@@ -1,0 +1,109 @@
+syntax = "proto3";
+package z2util;
+
+message Address {
+    int32 bank = 1;
+    int32 address = 2;
+}
+
+message Palette {
+    string name = 1;
+    Address address = 2;
+}
+
+enum MapType {
+    OUTDOORS = 0;
+    TOWN = 1;
+    PALACE = 2;
+    GREAT_PALACE = 3;
+    OVERWORLD = 4;
+}
+
+message Map {
+    string name = 1;
+    MapType type = 2;
+    Address address = 3;
+    int32 length = 4;    
+    Address palette = 5;
+    repeated Address objtable = 6;
+    Address chr = 7;
+}
+
+message SideViewMapPointers {
+    string area = 1;
+    Address address = 2;
+    int32 length = 3;
+    repeated string name = 4;
+    Address palette = 5;
+    MapType type = 6;
+    Address chr = 7;
+    Address enemies = 8;
+}
+
+message DecompressInfo {
+    enum ObjectType {
+        OBJECT_SMALL = 0;
+        OBJECT_SET_0 = 1;
+        OBJECT_SET_1 = 2;
+        OBJECT_EXTRA = 3;
+    }
+    enum RenderType {
+        UNKNOWN = 0;
+        // Render an 'item & 15' horizontal stripe of a 'height' tall object
+        RENDER_HORIZONTAL = 1;
+        // Render an 'item & 15'  vertical stripe of a 'width' wide object
+        RENDER_VERTICAL = 2;
+        // Render an 'item & 15' tall object with a unique top piece
+        RENDER_TOP_UNIQUE = 3;
+        // Render an 'item & 15' tall object with a unique bottom piece
+        RENDER_BOTTOM_UNIQUE = 4;
+        RENDER_CUSTOM = 5;
+    }
+    
+
+    MapType area = 1;
+    ObjectType type = 2;
+    int32 id = 3;
+    RenderType render = 4;
+    int32 width = 5;
+    int32 height = 6;
+    repeated int32 objid = 7;
+    string custom = 8;
+    string comment = 9;
+}
+
+message BackgroundInfo {
+    string name = 1;
+    repeated int32 ceiling = 2;
+    repeated int32 floor = 3;
+    int32 alternate = 4;
+    int32 background = 5;
+    int32 index = 6;
+    MapType type = 7;
+}
+
+message SpriteInfo {
+    string name = 1;
+    Address chr = 2;
+    int32 width = 3;
+    int32 height = 4;
+    bool mirror = 5;
+    repeated int32 id = 6;
+}
+
+message ItemInfo {
+    string area = 1;
+    map<int32, string> item = 2;
+}
+
+message RomInfo {
+    string path_ = 1; // For internal use by the config loader
+    repeated string load = 2;
+    repeated Map map = 3;    
+    repeated Palette palette = 4;
+    repeated SideViewMapPointers sideview = 5;
+    repeated DecompressInfo decompress = 6;
+    repeated BackgroundInfo background = 7;
+    repeated ItemInfo enemies = 8;
+    ItemInfo items = 9;
+}

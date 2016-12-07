@@ -1,0 +1,26 @@
+items {
+    item: [
+        { key: 0x00 value: "candle" },
+        { key: 0x01 value: "glove" },
+        { key: 0x02 value: "raft" },
+        { key: 0x03 value: "boots" },
+        { key: 0x04 value: "flute" },
+        { key: 0x05 value: "cross" },
+        { key: 0x06 value: "hammer" },
+        { key: 0x07 value: "magic key" },
+        { key: 0x08 value: "key" },
+        { key: 0x09 value: "???(0x09)" },
+        { key: 0x0a value: "50-bag" },
+        { key: 0x0b value: "100-bag" },
+        { key: 0x0c value: "200-bag" },
+        { key: 0x0d value: "500-bag" },
+        { key: 0x0e value: "magic container" },
+        { key: 0x0f value: "heart container" },
+        { key: 0x10 value: "blue jar" },
+        { key: 0x11 value: "red jar" },
+        { key: 0x12 value: "1up" },
+        { key: 0x13 value: "kid" },
+        { key: 0x14 value: "trophy" },
+        { key: 0x15 value: "water of life" }
+    ]
+}

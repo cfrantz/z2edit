@@ -1,0 +1,198 @@
+map {
+    name: "west_hyrule"
+    type: OVERWORLD
+    address: { bank: 1 address: 0x105c }
+    length: 0x320
+    palette: { bank: 7 address: 0x045b }
+    objtable: { bank: 0 address: 0x07a3 }
+    chr: { bank: 0x11 }
+}
+map {
+    name: "death_mountain"
+    type: OVERWORLD
+    address: { bank: 1 address: 0x264c }
+    length: 0x320
+    palette: { bank: 7 address: 0x045b }
+    objtable: { bank: 0 address: 0x07a3 }
+    chr: { bank: 0x11 }
+}
+map {
+    name: "east_hyrule"
+    type: OVERWORLD
+    address: { bank: 2 address: 0x1046 }
+    length: 0x320
+    palette: { bank: 7 address: 0x045b }
+    objtable: { bank: 0 address: 0x07a3 }
+    chr: { bank: 0x11 }
+}
+map {
+    name: "maze_island"
+    type: OVERWORLD
+    address: { bank: 2 address: 0x264c }
+    length: 0x320
+    palette: { bank: 7 address: 0x045b }
+    objtable: { bank: 0 address: 0x07a3 }
+    chr: { bank: 0x11 }
+}
+
+sideview: {
+    area: "background"
+    address: { bank: 1 address: 0x0 }
+    length: 6
+    palette: { bank: 1 address: 0xe }
+    type: OUTDOORS
+    chr: { bank: 0x3 }
+}
+sideview: {
+    area: "overworld"
+    address: { bank: 1 address: 0x0523 }
+    length: 63
+    palette: { bank: 1 address: 0xe }
+    type: OUTDOORS
+    chr: { bank: 0x3 }
+}
+sideview: {
+    area: "deathmountain"
+    address: { bank: 2 address: 0x2000 }
+    length: 63
+    palette: { bank: 1 address: 0xe }
+    type: OUTDOORS
+    chr: { bank: 0x3 }
+}
+sideview: {
+    area: "Palace1"
+    address: { bank: 4 address: 0x0523 }
+    length: 14
+    palette: { bank: 4 address: 0x3ef0 }
+    type: PALACE
+    chr: { bank: 0x9 }
+}
+sideview: {
+    area: "Palace2"
+    address: { bank: 4 address: 0x053F }
+    length: 14
+    palette: { bank: 4 address: 0x3f00 }
+    type: PALACE
+    chr: { bank: 0xb }
+}
+sideview: {
+    area: "Palace5"
+    address: { bank: 4 address: 0x0569 }
+    length: 21
+    palette: { bank: 4 address: 0x3f30 }
+    type: PALACE
+    chr: { bank: 0x17 }
+}
+sideview: {
+    area: "Palace3"
+    address: { bank: 4 address: 0x2000 }
+    length: 15
+    palette: { bank: 4 address: 0x3f00 }
+    type: PALACE
+    chr: { bank: 0x13 }
+}
+sideview: {
+    area: "Palace4"
+    address: { bank: 4 address: 0x201e }
+    length: 21
+    palette: { bank: 4 address: 0x3f10 }
+    type: PALACE
+    chr: { bank: 0x15 }
+}
+sideview: {
+    area: "Palace6"
+    address: { bank: 4 address: 0x2048 }
+    length: 27
+    palette: { bank: 4 address: 0x3f30 }
+    type: PALACE
+    chr: { bank: 0x19 }
+}
+
+
+##########################################################################
+##
+## Define the floor, ceiling and backgrounds of the different areas.
+## These must be in order.  The floor and ceiling entries should be
+## an array of length 2:
+##
+## ceiling: full tile, edge tile
+## floor: edge tile, full tile.
+##
+##########################################################################
+background {
+    type: OUTDOORS
+    index: 0
+    name: "cave"
+    ceiling: [0x53, 0x55]
+    floor: [0x52, 0x53]
+    background: 0x42
+}
+background {
+    type: OUTDOORS
+    index: 1
+    name: "forest"
+    ceiling: [0x8c, 0x8d]
+    floor: [0x90, 0x90]
+    alternate: 0x84
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 2
+    name: "water"
+    ceiling: [0x40, 0x40]
+    floor: [0x87, 0x91]
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 3
+    name: "swamp"
+    ceiling: [0x40, 0x40]
+    floor: [0x87, 0x91]
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 4
+    name: "grass"
+    ceiling: [0x40, 0x40]
+    floor: [0x8a, 0x8f]
+    alternate: 0x83
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 5
+    name: "volcano"
+    ceiling: [0x53, 0x55]
+    floor: [0x52, 0x53]
+    # FIXME
+    background: 0x51
+}
+background {
+    type: OUTDOORS
+    index: 6
+    name: "north palace"
+    ceiling: [0x8B, 0x8B]
+    floor: [0xC9, 0xC9]
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 7
+    name: "rocky"
+    ceiling: [0x53, 0x55]
+    floor: [0x52, 0x53]
+    background: 0x40
+}
+
+background {
+    type: PALACE
+    index: 0
+    name: "palace"
+    ceiling: [0x4b, 0x4b]
+    floor: [0x4b, 0x4b]
+    background: 0x42
+}
+

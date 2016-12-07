@@ -1,0 +1,56 @@
+##########################################################################
+##
+## Object IDs for side view areas in towns
+##
+## Objects: (for towns)
+##     Small Objects:
+##         00 = closed door with grass at bottom, 4 high 1 wide
+##         01 = open door with grass at bottom
+##         02 = open door with bricks at bottom
+##         03 = open door with vertical bricks at bottom
+##         04 = stonehenge
+##         05 = chair
+##         06 = ?
+##         07 = cloud
+##         08 = table
+##         09 = bench
+##         0A = cross
+##         0B-0E = cloud
+##         0F = crash
+##     Big objects for Object Set 0
+##         0x = small objects
+##         1x = crash
+##         2x = cross hatched roof, two high
+##         3x = gray vertical brick roof, two high
+##         4x = green vertical brick roof, two high
+##         5x = brick building, extends to ground
+##         6x = white small brick building, extends to ground
+##         7x = grass building, extends to ground
+##         8x = white brick wall, extends to ground
+##         9x = log building, extends to ground
+##         Ax = brown square windows, one wide, Two tall. One tile Gap between windows.  Repeats vertically
+##         Bx = gray windows, round on top...
+##         Cx = brown windows, round on top
+##         Dx = Underground blue bricks, two high
+##         Ex = Column
+##         Fx = castle background bricks
+##     Effects of Object Set 1 unknown
+##     Extra Objects (Y position 15)
+##         00 = Door to left
+##         01 = Door to right
+##         02 = Wall to left
+##         03 = wall to right
+##         04 = fireplace
+##         05 = fountain
+##         06 = sign
+##         07 = headstone one above ground
+##         08-0F = ?
+##         1x = single bush
+##         2x = background wall at Y pos 4, 3 wide, x tall
+##         3x = ?
+##         4x = ?
+##         5x = ?
+##         6x = bridge
+##         7x = water/lava
+##         80-FF = ?
+##########################################################################

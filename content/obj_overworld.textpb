@@ -1,0 +1,465 @@
+##########################################################################
+##
+## Object IDs for side view areas on the overworld
+## "Small Objects"
+##
+##########################################################################
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x00
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 1
+    objid: 0xC5
+    comment: "headstone"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x01
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 1
+    objid: 0xC6
+    comment: "cross"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x02
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 1
+    objid: 0xC7
+    comment: "angled cross"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x03
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 2
+    objid: [0x5b, 0x5C]
+    comment: "tree stump"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x04
+    render: RENDER_CUSTOM
+    width: 4
+    height: 3
+    objid: [
+        0x56, 0x57, 0x57, 0x58,
+        0x59, 0x00, 0x00, 0x59,
+        0x5a, 0x00, 0x00, 0x5a
+    ]
+    custom: "RenderGrid"
+    comment: "stonehenge"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x05
+    render: RENDER_CUSTOM
+    width: 1
+    height: 3
+    custom: "locked_door"
+    comment: "locked door"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x06
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0x4E, 0x4F]
+    comment: "sleeping zelda"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x07
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0x4E, 0x4F]
+    comment: "sleeping zelda"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x08
+    render: RENDER_VERTICAL
+    width: 1
+    height: 13
+    objid: [0x80, 0x89]
+    comment: "pit"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x09
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC3]
+    comment: "large cloud"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x0a
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x0b
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x0c
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x0d
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SMALL
+    id: 0x0e
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+
+##########################################################################
+##
+## Object IDs for side view areas on the overworld
+## "Object Set 0"
+##
+##########################################################################
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x20
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x8c, 0x8d]
+    comment: "forest ceiling"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x30
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x8c, 0x8d]
+    comment: "forest ceiling"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x40
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0xC0, 0xC1]
+    comment: "curtains"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x50
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0xC1
+    comment: "forest ceiling"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x60
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x20
+    comment: "crumble brick"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x70
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0
+    comment: "horizontal pit"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x80
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x81
+    comment: "single weed"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0x90
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x82
+    comment: "double weed"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0xA0
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x50
+    comment: "north castle steps"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0xB0
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x8B
+    comment: "north castle bricks"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0xC0
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x0
+    comment: "volcano background"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0xD0
+    render: RENDER_VERTICAL
+    width: 1
+    objid: 0x20
+    comment: "crumble bricks"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0xE0
+    render: RENDER_TOP_UNIQUE
+    width: 1
+    objid: [0x4c, 0x4b]
+    comment: "tree trunk"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_0
+    id: 0xF0
+    render: RENDER_TOP_UNIQUE
+    width: 1
+    objid: [0x86, 0x85]
+    comment: "pillar"
+}
+
+##########################################################################
+##
+## Object IDs for side view areas on the overworld
+## "Object Set 1"
+##
+##########################################################################
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x20
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x52, 0x53]
+    comment: "rock floor"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x30
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x53, 0x55]
+    comment: "rock ceiling"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x40
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x4d, 0x5d]
+    comment: "bridge"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x50
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x54
+    comment: "cave platform"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x60
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x60
+    comment: "crumble brick"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x70
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x60
+    comment: "crumble bridge"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x80
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x81
+    comment: "single weed"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0x90
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x82
+    comment: "double weed"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0xA0
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0
+    comment: "horizontal pit"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0xB0
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x8B
+    comment: "north castle bricks"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0xC0
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x0
+    comment: "volcano background"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0xD0
+    render: RENDER_VERTICAL
+    width: 1
+    objid: 0x60
+    comment: "crumble bricks"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0xE0
+    render: RENDER_TOP_UNIQUE
+    width: 1
+    objid: [0x52, 0x53]
+    comment: "rock floor"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_SET_1
+    id: 0xF0
+    render: RENDER_TOP_UNIQUE
+    width: 1
+    objid: [0x59, 0x5a]
+    comment: "stone spire"
+}
+
+##########################################################################
+##
+## Object IDs for side view areas on the overworld
+## "Extra Objects"
+##
+##########################################################################
+decompress {
+    area: OUTDOORS
+    type: OBJECT_EXTRA
+    id: 0x20
+    render: RENDER_CUSTOM
+    height: 3
+    objid: [0x80, 0x89]
+    custom: "RenderLava3High"
+    comment: "lava"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_EXTRA
+    id: 0x30
+    render: RENDER_CUSTOM
+    width: 1
+    objid: [0x46, 0x47]
+    custom: "RenderCactus1"
+    comment: "cactus1"
+}
+decompress {
+    area: OUTDOORS
+    type: OBJECT_EXTRA
+    id: 0x40
+    render: RENDER_CUSTOM
+    width: 1
+    height: 2
+    objid: [0x48, 0x49]
+    custom: "RenderCactus2"
+    comment: "cactus2"
+}
