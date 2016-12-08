@@ -38,6 +38,20 @@ bind(
 git_repository(
 	name = "google_protobuf",
 	remote = "https://github.com/google/protobuf.git",
-	#tag = "v3.0.0-beta-2"
 	tag = "v3.1.0"
+)
+
+######################################################################
+# protobuf
+######################################################################
+new_git_repository(
+	name = "nativefiledialog_git",
+	remote = "https://github.com/mlabbe/nativefiledialog.git",
+    commit = "5cfe5002eb0fac1e49777a17dec70134147931e2",
+    build_file = "nfd.BUILD",
+)
+
+bind(
+    name = "nfd",
+    actual = "@nativefiledialog_git//:nfd",
 )
