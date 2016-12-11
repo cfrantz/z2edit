@@ -19,6 +19,7 @@ cc_library(
         "//imwidget:hwpalette",
         "//imwidget:neschrview",
         "//imwidget:simplemap",
+        "//imwidget:editor",
         "//nes:cartridge",
         "//nes:mappers",
         "//proto:rominfo",
@@ -26,6 +27,7 @@ cc_library(
         "//util:os",
         "//external:gflags",
         "//external:imgui_sdl_opengl",
+        "//external:nfd",
     ],
 )
 

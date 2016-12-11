@@ -1,65 +1,148 @@
 #include <string>
 
 #include "imwidget/editor.h"
+#include "nes/z2decompress.h"
+#include "util/config.h"
 #include "util/stb_tilemap_editor.h"
+#include "imwidget/imutil.h"
 
-#define MAX_PROP 5
-ld36::Editor::PropertyInfo ld36::Editor::property_info_[MAX_PROP] = {
-    { "VertClimb", STBTE_PROP_bool, 0, 1, 1 },
-    { "LockedDoor", STBTE_PROP_bool, 0, 1, 1 },
-    { "Spawn", STBTE_PROP_int, 0, 100, 1 },
-    { "XRange", STBTE_PROP_int, 0, 100, 1 },
-};
-
-#define PROP_VERTCLIMB 0
-#define PROP_DOOR 1
-#define PROP_SPAWN 2
-#define PROP_XRANGE 3
-
-#define STBTE_MAX_TILEMAP_X      400
+#define STBTE_MAX_TILEMAP_X      64
 #define STBTE_MAX_TILEMAP_Y      200
-#define STBTE_MAX_PROPERTIES     MAX_PROP
+#define STBTE_MAX_PROPERTIES     0
 
 
 #define STBTE_DRAW_RECT(x0, y0, x1, y1, c) \
-    ld36::Editor::Get()->DrawRect(x0, y0, x1, y1, c)
+    z2util::Editor::Get()->DrawRect(x0, y0, x1, y1, c)
 
 #define STBTE_DRAW_TILE(x, y, id, highlight, props) \
-    ld36::Editor::Get()->DrawTile(x, y, id, highlight, props)
+    z2util::Editor::Get()->DrawTile(x, y, id, highlight, props)
 
 #define STBTE_PROP_TYPE(n, tiledata, params) \
-    ld36::Editor::Get()->PropertyType(n, tiledata, params)
+    z2util::Editor::Get()->PropertyType(n, tiledata, params)
 
 #define STBTE_PROP_NAME(n, tiledata, params) \
-    ld36::Editor::Get()->PropertyName(n, tiledata, params)
+    z2util::Editor::Get()->PropertyName(n, tiledata, params)
 
 #define STBTE_PROP_MIN(n, tiledata, params) \
-    ld36::Editor::Get()->PropertyRange(n, tiledata, params, 0)
+    z2util::Editor::Get()->PropertyRange(n, tiledata, params, 0)
 
 #define STBTE_PROP_MAX(n, tiledata, params) \
-    ld36::Editor::Get()->PropertyRange(n, tiledata, params, 1)
+    z2util::Editor::Get()->PropertyRange(n, tiledata, params, 1)
 
 #define STBTE_PROP_SCALE(n, tiledata, params) \
-    ld36::Editor::Get()->PropertyRange(n, tiledata, params, 2)
+    z2util::Editor::Get()->PropertyRange(n, tiledata, params, 2)
 
 #define STB_TILEMAP_EDITOR_IMPLEMENTATION
 #include "util/stb_tilemap_editor.h"
 
+namespace z2util {
+
 static Editor* current;
 
-Editor::Editor() :
-    edit_mode_(false),
-    bitmap(320,224)
+Editor::Editor()
+  : visible_(false),
+    show_connections_(true),
+    scale_(2.0),
+    map_(nullptr),
+    mouse_origin_(0, 0),
+    mouse_focus_(false),
+    mapsel_(0)
 { }
 
 Editor* Editor::Get() {
     return current;
 }
 
-Editor* Editor::Init(Renderer& r) {
-    current = new Editor(r);
+Editor* Editor::New() {
+    current = new Editor();
     current->ConvertFromMap(nullptr);
     return current;
+}
+
+void Editor::ConvertFromMap(Map* map) {
+    int width = 64;
+    int height = 72;
+    Z2Decompress decomp;
+
+    decomp.set_mapper(mapper_);
+    cache_.set_mapper(mapper_);
+    cache_.set_palette(hwpal_);
+
+    if (map) {
+        map_ = map;
+        decomp.Decompress(*map);
+        cache_.Init(*map);
+        connections_.Init(mapper_, map->connector());
+        width = decomp.width();
+        height = decomp.height();
+        LOG(INFO, "map decompressed to ", width, "x", height);
+    }
+    editor_ = stbte_create_map(width, height, 1, 16, 16, 255);
+    editor_->scroll_x = -80;
+    editor_->scroll_y = -16;
+    stbte_set_background_tile(editor_, 1);
+
+    if (map) {
+        for(int y=0; y<height; y++) {
+            for(int x=0; x<width; x++) {
+                editor_->data[y][x][0] = decomp.map(x, y);
+            }
+        }
+    }
+
+    for(int i=0; i<16; i++) {
+        stbte_define_tile(editor_, i, 255, "basic");
+    }
+}
+
+std::vector<uint8_t> Editor::CompressMap() {
+    std::vector<uint8_t> data;
+
+    for(int y=0; y<editor_->max_y; y++) {
+        for(int x=0; x<editor_->max_x; x++) {
+            uint8_t tile = editor_->data[y][x][0];
+            uint8_t count = 0;
+            while(x+1 < editor_->max_x && tile == editor_->data[y][x+1][0]) {
+                x++;
+                count++;
+                if (count == 15)
+                    break;
+            }
+            data.push_back(tile | count << 4); 
+        }
+    }
+    return data;
+}
+
+void Editor::SaveMap() {
+    std::vector<uint8_t> data = CompressMap();
+
+    LOG(INFO, "Map compresses to ", data.size(), " bytes.");
+    if (!map_) {
+        LOG(ERROR, "Can't save map: map_ == nullptr");
+        return;
+    }
+
+    Address addr = map_->address();
+    addr.set_address(0);
+    addr = mapper_->FindFreeSpace(addr, data.size());
+    if (addr.address() == 0) {
+        LOG(ERROR, "Can't save map: can't find ", data.size(), " bytes.");
+        return;
+    }
+
+    // Always mapped at 0x8000
+    addr.set_address(0x8000 | addr.address());
+
+    LOG(INFO, "Saving map to offset ", HEX(addr.address()));
+    for(unsigned i=0; i<data.size(); i++) {
+        mapper_->Write(addr, i, data[i]);
+    }
+    mapper_->WriteWord(map_->pointer(), 0, addr.address());
+    mapper_->Erase(map_->address(), map_->length());
+
+    *(map_->mutable_address()) = addr;
+    map_->set_length(data.size());
 }
 
 void Editor::Resize(int x0, int y0, int x1, int y1) {
@@ -67,81 +150,157 @@ void Editor::Resize(int x0, int y0, int x1, int y1) {
 }
 
 void Editor::DrawRect(int x0, int y0, int x1, int y1, uint32_t color) {
-    bitmap->FilledBox(x0, y0, x1-x0, y1-y0, color);
+    if (x0 < 0 || y0 < 0)
+        return;
+    if (x1 > size_.x || y1 > size_.y)
+        return;
+
+    auto* draw = ImGui::GetWindowDrawList();
+    color |= 0xFF000000;
+    draw->AddRectFilled(mouse_origin_ + ImVec2(x0, y0) * scale_,
+                        mouse_origin_ + ImVec2(x1, y1) * scale_,
+                        color);
 }
 
 void Editor::DrawTile(int x, int y, uint16_t tile, int mode, float* props) {
-    ResourceLoader *loader = ResourceLoader::Global();
-    sdlutil::GFX* g = sdlutil::GFX::Global();
-    Sprite *s = loader->sprite(tile);
-    if (!s) {
-        fprintf(stderr, "Unknown tile id %d (%04x)\n", tile, tile);
-        s = loader->sprite(1);
-    }
-    s->Draw(renderer_, ::SDL2pp::Point(x, y));
-    if (props) {
-        for(int i=0; i<MAX_PROP; i++) {
-            if (props[i] != 0.0) {
-                g->FilledCircle(x+16, y+16, 16, 0x80008000);
-            }
+    if (x < 0 || y < 0)
+        return;
+    if (x + 16 > size_.x || y + 16 > size_.y)
+        return;
+    ImGui::SetCursorPos(origin_ + ImVec2(x, y) * scale_);
+    cache_.Get(tile).Draw(16 * scale_, 16 * scale_);
+    ImGui::SetCursorPos(origin_ + ImVec2(x, y) * scale_);
+    if (show_connections_) {
+        if (connections_.DrawInEditor((x + editor_->scroll_x)/16,
+                                      (y + editor_->scroll_y)/16)) {
+            mouse_focus_ = false;
         }
     }
+    ImGui::SetCursorPos(origin_);
 }
 
 void Editor::Draw() {
-    stbte_draw(tm);
-    stbte_tick(tm, 1.0/60.0);
+    const char *names[256];
+    int len=0, mapsel = mapsel_;
+    if (!visible_)
+        return;
+
+    ImGui::Begin("Map Editor", visible());
+
+    auto rominfo = ConfigLoader<RomInfo>::GetConfig();
+    for(const auto& m : rominfo.map()) {
+        names[len++] = m.name().c_str();
+    }
+    ImGui::PushItemWidth(400);
+    ImGui::Combo("Map", &mapsel_, names, len);
+    ImGui::PopItemWidth();
+    if (mapsel_ != mapsel) {
+        ConvertFromMap(rominfo.mutable_map(mapsel_));
+    }
+
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+    ImGui::Checkbox("Show Connections", &show_connections_);
+
+    ImGui::SameLine();
+    if (ImGui::Button("Connections")) {
+        ImGui::OpenPopup("Connections");
+    }
+    connections_.DrawAdd();
+
+    ImGui::SameLine();
+    if (ImGui::Button("Save to ROM")) {
+        SaveMap();
+    }
+
+    ImGui::SameLine();
+    ImGui::InputFloat("Zoom", &scale_, 0.25, 1.0);
+    scale_ = Clamp(scale_, 0.25, 8.0);
+    ImGui::PopItemWidth();
+
+    mouse_origin_ = ImGui::GetCursorScreenPos();
+    origin_ = ImGui::GetCursorPos();
+    size_ = ImGui::GetContentRegionAvail();
+    ImGui::InvisibleButton("canvas", size_);
+    ImGui::SetCursorPos(origin_);
+    mouse_focus_ = ImGui::IsItemHovered();
+
+    size_ /= scale_;
+    stbte_set_display(0, 0, size_.x, size_.y);
+    stbte_draw(editor_);
+    stbte_tick(editor_, 1.0/60.0);
+
+    for(auto& e : events_) {
+        HandleEvent(&e);
+    }
+    events_.clear();
+
+    ImGui::End();
 }
 
-void Editor::ProcessEvent(SDL_Event *e) {
-   switch (e->type) {
-      case SDL_MOUSEMOTION:
-      case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEBUTTONUP:
-      case SDL_MOUSEWHEEL:
-         stbte_mouse_sdl(tm, e, 1.0f,1.0f,0,0);
-         break;
+void Editor::ProcessEvent(SDL_Event* e) {
+    if (!mouse_focus_)
+        return;
+    events_.push_back(*e);
+}
 
-      case SDL_KEYDOWN:
-         if (edit_mode_) {
+void Editor::HandleEvent(SDL_Event* e) {
+    switch (e->type) {
+        case SDL_MOUSEMOTION:
+            e->motion.x -= mouse_origin_.x; e->motion.y -= mouse_origin_.y;
+            e->motion.x /= scale_; e->motion.y /= scale_;
+            stbte_mouse_sdl(editor_, e, 1.0f,1.0f,0,0);
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+            e->button.x -= mouse_origin_.x; e->button.y -= mouse_origin_.y;
+            e->button.x /= scale_; e->button.y /= scale_;
+            stbte_mouse_sdl(editor_, e, 1.0f,1.0f,0,0);
+            break;
+        case SDL_MOUSEWHEEL:
+            e->wheel.x -= mouse_origin_.x; e->wheel.y -= mouse_origin_.y;
+            e->wheel.x /= scale_; e->wheel.y /= scale_;
+            stbte_mouse_sdl(editor_, e, 1.0f,1.0f,0,0);
+            break;
+
+        case SDL_KEYDOWN:
             switch (e->key.keysym.sym) {
-               case SDLK_RIGHT: stbte_action(tm, STBTE_scroll_right); break;
-               case SDLK_LEFT : stbte_action(tm, STBTE_scroll_left ); break;
-               case SDLK_UP   : stbte_action(tm, STBTE_scroll_up   ); break;
-               case SDLK_DOWN : stbte_action(tm, STBTE_scroll_down ); break;
-               default:
-                   ;
+                case SDLK_RIGHT: stbte_action(editor_, STBTE_scroll_right); break;
+                case SDLK_LEFT : stbte_action(editor_, STBTE_scroll_left ); break;
+                case SDLK_UP    : stbte_action(editor_, STBTE_scroll_up    ); break;
+                case SDLK_DOWN : stbte_action(editor_, STBTE_scroll_down ); break;
+                default:
+                    ; // nothing
             }
             switch (e->key.keysym.scancode) {
-               case SDL_SCANCODE_S: stbte_action(tm, STBTE_tool_select); break;
-               case SDL_SCANCODE_B: stbte_action(tm, STBTE_tool_brush ); break;
-               case SDL_SCANCODE_E: stbte_action(tm, STBTE_tool_erase ); break;
-               case SDL_SCANCODE_R: stbte_action(tm, STBTE_tool_rectangle ); break;
-               case SDL_SCANCODE_I: stbte_action(tm, STBTE_tool_eyedropper); break;
-               case SDL_SCANCODE_L: stbte_action(tm, STBTE_tool_link);       break;
-               case SDL_SCANCODE_G: stbte_action(tm, STBTE_act_toggle_grid); break;
-               default:
-                   ;
+                case SDL_SCANCODE_S: stbte_action(editor_, STBTE_tool_select); break;
+                case SDL_SCANCODE_B: stbte_action(editor_, STBTE_tool_brush ); break;
+                case SDL_SCANCODE_E: stbte_action(editor_, STBTE_tool_erase ); break;
+                case SDL_SCANCODE_R: stbte_action(editor_, STBTE_tool_rectangle ); break;
+                case SDL_SCANCODE_I: stbte_action(editor_, STBTE_tool_eyedropper); break;
+                case SDL_SCANCODE_L: stbte_action(editor_, STBTE_tool_link);         break;
+                case SDL_SCANCODE_G: stbte_action(editor_, STBTE_act_toggle_grid); break;
+                default:
+                    ; // nothing
             }
             if ((e->key.keysym.mod & KMOD_CTRL) && !(e->key.keysym.mod & ~KMOD_CTRL)) {
-               switch (e->key.keysym.scancode) {
-                  case SDL_SCANCODE_X: stbte_action(tm, STBTE_act_cut  ); break;
-                  case SDL_SCANCODE_C: stbte_action(tm, STBTE_act_copy ); break;
-                  case SDL_SCANCODE_V: stbte_action(tm, STBTE_act_paste); break;
-                  case SDL_SCANCODE_Z: stbte_action(tm, STBTE_act_undo ); break;
-                  case SDL_SCANCODE_Y: stbte_action(tm, STBTE_act_redo ); break;
-                  case SDL_SCANCODE_S: SaveMapText(); break;
-                  default:
-                         ;
-               }
+                switch (e->key.keysym.scancode) {
+                    case SDL_SCANCODE_X: stbte_action(editor_, STBTE_act_cut  ); break;
+                    case SDL_SCANCODE_C: stbte_action(editor_, STBTE_act_copy ); break;
+                    case SDL_SCANCODE_V: stbte_action(editor_, STBTE_act_paste); break;
+                    case SDL_SCANCODE_Z: stbte_action(editor_, STBTE_act_undo ); break;
+                    case SDL_SCANCODE_Y: stbte_action(editor_, STBTE_act_redo ); break;
+                    default:
+                        ; // nothing
+                }
             }
-         }
-         break;
-      default:
-         // nothing
-         ;
-   }
+            break;
+        default:
+            ; // nothing
+    }
 }
+
+Editor::PropertyInfo Editor::property_info_[1];
 
 int Editor::PropertyType(int n, int16_t* tiledata, float* params) {
     return property_info_[n].type;

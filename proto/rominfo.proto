@@ -27,6 +27,12 @@ message Map {
     Address palette = 5;
     repeated Address objtable = 6;
     Address chr = 7;
+
+    // connector table for overworld maps
+    Address connector = 8;
+
+    // Pointer to the map address
+    Address pointer = 9;
 }
 
 message SideViewMapPointers {

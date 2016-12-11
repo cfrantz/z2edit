@@ -1,4 +1,5 @@
 #include "imwidget/simplemap.h"
+#include "imwidget/imutil.h"
 
 SimpleMap::SimpleMap()
   : visible_(false)
@@ -72,6 +73,7 @@ void SimpleMap::Draw() {
 
     // ImVec2 ul = ImGui::GetCursorScreenPos();
     // ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 cursor = ImGui::GetCursorPos();
     if (bitmap_)
         bitmap_->Draw();
     //for(int i=0; i<4; i++) {
@@ -80,21 +82,36 @@ void SimpleMap::Draw() {
     //    ul.x += 256;
     //}
 
-    if (holder_.Draw()) {
-        decomp_.Clear();
-        decomp_.DecompressSideView(holder_.MapData().data());
-        pal_ = decomp_.palette();
-        for(int y=0; y<decomp_.height(); y++) {
-            for(int x=0; x<decomp_.width(); x++) {
-                BlitObject(x, y, decomp_.map(x, y));
+    if (map_.type() == z2util::MapType::OVERWORLD) {
+        connector_.Draw();
+        if (connector_.show()) {
+            for(int i=0; i<63; i++) {
+                int x, y;
+                connector_.GetXY(i, &x, &y);
+                x *= 16; y *= 16;
+                ImGui::SetCursorPos(cursor + ImVec2(x + 1, y + 1));
+                TextOutlined(ImColor(0xFFFF00FF), "%02x", i);
             }
         }
-        bitmap_->Update();
+    } else {
+        if (holder_.Draw()) {
+            decomp_.Clear();
+            decomp_.DecompressSideView(holder_.MapData().data());
+            pal_ = decomp_.palette();
+            for(int y=0; y<decomp_.height(); y++) {
+                for(int x=0; x<decomp_.width(); x++) {
+                    BlitObject(x, y, decomp_.map(x, y));
+                }
+            }
+            bitmap_->Update();
+        }
     }
+
     ImGui::End();
 }
 
 void SimpleMap::SetMap(const z2util::Map& map, const z2util::RomInfo& ri) {
+    map_ = map;
     rominfo_ = &ri;
     pal_ = map.palette();
 
@@ -117,7 +134,9 @@ void SimpleMap::SetMap(const z2util::Map& map, const z2util::RomInfo& ri) {
     decomp_.Init();
     decomp_.Decompress(map);
     // FIXME(cfrantz): stupid palette hack
-    if (map.type() != z2util::MapType::OVERWORLD) {
+    if (map.type() == z2util::MapType::OVERWORLD) {
+        connector_.Init(mapper_, map.connector());
+    } else {
         pal_ = decomp_.palette();
         holder_.Parse(map);
     }

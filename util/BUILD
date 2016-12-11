@@ -90,3 +90,9 @@ cc_library(
 	],
 )
 
+cc_library(
+	name = "stb-tilemap-editor",
+	hdrs = [
+		"stb_tilemap_editor.h",
+    ]
+)

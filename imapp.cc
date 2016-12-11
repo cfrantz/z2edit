@@ -4,6 +4,8 @@
 #include "examples/sdl_opengl_example/imgui_impl_sdl.h"
 #include "util/os.h"
 
+#include "nfd.h"
+
 
 DEFINE_int32(audio_frequency, 48000, "Audio sample frequency");
 //DEFINE_int32(audio_bufsize, 256, "Audio buffer size");
@@ -77,6 +79,7 @@ void ImApp::Init() {
     hwpal_.reset(new NesHardwarePalette);
     chrview_.reset(new NesChrView);
     simplemap_.reset(new SimpleMap);
+    editor_.reset(z2util::Editor::New());
 }
 
 void ImApp::Quit(DebugConsole* console, int argc, char **argv) {
@@ -91,6 +94,10 @@ void ImApp::Load(const std::string& filename) {
     simplemap_->set_mapper(mapper_.get());
     simplemap_->set_palette(hwpal_.get());
     simplemap_->SetMap(rominfo_.map(0), rominfo_);
+
+    editor_->set_mapper(mapper_.get());
+    editor_->set_palette(hwpal_.get());
+    editor_->ConvertFromMap(rominfo_.mutable_map(0));
 }
 
 void ImApp::LoadFile(DebugConsole* console, int argc, char **argv) {
@@ -337,6 +344,7 @@ bool ImApp::ProcessEvents() {
         ImGui_ImplSdl_ProcessEvent(&event);
         if (event.type == SDL_QUIT)
             done = true;
+        editor_->ProcessEvent(&event);
     }
     return !done;
 }
@@ -349,6 +357,35 @@ void ImApp::Draw() {
     ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
     if (ImGui::Begin(name_.c_str(), &open, ImGuiWindowFlags_MenuBar)) { 
         if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Open", "Ctrl+O")) {
+                    char *filename = nullptr;
+                    auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
+                    if (result == NFD_OKAY) {
+                        Load(filename);
+                    }
+                    free(filename);
+                }
+                if (ImGui::MenuItem("Save", "Ctrl+S")) {
+                    if (save_filename_.empty())
+                        goto save_as;
+                    cartridge_.SaveFile(save_filename_);
+                }
+                if (ImGui::MenuItem("Save As")) {
+save_as:
+                    char *filename = nullptr;
+                    auto result = NFD_SaveDialog(nullptr, nullptr, &filename);
+                    if (result == NFD_OKAY) {
+                        save_filename_.assign(filename);
+                        cartridge_.SaveFile(save_filename_);
+                    }
+                    free(filename);
+                }
+                if (ImGui::MenuItem("Quit")) {
+                    running_ = false;
+                }
+                ImGui::EndMenu();
+            }
             if (ImGui::BeginMenu("Windows")) {
                 ImGui::MenuItem("Debug Console", nullptr,
                                 console_.visible());
@@ -359,6 +396,8 @@ void ImApp::Draw() {
 
                 ImGui::MenuItem("MapViewer", nullptr,
                                 simplemap_->visible());
+                ImGui::MenuItem("Editor", nullptr,
+                                editor_->visible());
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -370,6 +409,7 @@ void ImApp::Draw() {
     hwpal_->Draw();
     chrview_->Draw();
     simplemap_->Draw();
+    editor_->Draw();
 
     ImGui::End();
 

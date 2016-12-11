@@ -4,6 +4,7 @@
 #include "imwidget/glbitmap.h"
 #include "imwidget/hwpalette.h"
 #include "imwidget/map_command.h"
+#include "imwidget/map_connect.h"
 #include "nes/mapper.h"
 #include "nes/z2decompress.h"
 #include "proto/rominfo.pb.h"
@@ -27,10 +28,12 @@ class SimpleMap {
     std::unique_ptr<GLBitmap> bitmap_;
     z2util::Z2Decompress decomp_;
     z2util::MapHolder holder_;
+    z2util::OverworldConnectorList connector_;
 
     Mapper* mapper_;
     NesHardwarePalette* hwpal_;
 
+    z2util::Map map_;
     z2util::Address obj_[4];
     z2util::Address chr_;
     z2util::Address pal_;

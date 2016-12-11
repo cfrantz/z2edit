@@ -12,6 +12,7 @@
 #include "imwidget/hwpalette.h"
 #include "imwidget/neschrview.h"
 #include "imwidget/simplemap.h"
+#include "imwidget/editor.h"
 #include "nes/cartridge.h"
 #include "nes/mapper.h"
 
@@ -82,9 +83,11 @@ class ImApp {
     z2util::RomInfo rominfo_;
     DebugConsole console_;
 
+    std::string save_filename_;
     std::unique_ptr<NesHardwarePalette> hwpal_;
     std::unique_ptr<NesChrView> chrview_;
     std::unique_ptr<SimpleMap> simplemap_;
+    std::unique_ptr<z2util::Editor> editor_;
 
     Cartridge cartridge_;
     std::unique_ptr<Mapper> mapper_;

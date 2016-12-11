@@ -9,6 +9,7 @@ Z2Decompress::Z2Decompress() {}
 void Z2Decompress::Init() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     memset(info_, 0, sizeof(info_));
+    layer_ = 0;
     for(const auto& d : ri.decompress()) {
         int id = d.id();
         if (id & 0xF0) {
@@ -19,17 +20,23 @@ void Z2Decompress::Init() {
 }
 
 void Z2Decompress::Clear() {
+    layer_ = 0;
     memset(map_, 0, sizeof(map_));
 }
 
 void Z2Decompress::Decompress(const Map& map) {
     compressed_map_ = map;
 
+    if (map.pointer().address()) {
+        *compressed_map_.mutable_address() =
+            mapper_->ReadAddr(map.pointer(), 0);
+    }
+
     Clear();
     if (map.type() == MapType::OVERWORLD) {
-        DecompressOverWorld(map);
+        DecompressOverWorld(compressed_map_);
     } else {
-        DecompressSideView(map);
+        DecompressSideView(compressed_map_);
     }
 }
 
@@ -37,6 +44,9 @@ void Z2Decompress::Decompress(const Map& map) {
 void Z2Decompress::DecompressOverWorld(const Map& map) {
     uint8_t *mm = (uint8_t*)map_;
     // FIXME: how to determine the map length instead of specifying manually
+    LOG(INFO, "DecompressOverWorld: bank=", map.address().bank(),
+              " address=", HEX(map.address().address()),
+              " length=", map.length());
     for(int i=0; i<map.length(); i++) {
         uint8_t val = Read(map.address(), i);
         uint8_t type = val & 0x0f;

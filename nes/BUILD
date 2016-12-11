@@ -25,6 +25,7 @@ cc_library(
     ],
     deps = [
         ":cartridge",
+        "//proto:rominfo",
         "//imwidget:debug_console",
     ],
     alwayslink = 1,
@@ -43,6 +44,20 @@ cc_library(
         "//util:config",
         "//util:logging",
         "//proto:rominfo",
+    ],
+)
+
+cc_library(
+    name = "z2objcache",
+    hdrs = ["z2objcache.h"],
+    srcs = [
+        "z2objcache.cc",
+    ],
+    deps = [
+        ":mappers",
+        "//proto:rominfo",
+        "//imwidget:glbitmap",
+        "//imwidget:hwpalette",
     ],
 )
 
