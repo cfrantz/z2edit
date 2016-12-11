@@ -43,6 +43,7 @@ Editor::Editor()
   : visible_(false),
     show_connections_(true),
     scale_(2.0),
+    editor_(nullptr),
     map_(nullptr),
     mouse_origin_(0, 0),
     mouse_focus_(false),
@@ -75,7 +76,8 @@ void Editor::ConvertFromMap(Map* map) {
         connections_.Init(mapper_, map->connector());
         width = decomp.width();
         height = decomp.height();
-        LOG(INFO, "map decompressed to ", width, "x", height);
+        LOG(INFO, "map ", map_->name(),
+                  " decompressed to ", width, "x", height);
     }
     editor_ = stbte_create_map(width, height, 1, 16, 16, 255);
     editor_->scroll_x = -80;
@@ -118,12 +120,13 @@ void Editor::SaveMap() {
     std::vector<uint8_t> data = CompressMap();
 
     LOG(INFO, "===========================================================");
-    LOG(INFO, "Saving ", map_->name());
-    LOG(INFO, "Map compresses to ", data.size(), " bytes.");
     if (!map_) {
         LOG(ERROR, "Can't save map: map_ == nullptr");
         return;
     }
+
+    LOG(INFO, "Saving ", map_->name());
+    LOG(INFO, "Map compresses to ", data.size(), " bytes.");
 
     Address addr = map_->address();
     addr.set_address(0);
@@ -191,13 +194,13 @@ void Editor::Draw() {
 
     ImGui::Begin("Map Editor", visible());
 
-    auto rominfo = ConfigLoader<RomInfo>::GetConfig();
-    for(const auto& m : rominfo.map()) {
+    auto* rominfo = ConfigLoader<RomInfo>::MutableConfig();
+    for(const auto& m : rominfo->map()) {
         names[len++] = m.name().c_str();
     }
     ImGui::PushItemWidth(400);
     if (ImGui::Combo("Map", &mapsel_, names, len)) {
-        ConvertFromMap(rominfo.mutable_map(mapsel_));
+        ConvertFromMap(rominfo->mutable_map(mapsel_));
     }
     ImGui::PopItemWidth();
 

@@ -16,6 +16,7 @@ class ConfigLoader {
         return &singleton;
     }
     static inline const T& GetConfig() { return Get()->config_; }
+    static inline T* MutableConfig() { return &Get()->config_; }
 
     void Load(const std::string& filename,
               std::function<void(T*)> postprocess=nullptr) {
