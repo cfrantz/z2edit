@@ -32,7 +32,6 @@ z2util::Address Mapper::FindFreeSpace(z2util::Address addr, int length) {
             while(run < end && Read(addr, run) == 0xFF) {
                 run++;
             }
-            printf("Found a run of %d at %04x\n", run-offset, offset);
             if (run-offset >= length) {
                 addr.set_address(offset);
                 break;

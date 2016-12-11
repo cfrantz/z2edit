@@ -28,11 +28,15 @@ void Z2Decompress::Decompress(const Map& map) {
     compressed_map_ = map;
 
     if (map.pointer().address()) {
+        LOG(INFO, "Map pointer at bank=", map.pointer().bank(),
+                  " address=", HEX(map.pointer().address()));
         *compressed_map_.mutable_address() =
             mapper_->ReadAddr(map.pointer(), 0);
     }
 
     Clear();
+    LOG(INFO, "Map at bank=", map.address().bank(),
+              " address=", HEX(map.address().address()));
     if (map.type() == MapType::OVERWORLD) {
         DecompressOverWorld(compressed_map_);
     } else {

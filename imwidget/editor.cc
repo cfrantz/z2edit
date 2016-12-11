@@ -117,6 +117,8 @@ std::vector<uint8_t> Editor::CompressMap() {
 void Editor::SaveMap() {
     std::vector<uint8_t> data = CompressMap();
 
+    LOG(INFO, "===========================================================");
+    LOG(INFO, "Saving ", map_->name());
     LOG(INFO, "Map compresses to ", data.size(), " bytes.");
     if (!map_) {
         LOG(ERROR, "Can't save map: map_ == nullptr");
@@ -127,14 +129,16 @@ void Editor::SaveMap() {
     addr.set_address(0);
     addr = mapper_->FindFreeSpace(addr, data.size());
     if (addr.address() == 0) {
-        LOG(ERROR, "Can't save map: can't find ", data.size(), " bytes.");
+        LOG(ERROR, "Can't save map: can't find ", data.size(), " bytes"
+                   " in bank=", addr.bank());
         return;
     }
 
     // Always mapped at 0x8000
     addr.set_address(0x8000 | addr.address());
 
-    LOG(INFO, "Saving map to offset ", HEX(addr.address()));
+    LOG(INFO, "Saving map to offset ", HEX(addr.address()),
+              " in bank=", addr.bank());
     for(unsigned i=0; i<data.size(); i++) {
         mapper_->Write(addr, i, data[i]);
     }
@@ -192,11 +196,10 @@ void Editor::Draw() {
         names[len++] = m.name().c_str();
     }
     ImGui::PushItemWidth(400);
-    ImGui::Combo("Map", &mapsel_, names, len);
-    ImGui::PopItemWidth();
-    if (mapsel_ != mapsel) {
+    if (ImGui::Combo("Map", &mapsel_, names, len)) {
         ConvertFromMap(rominfo.mutable_map(mapsel_));
     }
+    ImGui::PopItemWidth();
 
     ImGui::SameLine();
     ImGui::PushItemWidth(100);
