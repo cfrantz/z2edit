@@ -5,14 +5,16 @@
 #include "util/string.h"
 
 //const char kTranslationTable[] = "0123456789ABCDEF";
-const char kTranslationTable[] = "T^P=:.t#+ %Mw~o*";
+//const char kTranslationTable[] = "T^P=:.t#+ %Mw~o*";
+const char kTranslationTable[] = "ABCDEFGHIJKLMNOP";
 
 void Overworld::Decompress(uint32_t start, uint32_t end) {
     for(uint32_t i=start; i<=end; i++) {
         uint8_t v = rom_->Read8(i);
         if (v == 0xff)
             break;
-        map_.append((v>>4)+1, kTranslationTable[v & 0xF]);
+        map_.append(1, kTranslationTable[v & 0xF]);
+        map_.append((v>>4), kTranslationTable[v & 0xF] | 0x20);
     }
 }
 
