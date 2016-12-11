@@ -18,9 +18,9 @@ cc_library(
         "-I/usr/include/pango-1.0",
         "-I/usr/include/cairo",
     ],
-	linkopts = [
-		"-lgtk-3",
-		"-lglib-2.0",
+    linkopts = [
+        "-lgtk-3",
+        "-lglib-2.0",
         "-lgdk-3",
         "-latk-1.0",
         "-lgio-2.0",
