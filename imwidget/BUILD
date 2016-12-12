@@ -84,10 +84,11 @@ cc_library(
         ":glbitmap",
         ":hwpalette",
         ":map_command",
-        ":map_connect",
         "//nes:mappers",
         "//nes:z2decompress",
+        "//nes:z2objcache",
         "//proto:rominfo",
+        "//util:config",
         "//external:imgui",
     ],
 )
@@ -97,6 +98,7 @@ cc_library(
     hdrs = ["map_command.h"],
     srcs = ["map_command.cc"],
     deps = [
+        ":imutil",
         "//util:config",
         "//nes:mappers",
         "//proto:rominfo",

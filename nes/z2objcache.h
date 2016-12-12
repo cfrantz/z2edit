@@ -20,7 +20,8 @@ class Z2ObjectCache {
     GLBitmap& Get(uint8_t object);
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
-    inline void set_palette(NesHardwarePalette* pal) { hwpal_ = pal; }
+    inline void set_hwpal(NesHardwarePalette* pal) { hwpal_ = pal; }
+    inline void set_palette(const Address& pal) { palette_ = pal; }
     inline void Clear() { cache_.clear(); }
     const static int WIDTH = 16;
     const static int HEIGHT = 16;

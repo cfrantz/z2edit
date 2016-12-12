@@ -1,6 +1,7 @@
 #include <cstdlib>
 
 #include "imwidget/map_command.h"
+#include "imwidget/imutil.h"
 #include "imgui.h"
 #include "util/config.h"
 
@@ -63,31 +64,30 @@ MapCommand::MapCommand(const MapHolder& holder, uint8_t position,
 
 bool MapCommand::Draw() {
     bool changed = false;
-    const char *yfmt;
+    const char *xpos = "x position";
+    const char *ypos = "y position";
     if (data_.y == 13) {
-        yfmt = "%.0f (new floor)";
+        ypos = "new floor ";
     } else if (data_.y == 14) {
-        yfmt = "%.0f (x skip)";
+        ypos = "x skip    ";
+        xpos = "to screen#";
     } else if (data_.y == 15) {
-        yfmt = "%.0f (extra obj)";
-    } else {
-        yfmt = "%.0f";
+        ypos = "extra obj ";
     }
 
+    ImGui::PushID(id_);
     ImGui::PushItemWidth(100);
-    sprintf(name_.ypos, "ypos##%d", id_);
-    changed |= ImGui::DragInt(name_.ypos, &data_.y, 1, 0, 15, yfmt); 
-
+    changed |= ImGui::InputInt(ypos, &data_.y);
+    Clamp(&data_.y, 0, 15);
 
     ImGui::SameLine();
-    sprintf(name_.xpos, "xpos##%d", id_);
-    changed |= ImGui::DragInt(name_.xpos, &data_.x, 1, 0, 15);
+    changed |= ImGui::InputInt(xpos, &data_.x);
+    Clamp(&data_.x, 0, 15);
 
     if (data_.y == 13 || data_.y == 14) {
-        sprintf(name_.object, "param##%d", id_);
         sprintf(obuf_, "%02x", object_);
         ImGui::SameLine();
-        changed |= ImGui::InputText(name_.object, obuf_, sizeof(obuf_),
+        changed |= ImGui::InputText("param", obuf_, sizeof(obuf_),
                                     ImGuiInputTextFlags_CharsHexadecimal |
                                     ImGuiInputTextFlags_EnterReturnsTrue);
         object_ = strtoul(obuf_, 0, 16);
@@ -104,7 +104,7 @@ bool MapCommand::Draw() {
             if ((i==1 || i==2) && i != oindex)
                 continue;
             for(int j=0; j<16; j++) {
-                name_.sel[n++] = object_names_[type][i][j];
+                names_[n++] = object_names_[type][i][j];
             }
         }
 
@@ -121,19 +121,18 @@ bool MapCommand::Draw() {
             data_.param = object_ & 0x0F;
         }
 
-        sprintf(name_.object, "id##%d", id_);
         ImGui::PushItemWidth(200);
         ImGui::SameLine();
-        changed |= ImGui::Combo(name_.object, &data_.object, name_.sel, n);
+        changed |= ImGui::Combo("id", &data_.object, names_, n);
         ImGui::PopItemWidth();
         if (changed) {
             printf("changed to %d (%02x) %s\n", data_.object, data_.object,
-                    name_.sel[data_.object]);
+                    names_[data_.object]);
         }
                                
         // All of the object names start with their ID in hex, so we just
         // parse the value out of the name.
-        object_ = strtoul(name_.sel[data_.object], 0, 16);
+        object_ = strtoul(names_[data_.object], 0, 16);
 
         // If the index from the combobox is >= the "extra" items, then
         // set y to the magic 'extra items' value.
@@ -144,22 +143,22 @@ bool MapCommand::Draw() {
         }
         if (oindex) {
             ImGui::SameLine();
-            sprintf(name_.param, "param##%d", id_);
-            changed |= ImGui::DragInt(name_.param, &data_.param, 1, 0, 15);
+            changed |= ImGui::InputInt("param", &data_.param);
+            Clamp(&data_.param, 0, 15);
             object_ |= data_.param;
         } else if (object_ == 15) {
             ImGui::SameLine();
-            sprintf(name_.param, "collectable##%d", id_);
             sprintf(ebuf_, "%02x", extra_);
             ImGui::SameLine();
-            changed |= ImGui::InputText(name_.param, ebuf_, sizeof(ebuf_),
+            changed |= ImGui::InputText("collectable", ebuf_, sizeof(ebuf_),
                                         ImGuiInputTextFlags_CharsHexadecimal |
                                         ImGuiInputTextFlags_EnterReturnsTrue);
             extra_ = strtoul(ebuf_, 0, 16);
         }
     }
-
     ImGui::PopItemWidth();
+    ImGui::PopID();
+
     return changed;
 }
 
@@ -175,14 +174,14 @@ std::vector<uint8_t> MapCommand::Command() {
 MapHolder::MapHolder() {}
 
 const char* ground_names[] = {
-    "%.0f (cave)",
-    "%.0f (forest)",
-    "%.0f (lava)",
-    "%.0f (swamp)",
-    "%.0f (sand)",
-    "%.0f (volcano)",
-    "%.0f (north castle)",
-    "%.0f (outside)",
+    "TileSet (cave)",
+    "TileSet (forest)",
+    "TileSet (lava)",
+    "TileSet (swamp)",
+    "TileSet (sand)",
+    "TileSet (volcano)",
+    "TileSet (north castle)",
+    "TileSet (outside)",
 };
 
 void MapHolder::Unpack() {
@@ -213,28 +212,44 @@ bool MapHolder::Draw() {
 
     ImGui::PushItemWidth(100);
     ImGui::Text("Flags:");
-    changed |= ImGui::DragInt("Object Set", &data_.objset, 1, 0, 1);
-    ImGui::SameLine(); changed |= ImGui::DragInt("Width", &data_.width, 1, 1, 4);
-    ImGui::SameLine(); changed |= ImGui::Checkbox("Grass", &data_.grass);
-    ImGui::SameLine(); changed |= ImGui::Checkbox("Bushes", &data_.bushes);
+    changed |= ImGui::InputInt("Object Set", &data_.objset);
+    Clamp(&data_.objset, 0, 1);
+
+    ImGui::SameLine();
+    changed |= ImGui::InputInt("Width", &data_.width);
+    Clamp(&data_.width, 1, 4);
+
+    ImGui::SameLine();
+    changed |= ImGui::Checkbox("Grass", &data_.grass);
+
+    ImGui::SameLine();
+    changed |= ImGui::Checkbox("Bushes", &data_.bushes);
 
     ImGui::Text("Ground:");
     changed |= ImGui::Checkbox("Ceiling", &data_.ceiling);
-    ImGui::PushItemWidth(140);
-    ImGui::SameLine(); changed |= ImGui::DragInt("Tiles", &data_.ground, 1, 0, 7,
-                                      ground_names[data_.ground]);
-    ImGui::PopItemWidth();
-    ImGui::SameLine(); changed |= ImGui::DragInt("Floor", &data_.floor, 1, 0, 15);
+
+    ImGui::SameLine();
+    changed |= ImGui::InputInt(ground_names[data_.ground], &data_.ground);
+    Clamp(&data_.ground, 0, 7);
+    
+    ImGui::SameLine();
+    changed |= ImGui::InputInt("Floor", &data_.floor);
+    Clamp(&data_.floor, 0, 15);
 
     ImGui::Text("Background:");
-    changed |= ImGui::DragInt("Spr Palette", &data_.spal, 1, 0, 3);
-    ImGui::SameLine(); changed |= ImGui::DragInt("BG Palette", &data_.bpal, 1, 0, 7);
-    ImGui::SameLine(); changed |= ImGui::DragInt("BG Map", &data_.bmap, 1, 0, 7);
+    changed |= ImGui::InputInt("Spr Palette", &data_.spal);
+    Clamp(&data_.spal, 0, 3);
+
+    ImGui::SameLine();
+    changed |= ImGui::InputInt("BG Palette", &data_.bpal);
+    Clamp(&data_.bpal, 0, 7);
+
+    ImGui::SameLine();
+    changed |= ImGui::InputInt("BG Map", &data_.bmap);
+    Clamp(&data_.bmap, 0, 7);
 
     ImGui::Text("Command List:");
-    ImGui::BeginChild("Command List",
-                      ImVec2(ImGui::GetWindowContentRegionWidth() * 0.67f, 300),
-                      false, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("commands", ImGui::GetContentRegionAvail(), true);
     for(auto& cmd : command_) {
         changed |= cmd.Draw();
     }
@@ -246,26 +261,25 @@ bool MapHolder::Draw() {
 
 void MapHolder::Parse(const z2util::Map& map) {
     map_ = map;
-    // FIXME: for side view maps, the map address is the address of a pointer
+    // For side view maps, the map address is the address of a pointer
     // to the real address.  Read it and set the real address.
-    Address address = map.address();
-    address.set_address(ReadWord(map.address(), 0));
+    Address address = mapper_->ReadAddr(map.address(), 0);
 
-    length_ = Read(address, 0);
-    flags_ = Read(address, 1);
-    ground_ = Read(address, 2);
-    back_ = Read(address, 3);
+    length_ = mapper_->Read(address, 0);
+    flags_ = mapper_->Read(address, 1);
+    ground_ = mapper_->Read(address, 2);
+    back_ = mapper_->Read(address, 3);
 
     command_.clear();
     for(int i=4; i<length_; i+=2) {
-        uint8_t pos = Read(address, i);
-        uint8_t obj = Read(address, i+1);
+        uint8_t pos = mapper_->Read(address, i);
+        uint8_t obj = mapper_->Read(address, i+1);
         uint8_t extra = 0;
 
         int y = pos >> 4;
         if (y < 13 && obj == 15) {
             i++;
-            extra = Read(address, i+1);
+            extra = mapper_->Read(address, i+1);
         }
         command_.emplace_back(*this, pos, obj, extra);
     }

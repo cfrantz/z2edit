@@ -78,7 +78,7 @@ void ImApp::Init() {
 
     hwpal_.reset(new NesHardwarePalette);
     chrview_.reset(new NesChrView);
-    simplemap_.reset(new SimpleMap);
+    simplemap_.reset(new z2util::SimpleMap);
     editor_.reset(z2util::Editor::New());
 }
 
@@ -93,7 +93,7 @@ void ImApp::Load(const std::string& filename) {
 
     simplemap_->set_mapper(mapper_.get());
     simplemap_->set_palette(hwpal_.get());
-    simplemap_->SetMap(rominfo_.map(0), rominfo_);
+    simplemap_->SetMap(rominfo_.map(0));
 
     editor_->set_mapper(mapper_.get());
     editor_->set_palette(hwpal_.get());

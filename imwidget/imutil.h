@@ -38,8 +38,14 @@ inline ImVec2& operator-=(ImVec2& a, ImVec2& b) {
     return a;
 }
 
-inline float Clamp(float v, float mn, float mx) {
+template<typename T>
+inline T Clamp(T v, T mn, T mx) {
     return (v < mn) ? mn : (v > mx) ? mx : v;
+}
+
+template<typename T>
+inline void Clamp(T* v, T mn, T mx) {
+    *v = Clamp(*v, mn, mx);
 }
 
 void TextOutlined(const ImVec4& col, const char* fmt, ...);

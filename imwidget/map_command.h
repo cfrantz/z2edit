@@ -37,14 +37,7 @@ class MapCommand {
     } data_;
     char obuf_[4];
     char ebuf_[4];
-    struct {
-        char xpos[64];
-        char ypos[64];
-        char object[64];
-        char param[64];
-        char extra[64];
-        const char *sel[64];
-    } name_;
+    const char *names_[64];
 
     static void Init();
     static int newid();
@@ -65,13 +58,6 @@ class MapHolder {
   private:
     void Unpack();
     void Pack();
-    inline uint8_t Read(const Address& addr, uint16_t offset) {
-        return mapper_->ReadPrgBank(addr.bank(), addr.address() + offset);
-    }
-    inline uint16_t ReadWord(const Address& addr, uint16_t offset) {
-        return mapper_->ReadPrgBank(addr.bank(), addr.address() + offset) |
-          mapper_->ReadPrgBank(addr.bank(), addr.address() + offset + 1) << 8;
-    }
 
     uint8_t length_;
     uint8_t flags_;

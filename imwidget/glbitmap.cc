@@ -64,6 +64,11 @@ void GLBitmap::Draw(int w, int h) {
     ImGui::Image(ImTextureID(uintptr_t(texture_id_)), ImVec2(w, h));
 }
 
+void GLBitmap::DrawAt(int x, int y, int w, int h) {
+    ImGui::SetCursorPos(ImVec2(x, y));
+    Draw(w, h);
+}
+
 void GLBitmap::Box(int x, int y, int w, int h, uint32_t color) {
     int xx, yy;
     int y0, y1;

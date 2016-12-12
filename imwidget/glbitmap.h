@@ -16,6 +16,7 @@ class GLBitmap {
     uint32_t* Allocate(uint32_t* data=nullptr, bool claim_ownership=true);
     void Update();
     void Draw(int w=0, int h=0);
+    void DrawAt(int x, int y, int w=0, int h=0);
 
     inline uint32_t* data() { return data_; }
     inline GLuint texture_id() { return texture_id_; }

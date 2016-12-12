@@ -86,7 +86,7 @@ class ImApp {
     std::string save_filename_;
     std::unique_ptr<NesHardwarePalette> hwpal_;
     std::unique_ptr<NesChrView> chrview_;
-    std::unique_ptr<SimpleMap> simplemap_;
+    std::unique_ptr<z2util::SimpleMap> simplemap_;
     std::unique_ptr<z2util::Editor> editor_;
 
     Cartridge cartridge_;

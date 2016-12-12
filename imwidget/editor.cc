@@ -67,7 +67,7 @@ void Editor::ConvertFromMap(Map* map) {
 
     decomp.set_mapper(mapper_);
     cache_.set_mapper(mapper_);
-    cache_.set_palette(hwpal_);
+    cache_.set_hwpal(hwpal_);
 
     if (map) {
         map_ = map;
@@ -196,6 +196,8 @@ void Editor::Draw() {
 
     auto* rominfo = ConfigLoader<RomInfo>::MutableConfig();
     for(const auto& m : rominfo->map()) {
+        if (m.type() != MapType::OVERWORLD)
+            continue;
         names[len++] = m.name().c_str();
     }
     ImGui::PushItemWidth(400);
@@ -221,7 +223,7 @@ void Editor::Draw() {
 
     ImGui::SameLine();
     ImGui::InputFloat("Zoom", &scale_, 0.25, 1.0);
-    scale_ = Clamp(scale_, 0.25, 8.0);
+    scale_ = Clamp(scale_, 0.25f, 8.0f);
     ImGui::PopItemWidth();
 
     mouse_origin_ = ImGui::GetCursorScreenPos();
