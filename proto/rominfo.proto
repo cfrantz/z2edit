@@ -99,17 +99,20 @@ message SpriteInfo {
 
 message ItemInfo {
     string area = 1;
-    map<int32, string> item = 2;
+    int32 world = 2;
+    map<int32, string> info = 3;
 }
 
 message RomInfo {
-    string path_ = 1; // For internal use by the config loader
+    string path = 1; // For internal use by the config loader
     repeated string load = 2;
     repeated Map map = 3;    
     repeated Palette palette = 4;
     repeated SideViewMapPointers sideview = 5;
     repeated DecompressInfo decompress = 6;
     repeated BackgroundInfo background = 7;
-    repeated ItemInfo enemies = 8;
+    ItemInfo worlds = 8;
     ItemInfo items = 9;
+    repeated ItemInfo areas = 10;
+    repeated ItemInfo enemies = 11;
 }

@@ -49,7 +49,7 @@ void MapCommand::Init() {
     done = true;
 }
 
-MapCommand::MapCommand(const MapHolder& holder, uint8_t position,
+MapCommand::MapCommand(const MapHolder* holder, uint8_t position,
                        uint8_t object, uint8_t extra)
   : id_(newid()),
     holder_(holder),
@@ -61,6 +61,17 @@ MapCommand::MapCommand(const MapHolder& holder, uint8_t position,
     data_.y = position_ >> 4;
     Init();
 }
+
+/*
+MapCommand::MapCommand(MapCommand&& other)
+  : id_(other.id_),
+    holder_(other.holder_),
+    position_(other.position_),
+    object_(other.object_),
+    extra_(other.extra_),
+    data_(other.data_) {}
+    */
+
 
 bool MapCommand::Draw() {
     bool changed = false;
@@ -95,8 +106,8 @@ bool MapCommand::Draw() {
         int n = 0;
         int large_start = 0;
         int extra_start = 0;
-        int type = holder_.map().type();
-        int oindex = 1 + !!(holder_.flags() & 0x80);
+        int type = holder_->map().type();
+        int oindex = 1 + !!(holder_->flags() & 0x80);
 
         for(int i=0; i<NR_SETS; i++) {
             if (i==1) large_start = n;
@@ -250,8 +261,37 @@ bool MapHolder::Draw() {
 
     ImGui::Text("Command List:");
     ImGui::BeginChild("commands", ImGui::GetContentRegionAvail(), true);
-    for(auto& cmd : command_) {
-        changed |= cmd.Draw();
+//    for(auto& cmd : command_) {
+    int i = 0;
+    for(auto it = command_.begin(); it < command_.end(); ++it, ++i) {
+        auto next = it + 1;
+        ImGui::PushID(i);
+        if (ImGui::Button(" + ")) {
+            changed = true;
+            command_.insert(it, MapCommand(this, 0, 0, 0));
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Insert a new command");
+
+        ImGui::SameLine();
+        if (ImGui::Button(" v ")) {
+            changed = true;
+            std::swap(*it, *next);
+        }
+        if (ImGui::IsItemHovered())
+          ImGui::SetTooltip("Move command down");
+
+        ImGui::SameLine();
+        changed |= it->Draw();
+
+        ImGui::SameLine();
+        if (ImGui::Button(" X ")) {
+            changed = true;
+            command_.erase(it);
+        }
+        if (ImGui::IsItemHovered())
+          ImGui::SetTooltip("Delete this command");
+        ImGui::PopID();
     }
     ImGui::EndChild();
     ImGui::PopItemWidth();
@@ -281,7 +321,7 @@ void MapHolder::Parse(const z2util::Map& map) {
             i++;
             extra = mapper_->Read(address, i+1);
         }
-        command_.emplace_back(*this, pos, obj, extra);
+        command_.emplace_back(this, pos, obj, extra);
     }
 }
 

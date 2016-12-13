@@ -1,6 +1,6 @@
 enemies {
     area: "west_hyrule"
-    item: [
+    info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "red jar" },
         { key: 0x02 value: "door" },
@@ -39,7 +39,7 @@ enemies {
 
 enemies {
     area: "east_hyrule"
-    item: [
+    info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "red jar" },
         { key: 0x02 value: "door" },
@@ -73,7 +73,7 @@ enemies {
 
 enemies {
     area: "town"
-    item: [
+    info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "candle" },
         { key: 0x02 value: "door" },
@@ -116,9 +116,9 @@ enemies {
 
 enemies {
     area: "palace_125"
-    item: [
+    info: [
         { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "palace item" },
+        { key: 0x01 value: "palace info" },
         { key: 0x02 value: "door" },
         { key: 0x03 value: "myu" },
         { key: 0x04 value: "bot" },
@@ -158,9 +158,9 @@ enemies {
 
 enemies {
     area: "palace_346"
-    item: [
+    info: [
         { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "palace item" },
+        { key: 0x01 value: "palace info" },
         { key: 0x02 value: "door" },
         { key: 0x03 value: "myu" },
         { key: 0x04 value: "bot" },
@@ -200,7 +200,7 @@ enemies {
 
 enemies {
     area: "great_palace"
-    item: [
+    info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "red jar" },
         { key: 0x02 value: "door" },

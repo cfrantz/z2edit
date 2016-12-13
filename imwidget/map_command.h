@@ -12,7 +12,8 @@ namespace z2util {
 class MapHolder;
 class MapCommand {
   public:
-    MapCommand(const MapHolder& holder, uint8_t position, uint8_t object, uint8_t extra);
+    MapCommand(const MapHolder* holder, uint8_t position, uint8_t object, uint8_t extra);
+//    MapCommand(MapCommand&& other);
 
     bool Draw();
     std::vector<uint8_t> Command();
@@ -24,7 +25,7 @@ class MapCommand {
     static const char* object_names_[NR_AREAS][NR_SETS][16];
   private:
     int id_;
-    const MapHolder& holder_;
+    const MapHolder* holder_;
     uint8_t position_;
     uint8_t object_;
     uint8_t extra_;

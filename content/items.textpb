@@ -1,5 +1,5 @@
 items {
-    item: [
+    info: [
         { key: 0x00 value: "candle" },
         { key: 0x01 value: "glove" },
         { key: 0x02 value: "raft" },
