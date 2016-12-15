@@ -2,7 +2,9 @@
 #include "imapp.h"
 #include "imgui.h"
 #include "examples/sdl_opengl_example/imgui_impl_sdl.h"
+#include "nes/cpu6502.h"
 #include "util/os.h"
+#include "util/logging.h"
 
 #include "nfd.h"
 
@@ -76,6 +78,7 @@ void ImApp::Init() {
     RegisterCommand("wwp", "Write PRG words.", this, &ImApp::WriteWords);
     RegisterCommand("wwc", "Write CHR words.", this, &ImApp::WriteWords);
     RegisterCommand("elist", "Dump Enemy List.", this, &ImApp::EnemyList);
+    RegisterCommand("u", "Disassemble Code.", this, &ImApp::Unassemble);
 
     hwpal_.reset(new NesHardwarePalette);
     chrview_.reset(new NesChrView);
@@ -339,28 +342,32 @@ void ImApp::EnemyList(DebugConsole* console, int argc, char **argv) {
 }
 
 void ImApp::Unassemble(DebugConsole* console, int argc, char **argv) {
-    console->AddLog("[error]: not implemented yet");
-    /*
-    static uint16_t addr = 0;
+    static uint8_t bank;
+    static uint16_t addr;
 
-    if (addr == 0) {
-        addr = mem_->read_word(0xFFFC);
-    }
-    if (argc >= 2) {
-        addr = strtoul(argv[1], 0, 0);
+    int index = 0;
+    if (argc < 2) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s [b=<bank>] <addr> <length>", argv[0]);
+        return;
     }
 
-    int len = (argc == 3) ? strtol(argv[2], 0, 0) : 10;
+    if (!strncmp(argv[1], "b=", 2)) {
+        bank = strtoul(argv[1]+2, 0, 0);
+        index++;
+    }
+    addr = strtoul(argv[index+1], 0, 0);
+    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, 0) : 10;
+
+    LOG(VERBOSE, "u b=", bank, " ", HEX(addr), " ", len);
+    Cpu cpu(mapper_.get());
+    cpu.set_bank(bank);
     for(int i=0; i<len; i++) {
-        std::string s = cpu_->Disassemble(&addr);
-        console->AddLog("%s", s.c_str());
+        std::string instruction = cpu.Disassemble(&addr);
+        console->AddLog("%s", instruction.c_str());
+        LOG(VERBOSE, instruction);
     }
-    */
 }
-
-
-
-
 
 void ImApp::Run() {
     running_ = true;

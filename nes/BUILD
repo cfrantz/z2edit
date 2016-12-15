@@ -11,6 +11,15 @@ cc_library(
 )
 
 cc_library(
+    name = "cpu6502",
+    hdrs = ["cpu6502.h"],
+    srcs = ["cpu6502.cc"],
+    deps = [
+        ":mappers",
+    ],
+)
+
+cc_library(
     name = "mappers",
     hdrs = [
         "mapper.h",
