@@ -137,7 +137,7 @@ void Z2Decompress::DecompressSideView(const Map& map) {
     // FIXME: for side view maps, the map address is the address of a pointer
     // to the real address.  Read it and set the real address.
     Address address = map.address();
-    address.set_address(ReadWord(map.address(), 0));
+    //address.set_address(ReadWord(map.address(), 0));
 
     uint8_t len = Read(address, 0);
     LOG(INFO, "### ", map.name());

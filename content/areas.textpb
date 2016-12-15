@@ -1,0 +1,43 @@
+areas {
+    area: "west_hyrule"
+    world: 0
+    info [
+        { key: 0  value: "North Palace" },
+        { key: 1  value: "Troll Fish Bridge" },
+        { key: 2  value: "Bubbles & Lowder Bridge" },
+        { key: 4  value: "Moblin Bridge" },
+        { key: 5  value: "Red Daira Bridge" },
+        { key: 6  value: "Bubble-skip Tile" },
+        { key: 7  value: "Parapa (the rappa) Cave" },
+        { key: 9  value: "Jump Cave (left)" },
+        { key: 10 value: "Jump Cave (middle)" },
+        { key: 11 value: "Jump Cave (right)" },
+        { key: 12 value: "Midoro 100-Pbag Cave (entrance)" },
+        { key: 14 value: "Medicine Cave (entrance)" },
+        { key: 16 value: "Heart Container Cave (entrance)" },
+        { key: 18 value: "Fairy Cave (graveyard entrance)" },
+        { key: 19 value: "Fairy Cave (island entrance)" },
+
+        # Location 20 is multiple 1-screen areas
+        { key: 20 value: "Fairy (jump cave exit + Saria)" },
+
+        { key: 21 value: "Lost Woods (1)" },
+        { key: 22 value: "Lost Woods (2)" },
+        { key: 23 value: "Lost Woods (3)" },
+
+        { key: 33 value: "Trophy Cave" },
+        { key: 38 value: "Grass Tile" },
+        { key: 43 value: "Forest 50-Pbag" },
+        { key: 44 value: "Lost Woods (4)" },
+        { key: 45 value: "Magic Cave" },
+        { key: 46 value: "Forest 100-Pbag" },
+
+        # Location 51 is multiple 1-screen areas
+        { key: 51 value: "Swamp (1-Up + Red Jar" },
+
+        { key: 56 value: "Graveyard red jar" },
+
+        # Location 57 is multiple 1-screen areas
+        { key: 57 value: "Road Tile (Graveyard 1-Up + Swamp Road Jar)" }
+    ]
+}

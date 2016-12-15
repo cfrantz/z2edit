@@ -1,0 +1,14 @@
+worlds {
+    info [
+        { key: 0  value: "West Hyrule" },
+        { key: 1  value: "Death Mountain/Maze Island" },
+        { key: 2  value: "East Hyrule" },
+        { key: 4  value: "Western Towns" },
+        { key: 10  value: "Eastern Towns" },
+        { key: 12  value: "Palace 1,2" },
+        { key: 14  value: "Palace 5" },
+        { key: 16  value: "Palace 3" },
+        { key: 17  value: "Palace 4" },
+        { key: 22  value: "Great Palace" }
+    ]
+}

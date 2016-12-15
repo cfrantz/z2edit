@@ -83,5 +83,46 @@ class MapHolder {
     Unpacked data_;
 };
 
+class MapConnection {
+  public:
+    MapConnection();
+    inline void set_mapper(Mapper* m) { mapper_ = m; }
+
+    void Draw();
+    void Parse(const Map& map);
+    void Save();
+  private:
+    Mapper* mapper_;
+    Address connector_;
+    int world_;
+
+    struct Unpacked {
+        int destination;
+        int start;
+    };
+    Unpacked data_[4];
+};
+
+class MapEnemyList {
+  public:
+    MapEnemyList();
+    inline void set_mapper(Mapper* m) { mapper_ = m; }
+
+    void Draw();
+    void Parse(const Map& map);
+    void Save();
+  private:
+    Mapper* mapper_;
+    Address pointer_;
+    int world_;
+    int length_;
+
+    struct Unpacked {
+        int enemy;
+        int x, y;
+    };
+    Unpacked data_[128];
+};
+
 }  // namespace z2util
 #endif // Z2UTIL_IMWIDGET_MAP_COMMAND_H

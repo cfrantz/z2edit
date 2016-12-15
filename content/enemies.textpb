@@ -1,5 +1,6 @@
 enemies {
     area: "west_hyrule"
+    world: 0
     info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "red jar" },
@@ -39,6 +40,7 @@ enemies {
 
 enemies {
     area: "east_hyrule"
+    world: 2
     info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "red jar" },
@@ -73,6 +75,7 @@ enemies {
 
 enemies {
     area: "town"
+    world: 4
     info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "candle" },
@@ -116,6 +119,7 @@ enemies {
 
 enemies {
     area: "palace_125"
+    world: 12
     info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "palace info" },
@@ -158,6 +162,7 @@ enemies {
 
 enemies {
     area: "palace_346"
+    world: 16
     info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "palace info" },
@@ -200,6 +205,7 @@ enemies {
 
 enemies {
     area: "great_palace"
+    world: -1
     info: [
         { key: 0x00 value: "fairy" },
         { key: 0x01 value: "red jar" },

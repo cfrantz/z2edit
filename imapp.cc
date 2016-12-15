@@ -75,6 +75,7 @@ void ImApp::Init() {
     RegisterCommand("ww", "Write words (via mapper).", this, &ImApp::WriteWords);
     RegisterCommand("wwp", "Write PRG words.", this, &ImApp::WriteWords);
     RegisterCommand("wwc", "Write CHR words.", this, &ImApp::WriteWords);
+    RegisterCommand("elist", "Dump Enemy List.", this, &ImApp::EnemyList);
 
     hwpal_.reset(new NesHardwarePalette);
     chrview_.reset(new NesChrView);
@@ -298,6 +299,42 @@ void ImApp::WriteWords(DebugConsole* console, int argc, char **argv) {
             mapper_->Write(addr++, val);
             mapper_->Write(addr++, val>>8);
         }
+    }
+}
+
+void ImApp::EnemyList(DebugConsole* console, int argc, char **argv) {
+    char buf[1024];
+    uint8_t bank = 0;
+    int mode = argv[0][2];
+    int index = 0;
+    if (argc < 3) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        if (mode) {
+            console->AddLog("[error] %s [b=<bank>] <addr> <val> ...", argv[0]);
+        } else {
+            console->AddLog("[error] %s <addr> <val> ...", argv[0]);
+        }
+        return;
+    }
+
+    if (mode && !strncmp(argv[1], "b=", 2)) {
+        bank = strtoul(argv[1]+2, 0, 0);
+        index++;
+    }
+    uint32_t addr = strtoul(argv[index+1], 0, 0);
+    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, 0) : 64;
+
+    while(len > 0) {
+        int listlen = mapper_->ReadPrgBank(bank, addr);
+        buf[0] = buf[1] = 0;
+        console->AddLog("%04x: %02x (copied to %04x)", addr, listlen, addr-0x18a0);
+
+        addr++; len--;
+        int j=0;
+        for(int i=1; i<listlen && len; i++, len--) {
+            j += sprintf(buf+j, " %02x", mapper_->ReadPrgBank(bank, addr++));
+        }
+        console->AddLog("    [%s]", buf+1);
     }
 }
 

@@ -28,11 +28,13 @@ message Map {
     repeated Address objtable = 6;
     Address chr = 7;
 
-    // connector table for overworld maps
+    // address of connector table for overworld maps
+    // address of 4-byte connector entry for sideview maps
     Address connector = 8;
 
     // Pointer to the map address
     Address pointer = 9;
+    int32 world = 10;
 }
 
 message SideViewMapPointers {
@@ -43,7 +45,8 @@ message SideViewMapPointers {
     Address palette = 5;
     MapType type = 6;
     Address chr = 7;
-    Address enemies = 8;
+    Address connector = 8;
+    int32 world = 9;
 }
 
 message DecompressInfo {

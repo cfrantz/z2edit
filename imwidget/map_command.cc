@@ -221,6 +221,12 @@ bool MapHolder::Draw() {
     bool changed = false;
     Unpack();
 
+    Address addr = mapper_->ReadAddr(map_.pointer(), 0);
+    ImGui::Text("Map pointer at bank=0x%x address=0x%04x",
+                map_.pointer().bank(), map_.pointer().address());
+    ImGui::Text("Map address at bank=0x%x address=0x%04x",
+                addr.bank(), addr.address());
+
     ImGui::PushItemWidth(100);
     ImGui::Text("Flags:");
     changed |= ImGui::InputInt("Object Set", &data_.objset);
@@ -261,7 +267,7 @@ bool MapHolder::Draw() {
 
     ImGui::Text("Command List:");
     ImGui::BeginChild("commands", ImGui::GetContentRegionAvail(), true);
-//    for(auto& cmd : command_) {
+
     int i = 0;
     for(auto it = command_.begin(); it < command_.end(); ++it, ++i) {
         auto next = it + 1;
@@ -303,7 +309,7 @@ void MapHolder::Parse(const z2util::Map& map) {
     map_ = map;
     // For side view maps, the map address is the address of a pointer
     // to the real address.  Read it and set the real address.
-    Address address = mapper_->ReadAddr(map.address(), 0);
+    Address address = mapper_->ReadAddr(map.pointer(), 0);
 
     length_ = mapper_->Read(address, 0);
     flags_ = mapper_->Read(address, 1);
@@ -333,6 +339,124 @@ std::vector<uint8_t> MapHolder::MapData() {
     }
     map[0] = map.size();
     return map;
+}
+
+MapConnection::MapConnection()
+  : mapper_(nullptr)
+{}
+
+void MapConnection::Parse(const Map& map) {
+    uint8_t val;
+    connector_ = map.connector();
+    world_ = map.world();
+
+    for(int i=0; i<4; i++) {
+        val = mapper_->Read(connector_, i);
+        data_[i].destination = val >> 2;
+        data_[i].start = val & 3;
+    }
+}
+
+void MapConnection::Draw() {
+    const char *destlabel[] = {
+        "Left Exit ",
+        "Down Exit ",
+        "Up Exit   ",
+        "Right Exit",
+    };
+    const char *startlabel[] = {
+        "Left Dest Screen",
+        "Down Dest Screen",
+        "Up Dest Screen",
+        "Right Dest Screen",
+    };
+    const char *selection = "0\0001\0002\0003\0\0";
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    const char *names[ri.map().size() + 1];
+    int len = 0;
+
+    for(const auto& m : ri.map()) {
+        if (m.world() == world_ && m.type() != MapType::OVERWORLD) {
+            names[len++] = m.name().c_str();
+        }
+    }
+    names[len++] = "Outside";
+
+    ImGui::Text("Map exit table at bank=0x%x address=0x%04x",
+            connector_.bank(), connector_.address());
+    for(int i=0; i<4; i++) {
+        ImGui::PushItemWidth(400);
+        ImGui::Combo(destlabel[i], &data_[i].destination, names, len);
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        ImGui::PushItemWidth(100);
+        ImGui::Combo(startlabel[i], &data_[i].start, selection);
+        ImGui::PopItemWidth();
+    }
+}
+
+MapEnemyList::MapEnemyList()
+  : mapper_(nullptr),
+    world_(0),
+    length_(0),
+    data_{0, }
+{
+}
+
+void MapEnemyList::Parse(const Map& map) {
+    pointer_ = map.pointer();
+    world_ = map.world();
+    Address addr = mapper_->ReadAddr(pointer_, 0x7e);
+    uint16_t delta = 0x18a0;
+
+    length_ = 0;
+    uint8_t n = mapper_->Read(addr, delta);
+    for(int i=1; i<n; i+=2) {
+        uint8_t pos = mapper_->Read(addr, delta+i);
+        uint8_t enemy = mapper_->Read(addr, delta+i+1);
+        data_[length_].enemy = enemy & 0x3f;
+        data_[length_].x = (pos & 0xf) | (enemy & 0xc0) >> 2;
+        data_[length_].y = pos >> 4;
+        length_++;
+    }
+}
+
+void MapEnemyList::Draw() {
+    const char *names[256];
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+
+    for(int i=0; i<256; i++)
+        names[i] = "???";
+
+    int n = 0;
+    for(const auto& e : ri.enemies()) {
+        if (e.world() == world_) {
+            for(const auto& info : e.info()) {
+                names[info.first] = info.second.c_str();
+                n++;
+            }
+        }
+    }
+
+    Address addr = mapper_->ReadAddr(pointer_, 0x7e);
+    ImGui::Text("Map enemy table pointer at bank=0x%x address=0x%04x",
+                pointer_.bank(), pointer_.address() + 0x7e);
+    ImGui::Text("Map enemy table address at bank=0x%x address=0x%04x",
+                addr.bank(), addr.address() + 0x18a0);
+
+    for(int i=0; i<length_; i++) {
+        ImGui::PushID(i);
+        ImGui::PushItemWidth(100);
+        ImGui::InputInt("x position", &data_[i].x);
+        ImGui::SameLine();
+        ImGui::InputInt("y position", &data_[i].y);
+        ImGui::SameLine();
+        ImGui::PopItemWidth();
+        ImGui::PushItemWidth(400);
+        ImGui::Combo("enemy", &data_[i].enemy, names, n);
+        ImGui::PopItemWidth();
+        ImGui::PopID();
+    }
 }
 
 }  // namespace z2util

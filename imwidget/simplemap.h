@@ -29,8 +29,11 @@ class SimpleMap {
     int height_;
     float scale_;
     int mapsel_;
+    int tab_;
     Z2Decompress decomp_;
     MapHolder holder_;
+    MapConnection connection_;
+    MapEnemyList enemies_;;
 
     Mapper* mapper_;
     NesHardwarePalette* hwpal_;

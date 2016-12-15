@@ -56,6 +56,7 @@ class ImApp {
     void HexdumpWords(DebugConsole* console, int argc, char **argv);
     void WriteWords(DebugConsole* console, int argc, char **argv);
     void Unassemble(DebugConsole* console, int argc, char **argv);
+    void EnemyList(DebugConsole* console, int argc, char **argv);
 
 
 
