@@ -9,10 +9,11 @@
 #include "proto/rominfo.pb.h"
 #include "util/fpsmgr.h"
 #include "imwidget/debug_console.h"
+#include "imwidget/editor.h"
 #include "imwidget/hwpalette.h"
 #include "imwidget/neschrview.h"
 #include "imwidget/simplemap.h"
-#include "imwidget/editor.h"
+#include "imwidget/start_values.h"
 #include "nes/cartridge.h"
 #include "nes/mapper.h"
 
@@ -89,6 +90,7 @@ class ImApp {
     std::unique_ptr<NesChrView> chrview_;
     std::unique_ptr<z2util::SimpleMap> simplemap_;
     std::unique_ptr<z2util::Editor> editor_;
+    std::unique_ptr<z2util::StartValues> start_values_;
 
     Cartridge cartridge_;
     std::unique_ptr<Mapper> mapper_;

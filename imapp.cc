@@ -83,6 +83,7 @@ void ImApp::Init() {
     hwpal_.reset(new NesHardwarePalette);
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
+    start_values_.reset(new z2util::StartValues);
     editor_.reset(z2util::Editor::New());
 }
 
@@ -102,6 +103,8 @@ void ImApp::Load(const std::string& filename) {
     editor_->set_mapper(mapper_.get());
     editor_->set_palette(hwpal_.get());
     editor_->ConvertFromMap(rominfo_.mutable_map(0));
+
+    start_values_->set_mapper(mapper_.get());
 }
 
 void ImApp::LoadFile(DebugConsole* console, int argc, char **argv) {
@@ -433,6 +436,8 @@ save_as:
             if (ImGui::BeginMenu("Windows")) {
                 ImGui::MenuItem("Debug Console", nullptr,
                                 console_.visible());
+                ImGui::MenuItem("Start Values", nullptr,
+                                start_values_->visible());
                 ImGui::MenuItem("Hardware Palette", nullptr,
                                 hwpal_->visible());
                 ImGui::MenuItem("CHR Viewer", nullptr,
@@ -450,6 +455,7 @@ save_as:
     }
 
     console_.Draw();
+    start_values_->Draw();
     hwpal_->Draw();
     chrview_->Draw();
     simplemap_->Draw();

@@ -117,3 +117,13 @@ cc_library(
         "//external:imgui",
     ],
 )
+
+cc_library(
+    name = "start_values",
+    hdrs = ["start_values.h"],
+    srcs = ["start_values.cc"],
+    deps = [
+        "//nes:mappers",
+        "//external:imgui",
+    ],
+)

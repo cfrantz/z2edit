@@ -16,10 +16,11 @@ cc_library(
     ],
     deps = [
         "//imwidget:debug_console",
+        "//imwidget:editor",
         "//imwidget:hwpalette",
         "//imwidget:neschrview",
         "//imwidget:simplemap",
-        "//imwidget:editor",
+        "//imwidget:start_values",
         "//nes:cartridge",
         "//nes:cpu6502",
         "//nes:mappers",
