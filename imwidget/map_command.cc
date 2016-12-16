@@ -28,7 +28,7 @@ void MapCommand::Init() {
                     sprintf(names[i][j][k], "%02x: collectable",
                             j==0 ? k : k<<4);
                 } else {
-                    sprintf(names[i][j][k], "%02x: ???", 
+                    sprintf(names[i][j][k], "%02x: ???",
                             j==0 ? k : k<<4);
                 }
                 object_names_[i][j][k] = names[i][j][k];
@@ -140,7 +140,7 @@ bool MapCommand::Draw() {
             printf("changed to %d (%02x) %s\n", data_.object, data_.object,
                     names_[data_.object]);
         }
-                               
+
         // All of the object names start with their ID in hex, so we just
         // parse the value out of the name.
         object_ = strtoul(names_[data_.object], 0, 16);
@@ -248,7 +248,7 @@ bool MapHolder::Draw() {
     ImGui::SameLine();
     changed |= ImGui::InputInt(ground_names[data_.ground], &data_.ground);
     Clamp(&data_.ground, 0, 7);
-    
+
     ImGui::SameLine();
     changed |= ImGui::InputInt("Floor", &data_.floor);
     Clamp(&data_.floor, 0, 15);
@@ -310,6 +310,7 @@ void MapHolder::Parse(const z2util::Map& map) {
     // For side view maps, the map address is the address of a pointer
     // to the real address.  Read it and set the real address.
     Address address = mapper_->ReadAddr(map.pointer(), 0);
+    *map_.mutable_address() = address;
 
     length_ = mapper_->Read(address, 0);
     flags_ = mapper_->Read(address, 1);
@@ -341,6 +342,34 @@ std::vector<uint8_t> MapHolder::MapData() {
     return map;
 }
 
+void MapHolder::Save() {
+    LOG(INFO, "Saving ", map_.name());
+    std::vector<uint8_t> data = MapData();
+
+    Address addr = map_.address();
+    uint8_t orig_len = mapper_->Read(addr, 0);
+    if (data.size() > orig_len) {
+        addr.set_address(0);
+        addr = mapper_->FindFreeSpace(addr, data.size());
+        if (addr.address() == 0) {
+            LOG(ERROR, "Can't save map: can't find ", data.size(), "bytes"
+                       " in bank=", addr.bank());
+            return;
+        }
+        addr.set_address(0x8000 | addr.address());
+        mapper_->Erase(map_.address(), orig_len);
+        *map_.mutable_address() = addr;
+    }
+
+    LOG(INFO, "Saving map to offset ", HEX(addr.address()),
+              " in bank=", addr.bank());
+
+    for(unsigned i=0; i<data.size(); i++) {
+        mapper_->Write(addr, i, data[i]);
+    }
+    mapper_->WriteWord(map_.pointer(), 0, addr.address());
+}
+
 MapConnection::MapConnection()
   : mapper_(nullptr)
 {}
@@ -354,6 +383,13 @@ void MapConnection::Parse(const Map& map) {
         val = mapper_->Read(connector_, i);
         data_[i].destination = val >> 2;
         data_[i].start = val & 3;
+    }
+}
+
+void MapConnection::Save() {
+    for(int i=0; i<4; i++) {
+        uint8_t val = (data_[i].destination << 2) | (data_[i].start & 3);
+        mapper_->Write(connector_, i, val);
     }
 }
 
@@ -418,6 +454,21 @@ void MapEnemyList::Parse(const Map& map) {
         data_[length_].x = (pos & 0xf) | (enemy & 0xc0) >> 2;
         data_[length_].y = pos >> 4;
         length_++;
+    }
+}
+
+
+void MapEnemyList::Save() {
+    uint8_t n = 1 + length_ * 2;
+    Address addr = mapper_->ReadAddr(pointer_, 0x7e);
+    uint16_t delta = 0x18a0;
+
+    mapper_->Write(addr, delta, n);
+    for(int i=0; i<length_; i++) {
+        uint8_t pos = (data_[i].y << 4) | (data_[i].x & 0x0F);
+        uint8_t enemy = (data_[i].enemy & 0x3f) | (data_[i].x & 0x30) << 2;
+        mapper_->Write(addr, delta + 1 + i*2, pos);
+        mapper_->Write(addr, delta + 2 + i*2, enemy);
     }
 }
 

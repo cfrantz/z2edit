@@ -49,6 +49,7 @@ class MapHolder {
   public:
     MapHolder();
     bool Draw();
+    void Save();
     void Parse(const Map& map);
     std::vector<uint8_t> MapData();
     inline void set_mapper(Mapper* m) { mapper_ = m; }

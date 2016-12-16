@@ -38,8 +38,15 @@ void SimpleMap::Draw() {
     }
     ImGui::PopItemWidth();
 
-    ImGui::SameLine();
     ImGui::PushItemWidth(100);
+    ImGui::SameLine();
+    if (ImGui::Button("Commit to ROM")) {
+        holder_.Save();
+        connection_.Save();
+        enemies_.Save();
+    }
+
+    ImGui::SameLine();
     ImGui::InputFloat("Zoom", &scale_, 0.25, 1.0);
     scale_ = Clamp(scale_, 0.25f, 8.0f);
     ImGui::PopItemWidth();
