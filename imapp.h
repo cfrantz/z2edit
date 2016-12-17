@@ -59,7 +59,7 @@ class ImApp {
     void Unassemble(DebugConsole* console, int argc, char **argv);
     void EnemyList(DebugConsole* console, int argc, char **argv);
 
-
+    void SpawnEmulator(const std::string& romfile);
 
 
 

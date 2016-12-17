@@ -9,6 +9,8 @@
 #include "nfd.h"
 
 
+DEFINE_string(emulator, "fceux", "Emulator to run for testing");
+DEFINE_string(romtmp, "/tmp/zelda2-test.nes", "Temporary filename for running under test");
 DEFINE_int32(audio_frequency, 48000, "Audio sample frequency");
 //DEFINE_int32(audio_bufsize, 256, "Audio buffer size");
 DEFINE_int32(audio_bufsize, 2048, "Audio buffer size");
@@ -384,6 +386,11 @@ void ImApp::Run() {
     }
 }
 
+void ImApp::SpawnEmulator(const std::string& romfile) {
+    std::string cmdline = FLAGS_emulator + " " + romfile + " &";
+    system(cmdline.c_str());
+}
+
 bool ImApp::ProcessEvents() {
     SDL_Event event;
     bool done = false;
@@ -405,6 +412,10 @@ void ImApp::Draw() {
     if (ImGui::Begin(name_.c_str(), &open, ImGuiWindowFlags_MenuBar)) { 
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Emulate", "Ctrl+E")) {
+                    cartridge_.SaveFile(FLAGS_romtmp);
+                    SpawnEmulator(FLAGS_romtmp);
+                }
                 if (ImGui::MenuItem("Open", "Ctrl+O")) {
                     char *filename = nullptr;
                     auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
