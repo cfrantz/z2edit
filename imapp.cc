@@ -86,6 +86,7 @@ void ImApp::Init() {
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
     start_values_.reset(new z2util::StartValues);
+    object_table_.reset(new z2util::ObjectTable);
     editor_.reset(z2util::Editor::New());
 }
 
@@ -107,6 +108,10 @@ void ImApp::Load(const std::string& filename) {
     editor_->ConvertFromMap(rominfo_.mutable_map(0));
 
     start_values_->set_mapper(mapper_.get());
+
+    object_table_->set_mapper(mapper_.get());
+    object_table_->set_hwpal(hwpal_.get());
+    object_table_->Init();
 }
 
 void ImApp::LoadFile(DebugConsole* console, int argc, char **argv) {
@@ -458,6 +463,8 @@ save_as:
                                 simplemap_->visible());
                 ImGui::MenuItem("Editor", nullptr,
                                 editor_->visible());
+                ImGui::MenuItem("Object Table", nullptr,
+                                object_table_->visible());
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -471,6 +478,7 @@ save_as:
     chrview_->Draw();
     simplemap_->Draw();
     editor_->Draw();
+    object_table_->Draw();
 
     ImGui::End();
 

@@ -217,7 +217,7 @@ decompress {
     id: 0x70
     render: RENDER_HORIZONTAL
     height: 1
-    objid: 0
+    objid: 0x40
     comment: "horizontal pit"
 }
 decompress {
@@ -377,7 +377,7 @@ decompress {
     id: 0xA0
     render: RENDER_HORIZONTAL
     height: 1
-    objid: 0
+    objid: 0x40
     comment: "horizontal pit"
 }
 decompress {

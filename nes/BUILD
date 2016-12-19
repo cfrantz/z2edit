@@ -65,6 +65,8 @@ cc_library(
     deps = [
         ":mappers",
         "//proto:rominfo",
+        "//util:config",
+        "//util:logging",
         "//imwidget:glbitmap",
         "//imwidget:hwpalette",
     ],

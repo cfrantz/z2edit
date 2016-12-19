@@ -14,6 +14,7 @@
 #include "imwidget/neschrview.h"
 #include "imwidget/simplemap.h"
 #include "imwidget/start_values.h"
+#include "imwidget/object_table.h"
 #include "nes/cartridge.h"
 #include "nes/mapper.h"
 
@@ -91,6 +92,7 @@ class ImApp {
     std::unique_ptr<z2util::SimpleMap> simplemap_;
     std::unique_ptr<z2util::Editor> editor_;
     std::unique_ptr<z2util::StartValues> start_values_;
+    std::unique_ptr<z2util::ObjectTable> object_table_;
 
     Cartridge cartridge_;
     std::unique_ptr<Mapper> mapper_;

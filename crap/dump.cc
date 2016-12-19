@@ -11,6 +11,7 @@ DEFINE_int32(ovrstart, 0, "Overworld start.");
 DEFINE_int32(ovrend, 0, "Overworld end.");
 DEFINE_int32(ovrareas, 0, "Overworld areas pointer.");
 DEFINE_string(grep, "", "Search for binary pattern and hexdump it");
+DEFINE_string(xgrep, "", "Search for binary pattern and hexdump it (ff=any byte)");
 
 int main(int argc, char *argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -34,14 +35,17 @@ int main(int argc, char *argv[]) {
             bank = strtoul(h[0].c_str(), 0, 0);
             addr = strtoul(h[1].c_str(), 0, 0);
             len = strtoul(h[2].c_str(), 0, 0);
-            rom.Hexdump(bank, addr, len);
+            rom.Hexdump(uint8_t(bank), uint16_t(addr), len);
         } else {
             fprintf(stderr, "Unknown hexdump spec!\n");
             exit(1);
         }
     }
     if (!FLAGS_grep.empty()) {
-        rom.Grep(FLAGS_grep);
+        rom.Grep(FLAGS_grep, false);
+    }
+    if (!FLAGS_xgrep.empty()) {
+        rom.Grep(FLAGS_xgrep, true);
     }
 
     if (FLAGS_ovrstart && FLAGS_ovrend) {

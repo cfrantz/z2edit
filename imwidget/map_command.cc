@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <algorithm>
 
 #include "imwidget/map_command.h"
 #include "imwidget/imutil.h"
@@ -62,6 +63,17 @@ MapCommand::MapCommand(const MapHolder* holder, uint8_t position,
     Init();
 }
 
+MapCommand::MapCommand(const MapHolder* holder, int x0, uint8_t position,
+                       uint8_t object, uint8_t extra)
+  : MapCommand(holder, position, object, extra)
+{
+    if (data_.y == 14) {
+        data_.absx = data_.x * 16;
+    } else {
+        data_.absx = data_.x + x0;
+    }
+}
+
 /*
 MapCommand::MapCommand(MapCommand&& other)
   : id_(other.id_),
@@ -73,7 +85,7 @@ MapCommand::MapCommand(MapCommand&& other)
     */
 
 
-bool MapCommand::Draw() {
+bool MapCommand::Draw(bool abscoord) {
     bool changed = false;
     const char *xpos = "x position";
     const char *ypos = "y position";
@@ -92,8 +104,13 @@ bool MapCommand::Draw() {
     Clamp(&data_.y, 0, 15);
 
     ImGui::SameLine();
-    changed |= ImGui::InputInt(xpos, &data_.x);
-    Clamp(&data_.x, 0, 15);
+    if (abscoord) {
+        changed |= ImGui::InputInt(xpos, &data_.absx);
+        Clamp(&data_.x, 0, 63);
+    } else {
+        changed |= ImGui::InputInt(xpos, &data_.x);
+        Clamp(&data_.x, 0, 15);
+    }
 
     if (data_.y == 13 || data_.y == 14) {
         sprintf(obuf_, "%02x", object_);
@@ -271,10 +288,11 @@ bool MapHolder::Draw() {
     int i = 0;
     for(auto it = command_.begin(); it < command_.end(); ++it, ++i) {
         auto next = it + 1;
+        bool create = false;
         ImGui::PushID(i);
         if (ImGui::Button(" + ")) {
             changed = true;
-            command_.insert(it, MapCommand(this, 0, 0, 0));
+            create = true;
         }
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Insert a new command");
@@ -288,7 +306,7 @@ bool MapHolder::Draw() {
           ImGui::SetTooltip("Move command down");
 
         ImGui::SameLine();
-        changed |= it->Draw();
+        changed |= it->Draw(true);
 
         ImGui::SameLine();
         if (ImGui::Button(" X ")) {
@@ -298,6 +316,8 @@ bool MapHolder::Draw() {
         if (ImGui::IsItemHovered())
           ImGui::SetTooltip("Delete this command");
         ImGui::PopID();
+        if (create)
+            command_.emplace(it, this, it->absx(), 0, 0, 0);
     }
     ImGui::EndChild();
     ImGui::PopItemWidth();
@@ -318,6 +338,7 @@ void MapHolder::Parse(const z2util::Map& map) {
     back_ = mapper_->Read(address, 3);
 
     command_.clear();
+    int absx = 0;
     for(int i=4; i<length_; i+=2) {
         uint8_t pos = mapper_->Read(address, i);
         uint8_t obj = mapper_->Read(address, i+1);
@@ -328,23 +349,57 @@ void MapHolder::Parse(const z2util::Map& map) {
             i++;
             extra = mapper_->Read(address, i+1);
         }
-        command_.emplace_back(this, pos, obj, extra);
+        command_.emplace_back(this, absx, pos, obj, extra);
+        absx = command_.back().absx();
     }
 }
 
-std::vector<uint8_t> MapHolder::MapData() {
+std::vector<uint8_t> MapHolder::MapDataWorker(std::vector<MapCommand>& list) {
     std::vector<uint8_t> map = {length_, flags_, ground_, back_};
-    for(auto& cmd : command_) {
+    for(auto& cmd : list) {
         auto bytes = cmd.Command();
         map.insert(map.end(), bytes.begin(), bytes.end());
+        LOG(INFO, "CMD: op = ", HEX(bytes[0]), " ", HEX(bytes[1]));
     }
     map[0] = map.size();
     return map;
 }
 
+std::vector<uint8_t> MapHolder::MapData() {
+    return MapDataWorker(command_);
+}
+
+std::vector<uint8_t> MapHolder::MapDataAbs() {
+    std::vector<MapCommand> copy = command_;
+    std::stable_sort(copy.begin(), copy.end(),
+        [](const MapCommand& a, const MapCommand& b) {
+            return a.absx() < b.absx();
+        }
+    );
+    int x = 0;
+    for(auto it = copy.begin(); it < copy.end(); ++it) {
+        if (it->absy() == 14) {
+            // Erase any "skip" commands, as we'll re-synthesize them as needed.
+            copy.erase(it);
+        }
+        int deltax = it->absx() - x;
+        if (deltax > 15) {
+            int nx = it->absx() & ~15;
+            copy.emplace(it, this, x, 0xE0 | (nx/16), 0, 0);
+            it++;
+            x = nx;
+            deltax = it->absx() - x;
+        }
+        it->set_relx(deltax);
+        x = it->absx();
+    }
+
+    return MapDataWorker(copy);
+}
+
 void MapHolder::Save() {
     LOG(INFO, "Saving ", map_.name());
-    std::vector<uint8_t> data = MapData();
+    std::vector<uint8_t> data = MapDataAbs();
 
     Address addr = map_.address();
     uint8_t orig_len = mapper_->Read(addr, 0);

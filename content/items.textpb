@@ -1,4 +1,5 @@
 items {
+    valid_worlds: -1
     info: [
         { key: 0x00 value: "candle" },
         { key: 0x01 value: "glove" },
@@ -23,4 +24,6 @@ items {
         { key: 0x14 value: "trophy" },
         { key: 0x15 value: "water of life" }
     ]
+   chr { bank: 0 }
+    sprite_table { bank: 7 address: 0x2e7f }
 }

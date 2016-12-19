@@ -2,6 +2,7 @@
 #define Z2UTIL_IMWIDGET_MAP_COMMAND_H
 #include <cstdint>
 #include <string>
+#include <memory>
 #include <vector>
 
 #include "proto/rominfo.pb.h"
@@ -12,10 +13,12 @@ namespace z2util {
 class MapHolder;
 class MapCommand {
   public:
-    MapCommand(const MapHolder* holder, uint8_t position, uint8_t object, uint8_t extra);
-//    MapCommand(MapCommand&& other);
+    MapCommand(const MapHolder* holder, uint8_t position, uint8_t object,
+               uint8_t extra);
+    MapCommand(const MapHolder* holder, int x0, uint8_t position,
+               uint8_t object, uint8_t extra);
 
-    bool Draw();
+    bool Draw(bool abscoord=false);
     std::vector<uint8_t> Command();
     // areas: overword sideviews, towns, palaces, great palace
     const static int NR_AREAS = 4;
@@ -23,6 +26,10 @@ class MapCommand {
     const static int NR_SETS = 4;
     static const DecompressInfo* info_[NR_AREAS][NR_SETS][16];
     static const char* object_names_[NR_AREAS][NR_SETS][16];
+    inline int absx() const { return data_.absx; }
+    inline int absy() const { return data_.y; }
+    inline void set_relx(int x) { data_.x = x; }
+    inline uint8_t object() const { return object_; }
   private:
     int id_;
     const MapHolder* holder_;
@@ -30,6 +37,7 @@ class MapCommand {
     uint8_t object_;
     uint8_t extra_;
     struct {
+        int absx;
         int x, y;
         int object;
         int param;
@@ -52,12 +60,14 @@ class MapHolder {
     void Save();
     void Parse(const Map& map);
     std::vector<uint8_t> MapData();
+    std::vector<uint8_t> MapDataAbs();
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     inline uint8_t flags() const { return flags_; };
     inline uint8_t ground() const { return ground_; };
     inline uint8_t back() const { return back_; };
     inline const Map& map() const { return map_; }
   private:
+    std::vector<uint8_t> MapDataWorker(std::vector<MapCommand>& cmd);
     void Unpack();
     void Pack();
 

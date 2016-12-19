@@ -21,6 +21,10 @@ class Z2Decompress {
     inline uint8_t map(int x, int y) const {
         return map_[layer_][y][x];
     }
+    inline uint8_t item(int x, int y) const {
+        return type() == MapType::OVERWORLD ? 0xFF: items_[y][x];
+    }
+
     inline void set_map(int x, int y, uint8_t val) {
         map_[layer_][y][x] = val;
     }
@@ -80,6 +84,7 @@ class Z2Decompress {
 
     Mapper* mapper_;
     uint8_t map_[8][128][64];
+    uint8_t items_[16][64];
     Map compressed_map_;
 
     uint8_t flags_;

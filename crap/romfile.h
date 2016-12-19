@@ -14,7 +14,7 @@ class RomFile {
     void Hexdump(uint32_t offset, uint32_t length,
                  uint32_t highlight=0, uint32_t hilen=0) const;
 
-    void Grep(const std::string& pattern);
+    void Grep(const std::string& pattern, bool wildcard);
 
     inline uint8_t Read8(uint32_t fileofs) const { return rom_.at(fileofs); }
     inline uint8_t Read16(uint32_t fileofs) const {

@@ -50,7 +50,25 @@ void RomFile::Hexdump(uint32_t offset, uint32_t length,
     printf("  %*s%s\n", i, "", buf);
 }
 
-void RomFile::Grep(const std::string& pattern) {
+void *memmemx(const void *data, int len, const void *pat, int plen) {
+    const uint8_t *d = (uint8_t*)data, *p = (uint8_t*)pat;
+    int i, m;
+    if (len<plen)
+        return nullptr;
+
+    for(i=0; i<(len-plen); i++) {
+        for(m=0; m<plen; m++) {
+            if (p[m] != 0xff && p[m] != d[i+m])
+                break;
+        }
+        if (m == plen)
+            return (void*)(intptr_t(d)+i);
+    }
+    return nullptr;
+}
+
+
+void RomFile::Grep(const std::string& pattern, bool wildcard) {
     const char *data = rom_.c_str();
     uint32_t sz = rom_.size();
     uint8_t pat[128];
@@ -68,7 +86,11 @@ void RomFile::Grep(const std::string& pattern) {
     }
 
     for(;;) {
-        found = (char*)memmem(data, sz, pat, plen);
+        if (wildcard) {
+            found = (char*)memmemx(data, sz, pat, plen);
+        } else {
+            found = (char*)memmem(data, sz, pat, plen);
+        }
         if (found) {
             uint32_t offset = found - data;
             uint32_t start = offset-32;

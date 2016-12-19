@@ -127,3 +127,16 @@ cc_library(
         "//external:imgui",
     ],
 )
+
+cc_library(
+    name = "object_table",
+    hdrs = ["object_table.h"],
+    srcs = ["object_table.cc"],
+    deps = [
+        ":hwpalette",
+        "//nes:mappers",
+        "//nes:z2objcache",
+        "//proto:rominfo",
+        "//external:imgui",
+    ],
+)

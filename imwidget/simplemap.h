@@ -40,6 +40,7 @@ class SimpleMap {
 
     Map map_;
     Z2ObjectCache cache_;
+    Z2ObjectCache items_;;
 };
 
 }  // namespace z2util

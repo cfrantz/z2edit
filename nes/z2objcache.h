@@ -12,11 +12,17 @@ namespace z2util {
 
 class Z2ObjectCache {
   public:
+    enum Schema {
+        OVERWORLD = 0,
+        MAP = 1,
+        ITEM = 2,
+    };
     Z2ObjectCache() {};
     explicit Z2ObjectCache(Mapper* mapper, NesHardwarePalette* hwpal)
         : mapper_(mapper), hwpal_(hwpal) {}
 
     void Init(const Map& map);
+    void Init(const Address& addr, const Address& chr, Schema schema);
     GLBitmap& Get(uint8_t object);
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
@@ -27,12 +33,12 @@ class Z2ObjectCache {
     const static int HEIGHT = 16;
   private:
     void CreateObject(uint8_t obj, uint32_t* dest);
-    void BlitTile(uint32_t* dest, int x, int y, int tile, int pal);
+    void BlitTile(uint32_t* dest, int x, int y, int tile, int pal, bool flip=false);
 
     Mapper* mapper_;
     NesHardwarePalette* hwpal_;
 
-    MapType type_;
+    Schema schema_;
     Address obj_[4];
     Address palette_;
     Address chr_;

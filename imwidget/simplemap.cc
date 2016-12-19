@@ -16,6 +16,12 @@ void SimpleMap::DrawMap(const ImVec2& pos) {
         for(int x=0; x<decomp_.width(); x++) {
             cache_.Get(decomp_.map(x, y)).DrawAt(
                     pos.x + x*size, pos.y + y*size, size, size);
+
+            uint8_t item = decomp_.item(x, y);
+            if (item != 0xFF) {
+                items_.Get(item).DrawAt(
+                    pos.x + x*size, pos.y + y*size, size, size);
+            }
         }
     }
 }
@@ -67,7 +73,7 @@ void SimpleMap::Draw() {
         if (tab_ == 0) {
             if (holder_.Draw()) {
                 decomp_.Clear();
-                decomp_.DecompressSideView(holder_.MapData().data());
+                decomp_.DecompressSideView(holder_.MapDataAbs().data());
             }
         } else if (tab_ == 1) {
             connection_.Draw();
@@ -79,6 +85,7 @@ void SimpleMap::Draw() {
 }
 
 void SimpleMap::SetMap(const z2util::Map& map) {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     map_ = map;
 
     decomp_.Init();
@@ -88,6 +95,16 @@ void SimpleMap::SetMap(const z2util::Map& map) {
     cache_.set_mapper(mapper_);
     cache_.set_hwpal(hwpal_);
     cache_.Init(map);
+
+    items_.set_mapper(mapper_);
+    items_.set_hwpal(hwpal_);
+    Address ipal;
+    // FIXME(cfrantz): hardcoded palette location
+    ipal.set_bank(1); ipal.set_address(0x9e);
+    items_.Init(ri.items().sprite_table(), ri.items().chr(),
+                Z2ObjectCache::Schema::ITEM);
+    items_.set_palette(ipal);
+
     holder_.set_mapper(mapper_);
     enemies_.set_mapper(mapper_);
     if (map_.type() != MapType::OVERWORLD) {

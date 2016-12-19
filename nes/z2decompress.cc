@@ -22,6 +22,7 @@ void Z2Decompress::Init() {
 void Z2Decompress::Clear() {
     layer_ = 0;
     memset(map_, 0, sizeof(map_));
+    memset(items_, 0xFF, sizeof(items_));
 }
 
 void Z2Decompress::Decompress(const Map& map) {
@@ -233,8 +234,6 @@ void Z2Decompress::DecompressSideView(const uint8_t* data) {
             i++;
             obj = data[i+1];
             collectable = true;
-            // FIXME(cfrantz) learn to deal with colletable objects
-            (void)collectable;
         } else if (y == 13) {
             for(int j=0; j < xspace; j++, x++) {
                 if (x >= width_)
@@ -263,54 +262,54 @@ void Z2Decompress::DecompressSideView(const uint8_t* data) {
             DrawFloor(x, floor, ceiling);
         }
 
-        // Adjust the objset index to the PutFn array and set the
-        // function index
-        uint8_t findex, oindex;
-        if (extra) {
-            oindex = 3;
-            findex = obj >> 4;
-        } else if ((obj & 0xF0) == 0) {
-            oindex = 0;
-            findex = obj & 0x0F;
-        } else {
-            oindex = objset + 1;
-            findex = obj >> 4;
-        }
-        
-        std::string fn = "Invalid";
-        int type = compressed_map_.type();
-        const DecompressInfo* info = info_[type][oindex][findex];
-        if (info) {
-            switch(info->render()) {
-                case DecompressInfo::RENDER_HORIZONTAL:
-                    fn = "RenderHorizontal"; break;
-                case DecompressInfo::RENDER_VERTICAL:
-                    fn = "RenderVertical"; break;
-                case DecompressInfo::RENDER_TOP_UNIQUE:
-                    fn = "RenderTopUnique"; break;
-                case DecompressInfo::RENDER_BOTTOM_UNIQUE:
-                    fn = "RenderBottomUnique"; break;
-                case DecompressInfo::RENDER_CUSTOM:
-                    fn = info->custom(); break;
-                default:
-                    ; // Do nothing
-            }
-        } else {
-            LOG(ERROR, "Couldn't look up ", HEX(obj), " for ",
-                       oindex, " ", findex);
-        }
-
-        // Look up the put funtion and call it
-        PutFn put = put_[fn];
-        if (!put) {
-            put = &Z2Decompress::Invalid;
-        }
         DrawFloor(x, floor, ceiling);
-
         if (collectable) {
-            LOG(ERROR, "collectable item=", HEX(obj), " at ", x, ", ", y);
+            items_[y][x] = obj;
+        } else {
+            // Adjust the objset index to the PutFn array and set the
+            // function index
+            uint8_t findex, oindex;
+            if (extra) {
+                oindex = 3;
+                findex = obj >> 4;
+            } else if ((obj & 0xF0) == 0) {
+                oindex = 0;
+                findex = obj & 0x0F;
+            } else {
+                oindex = objset + 1;
+                findex = obj >> 4;
+            }
+
+            std::string fn = "Invalid";
+            int type = compressed_map_.type();
+            const DecompressInfo* info = info_[type][oindex][findex];
+            if (info) {
+                switch(info->render()) {
+                    case DecompressInfo::RENDER_HORIZONTAL:
+                        fn = "RenderHorizontal"; break;
+                    case DecompressInfo::RENDER_VERTICAL:
+                        fn = "RenderVertical"; break;
+                    case DecompressInfo::RENDER_TOP_UNIQUE:
+                        fn = "RenderTopUnique"; break;
+                    case DecompressInfo::RENDER_BOTTOM_UNIQUE:
+                        fn = "RenderBottomUnique"; break;
+                    case DecompressInfo::RENDER_CUSTOM:
+                        fn = info->custom(); break;
+                    default:
+                        ; // Do nothing
+                }
+            } else {
+                LOG(ERROR, "Couldn't look up ", HEX(obj), " for ",
+                           oindex, " ", findex);
+            }
+
+            // Look up the put funtion and call it
+            PutFn put = put_[fn];
+            if (!put) {
+                put = &Z2Decompress::Invalid;
+            }
+            (this->*put)(x, y, obj, info);
         }
-        (this->*put)(x, y, obj, info);
     }
     while (x < width_) {
         DrawFloor(x++, floor, ceiling);
