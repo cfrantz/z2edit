@@ -135,6 +135,8 @@ void SimpleMap::Draw() {
             if (holder_.Draw()) {
                 decomp_.Clear();
                 decomp_.DecompressSideView(holder_.MapDataAbs().data());
+                cache_.Clear();
+                cache_.set_palette(decomp_.palette());
             }
         } else if (tab_ == 1) {
             connection_.Draw();

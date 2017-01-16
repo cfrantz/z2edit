@@ -60,7 +60,7 @@ class MapHolder {
     MapHolder();
     bool Draw();
     void Save();
-    void Parse(const Map& map);
+    void Parse(const Map& map, uint16_t altaddr=0);
     std::vector<uint8_t> MapData();
     std::vector<uint8_t> MapDataAbs();
     inline void set_mapper(Mapper* m) { mapper_ = m; }
@@ -87,6 +87,9 @@ class MapHolder {
     std::vector<MapCommand> command_;
     Map map_;
     Mapper* mapper_;
+    bool data_changed_;
+    bool addr_changed_;
+    uint16_t map_addr_;
 
     struct Unpacked {
         int objset;

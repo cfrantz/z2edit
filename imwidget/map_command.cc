@@ -1,7 +1,8 @@
 #include <cstdlib>
 #include <algorithm>
-
 #include "imwidget/map_command.h"
+
+#include "imwidget/error_dialog.h"
 #include "imwidget/imutil.h"
 #include "imgui.h"
 #include "util/config.h"
@@ -243,16 +244,29 @@ void MapHolder::Pack() {
 }
 
 bool MapHolder::Draw() {
-    bool changed = false;
+    char abuf[8];
+    bool changed = false, achanged=false;
     Unpack();
 
     Address addr = mapper_->ReadAddr(map_.pointer(), 0);
     ImGui::Text("Map pointer at bank=0x%x address=0x%04x",
                 map_.pointer().bank(), map_.pointer().address());
-    ImGui::Text("Map address at bank=0x%x address=0x%04x",
-                addr.bank(), addr.address());
+    ImGui::Text("Map address at bank=0x%x address=",
+                addr.bank());
 
     ImGui::PushItemWidth(100);
+    sprintf(abuf, "%04x", map_addr_);
+    ImGui::SameLine();
+    achanged = ImGui::InputText("##addr", abuf, 5,
+                                ImGuiInputTextFlags_CharsHexadecimal |
+                                ImGuiInputTextFlags_EnterReturnsTrue);
+    if (achanged) {
+        addr_changed_ |= achanged;
+        map_addr_ = strtoul(abuf, 0, 16);
+        Parse(map_, map_addr_);
+        return true;
+    }
+
     ImGui::Text("Flags:");
     changed |= ImGui::InputInt("Object Set", &data_.objset);
     Clamp(&data_.objset, 0, 1);
@@ -333,15 +347,20 @@ bool MapHolder::Draw() {
     ImGui::EndChild();
     ImGui::PopItemWidth();
     Pack();
+    data_changed_ |= changed;
     return changed;
 }
 
-void MapHolder::Parse(const z2util::Map& map) {
+void MapHolder::Parse(const z2util::Map& map, uint16_t altaddr) {
     map_ = map;
     // For side view maps, the map address is the address of a pointer
     // to the real address.  Read it and set the real address.
     Address address = mapper_->ReadAddr(map.pointer(), 0);
+    if (altaddr) {
+        address.set_address(altaddr);
+    }
     *map_.mutable_address() = address;
+    map_addr_ = address.address();
 
     length_ = mapper_->Read(address, 0);
     flags_ = mapper_->Read(address, 1);
@@ -411,23 +430,33 @@ std::vector<uint8_t> MapHolder::MapDataAbs() {
 }
 
 void MapHolder::Save() {
-    LOG(INFO, "Saving ", map_.name());
+    if (addr_changed_ && !data_changed_) {
+        mapper_->WriteWord(map_.pointer(), 0, map_addr_);
+        addr_changed_ = false;
+        return;
+    }
+    if (addr_changed_ && data_changed_) {
+        ErrorDialog::New("Unexpected Change When Saving Map",
+            "Both the map data and map address have been changed.\n"
+            "Allocating a new address and saving data.\n");
+    }
     std::vector<uint8_t> data = MapDataAbs();
+    LOG(INFO, "Saving ", map_.name(), " (", data.size(), " bytes)");
 
     Address addr = map_.address();
-    uint8_t orig_len = mapper_->Read(addr, 0);
-    if (data.size() > orig_len) {
-        addr.set_address(0);
-        addr = mapper_->FindFreeSpace(addr, data.size());
-        if (addr.address() == 0) {
-            LOG(ERROR, "Can't save map: can't find ", data.size(), "bytes"
-                       " in bank=", addr.bank());
-            return;
-        }
-        addr.set_address(0x8000 | addr.address());
-        mapper_->Erase(map_.address(), orig_len);
-        *map_.mutable_address() = addr;
+    addr.set_address(0);
+    addr = mapper_->FindFreeSpace(addr, data.size());
+    if (addr.address() == 0) {
+        ErrorDialog::New("Error Saving Map",
+            "Can't save map: ", map_.name(), "\n\n"
+            "Can't find ", data.size(), " free bytes in bank ", addr.bank());
+        LOG(ERROR, "Can't save map: can't find ", data.size(), "bytes"
+                   " in bank=", addr.bank());
+        return;
     }
+    addr.set_address(0x8000 | addr.address());
+    *map_.mutable_address() = addr;
+    map_addr_ = addr.address();
 
     LOG(INFO, "Saving map to offset ", HEX(addr.address()),
               " in bank=", addr.bank());
@@ -436,6 +465,7 @@ void MapHolder::Save() {
         mapper_->Write(addr, i, data[i]);
     }
     mapper_->WriteWord(map_.pointer(), 0, addr.address());
+    data_changed_ = false;
 }
 
 MapConnection::MapConnection()

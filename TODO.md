@@ -12,7 +12,7 @@ Done, but still need:
 
 ### Sideview editing
   * Better modification of enemy lists (e.g. add/del enemies from an area).
-  * Sideview modifications should allocate new memory regions.
+  * Sideview modifications should allocate new memory regions (done).
 
 ### Overworld enemy encounter editor
   * Which sideview areas to load
