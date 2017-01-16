@@ -91,6 +91,7 @@ void ImApp::Init() {
     hwpal_ = NesHardwarePalette::Get();
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
+    misc_hacks_.reset(new z2util::MiscellaneousHacks);
     start_values_.reset(new z2util::StartValues);
     object_table_.reset(new z2util::ObjectTable);
     editor_.reset(z2util::Editor::New());
@@ -111,6 +112,7 @@ void ImApp::Load(const std::string& filename) {
     editor_->set_mapper(mapper_.get());
     editor_->ConvertFromMap(rominfo_.mutable_map(0));
 
+    misc_hacks_->set_mapper(mapper_.get());
     start_values_->set_mapper(mapper_.get());
 
     object_table_->set_mapper(mapper_.get());
@@ -454,20 +456,24 @@ save_as:
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Windows")) {
+            if (ImGui::BeginMenu("Edit")) {
                 ImGui::MenuItem("Debug Console", nullptr,
                                 console_.visible());
+                ImGui::MenuItem("Editor", nullptr,
+                                editor_->visible());
+                ImGui::MenuItem("MapViewer", nullptr,
+                                simplemap_->visible());
+                ImGui::MenuItem("Miscellaneous Hacks", nullptr,
+                                misc_hacks_->visible());
                 ImGui::MenuItem("Start Values", nullptr,
                                 start_values_->visible());
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("View")) {
                 ImGui::MenuItem("Hardware Palette", nullptr,
                                 hwpal_->visible());
                 ImGui::MenuItem("CHR Viewer", nullptr,
                                 chrview_->visible());
-
-                ImGui::MenuItem("MapViewer", nullptr,
-                                simplemap_->visible());
-                ImGui::MenuItem("Editor", nullptr,
-                                editor_->visible());
                 ImGui::MenuItem("Object Table", nullptr,
                                 object_table_->visible());
                 ImGui::EndMenu();
@@ -483,6 +489,7 @@ save_as:
 
     console_.Draw();
     start_values_->Draw();
+    misc_hacks_->Draw();
     hwpal_->Draw();
     chrview_->Draw();
     simplemap_->Draw();

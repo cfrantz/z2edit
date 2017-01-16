@@ -11,6 +11,7 @@
 #include "imwidget/debug_console.h"
 #include "imwidget/editor.h"
 #include "imwidget/hwpalette.h"
+#include "imwidget/misc_hacks.h"
 #include "imwidget/neschrview.h"
 #include "imwidget/simplemap.h"
 #include "imwidget/start_values.h"
@@ -92,6 +93,7 @@ class ImApp {
     std::unique_ptr<NesChrView> chrview_;
     std::unique_ptr<z2util::SimpleMap> simplemap_;
     std::unique_ptr<z2util::Editor> editor_;
+    std::unique_ptr<z2util::MiscellaneousHacks> misc_hacks_;
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::ObjectTable> object_table_;
     std::vector<std::function<bool()>> draw_callback_;

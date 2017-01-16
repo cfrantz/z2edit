@@ -38,6 +38,7 @@ cc_library(
         "//imwidget:debug_console",
         "//imwidget:editor",
         "//imwidget:hwpalette",
+        "//imwidget:misc_hacks",
         "//imwidget:neschrview",
         "//imwidget:simplemap",
         "//imwidget:start_values",
