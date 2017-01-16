@@ -4,12 +4,15 @@ Done, but still need:
   * Townspeople text editor
   * Building entrances to which rooms?
 
-### Add config which describes how to render GP.
-Done
+### Decompress Configs for all side-scroll areas
+  * Overworld caves/outside areas (done)
+  * Palaces (done)
+  * Towns (done)
+  * Great Palace (done)
 
-### Better modification of enemy lists (e.g. add/del enemies from an area).
-
-### Sideview modifications should allocate new memory regions.
+### Sideview editing
+  * Better modification of enemy lists (e.g. add/del enemies from an area).
+  * Sideview modifications should allocate new memory regions.
 
 ### Overworld enemy encounter editor
   * Which sideview areas to load
@@ -50,3 +53,7 @@ Done: Multimap editor
   * Known restrictions:
     * Overworld map must be < 1K
     * Enemy lists must be < 1K
+  * Auto-generate documentation from `content/obj_*.textpb`?
+  * Auto-generate documentation from `content/{enemies,items}.textpb`?
+  * Document used/unused sidview areas in vanilla game.
+    * Create a vanilla ROM which fixes all sideview exit oddities.
