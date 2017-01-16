@@ -32,8 +32,11 @@ Done: Multimap editor
   * pick-up-item delay
 
 ### Startup conditions editor
-  * starting lives
   * starting levels
+  * starting lives (done)
+  * starting itesm (done)
+  * starting spells (done)
+  * starting sword techs (done)
 
 ### Sprite and tiles editor
   * List of sprite equivalents between banks
