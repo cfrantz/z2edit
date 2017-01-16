@@ -19,6 +19,17 @@ cc_library(
 )
 
 cc_library(
+    name = "error_dialog",
+    hdrs = ["error_dialog.h"],
+    srcs = ["error_dialog.cc"],
+    deps = [
+        "//:imapp-util",
+        "//util:string",
+        "//external:imgui",
+    ],
+)
+
+cc_library(
     name = "glbitmap",
     hdrs = ["glbitmap.h"],
     srcs = ["glbitmap.cc"],
@@ -119,6 +130,7 @@ cc_library(
     srcs = ["map_command.cc"],
     deps = [
         ":imutil",
+        ":error_dialog",
         "//util:config",
         "//nes:mappers",
         "//proto:rominfo",
