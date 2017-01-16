@@ -12,16 +12,16 @@ void GetName(const z2util::RomInfo* config, int world, int id,
         if (world == area.world()) {
             const auto& it = area.info().find(id);
             if (it != area.info().end())
-                *name = it->second;
+                *name = it->second.name();
         }
     }
 }
 
 void PostProcess(z2util::RomInfo* config) {
+    char buf[128];
     for(const auto& s : config->sideview()) {
         for(int map=0; map<s.length(); map++) {
             auto* m = config->add_map();
-            char buf[128];
 
             std::string name = "";
             GetName(config, s.world(), map, &name);
@@ -34,6 +34,10 @@ void PostProcess(z2util::RomInfo* config) {
             m->set_name(buf);
             m->set_type(s.type());
             m->set_world(s.world());
+            int64_t valid_worlds = s.valid_worlds();
+            if (!valid_worlds)
+                valid_worlds = 1UL << s.world();
+            m->set_valid_worlds(valid_worlds);
             m->mutable_pointer()->set_bank(s.address().bank());
             m->mutable_pointer()->set_address(s.address().address() + 2*map);
 
@@ -50,6 +54,13 @@ void PostProcess(z2util::RomInfo* config) {
                 obj->set_bank(s.address().bank());
                 obj->set_address(0x500 + i*2);
             }
+        }
+    }
+    for(auto& elist: *config->mutable_enemies()) {
+        for(auto& e: *elist.mutable_info()) {
+            snprintf(buf, sizeof(buf), "%02x: %s",
+                     e.first, e.second.name().c_str());
+            e.second.set_name(buf);
         }
     }
 }

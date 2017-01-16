@@ -21,6 +21,11 @@ const uint32_t standard_palette[] = {
     0xFFB5EBF2, 0xFFB8B8B8, 0xFF000000, 0xFF000000,
 };
 
+NesHardwarePalette* NesHardwarePalette::Get() {
+    static NesHardwarePalette* singleton = new NesHardwarePalette();
+    return singleton;
+}
+
 void NesHardwarePalette::Init() {
     for(int i=0; i<64; i++) {
         uint32_t color = standard_palette[i];

@@ -1,14 +1,16 @@
 #include "imgui.h"
 #include "imwidget/map_connect.h"
+#include "imwidget/multimap.h"
 #include "imwidget/imutil.h"
 
 namespace z2util {
 
 OverworldConnector::OverworldConnector(Mapper* mapper, Address address,
-                                       uint8_t offset)
+                                       uint8_t offset, int world)
   : mapper_(mapper),
     address_(address),
-    offset_(offset)
+    offset_(offset),
+    current_world_(world)
 {
     Read();
 }
@@ -60,6 +62,12 @@ void OverworldConnector::Write() {
 
 void OverworldConnector::Draw() {
     Read();
+    if (ImGui::Button("View Area")) {
+        int world = world_;
+        if (world <= 1) world += current_world_;
+        MultiMap::New(mapper_, world, map_);
+    }
+
     ImGui::PushID(offset_);
     ImGui::Text("%02d: ", offset_);
 
@@ -103,6 +111,11 @@ void OverworldConnector::Draw() {
 
 void OverworldConnector::DrawInPopup() {
     Read();
+    if (ImGui::Button("View Area")) {
+        int world = world_;
+        if (world <= 1) world += current_world_;
+        MultiMap::New(mapper_, world, map_);
+    }
 
     ImGui::Text("Position:");
     ImGui::PushItemWidth(100);
@@ -146,11 +159,12 @@ OverworldConnectorList::OverworldConnectorList()
   : add_offset_(0)
 {}
 
-void OverworldConnectorList::Init(Mapper* mapper, Address address, int n) {
+void OverworldConnectorList::Init(Mapper* mapper, Address address, int world,
+                                  int n) {
     list_.clear();
     show_ = true;
     for(int i=0; i<n; i++) {
-        list_.emplace_back(mapper, address, i);
+        list_.emplace_back(mapper, address, i, world);
     }
 }
 

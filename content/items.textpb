@@ -1,29 +1,116 @@
 items {
     valid_worlds: -1
     info: [
-        { key: 0x00 value: "candle" },
-        { key: 0x01 value: "glove" },
-        { key: 0x02 value: "raft" },
-        { key: 0x03 value: "boots" },
-        { key: 0x04 value: "flute" },
-        { key: 0x05 value: "cross" },
-        { key: 0x06 value: "hammer" },
-        { key: 0x07 value: "magic key" },
-        { key: 0x08 value: "key" },
-        { key: 0x09 value: "???(0x09)" },
-        { key: 0x0a value: "50-bag" },
-        { key: 0x0b value: "100-bag" },
-        { key: 0x0c value: "200-bag" },
-        { key: 0x0d value: "500-bag" },
-        { key: 0x0e value: "magic container" },
-        { key: 0x0f value: "heart container" },
-        { key: 0x10 value: "blue jar" },
-        { key: 0x11 value: "red jar" },
-        { key: 0x12 value: "1up" },
-        { key: 0x13 value: "kid" },
-        { key: 0x14 value: "trophy" },
-        { key: 0x15 value: "water of life" }
+        { key: 0x00 value: {
+            name: "candle"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e7f }
+            palette: 1
+        }}, { key: 0x01 value: {
+            name: "glove"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e81 }
+            palette: 1
+        }}, { key: 0x02 value: {
+            name: "raft"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e83 }
+            palette: 1
+        }}, { key: 0x03 value: {
+            name: "boots"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e85 }
+            palette: 1
+        }}, { key: 0x04 value: {
+            name: "flute"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e87 }
+            palette: 1
+        }}, { key: 0x05 value: {
+            name: "cross"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e89 }
+            palette: 1
+        }}, { key: 0x06 value: {
+            name: "hammer"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e8b }
+            palette: 1
+        }}, { key: 0x07 value: {
+            name: "magic key"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e8d }
+            palette: 1
+        }}, { key: 0x08 value: {
+            name: "key"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e8f }
+            palette: 1
+        }}, { key: 0x09 value: {
+            name: "???(0x09)"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e91 }
+            palette: 1
+        }}, { key: 0x0a value: {
+            name: "50-bag"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e93 }
+            palette: 1
+        }}, { key: 0x0b value: {
+            name: "100-bag"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e95 }
+            palette: 1
+        }}, { key: 0x0c value: {
+            name: "200-bag"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e97 }
+            palette: 1
+        }}, { key: 0x0d value: {
+            name: "500-bag"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e99 }
+            palette: 1
+        }}, { key: 0x0e value: {
+            name: "magic container"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e9b }
+            palette: 1
+        }}, { key: 0x0f value: {
+            name: "heart container"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e9d }
+            palette: 1
+        }}, { key: 0x10 value: {
+            name: "blue jar"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2e9f }
+            palette: 2
+        }}, { key: 0x11 value: {
+            name: "red jar"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2ea1 }
+            palette: 3
+        }}, { key: 0x12 value: {
+            name: "1up"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2ea3 }
+            palette: 0
+        }}, { key: 0x13 value: {
+            name: "kid"
+            chr { bank: 4 }
+            table { bank: 7 address: 0x2ea5 }
+            palette: 1
+        }}, { key: 0x14 value: {
+            name: "trophy"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2ea7 }
+            palette: 1
+        }}, { key: 0x15 value: {
+            name: "water of life"
+            chr { bank: 2 }
+            table { bank: 7 address: 0x2ea9 }
+            palette: 1
+        }}
     ]
-   chr { bank: 0 }
-    sprite_table { bank: 7 address: 0x2e7f }
 }

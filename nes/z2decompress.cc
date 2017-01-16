@@ -21,6 +21,7 @@ void Z2Decompress::Init() {
 
 void Z2Decompress::Clear() {
     layer_ = 0;
+    cursor_moves_left_ = false;
     memset(map_, 0, sizeof(map_));
     memset(items_, 0xFF, sizeof(items_));
 }
@@ -64,6 +65,21 @@ void Z2Decompress::DecompressOverWorld(const Map& map) {
     height_ = (mm - (uint8_t*)map_) / width_;
 }
 
+const ItemInfo& Z2Decompress::EnemyInfo() {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+
+    for (const auto& e : ri.enemies()) {
+        if (compressed_map_.world() == e.world() ||
+            (1 << compressed_map_.world()) & e.valid_worlds()) {
+            LOG(INFO, "EnemyInfo for world ", e.world());
+            return e;
+        }
+    }
+    const auto& e = ri.enemies(0);
+    LOG(INFO, "Default EnemyInfo for world ", e.world());
+    return e;
+}
+
 const BackgroundInfo& Z2Decompress::GetBackgroundInfo() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     int n = (ground_ >> 4) & 0x7;
@@ -72,6 +88,8 @@ const BackgroundInfo& Z2Decompress::GetBackgroundInfo() {
             return bg;
         }
     }
+    LOG(ERROR, "Could not find background info for type=",
+            compressed_map_.type(), " index=", n);
     return ri.background(0);
 }
 
@@ -107,14 +125,15 @@ void Z2Decompress::DrawFloor(int x, uint8_t floor, uint8_t ceiling) {
                 set_map(x, 0, bg.ceiling(1));
         }
     } else if (floor < 15) {
-        ceiling = floor - 6;
-        for(y=0; y<ceiling-1; y++) {
+        if (ceiling) {
+            ceiling = floor - 6;
+            for(y=0; y<ceiling-1; y++) {
+                if (isbackground(x, y, bgtile))
+                    set_map(x, y, bg.ceiling(0));
+            }
             if (isbackground(x, y, bgtile))
-                set_map(x, y, bg.ceiling(0));
+                set_map(x, y, bg.ceiling(1));
         }
-        if (isbackground(x, y, bgtile))
-            set_map(x, y, bg.ceiling(1));
-
         if (isbackground(x, 11, bgtile))
             set_map(x, 11, bg.floor(0));
         if (isbackground(x, 12, bgtile))
@@ -155,10 +174,12 @@ void Z2Decompress::DecompressSideView(const Map& map) {
         backaddr.set_bank(address.bank());
         backaddr.set_address(0);
         backaddr.set_address(ReadWord(backaddr, (backmap - 1) * 2));
-        DecompressSideView(backaddr, true);
+        LOG(INFO, "Decompressing background map at ", HEX(backaddr.address()));
+        DecompressSideView(backaddr, address);
         layer_++;
     }
-    DecompressSideView(address, false);
+    LOG(INFO, "Decompressing foreground map at ", HEX(address.address()));
+    DecompressSideView(address, address);
     CollapseLayers(layer_);
     layer_ = 0;
 }
@@ -180,12 +201,20 @@ void Z2Decompress::CollapseLayers(int top_layer) {
 }
 
 void Z2Decompress::DecompressSideView(const Address& address,
-                                      bool clear) {
+                                      const Address& foreground) {
     uint8_t len = Read(address, 0);
     uint8_t data[256];
     for(int i=0; i<len; i++) {
         data[i] = Read(address, i);
     }
+    // Read the map parameter bytes from the foreground map
+    //data[1] = Read(foreground, 1);
+
+    // Get the tileset of the foreground map, but use the floor and
+    // ceiling parameters in the background map.
+    data[2] = (data[2] & 0x8f) | (Read(foreground, 2) & 0x70);
+
+    //data[3] = Read(foreground, 3);
     DecompressSideView(data);
 }
 
@@ -224,7 +253,7 @@ void Z2Decompress::DecompressSideView(const uint8_t* data) {
         bool collectable = false, extra = false;
         uint8_t pos = data[i];
         uint8_t obj = data[i+1];
-        //if (i>4) Print();
+//        if (i>4) Print();
         LOG(VERBOSE, "op = ", HEX(pos), " ", HEX(obj));
 
         xspace = pos & 0xf;
@@ -246,11 +275,14 @@ void Z2Decompress::DecompressSideView(const uint8_t* data) {
         } else if (y == 14) {
             // Set cursor directly to "xspace * 16"
             xspace *= 16;
+            if (xspace < x)
+                cursor_moves_left_ = true;
             while(x < xspace) {
                 DrawFloor(x++, floor, ceiling);
                 if (x >= width_)
                     goto exitloop;
             }
+            x = xspace;
             continue;
         } else if (y == 15) {
             extra = true;
@@ -270,8 +302,13 @@ void Z2Decompress::DecompressSideView(const uint8_t* data) {
             // function index
             uint8_t findex, oindex;
             if (extra) {
-                oindex = 3;
-                findex = obj >> 4;
+                if ((obj & 0xF0) == 0) {
+                    oindex = 3;
+                    findex = obj & 0x0F;
+                } else {
+                    oindex = 4;
+                    findex = obj >> 4;
+                }
             } else if ((obj & 0xF0) == 0) {
                 oindex = 0;
                 findex = obj & 0x0F;

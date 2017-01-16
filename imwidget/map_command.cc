@@ -27,10 +27,10 @@ void MapCommand::Init() {
             for(int k=0; k<16; k++) {
                 if (j==0 && k==15) {
                     sprintf(names[i][j][k], "%02x: collectable",
-                            j==0 ? k : k<<4);
+                            (j==0 || j==3)? k : k<<4);
                 } else {
                     sprintf(names[i][j][k], "%02x: ???",
-                            j==0 ? k : k<<4);
+                            (j==0 || j==3)? k : k<<4);
                 }
                 object_names_[i][j][k] = names[i][j][k];
             }
@@ -104,9 +104,9 @@ bool MapCommand::Draw(bool abscoord) {
     Clamp(&data_.y, 0, 15);
 
     ImGui::SameLine();
-    if (abscoord) {
+    if (data_.y != 14 && abscoord) {
         changed |= ImGui::InputInt(xpos, &data_.absx);
-        Clamp(&data_.x, 0, 63);
+        Clamp(&data_.absx, 0, 63);
     } else {
         changed |= ImGui::InputInt(xpos, &data_.x);
         Clamp(&data_.x, 0, 15);
@@ -123,12 +123,14 @@ bool MapCommand::Draw(bool abscoord) {
         int n = 0;
         int large_start = 0;
         int extra_start = 0;
+        int extra_small_start = 0;
         int type = holder_->map().type();
         int oindex = 1 + !!(holder_->flags() & 0x80);
 
         for(int i=0; i<NR_SETS; i++) {
             if (i==1) large_start = n;
-            if (i==3) extra_start = n;
+            if (i==3) extra_small_start = n;
+            if (i==4) extra_start = n;
             if ((i==1 || i==2) && i != oindex)
                 continue;
             for(int j=0; j<16; j++) {
@@ -137,9 +139,15 @@ bool MapCommand::Draw(bool abscoord) {
         }
 
         if (data_.y == 15) {
-            oindex = 3;
-            data_.object = extra_start + (object_ >> 4);
-            data_.param = object_ & 0x0F;
+            if ((object_ & 0xF0) == 0) {
+                oindex = 3;
+                data_.object = extra_small_start + object_;
+                data_.param = 0;
+            } else {
+                oindex = 4;
+                data_.object = extra_start + (object_ >> 4);
+                data_.param = object_ & 0x0F;
+            }
         } else if ((object_ & 0xF0) == 0) {
             oindex = 0;
             data_.object = object_ & 0x0F;
@@ -164,12 +172,12 @@ bool MapCommand::Draw(bool abscoord) {
 
         // If the index from the combobox is >= the "extra" items, then
         // set y to the magic 'extra items' value.
-        if (data_.object >= extra_start) {
+        if (data_.object >= extra_small_start) {
             data_.y = 15;
-        } else if (data_.object < extra_start && data_.y == 15) {
+        } else if (data_.object < extra_small_start && data_.y == 15) {
             data_.y = 12;
         }
-        if (oindex) {
+        if (oindex !=0 && oindex != 3) {
             ImGui::SameLine();
             changed |= ImGui::InputInt("param", &data_.param);
             Clamp(&data_.param, 0, 15);
@@ -258,6 +266,9 @@ bool MapHolder::Draw() {
 
     ImGui::SameLine();
     changed |= ImGui::Checkbox("Bushes", &data_.bushes);
+
+    ImGui::SameLine();
+    changed |= ImGui::Checkbox("Cursor Moves Left", &cursor_moves_left_);
 
     ImGui::Text("Ground:");
     changed |= ImGui::Checkbox("Ceiling", &data_.ceiling);
@@ -371,19 +382,21 @@ std::vector<uint8_t> MapHolder::MapData() {
 
 std::vector<uint8_t> MapHolder::MapDataAbs() {
     std::vector<MapCommand> copy = command_;
-    std::stable_sort(copy.begin(), copy.end(),
-        [](const MapCommand& a, const MapCommand& b) {
-            return a.absx() < b.absx();
-        }
-    );
+    if (!cursor_moves_left_) {
+        std::stable_sort(copy.begin(), copy.end(),
+            [](const MapCommand& a, const MapCommand& b) {
+                return a.absx() < b.absx();
+            });
+    }
     int x = 0;
     for(auto it = copy.begin(); it < copy.end(); ++it) {
         if (it->absy() == 14) {
-            // Erase any "skip" commands, as we'll re-synthesize them as needed.
+            // Erase any "skip" commands, as we'll re-synthesize them
+            // as needed.
             copy.erase(it);
         }
         int deltax = it->absx() - x;
-        if (deltax > 15) {
+        if (deltax < 0 || deltax > 15) {
             int nx = it->absx() & ~15;
             copy.emplace(it, this, x, 0xE0 | (nx/16), 0, 0);
             it++;
@@ -467,7 +480,8 @@ void MapConnection::Draw() {
     int len = 0;
 
     for(const auto& m : ri.map()) {
-        if (m.world() == world_ && m.type() != MapType::OVERWORLD) {
+        if (m.type() != MapType::OVERWORLD &&
+            m.valid_worlds() & (1UL << world_)) {
             names[len++] = m.name().c_str();
         }
     }
@@ -489,8 +503,7 @@ void MapConnection::Draw() {
 MapEnemyList::MapEnemyList()
   : mapper_(nullptr),
     world_(0),
-    length_(0),
-    data_{0, }
+    length_(0)
 {
 }
 
@@ -501,17 +514,18 @@ void MapEnemyList::Parse(const Map& map) {
     uint16_t delta = 0x18a0;
 
     length_ = 0;
+    data_.clear();
     uint8_t n = mapper_->Read(addr, delta);
     for(int i=1; i<n; i+=2) {
         uint8_t pos = mapper_->Read(addr, delta+i);
         uint8_t enemy = mapper_->Read(addr, delta+i+1);
-        data_[length_].enemy = enemy & 0x3f;
-        data_[length_].x = (pos & 0xf) | (enemy & 0xc0) >> 2;
-        data_[length_].y = pos >> 4;
+        int y = pos >> 4;
+        y = (y == 0) ? 1 : y+2;
+        data_.emplace_back(enemy & 0x3f,
+                           (pos & 0xf) | (enemy & 0xc0) >> 2, y);
         length_++;
     }
 }
-
 
 void MapEnemyList::Save() {
     uint8_t n = 1 + length_ * 2;
@@ -520,7 +534,9 @@ void MapEnemyList::Save() {
 
     mapper_->Write(addr, delta, n);
     for(int i=0; i<length_; i++) {
-        uint8_t pos = (data_[i].y << 4) | (data_[i].x & 0x0F);
+        int y = data_[i].y;
+        y = (y <= 1) ? 0 : y-2;
+        uint8_t pos = (y << 4) | (data_[i].x & 0x0F);
         uint8_t enemy = (data_[i].enemy & 0x3f) | (data_[i].x & 0x30) << 2;
         mapper_->Write(addr, delta + 1 + i*2, pos);
         mapper_->Write(addr, delta + 2 + i*2, enemy);
@@ -536,10 +552,12 @@ void MapEnemyList::Draw() {
 
     int n = 0;
     for(const auto& e : ri.enemies()) {
-        if (e.world() == world_) {
+        if (e.world() == world_ ||
+            e.valid_worlds() & (1UL << world_)) {
             for(const auto& info : e.info()) {
-                names[info.first] = info.second.c_str();
-                n++;
+                names[info.first] = info.second.name().c_str();
+                if (info.first >= n)
+                    n = info.first+1;
             }
         }
     }

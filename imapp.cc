@@ -1,12 +1,16 @@
 #include <gflags/gflags.h>
 #include "imapp.h"
 #include "imgui.h"
-#include "examples/sdl_opengl_example/imgui_impl_sdl.h"
 #include "nes/cpu6502.h"
+#include "util/config.h"
+#include "proto/rominfo.pb.h"
 #include "util/os.h"
 #include "util/logging.h"
+#include "util/imgui_impl_sdl.h"
 
+#ifdef HAVE_NFD
 #include "nfd.h"
+#endif
 
 
 DEFINE_string(emulator, "fceux", "Emulator to run for testing");
@@ -14,6 +18,7 @@ DEFINE_string(romtmp, "/tmp/zelda2-test.nes", "Temporary filename for running un
 DEFINE_int32(audio_frequency, 48000, "Audio sample frequency");
 //DEFINE_int32(audio_bufsize, 256, "Audio buffer size");
 DEFINE_int32(audio_bufsize, 2048, "Audio buffer size");
+DEFINE_double(hidpi, 1.0, "HiDPI scaling factor");
 
 ImApp* ImApp::singleton_;
 
@@ -44,6 +49,7 @@ ImApp::ImApp(const std::string& name, int width, int height)
                                SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     glcontext_ = SDL_GL_CreateContext(window_);
+    ImGui_ImplSdl_SetHiDPIScale(FLAGS_hidpi);
     ImGui_ImplSdl_Init(window_);
     fpsmgr_.SetRate(60);
 
@@ -82,7 +88,7 @@ void ImApp::Init() {
     RegisterCommand("elist", "Dump Enemy List.", this, &ImApp::EnemyList);
     RegisterCommand("u", "Disassemble Code.", this, &ImApp::Unassemble);
 
-    hwpal_.reset(new NesHardwarePalette);
+    hwpal_ = NesHardwarePalette::Get();
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
     start_values_.reset(new z2util::StartValues);
@@ -100,17 +106,14 @@ void ImApp::Load(const std::string& filename) {
     chrview_->set_mapper(mapper_.get());
 
     simplemap_->set_mapper(mapper_.get());
-    simplemap_->set_palette(hwpal_.get());
     simplemap_->SetMap(rominfo_.map(0));
 
     editor_->set_mapper(mapper_.get());
-    editor_->set_palette(hwpal_.get());
     editor_->ConvertFromMap(rominfo_.mutable_map(0));
 
     start_values_->set_mapper(mapper_.get());
 
     object_table_->set_mapper(mapper_.get());
-    object_table_->set_hwpal(hwpal_.get());
     object_table_->Init();
 }
 
@@ -414,13 +417,14 @@ void ImApp::Draw() {
     ImGui_ImplSdl_NewFrame(window_);
 
     ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
-    if (ImGui::Begin(name_.c_str(), &open, ImGuiWindowFlags_MenuBar)) { 
+    if (ImGui::Begin(name_.c_str(), &open, ImGuiWindowFlags_MenuBar)) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Emulate", "Ctrl+E")) {
                     cartridge_.SaveFile(FLAGS_romtmp);
                     SpawnEmulator(FLAGS_romtmp);
                 }
+#ifdef HAVE_NFD
                 if (ImGui::MenuItem("Open", "Ctrl+O")) {
                     char *filename = nullptr;
                     auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
@@ -444,6 +448,7 @@ save_as:
                     }
                     free(filename);
                 }
+#endif
                 if (ImGui::MenuItem("Quit")) {
                     running_ = false;
                 }
@@ -470,6 +475,10 @@ save_as:
             ImGui::EndMenuBar();
         }
         ImGui::Text("Hello World");
+        if (ImGui::Button("Reload Config")) {
+            auto* config = ConfigLoader<z2util::RomInfo>::Get();
+            config->Reload();
+        }
     }
 
     console_.Draw();
@@ -480,6 +489,13 @@ save_as:
     editor_->Draw();
     object_table_->Draw();
 
+    for(auto it=draw_callback_.begin(); it != draw_callback_.end();) {
+        if (!(*it)()) {
+            draw_callback_.erase(it);
+            continue;
+        }
+        ++it;
+    }
     ImGui::End();
 
     glViewport(0, 0,
@@ -489,6 +505,8 @@ save_as:
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui::Render();
     SDL_GL_SwapWindow(window_);
+    draw_callback_.insert(draw_callback_.end(), draw_added_.begin(), draw_added_.end());
+    draw_added_.clear();
 }
 
 
@@ -543,7 +561,13 @@ void ImApp::AudioCallback_(void* userdata, uint8_t* stream, int len) {
 }
 
 
+void ImApp::AddDrawCallback(std::function<bool()> cb) {
+    draw_added_.push_back(cb);
+}
 
 
+void AddDrawCallback(std::function<bool()> cb) {
+    ImApp::Get()->AddDrawCallback(cb);
+}
 
 

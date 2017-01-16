@@ -1,15 +1,15 @@
 #include "imwidget/object_table.h"
+#include "imwidget/imutil.h"
 
 namespace z2util {
 
 ObjectTable::ObjectTable()
-  : visible_(false)
+  : visible_(false),
+    scale_(1.0)
 {}
 
 void ObjectTable::Init() {
     cache_.set_mapper(mapper_);
-    cache_.set_hwpal(hwpal_);
-
 
     table_.set_bank(7); table_.set_address(0x2e51);
     chr_.set_bank(1);
@@ -35,6 +35,10 @@ void ObjectTable::Draw() {
     ImGui::Begin("Object Table", visible());
     ImGui::PushItemWidth(150);
     init_cache |= ImGui::InputInt("CHR", &chr);
+
+    ImGui::SameLine();
+    ImGui::InputFloat("Scale", &scale_, 0.25, 1.0);
+    Clamp(&scale_, 0.25f, 4.0f);
     init_cache |= ImGui::InputInt("Bank", &tableb);
     ImGui::SameLine();
 //    init_cache |= ImGui::InputInt("Address", &tablea);
@@ -54,7 +58,8 @@ void ObjectTable::Draw() {
     for(int y=0; y<8; y++) {
         for(int x=0; x<8; x++) {
             int item = y*8 + x;
-            cache_.Get(item).DrawAt(pos.x + x*24, pos.y + y*24);
+            cache_.Get(item).DrawAt(pos.x + x*24*scale_, pos.y + y*24*scale_,
+                                    16.0*scale_, 16.0*scale_);
         }
     }
     ImGui::PopItemWidth();

@@ -31,7 +31,6 @@ class Editor {
     void Draw();
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
-    inline void set_palette(NesHardwarePalette* p) { hwpal_ = p; }
     inline bool* visible() { return &visible_; }
 
     void DrawTile(int x, int y, uint16_t tile, int mode, float* props);

@@ -48,6 +48,7 @@ class ImApp {
 
     void PlayAudio(float* data, int len);
     void Load(const std::string& filename);
+    void AddDrawCallback(std::function<bool()> cb);
   private:
     void Quit(DebugConsole* console, int argc, char **argv);
     void LoadFile(DebugConsole* console, int argc, char **argv);
@@ -87,12 +88,14 @@ class ImApp {
     DebugConsole console_;
 
     std::string save_filename_;
-    std::unique_ptr<NesHardwarePalette> hwpal_;
+    NesHardwarePalette* hwpal_;
     std::unique_ptr<NesChrView> chrview_;
     std::unique_ptr<z2util::SimpleMap> simplemap_;
     std::unique_ptr<z2util::Editor> editor_;
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::ObjectTable> object_table_;
+    std::vector<std::function<bool()>> draw_callback_;
+    std::vector<std::function<bool()>> draw_added_;
 
     Cartridge cartridge_;
     std::unique_ptr<Mapper> mapper_;

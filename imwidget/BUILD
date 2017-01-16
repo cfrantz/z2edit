@@ -70,6 +70,7 @@ cc_library(
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
+        "//util:imgui_sdl_opengl",
         "//util:stb-tilemap-editor",
         "//external:imgui",
     ],
@@ -84,6 +85,25 @@ cc_library(
         ":glbitmap",
         ":hwpalette",
         ":map_command",
+        "//:imapp-util",
+        "//nes:mappers",
+        "//nes:z2decompress",
+        "//nes:z2objcache",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+    ],
+)
+
+cc_library(
+    name = "multimap",
+    hdrs = ["multimap.h"],
+    srcs = ["multimap.cc"],
+    deps = [
+        ":glbitmap",
+        ":simplemap",
+        ":map_command",
+        "//:imapp-util",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
@@ -112,6 +132,7 @@ cc_library(
     srcs = ["map_connect.cc"],
     deps = [
         ":imutil",
+        ":multimap",
         "//nes:mappers",
         "//proto:rominfo",
         "//external:imgui",
@@ -134,6 +155,7 @@ cc_library(
     srcs = ["object_table.cc"],
     deps = [
         ":hwpalette",
+        ":imutil",
         "//nes:mappers",
         "//nes:z2objcache",
         "//proto:rominfo",

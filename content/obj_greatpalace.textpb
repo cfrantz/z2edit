@@ -21,7 +21,7 @@ decompress {
     render: RENDER_HORIZONTAL
     width: 1
     height: 1
-    objid: 0x46
+    objid: 0x44
     comment: "unicord head"
 }
 decompress {
@@ -31,7 +31,7 @@ decompress {
     render: RENDER_HORIZONTAL
     width: 1
     height: 1
-    objid: 0x45
+    objid: 0x43
     comment: "rat head"
 }
 decompress {
@@ -82,11 +82,11 @@ decompress {
     area: GREAT_PALACE
     type: OBJECT_SMALL
     id: 0x06
-    render: RENDER_CUSTOM
+    render: RENDER_HORIZONTAL
     width: 1
-    height: 3
-    objid: 0
-    comment: "locked door"
+    height: 13
+    objid: 0x40
+    comment: "elevator shaft"
 }
 decompress {
     area: GREAT_PALACE
@@ -112,21 +112,21 @@ decompress {
     area: GREAT_PALACE
     type: OBJECT_SMALL
     id: 0x09
-    render: RENDER_HORIZONTAL
+    render: RENDER_VERTICAL
     width: 2
     height: 1
-    objid: [0x4E, 0x4F]
+    objid: [0x86, 0x87]
     comment: "sleeping zelda"
 }
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SMALL
     id: 0x0a
-    render: RENDER_VERTICAL
-    width: 2
-    height: 1
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 2
     objid: [0x4a, 0x4b]
-    comment: "Bird Knight"
+    comment: "bird knight"
 }
 decompress {
     area: GREAT_PALACE
@@ -179,74 +179,70 @@ decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x10
-    render: RENDER_VERTICAL
-    height: 2
-    # FIXME(cfrantz): Is the canopy the same as curtains?
-    objid: [0xc0, 0xc1]
-    comment: "Final Boss Canopy"
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x4d
+    comment: "final boss canopy"
 }
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x20
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x4b
+    objid: 0x4c
     comment: "horzontal brick"
 }
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x30
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x4c
+    objid: 0x4e
     comment: "breakable block"
 }
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x40
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 1
-    objid: 0xd1
+    objid: 0xc6
     comment: "steel brick"
 }
-
-# FIXME(cfrantz): Look up objids for these two
 decompress {
-    area: OUTDOORS
+    area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x50
     render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x50
+    objid: 0x48
     comment: "north castle steps"
 }
 decompress {
-    area: OUTDOORS
+    area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x60
     render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x8B
+    objid: 0x85
     comment: "north castle bricks"
 }
-
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x70
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x4e
+    objid: 0x50
     comment: "crumble bridge"
 }
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x80
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 2
     objid: [0x45, 0x4f]
     comment: "bridge"
@@ -255,7 +251,7 @@ decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0x90
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 2
     objid: [0x4c, 0x4c]
     comment: "bricks"
@@ -264,27 +260,37 @@ decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0xa0
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 2
-    objid: [0xcf, 0xd0]
+    objid: [0xc0, 0xc1]
     comment: "curtains"
 }
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0xb0
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 2
-    objid: [0x49, 0x49]
-    comment: "breakable block"
+    objid: [0x0c, 0x0c]
+    comment: "walk-thru bricks"
 }
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
     id: 0xc0
-    render: RENDER_VERTICAL
+    render: RENDER_HORIZONTAL
     height: 2
     objid: [0x4e, 0x4e]
+    comment: "breakable block"
+}
+
+decompress {
+    area: GREAT_PALACE
+    type: OBJECT_SET_0
+    id: 0xd0
+    render: RENDER_VERTICAL
+    width: 1
+    objid: 0x4e
     comment: "breakable block"
 }
 decompress {
@@ -293,11 +299,9 @@ decompress {
     id: 0xe0
     render: RENDER_VERTICAL
     width: 1
-    # FIXME(cfrantz): Look up objid for electric barrier
-    objid: 0
+    objid: 0x82
     comment: "electric barrier"
 }
-
 decompress {
     area: GREAT_PALACE
     type: OBJECT_SET_0
@@ -321,7 +325,7 @@ decompress {
     id: 0x10
     render: RENDER_CUSTOM
     height: 3
-    objid: [0x80, 0x89]
+    objid: [0x83, 0x84]
     custom: "RenderLava3High"
     comment: "lava"
 }

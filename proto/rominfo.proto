@@ -35,6 +35,11 @@ message Map {
     // Pointer to the map address
     Address pointer = 9;
     int32 world = 10;
+
+    // Palace "worlds" control some properties of a palace, but for the
+    // purpose of the connector list, this map is in each world in the
+    // bitmap
+    int64 valid_worlds = 11;
 }
 
 message SideViewMapPointers {
@@ -47,6 +52,7 @@ message SideViewMapPointers {
     Address chr = 7;
     Address connector = 8;
     int32 world = 9;
+    int64 valid_worlds = 10;
 }
 
 message DecompressInfo {
@@ -54,7 +60,8 @@ message DecompressInfo {
         OBJECT_SMALL = 0;
         OBJECT_SET_0 = 1;
         OBJECT_SET_1 = 2;
-        OBJECT_EXTRA = 3;
+        OBJECT_EXTRA_SMALL = 3;
+        OBJECT_EXTRA = 4;
     }
     enum RenderType {
         UNKNOWN = 0;
@@ -79,6 +86,7 @@ message DecompressInfo {
     repeated int32 objid = 7;
     string custom = 8;
     string comment = 9;
+    int32 fixed_y = 10;
 }
 
 message BackgroundInfo {
@@ -97,14 +105,15 @@ message SpriteInfo {
     int32 height = 3;
     Address chr = 4;
     Address table = 5;
-    repeated int32 id = 6;
+    int32 palette = 6;
+    repeated int32 id = 7;
 }
 
 message ItemInfo {
     string area = 1;
     int32 world = 2;
     int64 valid_worlds = 3;
-    map<int32, string> info = 4;
+    map<int32, SpriteInfo> info = 4;
     Address chr = 5;
     Address sprite_table = 6;
 }

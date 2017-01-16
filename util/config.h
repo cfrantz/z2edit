@@ -20,9 +20,11 @@ class ConfigLoader {
 
     void Load(const std::string& filename,
               std::function<void(T*)> postprocess=nullptr) {
-        Load(filename, &config_);
-        if (postprocess)
-            postprocess(&config_);
+        filename_ = filename;
+        postprocess_ = postprocess;
+        Load(filename_, &config_);
+        if (postprocess_)
+            postprocess_(&config_);
     }
     void Load(const std::string& filename, T* config) {
         std::string pb;
@@ -42,10 +44,18 @@ class ConfigLoader {
 
         config->MergeFrom(local_config);
     }
+    void Reload() {
+        config_.Clear();
+        Load(filename_, &config_);
+        if (postprocess_)
+            postprocess_(&config_);
+    }
     inline const T& config() const { return config_; }
   protected:
     ConfigLoader() {};
     T config_;
+    std::string filename_;
+    std::function<void(T*)> postprocess_;
 };
 
 #endif // UTIL_CONFIG_H

@@ -96,3 +96,18 @@ cc_library(
 		"stb_tilemap_editor.h",
     ]
 )
+
+
+cc_library(
+    name = "imgui_sdl_opengl",
+    copts = ["-I/usr/include/SDL2"],
+    hdrs = [
+        "imgui_impl_sdl.h",
+    ],
+    srcs = [
+        "imgui_impl_sdl.cpp",
+    ],
+    deps = [
+        "//external:imgui",
+    ],
+)

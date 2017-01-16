@@ -44,18 +44,19 @@ map {
     objtable: { bank: 0 address: 0x07a3 }
     chr: { bank: 0x11 }
     pointer: { bank: 2 address: 0x50a }
-    world: 1
+    world: 3
 }
 
 sideview: {
     area: "background"
-    address: { bank: 1 address: 0x0 }
+    address: { bank: 1 address: 0x8000 }
     length: 6
     palette: { bank: 1 address: 0xe }
     type: OUTDOORS
     chr: { bank: 0x3 }
     world: -1
 }
+
 sideview: {
     area: "west_hyrule"
     address: { bank: 1 address: 0x0523 }
@@ -82,9 +83,9 @@ sideview: {
     length: 63
     palette: { bank: 2 address: 0xe }
     type: OUTDOORS
-    chr: { bank: 0x3 }
+    chr: { bank: 0x5 }
     world: 2
-    connector: { bank: 1 address: 0x71b }
+    connector: { bank: 2 address: 0x71b }
 }
 sideview: {
     area: "maze_island"
@@ -93,8 +94,28 @@ sideview: {
     palette: { bank: 2 address: 0xe }
     type: OUTDOORS
     chr: { bank: 0x3 }
-    world: 1
-    connector: { bank: 1 address: 0x21f8 }
+    world: 3
+    connector: { bank: 2 address: 0x21f8 }
+}
+
+sideview: {
+    area: "townbg"
+    address: { bank: 3 address: 0x8000 }
+    length: 2
+    palette: { bank: 1 address: 0xe }
+    type: TOWN
+    chr: { bank: 0x7 }
+    world: -1
+}
+sideview: {
+    area: "town"
+    address: { bank: 3 address: 0x523 }
+    palette: { bank: 3 address: 0xe }
+    length: 63
+    type: TOWN
+    chr: { bank: 7 }
+    world: 4
+    connector: { bank: 3 address: 0x71b }
 }
 
 sideview: {
@@ -105,6 +126,7 @@ sideview: {
     type: PALACE
     chr: { bank: 0x9 }
     world: 12
+    valid_worlds: 0x5000
     connector: { bank: 4 address: 0x71b }
 }
 sideview: {
@@ -115,6 +137,7 @@ sideview: {
     type: PALACE
     chr: { bank: 0xb }
     world: 12
+    valid_worlds: 0x5000
     connector: { bank: 4 address: 0x753 }
 }
 sideview: {
@@ -125,7 +148,20 @@ sideview: {
     type: PALACE
     chr: { bank: 0x17 }
     world: 14
+    valid_worlds: 0x5000
     connector: { bank: 4 address: 0x78b }
+}
+
+sideview: {
+    area: "World12"
+    address: { bank: 4 address: 0x0593 }
+    length: 14
+    palette: { bank: 4 address: 0x3f00 }
+    type: PALACE
+    chr: { bank: 0x09 }
+    world: 12
+    valid_worlds: 0x5000
+    connector: { bank: 4 address: 0x7df }
 }
 
 sideview: {
@@ -136,6 +172,7 @@ sideview: {
     type: PALACE
     chr: { bank: 0x13 }
     world: 16
+    valid_worlds: 0x70000
     connector: { bank: 4 address: 0x21f8 }
 }
 
@@ -147,6 +184,7 @@ sideview: {
     type: PALACE
     chr: { bank: 0x15 }
     world: 17
+    valid_worlds: 0x70000
     connector: { bank: 4 address: 0x2234 }
 }
 sideview: {
@@ -156,8 +194,20 @@ sideview: {
     palette: { bank: 4 address: 0x3f30 }
     type: PALACE
     chr: { bank: 0x19 }
+    world: 18
+    valid_worlds: 0x70000
     connector: { bank: 4 address: 0x2288 }
-    world: -1
+}
+
+sideview: {
+    area: "GreatPalace"
+    address: { bank: 5 address: 0x0523 }
+    length: 63
+    palette: { bank: 5 address: 0x800e }
+    type: GREAT_PALACE
+    chr: { bank: 0xd }
+    world: 22
+    connector: { bank: 5 address: 0x71b }
 }
 
 
@@ -240,6 +290,33 @@ background {
 }
 
 background {
+    type: TOWN
+    index: 0
+    name: "town"
+    ceiling: [0x55, 0x55]
+    floor: [0x55, 0x55]
+    background: 0x42
+}
+
+background {
+    type: TOWN
+    index: 2
+    name: "town"
+    ceiling: [0x40, 0x40]
+    floor: [0x53, 0x53]
+    background: 0x40
+}
+background {
+    type: TOWN
+    index: 1
+    name: "town"
+    ceiling: [0xcb, 0xcb]
+    floor: [0xe9, 0xe9]
+    background: 0x44
+}
+
+
+background {
     type: PALACE
     index: 0
     name: "palace"
@@ -247,4 +324,47 @@ background {
     floor: [0x4b, 0x4b]
     background: 0x42
 }
+background {
+    type: PALACE
+    index: 1
+    name: "palace"
+    ceiling: [0x4b, 0x4b]
+    floor: [0x85, 0x85]
+    background: 0x40
+}
 
+background {
+    type: GREAT_PALACE
+    index: 0
+    name: "great palace"
+    ceiling: [0x4c, 0x4c]
+    floor: [0x4c, 0x4c]
+    background: 0x42
+}
+
+background {
+    type: GREAT_PALACE
+    index: 1
+    name: "great palace"
+    ceiling: [0x4c, 0x4c]
+    floor: [0x88, 0x88]
+    background: 0x40
+}
+
+background {
+    type: GREAT_PALACE
+    index: 2
+    name: "great palace"
+    ceiling: [0x48, 0x48]
+    floor: [0xc5, 0xc5]
+    background: 0x40
+}
+
+background {
+    type: GREAT_PALACE
+    index: 3
+    name: "great palace"
+    ceiling: [0x4c, 0x4c]
+    floor: [0x4c, 0x4c]
+    background: 0x40
+}

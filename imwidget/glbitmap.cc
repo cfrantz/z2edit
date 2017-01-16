@@ -69,6 +69,11 @@ void GLBitmap::DrawAt(int x, int y, int w, int h) {
     Draw(w, h);
 }
 
+void GLBitmap::DrawAt(int x, int y, float scale) {
+    ImGui::SetCursorPos(ImVec2(x, y));
+    Draw(int(width_*scale), int(height_*scale));
+}
+
 void GLBitmap::Box(int x, int y, int w, int h, uint32_t color) {
     int xx, yy;
     int y0, y1;
@@ -112,7 +117,10 @@ void GLBitmap::Blit(int x, int y, int w, int h, uint32_t* pixels) {
     uint32_t *p = data_ + x + y * width_;
     for(int yy=0; yy<h; yy++, p+=ww) {
         for(int xx=0; xx<w; xx++, p++) {
-            *p = *pixels++;;
+            // TODO(cfrantz): real alpha blending
+            uint32_t val = *pixels++;
+            if (val >> 24)
+                *p = val;
         }
     }
 }

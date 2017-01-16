@@ -16,32 +16,32 @@ class Z2ObjectCache {
         OVERWORLD = 0,
         MAP = 1,
         ITEM = 2,
+        ITEMINFO = 3,
     };
-    Z2ObjectCache() {};
-    explicit Z2ObjectCache(Mapper* mapper, NesHardwarePalette* hwpal)
-        : mapper_(mapper), hwpal_(hwpal) {}
+    Z2ObjectCache();
+    explicit Z2ObjectCache(Mapper* mapper)
+        : mapper_(mapper) {}
 
     void Init(const Map& map);
+    void Init(const ItemInfo& info);
     void Init(const Address& addr, const Address& chr, Schema schema);
     GLBitmap& Get(uint8_t object);
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
-    inline void set_hwpal(NesHardwarePalette* pal) { hwpal_ = pal; }
     inline void set_palette(const Address& pal) { palette_ = pal; }
     inline void Clear() { cache_.clear(); }
-    const static int WIDTH = 16;
-    const static int HEIGHT = 16;
   private:
-    void CreateObject(uint8_t obj, uint32_t* dest);
-    void BlitTile(uint32_t* dest, int x, int y, int tile, int pal, bool flip=false);
+    void CreateObject(uint8_t obj);
+    void BlitTile(uint32_t* dest, int x, int y, int tile, int pal,
+                  int width, bool flip=false);
 
     Mapper* mapper_;
-    NesHardwarePalette* hwpal_;
 
     Schema schema_;
     Address obj_[4];
     Address palette_;
     Address chr_;
+    ItemInfo info_;
 
     std::map<uint8_t, GLBitmap> cache_;
 };

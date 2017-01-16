@@ -11,7 +11,8 @@ namespace z2util {
 class OverworldConnectorList;
 class OverworldConnector {
   public:
-    OverworldConnector(Mapper* mapper, Address address, uint8_t offset);
+    OverworldConnector(Mapper* mapper, Address address,
+                       uint8_t offset, int world);
     OverworldConnector(const OverworldConnector& other);
     void Draw();
     void DrawInPopup();
@@ -28,6 +29,8 @@ class OverworldConnector {
     Address address_;
 
     int offset_;
+    int current_world_;
+
     int x_;
     int y_;
     int map_;
@@ -50,7 +53,7 @@ class OverworldConnectorList {
   public:
     OverworldConnectorList();
 
-    void Init(Mapper* mapper, Address address, int n=63);
+    void Init(Mapper* mapper, Address address, int world, int n=63);
     void Draw();
     bool DrawInEditor(int x, int y);
     void DrawAdd();

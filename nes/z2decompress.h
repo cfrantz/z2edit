@@ -34,6 +34,10 @@ class Z2Decompress {
     inline MapType type() const {
         return compressed_map_.type();
     }
+    inline bool cursor_moves_left() {
+        return cursor_moves_left_;
+    }
+    const ItemInfo& EnemyInfo();
     void Clear();
 
     Address palette();
@@ -42,18 +46,18 @@ class Z2Decompress {
     inline const std::string& name() const { return compressed_map_.name(); }
     // areas: overword sideviews, towns, palaces, great palace
     const static int NR_AREAS = 4;
-    // sets: small objects, object set 0, object set 1, extra objects
-    const static int NR_SETS = 4;
+    // sets: small objects, object set 0, object set 1,
+    // extra small objects, extra objects
+    const static int NR_SETS = 5;
   private:
     int width_;
     int height_;
     typedef void (Z2Decompress::*PutFn)(int x, int y, uint8_t item,
                   const DecompressInfo* info);
 
-
     void DecompressOverWorld(const Map& map);
     void DecompressSideView(const Map& map);
-    void DecompressSideView(const Address& address, bool clear);
+    void DecompressSideView(const Address& address, const Address& foreground);
     void CollapseLayers(int top_layer);
     const BackgroundInfo& GetBackgroundInfo();
 
@@ -81,6 +85,11 @@ class Z2Decompress {
                        const DecompressInfo* info);
     void RenderStonehenge(int x, int y, uint8_t item,
                           const DecompressInfo* info);
+    void RenderBuilding(int x, int y, uint8_t item,
+                        const DecompressInfo* info);
+    void RenderWindow(int x, int y, uint8_t item,
+                      const DecompressInfo* info);
+
 
     Mapper* mapper_;
     uint8_t map_[8][128][64];
@@ -91,6 +100,7 @@ class Z2Decompress {
     uint8_t ground_;
     uint8_t back_;
     int layer_;
+    bool cursor_moves_left_;
     const DecompressInfo* info_[NR_AREAS][NR_SETS][16];
     static std::map<std::string, PutFn> put_;
 

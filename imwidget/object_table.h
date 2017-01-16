@@ -3,7 +3,6 @@
 
 #include "nes/mapper.h"
 #include "nes/z2objcache.h"
-#include "imwidget/hwpalette.h"
 #include "proto/rominfo.pb.h"
 
 namespace z2util {
@@ -15,12 +14,11 @@ class ObjectTable {
     void Draw();
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
-    inline void set_hwpal(NesHardwarePalette* p) { hwpal_ = p; }
     inline bool* visible() { return &visible_; }
   private:
     bool visible_;
+    float scale_;
     Mapper* mapper_;
-    NesHardwarePalette* hwpal_;
 
     Address table_;
     Address chr_;

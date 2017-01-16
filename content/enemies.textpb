@@ -1,75 +1,482 @@
+#
+# Notes on tile ids:
+# Zelda2 programs the NES PPU to use double-tall sprites (8x16).  As
+# such, the LSB of each tile ID tells the PPU which of the two currently
+# mapped CHR banks to read the tile from.
+#
+# In this file, I have added additional metadata to the tile IDs to be
+# able to draw sprites which are composed of sprites on non-8x16 aligned
+# offsets, or are large mirrored sprites.  For example, the large
+# skull bubble in the great palace looks like a 32x32 sprite, however,
+# it is layed out like this:
+#
+#    AB
+#   sABs
+#   sCDs
+#    CD
+#
+# In order to accomodate the y-offseted and mirrored (S)ides of the bubble,
+# the upper bits of the sprite ID can encode additional information:
+#
+#  
+# bit: 2        1        0        0
+#      4        6        8        0
+# id:  m xxxxxxxx yyyyyyyy iiiiiiib
+#
+# Bit 24 unconditionally mirrors the sprite about the x axis.
+#        xxxxxxxx = xoffset to render the sprite.
+#        yyyyyyyy = xoffset to render the sprite.
+#        iiiiiiib = the sprite ID and bank offset.
+
 enemies {
     area: "west_hyrule"
     world: 0
+    # Valid enemies for worlds 0 and 1 (West Hyrule and Death Mountain)
+    valid_worlds: 0x0003
     info: [
-        { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "red jar" },
-        { key: 0x02 value: "door" },
-        { key: 0x03 value: "myu" },
-        { key: 0x04 value: "bot" },
-        { key: 0x05 value: "bit" },
-        { key: 0x06 value: "moa" },
-        { key: 0x07 value: "ache" },
-        { key: 0x0a value: "acheman" },
-        { key: 0x0b value: "bubble generator" },
-        { key: 0x0c value: "rock generator" },
-        { key: 0x0d value: "red deeler" },
-        { key: 0x0e value: "blue deeler" },
-        { key: 0x0f value: "bago bago generator" },
-        { key: 0x10 value: "bago bago" },
-        { key: 0x11 value: "red octoroc (jumping)" },
-        { key: 0x12 value: "red octoroc (moving)" },
-        { key: 0x13 value: "elevator" },
-        { key: 0x14 value: "orange moblin" },
-        { key: 0x15 value: "red moblin" },
-        { key: 0x16 value: "blue moblin" },
-        { key: 0x17 value: "orange diara" },
-        { key: 0x18 value: "red diara" },
-        { key: 0x19 value: "orange goryia" },
-        { key: 0x1a value: "red goryia" },
-        { key: 0x1b value: "blue goryia" },
-        { key: 0x1c value: "lowder" },
-        { key: 0x1d value: "moby generator" },
-        { key: 0x1e value: "moby" },
-        { key: 0x1f value: "megmet" },
-        { key: 0x20 value: "geldarm" },
-        { key: 0x21 value: "dumb moblin generator" },
-        { key: 0x22 value: "dumb moblin" }
+        { key: 0x00 value: {
+            name: "fairy"
+            width: 8 height: 16
+            chr: { bank: 2 }
+            palette: 1
+            id: 0x6a
+        }},
+        { key: 0x01 value: {
+            name: "red jar"
+            width: 8 height: 16
+            chr: { bank: 2 }
+            palette: 2
+            id: 0x8a
+        }},
+        { key: 0x02 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
+        }},
+        { key: 0x03 value: {
+            name: "myu"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: [0x24, 0x24]
+        }},
+        { key: 0x04 value: {
+            name: "bot"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x05 value: {
+            name: "bit"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 2
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x06 value: {
+            name: "moa"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: [0xb6, 0xb8]
+        }},
+        { key: 0x07 value: {
+            name: "ache"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: [0x4e, 0x4e]
+        }},
+        { key: 0x0a value: {
+            name: "acheman"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 2
+            id: [0x7c, 0x7e, 0x80, 0x82]
+        }},
+        { key: 0x0b value: {
+            name: "bubble generator"
+            width:8 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: 0xaa
+        }},
+        { key: 0x0c value: {
+            name: "rock generator"
+            width:8 height: 16
+            chr: { bank: 2 }
+            palette: 2
+            id: 0xae
+        }},
+        { key: 0x0d value: {
+            name: "red deeler"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 2
+            id: [0xba, 0xbc]
+        }},
+        { key: 0x0e value: {
+            name: "blue deeler"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: [0xba, 0xbc]
+        }},
+        { key: 0x0f value: {
+            name: "bago bago generator"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 0
+            id: [0xc0, 0xc4]
+        }},
+        { key: 0x10 value: {
+            name: "bago bago"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 1
+            id: [0xc0, 0xc4]
+        }},
+        { key: 0x11 value: {
+            name: "red octoroc (jumping)"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 2
+            id: [0xc6, 0xc8]
+        }},
+        { key: 0x12 value: {
+            name: "red octoroc (moving)"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 2
+            id: [0xc6, 0xc8]
+        }},
+        { key: 0x13 value: {
+            name: "elevator"
+            width: 24 height: 64
+            chr: { bank: 2 }
+            palette: 1
+            id: [ 0xac, 0xac, 0xac,
+                    -1,   -1,   -1,
+                    -1,   -1,   -1,
+                  0xac, 0xac, 0xac ]
+        }},
+        { key: 0x14 value: {
+            name: "orange moblin"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x0f, 0x11, 0x17, 0x19]
+        }},
+        { key: 0x15 value: {
+            name: "red moblin"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 2
+            id: [0x0f, 0x11, 0x17, 0x19]
+        }},
+        { key: 0x16 value: {
+            name: "blue moblin"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 3
+            id: [0x0f, 0x11, 0x17, 0x19]
+        }},
+        { key: 0x17 value: {
+            name: "orange diara"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 1
+            id: [0xe6, 0xe8, 0xea, 0xec]
+        }},
+        { key: 0x18 value: {
+            name: "red diara"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 2
+            id: [0xe6, 0xe8, 0xea, 0xec]
+        }},
+        { key: 0x19 value: {
+            name: "orange goryia"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x01, 0x03, 0xf2, 0xf4]
+        }},
+        { key: 0x1a value: {
+            name: "red goryia"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 2
+            id: [0x01, 0x03, 0xf2, 0xf4]
+        }},
+        { key: 0x1b value: {
+            name: "blue goryia"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 3
+            id: [0x01, 0x03, 0xf2, 0xf4]
+        }},
+        { key: 0x1c value: {
+            name: "lowder"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: [0xe2, 0xe0]
+        }},
+        { key: 0x1d value: {
+            name: "moby generator"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 1
+            id: [0xd4, 0xd2]
+        }},
+        { key: 0x1e value: {
+            name: "moby"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 1
+            id: [0xd4, 0xd2]
+        }},
+        { key: 0x1f value: {
+            name: "megmet"
+            width: 16 height: 16
+            chr: { bank: 2 }
+            palette: 3
+            id: [0xd6, 0xd8]
+        }},
+        { key: 0x20 value: {
+            name: "geldarm"
+            width: 8 height: 48
+            chr: { bank: 2 }
+            palette: 3
+            id: [0x62, 0x64, 0x64]
+        }},
+        { key: 0x21 value: {
+            name: "dumb moblin generator"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x1b, 0x23, 0xfc, 0xfe]
+        }},
+        { key: 0x22 value: {
+            name: "dumb moblin"
+            width: 16 height: 32
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x1b, 0x23, 0xfc, 0xfe]
+        }}
     ]
 }
 
 enemies {
     area: "east_hyrule"
     world: 2
+    # Valid enemies for worlds 2 and 3 (East Hyrule and Maze Island)
+    valid_worlds: 0x000c
     info: [
-        { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "red jar" },
-        { key: 0x02 value: "door" },
-        { key: 0x03 value: "myu" },
-        { key: 0x04 value: "bot" },
-        { key: 0x05 value: "bit" },
-        { key: 0x06 value: "moa" },
-        { key: 0x07 value: "ache" },
-        { key: 0x0a value: "acheman" },
-        { key: 0x0b value: "bubble generator" },
-        { key: 0x0c value: "rock generator" },
-        { key: 0x0d value: "red deeler" },
-        { key: 0x0e value: "blue deeler" },
-        { key: 0x0f value: "bago bago generator" },
-        { key: 0x10 value: "bago bago" },
-        { key: 0x11 value: "blue octoroc (jumping)" },
-        { key: 0x12 value: "blue octoroc (moving)" },
-        { key: 0x13 value: "elevator" },
-        { key: 0x14 value: "tektite" },
-        { key: 0x15 value: "eye" },
-        { key: 0x16 value: "leever" },
-        { key: 0x17 value: "boon" },
-        { key: 0x18 value: "balilisk" },
-        { key: 0x19 value: "scorpion" },
-        { key: 0x1a value: "red lizalfos" },
-        { key: 0x1b value: "orange lizalfos" },
-        { key: 0x1c value: "blue lizalfos" },
-        { key: 0x1d value: "fence lizalfos" }
+        { key: 0x00 value: {
+            name: "fairy"
+            width: 8 height: 16
+            chr: { bank: 4 }
+            palette: 1
+            id: 0x6a
+        }},
+        { key: 0x01 value: {
+            name: "red jar"
+            width: 8 height: 16
+            chr: { bank: 4 }
+            palette: 2
+            id: 0x8a
+        }},
+        { key: 0x02 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 4 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
+        }},
+        { key: 0x03 value: {
+            name: "myu"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x04 value: {
+            name: "bot"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x05 value: {
+            name: "bit"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 2
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x06 value: {
+            name: "moa"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xb6, 0xb8]
+        }},
+        { key: 0x07 value: {
+            name: "ache"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xb6, 0xb8]
+        }},
+        { key: 0x0a value: {
+            name: "acheman"
+            width: 16 height: 32
+            chr: { bank: 4 }
+            palette: 2
+            id: [0x7c, 0x7e, 0x80, 0x82]
+        }},
+        { key: 0x0b value: {
+            name: "bubble generator"
+            width:8 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: 0xaa
+        }},
+        { key: 0x0c value: {
+            name: "rock generator"
+            width:8 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: 0xaa
+        }},
+        { key: 0x0d value: {
+            name: "red deeler"
+            width:16 height: 16
+            chr: { bank: 4 }
+            palette: 2
+            id: [0xba, 0xbc]
+        }},
+        { key: 0x0e value: {
+            name: "blue deeler"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xba, 0xbc]
+        }},
+        { key: 0x0f value: {
+            name: "bago bago generator"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 1
+            id: [0xc0, 0xc4]
+        }},
+        { key: 0x10 value: {
+            name: "bago bago"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 1
+            id: [0xc0, 0xc4]
+        }},
+        { key: 0x11 value: {
+            name: "blue octoroc (jumping)"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xc6, 0xc8]
+        }},
+        { key: 0x12 value: {
+            name: "blue octoroc (moving)"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xc6, 0xc8]
+        }},
+        { key: 0x13 value: {
+            name: "elevator"
+            width: 24 height: 64
+            chr: { bank: 4 }
+            palette: 1
+            id: [ 0xac, 0xac, 0xac,
+                    -1,   -1,   -1,
+                    -1,   -1,   -1,
+                  0xac, 0xac, 0xac ]
+        }},
+        { key: 0x14 value: {
+            name: "tektite"
+            width: 16 height: 32
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xd0, 0xd2, 0xd4, 0xd6]
+        }},
+        { key: 0x15 value: {
+            name: "eye"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 2
+            id: [0x01, 0x03]
+        }},
+        { key: 0x16 value: {
+            name: "leever"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0x07, 0x07]
+        }},
+        { key: 0x17 value: {
+            name: "boon"
+            width: 16 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0x0b, 0x0f]
+        }},
+        { key: 0x18 value: {
+            name: "balilisk"
+            width: 24 height: 16
+            chr: { bank: 4 }
+            palette: 3
+            id: [0xdc, 0xde, 0xe0]
+        }},
+        { key: 0x19 value: {
+            name: "scorpion"
+            width: 24 height: 32
+            chr: { bank: 4 }
+            palette: 3
+            id: [  -1,   -1, 0xf2,
+                 0xfa, 0xf6, 0xf8]
+        }},
+        { key: 0x1a value: {
+            name: "red lizalfos"
+            width: 16 height: 32
+            chr: { bank: 4 }
+            palette: 2
+            id: [0x1d, 0x13, 0x1f, 0x17]
+        }},
+        { key: 0x1b value: {
+            name: "orange lizalfos"
+            width: 16 height: 32
+            chr: { bank: 4 }
+            palette: 1
+            id: [0x1d, 0x13, 0x1f, 0x17]
+        }},
+        { key: 0x1c value: {
+            name: "blue lizalfos"
+            width: 16 height: 32
+            chr: { bank: 4 }
+            palette: 3
+            id: [0x1d, 0x13, 0x1f, 0x17]
+        }},
+        { key: 0x1d value: {
+            name: "fence lizalfos"
+            width: 16 height: 16 
+            chr: { bank: 4 }
+            palette: 2
+            id: [0x1d, 0x13]
+        }}
     ]
 }
 
@@ -77,172 +484,953 @@ enemies {
     area: "town"
     world: 4
     info: [
-        { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "candle" },
-        { key: 0x02 value: "door" },
-        { key: 0x03 value: "purple keese" },
-        { key: 0x04 value: "purble bot" },
-        { key: 0x05 value: "bit" },
-        { key: 0x06 value: "purple moa" },
-        { key: 0x07 value: "purple keese(?)" },
-        { key: 0x08 value: "gold girl (crash?)" },
-        { key: 0x09 value: "townsperson" },
-        { key: 0x0a value: "townsperson" },
-        { key: 0x0b value: "townsperson" },
-        { key: 0x0c value: "townsperson" },
-        { key: 0x0d value: "townsperson" },
-        { key: 0x0e value: "townsperson" },
-        { key: 0x0f value: "townsperson" },
-        { key: 0x10 value: "townsperson" },
-        { key: 0x11 value: "townsperson" },
-        { key: 0x12 value: "townsperson" },
-        { key: 0x13 value: "townsperson" },
-        { key: 0x14 value: "townsperson" },
-        { key: 0x15 value: "townsperson" },
-        { key: 0x16 value: "townsperson" },
-        { key: 0x17 value: "townsperson" },
-        { key: 0x18 value: "townsperson" },
-        { key: 0x19 value: "townsperson" },
-        { key: 0x1a value: "townsperson" },
-        { key: 0x1b value: "townsperson" },
-        { key: 0x1c value: "townsperson" },
-        { key: 0x1d value: "townsperson" },
-        { key: 0x1e value: "townsperson" },
-        { key: 0x1f value: "townsperson" },
-        { key: 0x20 value: "townsperson" },
-        { key: 0x21 value: "townsperson" },
-        { key: 0x22 value: "townsperson" },
-        { key: 0x23 value: "townsperson" },
-        { key: 0x24 value: "townsperson" }
+        { key: 0x00 value: {
+            name: "fairy"
+        }},
+        { key: 0x01 value: {
+            name: "candle"
+        }},
+        { key: 0x02 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
+        }},
+        { key: 0x03 value: {
+            name: "purple keese"
+        }},
+        { key: 0x04 value: {
+            name: "purble bot"
+        }},
+        { key: 0x05 value: {
+            name: "bit"
+        }},
+        { key: 0x06 value: {
+            name: "purple moa"
+        }},
+        { key: 0x07 value: {
+            name: "purple keese(?)"
+        }},
+        { key: 0x08 value: {
+            name: "gold girl (crash?)"
+        }},
+        { key: 0x09 value: {
+            name: "townsperson 09"
+        }},
+        { key: 0x0a value: {
+            name: "townsperson 10"
+        }},
+        { key: 0x0b value: {
+            name: "townsperson 11"
+        }},
+        { key: 0x0c value: {
+            name: "townsperson 12"
+        }},
+        { key: 0x0d value: {
+            name: "townsperson 13"
+        }},
+        { key: 0x0e value: {
+            name: "townsperson 14"
+        }},
+        { key: 0x0f value: {
+            name: "15: Wizard"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 1
+            id: [0x74, 0x76, 0xd4, 0xd6]
+        }},
+        { key: 0x10 value: {
+            name: "16: Red Hint Guy (Eyes of Ganon...)"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 2
+            id: [0xc0, 0xc2, 0xc4, 0xc6]
+        }},
+        { key: 0x11 value: {
+            name: "17: Purple Hint Lady (Do not go south wihout...)"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 3
+            id: [0xdc, 0xde, 0xe4, 0xe6]
+        }},
+        { key: 0x12 value: {
+            name: "18: Red Hint Granny (place the crystal...)"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 2
+            id: [0xf4, 0xf6, 0xf8, 0xfa]
+        }},
+        { key: 0x13 value: {
+            name: "townsperson 19"
+        }},
+        { key: 0x14 value: {
+            name: "20: Item Lady"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 3
+            id: [0xdc, 0xde, 0xe4, 0xe6]
+        }},
+        { key: 0x15 value: {
+            name: "townsperson 21"
+        }},
+        { key: 0x16 value: {
+            name: "22: Trophy Lady"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 2
+            id: [0xd8, 0xda, 0xe0, 0xe2]
+        }},
+        { key: 0x17 value: {
+            name: "23: Life Lady"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 2
+            id: [0xd8, 0xda, 0xe0, 0xe2]
+        }},
+        { key: 0x18 value: {
+            name: "24: Magic Lady"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 1
+            id: [0xf4, 0xf6, 0xf8, 0xfa]
+        }},
+        { key: 0x19 value: {
+            name: "townsperson 25"
+        }},
+        { key: 0x1a value: {
+            name: "townsperson 26"
+        }},
+        { key: 0x1b value: {
+            name: "townsperson 27"
+        }},
+        { key: 0x1c value: {
+            name: "townsperson 28"
+        }},
+        { key: 0x1d value: {
+            name: "29: Purple Hint Guy (Find magic in a cave...)"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 3
+            id: [0xc0, 0xc2, 0xc4, 0xc6]
+        }},
+        { key: 0x1e value: {
+            name: "townsperson 30"
+        }},
+        { key: 0x1f value: {
+            name: "31: Red Hint Guy (Only a Hammer...)"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 2
+            id: [0xc0, 0xc2, 0xc4, 0xc6]
+        }},
+        { key: 0x20 value: {
+            name: "32: Purple Hint Lady (Find the heart...)"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 3
+            id: [0xd8, 0xda, 0xe0, 0xe2]
+        }},
+        { key: 0x21 value: {
+            name: "33: Mirror (I found a mirror...)"
+            width: 8 height: 16
+            chr: { bank: 6 }
+            palette: 1
+            id: 0xf5
+        }},
+        { key: 0x22 value: {
+            name: "34: Rauru Sign"
+            width: 8 height: 16
+            chr: { bank: 6 }
+            palette: 1
+            id: 0xf5
+        }},
+        { key: 0x23 value: {
+            name: "35: Busy townsperson generator"
+            width: 16 height: 32
+            chr: { bank: 6 }
+            palette: 3
+            id: [0xd8, 0xda, 0xe0, 0xe2]
+        }},
+        { key: 0x24 value: {
+            name: "townsperson 36"
+        }}
     ]
 }
 
 enemies {
     area: "palace_125"
     world: 12
+    valid_worlds: 0x5000
     info: [
-        { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "palace info" },
-        { key: 0x02 value: "door" },
-        { key: 0x03 value: "myu" },
-        { key: 0x04 value: "bot" },
-        { key: 0x05 value: "strike for jar" },
-        { key: 0x06 value: "slow bubble" },
-        { key: 0x07 value: "orange moa" },
-        { key: 0x08 value: "falling block generator" },
-        { key: 0x09 value: "falling block" },
-        { key: 0x0a value: "blue skull head" },
-        { key: 0x0b value: "rathead generator" },
-        { key: 0x0c value: "rathead" },
-        { key: 0x0d value: "acid dripper" },
-        { key: 0x0e value: "fast bubble" },
-        { key: 0x0f value: "bago bago generator" },
-        { key: 0x10 value: "bago bago" },
-        { key: 0x11 value: "rope (jumping)" },
-        { key: 0x12 value: "rope (moving)" },
-        { key: 0x13 value: "elevator" },
-        { key: 0x14 value: "crystal spot" },
-        { key: 0x15 value: "crystal" },
-        { key: 0x16 value: "energy ball shooter (down/right)" },
-        { key: 0x17 value: "energy ball shooter (down/left)" },
-        { key: 0x18 value: "orange ironknuckle" },
-        { key: 0x19 value: "red ironknuckle" },
-        { key: 0x1a value: "blue ironknuckle" },
-        { key: 0x1b value: "wolf head generator" },
-        { key: 0x1c value: "wolf head" },
-        { key: 0x1d value: "mago" },
-        { key: 0x1e value: "hammer thrower" },
-        { key: 0x1f value: "red stalfos" },
-        { key: 0x20 value: "horse head" },
-        { key: 0x21 value: "helmethead/gooma" },
-        { key: 0x22 value: "helmethead head" },
-        { key: 0x23 value: "blue stalfos" }
+        { key: 0x00 value: {
+            name: "fairy"
+            width: 8 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: 0x6a
+        }},
+        { key: 0x01 value: {
+            name: "palace item"
+        }},
+        { key: 0x02 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 8 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
+        }},
+        { key: 0x03 value: {
+            name: "myu"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 3
+            id: [0xb0, 0xb0]
+        }},
+        { key: 0x04 value: {
+            name: "bot"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 3
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x05 value: {
+            name: "strike for jar"
+            width: 8 height: 16
+            chr: { bank: 8 }
+            palette: 2
+            id: 0x8a
+        }},
+        { key: 0x06 value: {
+            name: "slow bubble"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: [0x67, 0x67]
+        }},
+        { key: 0x07 value: {
+            name: "orange moa"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: [0xb6, 0xb8]
+        }},
+        { key: 0x08 value: {
+            name: "falling block generator"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: [0xbb, 0xbd]
+        }},
+        { key: 0x09 value: {
+            name: "falling block"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: [0xbb, 0xbd]
+        }},
+        { key: 0x0a value: {
+            name: "blue skull head"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 3
+            id: [0xdc, 0x37]
+        }},
+        { key: 0x0b value: {
+            name: "tinsuit generator"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 1
+            id: [0x31, 0x33, 0x45, 0x47]
+        }},
+        { key: 0x0c value: {
+            name: "tinsuit"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 1
+            id: [0x31, 0x33, 0x45, 0x47]
+        }},
+        { key: 0x0d value: {
+            name: "acid dripper"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 2
+            id: [0x8f, 0x91]
+        }},
+        { key: 0x0e value: {
+            name: "fast bubble"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: [0x67, 0x67]
+        }},
+        { key: 0x0f value: {
+            name: "bago bago generator"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: [0xc0, 0xc2]
+        }},
+        { key: 0x10 value: {
+            name: "bago bago"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: [0xc0, 0xc2]
+        }},
+        { key: 0x11 value: {
+            name: "rope (jumping)"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 3
+            id: [0xca, 0xcc]
+        }},
+        { key: 0x12 value: {
+            name: "rope (moving)"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 3
+            id: [0xca, 0xcc]
+        }},
+        { key: 0x13 value: {
+            name: "elevator"
+            width: 24 height: 64
+            chr: { bank: 2 }
+            palette: 1
+            id: [ 0xac, 0xac, 0xac,
+                    -1,   -1,   -1,
+                    -1,   -1,   -1,
+                  0xac, 0xac, 0xac ]
+        }},
+        { key: 0x14 value: {
+            name: "crystal spot"
+            width: 8 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: 0x3d
+        }},
+        { key: 0x15 value: {
+            name: "crystal"
+            width: 8 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: 0x3d
+        }},
+        { key: 0x16 value: {
+            name: "energy ball shooter (down/right)"
+            width: 8 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: 0xce
+        }},
+        { key: 0x17 value: {
+            name: "energy ball shooter (down/left)"
+            width: 8 height: 16
+            chr: { bank: 8 }
+            palette: 1
+            id: 0xce
+        }},
+        { key: 0x18 value: {
+            name: "orange ironknuckle"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 1
+            id: [0x4d, 0x43, 0x4f, 0x47]
+        }},
+        { key: 0x19 value: {
+            name: "red ironknuckle"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 2
+            id: [0x4d, 0x43, 0x4f, 0x47]
+        }},
+        { key: 0x1a value: {
+            name: "blue ironknuckle"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 3
+            id: [0x4d, 0x43, 0x4f, 0x47]
+        }},
+        { key: 0x1b value: {
+            name: "wolf head generator"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 2
+            id: [0x39, 0x3b]
+        }},
+        { key: 0x1c value: {
+            name: "wolf head"
+            width: 16 height: 16
+            chr: { bank: 8 }
+            palette: 2
+            id: [0x39, 0x3b]
+        }},
+        { key: 0x1d value: {
+            name: "mago"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 1
+            id: [0xd0, 0xd2, 0xd4, 0xd6]
+        }},
+        { key: 0x1e value: {
+            name: "hammer thrower"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 2
+            id: [0xe0, 0xe2, 0xe8, 0xea]
+        }},
+        { key: 0x1f value: {
+            name: "red stalfos"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 2
+            id: [0xf0, 0xf2, 0xf4, 0xf6]
+        }},
+        { key: 0x20 value: {
+            name: "horse head"
+            width: 16 height: 48
+            chr: { bank: 8 }
+            palette: 2
+            id: [0x1b, 0x1d,
+                 0x1f, 0x21,
+                 0x13, 0x15]
+        }},
+        { key: 0x21 value: {
+            name: "helmethead/gooma"
+            width: 16 height: 48
+            chr: { bank: 8 }
+            palette: 3
+            id: [0x040409, -1,
+                 0x0f, 0x11,
+                 0x13, 0x15]
+        }},
+        { key: 0x22 value: {
+            name: "helmethead head"
+            width: 8 height: 16
+            chr: { bank: 8 }
+            palette: 3
+            id: 0x0b
+        }},
+        { key: 0x23 value: {
+            name: "blue stalfos"
+            width: 16 height: 32
+            chr: { bank: 8 }
+            palette: 3
+            id: [0xf0, 0xf2, 0xf4, 0xf6]
+        }}
     ]
 }
 
 enemies {
     area: "palace_346"
     world: 16
+    valid_worlds: 0x70000
     info: [
-        { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "palace info" },
-        { key: 0x02 value: "door" },
-        { key: 0x03 value: "myu" },
-        { key: 0x04 value: "bot" },
-        { key: 0x05 value: "strike for jar/IK" },
-        { key: 0x06 value: "slow bubble" },
-        { key: 0x07 value: "orange moa" },
-        { key: 0x08 value: "falling block generator" },
-        { key: 0x09 value: "falling block" },
-        { key: 0x0a value: "blue skull head" },
-        { key: 0x0b value: "rathead generator" },
-        { key: 0x0c value: "rathead" },
-        { key: 0x0d value: "acid dripper" },
-        { key: 0x0e value: "fast bubble" },
-        { key: 0x0f value: "???(0x0f)" },
-        { key: 0x10 value: "flame" },
-        { key: 0x11 value: "rope" },
-        { key: 0x12 value: "???(0x12)" },
-        { key: 0x13 value: "elevator" },
-        { key: 0x14 value: "crystal spot" },
-        { key: 0x15 value: "crystal" },
-        { key: 0x16 value: "energy ball shooter (down/right)" },
-        { key: 0x17 value: "energy ball shooter (down/left)" },
-        { key: 0x18 value: "orange ironknuckle" },
-        { key: 0x19 value: "red ironknuckle" },
-        { key: 0x1a value: "blue ironknuckle" },
-        { key: 0x1b value: "wolf head generator" },
-        { key: 0x1c value: "wolf head" },
-        { key: 0x1d value: "wizrobe" },
-        { key: 0x1e value: "red stalfos knight" },
-        { key: 0x1f value: "doom knocker" },
-        { key: 0x20 value: "rebonack" },
-        { key: 0x21 value: "barba" },
-        { key: 0x22 value: "carock" },
-        { key: 0x23 value: "blue stalfos knight" }
+        { key: 0x00 value: {
+            name: "fairy"
+            width: 8 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: 0x6a
+        }},
+        { key: 0x01 value: {
+            name: "palace info"
+        }},
+        { key: 0x02 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 18 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
+        }},
+        { key: 0x03 value: {
+            name: "myu"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 3
+            id: [0xb0, 0xb0]
+        }},
+        { key: 0x04 value: {
+            name: "bot"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 3
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x05 value: {
+            name: "strike for jar/IK"
+            width: 8 height: 16
+            chr: { bank: 18 }
+            palette: 2
+            id: 0x8a
+        }},
+        { key: 0x06 value: {
+            name: "slow bubble"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: [0x67, 0x67]
+        }},
+        { key: 0x07 value: {
+            name: "orange moa"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: [0xb6, 0xb8]
+        }},
+        { key: 0x08 value: {
+            name: "falling block generator"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: [0xbb, 0xbd]
+        }},
+        { key: 0x09 value: {
+            name: "falling block"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: [0xbb, 0xbd]
+        }},
+        { key: 0x0a value: {
+            name: "blue skull head"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 3
+            id: [0xdc, 0x37]
+        }},
+        { key: 0x0b value: {
+            name: "rathead generator"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 1
+            id: [0x31, 0x33, 0x45, 0x47]
+        }},
+        { key: 0x0c value: {
+            name: "rathead"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 1
+            id: [0x31, 0x33, 0x45, 0x47]
+        }},
+        { key: 0x0d value: {
+            name: "acid dripper"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 2
+            id: [0x8f, 0x91]
+        }},
+        { key: 0x0e value: {
+            name: "fast bubble"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: [0x67, 0x67]
+        }},
+        { key: 0x0f value: {
+            name: "blue skull head"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 3
+            id: [0x35, 0x37]
+        }},
+        { key: 0x10 value: {
+            name: "flame"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: [0x040052, -1]
+        }},
+        { key: 0x11 value: {
+            name: "rope"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 3
+            id: [0xca, 0xcc]
+        }},
+        { key: 0x12 value: {
+            name: "???(crash)"
+        }},
+        { key: 0x13 value: {
+            name: "elevator"
+            width: 24 height: 64
+            chr: { bank: 2 }
+            palette: 1
+            id: [ 0xac, 0xac, 0xac,
+                    -1,   -1,   -1,
+                    -1,   -1,   -1,
+                  0xac, 0xac, 0xac ]
+        }},
+        { key: 0x14 value: {
+            name: "crystal spot"
+            width: 8 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: 0x3d
+        }},
+        { key: 0x15 value: {
+            name: "crystal"
+            width: 8 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: 0x3d
+        }},
+        { key: 0x16 value: {
+            name: "energy ball shooter (down/right)"
+            width: 8 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: 0xce
+        }},
+        { key: 0x17 value: {
+            name: "energy ball shooter (down/left)"
+            width: 8 height: 16
+            chr: { bank: 18 }
+            palette: 1
+            id: 0xce
+        }},
+        { key: 0x18 value: {
+            name: "orange ironknuckle"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 1
+            id: [0x4d, 0x43, 0x4f, 0x47]
+        }},
+        { key: 0x19 value: {
+            name: "red ironknuckle"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 2
+            id: [0x4d, 0x43, 0x4f, 0x47]
+        }},
+        { key: 0x1a value: {
+            name: "blue ironknuckle"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 3
+            id: [0x4d, 0x43, 0x4f, 0x47]
+        }},
+        { key: 0x1b value: {
+            name: "wolf head generator"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 2
+            id: [0x39, 0x3b]
+        }},
+        { key: 0x1c value: {
+            name: "wolf head"
+            width: 16 height: 16
+            chr: { bank: 18 }
+            palette: 2
+            id: [0x39, 0x3b]
+        }},
+        { key: 0x1d value: {
+            name: "wizrobe"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 1
+            id: [0xd0, 0xd2, 0xd4, 0xd6]
+        }},
+        { key: 0x1e value: {
+            name: "doom knocker"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 3
+            id: [0xe0, 0xe2, 0xe4, 0xe6]
+        }},
+        { key: 0x1f value: {
+            name: "red stalfos knight"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 2
+            id: [0xf0, 0xf2, 0xf8, 0xfa]
+        }},
+        { key: 0x20 value: {
+            name: "rebonack"
+            width: 32 height: 32
+            chr: { bank: 18 }
+            palette: 3
+            id: [0x09, 0x0b, 0x4d, 0x43,
+                 0x0d, 0x0f, 0x11, 0x13]
+        }},
+        { key: 0x21 value: {
+            name: "barba"
+            width: 32 height: 64
+            chr: { bank: 24 }
+            palette: 1
+            id: [0x15, 0x17, 0x19, 0x1b,
+                   -1,   -1, 0xa1, 0xa3,
+                   -1,   -1, 0xa1, 0xa3,
+                   -1,   -1, 0xa1, 0xa3]
+        }},
+        { key: 0x22 value: {
+            name: "carock"
+            width: 32 height: 48
+            chr: { bank: 20 }
+            palette: 2
+            id: [0x09, 0x0b, 0x11, 0x13,
+                 0x0d, 0x0f, 0x15, 0x17,
+                   -1, 0x19, 0x1b,   -1]
+        }},
+        { key: 0x23 value: {
+            name: "blue stalfos knight"
+            width: 16 height: 32
+            chr: { bank: 18 }
+            palette: 3
+            id: [0xf0, 0xf2, 0xf8, 0xfa]
+        }}
     ]
 }
 
 enemies {
     area: "great_palace"
-    world: -1
+    world: 22
     info: [
-        { key: 0x00 value: "fairy" },
-        { key: 0x01 value: "red jar" },
-        { key: 0x02 value: "door" },
-        { key: 0x03 value: "myu" },
-        { key: 0x04 value: "bot" },
-        { key: 0x05 value: "bit" },
-        { key: 0x06 value: "moa" },
-        { key: 0x07 value: "ache" },
-        { key: 0x08 value: "???(0x08)" },
-        { key: 0x09 value: "???(0x09)" },
-        { key: 0x0a value: "acheman" },
-        { key: 0x0b value: "bubble generator" },
-        { key: 0x0c value: "rock generator" },
-        { key: 0x0d value: "red deeler" },
-        { key: 0x0e value: "blue deeler" },
-        { key: 0x0f value: "fire bago bago generator" },
-        { key: 0x10 value: "fire bago bago" },
-        { key: 0x11 value: "fire rope (jumping)" },
-        { key: 0x12 value: "fire rope (moving)" },
-        { key: 0x13 value: "elevator" },
-        { key: 0x14 value: "slow bubble" },
-        { key: 0x15 value: "fast bubble" },
-        { key: 0x16 value: "orange skull head" },
-        { key: 0x17 value: "large bubble" },
-        { key: 0x18 value: "orange fokka" },
-        { key: 0x19 value: "red fokka" },
-        { key: 0x1a value: "blue fokka" },
-        { key: 0x1b value: "???(0x1b)" },
-        { key: 0x1c value: "???(0x1c)" },
-        { key: 0x1d value: "fokkel" },
-        { key: 0x1e value: "king bot" },
-        { key: 0x1f value: "???(0x1f)" },
-        { key: 0x20 value: "barrier" },
-        { key: 0x21 value: "???(0x21)" },
-        { key: 0x22 value: "thunderbird" },
-        { key: 0x23 value: "dark link trigger" }
+        { key: 0x00 value: {
+            name: "fairy"
+            width: 8 height: 16
+            chr: { bank: 12 }
+            palette: 1
+            id: 0x6a
+        }},
+        { key: 0x01 value: {
+            name: "item"
+            width: 8 height: 16
+            chr: { bank: 12 }
+            palette: 2
+            id: 0x8a
+        }},
+        { key: 0x02 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 12 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
+        }},
+        { key: 0x03 value: {
+            name: "myu"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 3
+            id: [0x24, 0x24]
+        }},
+        { key: 0x04 value: {
+            name: "bot"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 3
+            id: [0xb4, 0xb4]
+        }},
+        { key: 0x05 value: {
+            name: "strike for jar/birdknight"
+            width: 8 height: 16
+            chr: { bank: 12 }
+            palette: 2
+            id: 0x8a
+        }},
+        { key: 0x06 value: {
+            name: "moa"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 3
+            id: [0xb6, 0xb8]
+        }},
+        { key: 0x07 value: {
+            name: "ache"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 3
+            id: [0x4e, 0x4e]
+        }},
+        { key: 0x08 value: {
+            name: "???(crash)"
+        }},
+        { key: 0x09 value: {
+            name: "???(crash)"
+        }},
+        { key: 0x0a value: {
+            name: "acheman"
+            width: 16 height: 32
+            chr: { bank: 12 }
+            palette: 2
+            id: [0x7c, 0x7e, 0x80, 0x82]
+        }},
+        { key: 0x0b value: {
+            name: "bubble generator"
+            width:8 height: 16
+            chr: { bank: 12 }
+            palette: 3
+            id: 0xaa
+        }},
+        { key: 0x0c value: {
+            name: "rock generator"
+            width:8 height: 16
+            chr: { bank: 12 }
+            palette: 2
+            id: 0xae
+        }},
+        { key: 0x0d value: {
+            name: "red deeler"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 2
+            id: [0xba, 0xbc]
+        }},
+        { key: 0x0e value: {
+            name: "blue deeler"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 3
+            id: [0xba, 0xbc]
+        }},
+        { key: 0x0f value: {
+            name: "fire bago bago generator"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 0
+            id: [0xc0, 0xc4]
+        }},
+        { key: 0x10 value: {
+            name: "fire bago bago"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 1
+            id: [0xc0, 0xc4]
+        }},
+        { key: 0x11 value: {
+            name: "fire rope (jumping)"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 2
+            id: [0x61, 0x33]
+        }},
+        { key: 0x12 value: {
+            name: "fire rope (moving)"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 2
+            id: [0x61, 0x33]
+        }},
+        { key: 0x13 value: {
+            name: "elevator"
+            width: 24 height: 64
+            chr: { bank: 12 }
+            palette: 1
+            id: [ 0xac, 0xac, 0xac,
+                    -1,   -1,   -1,
+                    -1,   -1,   -1,
+                  0xac, 0xac, 0xac ]
+        }},
+        { key: 0x14 value: {
+            name: "slow bubble"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 1
+            id: [0x67, 0x67]
+        }},
+        { key: 0x15 value: {
+            name: "fast bubble"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 1
+            id: [0x67, 0x67]
+        }},
+        { key: 0x16 value: {
+            name: "orange skull head"
+            width: 16 height: 16
+            chr: { bank: 12 }
+            palette: 1
+            id: [0x35, 0x37]
+        }},
+        { key: 0x17 value: {
+            name: "large bubble"
+            width: 32 height: 32
+            chr: { bank: 12 }
+            palette: 1
+            id: [ 0x000805, 0x07, 0x07, 0x1000805,
+                        -1, 0x09, 0x09, -1]
+        }},
+        { key: 0x18 value: {
+            name: "orange fokka"
+            width: 16 height: 32
+            chr: { bank: 12 }
+            palette: 1
+            id: [0x4d, 0x43, 0x51, 0x4b]
+        }},
+        { key: 0x19 value: {
+            name: "red fokka"
+            width: 16 height: 32
+            chr: { bank: 12 }
+            palette: 2
+            id: [0x4d, 0x43, 0x51, 0x4b]
+        }},
+        { key: 0x1a value: {
+            name: "blue fokka"
+            width: 16 height: 32
+            chr: { bank: 12 }
+            palette: 3
+            id: [0x4d, 0x43, 0x51, 0x4b]
+        }},
+        { key: 0x1b value: {
+            name: "???(crash)"
+        }},
+        { key: 0x1c value: {
+            name: "???(crash)"
+        }},
+        { key: 0x1d value: {
+            name: "fokkel (spicy chicken)"
+            width: 16 height: 32
+            chr: { bank: 12 }
+            palette: 2
+            id: [0xe8, 0xea, 0xe4, 0xe6]
+        }},
+        { key: 0x1e value: {
+            name: "king bot"
+            width: 48 height: 32
+            chr: { bank: 12 }
+            palette: 3
+            id: [0xf0, 0xf2, 0xf4, 0xf4, 0x10000f2, 0x10000f0,
+                 0xf6, 0xf8, 0xfa, 0xfa, 0x10000f8, 0x10000f6]
+        }},
+        { key: 0x1f value: {
+            name: "???(crash)"
+        }},
+        { key: 0x20 value: {
+            name: "barrier"
+            width: 16 height: 128
+            chr: { bank: 12 }
+            palette: 3
+            id: [0x9f, 0x9f,
+                 0x9f, 0x9f,
+                 0x9f, 0x9f,
+                 0x9f, 0x9f,
+                 0x9f, 0x9f,
+                 0x9f, 0x9f,
+                 0x9f, 0x9f,
+                 0x9f, 0x9f ]
+
+        }},
+        { key: 0x21 value: {
+            name: "???(crash)"
+        }},
+        { key: 0x22 value: {
+            name: "thunderbird"
+            width: 48 height: 80
+            chr: { bank: 12 }
+            palette: 2
+            id: [0x0f, 0x11, 0x13, 0x13, 0x1000011, 0x100000f,
+                 0x15, 0x17, 0x29, 0x29, 0x1000017, 0x1000015,
+                 0x1b, 0x1d, 0x1f, 0x1f, 0x100001d, 0x100001b,
+                   -1, 0x21, 0x23, 0x23, 0x1000021,   -1,
+                   -1, 0x25, 0x27, 0x27, 0x1000025,   -1]
+        }},
+        { key: 0x23 value: {
+            name: "dark link trigger"
+            width: 32 height: 16
+            chr: { bank: 12 }
+            palette: 1
+            id: [0x71, 0x73, 0x3d, 0x3d]
+        }}
     ]
 }
 

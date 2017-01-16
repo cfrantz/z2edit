@@ -17,6 +17,7 @@ class GLBitmap {
     void Update();
     void Draw(int w=0, int h=0);
     void DrawAt(int x, int y, int w=0, int h=0);
+    void DrawAt(int x, int y, float scale);
 
     inline uint32_t* data() { return data_; }
     inline GLuint texture_id() { return texture_id_; }

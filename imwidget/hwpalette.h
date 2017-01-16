@@ -5,6 +5,7 @@
 
 class NesHardwarePalette {
   public:
+    static NesHardwarePalette* Get();
     NesHardwarePalette() : visible_(false) { Init(); }
     void Init();
     void Draw();

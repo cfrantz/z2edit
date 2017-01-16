@@ -3,6 +3,7 @@
 #include "imwidget/editor.h"
 #include "nes/z2decompress.h"
 #include "util/config.h"
+#include "util/imgui_impl_sdl.h"
 #include "util/stb_tilemap_editor.h"
 #include "imwidget/imutil.h"
 
@@ -67,13 +68,12 @@ void Editor::ConvertFromMap(Map* map) {
 
     decomp.set_mapper(mapper_);
     cache_.set_mapper(mapper_);
-    cache_.set_hwpal(hwpal_);
 
     if (map) {
         map_ = map;
         decomp.Decompress(*map);
         cache_.Init(*map);
-        connections_.Init(mapper_, map->connector());
+        connections_.Init(mapper_, map->connector(), map->world());
         width = decomp.width();
         height = decomp.height();
         LOG(INFO, "map ", map_->name(),
@@ -162,10 +162,11 @@ void Editor::DrawRect(int x0, int y0, int x1, int y1, uint32_t color) {
     if (x1 > size_.x || y1 > size_.y)
         return;
 
+    float scale = scale_;
     auto* draw = ImGui::GetWindowDrawList();
     color |= 0xFF000000;
-    draw->AddRectFilled(mouse_origin_ + ImVec2(x0, y0) * scale_,
-                        mouse_origin_ + ImVec2(x1, y1) * scale_,
+    draw->AddRectFilled(mouse_origin_ + ImVec2(x0, y0) * scale,
+                        mouse_origin_ + ImVec2(x1, y1) * scale,
                         color);
 }
 
@@ -253,19 +254,23 @@ void Editor::ProcessEvent(SDL_Event* e) {
 }
 
 void Editor::HandleEvent(SDL_Event* e) {
+    float hidpi = ImGui_ImplSdl_GetHiDPIScale();
     switch (e->type) {
         case SDL_MOUSEMOTION:
+            e->motion.x /= hidpi; e->motion.y /= hidpi;
             e->motion.x -= mouse_origin_.x; e->motion.y -= mouse_origin_.y;
             e->motion.x /= scale_; e->motion.y /= scale_;
             stbte_mouse_sdl(editor_, e, 1.0f,1.0f,0,0);
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
+            e->button.x /= hidpi; e->button.y /= hidpi;
             e->button.x -= mouse_origin_.x; e->button.y -= mouse_origin_.y;
             e->button.x /= scale_; e->button.y /= scale_;
             stbte_mouse_sdl(editor_, e, 1.0f,1.0f,0,0);
             break;
         case SDL_MOUSEWHEEL:
+            e->wheel.x /= hidpi; e->wheel.y /= hidpi;
             e->wheel.x -= mouse_origin_.x; e->wheel.y -= mouse_origin_.y;
             e->wheel.x /= scale_; e->wheel.y /= scale_;
             stbte_mouse_sdl(editor_, e, 1.0f,1.0f,0,0);
