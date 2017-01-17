@@ -6,6 +6,7 @@
 #include "util/imgui_impl_sdl.h"
 #include "util/stb_tilemap_editor.h"
 #include "imwidget/imutil.h"
+#include "imwidget/error_dialog.h"
 
 #define STBTE_MAX_TILEMAP_X      64
 #define STBTE_MAX_TILEMAP_Y      200
@@ -119,10 +120,15 @@ std::vector<uint8_t> Editor::CompressMap() {
 void Editor::SaveMap() {
     std::vector<uint8_t> data = CompressMap();
 
-    LOG(INFO, "===========================================================");
     if (!map_) {
         LOG(ERROR, "Can't save map: map_ == nullptr");
         return;
+    }
+    if (data.size() > 1024) {
+        ErrorDialog::New("Overworld Save Error",
+            "Can't save ", map_->name(), " because it is ", data.size(),
+            " bytes\n\n"
+            "Overworld maps must be smaller than 1024 bytes.\n");
     }
 
     LOG(INFO, "Saving ", map_->name());
@@ -130,8 +136,10 @@ void Editor::SaveMap() {
 
     Address addr = map_->address();
     addr.set_address(0);
-    addr = mapper_->FindFreeSpace(addr, data.size());
+    addr = mapper_->Alloc(addr, data.size());
     if (addr.address() == 0) {
+        ErrorDialog::New("Overworld Save Error",
+            "Can't allocate free space for ", map_->name(), ".\n");
         LOG(ERROR, "Can't save map: can't find ", data.size(), " bytes"
                    " in bank=", addr.bank());
         return;
@@ -146,7 +154,7 @@ void Editor::SaveMap() {
         mapper_->Write(addr, i, data[i]);
     }
     mapper_->WriteWord(map_->pointer(), 0, addr.address());
-    mapper_->Erase(map_->address(), map_->length());
+    mapper_->Free(map_->address());
 
     *(map_->mutable_address()) = addr;
     map_->set_length(data.size());
@@ -218,7 +226,7 @@ void Editor::Draw() {
     connections_.DrawAdd();
 
     ImGui::SameLine();
-    if (ImGui::Button("Save to ROM")) {
+    if (ImGui::Button("Commit to ROM")) {
         SaveMap();
     }
 

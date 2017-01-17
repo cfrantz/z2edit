@@ -73,6 +73,7 @@ cc_library(
     srcs = ["editor.cc"],
     deps = [
         ":imutil",
+        ":error_dialog",
         ":glbitmap",
         ":hwpalette",
         ":map_connect",
