@@ -444,8 +444,9 @@ void MapHolder::Save() {
     LOG(INFO, "Saving ", map_.name(), " (", data.size(), " bytes)");
 
     Address addr = map_.address();
+    // Search the entire bank and allocate memory
     addr.set_address(0);
-    addr = mapper_->FindFreeSpace(addr, data.size());
+    addr = mapper_->Alloc(addr, data.size());
     if (addr.address() == 0) {
         ErrorDialog::New("Error Saving Map",
             "Can't save map: ", map_.name(), "\n\n"
@@ -455,6 +456,9 @@ void MapHolder::Save() {
         return;
     }
     addr.set_address(0x8000 | addr.address());
+
+    // Free the existing memory if it was owned by the allocator.
+    mapper_->Free(map_.address());
     *map_.mutable_address() = addr;
     map_addr_ = addr.address();
 

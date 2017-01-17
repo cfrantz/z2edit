@@ -31,27 +31,30 @@ class Mapper {
         return cartridge_->WriteChr(bank * 0x1000 + (addr & 0x0FFF), val);
     }
 
-    uint8_t Read(const z2util::Address& addr, uint16_t offset) {
+    uint8_t Read(const z2util::Address& addr, int offset) {
         return ReadPrgBank(addr.bank(), addr.address() + offset);
     }
-    uint16_t ReadWord(const z2util::Address& addr, uint16_t offset) {
+    uint16_t ReadWord(const z2util::Address& addr, int offset) {
         return Read(addr, offset) | uint16_t(Read(addr, offset + 1)) << 8;
     }
-    z2util::Address ReadAddr(z2util::Address addr, uint16_t offset) {
+    z2util::Address ReadAddr(z2util::Address addr, int offset) {
         addr.set_address(ReadWord(addr, offset));
         return addr;
     }
 
-    void Write(const z2util::Address& addr, uint16_t offset, uint8_t data) {
+    void Write(const z2util::Address& addr, int offset, uint8_t data) {
         WritePrgBank(addr.bank(), addr.address() + offset, data);
     }
-    void WriteWord(const z2util::Address& addr, uint16_t offset, uint16_t data) {
+    void WriteWord(const z2util::Address& addr, int offset, uint16_t data) {
         Write(addr, offset, uint8_t(data));
         Write(addr, offset+1, uint8_t(data >> 8));
     }
 
     z2util::Address FindFreeSpace(z2util::Address start, int length);
     void Erase(const z2util::Address& start, uint16_t length);
+
+    z2util::Address Alloc(z2util::Address start, int length);
+    void Free(z2util::Address start);
 
     Cartridge* cartridge() { return cartridge_; }
   protected:

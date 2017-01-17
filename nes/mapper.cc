@@ -1,5 +1,14 @@
 #include "nes/mapper.h"
 
+// The byte sequence A1 0C doesn't appear in the zelda2 ROM file.  We'll use
+// this sequence as a magic number for the free-space allocator.
+//
+// Allocations of free space always request 4 extra bytes, which are used
+// to mark that what follows is manged by the free-space allocator:
+//
+// A1 0C length-lsb length-msb <lenght bytes of user data>
+#define ALLOC_TOKEN     0x0CA1
+
 
 std::map<int, std::function<Mapper*(Cartridge*)>>* MapperRegistry::mappers() {
     static std::map<int, std::function<Mapper*(Cartridge*)>> reg;
@@ -46,5 +55,23 @@ z2util::Address Mapper::FindFreeSpace(z2util::Address addr, int length) {
 void Mapper::Erase(const z2util::Address& addr, uint16_t length) {
     for(uint16_t i=0; i<length; i++) {
         Write(addr, i, 0xFF);
+    }
+}
+
+z2util::Address Mapper::Alloc(z2util::Address addr, int length) {
+    addr = FindFreeSpace(addr, length+4);
+    if (addr.address() != 0) {
+        WriteWord(addr, 0, ALLOC_TOKEN);
+        WriteWord(addr, 2, length);
+        addr.set_address(addr.address() + 4);
+    }
+    return addr;
+}
+
+void Mapper::Free(z2util::Address addr) {
+    if (ReadWord(addr, -4) == ALLOC_TOKEN) {
+        uint16_t length = ReadWord(addr, -2);
+        addr.set_address(addr.address() - 4);
+        Erase(addr, length+4);
     }
 }
