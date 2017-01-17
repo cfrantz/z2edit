@@ -10,7 +10,7 @@ SimpleMap::SimpleMap()
     scale_(1.0),
     mapsel_(0),
     tab_(0),
-    title_("SimpleMap") {}
+    title_("Sideview Editor") {}
 
 SimpleMap::SimpleMap(Mapper* m, const Map& map)
   : SimpleMap() {
@@ -91,18 +91,22 @@ void SimpleMap::Draw() {
     ImGui::Begin(title_.c_str(), visible());
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size()];
-    int len=0;
+    int len=0, start=0;;
     for(const auto& m : ri.map()) {
+        start++;
+        if (m.type() == z2util::MapType::OVERWORLD)
+            continue;
         names[len] = m.name().c_str();
         if (mapsel_ == -1 && title_ == m.name()) {
             mapsel_ = len;
         }
         len++;
     }
+    start -= len;
 
     ImGui::PushItemWidth(400);
     if (ImGui::Combo("Map", &mapsel_, names, len)) {
-        SetMap(ri.map(mapsel_));
+        SetMap(ri.map(start + mapsel_));
     }
     ImGui::PopItemWidth();
 

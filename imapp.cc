@@ -107,7 +107,12 @@ void ImApp::Load(const std::string& filename) {
     chrview_->set_mapper(mapper_.get());
 
     simplemap_->set_mapper(mapper_.get());
-    simplemap_->SetMap(rominfo_.map(0));
+    for(const auto& m : rominfo_.map()) {
+        if (m.name().find("North Palace") != std::string::npos) {
+            simplemap_->SetMap(m);
+            break;
+        }
+    }
 
     editor_->set_mapper(mapper_.get());
     editor_->ConvertFromMap(rominfo_.mutable_map(0));
@@ -459,9 +464,9 @@ save_as:
             if (ImGui::BeginMenu("Edit")) {
                 ImGui::MenuItem("Debug Console", nullptr,
                                 console_.visible());
-                ImGui::MenuItem("Editor", nullptr,
+                ImGui::MenuItem("Overworld Editor", nullptr,
                                 editor_->visible());
-                ImGui::MenuItem("MapViewer", nullptr,
+                ImGui::MenuItem("Sideview Editor", nullptr,
                                 simplemap_->visible());
                 ImGui::MenuItem("Miscellaneous Hacks", nullptr,
                                 misc_hacks_->visible());
