@@ -1,3 +1,7 @@
+### Create a target for Windows
+  * Try to use https://github.com/cfrantz/hello_windows so I can
+    build from Linux.
+
 ### Add config which describes how to render towns
 Done, but still need:
   * Inventory of all the different townspeople
