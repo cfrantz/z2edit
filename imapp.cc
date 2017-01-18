@@ -419,77 +419,76 @@ bool ImApp::ProcessEvents() {
 }
 
 void ImApp::Draw() {
-    static bool open = true;
+    static bool open = false;
     ImVec4 clear_color = ImColor(114, 144, 154);
     ImGui_ImplSdl_NewFrame(window_);
 
     ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
-    if (ImGui::Begin(name_.c_str(), &open, ImGuiWindowFlags_MenuBar)) {
-        if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("Emulate", "Ctrl+E")) {
-                    cartridge_.SaveFile(FLAGS_romtmp);
-                    SpawnEmulator(FLAGS_romtmp);
-                }
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Emulate", "Ctrl+E")) {
+                cartridge_.SaveFile(FLAGS_romtmp);
+                SpawnEmulator(FLAGS_romtmp);
+            }
+            ImGui::Separator();
 #ifdef HAVE_NFD
-                if (ImGui::MenuItem("Open", "Ctrl+O")) {
-                    char *filename = nullptr;
-                    auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
-                    if (result == NFD_OKAY) {
-                        Load(filename);
-                    }
-                    free(filename);
+            if (ImGui::MenuItem("Open", "Ctrl+O")) {
+                char *filename = nullptr;
+                auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
+                if (result == NFD_OKAY) {
+                    Load(filename);
                 }
-                if (ImGui::MenuItem("Save", "Ctrl+S")) {
-                    if (save_filename_.empty())
-                        goto save_as;
+                free(filename);
+            }
+            if (ImGui::MenuItem("Save", "Ctrl+S")) {
+                if (save_filename_.empty())
+                    goto save_as;
+                cartridge_.SaveFile(save_filename_);
+            }
+            if (ImGui::MenuItem("Save As")) {
+save_as:
+                char *filename = nullptr;
+                auto result = NFD_SaveDialog(nullptr, nullptr, &filename);
+                if (result == NFD_OKAY) {
+                    save_filename_.assign(filename);
                     cartridge_.SaveFile(save_filename_);
                 }
-                if (ImGui::MenuItem("Save As")) {
-save_as:
-                    char *filename = nullptr;
-                    auto result = NFD_SaveDialog(nullptr, nullptr, &filename);
-                    if (result == NFD_OKAY) {
-                        save_filename_.assign(filename);
-                        cartridge_.SaveFile(save_filename_);
-                    }
-                    free(filename);
-                }
+                free(filename);
+            }
 #endif
-                if (ImGui::MenuItem("Quit")) {
-                    running_ = false;
-                }
-                ImGui::EndMenu();
+            ImGui::Separator();
+            if (ImGui::MenuItem("Reload Config")) {
+                auto* config = ConfigLoader<z2util::RomInfo>::Get();
+                config->Reload();
             }
-            if (ImGui::BeginMenu("Edit")) {
-                ImGui::MenuItem("Debug Console", nullptr,
-                                console_.visible());
-                ImGui::MenuItem("Overworld Editor", nullptr,
-                                editor_->visible());
-                ImGui::MenuItem("Sideview Editor", nullptr,
-                                simplemap_->visible());
-                ImGui::MenuItem("Miscellaneous Hacks", nullptr,
-                                misc_hacks_->visible());
-                ImGui::MenuItem("Start Values", nullptr,
-                                start_values_->visible());
-                ImGui::EndMenu();
+            if (ImGui::MenuItem("Quit")) {
+                running_ = false;
             }
-            if (ImGui::BeginMenu("View")) {
-                ImGui::MenuItem("Hardware Palette", nullptr,
-                                hwpal_->visible());
-                ImGui::MenuItem("CHR Viewer", nullptr,
-                                chrview_->visible());
-                ImGui::MenuItem("Object Table", nullptr,
-                                object_table_->visible());
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
+            ImGui::EndMenu();
         }
-        ImGui::Text("Hello World");
-        if (ImGui::Button("Reload Config")) {
-            auto* config = ConfigLoader<z2util::RomInfo>::Get();
-            config->Reload();
+        if (ImGui::BeginMenu("Edit")) {
+            ImGui::MenuItem("Debug Console", nullptr,
+                            console_.visible());
+            ImGui::MenuItem("Overworld Editor", nullptr,
+                            editor_->visible());
+            ImGui::MenuItem("Sideview Editor", nullptr,
+                            simplemap_->visible());
+            ImGui::MenuItem("Miscellaneous Hacks", nullptr,
+                            misc_hacks_->visible());
+            ImGui::MenuItem("Start Values", nullptr,
+                            start_values_->visible());
+            ImGui::EndMenu();
         }
+        if (ImGui::BeginMenu("View")) {
+            ImGui::MenuItem("Hardware Palette", nullptr,
+                            hwpal_->visible());
+            ImGui::MenuItem("CHR Viewer", nullptr,
+                            chrview_->visible());
+            ImGui::MenuItem("Object Table", nullptr,
+                            object_table_->visible());
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
     }
 
     console_.Draw();
@@ -508,7 +507,6 @@ save_as:
         }
         ++it;
     }
-    ImGui::End();
 
     glViewport(0, 0,
                (int)ImGui::GetIO().DisplaySize.x,
