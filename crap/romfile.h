@@ -17,18 +17,20 @@ class RomFile {
     void Grep(const std::string& pattern, bool wildcard);
 
     inline uint8_t Read8(uint32_t fileofs) const { return rom_.at(fileofs); }
-    inline uint8_t Read16(uint32_t fileofs) const {
-        return rom_.at(fileofs) | rom_.at(fileofs+1) << 8;
+    inline uint16_t Read16(uint32_t fileofs) const {
+        return Read8(fileofs) | uint16_t(Read8(fileofs+1)) << 8;
     }
     inline uint8_t Read8(uint8_t bank, uint16_t addr) const {
         return Read8(FileOffset(bank, addr));
     }
-    inline uint8_t Read16(uint8_t bank, uint16_t addr) const {
+    inline uint16_t Read16(uint8_t bank, uint16_t addr) const {
         return Read16(FileOffset(bank, addr));
     }
     static inline uint32_t FileOffset(uint8_t bank, uint16_t addr) {
         return (addr - 0x8000) + (bank * 0x4000) + 0x10;
     }
+    void FindOvrAreaPtrs();
+    void ReadEnemyLists(uint8_t bank);
   private:
     string rom_;
 };

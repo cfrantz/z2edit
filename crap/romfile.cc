@@ -1,3 +1,5 @@
+#include <vector>
+#include <algorithm>
 #include <inttypes.h>
 #include "romfile.h"
 
@@ -106,5 +108,38 @@ void RomFile::Grep(const std::string& pattern, bool wildcard) {
         } else {
             break;
         }
+    }
+}
+
+void RomFile::FindOvrAreaPtrs() {
+    const uint8_t *data = (const uint8_t*)rom_.c_str();
+    int sz = (int)rom_.size();
+    int plen = 16;
+    int i, j;
+
+    for(i=0x4000; i<0x8000; i++) {
+        for(j=0; j<plen; j++) {
+            if (data[i+j] >= 0x3f)
+                break;
+        }
+        if (j == plen) {
+            Hexdump(i & ~15, 64, i, plen);
+            i += j-1;
+        }
+    }
+}
+
+void RomFile::ReadEnemyLists(uint8_t bank) {
+    std::vector<uint16_t> ptr;
+    int i;
+
+    for(i=0; i<63; i++) {
+        ptr.push_back(Read16(bank, 0x85A1 + i*2));
+        ptr.push_back(Read16(bank, 0xA07E + i*2));
+    }
+    std::sort(ptr.begin(), ptr.end());
+    for(i=0; i<126; i++) {
+        printf("ptr[%d] = %04x -> %04x\n",
+                i, ptr[i], 0x88a0 + (ptr[i] & 0x0FFF));
     }
 }
