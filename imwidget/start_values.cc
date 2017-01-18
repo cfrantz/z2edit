@@ -11,8 +11,13 @@ StartValues::StartValues()
 void StartValues::Unpack() {
     Address addr;
     addr.set_bank(5);
-    addr.set_address(0x3ae7);
 
+    addr.set_address(0x3ae3);
+    data_.atklvl = mapper_->Read(addr, 0);
+    data_.maglvl = mapper_->Read(addr, 1);
+    data_.lifelvl = mapper_->Read(addr, 2);
+
+    addr.set_address(0x3ae7);
     data_.shield  = mapper_->Read(addr, 0) != 0;
     data_.jump    = mapper_->Read(addr, 1) != 0;
     data_.life    = mapper_->Read(addr, 2) != 0;
@@ -44,8 +49,13 @@ void StartValues::Unpack() {
 void StartValues::Pack() {
     Address addr;
     addr.set_bank(5);
-    addr.set_address(0x3ae7);
 
+    addr.set_address(0x3ae3);
+    mapper_->Write(addr, 0, data_.atklvl);
+    mapper_->Write(addr, 1, data_.maglvl);
+    mapper_->Write(addr, 2, data_.lifelvl);
+
+    addr.set_address(0x3ae7);
     mapper_->Write(addr, 0, data_.shield);
     mapper_->Write(addr, 1, data_.jump);
     mapper_->Write(addr, 2, data_.life);
@@ -84,8 +94,15 @@ void StartValues::Draw() {
     ImGui::Begin("Start Values", &visible_);
 
     ImGui::PushItemWidth(100);
+    ImGui::InputInt("Attack", &data_.atklvl);
+    ImGui::SameLine();
+    ImGui::InputInt("Magic", &data_.maglvl);
+    ImGui::SameLine();
+    ImGui::InputInt("Life", &data_.lifelvl);
+
     ImGui::InputInt("Heart Containers", &data_.heart);
     ImGui::InputInt("Magic Containers", &data_.magic);
+
     ImGui::InputInt("Crystals", &data_.crystals);
     ImGui::InputInt("Lives", &data_.lives);
     ImGui::PopItemWidth();

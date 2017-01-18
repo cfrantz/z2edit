@@ -39,7 +39,7 @@ Done: Multimap editor
   * pick-up-item delay
 
 ### Startup conditions editor
-  * starting levels
+  * starting levels (done)
   * starting lives (done)
   * starting itesm (done)
   * starting spells (done)

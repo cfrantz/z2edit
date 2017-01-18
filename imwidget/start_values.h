@@ -18,6 +18,10 @@ class StartValues {
     Mapper* mapper_;
 
     struct Unpacked {
+        int atklvl;
+        int maglvl;
+        int lifelvl;
+
         bool shield;
         bool jump;
         bool life;
