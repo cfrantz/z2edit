@@ -13,7 +13,7 @@ DEFINE_int32(ovrareas, 0, "Overworld areas pointer.");
 DEFINE_string(grep, "", "Search for binary pattern and hexdump it");
 DEFINE_string(xgrep, "", "Search for binary pattern and hexdump it (ff=any byte)");
 DEFINE_int32(elist, -1, "Print enemy list in bank <elist>");
-DEFINE_bool(ovrptr, false, "Search for OvrAreaPtrs");
+DEFINE_bool(freespace, false, "Search for Free Space");
 
 int main(int argc, char *argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -52,8 +52,8 @@ int main(int argc, char *argv[]) {
     if (FLAGS_elist != -1) {
         rom.ReadEnemyLists(FLAGS_elist);
     }
-    if (FLAGS_ovrptr) {
-        rom.FindOvrAreaPtrs();
+    if (FLAGS_freespace) {
+        rom.FindFreeSpace();
     }
 
     if (FLAGS_ovrstart && FLAGS_ovrend) {

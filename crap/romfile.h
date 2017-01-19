@@ -29,7 +29,8 @@ class RomFile {
     static inline uint32_t FileOffset(uint8_t bank, uint16_t addr) {
         return (addr - 0x8000) + (bank * 0x4000) + 0x10;
     }
-    void FindOvrAreaPtrs();
+    void FindFreeSpaceInBank(int bank);
+    void FindFreeSpace();
     void ReadEnemyLists(uint8_t bank);
   private:
     string rom_;

@@ -111,21 +111,35 @@ void RomFile::Grep(const std::string& pattern, bool wildcard) {
     }
 }
 
-void RomFile::FindOvrAreaPtrs() {
-    const uint8_t *data = (const uint8_t*)rom_.c_str();
-    int sz = (int)rom_.size();
-    int plen = 16;
-    int i, j;
+void RomFile::FindFreeSpaceInBank(int bank) {
+    int start;
+    int end;
+    int total = 0;
 
-    for(i=0x4000; i<0x8000; i++) {
-        for(j=0; j<plen; j++) {
-            if (data[i+j] >= 0x3f)
-                break;
+    printf("## Bank %d\n", bank);
+    printf("| Address | Size (bytes) |\n");
+    printf("|---|---|\n");
+    for(int i=0x8000; i<0xc000; i++) {
+        if (Read8(bank, i) == 0xFF) {
+            start = i;
+            for(;i<0xc000; i++) {
+                if (Read8(bank, i) != 0xFF)
+                    break;
+            }
+            end = i;
+
+            if (end-start > 15) {
+                printf("| `$%04x` | `%d` |\n", start, end-start);
+                total += (end - start);
+            }
         }
-        if (j == plen) {
-            Hexdump(i & ~15, 64, i, plen);
-            i += j-1;
-        }
+    }
+    printf("| Total | `%d` |\n\n", total);
+}
+
+void RomFile::FindFreeSpace() {
+    for(int i=0; i<8; i++) {
+        FindFreeSpaceInBank(i);
     }
 }
 
