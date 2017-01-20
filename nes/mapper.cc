@@ -28,27 +28,32 @@ Mapper* MapperRegistry::New(Cartridge* cart, int n) {
 }
 
 z2util::Address Mapper::FindFreeSpace(z2util::Address addr, int length) {
-    uint16_t end = 0x4000;
-    uint16_t offset = addr.address() & 0x3FFF;
+    int end;
+    int offset;
 
     addr.set_address(0);
-    if (length < 16)
-        length = 16;
+    if (length < 8)
+        length = 8;
 
-    while(offset < end) {
-        if ((offset & 0x000F) == 0 && Read(addr, offset) == 0xFF) {
-            uint16_t run = offset + 1;
-            while(run < end && Read(addr, run) == 0xFF) {
-                run++;
+    // Search backwards from the end for free space
+    offset = 0x3fe0;
+    while(offset > 0) {
+        if (Read(addr, offset) == 0xFF) {
+            end = offset;
+            while(offset > 0 && Read(addr, offset) == 0xFF) {
+                if (end - offset == length) {
+                    // FIXME(cfrantz): make sure we aren't in one of the
+                    // keepout regions.
+                    addr.set_address(0x8000 | offset);
+                    return addr;
+                }
+                offset--;
             }
-            if (run-offset >= length) {
-                addr.set_address(offset);
-                break;
-            }
-            offset = run;
         }
-        offset++;
+        offset--;
     }
+
+    addr.set_address(0);
     return addr;
 }
 
