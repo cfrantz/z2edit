@@ -31,7 +31,7 @@ class RomFile {
     }
     void FindFreeSpaceInBank(int bank);
     void FindFreeSpace();
-    void ReadEnemyLists(uint8_t bank);
+    void ReadEnemyLists(uint8_t bank, bool sort);
   private:
     string rom_;
 };

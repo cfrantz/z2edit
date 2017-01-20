@@ -143,15 +143,17 @@ void RomFile::FindFreeSpace() {
     }
 }
 
-void RomFile::ReadEnemyLists(uint8_t bank) {
+void RomFile::ReadEnemyLists(uint8_t bank, bool sort) {
     std::vector<uint16_t> ptr;
     int i;
 
-    for(i=0; i<63; i++) {
+    for(i=0; i<63; i++)
         ptr.push_back(Read16(bank, 0x85A1 + i*2));
+    for(i=0; i<63; i++)
         ptr.push_back(Read16(bank, 0xA07E + i*2));
-    }
-    std::sort(ptr.begin(), ptr.end());
+
+    if (sort)
+        std::sort(ptr.begin(), ptr.end());
     for(i=0; i<126; i++) {
         printf("ptr[%d] = %04x -> %04x\n",
                 i, ptr[i], 0x88a0 + (ptr[i] & 0x0FFF));
