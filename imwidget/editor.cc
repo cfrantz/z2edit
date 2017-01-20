@@ -69,6 +69,7 @@ void Editor::ConvertFromMap(Map* map) {
 
     decomp.set_mapper(mapper_);
     cache_.set_mapper(mapper_);
+    encounters_.set_mapper(mapper_);
 
     if (map) {
         map_ = map;
@@ -79,6 +80,8 @@ void Editor::ConvertFromMap(Map* map) {
         height = decomp.height();
         LOG(INFO, "map ", map_->name(),
                   " decompressed to ", width, "x", height);
+        encounters_.set_map(*map);
+        encounters_.Unpack();
     }
     editor_ = stbte_create_map(width, height, 1, 16, 16, 255);
     editor_->scroll_x = -80;
@@ -158,6 +161,7 @@ void Editor::SaveMap() {
 
     *(map_->mutable_address()) = addr;
     map_->set_length(data.size());
+    encounters_.Save();
 }
 
 void Editor::Resize(int x0, int y0, int x1, int y1) {
@@ -224,6 +228,12 @@ void Editor::Draw() {
         ImGui::OpenPopup("Connections");
     }
     connections_.DrawAdd();
+
+    ImGui::SameLine();
+    if (ImGui::Button("Encounters")) {
+        ImGui::OpenPopup("Encounters");
+    }
+    encounters_.Draw();
 
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {

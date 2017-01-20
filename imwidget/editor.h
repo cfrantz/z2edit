@@ -4,6 +4,7 @@
 #include <vector>
 #include "imwidget/glbitmap.h"
 #include "imwidget/map_connect.h"
+#include "imwidget/overworld_encounters.h"
 #include "nes/z2objcache.h"
 #include "imgui.h"
 
@@ -58,6 +59,7 @@ class Editor {
     NesHardwarePalette* hwpal_;
     Z2ObjectCache cache_;
     OverworldConnectorList connections_;
+    OverworldEncounters encounters_;
     ImVec2 mouse_origin_;
     ImVec2 origin_;
     ImVec2 size_;

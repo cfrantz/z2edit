@@ -77,6 +77,7 @@ cc_library(
         ":glbitmap",
         ":hwpalette",
         ":map_connect",
+        ":overworld_encounters",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
@@ -156,6 +157,16 @@ cc_library(
     name = "misc_hacks",
     hdrs = ["misc_hacks.h"],
     srcs = ["misc_hacks.cc"],
+    deps = [
+        "//nes:mappers",
+        "//external:imgui",
+    ],
+)
+
+cc_library(
+    name = "overworld_encounters",
+    hdrs = ["overworld_encounters.h"],
+    srcs = ["overworld_encounters.cc"],
     deps = [
         "//nes:mappers",
         "//external:imgui",
