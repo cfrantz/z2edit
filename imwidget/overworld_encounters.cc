@@ -1,16 +1,18 @@
 #include "imwidget/overworld_encounters.h"
 
 #include "nes/mapper.h"
+#include "util/config.h"
 #include "imgui.h"
 
 namespace z2util {
 
 void OverworldEncounters::Unpack() {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     Address addr = map_.pointer();
 
     // The overworld encounter table is fixed at address $8409
     // in the same bank as the overworld map
-    addr.set_address(0x8409);
+    addr.set_address(misc.overworld_encounters().address());
     data_.clear();
     for(int i=0; i<14; i++) {
         Unpacked data;
@@ -27,9 +29,8 @@ void OverworldEncounters::Unpack() {
     int world = map_.world();
     if (world & 1) world &= 1;
 
-    addr.set_bank(7);
-    addr.set_address(0xcb32);
-    south_side_ = mapper_->Read(addr, world) - 30;
+    addr = misc.overworld_mason_dixon();
+    south_side_ = mapper_->Read(addr, world) - misc.overworld_y_offset();
 }
 
 void OverworldEncounters::Draw() {
@@ -97,8 +98,10 @@ void OverworldEncounters::Draw() {
 }
 
 void OverworldEncounters::Save() {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     Address addr = map_.pointer();
-    addr.set_address(0x8409);
+    addr.set_address(misc.overworld_encounters().address());
+
     for(int i=0; i<int(data_.size()); i++) {
         uint8_t val = data_[i].area | (data_[i].screen << 6);
         mapper_->Write(addr, i, val);
@@ -107,9 +110,8 @@ void OverworldEncounters::Save() {
     int world = map_.world();
     if (world & 1) world &= 1;
 
-    addr.set_bank(7);
-    addr.set_address(0xcb32);
-    mapper_->Write(addr, world, south_side_ + 30);
+    addr = misc.overworld_mason_dixon();
+    mapper_->Write(addr, world, south_side_ + misc.overworld_y_offset());
 }
 
 }  // namespace z2util

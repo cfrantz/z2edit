@@ -1,4 +1,5 @@
 load: "content/maps.textpb"
+load: "content/misc.textpb"
 load: "content/obj_overworld.textpb"
 load: "content/obj_town.textpb"
 load: "content/obj_palace.textpb"

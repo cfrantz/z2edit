@@ -1,5 +1,6 @@
 #include "imwidget/start_values.h"
 #include "proto/rominfo.pb.h"
+#include "util/config.h"
 #include "imgui.h"
 
 namespace z2util {
@@ -9,80 +10,74 @@ StartValues::StartValues()
 {}
 
 void StartValues::Unpack() {
-    Address addr;
-    addr.set_bank(5);
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    Address addr = misc.start_values();
 
-    addr.set_address(0x3ae3);
     data_.atklvl = mapper_->Read(addr, 0);
     data_.maglvl = mapper_->Read(addr, 1);
     data_.lifelvl = mapper_->Read(addr, 2);
 
-    addr.set_address(0x3ae7);
-    data_.shield  = mapper_->Read(addr, 0) != 0;
-    data_.jump    = mapper_->Read(addr, 1) != 0;
-    data_.life    = mapper_->Read(addr, 2) != 0;
-    data_.fairy   = mapper_->Read(addr, 3) != 0;
-    data_.fire    = mapper_->Read(addr, 4) != 0;
-    data_.reflex  = mapper_->Read(addr, 5) != 0;
-    data_.spell   = mapper_->Read(addr, 6) != 0;
-    data_.thunder = mapper_->Read(addr, 7) != 0;
-    data_.magic   = mapper_->Read(addr, 8);
-    data_.heart   = mapper_->Read(addr, 9);
-    data_.candle  = mapper_->Read(addr, 10) != 0;
-    data_.glove   = mapper_->Read(addr, 11) != 0;
-    data_.raft    = mapper_->Read(addr, 12) != 0;
-    data_.boots   = mapper_->Read(addr, 13) != 0;
-    data_.flute   = mapper_->Read(addr, 14) != 0;
-    data_.cross   = mapper_->Read(addr, 15) != 0;
-    data_.hammer  = mapper_->Read(addr, 16) != 0;
-    data_.key     = mapper_->Read(addr, 17) != 0;
-    data_.crystals = mapper_->Read(addr, 25);
-    int techs     = mapper_->Read(addr, 27);
+    data_.shield  = mapper_->Read(addr, 4) != 0;
+    data_.jump    = mapper_->Read(addr, 5) != 0;
+    data_.life    = mapper_->Read(addr, 6) != 0;
+    data_.fairy   = mapper_->Read(addr, 7) != 0;
+    data_.fire    = mapper_->Read(addr, 8) != 0;
+    data_.reflex  = mapper_->Read(addr, 9) != 0;
+    data_.spell   = mapper_->Read(addr, 10) != 0;
+    data_.thunder = mapper_->Read(addr, 11) != 0;
+    data_.magic   = mapper_->Read(addr, 12);
+    data_.heart   = mapper_->Read(addr, 13);
+    data_.candle  = mapper_->Read(addr, 14) != 0;
+    data_.glove   = mapper_->Read(addr, 15) != 0;
+    data_.raft    = mapper_->Read(addr, 16) != 0;
+    data_.boots   = mapper_->Read(addr, 17) != 0;
+    data_.flute   = mapper_->Read(addr, 18) != 0;
+    data_.cross   = mapper_->Read(addr, 19) != 0;
+    data_.hammer  = mapper_->Read(addr, 20) != 0;
+    data_.key     = mapper_->Read(addr, 21) != 0;
+    data_.crystals = mapper_->Read(addr, 29);
+    int techs     = mapper_->Read(addr, 31);
     data_.downstab = !!(techs & 0x10);
     data_.upstab   = !!(techs & 0x04);
 
-    addr.set_bank(7);
-    addr.set_address(0x0359);
+    addr = misc.start_lives();
     data_.lives = mapper_->Read(addr, 0);
 }
 
 void StartValues::Pack() {
-    Address addr;
-    addr.set_bank(5);
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    Address addr = misc.start_values();
 
-    addr.set_address(0x3ae3);
     mapper_->Write(addr, 0, data_.atklvl);
     mapper_->Write(addr, 1, data_.maglvl);
     mapper_->Write(addr, 2, data_.lifelvl);
 
-    addr.set_address(0x3ae7);
-    mapper_->Write(addr, 0, data_.shield);
-    mapper_->Write(addr, 1, data_.jump);
-    mapper_->Write(addr, 2, data_.life);
-    mapper_->Write(addr, 3, data_.fairy);
-    mapper_->Write(addr, 4, data_.fire);
-    mapper_->Write(addr, 5, data_.reflex);
-    mapper_->Write(addr, 6, data_.spell);
-    mapper_->Write(addr, 7, data_.thunder);
+    mapper_->Write(addr, 4, data_.shield);
+    mapper_->Write(addr, 5, data_.jump);
+    mapper_->Write(addr, 6, data_.life);
+    mapper_->Write(addr, 7, data_.fairy);
+    mapper_->Write(addr, 8, data_.fire);
+    mapper_->Write(addr, 9, data_.reflex);
+    mapper_->Write(addr, 10, data_.spell);
+    mapper_->Write(addr, 11, data_.thunder);
 
-    mapper_->Write(addr, 8, data_.magic);
-    mapper_->Write(addr, 9, data_.heart);
+    mapper_->Write(addr, 12, data_.magic);
+    mapper_->Write(addr, 13, data_.heart);
 
-    mapper_->Write(addr, 10, data_.candle);
-    mapper_->Write(addr, 11, data_.glove);
-    mapper_->Write(addr, 12, data_.raft);
-    mapper_->Write(addr, 13, data_.boots);
-    mapper_->Write(addr, 14, data_.flute);
-    mapper_->Write(addr, 15, data_.cross);
-    mapper_->Write(addr, 16, data_.hammer);
-    mapper_->Write(addr, 17, data_.key);
+    mapper_->Write(addr, 14, data_.candle);
+    mapper_->Write(addr, 15, data_.glove);
+    mapper_->Write(addr, 16, data_.raft);
+    mapper_->Write(addr, 17, data_.boots);
+    mapper_->Write(addr, 18, data_.flute);
+    mapper_->Write(addr, 19, data_.cross);
+    mapper_->Write(addr, 20, data_.hammer);
+    mapper_->Write(addr, 21, data_.key);
 
-    mapper_->Write(addr, 25, data_.crystals);
-    mapper_->Write(addr, 27,
+    mapper_->Write(addr, 29, data_.crystals);
+    mapper_->Write(addr, 31,
             (data_.downstab ? 0x10 : 0) | (data_.upstab ? 0x04 : 0));
 
-    addr.set_bank(7);
-    addr.set_address(0x0359);
+    addr = misc.start_lives();
     mapper_->Write(addr, 0, data_.lives);
 }
 

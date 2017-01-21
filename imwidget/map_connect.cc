@@ -2,6 +2,7 @@
 #include "imwidget/map_connect.h"
 #include "imwidget/multimap.h"
 #include "imwidget/imutil.h"
+#include "util/config.h"
 
 namespace z2util {
 
@@ -24,12 +25,13 @@ OverworldConnector::OverworldConnector(const OverworldConnector& other)
 }
 
 void OverworldConnector::Read() {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     uint8_t y = mapper_->Read(address_, offset_ + 0x00);
     uint8_t x = mapper_->Read(address_, offset_ + 0x3f);
     uint8_t z = mapper_->Read(address_, offset_ + 0x7e);
     uint8_t w = mapper_->Read(address_, offset_ + 0xbd);
 
-    y_ = (y & 0x7f) - 30;
+    y_ = (y & 0x7f) - misc.overworld_y_offset();
     ext_ = !!(y & 0x80);
 
     x_ = x & 0x3f;
@@ -46,9 +48,10 @@ void OverworldConnector::Read() {
 }
 
 void OverworldConnector::Write() {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     uint8_t y, x, z, w;
 
-    y = (y_ + 30) | uint8_t(ext_) << 7;
+    y = (y_ + misc.overworld_y_offset()) | uint8_t(ext_) << 7;
     x = x_ | uint8_t(second_) << 6 | uint8_t(exit_2_lower_) << 7;
     z = map_ | entry_ << 6;
     w = world_ | uint8_t(entry_right_) << 5 |

@@ -169,6 +169,7 @@ cc_library(
     srcs = ["overworld_encounters.cc"],
     deps = [
         "//nes:mappers",
+        "//util:config",
         "//external:imgui",
     ],
 )
@@ -179,6 +180,7 @@ cc_library(
     srcs = ["start_values.cc"],
     deps = [
         "//nes:mappers",
+        "//util:config",
         "//external:imgui",
     ],
 )

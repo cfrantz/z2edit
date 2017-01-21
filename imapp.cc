@@ -419,7 +419,6 @@ bool ImApp::ProcessEvents() {
 }
 
 void ImApp::Draw() {
-    static bool open = false;
     ImVec4 clear_color = ImColor(114, 144, 154);
     ImGui_ImplSdl_NewFrame(window_);
 

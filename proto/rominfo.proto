@@ -6,6 +6,32 @@ message Address {
     int32 address = 2;
 }
 
+message MemoryRegion {
+    int32 bank = 1;
+    int32 address = 2;
+    int32 length = 3;
+}
+
+message Miscellaneous {
+    // Ad-hoc collection of values that don't fit anywhere else
+
+    // Overworld maps don't start at y coordinate zero.
+    int32 overworld_y_offset = 1;
+
+    // Table where Link's starting values are stored.
+    Address start_values = 2;
+    Address start_lives = 3;
+
+    // Table describing overworld encounters.
+    Address overworld_encounters = 4;
+
+    // Table describing which y-coordinate divides north vs. south.
+    Address overworld_mason_dixon = 5;
+
+    // List of memory regions the allocator should not use.
+    repeated MemoryRegion allocator_keepout = 6;
+}
+
 message Palette {
     string name = 1;
     Address address = 2;
@@ -130,4 +156,5 @@ message RomInfo {
     ItemInfo items = 9;
     repeated ItemInfo areas = 10;
     repeated ItemInfo enemies = 11;
+    Miscellaneous misc = 12;
 }

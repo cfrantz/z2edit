@@ -1,0 +1,29 @@
+misc {
+    overworld_y_offset: 30
+    start_values: { bank: 5 address: 0xbae3 }
+    start_lives:  { bank: 7 address: 0x8359 }
+    overworld_encounters: { address: 0x8409 }
+    overworld_mason_dixon: { bank: 7 address: 0xcb32 }
+    allocator_keepout: [
+        # Room connectivity data
+        { bank: 1 address: 0x871b length: 252 },
+        { bank: 1 address: 0xa1f8 length: 252 },
+        { bank: 2 address: 0x871b length: 252 },
+        { bank: 2 address: 0xa1f8 length: 252 },
+        { bank: 3 address: 0x871b length: 252 },
+        { bank: 3 address: 0xa1f8 length: 252 },
+        { bank: 4 address: 0x871b length: 252 },
+        { bank: 4 address: 0xa1f8 length: 252 },
+        { bank: 5 address: 0x871b length: 252 },
+        { bank: 5 address: 0xa1f8 length: 252 },
+
+        # Enemy Lists
+        { bank: 1 address: 0x88a0 length: 1024 },
+        { bank: 2 address: 0x88a0 length: 1024 },
+        { bank: 3 address: 0x88a0 length: 1024 },
+        { bank: 4 address: 0x88a0 length: 1024 },
+        { bank: 5 address: 0x88a0 length: 1024 },
+
+        { bank: 0 address: 0 length: 0 }
+    ]
+}
