@@ -48,12 +48,42 @@ map {
 }
 
 sideview: {
-    area: "background"
+    area: "west_background"
     address: { bank: 1 address: 0x8000 }
-    length: 6
+    length: 7
     palette: { bank: 1 address: 0xe }
     type: OUTDOORS
     chr: { bank: 0x3 }
+    world: -1
+}
+
+sideview: {
+    area: "east_background"
+    address: { bank: 2 address: 0x8000 }
+    length: 7
+    palette: { bank: 2 address: 0xe }
+    type: OUTDOORS
+    chr: { bank: 0x5 }
+    world: -1
+}
+
+sideview: {
+    area: "town_background"
+    address: { bank: 3 address: 0x8000 }
+    length: 7
+    palette: { bank: 3 address: 0xe }
+    type: TOWN
+    chr: { bank: 0x7 }
+    world: -1
+}
+
+sideview: {
+    area: "palace_background"
+    address: { bank: 4 address: 0x8000 }
+    length: 7
+    palette: { bank: 4 address: 0xe }
+    type: TOWN
+    chr: { bank: 0x9 }
     world: -1
 }
 
@@ -99,15 +129,6 @@ sideview: {
 }
 
 sideview: {
-    area: "townbg"
-    address: { bank: 3 address: 0x8000 }
-    length: 2
-    palette: { bank: 1 address: 0xe }
-    type: TOWN
-    chr: { bank: 0x7 }
-    world: -1
-}
-sideview: {
     area: "town"
     address: { bank: 3 address: 0x523 }
     palette: { bank: 3 address: 0xe }
@@ -143,7 +164,7 @@ sideview: {
 sideview: {
     area: "Palace5"
     address: { bank: 4 address: 0x0569 }
-    length: 27
+    length: 28
     palette: { bank: 4 address: 0x3f30 }
     type: PALACE
     chr: { bank: 0x17 }
