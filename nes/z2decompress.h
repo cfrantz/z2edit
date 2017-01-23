@@ -89,6 +89,8 @@ class Z2Decompress {
                         const DecompressInfo* info);
     void RenderWindow(int x, int y, uint8_t item,
                       const DecompressInfo* info);
+    void RenderItem(int x, int y, uint8_t item,
+                    const DecompressInfo* info);
 
 
     Mapper* mapper_;

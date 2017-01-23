@@ -111,6 +111,15 @@ items {
             chr { bank: 2 }
             table { bank: 7 address: 0x2ea9 }
             palette: 1
+        }}, { 
+            # A fake item to make rendering doors easier
+            key: 0xd4 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
         }}
+
     ]
 }

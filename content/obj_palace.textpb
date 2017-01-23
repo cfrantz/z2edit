@@ -75,7 +75,8 @@ decompress {
     render: RENDER_CUSTOM
     width: 1
     height: 3
-    objid: 0
+    objid: 0xd4
+    custom: "RenderItem"
     comment: "locked door"
 }
 decompress {
@@ -85,7 +86,8 @@ decompress {
     render: RENDER_CUSTOM
     width: 1
     height: 3
-    objid: 0
+    objid: 0xd4
+    custom: "RenderItem"
     comment: "locked door"
 }
 decompress {

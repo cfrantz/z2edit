@@ -42,6 +42,10 @@ void SimpleMap::DrawMap(const ImVec2& pos) {
             cache_.Get(decomp_.map(x, y)).DrawAt(
                     pos.x + x*size, pos.y + y*size, scale_);
 
+        }
+    }
+    for(int y=0; y<decomp_.height(); y++) {
+        for(int x=0; x<decomp_.width(); x++) {
             uint8_t item = decomp_.item(x, y);
             if (item != 0xFF) {
                 items_.Get(item).DrawAt(
@@ -61,6 +65,10 @@ void SimpleMap::RenderToBuffer(GLBitmap *buffer) {
             buffer->Blit(x*size, y*size, size, size,
                          cache_.Get(decomp_.map(x, y)).data());
 
+        }
+    }
+    for(int y=0; y<decomp_.height(); y++) {
+        for(int x=0; x<decomp_.width(); x++) {
             uint8_t item = decomp_.item(x, y);
             if (item != 0xFF) {
                 auto& sprite = items_.Get(item);

@@ -168,6 +168,10 @@ void Z2Decompress::RenderCactus2(int x, int y, uint8_t item,
     RenderTopUnique(x, 8, item, info);
 }
 
+void Z2Decompress::RenderItem(int x, int y, uint8_t item,
+                              const DecompressInfo* info) {
+    items_[y][x] = info->objid(0);
+}
 
 std::map<std::string, Z2Decompress::PutFn> Z2Decompress::put_ = {
     { "RenderHorizontal",   &Z2Decompress::RenderHorizontal },
@@ -181,6 +185,7 @@ std::map<std::string, Z2Decompress::PutFn> Z2Decompress::put_ = {
     { "RenderStonehenge",   &Z2Decompress::RenderStonehenge },
     { "RenderBuilding",     &Z2Decompress::RenderBuilding },
     { "RenderWindow",       &Z2Decompress::RenderWindow },
+    { "RenderItem",         &Z2Decompress::RenderItem },
     { "Invalid",            &Z2Decompress::Invalid },
 };
 
