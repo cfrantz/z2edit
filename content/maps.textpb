@@ -132,7 +132,7 @@ sideview: {
 sideview: {
     area: "Palace2"
     address: { bank: 4 address: 0x053F }
-    length: 14
+    length: 21
     palette: { bank: 4 address: 0x3f00 }
     type: PALACE
     chr: { bank: 0xb }
@@ -143,25 +143,13 @@ sideview: {
 sideview: {
     area: "Palace5"
     address: { bank: 4 address: 0x0569 }
-    length: 21
+    length: 27
     palette: { bank: 4 address: 0x3f30 }
     type: PALACE
     chr: { bank: 0x17 }
     world: 14
     valid_worlds: 0x5000
-    connector: { bank: 4 address: 0x78b }
-}
-
-sideview: {
-    area: "World12"
-    address: { bank: 4 address: 0x0593 }
-    length: 14
-    palette: { bank: 4 address: 0x3f00 }
-    type: PALACE
-    chr: { bank: 0x09 }
-    world: 12
-    valid_worlds: 0x5000
-    connector: { bank: 4 address: 0x7df }
+    connector: { bank: 4 address: 0x7a7 }
 }
 
 sideview: {
