@@ -113,14 +113,17 @@ void GLBitmap::FilledBox(int x, int y, int w, int h, uint32_t color) {
 }
 
 void GLBitmap::Blit(int x, int y, int w, int h, uint32_t* pixels) {
-    int ww = width_ - w;
-    uint32_t *p = data_ + x + y * width_;
-    for(int yy=0; yy<h; yy++, p+=ww) {
-        for(int xx=0; xx<w; xx++, p++) {
+    for(int yy=0; yy<h; yy++) {
+        int dy = y + yy;
+        for(int xx=0; xx<w && dy>=0 && dy<height_; xx++) {
+            int dx = x + xx;
+            uint32_t val = pixels[yy * w +xx];
             // TODO(cfrantz): real alpha blending
-            uint32_t val = *pixels++;
-            if (val >> 24)
-                *p = val;
+            if (val >> 24) {
+                if (dx >= 0 && dx < width_) {
+                    data_[dy * width_ + dx] = val;
+                }
+            }
         }
     }
 }

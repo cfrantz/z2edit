@@ -116,6 +116,7 @@ cc_library(
         ":glbitmap",
         ":simplemap",
         ":map_command",
+        "//alg:fdg",
         "//:imapp-util",
         "//nes:mappers",
         "//nes:z2decompress",
