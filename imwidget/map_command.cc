@@ -267,6 +267,8 @@ bool MapHolder::Draw() {
         return true;
     }
 
+    ImGui::Text("Length = %d bytes.", length_);
+
     ImGui::Text("Flags:");
     changed |= ImGui::InputInt("Object Set", &data_.objset);
     Clamp(&data_.objset, 0, 1);
