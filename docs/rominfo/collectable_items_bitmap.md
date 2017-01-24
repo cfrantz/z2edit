@@ -19,7 +19,7 @@ Therefore, each "world" bitmap is 32 bytes long.
 | 1        | 0     | West Hyrule          | `$600` |
 | 1 & 2    | 1     | Death Mt. / Maze Is. | `$620` |
 | 2        | 2     | East Hyrule          | `$640` |
-| 3        | 4     | Towns                | `$660` |
+| 3        | 4, 10 | Towns                | `$660` |
 | 4        | 12, 12, 14 | Palaces 1, 2, 5 | `$680` |
 | 4        | 16, 17, 18 | Palaces 3, 4, 6 | `$6a0` |
 | 5        | 22    | Great Palace         | `$6c0` |
