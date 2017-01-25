@@ -1,9 +1,13 @@
 #include <vector>
 #include <algorithm>
 #include <inttypes.h>
-#include "romfile.h"
 
+#include <gflags/gflags.h>
+
+#include "romfile.h"
 #include "util/file.h"
+
+DEFINE_bool(b, false, "Hexdump with bank info");
 
 RomFile::RomFile() {}
 
@@ -17,22 +21,36 @@ void RomFile::Hexdump(uint32_t offset, uint32_t length,
     uint32_t i;
     uint32_t addr;
 
-    printf("address   ");
+    printf("address     ");
 
     for(i=0; i<16; i++) {
         printf(" %02x", (offset + i) & 15);
     }
     printf("  text\n");
-    printf("--------   -----------------------------------------------  ----------------\n");
+    printf("----------  -----------------------------------------------  ----------------\n");
 
     for(i=0; i<length; i++) {
         addr = offset + i;
         uint8_t v = Read8(addr);
         if (i % 16 == 0) {
             if (i) {
-                printf("  %s\n%08" PRIx32 ": ", buf, addr);
+                if (FLAGS_b) {
+                    addr -= 0x10;
+                    unsigned bank = (addr / 16384);
+                    addr = (addr & 0x3FFF) | 0x8000;
+                    printf("  %s\nb=%2d %04" PRIx32 ": ", buf, bank, addr);
+                } else {
+                    printf("  %s\n%08" PRIx32 ":  ", buf, addr);
+                }
             } else {
-                printf("%08" PRIx32 ": ", addr);
+                if (FLAGS_b) {
+                    addr -= 0x10;
+                    unsigned bank = (addr / 16384);
+                    addr = (addr & 0x3FFF) | 0x8000;
+                    printf("b=%2d %04" PRIx32 ": ", bank, addr);
+                } else {
+                    printf("%08" PRIx32 ":  ", addr);
+                }
             }
             memset(buf, 0, sizeof(buf));
         }

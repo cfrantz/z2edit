@@ -11,6 +11,7 @@ cc_library(
     deps = [
         "//util:file",
         "//util:string",
+        "//external:gflags",
     ],
 )
 
