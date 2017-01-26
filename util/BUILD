@@ -100,7 +100,6 @@ cc_library(
 
 cc_library(
     name = "imgui_sdl_opengl",
-    copts = ["-I/usr/include/SDL2"],
     hdrs = [
         "imgui_impl_sdl.h",
     ],

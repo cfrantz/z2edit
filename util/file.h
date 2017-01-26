@@ -16,16 +16,18 @@ class Stat {
   public:
     enum Mode {
         IFMT = S_IFMT,
+#ifndef _WIN32
         IFSOCK = S_IFSOCK,
         IFLNK = S_IFLNK,
+        ISUID = S_ISUID,
+        ISGID = S_ISGID,
+        ISVTX = S_ISVTX,
+#endif
         IFREG = S_IFREG,
         IFBLK = S_IFBLK,
         IFDIR = S_IFDIR,
         IFCHR = S_IFCHR,
         IFIFO = S_IFIFO,
-        ISUID = S_ISUID,
-        ISGID = S_ISGID,
-        ISVTX = S_ISVTX,
         IRWXU = S_IRWXU,
         IRUSR = S_IRUSR,
         IWUSR = S_IWUSR,

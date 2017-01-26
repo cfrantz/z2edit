@@ -2,7 +2,7 @@
 
 ### Create a target for Windows
   * Try to use https://github.com/cfrantz/hello_windows so I can
-    build from Linux.
+    build from Linux (partially done).
 
 ### Add config which describes how to render towns
 Done, but still need:

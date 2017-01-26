@@ -1,0 +1,5 @@
+#!/bin/bash --norc
+
+exec -a i686-w64-mingw32.shared-gprof \
+    external/mingw_compiler_win32/usr/bin/i686-w64-mingw32.shared-gprof \
+    "$@"

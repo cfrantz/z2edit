@@ -544,7 +544,9 @@ void ImApp::PlayAudio(float* data, int len) {
         producer = (producer + 1) % audiobufsz_;
         while(producer == audio_consumer_) {
             // Audio overrun.
-            os::Yield();
+            // FIXME(cfrantz): This should use a condition variable, but this
+            // program doesn't use audio anyway.
+            // os::Yield();
         }
         audio_producer_ = producer;
     }

@@ -4,7 +4,10 @@ cc_library(
     name = "imgui",
 	linkopts = [
 		"-lm",
-		"-lGL",
+        # FIXME(cfrantz): Detect whether we're building for linux or windows,
+        # and select the appropriate GL library
+		# "-lGL",
+		# "-lopengl32",
     ],
     hdrs = [
         "imgui.h",

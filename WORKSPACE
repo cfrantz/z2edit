@@ -42,7 +42,7 @@ git_repository(
 )
 
 ######################################################################
-# protobuf
+# native file dialog
 ######################################################################
 new_git_repository(
 	name = "nativefiledialog_git",
@@ -54,4 +54,20 @@ new_git_repository(
 bind(
     name = "nfd",
     actual = "@nativefiledialog_git//:nfd",
+)
+
+
+######################################################################
+# compilers for windows
+######################################################################
+new_local_repository(
+    name = "mingw_compiler_win32",
+    path = "tools/mxe",
+    build_file = "tools/mingw_compiler_win32.BUILD",
+)
+
+new_local_repository(
+    name = "mingw_compiler_win64",
+    path = "tools/mxe",
+    build_file = "tools/mingw_compiler_win64.BUILD",
 )

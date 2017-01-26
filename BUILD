@@ -17,6 +17,7 @@ cc_library(
 cc_library(
     name = "imapp",
     linkopts = [
+        "-lSDL2main",
         "-lSDL2",
         "-lSDL2_image",
         "-lSDL2_mixer",
@@ -59,6 +60,23 @@ cc_binary(
     name = "main",
     linkopts = [
         "-lpthread",
+        "-lm",
+        "-lGL",
+        # TODO(cfrantz): Detect whether we're building for linux or windows
+        # and link with the appropriate libraries
+        # "-lopengl32",
+        # "-ldinput8",
+        # "-ldxguid",
+        # "-ldxerr8",
+        # "-luser32",
+        # "-lgdi32",
+        # "-lwinmm",
+        # "-limm32",
+        # "-lole32",
+        # "-loleaut32",
+        # "-lshell32",
+        # "-lversion",
+        # "-luuid",
     ],
     srcs = [
         "main.cc",

@@ -6,7 +6,10 @@
 
 namespace os {
 string GetCWD();
+
+#ifndef _WIN32
 void Yield();
+#endif
 
 namespace path {
 string Join(const std::vector<string>& components);
