@@ -54,6 +54,7 @@ class Editor {
     float scale_;
     stbte_tilemap* editor_;
     Map* map_;
+    int compressed_length_;
 
     Mapper* mapper_;
     NesHardwarePalette* hwpal_;

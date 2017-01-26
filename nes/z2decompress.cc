@@ -1,6 +1,10 @@
-#include "util/logging.h"
 #include "nes/z2decompress.h"
+#include <gflags/gflags.h>
+
+#include "util/logging.h"
 #include "util/config.h"
+
+DEFINE_int32(max_map_height, 75, "Maximum height of overworld maps");
 
 namespace z2util {
 
@@ -53,16 +57,20 @@ void Z2Decompress::DecompressOverWorld(const Map& map) {
     LOG(INFO, "DecompressOverWorld: bank=", map.address().bank(),
               " address=", HEX(map.address().address()),
               " length=", map.length());
-    for(int i=0; i<map.length(); i++) {
+
+    width_ = 64;
+    height_ = FLAGS_max_map_height;
+    int i = 0;
+    for(int n=0; n < width_ * height_; i++) {
         uint8_t val = Read(map.address(), i);
         uint8_t type = val & 0x0f;
         uint8_t len = (val >> 4) + 1;
         for(int j=0; j<len; j++) {
             *mm++ = type;
+            n++;
         }
     }
-    width_ = 64;
-    height_ = (mm - (uint8_t*)map_) / width_;
+    length_ = i;
 }
 
 const ItemInfo& Z2Decompress::EnemyInfo() {
@@ -220,6 +228,7 @@ void Z2Decompress::DecompressSideView(const Address& address,
 
 void Z2Decompress::DecompressSideView(const uint8_t* data) {
     uint8_t len = data[0];
+    length_ = len;
     flags_ = data[1];
     ground_ = data[2];
     back_ = data[3];

@@ -43,6 +43,9 @@ class Z2Decompress {
     Address palette();
     inline int width() const { return width_; }
     inline int height() const { return height_; }
+
+    inline const Address& address() const { return compressed_map_.address(); }
+    inline int length() const { return length_; }
     inline const std::string& name() const { return compressed_map_.name(); }
     // areas: overword sideviews, towns, palaces, great palace
     const static int NR_AREAS = 4;
@@ -101,6 +104,7 @@ class Z2Decompress {
     uint8_t flags_;
     uint8_t ground_;
     uint8_t back_;
+    int length_;
     int layer_;
     bool cursor_moves_left_;
     const DecompressInfo* info_[NR_AREAS][NR_SETS][16];

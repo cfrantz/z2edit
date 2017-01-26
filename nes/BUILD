@@ -53,6 +53,7 @@ cc_library(
         "//util:config",
         "//util:logging",
         "//proto:rominfo",
+        "//external:gflags",
     ],
 )
 

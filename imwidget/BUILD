@@ -85,6 +85,7 @@ cc_library(
         "//util:config",
         "//util:imgui_sdl_opengl",
         "//util:stb-tilemap-editor",
+        "//external:gflags",
         "//external:imgui",
     ],
 )

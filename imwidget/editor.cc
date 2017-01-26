@@ -1,4 +1,5 @@
 #include <string>
+#include <gflags/gflags.h>
 
 #include "imwidget/editor.h"
 #include "nes/z2decompress.h"
@@ -7,6 +8,8 @@
 #include "util/stb_tilemap_editor.h"
 #include "imwidget/imutil.h"
 #include "imwidget/error_dialog.h"
+
+DEFINE_int32(max_map_length, 896, "Maximum compressed map size");
 
 #define STBTE_MAX_TILEMAP_X      64
 #define STBTE_MAX_TILEMAP_Y      200
@@ -74,6 +77,7 @@ void Editor::ConvertFromMap(Map* map) {
     if (map) {
         map_ = map;
         decomp.Decompress(*map);
+        compressed_length_ = decomp.length();
         cache_.Init(*map);
         connections_.Init(mapper_, map->connector(), map->world());
         width = decomp.width();
@@ -127,15 +131,17 @@ void Editor::SaveMap() {
         LOG(ERROR, "Can't save map: map_ == nullptr");
         return;
     }
-    if (data.size() > 1024) {
+    if (data.size() > size_t(FLAGS_max_map_length)) {
         ErrorDialog::New("Overworld Save Error",
             "Can't save ", map_->name(), " because it is ", data.size(),
             " bytes\n\n"
-            "Overworld maps must be smaller than 1024 bytes.\n");
+            "Overworld maps must be smaller than", FLAGS_max_map_length,
+            " bytes.\n");
     }
 
     LOG(INFO, "Saving ", map_->name());
     LOG(INFO, "Map compresses to ", data.size(), " bytes.");
+    compressed_length_ = int(data.size());
 
     Address addr = map_->address();
     addr.set_address(0);
@@ -244,6 +250,10 @@ void Editor::Draw() {
     ImGui::InputFloat("Zoom", &scale_, 0.25, 1.0);
     scale_ = Clamp(scale_, 0.25f, 8.0f);
     ImGui::PopItemWidth();
+
+    ImGui::Text("Compresed map in bank %d address=%04x length=%d bytes.",
+                map_->address().bank(), map_->address().address(),
+                compressed_length_);
 
     mouse_origin_ = ImGui::GetCursorScreenPos();
     origin_ = ImGui::GetCursorPos();
