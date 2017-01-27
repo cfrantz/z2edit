@@ -36,7 +36,9 @@ PREFIX = {
 
 SKIP_DLLS = [
     'msvcrt.dll',
+    'ole32.dll',
     'KERNEL32.dll',
+    'SHELL32.dll',
     'USER32.dll',
     'IMM32.dll',
     'OPENGL32.dll',

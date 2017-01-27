@@ -1,9 +1,5 @@
 # TODO List
 
-### Create a target for Windows
-  * Try to use https://github.com/cfrantz/hello_windows so I can
-    build from Linux (partially done).
-
 ### Add config which describes how to render towns
 Done, but still need:
   * Inventory of all the different townspeople
@@ -42,6 +38,25 @@ Done, but still need:
     * Create a vanilla ROM which fixes all sideview exit oddities.
 
 # Done
+
+### Create a target for Windows (build for Windows from Linux)
+  1. One-time setup:
+     ```
+     ./tools/downloader.py --nowin32 compiler SDL2
+     ```
+
+  2. Build:
+     ```
+     bazel build --crosstool_top=//tools/windows:toolchain --cpu=win64 :main
+     ```
+
+  3. Package:
+     ```
+     ./tools/windows/zip4win.py --mxe tools/mxe --out z2edit.zip \
+         bazel-bin/main zelda2.textpb content/*
+     ```
+
+
 ### Better visualization of side-view areas
 Done: Multimap editor
   * Figure out drop rooms in GP (done-ish)
