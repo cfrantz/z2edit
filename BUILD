@@ -1,17 +1,16 @@
 package(default_visibility=["//visibility:public"])
 
+config_setting(
+    name = "windows",
+    values = {
+        "crosstool_top": "//tools/windows:toolchain",
+    }
+)
+
 cc_library(
     name = "imapp-util",
     hdrs = ["imapp-util.h"],
     srcs = [],
-)
-
-cc_library(
-    name = "nfd",
-    defines = [ "HAVE_NFD" ],
-    deps = [
-        "//external:nfd",
-    ]
 )
 
 cc_library(
@@ -35,7 +34,7 @@ cc_library(
         # between MIR (linked with protobuf 2.6.1) and this program,
         # which builds with protbuf 3.x.x.  A temporary workaround is to
         # not link with nfd (native-file-dialog).
-        ":nfd",
+        # ":nfd",
         "//imwidget:debug_console",
         "//imwidget:editor",
         "//imwidget:hwpalette",
@@ -53,31 +52,37 @@ cc_library(
         "//util:os",
         "//util:logging",
         "//external:gflags",
+        "//external:nfd",
     ],
 )
 
 cc_binary(
     name = "main",
-    linkopts = [
-        "-lpthread",
-        "-lm",
-        "-lGL",
-        # TODO(cfrantz): Detect whether we're building for linux or windows
-        # and link with the appropriate libraries
-        # "-lopengl32",
-        # "-ldinput8",
-        # "-ldxguid",
-        # "-ldxerr8",
-        # "-luser32",
-        # "-lgdi32",
-        # "-lwinmm",
-        # "-limm32",
-        # "-lole32",
-        # "-loleaut32",
-        # "-lshell32",
-        # "-lversion",
-        # "-luuid",
-    ],
+    linkopts = select({
+        ":windows": [
+            "-lpthread",
+            "-lm",
+            "-lopengl32",
+            "-ldinput8",
+            "-ldxguid",
+            "-ldxerr8",
+            "-luser32",
+            "-lgdi32",
+            "-lwinmm",
+            "-limm32",
+            "-lole32",
+            "-loleaut32",
+            "-lshell32",
+            "-lversion",
+            "-luuid",
+
+        ],
+        "//conditions:default": [
+            "-lpthread",
+            "-lm",
+            "-lGL",
+        ],
+    }),
     srcs = [
         "main.cc",
     ],

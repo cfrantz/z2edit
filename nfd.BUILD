@@ -1,5 +1,12 @@
 package(default_visibility = ["//visibility:public"])
 
+config_setting(
+    name = "windows",
+    values = {
+        "crosstool_top": "//tools/windows:toolchain",
+    }
+)
+
 genrule(
     name = "fucking-glib-headers",
     outs = [
@@ -9,7 +16,7 @@ genrule(
 )
 
 cc_library(
-    name = "nfd",
+    name = "nfd-linux",
     copts = [
         "-I/usr/include/gtk-3.0",
         "-I/usr/include/gdk-pixbuf-2.0",
@@ -46,4 +53,38 @@ cc_library(
         "src/nfd_gtk.c",
         "glib-2.0/include/glibconfig.h",
     ],
+)
+
+genrule(
+    name = "fucking-windows-filenames",
+    srcs = [ "src/nfd_win.cpp" ],
+    outs = [ "src/nfd_win_fixed.cpp" ],
+    cmd = "sed -e 's/ShObjIdl.h/shobjidl.h/g' $< >$(@)"
+)
+
+cc_library(
+    name = "nfd-windows",
+    defines = [ "MINGW_HAS_SECURE_API=1" ],
+    includes = [
+        "src",
+        "src/include",
+    ],
+    hdrs = [
+        "src/include/nfd.h",
+    ],
+    srcs = [
+        "src/common.h",
+        "src/nfd_common.h",
+        "src/nfd_common.c",
+        "src/nfd_win_fixed.cpp",
+    ],
+)
+
+cc_library(
+    name = "nfd",
+    defines = [ "HAVE_NFD" ],
+    deps = select({
+        ":windows": [ ":nfd-windows" ],
+        "//conditions:default": [ ":nfd-linux" ],
+    }),
 )
