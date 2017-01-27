@@ -10,18 +10,17 @@ Done, but still need:
   * Townspeople text editor
   * Building entrances to which rooms? (understood, no widget for editing yet).
 
+### Overworld Editing
+  * Fix raft spot.
+  * Fix hidden places in East Hyrule (New Kasuto, P6)
+  * Figure out if there is anything to do for boulders or river devil.
+
 ### Sideview editing
   * Better modification of enemy lists (e.g. add/del enemies from an area).
   * Sideview modifications should allocate new memory regions (done).
-
-### Overworld enemy encounter editor
-  * Which sideview areas to load
   * Large/small encounter enemy lists
 
 ### Enemy editor to change enemy HP, XP etc.
-
-### Figure out how overworld map size is determined
-  * Possible to not need to be copied to RAM?
 
 ### Curate list of known hacks to optionally apply to a ROM:
   * walk anywhere (done)
@@ -68,3 +67,10 @@ Done: Multimap editor
 
 ### HiDPI solution.
   * Done: --hidpi <scale> command line flag.
+
+### Figure out how overworld map size is determined
+  * Done: hardcoded constant in ROM.
+  * Need documentation on how to change.
+
+### Overworld enemy encounter editor
+  * Which sideview areas to load (done)
