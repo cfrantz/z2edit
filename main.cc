@@ -67,8 +67,21 @@ void PostProcess(z2util::RomInfo* config) {
     }
 }
 
+const char kUsage[] =
+R"ZZZ(<optional flags> [user-supplied-zelda2.nes]
+
+Description:
+  A ROM file edtior for Zelda II The Adventure of Link.
+
+Flags:
+  --config <filename> Use an alternate config file.
+  --hidpi <n>         Set the scaling factor on hidpi displays (try 2.0).
+  --emulator <prog>   Emulator to run for File | Emulate.
+  --romtmp <filename> Temporary filename for File | Emulate.
+)ZZZ";
 
 int main(int argc, char *argv[]) {
+    gflags::SetUsageMessage(kUsage);
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
     auto* config = ConfigLoader<z2util::RomInfo>::Get();
