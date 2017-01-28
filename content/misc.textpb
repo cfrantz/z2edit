@@ -26,4 +26,11 @@ misc {
 
         { bank: 0 address: 0 length: 0 }
     ]
+
+    enemy_pointer: [
+        { address: 0x85a1 },
+        { address: 0xa07e }
+    ]
+    enemy_data_rom: 0x88a0
+    enemy_data_ram: 0x7000
 }

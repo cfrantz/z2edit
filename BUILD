@@ -46,6 +46,7 @@ cc_library(
         "//nes:cartridge",
         "//nes:cpu6502",
         "//nes:mappers",
+        "//nes:memory",
         "//proto:rominfo",
         "//util:fpsmgr",
         "//util:imgui_sdl_opengl",

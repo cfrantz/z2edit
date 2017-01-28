@@ -138,19 +138,25 @@ class MapEnemyList {
         int x, y;
     };
     MapEnemyList();
+    MapEnemyList(Mapper* m);
     inline void set_mapper(Mapper* m) { mapper_ = m; }
 
     void Draw();
     void Parse(const Map& map);
+    std::vector<uint8_t> Pack();
     void Save();
-    const std::vector<Unpacked>& data() { return data_; }
+    const std::vector<Unpacked>& data();
   private:
     Mapper* mapper_;
+    bool is_large_;
+    bool is_encounter_;
     Address pointer_;
     int world_;
-    int length_;
+    int area_;
+    int display_;
 
     std::vector<Unpacked> data_;
+    std::unique_ptr<MapEnemyList> large_;
 };
 
 }  // namespace z2util

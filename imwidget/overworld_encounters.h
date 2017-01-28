@@ -13,6 +13,7 @@ class OverworldEncounters {
     void Draw();
     void Save();
 
+    bool IsEncounter(int area);
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     inline void set_map(const Map& map) { map_ = map; }
   private:

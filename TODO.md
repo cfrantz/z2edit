@@ -6,15 +6,13 @@ Done, but still need:
   * Townspeople text editor
   * Building entrances to which rooms? (understood, no widget for editing yet).
 
+### Sideview editing
+  * Initial item availability editor (doors & items)
+
 ### Overworld Editing
   * Fix raft spot.
   * Fix hidden places in East Hyrule (New Kasuto, P6)
   * Figure out if there is anything to do for boulders or river devil.
-
-### Sideview editing
-  * Better modification of enemy lists (e.g. add/del enemies from an area).
-  * Sideview modifications should allocate new memory regions (done).
-  * Large/small encounter enemy lists
 
 ### Enemy editor to change enemy HP, XP etc.
 
@@ -89,3 +87,8 @@ Done: Multimap editor
 
 ### Overworld enemy encounter editor
   * Which sideview areas to load (done)
+
+### Sideview editing
+  * Add/Delete enemies from a sideview area (done)
+  * Sideview modifications should allocate new memory regions (done)
+  * Large/small encounter enemy lists (done)

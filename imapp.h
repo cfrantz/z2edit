@@ -18,6 +18,7 @@
 #include "imwidget/object_table.h"
 #include "nes/cartridge.h"
 #include "nes/mapper.h"
+#include "nes/memory.h"
 
 class ImApp {
   public:
@@ -100,6 +101,7 @@ class ImApp {
     std::vector<std::function<bool()>> draw_added_;
 
     Cartridge cartridge_;
+    z2util::Memory memory_;
     std::unique_ptr<Mapper> mapper_;
 
     static void AudioCallback_(void* userdata, uint8_t* stream, int len);

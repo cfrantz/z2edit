@@ -27,7 +27,7 @@ $(bindir)/main <user-supplied-zelda2.nes>
 
    ```
    $ ./tools/windows/zip4win.py --mxe tools/mxe --out z2edit.zip \
-       bazel-bin/main zelda2.texpb content/*
+       bazel-bin/main zelda2.textpb content/*
    ```
 
    Take z2edit.zip to a windows machine.

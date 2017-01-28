@@ -20,6 +20,8 @@ DEFINE_int32(audio_frequency, 48000, "Audio sample frequency");
 DEFINE_int32(audio_bufsize, 2048, "Audio buffer size");
 DEFINE_double(hidpi, 1.0, "HiDPI scaling factor");
 
+DECLARE_bool(move_from_keepout);
+
 ImApp* ImApp::singleton_;
 
 ImApp::ImApp(const std::string& name, int width, int height)
@@ -122,6 +124,21 @@ void ImApp::Load(const std::string& filename) {
 
     object_table_->set_mapper(mapper_.get());
     object_table_->Init();
+
+    memory_.set_mapper(mapper_.get());
+    memory_.CheckBankForKeepout(1);
+    memory_.CheckBankForKeepout(2);
+    memory_.CheckBankForKeepout(3);
+    memory_.CheckBankForKeepout(4);
+    memory_.CheckBankForKeepout(5);
+
+    if (FLAGS_move_from_keepout) {
+        memory_.CheckBankForKeepout(1, true);
+        memory_.CheckBankForKeepout(2, true);
+        memory_.CheckBankForKeepout(3, true);
+        memory_.CheckBankForKeepout(4, true);
+        memory_.CheckBankForKeepout(5, true);
+    }
 }
 
 void ImApp::LoadFile(DebugConsole* console, int argc, char **argv) {

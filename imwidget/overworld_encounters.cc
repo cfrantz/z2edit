@@ -10,6 +10,13 @@ void OverworldEncounters::Unpack() {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     Address addr = map_.pointer();
 
+    // Check to see if this bank even has overworlds.  If not,
+    // don't do anything
+    addr.set_address(0x8500);
+    uint16_t ovptr = mapper_->ReadWord(addr, 10);
+    if (ovptr == 0 || ovptr == 0xFFFF)
+        return;
+
     // The overworld encounter table is fixed at address $8409
     // in the same bank as the overworld map
     addr.set_address(misc.overworld_encounters().address());
@@ -31,6 +38,14 @@ void OverworldEncounters::Unpack() {
 
     addr = misc.overworld_mason_dixon();
     south_side_ = mapper_->Read(addr, world) - misc.overworld_y_offset();
+}
+
+bool OverworldEncounters::IsEncounter(int area) {
+    for(const auto& data : data_) {
+        if (area == data.area)
+            return true;
+    }
+    return false;
 }
 
 void OverworldEncounters::Draw() {

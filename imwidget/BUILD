@@ -135,7 +135,9 @@ cc_library(
     deps = [
         ":imutil",
         ":error_dialog",
+        ":overworld_encounters",
         "//util:config",
+        "//nes:enemylist",
         "//nes:mappers",
         "//proto:rominfo",
         "//external:imgui",

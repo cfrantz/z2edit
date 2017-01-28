@@ -30,6 +30,13 @@ message Miscellaneous {
 
     // List of memory regions the allocator should not use.
     repeated MemoryRegion allocator_keepout = 6;
+
+    // Each bank has two pointers to enemy data
+    repeated Address enemy_pointer = 7;
+
+    // Each bank has a 1K block of enemy data
+    int32 enemy_data_rom = 8;
+    int32 enemy_data_ram = 9;
 }
 
 message Palette {

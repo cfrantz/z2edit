@@ -20,6 +20,22 @@ cc_library(
 )
 
 cc_library(
+    name = "enemylist",
+    hdrs = [
+        "enemylist.h",
+    ],
+    srcs = [
+        "enemylist.cc"
+    ],
+    deps = [
+        ":mappers",
+        "//proto:rominfo",
+        "//util:config",
+        "//util:logging",
+    ],
+)
+
+cc_library(
     name = "mappers",
     hdrs = [
         "mapper.h",
@@ -40,6 +56,21 @@ cc_library(
     alwayslink = 1,
 )
 
+cc_library(
+    name = "memory",
+    hdrs = [
+        "memory.h",
+    ],
+    srcs = [
+        "memory.cc"
+    ],
+    deps = [
+        ":mappers",
+        "//proto:rominfo",
+        "//util:config",
+        "//util:logging",
+    ],
+)
 
 cc_library(
     name = "z2decompress",

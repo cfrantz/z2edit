@@ -4,7 +4,9 @@
 
 #include "imwidget/error_dialog.h"
 #include "imwidget/imutil.h"
+#include "imwidget/overworld_encounters.h"
 #include "imgui.h"
+#include "nes/enemylist.h"
 #include "util/config.h"
 
 namespace z2util {
@@ -536,22 +538,44 @@ void MapConnection::Draw() {
     }
 }
 
-MapEnemyList::MapEnemyList()
-  : mapper_(nullptr),
+MapEnemyList::MapEnemyList(Mapper* m)
+  : mapper_(m),
+    is_large_(false),
+    is_encounter_(false),
     world_(0),
-    length_(0)
-{
-}
+    area_(0),
+    display_(0) {}
+
+MapEnemyList::MapEnemyList() : MapEnemyList(nullptr) {}
 
 void MapEnemyList::Parse(const Map& map) {
     pointer_ = map.pointer();
     world_ = map.world();
+
+    // FIXME(cfrantz): Find a better way of learning the area number
+    int a = pointer_.address() | 0x8000;
+    if (a >= 0xA000) {
+        area_ = (a - 0xA000) / 2;
+    } else {
+        area_ = (a - 0x8523) / 2;
+    }
+
+    // Check if this is an overworld random encounter area
+    OverworldEncounters enc;
+    enc.set_mapper(mapper_);
+    enc.set_map(map);
+    enc.Unpack();
+    is_encounter_ = enc.IsEncounter(area_);
+
     Address addr = mapper_->ReadAddr(pointer_, 0x7e);
     uint16_t delta = 0x18a0;
 
-    length_ = 0;
     data_.clear();
     uint8_t n = mapper_->Read(addr, delta);
+    if (is_large_) {
+        delta += n;
+        n = mapper_->Read(addr, delta);
+    }
     for(int i=1; i<n; i+=2) {
         uint8_t pos = mapper_->Read(addr, delta+i);
         uint8_t enemy = mapper_->Read(addr, delta+i+1);
@@ -559,24 +583,43 @@ void MapEnemyList::Parse(const Map& map) {
         y = (y == 0) ? 1 : y+2;
         data_.emplace_back(enemy & 0x3f,
                            (pos & 0xf) | (enemy & 0xc0) >> 2, y);
-        length_++;
+    }
+
+    // Encounters have 2 enemy lists, so make another widget
+    large_.reset(nullptr);
+    if (is_encounter_ && !is_large_) {
+        large_.reset(new MapEnemyList(mapper_));
+        large_->is_large_ = true;
+        large_->Parse(map);
     }
 }
 
-void MapEnemyList::Save() {
-    uint8_t n = 1 + length_ * 2;
-    Address addr = mapper_->ReadAddr(pointer_, 0x7e);
-    uint16_t delta = 0x18a0;
+std::vector<uint8_t> MapEnemyList::Pack() {
+    std::vector<uint8_t> packed;
 
-    mapper_->Write(addr, delta, n);
-    for(int i=0; i<length_; i++) {
-        int y = data_[i].y;
+    uint8_t n = 1 + data_.size() * 2;
+    packed.push_back(n);
+    for(const auto& data : data_) {
+        int y = data.y;
         y = (y <= 1) ? 0 : y-2;
-        uint8_t pos = (y << 4) | (data_[i].x & 0x0F);
-        uint8_t enemy = (data_[i].enemy & 0x3f) | (data_[i].x & 0x30) << 2;
-        mapper_->Write(addr, delta + 1 + i*2, pos);
-        mapper_->Write(addr, delta + 2 + i*2, enemy);
+        uint8_t pos = (y << 4) | (data.x & 0x0F);
+        uint8_t enemy = (data.enemy & 0x3f) | (data.x & 0x30) << 2;
+        packed.push_back(pos);
+        packed.push_back(enemy);
     }
+    return packed;
+}
+
+void MapEnemyList::Save() {
+    EnemyListPack ep(mapper_);
+    ep.Unpack(pointer_.bank());
+    auto data = Pack();
+    if (large_) {
+        auto more = large_->Pack();
+        data.insert(data.end(), more.begin(), more.end());
+    }
+    ep.Add(area_, data);
+    ep.Pack();
 }
 
 void MapEnemyList::Draw() {
@@ -604,19 +647,47 @@ void MapEnemyList::Draw() {
     ImGui::Text("Map enemy table address at bank=0x%x address=0x%04x",
                 addr.bank(), addr.address() + 0x18a0);
 
-    for(int i=0; i<length_; i++) {
-        ImGui::PushID(i);
+    if (is_encounter_) {
+        if (is_large_) {
+            ImGui::RadioButton("Large Enemy Encounter", &display_, 1);
+        } else {
+            ImGui::RadioButton("Small Enemy Encounter", &large_->display_, 0);
+        }
+    }
+
+    int i=0;
+    for(auto it=data_.begin(); it<data_.end(); ++it, ++i) {
+        ImGui::PushID(i | (is_large_ << 8));
         ImGui::PushItemWidth(100);
-        ImGui::InputInt("x position", &data_[i].x);
+        ImGui::InputInt("x position", &it->x);
         ImGui::SameLine();
-        ImGui::InputInt("y position", &data_[i].y);
+        ImGui::InputInt("y position", &it->y);
         ImGui::SameLine();
         ImGui::PopItemWidth();
         ImGui::PushItemWidth(400);
-        ImGui::Combo("enemy", &data_[i].enemy, names, n);
+        ImGui::Combo("enemy", &it->enemy, names, n);
         ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+        if (ImGui::Button(" X ")) {
+            data_.erase(it);
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Delete this enemy");
         ImGui::PopID();
     }
+    if (ImGui::Button("Add")) {
+        data_.emplace_back(0, 0, 0);
+    }
+
+    if (large_) {
+        ImGui::Separator();
+        large_->Draw();
+    }
+}
+
+const std::vector<MapEnemyList::Unpacked>& MapEnemyList::data() {
+    return (large_ && large_->display_) ? large_->data_ : data_;
 }
 
 }  // namespace z2util

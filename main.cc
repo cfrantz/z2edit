@@ -5,6 +5,7 @@
 #include "util/config.h"
 
 DEFINE_string(config, "zelda2.textpb", "ROM info config file");
+DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
 
 void GetName(const z2util::RomInfo* config, int world, int id,
              std::string* name) {
