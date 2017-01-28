@@ -1,4 +1,7 @@
+#include <stdarg.h>
 #include "util/logging.h"
+
+#include "util/stringprintf.h"
 #include <gflags/gflags.h>
 
 DEFINE_int32(loglevel, 4, "Logging level");
@@ -144,5 +147,14 @@ void Log(LogLevel level, Args ...args) {
     }
 }
 #endif
+
+void LogF(LogLevel level, const char *fmt, ...) {
+    std::string message;
+    va_list ap;
+    va_start(ap, fmt);
+    StringAppendV(&message, fmt, ap);
+    va_end(ap);
+    Log(level, message);
+}
 
 }  // namespace

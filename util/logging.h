@@ -8,6 +8,8 @@
 
 #define LOG(LEVEL, ...) \
     logging::Log(logging::LogLevel::LL_##LEVEL, __VA_ARGS__)
+#define LOGF(LEVEL, ...) \
+    logging::LogF(logging::LogLevel::LL_##LEVEL, __VA_ARGS__)
 #define HEX(...) logging::Hex(__VA_ARGS__)
 
 namespace logging {
@@ -121,6 +123,8 @@ void Log(LogLevel level, Args ...args) {
         abort();
     }
 }
+
+void LogF(LogLevel level, const char *fmt, ...);
 
 }  // namespace
 
