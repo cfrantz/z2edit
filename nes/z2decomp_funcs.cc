@@ -170,6 +170,7 @@ void Z2Decompress::RenderCactus2(int x, int y, uint8_t item,
 
 void Z2Decompress::RenderItem(int x, int y, uint8_t item,
                               const DecompressInfo* info) {
+    if (info->fixed_y()) y = info->fixed_y();
     items_[y][x] = info->objid(0);
 }
 

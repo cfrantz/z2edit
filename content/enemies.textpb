@@ -155,13 +155,13 @@ enemies {
         }},
         { key: 0x13 value: {
             name: "elevator"
-            width: 24 height: 64
+            width: 32 height: 64
             chr: { bank: 2 }
             palette: 1
-            id: [ 0xac, 0xac, 0xac,
-                    -1,   -1,   -1,
-                    -1,   -1,   -1,
-                  0xac, 0xac, 0xac ]
+            id: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
+                    -1,   -1,   -1, -1,
+                    -1,   -1,   -1, -1,
+                  0x0400ac, 0x0400ac, 0x0400ac, -1 ]
         }},
         { key: 0x14 value: {
             name: "orange moblin"
@@ -398,13 +398,13 @@ enemies {
         }},
         { key: 0x13 value: {
             name: "elevator"
-            width: 24 height: 64
+            width: 32 height: 64
             chr: { bank: 4 }
             palette: 1
-            id: [ 0xac, 0xac, 0xac,
-                    -1,   -1,   -1,
-                    -1,   -1,   -1,
-                  0xac, 0xac, 0xac ]
+            id: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
+                    -1,   -1,   -1, -1,
+                    -1,   -1,   -1, -1,
+                  0x0400ac, 0x0400ac, 0x0400ac, -1 ]
         }},
         { key: 0x14 value: {
             name: "tektite"
@@ -794,13 +794,13 @@ enemies {
         }},
         { key: 0x13 value: {
             name: "elevator"
-            width: 24 height: 64
-            chr: { bank: 2 }
+            width: 32 height: 64
+            chr: { bank: 8 }
             palette: 1
-            id: [ 0xac, 0xac, 0xac,
-                    -1,   -1,   -1,
-                    -1,   -1,   -1,
-                  0xac, 0xac, 0xac ]
+            id: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
+                    -1,   -1,   -1, -1,
+                    -1,   -1,   -1, -1,
+                  0x0400ac, 0x0400ac, 0x0400ac, -1 ]
         }},
         { key: 0x14 value: {
             name: "crystal spot"
@@ -1053,13 +1053,13 @@ enemies {
         }},
         { key: 0x13 value: {
             name: "elevator"
-            width: 24 height: 64
-            chr: { bank: 2 }
+            width: 32 height: 64
+            chr: { bank: 18 }
             palette: 1
-            id: [ 0xac, 0xac, 0xac,
-                    -1,   -1,   -1,
-                    -1,   -1,   -1,
-                  0xac, 0xac, 0xac ]
+            id: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
+                    -1,   -1,   -1, -1,
+                    -1,   -1,   -1, -1,
+                  0x0400ac, 0x0400ac, 0x0400ac, -1 ]
         }},
         { key: 0x14 value: {
             name: "crystal spot"
@@ -1313,13 +1313,13 @@ enemies {
         }},
         { key: 0x13 value: {
             name: "elevator"
-            width: 24 height: 64
+            width: 32 height: 64
             chr: { bank: 12 }
             palette: 1
-            id: [ 0xac, 0xac, 0xac,
-                    -1,   -1,   -1,
-                    -1,   -1,   -1,
-                  0xac, 0xac, 0xac ]
+            id: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
+                    -1,   -1,   -1, -1,
+                    -1,   -1,   -1, -1,
+                  0x0400ac, 0x0400ac, 0x0400ac, -1 ]
         }},
         { key: 0x14 value: {
             name: "slow bubble"

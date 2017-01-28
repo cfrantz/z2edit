@@ -112,6 +112,17 @@ items {
             table { bank: 7 address: 0x2ea9 }
             palette: 1
         }}, { 
+            # A fake item to make rendering elevators easier
+            key: 0xee value: {
+            name: "elevator"
+            width: 32 height: 64
+            chr: { bank: 2 }
+            palette: 1
+            id: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
+                    -1,   -1,   -1, -1,
+                    -1,   -1,   -1, -1,
+                  0x0400ac, 0x0400ac, 0x0400ac, -1 ]
+        }}, { 
             # A fake item to make rendering doors easier
             key: 0xd4 value: {
             name: "door"

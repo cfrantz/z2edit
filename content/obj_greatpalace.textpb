@@ -330,3 +330,15 @@ decompress {
     custom: "RenderLava3High"
     comment: "lava"
 }
+decompress {
+    area: GREAT_PALACE
+    type: OBJECT_EXTRA
+    id: 0x50
+    render: RENDER_CUSTOM
+    width: 2
+    height: 3
+    objid: 0xee
+    custom: "RenderItem"
+    comment: "elevator"
+    fixed_y: 7
+}
