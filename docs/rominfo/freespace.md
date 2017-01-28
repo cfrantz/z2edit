@@ -42,7 +42,7 @@ Eastern Hyrule and Maze Island.
 
 ### Bank 3
 
-Palaces.
+Towns.
 
 | Address | Size (bytes) |
 |---|---|
@@ -57,7 +57,7 @@ Palaces.
 
 ### Bank 4
 
-Towns.
+Palaces.
 
 | Address | Size (bytes) |
 |---|---|
