@@ -41,7 +41,7 @@ z2util::Address Mapper::FindFreeSpace(z2util::Address addr, int length) {
         if (Read(addr, offset) == 0xFF) {
             end = offset;
             while(offset > 0 && Read(addr, offset) == 0xFF) {
-                if (end - offset == length) {
+                if (end - offset + 1 == length) {
                     // FIXME(cfrantz): make sure we aren't in one of the
                     // keepout regions.
                     addr.set_address(0x8000 | offset);
