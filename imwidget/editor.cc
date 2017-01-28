@@ -78,6 +78,7 @@ void Editor::ConvertFromMap(Map* map) {
         map_ = map;
         decomp.Decompress(*map);
         compressed_length_ = decomp.length();
+        *map->mutable_address() = decomp.address();
         cache_.Init(*map);
         connections_.Init(mapper_, map->connector(), map->world());
         width = decomp.width();
@@ -251,7 +252,7 @@ void Editor::Draw() {
     scale_ = Clamp(scale_, 0.25f, 8.0f);
     ImGui::PopItemWidth();
 
-    ImGui::Text("Compresed map in bank %d address=%04x length=%d bytes.",
+    ImGui::Text("Compressed map in bank %d address=%04x length=%d bytes.",
                 map_->address().bank(), map_->address().address(),
                 compressed_length_);
 

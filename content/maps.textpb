@@ -1,49 +1,41 @@
 map {
     name: "west_hyrule"
     type: OVERWORLD
-    address: { bank: 1 address: 0x105c }
-    connector: { bank: 1 address: 0x061f }
-    length: 0x320
-    palette: { bank: 7 address: 0x045b }
-    objtable: { bank: 0 address: 0x07a3 }
+    connector: { bank: 1 address: 0x861f }
+    palette: { bank: 7 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
-    pointer: { bank: 1 address: 0x508 }
+    pointer: { bank: 1 address: 0x8508 }
     world: 0
 }
 map {
     name: "death_mountain"
     type: OVERWORLD
-    address: { bank: 1 address: 0x264c }
-    connector: { bank: 1 address: 0x20fc }
-    length: 0x320
-    palette: { bank: 7 address: 0x045b }
-    objtable: { bank: 0 address: 0x07a3 }
+    connector: { bank: 1 address: 0xa0fc }
+    palette: { bank: 7 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
-    pointer: { bank: 1 address: 0x50a }
+    pointer: { bank: 1 address: 0x850a }
     world: 1
 }
 map {
     name: "east_hyrule"
     type: OVERWORLD
-    address: { bank: 2 address: 0x1046 }
-    connector: { bank: 2 address: 0x061f }
-    length: 0x320
-    palette: { bank: 7 address: 0x045b }
-    objtable: { bank: 0 address: 0x07a3 }
+    connector: { bank: 2 address: 0x861f }
+    palette: { bank: 7 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
-    pointer: { bank: 2 address: 0x508 }
+    pointer: { bank: 2 address: 0x8508 }
     world: 2
 }
 map {
     name: "maze_island"
     type: OVERWORLD
-    address: { bank: 2 address: 0x264c }
-    connector: { bank: 2 address: 0x20fc }
-    length: 0x320
-    palette: { bank: 7 address: 0x045b }
-    objtable: { bank: 0 address: 0x07a3 }
+    connector: { bank: 2 address: 0xa0fc }
+    palette: { bank: 7 address: 0x8045b }
+    objtable: { bank: 0 address: 0x807a3 }
     chr: { bank: 0x11 }
-    pointer: { bank: 2 address: 0x50a }
+    pointer: { bank: 2 address: 0x850a }
     world: 3
 }
 
