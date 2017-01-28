@@ -26,12 +26,31 @@ class ConfigLoader {
         if (postprocess_)
             postprocess_(&config_);
     }
-    void Load(const std::string& filename, T* config) {
+    void Parse(const std::string& data,
+              std::function<void(T*)> postprocess=nullptr) {
+        postprocess_ = postprocess;
+        Load("", &config_, &data);
+        if (postprocess_)
+            postprocess_(&config_);
+    }
+    void Reload() {
+        config_.Clear();
+        Load(filename_, &config_);
+        if (postprocess_)
+            postprocess_(&config_);
+    }
+    inline const T& config() const { return config_; }
+
+  protected:
+    void Load(const std::string& filename, T* config,
+              const std::string* data = nullptr) {
         std::string pb;
         std::string path = File::Dirname(filename);
         T local_config;
 
-        if (!File::GetContents(filename, &pb)) {
+        if (data) {
+            pb = *data;
+        } else if (!File::GetContents(filename, &pb)) {
             LOG(FATAL, "Could not read '", filename, "'.");
         }
         if (!google::protobuf::TextFormat::ParseFromString(pb, &local_config)) {
@@ -44,14 +63,7 @@ class ConfigLoader {
 
         config->MergeFrom(local_config);
     }
-    void Reload() {
-        config_.Clear();
-        Load(filename_, &config_);
-        if (postprocess_)
-            postprocess_(&config_);
-    }
-    inline const T& config() const { return config_; }
-  protected:
+
     ConfigLoader() {};
     T config_;
     std::string filename_;

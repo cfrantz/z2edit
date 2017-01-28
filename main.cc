@@ -3,8 +3,9 @@
 
 #include "imapp.h"
 #include "util/config.h"
+#include "zelda2_config.h"
 
-DEFINE_string(config, "zelda2.textpb", "ROM info config file");
+DEFINE_string(config, "", "ROM info config file");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
 
 void GetName(const z2util::RomInfo* config, int world, int id,
@@ -73,6 +74,8 @@ int main(int argc, char *argv[]) {
     auto* config = ConfigLoader<z2util::RomInfo>::Get();
     if (!FLAGS_config.empty()) {
         config->Load(FLAGS_config, PostProcess);
+    } else {
+        config->Parse(kZelda2Cfg, PostProcess);
     }
 
     ImApp app("ROM Explorer");

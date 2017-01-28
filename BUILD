@@ -57,6 +57,15 @@ cc_library(
     ],
 )
 
+genrule(
+    name = "make_zelda2_config",
+    srcs = ["zelda2.textpb"] + glob(["content/*.textpb"]),
+    outs = ["zelda2_config.h"],
+    cmd = "$(location //tools:pack_config) --config $(location zelda2.textpb)" +
+          " --symbol kZelda2Cfg > $(@)",
+    tools = ["//tools:pack_config"],
+)
+
 cc_binary(
     name = "main",
     linkopts = select({
@@ -85,6 +94,7 @@ cc_binary(
         ],
     }),
     srcs = [
+        "zelda2_config.h",
         "main.cc",
     ],
     deps = [

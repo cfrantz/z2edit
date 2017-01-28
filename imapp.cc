@@ -21,6 +21,7 @@ DEFINE_int32(audio_bufsize, 2048, "Audio buffer size");
 DEFINE_double(hidpi, 1.0, "HiDPI scaling factor");
 
 DECLARE_bool(move_from_keepout);
+DECLARE_string(config);
 
 ImApp* ImApp::singleton_;
 
@@ -473,9 +474,11 @@ save_as:
             }
 #endif
             ImGui::Separator();
-            if (ImGui::MenuItem("Reload Config")) {
-                auto* config = ConfigLoader<z2util::RomInfo>::Get();
-                config->Reload();
+            if (!FLAGS_config.empty()) {
+                if (ImGui::MenuItem("Reload Config")) {
+                    auto* config = ConfigLoader<z2util::RomInfo>::Get();
+                    config->Reload();
+                }
             }
             if (ImGui::MenuItem("Quit")) {
                 running_ = false;
