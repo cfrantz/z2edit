@@ -63,10 +63,10 @@ class ImApp {
     void WriteWords(DebugConsole* console, int argc, char **argv);
     void Unassemble(DebugConsole* console, int argc, char **argv);
     void EnemyList(DebugConsole* console, int argc, char **argv);
+    void InsertPrg(DebugConsole* console, int argc, char **argv);
+    void CopyPrg(DebugConsole* console, int argc, char **argv);
 
     void SpawnEmulator(const std::string& romfile);
-
-
 
     void InitAudio(int freq, int chan, int bufsz, SDL_AudioFormat fmt);
     void AudioCallback(float* stream, int len);

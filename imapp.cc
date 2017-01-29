@@ -91,6 +91,8 @@ void ImApp::Init() {
     RegisterCommand("wwc", "Write CHR words.", this, &ImApp::WriteWords);
     RegisterCommand("elist", "Dump Enemy List.", this, &ImApp::EnemyList);
     RegisterCommand("u", "Disassemble Code.", this, &ImApp::Unassemble);
+    RegisterCommand("insertprg", "Insert a PRG bank.", this, &ImApp::InsertPrg);
+    RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &ImApp::CopyPrg);
 
     hwpal_ = NesHardwarePalette::Get();
     chrview_.reset(new NesChrView);
@@ -406,6 +408,35 @@ void ImApp::Unassemble(DebugConsole* console, int argc, char **argv) {
         console->AddLog("%s", instruction.c_str());
         LOG(VERBOSE, instruction);
     }
+}
+
+void ImApp::InsertPrg(DebugConsole* console, int argc, char **argv) {
+    uint8_t bank = 0;
+    if (argc < 2) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s <bank>", argv[0]);
+        return;
+    }
+
+    bank = strtoul(argv[1], 0, 0);
+    cartridge_.InsertPrg(bank, nullptr);
+    console->AddLog("# Added bank %d", bank);
+}
+
+void ImApp::CopyPrg(DebugConsole* console, int argc, char **argv) {
+    uint8_t src, dst;
+    if (argc < 3) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s <src> <dst>", argv[0]);
+        return;
+    }
+
+    src = strtoul(argv[1], 0, 0);
+    dst = strtoul(argv[2], 0, 0);
+    for(int i=0; i<16384; i++) {
+        mapper_->WritePrgBank(dst, i, mapper_->ReadPrgBank(src, i));
+    }
+    console->AddLog("# Copied bank %d to %d", src, dst);
 }
 
 void ImApp::Run() {

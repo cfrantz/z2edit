@@ -118,3 +118,39 @@ void Cartridge::PrintHeader(DebugConsole* console, int argc, char **argv) {
     console->AddLog("  Has trainer: %d\n", header_.trainer);
     console->AddLog("  Mapper: %d\n", mapper());
 }
+
+void Cartridge::InsertPrg(int bank, uint8_t *data) {
+    uint8_t *newprg = new uint8_t[prglen_ + 16384];
+    std::unique_ptr<uint8_t[]> data2;
+    if (data == nullptr) {
+        data = new uint8_t[16384]();
+        data2.reset(data);
+    }
+
+    memcpy(newprg, prg_.get(), bank * 16384);
+    memcpy(newprg + bank*16384, data, 16384);
+    memcpy(newprg + (bank+1)*16384, prg_.get()+(bank*16384),
+           (header_.prgsz-bank) * 16384);
+
+    prglen_ += 16384;
+    header_.prgsz++;
+    prg_.reset(newprg);
+}
+
+void Cartridge::InsertChr(int bank, uint8_t *data) {
+    uint8_t *newchr = new uint8_t[chrlen_ + 8192];
+    std::unique_ptr<uint8_t[]> data2;
+    if (data == nullptr) {
+        data = new uint8_t[8192]();
+        data2.reset(data);
+    }
+
+    memcpy(newchr, chr_.get(), bank * 8192);
+    memcpy(newchr + bank*8192, data, 8192);
+    memcpy(newchr + (bank+1)*8192, chr_.get()+(bank*8192),
+           (header_.chrsz-bank) * 8192);
+
+    chrlen_ += 8192;
+    header_.chrsz++;
+    chr_.reset(newchr);
+}

@@ -59,6 +59,8 @@ class Cartridge {
     void LoadFile(DebugConsole* console, int argc, char **argv);
     void SaveFile(DebugConsole* console, int argc, char **argv);
 
+    void InsertPrg(int bank, uint8_t* newprg);
+    void InsertChr(int bank, uint8_t* newchr);
   private:
     struct iNESHeader header_;
     std::unique_ptr<uint8_t[]> prg_;
