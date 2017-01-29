@@ -43,7 +43,7 @@ sideview: {
     area: "west_background"
     address: { bank: 1 address: 0x8000 }
     length: 7
-    palette: { bank: 1 address: 0xe }
+    palette: { bank: 1 address: 0x800e }
     type: OUTDOORS
     chr: { bank: 0x3 }
     world: -1
@@ -53,7 +53,7 @@ sideview: {
     area: "east_background"
     address: { bank: 2 address: 0x8000 }
     length: 7
-    palette: { bank: 2 address: 0xe }
+    palette: { bank: 2 address: 0x800e }
     type: OUTDOORS
     chr: { bank: 0x5 }
     world: -1
@@ -63,7 +63,7 @@ sideview: {
     area: "town_background"
     address: { bank: 3 address: 0x8000 }
     length: 7
-    palette: { bank: 3 address: 0xe }
+    palette: { bank: 3 address: 0x800e }
     type: TOWN
     chr: { bank: 0x7 }
     world: -1
@@ -73,7 +73,7 @@ sideview: {
     area: "palace_background"
     address: { bank: 4 address: 0x8000 }
     length: 7
-    palette: { bank: 4 address: 0xe }
+    palette: { bank: 4 address: 0x800e }
     type: TOWN
     chr: { bank: 0x9 }
     world: -1
@@ -81,29 +81,29 @@ sideview: {
 
 sideview: {
     area: "west_hyrule"
-    address: { bank: 1 address: 0x0523 }
+    address: { bank: 1 address: 0x8523 }
     length: 63
-    palette: { bank: 1 address: 0xe }
+    palette: { bank: 1 address: 0x800e }
     type: OUTDOORS
     chr: { bank: 0x3 }
     world: 0
-    connector: { bank: 1 address: 0x71b }
+    connector: { bank: 1 address: 0x871b }
 }
 sideview: {
     area: "deathmountain"
-    address: { bank: 1 address: 0x2000 }
+    address: { bank: 1 address: 0xa000 }
     length: 63
-    palette: { bank: 1 address: 0xe }
+    palette: { bank: 1 address: 0x800e }
     type: OUTDOORS
     chr: { bank: 0x3 }
     world: 1
-    connector: { bank: 1 address: 0x21f8 }
+    connector: { bank: 1 address: 0xa1f8 }
 }
 sideview: {
     area: "east_hyrule"
-    address: { bank: 2 address: 0x0523 }
+    address: { bank: 2 address: 0x8523 }
     length: 63
-    palette: { bank: 2 address: 0xe }
+    palette: { bank: 2 address: 0x800e }
     type: OUTDOORS
     chr: { bank: 0x5 }
     world: 2
@@ -111,104 +111,104 @@ sideview: {
 }
 sideview: {
     area: "maze_island"
-    address: { bank: 2 address: 0x2000 }
+    address: { bank: 2 address: 0xa000 }
     length: 63
-    palette: { bank: 2 address: 0xe }
+    palette: { bank: 2 address: 0x800e }
     type: OUTDOORS
     chr: { bank: 0x3 }
     world: 3
-    connector: { bank: 2 address: 0x21f8 }
+    connector: { bank: 2 address: 0xa1f8 }
 }
 
 sideview: {
     area: "town"
-    address: { bank: 3 address: 0x523 }
-    palette: { bank: 3 address: 0xe }
+    address: { bank: 3 address: 0x8523 }
+    palette: { bank: 3 address: 0x800e }
     length: 63
     type: TOWN
     chr: { bank: 7 }
     world: 4
-    connector: { bank: 3 address: 0x71b }
+    connector: { bank: 3 address: 0x871b }
 }
 
 sideview: {
     area: "Palace1"
-    address: { bank: 4 address: 0x0523 }
+    address: { bank: 4 address: 0x8523 }
     length: 14
     palette: { bank: 4 address: 0x3ef0 }
     type: PALACE
     chr: { bank: 0x9 }
     world: 12
     valid_worlds: 0x5000
-    connector: { bank: 4 address: 0x71b }
+    connector: { bank: 4 address: 0x871b }
 }
 sideview: {
     area: "Palace2"
-    address: { bank: 4 address: 0x053F }
+    address: { bank: 4 address: 0x853F }
     length: 21
     palette: { bank: 4 address: 0x3f00 }
     type: PALACE
     chr: { bank: 0xb }
     world: 12
     valid_worlds: 0x5000
-    connector: { bank: 4 address: 0x753 }
+    connector: { bank: 4 address: 0x8753 }
 }
 sideview: {
     area: "Palace5"
-    address: { bank: 4 address: 0x0569 }
+    address: { bank: 4 address: 0x8569 }
     length: 28
     palette: { bank: 4 address: 0x3f30 }
     type: PALACE
     chr: { bank: 0x17 }
     world: 14
     valid_worlds: 0x5000
-    connector: { bank: 4 address: 0x7a7 }
+    connector: { bank: 4 address: 0x87a7 }
 }
 
 sideview: {
     area: "Palace3"
-    address: { bank: 4 address: 0x2000 }
+    address: { bank: 4 address: 0xa000 }
     length: 15
     palette: { bank: 4 address: 0x3f00 }
     type: PALACE
     chr: { bank: 0x13 }
     world: 16
     valid_worlds: 0x70000
-    connector: { bank: 4 address: 0x21f8 }
+    connector: { bank: 4 address: 0xa1f8 }
 }
 
 sideview: {
     area: "Palace4"
-    address: { bank: 4 address: 0x201e }
+    address: { bank: 4 address: 0xa01e }
     length: 21
     palette: { bank: 4 address: 0x3f10 }
     type: PALACE
     chr: { bank: 0x15 }
     world: 17
     valid_worlds: 0x70000
-    connector: { bank: 4 address: 0x2234 }
+    connector: { bank: 4 address: 0xa234 }
 }
 sideview: {
     area: "Palace6"
-    address: { bank: 4 address: 0x2048 }
+    address: { bank: 4 address: 0xa048 }
     length: 27
     palette: { bank: 4 address: 0x3f30 }
     type: PALACE
     chr: { bank: 0x19 }
     world: 18
     valid_worlds: 0x70000
-    connector: { bank: 4 address: 0x2288 }
+    connector: { bank: 4 address: 0xa288 }
 }
 
 sideview: {
     area: "GreatPalace"
-    address: { bank: 5 address: 0x0523 }
+    address: { bank: 5 address: 0x8523 }
     length: 63
     palette: { bank: 5 address: 0x800e }
     type: GREAT_PALACE
     chr: { bank: 0xd }
     world: 22
-    connector: { bank: 5 address: 0x71b }
+    connector: { bank: 5 address: 0x871b }
 }
 
 
