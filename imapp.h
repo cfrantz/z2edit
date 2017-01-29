@@ -50,6 +50,7 @@ class ImApp {
 
     void PlayAudio(float* data, int len);
     void Load(const std::string& filename);
+    void Help(const std::string& topickey);
     void AddDrawCallback(std::function<bool()> cb);
   private:
     void Quit(DebugConsole* console, int argc, char **argv);

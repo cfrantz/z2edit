@@ -151,6 +151,10 @@ message ItemInfo {
     Address sprite_table = 6;
 }
 
+message HelpLinks {
+    map<string, string> url = 1;
+}
+
 message RomInfo {
     string path = 1; // For internal use by the config loader
     repeated string load = 2;
@@ -164,4 +168,5 @@ message RomInfo {
     repeated ItemInfo areas = 10;
     repeated ItemInfo enemies = 11;
     Miscellaneous misc = 12;
+    HelpLinks help = 13;
 }

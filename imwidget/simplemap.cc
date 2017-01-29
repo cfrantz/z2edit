@@ -131,6 +131,9 @@ void SimpleMap::Draw() {
     scale_ = Clamp(scale_, 0.25f, 8.0f);
     ImGui::PopItemWidth();
 
+    ImGui::SameLine();
+    HelpButton("sideview-editor");
+
     ImGui::BeginChild("image", ImVec2(0, 16 + decomp_.height()*16.0*scale_),
                       true, ImGuiWindowFlags_HorizontalScrollbar);
     ImVec2 cursor = ImGui::GetCursorPos();

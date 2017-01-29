@@ -1,6 +1,7 @@
 #include <string>
 #include <gflags/gflags.h>
 
+#include "imapp-util.h"
 #include "imwidget/editor.h"
 #include "nes/z2decompress.h"
 #include "util/config.h"
@@ -251,6 +252,9 @@ void Editor::Draw() {
     ImGui::InputFloat("Zoom", &scale_, 0.25, 1.0);
     scale_ = Clamp(scale_, 0.25f, 8.0f);
     ImGui::PopItemWidth();
+
+    ImGui::SameLine();
+    HelpButton("overworld-editor");
 
     ImGui::Text("Compressed map in bank %d address=%04x length=%d bytes.",
                 map_->address().bank(), map_->address().address(),

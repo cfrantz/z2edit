@@ -1,0 +1,17 @@
+help {
+  url: [
+    {
+      key: "root"
+      value: "https://github.com/cfrantz/z2doc/wiki/Z2Edit"
+    }, {
+      key: "overworld-editor"
+      value: "https://github.com/cfrantz/z2doc/wiki/overworld-editor"
+    }, {
+      key: "multimap-viewer"
+      value: "https://github.com/cfrantz/z2doc/wiki/multimap-viewer"
+    }, {
+      key: "sideview-editor"
+      value: "https://github.com/cfrantz/z2doc/wiki/sideview-editor"
+    }
+  ]
+}

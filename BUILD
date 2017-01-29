@@ -48,6 +48,7 @@ cc_library(
         "//nes:mappers",
         "//nes:memory",
         "//proto:rominfo",
+        "//util:browser",
         "//util:fpsmgr",
         "//util:imgui_sdl_opengl",
         "//util:os",

@@ -150,9 +150,21 @@ Vec2 MultiMap::Position(const DrawLocation& dl, Direction side) {
     return pos;
 }
 
+void MultiMap::DrawArrow(const Vec2& a, const Vec2&b, uint32_t color,
+                         float width, float arrowpos, float rootsize) {
+    if (width == 0) width = 2.0f;
+    Vec2 u = (b - a).unit();
+    Vec2 v = u.flip();
+    Vec2 p = a + u * (b - a).length() * arrowpos;
+
+    auto* draw = ImGui::GetWindowDrawList();
+    draw->AddTriangleFilled(p-v*10.0, p+v*10.0, p+u*20.0, color);
+    draw->AddCircleFilled(a, rootsize, color);
+    draw->AddLine(a, b, color, width);
+}
+
 void MultiMap::DrawConnections(const DrawLocation& dl) {
     Direction side = NONE;
-    auto* draw = ImGui::GetWindowDrawList();
     for(const auto& spring : dl.node->connection()) {
         side = Direction(int(side) + 1);
         const auto& loc = location_.find(spring.destid);
@@ -161,17 +173,7 @@ void MultiMap::DrawConnections(const DrawLocation& dl) {
 
         Vec2 a = absolute_ + Position(dl, side);
         Vec2 b = absolute_ + Position(loc->second, NONE);
-        ImU32 color = spring.color;
-
-        float linewidth = spring.width;
-        if (linewidth == 0) linewidth = 2.0f;
-
-        Vec2 u = (b - a).unit();
-        Vec2 v = u.flip();
-        Vec2 p = a + u * (b - a).length() * 0.1;
-        draw->AddTriangleFilled(p-v*10.0, p+v*10.0, p+u*20.0, color);
-        draw->AddCircleFilled(a, 10.0, color);
-        draw->AddLine(a, b, color, linewidth);
+        DrawArrow(a, b, spring.color, spring.width, 0.1, 10.0);
     }
 }
 
@@ -199,6 +201,33 @@ void MultiMap::DrawOne(const DrawLocation& dl) {
     dl.buffer->DrawAt(pos.x, pos.y, scale_);
 }
 
+void MultiMap::DrawLegend() {
+    if (ImGui::BeginPopup("Legend")) {
+        ImGui::Text("Legend:");
+        auto p = ImGui::GetCursorScreenPos();
+        ImGui::Text("Right Exit:                    ");
+        DrawArrow(Vec2(100, 8)+p, Vec2(200, 8)+p, RED);
+
+        p = ImGui::GetCursorScreenPos();
+        ImGui::Text("Left Exit: ");
+        DrawArrow(Vec2(200, 8)+p, Vec2(100, 8)+p, YELLOW);
+
+        p = ImGui::GetCursorScreenPos();
+        ImGui::Text("Up Exit:   ");
+        DrawArrow(Vec2(100, 8)+p, Vec2(200, 8)+p, GREEN);
+
+        p = ImGui::GetCursorScreenPos();
+        ImGui::Text("Down Exit: ");
+        DrawArrow(Vec2(200, 8)+p, Vec2(100, 8)+p, BLUE);
+
+        p = ImGui::GetCursorScreenPos();
+        ImGui::Text("Illegal Exit:");
+        DrawArrow(Vec2(100, 8)+p, Vec2(200, 8)+p, GRAY);
+
+        ImGui::EndPopup();
+    }
+}
+
 void MultiMap::Draw() {
     if (!visible_)
         return;
@@ -208,6 +237,7 @@ void MultiMap::Draw() {
     ImGui::PushItemWidth(100);
     ImGui::InputFloat("Zoom", &scale_, 1.0/8.0, 1.0);
     ImGui::PopItemWidth();
+
     ImGui::SameLine();
     if (ImGui::Button("Properties")) {
         ImGui::OpenPopup("Properties");
@@ -219,6 +249,15 @@ void MultiMap::Draw() {
         ImGui::Checkbox("Converge before first draw", &preconverge_);
         ImGui::EndPopup();
     }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Legend")) {
+        ImGui::OpenPopup("Legend");
+    }
+    DrawLegend();
+
+    ImGui::SameLine();
+    HelpButton("multimap-viewer");
 
     Vec2 minv(1e9, 1e9);
     Vec2 maxv(-1e9, -1e9);

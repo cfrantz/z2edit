@@ -40,10 +40,13 @@ class MultiMap {
     fdg::Node* AddRoom(int room, int x, int y);
     Vec2 Position(const Vec2& pos);
     Vec2 Position(const DrawLocation& dl, Direction side);
+    void DrawArrow(const Vec2& a, const Vec2&b, uint32_t color,
+                   float width=2.0, float arrowpos=0.1, float rootsize=10.0);
     void DrawConnections(const DrawLocation& dl);
     void DrawOne(const DrawLocation& dl);
     void Traverse(int room, int x, int y, int from);
     void Sort();
+    void DrawLegend();
 
     Mapper* mapper_;
     bool visible_;

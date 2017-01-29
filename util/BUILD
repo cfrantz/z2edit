@@ -1,6 +1,16 @@
 package(default_visibility=["//visibility:public"])
 
 cc_library(
+    name = "browser",
+    hdrs = [
+        "browser.h",
+    ],
+    srcs = [
+        "browser.cc",
+    ],
+)
+
+cc_library(
     name = "config",
     hdrs = [
         "config.h",

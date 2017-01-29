@@ -2,8 +2,9 @@
 #include "imapp.h"
 #include "imgui.h"
 #include "nes/cpu6502.h"
-#include "util/config.h"
 #include "proto/rominfo.pb.h"
+#include "util/browser.h"
+#include "util/config.h"
 #include "util/os.h"
 #include "util/logging.h"
 #include "util/imgui_impl_sdl.h"
@@ -507,6 +508,12 @@ save_as:
                             object_table_->visible());
             ImGui::EndMenu();
         }
+        if (ImGui::BeginMenu("Help")) {
+            if (ImGui::MenuItem("Online Help")) {
+                Help("root");
+            }
+            ImGui::EndMenu();
+        }
         ImGui::EndMainMenuBar();
     }
 
@@ -601,4 +608,25 @@ void AddDrawCallback(std::function<bool()> cb) {
     ImApp::Get()->AddDrawCallback(cb);
 }
 
+void ImApp::Help(const std::string& topickey) {
+    const auto& it = rominfo_.help().url().find(topickey);
+    if (it == rominfo_.help().url().end()) {
+        LOG(ERROR, "No help for topickey=", topickey);
+        if (topickey != "root") {
+            Help("root");
+        }
+        return;
+    }
+    Browser::Open(it->second);
+}
+
+void Help(const std::string& topickey) {
+    ImApp::Get()->Help(topickey);
+}
+
+void HelpButton(const std::string& topickey) {
+    if (ImGui::Button("Help")) {
+        ImApp::Get()->Help(topickey);
+    }
+}
 

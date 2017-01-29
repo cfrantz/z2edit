@@ -72,6 +72,7 @@ cc_library(
     hdrs = ["editor.h"],
     srcs = ["editor.cc"],
     deps = [
+        "//:imapp-util",
         ":imutil",
         ":error_dialog",
         ":glbitmap",
