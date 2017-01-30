@@ -82,7 +82,12 @@ std::string Cpu::Disassemble(uint16_t* nexti) {
     case 2:
         data = Read(pc+1);
         i = sprintf(b, "%02x: %02x%02x          ", pc, opcode, data);
-        sprintf(b+i, instruction_names_[opcode], data);
+        i += sprintf(b+i, instruction_names_[opcode], data);
+        // All branch instructions are hex(10, 30, 50, 70, 90, b0, d0, f0)
+        if ((opcode & 0x1F) == 0x10) {
+            data = pc + 2 + int8_t(data);
+            sprintf(b+i, " (target=%04x)", data);
+        }
         break;
     case 3:
         data = Read(pc+1) | Read(pc+2)<<8;
@@ -854,7 +859,7 @@ const char* Cpu::instruction_names_[] = {
 /* 4d */      "EOR $%04x",
 /* 4e */      "LSR $%04x",
 /* 4f */      "illop_4f",
-/* 50 */      "BVC",
+/* 50 */      "BVC $%02x",
 /* 51 */      "EOR ($%02x,Y)",
 /* 52 */      "illop_52",
 /* 53 */      "illop_53",
@@ -886,7 +891,7 @@ const char* Cpu::instruction_names_[] = {
 /* 6d */      "ADC $%04x",
 /* 6e */      "ROR $%04x",
 /* 6f */      "illop_6f",
-/* 70 */      "BVS",
+/* 70 */      "BVS $%02x",
 /* 71 */      "ADC ($%02x,Y)",
 /* 72 */      "illop_72",
 /* 73 */      "illop_73",
