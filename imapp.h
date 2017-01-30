@@ -65,6 +65,7 @@ class ImApp {
     void EnemyList(DebugConsole* console, int argc, char **argv);
     void InsertPrg(DebugConsole* console, int argc, char **argv);
     void CopyPrg(DebugConsole* console, int argc, char **argv);
+    void MemMove(DebugConsole* console, int argc, char **argv);
 
     void SpawnEmulator(const std::string& romfile);
 

@@ -93,6 +93,7 @@ void ImApp::Init() {
     RegisterCommand("u", "Disassemble Code.", this, &ImApp::Unassemble);
     RegisterCommand("insertprg", "Insert a PRG bank.", this, &ImApp::InsertPrg);
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &ImApp::CopyPrg);
+    RegisterCommand("memmove", "Move memory within a PRG bank.", this, &ImApp::MemMove);
 
     hwpal_ = NesHardwarePalette::Get();
     chrview_.reset(new NesChrView);
@@ -346,6 +347,33 @@ void ImApp::WriteWords(DebugConsole* console, int argc, char **argv) {
     }
 }
 
+void ImApp::MemMove(DebugConsole* console, int argc, char **argv) {
+    uint8_t bank = -1;
+    if (argc < 5 || strncmp(argv[1], "b=", 2) != 0) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s b=<bank> <dst> <src> <len>",  argv[0]);
+        return;
+    }
+
+    bank = strtoul(argv[1]+2, 0, 0);
+    int32_t dst = strtoul(argv[2], 0, 0);
+    int32_t src = strtoul(argv[3], 0, 0);
+    int32_t len = strtoul(argv[4], 0, 0);
+
+    if (dst < src) {
+        for(int i=0; i<len; i++, dst++, src++) {
+            mapper_->WritePrgBank(bank, dst, mapper_->ReadPrgBank(bank, src));
+        }
+    } else if (dst > src) {
+        dst += len-1; src += len-1;
+        for(int i=0; i<len; i++, dst--, src--) {
+            mapper_->WritePrgBank(bank, dst, mapper_->ReadPrgBank(bank, src));
+        }
+    } else {
+        console->AddLog("[error] dst and src are the same!");
+    }
+}
+
 void ImApp::EnemyList(DebugConsole* console, int argc, char **argv) {
     char buf[1024];
     uint8_t bank = 0;
@@ -400,13 +428,11 @@ void ImApp::Unassemble(DebugConsole* console, int argc, char **argv) {
     addr = strtoul(argv[index+1], 0, 0);
     int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, 0) : 10;
 
-    LOG(VERBOSE, "u b=", bank, " ", HEX(addr), " ", len);
     Cpu cpu(mapper_.get());
     cpu.set_bank(bank);
     for(int i=0; i<len; i++) {
         std::string instruction = cpu.Disassemble(&addr);
         console->AddLog("%s", instruction.c_str());
-        LOG(VERBOSE, instruction);
     }
 }
 
@@ -420,7 +446,7 @@ void ImApp::InsertPrg(DebugConsole* console, int argc, char **argv) {
 
     bank = strtoul(argv[1], 0, 0);
     cartridge_.InsertPrg(bank, nullptr);
-    console->AddLog("# Added bank %d", bank);
+    console->AddLog("#{0f0}Added bank %d", bank);
 }
 
 void ImApp::CopyPrg(DebugConsole* console, int argc, char **argv) {
@@ -436,7 +462,7 @@ void ImApp::CopyPrg(DebugConsole* console, int argc, char **argv) {
     for(int i=0; i<16384; i++) {
         mapper_->WritePrgBank(dst, i, mapper_->ReadPrgBank(src, i));
     }
-    console->AddLog("# Copied bank %d to %d", src, dst);
+    console->AddLog("#{0f0}Copied bank %d to %d", src, dst);
 }
 
 void ImApp::Run() {
