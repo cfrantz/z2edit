@@ -14,6 +14,7 @@ cc_library(
     hdrs = ["debug_console.h"],
     srcs = ["debug_console.cc"],
     deps = [
+        "//util:logging",
         "//external:imgui",
     ],
 )

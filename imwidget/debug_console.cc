@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include "imwidget/debug_console.h"
+#include "util/logging.h"
 
 DebugConsole::DebugConsole(const char* name) : name_(name), visible_(false) {
     ClearLog();
@@ -39,6 +40,7 @@ void  DebugConsole::AddLog(const char* fmt, ...) {
     buf[sizeof(buf)-1] = 0;
     va_end(args);
     items_.push_back(strdup(buf));
+    LOG(INFO, buf);
     scroll_to_bottom_ = true;
 }
 
@@ -96,6 +98,14 @@ void  DebugConsole::Draw() {
                             1.0f); // A better implementation may store a type per-item. For the sample let's just parse the text.
         if (strstr(item, "[error]")) col = ImColor(1.0f,0.4f,0.4f,1.0f);
         else if (strncmp(item, "# ", 2) == 0) col = ImColor(1.0f,0.78f,0.58f,1.0f);
+        else if (strncmp(item, "#{", 2) == 0) { // && item[5] == '}') {
+            unsigned cval = strtoul(item+2, 0, 16);
+            col = ImColor(float(cval & 0xF00) / float(0xF00),
+                          float(cval & 0x0F0) / float(0x0F0),
+                          float(cval & 0x00F) / float(0x00F),
+                          1.0f);
+            item += 6;
+        }
         ImGui::PushStyleColor(ImGuiCol_Text, col);
         ImGui::TextUnformatted(item);
         ImGui::PopStyleColor();
