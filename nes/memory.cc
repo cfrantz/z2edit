@@ -13,13 +13,12 @@ Memory::Memory() {}
 int Memory::CheckForKeepout(Address baseaddr, const std::string& name, int len,
                             bool move) {
     int result = 0;
-    std::map<int, int> moved;
 
     for(int i=0; i<len; i++, baseaddr.set_address(baseaddr.address() + 2)) {
         Address a = mapper_->ReadAddr(baseaddr, 0);
         if (InKeepoutRegion(a)) {
             if (move) {
-                int dest = moved[a.address()];
+                int dest = moved_[key(a)];
                 if (dest) {
                     // Already moved this address, so just copy it
                     mapper_->WriteWord(baseaddr, 0, uint16_t(dest));
@@ -30,7 +29,7 @@ int Memory::CheckForKeepout(Address baseaddr, const std::string& name, int len,
                         LOGF(ERROR, "Could not move %s %d out of keepout area",
                              name.c_str(), a.address());
                     }
-                    moved[a.address()] = dest;
+                    moved_[key(a)] = dest;
                 }
             } else {
                 LOGF(INFO, "In bank=%d, %s %d is in the keepout area (%04x)",

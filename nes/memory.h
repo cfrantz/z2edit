@@ -18,8 +18,12 @@ class Memory {
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     static bool InKeepoutRegion(const Address& addr);
+    static int key(const Address& a) {
+        return (a.bank() << 16) | a.address();
+    }
   private:
     Mapper* mapper_;
+    std::map<int, int> moved_;
 };
 
 }  // namespace
