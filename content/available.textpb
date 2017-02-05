@@ -1,0 +1,63 @@
+available {
+    # Western Hyrule
+    world: 0
+    overworld: 0
+    subworld: 0
+    address { bank: 5 address: 0xbb15 }
+}
+available {
+    # Death Mountain
+    world: 0
+    overworld: 0
+    subworld: 1
+    address { bank: 5 address: 0xbb35 }
+}
+available {
+    # Eastern Hyrule
+    world: 0
+    overworld: 2
+    subworld: 0
+    address { bank: 5 address: 0xbb55 }
+}
+available {
+    # Maze Island
+    world: 0
+    overworld: 2
+    subworld: 1
+    address { bank: 5 address: 0xbb35 }
+}
+available {
+    # Western Towns
+    world: 1
+    overworld: 0
+    subworld: 0
+    address { bank: 5 address: 0xbb75 }
+}
+available {
+    # Eastern Towns
+    world: 2
+    overworld: 0
+    subworld: 0
+    address { bank: 5 address: 0xbb75 }
+}
+available {
+    # Palaces 1,2,5
+    world: 3
+    overworld: 0
+    subworld: 0
+    address { bank: 5 address: 0xbb95 }
+}
+available {
+    # Palaces 3,4,6
+    world: 4
+    overworld: 0
+    subworld: 0
+    address { bank: 5 address: 0xbbb5 }
+}
+available {
+    # Great Palace
+    world: 5
+    overworld: 0
+    subworld: 0
+    address { bank: 5 address: 0xbbd5 }
+}

@@ -37,6 +37,8 @@ SimpleMap* SimpleMap::New(Mapper* m, const Map& map) {
 
 void SimpleMap::DrawMap(const ImVec2& pos) {
     float size = 16.0 * scale_;
+    auto* draw = ImGui::GetWindowDrawList();
+    auto sp = ImGui::GetCursorScreenPos();
     for(int y=0; y<decomp_.height(); y++) {
         for(int x=0; x<decomp_.width(); x++) {
             cache_.Get(decomp_.map(x, y)).DrawAt(
@@ -48,8 +50,21 @@ void SimpleMap::DrawMap(const ImVec2& pos) {
         for(int x=0; x<decomp_.width(); x++) {
             uint8_t item = decomp_.item(x, y);
             if (item != 0xFF) {
-                items_.Get(item).DrawAt(
-                    pos.x + x*size, pos.y + y*size, scale_);
+                auto& sprite = items_.Get(item);
+                sprite.DrawAt(pos.x + x*size, pos.y + y*size, scale_);
+                if (item != ELEVATOR && !avail_.get(x)) {
+                    draw->AddRect(
+                            ImVec2(sp.x + x*size, sp.y + y*size),
+                            ImVec2(sp.x + x*size + sprite.width() * scale_,
+                                   sp.y + y*size + sprite.height() * scale_),
+                            RED);
+                    draw->AddLine(
+                            ImVec2(sp.x + x*size, sp.y + y*size),
+                            ImVec2(sp.x + x*size + sprite.width() * scale_,
+                                   sp.y + y*size + sprite.height() * scale_),
+                            RED);
+
+                }
             }
         }
     }
@@ -124,6 +139,7 @@ void SimpleMap::Draw() {
         holder_.Save();
         connection_.Save();
         enemies_.Save();
+        avail_.Save();
     }
 
     ImGui::SameLine();
@@ -143,7 +159,8 @@ void SimpleMap::Draw() {
     if (map_.type() != z2util::MapType::OVERWORLD) {
         ImGui::RadioButton("Map Commands", &tab_, 0); ImGui::SameLine();
         ImGui::RadioButton("Connections", &tab_, 1); ImGui::SameLine();
-        ImGui::RadioButton("Enemy List", &tab_, 2);
+        ImGui::RadioButton("Enemy List", &tab_, 2); ImGui::SameLine();
+        ImGui::RadioButton("Item Availability", &tab_, 3);
         ImGui::Separator();
 
         if (tab_ == 0) {
@@ -157,6 +174,8 @@ void SimpleMap::Draw() {
             connection_.Draw();
         } else if (tab_ == 2) {
             enemies_.Draw();
+        } else if (tab_ == 3) {
+            avail_.Draw();
         }
     }
     ImGui::End();
@@ -186,12 +205,14 @@ void SimpleMap::SetMap(const z2util::Map& map) {
 
     holder_.set_mapper(mapper_);
     enemies_.set_mapper(mapper_);
+    avail_.set_mapper(mapper_);
     if (map_.type() != MapType::OVERWORLD) {
         cache_.set_palette(decomp_.palette());
         holder_.Parse(map);
         holder_.set_cursor_moves_left(decomp_.cursor_moves_left());
         connection_.Parse(map);
         enemies_.Parse(map);
+        avail_.Parse(map);
     }
 }
 

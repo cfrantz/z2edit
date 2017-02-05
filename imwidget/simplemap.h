@@ -36,7 +36,8 @@ class SimpleMap {
     Z2Decompress decomp_;
     MapHolder holder_;
     MapConnection connection_;
-    MapEnemyList enemies_;;
+    MapEnemyList enemies_;
+    MapItemAvailable avail_;
 
     Mapper* mapper_;
 
@@ -44,6 +45,8 @@ class SimpleMap {
     Z2ObjectCache cache_;
     Z2ObjectCache items_;
     Z2ObjectCache enemy_;
+    static const uint32_t RED    = 0xFF0000FF;
+    static const uint8_t ELEVATOR = 0xEE;
 };
 
 }  // namespace z2util

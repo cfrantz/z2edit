@@ -697,4 +697,48 @@ const std::vector<MapEnemyList::Unpacked>& MapEnemyList::data() {
     return (large_ && large_->display_) ? large_->data_ : data_;
 }
 
+
+void MapItemAvailable::Parse(const Map& map) {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+
+    area_ = map.area();
+    for(const auto& a : ri.available()) {
+        if (map.world() == a.world()
+            && map.overworld() == a.overworld()
+            && map.subworld() == a.subworld()) {
+            avail_ = a;
+        }
+    }
+
+    uint8_t a = mapper_->Read(avail_.address(), area_ / 2);
+    for(int i=0; i<4; i++) {
+        int bit = 7 - (i + 4 * (area_ & 1));
+        data_.avail[i] = !!(a & (1 << bit));
+
+    }
+
+}
+
+void MapItemAvailable::Save() {
+    uint8_t a = mapper_->Read(avail_.address(), area_ / 2);
+    for(int i=0; i<4; i++) {
+        int bit = 7 - (i + 4 * (area_ & 1));
+        a &= ~(1 << bit);
+        a |= data_.avail[i] << bit;
+    }
+    mapper_->Write(avail_.address(), area_ / 2, a);
+}
+
+void MapItemAvailable::Draw() {
+    const char* names[] = {
+        "Screen 1",
+        "Screen 2",
+        "Screen 3",
+        "Screen 4",
+    };
+    for(int i=0; i<4; i++) {
+        ImGui::Checkbox(names[i], &data_.avail[i]);
+    }
+}
+
 }  // namespace z2util

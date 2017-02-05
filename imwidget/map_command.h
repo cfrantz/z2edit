@@ -162,5 +162,26 @@ class MapEnemyList {
     std::unique_ptr<MapEnemyList> large_;
 };
 
+class MapItemAvailable {
+  public:
+    struct Unpacked {
+        bool avail[4];
+    };
+    MapItemAvailable() : MapItemAvailable(nullptr) {}
+    MapItemAvailable(Mapper* m) : mapper_(m) {}
+    inline void set_mapper(Mapper* m) { mapper_ = m; }
+
+    void Draw();
+    void Parse(const Map& map);
+    void Save();
+    inline const Unpacked& data() { return data_; }
+    inline bool get(int x) { return data_.avail[x/16]; }
+  private:
+    Mapper* mapper_;
+    AvailableBitmap avail_;
+    int area_;
+    Unpacked data_;
+};
+
 }  // namespace z2util
 #endif // Z2UTIL_IMWIDGET_MAP_COMMAND_H

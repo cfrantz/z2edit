@@ -159,6 +159,13 @@ message ItemInfo {
     int32 subworld = 8;
 }
 
+message AvailableBitmap {
+    int32 world = 1;
+    int32 overworld = 2;
+    int32 subworld = 3;
+    Address address = 4;
+}
+
 message HelpLinks {
     map<string, string> url = 1;
 }
@@ -177,4 +184,5 @@ message RomInfo {
     repeated ItemInfo enemies = 11;
     Miscellaneous misc = 12;
     HelpLinks help = 13;
+    repeated AvailableBitmap available = 14;
 }
