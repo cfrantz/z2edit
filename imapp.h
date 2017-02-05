@@ -77,6 +77,7 @@ class ImApp {
     int width_;
     int height_;
     bool running_;
+    bool loaded_;
 
     std::unique_ptr<float[]> audiobuf_;
     int audiobufsz_;

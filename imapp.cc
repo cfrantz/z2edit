@@ -95,6 +95,7 @@ void ImApp::Init() {
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &ImApp::CopyPrg);
     RegisterCommand("memmove", "Move memory within a PRG bank.", this, &ImApp::MemMove);
 
+    loaded_ = false;
     hwpal_ = NesHardwarePalette::Get();
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
@@ -109,6 +110,7 @@ void ImApp::Quit(DebugConsole* console, int argc, char **argv) {
 }
 
 void ImApp::Load(const std::string& filename) {
+    loaded_ = true;
     cartridge_.LoadFile(filename);
     mapper_.reset(MapperRegistry::New(&cartridge_, cartridge_.mapper()));
     chrview_->set_mapper(mapper_.get());
@@ -468,7 +470,14 @@ void ImApp::CopyPrg(DebugConsole* console, int argc, char **argv) {
 void ImApp::Run() {
     running_ = true;
     while(running_) {
-        if (save_filename_.empty()) {
+        if (!ProcessEvents())
+            break;
+        Draw();
+        // Play audio here if you have audio
+        // PlayAudio(...)
+        fpsmgr_.Delay();
+
+        if (!loaded_) {
             char *filename = nullptr;
             auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
             if (result == NFD_OKAY) {
@@ -477,12 +486,6 @@ void ImApp::Run() {
             }
             free(filename);
         }
-        if (!ProcessEvents())
-            break;
-        Draw();
-        // Play audio here if you have audio
-        // PlayAudio(...)
-        fpsmgr_.Delay();
     }
 }
 
