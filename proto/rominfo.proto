@@ -57,6 +57,9 @@ message Map {
     MapType type = 2;
     Address address = 3;
     int32 length = 4;    
+
+    // Address of a contiguous set of palettes for this map
+    // If the palettes are disjoint, use 'palettes' instead.
     Address palette = 5;
     repeated Address objtable = 6;
     Address chr = 7;
@@ -76,6 +79,9 @@ message Map {
     int32 overworld = 12;
     int32 subworld = 13;
     int32 area = 14;
+
+    // Addresses of palettes for this map.
+    repeated Address palettes = 15;
 }
 
 message SideViewMapPointers {
@@ -92,6 +98,7 @@ message SideViewMapPointers {
     int32 area_offset = 11;
     int32 overworld = 12;
     int32 subworld = 13;
+    repeated Address palettes = 15;
 }
 
 message DecompressInfo {

@@ -157,9 +157,15 @@ void Z2Decompress::DrawFloor(int x, uint8_t floor, uint8_t ceiling) {
 }
 
 Address Z2Decompress::palette() {
-
-    Address addr = compressed_map_.palette();
-    addr.set_address(addr.address() + 16 * ((back_ >> 3) & 7));
+    Address addr;
+    if (compressed_map_.palettes_size()) {
+        // FIXME: for palace maps, this should be an indirect lookup
+        // through the palace palette table at bank 7 $cd35.
+        addr = compressed_map_.palettes((back_ >> 3) & 7);
+    } else {
+        addr = compressed_map_.palette();
+        addr.set_address(addr.address() + 16 * ((back_ >> 3) & 7));
+    }
     return addr;
 }
 

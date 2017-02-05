@@ -53,6 +53,7 @@ void PostProcess(z2util::RomInfo* config) {
             }
             *(m->mutable_chr()) = s.chr();
             *(m->mutable_palette()) = s.palette();
+            *(m->mutable_palettes()) = s.palettes();
             for(int i=0; i<4; i++) {
                 auto *obj = m->add_objtable();
                 obj->set_bank(s.address().bank());

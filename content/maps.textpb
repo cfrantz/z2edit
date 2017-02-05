@@ -157,17 +157,28 @@ sideview: {
     world: 3
     connector: { bank: 4 address: 0x871b }
     area_offset: 0
+    palettes: [
+        { bank: 4 address: 0x8470 }, { bank: 4 address: 0xbf00 },
+        { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 },
+        { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 },
+        { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 }
+    ]
 }
 sideview: {
     area: "Palace2"
     address: { bank: 4 address: 0x853F }
     length: 21
-    palette: { bank: 4 address: 0x3f00 }
     type: PALACE
     chr: { bank: 0xb }
     world: 3
     connector: { bank: 4 address: 0x8753 }
     area_offset: 14
+    palettes: [
+        { bank: 4 address: 0x8480 }, { bank: 4 address: 0xbf10 },
+        { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 },
+        { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 },
+        { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 }
+    ]
 }
 sideview: {
     area: "Palace5"
@@ -179,6 +190,12 @@ sideview: {
     world: 3
     connector: { bank: 4 address: 0x87a7 }
     area_offset: 35
+    palettes: [
+        { bank: 4 address: 0x84b0 }, { bank: 4 address: 0xbf40 },
+        { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 },
+        { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 },
+        { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 }
+    ]
 }
 
 sideview: {
@@ -191,6 +208,12 @@ sideview: {
     world: 4
     connector: { bank: 4 address: 0xa1f8 }
     area_offset: 0
+    palettes: [
+        { bank: 4 address: 0x8490 }, { bank: 4 address: 0xbf20 },
+        { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 },
+        { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 },
+        { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 }
+    ]
 }
 
 sideview: {
@@ -203,6 +226,12 @@ sideview: {
     world: 4
     connector: { bank: 4 address: 0xa234 }
     area_offset: 15
+    palettes: [
+        { bank: 4 address: 0x84a0 }, { bank: 4 address: 0xbf30 },
+        { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 },
+        { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 },
+        { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 }
+    ]
 }
 sideview: {
     area: "Palace6"
@@ -214,6 +243,12 @@ sideview: {
     world: 4
     connector: { bank: 4 address: 0xa288 }
     area_offset: 36
+    palettes: [
+        { bank: 4 address: 0x84c0 }, { bank: 4 address: 0xbf50 },
+        { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 },
+        { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 },
+        { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 }
+    ]
 }
 
 sideview: {
