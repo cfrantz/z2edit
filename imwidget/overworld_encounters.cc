@@ -33,11 +33,11 @@ void OverworldEncounters::Unpack() {
     // The north/south dividing line is in a table in bank 7 at $cb32
     // Because of the whole death mountain/maze island fiasco, those worlds
     // share the north/south dividing line.
-    int world = map_.world();
-    if (world & 1) world &= 1;
+    int overworld = map_.overworld();
+    if (map_.subworld()) overworld = map_.subworld();
 
     addr = misc.overworld_mason_dixon();
-    south_side_ = mapper_->Read(addr, world) - misc.overworld_y_offset();
+    south_side_ = mapper_->Read(addr, overworld) - misc.overworld_y_offset();
 }
 
 bool OverworldEncounters::IsEncounter(int area) {
@@ -49,11 +49,11 @@ bool OverworldEncounters::IsEncounter(int area) {
 }
 
 void OverworldEncounters::Draw() {
-    int worlds = map_.world() & ~1;
     const char *screens = "0\0001\0002\0003\000\000";
 
     if (ImGui::BeginPopup("Encounters")) {
-        ImGui::Text("Overworld Encounters for Worlds %d & %d", worlds, worlds+1);
+        ImGui::Text("Overworld Encounters for %d-%d",
+                    map_.overworld(), map_.subworld());
 
         ImGui::PushItemWidth(100);
         ImGui::InputInt("North/South Dividing Line", &south_side_);
