@@ -214,6 +214,7 @@ void Editor::Draw() {
     if (!visible_)
         return;
 
+    ImGui::SetNextWindowSize(ImVec2(1100, 700), ImGuiSetCond_FirstUseEver);
     ImGui::Begin("Map Editor", visible());
 
     auto* rominfo = ConfigLoader<RomInfo>::MutableConfig();

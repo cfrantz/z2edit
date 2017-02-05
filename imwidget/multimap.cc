@@ -242,6 +242,7 @@ void MultiMap::Draw() {
         return;
 
     drag_ = false;
+    ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiSetCond_FirstUseEver);
     ImGui::Begin(title_.c_str(), &visible_);
     ImGui::PushItemWidth(100);
     ImGui::InputFloat("Zoom", &scale_, 1.0/8.0, 1.0);

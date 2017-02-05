@@ -238,7 +238,7 @@ decompress {
     render: RENDER_HORIZONTAL
     height: 2
     objid: [0x4b, 0x4b]
-    comment: "breakable block"
+    comment: "palace bricks"
 }
 decompress {
     area: PALACE

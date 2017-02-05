@@ -111,6 +111,7 @@ void SimpleMap::Draw() {
     if (!visible_)
         return;
 
+    ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiSetCond_FirstUseEver);
     ImGui::Begin(title_.c_str(), visible());
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size()];
@@ -195,7 +196,8 @@ void SimpleMap::SetMap(const z2util::Map& map) {
     items_.set_mapper(mapper_);
     Address ipal;
     // FIXME(cfrantz): hardcoded palette location
-    ipal.set_bank(1); ipal.set_address(0x9e);
+    ipal.set_bank(decomp_.palette().bank());
+    ipal.set_address(0x809e);
     items_.Init(ri.items());
     items_.set_palette(ipal);
 

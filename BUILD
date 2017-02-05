@@ -30,11 +30,6 @@ cc_library(
     ],
     deps = [
         ":imapp-util",
-        # TODO(cfrantz): on ubuntu 16 with MIR, there is a library conflict
-        # between MIR (linked with protobuf 2.6.1) and this program,
-        # which builds with protbuf 3.x.x.  A temporary workaround is to
-        # not link with nfd (native-file-dialog).
-        # ":nfd",
         "//imwidget:debug_console",
         "//imwidget:editor",
         "//imwidget:hwpalette",
@@ -54,6 +49,11 @@ cc_library(
         "//util:os",
         "//util:logging",
         "//external:gflags",
+
+        # TODO(cfrantz): on ubuntu 16 with MIR, there is a library conflict
+        # between MIR (linked with protobuf 2.6.1) and this program,
+        # which builds with protbuf 3.x.x.  A temporary workaround is to
+        # not link with nfd (native-file-dialog).
         "//external:nfd",
     ],
 )
