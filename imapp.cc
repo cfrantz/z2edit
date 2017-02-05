@@ -468,6 +468,15 @@ void ImApp::CopyPrg(DebugConsole* console, int argc, char **argv) {
 void ImApp::Run() {
     running_ = true;
     while(running_) {
+        if (save_filename_.empty()) {
+            char *filename = nullptr;
+            auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
+            if (result == NFD_OKAY) {
+                Load(filename);
+                save_filename_.assign(filename);
+            }
+            free(filename);
+        }
         if (!ProcessEvents())
             break;
         Draw();
@@ -512,6 +521,7 @@ void ImApp::Draw() {
                 auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
                 if (result == NFD_OKAY) {
                     Load(filename);
+                    save_filename_.assign(filename);
                 }
                 free(filename);
             }
