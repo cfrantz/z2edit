@@ -77,14 +77,16 @@ const ItemInfo& Z2Decompress::EnemyInfo() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
 
     for (const auto& e : ri.enemies()) {
-        if (compressed_map_.world() == e.world() ||
-            (1 << compressed_map_.world()) & e.valid_worlds()) {
-            LOG(INFO, "EnemyInfo for world ", e.world());
+        if (compressed_map_.world() == e.world() &&
+            compressed_map_.overworld() == e.overworld()) {
+            LOGF(INFO, "EnemyInfo for world %d overworld %d ",
+                 e.world(), e.overworld());
             return e;
         }
     }
     const auto& e = ri.enemies(0);
-    LOG(INFO, "Default EnemyInfo for world ", e.world());
+    LOGF(INFO, "EnemyInfo for world %d overworld %d ",
+         e.world(), e.overworld());
     return e;
 }
 

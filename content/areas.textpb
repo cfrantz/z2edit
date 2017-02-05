@@ -1,6 +1,8 @@
 areas {
     area: "west_hyrule"
     world: 0
+    overworld: 0
+    subworld: 0
     info [
         { key: 0  value: { name: "North Palace" }},
         { key: 1  value: { name: "Troll Fish Bridge" }},
@@ -44,7 +46,7 @@ areas {
 
 areas {
     area: "town"
-    world: 4
+    world: 1
     info [
         { key: 0  value: { name: "Glitch Town" }},
         { key: 1  value: { name: "Rauru (left)" }},

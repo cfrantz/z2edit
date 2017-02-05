@@ -1,5 +1,4 @@
 items {
-    valid_worlds: -1
     info: [
         { key: 0x00 value: {
             name: "candle"

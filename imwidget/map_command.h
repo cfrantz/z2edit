@@ -126,6 +126,8 @@ class MapConnection {
     Mapper* mapper_;
     Address connector_;
     int world_;
+    int overworld_;
+    int subworld_;
 
     Unpacked data_[4];
 };
@@ -152,6 +154,7 @@ class MapEnemyList {
     bool is_encounter_;
     Address pointer_;
     int world_;
+    int overworld_;
     int area_;
     int display_;
 

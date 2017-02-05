@@ -16,11 +16,13 @@ namespace z2util {
 
 class MultiMap {
   public:
-    static MultiMap* New(Mapper* m, int world, int map);
+    static MultiMap* New(Mapper* m,
+                         int world, int overworld, int subworld,int map);
 
-    MultiMap(Mapper* mapper, int world, int map)
+    MultiMap(Mapper* mapper, int world, int overworld, int subworld, int map)
         : mapper_(mapper), visible_(true), scale_(0.25),
-        world_(world), start_(map), pauseconv_(true) {};
+        world_(world), overworld_(overworld), subworld_(subworld),
+        start_(map), pauseconv_(true) {};
 
     void Init();
     void Draw();
@@ -52,6 +54,8 @@ class MultiMap {
     bool visible_;
     float scale_;
     int world_;
+    int overworld_;
+    int subworld_;
     int start_;
     std::string title_;
     int maxx_;

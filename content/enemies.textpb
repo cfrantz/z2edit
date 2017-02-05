@@ -29,10 +29,10 @@
 #        iiiiiiib = the sprite ID and bank offset.
 
 enemies {
+    # Valid enemies for overworld 0-0 and 0-1: West Hyrule and Death Mountain
     area: "west_hyrule"
     world: 0
-    # Valid enemies for worlds 0 and 1 (West Hyrule and Death Mountain)
-    valid_worlds: 0x0003
+    overworld: 0
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -273,9 +273,9 @@ enemies {
 
 enemies {
     area: "east_hyrule"
-    world: 2
-    # Valid enemies for worlds 2 and 3 (East Hyrule and Maze Island)
-    valid_worlds: 0x000c
+    # Valid enemies for overworld 2-0 and 2-1: East Hyrule and Maze Island1
+    world: 0
+    overworld: 2
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -482,7 +482,7 @@ enemies {
 
 enemies {
     area: "town"
-    world: 4
+    world: 1
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -660,8 +660,7 @@ enemies {
 
 enemies {
     area: "palace_125"
-    world: 12
-    valid_worlds: 0x5000
+    world: 3
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -923,8 +922,7 @@ enemies {
 
 enemies {
     area: "palace_346"
-    world: 16
-    valid_worlds: 0x70000
+    world: 4
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -1184,7 +1182,7 @@ enemies {
 
 enemies {
     area: "great_palace"
-    world: 22
+    world: 5
     info: [
         { key: 0x00 value: {
             name: "fairy"

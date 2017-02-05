@@ -7,11 +7,12 @@
 namespace z2util {
 
 OverworldConnector::OverworldConnector(Mapper* mapper, Address address,
-                                       uint8_t offset, int world)
+                               uint8_t offset, int overworld, int subworld)
   : mapper_(mapper),
     address_(address),
     offset_(offset),
-    current_world_(world)
+    overworld_(overworld),
+    subworld_(subworld)
 {
     Read();
 }
@@ -41,7 +42,8 @@ void OverworldConnector::Read() {
     map_ = z & 0x3f;
     entry_ = z >> 6;
 
-    world_ = w & 0x1f;
+    dest_overworld_ = w & 0x3;
+    dest_world_ = (w & 0x1c) >> 2;
     entry_right_ = !!(w & 0x20);
     passthru_ = !!(w & 0x40);
     fall_ = !!(w & 0x80);
@@ -54,7 +56,7 @@ void OverworldConnector::Write() {
     y = (y_ + misc.overworld_y_offset()) | uint8_t(ext_) << 7;
     x = x_ | uint8_t(second_) << 6 | uint8_t(exit_2_lower_) << 7;
     z = map_ | entry_ << 6;
-    w = world_ | uint8_t(entry_right_) << 5 |
+    w = dest_overworld_ | (dest_world_ << 2) | uint8_t(entry_right_) << 5 |
         uint8_t(passthru_) << 6 | uint8_t(fall_) << 7;
 
     mapper_->Write(address_, offset_ + 0x00, y);
@@ -66,9 +68,13 @@ void OverworldConnector::Write() {
 void OverworldConnector::Draw() {
     Read();
     if (ImGui::Button("View Area")) {
-        int world = world_;
-        if (world <= 1) world += current_world_;
-        MultiMap::New(mapper_, world, map_);
+        if (dest_world_ == 0 && dest_overworld_ == 0) {
+            MultiMap::New(mapper_,
+                          dest_world_, overworld_, subworld_, map_);
+        } else {
+            MultiMap::New(mapper_,
+                          dest_world_, 0, 0, map_);
+        }
     }
 
     ImGui::PushID(offset_);
@@ -84,8 +90,14 @@ void OverworldConnector::Draw() {
     ImGui::SameLine();
     ImGui::InputInt("map", &map_);
 
+    ImGui::PushItemWidth(40);
     ImGui::SameLine();
-    ImGui::InputInt("world", &world_);
+    ImGui::Combo("w##world", &dest_world_,
+                 "0\0001\0002\0003\0004\0005\0006\0007\000\0\0");
+    ImGui::SameLine();
+    ImGui::Combo("ov##overworld", &dest_overworld_,
+                 "0\0001\0002\0003\0\0");
+    ImGui::PopItemWidth();
 
     ImGui::SameLine();
     ImGui::Combo("entry", &entry_, "0\000256\000512\000768\0\0");
@@ -115,9 +127,13 @@ void OverworldConnector::Draw() {
 void OverworldConnector::DrawInPopup() {
     Read();
     if (ImGui::Button("View Area")) {
-        int world = world_;
-        if (world <= 1) world += current_world_;
-        MultiMap::New(mapper_, world, map_);
+        if (dest_world_ == 0 && dest_overworld_ == 0) {
+            MultiMap::New(mapper_,
+                          dest_world_, overworld_, subworld_, map_);
+        } else {
+            MultiMap::New(mapper_,
+                          dest_world_, 0, 0, map_);
+        }
     }
 
     ImGui::Text("Position:");
@@ -131,8 +147,14 @@ void OverworldConnector::DrawInPopup() {
     ImGui::Text("Connects to:");
     ImGui::InputInt("map ", &map_);
 
+    ImGui::PushItemWidth(40);
     ImGui::SameLine();
-    ImGui::InputInt("world", &world_);
+    ImGui::Combo("w##world", &dest_world_,
+                 "0\0001\0002\0003\0004\0005\0006\0007\000\0\0");
+    ImGui::SameLine();
+    ImGui::Combo("ov##overworld", &dest_overworld_,
+                 "0\0001\0002\0003\0\0");
+    ImGui::PopItemWidth();
 
     ImGui::Text("Properties:");
     ImGui::Combo("entry", &entry_, "0\000256\000512\000768\0\0");
@@ -162,12 +184,12 @@ OverworldConnectorList::OverworldConnectorList()
   : add_offset_(0)
 {}
 
-void OverworldConnectorList::Init(Mapper* mapper, Address address, int world,
-                                  int n) {
+void OverworldConnectorList::Init(Mapper* mapper, Address address,
+                                  int overworld, int subworld, int n) {
     list_.clear();
     show_ = true;
     for(int i=0; i<n; i++) {
-        list_.emplace_back(mapper, address, i, world);
+        list_.emplace_back(mapper, address, i, overworld, subworld);
     }
 }
 

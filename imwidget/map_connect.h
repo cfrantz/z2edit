@@ -12,7 +12,7 @@ class OverworldConnectorList;
 class OverworldConnector {
   public:
     OverworldConnector(Mapper* mapper, Address address,
-                       uint8_t offset, int world);
+                       uint8_t offset, int overworld, int subworld);
     OverworldConnector(const OverworldConnector& other);
     void Draw();
     void DrawInPopup();
@@ -29,12 +29,14 @@ class OverworldConnector {
     Address address_;
 
     int offset_;
-    int current_world_;
+    int overworld_;
+    int subworld_;
 
     int x_;
     int y_;
     int map_;
-    int world_;
+    int dest_world_;
+    int dest_overworld_;
 
     bool ext_;
     bool second_;
@@ -53,7 +55,8 @@ class OverworldConnectorList {
   public:
     OverworldConnectorList();
 
-    void Init(Mapper* mapper, Address address, int world, int n=63);
+    void Init(Mapper* mapper, Address address, int overworld, int subworld,
+              int n=63);
     void Draw();
     bool DrawInEditor(int x, int y);
     void DrawAdd();

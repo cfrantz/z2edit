@@ -3,8 +3,11 @@
 #include "imwidget/map_command.h"
 #include "imwidget/simplemap.h"
 #include "imapp-util.h"
-
 #include "util/config.h"
+
+#include <gflags/gflags.h>
+
+DEFINE_bool(town_hack, true, "World 2 towns are really in world 1");
 
 namespace z2util {
 
@@ -12,8 +15,9 @@ float MultiMap::xs_ = 0.40;
 float MultiMap::ys_ = 0.75;
 bool MultiMap::preconverge_ = true;
 
-MultiMap* MultiMap::New(Mapper* m, int world, int map) {
-    MultiMap* mm = new MultiMap(m, world, map);
+MultiMap* MultiMap::New(Mapper* m, int world, int overworld, int subworld,
+                        int map) {
+    MultiMap* mm = new MultiMap(m, world, overworld, subworld, map);
     mm->Init();
     AddDrawCallback([mm]() {
         bool vis = mm->visible_;
@@ -30,11 +34,16 @@ MultiMap* MultiMap::New(Mapper* m, int world, int map) {
 void MultiMap::Init() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
 
+    if (FLAGS_town_hack) {
+        if (world_ == 2) world_ = 1;
+    }
     visited_room0_ = 0;
     int n = 0;
     for(const auto& m : ri.map()) {
-        if (m.type() != MapType::OVERWORLD &&
-            m.valid_worlds() & (1UL << world_)) {
+        if (m.type() != MapType::OVERWORLD
+            && m.world() == world_
+            && m.overworld() == overworld_
+            && m.subworld() == subworld_) {
             maps_[n] = m;
             visited_[n] = false;
             n++;

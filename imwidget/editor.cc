@@ -81,7 +81,8 @@ void Editor::ConvertFromMap(Map* map) {
         compressed_length_ = decomp.length();
         *map->mutable_address() = decomp.address();
         cache_.Init(*map);
-        connections_.Init(mapper_, map->connector(), map->world());
+        connections_.Init(mapper_, map->connector(), map->overworld(),
+                          map->subworld());
         width = decomp.width();
         height = decomp.height();
         LOG(INFO, "map ", map_->name(),

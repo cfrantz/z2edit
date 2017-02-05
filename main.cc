@@ -8,10 +8,12 @@
 DEFINE_string(config, "", "ROM info config file");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
 
-void GetName(const z2util::RomInfo* config, int world, int id,
-             std::string* name) {
+void GetName(const z2util::RomInfo* config, int world,
+             int overworld, int subworld, int id, std::string* name) {
     for(const auto& area : config->areas()) {
-        if (world == area.world()) {
+        if (world == area.world()
+            && overworld == area.overworld()
+            && subworld == area.subworld()) {
             const auto& it = area.info().find(id);
             if (it != area.info().end())
                 *name = it->second.name();
@@ -26,20 +28,20 @@ void PostProcess(z2util::RomInfo* config) {
             auto* m = config->add_map();
 
             std::string name = "";
-            GetName(config, s.world(), map, &name);
+            GetName(config, s.world(), s.overworld(), s.subworld(), map, &name);
+            m->set_area(s.area_offset() + map);
             if (name.empty()) {
-                snprintf(buf, sizeof(buf), "%s %02d", s.area().c_str(), map);
+                snprintf(buf, sizeof(buf), "%02d: %s %02d",
+                         m->area(), s.area().c_str(), map);
             } else {
-                snprintf(buf, sizeof(buf), "%s %02d - %s",
-                         s.area().c_str(), map, name.c_str());
+                snprintf(buf, sizeof(buf), "%02d: %s %02d - %s",
+                         m->area(), s.area().c_str(), map, name.c_str());
             }
             m->set_name(buf);
             m->set_type(s.type());
             m->set_world(s.world());
-            int64_t valid_worlds = s.valid_worlds();
-            if (!valid_worlds)
-                valid_worlds = 1UL << s.world();
-            m->set_valid_worlds(valid_worlds);
+            m->set_overworld(s.overworld());
+            m->set_subworld(s.subworld());
             m->mutable_pointer()->set_bank(s.address().bank());
             m->mutable_pointer()->set_address(s.address().address() + 2*map);
 

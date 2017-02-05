@@ -484,6 +484,8 @@ void MapConnection::Parse(const Map& map) {
     uint8_t val;
     connector_ = map.connector();
     world_ = map.world();
+    overworld_ = map.overworld();
+    subworld_ = map.subworld();
 
     for(int i=0; i<4; i++) {
         val = mapper_->Read(connector_, i);
@@ -518,8 +520,10 @@ void MapConnection::Draw() {
     int len = 0;
 
     for(const auto& m : ri.map()) {
-        if (m.type() != MapType::OVERWORLD &&
-            m.valid_worlds() & (1UL << world_)) {
+        if (m.type() != MapType::OVERWORLD
+            && m.world() == world_
+            && m.overworld() == overworld_
+            && m.subworld() == subworld_) {
             names[len++] = m.name().c_str();
         }
     }
@@ -543,6 +547,7 @@ MapEnemyList::MapEnemyList(Mapper* m)
     is_large_(false),
     is_encounter_(false),
     world_(0),
+    overworld_(0),
     area_(0),
     display_(0) {}
 
@@ -551,7 +556,9 @@ MapEnemyList::MapEnemyList() : MapEnemyList(nullptr) {}
 void MapEnemyList::Parse(const Map& map) {
     pointer_ = map.pointer();
     world_ = map.world();
+    area_ = map.area();
 
+    /*
     // FIXME(cfrantz): Find a better way of learning the area number
     int a = pointer_.address() | 0x8000;
     if (a >= 0xA000) {
@@ -559,6 +566,7 @@ void MapEnemyList::Parse(const Map& map) {
     } else {
         area_ = (a - 0x8523) / 2;
     }
+    */
 
     // Check if this is an overworld random encounter area
     OverworldEncounters enc;
@@ -631,8 +639,7 @@ void MapEnemyList::Draw() {
 
     int n = 0;
     for(const auto& e : ri.enemies()) {
-        if (e.world() == world_ ||
-            e.valid_worlds() & (1UL << world_)) {
+        if (e.world() == world_ && e.overworld() == overworld_) {
             for(const auto& info : e.info()) {
                 names[info.first] = info.second.name().c_str();
                 if (info.first >= n)
