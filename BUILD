@@ -68,7 +68,7 @@ genrule(
 )
 
 cc_binary(
-    name = "main",
+    name = "z2edit",
     linkopts = select({
         ":windows": [
             "-lpthread",
