@@ -94,7 +94,7 @@ class File {
 
     bool Read(string* buf);
     bool Read(string* buf, int64_t len);
-    bool Read(void* buf, int64_t len);
+    bool Read(void* buf, int64_t *len);
     bool Write(const string& buf);
     bool Write(const string& buf, int64_t len);
     bool Write(const void* buf, int64_t len);

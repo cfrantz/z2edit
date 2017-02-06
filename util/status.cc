@@ -138,8 +138,7 @@ string StrError(int error) {
     return string(strerror(error));
 #else
     char buf[1024];
-    strerror_r(error, buf, sizeof(buf));
-    return string(buf);
+    return string(strerror_r(error, buf, sizeof(buf)));
 #endif
 }
 

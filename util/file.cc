@@ -87,14 +87,14 @@ int64_t File::Length() {
     return FStat().Size();
 }
 
-bool File::Read(void* buf, int64_t len) {
-    fread(buf, 1, len, fp_);
+bool File::Read(void* buf, int64_t *len) {
+    *len = fread(buf, 1, *len, fp_);
     return !ferror(fp_);
 }
 
 bool File::Read(string* buf, int64_t len) {
     buf->resize(len);
-    return Read(&buf->front(), len);
+    return Read(&buf->front(), &len);
 }
 
 bool File::Read(string* buf) {
