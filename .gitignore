@@ -1,0 +1,6 @@
+*.nes
+*.nes.sram
+imgui.ini
+bazel-*
+docs
+tools/mxe
