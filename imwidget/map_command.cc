@@ -9,6 +9,8 @@
 #include "nes/enemylist.h"
 #include "util/config.h"
 
+#include "IconsFontAwesome.h"
+
 namespace z2util {
 
 int MapCommand::newid() {
@@ -314,12 +316,13 @@ bool MapHolder::Draw() {
     ImGui::Text("Command List:");
     ImGui::BeginChild("commands", ImGui::GetContentRegionAvail(), true);
 
-    int i = 0;
+    int i = 0, lastx = 0;;
     for(auto it = command_.begin(); it < command_.end(); ++it, ++i) {
         auto next = it + 1;
         bool create = false;
+        lastx = it->absx();
         ImGui::PushID(i);
-        if (ImGui::Button(" + ")) {
+        if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
             changed = true;
             create = true;
         }
@@ -327,7 +330,7 @@ bool MapHolder::Draw() {
             ImGui::SetTooltip("Insert a new command");
 
         ImGui::SameLine();
-        if (ImGui::Button(" v ")) {
+        if (ImGui::Button(ICON_FA_CARET_DOWN)) {
             changed = true;
             std::swap(*it, *next);
         }
@@ -338,7 +341,7 @@ bool MapHolder::Draw() {
         changed |= it->Draw(true);
 
         ImGui::SameLine();
-        if (ImGui::Button(" X ")) {
+        if (ImGui::Button(ICON_FA_TIMES_CIRCLE)) {
             changed = true;
             command_.erase(it);
         }
@@ -348,6 +351,13 @@ bool MapHolder::Draw() {
         if (create)
             command_.emplace(it, this, it->absx(), 0, 0, 0);
     }
+    if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
+        changed = true;
+        command_.emplace_back(this, lastx, 0, 0, 0);
+    }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Append a new command");
+
     ImGui::EndChild();
     ImGui::PopItemWidth();
     Pack();
@@ -416,12 +426,14 @@ std::vector<uint8_t> MapHolder::MapDataAbs() {
         if (it->absy() == 14) {
             // Erase any "skip" commands, as we'll re-synthesize them
             // as needed.
-            copy.erase(it);
+            it = copy.erase(it);
+            if (it == copy.end())
+                break;
         }
         int deltax = it->absx() - x;
         if (deltax < 0 || deltax > 15) {
             int nx = it->absx() & ~15;
-            copy.emplace(it, this, x, 0xE0 | (nx/16), 0, 0);
+            it = copy.emplace(it, this, x, 0xE0 | (nx/16), 0, 0);
             it++;
             x = nx;
             deltax = it->absx() - x;
@@ -676,16 +688,18 @@ void MapEnemyList::Draw() {
         ImGui::PopItemWidth();
 
         ImGui::SameLine();
-        if (ImGui::Button(" X ")) {
+        if (ImGui::Button(ICON_FA_TIMES_CIRCLE)) {
             data_.erase(it);
         }
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Delete this enemy");
         ImGui::PopID();
     }
-    if (ImGui::Button("Add")) {
+    if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
         data_.emplace_back(0, 0, 0);
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Add a new enemy");
 
     if (large_) {
         ImGui::Separator();

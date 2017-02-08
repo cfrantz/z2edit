@@ -598,7 +598,7 @@ save_as:
 
     for(auto it=draw_callback_.begin(); it != draw_callback_.end();) {
         if (!(*it)()) {
-            draw_callback_.erase(it);
+            it = draw_callback_.erase(it);
             continue;
         }
         ++it;

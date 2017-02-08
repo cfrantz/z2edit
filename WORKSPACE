@@ -33,6 +33,20 @@ bind(
 )
 
 ######################################################################
+# IconFontCppHeaders
+######################################################################
+new_git_repository(
+	name = "iconfonts",
+	remote = "https://github.com/juliettef/IconFontCppHeaders.git",
+    commit = "fda5f470b767f7b413e4a3995fa8cfe47f78b586",
+    build_file = "iconfonts.BUILD",
+)
+bind(
+    name = "fontawesome",
+    actual = "@iconfonts//:fontawesome",
+)
+
+######################################################################
 # protobuf
 ######################################################################
 git_repository(

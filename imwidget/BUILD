@@ -143,6 +143,7 @@ cc_library(
         "//nes:mappers",
         "//proto:rominfo",
         "//external:imgui",
+        "//external:fontawesome",
     ],
 )
 

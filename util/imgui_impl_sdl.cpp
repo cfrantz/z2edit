@@ -10,7 +10,10 @@
 #include <SDL2/SDL_syswm.h>
 #include <SDL2/SDL_opengl.h>
 #include "imgui.h"
+#include "util/fontawesome.h"
 #include "util/imgui_impl_sdl.h"
+
+#include "IconsFontAwesome.h"
 
 // Data
 static double       g_Time = 0.0f;
@@ -179,6 +182,7 @@ bool ImGui_ImplSdl_CreateDeviceObjects()
     // Store our identifier
     io.Fonts->TexID = (void *)(intptr_t)g_FontTexture;
 
+
     // Restore state
     glBindTexture(GL_TEXTURE_2D, last_texture);
 
@@ -230,6 +234,17 @@ bool    ImGui_ImplSdl_Init(SDL_Window* window)
 #else
     (void)window;
 #endif
+
+    io.Fonts->AddFontDefault();
+    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0};
+    ImFontConfig icons_config;
+    icons_config.MergeMode = true;
+    icons_config.PixelSnapH = true;
+    icons_config.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontFromMemoryTTF(
+        util_data_fontawesome_webfont_ttf,
+        util_data_fontawesome_webfont_ttf_len,
+        16.0f, &icons_config, icons_ranges);
 
     return true;
 }
