@@ -1,12 +1,14 @@
 #include "imwidget/simplemap.h"
 #include "imwidget/imutil.h"
 #include "util/config.h"
+#include "util/strutil.h"
 #include "imapp-util.h"
 
 namespace z2util {
 
 SimpleMap::SimpleMap()
-  : visible_(false),
+  : id_(UniqueID()),
+    visible_(false),
     scale_(1.0),
     mapsel_(0),
     tab_(0),
@@ -17,7 +19,7 @@ SimpleMap::SimpleMap(Mapper* m, const Map& map)
     set_mapper(m);
     SetMap(map);
     mapsel_ = -1;
-    title_ = map.name();
+    title_ = StrCat(map.name(), "##", id_);
 }
 
 SimpleMap* SimpleMap::New(Mapper* m, const Map& map) {

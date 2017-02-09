@@ -26,6 +26,7 @@ class SimpleMap {
     void RenderToBuffer(GLBitmap *buffer);
     std::unique_ptr<GLBitmap> RenderToNewBuffer();
   private:
+    int id_;
     bool visible_;
     int width_;
     int height_;

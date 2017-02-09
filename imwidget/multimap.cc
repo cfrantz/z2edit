@@ -4,6 +4,7 @@
 #include "imwidget/simplemap.h"
 #include "imapp-util.h"
 #include "util/config.h"
+#include "util/strutil.h"
 
 #include <gflags/gflags.h>
 
@@ -51,7 +52,7 @@ void MultiMap::Init() {
     }
     location_.clear();
 
-    title_ = "MultiMap: " + maps_[start_].name();
+    title_ = StrCat("MultiMap: ", maps_[start_].name(), "##", id_);
     if (start_ != 0) {
         // Room 0 is often used as the destination for illegal exits
         visited_[0] = true;
@@ -164,7 +165,7 @@ void MultiMap::DrawArrow(const Vec2& a, const Vec2&b, uint32_t color,
     if (width == 0) width = 2.0f;
     Vec2 u = (b - a).unit();
     Vec2 v = u.flip();
-    Vec2 p = a + u * (b - a).length() * arrowpos;
+    Vec2 p = a + u * ((b - a).length() * arrowpos);
 
     auto* draw = ImGui::GetWindowDrawList();
     draw->AddTriangleFilled(p-v*10.0, p+v*10.0, p+u*20.0, color);

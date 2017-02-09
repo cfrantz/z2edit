@@ -6,6 +6,7 @@
 
 #include "alg/fdg.h"
 #include "imwidget/glbitmap.h"
+#include "imwidget/imutil.h"
 #include "nes/mapper.h"
 #include "nes/z2decompress.h"
 #include "nes/z2objcache.h"
@@ -20,7 +21,7 @@ class MultiMap {
                          int world, int overworld, int subworld,int map);
 
     MultiMap(Mapper* mapper, int world, int overworld, int subworld, int map)
-        : mapper_(mapper), visible_(true), scale_(0.25),
+        : id_(UniqueID()), mapper_(mapper), visible_(true), scale_(0.25),
         world_(world), overworld_(overworld), subworld_(subworld),
         start_(map), pauseconv_(true) {};
 
@@ -50,6 +51,7 @@ class MultiMap {
     void Sort();
     void DrawLegend();
 
+    int id_;
     Mapper* mapper_;
     bool visible_;
     float scale_;

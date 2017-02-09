@@ -51,4 +51,9 @@ inline void Clamp(T* v, T mn, T mx) {
 void TextOutlined(const ImVec4& col, const char* fmt, ...);
 void TextOutlinedV(const ImVec4& col, const char* fmt, va_list args);
 
+inline int UniqueID() {
+    static int id;
+    return ++id;
+}
+
 #endif // Z2UTIL_IMWIDGET_IMUTIL_H

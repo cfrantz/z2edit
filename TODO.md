@@ -1,5 +1,15 @@
 # TODO List
 
+### Issues found in alpha release
+1. Fix sideview editor crash (fixed?)
+2. Reminder dialogs for "Commit to Rom" (and flag to disable)
+3. Feature to swap sideview areas around (because of the 28 limitation)
+4. Button on sideview connection edtior to open up the destination area. (done)
+5. Add "did you remember to save all of your files?" dialog when you quit
+   with unsaved changes
+6. Enemy level editor wanted
+7. Move palaces between contitnents
+
 ### Add config which describes how to render towns
 Done, but still need:
   * Inventory of all the different townspeople

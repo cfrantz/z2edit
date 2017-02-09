@@ -94,20 +94,29 @@ cc_library(
 
 cc_library(
     name = "simplemap",
-    hdrs = ["simplemap.h"],
-    srcs = ["simplemap.cc"],
+    hdrs = [
+        "simplemap.h",
+        "map_command.h",
+    ],
+    srcs = [
+        "simplemap.cc",
+        "map_command.cc",
+    ],
     deps = [
         ":imutil",
+        ":error_dialog",
         ":glbitmap",
         ":hwpalette",
-        ":map_command",
+        ":overworld_encounters",
         "//:imapp-util",
+        "//nes:enemylist",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
         "//external:imgui",
+        "//external:fontawesome",
     ],
 )
 
@@ -118,7 +127,6 @@ cc_library(
     deps = [
         ":glbitmap",
         ":simplemap",
-        ":map_command",
         "//alg:fdg",
         "//:imapp-util",
         "//nes:mappers",
@@ -130,22 +138,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "map_command",
-    hdrs = ["map_command.h"],
-    srcs = ["map_command.cc"],
-    deps = [
-        ":imutil",
-        ":error_dialog",
-        ":overworld_encounters",
-        "//util:config",
-        "//nes:enemylist",
-        "//nes:mappers",
-        "//proto:rominfo",
-        "//external:imgui",
-        "//external:fontawesome",
-    ],
-)
 
 cc_library(
     name = "map_connect",

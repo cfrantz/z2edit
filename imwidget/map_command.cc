@@ -5,6 +5,7 @@
 #include "imwidget/error_dialog.h"
 #include "imwidget/imutil.h"
 #include "imwidget/overworld_encounters.h"
+#include "imwidget/simplemap.h"
 #include "imgui.h"
 #include "nes/enemylist.h"
 #include "util/config.h"
@@ -12,11 +13,6 @@
 #include "IconsFontAwesome.h"
 
 namespace z2util {
-
-int MapCommand::newid() {
-    static int id = 1;
-    return id++;
-}
 
 const DecompressInfo* MapCommand::info_[NR_AREAS][NR_SETS][16];
 const char* MapCommand::object_names_[NR_AREAS][NR_SETS][16];
@@ -57,7 +53,7 @@ void MapCommand::Init() {
 
 MapCommand::MapCommand(const MapHolder* holder, uint8_t position,
                        uint8_t object, uint8_t extra)
-  : id_(newid()),
+  : id_(UniqueID()),
     holder_(holder),
     position_(position),
     object_(object),
@@ -523,14 +519,18 @@ void MapConnection::Draw() {
         "Right Exit",
     };
     const char *startlabel[] = {
-        "Left Dest Screen",
-        "Down Dest Screen",
-        "Up Dest Screen",
+        "Left Dest Screen ",
+        "Down Dest Screen ",
+        "Up Dest Screen   ",
         "Right Dest Screen",
+    };
+    const char *buttonlabel[] = {
+        "View Area##0", "View Area##1", "View Area##2", "View Area##3",
     };
     const char *selection = "0\0001\0002\0003\0\0";
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size() + 1];
+    const Map *maps[ri.map().size() + 1];
     int len = 0;
 
     for(const auto& m : ri.map()) {
@@ -538,7 +538,9 @@ void MapConnection::Draw() {
             && m.world() == world_
             && m.overworld() == overworld_
             && m.subworld() == subworld_) {
-            names[len++] = m.name().c_str();
+            names[len] = m.name().c_str();
+            maps[len] = &m;
+            len++;
         }
     }
     names[len++] = "Outside";
@@ -552,6 +554,12 @@ void MapConnection::Draw() {
         ImGui::SameLine();
         ImGui::PushItemWidth(100);
         ImGui::Combo(startlabel[i], &data_[i].start, selection);
+        if (data_[i].destination != len-1) {
+            ImGui::SameLine();
+            if (ImGui::Button(buttonlabel[i])) {
+                SimpleMap::New(mapper_, *maps[data_[i].destination]);
+            }
+        }
         ImGui::PopItemWidth();
     }
 }
