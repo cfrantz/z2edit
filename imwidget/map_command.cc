@@ -255,6 +255,8 @@ bool MapHolder::Draw() {
     Address addr = mapper_->ReadAddr(map_.pointer(), 0);
     ImGui::Text("Map pointer at bank=0x%x address=0x%04x",
                 map_.pointer().bank(), map_.pointer().address());
+
+    ImGui::AlignFirstTextHeightToWidgets();
     ImGui::Text("Map address at bank=0x%x address=",
                 addr.bank());
 
