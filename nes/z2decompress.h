@@ -26,7 +26,9 @@ class Z2Decompress {
     }
 
     inline void set_map(int x, int y, uint8_t val) {
-        map_[layer_][y][x] = val;
+        if (x >= 0 && y >= 0 && x < width_ && y < height_) {
+            map_[layer_][y][x] = val;
+        }
     }
     inline bool isbackground(int x, int y, int val) {
         return map(x, y) == 0 || map(x, y) == val;

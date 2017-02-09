@@ -171,7 +171,9 @@ void Z2Decompress::RenderCactus2(int x, int y, uint8_t item,
 void Z2Decompress::RenderItem(int x, int y, uint8_t item,
                               const DecompressInfo* info) {
     if (info->fixed_y()) y = info->fixed_y();
-    items_[y][x] = info->objid(0);
+    if (x >= 0 && y >= 0 && x < width_ && y < height_) {
+        items_[y][x] = info->objid(0);
+    }
 }
 
 std::map<std::string, Z2Decompress::PutFn> Z2Decompress::put_ = {
