@@ -4,8 +4,9 @@
 
 
 ErrorDialog* ErrorDialog::New(const std::string& title,
+                              int buttons,
                               const std::string& message) {
-    ErrorDialog* err = new ErrorDialog(title, message);
+    ErrorDialog* err = new ErrorDialog(title, buttons, message);
     AddDrawCallback([err]() {
         bool vis = err->visible_;
         if (vis) {
@@ -19,6 +20,9 @@ ErrorDialog* ErrorDialog::New(const std::string& title,
 }
 
 void ErrorDialog::Draw() {
+    const char *buttons[] = {
+        "Dismiss", "OK", "Cancel",
+    };
     if (!visible_)
         return;
 
@@ -29,8 +33,19 @@ void ErrorDialog::Draw() {
     if (ImGui::BeginPopupModal(title_.c_str())) {
         ImGui::Text("%s", message_.c_str());
 
-        if (ImGui::Button("Dismiss")) {
+        ImGui::Text("\n");
+        ImGui::Text("\n");
+        for(int i=0; i<MAX_BUTTONS; i++) {
+            ImGui::SameLine();
+            if (buttons_ & (1UL << i)) {
+                if (ImGui::Button(buttons[i])) {
+                    result_ |= (1UL << i);
+                }
+            }
+        }
+        if (result_) {
             ImGui::CloseCurrentPopup();
+            if (result_cb_) result_cb_(result_);
             visible_ = false;
         }
         ImGui::EndPopup();
