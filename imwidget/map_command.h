@@ -111,7 +111,7 @@ class MapConnection {
     MapConnection();
     inline void set_mapper(Mapper* m) { mapper_ = m; }
 
-    void Draw();
+    bool Draw();
     void Parse(const Map& map);
     void Save();
     struct Unpacked {
@@ -143,7 +143,7 @@ class MapEnemyList {
     MapEnemyList(Mapper* m);
     inline void set_mapper(Mapper* m) { mapper_ = m; }
 
-    void Draw();
+    bool Draw();
     void Parse(const Map& map);
     std::vector<uint8_t> Pack();
     void Save();
@@ -171,7 +171,7 @@ class MapItemAvailable {
     MapItemAvailable(Mapper* m) : mapper_(m) {}
     inline void set_mapper(Mapper* m) { mapper_ = m; }
 
-    void Draw();
+    bool Draw();
     void Parse(const Map& map);
     void Save();
     inline const Unpacked& data() { return data_; }

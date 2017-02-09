@@ -28,12 +28,14 @@ class SimpleMap {
   private:
     int id_;
     bool visible_;
+    bool changed_;
     int width_;
     int height_;
     float scale_;
     int mapsel_;
     int tab_;
     std::string title_;
+    std::string window_title_;
     Z2Decompress decomp_;
     MapHolder holder_;
     MapConnection connection_;

@@ -2,6 +2,7 @@
 #define Z2UTIL_IMWIDGET_EDITOR_H
 #include <memory>
 #include <vector>
+#include "imwidget/error_dialog.h"
 #include "imwidget/glbitmap.h"
 #include "imwidget/map_connect.h"
 #include "imwidget/overworld_encounters.h"
@@ -50,6 +51,7 @@ class Editor {
     void HandleEvent(SDL_Event* e);
 
     bool visible_;
+    bool changed_;
     bool show_connections_;
     float scale_;
     stbte_tilemap* editor_;
@@ -67,6 +69,7 @@ class Editor {
     bool mouse_focus_;
     int mapsel_;
     std::vector<SDL_Event> events_;
+    std::unique_ptr<ErrorDialog> error_dialog_;
 };
 
 }  // namespace

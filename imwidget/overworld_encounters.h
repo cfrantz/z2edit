@@ -10,7 +10,7 @@ class OverworldEncounters {
   public:
     OverworldEncounters() : visible_(true) {}
     void Unpack();
-    void Draw();
+    bool Draw();
     void Save();
 
     bool IsEncounter(int area);

@@ -2,7 +2,7 @@
 
 ### Issues found in alpha release
 1. Fix sideview editor crash (fixed?)
-2. Reminder dialogs for "Commit to Rom" (and flag to disable)
+2. Reminder dialogs for "Commit to Rom" (and flag to disable)(done)
 3. Feature to swap sideview areas around (because of the 28 limitation)
 4. Button on sideview connection edtior to open up the destination area. (done)
 5. Add "did you remember to save all of your files?" dialog when you quit
@@ -30,6 +30,12 @@ Done, but still need:
 
 ### Sprite and tiles editor
   * List of sprite equivalents between banks
+
+### Code cleanups
+  * Rename the ::New methods to ::Spawn
+  * Common base class for imwidgets
+  * Get rid of vector of callbacks in imapp in favor of vector<unique_ptr>s.
+  * Clean up imapp.  Bigtime.
 
 # Documentation:
   * Sideview editing flow

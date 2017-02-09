@@ -1,25 +1,33 @@
 #include "imwidget/simplemap.h"
+#include <gflags/gflags.h>
+
 #include "imwidget/imutil.h"
+#include "imwidget/error_dialog.h"
 #include "util/config.h"
 #include "util/strutil.h"
 #include "imapp-util.h"
+
+DECLARE_bool(reminder_dialogs);
 
 namespace z2util {
 
 SimpleMap::SimpleMap()
   : id_(UniqueID()),
     visible_(false),
+    changed_(false),
     scale_(1.0),
     mapsel_(0),
     tab_(0),
-    title_("Sideview Editor") {}
+    title_("Sideview Editor"),
+    window_title_(title_) {}
 
 SimpleMap::SimpleMap(Mapper* m, const Map& map)
   : SimpleMap() {
     set_mapper(m);
     SetMap(map);
     mapsel_ = -1;
-    title_ = StrCat(map.name(), "##", id_);
+    title_ = map.name();
+    window_title_ = StrCat(title_, "##", id_);
 }
 
 SimpleMap* SimpleMap::New(Mapper* m, const Map& map) {
@@ -117,7 +125,9 @@ void SimpleMap::Draw() {
     ImGui::Begin(title_.c_str(), visible());
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size()];
-    int len=0, start=0;;
+    int len=0, start=0;
+    int mapsel = mapsel_;
+
     for(const auto& m : ri.map()) {
         start++;
         if (m.type() == z2util::MapType::OVERWORLD)
@@ -132,7 +142,19 @@ void SimpleMap::Draw() {
 
     ImGui::PushItemWidth(400);
     if (ImGui::Combo("Map", &mapsel_, names, len)) {
-        SetMap(ri.map(start + mapsel_));
+        if (FLAGS_reminder_dialogs && changed_) {
+            ErrorDialog::New("Discard Chagnes", 
+                ErrorDialog::OK | ErrorDialog::CANCEL,
+                "Discard Changes to map?")->set_result_cb([this, mapsel, ri, start](int result) {
+                    if (result == ErrorDialog::OK) {
+                        SetMap(ri.map(start + mapsel_));
+                    } else {
+                        mapsel_ = mapsel;
+                    }
+            });
+        } else {
+            SetMap(ri.map(start + mapsel_));
+        }
     }
     ImGui::PopItemWidth();
 
@@ -143,6 +165,7 @@ void SimpleMap::Draw() {
         connection_.Save();
         enemies_.Save();
         avail_.Save();
+        changed_ = false;
     }
 
     ImGui::SameLine();
@@ -168,17 +191,18 @@ void SimpleMap::Draw() {
 
         if (tab_ == 0) {
             if (holder_.Draw()) {
+                changed_ = true;
                 decomp_.Clear();
                 decomp_.DecompressSideView(holder_.MapDataAbs().data());
                 cache_.Clear();
                 cache_.set_palette(decomp_.palette());
             }
         } else if (tab_ == 1) {
-            connection_.Draw();
+            changed_ |= connection_.Draw();
         } else if (tab_ == 2) {
-            enemies_.Draw();
+            changed_ |= enemies_.Draw();
         } else if (tab_ == 3) {
-            avail_.Draw();
+            changed_ |= avail_.Draw();
         }
     }
     ImGui::End();
@@ -218,6 +242,7 @@ void SimpleMap::SetMap(const z2util::Map& map) {
         enemies_.Parse(map);
         avail_.Parse(map);
     }
+    changed_ = false;
 }
 
 }  // namespace z2util

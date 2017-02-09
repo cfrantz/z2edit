@@ -8,9 +8,9 @@
 #include "util/imgui_impl_sdl.h"
 #include "util/stb_tilemap_editor.h"
 #include "imwidget/imutil.h"
-#include "imwidget/error_dialog.h"
 
 DEFINE_int32(max_map_length, 896, "Maximum compressed map size");
+DECLARE_bool(reminder_dialogs);
 
 #define STBTE_MAX_TILEMAP_X      64
 #define STBTE_MAX_TILEMAP_Y      200
@@ -47,6 +47,7 @@ static Editor* current;
 
 Editor::Editor()
   : visible_(false),
+    changed_(false),
     show_connections_(true),
     scale_(2.0),
     editor_(nullptr),
@@ -106,6 +107,7 @@ void Editor::ConvertFromMap(Map* map) {
     for(int i=0; i<16; i++) {
         stbte_define_tile(editor_, i, 255, "basic");
     }
+    changed_ = false;
 }
 
 std::vector<uint8_t> Editor::CompressMap() {
@@ -171,6 +173,7 @@ void Editor::SaveMap() {
     *(map_->mutable_address()) = addr;
     map_->set_length(data.size());
     encounters_.Save();
+    changed_ = false;
 }
 
 void Editor::Resize(int x0, int y0, int x1, int y1) {
@@ -225,7 +228,19 @@ void Editor::Draw() {
     }
     ImGui::PushItemWidth(400);
     if (ImGui::Combo("Map", &mapsel_, names, len)) {
-        ConvertFromMap(rominfo->mutable_map(mapsel_));
+        if (FLAGS_reminder_dialogs && (changed_ || editor_->undo_len)) {
+            ErrorDialog::New("Discard Changes",
+                ErrorDialog::OK | ErrorDialog::CANCEL,
+                "Discard Changes to map?")->set_result_cb([this, mapsel, rominfo](int result) {
+                    if (result == ErrorDialog::OK) {
+                        ConvertFromMap(rominfo->mutable_map(mapsel_));
+                    } else {
+                        mapsel_ = mapsel;
+                    }
+            });
+        } else {
+            ConvertFromMap(rominfo->mutable_map(mapsel_));
+        }
     }
     ImGui::PopItemWidth();
 
@@ -243,7 +258,7 @@ void Editor::Draw() {
     if (ImGui::Button("Encounters")) {
         ImGui::OpenPopup("Encounters");
     }
-    encounters_.Draw();
+    changed_ |= encounters_.Draw();
 
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {

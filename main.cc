@@ -7,6 +7,7 @@
 
 DEFINE_string(config, "", "ROM info config file");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
+DEFINE_bool(reminder_dialogs, true, "Pop up dialogs for discarding changes");
 
 void GetName(const z2util::RomInfo* config, int world,
              int overworld, int subworld, int id, std::string* name) {

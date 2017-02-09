@@ -511,7 +511,7 @@ void MapConnection::Save() {
     }
 }
 
-void MapConnection::Draw() {
+bool MapConnection::Draw() {
     const char *destlabel[] = {
         "Left Exit ",
         "Down Exit ",
@@ -532,6 +532,7 @@ void MapConnection::Draw() {
     const char *names[ri.map().size() + 1];
     const Map *maps[ri.map().size() + 1];
     int len = 0;
+    bool chg = false;
 
     for(const auto& m : ri.map()) {
         if (m.type() != MapType::OVERWORLD
@@ -549,11 +550,11 @@ void MapConnection::Draw() {
             connector_.bank(), connector_.address());
     for(int i=0; i<4; i++) {
         ImGui::PushItemWidth(400);
-        ImGui::Combo(destlabel[i], &data_[i].destination, names, len);
+        chg |= ImGui::Combo(destlabel[i], &data_[i].destination, names, len);
         ImGui::PopItemWidth();
         ImGui::SameLine();
         ImGui::PushItemWidth(100);
-        ImGui::Combo(startlabel[i], &data_[i].start, selection);
+        chg |= ImGui::Combo(startlabel[i], &data_[i].start, selection);
         if (data_[i].destination != len-1) {
             ImGui::SameLine();
             if (ImGui::Button(buttonlabel[i])) {
@@ -562,6 +563,7 @@ void MapConnection::Draw() {
         }
         ImGui::PopItemWidth();
     }
+    return chg;
 }
 
 MapEnemyList::MapEnemyList(Mapper* m)
@@ -652,9 +654,10 @@ void MapEnemyList::Save() {
     ep.Pack();
 }
 
-void MapEnemyList::Draw() {
+bool MapEnemyList::Draw() {
     const char *names[256];
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    bool chg = false;
 
     for(int i=0; i<256; i++)
         names[i] = "???";
@@ -688,17 +691,18 @@ void MapEnemyList::Draw() {
     for(auto it=data_.begin(); it<data_.end(); ++it, ++i) {
         ImGui::PushID(i | (is_large_ << 8));
         ImGui::PushItemWidth(100);
-        ImGui::InputInt("x position", &it->x);
+        chg |= ImGui::InputInt("x position", &it->x);
         ImGui::SameLine();
-        ImGui::InputInt("y position", &it->y);
+        chg |= ImGui::InputInt("y position", &it->y);
         ImGui::SameLine();
         ImGui::PopItemWidth();
         ImGui::PushItemWidth(400);
-        ImGui::Combo("enemy", &it->enemy, names, n);
+        chg |= ImGui::Combo("enemy", &it->enemy, names, n);
         ImGui::PopItemWidth();
 
         ImGui::SameLine();
         if (ImGui::Button(ICON_FA_TIMES_CIRCLE)) {
+            chg = true;
             data_.erase(it);
         }
         if (ImGui::IsItemHovered())
@@ -706,6 +710,7 @@ void MapEnemyList::Draw() {
         ImGui::PopID();
     }
     if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
+        chg = true;
         data_.emplace_back(0, 0, 0);
     }
     if (ImGui::IsItemHovered())
@@ -713,8 +718,9 @@ void MapEnemyList::Draw() {
 
     if (large_) {
         ImGui::Separator();
-        large_->Draw();
+        chg |= large_->Draw();
     }
+    return chg;
 }
 
 const std::vector<MapEnemyList::Unpacked>& MapEnemyList::data() {
@@ -738,9 +744,7 @@ void MapItemAvailable::Parse(const Map& map) {
     for(int i=0; i<4; i++) {
         int bit = 7 - (i + 4 * (area_ & 1));
         data_.avail[i] = !!(a & (1 << bit));
-
     }
-
 }
 
 void MapItemAvailable::Save() {
@@ -753,7 +757,8 @@ void MapItemAvailable::Save() {
     mapper_->Write(avail_.address(), area_ / 2, a);
 }
 
-void MapItemAvailable::Draw() {
+bool MapItemAvailable::Draw() {
+    bool chg;
     const char* names[] = {
         "Screen 1",
         "Screen 2",
@@ -761,8 +766,9 @@ void MapItemAvailable::Draw() {
         "Screen 4",
     };
     for(int i=0; i<4; i++) {
-        ImGui::Checkbox(names[i], &data_.avail[i]);
+        chg |= ImGui::Checkbox(names[i], &data_.avail[i]);
     }
+    return chg;
 }
 
 }  // namespace z2util
