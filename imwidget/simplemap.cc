@@ -122,7 +122,7 @@ void SimpleMap::Draw() {
         return;
 
     ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiSetCond_FirstUseEver);
-    ImGui::Begin(title_.c_str(), visible());
+    ImGui::Begin(window_title_.c_str(), visible());
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size()];
     int len=0, start=0;
@@ -183,19 +183,18 @@ void SimpleMap::Draw() {
     ImGui::EndChild();
 
     if (map_.type() != z2util::MapType::OVERWORLD) {
+        bool want_redraw = false;
         ImGui::RadioButton("Map Commands", &tab_, 0); ImGui::SameLine();
         ImGui::RadioButton("Connections", &tab_, 1); ImGui::SameLine();
         ImGui::RadioButton("Enemy List", &tab_, 2); ImGui::SameLine();
-        ImGui::RadioButton("Item Availability", &tab_, 3);
+        ImGui::RadioButton("Item Availability", &tab_, 3); ImGui::SameLine();
+        ImGui::RadioButton("Swap", &tab_, 4);
         ImGui::Separator();
 
         if (tab_ == 0) {
             if (holder_.Draw()) {
                 changed_ = true;
-                decomp_.Clear();
-                decomp_.DecompressSideView(holder_.MapDataAbs().data());
-                cache_.Clear();
-                cache_.set_palette(decomp_.palette());
+                want_redraw = true;
             }
         } else if (tab_ == 1) {
             changed_ |= connection_.Draw();
@@ -203,6 +202,16 @@ void SimpleMap::Draw() {
             changed_ |= enemies_.Draw();
         } else if (tab_ == 3) {
             changed_ |= avail_.Draw();
+        } else if (tab_ == 4) {
+            if (swapper_.Draw()) {
+                SetMap(map_);
+            }
+        }
+        if (want_redraw) {
+            decomp_.Clear();
+            decomp_.DecompressSideView(holder_.MapDataAbs().data());
+            cache_.Clear();
+            cache_.set_palette(decomp_.palette());
         }
     }
     ImGui::End();
@@ -234,6 +243,7 @@ void SimpleMap::SetMap(const z2util::Map& map) {
     holder_.set_mapper(mapper_);
     enemies_.set_mapper(mapper_);
     avail_.set_mapper(mapper_);
+    swapper_.set_mapper(mapper_);
     if (map_.type() != MapType::OVERWORLD) {
         cache_.set_palette(decomp_.palette());
         holder_.Parse(map);
@@ -241,6 +251,7 @@ void SimpleMap::SetMap(const z2util::Map& map) {
         connection_.Parse(map);
         enemies_.Parse(map);
         avail_.Parse(map);
+        swapper_.set_map(map);
     }
     changed_ = false;
 }
