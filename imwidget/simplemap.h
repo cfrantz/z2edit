@@ -41,6 +41,7 @@ class SimpleMap {
     MapConnection connection_;
     MapEnemyList enemies_;
     MapItemAvailable avail_;
+    MapSwapper swapper_;
 
     Mapper* mapper_;
 

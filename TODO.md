@@ -1,14 +1,10 @@
 # TODO List
 
-### Issues found in alpha release
-1. Fix sideview editor crash (fixed?)
-2. Reminder dialogs for "Commit to Rom" (and flag to disable)(done)
-3. Feature to swap sideview areas around (because of the 28 limitation)
-4. Button on sideview connection edtior to open up the destination area. (done)
-5. Add "did you remember to save all of your files?" dialog when you quit
+### Issues found in alpha-1 release
+1. Add "did you remember to save all of your files?" dialog when you quit
    with unsaved changes
-6. Enemy level editor wanted
-7. Move palaces between contitnents
+1. Enemy level editor wanted
+1. Move palaces between contitnents
 
 ### Add config which describes how to render towns
 Done, but still need:
@@ -49,6 +45,12 @@ Done, but still need:
     * Create a vanilla ROM which fixes all sideview exit oddities.
 
 # Done
+
+### Issues found in alpha release
+1. Fix sideview editor crash (fixed?)
+1. Reminder dialogs for "Commit to Rom" (and flag to disable)(done)
+1. Feature to swap sideview areas around (because of the 28 limitation)(done)
+1. Button on sideview connection edtior to open up the destination area. (done)
 
 ### Create a target for Windows (build for Windows from Linux)
   1. One-time setup:
