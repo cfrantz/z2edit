@@ -1,8 +1,11 @@
 package(default_visibility=["//visibility:public"])
 
 cc_library(
-    name = "imutil",
-    hdrs = ["imutil.h"],
+    name = "base",
+    hdrs = [
+        "imutil.h",
+        "imwidget.h",
+    ],
     srcs = ["imutil.cc"],
     deps = [
         "//external:imgui",
@@ -14,6 +17,7 @@ cc_library(
     hdrs = ["debug_console.h"],
     srcs = ["debug_console.cc"],
     deps = [
+        ":base",
         "//util:logging",
         "//external:imgui",
     ],
@@ -24,6 +28,7 @@ cc_library(
     hdrs = ["error_dialog.h"],
     srcs = ["error_dialog.cc"],
     deps = [
+        ":base",
         "//:imapp-util",
         "//util:string",
         "//external:imgui",
@@ -44,6 +49,7 @@ cc_library(
     hdrs = ["hwpalette.h"],
     srcs = ["hwpalette.cc"],
     deps = [
+        ":base",
         "//external:imgui",
     ],
 )
@@ -53,6 +59,7 @@ cc_library(
     hdrs = ["neschrview.h"],
     srcs = ["neschrview.cc"],
     deps = [
+        ":base",
         ":glbitmap",
         "//nes:mappers",
         "//external:imgui",
@@ -73,13 +80,13 @@ cc_library(
     hdrs = ["editor.h"],
     srcs = ["editor.cc"],
     deps = [
-        "//:imapp-util",
-        ":imutil",
+        ":base",
         ":error_dialog",
         ":glbitmap",
         ":hwpalette",
         ":map_connect",
         ":overworld_encounters",
+        "//:imapp-util",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
@@ -103,7 +110,7 @@ cc_library(
         "map_command.cc",
     ],
     deps = [
-        ":imutil",
+        ":base",
         ":error_dialog",
         ":glbitmap",
         ":hwpalette",
@@ -125,6 +132,7 @@ cc_library(
     hdrs = ["multimap.h"],
     srcs = ["multimap.cc"],
     deps = [
+        ":base",
         ":glbitmap",
         ":simplemap",
         "//alg:fdg",
@@ -144,7 +152,7 @@ cc_library(
     hdrs = ["map_connect.h"],
     srcs = ["map_connect.cc"],
     deps = [
-        ":imutil",
+        ":base",
         ":multimap",
         "//nes:mappers",
         "//proto:rominfo",
@@ -157,6 +165,7 @@ cc_library(
     hdrs = ["misc_hacks.h"],
     srcs = ["misc_hacks.cc"],
     deps = [
+        ":base",
         "//nes:mappers",
         "//external:imgui",
     ],
@@ -178,6 +187,7 @@ cc_library(
     hdrs = ["start_values.h"],
     srcs = ["start_values.cc"],
     deps = [
+        ":base",
         "//nes:mappers",
         "//util:config",
         "//external:imgui",
@@ -189,8 +199,8 @@ cc_library(
     hdrs = ["object_table.h"],
     srcs = ["object_table.cc"],
     deps = [
+        ":base",
         ":hwpalette",
-        ":imutil",
         "//nes:mappers",
         "//nes:z2objcache",
         "//proto:rominfo",

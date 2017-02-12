@@ -6,11 +6,11 @@
 
 namespace z2util {
 
-void MiscellaneousHacks::Draw() {
+bool MiscellaneousHacks::Draw() {
     if (!visible_)
-        return;
+        return false;
 
-    ImGui::Begin("Miscellaneous Hacks", visible());
+    ImGui::Begin("Miscellaneous Hacks", &visible_);
 
     // At bank=0, offset $71d is near the end of the subroutine which determines
     // where Link can walk on the overworld:
@@ -37,6 +37,7 @@ void MiscellaneousHacks::Draw() {
     }
 
     ImGui::End();
+    return false;
 }
 
 }  // namespace

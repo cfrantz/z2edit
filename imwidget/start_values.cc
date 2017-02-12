@@ -6,7 +6,7 @@
 namespace z2util {
 
 StartValues::StartValues()
-  : visible_(false)
+  : ImWindowBase(false)
 {}
 
 void StartValues::Unpack() {
@@ -81,9 +81,9 @@ void StartValues::Pack() {
     mapper_->Write(addr, 0, data_.lives);
 }
 
-void StartValues::Draw() {
+bool StartValues::Draw() {
     if (!visible_)
-        return;
+        return false;
 
     Unpack();
     ImGui::Begin("Start Values", &visible_);
@@ -131,6 +131,7 @@ void StartValues::Draw() {
     ImGui::Columns(1);
     ImGui::End();
     Pack();
+    return false;
 }
 
 }  // namespace z2util

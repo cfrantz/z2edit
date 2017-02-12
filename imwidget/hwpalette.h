@@ -2,17 +2,16 @@
 #define Z2UTIL_IMWIDGET_HWPALETTE_H
 #include <cstdint>
 #include "imgui.h"
+#include "imwidget/imwidget.h"
 
-class NesHardwarePalette {
+class NesHardwarePalette: public ImWindowBase {
   public:
     static NesHardwarePalette* Get();
-    NesHardwarePalette() : visible_(false) { Init(); }
+    NesHardwarePalette() : ImWindowBase(false) { Init(); }
     void Init();
-    void Draw();
+    bool Draw() override;
     inline uint32_t palette(int color) const { return palette_[color]; }
-    inline bool* visible() { return &visible_; }
   private:
-    bool visible_;
     uint32_t palette_[64];
     ImColor fpal_[64];
     char label_[64][16];

@@ -3,7 +3,7 @@
 #include "imgui.h"
 
 NesChrView::NesChrView()
-  : visible_(false),
+  : ImWindowBase(false),
   bank_(0) {
     bitmap.reset(new GLBitmap(128, 128));
 }
@@ -42,13 +42,13 @@ void NesChrView::MakeLabels() {
     ImGui::Combo("Bank", &bank_, lptrs, nr_labels_);
 }
 
-void NesChrView::Draw() {
+bool NesChrView::Draw() {
     if (!visible_)
-        return;
+        return false;
 
     RenderChr();
 
-    ImGui::Begin("CHR Data", visible());
+    ImGui::Begin("CHR Data", &visible_);
     MakeLabels();
 
     // Render the labels on the vertical axis
@@ -79,5 +79,5 @@ void NesChrView::Draw() {
     ImGui::EndGroup();
 
     ImGui::End();
-
+    return false;
 }

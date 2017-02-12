@@ -2,6 +2,7 @@
 #define Z2UTIL_IMWIDGET_SIMPLEMAP_H
 #include <string>
 #include "imwidget/glbitmap.h"
+#include "imwidget/imwidget.h"
 #include "imwidget/map_command.h"
 #include "nes/mapper.h"
 #include "nes/z2decompress.h"
@@ -12,22 +13,19 @@
 
 namespace z2util {
 
-class SimpleMap {
+class SimpleMap: public ImWindowBase {
   public:
-    static SimpleMap* New(Mapper* m, const Map& map);
+    static SimpleMap* Spawn(Mapper* m, const Map& map);
     SimpleMap();
     SimpleMap(Mapper* m, const Map& map);
     void set_mapper(Mapper* m) { mapper_ = m; decomp_.set_mapper(m); }
-    void Draw();
+    bool Draw() override;
     void DrawMap(const ImVec2& pos);
     void SetMap(const Map& map);
-    inline bool* visible() { return &visible_; }
     inline const std::string& name() const { return decomp_.name(); }
     void RenderToBuffer(GLBitmap *buffer);
     std::unique_ptr<GLBitmap> RenderToNewBuffer();
   private:
-    int id_;
-    bool visible_;
     bool changed_;
     int width_;
     int height_;

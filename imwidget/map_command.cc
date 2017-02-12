@@ -450,7 +450,7 @@ void MapHolder::Save() {
         return;
     }
     if (addr_changed_ && data_changed_) {
-        ErrorDialog::New("Unexpected Change When Saving Map",
+        ErrorDialog::Spawn("Unexpected Change When Saving Map",
             "Both the map data and map address have been changed.\n"
             "Allocating a new address and saving data.\n");
     }
@@ -462,7 +462,7 @@ void MapHolder::Save() {
     addr.set_address(0);
     addr = mapper_->Alloc(addr, data.size());
     if (addr.address() == 0) {
-        ErrorDialog::New("Error Saving Map",
+        ErrorDialog::Spawn("Error Saving Map",
             "Can't save map: ", map_.name(), "\n\n"
             "Can't find ", data.size(), " free bytes in bank ", addr.bank());
         LOG(ERROR, "Can't save map: can't find ", data.size(), "bytes"
@@ -558,7 +558,7 @@ bool MapConnection::Draw() {
         if (data_[i].destination != len-1) {
             ImGui::SameLine();
             if (ImGui::Button(buttonlabel[i])) {
-                SimpleMap::New(mapper_, *maps[data_[i].destination]);
+                SimpleMap::Spawn(mapper_, *maps[data_[i].destination]);
             }
         }
         ImGui::PopItemWidth();

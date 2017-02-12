@@ -2,33 +2,33 @@
 #define Z2UTIL_IMWIDGET_ERROR_DIALOG_H
 #include <string>
 #include <functional>
+#include "imwidget/imwidget.h"
 
 #include "util/strutil.h"
 
-class ErrorDialog {
+class ErrorDialog: public ImWindowBase {
   public:
-    static ErrorDialog* New(const std::string& title, int buttons,
-                            const std::string& message);
+    static ErrorDialog* Spawn(const std::string& title, int buttons,
+                              const std::string& message);
 
     template<typename ...Args>
-    static ErrorDialog* New(const std::string& title,
-                            const std::string& message, Args ...args) {
-        return New(title, DISMISS, StrCat(message, args...));
+    static ErrorDialog* Spawn(const std::string& title,
+                              const std::string& message, Args ...args) {
+        return Spawn(title, DISMISS, StrCat(message, args...));
     }
 
     template<typename ...Args>
-    static ErrorDialog* New(const std::string& title, int buttons,
-                            const std::string& message, Args ...args) {
-        return New(title, buttons, StrCat(message, args...));
+    static ErrorDialog* Spawn(const std::string& title, int buttons,
+                              const std::string& message, Args ...args) {
+        return Spawn(title, buttons, StrCat(message, args...));
     }
 
     ErrorDialog(const std::string& title, int buttons,
                 const std::string& message)
-        : visible_(true), popup_(false), buttons_(buttons), result_(0),
+        : ImWindowBase(), popup_(false), buttons_(buttons), result_(0),
           title_(title), message_(message) {}
 
-    void Draw();
-    inline bool* visible() { return &visible_; }
+    bool Draw() override;
     inline int result() const { return result_; }
     inline void set_result_cb(std::function<void(int)> result_cb) {
         result_cb_ = result_cb;

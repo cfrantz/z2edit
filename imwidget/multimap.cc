@@ -16,8 +16,8 @@ float MultiMap::xs_ = 0.40;
 float MultiMap::ys_ = 0.75;
 bool MultiMap::preconverge_ = true;
 
-MultiMap* MultiMap::New(Mapper* m, int world, int overworld, int subworld,
-                        int map) {
+MultiMap* MultiMap::Spawn(Mapper* m, int world, int overworld, int subworld,
+                          int map) {
     MultiMap* mm = new MultiMap(m, world, overworld, subworld, map);
     mm->Init();
     AddDrawCallback([mm]() {
@@ -194,7 +194,7 @@ void MultiMap::DrawOne(const DrawLocation& dl) {
     Vec2 button_height(0, 24);
     ImGui::SetCursorPos(pos);
     if (ImGui::Button(maps_[dl.node->id()].name().c_str())) {
-        SimpleMap::New(mapper_, maps_[map]);
+        SimpleMap::Spawn(mapper_, maps_[map]);
     }
     pos += button_height;
     ImGui::SetCursorPos(pos);
@@ -239,9 +239,9 @@ void MultiMap::DrawLegend() {
     }
 }
 
-void MultiMap::Draw() {
+bool MultiMap::Draw() {
     if (!visible_)
-        return;
+        return false;
 
     drag_ = false;
     ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiSetCond_FirstUseEver);
@@ -302,6 +302,7 @@ void MultiMap::Draw() {
     ImGui::End();
     if (!(drag_ && pauseconv_))
         graph_.Compute(1.0/60.0);
+    return false;
 }
 
 }  // namespace z2util

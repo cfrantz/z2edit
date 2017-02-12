@@ -4,6 +4,7 @@
 #include <vector>
 #include "imwidget/error_dialog.h"
 #include "imwidget/glbitmap.h"
+#include "imwidget/imwidget.h"
 #include "imwidget/map_connect.h"
 #include "imwidget/overworld_encounters.h"
 #include "nes/z2objcache.h"
@@ -19,7 +20,7 @@ class NesHardwarePalette;
 namespace z2util {
 class Map;
 
-class Editor {
+class Editor: public ImWindowBase {
   public:
     static Editor* Get();
     static Editor* New();
@@ -30,10 +31,9 @@ class Editor {
     void SaveMap();
 
     void ProcessEvent(SDL_Event* e);
-    void Draw();
+    bool Draw() override;
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
-    inline bool* visible() { return &visible_; }
 
     void DrawTile(int x, int y, uint16_t tile, int mode, float* props);
     void DrawRect(int x0, int y0, int x1, int y1, uint32_t color);
@@ -50,7 +50,6 @@ class Editor {
   private:
     void HandleEvent(SDL_Event* e);
 
-    bool visible_;
     bool changed_;
     bool show_connections_;
     float scale_;

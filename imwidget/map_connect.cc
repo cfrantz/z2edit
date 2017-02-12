@@ -69,11 +69,11 @@ void OverworldConnector::Draw() {
     Read();
     if (ImGui::Button("View Area")) {
         if (dest_world_ == 0 && dest_overworld_ == 0) {
-            MultiMap::New(mapper_,
-                          dest_world_, overworld_, subworld_, map_);
+            MultiMap::Spawn(mapper_,
+                            dest_world_, overworld_, subworld_, map_);
         } else {
-            MultiMap::New(mapper_,
-                          dest_world_, 0, 0, map_);
+            MultiMap::Spawn(mapper_,
+                            dest_world_, 0, 0, map_);
         }
     }
 
@@ -128,11 +128,11 @@ void OverworldConnector::DrawInPopup() {
     Read();
     if (ImGui::Button("View Area")) {
         if (dest_world_ == 0 && dest_overworld_ == 0) {
-            MultiMap::New(mapper_,
-                          dest_world_, overworld_, subworld_, map_);
+            MultiMap::Spawn(mapper_,
+                            dest_world_, overworld_, subworld_, map_);
         } else {
-            MultiMap::New(mapper_,
-                          dest_world_, 0, 0, map_);
+            MultiMap::Spawn(mapper_,
+                            dest_world_, 0, 0, map_);
         }
     }
 

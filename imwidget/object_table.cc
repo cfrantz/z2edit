@@ -4,7 +4,7 @@
 namespace z2util {
 
 ObjectTable::ObjectTable()
-  : visible_(false),
+  : ImWindowBase(false),
     scale_(1.0)
 {}
 
@@ -21,9 +21,9 @@ void ObjectTable::Init() {
     cache_.set_palette(ipal);
 }
 
-void ObjectTable::Draw() {
+bool ObjectTable::Draw() {
     if (!visible_)
-        return;
+        return false;
 
     int chr = chr_.bank();
     int tableb = table_.bank();
@@ -32,7 +32,7 @@ void ObjectTable::Draw() {
     char abuf[8];
     sprintf(abuf, "%04x", tablea);
 
-    ImGui::Begin("Object Table", visible());
+    ImGui::Begin("Object Table", &visible_);
     ImGui::PushItemWidth(150);
     init_cache |= ImGui::InputInt("CHR", &chr);
 
@@ -64,6 +64,7 @@ void ObjectTable::Draw() {
     }
     ImGui::PopItemWidth();
     ImGui::End();
+    return false;
 }
 
 }  // namespace z2util

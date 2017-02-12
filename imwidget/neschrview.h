@@ -5,18 +5,17 @@
 
 #include "nes/mapper.h"
 #include "imwidget/glbitmap.h"
+#include "imwidget/imwidget.h"
 
-class NesChrView {
+class NesChrView: public ImWindowBase {
   public:
     NesChrView();
 
     void RenderChr();
     void MakeLabels();
-    void Draw();
-    inline bool* visible() { return &visible_; }
+    bool Draw();
     inline void set_mapper(Mapper* mapper) { mapper_ = mapper; }
   private:
-    bool visible_;
     Mapper* mapper_;
     int bank_;
     std::unique_ptr<GLBitmap> bitmap;

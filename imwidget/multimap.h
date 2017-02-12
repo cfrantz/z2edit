@@ -7,6 +7,7 @@
 #include "alg/fdg.h"
 #include "imwidget/glbitmap.h"
 #include "imwidget/imutil.h"
+#include "imwidget/imwidget.h"
 #include "nes/mapper.h"
 #include "nes/z2decompress.h"
 #include "nes/z2objcache.h"
@@ -15,10 +16,10 @@
 
 namespace z2util {
 
-class MultiMap {
+class MultiMap: public ImWindowBase {
   public:
-    static MultiMap* New(Mapper* m,
-                         int world, int overworld, int subworld,int map);
+    static MultiMap* Spawn(Mapper* m,
+                           int world, int overworld, int subworld,int map);
 
     MultiMap(Mapper* mapper, int world, int overworld, int subworld, int map)
         : id_(UniqueID()), mapper_(mapper), visible_(true), scale_(0.25),
@@ -26,8 +27,7 @@ class MultiMap {
         start_(map), pauseconv_(true) {};
 
     void Init();
-    void Draw();
-    bool* visible() { return &visible_; }
+    bool Draw() override;
   private:
     struct DrawLocation {
         fdg::Node *node;

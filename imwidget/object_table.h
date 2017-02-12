@@ -1,22 +1,21 @@
 #ifndef Z2UTIL_IMWIDGET_OBJECT_TABLE_H
 #define Z2UTIL_IMWIDGET_OBJECT_TABLE_H
 
+#include "imwidget/imwidget.h"
 #include "nes/mapper.h"
 #include "nes/z2objcache.h"
 #include "proto/rominfo.pb.h"
 
 namespace z2util {
 
-class ObjectTable {
+class ObjectTable: public ImWindowBase {
   public:
     ObjectTable();
     void Init();
-    void Draw();
+    bool Draw() override;
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
-    inline bool* visible() { return &visible_; }
   private:
-    bool visible_;
     float scale_;
     Mapper* mapper_;
 

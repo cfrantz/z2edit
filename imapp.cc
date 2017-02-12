@@ -558,24 +558,24 @@ save_as:
         }
         if (ImGui::BeginMenu("Edit")) {
             ImGui::MenuItem("Debug Console", nullptr,
-                            console_.visible());
+                            &console_.visible());
             ImGui::MenuItem("Overworld Editor", nullptr,
-                            editor_->visible());
+                            &editor_->visible());
             ImGui::MenuItem("Sideview Editor", nullptr,
-                            simplemap_->visible());
+                            &simplemap_->visible());
             ImGui::MenuItem("Miscellaneous Hacks", nullptr,
-                            misc_hacks_->visible());
+                            &misc_hacks_->visible());
             ImGui::MenuItem("Start Values", nullptr,
-                            start_values_->visible());
+                            &start_values_->visible());
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Hardware Palette", nullptr,
-                            hwpal_->visible());
+                            &hwpal_->visible());
             ImGui::MenuItem("CHR Viewer", nullptr,
-                            chrview_->visible());
+                            &chrview_->visible());
             ImGui::MenuItem("Object Table", nullptr,
-                            object_table_->visible());
+                            &object_table_->visible());
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Help")) {

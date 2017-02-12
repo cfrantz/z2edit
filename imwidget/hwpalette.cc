@@ -39,12 +39,12 @@ void NesHardwarePalette::Init() {
     }
 }
 
-void NesHardwarePalette::Draw() {
+bool NesHardwarePalette::Draw() {
     int x, y, i;
     if (!visible_)
-        return;
+        return false;
 
-    ImGui::Begin("Hardware Palette", visible());
+    ImGui::Begin("Hardware Palette", &visible_);
     ImGui::Text("Right click to edit colors.");
     for(x=0; x<16; x++) {
         if (x) ImGui::SameLine();
@@ -69,4 +69,5 @@ void NesHardwarePalette::Draw() {
         ImGui::EndGroup();
     }
     ImGui::End();
+    return false;
 }

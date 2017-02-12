@@ -3,7 +3,9 @@
 #include "imwidget/debug_console.h"
 #include "util/logging.h"
 
-DebugConsole::DebugConsole(const char* name) : name_(name), visible_(false) {
+DebugConsole::DebugConsole(const char* name)
+  : ImWindowBase(false, false),
+    name_(name) {
     ClearLog();
     memset(inputbuf_, 0, sizeof(inputbuf_));
     history_pos_ = -1;
@@ -44,14 +46,14 @@ void  DebugConsole::AddLog(const char* fmt, ...) {
     scroll_to_bottom_ = true;
 }
 
-void  DebugConsole::Draw() {
+bool DebugConsole::Draw() {
     if (!visible_)
-        return;
+        return false;
 
     ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiSetCond_FirstUseEver);
     if (!ImGui::Begin(name_, &visible_)) {
         ImGui::End();
-        return;
+        return false;
     }
 
     ImGui::TextWrapped("Enter 'HELP' for help, press TAB to use text completion.");
@@ -135,6 +137,7 @@ void  DebugConsole::Draw() {
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 
     ImGui::End();
+    return false;
 }
 
 void  DebugConsole::ExecCommand(const char* command_line) {

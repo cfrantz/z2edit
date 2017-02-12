@@ -1,20 +1,19 @@
 #ifndef Z2UTIL_IMWIDGET_STARTUP_H
 #define Z2UTIL_IMWIDGET_STARTUP_H
 #include "nes/mapper.h"
+#include "imwidget/imwidget.h"
 
 namespace z2util {
 
-class StartValues {
+class StartValues: public ImWindowBase {
   public:
     StartValues();
-    void Draw();
+    bool Draw() override;
 
-    inline bool* visible() { return &visible_; }
     inline void set_mapper(Mapper* m) { mapper_ = m; }
   private:
     void Unpack();
     void Pack();
-    bool visible_;
     Mapper* mapper_;
 
     struct Unpacked {

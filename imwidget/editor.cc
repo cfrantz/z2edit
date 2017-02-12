@@ -46,7 +46,7 @@ namespace z2util {
 static Editor* current;
 
 Editor::Editor()
-  : visible_(false),
+  : ImWindowBase(false),
     changed_(false),
     show_connections_(true),
     scale_(2.0),
@@ -55,7 +55,7 @@ Editor::Editor()
     mouse_origin_(0, 0),
     mouse_focus_(false),
     mapsel_(0)
-{ }
+{}
 
 Editor* Editor::Get() {
     return current;
@@ -137,7 +137,7 @@ void Editor::SaveMap() {
         return;
     }
     if (data.size() > size_t(FLAGS_max_map_length)) {
-        ErrorDialog::New("Overworld Save Error",
+        ErrorDialog::Spawn("Overworld Save Error",
             "Can't save ", map_->name(), " because it is ", data.size(),
             " bytes\n\n"
             "Overworld maps must be smaller than", FLAGS_max_map_length,
@@ -152,7 +152,7 @@ void Editor::SaveMap() {
     addr.set_address(0);
     addr = mapper_->Alloc(addr, data.size());
     if (addr.address() == 0) {
-        ErrorDialog::New("Overworld Save Error",
+        ErrorDialog::Spawn("Overworld Save Error",
             "Can't allocate free space for ", map_->name(), ".\n");
         LOG(ERROR, "Can't save map: can't find ", data.size(), " bytes"
                    " in bank=", addr.bank());
@@ -211,14 +211,14 @@ void Editor::DrawTile(int x, int y, uint16_t tile, int mode, float* props) {
     ImGui::SetCursorPos(origin_);
 }
 
-void Editor::Draw() {
+bool Editor::Draw() {
     const char *names[256];
     int len=0, mapsel = mapsel_;
     if (!visible_)
-        return;
+        return changed_;
 
     ImGui::SetNextWindowSize(ImVec2(1100, 700), ImGuiSetCond_FirstUseEver);
-    ImGui::Begin("Map Editor", visible());
+    ImGui::Begin("Map Editor", &visible_);
 
     auto* rominfo = ConfigLoader<RomInfo>::MutableConfig();
     for(const auto& m : rominfo->map()) {
@@ -229,7 +229,7 @@ void Editor::Draw() {
     ImGui::PushItemWidth(400);
     if (ImGui::Combo("Map", &mapsel_, names, len)) {
         if (FLAGS_reminder_dialogs && (changed_ || editor_->undo_len)) {
-            ErrorDialog::New("Discard Changes",
+            ErrorDialog::Spawn("Discard Changes",
                 ErrorDialog::OK | ErrorDialog::CANCEL,
                 "Discard Changes to map?")->set_result_cb([this, mapsel, rominfo](int result) {
                     if (result == ErrorDialog::OK) {
@@ -295,6 +295,7 @@ void Editor::Draw() {
     events_.clear();
 
     ImGui::End();
+    return changed_;
 }
 
 void Editor::ProcessEvent(SDL_Event* e) {

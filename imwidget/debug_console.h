@@ -3,14 +3,15 @@
 #include <string>
 #include <map>
 #include <functional>
+#include "imwidget/imwidget.h"
 #include "imgui.h"
 
 
-class DebugConsole {
+class DebugConsole: public ImWindowBase {
   public:
     DebugConsole(const char* name);
     DebugConsole(): DebugConsole("DebugConsole") {}
-    ~DebugConsole();
+    ~DebugConsole() override;
 
     void RegisterCommand(const char* cmd, const char* shorthelp,
                          std::function<void(DebugConsole* console,
@@ -28,8 +29,7 @@ class DebugConsole {
 
     void ClearLog();
     void AddLog(const char* fmt, ...) IM_PRINTFARGS(2);
-    void Draw();
-    inline bool* visible() { return &visible_; }
+    bool Draw() override;
   private:
     void ExecCommand(const char* command_line);
     int TextEditCallback(ImGuiTextEditCallbackData* data);
@@ -37,7 +37,6 @@ class DebugConsole {
     static int TextEditCallbackStub(ImGuiTextEditCallbackData* data);
 
     const char* name_;
-    bool visible_;
     char inputbuf_[256];
     ImVector<char*> items_;
     bool scroll_to_bottom_;

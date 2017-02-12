@@ -12,8 +12,7 @@ DECLARE_bool(reminder_dialogs);
 namespace z2util {
 
 SimpleMap::SimpleMap()
-  : id_(UniqueID()),
-    visible_(false),
+  : ImWindowBase(false),
     changed_(false),
     scale_(1.0),
     mapsel_(0),
@@ -30,7 +29,7 @@ SimpleMap::SimpleMap(Mapper* m, const Map& map)
     window_title_ = StrCat(title_, "##", id_);
 }
 
-SimpleMap* SimpleMap::New(Mapper* m, const Map& map) {
+SimpleMap* SimpleMap::Spawn(Mapper* m, const Map& map) {
     SimpleMap *sm = new SimpleMap(m, map);
     sm->visible_ = true;
     AddDrawCallback([sm]() {
@@ -117,12 +116,12 @@ std::unique_ptr<GLBitmap> SimpleMap::RenderToNewBuffer() {
 }
 
 
-void SimpleMap::Draw() {
+bool SimpleMap::Draw() {
     if (!visible_)
-        return;
+        return changed_;
 
     ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiSetCond_FirstUseEver);
-    ImGui::Begin(window_title_.c_str(), visible());
+    ImGui::Begin(window_title_.c_str(), &visible_);
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size()];
     int len=0, start=0;
@@ -143,7 +142,7 @@ void SimpleMap::Draw() {
     ImGui::PushItemWidth(400);
     if (ImGui::Combo("Map", &mapsel_, names, len)) {
         if (FLAGS_reminder_dialogs && changed_) {
-            ErrorDialog::New("Discard Chagnes", 
+            ErrorDialog::Spawn("Discard Chagnes", 
                 ErrorDialog::OK | ErrorDialog::CANCEL,
                 "Discard Changes to map?")->set_result_cb([this, mapsel, ri, start](int result) {
                     if (result == ErrorDialog::OK) {
@@ -215,6 +214,7 @@ void SimpleMap::Draw() {
         }
     }
     ImGui::End();
+    return changed_;
 }
 
 void SimpleMap::SetMap(const z2util::Map& map) {

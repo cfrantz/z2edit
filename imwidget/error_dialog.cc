@@ -3,9 +3,9 @@
 #include "imapp-util.h"
 
 
-ErrorDialog* ErrorDialog::New(const std::string& title,
-                              int buttons,
-                              const std::string& message) {
+ErrorDialog* ErrorDialog::Spawn(const std::string& title,
+                                int buttons,
+                                const std::string& message) {
     ErrorDialog* err = new ErrorDialog(title, buttons, message);
     AddDrawCallback([err]() {
         bool vis = err->visible_;
@@ -19,12 +19,12 @@ ErrorDialog* ErrorDialog::New(const std::string& title,
     return err;
 }
 
-void ErrorDialog::Draw() {
+bool ErrorDialog::Draw() {
     const char *buttons[] = {
         "Dismiss", "OK", "Cancel",
     };
     if (!visible_)
-        return;
+        return false;
 
     if (!popup_) {
         ImGui::OpenPopup(title_.c_str());
@@ -50,4 +50,5 @@ void ErrorDialog::Draw() {
         }
         ImGui::EndPopup();
     }
+    return false;
 }
