@@ -65,67 +65,8 @@ void OverworldConnector::Write() {
     mapper_->Write(address_, offset_ + 0xbd, w);
 }
 
-void OverworldConnector::Draw() {
-    Read();
-    if (ImGui::Button("View Area")) {
-        if (dest_world_ == 0 && dest_overworld_ == 0) {
-            MultiMap::Spawn(mapper_,
-                            dest_world_, overworld_, subworld_, map_);
-        } else {
-            MultiMap::Spawn(mapper_,
-                            dest_world_, 0, 0, map_);
-        }
-    }
-
-    ImGui::PushID(offset_);
-    ImGui::Text("%02d: ", offset_);
-
-    ImGui::PushItemWidth(100);
-    ImGui::SameLine();
-    ImGui::InputInt("xpos", &x_);
-
-    ImGui::SameLine();
-    ImGui::InputInt("ypos", &y_);
-
-    ImGui::SameLine();
-    ImGui::InputInt("map", &map_);
-
-    ImGui::PushItemWidth(40);
-    ImGui::SameLine();
-    ImGui::Combo("w##world", &dest_world_,
-                 "0\0001\0002\0003\0004\0005\0006\0007\000\0\0");
-    ImGui::SameLine();
-    ImGui::Combo("ov##overworld", &dest_overworld_,
-                 "0\0001\0002\0003\0\0");
-    ImGui::PopItemWidth();
-
-    ImGui::SameLine();
-    ImGui::Combo("entry", &entry_, "0\000256\000512\000768\0\0");
-
-    ImGui::SameLine();
-    ImGui::Checkbox("extern", &ext_);
-
-    ImGui::SameLine();
-    ImGui::Checkbox("second", &second_);
-
-    ImGui::SameLine();
-    ImGui::Checkbox("2 lower", &exit_2_lower_);
-
-    ImGui::SameLine();
-    ImGui::Checkbox("right", &entry_right_);
-
-    ImGui::SameLine();
-    ImGui::Checkbox("passthru", &passthru_);
-
-    ImGui::SameLine();
-    ImGui::Checkbox("fall", &fall_);
-    ImGui::PopItemWidth();
-    ImGui::PopID();
-    Write();
-}
-
-void OverworldConnector::DrawInPopup() {
-    Read();
+bool OverworldConnector::DrawInPopup() {
+    bool chg = false;
     if (ImGui::Button("View Area")) {
         if (dest_world_ == 0 && dest_overworld_ == 0) {
             MultiMap::Spawn(mapper_,
@@ -138,71 +79,59 @@ void OverworldConnector::DrawInPopup() {
 
     ImGui::Text("Position:");
     ImGui::PushItemWidth(100);
-    ImGui::InputInt("xpos", &x_);
+    chg |= ImGui::InputInt("xpos", &x_);
 
     ImGui::SameLine();
-    ImGui::InputInt("ypos", &y_);
-
+    chg |= ImGui::InputInt("ypos", &y_);
 
     ImGui::Text("Connects to:");
-    ImGui::InputInt("map ", &map_);
+    chg |= ImGui::InputInt("map ", &map_);
 
     ImGui::PushItemWidth(40);
     ImGui::SameLine();
-    ImGui::Combo("w##world", &dest_world_,
+    chg |= ImGui::Combo("w##world", &dest_world_,
                  "0\0001\0002\0003\0004\0005\0006\0007\000\0\0");
     ImGui::SameLine();
-    ImGui::Combo("ov##overworld", &dest_overworld_,
+    chg |= ImGui::Combo("ov##overworld", &dest_overworld_,
                  "0\0001\0002\0003\0\0");
     ImGui::PopItemWidth();
 
     ImGui::Text("Properties:");
-    ImGui::Combo("entry", &entry_, "0\000256\000512\000768\0\0");
+    chg |= ImGui::Combo("entry", &entry_, "0\000256\000512\000768\0\0");
 
-    ImGui::Checkbox("extern", &ext_);
-
-    ImGui::SameLine();
-    ImGui::Checkbox("second  ", &second_);
+    chg |= ImGui::Checkbox("extern", &ext_);
 
     ImGui::SameLine();
-    ImGui::Checkbox("2 lower", &exit_2_lower_);
-
-
-    ImGui::Checkbox("right ", &entry_right_);
+    chg |= ImGui::Checkbox("second  ", &second_);
 
     ImGui::SameLine();
-    ImGui::Checkbox("passthru", &passthru_);
+    chg |= ImGui::Checkbox("2 lower", &exit_2_lower_);
+
+
+    chg |= ImGui::Checkbox("right ", &entry_right_);
 
     ImGui::SameLine();
-    ImGui::Checkbox("fall", &fall_);
+    chg |= ImGui::Checkbox("passthru", &passthru_);
+
+    ImGui::SameLine();
+    chg |= ImGui::Checkbox("fall", &fall_);
     ImGui::PopItemWidth();
-    Write();
+    return chg;
 }
 
 
 OverworldConnectorList::OverworldConnectorList()
-  : add_offset_(0)
+  : add_offset_(0), changed_(false)
 {}
 
 void OverworldConnectorList::Init(Mapper* mapper, Address address,
                                   int overworld, int subworld, int n) {
     list_.clear();
     show_ = true;
+    changed_ = false;
     for(int i=0; i<n; i++) {
         list_.emplace_back(mapper, address, i, overworld, subworld);
     }
-}
-
-void OverworldConnectorList::Draw() {
-    ImGui::Text("Overworld Connections:");                                                
-    ImGui::Checkbox("Show on map", &show_);
-    ImGui::BeginChild("connectors",                                            
-                      ImVec2(ImGui::GetWindowContentRegionWidth()*0.7, 300), 
-                      true, ImGuiWindowFlags_HorizontalScrollbar);              
-    for(auto& c : list_) {
-        c.Draw();
-    }
-    ImGui::EndChild();
 }
 
 OverworldConnector* OverworldConnectorList::GetAtXY(int x, int y) {
@@ -218,10 +147,14 @@ OverworldConnector* OverworldConnectorList::Swap(int a, int b) {
 
     list_[a].offset_ = a;
     list_[b].offset_ = b;
-
-    list_[a].Write();
-    list_[b].Write();
     return &list_[a];
+}
+
+void OverworldConnectorList::Save() {
+    for(auto& c : list_) {
+        c.Write();
+    }
+    changed_ = false;
 }
 
 bool OverworldConnectorList::DrawInEditor(int x, int y) {
@@ -245,10 +178,11 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
     if (ImGui::BeginPopupContextItem("Properties")) {
         if(ImGui::Combo("Swap", &offset, ids)) {
             conn = Swap(offset, conn->offset());
+            changed_ = true;
             ImGui::CloseCurrentPopup();
         } else {
             ImGui::Separator();
-            conn->DrawInPopup();
+            changed_ |= conn->DrawInPopup();
         }
         ImGui::EndPopup();
     }
@@ -256,7 +190,7 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
     return focus;
 }
 
-void OverworldConnectorList::DrawAdd() {
+bool OverworldConnectorList::Draw() {
     const char *ids =
         "00\00001\00002\00003\00004\00005\00006\00007\00008\00009\000"
         "10\00011\00012\00013\00014\00015\00016\00017\00018\00019\000"
@@ -269,9 +203,10 @@ void OverworldConnectorList::DrawAdd() {
     if (ImGui::BeginPopup("Connections")) {
         ImGui::Combo("Entry", &add_offset_, ids);
         ImGui::Separator();
-        list_[add_offset_].DrawInPopup();
+        changed_ |= list_[add_offset_].DrawInPopup();
         ImGui::EndPopup();
     }
+    return changed_;
 }
 
 }  // namespace z2util

@@ -14,8 +14,7 @@ class OverworldConnector {
     OverworldConnector(Mapper* mapper, Address address,
                        uint8_t offset, int overworld, int subworld);
     OverworldConnector(const OverworldConnector& other);
-    void Draw();
-    void DrawInPopup();
+    bool DrawInPopup();
 
     inline int offset() const { return offset_; };
     inline int xpos() const { return x_; };
@@ -57,9 +56,9 @@ class OverworldConnectorList {
 
     void Init(Mapper* mapper, Address address, int overworld, int subworld,
               int n=63);
-    void Draw();
+
+    bool Draw();
     bool DrawInEditor(int x, int y);
-    void DrawAdd();
 
     OverworldConnector* GetAtXY(int x, int y);
     OverworldConnector* Swap(int a, int b);
@@ -69,13 +68,16 @@ class OverworldConnectorList {
         *x = item.xpos();
         *y = item.ypos();
     }
+    void Save();
 
     inline bool show() const { return show_; }
+    inline bool changed() const { return changed_; }
 
   private:
     int add_offset_;
     std::vector<OverworldConnector> list_;
     bool show_;
+    bool changed_;
 };
 
 }  // namespace z2util

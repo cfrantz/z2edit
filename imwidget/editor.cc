@@ -173,6 +173,7 @@ void Editor::SaveMap() {
     *(map_->mutable_address()) = addr;
     map_->set_length(data.size());
     encounters_.Save();
+    connections_.Save();
     changed_ = false;
 }
 
@@ -206,6 +207,7 @@ void Editor::DrawTile(int x, int y, uint16_t tile, int mode, float* props) {
         if (connections_.DrawInEditor((x + editor_->scroll_x)/16,
                                       (y + editor_->scroll_y)/16)) {
             mouse_focus_ = false;
+            changed_ |= connections_.changed();
         }
     }
     ImGui::SetCursorPos(origin_);
@@ -252,7 +254,7 @@ bool Editor::Draw() {
     if (ImGui::Button("Connections")) {
         ImGui::OpenPopup("Connections");
     }
-    connections_.DrawAdd();
+    changed_ |= connections_.Draw();
 
     ImGui::SameLine();
     if (ImGui::Button("Encounters")) {
