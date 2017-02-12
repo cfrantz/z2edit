@@ -1,5 +1,5 @@
 #include <gflags/gflags.h>
-#include "imapp.h"
+#include "app.h"
 #include "imgui.h"
 #include "nes/cpu6502.h"
 #include "proto/rominfo.pb.h"
@@ -16,84 +16,35 @@
 
 DEFINE_string(emulator, "fceux", "Emulator to run for testing");
 DEFINE_string(romtmp, "/tmp/zelda2-test.nes", "Temporary filename for running under test");
-DEFINE_int32(audio_frequency, 48000, "Audio sample frequency");
-//DEFINE_int32(audio_bufsize, 256, "Audio buffer size");
-DEFINE_int32(audio_bufsize, 2048, "Audio buffer size");
-DEFINE_double(hidpi, 1.0, "HiDPI scaling factor");
-
 DECLARE_bool(move_from_keepout);
 DECLARE_string(config);
 
-ImApp* ImApp::singleton_;
+namespace z2util {
 
-ImApp::ImApp(const std::string& name, int width, int height)
-  : name_(name),
-    width_(width),
-    height_(height),
-    audio_producer_(0),
-    audio_consumer_(0)
-{
-    singleton_ = this;
-    SDL_Init(SDL_INIT_VIDEO |
-             SDL_INIT_AUDIO |
-             SDL_INIT_TIMER |
-             SDL_INIT_JOYSTICK |
-             SDL_INIT_GAMECONTROLLER);
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-
-    window_ = SDL_CreateWindow(name.c_str(),
-                               SDL_WINDOWPOS_UNDEFINED,
-                               SDL_WINDOWPOS_UNDEFINED,
-                               width_, height_,
-                               SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-
-    glcontext_ = SDL_GL_CreateContext(window_);
-    ImGui_ImplSdl_SetHiDPIScale(FLAGS_hidpi);
-    ImGui_ImplSdl_Init(window_);
-    fpsmgr_.SetRate(60);
-
-    ///audiobufsz_ = FLAGS_audio_bufsize * 2;
-    ///audiobuf_.reset(new float[audiobufsz_]);
-    ///InitAudio(FLAGS_audio_frequency, 1, FLAGS_audio_bufsize, AUDIO_F32);
-}
-
-ImApp::~ImApp() {
-    ImGui_ImplSdl_Shutdown();
-    SDL_GL_DeleteContext(glcontext_);
-    SDL_DestroyWindow(window_);
-    SDL_Quit();
-}
-
-void ImApp::Init() {
-    RegisterCommand("quit", "Quit the application.", this, &ImApp::Quit);
-    RegisterCommand("load", "Load a NES ROM.", this, &ImApp::LoadFile);
-    RegisterCommand("save", "Save a NES ROM.", this, &ImApp::SaveFile);
-    RegisterCommand("wm", "Write mapper register.", this, &ImApp::WriteMapper);
+void Z2Edit::Init() {
+    RegisterCommand("load", "Load a NES ROM.", this, &Z2Edit::LoadFile);
+    RegisterCommand("save", "Save a NES ROM.", this, &Z2Edit::SaveFile);
+    RegisterCommand("wm", "Write mapper register.", this, &Z2Edit::WriteMapper);
     RegisterCommand("header", "Print iNES header.",
             &cartridge_, &Cartridge::PrintHeader);
 
-    RegisterCommand("db", "Hexdump bytes (via mapper).", this, &ImApp::HexdumpBytes);
-    RegisterCommand("dbp", "Hexdump PRG bytes.", this, &ImApp::HexdumpBytes);
-    RegisterCommand("dbc", "Hexdump CHR bytes.", this, &ImApp::HexdumpBytes);
-    RegisterCommand("dw", "Hexdump words (via mapper).", this, &ImApp::HexdumpWords);
-    RegisterCommand("dwp", "Hexdump PRG words.", this, &ImApp::HexdumpWords);
-    RegisterCommand("dwc", "Hexdump CHR words.", this, &ImApp::HexdumpWords);
-    RegisterCommand("wb", "Write bytes (via mapper).", this, &ImApp::WriteBytes);
-    RegisterCommand("wbp", "Write PRG bytes.", this, &ImApp::WriteBytes);
-    RegisterCommand("wbc", "Write CHR bytes.", this, &ImApp::WriteBytes);
-    RegisterCommand("ww", "Write words (via mapper).", this, &ImApp::WriteWords);
-    RegisterCommand("wwp", "Write PRG words.", this, &ImApp::WriteWords);
-    RegisterCommand("wwc", "Write CHR words.", this, &ImApp::WriteWords);
-    RegisterCommand("elist", "Dump Enemy List.", this, &ImApp::EnemyList);
-    RegisterCommand("u", "Disassemble Code.", this, &ImApp::Unassemble);
-    RegisterCommand("insertprg", "Insert a PRG bank.", this, &ImApp::InsertPrg);
-    RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &ImApp::CopyPrg);
-    RegisterCommand("memmove", "Move memory within a PRG bank.", this, &ImApp::MemMove);
+    RegisterCommand("db", "Hexdump bytes (via mapper).", this, &Z2Edit::HexdumpBytes);
+    RegisterCommand("dbp", "Hexdump PRG bytes.", this, &Z2Edit::HexdumpBytes);
+    RegisterCommand("dbc", "Hexdump CHR bytes.", this, &Z2Edit::HexdumpBytes);
+    RegisterCommand("dw", "Hexdump words (via mapper).", this, &Z2Edit::HexdumpWords);
+    RegisterCommand("dwp", "Hexdump PRG words.", this, &Z2Edit::HexdumpWords);
+    RegisterCommand("dwc", "Hexdump CHR words.", this, &Z2Edit::HexdumpWords);
+    RegisterCommand("wb", "Write bytes (via mapper).", this, &Z2Edit::WriteBytes);
+    RegisterCommand("wbp", "Write PRG bytes.", this, &Z2Edit::WriteBytes);
+    RegisterCommand("wbc", "Write CHR bytes.", this, &Z2Edit::WriteBytes);
+    RegisterCommand("ww", "Write words (via mapper).", this, &Z2Edit::WriteWords);
+    RegisterCommand("wwp", "Write PRG words.", this, &Z2Edit::WriteWords);
+    RegisterCommand("wwc", "Write CHR words.", this, &Z2Edit::WriteWords);
+    RegisterCommand("elist", "Dump Enemy List.", this, &Z2Edit::EnemyList);
+    RegisterCommand("u", "Disassemble Code.", this, &Z2Edit::Unassemble);
+    RegisterCommand("insertprg", "Insert a PRG bank.", this, &Z2Edit::InsertPrg);
+    RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &Z2Edit::CopyPrg);
+    RegisterCommand("memmove", "Move memory within a PRG bank.", this, &Z2Edit::MemMove);
 
     loaded_ = false;
     hwpal_ = NesHardwarePalette::Get();
@@ -105,18 +56,15 @@ void ImApp::Init() {
     editor_.reset(z2util::Editor::New());
 }
 
-void ImApp::Quit(DebugConsole* console, int argc, char **argv) {
-    running_ = false;
-}
-
-void ImApp::Load(const std::string& filename) {
+void Z2Edit::Load(const std::string& filename) {
     loaded_ = true;
     cartridge_.LoadFile(filename);
     mapper_.reset(MapperRegistry::New(&cartridge_, cartridge_.mapper()));
     chrview_->set_mapper(mapper_.get());
 
     simplemap_->set_mapper(mapper_.get());
-    for(const auto& m : rominfo_.map()) {
+    auto* ri = ConfigLoader<RomInfo>::MutableConfig();
+    for(const auto& m : ri->map()) {
         if (m.name().find("North Palace") != std::string::npos) {
             simplemap_->SetMap(m);
             break;
@@ -124,7 +72,7 @@ void ImApp::Load(const std::string& filename) {
     }
 
     editor_->set_mapper(mapper_.get());
-    editor_->ConvertFromMap(rominfo_.mutable_map(0));
+    editor_->ConvertFromMap(ri->mutable_map(0));
 
     misc_hacks_->set_mapper(mapper_.get());
     start_values_->set_mapper(mapper_.get());
@@ -148,7 +96,7 @@ void ImApp::Load(const std::string& filename) {
     }
 }
 
-void ImApp::LoadFile(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::LoadFile(DebugConsole* console, int argc, char **argv) {
     if (argc != 2) {
         console->AddLog("[error] Usage: %s [filename]", argv[0]);
         return;
@@ -156,11 +104,11 @@ void ImApp::LoadFile(DebugConsole* console, int argc, char **argv) {
     Load(argv[1]);
 }
 
-void ImApp::WriteMapper(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::WriteMapper(DebugConsole* console, int argc, char **argv) {
     mapper_->DebugWriteReg(console, argc, argv);
 }
 
-void ImApp::SaveFile(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::SaveFile(DebugConsole* console, int argc, char **argv) {
     if (argc != 2) {
         console->AddLog("[error] Usage: %s [filename]", argv[0]);
         return;
@@ -168,7 +116,7 @@ void ImApp::SaveFile(DebugConsole* console, int argc, char **argv) {
     cartridge_.SaveFile(argv[1]);
 }
 
-void ImApp::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
     // The hexdump command will be one of 'db', 'dbp' or 'dbc', standing
     // for 'dump bytes', 'dump bytes prg' and 'dump bytes chr'.  The
     // prg and chr versions can optionally take a bank number.
@@ -224,7 +172,7 @@ void ImApp::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
     console->AddLog("%s", line);
 }
 
-void ImApp::WriteBytes(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::WriteBytes(DebugConsole* console, int argc, char **argv) {
     uint8_t bank = 0;
     int mode = argv[0][2];
     int index = 0;
@@ -256,7 +204,7 @@ void ImApp::WriteBytes(DebugConsole* console, int argc, char **argv) {
     }
 }
 
-void ImApp::HexdumpWords(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::HexdumpWords(DebugConsole* console, int argc, char **argv) {
     uint8_t bank = 0;
     int mode = argv[0][2];
     int index = 0;
@@ -314,7 +262,7 @@ void ImApp::HexdumpWords(DebugConsole* console, int argc, char **argv) {
     console->AddLog("%s", line);
 }
 
-void ImApp::WriteWords(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::WriteWords(DebugConsole* console, int argc, char **argv) {
     uint8_t bank = 0;
     int mode = argv[0][2];
     int index = 0;
@@ -349,7 +297,7 @@ void ImApp::WriteWords(DebugConsole* console, int argc, char **argv) {
     }
 }
 
-void ImApp::MemMove(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::MemMove(DebugConsole* console, int argc, char **argv) {
     uint8_t bank = -1;
     if (argc < 5 || strncmp(argv[1], "b=", 2) != 0) {
         console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
@@ -376,7 +324,7 @@ void ImApp::MemMove(DebugConsole* console, int argc, char **argv) {
     }
 }
 
-void ImApp::EnemyList(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::EnemyList(DebugConsole* console, int argc, char **argv) {
     char buf[1024];
     uint8_t bank = 0;
     int mode = argv[0][2];
@@ -412,7 +360,7 @@ void ImApp::EnemyList(DebugConsole* console, int argc, char **argv) {
     }
 }
 
-void ImApp::Unassemble(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
     static uint8_t bank;
     static uint16_t addr;
 
@@ -438,7 +386,7 @@ void ImApp::Unassemble(DebugConsole* console, int argc, char **argv) {
     }
 }
 
-void ImApp::InsertPrg(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::InsertPrg(DebugConsole* console, int argc, char **argv) {
     uint8_t bank = 0;
     if (argc < 2) {
         console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
@@ -451,7 +399,7 @@ void ImApp::InsertPrg(DebugConsole* console, int argc, char **argv) {
     console->AddLog("#{0f0}Added bank %d", bank);
 }
 
-void ImApp::CopyPrg(DebugConsole* console, int argc, char **argv) {
+void Z2Edit::CopyPrg(DebugConsole* console, int argc, char **argv) {
     uint8_t src, dst;
     if (argc < 3) {
         console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
@@ -467,49 +415,19 @@ void ImApp::CopyPrg(DebugConsole* console, int argc, char **argv) {
     console->AddLog("#{0f0}Copied bank %d to %d", src, dst);
 }
 
-void ImApp::Run() {
-    running_ = true;
-    while(running_) {
-        if (!ProcessEvents())
-            break;
-        Draw();
-        // Play audio here if you have audio
-        // PlayAudio(...)
-        fpsmgr_.Delay();
 
-        if (!loaded_) {
-            char *filename = nullptr;
-            auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
-            if (result == NFD_OKAY) {
-                Load(filename);
-                save_filename_.assign(filename);
-            }
-            free(filename);
-        }
-    }
-}
 
-void ImApp::SpawnEmulator(const std::string& romfile) {
+
+void Z2Edit::SpawnEmulator(const std::string& romfile) {
     std::string cmdline = FLAGS_emulator + " " + romfile + " &";
     system(cmdline.c_str());
 }
 
-bool ImApp::ProcessEvents() {
-    SDL_Event event;
-    bool done = false;
-    while (SDL_PollEvent(&event)) {
-        ImGui_ImplSdl_ProcessEvent(&event);
-        if (event.type == SDL_QUIT)
-            done = true;
-        editor_->ProcessEvent(&event);
-    }
-    return !done;
+void Z2Edit::ProcessEvent(SDL_Event* event) {
+    editor_->ProcessEvent(event);
 }
 
-void ImApp::Draw() {
-    ImVec4 clear_color = ImColor(114, 144, 154);
-    ImGui_ImplSdl_NewFrame(window_);
-
+void Z2Edit::Draw() {
     ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -587,7 +505,6 @@ save_as:
         ImGui::EndMainMenuBar();
     }
 
-    console_.Draw();
     start_values_->Draw();
     misc_hacks_->Draw();
     hwpal_->Draw();
@@ -596,95 +513,21 @@ save_as:
     editor_->Draw();
     object_table_->Draw();
 
-    for(auto it=draw_callback_.begin(); it != draw_callback_.end();) {
-        if ((*it)->visible()) {
-            (*it)->Draw();
-        } else if ((*it)->want_dispose()) {
-            it = draw_callback_.erase(it);
-            continue;
+    if (!loaded_) {
+        char *filename = nullptr;
+        auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
+        if (result == NFD_OKAY) {
+            Load(filename);
+            save_filename_.assign(filename);
         }
-        ++it;
-    }
-
-    glViewport(0, 0,
-               (int)ImGui::GetIO().DisplaySize.x,
-               (int)ImGui::GetIO().DisplaySize.y);
-    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui::Render();
-    SDL_GL_SwapWindow(window_);
-    for(auto& widget : draw_added_) {
-        draw_callback_.emplace_back(std::move(widget));
-    }
-    draw_added_.clear();
-}
-
-
-void ImApp::InitAudio(int freq, int chan, int bufsz, SDL_AudioFormat fmt) {
-    SDL_AudioSpec want, have;
-    SDL_AudioDeviceID dev;
-
-    SDL_memset(&want, 0, sizeof(want));
-    want.freq = freq;
-    want.channels = chan;
-    want.samples = bufsz;
-    want.format = fmt;
-    want.callback = ImApp::AudioCallback_;
-    want.userdata = (void*)this;
-
-    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have,
-                              SDL_AUDIO_ALLOW_FORMAT_CHANGE);
-    SDL_PauseAudioDevice(dev, 0);
-}
-
-void ImApp::PlayAudio(float* data, int len) {
-    int producer = audio_producer_;
-    while(len) {
-        audiobuf_[producer] = *data++;
-        len--;
-        producer = (producer + 1) % audiobufsz_;
-        while(producer == audio_consumer_) {
-            // Audio overrun.
-            // FIXME(cfrantz): This should use a condition variable, but this
-            // program doesn't use audio anyway.
-            // os::Yield();
-        }
-        audio_producer_ = producer;
+        free(filename);
     }
 }
 
-void ImApp::AudioCallback(float* stream, int len) {
-    while(audio_consumer_ != audio_producer_ && len) {
-        *stream++ = audiobuf_[audio_consumer_];
-        len--;
-        audio_consumer_ = (audio_consumer_ + 1) % audiobufsz_;
-    }
-    if (len) {
-        fprintf(stderr, "Audio underrun!\n");
-        while(len--) {
-            *stream++ = 0;
-        }
-    }
-}
-
-void ImApp::AudioCallback_(void* userdata, uint8_t* stream, int len) {
-    ImApp* instance = (ImApp*)userdata;
-    instance->AudioCallback((float*)stream, len/sizeof(float));
-}
-
-
-void ImApp::AddDrawCallback(ImWindowBase* window) {
-    draw_added_.emplace_back(window);
-}
-
-
-void AddDrawCallback(ImWindowBase* window) {
-    ImApp::Get()->AddDrawCallback(window);
-}
-
-void ImApp::Help(const std::string& topickey) {
-    const auto& it = rominfo_.help().url().find(topickey);
-    if (it == rominfo_.help().url().end()) {
+void Z2Edit::Help(const std::string& topickey) {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    const auto& it = ri.help().url().find(topickey);
+    if (it == ri.help().url().end()) {
         LOG(ERROR, "No help for topickey=", topickey);
         if (topickey != "root") {
             Help("root");
@@ -694,13 +537,4 @@ void ImApp::Help(const std::string& topickey) {
     Browser::Open(it->second);
 }
 
-void Help(const std::string& topickey) {
-    ImApp::Get()->Help(topickey);
-}
-
-void HelpButton(const std::string& topickey) {
-    if (ImGui::Button("Help")) {
-        ImApp::Get()->Help(topickey);
-    }
-}
-
+}  // namespace z2util

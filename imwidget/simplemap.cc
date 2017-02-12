@@ -1,11 +1,11 @@
 #include "imwidget/simplemap.h"
 #include <gflags/gflags.h>
 
+#include "imwidget/imapp.h"
 #include "imwidget/imutil.h"
 #include "imwidget/error_dialog.h"
 #include "util/config.h"
 #include "util/strutil.h"
-#include "imapp-util.h"
 
 DECLARE_bool(reminder_dialogs);
 
@@ -32,7 +32,7 @@ SimpleMap::SimpleMap(Mapper* m, const Map& map)
 SimpleMap* SimpleMap::Spawn(Mapper* m, const Map& map) {
     SimpleMap *sm = new SimpleMap(m, map);
     sm->visible_ = true;
-    AddDrawCallback(sm);
+    ImApp::Get()->AddDrawCallback(sm);
     return sm;
 }
 
@@ -165,7 +165,7 @@ bool SimpleMap::Draw() {
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
-    HelpButton("sideview-editor");
+    ImApp::Get()->HelpButton("sideview-editor");
 
     ImGui::BeginChild("image", ImVec2(0, 16 + decomp_.height()*16.0*scale_),
                       true, ImGuiWindowFlags_HorizontalScrollbar);

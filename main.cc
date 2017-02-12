@@ -2,7 +2,7 @@
 #include <string>
 #include <gflags/gflags.h>
 
-#include "imapp.h"
+#include "app.h"
 #include "util/config.h"
 #include "zelda2_config.h"
 
@@ -101,9 +101,8 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    ImApp app("ROM Explorer");
+    z2util::Z2Edit app("Zelda 2 ROM Editor");
     app.Init();
-    app.set_rominfo(config->config());
 
     if (argc > 1) {
         app.Load(argv[1]);

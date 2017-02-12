@@ -1,13 +1,13 @@
 #include "imwidget/error_dialog.h"
+#include "imwidget/imapp.h"
 #include "imgui.h"
-#include "imapp-util.h"
 
 
 ErrorDialog* ErrorDialog::Spawn(const std::string& title,
                                 int buttons,
                                 const std::string& message) {
     ErrorDialog* err = new ErrorDialog(title, buttons, message);
-    AddDrawCallback(err);
+    ImApp::Get()->AddDrawCallback(err);
     return err;
 }
 

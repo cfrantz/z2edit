@@ -1,7 +1,7 @@
 #include <string>
 #include <gflags/gflags.h>
 
-#include "imapp-util.h"
+#include "imwidget/imapp.h"
 #include "imwidget/editor.h"
 #include "nes/z2decompress.h"
 #include "util/config.h"
@@ -271,7 +271,7 @@ bool Editor::Draw() {
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
-    HelpButton("overworld-editor");
+    ImApp::Get()->HelpButton("overworld-editor");
 
     ImGui::Text("Compressed map in bank %d address=%04x length=%d bytes.",
                 map_->address().bank(), map_->address().address(),

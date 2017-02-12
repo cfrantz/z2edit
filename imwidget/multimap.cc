@@ -1,8 +1,8 @@
 #include "imwidget/multimap.h"
 
+#include "imwidget/imapp.h"
 #include "imwidget/map_command.h"
 #include "imwidget/simplemap.h"
-#include "imapp-util.h"
 #include "util/config.h"
 #include "util/strutil.h"
 
@@ -20,7 +20,7 @@ MultiMap* MultiMap::Spawn(Mapper* m, int world, int overworld, int subworld,
                           int map) {
     MultiMap* mm = new MultiMap(m, world, overworld, subworld, map);
     mm->Init();
-    AddDrawCallback(mm);
+    ImApp::Get()->AddDrawCallback(mm);
     return mm;
 }
 
@@ -265,7 +265,7 @@ bool MultiMap::Draw() {
     DrawLegend();
 
     ImGui::SameLine();
-    HelpButton("multimap-viewer");
+    ImApp::Get()->HelpButton("overworld-editor");
 
     Vec2 minv(1e9, 1e9);
     Vec2 maxv(-1e9, -1e9);

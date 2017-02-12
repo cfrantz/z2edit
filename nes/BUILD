@@ -5,7 +5,7 @@ cc_library(
     hdrs = ["cartridge.h"],
     srcs = ["cartridge.cc"],
     deps = [
-        "//imwidget:debug_console",
+        "//imwidget:base",
         "//external:gflags",
     ],
 )
@@ -51,7 +51,7 @@ cc_library(
     deps = [
         ":cartridge",
         "//proto:rominfo",
-        "//imwidget:debug_console",
+        "//imwidget:base",
     ],
     alwayslink = 1,
 )

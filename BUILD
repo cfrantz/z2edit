@@ -8,16 +8,7 @@ config_setting(
 )
 
 cc_library(
-    name = "imapp-util",
-    hdrs = ["imapp-util.h"],
-    srcs = [],
-    deps = [
-        "//imwidget:base",
-    ],
-)
-
-cc_library(
-    name = "imapp",
+    name = "app",
     linkopts = [
         "-lSDL2main",
         "-lSDL2",
@@ -26,15 +17,13 @@ cc_library(
         "-lSDL2_gfx",
     ],
     hdrs = [
-        "imapp.h",
+        "app.h",
     ],
     srcs = [
-        "imapp.cc",
+        "app.cc",
     ],
     deps = [
-        ":imapp-util",
         "//imwidget:base",
-        "//imwidget:debug_console",
         "//imwidget:editor",
         "//imwidget:hwpalette",
         "//imwidget:misc_hacks",
@@ -103,7 +92,7 @@ cc_binary(
         "main.cc",
     ],
     deps = [
-        ":imapp",
+        ":app",
         "//util:config",
         "//external:gflags",
     ],

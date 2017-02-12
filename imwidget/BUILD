@@ -3,22 +3,21 @@ package(default_visibility=["//visibility:public"])
 cc_library(
     name = "base",
     hdrs = [
+        "debug_console.h",
+        "imapp.h",
         "imutil.h",
         "imwidget.h",
     ],
-    srcs = ["imutil.cc"],
-    deps = [
-        "//external:imgui",
+    srcs = [
+        "debug_console.cc",
+        "imapp.cc",
+        "imutil.cc",
     ],
-)
-
-cc_library(
-    name = "debug_console",
-    hdrs = ["debug_console.h"],
-    srcs = ["debug_console.cc"],
     deps = [
-        ":base",
+        "//util:fpsmgr",
+        "//util:imgui_sdl_opengl",
         "//util:logging",
+        "//external:gflags",
         "//external:imgui",
     ],
 )
@@ -29,7 +28,6 @@ cc_library(
     srcs = ["error_dialog.cc"],
     deps = [
         ":base",
-        "//:imapp-util",
         "//util:string",
         "//external:imgui",
     ],
@@ -86,7 +84,6 @@ cc_library(
         ":hwpalette",
         ":map_connect",
         ":overworld_encounters",
-        "//:imapp-util",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
@@ -115,7 +112,6 @@ cc_library(
         ":glbitmap",
         ":hwpalette",
         ":overworld_encounters",
-        "//:imapp-util",
         "//nes:enemylist",
         "//nes:mappers",
         "//nes:z2decompress",
@@ -136,7 +132,6 @@ cc_library(
         ":glbitmap",
         ":simplemap",
         "//alg:fdg",
-        "//:imapp-util",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
