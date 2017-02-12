@@ -27,18 +27,13 @@ Done, but still need:
 ### Sprite and tiles editor
   * List of sprite equivalents between banks
 
-### Code cleanups
-  * Rename the ::New methods to ::Spawn
-  * Common base class for imwidgets
-  * Get rid of vector of callbacks in imapp in favor of vector<unique_ptr>s.
-  * Clean up imapp.  Bigtime.
-
 # Documentation:
   * Sideview editing flow
   * Enemy editing
   * Known restrictions:
-    * Overworld map must be < 1K
+    * Overworld map must be < 896 bytes
     * Enemy lists must be < 1K
+    * Linked side-view areas in overworlds must be areas < 29.
   * Auto-generate documentation from `content/obj_*.textpb`?
   * Auto-generate documentation from `content/{enemies,items}.textpb`?
   * Document used/unused sidview areas in vanilla game.
@@ -108,3 +103,9 @@ Done: Multimap editor
   * Sideview modifications should allocate new memory regions (done)
   * Large/small encounter enemy lists (done)
   * Initial item availability editor (doors & items) (done)
+
+### Code cleanups
+  * Rename the ::New methods to ::Spawn (done)
+  * Common base class for imwidgets (done)
+  * Get rid of vector of callbacks in imapp in favor of vector<unique_ptr>s. (done)
+  * Clean up imapp.  Bigtime. (done)
