@@ -32,15 +32,7 @@ SimpleMap::SimpleMap(Mapper* m, const Map& map)
 SimpleMap* SimpleMap::Spawn(Mapper* m, const Map& map) {
     SimpleMap *sm = new SimpleMap(m, map);
     sm->visible_ = true;
-    AddDrawCallback([sm]() {
-        bool vis = sm->visible_;
-        if (vis) {
-            sm->Draw();
-        } else {
-            delete sm;
-        }
-        return vis;
-    });
+    AddDrawCallback(sm);
     return sm;
 }
 

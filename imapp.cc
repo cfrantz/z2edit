@@ -597,7 +597,9 @@ save_as:
     object_table_->Draw();
 
     for(auto it=draw_callback_.begin(); it != draw_callback_.end();) {
-        if (!(*it)()) {
+        if ((*it)->visible()) {
+            (*it)->Draw();
+        } else if ((*it)->want_dispose()) {
             it = draw_callback_.erase(it);
             continue;
         }
@@ -611,7 +613,9 @@ save_as:
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui::Render();
     SDL_GL_SwapWindow(window_);
-    draw_callback_.insert(draw_callback_.end(), draw_added_.begin(), draw_added_.end());
+    for(auto& widget : draw_added_) {
+        draw_callback_.emplace_back(std::move(widget));
+    }
     draw_added_.clear();
 }
 
@@ -669,13 +673,13 @@ void ImApp::AudioCallback_(void* userdata, uint8_t* stream, int len) {
 }
 
 
-void ImApp::AddDrawCallback(std::function<bool()> cb) {
-    draw_added_.push_back(cb);
+void ImApp::AddDrawCallback(ImWindowBase* window) {
+    draw_added_.emplace_back(window);
 }
 
 
-void AddDrawCallback(std::function<bool()> cb) {
-    ImApp::Get()->AddDrawCallback(cb);
+void AddDrawCallback(ImWindowBase* window) {
+    ImApp::Get()->AddDrawCallback(window);
 }
 
 void ImApp::Help(const std::string& topickey) {

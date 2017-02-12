@@ -11,6 +11,9 @@ cc_library(
     name = "imapp-util",
     hdrs = ["imapp-util.h"],
     srcs = [],
+    deps = [
+        "//imwidget:base",
+    ],
 )
 
 cc_library(
@@ -30,6 +33,7 @@ cc_library(
     ],
     deps = [
         ":imapp-util",
+        "//imwidget:base",
         "//imwidget:debug_console",
         "//imwidget:editor",
         "//imwidget:hwpalette",

@@ -11,6 +11,7 @@
 #include "imwidget/debug_console.h"
 #include "imwidget/editor.h"
 #include "imwidget/hwpalette.h"
+#include "imwidget/imwidget.h"
 #include "imwidget/misc_hacks.h"
 #include "imwidget/neschrview.h"
 #include "imwidget/simplemap.h"
@@ -51,7 +52,7 @@ class ImApp {
     void PlayAudio(float* data, int len);
     void Load(const std::string& filename);
     void Help(const std::string& topickey);
-    void AddDrawCallback(std::function<bool()> cb);
+    void AddDrawCallback(ImWindowBase* window);
   private:
     void Quit(DebugConsole* console, int argc, char **argv);
     void LoadFile(DebugConsole* console, int argc, char **argv);
@@ -100,8 +101,8 @@ class ImApp {
     std::unique_ptr<z2util::MiscellaneousHacks> misc_hacks_;
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::ObjectTable> object_table_;
-    std::vector<std::function<bool()>> draw_callback_;
-    std::vector<std::function<bool()>> draw_added_;
+    std::vector<std::unique_ptr<ImWindowBase>> draw_callback_;
+    std::vector<std::unique_ptr<ImWindowBase>> draw_added_;;
 
     Cartridge cartridge_;
     z2util::Memory memory_;

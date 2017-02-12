@@ -7,15 +7,7 @@ ErrorDialog* ErrorDialog::Spawn(const std::string& title,
                                 int buttons,
                                 const std::string& message) {
     ErrorDialog* err = new ErrorDialog(title, buttons, message);
-    AddDrawCallback([err]() {
-        bool vis = err->visible_;
-        if (vis) {
-            err->Draw();
-        } else {
-            delete err;
-        }
-        return vis;
-    });
+    AddDrawCallback(err);
     return err;
 }
 

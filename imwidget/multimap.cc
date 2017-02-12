@@ -20,15 +20,7 @@ MultiMap* MultiMap::Spawn(Mapper* m, int world, int overworld, int subworld,
                           int map) {
     MultiMap* mm = new MultiMap(m, world, overworld, subworld, map);
     mm->Init();
-    AddDrawCallback([mm]() {
-        bool vis = mm->visible_;
-        if (vis) {
-            mm->Draw();
-        } else {
-            delete mm;
-        }
-        return vis;
-    });
+    AddDrawCallback(mm);
     return mm;
 }
 
