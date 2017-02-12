@@ -33,4 +33,9 @@ misc {
     ]
     enemy_data_rom: 0x88a0
     enemy_data_ram: 0x7000
+
+    # Location of the operand to the compare which checks for the raft ID
+    raft_id: { bank: 0 address: 0x859a }
+    # Location of table of dock locations
+    raft_table: { bank: 0 address: 0x8528 }
 }

@@ -51,6 +51,7 @@ void OverworldConnector::Read() {
 
 void OverworldConnector::Write() {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    int raft = mapper_->Read(misc.raft_id(), 0);
     uint8_t y, x, z, w;
 
     y = (y_ + misc.overworld_y_offset()) | uint8_t(ext_) << 7;
@@ -63,6 +64,14 @@ void OverworldConnector::Write() {
     mapper_->Write(address_, offset_ + 0x3f, x);
     mapper_->Write(address_, offset_ + 0x7e, z);
     mapper_->Write(address_, offset_ + 0xbd, w);
+
+    if (offset_ == raft) {
+        // The raft table layout is:
+        // ov0_xpos, ov2_xpos, ov0_ypos, ov2_ypos
+        int delta = !(overworld_ == 0);
+        mapper_->Write(misc.raft_table(), delta+0, x & 0x3f);
+        mapper_->Write(misc.raft_table(), delta+2, y & 0x7f);
+    }
 }
 
 bool OverworldConnector::DrawInPopup() {
@@ -121,11 +130,12 @@ bool OverworldConnector::DrawInPopup() {
 
 
 OverworldConnectorList::OverworldConnectorList()
-  : add_offset_(0), changed_(false)
+  : mapper_(nullptr), add_offset_(0), changed_(false)
 {}
 
 void OverworldConnectorList::Init(Mapper* mapper, Address address,
                                   int overworld, int subworld, int n) {
+    mapper_ = mapper;
     list_.clear();
     show_ = true;
     changed_ = false;
@@ -171,9 +181,15 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
         "50\00051\00052\00053\00054\00055\00056\00057\00058\00059\000"
         "60\00061\00062\000Delete\0\0";
 
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    int raft = mapper_->Read(misc.raft_id(), 0);
     int offset = conn->offset();
     ImGui::PushID(offset);
-    TextOutlined(ImColor(0xFFFF00FF), "%02d", conn->offset());
+    if (offset == raft) {
+        TextOutlined(ImColor(0xFFFF00FF), "%02dRAFT", offset);
+    } else {
+        TextOutlined(ImColor(0xFFFF00FF), "%02d", offset);
+    }
     bool focus = ImGui::IsItemHovered();
     if (ImGui::BeginPopupContextItem("Properties")) {
         if(ImGui::Combo("Swap", &offset, ids)) {

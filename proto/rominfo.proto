@@ -37,6 +37,10 @@ message Miscellaneous {
     // Each bank has a 1K block of enemy data
     int32 enemy_data_rom = 8;
     int32 enemy_data_ram = 9;
+
+    // Information about the raft spot
+    Address raft_id = 10;
+    Address raft_table = 11;
 }
 
 message Palette {

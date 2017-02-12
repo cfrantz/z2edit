@@ -74,6 +74,7 @@ class OverworldConnectorList {
     inline bool changed() const { return changed_; }
 
   private:
+    Mapper* mapper_;
     int add_offset_;
     std::vector<OverworldConnector> list_;
     bool show_;
