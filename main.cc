@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <string>
 #include <gflags/gflags.h>
 
@@ -6,6 +7,7 @@
 #include "zelda2_config.h"
 
 DEFINE_string(config, "", "ROM info config file");
+DEFINE_bool(dump_config, false, "Dump config to stdout and exit");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
 DEFINE_bool(reminder_dialogs, true, "Pop up dialogs for discarding changes");
 
@@ -93,6 +95,10 @@ int main(int argc, char *argv[]) {
         config->Load(FLAGS_config, PostProcess);
     } else {
         config->Parse(kZelda2Cfg, PostProcess);
+    }
+    if (FLAGS_dump_config) {
+        puts(config->config().DebugString().c_str());
+        exit(0);
     }
 
     ImApp app("ROM Explorer");
