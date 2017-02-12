@@ -788,7 +788,7 @@ bool MapSwapper::Draw() {
     }
 
     ImGui::PushID(id_);
-    ImGui::Combo("Swap With", &newarea_, names, len);
+    ImGui::Combo("Area", &newarea_, names, len);
     ImGui::Checkbox("Map", &swap_map_);
     ImGui::Checkbox("Connections", &swap_conn_);
     ImGui::Checkbox("Enemies", &swap_enemies_);
@@ -798,9 +798,14 @@ bool MapSwapper::Draw() {
         "table, or the connection table on other maps.");
     ImGui::Text("If you swap maps, you must fix connections yourself.");
     ImGui::Text("\n");
-    ImGui::Text("Swap takes effect immediately.  You do not need to \"Commit to ROM\".");
+    ImGui::Text("Swap & Copy take effect immediately.  You do not need to \"Commit to ROM\".");
     if (ImGui::Button("Swap")) {
         Swap();
+        chg = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Copy")) {
+        Copy();
         chg = true;
     }
     ImGui::PopID();
@@ -880,6 +885,73 @@ void MapSwapper::Swap() {
         }
         // Write back to memory
         mapper_->Write(avail.address(), a->area() / 2, aa);
+        mapper_->Write(avail.address(), b->area() / 2, ba);
+    }
+    map_ = *b;
+}
+
+void MapSwapper::Copy() {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    const Map *a = &map_;
+    const Map *b = nullptr;
+    AvailableBitmap avail;
+
+    for(const auto& m : ri.map()) {
+        if (m.type() != MapType::OVERWORLD
+            && m.world() == map_.world()
+            && m.overworld() == map_.overworld()
+            && m.subworld() == map_.subworld()
+            && m.area() == newarea_) {
+            b = &m;
+        }
+    }
+    for(const auto& a : ri.available()) {
+        if (map_.world() == a.world()
+            && map_.overworld() == a.overworld()
+            && map_.subworld() == a.subworld()) {
+            avail = a;
+        }
+    }
+    LOG(INFO, "Copying ", a->name(), " to ", b->name());
+
+    if (swap_map_) {
+        uint16_t pa = mapper_->ReadWord(a->pointer(), 0);
+        mapper_->WriteWord(b->pointer(), 0, pa);
+    }
+    if (swap_conn_) {
+        for(int i=0; i<4; i++) {
+            uint8_t ca = mapper_->Read(a->connector(), i);
+            mapper_->Write(b->connector(), i, ca);
+        }
+    }
+    if (swap_enemies_) {
+        uint16_t pa = mapper_->ReadWord(a->pointer(), 0x7e);
+        mapper_->WriteWord(b->pointer(), 0x7e, pa);
+    }
+    if (swap_itemav_) {
+        uint8_t aa = mapper_->Read(avail.address(), a->area() / 2);
+        uint8_t ba = mapper_->Read(avail.address(), b->area() / 2);
+        uint8_t adata = aa;
+        // adata is the data to copy, while aa,ba is the data to keep
+        // in that byte
+        if (a->area() & 1) {
+            adata &= 0x0F; aa &= 0xF0;
+        } else {
+            adata >>= 4; aa &= 0x0F;
+        }
+        if (b->area() & 1) {
+            ba &= 0xF0;
+        } else {
+            ba &= 0x0F;
+        }
+
+        // Copy the data into the keeper word
+        if (b->area() & 1) {
+            ba |= adata;
+        } else {
+            ba |= adata << 4;
+        }
+        // Write back to memory
         mapper_->Write(avail.address(), b->area() / 2, ba);
     }
     map_ = *b;

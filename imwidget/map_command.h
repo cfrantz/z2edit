@@ -202,6 +202,7 @@ class MapSwapper {
     bool Draw();
   private:
     void Swap();
+    void Copy();
 
     int id_;
     Mapper* mapper_;

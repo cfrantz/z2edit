@@ -188,7 +188,7 @@ void SimpleMap::Draw() {
         ImGui::RadioButton("Connections", &tab_, 1); ImGui::SameLine();
         ImGui::RadioButton("Enemy List", &tab_, 2); ImGui::SameLine();
         ImGui::RadioButton("Item Availability", &tab_, 3); ImGui::SameLine();
-        ImGui::RadioButton("Swap", &tab_, 4);
+        ImGui::RadioButton("Swap/Copy", &tab_, 4);
         ImGui::Separator();
 
         if (tab_ == 0) {
