@@ -98,6 +98,7 @@ class Graph {
 
     void Print();
     void Compute(double deltaT);
+    void Clear() { nodes_.clear(); }
   private:
     std::map<int32_t, std::unique_ptr<Node>> nodes_;
 };

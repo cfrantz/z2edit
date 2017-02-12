@@ -51,6 +51,7 @@ void MultiMap::Init() {
         }
     }
     location_.clear();
+    graph_.Clear();
 
     title_ = StrCat("MultiMap: ", maps_[start_].name(), "##", id_);
     if (start_ != 0) {
@@ -249,6 +250,10 @@ void MultiMap::Draw() {
     ImGui::InputFloat("Zoom", &scale_, 1.0/8.0, 1.0);
     ImGui::PopItemWidth();
 
+    ImGui::SameLine();
+    if (ImGui::Button("Refresh")) {
+        Init();
+    }
     ImGui::SameLine();
     if (ImGui::Button("Properties")) {
         ImGui::OpenPopup("Properties");
