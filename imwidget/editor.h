@@ -51,6 +51,7 @@ class Editor: public ImWindowBase {
     void HandleEvent(SDL_Event* e);
 
     bool changed_;
+    int undo_len_;
     bool show_connections_;
     float scale_;
     stbte_tilemap* editor_;

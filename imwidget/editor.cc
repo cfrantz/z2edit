@@ -48,6 +48,7 @@ static Editor* current;
 Editor::Editor()
   : ImWindowBase(false),
     changed_(false),
+    undo_len_(0),
     show_connections_(true),
     scale_(2.0),
     editor_(nullptr),
@@ -108,6 +109,7 @@ void Editor::ConvertFromMap(Map* map) {
         stbte_define_tile(editor_, i, 255, "basic");
     }
     changed_ = false;
+    undo_len_ = editor_->undo_len;
 }
 
 std::vector<uint8_t> Editor::CompressMap() {
@@ -175,6 +177,7 @@ void Editor::SaveMap() {
     encounters_.Save();
     connections_.Save();
     changed_ = false;
+    undo_len_ = editor_->undo_len;
 }
 
 void Editor::Resize(int x0, int y0, int x1, int y1) {
@@ -230,7 +233,7 @@ bool Editor::Draw() {
     }
     ImGui::PushItemWidth(400);
     if (ImGui::Combo("Map", &mapsel_, names, len)) {
-        if (FLAGS_reminder_dialogs && (changed_ || editor_->undo_len)) {
+        if (FLAGS_reminder_dialogs && (changed_ || undo_len_ != editor_->undo_len)) {
             ErrorDialog::Spawn("Discard Changes",
                 ErrorDialog::OK | ErrorDialog::CANCEL,
                 "Discard Changes to map?")->set_result_cb([this, mapsel, rominfo](int result) {
