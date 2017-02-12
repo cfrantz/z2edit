@@ -22,9 +22,9 @@ class MultiMap: public ImWindowBase {
                            int world, int overworld, int subworld,int map);
 
     MultiMap(Mapper* mapper, int world, int overworld, int subworld, int map)
-        : id_(UniqueID()), mapper_(mapper), visible_(true), scale_(0.25),
+        : ImWindowBase(), mapper_(mapper), scale_(0.25),
         world_(world), overworld_(overworld), subworld_(subworld),
-        start_(map), pauseconv_(true) {};
+        start_(map), pauseconv_(true) {}
 
     void Init();
     bool Draw() override;
@@ -53,7 +53,6 @@ class MultiMap: public ImWindowBase {
 
     int id_;
     Mapper* mapper_;
-    bool visible_;
     float scale_;
     int world_;
     int overworld_;

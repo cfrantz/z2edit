@@ -38,7 +38,6 @@ class ErrorDialog: public ImWindowBase {
     const static int CANCEL = 4;
   private:
     const static int MAX_BUTTONS = 3;
-    bool visible_;
     bool popup_;
     int buttons_;
     int result_;
