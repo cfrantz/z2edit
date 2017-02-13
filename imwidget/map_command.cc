@@ -758,7 +758,7 @@ void MapItemAvailable::Save() {
 }
 
 bool MapItemAvailable::Draw() {
-    bool chg;
+    bool chg = false;
     const char* names[] = {
         "Screen 1",
         "Screen 2",
