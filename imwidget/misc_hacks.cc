@@ -1,6 +1,8 @@
 #include "imwidget/misc_hacks.h"
 
 #include "nes/mapper.h"
+#include "proto/rominfo.pb.h"
+#include "util/config.h"
 #include "imgui.h"
 
 
@@ -11,6 +13,7 @@ bool MiscellaneousHacks::Draw() {
         return false;
 
     ImGui::Begin("Miscellaneous Hacks", &visible_);
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
 
     // At bank=0, offset $71d is near the end of the subroutine which determines
     // where Link can walk on the overworld:
@@ -36,6 +39,23 @@ bool MiscellaneousHacks::Draw() {
         }
     }
 
+    ImGui::PushItemWidth(100);
+    int item_delay = mapper_->Read(misc.item_pickup_delay(), 0);
+    if (ImGui::InputInt("Item Pickup Delay", &item_delay)) {
+        mapper_->Write(misc.item_pickup_delay(), 0, item_delay & 0xFF);
+    }
+
+    int text_delay = mapper_->Read(misc.text_delay(0), 0);
+    if (ImGui::InputInt("Text Delay", &text_delay)) {
+        text_delay &= 0xFF;
+        int delay1 = text_delay - 0x1f; if (delay1 < 0) delay1 = 0;
+        int delay2 = text_delay - 0x25; if (delay2 < 0) delay2 = 0;
+        mapper_->Write(misc.text_delay(0), 0, text_delay);
+        mapper_->Write(misc.text_delay(1), 0, delay1);
+        mapper_->Write(misc.text_delay(2), 0, delay2);
+    }
+
+    ImGui::PopItemWidth();
     ImGui::End();
     return false;
 }

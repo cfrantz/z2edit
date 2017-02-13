@@ -162,6 +162,8 @@ cc_library(
     deps = [
         ":base",
         "//nes:mappers",
+        "//proto:rominfo",
+        "//util:config",
         "//external:imgui",
     ],
 )

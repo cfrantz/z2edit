@@ -55,6 +55,10 @@ message Miscellaneous {
     Address raft_table = 11;
     HiddenSpot hidden_palace = 12;
     HiddenSpot hidden_town = 13;
+
+    // How long link holds up an item
+    Address item_pickup_delay = 14;
+    repeated Address text_delay = 15;
 }
 
 message Palette {

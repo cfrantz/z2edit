@@ -55,4 +55,8 @@ misc {
         returny: { bank: 7 address: 0xcccb }
         discriminator: { bank: 7 address: 0xccc4 }
     }
+    item_pickup_delay: { bank: 7 address: 0xe53c }
+    text_delay: { bank: 3 address: 0xb615 }
+    text_delay: { bank: 3 address: 0xb657 }
+    text_delay: { bank: 3 address: 0xb74e }
 }

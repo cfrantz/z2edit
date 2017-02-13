@@ -12,17 +12,10 @@ Done, but still need:
   * Townspeople text editor
   * Building entrances to which rooms? (understood, no widget for editing yet).
 
-### Overworld Editing
-  * Fix raft spot.
-  * Fix hidden places in East Hyrule (New Kasuto, P6)
-  * Figure out if there is anything to do for boulders or river devil.
-
 ### Enemy editor to change enemy HP, XP etc.
 
 ### Curate list of known hacks to optionally apply to a ROM:
-  * walk anywhere (done)
-  * text speed
-  * pick-up-item delay
+  * Continue from the beginning of palaces.
 
 ### Sprite and tiles editor
   * List of sprite equivalents between banks
@@ -98,11 +91,21 @@ Done: Multimap editor
 ### Overworld enemy encounter editor
   * Which sideview areas to load (done)
 
+### Overworld Editing
+  * Fix raft spot (done)
+  * Fix hidden places in East Hyrule (New Kasuto, P6) (done)
+  * Figure out if there is anything to do for boulders or river devil. (no, done)
+
 ### Sideview editing
   * Add/Delete enemies from a sideview area (done)
   * Sideview modifications should allocate new memory regions (done)
   * Large/small encounter enemy lists (done)
   * Initial item availability editor (doors & items) (done)
+
+### Curate list of known hacks to optionally apply to a ROM:
+  * walk anywhere (done)
+  * text speed (done)
+  * pick-up-item delay (done)
 
 ### Code cleanups
   * Rename the ::New methods to ::Spawn (done)
