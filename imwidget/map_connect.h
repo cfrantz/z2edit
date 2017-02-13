@@ -68,6 +68,7 @@ class OverworldConnectorList {
         *x = item.xpos();
         *y = item.ypos();
     }
+    bool NoCompress(int x, int y);
     void Save();
 
     inline bool show() const { return show_; }
@@ -79,6 +80,8 @@ class OverworldConnectorList {
     std::vector<OverworldConnector> list_;
     bool show_;
     bool changed_;
+    int overworld_;
+    int subworld_;
 };
 
 }  // namespace z2util

@@ -27,10 +27,21 @@ OverworldConnector::OverworldConnector(const OverworldConnector& other)
 
 void OverworldConnector::Read() {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    const auto& hpal = misc.hidden_palace();
+    const auto& htown = misc.hidden_town();
+    int overworld = subworld_ ? subworld_ : overworld_;
+
     uint8_t y = mapper_->Read(address_, offset_ + 0x00);
     uint8_t x = mapper_->Read(address_, offset_ + 0x3f);
     uint8_t z = mapper_->Read(address_, offset_ + 0x7e);
     uint8_t w = mapper_->Read(address_, offset_ + 0xbd);
+    if (overworld == mapper_->Read(hpal.cmpov(), 0)
+        && offset_ == mapper_->Read(hpal.connector(), 0)) {
+        y = mapper_->Read(hpal.connector(), 2);
+    } else if (overworld == mapper_->Read(hpal.cmpov(), 0)
+               && offset_ == mapper_->Read(htown.connector(), 0)) {
+        y = mapper_->Read(htown.connector(), 2);
+    }
 
     y_ = (y & 0x7f) - misc.overworld_y_offset();
     ext_ = !!(y & 0x80);
@@ -51,6 +62,9 @@ void OverworldConnector::Read() {
 
 void OverworldConnector::Write() {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    const auto& hpal = misc.hidden_palace();
+    const auto& htown = misc.hidden_town();
+    int overworld = subworld_ ? subworld_ : overworld_;
     int raft = mapper_->Read(misc.raft_id(), 0);
     uint8_t y, x, z, w;
 
@@ -65,7 +79,40 @@ void OverworldConnector::Write() {
     mapper_->Write(address_, offset_ + 0x7e, z);
     mapper_->Write(address_, offset_ + 0xbd, w);
 
-    if (offset_ == raft) {
+    if (overworld == mapper_->Read(hpal.cmpov(), 0)
+        && offset_ == mapper_->Read(hpal.connector(), 0)) {
+        // Hidden palace Y coordinate includes the overworld_y_offset.
+        // Furthermore, the "call" spot is 2 tiles north of the target
+        // destination.
+        mapper_->Write(hpal.connector(), 2, y);
+        mapper_->Write(hpal.cmpy(), 0, (y & 0x7f) - 2);
+        mapper_->Write(hpal.cmpx(), 0, x_);
+        mapper_->Write(hpal.returny(), 0, (y & 0x7f));
+
+        // PPU macros have their addresses in big-endian order.
+        uint16_t ppu_addr = 0x2000 + 2 * (32*(y_ % 15) + (x_ % 16));
+        mapper_->Write(hpal.ppu_macro(), 0, ppu_addr >> 8);
+        mapper_->Write(hpal.ppu_macro(), 1, ppu_addr);
+        ppu_addr += 32;
+        mapper_->Write(hpal.ppu_macro(), 5, ppu_addr >> 8);
+        mapper_->Write(hpal.ppu_macro(), 6, ppu_addr);
+        // Lets be lazy and not deal with the palette change.
+        mapper_->Write(hpal.ppu_macro(), 10, 0xff);
+
+        mapper_->Write(address_, offset_ + 0x00, 0);
+    } else if (overworld == mapper_->Read(htown.cmpov(), 0)
+               && offset_ == mapper_->Read(htown.connector(), 0)) {
+        // Hidden Town Y coordinate does not include the overworld_y_offset.
+        // Furthermore, the x location seems to be 1 more than the actual
+        // coordinate.
+        mapper_->Write(htown.connector(), 2, y);
+        mapper_->Write(htown.cmpy(), 0, y_);
+        mapper_->Write(htown.cmpx(), 0, x_+1);
+        mapper_->Write(htown.returny(), 0, (y & 0x7f));
+        mapper_->Write(htown.discriminator(), 0, x_);
+
+        mapper_->Write(address_, offset_ + 0x00, 0);
+    } else if (offset_ == raft) {
         // The raft table layout is:
         // ov0_xpos, ov2_xpos, ov0_ypos, ov2_ypos
         int delta = !(overworld_ == 0);
@@ -130,7 +177,11 @@ bool OverworldConnector::DrawInPopup() {
 
 
 OverworldConnectorList::OverworldConnectorList()
-  : mapper_(nullptr), add_offset_(0), changed_(false)
+  : mapper_(nullptr),
+    add_offset_(0),
+    changed_(false),
+    overworld_(0),
+    subworld_(0)
 {}
 
 void OverworldConnectorList::Init(Mapper* mapper, Address address,
@@ -139,6 +190,8 @@ void OverworldConnectorList::Init(Mapper* mapper, Address address,
     list_.clear();
     show_ = true;
     changed_ = false;
+    overworld_ = overworld;
+    subworld_ = subworld;
     for(int i=0; i<n; i++) {
         list_.emplace_back(mapper, address, i, overworld, subworld);
     }
@@ -182,11 +235,21 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
         "60\00061\00062\000Delete\0\0";
 
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    const auto& hpal = misc.hidden_palace();
+    const auto& htown = misc.hidden_town();
+    int overworld = subworld_ ? subworld_ : overworld_;
     int raft = mapper_->Read(misc.raft_id(), 0);
+
     int offset = conn->offset();
     ImGui::PushID(offset);
     if (offset == raft) {
         TextOutlined(ImColor(0xFFFF00FF), "%02dRAFT", offset);
+    } else if (overworld == mapper_->Read(hpal.cmpov(), 0)
+               && offset == mapper_->Read(hpal.connector(), 0)) {
+        TextOutlined(ImColor(0xFFFF00FF), "%02dPAL", offset);
+    } else if (overworld == mapper_->Read(htown.cmpov(), 0)
+               && offset == mapper_->Read(htown.connector(), 0)) {
+        TextOutlined(ImColor(0xFFFF00FF), "%02dTOWN", offset);
     } else {
         TextOutlined(ImColor(0xFFFF00FF), "%02d", offset);
     }
@@ -205,6 +268,28 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
     ImGui::PopID();
     return focus;
 }
+
+bool OverworldConnectorList::NoCompress(int x, int y) {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    const auto& hpal = misc.hidden_palace();
+    const auto& htown = misc.hidden_town();
+    int overworld = subworld_ ? subworld_ : overworld_;
+
+    for(const auto& c : list_) {
+        if (x == c.xpos() && y == c.ypos()) {
+            if (overworld == mapper_->Read(hpal.cmpov(), 0)
+                && c.offset() == mapper_->Read(hpal.connector(), 0)) {
+                return true;
+            }
+            if (overworld == mapper_->Read(htown.cmpov(), 0)
+                && c.offset() == mapper_->Read(htown.connector(), 0)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 
 bool OverworldConnectorList::Draw() {
     const char *ids =

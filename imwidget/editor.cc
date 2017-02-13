@@ -119,7 +119,13 @@ std::vector<uint8_t> Editor::CompressMap() {
         for(int x=0; x<editor_->max_x; x++) {
             uint8_t tile = editor_->data[y][x][0];
             uint8_t count = 0;
-            while(x+1 < editor_->max_x && tile == editor_->data[y][x+1][0]) {
+            if (connections_.NoCompress(x, y)) {
+                data.push_back(tile | count << 4); 
+                continue;
+            }
+            while(x+1 < editor_->max_x
+                  && tile == editor_->data[y][x+1][0]
+                  && !connections_.NoCompress(x+1, y)) {
                 x++;
                 count++;
                 if (count == 15)

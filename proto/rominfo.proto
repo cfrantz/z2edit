@@ -12,6 +12,18 @@ message MemoryRegion {
     int32 length = 3;
 }
 
+message HiddenSpot {
+    Address connector = 1;
+    Address cmpov = 2;
+    Address cmpy = 3;
+    Address cmpx = 4;
+    Address returny = 5;
+    // ppu_macro is only for hidden palace
+    Address ppu_macro = 6;
+    // discriminator is only for hidden town
+    Address discriminator = 7;
+}
+
 message Miscellaneous {
     // Ad-hoc collection of values that don't fit anywhere else
 
@@ -41,6 +53,8 @@ message Miscellaneous {
     // Information about the raft spot
     Address raft_id = 10;
     Address raft_table = 11;
+    HiddenSpot hidden_palace = 12;
+    HiddenSpot hidden_town = 13;
 }
 
 message Palette {
