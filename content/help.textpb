@@ -12,6 +12,9 @@ help {
     }, {
       key: "sideview-editor"
       value: "https://github.com/cfrantz/z2doc/wiki/sideview-editor"
+    }, {
+      key: "misc"
+      value: "https://github.com/cfrantz/z2doc/wiki/misc-hacks"
     }
   ]
 }

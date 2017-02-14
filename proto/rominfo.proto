@@ -24,6 +24,16 @@ message HiddenSpot {
     Address discriminator = 7;
 }
 
+message PokeData {
+    Address address = 1;
+    repeated int32 data = 2;
+}
+
+message GameHack {
+    string name = 1;
+    repeated PokeData hack = 2;
+}
+
 message Miscellaneous {
     // Ad-hoc collection of values that don't fit anywhere else
 
@@ -59,6 +69,7 @@ message Miscellaneous {
     // How long link holds up an item
     Address item_pickup_delay = 14;
     repeated Address text_delay = 15;
+
 }
 
 message Palette {
@@ -214,4 +225,5 @@ message RomInfo {
     Miscellaneous misc = 12;
     HelpLinks help = 13;
     repeated AvailableBitmap available = 14;
+    repeated GameHack palace5_detect = 15;
 }

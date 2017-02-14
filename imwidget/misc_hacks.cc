@@ -1,5 +1,6 @@
 #include "imwidget/misc_hacks.h"
 
+#include "imwidget/imapp.h"
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
@@ -39,6 +40,9 @@ bool MiscellaneousHacks::Draw() {
         }
     }
 
+    ImGui::SameLine(ImGui::GetWindowWidth() - 50);
+    ImApp::Get()->HelpButton("misc");
+
     ImGui::PushItemWidth(100);
     int item_delay = mapper_->Read(misc.item_pickup_delay(), 0);
     if (ImGui::InputInt("Item Pickup Delay", &item_delay)) {
@@ -56,8 +60,47 @@ bool MiscellaneousHacks::Draw() {
     }
 
     ImGui::PopItemWidth();
+    ImGui::PushItemWidth(400);
+
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    const char *names[ri.palace5_detect_size()];
+    int len = 0;
+    int p5method = 0;
+    for(const auto& hack: ri.palace5_detect()) {
+        names[len] = hack.name().c_str();
+        if (MemcmpHack(hack.hack(0))) {
+            p5method = len;
+        }
+        len++;
+    }
+    if (ImGui::Combo("Palace 5 detect", &p5method, names, len)) {
+        PutGameHack(ri.palace5_detect(p5method));
+    }
+
+    ImGui::PopItemWidth();
     ImGui::End();
     return false;
+}
+
+bool MiscellaneousHacks::MemcmpHack(const PokeData& data) {
+    for(int i=0; i<data.data_size(); i++) {
+        if (mapper_->Read(data.address(), i) != data.data(i)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void MiscellaneousHacks::PutPokeData(const PokeData& data) {
+    for(int i=0; i<data.data_size(); i++) {
+        mapper_->Write(data.address(), i, data.data(i));
+    }
+}
+
+void MiscellaneousHacks::PutGameHack(const GameHack& hack) {
+    for(const auto& h : hack.hack()) {
+        PutPokeData(h);
+    }
 }
 
 }  // namespace
