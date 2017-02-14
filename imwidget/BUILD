@@ -180,6 +180,19 @@ cc_library(
 )
 
 cc_library(
+    name = "palace_gfx",
+    hdrs = ["palace_gfx.h"],
+    srcs = ["palace_gfx.cc"],
+    deps = [
+        ":base",
+        "//nes:mappers",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+    ],
+)
+
+cc_library(
     name = "start_values",
     hdrs = ["start_values.h"],
     srcs = ["start_values.cc"],

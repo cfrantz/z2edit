@@ -51,6 +51,7 @@ void Z2Edit::Init() {
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
     misc_hacks_.reset(new z2util::MiscellaneousHacks);
+    palace_gfx_.reset(new z2util::PalaceGraphics);
     start_values_.reset(new z2util::StartValues);
     object_table_.reset(new z2util::ObjectTable);
     editor_.reset(z2util::Editor::New());
@@ -75,6 +76,7 @@ void Z2Edit::Load(const std::string& filename) {
     editor_->ConvertFromMap(ri->mutable_map(0));
 
     misc_hacks_->set_mapper(mapper_.get());
+    palace_gfx_->set_mapper(mapper_.get());
     start_values_->set_mapper(mapper_.get());
 
     object_table_->set_mapper(mapper_.get());
@@ -483,6 +485,8 @@ save_as:
                             &simplemap_->visible());
             ImGui::MenuItem("Miscellaneous Hacks", nullptr,
                             &misc_hacks_->visible());
+            ImGui::MenuItem("Palace Graphics", nullptr,
+                            &palace_gfx_->visible());
             ImGui::MenuItem("Start Values", nullptr,
                             &start_values_->visible());
             ImGui::EndMenu();
@@ -507,6 +511,7 @@ save_as:
 
     start_values_->Draw();
     misc_hacks_->Draw();
+    palace_gfx_->Draw();
     hwpal_->Draw();
     chrview_->Draw();
     simplemap_->Draw();

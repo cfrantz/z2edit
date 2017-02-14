@@ -70,6 +70,9 @@ message Miscellaneous {
     Address item_pickup_delay = 14;
     repeated Address text_delay = 15;
 
+    Address palace_graphics = 16;
+    Address palace_palette = 17;
+    int32 palace_table_len = 18;
 }
 
 message Palette {

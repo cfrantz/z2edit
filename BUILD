@@ -28,6 +28,7 @@ cc_library(
         "//imwidget:hwpalette",
         "//imwidget:misc_hacks",
         "//imwidget:neschrview",
+        "//imwidget:palace_gfx",
         "//imwidget:simplemap",
         "//imwidget:start_values",
         "//imwidget:object_table",

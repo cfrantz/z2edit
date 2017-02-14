@@ -59,4 +59,10 @@ misc {
     text_delay: { bank: 3 address: 0xb615 }
     text_delay: { bank: 3 address: 0xb657 }
     text_delay: { bank: 3 address: 0xb74e }
+
+
+    palace_graphics: { bank: 7 address: 0xcd2a }
+    palace_palette: { bank: 7 address: 0xcd35 }
+    palace_table_len: 11
+
 }
