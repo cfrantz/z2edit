@@ -60,26 +60,50 @@ bool MiscellaneousHacks::Draw() {
     }
 
     ImGui::PopItemWidth();
-    ImGui::PushItemWidth(400);
 
+    Palace5Hack();
+    PalaceContinueHack();
+
+    ImGui::End();
+    return false;
+}
+
+void  MiscellaneousHacks::Palace5Hack() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.palace5_detect_size()];
     int len = 0;
-    int p5method = 0;
+    int method = 0;
     for(const auto& hack: ri.palace5_detect()) {
         names[len] = hack.name().c_str();
         if (MemcmpHack(hack.hack(0))) {
-            p5method = len;
+            method = len;
         }
         len++;
     }
-    if (ImGui::Combo("Palace 5 detect", &p5method, names, len)) {
-        PutGameHack(ri.palace5_detect(p5method));
+    ImGui::PushItemWidth(400);
+    if (ImGui::Combo("Palace 5 detect", &method, names, len)) {
+        PutGameHack(ri.palace5_detect(method));
     }
-
     ImGui::PopItemWidth();
-    ImGui::End();
-    return false;
+}
+
+void  MiscellaneousHacks::PalaceContinueHack() {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    const char *names[ri.palace_continue_size()];
+    int len = 0;
+    int method = 0;
+    for(const auto& hack: ri.palace_continue()) {
+        names[len] = hack.name().c_str();
+        if (MemcmpHack(hack.hack(0))) {
+            method = len;
+        }
+        len++;
+    }
+    ImGui::PushItemWidth(400);
+    if (ImGui::Combo("Palace Continue", &method, names, len)) {
+        PutGameHack(ri.palace_continue(method));
+    }
+    ImGui::PopItemWidth();
 }
 
 bool MiscellaneousHacks::MemcmpHack(const PokeData& data) {

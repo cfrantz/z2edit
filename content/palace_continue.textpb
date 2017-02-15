@@ -1,0 +1,18 @@
+palace_continue {
+    name: "Vanilla (continue only from P7)"
+    hack: [
+        {address { bank:7 address:0xcad0 } data: [ 0x20, 0x30, 0xcf, 0xc9, 0x0f, 0xf0, 0x07 ]}
+    ]
+}
+palace_continue {
+    name: "Continue from any palace"
+    hack: [
+        {address { bank:7 address:0xcad0 } data: [ 0xad, 0x07, 0x07, 0xc9, 0x03, 0xb0, 0x07 ]}
+    ]
+}
+palace_continue {
+    name: "Never continue from palaces"
+    hack: [
+        {address { bank:7 address:0xcad0 } data: [ 0xad, 0x07, 0x07, 0xc9, 0xf0, 0xb0, 0x07 ]}
+    ]
+}

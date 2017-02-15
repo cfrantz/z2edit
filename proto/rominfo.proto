@@ -229,4 +229,5 @@ message RomInfo {
     HelpLinks help = 13;
     repeated AvailableBitmap available = 14;
     repeated GameHack palace5_detect = 15;
+    repeated GameHack palace_continue = 16;
 }

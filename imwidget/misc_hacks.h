@@ -13,6 +13,9 @@ class MiscellaneousHacks: public ImWindowBase {
     bool Draw() override;
     inline void set_mapper(Mapper* m) { mapper_ = m; };
   private:
+    void Palace5Hack();
+    void PalaceContinueHack();
+
     bool MemcmpHack(const PokeData& data);
     void PutPokeData(const PokeData& data);
     void PutGameHack(const GameHack& hack);
