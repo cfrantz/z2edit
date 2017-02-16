@@ -1,5 +1,6 @@
 #include "imwidget/palace_gfx.h"
 
+#include "imwidget/imapp.h"
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
@@ -22,6 +23,9 @@ bool PalaceGraphics::Draw() {
     ImGui::Begin("Palace Graphics & Palettes", &visible_);
     int start = 52;
     ImGui::Text("East   DM/MZ  West   CHR bank           Palette Offset");
+
+    ImGui::SameLine(ImGui::GetWindowWidth() - 50);
+    ImApp::Get()->HelpButton("palace-graphics");
     ImGui::Separator();
 
     for(int i=0; i<misc.palace_table_len(); i++) {
@@ -33,6 +37,8 @@ bool PalaceGraphics::Draw() {
             ImGui::AlignFirstTextHeightToWidgets();
             if (n >= 52 && n < 56) {
                 ImGui::Text("%02d    ", n);
+            } else if (n >= 62) {
+                ImGui::Text("      ");
             } else {
                 ImGui::TextColored(ImColor(0xFF808080), "%02d    ", n);
             }

@@ -13,6 +13,9 @@ help {
       key: "sideview-editor"
       value: "https://github.com/cfrantz/z2doc/wiki/sideview-editor"
     }, {
+      key: "palace-graphics"
+      value: "https://github.com/cfrantz/z2doc/wiki/palace-graphics"
+    }, {
       key: "misc"
       value: "https://github.com/cfrantz/z2doc/wiki/misc-hacks"
     }
