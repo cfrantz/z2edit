@@ -1,0 +1,5 @@
+xptable {
+    lo { bank: 7 address: 0xddc0 }
+    hi { bank: 7 address: 0xdddc }
+    gfx { bank: 7 address: 0xdd4c }
+}

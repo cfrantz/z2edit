@@ -205,6 +205,8 @@ message ItemInfo {
     Address sprite_table = 6;
     int32 overworld = 7;
     int32 subworld = 8;
+    Address hpinfo = 9;
+    Address xpinfo = 10;
 }
 
 message AvailableBitmap {
@@ -216,6 +218,12 @@ message AvailableBitmap {
 
 message HelpLinks {
     map<string, string> url = 1;
+}
+
+message XPTable {
+    Address lo = 1;
+    Address hi = 2;
+    Address gfx = 3;
 }
 
 message RomInfo {
@@ -236,4 +244,5 @@ message RomInfo {
     repeated GameHack palace5_detect = 15;
     repeated GameHack palace_continue = 16;
     repeated PaletteGroup palettes = 17;
+    XPTable xptable = 18;
 }

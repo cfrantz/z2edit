@@ -55,7 +55,9 @@ void Z2ObjectCache::BlitTile(uint32_t* dest, int x, int y, int tile, int pal,
     int height = 8;
     dest += y*width + x;
 
-    if (schema_ == Schema::ITEM || schema_ == Schema::ITEMINFO) {
+    if (schema_ == Schema::ITEM
+        || schema_ == Schema::ITEMINFO
+        || schema_ == Schema::TILE8x16) {
         bofs = tile & 1;
         height = 16;
         tile &= ~1;
@@ -97,6 +99,11 @@ void Z2ObjectCache::CreateObject(uint8_t obj) {
 
         int tile2 = mapper_->Read(obj_[set], obj*2 + 1);
         BlitTile(dest, 8, 0, tile2, pal, width, tile == tile2);
+    } else if (schema_ == Schema::TILE8x8 || schema_ == Schema::TILE8x16) {
+        width = 8;
+        height = (schema_ == Schema::TILE8x8) ? 8 : 16;
+        dest = new uint32_t[width * height]();
+        BlitTile(dest, 0, 0, obj, 1, width);
     } else if (schema_ == Schema::ITEMINFO) {
         const auto& it = info_.info().find(obj);
         if (it != info_.info().end()) {

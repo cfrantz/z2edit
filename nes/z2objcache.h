@@ -17,6 +17,8 @@ class Z2ObjectCache {
         MAP = 1,
         ITEM = 2,
         ITEMINFO = 3,
+        TILE8x8 = 4,
+        TILE8x16 = 5,
     };
     Z2ObjectCache();
     explicit Z2ObjectCache(Mapper* mapper)

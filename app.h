@@ -5,6 +5,7 @@
 
 #include "imwidget/imapp.h"
 #include "imwidget/editor.h"
+#include "imwidget/enemyattr.h"
 #include "imwidget/hwpalette.h"
 #include "imwidget/imwidget.h"
 #include "imwidget/misc_hacks.h"
@@ -58,6 +59,7 @@ class Z2Edit: public ImApp {
     std::unique_ptr<z2util::PaletteEditor> palette_editor_;
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::ObjectTable> object_table_;
+    std::unique_ptr<z2util::EnemyEditor> enemy_editor_;;
 
     Cartridge cartridge_;
     z2util::Memory memory_;

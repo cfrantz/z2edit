@@ -25,6 +25,7 @@ cc_library(
     deps = [
         "//imwidget:base",
         "//imwidget:editor",
+        "//imwidget:enemyattr",
         "//imwidget:hwpalette",
         "//imwidget:misc_hacks",
         "//imwidget:neschrview",

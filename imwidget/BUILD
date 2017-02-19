@@ -233,3 +233,19 @@ cc_library(
         "//external:imgui",
     ],
 )
+
+cc_library(
+    name = "enemyattr",
+    hdrs = ["enemyattr.h"],
+    srcs = ["enemyattr.cc"],
+    deps = [
+        ":base",
+        ":error_dialog",
+        "//nes:mappers",
+        "//nes:z2objcache",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+        "//external:gflags",
+    ],
+)

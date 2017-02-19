@@ -33,6 +33,8 @@ enemies {
     area: "west_hyrule"
     world: 0
     overworld: 0
+    hpinfo { bank: 1 address: 0x9421 }
+    xpinfo { bank: 1 address: 0x94d5 }
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -276,6 +278,8 @@ enemies {
     # Valid enemies for overworld 2-0 and 2-1: East Hyrule and Maze Island1
     world: 0
     overworld: 2
+    hpinfo { bank: 2 address: 0x9421 }
+    xpinfo { bank: 2 address: 0x94d5 }
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -483,6 +487,8 @@ enemies {
 enemies {
     area: "town"
     world: 1
+    hpinfo { bank: 3 address: 0x9421 }
+    xpinfo { bank: 3 address: 0x94d5 }
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -661,6 +667,8 @@ enemies {
 enemies {
     area: "palace_125"
     world: 3
+    hpinfo { bank: 4 address: 0x9421 }
+    xpinfo { bank: 4 address: 0x94d5 }
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -923,6 +931,8 @@ enemies {
 enemies {
     area: "palace_346"
     world: 4
+    hpinfo { bank: 4 address: 0xa921 }
+    xpinfo { bank: 4 address: 0xa9d5 }
     info: [
         { key: 0x00 value: {
             name: "fairy"
@@ -1183,6 +1193,8 @@ enemies {
 enemies {
     area: "great_palace"
     world: 5
+    hpinfo { bank: 5 address: 0x9421 }
+    xpinfo { bank: 5 address: 0x94d5 }
     info: [
         { key: 0x00 value: {
             name: "fairy"
