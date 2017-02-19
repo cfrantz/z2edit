@@ -11,7 +11,7 @@ DECLARE_bool(reminder_dialogs);
 
 namespace z2util {
 
-void ExperienceTable::Init() {
+void PointsTable::Init() {
     Load();
     Address none;
     Address chr;
@@ -28,7 +28,7 @@ void ExperienceTable::Init() {
     cache_.Clear();
 }
 
-bool ExperienceTable::Draw() {
+bool PointsTable::Draw() {
     if (!visible_)
         return changed_;
 
@@ -49,7 +49,6 @@ bool ExperienceTable::Draw() {
         sprintf(buf, "%02x", val.gfx[0]);
         if (ImGui::InputText("", buf, sizeof(buf),
                              ImGuiInputTextFlags_CharsHexadecimal)) {
-//                             ImGuiInputTextFlags_EnterReturnsTrue)) {
             changed_ = true;
             val.gfx[0] = strtoul(buf, 0, 16);
         }
@@ -57,7 +56,6 @@ bool ExperienceTable::Draw() {
         sprintf(buf, "%02x", val.gfx[1]);
         if (ImGui::InputText("Graphics", buf, sizeof(buf),
                              ImGuiInputTextFlags_CharsHexadecimal)) {
-//                             ImGuiInputTextFlags_EnterReturnsTrue)) {
             changed_ = true;
             val.gfx[1] = strtoul(buf, 0, 16);
         }
@@ -75,7 +73,7 @@ bool ExperienceTable::Draw() {
     return changed_;
 }
 
-void ExperienceTable::Load() {
+void PointsTable::Load() {
     const auto& xp = ConfigLoader<RomInfo>::GetConfig().xptable();
 
     data_.clear();
@@ -89,7 +87,7 @@ void ExperienceTable::Load() {
     changed_ = false;
 }
 
-void ExperienceTable::Save() {
+void PointsTable::Save() {
     const auto& xp = ConfigLoader<RomInfo>::GetConfig().xptable();
     int i = 0;
     for(const auto& val : data_) {

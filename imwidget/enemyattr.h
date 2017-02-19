@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_IMWIDGET_XPTABLE_H
-#define Z2UTIL_IMWIDGET_XPTABLE_H
+#ifndef Z2UTIL_IMWIDGET_ENEMYATTR_H
+#define Z2UTIL_IMWIDGET_ENEMYATTR_H
 #include <vector>
 #include "imwidget/imwidget.h"
 #include "nes/z2objcache.h"
@@ -7,9 +7,9 @@
 class Mapper;
 namespace z2util {
 
-class ExperienceTable: public ImWindowBase {
+class PointsTable: public ImWindowBase {
   public:
-    ExperienceTable()
+    PointsTable()
       : ImWindowBase(false), mapper_(nullptr), changed_(false) {}
     void Init();
 
@@ -63,9 +63,9 @@ class EnemyEditor: public ImWindowBase {
     bool changed_;
     int category_;
     std::vector<Unpacked> data_;
-    ExperienceTable table_;
+    PointsTable table_;
     const static int TABLE_LEN = 0x24;
 };
 
 }  // namespace z2util
-#endif // Z2UTIL_IMWIDGET_XPTABLE_H
+#endif // Z2UTIL_IMWIDGET_ENEMYATTR_H
