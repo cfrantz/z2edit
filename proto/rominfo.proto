@@ -80,6 +80,11 @@ message Palette {
     Address address = 2;
 }
 
+message PaletteGroup {
+    string name = 1;
+    repeated Palette palette = 2;
+}
+
 enum MapType {
     OUTDOORS = 0;
     TOWN = 1;
@@ -230,4 +235,5 @@ message RomInfo {
     repeated AvailableBitmap available = 14;
     repeated GameHack palace5_detect = 15;
     repeated GameHack palace_continue = 16;
+    repeated PaletteGroup palettes = 17;
 }

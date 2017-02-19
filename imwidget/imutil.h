@@ -51,5 +51,13 @@ inline void Clamp(T* v, T mn, T mx) {
 void TextOutlined(const ImVec4& col, const char* fmt, ...);
 void TextOutlinedV(const ImVec4& col, const char* fmt, va_list args);
 
+inline ImColor Brighter(ImColor col) {
+    float h, s, v;
+    ImGui::ColorConvertRGBtoHSV(col.Value.x, col.Value.y, col.Value.z, h, s, v);
+    v *= 1.25;
+    if (v > 1.0) v = 1.0;
+    return ImColor::HSV(h, s, v);
+}
+
 
 #endif // Z2UTIL_IMWIDGET_IMUTIL_H

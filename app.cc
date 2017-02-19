@@ -52,6 +52,7 @@ void Z2Edit::Init() {
     simplemap_.reset(new z2util::SimpleMap);
     misc_hacks_.reset(new z2util::MiscellaneousHacks);
     palace_gfx_.reset(new z2util::PalaceGraphics);
+    palette_editor_.reset(new z2util::PaletteEditor);
     start_values_.reset(new z2util::StartValues);
     object_table_.reset(new z2util::ObjectTable);
     editor_.reset(z2util::Editor::New());
@@ -77,10 +78,13 @@ void Z2Edit::Load(const std::string& filename) {
 
     misc_hacks_->set_mapper(mapper_.get());
     palace_gfx_->set_mapper(mapper_.get());
+    palette_editor_->set_mapper(mapper_.get());
     start_values_->set_mapper(mapper_.get());
 
     object_table_->set_mapper(mapper_.get());
+
     object_table_->Init();
+    palette_editor_->Init();
 
     memory_.set_mapper(mapper_.get());
     memory_.CheckBankForKeepout(1);
@@ -487,6 +491,8 @@ save_as:
                             &misc_hacks_->visible());
             ImGui::MenuItem("Palace Graphics", nullptr,
                             &palace_gfx_->visible());
+            ImGui::MenuItem("Palette Editor", nullptr,
+                            &palette_editor_->visible());
             ImGui::MenuItem("Start Values", nullptr,
                             &start_values_->visible());
             ImGui::EndMenu();
@@ -512,6 +518,7 @@ save_as:
     start_values_->Draw();
     misc_hacks_->Draw();
     palace_gfx_->Draw();
+    palette_editor_->Draw();
     hwpal_->Draw();
     chrview_->Draw();
     simplemap_->Draw();

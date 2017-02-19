@@ -97,6 +97,22 @@ cc_library(
 )
 
 cc_library(
+    name = "palette",
+    hdrs = ["palette.h"],
+    srcs = ["palette.cc"],
+    deps = [
+        ":base",
+        ":error_dialog",
+        ":hwpalette",
+        "//nes:mappers",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+        "//external:gflags",
+    ],
+)
+
+cc_library(
     name = "simplemap",
     hdrs = [
         "simplemap.h",

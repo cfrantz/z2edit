@@ -10,6 +10,7 @@
 #include "imwidget/misc_hacks.h"
 #include "imwidget/neschrview.h"
 #include "imwidget/palace_gfx.h"
+#include "imwidget/palette.h"
 #include "imwidget/simplemap.h"
 #include "imwidget/start_values.h"
 #include "imwidget/object_table.h"
@@ -54,6 +55,7 @@ class Z2Edit: public ImApp {
     std::unique_ptr<z2util::Editor> editor_;
     std::unique_ptr<z2util::MiscellaneousHacks> misc_hacks_;
     std::unique_ptr<z2util::PalaceGraphics> palace_gfx_;
+    std::unique_ptr<z2util::PaletteEditor> palette_editor_;
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::ObjectTable> object_table_;
 
