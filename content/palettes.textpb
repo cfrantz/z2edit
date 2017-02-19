@@ -13,7 +13,6 @@ palettes {
     palette { name: "Swamp"        address: { bank:1 address: 0x805e } }
     palette { name: "Graveyard"    address: { bank:1 address: 0x806e } }
     palette { name: "Water"        address: { bank:1 address: 0x807e } }
-    palette { name: "Water"        address: { bank:1 address: 0x807e } }
     palette { name: "Dark Cave"    address: { bank:1 address: 0x808e } }
 }
 palettes {
