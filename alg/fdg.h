@@ -33,7 +33,7 @@ class Node {
     explicit Node(int32_t id, const Vec2& position)
       : id_(id), start_pos_(position), pos_(position),
         vel_(0, 0), acc_(0, 0), force_(0, 0),
-        mass_(1.0), charge_(1.0), friction_(0.01) {}
+        mass_(1.0), charge_(1.0), friction_(0.01), pause_(false) {}
 
     explicit Node(const Vec2& position) : Node(0, position) {}
     explicit Node() : Node(0, Vec2(0, 0)) {}
@@ -52,6 +52,9 @@ class Node {
     inline double friction() const { return friction_; }
     inline void set_friction(double friction) { friction_ = friction; }
 
+    inline bool pause() const { return pause_; }
+    inline void set_pause(bool pause) { pause_ = pause; }
+
     inline const std::vector<Spring>& connection() const { return connection_; }
     inline std::vector<Spring>* mutable_connection() { return &connection_; }
 
@@ -69,6 +72,7 @@ class Node {
     double mass_;
     double charge_;
     double friction_;
+    bool pause_;
     std::vector<Spring> connection_;
 };
 

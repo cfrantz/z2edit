@@ -70,7 +70,7 @@ void Node::ApplyForces(double deltaT) {
     // Equations of motion
     vel_ = vel_ * (1.0 - friction_) + acc_ * deltaT;
     Vec2 delta = vel_ * deltaT;
-    if (delta.length() < 1e-6)
+    if (pause_ || delta.length() < 1e-6)
         return;
 
     pos_ += delta;
