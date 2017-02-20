@@ -12,10 +12,9 @@ Done, but still need:
   * Townspeople text editor
   * Building entrances to which rooms? (understood, no widget for editing yet).
 
-### Enemy editor to change enemy HP, XP etc.
-
 ### Curate list of known hacks to optionally apply to a ROM:
-  * Continue from the beginning of palaces.
+  * Others? (Shadow of Night has a "Dash" spell for running fast).
+  * Links tunic color, other spell colors?
 
 ### Sprite and tiles editor
   * List of sprite equivalents between banks
@@ -106,6 +105,13 @@ Done: Multimap editor
   * walk anywhere (done)
   * text speed (done)
   * pick-up-item delay (done)
+  * Continue from the beginning of palaces (done)
+
+### Enemy editor to change enemy HP, XP etc.
+  * Enemy attributes editor (done)
+  * Experience table editor (done)
+
+### Palette editor (done)
 
 ### Code cleanups
   * Rename the ::New methods to ::Spawn (done)
