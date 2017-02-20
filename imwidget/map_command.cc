@@ -274,9 +274,9 @@ bool MapHolder::Draw() {
                                 ImGuiInputTextFlags_CharsHexadecimal |
                                 ImGuiInputTextFlags_EnterReturnsTrue);
     if (achanged) {
-        addr_changed_ |= achanged;
         map_addr_ = strtoul(abuf, 0, 16);
         Parse(map_, map_addr_);
+        addr_changed_ |= achanged;
         return true;
     }
 
@@ -413,6 +413,8 @@ void MapHolder::Parse(const z2util::Map& map, uint16_t altaddr) {
         command_.emplace_back(this, absx, pos, obj, extra);
         absx = command_.back().absx();
     }
+    data_changed_ = false;
+    addr_changed_ = false;
 }
 
 std::vector<uint8_t> MapHolder::MapDataWorker(std::vector<MapCommand>& list) {
@@ -503,6 +505,7 @@ void MapHolder::Save() {
     }
     mapper_->WriteWord(map_.pointer(), 0, addr.address());
     data_changed_ = false;
+    addr_changed_ = false;
 }
 
 MapConnection::MapConnection()
