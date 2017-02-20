@@ -51,6 +51,11 @@ bool PaletteEditor::Draw() {
     }
     ImGui::PopItemWidth();
 
+    ImGui::SameLine();
+    if (ImGui::Button("Commit to ROM")) {
+        Save();
+    }
+
     int id = 0;
     int n = 0;
     ImGui::Text("%-20s   %-18s %-18s%-18s %-18s",
@@ -77,9 +82,6 @@ bool PaletteEditor::Draw() {
         n++;
     }
 
-    if (ImGui::Button("Commit to ROM")) {
-        Save();
-    }
     ImGui::End();
     return changed_;
 }
