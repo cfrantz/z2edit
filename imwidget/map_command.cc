@@ -347,7 +347,7 @@ bool MapHolder::Draw() {
           ImGui::SetTooltip("Delete this command");
         ImGui::PopID();
         if (create)
-            command_.emplace(it, this, it->absx(), 0, 0, 0);
+            it = command_.emplace(it, this, it->absx(), 0, 0, 0);
     }
     if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
         changed = true;
