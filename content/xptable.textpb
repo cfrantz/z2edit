@@ -1,5 +1,22 @@
 xptable {
-    lo { bank: 7 address: 0xddc0 }
-    hi { bank: 7 address: 0xdddc }
-    gfx { bank: 7 address: 0xdd4c }
+    lo { bank:7 address: 0xddc0 }
+    hi { bank:7 address: 0xdddc }
+    gfx { bank:7 address: 0xdd4c }
+
+    sword { bank:7 address: 0xe66d }
+    small_damage { bank:7 address: 0xe2af }
+    large_damage { bank:7 address: 0xe2b7 }
+
+    magic { bank:0 address: 0x8d7b }
+    magic { bank:0 address: 0x8d83 }
+    magic { bank:0 address: 0x8d8b }
+    magic { bank:0 address: 0x8d93 }
+    magic { bank:0 address: 0x8d9b }
+    magic { bank:0 address: 0x8da3 }
+    magic { bank:0 address: 0x8dab }
+    magic { bank:0 address: 0x8db3 }
+    magic_effects { bank:0 address: 0x8dbb }
+
+    levelup { bank:0 address: 0x9659 }
+    levelup_gfx { bank:0 address: 0x9e32 }
 }

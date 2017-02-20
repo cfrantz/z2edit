@@ -15,6 +15,7 @@
 #include "imwidget/simplemap.h"
 #include "imwidget/start_values.h"
 #include "imwidget/object_table.h"
+#include "imwidget/xptable.h"
 #include "nes/cartridge.h"
 #include "nes/mapper.h"
 #include "nes/memory.h"
@@ -59,7 +60,8 @@ class Z2Edit: public ImApp {
     std::unique_ptr<z2util::PaletteEditor> palette_editor_;
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::ObjectTable> object_table_;
-    std::unique_ptr<z2util::EnemyEditor> enemy_editor_;;
+    std::unique_ptr<z2util::EnemyEditor> enemy_editor_;
+    std::unique_ptr<z2util::ExperienceTable> experience_table_;
 
     Cartridge cartridge_;
     z2util::Memory memory_;

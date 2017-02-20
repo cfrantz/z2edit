@@ -221,9 +221,35 @@ message HelpLinks {
 }
 
 message XPTable {
+    // Experience Points given for kills (types 0-F)
     Address lo = 1;
     Address hi = 2;
     Address gfx = 3;
+
+    // Sword attack power (levels 1-8)
+    Address sword = 4;
+    // Damage taken from enemies (levels 1-8)
+    Address small_damage = 5;
+    Address large_damage = 6;
+
+    // Magic cost for spells (levels 1-8)
+    repeated Address magic = 7;
+    // Bitmask of magic effects for spells
+    Address magic_effects = 8;
+
+    // Experience points to level up, arranged as:
+    //  Attack lo byte (2 - 1up)
+    //  Magic  lo byte (2 - 1up)
+    //  Life   lo byte (2 - 1up)
+    //  Attack hi byte (2 - 1up)
+    //  Magic  hi byte (2 - 1up)
+    //  Life   hi byte (2 - 1up)
+    Address levelup = 9;
+    // Graphics used to display level thresholds, arranged as:
+    //  Tens Place, 2-1up: ATK, Mag, Life
+    //  Hundreds Place, 2-1up: ATK, Mag, Life
+    //  Thousands Place, 2-1up: ATK, Mag, Life
+    Address levelup_gfx = 10;
 }
 
 message RomInfo {

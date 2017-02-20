@@ -56,6 +56,7 @@ void Z2Edit::Init() {
     start_values_.reset(new z2util::StartValues);
     object_table_.reset(new z2util::ObjectTable);
     enemy_editor_.reset(new z2util::EnemyEditor);
+    experience_table_.reset(new z2util::ExperienceTable);
     editor_.reset(z2util::Editor::New());
 }
 
@@ -84,10 +85,12 @@ void Z2Edit::Load(const std::string& filename) {
 
     object_table_->set_mapper(mapper_.get());
     enemy_editor_->set_mapper(mapper_.get());
+    experience_table_->set_mapper(mapper_.get());
 
     object_table_->Init();
     palette_editor_->Init();
     enemy_editor_->Init();
+    experience_table_->Init();
 
     memory_.set_mapper(mapper_.get());
     memory_.CheckBankForKeepout(1);
@@ -488,6 +491,8 @@ save_as:
                             &console_.visible());
             ImGui::MenuItem("Enemy Attributes", nullptr,
                             &enemy_editor_->visible());
+            ImGui::MenuItem("Experience Table", nullptr,
+                            &experience_table_->visible());
             ImGui::MenuItem("Overworld Editor", nullptr,
                             &editor_->visible());
             ImGui::MenuItem("Sideview Editor", nullptr,
@@ -530,6 +535,7 @@ save_as:
     editor_->Draw();
     object_table_->Draw();
     enemy_editor_->Draw();
+    experience_table_->Draw();
 
     if (!loaded_) {
         char *filename = nullptr;

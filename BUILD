@@ -34,6 +34,7 @@ cc_library(
         "//imwidget:simplemap",
         "//imwidget:start_values",
         "//imwidget:object_table",
+        "//imwidget:xptable",
         "//nes:cartridge",
         "//nes:cpu6502",
         "//nes:mappers",

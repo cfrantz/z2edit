@@ -249,3 +249,19 @@ cc_library(
         "//external:gflags",
     ],
 )
+
+cc_library(
+    name = "xptable",
+    hdrs = ["xptable.h"],
+    srcs = ["xptable.cc"],
+    deps = [
+        ":base",
+        ":error_dialog",
+        "//nes:mappers",
+        "//nes:z2objcache",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+        "//external:gflags",
+    ],
+)
