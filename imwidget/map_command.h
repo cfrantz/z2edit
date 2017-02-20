@@ -25,8 +25,10 @@ class MapCommand {
     // sets: small objects, object set 0, object set 1,
     // extra small objects, extra objects
     const static int NR_SETS = 5;
+    const static int MAX_COLLECTABLE = 36;
     static const DecompressInfo* info_[NR_AREAS][NR_SETS][16];
     static const char* object_names_[NR_AREAS][NR_SETS][16];
+    static const char *collectable_names_[MAX_COLLECTABLE];
     inline int absx() const { return data_.absx; }
     inline int absy() const { return data_.y; }
     inline void set_relx(int x) { data_.x = x; }

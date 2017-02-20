@@ -16,9 +16,11 @@ namespace z2util {
 
 const DecompressInfo* MapCommand::info_[NR_AREAS][NR_SETS][16];
 const char* MapCommand::object_names_[NR_AREAS][NR_SETS][16];
+const char* MapCommand::collectable_names_[MAX_COLLECTABLE];
 void MapCommand::Init() {
     static bool done;
     static char names[NR_AREAS][NR_SETS][16][64];
+    static char collectable[MAX_COLLECTABLE][32];
     if (done)
         return;
     memset(info_, 0, sizeof(info_));
@@ -48,6 +50,15 @@ void MapCommand::Init() {
                  "%02x: %s", val, d.comment().c_str());
         info_[d.area()][d.type()][id] = &d;
     }
+    for(int i=0; i<MAX_COLLECTABLE; i++) {
+        const auto& c = ri.items().info().find(i);
+        if (c == ri.items().info().end()) {
+            snprintf(collectable[i], 31, "%02x: ???", i);
+        } else {
+            snprintf(collectable[i], 31, "%02x: %s", i, c->second.name().c_str());
+        }
+        collectable_names_[i] = collectable[i];
+    }
     done = true;
 }
 
@@ -74,17 +85,6 @@ MapCommand::MapCommand(const MapHolder* holder, int x0, uint8_t position,
         data_.absx = data_.x + x0;
     }
 }
-
-/*
-MapCommand::MapCommand(MapCommand&& other)
-  : id_(other.id_),
-    holder_(other.holder_),
-    position_(other.position_),
-    object_(other.object_),
-    extra_(other.extra_),
-    data_(other.data_) {}
-    */
-
 
 bool MapCommand::Draw(bool abscoord) {
     bool changed = false;
@@ -140,6 +140,9 @@ bool MapCommand::Draw(bool abscoord) {
         }
 
         if (data_.y == 15) {
+            // y==15 means objects in the "extra" object set, which is not
+            // to be confused with the extra_ data element, meant to hold
+            // the ID of collectable items.
             if ((object_ & 0xF0) == 0) {
                 oindex = 3;
                 data_.object = extra_small_start + object_;
@@ -157,6 +160,7 @@ bool MapCommand::Draw(bool abscoord) {
             data_.object = large_start + (object_ >> 4);
             data_.param = object_ & 0x0F;
         }
+        data_.extra = extra_;
 
         ImGui::PushItemWidth(200);
         ImGui::SameLine();
@@ -185,12 +189,19 @@ bool MapCommand::Draw(bool abscoord) {
             object_ |= data_.param;
         } else if (object_ == 15) {
             ImGui::SameLine();
+            /*
             sprintf(ebuf_, "%02x", extra_);
             ImGui::SameLine();
             changed |= ImGui::InputText("collectable", ebuf_, sizeof(ebuf_),
                                         ImGuiInputTextFlags_CharsHexadecimal |
                                         ImGuiInputTextFlags_EnterReturnsTrue);
             extra_ = strtoul(ebuf_, 0, 16);
+            */
+            ImGui::PushItemWidth(200);
+            changed |= ImGui::Combo("##collectable", &data_.extra,
+                                    collectable_names_, MAX_COLLECTABLE);
+            ImGui::PopItemWidth();
+            extra_ = data_.extra;
         }
     }
     ImGui::PopItemWidth();
@@ -318,14 +329,18 @@ bool MapHolder::Draw() {
     for(auto it = command_.begin(); it < command_.end(); ++it, ++i) {
         auto next = it + 1;
         bool create = false;
+        bool copy = false;
+
         lastx = it->absx();
         ImGui::PushID(i);
         if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
+            if (ImGui::GetIO().KeyCtrl)
+                copy = true;
             changed = true;
             create = true;
         }
         if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Insert a new command");
+            ImGui::SetTooltip("Insert a new command\nCtrl+Click to copy");
 
         ImGui::SameLine();
         if (ImGui::Button(ICON_FA_CARET_DOWN)) {
@@ -341,13 +356,17 @@ bool MapHolder::Draw() {
         ImGui::SameLine();
         if (ImGui::Button(ICON_FA_TIMES_CIRCLE)) {
             changed = true;
-            command_.erase(it);
+            it = command_.erase(it);
         }
         if (ImGui::IsItemHovered())
           ImGui::SetTooltip("Delete this command");
         ImGui::PopID();
-        if (create)
-            it = command_.emplace(it, this, it->absx(), 0, 0, 0);
+        if (create) {
+            if (copy)
+                it = command_.insert(it, *it);
+            else
+                it = command_.emplace(it, this, it->absx(), 0, 0, 0);
+        }
     }
     if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
         changed = true;
