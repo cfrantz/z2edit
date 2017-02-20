@@ -16,6 +16,12 @@ help {
       key: "palace-graphics"
       value: "https://github.com/cfrantz/z2doc/wiki/palace-graphics"
     }, {
+      key: "enemy-attributes"
+      value: "https://github.com/cfrantz/z2doc/wiki/enemy-attributes"
+    }, {
+      key: "experience-table"
+      value: "https://github.com/cfrantz/z2doc/wiki/experience-table"
+    }, {
       key: "misc"
       value: "https://github.com/cfrantz/z2doc/wiki/misc-hacks"
     }
