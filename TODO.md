@@ -3,8 +3,6 @@
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
    with unsaved changes
-1. Enemy level editor wanted
-1. Move palaces between contitnents
 
 ### Add config which describes how to render towns
 Done, but still need:
@@ -12,10 +10,9 @@ Done, but still need:
   * Townspeople text editor
   * Building entrances to which rooms? (understood, no widget for editing yet).
 
-### Enemy editor to change enemy HP, XP etc.
-
 ### Curate list of known hacks to optionally apply to a ROM:
-  * Continue from the beginning of palaces.
+  * Others? (Shadow of Night has a "Dash" spell for running fast).
+  * Links tunic color, other spell colors?
 
 ### Sprite and tiles editor
   * List of sprite equivalents between banks
@@ -39,6 +36,8 @@ Done, but still need:
 1. Reminder dialogs for "Commit to Rom" (and flag to disable)(done)
 1. Feature to swap sideview areas around (because of the 28 limitation)(done)
 1. Button on sideview connection edtior to open up the destination area. (done)
+1. Enemy level editor wanted (done)
+1. Move palaces between contitnents (done)
 
 ### Create a target for Windows (build for Windows from Linux)
   1. One-time setup:
@@ -106,6 +105,13 @@ Done: Multimap editor
   * walk anywhere (done)
   * text speed (done)
   * pick-up-item delay (done)
+  * Continue from the beginning of palaces (done)
+
+### Enemy editor to change enemy HP, XP etc.
+  * Enemy attributes editor (done)
+  * Experience table editor (done)
+
+### Palette editor (done)
 
 ### Code cleanups
   * Rename the ::New methods to ::Spawn (done)
