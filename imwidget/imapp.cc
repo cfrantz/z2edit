@@ -150,7 +150,10 @@ void ImApp::PlayAudio(float* data, int len) {
     }
 }
 
-void ImApp::HelpButton(const std::string& topickey) {
+void ImApp::HelpButton(const std::string& topickey, bool right_justify) {
+    if (right_justify) {
+        ImGui::SameLine(ImGui::GetWindowWidth() - 50);
+    }
     if (ImGui::Button("Help")) {
         Help(topickey);
     }

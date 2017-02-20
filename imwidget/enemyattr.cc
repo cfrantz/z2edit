@@ -1,6 +1,7 @@
 #include "imwidget/enemyattr.h"
 
 #include "imwidget/error_dialog.h"
+#include "imwidget/imapp.h"
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
@@ -155,6 +156,7 @@ bool EnemyEditor::Draw() {
     if (ImGui::Button("Commit to ROM")) {
         Save();
     }
+    ImApp::Get()->HelpButton("enemy-attributes", true);
 
     ImGui::PushItemWidth(96);
     const auto& einfo = ri.enemies(category_);

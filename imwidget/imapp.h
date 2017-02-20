@@ -42,7 +42,7 @@ class ImApp {
 
     void AddDrawCallback(ImWindowBase* window);
     void PlayAudio(float* data, int len);
-    void HelpButton(const std::string& topickey);
+    void HelpButton(const std::string& topickey, bool right_justify=false);
   protected:
     std::string name_;
     int width_;
