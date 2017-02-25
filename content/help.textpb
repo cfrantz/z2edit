@@ -22,6 +22,9 @@ help {
       key: "experience-table"
       value: "https://github.com/cfrantz/z2doc/wiki/experience-table"
     }, {
+      key: "chr-viewer"
+      value: "https://github.com/cfrantz/z2doc/wiki/chr-viewer"
+    }, {
       key: "misc"
       value: "https://github.com/cfrantz/z2doc/wiki/misc-hacks"
     }

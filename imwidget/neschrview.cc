@@ -1,5 +1,6 @@
 #include <cstdio>
 #include "imwidget/error_dialog.h"
+#include "imwidget/imapp.h"
 #include "imwidget/neschrview.h"
 #include "imgui.h"
 
@@ -9,13 +10,14 @@
 
 NesChrView::NesChrView()
   : ImWindowBase(false),
-  bank_(0), mode_(0), grid_(false) {
-    bitmap.reset(new GLBitmap(128, 128));
+  bank_(0), mode_(true), grid_(true) {
+    int sz = grid_ ? 160 : 128;
+    bitmap_.reset(new GLBitmap(sz, sz));
 }
 
 void NesChrView::RenderChr() {
     uint32_t pal[] = { 0xFF000000, 0xFF666666, 0xFFAAAAAA, 0xFFFFFFFF };
-    uint32_t *image = bitmap->data();
+    uint32_t *image = bitmap_->data();
     int tile = 0;
     int inc = mode_ + 1;
     int width = grid_ ? 160 : 128;
@@ -43,24 +45,24 @@ void NesChrView::RenderChr() {
             }
         }
     }
-    bitmap->Update();
+    bitmap_->Update();
 }
 
 void NesChrView::Export(const std::string& filename) {
-    if (!bitmap->Save(filename)) {
+    if (!bitmap_->Save(filename)) {
         ErrorDialog::Spawn("Error Saving File",
                 "There was an error saving ", filename);
     }
 }
 
 void NesChrView::Import(const std::string& filename) {
-    if (!bitmap->Load(filename)) {
+    if (!bitmap_->Load(filename)) {
         ErrorDialog::Spawn("Error Loading File",
                 "There was an error loading ", filename);
         return;
     }
 
-    uint32_t *image = bitmap->data();
+    uint32_t *image = bitmap_->data();
     int tile = 0;
     int inc = mode_ + 1;
     int width = grid_ ? 160 : 128;
@@ -111,7 +113,7 @@ bool NesChrView::Draw() {
 
 
     int sz = grid_ ? 10 : 8;
-    ImGui::Begin("CHR Data", &visible_);
+    ImGui::Begin("CHR Viewer", &visible_);
     MakeLabels();
 
     ImGui::SameLine();
@@ -122,7 +124,7 @@ bool NesChrView::Draw() {
     ImGui::SameLine();
     if (ImGui::Checkbox("Grid", &grid_)) {
         sz = grid_ ? 10 : 8;
-        bitmap.reset(new GLBitmap(16*sz, 16*sz));
+        bitmap_.reset(new GLBitmap(16*sz, 16*sz));
     }
 
 #ifdef HAVE_NFD
@@ -145,6 +147,8 @@ bool NesChrView::Draw() {
         free(filename);
     }
 #endif
+
+    ImApp::Get()->HelpButton("chr-viewer", true);
 
     // Render the labels on the vertical axis
     ImGui::BeginGroup();
@@ -171,7 +175,7 @@ bool NesChrView::Draw() {
     // Render the CHR image
     RenderChr();
     ImGui::SetCursorPosY(y);
-    bitmap->Draw(sz*4*16, sz*4*16);
+    bitmap_->Draw(sz*4*16, sz*4*16);
     ImGui::EndGroup();
 
     ImGui::End();

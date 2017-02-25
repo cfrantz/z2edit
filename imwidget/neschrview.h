@@ -22,7 +22,7 @@ class NesChrView: public ImWindowBase {
   private:
     Mapper* mapper_;
     int bank_;
-    std::unique_ptr<GLBitmap> bitmap;
+    std::unique_ptr<GLBitmap> bitmap_;
     char labels_[256][64];
     int nr_labels_;
     int mode_;
