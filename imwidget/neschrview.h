@@ -12,15 +12,21 @@ class NesChrView: public ImWindowBase {
     NesChrView();
 
     void RenderChr();
+    void RenderChr8x8();
+    void RenderChr8x16();
     void MakeLabels();
     bool Draw();
     inline void set_mapper(Mapper* mapper) { mapper_ = mapper; }
+    void Export(const std::string& filename);
+    void Import(const std::string& filename);
   private:
     Mapper* mapper_;
     int bank_;
     std::unique_ptr<GLBitmap> bitmap;
     char labels_[256][64];
     int nr_labels_;
+    int mode_;
+    bool grid_;
 };
 
 #endif // Z2UTIL_IMWIDGET_NESCHRVIEW_H

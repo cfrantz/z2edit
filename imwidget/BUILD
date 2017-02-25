@@ -58,9 +58,11 @@ cc_library(
     srcs = ["neschrview.cc"],
     deps = [
         ":base",
+        ":error_dialog",
         ":glbitmap",
         "//nes:mappers",
         "//external:imgui",
+        "//external:nfd",
     ],
 )
 

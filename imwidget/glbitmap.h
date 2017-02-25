@@ -1,6 +1,7 @@
 #ifndef Z2UTIL_IMWIDGET_GLBITMAP_H
 #define Z2UTIL_IMWIDGET_GLBITMAP_H
 #include <cstdint>
+#include <string>
 #include <memory>
 
 // FIXME(cfrantz): probably include the real opengl headers
@@ -30,6 +31,9 @@ class GLBitmap {
 
     inline int width() const { return width_; }
     inline int height() const { return height_; }
+
+    bool Save(const std::string& filename);
+    bool Load(const std::string& filename);
 
   private:
     int width_;

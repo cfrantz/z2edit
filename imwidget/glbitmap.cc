@@ -1,5 +1,6 @@
 #include "imwidget/glbitmap.h"
 #include "imgui.h"
+#include <SDL2/SDL.h>
 
 GLBitmap::GLBitmap()
   : width_(0),
@@ -30,7 +31,7 @@ GLBitmap::~GLBitmap() {
 }
 
 uint32_t* GLBitmap::Allocate(uint32_t* data, bool claim_ownership) {
-    data_ = data ? data : new uint32_t[width_ * height_];
+    data_ = data ? data : new uint32_t[width_ * height_]();
     owned_data_.reset(claim_ownership ? data_ : nullptr);
 
     if (texture_id_)
@@ -126,4 +127,50 @@ void GLBitmap::Blit(int x, int y, int w, int h, uint32_t* pixels) {
             }
         }
     }
+}
+
+bool GLBitmap::Save(const std::string& filename) {
+    SDL_Surface *surface = SDL_CreateRGBSurface(0, width_, height_, 32,
+                                                0x000000FF,
+                                                0x0000FF00,
+                                                0x00FF0000,
+                                                0xFF000000);
+
+    uint8_t *src = (uint8_t*)data_;
+    uint8_t *dst = (uint8_t*)surface->pixels;
+    for(int y=0; y<height_; y++) {
+        memcpy(dst, src, width_ * 4);
+        dst += surface->pitch;
+        src += width_ * 4;
+    }
+
+    bool retval = (SDL_SaveBMP(surface, filename.c_str()) == 0);
+    SDL_FreeSurface(surface);
+    return retval;
+}
+
+bool GLBitmap::Load(const std::string& filename) {
+    bool retval = false;
+    SDL_Surface *orig = nullptr, *surface = nullptr;
+    uint8_t *dst = nullptr, *src = nullptr;
+    orig = SDL_LoadBMP(filename.c_str());
+    if (!orig) goto exitproc;
+    surface = SDL_ConvertSurfaceFormat(orig, SDL_PIXELFORMAT_ABGR8888, 0);
+    if (!surface) goto exitproc;
+
+    width_ = surface->w;
+    height_ = surface->h;
+    src = (uint8_t*)surface->pixels;
+    dst = (uint8_t*)Allocate();
+    for(int y=0; y<height_; y++) {
+        memcpy(dst, src, width_ * 4);
+        dst += width_ * 4;
+        src += surface->pitch;
+    }
+    Update();
+    retval = true;
+exitproc:
+    SDL_FreeSurface(surface);
+    SDL_FreeSurface(orig);
+    return retval;
 }
