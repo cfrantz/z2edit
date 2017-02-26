@@ -73,6 +73,10 @@ message Miscellaneous {
     Address palace_graphics = 16;
     Address palace_palette = 17;
     int32 palace_table_len = 18;
+
+    int32 overworld_width = 19;
+    int32 overworld_height = 20;
+    int32 overworld_length = 21;
 }
 
 message Palette {

@@ -1,5 +1,9 @@
 misc {
+    overworld_width: 64
+    overworld_height: 75
+    overworld_length: 896
     overworld_y_offset: 30
+
     start_values: { bank: 5 address: 0xbae3 }
     start_lives:  { bank: 7 address: 0x8359 }
     overworld_encounters: { address: 0x8409 }

@@ -9,7 +9,7 @@
 #include "util/stb_tilemap_editor.h"
 #include "imwidget/imutil.h"
 
-DEFINE_int32(max_map_length, 896, "Maximum compressed map size");
+DEFINE_int32(max_map_length, 0, "Maximum compressed map size");
 DECLARE_bool(reminder_dialogs);
 
 #define STBTE_MAX_TILEMAP_X      64
@@ -139,23 +139,26 @@ std::vector<uint8_t> Editor::CompressMap() {
 
 void Editor::SaveMap() {
     std::vector<uint8_t> data = CompressMap();
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    int max_length = misc.overworld_length();
+    if (FLAGS_max_map_length) max_length = FLAGS_max_map_length;
 
     if (!map_) {
         LOG(ERROR, "Can't save map: map_ == nullptr");
         return;
     }
-    if (data.size() > size_t(FLAGS_max_map_length)) {
-        ErrorDialog::Spawn("Overworld Save Error",
-            "Can't save ", map_->name(), " because it is ", data.size(),
-            " bytes\n\n"
-            "Overworld maps must be smaller than", FLAGS_max_map_length,
-            " bytes.\n");
-    }
 
     LOG(INFO, "Saving ", map_->name());
     LOG(INFO, "Map compresses to ", data.size(), " bytes.");
-    compressed_length_ = int(data.size());
 
+    if (data.size() > size_t(max_length)) {
+        ErrorDialog::Spawn("Overworld Save Error",
+            "Can't save ", map_->name(), " because it is ", data.size(),
+            " bytes\n\n"
+            "Overworld maps must be smaller than", max_length, " bytes.\n");
+    }
+
+    compressed_length_ = int(data.size());
     Address addr = map_->address();
     addr.set_address(0);
     addr = mapper_->Alloc(addr, data.size());

@@ -52,14 +52,19 @@ void Z2Decompress::Decompress(const Map& map) {
 
 
 void Z2Decompress::DecompressOverWorld(const Map& map) {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     uint8_t *mm = (uint8_t*)map_;
     // FIXME: how to determine the map length instead of specifying manually
     LOG(INFO, "DecompressOverWorld: bank=", map.address().bank(),
               " address=", HEX(map.address().address()),
               " length=", map.length());
 
-    width_ = 64;
-    height_ = FLAGS_max_map_height;
+    width_ = misc.overworld_width();
+    if (width_ != 64) {
+        LOG(FATAL, "Overworld width must be 64.");
+    }
+    height_ = misc.overworld_height();
+    if (FLAGS_max_map_height) height_ = FLAGS_max_map_height;
     int i = 0;
     for(int n=0; n < width_ * height_; i++) {
         uint8_t val = Read(map.address(), i);
