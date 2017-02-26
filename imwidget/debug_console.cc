@@ -173,8 +173,12 @@ void  DebugConsole::ExecCommand(const char* command_line) {
 
         argv[argc] = command;
         while(*command) {
-            if (*command == ' ') {
-                while(*command == ' ')
+            if (*command == '#') {
+                *command++ = '\0';
+                break;
+            }
+            if (isspace(*command)) {
+                while(isspace(*command))
                     *command++ = '\0';
                 if (*command) {
                     argv[++argc] = command;
@@ -185,14 +189,16 @@ void  DebugConsole::ExecCommand(const char* command_line) {
             command++;
         }
         ++argc;
-        for(const auto& c : commands_) {
-            if (!strcasecmp(argv[0], c.first)) {
-                c.second(this, argc, argv);
-                free(orig);
-                return;
+        if (strlen(argv[0])) {
+            for(const auto& c : commands_) {
+                if (!strcasecmp(argv[0], c.first)) {
+                    c.second(this, argc, argv);
+                    free(orig);
+                    return;
+                }
             }
+            AddLog("Unknown command: '%s'\n", argv[0]);
         }
-        AddLog("Unknown command: '%s'\n", argv[0]);
         free(orig);
     }
 }

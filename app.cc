@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include <gflags/gflags.h>
 #include "app.h"
 #include "imgui.h"
@@ -45,8 +47,11 @@ void Z2Edit::Init() {
     RegisterCommand("insertprg", "Insert a PRG bank.", this, &Z2Edit::InsertPrg);
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &Z2Edit::CopyPrg);
     RegisterCommand("memmove", "Move memory within a PRG bank.", this, &Z2Edit::MemMove);
+    RegisterCommand("set", "Set variables.", this, &Z2Edit::SetVar);
+    RegisterCommand("source", "Read and execute debugconsole commands from file.", this, &Z2Edit::Source);
 
     loaded_ = false;
+    ibase_ = 0;
     hwpal_ = NesHardwarePalette::Get();
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
@@ -132,7 +137,7 @@ void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
     // The hexdump command will be one of 'db', 'dbp' or 'dbc', standing
     // for 'dump bytes', 'dump bytes prg' and 'dump bytes chr'.  The
     // prg and chr versions can optionally take a bank number.
-    uint8_t bank = 0;
+    uint8_t bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 2) {
@@ -146,11 +151,11 @@ void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
     }
 
     if (mode && !strncmp(argv[1], "b=", 2)) {
-        bank = strtoul(argv[1]+2, 0, 0);
+        bank = strtoul(argv[1]+2, 0, ibase_);
         index++;
     }
-    uint32_t addr = strtoul(argv[index+1], 0, 0);
-    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, 0) : 64;
+    uint32_t addr = strtoul(argv[index+1], 0, ibase_);
+    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, ibase_) : 64;
 
     char line[128], chr[17];
     int i, n;
@@ -185,7 +190,7 @@ void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::WriteBytes(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = 0;
+    uint8_t bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 3) {
@@ -199,13 +204,13 @@ void Z2Edit::WriteBytes(DebugConsole* console, int argc, char **argv) {
     }
 
     if (mode && !strncmp(argv[1], "b=", 2)) {
-        bank = strtoul(argv[1]+2, 0, 0);
+        bank = strtoul(argv[1]+2, 0, ibase_);
         index++;
     }
-    uint32_t addr = strtoul(argv[index+1], 0, 0);
+    uint32_t addr = strtoul(argv[index+1], 0, ibase_);
 
     for(int i=2+index; i<argc; i++) {
-        uint8_t val = strtoul(argv[i], 0, 0);
+        uint8_t val = strtoul(argv[i], 0, ibase_);
         if (mode == 'p') {
             mapper_->WritePrgBank(bank, addr++, val);
         } else if (mode == 'c') {
@@ -217,7 +222,7 @@ void Z2Edit::WriteBytes(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::HexdumpWords(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = 0;
+    uint8_t bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 2) {
@@ -231,11 +236,11 @@ void Z2Edit::HexdumpWords(DebugConsole* console, int argc, char **argv) {
     }
 
     if (mode && !strncmp(argv[1], "b=", 2)) {
-        bank = strtoul(argv[1]+2, 0, 0);
+        bank = strtoul(argv[1]+2, 0, ibase_);
         index++;
     }
-    uint32_t addr = strtoul(argv[index+1], 0, 0);
-    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, 0) : 64;
+    uint32_t addr = strtoul(argv[index+1], 0, ibase_);
+    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, ibase_) : 64;
 
     char line[128], chr[17];
     int i, n;
@@ -275,7 +280,7 @@ void Z2Edit::HexdumpWords(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::WriteWords(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = 0;
+    uint8_t bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 3) {
@@ -289,13 +294,13 @@ void Z2Edit::WriteWords(DebugConsole* console, int argc, char **argv) {
     }
 
     if (mode && !strncmp(argv[1], "b=", 2)) {
-        bank = strtoul(argv[1]+2, 0, 0);
+        bank = strtoul(argv[1]+2, 0, ibase_);
         index++;
     }
-    uint32_t addr = strtoul(argv[index+1], 0, 0);
+    uint32_t addr = strtoul(argv[index+1], 0, ibase_);
 
     for(int i=2+index; i<argc; i++) {
-        uint16_t val = strtoul(argv[i], 0, 0);
+        uint16_t val = strtoul(argv[i], 0, ibase_);
         if (mode == 'p') {
             mapper_->WritePrgBank(bank, addr++, val);
             mapper_->WritePrgBank(bank, addr++, val>>8);
@@ -317,10 +322,10 @@ void Z2Edit::MemMove(DebugConsole* console, int argc, char **argv) {
         return;
     }
 
-    bank = strtoul(argv[1]+2, 0, 0);
-    int32_t dst = strtoul(argv[2], 0, 0);
-    int32_t src = strtoul(argv[3], 0, 0);
-    int32_t len = strtoul(argv[4], 0, 0);
+    bank = strtoul(argv[1]+2, 0, ibase_);
+    int32_t dst = strtoul(argv[2], 0, ibase_);
+    int32_t src = strtoul(argv[3], 0, ibase_);
+    int32_t len = strtoul(argv[4], 0, ibase_);
 
     if (dst < src) {
         for(int i=0; i<len; i++, dst++, src++) {
@@ -338,7 +343,7 @@ void Z2Edit::MemMove(DebugConsole* console, int argc, char **argv) {
 
 void Z2Edit::EnemyList(DebugConsole* console, int argc, char **argv) {
     char buf[1024];
-    uint8_t bank = 0;
+    uint8_t bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 3) {
@@ -352,11 +357,11 @@ void Z2Edit::EnemyList(DebugConsole* console, int argc, char **argv) {
     }
 
     if (mode && !strncmp(argv[1], "b=", 2)) {
-        bank = strtoul(argv[1]+2, 0, 0);
+        bank = strtoul(argv[1]+2, 0, ibase_);
         index++;
     }
-    uint32_t addr = strtoul(argv[index+1], 0, 0);
-    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, 0) : 64;
+    uint32_t addr = strtoul(argv[index+1], 0, ibase_);
+    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, ibase_) : 64;
 
     while(len > 0) {
         int listlen = mapper_->ReadPrgBank(bank, addr);
@@ -373,7 +378,7 @@ void Z2Edit::EnemyList(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
-    static uint8_t bank;
+    static uint8_t bank = bank_;
     static uint16_t addr;
 
     int index = 0;
@@ -384,11 +389,11 @@ void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
     }
 
     if (!strncmp(argv[1], "b=", 2)) {
-        bank = strtoul(argv[1]+2, 0, 0);
+        bank = strtoul(argv[1]+2, 0, ibase_);
         index++;
     }
-    addr = strtoul(argv[index+1], 0, 0);
-    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, 0) : 10;
+    addr = strtoul(argv[index+1], 0, ibase_);
+    int len = (argc == 3 + index) ? strtoul(argv[index+2], 0, ibase_) : 10;
 
     Cpu cpu(mapper_.get());
     cpu.set_bank(bank);
@@ -399,14 +404,14 @@ void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::InsertPrg(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = 0;
+    uint8_t bank = bank_;
     if (argc < 2) {
         console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
         console->AddLog("[error] %s <bank>", argv[0]);
         return;
     }
 
-    bank = strtoul(argv[1], 0, 0);
+    bank = strtoul(argv[1], 0, ibase_);
     cartridge_.InsertPrg(bank, nullptr);
     console->AddLog("#{0f0}Added bank %d", bank);
 }
@@ -419,16 +424,50 @@ void Z2Edit::CopyPrg(DebugConsole* console, int argc, char **argv) {
         return;
     }
 
-    src = strtoul(argv[1], 0, 0);
-    dst = strtoul(argv[2], 0, 0);
+    src = strtoul(argv[1], 0, ibase_);
+    dst = strtoul(argv[2], 0, ibase_);
     for(int i=0; i<16384; i++) {
         mapper_->WritePrgBank(dst, i, mapper_->ReadPrgBank(src, i));
     }
     console->AddLog("#{0f0}Copied bank %d to %d", src, dst);
 }
 
+void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
+    if (argc < 3) {
+        console->AddLog("[error] Usage: %s [var] [number]", argv[0]);
+        console->AddLog("Current ibase: %d "
+                        "(zero means autodetect with C prefixes)", ibase_);
+        console->AddLog("Current bank: %d", bank_);
+        return;
+    }
+    for(int i=1; i<argc; i++) {
+        if (!strcmp(argv[i], "ibase")) {
+            ibase_ = strtoul(argv[++i], 0, 0);
+        } else if (!strcmp(argv[i], "bank")) {
+            bank_ = strtoul(argv[++i], 0, ibase_);
+        } else {
+            console->AddLog("[error] Unknown var '%s'", argv[1]);
+        }
+    }
+}
 
-
+void Z2Edit::Source(DebugConsole* console, int argc, char **argv) {
+    if (argc != 2) {
+        console->AddLog("[error] Usage: %s [file]", argv[0]);
+        return;
+    }
+    char buf[4096];
+    char *p;
+    FILE *fp = fopen(argv[1], "r");;
+    if (!fp) {
+        console->AddLog("[error] Couldn't read %s", argv[1]);
+        return;
+    }
+    while((p = fgets(buf, sizeof(buf), fp)) != nullptr) {
+        console->ExecCommand(p);
+    }
+    fclose(fp);
+}
 
 void Z2Edit::SpawnEmulator(const std::string& romfile) {
     std::string cmdline = FLAGS_emulator + " " + romfile + " &";

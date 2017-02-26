@@ -46,10 +46,14 @@ class Z2Edit: public ImApp {
     void InsertPrg(DebugConsole* console, int argc, char **argv);
     void CopyPrg(DebugConsole* console, int argc, char **argv);
     void MemMove(DebugConsole* console, int argc, char **argv);
+    void SetVar(DebugConsole* console, int argc, char **argv);
+    void Source(DebugConsole* console, int argc, char **argv);
 
     void SpawnEmulator(const std::string& romfile);
 
     bool loaded_;
+    int ibase_;
+    int bank_;
     std::string save_filename_;
     NesHardwarePalette* hwpal_;
     std::unique_ptr<NesChrView> chrview_;
