@@ -46,6 +46,7 @@ void Z2Edit::Init() {
     RegisterCommand("u", "Disassemble Code.", this, &Z2Edit::Unassemble);
     RegisterCommand("insertprg", "Insert a PRG bank.", this, &Z2Edit::InsertPrg);
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &Z2Edit::CopyPrg);
+    RegisterCommand("copychr", "Copy a CHR bank to another bank.", this, &Z2Edit::CopyChr);
     RegisterCommand("memmove", "Move memory within a PRG bank.", this, &Z2Edit::MemMove);
     RegisterCommand("set", "Set variables.", this, &Z2Edit::SetVar);
     RegisterCommand("source", "Read and execute debugconsole commands from file.", this, &Z2Edit::Source);
@@ -413,7 +414,7 @@ void Z2Edit::InsertPrg(DebugConsole* console, int argc, char **argv) {
 
     bank = strtoul(argv[1], 0, ibase_);
     cartridge_.InsertPrg(bank, nullptr);
-    console->AddLog("#{0f0}Added bank %d", bank);
+    console->AddLog("#{0f0}Added PRG bank %d", bank);
 }
 
 void Z2Edit::CopyPrg(DebugConsole* console, int argc, char **argv) {
@@ -429,7 +430,23 @@ void Z2Edit::CopyPrg(DebugConsole* console, int argc, char **argv) {
     for(int i=0; i<16384; i++) {
         mapper_->WritePrgBank(dst, i, mapper_->ReadPrgBank(src, i));
     }
-    console->AddLog("#{0f0}Copied bank %d to %d", src, dst);
+    console->AddLog("#{0f0}Copied PRG bank %d to %d", src, dst);
+}
+
+void Z2Edit::CopyChr(DebugConsole* console, int argc, char **argv) {
+    uint8_t src, dst;
+    if (argc < 3) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s <src> <dst>", argv[0]);
+        return;
+    }
+
+    src = strtoul(argv[1], 0, ibase_);
+    dst = strtoul(argv[2], 0, ibase_);
+    for(int i=0; i<4096; i++) {
+        mapper_->WriteChrBank(dst, i, mapper_->ReadChrBank(src, i));
+    }
+    console->AddLog("#{0f0}Copied CHR bank %d to %d", src, dst);
 }
 
 void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
