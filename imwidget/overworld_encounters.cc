@@ -124,11 +124,11 @@ void OverworldEncounters::Save() {
         mapper_->Write(addr, i, val);
     }
 
-    int world = map_.world();
-    if (world & 1) world &= 1;
+    int overworld = map_.overworld();
+    if (map_.subworld()) overworld = map_.subworld();
 
     addr = misc.overworld_mason_dixon();
-    mapper_->Write(addr, world, south_side_ + misc.overworld_y_offset());
+    mapper_->Write(addr, overworld, south_side_ + misc.overworld_y_offset());
 }
 
 }  // namespace z2util
