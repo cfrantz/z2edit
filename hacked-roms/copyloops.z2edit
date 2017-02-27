@@ -1,0 +1,29 @@
+# Initialize
+set ibase 16 bank 7
+# General copy loop
+wbp cd98 4c df cd a0 00 b1 02 91 20 c8 10 f9 ca f0 0e b1 02 91 20 c8 d0 f9 e6 03 e6 21 ca d0 e8 60
+# Overworld destinations
+wbp cddf a9 00 85 20 a9 6a 85 21 a2 05 20 9b cd
+# Overworld
+wbp cdec ae 06 07 bd 27 cd aa bd 08 85 85 02 bd 09 85 85 03 a9 7c 85 21 a2 07 20 9b cd
+# Enemy list
+wbp ce06 a9 a0 85 02 a9 88 85 03 a9 70 85 21 a2 08 20 9b cd
+# Adjust destination setup
+wbp cd91 85 02
+wbp cd96 85 03
+# Fill newly unused space with FF
+wbp cdb6 ff ff ff ff ff ff ff ff
+wbp cdbe ff ff ff ff ff ff ff ff
+wbp cdc6 ff ff ff ff ff ff ff ff
+wbp cdce ff ff ff ff ff ff ff ff
+wbp cdd6 ff ff ff ff ff ff ff ff ff
+# Adjust overworld compressed destination and length
+wbp cdfd a9 7a
+wbp ce01 a2 0b
+wbp b=0 87f7 a9 7a
+# Adjust overworld vertical size from 75 to 96
+wbp b=0 8824 c9 60
+wbp b=0 8922 c9 60
+wbp b=0 8c29 c9 60
+wbp b=1 83dc c9 60
+wbp b=2 83dc c9 60

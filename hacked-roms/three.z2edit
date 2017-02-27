@@ -1,0 +1,115 @@
+# Initialize
+set ibase 16
+set bank 7
+# General copy loop
+wbp cd98 4c df cd a0 00 b1 02 91 20 c8 10 f9 ca f0 0e b1 02 91 20 c8 d0 f9 e6 03 e6 21 ca d0 e8 60
+# Overworld destinations
+wbp cddf a9 00 85 20 a9 6a 85 21 a2 05 20 9b cd
+# Overworld
+wbp cdec ae 06 07 bd 27 cd aa bd 08 85 85 02 bd 09 85 85 03 a9 7c 85 21 a2 07 20 9b cd
+# Enemy list
+wbp ce06 a9 a0 85 02 a9 88 85 03 a9 70 85 21 a2 08 20 9b cd
+# Adjust destination setup
+wbp cd91 85 02
+wbp cd96 85 03
+# Fill newly unused space with FF
+wbp cdb6 ff
+wbp cdb7 ff ff ff ff ff ff ff ff
+wbp cdbf ff ff ff ff ff ff ff ff
+wbp cdc7 ff ff ff ff ff ff ff ff
+wbp cdcf ff ff ff ff ff ff ff ff
+wbp cdd7 ff ff ff ff ff ff ff ff
+# Adjust overworld compressed destination and length
+wbp cdfd a9 7a
+wbp ce01 a2 0b
+wbp b=0 87f7 a9 7a
+# Adjust overworld vertical size from 75 to 96
+wbp b=0 8824 c9 60
+wbp b=0 8922 c9 60
+wbp b=0 8c29 c9 60
+wbp b=1 83dc c9 60
+wbp b=2 83dc c9 60
+# Fix the set_bank7 routine in every bank
+wbp b=0 bf95 a9 0f
+wbp b=1 bf95 a9 0f
+wbp b=2 bf95 a9 0f
+wbp b=3 bf95 a9 0f
+wbp b=4 bf95 a9 0f
+wbp b=5 bf95 a9 0f
+wbp b=6 bf95 a9 0f
+wbp b=7 bf95 a9 0f
+# Write a 4-byte tables at cddb [bank to switch to]
+wbp cddb 01 01 02 0e
+# Rewrite the bank selection routine to use the table at cdd7
+wbp cd48 d0 0d ac 06 07 c0 01 d0 03 ac 0a 07 b9 db cd 8d 69 07 20 cc ff ad 69 07 ea ea
+## # Write a 4-byte tables at cddb [overworld offset]
+## wbp cddb 00 02 00 00
+## # Rewrite the overworld selection to use the table at cddb
+## wbp cdef bd db cd
+# overwrite the overworld offset table at cd27, since we're going to move
+# the palace graphics/palette tables anyway
+wbp cd27 00 02 00 00
+# Insert PRG banks at 7, creating space and moving 7 to 15
+insertprg 7
+insertprg 7
+insertprg 7
+insertprg 7
+insertprg 7
+insertprg 7
+insertprg 7
+insertprg 7
+# Copy PRG bank 2 into bank 14
+set ibase 10
+copyprg 2 14
+# Copy CHR banks 4 and 5 into 28 and 29
+copychr 4 28
+copychr 5 29
+# Copy PRG bank 4 into bank 13 (extra palaces, worlds 6 and 7)
+copyprg 4 13
+set ibase 16
+set bank f
+# Update/extend the world to bank table at c4b7
+wbp c4b7 01 03 03 04 04 05 0d 0d
+# Create a world to enemy area offset table at cdcf (vanilla address c4bd)
+wbp cdcf 00 00 00 00 02 00 00 02
+# update references to c4bd to point at cdcf
+wbp c50d cf cd
+wbp cd8b cf cd
+# Now that we have 4 overworlds, rewrite the palace graphcis table to use 16 bytes
+wbp cd2b 04 05 09 09 0a 0a 0a 0a 0b 0c 06 09 04 04 04 04
+wbp cd3b ff ff ff ff ff
+# Update the pointer to the graphics table
+wbp cd73 2b cd
+# Create a 16-byte palette table at cdb6
+wbp cdb6 00 10 20 20 30 30 30 30 40 50 60 00 10 20 30 40
+# Update the pointer to the palette table
+wbp ce33 b6 cd
+# Rewrite the area calculation routine from continent*5+world to
+# continent*8+world
+wbp cf35 0a ea ea
+# Rewrite the item bitmap calculator, considering our previous change
+wbp c2b6 ea
+wbp c2bd a9 06 ea
+# Rewrite the item presense pointer table from 16 pointers to 32 offsets
+# 
+# world   0  1  2  3  4  5  6  7
+wbp c265 00 60 60 80 a0 c0 80 a0  # West Hyrule
+wbp c26d 20 60 60 80 a0 c0 80 a0  # DM, MZ, "third mountain/third island"
+wbp c275 40 60 60 80 a0 c0 80 a0  # East Hyrule
+wbp c27d 40 60 60 80 a0 c0 80 a0  # Third Hyrule
+# Update the two bits of code which check if you're in P7 to use the world code
+wbp cad0 ad 07 07 c9 05 f0 07
+wbp dd27 ad 07 07 c9 05
+# Update the per-world tile build jumptable (I think?)
+memmove b=f ff4c c819 12
+memmove b=f ff5e c825 4
+wbp c781 4c ff
+# Update the per-world object small construction routine+table
+memmove b=f feaa c927 15
+memmove b=f febf c936 4
+wbp c907 aa fe
+# Update the per-world object construction routine+table
+memmove b=f c927 c921 4
+wbp c92b ff ff ff ff ff
+wbp c930 ff ff ff ff ff ff ff ff ff ff ff ff
+
