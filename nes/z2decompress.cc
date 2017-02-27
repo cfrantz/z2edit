@@ -4,7 +4,7 @@
 #include "util/logging.h"
 #include "util/config.h"
 
-DEFINE_int32(max_map_height, 75, "Maximum height of overworld maps");
+DEFINE_int32(max_map_height, 0, "Maximum height of overworld maps");
 
 namespace z2util {
 
