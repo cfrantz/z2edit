@@ -171,25 +171,25 @@ void  DebugConsole::ExecCommand(const char* command_line) {
         char *command = strdup(command_line);
         char *orig = command;
 
-        argv[argc] = command;
+        argv[argc] = nullptr;
         while(*command) {
+            while(isspace(*command))
+                *command++ = '\0';
+
             if (*command == '#') {
                 *command++ = '\0';
                 break;
             }
-            if (isspace(*command)) {
-                while(isspace(*command))
-                    *command++ = '\0';
-                if (*command) {
-                    argv[++argc] = command;
-                } else {
-                    break;
-                }
+
+            if (*command) {
+                argv[argc++] = command;
+                while(*command && !isspace(*command))
+                    command++;
+            } else {
+                break;
             }
-            command++;
         }
-        ++argc;
-        if (strlen(argv[0])) {
+        if (argc && strlen(argv[0])) {
             for(const auto& c : commands_) {
                 if (!strcasecmp(argv[0], c.first)) {
                     c.second(this, argc, argv);
