@@ -112,4 +112,8 @@ wbp c907 aa fe
 memmove b=f c927 c921 4
 wbp c92b ff ff ff ff ff
 wbp c930 ff ff ff ff ff ff ff ff ff ff ff ff
-
+# Put the north/south frontier table in one of the newly freed areas (and erase
+# the old one)
+wbp cd3c 3c 4b 4c 4c
+wbp cb32 ff ff ff
+wbp cc15 3c cd
