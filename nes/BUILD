@@ -39,37 +39,22 @@ cc_library(
     name = "mappers",
     hdrs = [
         "mapper.h",
+        "memory.h",
     ],
     srcs = [
         "mapper.cc",
         "mapper1.h",
         "mapper1.cc",
-#        "mapper2.cc",
-#        "mapper3.cc",
-#        "mapper4.cc",
+        "memory.cc"
     ],
     deps = [
         ":cartridge",
         "//proto:rominfo",
         "//imwidget:base",
-    ],
-    alwayslink = 1,
-)
-
-cc_library(
-    name = "memory",
-    hdrs = [
-        "memory.h",
-    ],
-    srcs = [
-        "memory.cc"
-    ],
-    deps = [
-        ":mappers",
-        "//proto:rominfo",
         "//util:config",
         "//util:logging",
     ],
+    alwayslink=1,
 )
 
 cc_library(

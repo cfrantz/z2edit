@@ -1,4 +1,5 @@
 #include <map>
+#include <set>
 #include "nes/memory.h"
 
 #include "proto/rominfo.pb.h"
@@ -29,6 +30,8 @@ int Memory::CheckForKeepout(Address baseaddr, const std::string& name, int len,
                         LOGF(ERROR, "Could not move %s %d out of keepout area",
                              name.c_str(), a.address());
                     }
+                    LOGF(INFO, "In bank=%d, %s %d moved from %04x to %04x",
+                       a.bank(), name.c_str(), i, a.address(), dest);
                     moved_[key(a)] = dest;
                 }
             } else {
@@ -56,6 +59,17 @@ int Memory::CheckBankForKeepout(int bank, bool move) {
     result += CheckForKeepout(addr, "set two map", 63, move);
 
     return result;
+}
+
+void Memory::CheckAllBanksForKeepout(bool move) {
+    std::set<int> banks;
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    for(const auto& k : ri.misc().allocator_keepout()) {
+        banks.insert(k.bank());
+    }
+    for(const auto& bank : banks) {
+        CheckBankForKeepout(bank, move);
+    }
 }
 
 int Memory::MoveMapOutOfKeepout(const Address& pointer) {

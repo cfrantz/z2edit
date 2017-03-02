@@ -1,4 +1,5 @@
 #include "nes/mapper.h"
+#include "nes/memory.h"
 
 // The byte sequence A1 0C doesn't appear in the zelda2 ROM file.  We'll use
 // this sequence as a magic number for the free-space allocator.
@@ -42,9 +43,13 @@ z2util::Address Mapper::FindFreeSpace(z2util::Address addr, int length) {
             end = offset;
             while(offset > 0 && Read(addr, offset) == 0xFF) {
                 if (end - offset + 1 == length) {
-                    // FIXME(cfrantz): make sure we aren't in one of the
-                    // keepout regions.
+                    z2util::Address endaddr = addr;
                     addr.set_address(0x8000 | offset);
+                    endaddr.set_address(0x8000 | end);
+                    if (z2util::Memory::InKeepoutRegion(addr)
+                        || z2util::Memory::InKeepoutRegion(endaddr)) {
+                        break;
+                    }
                     return addr;
                 }
                 offset--;

@@ -99,18 +99,10 @@ void Z2Edit::Load(const std::string& filename) {
     experience_table_->Init();
 
     memory_.set_mapper(mapper_.get());
-    memory_.CheckBankForKeepout(1);
-    memory_.CheckBankForKeepout(2);
-    memory_.CheckBankForKeepout(3);
-    memory_.CheckBankForKeepout(4);
-    memory_.CheckBankForKeepout(5);
+    memory_.CheckAllBanksForKeepout();
 
     if (FLAGS_move_from_keepout) {
-        memory_.CheckBankForKeepout(1, true);
-        memory_.CheckBankForKeepout(2, true);
-        memory_.CheckBankForKeepout(3, true);
-        memory_.CheckBankForKeepout(4, true);
-        memory_.CheckBankForKeepout(5, true);
+        memory_.CheckAllBanksForKeepout(true);
     }
 }
 
