@@ -36,7 +36,8 @@ void MultiMap::Init() {
         if (m.type() != MapType::OVERWORLD
             && m.world() == world_
             && m.overworld() == overworld_
-            && m.subworld() == subworld_) {
+            // only care about the subworld in world 0 (overworlds)
+            && (world_ || m.subworld() == subworld_)) {
             maps_[n] = m;
             visited_[n] = false;
             n++;

@@ -157,6 +157,7 @@ class MapEnemyList {
     Address pointer_;
     int world_;
     int overworld_;
+    int subworld_;
     int area_;
     int display_;
 

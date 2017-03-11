@@ -594,6 +594,7 @@ MapEnemyList::MapEnemyList(Mapper* m)
     is_encounter_(false),
     world_(0),
     overworld_(0),
+    subworld_(0),
     area_(0),
     display_(0) {}
 
@@ -603,6 +604,7 @@ void MapEnemyList::Parse(const Map& map) {
     pointer_ = map.pointer();
     world_ = map.world();
     area_ = map.area();
+    subworld_ = map.subworld();
 
     /*
     // FIXME(cfrantz): Find a better way of learning the area number
@@ -672,7 +674,7 @@ void MapEnemyList::Save() {
         auto more = large_->Pack();
         data.insert(data.end(), more.begin(), more.end());
     }
-    ep.Add(area_, data);
+    ep.Add(area_ + 63 * subworld_, data);
     ep.Pack();
 }
 

@@ -122,6 +122,8 @@ message Map {
     // bitmap
     int64 valid_worlds = 11;
     int32 overworld = 12;
+    // The subworld refers to which set of maps in each bank.
+    // DM/MZ are subworld 1, and their sideview areas are in subworld 1.
     int32 subworld = 13;
     int32 area = 14;
 
