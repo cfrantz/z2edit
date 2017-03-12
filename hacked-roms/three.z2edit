@@ -117,3 +117,6 @@ wbp c930 ff ff ff ff ff ff ff ff ff ff ff ff
 wbp cd3c 3c 4b 4c 4c
 wbp cb32 ff ff ff
 wbp cc15 3c cd
+# Fix the "type B" palace detector to recognize both worlds 4 & 7 as type B
+wb cdc6 ac 07 07 b9 cf cd 60
+wb ce7f 20 c6 cd ea ea f0
