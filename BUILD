@@ -38,6 +38,7 @@ cc_library(
         "//nes:cartridge",
         "//nes:cpu6502",
         "//nes:mappers",
+        "//nes:text_encoding",
         "//proto:rominfo",
         "//util:browser",
         "//util:fpsmgr",

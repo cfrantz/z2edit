@@ -58,6 +58,14 @@ cc_library(
 )
 
 cc_library(
+    name = "text_encoding",
+    hdrs = ["text_encoding.h"],
+    srcs = ["text_encoding.cc"],
+    deps = [
+    ],
+)
+
+cc_library(
     name = "z2decompress",
     hdrs = ["z2decompress.h"],
     srcs = [

@@ -4,6 +4,7 @@
 #include "app.h"
 #include "imgui.h"
 #include "nes/cpu6502.h"
+#include "nes/text_encoding.h"
 #include "proto/rominfo.pb.h"
 #include "util/browser.h"
 #include "util/config.h"
@@ -48,11 +49,15 @@ void Z2Edit::Init() {
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &Z2Edit::CopyPrg);
     RegisterCommand("copychr", "Copy a CHR bank to another bank.", this, &Z2Edit::CopyChr);
     RegisterCommand("memmove", "Move memory within a PRG bank.", this, &Z2Edit::MemMove);
+    RegisterCommand("swap", "Swap memory within a PRG bank.", this, &Z2Edit::Swap);
+    RegisterCommand("bcopy", "Copy memory between PRG banks.", this, &Z2Edit::BCopy);
     RegisterCommand("set", "Set variables.", this, &Z2Edit::SetVar);
     RegisterCommand("source", "Read and execute debugconsole commands from file.", this, &Z2Edit::Source);
 
     loaded_ = false;
     ibase_ = 0;
+    bank_ = 0;
+    text_encoding_ = 0;
     hwpal_ = NesHardwarePalette::Get();
     chrview_.reset(new NesChrView);
     simplemap_.reset(new z2util::SimpleMap);
@@ -126,6 +131,15 @@ void Z2Edit::SaveFile(DebugConsole* console, int argc, char **argv) {
     cartridge_.SaveFile(argv[1]);
 }
 
+int Z2Edit::EncodedText(int ch) {
+    if (text_encoding_ == 1) {
+        ch = TextEncoding::FromZelda2(ch);
+    } else {
+        ch = TextEncoding::Identity(ch);
+    }
+    return ch ? ch : '.';
+}
+
 void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
     // The hexdump command will be one of 'db', 'dbp' or 'dbc', standing
     // for 'dump bytes', 'dump bytes prg' and 'dump bytes chr'.  The
@@ -171,7 +185,7 @@ void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
             memset(chr, 0, sizeof(chr));
         }
         n += sprintf(line+n, " %02x", val);
-        chr[i%16] = (val>=32 && val<127) ? val : '.';
+        chr[i%16] = EncodedText(val);
     }
     if (i % 16) {
         i = 3*(16 - i%16);
@@ -259,9 +273,9 @@ void Z2Edit::HexdumpWords(DebugConsole* console, int argc, char **argv) {
                   uint16_t(mapper_->Read(addr+i));
         }
         n += sprintf(line+n, " %04x", val);
-        chr[i%16] = (uint8_t(val)>=32 && uint8_t(val)<127) ? uint8_t(val) : '.';
+        chr[i%16] = EncodedText(uint8_t(val));
         val >>= 8;
-        chr[(i+1)%16] = (val>=32 && val<127) ? val : '.';
+        chr[i%16] = EncodedText(uint8_t(val));
     }
     if (i % 16) {
         i = 3*(16 - i%16);
@@ -331,6 +345,58 @@ void Z2Edit::MemMove(DebugConsole* console, int argc, char **argv) {
         }
     } else {
         console->AddLog("[error] dst and src are the same!");
+    }
+}
+
+void Z2Edit::Swap(DebugConsole* console, int argc, char **argv) {
+    uint8_t bank = -1;
+    if (argc < 5 || strncmp(argv[1], "b=", 2) != 0) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s b=<bank> <dst> <src> <len>",  argv[0]);
+        return;
+    }
+
+    bank = strtoul(argv[1]+2, 0, ibase_);
+    int32_t dst = strtoul(argv[2], 0, ibase_);
+    int32_t src = strtoul(argv[3], 0, ibase_);
+    int32_t len = strtoul(argv[4], 0, ibase_);
+
+    for(int i=0; i<len; i++, dst++, src++) {
+        uint8_t a = mapper_->ReadPrgBank(bank, src);
+        uint8_t b = mapper_->ReadPrgBank(bank, dst);
+        mapper_->WritePrgBank(bank, dst, a);
+        mapper_->WritePrgBank(bank, src, b);
+    }
+}
+
+void Z2Edit::BCopy(DebugConsole* console, int argc, char **argv) {
+    if (argc < 4) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s  <bank:dst> <bank:src> <len>",  argv[0]);
+        return;
+    }
+
+    int32_t srcb, srca, dstb, dsta, len;
+    char *endp;
+
+    dstb = strtoul(argv[1], &endp, ibase_);
+    if (*endp != ':') {
+        console->AddLog("[error] bad dst argument.  Expected bank:address.");
+        return;
+    }
+    dsta = strtoul(endp+1, 0, ibase_);
+
+    srcb = strtoul(argv[2], &endp, ibase_);
+    if (*endp != ':') {
+        console->AddLog("[error] bad src argument.  Expected bank:address.");
+        return;
+    }
+    srca = strtoul(endp+1, 0, ibase_);
+
+    len = strtoul(argv[3], 0, ibase_);
+
+    for(int i=0; i<len; i++, dsta++, srca++) {
+        mapper_->WritePrgBank(dstb, dsta, mapper_->ReadPrgBank(srcb, srca));
     }
 }
 
@@ -444,9 +510,10 @@ void Z2Edit::CopyChr(DebugConsole* console, int argc, char **argv) {
 void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
     if (argc < 3) {
         console->AddLog("[error] Usage: %s [var] [number]", argv[0]);
-        console->AddLog("Current ibase: %d "
+        console->AddLog("Current 'ibase': %d "
                         "(zero means autodetect with C prefixes)", ibase_);
-        console->AddLog("Current bank: %d", bank_);
+        console->AddLog("Current 'bank': %d", bank_);
+        console->AddLog("Current 'text' encoding: %d", text_encoding_);
         return;
     }
     for(int i=1; i<argc; i++) {
@@ -454,6 +521,8 @@ void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
             ibase_ = strtoul(argv[++i], 0, 0);
         } else if (!strcmp(argv[i], "bank")) {
             bank_ = strtoul(argv[++i], 0, ibase_);
+        } else if (!strcmp(argv[i], "text")) {
+            text_encoding_ = strtoul(argv[++i], 0, ibase_);
         } else {
             console->AddLog("[error] Unknown var '%s'", argv[1]);
         }
