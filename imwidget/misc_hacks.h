@@ -13,8 +13,8 @@ class MiscellaneousHacks: public ImWindowBase {
     bool Draw() override;
     inline void set_mapper(Mapper* m) { mapper_ = m; };
   private:
-    void Palace5Hack();
-    void PalaceContinueHack();
+    template<class GETALL, class GET>
+    void Hack(const char* hackname, int n, GETALL getall, GET get);
 
     bool MemcmpHack(const PokeData& data);
     void PutPokeData(const PokeData& data);

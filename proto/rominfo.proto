@@ -277,4 +277,5 @@ message RomInfo {
     repeated GameHack palace_continue = 16;
     repeated PaletteGroup palettes = 17;
     XPTable xptable = 18;
+    repeated GameHack palace_to_stone = 19;
 }

@@ -14,7 +14,8 @@ bool MiscellaneousHacks::Draw() {
         return false;
 
     ImGui::Begin("Miscellaneous Hacks", &visible_);
-    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    const auto& misc = ri.misc();
 
     // At bank=0, offset $71d is near the end of the subroutine which determines
     // where Link can walk on the overworld:
@@ -61,19 +62,30 @@ bool MiscellaneousHacks::Draw() {
 
     ImGui::PopItemWidth();
 
-    Palace5Hack();
-    PalaceContinueHack();
+    Hack("Palace 5 detect", ri.palace5_detect_size(),
+        [&]() { return ri.palace5_detect(); },
+        [&](int n) { return ri.palace5_detect(n); });
+
+    Hack("Palace Continue", ri.palace_continue_size(),
+        [&]() { return ri.palace_continue(); },
+        [&](int n) { return ri.palace_continue(n); });
+
+    Hack("Completed Places", ri.palace_to_stone_size(),
+        [&]() { return ri.palace_to_stone(); },
+        [&](int n) { return ri.palace_to_stone(n); });
 
     ImGui::End();
     return false;
 }
 
-void  MiscellaneousHacks::Palace5Hack() {
-    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
-    const char *names[ri.palace5_detect_size()];
+
+template<class GETALL, class GET>
+void MiscellaneousHacks::Hack(const char* hackname, int n,
+                              GETALL getall, GET get) {
+    const char *names[n];
     int len = 0;
     int method = 0;
-    for(const auto& hack: ri.palace5_detect()) {
+    for(const auto& hack: getall()) {
         names[len] = hack.name().c_str();
         if (MemcmpHack(hack.hack(0))) {
             method = len;
@@ -81,30 +93,12 @@ void  MiscellaneousHacks::Palace5Hack() {
         len++;
     }
     ImGui::PushItemWidth(400);
-    if (ImGui::Combo("Palace 5 detect", &method, names, len)) {
-        PutGameHack(ri.palace5_detect(method));
+    if (ImGui::Combo(hackname, &method, names, len)) {
+        PutGameHack(get(method));
     }
     ImGui::PopItemWidth();
 }
 
-void  MiscellaneousHacks::PalaceContinueHack() {
-    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
-    const char *names[ri.palace_continue_size()];
-    int len = 0;
-    int method = 0;
-    for(const auto& hack: ri.palace_continue()) {
-        names[len] = hack.name().c_str();
-        if (MemcmpHack(hack.hack(0))) {
-            method = len;
-        }
-        len++;
-    }
-    ImGui::PushItemWidth(400);
-    if (ImGui::Combo("Palace Continue", &method, names, len)) {
-        PutGameHack(ri.palace_continue(method));
-    }
-    ImGui::PopItemWidth();
-}
 
 bool MiscellaneousHacks::MemcmpHack(const PokeData& data) {
     for(int i=0; i<data.data_size(); i++) {

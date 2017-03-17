@@ -16,3 +16,18 @@ palace_continue {
         {address { bank:7 address:0xcad0 } data: [ 0xad, 0x07, 0x07, 0xc9, 0xf0, 0xb0, 0x07 ]}
     ]
 }
+
+palace_to_stone {
+    name: "Vanilla (palaces turn to stone)"
+    hack: [
+        {address { bank:1 address:0x8797 } data: [0x00, 0x01, 0x02, 0x03]},
+        {address { bank:2 address:0x8797 } data: [0x04, 0x05, 0xFF, 0x03]}
+    ]
+}
+palace_to_stone {
+    name: "Disable turning to stone"
+    hack: [
+        {address { bank:1 address:0x8797 } data: [0xFF, 0xFF, 0xFF, 0xFF]},
+        {address { bank:2 address:0x8797 } data: [0xFF, 0xFF, 0xFF, 0xFF]}
+    ]
+}
