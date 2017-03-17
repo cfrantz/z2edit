@@ -264,6 +264,7 @@ void EnemyEditor::Save() {
     table_.Save();
     for(const auto& enemy : einfo.info()) {
         const Unpacked& val = data_.at(enemy.first); 
+        mapper_->Write(einfo.hpinfo(), enemy.first, val.hp);
         uint8_t b = (val.palette << 6)
             | (val.need_fire << 5)
             | (val.steal_xp << 4)
