@@ -28,6 +28,8 @@ misc {
         { bank: 4 address: 0x88a0 length: 1024 },
         { bank: 5 address: 0x88a0 length: 1024 },
 
+        # Item availability bitmap
+        { bank: 5 address: 0xbb15 length: 0xe0 },
         { bank: 0 address: 0 length: 0 }
     ]
 
