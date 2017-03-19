@@ -179,15 +179,12 @@ int Cpu::Emulate(void) {
             cycles_ += info.page;
         break;
     case IndexedIndirect:
-        //addr = Read16Bug(Read(pc_+1) + x_);
         addr = Read16((Read(pc_ + 1) + x()) & 0xff);
         break;
     case Indirect:
         addr = Read16Bug(Read16(pc_+1));
         break;
     case IndirectIndexed:
-        //addr = Read16Bug(Read(pc_+1)) + y_;
-        // Fixed?
         addr = Read16(Read(pc_ + 1)) + y();
         if (PagesDiffer(addr - y_, addr))
             cycles_ += info.page;
@@ -237,7 +234,7 @@ int Cpu::Emulate(void) {
     case 0x9:
     /* ORA nnnn */
     case 0xD:
-    /* ORA (nn,Y) */
+    /* ORA (nn),Y */
     case 0x11:
     /* ORA nn,X */
     case 0x15:
@@ -294,7 +291,7 @@ int Cpu::Emulate(void) {
     case 0x29:
     /* AND nnnn */
     case 0x2D:
-    /* AND (nn,Y) */
+    /* AND (nn),Y */
     case 0x31:
     /* AND nn,X */
     case 0x35:
@@ -361,7 +358,7 @@ int Cpu::Emulate(void) {
     case 0x49:
     /* EOR nnnn */
     case 0x4D:
-    /* EOR (nn,Y) */
+    /* EOR (nn),Y */
     case 0x51:
     /* EOR nn,X */
     case 0x55:
@@ -423,7 +420,7 @@ int Cpu::Emulate(void) {
     case 0x69:
     /* ADC nnnn */
     case 0x6D:
-    /* ADC (nn,Y) */
+    /* ADC (nn),Y */
     case 0x71:
     /* ADC nn,X */
     case 0x75:
@@ -480,7 +477,7 @@ int Cpu::Emulate(void) {
     case 0x85:
     /* STA nnnn */
     case 0x8D:
-    /* STA (nn,Y) */
+    /* STA (nn),Y */
     case 0x91:
     /* STA nn,X */
     case 0x95:
@@ -550,7 +547,7 @@ int Cpu::Emulate(void) {
     case 0xA9:
     /* LDA nnnn */
     case 0xAD:
-    /* LDA (nn,Y) */
+    /* LDA (nn),Y */
     case 0xB1:
     /* LDA nn,X */
     case 0xB5:
@@ -614,7 +611,7 @@ int Cpu::Emulate(void) {
     case 0xC9:
     /* CMP nnnn */
     case 0xCD:
-    /* CMP (nn,Y) */
+    /* CMP (nn),Y */
     case 0xD1:
     /* CMP nn,X */
     case 0xD5:
@@ -669,7 +666,7 @@ int Cpu::Emulate(void) {
     case 0xE9:
     /* SBC nnnn */
     case 0xED:
-    /* SBC (nn,Y) */
+    /* SBC (nn),Y */
     case 0xF1:
     /* SBC nn,X */
     case 0xF5:
@@ -796,7 +793,7 @@ const char* Cpu::instruction_names_[] = {
 /* 0e */      "ASL $%04x",
 /* 0f */      "illop_0f",
 /* 10 */      "BPL $%02x",
-/* 11 */      "ORA ($%02x,Y)",
+/* 11 */      "ORA ($%02x),Y",
 /* 12 */      "illop_12",
 /* 13 */      "illop_13",
 /* 14 */      "illop_14",
@@ -828,7 +825,7 @@ const char* Cpu::instruction_names_[] = {
 /* 2e */      "ROL $%04x",
 /* 2f */      "illop_2f",
 /* 30 */      "BMI $%02x",
-/* 31 */      "AND ($%02x,Y)",
+/* 31 */      "AND ($%02x),Y",
 /* 32 */      "illop_32",
 /* 33 */      "illop_33",
 /* 34 */      "illop_34",
@@ -860,7 +857,7 @@ const char* Cpu::instruction_names_[] = {
 /* 4e */      "LSR $%04x",
 /* 4f */      "illop_4f",
 /* 50 */      "BVC $%02x",
-/* 51 */      "EOR ($%02x,Y)",
+/* 51 */      "EOR ($%02x),Y",
 /* 52 */      "illop_52",
 /* 53 */      "illop_53",
 /* 54 */      "illop_54",
@@ -892,7 +889,7 @@ const char* Cpu::instruction_names_[] = {
 /* 6e */      "ROR $%04x",
 /* 6f */      "illop_6f",
 /* 70 */      "BVS $%02x",
-/* 71 */      "ADC ($%02x,Y)",
+/* 71 */      "ADC ($%02x),Y",
 /* 72 */      "illop_72",
 /* 73 */      "illop_73",
 /* 74 */      "illop_74",
@@ -924,7 +921,7 @@ const char* Cpu::instruction_names_[] = {
 /* 8e */      "STX $%04x",
 /* 8f */      "illop_8f",
 /* 90 */      "BCC $%02x",
-/* 91 */      "STA ($%02x,Y)",
+/* 91 */      "STA ($%02x),Y",
 /* 92 */      "illop_92",
 /* 93 */      "illop_93",
 /* 94 */      "STY $%02x,X",
@@ -956,7 +953,7 @@ const char* Cpu::instruction_names_[] = {
 /* ae */      "LDX $%04x",
 /* af */      "illop_af",
 /* b0 */      "BCS $%02x",
-/* b1 */      "LDA ($%02x,Y)",
+/* b1 */      "LDA ($%02x),Y",
 /* b2 */      "illop_b2",
 /* b3 */      "illop_b3",
 /* b4 */      "LDY $%02x,X",
@@ -988,7 +985,7 @@ const char* Cpu::instruction_names_[] = {
 /* ce */      "DEC $%04x",
 /* cf */      "illop_cf",
 /* d0 */      "BNE $%02x",
-/* d1 */      "CMP ($%02x,Y)",
+/* d1 */      "CMP ($%02x),Y",
 /* d2 */      "illop_d2",
 /* d3 */      "illop_d3",
 /* d4 */      "illop_d4",
@@ -1020,7 +1017,7 @@ const char* Cpu::instruction_names_[] = {
 /* ee */      "INC $%04x",
 /* ef */      "illop_ef",
 /* f0 */      "BEQ $%02x",
-/* f1 */      "SBC ($%02x,Y)",
+/* f1 */      "SBC ($%02x),Y",
 /* f2 */      "illop_f2",
 /* f3 */      "illop_f3",
 /* f4 */      "illop_f4",
