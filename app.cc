@@ -564,8 +564,20 @@ void Z2Edit::Draw() {
                 cartridge_.SaveFile(FLAGS_romtmp);
                 SpawnEmulator(FLAGS_romtmp);
             }
-            ImGui::Separator();
 #ifdef HAVE_NFD
+            if (ImGui::MenuItem("Load & Run a Script")) {
+                char *filename = nullptr;
+                char cmd[] = "source";
+                auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
+                if (result == NFD_OKAY) {
+                    char *argv[] = {cmd, filename};
+                    Source(&console_, 2, argv);
+                    console_.visible() = true;
+                }
+                free(filename);
+            }
+
+            ImGui::Separator();
             if (ImGui::MenuItem("Open", "Ctrl+O")) {
                 char *filename = nullptr;
                 auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
