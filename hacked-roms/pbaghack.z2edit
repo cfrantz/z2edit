@@ -1,0 +1,20 @@
+set ibase 16
+set bank 7
+# Replace drop randomizer with custom subroutine
+wbp e8ad 20 4c ff
+
+# The first N-1 drops will be pbags, for both drop groups.
+# So, N=4 means 3 guaranteed 50-bags and 3 guaratneed 200-bags
+# We keep track of drop counts at $06f1 and $06f2.  I'm using this memory
+# area because I don't think anything else uses it, and game initialization
+# clears it at the beginning of each game.
+wbp ff4c 38 a9 00 79 f0 06 99 f0 06 c9 04 90 04 bd 1b 05 60 a9 02 c0 02 d0 02 69 00 60
+# The value of N goes here ------------^^ 
+
+# Rewrite some text on the select screen so there is no confusion that this
+# is a hacked rom.
+set bank 5
+set text 1
+# The "S E L E C T" is replaced with "PBAG HACK"
+wbp bc1c e9 db da e0 f4 e1 da dc e4 f4 f4
+dbp bc1c
