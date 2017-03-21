@@ -1,15 +1,36 @@
-set ibase 16
-set bank 7
-# Replace drop randomizer with custom subroutine
-wbp e8ad 20 4c ff
-
 # The first N-1 drops will be pbags, for both drop groups.
 # So, N=4 means 3 guaranteed 50-bags and 3 guaratneed 200-bags
 # We keep track of drop counts at $06f1 and $06f2.  I'm using this memory
 # area because I don't think anything else uses it, and game initialization
 # clears it at the beginning of each game.
-wbp ff4c 38 a9 00 79 f0 06 99 f0 06 c9 04 90 04 bd 1b 05 60 a9 02 c0 02 d0 02 69 00 60
-# The value of N goes here ------------^^ 
+
+# Reload the current file, but disable keepout moves. 
+load _ move=0
+
+# Set hex mode and bank 7
+set ibase 16
+set bank 7
+
+# Assemble some new code at $ff4c
+asm ff4c
+    sec             ; set carry flag
+    lda #0          ; clear A reg
+    adc $6f0,y      ; A = number of drops + 1
+    sta $6f0,y      ; store it back
+    ; The argument to the following CMP instruction is the value of N.
+    ; Adjust it for fewer or more guaranteed drops.
+    cmp #4          ; Is it less than 4?
+    bcc $4          ; If yes, branch to guaranteed selection
+    lda $51b,x      ; If no, regular randomizer
+    rts             ; return
+    lda #2          ; small drop slot 2 is a 50-bag
+    cpy #2          ; large drop category == 2
+    bne $2          ; if small return
+    adc #0          ; large drop slot 3 is a 200-bag
+    rts             ; return
+.org $e8ad
+    jsr $ff4c       ; Replace the random function with our custom routine
+.end
 
 # Rewrite some text on the select screen so there is no confusion that this
 # is a hacked rom.
@@ -17,4 +38,4 @@ set bank 5
 set text 1
 # The "S E L E C T" is replaced with "PBAG HACK"
 wbp bc1c e9 db da e0 f4 e1 da dc e4 f4 f4
-dbp bc1c
+dbp bc1c b
