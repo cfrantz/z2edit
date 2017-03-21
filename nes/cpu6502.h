@@ -2,17 +2,28 @@
 #define EMUDORE_SRC_CPU2_H
 #include <cstdint>
 #include <string>
+#include <map>
 #include "nes/mapper.h"
 
 class Cpu {
   public:
     Cpu() : Cpu(nullptr) {}
     Cpu(Mapper* mapper);
+    enum AsmError {
+        None,
+        End,
+        Meta,
+        UnknownOpcode,
+        InvalidOperand,
+        InvalidMode,
+    };
 
     inline void set_bank(int bank) { bank_ = bank; }
     void Reset();
     int Emulate();
     std::string Disassemble(uint16_t *nexti=nullptr);
+    AsmError Assemble(std::string code, uint16_t *nexti);
+
     std::string CpuState();
     inline void NMI() {
         nmi_pending_ = true;
@@ -81,13 +92,21 @@ class Cpu {
         ZeroPage,
         ZeroPageX,
         ZeroPageY,
+        Pseudo,
+        ZZ,
     };
+
+    static inline std::vector<std::string>& asmhelp() { return asmhelp_; }
   private:
     uint8_t inline Read(uint16_t addr) const {
         return mapper_->ReadPrgBank(bank_, addr);
     }
     void inline Write(uint16_t addr, uint8_t val) {
-        //mem_->write_byte(addr, val);
+        mapper_->WritePrgBank(bank_, addr, val);
+    }
+    void inline Write16(uint16_t addr, uint16_t val) {
+        mapper_->WritePrgBank(bank_, addr, val & 0xFF);
+        mapper_->WritePrgBank(bank_, addr+1, val >> 8);
     }
     uint16_t inline Read16(uint16_t addr) const {
         return Read(addr) | Read(addr+1) << 8;
@@ -131,8 +150,16 @@ class Cpu {
     bool irq_pending_;
 
     int bank_;
+
+    static void BuildAsmInfo();
+    struct AsmInfo {
+        std::string instruction;
+        int opcode[14];
+    };
     static const InstructionInfo info_[256];
     static const char* instruction_names_[256];
+    static std::map<std::string, AsmInfo> asminfo_;
+    static std::vector<std::string> asmhelp_;
 };
 
 #endif // EMUDORE_SRC_CPU2_H

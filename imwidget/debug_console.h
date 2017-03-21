@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <vector>
 #include "imwidget/imwidget.h"
 #include "imgui.h"
 
@@ -31,6 +32,9 @@ class DebugConsole: public ImWindowBase {
     void AddLog(const char* fmt, ...) IM_PRINTFARGS(2);
     bool Draw() override;
     void ExecCommand(const char* command_line);
+    void PushLineCallback(std::function<
+            void(DebugConsole* console, const char* line)> line_cb);
+    void PopLineCallback();
   private:
     int TextEditCallback(ImGuiTextEditCallbackData* data);
 
@@ -46,6 +50,8 @@ class DebugConsole: public ImWindowBase {
     std::map<const char*, const char*> shorthelp_;
     std::map<const char*, std::function<void(DebugConsole* console,
                                              int argc, char **argv)>> commands_;
+    std::vector<std::function<
+        void(DebugConsole* console, const char* line)>> line_cb_;
 };
 
 #endif // SYNTHY_IMWIDGET_DEBUG_CONSOLE_H

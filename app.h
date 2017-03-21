@@ -32,6 +32,7 @@ class Z2Edit: public ImApp {
     void Draw() override;
 
     void Load(const std::string& filename);
+    void Load(const std::string& filename, bool movekeepout);
     void Help(const std::string& topickey);
   private:
     void LoadFile(DebugConsole* console, int argc, char **argv);
@@ -42,6 +43,7 @@ class Z2Edit: public ImApp {
     void HexdumpWords(DebugConsole* console, int argc, char **argv);
     void WriteWords(DebugConsole* console, int argc, char **argv);
     void Unassemble(DebugConsole* console, int argc, char **argv);
+    void Assemble(DebugConsole* console, int argc, char **argv);
     void EnemyList(DebugConsole* console, int argc, char **argv);
     void InsertPrg(DebugConsole* console, int argc, char **argv);
     void CopyPrg(DebugConsole* console, int argc, char **argv);

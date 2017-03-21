@@ -26,7 +26,9 @@ Cpu::Cpu(Mapper* mapper) :
     stall_(0),
     nmi_pending_(false),
     irq_pending_(false),
-    bank_(0) {}
+    bank_(0) {
+        BuildAsmInfo();
+}
 
 void Cpu::Reset() {
     pc_ = Read16(0xFFFC);
@@ -86,7 +88,7 @@ std::string Cpu::Disassemble(uint16_t* nexti) {
         // All branch instructions are hex(10, 30, 50, 70, 90, b0, d0, f0)
         if ((opcode & 0x1F) == 0x10) {
             data = pc + 2 + int8_t(data);
-            sprintf(b+i, " (target=%04x)", data);
+            sprintf(b+i, " (dest=%04x)", data);
         }
         break;
     case 3:
@@ -207,6 +209,9 @@ int Cpu::Emulate(void) {
         break;
     case Relative:
         addr = pc_ + 2 + int8_t(Read(pc_ + 1));;
+        break;
+    case Pseudo:
+    case ZZ:
         break;
     }
 
@@ -717,6 +722,174 @@ int Cpu::Emulate(void) {
     return cycles_ - cycles;
 }
 
+void Cpu::BuildAsmInfo() {
+    static bool once;
+    if (once) return;
+    once = true;
+
+    for(int i=0; i<256; i++) {
+        const char *ii = instruction_names_[i];
+        if (strstr(ii, "illop_"))
+            continue;
+        std::string instr = std::string(ii);
+        auto p = instr.find(' ');
+        if (p != std::string::npos) {
+            instr.resize(p);
+        } else {
+            ++p;
+        }
+        ii += p;
+        if (asminfo_.find(instr) == asminfo_.end()) {
+            asminfo_.emplace(instr, AsmInfo{instr,
+                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1});
+        }
+        uint8_t mode = info_[i].mode;
+        asminfo_[instr].opcode[mode] = i;
+    }
+    asminfo_.emplace(".END", AsmInfo{".END",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
+    asminfo_.emplace(".ORG", AsmInfo{".ORG",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
+
+    char line[80];
+    asmhelp_.push_back("Instruction    Abs AbX AbY Acc Imm Imp InX Ind InY Rel Zp  ZpX ZpY Fake");
+    asmhelp_.push_back("-----------    --------------------------------------------------------");
+    for(const auto& a : asminfo_) {
+        int p = sprintf(line, "%-15s", a.first.c_str());
+        for(int i=0; i<14; i++) {
+            if (a.second.opcode[i] == -1) {
+                p += sprintf(line + p, "    ");
+            } else {
+                p += sprintf(line + p, "%02x  ", a.second.opcode[i]);
+            }
+        }
+        asmhelp_.emplace_back(line);
+    }
+}
+
+Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
+    std::string opcode, operand;
+    for (auto& c : code) c = toupper(c);
+    auto p = code.find(';');
+    if (p != std::string::npos) code.resize(p);
+    while(!code.empty() && code.at(0) == ' ') {
+        code.erase(0, 1);
+    }
+    p = code.find(' ');
+    opcode = code.substr(0, p);
+    if (opcode == ".END") {
+        return AsmError::End;
+    } else if (opcode == "") {
+        return AsmError::None;
+    }
+
+    const auto& ai = asminfo_.find(opcode);
+    if (ai == asminfo_.end()) {
+        return AsmError::UnknownOpcode;
+    }
+    const auto& info = ai->second;
+
+    if (p != std::string::npos) {
+        operand = code.substr(p);
+        while(!operand.empty() && operand.at(0) == ' ') {
+            operand.erase(0, 1);
+        }
+    }
+    uint8_t mode = 0;
+    int base = 0;
+    long addr;
+
+    if (operand.find(",X") != std::string::npos) mode |= 1;
+    if (operand.find(",Y") != std::string::npos) mode |= 2;
+    if (operand.find("(") != std::string::npos) mode |= 4;
+    if (operand.find("#") != std::string::npos) mode |= 8;
+    if (operand.find("!") != std::string::npos) mode |= 16;
+
+    const char *k = operand.c_str();
+    while(*k && !isxdigit(*k) && *k != '-') {
+        if (*k == '$') base = 16;
+        k++;
+    }
+    if (isxdigit(*k)) {
+        addr = strtol(k, 0, base);
+        if (addr >= 256) mode |= 16;
+        mode |= 32;
+    }
+    //printf("pre xlate mode = %02x\n", mode);
+    AddressingMode xlate[] = {
+        // Did not parse an address
+        Accumulator, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+
+        // Parsed an address
+        ZeroPage, ZeroPageX, ZeroPageY, ZZ,
+        Indirect, IndexedIndirect, IndirectIndexed, ZZ,
+        Immediate, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        Absolute, AbsoluteX, AbsoluteY, ZZ,
+        Indirect, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+        ZZ, ZZ, ZZ, ZZ,
+    };
+    //printf("post xlate mode = %02x\n", int(xlate[mode]));
+
+    if (xlate[mode] == ZZ) {
+        return AsmError::InvalidOperand;
+    }
+    mode = uint8_t(xlate[mode]);
+    if (info.opcode[mode] == -1) {
+        if (info.opcode[Relative] != -1) mode = Relative;
+        if (info.opcode[Implied] != -1) mode = Implied;
+        if (info.opcode[Pseudo] != -1) mode = Pseudo;
+    }
+    if (info.opcode[mode] == -1) {
+        return AsmError::InvalidMode;
+    }
+    switch(AddressingMode(mode)) {
+    case Absolute:
+    case AbsoluteX:
+    case AbsoluteY:
+    case IndexedIndirect:
+    case Indirect:
+    case IndirectIndexed:
+        Write(*nexti, info.opcode[mode]);
+        Write16(*nexti+1, addr);
+        *nexti += 3;
+        break;
+    case ZeroPage:
+    case ZeroPageX:
+    case ZeroPageY:
+    case Immediate:
+    case Relative:
+        Write(*nexti, info.opcode[mode]);
+        Write(*nexti+1, addr);
+        *nexti += 2;
+        break;
+    case Accumulator:
+    case Implied:
+        Write(*nexti, info.opcode[mode]);
+        *nexti += 1;
+        break;
+    case Pseudo:
+        if (opcode == ".ORG") {
+            *nexti = addr;
+        } else {
+            return AsmError::InvalidOperand;
+        }
+        return AsmError::Meta;
+    case ZZ:
+    default:
+        return AsmError::InvalidOperand;
+    }
+    return AsmError::None;
+}
+
 // Information about each instruction is encoded into the info_ table.
 // Each 4 bits means (from lowest to highest):
 //    AddressingMode
@@ -774,6 +947,9 @@ const Cpu::InstructionInfo Cpu::info_[256] = {
     0x1229, 0x1528, 0x0205, 0x0808, 0x042b, 0x042b, 0x062b, 0x060b, 
     0x0215, 0x1432, 0x0215, 0x0702, 0x1431, 0x1431, 0x0731, 0x0701, 
 };
+
+std::map<std::string, Cpu::AsmInfo> Cpu::asminfo_;
+std::vector<std::string> Cpu::asmhelp_;;
 
 const char* Cpu::instruction_names_[] = {
 /* 00 */      "BRK",

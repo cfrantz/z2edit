@@ -45,6 +45,7 @@ void Z2Edit::Init() {
     RegisterCommand("wwc", "Write CHR words.", this, &Z2Edit::WriteWords);
     RegisterCommand("elist", "Dump Enemy List.", this, &Z2Edit::EnemyList);
     RegisterCommand("u", "Disassemble Code.", this, &Z2Edit::Unassemble);
+    RegisterCommand("asm", "Disassemble Code.", this, &Z2Edit::Assemble);
     RegisterCommand("insertprg", "Insert a PRG bank.", this, &Z2Edit::InsertPrg);
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &Z2Edit::CopyPrg);
     RegisterCommand("copychr", "Copy a CHR bank to another bank.", this, &Z2Edit::CopyChr);
@@ -72,6 +73,10 @@ void Z2Edit::Init() {
 }
 
 void Z2Edit::Load(const std::string& filename) {
+    Load(filename, FLAGS_move_from_keepout);
+}
+
+void Z2Edit::Load(const std::string& filename, bool movekeepout) {
     loaded_ = true;
     cartridge_.LoadFile(filename);
     mapper_.reset(MapperRegistry::New(&cartridge_, cartridge_.mapper()));
@@ -106,17 +111,30 @@ void Z2Edit::Load(const std::string& filename) {
     memory_.set_mapper(mapper_.get());
     memory_.CheckAllBanksForKeepout();
 
-    if (FLAGS_move_from_keepout) {
+    if (movekeepout) {
         memory_.CheckAllBanksForKeepout(true);
     }
 }
 
 void Z2Edit::LoadFile(DebugConsole* console, int argc, char **argv) {
-    if (argc != 2) {
-        console->AddLog("[error] Usage: %s [filename]", argv[0]);
+    bool move = FLAGS_move_from_keepout;
+    if (argc < 2) {
+        console->AddLog("[error] Usage: %s [filename] [move=<0,1>]", argv[0]);
         return;
     }
-    Load(argv[1]);
+    if (argc == 3) {
+        if (!strcmp(argv[2], "move=0")) move = false;
+        if (!strcmp(argv[2], "move=1")) move = true;
+    }
+    const char *filename = argv[1];
+    if (!strcmp(filename, "_")) {
+        if (save_filename_.empty()) {
+            console->AddLog("[error] No file to reload!");
+            return;
+        }
+        filename = save_filename_.c_str();
+    }
+    Load(filename, move);
 }
 
 void Z2Edit::WriteMapper(DebugConsole* console, int argc, char **argv) {
@@ -462,6 +480,74 @@ void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
     }
 }
 
+void Z2Edit::Assemble(DebugConsole* console, int argc, char **argv) {
+    static uint8_t bank = bank_;
+    static uint16_t addr;
+
+    int index = 0;
+    if (argc < 2) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s [b=<bank>] <addr>", argv[0]);
+        return;
+    }
+
+    if (!strncmp(argv[1], "b=", 2)) {
+        bank = strtoul(argv[1]+2, 0, ibase_);
+        index++;
+    }
+    addr = strtoul(argv[index+1], 0, ibase_);
+
+    struct State {
+        uint16_t addr;
+        Cpu cpu;
+    };
+
+    State* state = new State{addr, mapper_.get()};
+    state->cpu.set_bank(bank);
+    console->AddLog("#{88f}Enering assembler mode.  '.end' to leave.");
+    console->PushLineCallback([state](DebugConsole* console, const char *cmdline) {
+        const char *errors[] = {
+            "None", "End", "Meta", "Invalid Opcode", "Invalid Operand",
+            "Invalid Addressing Mode",
+        };
+        std::string line(cmdline);
+        if (line == "quit") {
+            console->AddLog("#{88f}No 'quit' in assembler mode. Did you mean '.end'?");
+            return;
+        }
+        if (line == "help" || line == ".help") {
+            for(const auto& h : Cpu::asmhelp()) {
+                console->AddLog("%s", h.c_str());
+            }
+            return;
+        }
+        uint16_t prev = state->addr;
+        auto err = state->cpu.Assemble(line, &state->addr);
+        if (err == Cpu::AsmError::None) {
+            const char *comment = strchr(cmdline, ';');
+            if (prev != state->addr) {
+                std::string instruction = state->cpu.Disassemble(&prev);
+                console->AddLog("#{8f8}%-40s %s",
+                    instruction.c_str(), comment ? comment : "");
+            } else if (comment) {
+                console->AddLog("#{8f8}%s", comment);
+            }
+        } else if (err == Cpu::AsmError::Meta) {
+            console->AddLog("#{88f}%04x: %s", prev, cmdline);
+            console->AddLog("#{88f}%04x:", state->addr);
+        } else if (err == Cpu::AsmError::End) {
+            console->AddLog("#{88f}Leaving assembler mode");
+            delete state;
+            console->PopLineCallback();
+            return;
+        } else {
+            console->AddLog("#{f88}%s: '%s'", errors[int(err)], cmdline);
+        }
+    });
+}
+
+
+
 void Z2Edit::InsertPrg(DebugConsole* console, int argc, char **argv) {
     uint8_t bank = bank_;
     if (argc < 2) {
@@ -542,6 +628,10 @@ void Z2Edit::Source(DebugConsole* console, int argc, char **argv) {
         return;
     }
     while((p = fgets(buf, sizeof(buf), fp)) != nullptr) {
+        char *end = p + strlen(p);
+        while(end > p && isspace(end[-1])) {
+            *--end = '\0';
+        }
         console->ExecCommand(p);
     }
     fclose(fp);

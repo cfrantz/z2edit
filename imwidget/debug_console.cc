@@ -21,6 +21,15 @@ DebugConsole::~DebugConsole() {
         free(history_[i]);
 }
 
+void DebugConsole::PushLineCallback(std::function<
+            void(DebugConsole* console, const char* line)> line_cb) {
+    line_cb_.push_back(line_cb);
+}
+
+void DebugConsole::PopLineCallback() {
+    line_cb_.pop_back();
+}
+
 void  DebugConsole::ClearLog() {
     for (int i = 0; i < items_.Size; i++)
         free(items_[i]);
@@ -141,6 +150,10 @@ bool DebugConsole::Draw() {
 }
 
 void  DebugConsole::ExecCommand(const char* command_line) {
+    if (!line_cb_.empty()) {
+        line_cb_.back()(this, command_line);
+        return;
+    }
     AddLog("# %s\n", command_line);
 
     // Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or optimal.
