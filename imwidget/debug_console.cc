@@ -51,8 +51,17 @@ void  DebugConsole::AddLog(const char* fmt, ...) {
     buf[sizeof(buf)-1] = 0;
     va_end(args);
     items_.push_back(strdup(buf));
-    LOG(INFO, buf);
     scroll_to_bottom_ = true;
+
+    char *log = buf;
+    if (log[0] == '#' && buf[1] == '{')
+        log += 6;
+
+    char *end = log + strlen(log) - 1;
+    while(end > log && (*end == '\r' || *end == '\n')) {
+        *end-- = '\0';
+    }
+    LOG(INFO, "$$ ", log);
 }
 
 bool DebugConsole::Draw() {
@@ -154,7 +163,7 @@ void  DebugConsole::ExecCommand(const char* command_line) {
         line_cb_.back()(this, command_line);
         return;
     }
-    AddLog("# %s\n", command_line);
+    AddLog("#{fc8}%s\n", command_line);
 
     // Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or optimal.
     history_pos_ = -1;
@@ -195,9 +204,25 @@ void  DebugConsole::ExecCommand(const char* command_line) {
             }
 
             if (*command) {
-                argv[argc++] = command;
-                while(*command && !isspace(*command))
-                    command++;
+                bool quote = *command == '"';
+                if (quote) {
+                    argv[argc++] = ++command;
+                    while(*command && *command != '"') {
+                        command +=  (*command == '\\' && command[1]) ? 2 : 1;
+                    }
+                    if (*command == '"') {
+                        *command++ = '\0';
+                    } else {
+                        AddLog("[error] Unterminated string.");
+                        argc = 0;
+                        break;
+                    }
+                } else {
+                    argv[argc++] = command;
+                    while(*command && !isspace(*command)) {
+                        command++;
+                    }
+                }
             } else {
                 break;
             }

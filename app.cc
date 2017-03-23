@@ -43,9 +43,12 @@ void Z2Edit::Init() {
     RegisterCommand("ww", "Write words (via mapper).", this, &Z2Edit::WriteWords);
     RegisterCommand("wwp", "Write PRG words.", this, &Z2Edit::WriteWords);
     RegisterCommand("wwc", "Write CHR words.", this, &Z2Edit::WriteWords);
+    RegisterCommand("wt", "Write text bytes (via mapper).", this, &Z2Edit::WriteText);
+    RegisterCommand("wtp", "Write PRG text bytes.", this, &Z2Edit::WriteText);
+    RegisterCommand("wtc", "Write CHR text bytes.", this, &Z2Edit::WriteText);
     RegisterCommand("elist", "Dump Enemy List.", this, &Z2Edit::EnemyList);
     RegisterCommand("u", "Disassemble Code.", this, &Z2Edit::Unassemble);
-    RegisterCommand("asm", "Disassemble Code.", this, &Z2Edit::Assemble);
+    RegisterCommand("asm", "Assemble Code.", this, &Z2Edit::Assemble);
     RegisterCommand("insertprg", "Insert a PRG bank.", this, &Z2Edit::InsertPrg);
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &Z2Edit::CopyPrg);
     RegisterCommand("copychr", "Copy a CHR bank to another bank.", this, &Z2Edit::CopyChr);
@@ -242,6 +245,44 @@ void Z2Edit::WriteBytes(DebugConsole* console, int argc, char **argv) {
             mapper_->WriteChrBank(bank, addr++, val);
         } else {
             mapper_->Write(addr++, val);
+        }
+    }
+}
+
+void Z2Edit::WriteText(DebugConsole* console, int argc, char **argv) {
+    uint8_t bank = bank_;
+    int mode = argv[0][2];
+    int index = 0;
+    if (argc < 3) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        if (mode) {
+            console->AddLog("[error] %s [b=<bank>] <addr> <val> ...", argv[0]);
+        } else {
+            console->AddLog("[error] %s <addr> <val> ...", argv[0]);
+        }
+        return;
+    }
+
+    if (mode && !strncmp(argv[1], "b=", 2)) {
+        bank = strtoul(argv[1]+2, 0, ibase_);
+        index++;
+    }
+    uint32_t addr = strtoul(argv[index+1], 0, ibase_);
+
+    for(int i=2+index; i<argc; i++) {
+        for(char *val = argv[i]; *val; val++) {
+            int ch = *val;
+            if (text_encoding_ == 1) {
+                ch = TextEncoding::ToZelda2(ch);
+                if (ch == 0) ch = 0xf4;
+            }
+            if (mode == 'p') {
+                mapper_->WritePrgBank(bank, addr++, ch);
+            } else if (mode == 'c') {
+                mapper_->WriteChrBank(bank, addr++, ch);
+            } else {
+                mapper_->Write(addr++, ch);
+            }
         }
     }
 }

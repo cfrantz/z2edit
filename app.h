@@ -39,6 +39,7 @@ class Z2Edit: public ImApp {
     void SaveFile(DebugConsole* console, int argc, char **argv);
     void HexdumpBytes(DebugConsole* console, int argc, char **argv);
     void WriteBytes(DebugConsole* console, int argc, char **argv);
+    void WriteText(DebugConsole* console, int argc, char **argv);
     void WriteMapper(DebugConsole* console, int argc, char **argv);
     void HexdumpWords(DebugConsole* console, int argc, char **argv);
     void WriteWords(DebugConsole* console, int argc, char **argv);
