@@ -37,5 +37,5 @@ asm ff4c
 set bank 5
 set text 1
 # The "S E L E C T" is replaced with "PBAG HACK"
-wbp bc1c e9 db da e0 f4 e1 da dc e4 f4 f4
+wtp bc1c "PBAG HACK  "
 dbp bc1c b
