@@ -7,6 +7,13 @@ config_setting(
     }
 )
 
+genrule(
+    name = "make_version",
+    outs = ["version.h"],
+    cmd = """sed -e 's/ / "/g' -e 's/$$/"\\n/g' -e "s/^/#define /g" bazel-out/volatile-status.txt > $@""",
+    stamp = 1,
+)
+
 cc_library(
     name = "app",
     linkopts = [
@@ -18,6 +25,7 @@ cc_library(
     ],
     hdrs = [
         "app.h",
+        "version.h",
     ],
     srcs = [
         "app.cc",
@@ -63,6 +71,7 @@ genrule(
           " --symbol kZelda2Cfg > $(@)",
     tools = ["//tools:pack_config"],
 )
+
 
 cc_binary(
     name = "z2edit",

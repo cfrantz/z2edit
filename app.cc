@@ -3,6 +3,7 @@
 #include <gflags/gflags.h>
 #include "app.h"
 #include "imgui.h"
+#include "imwidget/error_dialog.h"
 #include "nes/cpu6502.h"
 #include "nes/text_encoding.h"
 #include "proto/rominfo.pb.h"
@@ -11,6 +12,8 @@
 #include "util/os.h"
 #include "util/logging.h"
 #include "util/imgui_impl_sdl.h"
+
+#include "version.h"
 
 #ifdef HAVE_NFD
 #include "nfd.h"
@@ -779,6 +782,18 @@ save_as:
         if (ImGui::BeginMenu("Help")) {
             if (ImGui::MenuItem("Online Help")) {
                 Help("root");
+            }
+            if (ImGui::MenuItem("About")) {
+                ErrorDialog::Spawn("About Z2Edit",
+                    "Z2Edit Zelda II ROM Editor\n\n",
+#ifdef BUILD_GIT_VERSION
+                    "Version: ", BUILD_GIT_VERSION, "-", BUILD_SCM_STATUS
+#else
+                    "Version: Unknown"
+#warning "Built without version stamp"
+#endif
+                    );
+
             }
             ImGui::EndMenu();
         }

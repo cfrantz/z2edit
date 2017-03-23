@@ -9,7 +9,13 @@ $ bazel build :main
 $(bindir)/main <user-supplied-zelda2.nes>
 ```
 
-### Build for Windows (on Linux)
+### Build and Package for Windows (on Linux)
+
+```
+./tools/release_windows.sh
+```
+
+### Manual Build for Windows (on Linux)
 
 1. Prepare the build environment
 
