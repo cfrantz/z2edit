@@ -15,7 +15,7 @@ class Z2Decompress {
 
     void Print();
     void Decompress(const Map& map);
-    void DecompressSideView(const uint8_t* data);
+    void DecompressSideView(const uint8_t* data, bool collapse=true);
     void set_mapper(Mapper* m) { mapper_ = m; }
 
     inline uint8_t map(int x, int y) const {
@@ -61,8 +61,7 @@ class Z2Decompress {
                   const DecompressInfo* info);
 
     void DecompressOverWorld(const Map& map);
-    void DecompressSideView(const Map& map);
-    void DecompressSideView(const Address& address, const Address& foreground);
+    void DecompressSideView(const Address& address, const Address* foreground);
     void CollapseLayers(int top_layer);
     const BackgroundInfo& GetBackgroundInfo();
 

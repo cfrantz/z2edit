@@ -46,7 +46,7 @@ void Z2Decompress::Decompress(const Map& map) {
     if (map.type() == MapType::OVERWORLD) {
         DecompressOverWorld(compressed_map_);
     } else {
-        DecompressSideView(compressed_map_);
+        DecompressSideView(address(), nullptr);
     }
 }
 
@@ -174,40 +174,10 @@ Address Z2Decompress::palette() {
     return addr;
 }
 
-void Z2Decompress::DecompressSideView(const Map& map) {
-    // FIXME: for side view maps, the map address is the address of a pointer
-    // to the real address.  Read it and set the real address.
-    Address address = map.address();
-    //address.set_address(ReadWord(map.address(), 0));
-
-    uint8_t len = Read(address, 0);
-    LOG(INFO, "### ", map.name());
-    LOG(INFO, "### dbp b=", address.bank(), " ", HEX(address.address()),
-              " ", len);
-
-    layer_ = 0;
-
-    uint8_t backmap = Read(address, 3) & 7;
-    if (backmap) {
-        Address backaddr;
-        // The backing map pointers are stored at offset zero in the
-        // current bank.
-        backaddr.set_bank(address.bank());
-        backaddr.set_address(0);
-        backaddr.set_address(ReadWord(backaddr, (backmap - 1) * 2));
-        LOG(INFO, "Decompressing background map at ", HEX(backaddr.address()));
-        DecompressSideView(backaddr, address);
-        layer_++;
-    }
-    LOG(INFO, "Decompressing foreground map at ", HEX(address.address()));
-    DecompressSideView(address, address);
-    CollapseLayers(layer_);
-    layer_ = 0;
-}
-
 void Z2Decompress::CollapseLayers(int top_layer) {
     const auto& bg = GetBackgroundInfo();
     uint8_t bgtile = uint8_t(bg.background());
+    printf("Collapse layers %d\n", top_layer);
     for(int y=0; y<height_; y++) {
         for(int x=0; x<width_; x++) {
             for(int t = top_layer; t>0; t--) {
@@ -222,24 +192,43 @@ void Z2Decompress::CollapseLayers(int top_layer) {
 }
 
 void Z2Decompress::DecompressSideView(const Address& address,
-                                      const Address& foreground) {
+                                      const Address* foreground) {
     uint8_t len = Read(address, 0);
     uint8_t data[256];
     for(int i=0; i<len; i++) {
         data[i] = Read(address, i);
     }
-    // Read the map parameter bytes from the foreground map
-    //data[1] = Read(foreground, 1);
 
     // Get the tileset of the foreground map, but use the floor and
     // ceiling parameters in the background map.
-    data[2] = (data[2] & 0x8f) | (Read(foreground, 2) & 0x70);
-
-    //data[3] = Read(foreground, 3);
-    DecompressSideView(data);
+    bool collapse = !foreground;
+    if (!foreground) foreground = &address;
+    data[2] = (data[2] & 0x8f) | (Read(*foreground, 2) & 0x70);
+    DecompressSideView(data, collapse);
 }
 
-void Z2Decompress::DecompressSideView(const uint8_t* data) {
+void Z2Decompress::DecompressSideView(const uint8_t* data, bool collapse) {
+    // Welcome to the shitshow: ground and back are needed to render
+    // the background correctly, but rendering a background map will
+    // modify them.  Rather than design this class proerply, I'm lazy
+    // and just overwrite the values again after rendering the background.
+    ground_ = data[2];
+    back_ = data[3];
+    const auto& bg = GetBackgroundInfo();
+    if (back_ & 7) {
+        Address backaddr = address();
+        // The backing map pointers are stored at offset zero in the
+        // current bank.
+        backaddr.set_address(0);
+        backaddr.set_address(ReadWord(backaddr, 2 * ((back_ & 7) - 1)));
+        LOG(INFO, "Decompressing background map at ", HEX(backaddr.address()));
+        DecompressSideView(backaddr, &address());
+        layer_++;
+    } else {
+        layer_ = 0;
+        memset(&map_[layer_], uint8_t(bg.background()), sizeof(map_[0]));
+    }
+
     uint8_t len = data[0];
     length_ = len;
     flags_ = data[1];
@@ -264,10 +253,6 @@ void Z2Decompress::DecompressSideView(const uint8_t* data) {
     uint8_t ceiling = !(ground_ & 0x80);
     uint8_t objset = !!(flags_ & 0x80);
 
-    const auto& bg = GetBackgroundInfo();
-    if ((back_ & 7) == 0) {
-        memset(&map_[layer_], uint8_t(bg.background()), sizeof(map_[0]));
-    }
 
     int x, y, xspace;
     x = y = 0;
@@ -374,7 +359,10 @@ void Z2Decompress::DecompressSideView(const uint8_t* data) {
         DrawFloor(x++, floor, ceiling);
     }
 exitloop:
-    //Print();
+    if (collapse) {
+        CollapseLayers(layer_);
+        layer_ = 0;
+    }
     return;
 }
 
