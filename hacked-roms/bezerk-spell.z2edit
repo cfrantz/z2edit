@@ -1,0 +1,99 @@
+######################################################################
+#
+# Spell hacks for Zelda II: The Adventure of Link
+#
+# This script hacks the game to replace SHIELD and FIRE spells.
+#
+# SHIELD is replaced with the FAST spell.  When Link casts FAST, he
+# will be able to run twice as fast, but he'll take twice as much
+# damage from enemies.
+#
+# FIRE is replaced with the BEZERK spell.  In addition to Link's sword
+# shooting fire, Link deals twice the damage.  Similar to FAST, when
+# in BEZERK mode, Link will take twice as much damage from enemies.
+#
+######################################################################
+# Hack for BEZERK spell
+set bank 0
+set ibase 16
+set text 1
+
+# Change the name of the spell from FIRE
+wtp 9c62 "BEZERK....."
+
+# Create a routine to compute double damage
+set bank 7
+asm b=7 feaa
+.org $feaa
+    sta $0c         ; store damage taken
+    lda #$10        ; fire spell bit
+    and $076f       ; magic bits
+    beq $2          ; skip next instr if not set
+    asl $0c         ; double damage taken
+    rts             ; done
+
+.org $feb6
+    lda $e66c,y     ; damage sword will do
+    sta $0          ; store tmp
+    lda #$10        ; fire spell bit
+    and $076f       ; magic bits
+    beq $2          ; skip next instr if not set
+    asl $0          ; double damage in tmp
+    lda $c2,x       ; get enemy HP
+    sec
+    sbc $0          ; subtract tmp
+    rts             ; done
+
+; Patch the damage taken routine to check for bezerk spell
+.org $e329
+    jsr $feaa
+    nop
+    nop
+    nop
+    nop
+    nop
+
+; Patch the damage given routine to check for bezerk spell
+.org $e72f
+    nop
+    nop
+    nop
+    jsr $feb6
+.end
+
+# Hack in FAST spell.  Comment out everything below this line to
+# keep SHEILD spell.
+
+# Create a two byte "fast" table for link's max fast right and left speed.
+set bank 0
+wb a89e 26 da
+
+# We'll patch normal comapre in Link's acceleration routine to use our
+# special routine.
+asm b=0 a8a0
+    pha             ; Save A, currently holding Link's speed
+    lda $076f       ; Get spell status
+    lsr             ; bit0 is "shield".  Shift into carry flag
+    bcs $05         ; "shield" activated? If yes, use "fast" table.
+    pla             ; Get speed
+    cmp $93b3,Y     ; Check against normal speed table
+    rts             ; Return
+    pla             ; Get speed
+    cmp $a89e,Y     ; Check against fast speed table
+    rts             ; Return
+; Now patch the two checks in the acceleration routine to use our
+; special check routine
+.org $93ff
+    jsr $a8a0
+.org $940e
+    jsr $a8a0
+.end
+
+# Change the name of the spell from SHEILD
+wtp 0x9c2a "FAST......."
+
+# Fix the damage check routine to check for BEZERK or FAST
+set bank 7
+asm b=7 feac
+    lda #$11        ; check "fire" or "shield" bits.
+.end

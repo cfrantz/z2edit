@@ -1,0 +1,54 @@
+# The code to control link's speed is in bank0
+set bank 0
+set ibase 16
+set text 1
+
+# Create a two byte "fast" table for link's max fast right and left speed.
+wb a89e 26 da
+
+# We'll patch normal comapre in Link's acceleration routine to use our
+# special routine.
+asm a8a0
+    pha             ; Save A, currently holding Link's speed
+    lda $076f       ; Get spell status
+    lsr             ; bit0 is "shield".  Shift into carry flag
+    bcs $05         ; "shield" activated? If yes, use "fast" table.
+    pla             ; Get speed
+    cmp $93b3,Y     ; Check against normal speed table
+    rts             ; Return
+    pla             ; Get speed
+    cmp $a89e,Y     ; Check against fast speed table
+    rts             ; Return
+; Now patch the two checks in the acceleration routine to use our
+; special check routine
+.org $93ff
+    jsr $a8a0
+.org $940e
+    jsr $a8a0
+.end
+
+# Change the name of the spell from SHEILD
+wtp 0x9c2a "FAST......."
+
+# Create a routine to compute 50% more damage when FAST is activated.
+set bank 7
+asm feaa
+    sta $0c         ; store damage taken
+    ldy $70f        ; link's tunic color
+    beq $06         ; if normal, no extra damage
+    lsr             ; a = a/2
+    clc             ; clear carry
+    adc $0c         ; plus damage taken
+    sta $0c         ; save it
+    rts
+
+; Patch the damage taken routine with the check for 50% more routine
+.org $e329
+    jsr $feaa
+    nop
+    nop
+    nop
+    nop
+    nop
+.end
+
