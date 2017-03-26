@@ -499,7 +499,7 @@ void Z2Edit::EnemyList(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
-    static uint8_t bank = bank_;
+    uint8_t bank = bank_;
     static uint16_t addr;
 
     int index = 0;
@@ -525,8 +525,8 @@ void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::Assemble(DebugConsole* console, int argc, char **argv) {
-    static uint8_t bank = bank_;
-    static uint16_t addr;
+    uint8_t bank = bank_;
+    uint16_t addr;
 
     int index = 0;
     if (argc < 2) {
@@ -548,7 +548,7 @@ void Z2Edit::Assemble(DebugConsole* console, int argc, char **argv) {
 
     State* state = new State{addr, mapper_.get()};
     state->cpu.set_bank(bank);
-    console->AddLog("#{88f}Enering assembler mode.  '.end' to leave.");
+    console->AddLog("#{88f}Entering assembler mode (bank=%d).  '.end' to leave.", bank);
     console->PushLineCallback([state](DebugConsole* console, const char *cmdline) {
         const char *errors[] = {
             "None", "End", "Meta", "Invalid Opcode", "Invalid Operand",
