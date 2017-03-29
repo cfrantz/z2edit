@@ -177,7 +177,6 @@ Address Z2Decompress::palette() {
 void Z2Decompress::CollapseLayers(int top_layer) {
     const auto& bg = GetBackgroundInfo();
     uint8_t bgtile = uint8_t(bg.background());
-    printf("Collapse layers %d\n", top_layer);
     for(int y=0; y<height_; y++) {
         for(int x=0; x<width_; x++) {
             for(int t = top_layer; t>0; t--) {
