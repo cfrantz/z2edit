@@ -10,6 +10,7 @@
    * include swap/copy
    * optional notes field
    * store project + config + history in a saved protobuf.
+1. Make File|Emulate more portable to windows.
 
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
