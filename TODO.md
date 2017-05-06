@@ -1,5 +1,16 @@
 # TODO List
 
+### From GTM
+1. Investigate and document swap/copy better.
+1. Document enemy editing WRT to "worlds".
+1. Fix continue from palaces hack.
+1. Make sideview editor easier to use.
+1. Add an undo stack
+   * save commits
+   * include swap/copy
+   * optional notes field
+   * store project + config + history in a saved protobuf.
+
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
    with unsaved changes
