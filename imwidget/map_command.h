@@ -192,14 +192,15 @@ class MapSwapper {
     MapSwapper(Mapper* m)
         : id_(888888),
         mapper_(m),
-        newarea_(0),
+        srcarea_(0),
+        dstarea_(0),
         swap_map_(true),
         swap_conn_(true),
         swap_enemies_(true),
         swap_itemav_(true) {}
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
-    inline void set_map(const Map& map) { map_ = map; }
+    inline void set_map(const Map& map) { map_ = map; srcarea_ = map_.area(); }
     inline const Map& map() const { return map_; }
 
     bool Draw();
@@ -210,7 +211,8 @@ class MapSwapper {
     int id_;
     Mapper* mapper_;
     Map map_;
-    int newarea_;
+    int srcarea_;
+    int dstarea_;
     bool swap_map_;
     bool swap_conn_;
     bool swap_enemies_;

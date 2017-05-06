@@ -812,7 +812,10 @@ bool MapSwapper::Draw() {
     }
 
     ImGui::PushID(id_);
-    ImGui::Combo("Area", &newarea_, names, len);
+    ImGui::PushItemWidth(400);
+    ImGui::Combo("Source Area", &srcarea_, names, len);
+    ImGui::Combo("Destination Area", &dstarea_, names, len);
+    ImGui::PopItemWidth();
     ImGui::Checkbox("Map", &swap_map_);
     ImGui::Checkbox("Connections", &swap_conn_);
     ImGui::Checkbox("Enemies", &swap_enemies_);
@@ -838,7 +841,7 @@ bool MapSwapper::Draw() {
 
 void MapSwapper::Swap() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
-    const Map *a = &map_;
+    const Map *a = nullptr;
     const Map *b = nullptr;
     AvailableBitmap avail;
 
@@ -846,9 +849,12 @@ void MapSwapper::Swap() {
         if (m.type() != MapType::OVERWORLD
             && m.world() == map_.world()
             && m.overworld() == map_.overworld()
-            && m.subworld() == map_.subworld()
-            && m.area() == newarea_) {
-            b = &m;
+            && m.subworld() == map_.subworld()) {
+            if (m.area() == srcarea_) {
+                a = &m;
+            } else if (m.area() == dstarea_) {
+                b = &m;
+            }
         }
     }
     for(const auto& a : ri.available()) {
@@ -911,12 +917,12 @@ void MapSwapper::Swap() {
         mapper_->Write(avail.address(), a->area() / 2, aa);
         mapper_->Write(avail.address(), b->area() / 2, ba);
     }
-    map_ = *b;
+    set_map(*b);
 }
 
 void MapSwapper::Copy() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
-    const Map *a = &map_;
+    const Map *a = nullptr;
     const Map *b = nullptr;
     AvailableBitmap avail;
 
@@ -924,9 +930,12 @@ void MapSwapper::Copy() {
         if (m.type() != MapType::OVERWORLD
             && m.world() == map_.world()
             && m.overworld() == map_.overworld()
-            && m.subworld() == map_.subworld()
-            && m.area() == newarea_) {
-            b = &m;
+            && m.subworld() == map_.subworld()) {
+            if (m.area() == srcarea_) {
+                a = &m;
+            } else if (m.area() == dstarea_) {
+                b = &m;
+            }
         }
     }
     for(const auto& a : ri.available()) {
@@ -978,7 +987,7 @@ void MapSwapper::Copy() {
         // Write back to memory
         mapper_->Write(avail.address(), b->area() / 2, ba);
     }
-    map_ = *b;
+    set_map(*b);
 }
 
 
