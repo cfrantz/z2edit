@@ -21,7 +21,7 @@
 
 
 DEFINE_string(emulator, "fceux", "Emulator to run for testing");
-DEFINE_string(romtmp, "/tmp/zelda2-test.nes", "Temporary filename for running under test");
+DEFINE_string(romtmp, "zelda2-test.nes", "Temporary filename for running under test");
 DECLARE_bool(move_from_keepout);
 DECLARE_string(config);
 
@@ -703,9 +703,10 @@ void Z2Edit::Source(DebugConsole* console, int argc, char **argv) {
     fclose(fp);
 }
 
-void Z2Edit::SpawnEmulator(const std::string& romfile) {
-    std::string cmdline = FLAGS_emulator + " " + romfile + " &";
-    system(cmdline.c_str());
+void Z2Edit::SpawnEmulator() {
+    std::string romtmp = os::TempFilename(FLAGS_romtmp);
+    cartridge_.SaveFile(romtmp);
+    os::System(StrCat(FLAGS_emulator, " ", romtmp), true);
 }
 
 void Z2Edit::ProcessEvent(SDL_Event* event) {
@@ -725,8 +726,7 @@ void Z2Edit::Draw() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Emulate", "Ctrl+E")) {
-                cartridge_.SaveFile(FLAGS_romtmp);
-                SpawnEmulator(FLAGS_romtmp);
+                SpawnEmulator();
             }
 #ifdef HAVE_NFD
             if (ImGui::MenuItem("Load & Run a Script")) {
@@ -777,7 +777,7 @@ save_as:
                 }
                 free(filename);
             }
-            if (ImGui::MenuItem("Export ROM", "Ctrl+E")) {
+            if (ImGui::MenuItem("Export ROM")) {
                 if (export_filename_.empty())
                     goto export_as;
                 project_.ExportRom(export_filename_);

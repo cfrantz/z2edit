@@ -75,6 +75,7 @@ cc_library(
 		"string.h",
 	],
 	deps = [
+        "//util:string",
 	]
 )
 

@@ -7,12 +7,13 @@
 namespace os {
 string GetCWD();
 
-#ifndef _WIN32
-void Yield();
-#endif
+void SchedulerYield();
 
 int64_t utime_now();
 std::string CTime(int64_t time_us);
+
+std::string TempFilename(const std::string& filename);
+int System(const std::string& cmd, bool background=false);
 
 namespace path {
 string Join(const std::vector<string>& components);

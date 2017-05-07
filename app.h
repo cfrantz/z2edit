@@ -61,7 +61,7 @@ class Z2Edit: public ImApp {
     void BCopy(DebugConsole* console, int argc, char **argv);
     void SetVar(DebugConsole* console, int argc, char **argv);
     void Source(DebugConsole* console, int argc, char **argv);
-    void SpawnEmulator(const std::string& romfile);
+    void SpawnEmulator();
     int EncodedText(int ch);
 
     bool loaded_;
