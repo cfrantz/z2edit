@@ -23,6 +23,12 @@ bool Project::Draw() {
     }
     ImApp::Get()->HelpButton("project", true);
 
+    char name[100];
+    strncpy(name, project_.name().c_str(), 99);
+    if (ImGui::InputText("Project Name", name, sizeof(name))) {
+        project_.set_name(name);
+    }
+
     char items_text[project_.history_size()][100];
     const char *items[project_.history_size()];
     char descr[100];

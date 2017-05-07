@@ -722,6 +722,7 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
 }
 
 void Z2Edit::Draw() {
+    SetTitle(project_.name());
     ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {

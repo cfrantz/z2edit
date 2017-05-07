@@ -22,6 +22,7 @@ class ImApp {
     virtual void ProcessEvent(SDL_Event* event) {}
     virtual void Help(const std::string& topickey) {}
 
+    void SetTitle(const std::string& title, bool with_appname=true);
     void Run();
     void BaseDraw();
     virtual bool ProcessEvents();

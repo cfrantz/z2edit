@@ -21,6 +21,7 @@ class Project: public ImWindowBase {
     void Commit(const std::string& message);
 
     inline void set_cartridge(Cartridge* c) { cartridge_ = c; }
+    inline const std::string& name() { return project_.name(); }
   private:
     bool LoadWorker(const std::string& filename);
     Cartridge* cartridge_;

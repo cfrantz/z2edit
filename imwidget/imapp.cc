@@ -62,6 +62,16 @@ void ImApp::Quit(DebugConsole* console, int argc, char **argv) {
     running_ = false;
 }
 
+void ImApp::SetTitle(const std::string& title, bool with_appname) {
+    std::string val;
+    if (with_appname) {
+        val = title.empty() ? name_ : StrCat(name_, ": ", title);
+    } else {
+        val = name_;
+    }
+    SDL_SetWindowTitle(window_, val.c_str());
+}
+
 void ImApp::Run() {
     running_ = true;
     while(running_) {
