@@ -14,6 +14,7 @@ class PointsTable: public ImWindowBase {
     void Init();
 
     bool Draw() override;
+    void Refresh() override { Init(); }
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     inline int xp(int t) const { return data_.at(t).xp; }
     void Load();
@@ -37,6 +38,7 @@ class EnemyEditor: public ImWindowBase {
     void Init();
 
     bool Draw() override;
+    void Refresh() override { Init(); }
     inline void set_mapper(Mapper* m) { mapper_ = m; }
   private:
     struct Unpacked {

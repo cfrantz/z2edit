@@ -33,6 +33,11 @@ class Cartridge {
     Cartridge();
     ~Cartridge();
 
+    static bool IsNESFile(const std::string& filename);
+
+    std::string SaveRom();
+    void LoadRom(const std::string& rom);
+
     void LoadFile(const std::string& filename);
     void SaveFile(const std::string& filename);
     void PrintHeader();

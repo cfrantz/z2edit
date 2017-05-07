@@ -8,6 +8,7 @@ namespace z2util {
 class StartValues: public ImWindowBase {
   public:
     StartValues();
+    void Refresh() override { Unpack(); }
     bool Draw() override;
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }

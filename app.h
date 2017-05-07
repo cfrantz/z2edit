@@ -12,6 +12,7 @@
 #include "imwidget/neschrview.h"
 #include "imwidget/palace_gfx.h"
 #include "imwidget/palette.h"
+#include "imwidget/project.h"
 #include "imwidget/simplemap.h"
 #include "imwidget/start_values.h"
 #include "imwidget/object_table.h"
@@ -29,10 +30,16 @@ class Z2Edit: public ImApp {
 
     void Init() override;
     void ProcessEvent(SDL_Event* event) override;
+    void ProcessMessage(const std::string& msg, const void* extra) override;
     void Draw() override;
 
     void Load(const std::string& filename);
-    void Load(const std::string& filename, bool movekeepout);
+
+    // movekeepout is tri-state:
+    // -1: default action based on FLAGS_move_from_keepout
+    // 0: do not move from keepouts
+    // 1: move from keepouts
+    void LoadPostProcess(int movekeepout);
     void Help(const std::string& topickey);
   private:
     void LoadFile(DebugConsole* console, int argc, char **argv);
@@ -62,6 +69,7 @@ class Z2Edit: public ImApp {
     int bank_;
     int text_encoding_;
     std::string save_filename_;
+    std::string export_filename_;
     NesHardwarePalette* hwpal_;
     std::unique_ptr<NesChrView> chrview_;
     std::unique_ptr<z2util::SimpleMap> simplemap_;
@@ -75,6 +83,7 @@ class Z2Edit: public ImApp {
     std::unique_ptr<z2util::ExperienceTable> experience_table_;
 
     Cartridge cartridge_;
+    Project project_;
     z2util::Memory memory_;
     std::unique_ptr<Mapper> mapper_;
 };

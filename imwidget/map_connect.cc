@@ -20,7 +20,9 @@ OverworldConnector::OverworldConnector(Mapper* mapper, Address address,
 OverworldConnector::OverworldConnector(const OverworldConnector& other)
   : mapper_(other.mapper_),
     address_(other.address_),
-    offset_(other.offset_)
+    offset_(other.offset_),
+    overworld_(other.overworld_),
+    subworld_(other.subworld_)
 {
     Read();
 }

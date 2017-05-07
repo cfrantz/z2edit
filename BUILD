@@ -39,6 +39,7 @@ cc_library(
         "//imwidget:neschrview",
         "//imwidget:palace_gfx",
         "//imwidget:palette",
+        "//imwidget:project",
         "//imwidget:simplemap",
         "//imwidget:start_values",
         "//imwidget:object_table",

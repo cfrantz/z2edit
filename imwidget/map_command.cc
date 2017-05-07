@@ -3,12 +3,14 @@
 #include "imwidget/map_command.h"
 
 #include "imwidget/error_dialog.h"
+#include "imwidget/imapp.h"
 #include "imwidget/imutil.h"
 #include "imwidget/overworld_encounters.h"
 #include "imwidget/simplemap.h"
 #include "imgui.h"
 #include "nes/enemylist.h"
 #include "util/config.h"
+#include "util/strutil.h"
 
 #include "IconsFontAwesome.h"
 
@@ -829,11 +831,15 @@ bool MapSwapper::Draw() {
     if (ImGui::Button("Swap")) {
         Swap();
         chg = true;
+        ImApp::Get()->ProcessMessage("commit", StrCat("Swap ",
+                    names[srcarea_], " with ", names[dstarea_]).c_str());
     }
     ImGui::SameLine();
     if (ImGui::Button("Copy")) {
         Copy();
         chg = true;
+        ImApp::Get()->ProcessMessage("commit", StrCat("Copy ",
+                    names[srcarea_], " to ", names[dstarea_]).c_str());
     }
     ImGui::PopID();
     return chg;

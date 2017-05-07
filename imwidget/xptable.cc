@@ -18,6 +18,7 @@ bool ExperienceTable::Draw() {
     ImGui::Begin("Experience Table", &visible_);
     if (ImGui::Button("Commit to ROM")) {
         Save();
+        ImApp::Get()->ProcessMessage("commit", "Experience Table");
     }
     ImApp::Get()->HelpButton("experience-table", true);
 

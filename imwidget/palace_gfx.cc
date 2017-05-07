@@ -54,6 +54,7 @@ bool PalaceGraphics::Draw() {
     }
     if (ImGui::Button("Commit to ROM")) {
         Save();
+        ImApp::Get()->ProcessMessage("commit", "Palace Graphics/Palette IDs");
     }
     ImGui::End();
     return false;

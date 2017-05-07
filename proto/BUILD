@@ -7,3 +7,13 @@ proto_library(
         "rominfo.proto",
     ],
 )
+
+proto_library(
+    name = "project",
+    srcs = [
+        "project.proto",
+    ],
+    deps = [
+        ":rominfo",
+    ],
+)

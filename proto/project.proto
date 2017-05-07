@@ -1,0 +1,17 @@
+syntax = "proto3";
+package z2util;
+
+import "proto/rominfo.proto";
+
+message CommitHistory {
+    int64 create_time = 1;
+    string description = 2;
+    bytes rom = 3;
+}
+
+message ProjectFile {
+    string name = 1;
+    RomInfo config = 2;
+    bytes rom = 3;
+    repeated CommitHistory history = 4;
+}

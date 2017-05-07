@@ -19,6 +19,7 @@ class SimpleMap: public ImWindowBase {
     SimpleMap();
     SimpleMap(Mapper* m, const Map& map);
     void set_mapper(Mapper* m) { mapper_ = m; decomp_.set_mapper(m); }
+    void Refresh() override { SetMap(map_); }
     bool Draw() override;
     void DrawMap(const ImVec2& pos);
     void SetMap(const Map& map);

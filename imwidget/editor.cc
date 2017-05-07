@@ -83,6 +83,7 @@ void Editor::ConvertFromMap(Map* map) {
         compressed_length_ = decomp.length();
         *map->mutable_address() = decomp.address();
         cache_.Init(*map);
+        printf("init connection table for %d %d\n", map->overworld(), map->subworld());
         connections_.Init(mapper_, map->connector(), map->overworld(),
                           map->subworld());
         width = decomp.width();
@@ -225,6 +226,11 @@ void Editor::DrawTile(int x, int y, uint16_t tile, int mode, float* props) {
     ImGui::SetCursorPos(origin_);
 }
 
+void Editor::Refresh() {
+    auto* rominfo = ConfigLoader<RomInfo>::MutableConfig();
+    ConvertFromMap(rominfo->mutable_map(mapsel_));
+}
+
 bool Editor::Draw() {
     const char *names[256];
     int len=0, mapsel = mapsel_;
@@ -277,6 +283,8 @@ bool Editor::Draw() {
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {
         SaveMap();
+        ImApp::Get()->ProcessMessage(
+                "commit", StrCat("Overworld edits to ", map_->name()).c_str());
     }
 
     ImGui::SameLine();

@@ -28,8 +28,8 @@ DECLARE_string(config);
 namespace z2util {
 
 void Z2Edit::Init() {
-    RegisterCommand("load", "Load a NES ROM.", this, &Z2Edit::LoadFile);
-    RegisterCommand("save", "Save a NES ROM.", this, &Z2Edit::SaveFile);
+    RegisterCommand("load", "Load a NES ROM or project file.", this, &Z2Edit::LoadFile);
+    RegisterCommand("save", "Save a NES ROM or project file.", this, &Z2Edit::SaveFile);
     RegisterCommand("wm", "Write mapper register.", this, &Z2Edit::WriteMapper);
     RegisterCommand("header", "Print iNES header.",
             &cartridge_, &Cartridge::PrintHeader);
@@ -76,18 +76,26 @@ void Z2Edit::Init() {
     enemy_editor_.reset(new z2util::EnemyEditor);
     experience_table_.reset(new z2util::ExperienceTable);
     editor_.reset(z2util::Editor::New());
+    project_.set_cartridge(&cartridge_);
 }
 
 void Z2Edit::Load(const std::string& filename) {
-    Load(filename, FLAGS_move_from_keepout);
+    project_.Load(filename, false);
 }
 
-void Z2Edit::Load(const std::string& filename, bool movekeepout) {
-    loaded_ = true;
-    cartridge_.LoadFile(filename);
+void Z2Edit::LoadPostProcess(int movekeepout) {
     mapper_.reset(MapperRegistry::New(&cartridge_, cartridge_.mapper()));
-    chrview_->set_mapper(mapper_.get());
+    if (movekeepout == -1) {
+        movekeepout = FLAGS_move_from_keepout;
+    }
+    memory_.set_mapper(mapper_.get());
+    memory_.CheckAllBanksForKeepout();
+    if (movekeepout) {
+        memory_.CheckAllBanksForKeepout(true);
+    }
+    loaded_ = true;
 
+    chrview_->set_mapper(mapper_.get());
     simplemap_->set_mapper(mapper_.get());
     auto* ri = ConfigLoader<RomInfo>::MutableConfig();
     for(const auto& m : ri->map()) {
@@ -98,27 +106,31 @@ void Z2Edit::Load(const std::string& filename, bool movekeepout) {
     }
 
     editor_->set_mapper(mapper_.get());
-    editor_->ConvertFromMap(ri->mutable_map(0));
+    editor_->Refresh();
 
     misc_hacks_->set_mapper(mapper_.get());
+    misc_hacks_->Refresh();
     palace_gfx_->set_mapper(mapper_.get());
+    palace_gfx_->Refresh();
     palette_editor_->set_mapper(mapper_.get());
+    palette_editor_->Refresh();
     start_values_->set_mapper(mapper_.get());
+    start_values_->Refresh();
 
     object_table_->set_mapper(mapper_.get());
+    object_table_->Refresh();
     enemy_editor_->set_mapper(mapper_.get());
+    enemy_editor_->Refresh();
     experience_table_->set_mapper(mapper_.get());
+    experience_table_->Refresh();
 
     object_table_->Init();
     palette_editor_->Init();
     enemy_editor_->Init();
     experience_table_->Init();
 
-    memory_.set_mapper(mapper_.get());
-    memory_.CheckAllBanksForKeepout();
-
-    if (movekeepout) {
-        memory_.CheckAllBanksForKeepout(true);
+    for(auto it=draw_callback_.begin(); it != draw_callback_.end(); ++it) {
+        (*it)->Refresh();
     }
 }
 
@@ -140,7 +152,12 @@ void Z2Edit::LoadFile(DebugConsole* console, int argc, char **argv) {
         }
         filename = save_filename_.c_str();
     }
-    Load(filename, move);
+    if (ends_with(filename, "nes") || ends_with(filename, "NES")) {
+        cartridge_.LoadFile(filename);
+        LoadPostProcess(move);
+    } else {
+        project_.Load(filename, false);
+    }
 }
 
 void Z2Edit::WriteMapper(DebugConsole* console, int argc, char **argv) {
@@ -152,7 +169,12 @@ void Z2Edit::SaveFile(DebugConsole* console, int argc, char **argv) {
         console->AddLog("[error] Usage: %s [filename]", argv[0]);
         return;
     }
-    cartridge_.SaveFile(argv[1]);
+    if (ends_with(argv[1], "nes") || ends_with(argv[1], "NES")) {
+        cartridge_.SaveFile(argv[1]);
+    } else {
+        bool as_text = ends_with(argv[1], "textpb");
+        project_.Save(argv[1], as_text);
+    }
 }
 
 int Z2Edit::EncodedText(int ch) {
@@ -690,6 +712,14 @@ void Z2Edit::ProcessEvent(SDL_Event* event) {
     editor_->ProcessEvent(event);
 }
 
+void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
+    if (msg == "commit") {
+        project_.Commit(static_cast<const char*>(extra));
+    } else if (msg == "loadpostprocess") {
+        LoadPostProcess(bool(extra));
+    }
+}
+
 void Z2Edit::Draw() {
     ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
     if (ImGui::BeginMainMenuBar()) {
@@ -714,13 +744,14 @@ void Z2Edit::Draw() {
             ImGui::Separator();
             if (ImGui::MenuItem("Open", "Ctrl+O")) {
                 char *filename = nullptr;
-                auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
+                auto result = NFD_OpenDialog("z2prj;nes", nullptr, &filename);
                 if (result == NFD_OKAY) {
-                    Load(filename);
+                    project_.Load(filename);
                     save_filename_.assign(filename);
                 }
                 free(filename);
             }
+
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
                 if (save_filename_.empty())
                     goto save_as;
@@ -729,10 +760,35 @@ void Z2Edit::Draw() {
             if (ImGui::MenuItem("Save As")) {
 save_as:
                 char *filename = nullptr;
-                auto result = NFD_SaveDialog(nullptr, nullptr, &filename);
+                auto result = NFD_SaveDialog("z2prj", nullptr, &filename);
                 if (result == NFD_OKAY) {
                     save_filename_.assign(filename);
-                    cartridge_.SaveFile(save_filename_);
+                    project_.Save(save_filename_);
+                }
+                free(filename);
+            }
+
+            ImGui::Separator();
+            if (ImGui::MenuItem("Import ROM")) {
+                char *filename = nullptr;
+                auto result = NFD_OpenDialog("nes", nullptr, &filename);
+                if (result == NFD_OKAY) {
+                    project_.ImportRom(filename);
+                }
+                free(filename);
+            }
+            if (ImGui::MenuItem("Export ROM", "Ctrl+E")) {
+                if (export_filename_.empty())
+                    goto export_as;
+                project_.ExportRom(export_filename_);
+            }
+            if (ImGui::MenuItem("Export ROM As")) {
+export_as:
+                char *filename = nullptr;
+                auto result = NFD_SaveDialog("nes", nullptr, &filename);
+                if (result == NFD_OKAY) {
+                    export_filename_.assign(filename);
+                    project_.ExportRom(export_filename_);
                 }
                 free(filename);
             }
@@ -771,6 +827,8 @@ save_as:
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
+            ImGui::MenuItem("History", nullptr,
+                            &project_.visible());
             ImGui::MenuItem("Hardware Palette", nullptr,
                             &hwpal_->visible());
             ImGui::MenuItem("CHR Viewer", nullptr,
@@ -811,13 +869,16 @@ save_as:
     object_table_->Draw();
     enemy_editor_->Draw();
     experience_table_->Draw();
+    project_.Draw();
 
     if (!loaded_) {
         char *filename = nullptr;
-        auto result = NFD_OpenDialog(nullptr, nullptr, &filename);
+        auto result = NFD_OpenDialog("z2prj,nes", nullptr, &filename);
         if (result == NFD_OKAY) {
-            Load(filename);
-            save_filename_.assign(filename);
+            project_.Load(filename, false);
+            if (ends_with(filename, "z2prj")) {
+                save_filename_.assign(filename);
+            }
         }
         free(filename);
     }

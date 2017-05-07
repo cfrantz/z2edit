@@ -26,6 +26,11 @@ class ImApp {
     void BaseDraw();
     virtual bool ProcessEvents();
 
+    virtual void ProcessMessage(const std::string& msg, const void *extra) {}
+    void ProcessMessage(const std::string& msg) {
+        ProcessMessage(msg, nullptr);
+    }
+
     // Convenience helpers for registering debug console commands
     inline void RegisterCommand(const char* cmd, const char* shorthelp,
                                 std::function<void(DebugConsole*,
@@ -49,6 +54,7 @@ class ImApp {
     int height_;
     bool running_;
     DebugConsole console_;
+    std::vector<std::unique_ptr<ImWindowBase>> draw_callback_;
 
   private:
     void Quit(DebugConsole* console, int argc, char **argv);
@@ -69,7 +75,6 @@ class ImApp {
     SDL_GLContext glcontext_;
     FPSManager fpsmgr_;
 
-    std::vector<std::unique_ptr<ImWindowBase>> draw_callback_;
     std::vector<std::unique_ptr<ImWindowBase>> draw_added_;
 };
 

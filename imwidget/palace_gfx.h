@@ -10,6 +10,7 @@ class PalaceGraphics: public ImWindowBase {
   public:
     PalaceGraphics(): ImWindowBase(false) {}
 
+    void Refresh() override { Load(); }
     bool Draw() override;
     inline void set_mapper(Mapper* m) { mapper_ = m; };
   private:

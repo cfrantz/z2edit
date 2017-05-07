@@ -14,6 +14,7 @@ class ExperienceTable: public ImWindowBase {
       : ImWindowBase(false), changed_(false) {}
     void Init();
 
+    void Refresh() override { Init(); }
     bool Draw() override;
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }

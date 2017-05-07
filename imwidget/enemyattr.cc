@@ -155,6 +155,7 @@ bool EnemyEditor::Draw() {
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {
         Save();
+        ImApp::Get()->ProcessMessage("commit", "Enemy Attributes");
     }
     ImApp::Get()->HelpButton("enemy-attributes", true);
 

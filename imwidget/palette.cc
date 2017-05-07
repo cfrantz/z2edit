@@ -2,6 +2,7 @@
 
 #include "imwidget/error_dialog.h"
 #include "imwidget/hwpalette.h"
+#include "imwidget/imapp.h"
 #include "imwidget/imutil.h"
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
@@ -54,6 +55,7 @@ bool PaletteEditor::Draw() {
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {
         Save();
+        ImApp::Get()->ProcessMessage("commit", "Palette Edits");
     }
 
     int id = 0;

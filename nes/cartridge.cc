@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "nes/cartridge.h"
+#include "util/file.h"
 
 Cartridge::Cartridge()
     : prg_(nullptr), prglen_(0),
@@ -11,17 +12,26 @@ Cartridge::Cartridge()
 
 Cartridge::~Cartridge() { }
 
-void Cartridge::LoadFile(const std::string& filename) {
-    FILE* fp = fopen(filename.c_str(), "rb");
+bool Cartridge::IsNESFile(const std::string& filename) {
+    std::string buf;
+    auto f = File::Open(filename, "rb");
+    if (f && f->Read(&buf, 4)) {
+        return (buf[0] == 'N' &&
+                buf[1] == 'E' &&
+                buf[2] == 'S' &&
+                buf[3] == '\x1a');
+    }
+    return false;
+}
 
-    if (fp == nullptr) {
-        fprintf(stderr, "Couldn't read %s.\n", filename.c_str());
-        abort();
-    }
-    if (fread(&header_, sizeof(header_), 1, fp) != 1) {
-        fprintf(stderr, "Couldn't read header.\n");
-        abort();
-    }
+void Cartridge::LoadRom(const std::string& rom) {
+    const char *data = rom.data();
+    unsigned offset = 0;
+    unsigned size = rom.size();
+
+    // Read the header
+    memcpy(&header_, data, sizeof(header_));
+    offset += sizeof(header_);
 
     mirror_ = MirrorMode(header_.mirror0 | (header_.mirror1 << 1));
     prglen_ = 16384 * header_.prgsz;
@@ -37,51 +47,44 @@ void Cartridge::LoadFile(const std::string& filename) {
 
     if (header_.trainer) {
         trainer_.reset(new uint8_t[512]);
-        if (fread(trainer_.get(), 1, 512, fp) != 512) {
-            fprintf(stderr, "Couldn't read trainer.\n");
-            abort();
-        }
+        memcpy(trainer_.get(), data + offset, 512);
+        offset += 512;
     }
 
-    if (fread(prg_.get(), 16384, header_.prgsz, fp) != header_.prgsz) {
+    if (offset + 16384 * header_.prgsz > size) {
         fprintf(stderr, "Couldn't read PRG.\n");
         abort();
     }
+    memcpy(prg_.get(), data + offset, 16384 * header_.prgsz);
+    offset += 16384 * header_.prgsz;
 
-    if (fread(chr_.get(), 8192, header_.chrsz, fp) != header_.chrsz) {
+    if (offset + 8192 * header_.chrsz > size) {
         fprintf(stderr, "Couldn't read CHR.\n");
         abort();
     }
-    fclose(fp);
+    memcpy(chr_.get(), data + offset, 8192 * header_.chrsz);
+    offset += 8192 * header_.chrsz;
+}
+
+std::string Cartridge::SaveRom() {
+    std::string rom;
+    rom.append((const char*)(&header_), sizeof(header_));
+    if (header_.trainer) {
+        rom.append((const char*)(trainer_.get()), 512);
+    }
+    rom.append((const char*)(prg_.get()), 16384 * header_.prgsz);
+    rom.append((const char*)(chr_.get()), 8192 * header_.chrsz);
+    return rom;
+}
+
+void Cartridge::LoadFile(const std::string& filename) {
+    std::string rom;
+    File::GetContents(filename, &rom);
+    LoadRom(rom);
 }
 
 void Cartridge::SaveFile(const std::string& filename) {
-    FILE* fp = fopen(filename.c_str(), "wb");
-    if (fp == nullptr) {
-        fprintf(stderr, "Couldn't open %s.\n", filename.c_str());
-        return;
-    }
-    if (fwrite(&header_, sizeof(header_), 1, fp) != 1) {
-        fprintf(stderr, "Couldn't write header.\n");
-        return;
-    }
-
-    if (header_.trainer) {
-        if (fwrite(trainer_.get(), 1, 512, fp) != 512) {
-            fprintf(stderr, "Couldn't write trainer.\n");
-            return;
-        }
-    }
-    if (fwrite(prg_.get(), 16384, header_.prgsz, fp) != header_.prgsz) {
-        fprintf(stderr, "Couldn't read PRG.\n");
-        return;
-    }
-
-    if (fwrite(chr_.get(), 8192, header_.chrsz, fp) != header_.chrsz) {
-        fprintf(stderr, "Couldn't read CHR.\n");
-        return;
-    }
-    fclose(fp);
+    File::SetContents(filename, SaveRom());
 }
 
 void Cartridge::LoadFile(DebugConsole* console, int argc, char **argv) {

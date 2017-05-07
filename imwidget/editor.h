@@ -32,6 +32,7 @@ class Editor: public ImWindowBase {
 
     void ProcessEvent(SDL_Event* e);
     bool Draw() override;
+    void Refresh() override;
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
 

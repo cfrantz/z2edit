@@ -5,6 +5,7 @@ cc_library(
     hdrs = ["cartridge.h"],
     srcs = ["cartridge.cc"],
     deps = [
+        "//util:file",
         "//imwidget:base",
         "//external:gflags",
     ],

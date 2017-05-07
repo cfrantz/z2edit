@@ -27,6 +27,7 @@ class MultiMap: public ImWindowBase {
         start_(map), pauseconv_(true) {}
 
     void Init();
+    void Refresh() override { Init(); }
     bool Draw() override;
   private:
     struct DrawLocation {

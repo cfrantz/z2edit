@@ -136,6 +136,7 @@ cc_library(
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
+        "//util:string",
         "//external:imgui",
         "//external:fontawesome",
     ],
@@ -265,5 +266,22 @@ cc_library(
         "//util:config",
         "//external:imgui",
         "//external:gflags",
+    ],
+)
+
+cc_library(
+    name = "project",
+    hdrs = ["project.h"],
+    srcs = ["project.cc"],
+    deps = [
+        ":base",
+        ":error_dialog",
+        "//nes:cartridge",
+        "//proto:project",
+        "//util:compress",
+        "//util:file",
+        "//util:os",
+        "//util:logging",
+        "//external:imgui",
     ],
 )

@@ -11,6 +11,7 @@ class PaletteEditor: public ImWindowBase {
     PaletteEditor()
         : ImWindowBase(false), mapper_(nullptr), changed_(false),grpsel_(0) {}
     void Init();
+    void Refresh() override { Init(); }
     bool Draw() override;
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }

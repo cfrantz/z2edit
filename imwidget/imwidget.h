@@ -18,6 +18,7 @@ class ImWindowBase {
     virtual ~ImWindowBase() {}
 
     virtual bool Draw() { return false; }
+    virtual void Refresh() {}
     inline bool& visible() { return visible_; }
     inline void set_visible(bool v) { visible_ = v; }
     inline bool want_dispose() { return want_dispose_; }

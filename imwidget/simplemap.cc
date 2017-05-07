@@ -157,6 +157,8 @@ bool SimpleMap::Draw() {
         enemies_.Save();
         avail_.Save();
         changed_ = false;
+        ImApp::Get()->ProcessMessage(
+                "commit", StrCat("Map edits to ", map_.name()).c_str());
     }
 
     ImGui::SameLine();
