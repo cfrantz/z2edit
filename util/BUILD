@@ -11,6 +11,20 @@ cc_library(
 )
 
 cc_library(
+    name = "compress",
+    linkopts = ["-lz"],
+    hdrs = [
+        "compress.h",
+    ],
+    srcs = [
+        "compress.cc",
+    ],
+    deps = [
+        "//util:status",
+    ],
+)
+
+cc_library(
     name = "config",
     hdrs = [
         "config.h",

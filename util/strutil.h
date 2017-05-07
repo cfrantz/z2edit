@@ -1,5 +1,7 @@
 #ifndef Z2HD_UTIL_STRUTIL_H
 #define Z2HD_UTIL_STRUTIL_H
+#include <algorithm>
+#include <string>
 
 // Grab useful utility functions from the protobuf library and put them in
 // the root namespace.
@@ -89,5 +91,10 @@ using google::protobuf::Base64Escape;
 using google::protobuf::WebSafeBase64Escape;
 using google::protobuf::EncodeAsUTF8Char;
 using google::protobuf::UTF8FirstLetterNumBytes;
+
+inline bool ends_with(const std::string& value, const std::string& ending) {
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
 
 #endif // Z2HD_UTIL_STRUTIL_H
