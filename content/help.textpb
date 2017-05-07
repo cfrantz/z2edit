@@ -4,6 +4,9 @@ help {
       key: "root"
       value: "https://github.com/cfrantz/z2doc/wiki/Z2Edit"
     }, {
+      key: "project"
+      value: "https://github.com/cfrantz/z2doc/wiki/project-history"
+    }, {
       key: "overworld-editor"
       value: "https://github.com/cfrantz/z2doc/wiki/overworld-editor"
     }, {
