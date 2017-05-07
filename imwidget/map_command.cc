@@ -829,17 +829,19 @@ bool MapSwapper::Draw() {
     ImGui::Text("\n");
     ImGui::Text("Swap & Copy take effect immediately.  You do not need to \"Commit to ROM\".");
     if (ImGui::Button("Swap")) {
+        int src = srcarea_, dst = dstarea_;
         Swap();
         chg = true;
         ImApp::Get()->ProcessMessage("commit", StrCat("Swap ",
-                    names[srcarea_], " with ", names[dstarea_]).c_str());
+                    names[src], " with ", names[dst]).c_str());
     }
     ImGui::SameLine();
     if (ImGui::Button("Copy")) {
+        int src = srcarea_, dst = dstarea_;
         Copy();
         chg = true;
         ImApp::Get()->ProcessMessage("commit", StrCat("Copy ",
-                    names[srcarea_], " to ", names[dstarea_]).c_str());
+                    names[src], " to ", names[dst]).c_str());
     }
     ImGui::PopID();
     return chg;
