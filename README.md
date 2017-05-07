@@ -22,7 +22,7 @@ load and save with the `load` and `save` commands in the Debug Console.
 ### Build for Linux
 
 ```
-$ bazel build :main
+$ bazel build :z2edit
 
 $ ./bazel-bin/z2edit <user-supplied-zelda2.nes>
 ```
