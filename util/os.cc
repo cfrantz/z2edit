@@ -38,7 +38,12 @@ int64_t utime_now() {
 #else
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
-    now = int64_t(ft.dwLowDateTime) | int64_t(ft.dwHighDateTime) << 32;
+    // FileTime is in 100ns increments.  Convert to microseconds.
+    now = (int64_t(ft.dwLowDateTime) | int64_t(ft.dwHighDateTime) << 32) / 10;
+    // Windows time is since Jan 1, 1601
+    // Unix time is since Jan 1, 1970
+#define SEC_TO_UNIX_EPOCH 11644473600LL
+    now -= SEC_TO_UNIX_EPOCH * 1000000LL;
 #endif
     return now;
 }
