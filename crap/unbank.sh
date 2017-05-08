@@ -9,6 +9,7 @@ for i in `seq 0 7`
 do
     OF="${OUT}.bank${i}"
     dd if=$ROM of=$OF bs=1 skip=$SKIP count=$SIZE
+    hexdump -C $OF > $OF.hexdump
     SKIP=$((SKIP + $SIZE))
 done
 
