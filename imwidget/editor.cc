@@ -83,7 +83,6 @@ void Editor::ConvertFromMap(Map* map) {
         compressed_length_ = decomp.length();
         *map->mutable_address() = decomp.address();
         cache_.Init(*map);
-        printf("init connection table for %d %d\n", map->overworld(), map->subworld());
         connections_.Init(mapper_, map->connector(), map->overworld(),
                           map->subworld());
         width = decomp.width();
