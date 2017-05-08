@@ -1,16 +1,7 @@
 # TODO List
 
 ### From GTM
-1. Investigate and document swap/copy better.
-1. Document enemy editing WRT to "worlds".
-1. Fix continue from palaces hack.
 1. Make sideview editor easier to use.
-1. Add an undo stack
-   * save commits
-   * include swap/copy
-   * optional notes field
-   * store project + config + history in a saved protobuf.
-1. Make File|Emulate more portable to windows.
 
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
@@ -42,6 +33,17 @@ Done, but still need:
     * Create a vanilla ROM which fixes all sideview exit oddities.
 
 # Done
+
+### From GTM
+1. Investigate and document swap/copy better (done).
+1. Document enemy editing WRT to "worlds". (done)
+1. Fix continue from palaces hack. (done)
+1. Add an undo stack (done)
+   * save commits
+   * include swap/copy
+   * optional notes field
+   * store project + config + history in a saved protobuf.
+1. Make File|Emulate more portable to windows. (done)
 
 ### Issues found in alpha release
 1. Fix sideview editor crash (fixed?)
