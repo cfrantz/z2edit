@@ -1,0 +1,50 @@
+# This routine was copied and optimized from Digshake's randomizer.
+#
+# The basic idea is to save the room code for the start of a palace
+# when you enter a palace area.  You can then reuse the room code to
+# continue at the beginning of that palace.
+#
+# Digshake was using $fb0/$fb1 to store these values, but I think this
+# memory may have some other use -- at least it isn't initialized to
+# zeros.
+#
+# Instead, I'm storing the room code at $6fe/$6ff, which is the end/
+# unused area of the item availability bitmap.  This area is zeroed out
+# upon each new game.  Depending on having zeroed memory allowed me
+# to optimize the routine a bit and squeeze it into a smaller amount of
+# the precious bank7 free space.
+
+asm b=7 0xd39a
+    sta $0707           ; World number is in A register, store it
+    cmp #$03            ; World less than 3
+    bmi $0e             ; yes, branch to end
+    lda $06fe           ; Has the room code already been stored
+    bne $09             ; yes, branch to end
+    lda $0561           ; get the current room code
+    sta $06ff           ; store it in $6ff
+    inc $06fe           ; mark it as stored in $6fe
+    lda $0707           ; End: reload the world number
+    rts                 ; Return
+
+    lda $06ff           ; Load the room code
+    sta $0561           ; Store it in the room code location
+    jsr $a057           ; something to do with levels and XP?
+    lda $0707           ; Load the world number
+    rts                 ; return
+
+    sty $0707           ; Zero out the world number (return to overworld)
+    sty $06fe           ; Zero out the room-code-stored marker
+    rts                 
+.org $cbaa
+    jsr $d39a           ; Entering a new area, maybe store room number
+.org $cf92
+    jsr $d3c0           ; Leaving an area, clear the room-code-stored-marker
+.org $cad0
+    jsr $d3b3           ; Refresh the room marker and load the world number
+    cmp #$03            ; World 3 or greater (palaces)
+    bcs $07             ; jump to restore/continue routine
+.org $cae3
+    nop                 ; zap out the code which clears the room number
+    nop
+    nop
+.end
