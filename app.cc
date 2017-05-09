@@ -77,6 +77,7 @@ void Z2Edit::Init() {
     experience_table_.reset(new z2util::ExperienceTable);
     editor_.reset(z2util::Editor::New());
     project_.set_cartridge(&cartridge_);
+    project_.set_visible(true);
 }
 
 void Z2Edit::Load(const std::string& filename) {
@@ -756,15 +757,30 @@ void Z2Edit::Draw() {
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
                 if (save_filename_.empty())
                     goto save_as;
-                cartridge_.SaveFile(save_filename_);
+                project_.Save(save_filename_);
             }
             if (ImGui::MenuItem("Save As")) {
 save_as:
                 char *filename = nullptr;
                 auto result = NFD_SaveDialog("z2prj", nullptr, &filename);
                 if (result == NFD_OKAY) {
-                    save_filename_.assign(filename);
-                    project_.Save(save_filename_);
+                    std::string savefile = filename;
+                    if (ends_with(savefile, ".z2prj")) {
+                        save_filename_.assign(savefile);
+                        project_.Save(save_filename_);
+                    } else {
+                        ErrorDialog::Spawn("Bad File Extension",
+                            ErrorDialog::OK | ErrorDialog::CANCEL,
+                            "Project files should have the extension .z2prj\n"
+                            "If you want to save a .nes file, use File | Export\n\n"
+                            "Press 'OK' to save anyway.\n")->set_result_cb(
+                                [=](int result) {
+                                    if (result == ErrorDialog::OK) {
+                                        save_filename_.assign(savefile);
+                                        project_.Save(save_filename_);
+                                    }
+                                });
+                    }
                 }
                 free(filename);
             }
@@ -877,7 +893,7 @@ export_as:
         auto result = NFD_OpenDialog("z2prj,nes", nullptr, &filename);
         if (result == NFD_OKAY) {
             project_.Load(filename, false);
-            if (ends_with(filename, "z2prj")) {
+            if (ends_with(filename, ".z2prj")) {
                 save_filename_.assign(filename);
             }
         }
