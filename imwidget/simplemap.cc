@@ -118,6 +118,7 @@ bool SimpleMap::Draw() {
     const char *names[ri.map().size()];
     int len=0, start=0;
     int mapsel = mapsel_;
+    bool want_redraw = false;
 
     for(const auto& m : ri.map()) {
         start++;
@@ -169,14 +170,18 @@ bool SimpleMap::Draw() {
     ImGui::SameLine();
     ImApp::Get()->HelpButton("sideview-editor");
 
-    ImGui::BeginChild("image", ImVec2(0, 16 + decomp_.height()*16.0*scale_),
+    ImGui::BeginChild("image", ImVec2(0, (decomp_.height()+2)*16.0*scale_),
                       true, ImGuiWindowFlags_HorizontalScrollbar);
     ImVec2 cursor = ImGui::GetCursorPos();
     DrawMap(cursor);
+    ImGui::SetCursorPos(cursor);
+    if (holder_.DrawPopup(scale_)) {
+        changed_ = true;
+        want_redraw = true;
+    }
     ImGui::EndChild();
 
     if (map_.type() != z2util::MapType::OVERWORLD) {
-        bool want_redraw = false;
         ImGui::RadioButton("Map Commands", &tab_, 0); ImGui::SameLine();
         ImGui::RadioButton("Connections", &tab_, 1); ImGui::SameLine();
         ImGui::RadioButton("Enemy List", &tab_, 2); ImGui::SameLine();

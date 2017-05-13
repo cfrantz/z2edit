@@ -70,7 +70,8 @@ MapCommand::MapCommand(const MapHolder* holder, uint8_t position,
     holder_(holder),
     position_(position),
     object_(object),
-    extra_(extra)
+    extra_(extra),
+    summary_(nullptr)
 {
     data_.x = position_ & 0xf;
     data_.y = position_ >> 4;
@@ -88,14 +89,20 @@ MapCommand::MapCommand(const MapHolder* holder, int x0, uint8_t position,
     }
 }
 
-bool MapCommand::Draw(bool abscoord) {
+MapCommand MapCommand::Copy() {
+    MapCommand copy = *this;
+    copy.id_ = UniqueID();
+    return copy;
+}
+
+bool MapCommand::Draw(bool abscoord, bool popup) {
     bool changed = false;
     const char *xpos = "x position";
     const char *ypos = "y position";
     if (data_.y == 13) {
-        ypos = "new floor ";
+        summary_ = ypos = "new floor ";
     } else if (data_.y == 14) {
-        ypos = "x skip    ";
+        summary_ = ypos = "x skip    ";
         xpos = "to screen#";
     } else if (data_.y == 15) {
         ypos = "extra obj ";
@@ -106,7 +113,7 @@ bool MapCommand::Draw(bool abscoord) {
     changed |= ImGui::InputInt(ypos, &data_.y);
     Clamp(&data_.y, 0, 15);
 
-    ImGui::SameLine();
+    if (!popup) ImGui::SameLine();
     if (data_.y != 14 && abscoord) {
         changed |= ImGui::InputInt(xpos, &data_.absx);
         Clamp(&data_.absx, 0, 63);
@@ -117,7 +124,7 @@ bool MapCommand::Draw(bool abscoord) {
 
     if (data_.y == 13 || data_.y == 14) {
         sprintf(obuf_, "%02x", object_);
-        ImGui::SameLine();
+        if (!popup) ImGui::SameLine();
         changed |= ImGui::InputText("param", obuf_, sizeof(obuf_),
                                     ImGuiInputTextFlags_CharsHexadecimal |
                                     ImGuiInputTextFlags_EnterReturnsTrue);
@@ -165,8 +172,9 @@ bool MapCommand::Draw(bool abscoord) {
         data_.extra = extra_;
 
         ImGui::PushItemWidth(200);
-        ImGui::SameLine();
+        if (!popup) ImGui::SameLine();
         changed |= ImGui::Combo("id", &data_.object, names_, n);
+        summary_ = names_[data_.object];
         ImGui::PopItemWidth();
         if (changed) {
             printf("changed to %d (%02x) %s\n", data_.object, data_.object,
@@ -185,12 +193,12 @@ bool MapCommand::Draw(bool abscoord) {
             data_.y = 12;
         }
         if (oindex !=0 && oindex != 3) {
-            ImGui::SameLine();
+            if (!popup) ImGui::SameLine();
             changed |= ImGui::InputInt("param", &data_.param);
             Clamp(&data_.param, 0, 15);
             object_ |= data_.param;
         } else if (object_ == 15) {
-            ImGui::SameLine();
+            if (!popup) ImGui::SameLine();
             /*
             sprintf(ebuf_, "%02x", extra_);
             ImGui::SameLine();
@@ -202,6 +210,7 @@ bool MapCommand::Draw(bool abscoord) {
             ImGui::PushItemWidth(200);
             changed |= ImGui::Combo("##collectable", &data_.extra,
                                     collectable_names_, MAX_COLLECTABLE);
+            summary_ = collectable_names_[data_.extra];
             ImGui::PopItemWidth();
             extra_ = data_.extra;
         }
@@ -210,6 +219,77 @@ bool MapCommand::Draw(bool abscoord) {
     ImGui::PopID();
 
     return changed;
+}
+
+MapCommand::DrawResult MapCommand::DrawPopup(float scale) {
+    DrawResult result = DR_NONE;
+    ImVec2 pos = ImGui::GetCursorPos();
+    ImVec2 abs = ImGui::GetCursorScreenPos();
+    uint32_t color = 0xFFFFFFFF;
+    auto* draw = ImGui::GetWindowDrawList();
+    float size = 16.0 * scale;
+    float yp = data_.y;
+    if (yp > 13) yp = 13;
+    ImVec2 a = ImVec2(abs.x + data_.absx * size, abs.y + yp * size);
+    ImVec2 b = ImVec2(a.x + size, a.y + size);
+    draw->AddRect(a, b, color, 0, ~0, 2.0f);
+    if (data_.y == 13) {
+        // New floor
+        for(int i=0; i<16; i+=4) {
+            ImVec2 a = ImVec2(abs.x + data_.absx * size + (i + 4) * scale,
+                              abs.y + yp * size + 8 * scale);
+            ImVec2 b = ImVec2(abs.x + data_.absx * size + (i + 0) * scale,
+                              abs.y + yp * size + 14 * scale);
+            draw->AddLine(a, b, color);
+        }
+    } else if (data_.y == 14) {
+        // X skip
+        ImVec2 a = ImVec2(abs.x + data_.absx * size + 4 * scale,
+                          abs.y + yp * size + 4 * scale);
+        ImVec2 b = ImVec2(abs.x + data_.absx * size + 4 * scale,
+                          abs.y + yp * size + 12 * scale);
+        ImVec2 c = ImVec2(abs.x + data_.absx * size + 12 * scale,
+                          abs.y + yp * size + 8 * scale);
+        draw->AddTriangleFilled(a, b, c, color);
+    }
+
+    ImGui::PushID(-id_);
+    ImGui::SetCursorPos(ImVec2(pos.x + data_.absx * size, pos.y + yp * size));
+    ImGui::InvisibleButton("button", ImVec2(size, size));
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("%s", summary_ ? summary_ : "unknown");
+    if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging()) {
+            int x = int((ImGui::GetIO().MousePos.x - abs.x) / size);
+            int y = int((ImGui::GetIO().MousePos.y - abs.y) / size);
+            x = Clamp(x, 0, 64);
+            y = Clamp(y, 0, 12);
+            if (x != data_.absx) {
+                data_.absx = x;
+                result = DR_CHANGED;
+            }
+            if (yp < 13 && y != yp) {
+                data_.y = y;
+                result = DR_CHANGED;
+            }
+        }
+    }
+    if (ImGui::BeginPopupContextItem("Properties")) {
+        if (Draw(true, true)) {
+            result = DR_CHANGED;
+        }
+        if (ImGui::Button("Copy")) {
+            result = DR_COPY;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Delete")) {
+            result = DR_DELETE;
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::SetCursorPos(pos);
+    ImGui::PopID();
+    return result;
 }
 
 std::vector<uint8_t> MapCommand::Command() {
@@ -365,7 +445,7 @@ bool MapHolder::Draw() {
         ImGui::PopID();
         if (create) {
             if (copy)
-                it = command_.insert(it, *it);
+                it = command_.insert(it, it->Copy());
             else
                 it = command_.emplace(it, this, it->absx(), 0, 0, 0);
         }
@@ -381,6 +461,29 @@ bool MapHolder::Draw() {
     ImGui::PopItemWidth();
     Pack();
     data_changed_ |= changed;
+    return changed;
+}
+
+bool MapHolder::DrawPopup(float scale) {
+    bool changed = false;
+    for(auto it = command_.begin(); it < command_.end(); ++it) {
+        auto result = it->DrawPopup(scale);
+        switch(result) {
+            case MapCommand::DR_NONE:
+                break;
+            case MapCommand::DR_CHANGED:
+                changed |= true;
+                break;
+            case MapCommand::DR_COPY:
+                it = command_.insert(it, it->Copy());
+                changed |= true;
+                break;
+            case MapCommand::DR_DELETE:
+                it = command_.erase(it);
+                changed |= true;
+                break;
+        }
+    }
     return changed;
 }
 
@@ -704,6 +807,7 @@ bool MapEnemyList::Draw() {
                 pointer_.bank(), pointer_.address() + 0x7e);
     ImGui::Text("Map enemy table address at bank=0x%x address=0x%04x",
                 addr.bank(), addr.address() + 0x18a0);
+    ImGui::Text("Map enemy table RAM addresss=0x%04x", addr.address());
 
     if (is_encounter_) {
         if (is_large_) {

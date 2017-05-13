@@ -13,12 +13,20 @@ namespace z2util {
 class MapHolder;
 class MapCommand {
   public:
+    enum DrawResult {
+        DR_NONE,
+        DR_CHANGED,
+        DR_COPY,
+        DR_DELETE,
+    };
     MapCommand(const MapHolder* holder, uint8_t position, uint8_t object,
                uint8_t extra);
     MapCommand(const MapHolder* holder, int x0, uint8_t position,
                uint8_t object, uint8_t extra);
 
-    bool Draw(bool abscoord=false);
+    MapCommand Copy();
+    bool Draw(bool abscoord=false, bool popup=false);
+    DrawResult DrawPopup(float scale);
     std::vector<uint8_t> Command();
     // areas: overword sideviews, towns, palaces, great palace
     const static int NR_AREAS = 4;
@@ -50,6 +58,7 @@ class MapCommand {
     } data_;
     char obuf_[4];
     char ebuf_[4];
+    const char *summary_;
     const char *names_[100];
 
     static void Init();
@@ -61,6 +70,7 @@ class MapHolder {
   public:
     MapHolder();
     bool Draw();
+    bool DrawPopup(float scale);
     void Save();
     void Parse(const Map& map, uint16_t altaddr=0);
     std::vector<uint8_t> MapData();
