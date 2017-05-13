@@ -701,9 +701,28 @@ MapEnemyList::MapEnemyList(Mapper* m)
     overworld_(0),
     subworld_(0),
     area_(0),
-    display_(0) {}
+    display_(0) {
+    Init();
+}
 
 MapEnemyList::MapEnemyList() : MapEnemyList(nullptr) {}
+
+void MapEnemyList::Init() {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    for(int i=0; i<256; i++)
+        names_[i] = "???";
+
+    max_names_ = 0;
+    for(const auto& e : ri.enemies()) {
+        if (e.world() == world_ && e.overworld() == overworld_) {
+            for(const auto& info : e.info()) {
+                names_[info.first] = info.second.name().c_str();
+                if (info.first >= max_names_)
+                    max_names_ = info.first+1;
+            }
+        }
+    }
+}
 
 void MapEnemyList::Parse(const Map& map) {
     pointer_ = map.pointer();
@@ -755,6 +774,81 @@ void MapEnemyList::Parse(const Map& map) {
     }
 }
 
+MapEnemyList::DrawResult MapEnemyList::DrawOnePopup(Unpacked* item,
+                                                    float scale) {
+    DrawResult result = DR_NONE;
+    ImVec2 pos = ImGui::GetCursorPos();
+    ImVec2 abs = ImGui::GetCursorScreenPos();
+    uint32_t color = 0x800000FF;
+    auto* draw = ImGui::GetWindowDrawList();
+    float size = 16.0 * scale;
+    ImVec2 a = ImVec2(abs.x + item->x * size, abs.y + item->y * size);
+    ImVec2 b = ImVec2(a.x + size, a.y + size);
+    draw->AddRect(a, b, color, 0, ~0, 2.0f);
+
+    ImGui::SetCursorPos(ImVec2(pos.x + item->x * size, pos.y + item->y * size));
+    ImGui::InvisibleButton("button", ImVec2(size, size));
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("%s", names_[item->enemy]);
+    if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging()) {
+            int x = int((ImGui::GetIO().MousePos.x - abs.x) / size);
+            int y = int((ImGui::GetIO().MousePos.y - abs.y) / size);
+            x = Clamp(x, 0, 64);
+            y = Clamp(y, 0, 12);
+            if (x != item->x) {
+                item->x = x;
+                result = DR_CHANGED;
+            }
+            if (y != item->y) {
+                item->y = y;
+                result = DR_CHANGED;
+            }
+        }
+    }
+    if (ImGui::BeginPopupContextItem("Properties")) {
+        if (DrawOne(item, true)) {
+            result = DR_CHANGED;
+        }
+        if (ImGui::Button("Copy")) {
+            result = DR_COPY;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Delete")) {
+            result = DR_DELETE;
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::SetCursorPos(pos);
+    return result;
+}
+
+bool MapEnemyList::DrawPopup(float scale) {
+    bool changed = false;
+    int i=0;
+    for(auto it=data_.begin(); it<data_.end(); ++it, ++i) {
+        ImGui::PushID(-(i | (is_large_ << 8)));
+        auto result = DrawOnePopup(&*it, scale);
+        switch(result) {
+            case MapEnemyList::DR_NONE:
+                break;
+            case MapEnemyList::DR_CHANGED:
+                changed |= true;
+                break;
+            case MapEnemyList::DR_COPY:
+                it = data_.insert(it, *it);
+                changed |= true;
+                break;
+            case MapEnemyList::DR_DELETE:
+                it = data_.erase(it);
+                changed |= true;
+                break;
+        }
+        ImGui::PopID();
+    }
+    return changed;
+}
+
 std::vector<uint8_t> MapEnemyList::Pack() {
     std::vector<uint8_t> packed;
 
@@ -783,24 +877,22 @@ void MapEnemyList::Save() {
     ep.Pack();
 }
 
-bool MapEnemyList::Draw() {
-    const char *names[256];
-    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
     bool chg = false;
+    ImGui::PushItemWidth(100);
+    chg |= ImGui::InputInt("x position", &item->x);
+    if (!popup) ImGui::SameLine();
+    chg |= ImGui::InputInt("y position", &item->y);
+    if (!popup) ImGui::SameLine();
+    ImGui::PopItemWidth();
+    ImGui::PushItemWidth(400);
+    chg |= ImGui::Combo("enemy", &item->enemy, names_, max_names_);
+    ImGui::PopItemWidth();
+    return chg;
+}
 
-    for(int i=0; i<256; i++)
-        names[i] = "???";
-
-    int n = 0;
-    for(const auto& e : ri.enemies()) {
-        if (e.world() == world_ && e.overworld() == overworld_) {
-            for(const auto& info : e.info()) {
-                names[info.first] = info.second.name().c_str();
-                if (info.first >= n)
-                    n = info.first+1;
-            }
-        }
-    }
+bool MapEnemyList::Draw() {
+    bool chg = false;
 
     Address addr = mapper_->ReadAddr(pointer_, 0x7e);
     ImGui::Text("Map enemy table pointer at bank=0x%x address=0x%04x",
@@ -820,15 +912,7 @@ bool MapEnemyList::Draw() {
     int i=0;
     for(auto it=data_.begin(); it<data_.end(); ++it, ++i) {
         ImGui::PushID(i | (is_large_ << 8));
-        ImGui::PushItemWidth(100);
-        chg |= ImGui::InputInt("x position", &it->x);
-        ImGui::SameLine();
-        chg |= ImGui::InputInt("y position", &it->y);
-        ImGui::SameLine();
-        ImGui::PopItemWidth();
-        ImGui::PushItemWidth(400);
-        chg |= ImGui::Combo("enemy", &it->enemy, names, n);
-        ImGui::PopItemWidth();
+        chg |= DrawOne(&*it, false);
 
         ImGui::SameLine();
         if (ImGui::Button(ICON_FA_TIMES_CIRCLE)) {

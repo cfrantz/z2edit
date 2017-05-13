@@ -146,6 +146,12 @@ class MapConnection {
 
 class MapEnemyList {
   public:
+    enum DrawResult {
+        DR_NONE,
+        DR_CHANGED,
+        DR_COPY,
+        DR_DELETE,
+    };
     struct Unpacked {
         Unpacked(int e_, int x_, int y_) : enemy(e_), x(x_), y(y_) {}
         int enemy;
@@ -153,9 +159,13 @@ class MapEnemyList {
     };
     MapEnemyList();
     MapEnemyList(Mapper* m);
+    void Init();
     inline void set_mapper(Mapper* m) { mapper_ = m; }
 
     bool Draw();
+    bool DrawOne(Unpacked* item, bool popup);
+    DrawResult DrawOnePopup(Unpacked* item, float scale);
+    bool DrawPopup(float scale);
     void Parse(const Map& map);
     std::vector<uint8_t> Pack();
     void Save();
@@ -173,6 +183,8 @@ class MapEnemyList {
 
     std::vector<Unpacked> data_;
     std::unique_ptr<MapEnemyList> large_;
+    const char *names_[256];
+    int max_names_;
 };
 
 class MapItemAvailable {

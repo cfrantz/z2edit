@@ -179,6 +179,7 @@ bool SimpleMap::Draw() {
         changed_ = true;
         want_redraw = true;
     }
+    changed_ |= enemies_.DrawPopup(scale_);
     ImGui::EndChild();
 
     if (map_.type() != z2util::MapType::OVERWORLD) {
