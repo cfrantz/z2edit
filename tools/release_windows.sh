@@ -10,5 +10,5 @@ VERSION=$(grep BUILD_GIT_VERSION bazel-out/volatile-status.txt | cut -f2 -d' ')
 
 tools/windows/zip4win.py \
     --mxe tools/mxe \
-    --out z2edit-${VERSION}.zip \
+    --out z2edit-windows-${VERSION}.zip \
     bazel-bin/z2edit
