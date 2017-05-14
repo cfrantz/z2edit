@@ -542,7 +542,11 @@ std::vector<uint8_t> MapHolder::MapDataWorker(std::vector<MapCommand>& list) {
     for(auto& cmd : list) {
         auto bytes = cmd.Command();
         map.insert(map.end(), bytes.begin(), bytes.end());
+#ifndef NDEBUG
+        // Turn this log message off in non-debug builds, as this method is
+        // in the sideview editors draw loop.
         LOG(INFO, "CMD: op = ", HEX(bytes[0]), " ", HEX(bytes[1]));
+#endif
     }
     map[0] = map.size();
     return map;

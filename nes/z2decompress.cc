@@ -4,6 +4,14 @@
 #include "util/logging.h"
 #include "util/config.h"
 
+#ifdef NDEBUG
+// Turn off logging in this module when not in debug mode, as logging to the
+// console on windows is very slow and the decompressor is in the sideview
+// editor's draw routine.
+#undef LOG
+#define LOG(...) do { } while(0)
+#endif
+
 DEFINE_int32(max_map_height, 0, "Maximum height of overworld maps");
 
 namespace z2util {
