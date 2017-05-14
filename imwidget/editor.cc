@@ -10,6 +10,8 @@
 #include "imwidget/imutil.h"
 
 DEFINE_int32(max_map_length, 0, "Maximum compressed map size");
+DEFINE_bool(compress_boulders, false, "RLE compress boulders and spiders on "
+                                      "overworld maps");
 DECLARE_bool(reminder_dialogs);
 
 #define STBTE_MAX_TILEMAP_X      64
@@ -121,9 +123,8 @@ std::vector<uint8_t> Editor::CompressMap() {
             uint8_t count = 0;
             // Don't compress magic connection spots, boulders or the
             // spider/river devil.
-            if (connections_.NoCompress(x, y)
-                || tile == 0x0E
-                || tile == 0x0F) {
+            if (connections_.NoCompress(x, y) ||
+                (!FLAGS_compress_boulders && (tile == 0x0E || tile == 0x0F))) {
                 data.push_back(tile | count << 4); 
                 continue;
             }
@@ -159,7 +160,8 @@ void Editor::SaveMap() {
         ErrorDialog::Spawn("Overworld Save Error",
             "Can't save ", map_->name(), " because it is ", data.size(),
             " bytes\n\n"
-            "Overworld maps must be smaller than", max_length, " bytes.\n");
+            "Overworld maps must be smaller than ", max_length, " bytes.\n");
+        return;
     }
 
     compressed_length_ = int(data.size());
