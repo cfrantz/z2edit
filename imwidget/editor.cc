@@ -119,7 +119,11 @@ std::vector<uint8_t> Editor::CompressMap() {
         for(int x=0; x<editor_->max_x; x++) {
             uint8_t tile = editor_->data[y][x][0];
             uint8_t count = 0;
-            if (connections_.NoCompress(x, y)) {
+            // Don't compress magic connection spots, boulders or the
+            // spider/river devil.
+            if (connections_.NoCompress(x, y)
+                || tile == 0x0E
+                || tile == 0x0F) {
                 data.push_back(tile | count << 4); 
                 continue;
             }
