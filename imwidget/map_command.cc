@@ -256,8 +256,16 @@ MapCommand::DrawResult MapCommand::DrawPopup(float scale) {
     ImGui::PushID(-id_);
     ImGui::SetCursorPos(ImVec2(pos.x + data_.absx * size, pos.y + yp * size));
     ImGui::InvisibleButton("button", ImVec2(size, size));
-    if (ImGui::IsItemHovered())
+    if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("%s", summary_ ? summary_ : "unknown");
+        int delta = int(ImGui::GetIO().MouseWheel);
+        if (delta && (object_ & 0xF0) != 0) {
+            data_.param = object_ & 0x0F;
+            data_.param = Clamp(data_.param - delta, 0, 15);
+            object_ = (object_ & 0xF0) | data_.param;
+            result = DR_CHANGED;
+        }
+    }
     if (ImGui::IsItemActive()) {
         if (ImGui::IsMouseDragging()) {
             int x = int((ImGui::GetIO().MousePos.x - abs.x) / size);
