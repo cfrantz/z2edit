@@ -1,8 +1,5 @@
 # TODO List
 
-### From GTM
-1. Make sideview editor easier to use.
-
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
    with unsaved changes
@@ -44,6 +41,7 @@ Done, but still need:
    * optional notes field
    * store project + config + history in a saved protobuf.
 1. Make File|Emulate more portable to windows. (done)
+1. Make sideview editor easier to use. (done)
 
 ### Issues found in alpha release
 1. Fix sideview editor crash (fixed?)
