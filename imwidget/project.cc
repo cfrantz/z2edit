@@ -114,6 +114,17 @@ bool Project::LoadWorker(const std::string& filename) {
                 return false;
             }
         }
+#if 0
+        LOG(INFO, "Loaded project: ", project_.name());
+        LOG(INFO, "  compressed rom is ", project_.rom().size(), " bytes");
+        File::SetContents(StrCat(project_.name(), "-rom.nes"), project_.rom());
+        for(int i=0; i<project_.history_size(); i++) {
+            File::SetContents(StrCat(project_.name(), "-", i, ".nes"), project_.history(i).rom());
+            LOGF(INFO, "  commit %d: %s", i, project_.history(i).description().c_str());
+            LOGF(INFO, "             created %lld", project_.history(i).create_time());
+            LOGF(INFO, "             size %u", project_.history(i).rom().size());
+        }
+#endif
         auto rom = ZLib::Uncompress(project_.rom());
         if (rom.ok()) {
             cartridge_->LoadRom(rom.ValueOrDie());
