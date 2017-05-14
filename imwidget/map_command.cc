@@ -716,9 +716,7 @@ MapEnemyList::MapEnemyList(Mapper* m)
     overworld_(0),
     subworld_(0),
     area_(0),
-    display_(0) {
-    Init();
-}
+    display_(0) { }
 
 MapEnemyList::MapEnemyList() : MapEnemyList(nullptr) {}
 
@@ -743,17 +741,10 @@ void MapEnemyList::Parse(const Map& map) {
     pointer_ = map.pointer();
     world_ = map.world();
     area_ = map.area();
+    overworld_ = map.overworld();
     subworld_ = map.subworld();
 
-    /*
-    // FIXME(cfrantz): Find a better way of learning the area number
-    int a = pointer_.address() | 0x8000;
-    if (a >= 0xA000) {
-        area_ = (a - 0xA000) / 2;
-    } else {
-        area_ = (a - 0x8523) / 2;
-    }
-    */
+    Init();
 
     // Check if this is an overworld random encounter area
     OverworldEncounters enc;
