@@ -20,6 +20,7 @@ cc_library(
         "compress.cc",
     ],
     deps = [
+        "//util:logging",
         "//util:status",
     ],
 )

@@ -3,6 +3,7 @@
 #include <zlib.h>
 
 #include "util/compress.h"
+#include "util/logging.h"
 #include "util/status.h"
 
 
@@ -10,9 +11,10 @@ std::string ZLib::Compress(const std::string& data) {
     unsigned long size = compressBound(data.size());
     std::string buf;
     buf.resize(size);
-    assert(
-        compress((unsigned char*)buf.data(), &size,
-                 (const unsigned char*)data.data(), data.size()) == Z_OK);
+    if (compress2((unsigned char*)buf.data(), &size,
+                  (const unsigned char*)data.data(), data.size(), -1) != Z_OK) {
+        LOG(FATAL, "Failed to compress rom buffer.");
+    }
     buf.resize(size);
     return buf;
 }
