@@ -54,16 +54,16 @@ void SimpleMap::DrawMap(const ImVec2& pos) {
                 auto& sprite = items_.Get(item);
                 sprite.DrawAt(pos.x + x*size, pos.y + y*size, scale_);
                 if (item != ELEVATOR && !avail_.get(x)) {
-                    draw->AddRect(
-                            ImVec2(sp.x + x*size, sp.y + y*size),
-                            ImVec2(sp.x + x*size + sprite.width() * scale_,
-                                   sp.y + y*size + sprite.height() * scale_),
-                            RED);
+                    float rx = sprite.width() * scale_ / 2.0;
+                    float ry = sprite.height() * scale_ / 2.0;
+                    draw->AddCircle(
+                            ImVec2(sp.x + x*size + rx, sp.y + y*size + ry),
+                            (rx+ry)/2.0, RED, 20, 2.0f);
                     draw->AddLine(
                             ImVec2(sp.x + x*size, sp.y + y*size),
                             ImVec2(sp.x + x*size + sprite.width() * scale_,
                                    sp.y + y*size + sprite.height() * scale_),
-                            RED);
+                            RED, 2.0f);
 
                 }
             }
