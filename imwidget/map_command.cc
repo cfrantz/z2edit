@@ -344,7 +344,8 @@ void MapHolder::Pack() {
     back_ = (data_.spal << 6) | (data_.bpal << 3) | data_.bmap;
 }
 
-bool MapHolder::Draw() {
+MapHolder::DrawResult MapHolder::Draw() {
+    DrawResult result = DR_NONE;
     char abuf[8];
     bool changed = false, achanged=false;
     Unpack();
@@ -367,7 +368,7 @@ bool MapHolder::Draw() {
         map_addr_ = strtoul(abuf, 0, 16);
         Parse(map_, map_addr_);
         addr_changed_ |= achanged;
-        return true;
+        return DR_PALETTE_CHANGED;
     }
 
     ImGui::Text("Length = %d bytes.", length_);
@@ -401,11 +402,17 @@ bool MapHolder::Draw() {
     Clamp(&data_.floor, 0, 15);
 
     ImGui::Text("Background:");
-    changed |= ImGui::InputInt("Spr Palette", &data_.spal);
+    if (ImGui::InputInt("Spr Palette", &data_.spal)) {
+        changed |= true;
+        result = DR_PALETTE_CHANGED;
+    }
     Clamp(&data_.spal, 0, 3);
 
     ImGui::SameLine();
-    changed |= ImGui::InputInt("BG Palette", &data_.bpal);
+    if (ImGui::InputInt("BG Palette", &data_.bpal)) {
+        changed |= true;
+        result = DR_PALETTE_CHANGED;
+    }
     Clamp(&data_.bpal, 0, 7);
 
     ImGui::SameLine();
@@ -469,7 +476,7 @@ bool MapHolder::Draw() {
     ImGui::PopItemWidth();
     Pack();
     data_changed_ |= changed;
-    return changed;
+    return (changed && result == DR_NONE) ? DR_CHANGED : result;;
 }
 
 bool MapHolder::DrawPopup(float scale) {

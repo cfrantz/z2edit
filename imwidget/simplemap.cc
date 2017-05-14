@@ -190,8 +190,10 @@ bool SimpleMap::Draw() {
         ImGui::RadioButton("Swap/Copy", &tab_, 4);
         ImGui::Separator();
 
+        MapHolder::DrawResult draw_result = MapHolder::DR_NONE;
         if (tab_ == 0) {
-            if (holder_.Draw()) {
+            draw_result = holder_.Draw();
+            if (draw_result != MapHolder::DR_NONE) {
                 changed_ = true;
                 want_redraw = true;
             }
@@ -209,8 +211,10 @@ bool SimpleMap::Draw() {
         if (want_redraw) {
             decomp_.Clear();
             decomp_.DecompressSideView(holder_.MapDataAbs().data());
-            cache_.Clear();
-            cache_.set_palette(decomp_.palette());
+            if (draw_result == MapHolder::DR_PALETTE_CHANGED) {
+                cache_.Clear();
+                cache_.set_palette(decomp_.palette());
+            }
         }
     }
     ImGui::End();

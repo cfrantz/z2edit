@@ -68,8 +68,13 @@ class MapCommand {
 
 class MapHolder {
   public:
+    enum DrawResult {
+        DR_NONE,
+        DR_CHANGED,
+        DR_PALETTE_CHANGED,
+    };
     MapHolder();
-    bool Draw();
+    DrawResult Draw();
     bool DrawPopup(float scale);
     void Save();
     void Parse(const Map& map, uint16_t altaddr=0);
