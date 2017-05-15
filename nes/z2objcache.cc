@@ -157,7 +157,8 @@ void Z2ObjectCache::CreateObject(uint8_t obj) {
         // Hack to make walkable water tiles visible
         if (schema_ == Schema::OVERWORLD && obj == 13) {
             for(int i=0; i<256; i++) {
-                if (dest[i] == 0xFFFFB064) dest[i] = 0xFFC08030;
+                dest[i] = ((dest[i] >> 1) & 0x7f7f7f7f) | 0xFF000000;
+//                if (dest[i] == 0xFFFFB064) dest[i] = 0xFFC08030;
             }
         }
     }
