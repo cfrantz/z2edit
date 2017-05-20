@@ -70,13 +70,26 @@ message Miscellaneous {
     Address item_pickup_delay = 14;
     repeated Address text_delay = 15;
 
+    // Location of the tables which encode palace entrance to
+    // CHR banks and palette offsets.
     Address palace_graphics = 16;
     Address palace_palette = 17;
     int32 palace_table_len = 18;
 
+    // Overworld parameters.  Overworld length refers to the size of the
+    // RAM area where the overworld gets copied.  In the vanilla game, this
+    // is at $7c00 with a length of 896 bytes.
     int32 overworld_width = 19;
     int32 overworld_height = 20;
     int32 overworld_length = 21;
+
+    // Parameters which control the behavior of the beam sword.
+    // The time is a byte operand to a 'lda' instruction, encoded as 
+    // (256-n) where n is the number of frames.
+    // The speed is a pair of bytes in a table encoding the right and left
+    // speeds.
+    Address beam_sword_time = 22;
+    Address beam_sword_speed = 23;
 }
 
 message Palette {

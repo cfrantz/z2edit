@@ -60,6 +60,17 @@ bool MiscellaneousHacks::Draw() {
         mapper_->Write(misc.text_delay(2), 0, delay2);
     }
 
+    int beam_time = 256 - mapper_->Read(misc.beam_sword_time(), 0);
+    if (ImGui::InputInt("Beam Sword Time", &beam_time)) {
+        mapper_->Write(misc.beam_sword_time(), 0, 256-beam_time);
+    }
+
+    int beam_speed = mapper_->Read(misc.beam_sword_speed(), 0);
+    if (ImGui::InputInt("Beam Sword Speed", &beam_speed)) {
+        mapper_->Write(misc.beam_sword_speed(), 0, beam_speed);
+        mapper_->Write(misc.beam_sword_speed(), 1, -beam_speed);
+    }
+
     ImGui::PopItemWidth();
 
     Hack("Palace 5 detect", ri.palace5_detect_size(),
