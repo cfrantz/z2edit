@@ -31,6 +31,9 @@ class Z2ObjectCache {
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     inline void set_palette(const Address& pal) { palette_ = pal; }
+    inline void set_chr(const Address& chr) { chr_ = chr; }
+    inline void set_use_iteminfo_chr(bool v) { use_iteminfo_chr_ = v; }
+    inline const Address& chr() { return chr_; }
     inline void Clear() { cache_.clear(); }
   private:
     void CreateObject(uint8_t obj);
@@ -40,6 +43,7 @@ class Z2ObjectCache {
     Mapper* mapper_;
 
     Schema schema_;
+    bool use_iteminfo_chr_;
     Address obj_[4];
     Address palette_;
     Address chr_;

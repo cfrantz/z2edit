@@ -5,7 +5,8 @@
 
 namespace z2util {
 
-Z2ObjectCache::Z2ObjectCache() {}
+Z2ObjectCache::Z2ObjectCache()
+  : use_iteminfo_chr_(false) {}
 
 void Z2ObjectCache::Init(const Map& map) {
     Clear();
@@ -112,7 +113,9 @@ void Z2ObjectCache::CreateObject(uint8_t obj) {
             height = item.height() ? item.height() : 16;
             dest = new uint32_t[width * height]();
             pal = item.palette();
-            chr_ = item.chr();
+            if (use_iteminfo_chr_) {
+                chr_ = item.chr();
+            }
             int n = 0;
             for(int y=0; y<height; y+=16) {
                 int lasttile = -1;

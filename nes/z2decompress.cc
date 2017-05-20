@@ -228,9 +228,13 @@ void Z2Decompress::DecompressSideView(const uint8_t* data, bool collapse) {
         // current bank.
         backaddr.set_address(0);
         backaddr.set_address(ReadWord(backaddr, 2 * ((back_ & 7) - 1)));
-        LOG(INFO, "Decompressing background map at ", HEX(backaddr.address()));
-        DecompressSideView(backaddr, &address());
-        layer_++;
+        LOG(INFO, "Decompressing background map ", (back_&7), " at ", HEX(backaddr.address()));
+        if (backaddr.address() == 0 || backaddr.address() == 0xFFFF) {
+            LOG(ERROR, "Unexpected address for background map");
+        } else {
+            DecompressSideView(backaddr, &address());
+            layer_++;
+        }
     } else {
         layer_ = 0;
         memset(&map_[layer_], uint8_t(bg.background()), sizeof(map_[0]));

@@ -129,7 +129,7 @@ sideview: {
     length: 63
     palette: { bank: 2 address: 0x800e }
     type: OUTDOORS
-    chr: { bank: 0x3 }
+    chr: { bank: 0x5 }
     world: 0
     overworld: 2
     subworld: 1

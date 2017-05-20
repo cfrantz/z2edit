@@ -7,6 +7,8 @@
 #include "util/config.h"
 #include "util/strutil.h"
 
+DEFINE_bool(render_items_in_known_banks, false,
+            "Render items and enemies from known bank locations");
 DECLARE_bool(reminder_dialogs);
 
 namespace z2util {
@@ -243,6 +245,18 @@ void SimpleMap::SetMap(const z2util::Map& map) {
     enemy_.set_mapper(mapper_);
     enemy_.Init(decomp_.EnemyInfo());
     enemy_.set_palette(ipal);
+
+    if (FLAGS_render_items_in_known_banks) {
+        // Use the CHR banks set in the configuration.
+        items_.set_use_iteminfo_chr(true);
+        enemy_.set_use_iteminfo_chr(true);
+    } else {
+        // Use the CHR banks associated with this map.
+        Address chr;
+        chr.set_bank(cache_.chr().bank() & ~1);
+        items_.set_chr(chr);
+        enemy_.set_chr(chr);
+    }
 
     holder_.set_mapper(mapper_);
     enemies_.set_mapper(mapper_);
