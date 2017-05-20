@@ -1,5 +1,8 @@
 # TODO List
 
+1. Erase original map when re-compressing the maps.
+2. Palaces turn to stone after completion.
+
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
    with unsaved changes
