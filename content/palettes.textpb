@@ -67,7 +67,7 @@ palettes {
     palette { name: "P4 (Maze)"    address: { bank:4 address: 0x84a0 } }
     palette { name: "P5 (Water)"   address: { bank:4 address: 0x84b0 } }
     palette { name: "P6 (Hidden)"  address: { bank:4 address: 0x84c0 } }
-    palette { name: "P7 (Great)"   address: { bank:5 address: 0x84d0 } }
+    palette { name: "P7 (Great)"   address: { bank:5 address: 0x800e } }
 }
 palettes {
     name: "Palaces (Inside)"
@@ -77,7 +77,7 @@ palettes {
     palette { name: "P4 (Maze)"    address: { bank:4 address: 0xBF30 } }
     palette { name: "P5 (Water)"   address: { bank:4 address: 0xBF40 } }
     palette { name: "P6 (Hidden)"  address: { bank:4 address: 0xBF50 } }
-    palette { name: "P7 (Great)"   address: { bank:5 address: 0xBF60 } }
+    palette { name: "P7 (Great)"   address: { bank:5 address: 0x801e } }
 }
 palettes {
     name: "Palace 1-6 Sprites"
