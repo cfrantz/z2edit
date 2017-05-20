@@ -15,6 +15,7 @@ namespace z2util {
 float MultiMap::xs_ = 0.40;
 float MultiMap::ys_ = 0.75;
 bool MultiMap::preconverge_ = true;
+bool MultiMap::continuous_converge_ = true;
 
 MultiMap* MultiMap::Spawn(Mapper* m, int world, int overworld, int subworld,
                           int map) {
@@ -258,6 +259,7 @@ bool MultiMap::Draw() {
         ImGui::SliderFloat("Y-Zoom", &ys_, 0.001f, 1.0f);
         ImGui::Checkbox("Pause Convergence while dragging", &pauseconv_);
         ImGui::Checkbox("Converge before first draw", &preconverge_);
+        ImGui::Checkbox("Converge during draw", &continuous_converge_);
         ImGui::EndPopup();
     }
 
@@ -295,8 +297,10 @@ bool MultiMap::Draw() {
 
     ImGui::EndChild();
     ImGui::End();
-    if (!(drag_ && pauseconv_))
+
+    if (continuous_converge_ && !(drag_ && pauseconv_))
         graph_.Compute(1.0/60.0);
+
     return false;
 }
 

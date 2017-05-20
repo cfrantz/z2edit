@@ -76,6 +76,7 @@ class MultiMap: public ImWindowBase {
     static float xs_;
     static float ys_;
     static bool preconverge_;
+    static bool continuous_converge_;
 
     static const uint32_t RED    = 0xF00000FF;
     static const uint32_t GREEN  = 0xF000FF00;
