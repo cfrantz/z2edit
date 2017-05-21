@@ -264,8 +264,10 @@ decompress {
     id: 0xa0
     render: RENDER_HORIZONTAL
     height: 2
-    objid: [0x47, 0x47]
-    comment: "walkthru bricks"
+    # Intentionally use the wrong object ID so these are drawn in a different
+    # color in the editor.  The correct object ID is 0x47.
+    objid: [0x07, 0x07]
+    comment: "walk-thru bricks"
 }
 decompress {
     area: PALACE
