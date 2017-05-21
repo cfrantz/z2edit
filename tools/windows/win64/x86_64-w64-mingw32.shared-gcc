@@ -14,7 +14,7 @@ while [ "${1+defined}" ]; do
   shift
 done
 
-PATH="external/mingw_compiler_win64/usr/libexec/gcc/x86_64-w64-mingw32.shared/4.9.4:external/mingw_compiler_win64/usr/bin:$PATH"
+PATH="external/mingw_compiler_win64/usr/libexec/gcc/x86_64-w64-mingw32.shared/5.4.0:external/mingw_compiler_win64/usr/bin:$PATH"
 exec -a x86_64-w64-mingw32.shared-gcc \
     external/mingw_compiler_win64/usr/bin/x86_64-w64-mingw32.shared-gcc \
     "${ARGS[@]}"
