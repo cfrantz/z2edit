@@ -199,14 +199,6 @@ bool MapCommand::Draw(bool abscoord, bool popup) {
             object_ |= data_.param;
         } else if (object_ == 15) {
             if (!popup) ImGui::SameLine();
-            /*
-            sprintf(ebuf_, "%02x", extra_);
-            ImGui::SameLine();
-            changed |= ImGui::InputText("collectable", ebuf_, sizeof(ebuf_),
-                                        ImGuiInputTextFlags_CharsHexadecimal |
-                                        ImGuiInputTextFlags_EnterReturnsTrue);
-            extra_ = strtoul(ebuf_, 0, 16);
-            */
             ImGui::PushItemWidth(200);
             changed |= ImGui::Combo("##collectable", &data_.extra,
                                     collectable_names_, MAX_COLLECTABLE);
