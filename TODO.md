@@ -2,6 +2,9 @@
 
 1. Erase original map when re-compressing the maps.
 2. Palaces turn to stone after completion.
+3. Edit p-bag values.
+4. Edit elevator speeds
+5. Edit strike-for-jar items/enemies
 
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
