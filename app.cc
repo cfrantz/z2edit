@@ -667,6 +667,7 @@ void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
                         "(zero means autodetect with C prefixes)", ibase_);
         console->AddLog("Current 'bank': %d", bank_);
         console->AddLog("Current 'text' encoding: %d", text_encoding_);
+        console->AddLog("Current 'emulator' command: %s", FLAGS_emulator.c_str());
         return;
     }
     for(int i=1; i<argc; i++) {
@@ -676,6 +677,8 @@ void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
             bank_ = strtoul(argv[++i], 0, ibase_);
         } else if (!strcmp(argv[i], "text")) {
             text_encoding_ = strtoul(argv[++i], 0, ibase_);
+        } else if (!strcmp(argv[i], "emulator")) {
+            FLAGS_emulator = argv[++i];
         } else {
             console->AddLog("[error] Unknown var '%s'", argv[1]);
         }
