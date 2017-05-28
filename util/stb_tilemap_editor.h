@@ -430,6 +430,8 @@ enum stbte_action
 };
 extern void stbte_action(stbte_tilemap *tm, enum stbte_action act);
 
+
+
 ////////////////
 //
 //  save/load 
@@ -494,6 +496,9 @@ extern void stbte_set_spacing(stbte_tilemap *tm, int spacing_x, int spacing_y, i
 extern void stbte_set_layername(stbte_tilemap *tm, int layer, const char *layername);
 // sets a string name for your layer that shows in the layer selector. note that this
 // makes the layer selector wider. 'layer' is from 0..(map_layers-1)
+//
+extern int stbte_get_selection(stbte_tilemap *tm,
+        int* x0, int *y0, int *x1, int *y1);
 
 #endif
 
@@ -1186,6 +1191,15 @@ void stbte_set_link(stbte_tilemap *tm, int x, int y, int destx, int desty)
 #endif
 }
 
+int stbte_get_selection(stbte_tilemap *tm, int* x0, int *y0, int *x1, int *y1) {
+   if (stbte__ui.has_selection) {
+       *x0 = stbte__ui.select_x0;
+       *x1 = stbte__ui.select_x1;
+       *y0 = stbte__ui.select_y0;
+       *y1 = stbte__ui.select_y1;
+   }
+   return stbte__ui.has_selection;
+}
 
 // returns an array of map_layers shorts. each short is either
 // one of the tile_id values from define_tile, or STBTE_EMPTY

@@ -123,6 +123,13 @@ cc_library(
     ]
 )
 
+cc_library(
+	name = "stb-perlin",
+	hdrs = [
+		"stb_perlin.h",
+    ]
+)
+
 genrule(
     name = "gen_fontawsome_h",
     srcs = ["data/fontawesome-webfont.ttf"],

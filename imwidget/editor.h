@@ -6,6 +6,7 @@
 #include "imwidget/glbitmap.h"
 #include "imwidget/imwidget.h"
 #include "imwidget/map_connect.h"
+#include "imwidget/randomize.h"
 #include "imwidget/overworld_encounters.h"
 #include "nes/z2objcache.h"
 #include "imgui.h"
@@ -71,6 +72,7 @@ class Editor: public ImWindowBase {
     int mapsel_;
     std::vector<SDL_Event> events_;
     std::unique_ptr<ErrorDialog> error_dialog_;
+    RandomizeOverworld randomize_;
 };
 
 }  // namespace

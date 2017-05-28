@@ -1,6 +1,7 @@
 #include <string>
 #include <gflags/gflags.h>
 
+#include "alg/terrain.h"
 #include "imwidget/imapp.h"
 #include "imwidget/editor.h"
 #include "nes/z2decompress.h"
@@ -72,7 +73,7 @@ Editor* Editor::New() {
 
 void Editor::ConvertFromMap(Map* map) {
     int width = 64;
-    int height = 72;
+    int height = 75;
     Z2Decompress decomp;
 
     decomp.set_mapper(mapper_);
@@ -284,6 +285,12 @@ bool Editor::Draw() {
         ImGui::OpenPopup("Encounters");
     }
     changed_ |= encounters_.Draw();
+
+    ImGui::SameLine();
+    if (ImGui::Button("Randomize")) {
+        ImGui::OpenPopup("Randomize");
+    }
+    changed_ |= randomize_.Draw(editor_, &connections_);
 
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {

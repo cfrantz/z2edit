@@ -22,3 +22,16 @@ cc_library(
         ":vecmath",
     ],
 )
+
+cc_library(
+    name = "terrain",
+    hdrs = [
+        "terrain.h",
+    ],
+    srcs = [
+        "terrain.cc",
+    ],
+    deps = [
+        "//util:stb-perlin",
+    ],
+)

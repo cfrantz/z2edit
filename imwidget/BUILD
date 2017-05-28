@@ -85,6 +85,7 @@ cc_library(
         ":glbitmap",
         ":hwpalette",
         ":map_connect",
+        ":randomize",
         ":overworld_encounters",
         "//nes:mappers",
         "//nes:z2decompress",
@@ -207,6 +208,20 @@ cc_library(
         "//nes:mappers",
         "//proto:rominfo",
         "//util:config",
+        "//external:imgui",
+    ],
+)
+
+cc_library(
+    name = "randomize",
+    hdrs = ["randomize.h"],
+    srcs = ["randomize.cc"],
+    deps = [
+        ":map_connect",
+        "//alg:terrain",
+        "//proto:rominfo",
+        "//util:config",
+        "//util:stb-tilemap-editor",
         "//external:imgui",
     ],
 )
