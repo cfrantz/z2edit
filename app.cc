@@ -601,8 +601,14 @@ void Z2Edit::Assemble(DebugConsole* console, int argc, char **argv) {
             }
         } else if (err == Cpu::AsmError::Meta) {
             console->AddLog("#{88f}%04x: %s", prev, cmdline);
-            console->AddLog("#{88f}%04x:", state->addr);
+            if (prev != state->addr) {
+                console->AddLog("#{88f}%04x:", state->addr);
+            }
         } else if (err == Cpu::AsmError::End) {
+            const auto& errors = state->cpu.ApplyFixups();
+            for(const auto& e : errors) {
+                console->AddLog("#{f88}%s", e.c_str());
+            }
             console->AddLog("#{88f}Leaving assembler mode");
             delete state;
             console->PopLineCallback();

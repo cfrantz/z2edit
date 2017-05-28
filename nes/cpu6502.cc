@@ -88,7 +88,7 @@ std::string Cpu::Disassemble(uint16_t* nexti) {
         // All branch instructions are hex(10, 30, 50, 70, 90, b0, d0, f0)
         if ((opcode & 0x1F) == 0x10) {
             data = pc + 2 + int8_t(data);
-            sprintf(b+i, " (dest=%04x)", data);
+            sprintf(b+i, " ;[dest=%04x]", data);
         }
         break;
     case 3:
@@ -745,10 +745,20 @@ void Cpu::BuildAsmInfo() {
         }
         uint8_t mode = info_[i].mode;
         asminfo_[instr].opcode[mode] = i;
+        if (AddressingMode(mode) == Relative) {
+            // Relative instructions don't really have immediate mode, but
+            // it can be useful for hand assmbly:
+            // bne $8800 ; branch to address $8800 (assembler computes displacement)
+            // bne #$6   ; branch displacement + 6
+            asminfo_[instr].opcode[int(Immediate)] = i;
+
+        }
     }
     asminfo_.emplace(".END", AsmInfo{".END",
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
     asminfo_.emplace(".ORG", AsmInfo{".ORG",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
+    asminfo_.emplace("=", AsmInfo{"=",
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
 
     char line[80];
@@ -775,6 +785,10 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     while(!code.empty() && code.at(0) == ' ') {
         code.erase(0, 1);
     }
+    while(!code.empty() && code.at(code.size()-1) == ' ') {
+        code.resize(code.size()-1);
+    }
+
     p = code.find(' ');
     opcode = code.substr(0, p);
     if (opcode == ".END") {
@@ -782,38 +796,65 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     } else if (opcode == "") {
         return AsmError::None;
     }
+    if (opcode.back() == ':') {
+        labels_[opcode.substr(0, opcode.size()-1)] = *nexti;
+        return AsmError::Meta;
+    }
 
-    const auto& ai = asminfo_.find(opcode);
+    bool assign = false;
+    if (p != std::string::npos) {
+        operand = code.substr(p);
+        while(!operand.empty() &&
+                (operand.at(0) == ' ' || operand.at(0) == '=')) {
+            if (operand.at(0) == '=') assign = true;
+            operand.erase(0, 1);
+        }
+    }
+
+    const auto& ai = asminfo_.find(assign ? "=" : opcode);
     if (ai == asminfo_.end()) {
         return AsmError::UnknownOpcode;
     }
     const auto& info = ai->second;
 
-    if (p != std::string::npos) {
-        operand = code.substr(p);
-        while(!operand.empty() && operand.at(0) == ' ') {
-            operand.erase(0, 1);
-        }
-    }
-    uint8_t mode = 0;
+    bool fixup_resolved = true;
     int base = 0;
     long addr;
+    uint8_t mode = 0;
+    // Operand start and ends
+    size_t ops=0, ope=operand.size();
 
-    if (operand.find(",X") != std::string::npos) mode |= 1;
-    if (operand.find(",Y") != std::string::npos) mode |= 2;
-    if (operand.find("(") != std::string::npos) mode |= 4;
-    if (operand.find("#") != std::string::npos) mode |= 8;
-    if (operand.find("!") != std::string::npos) mode |= 16;
-
-    const char *k = operand.c_str();
-    while(*k && !isxdigit(*k) && *k != '-') {
-        if (*k == '$') base = 16;
-        k++;
+    if ((p = operand.find(",X")) != std::string::npos) { mode |= 1; ope = p; }
+    if ((p = operand.find(",Y")) != std::string::npos) { mode |= 2; ope = p; }
+    if ((p = operand.find("(")) != std::string::npos) {
+        mode |= 4; 
+        ops = p + 1;
+        p = operand.find(")");
+        if (p < ope) ope = p;
     }
-    if (isxdigit(*k)) {
+    if ((p = operand.find("#")) != std::string::npos) { mode |= 8; ops = p+1; }
+    if ((p = operand.find("!")) != std::string::npos) { mode |= 16;ops = p+1; }
+
+    const char *k = operand.c_str() + ops;
+    if (*k == '$') { base = 16; k++; }
+    if (operand == "*") {
+        addr = *nexti;
+        mode |= 32 | 16;
+    } else if (base == 16 || isdigit(*k) || (*k == '-' && isdigit(k[1]))) {
         addr = strtol(k, 0, base);
         if (addr >= 256) mode |= 16;
         mode |= 32;
+    } else if (ope - ops) {
+        std::string target = operand.substr(ops, ope);
+        const auto& label = labels_.find(target);
+        if (label == labels_.end()) {
+            fixups_[*nexti] = target;
+            addr = -1;
+            fixup_resolved = false;
+        } else {
+            addr = label->second;
+        }
+        mode |= 32 | 16;
     }
     //printf("pre xlate mode = %02x\n", mode);
     AddressingMode xlate[] = {
@@ -866,9 +907,13 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     case ZeroPageX:
     case ZeroPageY:
     case Immediate:
-    case Relative:
         Write(*nexti, info.opcode[mode]);
         Write(*nexti+1, addr);
+        *nexti += 2;
+        break;
+    case Relative:
+        Write(*nexti, info.opcode[mode]);
+        Write(*nexti+1, fixup_resolved ? addr - (*nexti + 2) : 0xff);
         *nexti += 2;
         break;
     case Accumulator:
@@ -879,6 +924,8 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     case Pseudo:
         if (opcode == ".ORG") {
             *nexti = addr;
+        } else if (assign) {
+            labels_[opcode] = addr;
         } else {
             return AsmError::InvalidOperand;
         }
@@ -887,7 +934,51 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     default:
         return AsmError::InvalidOperand;
     }
+
     return AsmError::None;
+}
+
+std::vector<std::string> Cpu::ApplyFixups() {
+    std::vector<std::string> error;
+    char buf[256];
+    for(const auto& f : fixups_) {
+        const auto& label = labels_.find(f.second);
+        if (label == labels_.end()) {
+            sprintf(buf, "Fixup at $%04x: label %s not found",
+                    f.first, f.second.c_str());
+            error.push_back(buf);
+            continue;
+        }
+        uint8_t opcode = Read(f.first);
+        InstructionInfo info = info_[opcode];
+        switch(AddressingMode(info.mode)) {
+        case Absolute:
+        case AbsoluteX:
+        case AbsoluteY:
+        case IndexedIndirect:
+        case Indirect:
+        case IndirectIndexed:
+            Write16(f.first+1, label->second);
+            break;
+        case ZeroPage:
+        case ZeroPageX:
+        case ZeroPageY:
+        case Immediate:
+            Write16(f.first+1, label->second);
+            break;
+        case Relative:
+            Write(f.first+1, label->second - (f.first + 2));
+            break;
+        case Accumulator:
+        case Implied:
+        case Pseudo:
+        case ZZ:
+        default:
+            sprintf(buf, "Impossible to have a fixup at $%04x", f.first);
+            error.push_back(buf);
+        }
+    }
+    return error;
 }
 
 // Information about each instruction is encoded into the info_ table.

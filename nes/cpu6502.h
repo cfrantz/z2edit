@@ -23,6 +23,7 @@ class Cpu {
     int Emulate();
     std::string Disassemble(uint16_t *nexti=nullptr);
     AsmError Assemble(std::string code, uint16_t *nexti);
+    std::vector<std::string> ApplyFixups();
 
     std::string CpuState();
     inline void NMI() {
@@ -150,6 +151,8 @@ class Cpu {
     bool irq_pending_;
 
     int bank_;
+    std::map<std::string, uint16_t> labels_;
+    std::map<uint16_t, std::string> fixups_;
 
     static void BuildAsmInfo();
     struct AsmInfo {
