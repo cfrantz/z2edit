@@ -73,4 +73,6 @@ misc {
 
     beam_sword_time: { bank: 0 address: 0x986e }
     beam_sword_speed: { bank: 0 address: 0x9819 }
+
+    elevator_speed: { bank: 7 address: 0xd8bf }
 }

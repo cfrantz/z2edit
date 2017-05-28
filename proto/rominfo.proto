@@ -90,6 +90,11 @@ message Miscellaneous {
     // speeds.
     Address beam_sword_time = 22;
     Address beam_sword_speed = 23;
+
+    // Parameters which control the speed of the elevator.
+    // The speed is a pair of bytes in a table encoding the down and up
+    // speeds.
+    Address elevator_speed = 24;
 }
 
 message Palette {

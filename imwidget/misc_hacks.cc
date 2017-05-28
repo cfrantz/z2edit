@@ -71,6 +71,12 @@ bool MiscellaneousHacks::Draw() {
         mapper_->Write(misc.beam_sword_speed(), 1, -beam_speed);
     }
 
+    int elevator_speed = mapper_->Read(misc.elevator_speed(), 1);
+    if (ImGui::InputInt("Elevator Speed", &elevator_speed)) {
+        mapper_->Write(misc.elevator_speed(), 1, elevator_speed);
+        mapper_->Write(misc.elevator_speed(), 2, -elevator_speed);
+    }
+
     ImGui::PopItemWidth();
 
     Hack("Palace 5 detect", ri.palace5_detect_size(),
