@@ -221,14 +221,6 @@ void Editor::DrawTile(int x, int y, uint16_t tile, int mode, float* props) {
         return;
     ImGui::SetCursorPos(origin_ + ImVec2(x, y) * scale_);
     cache_.Get(tile).Draw(16 * scale_, 16 * scale_);
-    ImGui::SetCursorPos(origin_ + ImVec2(x, y) * scale_);
-    if (show_connections_) {
-        if (connections_.DrawInEditor((x + editor_->scroll_x)/16,
-                                      (y + editor_->scroll_y)/16)) {
-            mouse_focus_ = false;
-            changed_ |= connections_.changed();
-        }
-    }
     ImGui::SetCursorPos(origin_);
 }
 
@@ -302,6 +294,7 @@ bool Editor::Draw() {
     ImGui::SameLine();
     ImGui::InputFloat("Zoom", &scale_, 0.25, 1.0);
     scale_ = Clamp(scale_, 0.25f, 8.0f);
+    connections_.set_scale(16.0 * scale_);
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
@@ -311,23 +304,43 @@ bool Editor::Draw() {
                 map_->address().bank(), map_->address().address(),
                 compressed_length_);
 
-    mouse_origin_ = ImGui::GetCursorScreenPos();
+    ImGui::BeginChild("editarea", ImGui::GetContentRegionAvail());
     origin_ = ImGui::GetCursorPos();
+    mouse_origin_ = ImGui::GetCursorScreenPos();
     size_ = ImGui::GetContentRegionAvail();
-    ImGui::InvisibleButton("canvas", size_);
-    ImGui::SetCursorPos(origin_);
-    mouse_focus_ = ImGui::IsItemHovered();
+    ImVec2 mp = ImGui::GetMousePos();
+    mouse_focus_ = (ImGui::IsWindowHovered() &&
+                    mp.x >= mouse_origin_.x &&
+                    mp.y >= mouse_origin_.y &&
+                    mp.x < mouse_origin_.x + size_.x &&
+                    mp.y < mouse_origin_.y + size_.y);
 
     size_ /= scale_;
     stbte_set_display(0, 0, size_.x, size_.y);
     stbte_draw(editor_);
     stbte_tick(editor_, 1.0/60.0);
 
+    if (show_connections_) {
+        int max_x = int(size_.x) & ~15;
+        int max_y = int(size_.y) & ~15;
+        for(int y=0; y<max_y; y+=16) {
+            for(int x=0; x<max_x; x+=16) {
+                ImGui::SetCursorPos(origin_ + ImVec2(x, y) * scale_);
+                if (connections_.DrawInEditor((x + editor_->scroll_x)/16,
+                                              (y + editor_->scroll_y)/16)) {
+                    mouse_focus_ = false;
+                    changed_ |= connections_.changed();
+                }
+            }
+        }
+    }
+
     for(auto& e : events_) {
         HandleEvent(&e);
     }
     events_.clear();
 
+    ImGui::EndChild();
     ImGui::End();
     return changed_;
 }

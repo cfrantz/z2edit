@@ -12,7 +12,10 @@ OverworldConnector::OverworldConnector(Mapper* mapper, Address address,
     address_(address),
     offset_(offset),
     overworld_(overworld),
-    subworld_(subworld)
+    subworld_(subworld),
+    drag_(false),
+    dx_(0),
+    dy_(0)
 {
     Read();
 }
@@ -22,7 +25,10 @@ OverworldConnector::OverworldConnector(const OverworldConnector& other)
     address_(other.address_),
     offset_(other.offset_),
     overworld_(other.overworld_),
-    subworld_(other.subworld_)
+    subworld_(other.subworld_),
+    drag_(other.drag_),
+    dx_(other.dx_),
+    dy_(other.dy_)
 {
     Read();
 }
@@ -244,6 +250,10 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
 
     int offset = conn->offset();
     ImGui::PushID(offset);
+    ImVec2 pos = ImGui::GetCursorPos();
+    pos.x += conn->dx();
+    pos.y += conn->dy();
+    ImGui::SetCursorPos(pos);
     if (offset == raft) {
         TextOutlined(ImColor(0xFFFF00FF), "%02dRAFT", offset);
     } else if (overworld == mapper_->Read(hpal.cmpov(), 0)
@@ -255,7 +265,18 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
     } else {
         TextOutlined(ImColor(0xFFFF00FF), "%02d", offset);
     }
+    ImGui::SetCursorPos(pos);
+    ImGui::InvisibleButton("##button", ImVec2(16, 16));
     bool focus = ImGui::IsItemHovered();
+    if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging()) {
+            conn->drag_start();
+            ImVec2 delta = ImGui::GetIO().MouseDelta;
+            conn->drag(delta.x, delta.y);
+        }
+    } else {
+        changed_ |= conn->drag_finalize(scale_);
+    }
     if (ImGui::BeginPopupContextItem("Properties")) {
         if(ImGui::Combo("Swap", &offset, ids)) {
             conn = Swap(offset, conn->offset());

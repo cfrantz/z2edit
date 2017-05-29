@@ -16,9 +16,23 @@ class OverworldConnector {
     OverworldConnector(const OverworldConnector& other);
     bool DrawInPopup();
 
-    inline int offset() const { return offset_; };
-    inline int xpos() const { return x_; };
-    inline int ypos() const { return y_; };
+    inline int offset() const { return offset_; }
+    inline int xpos() const { return x_; }
+    inline int ypos() const { return y_; }
+    inline int dx() const { return dx_; }
+    inline int dy() const { return dy_; }
+    inline void drag_start() { if (!drag_) { drag_ = true; dx_ = dy_ = 0; } }
+    inline bool drag_finalize(float scale) {
+        if (drag_) {
+            drag_ = false;
+            x_ += dx_ / scale;
+            y_ += dy_ / scale;
+            dx_ = dy_ = 0;
+            return true;
+        }
+        return false;
+    }
+    inline void drag(int dx, int dy) { dx_ += dx; dy_ += dy; }
   private:
     void Read();
     void Write();
@@ -44,6 +58,10 @@ class OverworldConnector {
     bool entry_right_;
     bool passthru_;
     bool fall_;
+
+    bool drag_;
+    int dx_;
+    int dy_;
 
     int label_nr_;
     char labels_[11][32];
@@ -73,6 +91,7 @@ class OverworldConnectorList {
 
     inline bool show() const { return show_; }
     inline bool changed() const { return changed_; }
+    inline void set_scale(float s) { scale_ = s; }
 
   private:
     Mapper* mapper_;
@@ -82,6 +101,7 @@ class OverworldConnectorList {
     bool changed_;
     int overworld_;
     int subworld_;
+    float scale_;
 };
 
 }  // namespace z2util
