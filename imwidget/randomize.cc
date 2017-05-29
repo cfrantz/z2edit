@@ -68,6 +68,10 @@ bool RandomizeOverworld::Draw(stbte_tilemap* editor, OverworldConnectorList* con
         ImGui::InputInt("y0", &random_params_.y0);
         ImGui::SameLine();
         ImGui::InputInt("y1", &random_params_.y1);
+
+        ImGui::InputInt("cx", &random_params_.centerx);
+        ImGui::SameLine();
+        ImGui::InputInt("cy", &random_params_.centery);
         ImGui::PopItemWidth();
 
         ImGui::Combo("Algorithm", &random_params_.algorithm, algorithms);
@@ -77,15 +81,16 @@ bool RandomizeOverworld::Draw(stbte_tilemap* editor, OverworldConnectorList* con
         int y0 = random_params_.y0;
         int x1 = random_params_.x1;
         int y1 = random_params_.y1;
-        int cx = 0, cy = 0;
+        int cx = random_params_.centerx;
+        int cy = random_params_.centery;
 
         auto alg = Terrain::Type(random_params_.algorithm);
         auto terrain = Terrain::New(alg);
         if (alg == Terrain::PERLIN) {
             ImGui::SliderFloat("NoiseZoom", &random_params_.p, 0.0f, 1.0f);
             static_cast<PerlinTerrain*>(terrain.get())->set_noise_zoom(random_params_.p);
-            cx = x0 + (x1-x0) / 2;
-            cy = y0 + (y1-y0) / 2;
+            cx += x0 + (x1-x0) / 2;
+            cy += y0 + (y1-y0) / 2;
         } else {
             ImGui::SliderFloat("Probability", &random_params_.p, 0.0f, 1.0f);
             ImGui::PushItemWidth(100);

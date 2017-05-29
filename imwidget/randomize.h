@@ -26,6 +26,8 @@ class RandomizeOverworld {
         int y0;
         int x1;
         int y1;
+        int centerx;
+        int centery;
         bool keep;
         uint8_t backup[100][64];
     };
