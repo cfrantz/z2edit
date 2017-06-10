@@ -7,9 +7,12 @@
 #include "zelda2_config.h"
 
 DEFINE_string(config, "", "ROM info config file");
+DEFINE_string(keybinds, "", "Alternate keybinds for the editor");
 DEFINE_bool(dump_config, false, "Dump config to stdout and exit");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
 DEFINE_bool(reminder_dialogs, true, "Pop up dialogs for discarding changes");
+
+ConfigLoader<z2util::OverworldEditorKeybinds>* keybinds;
 
 void GetName(const z2util::RomInfo* config, int world,
              int overworld, int subworld, int id, std::string* name) {
@@ -71,6 +74,11 @@ void PostProcess(z2util::RomInfo* config) {
             e.second.set_name(buf);
         }
     }
+    if (keybinds) {
+        config->mutable_overworld_editor_keybind()->Clear();
+        config->mutable_overworld_editor_keybind()->MergeFrom(
+            keybinds->GetConfig().overworld_editor_keybind());
+    }
 }
 
 const char kUsage[] =
@@ -89,6 +97,12 @@ Flags:
 int main(int argc, char *argv[]) {
     gflags::SetUsageMessage(kUsage);
     gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+    // Load up alternative keybinds so we can apply them in PostProcess
+    if (!FLAGS_keybinds.empty()) {
+        keybinds = ConfigLoader<z2util::OverworldEditorKeybinds>::Get();
+        keybinds->Load(FLAGS_keybinds);
+    }
 
     auto* config = ConfigLoader<z2util::RomInfo>::Get();
     if (!FLAGS_config.empty()) {

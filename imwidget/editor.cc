@@ -352,6 +352,7 @@ void Editor::ProcessEvent(SDL_Event* e) {
 }
 
 void Editor::HandleEvent(SDL_Event* e) {
+    const auto& keybinds = ConfigLoader<RomInfo>::GetConfig().overworld_editor_keybind();
     float hidpi = ImGui_ImplSdl_GetHiDPIScale();
     switch (e->type) {
         case SDL_MOUSEMOTION:
@@ -375,36 +376,19 @@ void Editor::HandleEvent(SDL_Event* e) {
             break;
 
         case SDL_KEYDOWN:
-            switch (e->key.keysym.sym) {
-                case SDLK_RIGHT: stbte_action(editor_, STBTE_scroll_right); break;
-                case SDLK_LEFT : stbte_action(editor_, STBTE_scroll_left ); break;
-                case SDLK_UP    : stbte_action(editor_, STBTE_scroll_up    ); break;
-                case SDLK_DOWN : stbte_action(editor_, STBTE_scroll_down ); break;
-                default:
-                    ; // nothing
-            }
-            switch (e->key.keysym.scancode) {
-                case SDL_SCANCODE_S: stbte_action(editor_, STBTE_tool_select); break;
-                case SDL_SCANCODE_B: stbte_action(editor_, STBTE_tool_brush ); break;
-                case SDL_SCANCODE_E: stbte_action(editor_, STBTE_tool_erase ); break;
-                case SDL_SCANCODE_R: stbte_action(editor_, STBTE_tool_rectangle ); break;
-                case SDL_SCANCODE_I: stbte_action(editor_, STBTE_tool_eyedropper); break;
-                case SDL_SCANCODE_L: stbte_action(editor_, STBTE_tool_link);         break;
-                case SDL_SCANCODE_G: stbte_action(editor_, STBTE_act_toggle_grid); break;
-                default:
-                    ; // nothing
-            }
-            if ((e->key.keysym.mod & KMOD_CTRL) && !(e->key.keysym.mod & ~KMOD_CTRL)) {
-                switch (e->key.keysym.scancode) {
-                    case SDL_SCANCODE_X: stbte_action(editor_, STBTE_act_cut  ); break;
-                    case SDL_SCANCODE_C: stbte_action(editor_, STBTE_act_copy ); break;
-                    case SDL_SCANCODE_V: stbte_action(editor_, STBTE_act_paste); break;
-                    case SDL_SCANCODE_Z: stbte_action(editor_, STBTE_act_undo ); break;
-                    case SDL_SCANCODE_Y: stbte_action(editor_, STBTE_act_redo ); break;
-                    default:
-                        ; // nothing
+            for(const auto& kb : keybinds) {
+                int mod = int(kb.mod());
+                int scancode = int(kb.scancode());
+                if (mod == 0 || (
+                    (e->key.keysym.mod & mod) && !(e->key.keysym.mod & ~mod))) {
+                    if (e->key.keysym.scancode == scancode) {
+                        stbte_action(editor_,
+                                static_cast<enum stbte_action>(kb.action()));
+                        break;
+                    }
                 }
             }
+
             break;
         default:
             ; // nothing

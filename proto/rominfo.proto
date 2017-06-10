@@ -1,5 +1,6 @@
 syntax = "proto3";
 package z2util;
+import "proto/keybinds.proto";
 
 message Address {
     int32 bank = 1;
@@ -296,4 +297,5 @@ message RomInfo {
     repeated PaletteGroup palettes = 17;
     XPTable xptable = 18;
     repeated GameHack palace_to_stone = 19;
+    repeated OverworldEditorKeybind overworld_editor_keybind = 20;
 }

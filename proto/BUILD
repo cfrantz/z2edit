@@ -5,6 +5,7 @@ proto_library(
     name = "rominfo",
     srcs = [
         "rominfo.proto",
+        "keybinds.proto",
     ],
 )
 
