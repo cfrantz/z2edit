@@ -53,7 +53,7 @@ void RandomizeOverworld::RestoreMap(stbte_tilemap* editor) {
 
 bool RandomizeOverworld::Draw(stbte_tilemap* editor, OverworldConnectorList* connections) {
     bool changed = false;
-    const char * algorithms = "Perlin\0Cellular\0\0";
+    const char * algorithms = "Perlin\0Cellular\0Voronoi\0Manhattan\0\0";
     const char * terrains = "Town\0Cave\0Palace\0Bridge\0Sand\0Grass\0Forest\0Swamp\0Graveyard\0Road\0Lava\0Mountain\0Water\0Walk-Water\0Boulder\0Spider\0\0";
 
     if (ImGui::BeginPopup("Randomize")) {
@@ -86,12 +86,13 @@ bool RandomizeOverworld::Draw(stbte_tilemap* editor, OverworldConnectorList* con
 
         auto alg = Terrain::Type(random_params_.algorithm);
         auto terrain = Terrain::New(alg);
+        terrain->SetSize(x1-x0+1, y1-y0+1);
         if (alg == Terrain::PERLIN) {
             ImGui::SliderFloat("NoiseZoom", &random_params_.p, 0.0f, 1.0f);
             static_cast<PerlinTerrain*>(terrain.get())->set_noise_zoom(random_params_.p);
             cx += x0 + (x1-x0) / 2;
             cy += y0 + (y1-y0) / 2;
-        } else {
+        } else if (alg == Terrain::CELLULAR) {
             ImGui::SliderFloat("Probability", &random_params_.p, 0.0f, 1.0f);
             ImGui::PushItemWidth(100);
             ImGui::Combo("BG", &random_params_.bg, terrains);
@@ -101,13 +102,16 @@ bool RandomizeOverworld::Draw(stbte_tilemap* editor, OverworldConnectorList* con
             static_cast<CellularTerrain*>(terrain.get())->set_probability(random_params_.p);
             static_cast<CellularTerrain*>(terrain.get())->set_bg(random_params_.bg);
             static_cast<CellularTerrain*>(terrain.get())->set_fg(random_params_.fg);
+        } else if (alg == Terrain::VORONOI || alg == Terrain::MANHATTAN) {
+            ImGui::SliderFloat("NumPoints", &random_params_.p, 0.0f, 200.0f);
+            static_cast<VoronoiTerrain*>(terrain.get())->set_num(int(random_params_.p));
         }
 
         ImGui::Checkbox("Keep Transfer Tiles", &random_params_.keep_transfer_tiles);
         terrain->Generate(unsigned(random_params_.seed));
         for(int y=y0; y<=y1; y++) {
             for(int x=x0; x<=x1; x++) {
-                stbte_set_tile(editor, x, y, 0, terrain->GetTile(x-cx, y-cy));
+                stbte_set_tile(editor, x, y, 0, terrain->GetTile(x-x0-cx, y-y0-cy));
                 if (random_params_.keep_transfer_tiles
                     && connections->GetAtXY(x, y)) {
                     stbte_set_tile(editor, x, y, 0, random_params_.backup[y][x]);

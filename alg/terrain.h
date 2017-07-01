@@ -4,6 +4,7 @@
 #include <random>
 #include <functional>
 #include <memory>
+#include <vector>
 namespace z2util {
 
 // Terrain generators borrowed (with permission) from Quest Island
@@ -12,13 +13,15 @@ namespace z2util {
 class Terrain {
   public:
     enum Type {
-        PERLIN, CELLULAR
+        PERLIN, CELLULAR, VORONOI, MANHATTAN,
     };
     static std::unique_ptr<Terrain> New(Type type);
-    Terrain() {}
+    Terrain()
+      : width_(64), height_(75) {}
     ~Terrain() {}
     virtual void Generate(unsigned int seed) { rand_.seed(seed); }
     virtual int GetTile(int x, int y) = 0;
+    void SetSize(int w, int h) { width_ = w; height_ = h; }
 
     // Zelda 2 Terrain types
     static const uint8_t TOWN = 0;
@@ -39,14 +42,17 @@ class Terrain {
     static const uint8_t SPIDER = 15;
 
     // Zelda2 overworlds are always 64 tiles wide
-    const int MAPWIDTH = 64;
+    static const int MAPWIDTH = 64;
+    static const int MAPHEIGHT = 100;
   protected:
+    int width_;
+    int height_;
     std::default_random_engine rand_;
 };
 
 class PerlinTerrain : public Terrain {
   public:
-    PerlinTerrain() : noise_zoom_(0.03) {}
+    PerlinTerrain() : Terrain(), noise_zoom_(0.03) {}
     void Generate(unsigned int seed) override;
     int GetTile(int x, int y) override;
     void set_noise_zoom(float nz) { noise_zoom_ = nz; }
@@ -63,7 +69,8 @@ class PerlinTerrain : public Terrain {
 class CellularTerrain: public Terrain {
   public:
     CellularTerrain()
-      : fg_(Terrain::SAND), bg_(Terrain::MOUNTAINS), probability_(0.25) {}
+      : Terrain(), 
+      fg_(Terrain::SAND), bg_(Terrain::MOUNTAINS), probability_(0.25) {}
     void Generate(unsigned int seed) override;
     int GetTile(int x, int y) override;
     void set_fg(int fg) { fg_ = fg; }
@@ -74,9 +81,37 @@ class CellularTerrain: public Terrain {
     void Iterate(std::function<bool(int, int)> selector);
     int fg_, bg_;
     float probability_;
-    static const int WIDTH = 64;
-    static const int HEIGHT = 100;
-    uint8_t data_[HEIGHT][WIDTH];
+    uint8_t data_[MAPHEIGHT][MAPWIDTH];
+};
+
+class VoronoiTerrain: public Terrain {
+  public:
+    VoronoiTerrain()
+      : Terrain() {}
+    void Generate(unsigned int seed) override;
+    int GetTile(int x, int y) override;
+    void set_num(int n) { num_ = n; }
+  protected:
+    virtual double DistanceFunction(int fromx, int fromy, int topoint);
+
+    struct Distance {
+        double distance;
+        int point;
+    };
+    struct Point {
+        int x, y;
+        uint8_t terrain;
+    };
+    int num_;
+    std::vector<Point> points_;
+    Distance data_[MAPHEIGHT][MAPWIDTH];
+};
+
+class ManhattanTerrain: public VoronoiTerrain {
+  public:
+    ManhattanTerrain() : VoronoiTerrain() {}
+  protected:
+    double DistanceFunction(int fromx, int fromy, int topoint) override;
 };
 
 
