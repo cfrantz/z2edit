@@ -42,6 +42,19 @@ class Mapper {
         return addr;
     }
 
+    uint8_t Read(const z2util::MemoryRegion& addr, int offset) {
+        return ReadPrgBank(addr.bank(), addr.address() + offset);
+    }
+    uint16_t ReadWord(const z2util::MemoryRegion& addr, int offset) {
+        return Read(addr, offset) | uint16_t(Read(addr, offset + 1)) << 8;
+    }
+    z2util::Address ReadAddr(z2util::MemoryRegion& r, int offset) {
+        z2util::Address addr;
+        addr.set_bank(r.bank()); addr.set_address(r.address());
+        addr.set_address(ReadWord(addr, offset));
+        return addr;
+    }
+
     void Write(const z2util::Address& addr, int offset, uint8_t data) {
         WritePrgBank(addr.bank(), addr.address() + offset, data);
     }

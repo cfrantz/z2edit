@@ -60,6 +60,7 @@ void Z2Edit::Init() {
     RegisterCommand("bcopy", "Copy memory between PRG banks.", this, &Z2Edit::BCopy);
     RegisterCommand("set", "Set variables.", this, &Z2Edit::SetVar);
     RegisterCommand("source", "Read and execute debugconsole commands from file.", this, &Z2Edit::Source);
+    RegisterCommand("dtt", "Dump Town Text.", this, &Z2Edit::DumpTownText);
 
     loaded_ = false;
     ibase_ = 0;
@@ -711,6 +712,49 @@ void Z2Edit::Source(DebugConsole* console, int argc, char **argv) {
         console->ExecCommand(p);
     }
     fclose(fp);
+}
+
+void Z2Edit::DumpTownText(DebugConsole* console, int argc, char **argv) {
+    if (argc != 3) {
+        console->AddLog("[error] Usage: %s [towncode] [enemyid]", argv[0]);
+        return;
+    }
+    uint8_t towncode = strtoul(argv[1], 0, ibase_);
+    uint8_t enemyid = strtoul(argv[2], 0, ibase_);
+
+    if (enemyid < 10) {
+        console->AddLog("[error] Enemy IDs less than 10 do not have text");
+        return;
+    }
+    const auto& text_table = ConfigLoader<RomInfo>::GetConfig().text_table();
+    enemyid -= 10;
+
+    char text[256];
+    uint8_t world = towncode >> 2;
+    uint8_t index = enemyid * 4 + (towncode & 3);
+    Address ptable = mapper_->ReadAddr(text_table.pointer(), world * 2);
+    int len = (index < 64) ? 2 : 1;
+
+    for(int i=0; i<len; i++) {
+        const auto& region = text_table.index(world * 2 + i);
+        if (index >= region.length())
+            continue;
+
+        int offset = mapper_->Read(region, index);
+        Address str = mapper_->ReadAddr(ptable, offset * 2);
+
+        for(int j=0, ch=0; j<254; j++) {
+            ch = mapper_->Read(str, j);
+            if (ch == 255) {
+                text[j] = 0;
+                break;
+            }
+            ch = TextEncoding::FromZelda2(ch);
+            if (ch == 0) ch = '_';
+            text[j] = ch;
+        }
+        console->AddLog("%d (@%04x): %s", i, str.address(), text);
+    }
 }
 
 void Z2Edit::SpawnEmulator() {

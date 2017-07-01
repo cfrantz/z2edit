@@ -277,6 +277,11 @@ message XPTable {
     Address levelup_gfx = 10;
 }
 
+message TextTable {
+    Address pointer = 1;
+    repeated MemoryRegion index = 2;
+}
+
 message RomInfo {
     string path = 1; // For internal use by the config loader
     repeated string load = 2;
@@ -298,4 +303,5 @@ message RomInfo {
     XPTable xptable = 18;
     repeated GameHack palace_to_stone = 19;
     repeated OverworldEditorKeybind overworld_editor_keybind = 20;
+    TextTable text_table = 21;
 }
