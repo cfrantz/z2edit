@@ -1,4 +1,5 @@
 package(default_visibility=["//visibility:public"])
+load("//tools/windows:rules.bzl", "pkg_winzip")
 
 config_setting(
     name = "windows",
@@ -64,15 +65,22 @@ cc_library(
     ],
 )
 
+filegroup(
+    name = "content",
+    srcs = glob(["content/*.textpb"]),
+)
+
 genrule(
     name = "make_zelda2_config",
-    srcs = ["zelda2.textpb"] + glob(["content/*.textpb"]),
+    srcs = [
+        "zelda2.textpb",
+        ":content",
+    ],
     outs = ["zelda2_config.h"],
     cmd = "$(location //tools:pack_config) --config $(location zelda2.textpb)" +
           " --symbol kZelda2Cfg > $(@)",
     tools = ["//tools:pack_config"],
 )
-
 
 cc_binary(
     name = "z2edit",
@@ -109,5 +117,12 @@ cc_binary(
         ":app",
         "//util:config",
         "//external:gflags",
+    ],
+)
+
+pkg_winzip(
+    name = "z2edit-windows",
+    files = [
+        ":z2edit",
     ],
 )

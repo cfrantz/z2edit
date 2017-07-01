@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+exports_files(["mxe"])
+
 filegroup(
     name = "srcs",
     srcs = glob(["**"], exclude=["mxe/**"]) + [
