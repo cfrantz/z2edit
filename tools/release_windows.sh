@@ -2,7 +2,7 @@
 
 set -e
 bazel build \
-    --crosstool_top=//tools/windows:toolchain --cpu=win64 \
+    --crosstool_top=@mxebzl//tools/windows:toolchain --cpu=win64 \
     --workspace_status_command tools/buildstamp/get_workspace_status \
     -c opt :z2edit-windows
 

@@ -1,5 +1,0 @@
-#!/bin/bash --norc
-
-exec -a x86_64-w64-mingw32.shared-gfortran \
-    external/mingw_compiler_win64/usr/bin/x86_64-w64-mingw32.shared-gfortran \
-    "$@"
