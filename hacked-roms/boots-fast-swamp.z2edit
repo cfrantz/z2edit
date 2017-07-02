@@ -1,0 +1,20 @@
+######################################################################
+#
+# A hack to let link walk fast in the swamp when he has the boots
+#
+######################################################################
+
+asm b=0 0x86af
+        JSR boots_check     ; The game normally checks next tile here, jump
+        NOP                 ; to our special subroutine.
+        NOP                  
+
+.org $aa40
+boots_check:
+        LDA $0563           ; Type of tile link is facing?
+        CMP #$07            ; Is it swamp?
+        BNE return          ; If no, return
+        LDA $0788           ; If yes, check if we have the boots
+return:
+        RTS                 ; return back to overworld walk routine
+.end
