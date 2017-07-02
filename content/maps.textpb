@@ -145,6 +145,7 @@ sideview: {
     chr: { bank: 7 }
     world: 1
     connector: { bank: 3 address: 0x871b }
+    doors: { bank: 3 address: 0x8817 }
 }
 
 sideview: {

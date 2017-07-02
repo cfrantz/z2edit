@@ -631,6 +631,7 @@ MapConnection::MapConnection()
 void MapConnection::Parse(const Map& map) {
     uint8_t val;
     connector_ = map.connector();
+    doors_ = map.doors();
     world_ = map.world();
     overworld_ = map.overworld();
     subworld_ = map.subworld();
@@ -640,6 +641,13 @@ void MapConnection::Parse(const Map& map) {
         data_[i].destination = val >> 2;
         data_[i].start = val & 3;
     }
+    if (doors_.address()) {
+        for(int i=0; i<4; i++) {
+            val = mapper_->Read(doors_, i);
+            data_[i+4].destination = val >> 2;
+            data_[i+4].start = val & 3;
+        }
+    }
 }
 
 void MapConnection::Save() {
@@ -647,23 +655,38 @@ void MapConnection::Save() {
         uint8_t val = (data_[i].destination << 2) | (data_[i].start & 3);
         mapper_->Write(connector_, i, val);
     }
+    if (doors_.address()) {
+        for(int i=0; i<4; i++) {
+            uint8_t val = (data_[i+4].destination << 2) | (data_[i+4].start & 3);
+            mapper_->Write(doors_, i, val);
+        }
+    }
 }
 
 bool MapConnection::Draw() {
     const char *destlabel[] = {
-        "Left Exit ",
-        "Down Exit ",
-        "Up Exit   ",
-        "Right Exit",
+        "Left Exit    ",
+        "Down Exit    ",
+        "Up Exit      ",
+        "Right Exit   ",
+        "Screen 1 Door",
+        "Screen 2 Door",
+        "Screen 3 Door",
+        "Screen 4 Door",
     };
     const char *startlabel[] = {
         "Left Dest Screen ",
         "Down Dest Screen ",
         "Up Dest Screen   ",
         "Right Dest Screen",
+        "Door1 Dest Screen",
+        "Door2 Dest Screen",
+        "Door3 Dest Screen",
+        "Door4 Dest Screen",
     };
     const char *buttonlabel[] = {
         "View Area##0", "View Area##1", "View Area##2", "View Area##3",
+        "View Area##4", "View Area##5", "View Area##6", "View Area##7",
     };
     const char *selection = "0\0001\0002\0003\0\0";
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
@@ -686,7 +709,13 @@ bool MapConnection::Draw() {
 
     ImGui::Text("Map exit table at bank=0x%x address=0x%04x",
             connector_.bank(), connector_.address());
-    for(int i=0; i<4; i++) {
+    int guilen = doors_.address() ? 8 : 4;
+    for(int i=0; i<guilen; i++) {
+        if (i == 4) {
+            ImGui::Separator();
+            ImGui::Text("Map door table at bank=0x%x address=0x%04x",
+                    doors_.bank(), doors_.address());
+        }
         ImGui::PushItemWidth(400);
         chg |= ImGui::Combo(destlabel[i], &data_[i].destination, names, len);
         ImGui::PopItemWidth();

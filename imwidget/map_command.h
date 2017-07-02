@@ -142,11 +142,12 @@ class MapConnection {
   private:
     Mapper* mapper_;
     Address connector_;
+    Address doors_;
     int world_;
     int overworld_;
     int subworld_;
 
-    Unpacked data_[4];
+    Unpacked data_[8];
 };
 
 class MapEnemyList {

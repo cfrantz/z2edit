@@ -57,6 +57,14 @@ void PostProcess(z2util::RomInfo* config) {
                 m->mutable_connector()->set_address(
                         s.connector().address() + 4*map);
             }
+
+            // If the door table is not null
+            if (s.doors().address()) {
+                m->mutable_doors()->set_bank(s.doors().bank());
+                m->mutable_doors()->set_address(
+                        s.doors().address() + 4*map);
+            }
+
             *(m->mutable_chr()) = s.chr();
             *(m->mutable_palette()) = s.palette();
             *(m->mutable_palettes()) = s.palettes();

@@ -148,6 +148,9 @@ message Map {
 
     // Addresses of palettes for this map.
     repeated Address palettes = 15;
+
+    // address of door connectors for town maps
+    Address doors = 16;
 }
 
 message SideViewMapPointers {
@@ -165,6 +168,7 @@ message SideViewMapPointers {
     int32 overworld = 12;
     int32 subworld = 13;
     repeated Address palettes = 15;
+    Address doors = 16;
 }
 
 message DecompressInfo {
