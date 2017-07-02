@@ -19,20 +19,30 @@ SimpleMap::SimpleMap()
     scale_(1.0),
     mapsel_(0),
     tab_(0),
+    startscreen_(0),
     title_("Sideview Editor"),
-    window_title_(title_) {}
+    window_title_(title_),
+    grayout_(256, 208) {
+    for(int y=0; y<grayout_.height(); y++) {
+        for(int x=0; x<grayout_.width(); x++) {
+            grayout_.SetPixel(x, y, 0xc0000000);
+        }
+    }
+    grayout_.Update();
+}
 
-SimpleMap::SimpleMap(Mapper* m, const Map& map)
+SimpleMap::SimpleMap(Mapper* m, const Map& map, int startscreen)
   : SimpleMap() {
     set_mapper(m);
     SetMap(map);
+    startscreen_ = startscreen;
     mapsel_ = -1;
     title_ = map.name();
     window_title_ = StrCat(title_, "##", id_);
 }
 
-SimpleMap* SimpleMap::Spawn(Mapper* m, const Map& map) {
-    SimpleMap *sm = new SimpleMap(m, map);
+SimpleMap* SimpleMap::Spawn(Mapper* m, const Map& map, int startscreen) {
+    SimpleMap *sm = new SimpleMap(m, map, startscreen);
     sm->visible_ = true;
     ImApp::Get()->AddDrawCallback(sm);
     return sm;
@@ -74,6 +84,13 @@ void SimpleMap::DrawMap(const ImVec2& pos) {
     for(const auto& e : enemies_.data()) {
         enemy_.Get(e.enemy).DrawAt(pos.x + e.x*size, pos.y + e.y*size, scale_);
     }
+    int start = startscreen_ * 16;
+    int end = start + decomp_.mapwidth();;
+    for(int x=0; x<decomp_.width(); x+=16) {
+        if (!(x >= start && x < end)) {
+            grayout_.DrawAt(pos.x + x*size, pos.y + 0, scale_);
+        }
+    }
 }
 
 void SimpleMap::RenderToBuffer(GLBitmap *buffer) {
@@ -99,6 +116,14 @@ void SimpleMap::RenderToBuffer(GLBitmap *buffer) {
         auto& sprite = enemy_.Get(e.enemy);
         buffer->Blit(e.x*size, e.y*size, sprite.width(), sprite.height(),
                      sprite.data());
+    }
+    int start = startscreen_ * 16;
+    int end = start + decomp_.mapwidth();;
+    for(int x=0; x<decomp_.width(); x+=16) {
+        if (!(x >= start && x < end)) {
+            buffer->Blit(x*size, 0, grayout_.width(), grayout_.height(),
+                         grayout_.data());
+        }
     }
 }
 
@@ -229,6 +254,7 @@ void SimpleMap::SetMap(const z2util::Map& map) {
 
     decomp_.Init();
     decomp_.Decompress(map);
+    startscreen_ = 0;
 
     connection_.set_mapper(mapper_);
     cache_.set_mapper(mapper_);

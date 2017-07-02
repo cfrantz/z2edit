@@ -725,7 +725,8 @@ bool MapConnection::Draw() {
         if (data_[i].destination != len-1) {
             ImGui::SameLine();
             if (ImGui::Button(buttonlabel[i])) {
-                SimpleMap::Spawn(mapper_, *maps[data_[i].destination]);
+                SimpleMap::Spawn(mapper_, *maps[data_[i].destination],
+                                 data_[i].start);
             }
         }
         ImGui::PopItemWidth();

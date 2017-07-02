@@ -15,9 +15,9 @@ namespace z2util {
 
 class SimpleMap: public ImWindowBase {
   public:
-    static SimpleMap* Spawn(Mapper* m, const Map& map);
+    static SimpleMap* Spawn(Mapper* m, const Map& map, int startscreen=0);
     SimpleMap();
-    SimpleMap(Mapper* m, const Map& map);
+    SimpleMap(Mapper* m, const Map& map, int startscreen=0);
     void set_mapper(Mapper* m) { mapper_ = m; decomp_.set_mapper(m); }
     void Refresh() override { SetMap(map_); }
     bool Draw() override;
@@ -33,8 +33,10 @@ class SimpleMap: public ImWindowBase {
     float scale_;
     int mapsel_;
     int tab_;
+    int startscreen_;
     std::string title_;
     std::string window_title_;
+    GLBitmap grayout_;
     Z2Decompress decomp_;
     MapHolder holder_;
     MapConnection connection_;

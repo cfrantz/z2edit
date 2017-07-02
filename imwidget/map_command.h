@@ -135,10 +135,17 @@ class MapConnection {
         int destination;
         int start;
     };
-    inline Unpacked left() { return data_[0]; }
-    inline Unpacked down() { return data_[1]; }
-    inline Unpacked up() { return data_[2]; }
-    inline Unpacked right() { return data_[3]; }
+    inline Unpacked left() const { return data_[0]; }
+    inline Unpacked down() const { return data_[1]; }
+    inline Unpacked up() const { return data_[2]; }
+    inline Unpacked right() const { return data_[3]; }
+    inline Unpacked door(int d) const {
+        if (doors_.address() && d >= 0 && d < 4) {
+            return data_[4+d];
+        } else {
+            return Unpacked{63, 3};
+        }
+    }
   private:
     Mapper* mapper_;
     Address connector_;

@@ -44,6 +44,7 @@ class Z2Decompress {
 
     Address palette();
     inline int width() const { return width_; }
+    inline int mapwidth() const { return mapwidth_; }
     inline int height() const { return height_; }
 
     inline const Address& address() const { return compressed_map_.address(); }
@@ -56,6 +57,7 @@ class Z2Decompress {
     const static int NR_SETS = 5;
   private:
     int width_;
+    int mapwidth_;
     int height_;
     typedef void (Z2Decompress::*PutFn)(int x, int y, uint8_t item,
                   const DecompressInfo* info);

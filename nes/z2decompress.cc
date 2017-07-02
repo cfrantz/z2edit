@@ -258,8 +258,9 @@ void Z2Decompress::DecompressSideView(const uint8_t* data, bool collapse) {
                  " BackPal=", (back_ >> 3) & 7,
                  " BackMap=", back_ & 7);
 
-    width_ = (1 + ((flags_ >> 5) & 3)) * 16;
+    width_ = 64;
     height_ = 13;
+    mapwidth_ = (1 + ((flags_ >> 5) & 3)) * 16;
     uint8_t floor = ground_ & 0x0f;
     uint8_t ceiling = !(ground_ & 0x80);
     uint8_t objset = !!(flags_ & 0x80);
