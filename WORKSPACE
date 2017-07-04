@@ -77,7 +77,7 @@ bind(
 git_repository(
     name = "mxebzl",
     remote = "https://github.com/cfrantz/mxebzl.git",
-    tag = "20170701_RC02",
+    tag = "20170703_RC02",
 )
 
 load("@mxebzl//tools:repository.bzl", "mxe_compilers")
