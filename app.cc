@@ -73,6 +73,7 @@ void Z2Edit::Init() {
     palace_gfx_.reset(new z2util::PalaceGraphics);
     palette_editor_.reset(new z2util::PaletteEditor);
     start_values_.reset(new z2util::StartValues);
+    text_table_.reset(new z2util::TextTableEditor);
     object_table_.reset(new z2util::ObjectTable);
     enemy_editor_.reset(new z2util::EnemyEditor);
     experience_table_.reset(new z2util::ExperienceTable);
@@ -118,6 +119,8 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     palette_editor_->Refresh();
     start_values_->set_mapper(mapper_.get());
     start_values_->Refresh();
+    text_table_->set_mapper(mapper_.get());
+    text_table_->Refresh();
 
     object_table_->set_mapper(mapper_.get());
     object_table_->Refresh();
@@ -894,6 +897,8 @@ export_as:
                             &palette_editor_->visible());
             ImGui::MenuItem("Start Values", nullptr,
                             &start_values_->visible());
+            ImGui::MenuItem("Text Table", nullptr,
+                            &text_table_->visible());
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
@@ -929,6 +934,7 @@ export_as:
     }
 
     start_values_->Draw();
+    text_table_->Draw();
     misc_hacks_->Draw();
     palace_gfx_->Draw();
     palette_editor_->Draw();

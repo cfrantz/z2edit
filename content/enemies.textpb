@@ -540,28 +540,28 @@ enemies {
             name: "townsperson 14"
         }},
         { key: 0x0f value: {
-            name: "15: Wizard"
+            name: "Wizard"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 1
             id: [0x74, 0x76, 0xd4, 0xd6]
         }},
         { key: 0x10 value: {
-            name: "16: Red Hint Guy (Eyes of Ganon...)"
+            name: "Red Hint Guy"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xc0, 0xc2, 0xc4, 0xc6]
         }},
         { key: 0x11 value: {
-            name: "17: Purple Hint Lady (Do not go south wihout...)"
+            name: "Purple Hint Lady"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
             id: [0xdc, 0xde, 0xe4, 0xe6]
         }},
         { key: 0x12 value: {
-            name: "18: Red Hint Granny (place the crystal...)"
+            name: "Red Hint Granny"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
@@ -571,7 +571,7 @@ enemies {
             name: "townsperson 19"
         }},
         { key: 0x14 value: {
-            name: "20: Item Lady"
+            name: "Item Lady"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
@@ -581,21 +581,21 @@ enemies {
             name: "townsperson 21"
         }},
         { key: 0x16 value: {
-            name: "22: Trophy Lady"
+            name: "Trophy Lady"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xd8, 0xda, 0xe0, 0xe2]
         }},
         { key: 0x17 value: {
-            name: "23: Life Lady"
+            name: "Life Lady"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xd8, 0xda, 0xe0, 0xe2]
         }},
         { key: 0x18 value: {
-            name: "24: Magic Lady"
+            name: "Magic Lady"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 1
@@ -614,7 +614,7 @@ enemies {
             name: "townsperson 28"
         }},
         { key: 0x1d value: {
-            name: "29: Purple Hint Guy (Find magic in a cave...)"
+            name: "Purple Hint Guy"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
@@ -624,35 +624,35 @@ enemies {
             name: "townsperson 30"
         }},
         { key: 0x1f value: {
-            name: "31: Red Hint Guy (Only a Hammer...)"
+            name: "Red Hint Guy"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xc0, 0xc2, 0xc4, 0xc6]
         }},
         { key: 0x20 value: {
-            name: "32: Purple Hint Lady (Find the heart...)"
+            name: "Purple Hint Lady"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
             id: [0xd8, 0xda, 0xe0, 0xe2]
         }},
         { key: 0x21 value: {
-            name: "33: Mirror (I found a mirror...)"
+            name: "Mirror"
             width: 8 height: 16
             chr: { bank: 6 }
             palette: 1
             id: 0xf5
         }},
         { key: 0x22 value: {
-            name: "34: Rauru Sign"
+            name: "Sign"
             width: 8 height: 16
             chr: { bank: 6 }
             palette: 1
             id: 0xf5
         }},
         { key: 0x23 value: {
-            name: "35: Busy townsperson generator"
+            name: "Busy townsperson generator"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3

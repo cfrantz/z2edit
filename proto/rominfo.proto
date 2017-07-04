@@ -151,6 +151,18 @@ message Map {
 
     // address of door connectors for town maps
     Address doors = 16;
+
+    // area code of this map (town or palace code)
+    int32 code = 17;
+}
+
+// Palaces and Towns have an "area code" which helps determine some
+// properties about the area, such as which palette to use or what
+// text a townsperson says.
+message AreaCodeRange {
+    int32 offset = 1;
+    int32 length = 2;
+    int32 code = 3;
 }
 
 message SideViewMapPointers {
@@ -169,6 +181,7 @@ message SideViewMapPointers {
     int32 subworld = 13;
     repeated Address palettes = 15;
     Address doors = 16;
+    repeated AreaCodeRange code = 17;
 }
 
 message DecompressInfo {
@@ -283,7 +296,9 @@ message XPTable {
 
 message TextTable {
     Address pointer = 1;
-    repeated MemoryRegion index = 2;
+    repeated int32 length = 2;
+    repeated MemoryRegion index = 3;
+    MemoryRegion text_data = 4;
 }
 
 message RomInfo {

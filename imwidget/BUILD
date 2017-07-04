@@ -133,6 +133,7 @@ cc_library(
         ":overworld_encounters",
         "//nes:enemylist",
         "//nes:mappers",
+        "//nes:text_list",
         "//nes:z2decompress",
         "//nes:z2objcache",
         "//proto:rominfo",
@@ -277,6 +278,22 @@ cc_library(
         ":error_dialog",
         "//nes:mappers",
         "//nes:z2objcache",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+        "//external:gflags",
+    ],
+)
+
+cc_library(
+    name = "text_table",
+    hdrs = ["text_table.h"],
+    srcs = ["text_table.cc"],
+    deps = [
+        ":base",
+        ":error_dialog",
+        "//nes:mappers",
+        "//nes:text_list",
         "//proto:rominfo",
         "//util:config",
         "//external:imgui",

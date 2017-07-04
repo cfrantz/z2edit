@@ -43,6 +43,11 @@ void PostProcess(z2util::RomInfo* config) {
                 snprintf(buf, sizeof(buf), "%02d: %s %02d - %s",
                          m->area(), s.area().c_str(), map, name.c_str());
             }
+            for(const auto& c : s.code()) {
+                if (map >= c.offset() && map < c.offset() + c.length()) {
+                    m->set_code(c.code());
+                }
+            }
             m->set_name(buf);
             m->set_type(s.type());
             m->set_world(s.world());

@@ -764,6 +764,7 @@ void MapEnemyList::Init() {
 }
 
 void MapEnemyList::Parse(const Map& map) {
+    map_ = map;
     pointer_ = map.pointer();
     world_ = map.world();
     area_ = map.area();
@@ -771,6 +772,10 @@ void MapEnemyList::Parse(const Map& map) {
     subworld_ = map.subworld();
 
     Init();
+    if (map_.type() == MapType::TOWN) {
+        text_.set_mapper(mapper_);
+        text_.Unpack(map_.pointer().bank());
+    }
 
     // Check if this is an overworld random encounter area
     OverworldEncounters enc;
@@ -795,6 +800,16 @@ void MapEnemyList::Parse(const Map& map) {
         y = (y == 0) ? 1 : y+2;
         data_.emplace_back(enemy & 0x3f,
                            (pos & 0xf) | (enemy & 0xc0) >> 2, y);
+        if (map_.type() == MapType::TOWN && data_.back().enemy >= 10) {
+            const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
+            int idxtbl = (map_.code() >> 2) * 2;
+            int index = (data_.back().enemy - 10) * 4 + (map_.code() & 3);
+            for(int j=0; j<2; j++, idxtbl++) {
+                if (index < tt.index(idxtbl).length())
+                    data_.back().text[j] = mapper_->Read(tt.index(idxtbl),
+                                                         index);
+            }
+        }
     }
 
     // Encounters have 2 enemy lists, so make another widget
@@ -907,6 +922,21 @@ void MapEnemyList::Save() {
     }
     ep.Add(area_ + 63 * subworld_, data);
     ep.Pack();
+
+    if (map_.type() == MapType::TOWN) {
+        const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
+        for(const auto& data : data_) {
+            if (data.enemy < 10)
+                continue;
+
+            int idxtbl = (map_.code() >> 2) * 2;
+            int index = (data.enemy - 10) * 4 + (map_.code() & 3);
+            for(int j=0; j<2; j++, idxtbl++) {
+                if (index < tt.index(idxtbl).length())
+                    mapper_->Write(tt.index(idxtbl), index, data.text[j]);
+            }
+        }
+    }
 }
 
 bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
@@ -920,6 +950,28 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
     ImGui::PushItemWidth(400);
     chg |= ImGui::Combo("enemy", &item->enemy, names_, max_names_);
     ImGui::PopItemWidth();
+
+    if (map_.type() == MapType::TOWN) {
+        for(int i=0; i<2; i++) {
+            int w = map_.code() >> 2;
+            int index = item->text[i];
+            if (index < 0)
+                continue;
+
+            if (!popup) {
+                ImGui::Text("                         ");
+                ImGui::SameLine();
+            }
+            ImGui::PushItemWidth(100);
+            chg |= ImGui::InputInt("text      ", &item->text[i]);
+            ImGui::PopItemWidth();
+            std::string val;
+            text_.Get(w, index, &val);
+
+            ImGui::SameLine();
+            ImGui::Text("%s", val.c_str());
+        }
+    }
     return chg;
 }
 
@@ -954,6 +1006,9 @@ bool MapEnemyList::Draw() {
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Delete this enemy");
         ImGui::PopID();
+        if (map_.type() == MapType::TOWN) {
+            ImGui::Separator();
+        }
     }
     if (ImGui::Button(ICON_FA_CARET_SQUARE_O_UP)) {
         chg = true;

@@ -7,6 +7,7 @@
 
 #include "proto/rominfo.pb.h"
 #include "nes/mapper.h"
+#include "nes/text_list.h"
 
 namespace z2util {
 
@@ -166,9 +167,11 @@ class MapEnemyList {
         DR_DELETE,
     };
     struct Unpacked {
-        Unpacked(int e_, int x_, int y_) : enemy(e_), x(x_), y(y_) {}
+        Unpacked(int e_, int x_, int y_)
+            : enemy(e_), x(x_), y(y_), text{-1, -1} {}
         int enemy;
         int x, y;
+        int text[2];
     };
     MapEnemyList();
     MapEnemyList(Mapper* m);
@@ -188,6 +191,7 @@ class MapEnemyList {
     bool is_large_;
     bool is_encounter_;
     Address pointer_;
+    Map map_;
     int world_;
     int overworld_;
     int subworld_;
@@ -198,6 +202,7 @@ class MapEnemyList {
     std::unique_ptr<MapEnemyList> large_;
     const char *names_[256];
     int max_names_;
+    TextListPack text_;
 };
 
 class MapItemAvailable {

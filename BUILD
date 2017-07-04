@@ -43,6 +43,7 @@ cc_library(
         "//imwidget:project",
         "//imwidget:simplemap",
         "//imwidget:start_values",
+        "//imwidget:text_table",
         "//imwidget:object_table",
         "//imwidget:xptable",
         "//nes:cartridge",

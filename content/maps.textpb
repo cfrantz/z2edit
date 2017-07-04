@@ -146,6 +146,53 @@ sideview: {
     world: 1
     connector: { bank: 3 address: 0x871b }
     doors: { bank: 3 address: 0x8817 }
+    code { offset: 1 length: 2 code: 0 }
+    code { offset: 28 length: 1 code: 0 }
+    code { offset: 36 length: 1 code: 0 }
+    code { offset: 48 length: 1 code: 0 }
+
+    code { offset: 4 length: 2 code: 1 }
+    code { offset: 29 length: 1 code: 1 }
+    code { offset: 37 length: 1 code: 1 }
+    code { offset: 49 length: 1 code: 1 }
+
+    code { offset: 6 length: 3 code: 2 }
+    code { offset: 30 length: 1 code: 2 }
+    code { offset: 50 length: 1 code: 2 }
+    code { offset: 38 length: 1 code: 2 }
+
+    code { offset: 9 length: 3 code: 3 }
+    code { offset: 24 length: 1 code: 3 }
+    code { offset: 31 length: 1 code: 3 }
+    code { offset: 39 length: 1 code: 3 }
+    code { offset: 44 length: 1 code: 3 }
+    code { offset: 51 length: 1 code: 3 }
+    code { offset: 56 length: 1 code: 3 }
+
+    code { offset: 12 length: 3 code: 4 }
+    code { offset: 32 length: 1 code: 4 }
+    code { offset: 52 length: 1 code: 4 }
+    code { offset: 40 length: 1 code: 4 }
+
+    code { offset: 15 length: 3 code: 5 }
+    code { offset: 33 length: 1 code: 5 }
+    code { offset: 41 length: 1 code: 5 }
+    code { offset: 45 length: 1 code: 5 }
+    code { offset: 53 length: 1 code: 5 }
+    code { offset: 57 length: 1 code: 5 }
+
+    code { offset: 18 length: 3 code: 6 }
+    code { offset: 26 length: 1 code: 6 }
+    code { offset: 34 length: 1 code: 6 }
+    code { offset: 42 length: 1 code: 6 }
+    code { offset: 46 length: 1 code: 6 }
+    code { offset: 47 length: 1 code: 6 }
+    code { offset: 54 length: 1 code: 6 }
+
+    code { offset: 21 length: 3 code: 7 }
+    code { offset: 33 length: 3 code: 7 }
+    code { offset: 43 length: 1 code: 7 }
+    code { offset: 55 length: 1 code: 7 }
 }
 
 sideview: {
@@ -164,6 +211,7 @@ sideview: {
         { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 },
         { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 }
     ]
+    code { offset: 0 length: 14 code: 0 }
 }
 sideview: {
     area: "Palace2"
@@ -180,6 +228,7 @@ sideview: {
         { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 },
         { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 }
     ]
+    code { offset: 0 length: 21 code: 1 }
 }
 sideview: {
     area: "Palace5"
@@ -197,6 +246,7 @@ sideview: {
         { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 },
         { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 }
     ]
+    code { offset: 0 length: 28 code: 0 }
 }
 
 sideview: {
@@ -216,6 +266,7 @@ sideview: {
         { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 }
     ]
     subworld: 1
+    code { offset: 0 length: 15 code: 2 }
 }
 
 sideview: {
@@ -235,6 +286,7 @@ sideview: {
         { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 }
     ]
     subworld: 1
+    code { offset: 0 length: 21 code: 0 }
 }
 sideview: {
     area: "Palace6"
@@ -253,6 +305,7 @@ sideview: {
         { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 }
     ]
     subworld: 1
+    code { offset: 0 length: 27 code: 1 }
 }
 
 sideview: {
@@ -264,6 +317,7 @@ sideview: {
     chr: { bank: 0xd }
     world: 5
     connector: { bank: 5 address: 0x871b }
+    code { offset: 0 length: 63 code: 0 }
 }
 
 

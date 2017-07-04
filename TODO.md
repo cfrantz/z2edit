@@ -4,16 +4,11 @@
 1. Palaces turn to stone after completion.
 1. Edit p-bag values.
 1. Edit strike-for-jar items/enemies
+1. Inventory of all the different townspeople (mostly done)
 
 ### Issues found in alpha-1 release
 1. Add "did you remember to save all of your files?" dialog when you quit
    with unsaved changes
-
-### Add config which describes how to render towns
-Done, but still need:
-  * Inventory of all the different townspeople
-  * Townspeople text editor
-  * Building entrances to which rooms? (understood, no widget for editing yet).
 
 ### Curate list of known hacks to optionally apply to a ROM:
   * Others? (Shadow of Night has a "Dash" spell for running fast).
@@ -35,6 +30,10 @@ Done, but still need:
     * Create a vanilla ROM which fixes all sideview exit oddities.
 
 # Done
+
+### Add config which describes how to render towns (done)
+1. Townspeople text editor
+1. Building door editor.
 
 ### From GTM
 1. Investigate and document swap/copy better (done).

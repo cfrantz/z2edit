@@ -67,6 +67,19 @@ cc_library(
 )
 
 cc_library(
+    name = "text_list",
+    hdrs = ["text_list.h"],
+    srcs = ["text_list.cc"],
+    deps = [
+        ":mappers",
+        ":text_encoding",
+        "//proto:rominfo",
+        "//util:config",
+        "//util:logging",
+    ],
+)
+
+cc_library(
     name = "z2decompress",
     hdrs = ["z2decompress.h"],
     srcs = [

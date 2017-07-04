@@ -63,6 +63,14 @@ class Mapper {
         Write(addr, offset+1, uint8_t(data >> 8));
     }
 
+    void Write(const z2util::MemoryRegion& addr, int offset, uint8_t data) {
+        WritePrgBank(addr.bank(), addr.address() + offset, data);
+    }
+    void WriteWord(const z2util::MemoryRegion& addr, int offset, uint16_t data) {
+        Write(addr, offset, uint8_t(data));
+        Write(addr, offset+1, uint8_t(data >> 8));
+    }
+
     z2util::Address FindFreeSpace(z2util::Address start, int length);
     void Erase(const z2util::Address& start, uint16_t length);
 
