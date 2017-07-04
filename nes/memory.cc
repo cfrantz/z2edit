@@ -44,6 +44,39 @@ int Memory::CheckForKeepout(Address baseaddr, const std::string& name, int len,
     return result;
 }
 
+int Memory::CheckBank3Special(bool move) {
+    // This is a total hack
+    // There is a fragment of code (35 bytes) inside the enemylist keepout area
+    // in bank 3.  This checks the pointers to that code, moves it and updates
+    // the pointers.
+    int result = 0;
+    Address code;
+    code.set_bank(3);
+    code.set_address(0x9bf9);
+
+    Address src = mapper_->ReadAddr(code, 0);
+    if (InKeepoutRegion(src)) {
+        if (move) {
+            int len = 35;
+            Address dst = mapper_->Alloc(src, len);
+            for(int i=0; i<len; i++) {
+                mapper_->Write(dst, i, mapper_->Read(src, i));
+                mapper_->Write(src, i, 0);
+            }
+            mapper_->WriteWord(code, 0, dst.address());
+            mapper_->WriteWord(code, 2, dst.address());
+            mapper_->WriteWord(code, -60, dst.address() + 7);
+           LOGF(INFO, "In bank=%d, code moved from %04x to %04x",
+                src.bank(), src.address(), dst.address());
+        } else {
+            LOGF(INFO, "In bank=%d, code is in the keepout area (%04x)",
+                 src.bank(), src.address());
+        }
+        result += 1;
+    }
+    return result;
+}
+
 int Memory::CheckBankForKeepout(int bank, bool move) {
     bool result = false;
     Address addr;
@@ -57,6 +90,10 @@ int Memory::CheckBankForKeepout(int bank, bool move) {
 
     addr.set_address(0xA000);
     result += CheckForKeepout(addr, "set two map", 63, move);
+
+    if (bank == 3) {
+        result += CheckBank3Special(move);
+    }
 
     return result;
 }

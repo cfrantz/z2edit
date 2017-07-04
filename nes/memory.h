@@ -16,6 +16,8 @@ class Memory {
     int CheckBankForKeepout(int bank, bool move=false);
     int MoveMapOutOfKeepout(const Address& pointer);
 
+    int CheckBank3Special(bool move=false);
+
     void CheckAllBanksForKeepout(bool move=false);
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
