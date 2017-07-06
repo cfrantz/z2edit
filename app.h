@@ -62,6 +62,7 @@ class Z2Edit: public ImApp {
     void BCopy(DebugConsole* console, int argc, char **argv);
     void SetVar(DebugConsole* console, int argc, char **argv);
     void Source(DebugConsole* console, int argc, char **argv);
+    void RestoreBank(DebugConsole* console, int argc, char **argv);
     void DumpTownText(DebugConsole* console, int argc, char **argv);
     void SpawnEmulator();
     int EncodedText(int ch);

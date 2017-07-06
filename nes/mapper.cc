@@ -43,14 +43,15 @@ z2util::Address Mapper::FindFreeSpace(z2util::Address addr, int length) {
             end = offset;
             while(offset > 0 && Read(addr, offset) == 0xFF) {
                 if (end - offset + 1 == length) {
+                    z2util::Address startaddr = addr;
                     z2util::Address endaddr = addr;
-                    addr.set_address(0x8000 | offset);
+                    startaddr.set_address(0x8000 | offset);
                     endaddr.set_address(0x8000 | end);
-                    if (z2util::Memory::InKeepoutRegion(addr)
+                    if (z2util::Memory::InKeepoutRegion(startaddr)
                         || z2util::Memory::InKeepoutRegion(endaddr)) {
                         break;
                     }
-                    return addr;
+                    return startaddr;
                 }
                 offset--;
             }

@@ -40,6 +40,7 @@ void Z2Edit::Init() {
     RegisterCommand("dw", "Hexdump words (via mapper).", this, &Z2Edit::HexdumpWords);
     RegisterCommand("dwp", "Hexdump PRG words.", this, &Z2Edit::HexdumpWords);
     RegisterCommand("dwc", "Hexdump CHR words.", this, &Z2Edit::HexdumpWords);
+    RegisterCommand("dtt", "Dump Town Text.", this, &Z2Edit::DumpTownText);
     RegisterCommand("wb", "Write bytes (via mapper).", this, &Z2Edit::WriteBytes);
     RegisterCommand("wbp", "Write PRG bytes.", this, &Z2Edit::WriteBytes);
     RegisterCommand("wbc", "Write CHR bytes.", this, &Z2Edit::WriteBytes);
@@ -60,7 +61,7 @@ void Z2Edit::Init() {
     RegisterCommand("bcopy", "Copy memory between PRG banks.", this, &Z2Edit::BCopy);
     RegisterCommand("set", "Set variables.", this, &Z2Edit::SetVar);
     RegisterCommand("source", "Read and execute debugconsole commands from file.", this, &Z2Edit::Source);
-    RegisterCommand("dtt", "Dump Town Text.", this, &Z2Edit::DumpTownText);
+    RegisterCommand("restore", "Read/restore a PRG bank from a NES file.", this, &Z2Edit::RestoreBank);
 
     loaded_ = false;
     ibase_ = 0;
@@ -717,6 +718,44 @@ void Z2Edit::Source(DebugConsole* console, int argc, char **argv) {
     fclose(fp);
 }
 
+void Z2Edit::RestoreBank(DebugConsole* console, int argc, char **argv) {
+    bool move = FLAGS_move_from_keepout;
+    if (argc < 4) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s <nesfile> <frombank> <tobank> [move=<0,1>]",  argv[0]);
+        return;
+    }
+
+    const char *nesfile = argv[1];
+    uint32_t from = strtoul(argv[2], 0, ibase_);
+    uint32_t to = strtoul(argv[3], 0, ibase_);
+    if (argc == 5) {
+        if (!strcmp(argv[4], "move=0")) move = false;
+        if (!strcmp(argv[4], "move=1")) move = true;
+    }
+
+    Cartridge kart;
+    if (!kart.IsNESFile(nesfile)) {
+        console->AddLog("[error] %s is not a NES file", nesfile);
+        return;
+    }
+    kart.LoadFile(nesfile);
+    if (from >= kart.prglen()) {
+        console->AddLog("[error] %s only has %u banks", nesfile, kart.prglen());
+        return;
+    }
+    if (to >= cartridge_.prglen()) {
+        console->AddLog("[error] Current image only has %u banks",
+                        cartridge_.prglen());
+        return;
+    }
+    for(int i=0; i<16384; i++) {
+        uint8_t data = kart.ReadPrg(from*16384 + i);
+        mapper_->WritePrgBank(to, i, data);
+    }
+    LoadPostProcess(move);
+}
+
 void Z2Edit::DumpTownText(DebugConsole* console, int argc, char **argv) {
     if (argc != 3) {
         console->AddLog("[error] Usage: %s [towncode] [enemyid]", argv[0]);
@@ -774,7 +813,7 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
     if (msg == "commit") {
         project_.Commit(static_cast<const char*>(extra));
     } else if (msg == "loadpostprocess") {
-        LoadPostProcess(bool(extra));
+        LoadPostProcess(reinterpret_cast<intptr_t>(extra));
     }
 }
 
