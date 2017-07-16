@@ -13,5 +13,11 @@ do
     SKIP=$((SKIP + $SIZE))
 done
 
-OF="${OUT}.chr"
-dd if=$ROM of=$OF bs=1 skip=$SKIP
+SIZE=1024
+for i in `seq 0 127`
+do
+    b=`printf "%02x" $i`
+    OF="${OUT}-$b.chr"
+    dd if=$ROM of=$OF bs=1 skip=$SKIP count=$SIZE
+    SKIP=$((SKIP + $SIZE))
+done
