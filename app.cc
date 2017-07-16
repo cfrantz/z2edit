@@ -196,7 +196,7 @@ void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
     // The hexdump command will be one of 'db', 'dbp' or 'dbc', standing
     // for 'dump bytes', 'dump bytes prg' and 'dump bytes chr'.  The
     // prg and chr versions can optionally take a bank number.
-    uint8_t bank = bank_;
+    int bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 2) {
@@ -249,7 +249,7 @@ void Z2Edit::HexdumpBytes(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::WriteBytes(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = bank_;
+    int bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 3) {
@@ -281,7 +281,7 @@ void Z2Edit::WriteBytes(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::WriteText(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = bank_;
+    int bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 3) {
@@ -319,7 +319,7 @@ void Z2Edit::WriteText(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::HexdumpWords(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = bank_;
+    int bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 2) {
@@ -377,7 +377,7 @@ void Z2Edit::HexdumpWords(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::WriteWords(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = bank_;
+    int bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 3) {
@@ -412,7 +412,7 @@ void Z2Edit::WriteWords(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::MemMove(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = -1;
+    int bank = -1;
     if (argc < 5 || strncmp(argv[1], "b=", 2) != 0) {
         console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
         console->AddLog("[error] %s b=<bank> <dst> <src> <len>",  argv[0]);
@@ -439,7 +439,7 @@ void Z2Edit::MemMove(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::Swap(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = -1;
+    int bank = -1;
     if (argc < 5 || strncmp(argv[1], "b=", 2) != 0) {
         console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
         console->AddLog("[error] %s b=<bank> <dst> <src> <len>",  argv[0]);
@@ -492,7 +492,7 @@ void Z2Edit::BCopy(DebugConsole* console, int argc, char **argv) {
 
 void Z2Edit::EnemyList(DebugConsole* console, int argc, char **argv) {
     char buf[1024];
-    uint8_t bank = bank_;
+    int bank = bank_;
     int mode = argv[0][2];
     int index = 0;
     if (argc < 3) {
@@ -527,7 +527,7 @@ void Z2Edit::EnemyList(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = bank_;
+    int bank = bank_;
     static uint16_t addr;
 
     int index = 0;
@@ -553,7 +553,7 @@ void Z2Edit::Unassemble(DebugConsole* console, int argc, char **argv) {
 }
 
 void Z2Edit::Assemble(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = bank_;
+    int bank = bank_;
     uint16_t addr;
 
     int index = 0;
@@ -627,7 +627,7 @@ void Z2Edit::Assemble(DebugConsole* console, int argc, char **argv) {
 
 
 void Z2Edit::InsertPrg(DebugConsole* console, int argc, char **argv) {
-    uint8_t bank = bank_;
+    int bank = bank_;
     if (argc < 2) {
         console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
         console->AddLog("[error] %s <bank>", argv[0]);

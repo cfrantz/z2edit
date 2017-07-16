@@ -17,17 +17,21 @@ class Mapper {
         console->AddLog("Not implemented");
     }
 
-    virtual uint8_t ReadPrgBank(uint8_t bank, uint32_t addr) {
+    virtual uint8_t ReadPrgBank(int bank, uint32_t addr) {
+        if (bank < 0) bank += cartridge_->prgsz();
         return cartridge_->ReadPrg(bank * 0x4000 + (addr & 0x3FFF));
     }
-    virtual uint8_t ReadChrBank(uint8_t bank, uint32_t addr) {
+    virtual uint8_t ReadChrBank(int bank, uint32_t addr) {
+        if (bank < 0) bank += cartridge_->chrsz();
         return cartridge_->ReadChr(bank * 0x1000 + (addr & 0x0FFF));
     }
 
-    virtual void WritePrgBank(uint8_t bank, uint32_t addr, uint8_t val) {
+    virtual void WritePrgBank(int bank, uint32_t addr, uint8_t val) {
+        if (bank < 0) bank += cartridge_->prgsz();
         return cartridge_->WritePrg(bank * 0x4000 + (addr & 0x3FFF), val);
     }
-    virtual void WriteChrBank(uint8_t bank, uint32_t addr, uint8_t val) {
+    virtual void WriteChrBank(int bank, uint32_t addr, uint8_t val) {
+        if (bank < 0) bank += cartridge_->chrsz();
         return cartridge_->WriteChr(bank * 0x1000 + (addr & 0x0FFF), val);
     }
 

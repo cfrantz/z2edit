@@ -5,9 +5,9 @@ misc {
     overworld_y_offset: 30
 
     start_values: { bank: 5 address: 0xbae3 }
-    start_lives:  { bank: 7 address: 0x8359 }
+    start_lives:  { bank: -1 address: 0x8359 }
     overworld_encounters: { address: 0x8409 }
-    overworld_mason_dixon: { bank: 7 address: 0xcb32 }
+    overworld_mason_dixon: { bank: -1 address: 0xcb32 }
     allocator_keepout: [
         # Room connectivity data
         { bank: 1 address: 0x871b length: 389 },
@@ -46,35 +46,35 @@ misc {
     raft_table: { bank: 0 address: 0x8528 }
 
     hidden_palace {
-        connector: { bank: 7 address: 0xdf66 }
+        connector: { bank: -1 address: 0xdf66 }
         cmpov: { bank: 2 address: 0x836c }
         cmpy: { bank: 2 address: 0x8372 }
         cmpx: { bank: 2 address: 0x8378 }
-        returny: { bank: 7 address: 0xccb0 }
-        ppu_macro: { bank: 7 address: 0xdf6a }
+        returny: { bank: -1 address: 0xccb0 }
+        ppu_macro: { bank: -1 address: 0xdf6a }
     }
     hidden_town {
-        connector: { bank: 7 address: 0xdf67 }
-        cmpov: { bank: 7 address: 0xdf92 }
-        cmpy: { bank: 7 address: 0xdf9c }
-        cmpx: { bank: 7 address: 0xdfa2 }
-        returny: { bank: 7 address: 0xcccb }
-        discriminator: { bank: 7 address: 0xccc4 }
+        connector: { bank: -1 address: 0xdf67 }
+        cmpov: { bank: -1 address: 0xdf92 }
+        cmpy: { bank: -1 address: 0xdf9c }
+        cmpx: { bank: -1 address: 0xdfa2 }
+        returny: { bank: -1 address: 0xcccb }
+        discriminator: { bank: -1 address: 0xccc4 }
     }
-    item_pickup_delay: { bank: 7 address: 0xe53c }
+    item_pickup_delay: { bank: -1 address: 0xe53c }
     text_delay: { bank: 3 address: 0xb615 }
     text_delay: { bank: 3 address: 0xb657 }
     text_delay: { bank: 3 address: 0xb74e }
 
 
-    palace_graphics: { bank: 7 address: 0xcd2a }
-    palace_palette: { bank: 7 address: 0xcd35 }
+    palace_graphics: { bank: -1 address: 0xcd2a }
+    palace_palette: { bank: -1 address: 0xcd35 }
     palace_table_len: 11
 
     beam_sword_time: { bank: 0 address: 0x986e }
     beam_sword_speed: { bank: 0 address: 0x9819 }
 
-    elevator_speed: { bank: 7 address: 0xd8bf }
+    elevator_speed: { bank: -1 address: 0xd8bf }
 
     overworld_tile_palettes: { bank: 0 address: 0x87e3 }
 }

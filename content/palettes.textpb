@@ -1,7 +1,7 @@
 palettes {
     name: "Overworld"
-    palette { name: "Overworld" address: { bank:7 address: 0xc45b } }
-    palette { name: "Sprites"   address: { bank:7 address: 0xc46b } }
+    palette { name: "Overworld" address: { bank: -1 address: 0xc45b } }
+    palette { name: "Sprites"   address: { bank: -1 address: 0xc46b } }
 }
 palettes {
     name: "West Hyrule"
