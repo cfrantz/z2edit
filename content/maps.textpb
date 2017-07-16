@@ -38,7 +38,7 @@ map {
     name: "maze_island"
     type: OVERWORLD
     connector: { bank: 2 address: 0xa0fc }
-    palette: { bank: 7 address: 0x8045b }
+    palette: { bank: 7 address: 0x845b }
     objtable: { bank: 0 address: 0x807a3 }
     chr: { bank: 0x11 }
     pointer: { bank: 2 address: 0x850a }
