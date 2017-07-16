@@ -1,0 +1,22 @@
+# Fix the level-up XP softlock by preventing the levelup screen during
+# screen transistions
+
+set ibase 16
+set bank -1
+
+# Patch the screen transition routine to forbid the levelup dialog from
+# occuring.  The HUD_update_routine will set $074c if the level up display
+# should pop up.  If we're in a screen transition, we don't want this to
+# happen, so reset it to zero.  The HUD_update_routine will keep setting it
+# until we get back to a side-view screen and can deal with it.
+
+asm e81a
+    JSR softlock_fix
+
+.org $feaa
+softlock_fix:
+    INC $0726
+    LDX #$00
+    STX $074c
+    RTS
+.end
