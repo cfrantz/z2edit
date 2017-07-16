@@ -75,4 +75,6 @@ misc {
     beam_sword_speed: { bank: 0 address: 0x9819 }
 
     elevator_speed: { bank: 7 address: 0xd8bf }
+
+    overworld_tile_palettes: { bank: 0 address: 0x87e3 }
 }

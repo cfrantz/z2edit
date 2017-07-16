@@ -1,6 +1,8 @@
 #include "nes/z2objcache.h"
 #include "nes/mapper.h"
 #include "imwidget/hwpalette.h"
+#include "proto/rominfo.pb.h"
+#include "util/config.h"
 #include "util/logging.h"
 
 namespace z2util {
@@ -83,12 +85,6 @@ void Z2ObjectCache::CreateObject(uint8_t obj) {
     int width = 16, height = 16;
     uint8_t tile, pal;
     uint8_t set = obj >> 6;
-    uint8_t overworld_pal[] = {
-        2, 2, 2, 2,
-        3, 0, 0, 0,
-        1, 1, 1, 1,
-        3, 3, 1, 1,
-    };
 
     // FIXME(cfrantz): Maybe rework this to use polymorphism instead of a
     // big if statement.
@@ -140,7 +136,8 @@ void Z2ObjectCache::CreateObject(uint8_t obj) {
     } else {
         int offset = (obj & 0x3f) * 4;
         if (schema_ == Schema::OVERWORLD) {
-            pal = overworld_pal[obj];
+            const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+            pal = mapper_->Read(misc.overworld_tile_palettes(), obj);
         } else {
             pal = set;
         }

@@ -96,6 +96,10 @@ message Miscellaneous {
     // The speed is a pair of bytes in a table encoding the down and up
     // speeds.
     Address elevator_speed = 24;
+
+    // Table of 16 values which encode which palette each of the overworld
+    // tile types uses.
+    Address overworld_tile_palettes = 25;
 }
 
 message Palette {
