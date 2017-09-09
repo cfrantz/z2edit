@@ -896,12 +896,16 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     case Absolute:
     case AbsoluteX:
     case AbsoluteY:
+        Write(*nexti, info.opcode[mode]);
+        Write16(*nexti+1, addr);
+        *nexti += 3;
+        break;
     case IndexedIndirect:
     case Indirect:
     case IndirectIndexed:
         Write(*nexti, info.opcode[mode]);
-        Write16(*nexti+1, addr);
-        *nexti += 3;
+        Write(*nexti+1, addr);
+        *nexti += 2;
         break;
     case ZeroPage:
     case ZeroPageX:
