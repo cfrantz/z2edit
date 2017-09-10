@@ -100,6 +100,11 @@ message Miscellaneous {
     // Table of 16 values which encode which palette each of the overworld
     // tile types uses.
     Address overworld_tile_palettes = 25;
+
+    // The location holding the spell names.  The ROM stores the tiles
+    // which represent the spell selection dialog and the spell names are
+    // stored every 14 bytes from this base address.
+    Address spell_names = 26;
 }
 
 message Palette {

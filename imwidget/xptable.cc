@@ -2,6 +2,7 @@
 
 #include "imwidget/imapp.h"
 #include "nes/mapper.h"
+#include "nes/text_encoding.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
 #include "imgui.h"
@@ -30,6 +31,7 @@ bool ExperienceTable::Draw() {
     ImGui::Separator();
     int n = 0;
     for(auto& item : data_) {
+        ImGui::PushID(n*1000);
         if (n == 3) ImGui::Text(" ");
         if (n == 11) {
             ImGui::Text(
@@ -47,13 +49,24 @@ bool ExperienceTable::Draw() {
                 "Level 6", "Level 7", "Level 8", "1 UP");
             ImGui::Separator();
         }
-        ImGui::Text("%-20.20s", item.name);
+        if (n >=3 && n < 11) {
+            char *name = spell_names_[n-3];
+            if (ImGui::InputText("", name, 9)) {
+                Sanitize(name);
+                changed_ = true;
+            }
+            ImGui::SameLine();
+            ImGui::Text("     ");
+        } else {
+            ImGui::Text("%-20.20s", item.name);
+        }
         for(int i=0; i<8; i++) {
-            ImGui::PushID(n*100 + i);
+            ImGui::PushID(i);
             ImGui::SameLine();
             changed_ |= ImGui::InputInt("", &item.val[i]);
             ImGui::PopID();
         }
+        ImGui::PopID();
         n++;
     }
 
@@ -62,20 +75,39 @@ bool ExperienceTable::Draw() {
     return changed_;
 }
 
+void ExperienceTable::Sanitize(char *name) {
+    int i;
+    for(i=0; *name; name++, i++) {
+        int ch = TextEncoding::ToZelda2(*name);
+        if (ch) {
+            *name = TextEncoding::FromZelda2(ch);
+        } else {
+            // replace unknown characters with '.'
+            *name = '.';
+        }
+    }
+    while(i < 8) {
+        *name++ = '.';
+        i++;
+    }
+    *name = '\0';
+}
+
 void ExperienceTable::LoadSaveWorker(
         std::function<void(const char*, const Address&)> load8,
-        std::function<void(const char*, const Address&, int)> loadlevelup) {
+        std::function<void(const char*, const Address&, int)> loadlevelup,
+        std::function<void(char*, const Address&, int)> loadspell) {
     const auto& xpt = ConfigLoader<RomInfo>::GetConfig().xptable();
+    const auto& snt = ConfigLoader<RomInfo>::GetConfig().misc().spell_names();
 
     load8("Sword Power", xpt.sword());
     load8("Small Damage", xpt.small_damage());
     load8("Large Damage", xpt.large_damage());
 
-    const char* names[] = {
-        "Shield", "Jump", "Life", "Fairy", "Fire", "Reflect", "Spell", "Thunder"
-    };
     for(int i=0; i<8; i++) {
-        load8(names[i], xpt.magic(i));
+        // The spell names are stored every 14 bytes from the base address.
+        loadspell(spell_names_[i], snt, i*14);
+        load8(spell_names_[i], xpt.magic(i));
     }
     load8("Magic Effects", xpt.magic_effects());
 
@@ -86,6 +118,7 @@ void ExperienceTable::LoadSaveWorker(
 }
 
 void ExperienceTable::Load() {
+    data_.clear();
     auto load8 = [this](const char* name, const Address& addr) {
         Unpacked elem{name};
         for(int i=0; i<8; i++)
@@ -99,7 +132,14 @@ void ExperienceTable::Load() {
                         | mapper_->Read(addr, offset+i+24);
         data_.push_back(elem);
     };
-    LoadSaveWorker(load8, loadlevelup);
+    auto loadspell = [this](char* name, const Address& addr, int n) {
+        for(int i=0; i<8; i++, name++) {
+            *name = TextEncoding::FromZelda2(mapper_->Read(addr, n+i));
+        }
+        *name = '\0';
+    };
+
+    LoadSaveWorker(load8, loadlevelup, loadspell);
 }
 
 void ExperienceTable::Save() {
@@ -116,7 +156,12 @@ void ExperienceTable::Save() {
         }
         copy.erase(copy.begin());
     };
-    LoadSaveWorker(save8, savelevelup);
+    auto savespell = [this](char* name, const Address& addr, int n) {
+        for(int i=0; i<8; i++, name++) {
+            mapper_->Write(addr, n+i, TextEncoding::ToZelda2(*name));
+        }
+    };
+    LoadSaveWorker(save8, savelevelup, savespell);
     
     const auto& xpt = ConfigLoader<RomInfo>::GetConfig().xptable();
     for(int n=0,factor=10; n<3; n++, factor *= 10) {

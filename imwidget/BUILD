@@ -277,6 +277,7 @@ cc_library(
         ":base",
         ":error_dialog",
         "//nes:mappers",
+        "//nes:text_encoding",
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",

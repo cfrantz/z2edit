@@ -22,9 +22,11 @@ class ExperienceTable: public ImWindowBase {
   private:
     void LoadSaveWorker(
         std::function<void(const char*, const Address&)>,
-        std::function<void(const char*, const Address&, int)>);
+        std::function<void(const char*, const Address&, int)>,
+        std::function<void(char*, const Address&, int)>);
     void Load();
     void Save();
+    void Sanitize(char *name);
 
     struct Unpacked {
         const char *name;
@@ -33,6 +35,7 @@ class ExperienceTable: public ImWindowBase {
     Mapper* mapper_;
     bool changed_;
     std::vector<Unpacked> data_;
+    char spell_names_[8][9];
 };
 
 }  // z2util

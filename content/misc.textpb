@@ -77,4 +77,5 @@ misc {
     elevator_speed: { bank: -1 address: 0xd8bf }
 
     overworld_tile_palettes: { bank: 0 address: 0x87e3 }
+    spell_names: { bank: 0 address: 0x9c2a }
 }
