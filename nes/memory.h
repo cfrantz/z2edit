@@ -20,6 +20,7 @@ class Memory {
 
     void CheckAllBanksForKeepout(bool move=false);
 
+    void Reset() { moved_.clear(); }
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     static bool InKeepoutRegion(const Address& addr);
     static int key(const Address& a) {

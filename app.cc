@@ -92,6 +92,7 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     if (movekeepout == -1) {
         movekeepout = FLAGS_move_from_keepout;
     }
+    memory_.Reset();
     memory_.set_mapper(mapper_.get());
     memory_.CheckAllBanksForKeepout();
     if (movekeepout) {
