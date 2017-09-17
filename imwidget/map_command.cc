@@ -952,8 +952,9 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
     ImGui::PopItemWidth();
 
     if (map_.type() == MapType::TOWN) {
+        const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
         for(int i=0; i<2; i++) {
-            int w = map_.code() >> 2;
+            int world = map_.code() >> 2;
             int index = item->text[i];
             if (index < 0)
                 continue;
@@ -964,9 +965,11 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
             }
             ImGui::PushItemWidth(100);
             chg |= ImGui::InputInt("text      ", &item->text[i]);
+            Clamp(&item->text[i], 0, tt.length(world) - 1);
+
             ImGui::PopItemWidth();
             std::string val;
-            text_.Get(w, index, &val);
+            text_.Get(world, index, &val);
 
             ImGui::SameLine();
             ImGui::Text("%s", val.c_str());
