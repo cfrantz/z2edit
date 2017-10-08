@@ -1,35 +1,25 @@
-# Initialize
+######################################################################
+#
+# z2edit script to create an extra overworlds + extra palaces hack
+#
+######################################################################
 set ibase 16
-set bank 7
-# General copy loop
-wbp cd98 4c df cd a0 00 b1 02 91 20 c8 10 f9 ca f0 0e b1 02 91 20 c8 d0 f9 e6 03 e6 21 ca d0 e8 60
-# Overworld destinations
-wbp cddf a9 00 85 20 a9 6a 85 21 a2 05 20 9b cd
-# Overworld
-wbp cdec ae 06 07 bd 27 cd aa bd 08 85 85 02 bd 09 85 85 03 a9 7c 85 21 a2 07 20 9b cd
-# Enemy list
-wbp ce06 a9 a0 85 02 a9 88 85 03 a9 70 85 21 a2 08 20 9b cd
-# Adjust destination setup
-wbp cd91 85 02
-wbp cd96 85 03
-# Fill newly unused space with FF
-wbp cdb6 ff
-wbp cdb7 ff ff ff ff ff ff ff ff
-wbp cdbf ff ff ff ff ff ff ff ff
-wbp cdc7 ff ff ff ff ff ff ff ff
-wbp cdcf ff ff ff ff ff ff ff ff
-wbp cdd7 ff ff ff ff ff ff ff ff
-# Adjust overworld compressed destination and length
-wbp cdfd a9 7a
-wbp ce01 a2 0b
+
+# Adjust the src pointer of RAM overworld maps to $7a00
+# The instruction encoded here is "lda #$7a"
 wbp b=0 87f7 a9 7a
+
 # Adjust overworld vertical size from 75 to 96
+# This adjusts the height comparison: "cmp #$60"
 wbp b=0 8824 c9 60
 wbp b=0 8922 c9 60
 wbp b=0 8c29 c9 60
 wbp b=1 83dc c9 60
 wbp b=2 83dc c9 60
-# Fix the set_bank7 routine in every bank
+
+# Fix the set_bank7 routine in every bank.  We're going to move bank 7
+# to bank 15.
+# The instruction encoded here is "lda #$0f"
 wbp b=0 bf95 a9 0f
 wbp b=1 bf95 a9 0f
 wbp b=2 bf95 a9 0f
@@ -38,18 +28,13 @@ wbp b=4 bf95 a9 0f
 wbp b=5 bf95 a9 0f
 wbp b=6 bf95 a9 0f
 wbp b=7 bf95 a9 0f
-# Write a 4-byte tables at cddb [bank to switch to]
-wbp cddb 01 02 02 0e
-# Rewrite the bank selection routine to use the table at cdd7
-wbp cd48 d0 0d ac 06 07 c0 01 d0 03 ac 0a 07 b9 db cd 8d 69 07 20 cc ff ad 69 07 ea ea
-## # Write a 4-byte tables at cddb [overworld offset]
-## wbp cddb 00 02 00 00
-## # Rewrite the overworld selection to use the table at cddb
-## wbp cdef bd db cd
-# overwrite the overworld offset table at cd27, since we're going to move
-# the palace graphics/palette tables anyway
-wbp cd27 00 02 00 00
-# Insert PRG banks at 7, creating space and moving 7 to 15
+
+# Disable turning palaces to stone, since z2edit currently doesn't support
+# editing this data.
+wbp b=1 8797 ff ff ff ff
+wbp b=2 8797 ff ff ff ff
+
+# Insert 8 empty PRG banks at bank 7, thus moving the real bank 7 to bank 15
 insertprg 7
 insertprg 7
 insertprg 7
@@ -58,48 +43,24 @@ insertprg 7
 insertprg 7
 insertprg 7
 insertprg 7
-# Copy PRG bank 2 into bank 14
+
 set ibase 10
+# Copy PRG bank 2 to bank 14 (extra overworld)
 copyprg 2 14
+# Copy PRG bank 4 into bank 13 (extra palaces, worlds 6 and 7)
+copyprg 4 13
 # Copy CHR banks 4 and 5 into 28 and 29
 copychr 4 28
 copychr 5 29
-# Copy PRG bank 4 into bank 13 (extra palaces, worlds 6 and 7)
-copyprg 4 13
+
+
 set ibase 16
 set bank f
-# Update/extend the world to bank table at c4b7
-wbp c4b7 01 03 03 04 04 05 0d 0d
-# Create a world to enemy area offset table at cdcf (vanilla address c4bd)
-wbp cdcf 00 00 00 00 02 00 00 02
-# update references to c4bd to point at cdcf
-wbp c50d cf cd
-wbp cd8b cf cd
-# Now that we have 4 overworlds, rewrite the palace graphcis table to use 16 bytes
-wbp cd2b 04 05 09 09 0a 0a 0a 0a 0b 0c 06 09 04 04 04 04
-wbp cd3b ff ff ff ff ff
-# Update the pointer to the graphics table
-wbp cd73 2b cd
-# Create a 16-byte palette table at cdb6
-wbp cdb6 00 10 20 20 30 30 30 30 40 50 60 00 10 20 30 40
-# Update the pointer to the palette table
-wbp ce33 b6 cd
-# Rewrite the area calculation routine from continent*5+world to
-# continent*8+world
-wbp cf35 0a ea ea
-# Rewrite the item bitmap calculator, considering our previous change
-wbp c2b6 ea
-wbp c2bd a9 06 ea
-# Rewrite the item presense pointer table from 16 pointers to 32 offsets
-# 
-# world   0  1  2  3  4  5  6  7
-wbp c265 00 60 60 80 a0 c0 80 a0  # West Hyrule
-wbp c26d 20 60 60 80 a0 c0 80 a0  # DM, MZ, "third mountain/third island"
-wbp c275 40 60 60 80 a0 c0 80 a0  # East Hyrule
-wbp c27d 40 60 60 80 a0 c0 80 a0  # Third Hyrule
-# Update the two bits of code which check if you're in P7 to use the world code
-wbp cad0 ad 07 07 c9 05 f0 07
-wbp dd27 ad 07 07 c9 05
+######################################################################
+# These memmoves move some jump tables into the some of the freespace
+# areas in bank 15 (nee bank 7) so they can be extended to handle the
+# extra worlds.
+######################################################################
 # Update the per-world tile build jumptable (I think?)
 memmove b=f ff4c c819 12
 memmove b=f ff5e c825 4
@@ -112,16 +73,198 @@ wbp c907 aa fe
 memmove b=f c927 c921 4
 wbp c92b ff ff ff ff ff
 wbp c930 ff ff ff ff ff ff ff ff ff ff ff ff
-# Put the north/south frontier table in one of the newly freed areas (and erase
-# the old one)
-wbp cd3c 3c 4b 4c 4c
-wbp cb32 ff ff ff
-wbp cc15 3c cd
-# Fix the "type B" palace detector to recognize both worlds 4 & 7 as type B
-wbp cdc6 ac 07 07 b9 cf cd 60
-wbp ce7f 20 c6 cd ea ea f0
-# Disable turning palaces to stone, since z2edit currently doesn't suuport
-# editing this data.
-wbp b=1 8797 ff ff ff ff
-wbp b=2 8797 ff ff ff ff
-wbp b=14 8797 ff ff ff ff
+
+######################################################################
+# Enter assembly mode in bank 15 (nee bank 7) and rewrite some code
+# for memory copies and destination tables.
+######################################################################
+asm 0
+; Set up the src pointer for overworld transfers to be consistent with
+; our new copy loop
+.org $cd91
+        STA $02
+.org $cd96
+        STA $03
+
+.org $cd98
+        JMP copy_overworld_destinations
+copy_half_paragraphs:
+; Copy X-reg number of half-paragraphs from ($02/03) to ($20/21).
+        LDY #$00
+copybyte1:
+        LDA ($02),Y             ; load data from src pointer
+        STA ($20),Y             ; store at dst pointer
+        INY                     ; increment loop counter
+        BPL copybyte1           ; copied 128 bytes yet?
+        DEX                     ; decrement number of half-paragraphs
+        BEQ copydone            ; all done?
+copybyte2:
+        LDA ($02),Y             ; load data from src pointer
+        STA ($20),Y             ; store at dst pointer
+        INY                     ; increment loop counter
+        BNE copybyte2           ; copied 256 bytes yet?
+        INC $03                 ; increment src hi-byte
+        INC $21                 ; increment dst hi-byte
+        DEX                     ; decrement number of half-paragraphs
+        BNE copybyte1           ; all done?
+copydone:
+        RTS
+
+; Unused space - fill with ff
+.db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
+.db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
+.db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
+.db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
+.db $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
+.db $ff
+
+copy_overworld_destinations:
+        LDA #$00                ; copy overworld destinations to $6a00
+        STA $20
+        LDA #$6a
+        STA $21
+        LDX #$05                ; 5 half-paragraphs (640 bytes)
+        JSR copy_half_paragraphs
+
+copy_overworld:
+        LDX $0706               ; overworld index
+        LDA overworld_pointer_offset,X   ; overworld pointer offset
+        TAX
+        LDA $8508,X             ; overworld src pointer
+        STA $02
+        LDA $8509,X
+        STA $03
+        LDA #$7a                ; ram destination $7a00
+        STA $21
+        LDX #$0b                ; 11(dec) half paragraphs (1408 bytes)
+        JSR copy_half_paragraphs
+
+copy_enemy_lists:
+        LDA #$a0                ; enemy lists at $88a0
+        STA $02
+        LDA #$88
+        STA $03
+        LDA #$70                ; destination $7000
+        STA $21
+        LDX #$08                ; 8 half paragraphs (1024 bytes)
+        JSR copy_half_paragraphs
+
+.org $cd27
+overworld_pointer_offset:
+.db $00,$02,$00,$00
+
+.org $cddb
+overworld_banks:
+.db $01,$02,$02,$0e
+
+.org $cd48
+overworld_check_bank_switch:
+        ; Prior instructions load and check current world's bank
+        ; If we're not on the overworld, go immediately to bank switch
+        BNE do_bank_switch
+        LDY $0706                   ; Get overworld index
+        CPY #$01                    ; Are we on DM/MZ
+        BNE get_overworld_bank      ; No
+        LDY $070a                   ; Yes, get previous overworld index
+get_overworld_bank:
+        LDA overworld_banks,Y       ; Load the overworld bank
+do_bank_switch:
+        STA $0769                   ; store it in bank-to-switch-to
+        JSR $ffcc                   ; bank switch
+        LDA $0769                   ; reload it
+        NOP
+        NOP
+
+;
+.org $c4b7
+world_to_bank_table:
+.db $01,$03,$03,$04,$04,$05,$0d,$0d
+.org $cdcf
+world_to_enemy_offset_table:
+.db 0,0,0,0,2,0,0,2
+
+; Update users of the world_to_enemy_offset_table
+.org $c50c
+        LDA world_to_enemy_offset_table,Y
+.org $cd8a
+        LDA world_to_enemy_offset_table,Y
+
+; Fix the "type B" palace detector to recognize both worlds 4 & 7 as type B
+.org $cdc6
+        LDY $0707
+        LDA world_to_enemy_offset_table,Y
+        RTS
+.org $ce7f
+        JSR $cdc6
+        NOP
+        NOP
+        BEQ #$08 ;[dest=ce8e]
+
+; Since we have 4 overworlds now, rewrite the palace graphics table
+; to use 16 bytes (ov*4 + entry id)
+.org $cd2b
+palace_graphics_banks:
+.db $04,$05,$09,$09,$0a,$0a,$0a,$0a, $0b,$0c,$06,$09,$04,$04,$04,$04
+.db $ff,$ff,$ff,$ff
+
+.org $cdb6
+palace_palette_offsets:
+.db $00,$10,$20,$20,$30,$30,$30,$30,$40,$50,$60,$00,$10,$20,$30,$40
+
+.org $cd72
+        LDA palace_graphics_banks,Y
+.org $ce32
+        LDA palace_palette_offsets,Y
+
+; Put the north/south frontier table in one of the newly freed areas (and erase
+; the old one)
+.org $cd3c
+north_south_frontier:
+.db $3c,$4b,$4c,$4c
+.org $cb32
+.db $ff,$ff,$ff
+.org $cc14
+        CMP north_south_frontier,Y
+
+; Rewrite the area calculation routine from continent*5+world to
+; continent*8+world
+.org $cf35
+        ASL
+        NOP
+        NOP
+; Rewrite the item bitmap calculator, considering our previous change
+.org $c2b6
+        NOP
+.org $c2bd
+        LDA #$06
+        NOP
+; Rewrite the item presense pointer table from 16 pointers to 32 offsets
+;
+;    0   1   2   3   4   5   6   7
+.org $c265
+.db $00,$60,$60,$80,$a0,$c0,$80,$a0  ; West Hyrule
+.db $20,$60,$60,$80,$a0,$c0,$80,$a0  ; DM, MZ, "third mountain/third island"
+.db $40,$60,$60,$80,$a0,$c0,$80,$a0  ; East Hyrule
+.db $40,$60,$60,$80,$a0,$c0,$80,$a0  ; Third Hyrule
+
+; Update the two bits of code which check if you're in P7 to use the world code
+.org $cad0
+        LDA $0707
+        CMP #$05
+        BEQ #$07 ;[dest=cade]
+.org $dd27
+        LDA $0707
+        CMP #$05
+.end
+
+######################################################################
+# Enter assembly mode in bank 6 and fixup the world detection for
+# deciting which music to play
+######################################################################
+asm b=6 0
+.org $9bff
+        CMP #$05
+        BEQ #$3d ;[dest=9c40]
+.org $bf8d
+        LDA #$0f
+.end
