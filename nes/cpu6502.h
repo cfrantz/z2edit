@@ -138,6 +138,9 @@ class Cpu {
         return (a & 0xFF00) != (b & 0xFF00);
     }
     void Branch(uint16_t addr);
+    Cpu::AsmError ParseDataPseudoOp(const std::string& op,
+                                    const std::string& operand,
+                                    uint16_t* nexti);
 
     Mapper* mapper_;
     CpuFlags flags_;
@@ -151,8 +154,9 @@ class Cpu {
     bool irq_pending_;
 
     int bank_;
-    std::map<std::string, uint16_t> labels_;
+    std::map<std::string, uint32_t> labels_;
     std::map<uint16_t, std::string> fixups_;
+    std::map<uint16_t, std::pair<int, std::string>> data_fixups_;
 
     static void BuildAsmInfo();
     struct AsmInfo {

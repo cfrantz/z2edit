@@ -17,6 +17,7 @@ cc_library(
     srcs = ["cpu6502.cc"],
     deps = [
         ":mappers",
+        "//util:string",
     ],
 )
 

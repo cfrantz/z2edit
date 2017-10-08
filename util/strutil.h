@@ -20,6 +20,7 @@ using google::protobuf::HasPrefixString;
 using google::protobuf::StripPrefixString;
 using google::protobuf::HasSuffixString;
 using google::protobuf::StripSuffixString;
+using google::protobuf::StripWhitespace;
 
 using google::protobuf::LowerString;
 using google::protobuf::UpperString;

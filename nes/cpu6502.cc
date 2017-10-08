@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <gflags/gflags.h>
 #include "nes/cpu6502.h"
+#include "util/strutil.h"
 
 void Cpu::Branch(uint16_t addr) {
     static uint16_t last_pc, last_addr;
@@ -754,6 +755,12 @@ void Cpu::BuildAsmInfo() {
 
         }
     }
+    asminfo_.emplace(".DB", AsmInfo{".DB",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
+    asminfo_.emplace(".DW", AsmInfo{".DW",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
+    asminfo_.emplace(".DD", AsmInfo{".DD",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
     asminfo_.emplace(".END", AsmInfo{".END",
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
     asminfo_.emplace(".ORG", AsmInfo{".ORG",
@@ -777,22 +784,73 @@ void Cpu::BuildAsmInfo() {
     }
 }
 
+Cpu::AsmError Cpu::ParseDataPseudoOp(const std::string& op,
+                                     const std::string& operand,
+                                     uint16_t* nexti) {
+    int base;
+    int size;
+    bool negate;
+    uint32_t val;
+
+    if (op == ".DB") {
+        size = 1;
+    } else if (op == ".DW") {
+        size = 2;
+    } else if (op == ".DD") {
+        size = 4;
+    } else {
+        return AsmError::UnknownOpcode;
+    }
+
+    for(auto& arg : Split(operand, ",")) {
+        printf("Got arg '%s'\n", arg.c_str());
+        StripWhitespace(&arg);
+        base = 0;
+        negate = false;
+        val = 0xFFFFFFFF;
+        if (arg.empty()) continue;
+        if (arg[0] == '-') {
+            negate = true;
+            arg.erase(0, 1);
+        }
+        if (arg[0] == '$') {
+            base = 16;
+            arg.erase(0, 1);
+            val = strtoul(arg.c_str(), 0, base);
+        } else if (isdigit(arg[0])) {
+            val = strtoul(arg.c_str(), 0, base);
+        } else {
+            data_fixups_[*nexti] = std::make_pair(size, arg);
+        }
+        if (negate) val = -val;
+        int sz = size;
+        while(sz) {
+            Write(*nexti, val & 0xFF);
+            *nexti +=1;
+            sz--;
+            val >>= 8;
+        }
+    }
+    return AsmError::Meta;
+}
+
 Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     std::string opcode, operand;
     for (auto& c : code) c = toupper(c);
     auto p = code.find(';');
     if (p != std::string::npos) code.resize(p);
-    while(!code.empty() && code.at(0) == ' ') {
-        code.erase(0, 1);
-    }
-    while(!code.empty() && code.at(code.size()-1) == ' ') {
-        code.resize(code.size()-1);
-    }
+    StripWhitespace(&code);
 
     p = code.find(' ');
+    auto eq = code.find('=');
+    if (eq != std::string::npos && eq < p) {
+        p = eq;
+    }
     opcode = code.substr(0, p);
     if (opcode == ".END") {
         return AsmError::End;
+    } else if (opcode == ".DB" || opcode == ".DW" || opcode == ".DD") {
+        return ParseDataPseudoOp(opcode, code.substr(p), nexti);
     } else if (opcode == "") {
         return AsmError::None;
     }
@@ -953,6 +1011,7 @@ std::vector<std::string> Cpu::ApplyFixups() {
             error.push_back(buf);
             continue;
         }
+
         uint8_t opcode = Read(f.first);
         InstructionInfo info = info_[opcode];
         switch(AddressingMode(info.mode)) {
@@ -980,6 +1039,25 @@ std::vector<std::string> Cpu::ApplyFixups() {
         default:
             sprintf(buf, "Impossible to have a fixup at $%04x", f.first);
             error.push_back(buf);
+        }
+    }
+    for(const auto& f : data_fixups_) {
+        uint16_t addr = f.first;
+        int size = f.second.first;
+        const auto& label = labels_.find(f.second.second);
+        if (label == labels_.end()) {
+            sprintf(buf, "Fixup at $%04x: label %s not found",
+                    f.first, f.second.second.c_str());
+            error.push_back(buf);
+            continue;
+        }
+        uint32_t val = label->second;
+
+        while(size) {
+            Write(addr, val & 0xff);
+            size -= 1;
+            addr += 1;
+            val >>= 8;
         }
     }
     return error;
