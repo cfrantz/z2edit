@@ -3,11 +3,14 @@
 #include "google/protobuf/text_format.h"
 #include "imwidget/imapp.h"
 #include "imwidget/error_dialog.h"
+#include "ips/ips.h"
 #include "nes/cartridge.h"
 #include "util/compress.h"
 #include "util/file.h"
 #include "util/logging.h"
 #include "util/os.h"
+#include "util/status.h"
+#include "util/statusor.h"
 
 using google::protobuf::TextFormat;
 namespace z2util {
@@ -164,6 +167,46 @@ bool Project::ImportRom(const std::string& filename) {
 bool Project::ExportRom(const std::string& filename) {
     cartridge_->SaveFile(filename);
     return true;
+}
+
+util::Status Project::ExportIps(const std::string& filename, int original, int modified) {
+    auto orig = rom(original);
+    if (!orig.ok()) {
+        return orig.status();
+    }
+    auto mod = rom(modified);
+    if (!mod.ok()) {
+        return mod.status();
+    }
+
+    std::string patch = ips::CreatePatch(orig.ValueOrDie(), mod.ValueOrDie());
+    if (!File::SetContents(filename, patch)) {
+        return util::Status(util::error::Code::UNKNOWN, "Could not save file");
+    }
+    return util::Status();
+}
+
+
+StatusOr<std::string> Project::rom(int n) {
+    if (n == 0) {
+        return cartridge_->SaveRom();
+    }
+    if (n < 0) {
+        // Negative indexes:
+        // -1 = newest commit
+        // -2 = second newest commit
+        // etc..
+        n = project_.history_size() + n;
+    } else {
+        // Positive indexes:
+        // 1 = first commit, etc...
+        n -= 1;
+    }
+    if (n < 0 || n >= project_.history_size()) {
+        return util::Status(util::error::Code::INVALID_ARGUMENT,
+                            "Invalid history index");
+    }
+    return ZLib::Uncompress(project_.history(n).rom());
 }
 
 void Project::Commit(const std::string& message) {

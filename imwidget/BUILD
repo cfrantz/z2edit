@@ -309,12 +309,14 @@ cc_library(
     deps = [
         ":base",
         ":error_dialog",
+        "//ips:ips",
         "//nes:cartridge",
         "//proto:project",
         "//util:compress",
         "//util:file",
         "//util:os",
         "//util:logging",
+        "//util:status",
         "//external:imgui",
     ],
 )

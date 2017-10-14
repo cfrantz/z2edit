@@ -178,6 +178,11 @@ void Z2Edit::SaveFile(DebugConsole* console, int argc, char **argv) {
     }
     if (ends_with(argv[1], "nes") || ends_with(argv[1], "NES")) {
         cartridge_.SaveFile(argv[1]);
+    } else if (ends_with(argv[1], "ips") || ends_with(argv[1], "IPS")) {
+        auto result = project_.ExportIps(argv[1]);
+        if (!result.ok()) {
+            console->AddLog("[error] %s", result.ToString().c_str());
+        }
     } else {
         bool as_text = ends_with(argv[1], "textpb");
         project_.Save(argv[1], as_text);
@@ -902,6 +907,14 @@ export_as:
                 if (result == NFD_OKAY) {
                     export_filename_.assign(filename);
                     project_.ExportRom(export_filename_);
+                }
+                free(filename);
+            }
+            if (ImGui::MenuItem("Export IPS Patch")) {
+                char *filename = nullptr;
+                auto result = NFD_SaveDialog("ips", nullptr, &filename);
+                if (result == NFD_OKAY) {
+                    project_.ExportIps(filename);
                 }
                 free(filename);
             }
