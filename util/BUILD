@@ -89,7 +89,7 @@ cc_library(
 		"strutil.h",
 	],
 	deps = [
-		"@google_protobuf//:protobuf",
+		"@com_google_protobuf//:protobuf",
 	]
 )
 
@@ -104,7 +104,7 @@ cc_library(
 		"status.cc",
 	],
 	deps = [
-		"@google_protobuf//:protobuf",
+		"@com_google_protobuf//:protobuf",
 	]
 )
 

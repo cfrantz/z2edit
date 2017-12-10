@@ -1,16 +1,19 @@
 ######################################################################
 # gflags
 ######################################################################
-git_repository(
-    name = "gflags_git",
-    #commit = "HEAD",  # Use the current HEAD commit
-    commit = "74bcd20c0e5b904a67e37abf0c1262824ff9030c",
-    remote = "https://github.com/gflags/gflags.git",
+load("//rules:patched_http_archive.bzl", "patched_http_archive")
+
+patched_http_archive(
+    name = "com_github_gflags_gflags",
+    urls = ["https://github.com/gflags/gflags/archive/77592648e3f3be87d6c7123eb81cbad75f9aef5a.zip"],
+    strip_prefix = "gflags-77592648e3f3be87d6c7123eb81cbad75f9aef5a",
+    sha256 = "94ad0467a0de3331de86216cbc05636051be274bf2160f6e86f07345213ba45b",
+    patch = "//rules:gflags.patch",
 )
 
 bind(
     name = "gflags",
-    actual = "@gflags_git//:gflags",
+    actual = "@com_github_gflags_gflags//:gflags",
 )
 
 ######################################################################
@@ -20,7 +23,7 @@ new_git_repository(
     name = "imgui_git",
     tag = "v1.49",
     remote = "https://github.com/ocornut/imgui.git",
-    build_file = "imgui.BUILD",
+    build_file = "//rules:imgui.BUILD",
 )
 
 bind(
@@ -39,7 +42,7 @@ new_git_repository(
 	name = "iconfonts",
 	remote = "https://github.com/juliettef/IconFontCppHeaders.git",
     commit = "fda5f470b767f7b413e4a3995fa8cfe47f78b586",
-    build_file = "iconfonts.BUILD",
+    build_file = "//rules:iconfonts.BUILD",
 )
 bind(
     name = "fontawesome",
@@ -50,9 +53,9 @@ bind(
 # protobuf
 ######################################################################
 git_repository(
-	name = "google_protobuf",
+	name = "com_google_protobuf",
 	remote = "https://github.com/google/protobuf.git",
-	tag = "v3.1.0"
+	tag = "v3.5.0"
 )
 
 ######################################################################
@@ -62,7 +65,7 @@ new_git_repository(
 	name = "nativefiledialog_git",
 	remote = "https://github.com/mlabbe/nativefiledialog.git",
     commit = "5cfe5002eb0fac1e49777a17dec70134147931e2",
-    build_file = "nfd.BUILD",
+    build_file = "//rules:nfd.BUILD",
 )
 
 bind(
