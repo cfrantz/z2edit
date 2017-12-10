@@ -58,15 +58,13 @@ git_repository(
 	tag = "v3.5.0"
 )
 
+######################################################################
+# Abseil
+######################################################################
 git_repository(
     name = "com_google_absl",
     remote = "https://github.com/abseil/abseil-cpp.git",
     commit = "ecc56367b8836a552b3716c643da99537c128a13",
-)
-
-bind(
-    name = "absl",
-    actual = "@com_google_absl//:absl",
 )
 
 ######################################################################
