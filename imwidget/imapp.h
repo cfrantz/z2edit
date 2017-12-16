@@ -13,11 +13,14 @@
 class ImApp {
   public:
     static ImApp* Get() { return singleton_; }
-    ImApp(const std::string& name, int width, int height, bool want_audio=true);
+    ImApp(const std::string& name, int width, int height);
     ImApp(const std::string& name) : ImApp(name, 1280, 720) {}
     virtual ~ImApp();
 
+    void InitControllers();
+    void InitAudio(int freq, int chan, int bufsz, SDL_AudioFormat fmt);
     virtual void Init() {}
+    virtual bool PreDraw() { return false; }
     virtual void Draw() {}
     virtual void ProcessEvent(SDL_Event* event) {}
     virtual void Help(const std::string& topickey) {}
@@ -47,27 +50,23 @@ class ImApp {
     }
 
     void AddDrawCallback(ImWindowBase* window);
-    void PlayAudio(float* data, int len);
     void HelpButton(const std::string& topickey, bool right_justify=false);
+
   protected:
+    virtual void AudioCallback(void* stream, int len);
     std::string name_;
     int width_;
     int height_;
     bool running_;
+    ImVec4 clear_color_;
     DebugConsole console_;
     std::vector<std::unique_ptr<ImWindowBase>> draw_callback_;
 
   private:
     void Quit(DebugConsole* console, int argc, char **argv);
-    void InitAudio(int freq, int chan, int bufsz, SDL_AudioFormat fmt);
-    void AudioCallback(float* stream, int len);
     static void AudioCallback_(void* userdata, uint8_t* stream, int len);
 
     static ImApp* singleton_;
-
-    std::unique_ptr<float[]> audiobuf_;
-    int audiobufsz_;
-    int audio_producer_, audio_consumer_;
 
     SDL_Window *window_;
     SDL_Renderer *renderer_;

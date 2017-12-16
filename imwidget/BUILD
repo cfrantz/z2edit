@@ -15,8 +15,10 @@ cc_library(
     ],
     deps = [
         "//util:fpsmgr",
+        "//util:gamecontrollerdb",
         "//util:imgui_sdl_opengl",
         "//util:logging",
+        "//util:os",
         "//external:gflags",
         "//external:imgui",
         "@com_google_absl//absl/strings",

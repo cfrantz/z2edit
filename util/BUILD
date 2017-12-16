@@ -1,6 +1,12 @@
 package(default_visibility=["//visibility:public"])
 
 cc_library(
+    name = "gamecontrollerdb",
+    hdrs = ["gamecontrollerdb.h"],
+    srcs = ["gamecontrollerdb.cc"],
+)
+
+cc_library(
     name = "browser",
     hdrs = [
         "browser.h",
@@ -97,6 +103,13 @@ cc_library(
 	hdrs = [
 		"fpsmgr.h",
 	],
+)
+
+cc_library(
+	name = "macros",
+	hdrs = [
+        "macros.h",
+    ],
 )
 
 cc_library(
