@@ -13,6 +13,8 @@
 #endif
 
 DEFINE_int32(max_map_height, 0, "Maximum height of overworld maps");
+DEFINE_int32(convert_unprogrammed_overworld_tiles, 0xFC,
+            "Convert unprogrammed overworld tiles (0xFF) to this value.");
 
 namespace z2util {
 
@@ -76,6 +78,9 @@ void Z2Decompress::DecompressOverWorld(const Map& map) {
     int i = 0;
     for(int n=0; n < width_ * height_; i++) {
         uint8_t val = Read(map.address(), i);
+        if (val == 0xFF) {
+            val = FLAGS_convert_unprogrammed_overworld_tiles;
+        }
         uint8_t type = val & 0x0f;
         uint8_t len = (val >> 4) + 1;
         for(int j=0; j<len; j++) {

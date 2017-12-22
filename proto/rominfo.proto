@@ -105,6 +105,10 @@ message Miscellaneous {
     // which represent the spell selection dialog and the spell names are
     // stored every 14 bytes from this base address.
     Address spell_names = 26;
+
+    int32 overworld_ram = 27;
+    repeated Address overworld_palace_ram = 28;
+    int32 palace_connection_id = 29;
 }
 
 message Palette {

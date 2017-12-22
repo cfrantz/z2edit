@@ -79,6 +79,7 @@ class OverworldConnectorList {
     bool DrawInEditor(int x, int y);
 
     OverworldConnector* GetAtXY(int x, int y);
+    int GetID(int x, int y);
     OverworldConnector* Swap(int a, int b);
 
     void GetXY(int n, int* x, int *y) {

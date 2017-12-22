@@ -78,4 +78,10 @@ misc {
 
     overworld_tile_palettes: { bank: 0 address: 0x87e3 }
     spell_names: { bank: 0 address: 0x9c2a }
+
+    overworld_ram: 0x7c00
+    overworld_palace_ram { bank: 1 address: 0x878f }
+    overworld_palace_ram { bank: 2 address: 0x8795 }
+    overworld_palace_ram { bank: 2 address: 0x878f }
+    palace_connection_id: 52
 }

@@ -213,6 +213,16 @@ OverworldConnector* OverworldConnectorList::GetAtXY(int x, int y) {
     return nullptr;
 }
 
+int OverworldConnectorList::GetID(int x, int y) {
+    int i = 0;
+    for(auto& c : list_) {
+        if (x == c.xpos() && y == c.ypos())
+            return i;
+        i++;
+    }
+    return -1;
+}
+
 OverworldConnector* OverworldConnectorList::Swap(int a, int b) {
     std::swap(list_[a], list_[b]);
 

@@ -116,17 +116,41 @@ void Editor::ConvertFromMap(Map* map) {
 }
 
 std::vector<uint8_t> Editor::CompressMap() {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     std::vector<uint8_t> data;
 
     for(int y=0; y<editor_->max_y; y++) {
         for(int x=0; x<editor_->max_x; x++) {
             uint8_t tile = editor_->data[y][x][0];
             uint8_t count = 0;
+            // For palaces, write the ram address to the "turn to stone" offsets
+            // in their respective rom banks.
+            int conn = connections_.GetID(x, y);
+            if (conn >= misc.palace_connection_id() &&
+                conn < misc.palace_connection_id() + 4) {
+                uint16_t addr = misc.overworld_ram() + data.size();
+                int n = conn - misc.palace_connection_id();
+                int w = map_->subworld() ? map_->subworld() : map_->overworld();
+                if (w != 1 || (w == 1 && n == 0)) {
+                    mapper_->WriteWord(misc.overworld_palace_ram(w), n*2, addr);
+                } else {
+                    LOGF(ERROR, "Palace at (%d, %d) connection ID %d not expected (%d).",
+                            x, y, conn, misc.palace_connection_id());
+                }
+            } else {
+                // Only log an error if its a Palace tile and the connection ID
+                // exists (and is not zero, for north palace).
+                if (tile == 0x02 && conn > 0) {
+                    LOGF(ERROR, "Palace at (%d, %d) connection ID %d not in expected range %d-%d.",
+                        x, y, conn, misc.palace_connection_id(),
+                        misc.palace_connection_id() + 3);
+                }
+            }
             // Don't compress magic connection spots, boulders or the
             // spider/river devil.
             if (connections_.NoCompress(x, y) ||
                 (!FLAGS_compress_boulders && (tile == 0x0E || tile == 0x0F))) {
-                data.push_back(tile | count << 4); 
+                data.push_back(tile | count << 4);
                 continue;
             }
             while(x+1 < editor_->max_x
@@ -137,7 +161,7 @@ std::vector<uint8_t> Editor::CompressMap() {
                 if (count == 15)
                     break;
             }
-            data.push_back(tile | count << 4); 
+            data.push_back(tile | count << 4);
         }
     }
     return data;
