@@ -43,6 +43,7 @@ class MapCommand {
     inline void set_relx(int x) { data_.x = x; }
     inline int relx() const { return data_.x; }
     inline uint8_t object() const { return object_; }
+    static void Init();
   private:
     int id_;
     const MapHolder* holder_;
@@ -62,7 +63,6 @@ class MapCommand {
     const char *summary_;
     const char *names_[100];
 
-    static void Init();
     static int newid();
 };
 

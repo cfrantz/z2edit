@@ -78,6 +78,7 @@ void Z2Edit::Init() {
     object_table_.reset(new z2util::ObjectTable);
     enemy_editor_.reset(new z2util::EnemyEditor);
     experience_table_.reset(new z2util::ExperienceTable);
+    drops_.reset(new z2util::Drops);
     editor_.reset(z2util::Editor::New());
     project_.set_cartridge(&cartridge_);
     project_.set_visible(true);
@@ -123,6 +124,9 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     start_values_->Refresh();
     text_table_->set_mapper(mapper_.get());
     text_table_->Refresh();
+
+    drops_->set_mapper(mapper_.get());
+    drops_->Refresh();
 
     object_table_->set_mapper(mapper_.get());
     object_table_->Refresh();
@@ -934,6 +938,8 @@ export_as:
         if (ImGui::BeginMenu("Edit")) {
             ImGui::MenuItem("Debug Console", nullptr,
                             &console_.visible());
+            ImGui::MenuItem("Drops", nullptr,
+                            &drops_->visible());
             ImGui::MenuItem("Enemy Attributes", nullptr,
                             &enemy_editor_->visible());
             ImGui::MenuItem("Experience Table", nullptr,
@@ -993,6 +999,7 @@ export_as:
     palette_editor_->Draw();
     hwpal_->Draw();
     chrview_->Draw();
+    drops_->Draw();
     simplemap_->Draw();
     editor_->Draw();
     object_table_->Draw();

@@ -33,6 +33,7 @@ cc_library(
     ],
     deps = [
         "//imwidget:base",
+        "//imwidget:drops",
         "//imwidget:editor",
         "//imwidget:enemyattr",
         "//imwidget:hwpalette",

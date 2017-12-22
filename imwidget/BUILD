@@ -320,3 +320,18 @@ cc_library(
         "//external:imgui",
     ],
 )
+
+cc_library(
+    name = "drops",
+    hdrs = ["drops.h"],
+    srcs = ["drops.cc"],
+    deps = [
+        ":base",
+        ":simplemap",
+        "//nes:mappers",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+    ],
+)
+

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "imwidget/imapp.h"
+#include "imwidget/drops.h"
 #include "imwidget/editor.h"
 #include "imwidget/enemyattr.h"
 #include "imwidget/hwpalette.h"
@@ -76,6 +77,7 @@ class Z2Edit: public ImApp {
     NesHardwarePalette* hwpal_;
     std::unique_ptr<NesChrView> chrview_;
     std::unique_ptr<z2util::SimpleMap> simplemap_;
+    std::unique_ptr<z2util::Drops> drops_;
     std::unique_ptr<z2util::Editor> editor_;
     std::unique_ptr<z2util::MiscellaneousHacks> misc_hacks_;
     std::unique_ptr<z2util::PalaceGraphics> palace_gfx_;

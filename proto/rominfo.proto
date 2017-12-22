@@ -310,6 +310,20 @@ message TextTable {
     MemoryRegion text_data = 4;
 }
 
+message ItemDrop {
+    message Dropper {
+        string name = 1;
+        Address item = 2;
+        Address enemy = 3;
+        Address hp = 4;
+        int32 world = 5;
+    }
+    Address counter = 1;
+    Address drop_table = 2;
+    Address acid_dripper = 3;
+    repeated Dropper drops = 4;
+}
+
 message RomInfo {
     string path = 1; // For internal use by the config loader
     repeated string load = 2;
@@ -332,4 +346,5 @@ message RomInfo {
     repeated GameHack palace_to_stone = 19;
     repeated OverworldEditorKeybind overworld_editor_keybind = 20;
     TextTable text_table = 21;
+    ItemDrop drop_info = 22;
 }

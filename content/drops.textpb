@@ -1,0 +1,29 @@
+drop_info {
+    counter { bank: -1 address: 0xe8a0 }
+    drop_table { bank: -1 address: 0xe870 }
+    drops {
+        name: "Hidden Jar"
+        item { bank: 4 address: 0xb84c }
+        world: 3
+    }
+    drops {
+        name: "Acid Dripper"
+        enemy { bank: 4 address: 0x9917 }
+        world: 3
+    }
+    drops {
+        name: "Hidden Jar/Enemy"
+        item { bank: 4 address: 0xaf6f }
+        enemy { bank: 4 address: 0xaf82 }
+        hp { bank: 4 address: 0xaf7e }
+        world: 4
+    }
+    drops {
+        name: "Great Palace Hidden Jar/Enemy"
+        item { bank: 5 address: 0xa52f }
+        enemy { bank: 5 address: 0xa540 }
+        hp { bank: 5 address: 0xa53c }
+        world: 5
+    }
+
+}
