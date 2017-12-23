@@ -1,9 +1,7 @@
 # TODO List
 
 1. Erase original map when re-compressing the maps.
-1. Palaces turn to stone after completion.
 1. Edit p-bag values.
-1. Edit strike-for-jar items/enemies
 1. Inventory of all the different townspeople (mostly done)
 
 ### Issues found in alpha-1 release
@@ -30,6 +28,10 @@
     * Create a vanilla ROM which fixes all sideview exit oddities.
 
 # Done
+
+### Misc
+1. Palaces turn to stone after completion (done).
+1. Edit strike-for-jar items/enemies (done)
 
 ### Add config which describes how to render towns (done)
 1. Townspeople text editor
