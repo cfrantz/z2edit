@@ -31,6 +31,7 @@ class Cartridge {
         FOUR,
     };
     Cartridge();
+    Cartridge(const Cartridge& orig);
     ~Cartridge();
 
     static bool IsNESFile(const std::string& filename);

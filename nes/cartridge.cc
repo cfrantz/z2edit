@@ -10,6 +10,21 @@ Cartridge::Cartridge()
     chr_(nullptr), chrlen_(0),
     trainer_(nullptr) { }
 
+Cartridge::Cartridge(const Cartridge& orig)
+  : header_(orig.header_),
+    prglen_(orig.prglen_),
+    chrlen_(orig.chrlen_),
+    mirror_(orig.mirror_) {
+    if (header_.trainer) {
+        trainer_.reset(new uint8_t[512]);
+        memcpy(trainer_.get(), orig.trainer_.get(), 512);
+    }
+    prg_.reset(new uint8_t[prglen_]);
+    memcpy(prg_.get(), orig.prg_.get(), prglen_);
+    chr_.reset(new uint8_t[chrlen_]);
+    memcpy(chr_.get(), orig.chr_.get(), chrlen_);
+}
+
 Cartridge::~Cartridge() { }
 
 bool Cartridge::IsNESFile(const std::string& filename) {

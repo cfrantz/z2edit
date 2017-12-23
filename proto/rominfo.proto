@@ -109,6 +109,9 @@ message Miscellaneous {
     int32 overworld_ram = 27;
     repeated Address overworld_palace_ram = 28;
     int32 palace_connection_id = 29;
+    int32 town_connection_id = 30;
+    Address world_to_bank = 31;
+
 }
 
 message Palette {

@@ -815,6 +815,52 @@ void Z2Edit::SpawnEmulator() {
     os::System(StrCat(FLAGS_emulator, " ", romtmp), true);
 }
 
+void Z2Edit::SpawnEmulator(
+        uint8_t bank,
+        uint8_t region,
+        uint8_t world,
+        uint8_t town_code,
+        uint8_t palace_code,
+        uint8_t connector,
+        uint8_t room) {
+
+    LOGF(INFO, "StartEmulator:");
+    LOGF(INFO, "  bank: %d", bank);
+    LOGF(INFO, "  region: %d", region);
+    LOGF(INFO, "  world: %d", world);
+    LOGF(INFO, "  town_code: %d", town_code);
+    LOGF(INFO, "  palace_code: %d", palace_code);
+    LOGF(INFO, "  connector: %d", connector);
+    LOGF(INFO, "  room: %d", room);
+
+    uint8_t inject[] = {
+        0xa9, bank,             // LDA #bank
+        0x8d, 0x69, 0x07,       // STA $0769
+        0xa9, region,           // LDA #region
+        0x8d, 0x06, 0x07,       // STA $0706
+        0xa9, world,            // LDA #world
+        0x8d, 0x07, 0x07,       // STA $0706
+        0xa9, town_code,        // LDA #town_code
+        0x8d, 0x6b, 0x05,       // STA $056b
+        0xa9, palace_code,      // LDA #palace_code
+        0x8d, 0x6c, 0x05,       // STA $056c
+        0xa9, connector,        // LDA #connector
+        0x8d, 0x48, 0x07,       // STA $0748
+        0xa9, room,             // LDA #room
+        0x8d, 0x61, 0x05,       // STA $0561
+        0x60,                   // RTS
+    };
+    uint16_t addr = 0xaa3f & 0x3FFF;
+
+    std::string romtmp = os::TempFilename(FLAGS_romtmp);
+    Cartridge temp(cartridge_);
+    for(size_t i=0; i < sizeof(inject); i++) {
+        temp.WritePrg(addr + i, inject[i]);
+    }
+    temp.SaveFile(romtmp);
+    os::System(StrCat(FLAGS_emulator, " ", romtmp), true);
+}
+
 void Z2Edit::ProcessEvent(SDL_Event* event) {
     editor_->ProcessEvent(event);
 }
@@ -824,6 +870,9 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
         project_.Commit(static_cast<const char*>(extra));
     } else if (msg == "loadpostprocess") {
         LoadPostProcess(reinterpret_cast<intptr_t>(extra));
+    } else if (msg == "emulate_at") {
+        const uint8_t* p = reinterpret_cast<const uint8_t*>(extra);
+        SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
     }
 }
 

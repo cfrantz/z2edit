@@ -1,4 +1,5 @@
 #include "imgui.h"
+#include "imwidget/imapp.h"
 #include "imwidget/map_connect.h"
 #include "imwidget/multimap.h"
 #include "imwidget/imutil.h"
@@ -129,6 +130,33 @@ void OverworldConnector::Write() {
     }
 }
 
+void OverworldConnector::StartEmulator() {
+    const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
+    uint8_t towns = misc.town_connection_id();
+    uint8_t palaces = misc.palace_connection_id();
+    uint8_t town_code=0, palace_code=0;
+    uint8_t connector = offset_;
+    if (offset_ >= towns && offset_ < towns+8) {
+        town_code = (offset_ - towns) / 2;
+        palace_code = 0xf8;
+        connector &= 0xFE;
+    } else if (offset_ >= palaces && offset_ < palaces + 4) {
+        palace_code = offset_ - palaces;
+    }
+    uint8_t bank = mapper_->Read(misc.world_to_bank(), dest_world_);
+    uint8_t overworld = dest_overworld_ ? dest_overworld_ : overworld_;
+    if (dest_world_ == 0) {
+        // Hack - there is no overworld bank table.
+        bank += overworld / 2;
+    }
+    if (subworld_) overworld = subworld_;
+
+    uint8_t params[] = { bank, overworld, uint8_t(dest_world_), town_code,
+                         palace_code, connector, uint8_t(map_) };
+    ImApp::Get()->ProcessMessage("emulate_at", params);
+
+}
+
 bool OverworldConnector::DrawInPopup() {
     bool chg = false;
     if (ImGui::Button("View Area")) {
@@ -139,6 +167,10 @@ bool OverworldConnector::DrawInPopup() {
             MultiMap::Spawn(mapper_,
                             dest_world_, 0, 0, map_);
         }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Emulate")) {
+        StartEmulator();
     }
 
     ImGui::Text("Position:");

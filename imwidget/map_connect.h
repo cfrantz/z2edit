@@ -15,6 +15,7 @@ class OverworldConnector {
                        uint8_t offset, int overworld, int subworld);
     OverworldConnector(const OverworldConnector& other);
     bool DrawInPopup();
+    void StartEmulator();
 
     inline int offset() const { return offset_; }
     inline int xpos() const { return x_; }
