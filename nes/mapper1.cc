@@ -182,3 +182,4 @@ void Mapper1::LoadRegister(uint16_t addr, uint8_t val) {
 }
 
 REGISTER_MAPPER(1, Mapper1);
+REGISTER_MAPPER(5, Mapper1);
