@@ -48,6 +48,7 @@ cc_library(
         "//imwidget:object_table",
         "//imwidget:xptable",
         "//nes:cartridge",
+        "//nes:chr_util",
         "//nes:cpu6502",
         "//nes:mappers",
         "//nes:text_encoding",

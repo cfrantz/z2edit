@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "imwidget/error_dialog.h"
 #include "nes/cpu6502.h"
+#include "nes/chr_util.h"
 #include "nes/text_encoding.h"
 #include "proto/rominfo.pb.h"
 #include "util/browser.h"
@@ -18,7 +19,6 @@
 #ifdef HAVE_NFD
 #include "nfd.h"
 #endif
-
 
 DEFINE_string(emulator, "fceux", "Emulator to run for testing");
 DEFINE_string(romtmp, "zelda2-test.nes", "Temporary filename for running under test");
@@ -55,7 +55,11 @@ void Z2Edit::Init() {
     RegisterCommand("asm", "Assemble Code.", this, &Z2Edit::Assemble);
     RegisterCommand("insertprg", "Insert a PRG bank.", this, &Z2Edit::InsertPrg);
     RegisterCommand("copyprg", "Copy a PRG bank to another bank.", this, &Z2Edit::CopyPrg);
+    RegisterCommand("insertchr", "Insert a CHR bank.", this, &Z2Edit::InsertChr);
     RegisterCommand("copychr", "Copy a CHR bank to another bank.", this, &Z2Edit::CopyChr);
+    RegisterCommand("charclear", "Clear an individual char.", this, &Z2Edit::CharClear);
+    RegisterCommand("charcopy", "Copy an individual char.", this, &Z2Edit::CharCopy);
+    RegisterCommand("charswap", "Swap an individual char.", this, &Z2Edit::CharCopy);
     RegisterCommand("memmove", "Move memory within a PRG bank.", this, &Z2Edit::MemMove);
     RegisterCommand("swap", "Swap memory within a PRG bank.", this, &Z2Edit::Swap);
     RegisterCommand("bcopy", "Copy memory between PRG banks.", this, &Z2Edit::BCopy);
@@ -665,6 +669,19 @@ void Z2Edit::CopyPrg(DebugConsole* console, int argc, char **argv) {
     console->AddLog("#{0f0}Copied PRG bank %d to %d", src, dst);
 }
 
+void Z2Edit::InsertChr(DebugConsole* console, int argc, char **argv) {
+    int bank = bank_;
+    if (argc < 2) {
+        console->AddLog("[error] %s: Wrong number of arguments.", argv[0]);
+        console->AddLog("[error] %s <bank>", argv[0]);
+        return;
+    }
+
+    bank = strtoul(argv[1], 0, ibase_);
+    cartridge_.InsertChr(bank, nullptr);
+    console->AddLog("#{0f0}Added CHR bank %d", bank);
+}
+
 void Z2Edit::CopyChr(DebugConsole* console, int argc, char **argv) {
     uint8_t src, dst;
     if (argc < 3) {
@@ -679,6 +696,55 @@ void Z2Edit::CopyChr(DebugConsole* console, int argc, char **argv) {
         mapper_->WriteChrBank(dst, i, mapper_->ReadChrBank(src, i));
     }
     console->AddLog("#{0f0}Copied CHR bank %d to %d", src, dst);
+}
+
+bool Z2Edit::ParseChr(const std::string& a, int* bank, uint8_t* addr) {
+    *bank = chrbank_;
+    const char* s = a.c_str();
+    const char* t = strchr(s, ':');
+    if (t) {
+        *bank = strtoul(s, 0, ibase_);
+        s = t+1;
+    }
+    *addr = strtoul(s, 0, ibase_);
+    return true;
+}
+
+void Z2Edit::CharClear(DebugConsole* console, int argc, char **argv) {
+    int bank = chrbank_;
+    uint8_t chr;
+    bool with_id = false;
+    if (argc < 2) {
+        console->AddLog("[error] Usage: %s [char{,char,char...}] [with_id]", argv[0]);
+        return;
+    }
+    if (!strcmp(argv[2], "true")) {
+        with_id = true;
+    }
+    ChrUtil util(mapper_.get());
+    for(const auto& s : Split(argv[1], ",")) {
+        ParseChr(s, &bank, &chr);
+        util.Clear(bank, chr, with_id);
+    }
+}
+
+void Z2Edit::CharCopy(DebugConsole* console, int argc, char **argv) {
+    int sbank, dbank;
+    uint8_t src, dst;
+    if (argc < 3) {
+        console->AddLog("[error] Usage: %s [dstchar] [srcchar]", argv[0]);
+        return;
+    }
+    ParseChr(argv[1], &dbank, &dst);
+    ParseChr(argv[1], &sbank, &src);
+    ChrUtil util(mapper_.get());
+    if (!strcmp(argv[0], "charcopy")) {
+        util.Copy(dbank, dst, sbank, src);
+    } else if (!strcmp(argv[0], "charswap")) {
+        util.Swap(dbank, dst, sbank, src);
+    } else {
+        console->AddLog("[error] Usage: %s [dstchar] [srcchar]", argv[0]);
+    }
 }
 
 void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
@@ -696,6 +762,8 @@ void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
             ibase_ = strtoul(argv[++i], 0, 0);
         } else if (!strcmp(argv[i], "bank")) {
             bank_ = strtoul(argv[++i], 0, ibase_);
+        } else if (!strcmp(argv[i], "chrbank")) {
+            chrbank_ = strtoul(argv[++i], 0, ibase_);
         } else if (!strcmp(argv[i], "text")) {
             text_encoding_ = strtoul(argv[++i], 0, ibase_);
         } else if (!strcmp(argv[i], "emulator")) {

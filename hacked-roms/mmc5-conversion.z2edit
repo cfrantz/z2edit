@@ -14,6 +14,7 @@ bank7_reset:
     stx     $2000
     inx
     stx     $5100           ; two 16k PRG banks
+    stx     $5101           ; CHR mode 2x4k banks
 wait_ppu:
     lda     $2002
     bpl     wait_ppu
@@ -22,11 +23,10 @@ wait_ppu:
     txs
 
     stx     $5117           ; Top bank is last bank
-    inx                     ; X = 0
-    stx     $5101           ; CHR mode is 8kb
+    nop                     ; X = 0
     nop
     nop
-    
+
     lda     #$50            ; horizontal mirroring
     jsr     bank7_Config_Register
     jsr     bank7_chr_bank_switch__load_A
@@ -48,13 +48,15 @@ bank7_Config_Register:
 .db $ea,$ea,$ea,$ea
 
 bank7_chr_bank_switch__load_A:
-    lsr
+    sta     $5123
+    ora     #1
     sta     $5127
+    lsr
+    ora     #$20
     sta     $512b
     lda     #0
+    clc
     rts
-.db $ea,$ea,$ea,$ea
-.db $ea,$ea,$ea,$ea
 .db $ea,$ea
 
 bank7_Load_Bank_0_at_0x8000:
@@ -85,3 +87,373 @@ asm b=0 0
 .org $a86b
     jsr     $ffb1
 .end
+
+asm b=5 0
+; Clean up stuff in bank 5 - make it go via bank7's routines.
+.org $a712
+    lda     #$50            ; horizontal mirroring
+    jsr     $ff9d
+.org $a728
+    jsr     $ffb1
+.end
+
+######################################################################
+# Add 16 x 8k banks: the nes file format considers banks as 8k units, however
+# mappers may consider them differently.  We want to extend the CHR memory
+# out to the next power of 2.
+######################################################################
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+insertchr 0x10
+
+######################################################################
+# Copy the odd numbered 4k banks to the newly added banks, then clear
+# background objects from the original banks and clear sprite objects
+# from the newly copied banks.
+######################################################################
+copychr 0x01 0x20
+
+######################################################################
+# Bank 3 is western hyrule
+######################################################################
+copychr 0x03 0x21
+set chrbank 3
+charclear 28,29,2a,2b,2c,2d true
+charclear 32,33,34,35,36,37,38,39,3a,3b,3c,3d,3e,3f true
+charclear 40,41,42,43,44,45,46,47,48,49,4a,4b,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b,5c,5d,5e,5f true
+charclear 60,61,62,63,64,65,66,67,68,69,6a,6b,6c,6d,6e,6f true
+charclear 7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab,ac,ad,ae,af true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+set chrbank 21
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,2e,2f true
+charclear 30,31 true
+charclear 70,71,72,73,74,75,76,77 true
+charclear 70,71,72,73,74,75,76,77 true
+charclear 80,81,82,83 true
+
+######################################################################
+# Bank 3 is eastern hyrule
+######################################################################
+copychr 0x05 0x22
+set chrbank 5
+charclear 28,29,2a,2b,2c,2d true
+charclear 32,33,34,35,36,37,38,39,3a,3b,3c,3d,3e,3f true
+charclear 40,41,42,43,44,45,46,47,48,49,4a,4b,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b,5c,5d,5e,5f true
+charclear 60,61,62,63,64,65,66,67,68,69,6a,6b,6c,6d,6e,6f true
+charclear 7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab,ac,ad,ae,af true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 22
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,2e,2f true
+charclear 30,31 true
+charclear 70,71,72,73,74,75,76,77 true
+charclear 70,71,72,73,74,75,76,77 true
+charclear 80,81,82,83 true
+
+######################################################################
+# Bank 7 is towns
+######################################################################
+copychr 0x05 0x22
+copychr 0x07 0x23
+set chrbank 7
+charclear 28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,34,35,36,37,38,39,3a,3b,3c,3d,3e,3f true
+charclear 40,41,42,43,44,45,46,47,48,49,4a,4b,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b,5c,5d,5e,5f true
+charclear 60,61,62,63,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,74,75,76,77,78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab,ac,ad,ae,af true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 23
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27 true
+charclear 64,65,66,67 true
+charclear 80,81,82,83 true
+
+######################################################################
+# Bank 9 is Palace 1
+######################################################################
+copychr 0x09 0x24
+set chrbank 9
+charclear 5c,5d,5e,5f true
+charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,74,75,76,77,78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 24
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,3c,3d,3e,3f true
+charclear 44,45,46,47,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b true
+charclear 60,61,66,67 true
+charclear 80,81,82,83 true
+charclear ac,ad,ae,af true
+
+######################################################################
+# Bank b is Palace 2
+######################################################################
+set chrbank b
+charclear 5c,5d,5e,5f true
+charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,74,75,76,77,78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 25
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,3c,3d,3e,3f true
+charclear 44,45,46,47,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b true
+charclear 60,61,66,67 true
+charclear 80,81,82,83 true
+charclear ac,ad,ae,af true
+
+######################################################################
+# Bank d is Great Palace
+######################################################################
+copychr 0x0d 0x26
+set chrbank d
+charclear 5c,5d,5e,5f true
+charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
+charclear 78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 26
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,3c,3d,3e,3f true
+charclear 44,45,46,47,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b true
+charclear 70,71,72,73,74,75,76,77 true
+charclear 60,61,66,67 true
+charclear 80,81,82,83 true
+charclear ac,ad,ae,af true
+
+######################################################################
+# Bank f is the victory scenes
+######################################################################
+copychr 0x0f 0x27
+copychr 0x11 0x28
+set chrbank 11
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,34,35,36,37,38,39,3a,3b,3c,3d,3e,3f true
+charclear 40,41,42,43 true
+charclear 56,57,58,59,5a,5b,5c,5d,5e,5f true
+charclear 60,61,62,63,64,65,66,67,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,7c,7d,7e,7f true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd true
+
+set chrbank 28
+charclear 44,45,46,47,48,49,4a,4b,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55 true
+charclear 74,75,76,77,78,79,7a,7b true
+charclear 80,81,82,83,84,85,86,87 true
+
+######################################################################
+# Bank 13 is the Palace 3
+######################################################################
+copychr 0x13 0x29
+set chrbank 13
+charclear 5c,5d,5e,5f true
+charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,74,75,76,77,78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 29
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,3c,3d,3e,3f true
+charclear 44,45,46,47,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b true
+charclear 60,61,66,67 true
+charclear 80,81,82,83 true
+charclear ac,ad,ae,af true
+
+######################################################################
+# Bank 15 is Palace 4
+######################################################################
+copychr 0x15 0x2a
+set chrbank 15
+charclear 5c,5d,5e,5f true
+charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,74,75,76,77,78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 2a
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,3c,3d,3e,3f true
+charclear 44,45,46,47,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b true
+charclear 60,61,66,67 true
+charclear 80,81,82,83 true
+charclear ac,ad,ae,af true
+
+######################################################################
+# Bank 17 is Palace 5
+######################################################################
+copychr 0x17 0x2b
+set chrbank 17
+charclear 5c,5d,5e,5f true
+charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,74,75,76,77,78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 2b
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,3c,3d,3e,3f true
+charclear 44,45,46,47,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b true
+charclear 60,61,66,67 true
+charclear 80,81,82,83 true
+charclear ac,ad,ae,af true
+
+######################################################################
+# Bank 19 is Palace 6
+######################################################################
+copychr 0x19 0x2c
+set chrbank 19
+charclear 5c,5d,5e,5f true
+charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
+charclear 70,71,72,73,74,75,76,77,78,79,7a,7b,7c,7d,7e,7f true
+charclear 84,85,86,87,88,89,8a,8b,8c,8d,8e,8f true
+charclear 90,91,92,93,94,95,96,97,98,99,9a,9b,9c,9d,9e,9f true
+charclear a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab true
+charclear b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,ba,bb,bc,bd,be,bf true
+charclear c0,c1,c2,c3,c6,c7,c8,c9,ca,cb,cc,cd,ce,cf true
+charclear d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,da,db,dc,dd,de,df true
+charclear e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,ea,eb,ec,ed,ee,ef true
+charclear f0,f1,f2,f3,f6,f7,f8,f9,fa,fb,fc,fd,fe,ff true
+
+set chrbank 2c
+charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
+charclear 10,11,12,13,14,15,16,17,18,19,1a,1b,1c,1d,1e,1f true
+charclear 20,21,22,23,24,25,26,27,28,29,2a,2b,2c,2d,2e,2f true
+charclear 30,31,32,33,3c,3d,3e,3f true
+charclear 44,45,46,47,4c,4d,4e,4f true
+charclear 50,51,52,53,54,55,56,57,58,59,5a,5b true
+charclear 60,61,66,67 true
+charclear 80,81,82,83 true
+charclear ac,ad,ae,af true
+
+######################################################################
+# The remaining banks are blank space
+######################################################################
+copychr 0x1b 0x2d
+copychr 0x1d 0x2e
+copychr 0x1f 0x2f
+
+copychr 0x1f 0x30
+copychr 0x1f 0x31
+copychr 0x1f 0x32
+copychr 0x1f 0x33
+copychr 0x1f 0x34
+copychr 0x1f 0x35
+copychr 0x1f 0x36
+copychr 0x1f 0x37
+copychr 0x1f 0x38
+copychr 0x1f 0x39
+copychr 0x1f 0x3a
+copychr 0x1f 0x3b
+copychr 0x1f 0x3c
+copychr 0x1f 0x3d
+copychr 0x1f 0x3e
+copychr 0x1f 0x3f
+
+

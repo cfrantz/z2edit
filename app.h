@@ -57,7 +57,10 @@ class Z2Edit: public ImApp {
     void EnemyList(DebugConsole* console, int argc, char **argv);
     void InsertPrg(DebugConsole* console, int argc, char **argv);
     void CopyPrg(DebugConsole* console, int argc, char **argv);
+    void InsertChr(DebugConsole* console, int argc, char **argv);
     void CopyChr(DebugConsole* console, int argc, char **argv);
+    void CharClear(DebugConsole* console, int argc, char **argv);
+    void CharCopy(DebugConsole* console, int argc, char **argv);
     void MemMove(DebugConsole* console, int argc, char **argv);
     void Swap(DebugConsole* console, int argc, char **argv);
     void BCopy(DebugConsole* console, int argc, char **argv);
@@ -70,10 +73,12 @@ class Z2Edit: public ImApp {
         uint8_t town_code, uint8_t palace_code, uint8_t connector,
         uint8_t room);
     int EncodedText(int ch);
+    bool ParseChr(const std::string& a, int* bank, uint8_t *addr);
 
     bool loaded_;
     int ibase_;
     int bank_;
+    int chrbank_;
     int text_encoding_;
     std::string save_filename_;
     std::string export_filename_;
