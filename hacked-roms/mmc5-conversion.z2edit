@@ -1,5 +1,6 @@
 set ibase 16
 set bank 7
+set mapper 5
 asm c000
 bank7_code0:
 

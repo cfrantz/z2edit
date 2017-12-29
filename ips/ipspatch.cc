@@ -16,7 +16,7 @@ Description:
 
 Usage:
   ipspatch -create [original] [modified] [patch-output-file]
-  ipspatch -apply [origina] [patch-file] [modified-output-file]
+  ipspatch -apply [original] [patch-file] [modified-output-file]
 )ZZZ";
 
 int main(int argc, char *argv[]) {

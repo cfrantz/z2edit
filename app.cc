@@ -700,6 +700,9 @@ void Z2Edit::SetVar(DebugConsole* console, int argc, char **argv) {
             text_encoding_ = strtoul(argv[++i], 0, ibase_);
         } else if (!strcmp(argv[i], "emulator")) {
             FLAGS_emulator = argv[++i];
+        } else if (!strcmp(argv[i], "mapper")) {
+            uint8_t m = strtoul(argv[++i], 0, 0);
+            cartridge_.set_mapper(m);
         } else {
             console->AddLog("[error] Unknown var '%s'", argv[1]);
         }

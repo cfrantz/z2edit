@@ -50,6 +50,10 @@ class Cartridge {
     inline uint8_t mapper() const {
         return header_.mapperl | header_.mapperh << 4;
     }
+    inline void set_mapper(uint8_t m) {
+        header_.mapperl = m;
+        header_.mapperh = m>>4;
+    }
     inline uint32_t prglen() const { return prglen_; }
     inline uint32_t chrlen() const { return chrlen_; }
 

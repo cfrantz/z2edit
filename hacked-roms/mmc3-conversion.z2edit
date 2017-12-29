@@ -1,0 +1,139 @@
+set ibase 16
+set bank 7
+set mapper 4
+asm c000
+
+bank7_code0:
+
+TX = $6fe
+TY = $6ff
+
+.org $c4d0
+    lda     #$00            ; vertical mirroring
+
+.org $ff4c
+load_chr_bank:
+    stx     TX
+    sty     TY
+    asl
+    asl
+    tax
+    dex
+    ldy     #0
+loop_2k_bank:
+    inx
+loop_1k_bank:
+    sty     $8000
+    stx     $8001
+    inx
+    iny
+    cpy     #3
+    bcc     loop_2k_bank
+    cpy     #6
+    bne     loop_1k_bank
+    ldx     TX
+    ldy     TY
+    lda     #0
+    rts
+
+bank7_reset:
+    sei
+    cld
+    ldx     #$00
+    stx     $2000
+    inx
+wait_ppu:
+    lda     $2002
+    bpl     wait_ppu
+    dex
+    beq     wait_ppu
+    txs
+
+    lda     #$80
+    sta     $a001           ; enable SRAM
+
+    lda     #$01            ; horizontal mirroring
+    jsr     bank7_Config_Register
+    lda     #$00
+    jsr     bank7_chr_bank_switch__load_A
+    lda     #$07
+    jsr     bank7_Load_Bank_A_0x8000
+    jmp     bank7_code0
+
+
+.org $ff9d
+bank7_Config_Register:
+    sta     $a000
+    lda     #0
+    rts
+; Fill with NOPs
+.db $ea,$ea,$ea,$ea
+.db $ea,$ea,$ea,$ea
+.db $ea,$ea,$ea,$ea
+.db $ea,$ea
+
+bank7_chr_bank_switch__load_A:
+    jmp     load_chr_bank
+.db $ea,$ea,$ea,$ea
+.db $ea,$ea,$ea,$ea
+.db $ea,$ea,$ea,$ea
+.db $ea,$ea,$ea,$ea
+.db $ea
+
+bank7_Load_Bank_0_at_0x8000:
+    lda     #$00
+    beq     bank7_Load_Bank_A_0x8000
+bank7_Load_Bank_769_at_0x8000:
+    lda     $0769
+bank7_Load_Bank_A_0x8000:
+    asl
+    stx     TX
+    sty     TY
+    tax
+    ldy     #$06
+store_prg_bank:
+    sty     $8000
+    stx     $8001
+    inx
+    iny
+    cpy     #$8
+    bne     store_prg_bank
+    ldx     TX
+    ldy     TY
+    lda     #0
+    rts
+; Fill with NOPs
+.db $ea
+.org $fffc
+.dw bank7_reset
+.end
+
+asm b=0 0
+; Clean up stuff in bank 0 - make it go via bank7's routines.
+.org $8149
+    lda     #$01            ; horizontal mirroring
+    jsr     $ff9d
+.org $8150
+    jsr     $ffb1
+.org $a86b
+    jsr     $ffb1
+.end
+
+asm b=1 0
+.org $9d6b
+    ; This is most certainly a bug in the game code - this store can never
+    ; work.
+    ; sta $95e6
+    nop
+    nop
+    nop
+.end
+
+asm b=5 0
+; Clean up stuff in bank 5 - make it go via bank7's routines.
+.org $a712
+    lda     #$01            ; horizontal mirroring
+    jsr     $ff9d
+.org $a728
+    jsr     $ffb1
+.end

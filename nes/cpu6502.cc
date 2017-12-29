@@ -763,6 +763,8 @@ void Cpu::BuildAsmInfo() {
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
     asminfo_.emplace(".END", AsmInfo{".END",
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
+    asminfo_.emplace(".BANK", AsmInfo{".BANK",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
     asminfo_.emplace(".ORG", AsmInfo{".ORG",
                 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xFF});
     asminfo_.emplace("=", AsmInfo{"=",
@@ -803,7 +805,6 @@ Cpu::AsmError Cpu::ParseDataPseudoOp(const std::string& op,
     }
 
     for(auto& arg : Split(operand, ",")) {
-        printf("Got arg '%s'\n", arg.c_str());
         StripWhitespace(&arg);
         base = 0;
         negate = false;
@@ -909,10 +910,12 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
             fixups_[*nexti] = target;
             addr = -1;
             fixup_resolved = false;
+            mode |= 16;
         } else {
             addr = label->second;
+            if (addr >= 256) mode |= 16;
         }
-        mode |= 32 | 16;
+        mode |= 32;
     }
     //printf("pre xlate mode = %02x\n", mode);
     AddressingMode xlate[] = {
@@ -986,6 +989,8 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     case Pseudo:
         if (opcode == ".ORG") {
             *nexti = addr;
+        } else if (opcode == ".BANK") {
+            set_bank(addr);
         } else if (assign) {
             labels_[opcode] = addr;
         } else {
