@@ -1,4 +1,64 @@
 set ibase 16
+
+######################################################################
+# Obliterate the bankswitch code in other banks - bank 7 is constant.
+######################################################################
+wbp b=0 bf70 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=0 bf80 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=0 bf90 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=0 bfa0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=0 bfb0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=0 bfc0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=0 bfd0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+wbp b=1 bf70 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=1 bf80 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=1 bf90 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=1 bfa0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=1 bfb0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=1 bfc0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=1 bfd0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+wbp b=2 bf70 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=2 bf80 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=2 bf90 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=2 bfa0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=2 bfb0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=2 bfc0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=2 bfd0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+wbp b=3 bf70 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=3 bf80 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=3 bf90 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=3 bfa0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=3 bfb0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=3 bfc0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=3 bfd0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+wbp b=4 bf70 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=4 bf80 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=4 bf90 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=4 bfa0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=4 bfb0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=4 bfc0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=4 bfd0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+wbp b=5 bf70 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=5 bf80 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=5 bf90 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=5 bfa0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=5 bfb0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=5 bfc0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=5 bfd0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+wbp b=6 bf70 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=6 bf80 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=6 bf90 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=6 bfa0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=6 bfb0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=6 bfc0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+wbp b=6 bfd0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
 set bank 7
 set mapper 5
 asm c000
@@ -6,6 +66,7 @@ bank7_code0:
 
 .org $c4d0
     lda     #$44            ; vertical mirroring
+    sta     $5105
 .org $ff70
 bank7_reset:
     sei
@@ -15,6 +76,7 @@ bank7_reset:
     inx
     stx     $5100           ; two 16k PRG banks
     stx     $5101           ; CHR mode 2x4k banks
+    stx     $5103           ; Allow writing to WRAM
 wait_ppu:
     lda     $2002
     bpl     wait_ppu
@@ -23,29 +85,18 @@ wait_ppu:
     txs
 
     stx     $5117           ; Top bank is last bank
-    nop                     ; X = 0
-    nop
-    nop
+    lda     #2
+    sta     $5102           ; Allow writing to WRAM
 
     lda     #$50            ; horizontal mirroring
-    jsr     bank7_Config_Register
+    sta     $5105
     jsr     bank7_chr_bank_switch__load_A
     lda     #$07
     jsr     bank7_Load_Bank_A_0x8000
     jmp     bank7_code0
 
 
-.org $ff9d
-bank7_Config_Register:
-    sta     $5105
-    lda     #2
-    sta     $5102
-    lda     #1
-    sta     $5103
-    lda     #0
-    rts
-; Fill with NOPs
-.db $ea,$ea,$ea,$ea
+.org $ffb1
 
 bank7_chr_bank_switch__load_A:
     sta     $5123
@@ -81,7 +132,7 @@ asm b=0 0
 ; Clean up stuff in bank zero - make it go via bank7's routines.
 .org $8149
     lda     #$50            ; horizontal mirroring
-    jsr     $ff9d
+    sta     $5105
 .org $8150
     jsr     $ffb1
 .org $a86b
@@ -92,7 +143,7 @@ asm b=5 0
 ; Clean up stuff in bank 5 - make it go via bank7's routines.
 .org $a712
     lda     #$50            ; horizontal mirroring
-    jsr     $ff9d
+    sta     $5105
 .org $a728
     jsr     $ffb1
 .end
@@ -242,6 +293,7 @@ charclear ac,ad,ae,af true
 ######################################################################
 # Bank b is Palace 2
 ######################################################################
+copychr 0x0b 0x25
 set chrbank b
 charclear 5c,5d,5e,5f true
 charclear 62,63,64,65,68,69,6a,6b,6c,6d,6e,6f true
@@ -299,6 +351,10 @@ charclear ac,ad,ae,af true
 # Bank f is the victory scenes
 ######################################################################
 copychr 0x0f 0x27
+
+######################################################################
+# Bank 11 is the overworld
+######################################################################
 copychr 0x11 0x28
 set chrbank 11
 charclear 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f true
