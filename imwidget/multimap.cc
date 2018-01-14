@@ -5,6 +5,7 @@
 #include "imwidget/simplemap.h"
 #include "util/config.h"
 #include "util/strutil.h"
+#include "alg/palace_gen.h"
 
 #include <gflags/gflags.h>
 
@@ -63,6 +64,12 @@ void MultiMap::Init() {
             graph_.Compute(1.0/60.0);
         }
     }
+
+    if (pgo_.grid_width() == 0) pgo_.set_grid_width(8);
+    if (pgo_.grid_height() == 0) pgo_.set_grid_height(8);
+    if (pgo_.num_rooms() == 0) pgo_.set_num_rooms(21);
+    pgo_.set_start_room(start_);
+    pgo_.set_world(world_);
 }
 
 fdg::Node* MultiMap::AddRoom(int room, int x, int y) {
@@ -235,6 +242,34 @@ void MultiMap::DrawLegend() {
     }
 }
 
+void MultiMap::DrawGen() {
+    if (ImGui::BeginPopup("Generate")) {
+        int seed = pgo_.seed();
+        if (ImGui::InputInt("Seed", &seed)) { pgo_.set_seed(seed); }
+        int w = pgo_.grid_width();
+        if (ImGui::InputInt("Width", &w)) {  pgo_.set_grid_width(w); }
+        ImGui::SameLine();
+        int h = pgo_.grid_height();
+        if (ImGui::InputInt("Height", &h)) {  pgo_.set_grid_height(h); }
+
+        int n = pgo_.num_rooms();
+        if (ImGui::InputInt("Rooms", &n)) {  pgo_.set_num_rooms(n); }
+
+        bool efr = pgo_.enter_on_first_row();
+        if (ImGui::Checkbox("Enter on first row", &efr)) { 
+            pgo_.set_enter_on_first_row(efr);
+        }
+
+        if (ImGui::Button("Generate")) {
+            PalaceGenerator pgen(pgo_);
+            pgen.set_mapper(mapper_);
+            pgen.Generate();
+            Init();
+        }
+        ImGui::EndPopup();
+    }
+}
+
 bool MultiMap::Draw() {
     if (!visible_)
         return false;
@@ -268,6 +303,12 @@ bool MultiMap::Draw() {
         ImGui::OpenPopup("Legend");
     }
     DrawLegend();
+
+    ImGui::SameLine();
+    if (ImGui::Button("Generate")) {
+        ImGui::OpenPopup("Generate");
+    }
+    DrawGen();
 
     ImGui::SameLine();
     ImApp::Get()->HelpButton("overworld-editor");

@@ -28,3 +28,15 @@ cc_proto_library(
     name = "project",
     deps = [":project_proto"],
 )
+
+proto_library(
+    name = "generator_proto",
+    srcs = [
+        "generator.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "generator",
+    deps = [":generator_proto"],
+)

@@ -35,3 +35,20 @@ cc_library(
         "//util:stb-perlin",
     ],
 )
+
+cc_library(
+    name = "palace_gen",
+    hdrs = [
+        "palace_gen.h",
+    ],
+    srcs = [
+        "palace_gen.cc",
+    ],
+    deps = [
+        "//imwidget:simplemap",
+        "//nes:mappers",
+        "//proto:generator",
+        "//proto:rominfo",
+        "//util:config",
+    ],
+)

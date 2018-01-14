@@ -24,6 +24,7 @@ class MapCommand {
                uint8_t extra);
     MapCommand(const MapHolder* holder, int x0, uint8_t position,
                uint8_t object, uint8_t extra);
+    MapCommand(const MapCommand& other);
 
     MapCommand Copy();
     bool Draw(bool abscoord=false, bool popup=false);
@@ -74,17 +75,51 @@ class MapHolder {
         DR_CHANGED,
         DR_PALETTE_CHANGED,
     };
+    struct Unpacked {
+        int objset;
+        int width;
+        bool grass;
+        bool bushes;
+        bool ceiling;
+        int ground;
+        int floor;
+        int spal;
+        int bpal;
+        int bmap;
+    };
+
     MapHolder();
+    MapHolder(Mapper* m);
     DrawResult Draw();
     bool DrawPopup(float scale);
     void Save();
     void Parse(const Map& map, uint16_t altaddr=0);
     std::vector<uint8_t> MapData();
     std::vector<uint8_t> MapDataAbs();
+    void Clear(const Unpacked& data) {
+        command_.clear();
+        data_ = data;
+        data_changed_ = true;
+        cursor_moves_left_ = false;
+    }
+    void Append(const MapCommand& cmd);
+    void Extend(const std::vector<MapCommand>& cmds);
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     inline uint8_t flags() const { return flags_; };
     inline uint8_t ground() const { return ground_; };
     inline uint8_t back() const { return back_; };
+
+    inline void set_objset(int val) { data_.objset = val; }
+    inline void set_width(int val) { data_.width = val; }
+    inline void set_grass(bool val) { data_.grass = val; }
+    inline void set_bushes(bool val) { data_.bushes = val; }
+    inline void set_ceiling(bool val) { data_.ceiling = val; }
+    inline void set_ground(int val) { data_.ground = val; }
+    inline void set_floor(int val) { data_.floor = val; }
+    inline void set_spal(int val) { data_.spal = val; }
+    inline void set_bpal(int val) { data_.bpal = val; }
+    inline void set_bmap(int val) { data_.bmap = val; }
+
     inline const Map& map() const { return map_; }
     inline bool cursor_moves_left() {
         return cursor_moves_left_;
@@ -109,24 +144,13 @@ class MapHolder {
     bool addr_changed_;
     uint16_t map_addr_;
 
-    struct Unpacked {
-        int objset;
-        int width;
-        bool grass;
-        bool bushes;
-        bool ceiling;
-        int ground;
-        int floor;
-        int spal;
-        int bpal;
-        int bmap;
-    };
     Unpacked data_;
 };
 
 class MapConnection {
   public:
     MapConnection();
+    MapConnection(Mapper* m);
     inline void set_mapper(Mapper* m) { mapper_ = m; }
 
     bool Draw();
@@ -146,6 +170,19 @@ class MapConnection {
         } else {
             return Unpacked{63, 3};
         }
+    }
+
+    inline void set_left(int dest, int start) {
+        data_[0].destination = dest; data_[0].start = start;
+    }
+    inline void set_down(int dest, int start) {
+        data_[1].destination = dest; data_[1].start = start;
+    }
+    inline void set_up(int dest, int start) {
+        data_[2].destination = dest; data_[2].start = start;
+    }
+    inline void set_right(int dest, int start) {
+        data_[3].destination = dest; data_[3].start = start;
     }
   private:
     Mapper* mapper_;

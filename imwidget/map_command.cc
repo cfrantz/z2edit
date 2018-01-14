@@ -89,6 +89,15 @@ MapCommand::MapCommand(const MapHolder* holder, int x0, uint8_t position,
     }
 }
 
+MapCommand::MapCommand(const MapCommand& other)
+  : id_(UniqueID()),
+    holder_(other.holder_),
+    position_(other.position_),
+    object_(other.object_),
+    extra_(other.extra_),
+    data_(other.data_),
+    summary_(nullptr) {}
+
 MapCommand MapCommand::Copy() {
     MapCommand copy = *this;
     copy.id_ = UniqueID();
@@ -301,7 +310,8 @@ std::vector<uint8_t> MapCommand::Command() {
 }
 
 
-MapHolder::MapHolder() {}
+MapHolder::MapHolder(Mapper* m) : mapper_(m) {}
+MapHolder::MapHolder() : MapHolder(nullptr) {}
 
 const char* ground_names[] = {
     "TileSet (cave)",
@@ -544,6 +554,14 @@ std::vector<uint8_t> MapHolder::MapDataWorker(std::vector<MapCommand>& list) {
     return map;
 }
 
+void MapHolder::Append(const MapCommand& cmd) {
+    command_.push_back(cmd);
+}
+
+void MapHolder::Extend(const std::vector<MapCommand>& cmds) {
+    command_.insert(command_.end(), cmds.begin(), cmds.end());
+}
+
 std::vector<uint8_t> MapHolder::MapData() {
     return MapDataWorker(command_);
 }
@@ -591,6 +609,7 @@ void MapHolder::Save() {
             "Both the map data and map address have been changed.\n"
             "Allocating a new address and saving data.\n");
     }
+    Pack();
     std::vector<uint8_t> data = MapDataAbs();
     LOG(INFO, "Saving ", map_.name(), " (", data.size(), " bytes)");
 
@@ -624,9 +643,12 @@ void MapHolder::Save() {
     addr_changed_ = false;
 }
 
+
+MapConnection::MapConnection(Mapper* m)
+  : mapper_(m) {}
+
 MapConnection::MapConnection()
-  : mapper_(nullptr)
-{}
+  : MapConnection(nullptr) {}
 
 void MapConnection::Parse(const Map& map) {
     uint8_t val;

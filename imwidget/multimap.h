@@ -12,6 +12,7 @@
 #include "nes/z2decompress.h"
 #include "nes/z2objcache.h"
 #include "proto/rominfo.pb.h"
+#include "proto/generator.pb.h"
 #include "imgui.h"
 
 namespace z2util {
@@ -48,6 +49,7 @@ class MultiMap: public ImWindowBase {
                    float width=2.0, float arrowpos=0.1, float rootsize=10.0);
     void DrawConnections(const DrawLocation& dl);
     void DrawOne(const DrawLocation& dl);
+    void DrawGen();
     void Traverse(int room, int x, int y, int from);
     void Sort();
     void DrawLegend();
@@ -67,6 +69,8 @@ class MultiMap: public ImWindowBase {
     int visited_room0_;
     std::map<int32_t, DrawLocation> location_;
     fdg::Graph graph_;
+
+    PalaceGeneratorOptions pgo_;
 
     Vec2 origin_;
     Vec2 absolute_;

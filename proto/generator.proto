@@ -1,0 +1,13 @@
+syntax = "proto3";
+package z2util;
+
+message PalaceGeneratorOptions {
+    int64 seed = 1;
+    int32 grid_width = 2;
+    int32 grid_height = 3;
+    int32 num_rooms = 4;
+    int32 start_room = 5;
+    int32 world = 6;
+    double horizontal_bias = 7;
+    bool enter_on_first_row = 8;
+}
