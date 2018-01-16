@@ -10,4 +10,8 @@ message PalaceGeneratorOptions {
     int32 world = 6;
     double horizontal_bias = 7;
     bool enter_on_first_row = 8;
+    bool jump_required = 9;
+    bool glove_required = 10;
+    bool fairy_required = 11;
 }
+

@@ -67,7 +67,7 @@ void MultiMap::Init() {
 
     if (pgo_.grid_width() == 0) pgo_.set_grid_width(8);
     if (pgo_.grid_height() == 0) pgo_.set_grid_height(8);
-    if (pgo_.num_rooms() == 0) pgo_.set_num_rooms(21);
+    if (pgo_.num_rooms() == 0) pgo_.set_num_rooms(14);
     pgo_.set_start_room(start_);
     pgo_.set_world(world_);
 }
@@ -259,6 +259,21 @@ void MultiMap::DrawGen() {
         if (ImGui::Checkbox("Enter on first row", &efr)) { 
             pgo_.set_enter_on_first_row(efr);
         }
+
+        bool jump = pgo_.jump_required();
+        if (ImGui::Checkbox("Jump required", &jump)) {
+            pgo_.set_jump_required(jump);
+        }
+        bool glove = pgo_.glove_required();
+        if (ImGui::Checkbox("Glove required", &glove)) {
+            pgo_.set_glove_required(glove);
+        }
+        bool fairy = pgo_.fairy_required();
+        if (ImGui::Checkbox("Fairy required", &fairy)) {
+            pgo_.set_fairy_required(fairy);
+        }
+
+
 
         if (ImGui::Button("Generate")) {
             PalaceGenerator pgen(pgo_);

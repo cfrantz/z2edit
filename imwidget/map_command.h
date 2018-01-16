@@ -104,6 +104,7 @@ class MapHolder {
     }
     void Append(const MapCommand& cmd);
     void Extend(const std::vector<MapCommand>& cmds);
+    inline std::vector<MapCommand>* mutable_command() { return &command_; }
     inline void set_mapper(Mapper* m) { mapper_ = m; }
     inline uint8_t flags() const { return flags_; };
     inline uint8_t ground() const { return ground_; };
