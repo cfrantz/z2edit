@@ -41,6 +41,9 @@ DECLARE_bool(reminder_dialogs);
 #define STBTE_PROP_SCALE(n, tiledata, params) \
     z2util::Editor::Get()->PropertyRange(n, tiledata, params, 2)
 
+#ifndef _SDL_H
+#define _SDL_H
+#endif
 #define STB_TILEMAP_EDITOR_IMPLEMENTATION
 #include "util/stb_tilemap_editor.h"
 
