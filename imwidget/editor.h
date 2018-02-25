@@ -59,6 +59,8 @@ class Editor: public ImWindowBase {
     stbte_tilemap* editor_;
     Map* map_;
     int compressed_length_;
+    int hidden_palace_tile_;
+    int hidden_town_tile_;
 
     Mapper* mapper_;
     NesHardwarePalette* hwpal_;

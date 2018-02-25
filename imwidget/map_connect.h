@@ -71,6 +71,11 @@ class OverworldConnector {
 
 class OverworldConnectorList {
   public:
+    enum SpecialType {
+        ST_NONE,
+        ST_HIDDEN_PALACE,
+        ST_HIDDEN_TOWN,
+    };
     OverworldConnectorList();
 
     void Init(Mapper* mapper, Address address, int overworld, int subworld,
@@ -88,7 +93,7 @@ class OverworldConnectorList {
         *x = item.xpos();
         *y = item.ypos();
     }
-    bool NoCompress(int x, int y);
+    SpecialType NoCompress(int x, int y);
     void Save();
 
     inline bool show() const { return show_; }

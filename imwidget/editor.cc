@@ -121,6 +121,8 @@ void Editor::ConvertFromMap(Map* map) {
 std::vector<uint8_t> Editor::CompressMap() {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     std::vector<uint8_t> data;
+    hidden_palace_tile_ = -1;
+    hidden_town_tile_ = -1;
 
     for(int y=0; y<editor_->max_y; y++) {
         for(int x=0; x<editor_->max_x; x++) {
@@ -151,9 +153,15 @@ std::vector<uint8_t> Editor::CompressMap() {
             }
             // Don't compress magic connection spots, boulders or the
             // spider/river devil.
-            if (connections_.NoCompress(x, y) ||
+            auto st = connections_.NoCompress(x, y);
+            if (st != OverworldConnectorList::ST_NONE ||
                 (!FLAGS_compress_boulders && (tile == 0x0E || tile == 0x0F))) {
                 data.push_back(tile | count << 4);
+                if (st == OverworldConnectorList::ST_HIDDEN_PALACE) {
+                    hidden_palace_tile_ = tile;
+                } else if (st == OverworldConnectorList::ST_HIDDEN_TOWN) {
+                    hidden_town_tile_ = tile;
+                }
                 continue;
             }
             while(x+1 < editor_->max_x
@@ -214,6 +222,16 @@ void Editor::SaveMap() {
     }
     mapper_->WriteWord(map_->pointer(), 0, addr.address());
     mapper_->Free(map_->address());
+
+    const auto& tt = ConfigLoader<RomInfo>::GetConfig().tile_transform_table();
+    if (hidden_palace_tile_ != -1) {
+        // Hidden palace is the 3rd entry (index=2) into the table.
+        mapper_->Write(tt.from_tile(), 2, hidden_palace_tile_);
+    }
+    if (hidden_town_tile_ != -1) {
+        // Hidden town is the 4th entry (index=3) into the table.
+        mapper_->Write(tt.from_tile(), 3, hidden_town_tile_);
+    }
 
     *(map_->mutable_address()) = addr;
     map_->set_length(data.size());

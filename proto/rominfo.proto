@@ -331,6 +331,12 @@ message ItemDrop {
     repeated Dropper drops = 4;
 }
 
+message TileTable{
+    Address from_tile = 1;
+    Address to_tile = 2;
+    int32 length = 3;
+}
+
 message RomInfo {
     string path = 1; // For internal use by the config loader
     repeated string load = 2;
@@ -354,4 +360,5 @@ message RomInfo {
     repeated OverworldEditorKeybind overworld_editor_keybind = 20;
     TextTable text_table = 21;
     ItemDrop drop_info = 22;
+    TileTable tile_transform_table = 23;
 }

@@ -79,6 +79,7 @@ void Z2Edit::Init() {
     palette_editor_.reset(new z2util::PaletteEditor);
     start_values_.reset(new z2util::StartValues);
     text_table_.reset(new z2util::TextTableEditor);
+    tile_transform_.reset(new z2util::TileTransform);
     object_table_.reset(new z2util::ObjectTable);
     enemy_editor_.reset(new z2util::EnemyEditor);
     experience_table_.reset(new z2util::ExperienceTable);
@@ -128,6 +129,8 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     start_values_->Refresh();
     text_table_->set_mapper(mapper_.get());
     text_table_->Refresh();
+    tile_transform_->set_mapper(mapper_.get());
+    tile_transform_->Refresh();
 
     drops_->set_mapper(mapper_.get());
     drops_->Refresh();
@@ -939,6 +942,9 @@ void Z2Edit::ProcessEvent(SDL_Event* event) {
 void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
     if (msg == "commit") {
         project_.Commit(static_cast<const char*>(extra));
+        // Refresh this here for convenience: the table is very small, but
+        // commites of the overworld can re-write it.
+        tile_transform_->Refresh();
     } else if (msg == "loadpostprocess") {
         LoadPostProcess(reinterpret_cast<intptr_t>(extra));
     } else if (msg == "emulate_at") {
@@ -1078,6 +1084,8 @@ export_as:
                             &start_values_->visible());
             ImGui::MenuItem("Text Table", nullptr,
                             &text_table_->visible());
+            ImGui::MenuItem("Tile Transforms", nullptr,
+                            &tile_transform_->visible());
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
@@ -1114,6 +1122,7 @@ export_as:
 
     start_values_->Draw();
     text_table_->Draw();
+    tile_transform_->Draw();
     misc_hacks_->Draw();
     palace_gfx_->Draw();
     palette_editor_->Draw();

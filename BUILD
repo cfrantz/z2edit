@@ -45,6 +45,7 @@ cc_library(
         "//imwidget:simplemap",
         "//imwidget:start_values",
         "//imwidget:text_table",
+        "//imwidget:tile_transform",
         "//imwidget:object_table",
         "//imwidget:xptable",
         "//nes:cartridge",

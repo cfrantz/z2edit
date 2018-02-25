@@ -337,3 +337,16 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "tile_transform",
+    hdrs = ["tile_transform.h"],
+    srcs = ["tile_transform.cc"],
+    deps = [
+        ":base",
+        "//nes:mappers",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+    ],
+)
+

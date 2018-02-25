@@ -334,7 +334,8 @@ bool OverworldConnectorList::DrawInEditor(int x, int y) {
     return focus;
 }
 
-bool OverworldConnectorList::NoCompress(int x, int y) {
+OverworldConnectorList::SpecialType OverworldConnectorList::NoCompress(int x,
+                                                                       int y) {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     const auto& hpal = misc.hidden_palace();
     const auto& htown = misc.hidden_town();
@@ -344,15 +345,15 @@ bool OverworldConnectorList::NoCompress(int x, int y) {
         if (x == c.xpos() && y == c.ypos()) {
             if (overworld == mapper_->Read(hpal.cmpov(), 0)
                 && c.offset() == mapper_->Read(hpal.connector(), 0)) {
-                return true;
+                return ST_HIDDEN_PALACE;
             }
             if (overworld == mapper_->Read(htown.cmpov(), 0)
                 && c.offset() == mapper_->Read(htown.connector(), 0)) {
-                return true;
+                return ST_HIDDEN_TOWN;
             }
         }
     }
-    return false;
+    return ST_NONE;
 }
 
 

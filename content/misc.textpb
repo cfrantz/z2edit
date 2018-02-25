@@ -87,3 +87,8 @@ misc {
     town_connection_id: 44
     world_to_bank { bank: -1 address: 0xc4b7 }
 }
+tile_transform_table {
+    from_tile: { bank:7 address: 0xdf5e }
+    to_tile: { bank:7 address: 0xdf62 }
+    length: 4
+}
