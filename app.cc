@@ -739,7 +739,7 @@ void Z2Edit::CharCopy(DebugConsole* console, int argc, char **argv) {
         return;
     }
     ParseChr(argv[1], &dbank, &dst);
-    ParseChr(argv[1], &sbank, &src);
+    ParseChr(argv[2], &sbank, &src);
     ChrUtil util(mapper_.get());
     if (!strcmp(argv[0], "charcopy")) {
         util.Copy(dbank, dst, sbank, src);
