@@ -1,0 +1,95 @@
+# For GTM's hack, he wants to put medicine and a MC in a palace.
+# To do this, we'll re-arrange some stuff to put these graphics into
+# the palace banks:
+#
+# Graphics arrangement (numbers in expressed in hex):
+#
+# Western Hyrule = bank 2/3
+# Eastern Hyrule = bank 4/5
+# P1 = bank 8/9
+# P2 = bank a/b
+# P3 = bank 12/13
+# P4 = bank 14/15
+# P5 = bank 16/17
+# P6 = bank 18/19
+# P7 = bank c/d
+#
+
+# The medicine is bank3, sprite $31 (chrs 30 and 31).
+# In bank 5 (eastern hyrule), the Kid is in chrs 30 and 31.
+# The magic container is in banks 3 and 5, sprite $83 (chrs 82 and 83).
+# In the palace banks:
+#    chrs $9c,$9d are a comma and an empty space.
+#    chrs $b0,$b1 are a spike (never used).
+#    chrs $82,$83 are part of link-holding-up-an-item.
+# In the overworkd banks:
+#    chrs $9c,$9d are a comma and a fragment of cave wall.
+#
+# Since the sprite IDs for the meds and MC are global, it wouild be best to
+# make them the same in every bank.  As such, we will move sprites thusly:
+#
+# Link holding up an item will replace the unused spike, and the magic container
+# will replace that part of link.
+#
+# The medicine will overwrite the comma placement, and for overworlds, the
+# cave wall will be moved into the medicine place.
+
+set ibase 16
+# Swap the med/kid with comma/cave wall.
+charswap 3:9c 3:30 
+charswap 3:9d 3:31 
+charswap 5:9c 5:30 
+charswap 5:9d 5:31 
+
+# Copy the meds to the comma/blank in the palace banks.
+# charcopy <dest_bank:dest_char> <src_bank:src_char>
+charcopy 9:9c 3:9c
+charcopy 9:9d 3:9d
+charcopy b:9c 3:9c
+charcopy b:9d 3:9d
+charcopy 13:9c 3:9c
+charcopy 13:9d 3:9d
+charcopy 15:9c 3:9c
+charcopy 15:9d 3:9d
+charcopy 17:9c 3:9c
+charcopy 17:9d 3:9d
+charcopy 19:9c 3:9c
+charcopy 19:9d 3:9d
+
+# Copy link over the spike, and the mc over link.
+charcopy 9:b0 9:82
+charcopy 9:b1 9:83
+charcopy 9:82 3:82
+charcopy 9:83 3:83
+charcopy b:b0 b:82
+charcopy b:b1 b:83
+charcopy b:82 3:82
+charcopy b:83 3:83
+charcopy 13:b0 13:82
+charcopy 13:b1 13:83
+charcopy 13:82 3:82
+charcopy 13:83 3:83
+charcopy 15:b0 15:82
+charcopy 15:b1 15:83
+charcopy 15:82 3:82
+charcopy 15:83 3:83
+charcopy 17:b0 17:82
+charcopy 17:b1 17:83
+charcopy 17:82 3:82
+charcopy 17:83 3:83
+charcopy 19:b0 19:82
+charcopy 19:b1 19:83
+charcopy 19:82 3:82
+charcopy 19:83 3:83
+
+# Rewrite the sprite table for the meds/kid:
+wbp b=7 eea5 9d 9d
+wbp b=7 eea9 9d 9d
+# Fix the background objects table (e.g. moved cave wall):
+wbp b=1 8463 31
+wbp b=1 846b 31
+wbp b=2 8463 31
+wbp b=2 846b 31
+# Rewrite the sprite table for link-holding-up-item:
+wbp b=7 eb92 81 b1
+
