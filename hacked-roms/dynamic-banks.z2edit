@@ -3,12 +3,16 @@
 asm b=7 0xff4c
     sta $0561               ; store room
     jsr $ffc5               ; load bank 0
-    jmp $aa40               ; jump to routine in bank 0
+    jmp $be40               ; jump to routine in bank 0
 .org $cfb4
     jsr $ff4c
 .end
 
-asm b=0 0xaa40
+asm b=0 0xbe40
+ROOM = $be60
+BANK = $be61
+
+chrbank_switch:
     jsr $cf30               ; get region*5+world
     asl                     ; 16 bytes per region/world combo
     asl
@@ -16,21 +20,41 @@ asm b=0 0xaa40
     asl
     tax
 loop:
-    lda $ab00,x             ; table at $ab00
-    bmi done                ; negative value means end
+    lda ROOM,x              ; table at $ab00
+    beq done                ; zero value means end
     cmp $0561               ; equal to room number?
     beq loadchr             ; yes, get and load chr bank
     inx                     ; nope, inc pointer
     inx
     bne loop                ; check next value
 loadchr:
-    lda $ab01,x
+    lda BANK,x
     sta $076e
 done:
     jmp $ffc9               ; load bank in $0769 and return
+
+.org ROOM
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 .end
+
+
     
 # palace 5 is (region 2)*5 + (world 3) --> 13: 0xabd0
 # Room 55 (0x37): load CHR banks 0x16,0x17 (P5 banks)
 # Room 56 (0x38): load CHR banks 0x08,0x09 (P1 banks have horsehead)
-wbp b=0 0xabd0 0x37 0x16 0x38 0x8
+# wbp b=0 0xabd0 0x37 0x16 0x38 0x8

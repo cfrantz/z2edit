@@ -14,6 +14,29 @@ bool MiscellaneousHacks::Draw() {
         return false;
 
     ImGui::Begin("Miscellaneous Hacks", &visible_);
+
+    ImGui::RadioButton("Miscellaneous", &tab_, 0);
+    ImGui::SameLine(); ImGui::RadioButton("Dynamic Banks", &tab_, 1);
+    ImGui::SameLine(ImGui::GetWindowWidth() - 50);
+    ImApp::Get()->HelpButton("misc");
+    ImGui::Separator();
+
+    bool changed = false;
+    switch(tab_) {
+    case 0:
+        changed = DrawMiscHacks();
+        break;
+    case 1:
+        changed = DrawDynamicBanks();
+        break;
+    default:
+        ImGui::Text("Unknown tab value");
+    }
+    ImGui::End();
+    return changed;
+}
+
+bool MiscellaneousHacks::DrawMiscHacks() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const auto& misc = ri.misc();
 
@@ -41,8 +64,6 @@ bool MiscellaneousHacks::Draw() {
         }
     }
 
-    ImGui::SameLine(ImGui::GetWindowWidth() - 50);
-    ImApp::Get()->HelpButton("misc");
 
     ImGui::PushItemWidth(100);
     int item_delay = mapper_->Read(misc.item_pickup_delay(), 0);
@@ -91,13 +112,63 @@ bool MiscellaneousHacks::Draw() {
         [&]() { return ri.palace_to_stone(); },
         [&](int n) { return ri.palace_to_stone(n); });
 
-    ImGui::End();
+    return false;
+}
+
+bool MiscellaneousHacks::DrawDynamicBanks() {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    char roombuf[8], bankbuf[8];
+    const char *overworlds[] = {"West", "DM/Maze", "East"};
+    const char *worlds[] = {"Caves", "Towns", "Towns", "P125", "P346", "GP" };
+
+    int banks = Hack("CHR Banks", ri.dynamic_banks_size(),
+        [&]() { return ri.dynamic_banks(); },
+        [&](int n) { return ri.dynamic_banks(n); });
+    int ro = (banks == 0) ? ImGuiInputTextFlags_ReadOnly : 0;
+
+    ImGui::Columns(9, NULL, true);
+    ImGui::Text("Overworld World");
+    ImGui::NextColumn();
+    for(int i=0; i<8; i++) {
+        ImGui::Text("Room CHR");
+        ImGui::NextColumn();
+    }
+    ImGui::Separator();
+    for(int ov=0; ov<3; ov++) {
+        for(int world=0; world<6; world++) {
+            ImGui::Text("%9s %5s", overworlds[ov], worlds[world]);
+            ImGui::NextColumn();
+            for(int i=0; i<16; i+=2) {
+                int addr = 0xbe60 + (ov * 5 + world) * 16 + i;
+                ImGui::PushID(addr);
+                int room = mapper_->ReadPrgBank(0, addr + 0);
+                int bank = mapper_->ReadPrgBank(0, addr + 1);
+                snprintf(roombuf, sizeof(roombuf), "%d", room);
+                snprintf(bankbuf, sizeof(bankbuf), "%02x", bank);
+                ImGui::PushItemWidth(32);
+                if (ImGui::InputText("##room", roombuf, sizeof(roombuf), ImGuiInputTextFlags_CharsDecimal | ro)) {
+                    room = strtoul(roombuf, 0, 10);
+                    mapper_->WritePrgBank(0, addr+0, room);
+                }
+                ImGui::SameLine();
+                if (ImGui::InputText("##bank", bankbuf, sizeof(bankbuf), ImGuiInputTextFlags_CharsHexadecimal | ro)) {
+                    bank = strtoul(bankbuf, 0, 16);
+                    mapper_->WritePrgBank(0, addr+1, bank);
+                }
+                ImGui::PopItemWidth();
+                ImGui::PopID();
+                ImGui::NextColumn();
+            }
+            ImGui::Separator();
+        }
+    }
+    ImGui::Columns(1);
     return false;
 }
 
 
 template<class GETALL, class GET>
-void MiscellaneousHacks::Hack(const char* hackname, int n,
+int MiscellaneousHacks::Hack(const char* hackname, int n,
                               GETALL getall, GET get) {
     const char *names[n];
     int len = 0;
@@ -114,6 +185,7 @@ void MiscellaneousHacks::Hack(const char* hackname, int n,
         PutGameHack(get(method));
     }
     ImGui::PopItemWidth();
+    return method;
 }
 
 

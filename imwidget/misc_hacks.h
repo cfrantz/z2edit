@@ -8,17 +8,20 @@ namespace z2util {
 
 class MiscellaneousHacks: public ImWindowBase {
   public:
-    MiscellaneousHacks(): ImWindowBase(false) {};
+    MiscellaneousHacks(): ImWindowBase(false), tab_(0) {};
 
     bool Draw() override;
+    bool DrawMiscHacks();
+    bool DrawDynamicBanks();
     inline void set_mapper(Mapper* m) { mapper_ = m; };
   private:
     template<class GETALL, class GET>
-    void Hack(const char* hackname, int n, GETALL getall, GET get);
+    int Hack(const char* hackname, int n, GETALL getall, GET get);
 
     bool MemcmpHack(const PokeData& data);
     void PutPokeData(const PokeData& data);
     void PutGameHack(const GameHack& hack);
+    int tab_;
     Mapper* mapper_;
 };
 
