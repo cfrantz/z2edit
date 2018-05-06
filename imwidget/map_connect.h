@@ -59,6 +59,8 @@ class OverworldConnector {
     bool entry_right_;
     bool passthru_;
     bool fall_;
+    bool can_be_hidden_;
+    bool hidden_;
 
     bool drag_;
     int dx_;

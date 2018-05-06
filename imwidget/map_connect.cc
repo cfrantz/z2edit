@@ -46,10 +46,17 @@ void OverworldConnector::Read() {
     uint8_t w = mapper_->Read(address_, offset_ + 0xbd);
     if (overworld == mapper_->Read(hpal.cmpov(), 0)
         && offset_ == mapper_->Read(hpal.connector(), 0)) {
+        can_be_hidden_ = true;
+        hidden_ = y == 0;
         y = mapper_->Read(hpal.connector(), 2);
     } else if (overworld == mapper_->Read(hpal.cmpov(), 0)
                && offset_ == mapper_->Read(htown.connector(), 0)) {
+        can_be_hidden_ = true;
+        hidden_ = y == 0;
         y = mapper_->Read(htown.connector(), 2);
+    } else {
+        can_be_hidden_ = false;
+        hidden_ = false;
     }
 
     y_ = (y & 0x7f) - misc.overworld_y_offset();
@@ -108,7 +115,9 @@ void OverworldConnector::Write() {
         // Lets be lazy and not deal with the palette change.
         mapper_->Write(hpal.ppu_macro(), 10, 0xff);
 
-        mapper_->Write(address_, offset_ + 0x00, 0);
+        if (hidden_) {
+            mapper_->Write(address_, offset_ + 0x00, 0);
+        }
     } else if (overworld == mapper_->Read(htown.cmpov(), 0)
                && offset_ == mapper_->Read(htown.connector(), 0)) {
         // Hidden Town Y coordinate does not include the overworld_y_offset.
@@ -120,7 +129,9 @@ void OverworldConnector::Write() {
         mapper_->Write(htown.returny(), 0, (y & 0x7f));
         mapper_->Write(htown.discriminator(), 0, x_);
 
-        mapper_->Write(address_, offset_ + 0x00, 0);
+        if (hidden_) {
+            mapper_->Write(address_, offset_ + 0x00, 0);
+        }
     } else if (offset_ == raft) {
         // The raft table layout is:
         // ov0_xpos, ov2_xpos, ov0_ypos, ov2_ypos
@@ -193,6 +204,10 @@ bool OverworldConnector::DrawInPopup() {
     ImGui::PopItemWidth();
 
     ImGui::Text("Properties:");
+    if (can_be_hidden_) {
+        chg |= ImGui::Checkbox("hidden", &hidden_);
+    }
+
     chg |= ImGui::Combo("entry", &entry_, "0\000256\000512\000768\0\0");
 
     chg |= ImGui::Checkbox("extern", &ext_);
