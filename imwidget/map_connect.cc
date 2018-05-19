@@ -106,7 +106,8 @@ void OverworldConnector::Write() {
         mapper_->Write(hpal.returny(), 0, (y & 0x7f));
 
         // PPU macros have their addresses in big-endian order.
-        uint16_t ppu_addr = 0x2000 + 2 * (32*(y_ % 15) + (x_ % 16));
+        uint16_t ppu_addr = 0x2000 + 2 * (32*(y_ % 15) + (x_ % 16)) +
+                            0x800 * (y_ % 30 / 15);
         mapper_->Write(hpal.ppu_macro(), 0, ppu_addr >> 8);
         mapper_->Write(hpal.ppu_macro(), 1, ppu_addr);
         ppu_addr += 32;
