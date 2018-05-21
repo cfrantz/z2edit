@@ -10,7 +10,7 @@ namespace z2util {
 
 class App: public ImApp {
   public:
-    App(const std::string& name) : ImApp(name, 1280, 720, false) {}
+    App(const std::string& name) : ImApp(name, 1280, 720) {}
     ~App() override {}
 
     void Init() override;

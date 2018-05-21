@@ -53,7 +53,7 @@ class ImApp {
     void HelpButton(const std::string& topickey, bool right_justify=false);
 
   protected:
-    virtual void AudioCallback(void* stream, int len);
+    virtual void AudioCallback(float* stream, int len);
     std::string name_;
     int width_;
     int height_;

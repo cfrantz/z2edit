@@ -21,7 +21,7 @@ bind(
 ######################################################################
 new_git_repository(
     name = "imgui_git",
-    tag = "v1.49",
+    tag = "v1.60",
     remote = "https://github.com/ocornut/imgui.git",
     build_file = "//rules:imgui.BUILD",
 )
