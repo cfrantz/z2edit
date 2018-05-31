@@ -1,0 +1,14 @@
+overworld_breakblocks {
+    name: "Vanilla (Breakblocks are black tiles)"
+    hack: [
+        {address { bank:1 address:0x849b } data: [ 0x68, 0x69, 0x68, 0x69 ]},
+        {address { bank:2 address:0x849b } data: [ 0x68, 0x69, 0x68, 0x69 ]}
+    ]
+}
+overworld_breakblocks {
+    name: "Classic (Breakblocks the same tiles as in palaces)"
+    hack: [
+        {address { bank:1 address:0x849b } data: [ 0xba, 0xbb, 0xbc, 0xbd ]},
+        {address { bank:2 address:0x849b } data: [ 0xba, 0xbb, 0xbc, 0xbd ]}
+    ]
+}

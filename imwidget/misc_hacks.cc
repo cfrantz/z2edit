@@ -112,6 +112,10 @@ bool MiscellaneousHacks::DrawMiscHacks() {
         [&]() { return ri.palace_to_stone(); },
         [&](int n) { return ri.palace_to_stone(n); });
 
+    Hack("Overworld BreakBlocks", ri.overworld_breakblocks_size(),
+        [&]() { return ri.overworld_breakblocks(); },
+        [&](int n) { return ri.overworld_breakblocks(n); });
+
     return false;
 }
 

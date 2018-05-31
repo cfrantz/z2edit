@@ -209,8 +209,8 @@ decompress {
     id: 0x60
     render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x20
-    comment: "crumble brick"
+    objid: 0x61
+    comment: "breakable block"
 }
 decompress {
     area: OUTDOORS
@@ -272,8 +272,8 @@ decompress {
     id: 0xD0
     render: RENDER_VERTICAL
     width: 1
-    objid: 0x20
-    comment: "crumble bricks"
+    objid: 0x61
+    comment: "breakable block"
 }
 decompress {
     area: OUTDOORS
@@ -342,8 +342,8 @@ decompress {
     id: 0x60
     render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x60
-    comment: "crumble brick"
+    objid: 0x61
+    comment: "breakable brick"
 }
 decompress {
     area: OUTDOORS
@@ -405,8 +405,8 @@ decompress {
     id: 0xD0
     render: RENDER_VERTICAL
     width: 1
-    objid: 0x60
-    comment: "crumble bricks"
+    objid: 0x61
+    comment: "breakable block"
 }
 decompress {
     area: OUTDOORS

@@ -362,4 +362,5 @@ message RomInfo {
     ItemDrop drop_info = 22;
     TileTable tile_transform_table = 23;
     repeated GameHack dynamic_banks = 24;
+    repeated GameHack overworld_breakblocks = 25;
 }
