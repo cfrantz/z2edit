@@ -75,6 +75,7 @@ misc {
     beam_sword_speed: { bank: 0 address: 0x9819 }
 
     elevator_speed: { bank: -1 address: 0xd8bf }
+    fairy_speed: { bank: 0 address: 0x92aa }
 
     overworld_tile_palettes: { bank: 0 address: 0x87e3 }
     spell_names: { bank: 0 address: 0x9c2a }

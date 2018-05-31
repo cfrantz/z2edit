@@ -112,6 +112,9 @@ message Miscellaneous {
     int32 town_connection_id = 30;
     Address world_to_bank = 31;
 
+    // Parameters which control the speed of fairy.
+    Address fairy_speed = 32;
+
 }
 
 message Palette {

@@ -98,6 +98,17 @@ bool MiscellaneousHacks::DrawMiscHacks() {
         mapper_->Write(misc.elevator_speed(), 2, -elevator_speed);
     }
 
+    // 0x92aa: 10 18 e8 ff, 00 18 e8 ff, 00 18 e8 00
+    int fairy_speed = mapper_->Read(misc.fairy_speed(), 1);
+    if (ImGui::InputInt("Fairy Speed", &fairy_speed)) {
+        mapper_->Write(misc.fairy_speed(), 1, fairy_speed);
+        mapper_->Write(misc.fairy_speed(), 2, -fairy_speed);
+        mapper_->Write(misc.fairy_speed(), 4+1, fairy_speed);
+        mapper_->Write(misc.fairy_speed(), 4+2, -fairy_speed);
+        mapper_->Write(misc.fairy_speed(), 8+1, fairy_speed);
+        mapper_->Write(misc.fairy_speed(), 8+2, -fairy_speed);
+    }
+
     ImGui::PopItemWidth();
 
     Hack("Palace 5 detect", ri.palace5_detect_size(),
