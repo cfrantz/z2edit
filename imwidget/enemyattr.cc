@@ -108,6 +108,29 @@ void EnemyEditor::Init() {
     Load();
 }
 
+bool EnemyEditor::DrawPbags(const char *types) {
+    const char *bags[] = {
+        "50-bag",
+        "100-bag",
+        "200-bag",
+        "500-bag",
+    };
+
+    bool changed = false;
+    ImGui::Text("%-20s %s", "P-bag type", "Points");
+    ImGui::Separator();
+
+    for(int i=0; i<4; i++) {
+        ImGui::PushID(i);
+        ImGui::AlignFirstTextHeightToWidgets();
+        ImGui::Text("%-20s", bags[i]);
+        ImGui::SameLine();
+        changed_ |= ImGui::Combo("##xp", &pbags_[i], types);
+        ImGui::PopID();
+    }
+    return changed;
+}
+
 bool EnemyEditor::Draw() {
     if (!visible_)
         return changed_;
@@ -121,15 +144,16 @@ bool EnemyEditor::Draw() {
         n++;
     }
 
-    const char *names[ri.enemies_size()];
+    const char *names[ri.enemies_size() + 1];
     for(int i=0; i<ri.enemies_size(); i++) {
         names[i] = ri.enemies(i).area().c_str();
     }
+    names[ri.enemies_size()] = "P-Bags";
 
     ImGui::Begin("Enemy Attributes", &visible_);
     ImGui::PushItemWidth(400);
     int category = category_;
-    if (ImGui::Combo("Category", &category, names, ri.enemies_size())) {
+    if (ImGui::Combo("Category", &category, names, ri.enemies_size()+1)) {
         if (FLAGS_reminder_dialogs && changed_) {
             ErrorDialog::Spawn("Discard Chagnes", 
                 ErrorDialog::OK | ErrorDialog::CANCEL,
@@ -160,64 +184,68 @@ bool EnemyEditor::Draw() {
     ImApp::Get()->HelpButton("enemy-attributes", true);
 
     ImGui::PushItemWidth(96);
-    const auto& einfo = ri.enemies(category_);
-    ImGui::Text("%-40s  %-14s %-8s %-8s %-8s %-14s %-8s %-7s %-7s %-7s "
-                "%-7s %-7s %-7s %-7s %-7s",
-            "Name", "HitPoints", "Palette", "StealXP", "NeedFire", "Points",
-            "DropGrp", "BeamImm", "Unknown", "DmgType",
-            "ThndImm", "Regen", "Unknown", "SwordImm", "Unknown"
-            );
-    ImGui::Separator();
-    for(int i=0; i<TABLE_LEN; i++) {
-        const auto& enemy = einfo.info().find(i);
-        if (enemy == einfo.info().end())
-            continue;
+    if (category_ == ri.enemies_size()) {
+        changed_ |= DrawPbags(types);
+    } else {
+        const auto& einfo = ri.enemies(category_);
+        ImGui::Text("%-40s  %-14s %-8s %-8s %-8s %-14s %-8s %-7s %-7s %-7s "
+                    "%-7s %-7s %-7s %-7s %-7s",
+                "Name", "HitPoints", "Palette", "StealXP", "NeedFire", "Points",
+                "DropGrp", "BeamImm", "Unknown", "DmgType",
+                "ThndImm", "Regen", "Unknown", "SwordImm", "Unknown"
+                );
+        ImGui::Separator();
+        for(int i=0; i<TABLE_LEN; i++) {
+            const auto& enemy = einfo.info().find(i);
+            if (enemy == einfo.info().end())
+                continue;
 
-        ImGui::PushID(i);
-        ImGui::AlignFirstTextHeightToWidgets();
-        ImGui::Text("%-40.40s ", enemy->second.name().c_str());
+            ImGui::PushID(i);
+            ImGui::AlignFirstTextHeightToWidgets();
+            ImGui::Text("%-40.40s ", enemy->second.name().c_str());
 
-        ImGui::SameLine();
-        changed_ |= ImGui::InputInt("##hp", &data_[i].hp);
-        ImGui::SameLine();
-        ImGui::PushItemWidth(40);
-        changed_ |= ImGui::Combo("   ##pal", &data_[i].palette, "0\0001\0002\0003\000\0");
-        ImGui::PopItemWidth();
+            ImGui::SameLine();
+            changed_ |= ImGui::InputInt("##hp", &data_[i].hp);
+            ImGui::SameLine();
+            ImGui::PushItemWidth(40);
+            changed_ |= ImGui::Combo("   ##pal", &data_[i].palette, "0\0001\0002\0003\000\0");
+            ImGui::PopItemWidth();
 
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##steal", &data_[i].steal_xp);
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##fire", &data_[i].need_fire);
-        ImGui::SameLine();
-        changed_ |= ImGui::Combo("##xp", &data_[i].xp_type, types);
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##steal", &data_[i].steal_xp);
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##fire", &data_[i].need_fire);
+            ImGui::SameLine();
+            changed_ |= ImGui::Combo("##xp", &data_[i].xp_type, types);
 
-        ImGui::SameLine();
-        ImGui::PushItemWidth(60);
-        changed_ |= ImGui::Combo("##dg", &data_[i].drop_group, "None\0Small\0Large\0Unknown\0\0");
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##nobeam", &data_[i].no_beam);
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##unk1", &data_[i].unknown1);
-        ImGui::SameLine();
-        ImGui::PushItemWidth(40);
-        changed_ |= ImGui::Combo("##damage", &data_[i].damage_code, all);
-        ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::PushItemWidth(60);
+            changed_ |= ImGui::Combo("##dg", &data_[i].drop_group, "None\0Small\0Large\0Unknown\0\0");
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##nobeam", &data_[i].no_beam);
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##unk1", &data_[i].unknown1);
+            ImGui::SameLine();
+            ImGui::PushItemWidth(40);
+            changed_ |= ImGui::Combo("##damage", &data_[i].damage_code, all);
+            ImGui::PopItemWidth();
 
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##nothunder", &data_[i].no_thunder);
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##regen", &data_[i].regenerate);
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##unk2", &data_[i].unknown2);
-        ImGui::SameLine();
-        changed_ |= ImGui::Checkbox("    ##nosword", &data_[i].no_sword);
-        ImGui::SameLine();
-        ImGui::PushItemWidth(40);
-        changed_ |= ImGui::Combo("##unk3", &data_[i].unknown3, all);
-        ImGui::PopItemWidth();
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##nothunder", &data_[i].no_thunder);
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##regen", &data_[i].regenerate);
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##unk2", &data_[i].unknown2);
+            ImGui::SameLine();
+            changed_ |= ImGui::Checkbox("    ##nosword", &data_[i].no_sword);
+            ImGui::SameLine();
+            ImGui::PushItemWidth(40);
+            changed_ |= ImGui::Combo("##unk3", &data_[i].unknown3, all);
+            ImGui::PopItemWidth();
 
-        ImGui::PopID();
+            ImGui::PopID();
+        }
     }
     ImGui::PopItemWidth();
     ImGui::End();
@@ -226,9 +254,17 @@ bool EnemyEditor::Draw() {
 
 void EnemyEditor::Load() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
-    const auto& einfo = ri.enemies(category_);
+    changed_ = false;
     table_.Load();
+    if (category_ == ri.enemies_size()) {
+        for(int i=0; i<4; i++) {
+            pbags_[i] = mapper_->Read(ri.misc().pbag_values(), i);
+        }
+        return;
+    }
+
     data_.clear();
+    const auto& einfo = ri.enemies(category_);
     for(int i=0; i<TABLE_LEN; i++) {
         uint8_t hp = mapper_->Read(einfo.hpinfo(), i);
         uint8_t val = mapper_->Read(einfo.xpinfo(), i);
@@ -256,13 +292,19 @@ void EnemyEditor::Load() {
                      drop_group, no_beam, unknown1, damage_code,
                      no_thunder, regenerate, unknown2, no_sword, unknown3 });
     }
-    changed_ = false;
 }
 
 void EnemyEditor::Save() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
-    const auto& einfo = ri.enemies(category_);
+    changed_ = false;
     table_.Save();
+    if (category_ == ri.enemies_size()) {
+        for(int i=0; i<4; i++) {
+            mapper_->Write(ri.misc().pbag_values(), i, pbags_[i]);
+        }
+        return;
+    }
+    const auto& einfo = ri.enemies(category_);
     for(const auto& enemy : einfo.info()) {
         const Unpacked& val = data_.at(enemy.first); 
         mapper_->Write(einfo.hpinfo(), enemy.first, val.hp);
@@ -285,7 +327,6 @@ void EnemyEditor::Save() {
             | (val.unknown3);
         mapper_->Write(einfo.xpinfo(), enemy.first + 3*TABLE_LEN, b);
     }
-    changed_ = false;
 }
 
 

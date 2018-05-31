@@ -38,6 +38,8 @@ class EnemyEditor: public ImWindowBase {
     void Init();
 
     bool Draw() override;
+    bool DrawPbags(const char* types);
+
     void Refresh() override { Init(); }
     inline void set_mapper(Mapper* m) { mapper_ = m; }
   private:
@@ -65,6 +67,7 @@ class EnemyEditor: public ImWindowBase {
     bool changed_;
     int category_;
     std::vector<Unpacked> data_;
+    int pbags_[4];
     PointsTable table_;
     const static int TABLE_LEN = 0x24;
 };

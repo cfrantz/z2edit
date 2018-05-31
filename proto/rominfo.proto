@@ -115,6 +115,8 @@ message Miscellaneous {
     // Parameters which control the speed of fairy.
     Address fairy_speed = 32;
 
+    // Point values for pbags
+    Address pbag_values = 33;
 }
 
 message Palette {
