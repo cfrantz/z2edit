@@ -1,6 +1,11 @@
 *.nes
 *.nes.sram
+*.z2prj
+*.ips
+*.zip
 imgui.ini
 bazel-*
 docs
 tools/mxe
+gtm/*
+lemmy/*
