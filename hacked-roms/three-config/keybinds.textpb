@@ -1,0 +1,20 @@
+overworld_editor_keybind: [
+  { scancode: SDL_SCANCODE_RIGHT action: STBTE_scroll_right },
+  { scancode: SDL_SCANCODE_LEFT  action: STBTE_scroll_left },
+  { scancode: SDL_SCANCODE_UP    action: STBTE_scroll_up },
+  { scancode: SDL_SCANCODE_DOWN  action: STBTE_scroll_down },
+
+  { scancode: SDL_SCANCODE_S     action: STBTE_tool_select },
+  { scancode: SDL_SCANCODE_B     action: STBTE_tool_brush },
+  { scancode: SDL_SCANCODE_E     action: STBTE_tool_erase },
+  { scancode: SDL_SCANCODE_R     action: STBTE_tool_rectangle },
+  { scancode: SDL_SCANCODE_I     action: STBTE_tool_eyedropper },
+  { scancode: SDL_SCANCODE_L     action: STBTE_tool_link },
+  { scancode: SDL_SCANCODE_G     action: STBTE_act_toggle_grid },
+
+  { mod: KMOD__CTRL scancode: SDL_SCANCODE_X   action: STBTE_act_cut },
+  { mod: KMOD__CTRL scancode: SDL_SCANCODE_C   action: STBTE_act_copy },
+  { mod: KMOD__CTRL scancode: SDL_SCANCODE_V   action: STBTE_act_paste },
+  { mod: KMOD__CTRL scancode: SDL_SCANCODE_Z   action: STBTE_act_undo },
+  { mod: KMOD__CTRL scancode: SDL_SCANCODE_Y   action: STBTE_act_redo }
+]

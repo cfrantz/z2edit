@@ -1,0 +1,135 @@
+palettes {
+    name: "Overworld"
+    palette { name: "Overworld" address: { bank: -1 address: 0xc45b } }
+    palette { name: "Sprites"   address: { bank: -1 address: 0xc46b } }
+}
+palettes {
+    name: "West Hyrule"
+    palette { name: "North Castle" address: { bank:1 address: 0x800e } }
+    palette { name: "Cave"         address: { bank:1 address: 0x801e } }
+    palette { name: "Desert"       address: { bank:1 address: 0x802e } }
+    palette { name: "Grass"        address: { bank:1 address: 0x803e } }
+    palette { name: "Forest"       address: { bank:1 address: 0x804e } }
+    palette { name: "Swamp"        address: { bank:1 address: 0x805e } }
+    palette { name: "Graveyard"    address: { bank:1 address: 0x806e } }
+    palette { name: "Water"        address: { bank:1 address: 0x807e } }
+    palette { name: "Dark Cave"    address: { bank:1 address: 0x808e } }
+}
+palettes {
+    name: "West Hyrule Sprites"
+    palette { name: "Black Border" address: { bank:1 address: 0x809e } }
+    palette { name: "Dark Border"  address: { bank:1 address: 0x80ae } }
+    palette { name: "Unused 2"     address: { bank:1 address: 0x80be } }
+    palette { name: "Unused 3"     address: { bank:1 address: 0x80ce } }
+}
+palettes {
+    name: "East Hyrule"
+    palette { name: "North Castle" address: { bank:2 address: 0x800e } }
+    palette { name: "Cave"         address: { bank:2 address: 0x801e } }
+    palette { name: "Desert"       address: { bank:2 address: 0x802e } }
+    palette { name: "Grass"        address: { bank:2 address: 0x803e } }
+    palette { name: "Forest"       address: { bank:2 address: 0x804e } }
+    palette { name: "Swamp"        address: { bank:2 address: 0x805e } }
+    palette { name: "Graveyard"    address: { bank:2 address: 0x806e } }
+    palette { name: "Water"        address: { bank:2 address: 0x807e } }
+    palette { name: "Dark Cave"    address: { bank:2 address: 0x808e } }
+}
+palettes {
+    name: "East Hyrule Sprites"
+    palette { name: "Black Border" address: { bank:2 address: 0x809e } }
+    palette { name: "Dark Border"  address: { bank:2 address: 0x80ae } }
+    palette { name: "Unused 2"     address: { bank:2 address: 0x80be } }
+    palette { name: "Unused 3"     address: { bank:2 address: 0x80ce } }
+}
+palettes {
+    name: "Third Hyrule"
+    palette { name: "North Castle" address: { bank:14 address: 0x800e } }
+    palette { name: "Cave"         address: { bank:14 address: 0x801e } }
+    palette { name: "Desert"       address: { bank:14 address: 0x802e } }
+    palette { name: "Grass"        address: { bank:14 address: 0x803e } }
+    palette { name: "Forest"       address: { bank:14 address: 0x804e } }
+    palette { name: "Swamp"        address: { bank:14 address: 0x805e } }
+    palette { name: "Graveyard"    address: { bank:14 address: 0x806e } }
+    palette { name: "Water"        address: { bank:14 address: 0x807e } }
+    palette { name: "Dark Cave"    address: { bank:14 address: 0x808e } }
+}
+palettes {
+    name: "Third Hyrule Sprites"
+    palette { name: "Black Border" address: { bank:14 address: 0x809e } }
+    palette { name: "Dark Border"  address: { bank:14 address: 0x80ae } }
+    palette { name: "Unused 2"     address: { bank:14 address: 0x80be } }
+    palette { name: "Unused 3"     address: { bank:14 address: 0x80ce } }
+}
+
+palettes {
+    name: "Towns"
+    palette { name: "Rauru"        address: { bank:3 address: 0x800e } }
+    palette { name: "Ruto"         address: { bank:3 address: 0x801e } }
+    palette { name: "Saria"        address: { bank:3 address: 0x802e } }
+    palette { name: "Mido"         address: { bank:3 address: 0x803e } }
+    palette { name: "Nabooru"      address: { bank:3 address: 0x804e } }
+    palette { name: "Darunia"      address: { bank:3 address: 0x805e } }
+    palette { name: "Kasuto"       address: { bank:3 address: 0x806e } }
+    palette { name: "New Kasuto"   address: { bank:3 address: 0x807e } }
+}
+palettes {
+    name: "Town Sprites"
+    palette { name: "Black Border" address: { bank:3 address: 0x809e } }
+    palette { name: "Dark Border"  address: { bank:3 address: 0x80ae } }
+    palette { name: "Unused 2"     address: { bank:3 address: 0x80be } }
+    palette { name: "Unused 3"     address: { bank:3 address: 0x80ce } }
+}
+palettes {
+    name: "Palaces (Outdoors)"
+    palette { name: "P1 (Parapa)"  address: { bank:4 address: 0x8470 } }
+    palette { name: "P2 (Midoro)"  address: { bank:4 address: 0x8480 } }
+    palette { name: "P3 (Island)"  address: { bank:4 address: 0x8490 } }
+    palette { name: "P4 (Maze)"    address: { bank:4 address: 0x84a0 } }
+    palette { name: "P5 (Water)"   address: { bank:4 address: 0x84b0 } }
+    palette { name: "P6 (Hidden)"  address: { bank:4 address: 0x84c0 } }
+    palette { name: "P7 (Great)"   address: { bank:5 address: 0x800e } }
+    palette { name: "Pa (A)"  address: { bank:13 address: 0x8470 } }
+    palette { name: "Pb (B)"  address: { bank:13 address: 0x8480 } }
+    palette { name: "Pc (C)"  address: { bank:13 address: 0x8490 } }
+    palette { name: "Pd (D)"  address: { bank:13 address: 0x84a0 } }
+    palette { name: "Pe (E)"  address: { bank:13 address: 0x84b0 } }
+    palette { name: "Pf (F)"  address: { bank:13 address: 0x84c0 } }
+}
+palettes {
+    name: "Palaces (Inside)"
+    palette { name: "P1 (Parapa)"  address: { bank:4 address: 0xBF00 } }
+    palette { name: "P2 (Midoro)"  address: { bank:4 address: 0xBF10 } }
+    palette { name: "P3 (Island)"  address: { bank:4 address: 0xBF20 } }
+    palette { name: "P4 (Maze)"    address: { bank:4 address: 0xBF30 } }
+    palette { name: "P5 (Water)"   address: { bank:4 address: 0xBF40 } }
+    palette { name: "P6 (Hidden)"  address: { bank:4 address: 0xBF50 } }
+    palette { name: "P7 (Great)"   address: { bank:5 address: 0x801e } }
+    palette { name: "Pa (A)"  address: { bank:13 address: 0xBF00 } }
+    palette { name: "Pb (B)"  address: { bank:13 address: 0xBF10 } }
+    palette { name: "Pc (C)"  address: { bank:13 address: 0xBF20 } }
+    palette { name: "Pd (D)"  address: { bank:13 address: 0xBF30 } }
+    palette { name: "Pe (E)"  address: { bank:13 address: 0xBF40 } }
+    palette { name: "Pf (F)"  address: { bank:13 address: 0xBF50 } }
+}
+palettes {
+    name: "Palace 1-6 Sprites"
+    palette { name: "Black Border" address: { bank:4 address: 0x809e } }
+    palette { name: "Dark Border"  address: { bank:4 address: 0x80ae } }
+    palette { name: "Unused 2"     address: { bank:4 address: 0x80be } }
+    palette { name: "Unused 3"     address: { bank:4 address: 0x80ce } }
+}
+palettes {
+    name: "Palace A-F Sprites"
+    palette { name: "Black Border" address: { bank:13 address: 0x809e } }
+    palette { name: "Dark Border"  address: { bank:13 address: 0x80ae } }
+    palette { name: "Unused 2"     address: { bank:13 address: 0x80be } }
+    palette { name: "Unused 3"     address: { bank:13 address: 0x80ce } }
+}
+
+palettes {
+    name: "Palace 7 Sprites"
+    palette { name: "Black Border" address: { bank:5 address: 0x809e } }
+    palette { name: "Dark Border"  address: { bank:5 address: 0x80ae } }
+    palette { name: "Unused 2"     address: { bank:5 address: 0x80be } }
+    palette { name: "Unused 3"     address: { bank:5 address: 0x80ce } }
+}

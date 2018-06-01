@@ -1,0 +1,48 @@
+set ibase 16
+bcopy 0:bd00 0:87a3 50
+set bank 0
+bcopy 0:bd50 7:c458 24
+bcopy 0:bd80 0:bd00 80
+bcopy 0:be00 0:bd00 80
+wwp bf00 bd00 bd80 be00
+
+asm 81a3
+    jmp tile_palette_copy_routine
+
+.org $bf10
+tile_palette_copy_routine:
+    sta $0725
+    inc $0726
+    inc $0736
+
+    lda $0706       ; overworld index
+    asl
+    tay
+    lda $bf00,y
+    sta $e
+    lda $bf01,y
+    sta $f
+
+    ldy #0
+loop:
+    lda ($0e,y)
+    sta $6940,y
+    iny
+    bpl loop
+    rts
+.end
+
+wwp 8981 6940
+wwp 8c98 6940
+
+wwp 8aa9 6980
+wwp 8ab2 6980
+wwp 8abb 6980
+wwp 8ac4 6980
+
+wwp 8bb4 6980
+wwp 8bbd 6980
+wwp 8bc7 6980
+wwp 8bd0 6980
+
+wwp b=7 c051 6990

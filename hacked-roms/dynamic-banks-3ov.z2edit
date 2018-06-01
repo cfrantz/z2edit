@@ -1,0 +1,56 @@
+# Load CHR banks when entering specific rooms.
+# Use to put horsehead in P5
+# In my 3 overworlds hack, bank 15 $c92b got freed up.
+asm b=15 0xc92b
+    sta $0561               ; store room
+    jsr $ffc5               ; load bank 0
+    jmp $bf00               ; jump to routine in bank 0
+.org $cfb4
+    jsr $c92b
+.end
+
+asm b=0 0xbf00
+    lda $0707               ; Get world number
+    asl                     ; 32 bytes per world
+    asl
+    asl
+    asl
+    asl
+    tax
+loop:
+    lda $be00,x             ; table at $ab00
+    beq done                ; zero means end
+    cmp $0561               ; equal to room number?
+    beq loadchr             ; yes, get and load chr bank
+    inx                     ; nope, inc pointer
+    inx
+    bne loop                ; check next value
+loadchr:
+    lda $be01,x
+    sta $076e
+done:
+    jmp $ffc9               ; load bank in $0769 and return
+.end
+
+# Table of 256 zeros
+wbp b=0 0xbe00 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe20 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe30 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe40 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe50 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe60 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe70 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe80 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbe90 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbea0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbeb0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbec0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbed0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbee0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wbp b=0 0xbef0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# palace 5 is in world 3, 32*3 = 96 (0x60)
+# Room 55 (0x37): load CHR banks 0x16,0x17 (P5 banks)
+# Room 56 (0x38): load CHR banks 0x08,0x09 (P1 banks have horsehead)
+wbp b=0 0xbe60 0x37 0x16 0x38 0x8

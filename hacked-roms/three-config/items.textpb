@@ -1,0 +1,135 @@
+items {
+    info: [
+        { key: 0x00 value: {
+            name: "candle"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e7f }
+            palette: 1
+        }}, { key: 0x01 value: {
+            name: "glove"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e81 }
+            palette: 1
+        }}, { key: 0x02 value: {
+            name: "raft"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e83 }
+            palette: 1
+        }}, { key: 0x03 value: {
+            name: "boots"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e85 }
+            palette: 1
+        }}, { key: 0x04 value: {
+            name: "flute"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e87 }
+            palette: 1
+        }}, { key: 0x05 value: {
+            name: "cross"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e89 }
+            palette: 1
+        }}, { key: 0x06 value: {
+            name: "hammer"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e8b }
+            palette: 1
+        }}, { key: 0x07 value: {
+            name: "magic key"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e8d }
+            palette: 1
+        }}, { key: 0x08 value: {
+            name: "key"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e8f }
+            palette: 1
+        }}, { key: 0x09 value: {
+            name: "???(0x09)"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e91 }
+            palette: 1
+        }}, { key: 0x0a value: {
+            name: "50-bag"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e93 }
+            palette: 1
+        }}, { key: 0x0b value: {
+            name: "100-bag"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e95 }
+            palette: 1
+        }}, { key: 0x0c value: {
+            name: "200-bag"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e97 }
+            palette: 1
+        }}, { key: 0x0d value: {
+            name: "500-bag"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e99 }
+            palette: 1
+        }}, { key: 0x0e value: {
+            name: "magic container"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e9b }
+            palette: 1
+        }}, { key: 0x0f value: {
+            name: "heart container"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e9d }
+            palette: 1
+        }}, { key: 0x10 value: {
+            name: "blue jar"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2e9f }
+            palette: 2
+        }}, { key: 0x11 value: {
+            name: "red jar"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2ea1 }
+            palette: 3
+        }}, { key: 0x12 value: {
+            name: "1up"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2ea3 }
+            palette: 0
+        }}, { key: 0x13 value: {
+            name: "kid"
+            chr { bank: 4 }
+            table { bank: -1 address: 0x2ea5 }
+            palette: 1
+        }}, { key: 0x14 value: {
+            name: "trophy"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2ea7 }
+            palette: 1
+        }}, { key: 0x15 value: {
+            name: "water of life"
+            chr { bank: 2 }
+            table { bank: -1 address: 0x2ea9 }
+            palette: 1
+        }}, { 
+            # A fake item to make rendering elevators easier
+            key: 0xee value: {
+            name: "elevator"
+            width: 32 height: 64
+            chr: { bank: 2 }
+            palette: 1
+            id: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
+                    -1,   -1,   -1, -1,
+                    -1,   -1,   -1, -1,
+                  0x0400ac, 0x0400ac, 0x0400ac, -1 ]
+        }}, { 
+            # A fake item to make rendering doors easier
+            key: 0xd4 value: {
+            name: "door"
+            width: 8 height: 48
+            chr: { bank: 2 }
+            palette: 1
+            id: [0x74, 0x76, 0x74]
+        }}
+
+    ]
+}

@@ -1,0 +1,171 @@
+asm b=7 0xff4c
+framecount:
+        STA $2000
+        INC $7a00
+        LDA $7a00
+        CMP #60
+        BNE framecount_done
+        LDA #0
+        STA $7a00
+        INC $7a01
+framecount_done:
+        PLA
+        RTI
+
+reset_room:
+        ; seems like 37 frames from end of map to beginning of play
+        LDA #-37
+        STA $7a00
+        LDA #0
+        STA $7a01
+        jmp $c722
+
+; end of map decompress.
+.org $c62c
+        jmp reset_room
+
+; Very end of the ISR
+.org $c1b1
+        jmp framecount
+.end
+
+
+asm b=0 0xac00
+hud_macro:
+.db $20,$57,$08,$d0,$ce,$d0,$f4,$d0,$d0,$d0,$d0,$ff
+
+hud_update:
+        LDY $0301
+        LDX #$00
+copy_macro:
+        LDA $0524
+        BNE hud_update_done
+        LDA $074c
+        BNE hud_update_done
+
+        LDA $ac00,X
+        STA $0302,Y
+        INY
+        INX
+        CPX #$0c
+        BNE copy_macro
+        DEY
+        NOP
+        STY $0301
+        CLC
+        LDX $05e0
+        LDA ones_digit,X
+        STA $2fc,Y
+        LDX $05df
+        LDA ones_digit,X
+        STA $02fa,Y
+
+        LDX $7a00
+        LDA ones_digit,X
+        STA $301,Y
+        LDA tens_digit,X
+        STA $300,Y
+
+        LDX $7a01
+        LDA ones_digit,X
+        STA $2ff,Y
+        LDA tens_digit,X
+        STA $2fe,Y
+hud_update_done:
+        JMP $97bb
+
+overworld_display:
+        LDX #$0e
+        LDY #$00
+        STY $00
+rhs_black_bar:
+        LDA $00
+        STA $0208,Y
+        CLC
+        ADC #$10
+        STA $00
+        LDA #$ff
+        STA $0209,Y
+        LDA #$f8
+        STA $020b,Y
+        LDA #$01
+        STA $020a,Y
+        INY
+        INY
+        INY
+        INY
+        DEX
+        BPL rhs_black_bar
+
+        LDA #$08            ; Y-pos for counter sprites
+        STA $0208,Y
+        STA $020c,Y
+        STA $0210,Y
+        LDA #$02            ; attr for sprites
+        STA $020a,Y
+        STA $020e,Y
+        STA $0212,Y
+        LDA #$20            ; X-positions
+        STA $020b,Y
+        LDA #$28
+        STA $020f,Y
+        LDA #$38
+        STA $0213,Y
+        LDA $0516           ; timer high nibble
+        LSR
+        LSR
+        LSR
+        LSR
+        ASL
+        ADC #$e0
+        STA $0209,Y
+        LDA $0516           ; timer low nibble
+        AND #$0f
+        ASL
+        ADC #$e0
+        STA $020d,Y
+        LDA $26             ; step counter
+        LSR
+        LSR
+        LSR
+        LSR
+        ASL
+        ADC #$e0
+        STA $0211,Y
+        RTS
+
+ones_digit:
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+.db $d0,$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8,$d9
+tens_digit:
+.db $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
+.db $d1,$d1,$d1,$d1,$d1,$d1,$d1,$d1,$d1,$d1
+.db $d2,$d2,$d2,$d2,$d2,$d2,$d2,$d2,$d2,$d2
+.db $d3,$d3,$d3,$d3,$d3,$d3,$d3,$d3,$d3,$d3
+.db $d4,$d4,$d4,$d4,$d4,$d4,$d4,$d4,$d4,$d4
+.db $d5,$d5,$d5,$d5,$d5,$d5,$d5,$d5,$d5,$d5
+.db $d6,$d6,$d6,$d6,$d6,$d6,$d6,$d6,$d6,$d6
+.db $d7,$d7,$d7,$d7,$d7,$d7,$d7,$d7,$d7,$d7
+.db $d8,$d8,$d8,$d8,$d8,$d8,$d8,$d8,$d8,$d8
+.db $d9,$d9,$d9,$d9,$d9,$d9,$d9,$d9,$d9,$d9
+.db $da,$da,$da,$da,$da,$da,$da,$da,$da,$da
+.db $db,$db,$db,$db,$db,$db,$db,$db,$db,$db
+.db $dc,$dc,$dc,$dc,$dc,$dc,$dc,$dc,$dc,$dc
+.db $dd,$dd,$dd,$dd,$dd,$dd,$dd,$dd,$dd,$dd
+.db $de,$de,$de,$de,$de,$de,$de,$de,$de,$de
+.db $df,$df,$df,$df,$df,$df,$df,$df,$df,$df
+
+.org $971c
+        jmp hud_update
+.org $877c
+        jmp overworld_display
+.end
+

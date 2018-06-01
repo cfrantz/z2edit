@@ -1,0 +1,9 @@
+text_table {
+    pointer { bank: 3 address: 0xb423 }
+    length: [ 52, 46]
+    index { bank: 3 address: 0xa238 length: 100 }
+    index { bank: 3 address: 0xa29c length: 64  }
+    index { bank: 3 address: 0xa2dc length: 100 }
+    index { bank: 3 address: 0xa340 length: 64  }
+    text_data { bank: 3 address: 0xa380 length: 3134 }
+}

@@ -1,0 +1,29 @@
+asm b=0 0xac00
+hud_macro:
+.db $20,$54,$03,$d0,$ce,$d0,$ff
+
+hud_update:
+        LDY $0301
+        LDX #$00
+copy_macro:
+        LDA $ac00,X
+        STA $0302,Y
+        INY
+        INX
+        CPX #$07
+        BNE copy_macro
+        DEY
+        NOP
+        STY $0301
+        CLC
+        LDA $05e0
+        ADC #$d0
+        STA $0301,Y
+        LDA $05df
+        ADC #$d0
+        STA $02ff,Y
+        JMP $97bb
+
+.org $971c
+        jmp hud_update
+.end

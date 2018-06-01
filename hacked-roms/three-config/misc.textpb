@@ -1,0 +1,87 @@
+misc {
+    overworld_width: 64
+    overworld_height: 96
+    overworld_length: 1408
+    overworld_y_offset: 30
+
+    start_values: { bank: 5 address: 0xbae3 }
+    start_lives:  { bank: -1 address: 0x8359 }
+    overworld_encounters: { address: 0x8409 }
+    overworld_mason_dixon: { bank: -1 address: 0xcd3c }
+    allocator_keepout: [
+        # Room connectivity data
+        { bank: 1 address: 0x871b length: 389 },
+        { bank: 1 address: 0xa1f8 length: 252 },
+        { bank: 2 address: 0x871b length: 389 },
+        { bank: 2 address: 0xa1f8 length: 252 },
+        { bank: 3 address: 0x871b length: 389 },
+        { bank: 3 address: 0xa1f8 length: 252 },
+        { bank: 4 address: 0x871b length: 389 },
+        { bank: 4 address: 0xa1f8 length: 252 },
+        { bank: 5 address: 0x871b length: 389 },
+        { bank: 5 address: 0xa1f8 length: 252 },
+
+        { bank: 13 address: 0x871b length: 389 },
+        { bank: 13 address: 0xa1f8 length: 252 },
+        { bank: 14 address: 0x871b length: 389 },
+        { bank: 14 address: 0xa1f8 length: 252 },
+
+        # Enemy Lists
+        { bank: 1 address: 0x88a0 length: 1024 },
+        { bank: 2 address: 0x88a0 length: 1024 },
+        { bank: 3 address: 0x88a0 length: 1024 },
+        { bank: 4 address: 0x88a0 length: 1024 },
+        { bank: 5 address: 0x88a0 length: 1024 },
+        { bank: 13 address: 0x88a0 length: 1024 },
+        { bank: 14 address: 0x88a0 length: 1024 },
+
+        # Item availability bitmap
+        { bank: 5 address: 0xbb15 length: 0xe0 },
+        { bank: 0 address: 0 length: 0 }
+    ]
+
+    enemy_pointer: [
+        { address: 0x85a1 },
+        { address: 0xa07e }
+    ]
+    enemy_data_rom: 0x88a0
+    enemy_data_ram: 0x7000
+
+    # Location of the operand to the compare which checks for the raft ID
+    raft_id: { bank: 0 address: 0x859a }
+    # Location of table of dock locations
+    raft_table: { bank: 0 address: 0x8528 }
+
+    hidden_palace {
+        connector: { bank: -1 address: 0xdf66 }
+        cmpov: { bank: 2 address: 0x836c }
+        cmpy: { bank: 2 address: 0x8372 }
+        cmpx: { bank: 2 address: 0x8378 }
+        returny: { bank: -1 address: 0xccb0 }
+        ppu_macro: { bank: -1 address: 0xdf6a }
+    }
+    hidden_town {
+        connector: { bank: -1 address: 0xdf67 }
+        cmpov: { bank: -1 address: 0xdf92 }
+        cmpy: { bank: -1 address: 0xdf9c }
+        cmpx: { bank: -1 address: 0xdfa2 }
+        returny: { bank: -1 address: 0xcccb }
+        discriminator: { bank: -1 address: 0xccc4 }
+    }
+    item_pickup_delay: { bank: -1 address: 0xe53c }
+    text_delay: { bank: 3 address: 0xb615 }
+    text_delay: { bank: 3 address: 0xb657 }
+    text_delay: { bank: 3 address: 0xb74e }
+
+
+    palace_graphics: { bank: -1 address: 0xcd2b }
+    palace_palette: { bank: -1 address: 0xcdb6 }
+    palace_table_len: 16
+
+    beam_sword_time: { bank: 0 address: 0x986e }
+    beam_sword_speed: { bank: 0 address: 0x9819 }
+
+    elevator_speed: { bank: -1 address: 0xd8bf }
+
+    overworld_tile_palettes: { bank: 0 address: 0x87e3 }
+}

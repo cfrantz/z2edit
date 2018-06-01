@@ -1,0 +1,32 @@
+help {
+  url: [
+    {
+      key: "root"
+      value: "https://github.com/cfrantz/z2doc/wiki/Z2Edit"
+    }, {
+      key: "overworld-editor"
+      value: "https://github.com/cfrantz/z2doc/wiki/overworld-editor"
+    }, {
+      key: "multimap-viewer"
+      value: "https://github.com/cfrantz/z2doc/wiki/multimap-viewer"
+    }, {
+      key: "sideview-editor"
+      value: "https://github.com/cfrantz/z2doc/wiki/sideview-editor"
+    }, {
+      key: "palace-graphics"
+      value: "https://github.com/cfrantz/z2doc/wiki/palace-graphics"
+    }, {
+      key: "enemy-attributes"
+      value: "https://github.com/cfrantz/z2doc/wiki/enemy-attributes"
+    }, {
+      key: "experience-table"
+      value: "https://github.com/cfrantz/z2doc/wiki/experience-table"
+    }, {
+      key: "chr-viewer"
+      value: "https://github.com/cfrantz/z2doc/wiki/chr-viewer"
+    }, {
+      key: "misc"
+      value: "https://github.com/cfrantz/z2doc/wiki/misc-hacks"
+    }
+  ]
+}

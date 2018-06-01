@@ -1,0 +1,644 @@
+map {
+    name: "west_hyrule"
+    type: OVERWORLD
+    connector: { bank: 1 address: 0x861f }
+    palette: { bank: -1 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
+    chr: { bank: 0x11 }
+    pointer: { bank: 1 address: 0x8508 }
+    world: 0
+    overworld: 0
+    subworld: 0
+}
+map {
+    name: "death_mountain"
+    type: OVERWORLD
+    connector: { bank: 1 address: 0xa0fc }
+    palette: { bank: -1 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
+    chr: { bank: 0x11 }
+    pointer: { bank: 1 address: 0x850a }
+    world: 0
+    overworld: 0
+    subworld: 1
+}
+map {
+    name: "east_hyrule"
+    type: OVERWORLD
+    connector: { bank: 2 address: 0x861f }
+    palette: { bank: -1 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
+    chr: { bank: 0x11 }
+    pointer: { bank: 2 address: 0x8508 }
+    world: 0
+    overworld: 2
+    subworld: 0
+}
+map {
+    name: "maze_island"
+    type: OVERWORLD
+    connector: { bank: 2 address: 0xa0fc }
+    palette: { bank: -1 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
+    chr: { bank: 0x11 }
+    pointer: { bank: 2 address: 0x850a }
+    world: 0
+    overworld: 2
+    subworld: 1
+}
+map {
+    name: "third_hyrule"
+    type: OVERWORLD
+    connector: { bank: 14 address: 0x861f }
+    palette: { bank: -1 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
+    chr: { bank: 0x11 }
+    pointer: { bank: 14 address: 0x8508 }
+    world: 0
+    overworld: 3
+    subworld: 0
+}
+map {
+    name: "third_island"
+    type: OVERWORLD
+    connector: { bank: 14 address: 0xa0fc }
+    palette: { bank: -1 address: 0x845b }
+    objtable: { bank: 0 address: 0x87a3 }
+    chr: { bank: 0x11 }
+    pointer: { bank: 14 address: 0x850a }
+    world: 0
+    overworld: 3
+    subworld: 1
+}
+
+sideview: {
+    area: "west_background"
+    address: { bank: 1 address: 0x8000 }
+    length: 7
+    palette: { bank: 1 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 0x3 }
+    world: -1
+}
+
+sideview: {
+    area: "east_background"
+    address: { bank: 2 address: 0x8000 }
+    length: 7
+    palette: { bank: 2 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 0x5 }
+    world: -1
+}
+
+sideview: {
+    area: "town_background"
+    address: { bank: 3 address: 0x8000 }
+    length: 7
+    palette: { bank: 3 address: 0x800e }
+    type: TOWN
+    chr: { bank: 0x7 }
+    world: -1
+}
+sideview: {
+    area: "third_background"
+    address: { bank: 14 address: 0x8000 }
+    length: 7
+    palette: { bank: 14 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 28 }
+    world: -1
+}
+
+sideview: {
+    area: "palace_background"
+    address: { bank: 4 address: 0x8000 }
+    length: 7
+    palette: { bank: 4 address: 0x800e }
+    type: TOWN
+    chr: { bank: 0x9 }
+    world: -1
+}
+
+sideview: {
+    area: "west_hyrule"
+    address: { bank: 1 address: 0x8523 }
+    length: 63
+    palette: { bank: 1 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 0x3 }
+    world: 0
+    overworld: 0
+    subworld: 0
+    connector: { bank: 1 address: 0x871b }
+}
+sideview: {
+    area: "deathmountain"
+    address: { bank: 1 address: 0xa000 }
+    length: 63
+    palette: { bank: 1 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 0x3 }
+    world: 0
+    overworld: 0
+    subworld: 1
+    connector: { bank: 1 address: 0xa1f8 }
+}
+sideview: {
+    area: "east_hyrule"
+    address: { bank: 2 address: 0x8523 }
+    length: 63
+    palette: { bank: 2 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 0x5 }
+    world: 0
+    overworld: 2
+    subworld: 0
+    connector: { bank: 2 address: 0x71b }
+}
+sideview: {
+    area: "maze_island"
+    address: { bank: 2 address: 0xa000 }
+    length: 63
+    palette: { bank: 2 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 0x5 }
+    world: 0
+    overworld: 2
+    subworld: 1
+    connector: { bank: 2 address: 0xa1f8 }
+}
+sideview: {
+    area: "third_hyrule"
+    address: { bank: 14 address: 0x8523 }
+    length: 63
+    palette: { bank: 14 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 29 }
+    world: 0
+    overworld: 3
+    subworld: 0
+    connector: { bank: 14 address: 0x71b }
+}
+sideview: {
+    area: "third_island"
+    address: { bank: 14 address: 0xa000 }
+    length: 63
+    palette: { bank: 14 address: 0x800e }
+    type: OUTDOORS
+    chr: { bank: 29 }
+    world: 0
+    overworld: 3
+    subworld: 1
+    connector: { bank: 14 address: 0xa1f8 }
+}
+
+sideview: {
+    area: "town"
+    address: { bank: 3 address: 0x8523 }
+    palette: { bank: 3 address: 0x800e }
+    length: 63
+    type: TOWN
+    chr: { bank: 7 }
+    world: 1
+    connector: { bank: 3 address: 0x871b }
+    doors: { bank: 3 address: 0x8817 }
+    code { offset: 1 length: 2 code: 0 }
+    code { offset: 28 length: 1 code: 0 }
+    code { offset: 36 length: 1 code: 0 }
+    code { offset: 48 length: 1 code: 0 }
+
+    code { offset: 4 length: 2 code: 1 }
+    code { offset: 29 length: 1 code: 1 }
+    code { offset: 37 length: 1 code: 1 }
+    code { offset: 49 length: 1 code: 1 }
+
+    code { offset: 6 length: 3 code: 2 }
+    code { offset: 30 length: 1 code: 2 }
+    code { offset: 50 length: 1 code: 2 }
+    code { offset: 38 length: 1 code: 2 }
+
+    code { offset: 9 length: 3 code: 3 }
+    code { offset: 24 length: 1 code: 3 }
+    code { offset: 31 length: 1 code: 3 }
+    code { offset: 39 length: 1 code: 3 }
+    code { offset: 44 length: 1 code: 3 }
+    code { offset: 51 length: 1 code: 3 }
+    code { offset: 56 length: 1 code: 3 }
+
+    code { offset: 12 length: 3 code: 4 }
+    code { offset: 32 length: 1 code: 4 }
+    code { offset: 52 length: 1 code: 4 }
+    code { offset: 40 length: 1 code: 4 }
+
+    code { offset: 15 length: 3 code: 5 }
+    code { offset: 33 length: 1 code: 5 }
+    code { offset: 41 length: 1 code: 5 }
+    code { offset: 45 length: 1 code: 5 }
+    code { offset: 53 length: 1 code: 5 }
+    code { offset: 57 length: 1 code: 5 }
+
+    code { offset: 18 length: 3 code: 6 }
+    code { offset: 26 length: 1 code: 6 }
+    code { offset: 34 length: 1 code: 6 }
+    code { offset: 42 length: 1 code: 6 }
+    code { offset: 46 length: 1 code: 6 }
+    code { offset: 47 length: 1 code: 6 }
+    code { offset: 54 length: 1 code: 6 }
+
+    code { offset: 21 length: 3 code: 7 }
+    code { offset: 33 length: 3 code: 7 }
+    code { offset: 43 length: 1 code: 7 }
+    code { offset: 55 length: 1 code: 7 }
+}
+
+sideview: {
+    area: "Palace1"
+    address: { bank: 4 address: 0x8523 }
+    length: 14
+    palette: { bank: 4 address: 0x3ef0 }
+    type: PALACE
+    chr: { bank: 0x9 }
+    world: 3
+    connector: { bank: 4 address: 0x871b }
+    area_offset: 0
+    palettes: [
+        { bank: 4 address: 0x8470 }, { bank: 4 address: 0xbf00 },
+        { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 },
+        { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 },
+        { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 }
+    ]
+    code { offset: 0 length: 14 code: 0 }
+}
+sideview: {
+    area: "Palace2"
+    address: { bank: 4 address: 0x853F }
+    length: 21
+    type: PALACE
+    chr: { bank: 0xb }
+    world: 3
+    connector: { bank: 4 address: 0x8753 }
+    area_offset: 14
+    palettes: [
+        { bank: 4 address: 0x8480 }, { bank: 4 address: 0xbf10 },
+        { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 },
+        { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 },
+        { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 }
+    ]
+    code { offset: 0 length: 21 code: 1 }
+}
+sideview: {
+    area: "Palace5"
+    address: { bank: 4 address: 0x8569 }
+    length: 28
+    palette: { bank: 4 address: 0x3f30 }
+    type: PALACE
+    chr: { bank: 0x17 }
+    world: 3
+    connector: { bank: 4 address: 0x87a7 }
+    area_offset: 35
+    palettes: [
+        { bank: 4 address: 0x84b0 }, { bank: 4 address: 0xbf40 },
+        { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 },
+        { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 },
+        { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 }
+    ]
+    code { offset: 0 length: 28 code: 0 }
+}
+
+sideview: {
+    area: "Palace3"
+    address: { bank: 4 address: 0xa000 }
+    length: 15
+    palette: { bank: 4 address: 0x3f00 }
+    type: PALACE
+    chr: { bank: 0x13 }
+    world: 4
+    connector: { bank: 4 address: 0xa1f8 }
+    area_offset: 0
+    palettes: [
+        { bank: 4 address: 0x8490 }, { bank: 4 address: 0xbf20 },
+        { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 },
+        { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 },
+        { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 }
+    ]
+    subworld: 1
+    code { offset: 0 length: 15 code: 2 }
+}
+
+sideview: {
+    area: "Palace4"
+    address: { bank: 4 address: 0xa01e }
+    length: 21
+    palette: { bank: 4 address: 0x3f10 }
+    type: PALACE
+    chr: { bank: 0x15 }
+    world: 4
+    connector: { bank: 4 address: 0xa234 }
+    area_offset: 15
+    palettes: [
+        { bank: 4 address: 0x84a0 }, { bank: 4 address: 0xbf30 },
+        { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 },
+        { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 },
+        { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 }
+    ]
+    subworld: 1
+    code { offset: 0 length: 21 code: 0 }
+}
+sideview: {
+    area: "Palace6"
+    address: { bank: 4 address: 0xa048 }
+    length: 27
+    palette: { bank: 4 address: 0x3f30 }
+    type: PALACE
+    chr: { bank: 0x19 }
+    world: 4
+    connector: { bank: 4 address: 0xa288 }
+    area_offset: 36
+    palettes: [
+        { bank: 4 address: 0x84c0 }, { bank: 4 address: 0xbf50 },
+        { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 },
+        { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 },
+        { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 }
+    ]
+    subworld: 1
+    code { offset: 0 length: 27 code: 1 }
+}
+
+sideview: {
+    area: "GreatPalace"
+    address: { bank: 5 address: 0x8523 }
+    length: 63
+    palette: { bank: 5 address: 0x800e }
+    type: GREAT_PALACE
+    chr: { bank: 0xd }
+    world: 5
+    connector: { bank: 5 address: 0x871b }
+}
+
+
+sideview: {
+    area: "PalaceA"
+    address: { bank:13 address: 0x8523 }
+    length: 14
+    palette: { bank:13 address: 0x3ef0 }
+    type: PALACE
+    chr: { bank: 0x9 }
+    world: 6
+    connector: { bank:13 address: 0x871b }
+    area_offset: 0
+    palettes: [
+        { bank:13 address: 0x8470 }, { bank:13 address: 0xbf00 },
+        { bank:13 address: 0xbf00 }, { bank:13 address: 0xbf00 },
+        { bank:13 address: 0xbf00 }, { bank:13 address: 0xbf00 },
+        { bank:13 address: 0xbf00 }, { bank:13 address: 0xbf00 }
+    ]
+}
+sideview: {
+    area: "PalaceB"
+    address: { bank:13 address: 0x853F }
+    length: 21
+    type: PALACE
+    chr: { bank: 0xb }
+    world: 6
+    connector: { bank:13 address: 0x8753 }
+    area_offset: 14
+    palettes: [
+        { bank:13 address: 0x8480 }, { bank:13 address: 0xbf10 },
+        { bank:13 address: 0xbf10 }, { bank:13 address: 0xbf10 },
+        { bank:13 address: 0xbf10 }, { bank:13 address: 0xbf10 },
+        { bank:13 address: 0xbf10 }, { bank:13 address: 0xbf10 }
+    ]
+}
+sideview: {
+    area: "PalaceE"
+    address: { bank:13 address: 0x8569 }
+    length: 28
+    palette: { bank:13 address: 0x3f30 }
+    type: PALACE
+    chr: { bank: 0x17 }
+    world: 6
+    connector: { bank:13 address: 0x87a7 }
+    area_offset: 35
+    palettes: [
+        { bank:13 address: 0x84b0 }, { bank:13 address: 0xbf40 },
+        { bank:13 address: 0xbf40 }, { bank:13 address: 0xbf40 },
+        { bank:13 address: 0xbf40 }, { bank:13 address: 0xbf40 },
+        { bank:13 address: 0xbf40 }, { bank:13 address: 0xbf40 }
+    ]
+}
+
+sideview: {
+    area: "PalaceC"
+    address: { bank:13 address: 0xa000 }
+    length: 15
+    palette: { bank:13 address: 0x3f00 }
+    type: PALACE
+    chr: { bank: 0x13 }
+    world: 7
+    connector: { bank:13 address: 0xa1f8 }
+    area_offset: 0
+    palettes: [
+        { bank:13 address: 0x8490 }, { bank:13 address: 0xbf20 },
+        { bank:13 address: 0xbf20 }, { bank:13 address: 0xbf20 },
+        { bank:13 address: 0xbf20 }, { bank:13 address: 0xbf20 },
+        { bank:13 address: 0xbf20 }, { bank:13 address: 0xbf20 }
+    ]
+    subworld: 1
+}
+
+sideview: {
+    area: "PalaceD"
+    address: { bank:13 address: 0xa01e }
+    length: 21
+    palette: { bank:13 address: 0x3f10 }
+    type: PALACE
+    chr: { bank: 0x15 }
+    world: 7
+    connector: { bank:13 address: 0xa234 }
+    area_offset: 15
+    palettes: [
+        { bank:13 address: 0x84a0 }, { bank:13 address: 0xbf30 },
+        { bank:13 address: 0xbf30 }, { bank:13 address: 0xbf30 },
+        { bank:13 address: 0xbf30 }, { bank:13 address: 0xbf30 },
+        { bank:13 address: 0xbf30 }, { bank:13 address: 0xbf30 }
+    ]
+    subworld: 1
+}
+sideview: {
+    area: "PalaceF"
+    address: { bank:13 address: 0xa048 }
+    length: 27
+    palette: { bank:13 address: 0x3f30 }
+    type: PALACE
+    chr: { bank: 0x19 }
+    world: 7
+    connector: { bank:13 address: 0xa288 }
+    area_offset: 36
+    palettes: [
+        { bank:13 address: 0x84c0 }, { bank:13 address: 0xbf50 },
+        { bank:13 address: 0xbf50 }, { bank:13 address: 0xbf50 },
+        { bank:13 address: 0xbf50 }, { bank:13 address: 0xbf50 },
+        { bank:13 address: 0xbf50 }, { bank:13 address: 0xbf50 }
+    ]
+    subworld: 1
+}
+
+
+##########################################################################
+##
+## Define the floor, ceiling and backgrounds of the different areas.
+## These must be in order.  The floor and ceiling entries should be
+## an array of length 2:
+##
+## ceiling: full tile, edge tile
+## floor: edge tile, full tile.
+##
+##########################################################################
+background {
+    type: OUTDOORS
+    index: 0
+    name: "cave"
+    ceiling: [0x53, 0x55]
+    floor: [0x52, 0x53]
+    background: 0x42
+}
+background {
+    type: OUTDOORS
+    index: 1
+    name: "forest"
+    ceiling: [0x8c, 0x8d]
+    floor: [0x90, 0x90]
+    alternate: 0x84
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 2
+    name: "water"
+    ceiling: [0x40, 0x40]
+    floor: [0x87, 0x91]
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 3
+    name: "swamp"
+    ceiling: [0x40, 0x40]
+    floor: [0x87, 0x91]
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 4
+    name: "grass"
+    ceiling: [0x40, 0x40]
+    floor: [0x8a, 0x8f]
+    alternate: 0x83
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 5
+    name: "volcano"
+    ceiling: [0x53, 0x55]
+    floor: [0x52, 0x53]
+    # FIXME
+    background: 0x51
+}
+background {
+    type: OUTDOORS
+    index: 6
+    name: "north palace"
+    ceiling: [0x8B, 0x8B]
+    floor: [0xC9, 0xC9]
+    background: 0x40
+}
+background {
+    type: OUTDOORS
+    index: 7
+    name: "rocky"
+    ceiling: [0x53, 0x55]
+    floor: [0x52, 0x53]
+    background: 0x40
+}
+
+background {
+    type: TOWN
+    index: 0
+    name: "town"
+    ceiling: [0x55, 0x55]
+    floor: [0x55, 0x55]
+    background: 0x42
+}
+
+background {
+    type: TOWN
+    index: 2
+    name: "town"
+    ceiling: [0x40, 0x40]
+    floor: [0x53, 0x53]
+    background: 0x40
+}
+background {
+    type: TOWN
+    index: 1
+    name: "town"
+    ceiling: [0xcb, 0xcb]
+    floor: [0xe9, 0xe9]
+    background: 0x44
+}
+
+
+background {
+    type: PALACE
+    index: 0
+    name: "palace"
+    ceiling: [0x4b, 0x4b]
+    floor: [0x4b, 0x4b]
+    background: 0x42
+}
+background {
+    type: PALACE
+    index: 1
+    name: "palace"
+    ceiling: [0x4b, 0x4b]
+    floor: [0x85, 0x85]
+    background: 0x40
+}
+
+background {
+    type: GREAT_PALACE
+    index: 0
+    name: "great palace"
+    ceiling: [0x4c, 0x4c]
+    floor: [0x4c, 0x4c]
+    background: 0x42
+}
+
+background {
+    type: GREAT_PALACE
+    index: 1
+    name: "great palace"
+    ceiling: [0x4c, 0x4c]
+    floor: [0x88, 0x88]
+    background: 0x40
+}
+
+background {
+    type: GREAT_PALACE
+    index: 2
+    name: "great palace"
+    ceiling: [0x48, 0x48]
+    floor: [0xc5, 0xc5]
+    background: 0x40
+}
+
+background {
+    type: GREAT_PALACE
+    index: 3
+    name: "great palace"
+    ceiling: [0x4c, 0x4c]
+    floor: [0x4c, 0x4c]
+    background: 0x40
+}

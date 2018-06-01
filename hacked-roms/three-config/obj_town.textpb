@@ -1,0 +1,551 @@
+##########################################################################
+##
+## Object IDs for side view areas in towns
+##
+## Objects: (for towns)
+##     Small Objects:
+##         00 = closed door with grass at bottom, 4 high 1 wide
+##         01 = open door with grass at bottom
+##         02 = open door with bricks at bottom
+##         03 = open door with vertical bricks at bottom
+##         04 = stonehenge
+##         05 = chair
+##         06 = ?
+##         07 = cloud
+##         08 = table
+##         09 = bench
+##         0A = cross
+##         0B-0E = cloud
+##         0F = crash
+##     Big objects for Object Set 0
+##         0x = small objects
+##         1x = crash
+##         2x = cross hatched roof, two high
+##         3x = gray vertical brick roof, two high
+##         4x = green vertical brick roof, two high
+##         5x = brick building, extends to ground
+##         6x = white small brick building, extends to ground
+##         7x = grass building, extends to ground
+##         8x = white brick wall, extends to ground
+##         9x = log building, extends to ground
+##         Ax = brown square windows, one wide, Two tall. One tile Gap between windows.  Repeats vertically
+##         Bx = gray windows, round on top...
+##         Cx = brown windows, round on top
+##         Dx = Underground blue bricks, two high
+##         Ex = Column
+##         Fx = castle background bricks
+##     Effects of Object Set 1 unknown
+##     Extra Objects (Y position 15)
+##         00 = Door to left
+##         01 = Door to right
+##         02 = Wall to left
+##         03 = wall to right
+##         04 = fireplace
+##         05 = fountain
+##         06 = sign
+##         07 = headstone one above ground
+##         08-0F = ?
+##         1x = single bush
+##         2x = background wall at Y pos 4, 3 wide, x tall
+##         3x = ?
+##         4x = ?
+##         5x = ?
+##         6x = bridge
+##         7x = water/lava
+##         80-FF = ?
+##########################################################################
+
+
+##########################################################################
+##
+## Object IDs for side view areas on the overworld
+## "Small Objects"
+##
+##########################################################################
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x00
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 3
+    objid: [ 0x89, 0x8a, 0x8b ]
+    comment: "closed door"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x01
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 3
+    objid: [ 0x8c, 0x91, 0x91 ]
+    comment: "open door"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x02
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 3
+    objid: [ 0x8c, 0x91, 0x91 ]
+    comment: "open door"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x03
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 3
+    objid: [ 0x8c, 0x91, 0x91 ]
+    comment: "open door"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x04
+    render: RENDER_CUSTOM
+    width: 4
+    height: 3
+    objid: [
+        0x56, 0x57, 0x57, 0x58,
+        0x59, 0x00, 0x00, 0x59,
+        0x5a, 0x00, 0x00, 0x5a
+    ]
+    custom: "RenderGrid"
+    comment: "stonehenge"
+}
+
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x05
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 1
+    objid: 0x4a
+    comment: "chair"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x06
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC4, 0xC5]
+    comment: "large cloud"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x07
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC4, 0xC6]
+    comment: "small cloud"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x08
+    render: RENDER_CUSTOM
+    width: 2
+    height: 2
+    objid: [0x4b, 0x4b, 0x4c, 0x4d]
+    custom: "RenderGrid"
+    comment: "table"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x09
+    render: RENDER_VERTICAL
+    width: 5
+    height: 1
+    objid: [0x46, 0x46, 0x47, 0x48, 0x48]
+    comment: "bench"
+}
+
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x0a
+    render: RENDER_VERTICAL
+    width: 1
+    height: 1
+    objid: 0xdc
+    comment: "cross"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x0b
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0x5a, 0x5a]
+    comment: "chimney (entrance)"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x0c
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0x5a, 0x5a]
+    comment: "chimney"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x0d
+    render: RENDER_VERTICAL
+    width: 1
+    height: 1
+    objid: 0xdd
+    comment: "church cross"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SMALL
+    id: 0x0e
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC4, 0xC6]
+    comment: "small cloud"
+}
+
+##########################################################################
+##
+## Object IDs for side view areas in towns
+## "Object Set 0"
+##
+##########################################################################
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x20
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x84, 0x85]
+    comment: "cross-hatched roof"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x30
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0xcf, 0xd0]
+    comment: "gray roof"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x40
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0xcf, 0xd0]
+    comment: "green roof"
+}
+
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x50
+    render: RENDER_CUSTOM
+    objid: [0x80, 0x81]
+    custom: "RenderBuilding"
+    comment: "brick building"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x60
+    render: RENDER_CUSTOM
+    objid: [0xcd, 0xce]
+    custom: "RenderBuilding"
+    comment: "white brick building"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x70
+    render: RENDER_CUSTOM
+    objid: [0x4e, 0x4f]
+    custom: "RenderBuilding"
+    comment: "grass building"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x80
+    render: RENDER_CUSTOM
+    objid: [0xcb, 0xcb]
+    custom: "RenderBuilding"
+    comment: "white wall"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0x90
+    render: RENDER_CUSTOM
+    objid: [0x82, 0x83]
+    custom: "RenderBuilding"
+    comment: "log building"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0xA0
+    render: RENDER_CUSTOM
+    objid: [0x86, 0x86, 0]
+    custom: "RenderWindow"
+    comment: "square windows"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0xB0
+    render: RENDER_CUSTOM
+    objid: [0xd1, 0xd2, 0]
+    custom: "RenderWindow"
+    comment: "gray windows"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0xC0
+    render: RENDER_CUSTOM
+    objid: [0x87, 0x88, 0]
+    custom: "RenderWindow"
+    comment: "brown windows"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0xD0
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x55, 0x55]
+    comment: "underground bricks"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0xE0
+    render: RENDER_TOP_UNIQUE
+    width: 1
+    objid: [0x94, 0x93]
+    comment: "pillar"
+}
+decompress {
+    area: TOWN
+    type: OBJECT_SET_0
+    id: 0xF0
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x98
+    comment: "castle bricks"
+}
+
+
+##########################################################################
+##
+## Object IDs for side view areas on the overworld
+## "Extra Objects"
+##
+##########################################################################
+##         00 = Door to left
+##         01 = Door to right
+##         02 = Wall to left
+##         03 = wall to right
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x00
+    render: RENDER_CUSTOM
+    width: 3
+    height: 9
+    objid: [
+        0xc0, 0x00, 0x00,
+        0xc1, 0xc0, 0x00,
+        0xc1, 0xc1, 0xc0,
+        0xc1, 0xc1, 0xc1,
+        0xc1, 0xc1, 0xc1,
+        0xc3, 0xc2, 0xc1,
+        0xd6, 0xd6, 0xc1,
+        0xd6, 0xd6, 0xc1,
+        0xd6, 0xd6, 0xc1
+    ]
+    custom: "RenderGrid"
+    comment: "door left"
+    fixed_y: 2
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x01
+    render: RENDER_CUSTOM
+    width: 3
+    height: 9
+    objid: [
+        0x00, 0x00, 0xc7,
+        0x00, 0xc7, 0xc8,
+        0xc7, 0xc8, 0xc8,
+        0xc8, 0xc8, 0xc8,
+        0xc8, 0xc8, 0xc8,
+        0xc8, 0xc9, 0xca,
+        0xc8, 0xd6, 0xd6,
+        0xc8, 0xd6, 0xd6,
+        0xc8, 0xd6, 0xd6
+    ]
+    custom: "RenderGrid"
+    comment: "door right"
+    fixed_y: 2
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x02
+    render: RENDER_CUSTOM
+    width: 3
+    height: 9
+    objid: [
+        0xe7, 0x00, 0x00,
+        0xe8, 0xe7, 0x00,
+        0xe8, 0xc1, 0xe7,
+        0xe8, 0xc1, 0xc1,
+        0xe8, 0xc1, 0xc1,
+        0xe8, 0xc1, 0xc1,
+        0xe8, 0xc1, 0xc1,
+        0xe8, 0xc1, 0xc1,
+        0xe8, 0xc1, 0xc1
+    ]
+    custom: "RenderGrid"
+    comment: "wall left"
+    fixed_y: 2
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x03
+    render: RENDER_CUSTOM
+    width: 3
+    height: 9
+    objid: [
+        0x00, 0x00, 0xe5,
+        0x00, 0xe5, 0xe6,
+        0xe5, 0xe6, 0xe6,
+        0xc8, 0xc8, 0xe6,
+        0xc8, 0xc8, 0xe6,
+        0xc8, 0xc8, 0xe6,
+        0xc8, 0xc8, 0xe6,
+        0xc8, 0xc8, 0xe6,
+        0xc8, 0xc8, 0xe6
+    ]
+    custom: "RenderGrid"
+    comment: "wall right"
+    fixed_y: 2
+}
+
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x04
+    render: RENDER_CUSTOM
+    width: 2
+    height: 2
+    objid: [
+        0x8d, 0x8f,
+        0x8e, 0x90
+    ]
+    custom: "RenderGrid"
+    comment: "fireplace"
+    fixed_y: 10
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x05
+    render: RENDER_CUSTOM
+    width: 5
+    height: 2
+    objid: [
+        0x00, 0x00, 0xd9, 0x00, 0x00,
+        0xd7, 0xd8, 0xda, 0xd8, 0xdb
+    ]
+    custom: "RenderGrid"
+    comment: "fountain"
+    fixed_y: 9
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x06
+    render: RENDER_CUSTOM
+    width: 1
+    height: 2
+    objid: [ 0xe3, 0xe4 ]
+    custom: "RenderGrid"
+    comment: "sign"
+    fixed_y: 9
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x07
+    render: RENDER_CUSTOM
+    width: 1
+    height: 1
+    objid: [ 0x95 ]
+    custom: "RenderGrid"
+    comment: "headstone"
+    fixed_y: 9
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA
+    id: 0x10
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x45
+    comment: "bush"
+    fixed_y: 10
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA
+    id: 0x20
+    render: RENDER_VERTICAL
+    width: 3
+    objid: [0xcc, 0xcc, 0xd3]
+    comment: "background wall"
+    fixed_y: 4
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA
+    id: 0x60
+    render: RENDER_HORIZONTAL
+    height: 3
+    objid: [0x51, 0x56, 0x92]
+    comment: "bridge"
+    fixed_y: 10
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA
+    id: 0x70
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x40, 0x92]
+    comment: "water"
+    fixed_y: 11
+}

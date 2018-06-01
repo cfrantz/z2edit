@@ -1,0 +1,344 @@
+##########################################################################
+##
+## Object IDs for side view areas in palaces
+##     Small Objects
+##
+##########################################################################
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x00
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 2
+    objid: [0x80, 0x81]
+    comment: "window"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x01
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 1
+    objid: 0x46
+    comment: "unicord head"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x02
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 1
+    objid: 0x45
+    comment: "rat head"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x03
+    render: RENDER_CUSTOM
+    width: 4
+    height: 5
+    objid: [
+        0x00, 0xc5, 0xca, 0x00,
+        0x00, 0xc6, 0xcb, 0x00,
+        0x00, 0xc7, 0xcc, 0x00,
+        0xc0, 0xc8, 0xcd, 0xc0,
+        0xc1, 0xc9, 0xce, 0xc1
+    ]
+    custom: "RenderGrid"
+    comment: "crystal return statue"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x04
+    render: RENDER_CUSTOM
+    width: 4
+    height: 5
+    objid: [
+        0x00, 0xc5, 0xca, 0x00,
+        0x00, 0xc6, 0xcb, 0x00,
+        0x00, 0xc7, 0xcc, 0x00,
+        0xc0, 0xc8, 0xcd, 0xc0,
+        0xc1, 0xc9, 0xce, 0xc1
+    ]
+    custom: "RenderGrid"
+    comment: "crystal return statue"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x05
+    render: RENDER_CUSTOM
+    width: 1
+    height: 3
+    objid: 0xd4
+    custom: "RenderItem"
+    comment: "locked door"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x06
+    render: RENDER_CUSTOM
+    width: 1
+    height: 3
+    objid: 0xd4
+    custom: "RenderItem"
+    comment: "locked door"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x07
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC3]
+    comment: "large cloud"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x08
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x09
+    render: RENDER_HORIZONTAL
+    width: 1
+    height: 2
+    objid: [0x49, 0x4a]
+    comment: "Ironknuckle Statue"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x0a
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x0b
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x0c
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x0d
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SMALL
+    id: 0x0e
+    render: RENDER_VERTICAL
+    width: 2
+    height: 1
+    objid: [0xC2, 0xC4]
+    comment: "small cloud"
+}
+
+##########################################################################
+##
+## Object IDs for side view areas in palaces
+##     Large Objects (set 0)
+##
+##########################################################################
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x10
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x42
+    comment: "horzontal pit"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x20
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x4b
+    comment: "horzontal brick"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x30
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x4c
+    comment: "breakable block"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x40
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0xd1
+    comment: "steel brick"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x50
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x4e
+    comment: "crumble bridge"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x60
+    render: RENDER_HORIZONTAL
+    height: 1
+    objid: 0x4c
+    comment: "breakable block"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x70
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x4b, 0x4b]
+    comment: "palace bricks"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x80
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0xcf, 0xd0]
+    comment: "curtains"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0x90
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x4c, 0x4c]
+    comment: "breakable block"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0xa0
+    render: RENDER_HORIZONTAL
+    height: 2
+    objid: [0x47, 0x47]
+    comment: "walkthru bricks"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0xb0
+    render: RENDER_VERTICAL
+    width: 1
+    objid: 0x4c
+    comment: "breakable block"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0xc0
+    render: RENDER_TOP_UNIQUE
+    width: 1
+    objid: [0x43, 0x44]
+    comment: "pillar"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0xd0
+    render: RENDER_TOP_UNIQUE
+    width: 1
+    # FIXME(cfrantz): what are the object ids for the bridge?
+    objid: [0x00, 0x00]
+    comment: "bridge"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0xe0
+    render: RENDER_VERTICAL
+    width: 1
+    objid: 0x42
+    comment: "horzontal pit"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_SET_0
+    id: 0xf0
+    render: RENDER_HORIZONTAL
+    height: 13
+    objid: 0x40
+    comment: "horzontal pit"
+}
+
+##########################################################################
+##
+## Object IDs for side view areas in palaces
+##     Extra Objects
+##
+##########################################################################
+decompress {
+    area: PALACE
+    type: OBJECT_EXTRA
+    id: 0x10
+    render: RENDER_CUSTOM
+    height: 3
+    objid: [0x83, 0x84]
+    custom: "RenderLava3High"
+    comment: "lava"
+}
+decompress {
+    area: PALACE
+    type: OBJECT_EXTRA
+    id: 0x50
+    render: RENDER_CUSTOM
+    width: 2
+    height: 3
+    objid: 0xee
+    custom: "RenderItem"
+    comment: "elevator"
+    fixed_y: 7
+}

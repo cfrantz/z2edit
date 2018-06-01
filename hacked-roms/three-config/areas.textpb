@@ -1,0 +1,112 @@
+areas {
+    area: "west_hyrule"
+    world: 0
+    overworld: 0
+    subworld: 0
+    info [
+        { key: 0  value: { name: "North Palace" }},
+        { key: 1  value: { name: "Troll Fish Bridge" }},
+        { key: 2  value: { name: "Bubbles & Lowder Bridge" }},
+        { key: 4  value: { name: "Moblin Bridge" }},
+        { key: 5  value: { name: "Red Daira Bridge" }},
+        { key: 6  value: { name: "Bubble-skip Tile" }},
+        { key: 7  value: { name: "Parapa (the rappa) Cave" }},
+        { key: 9  value: { name: "Jump Cave (left)" }},
+        { key: 10 value: { name: "Jump Cave (middle)" }},
+        { key: 11 value: { name: "Jump Cave (right)" }},
+        { key: 12 value: { name: "Midoro 100-Pbag Cave (entrance)" }},
+        { key: 14 value: { name: "Medicine Cave (entrance)" }},
+        { key: 16 value: { name: "Heart Container Cave (entrance)" }},
+        { key: 18 value: { name: "Fairy Cave (graveyard entrance)" }},
+        { key: 19 value: { name: "Fairy Cave (island entrance)" }},
+
+        # Location 20 is multiple 1-screen areas
+        { key: 20 value: { name: "Fairy (jump cave exit + Saria)" }},
+
+        { key: 21 value: { name: "Lost Woods (1)" }},
+        { key: 22 value: { name: "Lost Woods (2)" }},
+        { key: 23 value: { name: "Lost Woods (3)" }},
+
+        { key: 33 value: { name: "Trophy Cave" }},
+        { key: 38 value: { name: "Grass Tile" }},
+        { key: 43 value: { name: "Forest 50-Pbag" }},
+        { key: 44 value: { name: "Lost Woods (4)" }},
+        { key: 45 value: { name: "Magic Cave" }},
+        { key: 46 value: { name: "Forest 100-Pbag" }},
+
+        # Location 51 is multiple 1-screen areas
+        { key: 51 value: { name: "Swamp (1-Up + Red Jar" }},
+
+        { key: 56 value: { name: "Graveyard red jar" }},
+
+        # Location 57 is multiple 1-screen areas
+        { key: 57 value: { name: "Road Tile (Graveyard 1-Up + Swamp Road Jar)" }}
+    ]
+}
+
+areas {
+    area: "town"
+    world: 1
+    info [
+        { key: 0  value: { name: "Glitch Town" }},
+        { key: 1  value: { name: "Rauru (left)" }},
+        { key: 2  value: { name: "Rauru (right)" }},
+
+        { key: 4  value: { name: "Ruto (left)" }},
+        { key: 5  value: { name: "Ruto (right)" }},
+
+        { key: 6  value: { name: "Saria (business)" }},
+        { key: 7  value: { name: "Saria (middle)" }},
+        { key: 8  value: { name: "Saria (party)" }},
+
+        { key: 9  value: { name: "Mido (left)" }},
+        { key: 10 value: { name: "Mido (middle)" }},
+        { key: 11 value: { name: "Mido (right)" }},
+
+        { key: 12 value: { name: "Nabooru (left)" }},
+        { key: 13 value: { name: "Nabooru (middle)" }},
+        { key: 14 value: { name: "Nabooru (right)" }},
+
+        { key: 15 value: { name: "Darunia (left)" }},
+        { key: 16 value: { name: "Darunia (middle)" }},
+        { key: 17 value: { name: "Darunia (right)" }},
+
+        { key: 18 value: { name: "New Kasuto (left)" }},
+        { key: 19 value: { name: "New Kasuto (middle)" }},
+        { key: 20 value: { name: "New Kasuto (right)" }},
+
+        { key: 21 value: { name: "Old Kasuto (left)" }},
+        { key: 22 value: { name: "Old Kasuto (middle)" }},
+        { key: 23 value: { name: "Old Kasuto (right)" }},
+
+        { key: 24 value: { name: "Bagu's House" }},
+
+        { key: 26 value: { name: "Spell House" }},
+
+        { key: 36 value: { name: "Shield Basement" }},
+        { key: 37 value: { name: "Jump Basement" }},
+        { key: 38 value: { name: "Life Basement" }},
+        { key: 39 value: { name: "Fairy Basement" }},
+        { key: 40 value: { name: "Fire Basement" }},
+        { key: 41 value: { name: "Reflect Basement" }},
+        { key: 42 value: { name: "Spell Basement" }},
+        { key: 43 value: { name: "Thunder Basement" }},
+        { key: 44 value: { name: "Downstab Basement" }},
+        { key: 45 value: { name: "Upstab Basement" }},
+
+        { key: 46 value: { name: "Magic Container Basement" }},
+        { key: 47 value: { name: "Magic Key Basement" }},
+        { key: 48 value: { name: "Shield House" }},
+        { key: 49 value: { name: "Jump House" }},
+        { key: 50 value: { name: "Life House" }},
+        { key: 51 value: { name: "Fairy House" }},
+        { key: 52 value: { name: "Fire House" }},
+        { key: 53 value: { name: "Reflect House" }},
+        { key: 55 value: { name: "Thunder House" }},
+        { key: 56 value: { name: "Downstab Church" }},
+        { key: 57 value: { name: "Upstab House" }},
+
+
+        { key: 60 value: { name: "King's Tomb" }}
+    ]
+}
