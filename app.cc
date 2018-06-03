@@ -80,6 +80,7 @@ void Z2Edit::Init() {
     start_values_.reset(new z2util::StartValues);
     text_table_.reset(new z2util::TextTableEditor);
     tile_transform_.reset(new z2util::TileTransform);
+    item_effects_.reset(new z2util::ItemEffects);
     object_table_.reset(new z2util::ObjectTable);
     enemy_editor_.reset(new z2util::EnemyEditor);
     experience_table_.reset(new z2util::ExperienceTable);
@@ -131,6 +132,8 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     text_table_->Refresh();
     tile_transform_->set_mapper(mapper_.get());
     tile_transform_->Refresh();
+    item_effects_->set_mapper(mapper_.get());
+    item_effects_->Refresh();
 
     drops_->set_mapper(mapper_.get());
     drops_->Refresh();
@@ -1070,6 +1073,8 @@ export_as:
                             &enemy_editor_->visible());
             ImGui::MenuItem("Experience Table", nullptr,
                             &experience_table_->visible());
+            ImGui::MenuItem("Item Effects", nullptr,
+                            &item_effects_->visible());
             ImGui::MenuItem("Overworld Editor", nullptr,
                             &editor_->visible());
             ImGui::MenuItem("Sideview Editor", nullptr,
@@ -1123,6 +1128,7 @@ export_as:
     start_values_->Draw();
     text_table_->Draw();
     tile_transform_->Draw();
+    item_effects_->Draw();
     misc_hacks_->Draw();
     palace_gfx_->Draw();
     palette_editor_->Draw();

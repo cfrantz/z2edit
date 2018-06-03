@@ -1,0 +1,29 @@
+item_effects {
+  town_base: 0x797
+  trophy {
+    load { bank: -1 address: 0xe830 }
+    bits { bank: -1 address: 0xe833 }
+    save { bank: -1 address: 0xe835 }
+  }
+  medicine {
+    load { bank: -1 address: 0xe83e }
+    bits { bank: -1 address: 0xe841 }
+    save { bank: -1 address: 0xe843 }
+  }
+  child {
+    load { bank: -1 address: 0xe822 }
+    bits { bank: -1 address: 0xe825 }
+    save { bank: -1 address: 0xe827 }
+  }
+  magic_container_count { bank: -1 address: 0xe7d8 }
+  magic_containers {
+    load { bank: -1 address: 0xe7dc }
+    bits { bank: -1 address: 0xe7df }
+    save { bank: -1 address: 0xe7e1 }
+  }
+  conditions_table { bank: 3 address: 0xb42e }
+  town_name: [
+    "Rauru", "Ruto", "Saria", "Mido",
+    "Nabooru", "Darunia", "NewKasuto", "OldKasuto"
+  ]
+}

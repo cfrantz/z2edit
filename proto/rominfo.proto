@@ -342,6 +342,24 @@ message TileTable{
     int32 length = 3;
 }
 
+message ItemEffect {
+    Address load = 1;
+    Address bits = 2;
+    Address save = 3;
+}
+
+message ItemEffectList {
+    int32 town_base = 1;
+    ItemEffect trophy = 2;
+    ItemEffect medicine = 3;
+    ItemEffect child = 4;
+    Address magic_container_count = 5;
+    ItemEffect magic_containers = 6;
+    Address conditions_table = 7;
+    repeated string town_name = 8;
+}
+    
+
 message RomInfo {
     string path = 1; // For internal use by the config loader
     repeated string load = 2;
@@ -368,4 +386,5 @@ message RomInfo {
     TileTable tile_transform_table = 23;
     repeated GameHack dynamic_banks = 24;
     repeated GameHack overworld_breakblocks = 25;
+    ItemEffectList item_effects = 26;
 }

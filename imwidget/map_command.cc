@@ -824,12 +824,19 @@ void MapEnemyList::Parse(const Map& map) {
                            (pos & 0xf) | (enemy & 0xc0) >> 2, y);
         if (map_.type() == MapType::TOWN && data_.back().enemy >= 10) {
             const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
-            int idxtbl = (map_.code() >> 2) * 2;
-            int index = (data_.back().enemy - 10) * 4 + (map_.code() & 3);
+            const auto& ie = ConfigLoader<RomInfo>::GetConfig().item_effects();
+            int townsperson = data_.back().enemy - 10;
+            int town = map_.code();
+            int idxtbl = (town >> 2) * 2;
+            int index = townsperson * 4 + (town & 3);
             for(int j=0; j<2; j++, idxtbl++) {
                 if (index < tt.index(idxtbl).length())
                     data_.back().text[j] = mapper_->Read(tt.index(idxtbl),
                                                          index);
+            }
+            if (townsperson >= 9 && townsperson < 9+4) {
+                data_.back().condition = mapper_->Read(ie.conditions_table(), 
+                        (townsperson-9)*8 + town);
             }
         }
     }
@@ -947,15 +954,22 @@ void MapEnemyList::Save() {
 
     if (map_.type() == MapType::TOWN) {
         const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
+        const auto& ie = ConfigLoader<RomInfo>::GetConfig().item_effects();
         for(const auto& data : data_) {
             if (data.enemy < 10)
                 continue;
 
-            int idxtbl = (map_.code() >> 2) * 2;
-            int index = (data.enemy - 10) * 4 + (map_.code() & 3);
+            int townsperson = data.enemy - 10;
+            int town = map_.code();
+            int idxtbl = (town >> 2) * 2;
+            int index = townsperson * 4 + (town & 3);
             for(int j=0; j<2; j++, idxtbl++) {
                 if (index < tt.index(idxtbl).length())
                     mapper_->Write(tt.index(idxtbl), index, data.text[j]);
+            }
+            if (townsperson >= 9 && townsperson < 9+4) {
+                mapper_->Write(ie.conditions_table(), (townsperson-9)*8 + town,
+                        data.condition);
             }
         }
     }
@@ -975,6 +989,7 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
 
     if (map_.type() == MapType::TOWN) {
         const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
+        int townsperson = item->enemy - 10;
         for(int i=0; i<2; i++) {
             int world = map_.code() >> 2;
             int index = item->text[i];
@@ -995,6 +1010,31 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
 
             ImGui::SameLine();
             ImGui::Text("%s", val.c_str());
+        }
+        if (townsperson >= 9 && townsperson < 9+4) {
+            bool b7 = !!(item->condition & 0x80);
+            bool b6 = !!(item->condition & 0x40);
+            bool b5 = !!(item->condition & 0x20);
+            bool b4 = !!(item->condition & 0x10);
+            bool b3 = !!(item->condition & 0x08);
+            bool b2 = !!(item->condition & 0x04);
+            bool b1 = !!(item->condition & 0x02);
+            bool b0 = !!(item->condition & 0x01);
+            ImGui::Text("%s                     b7  b6  b5  b4  b3  b2  b1  b0",
+                        popup ? "" : "                         ");
+            ImGui::Text("%sSatisfier condition:",
+                        popup ? "" : "                         ");
+            ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b7", &b7); ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b6", &b6); ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b5", &b5); ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b4", &b4); ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b3", &b3); ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b2", &b2); ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b1", &b1); ImGui::SameLine();
+            chg |= ImGui::Checkbox("##b0", &b0);
+            item->condition =
+                (b7<<7 | b6<<6 | b5<<5 | b4<<4 | b3<<3 | b2<<2 | b1<<1 | b0);
         }
     }
     return chg;

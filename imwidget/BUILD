@@ -350,3 +350,15 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "item_effects",
+    hdrs = ["item_effects.h"],
+    srcs = ["item_effects.cc"],
+    deps = [
+        ":base",
+        "//nes:mappers",
+        "//proto:rominfo",
+        "//util:config",
+        "//external:imgui",
+    ],
+)

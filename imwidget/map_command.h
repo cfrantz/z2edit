@@ -210,6 +210,7 @@ class MapEnemyList {
         int enemy;
         int x, y;
         int text[2];
+        int condition;
     };
     MapEnemyList();
     MapEnemyList(Mapper* m);

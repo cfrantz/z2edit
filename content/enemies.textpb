@@ -522,130 +522,130 @@ enemies {
             name: "gold girl (crash?)"
         }},
         { key: 0x09 value: {
-            name: "townsperson 09"
+            name: "townsperson #??"
         }},
         { key: 0x0a value: {
-            name: "townsperson 10"
+            name: "Ache (talking) #0"
         }},
         { key: 0x0b value: {
-            name: "townsperson 11"
+            name: "Bit (talking) #1"
         }},
         { key: 0x0c value: {
-            name: "townsperson 12"
+            name: "Invisible Dialog (sign) #2"
         }},
         { key: 0x0d value: {
-            name: "townsperson 13"
+            name: "Immobile Blue Woman / River Man #3"
         }},
         { key: 0x0e value: {
-            name: "townsperson 14"
+            name: "Blue Lumberjack #4"
         }},
         { key: 0x0f value: {
-            name: "Wizard"
+            name: "Wizard #5"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 1
             id: [0x74, 0x76, 0xd4, 0xd6]
         }},
         { key: 0x10 value: {
-            name: "Red Hint Guy"
+            name: "Little Kid #6"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xc0, 0xc2, 0xc4, 0xc6]
         }},
         { key: 0x11 value: {
-            name: "Purple Hint Lady"
+            name: "Immobile Blue Lady w/ Bowl #7"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
             id: [0xdc, 0xde, 0xe4, 0xe6]
         }},
         { key: 0x12 value: {
-            name: "Red Hint Granny"
+            name: "Immobile Red Granny #8"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xf4, 0xf6, 0xf8, 0xfa]
         }},
         { key: 0x13 value: {
-            name: "townsperson 19"
+            name: "Idle Red Lumberjack #9"
         }},
         { key: 0x14 value: {
-            name: "Item Lady"
+            name: "Idle Blue Lady w/ Bowl #10"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
             id: [0xdc, 0xde, 0xe4, 0xe6]
         }},
         { key: 0x15 value: {
-            name: "townsperson 21"
+            name: "Idle Blue Granny #11"
         }},
         { key: 0x16 value: {
-            name: "Trophy Lady"
+            name: "Idle Red Lady #12"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xd8, 0xda, 0xe0, 0xe2]
         }},
         { key: 0x17 value: {
-            name: "Life Lady"
+            name: "Life Lady #13"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xd8, 0xda, 0xe0, 0xe2]
         }},
         { key: 0x18 value: {
-            name: "Magic Lady"
+            name: "Magic Lady #14"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 1
             id: [0xf4, 0xf6, 0xf8, 0xfa]
         }},
         { key: 0x19 value: {
-            name: "townsperson 25"
+            name: "Random Blue Lumberjack #15"
         }},
         { key: 0x1a value: {
-            name: "townsperson 26"
+            name: "Random Red Lady w/ Bowl #16"
         }},
         { key: 0x1b value: {
-            name: "townsperson 27"
+            name: "Random Red Granny #17"
         }},
         { key: 0x1c value: {
-            name: "townsperson 28"
+            name: "Random Blue Lady #18"
         }},
         { key: 0x1d value: {
-            name: "Purple Hint Guy"
+            name: "Walking Blue Lumberjack #19"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
             id: [0xc0, 0xc2, 0xc4, 0xc6]
         }},
         { key: 0x1e value: {
-            name: "townsperson 30"
+            name: "Walking Red Guy #20"
         }},
         { key: 0x1f value: {
-            name: "Red Hint Guy"
+            name: "Walking Red Guy #21"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 2
             id: [0xc0, 0xc2, 0xc4, 0xc6]
         }},
         { key: 0x20 value: {
-            name: "Purple Hint Lady"
+            name: "Walking Blue Lady #22"
             width: 16 height: 32
             chr: { bank: 6 }
             palette: 3
             id: [0xd8, 0xda, 0xe0, 0xe2]
         }},
         { key: 0x21 value: {
-            name: "Mirror"
+            name: "Mirror #23"
             width: 8 height: 16
             chr: { bank: 6 }
             palette: 1
             id: 0xf5
         }},
         { key: 0x22 value: {
-            name: "Sign"
+            name: "Sign #24"
             width: 8 height: 16
             chr: { bank: 6 }
             palette: 1

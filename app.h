@@ -9,6 +9,7 @@
 #include "imwidget/enemyattr.h"
 #include "imwidget/hwpalette.h"
 #include "imwidget/imwidget.h"
+#include "imwidget/item_effects.h"
 #include "imwidget/misc_hacks.h"
 #include "imwidget/neschrview.h"
 #include "imwidget/palace_gfx.h"
@@ -94,6 +95,7 @@ class Z2Edit: public ImApp {
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::TextTableEditor> text_table_;
     std::unique_ptr<z2util::TileTransform> tile_transform_;
+    std::unique_ptr<z2util::ItemEffects> item_effects_;
     std::unique_ptr<z2util::ObjectTable> object_table_;
     std::unique_ptr<z2util::EnemyEditor> enemy_editor_;
     std::unique_ptr<z2util::ExperienceTable> experience_table_;
