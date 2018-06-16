@@ -49,7 +49,8 @@ bool ItemEffects::DrawItemTable() {
     const char *bits =
         "bit 0\0bit 1\0bit 2\0bit 3\0bit 4\0bit 5\0bit 6\0bit 7\0\0";
     const char *towns =
-        "Rauru\0Ruto\0Saria\0Mido\0Nabooru\0Darunia\0New Kasuto\0Old Kasuto\0\0";
+        "Rauru\0Ruto\0Saria\0Mido\0Nabooru\0Darunia\0New Kasuto\0Old Kasuto\0"
+        "Shield\0Jump\0Life\0Fairy\0Fire\0Reflect\0Spell\0Thunder\0\0";
     const char *names[] = {
         "Trophy", "Medicine", "Child", "Magic Containers"
     };
@@ -63,7 +64,7 @@ bool ItemEffects::DrawItemTable() {
         ImGui::PushItemWidth(70);
         changed |= ImGui::Combo("##bit", &item_[i].bit, bits);
         ImGui::PopItemWidth();
-        ImGui::SameLine(); ImGui::Text("in town"); ImGui::SameLine();
+        ImGui::SameLine(); ImGui::Text("for town/item slot"); ImGui::SameLine();
         ImGui::PushItemWidth(100);
         changed |= ImGui::Combo("##town", &item_[i].town, towns);
         if (i == 3) {
@@ -81,22 +82,27 @@ bool ItemEffects::DrawItemTable() {
 void ItemEffects::Unpack() {
     const auto& ie = ConfigLoader<RomInfo>::GetConfig().item_effects();
     int town, bit, n;
+    int magic_offset = 8 + ie.town_base() - ie.magic_base();
 
     item_.clear();
 
     town = mapper_->ReadWord(ie.trophy().load(), 0) - ie.town_base();
+    town += (town < 0) ? magic_offset : 0;
     bit = mapper_->Read(ie.trophy().bits(), 0);
     item_.emplace_back(UnpackedItemEffect{town, log2b(bit)});
 
     town = mapper_->ReadWord(ie.medicine().load(), 0) - ie.town_base();
+    town += (town < 0) ? magic_offset : 0;
     bit = mapper_->Read(ie.medicine().bits(), 0);
     item_.emplace_back(UnpackedItemEffect{town, log2b(bit)});
 
     town = mapper_->ReadWord(ie.child().load(), 0) - ie.town_base();
+    town += (town < 0) ? magic_offset : 0;
     bit = mapper_->Read(ie.child().bits(), 0);
     item_.emplace_back(UnpackedItemEffect{town, log2b(bit)});
 
     town = mapper_->ReadWord(ie.magic_containers().load(), 0) - ie.town_base();
+    town += (town < 0) ? magic_offset : 0;
     bit = mapper_->Read(ie.magic_containers().bits(), 0);
     n = mapper_->Read(ie.magic_container_count(), 0);
     item_.emplace_back(UnpackedItemEffect{town, log2b(bit), n});
@@ -106,22 +112,33 @@ void ItemEffects::Unpack() {
 
 void ItemEffects::Pack() {
     const auto& ie = ConfigLoader<RomInfo>::GetConfig().item_effects();
+    int magic_offset = 8 + ie.town_base() - ie.magic_base();
+    int town;
     int16_t base = ie.town_base();
+    int16_t addr;
 
-    mapper_->WriteWord(ie.trophy().load(), 0, item_[0].town + base);
-    mapper_->WriteWord(ie.trophy().save(), 0, item_[0].town + base);
+    town = item_[0].town;
+    addr = (town < 8) ? town + base : town + base - magic_offset;
+    mapper_->WriteWord(ie.trophy().load(), 0, addr);
+    mapper_->WriteWord(ie.trophy().save(), 0, addr);
     mapper_->Write(ie.trophy().bits(), 0, 1 << item_[0].bit);
 
-    mapper_->WriteWord(ie.medicine().load(), 0, item_[1].town + base);
-    mapper_->WriteWord(ie.medicine().save(), 0, item_[1].town + base);
+    town = item_[1].town;
+    addr = (town < 8) ? town + base : town + base - magic_offset;
+    mapper_->WriteWord(ie.medicine().load(), 0, addr);
+    mapper_->WriteWord(ie.medicine().save(), 0, addr);
     mapper_->Write(ie.medicine().bits(), 0, 1 << item_[1].bit);
 
-    mapper_->WriteWord(ie.child().load(), 0, item_[2].town + base);
-    mapper_->WriteWord(ie.child().save(), 0, item_[2].town + base);
+    town = item_[2].town;
+    addr = (town < 8) ? town + base : town + base - magic_offset;
+    mapper_->WriteWord(ie.child().load(), 0, addr);
+    mapper_->WriteWord(ie.child().save(), 0, addr);
     mapper_->Write(ie.child().bits(), 0, 1 << item_[2].bit);
 
-    mapper_->WriteWord(ie.magic_containers().load(), 0, item_[3].town + base);
-    mapper_->WriteWord(ie.magic_containers().save(), 0, item_[3].town + base);
+    town = item_[3].town;
+    addr = (town < 8) ? town + base : town + base - magic_offset;
+    mapper_->WriteWord(ie.magic_containers().load(), 0, addr);
+    mapper_->WriteWord(ie.magic_containers().save(), 0, addr);
     mapper_->Write(ie.magic_containers().bits(), 0, 1 << item_[3].bit);
     mapper_->Write(ie.magic_container_count(), 0, item_[3].mc_count);
 

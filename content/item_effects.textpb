@@ -1,5 +1,7 @@
 item_effects {
   town_base: 0x797
+  magic_base: 0x77b
+
   trophy {
     load { bank: -1 address: 0xe830 }
     bits { bank: -1 address: 0xe833 }
