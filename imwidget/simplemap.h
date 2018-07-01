@@ -28,6 +28,9 @@ class SimpleMap: public ImWindowBase {
     std::unique_ptr<GLBitmap> RenderToNewBuffer();
   private:
     bool changed_;
+    bool object_box_;
+    bool enemy_box_;
+    bool avail_box_;
     int width_;
     int height_;
     float scale_;

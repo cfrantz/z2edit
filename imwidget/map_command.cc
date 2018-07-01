@@ -68,6 +68,7 @@ MapCommand::MapCommand(const MapHolder* holder, uint8_t position,
                        uint8_t object, uint8_t extra)
   : id_(UniqueID()),
     holder_(holder),
+    show_origin_(true),
     position_(position),
     object_(object),
     extra_(extra),
@@ -92,6 +93,7 @@ MapCommand::MapCommand(const MapHolder* holder, int x0, uint8_t position,
 MapCommand::MapCommand(const MapCommand& other)
   : id_(UniqueID()),
     holder_(other.holder_),
+    show_origin_(other.show_origin_),
     position_(other.position_),
     object_(other.object_),
     extra_(other.extra_),
@@ -231,27 +233,30 @@ MapCommand::DrawResult MapCommand::DrawPopup(float scale) {
     float size = 16.0 * scale;
     float yp = data_.y;
     if (yp > 13) yp = 13;
-    ImVec2 a = ImVec2(abs.x + data_.absx * size, abs.y + yp * size);
-    ImVec2 b = ImVec2(a.x + size, a.y + size);
-    draw->AddRect(a, b, color, 0, ~0, 2.0f);
-    if (data_.y == 13) {
-        // New floor
-        for(int i=0; i<16; i+=4) {
-            ImVec2 a = ImVec2(abs.x + data_.absx * size + (i + 4) * scale,
+
+    if (show_origin_) {
+        ImVec2 a = ImVec2(abs.x + data_.absx * size, abs.y + yp * size);
+        ImVec2 b = ImVec2(a.x + size, a.y + size);
+        draw->AddRect(a, b, color, 0, ~0, 2.0f);
+        if (data_.y == 13) {
+            // New floor
+            for(int i=0; i<16; i+=4) {
+                ImVec2 a = ImVec2(abs.x + data_.absx * size + (i + 4) * scale,
+                                  abs.y + yp * size + 8 * scale);
+                ImVec2 b = ImVec2(abs.x + data_.absx * size + (i + 0) * scale,
+                                  abs.y + yp * size + 14 * scale);
+                draw->AddLine(a, b, color);
+            }
+        } else if (data_.y == 14) {
+            // X skip
+            ImVec2 a = ImVec2(abs.x + data_.absx * size + 4 * scale,
+                              abs.y + yp * size + 4 * scale);
+            ImVec2 b = ImVec2(abs.x + data_.absx * size + 4 * scale,
+                              abs.y + yp * size + 12 * scale);
+            ImVec2 c = ImVec2(abs.x + data_.absx * size + 12 * scale,
                               abs.y + yp * size + 8 * scale);
-            ImVec2 b = ImVec2(abs.x + data_.absx * size + (i + 0) * scale,
-                              abs.y + yp * size + 14 * scale);
-            draw->AddLine(a, b, color);
+            draw->AddTriangleFilled(a, b, c, color);
         }
-    } else if (data_.y == 14) {
-        // X skip
-        ImVec2 a = ImVec2(abs.x + data_.absx * size + 4 * scale,
-                          abs.y + yp * size + 4 * scale);
-        ImVec2 b = ImVec2(abs.x + data_.absx * size + 4 * scale,
-                          abs.y + yp * size + 12 * scale);
-        ImVec2 c = ImVec2(abs.x + data_.absx * size + 12 * scale,
-                          abs.y + yp * size + 8 * scale);
-        draw->AddTriangleFilled(a, b, c, color);
     }
 
     ImGui::PushID(-id_);
@@ -758,6 +763,7 @@ bool MapConnection::Draw() {
 
 MapEnemyList::MapEnemyList(Mapper* m)
   : mapper_(m),
+    show_origin_(true),
     is_large_(false),
     is_encounter_(false),
     world_(0),
@@ -858,9 +864,12 @@ MapEnemyList::DrawResult MapEnemyList::DrawOnePopup(Unpacked* item,
     uint32_t color = 0x800000FF;
     auto* draw = ImGui::GetWindowDrawList();
     float size = 16.0 * scale;
-    ImVec2 a = ImVec2(abs.x + item->x * size, abs.y + item->y * size);
-    ImVec2 b = ImVec2(a.x + size, a.y + size);
-    draw->AddRect(a, b, color, 0, ~0, 2.0f);
+
+    if (show_origin_) {
+        ImVec2 a = ImVec2(abs.x + item->x * size, abs.y + item->y * size);
+        ImVec2 b = ImVec2(a.x + size, a.y + size);
+        draw->AddRect(a, b, color, 0, ~0, 2.0f);
+    }
 
     ImGui::SetCursorPos(ImVec2(pos.x + item->x * size, pos.y + item->y * size));
     ImGui::InvisibleButton("button", ImVec2(size, size));
@@ -1099,10 +1108,13 @@ void MapItemAvailable::Parse(const Map& map) {
 
     area_ = map.area();
     for(const auto& a : ri.available()) {
-        if (map.world() == a.world()
-            && map.overworld() == a.overworld()
-            && map.subworld() == a.subworld()) {
-            avail_ = a;
+        if (map.world() == a.world()) {
+            if (map.world() != 0) {
+                avail_ = a;
+            } else if (map.overworld() == a.overworld() &&
+                       map.subworld() == a.subworld()) {
+                avail_ = a;
+            }
         }
     }
 

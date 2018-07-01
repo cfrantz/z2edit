@@ -44,10 +44,12 @@ class MapCommand {
     inline void set_relx(int x) { data_.x = x; }
     inline int relx() const { return data_.x; }
     inline uint8_t object() const { return object_; }
+    inline void set_show_origin(bool s) { show_origin_ = s; }
     static void Init();
   private:
     int id_;
     const MapHolder* holder_;
+    bool show_origin_;
     uint8_t position_;
     uint8_t object_;
     uint8_t extra_;
@@ -127,6 +129,11 @@ class MapHolder {
     }
     inline void set_cursor_moves_left(bool v) {
         cursor_moves_left_ = v;
+    }
+    inline void set_show_origin(bool s) {
+        for(auto& c : command_) {
+            c.set_show_origin(s);
+        }
     }
   private:
     std::vector<uint8_t> MapDataWorker(std::vector<MapCommand>& cmd);
@@ -225,8 +232,10 @@ class MapEnemyList {
     std::vector<uint8_t> Pack();
     void Save();
     const std::vector<Unpacked>& data();
+    inline void set_show_origin(bool s) { show_origin_ = s; }
   private:
     Mapper* mapper_;
+    bool show_origin_;
     bool is_large_;
     bool is_encounter_;
     Address pointer_;
@@ -258,8 +267,11 @@ class MapItemAvailable {
     void Save();
     inline const Unpacked& data() { return data_; }
     inline bool get(int x) { return data_.avail[x/16]; }
+    inline void set_show(bool s) { show_ = s; }
+    inline bool show() { return show_; }
   private:
     Mapper* mapper_;
+    bool show_;
     AvailableBitmap avail_;
     int area_;
     Unpacked data_;

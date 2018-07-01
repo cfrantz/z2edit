@@ -16,6 +16,9 @@ namespace z2util {
 SimpleMap::SimpleMap()
   : ImWindowBase(false),
     changed_(false),
+    object_box_(true),
+    enemy_box_(true),
+    avail_box_(true),
     scale_(1.0),
     mapsel_(0),
     tab_(0),
@@ -65,12 +68,12 @@ void SimpleMap::DrawMap(const ImVec2& pos) {
             if (item != 0xFF) {
                 auto& sprite = items_.Get(item);
                 sprite.DrawAt(pos.x + x*size, pos.y + y*size, scale_);
-                if (item != ELEVATOR && !avail_.get(x)) {
+                if (item != ELEVATOR && !avail_.get(x) && avail_.show()) {
                     float rx = sprite.width() * scale_ / 2.0;
                     float ry = sprite.height() * scale_ / 2.0;
                     draw->AddCircle(
                             ImVec2(sp.x + x*size + rx, sp.y + y*size + ry),
-                            (rx+ry)/2.0, RED, 20, 2.0f);
+                            (rx+ry)/1.333, RED, 20, 2.0f);
                     draw->AddLine(
                             ImVec2(sp.x + x*size, sp.y + y*size),
                             ImVec2(sp.x + x*size + sprite.width() * scale_,
@@ -194,8 +197,17 @@ bool SimpleMap::Draw() {
     scale_ = Clamp(scale_, 0.25f, 8.0f);
     ImGui::PopItemWidth();
 
+    ImGui::SameLine(); ImGui::Text("| Box:");
+    ImGui::SameLine(); ImGui::Checkbox("Object", &object_box_);
+    ImGui::SameLine(); ImGui::Checkbox("Enemy", &enemy_box_);
+    ImGui::SameLine(); ImGui::Checkbox("Avail", &avail_box_);
+    holder_.set_show_origin(object_box_);
+    enemies_.set_show_origin(enemy_box_);
+    avail_.set_show(avail_box_);
+
+
     ImGui::SameLine();
-    ImApp::Get()->HelpButton("sideview-editor");
+    ImApp::Get()->HelpButton("sideview-editor", true);
 
     ImGui::BeginChild("image", ImVec2(0, (decomp_.height()+2)*16.0*scale_),
                       true, ImGuiWindowFlags_HorizontalScrollbar);
