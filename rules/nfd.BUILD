@@ -12,7 +12,15 @@ genrule(
     outs = [
         "glib-2.0/include/glibconfig.h",
     ],
-    cmd = "cp /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h $(@)"
+    cmd = """
+    if [[ -f /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h ]]; then
+        # Ubuntu, debian
+        cp /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h $(@)
+    elif [[ -f /usr/lib/glib-2.0/include/glibconfig.h ]]; then
+        # Arch
+        cp /usr/lib/glib-2.0/include/glibconfig.h $(@)
+    fi
+    """,
 )
 
 cc_library(
