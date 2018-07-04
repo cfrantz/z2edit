@@ -957,21 +957,17 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     case Absolute:
     case AbsoluteX:
     case AbsoluteY:
+    case Indirect:
         Write(*nexti, info.opcode[mode]);
         Write16(*nexti+1, addr);
         *nexti += 3;
-        break;
-    case IndexedIndirect:
-    case Indirect:
-    case IndirectIndexed:
-        Write(*nexti, info.opcode[mode]);
-        Write(*nexti+1, addr);
-        *nexti += 2;
         break;
     case ZeroPage:
     case ZeroPageX:
     case ZeroPageY:
     case Immediate:
+    case IndexedIndirect:
+    case IndirectIndexed:
         Write(*nexti, info.opcode[mode]);
         Write(*nexti+1, addr);
         *nexti += 2;
@@ -1023,16 +1019,16 @@ std::vector<std::string> Cpu::ApplyFixups() {
         case Absolute:
         case AbsoluteX:
         case AbsoluteY:
-        case IndexedIndirect:
         case Indirect:
-        case IndirectIndexed:
             Write16(f.first+1, label->second);
             break;
         case ZeroPage:
         case ZeroPageX:
         case ZeroPageY:
         case Immediate:
-            Write16(f.first+1, label->second);
+        case IndexedIndirect:
+        case IndirectIndexed:
+            Write(f.first+1, label->second);
             break;
         case Relative:
             Write(f.first+1, label->second - (f.first + 2));
