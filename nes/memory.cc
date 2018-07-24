@@ -90,7 +90,10 @@ int Memory::CheckBankForKeepout(int bank, bool move) {
 
     if (bank == 3) {
         result += CheckBank3Special(move);
-    } else {
+    }
+
+    if (!(bank==3 || bank==5)) {
+        // Banks 3 and 5 do not have set two maps.
         addr.set_address(0xA000);
         result += CheckForKeepout(addr, "set two map", 63, move);
     }
