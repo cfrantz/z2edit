@@ -14,8 +14,8 @@ misc {
         { bank: 1 address: 0xa1f8 length: 252 },
         { bank: 2 address: 0x871b length: 389 },
         { bank: 2 address: 0xa1f8 length: 252 },
+        # Bank 3 doesn't have the second set of maps at $A000
         { bank: 3 address: 0x871b length: 389 },
-        { bank: 3 address: 0xa1f8 length: 252 },
         { bank: 4 address: 0x871b length: 389 },
         { bank: 4 address: 0xa1f8 length: 252 },
         { bank: 5 address: 0x871b length: 389 },

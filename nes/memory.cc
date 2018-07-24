@@ -88,11 +88,11 @@ int Memory::CheckBankForKeepout(int bank, bool move) {
     addr.set_address(0x8523);
     result += CheckForKeepout(addr, "set one map", 63, move);
 
-    addr.set_address(0xA000);
-    result += CheckForKeepout(addr, "set two map", 63, move);
-
     if (bank == 3) {
         result += CheckBank3Special(move);
+    } else {
+        addr.set_address(0xA000);
+        result += CheckForKeepout(addr, "set two map", 63, move);
     }
 
     return result;
