@@ -511,6 +511,30 @@ decompress {
 }
 decompress {
     area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x08
+    render: RENDER_CUSTOM
+    width: 1
+    height: 1
+    objid: [ 0x96 ]
+    custom: "RenderGrid"
+    comment: "tomb decorator left"
+    fixed_y: 9
+}
+decompress {
+    area: TOWN
+    type: OBJECT_EXTRA_SMALL
+    id: 0x09
+    render: RENDER_CUSTOM
+    width: 1
+    height: 1
+    objid: [ 0x97 ]
+    custom: "RenderGrid"
+    comment: "tomb decorator right"
+    fixed_y: 9
+}
+decompress {
+    area: TOWN
     type: OBJECT_EXTRA
     id: 0x10
     render: RENDER_HORIZONTAL
