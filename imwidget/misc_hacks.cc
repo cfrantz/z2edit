@@ -127,6 +127,10 @@ bool MiscellaneousHacks::DrawMiscHacks() {
         [&]() { return ri.overworld_breakblocks(); },
         [&](int n) { return ri.overworld_breakblocks(n); });
 
+    Hack("Spell Bits", ri.spell_bits_size(),
+        [&]() { return ri.spell_bits(); },
+        [&](int n) { return ri.spell_bits(n); });
+
     return false;
 }
 
@@ -188,7 +192,8 @@ int MiscellaneousHacks::Hack(const char* hackname, int n,
     const char *names[n];
     int len = 0;
     int method = 0;
-    for(const auto& hack: getall()) {
+    auto all = getall();
+    for(const auto& hack: all) {
         names[len] = hack.name().c_str();
         if (MemcmpHack(hack.hack(0))) {
             method = len;
