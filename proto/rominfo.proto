@@ -388,4 +388,5 @@ message RomInfo {
     repeated GameHack dynamic_banks = 24;
     repeated GameHack overworld_breakblocks = 25;
     ItemEffectList item_effects = 26;
+    repeated GameHack spell_bits = 27;
 }

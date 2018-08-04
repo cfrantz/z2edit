@@ -1,0 +1,14 @@
+spell_bits {
+    name: "Vanilla (Fixed bit positions)"
+    hack: [
+        {address { bank:0 address:0x8e2a } data: [ 0xb9, 0xbb, 0x8d ]},
+        {address { bank:0 address:0xbfe0 } data: [ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF ]}
+    ]
+}
+spell_bits {
+    name: "Flexible (Bit positions define effect type)"
+    hack: [
+        {address { bank:0 address:0x8e2a } data: [ 0xb9, 0xe0, 0xbf ]},
+        {address { bank:0 address:0xbfe0 } data: [ 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 ]}
+    ]
+}
