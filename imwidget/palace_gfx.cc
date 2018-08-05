@@ -22,7 +22,7 @@ bool PalaceGraphics::Draw() {
 
     ImGui::Begin("Palace Graphics & Palettes", &visible_);
     int start = 52;
-    ImGui::Text("East   DM/MZ  West   CHR bank           Palette Offset");
+    ImGui::Text("West   DM/MZ  East   CHR bank           Palette Offset");
 
     ImGui::SameLine(ImGui::GetWindowWidth() - 50);
     ImApp::Get()->HelpButton("palace-graphics");
