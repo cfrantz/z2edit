@@ -5,6 +5,7 @@ palettes {
 }
 palettes {
     name: "West Hyrule"
+    show_index: true
     palette { name: "North Castle" address: { bank:1 address: 0x800e } }
     palette { name: "Cave"         address: { bank:1 address: 0x801e } }
     palette { name: "Desert"       address: { bank:1 address: 0x802e } }
@@ -17,6 +18,7 @@ palettes {
 }
 palettes {
     name: "West Hyrule Sprites"
+    show_index: true
     palette { name: "Black Border" address: { bank:1 address: 0x809e } }
     palette { name: "Dark Border"  address: { bank:1 address: 0x80ae } }
     palette { name: "Unused 2"     address: { bank:1 address: 0x80be } }
@@ -24,6 +26,7 @@ palettes {
 }
 palettes {
     name: "East Hyrule"
+    show_index: true
     palette { name: "North Castle" address: { bank:2 address: 0x800e } }
     palette { name: "Cave"         address: { bank:2 address: 0x801e } }
     palette { name: "Desert"       address: { bank:2 address: 0x802e } }
@@ -36,6 +39,7 @@ palettes {
 }
 palettes {
     name: "East Hyrule Sprites"
+    show_index: true
     palette { name: "Black Border" address: { bank:2 address: 0x809e } }
     palette { name: "Dark Border"  address: { bank:2 address: 0x80ae } }
     palette { name: "Unused 2"     address: { bank:2 address: 0x80be } }
@@ -43,17 +47,19 @@ palettes {
 }
 palettes {
     name: "Towns"
-    palette { name: "Rauru"        address: { bank:3 address: 0x800e } }
-    palette { name: "Ruto"         address: { bank:3 address: 0x801e } }
-    palette { name: "Saria"        address: { bank:3 address: 0x802e } }
-    palette { name: "Mido"         address: { bank:3 address: 0x803e } }
-    palette { name: "Nabooru"      address: { bank:3 address: 0x804e } }
-    palette { name: "Darunia"      address: { bank:3 address: 0x805e } }
-    palette { name: "Kasuto"       address: { bank:3 address: 0x806e } }
-    palette { name: "New Kasuto"   address: { bank:3 address: 0x807e } }
+    show_index: true
+    palette { name: "Rauru/Nabooru"    address: { bank:3 address: 0x800e } }
+    palette { name: "Ruto"             address: { bank:3 address: 0x801e } }
+    palette { name: "Saria/New Kasuto" address: { bank:3 address: 0x802e } }
+    palette { name: "Mido"             address: { bank:3 address: 0x803e } }
+    palette { name: "Darunia"          address: { bank:3 address: 0x804e } }
+    palette { name: "Kasuto"           address: { bank:3 address: 0x805e } }
+    palette { name: "Indoors"          address: { bank:3 address: 0x806e } }
+    palette { name: "Basement"         address: { bank:3 address: 0x807e } }
 }
 palettes {
     name: "Town Sprites"
+    show_index: true
     palette { name: "Black Border" address: { bank:3 address: 0x809e } }
     palette { name: "Dark Border"  address: { bank:3 address: 0x80ae } }
     palette { name: "Unused 2"     address: { bank:3 address: 0x80be } }
@@ -81,6 +87,7 @@ palettes {
 }
 palettes {
     name: "Palace 1-6 Sprites"
+    show_index: true
     palette { name: "Black Border" address: { bank:4 address: 0x809e } }
     palette { name: "Dark Border"  address: { bank:4 address: 0x80ae } }
     palette { name: "Unused 2"     address: { bank:4 address: 0x80be } }
@@ -88,6 +95,7 @@ palettes {
 }
 palettes {
     name: "Palace 7 Sprites"
+    show_index: true
     palette { name: "Black Border" address: { bank:5 address: 0x809e } }
     palette { name: "Dark Border"  address: { bank:5 address: 0x80ae } }
     palette { name: "Unused 2"     address: { bank:5 address: 0x80be } }

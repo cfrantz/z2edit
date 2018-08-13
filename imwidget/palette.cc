@@ -64,7 +64,11 @@ bool PaletteEditor::Draw() {
             "Title", "Palette 0", "Palette 1", "Palette 2", "Palette 3");
     ImGui::Separator();
     for(const auto& p: ri.palettes(grpsel_).palette()) {
-        ImGui::Text("%20s", p.name().c_str());
+        if (ri.palettes(grpsel_).show_index()) {
+            ImGui::Text("%d:%18s", n, p.name().c_str());
+        } else {
+            ImGui::Text("%20s", p.name().c_str());
+        }
         for(int i=0; i<16; i++, id++) {
             ImGui::SameLine();
             if ((i % 4) == 0) {
