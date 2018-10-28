@@ -76,7 +76,13 @@ void PostProcess(z2util::RomInfo* config) {
             for(int i=0; i<4; i++) {
                 auto *obj = m->add_objtable();
                 obj->set_bank(s.address().bank());
-                obj->set_address(0x500 + i*2);
+                obj->set_address(0x8500 + i*2);
+            }
+            if (map == 0 && s.area().find("background") == std::string::npos) {
+                // Add a dummy "map" for initializing the object table editor
+                auto* o = config->add_objtable();
+                *o = *m;
+                o->set_name(s.area());
             }
         }
     }

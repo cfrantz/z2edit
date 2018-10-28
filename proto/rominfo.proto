@@ -360,7 +360,6 @@ message ItemEffectList {
     repeated string town_name = 8;
     int32 magic_base = 9;
 }
-    
 
 message RomInfo {
     string path = 1; // For internal use by the config loader
@@ -390,4 +389,5 @@ message RomInfo {
     repeated GameHack overworld_breakblocks = 25;
     ItemEffectList item_effects = 26;
     repeated GameHack spell_bits = 27;
+    repeated Map objtable = 28;
 }

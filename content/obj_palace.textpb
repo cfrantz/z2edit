@@ -293,8 +293,7 @@ decompress {
     id: 0xd0
     render: RENDER_TOP_UNIQUE
     width: 1
-    # FIXME(cfrantz): what are the object ids for the bridge?
-    objid: [0x00, 0x00]
+    objid: [0x48, 0x4d]
     comment: "bridge"
 }
 decompress {

@@ -251,6 +251,7 @@ cc_library(
         "//nes:mappers",
         "//nes:z2objcache",
         "//proto:rominfo",
+        "//util:config",
         "//external:imgui",
     ],
 )

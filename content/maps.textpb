@@ -39,7 +39,7 @@ map {
     type: OVERWORLD
     connector: { bank: 2 address: 0xa0fc }
     palette: { bank: -1 address: 0x845b }
-    objtable: { bank: 0 address: 0x807a3 }
+    objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
     pointer: { bank: 2 address: 0x850a }
     world: 0
@@ -82,7 +82,7 @@ sideview: {
     address: { bank: 4 address: 0x8000 }
     length: 7
     palette: { bank: 4 address: 0x800e }
-    type: TOWN
+    type: PALACE
     chr: { bank: 0x9 }
     world: -1
 }

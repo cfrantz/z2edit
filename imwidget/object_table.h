@@ -16,11 +16,13 @@ class ObjectTable: public ImWindowBase {
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
   private:
+    int group_;
+    int item_;
+    int palette_;
     float scale_;
-    Mapper* mapper_;
+    int selection_;
 
-    Address table_;
-    Address chr_;
+    Mapper* mapper_;
     Z2ObjectCache cache_;
 };
 
