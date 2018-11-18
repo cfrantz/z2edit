@@ -194,7 +194,7 @@ void MultiMap::DrawOne(const DrawLocation& dl) {
     Vec2 pos = origin_ + Position(dl.node->pos());
     Vec2 button_height(0, 24);
     ImGui::SetCursorPos(pos);
-    if (ImGui::Button(maps_[dl.node->id()].name().c_str())) {
+    if (show_labels_ && ImGui::Button(maps_[dl.node->id()].name().c_str())) {
         SimpleMap::Spawn(mapper_, maps_[map]);
     }
     pos += button_height;
@@ -310,6 +310,8 @@ bool MultiMap::Draw() {
         ImGui::Checkbox("Pause Convergence while dragging", &pauseconv_);
         ImGui::Checkbox("Converge before first draw", &preconverge_);
         ImGui::Checkbox("Converge during draw", &continuous_converge_);
+        ImGui::Checkbox("Show labels", &show_labels_);
+        ImGui::Checkbox("Show arrows", &show_arrows_);
         ImGui::EndPopup();
     }
 
@@ -346,10 +348,13 @@ bool MultiMap::Draw() {
     origin_ = -minv + ImGui::GetCursorPos();
     absolute_ = -minv + ImGui::GetCursorScreenPos();
 
-    for(const auto& dl : location_)
-        DrawConnections(dl.second);
-    for(const auto& dl : location_)
+    if (show_arrows_) {
+        for(const auto& dl : location_)
+            DrawConnections(dl.second);
+    }
+    for(const auto& dl : location_) {
         DrawOne(dl.second);
+    }
 
     ImGui::EndChild();
     ImGui::End();

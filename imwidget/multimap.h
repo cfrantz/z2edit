@@ -25,7 +25,8 @@ class MultiMap: public ImWindowBase {
     MultiMap(Mapper* mapper, int world, int overworld, int subworld, int map)
         : ImWindowBase(), mapper_(mapper), scale_(0.25),
         world_(world), overworld_(overworld), subworld_(subworld),
-        start_(map), pauseconv_(true) {}
+        start_(map), pauseconv_(true), show_labels_(true), show_arrows_(true)
+    {}
 
     void Init();
     void Refresh() override { Init(); }
@@ -76,6 +77,8 @@ class MultiMap: public ImWindowBase {
     Vec2 absolute_;
     bool drag_;
     bool pauseconv_;
+    bool show_labels_;
+    bool show_arrows_;
 
     static float xs_;
     static float ys_;
