@@ -1,0 +1,28 @@
+set text 1
+set bank 5
+set ibase 16
+
+# The title text strings have strict formatting requirements.  
+# They must be exactly 27 characters long (in reality, they're 28 characters
+# long, but the last character must be the Nintendo "newlink" character).
+#        "0         1         2       "
+#        "0123456789012345678901234567"
+
+wtp a932 "AFTER GANON WAS DESTROYED,  "
+wtp a94f "IMPA TOLD LINK A SLEEPING   "
+wtp a96c "SPELL WAS CAST ON PRINCESS  "
+wtp a989 "ZELDA. SHE WILL WAKE ONLY   "
+wtp a9a6 "WITH THE POWER OF NO.3      "
+wtp a9c3 "TRIFORCE SEALED IN A PALACE "
+wtp a9e0 "IN HYRULE. TO BREAK THE     "
+wtp a9fd "SEAL,CRYSTALS MUST BE       "
+wtp aa1a "PLACED IN STATUES IN 6      "
+wtp aa37 "WELL GUARDED PALACES.       "
+wtp aa54 "LINK SET OUT ON HIS MOST    "
+wtp aa71 "ADVENTURESOME QUEST YET...  "
+wtp aa8e "       .1987 NINTENDO       "
+wtp aaab "                            "
+wtp aac8 "                            "
+
+# Insert the copyright character
+wbp aa95 e
