@@ -101,3 +101,9 @@ palettes {
     palette { name: "Unused 2"     address: { bank:5 address: 0x80be } }
     palette { name: "Unused 3"     address: { bank:5 address: 0x80ce } }
 }
+palettes {
+    name: "Title Screen"
+    palette { name: "Background" address: { bank: 5 address: 0xaf40 } }
+    palette { name: "Sprites"   address: { bank: 5 address: 0xaf50 } }
+    palette { name: "Select Screen" address: { bank: 5 address: 0xbbf8 } }
+}
