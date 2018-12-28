@@ -1,0 +1,30 @@
+######################################################################
+#
+# 100% All Z's sprite hack.  Make all the keys into LilZs.
+#
+######################################################################
+
+set ibase 16
+
+# In every CHR bank, overwrite the key graphic with a LilZ.  The key is an
+# 8x16 sprite at tile ID 0x66-0x67.  Since palaces are mostly dark backgrounds,
+# instead of having an explicit black color, we use transparent for the eyes
+# and nose.
+wbc b=0 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=2 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=4 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=6 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=8 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=a 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=c 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=e 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=10 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=12 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=14 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=16 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+wbc b=18 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
+
+# In the sprite IDs table, the key is at $ee8f as $66,$F5 (key, blank).  Rewrite
+# the $F5 with $66, which will make the game consider the object as a 16x16
+# item in the form of a mirrored pair.
+wbp b=7 ee90 66
