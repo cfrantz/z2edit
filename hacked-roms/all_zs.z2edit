@@ -24,7 +24,15 @@ wbc b=14 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e
 wbc b=16 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
 wbc b=18 0x660 00 07 1f 7f ff f3 f3 ff 00 00 01 01 01 01 01 01 ff df dc dc dc 9e 0f 00 01 03 04 04 04 06 03 00
 
+# Replace the kidnapped child with a FullZ
+wbc b=5 0x300 07 1f 3b 6f ee ee e7 6b 01 01 01 01 02 02 03 08 0f 0f 0f 0f 0d 0c 0c 1c 0f 0f 0f 0f 0d 0c 0c 1c
+
 # In the sprite IDs table, the key is at $ee8f as $66,$F5 (key, blank).  Rewrite
 # the $F5 with $66, which will make the game consider the object as a 16x16
 # item in the form of a mirrored pair.
 wbp b=7 ee90 66
+
+# Change the town text to "rescue the kidnapped puppy..."
+set text 1
+wtp b=3 ad5e PUPPY
+wtp b=3 ad8f PUPPY
