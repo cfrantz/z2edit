@@ -1,0 +1,12 @@
+spell_cast {
+    name: "Vanilla (Menu between spell casts)"
+    hack: [
+        {address { bank:0 address:0x8dd4 } data: [ 0xf0, 0x49 ]}
+    ]
+}
+spell_cast {
+    name: "Quick (No menuing between casts)"
+    hack: [
+        {address { bank:0 address:0x8dd4 } data: [ 0xea, 0xea ]}
+    ]
+}

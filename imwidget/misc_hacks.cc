@@ -131,6 +131,10 @@ bool MiscellaneousHacks::DrawMiscHacks() {
         [&]() { return ri.spell_bits(); },
         [&](int n) { return ri.spell_bits(n); });
 
+    Hack("Spell Cast", ri.spell_cast_size(),
+        [&]() { return ri.spell_cast(); },
+        [&](int n) { return ri.spell_cast(n); });
+
     return false;
 }
 

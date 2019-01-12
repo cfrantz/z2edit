@@ -390,4 +390,5 @@ message RomInfo {
     ItemEffectList item_effects = 26;
     repeated GameHack spell_bits = 27;
     repeated Map objtable = 28;
+    repeated GameHack spell_cast = 29;
 }
