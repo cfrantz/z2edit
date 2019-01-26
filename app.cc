@@ -17,7 +17,7 @@
 #endif
 
 
-namespace z2util {
+namespace project {
 
 void App::Init() {
 }
@@ -88,7 +88,7 @@ save_as:
             }
             if (ImGui::MenuItem("About")) {
                 ErrorDialog::Spawn("About App",
-                    "App Zelda II ROM Editor\n\n",
+                    "Empty Project\n\n",
 #ifdef BUILD_GIT_VERSION
                     "Version: ", BUILD_GIT_VERSION, "-", BUILD_SCM_STATUS
 #else
@@ -121,4 +121,4 @@ save_as:
 void App::Help(const std::string& topickey) {
 }
 
-}  // namespace z2util
+}  // namespace project

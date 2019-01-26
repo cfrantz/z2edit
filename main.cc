@@ -6,23 +6,20 @@
 #include "util/config.h"
 
 const char kUsage[] =
-R"ZZZ(<optional flags> [user-supplied-zelda2.nes]
+R"ZZZ(<optional flags>
 
 Description:
-  A ROM file edtior for Zelda II The Adventure of Link.
+  An empty project.
 
 Flags:
-  --config <filename> Use an alternate config file.
   --hidpi <n>         Set the scaling factor on hidpi displays (try 2.0).
-  --emulator <prog>   Emulator to run for File | Emulate.
-  --romtmp <filename> Temporary filename for File | Emulate.
 )ZZZ";
 
 int main(int argc, char *argv[]) {
     gflags::SetUsageMessage(kUsage);
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-    z2util::App app("Zelda 2 ROM Editor");
+    project::App app("Empty Project");
     app.Init();
     app.Run();
     return 0;

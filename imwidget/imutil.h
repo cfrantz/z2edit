@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_IMWIDGET_IMUTIL_H
-#define Z2UTIL_IMWIDGET_IMUTIL_H
+#ifndef PROJECT_IMWIDGET_IMUTIL_H
+#define PROJECT_IMWIDGET_IMUTIL_H
 #include "imgui.h"
 
 inline ImVec2 operator*(const ImVec2& a, float b) {
@@ -60,4 +60,4 @@ inline ImColor Brighter(ImColor col) {
 }
 
 
-#endif // Z2UTIL_IMWIDGET_IMUTIL_H
+#endif // PROJECT_IMWIDGET_IMUTIL_H

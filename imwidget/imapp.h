@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_IMAPP_H
-#define Z2UTIL_IMAPP_H
+#ifndef PROJECT_IMAPP_H
+#define PROJECT_IMAPP_H
 #include <memory>
 
 #include <string>
@@ -78,4 +78,4 @@ class ImApp {
     std::vector<std::unique_ptr<ImWindowBase>> draw_added_;
 };
 
-#endif // Z2UTIL_IMAPP_H
+#endif // PROJECT_IMAPP_H

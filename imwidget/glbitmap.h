@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_IMWIDGET_GLBITMAP_H
-#define Z2UTIL_IMWIDGET_GLBITMAP_H
+#ifndef PROJECT_IMWIDGET_GLBITMAP_H
+#define PROJECT_IMWIDGET_GLBITMAP_H
 #include <cstdint>
 #include <string>
 #include <memory>
@@ -43,4 +43,4 @@ class GLBitmap {
     std::unique_ptr<uint32_t[]> owned_data_;
 };
 
-#endif // Z2UTIL_IMWIDGET_GLBITMAP_H
+#endif // PROJECT_IMWIDGET_GLBITMAP_H

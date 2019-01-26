@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_IMWIDGET_IMWIDGET_H
-#define Z2UTIL_IMWIDGET_IMWIDGET_H
+#ifndef PROJECT_IMWIDGET_IMWIDGET_H
+#define PROJECT_IMWIDGET_IMWIDGET_H
 
 
 inline int UniqueID() {
@@ -28,4 +28,4 @@ class ImWindowBase {
     bool want_dispose_;
 };
 
-#endif // Z2UTIL_IMWIDGET_IMWIDGET_H
+#endif // PROJECT_IMWIDGET_IMWIDGET_H

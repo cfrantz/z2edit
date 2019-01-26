@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_UTIL_FPSMGR_H
-#define Z2UTIL_UTIL_FPSMGR_H
+#ifndef PROJECT_UTIL_FPSMGR_H
+#define PROJECT_UTIL_FPSMGR_H
 #include <SDL2/SDL2_framerate.h>
 
 class FPSManager {
@@ -24,4 +24,4 @@ class FPSManager {
     FPSmanager mgr_;
 };
 
-#endif // Z2UTIL_UTIL_FPSMGR_H
+#endif // PROJECT_UTIL_FPSMGR_H

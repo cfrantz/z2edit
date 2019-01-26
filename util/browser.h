@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_UTIL_BROWSER_H
-#define Z2UTIL_UTIL_BROWSER_H
+#ifndef PROJECT_UTIL_BROWSER_H
+#define PROJECT_UTIL_BROWSER_H
 #include <string>
 
 class Browser {
@@ -7,4 +7,4 @@ class Browser {
     static void Open(const std::string& url);
 };
 
-#endif // Z2UTIL_UTIL_BROWSER_H
+#endif // PROJECT_UTIL_BROWSER_H

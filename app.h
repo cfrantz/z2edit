@@ -1,12 +1,12 @@
-#ifndef Z2UTIL_APP_H
-#define Z2UTIL_APP_H
+#ifndef PROJECT_APP_H
+#define PROJECT_APP_H
 #include <memory>
 #include <string>
 #include <SDL2/SDL.h>
 
 #include "imwidget/imapp.h"
 
-namespace z2util {
+namespace project {
 
 class App: public ImApp {
   public:
@@ -23,5 +23,5 @@ class App: public ImApp {
     std::string save_filename_;
 };
 
-}  // namespace z2util
-#endif // Z2UTIL_APP_H
+}  // namespace project
+#endif // PROJECT_APP_H

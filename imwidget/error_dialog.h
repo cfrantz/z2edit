@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_IMWIDGET_ERROR_DIALOG_H
-#define Z2UTIL_IMWIDGET_ERROR_DIALOG_H
+#ifndef PROJECT_IMWIDGET_ERROR_DIALOG_H
+#define PROJECT_IMWIDGET_ERROR_DIALOG_H
 #include <string>
 #include <functional>
 #include "absl/strings/str_cat.h"
@@ -45,4 +45,4 @@ class ErrorDialog: public ImWindowBase {
     std::function<void(int)> result_cb_;
 };
 
-#endif // Z2UTIL_IMWIDGET_ERROR_DIALOG_H
+#endif // PROJECT_IMWIDGET_ERROR_DIALOG_H
