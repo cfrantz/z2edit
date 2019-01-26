@@ -44,85 +44,94 @@ cc_library(
 )
 
 cc_library(
-	name = "file",
-	srcs = [
-		"file.cc",
-	],
-	hdrs = [
-		"file.h",
-	],
-	deps = [
-		":status",
-	]
+    name = "crc",
+    linkopts = ["-lz"],
+    hdrs = ["crc.h"],
+    srcs = ["crc.cc"],
 )
 
 cc_library(
-	name = "logging",
-	hdrs = [
-		"logging.h",
-	],
-	srcs = [
-		"logging.cc",
-	],
-	deps = [
+    name = "file",
+    srcs = [
+        "file.cc",
+    ],
+    hdrs = [
+        "file.h",
+    ],
+    deps = [
+        ":status",
+        "@com_google_absl//absl/strings",
+    ]
+)
+
+cc_library(
+    name = "logging",
+    hdrs = [
+        "logging.h",
+    ],
+    srcs = [
+        "logging.cc",
+    ],
+    deps = [
         "@com_google_absl//absl/strings",
         "//external:gflags",
-	]
+    ]
 )
 
 cc_library(
-	name = "os",
-	srcs = [
-		"os.cc",
-	],
-	hdrs = [
-		"os.h",
-	],
-	deps = [
+    name = "os",
+    srcs = [
+        "os.cc",
+    ],
+    hdrs = [
+        "os.h",
+    ],
+    deps = [
+        ":logging",
         "@com_google_absl//absl/strings",
-	]
+    ]
 )
 
 cc_library(
-	name = "status",
-	hdrs = [
-		"status.h",
-		"statusor.h",
-	],
-	srcs = [
-		"status.cc",
-	],
-	deps = [
-		"@com_google_protobuf//:protobuf",
-	]
+    name = "status",
+    hdrs = [
+        "status.h",
+        "statusor.h",
+    ],
+    srcs = [
+        "status.cc",
+    ],
+    deps = [
+        "@com_google_protobuf//:protobuf",
+    ]
 )
 
 
 cc_library(
-	name = "fpsmgr",
-	hdrs = [
-		"fpsmgr.h",
-	],
+    name = "fpsmgr",
+    hdrs = [
+        "fpsmgr.h",
+    ],
 )
 
 cc_library(
-	name = "macros",
-	hdrs = [
+    name = "macros",
+    hdrs = [
         "macros.h",
     ],
 )
 
 cc_library(
-	name = "stb-tilemap-editor",
-	hdrs = [
-		"stb_tilemap_editor.h",
+    name = "stb-tilemap-editor",
+    hdrs = [
+        "stb_tilemap_editor.h",
     ]
 )
 
 cc_library(
-	name = "stb-perlin",
-	hdrs = [
-		"stb_perlin.h",
+    name = "stb-perlin",
+    hdrs = [
+        "stb_perlin.h",
     ]
 )
 

@@ -1,12 +1,16 @@
 #include <cstdio>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include <libgen.h>
 #include <limits.h>
 
 #include "util/file.h"
+#include "util/status.h"
 #include "util/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
 
 StatusOr<Stat> Stat::Filename(const std::string& filename) {
     Stat s;
@@ -66,6 +70,47 @@ std::string File::Dirname(const std::string& path) {
     memcpy(buf, path.data(), path.size());
     buf[path.size()] = '\0';
     return std::string(dirname(buf));
+}
+
+util::Status File::Access(const std::string& path) {
+    if (access(path.c_str(), F_OK) == -1) {
+        return util::PosixStatus(errno);
+    }
+    return util::Status();
+}
+
+util::Status File::MakeDir(const std::string& path, mode_t mode) {
+    if (mkdir(path.c_str(), mode) == -1) {
+        return util::PosixStatus(errno);
+    }
+    return util::Status();
+}
+
+util::Status File::MakeDirs(const std::string& path, mode_t mode) {
+    std::vector<std::string> p = absl::StrSplit(path, absl::ByAnyChar("\\/"));
+    if (p[0] == "") {
+        p[0] = "/";
+    }
+
+    std::string mpath;
+    for(size_t i=0; i<p.size(); ++i) {
+        if (i == 0) {
+            mpath = p.at(i);
+        } else {
+            mpath = absl::StrCat(mpath,
+                                 mpath.back() == '/' ? "" : "/",
+                                 p.at(i));
+        }
+        util::Status status = Access(mpath);
+        if (status.ok()) {
+            continue;
+        }
+        status = MakeDir(mpath, mode);
+        if (!status.ok()) {
+            return status;
+        }
+    }
+    return util::Status();
 }
 
 File::File(FILE* fp) : fp_(fp) {}

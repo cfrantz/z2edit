@@ -87,6 +87,10 @@ class File {
     static std::string Basename(const std::string& path);
     static std::string Dirname(const std::string& path);
 
+    static util::Status Access(const std::string& path);
+    static util::Status MakeDir(const std::string& path, mode_t mode=0755);
+    static util::Status MakeDirs(const std::string& path, mode_t mode=0755);
+
     virtual ~File();
     Stat FStat();
     int64_t Length();
