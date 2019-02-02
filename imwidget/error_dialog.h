@@ -1,5 +1,6 @@
 #ifndef Z2UTIL_IMWIDGET_ERROR_DIALOG_H
 #define Z2UTIL_IMWIDGET_ERROR_DIALOG_H
+#include <cstdint>
 #include <string>
 #include <functional>
 #include "imwidget/imwidget.h"
@@ -33,9 +34,11 @@ class ErrorDialog: public ImWindowBase {
     inline void set_result_cb(std::function<void(int)> result_cb) {
         result_cb_ = result_cb;
     }
-    const static int DISMISS = 1;
-    const static int OK = 2;
-    const static int CANCEL = 4;
+    static constexpr uint32_t COPY    = 0x00000010;
+    static constexpr uint32_t CLONE   = 0x00000008;
+    static constexpr uint32_t DISMISS = 0x00000004;
+    static constexpr uint32_t OK      = 0x00000002;
+    static constexpr uint32_t CANCEL  = 0x00000001;
   private:
     const static int MAX_BUTTONS = 3;
     bool popup_;

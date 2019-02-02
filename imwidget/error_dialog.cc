@@ -2,6 +2,9 @@
 #include "imwidget/imapp.h"
 #include "imgui.h"
 
+static const char *button_text[32] = {
+    "Cancel", "Ok", "Dismiss", "Clone", "Copy",
+};
 
 ErrorDialog* ErrorDialog::Spawn(const std::string& title,
                                 int buttons,
@@ -12,9 +15,6 @@ ErrorDialog* ErrorDialog::Spawn(const std::string& title,
 }
 
 bool ErrorDialog::Draw() {
-    const char *buttons[] = {
-        "Dismiss", "OK", "Cancel",
-    };
     if (!visible_)
         return false;
 
@@ -27,10 +27,10 @@ bool ErrorDialog::Draw() {
 
         ImGui::Text("\n");
         ImGui::Text("\n");
-        for(int i=0; i<MAX_BUTTONS; i++) {
+        for(int i=31; i>=0; --i) {
             ImGui::SameLine();
             if (buttons_ & (1UL << i)) {
-                if (ImGui::Button(buttons[i])) {
+                if (ImGui::Button(button_text[i])) {
                     result_ |= (1UL << i);
                 }
             }
