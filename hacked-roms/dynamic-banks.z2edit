@@ -3,14 +3,15 @@
 asm b=7 0xff4c
     sta $0561               ; store room
     jsr $ffc5               ; load bank 0
-    jmp $be40               ; jump to routine in bank 0
+    jmp $be00               ; jump to routine in bank 0
 .org $cfb4
     jsr $ff4c
 .end
 
-asm b=0 0xbe40
+asm b=0 0xbe00
 ROOM = $be60
 BANK = $be61
+BITMASKS = $f26c
 
 chrbank_switch:
     jsr $cf30               ; get region*5+world
@@ -29,9 +30,24 @@ loop:
     bne loop                ; check next value
 loadchr:
     lda BANK,x
+    bmi soundeffect
     sta $076e
 done:
     jmp $ffc9               ; load bank in $0769 and return
+soundeffect:
+    pha
+    lsr                     ; Get SFX offset into X
+    lsr
+    lsr
+    lsr
+    tax
+    pla                     ; Low nybble is sound effect
+    and #$0f
+    tay
+    lda BITMASKS,y
+    sta $e0,x
+    jmp $ffc9               ; load bank in $0769 and return
+    
 
 .org ROOM
 .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
