@@ -180,18 +180,22 @@ bool SimpleMap::Draw() {
     }
     ImGui::PopItemWidth();
 
-    ImGui::PushItemWidth(100);
+    ImGui::PushItemWidth(80);
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {
-        holder_.Save();
-        connection_.Save();
-        enemies_.Save();
-        avail_.Save();
-        changed_ = false;
-        ImApp::Get()->ProcessMessage(
-                "commit", StrCat("Map edits to ", map_.name()).c_str());
+        holder_.Save([this]() {
+            connection_.Save();
+            enemies_.Save();
+            avail_.Save();
+            changed_ = false;
+            ImApp::Get()->ProcessMessage(
+                    "commit", StrCat("Map edits to ", map_.name()).c_str());
+        });
     }
 
+    ImGui::SameLine();
+    ImGui::InputInt("Screen", &startscreen_);
+    startscreen_ = Clamp(startscreen_, 0, 3);
     ImGui::SameLine();
     ImGui::InputFloat("Zoom", &scale_, 0.25, 1.0);
     scale_ = Clamp(scale_, 0.25f, 8.0f);
@@ -215,6 +219,7 @@ bool SimpleMap::Draw() {
     DrawMap(cursor);
     ImGui::SetCursorPos(cursor);
     if (holder_.DrawPopup(scale_)) {
+        LOG(INFO, "map changed");
         changed_ = true;
         want_redraw = true;
     }

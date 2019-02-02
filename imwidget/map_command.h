@@ -94,7 +94,8 @@ class MapHolder {
     MapHolder(Mapper* m);
     DrawResult Draw();
     bool DrawPopup(float scale);
-    void Save();
+    void Save() { Save([](){}, true); }
+    void Save(std::function<void()> finish, bool force=false);
     void Parse(const Map& map, uint16_t altaddr=0);
     std::vector<uint8_t> MapData();
     std::vector<uint8_t> MapDataAbs();

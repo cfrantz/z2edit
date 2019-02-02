@@ -506,6 +506,7 @@ bool MapHolder::DrawPopup(float scale) {
                 break;
         }
     }
+    data_changed_ |= changed;
     return changed;
 }
 
@@ -603,10 +604,18 @@ std::vector<uint8_t> MapHolder::MapDataAbs() {
     return MapDataWorker(copy);
 }
 
-void MapHolder::Save() {
+void MapHolder::Save(std::function<void()> finish, bool force) {
+    if (!addr_changed_ && !data_changed_) {
+        LOG(INFO, "No changes; nothing to save.");
+        // Nothing to save.
+        finish();
+        return;
+    }
     if (addr_changed_ && !data_changed_) {
+        LOG(INFO, "Address only changed.");
         mapper_->WriteWord(map_.pointer(), 0, map_addr_);
         addr_changed_ = false;
+        finish();
         return;
     }
     if (addr_changed_ && data_changed_) {
@@ -628,24 +637,72 @@ void MapHolder::Save() {
             "Can't find ", data.size(), " free bytes in bank ", addr.bank());
         LOG(ERROR, "Can't save map: can't find ", data.size(), "bytes"
                    " in bank=", addr.bank());
+        // Can't finish.
         return;
     }
     addr.set_address(0x8000 | addr.address());
 
-    // Free the existing memory if it was owned by the allocator.
-    mapper_->Free(map_.address());
-    *map_.mutable_address() = addr;
-    map_addr_ = addr.address();
-
-    LOG(INFO, "Saving map to offset ", HEX(addr.address()),
-              " in bank=", addr.bank());
-
-    for(unsigned i=0; i<data.size(); i++) {
-        mapper_->Write(addr, i, data[i]);
+    // Determine if any other maps point to the same map data
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    std::vector<const Map*> sameptr;
+    string names = StrCat(map_.name(), "\n");
+    for(const auto& m : ri.map()) {
+        Address mptr = mapper_->ReadAddr(m.pointer(), 0);
+        if (m.name() != map_.name() &&
+            mptr.bank() == map_.address().bank() &&
+            mptr.address() == map_.address().address()) {
+            sameptr.push_back(&m);
+            StrAppend(&names, "+ ", m.name(), "\n");
+            LOG(INFO, "Duplicate data: ", m.name());
+        }
     }
-    mapper_->WriteWord(map_.pointer(), 0, addr.address());
-    data_changed_ = false;
-    addr_changed_ = false;
+
+    // Capture everything we need to save into a lambda so we can defer the
+    // action until after the user responds to an ErrorDialog.
+    auto dosave = [this, addr, data, sameptr, finish](bool clone) {
+        if (clone) {
+            for(const auto* m : sameptr) {
+                mapper_->WriteWord(m->pointer(), 0, addr.address());
+            }
+            // Free the existing memory if it was owned by the allocator.
+            mapper_->Free(map_.address());
+        }
+        *map_.mutable_address() = addr;
+        map_addr_ = addr.address();
+
+        LOGF(INFO, "Saving map to {bank: %d address: 0x%04x}",
+                   addr.bank(), addr.address());
+
+        for(unsigned i=0; i<data.size(); i++) {
+            mapper_->Write(addr, i, data[i]);
+        }
+        mapper_->WriteWord(map_.pointer(), 0, addr.address());
+        data_changed_ = false;
+        addr_changed_ = false;
+        finish();
+    };
+
+    if (sameptr.empty() || force) {
+        LOG(INFO, "No duplicate pointers detected; saving normally.");
+        dosave(true);
+        return;
+    }
+    ErrorDialog::Spawn(
+        "Map Pointers",
+        ErrorDialog::COPY | ErrorDialog::CLONE | ErrorDialog::CANCEL,
+        "The following rooms all point at the same map data:\n\n",
+        names,
+        "\nTo resolve:\n"
+        "- Choose COPY to save the new map leaving the other rooms as-is.\n"
+        "- Choose CLONE to save the new map and point the other rooms at the new data.\n"
+        "- Choose CANCEL to abort the save.\n"
+    )->set_result_cb([dosave](int result) {
+        if (result == ErrorDialog::COPY) {
+            dosave(false);
+        } else if (result == ErrorDialog::CLONE) {
+            dosave(true);
+        }
+    });
 }
 
 
