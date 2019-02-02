@@ -159,7 +159,13 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
     ImGui::Separator();
     for(int ov=0; ov<3; ov++) {
         for(int world=0; world<6; world++) {
-            ImGui::Text("%9s %5s", overworlds[ov], worlds[world]);
+            if ((ov == 0 && world == 2) ||
+                (ov == 1 && (world == 1 || world == 2)) ||
+                (ov == 2 && world == 1)) {
+                ImGui::Text("%15s", "Not Used");
+            } else {
+                ImGui::Text("%9s %5s", overworlds[ov], worlds[world]);
+            }
             ImGui::NextColumn();
             for(int i=0; i<16; i+=2) {
                 int addr = 0xbe60 + (ov * 5 + world) * 16 + i;
