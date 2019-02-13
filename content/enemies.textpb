@@ -307,7 +307,7 @@ enemies {
             width: 16 height: 16
             chr: { bank: 4 }
             palette: 3
-            id: [0xb4, 0xb4]
+            id: [0x24, 0x24]
         }},
         { key: 0x04 value: {
             name: "bot"
@@ -335,7 +335,7 @@ enemies {
             width: 16 height: 16
             chr: { bank: 4 }
             palette: 3
-            id: [0xb6, 0xb8]
+            id: [0x4e, 0x4e]
         }},
         { key: 0x0a value: {
             name: "acheman"
