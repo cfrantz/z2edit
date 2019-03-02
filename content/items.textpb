@@ -84,12 +84,12 @@ items {
             name: "blue jar"
             chr { bank: 2 }
             table { bank: -1 address: 0x2e9f }
-            palette: 2
+            palette: 3
         }}, { key: 0x11 value: {
             name: "red jar"
             chr { bank: 2 }
             table { bank: -1 address: 0x2ea1 }
-            palette: 3
+            palette: 2
         }}, { key: 0x12 value: {
             name: "1up"
             chr { bank: 2 }
