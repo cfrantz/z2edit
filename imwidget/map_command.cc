@@ -134,12 +134,13 @@ bool MapCommand::Draw(bool abscoord, bool popup) {
     }
 
     if (data_.y == 13 || data_.y == 14) {
-        sprintf(obuf_, "%02x", object_);
         if (!popup) ImGui::SameLine();
-        changed |= ImGui::InputText("param", obuf_, sizeof(obuf_),
-                                    ImGuiInputTextFlags_CharsHexadecimal |
-                                    ImGuiInputTextFlags_EnterReturnsTrue);
-        object_ = strtoul(obuf_, 0, 16);
+        int val = object_;
+        if (ImGui::InputInt("param", &val)) {
+            Clamp(&val, 0, 15);
+            object_ = val;
+            changed |= true;
+        }
     } else {
         int n = 0;
         int large_start = 0;
