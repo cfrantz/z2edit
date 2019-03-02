@@ -1,0 +1,16 @@
+asm b=0 0
+.org $8e8d
+SHIELD_COLOR = $16
+REFLECT_COLOR = $27
+
+shield_spell:
+    LDA #SHIELD_COLOR
+    STA $070f            
+set_tunic:
+    STA $69de            
+    RTS                  
+reflect_spell:
+    LDA #REFLECT_COLOR
+    STA $0710            
+    BNE set_tunic
+.end

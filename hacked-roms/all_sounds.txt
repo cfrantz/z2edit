@@ -1,0 +1,69 @@
+N=98 --> e9 = 00 # No effect
+N=97 --> e9 = 01 # Link injury grunt
+N=96 --> e9 = 02 # Ganon laugh
+N=95 --> e9 = 04 # No effect
+N=94 --> e9 = 08 # No effect
+N=93 --> e9 = 10 # No effect
+N=92 --> e9 = 20 # No effect
+N=91 --> e9 = 40 # No effect
+N=90 --> e9 = 80 # No effect
+
+N=a8 --> ea = 00 # Enable music
+N=a7 --> ea = 01 # Silence music
+N=a6 --> ea = 02 # No effect
+N=a5 --> ea = 04 # No effect
+N=a4 --> ea = 08 # No effect
+N=a3 --> ea = 10 # No effect
+N=a2 --> ea = 20 # No effect
+N=a1 --> ea = 40 # No effect
+N=a0 --> ea = 80 # No effect
+
+N=b8 --> eb = 00 # No effect
+N=b7 --> eb = 01 # Main theme start at intro
+N=b6 --> eb = 02 # Main theme
+N=b5 --> eb = 04 # Second theme (battle music)
+N=b4 --> eb = 08 # Second theme with different modulation
+N=b3 --> eb = 10 # Item get fanfare
+N=b2 --> eb = 20 # Often nothing (Triforce get in GP)
+N=b1 --> eb = 40 # Fanfare (crystal placement)
+N=b0 --> eb = 80 # Often nothing
+
+N=c8 --> ec = 00 # No effect
+N=c7 --> ec = 01 # Death sound
+N=c6 --> ec = 02 # Sword denied
+N=c5 --> ec = 04 # Spell cast
+N=c4 --> ec = 08 # Flute
+N=c3 --> ec = 10 # Alternate flute #1
+N=c2 --> ec = 20 # Alternate flute #2
+N=c1 --> ec = 40 # Great barrier up
+N=c0 --> ec = 80 # Boss death
+
+N=d8 --> ed = 00 # No effect
+N=d7 --> ed = 01 # Nothing?
+N=d6 --> ed = 02 # Crumble bridge
+N=d5 --> ed = 04 # Crumble block
+N=d4 --> ed = 08 # Nothing
+N=d3 --> ed = 10 # Enemy damage
+N=d2 --> ed = 20 # Sword strike
+N=d1 --> ed = 40 # Crumble?
+N=d0 --> ed = 80 # Sword strike
+
+N=e8 --> ee = 00 # No effect
+N=e7 --> ee = 01 # Link falls in a pit
+N=e6 --> ee = 02 # Encounter pulls into battle (brwwwwooooowwww).
+N=e5 --> ee = 04 # Leave battle screen
+N=e4 --> ee = 08 # Spell menu open
+N=e3 --> ee = 10 # Tink
+N=e2 --> ee = 20 # Walking in swamp
+N=e1 --> ee = 40 # Nothing
+N=e0 --> ee = 80 # Nothing
+
+N=f8 --> ef = 00 # No effect
+N=f7 --> ef = 01 # Nothing
+N=f6 --> ef = 02 # Item drop after enemy kill
+N=f5 --> ef = 04 # Enemy kill
+N=f4 --> ef = 08 # Sword chime (beam or stab-item pickup)
+N=f3 --> ef = 10 # Menu cursor move sound
+N=f2 --> ef = 20 # Elevator
+N=f1 --> ef = 40 # Low health beep
+N=f0 --> ef = 80 # Nothing

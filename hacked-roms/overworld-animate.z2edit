@@ -1,0 +1,37 @@
+# The code to control overworld display is in bank 0
+set bank 0
+set ibase 16
+
+copychr 10 1c
+copychr 11 1d
+copychr 10 1e
+copychr 11 1f
+
+asm be00
+bank7_chr_bank_switch__load_A = $ffb1
+animate_overworld:
+    lda $12         ; Get frame counter
+    and #$0f        ; frame is multiple of 16?
+    bne done
+    inc $06f1       ; animation counter
+    ldy $06f1
+    cpy #animation_banks_len
+    bne display
+    ldy #0
+    sty $06f1
+display:
+    lda animation_banks,y
+    jsr bank7_chr_bank_switch__load_A
+done:
+    ldy #$00
+    sty $00
+    rts
+
+animation_banks:
+.db $10,$1c,$1e,$1c
+animation_banks_len = 4
+
+.org $877e
+    nop
+    jsr animate_overworld
+.end

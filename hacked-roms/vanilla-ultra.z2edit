@@ -1,0 +1,142 @@
+# The first N-1 drops will be pbags, for both drop groups.
+# So, N=4 means 3 guaranteed 50-bags and 3 guaratneed 200-bags
+# We keep track of drop counts at $06f1 and $06f2.  I'm using this memory
+# area because I don't think anything else uses it, and game initialization
+# clears it at the beginning of each game.
+
+
+# Reload the current file, but disable keepout moves. 
+#load _ move=0
+
+# Set hex mode and bank 7
+set ibase 16
+
+# Copy original banks to the unused banks.  These need to be reconfigured
+# later with the correct graphics.
+copychr 8 1a
+copychr 9 1b
+copychr 10 1c
+copychr 11 1d
+copychr 10 1e
+copychr 11 1f
+
+# Assemble some new code at $ff4c
+asm b=7 ff4c
+dynamic_bankswitch:
+    sta $0561               ; store room
+    jsr $ffc5               ; load bank 0
+    jmp $be40               ; jump to routine in bank 0
+pbag_hack:
+    sec             ; set carry flag
+    lda #0          ; clear A reg
+    adc $6f0,y      ; A = number of drops + 1
+    sta $6f0,y      ; store it back
+    ; The argument to the following CMP instruction is the value of N.
+    ; Adjust it for fewer or more guaranteed drops.
+    cmp #4          ; Is it less than 4?
+    bcc guaranteed_pbag  ; If yes, branch to guaranteed selection
+    lda $51b,x      ; If no, regular randomizer
+    rts             ; return
+guaranteed_pbag:
+    lda #2          ; small drop slot 2 is a 50-bag
+    cpy #2          ; large drop category == 2
+    bne pbag_done   ; if small return
+    adc #0          ; large drop slot 3 is a 200-bag
+pbag_done:
+    rts             ; return
+.org $e8ad
+    jsr pbag_hack   ; Replace the random function with our custom routine
+.org $cfb4
+    jsr dynamic_bankswitch
+.end
+
+# Rewrite some text on the select screen so there is no confusion that this
+# is a hacked rom.
+set bank 5
+set text 1
+# The "S E L E C T" is replaced with "PBAG HACK"
+wtp bc1c "PBAG HACK  "
+dbp bc1c b
+
+asm b=0 0xbe40
+ROOM = $be60
+BANK = $be61
+
+chrbank_switch:
+    jsr $cf30               ; get region*5+world
+    asl                     ; 16 bytes per region/world combo
+    asl
+    asl
+    asl
+    tax
+loop:
+    lda ROOM,x              ; table at $ab00
+    beq done                ; zero value means end
+    cmp $0561               ; equal to room number?
+    beq loadchr             ; yes, get and load chr bank
+    inx                     ; nope, inc pointer
+    inx
+    bne loop                ; check next value
+loadchr:
+    lda BANK,x
+    sta $076e
+done:
+    jmp $ffc9               ; load bank in $0769 and return
+
+.org ROOM
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+.end
+
+
+    
+# palace 5 is (region 2)*5 + (world 3) --> 13: 0xabd0
+# Room 55 (0x37): load CHR banks 0x16,0x17 (P5 banks)
+# Room 56 (0x38): load CHR banks 0x1a,0x1b (copy of P5 bank with HH)
+wbp b=0 0xbf30 0x37 0x16 0x38 0x1a
+
+
+# The code to control overworld display is in bank 0
+asm b=0 be00
+bank7_chr_bank_switch__load_A = $ffb1
+animation_banks:
+.db $10,$1c,$1e,$1c
+animation_banks_len = 4
+
+animate_overworld:
+    lda $12         ; Get frame counter
+    and #$0f        ; frame is multiple of 16?
+    bne done
+    inc $06f4       ; animation counter
+    ldy $06f4
+    cpy #animation_banks_len
+    bne display
+    ldy #0
+    sty $06f4
+display:
+    lda animation_banks,y
+    jsr bank7_chr_bank_switch__load_A
+done:
+    ldy #$00
+    sty $00
+    rts
+
+.org $877e
+    nop
+    jsr animate_overworld
+.end
+
