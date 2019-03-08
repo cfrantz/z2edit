@@ -1,0 +1,62 @@
+######################################################################
+# Palette swap Link's tunic for EoN's Z2gether hack.
+# 
+# You can tune the palette flips:
+# COLOR1 and COLOR2 are which colors to use for Link's tunic.
+# FRAMES is how often to swap colors in frames.
+# FRAMEMASK should be (FRAMES*2)-1
+#
+######################################################################
+asm b=0 0xac00
+
+COLOR1 = $2a
+COLOR2 = $12
+FRAMES = 32
+FRAMEMASK = 63
+
+tunic_macro:
+; This macro tells the NMI handler to write to the PPU at $3f13 for a
+; length of 1 byte, followed by the color.
+.db $3f,$13,$01,$2a,$ff
+
+tunic_update:
+        LDA $12             ; Get frame counter
+        AND #FRAMEMASK      ; Keep what we care about
+        BEQ player2         ; Frames=0, player two
+        CMP #FRAMES         ; Frames=FRAMES, player one.
+        BNE done            ; Any other value: do nothing.
+player1:
+        LDA #COLOR1         ; Player1, use COLOR1
+        BNE save_color
+player2:
+        LDA #COLOR2         ; Player2, use COLOR2
+save_color:
+        STA $6ff            ; Save the color for later.  $6ff seems unused.
+copy_macro:
+        LDA tunic_macro,X   ; Copy the tunic macro to the macro area.
+        STA $0302,Y
+        INY
+        INX
+        CPX #$05            ; 5 bytes is all we need
+        BNE copy_macro
+
+        DEY                 ; store the length in $301 (Y is 1 more than the
+        STY $0301           ; length here).
+        LDA $06ff           ; Get the saved color.
+        STA $0301,Y         ; Store it at the end, minus one ($301 vs. $302 above).
+done:
+        JMP $97bb           ; jump to where the game would have gone next.
+
+.org $971c
+        ; In the original game, this location is "jmp Fire_Spell2".
+        ; Patch our own jump in, and we'll jump out to Fire_Spell2 when our
+        ; code is done.
+        ;
+        ; Note: by analyzing the code leading up to this jmp in the vanilla
+        ; ROM, we know the following about the registers:
+        ; A = don't care.
+        ; X = zero.
+        ; Y = number of bytes written to the macro area so far.
+        ; We'll use these assumptions in our patch code.
+        jmp tunic_update
+.end
