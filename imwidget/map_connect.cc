@@ -133,7 +133,8 @@ void OverworldConnector::Write() {
         if (hidden_) {
             mapper_->Write(address_, offset_ + 0x00, 0);
         }
-    } else if (offset_ == raft) {
+    } else if (offset_ == raft && overworld != 1) {
+        // Raft is not allowed on DM or MZ.
         // The raft table layout is:
         // ov0_xpos, ov2_xpos, ov0_ypos, ov2_ypos
         int delta = !(overworld_ == 0);
