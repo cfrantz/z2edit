@@ -330,6 +330,7 @@ decompress {
     objid: [0x83, 0x84]
     custom: "RenderLava3High"
     comment: "lava"
+    fixed_y: 11
 }
 decompress {
     area: PALACE

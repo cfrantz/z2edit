@@ -154,7 +154,7 @@ void Z2Decompress::RenderLava3High(int x, int y, uint8_t item,
                                    const DecompressInfo* info) {
     DecompressInfo i = *info;
     i.set_width((item & 0xF) + 1);
-    RenderTopUnique(x, 10, item, &i);
+    RenderTopUnique(x, i.fixed_y(), item, &i);
 }
 
 void Z2Decompress::RenderCactus1(int x, int y, uint8_t item,

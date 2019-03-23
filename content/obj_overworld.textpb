@@ -442,6 +442,7 @@ decompress {
     objid: [0x80, 0x89]
     custom: "RenderLava3High"
     comment: "lava"
+    fixed_y: 10
 }
 decompress {
     area: OUTDOORS
