@@ -357,16 +357,19 @@ void Z2Decompress::DecompressSideView(const uint8_t* data, bool collapse) {
                     case DecompressInfo::RENDER_CUSTOM:
                         fn = info->custom(); break;
                     default:
+                        LOG(ERROR, "Couldn't find renderer ", info->render());
                         ; // Do nothing
                 }
             } else {
-                LOG(ERROR, "Couldn't look up ", HEX(obj), " for ",
-                           oindex, " ", findex);
+                LOG(ERROR, "Couldn't look up ", HEX(obj), " for o=",
+                           oindex, " f=", findex, " extra=", extra);
             }
 
             // Look up the put funtion and call it
             PutFn put = put_[fn];
             if (!put) {
+                LOG(ERROR, "Couldn't find PutFn for '", fn, "': ",
+                        info->DebugString());
                 put = &Z2Decompress::Invalid;
             }
             (this->*put)(x, y, obj, info);
