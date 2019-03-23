@@ -82,7 +82,8 @@ void Z2Decompress::RenderWindow(int x, int y, uint8_t item,
     height *= n;
     for(int yy=0; yy<height; yy++) {
         int objid = info->objid(yy % n);
-        if (objid && y+yy < height_) {
+        // Windows should stop repeating at tile height 10.
+        if (objid && y+yy < 10) {
             set_map(x, y+yy, objid);
         }
     }
