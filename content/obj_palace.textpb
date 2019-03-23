@@ -183,8 +183,8 @@ decompress {
     id: 0x10
     render: RENDER_HORIZONTAL
     height: 1
-    objid: 0x42
-    comment: "horzontal pit"
+    objid: 0x40
+    comment: "horizontal pit"
 }
 decompress {
     area: PALACE
@@ -227,9 +227,9 @@ decompress {
     type: OBJECT_SET_0
     id: 0x60
     render: RENDER_HORIZONTAL
-    height: 1
-    objid: 0x4c
-    comment: "breakable block"
+    height: 2
+    objid: [0x48, 0x4d]
+    comment: "bridge"
 }
 decompress {
     area: PALACE
@@ -291,10 +291,10 @@ decompress {
     area: PALACE
     type: OBJECT_SET_0
     id: 0xd0
-    render: RENDER_TOP_UNIQUE
+    render: RENDER_VERTICAL
     width: 1
-    objid: [0x48, 0x4d]
-    comment: "bridge"
+    objid: 0x40
+    comment: "vertical pit"
 }
 decompress {
     area: PALACE
@@ -302,8 +302,8 @@ decompress {
     id: 0xe0
     render: RENDER_VERTICAL
     width: 1
-    objid: 0x42
-    comment: "horzontal pit"
+    objid: 0x40
+    comment: "vertical pit"
 }
 decompress {
     area: PALACE
@@ -312,7 +312,7 @@ decompress {
     render: RENDER_HORIZONTAL
     height: 13
     objid: 0x40
-    comment: "horzontal pit"
+    comment: "horizontal pit"
 }
 
 ##########################################################################
