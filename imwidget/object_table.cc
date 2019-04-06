@@ -10,44 +10,57 @@ ObjectTable::ObjectTable()
     item_(0),
     palette_(0),
     scale_(2.0),
-    selection_(0)
+    selection_(0),
+    size_(16)
 {}
 
 void ObjectTable::Init() {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    objtable_.clear();
+    names_.clear();
+    for(const auto& m : ri.map()) {
+        if (m.type() == MapType::OVERWORLD) {
+            objtable_.push_back(&m);
+            names_.push_back(m.name().c_str());
+        }
+    }
+    // Pseudo-maps for the rest of the known sideview areas.
+    for(const auto& m : ri.objtable()) {
+        objtable_.push_back(&m);
+        names_.push_back(m.name().c_str());
+    }
+
     cache_.set_mapper(mapper_);
-    cache_.Init(ri.objtable(selection_));
+    cache_.Init(*objtable_[selection_]);
 }
 
 bool ObjectTable::Draw() {
     if (!visible_)
         return false;
 
-    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     auto set_palette = [&](int p) {
         Address pal;
-        if (ri.objtable(selection_).palettes_size()) {
-            pal = ri.objtable(selection_).palettes(p);
+        if (objtable_[selection_]->palettes_size()) {
+            pal = objtable_[selection_]->palettes(p);
         } else {
-            pal = ri.objtable(selection_).palette();
+            pal = objtable_[selection_]->palette();
             pal.set_address(pal.address() + 16 * p);
         }
         cache_.set_palette(pal);
         cache_.Clear();
     };
-    const char *names[ri.objtable().size()];
-    int len = 0;
-
-    for(const auto& o : ri.objtable()) {
-        names[len++] = o.name().c_str();
-    }
 
     ImGui::Begin("Object Table", &visible_);
     ImGui::PushItemWidth(200);
-    if (ImGui::Combo("Table", &selection_, names, len)) {
-        cache_.Init(ri.objtable(selection_));
+    if (ImGui::Combo("Table", &selection_, names_.data(), names_.size())) {
+        cache_.Init(*objtable_[selection_]);
         set_palette(palette_);
         item_ = 0;
+        if (objtable_[selection_]->type() == MapType::OVERWORLD) {
+            size_ = 16;
+        } else {
+            size_ = 256;
+        }
     }
     ImGui::PopItemWidth();
     ImGui::SameLine();
@@ -56,8 +69,14 @@ bool ObjectTable::Draw() {
     Clamp(&scale_, 0.25f, 4.0f);
     ImGui::InputInt("Group", &group_);
     Clamp(&group_, 0, 3);
+    if (objtable_[selection_]->type() == MapType::OVERWORLD) {
+        group_ = 0;
+    }
     if (ImGui::InputInt("Palette", &palette_)) {
         Clamp(&palette_, 0, 7);
+        if (objtable_[selection_]->type() == MapType::OVERWORLD) {
+            palette_ = 0;
+        }
         set_palette(palette_);
     }
     ImGui::PopItemWidth();
@@ -66,7 +85,7 @@ bool ObjectTable::Draw() {
     ImGui::Columns(2, "objects", true);
     ImGui::Text("Objects");
 
-    for(int item=group_*64,y=0; y<8; y++) {
+    for(int item=group_*64,y=0; y<8 && item<size_; y++) {
         ImGui::Text("%02x:", item);
         for(int x=0; x<8; x++, item++) {
             ImGui::SameLine();
@@ -84,11 +103,16 @@ bool ObjectTable::Draw() {
     ImGui::NextColumn();
     ImGui::Text("Caution: Tile-ID edits change the ROM immediately.\n\n");
     ImGui::Text("Tile IDs for item %02X.  Tiles from CHR bank %02X.",
-                item_, ri.objtable(selection_).chr().bank());
+                item_, objtable_[selection_]->chr().bank());
 
-    Address ptr = ri.objtable(selection_).objtable(group_);
-    Address base = mapper_->ReadAddr(
-            ri.objtable(selection_).objtable(group_), 0);
+    Address ptr, base;
+    if (objtable_[selection_]->type() == MapType::OVERWORLD) {
+        ptr.Clear();
+        base = objtable_[selection_]->objtable(group_);
+    } else {
+        ptr = objtable_[selection_]->objtable(group_);
+        base = mapper_->ReadAddr(objtable_[selection_]->objtable(group_), 0);
+    }
     ImGui::Text("PRG = %02X Ptr = %04X Base = %04X\n\n",
                 ptr.bank(), ptr.address(), base.address());
 
@@ -115,6 +139,20 @@ bool ObjectTable::Draw() {
     ImGui::SameLine();
     changed |= ImGui::InputText("##br", buf[3], 4,
             ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
+    ImGui::PopItemWidth();
+
+    ImGui::PushItemWidth(80);
+    if (objtable_[selection_]->type() == MapType::OVERWORLD) {
+        ImGui::Text("\n");
+        ImGui::Text("Tile Palette: ");
+        ImGui::SameLine();
+        int tilepal = mapper_->Read(base, 64+item_);
+        if (ImGui::InputInt("##tp", &tilepal)) {
+            Clamp(&tilepal, 0, 3);
+            mapper_->Write(base, 64+item_, tilepal);
+            cache_.Clear();
+        }
+    }
     ImGui::PopItemWidth();
 
     if (changed) {

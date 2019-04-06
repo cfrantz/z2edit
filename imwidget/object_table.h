@@ -1,5 +1,6 @@
 #ifndef Z2UTIL_IMWIDGET_OBJECT_TABLE_H
 #define Z2UTIL_IMWIDGET_OBJECT_TABLE_H
+#include <vector>
 
 #include "imwidget/imwidget.h"
 #include "nes/mapper.h"
@@ -21,9 +22,12 @@ class ObjectTable: public ImWindowBase {
     int palette_;
     float scale_;
     int selection_;
+    int size_;
 
     Mapper* mapper_;
     Z2ObjectCache cache_;
+    std::vector<const Map*> objtable_;
+    std::vector<const char*> names_;
 };
 
 }  // namespace z2util

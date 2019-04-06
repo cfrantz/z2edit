@@ -950,6 +950,9 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
         tile_transform_->Refresh();
     } else if (msg == "loadpostprocess") {
         LoadPostProcess(reinterpret_cast<intptr_t>(extra));
+    } else if (msg == "overworld_tile_hack") {
+        object_table_->Init();
+        palette_editor_->Init();
     } else if (msg == "emulate_at") {
         const uint8_t* p = reinterpret_cast<const uint8_t*>(extra);
         SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6]);

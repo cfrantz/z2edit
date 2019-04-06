@@ -64,6 +64,10 @@ bool PaletteEditor::Draw() {
             "Title", "Palette 0", "Palette 1", "Palette 2", "Palette 3");
     ImGui::Separator();
     for(const auto& p: ri.palettes(grpsel_).palette()) {
+        if (p.hidden()) {
+            n++;
+            continue;
+        }
         if (ri.palettes(grpsel_).show_index()) {
             ImGui::Text("%d:%18s", n, p.name().c_str());
         } else {
@@ -110,7 +114,7 @@ void PaletteEditor::Save() {
     int j = 0;
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     for(const auto& p: ri.palettes(grpsel_).palette()) {
-        for(int i=0; i<16; i++) {
+        for(int i=0; !p.hidden() && i<16; i++) {
             mapper_->Write(p.address(), i, data_[j].color[i]);
         }
         j++;

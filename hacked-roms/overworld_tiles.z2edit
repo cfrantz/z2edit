@@ -1,15 +1,85 @@
 set ibase 16
-bcopy 0:bd00 0:87a3 50
 set bank 0
-bcopy 0:bd50 7:c458 24
-bcopy 0:bd80 0:bd00 80
-bcopy 0:be00 0:bd00 80
-wwp bf00 bd00 bd80 be00
 
-asm 81a3
-    jmp tile_palette_copy_routine
+charclear 11:88 true
+charclear 11:89 true
+charclear 11:8a true
+charclear 11:8b true
+charclear 11:8c true
+charclear 11:8d true
+charclear 11:8e true
+charclear 11:8f true
+charclear 11:90 true
+charclear 11:91 true
+charclear 11:92 true
+charclear 11:93 true
+charclear 11:94 true
+charclear 11:95 true
+charclear 11:96 true
+charclear 11:97 true
+charclear 11:98 true
+charclear 11:99 true
+charclear 11:9a true
+charclear 11:9b true
+charclear 11:9c true
+charclear 11:9d true
+charclear 11:9e true
+charclear 11:9f true
+charclear 11:a0 true
+charclear 11:a1 true
+charclear 11:a2 true
+charclear 11:a3 true
+charclear 11:a4 true
+charclear 11:a5 true
+charclear 11:a6 true
+charclear 11:a7 true
+charclear 11:a8 true
+charclear 11:a9 true
+charclear 11:aa true
+charclear 11:ab true
+charclear 11:ac true
+charclear 11:ad true
+charclear 11:ae true
+charclear 11:af true
+charclear 11:b0 true
+charclear 11:b1 true
+charclear 11:b2 true
+charclear 11:b3 true
+charclear 11:b4 true
+charclear 11:b5 true
+charclear 11:b6 true
+charclear 11:b7 true
+charclear 11:b8 true
+charclear 11:b9 true
+charclear 11:ba true
+charclear 11:bb true
+charclear 11:bc true
+charclear 11:bd true
+charclear 11:be true
+charclear 11:bf true
+charclear 11:c0 true
+charclear 11:c1 true
+charclear 11:c2 true
+charclear 11:c3 true
 
-.org $bf10
+# Copy original game tile and palette maps to free space
+# Make 3 copies: west, dm/mz, east.
+bcopy 0:bc00 0:87a3 50
+bcopy 0:bc50 7:c458 24
+bcopy 0:bc80 0:bc00 80
+bcopy 0:bb80 0:bc00 80
+
+asm b=0 0
+OV_TILES = $bb00
+OV_TILES1 = $bb01
+
+RAM_TILES = $7a40
+RAM_TPAL = $7a80
+RAM_PALETTE = $7a90
+
+.org OV_TILES
+.dw $bb80,$bc00,$bc80,0
+
 tile_palette_copy_routine:
     sta $0725
     inc $0726
@@ -18,31 +88,64 @@ tile_palette_copy_routine:
     lda $0706       ; overworld index
     asl
     tay
-    lda $bf00,y
+    lda OV_TILES,y
     sta $e
-    lda $bf01,y
+    lda OV_TILES1,y
     sta $f
 
     ldy #0
 loop:
     lda ($0e,y)
-    sta $6940,y
+    sta RAM_TILES,y
     iny
     bpl loop
     rts
+
+; Patch the overworld-init routine to use our new tables
+.org $81a3
+    jmp tile_palette_copy_routine
+
+; Patch loads to our new RAM address
+.org $8980
+    lda RAM_TILES,x
+.org $8c97
+    lda RAM_TILES,x
+
+.org $8aa8
+    lda RAM_TPAL,x
+.org $8ab1
+    lda RAM_TPAL,x
+.org $8aba
+    lda RAM_TPAL,x
+.org $8ac3
+    lda RAM_TPAL,x
+
+.org $8bb3
+    lda RAM_TPAL,x
+.org $8bbc
+    lda RAM_TPAL,x
+.org $8bc6
+    lda RAM_TPAL,x
+.org $8bcf
+    lda RAM_TPAL,x
+
+.org $bc00
+.db $88,$89,$88,$89
+.db $8a,$8b,$8a,$8b
+.db $8c,$8d,$8c,$8d
+.db $8e,$8f,$8e,$8f
+.db $90,$91,$90,$91
+.db $92,$93,$92,$93
+.db $94,$95,$94,$95
+.db $96,$97,$96,$97
+.db $98,$99,$98,$99
+.db $9a,$9b,$9a,$9b
+.db $9c,$9d,$9c,$9d
+.db $9e,$9f,$9e,$9f
+.db $a0,$a1,$a0,$a1
+.db $a2,$a3,$a2,$a3
+.db $a4,$a5,$a4,$a5
+.db $a6,$a7,$a6,$a7
 .end
-
-wwp 8981 6940
-wwp 8c98 6940
-
-wwp 8aa9 6980
-wwp 8ab2 6980
-wwp 8abb 6980
-wwp 8ac4 6980
-
-wwp 8bb4 6980
-wwp 8bbd 6980
-wwp 8bc7 6980
-wwp 8bd0 6980
-
-wwp b=7 c051 6990
+# Patch PPU macro table in bank 7
+wwp b=7 c051 7a90

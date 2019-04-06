@@ -135,6 +135,10 @@ bool MiscellaneousHacks::DrawMiscHacks() {
         [&]() { return ri.spell_cast(); },
         [&](int n) { return ri.spell_cast(n); });
 
+    Hack("Overworld Tiles", ri.overworld_tiles_size(),
+        [&]() { return ri.overworld_tiles(); },
+        [&](int n) { return ri.overworld_tiles(n); });
+
     return false;
 }
 
@@ -195,6 +199,79 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
     return false;
 }
 
+void MiscellaneousHacks::CheckConfig() {
+    auto* ri = ConfigLoader<RomInfo>::MutableConfig();
+    if (EnabledIndex([&]() { return ri->overworld_tiles(); }) > 0) {
+        auto *p = ri->mutable_palettes(0);
+        p->mutable_palette(0)->set_hidden(true);
+        p->mutable_palette(1)->set_hidden(true);
+        p->mutable_palette(2)->set_hidden(false);
+        p->mutable_palette(3)->set_hidden(false);
+        p->mutable_palette(4)->set_hidden(false);
+        p->mutable_palette(5)->set_hidden(false);
+        p->mutable_palette(6)->set_hidden(false);
+        p->mutable_palette(7)->set_hidden(false);
+        ri->mutable_map(0)->mutable_objtable(0)->set_address(0xbb80);
+        ri->mutable_map(1)->mutable_objtable(0)->set_address(0xbc00);
+        ri->mutable_map(2)->mutable_objtable(0)->set_address(0xbc80);
+        ri->mutable_map(3)->mutable_objtable(0)->set_address(0xbc00);
+        *ri->mutable_map(0)->mutable_palette() = p->palette(2).address();
+        *ri->mutable_map(1)->mutable_palette() = p->palette(4).address();
+        *ri->mutable_map(2)->mutable_palette() = p->palette(6).address();
+        *ri->mutable_map(3)->mutable_palette() = p->palette(4).address();
+
+        int size = 128*3;
+        int i;
+        for(i=0; i<size; i++) {
+            if (mapper_->ReadPrgBank(0, 0xbb80+i) != 0xff)
+                break;
+        }
+        if (i == size) {
+            for(i=0; i<0x50; i++) {
+                mapper_->WritePrgBank(0, 0xbb80+i, mapper_->ReadPrgBank(0, 0x87a3+i));
+                mapper_->WritePrgBank(0, 0xbc00+i, mapper_->ReadPrgBank(0, 0x87a3+i));
+                mapper_->WritePrgBank(0, 0xbc80+i, mapper_->ReadPrgBank(0, 0x87a3+i));
+            }
+            for(i=0; i<0x24; i++) {
+                mapper_->WritePrgBank(0, 0xbbd0+i, mapper_->ReadPrgBank(-1, 0xc458+i));
+                mapper_->WritePrgBank(0, 0xbc50+i, mapper_->ReadPrgBank(-1, 0xc458+i));
+                mapper_->WritePrgBank(0, 0xbcd0+i, mapper_->ReadPrgBank(-1, 0xc458+i));
+            }
+        }
+    } else {
+        auto *p = ri->mutable_palettes(0);
+        p->mutable_palette(0)->set_hidden(false);
+        p->mutable_palette(1)->set_hidden(false);
+        p->mutable_palette(2)->set_hidden(true);
+        p->mutable_palette(3)->set_hidden(true);
+        p->mutable_palette(4)->set_hidden(true);
+        p->mutable_palette(5)->set_hidden(true);
+        p->mutable_palette(6)->set_hidden(true);
+        p->mutable_palette(7)->set_hidden(true);
+        ri->mutable_map(0)->mutable_objtable(0)->set_address(0x87a3);
+        ri->mutable_map(1)->mutable_objtable(0)->set_address(0x87a3);
+        ri->mutable_map(2)->mutable_objtable(0)->set_address(0x87a3);
+        ri->mutable_map(3)->mutable_objtable(0)->set_address(0x87a3);
+        *ri->mutable_map(0)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(1)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(2)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(3)->mutable_palette() = p->palette(0).address();
+    }
+}
+
+template<class GETALL>
+int MiscellaneousHacks::EnabledIndex(GETALL getall) {
+    int index = 0;
+    for(const auto& hack: getall()) {
+        if (MemcmpHack(hack.hack(0))) {
+            return index;
+        }
+        index++;
+    }
+    // If we couldn't identify the hack, return -1
+    return -1;
+}
+
 
 template<class GETALL, class GET>
 int MiscellaneousHacks::Hack(const char* hackname, int n,
@@ -213,6 +290,9 @@ int MiscellaneousHacks::Hack(const char* hackname, int n,
     ImGui::PushItemWidth(400);
     if (ImGui::Combo(hackname, &method, names, len)) {
         PutGameHack(get(method));
+        CheckConfig();
+        ImApp::Get()->ProcessMessage("overworld_tile_hack",
+                                     reinterpret_cast<void*>(-1));
     }
     ImGui::PopItemWidth();
     return method;

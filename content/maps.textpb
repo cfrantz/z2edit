@@ -1,5 +1,5 @@
 map {
-    name: "west_hyrule"
+    name: "west_hyrule overworld"
     type: OVERWORLD
     connector: { bank: 1 address: 0x861f }
     palette: { bank: -1 address: 0x845b }
@@ -11,7 +11,7 @@ map {
     subworld: 0
 }
 map {
-    name: "death_mountain"
+    name: "death_mountain overworld"
     type: OVERWORLD
     connector: { bank: 1 address: 0xa0fc }
     palette: { bank: -1 address: 0x845b }
@@ -23,7 +23,7 @@ map {
     subworld: 1
 }
 map {
-    name: "east_hyrule"
+    name: "east_hyrule overworld"
     type: OVERWORLD
     connector: { bank: 2 address: 0x861f }
     palette: { bank: -1 address: 0x845b }
@@ -35,7 +35,7 @@ map {
     subworld: 0
 }
 map {
-    name: "maze_island"
+    name: "maze_island overworld"
     type: OVERWORLD
     connector: { bank: 2 address: 0xa0fc }
     palette: { bank: -1 address: 0x845b }

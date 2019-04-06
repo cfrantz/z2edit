@@ -122,6 +122,7 @@ message Miscellaneous {
 message Palette {
     string name = 1;
     Address address = 2;
+    bool hidden = 3;
 }
 
 message PaletteGroup {
@@ -391,4 +392,5 @@ message RomInfo {
     repeated GameHack spell_bits = 27;
     repeated Map objtable = 28;
     repeated GameHack spell_cast = 29;
+    repeated GameHack overworld_tiles = 30;
 }

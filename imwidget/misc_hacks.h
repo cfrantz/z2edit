@@ -10,17 +10,23 @@ class MiscellaneousHacks: public ImWindowBase {
   public:
     MiscellaneousHacks(): ImWindowBase(false), tab_(0) {};
 
+    void Refresh() override { CheckConfig(); }
     bool Draw() override;
     bool DrawMiscHacks();
     bool DrawDynamicBanks();
+    void CheckConfig();
     inline void set_mapper(Mapper* m) { mapper_ = m; };
+
   private:
     template<class GETALL, class GET>
     int Hack(const char* hackname, int n, GETALL getall, GET get);
+    template<class GETALL>
+    int EnabledIndex(GETALL getall);
 
     bool MemcmpHack(const PokeData& data);
     void PutPokeData(const PokeData& data);
     void PutGameHack(const GameHack& hack);
+
     int tab_;
     Mapper* mapper_;
 };

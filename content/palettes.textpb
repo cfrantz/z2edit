@@ -2,6 +2,12 @@ palettes {
     name: "Overworld"
     palette { name: "Overworld" address: { bank: -1 address: 0xc45b } }
     palette { name: "Sprites"   address: { bank: -1 address: 0xc46b } }
+    palette { name: "West Hyrule"     address: { bank: 0 address: 0xbbd3 } hidden: true }
+    palette { name: "West Sprites"    address: { bank: 0 address: 0xbbe3 } hidden: true }
+    palette { name: "DM/Maze"         address: { bank: 0 address: 0xbc53 } hidden: true }
+    palette { name: "DM/Maze Sprites" address: { bank: 0 address: 0xbc63 } hidden: true }
+    palette { name: "East Hyrule"     address: { bank: 0 address: 0xbcd3 } hidden: true }
+    palette { name: "East Sprites"    address: { bank: 0 address: 0xbce3 } hidden: true }
 }
 palettes {
     name: "West Hyrule"
