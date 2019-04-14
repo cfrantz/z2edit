@@ -578,6 +578,13 @@ std::vector<uint8_t> MapHolder::MapDataAbs() {
     if (!cursor_moves_left_) {
         std::stable_sort(copy.begin(), copy.end(),
             [](const MapCommand& a, const MapCommand& b) {
+                if (a.absx() == b.absx()) {
+                    // Adjust y-coordinate so meta-ops appear before normal
+                    // map commands.
+                    int ya = (a.absy() + 3) % 16;
+                    int yb = (b.absy() + 3) % 16;
+                    return ya < yb;
+                }
                 return a.absx() < b.absx();
             });
     }
