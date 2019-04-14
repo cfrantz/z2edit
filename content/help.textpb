@@ -2,37 +2,37 @@ help {
   url: [
     {
       key: "root"
-      value: "https://github.com/cfrantz/z2doc/wiki/Z2Edit"
+      value: "https://github.com/cfrantz/z2edit/wiki/"
     }, {
       key: "project"
-      value: "https://github.com/cfrantz/z2doc/wiki/project-history"
+      value: "https://github.com/cfrantz/z2edit/wiki/project-history"
     }, {
       key: "overworld-editor"
-      value: "https://github.com/cfrantz/z2doc/wiki/overworld-editor"
+      value: "https://github.com/cfrantz/z2edit/wiki/overworld-editor"
     }, {
       key: "multimap-viewer"
-      value: "https://github.com/cfrantz/z2doc/wiki/multimap-viewer"
+      value: "https://github.com/cfrantz/z2edit/wiki/multimap-viewer"
     }, {
       key: "sideview-editor"
-      value: "https://github.com/cfrantz/z2doc/wiki/sideview-editor"
+      value: "https://github.com/cfrantz/z2edit/wiki/sideview-editor"
     }, {
       key: "palace-graphics"
-      value: "https://github.com/cfrantz/z2doc/wiki/palace-graphics"
+      value: "https://github.com/cfrantz/z2edit/wiki/palace-graphics"
     }, {
       key: "enemy-attributes"
-      value: "https://github.com/cfrantz/z2doc/wiki/enemy-attributes"
+      value: "https://github.com/cfrantz/z2edit/wiki/enemy-attributes"
     }, {
       key: "experience-table"
-      value: "https://github.com/cfrantz/z2doc/wiki/experience-table"
+      value: "https://github.com/cfrantz/z2edit/wiki/experience-table"
     }, {
       key: "item-effects"
-      value: "https://github.com/cfrantz/z2doc/wiki/item-effects"
+      value: "https://github.com/cfrantz/z2edit/wiki/item-effects"
     }, {
       key: "chr-viewer"
-      value: "https://github.com/cfrantz/z2doc/wiki/chr-viewer"
+      value: "https://github.com/cfrantz/z2edit/wiki/chr-viewer"
     }, {
       key: "misc"
-      value: "https://github.com/cfrantz/z2doc/wiki/misc-hacks"
+      value: "https://github.com/cfrantz/z2edit/wiki/misc-hacks"
     }
   ]
 }
