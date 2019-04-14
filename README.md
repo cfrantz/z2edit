@@ -1,12 +1,14 @@
 # z2edit
 
 `z2edit` is a ROM editor for *Zelda II: The Adventure of Link*.  Documentation
-is available at [https://github.com/cfrantz/z2doc/wiki/Z2Edit](https://github.com/cfrantz/z2doc/wiki/Z2Edit).
+is available at [https://github.com/cfrantz/z2edit/wiki/Z2Edit](https://github.com/cfrantz/z2edit/wiki).
 
 ## Building
 
 Z2Edit is built with [bazel](http://bazel.io) on Linux.  The bazel workspace
 should download all required dependencies.
+
+Currently, bazel-0.19 is required to perform the build.
 
 #### Known build issues
 
@@ -28,13 +30,6 @@ $ ./bazel-bin/z2edit <user-supplied-zelda2.nes>
 ```
 
 ### Build and Package for Windows (on Linux)
-
-Prepare the build environment (e.g. download the cross compiler).  You only
-need to do this once:
-
-```
-$ ./tools/downloader.py --nowin32 compiler SDL2
-```
 
 Build and package:
 
