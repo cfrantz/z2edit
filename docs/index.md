@@ -1,40 +1,29 @@
-# z2edit
+# Z2Edit
 
-`z2edit` is a ROM editor for *Zelda II: The Adventure of Link*.  Documentation
-is available at [https://github.com/cfrantz/z2edit/wiki](https://github.com/cfrantz/z2edit/wiki).
+Z2Edit is a ROM Editor for the 8-bit Nintendo game *Zelda II: The Adventure of Link*.
 
-## Building
+## Features
 
-Z2Edit is built with [bazel](http://bazel.io) on Linux.  The bazel workspace
-should download all required dependencies.
+* Awesome [ImGui](https://github.com/ocornut/imgui) based user interface.
+* [Overworld editing](overworld-editor).
+* [MultiMap Viewer](multimap-viewer) for visualizing connected sideview areas.
+* [Sideview map editing](sideview-editor).
+* Apply [Miscellaneous Hacks](misc-hacks)
+* Palette editing.
+* Edit data tables, including
+  [Enemy Attributes](enemy-attributes),
+  [Experience](experience-table), and
+  [Palace Attributes](palace-graphics).
+* Configuration via [protobufs](https://github.com/google/protobuf).
 
-Currently, bazel-0.19 is required to perform the build.
+## Downloads
 
-#### Known build issues
+* See the [releases](https://github.com/cfrantz/z2edit/releases/) page.
 
-On Ubuntu 16, the MIR libraries link with an older version of the protobuf
-libraries, which causes a conflict when starting the program.  A workaround
-is to not link with the `nfd` (native file dialog) library.  To do this,
-comment out the references to `//external:nfd` in the `BUILD` and
-`imwidget/BUILD` files.
+## Video Introduction
 
-This will, unfortunately, remove the file load/save dialogs.  You can still
-load and save with the `load` and `save` commands in the Debug Console.
+[![video](https://img.youtube.com/vi/4dgRAUzeAa0/0.jpg)](https://www.youtube.com/watch?v=4dgRAUzeAa0)
 
-### Build for Linux
+## Known Bugs
 
-```
-$ bazel build :z2edit
-
-$ ./bazel-bin/z2edit <user-supplied-zelda2.nes>
-```
-
-### Build and Package for Windows (on Linux)
-
-Build and package:
-
-```
-$ ./tools/release_windows.sh
-```
-
-Take z2edit.zip to a windows machine.
+* See the [Known Bugs](known-bugs) list.
