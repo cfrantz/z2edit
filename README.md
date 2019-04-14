@@ -1,7 +1,7 @@
 # z2edit
 
 `z2edit` is a ROM editor for *Zelda II: The Adventure of Link*.  Documentation
-is available at [https://github.com/cfrantz/z2edit/wiki/Z2Edit](https://github.com/cfrantz/z2edit/wiki).
+is available at [https://github.com/cfrantz/z2edit/wiki](https://github.com/cfrantz/z2edit/wiki).
 
 ## Building
 
