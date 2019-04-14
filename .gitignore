@@ -5,7 +5,6 @@
 *.zip
 imgui.ini
 bazel-*
-docs
 tools/mxe
 gtm/*
 lemmy/*
