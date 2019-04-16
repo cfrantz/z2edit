@@ -137,7 +137,6 @@ bool MapCommand::Draw(bool abscoord, bool popup) {
         if (!popup) ImGui::SameLine();
         int val = object_;
         if (ImGui::InputInt("param", &val)) {
-            Clamp(&val, 0, 15);
             object_ = val;
             changed |= true;
         }
