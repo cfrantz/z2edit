@@ -62,6 +62,12 @@ void EnemyListPack::Unpack(int bank) {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
 
     bank_ = bank;
+    // In bank5, the victory sequence starts at 0x8b50, so we have fewer
+    // bytes available for the enemy list.
+    // In the other banks, I've taken pains to move things around, but
+    // bank5 is pretty full and has only 63 rooms instead of 126, so
+    // ~half the space should be enough.
+    size_ = (bank == 5) ? 688 : 1024;
     area_.resize(126, 0);
 
     LoadEncounters();
@@ -73,7 +79,7 @@ void EnemyListPack::Unpack(int bank) {
             Address pointer = mapper_->ReadAddr(addr, 2*n);
             uint16_t pa = pointer.address();
             if (pa >= misc.enemy_data_ram() &&
-                    pa < misc.enemy_data_ram() + 1024) {
+                    pa < misc.enemy_data_ram() + size_) {
                 ReadOne(i, pointer);
             }
         } 
@@ -103,7 +109,7 @@ bool EnemyListPack::Pack() {
 
         List& entry = entry_[addr];
         if (entry.newaddr == 0) {
-            if (packed.size() + entry.data.size() > 1024) {
+            if (packed.size() + entry.data.size() > size_) {
                 LOGF(ERROR, "Out of space for enemy list at %d", i);
                 return false;
             }
@@ -127,7 +133,7 @@ bool EnemyListPack::Pack() {
     }
 
     // And copy the enemy lists to the rom
-    packed.resize(1024, 0);
+    packed.resize(size_, 0);
     Address addr;
     addr.set_bank(bank_);
     addr.set_address(misc.enemy_data_rom());

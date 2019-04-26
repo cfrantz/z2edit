@@ -25,6 +25,7 @@ class EnemyListPack {
     Mapper* mapper_;
     int newareas_;
     int bank_;
+    size_t size_;
 
     struct List {
         uint16_t newaddr;
