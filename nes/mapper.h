@@ -79,6 +79,7 @@ class Mapper {
     void Erase(const z2util::Address& start, uint16_t length);
 
     z2util::Address Alloc(z2util::Address start, int length);
+    uint16_t IsAlloc(z2util::Address start);
     void Free(z2util::Address start);
 
     Cartridge* cartridge() { return cartridge_; }

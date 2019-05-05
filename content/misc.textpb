@@ -32,6 +32,25 @@ misc {
         { bank: 5 address: 0xbb15 length: 0xe0 },
         { bank: 0 address: 0 length: 0 }
     ]
+    # Preferred location for the code in the keepout area.
+    bank3_code_move: { bank:3 address: 0x84da }
+    vanilla_overworld: [
+        { bank:1 address: 0x905c length: 801},
+        { bank:1 address: 0xa64c length: 743},
+        { bank:2 address: 0x9046 length: 794},
+        { bank:2 address: 0xa64c length: 743}
+    ]
+
+    static_regions: [
+        { bank: 1 address: 0x8ca0 length: 1757 },
+        { bank: 1 address: 0xa31e length: 1557 },
+        { bank: 2 address: 0x8ca0 length: 1728 },
+        { bank: 2 address: 0xa31e length: 1557 },
+        { bank: 3 address: 0x8ca0 length: 1888 },
+        { bank: 4 address: 0x8ca0 length: 1888 },
+        { bank: 5 address: 0x834e length: 386 },
+        { bank: 5 address: 0x861f length: 252 }
+    ]
 
     enemy_pointer: [
         { address: 0x85a1 },

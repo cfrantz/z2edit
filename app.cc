@@ -77,6 +77,7 @@ void Z2Edit::Init() {
     misc_hacks_.reset(new z2util::MiscellaneousHacks);
     palace_gfx_.reset(new z2util::PalaceGraphics);
     palette_editor_.reset(new z2util::PaletteEditor);
+    rom_memory_.reset(new z2util::RomMemory);
     start_values_.reset(new z2util::StartValues);
     text_table_.reset(new z2util::TextTableEditor);
     tile_transform_.reset(new z2util::TileTransform);
@@ -126,6 +127,8 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     palace_gfx_->Refresh();
     palette_editor_->set_mapper(mapper_.get());
     palette_editor_->Refresh();
+    rom_memory_->set_mapper(mapper_.get());
+    rom_memory_->Refresh();
     start_values_->set_mapper(mapper_.get());
     start_values_->Refresh();
     text_table_->set_mapper(mapper_.get());
@@ -1105,6 +1108,8 @@ export_as:
                             &chrview_->visible());
             ImGui::MenuItem("Object Table", nullptr,
                             &object_table_->visible());
+            ImGui::MenuItem("Rom Memory", nullptr,
+                            &rom_memory_->visible());
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Help")) {
@@ -1135,6 +1140,7 @@ export_as:
     misc_hacks_->Draw();
     palace_gfx_->Draw();
     palette_editor_->Draw();
+    rom_memory_->Draw();
     hwpal_->Draw();
     chrview_->Draw();
     drops_->Draw();

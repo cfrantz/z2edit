@@ -53,12 +53,15 @@ int Memory::CheckBank3Special(bool move) {
     Address code;
     code.set_bank(3);
     code.set_address(0x9bf9);
+    Address dst = ConfigLoader<RomInfo>::GetConfig().misc().bank3_code_move();
 
     Address src = mapper_->ReadAddr(code, 0);
-    if (InKeepoutRegion(src)) {
+    if (src.address() != dst.address()) {
         if (move) {
             int len = 35;
-            Address dst = mapper_->Alloc(src, len);
+            if (dst.address() == 0) {
+                dst = mapper_->Alloc(src, len);
+            }
             for(int i=0; i<len; i++) {
                 mapper_->Write(dst, i, mapper_->Read(src, i));
                 mapper_->Write(src, i, 0);
@@ -66,8 +69,9 @@ int Memory::CheckBank3Special(bool move) {
             mapper_->WriteWord(code, 0, dst.address());
             mapper_->WriteWord(code, 2, dst.address());
             mapper_->WriteWord(code, -60, dst.address() + 7);
-           LOGF(INFO, "In bank=%d, code moved from %04x to %04x",
+            LOGF(INFO, "In bank=%d, code moved from %04x to %04x",
                 src.bank(), src.address(), dst.address());
+            mapper_->Free(src);
         } else {
             LOGF(INFO, "In bank=%d, code is in the keepout area (%04x)",
                  src.bank(), src.address());
@@ -122,6 +126,7 @@ int Memory::MoveMapOutOfKeepout(const Address& pointer) {
         return false;
 
     // Copy to the new location, zero out the old location.
+    // LOGF(INFO, "Moving %d bytes from %04x to %04x", len, src.address(), dst.address());
     for(int i=0; i<len; i++) {
         mapper_->Write(dst, i, mapper_->Read(src, i));
         mapper_->Write(src, i, 0);

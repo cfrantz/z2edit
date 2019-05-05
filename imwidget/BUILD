@@ -363,3 +363,17 @@ cc_library(
         "//external:imgui",
     ],
 )
+
+cc_library(
+    name = "rom_memory",
+    hdrs = ["rom_memory.h"],
+    srcs = ["rom_memory.cc"],
+    deps = [
+        ":base",
+        ":glbitmap",
+        "//nes:mappers",
+        "//external:imgui",
+        "//external:gflags",
+    ],
+)
+

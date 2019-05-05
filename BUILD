@@ -42,6 +42,7 @@ cc_library(
         "//imwidget:palace_gfx",
         "//imwidget:palette",
         "//imwidget:project",
+        "//imwidget:rom_memory",
         "//imwidget:simplemap",
         "//imwidget:start_values",
         "//imwidget:text_table",

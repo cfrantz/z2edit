@@ -117,6 +117,16 @@ message Miscellaneous {
 
     // Point values for pbags
     Address pbag_values = 33;
+
+    // There is a small blob of code in bank3's keepout region.  This is
+    // the preferred address to move it to.
+    Address bank3_code_move = 34;
+
+    // Locations/lengths of vanilla overworlds.
+    repeated MemoryRegion vanilla_overworld = 35;
+
+    // Loations/lengths of static data regions in the ROM.
+    repeated MemoryRegion static_regions = 36;
 }
 
 message Palette {

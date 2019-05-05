@@ -15,6 +15,7 @@
 #include "imwidget/palace_gfx.h"
 #include "imwidget/palette.h"
 #include "imwidget/project.h"
+#include "imwidget/rom_memory.h"
 #include "imwidget/simplemap.h"
 #include "imwidget/start_values.h"
 #include "imwidget/text_table.h"
@@ -92,6 +93,7 @@ class Z2Edit: public ImApp {
     std::unique_ptr<z2util::MiscellaneousHacks> misc_hacks_;
     std::unique_ptr<z2util::PalaceGraphics> palace_gfx_;
     std::unique_ptr<z2util::PaletteEditor> palette_editor_;
+    std::unique_ptr<z2util::RomMemory> rom_memory_;
     std::unique_ptr<z2util::StartValues> start_values_;
     std::unique_ptr<z2util::TextTableEditor> text_table_;
     std::unique_ptr<z2util::TileTransform> tile_transform_;

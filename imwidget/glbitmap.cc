@@ -100,8 +100,8 @@ void GLBitmap::Box(int x, int y, int w, int h, uint32_t color) {
 
 void GLBitmap::FilledBox(int x, int y, int w, int h, uint32_t color) {
     if (x >= width_ || y >= height_) return;
-    if (x+w >= width_) w = width_ - x - 1;
-    if (y+h >= height_) h = height_ - y - 1;
+    if (x+w > width_) w = width_ - x;
+    if (y+h > height_) h = height_ - y;
     color |= 0xFF000000;
 
     int ww = width_ - w;

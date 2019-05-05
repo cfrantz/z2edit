@@ -79,9 +79,16 @@ z2util::Address Mapper::Alloc(z2util::Address addr, int length) {
     return addr;
 }
 
-void Mapper::Free(z2util::Address addr) {
+uint16_t Mapper::IsAlloc(z2util::Address addr) {
     if (ReadWord(addr, -4) == ALLOC_TOKEN) {
-        uint16_t length = ReadWord(addr, -2);
+        return ReadWord(addr, -2);
+    }
+    return 0;
+}
+
+void Mapper::Free(z2util::Address addr) {
+    uint16_t length = IsAlloc(addr);
+    if (length) {
         addr.set_address(addr.address() - 4);
         Erase(addr, length+4);
     }
