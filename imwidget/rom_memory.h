@@ -1,6 +1,7 @@
 #ifndef Z2UTIL_IMWIDGET_ROM_MEMORY_H
 #define Z2UTIL_IMWIDGET_ROM_MEMORY_H
 #include <cstdint>
+#include <map>
 #include <vector>
 
 #include "imwidget/imwidget.h"
@@ -40,6 +41,7 @@ class RomMemory: public ImWindowBase {
     bool Repack();
 
     struct RomData {
+        uint16_t orig;
         uint16_t address;
         std::vector<uint8_t> data;
     };
@@ -53,7 +55,8 @@ class RomMemory: public ImWindowBase {
     RomData ReadOverworld(const Address& addr);
     void WriteRomData(const RomData& rd);
     bool PlaceMap(std::vector<Region>* regions, RomData* map);
-    void FixPointers(uint16_t addr, const RomData& rd);
+    void FixMapPointers(const RomData& rd,
+                        std::map<uint16_t, std::vector<uint16_t>>& pointers);
     void FreeAllocRegions();
 
     Mapper* mapper_;

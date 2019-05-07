@@ -200,7 +200,7 @@ void RomMemory::ProcessSideview() {
 }
 
 RomMemory::RomData RomMemory::ReadLevel(const Address& addr) {
-    RomData rd{};
+    RomData rd{uint16_t(addr.address()), 0};
     int len = mapper_->Read(addr, 0);
     for(int i=0; i<len; i++) {
         rd.data.emplace_back(mapper_->Read(addr, i));
@@ -211,7 +211,7 @@ RomMemory::RomData RomMemory::ReadLevel(const Address& addr) {
 }
 
 RomMemory::RomData RomMemory::ReadOverworld(const Address& addr) {
-    RomData rd{};
+    RomData rd{uint16_t(addr.address()), 0};
     int len = GetOverworldLength(addr);
     for(int i=0; i<len; i++) {
         rd.data.emplace_back(mapper_->Read(addr, i));
@@ -228,7 +228,6 @@ void RomMemory::FreeAllocRegions() {
     addr.set_bank(bank_);
     addr.set_address(0x8000);
     int len = 16384;
-    int totallen = 0;
     int j;
     for(int i=0; i<len; ++i) {
         int val = mapper_->ReadWord(addr, i);
@@ -291,38 +290,20 @@ bool RomMemory::PlaceMap(std::vector<Region>* regions, RomData* map) {
     return false;
 }
 
-void RomMemory::FixPointers(uint16_t addr, const RomData& rd) {
-    Address base;
-    base.set_bank(bank_);
-    base.set_address(0x8000);
-    for(int room=0; room<7; room++) {
-        Address a = mapper_->ReadAddr(base, room*2);
-        if (a.address() == addr) {
-            mapper_->WriteWord(base, room*2, rd.address);
-        }
-    }
-    base.set_address(0x8523);
-    for(int room=0; room<63; room++) {
-        Address a = mapper_->ReadAddr(base, room*2);
-        if (a.address() == addr) {
-            a.set_address(rd.address);
-            mapper_->WriteWord(base, room*2, rd.address);
-        }
-    }
-    if (!(bank_==3 || bank_==5)) {
-        base.set_address(0xa000);
-        for(int room=0; room<63; room++) {
-            Address a = mapper_->ReadAddr(base, room*2);
-            if (a.address() == addr) {
-                mapper_->WriteWord(base, room*2, rd.address);
-            }
-        }
+void RomMemory::FixMapPointers(const RomData& rd,
+        std::map<uint16_t, std::vector<uint16_t>>& pointers) {
+    Address a;
+    a.set_bank(bank_);
+    a.set_address(0);
+    for(const auto& p : pointers[rd.orig]) {
+        mapper_->WriteWord(a, p, rd.address);
     }
 }
 
 bool RomMemory::Repack() {
     Address base;
     std::map<uint16_t, RomData> maps;
+    std::map<uint16_t, std::vector<uint16_t>> pointers;
 
     char buf[64];
     sprintf(buf, "Before repack maps in bank %d", bank_);
@@ -335,6 +316,7 @@ bool RomMemory::Repack() {
         Address a = mapper_->ReadAddr(base, room*2);
         if (a.address() == 0 || a.address() == 0xFFFF)
             continue;
+        pointers[a.address()].push_back(base.address() + room * 2);
         if (maps.find(a.address()) == maps.end())
             maps[a.address()] = ReadLevel(a);
     }
@@ -343,6 +325,7 @@ bool RomMemory::Repack() {
         Address a = mapper_->ReadAddr(base, room*2);
         if (a.address() == 0 || a.address() == 0xFFFF)
             continue;
+        pointers[a.address()].push_back(base.address() + room * 2);
         if (maps.find(a.address()) == maps.end())
             maps[a.address()] = ReadLevel(a);
     }
@@ -352,6 +335,7 @@ bool RomMemory::Repack() {
             Address a = mapper_->ReadAddr(base, room*2);
             if (a.address() == 0 || a.address() == 0xFFFF)
                 continue;
+            pointers[a.address()].push_back(base.address() + room * 2);
             if (maps.find(a.address()) == maps.end())
                 maps[a.address()] = ReadLevel(a);
         }
@@ -381,7 +365,7 @@ bool RomMemory::Repack() {
     // into the static regions.
     for(auto& m : maps) {
         PlaceMap(&regions, &m.second);
-        FixPointers(m.first, m.second);
+        FixMapPointers(m.second, pointers);
     }
 
     // Now place the overworld maps.  We always delegate this to the frespace
@@ -394,7 +378,6 @@ bool RomMemory::Repack() {
         PlaceMap(nullptr, &ov2);
         mapper_->WriteWord(base, 2, ov2.address);
     }
-
 
     return true;
 }
