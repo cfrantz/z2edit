@@ -16,34 +16,55 @@ namespace z2util {
 
 void RomMemory::Init() {}
 
-void RomMemory::FillFreeSpace(uint32_t color) {
+int RomMemory::FillFreeSpace(uint32_t color, uint32_t kocolor) {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     Address addr;
     addr.set_bank(bank_);
-    addr.set_address(0x8000);
+    bool freespace = false;
+    bool keepout = false;
     int len = 16384;
-    int freespace = 0;
+    int total = 0;
     int j;
     for(int i=0; i<len; ++i) {
-        int val = mapper_->Read(addr, i);
+        addr.set_address(0x8000 + i);
+        keepout = false;
+        for(const auto ko : ri.misc().allocator_keepout()) {
+            if (ko.bank() == bank_) {
+                if (addr.address() >= ko.address() &&
+                    addr.address() < ko.address() + ko.length()) {
+                    int pix = addr.address() & 0x3FFF;
+                    viz_.SetPixel(pix % 128, pix/128, kocolor);
+                    freespace = false;
+                    keepout = true;
+                    break;
+                }
+            }
+        }
+        if (keepout) {
+            continue;
+        }
+        int val = mapper_->Read(addr, 0);
         if (val == 255) {
             if (!freespace) {
                 // We only consider it freespace if its >= 8 bytes of 0xFF.
                 for(j=0; j<8 && i+j<len; ++j) {
-                    if (mapper_->Read(addr, i+j) != 255) {
+                    if (mapper_->Read(addr, j) != 255) {
                         break;
                     }
                 }
                 if (j == 8) {
-                    freespace = 1;
+                    freespace = true;
                 }
             }
             if (freespace) {
                 viz_.SetPixel(i%128, i/128, color);
+                ++total;
             }
         } else {
-            freespace = 0;
+            freespace = false;
         }
     }
+    return total;
 }
 
 void RomMemory::FillKeepout(uint32_t color) {
@@ -120,7 +141,7 @@ int RomMemory::FillAllocRegions() {
         }
     }
     // Length of allocations minus overhead
-    return len;
+    return totallen;
 }
 
 void RomMemory::ProcessOverworlds() {
@@ -401,13 +422,14 @@ bool RomMemory::Draw() {
 
     ImGui::Columns(2, "Memory", true);
     viz_.FilledBox(0, 0, 128, 128, 0xFF000000);
-    FillFreeSpace(0xFF202020);
-    FillKeepout(0xFF008AFF);
+    int freespace = FillFreeSpace(0xFF202020, 0xFF008AFF);
+    //FillKeepout(0xFF008AFF);
 
     ProcessOverworlds();
     ProcessSideview();
 
-    FillAllocRegions();
+    int allocated = FillAllocRegions();
+    ImGui::Text("Freespace: allocated=%d remain=%d", allocated, freespace);
     if (refresh_) {
         viz_.Update();
     }

@@ -32,7 +32,7 @@ class RomMemory: public ImWindowBase {
     int GetOverworldLength(const Address& addr);
     void ProcessOverworlds();
     void ProcessSideview();
-    void FillFreeSpace(uint32_t color);
+    int FillFreeSpace(uint32_t color, uint32_t kocolor);
     void FillKeepout(uint32_t color);
     int FillSideview(const Address& addr, uint32_t color);
     int FillOverworld(const Address& addr, uint32_t color);
