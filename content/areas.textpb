@@ -105,7 +105,7 @@ areas {
         { key: 55 value: { name: "Thunder House" }},
         { key: 56 value: { name: "Downstab Church" }},
         { key: 57 value: { name: "Upstab House" }},
-
+        { key: 58 value: { name: "Magic Container House" }},
 
         { key: 60 value: { name: "King's Tomb" }}
     ]

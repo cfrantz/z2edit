@@ -187,7 +187,7 @@ sideview: {
     code { offset: 42 length: 1 code: 6 }
     code { offset: 46 length: 1 code: 6 }
     code { offset: 47 length: 1 code: 6 }
-    code { offset: 54 length: 1 code: 6 }
+    code { offset: 58 length: 1 code: 6 }
 
     code { offset: 21 length: 3 code: 7 }
     code { offset: 33 length: 1 code: 7 }
