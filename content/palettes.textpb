@@ -108,6 +108,14 @@ palettes {
     palette { name: "Unused 3"     address: { bank:5 address: 0x80ce } }
 }
 palettes {
+    name: "Palace 7 Special"
+    palette {
+        name: "Dark Link Fight" address: { bank:7 address: 0xc47f }
+        magic_bg: { bank:5 address: 0x981c }
+    }
+    palette { name: "Post DL Fight" address: { bank:7 address: 0xc493 } }
+}
+palettes {
     name: "Title Screen"
     palette { name: "Background" address: { bank: 5 address: 0xaf40 } }
     palette { name: "Sprites"   address: { bank: 5 address: 0xaf50 } }

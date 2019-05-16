@@ -133,6 +133,7 @@ message Palette {
     string name = 1;
     Address address = 2;
     bool hidden = 3;
+    Address magic_bg = 4;
 }
 
 message PaletteGroup {

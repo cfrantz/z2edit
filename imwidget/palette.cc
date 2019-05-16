@@ -116,6 +116,9 @@ void PaletteEditor::Save() {
     for(const auto& p: ri.palettes(grpsel_).palette()) {
         for(int i=0; !p.hidden() && i<16; i++) {
             mapper_->Write(p.address(), i, data_[j].color[i]);
+            if (i==0 && p.magic_bg().address() != 0) {
+                mapper_->Write(p.magic_bg(), 0, data_[j].color[i]);
+            }
         }
         j++;
     }
