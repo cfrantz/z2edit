@@ -4,6 +4,7 @@
 #include "app.h"
 #include "imgui.h"
 #include "imwidget/error_dialog.h"
+#include "imwidget/map_connect.h"
 #include "nes/cpu6502.h"
 #include "nes/chr_util.h"
 #include "nes/text_encoding.h"
@@ -66,6 +67,7 @@ void Z2Edit::Init() {
     RegisterCommand("set", "Set variables.", this, &Z2Edit::SetVar);
     RegisterCommand("source", "Read and execute debugconsole commands from file.", this, &Z2Edit::Source);
     RegisterCommand("restore", "Read/restore a PRG bank from a NES file.", this, &Z2Edit::RestoreBank);
+    RegisterCommand("conntable", "Show the connection table for a given overworld/subworld", this, &Z2Edit::ConnTable);
 
     loaded_ = false;
     ibase_ = 0;
@@ -886,6 +888,23 @@ void Z2Edit::DumpTownText(DebugConsole* console, int argc, char **argv) {
             text[j] = ch;
         }
         console->AddLog("%d (@%04x): %s", i, str.address(), text);
+    }
+}
+
+void Z2Edit::ConnTable(DebugConsole* console, int argc, char **argv) {
+    if (argc != 3) {
+        console->AddLog("[error] Usage: %s [overworld] [subworld]", argv[0]);
+        return;
+    }
+    int overworld = strtol(argv[1], 0, ibase_);
+    int subworld = strtol(argv[2], 0, ibase_);
+    OverworldConnectorList clist;
+    if (!clist.Init(mapper_.get(), overworld, subworld)) {
+        console->AddLog("[error] Overworld %d-%d not known.", overworld, subworld);
+        return;
+    }
+    for(const auto& s : clist.Print()) {
+        console->AddLog("%s", s.c_str());
     }
 }
 

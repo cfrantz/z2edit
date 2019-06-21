@@ -76,6 +76,21 @@ void OverworldConnector::Read() {
     fall_ = !!(w & 0x80);
 }
 
+std::string OverworldConnector::Print() const {
+    char buf[256];
+
+    snprintf(buf, 255, "%2d: %2d %2d  %3d %4d %5d %4d %6s %3s %4s %5s %4s %4s",
+            offset_, y_, x_, map_, entry_, dest_world_, dest_overworld_,
+            ext_ ? "T" : "F",
+            second_ ? "T" : "F",
+            exit_2_lower_ ? "T" : "F",
+            entry_right_ ? "T" : "F",
+            passthru_ ? "T" : "F",
+            fall_ ? "T" : "F");
+
+    return buf;
+}
+
 void OverworldConnector::Write() {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     const auto& hpal = misc.hidden_palace();
@@ -254,6 +269,19 @@ void OverworldConnectorList::Init(Mapper* mapper, Address address,
     }
 }
 
+bool OverworldConnectorList::Init(Mapper* mapper, int overworld, int subworld) {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    for(const auto& m : ri.map()) {
+        if (m.type() == MapType::OVERWORLD &&
+            m.overworld() == overworld &&
+            m.subworld() == subworld) {
+            Init(mapper, m.connector(), overworld, subworld);
+            return true;
+        }
+    }
+    return false;
+}
+
 OverworldConnector* OverworldConnectorList::GetAtXY(int x, int y) {
     for(auto& c : list_) {
         if (x == c.xpos() && y == c.ypos())
@@ -391,6 +419,20 @@ bool OverworldConnectorList::Draw() {
         ImGui::EndPopup();
     }
     return changed_;
+}
+
+std::vector<std::string> OverworldConnectorList::Print() const {
+    std::vector<std::string> result;
+
+    result.emplace_back("ID   Y  X  Map Scrn World OvrW Extern 2nd 2Low Right Pass Fall");
+    result.emplace_back("--------------------------------------------------------------");
+    for(const auto& c : list_) {
+        if (c.ypos() >= 0) {
+            result.emplace_back(c.Print());
+        }
+    }
+
+    return result;
 }
 
 }  // namespace z2util

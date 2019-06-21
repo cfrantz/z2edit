@@ -38,6 +38,7 @@ cc_library(
         "//imwidget:enemyattr",
         "//imwidget:hwpalette",
         "//imwidget:misc_hacks",
+        "//imwidget:map_connect",
         "//imwidget:neschrview",
         "//imwidget:palace_gfx",
         "//imwidget:palette",

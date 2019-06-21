@@ -16,6 +16,7 @@ class OverworldConnector {
     OverworldConnector(const OverworldConnector& other);
     bool DrawInPopup();
     void StartEmulator();
+    std::string Print() const;
 
     inline int offset() const { return offset_; }
     inline int xpos() const { return x_; }
@@ -83,6 +84,8 @@ class OverworldConnectorList {
     void Init(Mapper* mapper, Address address, int overworld, int subworld,
               int n=63);
 
+    bool Init(Mapper* mapper, int overworld, int subworld);
+
     bool Draw();
     bool DrawInEditor(int x, int y);
 
@@ -97,6 +100,7 @@ class OverworldConnectorList {
     }
     SpecialType NoCompress(int x, int y);
     void Save();
+    std::vector<std::string> Print() const;
 
     inline bool show() const { return show_; }
     inline bool changed() const { return changed_; }

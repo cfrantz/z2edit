@@ -71,6 +71,7 @@ class Z2Edit: public ImApp {
     void Source(DebugConsole* console, int argc, char **argv);
     void RestoreBank(DebugConsole* console, int argc, char **argv);
     void DumpTownText(DebugConsole* console, int argc, char **argv);
+    void ConnTable(DebugConsole* console, int argc, char **argv);
     void SpawnEmulator();
     void SpawnEmulator(uint8_t bank, uint8_t region, uint8_t world,
         uint8_t town_code, uint8_t palace_code, uint8_t connector,
