@@ -3,6 +3,11 @@
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
+#include <gflags/gflags.h>
+
+
+DEFINE_int32(bank5_enemy_list_size, 432,
+        "Size of the enemylist buffer in bank 5");
 
 namespace z2util {
 
@@ -67,7 +72,7 @@ void EnemyListPack::Unpack(int bank) {
     // In the other banks, I've taken pains to move things around, but
     // bank5 is pretty full and has only 63 rooms instead of 126, so
     // ~half the space should be enough.
-    size_ = (bank == 5) ? 688 : 1024;
+    size_ = (bank == 5) ? FLAGS_bank5_enemy_list_size : 1024;
     area_.resize(126, 0);
 
     LoadEncounters();

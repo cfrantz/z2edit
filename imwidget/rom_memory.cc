@@ -293,6 +293,8 @@ bool RomMemory::PlaceMap(std::vector<Region>* regions, RomData* map) {
         for(auto& region: *regions) {
             if (region.offset + map->data.size() < region.length) {
                 map->address = region.address + region.offset;
+                LOGF(INFO, "Moved map from %04x to %04x (%d bytes)",
+                        map->orig, map->address, map->data.size());
                 WriteRomData(*map);
                 region.offset += map->data.size();
                 return true;
@@ -305,6 +307,8 @@ bool RomMemory::PlaceMap(std::vector<Region>* regions, RomData* map) {
     a = mapper_->Alloc(a, map->data.size());
     if (a.address()) {
         map->address = a.address();
+        LOGF(INFO, "Alloc map from %04x to %04x (%d bytes)",
+                map->orig, map->address, map->data.size());
         WriteRomData(*map);
         return true;
     }

@@ -11,6 +11,7 @@ DEFINE_string(keybinds, "", "Alternate keybinds for the editor");
 DEFINE_bool(dump_config, false, "Dump config to stdout and exit");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
 DEFINE_bool(reminder_dialogs, true, "Pop up dialogs for discarding changes");
+DECLARE_int32(bank5_enemy_list_size);
 
 ConfigLoader<z2util::OverworldEditorKeybinds>* keybinds;
 
@@ -93,6 +94,20 @@ void PostProcess(z2util::RomInfo* config) {
             e.second.set_name(buf);
         }
     }
+    uint16_t b5_enemy_end;
+    for(auto& ko: *config->mutable_misc()->mutable_allocator_keepout()) {
+        if (ko.bank() == 5 && ko.address() == 0x88a0) {
+            ko.set_length(FLAGS_bank5_enemy_list_size);
+            b5_enemy_end = 0x88a0 + FLAGS_bank5_enemy_list_size;
+        }
+    }
+    for(auto& sr: *config->mutable_misc()->mutable_static_regions()) {
+        if (sr.bank() == 5 && sr.address() == 0x8a50) {
+            sr.set_address(b5_enemy_end);
+            sr.set_length(0x8b50 - b5_enemy_end);
+        }
+    }
+
     if (keybinds) {
         config->mutable_overworld_editor_keybind()->Clear();
         config->mutable_overworld_editor_keybind()->MergeFrom(

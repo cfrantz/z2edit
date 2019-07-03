@@ -19,14 +19,13 @@ misc {
         { bank: 4 address: 0x871b length: 389 },
         { bank: 4 address: 0xa1f8 length: 252 },
         { bank: 5 address: 0x871b length: 389 },
-        { bank: 5 address: 0xa1f8 length: 252 },
 
         # Enemy Lists
         { bank: 1 address: 0x88a0 length: 1024 },
         { bank: 2 address: 0x88a0 length: 1024 },
         { bank: 3 address: 0x88a0 length: 1024 },
         { bank: 4 address: 0x88a0 length: 1024 },
-        { bank: 5 address: 0x88a0 length: 1024 },
+        { bank: 5 address: 0x88a0 length: 432 },
 
         # Item availability bitmap
         { bank: 5 address: 0xbb15 length: 0xe0 },
@@ -48,8 +47,9 @@ misc {
         { bank: 2 address: 0xa31e length: 1557 },
         { bank: 3 address: 0x8ca0 length: 1888 },
         { bank: 4 address: 0x8ca0 length: 1888 },
-        { bank: 5 address: 0x834e length: 386 },
-        { bank: 5 address: 0x861f length: 252 }
+        { bank: 5 address: 0x834e length: 386 }, # could be 434
+        { bank: 5 address: 0x861f length: 252 },
+        { bank: 5 address: 0x8a50 length: 256 }
     ]
 
     enemy_pointer: [
