@@ -634,20 +634,6 @@ void MapHolder::Save(std::function<void()> finish, bool force) {
     std::vector<uint8_t> data = MapDataAbs();
     LOG(INFO, "Saving ", map_.name(), " (", data.size(), " bytes)");
 
-    Address addr = map_.address();
-    // Search the entire bank and allocate memory
-    addr.set_address(0);
-    addr = mapper_->Alloc(addr, data.size());
-    if (addr.address() == 0) {
-        ErrorDialog::Spawn("Error Saving Map",
-            "Can't save map: ", map_.name(), "\n\n"
-            "Can't find ", data.size(), " free bytes in bank ", addr.bank());
-        LOG(ERROR, "Can't save map: can't find ", data.size(), "bytes"
-                   " in bank=", addr.bank());
-        // Can't finish.
-        return;
-    }
-    addr.set_address(0x8000 | addr.address());
 
     // Determine if any other maps point to the same map data
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
@@ -664,15 +650,41 @@ void MapHolder::Save(std::function<void()> finish, bool force) {
         }
     }
 
+    Address addr = map_.address();
+    addr.set_address(0x8000 | addr.address());
+    bool needfree = false;
+
+    if (data.size() > length_ || !sameptr.empty()) {
+        // Search the entire bank and allocate memory
+        addr.set_address(0);
+        addr = mapper_->Alloc(addr, data.size());
+        if (addr.address() == 0) {
+            ErrorDialog::Spawn("Error Saving Map",
+                "Can't save map: ", map_.name(), "\n\n"
+                "Can't find ", data.size(), " free bytes in bank ", addr.bank());
+            LOG(ERROR, "Can't save map: can't find ", data.size(), "bytes"
+                       " in bank=", addr.bank());
+            // Can't finish.
+            return;
+        }
+        needfree = true;
+        length_ = data.size();
+    }
+
     // Capture everything we need to save into a lambda so we can defer the
     // action until after the user responds to an ErrorDialog.
-    auto dosave = [this, addr, data, sameptr, finish](bool clone) {
+    auto dosave = [this, addr, data, sameptr, needfree, finish](bool clone) {
         if (clone) {
             for(const auto* m : sameptr) {
                 mapper_->WriteWord(m->pointer(), 0, addr.address());
             }
             // Free the existing memory if it was owned by the allocator.
-            mapper_->Free(map_.address());
+            if (needfree) {
+                LOGF(INFO, "Freeing old map at %04x", map_.address().address());
+                mapper_->Free(map_.address());
+            } else {
+                LOGF(INFO, "No free needed at %04x", map_.address().address());
+            }
         }
         *map_.mutable_address() = addr;
         map_addr_ = addr.address();

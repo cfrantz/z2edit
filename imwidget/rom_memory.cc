@@ -404,6 +404,8 @@ bool RomMemory::Repack() {
         mapper_->WriteWord(base, 2, ov2.address);
     }
 
+    ImApp::Get()->ProcessMessage("repack",
+            reinterpret_cast<void*>(0));
     return true;
 }
 

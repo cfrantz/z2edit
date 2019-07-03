@@ -133,6 +133,8 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     rom_memory_->Refresh();
     start_values_->set_mapper(mapper_.get());
     start_values_->Refresh();
+    simplemap_->set_mapper(mapper_.get());
+    simplemap_->Refresh();
     text_table_->set_mapper(mapper_.get());
     text_table_->Refresh();
     tile_transform_->set_mapper(mapper_.get());
@@ -975,6 +977,9 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
     } else if (msg == "overworld_tile_hack") {
         object_table_->Init();
         palette_editor_->Init();
+    } else if (msg == "repack") {
+        simplemap_->Refresh();
+        editor_->Refresh();
     } else if (msg == "emulate_at") {
         const uint8_t* p = reinterpret_cast<const uint8_t*>(extra);
         SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
