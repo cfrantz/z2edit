@@ -32,6 +32,7 @@ cc_library(
         "-I/usr/include/atk-1.0",
         "-I/usr/include/pango-1.0",
         "-I/usr/include/cairo",
+        "-I/usr/include/harfbuzz",
     ],
     linkopts = [
         "-lgtk-3",
