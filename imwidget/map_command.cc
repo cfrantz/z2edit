@@ -525,6 +525,7 @@ void MapHolder::Parse(const z2util::Map& map, uint16_t altaddr) {
     flags_ = mapper_->Read(address, 1);
     ground_ = mapper_->Read(address, 2);
     back_ = mapper_->Read(address, 3);
+    Unpack();
 
     command_.clear();
     int absx = 0;
