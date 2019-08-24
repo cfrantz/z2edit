@@ -232,7 +232,7 @@ class MapEnemyList {
     void Parse(const Map& map);
     std::vector<uint8_t> Pack();
     void Save();
-    const std::vector<Unpacked>& data();
+    std::vector<Unpacked>& data();
     inline void set_show_origin(bool s) { show_origin_ = s; }
   private:
     Mapper* mapper_;

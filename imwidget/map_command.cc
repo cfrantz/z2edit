@@ -987,7 +987,7 @@ MapEnemyList::DrawResult MapEnemyList::DrawOnePopup(Unpacked* item,
 bool MapEnemyList::DrawPopup(float scale) {
     bool changed = false;
     int i=0;
-    for(auto it=data_.begin(); it<data_.end(); ++it, ++i) {
+    for(auto it=data().begin(); it<data().end(); ++it, ++i) {
         ImGui::PushID(-(i | (is_large_ << 8)));
         auto result = DrawOnePopup(&*it, scale);
         switch(result) {
@@ -1174,7 +1174,7 @@ bool MapEnemyList::Draw() {
     return chg;
 }
 
-const std::vector<MapEnemyList::Unpacked>& MapEnemyList::data() {
+std::vector<MapEnemyList::Unpacked>& MapEnemyList::data() {
     return (large_ && large_->display_) ? large_->data_ : data_;
 }
 
