@@ -2,7 +2,7 @@ map {
     name: "west_hyrule overworld"
     type: OVERWORLD
     connector: { bank: 1 address: 0x861f }
-    palette: { bank: -1 address: 0x845b }
+    palette: { bank: -1 address: 0xc45b }
     objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
     pointer: { bank: 1 address: 0x8508 }
@@ -14,7 +14,7 @@ map {
     name: "death_mountain overworld"
     type: OVERWORLD
     connector: { bank: 1 address: 0xa0fc }
-    palette: { bank: -1 address: 0x845b }
+    palette: { bank: -1 address: 0xc45b }
     objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
     pointer: { bank: 1 address: 0x850a }
@@ -26,7 +26,7 @@ map {
     name: "east_hyrule overworld"
     type: OVERWORLD
     connector: { bank: 2 address: 0x861f }
-    palette: { bank: -1 address: 0x845b }
+    palette: { bank: -1 address: 0xc45b }
     objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
     pointer: { bank: 2 address: 0x8508 }
@@ -38,7 +38,7 @@ map {
     name: "maze_island overworld"
     type: OVERWORLD
     connector: { bank: 2 address: 0xa0fc }
-    palette: { bank: -1 address: 0x845b }
+    palette: { bank: -1 address: 0xc45b }
     objtable: { bank: 0 address: 0x87a3 }
     chr: { bank: 0x11 }
     pointer: { bank: 2 address: 0x850a }
