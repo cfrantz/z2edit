@@ -106,20 +106,38 @@ bool EnemyListPack::Pack() {
     const auto& misc = ConfigLoader<RomInfo>::GetConfig().misc();
     std::vector<uint8_t> packed;
     
+    // Insert an empty list to consolidate all empty rooms to the same
+    // zero length list.
+    packed.push_back(1);
+
     // Pack all of the enemy lists into the buffer
     for(int i=0; i<126; i++) {
+        char side = 'A' + i/63;
+        int room = i%63;
         int addr = area_[i];
         if (addr == 0)
             continue;
 
         List& entry = entry_[addr];
         if (entry.newaddr == 0) {
-            if (packed.size() + entry.data.size() > size_) {
-                LOGF(ERROR, "Out of space for enemy list at %d", i);
+            if (entry.data.size() == 1) {
+                // All empty lists (lists of length 1) point to the
+                // empty-list sentinel at the beginning of the packed array.
+                entry.newaddr = 0 + misc.enemy_data_ram();
+                LOGF(INFO, "Packed room %c%d at %04x (%d bytes)",
+                        side, room, entry.newaddr, entry.data.size());
+            } else if (packed.size() + entry.data.size() > size_) {
+                LOGF(ERROR, "Out of space for enemy list at %c%d (want %d+%d / %d)",
+                        side, room, packed.size(), entry.data.size(), size_);
                 return false;
+            } else {
+                entry.newaddr = packed.size() + misc.enemy_data_ram();
+                packed.insert(packed.end(), entry.data.begin(), entry.data.end());
+                LOGF(INFO, "Packed room %c%d at %04x (%d bytes)",
+                        side, room, entry.newaddr, entry.data.size());
             }
-            entry.newaddr = packed.size() + misc.enemy_data_ram();
-            packed.insert(packed.end(), entry.data.begin(), entry.data.end());
+        } else {
+            LOGF(INFO, "Refer room  %c%d to %04x", side, room, entry.newaddr);
         }
     }
 
@@ -138,7 +156,8 @@ bool EnemyListPack::Pack() {
     }
 
     // And copy the enemy lists to the rom
-    packed.resize(size_, 0);
+    LOGF(INFO, "Extending pack from %d to %d bytes", packed.size(), size_);
+    packed.resize(size_, 0xFF);
     Address addr;
     addr.set_bank(bank_);
     addr.set_address(misc.enemy_data_rom());
