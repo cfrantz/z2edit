@@ -1,3 +1,5 @@
+#include <set>
+
 #include "nes/enemylist.h"
 
 #include "nes/mapper.h"
@@ -77,6 +79,8 @@ void EnemyListPack::Unpack(int bank) {
 
     LoadEncounters();
 
+    std::set<int> single_list(misc.single_enemy_list_bank().cbegin(),
+                              misc.single_enemy_list_bank().cend());
     int i = 0;
     for(Address addr : misc.enemy_pointer()) {
         addr.set_bank(bank_);
@@ -88,6 +92,10 @@ void EnemyListPack::Unpack(int bank) {
                 ReadOne(i, pointer);
             }
         } 
+        if (single_list.find(bank_) != single_list.end()) {
+            // If this bank only has a single enemy list, bail out.
+            break;
+        }
     }
 }
 

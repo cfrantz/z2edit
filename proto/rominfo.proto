@@ -127,6 +127,9 @@ message Miscellaneous {
 
     // Loations/lengths of static data regions in the ROM.
     repeated MemoryRegion static_regions = 36;
+
+    // List of banks with only one enemy list.
+    repeated int32 single_enemy_list_bank = 37;
 }
 
 message Palette {
