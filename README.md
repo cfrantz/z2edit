@@ -12,8 +12,6 @@ Check the [releases](https://github.com/cfrantz/z2edit/releases) page.
 Z2Edit is built with [bazel](http://bazel.io) on Linux.  The bazel workspace
 should download all required dependencies.
 
-Currently, bazel-0.19 is required to perform the build.
-
 #### Known build issues
 
 On Ubuntu 16, the MIR libraries link with an older version of the protobuf
