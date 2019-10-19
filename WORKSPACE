@@ -1,3 +1,6 @@
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+
 ######################################################################
 # gflags
 ######################################################################
@@ -55,8 +58,11 @@ bind(
 git_repository(
 	name = "com_google_protobuf",
 	remote = "https://github.com/google/protobuf.git",
-	tag = "v3.5.0"
+	tag = "v3.10.0"
 )
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+protobuf_deps()
 
 ######################################################################
 # native file dialog
