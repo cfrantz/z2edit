@@ -42,8 +42,8 @@ bind(
 # IconFontCppHeaders
 ######################################################################
 new_git_repository(
-	name = "iconfonts",
-	remote = "https://github.com/juliettef/IconFontCppHeaders.git",
+    name = "iconfonts",
+    remote = "https://github.com/juliettef/IconFontCppHeaders.git",
     commit = "fda5f470b767f7b413e4a3995fa8cfe47f78b586",
     build_file = "//rules:iconfonts.BUILD",
 )
@@ -56,9 +56,9 @@ bind(
 # protobuf
 ######################################################################
 git_repository(
-	name = "com_google_protobuf",
-	remote = "https://github.com/google/protobuf.git",
-	tag = "v3.10.0"
+    name = "com_google_protobuf",
+    remote = "https://github.com/google/protobuf.git",
+    tag = "v3.10.0"
 )
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
@@ -68,8 +68,8 @@ protobuf_deps()
 # native file dialog
 ######################################################################
 new_git_repository(
-	name = "nativefiledialog_git",
-	remote = "https://github.com/mlabbe/nativefiledialog.git",
+    name = "nativefiledialog_git",
+    remote = "https://github.com/mlabbe/nativefiledialog.git",
     commit = "5cfe5002eb0fac1e49777a17dec70134147931e2",
     build_file = "//rules:nfd.BUILD",
 )
@@ -86,7 +86,7 @@ bind(
 git_repository(
     name = "mxebzl",
     remote = "https://github.com/cfrantz/mxebzl.git",
-	tag = "20190619_RC01",
+    tag = "20190619_RC01",
 )
 
 load("@mxebzl//tools:repository.bzl", "mxe_compilers")
