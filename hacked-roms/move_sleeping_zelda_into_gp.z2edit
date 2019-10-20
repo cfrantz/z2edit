@@ -1,0 +1,73 @@
+# Re-arrange tile IDs to put sleeping zelda into GP.
+#
+# Graphics arrangement (numbers in expressed in hex):
+#
+# P7 = bank c/d
+# Victory = bank e/f
+#
+
+# Sleeping zelda is small object 9, arranged as:
+# ID:
+# $86   $87
+# ----- -----
+# 02 03 04 05
+# 06 06 06 06
+# In tile group 2 (with tiles coming from bank $f).
+#
+# GP has a few unused tiles in bank $d which appear to also be
+# unused in bank $f.
+#
+# Bank $d                Bank $f
+# $30,$31 = blank        blank
+# $9c,$9d = comma, cave  comma, cave
+# $b0,$b1 = spike        half of grave
+
+# We'll move $02 - $06 from bank $f into the unused tiles in bank $d,
+# then rewrite the object table.
+
+set ibase 16
+
+# Copy sleeping zelda to unused tiles in bank $d
+charcopy d:30 f:02
+charcopy d:31 f:03
+charcopy d:9c f:04
+charcopy d:9d f:05
+charcopy d:b0 f:06
+
+# Copy sleeping zelda to the same unused tiles in bank $f
+charcopy f:30 f:02
+charcopy f:31 f:03
+charcopy f:9c f:04
+charcopy f:9d f:05
+charcopy f:b0 f:06
+
+# Simple version
+# Rewrite the object table for sleeping zelda
+# wbp b=5 8323 30 b0 31 b0 9c b0 9d b0
+
+# Manuever the tilemaps a bit to give better color selection flexibility.
+wwp b=5 8506 8323
+wbp b=5 8323  84 84 86 86 84 85 86 87 63 63 63 63 b5 b6 b7 b8
+wbp b=5 8333  b7 b8 f4 f4 7e 7e 7e 7e 5c 5d 5e 5f 30 b0 31 b0
+wbp b=5 8343  9c b0 9d b0 b3 b4 b5 b6
+
+# Fix large cloud
+wbp b=5 82bd c9
+
+# Possible sleeping zeldas:
+
+# Group 0: red/blue/white palette
+wbp b=5 82a4 1e
+wbp b=5 82a9 1f
+
+# Group 1: GP background palette (gold/brown)
+# wbp b=5 82a4 5e
+# wbp b=5 82a9 5f
+
+# Group 2: GP background palette (gold/red)
+# wbp b=5 82a4 8d
+# wbp b=5 82a9 8e
+
+# Group 3: GP curtains palette (light cyan)
+# wbp b=5 82a4 c7
+# wbp b=5 82a9 c8
