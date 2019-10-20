@@ -219,7 +219,7 @@ decompress {
     render: RENDER_HORIZONTAL
     height: 1
     objid: 0x48
-    comment: "north castle steps"
+    comment: "north castle bricks"
 }
 decompress {
     area: GREAT_PALACE
@@ -228,7 +228,7 @@ decompress {
     render: RENDER_HORIZONTAL
     height: 1
     objid: 0x85
-    comment: "north castle bricks"
+    comment: "north castle steps"
 }
 decompress {
     area: GREAT_PALACE
