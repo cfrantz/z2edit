@@ -135,6 +135,10 @@ bool MiscellaneousHacks::DrawMiscHacks() {
         [&]() { return ri.spell_cast(); },
         [&](int n) { return ri.spell_cast(n); });
 
+    Hack("Spell Restrictions", ri.spell_restrictions_size(),
+        [&]() { return ri.spell_restrictions(); },
+        [&](int n) { return ri.spell_restrictions(n); });
+
     Hack("Overworld Tiles", ri.overworld_tiles_size(),
         [&]() { return ri.overworld_tiles(); },
         [&](int n) { return ri.overworld_tiles(n); });

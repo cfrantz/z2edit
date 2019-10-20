@@ -407,4 +407,5 @@ message RomInfo {
     repeated Map objtable = 28;
     repeated GameHack spell_cast = 29;
     repeated GameHack overworld_tiles = 30;
+    repeated GameHack spell_restrictions = 31;
 }
