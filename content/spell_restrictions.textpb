@@ -1,0 +1,12 @@
+spell_restrictions {
+    name: "Vanilla (Magic Containers == Town Number)"
+    hack: [
+        {address { bank:3 address:0xb529 } data: [ 0xc5, 0x01]}
+    ]
+}
+spell_restrictions {
+    name: "None (Can get spells with any number of MCs)"
+    hack: [
+        {address { bank:3 address:0xb529 } data: [ 0xc9, 0x00]}
+    ]
+}
