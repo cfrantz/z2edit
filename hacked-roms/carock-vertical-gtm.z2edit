@@ -1,0 +1,35 @@
+# Make carock more interesting by giving him a vertical position.
+set bank 4
+set ibase 16
+
+asm b=4 0
+
+; We need 25 bytes of free space.
+; In GTM's hack, lots of stuff has been moved and repacked.
+; There are 32 bytes free at $86fb, so thats where we'll go.
+
+.org $86fb
+carock_x_pos:
+    sta $4e,x       ; Save carock X position
+    lda #1          ; Carock is always on screen 1
+    sta $3c,x
+
+carock_y_pos:
+    lda $051c,x     ; Get a random value.
+    and #$1f        ; Mask to range 0-31
+    adc #$88        ; Add to $88 (136 dec)
+    sta $2a,x       ; Store as Y position
+    rts
+
+beam_y_pos:
+    lda !$30,y      ; Compute the beam Y position
+    adc #$20        ; Carock Y position + 32
+    sta !$30,y
+    rts
+
+.org $aecc
+    jmp carock_x_pos
+.org $af08
+    jsr beam_y_pos
+.end
+
