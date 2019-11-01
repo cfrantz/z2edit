@@ -1,0 +1,56 @@
+# Script for editing the end of game credits.
+# All replacement text must be exactly the same lengths as original text.
+
+set bank 5
+set ibase 16
+set text 1
+
+### 9280 |------------------|
+wtp 9280 "EXECUTIVE PRODUCER"
+### 9296 |----------|
+wtp 9296 "H.YAMAUCHI"
+
+### 92a4 |------------------|
+wtp 92a4 "PRODUCER          "
+### 92ba |----------|
+wtp 92ba "MIYAHON   "
+
+### 92c8 |--------|
+wtp 92c8 "DIRECTOR"
+### 92d4 |-------|
+wtp 92d4 "SUGIYAN"
+### 92de |-------|
+wtp 92de "YAMAHEN"
+
+### 92e9 |--------|
+wtp 92e9 "DESIGNER"
+### 92f5 |-------|
+wtp 92f5 "ISSHIN "
+### 92ff |-------|
+wtp 92ff "       "
+
+### 930a |--------------|
+wtp 930a "SOUND COMPOSER"
+### 931c |--------|
+wtp 931c "TSUKASAN"
+
+### 9328 |--------------|
+wtp 9328 "PROGRAMER     "
+### 933a |---------|
+wtp 933a "MORIKAZU "
+### 9346 |--------|
+wtp 9346 "MARUMARU"
+
+### 9352 |-----------------|
+wtp 9352 "THANKS A MILLION."
+### 9367 |----------|
+wtp 9367 "PUSH START"
+### 9374 |---------|
+wtp 9374 "TO REPLAY"
+
+### 9381 |---------|
+wtp 9381 "SHIGECHAN"
+### 938d |--------|
+wtp 938d "NISHIYAN"
+### 9399 |---------|
+wtp 9399 "NAKAZOO  "
