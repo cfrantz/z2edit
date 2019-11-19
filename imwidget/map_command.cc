@@ -1122,6 +1122,18 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
             item->condition =
                 (b7<<7 | b6<<6 | b5<<5 | b4<<4 | b3<<3 | b2<<2 | b1<<1 | b0);
         }
+        int satisfy = townsperson == 19 ? 7 :
+                      townsperson == 20 ? 6 :
+                      townsperson == 21 ? 5 :
+                      townsperson == 22 ? 4 :
+                      townsperson ==  6 ? 3 :
+                      townsperson ==  7 ? 2 :
+                      townsperson ==  8 ? 1 :
+                      townsperson == 23 ? 0 : -1;
+        if (satisfy != -1) {
+            ImGui::Text("%*sWill satisfy condition: b%d",
+                        popup ? 0 : 52, "", satisfy);
+        }
     }
     return chg;
 }
