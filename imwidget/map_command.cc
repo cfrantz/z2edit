@@ -868,6 +868,44 @@ void MapEnemyList::Init() {
     }
 }
 
+void MapEnemyList::LoadText(Unpacked* item) {
+    item->text[0] = item->text[1] = item->text[2] = -1;
+    if (map_.type() == MapType::TOWN && item->enemy >= 10) {
+        const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
+        const auto& ie = ConfigLoader<RomInfo>::GetConfig().item_effects();
+        int townsperson = item->enemy - 10;
+        int town = map_.code();
+        int idxtbl = (town >> 2) * 2;
+        int index = townsperson * 4 + (town & 3);
+        for(int j=0; j<2; j++, idxtbl++) {
+            if (index < tt.index(idxtbl).length()) {
+                item->text[j] = mapper_->Read(tt.index(idxtbl),
+                                                     index);
+                LOGF(INFO, "Enemy %d (townsperson %d), line %d: %04x -> %d",
+                     item->enemy, townsperson, j,
+                     tt.index(idxtbl).address()+index, item->text[j]);
+                if (item->text[j] == 255) {
+                    LOGF(ERROR, "Enemy $%02x has an invalid text index.", item->enemy);
+                }
+            }
+        }
+        if (item->enemy == 0x0f || item->enemy == 0x0d) {
+            // Wise man (wizard or knight) has a third dialog: "Go now..."
+            // Encoded under townsperson 15 dialog 2.
+            index = 15 * 4 + (town&3);
+            idxtbl = (town >> 2) * 2 + 1;
+            item->text[2] = mapper_->Read(tt.index(idxtbl), index);
+            if (item->text[2] == 255) {
+                LOGF(ERROR, "Enemy $%02x has an invalid text index.", item->enemy);
+            }
+        }
+        if (townsperson >= 9 && townsperson < 9+4) {
+            item->condition = mapper_->Read(ie.conditions_table(),
+                    (townsperson-9)*8 + town);
+        }
+    }
+}
+
 void MapEnemyList::Parse(const Map& map) {
     map_ = map;
     pointer_ = map.pointer();
@@ -905,23 +943,8 @@ void MapEnemyList::Parse(const Map& map) {
         y = (y == 0) ? 1 : y+2;
         data_.emplace_back(enemy & 0x3f,
                            (pos & 0xf) | (enemy & 0xc0) >> 2, y);
-        if (map_.type() == MapType::TOWN && data_.back().enemy >= 10) {
-            const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
-            const auto& ie = ConfigLoader<RomInfo>::GetConfig().item_effects();
-            int townsperson = data_.back().enemy - 10;
-            int town = map_.code();
-            int idxtbl = (town >> 2) * 2;
-            int index = townsperson * 4 + (town & 3);
-            for(int j=0; j<2; j++, idxtbl++) {
-                if (index < tt.index(idxtbl).length())
-                    data_.back().text[j] = mapper_->Read(tt.index(idxtbl),
-                                                         index);
-            }
-            if (townsperson >= 9 && townsperson < 9+4) {
-                data_.back().condition = mapper_->Read(ie.conditions_table(), 
-                        (townsperson-9)*8 + town);
-            }
-        }
+
+        LoadText(&data_.back());
     }
 
     // Encounters have 2 enemy lists, so make another widget
@@ -1050,8 +1073,20 @@ void MapEnemyList::Save() {
             int idxtbl = (town >> 2) * 2;
             int index = townsperson * 4 + (town & 3);
             for(int j=0; j<2; j++, idxtbl++) {
-                if (index < tt.index(idxtbl).length())
-                    mapper_->Write(tt.index(idxtbl), index, data.text[j]);
+                if (index < tt.index(idxtbl).length()) {
+                    if (data.text[j] < 0) {
+                        LOGF(ERROR, "No text for EnemyID $%02x. Skipping.", data.enemy);
+                    } else {
+                        mapper_->Write(tt.index(idxtbl), index, data.text[j]);
+                    }
+                }
+            }
+            if (data.text[2] != -1) {
+                // Wise man (wizard or knight) has a third dialog: "Go now..."
+                // Encoded under townsperson 15 dialog 2.
+                index = 15 * 4 + (town & 3);
+                idxtbl = (town >> 2) * 2 + 1;
+                mapper_->Write(tt.index(idxtbl), index, data.text[2]);
             }
             if (townsperson >= 9 && townsperson < 9+4) {
                 mapper_->Write(ie.conditions_table(), (townsperson-9)*8 + town,
@@ -1070,13 +1105,17 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
     if (!popup) ImGui::SameLine();
     ImGui::PopItemWidth();
     ImGui::PushItemWidth(400);
-    chg |= ImGui::Combo("enemy", &item->enemy, names_, max_names_);
+    if (ImGui::Combo("enemy", &item->enemy, names_, max_names_)) {
+        chg |= true;
+        LoadText(item);
+    }
     ImGui::PopItemWidth();
 
     if (map_.type() == MapType::TOWN) {
         const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
         int townsperson = item->enemy - 10;
-        for(int i=0; i<2; i++) {
+        for(int i=0; i<3; i++) {
+            ImGui::PushID(i);
             int world = map_.code() >> 2;
             int index = item->text[i];
             if (index < 0)
@@ -1096,6 +1135,7 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
 
             ImGui::SameLine();
             ImGui::Text("%s", val.c_str());
+            ImGui::PopID();
         }
         if (townsperson >= 9 && townsperson < 9+4) {
             bool b7 = !!(item->condition & 0x80);

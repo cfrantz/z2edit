@@ -14,7 +14,9 @@ class TextListPack {
     TextListPack() : TextListPack(nullptr) {}
 
     void Unpack(int bank);
+    void CheckIndex();
     bool Pack();
+    const std::string& Get(int world, int index);
     bool Get(int world, int index, std::string* val);
     bool Set(int world, int index, const std::string& val);
     int Length(int world);

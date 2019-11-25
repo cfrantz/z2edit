@@ -4,6 +4,7 @@
 #include "nes/text_encoding.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
+#include "util/logging.h"
 
 namespace z2util {
 
@@ -57,6 +58,35 @@ void TextListPack::Unpack(int bank) {
     }
 }
 
+void TextListPack::CheckIndex() {
+    const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
+    int world = -1;
+    for(const auto len: tt.length()) {
+        ++world;
+        const auto& i0 = tt.index(world*2 + 0);
+        const auto& i1 = tt.index(world*2 + 1);
+        for(int i=0; i < i0.length(); ++i) {
+            Address a;
+            a.set_bank(i0.bank()); a.set_address(i0.address());
+            int value = mapper_->Read(a, i);
+            if (value >= len) {
+                LOGF(ERROR, "Town %d: Enemy $%02x text1 index is out of bounds (%d)",
+                        world*4 + i%4, 10+i/4, value);
+            }
+
+            if (i >= i1.length())
+                continue;
+
+            a.set_bank(i1.bank()); a.set_address(i1.address());
+            value = mapper_->Read(a, i);
+            if (value >= len) {
+                LOGF(ERROR, "Town %d: Enemy $%02x text2 index is out of bounds (%d)",
+                        world*4 + i%4, 10+i/4, value);
+            }
+        }
+    }
+}
+
 void TextListPack::ResetAddrs() {
     for(auto& entry : entry_) {
         entry.second.newaddr = 0;
@@ -79,9 +109,11 @@ bool TextListPack::Pack() {
             int na = packed.size() + tt.text_data().address();
             LOGF(INFO, "Text w=%d i=%d addr=%04x->%04x '%s'", world, i, addr, na, entry.data.c_str());
             if (entry.newaddr == 0) {
-                if (int(packed.size() + entry.data.size() + 1) >
-                        tt.text_data().length()) {
+                int newsize = packed.size() + entry.data.size() + 1;
+                if (newsize > tt.text_data().length()) {
                     LOGF(ERROR, "Out of space for text list at world=%d index=%d", world, i);
+                    LOGF(ERROR, "Want %d bytes, but only %d available.",
+                         newsize, tt.text_data().length());
                     ResetAddrs();
                     return false;
                 }
@@ -101,6 +133,7 @@ bool TextListPack::Pack() {
         ++world;
     }
 
+    // Copy text pointers to ROM.
     world = 0;
     for(const auto len : tt.length()) {
         Address table = mapper_->ReadAddr(tt.pointer(), world*2);
@@ -115,12 +148,21 @@ bool TextListPack::Pack() {
         ++world;
     }
 
-    // And copy the enemy lists to the rom
+    // And copy the text to the ROM.
     packed.resize(tt.text_data().length(), 0);
     for(size_t i=0; i<packed.size(); i++) {
         mapper_->Write(tt.text_data(), i, packed[i]);
     }
     return true;
+}
+
+const std::string& TextListPack::Get(int world, int index) {
+    const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
+    if (world < tt.length_size() && index < tt.length(world)) {
+        uint16_t addr = index_[world][index];
+        return entry_[addr].data;
+    }
+    return "";
 }
 
 bool TextListPack::Get(int world, int index, std::string* val) {

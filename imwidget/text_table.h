@@ -14,6 +14,7 @@ class TextTableEditor: public ImWindowBase {
     void Init();
     void Refresh() override { Init(); }
     bool Draw() override;
+    int TotalLength();
 
     inline void set_mapper(Mapper* m) { mapper_ = m; }
   private:

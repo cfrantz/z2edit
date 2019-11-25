@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "imwidget/text_table.h"
 
 #include "imwidget/error_dialog.h"
@@ -17,7 +19,23 @@ void TextTableEditor::Init() {
     Load();
 }
 
+int TextTableEditor::TotalLength() {
+    int other = 1 - world_;
+    int i;
+    int total = 0;
+    // Count up size of strings in the other world.
+    for(i=0; i<pack_.Length(other); ++i) {
+        total += pack_.Get(other, i).size() + 1;
+    }
+    // Count up size of strings actively under edit.
+    for(i=0; i<pack_.Length(world_); ++i) {
+        total += strlen(data_[i]) + 1;
+    }
+    return total;
+}
+
 bool TextTableEditor::Draw() {
+    const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
     if (!visible_)
         return false;
 
@@ -51,6 +69,10 @@ bool TextTableEditor::Draw() {
     }
     ImApp::Get()->HelpButton("texttable", true);
 
+    ImGui::Text("Space available: %d bytes (%d / %d used)",
+            tt.text_data().length() - TotalLength(),
+            TotalLength(), tt.text_data().length());
+
     ImGui::BeginChild("texttable", ImVec2(0, 0), true);
     int len = pack_.Length(world_);
     for(int i=0; i<len; i++) {
@@ -69,6 +91,7 @@ void TextTableEditor::Load() {
     memset(data_, 0, sizeof(data_));
     pack_.set_mapper(mapper_);
     pack_.Unpack(3);
+    pack_.CheckIndex();
 
     int len = pack_.Length(world_);
     for(int i=0; i<len; i++) {

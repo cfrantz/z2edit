@@ -214,10 +214,10 @@ class MapEnemyList {
     };
     struct Unpacked {
         Unpacked(int e_, int x_, int y_)
-            : enemy(e_), x(x_), y(y_), text{-1, -1} {}
+            : enemy(e_), x(x_), y(y_), text{-1, -1, -1}, condition{0} {}
         int enemy;
         int x, y;
-        int text[2];
+        int text[3];
         int condition;
     };
     MapEnemyList();
@@ -235,6 +235,8 @@ class MapEnemyList {
     std::vector<Unpacked>& data();
     inline void set_show_origin(bool s) { show_origin_ = s; }
   private:
+    void LoadText(Unpacked* item);
+
     Mapper* mapper_;
     bool show_origin_;
     bool is_large_;
