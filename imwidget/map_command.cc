@@ -1009,6 +1009,10 @@ MapEnemyList::DrawResult MapEnemyList::DrawOnePopup(Unpacked* item,
 }
 
 bool MapEnemyList::DrawPopup(float scale) {
+    if (large_ && large_->display_) {
+        return large_->DrawPopup(scale);
+    }
+
     bool changed = false;
     int i=0;
     for(auto it=data().begin(); it<data().end(); ++it, ++i) {
