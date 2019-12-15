@@ -1001,11 +1001,11 @@ enemies {
             id: [0xbb, 0xbd]
         }},
         { key: 0x0a value: {
-            name: "blue skull head"
-            width: 16 height: 16
+            name: "rebonack un-horsed"
+            width: 16 height: 32
             chr: { bank: 18 }
             palette: 3
-            id: [0xdc, 0x37]
+            id: [0x4d, 0x43, 0x4f, 0x47]
         }},
         { key: 0x0b value: {
             name: "rathead generator"
