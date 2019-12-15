@@ -1,12 +1,13 @@
 package(default_visibility=["//visibility:public"])
-load("@mxebzl//tools/windows:rules.bzl", "pkg_winzip")
+load("@mxebzl//tools:rules.bzl", "pkg_winzip")
 
 config_setting(
     name = "windows",
     values = {
-        "crosstool_top": "@mxebzl//tools/windows:toolchain",
+        "crosstool_top": "@mxebzl//compiler:win64",
     }
 )
+
 
 genrule(
     name = "make_version",
@@ -18,11 +19,10 @@ genrule(
 cc_library(
     name = "app",
     linkopts = [
-        "-lSDL2main",
-        "-lSDL2",
         "-lSDL2_image",
         "-lSDL2_mixer",
         "-lSDL2_gfx",
+        "-lSDL2",
     ],
     hdrs = [
         "app.h",
@@ -108,7 +108,8 @@ cc_binary(
             "-lshell32",
             "-lversion",
             "-luuid",
-
+            "-lmingw32",
+            "-lSDL2main",
         ],
         "//conditions:default": [
             "-lpthread",
