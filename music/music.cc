@@ -80,6 +80,10 @@ void Pattern::clear() {
   notes_[Channel::Noise].clear();
 }
 
+std::vector<Note> Pattern::notes(Pattern::Channel ch) const {
+  return notes_.at(ch);
+}
+
 void Pattern::set_tempo(uint8_t tempo) {
   tempo_ = tempo;
 }
@@ -120,15 +124,15 @@ Song::Song(const Rom& rom, size_t address) {
   // TODO parse song from rom
 }
 
-size_t Song::add_pattern(const Pattern& pattern) {
+void Song::add_pattern(const Pattern& pattern) {
   patterns_.push_back(pattern);
-  size_t index = patterns_.size() - 1;
-  sequence_.push_back(index);
-  return index;
 }
 
-void Song::repeat_pattern(size_t index) {
-  sequence_.push_back(index);
+void Song::set_sequence(std::initializer_list<size_t> seq) {
+  sequence_.clear();
+  for (size_t i : seq) {
+    sequence_.push_back(i);
+  }
 }
 
 void Song::write_sequnce(Rom* rom, size_t offset) const {

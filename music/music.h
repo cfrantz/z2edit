@@ -76,6 +76,7 @@ class Pattern {
 
     void add_notes(Channel ch, std::initializer_list<Note> notes);
     void clear();
+    std::vector<Note> notes(Channel ch) const;
 
     // TODO figure out if the tempo values are meaningful
     void set_tempo(uint8_t tempo);
