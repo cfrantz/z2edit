@@ -18,13 +18,10 @@ class Rom {
 
   private:
     uint8_t data_[0x2000];
-    size_t pos_;
-
 };
 
 class Note {
   public:
-
     enum class Duration {
       Sixteenth      = 0x00,
       DottedQuarter  = 0x01,
@@ -78,6 +75,7 @@ class Pattern {
     size_t length() const;
 
     void add_notes(Channel ch, std::initializer_list<Note> notes);
+    void clear();
 
     // TODO figure out if the tempo values are meaningful
     void set_tempo(uint8_t tempo);
@@ -91,6 +89,8 @@ class Pattern {
   private:
     uint8_t tempo_;
     std::unordered_map<Channel, std::vector<Note>> notes_;
+
+    void read_notes(Channel ch, const Rom& rom, size_t address);
 };
 
 class Song {
@@ -98,8 +98,8 @@ class Song {
     Song();
     Song(const Rom& rom, size_t address);
 
-    size_t add_pattern(const Pattern& pattern);
-    void repeat_pattern(size_t index);
+    void add_pattern(const Pattern& pattern);
+    void set_sequence(std::initializer_list<size_t> seq);
 
     void write_sequnce(Rom* rom, size_t offset) const;
 

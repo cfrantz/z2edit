@@ -45,12 +45,23 @@ uint8_t Note::encode() const {
 Pattern::Pattern() : tempo_(0x18) {}
 
 Pattern::Pattern(const Rom& rom, size_t address) {
-  // TODO parse pattern
+  uint8_t header[6];
+  rom.read(header, address, 6);
+
+  tempo_ = header[0];
+
+  size_t note_base = header[2] << 8 | header[1];
+
+  read_notes(Channel::Pulse1, rom, note_base);
+
+  if (header[3] > 0) read_notes(Channel::Triangle, rom, note_base + header[3]);
+  if (header[4] > 0) read_notes(Channel::Pulse2, rom, note_base + header[4]);
+  if (header[5] > 0) read_notes(Channel::Noise, rom, note_base + header[5]);
 }
 
 size_t Pattern::length() const {
   size_t length = 0;
-  for (auto n : notes_.at(Channel::Pulse1)){
+  for (auto n : notes_.at(Channel::Pulse1)) {
     length += n.length();
   }
   return length;
@@ -62,12 +73,45 @@ void Pattern::add_notes(Pattern::Channel ch, std::initializer_list<Note> notes) 
   }
 }
 
+void Pattern::clear() {
+  notes_[Channel::Pulse1].clear();
+  notes_[Channel::Pulse2].clear();
+  notes_[Channel::Triangle].clear();
+  notes_[Channel::Noise].clear();
+}
+
+void Pattern::set_tempo(uint8_t tempo) {
+  tempo_ = tempo;
+}
+
+uint8_t Pattern::tempo() const {
+  return tempo_;
+}
+
+bool Pattern::validate() const {
+  // TODO Implement validator
+  return true;
+}
+
 void Pattern::write_notes(Rom* rom, size_t offset) const {
   // TODO write note data to rom
 }
 
 void Pattern::write_meta(Rom* rom, size_t offset, size_t notes) const {
   // TODO write metadata to rom
+}
+
+void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {
+  size_t max_length = ch == Channel::Pulse1 ? 16 * 96 : length();
+  size_t length = 0;
+
+  while (length < max_length) {
+    Note n = Note(rom.getc(address++));
+    // Note data can terminate early on 00 byte
+    if (n.encode() == 0x00) break;
+    length += n.length();
+    add_notes(ch, {n});
+  }
 }
 
 Song::Song() {}
