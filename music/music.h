@@ -58,6 +58,7 @@ class Note {
     Pitch pitch() const;
 
     size_t length() const;
+    std::string pitch_string() const;
 
     uint8_t encode() const;
 
@@ -97,12 +98,15 @@ class Pattern {
 class Song {
   public:
     Song();
-    Song(const Rom& rom, size_t address);
+    Song(const Rom& rom, size_t address, size_t entry);
 
     void add_pattern(const Pattern& pattern);
     void set_sequence(std::initializer_list<size_t> seq);
 
     void write_sequnce(Rom* rom, size_t offset) const;
+
+    size_t sequence_length() const;
+    Pattern* at(size_t i);
 
   private:
     std::vector<Pattern> patterns_;

@@ -1,11 +1,10 @@
 #include "music.h"
 
-#include <iomanip>
 #include <iostream>
 
 void dump_notes(std::vector<z2music::Note> notes) {
   for (z2music::Note n : notes) {
-    std::cerr << '[' << std::hex << std::setw(2) << n.encode() << ']';
+    std::cerr << n.pitch_string();
     size_t left = n.length() / 4 - 4;
     std::cerr << std::string(left, '.');
   }
@@ -14,18 +13,14 @@ void dump_notes(std::vector<z2music::Note> notes) {
 
 int main(void) {
   z2music::Rom rom("/home/alan/source/z2-music/z2.nes");
-  z2music::Pattern pattern(rom, 0x01a970);
+  z2music::Song song(rom, 0x01a946, 5);
 
-  std::cerr << "Pattern length: " << (pattern.length() / 96.0) << std::endl;
+  std::cerr << "Song length: " << song.sequence_length() << " phrases" << std::endl;
 
-  std::cerr << "PW1 : ";
-  dump_notes(pattern.notes(z2music::Pattern::Channel::Pulse1));
-  std::cerr << "PW2 : ";
-  dump_notes(pattern.notes(z2music::Pattern::Channel::Pulse2));
-  std::cerr << "TRI : ";
-  dump_notes(pattern.notes(z2music::Pattern::Channel::Triangle));
-  std::cerr << "NSE : ";
-  dump_notes(pattern.notes(z2music::Pattern::Channel::Noise));
+  for (size_t i = 0; i < song.sequence_length(); ++i) {
+    z2music::Pattern* p = song.at(i);
+    std::cerr << "PW1 : "; dump_notes(p->notes(z2music::Pattern::Channel::Pulse1));
+  }
 
   return 0;
 }
