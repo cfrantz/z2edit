@@ -135,7 +135,7 @@ std::vector<Note> Pattern::notes(Pattern::Channel ch) const {
   return notes_.at(ch);
 }
 
-void Pattern::set_tempo(uint8_t tempo) {
+void Pattern::tempo(uint8_t tempo) {
   tempo_ = tempo;
 }
 
