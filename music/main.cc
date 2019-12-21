@@ -11,16 +11,24 @@ void dump_notes(std::vector<z2music::Note> notes) {
   std::cerr << std::endl;
 }
 
-int main(void) {
-  z2music::Rom rom("/home/alan/source/z2-music/z2.nes");
-  z2music::Song song(rom, 0x01a946, 5);
-
+void dump_song(const z2music::Song& song) {
   std::cerr << "Song length: " << song.sequence_length() << " phrases" << std::endl;
 
   for (size_t i = 0; i < song.sequence_length(); ++i) {
-    z2music::Pattern* p = song.at(i);
-    std::cerr << "PW1 : "; dump_notes(p->notes(z2music::Pattern::Channel::Pulse1));
+    const z2music::Pattern* p = song.at(i);
+    dump_notes(p->notes(z2music::Pattern::Channel::Pulse1));
+    dump_notes(p->notes(z2music::Pattern::Channel::Pulse2));
+    /* dump_notes(p->notes(z2music::Pattern::Channel::Triangle)); */
+    /* dump_notes(p->notes(z2music::Pattern::Channel::Noise)); */
+    std::cerr << std::endl;
   }
+}
+
+int main(void) {
+  z2music::Rom rom("/home/alan/source/z2-music/z2.nes");
+  z2music::Song* song = rom.song(z2music::Rom::SongTitle::HouseTheme);
+
+  dump_song(*song);
 
   return 0;
 }

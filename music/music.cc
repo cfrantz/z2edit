@@ -1,7 +1,8 @@
 #include "music.h"
 
-#include <fstream>
 #include <algorithm>
+#include <fstream>
+#include <map>
 
 namespace z2music {
 
@@ -18,8 +19,16 @@ Note::Duration Note::duration() const {
   return static_cast<Duration>(value_ & 0xc1);
 }
 
+void Note::duration(Note::Duration d) {
+  value_ = to_byte(d) | to_byte(pitch());
+}
+
 Note::Pitch Note::pitch() const {
   return static_cast<Pitch>(value_ & 0x3e);
+}
+
+void Note::pitch(Note::Pitch p) {
+  value_ = to_byte(duration()) | to_byte(p);
 }
 
 size_t Note::length() const {
@@ -135,27 +144,71 @@ uint8_t Pattern::tempo() const {
 }
 
 bool Pattern::validate() const {
+  // TODO validate pattern
+
+  // check that pw1 length is <= 16 quarter notes
+  // check that other lengths are equal or valid partial lengths
+  // TODO does the game handle unusual lengths?  maybe this isn't really needed
+
   return true;
 }
 
-void Pattern::write_notes(Rom* rom, size_t offset) const {
-  // TODO write note data to rom
+void Pattern::write_notes(Rom& rom, size_t offset) const {
+  const size_t pw1 = notes_.at(Channel::Pulse1).size();
+  const size_t pw2 = notes_.at(Channel::Pulse2).size();
+  const size_t tri = notes_.at(Channel::Triangle).size();
+
+  write_channel(Channel::Pulse1, rom, offset);
+  write_channel(Channel::Pulse2, rom, offset + pw1);
+  write_channel(Channel::Triangle, rom, offset + pw1 + pw2);
+  write_channel(Channel::Noise, rom, offset + pw1 + pw2 + tri);
 }
 
-void Pattern::write_meta(Rom* rom, size_t offset, size_t notes) const {
-  // TODO write metadata to rom
+void Pattern::write_meta(Rom& rom, size_t offset, size_t notes) const {
+  const size_t pw1 = notes_.at(Channel::Pulse1).size();
+  const size_t pw2 = notes_.at(Channel::Pulse2).size();
+  const size_t tri = notes_.at(Channel::Triangle).size();
+
+  rom.putc(offset + 0, tempo_);
+  rom.putc(offset + 1, notes % 256);
+  rom.putc(offset + 2, notes >> 8);
+  rom.putc(offset + 3, notes_.at(Channel::Triangle).empty() ? 0 : pw1 + pw2);
+  rom.putc(offset + 4, notes_.at(Channel::Pulse2).empty() ? 0 : pw1);
+  rom.putc(offset + 5, notes_.at(Channel::Noise).empty() ? 0 : pw1 + pw2 + tri);
 }
 
 void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {
-  size_t max_length = ch == Channel::Pulse1 ? 16 * 96 : length();
+  const size_t max_length = ch == Channel::Pulse1 ? 16 * 96 : length();
   size_t length = 0;
 
   while (length < max_length) {
     Note n = Note(rom.getc(address++));
     // Note data can terminate early on 00 byte
     if (n.encode() == 0x00) break;
+
     length += n.length();
     add_notes(ch, {n});
+
+    // If a QuarterTriplet is preceeded by two EighthTriplets, there is special
+    // meaning.  In this case, the three notes should really be DottedEighth
+    // DottedEighth Eighth.  This doesn't change the overall length of the
+    // pattern, but the duration bits need to be rewritten.
+    if (n.duration() == Note::Duration::QuarterTriplet) {
+      const size_t i = notes_[ch].size() - 3;
+      if (notes_[ch][i + 0].duration() == Note::Duration::EighthTriplet &&
+          notes_[ch][i + 1].duration() == Note::Duration::EighthTriplet) {
+
+        notes_[ch][i + 0].duration(Note::Duration::DottedEighth);
+        notes_[ch][i + 1].duration(Note::Duration::DottedEighth);
+        notes_[ch][i + 2].duration(Note::Duration::Eighth);
+      }
+    }
+  }
+}
+
+void Pattern::write_channel(Pattern::Channel ch, Rom& rom, size_t offset) const {
+  for (size_t i = 0; i < notes_.at(ch).size(); ++i) {
+    rom.putc(offset + i, notes_.at(ch).at(i).encode());
   }
 }
 
@@ -167,38 +220,38 @@ Song::Song(const Rom& rom, size_t address, size_t entry) {
   uint8_t table[8];
   rom.read(table, address, 8);
 
-  std::unordered_map<uint8_t, Pattern> patterns;
-  std::unordered_map<uint8_t, size_t> map;
+  std::map<uint8_t, Pattern> patterns;
+  std::map<uint8_t, size_t> map;
   std::vector<size_t> seq;
   size_t n = 0;
+
   for (size_t i = 0; true; ++i) {
-    uint8_t offset = rom.getc(table[entry] + i);
+    uint8_t offset = rom.getc(address + table[entry] + i);
+
     if (offset == 0) break;
     if (patterns.find(offset) == patterns.end()) {
       map[offset] = n++;
+      // TODO fix
       patterns[offset] = Pattern(rom, address + offset);
-      seq.push_back(map[offset]);
     }
+    seq.push_back(map[offset]);
   }
 
   for (const auto& pattern : patterns) {
     add_pattern(pattern.second);
   }
-  /* set_sequence(seq); */
+  set_sequence(seq);
 }
 
 void Song::add_pattern(const Pattern& pattern) {
   patterns_.push_back(pattern);
 }
 
-void Song::set_sequence(std::initializer_list<size_t> seq) {
-  sequence_.clear();
-  for (size_t i : seq) {
-    sequence_.push_back(i);
-  }
+void Song::set_sequence(const std::vector<size_t>& seq) {
+  sequence_ = seq;
 }
 
-void Song::write_sequnce(Rom* rom, size_t offset) const {
+void Song::write_sequnce(Rom& rom, size_t offset) const {
   // TODO write sequence to rom
 }
 
@@ -211,11 +264,40 @@ Pattern* Song::at(size_t i) {
   return &(patterns_.at(sequence_.at(i)));
 }
 
+const Pattern* Song::at(size_t i) const {
+  if (i < 0 || i >= sequence_.size()) return nullptr;
+  return &(patterns_.at(sequence_.at(i)));
+}
+
 Rom::Rom(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
   if (file.is_open()) {
     file.seekg(0x01a010);
     file.read(reinterpret_cast<char *>(&data_[0]), 0x2000 * sizeof(data_[0]));
+
+    songs_[SongTitle::OverworldIntro] = Song(*this, 0x1a010, 0);
+    songs_[SongTitle::OverworldTheme] = Song(*this, 0x1a010, 1);
+    songs_[SongTitle::BattleTheme] = Song(*this, 0x1a010, 2);
+    songs_[SongTitle::CaveItemFanfare] = Song(*this, 0x1a010, 4);
+
+    songs_[SongTitle::TownIntro] = Song(*this, 0x1a3da, 0);
+    songs_[SongTitle::TownTheme] = Song(*this, 0x1a3da, 1);
+    songs_[SongTitle::HouseTheme] = Song(*this, 0x1a3da, 2);
+    songs_[SongTitle::TownItemFanfare] = Song(*this, 0x1a3da, 4);
+
+    songs_[SongTitle::PalaceIntro] = Song(*this, 0x1a63f, 0);
+    songs_[SongTitle::PalaceTheme] = Song(*this, 0x1a63f, 1);
+    songs_[SongTitle::BossTheme] = Song(*this, 0x1a63f, 3);
+    songs_[SongTitle::PalaceItemFanfare] = Song(*this, 0x1a63f, 4);
+    songs_[SongTitle::CrystalFanfare] = Song(*this, 0x1a63f, 6);
+
+    songs_[SongTitle::GreatPalaceIntro] = Song(*this, 0x1a946, 0);
+    songs_[SongTitle::GreatPalaceTheme] = Song(*this, 0x1a946, 1);
+    songs_[SongTitle::ZeldaTheme] = Song(*this, 0x1a946, 2);
+    songs_[SongTitle::CreditsTheme] = Song(*this, 0x1a946, 3);
+    songs_[SongTitle::GreatPalaceItemFanfare] = Song(*this, 0x1a946, 4);
+    songs_[SongTitle::TriforceFanfare] = Song(*this, 0x1a946, 5);
+    songs_[SongTitle::FinalBossTheme] = Song(*this, 0x1a946, 6);
   }
 }
 
@@ -231,8 +313,23 @@ void Rom::read(uint8_t* buffer, size_t address, size_t length) const {
   }
 }
 
-void Rom::write(const std::string& filename) {
+void Rom::putc(size_t address, uint8_t data) {
+  if (address < 0x1a010 || address > 0x1c00f) return;
+  data_[address - 0x1a010] = data;
+}
+
+void Rom::write(size_t address, std::vector<uint8_t> data) {
+  for (size_t i = 0; i < data.size(); ++i) {
+    putc(address + i, data[i]);
+  }
+}
+
+void Rom::save(const std::string& filename) {
   // TODO write all the shit back to the ROM
+}
+
+Song* Rom::song(Rom::SongTitle title) {
+  return &songs_[title];
 }
 
 } // namespace z2music

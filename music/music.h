@@ -1,24 +1,15 @@
 #ifndef Z2UTIL_MUSIC_MUSIC
 #define Z2UTIL_MUSIC_MUSIC
 
+#include <fstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace z2music {
 
-class Rom {
-  public:
-    Rom(const std::string& filename);
-
-    uint8_t getc(size_t address) const;
-    void read(uint8_t* buffer, size_t address, size_t length) const;
-
-    void write(const std::string& filename);
-
-  private:
-    uint8_t data_[0x2000];
-};
+// Forward declaration since other classes refer to rom.
+class Rom;
 
 class Note {
   public:
@@ -57,6 +48,9 @@ class Note {
     Duration duration() const;
     Pitch pitch() const;
 
+    void duration(Duration d);
+    void pitch(Pitch p);
+
     size_t length() const;
     std::string pitch_string() const;
 
@@ -85,14 +79,15 @@ class Pattern {
 
     bool validate() const;
 
-    void write_notes(Rom* rom, size_t offset) const;
-    void write_meta(Rom* rom, size_t offset, size_t notes) const;
+    void write_notes(Rom& rom, size_t offset) const;
+    void write_meta(Rom& rom, size_t offset, size_t notes) const;
 
   private:
     uint8_t tempo_;
     std::unordered_map<Channel, std::vector<Note>> notes_;
 
     void read_notes(Channel ch, const Rom& rom, size_t address);
+    void write_channel(Channel ch, Rom& rom, size_t offset) const;
 };
 
 class Song {
@@ -101,16 +96,59 @@ class Song {
     Song(const Rom& rom, size_t address, size_t entry);
 
     void add_pattern(const Pattern& pattern);
-    void set_sequence(std::initializer_list<size_t> seq);
+    void set_sequence(const std::vector<size_t>& seq);
 
-    void write_sequnce(Rom* rom, size_t offset) const;
+    void write_sequnce(Rom& rom, size_t offset) const;
 
     size_t sequence_length() const;
     Pattern* at(size_t i);
+    const Pattern* at(size_t i) const;
 
   private:
     std::vector<Pattern> patterns_;
     std::vector<size_t> sequence_;
+};
+
+class Rom {
+  public:
+    enum class SongTitle {
+      OverworldIntro, OverworldTheme,
+      BattleTheme,
+      CaveItemFanfare,
+
+      TownIntro, TownTheme,
+      HouseTheme,
+      TownItemFanfare,
+
+      PalaceIntro, PalaceTheme,
+      BossTheme,
+      PalaceItemFanfare,
+      CrystalFanfare,
+
+      GreatPalaceIntro, GreatPalaceTheme,
+      ZeldaTheme,
+      CreditsTheme,
+      GreatPalaceItemFanfare,
+      TriforceFanfare,
+      FinalBossTheme,
+    };
+
+    Rom(const std::string& filename);
+
+    uint8_t getc(size_t address) const;
+    void putc(size_t address, uint8_t data);
+
+    void read(uint8_t* buffer, size_t address, size_t length) const;
+    void write(size_t address, std::vector<uint8_t> data);
+
+    void save(const std::string& filename);
+
+    Song* song(SongTitle title);
+
+  private:
+    uint8_t data_[0x2000];
+
+    std::unordered_map<SongTitle, Song> songs_;
 };
 
 } // namespace z2music
