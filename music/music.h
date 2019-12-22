@@ -97,6 +97,7 @@ class Song {
 
     void add_pattern(const Pattern& pattern);
     void set_sequence(const std::vector<size_t>& seq);
+    void append_sequence(size_t n);
 
     void write_sequnce(Rom& rom, size_t offset) const;
 

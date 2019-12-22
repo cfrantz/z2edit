@@ -220,8 +220,7 @@ Song::Song(const Rom& rom, size_t address, size_t entry) {
   uint8_t table[8];
   rom.read(table, address, 8);
 
-  std::map<uint8_t, Pattern> patterns;
-  std::map<uint8_t, size_t> map;
+  std::unordered_map<uint8_t, size_t> offset_map;
   std::vector<size_t> seq;
   size_t n = 0;
 
@@ -229,18 +228,12 @@ Song::Song(const Rom& rom, size_t address, size_t entry) {
     uint8_t offset = rom.getc(address + table[entry] + i);
 
     if (offset == 0) break;
-    if (patterns.find(offset) == patterns.end()) {
-      map[offset] = n++;
-      // TODO fix
-      patterns[offset] = Pattern(rom, address + offset);
+    if (offset_map.find(offset) == offset_map.end()) {
+      offset_map[offset] = n++;
+      add_pattern(Pattern(rom, address + offset));
     }
-    seq.push_back(map[offset]);
+    append_sequence(offset_map.at(offset));
   }
-
-  for (const auto& pattern : patterns) {
-    add_pattern(pattern.second);
-  }
-  set_sequence(seq);
 }
 
 void Song::add_pattern(const Pattern& pattern) {
@@ -249,6 +242,10 @@ void Song::add_pattern(const Pattern& pattern) {
 
 void Song::set_sequence(const std::vector<size_t>& seq) {
   sequence_ = seq;
+}
+
+void Song::append_sequence(size_t n) {
+  sequence_.push_back(n);
 }
 
 void Song::write_sequnce(Rom& rom, size_t offset) const {
