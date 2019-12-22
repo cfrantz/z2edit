@@ -1,0 +1,8 @@
+# Split the tables for the sound of the pulse wave channels in the music.
+
+set ibase 16
+
+wbp b=6 9d34 a8 9d
+wbp b=6 9da8 90 91 91 91 92 92 92 93
+wbp b=6 9db0 93 93 94 94 94 95 95 95
+wbp b=6 9db8 96 96 96 97 97 97 98 98
