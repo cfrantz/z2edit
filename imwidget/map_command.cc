@@ -1119,12 +1119,12 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
         const auto& tt = ConfigLoader<RomInfo>::GetConfig().text_table();
         int townsperson = item->enemy - 10;
         for(int i=0; i<3; i++) {
-            ImGui::PushID(i);
             int world = map_.code() >> 2;
             int index = item->text[i];
             if (index < 0)
                 continue;
 
+            ImGui::PushID(i);
             if (!popup) {
                 ImGui::Text("                         ");
                 ImGui::SameLine();
@@ -1151,9 +1151,9 @@ bool MapEnemyList::DrawOne(Unpacked* item, bool popup) {
             bool b1 = !!(item->condition & 0x02);
             bool b0 = !!(item->condition & 0x01);
             ImGui::Text("%s                     b7  b6  b5  b4  b3  b2  b1  b0",
-                        popup ? "" : "                         ");
+                        popup ? "" : "                               ");
             ImGui::Text("%sSatisfier condition:",
-                        popup ? "" : "                         ");
+                        popup ? "" : "                               ");
             ImGui::SameLine();
             chg |= ImGui::Checkbox("##b7", &b7); ImGui::SameLine();
             chg |= ImGui::Checkbox("##b6", &b6); ImGui::SameLine();
