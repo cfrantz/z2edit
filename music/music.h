@@ -79,15 +79,14 @@ class Pattern {
 
     bool validate() const;
 
-    void write_notes(Rom& rom, size_t offset) const;
-    void write_meta(Rom& rom, size_t offset, size_t notes) const;
+    std::vector<uint8_t> note_data() const;
+    std::vector<uint8_t> meta_data(size_t pw1_address) const;
 
   private:
     uint8_t tempo_;
     std::unordered_map<Channel, std::vector<Note>> notes_;
 
     void read_notes(Channel ch, const Rom& rom, size_t address);
-    void write_channel(Channel ch, Rom& rom, size_t offset) const;
 };
 
 class Song {
@@ -98,7 +97,7 @@ class Song {
     void add_pattern(const Pattern& pattern);
     void set_sequence(const std::vector<size_t>& seq);
 
-    void write_sequnce(Rom& rom, size_t offset) const;
+    std::vector<uint8_t> sequence_data(uint8_t first) const;
 
     size_t sequence_length() const;
     size_t pattern_count() const;
@@ -144,6 +143,7 @@ class Rom {
     void read(uint8_t* buffer, size_t address, size_t length) const;
     void write(size_t address, std::vector<uint8_t> data);
 
+    bool commit();
     void save(const std::string& filename);
 
     Song* song(SongTitle title);
@@ -162,6 +162,7 @@ class Rom {
 
     std::unordered_map<SongTitle, Song> songs_;
 
+    void commit(size_t address, std::initializer_list<SongTitle> songs);
     size_t metadata_length(std::vector<SongTitle> songs);
 };
 
