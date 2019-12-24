@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   dump_song(*theme);
 
   rom.commit();
-  // rom.save(file);
+  rom.save("/tmp/output.nes");
 
   return 0;
 }
