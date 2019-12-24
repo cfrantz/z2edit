@@ -25,10 +25,13 @@ void dump_song(const z2music::Song& song) {
 }
 
 int main(void) {
-  z2music::Rom rom("/home/alan/source/z2-music/z2.nes");
-  z2music::Song* song = rom.song(z2music::Rom::SongTitle::HouseTheme);
+  z2music::Rom rom("/usr/local/google/home/alanberndt/Downloads/z2.nes");
 
-  dump_song(*song);
+  z2music::Song* intro = rom.song(z2music::Rom::SongTitle::GreatPalaceIntro);
+  z2music::Song* theme = rom.song(z2music::Rom::SongTitle::GreatPalaceTheme);
+
+  dump_song(*intro);
+  dump_song(*theme);
 
   return 0;
 }
