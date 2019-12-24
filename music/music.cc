@@ -272,6 +272,8 @@ std::vector<uint8_t> Song::sequence_data(uint8_t first) const {
     b.push_back(first + n * 6);
   }
 
+  b.push_back(0);
+
   return b;
 }
 
@@ -429,6 +431,10 @@ void Rom::commit(size_t address, std::initializer_list<Rom::SongTitle> songs) {
       return;
   }
 
+  /**************
+   * SONG TABLE *
+   **************/
+
   uint8_t offset = 8;
   std::vector<uint8_t> offsets;
   offsets.reserve(8);
@@ -450,6 +456,34 @@ void Rom::commit(size_t address, std::initializer_list<Rom::SongTitle> songs) {
   for (size_t i = 0; i < 8; ++i) {
     putc(address + i, offsets[table[i]]);
   }
+
+  /******************
+   * SEQUENCE TABLE *
+   ******************/
+
+  const uint8_t first_pattern = offset + 1;
+  uint8_t seq_offset = 8;
+  uint8_t pat_offset = first_pattern;
+
+  for (auto s : songs) {
+    fprintf(stderr, "Writing seq at %02x with pat at %02x\n", seq_offset, pat_offset);
+    const std::vector<uint8_t> seq = songs_.at(s).sequence_data(pat_offset);
+    write(address + seq_offset, seq);
+
+    pat_offset += 6 * songs_.at(s).pattern_count();
+    seq_offset += seq.size();
+  }
+
+  // Write an empty sequence for the empty song
+  putc(address + seq_offset, 0);
+
+  /*****************
+   * PATTERN TABLE *
+   *****************/
+
+  /*************
+   * NOTE DATA *
+   *************/
 }
 
 } // namespace z2music
