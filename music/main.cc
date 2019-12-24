@@ -24,14 +24,24 @@ void dump_song(const z2music::Song& song) {
   }
 }
 
-int main(void) {
-  z2music::Rom rom("/usr/local/google/home/alanberndt/Downloads/z2.nes");
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    std::cerr << "Usage: " << argv[0] << " z2_rom" << std::endl;
+    return 1;
+  }
+
+  const std::string file = std::string(argv[1]);
+
+  z2music::Rom rom(file);
 
   z2music::Song* intro = rom.song(z2music::Rom::SongTitle::GreatPalaceIntro);
   z2music::Song* theme = rom.song(z2music::Rom::SongTitle::GreatPalaceTheme);
 
   dump_song(*intro);
   dump_song(*theme);
+
+  rom.commit();
+  // rom.save(file);
 
   return 0;
 }
