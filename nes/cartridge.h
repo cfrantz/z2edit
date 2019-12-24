@@ -60,6 +60,9 @@ class Cartridge {
     inline uint8_t prgsz() const { return header_.prgsz; }
     inline uint8_t chrsz() const { return header_.chrsz; }
 
+    inline uint8_t* prg() const { return prg_.get(); }
+    inline uint8_t* chr() const { return chr_.get(); }
+
     inline uint8_t ReadPrg(uint32_t addr) { return prg_[addr]; }
     inline uint8_t ReadChr(uint32_t addr) { return chr_[addr]; }
     inline void WritePrg(uint32_t addr, uint8_t val) { prg_[addr] = val; }

@@ -1,0 +1,16 @@
+# Split the tables for the sound of the pulse wave channels in the music.
+#
+# The envelope information for the pulse channels is stored as a 24 byte table
+# of APU control register values.  These values are sent to the APU in reverse
+# order once per frame whenever a new note is triggered.
+#
+# The game stores the address for the envelope tables separately but they point
+# to the same table:
+#   Pulse1 Pointer: bank 6 0x9cd6
+#   Pulse2 Pointer: bank 6 0x9d34
+#
+# For this, we will rewrite the Pulse2 pointer and copy the envelope table to
+# the new location.  Then, each can be modified independently.
+
+wwp b=6 0x9d34 0x9da8
+bcopy 6:0x9da8 6:0x9135 24

@@ -2,6 +2,7 @@
 
 #include "imwidget/error_dialog.h"
 #include "imwidget/imapp.h"
+#include "imwidget/imutil.h"
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
@@ -44,6 +45,7 @@ bool PointsTable::Draw() {
 
         ImGui::SameLine();
         changed_ |= ImGui::InputInt("Experience  ", &val.xp);
+        Clamp(&val.xp, 0, 65535);
 
         ImGui::PushItemWidth(25);
         ImGui::SameLine();
@@ -206,6 +208,7 @@ bool EnemyEditor::Draw() {
 
             ImGui::SameLine();
             changed_ |= ImGui::InputInt("##hp", &data_[i].hp);
+            Clamp(&data_[i].hp, 0, 255);
             ImGui::SameLine();
             ImGui::PushItemWidth(40);
             changed_ |= ImGui::Combo("   ##pal", &data_[i].palette, "0\0001\0002\0003\000\0");
