@@ -79,15 +79,14 @@ class Pattern {
 
     bool validate() const;
 
-    void write_notes(Rom& rom, size_t offset) const;
-    void write_meta(Rom& rom, size_t offset, size_t notes) const;
+    std::vector<uint8_t> note_data() const;
+    std::vector<uint8_t> meta_data(size_t pw1_address) const;
 
   private:
     uint8_t tempo_;
     std::unordered_map<Channel, std::vector<Note>> notes_;
 
     void read_notes(Channel ch, const Rom& rom, size_t address);
-    void write_channel(Channel ch, Rom& rom, size_t offset) const;
 };
 
 class Song {
@@ -99,9 +98,12 @@ class Song {
     void set_sequence(const std::vector<size_t>& seq);
     void append_sequence(size_t n);
 
-    void write_sequnce(Rom& rom, size_t offset) const;
+    std::vector<uint8_t> sequence_data(uint8_t first) const;
 
     size_t sequence_length() const;
+    size_t pattern_count() const;
+    size_t metadata_length() const;
+
     Pattern* at(size_t i);
     const Pattern* at(size_t i) const;
 
@@ -142,14 +144,27 @@ class Rom {
     void read(uint8_t* buffer, size_t address, size_t length) const;
     void write(size_t address, std::vector<uint8_t> data);
 
+    bool commit();
     void save(const std::string& filename);
 
     Song* song(SongTitle title);
 
   private:
-    uint8_t data_[0x2000];
+    static constexpr size_t kHeaderSize =     0x10;
+    static constexpr size_t kRomSize    = 0x040000;
+
+    static constexpr size_t kOverworldSongTable   = 0x01a000;
+    static constexpr size_t kTownSongTable        = 0x01a3ca;
+    static constexpr size_t kPalaceSongTable      = 0x01a62f;
+    static constexpr size_t kGreatPalaceSongTable = 0x01a936;
+
+    uint8_t header_[kHeaderSize];
+    uint8_t data_[kRomSize];
 
     std::unordered_map<SongTitle, Song> songs_;
+
+    void commit(size_t address, std::initializer_list<SongTitle> songs);
+    size_t metadata_length(std::vector<SongTitle> songs);
 };
 
 } // namespace z2music

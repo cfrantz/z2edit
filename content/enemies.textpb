@@ -657,9 +657,6 @@ enemies {
             chr: { bank: 6 }
             palette: 3
             id: [0xd8, 0xda, 0xe0, 0xe2]
-        }},
-        { key: 0x24 value: {
-            name: "townsperson 36"
         }}
     ]
 }
