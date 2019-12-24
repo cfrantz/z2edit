@@ -1,6 +1,5 @@
 #include "music.h"
 
-#include <algorithm>
 #include <fstream>
 #include <map>
 
@@ -101,7 +100,7 @@ Pattern::Pattern(const Rom& rom, size_t address) {
 
   tempo_ = header[0];
 
-  size_t note_base = (header[2] << 8) + header[1] + 0x10010;
+  size_t note_base = (header[2] << 8) + header[1] + 0x10000;
 
   read_notes(Channel::Pulse1, rom, note_base);
 
@@ -181,10 +180,15 @@ void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {
   const size_t max_length = ch == Channel::Pulse1 ? 16 * 96 : length();
   size_t length = 0;
 
+  fprintf(stderr, "Reading note data at %06lx\n", address);
+
   while (length < max_length) {
     Note n = Note(rom.getc(address++));
     // Note data can terminate early on 00 byte
-    if (n.encode() == 0x00) break;
+    if (n.encode() == 0x00) {
+      fprintf(stderr, "Terminating early on 00 note\n");
+      break;
+    }
 
     length += n.length();
     add_notes(ch, {n});
@@ -197,6 +201,8 @@ void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {
       const size_t i = notes_[ch].size() - 3;
       if (notes_[ch][i + 0].duration() == Note::Duration::EighthTriplet &&
           notes_[ch][i + 1].duration() == Note::Duration::EighthTriplet) {
+
+        fprintf(stderr, "Special sequence, retiming past three notes\n");
 
         notes_[ch][i + 0].duration(Note::Duration::DottedEighth);
         notes_[ch][i + 1].duration(Note::Duration::DottedEighth);
@@ -259,6 +265,14 @@ size_t Song::sequence_length() const {
   return sequence_.size();
 }
 
+size_t Song::pattern_count() const {
+  return patterns_.size();
+}
+
+size_t Song::metadata_length() const {
+  return sequence_length() + 1 + 6 * pattern_count();
+}
+
 Pattern* Song::at(size_t i) {
   if (i < 0 || i >= sequence_.size()) return nullptr;
   return &(patterns_.at(sequence_.at(i)));
@@ -272,41 +286,42 @@ const Pattern* Song::at(size_t i) const {
 Rom::Rom(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
   if (file.is_open()) {
-    file.seekg(0x01a010);
-    file.read(reinterpret_cast<char *>(&data_[0]), 0x2000 * sizeof(data_[0]));
+    file.read(reinterpret_cast<char *>(&header_[0]), kHeaderSize);
+    file.read(reinterpret_cast<char *>(&data_[0]), kRomSize);
 
-    songs_[SongTitle::OverworldIntro] = Song(*this, 0x1a010, 0);
-    songs_[SongTitle::OverworldTheme] = Song(*this, 0x1a010, 1);
-    songs_[SongTitle::BattleTheme] = Song(*this, 0x1a010, 2);
-    songs_[SongTitle::CaveItemFanfare] = Song(*this, 0x1a010, 4);
+    songs_[SongTitle::OverworldIntro] = Song(*this, kOverworldSongTable, 0);
+    songs_[SongTitle::OverworldTheme] = Song(*this, kOverworldSongTable, 1);
+    songs_[SongTitle::BattleTheme] = Song(*this, kOverworldSongTable, 2);
+    songs_[SongTitle::CaveItemFanfare] = Song(*this, kOverworldSongTable, 4);
 
-    songs_[SongTitle::TownIntro] = Song(*this, 0x1a3da, 0);
-    songs_[SongTitle::TownTheme] = Song(*this, 0x1a3da, 1);
-    songs_[SongTitle::HouseTheme] = Song(*this, 0x1a3da, 2);
-    songs_[SongTitle::TownItemFanfare] = Song(*this, 0x1a3da, 4);
+    songs_[SongTitle::TownIntro] = Song(*this, kTownSongTable, 0);
+    songs_[SongTitle::TownTheme] = Song(*this, kTownSongTable, 1);
+    songs_[SongTitle::HouseTheme] = Song(*this, kTownSongTable, 2);
+    songs_[SongTitle::TownItemFanfare] = Song(*this, kTownSongTable, 4);
 
-    songs_[SongTitle::PalaceIntro] = Song(*this, 0x1a63f, 0);
-    songs_[SongTitle::PalaceTheme] = Song(*this, 0x1a63f, 1);
-    songs_[SongTitle::BossTheme] = Song(*this, 0x1a63f, 3);
-    songs_[SongTitle::PalaceItemFanfare] = Song(*this, 0x1a63f, 4);
-    songs_[SongTitle::CrystalFanfare] = Song(*this, 0x1a63f, 6);
+    songs_[SongTitle::PalaceIntro] = Song(*this, kPalaceSongTable, 0);
+    songs_[SongTitle::PalaceTheme] = Song(*this, kPalaceSongTable, 1);
+    songs_[SongTitle::BossTheme] = Song(*this, kPalaceSongTable, 3);
+    songs_[SongTitle::PalaceItemFanfare] = Song(*this, kPalaceSongTable, 4);
+    songs_[SongTitle::CrystalFanfare] = Song(*this, kPalaceSongTable, 6);
 
-    songs_[SongTitle::GreatPalaceIntro] = Song(*this, 0x1a946, 0);
-    songs_[SongTitle::GreatPalaceTheme] = Song(*this, 0x1a946, 1);
-    songs_[SongTitle::ZeldaTheme] = Song(*this, 0x1a946, 2);
-    songs_[SongTitle::CreditsTheme] = Song(*this, 0x1a946, 3);
-    songs_[SongTitle::GreatPalaceItemFanfare] = Song(*this, 0x1a946, 4);
-    songs_[SongTitle::TriforceFanfare] = Song(*this, 0x1a946, 5);
-    songs_[SongTitle::FinalBossTheme] = Song(*this, 0x1a946, 6);
+    songs_[SongTitle::GreatPalaceIntro] = Song(*this, kGreatPalaceSongTable, 0);
+    songs_[SongTitle::GreatPalaceTheme] = Song(*this, kGreatPalaceSongTable, 1);
+    songs_[SongTitle::ZeldaTheme] = Song(*this, kGreatPalaceSongTable, 2);
+    songs_[SongTitle::CreditsTheme] = Song(*this, kGreatPalaceSongTable, 3);
+    songs_[SongTitle::GreatPalaceItemFanfare] = Song(*this, kGreatPalaceSongTable, 4);
+    songs_[SongTitle::TriforceFanfare] = Song(*this, kGreatPalaceSongTable, 5);
+    songs_[SongTitle::FinalBossTheme] = Song(*this, kGreatPalaceSongTable, 6);
   }
 }
 
 uint8_t Rom::getc(size_t address) const {
-  if (address < 0x1a010 || address > 0x1c00f) return 0xff;
-  return data_[address - 0x1a010];
+  if (address > kRomSize) return 0xff;
+  return data_[address];
 }
 
 void Rom::read(uint8_t* buffer, size_t address, size_t length) const {
+  fprintf(stderr, "Reading %02lx bytes at %06lx\n", length, address);
   // Could use std::copy or std::memcpy but this handles out of range addresses
   for (size_t i = 0; i < length; ++i) {
     buffer[i] = getc(address + i);
@@ -314,8 +329,9 @@ void Rom::read(uint8_t* buffer, size_t address, size_t length) const {
 }
 
 void Rom::putc(size_t address, uint8_t data) {
-  if (address < 0x1a010 || address > 0x1c00f) return;
-  data_[address - 0x1a010] = data;
+  if (address > kRomSize) return;
+  fprintf(stderr, "PUTC 0x%06lx : %02x\n", address, data);
+  data_[address] = data;
 }
 
 void Rom::write(size_t address, std::vector<uint8_t> data) {

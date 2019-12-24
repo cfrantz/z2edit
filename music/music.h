@@ -101,6 +101,9 @@ class Song {
     void write_sequnce(Rom& rom, size_t offset) const;
 
     size_t sequence_length() const;
+    size_t pattern_count() const;
+    size_t metadata_length() const;
+
     Pattern* at(size_t i);
     const Pattern* at(size_t i) const;
 
@@ -146,9 +149,20 @@ class Rom {
     Song* song(SongTitle title);
 
   private:
-    uint8_t data_[0x2000];
+    static constexpr size_t kHeaderSize =     0x10;
+    static constexpr size_t kRomSize    = 0x040000;
+
+    static constexpr size_t kOverworldSongTable   = 0x01a000;
+    static constexpr size_t kTownSongTable        = 0x01a3ca;
+    static constexpr size_t kPalaceSongTable      = 0x01a62f;
+    static constexpr size_t kGreatPalaceSongTable = 0x01a936;
+
+    uint8_t header_[kHeaderSize];
+    uint8_t data_[kRomSize];
 
     std::unordered_map<SongTitle, Song> songs_;
+
+    size_t metadata_length(std::vector<SongTitle> songs);
 };
 
 } // namespace z2music
