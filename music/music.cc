@@ -160,20 +160,29 @@ std::vector<uint8_t> Pattern::note_data() const {
   for (auto n : notes_.at(Channel::Pulse1)) { b.push_back(n.encode()); }
   b.push_back(0); // Pulse1 channel needs to be 0 terminated
 
-  // TODO only channels shorter than pw1 need to be 0 terminated
-  for (auto n : notes_.at(Channel::Pulse2)) { b.push_back(n.encode()); }
-  b.push_back(0);
+  const size_t pw1_length = length();
 
-  for (auto n : notes_.at(Channel::Triangle)) { b.push_back(n.encode()); }
-  b.push_back(0);
+  const std::vector<Channel> channels = {
+    Channel::Pulse2,
+    Channel::Triangle,
+    Channel::Noise,
+  };
 
-  for (auto n : notes_.at(Channel::Noise)) { b.push_back(n.encode()); }
-  b.push_back(0);
+  for (auto ch : channels) {
+    size_t ch_length = 0;
+    const auto notes = notes_.at(ch);
+    for (auto n : notes) {
+      b.push_back(n.encode());
+      ch_length += n.length();
+    }
+    if (ch_length > 0 && ch_length < pw1_length) b.push_back(0);
+  }
 
   return b;
 }
 
 std::vector<uint8_t> Pattern::meta_data(size_t notes) const {
+  // FIXME calculate which channels need extra bytes :(
   const size_t pw1 = notes_.at(Channel::Pulse1).size();
   const size_t pw2 = notes_.at(Channel::Pulse2).size();
   const size_t tri = notes_.at(Channel::Triangle).size();
@@ -289,6 +298,10 @@ size_t Song::metadata_length() const {
   return sequence_length() + 1 + 6 * pattern_count();
 }
 
+std::vector<Pattern> Song::patterns() {
+  return patterns_;
+}
+
 Pattern* Song::at(size_t i) {
   if (i < 0 || i >= sequence_.size()) return nullptr;
   return &(patterns_.at(sequence_.at(i)));
@@ -346,11 +359,11 @@ void Rom::read(uint8_t* buffer, size_t address, size_t length) const {
 
 void Rom::putc(size_t address, uint8_t data) {
   if (address > kRomSize) return;
-  fprintf(stderr, "PUTC 0x%06lx : %02x\n", address, data);
   data_[address] = data;
 }
 
 void Rom::write(size_t address, std::vector<uint8_t> data) {
+  /* fprintf(stderr, "Write %lu bytes at %06lx\n", data.size(), address); */
   for (size_t i = 0; i < data.size(); ++i) {
     putc(address + i, data[i]);
   }
@@ -365,27 +378,27 @@ bool Rom::commit() {
       SongTitle::BattleTheme,
       SongTitle::CaveItemFanfare});
 
-  commit(kTownSongTable, {
-      SongTitle::TownIntro,
-      SongTitle::TownTheme,
-      SongTitle::HouseTheme,
-      SongTitle::TownItemFanfare});
+  /* commit(kTownSongTable, { */
+  /*     SongTitle::TownIntro, */
+  /*     SongTitle::TownTheme, */
+  /*     SongTitle::HouseTheme, */
+  /*     SongTitle::TownItemFanfare}); */
 
-  commit(kPalaceSongTable, {
-      SongTitle::PalaceIntro,
-      SongTitle::PalaceTheme,
-      SongTitle::BossTheme,
-      SongTitle::PalaceItemFanfare,
-      SongTitle::CrystalFanfare});
+  /* commit(kPalaceSongTable, { */
+  /*     SongTitle::PalaceIntro, */
+  /*     SongTitle::PalaceTheme, */
+  /*     SongTitle::BossTheme, */
+  /*     SongTitle::PalaceItemFanfare, */
+  /*     SongTitle::CrystalFanfare}); */
 
-  commit(kGreatPalaceSongTable, {
-      SongTitle::GreatPalaceIntro,
-      SongTitle::GreatPalaceTheme,
-      SongTitle::ZeldaTheme,
-      SongTitle::CreditsTheme,
-      SongTitle::GreatPalaceItemFanfare,
-      SongTitle::TriforceFanfare,
-      SongTitle::FinalBossTheme});
+  /* commit(kGreatPalaceSongTable, { */
+  /*     SongTitle::GreatPalaceIntro, */
+  /*     SongTitle::GreatPalaceTheme, */
+  /*     SongTitle::ZeldaTheme, */
+  /*     SongTitle::CreditsTheme, */
+  /*     SongTitle::GreatPalaceItemFanfare, */
+  /*     SongTitle::TriforceFanfare, */
+  /*     SongTitle::FinalBossTheme}); */
 
   return true;
 }
@@ -477,9 +490,28 @@ void Rom::commit(size_t address, std::initializer_list<Rom::SongTitle> songs) {
   // Write an empty sequence for the empty song
   putc(address + seq_offset, 0);
 
-  /*****************
-   * PATTERN TABLE *
-   *****************/
+  /*******************************
+   * PATTERN TABLE AND NOTE DATA *
+   *******************************/
+
+  size_t note_address = pat_offset + address;
+  pat_offset = first_pattern;
+
+  fprintf(stderr, "Note data to start at %06lx\n", note_address);
+
+  for (auto s : songs) {
+    for (auto p : songs_.at(s).patterns()) {
+      const std::vector<uint8_t> note_data = p.note_data();
+
+      fprintf(stderr, "Pattern at %02x, notes at %06lx\n", pat_offset, note_address);
+
+      write(address + pat_offset, p.meta_data(note_address));
+      /* write(note_address, note_data); */
+
+      pat_offset += 6;
+      note_address += note_data.size();
+    }
+  }
 
   /*************
    * NOTE DATA *

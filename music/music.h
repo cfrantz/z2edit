@@ -104,6 +104,8 @@ class Song {
     size_t pattern_count() const;
     size_t metadata_length() const;
 
+    std::vector<Pattern> patterns();
+
     Pattern* at(size_t i);
     const Pattern* at(size_t i) const;
 
