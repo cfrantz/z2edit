@@ -396,27 +396,27 @@ bool Rom::commit() {
       SongTitle::BattleTheme,
       SongTitle::CaveItemFanfare});
 
-  /* commit(kTownSongTable, { */
-  /*     SongTitle::TownIntro, */
-  /*     SongTitle::TownTheme, */
-  /*     SongTitle::HouseTheme, */
-  /*     SongTitle::TownItemFanfare}); */
+  commit(kTownSongTable, {
+      SongTitle::TownIntro,
+      SongTitle::TownTheme,
+      SongTitle::HouseTheme,
+      SongTitle::TownItemFanfare});
 
-  /* commit(kPalaceSongTable, { */
-  /*     SongTitle::PalaceIntro, */
-  /*     SongTitle::PalaceTheme, */
-  /*     SongTitle::BossTheme, */
-  /*     SongTitle::PalaceItemFanfare, */
-  /*     SongTitle::CrystalFanfare}); */
+  commit(kPalaceSongTable, {
+      SongTitle::PalaceIntro,
+      SongTitle::PalaceTheme,
+      SongTitle::BossTheme,
+      SongTitle::PalaceItemFanfare,
+      SongTitle::CrystalFanfare});
 
-  /* commit(kGreatPalaceSongTable, { */
-  /*     SongTitle::GreatPalaceIntro, */
-  /*     SongTitle::GreatPalaceTheme, */
-  /*     SongTitle::ZeldaTheme, */
-  /*     SongTitle::CreditsTheme, */
-  /*     SongTitle::GreatPalaceItemFanfare, */
-  /*     SongTitle::TriforceFanfare, */
-  /*     SongTitle::FinalBossTheme}); */
+  commit(kGreatPalaceSongTable, {
+      SongTitle::GreatPalaceIntro,
+      SongTitle::GreatPalaceTheme,
+      SongTitle::ZeldaTheme,
+      SongTitle::CreditsTheme,
+      SongTitle::GreatPalaceItemFanfare,
+      SongTitle::TriforceFanfare,
+      SongTitle::FinalBossTheme});
 
   return true;
 }
@@ -521,19 +521,15 @@ void Rom::commit(size_t address, std::initializer_list<Rom::SongTitle> songs) {
     for (auto p : songs_.at(s).patterns()) {
       const std::vector<uint8_t> note_data = p.note_data();
 
-      fprintf(stderr, "Pattern at %02x, notes at %06lx\n", pat_offset, note_address);
+      fprintf(stderr, "Pattern at %06lx, notes at %06lx\n", address + pat_offset, note_address);
 
       write(address + pat_offset, p.meta_data(note_address));
-      /* write(note_address, note_data); */
+      write(note_address, note_data);
 
       pat_offset += 6;
       note_address += note_data.size();
     }
   }
-
-  /*************
-   * NOTE DATA *
-   *************/
 }
 
 } // namespace z2music
