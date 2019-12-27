@@ -18,8 +18,8 @@ void dump_song(const z2music::Song& song) {
     const z2music::Pattern* p = song.at(i);
     dump_notes(p->notes(z2music::Pattern::Channel::Pulse1));
     dump_notes(p->notes(z2music::Pattern::Channel::Pulse2));
-    /* dump_notes(p->notes(z2music::Pattern::Channel::Triangle)); */
-    /* dump_notes(p->notes(z2music::Pattern::Channel::Noise)); */
+    dump_notes(p->notes(z2music::Pattern::Channel::Triangle));
+    dump_notes(p->notes(z2music::Pattern::Channel::Noise));
     std::cerr << std::endl;
   }
 }
@@ -33,14 +33,9 @@ int main(int argc, char** argv) {
   const std::string file = std::string(argv[1]);
 
   z2music::Rom rom(file);
+  z2music::Song* battle = rom.song(z2music::Rom::SongTitle::BattleTheme);
+  dump_song(*battle);
 
-  z2music::Song* intro = rom.song(z2music::Rom::SongTitle::GreatPalaceIntro);
-  z2music::Song* theme = rom.song(z2music::Rom::SongTitle::GreatPalaceTheme);
-
-  dump_song(*intro);
-  dump_song(*theme);
-
-  rom.commit();
   rom.save("/tmp/output.nes");
 
   return 0;

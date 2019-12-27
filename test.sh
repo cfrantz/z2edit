@@ -9,4 +9,4 @@ bazel build music:test || exit
 xxd "$ORIG" > /tmp/orig
 xxd "$TEST" > /tmp/test
 
-colordiff -u /tmp/orig /tmp/test
+colordiff -u /tmp/orig /tmp/test && echo "No diffs!"
