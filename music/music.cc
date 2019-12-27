@@ -220,7 +220,7 @@ size_t Pattern::note_data_length(Pattern::Channel ch) const {
 }
 
 void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {
-  const size_t max_length = ch == Channel::Pulse1 ? 16 * 96 : length();
+  const size_t max_length = ch == Channel::Pulse1 ? 64 * 96 : length();
   size_t length = 0;
 
   fprintf(stderr, "Reading note data at %06lx\n", address);
