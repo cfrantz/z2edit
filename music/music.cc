@@ -112,11 +112,7 @@ Pattern::Pattern(const Rom& rom, size_t address) {
 }
 
 size_t Pattern::length() const {
-  size_t length = 0;
-  for (auto n : notes_.at(Channel::Pulse1)) {
-    length += n.length();
-  }
-  return length;
+  return length(Channel::Pulse1);
 }
 
 void Pattern::add_notes(Pattern::Channel ch, std::initializer_list<Note> notes) {
@@ -157,25 +153,16 @@ bool Pattern::validate() const {
 std::vector<uint8_t> Pattern::note_data() const {
   std::vector<uint8_t> b;
 
-  for (auto n : notes_.at(Channel::Pulse1)) { b.push_back(n.encode()); }
-  b.push_back(0); // Pulse1 channel needs to be 0 terminated
-
-  const size_t pw1_length = length();
-
-  const std::vector<Channel> channels = {
+  const std::array<Channel, 4> channels = {
+    Channel::Pulse1,
     Channel::Pulse2,
     Channel::Triangle,
     Channel::Noise,
   };
 
   for (auto ch : channels) {
-    size_t ch_length = 0;
-    const auto notes = notes_.at(ch);
-    for (auto n : notes) {
-      b.push_back(n.encode());
-      ch_length += n.length();
-    }
-    if (ch_length > 0 && ch_length < pw1_length) b.push_back(0);
+    const std::vector<uint8_t> c = note_data(ch);
+    b.insert(b.end(), c.begin(), c.end());
   }
 
   return b;
@@ -183,10 +170,10 @@ std::vector<uint8_t> Pattern::note_data() const {
 
 std::vector<uint8_t> Pattern::meta_data(size_t notes) const {
   // FIXME calculate which channels need extra bytes :(
-  const size_t pw1 = notes_.at(Channel::Pulse1).size();
-  const size_t pw2 = notes_.at(Channel::Pulse2).size();
-  const size_t tri = notes_.at(Channel::Triangle).size();
-  const size_t noi = notes_.at(Channel::Noise).size();
+  const size_t pw1 = note_data_length(Channel::Pulse1);
+  const size_t pw2 = note_data_length(Channel::Pulse2);
+  const size_t tri = note_data_length(Channel::Triangle);
+  const size_t noi = note_data_length(Channel::Noise);
 
   std::vector<uint8_t> b;
   b.reserve(6);
@@ -199,6 +186,37 @@ std::vector<uint8_t> Pattern::meta_data(size_t notes) const {
   b.push_back(noi == 0 ? 0 : pw1 + pw2 + tri);
 
   return b;
+}
+
+size_t Pattern::length(Pattern::Channel ch) const {
+  size_t length = 0;
+  for (auto n : notes_.at(ch)) {
+    length += n.length();
+  }
+  return length;
+}
+
+bool Pattern::pad_note_data(Pattern::Channel ch) const {
+  if (ch == Channel::Pulse1) return true;
+
+  const size_t l = length(ch);
+  return l > 0 && l < length();
+}
+
+std::vector<uint8_t> Pattern::note_data(Pattern::Channel ch) const {
+  std::vector<uint8_t> b;
+  b.reserve(notes_.at(ch).size() + 1);
+
+  for (auto n : notes_.at(ch)) {
+    b.push_back(n.encode());
+  }
+  if (pad_note_data(ch)) b.push_back(0);
+
+  return b;
+}
+
+size_t Pattern::note_data_length(Pattern::Channel ch) const {
+  return notes_.at(ch).size() + (pad_note_data(ch) ? 1 : 0);
 }
 
 void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {

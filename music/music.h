@@ -86,6 +86,11 @@ class Pattern {
     uint8_t tempo_;
     std::unordered_map<Channel, std::vector<Note>> notes_;
 
+    size_t length(Channel ch) const;
+    bool pad_note_data(Channel ch) const;
+    std::vector<uint8_t> note_data(Channel ch) const;
+    size_t note_data_length(Channel ch) const;
+
     void read_notes(Channel ch, const Rom& rom, size_t address);
 };
 
