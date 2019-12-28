@@ -236,20 +236,21 @@ void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {
     length += n.length();
     add_notes(ch, {n});
 
-    // If a QuarterTriplet is preceeded by two EighthTriplets, there is special
-    // meaning.  In this case, the three notes should really be DottedEighth
-    // DottedEighth Eighth.  This doesn't change the overall length of the
-    // pattern, but the duration bits need to be rewritten.
+    // The QuarterTriplet duration has special meaning when preceeded by
+    // two EighthTriplets, which differs based on a tempo flag.
     if (n.duration() == Note::Duration::QuarterTriplet) {
       const size_t i = notes_[ch].size() - 3;
       if (notes_[ch][i + 0].duration() == Note::Duration::EighthTriplet &&
           notes_[ch][i + 1].duration() == Note::Duration::EighthTriplet) {
-
-        fprintf(stderr, "Special sequence, retiming past three notes\n");
-
-        notes_[ch][i + 0].duration(Note::Duration::DottedEighth);
-        notes_[ch][i + 1].duration(Note::Duration::DottedEighth);
-        notes_[ch][i + 2].duration(Note::Duration::Eighth);
+        if (tempo_ & 0x08) {
+          // If flag 0x08 is set, just count 0xc1 as a third EighthTriplet
+          notes_[ch][i + 2].duration(Note::Duration::EighthTriplet);
+        } else {
+          // If flag 0x08 is not set, rewrite the whole sequence
+          notes_[ch][i + 0].duration(Note::Duration::DottedEighth);
+          notes_[ch][i + 1].duration(Note::Duration::DottedEighth);
+          notes_[ch][i + 2].duration(Note::Duration::Eighth);
+        }
       }
     }
   }
