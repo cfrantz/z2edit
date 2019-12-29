@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   const std::string file = std::string(argv[1]);
 
   z2music::Rom rom(file);
-  z2music::Song* credits = rom.song(z2music::Rom::SongTitle::OverworldTheme);
+  z2music::Song* credits = rom.song(z2music::Rom::SongTitle::CreditsTheme);
 
   credits->clear();
 
