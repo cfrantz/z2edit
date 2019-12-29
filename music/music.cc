@@ -86,7 +86,7 @@ std::string Note::pitch_string() const {
   return "???.";
 }
 
-uint8_t Note::encode() const {
+Note::operator uint8_t() const {
   return value_;
 }
 
@@ -208,7 +208,7 @@ std::vector<uint8_t> Pattern::note_data(Pattern::Channel ch) const {
   b.reserve(notes_.at(ch).size() + 1);
 
   for (auto n : notes_.at(ch)) {
-    b.push_back(n.encode());
+    b.push_back(n);
   }
   if (pad_note_data(ch)) b.push_back(0);
 
@@ -228,7 +228,7 @@ void Pattern::read_notes(Pattern::Channel ch, const Rom& rom, size_t address) {
   while (length < max_length) {
     Note n = Note(rom.getc(address++));
     // Note data can terminate early on 00 byte
-    if (n.encode() == 0x00) {
+    if (n == 0x00) {
       fprintf(stderr, "Terminating early on 00 note\n");
       break;
     }

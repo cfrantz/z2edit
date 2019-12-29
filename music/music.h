@@ -54,7 +54,7 @@ class Note {
     size_t length() const;
     std::string pitch_string() const;
 
-    uint8_t encode() const;
+    operator uint8_t() const;
 
   private:
     uint8_t value_;
