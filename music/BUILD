@@ -9,3 +9,9 @@ cc_binary(
     srcs = ["main.cc"],
     deps = [":music"],
 )
+
+cc_binary(
+    name = "solstice",
+    srcs = ["solstice.cc"],
+    deps = [":music"],
+)
