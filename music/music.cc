@@ -317,6 +317,11 @@ size_t Song::metadata_length() const {
   return sequence_length() + 1 + 6 * pattern_count();
 }
 
+void Song::clear() {
+  patterns_.clear();
+  sequence_.clear();
+}
+
 std::vector<Pattern> Song::patterns() {
   return patterns_;
 }
