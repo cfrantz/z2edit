@@ -111,6 +111,18 @@ Pattern::Pattern(const Rom& rom, size_t address) {
   if (header[5] > 0) read_notes(Channel::Noise, rom, note_base + header[5]);
 }
 
+Pattern::Pattern(std::initializer_list<Note> pw1,
+    std::initializer_list<Note> pw2,
+    std::initializer_list<Note> triangle,
+    std::initializer_list<Note> noise):
+tempo_(0x18) {
+  clear();
+  add_notes(Channel::Pulse1, pw1);
+  add_notes(Channel::Pulse2, pw2);
+  add_notes(Channel::Triangle, triangle);
+  add_notes(Channel::Noise, noise);
+}
+
 size_t Pattern::length() const {
   return length(Channel::Pulse1);
 }

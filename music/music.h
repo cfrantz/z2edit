@@ -66,6 +66,10 @@ class Pattern {
 
     Pattern();
     Pattern(const Rom& rom, size_t address);
+    Pattern(std::initializer_list<Note> pw1,
+        std::initializer_list<Note> pw2,
+        std::initializer_list<Note> triangle,
+        std::initializer_list<Note> noise);
 
     size_t length() const;
 
