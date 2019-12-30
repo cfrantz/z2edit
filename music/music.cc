@@ -516,9 +516,12 @@ void Rom::commit(size_t address, std::initializer_list<Rom::SongTitle> songs) {
   uint8_t pat_offset = first_pattern;
 
   for (auto s : songs) {
-    fprintf(stderr, "Writing seq at %02x with pat at %02x\n", seq_offset, pat_offset);
+    fprintf(stderr, "Writing seq at %02x with pat at %02x: ", seq_offset, pat_offset);
     const std::vector<uint8_t> seq = songs_.at(s).sequence_data(pat_offset);
     write(address + seq_offset, seq);
+
+    for (auto b : seq) fprintf(stderr, "%02x ", b);
+    fprintf(stderr, "\n");
 
     pat_offset += 6 * songs_.at(s).pattern_count();
     seq_offset += seq.size();
