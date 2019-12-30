@@ -111,11 +111,12 @@ Pattern::Pattern(const Rom& rom, size_t address) {
   if (header[5] > 0) read_notes(Channel::Noise, rom, note_base + header[5]);
 }
 
-Pattern::Pattern(std::initializer_list<Note> pw1,
+Pattern::Pattern(uint8_t tempo,
+    std::initializer_list<Note> pw1,
     std::initializer_list<Note> pw2,
     std::initializer_list<Note> triangle,
     std::initializer_list<Note> noise):
-tempo_(0x18) {
+tempo_(tempo) {
   clear();
   add_notes(Channel::Pulse1, pw1);
   add_notes(Channel::Pulse2, pw2);
