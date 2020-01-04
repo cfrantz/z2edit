@@ -259,6 +259,9 @@ int main(int argc, char** argv) {
   set_zelda_theme(rom.song(z2music::Rom::SongTitle::ZeldaTheme));
   set_alt_credits_theme(rom.song(z2music::Rom::SongTitle::CreditsTheme));
 
+  // Fix a bug in the vanilla game
+  rom.write(0x5d6b, { 0xea, 0xea, 0xea });
+
   rom.save("/tmp/output.nes");
 
   return 0;
