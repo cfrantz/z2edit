@@ -33,7 +33,8 @@ for example.
 ### Pattern
 
 This class represents a single pattern element of a `Song`.  Each pattern has
-a tempo and four channels of note data.
+a tempo and four channels of note data.  The four channels are named in the
+`Pattern::Channel` enum.
 
 ### Note
 
