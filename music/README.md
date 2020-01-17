@@ -32,7 +32,7 @@ for example.
 
 ### Pattern
 
-This class represents a single pattern element of a 'Song'.  Each pattern has
+This class represents a single pattern element of a `Song`.  Each pattern has
 a tempo and four channels of note data.
 
 ### Note
