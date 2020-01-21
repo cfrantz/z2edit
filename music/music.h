@@ -126,6 +126,26 @@ class Song {
     std::vector<size_t> sequence_;
 };
 
+class Credits {
+  public:
+    Credits();
+    Credits(const Rom& rom);
+
+    struct Text {
+      std::string title;
+      std::string name1;
+      std::string name2;
+    };
+
+    void set(size_t page, const Text& text);
+    Text get(size_t page) const;
+
+  private:
+    std::vector<Text> credits_;
+
+    std::string parse_string_(const Rom& rom, size_t address);
+};
+
 class Rom {
   public:
     enum class SongTitle {
@@ -153,6 +173,7 @@ class Rom {
     Rom(const std::string& filename);
 
     uint8_t getc(size_t address) const;
+    uint16_t getw(size_t address) const;
     void putc(size_t address, uint8_t data);
 
     void read(uint8_t* buffer, size_t address, size_t length) const;
@@ -176,6 +197,7 @@ class Rom {
     uint8_t data_[kRomSize];
 
     std::unordered_map<SongTitle, Song> songs_;
+    Credits credits_;
 
     void commit(size_t address, std::initializer_list<SongTitle> songs);
     size_t metadata_length(std::vector<SongTitle> songs);

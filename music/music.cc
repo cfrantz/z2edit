@@ -349,6 +349,77 @@ const Pattern* Song::at(size_t i) const {
   return &(patterns_.at(sequence_.at(i)));
 }
 
+Credits::Credits() {}
+
+Credits::Credits(const Rom& rom) {
+  const size_t credits_table = 0x015259;
+
+  for (size_t i = 0; i < 9; ++i) {
+    const size_t addr = credits_table + 4 * i;
+
+    fprintf(stderr, "Reading credits entries from table at %06lx\n", addr);
+
+    const size_t title = rom.getw(addr) + 0xc000;
+    const size_t names = rom.getw(addr + 2) + 0xc000;
+
+    Text text;
+    text.title = parse_string_(rom, title);
+    text.name1 = parse_string_(rom, names);
+    text.name2 = parse_string_(rom, names + text.name1.length() + 3);
+
+    credits_.push_back(text);
+  }
+}
+
+char z2_decode_(uint8_t data) {
+  switch (data) {
+    case 0x32: return 0x2a;
+    case 0x34: return 0x3f;
+    case 0x36: return 0x21;
+    case 0x9c: return 0x2c;
+    case 0xf4: return 0x20;
+    case 0xfd: return 0x5c;
+    case 0xfe: return 0x5f;
+  }
+
+  if (data >= 0xce && data <= 0xd9) return data - 0xa0;
+  if (data >= 0xda && data <= 0xf3) return data - 0x99;
+
+  return 0x00;
+}
+
+uint8_t z2_encode_(char data) {
+  switch (data) {
+    case 0x20: return 0xf4;
+    case 0x21: return 0x36;
+    case 0x2a: return 0x32;
+    case 0x2c: return 0x9c;
+    case 0x3f: return 0x34;
+    case 0x5c: return 0xfd;
+    case 0x5f: return 0xfe;
+  }
+
+  if (data >= 0x2e && data <= 0x39) return data + 0xa0;
+  if (data >= 0x41 && data <= 0x5a) return data + 0x99;
+  if (data >= 0x61 && data <= 0x7a) return data + 0x79;
+
+  return 0x00;
+}
+
+std::string Credits::parse_string_(const Rom& rom, size_t address) {
+  uint8_t length = rom.getc(address + 2);
+  if (length == 0xff) return "[empty]";
+
+  std::string s = "";
+  for (uint8_t i = 0; i < length; ++i) {
+    s.append(1, z2_decode_(rom.getc(address + i + 3)));
+  }
+
+  fprintf(stderr, "Found string at %06lx - [%s]\n", address, s.c_str());
+
+  return s;
+}
+
 Rom::Rom(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
   if (file.is_open()) {
@@ -378,12 +449,18 @@ Rom::Rom(const std::string& filename) {
     songs_[SongTitle::GreatPalaceItemFanfare] = Song(*this, kGreatPalaceSongTable, 4);
     songs_[SongTitle::TriforceFanfare] = Song(*this, kGreatPalaceSongTable, 5);
     songs_[SongTitle::FinalBossTheme] = Song(*this, kGreatPalaceSongTable, 6);
+
+    credits_ = Credits(*this);
   }
 }
 
 uint8_t Rom::getc(size_t address) const {
   if (address > kRomSize) return 0xff;
   return data_[address];
+}
+
+uint16_t Rom::getw(size_t address) const {
+  return getc(address) + (getc(address + 1) << 8);
 }
 
 void Rom::read(uint8_t* buffer, size_t address, size_t length) const {
