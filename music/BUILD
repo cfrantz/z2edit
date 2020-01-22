@@ -15,3 +15,9 @@ cc_binary(
     srcs = ["solstice.cc"],
     deps = [":music"],
 )
+
+cc_binary(
+    name = "credits",
+    srcs = ["credits.cc"],
+    deps = [":music"],
+)

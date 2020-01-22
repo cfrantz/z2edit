@@ -1,6 +1,7 @@
 #ifndef Z2UTIL_MUSIC_MUSIC
 #define Z2UTIL_MUSIC_MUSIC
 
+#include <array>
 #include <fstream>
 #include <string>
 #include <unordered_map>
@@ -139,11 +140,14 @@ class Credits {
 
     void set(size_t page, const Text& text);
     Text get(size_t page) const;
+    void commit(Rom& rom) const;
 
   private:
-    std::vector<Text> credits_;
+    static constexpr size_t kCreditsTableAddress = 0x015259;
+    static constexpr size_t kCreditsBankOffset = 0xc000;
+    static constexpr size_t kCreditsPages = 9;
 
-    std::string parse_string_(const Rom& rom, size_t address);
+    std::array<Text, kCreditsPages> credits_;
 };
 
 class Rom {
@@ -174,7 +178,9 @@ class Rom {
 
     uint8_t getc(size_t address) const;
     uint16_t getw(size_t address) const;
+
     void putc(size_t address, uint8_t data);
+    void putw(size_t address, uint16_t data);
 
     void read(uint8_t* buffer, size_t address, size_t length) const;
     void write(size_t address, std::vector<uint8_t> data);
@@ -183,6 +189,7 @@ class Rom {
     void save(const std::string& filename);
 
     Song* song(SongTitle title);
+    Credits* credits();
 
   private:
     static constexpr size_t kHeaderSize =     0x10;

@@ -349,28 +349,6 @@ const Pattern* Song::at(size_t i) const {
   return &(patterns_.at(sequence_.at(i)));
 }
 
-Credits::Credits() {}
-
-Credits::Credits(const Rom& rom) {
-  const size_t credits_table = 0x015259;
-
-  for (size_t i = 0; i < 9; ++i) {
-    const size_t addr = credits_table + 4 * i;
-
-    fprintf(stderr, "Reading credits entries from table at %06lx\n", addr);
-
-    const size_t title = rom.getw(addr) + 0xc000;
-    const size_t names = rom.getw(addr + 2) + 0xc000;
-
-    Text text;
-    text.title = parse_string_(rom, title);
-    text.name1 = parse_string_(rom, names);
-    text.name2 = parse_string_(rom, names + text.name1.length() + 3);
-
-    credits_.push_back(text);
-  }
-}
-
 char z2_decode_(uint8_t data) {
   switch (data) {
     case 0x32: return 0x2a;
@@ -406,9 +384,11 @@ uint8_t z2_encode_(char data) {
   return 0x00;
 }
 
-std::string Credits::parse_string_(const Rom& rom, size_t address) {
-  uint8_t length = rom.getc(address + 2);
-  if (length == 0xff) return "[empty]";
+std::string parse_string_(const Rom& rom, size_t address) {
+  const uint8_t flag = rom.getc(address);
+  if (flag != 0x22) return "";
+
+  const uint8_t length = rom.getc(address + 2);
 
   std::string s = "";
   for (uint8_t i = 0; i < length; ++i) {
@@ -418,6 +398,71 @@ std::string Credits::parse_string_(const Rom& rom, size_t address) {
   fprintf(stderr, "Found string at %06lx - [%s]\n", address, s.c_str());
 
   return s;
+}
+
+size_t write_string_(Rom& rom, size_t address, const std::string& s) {
+  uint8_t length = s.length();
+  rom.putc(address, length);
+  for (uint8_t i = 0; i < length; ++i) {
+    rom.putc(address + i + 1, z2_encode_(s.at(i)));
+  }
+  return address + length + 1;
+}
+
+Credits::Credits() {}
+
+Credits::Credits(const Rom& rom) {
+  for (size_t i = 0; i < kCreditsPages; ++i) {
+    const size_t addr = kCreditsTableAddress + 4 * i;
+
+    fprintf(stderr, "Reading credits entries from table at %06lx\n", addr);
+
+    const size_t title = rom.getw(addr) + kCreditsBankOffset;
+    const size_t names = rom.getw(addr + 2) + kCreditsBankOffset;
+
+    Text t;
+    t.title = parse_string_(rom, title);
+    t.name1 = parse_string_(rom, names);
+    t.name2 = parse_string_(rom, names + t.name1.length() + 3);
+
+    credits_[i] = t;
+  }
+}
+
+void Credits::set(size_t page, const Credits::Text& text) {
+  if (page < kCreditsPages) credits_[page] = text;
+}
+
+Credits::Text Credits::get(size_t page) const {
+  if (page < kCreditsPages) return credits_[page];
+  return {"","",""};
+}
+
+void Credits::commit(Rom& rom) const {
+  size_t table = kCreditsTableAddress;
+  size_t data = kCreditsTableAddress + 4 * kCreditsPages;
+
+  for (size_t i = 0; i < kCreditsPages; ++i) {
+    // Add entry for title
+    rom.putw(table, data - kCreditsBankOffset);
+    rom.write(data, {0x22, 0x47});
+    data = write_string_(rom, data + 2, credits_[i].title);
+    rom.putc(data++, 0xff);
+
+    // Add entry for name1
+    rom.putw(table + 2, data - kCreditsBankOffset);
+    rom.write(data, {0x22, 0x8b});
+    data = write_string_(rom, data + 2, credits_[i].name1);
+
+    // Add entry for name2 if present
+    if (credits_[i].name2.length() > 0) {
+      rom.write(data, {0x22, 0xcb});
+      data = write_string_(rom, data + 2, credits_[i].name2);
+    }
+
+    rom.putc(data++, 0xff);
+    table += 4;
+  }
 }
 
 Rom::Rom(const std::string& filename) {
@@ -476,6 +521,11 @@ void Rom::putc(size_t address, uint8_t data) {
   data_[address] = data;
 }
 
+void Rom::putw(size_t address, uint16_t data) {
+  putc(address, data & 0xff);
+  putc(address + 1, data >> 8);
+}
+
 void Rom::write(size_t address, std::vector<uint8_t> data) {
   /* fprintf(stderr, "Write %lu bytes at %06lx\n", data.size(), address); */
   for (size_t i = 0; i < data.size(); ++i) {
@@ -514,6 +564,8 @@ bool Rom::commit() {
       SongTitle::TriforceFanfare,
       SongTitle::FinalBossTheme});
 
+  credits_.commit(*this);
+
   return true;
 }
 
@@ -529,6 +581,10 @@ void Rom::save(const std::string& filename) {
 
 Song* Rom::song(Rom::SongTitle title) {
   return &songs_[title];
+}
+
+Credits* Rom::credits() {
+  return &credits_;
 }
 
 void Rom::commit(size_t address, std::initializer_list<Rom::SongTitle> songs) {

@@ -253,6 +253,7 @@ int main(int argc, char** argv) {
 
   z2music::Rom rom(file);
 
+  // Change gp music
   set_gp_intro(rom.song(z2music::Rom::SongTitle::GreatPalaceIntro));
   set_gp_theme(rom.song(z2music::Rom::SongTitle::GreatPalaceTheme));
   set_final_boss(rom.song(z2music::Rom::SongTitle::FinalBossTheme));
@@ -261,6 +262,18 @@ int main(int argc, char** argv) {
 
   // Fix a bug in the vanilla game
   rom.write(0x5d6b, { 0xea, 0xea, 0xea });
+
+  // Change credits
+  z2music::Credits* c = rom.credits();
+  c->set(0, {"WINTER SOLSTICE",  "BY GTM604",     ""});
+  c->set(1, {"HACKING        ",  "CF207    ",     ""});
+  c->set(2, {"MUSIC  ",          "BENTGLASSTUBE", ""});
+  c->set(3, {"DESIGN",           "GTM604       ", "ICEPENGUIN"});
+  c->set(4, {"DESIGN",           "MISTERMIKE",    "NJOSRO    "});
+  c->set(5, {"SPECIAL THANKS",   "MAX       ",    "SIMPOLDOOD"});
+  c->set(6, {"SPECIAL THANKS",   "REP2369",       "TRAX      "});
+  c->set(7, {"SPECIAL THANKS",   "ZELDA II",      "COMMUNITY"});
+  // c->set(8, {"THANKS A MILLION", "PUSH START",    "TO REPLAY"});
 
   rom.save("/tmp/output.nes");
 
