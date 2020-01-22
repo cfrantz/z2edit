@@ -265,15 +265,15 @@ int main(int argc, char** argv) {
 
   // Change credits
   z2music::Credits* c = rom.credits();
-  c->set(0, {"WINTER SOLSTICE",  "BY GTM604",     ""});
-  c->set(1, {"HACKING        ",  "CF207    ",     ""});
-  c->set(2, {"MUSIC  ",          "BENTGLASSTUBE", ""});
-  c->set(3, {"DESIGN",           "GTM604       ", "ICEPENGUIN"});
-  c->set(4, {"DESIGN",           "MISTERMIKE",    "NJOSRO    "});
-  c->set(5, {"SPECIAL THANKS",   "MAX       ",    "SIMPOLDOOD"});
-  c->set(6, {"SPECIAL THANKS",   "REP2369",       "TRAX      "});
-  c->set(7, {"SPECIAL THANKS",   "ZELDA II",      "COMMUNITY"});
-  // c->set(8, {"THANKS A MILLION", "PUSH START",    "TO REPLAY"});
+  c->set(0, {"WINTER SOLSTICE",   "BY GTM604",     ""});
+  c->set(1, {"HACKING        ",   "CF207    ",     ""});
+  c->set(2, {"MUSIC  ",           "BENTGLASSTUBE", ""});
+  c->set(3, {"DESIGN",            "GTM604       ", "ICEPENGUIN"  });
+  c->set(4, {"DESIGN",            "MISTERMIKE",    "REP2369   "  });
+  c->set(5, {"SPECIAL THANKS",    "MAX       ",    "SIMPOLDOOD"  });
+  c->set(6, {"SPECIAL THANKS",    "NJOSRO",        "TRAX      "  });
+  c->set(7, {"SPECIAL THANKS",    "ZELDA II",      "COMMUNITY"   });
+  c->set(8, {"THANKS A MILLION/", "PUSH START TO", "KEEP FISHING"});
 
   rom.save("/tmp/output.nes");
 
