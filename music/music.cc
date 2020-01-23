@@ -444,10 +444,15 @@ void Credits::commit(Rom& rom) const {
 
   for (size_t i = 0; i < kCreditsPages; ++i) {
     // Add entry for title
-    rom.putw(table, data - kCreditsBankOffset);
-    rom.write(data, {0x22, 0x47});
-    data = write_string_(rom, data + 2, credits_[i].title);
-    rom.putc(data++, 0xff);
+    if (credits_[i].title.length() > 0) {
+      rom.putw(table, data - kCreditsBankOffset);
+      rom.write(data, {0x22, 0x47});
+      data = write_string_(rom, data + 2, credits_[i].title);
+      rom.putc(data++, 0xff);
+    } else {
+      // optimization if the title is empty, just point to the previous title
+      rom.putw(table, rom.getw(table - 4));
+    }
 
     // Add entry for name1
     rom.putw(table + 2, data - kCreditsBankOffset);
