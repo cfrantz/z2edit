@@ -1,0 +1,62 @@
+asm b=0 0x8000
+; Disable all spells except thunder in Tbird's room.
+
+; Original addresses of all the spells
+real_shield_spell = $8e8d
+real_jump_spell = $8e58
+real_life_spell = $8e5d
+real_fairy_spell = $91a4
+real_fire_spell = $97f1
+real_reflect_spell = $8e96
+real_spell_spell = $8e73
+real_thunder_spell = $91e6
+
+.org $bd80
+check_tbird_room:
+    lda     $0707               ; World code
+    cmp     #5                  ; GP is world 5
+    bne     check_tbird_done
+    lda     $561                ; Room code
+    cmp     #53                 ; T-bird is in room 53
+check_tbird_done:    
+    rts
+
+shield_spell:
+    jsr     check_tbird_room
+    beq     check_tbird_done
+    jmp     real_shield_spell
+jump_spell:
+    jsr     check_tbird_room
+    beq     check_tbird_done
+    jmp     real_jump_spell
+life_spell:
+    jsr     check_tbird_room
+    beq     check_tbird_done
+    jmp     real_life_spell
+fairy_spell:
+    jsr     check_tbird_room
+    beq     check_tbird_done
+    jmp     real_fairy_spell
+fire_spell:
+    jsr     check_tbird_room
+    beq     check_tbird_done
+    jmp     real_fire_spell
+reflect_spell:
+    jsr     check_tbird_room
+    beq     check_tbird_done
+    jmp     real_reflect_spell
+spell_spell:
+    jsr     check_tbird_room
+    beq     check_tbird_done
+    jmp     real_spell_spell
+
+.org $8e48
+.dw shield_spell
+.dw jump_spell
+.dw life_spell
+.dw fairy_spell
+.dw fire_spell
+.dw reflect_spell
+.dw spell_spell
+.dw real_thunder_spell
+.end

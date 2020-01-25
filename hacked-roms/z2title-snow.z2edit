@@ -1,0 +1,64 @@
+asm b=5 0
+
+
+; For better snow effect:
+; Disable sprites 4, 9, 10, 11, 12, 17, 18, 19, 20 by setting their
+; Y-coordinate to $f8 (off the bottom of the screen).
+
+.org $a7c1
+; sprites 0-3
+.db $7e,$f0,$01,$f8, $3f,$ee,$01,$f8, $4f,$f6,$01,$f0, $4f,$f4,$01,$f8
+; sprites 4-7
+.db $5f,$ee,$01,$e8, $5f,$f0,$01,$f0, $5f,$f0,$01,$f8, $6f,$f8,$02,$78
+; sprites 8-11
+.db $6f,$fa,$02,$80, $f8,$ee,$01,$d0, $f8,$f0,$01,$d8, $f8,$f4,$01,$e0
+; sprites 12-15
+.db $6f,$f2,$01,$e8, $6f,$f6,$01,$f0, $6f,$f0,$01,$f8, $7f,$fc,$02,$78
+; sprites 16-19
+.db $7f,$fe,$02,$80, $f8,$f0,$01,$d0, $f8,$f2,$01,$d8, $f8,$f4,$01,$e0
+; sprites 20-23
+.db $7f,$f0,$01,$e8, $7f,$f2,$01,$f0, $8f,$ea,$02,$78, $8f,$ec,$02,$80
+
+.db $9f,$ea,$02,$78, $9f,$ec,$02,$80, $ff,$e8,$21,$70, $07,$e8,$22,$28
+.db $07,$e8,$23,$50, $07,$e8,$20,$a0, $0f,$e8,$21,$20, $0f,$e8,$22,$78
+.db $5f,$e8,$23,$40, $17,$e8,$20,$e0, $1f,$e8,$21,$10, $1f,$e8,$22,$28
+.db $5f,$e8,$23,$60, $1f,$e8,$20,$a0, $4f,$e8,$21,$80, $1f,$e8,$22,$e0
+.db $1f,$e8,$23,$e8, $27,$e8,$20,$78, $27,$e8,$21,$c8, $27,$e8,$22,$e8
+.db $2f,$e8,$23,$28, $2f,$e8,$20,$d8, $37,$e8,$21,$10, $37,$e8,$22,$c8
+.db $3f,$e8,$23,$a8, $3f,$e8,$20,$18, $47,$e8,$21,$08, $47,$e8,$22,$48
+.db $4f,$e8,$23,$e0, $af,$e8,$01,$40, $b4,$e8,$02,$20, $9f,$e8,$03,$58
+.db $ad,$e8,$00,$48, $92,$e8,$01,$70, $95,$e8,$02,$88, $8f,$e8,$03,$90
+.db $95,$e8,$00,$b0, $98,$e8,$01,$8a, $78,$e8,$02,$95, $93,$e8,$03,$8e
+
+
+.org $a8cf
+
+bank5_Snow_Animation:
+    lda $12             ; Get frame counter
+    lsr
+    bcc done            ; skip snow routine on even frames
+    ldx #$98
+next_sprite:
+    dex
+    dex
+    dex
+    dex
+    beq done
+snow_down:
+    lda #2              ; White
+    sta $26a,x          ; OAM color
+    inc $268,x          ; OAM Y pos
+    txa                 ; Sprite number to A
+    asl                 ; Move up a bit position (cuz every other frame)
+    eor $12             ; XOR with frame counter
+    and #$f             ; Clamp to 0-7
+    cmp #7              ; >=8, snow left
+    bcs snow_left
+    inc $26b,x          ; snow right
+    bne next_sprite
+snow_left:
+    dec $26b,x          ; snow left
+    bne next_sprite
+done:
+    rts
+.end
