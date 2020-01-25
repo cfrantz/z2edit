@@ -1,0 +1,46 @@
+asm b=5 0
+bank7_remove_enemy_or_item = $dd47
+bank5_table_Enemy_Routines1 = $948d
+label_de40 = $de40
+
+; $93ae is marked as 'unused' in Lemmy's disassembly, and also appears
+; unused in GTM's hack.
+bank5_life_and_magic_fairy = $93ae
+
+.org bank5_life_and_magic_fairy
+    lda      $C9            ; ???
+    and      #$08           ; bit3 means we already did something?
+    bne      action         ; if yes, jump to action routine
+    lda      $81,x          ; get current animation frame
+    ora      $07FE          ; ored with already played the sound
+    bne      action         ; if yes, jump to action routine
+    lda      #$C0           ; sound effect $C0
+    sta      $EC            ; play it
+    inc      $81,x          ; increment animation frame
+action:
+    jsr      label_de40     ; ??
+    ldy      $AF,x          ; Fairy AI
+    bne      fillup         ; Non-zero means fillup in progress
+    lda      $A8,x          ; Fairy state
+    and      #$10           ; bit4 means collision with link?
+    beq      done           ; no collision, nothing to do.
+    inc      $AF,x          ; start fillup
+    inc      $DE            ; prevent link movement
+    dey                     ; decrement Y (to $FF)
+    sty      $070C          ; Fill MAGIC
+    sty      $070D          ; Fill LIFE
+done:
+    rts
+
+fillup:
+    lda      $074B          ; Spell Flash Counter
+    ora      #$10           ; set bit4
+    sta      $074B          ; Save
+    lda      $070D          ; Fillup still in progress?
+    bne      done           ; If yes, done
+    sta      $DE            ; allow link movement
+    jmp      bank7_remove_enemy_or_item    
+
+.org bank5_table_Enemy_Routines1
+.dw bank5_life_and_magic_fairy
+.end
