@@ -107,17 +107,31 @@ StatusOr<std::string> ApplyPatch(const string& original,
             modified.resize(offset+len, '\xff');
         }
 
+#ifdef DEBUG_PRINT
+        // TODO: distinguish between PRG and CHR banks.
+        int addr = 0x8000 | ((offset - 0x10) & 0x3FFF);
+        int bank = (offset - 0x10) / 16384;
+        if (bank == 7) addr |= 0xC000;
+        printf("Applying patch at bank=%d addr=0x%x for 0x%x bytes\n", bank, addr, len);
+        printf("   ");
+#endif
         for(int32_t j=0; j<len; j++) {
             if (i >= patch.size()) {
                 return util::Status(util::error::Code::INVALID_ARGUMENT,
                                 "Premature end of patch reading data");
             }
             modified[offset+j] = patch.at(i);
+#ifdef DEBUG_PRINT
+            printf(" %02x", patch.at(i) & 0xff);
+#endif
 
             // An RLE chunk is "len" of the same byte
             // In non-RLE mode, we increment the patch offset in the loop
             if (!rle_chunk) i++;
         }
+#ifdef DEBUG_PRINT
+        printf("\n");
+#endif
         // In RLE mode, we increment the patch offset once outside the loop
         if (rle_chunk) i++;
     }
