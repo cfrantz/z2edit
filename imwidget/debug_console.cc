@@ -68,7 +68,7 @@ bool DebugConsole::Draw() {
     if (!visible_)
         return false;
 
-    ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin(name_, &visible_)) {
         ImGui::End();
         return false;

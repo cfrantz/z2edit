@@ -1,10 +1,10 @@
 package(default_visibility=["//visibility:public"])
-load("@mxebzl//tools/windows:rules.bzl", "pkg_winzip")
+load("@mxebzl//tools:rules.bzl", "pkg_winzip")
 
 config_setting(
     name = "windows",
     values = {
-        "crosstool_top": "@mxebzl//tools/windows:toolchain",
+        "crosstool_top": "@mxebzl//compiler:win64",
     }
 )
 

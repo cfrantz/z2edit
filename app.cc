@@ -29,7 +29,7 @@ void App::ProcessMessage(const std::string& msg, const void* extra) {
 }
 
 void App::Draw() {
-    ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open", "Ctrl+O")) {
