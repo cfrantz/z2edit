@@ -227,30 +227,35 @@ bool SimpleMap::Draw() {
     ImGui::EndChild();
 
     if (map_.type() != z2util::MapType::OVERWORLD) {
-        ImGui::RadioButton("Map Commands", &tab_, 0); ImGui::SameLine();
-        ImGui::RadioButton("Connections", &tab_, 1); ImGui::SameLine();
-        ImGui::RadioButton("Enemy List", &tab_, 2); ImGui::SameLine();
-        ImGui::RadioButton("Item Availability", &tab_, 3); ImGui::SameLine();
-        ImGui::RadioButton("Swap/Copy", &tab_, 4);
-        ImGui::Separator();
-
         MapHolder::DrawResult draw_result = MapHolder::DR_NONE;
-        if (tab_ == 0) {
-            draw_result = holder_.Draw();
-            if (draw_result != MapHolder::DR_NONE) {
-                changed_ = true;
-                want_redraw = true;
+        if (ImGui::BeginTabBar("SideviewTabs", ImGuiTabBarFlags_None)) {
+            if (ImGui::BeginTabItem("Map Commands")) {
+                draw_result = holder_.Draw();
+                if (draw_result != MapHolder::DR_NONE) {
+                    changed_ = true;
+                    want_redraw = true;
+                }
+                ImGui::EndTabItem();
             }
-        } else if (tab_ == 1) {
-            changed_ |= connection_.Draw();
-        } else if (tab_ == 2) {
-            changed_ |= enemies_.Draw();
-        } else if (tab_ == 3) {
-            changed_ |= avail_.Draw();
-        } else if (tab_ == 4) {
-            if (swapper_.Draw()) {
-                SetMap(map_);
+            if (ImGui::BeginTabItem("Connections")) {
+                changed_ |= connection_.Draw();
+                ImGui::EndTabItem();
             }
+            if (ImGui::BeginTabItem("Enemy List")) {
+                changed_ |= enemies_.Draw();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Item Availability")) {
+                changed_ |= avail_.Draw();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Swap/Copy")) {
+                if (swapper_.Draw()) {
+                    SetMap(map_);
+                }
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
         }
         if (want_redraw) {
             decomp_.Clear();
