@@ -1,5 +1,5 @@
-#ifndef PROJECT_IMAPP_H
-#define PROJECT_IMAPP_H
+#ifndef Z2UTIL_IMAPP_H
+#define Z2UTIL_IMAPP_H
 #include <memory>
 
 #include <string>
@@ -52,8 +52,11 @@ class ImApp {
     void AddDrawCallback(ImWindowBase* window);
     void HelpButton(const std::string& topickey, bool right_justify=false);
 
+    inline const ImVec4& clear_color() { return clear_color_; }
+    inline void set_clear_color(const ImVec4& c) { clear_color_ = c; }
+
   protected:
-    virtual void AudioCallback(float* stream, int len);
+    virtual void AudioCallback(void* stream, int len);
     std::string name_;
     int width_;
     int height_;
@@ -78,4 +81,4 @@ class ImApp {
     std::vector<std::unique_ptr<ImWindowBase>> draw_added_;
 };
 
-#endif // PROJECT_IMAPP_H
+#endif // Z2UTIL_IMAPP_H

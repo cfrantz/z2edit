@@ -1,12 +1,16 @@
-diff -Naur bazel/gflags.bzl bazel/gflags.bzl
---- bazel/gflags.bzl	2017-11-03 05:21:22.000000000 -0700
-+++ bazel/gflags.bzl	2017-12-09 18:21:31.588867780 -0800
-@@ -65,7 +65,7 @@
-         "-DHAVE_INTTYPES_H",
-         "-DHAVE_SYS_STAT_H",
-         "-DHAVE_UNISTD_H",
--        "-DHAVE_FNMATCH_H",
-+        #"-DHAVE_FNMATCH_H",
-         "-DHAVE_STRTOLL",
-         "-DHAVE_STRTOQ",
-         "-DHAVE_PTHREAD",
+diff --git a/BUILD b/BUILD
+index 0e7ccdd..e22dcb8 100644
+--- a/BUILD
++++ b/BUILD
+@@ -8,7 +8,10 @@ exports_files(["src/gflags_completions.sh", "COPYING.txt"])
+ 
+ config_setting(
+     name = "x64_windows",
+-    values = {"cpu": "x64_windows"},
++    values = {
++        #"cpu": "x64_windows",
++        "crosstool_top": "@mxebzl//compiler:win64",
++    },
+ )
+ 
+ load(":bazel/gflags.bzl", "gflags_sources", "gflags_library")

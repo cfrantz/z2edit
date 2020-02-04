@@ -2,19 +2,20 @@
 # gflags
 ######################################################################
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//rules:patched_http_archive.bzl", "patched_http_archive")
+#load("//rules:patched_http_archive.bzl", "patched_http_archive")
 load(
     "@bazel_tools//tools/build_defs/repo:git.bzl",
     "git_repository",
     "new_git_repository",
 )
 
-patched_http_archive(
+http_archive(
     name = "com_github_gflags_gflags",
-    patch = "//rules:gflags.patch",
-    sha256 = "94ad0467a0de3331de86216cbc05636051be274bf2160f6e86f07345213ba45b",
-    strip_prefix = "gflags-77592648e3f3be87d6c7123eb81cbad75f9aef5a",
-    urls = ["https://github.com/gflags/gflags/archive/77592648e3f3be87d6c7123eb81cbad75f9aef5a.zip"],
+    patches = ["//rules:gflags.patch"],
+    patch_args = ["-p1"],
+    strip_prefix = "gflags-2e227c3daae2ea8899f49858a23f3d318ea39b57",
+    sha256 = "c5554661e7dc413f3c8ed8ae48034c8b34cf77ab13d49ed199821ef5544dd4ef",
+    urls = ["https://github.com/gflags/gflags/archive/2e227c3daae2ea8899f49858a23f3d318ea39b57.zip"],
 )
 
 bind(
