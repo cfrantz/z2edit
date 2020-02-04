@@ -33,7 +33,7 @@ int32_t read_uint(const std::string& p, size_t offset, size_t len) {
 }
 }  // namespace
 
-std::string CreatePatch(const string& original, const string& modified) {
+std::string CreatePatch(const std::string& original, const std::string& modified) {
     std::string patch = "PATCH";
     size_t len = original.size();
     size_t i;
@@ -68,8 +68,8 @@ std::string CreatePatch(const string& original, const string& modified) {
     return patch;
 }
 
-StatusOr<std::string> ApplyPatch(const string& original,
-                                 const string& patch) {
+StatusOr<std::string> ApplyPatch(const std::string& original,
+                                 const std::string& patch) {
     size_t i = 0;
     int32_t offset, len;
     bool rle_chunk;

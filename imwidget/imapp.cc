@@ -1,23 +1,22 @@
 #include <gflags/gflags.h>
 #include "imapp.h"
 #include "imgui.h"
-//#include "util/os.h"
+#include "util/os.h"
+#include "util/gamecontrollerdb.h"
 #include "util/logging.h"
 #include "util/imgui_impl_sdl.h"
+#include "absl/strings/str_cat.h"
 
-DEFINE_int32(audio_frequency, 48000, "Audio sample frequency");
-DEFINE_int32(audio_bufsize, 2048, "Audio buffer size");
 DEFINE_double(hidpi, 1.0, "HiDPI scaling factor");
+DEFINE_string(controller_db, "", "Path to the SDL gamecontrollerdb.txt file");
 
 
 ImApp* ImApp::singleton_;
 
-ImApp::ImApp(const std::string& name, int width, int height, bool want_audio)
+ImApp::ImApp(const std::string& name, int width, int height)
   : name_(name),
     width_(width),
-    height_(height),
-    audio_producer_(0),
-    audio_consumer_(0)
+    height_(height)
 {
     singleton_ = this;
     SDL_Init(SDL_INIT_VIDEO |
@@ -29,7 +28,7 @@ ImApp::ImApp(const std::string& name, int width, int height, bool want_audio)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     window_ = SDL_CreateWindow(name.c_str(),
@@ -39,23 +38,54 @@ ImApp::ImApp(const std::string& name, int width, int height, bool want_audio)
                                SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     glcontext_ = SDL_GL_CreateContext(window_);
+    // Setup ImGui binding
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui_ImplSdl_SetHiDPIScale(FLAGS_hidpi);
-    ImGui_ImplSdl_Init(window_);
-    fpsmgr_.SetRate(60);
+    ImGui_ImplSdlGL3_Init(window_);
+    clear_color_ = ImColor(114, 144, 154);
+    //fpsmgr_.SetRate(60);
 
-    if (want_audio) {
-        audiobufsz_ = FLAGS_audio_bufsize * 2;
-        audiobuf_.reset(new float[audiobufsz_]);
-        InitAudio(FLAGS_audio_frequency, 1, FLAGS_audio_bufsize, AUDIO_F32);
-    }
     RegisterCommand("quit", "Quit the application.", this, &ImApp::Quit);
 }
 
 ImApp::~ImApp() {
-    ImGui_ImplSdl_Shutdown();
+    ImGui_ImplSdlGL3_Shutdown();
+    ImGui::DestroyContext();
     SDL_GL_DeleteContext(glcontext_);
     SDL_DestroyWindow(window_);
     SDL_Quit();
+}
+
+void ImApp::InitControllers() {
+    if (FLAGS_controller_db.empty()) {
+        SDL_RWops* f = SDL_RWFromConstMem(kGameControllerDB,
+                                          kGameControllerDB_len);
+        SDL_GameControllerAddMappingsFromRW(f, 1);
+    } else {
+        SDL_GameControllerAddMappingsFromFile(FLAGS_controller_db.c_str());
+    }
+
+    int controllers = 0;
+    char guid[64];
+    for(int i=0; i<SDL_NumJoysticks(); ++i) {
+        const char *name, *desc;
+        SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(i), guid, sizeof(guid));
+        if (SDL_IsGameController(i)) {
+            controllers++;
+            name = SDL_GameControllerNameForIndex(i);
+            desc = "Controller";
+        } else {
+            name = SDL_JoystickNameForIndex(i);
+            desc = "Joystick";
+        }
+        printf("%s %d: %s (guid: %s)\n", desc, i,
+               name ? name : "Unknown", guid);
+    }
+    for(int i=0; i<controllers; i++) {
+        printf("Opening controller %d\n", i);
+        SDL_GameControllerOpen(i);
+    }
 }
 
 void ImApp::Quit(DebugConsole* console, int argc, char **argv) {
@@ -65,7 +95,7 @@ void ImApp::Quit(DebugConsole* console, int argc, char **argv) {
 void ImApp::SetTitle(const std::string& title, bool with_appname) {
     std::string val;
     if (with_appname) {
-        val = title.empty() ? name_ : StrCat(name_, ": ", title);
+        val = title.empty() ? name_ : absl::StrCat(name_, ": ", title);
     } else {
         val = name_;
     }
@@ -78,9 +108,7 @@ void ImApp::Run() {
         if (!ProcessEvents())
             break;
         BaseDraw();
-        // Play audio here if you have audio
-        // PlayAudio(...)
-        fpsmgr_.Delay();
+        //fpsmgr_.Delay();
     }
 }
 
@@ -88,7 +116,7 @@ bool ImApp::ProcessEvents() {
     SDL_Event event;
     bool done = false;
     while (SDL_PollEvent(&event)) {
-        ImGui_ImplSdl_ProcessEvent(&event);
+        ImGui_ImplSdlGL3_ProcessEvent(&event);
         if (event.type == SDL_QUIT)
             done = true;
         ProcessEvent(&event);
@@ -97,9 +125,15 @@ bool ImApp::ProcessEvents() {
 }
 
 void ImApp::BaseDraw() {
-    ImVec4 clear_color = ImColor(114, 144, 154);
-    ImGui_ImplSdl_NewFrame(window_);
+    if (!PreDraw()) {
+        glViewport(0, 0,
+                   (int)ImGui::GetIO().DisplaySize.x,
+                   (int)ImGui::GetIO().DisplaySize.y);
+        glClearColor(clear_color_.x, clear_color_.y, clear_color_.z, clear_color_.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
+    ImGui_ImplSdlGL3_NewFrame(window_);
     console_.Draw();
     for(auto it=draw_callback_.begin(); it != draw_callback_.end();) {
         if ((*it)->visible()) {
@@ -112,13 +146,8 @@ void ImApp::BaseDraw() {
     }
 
     Draw();
-
-    glViewport(0, 0,
-               (int)ImGui::GetIO().DisplaySize.x,
-               (int)ImGui::GetIO().DisplaySize.y);
-    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
     ImGui::Render();
+    ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(window_);
     for(auto& widget : draw_added_) {
         draw_callback_.emplace_back(std::move(widget));
@@ -144,22 +173,6 @@ void ImApp::InitAudio(int freq, int chan, int bufsz, SDL_AudioFormat fmt) {
     SDL_PauseAudioDevice(dev, 0);
 }
 
-void ImApp::PlayAudio(float* data, int len) {
-    int producer = audio_producer_;
-    while(len) {
-        audiobuf_[producer] = *data++;
-        len--;
-        producer = (producer + 1) % audiobufsz_;
-        while(producer == audio_consumer_) {
-            // Audio overrun.
-            // FIXME(cfrantz): This should use a condition variable, but this
-            // program doesn't use audio anyway.
-            // os::Yield();
-        }
-        audio_producer_ = producer;
-    }
-}
-
 void ImApp::HelpButton(const std::string& topickey, bool right_justify) {
     if (right_justify) {
         ImGui::SameLine(ImGui::GetWindowWidth() - 50);
@@ -170,17 +183,7 @@ void ImApp::HelpButton(const std::string& topickey, bool right_justify) {
 }
 
 void ImApp::AudioCallback(float* stream, int len) {
-    while(audio_consumer_ != audio_producer_ && len) {
-        *stream++ = audiobuf_[audio_consumer_];
-        len--;
-        audio_consumer_ = (audio_consumer_ + 1) % audiobufsz_;
-    }
-    if (len) {
-        fprintf(stderr, "Audio underrun!\n");
-        while(len--) {
-            *stream++ = 0;
-        }
-    }
+    memset(stream, 0, len * sizeof(float));
 }
 
 void ImApp::AudioCallback_(void* userdata, uint8_t* stream, int len) {

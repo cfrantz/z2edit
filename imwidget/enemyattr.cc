@@ -40,7 +40,7 @@ bool PointsTable::Draw() {
     ImGui::PushItemWidth(100);
     for(auto& val : data_) {
         ImGui::PushID(i);
-        ImGui::AlignFirstTextHeightToWidgets();
+        ImGui::AlignTextToFramePadding();
         ImGui::Text("Type %x", i);
 
         ImGui::SameLine();
@@ -124,7 +124,7 @@ bool EnemyEditor::DrawPbags(const char *types) {
 
     for(int i=0; i<4; i++) {
         ImGui::PushID(i);
-        ImGui::AlignFirstTextHeightToWidgets();
+        ImGui::AlignTextToFramePadding();
         ImGui::Text("%-20s", bags[i]);
         ImGui::SameLine();
         changed_ |= ImGui::Combo("##xp", &pbags_[i], types);
@@ -203,7 +203,7 @@ bool EnemyEditor::Draw() {
                 continue;
 
             ImGui::PushID(i);
-            ImGui::AlignFirstTextHeightToWidgets();
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("%-40.40s ", enemy->second.name().c_str());
 
             ImGui::SameLine();

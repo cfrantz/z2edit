@@ -34,7 +34,7 @@ bool PalaceGraphics::Draw() {
 
         for(int world=0; world<3; world++) {
             int n = start + i - world * 4;
-            ImGui::AlignFirstTextHeightToWidgets();
+            ImGui::AlignTextToFramePadding();
             if (n >= 52 && n < 56) {
                 ImGui::Text("%02d    ", n);
             } else if (n >= 62) {

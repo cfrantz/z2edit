@@ -26,7 +26,7 @@ bind(
 ######################################################################
 new_git_repository(
     name = "imgui_git",
-    tag = "v1.49",
+    tag = "v1.74",
     remote = "https://github.com/ocornut/imgui.git",
     build_file = "//rules:imgui.BUILD",
 )
@@ -52,6 +52,15 @@ new_git_repository(
 bind(
     name = "fontawesome",
     actual = "@iconfonts//:fontawesome",
+)
+
+######################################################################
+# Abseil
+######################################################################
+git_repository(
+    name = "com_google_absl",
+    remote = "https://github.com/abseil/abseil-cpp.git",
+    commit = "0f86336b6939ea673cc1cbe29189286cae67d63a",
 )
 
 ######################################################################

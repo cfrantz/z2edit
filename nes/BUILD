@@ -26,7 +26,7 @@ cc_library(
     srcs = ["cpu6502.cc"],
     deps = [
         ":mappers",
-        "//util:string",
+        "@com_google_absl//absl/strings",
     ],
 )
 

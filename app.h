@@ -30,7 +30,7 @@ namespace z2util {
 
 class Z2Edit: public ImApp {
   public:
-    Z2Edit(const std::string& name) : ImApp(name, 1280, 720, false) {}
+    Z2Edit(const std::string& name) : ImApp(name, 1280, 720) {}
     ~Z2Edit() override {}
 
     void Init() override;

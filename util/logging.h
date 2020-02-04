@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <string>
 #include <unistd.h>
+#include "absl/strings/str_cat.h"
 
-#include "util/strutil.h"
 
 #define LOG(LEVEL, ...) \
     logging::Log(logging::LogLevel::LL_##LEVEL, __VA_ARGS__)
@@ -40,16 +40,6 @@ extern int logging_init_done;
 extern LogLevel loglevel;
 extern FILE* logfp;
 extern int logfp_isatty;
-
-template<typename ...Args>
-inline void Print(FILE* fp, Args ...args) {
-    fputs(StrCat(args...).c_str(), fp);
-}
-
-template<typename ...Args>
-inline void Println(FILE* fp, Args ...args) {
-    fputs(StrCat(args..., "\n").c_str(), fp);
-}
 
 extern std::string Hex(uint8_t x, bool lz=true, bool zx=true);
 extern std::string Hex(uint16_t x, bool lz=true, bool zx=true);
@@ -108,15 +98,14 @@ void Log(LogLevel level, Args ...args) {
     }
 
     if (logfp_isatty) {
-//        fputs(BOLD, logfp);
         fputs(color, logfp);
         fputs(prefix, logfp);
-        fputs(StrCat(args...).c_str(), logfp);
+        fputs(absl::StrCat(args...).c_str(), logfp);
         fputs(RESET, logfp);
         fputs("\n", logfp);
     } else {
         fputs(prefix, logfp);
-        fputs(StrCat(args...).c_str(), logfp);
+        fputs(absl::StrCat(args...).c_str(), logfp);
         fputs("\n", logfp);
     }
     if (level == LL_FATAL) {

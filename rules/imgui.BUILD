@@ -17,9 +17,10 @@ cc_library(
     srcs = [
         "imgui.cpp",
         "imgui_draw.cpp",
-        "stb_rect_pack.h",
-        "stb_textedit.h",
-        "stb_truetype.h",
+        "imgui_widgets.cpp",
+        "imstb_rectpack.h",
+        "imstb_textedit.h",
+        "imstb_truetype.h",
     ],
 )
 

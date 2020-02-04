@@ -57,7 +57,7 @@ bool ItemEffects::DrawItemTable() {
     bool changed = false;
     for(int i=0; i<4; i++) {
         if (i) ImGui::Separator();
-        ImGui::AlignFirstTextHeightToWidgets();
+        ImGui::AlignTextToFramePadding();
         ImGui::PushID(i);
         ImGui::Text("%20s activates", names[i]);
         ImGui::SameLine();

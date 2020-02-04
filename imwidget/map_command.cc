@@ -10,7 +10,7 @@
 #include "imgui.h"
 #include "nes/enemylist.h"
 #include "util/config.h"
-#include "util/strutil.h"
+#include "absl/strings/str_cat.h"
 
 #include "IconsFontAwesome.h"
 
@@ -361,7 +361,7 @@ MapHolder::DrawResult MapHolder::Draw() {
     ImGui::Text("Map pointer at bank=0x%x address=0x%04x",
                 map_.pointer().bank(), map_.pointer().address());
 
-    ImGui::AlignFirstTextHeightToWidgets();
+    ImGui::AlignTextToFramePadding();
     ImGui::Text("Map address at bank=0x%x address=",
                 addr.bank());
 
@@ -639,14 +639,14 @@ void MapHolder::Save(std::function<void()> finish, bool force) {
     // Determine if any other maps point to the same map data
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     std::vector<const Map*> sameptr;
-    string names = StrCat(map_.name(), "\n");
+    std::string names = absl::StrCat(map_.name(), "\n");
     for(const auto& m : ri.map()) {
         Address mptr = mapper_->ReadAddr(m.pointer(), 0);
         if (m.name() != map_.name() &&
             mptr.bank() == map_.address().bank() &&
             mptr.address() == map_.address().address()) {
             sameptr.push_back(&m);
-            StrAppend(&names, "+ ", m.name(), "\n");
+            absl::StrAppend(&names, "+ ", m.name(), "\n");
             LOG(INFO, "Duplicate data: ", m.name());
         }
     }
@@ -1317,7 +1317,7 @@ bool MapSwapper::Draw() {
         int src = srcarea_, dst = dstarea_;
         Swap();
         chg = true;
-        ImApp::Get()->ProcessMessage("commit", StrCat("Swap ",
+        ImApp::Get()->ProcessMessage("commit", absl::StrCat("Swap ",
                     names[src], " with ", names[dst]).c_str());
     }
     ImGui::SameLine();
@@ -1325,7 +1325,7 @@ bool MapSwapper::Draw() {
         int src = srcarea_, dst = dstarea_;
         Copy();
         chg = true;
-        ImApp::Get()->ProcessMessage("commit", StrCat("Copy ",
+        ImApp::Get()->ProcessMessage("commit", absl::StrCat("Copy ",
                     names[src], " to ", names[dst]).c_str());
     }
     ImGui::PopID();

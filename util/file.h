@@ -1,8 +1,8 @@
 #ifndef Z2HD_UTIL_FILE_H
 #define Z2HD_UTIL_FILE_H
+#include <cstdio>
+#include <cstdint>
 #include <memory>
-#include <stdio.h>
-#include <stdint.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -10,7 +10,6 @@
 
 #include "util/status.h"
 #include "util/statusor.h"
-#include "util/string.h"
 
 class Stat {
   public:
@@ -41,9 +40,9 @@ class Stat {
         IWOTH = S_IWOTH,
         IXOTH = S_IXOTH,
     };
-    static StatusOr<Stat> Filename(const string& filename);
+    static StatusOr<Stat> Filename(const std::string& filename);
     static StatusOr<Stat> FileDescriptor(int fd);
-    static StatusOr<Stat> Link(const string& filename);
+    static StatusOr<Stat> Link(const std::string& filename);
 
     inline bool IsRegular() const {
         return S_ISREG(Mode());
@@ -80,23 +79,27 @@ class Stat {
 
 class File {
   public:
-    static std::unique_ptr<File> Open(const string& filename,
-                                      const string& mode);
-    static bool GetContents(const string& filename, string* contents);
-    static bool SetContents(const string& filename, const string& contents);
+    static std::unique_ptr<File> Open(const std::string& filename,
+                                      const std::string& mode);
+    static bool GetContents(const std::string& filename, std::string* contents);
+    static bool SetContents(const std::string& filename, const std::string& contents);
 
-    static string Basename(const string& path);
-    static string Dirname(const string& path);
+    static std::string Basename(const std::string& path);
+    static std::string Dirname(const std::string& path);
+
+    static util::Status Access(const std::string& path);
+    static util::Status MakeDir(const std::string& path, mode_t mode=0755);
+    static util::Status MakeDirs(const std::string& path, mode_t mode=0755);
 
     virtual ~File();
     Stat FStat();
     int64_t Length();
 
-    bool Read(string* buf);
-    bool Read(string* buf, int64_t len);
+    bool Read(std::string* buf);
+    bool Read(std::string* buf, int64_t len);
     bool Read(void* buf, int64_t *len);
-    bool Write(const string& buf);
-    bool Write(const string& buf, int64_t len);
+    bool Write(const std::string& buf);
+    bool Write(const std::string& buf, int64_t len);
     bool Write(const void* buf, int64_t len);
 
     void Close();

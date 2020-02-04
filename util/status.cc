@@ -1,8 +1,8 @@
-#include <errno.h>
 #include <map>
+#include <string>
+#include <errno.h>
 
 #include "util/status.h"
-#include "util/string.h"
 
 namespace util {
 namespace error {
@@ -133,12 +133,12 @@ std::map<int, Code> posix_errors = {
 };
 } // namespace error
 
-string StrError(int error) {
+std::string StrError(int error) {
 #ifdef _WIN32
-    return string(strerror(error));
+    return std::string(strerror(error));
 #else
     char buf[1024];
-    return string(strerror_r(error, buf, sizeof(buf)));
+    return std::string(strerror_r(error, buf, sizeof(buf)));
 #endif
 }
 

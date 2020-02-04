@@ -280,7 +280,7 @@ bool Editor::Draw() {
     if (!visible_)
         return changed_;
 
-    ImGui::SetNextWindowSize(ImVec2(1100, 700), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(1100, 700), ImGuiCond_FirstUseEver);
     ImGui::Begin("Map Editor", &visible_);
 
     auto* rominfo = ConfigLoader<RomInfo>::MutableConfig();
@@ -333,7 +333,7 @@ bool Editor::Draw() {
     if (ImGui::Button("Commit to ROM")) {
         SaveMap();
         ImApp::Get()->ProcessMessage(
-                "commit", StrCat("Overworld edits to ", map_->name()).c_str());
+                "commit", absl::StrCat("Overworld edits to ", map_->name()).c_str());
     }
 
     ImGui::SameLine();

@@ -11,7 +11,7 @@ class NesHardwarePalette: public ImWindowBase {
     void Init();
     bool Draw() override;
     inline uint32_t palette(int color) const { return palette_[color]; }
-    inline ImColor imcolor(int color) const { return fpal_[color]; }
+    inline ImVec4 imcolor(int color) const { return fpal_[color]; }
   private:
     uint32_t palette_[64];
     ImColor fpal_[64];

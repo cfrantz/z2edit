@@ -5,7 +5,7 @@
 #include "imwidget/imutil.h"
 #include "imwidget/error_dialog.h"
 #include "util/config.h"
-#include "util/strutil.h"
+#include "absl/strings/str_cat.h"
 
 DEFINE_bool(render_items_in_known_banks, false,
             "Render items and enemies from known bank locations");
@@ -41,7 +41,7 @@ SimpleMap::SimpleMap(Mapper* m, const Map& map, int startscreen)
     startscreen_ = startscreen;
     mapsel_ = -1;
     title_ = map.name();
-    window_title_ = StrCat(title_, "##", id_);
+    window_title_ = absl::StrCat(title_, "##", id_);
 }
 
 SimpleMap* SimpleMap::Spawn(Mapper* m, const Map& map, int startscreen) {
@@ -142,7 +142,7 @@ bool SimpleMap::Draw() {
     if (!visible_)
         return changed_;
 
-    ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiCond_FirstUseEver);
     ImGui::Begin(window_title_.c_str(), &visible_);
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size()];
@@ -189,7 +189,7 @@ bool SimpleMap::Draw() {
             avail_.Save();
             changed_ = false;
             ImApp::Get()->ProcessMessage(
-                    "commit", StrCat("Map edits to ", map_.name()).c_str());
+                    "commit", absl::StrCat("Map edits to ", map_.name()).c_str());
         });
     }
 

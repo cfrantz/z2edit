@@ -3,7 +3,8 @@
 #include <inttypes.h>
 #include <gflags/gflags.h>
 #include "nes/cpu6502.h"
-#include "util/strutil.h"
+#include "absl/strings/ascii.h"
+#include "absl/strings/str_split.h"
 
 void Cpu::Branch(uint16_t addr) {
     static uint16_t last_pc, last_addr;
@@ -804,8 +805,8 @@ Cpu::AsmError Cpu::ParseDataPseudoOp(const std::string& op,
         return AsmError::UnknownOpcode;
     }
 
-    for(auto& arg : Split(operand, ",")) {
-        StripWhitespace(&arg);
+    for(auto& piece : absl::StrSplit(operand, ',')) {
+        std::string arg = std::string(absl::StripAsciiWhitespace(piece));
         base = 0;
         negate = false;
         val = 0xFFFFFFFF;
@@ -840,7 +841,7 @@ Cpu::AsmError Cpu::Assemble(std::string code, uint16_t* nexti) {
     for (auto& c : code) c = toupper(c);
     auto p = code.find(';');
     if (p != std::string::npos) code.resize(p);
-    StripWhitespace(&code);
+    absl::StripAsciiWhitespace(&code);
 
     p = code.find(' ');
     auto eq = code.find('=');

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstdlib>
 #include <time.h>
 #include <unistd.h>
@@ -7,16 +8,22 @@
 #include <windows.h>
 #endif
 
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
 #include "util/os.h"
-#include "util/strutil.h"
+#include "util/logging.h"
 
 namespace os {
-string GetCWD() {
+namespace {
+char ApplicationName[256];
+}  // namespace
+
+std::string GetCWD() {
     char path[PATH_MAX];
-    string result;
+    std::string result;
 
     if (getcwd(path, PATH_MAX)) {
-        result = string(path);
+        result = std::string(path);
     }
     return result;
 }
@@ -77,29 +84,119 @@ int System(const std::string& cmd, bool background) {
 #else
     trailer = " &";
 #endif
-    return system(StrCat(header, cmd, trailer).c_str());
+    return system(absl::StrCat(header, cmd, trailer).c_str());
+}
+
+void SetApplicationName(const char *name) {
+    strncpy(ApplicationName, name, sizeof(ApplicationName) - 1);
+}
+
+std::string GetApplicationName() {
+    std::string name = ApplicationName;
+    if (name == "") {
+        name = path::Split(path::Executable()).back();
+    }
+    return name;
 }
 
 namespace path {
 char kPathSep = '/';
 
-string Join(const std::vector<string>& components) {
-    string result;
+std::string Executable() {
+    char exepath[PATH_MAX] = {0, };
+#ifdef _WIN32
+    GetModuleFileName(nullptr, exepath, PATH_MAX);
+#else
+    char self[PATH_MAX];
+#ifdef __linux__
+    snprintf(self, sizeof(self), "/proc/self/exe");
+#elif defined(__FreeBSD__)
+    snprintf(self, sizeof(self), "/proc/%d/file", getpid());
+#else
+#error "Don't know how to get Executable"
+#endif
+    if (!realpath(self, exepath)) {
+        perror("realpath");
+    }
+#endif
+    return std::string(exepath);
+}
+
+std::string ResourceDir(const std::string& name) {
+    std::string exe = Executable();
+    if (exe.find("_bazel_") != std::string::npos) {
+        LOG(INFO, "Executable contains '_bazel_'. Assuming ResourceDir is CWD.");
+        return GetCWD();
+    }
+    std::vector<std::string> path = Split(exe);
+    path.pop_back(); // Remove exe filename
+
+#ifdef _WIN32
+    LOG(INFO, "Windows: assuming ResourceDir is", Join(path));
+#else
+    if (path.back() == "bin") {
+        path.pop_back();
+        path.push_back("share");
+        path.push_back(name);
+    } else {
+        LOG(INFO, "Unix: Did not find 'bin' in executable path. "
+                  "Assuming ResourcDir is ", Join(path));
+    }
+#endif
+    return Join(path);
+}
+
+std::string DataPath(const std::vector<std::string>& components) {
+    std::vector<std::string> p;
+#ifdef _WIN32
+    const char *data = getenv("LOCALAPPDATA");
+    const char *home = getenv("USERPROFILE");
+#else
+    const char *data = getenv("XDG_DATA_HOME");
+    const char *home = getenv("HOME");
+#endif
+
+    if (data) {
+        p = Split(data);
+        p.push_back(absl::StrCat(GetApplicationName()));
+    } else if (home) {
+        p = Split(home);
+        p.push_back(absl::StrCat(".", GetApplicationName()));
+    } else {
+        LOG(ERROR, "ConfigPath is unknown.");
+    }
+    p.insert(p.end(), components.begin(), components.end());
+    return Join(p);
+}
+
+std::string Join(const std::vector<std::string>& components) {
+    std::string result;
 
     for(const auto& p : components) {
-        if (!result.empty()) {
+        if (!result.empty() && result.back() != kPathSep) {
             result.push_back(kPathSep);
         }
         if (p.front() == kPathSep) {
             result.clear();
         }
         if (p.back() == kPathSep) {
-            result.append(p, 0, p.length() - 1);
+            size_t len = p.length() - 1;
+            //  In case we're adding a single "/" component.
+            if (len == 0) len = 1;
+            result.append(p, 0, len);
         } else {
             result.append(p);
         }
     }
     return result;
+}
+
+std::vector<std::string> Split(const std::string& path) {
+    std::vector<std::string> p = absl::StrSplit(path, absl::ByAnyChar("\\/"));
+    if (p[0] == "") {
+        p[0] = "/";
+    }
+    return p;
 }
 
 } // namespace path

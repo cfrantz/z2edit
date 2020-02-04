@@ -29,7 +29,7 @@ class DebugConsole: public ImWindowBase {
     }
 
     void ClearLog();
-    void AddLog(const char* fmt, ...) IM_PRINTFARGS(2);
+    void AddLog(const char* fmt, ...);
     bool Draw() override;
     void ExecCommand(const char* command_line);
     void PushLineCallback(std::function<

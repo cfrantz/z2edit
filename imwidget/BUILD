@@ -17,6 +17,8 @@ cc_library(
         "//util:fpsmgr",
         "//util:imgui_sdl_opengl",
         "//util:logging",
+        "//util:os",
+        "//util:gamecontrollerdb",
         "//external:gflags",
         "//external:imgui",
     ],
@@ -28,7 +30,7 @@ cc_library(
     srcs = ["error_dialog.cc"],
     deps = [
         ":base",
-        "//util:string",
+        "@com_google_absl//absl/strings",
         "//external:imgui",
     ],
 )
@@ -138,7 +140,7 @@ cc_library(
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
-        "//util:string",
+        "@com_google_absl//absl/strings",
         "//external:imgui",
         "//external:fontawesome",
     ],

@@ -5,7 +5,7 @@
 #include <functional>
 #include "imwidget/imwidget.h"
 
-#include "util/strutil.h"
+#include "absl/strings/str_cat.h"
 
 class ErrorDialog: public ImWindowBase {
   public:
@@ -15,13 +15,13 @@ class ErrorDialog: public ImWindowBase {
     template<typename ...Args>
     static ErrorDialog* Spawn(const std::string& title,
                               const std::string& message, Args ...args) {
-        return Spawn(title, DISMISS, StrCat(message, args...));
+        return Spawn(title, DISMISS, absl::StrCat(message, args...));
     }
 
     template<typename ...Args>
     static ErrorDialog* Spawn(const std::string& title, int buttons,
                               const std::string& message, Args ...args) {
-        return Spawn(title, buttons, StrCat(message, args...));
+        return Spawn(title, buttons, absl::StrCat(message, args...));
     }
 
     ErrorDialog(const std::string& title, int buttons,

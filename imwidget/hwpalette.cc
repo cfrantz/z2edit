@@ -51,12 +51,13 @@ bool NesHardwarePalette::Draw() {
         ImGui::BeginGroup();
         ImGui::Text(x == 0 ? "   %02x" : "%02x", x);
         for(y=0; y<4; y++) {
+            ImGui::PushID(y*16+x);
             if (x == 0) {
                 ImGui::Text("%x0", y);
                 ImGui::SameLine();
             }
             i = y * 16 + x;
-            ImGui::ColorButton(fpal_[i]);
+            ImGui::ColorButton("##button", fpal_[i]);
             if (ImGui::BeginPopupContextItem(label_[i])) {
                 ImGui::Text("Edit Color");
                 ImGui::ColorEdit3("##edit", (float*)&fpal_[i]);
@@ -65,6 +66,7 @@ bool NesHardwarePalette::Draw() {
                 ImGui::EndPopup();
                 palette_[i] = ImU32(fpal_[i]);
             }
+            ImGui::PopID();
         }
         ImGui::EndGroup();
     }

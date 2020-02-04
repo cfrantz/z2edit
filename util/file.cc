@@ -1,14 +1,18 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdint>
+#include <string>
+#include <vector>
+
 #include <libgen.h>
 #include <limits.h>
 
 #include "util/file.h"
+#include "util/status.h"
 #include "util/statusor.h"
-#include "util/string.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
 
-StatusOr<Stat> Stat::Filename(const string& filename) {
+StatusOr<Stat> Stat::Filename(const std::string& filename) {
     Stat s;
     if (stat(filename.c_str(), &s.stat_) == -1) {
         return util::PosixStatus(errno);
@@ -24,7 +28,7 @@ StatusOr<Stat> Stat::FileDescriptor(int fd) {
     return s;
 }
 
-StatusOr<Stat> Stat::Link(const string& filename) {
+StatusOr<Stat> Stat::Link(const std::string& filename) {
     Stat s;
     if (stat(filename.c_str(), &s.stat_) == -1) {
         return util::PosixStatus(errno);
@@ -32,40 +36,81 @@ StatusOr<Stat> Stat::Link(const string& filename) {
     return s;
 }
 
-std::unique_ptr<File> File::Open(const string& filename,
-                                 const string& mode) {
+std::unique_ptr<File> File::Open(const std::string& filename,
+                                 const std::string& mode) {
     FILE* fp = fopen(filename.c_str(), mode.c_str());
     if (fp == nullptr)
         return nullptr;
     return std::unique_ptr<File>(new File(fp));
 }
 
-bool File::GetContents(const string& filename, string* contents) {
+bool File::GetContents(const std::string& filename, std::string* contents) {
     std::unique_ptr<File> f(Open(filename, "rb"));
     if (f == nullptr)
         return false;
     return f->Read(contents);
 }
 
-bool File::SetContents(const string& filename, const string& contents) {
+bool File::SetContents(const std::string& filename, const std::string& contents) {
     std::unique_ptr<File> f(Open(filename, "wb"));
     if (f == nullptr)
         return false;
     return f->Write(contents);
 }
 
-string File::Basename(const string& path) {
+std::string File::Basename(const std::string& path) {
     char buf[PATH_MAX];
     memcpy(buf, path.data(), path.size());
     buf[path.size()] = '\0';
-    return string(basename(buf));
+    return std::string(basename(buf));
 }
 
-string File::Dirname(const string& path) {
+std::string File::Dirname(const std::string& path) {
     char buf[PATH_MAX];
     memcpy(buf, path.data(), path.size());
     buf[path.size()] = '\0';
-    return string(dirname(buf));
+    return std::string(dirname(buf));
+}
+
+util::Status File::Access(const std::string& path) {
+    if (access(path.c_str(), F_OK) == -1) {
+        return util::PosixStatus(errno);
+    }
+    return util::Status();
+}
+
+util::Status File::MakeDir(const std::string& path, mode_t mode) {
+    if (mkdir(path.c_str(), mode) == -1) {
+        return util::PosixStatus(errno);
+    }
+    return util::Status();
+}
+
+util::Status File::MakeDirs(const std::string& path, mode_t mode) {
+    std::vector<std::string> p = absl::StrSplit(path, absl::ByAnyChar("\\/"));
+    if (p[0] == "") {
+        p[0] = "/";
+    }
+
+    std::string mpath;
+    for(size_t i=0; i<p.size(); ++i) {
+        if (i == 0) {
+            mpath = p.at(i);
+        } else {
+            mpath = absl::StrCat(mpath,
+                                 mpath.back() == '/' ? "" : "/",
+                                 p.at(i));
+        }
+        util::Status status = Access(mpath);
+        if (status.ok()) {
+            continue;
+        }
+        status = MakeDir(mpath, mode);
+        if (!status.ok()) {
+            return status;
+        }
+    }
+    return util::Status();
 }
 
 File::File(FILE* fp) : fp_(fp) {}
@@ -92,12 +137,12 @@ bool File::Read(void* buf, int64_t *len) {
     return !ferror(fp_);
 }
 
-bool File::Read(string* buf, int64_t len) {
+bool File::Read(std::string* buf, int64_t len) {
     buf->resize(len);
     return Read(&buf->front(), &len);
 }
 
-bool File::Read(string* buf) {
+bool File::Read(std::string* buf) {
     return Read(buf, Length());
 }
 
@@ -106,11 +151,11 @@ bool File::Write(const void* buf, int64_t len) {
     return !ferror(fp_);
 }
 
-bool File::Write(const string& buf, int64_t len) {
+bool File::Write(const std::string& buf, int64_t len) {
     return Write(buf.data(), len);
 }
 
-bool File::Write(const string& buf) {
+bool File::Write(const std::string& buf) {
     return Write(buf.data(), buf.size());
 }
 

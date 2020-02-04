@@ -4,7 +4,7 @@
 #include "imwidget/map_command.h"
 #include "imwidget/simplemap.h"
 #include "util/config.h"
-#include "util/strutil.h"
+#include "absl/strings/str_cat.h"
 #include "alg/palace_gen.h"
 
 #include <gflags/gflags.h>
@@ -48,7 +48,7 @@ void MultiMap::Init() {
     location_.clear();
     graph_.Clear();
 
-    title_ = StrCat("MultiMap: ", maps_[start_].name(), "##", id_);
+    title_ = absl::StrCat("MultiMap: ", maps_[start_].name(), "##", id_);
     if (start_ != 0) {
         // Room 0 is often used as the destination for illegal exits
         visited_[0] = true;
@@ -290,7 +290,7 @@ bool MultiMap::Draw() {
         return false;
 
     drag_ = false;
-    ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiCond_FirstUseEver);
     ImGui::Begin(title_.c_str(), &visible_);
     ImGui::PushItemWidth(100);
     ImGui::InputFloat("Zoom", &scale_, 1.0/8.0, 1.0);

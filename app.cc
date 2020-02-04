@@ -14,6 +14,8 @@
 #include "util/os.h"
 #include "util/logging.h"
 #include "util/imgui_impl_sdl.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/match.h"
 
 #include "version.h"
 
@@ -180,7 +182,7 @@ void Z2Edit::LoadFile(DebugConsole* console, int argc, char **argv) {
         }
         filename = save_filename_.c_str();
     }
-    if (ends_with(filename, "nes") || ends_with(filename, "NES")) {
+    if (absl::EndsWith(filename, "nes") || absl::EndsWith(filename, "NES")) {
         cartridge_.LoadFile(filename);
         LoadPostProcess(move);
     } else {
@@ -197,15 +199,15 @@ void Z2Edit::SaveFile(DebugConsole* console, int argc, char **argv) {
         console->AddLog("[error] Usage: %s [filename]", argv[0]);
         return;
     }
-    if (ends_with(argv[1], "nes") || ends_with(argv[1], "NES")) {
+    if (absl::EndsWith(argv[1], "nes") || absl::EndsWith(argv[1], "NES")) {
         cartridge_.SaveFile(argv[1]);
-    } else if (ends_with(argv[1], "ips") || ends_with(argv[1], "IPS")) {
+    } else if (absl::EndsWith(argv[1], "ips") || absl::EndsWith(argv[1], "IPS")) {
         auto result = project_.ExportIps(argv[1]);
         if (!result.ok()) {
             console->AddLog("[error] %s", result.ToString().c_str());
         }
     } else {
-        bool as_text = ends_with(argv[1], "textpb");
+        bool as_text = absl::EndsWith(argv[1], "textpb");
         project_.Save(argv[1], as_text);
     }
 }
@@ -735,8 +737,8 @@ void Z2Edit::CharClear(DebugConsole* console, int argc, char **argv) {
         with_id = true;
     }
     ChrUtil util(mapper_.get());
-    for(const auto& s : Split(argv[1], ",")) {
-        ParseChr(s, &bank, &chr);
+    for(const auto& s : absl::StrSplit(argv[1], ',')) {
+        ParseChr(std::string(s), &bank, &chr);
         util.Clear(bank, chr, with_id);
     }
 }
@@ -913,7 +915,7 @@ void Z2Edit::ConnTable(DebugConsole* console, int argc, char **argv) {
 void Z2Edit::SpawnEmulator() {
     std::string romtmp = os::TempFilename(FLAGS_romtmp);
     cartridge_.SaveFile(romtmp);
-    os::System(StrCat(FLAGS_emulator, " ", romtmp), true);
+    os::System(absl::StrCat(FLAGS_emulator, " ", romtmp), true);
 }
 
 void Z2Edit::SpawnEmulator(
@@ -959,7 +961,7 @@ void Z2Edit::SpawnEmulator(
         temp.WritePrg(addr + i, inject[i]);
     }
     temp.SaveFile(romtmp);
-    os::System(StrCat(FLAGS_emulator, " ", romtmp), true);
+    os::System(absl::StrCat(FLAGS_emulator, " ", romtmp), true);
 }
 
 void Z2Edit::ProcessEvent(SDL_Event* event) {
@@ -988,7 +990,7 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
 
 void Z2Edit::Draw() {
     SetTitle(project_.name());
-    ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Emulate", "Ctrl+E")) {
@@ -1029,7 +1031,7 @@ save_as:
                 auto result = NFD_SaveDialog("z2prj", nullptr, &filename);
                 if (result == NFD_OKAY) {
                     std::string savefile = filename;
-                    if (ends_with(savefile, ".z2prj")) {
+                    if (absl::EndsWith(savefile, ".z2prj")) {
                         save_filename_.assign(savefile);
                         project_.Save(save_filename_);
                     } else {
@@ -1180,7 +1182,7 @@ export_as:
         auto result = NFD_OpenDialog("z2prj,nes", nullptr, &filename);
         if (result == NFD_OKAY) {
             project_.Load(filename, false);
-            if (ends_with(filename, ".z2prj")) {
+            if (absl::EndsWith(filename, ".z2prj")) {
                 save_filename_.assign(filename);
             }
         }

@@ -1,5 +1,5 @@
-#ifndef Z2UTIL_UTIL_COMPRESS_H
-#define Z2UTIL_UTIL_COMPRESS_H
+#ifndef PROJECT_UTIL_COMPRESS_H
+#define PROJECT_UTIL_COMPRESS_H
 #include <string>
 
 #include "util/statusor.h"
@@ -10,4 +10,4 @@ class ZLib {
     static StatusOr<std::string> Uncompress(const std::string& data, int size=0);
 };
 
-#endif // Z2UTIL_UTIL_COMPRESS_H
+#endif // PROJECT_UTIL_COMPRESS_H

@@ -120,9 +120,9 @@ bool Project::LoadWorker(const std::string& filename) {
 #if 0
         LOG(INFO, "Loaded project: ", project_.name());
         LOG(INFO, "  compressed rom is ", project_.rom().size(), " bytes");
-        File::SetContents(StrCat(project_.name(), "-rom.nes"), project_.rom());
+        File::SetContents(absl::StrCat(project_.name(), "-rom.nes"), project_.rom());
         for(int i=0; i<project_.history_size(); i++) {
-            File::SetContents(StrCat(project_.name(), "-", i, ".nes"), project_.history(i).rom());
+            File::SetContents(absl::StrCat(project_.name(), "-", i, ".nes"), project_.history(i).rom());
             LOGF(INFO, "  commit %d: %s", i, project_.history(i).description().c_str());
             LOGF(INFO, "             created %lld", project_.history(i).create_time());
             LOGF(INFO, "             size %u", project_.history(i).rom().size());
@@ -158,7 +158,7 @@ bool Project::Save(const std::string& filename, bool as_text) {
 }
 
 bool Project::ImportRom(const std::string& filename) {
-    Commit(StrCat("Before import of ", filename));
+    Commit(absl::StrCat("Before import of ", filename));
     cartridge_->LoadFile(filename);
     ImApp::Get()->ProcessMessage("loadpostprocess", reinterpret_cast<void*>(-1));
     return true;
