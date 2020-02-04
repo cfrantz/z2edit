@@ -1,27 +1,27 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "romfile",
-    hdrs = [
-        "romfile.h",
-    ],
     srcs = [
         "romfile.cc",
     ],
+    hdrs = [
+        "romfile.h",
+    ],
     deps = [
+        "//external:gflags",
         "//util:file",
         "//util:string",
-        "//external:gflags",
     ],
 )
 
 cc_library(
     name = "overworld",
-    hdrs = [
-        "overworld.h",
-    ],
     srcs = [
         "overworld.cc",
+    ],
+    hdrs = [
+        "overworld.h",
     ],
     deps = [
         ":romfile",
@@ -35,8 +35,8 @@ cc_binary(
         "dump.cc",
     ],
     deps = [
-        ":romfile",
         ":overworld",
+        ":romfile",
         "//external:gflags",
     ],
 )

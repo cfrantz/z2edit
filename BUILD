@@ -1,13 +1,13 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
+
 load("@mxebzl//tools:rules.bzl", "pkg_winzip")
 
 config_setting(
     name = "windows",
     values = {
         "crosstool_top": "@mxebzl//compiler:win64",
-    }
+    },
 )
-
 
 genrule(
     name = "make_version",
@@ -18,18 +18,18 @@ genrule(
 
 cc_library(
     name = "app",
-    linkopts = [
-        "-lSDL2_image",
-        "-lSDL2_mixer",
-        "-lSDL2_gfx",
-        "-lSDL2",
+    srcs = [
+        "app.cc",
     ],
     hdrs = [
         "app.h",
         "version.h",
     ],
-    srcs = [
-        "app.cc",
+    linkopts = [
+        "-lSDL2_image",
+        "-lSDL2_mixer",
+        "-lSDL2_gfx",
+        "-lSDL2",
     ],
     deps = [
         "//imwidget:base",
@@ -91,6 +91,10 @@ genrule(
 
 cc_binary(
     name = "z2edit",
+    srcs = [
+        "main.cc",
+        "zelda2_config.h",
+    ],
     linkopts = select({
         ":windows": [
             "-lpthread",
@@ -117,14 +121,10 @@ cc_binary(
             "-lGL",
         ],
     }),
-    srcs = [
-        "zelda2_config.h",
-        "main.cc",
-    ],
     deps = [
         ":app",
-        "//util:config",
         "//external:gflags",
+        "//util:config",
     ],
 )
 

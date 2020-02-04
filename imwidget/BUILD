@@ -1,44 +1,44 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "base",
+    srcs = [
+        "debug_console.cc",
+        "imapp.cc",
+        "imutil.cc",
+    ],
     hdrs = [
         "debug_console.h",
         "imapp.h",
         "imutil.h",
         "imwidget.h",
     ],
-    srcs = [
-        "debug_console.cc",
-        "imapp.cc",
-        "imutil.cc",
-    ],
     deps = [
+        "//external:gflags",
+        "//external:imgui",
         "//util:fpsmgr",
+        "//util:gamecontrollerdb",
         "//util:imgui_sdl_opengl",
         "//util:logging",
         "//util:os",
-        "//util:gamecontrollerdb",
-        "//external:gflags",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "error_dialog",
-    hdrs = ["error_dialog.h"],
     srcs = ["error_dialog.cc"],
+    hdrs = ["error_dialog.h"],
     deps = [
         ":base",
-        "@com_google_absl//absl/strings",
         "//external:imgui",
+        "@com_google_absl//absl/strings",
     ],
 )
 
 cc_library(
     name = "glbitmap",
-    hdrs = ["glbitmap.h"],
     srcs = ["glbitmap.cc"],
+    hdrs = ["glbitmap.h"],
     deps = [
         "//external:imgui",
     ],
@@ -46,8 +46,8 @@ cc_library(
 
 cc_library(
     name = "hwpalette",
-    hdrs = ["hwpalette.h"],
     srcs = ["hwpalette.cc"],
+    hdrs = ["hwpalette.h"],
     deps = [
         ":base",
         "//external:imgui",
@@ -56,20 +56,22 @@ cc_library(
 
 cc_library(
     name = "neschrview",
-    hdrs = ["neschrview.h"],
     srcs = ["neschrview.cc"],
+    hdrs = ["neschrview.h"],
     deps = [
         ":base",
         ":error_dialog",
         ":glbitmap",
-        "//nes:mappers",
         "//external:imgui",
         "//external:nfd",
+        "//nes:mappers",
     ],
 )
 
 cc_library(
     name = "editor",
+    srcs = ["editor.cc"],
+    hdrs = ["editor.h"],
     copts = [
         "-fpermissive",
         "-Wno-unused-function",
@@ -79,16 +81,16 @@ cc_library(
         "-Wno-comment",
         "-Wno-narrowing",
     ],
-    hdrs = ["editor.h"],
-    srcs = ["editor.cc"],
     deps = [
         ":base",
         ":error_dialog",
         ":glbitmap",
         ":hwpalette",
         ":map_connect",
-        ":randomize",
         ":overworld_encounters",
+        ":randomize",
+        "//external:gflags",
+        "//external:imgui",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
@@ -96,36 +98,34 @@ cc_library(
         "//util:config",
         "//util:imgui_sdl_opengl",
         "//util:stb-tilemap-editor",
-        "//external:gflags",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "palette",
-    hdrs = ["palette.h"],
     srcs = ["palette.cc"],
+    hdrs = ["palette.h"],
     deps = [
         ":base",
         ":error_dialog",
         ":hwpalette",
+        "//external:gflags",
+        "//external:imgui",
         "//nes:mappers",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
-        "//external:gflags",
     ],
 )
 
 cc_library(
     name = "simplemap",
-    hdrs = [
-        "simplemap.h",
-        "map_command.h",
-    ],
     srcs = [
-        "simplemap.cc",
         "map_command.cc",
+        "simplemap.cc",
+    ],
+    hdrs = [
+        "map_command.h",
+        "simplemap.h",
     ],
     deps = [
         ":base",
@@ -133,6 +133,8 @@ cc_library(
         ":glbitmap",
         ":hwpalette",
         ":overworld_encounters",
+        "//external:fontawesome",
+        "//external:imgui",
         "//nes:enemylist",
         "//nes:mappers",
         "//nes:text_list",
@@ -141,241 +143,237 @@ cc_library(
         "//proto:rominfo",
         "//util:config",
         "@com_google_absl//absl/strings",
-        "//external:imgui",
-        "//external:fontawesome",
     ],
 )
 
 cc_library(
     name = "multimap",
-    hdrs = ["multimap.h"],
     srcs = ["multimap.cc"],
+    hdrs = ["multimap.h"],
     deps = [
         ":base",
         ":glbitmap",
         ":simplemap",
         "//alg:fdg",
         "//alg:palace_gen",
+        "//external:imgui",
         "//nes:mappers",
         "//nes:z2decompress",
         "//nes:z2objcache",
         "//proto:generator",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
-
 cc_library(
     name = "map_connect",
-    hdrs = ["map_connect.h"],
     srcs = ["map_connect.cc"],
+    hdrs = ["map_connect.h"],
     deps = [
         ":base",
         ":multimap",
+        "//external:imgui",
         "//nes:mappers",
         "//proto:rominfo",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "misc_hacks",
-    hdrs = ["misc_hacks.h"],
     srcs = ["misc_hacks.cc"],
+    hdrs = ["misc_hacks.h"],
     deps = [
         ":base",
+        "//external:imgui",
         "//nes:mappers",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "overworld_encounters",
-    hdrs = ["overworld_encounters.h"],
     srcs = ["overworld_encounters.cc"],
+    hdrs = ["overworld_encounters.h"],
     deps = [
+        "//external:imgui",
         "//nes:mappers",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "palace_gfx",
-    hdrs = ["palace_gfx.h"],
     srcs = ["palace_gfx.cc"],
+    hdrs = ["palace_gfx.h"],
     deps = [
         ":base",
+        "//external:imgui",
         "//nes:mappers",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "randomize",
-    hdrs = ["randomize.h"],
     srcs = ["randomize.cc"],
+    hdrs = ["randomize.h"],
     deps = [
         ":map_connect",
         "//alg:terrain",
+        "//external:imgui",
         "//proto:rominfo",
         "//util:config",
         "//util:stb-tilemap-editor",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "start_values",
-    hdrs = ["start_values.h"],
     srcs = ["start_values.cc"],
+    hdrs = ["start_values.h"],
     deps = [
         ":base",
+        "//external:imgui",
         "//nes:mappers",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "object_table",
-    hdrs = ["object_table.h"],
     srcs = ["object_table.cc"],
+    hdrs = ["object_table.h"],
     deps = [
         ":base",
         ":hwpalette",
+        "//external:imgui",
         "//nes:mappers",
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "enemyattr",
-    hdrs = ["enemyattr.h"],
     srcs = ["enemyattr.cc"],
+    hdrs = ["enemyattr.h"],
     deps = [
         ":base",
         ":error_dialog",
+        "//external:gflags",
+        "//external:imgui",
         "//nes:mappers",
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
-        "//external:gflags",
     ],
 )
 
 cc_library(
     name = "xptable",
-    hdrs = ["xptable.h"],
     srcs = ["xptable.cc"],
+    hdrs = ["xptable.h"],
     deps = [
         ":base",
         ":error_dialog",
+        "//external:gflags",
+        "//external:imgui",
         "//nes:mappers",
         "//nes:text_encoding",
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
-        "//external:gflags",
     ],
 )
 
 cc_library(
     name = "text_table",
-    hdrs = ["text_table.h"],
     srcs = ["text_table.cc"],
+    hdrs = ["text_table.h"],
     deps = [
         ":base",
         ":error_dialog",
+        "//external:gflags",
+        "//external:imgui",
         "//nes:mappers",
         "//nes:text_list",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
-        "//external:gflags",
     ],
 )
 
 cc_library(
     name = "project",
-    hdrs = ["project.h"],
     srcs = ["project.cc"],
+    hdrs = ["project.h"],
     deps = [
         ":base",
         ":error_dialog",
-        "//ips:ips",
+        "//external:imgui",
+        "//ips",
         "//nes:cartridge",
         "//proto:project",
         "//util:compress",
         "//util:file",
-        "//util:os",
         "//util:logging",
+        "//util:os",
         "//util:status",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "drops",
-    hdrs = ["drops.h"],
     srcs = ["drops.cc"],
+    hdrs = ["drops.h"],
     deps = [
         ":base",
         ":simplemap",
+        "//external:imgui",
         "//nes:mappers",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "tile_transform",
-    hdrs = ["tile_transform.h"],
     srcs = ["tile_transform.cc"],
+    hdrs = ["tile_transform.h"],
     deps = [
         ":base",
+        "//external:imgui",
         "//nes:mappers",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "item_effects",
-    hdrs = ["item_effects.h"],
     srcs = ["item_effects.cc"],
+    hdrs = ["item_effects.h"],
     deps = [
         ":base",
+        "//external:imgui",
         "//nes:mappers",
         "//proto:rominfo",
         "//util:config",
-        "//external:imgui",
     ],
 )
 
 cc_library(
     name = "rom_memory",
-    hdrs = ["rom_memory.h"],
     srcs = ["rom_memory.cc"],
+    hdrs = ["rom_memory.h"],
     deps = [
         ":base",
         ":glbitmap",
-        "//nes:mappers",
-        "//external:imgui",
         "//external:gflags",
+        "//external:imgui",
+        "//nes:mappers",
     ],
 )
-

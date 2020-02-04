@@ -1,20 +1,20 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "cartridge",
-    hdrs = ["cartridge.h"],
     srcs = ["cartridge.cc"],
+    hdrs = ["cartridge.h"],
     deps = [
-        "//util:file",
-        "//imwidget:base",
         "//external:gflags",
+        "//imwidget:base",
+        "//util:file",
     ],
 )
 
 cc_library(
     name = "chr_util",
-    hdrs = ["chr_util.h"],
     srcs = ["chr_util.cc"],
+    hdrs = ["chr_util.h"],
     deps = [
         ":mappers",
     ],
@@ -22,8 +22,8 @@ cc_library(
 
 cc_library(
     name = "cpu6502",
-    hdrs = ["cpu6502.h"],
     srcs = ["cpu6502.cc"],
+    hdrs = ["cpu6502.h"],
     deps = [
         ":mappers",
         "@com_google_absl//absl/strings",
@@ -32,11 +32,11 @@ cc_library(
 
 cc_library(
     name = "enemylist",
+    srcs = [
+        "enemylist.cc",
+    ],
     hdrs = [
         "enemylist.h",
-    ],
-    srcs = [
-        "enemylist.cc"
     ],
     deps = [
         ":mappers",
@@ -48,38 +48,38 @@ cc_library(
 
 cc_library(
     name = "mappers",
+    srcs = [
+        "mapper.cc",
+        "mapper1.cc",
+        "mapper1.h",
+        "memory.cc",
+    ],
     hdrs = [
         "mapper.h",
         "memory.h",
     ],
-    srcs = [
-        "mapper.cc",
-        "mapper1.h",
-        "mapper1.cc",
-        "memory.cc"
-    ],
     deps = [
         ":cartridge",
-        "//proto:rominfo",
         "//imwidget:base",
+        "//proto:rominfo",
         "//util:config",
         "//util:logging",
     ],
-    alwayslink=1,
+    alwayslink = 1,
 )
 
 cc_library(
     name = "text_encoding",
-    hdrs = ["text_encoding.h"],
     srcs = ["text_encoding.cc"],
+    hdrs = ["text_encoding.h"],
     deps = [
     ],
 )
 
 cc_library(
     name = "text_list",
-    hdrs = ["text_list.h"],
     srcs = ["text_list.cc"],
+    hdrs = ["text_list.h"],
     deps = [
         ":mappers",
         ":text_encoding",
@@ -91,33 +91,32 @@ cc_library(
 
 cc_library(
     name = "z2decompress",
-    hdrs = ["z2decompress.h"],
     srcs = [
-        "z2decompress.cc",
         "z2decomp_funcs.cc",
+        "z2decompress.cc",
     ],
+    hdrs = ["z2decompress.h"],
     deps = [
         ":mappers",
+        "//external:gflags",
+        "//proto:rominfo",
         "//util:config",
         "//util:logging",
-        "//proto:rominfo",
-        "//external:gflags",
     ],
 )
 
 cc_library(
     name = "z2objcache",
-    hdrs = ["z2objcache.h"],
     srcs = [
         "z2objcache.cc",
     ],
+    hdrs = ["z2objcache.h"],
     deps = [
         ":mappers",
+        "//imwidget:glbitmap",
+        "//imwidget:hwpalette",
         "//proto:rominfo",
         "//util:config",
         "//util:logging",
-        "//imwidget:glbitmap",
-        "//imwidget:hwpalette",
     ],
 )
-

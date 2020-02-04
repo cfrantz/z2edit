@@ -1,4 +1,4 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "vecmath",
@@ -12,11 +12,11 @@ cc_library(
 
 cc_library(
     name = "fdg",
-    hdrs = [
-        "fdg.h",
-    ],
     srcs = [
         "fdg.cc",
+    ],
+    hdrs = [
+        "fdg.h",
     ],
     deps = [
         ":vecmath",
@@ -25,11 +25,11 @@ cc_library(
 
 cc_library(
     name = "terrain",
-    hdrs = [
-        "terrain.h",
-    ],
     srcs = [
         "terrain.cc",
+    ],
+    hdrs = [
+        "terrain.h",
     ],
     deps = [
         "//util:stb-perlin",
@@ -38,11 +38,11 @@ cc_library(
 
 cc_library(
     name = "palace_gen",
-    hdrs = [
-        "palace_gen.h",
-    ],
     srcs = [
         "palace_gen.cc",
+    ],
+    hdrs = [
+        "palace_gen.h",
     ],
     deps = [
         "//imwidget:simplemap",

@@ -1,11 +1,11 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 #load(":proto.bzl", "proto_library")
 
 proto_library(
     name = "rominfo_proto",
     srcs = [
-        "rominfo.proto",
         "keybinds.proto",
+        "rominfo.proto",
     ],
 )
 

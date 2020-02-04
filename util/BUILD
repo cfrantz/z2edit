@@ -1,30 +1,30 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "gamecontrollerdb",
-    hdrs = ["gamecontrollerdb.h"],
     srcs = ["gamecontrollerdb.cc"],
+    hdrs = ["gamecontrollerdb.h"],
 )
 
 cc_library(
     name = "browser",
-    hdrs = [
-        "browser.h",
-    ],
     srcs = [
         "browser.cc",
+    ],
+    hdrs = [
+        "browser.h",
     ],
 )
 
 cc_library(
     name = "compress",
-    linkopts = ["-lz"],
-    hdrs = [
-        "compress.h",
-    ],
     srcs = [
         "compress.cc",
     ],
+    hdrs = [
+        "compress.h",
+    ],
+    linkopts = ["-lz"],
     deps = [
         "//util:logging",
         "//util:status",
@@ -45,9 +45,9 @@ cc_library(
 
 cc_library(
     name = "crc",
-    linkopts = ["-lz"],
-    hdrs = ["crc.h"],
     srcs = ["crc.cc"],
+    hdrs = ["crc.h"],
+    linkopts = ["-lz"],
 )
 
 cc_library(
@@ -61,21 +61,21 @@ cc_library(
     deps = [
         ":status",
         "@com_google_absl//absl/strings",
-    ]
+    ],
 )
 
 cc_library(
     name = "logging",
-    hdrs = [
-        "logging.h",
-    ],
     srcs = [
         "logging.cc",
     ],
+    hdrs = [
+        "logging.h",
+    ],
     deps = [
-        "@com_google_absl//absl/strings",
         "//external:gflags",
-    ]
+        "@com_google_absl//absl/strings",
+    ],
 )
 
 cc_library(
@@ -89,23 +89,22 @@ cc_library(
     deps = [
         ":logging",
         "@com_google_absl//absl/strings",
-    ]
+    ],
 )
 
 cc_library(
     name = "status",
+    srcs = [
+        "status.cc",
+    ],
     hdrs = [
         "status.h",
         "statusor.h",
     ],
-    srcs = [
-        "status.cc",
-    ],
     deps = [
         "@com_google_protobuf//:protobuf",
-    ]
+    ],
 )
-
 
 cc_library(
     name = "fpsmgr",
@@ -125,14 +124,14 @@ cc_library(
     name = "stb-tilemap-editor",
     hdrs = [
         "stb_tilemap_editor.h",
-    ]
+    ],
 )
 
 cc_library(
     name = "stb-perlin",
     hdrs = [
         "stb_perlin.h",
-    ]
+    ],
 )
 
 genrule(
@@ -144,15 +143,15 @@ genrule(
 
 cc_library(
     name = "imgui_sdl_opengl",
+    srcs = [
+        "fontawesome.h",
+        "imgui_impl_sdl.cpp",
+    ],
     hdrs = [
         "imgui_impl_sdl.h",
     ],
-    srcs = [
-        "imgui_impl_sdl.cpp",
-        "fontawesome.h",
-    ],
     deps = [
-        "//external:imgui",
         "//external:fontawesome",
+        "//external:imgui",
     ],
 )
