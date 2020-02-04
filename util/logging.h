@@ -14,17 +14,16 @@
 
 namespace logging {
 
-extern const char RESET[];
-extern const char BOLD[];
-
-extern const char BLACK[];
-extern const char RED[];
-extern const char GREEN[];
-extern const char YELLOW[];
-extern const char BLUE[];
-extern const char MAGENTA[];
-extern const char CYAN[];
-extern const char WHITE[];
+extern const int RESET;
+extern const int BOLD;
+extern const int BLACK;
+extern const int RED;
+extern const int GREEN;
+extern const int YELLOW;
+extern const int BLUE;
+extern const int MAGENTA;
+extern const int CYAN;
+extern const int WHITE;
 
 enum LogLevel {
     LL_FATAL = 0,
@@ -41,6 +40,7 @@ extern LogLevel loglevel;
 extern FILE* logfp;
 extern int logfp_isatty;
 
+extern void SetLogColor(int color);
 extern std::string Hex(uint8_t x, bool lz=true, bool zx=true);
 extern std::string Hex(uint16_t x, bool lz=true, bool zx=true);
 extern std::string Hex(uint32_t x, bool lz=true, bool zx=true);
@@ -70,7 +70,7 @@ void Log(LogLevel level, Args ...args) {
     if (level > loglevel)
         return;
 
-    const char* color = "";
+    int color = WHITE;
     const char* prefix = "[?] ";
     switch(level) {
         case LL_FATAL:
@@ -98,10 +98,10 @@ void Log(LogLevel level, Args ...args) {
     }
 
     if (logfp_isatty) {
-        fputs(color, logfp);
+        SetLogColor(color);
         fputs(prefix, logfp);
         fputs(absl::StrCat(args...).c_str(), logfp);
-        fputs(RESET, logfp);
+        SetLogColor(RESET);
         fputs("\n", logfp);
     } else {
         fputs(prefix, logfp);

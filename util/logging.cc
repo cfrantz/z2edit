@@ -1,5 +1,8 @@
 #include <stdarg.h>
 #include "util/logging.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include <gflags/gflags.h>
 
@@ -8,22 +11,35 @@ DEFINE_string(logfile, "", "Log to file");
 
 namespace logging {
 
-const char RESET[] = "\033[0m";
-const char BOLD[]  = "\033[1m";
+const int RESET  = -1;
+const int BOLD   = -2;
+const int BLACK   = 0;
+const int BLUE    = 1;
+const int GREEN   = 2;
+const int CYAN    = 3;
+const int RED     = 4;
+const int MAGENTA = 5;
+const int YELLOW  = 6;
+const int WHITE   = 7;
 
-const char BLACK[]   = "\033[30m";
-const char RED[]     = "\033[31m";
-const char GREEN[]   = "\033[32m";
-const char YELLOW[]  = "\033[33m";
-const char BLUE[]    = "\033[34m";
-const char MAGENTA[] = "\033[35m";
-const char CYAN[]    = "\033[36m";
-const char WHITE[]   = "\033[37m";
+const char _RESET[] = "\033[0m";
+const char _BOLD[]  = "\033[1m";
+const char _BLACK[]   = "\033[30m";
+const char _RED[]     = "\033[31m";
+const char _GREEN[]   = "\033[32m";
+const char _YELLOW[]  = "\033[33m";
+const char _BLUE[]    = "\033[34m";
+const char _MAGENTA[] = "\033[35m";
+const char _CYAN[]    = "\033[36m";
+const char _WHITE[]   = "\033[37m";
 
 int logging_init_done;
 LogLevel loglevel;
 FILE* logfp;
 int logfp_isatty;
+#ifdef _WIN32
+HANDLE hStdErr;
+#endif
 
 void logging_init() {
     if (logging_init_done)
@@ -33,6 +49,9 @@ void logging_init() {
     loglevel = LogLevel(FLAGS_loglevel);
     if (FLAGS_logfile.empty()) {
         logfp = stderr;
+#ifdef _WIN32
+        hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+#endif
     } else {
         logfp = fopen(FLAGS_logfile.c_str(), "w");
         if (logfp == nullptr) {
@@ -44,6 +63,39 @@ void logging_init() {
     if (initerror) {
         LOG(FATAL, "Could not open ", FLAGS_logfile, " for writing.");
     }
+}
+
+void SetLogColor(int color) {
+#ifdef _WIN32
+    static int bold;
+    static int lastcolor = WHITE;
+    if (color == RESET) {
+        bold = 0;
+        color = WHITE;
+    } else if (color == BOLD) {
+        bold = 8;
+        color = lastcolor;
+    }
+    lastcolor = color;
+    SetConsoleTextAttribute(hStdErr, bold+color);
+#else
+    const char *code;
+    switch(color) {
+        case RESET   : code = _RESET; break;
+        case BOLD    : code = _BOLD; break;
+        case BLACK   : code = _BLACK; break;
+        case RED     : code = _RED; break;
+        case GREEN   : code = _GREEN; break;
+        case YELLOW  : code = _YELLOW; break;
+        case BLUE    : code = _BLUE; break;
+        case MAGENTA : code = _MAGENTA; break;
+        case CYAN    : code = _CYAN; break;
+        case WHITE   : code = _WHITE; break;
+        default:
+            code = _WHITE;
+    }
+    fputs(code, logfp);
+#endif
 }
 
 const char hexletters[] = "0123456789ABCDEF";
