@@ -17,6 +17,12 @@ cc_binary(
 )
 
 cc_binary(
+    name = "hack2",
+    srcs = ["hack2.cc"],
+    deps = [":music"],
+)
+
+cc_binary(
     name = "credits",
     srcs = ["credits.cc"],
     deps = [":music"],
