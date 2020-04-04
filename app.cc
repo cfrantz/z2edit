@@ -70,6 +70,7 @@ void Z2Edit::Init() {
     RegisterCommand("source", "Read and execute debugconsole commands from file.", this, &Z2Edit::Source);
     RegisterCommand("restore", "Read/restore a PRG bank from a NES file.", this, &Z2Edit::RestoreBank);
     RegisterCommand("conntable", "Show the connection table for a given overworld/subworld", this, &Z2Edit::ConnTable);
+    RegisterCommand("sendmessage", "Send a message to the editor refresh loop", this, &Z2Edit::SendMessage);
 
     loaded_ = false;
     ibase_ = 0;
@@ -122,11 +123,12 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
         }
     }
 
-    editor_->set_mapper(mapper_.get());
-    editor_->Refresh();
-
+    // Misc hacks first because it can modify config.
     misc_hacks_->set_mapper(mapper_.get());
     misc_hacks_->Refresh();
+
+    editor_->set_mapper(mapper_.get());
+    editor_->Refresh();
     palace_gfx_->set_mapper(mapper_.get());
     palace_gfx_->Refresh();
     palette_editor_->set_mapper(mapper_.get());
@@ -912,6 +914,16 @@ void Z2Edit::ConnTable(DebugConsole* console, int argc, char **argv) {
     }
 }
 
+void Z2Edit::SendMessage(DebugConsole* console, int argc, char **argv) {
+    if (argc != 3) {
+        console->AddLog("[error] Usage: %s [message] [argument]", argv[0]);
+        return;
+    }
+    const char* message = argv[1];
+    int argument = strtol(argv[2], 0, ibase_);
+    ProcessMessage(message, reinterpret_cast<void*>(argument));
+}
+
 void Z2Edit::SpawnEmulator() {
     std::string romtmp = os::TempFilename(FLAGS_romtmp);
     cartridge_.SaveFile(romtmp);
@@ -985,6 +997,8 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
     } else if (msg == "emulate_at") {
         const uint8_t* p = reinterpret_cast<const uint8_t*>(extra);
         SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
+    } else {
+        console_.AddLog("[error] Unknown message %s(%p)", msg.c_str(), extra);
     }
 }
 

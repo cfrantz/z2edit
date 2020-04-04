@@ -14,6 +14,7 @@ DEFINE_int32(max_map_length, 0, "Maximum compressed map size");
 DEFINE_bool(compress_boulders, false, "RLE compress boulders and spiders on "
                                       "overworld maps");
 DECLARE_bool(reminder_dialogs);
+DECLARE_bool(hackjam2020);
 
 #define STBTE_MAX_TILEMAP_X      64
 #define STBTE_MAX_TILEMAP_Y      200
@@ -111,7 +112,8 @@ void Editor::ConvertFromMap(Map* map) {
         }
     }
 
-    for(int i=0; i<16; i++) {
+    int tiles = FLAGS_hackjam2020 ? 64 : 16;
+    for(int i=0; i<tiles; i++) {
         stbte_define_tile(editor_, i, 255, "basic");
     }
     changed_ = false;
@@ -151,6 +153,17 @@ std::vector<uint8_t> Editor::CompressMap() {
                         misc.palace_connection_id() + 3);
                 }
             }
+#if 0
+            // Don't compress expansion tiles
+            if (FLAGS_hackjam2020) {
+                if (tile >= 16) {
+                    // Special marker for expansion tile.
+                    data.push_back(0xFF);
+                    data.push_back(tile);
+                    continue;
+                }
+            }
+#endif
             // Don't compress magic connection spots, boulders or the
             // spider/river devil.
             auto st = connections_.NoCompress(x, y);
@@ -164,15 +177,29 @@ std::vector<uint8_t> Editor::CompressMap() {
                 }
                 continue;
             }
-            while(x+1 < editor_->max_x
-                  && tile == editor_->data[y][x+1][0]
-                  && !connections_.NoCompress(x+1, y)) {
-                x++;
-                count++;
-                if (count == 15)
-                    break;
+            if (FLAGS_hackjam2020 && tile >=16) {
+                // Compress tiles using $1F to $FF as RLE escape bytes.
+                while(x+1 < editor_->max_x
+                      && tile == editor_->data[y][x+1][0]
+                      && !connections_.NoCompress(x+1, y)) {
+                    x++;
+                    count++;
+                    if (count == 14)
+                        break;
+                }
+                data.push_back(0xF | (count+1) << 4);
+                data.push_back(tile);
+            } else {
+                while(x+1 < editor_->max_x
+                      && tile == editor_->data[y][x+1][0]
+                      && !connections_.NoCompress(x+1, y)) {
+                    x++;
+                    count++;
+                    if (count == 15)
+                        break;
+                }
+                data.push_back(tile | count << 4);
             }
-            data.push_back(tile | count << 4);
         }
     }
     return data;

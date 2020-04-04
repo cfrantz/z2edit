@@ -2,6 +2,9 @@
 #include "imwidget/imutil.h"
 #include "util/config.h"
 
+#include <gflags/gflags.h>
+DECLARE_bool(hackjam2020);
+
 namespace z2util {
 
 ObjectTable::ObjectTable()
@@ -11,7 +14,7 @@ ObjectTable::ObjectTable()
     palette_(0),
     scale_(2.0),
     selection_(0),
-    size_(16)
+    size_(FLAGS_hackjam2020 ? 64 : 16)
 {}
 
 void ObjectTable::Init() {
@@ -57,7 +60,7 @@ bool ObjectTable::Draw() {
         set_palette(palette_);
         item_ = 0;
         if (objtable_[selection_]->type() == MapType::OVERWORLD) {
-            size_ = 16;
+            size_ = FLAGS_hackjam2020 ? 64 : 16;
         } else {
             size_ = 256;
         }
@@ -146,10 +149,11 @@ bool ObjectTable::Draw() {
         ImGui::Text("\n");
         ImGui::Text("Tile Palette: ");
         ImGui::SameLine();
-        int tilepal = mapper_->Read(base, 64+item_);
+        int offset = size_ * 4;
+        int tilepal = mapper_->Read(base, offset+item_);
         if (ImGui::InputInt("##tp", &tilepal)) {
             Clamp(&tilepal, 0, 3);
-            mapper_->Write(base, 64+item_, tilepal);
+            mapper_->Write(base, offset+item_, tilepal);
             cache_.Clear();
         }
     }
