@@ -598,7 +598,7 @@ void Z2Edit::Assemble(DebugConsole* console, int argc, char **argv) {
         bank = strtoul(argv[1]+2, 0, ibase_);
         index++;
     }
-    addr = strtoul(argv[index+1], 0, ibase_);
+    addr = (index+1 < argc) ? strtoul(argv[index+1], 0, ibase_) : 0;
 
     struct State {
         uint16_t addr;
@@ -799,11 +799,16 @@ void Z2Edit::Source(DebugConsole* console, int argc, char **argv) {
         console->AddLog("[error] Usage: %s [file]", argv[0]);
         return;
     }
+    Source(argv[1], console);
+}
+
+void Z2Edit::Source(const std::string& filename, DebugConsole* console) {
+    if (console == nullptr) console = &console_;
     char buf[4096];
     char *p;
-    FILE *fp = fopen(argv[1], "r");;
+    FILE *fp = fopen(filename.c_str(), "r");;
     if (!fp) {
-        console->AddLog("[error] Couldn't read %s", argv[1]);
+        console->AddLog("[error] Couldn't read %s", filename.c_str());
         return;
     }
     while((p = fgets(buf, sizeof(buf), fp)) != nullptr) {

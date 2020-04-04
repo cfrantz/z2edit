@@ -39,6 +39,7 @@ class Z2Edit: public ImApp {
     void Draw() override;
 
     void Load(const std::string& filename);
+    void Source(const std::string& filename, DebugConsole* console=nullptr);
 
     // movekeepout is tri-state:
     // -1: default action based on FLAGS_move_from_keepout
