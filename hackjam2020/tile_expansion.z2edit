@@ -1,3 +1,7 @@
+######################################################################
+# Expanded tileset experiment for Zedla2.
+# Give overworld up to 64 unique tiles.
+######################################################################
 set ibase 16
 set bank 0
 
@@ -62,6 +66,9 @@ charclear 11:c1 true
 charclear 11:c2 true
 charclear 11:c3 true
 
+######################################################################
+# Create a new tile mapping table, followed by a palette mapping table.
+######################################################################
 asm b=0 0
 .org $b000
 overworld_tile_mappings:
@@ -139,12 +146,13 @@ overworld_palette_codes:
 .db 2,1,2,1,3,0,0,0,1,1,1,1,3,3,1,1 ; Tiles $20-$2F
 .db 2,1,2,1,3,0,0,0,1,1,1,1,3,3,1,1 ; Tiles $30-$3F
 
-; This is 'bank0_unknown7' in Lemmy's disassembly.
-; Move it here so I can save 2 bytes to hack the terrain type in
-; the preceeding function at L8A0D.
-overworld_direction_table:
-.db $01,$ff                 ; Used when link is walking
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Create a decompressor which understands the expanded tileset.
+; Tile IDs $0 to $E behave normally.
+; Tile ID $F is only useful as length==1, so reuse all other length
+; encodings for tile $F to mean "that many of the following expansion
+; tile ID".
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 overworld_decompress:
     lda ($0e),y             ; Get compressed tile
     and #$0f                ; Tile id
@@ -208,19 +216,12 @@ save_count:
     lda overworld_palette_codes,x
 .org $8bcf
     lda overworld_palette_codes,x
-
-;;;; Patch the overworld movement routine
-;;;.org $8A43
-;;;    adc overworld_direction_table,y
-;;;
-;;;; Mask the terrain type so all expanded tile ids alias mod 16.
-;;;.org $8a14
-;;;    and #$0f
-;;;    sta $0563
-;;;    rts
-
 .end
 
+######################################################################
+# bank 1 has a copy of the decompressor used to determine map boundaries
+# and terrain types.  Patch in a version of ours for that purpose.
+######################################################################
 asm b=1 0
 .org $bc00
 bank1_ov_decompress:
@@ -264,5 +265,60 @@ done:
 
 .org $83eb
     jmp bank1_ov_decompress
+
 .end
+
+######################################################################
+# bank 2 has a copy of the decompressor used to determine map boundaries
+# and terrain types.  Patch in a version of ours for that purpose.
+######################################################################
+asm b=2 0
+.org $bc00
+bank1_ov_decompress:
+    lda ($0e),y             ; Get compressed tile
+    and #$0f                ; Tile id
+    cmp #$0f
+    bcc regular_rle         ; Tile id < $0f means regular mode
+    lda ($0e),y             ; Get compressed tile
+    cmp #$1f
+    bcc regular_rle         ; {count,tile} < $1f means regular mode
+    pha                     ; Save it to extract the count later
+    iny
+    lda ($0e),y             ; Expansion tile
+    and #$0f                ; Mask off the expansion bits to alias to terrain type
+    sta $02
+    pla                     ; Get the count byte
+    lsr                     ; shift the count down 4 bits
+    lsr
+    lsr
+    lsr
+    clc                     ; count + 0
+    bcc save_count          ; we just cleared carry, branch always to save.
+regular_rle:
+    and #$0f                ; Get tile type
+    sta $02                 ; store it
+    lda ($0e),y             ; Get compressed tile
+    lsr                     ; shift the count down 4 bits
+    lsr
+    lsr
+    lsr
+    sec                     ; count + 1
+save_count:
+    adc $03
+    sta $03
+    cmp $00
+    bcs done
+    iny
+    jmp bank1_ov_decompress
+done:
+    rts
+
+.org $83eb
+    jmp bank1_ov_decompress
+
+.end
+
+######################################################################
+# Make the editor refresh internal state.
+######################################################################
 sendmessage "loadpostprocess" -1
