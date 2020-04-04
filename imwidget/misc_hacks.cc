@@ -4,6 +4,7 @@
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
+#include "util/logging.h"
 #include "imgui.h"
 
 
@@ -111,38 +112,51 @@ bool MiscellaneousHacks::DrawMiscHacks() {
 
     ImGui::PopItemWidth();
 
+    auto nocheck = [](){};
+
     Hack("Palace 5 detect", ri.palace5_detect_size(),
         [&]() { return ri.palace5_detect(); },
-        [&](int n) { return ri.palace5_detect(n); });
+        [&](int n) { return ri.palace5_detect(n); },
+        nocheck);
 
     Hack("Palace Continue", ri.palace_continue_size(),
         [&]() { return ri.palace_continue(); },
-        [&](int n) { return ri.palace_continue(n); });
+        [&](int n) { return ri.palace_continue(n); },
+        nocheck);
 
     Hack("Completed Places", ri.palace_to_stone_size(),
         [&]() { return ri.palace_to_stone(); },
-        [&](int n) { return ri.palace_to_stone(n); });
+        [&](int n) { return ri.palace_to_stone(n); },
+        nocheck);
 
     Hack("Overworld BreakBlocks", ri.overworld_breakblocks_size(),
         [&]() { return ri.overworld_breakblocks(); },
-        [&](int n) { return ri.overworld_breakblocks(n); });
+        [&](int n) { return ri.overworld_breakblocks(n); },
+        nocheck);
 
     Hack("Spell Bits", ri.spell_bits_size(),
         [&]() { return ri.spell_bits(); },
-        [&](int n) { return ri.spell_bits(n); });
+        [&](int n) { return ri.spell_bits(n); },
+        nocheck);
 
     Hack("Spell Cast", ri.spell_cast_size(),
         [&]() { return ri.spell_cast(); },
-        [&](int n) { return ri.spell_cast(n); });
+        [&](int n) { return ri.spell_cast(n); },
+        nocheck);
 
     Hack("Spell Restrictions", ri.spell_restrictions_size(),
         [&]() { return ri.spell_restrictions(); },
-        [&](int n) { return ri.spell_restrictions(n); });
+        [&](int n) { return ri.spell_restrictions(n); },
+        nocheck);
 
     Hack("Overworld Tiles", ri.overworld_tiles_size(),
         [&]() { return ri.overworld_tiles(); },
-        [&](int n) { return ri.overworld_tiles(n); });
-
+        [&](int n) { return ri.overworld_tiles(n); },
+        [&, this]() {
+            this->CheckOverworldTileHack();
+            ImApp::Get()->ProcessMessage("overworld_tile_hack",
+                                         reinterpret_cast<void*>(-1));
+        });
     return false;
 }
 
@@ -154,7 +168,8 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
 
     int banks = Hack("CHR Banks", ri.dynamic_banks_size(),
         [&]() { return ri.dynamic_banks(); },
-        [&](int n) { return ri.dynamic_banks(n); });
+        [&](int n) { return ri.dynamic_banks(n); },
+        [](){});
     int ro = (banks == 0) ? ImGuiInputTextFlags_ReadOnly : 0;
 
     ImGui::Columns(9, NULL, true);
@@ -203,9 +218,11 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
     return false;
 }
 
-void MiscellaneousHacks::CheckConfig() {
+void MiscellaneousHacks::CheckOverworldTileHack() {
     auto* ri = ConfigLoader<RomInfo>::MutableConfig();
-    if (EnabledIndex([&]() { return ri->overworld_tiles(); }) > 0) {
+    int index = EnabledIndex([&]() { return ri->overworld_tiles(); });
+    LOGF(INFO, "Overworld tile hack: %d", index);
+    if (index == 1) {
         auto *p = ri->mutable_palettes(0);
         p->mutable_palette(0)->set_hidden(true);
         p->mutable_palette(1)->set_hidden(true);
@@ -223,6 +240,7 @@ void MiscellaneousHacks::CheckConfig() {
         *ri->mutable_map(1)->mutable_palette() = p->palette(4).address();
         *ri->mutable_map(2)->mutable_palette() = p->palette(6).address();
         *ri->mutable_map(3)->mutable_palette() = p->palette(4).address();
+        ri->mutable_misc()->mutable_overworld_tile_palettes()->set_address(0x87e3);
 
         int size = 128*3;
         int i;
@@ -242,7 +260,27 @@ void MiscellaneousHacks::CheckConfig() {
                 mapper_->WritePrgBank(0, 0xbcd0+i, mapper_->ReadPrgBank(-1, 0xc458+i));
             }
         }
-    } else {
+    } else if (index == 2) {
+        auto *p = ri->mutable_palettes(0);
+        p->mutable_palette(0)->set_hidden(false);
+        p->mutable_palette(1)->set_hidden(false);
+        p->mutable_palette(2)->set_hidden(true);
+        p->mutable_palette(3)->set_hidden(true);
+        p->mutable_palette(4)->set_hidden(true);
+        p->mutable_palette(5)->set_hidden(true);
+        p->mutable_palette(6)->set_hidden(true);
+        p->mutable_palette(7)->set_hidden(true);
+        ri->mutable_map(0)->mutable_objtable(0)->set_address(0xb000);
+        ri->mutable_map(1)->mutable_objtable(0)->set_address(0xb000);
+        ri->mutable_map(2)->mutable_objtable(0)->set_address(0xb000);
+        ri->mutable_map(3)->mutable_objtable(0)->set_address(0xb000);
+        *ri->mutable_map(0)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(1)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(2)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(3)->mutable_palette() = p->palette(0).address();
+        ri->mutable_misc()->mutable_overworld_tile_palettes()->set_address(0xb100);
+
+    } else if (index == 0) {
         auto *p = ri->mutable_palettes(0);
         p->mutable_palette(0)->set_hidden(false);
         p->mutable_palette(1)->set_hidden(false);
@@ -260,7 +298,9 @@ void MiscellaneousHacks::CheckConfig() {
         *ri->mutable_map(1)->mutable_palette() = p->palette(0).address();
         *ri->mutable_map(2)->mutable_palette() = p->palette(0).address();
         *ri->mutable_map(3)->mutable_palette() = p->palette(0).address();
+        ri->mutable_misc()->mutable_overworld_tile_palettes()->set_address(0x87e3);
     }
+
 }
 
 template<class GETALL>
@@ -277,9 +317,9 @@ int MiscellaneousHacks::EnabledIndex(GETALL getall) {
 }
 
 
-template<class GETALL, class GET>
+template<class GETALL, class GET, class CHECK>
 int MiscellaneousHacks::Hack(const char* hackname, int n,
-                              GETALL getall, GET get) {
+                              GETALL getall, GET get, CHECK check) {
     const char *names[n];
     int len = 0;
     int method = 0;
@@ -294,9 +334,7 @@ int MiscellaneousHacks::Hack(const char* hackname, int n,
     ImGui::PushItemWidth(400);
     if (ImGui::Combo(hackname, &method, names, len)) {
         PutGameHack(get(method));
-        CheckConfig();
-        ImApp::Get()->ProcessMessage("overworld_tile_hack",
-                                     reinterpret_cast<void*>(-1));
+        check();
     }
     ImGui::PopItemWidth();
     return method;

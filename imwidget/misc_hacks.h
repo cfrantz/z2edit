@@ -10,16 +10,18 @@ class MiscellaneousHacks: public ImWindowBase {
   public:
     MiscellaneousHacks(): ImWindowBase(false), tab_(0) {};
 
-    void Refresh() override { CheckConfig(); }
+    void Refresh() override {
+        CheckOverworldTileHack();
+    }
     bool Draw() override;
     bool DrawMiscHacks();
     bool DrawDynamicBanks();
-    void CheckConfig();
+    void CheckOverworldTileHack();
     inline void set_mapper(Mapper* m) { mapper_ = m; };
 
   private:
-    template<class GETALL, class GET>
-    int Hack(const char* hackname, int n, GETALL getall, GET get);
+    template<class GETALL, class GET, class CHECK>
+    int Hack(const char* hackname, int n, GETALL getall, GET get, CHECK check);
     template<class GETALL>
     int EnabledIndex(GETALL getall);
 
