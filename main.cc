@@ -3,13 +3,11 @@
 #include <gflags/gflags.h>
 #include <SDL2/SDL.h>
 
-#include "absl/strings/str_split.h"
 #include "app.h"
 #include "util/config.h"
 #include "zelda2_config.h"
 
 DEFINE_string(config, "", "ROM info config file");
-DEFINE_string(source, "", "List of scripts to run upon startup.");
 DEFINE_string(keybinds, "", "Alternate keybinds for the editor");
 DEFINE_bool(dump_config, false, "Dump config to stdout and exit");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
@@ -120,14 +118,13 @@ void PostProcess(z2util::RomInfo* config) {
 }
 
 const char kUsage[] =
-R"ZZZ(<optional flags> [user-supplied-zelda2.nes]
+R"ZZZ(<optional flags> [user-supplied-zelda2.nes] [script ...]
 
 Description:
   A ROM file edtior for Zelda II The Adventure of Link.
 
 Flags:
   --config <filename>        Use an alternate config file.
-  --source [script[,script]] Scripts to run on startup.
   --hidpi <n>                Set the scaling factor on hidpi displays (try 2.0)
   --emulator <prog>          Emulator to run for File | Emulate.
   --romtmp <filename>        Temporary filename for File | Emulate.
@@ -159,10 +156,8 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1) {
         app.Load(argv[1]);
-        if (!FLAGS_source.empty()) {
-            for(const auto& s : absl::StrSplit(FLAGS_source, ',')) {
-                app.Source(std::string(s));
-            }
+        for(int i=2; i<argc; ++i) {
+            app.Source(argv[i]);
         }
     }
     app.Run();
