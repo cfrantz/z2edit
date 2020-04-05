@@ -3,112 +3,112 @@ items {
         { key: 0x00 value: {
             name: "candle"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e7f }
+            table { bank: -1 address: 0xee7f }
             palette: 1
         }}, { key: 0x01 value: {
             name: "glove"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e81 }
+            table { bank: -1 address: 0xee81 }
             palette: 1
         }}, { key: 0x02 value: {
             name: "raft"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e83 }
+            table { bank: -1 address: 0xee83 }
             palette: 1
         }}, { key: 0x03 value: {
             name: "boots"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e85 }
+            table { bank: -1 address: 0xee85 }
             palette: 1
         }}, { key: 0x04 value: {
             name: "flute"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e87 }
+            table { bank: -1 address: 0xee87 }
             palette: 1
         }}, { key: 0x05 value: {
             name: "cross"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e89 }
+            table { bank: -1 address: 0xee89 }
             palette: 1
         }}, { key: 0x06 value: {
             name: "hammer"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e8b }
+            table { bank: -1 address: 0xee8b }
             palette: 1
         }}, { key: 0x07 value: {
             name: "magic key"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e8d }
+            table { bank: -1 address: 0xee8d }
             palette: 1
         }}, { key: 0x08 value: {
             name: "key"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e8f }
+            table { bank: -1 address: 0xee8f }
             palette: 1
         }}, { key: 0x09 value: {
             name: "???(0x09)"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e91 }
+            table { bank: -1 address: 0xee91 }
             palette: 1
         }}, { key: 0x0a value: {
             name: "50-bag"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e93 }
+            table { bank: -1 address: 0xee93 }
             palette: 1
         }}, { key: 0x0b value: {
             name: "100-bag"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e95 }
+            table { bank: -1 address: 0xee95 }
             palette: 1
         }}, { key: 0x0c value: {
             name: "200-bag"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e97 }
+            table { bank: -1 address: 0xee97 }
             palette: 1
         }}, { key: 0x0d value: {
             name: "500-bag"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e99 }
+            table { bank: -1 address: 0xee99 }
             palette: 1
         }}, { key: 0x0e value: {
             name: "magic container"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e9b }
+            table { bank: -1 address: 0xee9b }
             palette: 1
         }}, { key: 0x0f value: {
             name: "heart container"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e9d }
+            table { bank: -1 address: 0xee9d }
             palette: 1
         }}, { key: 0x10 value: {
             name: "blue jar"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2e9f }
+            table { bank: -1 address: 0xee9f }
             palette: 3
         }}, { key: 0x11 value: {
             name: "red jar"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2ea1 }
+            table { bank: -1 address: 0xeea1 }
             palette: 2
         }}, { key: 0x12 value: {
             name: "1up"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2ea3 }
+            table { bank: -1 address: 0xeea3 }
             palette: 0
         }}, { key: 0x13 value: {
             name: "kid"
             chr { bank: 4 }
-            table { bank: -1 address: 0x2ea5 }
+            table { bank: -1 address: 0xeea5 }
             palette: 1
         }}, { key: 0x14 value: {
             name: "trophy"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2ea7 }
+            table { bank: -1 address: 0xeea7 }
             palette: 1
         }}, { key: 0x15 value: {
             name: "water of life"
             chr { bank: 2 }
-            table { bank: -1 address: 0x2ea9 }
+            table { bank: -1 address: 0xeea9 }
             palette: 1
         }}, { 
             # A fake item to make rendering elevators easier
