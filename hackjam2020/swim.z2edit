@@ -1,0 +1,60 @@
+asm b=0
+.org $b200
+;; Mess with jump routine so A means "go up"
+swim:
+    lda $057d
+    bmi gravity
+    lda $9470
+    sta $057d
+gravity:
+    ldy #0
+    rts
+
+;; Hack the movement routine to change the bitfield encoding of the
+;; acceleration parameters.  Instead of <4,4> of <pix,subpix>,
+;; change to <3,5> of <pix,subpix>.  Allows for more sluggish motion.
+link_movement_routine:
+    lda      $70,x
+    asl
+    asl
+    asl
+    sta      $01
+    lda      $70,x
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    cmp      #$04
+    bcc      save_signed_result
+    ora      #$F8
+save_signed_result:
+    sta      $00
+    jmp      $d1e4
+
+
+.org $9470
+;; Set jump parameters:
+;; Jump-spell gravity < full horiz speed.
+;; Jump-spell gravity = full horiz speed.
+;; Regular Jump gravity < full horiz speed.
+;; Regular Jump gravity = full horiz speed.
+.db $FB,$FB,$FF,$FF
+
+;; Gravity counter (each time it overflows in the grav calc, vspeed += 1).
+;; Same ordering as prior table.
+.db $80,$00,$F0,$80
+
+;; Hack swim into jump routine
+.org $9535
+    jsr swim
+    nop
+    nop
+    nop
+    nop
+
+;; Hack link's xy movement
+.org $9628
+    jsr link_movement_routine
+
+.end
