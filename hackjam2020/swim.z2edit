@@ -4,7 +4,7 @@ asm b=0
 swim:
     lda $057d
     bmi gravity
-    lda $9470
+    lda $9472
     sta $057d
 gravity:
     ldy #0
