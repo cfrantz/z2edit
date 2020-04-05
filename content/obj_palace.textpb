@@ -85,10 +85,10 @@ decompress {
     id: 0x06
     render: RENDER_CUSTOM
     width: 1
-    height: 3
-    objid: 0xd4
-    custom: "RenderItem"
-    comment: "locked door"
+    height: 4
+    objid: [0x41, 0x40, 0x40, 0x51]
+    custom: "RenderGrid"
+    comment: "open door"
 }
 decompress {
     area: PALACE

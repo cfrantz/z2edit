@@ -213,6 +213,7 @@ sideview: {
         { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 }
     ]
     code { offset: 0 length: 14 code: 0 }
+    doors: { bank: 4 address: 0x8817 }
 }
 sideview: {
     area: "Palace2"

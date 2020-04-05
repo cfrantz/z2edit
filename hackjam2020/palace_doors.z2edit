@@ -1,0 +1,51 @@
+######################################################################
+# Add the town-door mechanic to palaces.
+######################################################################
+set ibase 16
+
+# Copy the town top doorframe to Palace1's bank CHR bank.
+charcopy 9:b0 7:49
+charcopy 9:b1 7:4a
+
+asm b=4 0
+bank7_set_ram_address_for_object = $c944
+bank7_place_object_vertical = $df56
+
+;; Set CHR tile codes for door components.
+;; This creates background objects $41 and $51.
+;; Object $41 is the top door frame.
+;; Object $51 looks just like palace bricks, but is a distinct object
+;;            so the door routine can detect when Link stands on it.
+.org $8341
+.db $b0,$f5,$b1,$f5
+.org $8381
+.db $64,$65,$65,$64
+
+.org $9ee0
+;; Door tiles bottom to top.
+door_construction_table:
+.db $51,$40,$40,$41
+
+;; Routine to construct the door object.
+palace_door_construction_routine:
+    ldx #3                                  ; Door is 4 tiles tall.
+    stx $0
+    jsr bank7_set_ram_address_for_object    ; Location where we'll put it.
+loop:
+    lda door_construction_table,x           ; Get the object id
+    jsr bank7_place_object_vertical         ; Place it
+    dex
+    dec $0
+    bpl loop                                ; Repeat
+    rts
+
+;; Take over "small object 6" which is currently a duplicate of the
+;; conventional palace locked door.  Patch in our door routine.
+.org $813f
+.dw palace_door_construction_routine
+
+;; Set the magic door tile in the magic tiles table.
+.org $851a
+.db $51
+.end
+
