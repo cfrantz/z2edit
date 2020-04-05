@@ -128,7 +128,7 @@ bool EnemyListPack::Pack() {
 
         List& entry = entry_[addr];
         if (entry.newaddr == 0) {
-            if (entry.data.size() == 1) {
+            if (entry.data.size() == 1 && !IsEncounter(room)) {
                 // All empty lists (lists of length 1) point to the
                 // empty-list sentinel at the beginning of the packed array.
                 entry.newaddr = 0 + misc.enemy_data_ram();
