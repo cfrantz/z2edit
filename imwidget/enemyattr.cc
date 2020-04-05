@@ -193,7 +193,7 @@ bool EnemyEditor::Draw() {
         ImGui::Text("%-40s  %-14s %-8s %-8s %-8s %-14s %-8s %-7s %-7s %-7s "
                     "%-7s %-7s %-7s %-7s %-7s",
                 "Name", "HitPoints", "Palette", "StealXP", "NeedFire", "Points",
-                "DropGrp", "BeamImm", "Unknown", "DmgType",
+                "DropGrp", "BeamImm", "SpellIm", "DmgType",
                 "ThndImm", "Regen", "Unknown", "SwordImm", "Unknown"
                 );
         ImGui::Separator();
