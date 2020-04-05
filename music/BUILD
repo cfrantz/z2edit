@@ -23,6 +23,12 @@ cc_binary(
 )
 
 cc_binary(
+    name = "undersea",
+    srcs = ["undersea.cc"],
+    deps = [":music"],
+)
+
+cc_binary(
     name = "credits",
     srcs = ["credits.cc"],
     deps = [":music"],
