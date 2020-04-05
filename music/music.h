@@ -195,6 +195,7 @@ class Rom {
     static constexpr size_t kHeaderSize =     0x10;
     static constexpr size_t kRomSize    = 0x040000;
 
+    static constexpr size_t kTitleScreenTable     = 0x019000;
     static constexpr size_t kOverworldSongTable   = 0x01a000;
     static constexpr size_t kTownSongTable        = 0x01a3ca;
     static constexpr size_t kPalaceSongTable      = 0x01a62f;
