@@ -159,8 +159,10 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1) {
         app.Load(argv[1]);
-        for(const auto& s : absl::StrSplit(FLAGS_source, ',')) {
-            app.Source(std::string(s));
+        if (!FLAGS_source.empty()) {
+            for(const auto& s : absl::StrSplit(FLAGS_source, ',')) {
+                app.Source(std::string(s));
+            }
         }
     }
     app.Run();
