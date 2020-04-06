@@ -9,6 +9,22 @@
 
 namespace z2util {
 
+const char* MiscellaneousHacks::collectable_names_[MAX_COLLECTABLE];
+
+void MiscellaneousHacks::Init() {
+    static char collectable[MAX_COLLECTABLE][32];
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    for(int i=0; i<MAX_COLLECTABLE; i++) {
+        const auto& c = ri.items().info().find(i);
+        if (c == ri.items().info().end()) {
+            snprintf(collectable[i], 31, "%02x: ???", i);
+        } else {
+            snprintf(collectable[i], 31, "%02x: %s", i, c->second.name().c_str());
+        }
+        collectable_names_[i] = collectable[i];
+    }
+}
+
 bool MiscellaneousHacks::Draw() {
     if (!visible_)
         return false;
@@ -33,6 +49,37 @@ bool MiscellaneousHacks::Draw() {
         ImGui::Text("Unknown tab value");
     }
     ImGui::End();
+    return changed;
+}
+
+
+bool MiscellaneousHacks::DrawPalaceCompletionItems() {
+    const auto& ri = ConfigLoader<RomInfo>::GetConfig();
+    const auto& misc = ri.misc();
+    char palace[4];
+    int item;
+    bool changed = false;
+    ImGui::Text("Palace Completion Items:");
+    ImGui::Text("    ");
+    ImGui::PushItemWidth(90);
+    for(int i=0; i<6; ++i) {
+        // Palace four has a special configuration in overworld_palace_ram,
+        // but the offsets for completion items don't care about that.
+        const auto& addr = (i<4) ? misc.overworld_palace_ram(0)
+                                 : misc.overworld_palace_ram(2);
+        int offset = (i<4) ? i : i-4;
+        item = mapper_->Read(addr, 8+offset);
+        snprintf(palace, sizeof(palace), "P%d", i+1);
+        ImGui::SameLine();
+        if (ImGui::Combo(palace, &item, collectable_names_, MAX_COLLECTABLE)) {
+            mapper_->Write(addr, 8+offset, item);
+            if (i==3) {
+                // Palace 4 gets to be in both banks.
+                mapper_->Write(misc.overworld_palace_ram(2), 8+offset, item);
+            }
+        }
+    }
+    ImGui::PopItemWidth();
     return changed;
 }
 
@@ -122,6 +169,10 @@ bool MiscellaneousHacks::DrawMiscHacks() {
     Hack("Completed Places", ri.palace_to_stone_size(),
         [&]() { return ri.palace_to_stone(); },
         [&](int n) { return ri.palace_to_stone(n); });
+    if (EnabledIndex([&]() { return ri.palace_to_stone(); }) == 1) {
+        // If its the fixed version, let the user edit the table.
+        DrawPalaceCompletionItems();
+    }
 
     Hack("Overworld BreakBlocks", ri.overworld_breakblocks_size(),
         [&]() { return ri.overworld_breakblocks(); },

@@ -8,8 +8,9 @@ namespace z2util {
 
 class MiscellaneousHacks: public ImWindowBase {
   public:
-    MiscellaneousHacks(): ImWindowBase(false), tab_(0) {};
+    MiscellaneousHacks(): ImWindowBase(false), tab_(0) { Init(); }
 
+    void Init();
     void Refresh() override { CheckConfig(); }
     bool Draw() override;
     bool DrawMiscHacks();
@@ -17,18 +18,21 @@ class MiscellaneousHacks: public ImWindowBase {
     void CheckConfig();
     inline void set_mapper(Mapper* m) { mapper_ = m; };
 
+    const static int MAX_COLLECTABLE = 36;
   private:
     template<class GETALL, class GET>
     int Hack(const char* hackname, int n, GETALL getall, GET get);
     template<class GETALL>
     int EnabledIndex(GETALL getall);
 
+    bool DrawPalaceCompletionItems();
     bool MemcmpHack(const PokeData& data);
     void PutPokeData(const PokeData& data);
     void PutGameHack(const GameHack& hack);
 
     int tab_;
     Mapper* mapper_;
+    static const char *collectable_names_[MAX_COLLECTABLE];
 };
 
 }  // namespace

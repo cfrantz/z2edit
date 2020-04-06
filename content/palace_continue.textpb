@@ -35,16 +35,26 @@ palace_continue {
 }
 
 palace_to_stone {
-    name: "Vanilla (palaces turn to stone)"
+    name: "Vanilla (turn to stone w/ original coding error)"
     hack: [
-        {address { bank:1 address:0x8797 } data: [0x00, 0x01, 0x02, 0x03]},
-        {address { bank:2 address:0x8797 } data: [0x04, 0x05, 0xFF, 0x03]}
+        {address { bank:1 address:0x87aa } data: [0xb9, 0x8d, 0x07]},
+        {address { bank:2 address:0x87b3 } data: [0xb9, 0x8d, 0x07]},
+        {address { bank:-1 address:0xe01e } data: [0x20, 0x9b, 0x87]}
+    ]
+}
+palace_to_stone {
+    name: "Palaces turn to stone (error fixed)"
+    hack: [
+        {address { bank:1 address:0x87aa } data: [0xbd, 0x8d, 0x07]},
+        {address { bank:2 address:0x87b3 } data: [0xbd, 0x8d, 0x07]},
+        {address { bank:-1 address:0xe01e } data: [0x20, 0x9b, 0x87]}
     ]
 }
 palace_to_stone {
     name: "Disable turning to stone"
     hack: [
-        {address { bank:1 address:0x8797 } data: [0xFF, 0xFF, 0xFF, 0xFF]},
-        {address { bank:2 address:0x8797 } data: [0xFF, 0xFF, 0xFF, 0xFF]}
+        {address { bank:1 address:0x87aa } data: [0xea, 0xea, 0xea]},
+        {address { bank:2 address:0x87b3 } data: [0xea, 0xea, 0xea]},
+        {address { bank:-1 address:0xe01e } data: [0xea, 0xea, 0xea]}
     ]
 }
