@@ -332,8 +332,8 @@ const char* ground_names[] = {
 void MapHolder::Unpack() {
     data_.objset = !!(flags_ & 0x80);
     data_.width = 1 + ((flags_ >> 5) & 3);
-    data_.grass = !!(flags_ & 0x10);
-    data_.bushes = !!(flags_ & 0x08);
+    data_.grass = !!(flags_ & 0x08);
+    data_.bushes = !!(flags_ & 0x04);
     data_.ceiling = !(ground_ & 0x80);
     data_.ground = (ground_ >> 4) & 7;
     data_.floor = ground_ & 0xf;
@@ -345,8 +345,8 @@ void MapHolder::Unpack() {
 void MapHolder::Pack() {
     flags_ = (data_.objset << 7) |
              ((data_.width-1) << 5) |
-             (int(data_.grass) << 4) |
-             (int(data_.bushes) << 3);
+             (int(data_.grass) << 3) |
+             (int(data_.bushes) << 2);
     ground_ = (int(!data_.ceiling) << 7) | (data_.ground << 4) | (data_.floor);
     back_ = (data_.spal << 6) | (data_.bpal << 3) | data_.bmap;
 }
