@@ -174,7 +174,7 @@ class MapConnection {
     inline Unpacked up() const { return data_[2]; }
     inline Unpacked right() const { return data_[3]; }
     inline Unpacked door(int d) const {
-        if (doors_.address() && d >= 0 && d < 4) {
+        if (doors_.address() && d >= 0 && d < 4 && area_ < kMaxDoorArea) {
             return data_[4+d];
         } else {
             return Unpacked{63, 3};
@@ -193,6 +193,7 @@ class MapConnection {
     inline void set_right(int dest, int start) {
         data_[3].destination = dest; data_[3].start = start;
     }
+    static constexpr int kMaxDoorArea = 32;
   private:
     Mapper* mapper_;
     Address connector_;
@@ -200,8 +201,10 @@ class MapConnection {
     int world_;
     int overworld_;
     int subworld_;
+    int area_;
 
     Unpacked data_[8];
+    bool fixtarget_[8];
 };
 
 class MapEnemyList {

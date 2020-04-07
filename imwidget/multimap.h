@@ -25,7 +25,9 @@ class MultiMap: public ImWindowBase {
     MultiMap(Mapper* mapper, int world, int overworld, int subworld, int map)
         : ImWindowBase(), mapper_(mapper), scale_(0.25),
         world_(world), overworld_(overworld), subworld_(subworld),
-        start_(map), pauseconv_(true), show_labels_(true), show_arrows_(true)
+        start_(map), pauseconv_(true), show_labels_(true), show_arrows_(true),
+        show_doors_(false),
+        xs_(0.40), ys_(0.75)
     {}
 
     void Init();
@@ -42,8 +44,12 @@ class MultiMap: public ImWindowBase {
         DOWN,
         UP,
         RIGHT,
+        DOOR1,
+        DOOR2,
+        DOOR3,
+        DOOR4,
     };
-    fdg::Node* AddRoom(int room, int x, int y);
+    fdg::Node* AddRoom(int room, double x, double y);
     Vec2 Position(const Vec2& pos);
     Vec2 Position(const DrawLocation& dl, Direction side);
     void DrawArrow(const Vec2& a, const Vec2&b, uint32_t color,
@@ -51,7 +57,7 @@ class MultiMap: public ImWindowBase {
     void DrawConnections(const DrawLocation& dl);
     void DrawOne(const DrawLocation& dl);
     void DrawGen();
-    void Traverse(int room, int x, int y, int from);
+    void Traverse(int room, double x, double y, int from, double strength=1.0);
     void Sort();
     void DrawLegend();
 
@@ -79,9 +85,10 @@ class MultiMap: public ImWindowBase {
     bool pauseconv_;
     bool show_labels_;
     bool show_arrows_;
+    bool show_doors_;
 
-    static float xs_;
-    static float ys_;
+    float xs_;
+    float ys_;
     static bool preconverge_;
     static bool continuous_converge_;
 
@@ -89,6 +96,7 @@ class MultiMap: public ImWindowBase {
     static const uint32_t GREEN  = 0xF000FF00;
     static const uint32_t BLUE   = 0xF0FF0000;
     static const uint32_t YELLOW = 0xF000EEFD;
+    static const uint32_t ORANGE = 0xF0008BFF;
     static const uint32_t GRAY   = 0x60808080;
 };
 
