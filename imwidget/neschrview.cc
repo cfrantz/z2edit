@@ -8,12 +8,14 @@
 #include "nfd.h"
 #endif
 
-NesChrView::NesChrView()
+NesChrView::NesChrView(int bank)
   : ImWindowBase(false),
-  bank_(0), mode_(true), grid_(true) {
+  bank_(bank), mode_(true), grid_(true) {
     int sz = grid_ ? 160 : 128;
     bitmap_.reset(new GLBitmap(sz, sz));
 }
+
+NesChrView::NesChrView() : NesChrView(0) {}
 
 void NesChrView::RenderChr() {
     uint32_t pal[] = { 0xFF000000, 0xFF666666, 0xFFAAAAAA, 0xFFFFFFFF };

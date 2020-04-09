@@ -9,6 +9,7 @@
 
 class NesChrView: public ImWindowBase {
   public:
+    NesChrView(int bank);
     NesChrView();
 
     void RenderChr();
