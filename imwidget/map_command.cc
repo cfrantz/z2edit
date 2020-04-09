@@ -774,8 +774,6 @@ void MapConnection::Save() {
         }
     }
     if (doors_.address() && area_ < kMaxDoorArea) {
-        base = doors_;
-        base.set_address(base.address() - 4*area_);
         for(int i=0; i<4; i++) {
             uint8_t val = (data_[i+4].destination << 2) | (data_[i+4].start & 3);
             mapper_->Write(doors_, i, val);
