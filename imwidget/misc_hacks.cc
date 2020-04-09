@@ -15,23 +15,23 @@ bool MiscellaneousHacks::Draw() {
         return false;
 
     ImGui::Begin("Miscellaneous Hacks", &visible_);
-
-    ImGui::RadioButton("Miscellaneous", &tab_, 0);
-    ImGui::SameLine(); ImGui::RadioButton("Dynamic Banks", &tab_, 1);
-    ImGui::SameLine(ImGui::GetWindowWidth() - 50);
     ImApp::Get()->HelpButton("misc");
-    ImGui::Separator();
-
     bool changed = false;
-    switch(tab_) {
-    case 0:
-        changed = DrawMiscHacks();
-        break;
-    case 1:
-        changed = DrawDynamicBanks();
-        break;
-    default:
-        ImGui::Text("Unknown tab value");
+
+    if (ImGui::BeginTabBar("MiscTabs", ImGuiTabBarFlags_None)) {
+        if (ImGui::BeginTabItem("Miscellaneous")) {
+            changed |= DrawMiscHacks();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Dynamic Banks")) {
+            changed |= DrawDynamicBanks();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Swim Enables")) {
+            changed |= DrawSwimEnables();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
     ImGui::End();
     return changed;
@@ -217,6 +217,52 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
     ImGui::Columns(1);
     return false;
 }
+
+bool MiscellaneousHacks::DrawSwimEnables() {
+    char roombuf[16];
+    const char *overworlds[] = {"West", "DM/Maze", "East"};
+    const char *worlds[] = {"Caves", "Towns", "Towns", "P125", "P346", "GP" };
+
+    ImGui::Columns(17, NULL, true);
+    ImGui::Text("Overworld World");
+    ImGui::NextColumn();
+    for(int i=0; i<16; i++) {
+        ImGui::Text("Room");
+        ImGui::NextColumn();
+    }
+    ImGui::Separator();
+    for(int ov=0; ov<3; ov++) {
+        for(int world=0; world<6; world++) {
+            if ((ov == 0 && world == 2) ||
+                (ov == 1 && (world == 1 || world == 2)) ||
+                (ov == 2 && world == 1)) {
+                ImGui::Text("%15s", "Not Used");
+            } else {
+                ImGui::Text("%9s %5s", overworlds[ov], worlds[world]);
+            }
+            ImGui::NextColumn();
+            for(int i=0; i<16; i+=1) {
+                int addr = 0xb200 + (ov * 5 + world) * 16 + i;
+                ImGui::PushID(addr);
+                int room = mapper_->ReadPrgBank(0, addr);
+                snprintf(roombuf, sizeof(roombuf), "%d", room);
+                ImGui::PushItemWidth(32);
+                if (ImGui::InputText("##room", roombuf, sizeof(roombuf),
+                                     ImGuiInputTextFlags_CharsDecimal)) {
+                    room = strtoul(roombuf, 0, 10);
+                    mapper_->WritePrgBank(0, addr, room);
+                }
+                ImGui::PopItemWidth();
+                ImGui::PopID();
+                ImGui::NextColumn();
+            }
+            ImGui::Separator();
+        }
+    }
+    ImGui::Columns(1);
+    return false;
+}
+
 
 void MiscellaneousHacks::CheckOverworldTileHack() {
     auto* ri = ConfigLoader<RomInfo>::MutableConfig();

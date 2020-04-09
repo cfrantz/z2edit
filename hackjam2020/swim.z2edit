@@ -1,19 +1,115 @@
 asm b=0
+;; Some useful addressses in bank7
+get_regionx5_plus_world = $cf30
+load_bank0 = $ffc5
+load_bank_at_769 = $ffc9
+bank7_xy_movement_routine = $d1ce
+bank7_xy_computation = $d1e4
+
+;; Unused RAM - holds the swim enabled flag.
+swim_enabled = $06e0
+
+;; Freespace in bank7 to hold our thunk to swimcheck.
+.org $ff4c
+    sta $0561
+    jsr load_bank0
+    jmp swimcheck
+.org $c65d              ; In the elevator exit routine
+    jsr $ff4c
+.org $cc9d              ; In "get area code enter code and direction"
+    jsr $ff4c
+.org $cfb4              ; room-to-room transition (I think).
+    jsr $ff4c           
+.org $d00e              ; doorways
+    jsr $ff4c
+
+
+;; Table for each region.  Each segment of the table is 16 bytes long,
+;; and contains room numbers in which swim is enabled, with a zero terminator.
 .org $b200
+swimrooms:
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West caves
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West towns
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P125
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P346
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ caves (or West GP)
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P125
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P346
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Caves (or DM/MZ GP)
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Towns
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P125
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P346
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East GP
+
+.org $b300
+;; Original jump gravity table is at $9470.
+;; We have our own alternate "swim gravity" table.
+jump_gravity = $9470
+swim_gravity:
+.db $ff,$ff,$ff,$ff
+
+;; Swimcheck is just like dynamic banks:  Scan the table for the
+;; room we're in.  Dynamic banks loads a CHR bank, swimcheck just sets a flag.
+swimcheck:
+    jsr get_regionx5_plus_world     ; Get region*5+world
+    asl                             ; 16 bytes per region/world combo
+    asl
+    asl
+    asl
+    tax
+loop:
+    lda swimrooms,x                 ; scan through table
+    beq done                        ; zero value means end
+    cmp $0561                       ; equal to current room
+    beq done
+    inx
+    bne loop
+done:
+    sta swim_enabled                ; store the swim state
+    jmp load_bank_at_769            ; load bank $769 and return
+    
+    
 ;; Mess with jump routine so A means "go up"
-swim:
-    lda $057d
-    bmi gravity
-    lda $9472
+swim1:
+    lda swim_enabled                ; Is swimming enabled
+    beq not_swimming1
+    lda swim_gravity,y              ; Yes - Load the swim gravity.
+    rts
+not_swimming1:
+    lda jump_gravity,y              ; No - Load the regular gravity.
+    rts
+
+swim2:
+    lda swim_enabled                ; Is swimming enabled
+    beq not_swimming2
+    lda $057d                       ; Link's Y velocity
+    bmi swim_no_gravity             ; Heading up? do nothing.
+    lda swim_gravity                ; Heading down, rewrite downward accel as -1
     sta $057d
-gravity:
+swim_no_gravity:
     ldy #0
     rts
+not_swimming2:
+    lda $057d                       ; Link's Y velocity (original code).
+    bpl moving_down
+    ldy #$30
+moving_down:
+    rts
+
+
+link_movement_routine:
+    lda     swim_enabled
+    bne     slow_link_movement_routine
+    jmp     bank7_xy_movement_routine
 
 ;; Hack the movement routine to change the bitfield encoding of the
 ;; acceleration parameters.  Instead of <4,4> of <pix,subpix>,
 ;; change to <3,5> of <pix,subpix>.  Allows for more sluggish motion.
-link_movement_routine:
+slow_link_movement_routine:
     lda      $70,x
     asl
     asl
@@ -30,24 +126,15 @@ link_movement_routine:
     ora      #$F8
 save_signed_result:
     sta      $00
-    jmp      $d1e4
+    jmp      bank7_xy_computation
 
-
-.org $9470
-;; Set jump parameters:
-;; Jump-spell gravity < full horiz speed.
-;; Jump-spell gravity = full horiz speed.
-;; Regular Jump gravity < full horiz speed.
-;; Regular Jump gravity = full horiz speed.
-.db $FB,$FB,$FF,$FF
-
-;; Gravity counter (each time it overflows in the grav calc, vspeed += 1).
-;; Same ordering as prior table.
-.db $80,$00,$F0,$80
 
 ;; Hack swim into jump routine
+.org $951c
+    jsr swim1           ; Get the initial swim gravity for the first press of A.
+
 .org $9535
-    jsr swim
+    jsr swim2           ; Override Y-vel on subsequent presses of A.
     nop
     nop
     nop

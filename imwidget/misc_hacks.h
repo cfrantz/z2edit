@@ -16,6 +16,7 @@ class MiscellaneousHacks: public ImWindowBase {
     bool Draw() override;
     bool DrawMiscHacks();
     bool DrawDynamicBanks();
+    bool DrawSwimEnables();
     void CheckOverworldTileHack();
     inline void set_mapper(Mapper* m) { mapper_ = m; };
 
