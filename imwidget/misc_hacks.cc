@@ -1,4 +1,5 @@
 #include "imwidget/misc_hacks.h"
+#include <gflags/gflags.h>
 
 #include "imwidget/imapp.h"
 #include "nes/mapper.h"
@@ -7,6 +8,7 @@
 #include "util/logging.h"
 #include "imgui.h"
 
+DECLARE_bool(hackjam2020);
 
 namespace z2util {
 
@@ -27,7 +29,7 @@ bool MiscellaneousHacks::Draw() {
             changed |= DrawDynamicBanks();
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Swim Enables")) {
+        if (FLAGS_hackjam2020 && ImGui::BeginTabItem("Swim Enables")) {
             changed |= DrawSwimEnables();
             ImGui::EndTabItem();
         }
@@ -165,12 +167,18 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
     char roombuf[8], bankbuf[8];
     const char *overworlds[] = {"West", "DM/Maze", "East"};
     const char *worlds[] = {"Caves", "Towns", "Towns", "P125", "P346", "GP" };
+    int banks, ro;
 
-    int banks = Hack("CHR Banks", ri.dynamic_banks_size(),
-        [&]() { return ri.dynamic_banks(); },
-        [&](int n) { return ri.dynamic_banks(n); },
-        [](){});
-    int ro = (banks == 0) ? ImGuiInputTextFlags_ReadOnly : 0;
+    if (FLAGS_hackjam2020) {
+        // Just permanently enable this for hackjam2020.
+        ro = 0;
+    } else {
+        banks = Hack("CHR Banks", ri.dynamic_banks_size(),
+            [&]() { return ri.dynamic_banks(); },
+            [&](int n) { return ri.dynamic_banks(n); },
+            [](){});
+            ro = (banks == 0) ? ImGuiInputTextFlags_ReadOnly : 0;
+    }
 
     ImGui::Columns(9, NULL, true);
     ImGui::Text("Overworld World");

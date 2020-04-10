@@ -5,9 +5,13 @@ load_bank0 = $ffc5
 load_bank_at_769 = $ffc9
 bank7_xy_movement_routine = $d1ce
 bank7_xy_computation = $d1e4
+ROOM = $be60
+BANK = $be61
+BITMASKS = $f26c
 
-;; Unused RAM - holds the swim enabled flag.
-swim_enabled = $06e0
+;; Unused RAM at $06e0
+swim_enabled = $06e0    ; is swim enabled on this screen?
+tmpy = $06e1            ; Temp storage for Y register
 
 ;; Freespace in bank7 to hold our thunk to swimcheck.
 .org $ff4c
@@ -28,22 +32,23 @@ swim_enabled = $06e0
 ;; and contains room numbers in which swim is enabled, with a zero terminator.
 .org $b200
 swimrooms:
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West caves
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West towns
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P125
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P346
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ caves (or West GP)
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P125
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P346
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Caves (or DM/MZ GP)
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Towns
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P125
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P346
-.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East GP
+;; Commented out to not clobber BGT's swim rooms
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West caves
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West towns
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P125
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P346
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ caves (or West GP)
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P125
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P346
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Caves (or DM/MZ GP)
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Towns
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P125
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P346
+;; .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East GP
 
 .org $b300
 ;; Original jump gravity table is at $9470.
@@ -60,16 +65,54 @@ swimcheck:
     asl
     asl
     asl
+    pha                             ; Save R5+W for later
+    tax
+swimcheckloop:
+    lda swimrooms,x                 ; scan through table
+    beq swimcheckdone
+    cmp $0561                       ; equal to current room
+    beq swimcheckdone
+    inx
+    bne swimcheckloop
+swimcheckdone:
+    sta swim_enabled                ; store the swim state
+
+;; Second part: dynamic banks, sfx and automation
+    pla                             ; Get R5+W
     tax
 loop:
-    lda swimrooms,x                 ; scan through table
+    lda ROOM,x                      ; table at $be60
     beq done                        ; zero value means end
-    cmp $0561                       ; equal to current room
-    beq done
+    cmp $0561                       ; equal to room number?
+    beq loadchr                     ; yes, get and load chr bank
+    inx                             ; nope, inc pointer
     inx
-    bne loop
+    bne loop                        ; check next value
+loadchr:
+    lda BANK,x                      ; Which CHR bank or effect?
+    bmi soundeffect                 ; Effect
+    sta $076e                       ; Save CHR bank.
 done:
-    sta swim_enabled                ; store the swim state
+    jmp load_bank_at_769            ; load bank $769 and return
+soundeffect:
+    pha
+    lsr                             ; Get SFX offset into X
+    lsr
+    lsr
+    lsr
+    tax
+    pla                             ; Low nybble is sound effect
+    and #$0f
+    cpx #$08                        ; Values $80 to $8F for automation
+    beq automation
+    sty tmpy
+    tay
+    lda BITMASKS,y
+    sta $e0,x
+    ldy tmpy
+    jmp load_bank_at_769            ; load bank $769 and return
+automation:
+    sta $076c                       ; Set automation routine
     jmp load_bank_at_769            ; load bank $769 and return
     
     
@@ -143,5 +186,25 @@ save_signed_result:
 ;; Hack link's xy movement
 .org $9628
     jsr link_movement_routine
+
+
+;; Comment this out after applying once.
+.org ROOM
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West caves
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West towns
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P125
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; West P346
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ caves (or West GP)
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P125
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; DM/MZ P346
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Caves (or DM/MZ GP)
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; Not used
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East Towns
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P125
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East P346
+.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0         ; East GP
 
 .end
