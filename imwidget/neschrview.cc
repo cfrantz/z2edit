@@ -165,10 +165,9 @@ bool NesChrView::Draw() {
 
     // Render the labels on the horizontal axis
     ImGui::BeginGroup();
-    ImGui::Text(" ");
     float x = ImGui::GetCursorPosX();
     for(int i=0; i<16; i++) {
-        ImGui::SameLine(x + i*4*sz + sz);
+        ImGui::SameLine(x + i*4*sz - sz*2);
         ImGui::Text("%02x", i * (mode_+1));
     }
 
