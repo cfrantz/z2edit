@@ -117,6 +117,11 @@ bool EnemyListPack::Pack() {
     // Insert an empty list to consolidate all empty rooms to the same
     // zero length list.
     packed.push_back(1);
+    // Insert a second empty list: if Link dies to a large encounter, the
+    // game will spawn enemies from the second encounter list in area 0
+    // (north palace).  Since North Palace is usually empty, it will pick
+    // the enemy list from the next area.
+    packed.push_back(1);
 
     // Pack all of the enemy lists into the buffer
     for(int i=0; i<126; i++) {
