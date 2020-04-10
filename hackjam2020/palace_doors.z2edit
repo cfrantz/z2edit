@@ -4,8 +4,8 @@
 set ibase 16
 
 # Copy the town top doorframe to Palace1's bank CHR bank.
-charcopy 9:b0 7:49
-charcopy 9:b1 7:4a
+#charcopy 9:b0 7:49
+#charcopy 9:b1 7:4a
 
 asm b=4 0
 bank7_set_ram_address_for_object = $c944
@@ -47,5 +47,15 @@ loop:
 ;; Set the magic door tile in the magic tiles table.
 .org $851a
 .db $51
+
+.org $d031
+;; The vanilla door exit routine would always change the music unless you were
+;; in old kasuto.  Change it to always change the music in towns, but not
+;; in palaces.
+door_exit_done = $d041
+door_exit_music:
+    lda $0707                               ; Current world
+    cmp #3                                  ; worlds >= 3 are palaces
+    bcs door_exit_done                      ; branch greater-or-equal
 .end
 
