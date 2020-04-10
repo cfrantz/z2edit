@@ -40,3 +40,14 @@ cc_binary(
         "//external:gflags",
     ],
 )
+
+cc_binary(
+    name = "chr_dump",
+    srcs = ["chr_dump.cc"],
+    deps = ["//:app"],
+    linkopts = [
+        "-lpthread",
+        "-lm",
+        "-lGL",
+    ],
+)

@@ -155,14 +155,3 @@ cc_library(
         "//external:imgui",
     ],
 )
-
-cc_binary(
-    name = "chr_dump",
-    srcs = ["chr_dump.cc"],
-    deps = ["//:app"],
-    linkopts = [
-        "-lpthread",
-        "-lm",
-        "-lGL",
-    ],
-)
