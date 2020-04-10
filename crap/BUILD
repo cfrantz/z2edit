@@ -51,3 +51,14 @@ cc_binary(
         "-lGL",
     ],
 )
+
+cc_binary(
+    name = "chr_load",
+    srcs = ["chr_load.cc"],
+    deps = ["//:app"],
+    linkopts = [
+        "-lpthread",
+        "-lm",
+        "-lGL",
+    ],
+)
