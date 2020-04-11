@@ -1,0 +1,10 @@
+asm b=7
+
+.org $e821
+go_on_get_the_kid:
+    lda #3
+    sta $76c
+    nop
+    nop
+    nop
+.end
