@@ -1,0 +1,21 @@
+asm b=4 0
+.org $82e5
+barba_projectile_direction:
+    lda $29                 ; Link's y position
+    cmp $2f                 ; Barba's y position
+    bcs direction_done      ; If >= barba's Ypos, nothing to do
+    lda $584,x              ; Flip bits
+    eor #$ff
+    sta $584,x
+direction_done:
+    dec $30,x
+    dec $30,x
+    dec $30,x
+    rts
+
+.org $b1ab
+    jsr barba_projectile_direction
+    nop
+    nop
+    nop
+.end
