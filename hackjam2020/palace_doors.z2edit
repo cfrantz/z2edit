@@ -3,9 +3,21 @@
 ######################################################################
 set ibase 16
 
-# Copy the town top doorframe to Palace1's bank CHR bank.
-#charcopy 9:b0 7:49
-#charcopy 9:b1 7:4a
+# Copy the town top doorframe to all Palace CHR banks.
+charcopy 9:a4 7:49
+charcopy 9:a7 7:4a
+charcopy b:a4 7:49
+charcopy b:a7 7:4a
+charcopy d:a4 7:49
+charcopy d:a7 7:4a
+charcopy 13:a4 7:49
+charcopy 13:a7 7:4a
+charcopy 15:a4 7:49
+charcopy 15:a7 7:4a
+charcopy 17:a4 7:49
+charcopy 17:a7 7:4a
+charcopy 19:a4 7:49
+charcopy 19:a7 7:4a
 
 asm b=4 0
 bank7_set_ram_address_for_object = $c944
@@ -17,7 +29,7 @@ bank7_place_object_vertical = $df56
 ;; Object $51 looks just like palace bricks, but is a distinct object
 ;;            so the door routine can detect when Link stands on it.
 .org $8341
-.db $b0,$f5,$b1,$f5
+.db $a4,$f5,$a7,$f5
 .org $8381
 .db $64,$65,$65,$64
 
