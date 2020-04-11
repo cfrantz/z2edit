@@ -172,6 +172,23 @@ save_signed_result:
     jmp      bank7_xy_computation
 
 
+max_walk_speed:
+;; The max walk speed is interpreted in 4-bit <pix,subpix> units.
+.db $18,$e8
+
+max_swim_speed:
+;; The max swim speed is interpreted in <3,5>-bit <pix,subpix> units.
+.db $20,$E0
+
+check_max_speed:
+    ldx     swim_enabled
+    beq     check_walk_speed
+    cmp     max_swim_speed,y
+    rts
+check_walk_speed:
+    cmp     max_walk_speed,y
+    rts
+
 ;; Hack swim into jump routine
 .org $951c
     jsr swim1           ; Get the initial swim gravity for the first press of A.
@@ -186,6 +203,12 @@ save_signed_result:
 ;; Hack link's xy movement
 .org $9628
     jsr link_movement_routine
+
+;; Patch in max speed check
+.org $93ff
+    jsr check_max_speed
+.org $940e
+    jsr check_max_speed
 
 
 ;; Comment this out after applying once.
