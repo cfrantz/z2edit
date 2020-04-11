@@ -223,7 +223,7 @@ save_count:
 # and terrain types.  Patch in a version of ours for that purpose.
 ######################################################################
 asm b=1 0
-.org $bc00
+.org $ac00
 bank1_ov_decompress:
     lda ($0e),y             ; Get compressed tile
     and #$0f                ; Tile id
@@ -273,7 +273,7 @@ done:
 # and terrain types.  Patch in a version of ours for that purpose.
 ######################################################################
 asm b=2 0
-.org $bc00
+.org $ac00
 bank1_ov_decompress:
     lda ($0e),y             ; Get compressed tile
     and #$0f                ; Tile id
