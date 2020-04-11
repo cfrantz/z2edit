@@ -152,5 +152,5 @@ wbp b=2 846b 31
 wbp b=4 8391 8d
 wbp b=4 83a5 8d
 # Rewrite the sprite table for link-holding-up-item:
-wbp b=7 eb92 88 b1
+wbp b=7 eb92 89 b1
 
