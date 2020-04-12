@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
   set_palace_theme(rom.song(z2music::Rom::SongTitle::PalaceTheme));
 
   // Change boss music:
-  set_boss_theme(rom.song(z2music::Rom::SongTitle::BossTheme));
+  // set_boss_theme(rom.song(z2music::Rom::SongTitle::BossTheme));
 
   // Fix a bug in the vanilla game
   rom.write(0x5d6b, { 0xea, 0xea, 0xea });
@@ -166,6 +166,18 @@ int main(int argc, char** argv) {
       0x93, 0x95, 0x93, 0x91, 0x93, 0x96, 0x93, 0x91,
       0x94, 0x97, 0x94, 0x91, 0x94, 0x98, 0x94, 0x91,
       });
+
+  // Change credits
+  z2music::Credits* c = rom.credits();
+  c->set(0, {"BENTHIC KING   ",   "BY CF207 AND",  "BENTGLASSTUBE"});
+  c->set(1, {"PROGRAMER   ",      "CF207        ", "             "});
+  c->set(2, {"GRAPHICS ",         "BENTGLASSTUBE", ""});
+  c->set(3, {"STORY   ",          "CF207        ", "BENTGLASSTUBE"  });
+  c->set(4, {"MUSIC",             "BENTGLASSTUBE", "             "});
+  c->set(5, {"TOWER PALACE",      "CF207        ", ""});
+  c->set(6, {"SEA PALACE  ",      "BENTGLASSTUBE", ""});
+  c->set(7, {"SPECIAL THANKS",    "ZELDA II",      "COMMUNITY"   });
+  c->set(8, {"THANKS A MILLION/", "PUSH START TO", "PLAY AGAIN"});
 
   rom.save("/tmp/output.nes");
 
