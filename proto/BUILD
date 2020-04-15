@@ -21,6 +21,7 @@ proto_library(
     ],
     deps = [
         ":rominfo_proto",
+        ":session_proto",
     ],
 )
 
@@ -39,4 +40,16 @@ proto_library(
 cc_proto_library(
     name = "generator",
     deps = [":generator_proto"],
+)
+
+proto_library(
+    name = "session_proto",
+    srcs = [
+        "session.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "session",
+    deps = [":session_proto"],
 )

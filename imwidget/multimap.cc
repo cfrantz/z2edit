@@ -4,6 +4,7 @@
 #include "imwidget/map_command.h"
 #include "imwidget/simplemap.h"
 #include "util/config.h"
+#include "util/macros.h"
 #include "absl/strings/str_cat.h"
 #include "alg/palace_gen.h"
 
@@ -12,11 +13,6 @@
 DEFINE_bool(town_hack, true, "World 2 towns are really in world 1");
 
 namespace z2util {
-
-float MultiMap::xs_ = 0.40;
-float MultiMap::ys_ = 0.75;
-bool MultiMap::preconverge_ = true;
-bool MultiMap::continuous_converge_ = true;
 
 MultiMap* MultiMap::Spawn(Mapper* m, int world, int overworld, int subworld,
                           int map) {
@@ -48,10 +44,27 @@ void MultiMap::Init() {
     location_.clear();
     graph_.Clear();
 
-    title_ = absl::StrCat("MultiMap: ", maps_[start_].name(), "##", id_);
+    title_ = absl::StrCat("MultiMap: ", maps_[start_].name());
+    auto *sc = ConfigLoader<SessionConfig>::MutableConfig();
+    mcfg_ = &(*sc->mutable_multimap())[title_];
+    if (!mcfg_->initialized()) {
+        mcfg_->set_initialized(true);
+        mcfg_->set_scale(0.25);
+        mcfg_->set_zoom_x(0.50);
+        mcfg_->set_zoom_y(0.75);
+        mcfg_->set_pause_converge(true);
+        mcfg_->set_pre_converge(true);
+        mcfg_->set_continuous_converge(true);
+        mcfg_->set_show_labels(true);
+        mcfg_->set_show_arrows(true);
+    }
+    title_ = absl::StrCat(title_, "##", id_);
     if (start_ != 0) {
         // Room 0 is often used as the destination for illegal exits
         visited_[0] = true;
+    }
+    if (mcfg_->pre_converge()) {
+        mcfg_->clear_room();
     }
     Traverse(start_, 0, 0, -1);
     if (start_ != 0 && visited_room0_) {
@@ -59,7 +72,7 @@ void MultiMap::Init() {
         node->set_charge(0.001);
     }
 
-    if (preconverge_) {
+    if (mcfg_->pre_converge()) {
         for(int i=0; i<10000; i++) {
             graph_.Compute(1.0/60.0);
         }
@@ -77,9 +90,13 @@ fdg::Node* MultiMap::AddRoom(int room, int x, int y) {
     auto buffer(simple.RenderToNewBuffer());
     buffer->Update();
 
-    double xx = double(x) + room / 1000.0;
-    double yy = double(y) + room / 1000.0;
-    fdg::Node *node = graph_.AddNode(room, Vec2(xx, yy));
+    const std::string& name = maps_[room].name();
+    auto pos = (*mcfg_->mutable_room())[name];
+    if (pos.x() == 0.0 && pos.y() == 0.0) {
+        pos.set_x(double(x) + double(room) / 1000.0);
+        pos.set_y(double(y) + double(room) / 1000.0);
+    }
+    fdg::Node *node = graph_.AddNode(room, Vec2(pos.x(), pos.y()));
 
     location_.emplace(std::make_pair(
                 room, DrawLocation{node, std::move(buffer)}));
@@ -142,14 +159,15 @@ void MultiMap::Sort() {
 }
 
 Vec2 MultiMap::Position(const Vec2& pos) {
-    float width = 1024.0 * scale_; //+ 8.0;
-    float height = 224.0 * scale_; //+ 32.0;
-    return Vec2(pos.x * xs_ * width, pos.y * ys_ * height);
+    float width = 1024.0 * mcfg_->scale(); //+ 8.0;
+    float height = 224.0 * mcfg_->scale(); //+ 32.0;
+    return Vec2(pos.x * mcfg_->zoom_x() * width,
+                pos.y * mcfg_->zoom_y() * height);
 }
 
 Vec2 MultiMap::Position(const DrawLocation& dl, Direction side) {
-    float w = dl.buffer->width() * scale_;
-    float h = dl.buffer->height() * scale_;
+    float w = dl.buffer->width() * mcfg_->scale();
+    float h = dl.buffer->height() * mcfg_->scale();
     Vec2 pos = Position(dl.node->pos()) + Vec2(0, 24);
     switch(side) {
         case LEFT:  pos += Vec2(0, h/2.0); break;
@@ -194,25 +212,31 @@ void MultiMap::DrawOne(const DrawLocation& dl) {
     Vec2 pos = origin_ + Position(dl.node->pos());
     Vec2 button_height(0, 24);
     ImGui::SetCursorPos(pos);
-    if (show_labels_ && ImGui::Button(maps_[dl.node->id()].name().c_str())) {
+    const std::string& name = maps_[dl.node->id()].name();
+    if (mcfg_->show_labels() &&
+        ImGui::Button(name.c_str())) {
         SimpleMap::Spawn(mapper_, maps_[map]);
     }
     pos += button_height;
     ImGui::SetCursorPos(pos);
     ImGui::InvisibleButton(maps_[dl.node->id()].name().c_str(),
-                           ImVec2(dl.buffer->width() * scale_,
-                                  dl.buffer->height() * scale_));
+                           ImVec2(dl.buffer->width() * mcfg_->scale(),
+                                  dl.buffer->height() * mcfg_->scale()));
     dl.node->set_pause(false);
     if (ImGui::IsItemActive()) {
         drag_ |= true;
         if (ImGui::IsMouseDragging()) {
-            Vec2 delta = Vec2(ImGui::GetIO().MouseDelta.x / (1024.0 * xs_ * scale_),
-                              ImGui::GetIO().MouseDelta.y / (224.0 * ys_ * scale_));
+            Vec2 delta = Vec2(ImGui::GetIO().MouseDelta.x /
+                                  (1024.0 * mcfg_->zoom_x() * mcfg_->scale()),
+                              ImGui::GetIO().MouseDelta.y /
+                                  (224.0 * mcfg_->zoom_y() * mcfg_->scale()));
             dl.node->set_pos(dl.node->pos() + delta);
             dl.node->set_pause(true);
         }
     }
-    dl.buffer->DrawAt(pos.x, pos.y, scale_);
+    (*mcfg_->mutable_room())[name].set_x(dl.node->pos().x);
+    (*mcfg_->mutable_room())[name].set_y(dl.node->pos().y);
+    dl.buffer->DrawAt(pos.x, pos.y, mcfg_->scale());
 }
 
 void MultiMap::DrawLegend() {
@@ -293,7 +317,8 @@ bool MultiMap::Draw() {
     ImGui::SetNextWindowSize(ImVec2(1024, 700), ImGuiCond_FirstUseEver);
     ImGui::Begin(title_.c_str(), &visible_);
     ImGui::PushItemWidth(100);
-    ImGui::InputFloat("Zoom", &scale_, 1.0/8.0, 1.0);
+    WITH_PROTO_FIELD(*mcfg_, scale,
+        ImGui::InputFloat("Zoom", &scale, 1.0/8.0, 1.0));
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
@@ -305,13 +330,20 @@ bool MultiMap::Draw() {
         ImGui::OpenPopup("Properties");
     }
     if (ImGui::BeginPopup("Properties")) {
-        ImGui::SliderFloat("X-Zoom", &xs_, 0.001f, 1.0f);
-        ImGui::SliderFloat("Y-Zoom", &ys_, 0.001f, 1.0f);
-        ImGui::Checkbox("Pause Convergence while dragging", &pauseconv_);
-        ImGui::Checkbox("Converge before first draw", &preconverge_);
-        ImGui::Checkbox("Converge during draw", &continuous_converge_);
-        ImGui::Checkbox("Show labels", &show_labels_);
-        ImGui::Checkbox("Show arrows", &show_arrows_);
+        WITH_PROTO_FIELD(*mcfg_, zoom_x,
+            ImGui::SliderFloat("X-Zoom", &zoom_x, 0.001f, 1.0f));
+        WITH_PROTO_FIELD(*mcfg_, zoom_y,
+            ImGui::SliderFloat("Y-Zoom", &zoom_y, 0.001f, 1.0f));
+        WITH_PROTO_FIELD(*mcfg_, pause_converge,
+            ImGui::Checkbox("Pause Convergence while dragging", &pause_converge));
+        WITH_PROTO_FIELD(*mcfg_, pre_converge,
+            ImGui::Checkbox("Converge before first draw", &pre_converge));
+        WITH_PROTO_FIELD(*mcfg_, continuous_converge,
+            ImGui::Checkbox("Converge during draw", &continuous_converge));
+        WITH_PROTO_FIELD(*mcfg_, show_labels,
+            ImGui::Checkbox("Show labels", &show_labels));
+        WITH_PROTO_FIELD(*mcfg_, show_arrows,
+            ImGui::Checkbox("Show arrows", &show_arrows));
         ImGui::EndPopup();
     }
 
@@ -348,7 +380,7 @@ bool MultiMap::Draw() {
     origin_ = -minv + ImGui::GetCursorPos();
     absolute_ = -minv + ImGui::GetCursorScreenPos();
 
-    if (show_arrows_) {
+    if (mcfg_->show_arrows()) {
         for(const auto& dl : location_)
             DrawConnections(dl.second);
     }
@@ -359,7 +391,7 @@ bool MultiMap::Draw() {
     ImGui::EndChild();
     ImGui::End();
 
-    if (continuous_converge_ && !(drag_ && pauseconv_))
+    if (mcfg_->continuous_converge() && !(drag_ && mcfg_->pause_converge()))
         graph_.Compute(1.0/60.0);
 
     return false;

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package z2util;
+
+
+message MultiMapConfig {
+    message Room {
+        double x = 1;
+        double y = 2;
+    }
+
+    bool initialized = 1;
+    float scale = 2;
+    float zoom_x = 3;
+    float zoom_y = 4;
+
+    bool pause_converge = 5;
+    bool pre_converge = 6;
+    bool continuous_converge = 7;
+    bool show_labels = 8;
+    bool show_arrows = 9;
+    
+    // Map rooms names to multi-map positions
+    map <string, Room> room = 10;
+}
+
+message SessionConfig {
+    map <string, MultiMapConfig> multimap = 1;
+}

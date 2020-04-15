@@ -162,7 +162,9 @@ cc_library(
         "//nes:z2objcache",
         "//proto:generator",
         "//proto:rominfo",
+        "//proto:session",
         "//util:config",
+        "//util:macros",
     ],
 )
 
@@ -318,6 +320,7 @@ cc_library(
         "//nes:cartridge",
         "//proto:project",
         "//util:compress",
+        "//util:config",
         "//util:file",
         "//util:logging",
         "//util:os",

@@ -13,6 +13,7 @@
 #include "nes/z2objcache.h"
 #include "proto/rominfo.pb.h"
 #include "proto/generator.pb.h"
+#include "proto/session.pb.h"
 #include "imgui.h"
 
 namespace z2util {
@@ -23,9 +24,12 @@ class MultiMap: public ImWindowBase {
                            int world, int overworld, int subworld,int map);
 
     MultiMap(Mapper* mapper, int world, int overworld, int subworld, int map)
-        : ImWindowBase(), mapper_(mapper), scale_(0.25),
-        world_(world), overworld_(overworld), subworld_(subworld),
-        start_(map), pauseconv_(true), show_labels_(true), show_arrows_(true)
+        : ImWindowBase(),
+        mapper_(mapper),
+        world_(world),
+        overworld_(overworld),
+        subworld_(subworld),
+        start_(map)
     {}
 
     void Init();
@@ -57,7 +61,6 @@ class MultiMap: public ImWindowBase {
 
     int id_;
     Mapper* mapper_;
-    float scale_;
     int world_;
     int overworld_;
     int subworld_;
@@ -71,19 +74,12 @@ class MultiMap: public ImWindowBase {
     std::map<int32_t, DrawLocation> location_;
     fdg::Graph graph_;
 
+    MultiMapConfig* mcfg_;
     PalaceGeneratorOptions pgo_;
 
     Vec2 origin_;
     Vec2 absolute_;
     bool drag_;
-    bool pauseconv_;
-    bool show_labels_;
-    bool show_arrows_;
-
-    static float xs_;
-    static float ys_;
-    static bool preconverge_;
-    static bool continuous_converge_;
 
     static const uint32_t RED    = 0xF00000FF;
     static const uint32_t GREEN  = 0xF000FF00;

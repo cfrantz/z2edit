@@ -6,6 +6,7 @@
 #include "ips/ips.h"
 #include "nes/cartridge.h"
 #include "util/compress.h"
+#include "util/config.h"
 #include "util/file.h"
 #include "util/logging.h"
 #include "util/os.h"
@@ -136,6 +137,7 @@ bool Project::LoadWorker(const std::string& filename) {
                     rom.status().ToString());
         }
     }
+    *ConfigLoader<SessionConfig>::Get()->MutableConfig() = project_.settings();
     ImApp::Get()->ProcessMessage("loadpostprocess", reinterpret_cast<void*>(-1));
     return true;
 }
@@ -143,6 +145,8 @@ bool Project::LoadWorker(const std::string& filename) {
 bool Project::Save(const std::string& filename, bool as_text) {
     std::string content;
     project_.set_rom(ZLib::Compress(cartridge_->SaveRom()));
+    *project_.mutable_settings() =
+        ConfigLoader<SessionConfig>::Get()->GetConfig();
     if (as_text) {
         TextFormat::PrintToString(project_, &content);
     } else {

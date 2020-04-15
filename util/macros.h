@@ -59,4 +59,10 @@
 #define APPLYX_(M, ...) M(__VA_ARGS__)
 #define APPLYX(X, ...) APPLYX_(PASTE(APPLYX, PP_NARG(__VA_ARGS__)), X, __VA_ARGS__)
 
+#define WITH_PROTO_FIELD(proto, field, stmt) do { \
+        auto field = (proto).field();         \
+        do { stmt; } while(0);              \
+        (proto).set_##field(field);            \
+    } while(0)
+
 #endif // PROTONES_UTIL_MACROS_H
