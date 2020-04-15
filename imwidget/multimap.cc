@@ -13,6 +13,9 @@
 DEFINE_bool(town_hack, true, "World 2 towns are really in world 1");
 
 namespace z2util {
+namespace {
+const double kInvalidStrength = 0.000001;
+}  // namespace
 
 MultiMap* MultiMap::Spawn(Mapper* m, int world, int overworld, int subworld,
                           int map) {
@@ -85,7 +88,7 @@ void MultiMap::Init() {
     pgo_.set_world(world_);
 }
 
-fdg::Node* MultiMap::AddRoom(int room, int x, int y) {
+fdg::Node* MultiMap::AddRoom(int room, double x, double y) {
     SimpleMap simple(mapper_, maps_[room]);
     auto buffer(simple.RenderToNewBuffer());
     buffer->Update();
@@ -97,13 +100,12 @@ fdg::Node* MultiMap::AddRoom(int room, int x, int y) {
         pos.set_y(double(y) + double(room) / 1000.0);
     }
     fdg::Node *node = graph_.AddNode(room, Vec2(pos.x(), pos.y()));
-
     location_.emplace(std::make_pair(
                 room, DrawLocation{node, std::move(buffer)}));
     return node;
 }
 
-void MultiMap::Traverse(int room, int x, int y, int from) {
+void MultiMap::Traverse(int room, double x, double y, int from, double strength) {
     if (room == 0)
         visited_room0_++;
     if (room == 63 || visited_[room])
@@ -122,37 +124,57 @@ void MultiMap::Traverse(int room, int x, int y, int from) {
 
     // yellow
     d = conn.left().destination;
-    //k = d ? 1 : 0.001;
-    k = (d || d == from) ? 1 : 0.001;
-    col = (k < 1.0) ? GRAY : YELLOW;
-    w   = (k < 1.0) ? 1 : 3;
-    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Horizontal, col, w});
+    k = (d || d == from) ? strength : kInvalidStrength;
+    col = (k <= kInvalidStrength) ? GRAY : YELLOW;
+    w   = (k <= kInvalidStrength) ? 1 : 3;
+    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Horizontal, col, w,
+                                     Direction::LEFT, conn.left().start+1});
 
     // blue
     d = conn.down().destination;
-    k = (d || d == from) ? 1 : 0.001;
-    col = (k < 1.0) ? GRAY : BLUE;
-    w   = (k < 1.0) ? 1 : 6;
-    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Vertical, col, w});
+    k = (d || d == from) ? strength : kInvalidStrength;
+    col = (k <= kInvalidStrength) ? GRAY : BLUE;
+    w   = (k <= kInvalidStrength) ? 1 : 6;
+    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Vertical, col, w,
+                                     Direction::DOWN, Direction::UP});
 
     // green
     d = conn.up().destination;
-    k = (d || d == from) ? 1 : 0.001;
-    col = (k < 1.0) ? GRAY : GREEN;
-    w   = (k < 1.0) ? 1 : 3;
-    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Vertical, col, w});
+    k = (d || d == from) ? strength : kInvalidStrength;
+    col = (k <= kInvalidStrength) ? GRAY : GREEN;
+    w   = (k <= kInvalidStrength) ? 1 : 3;
+    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Vertical, col, w,
+                                     Direction::UP, Direction::DOWN});
 
     // red
     d = conn.right().destination;
-    k = (d || d == from) ? 1 : 0.001;
-    col = (k < 1.0) ? GRAY : RED;
-    w   = (k < 1.0) ? 1 : 6;
-    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Horizontal, col, w});
+    k = (d || d == from) ? strength : kInvalidStrength;
+    col = (k <= kInvalidStrength) ? GRAY : RED;
+    w   = (k <= kInvalidStrength) ? 1 : 6;
+    spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Horizontal, col, w,
+                                     Direction::RIGHT, conn.right().start+1});
 
-    Traverse(conn.left().destination,  x-1, y, room);
-    Traverse(conn.down().destination,  x, y+1, room);
-    Traverse(conn.up().destination,    x, y-1, room);
-    Traverse(conn.right().destination, x+1, y, room);
+    Traverse(conn.left().destination,  x-2.0, y, room, 1.0);
+    Traverse(conn.down().destination,  x, y+2.0, room, 1.0);
+    Traverse(conn.up().destination,    x, y-2.0, room, 1.0);
+    Traverse(conn.right().destination, x+2.0, y, room, 1.0);
+
+    if (mcfg_->show_doors()) {
+        const double kWeakStrength = 0.1;
+        for(int door=0; door<4; door++) {
+            // orange
+            d = conn.door(door).destination;
+            if (d == 0 || d == 63)
+                continue;
+
+            k = (d || d == from) ? kWeakStrength : kInvalidStrength;
+            col = (k <= kInvalidStrength) ? GRAY : ORANGE;
+            w   = (k <= kInvalidStrength) ? 1 : 3;
+            spring->emplace_back(fdg::Spring{d, k, fdg::Bias::Vertical, col, w,
+                                             door+5, conn.door(door).start+1});
+            Traverse(d, x-1.5+door, y+1.0, room, kWeakStrength);
+        }
+    }
 }
 
 void MultiMap::Sort() {
@@ -174,6 +196,10 @@ Vec2 MultiMap::Position(const DrawLocation& dl, Direction side) {
         case DOWN:  pos += Vec2(w/2.0, h); break;
         case UP:    pos += Vec2(w/2.0, 0); break;
         case RIGHT: pos += Vec2(w, h/2.0); break;
+        case DOOR1: pos += Vec2(w*0.175, h); break;
+        case DOOR2: pos += Vec2(w*0.375, h); break;
+        case DOOR3: pos += Vec2(w*0.675, h); break;
+        case DOOR4: pos += Vec2(w*0.875, h); break;
         default:
             pos += Vec2(w/2.0, h/2.0);
     }
@@ -201,8 +227,11 @@ void MultiMap::DrawConnections(const DrawLocation& dl) {
         if (loc == location_.end())
             continue;
 
-        Vec2 a = absolute_ + Position(dl, side);
-        Vec2 b = absolute_ + Position(loc->second, NONE);
+        Vec2 a = absolute_ + Position(dl, Direction(spring.srcloc));
+        Vec2 b = absolute_ + Position(loc->second,
+                                      spring.k <= kInvalidStrength
+                                          ? Direction::NONE
+                                          : Direction(spring.dstloc));
         DrawArrow(a, b, spring.color, spring.width, 0.1, 10.0);
     }
 }
@@ -344,6 +373,8 @@ bool MultiMap::Draw() {
             ImGui::Checkbox("Show labels", &show_labels));
         WITH_PROTO_FIELD(*mcfg_, show_arrows,
             ImGui::Checkbox("Show arrows", &show_arrows));
+        WITH_PROTO_FIELD(*mcfg_, show_doors,
+            ImGui::Checkbox("Show door connections", &show_doors));
         ImGui::EndPopup();
     }
 

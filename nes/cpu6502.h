@@ -100,14 +100,17 @@ class Cpu {
     static inline std::vector<std::string>& asmhelp() { return asmhelp_; }
   private:
     uint8_t inline Read(uint16_t addr) const {
-        return mapper_->ReadPrgBank(bank_, addr);
+        int bank = (addr < 0xC000) ? bank_ : -1;
+        return mapper_->ReadPrgBank(bank, addr);
     }
     void inline Write(uint16_t addr, uint8_t val) {
-        mapper_->WritePrgBank(bank_, addr, val);
+        int bank = (addr < 0xC000) ? bank_ : -1;
+        mapper_->WritePrgBank(bank, addr, val);
     }
     void inline Write16(uint16_t addr, uint16_t val) {
-        mapper_->WritePrgBank(bank_, addr, val & 0xFF);
-        mapper_->WritePrgBank(bank_, addr+1, val >> 8);
+        int bank = (addr < 0xC000) ? bank_ : -1;
+        mapper_->WritePrgBank(bank, addr, val & 0xFF);
+        mapper_->WritePrgBank(bank, addr+1, val >> 8);
     }
     uint16_t inline Read16(uint16_t addr) const {
         return Read(addr) | Read(addr+1) << 8;

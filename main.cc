@@ -13,6 +13,7 @@ DEFINE_bool(dump_config, false, "Dump config to stdout and exit");
 DEFINE_bool(move_from_keepout, true, "Move maps out of known keepout areas");
 DEFINE_bool(reminder_dialogs, true, "Pop up dialogs for discarding changes");
 DECLARE_int32(bank5_enemy_list_size);
+DEFINE_bool(hackjam2020, false, "Turn on features for hackjam2020");
 
 ConfigLoader<z2util::OverworldEditorKeybinds>* keybinds;
 

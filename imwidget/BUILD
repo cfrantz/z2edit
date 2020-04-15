@@ -256,6 +256,7 @@ cc_library(
         "//nes:z2objcache",
         "//proto:rominfo",
         "//util:config",
+        "//external:gflags",
     ],
 )
 

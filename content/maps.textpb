@@ -213,6 +213,7 @@ sideview: {
         { bank: 4 address: 0xbf00 }, { bank: 4 address: 0xbf00 }
     ]
     code { offset: 0 length: 14 code: 0 }
+    doors: { bank: 4 address: 0x8817 }
 }
 sideview: {
     area: "Palace2"
@@ -229,6 +230,7 @@ sideview: {
         { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 },
         { bank: 4 address: 0xbf10 }, { bank: 4 address: 0xbf10 }
     ]
+    doors: { bank: 4 address: 0x884f }
     code { offset: 0 length: 21 code: 1 }
 }
 sideview: {
@@ -247,6 +249,7 @@ sideview: {
         { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 },
         { bank: 4 address: 0xbf40 }, { bank: 4 address: 0xbf40 }
     ]
+    doors: { bank: 4 address: 0x8887 }
     code { offset: 0 length: 28 code: 0 }
 }
 
@@ -267,6 +270,7 @@ sideview: {
         { bank: 4 address: 0xbf20 }, { bank: 4 address: 0xbf20 }
     ]
     subworld: 1
+    doors: { bank: 4 address: 0x8817 }
     code { offset: 0 length: 15 code: 2 }
 }
 
@@ -287,6 +291,7 @@ sideview: {
         { bank: 4 address: 0xbf30 }, { bank: 4 address: 0xbf30 }
     ]
     subworld: 1
+    doors: { bank: 4 address: 0x8853 }
     code { offset: 0 length: 21 code: 0 }
 }
 sideview: {
@@ -306,6 +311,7 @@ sideview: {
         { bank: 4 address: 0xbf50 }, { bank: 4 address: 0xbf50 }
     ]
     subworld: 1
+    doors: { bank: 4 address: 0x88a7 }
     code { offset: 0 length: 27 code: 1 }
 }
 

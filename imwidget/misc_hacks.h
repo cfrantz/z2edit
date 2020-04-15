@@ -11,17 +11,21 @@ class MiscellaneousHacks: public ImWindowBase {
     MiscellaneousHacks(): ImWindowBase(false), tab_(0) { Init(); }
 
     void Init();
-    void Refresh() override { CheckConfig(); }
+    void Refresh() override {
+        CheckOverworldTileHack();
+    }
+
     bool Draw() override;
     bool DrawMiscHacks();
     bool DrawDynamicBanks();
-    void CheckConfig();
+    bool DrawSwimEnables();
+    void CheckOverworldTileHack();
     inline void set_mapper(Mapper* m) { mapper_ = m; };
 
     const static int MAX_COLLECTABLE = 36;
   private:
-    template<class GETALL, class GET>
-    int Hack(const char* hackname, int n, GETALL getall, GET get);
+    template<class GETALL, class GET, class CHECK>
+    int Hack(const char* hackname, int n, GETALL getall, GET get, CHECK check);
     template<class GETALL>
     int EnabledIndex(GETALL getall);
 

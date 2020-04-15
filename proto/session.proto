@@ -21,6 +21,8 @@ message MultiMapConfig {
     
     // Map rooms names to multi-map positions
     map <string, Room> room = 10;
+
+    bool show_doors = 11;
 }
 
 message SessionConfig {

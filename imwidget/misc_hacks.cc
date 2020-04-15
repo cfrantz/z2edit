@@ -1,11 +1,14 @@
 #include "imwidget/misc_hacks.h"
+#include <gflags/gflags.h>
 
 #include "imwidget/imapp.h"
 #include "nes/mapper.h"
 #include "proto/rominfo.pb.h"
 #include "util/config.h"
+#include "util/logging.h"
 #include "imgui.h"
 
+DECLARE_bool(hackjam2020);
 
 namespace z2util {
 
@@ -30,23 +33,23 @@ bool MiscellaneousHacks::Draw() {
         return false;
 
     ImGui::Begin("Miscellaneous Hacks", &visible_);
-
-    ImGui::RadioButton("Miscellaneous", &tab_, 0);
-    ImGui::SameLine(); ImGui::RadioButton("Dynamic Banks", &tab_, 1);
-    ImGui::SameLine(ImGui::GetWindowWidth() - 50);
     ImApp::Get()->HelpButton("misc");
-    ImGui::Separator();
-
     bool changed = false;
-    switch(tab_) {
-    case 0:
-        changed = DrawMiscHacks();
-        break;
-    case 1:
-        changed = DrawDynamicBanks();
-        break;
-    default:
-        ImGui::Text("Unknown tab value");
+
+    if (ImGui::BeginTabBar("MiscTabs", ImGuiTabBarFlags_None)) {
+        if (ImGui::BeginTabItem("Miscellaneous")) {
+            changed |= DrawMiscHacks();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Dynamic Banks")) {
+            changed |= DrawDynamicBanks();
+            ImGui::EndTabItem();
+        }
+        if (FLAGS_hackjam2020 && ImGui::BeginTabItem("Swim Enables")) {
+            changed |= DrawSwimEnables();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
     ImGui::End();
     return changed;
@@ -158,17 +161,22 @@ bool MiscellaneousHacks::DrawMiscHacks() {
 
     ImGui::PopItemWidth();
 
+    auto nocheck = [](){};
+
     Hack("Palace 5 detect", ri.palace5_detect_size(),
         [&]() { return ri.palace5_detect(); },
-        [&](int n) { return ri.palace5_detect(n); });
+        [&](int n) { return ri.palace5_detect(n); },
+        nocheck);
 
     Hack("Palace Continue", ri.palace_continue_size(),
         [&]() { return ri.palace_continue(); },
-        [&](int n) { return ri.palace_continue(n); });
+        [&](int n) { return ri.palace_continue(n); },
+        nocheck);
 
     Hack("Completed Places", ri.palace_to_stone_size(),
         [&]() { return ri.palace_to_stone(); },
-        [&](int n) { return ri.palace_to_stone(n); });
+        [&](int n) { return ri.palace_to_stone(n); },
+        nocheck);
     if (EnabledIndex([&]() { return ri.palace_to_stone(); }) == 1) {
         // If its the fixed version, let the user edit the table.
         DrawPalaceCompletionItems();
@@ -176,24 +184,32 @@ bool MiscellaneousHacks::DrawMiscHacks() {
 
     Hack("Overworld BreakBlocks", ri.overworld_breakblocks_size(),
         [&]() { return ri.overworld_breakblocks(); },
-        [&](int n) { return ri.overworld_breakblocks(n); });
+        [&](int n) { return ri.overworld_breakblocks(n); },
+        nocheck);
 
     Hack("Spell Bits", ri.spell_bits_size(),
         [&]() { return ri.spell_bits(); },
-        [&](int n) { return ri.spell_bits(n); });
+        [&](int n) { return ri.spell_bits(n); },
+        nocheck);
 
     Hack("Spell Cast", ri.spell_cast_size(),
         [&]() { return ri.spell_cast(); },
-        [&](int n) { return ri.spell_cast(n); });
+        [&](int n) { return ri.spell_cast(n); },
+        nocheck);
 
     Hack("Spell Restrictions", ri.spell_restrictions_size(),
         [&]() { return ri.spell_restrictions(); },
-        [&](int n) { return ri.spell_restrictions(n); });
+        [&](int n) { return ri.spell_restrictions(n); },
+        nocheck);
 
     Hack("Overworld Tiles", ri.overworld_tiles_size(),
         [&]() { return ri.overworld_tiles(); },
-        [&](int n) { return ri.overworld_tiles(n); });
-
+        [&](int n) { return ri.overworld_tiles(n); },
+        [&, this]() {
+            this->CheckOverworldTileHack();
+            ImApp::Get()->ProcessMessage("overworld_tile_hack",
+                                         reinterpret_cast<void*>(-1));
+        });
     return false;
 }
 
@@ -202,11 +218,14 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
     char roombuf[8], bankbuf[8];
     const char *overworlds[] = {"West", "DM/Maze", "East"};
     const char *worlds[] = {"Caves", "Towns", "Towns", "P125", "P346", "GP" };
+    int banks, ro;
 
-    int banks = Hack("CHR Banks", ri.dynamic_banks_size(),
+    banks = Hack("CHR Banks", ri.dynamic_banks_size(),
         [&]() { return ri.dynamic_banks(); },
-        [&](int n) { return ri.dynamic_banks(n); });
-    int ro = (banks == 0) ? ImGuiInputTextFlags_ReadOnly : 0;
+        [&](int n) { return ri.dynamic_banks(n); },
+        [](){});
+    ro = (banks == 0) ? ImGuiInputTextFlags_ReadOnly : 0;
+
 
     ImGui::Columns(9, NULL, true);
     ImGui::Text("Overworld World");
@@ -254,9 +273,57 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
     return false;
 }
 
-void MiscellaneousHacks::CheckConfig() {
+bool MiscellaneousHacks::DrawSwimEnables() {
+    char roombuf[16];
+    const char *overworlds[] = {"West", "DM/Maze", "East"};
+    const char *worlds[] = {"Caves", "Towns", "Towns", "P125", "P346", "GP" };
+
+    ImGui::Columns(17, NULL, true);
+    ImGui::Text("Overworld World");
+    ImGui::NextColumn();
+    for(int i=0; i<16; i++) {
+        ImGui::Text("Room");
+        ImGui::NextColumn();
+    }
+    ImGui::Separator();
+    for(int ov=0; ov<3; ov++) {
+        for(int world=0; world<6; world++) {
+            if ((ov == 0 && world == 2) ||
+                (ov == 1 && (world == 1 || world == 2)) ||
+                (ov == 2 && world == 1)) {
+                ImGui::Text("%15s", "Not Used");
+            } else {
+                ImGui::Text("%9s %5s", overworlds[ov], worlds[world]);
+            }
+            ImGui::NextColumn();
+            for(int i=0; i<16; i+=1) {
+                int addr = 0xb200 + (ov * 5 + world) * 16 + i;
+                ImGui::PushID(addr);
+                int room = mapper_->ReadPrgBank(0, addr);
+                snprintf(roombuf, sizeof(roombuf), "%d", room);
+                ImGui::PushItemWidth(32);
+                if (ImGui::InputText("##room", roombuf, sizeof(roombuf),
+                                     ImGuiInputTextFlags_CharsDecimal)) {
+                    room = strtoul(roombuf, 0, 10);
+                    mapper_->WritePrgBank(0, addr, room);
+                }
+                ImGui::PopItemWidth();
+                ImGui::PopID();
+                ImGui::NextColumn();
+            }
+            ImGui::Separator();
+        }
+    }
+    ImGui::Columns(1);
+    return false;
+}
+
+
+void MiscellaneousHacks::CheckOverworldTileHack() {
     auto* ri = ConfigLoader<RomInfo>::MutableConfig();
-    if (EnabledIndex([&]() { return ri->overworld_tiles(); }) > 0) {
+    int index = EnabledIndex([&]() { return ri->overworld_tiles(); });
+    LOGF(INFO, "Overworld tile hack: %d", index);
+    if (index == 1) {
         auto *p = ri->mutable_palettes(0);
         p->mutable_palette(0)->set_hidden(true);
         p->mutable_palette(1)->set_hidden(true);
@@ -274,6 +341,7 @@ void MiscellaneousHacks::CheckConfig() {
         *ri->mutable_map(1)->mutable_palette() = p->palette(4).address();
         *ri->mutable_map(2)->mutable_palette() = p->palette(6).address();
         *ri->mutable_map(3)->mutable_palette() = p->palette(4).address();
+        ri->mutable_misc()->mutable_overworld_tile_palettes()->set_address(0x87e3);
 
         int size = 128*3;
         int i;
@@ -293,7 +361,27 @@ void MiscellaneousHacks::CheckConfig() {
                 mapper_->WritePrgBank(0, 0xbcd0+i, mapper_->ReadPrgBank(-1, 0xc458+i));
             }
         }
-    } else {
+    } else if (index == 2) {
+        auto *p = ri->mutable_palettes(0);
+        p->mutable_palette(0)->set_hidden(false);
+        p->mutable_palette(1)->set_hidden(false);
+        p->mutable_palette(2)->set_hidden(true);
+        p->mutable_palette(3)->set_hidden(true);
+        p->mutable_palette(4)->set_hidden(true);
+        p->mutable_palette(5)->set_hidden(true);
+        p->mutable_palette(6)->set_hidden(true);
+        p->mutable_palette(7)->set_hidden(true);
+        ri->mutable_map(0)->mutable_objtable(0)->set_address(0xb000);
+        ri->mutable_map(1)->mutable_objtable(0)->set_address(0xb000);
+        ri->mutable_map(2)->mutable_objtable(0)->set_address(0xb000);
+        ri->mutable_map(3)->mutable_objtable(0)->set_address(0xb000);
+        *ri->mutable_map(0)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(1)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(2)->mutable_palette() = p->palette(0).address();
+        *ri->mutable_map(3)->mutable_palette() = p->palette(0).address();
+        ri->mutable_misc()->mutable_overworld_tile_palettes()->set_address(0xb100);
+
+    } else if (index == 0) {
         auto *p = ri->mutable_palettes(0);
         p->mutable_palette(0)->set_hidden(false);
         p->mutable_palette(1)->set_hidden(false);
@@ -311,7 +399,9 @@ void MiscellaneousHacks::CheckConfig() {
         *ri->mutable_map(1)->mutable_palette() = p->palette(0).address();
         *ri->mutable_map(2)->mutable_palette() = p->palette(0).address();
         *ri->mutable_map(3)->mutable_palette() = p->palette(0).address();
+        ri->mutable_misc()->mutable_overworld_tile_palettes()->set_address(0x87e3);
     }
+
 }
 
 template<class GETALL>
@@ -328,9 +418,9 @@ int MiscellaneousHacks::EnabledIndex(GETALL getall) {
 }
 
 
-template<class GETALL, class GET>
+template<class GETALL, class GET, class CHECK>
 int MiscellaneousHacks::Hack(const char* hackname, int n,
-                              GETALL getall, GET get) {
+                              GETALL getall, GET get, CHECK check) {
     const char *names[n];
     int len = 0;
     int method = 0;
@@ -345,9 +435,7 @@ int MiscellaneousHacks::Hack(const char* hackname, int n,
     ImGui::PushItemWidth(400);
     if (ImGui::Combo(hackname, &method, names, len)) {
         PutGameHack(get(method));
-        CheckConfig();
-        ImApp::Get()->ProcessMessage("overworld_tile_hack",
-                                     reinterpret_cast<void*>(-1));
+        check();
     }
     ImGui::PopItemWidth();
     return method;

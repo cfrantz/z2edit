@@ -739,30 +739,49 @@ void MapConnection::Parse(const Map& map) {
     world_ = map.world();
     overworld_ = map.overworld();
     subworld_ = map.subworld();
+    area_ = map.area();
 
     for(int i=0; i<4; i++) {
         val = mapper_->Read(connector_, i);
         data_[i].destination = val >> 2;
         data_[i].start = val & 3;
+        fixtarget_[i] = false;
     }
-    if (doors_.address()) {
+    if (doors_.address() && area_ < kMaxDoorArea) {
         for(int i=0; i<4; i++) {
             val = mapper_->Read(doors_, i);
             data_[i+4].destination = val >> 2;
             data_[i+4].start = val & 3;
+            fixtarget_[i+4] = false;
         }
     }
 }
 
 void MapConnection::Save() {
+    // I was too clever by far: the connector_ and doors_ addresses are the
+    // addresses for *this* room.  Subtract off the area_*4 to get back to
+    // the table's base address so we can compute the reverse connection
+    // offsets.
+    Address base = connector_;
+    base.set_address(base.address() - 4*area_);
     for(int i=0; i<4; i++) {
         uint8_t val = (data_[i].destination << 2) | (data_[i].start & 3);
         mapper_->Write(connector_, i, val);
+        if (fixtarget_[i] && data_[i].destination != 63) {
+            // Point the target back to this room / screen.
+            // The previously computed val is the offset from the base address.
+            mapper_->Write(base, val, (area_ << 2) | i);
+        }
     }
-    if (doors_.address()) {
+    if (doors_.address() && area_ < kMaxDoorArea) {
         for(int i=0; i<4; i++) {
             uint8_t val = (data_[i+4].destination << 2) | (data_[i+4].start & 3);
             mapper_->Write(doors_, i, val);
+            if (fixtarget_[i+4] && data_[i+4].destination != 63) {
+                // Point the target back to this room / screen.
+                // The previously computed val is the offset from the base address.
+                mapper_->Write(base, val, (area_ << 2) | i);
+            }
         }
     }
 }
@@ -792,6 +811,16 @@ bool MapConnection::Draw() {
         "View Area##0", "View Area##1", "View Area##2", "View Area##3",
         "View Area##4", "View Area##5", "View Area##6", "View Area##7",
     };
+    const char *checklabel[] = {
+        "Adjust connection in target room##0",
+        "Adjust connection in target room##1",
+        "Adjust connection in target room##2",
+        "Adjust connection in target room##3",
+        "Adjust connection in target room##4",
+        "Adjust connection in target room##5",
+        "Adjust connection in target room##6",
+        "Adjust connection in target room##7",
+    };
     const char *selection = "0\0001\0002\0003\0\0";
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     const char *names[ri.map().size() + 1];
@@ -813,18 +842,18 @@ bool MapConnection::Draw() {
 
     ImGui::Text("Map exit table at bank=0x%x address=0x%04x",
             connector_.bank(), connector_.address());
-    int guilen = doors_.address() ? 8 : 4;
+    int guilen = (doors_.address() && area_ < kMaxDoorArea) ? 8 : 4;
     for(int i=0; i<guilen; i++) {
         if (i == 4) {
             ImGui::Separator();
             ImGui::Text("Map door table at bank=0x%x address=0x%04x",
                     doors_.bank(), doors_.address());
         }
-        ImGui::PushItemWidth(400);
+        ImGui::PushItemWidth(200);
         chg |= ImGui::Combo(destlabel[i], &data_[i].destination, names, len);
         ImGui::PopItemWidth();
         ImGui::SameLine();
-        ImGui::PushItemWidth(100);
+        ImGui::PushItemWidth(50);
         chg |= ImGui::Combo(startlabel[i], &data_[i].start, selection);
         if (data_[i].destination != len-1) {
             ImGui::SameLine();
@@ -832,6 +861,9 @@ bool MapConnection::Draw() {
                 SimpleMap::Spawn(mapper_, *maps[data_[i].destination],
                                  data_[i].start);
             }
+
+            ImGui::SameLine();
+            chg |= ImGui::Checkbox(checklabel[i], &fixtarget_[i]);
         }
         ImGui::PopItemWidth();
     }

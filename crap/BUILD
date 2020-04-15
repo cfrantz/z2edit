@@ -40,3 +40,25 @@ cc_binary(
         "//external:gflags",
     ],
 )
+
+cc_binary(
+    name = "chr_dump",
+    srcs = ["chr_dump.cc"],
+    deps = ["//:app"],
+    linkopts = [
+        "-lpthread",
+        "-lm",
+        "-lGL",
+    ],
+)
+
+cc_binary(
+    name = "chr_load",
+    srcs = ["chr_load.cc"],
+    deps = ["//:app"],
+    linkopts = [
+        "-lpthread",
+        "-lm",
+        "-lGL",
+    ],
+)

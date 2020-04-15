@@ -1,0 +1,28 @@
+set text 1
+set bank 5
+set ibase 16
+
+# The title text strings have strict formatting requirements.  
+# They must be exactly 27 characters long (in reality, they're 28 characters
+# long, but the last character must be the Nintendo "newlink" character).
+#        "0         1         2       "
+#        "0123456789012345678901234567"
+
+wtp a932 "HYRULE HAS ENJOYED YEARS    "
+wtp a94f "OF UNCHARACTERISTIC PEACE.  "
+wtp a96c "                            "
+wtp a989 "BAGU SPENDS ALL HIS DAYS    "
+wtp a9a6 "ENDLESSLY FISHING, BUT NOW  "
+wtp a9c3 "HE HAS ANGERED THE KING OF  "
+wtp a9e0 "THE MERFOLK.  THE OCEANS    "
+wtp a9fd "ARE RISING QUICKLY.  LINK   "
+wtp aa1a "MUST JOURNEY INTO THE       "
+wtp aa37 "BRINY DEPTHS AND DEFEAT     "
+wtp aa54 "THE FISH KING IN HIS MOST   "
+wtp aa71 "ADVENTURESOME QUEST YET...  "
+wtp aa8e "       .1987 NINTENDO       "
+wtp aaab "                            "
+wtp aac8 "                            "
+
+# Insert the copyright character
+wbp aa95 e

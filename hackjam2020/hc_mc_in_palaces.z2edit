@@ -1,0 +1,156 @@
+# For GTM's hack, he wants to put medicine and a MC in a palace.
+# To do this, we'll re-arrange some stuff to put these graphics into
+# the palace banks:
+#
+# Graphics arrangement (numbers in expressed in hex):
+#
+# Western Hyrule = bank 2/3
+# Eastern Hyrule = bank 4/5
+# P1 = bank 8/9
+# P2 = bank a/b
+# P3 = bank 12/13
+# P4 = bank 14/15
+# P5 = bank 16/17
+# P6 = bank 18/19
+# P7 = bank c/d
+#
+
+# The medicine is bank3, sprite $31 (chrs 30 and 31).
+# In bank 5 (eastern hyrule), the Kid is in chrs 30 and 31.
+# The magic container is in banks 3 and 5, sprite $83 (chrs 82 and 83).
+# In the palace banks:
+#    chrs $9c,$9d are a comma and an empty space.
+#    chrs $b0,$b1 are a spike (never used).
+#    chrs $82,$83 are part of link-holding-up-an-item.
+# In the overworkd banks:
+#    chrs $9c,$9d are a comma and a fragment of cave wall.
+#
+# Since the sprite IDs for the meds and MC are global, it wouild be best to
+# make them the same in every bank.  As such, we will move sprites thusly:
+#
+# Link holding up an item will replace the unused spike, and the magic container
+# will replace that part of link.
+#
+# The medicine will overwrite the comma placement, and for overworlds, the
+# cave wall will be moved into the medicine place.
+
+set ibase 16
+# Swap the med/kid with comma/cave wall.
+charswap 3:9c 3:30 
+charswap 3:9d 3:31 
+charswap 5:9c 5:30 
+charswap 5:9d 5:31 
+
+# Copy the meds to the comma/blank in the palace banks.
+# charcopy <dest_bank:dest_char> <src_bank:src_char>
+charcopy 9:9c 3:9c
+charcopy 9:9d 3:9d
+charcopy b:9c 3:9c
+charcopy b:9d 3:9d
+charcopy d:9c 3:9c
+charcopy d:9d 3:9d
+charcopy 13:9c 3:9c
+charcopy 13:9d 3:9d
+charcopy 15:9c 3:9c
+charcopy 15:9d 3:9d
+charcopy 17:9c 3:9c
+charcopy 17:9d 3:9d
+charcopy 19:9c 3:9c
+charcopy 19:9d 3:9d
+
+# Move tile $88 to $8d and clear tile $8b ($89,$8b,$8d appear unused).
+# This opens up tiles $88/$89 as location for an 8x16 sprite.
+# Copy link into $88 and over the spike ($b0), and the hc and mc over link.
+charclear 9:8b
+charcopy 9:8d 9:88
+charcopy 9:88 9:80
+charcopy 9:89 9:81
+charcopy 9:b0 9:82
+charcopy 9:b1 9:83
+
+charcopy 9:80 3:80
+charcopy 9:81 3:81
+charcopy 9:82 3:82
+charcopy 9:83 3:83
+
+charclear b:8b
+charcopy b:8d b:88
+charcopy b:88 b:80
+charcopy b:89 b:81
+charcopy b:b0 b:82
+charcopy b:b1 b:83
+charcopy b:80 3:80
+charcopy b:81 3:81
+charcopy b:82 3:82
+charcopy b:83 3:83
+
+charclear d:8b
+charcopy d:8d d:88
+charcopy d:88 d:80
+charcopy d:89 d:81
+charcopy d:b0 d:82
+charcopy d:b1 d:83
+charcopy d:80 3:80
+charcopy d:81 3:81
+charcopy d:82 3:82
+charcopy d:83 3:83
+
+charclear 13:8b
+charcopy 13:8d 13:88
+charcopy 13:88 13:80
+charcopy 13:89 13:81
+charcopy 13:b0 13:82
+charcopy 13:b1 13:83
+charcopy 13:80 3:80
+charcopy 13:81 3:81
+charcopy 13:82 3:82
+charcopy 13:83 3:83
+
+charclear 15:8b
+charcopy 15:8d 15:88
+charcopy 15:88 15:80
+charcopy 15:89 15:81
+charcopy 15:b0 15:82
+charcopy 15:b1 15:83
+charcopy 15:80 3:80
+charcopy 15:81 3:81
+charcopy 15:82 3:82
+charcopy 15:83 3:83
+
+charclear 17:8b
+charcopy 17:8d 17:88
+charcopy 17:88 17:80
+charcopy 17:89 17:81
+charcopy 17:b0 17:82
+charcopy 17:b1 17:83
+charcopy 17:80 3:80
+charcopy 17:81 3:81
+charcopy 17:82 3:82
+charcopy 17:83 3:83
+
+charclear 19:8b
+charcopy 19:8d 19:88
+charcopy 19:88 19:80
+charcopy 19:89 19:81
+charcopy 19:b0 19:82
+charcopy 19:b1 19:83
+charcopy 19:80 3:80
+charcopy 19:81 3:81
+charcopy 19:82 3:82
+charcopy 19:83 3:83
+
+# Rewrite the sprite table for the meds/kid:
+wbp b=7 eea9 9d 9d
+wbp b=7 eea5 9d 9d
+# Fix the background objects table (e.g. moved cave wall):
+wbp b=1 8463 31
+wbp b=1 846b 31
+wbp b=2 8463 31
+wbp b=2 846b 31
+
+# Fix the palace crystal statue after tile moves
+wbp b=4 8391 8d
+wbp b=4 83a5 8d
+# Rewrite the sprite table for link-holding-up-item:
+wbp b=7 eb92 89 b1
+

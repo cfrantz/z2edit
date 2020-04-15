@@ -26,6 +26,8 @@ struct Spring {
     // to put them here.
     uint32_t color;
     double width;
+    int srcloc;
+    int dstloc;
 };
 
 class Node {
