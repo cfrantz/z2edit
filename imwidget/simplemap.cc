@@ -19,6 +19,7 @@ SimpleMap::SimpleMap()
     object_box_(true),
     enemy_box_(true),
     avail_box_(true),
+    bgmap_(false),
     scale_(1.0),
     mapsel_(0),
     tab_(0),
@@ -42,6 +43,7 @@ SimpleMap::SimpleMap(Mapper* m, const Map& map, int startscreen)
     mapsel_ = -1;
     title_ = map.name();
     window_title_ = absl::StrCat(title_, "##", id_);
+    bgmap_ = map.world() == -1;
 }
 
 SimpleMap* SimpleMap::Spawn(Mapper* m, const Map& map, int startscreen) {
@@ -137,6 +139,19 @@ std::unique_ptr<GLBitmap> SimpleMap::RenderToNewBuffer() {
     return buffer;
 }
 
+void SimpleMap::StartEmulator(int screen) {
+    uint8_t params[] = {
+        uint8_t(map_.address().bank()), // prg bank
+        uint8_t(map_.subworld() ? map_.subworld() : map_.overworld()), // overworld
+        uint8_t(map_.world()),          // world
+        uint8_t(map_.code()),           // town code
+        uint8_t(map_.code()),           // palace code
+        uint8_t(1),                     // connector: we don't know
+        uint8_t(map_.area()),           // map number
+        uint8_t(screen),                // start screen
+    };
+    ImApp::Get()->ProcessMessage("emulate_at", params);
+}
 
 bool SimpleMap::Draw() {
     if (!visible_)
@@ -184,15 +199,33 @@ bool SimpleMap::Draw() {
     ImGui::SameLine();
     if (ImGui::Button("Commit to ROM")) {
         holder_.Save([this]() {
-            connection_.Save();
-            enemies_.Save();
-            avail_.Save();
+            if (!bgmap_) {
+                connection_.Save();
+                enemies_.Save();
+                avail_.Save();
+            }
             changed_ = false;
             ImApp::Get()->ProcessMessage(
                     "commit", absl::StrCat("Map edits to ", map_.name()).c_str());
         });
     }
+    ImGui::SameLine();
+    bool can_emulate = !(bgmap_ || map_.type() == z2util::MapType::OUTDOORS);
+    if (can_emulate && ImGui::Button("Emulate")) {
+        ImGui::OpenPopup("Emulate");
+    }
+    if (ImGui::BeginPopup("Emulate")) {
+        ImGui::Text("Start Link on:");
+        if (ImGui::Button("Screen 1")) StartEmulator(0);
+        if (ImGui::Button("Screen 2")) StartEmulator(1);
+        if (ImGui::Button("Screen 3")) StartEmulator(2);
+        if (ImGui::Button("Screen 4")) StartEmulator(3);
+        ImGui::EndPopup();
+    }
+    ImGui::SameLine();
+    ImApp::Get()->HelpButton("sideview-editor", true);
 
+    ImGui::Text("View: ");
     ImGui::SameLine();
     ImGui::InputInt("Screen", &startscreen_);
     startscreen_ = Clamp(startscreen_, 0, 3);
@@ -203,15 +236,15 @@ bool SimpleMap::Draw() {
 
     ImGui::SameLine(); ImGui::Text("| Box:");
     ImGui::SameLine(); ImGui::Checkbox("Object", &object_box_);
-    ImGui::SameLine(); ImGui::Checkbox("Enemy", &enemy_box_);
-    ImGui::SameLine(); ImGui::Checkbox("Avail", &avail_box_);
     holder_.set_show_origin(object_box_);
-    enemies_.set_show_origin(enemy_box_);
-    avail_.set_show(avail_box_);
 
+    if (!bgmap_) {
+        ImGui::SameLine(); ImGui::Checkbox("Enemy", &enemy_box_);
+        enemies_.set_show_origin(enemy_box_);
+        ImGui::SameLine(); ImGui::Checkbox("Avail", &avail_box_);
+        avail_.set_show(avail_box_);
+    }
 
-    ImGui::SameLine();
-    ImApp::Get()->HelpButton("sideview-editor", true);
 
     ImGui::BeginChild("image", ImVec2(0, (decomp_.height()+2)*16.0*scale_),
                       true, ImGuiWindowFlags_HorizontalScrollbar);
@@ -237,15 +270,15 @@ bool SimpleMap::Draw() {
                 }
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Connections")) {
+            if (!bgmap_ && ImGui::BeginTabItem("Connections")) {
                 changed_ |= connection_.Draw();
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Enemy List")) {
+            if (!bgmap_ && ImGui::BeginTabItem("Enemy List")) {
                 changed_ |= enemies_.Draw();
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Item Availability")) {
+            if (!bgmap_ && ImGui::BeginTabItem("Item Availability")) {
                 changed_ |= avail_.Draw();
                 ImGui::EndTabItem();
             }
@@ -270,9 +303,11 @@ bool SimpleMap::Draw() {
     return changed_;
 }
 
-void SimpleMap::SetMap(const z2util::Map& map) {
+void SimpleMap::SetMap(const z2util::Map& map, int mapsel) {
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     map_ = map;
+    bgmap_ = map.world() == -1;
+    if (mapsel != -1) mapsel_ = mapsel;
 
     decomp_.Init();
     decomp_.Decompress(map);
@@ -314,9 +349,12 @@ void SimpleMap::SetMap(const z2util::Map& map) {
         cache_.set_palette(decomp_.palette());
         holder_.Parse(map);
         holder_.set_cursor_moves_left(decomp_.cursor_moves_left());
-        connection_.Parse(map);
-        enemies_.Parse(map);
-        avail_.Parse(map);
+        if (!bgmap_) {
+            // Background maps don't have these.
+            connection_.Parse(map);
+            enemies_.Parse(map);
+            avail_.Parse(map);
+        }
         swapper_.set_map(map);
     }
     changed_ = false;

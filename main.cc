@@ -39,12 +39,15 @@ void PostProcess(z2util::RomInfo* config) {
             std::string name = "";
             GetName(config, s.world(), s.overworld(), s.subworld(), map, &name);
             m->set_area(s.area_offset() + map);
+            int bgoffset =
+                (s.area().find("background") != std::string::npos) ? 1 : 0;
             if (name.empty()) {
                 snprintf(buf, sizeof(buf), "%02d: %s %02d",
-                         m->area(), s.area().c_str(), map);
+                         m->area()+bgoffset, s.area().c_str(), map+bgoffset);
             } else {
                 snprintf(buf, sizeof(buf), "%02d: %s %02d - %s",
-                         m->area(), s.area().c_str(), map, name.c_str());
+                         m->area()+bgoffset, s.area().c_str(), map+bgoffset,
+                         name.c_str());
             }
             for(const auto& c : s.code()) {
                 if (map >= c.offset() && map < c.offset() + c.length()) {

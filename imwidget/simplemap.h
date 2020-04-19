@@ -22,7 +22,8 @@ class SimpleMap: public ImWindowBase {
     void Refresh() override { SetMap(map_); }
     bool Draw() override;
     void DrawMap(const ImVec2& pos);
-    void SetMap(const Map& map);
+    void SetMap(const Map& map, int mapsel=-1);
+    void StartEmulator(int screen);
     inline const std::string& name() const { return decomp_.name(); }
     void RenderToBuffer(GLBitmap *buffer);
     std::unique_ptr<GLBitmap> RenderToNewBuffer();
@@ -31,6 +32,7 @@ class SimpleMap: public ImWindowBase {
     bool object_box_;
     bool enemy_box_;
     bool avail_box_;
+    bool bgmap_;
     int width_;
     int height_;
     float scale_;

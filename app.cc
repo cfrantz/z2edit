@@ -116,11 +116,16 @@ void Z2Edit::LoadPostProcess(int movekeepout) {
     chrview_->set_mapper(mapper_.get());
     simplemap_->set_mapper(mapper_.get());
     auto* ri = ConfigLoader<RomInfo>::MutableConfig();
+    int n = 0;
     for(const auto& m : ri->map()) {
+        if (m.type() == z2util::MapType::OVERWORLD) {
+            continue;
+        }
         if (m.name().find("North Palace") != std::string::npos) {
-            simplemap_->SetMap(m);
+            simplemap_->SetMap(m, n);
             break;
         }
+        n++;
     }
 
     // Misc hacks first because it can modify config.
@@ -942,8 +947,10 @@ void Z2Edit::SpawnEmulator(
         uint8_t town_code,
         uint8_t palace_code,
         uint8_t connector,
-        uint8_t room) {
+        uint8_t room,
+        uint8_t page) {
 
+    uint8_t facing = (page < 3) ? 0 : 1;
     LOGF(INFO, "StartEmulator:");
     LOGF(INFO, "  bank: %d", bank);
     LOGF(INFO, "  region: %d", region);
@@ -952,6 +959,7 @@ void Z2Edit::SpawnEmulator(
     LOGF(INFO, "  palace_code: %d", palace_code);
     LOGF(INFO, "  connector: %d", connector);
     LOGF(INFO, "  room: %d", room);
+    LOGF(INFO, "  page: %d", page);
 
     uint8_t inject[] = {
         0xa9, bank,             // LDA #bank
@@ -968,6 +976,10 @@ void Z2Edit::SpawnEmulator(
         0x8d, 0x48, 0x07,       // STA $0748
         0xa9, room,             // LDA #room
         0x8d, 0x61, 0x05,       // STA $0561
+        0xa9, page,             // LDA #page
+        0x8d, 0x5c, 0x07,       // STA $075c
+        0xa9, facing,           // LDA #facing
+        0x8d, 0x01, 0x07,       // STA $0701
         0x60,                   // RTS
     };
     uint16_t addr = 0xaa3f & 0x3FFF;
@@ -1001,7 +1013,7 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
         editor_->Refresh();
     } else if (msg == "emulate_at") {
         const uint8_t* p = reinterpret_cast<const uint8_t*>(extra);
-        SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
+        SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
     } else {
         console_.AddLog("[error] Unknown message %s(%p)", msg.c_str(), extra);
     }

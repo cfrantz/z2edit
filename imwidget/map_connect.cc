@@ -180,7 +180,8 @@ void OverworldConnector::StartEmulator() {
     if (subworld_) overworld = subworld_;
 
     uint8_t params[] = { bank, overworld, uint8_t(dest_world_), town_code,
-                         palace_code, connector, uint8_t(map_) };
+                         palace_code, connector, uint8_t(map_),
+                         uint8_t(entry_) };
     ImApp::Get()->ProcessMessage("emulate_at", params);
 
 }

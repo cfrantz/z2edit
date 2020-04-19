@@ -898,6 +898,7 @@ void MapEnemyList::Init() {
             }
         }
     }
+    data_.clear();
 }
 
 void MapEnemyList::LoadText(Unpacked* item) {
