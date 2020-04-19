@@ -1,6 +1,7 @@
 #include "imwidget/multimap.h"
 
 #include "imwidget/imapp.h"
+#include "imwidget/imutil.h"
 #include "imwidget/map_command.h"
 #include "imwidget/simplemap.h"
 #include "util/config.h"
@@ -347,7 +348,8 @@ bool MultiMap::Draw() {
     ImGui::Begin(title_.c_str(), &visible_);
     ImGui::PushItemWidth(100);
     WITH_PROTO_FIELD(*mcfg_, scale,
-        ImGui::InputFloat("Zoom", &scale, 1.0/8.0, 1.0));
+        ImGui::InputFloat("Zoom", &scale, 1.0/8.0, 1.0);
+        Clamp(&scale, 0.125f, 4.0f));
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
