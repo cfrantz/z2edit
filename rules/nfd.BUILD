@@ -19,6 +19,9 @@ genrule(
     elif [[ -f /usr/lib/glib-2.0/include/glibconfig.h ]]; then
         # Arch
         cp /usr/lib/glib-2.0/include/glibconfig.h $(@)
+    elif [[ -f /lib64/glib-2.0/include/glibconfig.h ]]; then
+        # Fedora
+        cp /lib64/glib-2.0/include/glibconfig.h $(@)
     fi
     """,
 )
