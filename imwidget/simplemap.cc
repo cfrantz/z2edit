@@ -149,6 +149,7 @@ void SimpleMap::StartEmulator(int screen) {
         uint8_t(1),                     // connector: we don't know
         uint8_t(map_.area()),           // map number
         uint8_t(screen),                // start screen
+        uint8_t(map_.overworld()),      // prev_overworld
     };
     ImApp::Get()->ProcessMessage("emulate_at", params);
 }

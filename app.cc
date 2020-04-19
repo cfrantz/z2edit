@@ -948,7 +948,8 @@ void Z2Edit::SpawnEmulator(
         uint8_t palace_code,
         uint8_t connector,
         uint8_t room,
-        uint8_t page) {
+        uint8_t page,
+        uint8_t prev_region) {
 
     uint8_t facing = (page < 3) ? 0 : 1;
     LOGF(INFO, "StartEmulator:");
@@ -967,7 +968,7 @@ void Z2Edit::SpawnEmulator(
         0xa9, region,           // LDA #region
         0x8d, 0x06, 0x07,       // STA $0706
         0xa9, world,            // LDA #world
-        0x8d, 0x07, 0x07,       // STA $0706
+        0x8d, 0x07, 0x07,       // STA $0707
         0xa9, town_code,        // LDA #town_code
         0x8d, 0x6b, 0x05,       // STA $056b
         0xa9, palace_code,      // LDA #palace_code
@@ -980,6 +981,8 @@ void Z2Edit::SpawnEmulator(
         0x8d, 0x5c, 0x07,       // STA $075c
         0xa9, facing,           // LDA #facing
         0x8d, 0x01, 0x07,       // STA $0701
+        0xa9, prev_region,      // LDA #prev_region
+        0x8d, 0x0a, 0x07,       // STA $070a
         0x60,                   // RTS
     };
     uint16_t addr = 0xaa3f & 0x3FFF;
@@ -1013,7 +1016,7 @@ void Z2Edit::ProcessMessage(const std::string& msg, const void* extra) {
         editor_->Refresh();
     } else if (msg == "emulate_at") {
         const uint8_t* p = reinterpret_cast<const uint8_t*>(extra);
-        SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+        SpawnEmulator(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8]);
     } else {
         console_.AddLog("[error] Unknown message %s(%p)", msg.c_str(), extra);
     }

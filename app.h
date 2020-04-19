@@ -77,7 +77,7 @@ class Z2Edit: public ImApp {
     void SpawnEmulator();
     void SpawnEmulator(uint8_t bank, uint8_t region, uint8_t world,
         uint8_t town_code, uint8_t palace_code, uint8_t connector,
-        uint8_t room, uint8_t page);
+        uint8_t room, uint8_t page, uint8_t prev_region);
     int EncodedText(int ch);
     bool ParseChr(const std::string& a, int* bank, uint8_t *addr);
 

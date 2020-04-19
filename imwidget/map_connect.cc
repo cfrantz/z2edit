@@ -175,13 +175,27 @@ void OverworldConnector::StartEmulator() {
     uint8_t overworld = dest_overworld_ ? dest_overworld_ : overworld_;
     if (dest_world_ == 0) {
         // Hack - there is no overworld bank table.
-        bank += overworld / 2;
+        if (overworld == 1) {
+            // overworld 1 can mean both DM or MZ.  Try to determine which
+            // by examining the owning overworld.
+            bank = 1 + overworld_ / 2;
+        } else {
+            bank = 1 + overworld / 2;
+        }
     }
     if (subworld_) overworld = subworld_;
 
-    uint8_t params[] = { bank, overworld, uint8_t(dest_world_), town_code,
-                         palace_code, connector, uint8_t(map_),
-                         uint8_t(entry_) };
+    uint8_t params[] = {
+        bank,
+        overworld,
+        uint8_t(dest_world_),
+        town_code,
+        palace_code,
+        connector,
+        uint8_t(map_),
+        uint8_t(entry_),
+        uint8_t(overworld_),
+    };
     ImApp::Get()->ProcessMessage("emulate_at", params);
 
 }
