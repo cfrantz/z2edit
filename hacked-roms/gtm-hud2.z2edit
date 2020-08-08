@@ -1,0 +1,124 @@
+# A new HUD for GTM's collect-a-thon hack.
+
+## The first part of this patch blanks out the magic meter in the HUD.
+
+asm b=7 0
+.org $d0d4
+; Remove the text that says "MAGIC-"
+.db $f4,$f4,$f4,$f4,$f4,$f4
+.end
+
+asm b=0 0
+; Eliminate the default value of Link's magic level (digit 1).
+.org $9631
+.db $f4
+
+; Elimiate the "M" indicator on the second line of the hud.
+; Can replace this with a different indicator or word.
+.org $9637
+.db $f4
+
+; Make the variable position magic meter sprite into the blank sprite.
+.org $9689
+.db $f5
+
+.org $96d7
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+; Ought to be at $970e here.
+.end
+
+## The next part reuses the blanked out space in the HUD to display a
+## counter of keys, which GTM is using to count MacGuffins.
+asm b=0 0
+decimal_convert = $a5a4
+bank7_remove_enemy_or_item = $dd47
+hud_offset = $030c
+
+; Replace the "M" indicator in the HUD with the little key graphic.
+.org $9637
+.db $b9                         ; This is the key graphic in bg tile set.
+
+.org $96d7
+    tya                         ; Save macro write index
+    pha
+    lda #0                      ; Use zero for the high byte of number of keys
+    sta $0
+    lda $0793                   ; current number of keys
+    jsr decimal_convert         ; convert to decimal, result in [$01:$00:y:a]
+    sta $00                     ; don't care about hundreds value, save ones.
+    sty $01                     ; don't care about thousands value, save tens.
+    pla                         ; Get the macro index back into Y.
+    tay
+    lda $01                     ; Get tens digit
+    sta hud_offset,y            ; Store in ppu macro
+    iny
+    lda $00                     ; Get ones digit
+    sta hud_offset,y            ; Store in ppu macro
+; program counter should be <= $970e here.
+
+; Modify key-pickup to notify the HUD. This uses some bank7 freespace.
+.org $feaa
+key_pickup:
+    lda $74f                    ; I think $74f is a bitmap of what needs to
+    ora #$80                    ; update in the hud.  We say "magic" because
+    sta $74f                    ; we took over the magic code.
+    jmp bank7_remove_enemy_or_item
+
+.org $e7b8
+    ; this instruction is immediately after incrmenting keys.
+    jmp key_pickup
+.end
