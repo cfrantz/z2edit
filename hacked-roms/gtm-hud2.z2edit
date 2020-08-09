@@ -4,25 +4,55 @@
 
 asm b=7 0
 .org $d0d4
-; Remove the text that says "MAGIC-"
+; Blank out the text that says "MAGIC-"
 .db $f4,$f4,$f4,$f4,$f4,$f4
+
+; Blank out the sword icon for attack level
+.org $d0ec
+.db $f4
+
+; Blank out the text "NEXT"
+.org $d0e5
+.db $f4,$f4,$f4,$f4
+
+; Blank out the "/0000" portion of the XP display
+.org $d0f4
+.db $f4,$f4,$f4,$f4,$f4
+
 .end
 
 asm b=0 0
-; Eliminate the default value of Link's magic level (digit 1).
+; Blank out the default value of Link's magic level (digit 1).
 .org $9631
 .db $f4
 
-; Elimiate the "M" indicator on the second line of the hud.
+; Blank out the attact level value (digit 1 at $9535).
+; Elimiate the "M" indicator on the second line of the hud (at $9537).
 ; Can replace this with a different indicator or word.
-.org $9637
-.db $f4
+.org $9635
+.db $f4,$f4,$f4
+
+; Blank out the "0000/000" portion of the update macro
+.org $9650
+.db $f4,$f4,$f4,$f4,$f4,$f4,$f4,$f4
 
 ; Make the variable position magic meter sprite into the blank sprite.
 .org $9689
 .db $f5
 
-.org $96d7
+; Nop out the code which displays the attack level and magic level
+.org $96ce
+    ; Attack level starts here ($96ce)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    ; Magic level starts here ($96d7)
     nop
     nop
     nop
@@ -79,7 +109,76 @@ asm b=0 0
     nop
     nop
 ; Ought to be at $970e here.
+
+; Nop out the code which displays the XP and Next levels
+.org $9748
+    ; current xp ($9748)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    ; next level (9771)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 .end
+
+
 
 ## The next part reuses the blanked out space in the HUD to display a
 ## counter of keys, which GTM is using to count MacGuffins.
@@ -92,7 +191,7 @@ hud_offset = $030c
 .org $9637
 .db $b9                         ; This is the key graphic in bg tile set.
 
-.org $96d7
+.org $96ce
     tya                         ; Save macro write index
     pha
     lda #0                      ; Use zero for the high byte of number of keys
