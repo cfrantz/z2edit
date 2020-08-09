@@ -218,7 +218,9 @@ hud_done:
 .org $9381
     jsr victory_check
 
-.org $be00
+; The address $bd80 is just a convenient blank space in bank0 which wont
+; conflict with the dynamic banks feature of z2edit.
+.org $bd80
 victory_check:
     lda $0793                   ; current number of keys
     cmp #victory_count          ; correct number of keys for victory?
