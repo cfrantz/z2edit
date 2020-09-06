@@ -120,4 +120,7 @@ palettes {
     palette { name: "Background" address: { bank: 5 address: 0xaf40 } }
     palette { name: "Sprites"   address: { bank: 5 address: 0xaf50 } }
     palette { name: "Select Screen" address: { bank: 5 address: 0xbbf8 } }
+    palette { name: "Select Sprites" address: { bank: 5 address: 0xbc08 } }
+    palette { name: "Lives Screen" address: { bank:-1 address: 0xc44c } length: 4 }
+    palette { name: "Lives (sprites)" address: { bank:-1 address: 0xc453 } length: 4 }
 }
