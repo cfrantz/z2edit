@@ -19,7 +19,7 @@ impl App {
     pub fn new() -> Self {
         App {
             running: false,
-            preferences: Preferences::new(),
+            preferences: Preferences::load().unwrap_or_default(),
         }
     }
 
