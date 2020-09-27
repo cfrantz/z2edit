@@ -1,0 +1,27 @@
+[package]
+name = "z2e2"
+version = "0.1.0"
+authors = ["Chris Frantz <frantzcj@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Basic application stuff
+structopt = "0.3.18"
+log = "0.4"
+simplelog = "^0.7.6"
+directories = "3.0.1"
+error-chain = "0.12.4"
+
+# Serialization stuff
+ron = "*"
+serde = { version="1", features=["serde_derive"] }
+
+# Gui stuff
+sdl2 = "0.34"
+gl = "0.14.0"
+imgui = "0.4"
+imgui-opengl-renderer = "0.8.0"
+imgui-sdl2 = "0.11.0"
+nfd = "0.0.4"
