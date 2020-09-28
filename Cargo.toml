@@ -13,6 +13,8 @@ log = "0.4"
 simplelog = "^0.7.6"
 directories = "3.0.1"
 error-chain = "0.12.4"
+rustyline = "6.3.0"
+libc = "0.2"
 
 # Serialization stuff
 ron = "*"
@@ -25,3 +27,6 @@ imgui = "0.4"
 imgui-opengl-renderer = "0.8.0"
 imgui-sdl2 = "0.11.0"
 nfd = "0.0.4"
+
+[target.'cfg(unix)'.dependencies]
+nix = "0.18"

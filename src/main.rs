@@ -7,9 +7,11 @@ extern crate sdl2;
 #[macro_use]
 extern crate log;
 extern crate simplelog;
+extern crate rustyline;
 
 pub mod gui;
 pub mod errors;
+pub mod util;
 
 
 use std::fs;
@@ -20,6 +22,7 @@ use directories::ProjectDirs;
 use gui::app::App;
 use gui::app_context::AppContext;
 use structopt::StructOpt;
+use util::TerminalGuard;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "z2edit")]
@@ -50,6 +53,7 @@ fn run() -> Result<()> {
     fs::create_dir_all(data).map_err(|e| ErrorKind::Io(e))?;
 
     AppContext::init("Z2Edit", opt.width, opt.height, config, data)?;
+    let _mode = TerminalGuard::new();
     let mut app = App::new();
     app.run();
     Ok(())

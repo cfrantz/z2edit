@@ -8,11 +8,13 @@ use sdl2::event::Event;
 
 use crate::gui::app_context::AppContext;
 use crate::gui::glhelper;
+use crate::gui::console::{Console, NullExecutor};
 use crate::gui::preferences::Preferences;
 
 pub struct App {
     running: bool,
     preferences: Preferences,
+    console: Console,
 }
 
 impl App {
@@ -20,17 +22,22 @@ impl App {
         App {
             running: false,
             preferences: Preferences::load().unwrap_or_default(),
+            console: Console::new("Debug Console"),
         }
     }
 
     fn draw(&mut self, ui: &imgui::Ui) {
         ui.main_menu_bar(|| {
             ui.menu(im_str!("View"), true, || {
+                MenuItem::new(im_str!("Console"))
+                    .build_with_ref(ui, &mut self.console.visible);
                 MenuItem::new(im_str!("Preferences"))
                     .build_with_ref(ui, &mut self.preferences.visible);
             });
         });
         self.preferences.draw(ui);
+        let mut e = NullExecutor;
+        self.console.draw(&mut e, ui);
     }
 
     pub fn run(&mut self) {
