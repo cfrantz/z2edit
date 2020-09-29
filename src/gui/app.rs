@@ -5,24 +5,30 @@ use imgui_opengl_renderer::Renderer;
 use imgui_sdl2::ImguiSdl2;
 use std::time::Instant;
 use sdl2::event::Event;
+use pyo3::prelude::*;
 
 use crate::gui::app_context::AppContext;
 use crate::gui::glhelper;
 use crate::gui::console::{Console, NullExecutor};
 use crate::gui::preferences::Preferences;
+use crate::util::pyexec::PythonExecutor;
 
-pub struct App {
+pub struct App<'p> {
     running: bool,
     preferences: Preferences,
     console: Console,
+    python: Python<'p>,
+    executor: PythonExecutor<'p>,
 }
 
-impl App {
-    pub fn new() -> Self {
+impl<'p> App<'p> {
+    pub fn new(python: Python<'p>) -> Self {
         App {
             running: false,
             preferences: Preferences::load().unwrap_or_default(),
             console: Console::new("Debug Console"),
+            python: python,
+            executor: PythonExecutor::new(python),
         }
     }
 
@@ -36,8 +42,7 @@ impl App {
             });
         });
         self.preferences.draw(ui);
-        let mut e = NullExecutor;
-        self.console.draw(&mut e, ui);
+        self.console.draw(&mut self.executor, ui);
     }
 
     pub fn run(&mut self) {

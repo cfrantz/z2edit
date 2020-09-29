@@ -74,6 +74,15 @@ pub fn color_as_f32(color: u32) -> [f32; 4] {
     ]
 }
 
+pub fn color_as_u8(color: u32) -> [u8; 4] {
+    [
+        ((color >> R_SHIFT) & 0xFF) as u8,
+        ((color >> G_SHIFT) & 0xFF) as u8,
+        ((color >> B_SHIFT) & 0xFF) as u8,
+        ((color >> A_SHIFT) & 0xFF) as u8,
+    ]
+}
+
 pub fn color_to_f32(color: u32, fcol: &mut [f32; 4]) {
     fcol[0] = ((color >> R_SHIFT) & 0xFF) as f32 / 255.0;
     fcol[1] = ((color >> G_SHIFT) & 0xFF) as f32 / 255.0;

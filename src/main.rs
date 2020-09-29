@@ -8,6 +8,7 @@ extern crate sdl2;
 extern crate log;
 extern crate simplelog;
 extern crate rustyline;
+extern crate pyo3;
 
 pub mod gui;
 pub mod errors;
@@ -23,6 +24,7 @@ use gui::app::App;
 use gui::app_context::AppContext;
 use structopt::StructOpt;
 use util::TerminalGuard;
+use pyo3::prelude::Python;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "z2edit")]
@@ -33,7 +35,7 @@ struct Opt {
     height: u32,
 }
 
-fn run() -> Result<()> {
+fn run(py: Python) -> Result<()> {
     let opt = Opt::from_args();
     CombinedLogger::init(vec![TermLogger::new(
             LevelFilter::Info,
@@ -54,11 +56,13 @@ fn run() -> Result<()> {
 
     AppContext::init("Z2Edit", opt.width, opt.height, config, data)?;
     let _mode = TerminalGuard::new();
-    let mut app = App::new();
+    let mut app = App::new(py);
     app.run();
     Ok(())
 }
 
 fn main() {
-    run().unwrap();
+    Python::with_gil(|py| {
+        run(py).unwrap();
+    });
 }

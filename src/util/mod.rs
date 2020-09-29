@@ -1,4 +1,5 @@
 pub mod terminal;
+pub mod pyexec;
 
 use terminal::UnixTerminalGuard;
 

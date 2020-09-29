@@ -6,6 +6,9 @@ use std::sync::mpsc;
 use std::thread;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use std::io::Write;
+
 
 use crate::gui::glhelper;
 
@@ -20,11 +23,13 @@ pub struct Console {
     input: ImString,
     items: RefCell<Vec<Item>>,
     scroll: Cell<bool>,
-    queue: mpsc::Receiver<String>,
+    in_queue: mpsc::Receiver<String>,
+    prompter: mpsc::SyncSender<String>,
 }
 
 pub trait Executor {
     fn exec(&mut self, line: &str, console: &Console);
+    fn prompt(&self) -> &str;
 }
 
 pub struct NullExecutor;
@@ -33,13 +38,15 @@ impl Executor for NullExecutor {
     fn exec(&mut self, line: &str, console: &Console) {
         console.add_text(line);
     }
+    fn prompt(&self) -> &str { ">>>" }
 }
 
 impl Console {
     pub fn new(name: &str) -> Self {
-        let (sender, receiver) = mpsc::sync_channel(2);
+        let (in_sender, in_receiver) = mpsc::sync_channel(2);
+        let (pr_sender, pr_receiver) = mpsc::sync_channel(2);
         let _ = thread::spawn(move || {
-            Console::stdin_listener(sender);
+            Console::stdin_listener(in_sender, pr_receiver);
         });
         Console {
             visible: false,
@@ -47,16 +54,25 @@ impl Console {
             input: ImString::with_capacity(256),
             items: RefCell::new(Vec::<Item>::new()),
             scroll: Cell::new(true),
-            queue: receiver,
+            in_queue: in_receiver,
+            prompter: pr_sender,
         }
     }
 
-    fn stdin_listener(sender: mpsc::SyncSender<String>) {
+    fn stdin_listener(in_sender: mpsc::SyncSender<String>,
+                      pr_receiver: mpsc::Receiver<String>) {
         let mut rl = Editor::<()>::new();
+        let mut prompt = ">>> ".to_owned();
+        let mut stdout = StandardStream::stdout(ColorChoice::Auto);
         let ret = loop {
-            let readline = rl.readline(">> ");
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)));
+            let readline = rl.readline(&prompt);
             match readline {
-                Ok(line) => sender.send(line).unwrap(),
+                Ok(line) => {
+                    in_sender.send(line).unwrap();
+                    prompt = pr_receiver.recv().unwrap();
+                    prompt.push(' ');
+                },
                 Err(ReadlineError::Interrupted) => {
                     break 1;
                 },
@@ -83,6 +99,15 @@ impl Console {
         };
         self.items.borrow_mut().push(item);
         self.scroll.set(true);
+
+        let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+        let rgba = glhelper::color_as_u8(color);
+        // Stupid magic value hack to not reprint the line from stdin.
+        if rgba[3] != 0xfe {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(
+                        rgba[0], rgba[1], rgba[2])))).unwrap_or(());
+            write!(&mut stdout, "{}", text);
+        }
     }
 
     pub fn add_text(&self, text: &str) {
@@ -101,8 +126,12 @@ impl Console {
     }
 
     pub fn draw(&mut self, exec: &mut dyn Executor, ui: &imgui::Ui) {
-        match self.queue.try_recv() {
-            Ok(line) => exec.exec(&line, self),
+        match self.in_queue.try_recv() {
+            Ok(line) => {
+                self.add_item(0xfe88ccff, &format!("{} {}", exec.prompt(), line));
+                exec.exec(&line, self);
+                self.prompter.send(exec.prompt().to_owned()).unwrap();
+            },
             Err(_) => {},
         };
         if !self.visible {
@@ -131,12 +160,15 @@ impl Console {
                         self.scroll.set(false);
                         spacing.pop(ui);
                 });
-                ui.text(">>>");
+                let prompt = exec.prompt();
+                ui.text(prompt);
                 ui.same_line(0.0);
                 if imgui::InputText::new(ui, im_str!(""), &mut self.input)
                     .enter_returns_true(true)
                     .build() {
-                    exec.exec(self.input.to_str(), self);
+                    let line = self.input.to_str();
+                    self.add_item(0xfe88ccff, &format!("{} {}", prompt, line));
+                    exec.exec(line, self);
                     self.input.clear();
                     ui.set_keyboard_focus_here(imgui::FocusedWidget::Previous);
                 }
