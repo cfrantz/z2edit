@@ -5,14 +5,18 @@ use std::io::Read;
 use std::fs::File;
 use std::path::Path;
 use ron;
+use pyo3::prelude::*;
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
 
 
+#[pyclass]
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Preferences {
+    #[pyo3(get, set)]
     pub visible: bool,
+    #[pyo3(get, set)]
     pub background: [f32; 3],
 }
 

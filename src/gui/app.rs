@@ -4,57 +4,63 @@ use imgui::MenuItem;
 use imgui_opengl_renderer::Renderer;
 use imgui_sdl2::ImguiSdl2;
 use std::time::Instant;
+use std::cell::{Cell, RefCell};
+use std::rc::Rc;
 use sdl2::event::Event;
 use pyo3::prelude::*;
 
 use crate::gui::app_context::AppContext;
 use crate::gui::glhelper;
-use crate::gui::console::{Console, NullExecutor};
+use crate::gui::console::Console;
 use crate::gui::preferences::Preferences;
 use crate::util::pyexec::PythonExecutor;
 
-pub struct App<'p> {
-    running: bool,
-    preferences: Preferences,
-    console: Console,
-    python: Python<'p>,
-    executor: PythonExecutor<'p>,
+#[pyclass(unsendable)]
+pub struct App {
+    running: Cell<bool>,
+    #[pyo3(get, set)]
+    preferences: Py<Preferences>,
+    console: Rc<RefCell<Console>>,
 }
 
-impl<'p> App<'p> {
-    pub fn new(python: Python<'p>) -> Self {
+impl App {
+    pub fn new(py: Python) -> Self {
         App {
-            running: false,
-            preferences: Preferences::load().unwrap_or_default(),
-            console: Console::new("Debug Console"),
-            python: python,
-            executor: PythonExecutor::new(python),
+            running: Cell::new(false),
+            preferences: Py::new(py, Preferences::load().unwrap_or_default()).unwrap(),
+            console: Rc::new(RefCell::new(Console::new("Debug Console"))),
         }
     }
 
-    fn draw(&mut self, ui: &imgui::Ui) {
+    fn draw(slf: &PyCell<Self>, executor: &mut PythonExecutor, ui: &imgui::Ui) {
+        let gil = Python::acquire_gil();
+        let py = gil.python();
         ui.main_menu_bar(|| {
             ui.menu(im_str!("View"), true, || {
                 MenuItem::new(im_str!("Console"))
-                    .build_with_ref(ui, &mut self.console.visible);
+                    .build_with_ref(ui, &mut slf.borrow().console.borrow_mut().visible);
                 MenuItem::new(im_str!("Preferences"))
-                    .build_with_ref(ui, &mut self.preferences.visible);
+                    .build_with_ref(ui, &mut slf.borrow_mut().preferences.borrow_mut(py).visible);
             });
         });
-        self.preferences.draw(ui);
-        self.console.draw(&mut self.executor, ui);
+        slf.borrow_mut().preferences.borrow_mut(py).draw(ui);
+        let console = Rc::clone(&slf.borrow().console);
+        console.borrow_mut().draw(executor, ui);
     }
 
-    pub fn run(&mut self) {
+    pub fn run(slf: &PyCell<Self>, executor: &mut PythonExecutor) {
         let context = AppContext::get();
         let mut last_frame = Instant::now();
         let mut imgui = imgui::Context::create();
         let mut imgui_sdl2 = ImguiSdl2::new(&mut imgui, &context.window);
         let renderer = Renderer::new(&mut imgui, |s| context.video.gl_get_proc_address(s) as _);
 
-        self.running = true;
+        slf.borrow().running.set(true);
 
-        'running: while self.running {
+        'running: loop {
+            if !slf.borrow().running.get() {
+                break 'running;
+            }
             let mut event_pump = context.event_pump.borrow_mut();
             for event in event_pump.poll_iter() {
                 imgui_sdl2.handle_event(&mut imgui, &event);
@@ -75,12 +81,30 @@ impl<'p> App<'p> {
             last_frame = now;
 
             let ui = imgui.frame();
-            self.draw(&ui);
+            App::draw(slf, executor, &ui);
 
-            glhelper::clear_screen(&self.preferences.background);
+            {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            glhelper::clear_screen(&slf.borrow().preferences.borrow(py).background);
+            }
             imgui_sdl2.prepare_render(&ui, &context.window);
             renderer.render(ui);
             context.window.gl_swap_window();
         }
     }
+}
+
+#[pymethods]
+impl App {
+    #[getter]
+    fn get_running(&self) -> bool {
+        self.running.get()
+    }
+
+    #[setter]
+    fn set_running(&self, value: bool) {
+        self.running.set(value);
+    }
+
 }

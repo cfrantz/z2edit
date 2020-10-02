@@ -17,14 +17,17 @@ pub mod util;
 
 use std::fs;
 use std::io;
-use crate::errors::*;
 use simplelog::*;
 use directories::ProjectDirs;
-use gui::app::App;
-use gui::app_context::AppContext;
 use structopt::StructOpt;
 use util::TerminalGuard;
-use pyo3::prelude::Python;
+use pyo3::prelude::*;
+
+use crate::errors::*;
+use crate::gui::app::App;
+use crate::gui::preferences::Preferences;
+use crate::gui::app_context::AppContext;
+use crate::util::pyexec::PythonExecutor;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "z2edit")]
@@ -56,8 +59,14 @@ fn run(py: Python) -> Result<()> {
 
     AppContext::init("Z2Edit", opt.width, opt.height, config, data)?;
     let _mode = TerminalGuard::new();
-    let mut app = App::new(py);
-    app.run();
+    let app = PyCell::new(py, App::new(py)).unwrap();
+    let submodule = PyModule::new(py, "z2edit").unwrap();
+    submodule.add_class::<App>().unwrap();
+    submodule.add_class::<Preferences>().unwrap();
+    submodule.setattr("instance", app).unwrap();
+
+    let mut executor = PythonExecutor::new(py, submodule);
+    App::run(&app, &mut executor);
     Ok(())
 }
 
