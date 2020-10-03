@@ -60,13 +60,17 @@ fn run(py: Python) -> Result<()> {
     AppContext::init("Z2Edit", opt.width, opt.height, config, data)?;
     let _mode = TerminalGuard::new();
     let app = PyCell::new(py, App::new(py)).unwrap();
-    let submodule = PyModule::new(py, "z2edit").unwrap();
-    submodule.add_class::<App>().unwrap();
-    submodule.add_class::<Preferences>().unwrap();
-    submodule.setattr("instance", app).unwrap();
+    let mut executor = PythonExecutor::new(py);
 
-    let mut executor = PythonExecutor::new(py, submodule);
-    App::run(&app, &mut executor);
+    let module = PyModule::new(py, "z2edit").unwrap();
+    app.borrow().pythonize(py, module);
+    module.setattr("app", app).unwrap();
+
+    let sys = PyModule::import(py, "sys").unwrap();
+    let modules = sys.get("modules").unwrap();
+    modules.set_item("z2edit", module).unwrap();
+
+    App::run(&app, py, &mut executor);
     Ok(())
 }
 

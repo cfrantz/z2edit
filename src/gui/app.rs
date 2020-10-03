@@ -32,23 +32,24 @@ impl App {
         }
     }
 
-    fn draw(slf: &PyCell<Self>, executor: &mut PythonExecutor, ui: &imgui::Ui) {
-        let gil = Python::acquire_gil();
-        let py = gil.python();
+    pub fn pythonize(&self, _py: Python, module: &PyModule) {
+        module.add_class::<App>().unwrap();
+        module.add_class::<Preferences>().unwrap();
+    }
+
+    fn draw(&mut self, py: Python, ui: &imgui::Ui) {
         ui.main_menu_bar(|| {
             ui.menu(im_str!("View"), true, || {
                 MenuItem::new(im_str!("Console"))
-                    .build_with_ref(ui, &mut slf.borrow().console.borrow_mut().visible);
+                    .build_with_ref(ui, &mut self.console.borrow_mut().visible);
                 MenuItem::new(im_str!("Preferences"))
-                    .build_with_ref(ui, &mut slf.borrow_mut().preferences.borrow_mut(py).visible);
+                    .build_with_ref(ui, &mut self.preferences.borrow_mut(py).visible);
             });
         });
-        slf.borrow_mut().preferences.borrow_mut(py).draw(ui);
-        let console = Rc::clone(&slf.borrow().console);
-        console.borrow_mut().draw(executor, ui);
+        self.preferences.borrow_mut(py).draw(ui);
     }
 
-    pub fn run(slf: &PyCell<Self>, executor: &mut PythonExecutor) {
+    pub fn run(slf: &PyCell<Self>, py: Python, executor: &mut PythonExecutor) {
         let context = AppContext::get();
         let mut last_frame = Instant::now();
         let mut imgui = imgui::Context::create();
@@ -81,13 +82,11 @@ impl App {
             last_frame = now;
 
             let ui = imgui.frame();
-            App::draw(slf, executor, &ui);
-
-            {
-            let gil = Python::acquire_gil();
-            let py = gil.python();
+            slf.borrow_mut().draw(py, &ui);
+            let console = Rc::clone(&slf.borrow().console);
+            console.borrow_mut().draw(executor, &ui);
             glhelper::clear_screen(&slf.borrow().preferences.borrow(py).background);
-            }
+
             imgui_sdl2.prepare_render(&ui, &context.window);
             renderer.render(ui);
             context.window.gl_swap_window();

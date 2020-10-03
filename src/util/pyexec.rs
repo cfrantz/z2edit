@@ -2,7 +2,7 @@ use crate::gui::console::{Console, Executor};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 
-#[pyclass]
+
 pub struct PythonExecutor {
     interp: PyObject,
     source: String,
@@ -10,15 +10,13 @@ pub struct PythonExecutor {
 }
 
 impl PythonExecutor {
-    pub fn new(py: Python, submodule: &PyModule) -> Self {
-        let m = PyModule::from_code(py,
+    pub fn new(py: Python) -> Self {
+        let module = PyModule::from_code(py,
                             include_str!("../../python/console.py"),
                             "console.py",
                             "console").unwrap();
 
-        m.add_submodule(submodule);
-        let interp = m.call0("CreatePythonConsole").unwrap();
-
+        let interp = module.call0("CreatePythonConsole").unwrap();
         PythonExecutor {
             interp: interp.extract().unwrap(),
             source: "".to_owned(),
@@ -37,18 +35,18 @@ impl Executor for PythonExecutor {
             self.source = line.to_owned();
         }
         Python::with_gil(|py| {
-        let result = self.interp.call_method(py, "runsource", (&self.source, "<input>"), None).unwrap();
-        self.more = result.extract(py).unwrap();
+            let result = self.interp.call_method(py, "runsource", (&self.source, "<input>"), None).unwrap();
+            self.more = result.extract(py).unwrap();
 
-        let s = self.interp.call_method0(py, "GetOut").unwrap().extract::<String>(py).unwrap();
-        if !s.is_empty() {
-            console.add_item(0x33ff33, &s);
-        }
+            let s = self.interp.call_method0(py, "GetOut").unwrap().extract::<String>(py).unwrap();
+            if !s.is_empty() {
+                console.add_item(0x33ff33, &s);
+            }
 
-        let s = self.interp.call_method0(py, "GetErr").unwrap().extract::<String>(py).unwrap();
-        if !s.is_empty() {
-            console.add_item(0x3333ff, &s);
-        }
+            let s = self.interp.call_method0(py, "GetErr").unwrap().extract::<String>(py).unwrap();
+            if !s.is_empty() {
+                console.add_item(0x3333ff, &s);
+            }
         });
     }
 
