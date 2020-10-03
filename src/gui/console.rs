@@ -5,7 +5,7 @@ use std::cell::{Cell, RefCell};
 use std::sync::mpsc;
 use std::thread;
 use rustyline::error::ReadlineError;
-use rustyline::Editor;
+use rustyline::{Editor, Config, EditMode, CompletionType, OutputStreamType};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use std::io::Write;
 
@@ -61,7 +61,13 @@ impl Console {
 
     fn stdin_listener(in_sender: mpsc::SyncSender<String>,
                       pr_receiver: mpsc::Receiver<String>) {
-        let mut rl = Editor::<()>::new();
+        let config = Config::builder()
+            .auto_add_history(true)
+            .completion_type(CompletionType::List)
+            .edit_mode(EditMode::Emacs)
+            .output_stream(OutputStreamType::Stdout)
+            .build();
+        let mut rl = Editor::<()>::with_config(config);
         let mut prompt = ">>> ".to_owned();
         let mut stdout = StandardStream::stdout(ColorChoice::Auto);
         let ret = loop {

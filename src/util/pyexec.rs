@@ -22,7 +22,6 @@ impl PythonExecutor {
             source: "".to_owned(),
             more: false,
         }
-
     }
 }
 

@@ -25,7 +25,6 @@ use pyo3::prelude::*;
 
 use crate::errors::*;
 use crate::gui::app::App;
-use crate::gui::preferences::Preferences;
 use crate::gui::app_context::AppContext;
 use crate::util::pyexec::PythonExecutor;
 
@@ -58,7 +57,6 @@ fn run(py: Python) -> Result<()> {
     fs::create_dir_all(data).map_err(|e| ErrorKind::Io(e))?;
 
     AppContext::init("Z2Edit", opt.width, opt.height, config, data)?;
-    let _mode = TerminalGuard::new();
     let app = PyCell::new(py, App::new(py)).unwrap();
     let mut executor = PythonExecutor::new(py);
 
@@ -75,6 +73,7 @@ fn run(py: Python) -> Result<()> {
 }
 
 fn main() {
+    let _mode = TerminalGuard::new();
     Python::with_gil(|py| {
         run(py).unwrap();
     });
