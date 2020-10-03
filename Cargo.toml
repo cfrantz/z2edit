@@ -25,10 +25,10 @@ serde = { version="1", features=["serde_derive"] }
 # Gui stuff
 sdl2 = "0.34"
 gl = "0.14.0"
-imgui = "0.4"
-imgui-opengl-renderer = "0.8.0"
-imgui-sdl2 = "0.11.0"
 nfd = "0.0.4"
+imgui = "0.5"
+imgui-opengl-renderer = {version="*", path="third_party/rust-imgui-opengl-renderer" }
+imgui-sdl2 = {version="*", path="third_party/rust-imgui-sdl2" }
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.18"
