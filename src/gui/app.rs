@@ -9,6 +9,7 @@ use std::rc::Rc;
 use sdl2::event::Event;
 use pyo3::prelude::*;
 
+use crate::errors::*;
 use crate::gui::app_context::AppContext;
 use crate::gui::glhelper;
 use crate::gui::console::Console;
@@ -24,17 +25,18 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(py: Python) -> Self {
-        App {
+    pub fn new(py: Python) -> Result<Self> {
+        Ok(App {
             running: Cell::new(false),
-            preferences: Py::new(py, Preferences::load().unwrap_or_default()).unwrap(),
+            preferences: Py::new(py, Preferences::load().unwrap_or_default())?,
             console: Rc::new(RefCell::new(Console::new("Debug Console"))),
-        }
+        })
     }
 
-    pub fn pythonize(&self, _py: Python, module: &PyModule) {
-        module.add_class::<App>().unwrap();
-        module.add_class::<Preferences>().unwrap();
+    pub fn pythonize(&self, _py: Python, module: &PyModule) -> Result<()> {
+        module.add_class::<App>()?;
+        module.add_class::<Preferences>()?;
+        Ok(())
     }
 
     fn draw(&mut self, py: Python, ui: &imgui::Ui) {

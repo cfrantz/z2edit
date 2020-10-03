@@ -3,6 +3,7 @@ error_chain! {
         WindowBuildError(::sdl2::video::WindowBuildError);
         Io(::std::io::Error);
         DecodeError(::ron::error::Error);
+        PyErr(::pyo3::PyErr);
     }
     errors {
         SdlError(e: String) {

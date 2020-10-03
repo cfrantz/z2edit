@@ -71,7 +71,7 @@ impl Console {
         let mut prompt = ">>> ".to_owned();
         let mut stdout = StandardStream::stdout(ColorChoice::Auto);
         let ret = loop {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)));
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::White))).unwrap();
             let readline = rl.readline(&prompt);
             match readline {
                 Ok(line) => {
@@ -112,7 +112,7 @@ impl Console {
         if rgba[3] != 0xfe {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(
                         rgba[0], rgba[1], rgba[2])))).unwrap_or(());
-            write!(&mut stdout, "{}", text);
+            write!(&mut stdout, "{}", text).unwrap();
         }
     }
 

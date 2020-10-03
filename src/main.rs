@@ -57,16 +57,16 @@ fn run(py: Python) -> Result<()> {
     fs::create_dir_all(data).map_err(|e| ErrorKind::Io(e))?;
 
     AppContext::init("Z2Edit", opt.width, opt.height, config, data)?;
-    let app = PyCell::new(py, App::new(py)).unwrap();
-    let mut executor = PythonExecutor::new(py);
+    let app = PyCell::new(py, App::new(py)?)?;
+    let mut executor = PythonExecutor::new(py)?;
 
-    let module = PyModule::new(py, "z2edit").unwrap();
-    app.borrow().pythonize(py, module);
-    module.setattr("app", app).unwrap();
+    let module = PyModule::new(py, "z2edit")?;
+    app.borrow().pythonize(py, module)?;
+    module.setattr("app", app)?;
 
-    let sys = PyModule::import(py, "sys").unwrap();
-    let modules = sys.get("modules").unwrap();
-    modules.set_item("z2edit", module).unwrap();
+    let sys = PyModule::import(py, "sys")?;
+    let modules = sys.get("modules")?;
+    modules.set_item("z2edit", module)?;
 
     App::run(&app, py, &mut executor);
     Ok(())
