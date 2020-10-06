@@ -137,6 +137,9 @@ message Palette {
     Address address = 2;
     bool hidden = 3;
     Address magic_bg = 4;
+    // The length defaults to 16, but there are a few shortened
+    // tables in the ROM.
+    int32 length = 5;
 }
 
 message PaletteGroup {

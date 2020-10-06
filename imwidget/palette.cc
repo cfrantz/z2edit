@@ -73,7 +73,8 @@ bool PaletteEditor::Draw() {
         } else {
             ImGui::Text("%20s", p.name().c_str());
         }
-        for(int i=0; i<16; i++, id++) {
+        int len = p.length() ? p.length() : 16;
+        for(int i=0; i<len; i++, id++) {
             ImGui::SameLine();
             if ((i % 4) == 0) {
                 ImGui::Text(" ");
@@ -102,7 +103,8 @@ void PaletteEditor::Load() {
 
     for(const auto& p: ri.palettes(grpsel_).palette()) {
         Unpacked elem;
-        for(int i=0; i<16; i++) {
+        int len = p.length() ? p.length() : 16;
+        for(int i=0; i<len; i++) {
             elem.color[i] = mapper_->Read(p.address(), i);
         }
         data_.push_back(elem);
@@ -114,7 +116,8 @@ void PaletteEditor::Save() {
     int j = 0;
     const auto& ri = ConfigLoader<RomInfo>::GetConfig();
     for(const auto& p: ri.palettes(grpsel_).palette()) {
-        for(int i=0; !p.hidden() && i<16; i++) {
+        int len = p.length() ? p.length() : 16;
+        for(int i=0; !p.hidden() && i<len; i++) {
             mapper_->Write(p.address(), i, data_[j].color[i]);
             if (i==0 && p.magic_bg().address() != 0) {
                 mapper_->Write(p.magic_bg(), 0, data_[j].color[i]);

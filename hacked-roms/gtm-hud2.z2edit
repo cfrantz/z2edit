@@ -1,0 +1,271 @@
+# A new HUD for GTM's collect-a-thon hack.
+
+## The first part of this patch blanks out the magic meter in the HUD.
+
+asm b=7 0
+.org $d0d4
+; Blank out the text that says "MAGIC-"
+.db $f4,$f4,$f4,$f4,$f4,$f4
+
+; Blank out the sword icon for attack level
+.org $d0ec
+.db $f4
+
+; Blank out the text "NEXT"
+.org $d0e5
+.db $f4,$f4,$f4,$f4
+
+; Blank out the "/0000" portion of the XP display
+.org $d0f4
+.db $f4,$f4,$f4,$f4,$f4
+
+.end
+
+asm b=0 0
+; Blank out the default value of Link's magic level (digit 1).
+.org $9631
+.db $f4
+
+; Blank out the attact level value (digit 1 at $9535).
+; Elimiate the "M" indicator on the second line of the hud (at $9537).
+; Can replace this with a different indicator or word.
+.org $9635
+.db $f4,$f4,$f4
+
+; Blank out the "0000/000" portion of the update macro
+.org $9650
+.db $f4,$f4,$f4,$f4,$f4,$f4,$f4,$f4
+
+; Make the variable position magic meter sprite into the blank sprite.
+.org $9689
+.db $f5
+
+; Nop out the code which displays the attack level and magic level
+.org $96ce
+    ; Attack level starts here ($96ce)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    ; Magic level starts here ($96d7)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+; Ought to be at $970e here.
+
+; Nop out the code which displays the XP and Next levels
+.org $9748
+    ; current xp ($9748)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    ; next level (9771)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+.end
+
+
+
+## The next part reuses the blanked out space in the HUD to display a
+## counter of keys, which GTM is using to count MacGuffins.
+asm b=0 0
+decimal_convert = $a5a4
+bank7_remove_enemy_or_item = $dd47
+bank0_Side_View4_walking = $93bc
+hud_offset = $030c
+victory_frame = $7ff
+victory_count = 60
+
+; Replace the "M" indicator in the HUD with the little key graphic.
+.org $9637
+.db $b9                         ; This is the key graphic in bg tile set.
+
+.org $96ce
+    tya                         ; Save macro write index
+    pha
+    lda #0                      ; Use zero for the high byte of number of keys
+    sta $0
+    lda $0793                   ; current number of keys
+    jsr decimal_convert         ; convert to decimal, result in [$01:$00:y:a]
+    sta $00                     ; don't care about hundreds value, save ones.
+    sty $01                     ; don't care about thousands value, save tens.
+    pla                         ; Get the macro index back into Y.
+    tay
+    lda $01                     ; Get tens digit
+    sta hud_offset,y            ; Store in ppu macro
+    iny
+    lda $00                     ; Get ones digit
+    sta hud_offset,y            ; Store in ppu macro
+hud_done:
+; program counter should be <= $970e here.
+
+; Insert our victory check into link's sideview walking routine
+; (becuase it runs every frame)
+.org $9381
+    jsr victory_check
+
+; The address $bd80 is just a convenient blank space in bank0 which wont
+; conflict with the dynamic banks feature of z2edit.
+.org $bd80
+victory_check:
+    lda $0793                   ; current number of keys
+    cmp #victory_count          ; correct number of keys for victory?
+    bne victory_check_done
+    inc victory_frame           ; incrment victory frame counter
+    lda victory_frame
+    cmp #1                      ; frame one, move link
+    bne victory_frame2
+victory_frame1:
+    ; trigger transfer to the victory room
+    lda #0
+    sta $701                    ; enter from the left
+    sta $736                    ; command zero = load room
+    sta $75c                    ; enter room 0
+    lda #2
+    sta $706                    ; overworld 2
+    sta $56c                    ; palace code 2
+    lda #5
+    sta $769                    ; bank 5
+    sta $707                    ; world 5
+    lda #9
+    sta $56b                    ; town code (why we have to set it?)
+    lda #54
+    sta $748                    ; overworld connector 54 = GP.
+    lda #61                     ; room 61 is the victory room
+    sta $561
+    bne victory_check_done
+victory_frame2:
+    cmp #2
+    bne victory_check_done
+    lda #3
+    sta $76c                    ; Trigger automatic routine #3 (victory)
+victory_check_done:
+    jmp bank0_Side_View4_walking
+
+
+; Modify key-pickup to notify the HUD. This uses some bank7 freespace.
+.org $feaa
+key_pickup:
+    lda $74f                    ; I think $74f is a bitmap of what needs to
+    ora #$80                    ; update in the hud.  We say "magic" because
+    sta $74f                    ; we took over the magic code.
+    jmp bank7_remove_enemy_or_item
+
+.org $e7b8
+    ; this instruction is immediately after incrmenting keys.
+    jmp key_pickup
+.end
