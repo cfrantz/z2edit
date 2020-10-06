@@ -26,7 +26,8 @@ class Note {
     };
 
     enum class Pitch {
-                   Rest = 0x02, E3  = 0x04, G3  = 0x06,
+      Rest = 0x02, Cs3  = 0x3e, E3   = 0x04, G3  = 0x06,
+                   Db3  = 0x3e,
       Gs3  = 0x08, A3   = 0x0a, As3 = 0x0c, B3  = 0x0e,
       Ab3  = 0x08,              Bb3 = 0x0c,
       C4   = 0x10, Cs4  = 0x12, D4  = 0x14, Ds4 = 0x16,
@@ -39,7 +40,7 @@ class Note {
                    Db5  = 0x2a,             Eb5 = 0x2e,
       E5   = 0x30, F5   = 0x32, Fs5 = 0x34, G5  = 0x36,
                                 Gb5 = 0x34,
-      A5   = 0x38, As5  = 0x3a, B5  = 0x3c, C6  = 0x3e,
+      A5   = 0x38, As5  = 0x3a, B5  = 0x3c,
                    Bb5  = 0x3a,
     };
 

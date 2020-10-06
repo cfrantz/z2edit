@@ -51,6 +51,7 @@ size_t Note::length() const {
 std::string Note::pitch_string() const {
   switch (pitch()) {
     case Pitch::Rest: return "---.";
+    case Pitch::Cs3:  return "C#3.";
     case Pitch::E3:   return "E3..";
     case Pitch::G3:   return "G3..";
     case Pitch::Gs3:  return "G#3.";
@@ -80,7 +81,6 @@ std::string Note::pitch_string() const {
     case Pitch::A5:   return "A5..";
     case Pitch::As5:  return "A#5.";
     case Pitch::B5:   return "B5..";
-    case Pitch::C6:   return "C6..";
   }
 
   return "???.";
