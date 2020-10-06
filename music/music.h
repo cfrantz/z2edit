@@ -212,6 +212,14 @@ class Rom {
     size_t metadata_length(std::vector<SongTitle> songs);
 };
 
+// Convenience method for writing notes
+inline uint8_t operator|(Note::Pitch pitch, Note::Duration duration) {
+  return ((uint8_t)pitch & 0x3e) | ((uint8_t)duration & 0xc1);
+}
+inline uint8_t operator|(Note::Duration duration, Note::Pitch pitch) {
+  return ((uint8_t)pitch & 0x3e) | ((uint8_t)duration & 0xc1);
+}
+
 } // namespace z2music
 
 #endif // define Z2UTIL_MUSIC_MUSIC
