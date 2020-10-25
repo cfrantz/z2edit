@@ -4,13 +4,13 @@ use imgui;
 use imgui::{im_str, ImStr, ImString};
 
 use crate::errors::*;
-use crate::nes::IdPath;
-use crate::zelda2::palette::{Palette, PaletteGroup};
-use crate::zelda2::project::{Project, Edit, RomData};
-use crate::zelda2::config::Config;
-use crate::gui::Visibility;
 use crate::gui::zelda2::Gui;
+use crate::gui::Visibility;
 use crate::nes::hwpalette;
+use crate::nes::IdPath;
+use crate::zelda2::config::Config;
+use crate::zelda2::palette::{Palette, PaletteGroup};
+use crate::zelda2::project::{Edit, Project, RomData};
 
 pub struct PaletteGui {
     visible: Visibility,
@@ -21,8 +21,6 @@ pub struct PaletteGui {
     orig: Vec<PaletteGroup>,
     group: Vec<PaletteGroup>,
     selected: usize,
-
-
 }
 
 impl PaletteGui {
@@ -49,7 +47,7 @@ impl PaletteGui {
             names: names,
             orig: orig,
             group: data,
-            selected: 0
+            selected: 0,
         }))
     }
 
@@ -95,16 +93,19 @@ impl PaletteGui {
             for x in 0..16 {
                 //if x != 0 { ui.same_line(0.0); }
                 let g = ui.begin_group();
-                ui.text(if x==0 { im_str!("   {:02x}", x) } else { im_str!("{:02x}", x) });
+                ui.text(if x == 0 {
+                    im_str!("   {:02x}", x)
+                } else {
+                    im_str!("{:02x}", x)
+                });
                 for y in 0..4 {
                     if x == 0 {
                         ui.text(im_str!("{:x}0", y));
                         ui.same_line(0.0);
                     }
                     let i = y * 16 + x;
-                    let style = ui.push_style_colors(&[
-                        (imgui::StyleColor::Button, hwpalette::fget(i)),
-                    ]);
+                    let style =
+                        ui.push_style_colors(&[(imgui::StyleColor::Button, hwpalette::fget(i))]);
                     if ui.button(&im_str!("  ##{}", i), [0.0, 0.0]) {
                         result = Some(i as u8);
                         ui.close_current_popup();
@@ -132,31 +133,51 @@ impl Gui for PaletteGui {
         imgui::Window::new(im_str!("Palette Editor"))
             .opened(&mut visible)
             .build(ui, || {
-                let names = self.names.iter().map(|s| s.as_ref()).collect::<Vec<&ImStr>>();
-                imgui::ComboBox::new(im_str!("Group"))
-                    .build_simple_string(ui, &mut self.selected, &names);
+                let names = self
+                    .names
+                    .iter()
+                    .map(|s| s.as_ref())
+                    .collect::<Vec<&ImStr>>();
+                imgui::ComboBox::new(im_str!("Group")).build_simple_string(
+                    ui,
+                    &mut self.selected,
+                    &names,
+                );
 
                 ui.same_line(0.0);
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => error!("PaletteGui: commit error {}", e),
-                        _ => {},
+                        _ => {}
                     };
                     self.changed = false;
                 }
 
-
                 let config = Config::get(&self.edit.meta.borrow().config).unwrap();
-                ui.text(im_str!("{:<20}    {:<18} {:<18} {:<18} {:<18}",
-                                "Title", "Palette 0", "Palette 1", "Palette 2", "Palette 3"));
+                ui.text(im_str!(
+                    "{:<20}    {:<18} {:<18} {:<18} {:<18}",
+                    "Title",
+                    "Palette 0",
+                    "Palette 1",
+                    "Palette 2",
+                    "Palette 3"
+                ));
                 ui.separator();
                 for (n, p) in config.palette.0[self.selected].palette.iter().enumerate() {
                     ui.text(im_str!("{:<20}", p.name));
-                    for (i, color) in self.group[self.selected].data[n].data.iter_mut().enumerate() {
+                    for (i, color) in self.group[self.selected].data[n]
+                        .data
+                        .iter_mut()
+                        .enumerate()
+                    {
                         let cindex = *color as usize;
                         ui.same_line(0.0);
-                        if i % 4 == 0 { ui.text(" "); ui.same_line(0.0); }
-                        let style = ui.push_style_color(imgui::StyleColor::Button, hwpalette::fget(cindex));
+                        if i % 4 == 0 {
+                            ui.text(" ");
+                            ui.same_line(0.0);
+                        }
+                        let style =
+                            ui.push_style_color(imgui::StyleColor::Button, hwpalette::fget(cindex));
                         let label = im_str!("{:02x}##{}", color, n * 16 + i);
                         if ui.button(&label, [0.0, 0.0]) {
                             ui.open_popup(&label);
@@ -172,10 +193,9 @@ impl Gui for PaletteGui {
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Palettes Changed"),
-            "There are unsaved changes in the Palette Editor.\nDo you want to discard them?", ui);
-
-
-
+            "There are unsaved changes in the Palette Editor.\nDo you want to discard them?",
+            ui,
+        );
     }
 
     fn wants_dispose(&self) -> bool {

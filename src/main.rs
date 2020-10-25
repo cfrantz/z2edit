@@ -1,32 +1,31 @@
 #[macro_use]
 extern crate error_chain;
 extern crate chrono;
-extern crate structopt;
 extern crate directories;
 extern crate gl;
 extern crate sdl2;
+extern crate structopt;
 #[macro_use]
 extern crate log;
-extern crate simplelog;
-extern crate rustyline;
 extern crate pyo3;
+extern crate rustyline;
+extern crate simplelog;
 extern crate typetag;
 extern crate whoami;
 
-pub mod gui;
 pub mod errors;
-pub mod util;
+pub mod gui;
 pub mod nes;
+pub mod util;
 pub mod zelda2;
 
-
+use directories::ProjectDirs;
+use pyo3::prelude::*;
+use simplelog::*;
 use std::fs;
 use std::io;
-use simplelog::*;
-use directories::ProjectDirs;
 use structopt::StructOpt;
 use util::TerminalGuard;
-use pyo3::prelude::*;
 
 use crate::errors::*;
 use crate::gui::app::App;
@@ -47,13 +46,15 @@ struct Opt {
 fn run(py: Python) -> Result<()> {
     let opt = Opt::from_args();
     CombinedLogger::init(vec![TermLogger::new(
-            LevelFilter::Info,
-            Config::default(),
-            TerminalMode::Mixed).unwrap()]
-    ).unwrap();
+        LevelFilter::Info,
+        Config::default(),
+        TerminalMode::Mixed,
+    )
+    .unwrap()])
+    .unwrap();
 
-    let dirs = ProjectDirs::from("org", "CF207", "Z2Edit").ok_or_else(
-        || io::Error::new(io::ErrorKind::NotFound, "Could not find home directory"))?;
+    let dirs = ProjectDirs::from("org", "CF207", "Z2Edit")
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Could not find home directory"))?;
 
     let config = dirs.config_dir();
     info!("Config dir: {}", config.display());

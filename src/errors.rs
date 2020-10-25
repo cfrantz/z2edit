@@ -1,6 +1,6 @@
 use crate::nes::Address;
-use pyo3::prelude::*;
 use pyo3::exceptions::PyException;
+use pyo3::prelude::*;
 
 error_chain! {
     foreign_links {

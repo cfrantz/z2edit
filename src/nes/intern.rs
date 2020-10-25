@@ -1,6 +1,6 @@
-use std::convert::From;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
+use std::convert::From;
 
 struct InternTable {
     pub index: HashMap<usize, String>,
@@ -30,13 +30,12 @@ impl InternTable {
             self.string.insert(v.to_owned(), n);
             n
         }
-
     }
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(from="String")]
-#[serde(into="String")]
+#[serde(from = "String")]
+#[serde(into = "String")]
 pub struct Istr(usize);
 
 impl From<String> for Istr {

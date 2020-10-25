@@ -1,13 +1,12 @@
-use serde::{Deserialize, Serialize};
 use ron;
+use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
-use crate::nes::{Address, IdPath, MemoryAccess};
-use crate::zelda2::project::{Project, Edit, RomData};
-use crate::zelda2::config::Config;
-use crate::gui::zelda2::Gui;
 use crate::gui::zelda2::palette::PaletteGui;
-
+use crate::gui::zelda2::Gui;
+use crate::nes::{Address, IdPath, MemoryAccess};
+use crate::zelda2::config::Config;
+use crate::zelda2::project::{Edit, Project, RomData};
 
 pub mod config {
     use super::*;
@@ -17,7 +16,7 @@ pub mod config {
         pub name: String,
         pub address: Address,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub length: Option<usize>, 
+        pub length: Option<usize>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub magic_background: Option<Address>,
     }
@@ -26,39 +25,38 @@ pub mod config {
     pub struct PaletteGroup {
         pub id: String,
         pub name: String,
-        pub palette: Vec<Palette>
+        pub palette: Vec<Palette>,
     }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config(pub Vec<config::PaletteGroup>);
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct Config(pub Vec<config::PaletteGroup>);
 
-impl Config {
-    pub fn to_string(&self) -> String {
-        let pretty = ron::ser::PrettyConfig::new();
-        ron::ser::to_string_pretty(&self, pretty).unwrap()
-    }
+    impl Config {
+        pub fn to_string(&self) -> String {
+            let pretty = ron::ser::PrettyConfig::new();
+            ron::ser::to_string_pretty(&self, pretty).unwrap()
+        }
 
-    pub fn find(&self, path: &IdPath) -> Result<&config::Palette> {
-        path.check_len("palette", 2)?;
-        for group in self.0.iter() {
-            if path.at(0) == group.id {
-                for palette in group.palette.iter() {
-                    if path.at(1) == palette.id {
-                        return Ok(palette);
+        pub fn find(&self, path: &IdPath) -> Result<&config::Palette> {
+            path.check_len("palette", 2)?;
+            for group in self.0.iter() {
+                if path.at(0) == group.id {
+                    for palette in group.palette.iter() {
+                        if path.at(1) == palette.id {
+                            return Ok(palette);
+                        }
                     }
                 }
             }
+            Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
-        Err(ErrorKind::IdPathNotFound(path.into()).into())
     }
-}
 
-impl Default for Config {
-    fn default() -> Self {
-        ron::de::from_bytes(
-            include_bytes!("../../config/vanilla/palette.ron")).unwrap()
+    impl Default for Config {
+        fn default() -> Self {
+            ron::de::from_bytes(include_bytes!("../../config/vanilla/palette.ron")).unwrap()
+        }
     }
-}
 }
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
@@ -84,7 +82,9 @@ impl RomData for Palette {
     fn pack(&self, edit: &Edit) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let pcfg = config.palette.find(&self.id)?;
-        edit.rom.borrow_mut().write_bytes(pcfg.address, &self.data)?;
+        edit.rom
+            .borrow_mut()
+            .write_bytes(pcfg.address, &self.data)?;
         if let Some(bg) = pcfg.magic_background {
             edit.rom.borrow_mut().write(bg, self.data[0])?;
         }

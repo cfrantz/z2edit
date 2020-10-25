@@ -1,11 +1,11 @@
-use std::vec::Vec;
-use std::io::{Read, Write};
 use std::fs::File;
+use std::io::{Read, Write};
 use std::path::Path;
+use std::vec::Vec;
 
-use crate::errors::*;
 use super::address::{Address, MemoryAccess};
 use super::layout::*;
+use crate::errors::*;
 
 #[derive(Default, Debug, Clone)]
 pub struct Buffer {
@@ -16,12 +16,15 @@ pub struct Buffer {
 impl Buffer {
     pub fn new(size: usize) -> Self {
         Buffer {
-            layout: Layout(vec![Segment::Raw {
-                name: "".to_string(),
-                offset: 0,
-                length: size,
-                fill: 0xff,
-            }; 1]),
+            layout: Layout(vec![
+                Segment::Raw {
+                    name: "".to_string(),
+                    offset: 0,
+                    length: size,
+                    fill: 0xff,
+                };
+                1
+            ]),
             data: vec![0xffu8; size],
         }
     }
@@ -30,10 +33,18 @@ impl Buffer {
         let mut data = Vec::<u8>::new();
         for segment in &layout.0 {
             match segment {
-                Segment::Raw{offset: o, length: l, fill: f, ..} => 
-                    data.resize(*o+*l, *f),
-                Segment::Banked{offset: o, length: l, fill: f, ..} =>
-                    data.resize(*o+*l, *f),
+                Segment::Raw {
+                    offset: o,
+                    length: l,
+                    fill: f,
+                    ..
+                } => data.resize(*o + *l, *f),
+                Segment::Banked {
+                    offset: o,
+                    length: l,
+                    fill: f,
+                    ..
+                } => data.resize(*o + *l, *f),
             }
         }
         Buffer {
@@ -45,11 +56,21 @@ impl Buffer {
     fn check_layout(layout: &Layout, data: &[u8]) -> Result<()> {
         if let Some(segment) = layout.0.last() {
             let length = match segment {
-                Segment::Raw{offset: o, length: l, ..} => o+l,
-                Segment::Banked{offset: o, length: l, ..} => o+l,
+                Segment::Raw {
+                    offset: o,
+                    length: l,
+                    ..
+                } => o + l,
+                Segment::Banked {
+                    offset: o,
+                    length: l,
+                    ..
+                } => o + l,
             };
             if length != data.len() {
-                bail!(ErrorKind::LayoutError("Layout length doesn't match data length".into()));
+                bail!(ErrorKind::LayoutError(
+                    "Layout length doesn't match data length".into()
+                ));
             }
         } else {
             bail!(ErrorKind::LayoutError("Layout is empty".into()));
@@ -64,12 +85,15 @@ impl Buffer {
             Buffer::check_layout(&lo, &data)?;
             lo
         } else {
-            Layout(vec![Segment::Raw {
-                name: "".to_string(),
-                offset: 0,
-                length: data.len(),
-                fill: 0,
-            }; 1])
+            Layout(vec![
+                Segment::Raw {
+                    name: "".to_string(),
+                    offset: 0,
+                    length: data.len(),
+                    fill: 0,
+                };
+                1
+            ])
         };
         Ok(Buffer {
             layout: layout,
@@ -96,13 +120,13 @@ impl Buffer {
 impl MemoryAccess for Buffer {
     fn read_bytes(&self, address: Address, length: usize) -> Result<&[u8]> {
         let offset = address.offset(length, &self.layout)?;
-        Ok(&self.data[offset .. offset+length])
+        Ok(&self.data[offset..offset + length])
     }
 
     fn write_bytes(&mut self, address: Address, value: &[u8]) -> Result<()> {
         let offset = address.offset(value.len(), &self.layout)?;
         for (i, v) in value.iter().enumerate() {
-            self.data[offset+i] = *v;
+            self.data[offset + i] = *v;
         }
         Ok(())
     }
@@ -125,9 +149,28 @@ mod tests {
     #[test]
     fn test_buffer() {
         let layout = Layout(vec![
-            Segment::Raw { name: "header".into(), offset: 0, length: 16, fill: 0 },
-            Segment::Banked { name: "prg".into(), offset: 16, length: 4096, banksize: 1024, mask: 0x3ff, fill: 0xff },
-            Segment::Banked { name: "chr".into(), offset: 16+4096, length: 1024, banksize: 256, mask: 0xff, fill: 0x55 },
+            Segment::Raw {
+                name: "header".into(),
+                offset: 0,
+                length: 16,
+                fill: 0,
+            },
+            Segment::Banked {
+                name: "prg".into(),
+                offset: 16,
+                length: 4096,
+                banksize: 1024,
+                mask: 0x3ff,
+                fill: 0xff,
+            },
+            Segment::Banked {
+                name: "chr".into(),
+                offset: 16 + 4096,
+                length: 1024,
+                banksize: 256,
+                mask: 0xff,
+                fill: 0x55,
+            },
         ]);
 
         let buffer = Buffer::from_layout(layout);

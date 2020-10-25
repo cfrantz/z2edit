@@ -1,6 +1,6 @@
 use imgui;
-use imgui::ImStr;
 use imgui::im_str;
+use imgui::ImStr;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Visibility {
@@ -25,7 +25,11 @@ impl Visibility {
     pub fn change(&mut self, visible: bool, changed: bool) {
         if *self == Visibility::Visible {
             if !visible {
-                *self = if changed { Visibility::Changed } else { Visibility::Dispose };
+                *self = if changed {
+                    Visibility::Changed
+                } else {
+                    Visibility::Dispose
+                };
             }
         }
     }
@@ -48,7 +52,6 @@ impl Visibility {
                     *self = Visibility::Visible;
                     ui.close_current_popup();
                 }
-
             });
         }
     }

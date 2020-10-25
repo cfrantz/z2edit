@@ -1,9 +1,9 @@
+use serde::{Deserialize, Serialize};
 use std::ops;
-use serde::{Serialize, Deserialize};
 
-use crate::errors::*;
-use super::layout::*;
 use super::intern::Istr;
+use super::layout::*;
+use crate::errors::*;
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Address {
@@ -28,7 +28,6 @@ impl Address {
     pub fn new_bank(name: &str, bank: isize, offset: usize) -> Address {
         Address::Bank(Istr::new(name), bank, offset)
     }
-
 
     // Simplify the helper variants into the Bank variant.
     pub fn simplify(self) -> Self {
@@ -56,34 +55,48 @@ impl Address {
         let (start, end) = address.bound(layout)?;
         match address {
             Address::File(o) => {
-                if start+o+length <= end {
+                if start + o + length <= end {
                     Ok(start + o)
                 } else {
                     Err(ErrorKind::AddressBoundError(self.clone()).into())
                 }
-            },
+            }
             Address::Seg(_, o) => {
-                if start+o+length <= end {
+                if start + o + length <= end {
                     Ok(start + o)
                 } else {
                     Err(ErrorKind::AddressBoundError(self.clone()).into())
                 }
             }
             Address::Bank(n, b, o) => {
-                if let Segment::Banked{length: len, banksize, mask, ..} = layout.segment(n.as_str())? {
+                if let Segment::Banked {
+                    length: len,
+                    banksize,
+                    mask,
+                    ..
+                } = layout.segment(n.as_str())?
+                {
                     let banks = len / banksize;
-                    let b = if b >= 0 { b as usize } else { banks - (-b) as usize };
-                    let so = b*banksize + (o & mask);
+                    let b = if b >= 0 {
+                        b as usize
+                    } else {
+                        banks - (-b) as usize
+                    };
+                    let so = b * banksize + (o & mask);
                     let eo = (o & mask) + length - 1;
                     let s = start + so;
                     let e = so + length - 1;
-                    if e < end  && eo & !mask == 0 {
+                    if e < end && eo & !mask == 0 {
                         Ok(s)
                     } else {
                         Err(ErrorKind::AddressBoundError(self.clone()).into())
                     }
                 } else {
-                    Err(ErrorKind::LayoutError(format!("Address::Bank in non Banked segment {}", n.as_str())).into())
+                    Err(ErrorKind::LayoutError(format!(
+                        "Address::Bank in non Banked segment {}",
+                        n.as_str()
+                    ))
+                    .into())
                 }
             }
 
@@ -161,7 +174,6 @@ macro_rules! addsub {
                     Address::Prg(b, x) => Address::Prg(b, x.wrapping_add(rhs as u16)),
                     Address::Chr(b, x) => Address::Chr(b, x.wrapping_add(rhs as u16)),
                 }
-
             }
         }
 
@@ -178,14 +190,19 @@ macro_rules! addsub {
                 }
             }
         }
-    }
+    };
 }
 
-addsub!(usize); addsub!(isize);
-addsub!(u8); addsub!(i8);
-addsub!(u16); addsub!(i16);
-addsub!(u32); addsub!(i32);
-addsub!(u64); addsub!(i64);
+addsub!(usize);
+addsub!(isize);
+addsub!(u8);
+addsub!(i8);
+addsub!(u16);
+addsub!(i16);
+addsub!(u32);
+addsub!(i32);
+addsub!(u64);
+addsub!(i64);
 
 pub trait MemoryAccess {
     // Memory reading functions.
@@ -214,7 +231,6 @@ pub trait MemoryAccess {
     fn apply_layout(&mut self, layout: Layout) -> Result<()>;
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -222,9 +238,28 @@ mod tests {
     #[test]
     fn test_layout() {
         let layout = Layout(vec![
-            Segment::Raw { name: "header".into(), offset: 0, length: 16, fill: 0 },
-            Segment::Banked { name: "prg".into(), offset: 16, length: 4096, banksize: 1024, mask: 0x3ff, fill: 0xff },
-            Segment::Banked { name: "chr".into(), offset: 16+4096, length: 1024, banksize: 256, mask: 0xff, fill: 0x55 },
+            Segment::Raw {
+                name: "header".into(),
+                offset: 0,
+                length: 16,
+                fill: 0,
+            },
+            Segment::Banked {
+                name: "prg".into(),
+                offset: 16,
+                length: 4096,
+                banksize: 1024,
+                mask: 0x3ff,
+                fill: 0xff,
+            },
+            Segment::Banked {
+                name: "chr".into(),
+                offset: 16 + 4096,
+                length: 1024,
+                banksize: 256,
+                mask: 0xff,
+                fill: 0x55,
+            },
         ]);
 
         let a = Address::File(0).offset(1, &layout).unwrap();
@@ -236,17 +271,19 @@ mod tests {
         let a = Address::new_seg("header", 5).offset(1, &layout).unwrap();
         assert_eq!(5, a);
 
-        let a = Address::new_seg("header", 16).offset(1, &layout).unwrap_err();
+        let a = Address::new_seg("header", 16)
+            .offset(1, &layout)
+            .unwrap_err();
         assert_eq!("address bound error", a.description());
 
         let a = Address::Prg(0, 4).offset(1, &layout).unwrap();
-        assert_eq!(16+4, a);
+        assert_eq!(16 + 4, a);
 
         let a = Address::Prg(1, 0x8000).offset(1, &layout).unwrap();
-        assert_eq!(16+1024, a);
+        assert_eq!(16 + 1024, a);
 
         let a = Address::Prg(-1, 0x8000).offset(1, &layout).unwrap();
-        assert_eq!(16+3*1024, a);
+        assert_eq!(16 + 3 * 1024, a);
 
         let a = Address::Prg(-1, 0xffff).offset(2, &layout).unwrap_err();
         assert_eq!("address bound error", a.description());

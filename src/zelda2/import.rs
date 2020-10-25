@@ -1,13 +1,12 @@
-use std::path::Path;
-use std::io;
 use serde::{Deserialize, Serialize};
+use std::io;
+use std::path::Path;
 
 use crate::errors::*;
-use crate::nes::IdPath;
 use crate::nes::Buffer;
-use crate::zelda2::project::{Edit, RomData};
+use crate::nes::IdPath;
 use crate::zelda2::config::Config;
-
+use crate::zelda2::project::{Edit, RomData};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ImportRom {

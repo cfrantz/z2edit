@@ -12,10 +12,12 @@ pub struct PythonExecutor {
 
 impl PythonExecutor {
     pub fn new(py: Python) -> Result<Self> {
-        let module = PyModule::from_code(py,
-                            include_str!("../../python/console.py"),
-                            "console.py",
-                            "console")?;
+        let module = PyModule::from_code(
+            py,
+            include_str!("../../python/console.py"),
+            "console.py",
+            "console",
+        )?;
 
         let interp = module.call0("CreatePythonConsole")?;
         Ok(PythonExecutor {
@@ -35,21 +37,33 @@ impl Executor for PythonExecutor {
             self.source = line.to_owned();
         }
         Python::with_gil(|py| {
-            let result = self.interp.call_method(py, "runsource", (&self.source, "<input>"), None);
+            let result = self
+                .interp
+                .call_method(py, "runsource", (&self.source, "<input>"), None);
             match result {
                 Ok(more) => {
                     self.more = more.extract(py).unwrap();
 
-                    let s = self.interp.call_method0(py, "GetOut").unwrap().extract::<String>(py).unwrap();
+                    let s = self
+                        .interp
+                        .call_method0(py, "GetOut")
+                        .unwrap()
+                        .extract::<String>(py)
+                        .unwrap();
                     if !s.is_empty() {
                         console.add_item(0x33ff33, &s);
                     }
 
-                    let s = self.interp.call_method0(py, "GetErr").unwrap().extract::<String>(py).unwrap();
+                    let s = self
+                        .interp
+                        .call_method0(py, "GetErr")
+                        .unwrap()
+                        .extract::<String>(py)
+                        .unwrap();
                     if !s.is_empty() {
                         console.add_item(0x3333ff, &s);
                     }
-                },
+                }
                 Err(e) => {
                     error!("PythonConsole error {:?}", e);
                 }

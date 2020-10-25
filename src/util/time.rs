@@ -1,8 +1,8 @@
-use std::time::{SystemTime, UNIX_EPOCH, Duration};
-use chrono::prelude::DateTime;
-use chrono::format::DelayedFormat;
 use chrono::format::strftime::StrftimeItems;
+use chrono::format::DelayedFormat;
+use chrono::prelude::DateTime;
 use chrono::Local;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub struct UTime;
 

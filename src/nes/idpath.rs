@@ -1,10 +1,10 @@
-use std::convert::{From, Into};
-use serde::{Serialize, Deserialize};
 use crate::errors::*;
+use serde::{Deserialize, Serialize};
+use std::convert::{From, Into};
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(from="String")]
-#[serde(into="String")]
+#[serde(from = "String")]
+#[serde(into = "String")]
 pub struct IdPath(pub Vec<String>);
 
 impl IdPath {

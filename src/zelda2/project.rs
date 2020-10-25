@@ -1,22 +1,21 @@
-use std::path::Path;
+use pyo3::prelude::*;
+use ron;
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use std::io::{Read, Write};
 use std::fs::File;
+use std::io::{Read, Write};
+use std::path::Path;
 use std::rc::Rc;
 use std::vec::Vec;
-use pyo3::prelude::*;
-use serde::{Serialize, Deserialize};
 use whoami;
-use ron;
-
 
 use crate::errors::*;
-use crate::util::pyaddress::PyAddress;
 use crate::nes::Buffer;
+use crate::util::pyaddress::PyAddress;
 //use crate::nes::MemoryAccess;
-use crate::zelda2::import::ImportRom;
-use crate::util::UTime;
 use crate::gui::zelda2::Gui;
+use crate::util::UTime;
+use crate::zelda2::import::ImportRom;
 
 #[pyclass(unsendable)]
 #[derive(Default, Serialize, Deserialize)]
@@ -68,11 +67,10 @@ impl Project {
         self.to_writer(&mut file)
     }
 
-
     fn normalized_index(&self, index: isize) -> Result<usize> {
         let len = self.edits.len() as isize;
         if index == -1 {
-            Ok((len-1) as usize)
+            Ok((len - 1) as usize)
         } else if index < len {
             Ok(index as usize)
         } else {
@@ -146,7 +144,7 @@ impl Project {
     }
 }
 
-#[typetag::serde(tag="type")]
+#[typetag::serde(tag = "type")]
 pub trait RomData
 where
     Self: std::fmt::Debug,

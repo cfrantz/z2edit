@@ -1,12 +1,11 @@
-mod layout;
 mod address;
 mod buffer;
-mod intern;
-mod idpath;
 pub mod hwpalette;
+mod idpath;
+mod intern;
+mod layout;
 
 pub use address::*;
-pub use layout::*;
 pub use buffer::*;
 pub use idpath::*;
-
+pub use layout::*;

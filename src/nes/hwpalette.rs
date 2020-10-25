@@ -13,9 +13,8 @@ pub const PALETTE: [u32; 64] = [
     0xff94e5e4, 0xff96efcf, 0xffabf4bd, 0xffccf3b3, 0xfff2ebb5, 0xffb8b8b8, 0xff000000, 0xff000000,
 ];
 
-pub static FPALETTE: Lazy<Vec<[f32; 4]>> = Lazy::new(|| {
-    PALETTE.iter().map(|x| color_as_f32(*x)).collect()
-});
+pub static FPALETTE: Lazy<Vec<[f32; 4]>> =
+    Lazy::new(|| PALETTE.iter().map(|x| color_as_f32(*x)).collect());
 
 const R_SHIFT: usize = 0;
 const G_SHIFT: usize = 8;

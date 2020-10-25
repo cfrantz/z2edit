@@ -1,7 +1,7 @@
-use sdl2;
 use crate::errors::*;
-use std::path::{Path, PathBuf};
+use sdl2;
 use std::cell::RefCell;
+use std::path::{Path, PathBuf};
 
 pub struct AppContext {
     pub sdl: sdl2::Sdl,
@@ -21,7 +21,7 @@ impl AppContext {
         width: u32,
         height: u32,
         config_dir: &Path,
-        data_dir: &Path
+        data_dir: &Path,
     ) -> Result<()> {
         let sdl = sdl2::init()?;
         let video = sdl.video()?;
@@ -57,8 +57,6 @@ impl AppContext {
     }
 
     pub fn get() -> &'static AppContext {
-        unsafe {
-            APP_CONTEXT.as_ref().unwrap()
-        }
+        unsafe { APP_CONTEXT.as_ref().unwrap() }
     }
 }

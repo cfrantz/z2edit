@@ -1,14 +1,13 @@
+use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
-use once_cell::sync::Lazy;
-use serde::{Serialize, Deserialize};
 
 use crate::errors::*;
-use crate::zelda2::palette;
 use crate::nes::{Layout, Segment};
-
+use crate::zelda2::palette;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -66,7 +65,6 @@ static mut CONFIGS: Lazy<Mutex<HashMap<String, Arc<Config>>>> = Lazy::new(|| {
     Mutex::new(map)
 });
 
-
 impl Config {
     pub fn get(name: &str) -> Result<Arc<Config>> {
         let configs = unsafe { CONFIGS.lock().unwrap() };
@@ -81,7 +79,7 @@ impl Config {
         configs.insert(name.to_owned(), Arc::new(config));
     }
 
-/*
+    /*
     pub fn get(name: &str) -> Result<&'static Config> {
         let configs = CONFIGS.borrow();
         let result = configs.get(name).ok_or_else(

@@ -1,7 +1,7 @@
+use libc;
 use nix::sys::termios;
 use nix::sys::termios::SetArg;
 use std::os::unix::io::RawFd;
-use libc;
 
 const STDIN_FILENO: RawFd = libc::STDIN_FILENO;
 

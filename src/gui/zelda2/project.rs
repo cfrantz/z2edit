@@ -1,16 +1,16 @@
+use imgui;
+use imgui::{im_str, ImString, MenuItem};
+use nfd;
 use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
-use imgui;
-use nfd;
-use imgui::{im_str, ImString, MenuItem};
 
 use crate::errors::*;
-use crate::zelda2::project::{EditAction, Project};
-use crate::gui::zelda2::Gui;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::palette::PaletteGui;
+use crate::gui::zelda2::Gui;
 use crate::util::UTime;
+use crate::zelda2::project::{EditAction, Project};
 
 pub struct ProjectGui {
     pub visible: bool,
@@ -38,7 +38,7 @@ impl ProjectGui {
         if let Some(path) = &self.filename {
             match self.project.borrow().to_file(&Path::new(&path)) {
                 Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
-                _ => {},
+                _ => {}
             }
         } else {
             self.save_dialog(false);
@@ -47,12 +47,12 @@ impl ProjectGui {
     fn save_dialog(&mut self, save_as: bool) {
         let result = nfd::open_save_dialog(Some("z2prj"), None).unwrap();
         match result {
-            nfd::Response::Okay(path) => {
-                match self.project.borrow().to_file(&Path::new(&path)) {
-                    Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
-                    Ok(_) => { 
-                        if !save_as { self.filename = Some(path); }
-                    },
+            nfd::Response::Okay(path) => match self.project.borrow().to_file(&Path::new(&path)) {
+                Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
+                Ok(_) => {
+                    if !save_as {
+                        self.filename = Some(path);
+                    }
                 }
             },
             _ => {}
@@ -99,24 +99,26 @@ impl ProjectGui {
             match action {
                 EditAction::None => {
                     i += 1;
-                },
+                }
                 EditAction::MoveTo(pos) => {
                     let pos = pos as usize;
                     project.edits.swap(i, pos);
                     if first_action == 0 {
                         first_action = if i < pos { i } else { pos };
                     }
-                },
+                }
                 EditAction::Delete => {
                     project.edits.remove(i);
-                    if first_action == 0 { first_action = i; }
-                },
+                    if first_action == 0 {
+                        first_action = i;
+                    }
+                }
             }
         }
         if first_action != 0 {
             match project.replay(first_action as isize, -1) {
                 Err(e) => error!("EditActions: replay errror {:?}", e),
-                _ => {},
+                _ => {}
             };
         }
     }
@@ -139,27 +141,38 @@ impl ProjectGui {
                 let gui = EditDetailsGui::new(Rc::clone(&edit)).unwrap();
                 self.widgets.push(gui);
             }
-            if MenuItem::new(im_str!("Move Up")).enabled(index > 1).build(ui) {
+            if MenuItem::new(im_str!("Move Up"))
+                .enabled(index > 1)
+                .build(ui)
+            {
                 edit.action.replace(EditAction::MoveTo(index - 1));
             }
-            if MenuItem::new(im_str!("Move Down")).enabled(index > 0 && index < len-1).build(ui) {
+            if MenuItem::new(im_str!("Move Down"))
+                .enabled(index > 0 && index < len - 1)
+                .build(ui)
+            {
                 edit.action.replace(EditAction::MoveTo(index + 1));
             }
-            if MenuItem::new(im_str!("Delete")).enabled(index > 0).build(ui) {
+            if MenuItem::new(im_str!("Delete"))
+                .enabled(index > 0)
+                .build(ui)
+            {
                 edit.action.replace(EditAction::Delete);
             }
             ui.end_popup();
         }
         if hdr {
-            ui.bullet_text(&im_str!("By {} on {}", meta.user, UTime::datetime(meta.timestamp)));
+            ui.bullet_text(&im_str!(
+                "By {} on {}",
+                meta.user,
+                UTime::datetime(meta.timestamp)
+            ));
             if !meta.comment.is_empty() {
                 ui.text_wrapped(&ImString::new(&meta.comment));
             }
         }
         id.pop(ui);
     }
-
-
 
     pub fn draw(&mut self, ui: &imgui::Ui) {
         let mut visible = self.visible;
@@ -173,7 +186,7 @@ impl ProjectGui {
             .menu_bar(true)
             .build(ui, || {
                 self.menu(ui);
-  
+
                 let editlist = ui.push_id("editlist");
                 let edits = self.project.borrow().edits.len();
                 for i in 0..edits {
@@ -187,7 +200,7 @@ impl ProjectGui {
                     widget.draw(&mut project, ui);
                 }
                 widgetlist.pop(ui);
-        });
+            });
         self.visible = visible;
         self.dispose_widgets();
         self.process_editactions();
