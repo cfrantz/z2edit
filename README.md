@@ -4,7 +4,7 @@ Z2Edit 2.0 is a re-write of Z2Edit in Rust.
 
 This is a very experimental work-in-progress and is not in any way useful yet.
 
-## Introduction
+## Motivation
 
 The Z2 Hackjam 2020 event demonstrated to me that Z2Edit 1.0 is not a
 good tool for collaboration.  The project file maintains a single linear
