@@ -1,0 +1,35 @@
+([
+    (
+        id: "overworld",
+        name: "Overworld",
+        palette: [
+            (id: "0", name: "Overworld", address: Prg(-1, 0xc45b)),
+            (id: "1", name: "Sprites",   address: Prg(-1, 0xc46b)),
+        ],
+    ),
+    (
+        id: "west_hyrule",
+        name: "West Hyrule",
+        palette: [
+            (id: "0", name: "North Castle", address: Prg(1, 0x800e)),
+            (id: "1", name: "Cave",         address: Prg(1, 0x801e)),
+            (id: "2", name: "Desert",       address: Prg(1, 0x802e)),
+            (id: "3", name: "Grass",        address: Prg(1, 0x803e)),
+            (id: "4", name: "Forest",       address: Prg(1, 0x804e)),
+            (id: "5", name: "Swamp",        address: Prg(1, 0x805e)),
+            (id: "6", name: "Graveyard",    address: Prg(1, 0x806e)),
+            (id: "7", name: "Water",        address: Prg(1, 0x807e)),
+            (id: "8", name: "Dark Cave",    address: Prg(1, 0x808e)),
+        ],
+    ),
+    (
+        id: "west_hyrule_sprites",
+        name: "West Hyrule Sprites",
+        palette: [
+            (id: "0", name: "Black Border", address: Prg(1, 0x809e)),
+            (id: "1", name: "Dark Border",  address: Prg(1, 0x80ae)),
+            (id: "2", name: "Unused 2",     address: Prg(1, 0x80be)),
+            (id: "3", name: "Unused 3",     address: Prg(1, 0x80ce)),
+        ],
+    ),
+])

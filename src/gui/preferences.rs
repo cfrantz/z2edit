@@ -15,6 +15,7 @@ use crate::gui::app_context::AppContext;
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Preferences {
     #[pyo3(get, set)]
+    #[serde(skip)]
     pub visible: bool,
     #[pyo3(get, set)]
     pub background: [f32; 3],

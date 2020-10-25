@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate error_chain;
+extern crate chrono;
 extern crate structopt;
 extern crate directories;
 extern crate gl;
@@ -9,10 +10,14 @@ extern crate log;
 extern crate simplelog;
 extern crate rustyline;
 extern crate pyo3;
+extern crate typetag;
+extern crate whoami;
 
 pub mod gui;
 pub mod errors;
 pub mod util;
+pub mod nes;
+pub mod zelda2;
 
 
 use std::fs;
@@ -26,7 +31,9 @@ use pyo3::prelude::*;
 use crate::errors::*;
 use crate::gui::app::App;
 use crate::gui::app_context::AppContext;
+use crate::util::pyaddress::PyAddress;
 use crate::util::pyexec::PythonExecutor;
+use crate::zelda2::project::Project;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "z2edit")]
@@ -62,6 +69,8 @@ fn run(py: Python) -> Result<()> {
 
     let module = PyModule::new(py, "z2edit")?;
     app.borrow().pythonize(py, module)?;
+    module.add_class::<PyAddress>()?;
+    module.add_class::<Project>()?;
     module.setattr("app", app)?;
 
     let sys = PyModule::import(py, "sys")?;

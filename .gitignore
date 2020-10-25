@@ -2,4 +2,5 @@ Cargo.lock
 */target/*
 target/*
 imgui.ini
-
+*.nes
+*.z2prj

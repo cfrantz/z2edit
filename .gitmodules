@@ -4,3 +4,6 @@
 [submodule "third_party/rust-imgui-opengl-renderer"]
 	path = third_party/rust-imgui-opengl-renderer
 	url = https://github.com/cfrantz/rust-imgui-opengl-renderer.git
+[submodule "third_party/imgui-rs"]
+	path = third_party/imgui-rs
+	url = git@github.com:cfrantz/imgui-rs.git
