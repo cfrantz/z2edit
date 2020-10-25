@@ -34,3 +34,16 @@ to learn how to expunge the project file from version control history.
 
 - Python Integration: Z2Edit 1.0 has a command processor which makes writing
   any non-trivial script impossible.
+
+
+## Development
+
+- Rust
+- SDL + Imgui (user interface)
+- Ron (Rusty Object Notation for save files)
+- PyO3 (for Python Integration)
+
+### Remember to initialize submodules
+```
+git submodule update --init --recursive
+```
