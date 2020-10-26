@@ -7,10 +7,17 @@ use crate::errors::*;
 use crate::nes::{Layout, Segment};
 use crate::zelda2::enemyattr;
 use crate::zelda2::palette;
+use crate::zelda2::start;
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct Miscellaneous {
+    pub start: start::config::Config,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub layout: Layout,
+    pub misc: Miscellaneous,
     pub palette: palette::config::Config,
     pub enemy: enemyattr::config::Config,
 }
@@ -46,6 +53,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             layout: zelda2_nesfile_layout(),
+            misc: Miscellaneous::default(),
             palette: palette::config::Config::default(),
             enemy: enemyattr::config::Config::default(),
         }

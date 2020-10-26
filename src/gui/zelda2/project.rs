@@ -9,6 +9,7 @@ use crate::errors::*;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::palette::PaletteGui;
+use crate::gui::zelda2::start::StartGui;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
 use crate::zelda2::project::{EditAction, Project};
@@ -81,6 +82,12 @@ impl ProjectGui {
                     match PaletteGui::new(&self.project.borrow_mut(), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create PaletteGui: {:?}", e),
+                    };
+                }
+                if MenuItem::new(im_str!("Start Values")).build(ui) {
+                    match StartGui::new(&self.project.borrow_mut(), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create StartGui: {:?}", e),
                     };
                 }
             });

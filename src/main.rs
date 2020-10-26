@@ -34,8 +34,6 @@ use crate::util::pyaddress::PyAddress;
 use crate::util::pyexec::PythonExecutor;
 use crate::zelda2::project::Project;
 
-use crate::zelda2::enemyattr::config::Config as Ecfg;
-
 #[derive(StructOpt, Debug)]
 #[structopt(name = "z2edit")]
 struct Opt {

@@ -2,6 +2,7 @@ pub mod edit;
 pub mod enemyattr;
 pub mod palette;
 pub mod project;
+pub mod start;
 
 use crate::zelda2::project::Project;
 use imgui;
