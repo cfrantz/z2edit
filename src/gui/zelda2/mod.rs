@@ -1,4 +1,5 @@
 pub mod edit;
+pub mod enemyattr;
 pub mod palette;
 pub mod project;
 

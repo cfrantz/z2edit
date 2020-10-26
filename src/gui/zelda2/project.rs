@@ -7,6 +7,7 @@ use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::edit::EditDetailsGui;
+use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
@@ -70,10 +71,16 @@ impl ProjectGui {
                 }
             });
             ui.menu(im_str!("Edit"), true, || {
+                if MenuItem::new(im_str!("Enemy Attributes")).build(ui) {
+                    match EnemyGui::new(&self.project.borrow_mut(), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create EnemyGui: {:?}", e),
+                    };
+                }
                 if MenuItem::new(im_str!("Palette")).build(ui) {
                     match PaletteGui::new(&self.project.borrow_mut(), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create PaletteEdit: {:?}", e),
+                        Err(e) => error!("Could not create PaletteGui: {:?}", e),
                     };
                 }
             });

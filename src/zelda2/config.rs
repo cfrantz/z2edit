@@ -1,18 +1,18 @@
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use crate::errors::*;
 use crate::nes::{Layout, Segment};
+use crate::zelda2::enemyattr;
 use crate::zelda2::palette;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub layout: Layout,
     pub palette: palette::config::Config,
+    pub enemy: enemyattr::config::Config,
 }
 
 fn zelda2_nesfile_layout() -> Layout {
@@ -47,17 +47,10 @@ impl Default for Config {
         Config {
             layout: zelda2_nesfile_layout(),
             palette: palette::config::Config::default(),
+            enemy: enemyattr::config::Config::default(),
         }
     }
 }
-
-/*
-static CONFIGS: Lazy<RefCell<HashMap<String, Config>>> = Lazy::new(|| {
-    let mut m = HashMap::new();
-    m.insert("vanilla".to_owned(), Config::default());
-    RefCell::new(m)
-});
-*/
 
 static mut CONFIGS: Lazy<Mutex<HashMap<String, Arc<Config>>>> = Lazy::new(|| {
     let mut map = HashMap::new();
@@ -78,13 +71,4 @@ impl Config {
         let configs = unsafe { CONFIGS.get_mut().unwrap() };
         configs.insert(name.to_owned(), Arc::new(config));
     }
-
-    /*
-    pub fn get(name: &str) -> Result<&'static Config> {
-        let configs = CONFIGS.borrow();
-        let result = configs.get(name).ok_or_else(
-            || ErrorKind::ConfigNotFound(name.to_owned()).into());
-        result
-    }
-    */
 }

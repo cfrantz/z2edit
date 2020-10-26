@@ -34,6 +34,8 @@ use crate::util::pyaddress::PyAddress;
 use crate::util::pyexec::PythonExecutor;
 use crate::zelda2::project::Project;
 
+use crate::zelda2::enemyattr::config::Config as Ecfg;
+
 #[derive(StructOpt, Debug)]
 #[structopt(name = "z2edit")]
 struct Opt {
@@ -84,6 +86,8 @@ fn run(py: Python) -> Result<()> {
 
 fn main() {
     let _mode = TerminalGuard::new();
+    let e = Ecfg::new();
+    println!("e = {}", e.to_string());
     Python::with_gil(|py| {
         run(py).unwrap();
     });
