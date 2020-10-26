@@ -2,7 +2,7 @@ use ron;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
-use crate::gui::zelda2::palette::PaletteGui;
+use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::Gui;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
@@ -173,6 +173,6 @@ impl RomData for EnemyGroup {
     }
 
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        PaletteGui::new(project, commit_index)
+        EnemyGui::new(project, commit_index)
     }
 }

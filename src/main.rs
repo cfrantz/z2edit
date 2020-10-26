@@ -86,8 +86,6 @@ fn run(py: Python) -> Result<()> {
 
 fn main() {
     let _mode = TerminalGuard::new();
-    let e = Ecfg::new();
-    println!("e = {}", e.to_string());
     Python::with_gil(|py| {
         run(py).unwrap();
     });
