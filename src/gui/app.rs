@@ -100,6 +100,10 @@ impl App {
         let context = AppContext::get();
         let mut last_frame = Instant::now();
         let mut imgui = imgui::Context::create();
+
+        imgui.io_mut().config_flags |= imgui::ConfigFlags::DOCKING_ENABLE;
+
+
         let mut imgui_sdl2 = ImguiSdl2::new(&mut imgui, &context.window);
         let renderer = Renderer::new(&mut imgui, |s| context.video.gl_get_proc_address(s) as _);
 

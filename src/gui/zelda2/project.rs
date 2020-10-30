@@ -195,26 +195,35 @@ impl ProjectGui {
         } else {
             imgui::ImString::new("Project: unnamed")
         };
-        imgui::Window::new(&title)
+        let window = imgui::Window::new(&title)
             .opened(&mut visible)
             .menu_bar(true)
-            .build(ui, || {
-                self.menu(ui);
+            .begin(ui);
 
+        ui.dock_space("project".into(), [0.0, 0.0]);
+        if let Some(token) = window {
+
+            self.menu(ui);
+            imgui::Window::new(im_str!("Edit List"))
+                .build(ui, || {
                 let editlist = ui.push_id("editlist");
                 let edits = self.project.borrow().edits.len();
                 for i in 0..edits {
                     self.draw_edit(i as isize, ui);
                 }
                 editlist.pop(ui);
+            });
+            token.end(ui);
 
                 let mut project = self.project.borrow_mut();
                 let widgetlist = ui.push_id("widgetlist");
                 for widget in self.widgets.iter_mut() {
+                    ui.set_next_window_dock_id("project".into(),
+                                               imgui::Condition::FirstUseEver);
                     widget.draw(&mut project, ui);
                 }
                 widgetlist.pop(ui);
-            });
+        }
         self.visible = visible;
         self.dispose_widgets();
         self.process_editactions();
