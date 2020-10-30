@@ -15,6 +15,7 @@ use crate::zelda2::project::{Edit, Project, RomData};
 pub struct EnemyGui {
     visible: Visibility,
     changed: bool,
+    win_id: u64,
     commit_index: isize,
     edit: Rc<Edit>,
     names: Vec<ImString>,
@@ -90,9 +91,11 @@ impl EnemyGui {
             data.clone()
         };
 
+        let win_id = edit.meta.borrow().timestamp;
         Ok(Box::new(EnemyGui {
             visible: Visibility::Visible,
             changed: false,
+            win_id: win_id,
             commit_index: commit_index,
             edit: edit,
             names: names,
@@ -221,7 +224,7 @@ impl Gui for EnemyGui {
         if !visible {
             return;
         }
-        imgui::Window::new(im_str!("Enemy Editor"))
+        imgui::Window::new(&im_str!("Enemy Editor##{}", self.win_id))
             .opened(&mut visible)
             .build(ui, || {
                 let names = self

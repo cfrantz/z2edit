@@ -15,6 +15,7 @@ use crate::zelda2::project::{Edit, Project, RomData};
 pub struct PaletteGui {
     visible: Visibility,
     changed: bool,
+    win_id: u64,
     commit_index: isize,
     edit: Rc<Edit>,
     names: Vec<ImString>,
@@ -39,9 +40,11 @@ impl PaletteGui {
             data.clone()
         };
 
+        let win_id = edit.meta.borrow().timestamp;
         Ok(Box::new(PaletteGui {
             visible: Visibility::Visible,
             changed: false,
+            win_id: win_id,
             commit_index: commit_index,
             edit: edit,
             names: names,
@@ -130,7 +133,7 @@ impl Gui for PaletteGui {
         if !visible {
             return;
         }
-        imgui::Window::new(im_str!("Palette Editor"))
+        imgui::Window::new(&im_str!("Palette Editor##{}", self.win_id))
             .opened(&mut visible)
             .build(ui, || {
                 let names = self

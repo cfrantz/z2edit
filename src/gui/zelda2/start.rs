@@ -12,6 +12,7 @@ use crate::zelda2::start::Start;
 pub struct StartGui {
     visible: Visibility,
     changed: bool,
+    win_id: u64,
     commit_index: isize,
     edit: Rc<Edit>,
     start: Start,
@@ -24,9 +25,11 @@ impl StartGui {
         let mut start = Start::default();
         start.unpack(&edit)?;
 
+        let win_id = edit.meta.borrow().timestamp;
         Ok(Box::new(StartGui {
             visible: Visibility::Visible,
             changed: false,
+            win_id: win_id,
             commit_index: commit_index,
             edit: edit,
             start: start,
@@ -48,7 +51,7 @@ impl Gui for StartGui {
         if !visible {
             return;
         }
-        imgui::Window::new(im_str!("Start Values"))
+        imgui::Window::new(&im_str!("Start Values##{}", self.win_id))
             .opened(&mut visible)
             .build(ui, || {
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
