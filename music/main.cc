@@ -41,14 +41,25 @@ int main(int argc, char** argv) {
   z2music::Pattern a;
   z2music::Pattern b;
 
-  const z2music::Note CE(z2music::Note::Duration::Eighth, z2music::Note::Pitch::C4);
-  const z2music::Note CH(z2music::Note::Duration::Half, z2music::Note::Pitch::C4);
-  const z2music::Note DE(z2music::Note::Duration::Eighth, z2music::Note::Pitch::D4);
-  const z2music::Note DQ(z2music::Note::Duration::Quarter, z2music::Note::Pitch::D4);
-  const z2music::Note EQ(z2music::Note::Duration::Quarter, z2music::Note::Pitch::E4);
+  const z2music::Note CH();
+  const z2music::Note DQ();
+  const z2music::Note EQ();
 
-  a.add_notes(z2music::Pattern::Channel::Pulse1, { EQ, DQ, CH });
-  b.add_notes(z2music::Pattern::Channel::Pulse1, { CE, CE, CE, CE, DE, DE, DE, DE });
+  a.add_notes(z2music::Pattern::Channel::Pulse1, {
+    z2music::Note::Duration::Quarter | z2music::Note::Pitch::E4,
+    z2music::Note::Duration::Quarter | z2music::Note::Pitch::D4,
+    z2music::Note::Duration::Half | z2music::Note::Pitch::C4,
+  });
+  b.add_notes(z2music::Pattern::Channel::Pulse1, {
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::C4,
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::C4,
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::C4,
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::C4,
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::D4,
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::D4,
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::D4,
+      z2music::Note::Duration::Eighth | z2music::Note::Pitch::D4,
+  });
 
   battle->add_pattern(a);
   battle->add_pattern(b);
