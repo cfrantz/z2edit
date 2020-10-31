@@ -1,0 +1,16 @@
+asm b=7 0
+; Make fairies refill both life and magic everywhere in the game.
+;
+; Changes bank7_Enemy_Routines1_Fairy to write 255 into both the life and
+; magic refill counters.
+
+; Locate the refill at $ff55 so it won't interfere with Z2Edit's "softlock fix".
+.org $ff55
+life_and_magic_refill:
+    sty      $070C          ; Fill MAGIC
+    sty      $070D          ; Fill LIFE
+    rts
+
+.org $d943
+    jmp life_and_magic_refill
+.end

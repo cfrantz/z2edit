@@ -1,0 +1,24 @@
+asm b=5 0
+; Change tbird's fireball spawning.
+; Vanilla has two phases:
+;   phase 1: spawn a fireball every 32 frames.
+;   phase 2: spawn a fireball every 16 frames.
+;
+; Phase 2 is detected when tbird has less than 96 HP remaining.
+;
+; This hack eliminates phase 1/2 detection and just spawns fireballs at
+; a constant rate.
+
+; The rate is a power-of-two (1,2,4,8,16,32,64,128) minus 1.
+RATE = 15
+
+.org $a3fe
+    lda     #RATE           ; how often to spawn?
+    nop                     ; eliminate phase detection logic
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+.end

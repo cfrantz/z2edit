@@ -1,0 +1,30 @@
+asm b=0
+
+; Don't clear XP for up+a
+.org $a1c9
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+
+; Don't clear XP for game over
+.org $ca5f
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+
+; Don't clear XP for continue (I think)
+.org $cac4
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+
+.end
