@@ -4,6 +4,8 @@ use imgui::MenuItem;
 use imgui_opengl_renderer::Renderer;
 use imgui_sdl2::ImguiSdl2;
 use pyo3::prelude::*;
+use pyo3::class::PySequenceProtocol;
+use pyo3::exceptions::PyIndexError;
 use sdl2::event::Event;
 use std::cell::{Cell, RefCell};
 use std::path::Path;
@@ -47,21 +49,21 @@ impl App {
         Ok(())
     }
 
-    fn load_project(&mut self, filename: &str) -> Result<()> {
+    fn load_project(&mut self, py: Python, filename: &str) -> Result<()> {
         if filename.ends_with(".nes") {
             self.project
-                .push(ProjectGui::new(Project::from_rom(filename)?));
+                .push(ProjectGui::new(py, Project::from_rom(filename)?)?);
         } else {
-            self.project.push(ProjectGui::from_file(&filename)?);
+            self.project.push(ProjectGui::from_file(py, &filename)?);
         }
         Ok(())
     }
 
-    fn load_dialog(&mut self, ftype: &str) {
+    fn load_dialog(&mut self, py: Python, ftype: &str) {
         loop {
             let result = nfd::open_file_dialog(Some(ftype), None).unwrap();
             match result {
-                nfd::Response::Okay(path) => match self.load_project(&path) {
+                nfd::Response::Okay(path) => match self.load_project(py, &path) {
                     Err(e) => error!("Could not load {:?}: {:?}", path, e),
                     Ok(_) => break,
                 },
@@ -74,10 +76,10 @@ impl App {
         ui.main_menu_bar(|| {
             ui.menu(im_str!("File"), true, || {
                 if MenuItem::new(im_str!("Open Project")).build(ui) {
-                    self.load_dialog("z2prj");
+                    self.load_dialog(py, "z2prj");
                 }
                 if MenuItem::new(im_str!("Open ROM")).build(ui) {
-                    self.load_dialog("nes");
+                    self.load_dialog(py, "nes");
                 }
             });
             ui.menu(im_str!("View"), true, || {
@@ -91,7 +93,7 @@ impl App {
         //        self.project.borrow_mut(py).draw(ui);
         for (i, project) in self.project.iter_mut().enumerate() {
             let id = ui.push_id(i as i32);
-            project.draw(ui);
+            project.draw(py, ui);
             id.pop(ui);
         }
     }
@@ -157,5 +159,33 @@ impl App {
     #[setter]
     fn set_running(&self, value: bool) {
         self.running.set(value);
+    }
+
+    fn load(&mut self, py: Python, filename: &str) -> PyResult<usize> {
+        let i = self.project.len();
+        self.load_project(py, filename)?;
+        Ok(i)
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for App {
+    fn __len__(&self) -> usize {
+        self.project.len()
+    }
+
+    fn __getitem__(&self, index: isize) -> PyResult<Py<Project>> {
+        let len = self.project.len() as isize;
+        let i = if index < 0 {
+            len + index
+        } else {
+            index
+        };
+
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        Ok(self.project.get(i as usize)
+           .ok_or_else(|| PyIndexError::new_err("list index out of range"))?
+           .project.clone_ref(py))
     }
 }

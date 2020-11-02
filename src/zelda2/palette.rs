@@ -120,4 +120,15 @@ impl RomData for PaletteGroup {
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
         PaletteGui::new(project, commit_index)
     }
+
+    fn to_text(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).map_err(|e| e.into())
+    }
+
+    fn from_text(&mut self, text: &str) -> Result<()> {
+        match serde_json::from_str(text) {
+            Ok(v) => { *self = v; Ok(()) },
+            Err(e) => Err(e.into()),
+        }
+    }
 }

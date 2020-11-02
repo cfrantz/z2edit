@@ -1,9 +1,10 @@
+use std::path::Path;
+use std::rc::Rc;
+
+use pyo3::prelude::*;
 use imgui;
 use imgui::{im_str, ImString, MenuItem};
 use nfd;
-use std::cell::RefCell;
-use std::path::Path;
-use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::edit::EditDetailsGui;
@@ -18,38 +19,39 @@ pub struct ProjectGui {
     pub visible: bool,
     pub filename: Option<String>,
     pub widgets: Vec<Box<dyn Gui>>,
-    pub project: RefCell<Project>,
+    pub project: Py<Project>,
 }
 
 impl ProjectGui {
-    pub fn new(p: Project) -> Self {
-        ProjectGui {
+    pub fn new(py: Python, p: Project) -> Result<Self> {
+        Ok(ProjectGui {
             visible: true,
             filename: None,
             widgets: Vec::new(),
-            project: RefCell::new(p),
-        }
+            project: Py::new(py, p)?,
+        })
     }
-    pub fn from_file(filename: &str) -> Result<Self> {
-        let mut project = ProjectGui::new(Project::from_file(&Path::new(filename))?);
+
+    pub fn from_file(py: Python, filename: &str) -> Result<Self> {
+        let mut project = ProjectGui::new(py, Project::from_file(&Path::new(filename))?)?;
         project.filename = Some(filename.to_owned());
         Ok(project)
     }
 
-    fn save(&mut self) {
+    fn save(&mut self, py: Python) {
         if let Some(path) = &self.filename {
-            match self.project.borrow().to_file(&Path::new(&path)) {
+            match self.project.borrow(py).to_file(&Path::new(&path)) {
                 Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
                 _ => {}
             }
         } else {
-            self.save_dialog(false);
+            self.save_dialog(py, false);
         }
     }
-    fn save_dialog(&mut self, save_as: bool) {
+    fn save_dialog(&mut self, py: Python, save_as: bool) {
         let result = nfd::open_save_dialog(Some("z2prj"), None).unwrap();
         match result {
-            nfd::Response::Okay(path) => match self.project.borrow().to_file(&Path::new(&path)) {
+            nfd::Response::Okay(path) => match self.project.borrow(py).to_file(&Path::new(&path)) {
                 Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
                 Ok(_) => {
                     if !save_as {
@@ -61,31 +63,31 @@ impl ProjectGui {
         }
     }
 
-    pub fn menu(&mut self, ui: &imgui::Ui) {
+    pub fn menu(&mut self, py: Python, ui: &imgui::Ui) {
         ui.menu_bar(|| {
             ui.menu(im_str!("File"), true, || {
                 if MenuItem::new(im_str!("Save")).build(ui) {
-                    self.save();
+                    self.save(py);
                 }
                 if MenuItem::new(im_str!("Save As")).build(ui) {
-                    self.save_dialog(true);
+                    self.save_dialog(py, true);
                 }
             });
             ui.menu(im_str!("Edit"), true, || {
                 if MenuItem::new(im_str!("Enemy Attributes")).build(ui) {
-                    match EnemyGui::new(&self.project.borrow_mut(), -1) {
+                    match EnemyGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create EnemyGui: {:?}", e),
                     };
                 }
                 if MenuItem::new(im_str!("Palette")).build(ui) {
-                    match PaletteGui::new(&self.project.borrow_mut(), -1) {
+                    match PaletteGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create PaletteGui: {:?}", e),
                     };
                 }
                 if MenuItem::new(im_str!("Start Values")).build(ui) {
-                    match StartGui::new(&self.project.borrow_mut(), -1) {
+                    match StartGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create StartGui: {:?}", e),
                     };
@@ -104,8 +106,8 @@ impl ProjectGui {
             }
         }
     }
-    fn process_editactions(&self) {
-        let mut project = self.project.borrow_mut();
+    fn process_editactions(&self, py: Python) {
+        let mut project = self.project.borrow_mut(py);
         let mut i = 0;
         let mut first_action = 0;
         while i != project.edits.len() {
@@ -127,6 +129,11 @@ impl ProjectGui {
                         first_action = i;
                     }
                 }
+                EditAction::Update => {
+                    if first_action == 0 {
+                        first_action = i;
+                    }
+                }
             }
         }
         if first_action != 0 {
@@ -137,9 +144,9 @@ impl ProjectGui {
         }
     }
 
-    fn draw_edit(&mut self, index: isize, ui: &imgui::Ui) {
+    fn draw_edit(&mut self, py: Python, index: isize, ui: &imgui::Ui) {
         let id = ui.push_id(index as i32);
-        let project = self.project.borrow_mut();
+        let project = self.project.borrow_mut(py);
         let edit = project.get_commit(index).unwrap();
         let len = project.edits.len() as isize;
         let meta = edit.meta.borrow();
@@ -188,7 +195,7 @@ impl ProjectGui {
         id.pop(ui);
     }
 
-    pub fn draw(&mut self, ui: &imgui::Ui) {
+    pub fn draw(&mut self, py: Python, ui: &imgui::Ui) {
         let mut visible = self.visible;
         let title = if let Some(f) = &self.filename {
             im_str!("Project: {}", f)
@@ -203,19 +210,19 @@ impl ProjectGui {
         ui.dock_space("project".into(), [0.0, 0.0]);
         if let Some(token) = window {
 
-            self.menu(ui);
+            self.menu(py, ui);
             imgui::Window::new(im_str!("Edit List"))
                 .build(ui, || {
                 let editlist = ui.push_id("editlist");
-                let edits = self.project.borrow().edits.len();
+                let edits = self.project.borrow(py).edits.len();
                 for i in 0..edits {
-                    self.draw_edit(i as isize, ui);
+                    self.draw_edit(py, i as isize, ui);
                 }
                 editlist.pop(ui);
             });
             token.end(ui);
 
-                let mut project = self.project.borrow_mut();
+                let mut project = self.project.borrow_mut(py);
                 let widgetlist = ui.push_id("widgetlist");
                 for widget in self.widgets.iter_mut() {
                     ui.set_next_window_dock_id("project".into(),
@@ -226,6 +233,6 @@ impl ProjectGui {
         }
         self.visible = visible;
         self.dispose_widgets();
-        self.process_editactions();
+        self.process_editactions(py);
     }
 }

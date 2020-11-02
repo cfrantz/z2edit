@@ -8,6 +8,7 @@ extern crate structopt;
 #[macro_use]
 extern crate log;
 extern crate pyo3;
+extern crate dict_derive;
 extern crate rustyline;
 extern crate simplelog;
 extern crate typetag;
@@ -77,6 +78,22 @@ fn run(py: Python) -> Result<()> {
     let sys = PyModule::import(py, "sys")?;
     let modules = sys.get("modules")?;
     modules.set_item("z2edit", module)?;
+
+    let assembler = PyModule::from_code(
+        py,
+        include_str!("../python/assembler.py"),
+        "assembler.py",
+        "assembler",
+    )?;
+    modules.set_item("assembler", assembler)?;
+
+    let debug = PyModule::from_code(
+        py,
+        include_str!("../python/debug.py"),
+        "debug.py",
+        "debug",
+    )?;
+    modules.set_item("debug", debug)?;
 
     App::run(&app, py, &mut executor);
     Ok(())

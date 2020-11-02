@@ -4,10 +4,11 @@ use pyo3::prelude::*;
 
 error_chain! {
     foreign_links {
-        WindowBuildError(::sdl2::video::WindowBuildError);
-        Io(::std::io::Error);
         DecodeError(::ron::error::Error);
+        Io(::std::io::Error);
+        Json(::serde_json::error::Error);
         PyErr(::pyo3::PyErr);
+        WindowBuildError(::sdl2::video::WindowBuildError);
     }
     errors {
         SdlError(e: String) {
@@ -46,9 +47,9 @@ error_chain! {
             description("Bad commit index"),
             display("Bad commit index {}", index),
         }
-        NoGuiImplemented(name: String) {
-            description("No GUI Implemented"),
-            display("No GUI Implemented for {}", name),
+        NotImplemented(name: String) {
+            description("Not Implemented"),
+            display("Not Implemented: {}", name),
         }
     }
 }

@@ -45,4 +45,15 @@ impl RomData for ImportRom {
         edit.rom.replace(rom);
         Ok(())
     }
+
+    fn to_text(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).map_err(|e| e.into())
+    }
+
+    fn from_text(&mut self, text: &str) -> Result<()> {
+        match serde_json::from_str(text) {
+            Ok(v) => { *self = v; Ok(()) },
+            Err(e) => Err(e.into()),
+        }
+    }
 }

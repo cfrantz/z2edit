@@ -62,7 +62,8 @@ impl Default for Config {
 
 static mut CONFIGS: Lazy<Mutex<HashMap<String, Arc<Config>>>> = Lazy::new(|| {
     let mut map = HashMap::new();
-    map.insert("vanilla".to_owned(), Arc::new(Config::default()));
+    let config = Config::default();
+    map.insert("vanilla".to_owned(), Arc::new(config));
     Mutex::new(map)
 });
 

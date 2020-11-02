@@ -1,6 +1,3 @@
-use pyo3::prelude::*;
-use ron;
-use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -9,10 +6,16 @@ use std::rc::Rc;
 use std::vec::Vec;
 use whoami;
 
+use pyo3::prelude::*;
+use pyo3::class::PySequenceProtocol;
+use pyo3::exceptions::PyIndexError;
+use dict_derive::{FromPyObject, IntoPyObject};
+use serde_json;
+use serde::{Deserialize, Serialize};
+
 use crate::errors::*;
-use crate::nes::Buffer;
+use crate::nes::{Buffer, MemoryAccess};
 use crate::util::pyaddress::PyAddress;
-//use crate::nes::MemoryAccess;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
 use crate::zelda2::import::ImportRom;
@@ -46,7 +49,7 @@ impl Project {
     }
 
     pub fn from_reader(r: impl Read) -> Result<Self> {
-        let project: Project = ron::de::from_reader(r)?;
+        let project: Project = serde_json::from_reader(r)?;
         project.replay(0, -1)?;
         Ok(project)
     }
@@ -57,8 +60,7 @@ impl Project {
     }
 
     pub fn to_writer(&self, w: &mut impl Write) -> Result<()> {
-        let pretty = ron::ser::PrettyConfig::new();
-        ron::ser::to_writer_pretty(w, self, pretty)?;
+        serde_json::to_writer_pretty(w, self)?;
         Ok(())
     }
 
@@ -153,11 +155,17 @@ where
     fn unpack(&mut self, edit: &Edit) -> Result<()>;
     fn pack(&self, edit: &Edit) -> Result<()>;
     fn gui(&self, _project: &Project, _commit_index: isize) -> Result<Box<dyn Gui>> {
-        Err(ErrorKind::NoGuiImplemented(self.name()).into())
+        Err(ErrorKind::NotImplemented(self.name()).into())
+    }
+    fn to_text(&self) -> Result<String> {
+        Err(ErrorKind::NotImplemented(format!("{}::to_text", self.name())).into())
+    }
+    fn from_text(&mut self, _text: &str) -> Result<()> {
+        Err(ErrorKind::NotImplemented(format!("{}::from_text", self.name())).into())
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromPyObject, IntoPyObject)]
 pub struct Metadata {
     pub label: String,
     pub user: String,
@@ -171,6 +179,7 @@ pub enum EditAction {
     None,
     MoveTo(isize),
     Delete,
+    Update,
 }
 
 impl Default for EditAction {
@@ -189,42 +198,89 @@ pub struct Edit {
     pub action: RefCell<EditAction>,
 }
 
+#[pyclass(unsendable)]
+pub struct EditProxy {
+    edit: Rc<Edit>
+}
+
 #[pymethods]
-impl Project {
-    #[new]
-    fn new(filename: String) -> PyResult<Self> {
-        Project::from_rom(&filename).map_err(|e| e.into())
+impl EditProxy {
+    #[getter]
+    fn get_name(&self) -> PyResult<String> {
+        Ok(self.edit.edit.borrow().name())
+    }
+
+    #[getter]
+    fn get_meta(&self) -> PyResult<Metadata> {
+        Ok(self.edit.meta.borrow().clone())
+    }
+
+    #[setter]
+    fn set_meta(&self, meta: Metadata) -> PyResult<()> {
+        self.edit.meta.replace(meta);
+        Ok(())
+    }
+
+    #[getter]
+    fn get_text(&self) -> PyResult<String> {
+        self.edit.edit.borrow().to_text().map_err(|e| e.into())
+    }
+
+    #[setter]
+    fn set_text(&self, text: &str) -> PyResult<()> {
+        match self.edit.edit.borrow_mut().from_text(text) {
+            Ok(()) => {
+                self.edit.action.replace(EditAction::Update);
+                Ok(())
+            },
+            Err(e) => Err(e.into()),
+        }
     }
 
     fn read_byte(&self, addr: PyAddress) -> Result<u8> {
-        Ok(0)
-        //self.rom.borrow().read(addr.address)
+        self.edit.rom.borrow().read(addr.address)
     }
 
     fn read_word(&self, addr: PyAddress) -> Result<u16> {
-        Ok(0)
-        //self.rom.borrow().read_word(addr.address)
+        self.edit.rom.borrow().read_word(addr.address)
     }
 
     fn read_bytes(&self, addr: PyAddress, len: usize) -> Result<Vec<u8>> {
-        //let rom = self.rom.borrow();
-        //let bytes = rom.read_bytes(addr.address, len)?.to_vec();
-        let bytes = vec![0u8];
+        let rom = self.edit.rom.borrow();
+        let bytes = rom.read_bytes(addr.address, len)?.to_vec();
         Ok(bytes)
     }
 
     fn write_byte(&self, addr: PyAddress, val: u8) -> Result<()> {
-        Ok(())
-        //self.rom.borrow_mut().write(addr.address, val)
+        self.edit.rom.borrow_mut().write(addr.address, val)
     }
 
     fn write_word(&self, addr: PyAddress, val: u16) -> Result<()> {
-        Ok(())
-        //self.rom.borrow_mut().write_word(addr.address, val)
+        self.edit.rom.borrow_mut().write_word(addr.address, val)
     }
 
     fn write_bytes(&self, addr: PyAddress, val: &[u8]) -> Result<()> {
-        Ok(())
-        //self.rom.borrow_mut().write_bytes(addr.address, val)
+        self.edit.rom.borrow_mut().write_bytes(addr.address, val)
+    }
+}
+
+#[pymethods]
+impl Project {
+    fn save(&self, filename: &str) -> PyResult<()> {
+        self.to_file(&Path::new(filename)).map_err(|e| e.into())
+    }
+}
+
+#[pyproto]
+impl PySequenceProtocol for Project {
+    fn __len__(&self) -> usize {
+        self.edits.len()
+    }
+
+    fn __getitem__(&self, index: isize) -> PyResult<EditProxy> {
+        match self.get_commit(index) {
+            Ok(edit) => Ok(EditProxy { edit: edit }),
+            Err(_) => Err(PyIndexError::new_err("list index out of range")),
+        }
     }
 }
