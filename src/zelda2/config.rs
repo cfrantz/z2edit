@@ -9,7 +9,7 @@ use crate::zelda2::enemyattr;
 use crate::zelda2::palette;
 use crate::zelda2::start;
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Miscellaneous {
     pub start: start::config::Config,
 }
@@ -49,21 +49,22 @@ fn zelda2_nesfile_layout() -> Layout {
     ])
 }
 
-impl Default for Config {
-    fn default() -> Self {
+impl Config {
+    pub fn vanilla() -> Self {
         Config {
             layout: zelda2_nesfile_layout(),
-            misc: Miscellaneous::default(),
-            palette: palette::config::Config::default(),
-            enemy: enemyattr::config::Config::default(),
+            misc: Miscellaneous {
+                start: start::config::Config::vanilla(),
+            },
+            palette: palette::config::Config::vanilla(),
+            enemy: enemyattr::config::Config::vanilla(),
         }
     }
 }
 
 static mut CONFIGS: Lazy<Mutex<HashMap<String, Arc<Config>>>> = Lazy::new(|| {
     let mut map = HashMap::new();
-    let config = Config::default();
-    map.insert("vanilla".to_owned(), Arc::new(config));
+    map.insert("vanilla".to_owned(), Arc::new(Config::vanilla()));
     Mutex::new(map)
 });
 

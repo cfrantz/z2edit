@@ -21,10 +21,8 @@ pub mod config {
             let pretty = ron::ser::PrettyConfig::new();
             ron::ser::to_string_pretty(&self, pretty).unwrap()
         }
-    }
 
-    impl Default for Config {
-        fn default() -> Self {
+        pub fn vanilla() -> Self {
             ron::de::from_bytes(include_bytes!("../../config/vanilla/misc_start.ron")).unwrap()
         }
     }

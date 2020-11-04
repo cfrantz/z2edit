@@ -55,10 +55,8 @@ pub mod config {
             }
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
-    }
 
-    impl Default for Config {
-        fn default() -> Self {
+        pub fn vanilla() -> Self {
             ron::de::from_bytes(include_bytes!("../../config/vanilla/enemies.ron")).unwrap()
         }
     }
