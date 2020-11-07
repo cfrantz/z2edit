@@ -8,7 +8,6 @@ use pyo3::class::PySequenceProtocol;
 use pyo3::exceptions::PyIndexError;
 use sdl2::event::Event;
 use std::cell::{Cell, RefCell};
-use std::path::Path;
 use std::rc::Rc;
 use std::time::Instant;
 
@@ -37,7 +36,6 @@ impl App {
         Ok(App {
             running: Cell::new(false),
             preferences: Py::new(py, Preferences::load().unwrap_or_default())?,
-            //            project: Py::new(py, Project::from_file(&p)?)?,
             project: Vec::new(),
             console: Rc::new(RefCell::new(Console::new("Debug Console"))),
         })
@@ -80,6 +78,10 @@ impl App {
                 }
                 if MenuItem::new(im_str!("Open ROM")).build(ui) {
                     self.load_dialog(py, "nes");
+                }
+                ui.separator();
+                if MenuItem::new(im_str!("Quit")).build(ui) {
+                    self.running.set(false);
                 }
             });
             ui.menu(im_str!("View"), true, || {
