@@ -22,7 +22,6 @@ pub struct EnemyGui {
     orig: Vec<EnemyGroup>,
     group: Vec<EnemyGroup>,
     selected: usize,
-    gui_once_init: bool,
 }
 
 static HEX: Lazy<Vec<&ImStr>> = Lazy::new(|| {
@@ -102,7 +101,6 @@ impl EnemyGui {
             orig: orig,
             group: data,
             selected: 0,
-            gui_once_init: false,
         }))
     }
 
@@ -144,6 +142,7 @@ impl EnemyGui {
 
     pub fn enemy_row(enemy: &mut Enemy, config: &config::Enemy, ui: &imgui::Ui) -> bool {
         let mut changed = false;
+        ui.align_text_to_frame_padding();
         ui.text(im_str!("{:02x}: {}", config.offset, config.name));
         ui.next_column();
 
@@ -250,24 +249,25 @@ impl Gui for EnemyGui {
                 }
 
                 let config = Config::get(&self.edit.meta.borrow().config).unwrap();
-                ui.separator();
                 ui.columns(COLUMNS.len() as i32, im_str!("columns"), true);
+                ui.separator();
+                let mut offset = 0.0;
                 for (n, (name, width)) in COLUMNS.iter().enumerate() {
                     ui.text(name);
-                    if !self.gui_once_init {
-                        ui.set_column_width(n as i32, *width);
-                    }
+                    ui.set_column_offset(n as i32, offset);
+                    offset += *width;
                     ui.next_column();
                 }
-                self.gui_once_init = true;
-                ui.separator();
+
                 for (n, cfg) in config.enemy.0[self.selected].enemy.iter().enumerate() {
+                    ui.separator();
                     let mut enemy = &mut self.group[self.selected].data[n];
                     let id = ui.push_id(n as i32);
                     self.changed |= EnemyGui::enemy_row(&mut enemy, &cfg, ui);
                     id.pop(ui);
-                    ui.separator();
                 }
+                ui.columns(1, im_str!(""), false);
+                ui.separator();
             });
         self.visible.change(visible, self.changed);
         self.visible.draw(

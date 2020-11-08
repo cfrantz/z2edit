@@ -102,8 +102,8 @@ impl Gui for StartGui {
                 ui.same_line(0.0);
                 changed |= ui.checkbox(im_str!("Upstab"), &mut self.start.inventory.upstab);
 
-                ui.separator();
                 ui.columns(2, im_str!("columns"), true);
+                ui.separator();
                 changed |= ui.checkbox(im_str!("Shield Spell"), &mut self.start.spell.shield);
                 changed |= ui.checkbox(im_str!("Jump Spell"), &mut self.start.spell.jump);
                 changed |= ui.checkbox(im_str!("Life Spell"), &mut self.start.spell.life);
@@ -123,6 +123,10 @@ impl Gui for StartGui {
                 changed |= ui.checkbox(im_str!("Cross"), &mut self.start.inventory.cross);
                 changed |= ui.checkbox(im_str!("Hammer"), &mut self.start.inventory.hammer);
                 changed |= ui.checkbox(im_str!("Magic Key"), &mut self.start.inventory.magickey);
+
+                ui.next_column();
+                ui.columns(1, im_str!(""), false);
+                ui.separator();
                 self.changed = changed;
             });
         self.visible.change(visible, self.changed);

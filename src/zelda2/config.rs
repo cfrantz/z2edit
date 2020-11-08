@@ -8,6 +8,7 @@ use crate::nes::{Layout, Segment};
 use crate::zelda2::enemyattr;
 use crate::zelda2::palette;
 use crate::zelda2::start;
+use crate::zelda2::xp_spells;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Miscellaneous {
@@ -20,6 +21,7 @@ pub struct Config {
     pub misc: Miscellaneous,
     pub palette: palette::config::Config,
     pub enemy: enemyattr::config::Config,
+    pub experience: xp_spells::config::Config,
 }
 
 fn zelda2_nesfile_layout() -> Layout {
@@ -58,6 +60,7 @@ impl Config {
             },
             palette: palette::config::Config::vanilla(),
             enemy: enemyattr::config::Config::vanilla(),
+            experience: xp_spells::config::Config::vanilla(),
         }
     }
 }

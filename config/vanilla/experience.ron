@@ -1,0 +1,53 @@
+(
+    group: [
+        (
+            id: "level_up",
+            name: "Level Up Experience",
+            table: [
+                (id: "attack", name: "Attack", address: Prg(0, 0x9671), graphics: Some(Prg(0, 0x9e32)), offset: Some(-24)),
+                (id: "magic",  name: "Magic",  address: Prg(0, 0x9679), graphics: Some(Prg(0, 0x9e32)), offset: Some(-24)),
+                (id: "life",   name: "Life",   address: Prg(0, 0x9681), graphics: Some(Prg(0, 0x9e32)), offset: Some(-24)),
+            ],
+        ),
+        (
+            id: "sword_power",
+            name: "Sword Power",
+            table: [
+                (id: "0", name: "Sword Power", address: Prg(-1, 0xe66d)),
+            ],
+        ),
+        (
+            id: "damage_group",
+            name: "Damage Groups",
+            table: [
+                (id: "0", name: "Damage Code 0", address: Prg(-1, 0xe2af)),
+                (id: "1", name: "Damage Code 1", address: Prg(-1, 0xe2b7)),
+                (id: "2", name: "Damage Code 2", address: Prg(-1, 0xe2bf)),
+                (id: "3", name: "Damage Code 3", address: Prg(-1, 0xe2c7)),
+                (id: "4", name: "Damage Code 4", address: Prg(-1, 0xe2cf)),
+                (id: "5", name: "Damage Code 5", address: Prg(-1, 0xe2d7)),
+                (id: "6", name: "Damage Code 6", address: Prg(-1, 0xe2df)),
+                (id: "7", name: "Damage Code 7", address: Prg(-1, 0xe2e7)),
+            ],
+        ),
+        (
+            id: "spell",
+            name: "Spell Costs",
+            table: [
+                (id: "0", name: "Shield",  address: Prg(0, 0x8d7b), game_name: Some(Prg(0, 0x9c2a))),
+                (id: "1", name: "Jump",    address: Prg(0, 0x8d83), game_name: Some(Prg(0, 0x9c38))),
+                (id: "2", name: "Life",    address: Prg(0, 0x8d8b), game_name: Some(Prg(0, 0x9c46))),
+                (id: "3", name: "Fairy",   address: Prg(0, 0x8d93), game_name: Some(Prg(0, 0x9c54))),
+                (id: "4", name: "Fire",    address: Prg(0, 0x8d9b), game_name: Some(Prg(0, 0x9c62))),
+                (id: "5", name: "Reflect", address: Prg(0, 0x8da3), game_name: Some(Prg(0, 0x9c70))),
+                (id: "6", name: "Spell",   address: Prg(0, 0x8dab), game_name: Some(Prg(0, 0x9c7e))),
+                (id: "7", name: "Thunder", address: Prg(0, 0x8db3), game_name: Some(Prg(0, 0x9c8c))),
+                (id: "effects", name: "Effect", address: Prg(0, 0x8dbb)),
+            ],
+        ),
+
+    ],
+    enemy_xp_lo: Prg(-1, 0xddc0),
+    enemy_xp_hi: Prg(-1, 0xdddc),
+    enemy_xp_gfx: Prg(-1, 0xdd4c),
+)

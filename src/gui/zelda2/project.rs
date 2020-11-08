@@ -11,6 +11,7 @@ use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::start::StartGui;
+use crate::gui::zelda2::xp_spells::ExperienceTableGui;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
 use crate::zelda2::project::{EditAction, Project};
@@ -80,6 +81,12 @@ impl ProjectGui {
                         Err(e) => error!("Could not create EnemyGui: {:?}", e),
                     };
                 }
+                if MenuItem::new(im_str!("Experience & Spells")).build(ui) {
+                    match ExperienceTableGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create ExperienceTableGui: {:?}", e),
+                    };
+                }
                 if MenuItem::new(im_str!("Palette")).build(ui) {
                     match PaletteGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
@@ -92,6 +99,7 @@ impl ProjectGui {
                         Err(e) => error!("Could not create StartGui: {:?}", e),
                     };
                 }
+
             });
         });
     }
