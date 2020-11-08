@@ -153,7 +153,7 @@ pub struct EnemyGroup {
 #[typetag::serde]
 impl RomData for EnemyGroup {
     fn name(&self) -> String {
-        "EnemyGroup".to_owned()
+        "Enemy Attributes".to_owned()
     }
 
     fn unpack(&mut self, edit: &Edit) -> Result<()> {

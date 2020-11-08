@@ -75,7 +75,7 @@ pub struct Start {
 #[typetag::serde]
 impl RomData for Start {
     fn name(&self) -> String {
-        "Start".to_owned()
+        "Start Values".to_owned()
     }
 
     fn unpack(&mut self, edit: &Edit) -> Result<()> {

@@ -153,7 +153,7 @@ pub struct ExperienceTableGroup {
 #[typetag::serde]
 impl RomData for ExperienceTableGroup {
     fn name(&self) -> String {
-        "ExperienceTableGroup".to_owned()
+        "Experience & Spells".to_owned()
     }
 
     fn unpack(&mut self, edit: &Edit) -> Result<()> {
