@@ -21,6 +21,8 @@ pub struct ProjectGui {
     pub filename: Option<String>,
     pub widgets: Vec<Box<dyn Gui>>,
     pub project: Py<Project>,
+    pub history_pane: imgui::Id<'static>,
+    pub editor_pane: imgui::Id<'static>,
 }
 
 impl ProjectGui {
@@ -30,6 +32,8 @@ impl ProjectGui {
             filename: None,
             widgets: Vec::new(),
             project: Py::new(py, p)?,
+            history_pane: imgui::Id::Int(0),
+            editor_pane: imgui::Id::Int(0),
         })
     }
 
@@ -210,12 +214,23 @@ impl ProjectGui {
         } else {
             imgui::ImString::new("Project: unnamed")
         };
+        let dock_id = imgui::Id::Str("project");
         let window = imgui::Window::new(&title)
             .opened(&mut visible)
             .menu_bar(true)
             .begin(ui);
 
-        ui.dock_space("project".into(), [0.0, 0.0]);
+        if !ui.dock_builder_has_node(dock_id) {
+            ui.dock_builder_remove_node(dock_id);
+            ui.dock_builder_add_node(dock_id, 0);
+            let (lhs, rhs) = ui.dock_builder_split_node(dock_id, imgui::Direction::Left, 0.15);
+            self.history_pane = lhs;
+            self.editor_pane = rhs;
+            ui.dock_builder_dock_window(im_str!("Edit List"), self.history_pane);
+            ui.dock_builder_finish(dock_id);
+        }
+
+        ui.dock_space(dock_id, [0.0, 0.0]);
         if let Some(token) = window {
 
             self.menu(py, ui);
@@ -233,8 +248,8 @@ impl ProjectGui {
                 let mut project = self.project.borrow_mut(py);
                 let widgetlist = ui.push_id("widgetlist");
                 for widget in self.widgets.iter_mut() {
-                    ui.set_next_window_dock_id("project".into(),
-                                               imgui::Condition::FirstUseEver);
+                    ui.set_next_window_dock_id(self.editor_pane,
+                                               imgui::Condition::Once);
                     widget.draw(&mut project, ui);
                 }
                 widgetlist.pop(ui);
