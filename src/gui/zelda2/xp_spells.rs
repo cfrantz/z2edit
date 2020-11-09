@@ -102,7 +102,7 @@ impl ExperienceTableGui {
         }))
     }
 
-    pub fn read_tables(config: &Config, edit: &Edit) -> Result<Vec<ExperienceTableGroup>> {
+    pub fn read_tables(config: &Config, edit: &Rc<Edit>) -> Result<Vec<ExperienceTableGroup>> {
         let mut data = Vec::new();
         for group in config.experience.group.iter() {
             let mut pg = ExperienceTableGroup::default();

@@ -1,3 +1,5 @@
+use std::any::Any;
+use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
 
@@ -77,8 +79,9 @@ impl RomData for Start {
     fn name(&self) -> String {
         "Start Values".to_owned()
     }
+    fn as_any(&self) -> &dyn Any { self }
 
-    fn unpack(&mut self, edit: &Edit) -> Result<()> {
+    fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let start = config.misc.start.values;
         let rom = edit.rom.borrow();
@@ -114,7 +117,7 @@ impl RomData for Start {
         Ok(())
     }
 
-    fn pack(&self, edit: &Edit) -> Result<()> {
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let start = config.misc.start.values;
         let mut rom = edit.rom.borrow_mut();

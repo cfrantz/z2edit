@@ -1,3 +1,5 @@
+use std::any::Any;
+use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
 
@@ -78,8 +80,9 @@ impl RomData for ExperienceTable {
     fn name(&self) -> String {
         "ExperienceTable".to_owned()
     }
+    fn as_any(&self) -> &dyn Any { self }
 
-    fn unpack(&mut self, edit: &Edit) -> Result<()> {
+    fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let rom = edit.rom.borrow();
         let config = Config::get(&edit.meta.borrow().config)?;
         let tcfg = config.experience.find(&self.id)?;
@@ -101,7 +104,7 @@ impl RomData for ExperienceTable {
         Ok(())
     }
 
-    fn pack(&self, edit: &Edit) -> Result<()> {
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let mut rom = edit.rom.borrow_mut();
         let config = Config::get(&edit.meta.borrow().config)?;
         let tcfg = config.experience.find(&self.id)?;
@@ -155,15 +158,16 @@ impl RomData for ExperienceTableGroup {
     fn name(&self) -> String {
         "Experience & Spells".to_owned()
     }
+    fn as_any(&self) -> &dyn Any { self }
 
-    fn unpack(&mut self, edit: &Edit) -> Result<()> {
+    fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         for d in self.data.iter_mut() {
             d.unpack(edit)?;
         }
         Ok(())
     }
 
-    fn pack(&self, edit: &Edit) -> Result<()> {
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         for d in self.data.iter() {
             d.pack(edit)?;
         }

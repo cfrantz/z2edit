@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -118,14 +119,14 @@ impl Project {
                 config: last.meta.borrow().config.clone(),
             };
 
-            let commit = Edit {
+            let commit = Rc::new(Edit {
                 meta: RefCell::new(meta),
                 edit: RefCell::new(edit),
                 rom: last.rom.clone(),
                 action: RefCell::default(),
-            };
+            });
             commit.edit.borrow().pack(&commit)?;
-            self.edits.push(Rc::new(commit));
+            self.edits.push(commit);
             Ok(len)
         } else if index < len {
             let last = self.get_commit(index - 1)?;
@@ -137,7 +138,6 @@ impl Project {
             }
             commit.edit.replace(edit);
             commit.rom.replace(last.rom.borrow().clone());
-            commit.edit.borrow().pack(&commit)?;
             self.replay(index, -1)?;
             Ok(index)
         } else {
@@ -152,8 +152,8 @@ where
     Self: std::fmt::Debug,
 {
     fn name(&self) -> String;
-    fn unpack(&mut self, edit: &Edit) -> Result<()>;
-    fn pack(&self, edit: &Edit) -> Result<()>;
+    fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()>;
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()>;
     fn gui(&self, _project: &Project, _commit_index: isize) -> Result<Box<dyn Gui>> {
         Err(ErrorKind::NotImplemented(self.name()).into())
     }
@@ -163,6 +163,7 @@ where
     fn from_text(&mut self, _text: &str) -> Result<()> {
         Err(ErrorKind::NotImplemented(format!("{}::from_text", self.name())).into())
     }
+    fn as_any(&self) -> &dyn Any;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromPyObject, IntoPyObject)]
@@ -201,6 +202,14 @@ pub struct Edit {
 #[pyclass(unsendable)]
 pub struct EditProxy {
     edit: Rc<Edit>
+}
+
+impl EditProxy {
+    pub fn new(edit: Rc<Edit>) -> EditProxy {
+        EditProxy {
+            edit: edit,
+        }
+    }
 }
 
 #[pymethods]

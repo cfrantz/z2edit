@@ -54,7 +54,7 @@ impl PaletteGui {
         }))
     }
 
-    pub fn read_palettes(config: &Config, edit: &Edit) -> Result<Vec<PaletteGroup>> {
+    pub fn read_palettes(config: &Config, edit: &Rc<Edit>) -> Result<Vec<PaletteGroup>> {
         let mut data = Vec::new();
         for group in config.palette.0.iter() {
             let mut pg = PaletteGroup::default();

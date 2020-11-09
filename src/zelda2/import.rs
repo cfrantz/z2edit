@@ -1,6 +1,9 @@
-use serde::{Deserialize, Serialize};
+use std::any::Any;
 use std::io;
 use std::path::Path;
+use std::rc::Rc;
+
+use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
 use crate::nes::Buffer;
@@ -32,12 +35,13 @@ impl RomData for ImportRom {
     fn name(&self) -> String {
         "ImportRom".to_owned()
     }
+    fn as_any(&self) -> &dyn Any { self }
 
-    fn unpack(&mut self, _edit: &Edit) -> Result<()> {
+    fn unpack(&mut self, _edit: &Rc<Edit>) -> Result<()> {
         Ok(())
     }
 
-    fn pack(&self, edit: &Edit) -> Result<()> {
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let path = Path::new(&self.filename);
         info!("ImportRom: loading file {:?}", path);

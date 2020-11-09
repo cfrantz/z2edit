@@ -104,7 +104,7 @@ impl EnemyGui {
         }))
     }
 
-    pub fn read_enemies(config: &Config, edit: &Edit) -> Result<Vec<EnemyGroup>> {
+    pub fn read_enemies(config: &Config, edit: &Rc<Edit>) -> Result<Vec<EnemyGroup>> {
         let mut data = Vec::new();
         for group in config.enemy.0.iter() {
             let mut pg = EnemyGroup::default();
@@ -113,7 +113,7 @@ impl EnemyGui {
                     id: IdPath(vec![group.id.clone(), enemy.id.clone()]),
                     ..Default::default()
                 };
-                p.unpack(&edit)?;
+                p.unpack(edit)?;
                 pg.data.push(p);
             }
             data.push(pg);

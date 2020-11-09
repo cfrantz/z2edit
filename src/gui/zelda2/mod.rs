@@ -2,6 +2,7 @@ pub mod edit;
 pub mod enemyattr;
 pub mod palette;
 pub mod project;
+pub mod python;
 pub mod start;
 pub mod xp_spells;
 

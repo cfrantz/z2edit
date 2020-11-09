@@ -1,3 +1,5 @@
+use std::any::Any;
+use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
 
@@ -68,8 +70,9 @@ impl RomData for Palette {
     fn name(&self) -> String {
         "Palette".to_owned()
     }
+    fn as_any(&self) -> &dyn Any { self }
 
-    fn unpack(&mut self, edit: &Edit) -> Result<()> {
+    fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let pcfg = config.palette.find(&self.id)?;
         let length = pcfg.length.unwrap_or(16);
@@ -77,7 +80,7 @@ impl RomData for Palette {
         Ok(())
     }
 
-    fn pack(&self, edit: &Edit) -> Result<()> {
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let pcfg = config.palette.find(&self.id)?;
         edit.rom
@@ -100,15 +103,16 @@ impl RomData for PaletteGroup {
     fn name(&self) -> String {
         "PaletteGroup".to_owned()
     }
+    fn as_any(&self) -> &dyn Any { self }
 
-    fn unpack(&mut self, edit: &Edit) -> Result<()> {
+    fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         for d in self.data.iter_mut() {
             d.unpack(edit)?;
         }
         Ok(())
     }
 
-    fn pack(&self, edit: &Edit) -> Result<()> {
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         for d in self.data.iter() {
             d.pack(edit)?;
         }

@@ -10,6 +10,7 @@ use crate::errors::*;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::palette::PaletteGui;
+use crate::gui::zelda2::python::PythonScriptGui;
 use crate::gui::zelda2::start::StartGui;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
 use crate::gui::zelda2::Gui;
@@ -95,6 +96,12 @@ impl ProjectGui {
                     match PaletteGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create PaletteGui: {:?}", e),
+                    };
+                }
+                if MenuItem::new(im_str!("Python Script")).build(ui) {
+                    match PythonScriptGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create PythonScriptGui: {:?}", e),
                     };
                 }
                 if MenuItem::new(im_str!("Start Values")).build(ui) {
