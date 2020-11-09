@@ -32,6 +32,8 @@ impl RomData for PythonScript {
         let proxy = Py::new(py, EditProxy::new(Rc::clone(edit)))?;
         let locals = PyDict::new(py);
         locals.set_item("edit", proxy)?;
+        py.run("from assembler import Asm\n\
+                asm = Asm(edit)\n", None, Some(locals))?;
         py.run(&self.code, None, Some(locals))?;
         Ok(())
     }

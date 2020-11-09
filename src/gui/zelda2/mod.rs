@@ -1,5 +1,6 @@
 pub mod edit;
 pub mod enemyattr;
+pub mod hacks;
 pub mod palette;
 pub mod project;
 pub mod python;

@@ -9,6 +9,7 @@ use nfd;
 use crate::errors::*;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
+use crate::gui::zelda2::hacks::HacksGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::python::PythonScriptGui;
 use crate::gui::zelda2::start::StartGui;
@@ -90,6 +91,12 @@ impl ProjectGui {
                     match ExperienceTableGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create ExperienceTableGui: {:?}", e),
+                    };
+                }
+                if MenuItem::new(im_str!("Miscellaneous Hacks")).build(ui) {
+                    match HacksGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create HacksGui: {:?}", e),
                     };
                 }
                 if MenuItem::new(im_str!("Palette")).build(ui) {

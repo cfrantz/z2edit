@@ -427,6 +427,9 @@ class Asm:
             self.parse_line(line)
         self.apply_fixups()
 
+    def __call__(self, src, *, org=None, bank=None):
+        self.asm(src, org=org, bank=bank)
+
     def disassemble_one(self, pc):
         opcode = self.read(pc)
         name = self.names[opcode]

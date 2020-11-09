@@ -1,0 +1,98 @@
+(
+    walk_anywhere: Prg(0, 0x871e),
+    item_pickup_delay: Prg(-1, 0xe53c),
+    text_delay: [
+        Prg(3, 0xb615),
+        Prg(3, 0xb657),
+        Prg(3, 0xb74e)
+    ],
+    beam_sword_time: Prg(0, 0x986e),
+    beam_sword_speed: Prg(0, 0x9819),
+    elevator_speed: Prg(-1, 0xd8bf),
+    fairy_speed: Prg(0, 0x92aa),
+    hack: [
+        (
+            id: "p5_detect",
+            name: "Palace 5 detect",
+            item: [
+                (
+                    id: "0",
+                    name: "Vanilla (P5 on overworld 2)",
+                    code: "",
+                ),
+                (
+                    id: "1",
+                    name: "Palace 2 must be connection #52",
+                    code: r#"asm("""
+                        .bank 4
+                        .org $bac3
+                            LDA $056c
+                        .org $bad3
+                            LDA $056c
+                        .org $bc83
+                            LDA $056c
+                        .org $bd75
+                            LDA $056c
+                    """)
+                    "#,
+                ),
+                (
+                    id: "2",
+                    name: "P2 even / P5 odd",
+                    code: r#"asm("""
+                        .bank 4
+                        .org $bac3
+                            JSR check_palace_code
+                            BCC #3
+                        .org $bad3
+                            JSR check_palace_code
+                            BCC #2
+                        .org $bc83
+                            JSR check_palace_code
+                            BCC #1
+                        .org $bd75
+                            JSR check_palace_code
+                            BCC #3
+
+                        .org $bfe0
+                        check_palace_code:
+                            PHA
+                            LDA $056c
+                            LSR
+                            PLA
+                            RTS
+                    """)
+                    "#,
+                ),
+                (
+                    id: "3",
+                    name: "P2 odd / P5 even",
+                    code: r#"asm("""
+                        .bank 4
+                        .org $bac3
+                            JSR check_palace_code
+                            BCS #3
+                        .org $bad3
+                            JSR check_palace_code
+                            BCS #2
+                        .org $bc83
+                            JSR check_palace_code
+                            BCS #1
+                        .org $bd75
+                            JSR check_palace_code
+                            BCS #3
+
+                        .org $bfe0
+                        check_palace_code:
+                            PHA
+                            LDA $056c
+                            LSR
+                            PLA
+                            RTS
+                    """)
+                    "#,
+                ),
+            ],
+        ),
+    ],
+)
