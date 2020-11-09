@@ -1,0 +1,66 @@
+[
+    // Bank 0
+    (Prg(0, 0xaa40), 5408),
+    (Prg(0, 0xbfe0), 24),
+
+    // Bank 1
+    // Not sure if this is really free
+    // (Prg(1, 0x84e7), 25),
+    // The apparent block at 0x87c6 is part of room connectivity.
+    // Possible block at (Prg(1, 0x93bb), 69)
+    // Possible block at (Prg(1, 0x9eb9), 369)
+    (Prg(1, 0xa933), 5677),
+    (Prg(1, 0xbfe0), 24),
+    
+    // Bank 2
+    // Not sure if this is really free
+    // (Prg(2, 0x84e7), 25),
+    // The apparent block at 0x87d3 is part of room connectivity.
+    // Possible block at (Prg(2, 0x93c9), 55)
+    // Possible block at (Prg(2, 0x9f85), 123)
+    (Prg(2, 0xa933), 5677),
+    (Prg(2, 0xbfe0), 24),
+    
+    // Bank 3
+    (Prg(3, 0x84da), 38),
+    // The apparent block at 0x8887 is part of room connectivity.
+    // The block from 0x8BB1 to 8CA0 is part of enemy lists.
+    (Prg(3, 0x8ca0), 1104),
+    (Prg(3, 0x9134), 716),
+    (Prg(3, 0x9d0a), 758),
+    (Prg(3, 0xB803), 1901),
+    (Prg(3, 0xbfe0), 24),
+
+    // Bank 4
+    (Prg(4, 0x83DC), 148),
+    (Prg(4, 0x84F0), 16),
+    (Prg(4, 0x870E), 13),
+    // The apparent block at 0x8817 is part of room connectivity.
+    (Prg(4, 0x8ec3), 1341),
+    (Prg(4, 0x9ee0), 288),
+    (Prg(4, 0xA1E3), 21),
+    (Prg(4, 0xA3F8), 69),
+    (Prg(4, 0xA539), 263),
+    (Prg(4, 0xA765), 411),
+    (Prg(4, 0xbfe0), 24),
+    
+    // Bank 5
+    (Prg(5, 0x84c2), 14),
+    (Prg(5, 0x84e0), 16),
+    (Prg(5, 0x84f4), 12),
+    (Prg(5, 0x8705), 22),
+    (Prg(5, 0x8891), 15),
+    (Prg(5, 0x8b31), 31),
+    (Prg(5, 0x93ae), 82),
+    (Prg(5, 0xa54f), 177),
+    (Prg(5, 0xbdA1), 447),
+    (Prg(5, 0xbfe0), 24),
+
+    // Bank 6
+    // Unknown for now.
+    
+    // Bank 7
+    (Prg(7, 0xd39a), 48),
+    (Prg(7, 0xffea), 38),
+    (Prg(7, 0xff4c), 36),
+]

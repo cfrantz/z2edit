@@ -1,18 +1,30 @@
+use ron;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::errors::*;
-use crate::nes::{Layout, Segment};
+use crate::nes::{Address, Layout, Segment};
 use crate::zelda2::enemyattr;
 use crate::zelda2::palette;
 use crate::zelda2::start;
 use crate::zelda2::xp_spells;
 
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FreeSpace(Address, u16);
+
+impl FreeSpace {
+    pub fn vanilla() -> Vec<Self> {
+        ron::de::from_bytes(include_bytes!("../../config/vanilla/freespace.ron")).unwrap()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Miscellaneous {
     pub start: start::config::Config,
+    pub freespace: Vec<FreeSpace>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,6 +69,7 @@ impl Config {
             layout: zelda2_nesfile_layout(),
             misc: Miscellaneous {
                 start: start::config::Config::vanilla(),
+                freespace: FreeSpace::vanilla(),
             },
             palette: palette::config::Config::vanilla(),
             enemy: enemyattr::config::Config::vanilla(),
