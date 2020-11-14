@@ -6,6 +6,7 @@ error_chain! {
     foreign_links {
         DecodeError(::ron::error::Error);
         Io(::std::io::Error);
+        Convert(::core::num::ParseIntError);
         Json(::serde_json::error::Error);
         PyErr(::pyo3::PyErr);
         WindowBuildError(::sdl2::video::WindowBuildError);
@@ -50,6 +51,14 @@ error_chain! {
         NotImplemented(name: String) {
             description("Not Implemented"),
             display("Not Implemented: {}", name),
+        }
+        FreeSpaceError(error: String) {
+            description("FreeSpace Error"),
+            display("FreeSpace Error: {}", error),
+        }
+        OutOfMemory(bank: isize) {
+            description("Out of Memory"),
+            display("Out of memory in bank {}", bank),
         }
     }
 }

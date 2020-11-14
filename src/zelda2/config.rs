@@ -5,7 +5,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::errors::*;
-use crate::nes::{Address, Layout, Segment};
+use crate::nes::{Layout, Segment};
+use crate::nes::freespace;
 use crate::zelda2::enemyattr;
 use crate::zelda2::hacks;
 use crate::zelda2::palette;
@@ -13,11 +14,8 @@ use crate::zelda2::start;
 use crate::zelda2::xp_spells;
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FreeSpace(Address, u16);
-
-impl FreeSpace {
-    pub fn vanilla() -> Vec<Self> {
+impl freespace::config::Config {
+    pub fn vanilla() -> Self {
         ron::de::from_bytes(include_bytes!("../../config/vanilla/freespace.ron")).unwrap()
     }
 }
@@ -25,7 +23,7 @@ impl FreeSpace {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Miscellaneous {
     pub start: start::config::Config,
-    pub freespace: Vec<FreeSpace>,
+    pub freespace: freespace::config::Config,
     pub hacks: hacks::config::Config,
 }
 
@@ -71,7 +69,7 @@ impl Config {
             layout: zelda2_nesfile_layout(),
             misc: Miscellaneous {
                 start: start::config::Config::vanilla(),
-                freespace: FreeSpace::vanilla(),
+                freespace: freespace::config::Config::vanilla(),
                 hacks: hacks::config::Config::vanilla(),
             },
             palette: palette::config::Config::vanilla(),

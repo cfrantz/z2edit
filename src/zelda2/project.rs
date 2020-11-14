@@ -16,10 +16,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
 use crate::nes::{Buffer, MemoryAccess};
+use crate::nes::freespace::FreeSpace;
 use crate::util::pyaddress::PyAddress;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
 use crate::zelda2::import::ImportRom;
+use crate::zelda2::config::Config;
 
 #[pyclass(unsendable)]
 #[derive(Default, Serialize, Deserialize)]
@@ -36,10 +38,12 @@ impl Project {
             comment: String::default(),
             config: "vanilla".to_owned(),
         };
+        let config = Config::get(&meta.config)?;
         let commit = Edit {
             meta: RefCell::new(meta),
             edit: RefCell::new(ImportRom::from_file(filename)?),
             rom: RefCell::default(),
+            memory: RefCell::new(FreeSpace::new(&config.misc.freespace)?),
             action: RefCell::default(),
         };
         let project = Project {
@@ -86,11 +90,15 @@ impl Project {
         let end = self.normalized_index(end)? + 1;
         for i in start..end {
             let commit = &self.edits[i];
-            if i > 0 {
+            let config = Config::get(&commit.meta.borrow().config)?;
+            if i == 0 {
+                commit.memory.replace(FreeSpace::new(&config.misc.freespace)?);
+            } else {
                 let last = &self.edits[i - 1];
                 //info!("Project::replay: {}.unpack", commit.edit.borrow().name());
                 //commit.edit.borrow_mut().unpack(last)?;
                 commit.rom.replace(last.rom.borrow().clone());
+                commit.memory.replace(last.memory.borrow().clone());
             }
             info!("Project::replay: {}.pack", commit.edit.borrow().name());
             commit.edit.borrow().pack(&commit)?;
@@ -123,6 +131,7 @@ impl Project {
                 meta: RefCell::new(meta),
                 edit: RefCell::new(edit),
                 rom: last.rom.clone(),
+                memory: last.memory.clone(),
                 action: RefCell::default(),
             });
             commit.edit.borrow().pack(&commit)?;
@@ -195,6 +204,8 @@ pub struct Edit {
     pub edit: RefCell<Box<dyn RomData>>,
     #[serde(skip)]
     pub rom: RefCell<Buffer>,
+    #[serde(skip)]
+    pub memory: RefCell<FreeSpace>,
     #[serde(skip)]
     pub action: RefCell<EditAction>,
 }

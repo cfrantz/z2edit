@@ -1,5 +1,6 @@
 mod address;
 mod buffer;
+pub mod freespace;
 pub mod hwpalette;
 mod idpath;
 mod intern;
