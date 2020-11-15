@@ -47,3 +47,45 @@ to learn how to expunge the project file from version control history.
 ```
 git submodule update --init --recursive
 ```
+
+### TODO
+
+- Partial Implementation
+    - 6502 Assembler
+    - Console (python)
+    - Enemy Attributes
+    - Experience & Spells
+    - Misc Hacks (still need to add several common misc hacks)
+    - Import Rom
+    - Palette Editor
+    - Python script execution
+    - Start Values
+    - Text Table
+
+- Not Started
+    - Drops (drop probabilities, hidden drops, pbag values)
+    - Item Effects
+    - Palace graphics banks and palettes
+    - Tile transforms
+    - Object table
+    - Enemy XP values and graphics
+    - Overworld editor
+    - Sideview editor
+    - CHR viewer
+    - Import banks or graphics
+    - Help documentation
+
+- Other Features
+    - Build for Windows, cross compile from Linux to windows
+    - Apply default fixes (move maps and code out of keepout regions)
+    - Zelda 2 config updates & alternate configs
+    - Emulate / Emulate at a location
+    - Remember the location of the vanilla rom
+    - Periodic automatic save
+    - Remember project association with exported ROMs
+    - IPS Patch creator
+
+- Cleanups
+    - Refactor some of the GUIs into common code
+    - Add common methods to the `Edit` struct
+    - Maybe add menubars to individual editor GUIs
