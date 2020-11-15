@@ -13,6 +13,7 @@ use crate::gui::zelda2::hacks::HacksGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::python::PythonScriptGui;
 use crate::gui::zelda2::start::StartGui;
+use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
@@ -115,6 +116,12 @@ impl ProjectGui {
                     match StartGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create StartGui: {:?}", e),
+                    };
+                }
+                if MenuItem::new(im_str!("Text Table")).build(ui) {
+                    match TextTableGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create TextTableGui: {:?}", e),
                     };
                 }
 

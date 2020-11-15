@@ -7,4 +7,5 @@ pub mod project;
 pub mod python;
 pub mod start;
 pub mod text_encoding;
+pub mod text_table;
 pub mod xp_spells;

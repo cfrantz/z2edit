@@ -215,7 +215,21 @@ pub trait MemoryAccess {
         let byte = self.read_bytes(address, 2)?;
         Ok(byte[0] as u16 | (byte[1] as u16) << 8)
     }
+    fn read_pointer(&self, address: Address) -> Result<Address> {
+        let ptr = self.read_word(address)?;
+        // TODO: fail for enum type File
+        Ok(address.set_val(ptr as usize))
+    }
+
     fn read_bytes(&self, address: Address, length: usize) -> Result<&[u8]>;
+
+    fn read_terminated(&self, address: Address, terminator: u8) -> Result<&[u8]> {
+        let mut len = 0;
+        while self.read(address + len)? != terminator {
+            len += 1;
+        }
+        self.read_bytes(address, len)
+    }
 
     // Memory writing functions.
     fn write(&mut self, address: Address, value: u8) -> Result<()> {
@@ -226,6 +240,12 @@ pub trait MemoryAccess {
         self.write_bytes(address, &v)
     }
     fn write_bytes(&mut self, address: Address, value: &[u8]) -> Result<()>;
+
+    fn write_terminated(&mut self, address: Address, value: &[u8], terminator: u8) -> Result<()> {
+        self.write_bytes(address, value)?;
+        self.write(address + value.len(), terminator)?;
+        Ok(())
+    }
 
     // Apply a layout for memory access.
     fn apply_layout(&mut self, layout: Layout) -> Result<()>;
