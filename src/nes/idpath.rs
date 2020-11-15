@@ -23,6 +23,16 @@ impl IdPath {
     pub fn at(&self, i: usize) -> &str {
         &self.0[i]
     }
+
+    pub fn usize_at(&self, i: usize) -> Result<usize> {
+        let result = self.0[i].parse()?;
+        Ok(result)
+    }
+
+    pub fn to_string(&self) -> String {
+        self.0.join("/")
+    }
+
 }
 
 impl From<String> for IdPath {
@@ -33,12 +43,12 @@ impl From<String> for IdPath {
 
 impl From<&IdPath> for String {
     fn from(a: &IdPath) -> Self {
-        a.0.join("/")
+        a.to_string()
     }
 }
 
 impl From<IdPath> for String {
     fn from(a: IdPath) -> Self {
-        a.0.join("/")
+        a.to_string()
     }
 }
