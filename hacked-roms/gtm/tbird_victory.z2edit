@@ -7,7 +7,7 @@ asm b=0
 ; a room entry into room 61 (the victory screen) and then triggers the
 ; victory sequence.
 
-TBIRD_ROOM = 53
+TBIRD_ROOM = 54
 
 bank7_remove_enemy_or_item = $dd47
 bank0_Side_View4_walking = $93bc
@@ -65,6 +65,8 @@ victory_frame1:
 victory_frame2:
     cmp #2
     bne victory_check_done
+    lda #0
+    sta victory_frame
     lda #3
     sta $76c                    ; Trigger automatic routine #3 (victory)
 victory_check_done:
