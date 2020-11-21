@@ -1,6 +1,7 @@
 Cargo.lock
 */target/*
 target/*
+junk/*
 imgui.ini
 *.nes
 *.z2prj
