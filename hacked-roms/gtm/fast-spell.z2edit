@@ -1,0 +1,65 @@
+# The code to control link's speed is in bank0
+set bank 0
+set text 1
+
+# We'll patch normal comapre in Link's acceleration routine to use our
+# special routine.
+asm b=0
+.org $bd00
+fast_table:
+.db $26,$da
+
+fast_accel_check:
+    pha                     ; Save A, currently holding Link's speed
+    lda $076f               ; Get spell status
+    and #$20                ; Reflect spell is $20
+    bne fast_check          ; compare against the fast_table
+    pla                     ; Get speed
+    cmp $93b3,Y             ; Check against normal speed table
+    rts                     ; Return
+fast_check:
+    pla                     ; Get speed
+    cmp fast_table,Y        ; Check against fast speed table
+    rts                     ; Return
+
+; Now patch the two checks in the acceleration routine to use our
+; special check routine
+.org $93ff
+    jsr fast_accel_check
+.org $940e
+    jsr fast_accel_check
+
+
+.org $8e95
+;;;;;;;;;;;;;;
+; CHECK HERE
+;;;;;;;;;;;;;;
+
+; The next instruction controls whether sheild and relflect activate
+; together.  The instruction should be:
+;     nop - Activate shield and reflect together.
+;     rts - Activate shield only (reflect is a separate spell)
+    nop                     ; Don't return from shield, activate reflect too.
+
+; This is vanilla code with convenient labels fro the next part.
+reflect_spell:
+    lda #1
+    sta $0710               ; activate reflect    
+reflect_end:
+    rts
+
+
+.org $8e52
+;;;;;;;;;;;;;;
+; CHECK HERE
+;;;;;;;;;;;;;;
+
+; To disable FAST from activating reflect, change the following to:
+;     reflect_end   - Do not activate reflect when activating the 6th spell.
+;     reflect_spell - Activate reflect when activating the 6th spell.
+.dw reflect_end
+
+.end
+
+# Change the name of the spell from REFLECT
+wtp 0x9c70 "FAST......."
