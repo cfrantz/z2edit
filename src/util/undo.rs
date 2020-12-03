@@ -1,4 +1,3 @@
-
 pub struct UndoStack<T> {
     maxlen: isize,
     index: isize,

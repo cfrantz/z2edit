@@ -8,5 +8,5 @@ pub mod util;
 pub mod visibility;
 pub mod zelda2;
 
-pub use visibility::Visibility;
 pub use selector::Selector;
+pub use visibility::Visibility;

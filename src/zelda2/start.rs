@@ -1,7 +1,7 @@
-use std::any::Any;
-use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::start::StartGui;
@@ -79,7 +79,9 @@ impl RomData for Start {
     fn name(&self) -> String {
         "Start Values".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
@@ -165,7 +167,10 @@ impl RomData for Start {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

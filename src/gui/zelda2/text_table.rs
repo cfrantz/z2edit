@@ -8,9 +8,9 @@ use crate::gui::zelda2::Gui;
 use crate::gui::Visibility;
 use crate::nes::IdPath;
 use crate::zelda2::config::Config;
-use crate::zelda2::text_table::{TextTable, TextItem};
-use crate::zelda2::text_encoding::Text;
 use crate::zelda2::project::{Edit, Project, RomData};
+use crate::zelda2::text_encoding::Text;
+use crate::zelda2::text_table::{TextItem, TextTable};
 
 pub struct TextTableGui {
     visible: Visibility,
@@ -101,7 +101,6 @@ impl TextTableGui {
         self.commit_index = i;
         Ok(())
     }
-
 }
 
 impl Gui for TextTableGui {
@@ -133,9 +132,9 @@ impl Gui for TextTableGui {
                     self.changed = false;
                 }
 
-                let bytes = self.text.iter().fold(0,
-                        |acc, v| acc + v.iter().fold(0,
-                                |acc, x| acc + x.to_str().len() + 1));
+                let bytes = self.text.iter().fold(0, |acc, v| {
+                    acc + v.iter().fold(0, |acc, x| acc + x.to_str().len() + 1)
+                });
                 ui.text(im_str!("Bytes used: {}", bytes));
 
                 let group_id = ui.push_id(self.selected as i32);

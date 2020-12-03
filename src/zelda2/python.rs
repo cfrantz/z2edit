@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::rc::Rc;
-use serde::{Deserialize, Serialize};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -20,7 +20,9 @@ impl RomData for PythonScript {
     fn name(&self) -> String {
         "Python Script".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, _edit: &Rc<Edit>) -> Result<()> {
         Ok(())
@@ -32,8 +34,12 @@ impl RomData for PythonScript {
         let proxy = Py::new(py, EditProxy::new(Rc::clone(edit)))?;
         let locals = PyDict::new(py);
         locals.set_item("edit", proxy)?;
-        py.run("from assembler import Asm\n\
-                asm = Asm(edit)\n", None, Some(locals))?;
+        py.run(
+            "from assembler import Asm\n\
+                asm = Asm(edit)\n",
+            None,
+            Some(locals),
+        )?;
         py.run(&self.code, None, Some(locals))?;
         Ok(())
     }
@@ -48,7 +54,10 @@ impl RomData for PythonScript {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

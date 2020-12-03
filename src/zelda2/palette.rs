@@ -1,7 +1,7 @@
-use std::any::Any;
-use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::palette::PaletteGui;
@@ -70,7 +70,9 @@ impl RomData for Palette {
     fn name(&self) -> String {
         "Palette".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
@@ -103,7 +105,9 @@ impl RomData for PaletteGroup {
     fn name(&self) -> String {
         "PaletteGroup".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         for d in self.data.iter_mut() {
@@ -129,7 +133,10 @@ impl RomData for PaletteGroup {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

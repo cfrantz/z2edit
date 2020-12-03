@@ -1,7 +1,7 @@
-use std::any::Any;
-use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
@@ -80,7 +80,9 @@ impl RomData for ExperienceTable {
     fn name(&self) -> String {
         "ExperienceTable".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let rom = edit.rom.borrow();
@@ -96,8 +98,7 @@ impl RomData for ExperienceTable {
             self.data.push(val);
         }
         if let Some(game_name) = tcfg.game_name {
-            self.game_name = Text::from_zelda2(
-                &rom.read_bytes(game_name, 8)?.to_vec());
+            self.game_name = Text::from_zelda2(&rom.read_bytes(game_name, 8)?.to_vec());
         } else {
             self.game_name.clear();
         }
@@ -114,13 +115,15 @@ impl RomData for ExperienceTable {
             if offset != 0 {
                 rom.write(tcfg.address + i, (*val >> 8) as u8)?;
             }
-
         }
         if let Some(game_name) = tcfg.game_name {
             // Handle spell names.
-            let len = if self.game_name.len() < 8 { self.game_name.len() } else { 8 };
-            rom.write_bytes(game_name,
-                            &Text::to_zelda2(&self.game_name[0..len]))?;
+            let len = if self.game_name.len() < 8 {
+                self.game_name.len()
+            } else {
+                8
+            };
+            rom.write_bytes(game_name, &Text::to_zelda2(&self.game_name[0..len]))?;
         }
         if let Some(graphics) = tcfg.graphics {
             // Handle level-up points values graphics.
@@ -158,7 +161,9 @@ impl RomData for ExperienceTableGroup {
     fn name(&self) -> String {
         "Experience & Spells".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         for d in self.data.iter_mut() {
@@ -184,7 +189,10 @@ impl RomData for ExperienceTableGroup {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

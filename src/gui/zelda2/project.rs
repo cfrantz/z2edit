@@ -1,10 +1,10 @@
 use std::path::Path;
 use std::rc::Rc;
 
-use pyo3::prelude::*;
 use imgui;
 use imgui::{im_str, ImString, MenuItem};
 use nfd;
+use pyo3::prelude::*;
 
 use crate::errors::*;
 use crate::gui::zelda2::edit::EditDetailsGui;
@@ -18,7 +18,7 @@ use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
-use crate::zelda2::project::{EditAction, Project, Edit};
+use crate::zelda2::project::{Edit, EditAction, Project};
 
 pub struct ProjectGui {
     pub visible: bool,
@@ -76,7 +76,7 @@ impl ProjectGui {
         match nfd::open_save_dialog(Some("nes"), None).unwrap() {
             nfd::Response::Okay(path) => match edit.export(&path) {
                 Err(e) => error!("Could not export ROM as {:?}: {:?}", path, e),
-                Ok(_) => {},
+                Ok(_) => {}
             },
             _ => {}
         }
@@ -141,7 +141,6 @@ impl ProjectGui {
                         Err(e) => error!("Could not create TextTableGui: {:?}", e),
                     };
                 }
-
             });
         });
     }
@@ -273,10 +272,8 @@ impl ProjectGui {
 
         ui.dock_space(dock_id, [0.0, 0.0]);
         if let Some(token) = window {
-
             self.menu(py, ui);
-            imgui::Window::new(im_str!("Edit List"))
-                .build(ui, || {
+            imgui::Window::new(im_str!("Edit List")).build(ui, || {
                 let editlist = ui.push_id("editlist");
                 let edits = self.project.borrow(py).edits.len();
                 for i in 0..edits {
@@ -286,14 +283,13 @@ impl ProjectGui {
             });
             token.end(ui);
 
-                let mut project = self.project.borrow_mut(py);
-                let widgetlist = ui.push_id("widgetlist");
-                for widget in self.widgets.iter_mut() {
-                    ui.set_next_window_dock_id(self.editor_pane,
-                                               imgui::Condition::Once);
-                    widget.draw(&mut project, ui);
-                }
-                widgetlist.pop(ui);
+            let mut project = self.project.borrow_mut(py);
+            let widgetlist = ui.push_id("widgetlist");
+            for widget in self.widgets.iter_mut() {
+                ui.set_next_window_dock_id(self.editor_pane, imgui::Condition::Once);
+                widget.draw(&mut project, ui);
+            }
+            widgetlist.pop(ui);
         }
         self.visible = visible;
         self.dispose_widgets();

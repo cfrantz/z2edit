@@ -1,8 +1,8 @@
-use std::any::Any;
-use std::rc::Rc;
-use std::convert::{From, TryFrom};
 use ron;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::convert::{From, TryFrom};
+use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::overworld::OverworldGui;
@@ -42,7 +42,9 @@ pub mod config {
     }
 
     impl Default for HiddenKind {
-        fn default() -> Self { HiddenKind::None }
+        fn default() -> Self {
+            HiddenKind::None
+        }
     }
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -194,11 +196,12 @@ impl Map {
                     want_compress = false;
                 }
 
-                while want_compress &&
-                      count < 15 &&
-                      x+1 < self.width &&
-                      tile == row[x+1] &&
-                      !overworld.skip_compress(x+1, y) {
+                while want_compress
+                    && count < 15
+                    && x + 1 < self.width
+                    && tile == row[x + 1]
+                    && !overworld.skip_compress(x + 1, y)
+                {
                     x += 1;
                     count += 1;
                 }
@@ -210,7 +213,8 @@ impl Map {
     }
 }
 
-const JSONMAP_TRANSFORM: &[u8] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_*".as_bytes();
+const JSONMAP_TRANSFORM: &[u8] =
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_*".as_bytes();
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct JsonMap {
@@ -234,7 +238,6 @@ impl From<&Map> for JsonMap {
             height: a.height,
             data: map,
         }
-
     }
 }
 
@@ -251,9 +254,16 @@ impl TryFrom<JsonMap> for Map {
         for row in a.data.iter() {
             let mut s = Vec::new();
             for col in row.chars() {
-                let v = JSONMAP_TRANSFORM.iter().position(|&x| col as u8 == x).ok_or_else(
-                    || -> Error { ErrorKind::TransformationError(format!(
-                            "Map transform could not convert '{}'", col)).into() } )?;
+                let v = JSONMAP_TRANSFORM
+                    .iter()
+                    .position(|&x| col as u8 == x)
+                    .ok_or_else(|| -> Error {
+                        ErrorKind::TransformationError(format!(
+                            "Map transform could not convert '{}'",
+                            col
+                        ))
+                        .into()
+                    })?;
                 s.push(v as u8);
             }
             map.push(s);
@@ -333,27 +343,31 @@ impl Connector {
             None
         };
 
-        self.hidden =
-            if let Some(spot) = self.hidden_index(edit, &config.overworld)? {
-                self.set_y(rom.read(spot.connector + 2)?, &config.overworld);
-                Some(Hidden {
-                    hidden: y == 0,
-                    id: IdPath(vec![spot.id.clone()]),
-                })
-            } else {
-                None
-            };
+        self.hidden = if let Some(spot) = self.hidden_index(edit, &config.overworld)? {
+            self.set_y(rom.read(spot.connector + 2)?, &config.overworld);
+            Some(Hidden {
+                hidden: y == 0,
+                id: IdPath(vec![spot.id.clone()]),
+            })
+        } else {
+            None
+        };
 
         Ok(())
     }
 
-    fn hidden_index<'a>(&self, edit: &Rc<Edit>, config: &'a config::Config) -> Result<Option<&'a config::HiddenSpot>> {
+    fn hidden_index<'a>(
+        &self,
+        edit: &Rc<Edit>,
+        config: &'a config::Config,
+    ) -> Result<Option<&'a config::HiddenSpot>> {
         let ocfg = config.find(&self.id)?;
         let index = self.id.usize_at(1)?;
         let rom = edit.rom.borrow();
         for h in config.hidden.iter() {
-            if rom.read(h.connector)? == index as u8 &&
-               rom.read(h.overworld)? == ocfg.overworld as u8 {
+            if rom.read(h.connector)? == index as u8
+                && rom.read(h.overworld)? == ocfg.overworld as u8
+            {
                 return Ok(Some(h));
             }
         }
@@ -371,21 +385,19 @@ impl Connector {
         let index = self.id.usize_at(1)?;
         let mut rom = edit.rom.borrow_mut();
 
-
-        let y = if self.external { 0x80 } else { 0x00 }
-              | (self.y + config.overworld.y_offset) as u8;
+        let y =
+            if self.external { 0x80 } else { 0x00 } | (self.y + config.overworld.y_offset) as u8;
         let x = if self.second { 0x40 } else { 0x00 }
-              | if self.external { 0x80 } else { 0x00 }
-              | self.x as u8;
-        let z = (self.entry << 6) as u8
-              | self.dest_map as u8;
+            | if self.external { 0x80 } else { 0x00 }
+            | self.x as u8;
+        let z = (self.entry << 6) as u8 | self.dest_map as u8;
 
         let w = if self.entry_right { 0x20 } else { 0x00 }
-              | if self.passthru { 0x40 } else { 0x00 }
-              | if self.fall { 0x80 } else { 0x00 }
-              | self.dest_overworld as u8
-              | (self.dest_world << 2) as u8;
-        
+            | if self.passthru { 0x40 } else { 0x00 }
+            | if self.fall { 0x80 } else { 0x00 }
+            | self.dest_overworld as u8
+            | (self.dest_world << 2) as u8;
+
         rom.write(ocfg.connector + index + 0x00, y)?;
         rom.write(ocfg.connector + index + 0x3f, x)?;
         rom.write(ocfg.connector + index + 0x7e, z)?;
@@ -398,8 +410,11 @@ impl Connector {
                 // Furthermore, the "call" spot is 2 tiles north of the target
                 // destination.
                 if spot.ppu_macro.raw() == 0 {
-                    return Err(ErrorKind::ConfigError(
-                      format!("No ppu_macro address defined for {}", spot.id.to_string())).into());
+                    return Err(ErrorKind::ConfigError(format!(
+                        "No ppu_macro address defined for {}",
+                        spot.id.to_string()
+                    ))
+                    .into());
                 }
                 rom.write(spot.connector + 2, y)?;
                 rom.write(spot.y, (y & 0x7f) - 2)?;
@@ -409,12 +424,11 @@ impl Connector {
                 // Compute the destination address in VRAM.
                 let xx = self.x as u16;
                 let yy = self.y as u16;
-                let ppu_addr = 0x2000 + 2 * (32*(yy % 15) + (xx % 16)) +            
-                               0x800 * (yy % 30 / 15);
+                let ppu_addr = 0x2000 + 2 * (32 * (yy % 15) + (xx % 16)) + 0x800 * (yy % 30 / 15);
 
                 rom.write(spot.ppu_macro + 0, (ppu_addr >> 8) as u8)?;
                 rom.write(spot.ppu_macro + 1, ppu_addr as u8)?;
-                rom.write(spot.ppu_macro + 5, ((ppu_addr + 32)>> 8) as u8)?;
+                rom.write(spot.ppu_macro + 5, ((ppu_addr + 32) >> 8) as u8)?;
                 rom.write(spot.ppu_macro + 6, (ppu_addr + 32) as u8)?;
                 // Being lazy and not dealing with the color bits.
                 rom.write(spot.ppu_macro + 10, 0xff)?;
@@ -423,12 +437,15 @@ impl Connector {
                     rom.write(ocfg.connector + index + 0x00, 0)?;
                 }
             } else if spot.kind == HiddenKind::Town {
-                // Hidden Town Y coordinate does not include the overworld_y_offset.     
-                // Furthermore, the x location seems to be 1 more than the actual        
-                // coordinate.                                                           
+                // Hidden Town Y coordinate does not include the overworld_y_offset.
+                // Furthermore, the x location seems to be 1 more than the actual
+                // coordinate.
                 if spot.discriminator.raw() == 0 {
-                    return Err(ErrorKind::ConfigError(
-                      format!("No discriminator address defined for {}", spot.id.to_string())).into());
+                    return Err(ErrorKind::ConfigError(format!(
+                        "No discriminator address defined for {}",
+                        spot.id.to_string()
+                    ))
+                    .into());
                 }
                 rom.write(spot.connector + 2, y)?;
                 rom.write(spot.y, self.y as u8)?;
@@ -439,8 +456,11 @@ impl Connector {
                     rom.write(ocfg.connector + index + 0x00, 0)?;
                 }
             } else {
-                return Err(ErrorKind::ConfigError(
-                  format!("Don't know how to pack hidden spot {}", spot.id.to_string())).into());
+                return Err(ErrorKind::ConfigError(format!(
+                    "Don't know how to pack hidden spot {}",
+                    spot.id.to_string()
+                ))
+                .into());
             }
         }
         if index == ocfg.raft_connector {
@@ -524,26 +544,34 @@ impl RomData for Overworld {
     fn name(&self) -> String {
         "Overworld".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let ocfg = config.overworld.find(&self.id)?;
         let addr = edit.rom.borrow().read_pointer(ocfg.pointer)?;
 
-        self.mason_dixon_line = edit.rom.borrow().read(config.overworld.mason_dixon_line)? as i32 - config.overworld.y_offset;
+        self.mason_dixon_line = edit.rom.borrow().read(config.overworld.mason_dixon_line)? as i32
+            - config.overworld.y_offset;
         self.map.width = ocfg.width;
         self.map.height = ocfg.height;
         self.map.decompress(addr, &edit.rom.borrow())?;
-        self.encounter = edit.rom.borrow().read_bytes(ocfg.encounter, 14)?
+        self.encounter = edit
+            .rom
+            .borrow()
+            .read_bytes(ocfg.encounter, 14)?
             .iter()
             .map(|byte| Encounter::from(*byte))
             .collect();
 
         self.connector.clear();
         for index in 0..63 {
-            self.connector.push(
-                Connector::from_rom(edit, IdPath(vec![ocfg.id.clone(), index.to_string()]))?);
+            self.connector.push(Connector::from_rom(
+                edit,
+                IdPath(vec![ocfg.id.clone(), index.to_string()]),
+            )?);
         }
 
         Ok(())
@@ -555,8 +583,11 @@ impl RomData for Overworld {
         let map = self.map.compress(self, &config.overworld);
         if map.data.len() >= config.overworld.overworld_len {
             return Err(ErrorKind::LengthError(format!(
-                        "Overworld too big: compressed size of {} bytes is larger than {} bytes",
-                        map.data.len(), config.overworld.overworld_len)).into());
+                "Overworld too big: compressed size of {} bytes is larger than {} bytes",
+                map.data.len(),
+                config.overworld.overworld_len
+            ))
+            .into());
         }
         {
             let mut memory = edit.memory.borrow_mut();
@@ -570,13 +601,21 @@ impl RomData for Overworld {
 
             memory.free(addr, length);
             let addr = memory.alloc_near(addr, map.data.len() as u16)?;
-            info!("Overworld::pack: storing {} at {:x?} using {} bytes", self.id, addr, map.data.len());
+            info!(
+                "Overworld::pack: storing {} at {:x?} using {} bytes",
+                self.id,
+                addr,
+                map.data.len()
+            );
             rom.write_bytes(addr, &map.data)?;
 
             let (addr, length) = ocfg.palace_to_stone_table;
             for i in 0..length {
                 if map.palace_offset[i] != 0xFFFF {
-                    rom.write_word(addr + i*2, config.overworld.overworld_ram + map.palace_offset[i])?
+                    rom.write_word(
+                        addr + i * 2,
+                        config.overworld.overworld_ram + map.palace_offset[i],
+                    )?
                 }
             }
 
@@ -600,7 +639,10 @@ impl RomData for Overworld {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

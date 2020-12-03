@@ -1,7 +1,7 @@
 use crate::errors::*;
-use crate::nes::{MemoryAccess, Address};
+use crate::nes::{Address, MemoryAccess};
 
-
+#[rustfmt::skip]
 const ZELDA2_TO_ASCII: [u8; 256] = [
 // 0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // 00
@@ -22,6 +22,7 @@ const ZELDA2_TO_ASCII: [u8; 256] = [
 0x57,0x58,0x59,0x5a,0x20,0x20,0x2d,0x00,0x00,0x00,0x00,0x00,0x78,0x7c,0x5f,0x00,  // F0
 ];
 
+#[rustfmt::skip]
 const ASCII_TO_ZELDA2: [u8; 128] = [
 // 0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xfd,0x00,0x00,0xfd,0x00,0x00,  // 00
@@ -56,7 +57,11 @@ impl Text {
         for ch in s.bytes() {
             let ch = if ch < 128 {
                 let t = ASCII_TO_ZELDA2[ch as usize];
-                if t == 0 { err } else { t }
+                if t == 0 {
+                    err
+                } else {
+                    t
+                }
             } else {
                 err
             };

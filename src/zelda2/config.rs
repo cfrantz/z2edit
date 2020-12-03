@@ -1,12 +1,12 @@
-use ron;
 use once_cell::sync::Lazy;
+use ron;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::errors::*;
-use crate::nes::{Layout, Segment};
 use crate::nes::freespace;
+use crate::nes::{Layout, Segment};
 use crate::zelda2::enemyattr;
 use crate::zelda2::hacks;
 use crate::zelda2::overworld;
@@ -14,7 +14,6 @@ use crate::zelda2::palette;
 use crate::zelda2::start;
 use crate::zelda2::text_table;
 use crate::zelda2::xp_spells;
-
 
 impl freespace::config::Config {
     pub fn vanilla() -> Self {

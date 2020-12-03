@@ -35,7 +35,9 @@ impl RomData for ImportRom {
     fn name(&self) -> String {
         "ImportRom".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, _edit: &Rc<Edit>) -> Result<()> {
         Ok(())
@@ -56,7 +58,10 @@ impl RomData for ImportRom {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

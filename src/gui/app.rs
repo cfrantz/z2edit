@@ -3,9 +3,9 @@ use imgui::im_str;
 use imgui::MenuItem;
 use imgui_opengl_renderer::Renderer;
 use imgui_sdl2::ImguiSdl2;
-use pyo3::prelude::*;
 use pyo3::class::PySequenceProtocol;
 use pyo3::exceptions::PyIndexError;
+use pyo3::prelude::*;
 use sdl2::event::Event;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -107,7 +107,6 @@ impl App {
 
         imgui.io_mut().config_flags |= imgui::ConfigFlags::DOCKING_ENABLE;
 
-
         let mut imgui_sdl2 = ImguiSdl2::new(&mut imgui, &context.window);
         let renderer = Renderer::new(&mut imgui, |s| context.video.gl_get_proc_address(s) as _);
 
@@ -178,16 +177,15 @@ impl PySequenceProtocol for App {
 
     fn __getitem__(&self, index: isize) -> PyResult<Py<Project>> {
         let len = self.project.len() as isize;
-        let i = if index < 0 {
-            len + index
-        } else {
-            index
-        };
+        let i = if index < 0 { len + index } else { index };
 
         let gil = Python::acquire_gil();
         let py = gil.python();
-        Ok(self.project.get(i as usize)
-           .ok_or_else(|| PyIndexError::new_err("list index out of range"))?
-           .project.clone_ref(py))
+        Ok(self
+            .project
+            .get(i as usize)
+            .ok_or_else(|| PyIndexError::new_err("list index out of range"))?
+            .project
+            .clone_ref(py))
     }
 }

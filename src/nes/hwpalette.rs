@@ -44,10 +44,7 @@ pub fn glget(index: usize) -> u32 {
     let g = (color >> G_SHIFT) & 0xFF;
     let b = (color >> B_SHIFT) & 0xFF;
     let a = (color >> A_SHIFT) & 0xFF;
-    (a << 24) |
-    (r << 16) |
-    (g << 8) |
-    b
+    (a << 24) | (r << 16) | (g << 8) | b
 }
 
 pub fn fget(index: usize) -> [f32; 4] {

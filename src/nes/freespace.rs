@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use super::Address;
 use crate::errors::*;
@@ -22,8 +22,9 @@ struct FreeSpaceRange {
 impl FreeSpaceRange {
     fn contains(&self, address: Address) -> bool {
         match address {
-            Address::Prg(bank, addr) => (
-                bank == self.bank && addr >= self.address && addr < self.address + self.length),
+            Address::Prg(bank, addr) => {
+                (bank == self.bank && addr >= self.address && addr < self.address + self.length)
+            }
             _ => false,
         }
     }
@@ -36,11 +37,10 @@ impl FreeSpaceRange {
         if self.adjacent(other) {
             self.length += other.length;
             true
-        } else{
+        } else {
             false
         }
     }
-
 }
 
 #[derive(Debug, Default, Clone)]
@@ -73,7 +73,7 @@ impl FreeSpace {
                 self.freelist.remove(i);
                 continue;
             }
-            if self.freelist[i].adjacent(&self.freelist[i+1]) {
+            if self.freelist[i].adjacent(&self.freelist[i + 1]) {
                 let next = self.freelist.remove(i + 1);
                 self.freelist[i].extend(&next);
                 continue;
@@ -84,11 +84,19 @@ impl FreeSpace {
 
     pub fn register(&mut self, address: Address, length: u16) -> Result<()> {
         if self.contains(address) {
-            return Err(ErrorKind::FreeSpaceError(format!("Address {:?} already in freespace", address)).into());
+            return Err(ErrorKind::FreeSpaceError(format!(
+                "Address {:?} already in freespace",
+                address
+            ))
+            .into());
         }
 
         if self.contains(address + length) {
-            return Err(ErrorKind::FreeSpaceError(format!("Address {:?}+{} already in freespace", address, length)).into());
+            return Err(ErrorKind::FreeSpaceError(format!(
+                "Address {:?}+{} already in freespace",
+                address, length
+            ))
+            .into());
         }
         match address {
             Address::Prg(bank, addr) => {
@@ -101,8 +109,12 @@ impl FreeSpace {
                 self.freelist.sort();
                 self.coalesce();
                 Ok(())
-            },
-            _ => Err(ErrorKind::FreeSpaceError(format!("Address must by of type Prg: {:?}", address)).into()),
+            }
+            _ => Err(ErrorKind::FreeSpaceError(format!(
+                "Address must by of type Prg: {:?}",
+                address
+            ))
+            .into()),
         }
     }
 
@@ -134,7 +146,11 @@ impl FreeSpace {
         let bank = if let Some(b) = address.bank() {
             b.1
         } else {
-            return Err(ErrorKind::FreeSpaceError(format!("Address must by of type Prg: {:?}", address)).into());
+            return Err(ErrorKind::FreeSpaceError(format!(
+                "Address must by of type Prg: {:?}",
+                address
+            ))
+            .into());
         };
         // Generate (delta from requested address, freespace index) tuples.
         let mut nearness = Vec::new();
@@ -168,8 +184,7 @@ impl FreeSpace {
     pub fn free(&mut self, address: Address, length: u16) {
         match self.register(address, length) {
             Err(e) => panic!("{:?}", e),
-            _ => {},
+            _ => {}
         };
     }
-
 }

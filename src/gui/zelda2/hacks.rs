@@ -8,8 +8,8 @@ use crate::errors::*;
 use crate::gui::zelda2::Gui;
 use crate::gui::Visibility;
 use crate::zelda2::config::Config;
+use crate::zelda2::hacks::{Hack, Hacks};
 use crate::zelda2::project::{Edit, Project, RomData};
-use crate::zelda2::hacks::{Hacks, Hack};
 
 pub struct HacksGui {
     visible: Visibility,
@@ -105,20 +105,40 @@ impl Gui for HacksGui {
                 }
                 ui.separator();
                 let mut changed = self.changed;
-                changed |= ui.checkbox(im_str!("Walk anywhere on overworld"), &mut self.hacks.walk_anywhere);
-                
+                changed |= ui.checkbox(
+                    im_str!("Walk anywhere on overworld"),
+                    &mut self.hacks.walk_anywhere,
+                );
+
                 let width = ui.push_item_width(100.0);
-                changed |= ui.input_int(im_str!("Item pickup delay"), &mut self.hacks.item_pickup_delay).build();
-                changed |= ui.input_int(im_str!("Text delay"), &mut self.hacks.text_delay).build();
-                changed |= ui.input_int(im_str!("Beam sword time"), &mut self.hacks.beam_sword_time).build();
-                changed |= ui.input_int(im_str!("Beam sword speed"), &mut self.hacks.beam_sword_speed).build();
-                changed |= ui.input_int(im_str!("Elevator speed"), &mut self.hacks.elevator_speed).build();
-                changed |= ui.input_int(im_str!("Fairy speed"), &mut self.hacks.fairy_speed).build();
+                changed |= ui
+                    .input_int(
+                        im_str!("Item pickup delay"),
+                        &mut self.hacks.item_pickup_delay,
+                    )
+                    .build();
+                changed |= ui
+                    .input_int(im_str!("Text delay"), &mut self.hacks.text_delay)
+                    .build();
+                changed |= ui
+                    .input_int(im_str!("Beam sword time"), &mut self.hacks.beam_sword_time)
+                    .build();
+                changed |= ui
+                    .input_int(
+                        im_str!("Beam sword speed"),
+                        &mut self.hacks.beam_sword_speed,
+                    )
+                    .build();
+                changed |= ui
+                    .input_int(im_str!("Elevator speed"), &mut self.hacks.elevator_speed)
+                    .build();
+                changed |= ui
+                    .input_int(im_str!("Fairy speed"), &mut self.hacks.fairy_speed)
+                    .build();
                 width.pop(ui);
 
                 for (i, item) in self.hacks.item.iter_mut().enumerate() {
-                    let names = self
-                        .names[i]
+                    let names = self.names[i]
                         .iter()
                         .map(|s| s.as_ref())
                         .collect::<Vec<&ImStr>>();

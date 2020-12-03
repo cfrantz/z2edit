@@ -7,21 +7,21 @@ use std::rc::Rc;
 use std::vec::Vec;
 use whoami;
 
-use pyo3::prelude::*;
+use dict_derive::{FromPyObject, IntoPyObject};
 use pyo3::class::PySequenceProtocol;
 use pyo3::exceptions::PyIndexError;
-use dict_derive::{FromPyObject, IntoPyObject};
-use serde_json;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_json;
 
 use crate::errors::*;
-use crate::nes::{Buffer, MemoryAccess};
-use crate::nes::freespace::FreeSpace;
-use crate::util::pyaddress::PyAddress;
 use crate::gui::zelda2::Gui;
+use crate::nes::freespace::FreeSpace;
+use crate::nes::{Buffer, MemoryAccess};
+use crate::util::pyaddress::PyAddress;
 use crate::util::UTime;
-use crate::zelda2::import::ImportRom;
 use crate::zelda2::config::Config;
+use crate::zelda2::import::ImportRom;
 
 #[pyclass(unsendable)]
 #[derive(Default, Serialize, Deserialize)]
@@ -92,7 +92,9 @@ impl Project {
             let commit = &self.edits[i];
             let config = Config::get(&commit.meta.borrow().config)?;
             if i == 0 {
-                commit.memory.replace(FreeSpace::new(&config.misc.freespace)?);
+                commit
+                    .memory
+                    .replace(FreeSpace::new(&config.misc.freespace)?);
             } else {
                 let last = &self.edits[i - 1];
                 //info!("Project::replay: {}.unpack", commit.edit.borrow().name());
@@ -219,14 +221,12 @@ impl Edit {
 
 #[pyclass(unsendable)]
 pub struct EditProxy {
-    edit: Rc<Edit>
+    edit: Rc<Edit>,
 }
 
 impl EditProxy {
     pub fn new(edit: Rc<Edit>) -> EditProxy {
-        EditProxy {
-            edit: edit,
-        }
+        EditProxy { edit: edit }
     }
 }
 
@@ -259,7 +259,7 @@ impl EditProxy {
             Ok(()) => {
                 self.edit.action.replace(EditAction::Update);
                 Ok(())
-            },
+            }
             Err(e) => Err(e.into()),
         }
     }

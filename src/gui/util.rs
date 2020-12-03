@@ -40,13 +40,22 @@ impl KeyAction {
 pub fn text_outlined(ui: &imgui::Ui, color: [f32; 4], text: &imgui::ImStr) {
     const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
     let pos = ui.cursor_pos();
-    ui.set_cursor_pos([pos[0] - 1.0, pos[1] - 1.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] + 0.0, pos[1] - 1.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] + 1.0, pos[1] - 1.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] - 1.0, pos[1] + 0.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] + 1.0, pos[1] + 0.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] - 1.0, pos[1] + 1.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] + 0.0, pos[1] + 1.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] + 1.0, pos[1] + 1.0]); ui.text_colored(BLACK, text);
-    ui.set_cursor_pos([pos[0] + 0.0, pos[1] + 0.0]); ui.text_colored(color, text);
+    ui.set_cursor_pos([pos[0] - 1.0, pos[1] - 1.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] + 0.0, pos[1] - 1.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] + 1.0, pos[1] - 1.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] - 1.0, pos[1] + 0.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] + 1.0, pos[1] + 0.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] - 1.0, pos[1] + 1.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] + 0.0, pos[1] + 1.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] + 1.0, pos[1] + 1.0]);
+    ui.text_colored(BLACK, text);
+    ui.set_cursor_pos([pos[0] + 0.0, pos[1] + 0.0]);
+    ui.text_colored(color, text);
 }

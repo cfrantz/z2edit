@@ -1,5 +1,5 @@
-use std::rc::Rc;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use imgui;
 use imgui::{im_str, ImStr, ImString};
@@ -10,9 +10,9 @@ use crate::gui::zelda2::Gui;
 use crate::gui::Visibility;
 use crate::nes::IdPath;
 use crate::zelda2::config::Config;
+use crate::zelda2::project::{Edit, Project, RomData};
 use crate::zelda2::text_encoding::Text;
 use crate::zelda2::xp_spells::{config, ExperienceTable, ExperienceTableGroup};
-use crate::zelda2::project::{Edit, Project, RomData};
 
 pub struct ExperienceTableGui {
     visible: Visibility,
@@ -138,7 +138,11 @@ impl ExperienceTableGui {
         Ok(())
     }
 
-    pub fn table_row(xpt: &mut ExperienceTable, config: &config::ExperienceTable, ui: &imgui::Ui) -> bool {
+    pub fn table_row(
+        xpt: &mut ExperienceTable,
+        config: &config::ExperienceTable,
+        ui: &imgui::Ui,
+    ) -> bool {
         let mut changed = false;
 
         if config.id == "effects" {
@@ -150,7 +154,11 @@ impl ExperienceTableGui {
         }
         if config.game_name.is_some() {
             let mut name = imgui::ImString::new(&xpt.game_name);
-            if ui.input_text(im_str!(""), &mut name).resize_buffer(false).build() {
+            if ui
+                .input_text(im_str!(""), &mut name)
+                .resize_buffer(false)
+                .build()
+            {
                 xpt.game_name = Text::validate(name.to_str(), Some(8));
                 changed = true;
             }
@@ -168,7 +176,7 @@ impl ExperienceTableGui {
             id.pop(ui);
             ui.next_column();
         }
-        
+
         changed
     }
 }
@@ -205,16 +213,22 @@ impl Gui for ExperienceTableGui {
                 }
 
                 let config = Config::get(&self.edit.meta.borrow().config).unwrap();
-                let columns = COLUMNS.get(&config.experience.group[self.selected].id).unwrap();
+                let columns = COLUMNS
+                    .get(&config.experience.group[self.selected].id)
+                    .unwrap();
                 ui.columns(columns.len() as i32, im_str!("columns"), true);
                 ui.separator();
                 for (n, name) in columns.iter().enumerate() {
-                    ui.set_column_offset(n as i32, (130*n) as f32);
+                    ui.set_column_offset(n as i32, (130 * n) as f32);
                     ui.text(name);
                     ui.next_column();
                 }
                 self.gui_once_init = true;
-                for (n, cfg) in config.experience.group[self.selected].table.iter().enumerate() {
+                for (n, cfg) in config.experience.group[self.selected]
+                    .table
+                    .iter()
+                    .enumerate()
+                {
                     ui.separator();
                     let mut table = &mut self.group[self.selected].data[n];
                     let id = ui.push_id(&cfg.id);

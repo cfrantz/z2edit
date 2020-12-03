@@ -7,8 +7,8 @@ extern crate sdl2;
 extern crate structopt;
 #[macro_use]
 extern crate log;
-extern crate pyo3;
 extern crate dict_derive;
+extern crate pyo3;
 extern crate rustyline;
 extern crate simplelog;
 extern crate typetag;
@@ -87,12 +87,7 @@ fn run(py: Python) -> Result<()> {
     )?;
     modules.set_item("assembler", assembler)?;
 
-    let debug = PyModule::from_code(
-        py,
-        include_str!("../python/debug.py"),
-        "debug.py",
-        "debug",
-    )?;
+    let debug = PyModule::from_code(py, include_str!("../python/debug.py"), "debug.py", "debug")?;
     modules.set_item("debug", debug)?;
 
     App::run(&app, py, &mut executor);

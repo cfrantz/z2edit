@@ -1,4 +1,4 @@
-use pyo3::class::{PyObjectProtocol, PyNumberProtocol};
+use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
 use pyo3::prelude::*;
 
 use crate::nes::Address;
@@ -76,10 +76,14 @@ impl PyObjectProtocol for PyAddress {
 #[pyproto]
 impl PyNumberProtocol for PyAddress {
     fn __add__(lhs: PyAddress, rhs: isize) -> Self {
-        PyAddress { address: lhs.address + rhs }
+        PyAddress {
+            address: lhs.address + rhs,
+        }
     }
     fn __sub__(lhs: PyAddress, rhs: isize) -> Self {
-        PyAddress { address: lhs.address - rhs }
+        PyAddress {
+            address: lhs.address - rhs,
+        }
     }
     fn __iadd__(&mut self, rhs: isize) {
         self.address = self.address + rhs;

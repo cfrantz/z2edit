@@ -1,8 +1,8 @@
 use crate::errors::*;
 use serde::{Deserialize, Serialize};
 use std::convert::{From, Into};
-use std::ops::Range;
 use std::fmt;
+use std::ops::Range;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(from = "String")]
@@ -41,7 +41,6 @@ impl IdPath {
     pub fn to_string(&self) -> String {
         self.0.join("/")
     }
-
 }
 
 impl From<String> for IdPath {

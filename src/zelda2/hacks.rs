@@ -1,15 +1,15 @@
-use std::any::Any;
-use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::hacks::HacksGui;
 use crate::gui::zelda2::Gui;
 use crate::nes::{Address, MemoryAccess};
 use crate::zelda2::config::Config;
-use crate::zelda2::python::PythonScript;
 use crate::zelda2::project::{Edit, Project, RomData};
+use crate::zelda2::python::PythonScript;
 
 pub mod config {
     use super::*;
@@ -86,7 +86,9 @@ impl RomData for Hacks {
     fn name(&self) -> String {
         "Miscellaneous Hacks".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
@@ -109,8 +111,7 @@ impl RomData for Hacks {
 
         {
             let mut rom = edit.rom.borrow_mut();
-            rom.write(cfg.walk_anywhere,
-                      if self.walk_anywhere { 0 } else { 2 })?;
+            rom.write(cfg.walk_anywhere, if self.walk_anywhere { 0 } else { 2 })?;
             rom.write(cfg.item_pickup_delay, self.item_pickup_delay as u8)?;
 
             let delay0 = self.text_delay;
@@ -138,7 +139,9 @@ impl RomData for Hacks {
                 if item.id == h.id {
                     if let Some(hackitem) = &h.item.get(item.selected) {
                         info!("Applying hackitem '{}'", hackitem.name);
-                        let p = PythonScript { code: hackitem.code.clone() };
+                        let p = PythonScript {
+                            code: hackitem.code.clone(),
+                        };
                         p.pack(edit)?;
                     } else {
                         error!("No hackitem[{}] in '{}'", item.selected, h.name);
@@ -159,7 +162,10 @@ impl RomData for Hacks {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

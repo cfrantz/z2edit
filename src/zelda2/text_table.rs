@@ -1,7 +1,7 @@
-use std::any::Any;
-use std::rc::Rc;
 use ron;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::zelda2::text_table::TextTableGui;
@@ -77,7 +77,9 @@ impl RomData for TextTable {
     fn name(&self) -> String {
         "TextTable".to_owned()
     }
-    fn as_any(&self) -> &dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
@@ -87,7 +89,7 @@ impl RomData for TextTable {
         for tcfg in config.text_table.table.iter() {
             let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
             for i in 0..tcfg.length {
-                let str_ptr = rom.read_pointer(table + i*2)?;
+                let str_ptr = rom.read_pointer(table + i * 2)?;
                 self.data.push(TextItem {
                     id: IdPath(vec![tcfg.id.clone(), i.to_string()]),
                     text: Text::from_zelda2(rom.read_terminated(str_ptr, 0xff)?),
@@ -109,7 +111,7 @@ impl RomData for TextTable {
             let tcfg = config.text_table.find(&item.id)?;
             let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
             let index = item.id.usize_at(1)?;
-            let str_ptr = rom.read_pointer(table + index*2)?;
+            let str_ptr = rom.read_pointer(table + index * 2)?;
             memory.free(str_ptr, item.text.len() as u16 + 1);
         }
         // Merge in the changed strings.
@@ -120,10 +122,15 @@ impl RomData for TextTable {
             let tcfg = config.text_table.find(&item.id)?;
             let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
             let index = item.id.usize_at(1)?;
-            let str_ptr = rom.read_pointer(table + index*2)?;
+            let str_ptr = rom.read_pointer(table + index * 2)?;
             let str_ptr = memory.alloc_near(str_ptr, item.text.len() as u16 + 1)?;
-            info!("Writing {:?} to {:x?}: '{}'", item.id.to_string(), str_ptr, item.text);
-            rom.write_word(table + index*2, str_ptr.raw() as u16)?;
+            info!(
+                "Writing {:?} to {:x?}: '{}'",
+                item.id.to_string(),
+                str_ptr,
+                item.text
+            );
+            rom.write_word(table + index * 2, str_ptr.raw() as u16)?;
             rom.write_terminated(str_ptr, &Text::to_zelda2(&item.text), 0xff)?;
         }
         Ok(())
@@ -139,7 +146,10 @@ impl RomData for TextTable {
 
     fn from_text(&mut self, text: &str) -> Result<()> {
         match serde_json::from_str(text) {
-            Ok(v) => { *self = v; Ok(()) },
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
             Err(e) => Err(e.into()),
         }
     }

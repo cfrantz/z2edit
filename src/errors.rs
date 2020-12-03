@@ -1,7 +1,7 @@
-use std::ops::Range;
 use crate::nes::Address;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use std::ops::Range;
 
 error_chain! {
     foreign_links {

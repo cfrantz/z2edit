@@ -1,15 +1,13 @@
+use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::{Ref, RefCell};
 
 use crate::errors::*;
-use crate::zelda2::config::Config;
-use crate::zelda2::project::Edit;
 use crate::gui::glhelper::Image;
 use crate::nes::hwpalette;
-use crate::nes::{Address, MemoryAccess, IdPath};
-
-
+use crate::nes::{Address, IdPath, MemoryAccess};
+use crate::zelda2::config::Config;
+use crate::zelda2::project::Edit;
 
 #[derive(Debug)]
 pub enum Schema {
@@ -37,7 +35,14 @@ impl TileCache {
         self.cache.borrow_mut().clear();
     }
 
-    fn blit(&self, image: &mut Image, tileaddr: Address, paladdr: Address, x0: u32, y0: u32) -> Result<()> {
+    fn blit(
+        &self,
+        image: &mut Image,
+        tileaddr: Address,
+        paladdr: Address,
+        x0: u32,
+        y0: u32,
+    ) -> Result<()> {
         let rom = self.edit.rom.borrow();
         for y in 0..8 {
             let a = rom.read(tileaddr + y)?;
@@ -67,22 +72,34 @@ impl TileCache {
         let palidx = rom.read(ov.tile_palette + tile)?;
 
         let mut image = Image::new(16, 16);
-        self.blit(&mut image,
-                  ov.chr.set_val(table[0] as usize * 16),
-                  ov.palette + palidx * 4,
-                  0, 0)?;
-        self.blit(&mut image,
-                  ov.chr.set_val(table[1] as usize * 16),
-                  ov.palette + palidx * 4,
-                  0, 8)?;
-        self.blit(&mut image,
-                  ov.chr.set_val(table[2] as usize * 16),
-                  ov.palette + palidx * 4,
-                  8, 0)?;
-        self.blit(&mut image,
-                  ov.chr.set_val(table[3] as usize * 16),
-                  ov.palette + palidx * 4,
-                  8, 8)?;
+        self.blit(
+            &mut image,
+            ov.chr.set_val(table[0] as usize * 16),
+            ov.palette + palidx * 4,
+            0,
+            0,
+        )?;
+        self.blit(
+            &mut image,
+            ov.chr.set_val(table[1] as usize * 16),
+            ov.palette + palidx * 4,
+            0,
+            8,
+        )?;
+        self.blit(
+            &mut image,
+            ov.chr.set_val(table[2] as usize * 16),
+            ov.palette + palidx * 4,
+            8,
+            0,
+        )?;
+        self.blit(
+            &mut image,
+            ov.chr.set_val(table[3] as usize * 16),
+            ov.palette + palidx * 4,
+            8,
+            8,
+        )?;
 
         // If the tile is walkable water, darken it so it's visible as a
         // distinct entity on the map.
@@ -112,5 +129,4 @@ impl TileCache {
     pub fn get(&self, tile: u8) -> Ref<'_, Image> {
         self._get(tile).unwrap()
     }
-
 }

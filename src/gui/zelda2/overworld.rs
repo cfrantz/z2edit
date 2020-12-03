@@ -1,22 +1,22 @@
+use std::convert::{From, TryFrom};
 use std::mem::swap;
 use std::rc::Rc;
-use std::convert::{From, TryFrom};
 
 use imgui;
 use imgui::im_str;
-use imgui::{ImString, ImStr, MouseButton};
+use imgui::{ImStr, ImString, MouseButton};
 
 use crate::errors::*;
-use crate::util::clamp;
-use crate::util::undo::UndoStack;
+use crate::gui::util::{text_outlined, KeyAction};
+use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
-use crate::gui::zelda2::tile_cache::{TileCache, Schema};
-use crate::gui::util::{KeyAction, text_outlined};
 use crate::gui::{Selector, Visibility};
 use crate::nes::IdPath;
+use crate::util::clamp;
+use crate::util::undo::UndoStack;
 use crate::zelda2::config::Config;
+use crate::zelda2::overworld::{Connector, Encounter, JsonMap, Map, Overworld};
 use crate::zelda2::project::{Edit, Project};
-use crate::zelda2::overworld::{Overworld, Map, JsonMap, Connector, Encounter};
 
 #[derive(Copy, Clone, Debug)]
 struct SelectBox {
@@ -39,8 +39,7 @@ impl Default for SelectBox {
 
 impl SelectBox {
     pub fn contains(&self, x: isize, y: isize) -> bool {
-        x >= self.x0 && x <= self.x1 &&
-        y >= self.y0 && y <= self.y1
+        x >= self.x0 && x <= self.x1 && y >= self.y0 && y <= self.y1
     }
 
     pub fn init(&mut self, x: isize, y: isize) {
@@ -59,7 +58,6 @@ impl SelectBox {
         if self.y0 == isize::MIN {
             self.y0 = self.y1
         }
-
     }
 
     pub fn normalized(self) -> Self {
@@ -74,10 +72,10 @@ impl SelectBox {
     }
 
     pub fn valid(&self) -> bool {
-        self.x0 != isize::MIN &&
-        self.y0 != isize::MIN &&
-        self.x1 != isize::MIN &&
-        self.y1 != isize::MIN
+        self.x0 != isize::MIN
+            && self.y0 != isize::MIN
+            && self.x1 != isize::MIN
+            && self.y1 != isize::MIN
     }
 }
 
@@ -166,8 +164,9 @@ impl OverworldGui {
 
         let win_id = edit.meta.borrow().timestamp;
         let cache = TileCache::new(
-            &edit, Schema::Overworld(edit.meta.borrow().config.clone(),
-                                     overworld.id.clone()));
+            &edit,
+            Schema::Overworld(edit.meta.borrow().config.clone(), overworld.id.clone()),
+        );
 
         let mut undo = UndoStack::new(1000);
         undo.push(overworld.clone());
@@ -195,8 +194,7 @@ impl OverworldGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let i = project.commit(self.commit_index,
-                               Box::new(self.overworld.clone()))?;
+        let i = project.commit(self.commit_index, Box::new(self.overworld.clone()))?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
@@ -249,10 +247,12 @@ impl OverworldGui {
                         }
                     }
                     self.selectbox.init(x0 as isize, y0 as isize);
-                    self.selectbox.drag(clamp(x0 + map.width, 0, self.overworld.map.width) as isize - 1,
-                                        clamp(y0 + map.height, 0, self.overworld.map.height) as isize - 1);
+                    self.selectbox.drag(
+                        clamp(x0 + map.width, 0, self.overworld.map.width) as isize - 1,
+                        clamp(y0 + map.height, 0, self.overworld.map.height) as isize - 1,
+                    );
                 }
-            },
+            }
             Err(e) => {
                 warn!("OverworldGui clipboard: {:?}", e);
             }
@@ -263,13 +263,18 @@ impl OverworldGui {
         let config = Config::get(&self.edit.meta.borrow().config).unwrap();
         let overworld = &config.overworld.map[self.selector.value()];
         let group = ui.begin_group();
-        ui.text(im_str!("Map:\n  Width: {}\n  Height: {}",
-                        self.overworld.map.width,
-                        self.overworld.map.height));
+        ui.text(im_str!(
+            "Map:\n  Width: {}\n  Height: {}",
+            self.overworld.map.width,
+            self.overworld.map.height
+        ));
 
         ui.text(im_str!(""));
-        ui.text(im_str!("Cursor:\n  X: {}\n  Y: {}",
-                        self.cursor[0], self.cursor[1]));
+        ui.text(im_str!(
+            "Cursor:\n  X: {}\n  Y: {}",
+            self.cursor[0],
+            self.cursor[1]
+        ));
 
         ui.text(im_str!(""));
         ui.text(im_str!("Tiles:"));
@@ -289,7 +294,8 @@ impl OverworldGui {
             };
             if imgui::ImageButton::new(image.id, [32.0, 32.0])
                 .frame_padding(4)
-                .build(ui) {
+                .build(ui)
+            {
                 self.tile_selected = i;
             }
             if let Some(token) = token {
@@ -321,7 +327,8 @@ impl OverworldGui {
             let mut focused = false;
             for i in 0..self.overworld.connector.len() {
                 let (f, c) = self.draw_connection(i, ui);
-                focused |= f; changed |= c;
+                focused |= f;
+                changed |= c;
             }
             if focused {
                 return changed;
@@ -339,16 +346,26 @@ impl OverworldGui {
 
         let wmin = ui.window_content_region_min();
         let wmax = ui.window_content_region_max();
-        let bounds = [wmax[0] - wmin[0] + ui.scroll_x(),
-                      wmax[1] - wmin[1] + ui.scroll_y()];
+        let bounds = [
+            wmax[0] - wmin[0] + ui.scroll_x(),
+            wmax[1] - wmin[1] + ui.scroll_y(),
+        ];
 
-        if tx >= 0 && tx < self.overworld.map.width as isize &&
-           ty >= 0 && ty < self.overworld.map.height as isize &&
-           ui.is_window_hovered() && mx < bounds[0] && my < bounds[1] {
+        if tx >= 0
+            && tx < self.overworld.map.width as isize
+            && ty >= 0
+            && ty < self.overworld.map.height as isize
+            && ui.is_window_hovered()
+            && mx < bounds[0]
+            && my < bounds[1]
+        {
             self.cursor = [tx, ty];
             let x = scr_origin[0] + tx as f32 * scale;
             let y = scr_origin[1] + ty as f32 * scale;
-            draw_list.add_rect([x, y], [x+scale, y+scale], [1.0, 1.0, 1.0, 1.0]).thickness(2.0).build();
+            draw_list
+                .add_rect([x, y], [x + scale, y + scale], [1.0, 1.0, 1.0, 1.0])
+                .thickness(2.0)
+                .build();
 
             if ui.is_mouse_clicked(MouseButton::Left) {
                 self.button_down = true;
@@ -361,7 +378,8 @@ impl OverworldGui {
                 if self.selectbox.contains(tx, ty) {
                     for y in self.selectbox.y0..=self.selectbox.y1 {
                         for x in self.selectbox.x0..=self.selectbox.x1 {
-                            self.overworld.map.data[y as usize][x as usize] = self.tile_selected as u8;
+                            self.overworld.map.data[y as usize][x as usize] =
+                                self.tile_selected as u8;
                         }
                     }
                     changed = true;
@@ -383,7 +401,8 @@ impl OverworldGui {
         if io.key_shift && ui.is_mouse_dragging(MouseButton::Left) {
             self.selectbox.drag(
                 clamp(tx, 0, self.overworld.map.width as isize - 1),
-                clamp(ty, 0, self.overworld.map.height as isize - 1));
+                clamp(ty, 0, self.overworld.map.height as isize - 1),
+            );
             self.select_drag = true;
         }
         if self.selectbox.valid() {
@@ -392,34 +411,41 @@ impl OverworldGui {
             let y0 = scr_origin[1] + norm.y0 as f32 * scale;
             let x1 = scr_origin[0] + norm.x1 as f32 * scale + scale;
             let y1 = scr_origin[1] + norm.y1 as f32 * scale + scale;
-            draw_list.add_rect([x0, y0], [x1, y1], [1.0, 1.0, 1.0, 0.25]).filled(true).build();
-            draw_list.add_rect([x0, y0], [x1, y1], [0.0, 0.0, 0.0, 1.0]).build();
+            draw_list
+                .add_rect([x0, y0], [x1, y1], [1.0, 1.0, 1.0, 0.25])
+                .filled(true)
+                .build();
+            draw_list
+                .add_rect([x0, y0], [x1, y1], [0.0, 0.0, 0.0, 1.0])
+                .build();
         }
 
         match KeyAction::get(ui) {
             KeyAction::Cut | KeyAction::Copy => {
                 self.copy_to_clipboard(ui);
-            },
+            }
             KeyAction::Paste => {
                 self.paste_from_clipboard(ui);
                 changed = true;
-            },
+            }
             KeyAction::SelectAll => {
                 self.selectbox.init(0, 0);
-                self.selectbox.drag(self.overworld.map.width as isize - 1,
-                                    self.overworld.map.height as isize - 1);
-            },
+                self.selectbox.drag(
+                    self.overworld.map.width as isize - 1,
+                    self.overworld.map.height as isize - 1,
+                );
+            }
             KeyAction::Undo => {
                 if let Some(overworld) = self.undo.undo() {
                     self.overworld = overworld.clone();
                 }
-            },
+            }
             KeyAction::Redo => {
                 if let Some(overworld) = self.undo.redo() {
                     self.overworld = overworld.clone();
                 }
-            },
-            KeyAction::None => {},
+            }
+            KeyAction::None => {}
         }
         changed
     }
@@ -436,11 +462,16 @@ impl OverworldGui {
         let id0 = ui.push_id(imgui::Id::Str(&conn.id.at(0)));
         let id1 = ui.push_id(imgui::Id::Str(&conn.id.at(1)));
         let delta = self.conn_drag.delta(n);
-        let pos = [conn.x as f32 * scale + delta[0],
-                   conn.y as f32 * scale + delta[1]];
+        let pos = [
+            conn.x as f32 * scale + delta[0],
+            conn.y as f32 * scale + delta[1],
+        ];
         ui.set_cursor_pos(pos);
-        text_outlined(ui, [1.0, 0.0, 1.0, 1.0],
-                      &im_str!("{:02}", conn.id.usize_at(1).unwrap()));
+        text_outlined(
+            ui,
+            [1.0, 0.0, 1.0, 1.0],
+            &im_str!("{:02}", conn.id.usize_at(1).unwrap()),
+        );
         ui.set_cursor_pos(pos);
         ui.invisible_button(&im_str!("edit"), [16.0, 16.0]);
         let focus = ui.is_item_focused();
@@ -468,6 +499,7 @@ impl OverworldGui {
     fn draw_connection_dialog(&mut self, ui: &imgui::Ui) -> bool {
         let mut changed = false;
         ui.popup(im_str!("connections"), || {
+            #[rustfmt::skip]
             imgui::ComboBox::new(im_str!("Connection"))
                 .build_simple_string(ui, &mut self.conn_selected, &[
                 &im_str!("00"), &im_str!("01"), &im_str!("02"), &im_str!("03"), &im_str!("04"), &im_str!("05"), &im_str!("06"), &im_str!("07"), &im_str!("08"), &im_str!("09"),
@@ -496,23 +528,41 @@ impl OverworldGui {
         changed |= ui.input_int(im_str!("Map"), &mut conn.dest_map).build();
         ui.same_line(0.0);
         let width2 = ui.push_item_width(40.0);
-        changed |= imgui::ComboBox::new(im_str!("W##world"))
-            .build_simple_string(ui, &mut conn.dest_world, &[
-                                 &im_str!("0"), &im_str!("1"), &im_str!("2"), &im_str!("3"),
-                                 &im_str!("4"), &im_str!("5"), &im_str!("6"), &im_str!("7")]);
+        changed |= imgui::ComboBox::new(im_str!("W##world")).build_simple_string(
+            ui,
+            &mut conn.dest_world,
+            &[
+                &im_str!("0"),
+                &im_str!("1"),
+                &im_str!("2"),
+                &im_str!("3"),
+                &im_str!("4"),
+                &im_str!("5"),
+                &im_str!("6"),
+                &im_str!("7"),
+            ],
+        );
         ui.same_line(0.0);
-        changed |= imgui::ComboBox::new(im_str!("OV##overworld"))
-            .build_simple_string(ui, &mut conn.dest_overworld, &[
-                                 &im_str!("0"), &im_str!("1"), &im_str!("2"), &im_str!("3")]);
-                                 
+        changed |= imgui::ComboBox::new(im_str!("OV##overworld")).build_simple_string(
+            ui,
+            &mut conn.dest_overworld,
+            &[&im_str!("0"), &im_str!("1"), &im_str!("2"), &im_str!("3")],
+        );
+
         width2.pop(ui);
 
         ui.text("Properties:");
-        changed |= imgui::ComboBox::new(im_str!("Entry"))
-            .build_simple_string(ui, &mut conn.entry, &[
-                                 &im_str!("Screen 1"), &im_str!("Screen 2"),
-                                 &im_str!("Screen 3"), &im_str!("Screen 4")]);
-                                 
+        changed |= imgui::ComboBox::new(im_str!("Entry")).build_simple_string(
+            ui,
+            &mut conn.entry,
+            &[
+                &im_str!("Screen 1"),
+                &im_str!("Screen 2"),
+                &im_str!("Screen 3"),
+                &im_str!("Screen 4"),
+            ],
+        );
+
         if let Some(hidden) = conn.hidden.as_mut() {
             ui.same_line(0.0);
             changed |= ui.checkbox(im_str!("Hidden"), &mut hidden.hidden);
@@ -540,10 +590,16 @@ impl OverworldGui {
         let width = ui.push_item_width(100.0);
         changed |= ui.input_int(im_str!("##dest"), &mut e.dest_map).build();
         ui.same_line(0.0);
-        changed |= imgui::ComboBox::new(im_str!("##entry"))
-            .build_simple_string(ui, &mut e.entry, &[
-                                 &im_str!("Screen 1"), &im_str!("Screen 2"),
-                                 &im_str!("Screen 3"), &im_str!("Screen 4")]);
+        changed |= imgui::ComboBox::new(im_str!("##entry")).build_simple_string(
+            ui,
+            &mut e.entry,
+            &[
+                &im_str!("Screen 1"),
+                &im_str!("Screen 2"),
+                &im_str!("Screen 3"),
+                &im_str!("Screen 4"),
+            ],
+        );
         width.pop(ui);
         changed
     }
@@ -552,18 +608,27 @@ impl OverworldGui {
         let config = Config::get(&self.edit.meta.borrow().config).unwrap();
         let mut changed = false;
         ui.popup(im_str!("encounters"), || {
-            changed |= ui.input_int(im_str!("North-South Dividing Line"), &mut self.overworld.mason_dixon_line).build();
+            changed |= ui
+                .input_int(
+                    im_str!("North-South Dividing Line"),
+                    &mut self.overworld.mason_dixon_line,
+                )
+                .build();
             ui.separator();
-            ui.text(im_str!("Terrain    North Side                        South Side"));
+            ui.text(im_str!(
+                "Terrain    North Side                        South Side"
+            ));
             ui.separator();
             for (i, terrain) in config.overworld.terrain_name.iter().enumerate() {
                 ui.text(im_str!("{:10}", terrain));
                 ui.same_line(0.0);
-                changed |= OverworldGui::encounter_edit(&mut self.overworld.encounter[2*i+0], ui);
+                changed |=
+                    OverworldGui::encounter_edit(&mut self.overworld.encounter[2 * i + 0], ui);
                 ui.same_line(0.0);
                 ui.text(im_str!("  "));
                 ui.same_line(0.0);
-                changed |= OverworldGui::encounter_edit(&mut self.overworld.encounter[2*i+1], ui);
+                changed |=
+                    OverworldGui::encounter_edit(&mut self.overworld.encounter[2 * i + 1], ui);
             }
         });
         changed
@@ -590,7 +655,8 @@ impl Gui for OverworldGui {
                     imgui::ComboBox::new(im_str!("Overworld")).build_simple_string(
                         ui,
                         self.selector.as_mut(),
-                        &names); 
+                        &names,
+                    );
                 } else {
                     ui.label_text(im_str!("Overworld"), &names[self.selector.value()]);
                 }
@@ -611,7 +677,10 @@ impl Gui for OverworldGui {
 
                 ui.same_line(0.0);
                 let width = ui.push_item_width(100.0);
-                if imgui::InputFloat::new(ui, im_str!("Scale"), &mut self.scale).step(0.25).build() {
+                if imgui::InputFloat::new(ui, im_str!("Scale"), &mut self.scale)
+                    .step(0.25)
+                    .build()
+                {
                     self.scale = clamp(self.scale, 0.25, 4.0);
                 }
                 width.pop(ui);
@@ -634,7 +703,7 @@ impl Gui for OverworldGui {
                     .always_horizontal_scrollbar(true)
                     .build(ui, || {
                         changed |= self.draw_map(ui);
-                });
+                    });
                 if changed {
                     self.undo.push(self.overworld.clone());
                 }
@@ -650,14 +719,16 @@ impl Gui for OverworldGui {
             self.changed,
             im_str!("Overworld Changed"),
             "There are unsaved changes in the Overworld Editor.\nDo you want to discard them?",
-            ui) {
+            ui,
+        ) {
             let which = &config.overworld.map[self.selector.value()];
             let id = IdPath(vec![which.id.clone()]);
             self.overworld = Overworld::from_rom(&self.edit, id).unwrap();
             self.undo.reset(self.overworld.clone());
             self.cache.reset(Schema::Overworld(
-                    self.edit.meta.borrow().config.clone(),
-                    self.overworld.id.clone()));
+                self.edit.meta.borrow().config.clone(),
+                self.overworld.id.clone(),
+            ));
         }
     }
 
