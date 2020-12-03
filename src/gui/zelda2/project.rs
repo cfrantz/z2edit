@@ -10,6 +10,7 @@ use crate::errors::*;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::hacks::HacksGui;
+use crate::gui::zelda2::overworld::OverworldGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::python::PythonScriptGui;
 use crate::gui::zelda2::start::StartGui;
@@ -17,7 +18,7 @@ use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
 use crate::gui::zelda2::Gui;
 use crate::util::UTime;
-use crate::zelda2::project::{EditAction, Project};
+use crate::zelda2::project::{EditAction, Project, Edit};
 
 pub struct ProjectGui {
     pub visible: bool,
@@ -71,6 +72,16 @@ impl ProjectGui {
         }
     }
 
+    fn export_dialog(&self, edit: &Edit) {
+        match nfd::open_save_dialog(Some("nes"), None).unwrap() {
+            nfd::Response::Okay(path) => match edit.export(&path) {
+                Err(e) => error!("Could not export ROM as {:?}: {:?}", path, e),
+                Ok(_) => {},
+            },
+            _ => {}
+        }
+    }
+
     pub fn menu(&mut self, py: Python, ui: &imgui::Ui) {
         ui.menu_bar(|| {
             ui.menu(im_str!("File"), true, || {
@@ -98,6 +109,12 @@ impl ProjectGui {
                     match HacksGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => error!("Could not create HacksGui: {:?}", e),
+                    };
+                }
+                if MenuItem::new(im_str!("Overworld Editor")).build(ui) {
+                    match OverworldGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create OverworldGui: {:?}", e),
                     };
                 }
                 if MenuItem::new(im_str!("Palette")).build(ui) {
@@ -190,6 +207,9 @@ impl ProjectGui {
                     Ok(gui) => self.widgets.push(gui),
                     Err(e) => error!("Error creating widget: {:?}", e),
                 }
+            }
+            if MenuItem::new(im_str!("Export")).build(ui) {
+                self.export_dialog(&edit);
             }
             if MenuItem::new(im_str!("Details")).build(ui) {
                 let gui = EditDetailsGui::new(Rc::clone(&edit)).unwrap();

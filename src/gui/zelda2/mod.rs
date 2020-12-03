@@ -1,11 +1,13 @@
 pub mod edit;
 pub mod enemyattr;
 pub mod hacks;
+pub mod overworld;
 pub mod palette;
 pub mod project;
 pub mod python;
 pub mod start;
 pub mod text_table;
+pub mod tile_cache;
 pub mod xp_spells;
 
 use crate::zelda2::project::Project;

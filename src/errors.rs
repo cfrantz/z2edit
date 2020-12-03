@@ -1,3 +1,4 @@
+use std::ops::Range;
 use crate::nes::Address;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -32,6 +33,10 @@ error_chain! {
             description("Layout error"),
             display("Layout error: {}", message),
         }
+        ConfigError(message: String) {
+            description("Config error"),
+            display("Config error: {}", message),
+        }
         ConfigNotFound(which: String) {
             description("Config not found"),
             display("Config not found: {}", which),
@@ -43,6 +48,11 @@ error_chain! {
         IdPathBadLength(category: String, len: usize) {
             description("Bad IdPath length"),
             display("Bad IdPath length: {} expecting length {}", category, len),
+        }
+        IdPathBadRange(category: String, range: Range<usize>) {
+            description("Bad IdPath length"),
+            display("Bad IdPath length: {} expecting length in range {}..{}",
+                    category, range.start, range.end),
         }
         CommitIndexError(index: isize) {
             description("Bad commit index"),
@@ -59,6 +69,14 @@ error_chain! {
         OutOfMemory(bank: isize) {
             description("Out of Memory"),
             display("Out of memory in bank {}", bank),
+        }
+        TransformationError(error: String) {
+            description("Transformation Error"),
+            display("Transformation Error: {}", error),
+        }
+        LengthError(error: String) {
+            description("Length Error"),
+            display("Length Error: {}", error),
         }
     }
 }

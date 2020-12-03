@@ -52,6 +52,52 @@ pub fn update_image(image: imgui::TextureId, x: u32, y: u32, w: u32, h: u32, pix
     }
 }
 
+pub fn delete_image(image: imgui::TextureId) {
+    unsafe {
+        let id = image.id() as u32;
+        gl::DeleteTextures(1, &id as *const u32);
+    }
+}
+
+#[derive(Debug)]
+pub struct Image {
+    pub id: imgui::TextureId,
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Vec<u32>,
+}
+
+impl Image {
+    pub fn new(width: u32, height: u32) -> Self {
+        let pixels = vec![0u32; (width * height) as usize];
+        let id = new_image(width, height, &pixels);
+        Image {
+            id: id,
+            width: width,
+            height: height,
+            pixels: pixels,
+        }
+    }
+    pub fn update(&self) {
+        update_image(self.id, 0, 0, self.width, self.height, &self.pixels);
+    }
+    pub fn draw(&self, scale: f32, ui: &imgui::Ui) {
+        let w = self.width as f32 * scale;
+        let h = self.height as f32 * scale;
+        imgui::Image::new(self.id, [w, h]).build(ui);
+    }
+    pub fn draw_at(&self, position: [f32; 2], scale: f32, ui: &imgui::Ui) {
+        ui.set_cursor_pos(position);
+        self.draw(scale, ui);
+    }
+}
+
+impl Drop for Image {
+    fn drop(&mut self) {
+        delete_image(self.id);
+    }
+}
+
 pub fn clear_screen(color: &[f32; 3]) {
     let [r, g, b] = color;
     unsafe {

@@ -1,6 +1,8 @@
 use crate::errors::*;
 use serde::{Deserialize, Serialize};
 use std::convert::{From, Into};
+use std::ops::Range;
+use std::fmt;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(from = "String")]
@@ -13,6 +15,13 @@ impl IdPath {
             Ok(())
         } else {
             Err(ErrorKind::IdPathBadLength(category.to_owned(), len).into())
+        }
+    }
+    pub fn check_range(&self, category: &str, range: Range<usize>) -> Result<()> {
+        if range.contains(&self.0.len()) {
+            Ok(())
+        } else {
+            Err(ErrorKind::IdPathBadRange(category.to_owned(), range).into())
         }
     }
 
@@ -50,5 +59,11 @@ impl From<&IdPath> for String {
 impl From<IdPath> for String {
     fn from(a: IdPath) -> Self {
         a.to_string()
+    }
+}
+
+impl fmt::Display for IdPath {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.to_string())
     }
 }

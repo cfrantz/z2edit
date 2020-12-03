@@ -36,6 +36,20 @@ pub fn get(index: usize) -> u32 {
     PALETTE[index]
 }
 
+pub fn glget(index: usize) -> u32 {
+    // Out-of-bounds index returns black.
+    let index = if index < PALETTE.len() { index } else { 0x0f };
+    let color = PALETTE[index];
+    let r = (color >> R_SHIFT) & 0xFF;
+    let g = (color >> G_SHIFT) & 0xFF;
+    let b = (color >> B_SHIFT) & 0xFF;
+    let a = (color >> A_SHIFT) & 0xFF;
+    (a << 24) |
+    (r << 16) |
+    (g << 8) |
+    b
+}
+
 pub fn fget(index: usize) -> [f32; 4] {
     // Out-of-bounds index returns black.
     let index = if index < PALETTE.len() { index } else { 0x0f };

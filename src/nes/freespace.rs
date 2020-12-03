@@ -147,7 +147,6 @@ impl FreeSpace {
         if nearness.len() > 0 {
             // Order the tuples by nearness and allocate.
             nearness.sort();
-            info!("Nearness: {:x?}", nearness);
             let index = nearness[0].1;
             let result = self.freelist[index].address;
             self.freelist[index].address += length;

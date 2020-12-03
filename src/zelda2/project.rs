@@ -210,6 +210,13 @@ pub struct Edit {
     pub action: RefCell<EditAction>,
 }
 
+impl Edit {
+    pub fn export(&self, filename: &str) -> Result<()> {
+        let rom = self.rom.borrow();
+        rom.save(Path::new(filename))
+    }
+}
+
 #[pyclass(unsendable)]
 pub struct EditProxy {
     edit: Rc<Edit>

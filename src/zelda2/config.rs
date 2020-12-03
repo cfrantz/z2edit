@@ -9,6 +9,7 @@ use crate::nes::{Layout, Segment};
 use crate::nes::freespace;
 use crate::zelda2::enemyattr;
 use crate::zelda2::hacks;
+use crate::zelda2::overworld;
 use crate::zelda2::palette;
 use crate::zelda2::start;
 use crate::zelda2::text_table;
@@ -35,6 +36,7 @@ pub struct Config {
     pub palette: palette::config::Config,
     pub enemy: enemyattr::config::Config,
     pub experience: xp_spells::config::Config,
+    pub overworld: overworld::config::Config,
     pub text_table: text_table::config::Config,
 }
 
@@ -77,6 +79,7 @@ impl Config {
             palette: palette::config::Config::vanilla(),
             enemy: enemyattr::config::Config::vanilla(),
             experience: xp_spells::config::Config::vanilla(),
+            overworld: overworld::config::Config::vanilla(),
             text_table: text_table::config::Config::vanilla(),
         }
     }
