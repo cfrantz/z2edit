@@ -15,7 +15,7 @@ use crate::errors::*;
 use crate::gui::app_context::AppContext;
 use crate::gui::console::Console;
 use crate::gui::glhelper;
-use crate::gui::preferences::Preferences;
+use crate::gui::preferences::PreferencesGui;
 use crate::gui::zelda2::project::ProjectGui;
 use crate::util::pyexec::PythonExecutor;
 
@@ -25,8 +25,7 @@ use crate::zelda2::project::Project;
 pub struct App {
     running: Cell<bool>,
     #[pyo3(get, set)]
-    preferences: Py<Preferences>,
-    //project: Py<Project>,
+    pub preferences: Py<PreferencesGui>,
     project: Vec<ProjectGui>,
     console: Rc<RefCell<Console>>,
 }
@@ -35,7 +34,7 @@ impl App {
     pub fn new(py: Python) -> Result<Self> {
         Ok(App {
             running: Cell::new(false),
-            preferences: Py::new(py, Preferences::load().unwrap_or_default())?,
+            preferences: Py::new(py, PreferencesGui::default())?,
             project: Vec::new(),
             console: Rc::new(RefCell::new(Console::new("Debug Console"))),
         })
@@ -43,7 +42,7 @@ impl App {
 
     pub fn pythonize(&self, _py: Python, module: &PyModule) -> Result<()> {
         module.add_class::<App>()?;
-        module.add_class::<Preferences>()?;
+        module.add_class::<PreferencesGui>()?;
         Ok(())
     }
 
@@ -100,7 +99,7 @@ impl App {
         }
     }
 
-    pub fn run(slf: &PyCell<Self>, py: Python, executor: &mut PythonExecutor) {
+    pub fn run(slf: &Py<Self>, py: Python, executor: &mut PythonExecutor) {
         let context = AppContext::get();
         let mut last_frame = Instant::now();
         let mut imgui = imgui::Context::create();
@@ -110,10 +109,10 @@ impl App {
         let mut imgui_sdl2 = ImguiSdl2::new(&mut imgui, &context.window);
         let renderer = Renderer::new(&mut imgui, |s| context.video.gl_get_proc_address(s) as _);
 
-        slf.borrow().running.set(true);
+        slf.borrow(py).running.set(true);
 
         'running: loop {
-            if !slf.borrow().running.get() {
+            if !slf.borrow(py).running.get() {
                 break 'running;
             }
             let mut event_pump = context.event_pump.borrow_mut();
@@ -138,10 +137,10 @@ impl App {
             last_frame = now;
 
             let ui = imgui.frame();
-            slf.borrow_mut().draw(py, &ui);
-            let console = Rc::clone(&slf.borrow().console);
+            slf.borrow_mut(py).draw(py, &ui);
+            let console = Rc::clone(&slf.borrow(py).console);
             console.borrow_mut().draw(executor, &ui);
-            glhelper::clear_screen(&slf.borrow().preferences.borrow(py).background);
+            glhelper::clear_screen(&AppContext::pref().background);
 
             imgui_sdl2.prepare_render(&ui, &context.window);
             renderer.render(ui);

@@ -12,11 +12,12 @@ use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::{Selector, Visibility};
 use crate::nes::IdPath;
+use crate::nes::MemoryAccess;
 use crate::util::clamp;
 use crate::util::undo::UndoStack;
 use crate::zelda2::config::Config;
 use crate::zelda2::overworld::{Connector, Encounter, JsonMap, Map, Overworld};
-use crate::zelda2::project::{Edit, Project};
+use crate::zelda2::project::{Edit, EmulateAt, Project};
 
 #[derive(Copy, Clone, Debug)]
 struct SelectBox {
@@ -488,12 +489,86 @@ impl OverworldGui {
             }
         }
         if ui.popup_context_item(im_str!("connection")) {
+            if ui.button(im_str!("Emulate"), [0.0, 0.0]) {
+                OverworldGui::emulate_at(conn, &self.edit, self.selector.value());
+            }
             changed |= OverworldGui::connection_edit(&mut conn, ui);
             ui.end_popup();
         }
         id1.pop(ui);
         id0.pop(ui);
         (focus, changed)
+    }
+
+    fn emulate_at(conn: &Connector, edit: &Rc<Edit>, ov: usize) {
+        let config = Config::get(&edit.meta.borrow().config).unwrap();
+        let overworld = &config.overworld.map[ov];
+        let mut index = conn.id.usize_at(1).unwrap();
+        let mut at = EmulateAt::default();
+
+        let (region, bank) = if conn.dest_world == 0 {
+            if conn.external {
+                // Overworld 1 can be either DM or MZ depending on whether you
+                // are transfering from overworld 0 or overworld 2.
+                // Z2Edit represents overworld 1 as a subworld.  We search
+                // available maps for the configured (overworld, subworld)
+                // combination.
+                let (ovw, sub) = if conn.dest_overworld == 1 {
+                    (overworld.overworld, 1)
+                } else {
+                    (conn.dest_overworld, 0)
+                };
+                let mut r = 0;
+                let mut b = 1;
+                for map in config.overworld.map.iter() {
+                    if map.overworld == ovw && map.subworld == sub {
+                        r = if map.subworld != 0 {
+                            map.subworld as u8
+                        } else {
+                            map.overworld as u8
+                        };
+                        b = map.pointer.bank().unwrap().1 as u8;
+                    }
+                }
+                (r, b)
+            } else {
+                let r = if overworld.subworld != 0 {
+                    overworld.subworld as u8
+                } else {
+                    overworld.overworld as u8
+                };
+                let b = overworld.pointer.bank().unwrap().1 as u8;
+                (r, b)
+            }
+        } else {
+            let r = conn.dest_overworld as u8;
+            let rom = edit.rom.borrow();
+            let b = rom
+                .read(config.misc.world_to_bank + conn.dest_world)
+                .unwrap_or(0);
+            (r, b)
+        };
+
+        let town_code = config.overworld.town_code(index);
+        if town_code.is_some() {
+            // Always use the even connector for towns.
+            index &= 0xFE;
+        }
+
+        at.bank = bank;
+        at.region = region;
+        at.world = conn.dest_world as u8;
+        at.town_code = town_code.unwrap_or(0) as u8;
+        at.palace_code = config.overworld.palace_code(index).unwrap_or(0) as u8;
+        at.connector = index as u8;
+        at.room = conn.dest_map as u8;
+        at.page = conn.entry as u8;
+        at.prev_region = overworld.overworld as u8;
+
+        match edit.emulate(Some(at)) {
+            Err(e) => error!("Error starting emulator: {:?}", e),
+            Ok(_) => {}
+        };
     }
 
     fn draw_connection_dialog(&mut self, ui: &imgui::Ui) -> bool {

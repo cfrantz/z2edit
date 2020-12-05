@@ -4,12 +4,15 @@ extern crate chrono;
 extern crate directories;
 extern crate gl;
 extern crate sdl2;
+#[macro_use]
+extern crate smart_default;
 extern crate structopt;
 #[macro_use]
 extern crate log;
 extern crate dict_derive;
 extern crate pyo3;
 extern crate rustyline;
+extern crate shellwords;
 extern crate simplelog;
 extern crate typetag;
 extern crate whoami;
@@ -30,22 +33,13 @@ use util::TerminalGuard;
 
 use crate::errors::*;
 use crate::gui::app::App;
-use crate::gui::app_context::AppContext;
+use crate::gui::app_context::{AppContext, CommandlineArgs};
 use crate::util::pyaddress::PyAddress;
 use crate::util::pyexec::PythonExecutor;
 use crate::zelda2::project::Project;
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "z2edit")]
-struct Opt {
-    #[structopt(short, long, default_value = "1280")]
-    width: u32,
-    #[structopt(short, long, default_value = "720")]
-    height: u32,
-}
-
 fn run(py: Python) -> Result<()> {
-    let opt = Opt::from_args();
+    let args = CommandlineArgs::from_args();
     CombinedLogger::init(vec![TermLogger::new(
         LevelFilter::Info,
         Config::default(),
@@ -65,12 +59,13 @@ fn run(py: Python) -> Result<()> {
     info!("Data dir: {}", data.display());
     fs::create_dir_all(data).map_err(|e| ErrorKind::Io(e))?;
 
-    AppContext::init("Z2Edit", opt.width, opt.height, config, data)?;
-    let app = PyCell::new(py, App::new(py)?)?;
+    AppContext::init(args, "Z2Edit", config, data)?;
+    AppContext::init_app(Py::new(py, App::new(py)?)?);
+    let app = AppContext::app();
     let mut executor = PythonExecutor::new(py)?;
 
     let module = PyModule::new(py, "z2edit")?;
-    app.borrow().pythonize(py, module)?;
+    app.borrow(py).pythonize(py, module)?;
     module.add_class::<PyAddress>()?;
     module.add_class::<Project>()?;
     module.setattr("app", app)?;
@@ -90,7 +85,7 @@ fn run(py: Python) -> Result<()> {
     let debug = PyModule::from_code(py, include_str!("../python/debug.py"), "debug.py", "debug")?;
     modules.set_item("debug", debug)?;
 
-    App::run(&app, py, &mut executor);
+    App::run(app, py, &mut executor);
     Ok(())
 }
 

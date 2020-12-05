@@ -74,7 +74,7 @@ impl ProjectGui {
 
     fn export_dialog(&self, edit: &Edit) {
         match nfd::open_save_dialog(Some("nes"), None).unwrap() {
-            nfd::Response::Okay(path) => match edit.export(&path) {
+            nfd::Response::Okay(path) => match edit.export(&Path::new(&path)) {
                 Err(e) => error!("Could not export ROM as {:?}: {:?}", path, e),
                 Ok(_) => {}
             },
@@ -205,6 +205,14 @@ impl ProjectGui {
                 match edit.edit.borrow().gui(&project, index) {
                     Ok(gui) => self.widgets.push(gui),
                     Err(e) => error!("Error creating widget: {:?}", e),
+                }
+            }
+            if MenuItem::new(im_str!("Emulate")).build(ui) {
+                match edit.emulate(None) {
+                    Ok(()) => {}
+                    Err(e) => {
+                        error!("Error spawning emulator: {:?}", e);
+                    }
                 }
             }
             if MenuItem::new(im_str!("Export")).build(ui) {

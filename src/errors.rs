@@ -11,6 +11,7 @@ error_chain! {
         Json(::serde_json::error::Error);
         PyErr(::pyo3::PyErr);
         WindowBuildError(::sdl2::video::WindowBuildError);
+        MismatchedQuotes(::shellwords::MismatchedQuotes);
     }
     errors {
         SdlError(e: String) {

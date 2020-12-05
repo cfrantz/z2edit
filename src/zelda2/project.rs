@@ -3,8 +3,10 @@ use std::cell::RefCell;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
+use std::process::Command;
 use std::rc::Rc;
 use std::vec::Vec;
+
 use whoami;
 
 use dict_derive::{FromPyObject, IntoPyObject};
@@ -15,9 +17,10 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 
 use crate::errors::*;
+use crate::gui::app_context::AppContext;
 use crate::gui::zelda2::Gui;
 use crate::nes::freespace::FreeSpace;
-use crate::nes::{Buffer, MemoryAccess};
+use crate::nes::{Address, Buffer, MemoryAccess};
 use crate::util::pyaddress::PyAddress;
 use crate::util::UTime;
 use crate::zelda2::config::Config;
@@ -212,10 +215,106 @@ pub struct Edit {
     pub action: RefCell<EditAction>,
 }
 
+#[derive(Debug, Default)]
+pub struct EmulateAt {
+    pub bank: u8,
+    pub region: u8,
+    pub world: u8,
+    pub town_code: u8,
+    pub palace_code: u8,
+    pub connector: u8,
+    pub room: u8,
+    pub page: u8,
+    pub prev_region: u8,
+}
+
+impl EmulateAt {
+    fn patch(&self, buffer: &Buffer) -> Result<Buffer> {
+        let mut buffer = buffer.clone();
+        let facing = if self.page < 3 { 0 } else { 1 };
+        let code = [
+            0xa9,
+            self.bank, // LDA #bank
+            0x8d,
+            0x69,
+            0x07, // STA $0769
+            0xa9,
+            self.region, // LDA #region
+            0x8d,
+            0x06,
+            0x07, // STA $0706
+            0xa9,
+            self.world, // LDA #world
+            0x8d,
+            0x07,
+            0x07, // STA $0707
+            0xa9,
+            self.town_code, // LDA #town_code
+            0x8d,
+            0x6b,
+            0x05, // STA $056b
+            0xa9,
+            self.palace_code, // LDA #palace_code
+            0x8d,
+            0x6c,
+            0x05, // STA $056c
+            0xa9,
+            self.connector, // LDA #connector
+            0x8d,
+            0x48,
+            0x07, // STA $0748
+            0xa9,
+            self.room, // LDA #room
+            0x8d,
+            0x61,
+            0x05, // STA $0561
+            0xa9,
+            self.page, // LDA #page
+            0x8d,
+            0x5c,
+            0x07, // STA $075c
+            0xa9,
+            facing, // LDA #facing
+            0x8d,
+            0x01,
+            0x07, // STA $0701
+            0xa9,
+            self.prev_region, // LDA #prev_region
+            0x8d,
+            0x0a,
+            0x07, // STA $070a
+            0x60, // RTS
+        ];
+        let addr = Address::Prg(0, 0xAA3F);
+        buffer.write_bytes(addr, &code)?;
+        Ok(buffer)
+    }
+}
+
 impl Edit {
-    pub fn export(&self, filename: &str) -> Result<()> {
+    pub fn export(&self, filename: &Path) -> Result<()> {
         let rom = self.rom.borrow();
-        rom.save(Path::new(filename))
+        rom.save(filename)
+    }
+
+    pub fn emulate(&self, at: Option<EmulateAt>) -> Result<()> {
+        let mut tmp = std::env::temp_dir();
+        tmp.push("zelda2-test.nes");
+
+        if let Some(at) = at {
+            info!("{:?}", at);
+            let rom = self.rom.borrow();
+            let rom = at.patch(&rom)?;
+            rom.save(&tmp)?;
+        } else {
+            self.export(&tmp)?;
+        }
+
+        let mut emulator = shellwords::split(&AppContext::emulator())?;
+        emulator.push(tmp.to_str().unwrap().to_owned());
+
+        Command::new(&emulator[0]).args(&emulator[1..]).spawn()?;
+        Ok(())
     }
 }
 

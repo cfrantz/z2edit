@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::errors::*;
 use crate::nes::freespace;
-use crate::nes::{Layout, Segment};
+use crate::nes::{Address, Layout, Segment};
 use crate::zelda2::enemyattr;
 use crate::zelda2::hacks;
 use crate::zelda2::overworld;
@@ -26,6 +26,7 @@ pub struct Miscellaneous {
     pub start: start::config::Config,
     pub freespace: freespace::config::Config,
     pub hacks: hacks::config::Config,
+    pub world_to_bank: Address,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,6 +75,7 @@ impl Config {
                 start: start::config::Config::vanilla(),
                 freespace: freespace::config::Config::vanilla(),
                 hacks: hacks::config::Config::vanilla(),
+                world_to_bank: Address::Prg(-1, 0xc4b7),
             },
             palette: palette::config::Config::vanilla(),
             enemy: enemyattr::config::Config::vanilla(),

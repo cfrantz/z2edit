@@ -68,6 +68,7 @@ pub mod config {
         pub hidden: Vec<config::HiddenSpot>,
         pub terrain_name: Vec<String>,
         pub palace_connectors: Vec<usize>,
+        pub town_connectors: Vec<usize>,
         pub overworld_ram: u16,
         pub overworld_len: usize,
     }
@@ -96,6 +97,22 @@ pub mod config {
                 }
             }
             Err(ErrorKind::IdPathNotFound(path.into()).into())
+        }
+
+        pub fn palace_code(&self, conn: usize) -> Option<usize> {
+            if self.palace_connectors.contains(&conn) {
+                Some(conn - self.palace_connectors[0])
+            } else {
+                None
+            }
+        }
+
+        pub fn town_code(&self, conn: usize) -> Option<usize> {
+            if self.town_connectors.contains(&conn) {
+                Some((conn - self.town_connectors[0]) / 2)
+            } else {
+                None
+            }
         }
 
         pub fn vanilla() -> Self {
@@ -174,8 +191,7 @@ impl Map {
                 let tile = row[x];
                 if let Some(conn) = overworld.connector_at(x, y) {
                     let index = conn.id.usize_at(1).unwrap();
-                    if config.palace_connectors.contains(&index) {
-                        let palace = index - config.palace_connectors[0];
+                    if let Some(palace) = config.palace_code(index) {
                         want_compress = false;
                         map.palace_offset[palace] = map.data.len() as u16;
                         if let Some(h) = &conn.hidden {
@@ -337,12 +353,7 @@ impl Connector {
         self.passthru = (w & 0x40) != 0;
         self.fall = (w & 0x80) != 0;
 
-        self.palace = if config.overworld.palace_connectors.contains(&index) {
-            Some(index - config.overworld.palace_connectors[0])
-        } else {
-            None
-        };
-
+        self.palace = config.overworld.palace_code(index);
         self.hidden = if let Some(spot) = self.hidden_index(edit, &config.overworld)? {
             self.set_y(rom.read(spot.connector + 2)?, &config.overworld);
             Some(Hidden {
