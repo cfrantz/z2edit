@@ -53,10 +53,12 @@ git submodule update --init --recursive
 - Partial Implementation
     - 6502 Assembler
     - Console (python)
+    - Emulate / Emulate at a location
     - Enemy Attributes
     - Experience & Spells
-    - Misc Hacks (still need to add several common misc hacks)
     - Import Rom
+    - Misc Hacks (still need to add several common misc hacks)
+    - Overworld editor
     - Palette Editor
     - Python script execution
     - Start Values
@@ -69,7 +71,6 @@ git submodule update --init --recursive
     - Tile transforms
     - Object table
     - Enemy XP values and graphics
-    - Overworld editor
     - Sideview editor
     - CHR viewer
     - Import banks or graphics
@@ -79,7 +80,6 @@ git submodule update --init --recursive
     - Build for Windows, cross compile from Linux to windows
     - Apply default fixes (move maps and code out of keepout regions)
     - Zelda 2 config updates & alternate configs
-    - Emulate / Emulate at a location
     - Remember the location of the vanilla rom
     - Periodic automatic save
     - Remember project association with exported ROMs
