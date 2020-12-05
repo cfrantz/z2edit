@@ -265,13 +265,15 @@ impl ProjectGui {
         let dock_id = imgui::Id::Str("project");
         let window = imgui::Window::new(&title)
             .opened(&mut visible)
+            .size([1000.0, 900.0], imgui::Condition::FirstUseEver)
             .menu_bar(true)
             .begin(ui);
 
         if !ui.dock_builder_has_node(dock_id) {
             ui.dock_builder_remove_node(dock_id);
-            ui.dock_builder_add_node(dock_id, 0);
-            let (lhs, rhs) = ui.dock_builder_split_node(dock_id, imgui::Direction::Left, 0.15);
+            ui.dock_builder_add_node(dock_id, imgui::DockNodeFlags::DOCK_SPACE);
+            ui.dock_builder_set_node_size(dock_id, [1000.0, 900.0]);
+            let (lhs, rhs) = ui.dock_builder_split_node(dock_id, imgui::Direction::Left, 0.20);
             self.history_pane = lhs;
             self.editor_pane = rhs;
             ui.dock_builder_dock_window(im_str!("Edit List"), self.history_pane);
