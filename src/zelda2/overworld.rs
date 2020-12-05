@@ -399,7 +399,7 @@ impl Connector {
         let y =
             if self.external { 0x80 } else { 0x00 } | (self.y + config.overworld.y_offset) as u8;
         let x = if self.second { 0x40 } else { 0x00 }
-            | if self.external { 0x80 } else { 0x00 }
+            | if self.exit_2_lower { 0x80 } else { 0x00 }
             | self.x as u8;
         let z = (self.entry << 6) as u8 | self.dest_map as u8;
 
