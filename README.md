@@ -115,7 +115,7 @@ Started by following the [ArchLinux instructions](https://wiki.archlinux.org/ind
 
     ```
 - Deal with Python:
-  - Download Python-3.8.6 embeddable ZIP and unpack into `windows/python`.
+  - Download Python-3.8.6 embeddable ZIP and saved in `windows/bindist`.
   - Really should get a windows install of python includes, but I think the
     standard includes are the same between linux and windows.
   - Download Python-3.8.6 installer, extracted with cabextract.  Then searched
@@ -123,7 +123,10 @@ Started by following the [ArchLinux instructions](https://wiki.archlinux.org/ind
     `windows/python`.  Created the `libpython3.8.a` file using
     `windows/mk-python-archive.py`.
   - Set env variables when building:
-    `PYO3_CROSS_INCLUDE_DIR=/usr/include/python3.8/ PYO3_CROSS_LIB_DIR=/home/cfrantz/src/z2e2/windows/python/`
+    ```
+    PYO3_CROSS_INCLUDE_DIR=/usr/include/python3.8/
+    PYO3_CROSS_LIB_DIR=/home/cfrantz/src/z2e2/windows/python/`
+    ```
 - Deal with NFD:
   - NFD includes `ShObjIdl.h`, but the x86_64-w64-mingw32 include files are
     stored as lower-case and the linux filesystem is case-sensitive.
@@ -132,5 +135,7 @@ Started by following the [ArchLinux instructions](https://wiki.archlinux.org/ind
   - Downloaded the SDL2-devel mingw archive from https://www.libsdl.org/download-2.0.php.
   - Unpacked in /tmp
   - Copied libs to my local rust environment:
-    `cp -r /tmp/SDL2-2.0.12/x86_64-w64-mingw32/lib/* ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-pc-windows-gnu/lib/`
-
+    ```
+    cp -r /tmp/SDL2-2.0.12/x86_64-w64-mingw32/lib/* ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-pc-windows-gnu/lib/
+    ```
+  - Zipped up `SDL2.dll` and saved in `windows/bindist`.
