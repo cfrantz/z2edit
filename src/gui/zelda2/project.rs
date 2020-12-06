@@ -155,6 +155,16 @@ impl ProjectGui {
             }
         }
     }
+
+    fn is_window_open(&self, id: u64) -> bool {
+        for w in self.widgets.iter() {
+            if id == w.window_id() {
+                return true;
+            }
+        }
+        false
+    }
+
     fn process_editactions(&self, py: Python) {
         let mut project = self.project.borrow_mut(py);
         let mut i = 0;
@@ -199,9 +209,10 @@ impl ProjectGui {
         let edit = project.get_commit(index).unwrap();
         let len = project.edits.len() as isize;
         let meta = edit.meta.borrow();
+        let is_open = self.is_window_open(meta.timestamp);
         let hdr = imgui::CollapsingHeader::new(&ImString::new(&meta.label)).build(ui);
         if ui.popup_context_item(im_str!("menu")) {
-            if MenuItem::new(im_str!("Edit")).build(ui) {
+            if MenuItem::new(im_str!("Edit")).enabled(!is_open).build(ui) {
                 match edit.edit.borrow().gui(&project, index) {
                     Ok(gui) => self.widgets.push(gui),
                     Err(e) => error!("Error creating widget: {:?}", e),

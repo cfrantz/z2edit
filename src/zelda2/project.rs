@@ -120,12 +120,22 @@ impl Project {
         Ok(Rc::clone(&self.edits[index]))
     }
 
-    pub fn commit(&mut self, index: isize, edit: Box<dyn RomData>) -> Result<isize> {
+    pub fn commit(
+        &mut self,
+        index: isize,
+        edit: Box<dyn RomData>,
+        suffix: Option<&str>,
+    ) -> Result<isize> {
         let len = self.edits.len() as isize;
         if index == -1 {
             let last = self.get_commit(index)?;
+            let label = if let Some(suffix) = suffix {
+                format!("{}: {}", edit.name(), suffix)
+            } else {
+                edit.name()
+            };
             let meta = Metadata {
-                label: edit.name(),
+                label: label,
                 user: whoami::username(),
                 timestamp: UTime::now(),
                 comment: String::default(),
@@ -315,6 +325,14 @@ impl Edit {
 
         Command::new(&emulator[0]).args(&emulator[1..]).spawn()?;
         Ok(())
+    }
+
+    pub fn win_id(&self, index: isize) -> u64 {
+        if index == -1 {
+            UTime::now()
+        } else {
+            self.meta.borrow().timestamp
+        }
     }
 }
 

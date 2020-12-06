@@ -25,7 +25,7 @@ impl StartGui {
         let mut start = Start::default();
         start.unpack(&edit)?;
 
-        let win_id = edit.meta.borrow().timestamp;
+        let win_id = edit.win_id(commit_index);
         Ok(Box::new(StartGui {
             visible: Visibility::Visible,
             changed: false,
@@ -38,7 +38,7 @@ impl StartGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let edit = Box::new(self.start.clone());
-        let i = project.commit(self.commit_index, edit)?;
+        let i = project.commit(self.commit_index, edit, None)?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
@@ -139,5 +139,8 @@ impl Gui for StartGui {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
+    }
+    fn window_id(&self) -> u64 {
+        self.win_id
     }
 }

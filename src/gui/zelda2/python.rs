@@ -31,7 +31,7 @@ impl PythonScriptGui {
             obj.code.clone()
         };
 
-        let win_id = edit.meta.borrow().timestamp;
+        let win_id = edit.win_id(commit_index);
         Ok(Box::new(PythonScriptGui {
             visible: Visibility::Visible,
             changed: false,
@@ -46,7 +46,7 @@ impl PythonScriptGui {
         let edit = Box::new(PythonScript {
             code: self.code.to_str().into(),
         });
-        let i = project.commit(self.commit_index, edit)?;
+        let i = project.commit(self.commit_index, edit, None)?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
@@ -94,5 +94,8 @@ impl Gui for PythonScriptGui {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
+    }
+    fn window_id(&self) -> u64 {
+        self.win_id
     }
 }

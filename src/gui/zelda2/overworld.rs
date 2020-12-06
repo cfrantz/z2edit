@@ -163,7 +163,7 @@ impl OverworldGui {
             }
         }
 
-        let win_id = edit.meta.borrow().timestamp;
+        let win_id = edit.win_id(commit_index);
         let cache = TileCache::new(
             &edit,
             Schema::Overworld(edit.meta.borrow().config.clone(), overworld.id.clone()),
@@ -195,7 +195,13 @@ impl OverworldGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let i = project.commit(self.commit_index, Box::new(self.overworld.clone()))?;
+        let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+        let overworld = &config.overworld.map[self.selector.value()];
+        let i = project.commit(
+            self.commit_index,
+            Box::new(self.overworld.clone()),
+            Some(&overworld.name),
+        )?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
@@ -809,5 +815,8 @@ impl Gui for OverworldGui {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
+    }
+    fn window_id(&self) -> u64 {
+        self.win_id
     }
 }

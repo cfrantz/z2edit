@@ -90,7 +90,7 @@ impl EnemyGui {
             data.clone()
         };
 
-        let win_id = edit.meta.borrow().timestamp;
+        let win_id = edit.win_id(commit_index);
         Ok(Box::new(EnemyGui {
             visible: Visibility::Visible,
             changed: false,
@@ -133,7 +133,7 @@ impl EnemyGui {
         if edit.data.len() == 0 {
             info!("EnemyGui: no changes to commit.");
         } else {
-            let i = project.commit(self.commit_index, edit)?;
+            let i = project.commit(self.commit_index, edit, None)?;
             self.edit = project.get_commit(i)?;
             self.commit_index = i;
         }
@@ -279,5 +279,8 @@ impl Gui for EnemyGui {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
+    }
+    fn window_id(&self) -> u64 {
+        self.win_id
     }
 }

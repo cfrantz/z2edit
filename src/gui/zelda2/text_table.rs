@@ -37,7 +37,7 @@ impl TextTableGui {
             text.push(Vec::new());
         }
 
-        let win_id = edit.meta.borrow().timestamp;
+        let win_id = edit.win_id(commit_index);
         let mut ret = Box::new(TextTableGui {
             visible: Visibility::Visible,
             changed: false,
@@ -96,7 +96,7 @@ impl TextTableGui {
             }
         }
 
-        let i = project.commit(self.commit_index, edit)?;
+        let i = project.commit(self.commit_index, edit, None)?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
@@ -163,5 +163,8 @@ impl Gui for TextTableGui {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
+    }
+    fn window_id(&self) -> u64 {
+        self.win_id
     }
 }

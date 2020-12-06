@@ -18,4 +18,7 @@ pub trait Gui {
     fn wants_dispose(&self) -> bool {
         false
     }
+    fn window_id(&self) -> u64 {
+        0
+    }
 }

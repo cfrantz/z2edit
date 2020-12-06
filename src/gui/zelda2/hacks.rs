@@ -25,7 +25,7 @@ pub struct HacksGui {
 impl HacksGui {
     pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
         let edit = project.get_commit(commit_index)?;
-        let win_id = edit.meta.borrow().timestamp;
+        let win_id = edit.win_id(commit_index);
         let hacks = HacksGui::init(&edit)?;
         let (titles, names) = HacksGui::names(&edit)?;
 
@@ -80,7 +80,7 @@ impl HacksGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let edit = Box::new(self.hacks.clone());
-        let i = project.commit(self.commit_index, edit)?;
+        let i = project.commit(self.commit_index, edit, None)?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
@@ -161,5 +161,8 @@ impl Gui for HacksGui {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
+    }
+    fn window_id(&self) -> u64 {
+        self.win_id
     }
 }
