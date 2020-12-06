@@ -1,12 +1,14 @@
 pub mod pyaddress;
 pub mod pyexec;
-pub mod terminal;
 pub mod time;
 pub mod undo;
 
-use terminal::UnixTerminalGuard;
+#[cfg_attr(target_os = "linux", path = "terminal_unix.rs")]
+#[cfg_attr(target_os = "windows", path = "terminal_windows.rs")]
+pub mod terminal;
 
-pub type TerminalGuard = UnixTerminalGuard;
+pub use terminal::TerminalGuard;
+
 pub use time::UTime;
 
 pub fn clamp<T: PartialOrd>(a: T, mn: T, mx: T) -> T {
