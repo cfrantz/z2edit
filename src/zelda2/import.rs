@@ -18,6 +18,14 @@ pub struct ImportRom {
 }
 
 impl ImportRom {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if id.is_none() {
+            Ok(Box::new(Self::default()))
+        } else {
+            Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
+        }
+    }
+
     pub fn from_file(filename: &str) -> Result<Box<ImportRom>> {
         if Path::new(filename).is_file() {
             Ok(Box::new(ImportRom {

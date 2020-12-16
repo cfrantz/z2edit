@@ -12,6 +12,7 @@ use crate::zelda2::project::Edit;
 #[derive(Debug)]
 pub enum Schema {
     Overworld(String, IdPath),
+    MetaTile(String, IdPath, i32),
 }
 
 #[derive(Debug)]
@@ -112,12 +113,60 @@ impl TileCache {
         Ok(image)
     }
 
+    fn get_meta_tile(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
+        let config = Config::get(config)?;
+        let sv = config.sideview.find(id)?;
+        let group = tile >> 6;
+        let tile = tile & 0x3f;
+
+        let rom = self.edit.rom.borrow();
+        let table = rom.read_pointer(sv.metatile_table + group * 2)?;
+        let tiles = rom.read_bytes(table + tile * 4, 4)?;
+        let palidx = palidx as usize * 16 + group as usize * 4;
+
+        let mut image = Image::new(16, 16);
+        self.blit(
+            &mut image,
+            sv.chr + tiles[0] as usize * 16,
+            sv.palette + palidx,
+            0,
+            0,
+        )?;
+        self.blit(
+            &mut image,
+            sv.chr + tiles[1] as usize * 16,
+            sv.palette + palidx,
+            0,
+            8,
+        )?;
+        self.blit(
+            &mut image,
+            sv.chr + tiles[2] as usize * 16,
+            sv.palette + palidx,
+            8,
+            0,
+        )?;
+        self.blit(
+            &mut image,
+            sv.chr + tiles[3] as usize * 16,
+            sv.palette + palidx,
+            8,
+            8,
+        )?;
+
+        image.update();
+        Ok(image)
+    }
+
     fn _get(&self, tile: u8) -> Result<Ref<'_, Image>> {
         {
             let mut cache = self.cache.borrow_mut();
             if !cache.contains_key(&tile) {
                 let image = match &self.schema {
                     Schema::Overworld(config, id) => self.get_overworld_tile(tile, config, id)?,
+                    Schema::MetaTile(config, id, palidx) => {
+                        self.get_meta_tile(tile, config, id, *palidx)?
+                    }
                 };
                 cache.insert(tile, image);
             }

@@ -24,6 +24,7 @@ use crate::nes::{Address, Buffer, MemoryAccess};
 use crate::util::pyaddress::PyAddress;
 use crate::util::UTime;
 use crate::zelda2::config::Config;
+use crate::zelda2::edit_factory;
 use crate::zelda2::import::ImportRom;
 
 #[pyclass(unsendable)]
@@ -199,12 +200,31 @@ pub struct Metadata {
     pub config: String,
 }
 
-#[derive(Debug)]
+// TODO(cfrantz): should probably move this to gui
+#[derive(Debug, PartialEq)]
 pub enum EditAction {
     None,
-    MoveTo(isize),
-    Delete,
+    New,
+    NewAt(usize),
+    MoveTo(usize),
+    CopyAt(usize),
+    Delete(usize),
+    Swap(usize, usize),
+    Drag,
     Update,
+    PaletteChanged,
+    CacheInvalidate,
+}
+
+impl EditAction {
+    pub fn set(&mut self, action: EditAction) {
+        if action != EditAction::None {
+            if *self != EditAction::None {
+                error!("EditAction {:?} replaced by {:?}", self, action);
+            }
+            *self = action;
+        }
+    }
 }
 
 impl Default for EditAction {
@@ -379,6 +399,37 @@ impl EditProxy {
             }
             Err(e) => Err(e.into()),
         }
+    }
+
+    fn create(&self, kind: &str, id: Option<&str>) -> PyResult<EditProxy> {
+        let meta = Metadata {
+            label: kind.to_owned(),
+            user: whoami::username(),
+            timestamp: UTime::now(),
+            comment: String::default(),
+            config: self.edit.meta.borrow().config.clone(),
+        };
+        let commit = Rc::new(Edit {
+            meta: RefCell::new(meta),
+            edit: RefCell::new(edit_factory(kind, id)?),
+            rom: self.edit.rom.clone(),
+            memory: self.edit.memory.clone(),
+            action: RefCell::default(),
+        });
+        Ok(EditProxy::new(commit))
+    }
+
+    fn unpack(&self, proxy: Option<&EditProxy>) -> PyResult<()> {
+        let proxy = proxy.unwrap_or(self);
+        let mut obj = proxy.edit.edit.borrow_mut();
+        obj.unpack(&proxy.edit)?;
+        Ok(())
+    }
+
+    fn pack(&self) -> PyResult<()> {
+        let obj = self.edit.edit.borrow();
+        obj.pack(&self.edit)?;
+        Ok(())
     }
 
     fn read_byte(&self, addr: PyAddress) -> Result<u8> {

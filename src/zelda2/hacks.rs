@@ -71,6 +71,14 @@ pub struct Hacks {
 }
 
 impl Hacks {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if id.is_none() {
+            Ok(Box::new(Self::default()))
+        } else {
+            Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
+        }
+    }
+
     pub fn find_item(&self, id: &str) -> Option<&Hack> {
         for item in self.item.iter() {
             if item.id == id {

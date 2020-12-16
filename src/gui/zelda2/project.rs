@@ -13,6 +13,7 @@ use crate::gui::zelda2::hacks::HacksGui;
 use crate::gui::zelda2::overworld::OverworldGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::python::PythonScriptGui;
+use crate::gui::zelda2::sideview::SideviewGui;
 use crate::gui::zelda2::start::StartGui;
 use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
@@ -129,6 +130,12 @@ impl ProjectGui {
                         Err(e) => error!("Could not create PythonScriptGui: {:?}", e),
                     };
                 }
+                if MenuItem::new(im_str!("Sideview Editor")).build(ui) {
+                    match SideviewGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => error!("Could not create SideviewGui: {:?}", e),
+                    };
+                }
                 if MenuItem::new(im_str!("Start Values")).build(ui) {
                     match StartGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
@@ -176,13 +183,12 @@ impl ProjectGui {
                     i += 1;
                 }
                 EditAction::MoveTo(pos) => {
-                    let pos = pos as usize;
                     project.edits.swap(i, pos);
                     if first_action == 0 {
                         first_action = if i < pos { i } else { pos };
                     }
                 }
-                EditAction::Delete => {
+                EditAction::Delete(_) => {
                     project.edits.remove(i);
                     if first_action == 0 {
                         first_action = i;
@@ -192,6 +198,9 @@ impl ProjectGui {
                     if first_action == 0 {
                         first_action = i;
                     }
+                }
+                _ => {
+                    info!("Edit action not handled: {:?}", action);
                 }
             }
         }
@@ -237,19 +246,19 @@ impl ProjectGui {
                 .enabled(index > 1)
                 .build(ui)
             {
-                edit.action.replace(EditAction::MoveTo(index - 1));
+                edit.action.replace(EditAction::MoveTo(index as usize - 1));
             }
             if MenuItem::new(im_str!("Move Down"))
                 .enabled(index > 0 && index < len - 1)
                 .build(ui)
             {
-                edit.action.replace(EditAction::MoveTo(index + 1));
+                edit.action.replace(EditAction::MoveTo(index as usize + 1));
             }
             if MenuItem::new(im_str!("Delete"))
                 .enabled(index > 0)
                 .build(ui)
             {
-                edit.action.replace(EditAction::Delete);
+                edit.action.replace(EditAction::Delete(index as usize));
             }
             ui.end_popup();
         }

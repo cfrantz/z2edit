@@ -5,6 +5,7 @@ pub mod overworld;
 pub mod palette;
 pub mod project;
 pub mod python;
+pub mod sideview;
 pub mod start;
 pub mod text_table;
 pub mod tile_cache;

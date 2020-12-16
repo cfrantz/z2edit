@@ -41,6 +41,16 @@ impl IdPath {
     pub fn to_string(&self) -> String {
         self.0.join("/")
     }
+
+    pub fn push(&mut self, val: &str) {
+        self.0.push(val.to_owned());
+    }
+}
+
+impl From<&str> for IdPath {
+    fn from(a: &str) -> Self {
+        IdPath(a.split('/').map(|s| s.to_owned()).collect())
+    }
 }
 
 impl From<String> for IdPath {

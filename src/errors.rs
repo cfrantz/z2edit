@@ -42,6 +42,10 @@ error_chain! {
             description("Config not found"),
             display("Config not found: {}", which),
         }
+        IdPathError(path: String) {
+            description("IdPath error"),
+            display("IdPath error: {}", path),
+        }
         IdPathNotFound(path: String) {
             description("IdPath not found"),
             display("IdPath not found: {}", path),
@@ -54,6 +58,10 @@ error_chain! {
             description("Bad IdPath length"),
             display("Bad IdPath length: {} expecting length in range {}..{}",
                     category, range.start, range.end),
+        }
+        IndexError(index: usize) {
+            description("Bad index"),
+            display("Bad index {}", index),
         }
         CommitIndexError(index: isize) {
             description("Bad commit index"),
@@ -78,6 +86,10 @@ error_chain! {
         LengthError(error: String) {
             description("Length Error"),
             display("Length Error: {}", error),
+        }
+        NotFound(message: String) {
+            description("Not Found"),
+            display("Not found: {}", message),
         }
     }
 }

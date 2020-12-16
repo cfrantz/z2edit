@@ -61,6 +61,13 @@ pub struct TextTable {
 }
 
 impl TextTable {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if id.is_none() {
+            Ok(Box::new(Self::default()))
+        } else {
+            Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
+        }
+    }
     fn merge(&mut self, other: &TextTable) {
         for o in other.data.iter() {
             for d in self.data.iter_mut() {

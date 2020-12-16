@@ -1,5 +1,4 @@
 use std::convert::{From, TryFrom};
-use std::mem::swap;
 use std::rc::Rc;
 
 use imgui;
@@ -8,6 +7,7 @@ use imgui::{ImStr, ImString, MouseButton};
 
 use crate::errors::*;
 use crate::gui::util::{text_outlined, KeyAction};
+use crate::gui::util::{DragHelper, SelectBox};
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::{Selector, Visibility};
@@ -18,104 +18,6 @@ use crate::util::undo::UndoStack;
 use crate::zelda2::config::Config;
 use crate::zelda2::overworld::{Connector, Encounter, JsonMap, Map, Overworld};
 use crate::zelda2::project::{Edit, EmulateAt, Project};
-
-#[derive(Copy, Clone, Debug)]
-struct SelectBox {
-    x0: isize,
-    y0: isize,
-    x1: isize,
-    y1: isize,
-}
-
-impl Default for SelectBox {
-    fn default() -> Self {
-        SelectBox {
-            x0: isize::MIN,
-            y0: isize::MIN,
-            x1: isize::MIN,
-            y1: isize::MIN,
-        }
-    }
-}
-
-impl SelectBox {
-    pub fn contains(&self, x: isize, y: isize) -> bool {
-        x >= self.x0 && x <= self.x1 && y >= self.y0 && y <= self.y1
-    }
-
-    pub fn init(&mut self, x: isize, y: isize) {
-        self.x0 = x;
-        self.y0 = y;
-        self.x1 = isize::MIN;
-        self.y1 = isize::MIN;
-    }
-
-    pub fn drag(&mut self, x: isize, y: isize) {
-        self.x1 = x;
-        self.y1 = y;
-        if self.x0 == isize::MIN {
-            self.x0 = self.x1
-        }
-        if self.y0 == isize::MIN {
-            self.y0 = self.y1
-        }
-    }
-
-    pub fn normalized(self) -> Self {
-        let mut norm = self;
-        if norm.x1 < norm.x0 {
-            swap(&mut norm.x0, &mut norm.x1);
-        }
-        if norm.y1 < norm.y0 {
-            swap(&mut norm.y0, &mut norm.y1);
-        }
-        norm
-    }
-
-    pub fn valid(&self) -> bool {
-        self.x0 != isize::MIN
-            && self.y0 != isize::MIN
-            && self.x1 != isize::MIN
-            && self.y1 != isize::MIN
-    }
-}
-
-#[derive(Debug, Default)]
-struct ConnectionDrag {
-    number: Option<usize>,
-    amount: [f32; 2],
-}
-
-impl ConnectionDrag {
-    pub fn start(&mut self, number: usize) {
-        if self.number.is_none() {
-            self.number = Some(number);
-            self.amount = [0.0, 0.0];
-        }
-    }
-    pub fn drag(&mut self, number: usize, amount: [f32; 2]) {
-        if Some(number) == self.number {
-            self.amount[0] += amount[0];
-            self.amount[1] += amount[1];
-        }
-    }
-    pub fn delta(&self, number: usize) -> [f32; 2] {
-        if Some(number) == self.number {
-            self.amount
-        } else {
-            [0.0, 0.0]
-        }
-    }
-
-    pub fn finalize(&mut self, number: usize) -> Option<[f32; 2]> {
-        if Some(number) == self.number {
-            self.number = None;
-            Some(self.amount)
-        } else {
-            None
-        }
-    }
-}
 
 pub struct OverworldGui {
     visible: Visibility,
@@ -135,7 +37,7 @@ pub struct OverworldGui {
     select_drag: bool,
     conn_show: bool,
     conn_selected: usize,
-    conn_drag: ConnectionDrag,
+    conn_drag: DragHelper,
     cursor: [isize; 2],
 }
 
@@ -189,7 +91,7 @@ impl OverworldGui {
             select_drag: false,
             conn_show: true,
             conn_selected: 0,
-            conn_drag: ConnectionDrag::default(),
+            conn_drag: DragHelper::default(),
             cursor: [0, 0],
         }))
     }

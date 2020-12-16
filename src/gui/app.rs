@@ -1,6 +1,7 @@
 use imgui;
 use imgui::im_str;
 use imgui::MenuItem;
+use imgui::{FontConfig, FontGlyphRanges, FontSource};
 use imgui_opengl_renderer::Renderer;
 use imgui_sdl2::ImguiSdl2;
 use pyo3::class::PySequenceProtocol;
@@ -14,6 +15,7 @@ use std::time::Instant;
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
 use crate::gui::console::Console;
+use crate::gui::fa;
 use crate::gui::glhelper;
 use crate::gui::preferences::PreferencesGui;
 use crate::gui::zelda2::project::ProjectGui;
@@ -105,6 +107,25 @@ impl App {
         let mut imgui = imgui::Context::create();
 
         imgui.io_mut().config_flags |= imgui::ConfigFlags::DOCKING_ENABLE;
+
+        let font_size = 13.0;
+        imgui.fonts().add_font(&[
+            FontSource::DefaultFontData {
+                config: Some(FontConfig {
+                    size_pixels: font_size,
+                    ..FontConfig::default()
+                }),
+            },
+            FontSource::TtfData {
+                data: include_bytes!("../../resources/fontawesome-webfont.ttf"),
+                size_pixels: 16.0,
+                config: Some(FontConfig {
+                    glyph_ranges: FontGlyphRanges::from_slice(&[fa::ICON_MIN, fa::ICON_MAX, 0]),
+                    glyph_offset: [0.0, 3.0],
+                    ..FontConfig::default()
+                }),
+            },
+        ]);
 
         let mut imgui_sdl2 = ImguiSdl2::new(&mut imgui, &context.window);
         let renderer = Renderer::new(&mut imgui, |s| context.video.gl_get_proc_address(s) as _);

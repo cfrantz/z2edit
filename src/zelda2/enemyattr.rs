@@ -1,6 +1,7 @@
 use ron;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::convert::From;
 use std::rc::Rc;
 
 use crate::errors::*;
@@ -83,6 +84,19 @@ pub struct Enemy {
     pub unknown3: usize,
 }
 
+impl Enemy {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if let Some(id) = id {
+            Ok(Box::new(Enemy {
+                id: IdPath::from(id),
+                ..Default::default()
+            }))
+        } else {
+            Err(ErrorKind::IdPathError("id required".to_string()).into())
+        }
+    }
+}
+
 #[typetag::serde]
 impl RomData for Enemy {
     fn name(&self) -> String {
@@ -153,6 +167,16 @@ impl RomData for Enemy {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct EnemyGroup {
     pub data: Vec<Enemy>,
+}
+
+impl EnemyGroup {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if id.is_none() {
+            Ok(Box::new(EnemyGroup::default()))
+        } else {
+            Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
+        }
+    }
 }
 
 #[typetag::serde]

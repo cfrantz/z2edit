@@ -75,6 +75,19 @@ pub struct ExperienceTable {
     pub game_name: String,
 }
 
+impl ExperienceTable {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if let Some(id) = id {
+            Ok(Box::new(Self {
+                id: IdPath::from(id),
+                ..Default::default()
+            }))
+        } else {
+            Err(ErrorKind::IdPathError("id required".to_string()).into())
+        }
+    }
+}
+
 #[typetag::serde]
 impl RomData for ExperienceTable {
     fn name(&self) -> String {
@@ -154,6 +167,16 @@ impl RomData for ExperienceTable {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ExperienceTableGroup {
     pub data: Vec<ExperienceTable>,
+}
+
+impl ExperienceTableGroup {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if id.is_none() {
+            Ok(Box::new(Self::default()))
+        } else {
+            Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
+        }
+    }
 }
 
 #[typetag::serde]

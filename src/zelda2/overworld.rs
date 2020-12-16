@@ -515,6 +515,17 @@ pub struct Overworld {
 }
 
 impl Overworld {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if let Some(id) = id {
+            Ok(Box::new(Self {
+                id: IdPath::from(id),
+                ..Default::default()
+            }))
+        } else {
+            Err(ErrorKind::IdPathError("id required".to_string()).into())
+        }
+    }
+
     pub fn from_rom(edit: &Rc<Edit>, id: IdPath) -> Result<Self> {
         let mut overworld = Overworld::default();
         overworld.id = id;

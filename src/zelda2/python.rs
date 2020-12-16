@@ -15,6 +15,16 @@ pub struct PythonScript {
     pub code: String,
 }
 
+impl PythonScript {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if id.is_none() {
+            Ok(Box::new(Self::default()))
+        } else {
+            Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
+        }
+    }
+}
+
 #[typetag::serde]
 impl RomData for PythonScript {
     fn name(&self) -> String {
