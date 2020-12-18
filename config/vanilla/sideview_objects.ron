@@ -39,7 +39,7 @@
         render: Grid,
         id: 0x03,
         width: 1,
-        height: 1,
+        height: 2,
         metatile: [0x5b, 0x5c],
     ),
     (

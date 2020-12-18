@@ -140,7 +140,7 @@ impl EnemyGui {
         Ok(())
     }
 
-    pub fn enemy_row(enemy: &mut Enemy, config: &config::Enemy, ui: &imgui::Ui) -> bool {
+    pub fn enemy_row(enemy: &mut Enemy, config: &config::Sprite, ui: &imgui::Ui) -> bool {
         let mut changed = false;
         ui.align_text_to_frame_padding();
         ui.text(im_str!("{:02x}: {}", config.offset, config.name));

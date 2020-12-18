@@ -28,7 +28,9 @@ pub struct SideviewGui {
     edit: Rc<Edit>,
     names: Vec<ImString>,
     ids: Vec<IdPath>,
-    cache: TileCache,
+    background: TileCache,
+    item: TileCache,
+    enemies: TileCache,
     selector: Selector,
     scale: f32,
     sideview: Sideview,
@@ -38,6 +40,8 @@ pub struct SideviewGui {
     objects_map: HashMap<usize, usize>,
     extras: Vec<(ImString, u8)>,
     extras_map: HashMap<usize, usize>,
+    items: Vec<(ImString, u8)>,
+    items_map: HashMap<usize, usize>,
 }
 
 impl SideviewGui {
@@ -56,6 +60,8 @@ impl SideviewGui {
         let mut names = Vec::new();
         let mut ids = Vec::new();
         let mut selected = usize::MAX;
+        let mut default_select = 0;
+        let north_palace = IdPath::from("west_hyrule/0");
         for group in config.sideview.group.iter() {
             for i in 0..group.length {
                 let name = if let Some(pet_name) = group.pet_names.get(&i) {
@@ -69,14 +75,17 @@ impl SideviewGui {
                 if sideview.id == idpath {
                     selected = ids.len() - 1;
                 }
+                if idpath == north_palace {
+                    default_select = ids.len();
+                }
                 ids.push(idpath);
             }
         }
 
         if selected == usize::MAX {
-            sideview.id = ids[0].clone();
+            selected = default_select;
+            sideview.id = ids[selected].clone();
             sideview.unpack(&edit)?;
-            selected = 0;
         }
 
         let mut decomp = Decompressor::new();
@@ -87,13 +96,18 @@ impl SideviewGui {
             &config.objects,
         );
 
-        let cache = TileCache::new(
+        let background = TileCache::new(
             &edit,
             Schema::MetaTile(
                 edit.meta.borrow().config.clone(),
                 sideview.id.clone(),
                 sideview.map.background_palette,
             ),
+        );
+        let item = TileCache::new(&edit, Schema::Item(edit.meta.borrow().config.clone()));
+        let enemies = TileCache::new(
+            &edit,
+            Schema::Enemy(edit.meta.borrow().config.clone(), sideview.id.clone()),
         );
 
         let win_id = edit.win_id(commit_index);
@@ -105,7 +119,9 @@ impl SideviewGui {
             edit: edit,
             names: names,
             ids: ids,
-            cache: cache,
+            background: background,
+            item: item,
+            enemies: enemies,
             selector: Selector::new(selected),
             scale: 1.0,
             sideview: sideview,
@@ -115,6 +131,8 @@ impl SideviewGui {
             objects_map: HashMap::new(),
             extras: Vec::new(),
             extras_map: HashMap::new(),
+            items: Vec::new(),
+            items_map: HashMap::new(),
         });
         ret.list_object_names()?;
         Ok(ret)
@@ -126,6 +144,20 @@ impl SideviewGui {
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
+    }
+
+    pub fn reset_caches(&mut self) {
+        self.background.reset(Schema::MetaTile(
+            self.edit.meta.borrow().config.clone(),
+            self.sideview.id.clone(),
+            self.sideview.map.background_palette,
+        ));
+        self.item
+            .reset(Schema::Item(self.edit.meta.borrow().config.clone()));
+        self.enemies.reset(Schema::Enemy(
+            self.edit.meta.borrow().config.clone(),
+            self.sideview.id.clone(),
+        ));
     }
 
     fn list_object_names(&mut self) -> Result<()> {
@@ -167,6 +199,12 @@ impl SideviewGui {
                 .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
             self.extras_map.insert(obj.id as usize, i);
         }
+        for (i, obj) in config.items.item.iter().enumerate() {
+            self.items
+                .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
+            self.items_map.insert(obj.offset as usize, i);
+        }
+
         Ok(())
     }
 
@@ -177,12 +215,24 @@ impl SideviewGui {
 
         for y in 0..Decompressor::HEIGHT {
             for x in 0..Decompressor::WIDTH {
-                let image = self.cache.get(self.decomp.data[y][x]);
+                let image = self.background.get(self.decomp.data[y][x]);
                 let xo = origin[0] + x as f32 * scale;
                 let yo = origin[1] + y as f32 * scale;
                 image.draw_at([xo, yo], self.scale, ui);
             }
         }
+        for y in 0..Decompressor::HEIGHT {
+            for x in 0..Decompressor::WIDTH {
+                let item = self.decomp.item[y][x];
+                if item != 0xFF {
+                    let image = self.item.get(item);
+                    let xo = origin[0] + x as f32 * scale;
+                    let yo = origin[1] + y as f32 * scale;
+                    image.draw_at([xo, yo], self.scale, ui);
+                }
+            }
+        }
+
         let mut action = EditAction::None;
         for i in 0..self.sideview.map.data.len() {
             action.set(
@@ -313,6 +363,8 @@ impl SideviewGui {
             self.draw_map_command_header(config, ui)
                 .expect("map_command_header"),
         );
+        ui.text("\nMap Commands:");
+        ui.separator();
         for i in 0..self.sideview.map.data.len() {
             action.set(self.draw_map_command(i, false, ui).expect("map_command"));
         }
@@ -345,12 +397,7 @@ impl SideviewGui {
             EditAction::Drag => false,
             EditAction::Update => true,
             EditAction::PaletteChanged | EditAction::CacheInvalidate => {
-                self.cache.reset(Schema::MetaTile(
-                    self.edit.meta.borrow().config.clone(),
-                    self.sideview.id.clone(),
-                    self.sideview.map.background_palette,
-                ));
-
+                self.reset_caches();
                 true
             }
             _ => {
@@ -444,7 +491,7 @@ impl SideviewGui {
         let width = ui.push_item_width(200.0);
         if y < 13 {
             if !popup {
-                ui.same_line(540.0);
+                ui.same_line(510.0);
             }
             let kind = &mut self.sideview.map.data[index].kind;
             let mut sel = self.objects_map[kind];
@@ -454,7 +501,7 @@ impl SideviewGui {
             }
         } else if y == 15 {
             if !popup {
-                ui.same_line(540.0);
+                ui.same_line(510.0);
             }
             let kind = &mut self.sideview.map.data[index].kind;
             let mut sel = self.extras_map[kind];
@@ -465,20 +512,36 @@ impl SideviewGui {
         }
         width.pop(ui);
 
-        let width = ui.push_item_width(100.0);
         if y != 14 {
             if !popup {
-                ui.same_line(840.0);
+                ui.same_line(770.0);
             }
-            let p = &mut self.sideview.map.data[index].param;
-            if ui.input_int(im_str!("Param"), p).build() {
-                *p = clamp(*p, 0, if y == 13 { 255 } else { 15 });
-                action.set(EditAction::Update);
+            if self.sideview.map.data[index].kind == 0x0f {
+                let width = ui.push_item_width(200.0);
+                let item = &mut self.sideview.map.data[index].param;
+                let mut sel = self.items_map[&(*item as usize)];
+                let items = self
+                    .items
+                    .iter()
+                    .map(|s| s.0.as_ref())
+                    .collect::<Vec<&ImStr>>();
+                if imgui::ComboBox::new(im_str!("Item")).build_simple_string(ui, &mut sel, &items) {
+                    *item = self.objects[sel].1 as i32;
+                    action.set(EditAction::Update);
+                }
+                width.pop(ui);
+            } else {
+                let width = ui.push_item_width(100.0);
+                let p = &mut self.sideview.map.data[index].param;
+                if ui.input_int(im_str!("Param"), p).build() {
+                    *p = clamp(*p, 0, if y == 13 { 255 } else { 15 });
+                    action.set(EditAction::Update);
+                }
+                width.pop(ui);
             }
         }
-        width.pop(ui);
         if !popup {
-            ui.same_line(1000.0);
+            ui.same_line(1020.0);
             if ui.button(&im_str!("{}", fa::ICON_TRASH), [0.0, 0.0]) {
                 action.set(EditAction::Delete(index));
             }
@@ -698,11 +761,7 @@ impl Gui for SideviewGui {
             );
 
             //            self.undo.reset(self.overworld.clone());
-            self.cache.reset(Schema::MetaTile(
-                self.edit.meta.borrow().config.clone(),
-                self.sideview.id.clone(),
-                self.sideview.map.background_palette,
-            ));
+            self.reset_caches();
         }
     }
 

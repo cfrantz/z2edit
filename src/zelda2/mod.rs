@@ -2,6 +2,7 @@ pub mod config;
 pub mod enemyattr;
 pub mod hacks;
 pub mod import;
+pub mod items;
 pub mod objects;
 pub mod overworld;
 pub mod palette;

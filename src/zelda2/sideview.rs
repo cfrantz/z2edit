@@ -285,13 +285,15 @@ pub struct Enemy {
     pub x: i32,
     pub y: i32,
     pub kind: usize,
+    #[serde(default)]
     pub dialog: Vec<i32>,
+    #[serde(default)]
     pub condition: Option<u8>,
 }
 
 impl Enemy {
     fn list_from_bytes(data: &[u8]) -> Vec<Enemy> {
-        let length = data[0] as usize - 1;
+        let length = data[0] as usize;
         let mut list = Vec::new();
         let mut i = 1;
         while i < length {
@@ -552,7 +554,7 @@ impl Decompressor {
         Decompressor {
             layers: [[[0; 64]; 13]; 3],
             data: [[0; 64]; 13],
-            item: [[0; 64]; 13],
+            item: [[0xFF; 64]; 13],
             bgtile: 0,
             layer: 0,
         }
@@ -698,7 +700,7 @@ impl Decompressor {
             for y in 0..Decompressor::HEIGHT {
                 for x in 0..Decompressor::WIDTH {
                     self.layers[z][y][x] = if z == 0 { self.bgtile } else { 0 };
-                    self.item[y][x] = 0;
+                    self.item[y][x] = 0xFF;
                 }
             }
         }

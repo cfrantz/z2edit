@@ -13,16 +13,7 @@ use crate::zelda2::project::{Edit, Project, RomData};
 
 pub mod config {
     use super::*;
-    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-    pub struct Enemy {
-        pub id: String,
-        pub offset: u8,
-        pub name: String,
-        pub chr: Address,
-        pub palette: u8,
-        pub size: (i32, i32),
-        pub tiles: Vec<i32>,
-    }
+    pub use crate::zelda2::items::config::Sprite;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct EnemyGroup {
@@ -33,7 +24,7 @@ pub mod config {
         pub hp: Address,
         pub xp: Address,
         pub table_len: u8,
-        pub enemy: Vec<Enemy>,
+        pub enemy: Vec<Sprite>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,7 +36,7 @@ pub mod config {
             ron::ser::to_string_pretty(&self, pretty).unwrap()
         }
 
-        pub fn find(&self, path: &IdPath) -> Result<(&EnemyGroup, &Enemy)> {
+        pub fn find(&self, path: &IdPath) -> Result<(&EnemyGroup, &Sprite)> {
             path.check_len("enemy", 2)?;
             for group in self.0.iter() {
                 if path.at(0) == group.id {

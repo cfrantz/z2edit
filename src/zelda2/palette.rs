@@ -53,6 +53,17 @@ pub mod config {
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
 
+        pub fn find_sprite(&self, path: &IdPath) -> Result<&config::Palette> {
+            let path0 = path.at(0);
+            let mut area = match path0 {
+                "palace_125" | "palace_346" => "palace".to_owned(),
+                "item" => "west_hyrule".to_owned(),
+                _ => path0.to_owned(),
+            };
+            area.push_str("_sprites");
+            self.find(&IdPath(vec![area, "0".to_owned()]))
+        }
+
         pub fn vanilla() -> Self {
             ron::de::from_bytes(include_bytes!("../../config/vanilla/palette.ron")).unwrap()
         }

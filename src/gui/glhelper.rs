@@ -21,7 +21,7 @@ pub fn new_image(width: u32, height: u32, pixels: &[u32]) -> imgui::TextureId {
         gl::TexImage2D(
             gl::TEXTURE_2D,
             0,
-            gl::RGB as i32,
+            gl::RGBA as i32,
             width as i32,
             height as i32,
             0,

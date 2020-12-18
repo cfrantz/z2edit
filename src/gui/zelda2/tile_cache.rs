@@ -9,10 +9,17 @@ use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
 use crate::zelda2::project::Edit;
 
+const ERROR_BITMAP: [u32; 64] = [
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1,
+    1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+];
+
 #[derive(Debug)]
 pub enum Schema {
     Overworld(String, IdPath),
     MetaTile(String, IdPath, i32),
+    Enemy(String, IdPath),
+    Item(String),
 }
 
 #[derive(Debug)]
@@ -20,14 +27,22 @@ pub struct TileCache {
     schema: Schema,
     edit: Rc<Edit>,
     cache: RefCell<HashMap<u8, Image>>,
+    error: RefCell<Image>,
 }
 
 impl TileCache {
     pub fn new(edit: &Rc<Edit>, schema: Schema) -> Self {
+        let mut error_image = Image::new(8, 8);
+        for (i, val) in ERROR_BITMAP.iter().enumerate() {
+            error_image.pixels[i] = if *val == 1 { 0xFF0000FF } else { 0xFF000000 };
+        }
+        error_image.update();
+
         TileCache {
             schema: schema,
             edit: Rc::clone(edit),
             cache: RefCell::new(HashMap::<u8, Image>::new()),
+            error: RefCell::new(error_image),
         }
     }
 
@@ -43,16 +58,26 @@ impl TileCache {
         paladdr: Address,
         x0: u32,
         y0: u32,
+        mirror: bool,
+        sprite: bool,
     ) -> Result<()> {
         let rom = self.edit.rom.borrow();
         for y in 0..8 {
             let a = rom.read(tileaddr + y)?;
             let b = rom.read(tileaddr + y + 8)?;
             for x in 0..8 {
-                let pix = (((a << x) & 0x80) >> 7) | (((b << x) & 0x80) >> 6);
+                let pix = if mirror {
+                    (((a >> x) & 0x01) << 0) | (((b >> x) & 0x01) << 1)
+                } else {
+                    (((a << x) & 0x80) >> 7) | (((b << x) & 0x80) >> 6)
+                };
                 let idx = rom.read(paladdr + pix)?;
                 let color = if idx < 64 {
-                    hwpalette::get(idx as usize)
+                    if idx == 0 && sprite {
+                        0
+                    } else {
+                        hwpalette::get(idx as usize)
+                    }
                 } else {
                     0
                 };
@@ -79,6 +104,8 @@ impl TileCache {
             ov.palette + palidx * 4,
             0,
             0,
+            false,
+            false,
         )?;
         self.blit(
             &mut image,
@@ -86,6 +113,8 @@ impl TileCache {
             ov.palette + palidx * 4,
             0,
             8,
+            false,
+            false,
         )?;
         self.blit(
             &mut image,
@@ -93,6 +122,8 @@ impl TileCache {
             ov.palette + palidx * 4,
             8,
             0,
+            false,
+            false,
         )?;
         self.blit(
             &mut image,
@@ -100,6 +131,8 @@ impl TileCache {
             ov.palette + palidx * 4,
             8,
             8,
+            false,
+            false,
         )?;
 
         // If the tile is walkable water, darken it so it's visible as a
@@ -131,6 +164,8 @@ impl TileCache {
             sv.palette + palidx,
             0,
             0,
+            false,
+            false,
         )?;
         self.blit(
             &mut image,
@@ -138,6 +173,8 @@ impl TileCache {
             sv.palette + palidx,
             0,
             8,
+            false,
+            false,
         )?;
         self.blit(
             &mut image,
@@ -145,6 +182,8 @@ impl TileCache {
             sv.palette + palidx,
             8,
             0,
+            false,
+            false,
         )?;
         self.blit(
             &mut image,
@@ -152,8 +191,83 @@ impl TileCache {
             sv.palette + palidx,
             8,
             8,
+            false,
+            false,
         )?;
 
+        image.update();
+        Ok(image)
+    }
+
+    fn get_sprite(&self, tile: u8, config: &str, id: &IdPath) -> Result<Image> {
+        let config = Config::get(config)?;
+        let rom = self.edit.rom.borrow();
+        let palette = config.palette.find_sprite(id)?;
+        let (romaddr, sprite_info) = if id.at(0) == "item" {
+            (Some(config.items.sprite_table), config.items.find(tile)?)
+        } else {
+            let (_, sprite) = config.enemy.find(id)?;
+            (None, sprite)
+        };
+
+        let mut rom_sprites = [0i32, 0i32];
+        let sprites = if sprite_info.sprites.is_empty() {
+            if let Some(addr) = romaddr {
+                let table = rom.read_bytes(addr + tile * 2, 2)?;
+                rom_sprites[0] = table[0] as i32;
+                rom_sprites[1] = if table[0] != table[1] {
+                    table[1] as i32
+                } else {
+                    table[1] as i32 | 0x01000000
+                };
+                &rom_sprites
+            } else {
+                return Err(ErrorKind::NotFound(format!("sprite {}", id)).into());
+            }
+        } else {
+            &sprite_info.sprites[..]
+        };
+
+        let (width, height) = sprite_info.size;
+        let mut image = Image::new(width, height);
+        let width = width / 8;
+        let height = height / 16;
+        let mut y = 0;
+        while y < height {
+            let mut x = 0;
+            while x < width {
+                let sprite_id = sprites[(y * width + x) as usize];
+                if sprite_id == -1 {
+                    x += 1;
+                    continue;
+                }
+                let mirror = sprite_id & 0x1000000 != 0;
+                let xdelta = (sprite_id as u32 >> 16) & 0xFF;
+                let ydelta = (sprite_id as u32 >> 8) & 0xFF;
+                let tile = sprite_id & 0xFE;
+                let chr = sprite_info.chr.add_bank(sprite_id as isize & 1);
+                self.blit(
+                    &mut image,
+                    chr + tile * 16,
+                    palette.address + sprite_info.palette * 4,
+                    x * 8 + xdelta,
+                    y * 16 + ydelta,
+                    mirror,
+                    true,
+                )?;
+                self.blit(
+                    &mut image,
+                    chr + (tile + 1) * 16,
+                    palette.address + sprite_info.palette * 4,
+                    x * 8 + xdelta,
+                    y * 16 + ydelta + 8,
+                    mirror,
+                    true,
+                )?;
+                x += 1;
+            }
+            y += 1;
+        }
         image.update();
         Ok(image)
     }
@@ -167,6 +281,10 @@ impl TileCache {
                     Schema::MetaTile(config, id, palidx) => {
                         self.get_meta_tile(tile, config, id, *palidx)?
                     }
+                    Schema::Enemy(config, id) => self.get_sprite(tile, config, id)?,
+                    Schema::Item(config) => {
+                        self.get_sprite(tile, config, &IdPath(vec!["item".to_owned()]))?
+                    }
                 };
                 cache.insert(tile, image);
             }
@@ -176,6 +294,12 @@ impl TileCache {
     }
 
     pub fn get(&self, tile: u8) -> Ref<'_, Image> {
-        self._get(tile).unwrap()
+        match self._get(tile) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
+                self.error.borrow()
+            }
+        }
     }
 }

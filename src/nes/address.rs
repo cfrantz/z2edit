@@ -149,6 +149,17 @@ impl Address {
         }
     }
 
+    pub fn add_bank(&self, delta: isize) -> Address {
+        match self {
+            Address::File(_) => *self,
+            Address::Seg(_, _) => *self,
+            Address::Cpu(_) => *self,
+            Address::Bank(s, b, x) => Address::Bank(*s, b + delta, *x),
+            Address::Prg(b, x) => Address::Prg(b + delta, *x),
+            Address::Chr(b, x) => Address::Chr(b + delta, *x),
+        }
+    }
+
     pub fn set_val(&self, addr: usize) -> Address {
         match self {
             Address::File(_) => Address::File(addr),
