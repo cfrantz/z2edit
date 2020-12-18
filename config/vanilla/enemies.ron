@@ -1,3 +1,32 @@
+// Notes on tile ids in the `sprites` field:
+// Zelda2 programs the NES PPU to use double-tall sprites (8x16).  As
+// such, the LSB of each tile ID tells the PPU which of the two currently
+// mapped CHR banks to read the tile from.
+//
+// In this file, I have added additional metadata to the tile IDs to be
+// able to draw sprites which are composed of sprites on non-8x16 aligned
+// offsets, or are large mirrored sprites.  For example, the large
+// skull bubble in the great palace looks like a 32x32 sprite, however,
+// it is layed out like this:
+//
+//    AB
+//   sABs
+//   sCDs
+//    CD
+//
+// In order to accomodate the y-offseted and mirrored (S)ides of the bubble,
+// the upper bits of the sprite ID can encode additional information:
+//
+//
+// bit: 2        1        0        0
+//      4        6        8        0
+// id:  m xxxxxxxx yyyyyyyy iiiiiiib
+//
+// Bit 24 unconditionally mirrors the sprite about the x axis.
+//        xxxxxxxx = xoffset to render the sprite.
+//        yyyyyyyy = xoffset to render the sprite.
+//        iiiiiiib = the sprite ID and bank offset.
+
 ([
     (
         id: "west_hyrule",
@@ -16,7 +45,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x6a, 
+                0x6a,
             ],
         ),
         (
@@ -27,7 +56,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0x8a, 
+                0x8a,
             ],
         ),
         (
@@ -38,9 +67,9 @@
             palette: 1,
             size: (8, 48),
             sprites: [
-                0x74, 
-                0x76, 
-                0x74, 
+                0x74,
+                0x76,
+                0x74,
             ],
         ),
         (
@@ -51,7 +80,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x24, 0x24, 
+                0x24, 0x24,
             ],
         ),
         (
@@ -62,7 +91,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb4, 0xb4, 
+                0xb4, 0xb4,
             ],
         ),
         (
@@ -73,7 +102,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0xb4, 0xb4, 
+                0xb4, 0xb4,
             ],
         ),
         (
@@ -84,7 +113,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb6, 0xb8, 
+                0xb6, 0xb8,
             ],
         ),
         (
@@ -95,7 +124,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x4e, 0x4e, 
+                0x4e, 0x4e,
             ],
         ),
         (
@@ -106,8 +135,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x7c, 0x7e, 
-                0x80, 0x82, 
+                0x7c, 0x7e,
+                0x80, 0x82,
             ],
         ),
         (
@@ -118,7 +147,7 @@
             palette: 3,
             size: (8, 16),
             sprites: [
-                0xaa, 
+                0xaa,
             ],
         ),
         (
@@ -129,7 +158,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0xae, 
+                0xae,
             ],
         ),
         (
@@ -140,7 +169,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0xba, 0xbc, 
+                0xba, 0xbc,
             ],
         ),
         (
@@ -151,7 +180,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xba, 0xbc, 
+                0xba, 0xbc,
             ],
         ),
         (
@@ -162,7 +191,7 @@
             palette: 0,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc4, 
+                0xc0, 0xc4,
             ],
         ),
         (
@@ -173,7 +202,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc4, 
+                0xc0, 0xc4,
             ],
         ),
         (
@@ -184,7 +213,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0xc6, 0xc8, 
+                0xc6, 0xc8,
             ],
         ),
         (
@@ -195,7 +224,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0xc6, 0xc8, 
+                0xc6, 0xc8,
             ],
         ),
         (
@@ -206,10 +235,10 @@
             palette: 1,
             size: (32, 64),
             sprites: [
-                0x400ac, 0x400ac, 0x400ac, -1, 
-                -1, -1, -1, -1, 
-                -1, -1, -1, -1, 
-                0x400ac, 0x400ac, 0x400ac, -1, 
+                0x400ac, 0x400ac, 0x400ac, -1,
+                -1, -1, -1, -1,
+                -1, -1, -1, -1,
+                0x400ac, 0x400ac, 0x400ac, -1,
             ],
         ),
         (
@@ -220,8 +249,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0xf, 0x11, 
-                0x17, 0x19, 
+                0xf, 0x11,
+                0x17, 0x19,
             ],
         ),
         (
@@ -232,8 +261,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xf, 0x11, 
-                0x17, 0x19, 
+                0xf, 0x11,
+                0x17, 0x19,
             ],
         ),
         (
@@ -244,8 +273,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xf, 0x11, 
-                0x17, 0x19, 
+                0xf, 0x11,
+                0x17, 0x19,
             ],
         ),
         (
@@ -256,8 +285,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0xe6, 0xe8, 
-                0xea, 0xec, 
+                0xe6, 0xe8,
+                0xea, 0xec,
             ],
         ),
         (
@@ -268,8 +297,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xe6, 0xe8, 
-                0xea, 0xec, 
+                0xe6, 0xe8,
+                0xea, 0xec,
             ],
         ),
         (
@@ -280,8 +309,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x1, 0x3, 
-                0xf2, 0xf4, 
+                0x1, 0x3,
+                0xf2, 0xf4,
             ],
         ),
         (
@@ -292,8 +321,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x1, 0x3, 
-                0xf2, 0xf4, 
+                0x1, 0x3,
+                0xf2, 0xf4,
             ],
         ),
         (
@@ -304,8 +333,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0x1, 0x3, 
-                0xf2, 0xf4, 
+                0x1, 0x3,
+                0xf2, 0xf4,
             ],
         ),
         (
@@ -316,7 +345,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xe2, 0xe0, 
+                0xe2, 0xe0,
             ],
         ),
         (
@@ -327,7 +356,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xd4, 0xd2, 
+                0xd4, 0xd2,
             ],
         ),
         (
@@ -338,7 +367,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xd4, 0xd2, 
+                0xd4, 0xd2,
             ],
         ),
         (
@@ -349,7 +378,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xd6, 0xd8, 
+                0xd6, 0xd8,
             ],
         ),
         (
@@ -360,9 +389,9 @@
             palette: 3,
             size: (8, 48),
             sprites: [
-                0x62, 
-                0x64, 
-                0x64, 
+                0x62,
+                0x64,
+                0x64,
             ],
         ),
         (
@@ -373,8 +402,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x1b, 0x23, 
-                0xfc, 0xfe, 
+                0x1b, 0x23,
+                0xfc, 0xfe,
             ],
         ),
         (
@@ -385,8 +414,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x1b, 0x23, 
-                0xfc, 0xfe, 
+                0x1b, 0x23,
+                0xfc, 0xfe,
             ],
         ),
         ]
@@ -408,7 +437,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x6a, 
+                0x6a,
             ],
         ),
         (
@@ -419,7 +448,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0x8a, 
+                0x8a,
             ],
         ),
         (
@@ -430,9 +459,9 @@
             palette: 1,
             size: (8, 48),
             sprites: [
-                0x74, 
-                0x76, 
-                0x74, 
+                0x74,
+                0x76,
+                0x74,
             ],
         ),
         (
@@ -443,7 +472,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x24, 0x24, 
+                0x24, 0x24,
             ],
         ),
         (
@@ -454,7 +483,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb4, 0xb4, 
+                0xb4, 0xb4,
             ],
         ),
         (
@@ -465,7 +494,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0xb4, 0xb4, 
+                0xb4, 0xb4,
             ],
         ),
         (
@@ -476,7 +505,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb6, 0xb8, 
+                0xb6, 0xb8,
             ],
         ),
         (
@@ -487,7 +516,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x4e, 0x4e, 
+                0x4e, 0x4e,
             ],
         ),
         (
@@ -498,8 +527,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x7c, 0x7e, 
-                0x80, 0x82, 
+                0x7c, 0x7e,
+                0x80, 0x82,
             ],
         ),
         (
@@ -510,7 +539,7 @@
             palette: 3,
             size: (8, 16),
             sprites: [
-                0xaa, 
+                0xaa,
             ],
         ),
         (
@@ -521,7 +550,7 @@
             palette: 3,
             size: (8, 16),
             sprites: [
-                0xaa, 
+                0xaa,
             ],
         ),
         (
@@ -532,7 +561,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0xba, 0xbc, 
+                0xba, 0xbc,
             ],
         ),
         (
@@ -543,7 +572,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xba, 0xbc, 
+                0xba, 0xbc,
             ],
         ),
         (
@@ -554,7 +583,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc4, 
+                0xc0, 0xc4,
             ],
         ),
         (
@@ -565,7 +594,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc4, 
+                0xc0, 0xc4,
             ],
         ),
         (
@@ -576,7 +605,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xc6, 0xc8, 
+                0xc6, 0xc8,
             ],
         ),
         (
@@ -587,7 +616,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xc6, 0xc8, 
+                0xc6, 0xc8,
             ],
         ),
         (
@@ -598,10 +627,10 @@
             palette: 1,
             size: (32, 64),
             sprites: [
-                0x400ac, 0x400ac, 0x400ac, -1, 
-                -1, -1, -1, -1, 
-                -1, -1, -1, -1, 
-                0x400ac, 0x400ac, 0x400ac, -1, 
+                0x400ac, 0x400ac, 0x400ac, -1,
+                -1, -1, -1, -1,
+                -1, -1, -1, -1,
+                0x400ac, 0x400ac, 0x400ac, -1,
             ],
         ),
         (
@@ -612,8 +641,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xd0, 0xd2, 
-                0xd4, 0xd6, 
+                0xd0, 0xd2,
+                0xd4, 0xd6,
             ],
         ),
         (
@@ -624,7 +653,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x1, 0x3, 
+                0x1, 0x3,
             ],
         ),
         (
@@ -635,7 +664,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x7, 0x7, 
+                0x7, 0x7,
             ],
         ),
         (
@@ -646,7 +675,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb, 0xf, 
+                0xb, 0xf,
             ],
         ),
         (
@@ -657,7 +686,7 @@
             palette: 3,
             size: (24, 16),
             sprites: [
-                0xdc, 0xde, 0xe0, 
+                0xdc, 0xde, 0xe0,
             ],
         ),
         (
@@ -668,8 +697,8 @@
             palette: 3,
             size: (24, 32),
             sprites: [
-                -1, -1, 0xf2, 
-                0xfa, 0xf6, 0xf8, 
+                -1, -1, 0xf2,
+                0xfa, 0xf6, 0xf8,
             ],
         ),
         (
@@ -680,8 +709,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x1d, 0x13, 
-                0x1f, 0x17, 
+                0x1d, 0x13,
+                0x1f, 0x17,
             ],
         ),
         (
@@ -692,8 +721,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x1d, 0x13, 
-                0x1f, 0x17, 
+                0x1d, 0x13,
+                0x1f, 0x17,
             ],
         ),
         (
@@ -704,8 +733,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0x1d, 0x13, 
-                0x1f, 0x17, 
+                0x1d, 0x13,
+                0x1f, 0x17,
             ],
         ),
         (
@@ -716,7 +745,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x1d, 0x13, 
+                0x1d, 0x13,
             ],
         ),
         ]
@@ -758,9 +787,9 @@
             palette: 1,
             size: (8, 48),
             sprites: [
-                0x74, 
-                0x76, 
-                0x74, 
+                0x74,
+                0x76,
+                0x74,
             ],
         ),
         (
@@ -891,8 +920,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x74, 0x76, 
-                0xd4, 0xd6, 
+                0x74, 0x76,
+                0xd4, 0xd6,
             ],
         ),
         (
@@ -903,8 +932,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xc0, 0xc2, 
-                0xc4, 0xc6, 
+                0xc0, 0xc2,
+                0xc4, 0xc6,
             ],
         ),
         (
@@ -915,8 +944,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xdc, 0xde, 
-                0xe4, 0xe6, 
+                0xdc, 0xde,
+                0xe4, 0xe6,
             ],
         ),
         (
@@ -927,8 +956,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xf4, 0xf6, 
-                0xf8, 0xfa, 
+                0xf4, 0xf6,
+                0xf8, 0xfa,
             ],
         ),
         (
@@ -949,8 +978,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xdc, 0xde, 
-                0xe4, 0xe6, 
+                0xdc, 0xde,
+                0xe4, 0xe6,
             ],
         ),
         (
@@ -971,8 +1000,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda, 
-                0xe0, 0xe2, 
+                0xd8, 0xda,
+                0xe0, 0xe2,
             ],
         ),
         (
@@ -983,8 +1012,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda, 
-                0xe0, 0xe2, 
+                0xd8, 0xda,
+                0xe0, 0xe2,
             ],
         ),
         (
@@ -995,8 +1024,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0xf4, 0xf6, 
-                0xf8, 0xfa, 
+                0xf4, 0xf6,
+                0xf8, 0xfa,
             ],
         ),
         (
@@ -1047,8 +1076,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xc0, 0xc2, 
-                0xc4, 0xc6, 
+                0xc0, 0xc2,
+                0xc4, 0xc6,
             ],
         ),
         (
@@ -1069,8 +1098,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xc0, 0xc2, 
-                0xc4, 0xc6, 
+                0xc0, 0xc2,
+                0xc4, 0xc6,
             ],
         ),
         (
@@ -1081,8 +1110,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda, 
-                0xe0, 0xe2, 
+                0xd8, 0xda,
+                0xe0, 0xe2,
             ],
         ),
         (
@@ -1093,7 +1122,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0xf5, 
+                0xf5,
             ],
         ),
         (
@@ -1104,7 +1133,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0xf5, 
+                0xf5,
             ],
         ),
         (
@@ -1115,8 +1144,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda, 
-                0xe0, 0xe2, 
+                0xd8, 0xda,
+                0xe0, 0xe2,
             ],
         ),
         ]
@@ -1138,7 +1167,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x6a, 
+                0x6a,
             ],
         ),
         (
@@ -1159,9 +1188,9 @@
             palette: 1,
             size: (8, 48),
             sprites: [
-                0x74, 
-                0x76, 
-                0x74, 
+                0x74,
+                0x76,
+                0x74,
             ],
         ),
         (
@@ -1172,7 +1201,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb0, 0xb0, 
+                0xb0, 0xb0,
             ],
         ),
         (
@@ -1183,7 +1212,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb4, 0xb4, 
+                0xb4, 0xb4,
             ],
         ),
         (
@@ -1194,7 +1223,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0x8a, 
+                0x8a,
             ],
         ),
         (
@@ -1205,7 +1234,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x67, 0x67, 
+                0x67, 0x67,
             ],
         ),
         (
@@ -1216,7 +1245,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xb6, 0xb8, 
+                0xb6, 0xb8,
             ],
         ),
         (
@@ -1227,7 +1256,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xbb, 0xbd, 
+                0xbb, 0xbd,
             ],
         ),
         (
@@ -1238,7 +1267,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xbb, 0xbd, 
+                0xbb, 0xbd,
             ],
         ),
         (
@@ -1249,7 +1278,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xdc, 0x37, 
+                0xdc, 0x37,
             ],
         ),
         (
@@ -1260,8 +1289,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x31, 0x33, 
-                0x45, 0x47, 
+                0x31, 0x33,
+                0x45, 0x47,
             ],
         ),
         (
@@ -1272,8 +1301,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x31, 0x33, 
-                0x45, 0x47, 
+                0x31, 0x33,
+                0x45, 0x47,
             ],
         ),
         (
@@ -1284,7 +1313,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x8f, 0x91, 
+                0x8f, 0x91,
             ],
         ),
         (
@@ -1295,7 +1324,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x67, 0x67, 
+                0x67, 0x67,
             ],
         ),
         (
@@ -1306,7 +1335,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc2, 
+                0xc0, 0xc2,
             ],
         ),
         (
@@ -1317,7 +1346,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc2, 
+                0xc0, 0xc2,
             ],
         ),
         (
@@ -1328,7 +1357,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xca, 0xcc, 
+                0xca, 0xcc,
             ],
         ),
         (
@@ -1339,7 +1368,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xca, 0xcc, 
+                0xca, 0xcc,
             ],
         ),
         (
@@ -1350,10 +1379,10 @@
             palette: 1,
             size: (32, 64),
             sprites: [
-                0x400ac, 0x400ac, 0x400ac, -1, 
-                -1, -1, -1, -1, 
-                -1, -1, -1, -1, 
-                0x400ac, 0x400ac, 0x400ac, -1, 
+                0x400ac, 0x400ac, 0x400ac, -1,
+                -1, -1, -1, -1,
+                -1, -1, -1, -1,
+                0x400ac, 0x400ac, 0x400ac, -1,
             ],
         ),
         (
@@ -1364,7 +1393,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x3d, 
+                0x3d,
             ],
         ),
         (
@@ -1375,7 +1404,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x3d, 
+                0x3d,
             ],
         ),
         (
@@ -1386,7 +1415,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0xce, 
+                0xce,
             ],
         ),
         (
@@ -1397,7 +1426,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0xce, 
+                0xce,
             ],
         ),
         (
@@ -1408,8 +1437,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x4f, 0x47, 
+                0x4d, 0x43,
+                0x4f, 0x47,
             ],
         ),
         (
@@ -1420,8 +1449,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x4f, 0x47, 
+                0x4d, 0x43,
+                0x4f, 0x47,
             ],
         ),
         (
@@ -1432,8 +1461,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x4f, 0x47, 
+                0x4d, 0x43,
+                0x4f, 0x47,
             ],
         ),
         (
@@ -1444,7 +1473,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x39, 0x3b, 
+                0x39, 0x3b,
             ],
         ),
         (
@@ -1455,7 +1484,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x39, 0x3b, 
+                0x39, 0x3b,
             ],
         ),
         (
@@ -1466,8 +1495,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0xd0, 0xd2, 
-                0xd4, 0xd6, 
+                0xd0, 0xd2,
+                0xd4, 0xd6,
             ],
         ),
         (
@@ -1478,8 +1507,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xe0, 0xe2, 
-                0xe8, 0xea, 
+                0xe0, 0xe2,
+                0xe8, 0xea,
             ],
         ),
         (
@@ -1490,8 +1519,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xf0, 0xf2, 
-                0xf4, 0xf6, 
+                0xf0, 0xf2,
+                0xf4, 0xf6,
             ],
         ),
         (
@@ -1502,9 +1531,9 @@
             palette: 2,
             size: (16, 48),
             sprites: [
-                0x1b, 0x1d, 
-                0x1f, 0x21, 
-                0x13, 0x15, 
+                0x1b, 0x1d,
+                0x1f, 0x21,
+                0x13, 0x15,
             ],
         ),
         (
@@ -1515,9 +1544,9 @@
             palette: 3,
             size: (16, 48),
             sprites: [
-                0x40409, -1, 
-                0xf, 0x11, 
-                0x13, 0x15, 
+                0x40409, -1,
+                0xf, 0x11,
+                0x13, 0x15,
             ],
         ),
         (
@@ -1528,7 +1557,7 @@
             palette: 3,
             size: (8, 16),
             sprites: [
-                0xb, 
+                0xb,
             ],
         ),
         (
@@ -1539,8 +1568,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xf0, 0xf2, 
-                0xf4, 0xf6, 
+                0xf0, 0xf2,
+                0xf4, 0xf6,
             ],
         ),
         ]
@@ -1562,7 +1591,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x6a, 
+                0x6a,
             ],
         ),
         (
@@ -1583,9 +1612,9 @@
             palette: 1,
             size: (8, 48),
             sprites: [
-                0x74, 
-                0x76, 
-                0x74, 
+                0x74,
+                0x76,
+                0x74,
             ],
         ),
         (
@@ -1596,7 +1625,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb0, 0xb0, 
+                0xb0, 0xb0,
             ],
         ),
         (
@@ -1607,7 +1636,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb4, 0xb4, 
+                0xb4, 0xb4,
             ],
         ),
         (
@@ -1618,7 +1647,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0x8a, 
+                0x8a,
             ],
         ),
         (
@@ -1629,7 +1658,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x67, 0x67, 
+                0x67, 0x67,
             ],
         ),
         (
@@ -1640,7 +1669,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xb6, 0xb8, 
+                0xb6, 0xb8,
             ],
         ),
         (
@@ -1651,7 +1680,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xbb, 0xbd, 
+                0xbb, 0xbd,
             ],
         ),
         (
@@ -1662,7 +1691,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xbb, 0xbd, 
+                0xbb, 0xbd,
             ],
         ),
         (
@@ -1673,8 +1702,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x4f, 0x47, 
+                0x4d, 0x43,
+                0x4f, 0x47,
             ],
         ),
         (
@@ -1685,8 +1714,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x31, 0x33, 
-                0x45, 0x47, 
+                0x31, 0x33,
+                0x45, 0x47,
             ],
         ),
         (
@@ -1697,8 +1726,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x31, 0x33, 
-                0x45, 0x47, 
+                0x31, 0x33,
+                0x45, 0x47,
             ],
         ),
         (
@@ -1709,7 +1738,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x8f, 0x91, 
+                0x8f, 0x91,
             ],
         ),
         (
@@ -1720,7 +1749,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x67, 0x67, 
+                0x67, 0x67,
             ],
         ),
         (
@@ -1731,7 +1760,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x35, 0x37, 
+                0x35, 0x37,
             ],
         ),
         (
@@ -1742,7 +1771,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x40052, -1, 
+                0x40052, -1,
             ],
         ),
         (
@@ -1753,7 +1782,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xca, 0xcc, 
+                0xca, 0xcc,
             ],
         ),
         (
@@ -1774,10 +1803,10 @@
             palette: 1,
             size: (32, 64),
             sprites: [
-                0x400ac, 0x400ac, 0x400ac, -1, 
-                -1, -1, -1, -1, 
-                -1, -1, -1, -1, 
-                0x400ac, 0x400ac, 0x400ac, -1, 
+                0x400ac, 0x400ac, 0x400ac, -1,
+                -1, -1, -1, -1,
+                -1, -1, -1, -1,
+                0x400ac, 0x400ac, 0x400ac, -1,
             ],
         ),
         (
@@ -1788,7 +1817,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x3d, 
+                0x3d,
             ],
         ),
         (
@@ -1799,7 +1828,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x3d, 
+                0x3d,
             ],
         ),
         (
@@ -1810,7 +1839,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0xce, 
+                0xce,
             ],
         ),
         (
@@ -1821,7 +1850,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0xce, 
+                0xce,
             ],
         ),
         (
@@ -1832,8 +1861,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x4f, 0x47, 
+                0x4d, 0x43,
+                0x4f, 0x47,
             ],
         ),
         (
@@ -1844,8 +1873,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x4f, 0x47, 
+                0x4d, 0x43,
+                0x4f, 0x47,
             ],
         ),
         (
@@ -1856,8 +1885,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x4f, 0x47, 
+                0x4d, 0x43,
+                0x4f, 0x47,
             ],
         ),
         (
@@ -1868,7 +1897,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x39, 0x3b, 
+                0x39, 0x3b,
             ],
         ),
         (
@@ -1879,7 +1908,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x39, 0x3b, 
+                0x39, 0x3b,
             ],
         ),
         (
@@ -1890,8 +1919,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0xd0, 0xd2, 
-                0xd4, 0xd6, 
+                0xd0, 0xd2,
+                0xd4, 0xd6,
             ],
         ),
         (
@@ -1902,8 +1931,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xe0, 0xe2, 
-                0xe4, 0xe6, 
+                0xe0, 0xe2,
+                0xe4, 0xe6,
             ],
         ),
         (
@@ -1914,8 +1943,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xf0, 0xf2, 
-                0xf8, 0xfa, 
+                0xf0, 0xf2,
+                0xf8, 0xfa,
             ],
         ),
         (
@@ -1926,8 +1955,8 @@
             palette: 3,
             size: (32, 32),
             sprites: [
-                0x9, 0xb, 0x4d, 0x43, 
-                0xd, 0xf, 0x11, 0x13, 
+                0x9, 0xb, 0x4d, 0x43,
+                0xd, 0xf, 0x11, 0x13,
             ],
         ),
         (
@@ -1938,10 +1967,10 @@
             palette: 1,
             size: (32, 64),
             sprites: [
-                0x15, 0x17, 0x19, 0x1b, 
-                -1, -1, 0xa1, 0xa3, 
-                -1, -1, 0xa1, 0xa3, 
-                -1, -1, 0xa1, 0xa3, 
+                0x15, 0x17, 0x19, 0x1b,
+                -1, -1, 0xa1, 0xa3,
+                -1, -1, 0xa1, 0xa3,
+                -1, -1, 0xa1, 0xa3,
             ],
         ),
         (
@@ -1952,9 +1981,9 @@
             palette: 2,
             size: (32, 48),
             sprites: [
-                0x9, 0xb, 0x11, 0x13, 
-                0xd, 0xf, 0x15, 0x17, 
-                -1, 0x19, 0x1b, -1, 
+                0x9, 0xb, 0x11, 0x13,
+                0xd, 0xf, 0x15, 0x17,
+                -1, 0x19, 0x1b, -1,
             ],
         ),
         (
@@ -1965,8 +1994,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xf0, 0xf2, 
-                0xf8, 0xfa, 
+                0xf0, 0xf2,
+                0xf8, 0xfa,
             ],
         ),
         ]
@@ -1988,7 +2017,7 @@
             palette: 1,
             size: (8, 16),
             sprites: [
-                0x6a, 
+                0x6a,
             ],
         ),
         (
@@ -1999,7 +2028,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0x8a, 
+                0x8a,
             ],
         ),
         (
@@ -2010,9 +2039,9 @@
             palette: 1,
             size: (8, 48),
             sprites: [
-                0x74, 
-                0x76, 
-                0x74, 
+                0x74,
+                0x76,
+                0x74,
             ],
         ),
         (
@@ -2023,7 +2052,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x24, 0x24, 
+                0x24, 0x24,
             ],
         ),
         (
@@ -2034,7 +2063,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb4, 0xb4, 
+                0xb4, 0xb4,
             ],
         ),
         (
@@ -2045,7 +2074,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0x8a, 
+                0x8a,
             ],
         ),
         (
@@ -2056,7 +2085,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xb6, 0xb8, 
+                0xb6, 0xb8,
             ],
         ),
         (
@@ -2067,7 +2096,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0x4e, 0x4e, 
+                0x4e, 0x4e,
             ],
         ),
         (
@@ -2098,8 +2127,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x7c, 0x7e, 
-                0x80, 0x82, 
+                0x7c, 0x7e,
+                0x80, 0x82,
             ],
         ),
         (
@@ -2110,7 +2139,7 @@
             palette: 3,
             size: (8, 16),
             sprites: [
-                0xaa, 
+                0xaa,
             ],
         ),
         (
@@ -2121,7 +2150,7 @@
             palette: 2,
             size: (8, 16),
             sprites: [
-                0xae, 
+                0xae,
             ],
         ),
         (
@@ -2132,7 +2161,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0xba, 0xbc, 
+                0xba, 0xbc,
             ],
         ),
         (
@@ -2143,7 +2172,7 @@
             palette: 3,
             size: (16, 16),
             sprites: [
-                0xba, 0xbc, 
+                0xba, 0xbc,
             ],
         ),
         (
@@ -2154,7 +2183,7 @@
             palette: 0,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc4, 
+                0xc0, 0xc4,
             ],
         ),
         (
@@ -2165,7 +2194,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0xc0, 0xc4, 
+                0xc0, 0xc4,
             ],
         ),
         (
@@ -2176,7 +2205,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x61, 0x33, 
+                0x61, 0x33,
             ],
         ),
         (
@@ -2187,7 +2216,7 @@
             palette: 2,
             size: (16, 16),
             sprites: [
-                0x61, 0x33, 
+                0x61, 0x33,
             ],
         ),
         (
@@ -2198,10 +2227,10 @@
             palette: 1,
             size: (32, 64),
             sprites: [
-                0x400ac, 0x400ac, 0x400ac, -1, 
-                -1, -1, -1, -1, 
-                -1, -1, -1, -1, 
-                0x400ac, 0x400ac, 0x400ac, -1, 
+                0x400ac, 0x400ac, 0x400ac, -1,
+                -1, -1, -1, -1,
+                -1, -1, -1, -1,
+                0x400ac, 0x400ac, 0x400ac, -1,
             ],
         ),
         (
@@ -2212,7 +2241,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x67, 0x67, 
+                0x67, 0x67,
             ],
         ),
         (
@@ -2223,7 +2252,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x67, 0x67, 
+                0x67, 0x67,
             ],
         ),
         (
@@ -2234,7 +2263,7 @@
             palette: 1,
             size: (16, 16),
             sprites: [
-                0x35, 0x37, 
+                0x35, 0x37,
             ],
         ),
         (
@@ -2245,8 +2274,8 @@
             palette: 1,
             size: (32, 32),
             sprites: [
-                0x805, 0x7, 0x7, 0x1000805, 
-                -1, 0x9, 0x9, -1, 
+                0x805, 0x7, 0x7, 0x1000805,
+                -1, 0x9, 0x9, -1,
             ],
         ),
         (
@@ -2257,8 +2286,8 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x51, 0x4b, 
+                0x4d, 0x43,
+                0x51, 0x4b,
             ],
         ),
         (
@@ -2269,8 +2298,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x51, 0x4b, 
+                0x4d, 0x43,
+                0x51, 0x4b,
             ],
         ),
         (
@@ -2281,8 +2310,8 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0x4d, 0x43, 
-                0x51, 0x4b, 
+                0x4d, 0x43,
+                0x51, 0x4b,
             ],
         ),
         (
@@ -2313,8 +2342,8 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xe8, 0xea, 
-                0xe4, 0xe6, 
+                0xe8, 0xea,
+                0xe4, 0xe6,
             ],
         ),
         (
@@ -2325,8 +2354,8 @@
             palette: 3,
             size: (48, 32),
             sprites: [
-                0xf0, 0xf2, 0xf4, 0xf4, 0x10000f2, 0x10000f0, 
-                0xf6, 0xf8, 0xfa, 0xfa, 0x10000f8, 0x10000f6, 
+                0xf0, 0xf2, 0xf4, 0xf4, 0x10000f2, 0x10000f0,
+                0xf6, 0xf8, 0xfa, 0xfa, 0x10000f8, 0x10000f6,
             ],
         ),
         (
@@ -2347,14 +2376,14 @@
             palette: 3,
             size: (16, 128),
             sprites: [
-                0x9f, 0x9f, 
-                0x9f, 0x9f, 
-                0x9f, 0x9f, 
-                0x9f, 0x9f, 
-                0x9f, 0x9f, 
-                0x9f, 0x9f, 
-                0x9f, 0x9f, 
-                0x9f, 0x9f, 
+                0x9f, 0x9f,
+                0x9f, 0x9f,
+                0x9f, 0x9f,
+                0x9f, 0x9f,
+                0x9f, 0x9f,
+                0x9f, 0x9f,
+                0x9f, 0x9f,
+                0x9f, 0x9f,
             ],
         ),
         (
@@ -2375,11 +2404,11 @@
             palette: 2,
             size: (48, 80),
             sprites: [
-                0xf, 0x11, 0x13, 0x13, 0x1000011, 0x100000f, 
-                0x15, 0x17, 0x29, 0x29, 0x1000017, 0x1000015, 
-                0x1b, 0x1d, 0x1f, 0x1f, 0x100001d, 0x100001b, 
-                -1, 0x21, 0x23, 0x23, 0x1000021, -1, 
-                -1, 0x25, 0x27, 0x27, 0x1000025, -1, 
+                0xf, 0x11, 0x13, 0x13, 0x1000011, 0x100000f,
+                0x15, 0x17, 0x29, 0x29, 0x1000017, 0x1000015,
+                0x1b, 0x1d, 0x1f, 0x1f, 0x100001d, 0x100001b,
+                -1, 0x21, 0x23, 0x23, 0x1000021, -1,
+                -1, 0x25, 0x27, 0x27, 0x1000025, -1,
             ],
         ),
         (
@@ -2390,7 +2419,7 @@
             palette: 1,
             size: (32, 16),
             sprites: [
-                0x71, 0x73, 0x3d, 0x3d, 
+                0x71, 0x73, 0x3d, 0x3d,
             ],
         ),
         ]

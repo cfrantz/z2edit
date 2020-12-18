@@ -208,9 +208,31 @@ impl SideviewGui {
         Ok(())
     }
 
-    fn draw_map(&mut self, config: &Config, ui: &imgui::Ui) -> bool {
-        let origin = ui.cursor_pos();
-        let scr_origin = ui.cursor_screen_pos();
+    fn draw_enemies(
+        &mut self,
+        config: &Config,
+        origin: [f32; 2],
+        scr_origin: [f32; 2],
+        ui: &imgui::Ui,
+    ) -> bool {
+        let scale = 16.0 * self.scale;
+
+        for e in self.sideview.enemy.iter() {
+            let image = self.enemies.get(e.kind as u8);
+            let xo = origin[0] + e.x as f32 * scale;
+            let yo = origin[1] + e.y as f32 * scale;
+            image.draw_at([xo, yo], self.scale, ui);
+        }
+        false
+    }
+
+    fn draw_map(
+        &mut self,
+        config: &Config,
+        origin: [f32; 2],
+        scr_origin: [f32; 2],
+        ui: &imgui::Ui,
+    ) -> bool {
         let scale = 16.0 * self.scale;
 
         for y in 0..Decompressor::HEIGHT {
@@ -718,7 +740,10 @@ impl Gui for SideviewGui {
                     .always_vertical_scrollbar(true)
                     .always_horizontal_scrollbar(true)
                     .build(ui, || {
-                        changed |= self.draw_map(&config, ui);
+                        let origin = ui.cursor_pos();
+                        let scr_origin = ui.cursor_screen_pos();
+                        changed |= self.draw_map(&config, origin, scr_origin, ui);
+                        changed |= self.draw_enemies(&config, origin, scr_origin, ui);
                     });
                 imgui::TabBar::new(im_str!("Map Editor")).build(ui, || {
                     imgui::TabItem::new(im_str!("Map Commands")).build(ui, || {

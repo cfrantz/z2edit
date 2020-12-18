@@ -206,7 +206,7 @@ impl TileCache {
         let (romaddr, sprite_info) = if id.at(0) == "item" {
             (Some(config.items.sprite_table), config.items.find(tile)?)
         } else {
-            let (_, sprite) = config.enemy.find(id)?;
+            let (_, sprite) = config.enemy.find_by_index(id, tile)?;
             (None, sprite)
         };
 
@@ -215,11 +215,7 @@ impl TileCache {
             if let Some(addr) = romaddr {
                 let table = rom.read_bytes(addr + tile * 2, 2)?;
                 rom_sprites[0] = table[0] as i32;
-                rom_sprites[1] = if table[0] != table[1] {
-                    table[1] as i32
-                } else {
-                    table[1] as i32 | 0x01000000
-                };
+                rom_sprites[1] = table[1] as i32;
                 &rom_sprites
             } else {
                 return Err(ErrorKind::NotFound(format!("sprite {}", id)).into());
@@ -241,7 +237,8 @@ impl TileCache {
                     x += 1;
                     continue;
                 }
-                let mirror = sprite_id & 0x1000000 != 0;
+                let mirror = sprite_id & 0x0100_0000 != 0
+                    || (x & 1 == 1 && sprite_id == sprites[(y * width + x - 1) as usize]);
                 let xdelta = (sprite_id as u32 >> 16) & 0xFF;
                 let ydelta = (sprite_id as u32 >> 8) & 0xFF;
                 let tile = sprite_id & 0xFE;

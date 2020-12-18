@@ -1,3 +1,31 @@
+// Notes on tile ids in the `sprites` field:
+// Zelda2 programs the NES PPU to use double-tall sprites (8x16).  As
+// such, the LSB of each tile ID tells the PPU which of the two currently
+// mapped CHR banks to read the tile from.
+//
+// In this file, I have added additional metadata to the tile IDs to be
+// able to draw sprites which are composed of sprites on non-8x16 aligned
+// offsets, or are large mirrored sprites.  For example, the large
+// skull bubble in the great palace looks like a 32x32 sprite, however,
+// it is layed out like this:
+//
+//    AB
+//   sABs
+//   sCDs
+//    CD
+//
+// In order to accomodate the y-offseted and mirrored (S)ides of the bubble,
+// the upper bits of the sprite ID can encode additional information:
+//
+//
+// bit: 2        1        0        0
+//      4        6        8        0
+// id:  m xxxxxxxx yyyyyyyy iiiiiiib
+//
+// Bit 24 unconditionally mirrors the sprite about the x axis.
+//        xxxxxxxx = xoffset to render the sprite.
+//        yyyyyyyy = xoffset to render the sprite.
+//        iiiiiiib = the sprite ID and bank offset.
 (
     id: "item",
     item: [
@@ -196,10 +224,12 @@
             chr: Chr(2, 0),
             palette: 1,
             size: (32, 64),
-            sprites: [ 0x0400ac, 0x0400ac, 0x0400ac, -1,
-                    -1,   -1,   -1, -1,
-                    -1,   -1,   -1, -1,
-                   0x0400ac, 0x0400ac, 0x0400ac, -1 ]
+            sprites: [
+                0x0400ac, 0x0400ac, 0x0400ac, -1,
+                      -1,       -1,       -1, -1,
+                      -1,       -1,       -1, -1,
+                0x0400ac, 0x0400ac, 0x0400ac, -1,
+            ],
         ),
     ],
     sprite_table: Prg(-1, 0xee7f),

@@ -61,7 +61,7 @@ pub mod config {
                 _ => path0.to_owned(),
             };
             area.push_str("_sprites");
-            self.find(&IdPath(vec![area, "0".to_owned()]))
+            self.find(&IdPath(vec![area, "1".to_owned()]))
         }
 
         pub fn vanilla() -> Self {

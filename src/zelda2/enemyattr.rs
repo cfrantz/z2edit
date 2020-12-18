@@ -50,6 +50,19 @@ pub mod config {
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
 
+        pub fn find_by_index(&self, path: &IdPath, index: u8) -> Result<(&EnemyGroup, &Sprite)> {
+            for group in self.0.iter() {
+                if path.at(0) == group.id {
+                    for enemy in group.enemy.iter() {
+                        if index == enemy.offset {
+                            return Ok((group, enemy));
+                        }
+                    }
+                }
+            }
+            Err(ErrorKind::IdPathNotFound(path.into()).into())
+        }
+
         pub fn vanilla() -> Self {
             ron::de::from_bytes(include_bytes!("../../config/vanilla/enemies.ron")).unwrap()
         }

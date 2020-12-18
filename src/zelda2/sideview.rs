@@ -298,10 +298,12 @@ impl Enemy {
         let mut i = 1;
         while i < length {
             let xy = data[i + 0];
+            let y = (xy >> 4) as i32;
+            let y = if y == 0 { y + 1 } else { y + 2 };
             let kind = data[i + 1];
             list.push(Enemy {
                 x: ((xy & 0x0F) | (kind >> 2) & 0x30) as i32,
-                y: (xy >> 4) as i32,
+                y: y,
                 kind: (kind & 0x3F) as usize,
                 dialog: Vec::new(),
                 condition: None,
