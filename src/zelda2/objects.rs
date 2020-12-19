@@ -34,11 +34,14 @@ pub mod config {
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub enum Renderer {
+        Unknown,
         Grid,
         Horizontal,
         Vertical,
         TopUnique,
         Item,
+        Building,
+        Window,
     }
     impl Default for Renderer {
         fn default() -> Self {

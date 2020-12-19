@@ -177,6 +177,13 @@ impl SideviewGui {
             self.objects
                 .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
             self.objects_map.insert(obj.id as usize, i);
+            info!(
+                "object: {:?}/{:?}/{:x?} => {:?}",
+                scfg.kind,
+                ObjectKind::Small,
+                obj.id,
+                i
+            );
         }
         let delta = self.objects.len();
         for (i, obj) in config
@@ -188,6 +195,13 @@ impl SideviewGui {
             self.objects
                 .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
             self.objects_map.insert(obj.id as usize, i + delta);
+            info!(
+                "object: {:?}/{:?}/{:x?} => {:?}",
+                scfg.kind,
+                ObjectKind::Objset(self.sideview.map.objset),
+                obj.id,
+                i + delta
+            );
         }
         for (i, obj) in config
             .objects
@@ -198,6 +212,13 @@ impl SideviewGui {
             self.extras
                 .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
             self.extras_map.insert(obj.id as usize, i);
+            info!(
+                "object: {:?}/{:?}/{:x?} => {:?}",
+                scfg.kind,
+                ObjectKind::Extra,
+                obj.id,
+                i
+            );
         }
         for (i, obj) in config.items.item.iter().enumerate() {
             self.items
@@ -784,6 +805,7 @@ impl Gui for SideviewGui {
                 &config.sideview,
                 &config.objects,
             );
+            self.list_object_names().expect("list object names");
 
             //            self.undo.reset(self.overworld.clone());
             self.reset_caches();

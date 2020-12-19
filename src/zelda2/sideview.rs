@@ -425,6 +425,7 @@ impl RomData for Sideview {
             ))
             .into());
         }
+        let length = if length < 4 { 4 } else { length };
         self.map = Map::from_bytes(rom.read_bytes(addr, length)?);
 
         self.connection.clear();
@@ -677,7 +678,18 @@ impl Decompressor {
                     Renderer::TopUnique => {
                         self.draw_top_unique(xcursor, command.y, command.param, obj)
                     }
+                    Renderer::Building => {
+                        self.draw_building(xcursor, command.y, command.param, obj)
+                    }
+                    Renderer::Window => self.draw_window(xcursor, command.y, command.param, obj),
                     Renderer::Item => self.draw_item(xcursor, command.y, command.param, obj),
+                    _ => {
+                        error!(
+                            "No Renderer for {:?}: {:?}",
+                            sideview.id.to_string(),
+                            obj.render
+                        );
+                    }
                 }
             } else {
                 error!(
@@ -815,6 +827,7 @@ impl Decompressor {
             }
         }
     }
+
     fn draw_vertical(&mut self, x0: i32, y0: i32, param: i32, object: &Object) {
         let x0 = x0 as usize;
         let y0 = Decompressor::calculate_y(y0, param, object);
@@ -833,8 +846,8 @@ impl Decompressor {
     fn draw_top_unique(&mut self, x0: i32, y0: i32, param: i32, object: &Object) {
         let x0 = x0 as usize;
         let y0 = Decompressor::calculate_y(y0, param, object);
-        let param = param as usize + 1;
-        for y in 0..param {
+        let height = param as usize + 1;
+        for y in 0..height {
             for x in 0..object.width {
                 if y == 0 {
                     self.set(x0 + x, y0 + y, object.metatile[0 * object.width + x]);
@@ -855,6 +868,39 @@ impl Decompressor {
             } else {
                 object.metatile[0]
             };
+        }
+    }
+
+    fn draw_building(&mut self, x0: i32, y0: i32, param: i32, object: &Object) {
+        let x0 = x0 as usize;
+        let y0 = Decompressor::calculate_y(y0, param, object);
+        let width = param as usize + 1;
+        for y in 0..Decompressor::HEIGHT {
+            for x in 0..width {
+                let metatile = if x < width - 1 {
+                    object.metatile[0]
+                } else {
+                    object.metatile[1]
+                };
+                if metatile != 0 && y0 + y < 11 {
+                    self.set(x0 + x, y0 + y, metatile);
+                }
+            }
+        }
+    }
+
+    fn draw_window(&mut self, x0: i32, y0: i32, param: i32, object: &Object) {
+        let x0 = x0 as usize;
+        let y0 = Decompressor::calculate_y(y0, param, object);
+        let param = param as usize + 1;
+        for y in 0..(object.height * param) {
+            for x in 0..object.width {
+                // Windows stop rendering at tile y-coordinate 10.
+                let metatile = object.metatile[(y % object.height) * object.width + x];
+                if metatile != 0 && y0 + y < 10 {
+                    self.set(x0 + x, y0 + y, metatile);
+                }
+            }
         }
     }
 

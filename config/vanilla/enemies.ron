@@ -30,6 +30,7 @@
 ([
     (
         id: "west_hyrule",
+        alias: "death_mountain",
         name: "West Hyrule",
         world: 0,
         overworld: 0,
@@ -422,6 +423,7 @@
     ),
     (
         id: "east_hyrule",
+        alias: "maze_island",
         name: "East Hyrule",
         world: 0,
         overworld: 2,

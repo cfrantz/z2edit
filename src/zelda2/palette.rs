@@ -57,6 +57,8 @@ pub mod config {
             let path0 = path.at(0);
             let mut area = match path0 {
                 "palace_125" | "palace_346" => "palace".to_owned(),
+                "death_mountain" => "west_hyrule".to_owned(),
+                "maze_island" => "east_hyrule".to_owned(),
                 "item" => "west_hyrule".to_owned(),
                 _ => path0.to_owned(),
             };
