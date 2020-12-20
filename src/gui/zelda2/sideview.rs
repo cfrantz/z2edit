@@ -1,13 +1,15 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 use imgui;
 use imgui::im_str;
-use imgui::{ImStr, ImString, MouseButton};
+use imgui::{ImString, MouseButton};
 
 use crate::errors::*;
 use crate::gui::fa;
 use crate::gui::util::tooltip;
+use crate::gui::util::KeyAction;
 use crate::gui::util::{DragHelper, SelectBox};
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
@@ -15,10 +17,11 @@ use crate::gui::{Selector, Visibility};
 use crate::nes::IdPath;
 use crate::nes::MemoryAccess;
 use crate::util::clamp;
+use crate::util::undo::UndoStack;
 use crate::zelda2::config::Config;
 use crate::zelda2::objects::config::ObjectKind;
 use crate::zelda2::project::{Edit, EditAction, Project, RomData};
-use crate::zelda2::sideview::{Decompressor, MapCommand, Sideview};
+use crate::zelda2::sideview::{Decompressor, Enemy, MapCommand, Sideview};
 
 pub struct SideviewGui {
     visible: Visibility,
@@ -30,10 +33,12 @@ pub struct SideviewGui {
     ids: Vec<IdPath>,
     background: TileCache,
     item: TileCache,
-    enemies: TileCache,
+    enemy: TileCache,
     selector: Selector,
     scale: f32,
     sideview: Sideview,
+    undo: UndoStack<Sideview>,
+    selectbox: SelectBox,
     decomp: Decompressor,
     drag_helper: DragHelper,
     objects: Vec<(ImString, u8)>,
@@ -42,6 +47,9 @@ pub struct SideviewGui {
     extras_map: HashMap<usize, usize>,
     items: Vec<(ImString, u8)>,
     items_map: HashMap<usize, usize>,
+    enemies: Vec<(ImString, u8)>,
+    enemies_map: HashMap<usize, usize>,
+    connections: Vec<ImString>,
 }
 
 impl SideviewGui {
@@ -105,11 +113,13 @@ impl SideviewGui {
             ),
         );
         let item = TileCache::new(&edit, Schema::Item(edit.meta.borrow().config.clone()));
-        let enemies = TileCache::new(
+        let enemy = TileCache::new(
             &edit,
             Schema::Enemy(edit.meta.borrow().config.clone(), sideview.id.clone()),
         );
 
+        let mut undo = UndoStack::new(1000);
+        undo.push(sideview.clone());
         let win_id = edit.win_id(commit_index);
         let mut ret = Box::new(SideviewGui {
             visible: Visibility::Visible,
@@ -121,10 +131,12 @@ impl SideviewGui {
             ids: ids,
             background: background,
             item: item,
-            enemies: enemies,
+            enemy: enemy,
             selector: Selector::new(selected),
             scale: 1.0,
             sideview: sideview,
+            undo: undo,
+            selectbox: SelectBox::default(),
             decomp: decomp,
             drag_helper: DragHelper::default(),
             objects: Vec::new(),
@@ -133,6 +145,9 @@ impl SideviewGui {
             extras_map: HashMap::new(),
             items: Vec::new(),
             items_map: HashMap::new(),
+            enemies: Vec::new(),
+            enemies_map: HashMap::new(),
+            connections: Vec::new(),
         });
         ret.list_object_names()?;
         Ok(ret)
@@ -154,7 +169,7 @@ impl SideviewGui {
         ));
         self.item
             .reset(Schema::Item(self.edit.meta.borrow().config.clone()));
-        self.enemies.reset(Schema::Enemy(
+        self.enemy.reset(Schema::Enemy(
             self.edit.meta.borrow().config.clone(),
             self.sideview.id.clone(),
         ));
@@ -165,9 +180,15 @@ impl SideviewGui {
         let scfg = config.sideview.find(&self.sideview.id)?;
 
         self.objects.clear();
-        self.extras.clear();
         self.objects_map.clear();
+        self.extras.clear();
         self.extras_map.clear();
+        self.items.clear();
+        self.items_map.clear();
+        self.enemies.clear();
+        self.enemies_map.clear();
+        self.connections.clear();
+
         for (i, obj) in config
             .objects
             .list(&scfg.kind, &ObjectKind::Small)
@@ -177,7 +198,7 @@ impl SideviewGui {
             self.objects
                 .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
             self.objects_map.insert(obj.id as usize, i);
-            info!(
+            debug!(
                 "object: {:?}/{:?}/{:x?} => {:?}",
                 scfg.kind,
                 ObjectKind::Small,
@@ -195,7 +216,7 @@ impl SideviewGui {
             self.objects
                 .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
             self.objects_map.insert(obj.id as usize, i + delta);
-            info!(
+            debug!(
                 "object: {:?}/{:?}/{:x?} => {:?}",
                 scfg.kind,
                 ObjectKind::Objset(self.sideview.map.objset),
@@ -212,7 +233,7 @@ impl SideviewGui {
             self.extras
                 .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
             self.extras_map.insert(obj.id as usize, i);
-            info!(
+            debug!(
                 "object: {:?}/{:?}/{:x?} => {:?}",
                 scfg.kind,
                 ObjectKind::Extra,
@@ -225,8 +246,258 @@ impl SideviewGui {
                 .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
             self.items_map.insert(obj.offset as usize, i);
         }
+        let enemy_group = config.enemy.find_group(&self.sideview.id)?;
+        for (i, obj) in enemy_group.enemy.iter().enumerate() {
+            self.enemies
+                .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
+            self.enemies_map.insert(obj.offset as usize, i);
+        }
+
+        let world = config.sideview.find(&self.sideview.id)?;
+        for i in 0..world.length {
+            let name = if let Some(pet_name) = world.pet_names.get(&i) {
+                im_str!("{:02}: {} {} ({})", i, world.name, i, pet_name)
+            } else {
+                im_str!("{:02}: {} {}", i, world.name, i)
+            };
+            self.connections.push(name);
+        }
+        self.connections.push(ImString::new("Outside"));
 
         Ok(())
+    }
+
+    fn decompress(&mut self, config: &Config) {
+        self.decomp.decompress(
+            &self.sideview,
+            self.sideview.background_layer_from_rom(&self.edit).as_ref(),
+            &config.sideview,
+            &config.objects,
+        );
+    }
+
+    fn draw_selectbox(&mut self, changed: bool, scr_origin: [f32; 2], ui: &imgui::Ui) {
+        let scale = self.scale * 16.0;
+        let io = ui.io();
+        let mx = io.mouse_pos[0] - scr_origin[0];
+        let my = io.mouse_pos[1] - scr_origin[1];
+        let tx = if mx >= 0.0 { (mx / scale) as isize } else { -1 };
+        let ty = if my >= 0.0 { (my / scale) as isize } else { -1 };
+        let modifier = io.key_ctrl | io.key_shift | io.key_alt | io.key_super;
+
+        let wmin = ui.window_content_region_min();
+        let wmax = ui.window_content_region_max();
+        let bounds = [
+            wmax[0] - wmin[0] + ui.scroll_x(),
+            wmax[1] - wmin[1] + ui.scroll_y(),
+        ];
+
+        if !changed
+            && tx >= 0
+            && tx < Decompressor::WIDTH as isize
+            && ty >= 0
+            && ty < Decompressor::HEIGHT as isize + 1
+            && ui.is_window_hovered()
+            && mx < bounds[0]
+            && my < bounds[1]
+        {
+            if (!modifier && ui.is_mouse_clicked(MouseButton::Right))
+                || (io.key_shift && ui.is_mouse_clicked(MouseButton::Left))
+            {
+                self.selectbox.init(tx, ty);
+            }
+            if (!modifier && ui.is_mouse_dragging(MouseButton::Right))
+                || (io.key_shift && ui.is_mouse_dragging(MouseButton::Left))
+            {
+                self.selectbox.drag(
+                    clamp(tx, 0, Decompressor::WIDTH as isize - 1),
+                    clamp(ty, 0, Decompressor::HEIGHT as isize),
+                );
+            }
+        }
+
+        if self.selectbox.valid() {
+            let norm = self.selectbox.normalized();
+            let x0 = scr_origin[0] + norm.x0 as f32 * scale;
+            let y0 = scr_origin[1] + norm.y0 as f32 * scale;
+            let x1 = scr_origin[0] + norm.x1 as f32 * scale + scale;
+            let y1 = scr_origin[1] + norm.y1 as f32 * scale + scale;
+            let draw_list = ui.get_window_draw_list();
+            draw_list
+                .add_rect([x0, y0], [x1, y1], [1.0, 1.0, 1.0, 0.25])
+                .filled(true)
+                .build();
+            draw_list
+                .add_rect([x0, y0], [x1, y1], [0.0, 0.0, 0.0, 1.0])
+                .build();
+        }
+    }
+
+    pub fn copy_to_clipboard(&mut self, cut: bool, ui: &imgui::Ui) {
+        if self.selectbox.valid() {
+            let mut norm = self.selectbox.normalized();
+            if norm.y1 == Decompressor::HEIGHT as isize {
+                norm.y1 = 15;
+            }
+            let mut sv = Sideview::default();
+            let mut i = 0;
+            while i < self.sideview.map.data.len() {
+                let x = self.sideview.map.data[i].x as isize;
+                let y = self.sideview.map.data[i].y as isize;
+                if x >= norm.x0 && x <= norm.x1 && y >= norm.y0 && y < norm.y1 {
+                    if cut {
+                        let mut command = self.sideview.map.data.remove(i);
+                        command.x -= norm.x0 as i32;
+                        command.y -= norm.y0 as i32;
+                        sv.map.data.push(command);
+                        continue;
+                    } else {
+                        let mut command = self.sideview.map.data[i].clone();
+                        command.x -= norm.x0 as i32;
+                        command.y -= norm.y0 as i32;
+                        sv.map.data.push(command);
+                    }
+                }
+                i += 1;
+            }
+            let mut i = 0;
+            while i < self.sideview.enemy.len() {
+                let x = self.sideview.enemy[i].x as isize;
+                let y = self.sideview.enemy[i].y as isize;
+                if x >= norm.x0 && x <= norm.x1 && y >= norm.y0 && y < norm.y1 {
+                    if cut {
+                        let mut enemy = self.sideview.enemy.remove(i);
+                        enemy.x -= norm.x0 as i32;
+                        enemy.y -= norm.y0 as i32;
+                        sv.enemy.push(enemy);
+                        continue;
+                    } else {
+                        let mut enemy = self.sideview.enemy[i].clone();
+                        enemy.x -= norm.x0 as i32;
+                        enemy.y -= norm.y0 as i32;
+                        sv.enemy.push(enemy);
+                    }
+                }
+                i += 1;
+            }
+            let text = ImString::new(serde_json::to_string_pretty(&sv).expect("copy to clipboard"));
+            ui.set_clipboard_text(&text);
+        }
+    }
+
+    pub fn decode_clipboard(&self, ui: &imgui::Ui) -> Result<Sideview> {
+        if let Some(text) = ui.clipboard_text() {
+            let sv = serde_json::from_str::<Sideview>(text.to_str())?;
+            Ok(sv)
+        } else {
+            Ok(Sideview::default())
+        }
+    }
+
+    pub fn paste_from_clipboard(&mut self, ui: &imgui::Ui) {
+        if !self.selectbox.valid() {
+            return;
+        }
+        let norm = self.selectbox.normalized();
+        let x0 = norm.x0 as i32;
+        let y0 = norm.y0 as i32;
+        match self.decode_clipboard(ui) {
+            Ok(sv) => {
+                for c in sv.map.data.iter() {
+                    let mut command = c.clone();
+                    command.x += x0;
+                    command.y += y0;
+                    self.sideview.map.data.push(command);
+                }
+                for e in sv.enemy.iter() {
+                    let mut enemy = e.clone();
+                    enemy.x += x0;
+                    enemy.y += y0;
+                    self.sideview.enemy.push(enemy);
+                }
+            }
+            Err(e) => {
+                warn!("SideviewGui: clipboard {:?}", e);
+            }
+        }
+    }
+
+    fn draw_availability_tab(&mut self, ui: &imgui::Ui) -> bool {
+        let mut changed = false;
+        for (i, mut a) in self.sideview.availability.iter_mut().enumerate() {
+            changed |= ui.checkbox(&im_str!("Screen {}", i + 1), &mut a);
+        }
+        changed
+    }
+
+    fn draw_connections_tab(&mut self, _config: &Config, ui: &imgui::Ui) -> bool {
+        let mut changed = false;
+        let label = [
+            im_str!("Screen 1 (Left) "),
+            im_str!("Screen 2 (Down) "),
+            im_str!("Screen 3 (Up)   "),
+            im_str!("Screen 4 (Right)"),
+        ];
+        let screen = [
+            im_str!("Screen 1"),
+            im_str!("Screen 2"),
+            im_str!("Screen 3"),
+            im_str!("Screen 4"),
+        ];
+        if !self.sideview.connection.is_empty() {
+            ui.text("Connection Table:");
+            ui.separator();
+            for (i, c) in self.sideview.connection.iter_mut().enumerate() {
+                let id0 = ui.push_id(0xDD00 | i as i32);
+                let width = ui.push_item_width(200.0);
+                changed |= imgui::ComboBox::new(label[i]).build_simple(
+                    ui,
+                    &mut c.dest_map,
+                    &self.connections,
+                    &|x| Cow::Borrowed(&x),
+                );
+                width.pop(ui);
+                ui.same_line(0.0);
+                let width = ui.push_item_width(100.0);
+                changed |= imgui::ComboBox::new(im_str!("Destination")).build_simple(
+                    ui,
+                    &mut c.entry,
+                    &screen,
+                    &|x| Cow::Borrowed(&x),
+                );
+                width.pop(ui);
+                id0.pop(ui);
+            }
+        } else {
+            ui.text(im_str!("No connections for {}", self.sideview.id));
+        }
+
+        if !self.sideview.door.is_empty() {
+            ui.text("\n\nDoor Table:");
+            ui.separator();
+            for (i, c) in self.sideview.door.iter_mut().enumerate() {
+                let id0 = ui.push_id(0xD400 | i as i32);
+                let width = ui.push_item_width(200.0);
+                changed |= imgui::ComboBox::new(screen[i]).build_simple(
+                    ui,
+                    &mut c.dest_map,
+                    &self.connections,
+                    &|x| Cow::Borrowed(&x),
+                );
+                width.pop(ui);
+                ui.same_line(0.0);
+                let width = ui.push_item_width(100.0);
+                changed |= imgui::ComboBox::new(im_str!("Destination")).build_simple(
+                    ui,
+                    &mut c.entry,
+                    &screen,
+                    &|x| Cow::Borrowed(&x),
+                );
+                width.pop(ui);
+                id0.pop(ui);
+            }
+        }
+        changed
     }
 
     fn draw_enemies(
@@ -236,15 +507,209 @@ impl SideviewGui {
         scr_origin: [f32; 2],
         ui: &imgui::Ui,
     ) -> bool {
-        let scale = 16.0 * self.scale;
-
-        for e in self.sideview.enemy.iter() {
-            let image = self.enemies.get(e.kind as u8);
-            let xo = origin[0] + e.x as f32 * scale;
-            let yo = origin[1] + e.y as f32 * scale;
-            image.draw_at([xo, yo], self.scale, ui);
+        let mut action = EditAction::None;
+        for index in 0..self.sideview.enemy.len() {
+            action.set(
+                self.draw_enemy_entity(index, origin, scr_origin, ui)
+                    .expect("enemy_entity"),
+            );
         }
-        false
+        self.process_enemy_action(action, &config)
+    }
+
+    fn draw_enemies_tab(&mut self, config: &Config, ui: &imgui::Ui) -> bool {
+        let mut action = EditAction::None;
+        for i in 0..self.sideview.enemy.len() {
+            action.set(self.draw_enemy_item(i, false, ui).expect("enemy_item"));
+        }
+        if self.sideview.enemy.len() == 0 {
+            if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+                action.set(EditAction::NewAt(0));
+            }
+            tooltip("Insert a new Enemy", ui);
+        }
+        self.process_enemy_action(action, &config)
+    }
+
+    fn process_enemy_action(&mut self, action: EditAction, _config: &Config) -> bool {
+        if action != EditAction::None {
+            info!("enemy action = {:?}", action);
+        }
+        let changed = match action {
+            EditAction::None => false,
+            EditAction::Swap(i, j) => {
+                self.sideview.enemy.swap(i, j);
+                true
+            }
+            EditAction::NewAt(i) => {
+                self.sideview.enemy.insert(i, Enemy::default());
+                true
+            }
+            EditAction::CopyAt(i) => {
+                let item = self.sideview.enemy[i].clone();
+                self.sideview.enemy.insert(i, item);
+                true
+            }
+            EditAction::Delete(i) => {
+                self.sideview.enemy.remove(i);
+                true
+            }
+            EditAction::Drag => false,
+            EditAction::Update => true,
+            EditAction::PaletteChanged | EditAction::CacheInvalidate => {
+                self.reset_caches();
+                true
+            }
+            _ => {
+                info!("map_commands: unhandled edit action {:?}", action);
+                false
+            }
+        };
+        changed
+    }
+
+    fn draw_enemy_item(&mut self, index: usize, popup: bool, ui: &imgui::Ui) -> Result<EditAction> {
+        let mut action = EditAction::None;
+        let id0 = ui.push_id(0xEE00 | index as i32);
+
+        if !popup {
+            if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+                action.set(EditAction::NewAt(index));
+            }
+            tooltip("Insert a new Enemy", ui);
+            ui.same_line(0.0);
+            if ui.button(&im_str!("{}", fa::ICON_ARROW_UP), [0.0, 0.0]) {
+                if index > 0 {
+                    action.set(EditAction::Swap(index, index - 1));
+                }
+            }
+            tooltip("Move Up", ui);
+            ui.same_line(0.0);
+            if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN), [0.0, 0.0]) {
+                if index < self.sideview.enemy.len() - 1 {
+                    action.set(EditAction::Swap(index, index + 1));
+                }
+            }
+            tooltip("Move Down", ui);
+        }
+
+        if !popup {
+            ui.same_line(120.0);
+        }
+        let width = ui.push_item_width(100.0);
+        let y = &mut self.sideview.enemy[index].y;
+        if ui.input_int(im_str!("Y position"), y).build() {
+            *y = clamp(*y, 0, 15);
+            action.set(EditAction::Update);
+        }
+
+        if !popup {
+            ui.same_line(320.0);
+        }
+        {
+            let x = &mut self.sideview.enemy[index].x;
+            if ui.input_int(im_str!("X position"), x).build() {
+                *x = clamp(*x, 0, 63);
+                action.set(EditAction::Update);
+            }
+        }
+        width.pop(ui);
+
+        let width = ui.push_item_width(200.0);
+        if !popup {
+            ui.same_line(510.0);
+        }
+        let kind = &mut self.sideview.enemy[index].kind;
+        let mut sel = self.enemies_map[kind];
+        if imgui::ComboBox::new(im_str!("Enemy"))
+            .build_simple(ui, &mut sel, &self.enemies, &|x| Cow::Borrowed(&x.0))
+        {
+            *kind = self.enemies[sel].1 as usize;
+            action.set(EditAction::Update);
+        }
+        width.pop(ui);
+
+        if !popup {
+            ui.same_line(760.0);
+            if ui.button(&im_str!("{}", fa::ICON_TRASH), [0.0, 0.0]) {
+                action.set(EditAction::Delete(index));
+            }
+            tooltip("Delete", ui);
+        }
+
+        id0.pop(ui);
+        Ok(action)
+    }
+
+    fn draw_enemy_entity(
+        &mut self,
+        index: usize,
+        origin: [f32; 2],
+        scr_origin: [f32; 2],
+        ui: &imgui::Ui,
+    ) -> Result<EditAction> {
+        let mut action = EditAction::None;
+        let draw_list = ui.get_window_draw_list();
+        let scale = self.scale * 16.0;
+        let id = ui.push_id(0xEE00 | index as i32);
+
+        let ox = self.sideview.enemy[index].x;
+        let oy = self.sideview.enemy[index].y;
+        let x = ox as f32 * scale;
+        let y = oy as f32 * scale;
+
+        {
+            let image = self.enemy.get(self.sideview.enemy[index].kind as u8);
+            image.draw_at([x + origin[0], y + origin[1]], self.scale, ui);
+        }
+        draw_list
+            .add_rect(
+                [x + scr_origin[0], y + scr_origin[1]],
+                [x + scr_origin[0] + scale, y + scr_origin[1] + scale],
+                [1.0, 0.0, 0.0, 1.0],
+            )
+            .thickness(2.0)
+            .build();
+
+        ui.set_cursor_pos([x + origin[0], y + origin[1]]);
+        ui.invisible_button(&im_str!("edit"), [scale, scale]);
+        if ui.is_item_active() {
+            if ui.is_mouse_dragging(MouseButton::Left) {
+                let mp = ui.io().mouse_pos;
+                let mp = [mp[0] - scr_origin[0], mp[1] - scr_origin[1]];
+                // Use a constant to make enemy drag and map drags unique.
+                self.drag_helper.start(0xEE00 | index);
+                self.drag_helper.position(0xEE00 | index, mp);
+                let x = clamp((mp[0] / scale) as i32, 0, 64);
+                let y = clamp((mp[1] / scale) as i32, 0, 12);
+
+                if x != ox {
+                    self.sideview.enemy[index].x = x;
+                    action.set(EditAction::Drag);
+                }
+                if y != oy {
+                    self.sideview.enemy[index].y = y;
+                    action.set(EditAction::Drag);
+                }
+            }
+        } else {
+            if let Some(_) = self.drag_helper.finalize(0xEE00 | index) {
+                action.set(EditAction::Update);
+            }
+        }
+        if ui.popup_context_item(im_str!("properties")) {
+            action.set(self.draw_enemy_item(index, true, ui).expect("enemy_list"));
+            if ui.button(im_str!("Copy"), [0.0, 0.0]) {
+                action.set(EditAction::CopyAt(index));
+            }
+            ui.same_line(0.0);
+            if ui.button(im_str!("Delete"), [0.0, 0.0]) {
+                action.set(EditAction::Delete(index));
+            }
+            ui.end_popup();
+        }
+        id.pop(ui);
+        Ok(action)
     }
 
     fn draw_map(
@@ -411,12 +876,18 @@ impl SideviewGui {
         for i in 0..self.sideview.map.data.len() {
             action.set(self.draw_map_command(i, false, ui).expect("map_command"));
         }
+        if self.sideview.map.data.len() == 0 {
+            if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+                action.set(EditAction::NewAt(0));
+            }
+            tooltip("Insert a new Map Command", ui);
+        }
         self.process_map_action(action, &config)
     }
 
     fn process_map_action(&mut self, action: EditAction, config: &Config) -> bool {
         if action != EditAction::None {
-            info!("action = {:?}", action);
+            info!("map action = {:?}", action);
         }
         let changed = match action {
             EditAction::None => false,
@@ -450,12 +921,7 @@ impl SideviewGui {
         };
 
         if changed || action == EditAction::Drag {
-            self.decomp.decompress(
-                &self.sideview,
-                self.sideview.background_layer_from_rom(&self.edit).as_ref(),
-                &config.sideview,
-                &config.objects,
-            );
+            self.decompress(config);
         }
         changed
     }
@@ -520,17 +986,6 @@ impl SideviewGui {
         }
         width.pop(ui);
 
-        let objects = self
-            .objects
-            .iter()
-            .map(|s| s.0.as_ref())
-            .collect::<Vec<&ImStr>>();
-        let extras = self
-            .extras
-            .iter()
-            .map(|s| s.0.as_ref())
-            .collect::<Vec<&ImStr>>();
-
         let width = ui.push_item_width(200.0);
         if y < 13 {
             if !popup {
@@ -538,7 +993,12 @@ impl SideviewGui {
             }
             let kind = &mut self.sideview.map.data[index].kind;
             let mut sel = self.objects_map[kind];
-            if imgui::ComboBox::new(im_str!("Object")).build_simple_string(ui, &mut sel, &objects) {
+            if imgui::ComboBox::new(im_str!("Object")).build_simple(
+                ui,
+                &mut sel,
+                &self.objects,
+                &|x| Cow::Borrowed(&x.0),
+            ) {
                 *kind = self.objects[sel].1 as usize;
                 action.set(EditAction::Update);
             }
@@ -547,10 +1007,19 @@ impl SideviewGui {
                 ui.same_line(510.0);
             }
             let kind = &mut self.sideview.map.data[index].kind;
-            let mut sel = self.extras_map[kind];
-            if imgui::ComboBox::new(im_str!("Object")).build_simple_string(ui, &mut sel, &extras) {
-                *kind = self.extras[sel].1 as usize;
-                action.set(EditAction::Update);
+            if let Some(sel) = self.extras_map.get(kind) {
+                let mut sel = *sel;
+                if imgui::ComboBox::new(im_str!("Object")).build_simple(
+                    ui,
+                    &mut sel,
+                    &self.extras,
+                    &|x| Cow::Borrowed(&x.0),
+                ) {
+                    *kind = self.extras[sel].1 as usize;
+                    action.set(EditAction::Update);
+                }
+            } else {
+                ui.text(im_str!("Unknown: Extra/{:x?}", kind));
             }
         }
         width.pop(ui);
@@ -563,12 +1032,12 @@ impl SideviewGui {
                 let width = ui.push_item_width(200.0);
                 let item = &mut self.sideview.map.data[index].param;
                 let mut sel = self.items_map[&(*item as usize)];
-                let items = self
-                    .items
-                    .iter()
-                    .map(|s| s.0.as_ref())
-                    .collect::<Vec<&ImStr>>();
-                if imgui::ComboBox::new(im_str!("Item")).build_simple_string(ui, &mut sel, &items) {
+                if imgui::ComboBox::new(im_str!("Item")).build_simple(
+                    ui,
+                    &mut sel,
+                    &self.items,
+                    &|x| Cow::Borrowed(&x.0),
+                ) {
                     *item = self.objects[sel].1 as i32;
                     action.set(EditAction::Update);
                 }
@@ -717,18 +1186,13 @@ impl Gui for SideviewGui {
         imgui::Window::new(&im_str!("Sideview##{}", self.win_id))
             .opened(&mut visible)
             .build(ui, || {
-                let names = self
-                    .names
-                    .iter()
-                    .map(|s| s.as_ref())
-                    .collect::<Vec<&ImStr>>();
                 let width = ui.push_item_width(400.0);
                 if self.commit_index == -1 {
-                    imgui::ComboBox::new(im_str!("Area")).build_simple_string(
-                        ui,
-                        self.selector.as_mut(),
-                        &names,
-                    );
+                    imgui::ComboBox::new(im_str!("Area"))
+                        .height(imgui::ComboBoxHeight::Large)
+                        .build_simple(ui, self.selector.as_mut(), &self.names, &|x| {
+                            Cow::Borrowed(x)
+                        });
                 } else {
                     ui.label_text(im_str!("Area"), &self.names[self.selector.value()]);
                 }
@@ -765,17 +1229,64 @@ impl Gui for SideviewGui {
                         let scr_origin = ui.cursor_screen_pos();
                         changed |= self.draw_map(&config, origin, scr_origin, ui);
                         changed |= self.draw_enemies(&config, origin, scr_origin, ui);
+                        self.draw_selectbox(changed, scr_origin, ui);
                     });
                 imgui::TabBar::new(im_str!("Map Editor")).build(ui, || {
                     imgui::TabItem::new(im_str!("Map Commands")).build(ui, || {
                         changed |= self.draw_map_command_tab(&config, ui);
                     });
-                    imgui::TabItem::new(im_str!("Enemies")).build(ui, || {});
-                    imgui::TabItem::new(im_str!("Connections")).build(ui, || {});
-                    imgui::TabItem::new(im_str!("Item Availability")).build(ui, || {});
+                    imgui::TabItem::new(im_str!("Enemies")).build(ui, || {
+                        changed |= self.draw_enemies_tab(&config, ui);
+                    });
+                    imgui::TabItem::new(im_str!("Connections")).build(ui, || {
+                        changed |= self.draw_connections_tab(&config, ui);
+                    });
+                    imgui::TabItem::new(im_str!("Item Availability")).build(ui, || {
+                        changed |= self.draw_availability_tab(ui);
+                    });
                 });
+
+                match KeyAction::get(ui) {
+                    KeyAction::Cut => {
+                        self.copy_to_clipboard(true, ui);
+                        self.decompress(&config);
+                        changed = true;
+                    }
+
+                    KeyAction::Copy => {
+                        self.copy_to_clipboard(false, ui);
+                    }
+                    KeyAction::Paste => {
+                        self.paste_from_clipboard(ui);
+                        self.decompress(&config);
+                        changed = true;
+                    }
+                    KeyAction::SelectAll => {
+                        self.selectbox.init(0, 0);
+                        self.selectbox.drag(
+                            Decompressor::WIDTH as isize - 1,
+                            Decompressor::HEIGHT as isize,
+                        );
+                    }
+                    KeyAction::Undo => {
+                        if let Some(sideview) = self.undo.undo() {
+                            self.sideview = sideview.clone();
+                            self.decompress(&config);
+                            self.reset_caches();
+                        }
+                    }
+                    KeyAction::Redo => {
+                        if let Some(sideview) = self.undo.redo() {
+                            self.sideview = sideview.clone();
+                            self.decompress(&config);
+                            self.reset_caches();
+                        }
+                    }
+                    KeyAction::None => {}
+                }
+
                 if changed {
-                    // stuff.
+                    self.undo.push(self.sideview.clone());
                 }
                 self.changed |= changed;
             });
@@ -799,16 +1310,11 @@ impl Gui for SideviewGui {
                     Sideview::new(id.clone())
                 }
             };
-            self.decomp.decompress(
-                &self.sideview,
-                self.sideview.background_layer_from_rom(&self.edit).as_ref(),
-                &config.sideview,
-                &config.objects,
-            );
-            self.list_object_names().expect("list object names");
-
-            //            self.undo.reset(self.overworld.clone());
+            self.decompress(&config);
             self.reset_caches();
+            self.list_object_names().expect("list object names");
+            self.undo.reset(self.sideview.clone());
+            self.changed = false;
         }
     }
 

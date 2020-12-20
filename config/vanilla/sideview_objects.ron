@@ -1362,7 +1362,7 @@
         name: "Lava",
         area: Palace,
         kind: Extra,
-        render: Grid,
+        render: Horizontal,
         id: 0x10,
         width: 1,
         height: 3,
@@ -1674,7 +1674,7 @@
         height: 2,
         // Intentionally uuse the wrong object ID which will cause the editor
         // to draw these bricks with a different color.
-        metatile: [0x07, 0x07],
+        metatile: [0x0c, 0x0c],
     ),
     (
         name: "Breakable Block",
@@ -1724,7 +1724,7 @@
         name: "Lava",
         area: GreatPalace,
         kind: Extra,
-        render: Grid,
+        render: Horizontal,
         id: 0x10,
         width: 1,
         height: 3,

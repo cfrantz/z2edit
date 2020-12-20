@@ -111,6 +111,7 @@ impl OverworldGui {
 
     pub fn copy_to_clipboard(&self, ui: &imgui::Ui) {
         if self.selectbox.valid() {
+            // FIXME: should use normalized selectbox coords.
             let mut map = Map::default();
             map.width = (self.selectbox.x1 - self.selectbox.x0 + 1) as usize;
             map.height = (self.selectbox.y1 - self.selectbox.y0 + 1) as usize;
@@ -712,6 +713,7 @@ impl Gui for OverworldGui {
                 self.edit.meta.borrow().config.clone(),
                 self.overworld.id.clone(),
             ));
+            self.changed = false;
         }
     }
 

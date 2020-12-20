@@ -316,14 +316,14 @@ impl Enemy {
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Connection {
-    pub dest_map: i32,
+    pub dest_map: usize,
     pub entry: usize,
 }
 
 impl From<u8> for Connection {
     fn from(a: u8) -> Connection {
         Connection {
-            dest_map: (a >> 2) as i32,
+            dest_map: (a >> 2) as usize,
             entry: (a & 3) as usize,
         }
     }

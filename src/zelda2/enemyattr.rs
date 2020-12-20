@@ -52,6 +52,15 @@ pub mod config {
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
 
+        pub fn find_group(&self, path: &IdPath) -> Result<&EnemyGroup> {
+            for group in self.0.iter() {
+                if path.at(0) == group.id || path.at(0) == group.alias {
+                    return Ok(group);
+                }
+            }
+            Err(ErrorKind::IdPathNotFound(path.into()).into())
+        }
+
         pub fn find_by_index(&self, path: &IdPath, index: u8) -> Result<(&EnemyGroup, &Sprite)> {
             for group in self.0.iter() {
                 if path.at(0) == group.id || path.at(0) == group.alias {
