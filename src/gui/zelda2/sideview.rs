@@ -1282,9 +1282,10 @@ impl Gui for SideviewGui {
                 ui.separator();
                 let mut changed = false;
 
+                let size = ui.content_region_avail();
                 imgui::ChildWindow::new(1)
                     .movable(false)
-                    .size([65.0 * 16.0 * self.scale, 16.0 * 16.0 * self.scale])
+                    .size([size[0], 16.0 * 16.0 * self.scale])
                     .always_vertical_scrollbar(true)
                     .always_horizontal_scrollbar(true)
                     .build(ui, || {
