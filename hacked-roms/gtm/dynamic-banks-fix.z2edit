@@ -1,0 +1,56 @@
+# Load CHR banks when entering specific rooms.
+# Use to put horsehead in P5
+asm b=7 0xff4c
+    sta $0561               ; store room
+    jsr $ffc5               ; load bank 0
+    jmp $be00               ; jump to routine in bank 0
+.org $cfb4
+    jsr $ff4c
+.end
+
+asm b=0 0xbe00
+ROOM = $be60
+BANK = $be61
+BITMASKS = $f26c
+
+chrbank_switch:
+    jsr $cf30               ; get region*5+world
+    asl                     ; 16 bytes per region/world combo
+    asl
+    asl
+    asl
+    tax
+loop:
+    lda ROOM,x              ; table at $ab00
+    beq done                ; zero value means end
+    cmp $0561               ; equal to room number?
+    beq loadchr             ; yes, get and load chr bank
+    inx                     ; nope, inc pointer
+    inx
+    bne loop                ; check next value
+loadchr:
+    lda BANK,x
+    bmi soundeffect
+    sta $076e
+done:
+    lda $0561
+    jmp $ffc9               ; load bank in $0769 and return
+soundeffect:
+    sty $00                 ; Save Y, the elevator routine needs it.
+    pha
+    lsr                     ; Get SFX offset into X
+    lsr
+    lsr
+    lsr
+    tax
+    pla                     ; Low nybble is sound effect
+    and #$0f
+    tay
+    lda BITMASKS,y
+    sta $e0,x
+    ldy $00                 ; Restore Y.
+    jmp done
+    
+
+.org ROOM
+.end
