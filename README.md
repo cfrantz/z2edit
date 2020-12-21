@@ -61,6 +61,7 @@ git submodule update --init --recursive
     - Overworld editor
     - Palette Editor
     - Python script execution
+    - Sideview editor (still needs townspeople "enemy" properties).
     - Start Values
     - Text Table
 
@@ -71,7 +72,6 @@ git submodule update --init --recursive
     - Tile transforms
     - Object table
     - Enemy XP values and graphics
-    - Sideview editor
     - CHR viewer
     - Import banks or graphics
     - Help documentation
