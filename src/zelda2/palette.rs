@@ -6,6 +6,7 @@ use std::rc::Rc;
 use crate::errors::*;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::Gui;
+use crate::idpath;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
@@ -63,7 +64,7 @@ pub mod config {
                 _ => path0.to_owned(),
             };
             area.push_str("_sprites");
-            self.find(&IdPath(vec![area, "1".to_owned()]))
+            self.find(&idpath!(area, 1))
         }
 
         pub fn vanilla() -> Self {

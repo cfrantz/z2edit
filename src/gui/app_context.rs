@@ -17,6 +17,8 @@ pub struct CommandlineArgs {
     pub height: u32,
     #[structopt(long)]
     pub emulator: Option<String>,
+    #[structopt(name = "FILE")]
+    pub file: Option<String>,
 }
 
 pub struct AppContext {

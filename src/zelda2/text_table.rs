@@ -6,6 +6,7 @@ use std::rc::Rc;
 use crate::errors::*;
 use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::Gui;
+use crate::idpath;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
@@ -98,7 +99,7 @@ impl RomData for TextTable {
             for i in 0..tcfg.length {
                 let str_ptr = rom.read_pointer(table + i * 2)?;
                 self.data.push(TextItem {
-                    id: IdPath(vec![tcfg.id.clone(), i.to_string()]),
+                    id: idpath!(tcfg.id, i),
                     text: Text::from_zelda2(rom.read_terminated(str_ptr, 0xff)?),
                 });
             }

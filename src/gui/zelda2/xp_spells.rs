@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
 use crate::gui::Visibility;
-use crate::nes::IdPath;
+use crate::idpath;
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
 use crate::zelda2::text_encoding::Text;
@@ -108,7 +108,7 @@ impl ExperienceTableGui {
             let mut pg = ExperienceTableGroup::default();
             for table in group.table.iter() {
                 let mut p = ExperienceTable {
-                    id: IdPath(vec![group.id.clone(), table.id.clone()]),
+                    id: idpath!(group.id, table.id),
                     ..Default::default()
                 };
                 p.unpack(&edit)?;

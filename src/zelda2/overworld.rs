@@ -7,6 +7,7 @@ use std::rc::Rc;
 use crate::errors::*;
 use crate::gui::zelda2::overworld::OverworldGui;
 use crate::gui::zelda2::Gui;
+use crate::idpath;
 use crate::nes::{Address, Buffer, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
@@ -377,7 +378,7 @@ impl Connector {
             self.set_y(rom.read(spot.connector + 2)?, &config.overworld);
             Some(Hidden {
                 hidden: y == 0,
-                id: IdPath(vec![spot.id.clone()]),
+                id: idpath!(spot.id),
             })
         } else {
             None
@@ -609,10 +610,8 @@ impl RomData for Overworld {
 
         self.connector.clear();
         for index in 0..63 {
-            self.connector.push(Connector::from_rom(
-                edit,
-                IdPath(vec![ocfg.id.clone(), index.to_string()]),
-            )?);
+            self.connector
+                .push(Connector::from_rom(edit, idpath!(ocfg.id, index))?);
         }
 
         Ok(())

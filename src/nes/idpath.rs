@@ -80,3 +80,14 @@ impl fmt::Display for IdPath {
         write!(f, "{:?}", self.to_string())
     }
 }
+
+#[macro_export]
+macro_rules! idpath {
+    () => (
+        $crate::nes::IdPath(vec![])
+    );
+
+    ($($x:expr),+ $(,)?) => (
+        $crate::nes::IdPath(vec![$($x.to_string()),+])
+    );
+}

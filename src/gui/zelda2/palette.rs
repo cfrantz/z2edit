@@ -6,8 +6,8 @@ use imgui::{im_str, ImStr, ImString};
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
 use crate::gui::Visibility;
+use crate::idpath;
 use crate::nes::hwpalette;
-use crate::nes::IdPath;
 use crate::zelda2::config::Config;
 use crate::zelda2::palette::{Palette, PaletteGroup};
 use crate::zelda2::project::{Edit, Project, RomData};
@@ -60,7 +60,7 @@ impl PaletteGui {
             let mut pg = PaletteGroup::default();
             for palette in group.palette.iter() {
                 let mut p = Palette {
-                    id: IdPath(vec![group.id.clone(), palette.id.clone()]),
+                    id: idpath!(group.id, palette.id),
                     ..Default::default()
                 };
                 p.unpack(&edit)?;

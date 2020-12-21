@@ -4,6 +4,7 @@ use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::glhelper::Image;
+use crate::idpath;
 use crate::nes::hwpalette;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
@@ -279,9 +280,7 @@ impl TileCache {
                         self.get_meta_tile(tile, config, id, *palidx)?
                     }
                     Schema::Enemy(config, id) => self.get_sprite(tile, config, id)?,
-                    Schema::Item(config) => {
-                        self.get_sprite(tile, config, &IdPath(vec!["item".to_owned()]))?
-                    }
+                    Schema::Item(config) => self.get_sprite(tile, config, &idpath!("item"))?,
                 };
                 cache.insert(tile, image);
             }

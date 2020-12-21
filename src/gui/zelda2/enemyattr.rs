@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
 use crate::gui::Visibility;
-use crate::nes::IdPath;
+use crate::idpath;
 use crate::zelda2::config::Config;
 use crate::zelda2::enemyattr::{config, Enemy, EnemyGroup};
 use crate::zelda2::project::{Edit, Project, RomData};
@@ -110,7 +110,7 @@ impl EnemyGui {
             let mut pg = EnemyGroup::default();
             for enemy in group.enemy.iter() {
                 let mut p = Enemy {
-                    id: IdPath(vec![group.id.clone(), enemy.id.clone()]),
+                    id: idpath!(group.id, enemy.id),
                     ..Default::default()
                 };
                 p.unpack(edit)?;

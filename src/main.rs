@@ -92,6 +92,10 @@ fn run(py: Python) -> Result<()> {
     let debug = PyModule::from_code(py, include_str!("../python/debug.py"), "debug.py", "debug")?;
     modules.set_item("debug", debug)?;
 
+    if let Some(file) = &AppContext::get().args.file {
+        app.borrow_mut(py).load_project(py, file)?;
+    }
+
     App::run(app, py, &mut executor);
     Ok(())
 }

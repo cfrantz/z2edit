@@ -14,6 +14,7 @@ use crate::gui::util::{DragHelper, SelectBox};
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::{Selector, Visibility};
+use crate::idpath;
 use crate::nes::IdPath;
 use crate::nes::MemoryAccess;
 use crate::util::clamp;
@@ -80,14 +81,14 @@ impl SideviewGui {
                 };
                 let name = ImString::from(name);
                 names.push(name);
-                let idpath = IdPath(vec![group.id.clone(), i.to_string()]);
-                if sideview.id == idpath {
+                let path = idpath!(group.id, i);
+                if sideview.id == path {
                     selected = ids.len() - 1;
                 }
-                if idpath == north_palace {
+                if path == north_palace {
                     default_select = ids.len();
                 }
-                ids.push(idpath);
+                ids.push(path);
             }
         }
 

@@ -48,7 +48,7 @@ impl App {
         Ok(())
     }
 
-    fn load_project(&mut self, py: Python, filename: &str) -> Result<()> {
+    pub fn load_project(&mut self, py: Python, filename: &str) -> Result<()> {
         if filename.ends_with(".nes") {
             self.project
                 .push(ProjectGui::new(py, Project::from_rom(filename)?)?);

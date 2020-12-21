@@ -6,6 +6,7 @@ use imgui::{im_str, ImStr, ImString};
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
 use crate::gui::Visibility;
+use crate::idpath;
 use crate::nes::IdPath;
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
@@ -89,7 +90,7 @@ impl TextTableGui {
             for (j, (ot, nt)) in self.orig[i].iter().zip(self.text[i].iter()).enumerate() {
                 if ot != nt {
                     edit.data.push(TextItem {
-                        id: IdPath(vec![tcfg.id.clone(), j.to_string()]),
+                        id: idpath!(tcfg.id, j),
                         text: nt.to_str().into(),
                     });
                 }

@@ -11,7 +11,7 @@ use crate::gui::util::{DragHelper, SelectBox};
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::{Selector, Visibility};
-use crate::nes::IdPath;
+use crate::idpath;
 use crate::nes::MemoryAccess;
 use crate::util::clamp;
 use crate::util::undo::UndoStack;
@@ -47,8 +47,7 @@ impl OverworldGui {
         let config = Config::get(&edit.meta.borrow().config)?;
 
         let overworld = if commit_index == -1 {
-            let which = &config.overworld.map[0];
-            let id = IdPath(vec![which.id.clone()]);
+            let id = idpath!(config.overworld.map[0].id);
             Overworld::from_rom(&edit, id)?
         } else {
             let obj = edit.edit.borrow();
@@ -705,8 +704,7 @@ impl Gui for OverworldGui {
             "There are unsaved changes in the Overworld Editor.\nDo you want to discard them?",
             ui,
         ) {
-            let which = &config.overworld.map[self.selector.value()];
-            let id = IdPath(vec![which.id.clone()]);
+            let id = idpath!(config.overworld.map[self.selector.value()].id);
             self.overworld = Overworld::from_rom(&self.edit, id).unwrap();
             self.undo.reset(self.overworld.clone());
             self.cache.reset(Schema::Overworld(
