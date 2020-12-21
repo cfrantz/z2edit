@@ -1,4 +1,7 @@
 use once_cell::sync::Lazy;
+use pyo3::class::PyMappingProtocol;
+use pyo3::exceptions::PyException;
+use pyo3::prelude::*;
 use ron;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -113,5 +116,34 @@ impl Config {
     pub fn put(name: &str, config: Config) {
         let configs = unsafe { CONFIGS.get_mut().unwrap() };
         configs.insert(name.to_owned(), Arc::new(config));
+    }
+}
+
+#[pyclass]
+pub struct PyConfig {}
+
+#[pymethods]
+impl PyConfig {
+    fn keys(&self) -> Vec<String> {
+        let configs = unsafe { CONFIGS.lock().unwrap() };
+        configs.keys().map(|k| k.to_owned()).collect()
+    }
+}
+
+#[pyproto]
+impl PyMappingProtocol for PyConfig {
+    fn __len__(&self) -> usize {
+        unsafe { CONFIGS.lock().unwrap().len() }
+    }
+
+    fn __getitem__(&self, name: &str) -> PyResult<String> {
+        let config = Config::get(name)?;
+        serde_json::to_string_pretty(&config).map_err(|e| PyException::new_err(e.to_string()))
+    }
+
+    fn __setitem__(&mut self, name: &str, val: &str) -> PyResult<()> {
+        let config = serde_json::from_str(val).map_err(|e| PyException::new_err(e.to_string()))?;
+        Config::put(name, config);
+        Ok(())
     }
 }

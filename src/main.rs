@@ -37,6 +37,7 @@ use crate::gui::app_context::{AppContext, CommandlineArgs};
 use crate::util::pyaddress::PyAddress;
 use crate::util::pyexec::PythonExecutor;
 use crate::zelda2::config::Config as Zelda2Config;
+use crate::zelda2::config::PyConfig;
 use crate::zelda2::project::Project;
 
 fn run(py: Python) -> Result<()> {
@@ -73,6 +74,8 @@ fn run(py: Python) -> Result<()> {
     module.add_class::<PyAddress>()?;
     module.add_class::<Project>()?;
     module.setattr("app", app)?;
+    let pycfg = Py::new(py, PyConfig {})?;
+    module.setattr("config", pycfg)?;
 
     let sys = PyModule::import(py, "sys")?;
     let modules = sys.get("modules")?;
