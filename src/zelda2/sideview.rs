@@ -55,9 +55,18 @@ pub mod config {
         pub background: Vec<Background>,
     }
 
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct EnemyList {
+        pub bank: isize,
+        pub ids: Vec<IdPath>,
+        pub address: Address,
+        pub length: u16,
+    }
+
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Config {
         pub group: Vec<SideviewGroup>,
+        pub enemy_list: Vec<EnemyList>,
         pub enemy_list_ram: u16,
         pub enemy_list_rom: u16,
     }
@@ -69,13 +78,24 @@ pub mod config {
         }
 
         pub fn find(&self, path: &IdPath) -> Result<&config::SideviewGroup> {
-            path.check_len("sideview", 2)?;
+            path.check_range("sideview", 1..3)?;
             for group in self.group.iter() {
                 if path.at(0) == group.id {
                     return Ok(group);
                 }
             }
             Err(ErrorKind::IdPathNotFound(path.into()).into())
+        }
+
+        pub fn enemy_list_for(&self, id: &IdPath) -> Result<&config::EnemyList> {
+            for el in self.enemy_list.iter() {
+                for i in el.ids.iter() {
+                    if id.at(0) == i.at(0) {
+                        return Ok(el);
+                    }
+                }
+            }
+            Err(ErrorKind::IdPathNotFound(id.into()).into())
         }
 
         pub fn vanilla() -> Self {
@@ -291,7 +311,158 @@ pub struct Enemy {
     pub condition: Option<u8>,
 }
 
-impl Enemy {
+#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
+pub struct EnemyList {
+    pub data: Vec<Vec<Enemy>>,
+    pub is_encounter: bool,
+    #[serde(skip)]
+    pub ram_address: u16,
+}
+
+impl EnemyList {
+    pub fn from_rom(edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<Self> {
+        let scfg = config.sideview.find(id)?;
+        let index = id.usize_at(1)?;
+        if index >= scfg.length {
+            return Err(ErrorKind::IndexError(index).into());
+        }
+
+        let rom = edit.rom.borrow();
+        // Enemy list.  Pointers are stored as RAM addresses.
+        let delta = config.sideview.enemy_list_rom - config.sideview.enemy_list_ram;
+        let ram_address = rom.read_pointer(scfg.enemies + index * 2)?;
+        let addr = ram_address + delta;
+        let length = rom.read(addr)? as usize;
+        let mut total = length;
+        let mut data = Vec::new();
+        data.push(EnemyList::list_from_bytes(rom.read_bytes(addr, length)?));
+        let is_encounter = config.overworld.is_encounter(edit, id)?;
+        if is_encounter {
+            // For encounters, the large-encounter enemy list immediately
+            // follows the small-encounter list.
+            let addr = addr + length;
+            let length = rom.read(addr)? as usize;
+            total += length;
+            data.push(EnemyList::list_from_bytes(rom.read_bytes(addr, length)?));
+        }
+        debug!("EnemyList: {} read from {:x?} ({} bytes)", id, addr, total);
+
+        Ok(EnemyList {
+            data: data,
+            is_encounter: is_encounter,
+            ram_address: ram_address.raw() as u16,
+        })
+    }
+
+    pub fn write(&self, edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<()> {
+        let (el, n, mut all) = self.read_all(edit, id, config)?;
+        let index = id.usize_at(1)?;
+
+        all[n * 63 + index] = self.clone();
+        // This list has been edited, so make it unique.
+        all[n * 63 + index].ram_address = 0;
+
+        let mut rom = edit.rom.borrow_mut();
+        let mut scfg = config.sideview.find(&el.ids[0])?;
+        // Write a pair of empty enemy lists at the beginning.  All occurances
+        // of empty lists will refer to these empty lists.
+        let rom_addr = scfg
+            .enemies
+            .set_val(config.sideview.enemy_list_rom as usize);
+        rom.write_bytes(rom_addr, &[1, 1])?;
+        // Mapping of old enemy list RAM addrs to new RAM addrs.
+        let mut dedup = HashMap::<u16, u16>::new();
+
+        let mut length = 2;
+        for (i, enemy) in all.iter().enumerate() {
+            if i == 63 {
+                scfg = config.sideview.find(&el.ids[i / 63])?;
+            }
+            let i = i % 63;
+            let list = enemy.to_bytes();
+            if list.len() <= 2 {
+                // An empty enemy list, or empty pair will refer back to the
+                // empty token list at the beginning.
+                rom.write_word(scfg.enemies + i * 2, config.sideview.enemy_list_ram)?;
+                info!(
+                    "EnemyList: writing {}/{} as {:x?} (empty)",
+                    scfg.id, i, config.sideview.enemy_list_ram
+                );
+                continue;
+            }
+
+            if let Some(ram_addr) = dedup.get(&enemy.ram_address) {
+                rom.write_word(scfg.enemies + i * 2, *ram_addr)?;
+                info!(
+                    "EnemyList: writing {}/{} as {:x?} (dedup)",
+                    scfg.id, i, ram_addr
+                );
+            } else {
+                let ram_addr = config.sideview.enemy_list_ram + length;
+                dedup.insert(enemy.ram_address, ram_addr);
+                let rom_addr = scfg
+                    .enemies
+                    .set_val(config.sideview.enemy_list_rom as usize)
+                    + length;
+                rom.write_bytes(rom_addr, &list)?;
+                rom.write_word(scfg.enemies + i * 2, ram_addr)?;
+                info!(
+                    "EnemyList: writing {}/{} at {:x?} -> {:x?} ({} bytes)",
+                    scfg.id,
+                    i,
+                    ram_addr,
+                    rom_addr,
+                    list.len()
+                );
+                length += list.len() as u16;
+
+                if length > el.length {
+                    return Err(ErrorKind::LengthError(format!(
+                        "Enemy list for {} is too long ({} > {})",
+                        scfg.id, length, el.length
+                    ))
+                    .into());
+                }
+            }
+        }
+        info!(
+            "EnemyList: Packed into {} out of {} bytes",
+            length, el.length
+        );
+        while length < el.length {
+            let rom_addr = scfg
+                .enemies
+                .set_val(config.sideview.enemy_list_rom as usize)
+                + length;
+            rom.write(rom_addr, 0xFF)?;
+            length += 1;
+        }
+        Ok(())
+    }
+
+    fn read_all<'a>(
+        &self,
+        edit: &Rc<Edit>,
+        id: &IdPath,
+        config: &'a Config,
+    ) -> Result<(&'a config::EnemyList, usize, Vec<EnemyList>)> {
+        let mut ret = Vec::new();
+        let el = config.sideview.enemy_list_for(id)?;
+        let mut n = 0;
+        for (i, world) in el.ids.iter().enumerate() {
+            if id.at(0) == world.at(0) {
+                n = i;
+            }
+            let scfg = config.sideview.find(world)?;
+            for index in 0..scfg.length {
+                let mut area = world.clone();
+                area.push_usize(index);
+                ret.push(EnemyList::from_rom(edit, &area, config)?);
+            }
+        }
+        Ok((el, n, ret))
+    }
+
     fn list_from_bytes(data: &[u8]) -> Vec<Enemy> {
         let length = data[0] as usize;
         let mut list = Vec::new();
@@ -312,12 +483,25 @@ impl Enemy {
         }
         list
     }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut ret = Vec::new();
+        for data in self.data.iter() {
+            ret.push(data.len() as u8 * 2 + 1);
+            for enemy in data.iter() {
+                ret.push((enemy.y << 4) as u8 | (enemy.x as u8 & 0x0F));
+                ret.push((enemy.x as u8 & 0x30) << 2 | (enemy.kind as u8));
+            }
+        }
+        ret
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Connection {
     pub dest_map: usize,
     pub entry: usize,
+    pub point_target_back: Option<usize>,
 }
 
 impl From<u8> for Connection {
@@ -325,6 +509,7 @@ impl From<u8> for Connection {
         Connection {
             dest_map: (a >> 2) as usize,
             entry: (a & 3) as usize,
+            point_target_back: None,
         }
     }
 }
@@ -339,7 +524,7 @@ impl From<&Connection> for u8 {
 pub struct Sideview {
     pub id: IdPath,
     pub map: Map,
-    pub enemy: Vec<Enemy>,
+    pub enemy: EnemyList,
     pub connection: Vec<Connection>,
     pub door: Vec<Connection>,
     pub availability: Vec<bool>,
@@ -431,11 +616,7 @@ impl RomData for Sideview {
         self.connection.clear();
         self.door.clear();
         if !scfg.background_layer {
-            // Enemy list.  Pointers are stored as RAM addresses.
-            let delta = config.sideview.enemy_list_rom - config.sideview.enemy_list_ram;
-            let addr = rom.read_pointer(scfg.enemies + index * 2)? + delta;
-            let length = rom.read(addr)? as usize;
-            self.enemy = Enemy::list_from_bytes(rom.read_bytes(addr, length)?);
+            self.enemy = EnemyList::from_rom(edit, &self.id, &config)?;
 
             if index < scfg.max_connectable_index {
                 let table = rom.read_bytes(scfg.connections + index * 4, 4)?;
@@ -468,6 +649,11 @@ impl RomData for Sideview {
         if index >= scfg.length {
             return Err(ErrorKind::IndexError(index).into());
         }
+
+        // Enemy Lists.  Doing this first because the enemy list functions
+        // want to borrow 'rom', so take care of it before our own borrow.
+        self.enemy.write(edit, &self.id, &config)?;
+
         let mut rom = edit.rom.borrow_mut();
         let mut memory = edit.memory.borrow_mut();
 
@@ -480,8 +666,6 @@ impl RomData for Sideview {
         rom.write_bytes(addr, &map_bytes)?;
         rom.write_word(scfg.address + index * 2, addr.raw() as u16)?;
 
-        // TODO: Enemy lists
-
         // Room connections
         if index < scfg.max_connectable_index {
             if self.connection.len() != 4 {
@@ -492,6 +676,17 @@ impl RomData for Sideview {
             }
             for (i, c) in self.connection.iter().enumerate() {
                 rom.write(scfg.connections + index * 4 + i, u8::from(c))?;
+                if let Some(target) = c.point_target_back {
+                    let target_conn = Connection {
+                        dest_map: index,
+                        entry: target,
+                        point_target_back: None,
+                    };
+                    rom.write(
+                        scfg.connections + c.dest_map * 4 + c.entry,
+                        u8::from(&target_conn),
+                    )?;
+                }
             }
         }
 
@@ -505,6 +700,17 @@ impl RomData for Sideview {
             }
             for (i, c) in self.door.iter().enumerate() {
                 rom.write(scfg.doors + index * 4 + i, u8::from(c))?;
+                if let Some(target) = c.point_target_back {
+                    let target_conn = Connection {
+                        dest_map: index,
+                        entry: target,
+                        point_target_back: None,
+                    };
+                    rom.write(
+                        scfg.connections + c.dest_map * 4 + c.entry,
+                        u8::from(&target_conn),
+                    )?;
+                }
             }
         }
 
@@ -547,6 +753,7 @@ pub struct Decompressor {
     pub item: [[u8; 64]; 13],
     pub bgtile: u8,
     pub layer: usize,
+    pub elevator: Option<usize>,
 }
 
 impl Decompressor {
@@ -560,6 +767,7 @@ impl Decompressor {
             item: [[0xFF; 64]; 13],
             bgtile: 0,
             layer: 0,
+            elevator: None,
         }
     }
 
@@ -666,6 +874,10 @@ impl Decompressor {
                 command.y, command.x, svcfg.kind, obj_kind, command.kind
             );
 
+            if extra && command.kind == 0x50 {
+                // If there is an elevator, remember its X coordinate.
+                self.elevator = Some(command.x as usize);
+            }
             if let Some(obj) = object.find(command.kind as u8, &svcfg.kind, &obj_kind) {
                 match &obj.render {
                     Renderer::Grid => self.draw_grid(xcursor, command.y, command.param, obj),
@@ -721,6 +933,7 @@ impl Decompressor {
         // Layer 0 is the background tile.
         // Layers 1 & 2 are map data.
         self.layer = 1;
+        self.elevator = None;
     }
 
     fn set(&mut self, x: usize, y: usize, val: u8) {

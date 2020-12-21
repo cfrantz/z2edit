@@ -45,6 +45,10 @@ impl IdPath {
     pub fn push(&mut self, val: &str) {
         self.0.push(val.to_owned());
     }
+
+    pub fn push_usize(&mut self, val: usize) {
+        self.0.push(val.to_string());
+    }
 }
 
 impl From<&str> for IdPath {

@@ -115,6 +115,25 @@ pub mod config {
             }
         }
 
+        pub fn is_encounter(&self, edit: &Rc<Edit>, id: &IdPath) -> Result<bool> {
+            let ocfg = match self.find(id) {
+                Ok(v) => v,
+                Err(_) => {
+                    return Ok(false);
+                }
+            };
+            let encounters = edit
+                .rom
+                .borrow()
+                .read_bytes(ocfg.encounter, 14)?
+                .iter()
+                .map(|byte| Encounter::from(*byte).dest_map)
+                .collect::<Vec<i32>>();
+
+            let map = id.usize_at(1)? as i32;
+            Ok(encounters.contains(&map))
+        }
+
         pub fn vanilla() -> Self {
             ron::de::from_bytes(include_bytes!("../../config/vanilla/overworld.ron")).unwrap()
         }
