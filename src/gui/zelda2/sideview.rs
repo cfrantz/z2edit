@@ -158,7 +158,16 @@ impl SideviewGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let edit = Box::new(self.sideview.clone());
-        let i = project.commit(self.commit_index, edit, None)?;
+        let config = Config::get(&self.edit.meta.borrow().config)?;
+        let group = config.sideview.find(&self.sideview.id)?;
+        let area = self.sideview.id.usize_at(1)?;
+        let name = if let Some(pet_name) = group.pet_names.get(&area) {
+            format!("{} {} ({})", group.name, area, pet_name)
+        } else {
+            format!("{} {}", group.name, area)
+        };
+
+        let i = project.commit(self.commit_index, edit, Some(&name))?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;
         Ok(())
