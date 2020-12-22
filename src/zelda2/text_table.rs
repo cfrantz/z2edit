@@ -138,7 +138,7 @@ impl RomData for TextTable {
                 str_ptr,
                 item.text
             );
-            rom.write_word(table + index * 2, str_ptr.raw() as u16)?;
+            rom.write_pointer(table + index * 2, str_ptr)?;
             rom.write_terminated(str_ptr, &Text::to_zelda2(&item.text), 0xff)?;
         }
         Ok(())

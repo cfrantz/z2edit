@@ -170,6 +170,30 @@ impl Address {
             Address::Chr(b, _) => Address::Chr(*b, addr as u16),
         }
     }
+
+    pub fn in_range(&self, start: Address, length: usize) -> bool {
+        match (self, start) {
+            (Address::File(x), Address::File(a)) => *x >= a && *x < a + length,
+            (Address::Seg(s, x), Address::Seg(sa, a)) => *s == sa && *x >= a && *x < a + length,
+            (Address::Cpu(x), Address::Cpu(a)) => *x >= a && *x < a.wrapping_add(length as u16),
+            (Address::Bank(name, bank, x), Address::Bank(namea, banka, a)) => {
+                *name == namea && *bank == banka && *x >= a && *x < a + length
+            }
+            (Address::Prg(bank, x), Address::Prg(banka, a)) => {
+                *bank == banka && *x >= a && *x < a.wrapping_add(length as u16)
+            }
+            (Address::Chr(bank, x), Address::Chr(banka, a)) => {
+                *bank == banka && *x >= a && *x < a.wrapping_add(length as u16)
+            }
+            _ => {
+                error!(
+                    "Address::in_range: cannot compare {:x?} vs {:x?}",
+                    self, start
+                );
+                false
+            }
+        }
+    }
 }
 
 macro_rules! addsub {
@@ -250,6 +274,12 @@ pub trait MemoryAccess {
         let v = [value as u8, (value >> 8) as u8];
         self.write_bytes(address, &v)
     }
+
+    fn write_pointer(&mut self, address: Address, ptr: Address) -> Result<()> {
+        // TODO: add failure cases for bad pointers (e.g. wrong bank, etc).
+        self.write_word(address, ptr.raw() as u16)
+    }
+
     fn write_bytes(&mut self, address: Address, value: &[u8]) -> Result<()>;
 
     fn write_terminated(&mut self, address: Address, value: &[u8], terminator: u8) -> Result<()> {

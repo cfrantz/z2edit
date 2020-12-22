@@ -315,6 +315,7 @@ pub struct Enemy {
 pub struct EnemyList {
     pub data: Vec<Vec<Enemy>>,
     pub is_encounter: bool,
+    pub valid: bool,
     #[serde(skip)]
     pub ram_address: u16,
 }
@@ -350,11 +351,15 @@ impl EnemyList {
         Ok(EnemyList {
             data: data,
             is_encounter: is_encounter,
+            valid: true,
             ram_address: ram_address.raw() as u16,
         })
     }
 
     pub fn write(&self, edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<()> {
+        if !self.valid {
+            return Ok(());
+        }
         let (el, n, mut all) = self.read_all(edit, id, config)?;
         let index = id.usize_at(1)?;
 
@@ -664,7 +669,7 @@ impl RomData for Sideview {
         let map_bytes = self.map.to_bytes();
         let addr = memory.alloc_near(addr, map_bytes.len() as u16)?;
         rom.write_bytes(addr, &map_bytes)?;
-        rom.write_word(scfg.address + index * 2, addr.raw() as u16)?;
+        rom.write_pointer(scfg.address + index * 2, addr)?;
 
         // Room connections
         if index < scfg.max_connectable_index {

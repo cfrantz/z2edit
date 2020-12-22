@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::cell::RefCell;
+use std::convert::From;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -13,6 +14,7 @@ use dict_derive::{FromPyObject, IntoPyObject};
 use pyo3::class::PySequenceProtocol;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
+use pyo3::types::PyBytes;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -262,58 +264,29 @@ impl EmulateAt {
     fn patch(&self, buffer: &Buffer) -> Result<Buffer> {
         let mut buffer = buffer.clone();
         let facing = if self.page < 3 { 0 } else { 1 };
+        #[rustfmt::skip]
         let code = [
-            0xa9,
-            self.bank, // LDA #bank
-            0x8d,
-            0x69,
-            0x07, // STA $0769
-            0xa9,
-            self.region, // LDA #region
-            0x8d,
-            0x06,
-            0x07, // STA $0706
-            0xa9,
-            self.world, // LDA #world
-            0x8d,
-            0x07,
-            0x07, // STA $0707
-            0xa9,
-            self.town_code, // LDA #town_code
-            0x8d,
-            0x6b,
-            0x05, // STA $056b
-            0xa9,
-            self.palace_code, // LDA #palace_code
-            0x8d,
-            0x6c,
-            0x05, // STA $056c
-            0xa9,
-            self.connector, // LDA #connector
-            0x8d,
-            0x48,
-            0x07, // STA $0748
-            0xa9,
-            self.room, // LDA #room
-            0x8d,
-            0x61,
-            0x05, // STA $0561
-            0xa9,
-            self.page, // LDA #page
-            0x8d,
-            0x5c,
-            0x07, // STA $075c
-            0xa9,
-            facing, // LDA #facing
-            0x8d,
-            0x01,
-            0x07, // STA $0701
-            0xa9,
-            self.prev_region, // LDA #prev_region
-            0x8d,
-            0x0a,
-            0x07, // STA $070a
-            0x60, // RTS
+            0xa9, self.bank,        // LDA #bank
+            0x8d, 0x69, 0x07,       // STA $0769
+            0xa9, self.region,      // LDA #region
+            0x8d, 0x06, 0x07,       // STA $0706
+            0xa9, self.world,       // LDA #world
+            0x8d, 0x07, 0x07,       // STA $0707
+            0xa9, self.town_code,   // LDA #town_code
+            0x8d, 0x6b, 0x05,       // STA $056b
+            0xa9, self.palace_code, // LDA #palace_code
+            0x8d, 0x6c, 0x05,       // STA $056c
+            0xa9, self.connector,   // LDA #connector
+            0x8d, 0x48, 0x07,       // STA $0748
+            0xa9, self.room,        // LDA #room
+            0x8d, 0x61, 0x05,       // STA $0561
+            0xa9, self.page,        // LDA #page
+            0x8d, 0x5c, 0x07,       // STA $075c
+            0xa9, facing,           // LDA #facing
+            0x8d, 0x01, 0x07,       // STA $0701
+            0xa9, self.prev_region, // LDA #prev_region
+            0x8d, 0x0a, 0x07,       // STA $070a
+            0x60,                   // RTS
         ];
         let addr = Address::Prg(0, 0xAA3F);
         buffer.write_bytes(addr, &code)?;
@@ -432,21 +405,25 @@ impl EditProxy {
         Ok(())
     }
 
-    fn read_byte(&self, addr: PyAddress) -> Result<u8> {
+    fn read(&self, addr: PyAddress) -> Result<u8> {
         self.edit.rom.borrow().read(addr.address)
     }
 
     fn read_word(&self, addr: PyAddress) -> Result<u16> {
         self.edit.rom.borrow().read_word(addr.address)
     }
-
-    fn read_bytes(&self, addr: PyAddress, len: usize) -> Result<Vec<u8>> {
-        let rom = self.edit.rom.borrow();
-        let bytes = rom.read_bytes(addr.address, len)?.to_vec();
-        Ok(bytes)
+    fn read_pointer(&self, addr: PyAddress) -> Result<PyAddress> {
+        let ptr = self.edit.rom.borrow().read_pointer(addr.address)?;
+        Ok(PyAddress::from(ptr))
     }
 
-    fn write_byte(&self, addr: PyAddress, val: u8) -> Result<()> {
+    fn read_bytes<'p>(&self, py: Python<'p>, addr: PyAddress, len: usize) -> Result<&'p PyBytes> {
+        let rom = self.edit.rom.borrow();
+        let bytes = rom.read_bytes(addr.address, len)?;
+        Ok(PyBytes::new(py, bytes))
+    }
+
+    fn write(&self, addr: PyAddress, val: u8) -> Result<()> {
         self.edit.rom.borrow_mut().write(addr.address, val)
     }
 
@@ -454,8 +431,43 @@ impl EditProxy {
         self.edit.rom.borrow_mut().write_word(addr.address, val)
     }
 
+    fn write_pointer(&self, addr: PyAddress, ptr: PyAddress) -> Result<()> {
+        self.edit
+            .rom
+            .borrow_mut()
+            .write_pointer(addr.address, ptr.address)
+    }
+
     fn write_bytes(&self, addr: PyAddress, val: &[u8]) -> Result<()> {
         self.edit.rom.borrow_mut().write_bytes(addr.address, val)
+    }
+    fn write_terminated(&mut self, addr: PyAddress, val: &[u8], terminator: u8) -> Result<()> {
+        self.edit
+            .rom
+            .borrow_mut()
+            .write_terminated(addr.address, val, terminator)
+    }
+
+    fn alloc(&mut self, addr: PyAddress, length: u16) -> Result<PyAddress> {
+        let mut mem = self.edit.memory.borrow_mut();
+        let addr = mem.alloc(addr.address, length)?;
+        Ok(PyAddress::from(addr))
+    }
+
+    fn alloc_near(&mut self, addr: PyAddress, length: u16) -> Result<PyAddress> {
+        let mut mem = self.edit.memory.borrow_mut();
+        let addr = mem.alloc_near(addr.address, length)?;
+        Ok(PyAddress::from(addr))
+    }
+
+    fn free(&mut self, addr: PyAddress, length: u16) {
+        let mut mem = self.edit.memory.borrow_mut();
+        mem.free(addr.address, length);
+    }
+
+    fn report(&self, addr: PyAddress) -> Result<(usize, u16)> {
+        let mem = self.edit.memory.borrow();
+        mem.report(addr.address)
     }
 }
 

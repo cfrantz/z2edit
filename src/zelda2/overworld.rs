@@ -648,6 +648,7 @@ impl RomData for Overworld {
                 map.data.len()
             );
             rom.write_bytes(addr, &map.data)?;
+            rom.write_pointer(ocfg.pointer, addr)?;
 
             let (addr, length) = ocfg.palace_to_stone_table;
             for i in 0..length {

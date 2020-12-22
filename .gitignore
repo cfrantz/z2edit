@@ -5,3 +5,4 @@ junk/*
 imgui.ini
 *.nes
 *.z2prj
+__pycache__

@@ -6,10 +6,13 @@ use crate::errors::*;
 pub mod config {
     use super::*;
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-    pub struct FreeSpace(pub Address, pub usize);
+    pub struct AddressRange(pub Address, pub usize);
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-    pub struct Config(pub Vec<FreeSpace>);
+    pub struct Config {
+        pub freespace: Vec<AddressRange>,
+        pub keepout: Vec<AddressRange>,
+    }
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -23,7 +26,7 @@ impl FreeSpaceRange {
     fn contains(&self, address: Address) -> bool {
         match address {
             Address::Prg(bank, addr) => {
-                (bank == self.bank && addr >= self.address && addr < self.address + self.length)
+                bank == self.bank && addr >= self.address && addr < self.address + self.length
             }
             _ => false,
         }
@@ -51,10 +54,40 @@ pub struct FreeSpace {
 impl FreeSpace {
     pub fn new(config: &config::Config) -> Result<Self> {
         let mut space = FreeSpace::default();
-        for item in config.0.iter() {
+        for item in config.freespace.iter() {
+            FreeSpace::check_keepout_overlap(item.0, item.1, config);
             space.register(item.0, item.1 as u16)?;
         }
         Ok(space)
+    }
+
+    fn check_keepout_overlap(addr: Address, length: usize, config: &config::Config) {
+        for config::AddressRange(koaddr, kolen) in config.keepout.iter() {
+            if addr.in_range(*koaddr, *kolen) {
+                panic!(
+                    "Start of frespace range ({:x?}, {}) overlaps keepout region ({:x?}, {})",
+                    addr, length, koaddr, kolen
+                );
+            }
+            if (addr + (length - 1)).in_range(*koaddr, *kolen) {
+                panic!(
+                    "End of frespace range ({:x?}, {}) overlaps keepout region ({:x?}, {})",
+                    addr, length, koaddr, kolen
+                );
+            }
+            if koaddr.in_range(addr, length) {
+                panic!(
+                    "Start of keepout range ({:x?}, {}) overlaps freespace region ({:x?}, {})",
+                    koaddr, kolen, addr, length
+                );
+            }
+            if (*koaddr + (*kolen - 1)).in_range(addr, length) {
+                panic!(
+                    "Start of keepout range ({:x?}, {}) overlaps freespace region ({:x?}, {})",
+                    koaddr, kolen, addr, length
+                );
+            }
+        }
     }
 
     fn contains(&self, address: Address) -> bool {
@@ -79,6 +112,17 @@ impl FreeSpace {
                 continue;
             }
             i += 1;
+        }
+    }
+
+    fn get_bank(address: Address) -> Result<isize> {
+        match address {
+            Address::Prg(bank, _) => Ok(bank),
+            _ => Err(ErrorKind::FreeSpaceError(format!(
+                "Address must by of type Prg: {:?}",
+                address
+            ))
+            .into()),
         }
     }
 
@@ -143,15 +187,7 @@ impl FreeSpace {
     }
 
     pub fn alloc_near(&mut self, address: Address, length: u16) -> Result<Address> {
-        let bank = if let Some(b) = address.bank() {
-            b.1
-        } else {
-            return Err(ErrorKind::FreeSpaceError(format!(
-                "Address must by of type Prg: {:?}",
-                address
-            ))
-            .into());
-        };
+        let bank = FreeSpace::get_bank(address)?;
         // Generate (delta from requested address, freespace index) tuples.
         let mut nearness = Vec::new();
         for (i, f) in self.freelist.iter().enumerate() {
@@ -173,7 +209,8 @@ impl FreeSpace {
         }
     }
 
-    pub fn alloc(&mut self, bank: isize, length: u16) -> Result<Address> {
+    pub fn alloc(&mut self, address: Address, length: u16) -> Result<Address> {
+        let bank = FreeSpace::get_bank(address)?;
         let mut result = self.alloc_exact_fit(bank, length);
         if result.is_err() {
             result = self.alloc_first_fit(bank, length);
@@ -186,5 +223,17 @@ impl FreeSpace {
             Err(e) => panic!("{:?}", e),
             _ => {}
         };
+    }
+    pub fn report(&self, address: Address) -> Result<(usize, u16)> {
+        let bank = FreeSpace::get_bank(address)?;
+        let mut chunks = 0;
+        let mut total = 0;
+        for f in self.freelist.iter() {
+            if f.bank == bank && f.length > 0 {
+                chunks += 1;
+                total += f.length;
+            }
+        }
+        Ok((chunks, total))
     }
 }

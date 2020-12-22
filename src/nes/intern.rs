@@ -70,4 +70,8 @@ impl Istr {
         };
         intern.index.get(&self.0).unwrap()
     }
+
+    pub fn ival(&self) -> usize {
+        self.0
+    }
 }
