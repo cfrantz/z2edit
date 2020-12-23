@@ -59,7 +59,7 @@ impl PreferencesGui {
         let pref = AppContext::pref();
         if self.vanilla_hash.is_empty() {
             if pref.vanilla_rom.is_empty() {
-                Err(ErrorKind::NotFound("Filename is empty".to_string()).into())
+                Ok(false)
             } else {
                 let buffer = Buffer::from_file(&Path::new(&pref.vanilla_rom), None)?;
                 self.vanilla_hash = buffer.sha256();
@@ -83,7 +83,10 @@ impl PreferencesGui {
     }
 
     pub fn draw(&mut self, ui: &imgui::Ui) {
-        let mut visible = self.visible.as_bool();
+        let mut visible = match self.check_vanilla() {
+            Ok(false) | Err(_) => true,
+            Ok(true) => self.visible.as_bool(),
+        };
         if !visible {
             return;
         }
@@ -114,10 +117,19 @@ impl PreferencesGui {
                 match self.check_vanilla() {
                     Ok(true) => ui
                         .text_colored([0.0, 1.0, 0.0, 1.0], "SHA256 checksum matches Vanilla ROM."),
-                    Ok(false) => ui.text_colored(
-                        [1.0, 0.0, 0.0, 1.0],
-                        "SHA256 checksum does not match Vanilla ROM.",
-                    ),
+                    Ok(false) => {
+                        if pref.vanilla_rom.is_empty() {
+                            ui.text_colored(
+                                [1.0, 0.0, 0.0, 1.0],
+                                "Please provide the location of your unmodified Zelda II ROM",
+                            );
+                        } else {
+                            ui.text_colored(
+                                [1.0, 0.0, 0.0, 1.0],
+                                "SHA256 checksum does not match Vanilla ROM.",
+                            )
+                        }
+                    }
                     Err(e) => ui
                         .text_colored([1.0, 0.0, 0.0, 1.0], im_str!("Error checking ROM: {:?}", e)),
                 }

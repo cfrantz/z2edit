@@ -85,7 +85,7 @@ impl ProjectGui {
 
     pub fn menu(&mut self, py: Python, ui: &imgui::Ui) {
         ui.menu_bar(|| {
-            ui.menu(im_str!("File"), true, || {
+            ui.menu(im_str!("Project"), true, || {
                 if MenuItem::new(im_str!("Save")).build(ui) {
                     self.save(py);
                 }
@@ -277,11 +277,7 @@ impl ProjectGui {
 
     pub fn draw(&mut self, py: Python, ui: &imgui::Ui) {
         let mut visible = self.visible;
-        let title = if let Some(f) = &self.filename {
-            im_str!("Project: {}", f)
-        } else {
-            imgui::ImString::new("Project: unnamed")
-        };
+        let title = im_str!("Project: {}", self.project.borrow(py).name);
         let dock_id = imgui::Id::Str("project");
         let window = imgui::Window::new(&title)
             .opened(&mut visible)
