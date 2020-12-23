@@ -117,6 +117,16 @@ impl Config {
         let configs = unsafe { CONFIGS.get_mut().unwrap() };
         configs.insert(name.to_owned(), Arc::new(config));
     }
+
+    pub fn keys() -> Vec<String> {
+        let configs = unsafe { CONFIGS.lock().unwrap() };
+        let mut keys = configs
+            .keys()
+            .map(|k| k.to_owned())
+            .collect::<Vec<String>>();
+        keys.sort();
+        keys
+    }
 }
 
 #[pyclass]
@@ -125,8 +135,7 @@ pub struct PyConfig {}
 #[pymethods]
 impl PyConfig {
     fn keys(&self) -> Vec<String> {
-        let configs = unsafe { CONFIGS.lock().unwrap() };
-        configs.keys().map(|k| k.to_owned()).collect()
+        Config::keys()
     }
 }
 

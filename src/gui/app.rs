@@ -18,6 +18,7 @@ use crate::gui::console::Console;
 use crate::gui::fa;
 use crate::gui::glhelper;
 use crate::gui::preferences::PreferencesGui;
+use crate::gui::project_wizard::ProjectWizardGui;
 use crate::gui::zelda2::project::ProjectGui;
 use crate::util::pyexec::PythonExecutor;
 
@@ -29,6 +30,7 @@ pub struct App {
     #[pyo3(get, set)]
     pub preferences: Py<PreferencesGui>,
     project: Vec<ProjectGui>,
+    wizard: ProjectWizardGui,
     console: Rc<RefCell<Console>>,
 }
 
@@ -38,6 +40,7 @@ impl App {
             running: Cell::new(false),
             preferences: Py::new(py, PreferencesGui::default())?,
             project: Vec::new(),
+            wizard: ProjectWizardGui::default(),
             console: Rc::new(RefCell::new(Console::new("Debug Console"))),
         })
     }
@@ -58,6 +61,14 @@ impl App {
         Ok(())
     }
 
+    fn file_dialog(&self, ftype: Option<&str>) -> Option<String> {
+        let result = nfd::open_file_dialog(ftype, None).expect("ProjectWizardGui::file_dialog");
+        match result {
+            nfd::Response::Okay(path) => Some(path),
+            _ => None,
+        }
+    }
+
     fn load_dialog(&mut self, py: Python, ftype: &str) {
         loop {
             let result = nfd::open_file_dialog(Some(ftype), None).unwrap();
@@ -71,14 +82,35 @@ impl App {
         }
     }
 
+    fn new_project_from_wizard(&mut self, py: Python) -> Result<()> {
+        self.project.push(ProjectGui::new(
+            py,
+            Project::new(
+                self.wizard.name.to_str(),
+                self.wizard.rom.clone(),
+                self.wizard.config(),
+                self.wizard.fix,
+            )?,
+        )?);
+        Ok(())
+    }
+
     fn draw(&mut self, py: Python, ui: &imgui::Ui) {
         ui.main_menu_bar(|| {
             ui.menu(im_str!("File"), true, || {
+                if MenuItem::new(im_str!("New Project")).build(ui) {
+                    self.wizard = ProjectWizardGui::new();
+                    self.wizard.show();
+                }
+                ui.separator();
                 if MenuItem::new(im_str!("Open Project")).build(ui) {
                     self.load_dialog(py, "z2prj");
                 }
                 if MenuItem::new(im_str!("Open ROM")).build(ui) {
-                    self.load_dialog(py, "nes");
+                    if let Some(filename) = self.file_dialog(Some("nes")) {
+                        self.wizard = ProjectWizardGui::from_filename(&filename);
+                        self.wizard.show();
+                    }
                 }
                 ui.separator();
                 if MenuItem::new(im_str!("Quit")).build(ui) {
@@ -88,12 +120,19 @@ impl App {
             ui.menu(im_str!("View"), true, || {
                 MenuItem::new(im_str!("Console"))
                     .build_with_ref(ui, &mut self.console.borrow_mut().visible);
-                MenuItem::new(im_str!("Preferences"))
-                    .build_with_ref(ui, &mut self.preferences.borrow_mut(py).visible);
+                if MenuItem::new(im_str!("Preferences")).build(ui) {
+                    self.preferences.borrow_mut(py).show();
+                }
             });
         });
+        if self.wizard.draw(ui) {
+            match self.new_project_from_wizard(py) {
+                Err(e) => error!("Could not create project: {:?}", e),
+                Ok(_) => {}
+            }
+        }
         self.preferences.borrow_mut(py).draw(ui);
-        //        self.project.borrow_mut(py).draw(ui);
+
         for (i, project) in self.project.iter_mut().enumerate() {
             let id = ui.push_id(i as i32);
             project.draw(py, ui);

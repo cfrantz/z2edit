@@ -12,13 +12,7 @@ pub struct PythonExecutor {
 
 impl PythonExecutor {
     pub fn new(py: Python) -> Result<Self> {
-        let module = PyModule::from_code(
-            py,
-            include_str!("../../python/console.py"),
-            "console.py",
-            "console",
-        )?;
-
+        let module = PyModule::import(py, "z2edit.console")?;
         let interp = module.call0("CreatePythonConsole")?;
         Ok(PythonExecutor {
             interp: interp.extract()?,

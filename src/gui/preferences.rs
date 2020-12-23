@@ -9,9 +9,14 @@ use std::path::Path;
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
+use crate::gui::Visibility;
+use crate::nes::Buffer;
 
 #[derive(Clone, Debug, SmartDefault, Serialize, Deserialize)]
 pub struct Preferences {
+    #[serde(default)]
+    #[default = ""]
+    pub vanilla_rom: String,
     #[serde(default)]
     #[default(_code = "[0.0, 0.1, 0.25]")]
     pub background: [f32; 3],
@@ -38,51 +43,143 @@ impl Preferences {
     }
 }
 
+const VANILLA_HASH: &'static str =
+    "ad8c0fbcf092bf84b48e69fd3964eea4ed91bfe62abc352943d537979782680c";
+
 #[pyclass]
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct PreferencesGui {
-    #[pyo3(get, set)]
-    pub visible: bool,
+    pub visible: Visibility,
+    pub changed: bool,
+    pub vanilla_hash: String,
 }
 
 impl PreferencesGui {
+    pub fn check_vanilla(&mut self) -> Result<bool> {
+        let pref = AppContext::pref();
+        if self.vanilla_hash.is_empty() {
+            if pref.vanilla_rom.is_empty() {
+                Err(ErrorKind::NotFound("Filename is empty".to_string()).into())
+            } else {
+                let buffer = Buffer::from_file(&Path::new(&pref.vanilla_rom), None)?;
+                self.vanilla_hash = buffer.sha256();
+                Ok(self.vanilla_hash == VANILLA_HASH)
+            }
+        } else {
+            Ok(self.vanilla_hash == VANILLA_HASH)
+        }
+    }
+
+    pub fn show(&mut self) {
+        self.visible = Visibility::Visible;
+    }
+
+    fn file_dialog(&self, ftype: Option<&str>) -> Option<String> {
+        let result = nfd::open_file_dialog(ftype, None).expect("PreferencesGui::file_dialog");
+        match result {
+            nfd::Response::Okay(path) => Some(path),
+            _ => None,
+        }
+    }
+
     pub fn draw(&mut self, ui: &imgui::Ui) {
-        let mut visible = self.visible;
+        let mut visible = self.visible.as_bool();
         if !visible {
             return;
         }
-        let mut changed = false;
+        let mut changed = self.changed;
         let pref = AppContext::pref_mut();
         imgui::Window::new(im_str!("Preferences"))
             .opened(&mut visible)
             .build(&ui, || {
-                ui.text(format!(
-                    "Instantaneous FPS: {:>6.02}",
-                    1.0 / ui.io().delta_time
-                ));
+                ui.text("Vanilla ROM:");
+                let mut vanilla_rom = imgui::ImString::new(&pref.vanilla_rom);
+                if ui
+                    .input_text(im_str!("##vanilla"), &mut vanilla_rom)
+                    .resize_buffer(true)
+                    .build()
+                {
+                    pref.vanilla_rom = vanilla_rom.to_str().to_owned();
+                    self.vanilla_hash.clear();
+                    changed |= true;
+                }
+                ui.same_line(0.0);
+                if ui.button(im_str!("Browse##vanilla"), [0.0, 0.0]) {
+                    if let Some(filename) = self.file_dialog(Some("nes")) {
+                        pref.vanilla_rom = filename;
+                        self.vanilla_hash.clear();
+                        changed |= true;
+                    }
+                }
+                match self.check_vanilla() {
+                    Ok(true) => ui
+                        .text_colored([0.0, 1.0, 0.0, 1.0], "SHA256 checksum matches Vanilla ROM."),
+                    Ok(false) => ui.text_colored(
+                        [1.0, 0.0, 0.0, 1.0],
+                        "SHA256 checksum does not match Vanilla ROM.",
+                    ),
+                    Err(e) => ui
+                        .text_colored([1.0, 0.0, 0.0, 1.0], im_str!("Error checking ROM: {:?}", e)),
+                }
 
+                ui.separator();
+                ui.text("Emulator:");
                 let mut emulator = imgui::ImString::new(&pref.emulator);
                 if ui
-                    .input_text(im_str!("Emulator"), &mut emulator)
+                    .input_text(im_str!("##emulator"), &mut emulator)
                     .resize_buffer(true)
                     .build()
                 {
                     pref.emulator = emulator.to_str().to_owned();
                     changed |= true;
                 }
-                changed |= imgui::ColorEdit::new(im_str!("Background"), &mut pref.background)
+                ui.same_line(0.0);
+                if ui.button(im_str!("Browse##emulator"), [0.0, 0.0]) {
+                    if let Some(filename) = self.file_dialog(None) {
+                        pref.emulator = filename;
+                        changed |= true;
+                    }
+                }
+
+                ui.separator();
+                changed |= imgui::ColorEdit::new(im_str!("Background Color"), &mut pref.background)
                     .alpha(false)
                     .inputs(false)
                     .picker(true)
                     .build(&ui);
+
+                ui.separator();
+                if ui.button(im_str!("Save"), [0.0, 0.0]) {
+                    let file = AppContext::config_file("preferences.ron");
+                    match pref.save(&file) {
+                        Err(e) => error!("Error saving preferences: {}", e),
+                        _ => {}
+                    }
+                    changed = false;
+                    self.visible = Visibility::Hidden;
+                }
+                ui.same_line(0.0);
+                if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
+                    // FIXME: stupid.  Should maintain a local copy of preferences
+                    // and discard that upon cancel.
+                    let file = AppContext::config_file("preferences.ron");
+                    *pref = Preferences::from_file(&file).unwrap_or_default();
+                    changed = false;
+                    self.visible = Visibility::Hidden;
+                }
             });
-        self.visible = visible;
-        if changed {
-            let file = AppContext::get().config_dir.join("preferences.ron");
-            match pref.save(&file) {
-                Err(e) => error!("Error saving preferences: {}", e),
-                _ => {}
-            }
+        self.changed = changed;
+        self.visible.change(visible, self.changed);
+        if Some(true)
+            == self.visible.draw(
+                im_str!("Preferences Changed"),
+                "There are unsaved changes in Preferences.\nDo you want to discard them?",
+                ui,
+            )
+        {
+            let file = AppContext::config_file("preferences.ron");
+            *pref = Preferences::from_file(&file).unwrap_or_default();
+            self.changed = false;
         }
     }
 }

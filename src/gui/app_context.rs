@@ -30,6 +30,7 @@ pub struct AppContext {
     pub event_pump: RefCell<sdl2::EventPump>,
     pub config_dir: PathBuf,
     pub data_dir: PathBuf,
+    pub install_dir: PathBuf,
     pub preferences: Preferences,
 }
 
@@ -73,6 +74,8 @@ impl AppContext {
             }
         };
 
+        let install_dir = AppContext::installation_dir().expect("AppContext::init");
+
         unsafe {
             APP_CONTEXT = Some(AppContext {
                 args: args,
@@ -83,10 +86,29 @@ impl AppContext {
                 event_pump: RefCell::new(event_pump),
                 config_dir: config_dir,
                 data_dir: data_dir.to_path_buf(),
+                install_dir: install_dir,
                 preferences: preferences,
             });
         }
         Ok(())
+    }
+
+    pub fn installation_dir() -> Result<PathBuf> {
+        let release = format!("target{}release", std::path::MAIN_SEPARATOR);
+        let debug = format!("target{}debug", std::path::MAIN_SEPARATOR);
+        let exe = std::env::current_exe()?;
+        if let Some(parent) = exe.parent() {
+            if parent.ends_with(release) || parent.ends_with(debug) {
+                let mut dir = parent.to_path_buf();
+                dir.pop();
+                dir.pop();
+                Ok(dir)
+            } else {
+                Ok(parent.to_path_buf())
+            }
+        } else {
+            Err(ErrorKind::NotFound(format!("No parent directory: {:?}", exe)).into())
+        }
     }
 
     pub fn get() -> &'static AppContext {
@@ -109,6 +131,14 @@ impl AppContext {
 
     pub fn app() -> &'static Py<App> {
         unsafe { APPLICATION.as_ref().unwrap() }
+    }
+
+    pub fn config_file<P: AsRef<Path>>(path: P) -> PathBuf {
+        AppContext::get().config_dir.join(path)
+    }
+
+    pub fn data_file<P: AsRef<Path>>(path: P) -> PathBuf {
+        AppContext::get().data_dir.join(path)
     }
 
     pub fn emulator() -> String {

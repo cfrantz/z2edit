@@ -7,6 +7,8 @@ use super::address::{Address, MemoryAccess};
 use super::layout::*;
 use crate::errors::*;
 
+use sha2::{Digest, Sha256};
+
 #[derive(Default, Debug, Clone)]
 pub struct Buffer {
     layout: Layout,
@@ -114,6 +116,11 @@ impl Buffer {
     pub fn save(&self, filepath: &Path) -> Result<()> {
         let mut file = File::create(filepath)?;
         self.to_writer(&mut file)
+    }
+
+    pub fn sha256(&self) -> String {
+        let hash = Sha256::digest(&self.data);
+        format!("{:x}", hash)
     }
 }
 

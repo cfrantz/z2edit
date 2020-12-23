@@ -12,6 +12,7 @@ extern crate log;
 extern crate dict_derive;
 extern crate pyo3;
 extern crate rustyline;
+extern crate sha2;
 extern crate shellwords;
 extern crate simplelog;
 extern crate typetag;
@@ -40,15 +41,20 @@ use crate::zelda2::config::Config as Zelda2Config;
 use crate::zelda2::config::PyConfig;
 use crate::zelda2::project::Project;
 
+fn setup_pythonpath() {
+    if let Some(path) = std::env::var_os("PYTHONPATH") {
+        let mut paths = std::env::split_paths(&path).collect::<Vec<_>>();
+        let mut pydir = AppContext::installation_dir().expect("pydir");
+        pydir.push("python");
+        paths.push(pydir);
+        let new_path = std::env::join_paths(paths).expect("pythonpath");
+        info!("PYTHONPATH={:?}", new_path);
+        std::env::set_var("PYTHONPATH", &new_path);
+    }
+}
+
 fn run(py: Python) -> Result<()> {
     let args = CommandlineArgs::from_args();
-    CombinedLogger::init(vec![TermLogger::new(
-        LevelFilter::Info,
-        Config::default(),
-        TerminalMode::Mixed,
-    )
-    .unwrap()])
-    .unwrap();
 
     // Force evaluation of the config early.
     let _ = Zelda2Config::get("vanilla");
@@ -69,7 +75,7 @@ fn run(py: Python) -> Result<()> {
     let app = AppContext::app();
     let mut executor = PythonExecutor::new(py)?;
 
-    let module = PyModule::new(py, "z2edit")?;
+    let module = PyModule::import(py, "z2edit")?;
     app.borrow(py).pythonize(py, module)?;
     module.add_class::<PyAddress>()?;
     module.add_class::<Project>()?;
@@ -77,20 +83,9 @@ fn run(py: Python) -> Result<()> {
     let pycfg = Py::new(py, PyConfig {})?;
     module.setattr("config", pycfg)?;
 
-    let sys = PyModule::import(py, "sys")?;
-    let modules = sys.get("modules")?;
-    modules.set_item("z2edit", module)?;
-
-    let assembler = PyModule::from_code(
-        py,
-        include_str!("../python/assembler.py"),
-        "assembler.py",
-        "assembler",
-    )?;
-    modules.set_item("assembler", assembler)?;
-
-    let debug = PyModule::from_code(py, include_str!("../python/debug.py"), "debug.py", "debug")?;
-    modules.set_item("debug", debug)?;
+    //let sys = PyModule::import(py, "sys")?;
+    //let modules = sys.get("modules")?;
+    //modules.set_item("z2edit", module)?;
 
     if let Some(file) = &AppContext::get().args.file {
         app.borrow_mut(py).load_project(py, file)?;
@@ -101,6 +96,15 @@ fn run(py: Python) -> Result<()> {
 }
 
 fn main() {
+    CombinedLogger::init(vec![TermLogger::new(
+        LevelFilter::Info,
+        Config::default(),
+        TerminalMode::Mixed,
+    )
+    .unwrap()])
+    .unwrap();
+
+    setup_pythonpath();
     let _mode = TerminalGuard::new();
     Python::with_gil(|py| {
         run(py).unwrap();

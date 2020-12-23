@@ -11,6 +11,12 @@ pub enum Visibility {
     Dispose,
 }
 
+impl Default for Visibility {
+    fn default() -> Self {
+        Visibility::Hidden
+    }
+}
+
 impl Visibility {
     pub fn as_bool(&self) -> bool {
         match self {
@@ -34,7 +40,8 @@ impl Visibility {
         }
     }
 
-    pub fn draw(&mut self, id: &ImStr, text: &str, ui: &imgui::Ui) {
+    pub fn draw(&mut self, id: &ImStr, text: &str, ui: &imgui::Ui) -> Option<bool> {
+        let mut result = None;
         if *self == Visibility::Changed {
             ui.open_popup(id);
             *self = Visibility::Pending;
@@ -46,13 +53,16 @@ impl Visibility {
                 if ui.button(im_str!("Ok"), [0.0, 0.0]) {
                     *self = Visibility::Dispose;
                     ui.close_current_popup();
+                    result = Some(true);
                 }
                 ui.same_line(0.0);
                 if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
                     *self = Visibility::Visible;
                     ui.close_current_popup();
+                    result = Some(false);
                 }
             });
         }
+        result
     }
 }

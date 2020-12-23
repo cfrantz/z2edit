@@ -27,36 +27,48 @@ use crate::util::pyaddress::PyAddress;
 use crate::util::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::edit_factory;
-use crate::zelda2::import::ImportRom;
+use crate::zelda2::import::{FileResource, ImportRom};
 
 #[pyclass(unsendable)]
 #[derive(Default, Serialize, Deserialize)]
 pub struct Project {
+    pub name: String,
     pub edits: Vec<Rc<Edit>>,
 }
 
 impl Project {
-    pub fn from_rom(filename: &str) -> Result<Self> {
+    pub fn new(name: &str, file: FileResource, config: &str, fix: bool) -> Result<Self> {
         let meta = Metadata {
             label: "ImportRom".to_owned(),
             user: whoami::username(),
             timestamp: UTime::now(),
             comment: String::default(),
-            config: "vanilla".to_owned(),
+            config: config.to_owned(),
         };
         let config = Config::get(&meta.config)?;
         let commit = Edit {
             meta: RefCell::new(meta),
-            edit: RefCell::new(ImportRom::from_file(filename)?),
+            edit: RefCell::new(ImportRom::new(file)?),
             rom: RefCell::default(),
             memory: RefCell::new(FreeSpace::new(&config.misc.freespace)?),
             action: RefCell::default(),
         };
         let project = Project {
+            name: name.to_owned(),
             edits: vec![Rc::new(commit)],
         };
         project.replay(0, -1)?;
         Ok(project)
+    }
+
+    pub fn from_rom(filename: &str) -> Result<Self> {
+        let now = UTime::now();
+        Project::new(
+            &format!("Project-{}", UTime::format(now, "%Y%m%d-%H%M")),
+            FileResource::Name(filename.to_owned()),
+            "vanilla",
+            false,
+        )
     }
 
     pub fn from_reader(r: impl Read) -> Result<Self> {
