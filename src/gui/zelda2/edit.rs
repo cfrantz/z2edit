@@ -93,7 +93,7 @@ impl EditDetailsGui {
 }
 
 impl Gui for EditDetailsGui {
-    fn draw(&mut self, _project: &mut Project, ui: &imgui::Ui) {
+    fn draw(&mut self, project: &mut Project, ui: &imgui::Ui) {
         let title = im_str!("{} Details", self.edit.meta.borrow().label);
         imgui::Window::new(&title)
             .unsaved_document(self.changed)
@@ -130,6 +130,7 @@ impl Gui for EditDetailsGui {
                         .iter()
                         .map(|(k, v)| (k.to_string(), v.to_string()))
                         .collect();
+                    project.changed.set(true);
                     self.visible = Visibility::Dispose;
                     self.changed = false;
                 }

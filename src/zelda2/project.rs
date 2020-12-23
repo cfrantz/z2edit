@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::convert::From;
 use std::fs::File;
@@ -35,6 +35,8 @@ use crate::zelda2::import::{FileResource, ImportRom};
 pub struct Project {
     pub name: String,
     pub edits: Vec<Rc<Edit>>,
+    #[serde(skip)]
+    pub changed: Cell<bool>,
 }
 
 impl Project {
@@ -61,6 +63,7 @@ impl Project {
         let project = Project {
             name: name.to_owned(),
             edits: vec![Rc::new(commit)],
+            ..Default::default()
         };
         project.replay(0, -1)?;
         Ok(project)
@@ -89,6 +92,7 @@ impl Project {
 
     pub fn to_writer(&self, w: &mut impl Write) -> Result<()> {
         serde_json::to_writer_pretty(w, self)?;
+        self.changed.set(false);
         Ok(())
     }
 
@@ -172,6 +176,7 @@ impl Project {
             });
             commit.edit.borrow().pack(&commit)?;
             self.edits.push(commit);
+            self.changed.set(true);
             Ok(len)
         } else if index < len {
             let last = self.get_commit(index - 1)?;
@@ -184,6 +189,7 @@ impl Project {
             commit.edit.replace(edit);
             commit.rom.replace(last.rom.borrow().clone());
             self.replay(index, -1)?;
+            self.changed.set(true);
             Ok(index)
         } else {
             Err(ErrorKind::CommitIndexError(index).into())

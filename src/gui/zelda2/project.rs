@@ -18,11 +18,13 @@ use crate::gui::zelda2::start::StartGui;
 use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
 use crate::gui::zelda2::Gui;
+use crate::gui::Visibility;
 use crate::util::UTime;
 use crate::zelda2::project::{Edit, EditAction, Project};
 
 pub struct ProjectGui {
-    pub visible: bool,
+    pub visible: Visibility,
+    pub changed: bool,
     pub filename: Option<String>,
     pub widgets: Vec<Box<dyn Gui>>,
     pub project: Py<Project>,
@@ -33,7 +35,8 @@ pub struct ProjectGui {
 impl ProjectGui {
     pub fn new(py: Python, p: Project) -> Result<Self> {
         Ok(ProjectGui {
-            visible: true,
+            visible: Visibility::Visible,
+            changed: false,
             filename: None,
             widgets: Vec::new(),
             project: Py::new(py, p)?,
@@ -52,7 +55,9 @@ impl ProjectGui {
         if let Some(path) = &self.filename {
             match self.project.borrow(py).to_file(&Path::new(&path)) {
                 Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
-                _ => {}
+                Ok(_) => {
+                    self.changed = false;
+                }
             }
         } else {
             self.save_dialog(py, false);
@@ -67,6 +72,7 @@ impl ProjectGui {
                     if !save_as {
                         self.filename = Some(path);
                     }
+                    self.changed = false;
                 }
             },
             _ => {}
@@ -91,6 +97,16 @@ impl ProjectGui {
                 }
                 if MenuItem::new(im_str!("Save As")).build(ui) {
                     self.save_dialog(py, true);
+                }
+                ui.separator();
+                if MenuItem::new(im_str!("Export ROM")).build(ui) {
+                    let project = self.project.borrow(py);
+                    let edit = project.get_commit(-1).expect("Export ROM");
+                    self.export_dialog(&edit);
+                }
+                ui.separator();
+                if MenuItem::new(im_str!("Close")).build(ui) {
+                    self.visible.change(false, self.changed);
                 }
             });
             ui.menu(im_str!("Edit"), true, || {
@@ -172,7 +188,7 @@ impl ProjectGui {
         false
     }
 
-    fn process_editactions(&self, py: Python) {
+    fn process_editactions(&mut self, py: Python) {
         let mut project = self.project.borrow_mut(py);
         let mut i = 0;
         let mut first_action = 0;
@@ -187,17 +203,20 @@ impl ProjectGui {
                     if first_action == 0 {
                         first_action = if i < pos { i } else { pos };
                     }
+                    self.changed = true;
                 }
                 EditAction::Delete(_) => {
                     project.edits.remove(i);
                     if first_action == 0 {
                         first_action = i;
                     }
+                    self.changed = true;
                 }
                 EditAction::Update => {
                     if first_action == 0 {
                         first_action = i;
                     }
+                    self.changed = true;
                 }
                 _ => {
                     info!("Edit action not handled: {:?}", action);
@@ -276,11 +295,12 @@ impl ProjectGui {
     }
 
     pub fn draw(&mut self, py: Python, ui: &imgui::Ui) {
-        let mut visible = self.visible;
+        let mut visible = self.visible.as_bool();
         let title = im_str!("Project: {}", self.project.borrow(py).name);
         let dock_id = imgui::Id::Str("project");
         let window = imgui::Window::new(&title)
             .opened(&mut visible)
+            .unsaved_document(self.changed)
             .size([1000.0, 900.0], imgui::Condition::FirstUseEver)
             .menu_bar(true)
             .begin(ui);
@@ -316,9 +336,19 @@ impl ProjectGui {
                 widget.draw(&mut project, ui);
             }
             widgetlist.pop(ui);
+            self.changed |= project.changed.get();
         }
-        self.visible = visible;
         self.dispose_widgets();
         self.process_editactions(py);
+        self.visible.change(visible, self.changed);
+        self.visible.draw(
+            im_str!("Project Changed"),
+            "There are unsaved changes in the Project.\nDo you want to discard them?",
+            ui,
+        );
+    }
+
+    pub fn wants_dispose(&self) -> bool {
+        self.visible == Visibility::Dispose
     }
 }

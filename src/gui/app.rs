@@ -160,6 +160,20 @@ impl App {
             gui.borrow_mut().draw(py, ui);
             id.pop(ui);
         }
+        self.process_dispose();
+    }
+
+    fn process_dispose(&self) {
+        let mut projects = self.project.borrow_mut();
+        let mut i = 0;
+        while i < projects.len() {
+            let dispose = projects[i].borrow().wants_dispose();
+            if dispose {
+                projects.remove(i);
+            } else {
+                i += 1;
+            }
+        }
     }
 
     pub fn run(slf: &Py<Self>, py: Python) {
