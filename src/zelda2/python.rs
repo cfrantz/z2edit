@@ -6,6 +6,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 use crate::errors::*;
+use crate::gui::app_context::AppContext;
 use crate::gui::zelda2::python::PythonScriptGui;
 use crate::gui::zelda2::Gui;
 use crate::zelda2::project::{Edit, EditProxy, Project, RomData};
@@ -51,6 +52,7 @@ impl RomData for PythonScript {
             Some(locals),
         )?;
         py.run(&self.code, None, Some(locals))?;
+        AppContext::app().borrow(py).process_python_output();
         Ok(())
     }
 

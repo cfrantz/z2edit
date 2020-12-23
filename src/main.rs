@@ -36,7 +36,6 @@ use crate::errors::*;
 use crate::gui::app::App;
 use crate::gui::app_context::{AppContext, CommandlineArgs};
 use crate::util::pyaddress::PyAddress;
-use crate::util::pyexec::PythonExecutor;
 use crate::zelda2::config::Config as Zelda2Config;
 use crate::zelda2::config::PyConfig;
 use crate::zelda2::project::Project;
@@ -73,7 +72,6 @@ fn run(py: Python) -> Result<()> {
     AppContext::init(args, "Z2Edit", config, data)?;
     AppContext::init_app(Py::new(py, App::new(py)?)?);
     let app = AppContext::app();
-    let mut executor = PythonExecutor::new(py)?;
 
     let module = PyModule::import(py, "z2edit")?;
     app.borrow(py).pythonize(py, module)?;
@@ -83,15 +81,11 @@ fn run(py: Python) -> Result<()> {
     let pycfg = Py::new(py, PyConfig {})?;
     module.setattr("config", pycfg)?;
 
-    //let sys = PyModule::import(py, "sys")?;
-    //let modules = sys.get("modules")?;
-    //modules.set_item("z2edit", module)?;
-
     if let Some(file) = &AppContext::get().args.file {
-        app.borrow_mut(py).load_project(py, file)?;
+        app.borrow(py).load_project(py, file)?;
     }
 
-    App::run(app, py, &mut executor);
+    App::run(app, py);
     Ok(())
 }
 

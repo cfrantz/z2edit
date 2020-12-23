@@ -123,6 +123,7 @@ impl RomData for ImportRom {
         let locals = PyDict::new(py);
         locals.set_item("edit", proxy)?;
         py.run(FIX_SCRIPT, None, Some(locals))?;
+        AppContext::app().borrow(py).process_python_output();
         Ok(())
     }
 

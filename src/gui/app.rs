@@ -14,7 +14,7 @@ use std::time::Instant;
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
-use crate::gui::console::Console;
+use crate::gui::console::{Console, Executor};
 use crate::gui::fa;
 use crate::gui::glhelper;
 use crate::gui::preferences::PreferencesGui;
@@ -29,9 +29,12 @@ pub struct App {
     running: Cell<bool>,
     #[pyo3(get, set)]
     pub preferences: Py<PreferencesGui>,
-    project: Vec<ProjectGui>,
-    wizard: ProjectWizardGui,
-    console: Rc<RefCell<Console>>,
+    // This monstrosity is to allow us to execute the ProjectGui without
+    // holding any references to the 'project' vector.
+    project: RefCell<Vec<Rc<RefCell<ProjectGui>>>>,
+    wizard: RefCell<ProjectWizardGui>,
+    console: RefCell<Console>,
+    executor: RefCell<PythonExecutor>,
 }
 
 impl App {
@@ -39,9 +42,10 @@ impl App {
         Ok(App {
             running: Cell::new(false),
             preferences: Py::new(py, PreferencesGui::default())?,
-            project: Vec::new(),
-            wizard: ProjectWizardGui::default(),
-            console: Rc::new(RefCell::new(Console::new("Debug Console"))),
+            project: RefCell::new(Vec::new()),
+            wizard: RefCell::default(),
+            console: RefCell::new(Console::new("Debug Console")),
+            executor: RefCell::new(PythonExecutor::new(py)?),
         })
     }
 
@@ -51,12 +55,13 @@ impl App {
         Ok(())
     }
 
-    pub fn load_project(&mut self, py: Python, filename: &str) -> Result<()> {
+    pub fn load_project(&self, py: Python, filename: &str) -> Result<()> {
         if filename.ends_with(".nes") {
-            self.project
-                .push(ProjectGui::new(py, Project::from_rom(filename)?)?);
+            let pg = ProjectGui::new(py, Project::from_rom(filename)?)?;
+            self.project.borrow_mut().push(Rc::new(RefCell::new(pg)));
         } else {
-            self.project.push(ProjectGui::from_file(py, &filename)?);
+            let pg = ProjectGui::from_file(py, &filename)?;
+            self.project.borrow_mut().push(Rc::new(RefCell::new(pg)));
         }
         Ok(())
     }
@@ -69,7 +74,7 @@ impl App {
         }
     }
 
-    fn load_dialog(&mut self, py: Python, ftype: &str) {
+    fn load_dialog(&self, py: Python, ftype: &str) {
         loop {
             let result = nfd::open_file_dialog(Some(ftype), None).unwrap();
             match result {
@@ -82,25 +87,39 @@ impl App {
         }
     }
 
-    fn new_project_from_wizard(&mut self, py: Python) -> Result<()> {
-        self.project.push(ProjectGui::new(
+    fn new_project_from_wizard(&self, py: Python) -> Result<()> {
+        let wizard = self.wizard.borrow();
+        let pg = ProjectGui::new(
             py,
             Project::new(
-                self.wizard.name.to_str(),
-                self.wizard.rom.clone(),
-                self.wizard.config(),
-                self.wizard.fix,
+                wizard.name.to_str(),
+                wizard.rom.clone(),
+                wizard.config(),
+                wizard.fix,
             )?,
-        )?);
+        )?;
+        self.project.borrow_mut().push(Rc::new(RefCell::new(pg)));
         Ok(())
     }
 
-    fn draw(&mut self, py: Python, ui: &imgui::Ui) {
+    fn draw_console(&self, ui: &imgui::Ui) {
+        let mut console = self.console.borrow_mut();
+        let mut executor = self.executor.borrow_mut();
+        console.draw(&mut *executor, ui);
+    }
+
+    pub fn process_python_output(&self) {
+        let console = self.console.borrow();
+        let executor = self.executor.borrow();
+        executor.process_output(&console);
+    }
+
+    fn draw(&self, py: Python, ui: &imgui::Ui) {
         ui.main_menu_bar(|| {
             ui.menu(im_str!("File"), true, || {
                 if MenuItem::new(im_str!("New Project")).build(ui) {
-                    self.wizard = ProjectWizardGui::new();
-                    self.wizard.show();
+                    self.wizard.replace(ProjectWizardGui::new());
+                    self.wizard.borrow_mut().show();
                 }
                 ui.separator();
                 if MenuItem::new(im_str!("Open Project")).build(ui) {
@@ -108,8 +127,9 @@ impl App {
                 }
                 if MenuItem::new(im_str!("Open ROM")).build(ui) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
-                        self.wizard = ProjectWizardGui::from_filename(&filename);
-                        self.wizard.show();
+                        self.wizard
+                            .replace(ProjectWizardGui::from_filename(&filename));
+                        self.wizard.borrow_mut().show();
                     }
                 }
                 ui.separator();
@@ -125,7 +145,7 @@ impl App {
                 }
             });
         });
-        if self.wizard.draw(ui) {
+        if self.wizard.borrow_mut().draw(ui) {
             match self.new_project_from_wizard(py) {
                 Err(e) => error!("Could not create project: {:?}", e),
                 Ok(_) => {}
@@ -133,14 +153,16 @@ impl App {
         }
         self.preferences.borrow_mut(py).draw(ui);
 
-        for (i, project) in self.project.iter_mut().enumerate() {
+        let len = self.project.borrow().len();
+        for i in 0..len {
+            let gui = Rc::clone(&self.project.borrow()[i]);
             let id = ui.push_id(i as i32);
-            project.draw(py, ui);
+            gui.borrow_mut().draw(py, ui);
             id.pop(ui);
         }
     }
 
-    pub fn run(slf: &Py<Self>, py: Python, executor: &mut PythonExecutor) {
+    pub fn run(slf: &Py<Self>, py: Python) {
         let context = AppContext::get();
         let mut last_frame = Instant::now();
         let mut imgui = imgui::Context::create();
@@ -197,9 +219,8 @@ impl App {
             last_frame = now;
 
             let ui = imgui.frame();
-            slf.borrow_mut(py).draw(py, &ui);
-            let console = Rc::clone(&slf.borrow(py).console);
-            console.borrow_mut().draw(executor, &ui);
+            slf.borrow(py).draw(py, &ui);
+            slf.borrow(py).draw_console(&ui);
             glhelper::clear_screen(&AppContext::pref().background);
 
             imgui_sdl2.prepare_render(&ui, &context.window);
@@ -221,8 +242,8 @@ impl App {
         self.running.set(value);
     }
 
-    fn load(&mut self, py: Python, filename: &str) -> PyResult<usize> {
-        let i = self.project.len();
+    fn load(&self, py: Python, filename: &str) -> PyResult<usize> {
+        let i = self.project.borrow().len();
         self.load_project(py, filename)?;
         Ok(i)
     }
@@ -231,19 +252,21 @@ impl App {
 #[pyproto]
 impl PySequenceProtocol for App {
     fn __len__(&self) -> usize {
-        self.project.len()
+        self.project.borrow().len()
     }
 
     fn __getitem__(&self, index: isize) -> PyResult<Py<Project>> {
-        let len = self.project.len() as isize;
+        let len = self.project.borrow().len() as isize;
         let i = if index < 0 { len + index } else { index };
 
         let gil = Python::acquire_gil();
         let py = gil.python();
         Ok(self
             .project
+            .borrow()
             .get(i as usize)
             .ok_or_else(|| PyIndexError::new_err("list index out of range"))?
+            .borrow()
             .project
             .clone_ref(py))
     }
