@@ -1,5 +1,3 @@
-use crate::errors::*;
-use crate::zelda2::sideview;
 use ron;
 use serde::{Deserialize, Serialize};
 
