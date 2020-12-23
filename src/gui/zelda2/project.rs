@@ -7,6 +7,7 @@ use nfd;
 use pyo3::prelude::*;
 
 use crate::errors::*;
+use crate::gui::app_context::AppContext;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::hacks::HacksGui;
@@ -25,6 +26,7 @@ use crate::zelda2::project::{Edit, EditAction, Project};
 pub struct ProjectGui {
     pub visible: Visibility,
     pub changed: bool,
+    pub want_autosave: bool,
     pub filename: Option<String>,
     pub widgets: Vec<Box<dyn Gui>>,
     pub project: Py<Project>,
@@ -37,6 +39,7 @@ impl ProjectGui {
         Ok(ProjectGui {
             visible: Visibility::Visible,
             changed: false,
+            want_autosave: false,
             filename: None,
             widgets: Vec::new(),
             project: Py::new(py, p)?,
@@ -57,6 +60,8 @@ impl ProjectGui {
                 Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
                 Ok(_) => {
                     self.changed = false;
+                    self.want_autosave = false;
+                    self.remove_autosave(py);
                 }
             }
         } else {
@@ -73,19 +78,46 @@ impl ProjectGui {
                         self.filename = Some(path);
                     }
                     self.changed = false;
+                    self.want_autosave = false;
+                    self.remove_autosave(py);
                 }
             },
             _ => {}
         }
     }
 
-    fn export_dialog(&self, edit: &Edit) {
+    fn autosave(&mut self, py: Python, export: Option<&str>) {
+        let project = self.project.borrow(py);
+        let filename = if let Some(ex) = export {
+            format!("{}-export.z2prj", ex)
+        } else {
+            format!("{}-autosave.z2prj", project.name)
+        };
+        let path = AppContext::data_file(&filename);
+        match project.to_file(&path) {
+            Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
+            Ok(_) => {}
+        }
+        self.want_autosave = false;
+    }
+
+    fn remove_autosave(&self, py: Python) {
+        let project = self.project.borrow(py);
+        let filename = format!("{}-autosave.z2prj", project.name);
+        let path = AppContext::data_file(&filename);
+        let _ = std::fs::remove_file(&path);
+    }
+
+    fn export_dialog(&self, edit: &Edit) -> Option<String> {
         match nfd::open_save_dialog(Some("nes"), None).unwrap() {
             nfd::Response::Okay(path) => match edit.export(&Path::new(&path)) {
-                Err(e) => error!("Could not export ROM as {:?}: {:?}", path, e),
-                Ok(_) => {}
+                Err(e) => {
+                    error!("Could not export ROM as {:?}: {:?}", path, e);
+                    None
+                }
+                Ok(sha256) => Some(sha256),
             },
-            _ => {}
+            _ => None,
         }
     }
 
@@ -100,9 +132,13 @@ impl ProjectGui {
                 }
                 ui.separator();
                 if MenuItem::new(im_str!("Export ROM")).build(ui) {
-                    let project = self.project.borrow(py);
-                    let edit = project.get_commit(-1).expect("Export ROM");
-                    self.export_dialog(&edit);
+                    let edit = {
+                        let project = self.project.borrow(py);
+                        project.get_commit(-1).expect("Export ROM")
+                    };
+                    if let Some(sha256) = self.export_dialog(&edit) {
+                        self.autosave(py, Some(&sha256));
+                    }
                 }
                 ui.separator();
                 if MenuItem::new(im_str!("Close")).build(ui) {
@@ -204,6 +240,7 @@ impl ProjectGui {
                         first_action = if i < pos { i } else { pos };
                     }
                     self.changed = true;
+                    self.want_autosave = true;
                 }
                 EditAction::Delete(_) => {
                     project.edits.remove(i);
@@ -211,12 +248,14 @@ impl ProjectGui {
                         first_action = i;
                     }
                     self.changed = true;
+                    self.want_autosave = true;
                 }
                 EditAction::Update => {
                     if first_action == 0 {
                         first_action = i;
                     }
                     self.changed = true;
+                    self.want_autosave = true;
                 }
                 _ => {
                     info!("Edit action not handled: {:?}", action);
@@ -330,6 +369,7 @@ impl ProjectGui {
             token.end(ui);
 
             let mut project = self.project.borrow_mut(py);
+            let prjchanged = project.changed.get();
             let widgetlist = ui.push_id("widgetlist");
             for widget in self.widgets.iter_mut() {
                 ui.set_next_window_dock_id(self.editor_pane, imgui::Condition::Once);
@@ -337,15 +377,23 @@ impl ProjectGui {
             }
             widgetlist.pop(ui);
             self.changed |= project.changed.get();
+            self.want_autosave |= (prjchanged == false) && project.changed.get();
+        }
+        if self.want_autosave {
+            self.autosave(py, None);
         }
         self.dispose_widgets();
         self.process_editactions(py);
         self.visible.change(visible, self.changed);
-        self.visible.draw(
-            im_str!("Project Changed"),
-            "There are unsaved changes in the Project.\nDo you want to discard them?",
-            ui,
-        );
+        if Some(true)
+            == self.visible.draw(
+                im_str!("Project Changed"),
+                "There are unsaved changes in the Project.\nDo you want to discard them?",
+                ui,
+            )
+        {
+            self.remove_autosave(py);
+        }
     }
 
     pub fn wants_dispose(&self) -> bool {

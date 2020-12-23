@@ -330,9 +330,10 @@ impl Edit {
         }
     }
 
-    pub fn export(&self, filename: &Path) -> Result<()> {
+    pub fn export(&self, filename: &Path) -> Result<String> {
         let rom = self.rom.borrow();
-        rom.save(filename)
+        rom.save(filename)?;
+        Ok(rom.sha256())
     }
 
     pub fn emulate(&self, at: Option<EmulateAt>) -> Result<()> {

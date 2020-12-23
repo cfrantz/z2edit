@@ -61,9 +61,14 @@ git submodule update --init --recursive
     - Overworld editor
     - Palette Editor
     - Python script execution
-    - Sideview editor (still needs townspeople "enemy" properties).
+    - Sideview editor (still needs townspeople "enemy" properties)
     - Start Values
     - Text Table
+    - Apply default fixes (move maps and code out of keepout regions)
+    - Zelda 2 config updates & alternate configs
+    - Remember the location of the vanilla rom
+    - Periodic automatic save
+    - Remember project association with exported ROMs
 
 - Not Started
     - Drops (drop probabilities, hidden drops, pbag values)
@@ -77,11 +82,7 @@ git submodule update --init --recursive
     - Help documentation
 
 - Other Features
-    - Apply default fixes (move maps and code out of keepout regions)
-    - Zelda 2 config updates & alternate configs
-    - Remember the location of the vanilla rom
-    - Periodic automatic save
-    - Remember project association with exported ROMs
+    - Automate recovery from autosave and export-save files.
     - IPS Patch creator
 
 - Cleanups
