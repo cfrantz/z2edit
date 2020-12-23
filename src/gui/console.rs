@@ -28,6 +28,7 @@ pub struct Console {
 
 pub trait Executor {
     fn exec(&mut self, line: &str, console: &Console);
+    fn process_output(&self, console: &Console);
     fn prompt(&self) -> &str;
 }
 
@@ -37,6 +38,7 @@ impl Executor for NullExecutor {
     fn exec(&mut self, line: &str, console: &Console) {
         console.add_text(line);
     }
+    fn process_output(&self, _console: &Console) {}
     fn prompt(&self) -> &str {
         ">>>"
     }
@@ -143,12 +145,12 @@ impl Console {
             }
             Err(_) => {}
         };
+        exec.process_output(self);
         if !self.visible {
             return;
         }
         let mut visible = self.visible;
-        let name = ImString::new(&self.name);
-        imgui::Window::new(&name)
+        imgui::Window::new(&im_str!("{}", &self.name))
             .opened(&mut visible)
             .scroll_bar(false)
             .build(ui, || {

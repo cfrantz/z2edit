@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::convert::From;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -38,12 +39,16 @@ pub struct Project {
 
 impl Project {
     pub fn new(name: &str, file: FileResource, config: &str, fix: bool) -> Result<Self> {
+        let mut extra = HashMap::new();
+        extra.insert("project".to_owned(), name.to_owned());
+        extra.insert("fix".to_owned(), fix.to_string());
         let meta = Metadata {
             label: "ImportRom".to_owned(),
             user: whoami::username(),
             timestamp: UTime::now(),
             comment: String::default(),
             config: config.to_owned(),
+            extra: extra,
         };
         let config = Config::get(&meta.config)?;
         let commit = Edit {
@@ -154,7 +159,8 @@ impl Project {
                 user: whoami::username(),
                 timestamp: UTime::now(),
                 comment: String::default(),
-                config: last.meta.borrow().config.clone(),
+                config: last.next_config(),
+                extra: HashMap::new(),
             };
 
             let commit = Rc::new(Edit {
@@ -212,6 +218,8 @@ pub struct Metadata {
     pub timestamp: u64,
     pub comment: String,
     pub config: String,
+    #[serde(default)]
+    pub extra: HashMap<String, String>,
 }
 
 // TODO(cfrantz): should probably move this to gui
@@ -307,6 +315,15 @@ impl EmulateAt {
 }
 
 impl Edit {
+    pub fn next_config(&self) -> String {
+        let meta = self.meta.borrow();
+        if let Some(config) = meta.extra.get("next_config") {
+            config.to_owned()
+        } else {
+            meta.config.to_owned()
+        }
+    }
+
     pub fn export(&self, filename: &Path) -> Result<()> {
         let rom = self.rom.borrow();
         rom.save(filename)
@@ -392,7 +409,8 @@ impl EditProxy {
             user: whoami::username(),
             timestamp: UTime::now(),
             comment: String::default(),
-            config: self.edit.meta.borrow().config.clone(),
+            config: self.edit.next_config(),
+            extra: HashMap::new(),
         };
         let commit = Rc::new(Edit {
             meta: RefCell::new(meta),

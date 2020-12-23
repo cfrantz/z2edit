@@ -3,6 +3,8 @@ use std::convert::From;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
@@ -10,7 +12,7 @@ use crate::gui::app_context::AppContext;
 use crate::nes::Buffer;
 use crate::nes::IdPath;
 use crate::zelda2::config::Config;
-use crate::zelda2::project::{Edit, RomData};
+use crate::zelda2::project::{Edit, EditProxy, RomData};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum FileResource {
@@ -86,6 +88,14 @@ impl ImportRom {
     }
 }
 
+const FIX_SCRIPT: &str = r#"from z2edit import fix
+try:
+    fix.fix_all(edit)
+except Exception as e:
+    print("ImportRom: ", e)
+    raise e
+"#;
+
 #[typetag::serde]
 impl RomData for ImportRom {
     fn name(&self) -> String {
@@ -105,6 +115,14 @@ impl RomData for ImportRom {
         info!("ImportRom: loading file {:?}", path);
         let rom = Buffer::from_file(&path, Some(config.layout.clone()))?;
         edit.rom.replace(rom);
+
+        info!("ImportRom: applying default fixes");
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let proxy = Py::new(py, EditProxy::new(Rc::clone(edit)))?;
+        let locals = PyDict::new(py);
+        locals.set_item("edit", proxy)?;
+        py.run(FIX_SCRIPT, None, Some(locals))?;
         Ok(())
     }
 

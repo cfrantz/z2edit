@@ -1,31 +1,10 @@
 import json
 import z2edit
 from z2edit import PyAddress
-
-class ObjectDict(dict):
-    def __getattr__(self, name):
-        if name in self:
-            return self[name]
-        else:
-            raise AttributeError('No such attribute: ' + name)
-
-    def __setattr__(self, name, value):
-        self[name] = value
-
-    def __delattr__(self, name):
-        if name in self:
-            del self[name]
-        else:
-            raise AttributeError('No such attribute: ' + name)
-
-    @staticmethod
-    def from_json(text):
-        return json.loads(text, object_hook=ObjectDict)
-
-    def to_json(self):
-        return json.dumps(self, indent=4)
+from z2edit.util import ObjectDict
 
 class KeepoutFixup(object):
+    """Find maps and code in the keepout regions and move them out."""
     
     def __init__(self, edit, config):
         self.edit = edit
@@ -99,8 +78,19 @@ class KeepoutFixup(object):
             self.check_group(group)
         self.report()
 
-def keepout(edit):
-    config = ObjectDict.from_json(z2edit.config[edit.meta['config']])
-    fix = KeepoutFixup(edit, config)
-    fix.check()
+def fix_all(edit):
+    meta = edit.meta
+    extra = meta['extra']
+    if extra.get('fix') != "true":
+        return
 
+    config = ObjectDict.from_json(z2edit.config[meta['config']])
+    KeepoutFixup(edit, config).check()
+
+    for el in config.sideview.enemy_list:
+        el.length = 1024 if el.bank !=5 else 432
+
+    name = 'config-{}'.format(extra.get('project'))
+    z2edit.config[name] = config.to_json()
+    extra['next_config'] = name
+    edit.meta = meta

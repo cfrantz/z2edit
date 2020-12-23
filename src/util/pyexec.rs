@@ -37,30 +37,35 @@ impl Executor for PythonExecutor {
             match result {
                 Ok(more) => {
                     self.more = more.extract(py).unwrap();
-
-                    let s = self
-                        .interp
-                        .call_method0(py, "GetOut")
-                        .unwrap()
-                        .extract::<String>(py)
-                        .unwrap();
-                    if !s.is_empty() {
-                        console.add_item(0x33ff33, &s);
-                    }
-
-                    let s = self
-                        .interp
-                        .call_method0(py, "GetErr")
-                        .unwrap()
-                        .extract::<String>(py)
-                        .unwrap();
-                    if !s.is_empty() {
-                        console.add_item(0x3333ff, &s);
-                    }
                 }
                 Err(e) => {
                     error!("PythonConsole error {:?}", e);
                 }
+            }
+        });
+        self.process_output(console);
+    }
+
+    fn process_output(&self, console: &Console) {
+        Python::with_gil(|py| {
+            let s = self
+                .interp
+                .call_method0(py, "GetOut")
+                .unwrap()
+                .extract::<String>(py)
+                .unwrap();
+            if !s.is_empty() {
+                console.add_item(0x33ff33, &s);
+            }
+
+            let s = self
+                .interp
+                .call_method0(py, "GetErr")
+                .unwrap()
+                .extract::<String>(py)
+                .unwrap();
+            if !s.is_empty() {
+                console.add_item(0x3333ff, &s);
             }
         });
     }

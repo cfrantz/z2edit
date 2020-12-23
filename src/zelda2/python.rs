@@ -45,7 +45,7 @@ impl RomData for PythonScript {
         let locals = PyDict::new(py);
         locals.set_item("edit", proxy)?;
         py.run(
-            "from assembler import Asm\n\
+            "from z2edit.assembler import Asm\n\
                 asm = Asm(edit)\n",
             None,
             Some(locals),
