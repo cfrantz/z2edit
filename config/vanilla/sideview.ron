@@ -963,31 +963,31 @@
         // vanilla game uses some of the space to store other data.
         (
             bank: 1,
-            ids: ["west_background", "west_hyrule", "death_mountain"],
+            ids: ["west_hyrule", "death_mountain"],
             address: Prg(1, 0x88a0),
             length: 924,
         ),
         (
             bank: 2,
-            ids: ["east_background", "east_hyrule", "maze_island"],
+            ids: ["east_hyrule", "maze_island"],
             address: Prg(2, 0x88a0),
             length: 962,
         ),
         (
             bank: 3,
-            ids: ["town_background", "town"],
+            ids: ["town"],
             address: Prg(3, 0x88a0),
             length: 288,
         ),
         (
             bank: 4,
-            ids: ["palace_background", "palace_125", "palace_346"],
+            ids: ["palace_125", "palace_346"],
             address: Prg(4, 0x88a0),
             length: 979,
         ),
         (
             bank: 5,
-            ids: ["great_palace_background", "great_palace"],
+            ids: ["great_palace"],
             address: Prg(5, 0x88a0),
             length: 312,
         ),

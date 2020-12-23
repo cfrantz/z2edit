@@ -7,6 +7,7 @@ use std::rc::Rc;
 
 use crate::errors::*;
 //use crate::gui::zelda2::palette::PaletteGui;
+use crate::gui::zelda2::sideview::SideviewGui;
 use crate::gui::zelda2::Gui;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
@@ -281,13 +282,17 @@ impl Map {
         let commands = self.to_relative();
         for c in commands.iter() {
             let xy = (c.x as u8 & 0xF) | (c.y as u8 & 0xF) << 4;
-            let kind = c.kind as u8
-                | if c.kind >= 0x10 {
-                    c.param as u8 & 0xF
-                } else {
-                    0
-                };
-
+            let kind = match c.y {
+                13 => c.param as u8,
+                14 => 0,
+                _ => {
+                    if c.kind < 0x10 {
+                        c.kind as u8
+                    } else {
+                        c.kind as u8 | c.param as u8 & 0x0F
+                    }
+                }
+            };
             result.push(xy);
             result.push(kind);
             if c.kind == 0x0F {
@@ -346,14 +351,18 @@ impl EnemyList {
             total += length;
             data.push(EnemyList::list_from_bytes(rom.read_bytes(addr, length)?));
         }
-        debug!("EnemyList: {} read from {:x?} ({} bytes)", id, addr, total);
 
-        Ok(EnemyList {
+        debug!(
+            "EnemyList: {} read from {:x?} ({} bytes, list={:x?})",
+            id, addr, total
+        );
+        let list = EnemyList {
             data: data,
             is_encounter: is_encounter,
             valid: true,
             ram_address: ram_address.raw() as u16,
-        })
+        };
+        Ok(list)
     }
 
     pub fn write(&self, edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<()> {
@@ -417,7 +426,7 @@ impl EnemyList {
                     i,
                     ram_addr,
                     rom_addr,
-                    list.len()
+                    list.len(),
                 );
                 length += list.len() as u16;
 
@@ -494,7 +503,8 @@ impl EnemyList {
         for data in self.data.iter() {
             ret.push(data.len() as u8 * 2 + 1);
             for enemy in data.iter() {
-                ret.push((enemy.y << 4) as u8 | (enemy.x as u8 & 0x0F));
+                let y = if enemy.y < 2 { 0 } else { enemy.y - 2 };
+                ret.push((y << 4) as u8 | (enemy.x as u8 & 0x0F));
                 ret.push((enemy.x as u8 & 0x30) << 2 | (enemy.kind as u8));
             }
         }
@@ -588,8 +598,8 @@ impl RomData for Sideview {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn gui(&self, _project: &Project, _commit_index: isize) -> Result<Box<dyn Gui>> {
-        Err(ErrorKind::NotImplemented(self.name()).into())
+    fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
+        SideviewGui::new(project, commit_index)
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
