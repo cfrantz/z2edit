@@ -189,6 +189,7 @@ impl Gui for ExperienceTableGui {
         }
         imgui::Window::new(&im_str!("ExperienceTable Editor##{}", self.win_id))
             .opened(&mut visible)
+            .unsaved_document(self.changed)
             .build(ui, || {
                 let names = self
                     .names

@@ -1257,6 +1257,7 @@ impl Gui for SideviewGui {
         let config = Config::get(&self.edit.meta.borrow().config).unwrap();
         imgui::Window::new(&im_str!("Sideview##{}", self.win_id))
             .opened(&mut visible)
+            .unsaved_document(self.changed)
             .build(ui, || {
                 let width = ui.push_item_width(400.0);
                 if self.commit_index == -1 {

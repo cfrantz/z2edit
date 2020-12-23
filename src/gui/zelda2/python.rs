@@ -61,6 +61,7 @@ impl Gui for PythonScriptGui {
         }
         imgui::Window::new(&im_str!("Python Script##{}", self.win_id))
             .opened(&mut visible)
+            .unsaved_document(self.changed)
             .build(ui, || {
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {

@@ -627,6 +627,7 @@ impl Gui for OverworldGui {
         let config = Config::get(&self.edit.meta.borrow().config).unwrap();
         imgui::Window::new(&im_str!("Overworld##{}", self.win_id))
             .opened(&mut visible)
+            .unsaved_document(self.changed)
             .build(ui, || {
                 let names = self
                     .names

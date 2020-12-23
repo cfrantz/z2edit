@@ -135,6 +135,7 @@ impl Gui for PaletteGui {
         }
         imgui::Window::new(&im_str!("Palette Editor##{}", self.win_id))
             .opened(&mut visible)
+            .unsaved_document(self.changed)
             .build(ui, || {
                 let names = self
                     .names

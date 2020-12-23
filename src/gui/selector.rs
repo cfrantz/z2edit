@@ -37,14 +37,14 @@ impl Selector {
                 ui.popup_modal(id).build(|| {
                     ui.text(text);
                     ui.text("\n");
-                    if ui.button(im_str!("Yes"), [0.0, 0.0]) {
+                    if ui.button(im_str!(" Yes "), [0.0, 0.0]) {
                         self.selected = self.next;
                         use_next = true;
                         self.open = false;
                         ui.close_current_popup();
                     }
                     ui.same_line(0.0);
-                    if ui.button(im_str!("No"), [0.0, 0.0]) {
+                    if ui.button(im_str!("  No  "), [0.0, 0.0]) {
                         self.next = self.selected;
                         self.open = false;
                         ui.close_current_popup();
