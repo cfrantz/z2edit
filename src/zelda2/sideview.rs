@@ -352,10 +352,7 @@ impl EnemyList {
             data.push(EnemyList::list_from_bytes(rom.read_bytes(addr, length)?));
         }
 
-        debug!(
-            "EnemyList: {} read from {:x?} ({} bytes, list={:x?})",
-            id, addr, total
-        );
+        debug!("EnemyList: {} read from {:x?} ({} bytes)", id, addr, total);
         let list = EnemyList {
             data: data,
             is_encounter: is_encounter,
