@@ -63,7 +63,6 @@ impl Project {
             connectivity: RefCell::default(),
             action: RefCell::default(),
         });
-        commit.connectivity.borrow_mut().scan(&commit)?;
         let project = Project {
             name: name.to_owned(),
             edits: vec![commit],
