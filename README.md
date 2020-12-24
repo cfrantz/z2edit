@@ -60,6 +60,7 @@ git submodule update --init --recursive
     - Misc Hacks (still need to add several common misc hacks)
     - Overworld editor
     - Palette Editor
+    - Palace graphics banks and palettes (added to overworld connections)
     - Python script execution
     - Sideview editor (still needs townspeople "enemy" properties)
     - Start Values
@@ -73,7 +74,6 @@ git submodule update --init --recursive
 - Not Started
     - Drops (drop probabilities, hidden drops, pbag values)
     - Item Effects
-    - Palace graphics banks and palettes
     - Tile transforms
     - Object table
     - Enemy XP values and graphics

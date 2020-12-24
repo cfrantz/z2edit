@@ -15,6 +15,13 @@ use crate::zelda2::project::{Edit, Project, RomData};
 pub mod config {
     use super::*;
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct PalaceDetail {
+        pub to_stone_table: (Address, usize),
+        pub chr_table: Address,
+        pub palette_table: Address,
+        pub length: usize,
+    }
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct Overworld {
         pub id: String,
         pub name: String,
@@ -30,9 +37,9 @@ pub mod config {
         pub chr: Address,
         pub width: usize,
         pub height: usize,
-        pub palace_to_stone_table: (Address, usize),
         pub raft_connector: usize,
         pub raft_table: Address,
+        pub palace: PalaceDetail,
     }
 
     #[derive(Eq, PartialEq, Debug, Clone, Copy, Serialize, Deserialize)]
@@ -321,6 +328,13 @@ pub struct Hidden {
 }
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
+pub struct PalaceDetail {
+    pub index: usize,
+    pub chr_bank: i32,
+    pub palette: i32,
+}
+
+#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Connector {
     pub id: IdPath,
 
@@ -338,7 +352,7 @@ pub struct Connector {
     pub passthru: bool,
     pub fall: bool,
     pub hidden: Option<Hidden>,
-    pub palace: Option<usize>,
+    pub palace: Option<PalaceDetail>,
 }
 
 impl Connector {
@@ -375,7 +389,19 @@ impl Connector {
         self.passthru = (w & 0x40) != 0;
         self.fall = (w & 0x80) != 0;
 
-        self.palace = config.overworld.palace_code(index);
+        self.palace = if let Some(p) = config.overworld.palace_code(index) {
+            if p < ocfg.palace.length {
+                Some(PalaceDetail {
+                    index: p,
+                    chr_bank: rom.read(ocfg.palace.chr_table + p)? as i32 * 2,
+                    palette: rom.read(ocfg.palace.palette_table + p)? as i32 / 16,
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
         self.hidden = if let Some(spot) = self.hidden_index(edit, &config.overworld)? {
             self.set_y(rom.read(spot.connector + 2)?, &config.overworld);
             Some(Hidden {
@@ -436,6 +462,11 @@ impl Connector {
         rom.write(ocfg.connector + index + 0x7e, z)?;
         rom.write(ocfg.connector + index + 0xbd, w)?;
 
+        if let Some(palace) = &self.palace {
+            let p = palace.index;
+            rom.write(ocfg.palace.chr_table + p, palace.chr_bank as u8 / 2)?;
+            rom.write(ocfg.palace.palette_table + p, palace.palette as u8 * 16)?;
+        }
         if let Some(hidden) = &self.hidden {
             let spot = config.overworld.find_hidden(&hidden.id)?;
             if spot.kind == HiddenKind::Palace {
@@ -652,7 +683,7 @@ impl RomData for Overworld {
             rom.write_bytes(addr, &map.data)?;
             rom.write_pointer(ocfg.pointer, addr)?;
 
-            let (addr, length) = ocfg.palace_to_stone_table;
+            let (addr, length) = ocfg.palace.to_stone_table;
             for i in 0..length {
                 if map.palace_offset[i] != 0xFFFF {
                     rom.write_word(

@@ -563,6 +563,17 @@ impl OverworldGui {
         ui.same_line(0.0);
         changed |= ui.checkbox(im_str!("Fall    "), &mut conn.fall);
 
+        if let Some(palace) = conn.palace.as_mut() {
+            ui.separator();
+            ui.text("Palace Graphics & Palette:");
+            changed |= ui
+                .input_int(im_str!("CHR Bank"), &mut palace.chr_bank)
+                .build();
+            changed |= ui
+                .input_int(im_str!("Palette"), &mut palace.palette)
+                .build();
+        }
+
         width.pop(ui);
         changed
     }

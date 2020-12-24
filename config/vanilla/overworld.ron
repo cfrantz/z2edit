@@ -17,9 +17,14 @@
             chr: Chr(0x11, 0),
             width: 64,
             height: 75,
-            palace_to_stone_table: (Prg(1, 0x878f), 4),
             raft_connector: 41,
             raft_table: Prg(0, 8528),
+            palace: (
+                to_stone_table: (Prg(1, 0x878f), 4),
+                chr_table: Prg(-1, 0xcd2a),
+                palette_table: Prg(-1, 0xcd35),
+                length: 4,
+            )
         ),
         (
             id: "death_mountain",
@@ -36,9 +41,14 @@
             chr: Chr(0x11, 0),
             width: 64,
             height: 75,
-            palace_to_stone_table: (Prg(1, 0x8795), 1),
             raft_connector: 255,
             raft_table: Prg(0, 0),
+            palace: (
+                to_stone_table: (Prg(1, 0x8795), 1),
+                chr_table: Prg(-1, 0xcd2e),
+                palette_table: Prg(-1, 0xcd39),
+                length: 4,
+            )
         ),
         (
             id: "east_hyrule",
@@ -55,9 +65,14 @@
             chr: Chr(0x11, 0),
             width: 64,
             height: 75,
-            palace_to_stone_table: (Prg(2, 0x878f), 4),
             raft_connector: 41,
             raft_table: Prg(0, 8529),
+            palace: (
+                to_stone_table: (Prg(2, 0x878f), 4),
+                chr_table: Prg(-1, 0xcd33),
+                palette_table: Prg(-1, 0xcd3d),
+                length: 3,
+            )
         ),
         (
             id: "maze_island",
@@ -74,9 +89,14 @@
             chr: Chr(0x11, 0),
             width: 64,
             height: 75,
-            palace_to_stone_table: (Prg(2, 0x8795), 1),
             raft_connector: 255,
             raft_table: Prg(0, 0),
+            palace: (
+                to_stone_table: (Prg(2, 0x8795), 1),
+                chr_table: Prg(-1, 0xcd2e),
+                palette_table: Prg(-1, 0xcd39),
+                length: 4,
+            )
         ),
     ],
     hidden: [
