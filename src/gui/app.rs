@@ -181,6 +181,7 @@ impl App {
         let mut last_frame = Instant::now();
         let mut imgui = imgui::Context::create();
 
+        imgui.set_ini_filename(None);
         imgui.io_mut().config_flags |= imgui::ConfigFlags::DOCKING_ENABLE;
 
         let font_size = 13.0;
