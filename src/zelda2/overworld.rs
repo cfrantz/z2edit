@@ -356,7 +356,7 @@ pub struct Connector {
 }
 
 impl Connector {
-    fn from_rom(edit: &Rc<Edit>, id: IdPath) -> Result<Self> {
+    pub fn from_rom(edit: &Rc<Edit>, id: IdPath) -> Result<Self> {
         let mut connector = Connector::default();
         connector.id = id;
         connector.unpack(edit)?;

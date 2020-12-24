@@ -69,7 +69,7 @@
             raft_table: Prg(0, 8529),
             palace: (
                 to_stone_table: (Prg(2, 0x878f), 4),
-                chr_table: Prg(-1, 0xcd33),
+                chr_table: Prg(-1, 0xcd32),
                 palette_table: Prg(-1, 0xcd3d),
                 length: 3,
             )

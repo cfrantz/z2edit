@@ -29,6 +29,8 @@ pub struct TileCache {
     edit: Rc<Edit>,
     cache: RefCell<HashMap<u8, Image>>,
     error: RefCell<Image>,
+    chr_override: Option<Address>,
+    pal_override: Option<Address>,
 }
 
 impl TileCache {
@@ -44,12 +46,26 @@ impl TileCache {
             edit: Rc::clone(edit),
             cache: RefCell::new(HashMap::<u8, Image>::new()),
             error: RefCell::new(error_image),
+            chr_override: None,
+            pal_override: None,
         }
     }
 
     pub fn reset(&mut self, schema: Schema) {
         self.schema = schema;
         self.cache.borrow_mut().clear();
+        self.chr_override = None;
+        self.pal_override = None;
+    }
+
+    pub fn set_chr_override(&mut self, addr: Option<Address>) {
+        self.cache.borrow_mut().clear();
+        self.chr_override = addr;
+    }
+
+    pub fn set_pal_override(&mut self, addr: Option<Address>) {
+        self.cache.borrow_mut().clear();
+        self.pal_override = addr;
     }
 
     fn blit(
@@ -98,11 +114,13 @@ impl TileCache {
         let table = rom.read_bytes(table, 4)?;
         let palidx = rom.read(ov.tile_palette + tile)?;
 
+        let chr = self.chr_override.unwrap_or(ov.chr);
+        let palette = self.pal_override.unwrap_or(ov.palette);
         let mut image = Image::new(16, 16);
         self.blit(
             &mut image,
-            ov.chr.set_val(table[0] as usize * 16),
-            ov.palette + palidx * 4,
+            chr.set_val(table[0] as usize * 16),
+            palette + palidx * 4,
             0,
             0,
             false,
@@ -110,8 +128,8 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            ov.chr.set_val(table[1] as usize * 16),
-            ov.palette + palidx * 4,
+            chr.set_val(table[1] as usize * 16),
+            palette + palidx * 4,
             0,
             8,
             false,
@@ -119,8 +137,8 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            ov.chr.set_val(table[2] as usize * 16),
-            ov.palette + palidx * 4,
+            chr.set_val(table[2] as usize * 16),
+            palette + palidx * 4,
             8,
             0,
             false,
@@ -128,8 +146,8 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            ov.chr.set_val(table[3] as usize * 16),
-            ov.palette + palidx * 4,
+            chr.set_val(table[3] as usize * 16),
+            palette + palidx * 4,
             8,
             8,
             false,
@@ -156,13 +174,15 @@ impl TileCache {
         let rom = self.edit.rom.borrow();
         let table = rom.read_pointer(sv.metatile_table + group * 2)?;
         let tiles = rom.read_bytes(table + tile * 4, 4)?;
-        let palidx = palidx as usize * 16 + group as usize * 4;
+        let palidx = palidx as usize * 16;
 
+        let chr = self.chr_override.unwrap_or(sv.chr);
+        let palette = self.pal_override.unwrap_or(sv.palette + palidx);
         let mut image = Image::new(16, 16);
         self.blit(
             &mut image,
-            sv.chr + tiles[0] as usize * 16,
-            sv.palette + palidx,
+            chr + tiles[0] as usize * 16,
+            palette + group * 4,
             0,
             0,
             false,
@@ -170,8 +190,8 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            sv.chr + tiles[1] as usize * 16,
-            sv.palette + palidx,
+            chr + tiles[1] as usize * 16,
+            palette + group * 4,
             0,
             8,
             false,
@@ -179,8 +199,8 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            sv.chr + tiles[2] as usize * 16,
-            sv.palette + palidx,
+            chr + tiles[2] as usize * 16,
+            palette + group * 4,
             8,
             0,
             false,
@@ -188,8 +208,8 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            sv.chr + tiles[3] as usize * 16,
-            sv.palette + palidx,
+            chr + tiles[3] as usize * 16,
+            palette + group * 4,
             8,
             8,
             false,
@@ -243,7 +263,8 @@ impl TileCache {
                 let xdelta = (sprite_id as u32 >> 16) & 0xFF;
                 let ydelta = (sprite_id as u32 >> 8) & 0xFF;
                 let tile = sprite_id & 0xFE;
-                let chr = sprite_info.chr.add_bank(sprite_id as isize & 1);
+                let chr = self.chr_override.unwrap_or(sprite_info.chr);
+                let chr = chr.add_bank(sprite_id as isize & 1);
                 self.blit(
                     &mut image,
                     chr + tile * 16,

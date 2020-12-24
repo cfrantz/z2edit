@@ -55,7 +55,7 @@ impl Project {
             extra: extra,
         };
         let config = Config::get(&meta.config)?;
-        let mut commit = Rc::new(Edit {
+        let commit = Rc::new(Edit {
             meta: RefCell::new(meta),
             edit: RefCell::new(ImportRom::new(file)?),
             rom: RefCell::default(),
@@ -371,6 +371,11 @@ impl Edit {
         } else {
             self.meta.borrow().timestamp
         }
+    }
+
+    pub fn overworld_connector(&self, id: &IdPath) -> Option<IdPath> {
+        let conn = self.connectivity.borrow();
+        conn.overworld_connector(id).map(|x| x.clone())
     }
 }
 

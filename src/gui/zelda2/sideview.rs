@@ -15,12 +15,14 @@ use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::{Selector, Visibility};
 use crate::idpath;
+use crate::nes::Address;
 use crate::nes::IdPath;
 use crate::nes::MemoryAccess;
 use crate::util::clamp;
 use crate::util::undo::UndoStack;
 use crate::zelda2::config::Config;
 use crate::zelda2::objects::config::ObjectKind;
+use crate::zelda2::overworld::Connector;
 use crate::zelda2::project::{Edit, EditAction, Project, RomData};
 use crate::zelda2::sideview::{Decompressor, Enemy, MapCommand, Sideview};
 
@@ -185,6 +187,24 @@ impl SideviewGui {
             self.edit.meta.borrow().config.clone(),
             self.sideview.id.clone(),
         ));
+        if let Some(id) = self.edit.overworld_connector(&self.sideview.id) {
+            let conn = Connector::from_rom(&self.edit, id).expect("reset_caches");
+            if let Some(palace) = conn.palace {
+                let chr = Address::Chr(palace.chr_bank as isize, 0);
+                // FIXME: look these addresses up from Palette.
+                let pal = if self.sideview.map.background_palette == 0 {
+                    Address::Prg(4, 0x8470) + palace.palette * 16
+                } else {
+                    Address::Prg(4, 0xbf00) + palace.palette * 16
+                };
+                self.background.set_chr_override(Some(chr.add_bank(1)));
+                self.item.set_chr_override(Some(chr));
+                self.enemy.set_chr_override(Some(chr));
+                if self.sideview.id.at(0) != "great_palace" {
+                    self.background.set_pal_override(Some(pal));
+                }
+            }
+        }
     }
 
     fn list_object_names(&mut self) -> Result<()> {
