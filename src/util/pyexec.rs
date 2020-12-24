@@ -6,7 +6,6 @@ use crate::gui::console::{Console, Executor};
 
 pub struct PythonExecutor {
     interp: PyObject,
-    source: String,
     more: bool,
 }
 
@@ -16,7 +15,6 @@ impl PythonExecutor {
         let interp = module.call0("CreatePythonConsole")?;
         Ok(PythonExecutor {
             interp: interp.extract()?,
-            source: "".to_owned(),
             more: false,
         })
     }
@@ -24,22 +22,19 @@ impl PythonExecutor {
 
 impl Executor for PythonExecutor {
     fn exec(&mut self, line: &str, console: &Console) {
-        if self.more {
-            self.source.push('\n');
-            self.source.push_str(line);
-        } else {
-            self.source = line.to_owned();
-        }
         Python::with_gil(|py| {
-            let result = self
-                .interp
-                .call_method(py, "runsource", (&self.source, "<input>"), None);
-            match result {
-                Ok(more) => {
-                    self.more = more.extract(py).unwrap();
-                }
-                Err(e) => {
-                    error!("PythonConsole error {:?}", e);
+            if line == "\x03" {
+                let _ = self.interp.call_method(py, "resetbuffer", (), None);
+                self.more = false;
+            } else {
+                let result = self.interp.call_method(py, "push", (line,), None);
+                match result {
+                    Ok(more) => {
+                        self.more = more.extract(py).unwrap();
+                    }
+                    Err(e) => {
+                        error!("PythonConsole error {:?}", e);
+                    }
                 }
             }
         });

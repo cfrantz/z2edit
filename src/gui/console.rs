@@ -84,7 +84,9 @@ impl Console {
                     prompt.push(' ');
                 }
                 Err(ReadlineError::Interrupted) => {
-                    break 1;
+                    in_sender.send("\x03".to_string()).unwrap();
+                    prompt = pr_receiver.recv().unwrap();
+                    prompt.push(' ');
                 }
                 Err(ReadlineError::Eof) => {
                     break 0;

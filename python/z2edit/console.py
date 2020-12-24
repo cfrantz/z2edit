@@ -11,14 +11,14 @@ pydoc.pager = pydoc.plainpager
 sys.stdout.orig_write = sys.stdout.write
 sys.stdout.orig_write = sys.stdout.write
 
-class PythonConsole(code.InteractiveInterpreter):
+class PythonConsole(code.InteractiveConsole):
     """Create an Interpreter that the GUI's PythonConsole can use.
 
     This object captures stdout and stderr write functions so the
     data can be written into the PythonConsole GUI element.
     """
     def __init__(self, *args, **kwargs):
-        code.InteractiveInterpreter.__init__(self, *args, **kwargs)
+        code.InteractiveConsole.__init__(self, *args, **kwargs)
         self.outbuf = ''
         self.errbuf = ''
         sys.stdout.write = self.outwrite
@@ -39,6 +39,7 @@ class PythonConsole(code.InteractiveInterpreter):
         data = self.errbuf
         self.errbuf = ''
         return data;
+
 
 def CreatePythonConsole():
     return PythonConsole()
