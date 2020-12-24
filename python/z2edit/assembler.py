@@ -68,6 +68,7 @@ class Asm:
         ".DD": [   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
         "=":   [   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
         ".ORG": [  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
+        ".ASSERT_ORG": [  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
         ".BANK":[  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
 
         "ADC": [ 0x6d, 0x7d, 0x79,   -1, 0x69,   -1, 0x61,   -1, 0x71,   -1, 0x65, 0x75,   -1,   -1, ],
@@ -467,11 +468,11 @@ class Asm:
 
     def read(self, address):
         address = nes_address_adaptor(self.bank, address)
-        return self.rom.read_byte(address)
+        return self.rom.read(address)
 
     def write(self, address, value):
         address = nes_address_adaptor(self.bank, address)
-        self.rom.write_byte(address, value & 0xFF)
+        self.rom.write(address, value & 0xFF)
 
     def write16(self, address, value):
         address = nes_address_adaptor(self.bank, address)
@@ -642,6 +643,9 @@ class Asm:
                 raise OperandError("Unresolved symbol", opcode, operand)
             if opcode == '.ORG':
                 self.org = addr
+            elif opcode == ".ASSERT_ORG":
+                if self.org != addr:
+                    raise OperandError("ORG assertion failed", self.org, addr)
             elif opcode == ".BANK":
                 self.bank = addr
         else:

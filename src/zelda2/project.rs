@@ -512,6 +512,12 @@ impl EditProxy {
         Ok(PyAddress::from(addr))
     }
 
+    fn alloc_at(&mut self, addr: PyAddress, length: u16) -> Result<PyAddress> {
+        let mut mem = self.edit.memory.borrow_mut();
+        let addr = mem.alloc_at(addr.address, length)?;
+        Ok(PyAddress::from(addr))
+    }
+
     fn free(&mut self, addr: PyAddress, length: u16) {
         let mut mem = self.edit.memory.borrow_mut();
         mem.free(addr.address, length);

@@ -99,7 +99,7 @@ impl Gui for HacksGui {
             .build(ui, || {
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("EnemyGui: commit error {}", e),
+                        Err(e) => error!("HacksGui: commit error {}", e),
                         _ => {}
                     };
                     self.changed = false;

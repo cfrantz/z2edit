@@ -186,7 +186,7 @@ impl FreeSpace {
         Err(ErrorKind::OutOfMemory(bank).into())
     }
 
-    pub fn alloc_near(&mut self, address: Address, length: u16) -> Result<Address> {
+    fn alloc_near_helper(&mut self, address: Address, length: u16, exact: bool) -> Result<Address> {
         let bank = FreeSpace::get_bank(address)?;
         // Generate (delta from requested address, freespace index) tuples.
         let mut nearness = Vec::new();
@@ -201,12 +201,25 @@ impl FreeSpace {
             nearness.sort();
             let index = nearness[0].1;
             let result = self.freelist[index].address;
+            if exact {
+                if (result as i64) - address.raw() != 0 {
+                    return Err(ErrorKind::OutOfMemory(bank).into());
+                }
+            }
             self.freelist[index].address += length;
             self.freelist[index].length -= length;
             Ok(Address::Prg(bank, result))
         } else {
             Err(ErrorKind::OutOfMemory(bank).into())
         }
+    }
+
+    pub fn alloc_near(&mut self, address: Address, length: u16) -> Result<Address> {
+        self.alloc_near_helper(address, length, false)
+    }
+
+    pub fn alloc_at(&mut self, address: Address, length: u16) -> Result<Address> {
+        self.alloc_near_helper(address, length, true)
     }
 
     pub fn alloc(&mut self, address: Address, length: u16) -> Result<Address> {
