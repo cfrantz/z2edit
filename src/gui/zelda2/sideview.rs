@@ -829,6 +829,29 @@ impl SideviewGui {
                     let xo = origin[0] + x as f32 * scale;
                     let yo = origin[1] + y as f32 * scale;
                     image.draw_at([xo, yo], self.scale, ui);
+                    let aindex = x / 16;
+                    if item != 0xee && self.sideview.availability.get(aindex) == Some(&false) {
+                        let radius = std::cmp::max(image.width, image.height) as f32 * self.scale
+                            / 2.0
+                            - 2.0;
+                        let draw_list = ui.get_window_draw_list();
+                        let xc =
+                            scr_origin[0] + (x as u32 * 16 + image.width / 2) as f32 * self.scale;
+                        let yc =
+                            scr_origin[1] + (y as u32 * 16 + image.height / 2) as f32 * self.scale;
+                        draw_list
+                            .add_circle([xc, yc], radius, [1.0, 0.0, 0.0, 1.0])
+                            .thickness(2.0)
+                            .build();
+                        draw_list
+                            .add_line(
+                                [xc - radius, yc - radius],
+                                [xc + radius, yc + radius],
+                                [1.0, 0.0, 0.0, 1.0],
+                            )
+                            .thickness(2.0)
+                            .build();
+                    }
                 }
             }
         }
