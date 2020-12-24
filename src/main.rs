@@ -11,6 +11,7 @@ extern crate structopt;
 extern crate log;
 extern crate dict_derive;
 extern crate pyo3;
+extern crate rand;
 extern crate rustyline;
 extern crate sha2;
 extern crate shellwords;

@@ -5,6 +5,7 @@ use imgui;
 use imgui::{im_str, ImString, MenuItem};
 use nfd;
 use pyo3::prelude::*;
+use rand::Rng;
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
@@ -30,12 +31,15 @@ pub struct ProjectGui {
     pub filename: Option<String>,
     pub widgets: Vec<Box<dyn Gui>>,
     pub project: Py<Project>,
+    pub title_id: i32,
+    pub dock_id: i32,
     pub history_pane: imgui::Id<'static>,
     pub editor_pane: imgui::Id<'static>,
 }
 
 impl ProjectGui {
     pub fn new(py: Python, p: Project) -> Result<Self> {
+        let mut rng = rand::thread_rng();
         Ok(ProjectGui {
             visible: Visibility::Visible,
             changed: false,
@@ -43,6 +47,8 @@ impl ProjectGui {
             filename: None,
             widgets: Vec::new(),
             project: Py::new(py, p)?,
+            title_id: rng.gen(),
+            dock_id: rng.gen(),
             history_pane: imgui::Id::Int(0),
             editor_pane: imgui::Id::Int(0),
         })
@@ -335,8 +341,12 @@ impl ProjectGui {
 
     pub fn draw(&mut self, py: Python, ui: &imgui::Ui) {
         let mut visible = self.visible.as_bool();
-        let title = im_str!("Project: {}", self.project.borrow(py).name);
-        let dock_id = imgui::Id::Str("project");
+        let title = im_str!(
+            "Project: {}##{}",
+            self.project.borrow(py).name,
+            self.title_id
+        );
+        let dock_id = imgui::Id::Int(self.dock_id);
         let window = imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -351,14 +361,14 @@ impl ProjectGui {
             let (lhs, rhs) = ui.dock_builder_split_node(dock_id, imgui::Direction::Left, 0.20);
             self.history_pane = lhs;
             self.editor_pane = rhs;
-            ui.dock_builder_dock_window(im_str!("Edit List"), self.history_pane);
+            ui.dock_builder_dock_window(&im_str!("Edit List##{}", self.dock_id), self.history_pane);
             ui.dock_builder_finish(dock_id);
         }
 
         ui.dock_space(dock_id, [0.0, 0.0]);
         if let Some(token) = window {
             self.menu(py, ui);
-            imgui::Window::new(im_str!("Edit List")).build(ui, || {
+            imgui::Window::new(&im_str!("Edit List##{}", self.dock_id)).build(ui, || {
                 let editlist = ui.push_id("editlist");
                 let edits = self.project.borrow(py).edits.len();
                 for i in 0..edits {
