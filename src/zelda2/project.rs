@@ -23,10 +23,12 @@ use crate::errors::*;
 use crate::gui::app_context::AppContext;
 use crate::gui::zelda2::Gui;
 use crate::nes::freespace::FreeSpace;
+use crate::nes::IdPath;
 use crate::nes::{Address, Buffer, MemoryAccess};
 use crate::util::pyaddress::PyAddress;
 use crate::util::UTime;
 use crate::zelda2::config::Config;
+use crate::zelda2::connectivity::Connectivity;
 use crate::zelda2::edit_factory;
 use crate::zelda2::import::{FileResource, ImportRom};
 
@@ -53,16 +55,18 @@ impl Project {
             extra: extra,
         };
         let config = Config::get(&meta.config)?;
-        let commit = Edit {
+        let mut commit = Rc::new(Edit {
             meta: RefCell::new(meta),
             edit: RefCell::new(ImportRom::new(file)?),
             rom: RefCell::default(),
             memory: RefCell::new(FreeSpace::new(&config.misc.freespace)?),
+            connectivity: RefCell::default(),
             action: RefCell::default(),
-        };
+        });
+        commit.connectivity.borrow_mut().scan(&commit)?;
         let project = Project {
             name: name.to_owned(),
-            edits: vec![Rc::new(commit)],
+            edits: vec![commit],
             ..Default::default()
         };
         project.replay(0, -1)?;
@@ -131,6 +135,7 @@ impl Project {
             }
             info!("Project::replay: {}.pack", commit.edit.borrow().name());
             commit.edit.borrow().pack(&commit)?;
+            commit.connectivity.borrow_mut().scan(&commit)?;
         }
         Ok(())
     }
@@ -172,9 +177,11 @@ impl Project {
                 edit: RefCell::new(edit),
                 rom: last.rom.clone(),
                 memory: last.memory.clone(),
+                connectivity: RefCell::default(),
                 action: RefCell::default(),
             });
             commit.edit.borrow().pack(&commit)?;
+            commit.connectivity.borrow_mut().scan(&commit)?;
             self.edits.push(commit);
             self.changed.set(true);
             Ok(len)
@@ -269,6 +276,8 @@ pub struct Edit {
     pub rom: RefCell<Buffer>,
     #[serde(skip)]
     pub memory: RefCell<FreeSpace>,
+    #[serde(skip)]
+    pub connectivity: RefCell<Connectivity>,
     #[serde(skip)]
     pub action: RefCell<EditAction>,
 }
@@ -424,6 +433,7 @@ impl EditProxy {
             edit: RefCell::new(edit_factory(kind, id)?),
             rom: self.edit.rom.clone(),
             memory: self.edit.memory.clone(),
+            connectivity: self.edit.connectivity.clone(),
             action: RefCell::default(),
         });
         Ok(EditProxy::new(commit))
@@ -505,6 +515,15 @@ impl EditProxy {
     fn report(&self, addr: PyAddress) -> Result<(usize, u16)> {
         let mem = self.edit.memory.borrow();
         mem.report(addr.address)
+    }
+
+    fn overworld_connector(&self, id: &str) -> Option<String> {
+        let id = IdPath::from(id);
+        self.edit
+            .connectivity
+            .borrow()
+            .overworld_connector(&id)
+            .map(|s| s.to_string())
     }
 }
 

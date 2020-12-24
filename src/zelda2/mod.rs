@@ -1,4 +1,5 @@
 pub mod config;
+pub mod connectivity;
 pub mod enemyattr;
 pub mod hacks;
 pub mod import;

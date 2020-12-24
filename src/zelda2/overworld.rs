@@ -191,7 +191,9 @@ impl Map {
                 let tile = val & 0x0F;
                 let count = (val >> 4) as usize + 1;
                 for _ in 0..count {
-                    self.data[y][x] = tile;
+                    if x < self.width {
+                        self.data[y][x] = tile;
+                    }
                     x += 1;
                 }
                 index += 1;

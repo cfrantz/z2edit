@@ -88,6 +88,33 @@ pub mod config {
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
 
+        pub fn find_by_world(
+            &self,
+            world: usize,
+            overworld: usize,
+            subworld: usize,
+        ) -> Result<&config::SideviewGroup> {
+            for group in self.group.iter() {
+                if group.background_layer {
+                    continue;
+                }
+                if world != 0 {
+                    if world == group.world {
+                        return Ok(group);
+                    }
+                } else {
+                    if overworld == group.overworld && subworld == group.subworld {
+                        return Ok(group);
+                    }
+                }
+            }
+            Err(ErrorKind::NotFound(format!(
+                "Sideview group with world={}, overworld={}, subworld={}",
+                world, overworld, subworld
+            ))
+            .into())
+        }
+
         pub fn enemy_list_for(&self, id: &IdPath) -> Result<&config::EnemyList> {
             for el in self.enemy_list.iter() {
                 for i in el.ids.iter() {
@@ -202,6 +229,15 @@ impl Map {
                 a.x.cmp(&b.x)
             }
         });
+    }
+
+    pub fn has_elevator(&self) -> bool {
+        for item in self.data.iter() {
+            if item.y == 15 && item.kind == 0x50 {
+                return true;
+            }
+        }
+        false
     }
 
     pub fn sort(&mut self) {
@@ -611,7 +647,7 @@ impl RomData for Sideview {
         // Map commands list
         let addr = rom.read_pointer(scfg.address + index * 2)?;
         let length = rom.read(addr)? as usize;
-        info!(
+        debug!(
             "Sidview::unpack: reading {} from ROM @ {:x?} for {} bytes",
             self.id, addr, length
         );
