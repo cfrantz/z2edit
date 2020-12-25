@@ -4,13 +4,74 @@
     text_delay: [
         Prg(3, 0xb615),
         Prg(3, 0xb657),
-        Prg(3, 0xb74e)
+        Prg(3, 0xb74e),
     ],
     beam_sword_time: Prg(0, 0x986e),
     beam_sword_speed: Prg(0, 0x9819),
     elevator_speed: Prg(-1, 0xd8bf),
     fairy_speed: Prg(0, 0x92aa),
     hack: [
+        (
+            id: "overworld_breakblocks",
+            name: "Overworld Breakable Blocks",
+            item: [
+                (
+                    id: "0",
+                    name: "Vanilla (Break-blocks are black tiles)",
+                    code: "",
+                ),
+                (
+                    id: "1",
+                    name: "Classic (Break-blocks are the same tiles as palaces)",
+                    code: r#"
+from z2edit.hacks import breakblocks
+breakblocks.classic(edit)"#,
+                ),
+            ],
+        ),
+        (
+            id: "palace_continue",
+            name: "Palace Continue",
+            item: [
+                (
+                    id: "0",
+                    name: "Vanilla (continue only from GP)",
+                    code: "",
+                ),
+                (
+                    id: "1",
+                    name: "Continue from Palaces",
+                    code: r#"
+from z2edit.hacks import palace
+palace.continue_from_palaces(edit, asm)"#,
+                ),
+            ],
+        ),
+        (
+            id: "palace_to_stone",
+            name: "Palaces to Stone",
+            item: [
+                (
+                    id: "0",
+                    name: "Vanilla (palaces turn to stone w/ original coding error)",
+                    code: "",
+                ),
+                (
+                    id: "1",
+                    name: "Fixed",
+                    code: r#"
+from z2edit.hacks import palace
+palace.palaces_to_stone_fixed(edit, asm)"#,
+                ),
+                (
+                    id: "2",
+                    name: "Never turn to Stone",
+                    code: r#"
+from z2edit.hacks import palace
+palace.palaces_to_stone_never(edit, asm)"#,
+                ),
+            ],
+        ),
         (
             id: "p5_detect",
             name: "Palace 5 detect",
@@ -24,22 +85,76 @@
                     id: "1",
                     name: "Palace 2 must be connection #52",
                     code: r#"
-from z2edit.hacks import palace5
-palace5.palace2_must_be_connection52(edit, asm)"#,
+from z2edit.hacks import palace
+palace.palace2_must_be_connection52(edit, asm)"#,
                 ),
                 (
                     id: "2",
                     name: "P2 even / P5 odd",
                     code: r#"
-from z2edit.hacks import palace5
-palace5.palace2_even_palace5_odd(edit, asm)"#,
+from z2edit.hacks import palace
+palace.palace2_even_palace5_odd(edit, asm)"#,
                 ),
                 (
                     id: "3",
                     name: "P2 odd / P5 even",
                     code: r#"
-from z2edit.hacks import palace5
-palace5.palace2_odd_palace5_even(edit, asm)"#,
+from z2edit.hacks import palace
+palace.palace2_odd_palace5_even(edit, asm)"#,
+                ),
+            ],
+        ),
+        (
+            id: "spell_bits",
+            name: "Spell Bits",
+            item: [
+                (
+                    id: "0",
+                    name: "Vanilla (fixed bit positions)",
+                    code: "",
+                ),
+                (
+                    id: "1",
+                    name: "Flexible (bit positions define effect type)",
+                    code: r#"
+from z2edit.hacks import spells
+spells.flexible_bits(edit, asm)"#,
+                ),
+            ],
+        ),
+        (
+            id: "spell_cast",
+            name: "Spell Casting",
+            item: [
+                (
+                    id: "0",
+                    name: "Vanilla (activate menu between each spell cast)",
+                    code: "",
+                ),
+                (
+                    id: "1",
+                    name: "Fast (no menuing required between spell casts)",
+                    code: r#"
+from z2edit.hacks import spells
+spells.fast_casting(edit, asm)"#,
+                ),
+            ],
+        ),
+        (
+            id: "spell_restrictions",
+            name: "Spell Restrictions",
+            item: [
+                (
+                    id: "0",
+                    name: "Vanilla (Magic Containers == Town Number)",
+                    code: "",
+                ),
+                (
+                    id: "1",
+                    name: "No Restrictions (can get spells with any number of MCs)",
+                    code: r#"
+from z2edit.hacks import spells
+spells.no_restrictions(edit, asm)"#,
                 ),
             ],
         ),

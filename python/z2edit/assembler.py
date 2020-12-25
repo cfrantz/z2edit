@@ -648,6 +648,8 @@ class Asm:
                     raise OperandError("ORG assertion failed", self.org, addr)
             elif opcode == ".BANK":
                 self.bank = addr
+            elif opcode == "=":
+                self.symtab[label] = addr
         else:
             raise OperandError("Invalid mode", mode)
         return None
