@@ -11,7 +11,7 @@
         // The apparent block at 0x87c6 is part of room connectivity.
         // Possible block at (Prg(1, 0x93bb), 69)
         // Possible block at (Prg(1, 0x9eb9), 369)
-        (Prg(1, 0xa933), 5677),
+        (Prg(1, 0xa970), 5616),
         (Prg(1, 0xbfe0), 24),
 
         // Bank 2
@@ -20,7 +20,7 @@
         // The apparent block at 0x87d3 is part of room connectivity.
         // Possible block at (Prg(2, 0x93c9), 55)
         // Possible block at (Prg(2, 0x9f85), 123)
-        (Prg(2, 0xa933), 5677),
+        (Prg(2, 0xa970), 5616),
         (Prg(2, 0xbfe0), 24),
 
         // Bank 3
