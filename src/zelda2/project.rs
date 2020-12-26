@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::cell::{Cell, RefCell};
+use std::clone::Clone;
 use std::collections::HashMap;
 use std::convert::From;
 use std::fs::File;
@@ -62,6 +63,7 @@ impl Project {
             memory: RefCell::new(FreeSpace::new(&config.misc.freespace)?),
             connectivity: RefCell::default(),
             action: RefCell::default(),
+            error: RefCell::default(),
         });
         let project = Project {
             name: name.to_owned(),
@@ -84,7 +86,10 @@ impl Project {
 
     pub fn from_reader(r: impl Read) -> Result<Self> {
         let project: Project = serde_json::from_reader(r)?;
-        project.replay(0, -1)?;
+        match project.replay(0, -1) {
+            Ok(_) => {}
+            Err(e) => error!("Replay error during loading: {:?}", e),
+        }
         Ok(project)
     }
 
@@ -119,23 +124,35 @@ impl Project {
         let start = self.normalized_index(start)?;
         let end = self.normalized_index(end)? + 1;
         for i in start..end {
-            let commit = &self.edits[i];
-            let config = Config::get(&commit.meta.borrow().config)?;
-            if i == 0 {
-                commit
-                    .memory
-                    .replace(FreeSpace::new(&config.misc.freespace)?);
-            } else {
-                let last = &self.edits[i - 1];
-                //info!("Project::replay: {}.unpack", commit.edit.borrow().name());
-                //commit.edit.borrow_mut().unpack(last)?;
-                commit.rom.replace(last.rom.borrow().clone());
-                commit.memory.replace(last.memory.borrow().clone());
-            }
-            info!("Project::replay: {}.pack", commit.edit.borrow().name());
-            commit.edit.borrow().pack(&commit)?;
-            commit.connectivity.borrow_mut().scan(&commit)?;
+            let result = self.replay_one_commit(i);
+            match result {
+                Ok(_) => self.edits[i].error.borrow_mut().clear(),
+                Err(e) => {
+                    self.edits[i].error.replace(e.to_string());
+                    return Err(e);
+                }
+            };
         }
+        Ok(())
+    }
+
+    fn replay_one_commit(&self, index: usize) -> Result<()> {
+        let commit = &self.edits[index];
+        let config = Config::get(&commit.meta.borrow().config)?;
+        if index == 0 {
+            commit
+                .memory
+                .replace(FreeSpace::new(&config.misc.freespace)?);
+        } else {
+            let last = &self.edits[index - 1];
+            //info!("Project::replay: {}.unpack", commit.edit.borrow().name());
+            //commit.edit.borrow_mut().unpack(last)?;
+            commit.rom.replace(last.rom.borrow().clone());
+            commit.memory.replace(last.memory.borrow().clone());
+        }
+        info!("Project::replay: {}.pack", commit.edit.borrow().name());
+        commit.edit.borrow().pack(&commit)?;
+        commit.connectivity.borrow_mut().scan(&commit)?;
         Ok(())
     }
 
@@ -178,6 +195,7 @@ impl Project {
                 memory: last.memory.clone(),
                 connectivity: RefCell::default(),
                 action: RefCell::default(),
+                error: RefCell::default(),
             });
             commit.edit.borrow().pack(&commit)?;
             commit.connectivity.borrow_mut().scan(&commit)?;
@@ -279,6 +297,8 @@ pub struct Edit {
     pub connectivity: RefCell<Connectivity>,
     #[serde(skip)]
     pub action: RefCell<EditAction>,
+    #[serde(skip)]
+    pub error: RefCell<String>,
 }
 
 #[derive(Debug, Default)]
@@ -439,6 +459,7 @@ impl EditProxy {
             memory: self.edit.memory.clone(),
             connectivity: self.edit.connectivity.clone(),
             action: RefCell::default(),
+            error: RefCell::default(),
         });
         Ok(EditProxy::new(commit))
     }

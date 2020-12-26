@@ -2,7 +2,7 @@ use std::path::Path;
 use std::rc::Rc;
 
 use imgui;
-use imgui::{im_str, ImString, MenuItem};
+use imgui::{im_str, ImString, MenuItem, StyleColor};
 use nfd;
 use pyo3::prelude::*;
 use rand::Rng;
@@ -24,6 +24,14 @@ use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::util::UTime;
 use crate::zelda2::project::{Edit, EditAction, Project};
+
+const ERROR_HEADER: [f32; 4] = [1.0, 0.4, 0.4, 0.3];
+const ERROR_HEADER_HOVERED: [f32; 4] = [1.0, 0.4, 0.4, 0.8];
+const ERROR_HEADER_ACTIVE: [f32; 4] = [1.0, 0.4, 0.4, 1.0];
+
+const GRAY_HEADER: [f32; 4] = [0.5, 0.5, 0.5, 0.3];
+const GRAY_HEADER_HOVERED: [f32; 4] = [0.5, 0.5, 0.5, 0.8];
+const GRAY_HEADER_ACTIVE: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
 
 pub struct ProjectGui {
     pub visible: Visibility,
@@ -262,7 +270,7 @@ impl ProjectGui {
     fn process_editactions(&mut self, py: Python) {
         let mut project = self.project.borrow_mut(py);
         let mut i = 0;
-        let mut first_action = 0;
+        let mut first_action = usize::MAX;
         while i != project.edits.len() {
             let action = project.edits[i].action.replace(EditAction::None);
             match action {
@@ -271,7 +279,7 @@ impl ProjectGui {
                 }
                 EditAction::MoveTo(pos) => {
                     project.edits.swap(i, pos);
-                    if first_action == 0 {
+                    if first_action == usize::MAX {
                         first_action = if i < pos { i } else { pos };
                     }
                     self.changed = true;
@@ -279,14 +287,14 @@ impl ProjectGui {
                 }
                 EditAction::Delete(_) => {
                     project.edits.remove(i);
-                    if first_action == 0 {
+                    if first_action == usize::MAX {
                         first_action = i;
                     }
                     self.changed = true;
                     self.want_autosave = true;
                 }
                 EditAction::Update => {
-                    if first_action == 0 {
+                    if first_action == usize::MAX {
                         first_action = i;
                     }
                     self.changed = true;
@@ -297,7 +305,8 @@ impl ProjectGui {
                 }
             }
         }
-        if first_action != 0 {
+        if first_action != usize::MAX {
+            info!("Replay requested at {}", first_action);
             match project.replay(first_action as isize, -1) {
                 Err(e) => self.error.show("Edit Action", "Replay error", Some(e)),
                 _ => {}
@@ -305,14 +314,34 @@ impl ProjectGui {
         }
     }
 
-    fn draw_edit(&mut self, py: Python, index: isize, ui: &imgui::Ui) {
+    fn draw_edit(&mut self, py: Python, index: isize, error_state: bool, ui: &imgui::Ui) -> bool {
         let id = ui.push_id(index as i32);
         let project = self.project.borrow_mut(py);
         let edit = project.get_commit(index).unwrap();
         let len = project.edits.len() as isize;
         let meta = edit.meta.borrow();
         let is_open = self.is_window_open(meta.timestamp);
+        let mut error_state = error_state;
+        let header = if error_state {
+            Some((GRAY_HEADER, GRAY_HEADER_HOVERED, GRAY_HEADER_ACTIVE))
+        } else if !edit.error.borrow().is_empty() {
+            error_state = true;
+            Some((ERROR_HEADER, ERROR_HEADER_HOVERED, ERROR_HEADER_ACTIVE))
+        } else {
+            None
+        };
+        let color_id = header.map(|h| {
+            ui.push_style_colors(&[
+                (StyleColor::Header, h.0),
+                (StyleColor::HeaderHovered, h.1),
+                (StyleColor::HeaderActive, h.2),
+            ])
+        });
         let hdr = imgui::CollapsingHeader::new(&ImString::new(&meta.label)).build(ui);
+        if let Some(cid) = color_id {
+            cid.pop(ui);
+        }
+
         if ui.popup_context_item(im_str!("menu")) {
             if MenuItem::new(im_str!("Edit")).enabled(!is_open).build(ui) {
                 match edit.edit.borrow().gui(&project, index) {
@@ -370,6 +399,7 @@ impl ProjectGui {
             }
         }
         id.pop(ui);
+        error_state
     }
 
     pub fn draw(&mut self, py: Python, ui: &imgui::Ui) {
@@ -404,8 +434,9 @@ impl ProjectGui {
             imgui::Window::new(&im_str!("Edit List##{}", self.dock_id)).build(ui, || {
                 let editlist = ui.push_id("editlist");
                 let edits = self.project.borrow(py).edits.len();
+                let mut error_state = false;
                 for i in 0..edits {
-                    self.draw_edit(py, i as isize, ui);
+                    error_state = self.draw_edit(py, i as isize, error_state, ui);
                 }
                 editlist.pop(ui);
             });

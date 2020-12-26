@@ -98,6 +98,13 @@ impl Gui for EditDetailsGui {
         imgui::Window::new(&title)
             .unsaved_document(self.changed)
             .build(ui, || {
+                if !self.edit.error.borrow().is_empty() {
+                    ui.text_colored(
+                        [1.0, 0.4, 0.4, 1.0],
+                        im_str!("Error: {}", &self.edit.error.borrow()),
+                    );
+                    ui.separator();
+                }
                 self.changed |= imgui::InputText::new(ui, im_str!("Label"), &mut self.label)
                     .resize_buffer(true)
                     .build();
@@ -130,6 +137,7 @@ impl Gui for EditDetailsGui {
                         .iter()
                         .map(|(k, v)| (k.to_string(), v.to_string()))
                         .collect();
+                    self.edit.action.replace(EditAction::Update);
                     project.changed.set(true);
                     self.visible = Visibility::Dispose;
                     self.changed = false;
