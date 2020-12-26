@@ -7,6 +7,7 @@ use once_cell::sync::Lazy;
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::idpath;
 use crate::zelda2::config::Config;
@@ -25,6 +26,7 @@ pub struct ExperienceTableGui {
     group: Vec<ExperienceTableGroup>,
     selected: usize,
     gui_once_init: bool,
+    error: ErrorDialog,
 }
 
 static COLUMNS: Lazy<HashMap<String, Vec<&ImStr>>> = Lazy::new(|| {
@@ -99,6 +101,7 @@ impl ExperienceTableGui {
             group: data,
             selected: 0,
             gui_once_init: true,
+            error: ErrorDialog::default(),
         }))
     }
 
@@ -207,7 +210,9 @@ impl Gui for ExperienceTableGui {
                 ui.same_line(0.0);
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("ExperienceTableGui: commit error {}", e),
+                        Err(e) => self
+                            .error
+                            .show("ExperienceTableGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -239,6 +244,7 @@ impl Gui for ExperienceTableGui {
                 ui.columns(1, im_str!(""), false);
                 ui.separator();
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("ExperienceTables Changed"),

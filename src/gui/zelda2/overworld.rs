@@ -10,6 +10,7 @@ use crate::gui::util::{text_outlined, KeyAction};
 use crate::gui::util::{DragHelper, SelectBox};
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::{Selector, Visibility};
 use crate::idpath;
 use crate::nes::MemoryAccess;
@@ -39,6 +40,7 @@ pub struct OverworldGui {
     conn_selected: usize,
     conn_drag: DragHelper,
     cursor: [isize; 2],
+    error: ErrorDialog,
 }
 
 impl OverworldGui {
@@ -92,6 +94,7 @@ impl OverworldGui {
             conn_selected: 0,
             conn_drag: DragHelper::default(),
             cursor: [0, 0],
+            error: ErrorDialog::default(),
         }))
     }
 
@@ -683,7 +686,7 @@ impl Gui for OverworldGui {
                 ui.same_line(0.0);
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("OverworldGui: commit error {}", e),
+                        Err(e) => self.error.show("OverworldGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -704,6 +707,7 @@ impl Gui for OverworldGui {
                 }
                 self.changed |= changed;
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Overworld Changed"),

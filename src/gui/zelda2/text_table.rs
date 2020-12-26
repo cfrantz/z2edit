@@ -5,6 +5,7 @@ use imgui::{im_str, ImStr, ImString};
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::idpath;
 use crate::zelda2::config::Config;
@@ -22,6 +23,7 @@ pub struct TextTableGui {
     orig: Vec<Vec<ImString>>,
     text: Vec<Vec<ImString>>,
     selected: usize,
+    error: ErrorDialog,
 }
 
 impl TextTableGui {
@@ -48,6 +50,7 @@ impl TextTableGui {
             orig: orig,
             text: text,
             selected: 0,
+            error: ErrorDialog::default(),
         });
         ret.read_text(project)?;
         Ok(ret)
@@ -127,7 +130,7 @@ impl Gui for TextTableGui {
                 ui.same_line(0.0);
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("TextTableGui: commit error {}", e),
+                        Err(e) => self.error.show("TextTableGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -154,6 +157,7 @@ impl Gui for TextTableGui {
                 group_id.pop(ui);
                 self.changed = changed;
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("TextTables Changed"),

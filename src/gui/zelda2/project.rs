@@ -20,6 +20,7 @@ use crate::gui::zelda2::start::StartGui;
 use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::xp_spells::ExperienceTableGui;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::util::UTime;
 use crate::zelda2::project::{Edit, EditAction, Project};
@@ -35,6 +36,7 @@ pub struct ProjectGui {
     pub dock_id: i32,
     pub history_pane: imgui::Id<'static>,
     pub editor_pane: imgui::Id<'static>,
+    pub error: ErrorDialog,
 }
 
 impl ProjectGui {
@@ -51,6 +53,7 @@ impl ProjectGui {
             dock_id: rng.gen(),
             history_pane: imgui::Id::Int(0),
             editor_pane: imgui::Id::Int(0),
+            error: ErrorDialog::default(),
         })
     }
 
@@ -63,7 +66,11 @@ impl ProjectGui {
     fn save(&mut self, py: Python) {
         if let Some(path) = &self.filename {
             match self.project.borrow(py).to_file(&Path::new(&path)) {
-                Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
+                Err(e) => self.error.show(
+                    "Save",
+                    &format!("Could not save project as {:?}", path),
+                    Some(e),
+                ),
                 Ok(_) => {
                     self.changed = false;
                     self.want_autosave = false;
@@ -78,7 +85,11 @@ impl ProjectGui {
         let result = nfd::open_save_dialog(Some("z2prj"), None).unwrap();
         match result {
             nfd::Response::Okay(path) => match self.project.borrow(py).to_file(&Path::new(&path)) {
-                Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
+                Err(e) => self.error.show(
+                    "Save",
+                    &format!("Could not save project as {:?}", path),
+                    Some(e),
+                ),
                 Ok(_) => {
                     if !save_as {
                         self.filename = Some(path);
@@ -118,7 +129,11 @@ impl ProjectGui {
         match nfd::open_save_dialog(Some("nes"), None).unwrap() {
             nfd::Response::Okay(path) => match edit.export(&Path::new(&path)) {
                 Err(e) => {
-                    error!("Could not export ROM as {:?}: {:?}", path, e);
+                    self.error.show(
+                        "Export",
+                        &format!("Could not export ROM as {:?}", path),
+                        Some(e),
+                    );
                     None
                 }
                 Ok(sha256) => Some(sha256),
@@ -155,55 +170,69 @@ impl ProjectGui {
                 if MenuItem::new(im_str!("Enemy Attributes")).build(ui) {
                     match EnemyGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create EnemyGui: {:?}", e),
+                        Err(e) => self.error.show("GUI", "Could not create EnemyGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Experience & Spells")).build(ui) {
                     match ExperienceTableGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create ExperienceTableGui: {:?}", e),
+                        Err(e) => {
+                            self.error
+                                .show("GUI", "Could not create ExperienceTableGui", Some(e))
+                        }
                     };
                 }
                 if MenuItem::new(im_str!("Miscellaneous Hacks")).build(ui) {
                     match HacksGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create HacksGui: {:?}", e),
+                        Err(e) => self.error.show("GUI", "Could not create HacksGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Overworld Editor")).build(ui) {
                     match OverworldGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create OverworldGui: {:?}", e),
+                        Err(e) => self
+                            .error
+                            .show("GUI", "Could not create OverworldGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Palette")).build(ui) {
                     match PaletteGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create PaletteGui: {:?}", e),
+                        Err(e) => self
+                            .error
+                            .show("GUI", "Could not create PaletteGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Python Script")).build(ui) {
                     match PythonScriptGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create PythonScriptGui: {:?}", e),
+                        Err(e) => {
+                            self.error
+                                .show("GUI", "Could not create PythonScriptGui", Some(e))
+                        }
                     };
                 }
                 if MenuItem::new(im_str!("Sideview Editor")).build(ui) {
                     match SideviewGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create SideviewGui: {:?}", e),
+                        Err(e) => self
+                            .error
+                            .show("GUI", "Could not create SideviewGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Start Values")).build(ui) {
                     match StartGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create StartGui: {:?}", e),
+                        Err(e) => self.error.show("GUI", "Could not create StartGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Text Table")).build(ui) {
                     match TextTableGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
-                        Err(e) => error!("Could not create TextTableGui: {:?}", e),
+                        Err(e) => self
+                            .error
+                            .show("GUI", "Could not create TextTableGui", Some(e)),
                     };
                 }
             });
@@ -270,7 +299,7 @@ impl ProjectGui {
         }
         if first_action != 0 {
             match project.replay(first_action as isize, -1) {
-                Err(e) => error!("EditActions: replay errror {:?}", e),
+                Err(e) => self.error.show("Edit Action", "Replay error", Some(e)),
                 _ => {}
             };
         }
@@ -288,15 +317,19 @@ impl ProjectGui {
             if MenuItem::new(im_str!("Edit")).enabled(!is_open).build(ui) {
                 match edit.edit.borrow().gui(&project, index) {
                     Ok(gui) => self.widgets.push(gui),
-                    Err(e) => error!("Error creating widget: {:?}", e),
+                    Err(e) => self.error.show(
+                        "GUI",
+                        &format!("Could not create widget for {}", edit.edit.borrow().name()),
+                        Some(e),
+                    ),
                 }
             }
             if MenuItem::new(im_str!("Emulate")).build(ui) {
                 match edit.emulate(None) {
                     Ok(()) => {}
-                    Err(e) => {
-                        error!("Error spawning emulator: {:?}", e);
-                    }
+                    Err(e) => self
+                        .error
+                        .show("Emulate", "Could not start emulator", Some(e)),
                 }
             }
             if MenuItem::new(im_str!("Export")).build(ui) {
@@ -394,6 +427,7 @@ impl ProjectGui {
         }
         self.dispose_widgets();
         self.process_editactions(py);
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         if Some(true)
             == self.visible.draw(

@@ -6,6 +6,7 @@ use once_cell::sync::Lazy;
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::idpath;
 use crate::zelda2::config::Config;
@@ -22,6 +23,7 @@ pub struct EnemyGui {
     orig: Vec<EnemyGroup>,
     group: Vec<EnemyGroup>,
     selected: usize,
+    error: ErrorDialog,
 }
 
 static HEX: Lazy<Vec<&ImStr>> = Lazy::new(|| {
@@ -101,6 +103,7 @@ impl EnemyGui {
             orig: orig,
             group: data,
             selected: 0,
+            error: ErrorDialog::default(),
         }))
     }
 
@@ -243,7 +246,7 @@ impl Gui for EnemyGui {
                 ui.same_line(0.0);
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("EnemyGui: commit error {}", e),
+                        Err(e) => self.error.show("EnemyGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -270,6 +273,7 @@ impl Gui for EnemyGui {
                 ui.columns(1, im_str!(""), false);
                 ui.separator();
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Enemys Changed"),

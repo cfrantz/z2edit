@@ -5,6 +5,7 @@ use imgui::{im_str, ImStr, ImString};
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::idpath;
 use crate::nes::hwpalette;
@@ -22,6 +23,7 @@ pub struct PaletteGui {
     orig: Vec<PaletteGroup>,
     group: Vec<PaletteGroup>,
     selected: usize,
+    error: ErrorDialog,
 }
 
 impl PaletteGui {
@@ -51,6 +53,7 @@ impl PaletteGui {
             orig: orig,
             group: data,
             selected: 0,
+            error: ErrorDialog::default(),
         }))
     }
 
@@ -151,7 +154,7 @@ impl Gui for PaletteGui {
                 ui.same_line(0.0);
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("PaletteGui: commit error {}", e),
+                        Err(e) => self.error.show("PaletteGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -194,6 +197,7 @@ impl Gui for PaletteGui {
                     }
                 }
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Palettes Changed"),

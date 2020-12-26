@@ -6,6 +6,7 @@ use imgui::{ImStr, ImString};
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::zelda2::config::Config;
 use crate::zelda2::hacks::{Hack, Hacks};
@@ -20,6 +21,7 @@ pub struct HacksGui {
     hacks: Hacks,
     titles: Vec<ImString>,
     names: Vec<Vec<ImString>>,
+    error: ErrorDialog,
 }
 
 impl HacksGui {
@@ -38,6 +40,7 @@ impl HacksGui {
             hacks: hacks,
             titles: titles,
             names: names,
+            error: ErrorDialog::default(),
         }))
     }
 
@@ -99,7 +102,7 @@ impl Gui for HacksGui {
             .build(ui, || {
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("HacksGui: commit error {}", e),
+                        Err(e) => self.error.show("HacksGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -152,6 +155,7 @@ impl Gui for HacksGui {
 
                 self.changed = changed;
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Hacks Changed"),

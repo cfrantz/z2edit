@@ -20,6 +20,7 @@ use crate::gui::glhelper;
 use crate::gui::preferences::PreferencesGui;
 use crate::gui::project_wizard::ProjectWizardGui;
 use crate::gui::zelda2::project::ProjectGui;
+use crate::gui::ErrorDialog;
 use crate::util::pyexec::PythonExecutor;
 
 use crate::zelda2::project::Project;
@@ -35,6 +36,7 @@ pub struct App {
     wizard: RefCell<ProjectWizardGui>,
     console: RefCell<Console>,
     executor: RefCell<PythonExecutor>,
+    error: ErrorDialog,
 }
 
 impl App {
@@ -46,6 +48,7 @@ impl App {
             wizard: RefCell::default(),
             console: RefCell::new(Console::new("Debug Console")),
             executor: RefCell::new(PythonExecutor::new(py)?),
+            error: ErrorDialog::default(),
         })
     }
 
@@ -67,7 +70,7 @@ impl App {
     }
 
     fn file_dialog(&self, ftype: Option<&str>) -> Option<String> {
-        let result = nfd::open_file_dialog(ftype, None).expect("ProjectWizardGui::file_dialog");
+        let result = nfd::open_file_dialog(ftype, None).expect("App::file_dialog");
         match result {
             nfd::Response::Okay(path) => Some(path),
             _ => None,
@@ -75,15 +78,15 @@ impl App {
     }
 
     fn load_dialog(&self, py: Python, ftype: &str) {
-        loop {
-            let result = nfd::open_file_dialog(Some(ftype), None).unwrap();
-            match result {
-                nfd::Response::Okay(path) => match self.load_project(py, &path) {
-                    Err(e) => error!("Could not load {:?}: {:?}", path, e),
-                    Ok(_) => break,
-                },
-                _ => break,
-            }
+        let result = nfd::open_file_dialog(Some(ftype), None).expect("App::load_dialog");
+        match result {
+            nfd::Response::Okay(path) => match self.load_project(py, &path) {
+                Err(e) => self
+                    .error
+                    .show("File", &format!("Could not load {:?}", path), Some(e)),
+                Ok(_) => {}
+            },
+            _ => {}
         }
     }
 
@@ -147,7 +150,9 @@ impl App {
         });
         if self.wizard.borrow_mut().draw(ui) {
             match self.new_project_from_wizard(py) {
-                Err(e) => error!("Could not create project: {:?}", e),
+                Err(e) => self
+                    .error
+                    .show("Project", "Could not create project", Some(e)),
                 Ok(_) => {}
             }
         }
@@ -161,6 +166,7 @@ impl App {
             id.pop(ui);
         }
         self.process_dispose();
+        self.error.draw(ui);
     }
 
     fn process_dispose(&self) {

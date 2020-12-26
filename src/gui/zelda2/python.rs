@@ -6,6 +6,7 @@ use imgui::ImString;
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::zelda2::project::{Edit, Project};
 use crate::zelda2::python::PythonScript;
@@ -17,6 +18,7 @@ pub struct PythonScriptGui {
     commit_index: isize,
     edit: Rc<Edit>,
     code: ImString,
+    error: ErrorDialog,
 }
 
 impl PythonScriptGui {
@@ -39,6 +41,7 @@ impl PythonScriptGui {
             commit_index: commit_index,
             edit: edit,
             code: ImString::new(&script),
+            error: ErrorDialog::default(),
         }))
     }
 
@@ -65,7 +68,7 @@ impl Gui for PythonScriptGui {
             .build(ui, || {
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("PythonScriptGui: commit error {}", e),
+                        Err(e) => self.error.show("PythonScript", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -85,6 +88,7 @@ impl Gui for PythonScriptGui {
 
                 self.changed = changed;
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Script Changed"),

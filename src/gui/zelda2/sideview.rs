@@ -13,6 +13,7 @@ use crate::gui::util::KeyAction;
 use crate::gui::util::{DragHelper, SelectBox};
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::{Selector, Visibility};
 use crate::idpath;
 use crate::nes::Address;
@@ -54,6 +55,7 @@ pub struct SideviewGui {
     enemies: Vec<(ImString, u8)>,
     enemies_map: HashMap<usize, usize>,
     connections: Vec<ImString>,
+    error: ErrorDialog,
 }
 
 impl SideviewGui {
@@ -153,6 +155,7 @@ impl SideviewGui {
             enemies: Vec::new(),
             enemies_map: HashMap::new(),
             connections: Vec::new(),
+            error: ErrorDialog::default(),
         });
         ret.list_object_names()?;
         Ok(ret)
@@ -1327,7 +1330,7 @@ impl Gui for SideviewGui {
                 ui.same_line(0.0);
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("SideviewGui: commit error {:?}", e),
+                        Err(e) => self.error.show("SideviewGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -1415,6 +1418,7 @@ impl Gui for SideviewGui {
                 }
                 self.changed |= changed;
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Sideview Changed"),
@@ -1431,7 +1435,7 @@ impl Gui for SideviewGui {
             self.sideview = match Sideview::from_rom(&self.edit, id.clone()) {
                 Ok(val) => val,
                 Err(e) => {
-                    error!("Error loading map: {:?}", e);
+                    self.error.show("SideviewGui", "Error loading map", Some(e));
                     Sideview::new(id.clone())
                 }
             };

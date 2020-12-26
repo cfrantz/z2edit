@@ -5,6 +5,7 @@ use imgui::im_str;
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
+use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::zelda2::project::{Edit, Project, RomData};
 use crate::zelda2::start::Start;
@@ -16,6 +17,7 @@ pub struct StartGui {
     commit_index: isize,
     edit: Rc<Edit>,
     start: Start,
+    error: ErrorDialog,
 }
 
 impl StartGui {
@@ -33,6 +35,7 @@ impl StartGui {
             commit_index: commit_index,
             edit: edit,
             start: start,
+            error: ErrorDialog::default(),
         }))
     }
 
@@ -57,7 +60,7 @@ impl Gui for StartGui {
             .build(ui, || {
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
-                        Err(e) => error!("EnemyGui: commit error {}", e),
+                        Err(e) => self.error.show("StartGui", "Commit Error", Some(e)),
                         _ => {}
                     };
                     self.changed = false;
@@ -130,6 +133,7 @@ impl Gui for StartGui {
                 ui.separator();
                 self.changed = changed;
             });
+        self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
             im_str!("Start Values Changed"),
