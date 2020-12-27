@@ -99,7 +99,7 @@ impl RomData for Hacks {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let cfg = &config.misc.hacks;
         let rom = edit.rom.borrow();
 
@@ -114,7 +114,7 @@ impl RomData for Hacks {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let cfg = &config.misc.hacks;
 
         {

@@ -122,7 +122,7 @@ impl RomData for Enemy {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let (egrp, ecfg) = config.enemy.find(&self.id)?;
         let rom = edit.rom.borrow();
         let hp = rom.read(egrp.hp + ecfg.offset)?;
@@ -150,7 +150,7 @@ impl RomData for Enemy {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let (egrp, ecfg) = config.enemy.find(&self.id)?;
 
         let xp0 = (self.palette << 6) as u8

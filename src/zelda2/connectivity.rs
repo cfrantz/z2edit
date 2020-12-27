@@ -16,7 +16,7 @@ pub struct Connectivity {
 impl Connectivity {
     pub fn scan(&mut self, edit: &Rc<Edit>) -> Result<()> {
         self.connector.clear();
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         for ocfg in config.overworld.map.iter() {
             self.explore_overworld(edit, ocfg, &config)?;
         }

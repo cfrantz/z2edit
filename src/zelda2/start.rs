@@ -94,7 +94,7 @@ impl RomData for Start {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let start = config.misc.start.values;
         let rom = edit.rom.borrow();
 
@@ -130,7 +130,7 @@ impl RomData for Start {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let start = config.misc.start.values;
         let mut rom = edit.rom.borrow_mut();
 

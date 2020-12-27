@@ -110,7 +110,7 @@ impl RomData for ImportRom {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let path = self.file.to_pathbuf()?;
         info!("ImportRom: loading file {:?}", path);
         let rom = Buffer::from_file(&path, Some(config.layout.clone()))?;

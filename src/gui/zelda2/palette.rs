@@ -29,7 +29,7 @@ pub struct PaletteGui {
 impl PaletteGui {
     pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
         let edit = project.get_commit(commit_index)?;
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let mut names = Vec::new();
         for group in config.palette.0.iter() {
             names.push(ImString::new(&group.name));
@@ -160,7 +160,7 @@ impl Gui for PaletteGui {
                     self.changed = false;
                 }
 
-                let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+                let config = Config::get(&self.edit.config()).unwrap();
                 ui.text(im_str!(
                     "{:<20}    {:<18} {:<18} {:<18} {:<18}",
                     "Title",

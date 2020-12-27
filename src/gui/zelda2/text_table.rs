@@ -29,7 +29,7 @@ pub struct TextTableGui {
 impl TextTableGui {
     pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
         let edit = project.get_commit(commit_index)?;
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let mut names = Vec::new();
         let mut orig = Vec::<Vec<ImString>>::new();
         let mut text = Vec::<Vec<ImString>>::new();
@@ -58,7 +58,7 @@ impl TextTableGui {
 
     pub fn read_text(&mut self, project: &Project) -> Result<()> {
         let edit = project.get_commit(self.commit_index)?;
-        let config = Config::get(&self.edit.meta.borrow().config)?;
+        let config = Config::get(&self.edit.config())?;
 
         let mut curr = TextTable::default();
         curr.unpack(&edit)?;
@@ -85,7 +85,7 @@ impl TextTableGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let config = Config::get(&self.edit.meta.borrow().config)?;
+        let config = Config::get(&self.edit.config())?;
         let mut edit = Box::new(TextTable::default());
         for i in 0..self.text.len() {
             let tcfg = &config.text_table.table[i];

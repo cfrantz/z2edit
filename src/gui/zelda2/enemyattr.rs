@@ -79,7 +79,7 @@ static COLUMNS: Lazy<Vec<(&ImStr, f32)>> = Lazy::new(|| {
 impl EnemyGui {
     pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
         let edit = project.get_commit(commit_index)?;
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let mut names = Vec::new();
         for group in config.enemy.0.iter() {
             names.push(ImString::new(&group.name));
@@ -252,7 +252,7 @@ impl Gui for EnemyGui {
                     self.changed = false;
                 }
 
-                let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+                let config = Config::get(&self.edit.config()).unwrap();
                 ui.columns(COLUMNS.len() as i32, im_str!("columns"), true);
                 ui.separator();
                 let mut offset = 0.0;

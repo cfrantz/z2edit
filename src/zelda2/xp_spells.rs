@@ -99,7 +99,7 @@ impl RomData for ExperienceTable {
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let rom = edit.rom.borrow();
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let tcfg = config.experience.find(&self.id)?;
         let offset = tcfg.offset.unwrap_or(0);
         self.data.clear();
@@ -120,7 +120,7 @@ impl RomData for ExperienceTable {
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let mut rom = edit.rom.borrow_mut();
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let tcfg = config.experience.find(&self.id)?;
         let offset = tcfg.offset.unwrap_or(0);
         for (i, val) in self.data.iter().enumerate() {

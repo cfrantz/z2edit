@@ -102,7 +102,7 @@ impl RomData for Palette {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let pcfg = config.palette.find(&self.id)?;
         let length = pcfg.length.unwrap_or(16);
         self.data = edit.rom.borrow().read_bytes(pcfg.address, length)?.to_vec();
@@ -110,7 +110,7 @@ impl RomData for Palette {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let pcfg = config.palette.find(&self.id)?;
         edit.rom
             .borrow_mut()

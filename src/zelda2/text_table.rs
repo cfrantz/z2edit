@@ -89,7 +89,7 @@ impl RomData for TextTable {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let rom = edit.rom.borrow();
 
         self.data.clear();
@@ -109,7 +109,7 @@ impl RomData for TextTable {
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let mut all = TextTable::default();
         all.unpack(edit)?;
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let mut rom = edit.rom.borrow_mut();
         let mut memory = edit.memory.borrow_mut();
 

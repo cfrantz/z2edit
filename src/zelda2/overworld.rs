@@ -364,7 +364,7 @@ impl Connector {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let ocfg = config.overworld.find(&self.id)?;
         let index = self.id.usize_last()?;
         let rom = edit.rom.borrow();
@@ -439,7 +439,7 @@ impl Connector {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let ocfg = config.overworld.find(&self.id)?;
         let index = self.id.usize_last()?;
         let mut rom = edit.rom.borrow_mut();
@@ -624,7 +624,7 @@ impl RomData for Overworld {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let ocfg = config.overworld.find(&self.id)?;
         let addr = edit.rom.borrow().read_pointer(ocfg.pointer)?;
 
@@ -651,7 +651,7 @@ impl RomData for Overworld {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let ocfg = config.overworld.find(&self.id)?;
         let map = self.map.compress(self, &config.overworld);
         if map.data.len() >= config.overworld.overworld_len {

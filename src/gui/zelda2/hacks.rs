@@ -45,7 +45,7 @@ impl HacksGui {
     }
 
     fn names(edit: &Edit) -> Result<(Vec<ImString>, Vec<Vec<ImString>>)> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let cfg = &config.misc.hacks;
         let mut titles = Vec::new();
         let mut names = Vec::new();
@@ -61,7 +61,7 @@ impl HacksGui {
         let mut hacks = Hacks::default();
         hacks.unpack(edit)?;
 
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let cfg = &config.misc.hacks;
 
         // We don't try to detect the assembly-based hacks, so we clone
