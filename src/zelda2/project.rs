@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::cell::{Cell, RefCell};
+use std::cell::{Cell, Ref, RefCell};
 use std::clone::Clone;
 use std::collections::HashMap;
 use std::convert::From;
@@ -356,6 +356,10 @@ impl Edit {
         } else {
             meta.config.to_owned()
         }
+    }
+
+    pub fn config(&self) -> Ref<'_, String> {
+        Ref::map(self.meta.borrow(), |meta| &meta.config)
     }
 
     pub fn export(&self, filename: &Path) -> Result<String> {

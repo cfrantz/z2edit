@@ -17,9 +17,9 @@ pub mod config {
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct EnemyGroup {
-        pub id: String,
+        pub id: IdPath,
         #[serde(default)]
-        pub alias: String,
+        pub alias: IdPath,
         pub name: String,
         pub world: u8,
         pub overworld: u8,
@@ -39,11 +39,11 @@ pub mod config {
         }
 
         pub fn find(&self, path: &IdPath) -> Result<(&EnemyGroup, &Sprite)> {
-            path.check_len("enemy", 2)?;
+            path.check_len("enemy", 3)?;
             for group in self.0.iter() {
-                if path.at(0) == group.id || path.at(0) == group.alias {
+                if path.prefix(&group.id) || path.prefix(&group.alias) {
                     for enemy in group.enemy.iter() {
-                        if path.at(1) == enemy.id {
+                        if path.at(2) == enemy.id {
                             return Ok((group, enemy));
                         }
                     }
@@ -54,7 +54,7 @@ pub mod config {
 
         pub fn find_group(&self, path: &IdPath) -> Result<&EnemyGroup> {
             for group in self.0.iter() {
-                if path.at(0) == group.id || path.at(0) == group.alias {
+                if path.prefix(&group.id) || path.prefix(&group.alias) {
                     return Ok(group);
                 }
             }
@@ -63,7 +63,7 @@ pub mod config {
 
         pub fn find_by_index(&self, path: &IdPath, index: u8) -> Result<(&EnemyGroup, &Sprite)> {
             for group in self.0.iter() {
-                if path.at(0) == group.id || path.at(0) == group.alias {
+                if path.prefix(&group.id) || path.prefix(&group.alias) {
                     for enemy in group.enemy.iter() {
                         if index == enemy.offset {
                             return Ok((group, enemy));

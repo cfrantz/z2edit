@@ -6,9 +6,9 @@ use std::convert::From;
 use std::rc::Rc;
 
 use crate::errors::*;
-//use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::sideview::SideviewGui;
 use crate::gui::zelda2::Gui;
+use crate::idpath;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
 use crate::zelda2::objects::config::Config as ObjectConfig;
@@ -364,7 +364,7 @@ pub struct EnemyList {
 impl EnemyList {
     pub fn from_rom(edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<Self> {
         let scfg = config.sideview.find(id)?;
-        let index = id.usize_at(1)?;
+        let index = id.usize_last()?;
         if index >= scfg.length {
             return Err(ErrorKind::IndexError(index).into());
         }
@@ -403,7 +403,7 @@ impl EnemyList {
             return Ok(());
         }
         let (el, n, mut all) = self.read_all(edit, id, config)?;
-        let index = id.usize_at(1)?;
+        let index = id.usize_last()?;
 
         all[n * 63 + index] = self.clone();
         // This list has been edited, so make it unique.
@@ -592,6 +592,7 @@ impl Sideview {
             Err(ErrorKind::IdPathError("id required".to_string()).into())
         }
     }
+
     pub fn from_rom(edit: &Rc<Edit>, id: IdPath) -> Result<Self> {
         let mut sideview = Sideview::default();
         sideview.id = id;
@@ -619,6 +620,10 @@ impl Sideview {
             None
         }
     }
+
+    pub fn enemy_group(&self) -> IdPath {
+        idpath!(self.id.at(0), "enemy")
+    }
 }
 
 #[typetag::serde]
@@ -636,7 +641,7 @@ impl RomData for Sideview {
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let scfg = config.sideview.find(&self.id)?;
-        let index = self.id.usize_at(1)?;
+        let index = self.id.usize_last()?;
         if index >= scfg.length {
             return Err(ErrorKind::IndexError(index).into());
         }
@@ -691,7 +696,7 @@ impl RomData for Sideview {
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let scfg = config.sideview.find(&self.id)?;
-        let index = self.id.usize_at(1)?;
+        let index = self.id.usize_last()?;
         if index >= scfg.length {
             return Err(ErrorKind::IndexError(index).into());
         }

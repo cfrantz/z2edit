@@ -61,7 +61,7 @@ pub struct SideviewGui {
 impl SideviewGui {
     pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
         let edit = project.get_commit(commit_index)?;
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
 
         let mut sideview = if commit_index == -1 {
             Sideview::default()
@@ -113,15 +113,15 @@ impl SideviewGui {
         let background = TileCache::new(
             &edit,
             Schema::MetaTile(
-                edit.meta.borrow().config.clone(),
+                edit.config().clone(),
                 sideview.id.clone(),
                 sideview.map.background_palette,
             ),
         );
-        let item = TileCache::new(&edit, Schema::Item(edit.meta.borrow().config.clone()));
+        let item = TileCache::new(&edit, Schema::Item(edit.config().clone()));
         let enemy = TileCache::new(
             &edit,
-            Schema::Enemy(edit.meta.borrow().config.clone(), sideview.id.clone()),
+            Schema::Enemy(edit.config().clone(), sideview.enemy_group()),
         );
 
         let mut undo = UndoStack::new(1000);
@@ -163,9 +163,9 @@ impl SideviewGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let edit = Box::new(self.sideview.clone());
-        let config = Config::get(&self.edit.meta.borrow().config)?;
+        let config = Config::get(&self.edit.config())?;
         let group = config.sideview.find(&self.sideview.id)?;
-        let area = self.sideview.id.usize_at(1)?;
+        let area = self.sideview.id.usize_last()?;
         let name = if let Some(pet_name) = group.pet_names.get(&area) {
             format!("{} {} ({})", group.name, area, pet_name)
         } else {
@@ -180,15 +180,14 @@ impl SideviewGui {
 
     pub fn reset_caches(&mut self) {
         self.background.reset(Schema::MetaTile(
-            self.edit.meta.borrow().config.clone(),
+            self.edit.config().clone(),
             self.sideview.id.clone(),
             self.sideview.map.background_palette,
         ));
-        self.item
-            .reset(Schema::Item(self.edit.meta.borrow().config.clone()));
+        self.item.reset(Schema::Item(self.edit.config().clone()));
         self.enemy.reset(Schema::Enemy(
-            self.edit.meta.borrow().config.clone(),
-            self.sideview.id.clone(),
+            self.edit.config().clone(),
+            self.sideview.enemy_group(),
         ));
         if let Some(id) = self.edit.overworld_connector(&self.sideview.id) {
             let conn = Connector::from_rom(&self.edit, id).expect("reset_caches");
@@ -211,7 +210,7 @@ impl SideviewGui {
     }
 
     fn list_object_names(&mut self) -> Result<()> {
-        let config = Config::get(&self.edit.meta.borrow().config)?;
+        let config = Config::get(&self.edit.config())?;
         let scfg = config.sideview.find(&self.sideview.id)?;
 
         self.objects.clear();
@@ -281,7 +280,7 @@ impl SideviewGui {
                 .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
             self.items_map.insert(obj.offset as usize, i);
         }
-        let enemy_group = config.enemy.find_group(&self.sideview.id)?;
+        let enemy_group = config.enemy.find_group(&self.sideview.enemy_group())?;
         for (i, obj) in enemy_group.enemy.iter().enumerate() {
             self.enemies
                 .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
@@ -1184,7 +1183,7 @@ impl SideviewGui {
 
     fn draw_map_command_header(&mut self, config: &Config, ui: &imgui::Ui) -> Result<EditAction> {
         let scfg = config.sideview.find(&self.sideview.id)?;
-        let index = self.sideview.id.usize_at(1)?;
+        let index = self.sideview.id.usize_last()?;
         let rom = self.edit.rom.borrow();
 
         let ptr = scfg.address + index * 2;
@@ -1300,7 +1299,7 @@ impl Gui for SideviewGui {
         if !visible {
             return;
         }
-        let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+        let config = Config::get(&self.edit.config()).unwrap();
         imgui::Window::new(&im_str!("Sideview##{}", self.win_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)

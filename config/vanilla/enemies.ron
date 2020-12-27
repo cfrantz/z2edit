@@ -29,8 +29,8 @@
 
 ([
     (
-        id: "west_hyrule",
-        alias: "death_mountain",
+        id: "west_hyrule/enemy",
+        alias: "death_mountain/enemy",
         name: "West Hyrule",
         world: 0,
         overworld: 0,
@@ -422,8 +422,8 @@
         ]
     ),
     (
-        id: "east_hyrule",
-        alias: "maze_island",
+        id: "east_hyrule/enemy",
+        alias: "maze_island/enemy",
         name: "East Hyrule",
         world: 0,
         overworld: 2,
@@ -753,7 +753,7 @@
         ]
     ),
     (
-        id: "town",
+        id: "town/enemy",
         name: "Town",
         world: 1,
         overworld: 0,
@@ -1153,7 +1153,7 @@
         ]
     ),
     (
-        id: "palace_125",
+        id: "palace_125/enemy",
         name: "Palace 125",
         world: 3,
         overworld: 0,
@@ -1577,7 +1577,7 @@
         ]
     ),
     (
-        id: "palace_346",
+        id: "palace_346/enemy",
         name: "Palace 346",
         world: 4,
         overworld: 0,
@@ -2003,7 +2003,7 @@
         ]
     ),
     (
-        id: "great_palace",
+        id: "great_palace/enemy",
         name: "Great Palace",
         world: 5,
         overworld: 0,

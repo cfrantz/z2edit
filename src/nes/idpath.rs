@@ -26,6 +26,15 @@ impl IdPath {
         }
     }
 
+    pub fn prefix(&self, other: &IdPath) -> bool {
+        for (a, b) in self.0.iter().zip(other.0.iter()) {
+            if a != b {
+                return false;
+            }
+        }
+        return true;
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -36,6 +45,12 @@ impl IdPath {
 
     pub fn usize_at(&self, i: usize) -> Result<usize> {
         let result = self.0[i].parse()?;
+        Ok(result)
+    }
+
+    pub fn usize_last(&self) -> Result<usize> {
+        let index = self.0.len() - 1;
+        let result = self.0[index].parse()?;
         Ok(result)
     }
 
