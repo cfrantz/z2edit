@@ -46,7 +46,7 @@ pub struct OverworldGui {
 impl OverworldGui {
     pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
         let edit = project.get_commit(commit_index)?;
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
 
         let overworld = if commit_index == -1 {
             let id = idpath!(config.overworld.map[0].id);
@@ -61,7 +61,7 @@ impl OverworldGui {
         let mut selected = 0;
         for (i, map) in config.overworld.map.iter().enumerate() {
             names.push(ImString::from(map.name.clone()));
-            if map.id == overworld.id.at(0) {
+            if map.id == overworld.id {
                 selected = i;
             }
         }
@@ -69,7 +69,7 @@ impl OverworldGui {
         let win_id = edit.win_id(commit_index);
         let cache = TileCache::new(
             &edit,
-            Schema::Overworld(edit.meta.borrow().config.clone(), overworld.id.clone()),
+            Schema::Overworld(edit.config().clone(), overworld.id.clone()),
         );
 
         let mut undo = UndoStack::new(1000);
@@ -99,7 +99,7 @@ impl OverworldGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+        let config = Config::get(&self.edit.config()).unwrap();
         let overworld = &config.overworld.map[self.selector.value()];
         let i = project.commit(
             self.commit_index,
@@ -172,7 +172,7 @@ impl OverworldGui {
     }
 
     fn draw_tile_selection(&mut self, ui: &imgui::Ui) {
-        let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+        let config = Config::get(&self.edit.config()).unwrap();
         let overworld = &config.overworld.map[self.selector.value()];
         let group = ui.begin_group();
         ui.text(im_str!(
@@ -371,8 +371,7 @@ impl OverworldGui {
         let mut changed = false;
         let scale = self.scale * 16.0;
 
-        let id0 = ui.push_id(imgui::Id::Str(&conn.id.at(0)));
-        let id1 = ui.push_id(imgui::Id::Str(&conn.id.at(1)));
+        let id = ui.push_id(imgui::Id::Str(&conn.id.to_string()));
         let delta = self.conn_drag.delta(n);
         let pos = [
             conn.x as f32 * scale + delta[0],
@@ -382,7 +381,7 @@ impl OverworldGui {
         text_outlined(
             ui,
             [1.0, 0.0, 1.0, 1.0],
-            &im_str!("{:02}", conn.id.usize_at(1).unwrap()),
+            &im_str!("{:02}", conn.id.usize_last().unwrap()),
         );
         ui.set_cursor_pos(pos);
         ui.invisible_button(&im_str!("edit"), [16.0, 16.0]);
@@ -406,15 +405,14 @@ impl OverworldGui {
             changed |= OverworldGui::connection_edit(&mut conn, ui);
             ui.end_popup();
         }
-        id1.pop(ui);
-        id0.pop(ui);
+        id.pop(ui);
         (focus, changed)
     }
 
     fn emulate_at(conn: &Connector, edit: &Rc<Edit>, ov: usize) {
-        let config = Config::get(&edit.meta.borrow().config).unwrap();
+        let config = Config::get(&edit.config()).unwrap();
         let overworld = &config.overworld.map[ov];
-        let mut index = conn.id.usize_at(1).unwrap();
+        let mut index = conn.id.usize_last().unwrap();
         let mut at = EmulateAt::default();
 
         let (region, bank) = if conn.dest_world == 0 {
@@ -602,7 +600,7 @@ impl OverworldGui {
     }
 
     fn draw_encounters_dialog(&mut self, ui: &imgui::Ui) -> bool {
-        let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+        let config = Config::get(&self.edit.config()).unwrap();
         let mut changed = false;
         ui.popup(im_str!("encounters"), || {
             changed |= ui
@@ -638,7 +636,7 @@ impl Gui for OverworldGui {
         if !visible {
             return;
         }
-        let config = Config::get(&self.edit.meta.borrow().config).unwrap();
+        let config = Config::get(&self.edit.config()).unwrap();
         imgui::Window::new(&im_str!("Overworld##{}", self.win_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -724,7 +722,7 @@ impl Gui for OverworldGui {
             self.overworld = Overworld::from_rom(&self.edit, id).unwrap();
             self.undo.reset(self.overworld.clone());
             self.cache.reset(Schema::Overworld(
-                self.edit.meta.borrow().config.clone(),
+                self.edit.config().clone(),
                 self.overworld.id.clone(),
             ));
             self.changed = false;

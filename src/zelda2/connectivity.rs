@@ -33,8 +33,8 @@ impl Connectivity {
         ocfg: &overworld::config::Overworld,
         config: &Config,
     ) -> Result<()> {
-        let ov = overworld::Overworld::from_rom(edit, idpath!(ocfg.id))?;
-        for (i, conn) in ov.connector.iter().enumerate() {
+        let ov = overworld::Overworld::from_rom(edit, ocfg.id.clone())?;
+        for conn in ov.connector.iter() {
             let hidden = if let Some(h) = &conn.hidden {
                 h.hidden
             } else {
@@ -59,12 +59,7 @@ impl Connectivity {
                 (conn.dest_overworld, 0)
             };
             let scfg = config.sideview.find_by_world(world, overworld, subworld)?;
-            self.explore_sideview(
-                edit,
-                &idpath!(ocfg.id, i),
-                &idpath!(scfg.id, conn.dest_map),
-                scfg,
-            )?;
+            self.explore_sideview(edit, &conn.id, &idpath!(scfg.id, conn.dest_map), scfg)?;
         }
         Ok(())
     }

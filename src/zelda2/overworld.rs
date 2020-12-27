@@ -23,7 +23,7 @@ pub mod config {
     }
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct Overworld {
-        pub id: String,
+        pub id: IdPath,
         pub name: String,
         pub overworld: usize,
         pub subworld: usize,
@@ -57,7 +57,7 @@ pub mod config {
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct HiddenSpot {
-        pub id: String,
+        pub id: IdPath,
         pub kind: HiddenKind,
         pub connector: Address,
         pub overworld: Address,
@@ -88,9 +88,9 @@ pub mod config {
         }
 
         pub fn find(&self, path: &IdPath) -> Result<&config::Overworld> {
-            path.check_range("overworld", 1..3)?;
+            path.check_range("overworld", 1..=3)?;
             for overworld in self.map.iter() {
-                if path.at(0) == overworld.id {
+                if path.prefix(&overworld.id) {
                     return Ok(overworld);
                 }
             }
@@ -100,7 +100,7 @@ pub mod config {
         pub fn find_hidden(&self, path: &IdPath) -> Result<&config::HiddenSpot> {
             path.check_len("hidden", 1)?;
             for hidden in self.hidden.iter() {
-                if path.at(0) == hidden.id {
+                if *path == hidden.id {
                     return Ok(hidden);
                 }
             }
@@ -138,7 +138,7 @@ pub mod config {
                 .map(|byte| Encounter::from(*byte).dest_map)
                 .collect::<Vec<i32>>();
 
-            let map = id.usize_at(1)? as i32;
+            let map = id.usize_last()? as i32;
             Ok(encounters.contains(&map))
         }
 
@@ -219,7 +219,7 @@ impl Map {
                 let mut want_compress = true;
                 let tile = row[x];
                 if let Some(conn) = overworld.connector_at(x, y) {
-                    let index = conn.id.usize_at(1).unwrap();
+                    let index = conn.id.usize_last().unwrap();
                     if let Some(palace) = config.palace_code(index) {
                         want_compress = false;
                         map.palace_offset[palace] = map.data.len() as u16;
@@ -366,7 +366,7 @@ impl Connector {
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let ocfg = config.overworld.find(&self.id)?;
-        let index = self.id.usize_at(1)?;
+        let index = self.id.usize_last()?;
         let rom = edit.rom.borrow();
 
         let y = rom.read(ocfg.connector + index + 0x00)?;
@@ -421,7 +421,7 @@ impl Connector {
         config: &'a config::Config,
     ) -> Result<Option<&'a config::HiddenSpot>> {
         let ocfg = config.find(&self.id)?;
-        let index = self.id.usize_at(1)?;
+        let index = self.id.usize_last()?;
         let rom = edit.rom.borrow();
         for h in config.hidden.iter() {
             if rom.read(h.connector)? == index as u8
@@ -441,7 +441,7 @@ impl Connector {
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.meta.borrow().config)?;
         let ocfg = config.overworld.find(&self.id)?;
-        let index = self.id.usize_at(1)?;
+        let index = self.id.usize_last()?;
         let mut rom = edit.rom.borrow_mut();
 
         let y =
@@ -643,8 +643,8 @@ impl RomData for Overworld {
 
         self.connector.clear();
         for index in 0..63 {
-            self.connector
-                .push(Connector::from_rom(edit, idpath!(ocfg.id, index))?);
+            let conn_id = ocfg.id.extend("connector").extend(index);
+            self.connector.push(Connector::from_rom(edit, conn_id)?);
         }
 
         Ok(())

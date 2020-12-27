@@ -1,7 +1,7 @@
 use crate::nes::Address;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use std::ops::Range;
+use std::ops::RangeBounds;
 
 error_chain! {
     foreign_links {
@@ -50,14 +50,14 @@ error_chain! {
             description("IdPath not found"),
             display("IdPath not found: {}", path),
         }
-        IdPathBadLength(category: String, len: usize) {
+        IdPathBadLength(category: String, path: String, len: usize) {
             description("Bad IdPath length"),
-            display("Bad IdPath length: {} expecting length {}", category, len),
+            display("Bad IdPath length: {} expecting length {} ({})", category, len, path),
         }
-        IdPathBadRange(category: String, range: Range<usize>) {
+        IdPathBadRange(category: String, path: String, range: String) {
             description("Bad IdPath length"),
-            display("Bad IdPath length: {} expecting length in range {}..{}",
-                    category, range.start, range.end),
+            display("Bad IdPath length: {} expecting length in range {:?} ({})",
+                    category, range, path),
         }
         IndexError(index: usize) {
             description("Bad index"),

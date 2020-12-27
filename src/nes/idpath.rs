@@ -2,7 +2,7 @@ use crate::errors::*;
 use serde::{Deserialize, Serialize};
 use std::convert::{From, Into};
 use std::fmt;
-use std::ops::Range;
+use std::ops::RangeBounds;
 use std::string::ToString;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
@@ -15,14 +15,18 @@ impl IdPath {
         if len == self.0.len() {
             Ok(())
         } else {
-            Err(ErrorKind::IdPathBadLength(category.to_owned(), len).into())
+            Err(ErrorKind::IdPathBadLength(category.to_owned(), self.to_string(), len).into())
         }
     }
-    pub fn check_range(&self, category: &str, range: Range<usize>) -> Result<()> {
+    pub fn check_range<R>(&self, category: &str, range: R) -> Result<()>
+    where
+        R: RangeBounds<usize> + fmt::Debug,
+    {
         if range.contains(&self.0.len()) {
             Ok(())
         } else {
-            Err(ErrorKind::IdPathBadRange(category.to_owned(), range).into())
+            let range = format!("{:?}", range);
+            Err(ErrorKind::IdPathBadRange(category.to_owned(), self.to_string(), range).into())
         }
     }
 
