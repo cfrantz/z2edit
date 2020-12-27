@@ -539,7 +539,6 @@ impl EnemyList {
         id: &IdPath,
         config: &'a Config,
     ) -> Option<(&'a TextTable, usize, usize)> {
-        info!("Text info for enemy {} in {}", enemy.kind, id);
         if enemy.kind < 10 {
             return None;
         }
@@ -550,7 +549,6 @@ impl EnemyList {
         };
         // This should turn into something like "west_hyrule/town".
         let text_id = idpath!(connection.at(0), id.at(0));
-        info!("Connection: {} -> {}", connection, text_id);
         let town_text = match config.text_table.find(&text_id) {
             Ok(table) => table,
             Err(_) => {
@@ -559,13 +557,11 @@ impl EnemyList {
                 return None;
             }
         };
-        info!("town_text = {:?}", town_text);
         if let Some(town_code) = config
             .overworld
             .town_code(connection.usize_last().expect("get_text_info"))
         {
             let townsperson = enemy.kind - 10;
-            info!("Townsperson: {}", townsperson);
             Some((town_text, townsperson, town_code))
         } else {
             None
