@@ -121,7 +121,7 @@ impl SideviewGui {
         let item = TileCache::new(&edit, Schema::Item(edit.config().clone()));
         let enemy = TileCache::new(
             &edit,
-            Schema::Enemy(edit.config().clone(), sideview.enemy_group()),
+            Schema::Enemy(edit.config().clone(), sideview.enemy_group_id()),
         );
 
         let mut undo = UndoStack::new(1000);
@@ -187,7 +187,7 @@ impl SideviewGui {
         self.item.reset(Schema::Item(self.edit.config().clone()));
         self.enemy.reset(Schema::Enemy(
             self.edit.config().clone(),
-            self.sideview.enemy_group(),
+            self.sideview.enemy_group_id(),
         ));
         if let Some(id) = self.edit.overworld_connector(&self.sideview.id) {
             let conn = Connector::from_rom(&self.edit, id).expect("reset_caches");
@@ -280,7 +280,7 @@ impl SideviewGui {
                 .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
             self.items_map.insert(obj.offset as usize, i);
         }
-        let enemy_group = config.enemy.find_group(&self.sideview.enemy_group())?;
+        let enemy_group = config.enemy.find_group(&self.sideview.enemy_group_id())?;
         for (i, obj) in enemy_group.enemy.iter().enumerate() {
             self.enemies
                 .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));

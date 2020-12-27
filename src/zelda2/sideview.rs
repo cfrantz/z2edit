@@ -30,7 +30,7 @@ pub mod config {
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct SideviewGroup {
-        pub id: String,
+        pub id: IdPath,
         pub name: String,
         pub kind: ObjectArea,
         pub world: usize,
@@ -81,7 +81,7 @@ pub mod config {
         pub fn find(&self, path: &IdPath) -> Result<&config::SideviewGroup> {
             path.check_range("sideview", 1..3)?;
             for group in self.group.iter() {
-                if path.at(0) == group.id {
+                if path.prefix(&group.id) {
                     return Ok(group);
                 }
             }
@@ -601,7 +601,7 @@ impl Sideview {
     }
 
     pub fn background_layer_from_rom(&self, edit: &Rc<Edit>) -> Option<Self> {
-        let config = Config::get(&edit.meta.borrow().config).unwrap();
+        let config = Config::get(&edit.config()).unwrap();
         let scfg = config.sideview.find(&self.id).unwrap();
         if self.map.background_map != 0 {
             if let Some(bg_id) = &scfg.background_id {
@@ -621,7 +621,7 @@ impl Sideview {
         }
     }
 
-    pub fn enemy_group(&self) -> IdPath {
+    pub fn enemy_group_id(&self) -> IdPath {
         idpath!(self.id.at(0), "enemy")
     }
 }
@@ -639,7 +639,7 @@ impl RomData for Sideview {
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let scfg = config.sideview.find(&self.id)?;
         let index = self.id.usize_last()?;
         if index >= scfg.length {
@@ -694,7 +694,7 @@ impl RomData for Sideview {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let config = Config::get(&edit.meta.borrow().config)?;
+        let config = Config::get(&edit.config())?;
         let scfg = config.sideview.find(&self.id)?;
         let index = self.id.usize_last()?;
         if index >= scfg.length {
