@@ -54,7 +54,7 @@ pub mod config {
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
 
-        pub fn find_sprite(&self, path: &IdPath) -> Result<&config::Palette> {
+        pub fn find_sprite(&self, path: &IdPath, index: usize) -> Result<&config::Palette> {
             let path0 = path.at(0);
             let mut area = match path0 {
                 "palace_125" | "palace_346" => "palace".to_owned(),
@@ -64,7 +64,7 @@ pub mod config {
                 _ => path0.to_owned(),
             };
             area.push_str("_sprites");
-            self.find(&idpath!(area, 1))
+            self.find(&idpath!(area, index))
         }
 
         pub fn vanilla() -> Self {

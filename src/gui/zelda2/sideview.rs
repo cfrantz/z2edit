@@ -123,7 +123,11 @@ impl SideviewGui {
         let item = TileCache::new(&edit, Schema::Item(edit.config().clone()));
         let enemy = TileCache::new(
             &edit,
-            Schema::Enemy(edit.config().clone(), sideview.enemy_group_id()),
+            Schema::Enemy(
+                edit.config().clone(),
+                sideview.enemy_group_id(),
+                sideview.map.sprite_palette,
+            ),
         );
 
         let mut undo = UndoStack::new(1000);
@@ -192,6 +196,7 @@ impl SideviewGui {
         self.enemy.reset(Schema::Enemy(
             self.edit.config().clone(),
             self.sideview.enemy_group_id(),
+            self.sideview.map.sprite_palette,
         ));
         if let Some(id) = self.edit.overworld_connector(&self.sideview.id) {
             let conn = Connector::from_rom(&self.edit, id).expect("reset_caches");

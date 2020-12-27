@@ -19,7 +19,7 @@ const ERROR_BITMAP: [u32; 64] = [
 pub enum Schema {
     Overworld(String, IdPath),
     MetaTile(String, IdPath, i32),
-    Enemy(String, IdPath),
+    Enemy(String, IdPath, i32),
     Item(String),
 }
 
@@ -220,10 +220,10 @@ impl TileCache {
         Ok(image)
     }
 
-    fn get_sprite(&self, tile: u8, config: &str, id: &IdPath) -> Result<Image> {
+    fn get_sprite(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
         let config = Config::get(config)?;
         let rom = self.edit.rom.borrow();
-        let palette = config.palette.find_sprite(id)?;
+        let palette = config.palette.find_sprite(id, palidx as usize)?;
         let (romaddr, sprite_info) = if id.at(0) == "item" {
             (Some(config.items.sprite_table), config.items.find(tile)?)
         } else {
@@ -300,8 +300,10 @@ impl TileCache {
                     Schema::MetaTile(config, id, palidx) => {
                         self.get_meta_tile(tile, config, id, *palidx)?
                     }
-                    Schema::Enemy(config, id) => self.get_sprite(tile, config, id)?,
-                    Schema::Item(config) => self.get_sprite(tile, config, &idpath!("item"))?,
+                    Schema::Enemy(config, id, palidx) => {
+                        self.get_sprite(tile, config, id, *palidx)?
+                    }
+                    Schema::Item(config) => self.get_sprite(tile, config, &idpath!("item"), 0)?,
                 };
                 cache.insert(tile, image);
             }
