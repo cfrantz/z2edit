@@ -2,14 +2,14 @@
     pointer: Prg(3, 0xb423),
     table: [
         (
-            id: "west_towns",
-            name: "West Towns",
+            id: "west_hyrule/town",
+            name: "West Hyrule Towns",
             index: 0,
             length: 52,
         ),
         (
-            id: "east_towns",
-            name: "East Towns",
+            id: "east_hyrule/town",
+            name: "East Hyrule Towns",
             index: 1,
             length: 46,
         ),

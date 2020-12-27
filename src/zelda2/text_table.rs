@@ -6,7 +6,6 @@ use std::rc::Rc;
 use crate::errors::*;
 use crate::gui::zelda2::text_table::TextTableGui;
 use crate::gui::zelda2::Gui;
-use crate::idpath;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
@@ -16,7 +15,7 @@ pub mod config {
     use super::*;
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct TextTable {
-        pub id: String,
+        pub id: IdPath,
         pub name: String,
         pub index: usize,
         pub length: usize,
@@ -35,9 +34,9 @@ pub mod config {
         }
 
         pub fn find(&self, path: &IdPath) -> Result<&config::TextTable> {
-            path.check_len("text table", 2)?;
+            path.check_len("text table", 3)?;
             for table in self.table.iter() {
-                if path.at(0) == table.id {
+                if path.prefix(&table.id) {
                     return Ok(table);
                 }
             }
@@ -99,7 +98,7 @@ impl RomData for TextTable {
             for i in 0..tcfg.length {
                 let str_ptr = rom.read_pointer(table + i * 2)?;
                 self.data.push(TextItem {
-                    id: idpath!(tcfg.id, i),
+                    id: tcfg.id.extend(i),
                     text: Text::from_zelda2(rom.read_terminated(str_ptr, 0xff)?),
                 });
             }
@@ -118,7 +117,7 @@ impl RomData for TextTable {
         for item in all.data.iter() {
             let tcfg = config.text_table.find(&item.id)?;
             let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
-            let index = item.id.usize_at(1)?;
+            let index = item.id.usize_last()?;
             let str_ptr = rom.read_pointer(table + index * 2)?;
             memory.free(str_ptr, item.text.len() as u16 + 1);
         }
@@ -129,7 +128,7 @@ impl RomData for TextTable {
         for item in all.data.iter() {
             let tcfg = config.text_table.find(&item.id)?;
             let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
-            let index = item.id.usize_at(1)?;
+            let index = item.id.usize_last()?;
             let str_ptr = rom.read_pointer(table + index * 2)?;
             let str_ptr = memory.alloc_near(str_ptr, item.text.len() as u16 + 1)?;
             info!(
