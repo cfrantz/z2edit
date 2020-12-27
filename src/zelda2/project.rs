@@ -152,7 +152,9 @@ impl Project {
         }
         info!("Project::replay: {}.pack", commit.edit.borrow().name());
         commit.edit.borrow().pack(&commit)?;
-        commit.connectivity.borrow_mut().scan(&commit)?;
+        commit
+            .connectivity
+            .replace(Connectivity::from_rom(&commit)?);
         Ok(())
     }
 
@@ -198,7 +200,9 @@ impl Project {
                 error: RefCell::default(),
             });
             commit.edit.borrow().pack(&commit)?;
-            commit.connectivity.borrow_mut().scan(&commit)?;
+            commit
+                .connectivity
+                .replace(Connectivity::from_rom(&commit)?);
             self.edits.push(commit);
             self.changed.set(true);
             Ok(len)

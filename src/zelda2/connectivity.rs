@@ -14,13 +14,13 @@ pub struct Connectivity {
 }
 
 impl Connectivity {
-    pub fn scan(&mut self, edit: &Rc<Edit>) -> Result<()> {
-        self.connector.clear();
+    pub fn from_rom(edit: &Rc<Edit>) -> Result<Self> {
+        let mut result = Connectivity::default();
         let config = Config::get(&edit.config())?;
         for ocfg in config.overworld.map.iter() {
-            self.explore_overworld(edit, ocfg, &config)?;
+            result.explore_overworld(edit, ocfg, &config)?;
         }
-        Ok(())
+        Ok(result)
     }
 
     pub fn overworld_connector(&self, id: &IdPath) -> Option<&IdPath> {

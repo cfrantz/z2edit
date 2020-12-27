@@ -62,7 +62,7 @@ git submodule update --init --recursive
     - Palette Editor
     - Palace graphics banks and palettes (added to overworld connections)
     - Python script execution
-    - Sideview editor (still needs townspeople "enemy" properties)
+    - Sideview editor
     - Start Values
     - Text Table
     - Apply default fixes (move maps and code out of keepout regions)

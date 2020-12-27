@@ -77,8 +77,8 @@ impl TextTableGui {
         }
         for (o, c) in orig.data.iter().zip(curr.data.iter()) {
             let tcfg = config.text_table.find(&o.id)?;
-            self.orig[tcfg.index].push(ImString::new(&o.text));
-            self.text[tcfg.index].push(ImString::new(&c.text));
+            self.orig[tcfg.offset].push(ImString::new(&o.text));
+            self.text[tcfg.offset].push(ImString::new(&c.text));
         }
 
         Ok(())

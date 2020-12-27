@@ -14,6 +14,7 @@ use crate::zelda2::config::Config;
 use crate::zelda2::objects::config::Config as ObjectConfig;
 use crate::zelda2::objects::config::{Object, ObjectArea, ObjectKind, Renderer};
 use crate::zelda2::project::{Edit, Project, RomData};
+use crate::zelda2::text_table::config::TextTable;
 
 pub mod config {
     use super::*;
@@ -347,7 +348,7 @@ pub struct Enemy {
     pub y: i32,
     pub kind: usize,
     #[serde(default)]
-    pub dialog: Vec<i32>,
+    pub dialog: Vec<IdPath>,
     #[serde(default)]
     pub condition: Option<u8>,
 }
@@ -389,12 +390,13 @@ impl EnemyList {
         }
 
         debug!("EnemyList: {} read from {:x?} ({} bytes)", id, addr, total);
-        let list = EnemyList {
+        let mut list = EnemyList {
             data: data,
             is_encounter: is_encounter,
             valid: true,
             ram_address: ram_address.raw() as u16,
         };
+        list.read_text(edit, id, config)?;
         Ok(list)
     }
 
@@ -406,6 +408,7 @@ impl EnemyList {
         let index = id.usize_last()?;
 
         all[n * 63 + index] = self.clone();
+        self.write_text(edit, id, config)?;
         // This list has been edited, so make it unique.
         all[n * 63 + index].ram_address = 0;
 
@@ -528,6 +531,116 @@ impl EnemyList {
             i += 2;
         }
         list
+    }
+
+    fn get_text_info<'a>(
+        enemy: &Enemy,
+        edit: &Rc<Edit>,
+        id: &IdPath,
+        config: &'a Config,
+    ) -> Option<(&'a TextTable, usize, usize)> {
+        info!("Text info for enemy {} in {}", enemy.kind, id);
+        if enemy.kind < 10 {
+            return None;
+        }
+        let connection = if let Some(c) = edit.overworld_connector(&id) {
+            c
+        } else {
+            return None;
+        };
+        // This should turn into something like "west_hyrule/town".
+        let text_id = idpath!(connection.at(0), id.at(0));
+        info!("Connection: {} -> {}", connection, text_id);
+        let town_text = match config.text_table.find(&text_id) {
+            Ok(table) => table,
+            Err(_) => {
+                // Text table not found, probably because we're asking for a
+                // table which doesn't exist (e.g. a palace).
+                return None;
+            }
+        };
+        info!("town_text = {:?}", town_text);
+        if let Some(town_code) = config
+            .overworld
+            .town_code(connection.usize_last().expect("get_text_info"))
+        {
+            let townsperson = enemy.kind - 10;
+            info!("Townsperson: {}", townsperson);
+            Some((town_text, townsperson, town_code))
+        } else {
+            None
+        }
+    }
+
+    fn read_text_one(
+        enemy: &mut Enemy,
+        edit: &Rc<Edit>,
+        id: &IdPath,
+        config: &Config,
+    ) -> Result<()> {
+        if let Some((town_text, townsperson, town_code)) =
+            EnemyList::get_text_info(enemy, edit, id, config)
+        {
+            let rom = edit.rom.borrow();
+            let i = townsperson * 4 + town_code;
+            for index in town_text.index.iter() {
+                if i < index.length {
+                    let dialog = rom.read(index.address + i)?;
+                    enemy.dialog.push(town_text.id.extend(dialog));
+                }
+            }
+            if townsperson >= 9 && townsperson < 13 {
+                let i = (townsperson - 9) * 8 + town_text.offset * 4 + town_code;
+                enemy.condition = Some(rom.read(config.text_table.dialog_conditions + i)?);
+            }
+        }
+        Ok(())
+    }
+
+    fn read_text(&mut self, edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<()> {
+        for list in self.data.iter_mut() {
+            for enemy in list.iter_mut() {
+                EnemyList::read_text_one(enemy, edit, id, config)?
+            }
+        }
+        Ok(())
+    }
+
+    fn write_text_one(enemy: &Enemy, edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<()> {
+        if let Some((town_text, townsperson, town_code)) =
+            EnemyList::get_text_info(enemy, edit, id, config)
+        {
+            let mut rom = edit.rom.borrow_mut();
+            let i = townsperson * 4 + town_code;
+            for (index, dialog) in town_text.index.iter().zip(enemy.dialog.iter()) {
+                if i < index.length {
+                    if !town_text.id.prefix(dialog) {
+                        return Err(ErrorKind::IdPathError(format!(
+                            "Expected prefix of {} but saw {}",
+                            town_text.id, dialog
+                        ))
+                        .into());
+                    }
+                    rom.write(index.address + i, dialog.usize_last()? as u8)?;
+                }
+            }
+            if townsperson >= 9 && townsperson < 13 {
+                if let Some(cond) = enemy.condition {
+                    let i = (townsperson - 9) * 8 + town_text.offset * 4 + town_code;
+                    rom.write(config.text_table.dialog_conditions + i, cond)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn write_text(&self, edit: &Rc<Edit>, id: &IdPath, config: &Config) -> Result<()> {
+        for list in self.data.iter() {
+            for enemy in list.iter() {
+                EnemyList::write_text_one(enemy, edit, id, config)?
+            }
+        }
+        Ok(())
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {

@@ -58,6 +58,20 @@ impl IdPath {
         Ok(result)
     }
 
+    pub fn set<T: ToString>(&mut self, index: isize, val: T) -> Result<()> {
+        let index = if index < 0 {
+            (self.0.len() as isize + index) as usize
+        } else {
+            index as usize
+        };
+        if let Some(item) = self.0.get_mut(index) {
+            *item = val.to_string();
+            Ok(())
+        } else {
+            Err(ErrorKind::IndexError(index).into())
+        }
+    }
+
     pub fn extend<T: ToString>(&self, val: T) -> Self {
         let mut ret = self.clone();
         for component in val.to_string().split('/') {

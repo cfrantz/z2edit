@@ -26,6 +26,7 @@ use crate::zelda2::objects::config::ObjectKind;
 use crate::zelda2::overworld::Connector;
 use crate::zelda2::project::{Edit, EditAction, Project, RomData};
 use crate::zelda2::sideview::{Decompressor, Enemy, MapCommand, Sideview};
+use crate::zelda2::text_table::TextTable;
 
 pub struct SideviewGui {
     visible: Visibility,
@@ -55,6 +56,7 @@ pub struct SideviewGui {
     enemies: Vec<(ImString, u8)>,
     enemies_map: HashMap<usize, usize>,
     connections: Vec<ImString>,
+    text_table: TextTable,
     error: ErrorDialog,
 }
 
@@ -127,6 +129,7 @@ impl SideviewGui {
         let mut undo = UndoStack::new(1000);
         undo.push(sideview.clone());
         let win_id = edit.win_id(commit_index);
+        let text_table = TextTable::from_rom(&edit)?;
         let mut ret = Box::new(SideviewGui {
             visible: Visibility::Visible,
             changed: false,
@@ -155,6 +158,7 @@ impl SideviewGui {
             enemies: Vec::new(),
             enemies_map: HashMap::new(),
             connections: Vec::new(),
+            text_table: text_table,
             error: ErrorDialog::default(),
         });
         ret.list_object_names()?;
@@ -603,6 +607,7 @@ impl SideviewGui {
         let mut action = EditAction::None;
         for i in 0..self.sideview.enemy.data[el].len() {
             action.set(self.draw_enemy_item(el, i, false, ui).expect("enemy_item"));
+            ui.separator();
         }
         if self.sideview.enemy.data[el].len() == 0 {
             if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
@@ -723,6 +728,51 @@ impl SideviewGui {
                 action.set(EditAction::Delete(index));
             }
             tooltip("Delete", ui);
+        }
+
+        let width = ui.push_item_width(100.0);
+        for d in 0..self.sideview.enemy.data[el][index].dialog.len() {
+            let dialog = &mut self.sideview.enemy.data[el][index].dialog[d];
+            let mut dlg = dialog.usize_last().expect("draw_enemy_item.dialog") as i32;
+            if !popup {
+                ui.new_line();
+                ui.same_line(120.0);
+            }
+            if ui.input_int(&im_str!("##dialog{}", d), &mut dlg).build() {
+                dlg = clamp(dlg, 0, 255);
+                dialog.set(-1, dlg).unwrap();
+                action.set(EditAction::Update);
+            }
+            ui.same_line(0.0);
+            if let Some(textitem) = self.text_table.get(dialog) {
+                ui.text(&textitem.text);
+            } else {
+                ui.text(im_str!("No dialog {}", dialog));
+            }
+        }
+        width.pop(ui);
+
+        if let Some(condition) = self.sideview.enemy.data[el][index].condition.as_mut() {
+            let base = if !popup {
+                ui.new_line();
+                ui.same_line(120.0);
+                272.0
+            } else {
+                160.0
+            };
+            ui.text("Condition satisfiers: b7  b6  b5  b4  b3  b2  b1  b0");
+            ui.new_line();
+
+            for i in 0..8 {
+                ui.same_line(base + 28.0 * i as f32);
+                let mask = 1u8 << (7 - i);
+                let mut bit = (*condition & mask) != 0;
+                if ui.checkbox(&im_str!("##b{}", i), &mut bit) {
+                    *condition &= !mask;
+                    *condition |= if bit { mask } else { 0 };
+                    action.set(EditAction::Update);
+                }
+            }
         }
 
         id0.pop(ui);

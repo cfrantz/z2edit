@@ -14,16 +14,24 @@ use crate::zelda2::text_encoding::Text;
 pub mod config {
     use super::*;
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct DialogIndex {
+        pub address: Address,
+        pub length: usize,
+    }
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct TextTable {
         pub id: IdPath,
         pub name: String,
-        pub index: usize,
+        pub offset: usize,
         pub length: usize,
+        pub index: Vec<DialogIndex>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Config {
         pub pointer: Address,
+        pub dialog_conditions: Address,
         pub table: Vec<TextTable>,
     }
 
@@ -34,7 +42,7 @@ pub mod config {
         }
 
         pub fn find(&self, path: &IdPath) -> Result<&config::TextTable> {
-            path.check_len("text table", 3)?;
+            path.check_range("text table", 2..=3)?;
             for table in self.table.iter() {
                 if path.prefix(&table.id) {
                     return Ok(table);
@@ -68,6 +76,22 @@ impl TextTable {
             Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
         }
     }
+
+    pub fn from_rom(edit: &Rc<Edit>) -> Result<Self> {
+        let mut result = TextTable::default();
+        result.unpack(edit)?;
+        Ok(result)
+    }
+
+    pub fn get(&self, id: &IdPath) -> Option<&TextItem> {
+        for item in self.data.iter() {
+            if item.id == *id {
+                return Some(item);
+            }
+        }
+        None
+    }
+
     fn merge(&mut self, other: &TextTable) {
         for o in other.data.iter() {
             for d in self.data.iter_mut() {
@@ -94,7 +118,7 @@ impl RomData for TextTable {
 
         self.data.clear();
         for tcfg in config.text_table.table.iter() {
-            let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
+            let table = rom.read_pointer(config.text_table.pointer + tcfg.offset * 2)?;
             for i in 0..tcfg.length {
                 let str_ptr = rom.read_pointer(table + i * 2)?;
                 self.data.push(TextItem {
@@ -116,7 +140,7 @@ impl RomData for TextTable {
         // Free the entire block of text.
         for item in all.data.iter() {
             let tcfg = config.text_table.find(&item.id)?;
-            let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
+            let table = rom.read_pointer(config.text_table.pointer + tcfg.offset * 2)?;
             let index = item.id.usize_last()?;
             let str_ptr = rom.read_pointer(table + index * 2)?;
             memory.free(str_ptr, item.text.len() as u16 + 1);
@@ -127,7 +151,7 @@ impl RomData for TextTable {
         // Re-allocate and write the strings into rom.
         for item in all.data.iter() {
             let tcfg = config.text_table.find(&item.id)?;
-            let table = rom.read_pointer(config.text_table.pointer + tcfg.index * 2)?;
+            let table = rom.read_pointer(config.text_table.pointer + tcfg.offset * 2)?;
             let index = item.id.usize_last()?;
             let str_ptr = rom.read_pointer(table + index * 2)?;
             let str_ptr = memory.alloc_near(str_ptr, item.text.len() as u16 + 1)?;

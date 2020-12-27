@@ -1,17 +1,26 @@
 (
     pointer: Prg(3, 0xb423),
+    dialog_conditions: Prg(3, 0xb42e),
     table: [
         (
             id: "west_hyrule/town",
             name: "West Hyrule Towns",
-            index: 0,
+            offset: 0,
             length: 52,
+            index: [
+                (address: Prg(3, 0xa238), length: 100),
+                (address: Prg(3, 0xa29c), length: 64),
+            ],
         ),
         (
             id: "east_hyrule/town",
             name: "East Hyrule Towns",
-            index: 1,
+            offset: 1,
             length: 46,
+            index: [
+                (address: Prg(3, 0xa2dc), length: 100),
+                (address: Prg(3, 0xa340), length: 64),
+            ],
         ),
     ],
 )
