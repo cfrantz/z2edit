@@ -429,6 +429,7 @@ impl ProjectGui {
         }
 
         ui.dock_space(dock_id, [0.0, 0.0]);
+        let before = self.project.borrow(py).changed.get();
         if let Some(token) = window {
             self.menu(py, ui);
             imgui::Window::new(&im_str!("Edit List##{}", self.dock_id)).build(ui, || {
@@ -443,21 +444,23 @@ impl ProjectGui {
             token.end(ui);
 
             let mut project = self.project.borrow_mut(py);
-            let prjchanged = project.changed.get();
             let widgetlist = ui.push_id("widgetlist");
             for widget in self.widgets.iter_mut() {
                 ui.set_next_window_dock_id(self.editor_pane, imgui::Condition::Once);
                 widget.draw(&mut project, ui);
             }
             widgetlist.pop(ui);
-            self.changed |= project.changed.get();
-            self.want_autosave |= (prjchanged == false) && project.changed.get();
         }
+        self.process_editactions(py);
+        let after = self.project.borrow(py).changed.get();
+        self.changed |= after;
+        self.want_autosave |= before == false && after == true;
         if self.want_autosave {
             self.autosave(py, None);
+            // An autosave means the project was updated, so refresh the widgets as well.
+            self.refresh();
         }
         self.dispose_widgets();
-        self.process_editactions(py);
         self.error.draw(ui);
         self.visible.change(visible, self.changed);
         if Some(true)
@@ -473,5 +476,13 @@ impl ProjectGui {
 
     pub fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
+    }
+
+    pub fn refresh(&mut self) {
+        // FIXME: this is sub-optimal: should only have to refresh widgets
+        // after the replay point.
+        for widget in self.widgets.iter_mut() {
+            widget.refresh();
+        }
     }
 }

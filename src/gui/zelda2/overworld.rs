@@ -729,6 +729,10 @@ impl Gui for OverworldGui {
         }
     }
 
+    fn refresh(&mut self) {
+        self.cache.clear();
+    }
+
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
     }

@@ -16,6 +16,7 @@ use imgui;
 
 pub trait Gui {
     fn draw(&mut self, project: &mut Project, ui: &imgui::Ui);
+    fn refresh(&mut self) {}
     fn wants_dispose(&self) -> bool {
         false
     }

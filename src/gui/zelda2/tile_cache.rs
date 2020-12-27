@@ -51,20 +51,24 @@ impl TileCache {
         }
     }
 
+    pub fn clear(&self) {
+        self.cache.borrow_mut().clear();
+    }
+
     pub fn reset(&mut self, schema: Schema) {
         self.schema = schema;
-        self.cache.borrow_mut().clear();
+        self.clear();
         self.chr_override = None;
         self.pal_override = None;
     }
 
     pub fn set_chr_override(&mut self, addr: Option<Address>) {
-        self.cache.borrow_mut().clear();
+        self.clear();
         self.chr_override = addr;
     }
 
     pub fn set_pal_override(&mut self, addr: Option<Address>) {
-        self.cache.borrow_mut().clear();
+        self.clear();
         self.pal_override = addr;
     }
 

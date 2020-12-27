@@ -216,6 +216,7 @@ impl SideviewGui {
                 }
             }
         }
+        self.text_table = TextTable::from_rom(&self.edit).expect("reset_caches");
     }
 
     fn list_object_names(&mut self) -> Result<()> {
@@ -1500,6 +1501,10 @@ impl Gui for SideviewGui {
             self.undo.reset(self.sideview.clone());
             self.changed = false;
         }
+    }
+
+    fn refresh(&mut self) {
+        self.reset_caches();
     }
 
     fn wants_dispose(&self) -> bool {
