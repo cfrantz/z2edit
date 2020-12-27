@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::convert::{From, Into};
 use std::fmt;
 use std::ops::Range;
+use std::string::ToString;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(from = "String")]
@@ -38,16 +39,12 @@ impl IdPath {
         Ok(result)
     }
 
-    pub fn to_string(&self) -> String {
-        self.0.join("/")
-    }
-
-    pub fn push(&mut self, val: &str) {
-        self.0.push(val.to_owned());
-    }
-
-    pub fn push_usize(&mut self, val: usize) {
-        self.0.push(val.to_string());
+    pub fn extend<T: ToString>(&self, val: T) -> Self {
+        let mut ret = self.clone();
+        for component in val.to_string().split('/') {
+            ret.0.push(component.to_string());
+        }
+        ret
     }
 }
 
@@ -77,7 +74,7 @@ impl From<IdPath> for String {
 
 impl fmt::Display for IdPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self.to_string())
+        write!(f, "{}", self.0.join("/"))
     }
 }
 

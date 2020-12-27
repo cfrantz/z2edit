@@ -502,8 +502,7 @@ impl EnemyList {
             }
             let scfg = config.sideview.find(world)?;
             for index in 0..scfg.length {
-                let mut area = world.clone();
-                area.push_usize(index);
+                let area = world.extend(index);
                 ret.push(EnemyList::from_rom(edit, &area, config)?);
             }
         }
@@ -605,8 +604,7 @@ impl Sideview {
         let scfg = config.sideview.find(&self.id).unwrap();
         if self.map.background_map != 0 {
             if let Some(bg_id) = &scfg.background_id {
-                let mut bg_id = bg_id.clone();
-                bg_id.push(&(self.map.background_map - 1).to_string());
+                let bg_id = bg_id.extend(self.map.background_map - 1);
                 match Sideview::from_rom(edit, bg_id) {
                     Ok(v) => Some(v),
                     Err(e) => {
