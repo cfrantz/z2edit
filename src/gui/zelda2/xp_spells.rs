@@ -237,7 +237,7 @@ impl ExperienceTableGui {
             }
             ui.same_line(0.0);
             let mut sprite = im_str!("{:02x}", self.value[i].sprites[1]);
-            if imgui::InputText::new(ui, im_str!("##spr0"), &mut sprite)
+            if imgui::InputText::new(ui, im_str!("##spr1"), &mut sprite)
                 .chars_hexadecimal(true)
                 .build()
             {
