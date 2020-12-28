@@ -50,12 +50,13 @@ git submodule update --init --recursive
 
 ### TODO
 
-- Partial Implementation
+- Done (or at least a partial implementation)
     - 6502 Assembler
     - Console (python)
     - Emulate / Emulate at a location
     - Enemy Attributes
     - Experience & Spells
+    - Enemy XP values and graphics
     - Import Rom
     - Misc Hacks (still need to add several common misc hacks)
     - Overworld editor
@@ -75,8 +76,7 @@ git submodule update --init --recursive
     - Drops (drop probabilities, hidden drops, pbag values)
     - Item Effects
     - Tile transforms
-    - Object table
-    - Enemy XP values and graphics
+    - Metatile Editor (aka "Object table" in Z2Edit 1).
     - CHR viewer
     - Import banks or graphics
     - Help documentation

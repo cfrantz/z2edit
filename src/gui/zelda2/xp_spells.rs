@@ -1,4 +1,6 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::i32;
 use std::rc::Rc;
 
 use imgui;
@@ -6,14 +8,16 @@ use imgui::{im_str, ImStr, ImString};
 use once_cell::sync::Lazy;
 
 use crate::errors::*;
+use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
 use crate::idpath;
+use crate::nes::Address;
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
 use crate::zelda2::text_encoding::Text;
-use crate::zelda2::xp_spells::{config, ExperienceTable, ExperienceTableGroup};
+use crate::zelda2::xp_spells::{config, ExperienceTable, ExperienceTableGroup, ExperienceValue};
 
 pub struct ExperienceTableGui {
     visible: Visibility,
@@ -24,8 +28,10 @@ pub struct ExperienceTableGui {
     names: Vec<ImString>,
     orig: Vec<ExperienceTableGroup>,
     group: Vec<ExperienceTableGroup>,
+    value: Vec<ExperienceValue>,
     selected: usize,
     gui_once_init: bool,
+    tile_cache: TileCache,
     error: ErrorDialog,
 }
 
@@ -81,14 +87,25 @@ impl ExperienceTableGui {
         for group in config.experience.group.iter() {
             names.push(ImString::new(&group.name));
         }
-        let data = ExperienceTableGui::read_tables(&config, &edit)?;
-        let orig = if commit_index > 0 {
+        names.push(ImString::new("Experience Values & Graphics"));
+
+        let (data, values) = ExperienceTableGui::read_tables(&config, &edit)?;
+        let (orig, values) = if commit_index > 0 {
             let prev = project.get_commit(commit_index - 1)?;
             ExperienceTableGui::read_tables(&config, &prev)?
         } else {
-            data.clone()
+            (data.clone(), values)
         };
 
+        let tile_cache = TileCache::new(
+            &edit,
+            Schema::RawSprite(
+                edit.config().clone(),
+                Address::Chr(2, 0),
+                idpath!("west_hyrule_sprites", 0),
+                1,
+            ),
+        );
         let win_id = edit.win_id(commit_index);
         Ok(Box::new(ExperienceTableGui {
             visible: Visibility::Visible,
@@ -99,14 +116,20 @@ impl ExperienceTableGui {
             names: names,
             orig: orig,
             group: data,
+            value: values,
             selected: 0,
             gui_once_init: true,
+            tile_cache: tile_cache,
             error: ErrorDialog::default(),
         }))
     }
 
-    pub fn read_tables(config: &Config, edit: &Rc<Edit>) -> Result<Vec<ExperienceTableGroup>> {
+    pub fn read_tables(
+        config: &Config,
+        edit: &Rc<Edit>,
+    ) -> Result<(Vec<ExperienceTableGroup>, Vec<ExperienceValue>)> {
         let mut data = Vec::new();
+        let mut values = Vec::new();
         for group in config.experience.group.iter() {
             let mut pg = ExperienceTableGroup::default();
             for table in group.table.iter() {
@@ -119,7 +142,14 @@ impl ExperienceTableGui {
             }
             data.push(pg);
         }
-        Ok(data)
+
+        for i in 0..config.experience.values.length {
+            values.push(ExperienceValue::from_rom(
+                edit,
+                config.experience.values.id.extend(i),
+            )?);
+        }
+        Ok((data, values))
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
@@ -131,13 +161,12 @@ impl ExperienceTableGui {
                 }
             }
         }
-        if edit.data.len() == 0 {
-            info!("ExperienceTableGui: no changes to commit.");
-        } else {
-            let i = project.commit(self.commit_index, edit, None)?;
-            self.edit = project.get_commit(i)?;
-            self.commit_index = i;
-        }
+
+        edit.value = self.value.clone();
+        let i = project.commit(self.commit_index, edit, None)?;
+        self.edit = project.get_commit(i)?;
+        self.commit_index = i;
+
         Ok(())
     }
 
@@ -182,6 +211,54 @@ impl ExperienceTableGui {
 
         changed
     }
+
+    pub fn xp_values(&mut self, ui: &imgui::Ui) -> bool {
+        let mut changed = false;
+
+        for i in 0..self.value.len() {
+            ui.separator();
+            let id = ui.push_id(i as i32);
+            ui.text(im_str!("Experience Value {:x}:  ", i));
+            ui.same_line(0.0);
+            let width = ui.push_item_width(100.0);
+            let value = &mut self.value[i].value;
+            changed |= ui.input_int(im_str!("##value"), value).build();
+            width.pop(ui);
+            ui.same_line(300.0);
+            let width = ui.push_item_width(48.0);
+
+            let mut sprite = im_str!("{:02x}", self.value[i].sprites[0]);
+            if imgui::InputText::new(ui, im_str!("##spr0"), &mut sprite)
+                .chars_hexadecimal(true)
+                .build()
+            {
+                self.value[i].sprites[0] = i32::from_str_radix(sprite.to_str(), 16).unwrap_or(0);
+                changed |= true;
+            }
+            ui.same_line(0.0);
+            let mut sprite = im_str!("{:02x}", self.value[i].sprites[1]);
+            if imgui::InputText::new(ui, im_str!("##spr0"), &mut sprite)
+                .chars_hexadecimal(true)
+                .build()
+            {
+                self.value[i].sprites[1] = i32::from_str_radix(sprite.to_str(), 16).unwrap_or(0);
+                changed |= true;
+            }
+            width.pop(ui);
+
+            ui.same_line(0.0);
+            ui.same_line_with_spacing(0.0, 32.0);
+            self.tile_cache
+                .get(self.value[i].sprites[0] as u8)
+                .draw(2.0, ui);
+            ui.same_line_with_spacing(0.0, 0.0);
+            self.tile_cache
+                .get(self.value[i].sprites[1] as u8)
+                .draw(2.0, ui);
+            id.pop(ui);
+        }
+        changed
+    }
 }
 
 impl Gui for ExperienceTableGui {
@@ -194,16 +271,12 @@ impl Gui for ExperienceTableGui {
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {
-                let names = self
-                    .names
-                    .iter()
-                    .map(|s| s.as_ref())
-                    .collect::<Vec<&ImStr>>();
                 let width = ui.push_item_width(400.0);
-                imgui::ComboBox::new(im_str!("Group")).build_simple_string(
+                imgui::ComboBox::new(im_str!("Group")).build_simple(
                     ui,
                     &mut self.selected,
-                    &names,
+                    &self.names,
+                    &|x| Cow::Borrowed(&x),
                 );
                 width.pop(ui);
 
@@ -219,29 +292,33 @@ impl Gui for ExperienceTableGui {
                 }
 
                 let config = Config::get(&self.edit.config()).unwrap();
-                let columns = COLUMNS
-                    .get(&config.experience.group[self.selected].id)
-                    .unwrap();
-                ui.columns(columns.len() as i32, im_str!("columns"), true);
-                ui.separator();
-                for (n, name) in columns.iter().enumerate() {
-                    ui.set_column_offset(n as i32, (130 * n) as f32);
-                    ui.text(name);
-                    ui.next_column();
-                }
-                self.gui_once_init = true;
-                for (n, cfg) in config.experience.group[self.selected]
-                    .table
-                    .iter()
-                    .enumerate()
-                {
+                if self.selected == self.names.len() - 1 {
+                    self.changed |= self.xp_values(ui);
+                } else {
+                    let columns = COLUMNS
+                        .get(&config.experience.group[self.selected].id)
+                        .unwrap();
+                    ui.columns(columns.len() as i32, im_str!("columns"), true);
                     ui.separator();
-                    let mut table = &mut self.group[self.selected].data[n];
-                    let id = ui.push_id(&cfg.id);
-                    self.changed |= ExperienceTableGui::table_row(&mut table, &cfg, ui);
-                    id.pop(ui);
+                    for (n, name) in columns.iter().enumerate() {
+                        ui.set_column_offset(n as i32, (130 * n) as f32);
+                        ui.text(name);
+                        ui.next_column();
+                    }
+                    self.gui_once_init = true;
+                    for (n, cfg) in config.experience.group[self.selected]
+                        .table
+                        .iter()
+                        .enumerate()
+                    {
+                        ui.separator();
+                        let mut table = &mut self.group[self.selected].data[n];
+                        let id = ui.push_id(&cfg.id);
+                        self.changed |= ExperienceTableGui::table_row(&mut table, &cfg, ui);
+                        id.pop(ui);
+                    }
+                    ui.columns(1, im_str!(""), false);
                 }
-                ui.columns(1, im_str!(""), false);
                 ui.separator();
             });
         self.error.draw(ui);
@@ -251,6 +328,10 @@ impl Gui for ExperienceTableGui {
             "There are unsaved changes in the ExperienceTable Editor.\nDo you want to discard them?",
             ui,
         );
+    }
+
+    fn refresh(&mut self) {
+        self.tile_cache.clear();
     }
 
     fn wants_dispose(&self) -> bool {

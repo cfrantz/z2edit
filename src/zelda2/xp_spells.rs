@@ -32,13 +32,19 @@ pub mod config {
         pub name: String,
         pub table: Vec<ExperienceTable>,
     }
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct ExperienceTableValues {
+        pub id: IdPath,
+        pub length: usize,
+        pub enemy_xp_lo: Address,
+        pub enemy_xp_hi: Address,
+        pub enemy_xp_gfx: Address,
+    }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Config {
         pub group: Vec<config::ExperienceTableGroup>,
-        pub enemy_xp_lo: Address,
-        pub enemy_xp_hi: Address,
-        pub enemy_xp_gfx: Address,
+        pub values: ExperienceTableValues,
     }
 
     impl Config {
@@ -52,7 +58,7 @@ pub mod config {
             for group in self.group.iter() {
                 if path.at(0) == group.id {
                     for table in group.table.iter() {
-                        if path.at(1) == table.id {
+                        if path.last() == table.id {
                             return Ok(table);
                         }
                     }
@@ -164,9 +170,75 @@ impl RomData for ExperienceTable {
     }
 }
 
+#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ExperienceValue {
+    pub id: IdPath,
+    pub value: i32,
+    pub sprites: [i32; 2],
+}
+
+impl ExperienceValue {
+    pub fn create(id: Option<&str>) -> Result<Box<dyn RomData>> {
+        if let Some(id) = id {
+            Ok(Box::new(Self {
+                id: IdPath::from(id),
+                ..Default::default()
+            }))
+        } else {
+            Err(ErrorKind::IdPathError("id required".to_string()).into())
+        }
+    }
+
+    pub fn from_rom(edit: &Rc<Edit>, id: IdPath) -> Result<Self> {
+        let mut result = Self {
+            id: id,
+            ..Default::default()
+        };
+        result.unpack(edit)?;
+        Ok(result)
+    }
+}
+
+#[typetag::serde]
+impl RomData for ExperienceValue {
+    fn name(&self) -> String {
+        "ExperienceValue".to_owned()
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
+        let config = Config::get(&edit.config())?;
+        let values = &config.experience.values;
+        let offset = self.id.usize_last()?;
+        let rom = edit.rom.borrow();
+
+        self.value = rom.read(values.enemy_xp_lo + offset)? as i32
+            | (rom.read(values.enemy_xp_hi + offset)? as i32) << 8;
+        self.sprites[0] = rom.read(values.enemy_xp_gfx + offset)? as i32;
+        self.sprites[1] = rom.read(values.enemy_xp_gfx + offset + 16)? as i32;
+        Ok(())
+    }
+
+    fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
+        let config = Config::get(&edit.config())?;
+        let values = &config.experience.values;
+        let offset = self.id.usize_last()?;
+        let mut rom = edit.rom.borrow_mut();
+
+        rom.write(values.enemy_xp_lo + offset, self.value as u8)?;
+        rom.write(values.enemy_xp_hi + offset, (self.value >> 8) as u8)?;
+        rom.write(values.enemy_xp_gfx + offset, self.sprites[0] as u8)?;
+        rom.write(values.enemy_xp_gfx + offset + 16, self.sprites[1] as u8)?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ExperienceTableGroup {
     pub data: Vec<ExperienceTable>,
+    pub value: Vec<ExperienceValue>,
 }
 
 impl ExperienceTableGroup {
@@ -192,12 +264,19 @@ impl RomData for ExperienceTableGroup {
         for d in self.data.iter_mut() {
             d.unpack(edit)?;
         }
+        for v in self.value.iter_mut() {
+            v.unpack(edit)?;
+        }
+
         Ok(())
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         for d in self.data.iter() {
             d.pack(edit)?;
+        }
+        for v in self.value.iter() {
+            v.pack(edit)?;
         }
         Ok(())
     }

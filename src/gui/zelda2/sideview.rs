@@ -120,7 +120,10 @@ impl SideviewGui {
                 sideview.map.background_palette,
             ),
         );
-        let item = TileCache::new(&edit, Schema::Item(edit.config().clone()));
+        let item = TileCache::new(
+            &edit,
+            Schema::Item(edit.config().clone(), sideview.id.clone()),
+        );
         let enemy = TileCache::new(
             &edit,
             Schema::Enemy(
@@ -192,7 +195,10 @@ impl SideviewGui {
             self.sideview.id.clone(),
             self.sideview.map.background_palette,
         ));
-        self.item.reset(Schema::Item(self.edit.config().clone()));
+        self.item.reset(Schema::Item(
+            self.edit.config().clone(),
+            self.sideview.id.clone(),
+        ));
         self.enemy.reset(Schema::Enemy(
             self.edit.config().clone(),
             self.sideview.enemy_group_id(),

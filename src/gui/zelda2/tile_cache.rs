@@ -4,10 +4,11 @@ use std::rc::Rc;
 
 use crate::errors::*;
 use crate::gui::glhelper::Image;
-use crate::idpath;
 use crate::nes::hwpalette;
 use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
+use crate::zelda2::items::config::Sprite;
+use crate::zelda2::palette::config::Palette;
 use crate::zelda2::project::Edit;
 
 const ERROR_BITMAP: [u32; 64] = [
@@ -20,7 +21,8 @@ pub enum Schema {
     Overworld(String, IdPath),
     MetaTile(String, IdPath, i32),
     Enemy(String, IdPath, i32),
-    Item(String),
+    Item(String, IdPath),
+    RawSprite(String, Address, IdPath, u8),
 }
 
 #[derive(Debug)]
@@ -224,31 +226,49 @@ impl TileCache {
         Ok(image)
     }
 
-    fn get_sprite(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
+    fn get_raw_sprite(
+        &self,
+        tile: u8,
+        config: &str,
+        chr: Address,
+        id: &IdPath,
+        palidx: u8,
+    ) -> Result<Image> {
         let config = Config::get(config)?;
-        let rom = self.edit.rom.borrow();
+        let palette = config.palette.find(id)?;
+        let sprite_info = Sprite {
+            chr: chr,
+            palette: palidx,
+            size: (8, 16),
+            sprites: vec![tile as i32],
+            ..Default::default()
+        };
+        self.get_sprite_helper(&sprite_info, palette)
+    }
+
+    fn get_enemy_sprite(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
+        let config = Config::get(config)?;
         let palette = config.palette.find_sprite(id, palidx as usize)?;
-        let (romaddr, sprite_info) = if id.at(0) == "item" {
-            (Some(config.items.sprite_table), config.items.find(tile)?)
-        } else {
-            let (_, sprite) = config.enemy.find_by_index(id, tile)?;
-            (None, sprite)
-        };
+        let (_, sprite_info) = config.enemy.find_by_index(id, tile)?;
+        self.get_sprite_helper(sprite_info, palette)
+    }
 
-        let mut rom_sprites = [0i32, 0i32];
-        let sprites = if sprite_info.sprites.is_empty() {
-            if let Some(addr) = romaddr {
-                let table = rom.read_bytes(addr + tile * 2, 2)?;
-                rom_sprites[0] = table[0] as i32;
-                rom_sprites[1] = table[1] as i32;
-                &rom_sprites
-            } else {
-                return Err(ErrorKind::NotFound(format!("sprite {}", id)).into());
-            }
-        } else {
-            &sprite_info.sprites[..]
-        };
+    fn get_item_sprite(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
+        let config = Config::get(config)?;
+        let palette = config.palette.find_sprite(id, palidx as usize)?;
+        let mut sprite_info = config.items.find(tile)?.clone();
 
+        if sprite_info.sprites.is_empty() {
+            let addr = config.items.sprite_table + tile * 2;
+            let rom = self.edit.rom.borrow();
+            let table = rom.read_bytes(addr, 2)?;
+            sprite_info.sprites.push(table[0] as i32);
+            sprite_info.sprites.push(table[1] as i32);
+        }
+        self.get_sprite_helper(&sprite_info, palette)
+    }
+
+    fn get_sprite_helper(&self, sprite_info: &Sprite, palette: &Palette) -> Result<Image> {
         let (width, height) = sprite_info.size;
         let mut image = Image::new(width, height);
         let width = width / 8;
@@ -257,13 +277,14 @@ impl TileCache {
         while y < height {
             let mut x = 0;
             while x < width {
-                let sprite_id = sprites[(y * width + x) as usize];
+                let sprite_id = sprite_info.sprites[(y * width + x) as usize];
                 if sprite_id == -1 {
                     x += 1;
                     continue;
                 }
                 let mirror = sprite_id & 0x0100_0000 != 0
-                    || (x & 1 == 1 && sprite_id == sprites[(y * width + x - 1) as usize]);
+                    || (x & 1 == 1
+                        && sprite_id == sprite_info.sprites[(y * width + x - 1) as usize]);
                 let xdelta = (sprite_id as u32 >> 16) & 0xFF;
                 let ydelta = (sprite_id as u32 >> 8) & 0xFF;
                 let tile = sprite_id & 0xFE;
@@ -305,9 +326,14 @@ impl TileCache {
                         self.get_meta_tile(tile, config, id, *palidx)?
                     }
                     Schema::Enemy(config, id, palidx) => {
-                        self.get_sprite(tile, config, id, *palidx)?
+                        self.get_enemy_sprite(tile, config, id, *palidx)?
                     }
-                    Schema::Item(config) => self.get_sprite(tile, config, &idpath!("item"), 0)?,
+                    Schema::Item(config, area_id) => {
+                        self.get_item_sprite(tile, config, area_id, 0)?
+                    }
+                    Schema::RawSprite(config, chr, pal_id, palette) => {
+                        self.get_raw_sprite(tile, config, *chr, pal_id, *palette)?
+                    }
                 };
                 cache.insert(tile, image);
             }

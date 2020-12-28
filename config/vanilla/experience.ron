@@ -47,7 +47,11 @@
         ),
 
     ],
-    enemy_xp_lo: Prg(-1, 0xddc0),
-    enemy_xp_hi: Prg(-1, 0xdddc),
-    enemy_xp_gfx: Prg(-1, 0xdd4c),
+    values: (
+        id: "xp",
+        length: 16,
+        enemy_xp_lo: Prg(-1, 0xddc0),
+        enemy_xp_hi: Prg(-1, 0xdddc),
+        enemy_xp_gfx: Prg(-1, 0xdd4c),
+    ),
 )

@@ -52,6 +52,11 @@ impl IdPath {
         Ok(result)
     }
 
+    pub fn last(&self) -> &str {
+        let index = self.0.len() - 1;
+        &self.0[index]
+    }
+
     pub fn usize_last(&self) -> Result<usize> {
         let index = self.0.len() - 1;
         let result = self.0[index].parse()?;
