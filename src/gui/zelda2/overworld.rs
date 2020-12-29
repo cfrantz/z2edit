@@ -303,14 +303,15 @@ impl OverworldGui {
                     changed = new != orig;
                 }
             }
-            if !modifier && ui.is_mouse_clicked(MouseButton::Right) {
-                self.selectbox = SelectBox::default();
-            }
-            if io.key_shift && ui.is_mouse_clicked(MouseButton::Left) {
+            if (!modifier && ui.is_mouse_clicked(MouseButton::Right))
+                || (io.key_shift && ui.is_mouse_clicked(MouseButton::Left))
+            {
                 self.selectbox.init(tx, ty);
             }
         }
-        if io.key_shift && ui.is_mouse_dragging(MouseButton::Left) {
+        if (!modifier && ui.is_mouse_dragging(MouseButton::Right))
+            || (io.key_shift && ui.is_mouse_dragging(MouseButton::Left))
+        {
             self.selectbox.drag(
                 clamp(tx, 0, self.overworld.map.width as isize - 1),
                 clamp(ty, 0, self.overworld.map.height as isize - 1),
@@ -399,6 +400,9 @@ impl OverworldGui {
             }
         }
         if ui.popup_context_item(im_str!("connection")) {
+            let index = conn.id.usize_last().unwrap();
+            ui.text(im_str!("Overworld Connector {:02}", index));
+            ui.separator();
             if ui.button(im_str!("Emulate"), [0.0, 0.0]) {
                 OverworldGui::emulate_at(conn, &self.edit, self.selector.value());
             }
