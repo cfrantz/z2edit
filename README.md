@@ -64,6 +64,7 @@ git submodule update --init --recursive
     - Palace graphics banks and palettes (added to overworld connections)
     - Python script execution
     - Sideview editor
+      - TODO: copy/clone policy for maps which point to the same address
     - Start Values
     - Text Table
     - Apply default fixes (move maps and code out of keepout regions)
@@ -71,14 +72,14 @@ git submodule update --init --recursive
     - Remember the location of the vanilla rom
     - Periodic automatic save
     - Remember project association with exported ROMs
+    - CHR viewer / importer.
 
 - Not Started
     - Drops (drop probabilities, hidden drops, pbag values)
     - Item Effects
     - Tile transforms
     - Metatile Editor (aka "Object table" in Z2Edit 1).
-    - CHR viewer
-    - Import banks or graphics
+    - Multimap viewer
     - Help documentation
 
 - Other Features
@@ -89,6 +90,9 @@ git submodule update --init --recursive
     - Refactor some of the GUIs into common code
     - Add common methods to the `Edit` struct
     - Maybe add menubars to individual editor GUIs
+    - Relative-ize paths to location of project file (e.g. ImportChrBank)
+    - Check on TileCache recreation after commits in Overworld & Sideview editors.
+      - Create `Edit` instances as tentative commits.
 
 ### Cross Compile for Windows
 

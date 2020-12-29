@@ -1,6 +1,7 @@
 pub mod edit;
 pub mod enemyattr;
 pub mod hacks;
+pub mod import_chr;
 pub mod overworld;
 pub mod palette;
 pub mod project;

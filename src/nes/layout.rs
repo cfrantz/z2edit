@@ -40,6 +40,16 @@ impl Segment {
             Segment::Banked { length: n, .. } => *n,
         }
     }
+    pub fn banks(&self) -> usize {
+        match self {
+            Segment::Banked {
+                length: n,
+                banksize: sz,
+                ..
+            } => *n / *sz,
+            _ => 0,
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]

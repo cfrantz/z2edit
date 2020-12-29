@@ -3,6 +3,7 @@ pub mod connectivity;
 pub mod enemyattr;
 pub mod hacks;
 pub mod import;
+pub mod import_chr;
 pub mod items;
 pub mod objects;
 pub mod overworld;

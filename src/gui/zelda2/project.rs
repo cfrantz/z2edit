@@ -12,6 +12,7 @@ use crate::gui::app_context::AppContext;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::hacks::HacksGui;
+use crate::gui::zelda2::import_chr::ImportChrBankGui;
 use crate::gui::zelda2::overworld::OverworldGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::python::PythonScriptGui;
@@ -187,6 +188,15 @@ impl ProjectGui {
                         Err(e) => {
                             self.error
                                 .show("GUI", "Could not create ExperienceTableGui", Some(e))
+                        }
+                    };
+                }
+                if MenuItem::new(im_str!("Import CHR Bank")).build(ui) {
+                    match ImportChrBankGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => {
+                            self.error
+                                .show("GUI", "Could not create ImportChrBankGui", Some(e))
                         }
                     };
                 }

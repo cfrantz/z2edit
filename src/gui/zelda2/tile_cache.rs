@@ -18,11 +18,13 @@ const ERROR_BITMAP: [u32; 64] = [
 
 #[derive(Debug)]
 pub enum Schema {
+    None,
     Overworld(String, IdPath),
     MetaTile(String, IdPath, i32),
     Enemy(String, IdPath, i32),
     Item(String, IdPath),
     RawSprite(String, Address, IdPath, u8),
+    RawTile(Address, [u32; 4]),
 }
 
 #[derive(Debug)]
@@ -85,6 +87,28 @@ impl TileCache {
         sprite: bool,
     ) -> Result<()> {
         let rom = self.edit.rom.borrow();
+        let mut palette = [0u32; 4];
+        for (c, &i) in palette.iter_mut().zip(rom.read_bytes(paladdr, 4)?.iter()) {
+            *c = if i < 64 {
+                hwpalette::get(i as usize)
+            } else {
+                0
+            };
+        }
+        self.blit_raw(image, tileaddr, &palette, x0, y0, mirror, sprite)
+    }
+
+    fn blit_raw(
+        &self,
+        image: &mut Image,
+        tileaddr: Address,
+        palette: &[u32],
+        x0: u32,
+        y0: u32,
+        mirror: bool,
+        sprite: bool,
+    ) -> Result<()> {
+        let rom = self.edit.rom.borrow();
         for y in 0..8 {
             let a = rom.read(tileaddr + y)?;
             let b = rom.read(tileaddr + y + 8)?;
@@ -94,21 +118,62 @@ impl TileCache {
                 } else {
                     (((a << x) & 0x80) >> 7) | (((b << x) & 0x80) >> 6)
                 };
-                let idx = rom.read(paladdr + pix)?;
-                let color = if idx < 64 {
-                    if idx == 0 && sprite {
-                        0
-                    } else {
-                        hwpalette::get(idx as usize)
-                    }
-                } else {
+                let color = if sprite && pix == 0 {
                     0
+                } else {
+                    palette[pix as usize]
                 };
                 let offset = (y0 + y) * image.width + (x0 + x);
                 image.pixels[offset as usize] = color;
             }
         }
         Ok(())
+    }
+
+    fn unblit(
+        &self,
+        image: &Image,
+        tileaddr: Address,
+        palette: &[u32],
+        x0: u32,
+        y0: u32,
+    ) -> Result<()> {
+        let mut rom = self.edit.rom.borrow_mut();
+        for y in 0..8 {
+            let mut a = 0u8;
+            let mut b = 0u8;
+            for x in 0..8 {
+                let offset = (y0 + y) * image.width + (x0 + x);
+                let color = image.pixels[offset as usize];
+                let mut index = 0;
+                for (i, c) in palette.iter().enumerate() {
+                    if color == *c {
+                        index = i;
+                    };
+                }
+
+                a |= if index & 1 == 0 { 0 } else { 1 << (7 - x) };
+                b |= if index & 2 == 0 { 0 } else { 1 << (7 - x) };
+            }
+            rom.write(tileaddr + y, a)?;
+            rom.write(tileaddr + y + 8, b)?;
+        }
+        Ok(())
+    }
+
+    fn get_raw_tile(&self, tile: u8, chr: Address, palette: &[u32]) -> Result<Image> {
+        let chr = self.chr_override.unwrap_or(chr);
+        let mut image = Image::new(8, 8);
+        self.blit_raw(
+            &mut image,
+            chr.set_val(tile as usize * 16),
+            palette,
+            0,
+            0,
+            false,
+            false,
+        )?;
+        Ok(image)
     }
 
     fn get_overworld_tile(&self, tile: u8, config: &str, id: &IdPath) -> Result<Image> {
@@ -321,6 +386,9 @@ impl TileCache {
             let mut cache = self.cache.borrow_mut();
             if !cache.contains_key(&tile) {
                 let image = match &self.schema {
+                    Schema::None => {
+                        return Err(ErrorKind::NotFound("Schema::None".to_string()).into());
+                    }
                     Schema::Overworld(config, id) => self.get_overworld_tile(tile, config, id)?,
                     Schema::MetaTile(config, id, palidx) => {
                         self.get_meta_tile(tile, config, id, *palidx)?
@@ -334,6 +402,7 @@ impl TileCache {
                     Schema::RawSprite(config, chr, pal_id, palette) => {
                         self.get_raw_sprite(tile, config, *chr, pal_id, *palette)?
                     }
+                    Schema::RawTile(chr, palette) => self.get_raw_tile(tile, *chr, palette)?,
                 };
                 cache.insert(tile, image);
             }
@@ -350,5 +419,79 @@ impl TileCache {
                 self.error.borrow()
             }
         }
+    }
+
+    pub fn get_bank(
+        &self,
+        chr: Address,
+        palette: &[u32],
+        sprite_layout: bool,
+        border: u32,
+    ) -> Result<Image> {
+        let width = border + 16 * (8 + border);
+        let height = if sprite_layout {
+            border + 8 * (16 + border)
+        } else {
+            border + 16 * (8 + border)
+        };
+        let mut image = Image::new_with_color(width, height, 0xFFFF00FF);
+        self.bank_worker(sprite_layout, border, &mut |tile, x, y| {
+            self.blit_raw(&mut image, chr + tile * 16, palette, x, y, false, false)
+        })?;
+        image.update();
+        Ok(image)
+    }
+
+    pub fn put_bank(
+        &self,
+        image: &Image,
+        chr: Address,
+        palette: &[u32],
+        sprite_layout: bool,
+        border: u32,
+    ) -> Result<()> {
+        let width = border + 16 * (8 + border);
+        let height = if sprite_layout {
+            border + 8 * (16 + border)
+        } else {
+            border + 16 * (8 + border)
+        };
+        if image.width != width || image.height != height {
+            return Err(ErrorKind::TransformationError(format!(
+                "Image size ({}, {}) does not match expected size of ({}, {})",
+                image.width, image.height, width, height
+            ))
+            .into());
+        }
+        self.bank_worker(sprite_layout, border, &mut |tile, x, y| {
+            self.unblit(&image, chr + tile * 16, palette, x, y)
+        })
+    }
+
+    fn bank_worker<F>(&self, sprite_layout: bool, border: u32, work: &mut F) -> Result<()>
+    where
+        F: FnMut(u32, u32, u32) -> Result<()>,
+    {
+        if sprite_layout {
+            for y in 0..8 {
+                for x in 0..16 {
+                    let tile = y * 32 + x * 2;
+                    work(tile, border + x * (8 + border), border + y * (16 + border))?;
+                    work(
+                        tile + 1,
+                        border + x * (8 + border),
+                        border + y * (16 + border) + 8,
+                    )?;
+                }
+            }
+        } else {
+            for y in 0..16 {
+                for x in 0..16 {
+                    let tile = y * 16 + x;
+                    work(tile, border + x * (8 + border), border + y * (8 + border))?;
+                }
+            }
+        }
+        Ok(())
     }
 }

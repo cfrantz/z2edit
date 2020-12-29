@@ -1,6 +1,13 @@
+#![allow(mutable_transmutes)]
 use gl;
 use imgui;
 use std;
+use std::path::Path;
+
+use sdl2::pixels::PixelFormatEnum;
+use sdl2::surface::Surface;
+
+use crate::errors::*;
 
 pub fn new_blank_image(width: u32, height: u32) -> imgui::TextureId {
     let pixels = vec![0u32; (width * height) as usize];
@@ -68,8 +75,8 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(width: u32, height: u32) -> Self {
-        let pixels = vec![0u32; (width * height) as usize];
+    pub fn new_with_color(width: u32, height: u32, color: u32) -> Self {
+        let pixels = vec![color; (width * height) as usize];
         let id = new_image(width, height, &pixels);
         Image {
             id: id,
@@ -78,6 +85,11 @@ impl Image {
             pixels: pixels,
         }
     }
+
+    pub fn new(width: u32, height: u32) -> Self {
+        Image::new_with_color(width, height, 0)
+    }
+
     pub fn update(&self) {
         update_image(self.id, 0, 0, self.width, self.height, &self.pixels);
     }
@@ -89,6 +101,75 @@ impl Image {
     pub fn draw_at(&self, position: [f32; 2], scale: f32, ui: &imgui::Ui) {
         ui.set_cursor_pos(position);
         self.draw(scale, ui);
+    }
+
+    pub fn save_bmp<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let pixels = unsafe {
+            // Surface::from_data requires a mutable reference, but we aren't
+            // going to modify the data, so we lie about mutability.
+            std::mem::transmute::<&[u32], &mut [u8]>(&self.pixels[..])
+        };
+        let surface = Surface::from_data(
+            pixels,
+            self.width,
+            self.height,
+            self.width * 4,
+            PixelFormatEnum::ABGR8888,
+        )
+        .map_err(|e| ErrorKind::SdlError(e))?;
+        surface.save_bmp(path).map_err(|e| ErrorKind::SdlError(e))?;
+        Ok(())
+    }
+
+    pub fn load_bmp<P: AsRef<Path>>(path: P) -> Result<Image> {
+        let surface = Surface::load_bmp(path).map_err(|e| ErrorKind::SdlError(e))?;
+        let surface = surface
+            .convert_format(PixelFormatEnum::ABGR8888)
+            .map_err(|e| ErrorKind::SdlError(e))?;
+        surface.with_lock(|p| {
+            let pixels = unsafe { std::mem::transmute::<&[u8], &[u32]>(p) };
+            let mut image = Image::new(surface.width(), surface.height());
+            let width = image.width as usize;
+            let pitch = surface.pitch() as usize / 4;
+            for y in 0..(image.height as usize) {
+                //unsafe {
+                image.pixels[(y * width)..((y + 1) * width)].clone_from_slice(
+                    //std::mem::transmute_copy(p[(y * pitch)..((y + 1) * pitch)]),
+                    &pixels[(y * pitch)..(y + 1) * pitch],
+                );
+                //}
+            }
+            image.update();
+            Ok(image)
+        })
+    }
+
+    pub fn overlay(&mut self, other: &Image, x0: u32, y0: u32) {
+        for y in 0..other.height {
+            if y0 + y > self.height {
+                break;
+            }
+
+            for x in 0..other.width {
+                if x0 + x > self.width {
+                    break;
+                }
+
+                let offset1 = ((y0 + y) * self.width + x0 + x) as usize;
+                let offset2 = (y * other.width + x) as usize;
+                let pixel1 = color_as_f32(self.pixels[offset1]);
+                let pixel2 = color_as_f32(other.pixels[offset2]);
+                let a1 = 1.0 - pixel2[3];
+                let a2 = pixel2[3];
+                let pixel = [
+                    a1 * pixel1[0] + a2 * pixel2[0],
+                    a1 * pixel1[1] + a2 * pixel2[1],
+                    a1 * pixel1[2] + a2 * pixel2[2],
+                    1.0,
+                ];
+                self.pixels[offset1] = f32_to_color(&pixel);
+            }
+        }
     }
 }
 
