@@ -73,12 +73,12 @@ git submodule update --init --recursive
     - Periodic automatic save
     - Remember project association with exported ROMs
     - CHR viewer / importer.
+    - Metatile Editor (aka "Object table" in Z2Edit 1).
 
 - Not Started
     - Drops (drop probabilities, hidden drops, pbag values)
     - Item Effects
     - Tile transforms
-    - Metatile Editor (aka "Object table" in Z2Edit 1).
     - Multimap viewer
     - Help documentation
 
@@ -93,6 +93,8 @@ git submodule update --init --recursive
     - Relative-ize paths to location of project file (e.g. ImportChrBank)
     - Check on TileCache recreation after commits in Overworld & Sideview editors.
       - Create `Edit` instances as tentative commits.
+    - Verify freespace upon import.
+      - FreeSpace::allocate_at is buggy.
 
 ### Cross Compile for Windows
 

@@ -84,6 +84,12 @@ impl IdPath {
         }
         ret
     }
+
+    pub fn pop(&self) -> Self {
+        let mut ret = self.clone();
+        ret.0.pop();
+        ret
+    }
 }
 
 impl From<&str> for IdPath {

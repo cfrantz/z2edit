@@ -17,6 +17,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb15),
             metatile_table: Prg(1, 0x8500),
+            metatile_lengths: [34, 34, 18, 11],
             chr: Chr(3, 0),
             pet_names: {
             },
@@ -92,6 +93,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb15),
             metatile_table: Prg(1, 0x8500),
+            metatile_lengths: [34, 34, 18, 11],
             chr: Chr(3, 0),
             pet_names: {
                 0: "North Palace",
@@ -167,6 +169,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb35),
             metatile_table: Prg(1, 0x8500),
+            metatile_lengths: [34, 34, 18, 11],
             chr: Chr(3, 0),
             pet_names: {
             },
@@ -241,6 +244,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb55),
             metatile_table: Prg(2, 0x8500),
+            metatile_lengths: [34, 34, 18, 11],
             chr: Chr(5, 0),
             pet_names: {
             },
@@ -316,6 +320,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb55),
             metatile_table: Prg(2, 0x8500),
+            metatile_lengths: [34, 34, 18, 11],
             chr: Chr(5, 0),
             pet_names: {
             },
@@ -390,6 +395,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb35),
             metatile_table: Prg(2, 0x8500),
+            metatile_lengths: [34, 34, 18, 11],
             chr: Chr(5, 0),
             pet_names: {
             },
@@ -464,6 +470,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb75),
             metatile_table: Prg(3, 0x8500),
+            metatile_lengths: [27, 27, 25, 43],
             chr: Chr(7, 0),
             pet_names: {
             },
@@ -538,6 +545,7 @@
             max_door_index: 28,
             availability: Prg(5, 0xbb75),
             metatile_table: Prg(3, 0x8500),
+            metatile_lengths: [27, 27, 25, 43],
             chr: Chr(7, 0),
             pet_names: {
             },
@@ -610,6 +618,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb95),
             metatile_table: Prg(4, 0x8500),
+            metatile_lengths: [15, 15, 6, 18],
             chr: Chr(9, 0),
             pet_names: {
             },
@@ -683,6 +692,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbb95),
             metatile_table: Prg(4, 0x8500),
+            metatile_lengths: [15, 15, 6, 18],
             chr: Chr(9, 0),
             pet_names: {
             },
@@ -756,6 +766,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbbb5),
             metatile_table: Prg(4, 0x8500),
+            metatile_lengths: [15, 15, 6, 18],
             chr: Chr(9, 0),
             pet_names: {
             },
@@ -828,6 +839,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbbd5),
             metatile_table: Prg(5, 0x8500),
+            metatile_lengths: [17, 17, 9, 7],
             chr: Chr(13, 0),
             pet_names: {
             },
@@ -902,6 +914,7 @@
             max_door_index: 0,
             availability: Prg(5, 0xbbd5),
             metatile_table: Prg(5, 0x8500),
+            metatile_lengths: [17, 17, 9, 7],
             chr: Chr(13, 0),
             pet_names: {
             },

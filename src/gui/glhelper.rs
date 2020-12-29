@@ -74,6 +74,19 @@ pub struct Image {
     pub pixels: Vec<u32>,
 }
 
+impl Clone for Image {
+    fn clone(&self) -> Self {
+        let pixels = self.pixels.clone();
+        let id = new_image(self.width, self.height, &pixels);
+        Image {
+            id: id,
+            width: self.width,
+            height: self.height,
+            pixels: pixels,
+        }
+    }
+}
+
 impl Image {
     pub fn new_with_color(width: u32, height: u32, color: u32) -> Self {
         let pixels = vec![color; (width * height) as usize];

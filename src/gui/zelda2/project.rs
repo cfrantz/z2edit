@@ -13,6 +13,7 @@ use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::hacks::HacksGui;
 use crate::gui::zelda2::import_chr::ImportChrBankGui;
+use crate::gui::zelda2::metatile::MetatileGroupGui;
 use crate::gui::zelda2::overworld::OverworldGui;
 use crate::gui::zelda2::palette::PaletteGui;
 use crate::gui::zelda2::python::PythonScriptGui;
@@ -200,12 +201,22 @@ impl ProjectGui {
                         }
                     };
                 }
+                if MenuItem::new(im_str!("Metatile Editor")).build(ui) {
+                    match MetatileGroupGui::new(&self.project.borrow_mut(py), -1) {
+                        Ok(gui) => self.widgets.push(gui),
+                        Err(e) => {
+                            self.error
+                                .show("GUI", "Could not create MetatileGroupGui", Some(e))
+                        }
+                    };
+                }
                 if MenuItem::new(im_str!("Miscellaneous Hacks")).build(ui) {
                     match HacksGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self.error.show("GUI", "Could not create HacksGui", Some(e)),
                     };
                 }
+
                 if MenuItem::new(im_str!("Overworld Editor")).build(ui) {
                     match OverworldGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),

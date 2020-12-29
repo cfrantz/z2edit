@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -32,7 +33,8 @@ pub struct TileCache {
     schema: Schema,
     edit: Rc<Edit>,
     cache: RefCell<HashMap<u8, Image>>,
-    error: RefCell<Image>,
+    error: Image,
+    error_ref: RefCell<Image>,
     chr_override: Option<Address>,
     pal_override: Option<Address>,
 }
@@ -49,7 +51,8 @@ impl TileCache {
             schema: schema,
             edit: Rc::clone(edit),
             cache: RefCell::new(HashMap::<u8, Image>::new()),
-            error: RefCell::new(error_image),
+            error: error_image.clone(),
+            error_ref: RefCell::new(error_image),
             chr_override: None,
             pal_override: None,
         }
@@ -166,23 +169,29 @@ impl TileCache {
         let mut image = Image::new(8, 8);
         self.blit_raw(
             &mut image,
-            chr.set_val(tile as usize * 16),
+            chr + tile as usize * 16,
             palette,
             0,
             0,
             false,
             false,
         )?;
+        image.update();
         Ok(image)
     }
 
-    fn get_overworld_tile(&self, tile: u8, config: &str, id: &IdPath) -> Result<Image> {
+    fn get_overworld_tile(
+        &self,
+        tile: u8,
+        config: &str,
+        id: &IdPath,
+        table: Option<&[u8]>,
+    ) -> Result<Image> {
         let config = Config::get(config)?;
         let ov = config.overworld.find(id)?;
 
-        let table = ov.objtable + tile * 4;
         let rom = self.edit.rom.borrow();
-        let table = rom.read_bytes(table, 4)?;
+        let table = table.unwrap_or(rom.read_bytes(ov.objtable + tile as usize * 4, 4)?);
         let palidx = rom.read(ov.tile_palette + tile)?;
 
         let chr = self.chr_override.unwrap_or(ov.chr);
@@ -236,15 +245,22 @@ impl TileCache {
         Ok(image)
     }
 
-    fn get_meta_tile(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
+    fn get_meta_tile(
+        &self,
+        tile: u8,
+        config: &str,
+        id: &IdPath,
+        palidx: i32,
+        table: Option<&[u8]>,
+    ) -> Result<Image> {
         let config = Config::get(config)?;
         let sv = config.sideview.find(id)?;
         let group = tile >> 6;
         let tile = tile & 0x3f;
 
         let rom = self.edit.rom.borrow();
-        let table = rom.read_pointer(sv.metatile_table + group * 2)?;
-        let tiles = rom.read_bytes(table + tile * 4, 4)?;
+        let ptr = rom.read_pointer(sv.metatile_table + group * 2)?;
+        let tiles = table.unwrap_or(rom.read_bytes(ptr + tile * 4, 4)?);
         let palidx = palidx as usize * 16;
 
         let chr = self.chr_override.unwrap_or(sv.chr);
@@ -381,29 +397,32 @@ impl TileCache {
         Ok(image)
     }
 
-    fn _get(&self, tile: u8) -> Result<Ref<'_, Image>> {
+    fn _get_raw(&self, tile: u8, table: Option<&[u8]>) -> Result<Image> {
+        let image = match &self.schema {
+            Schema::None => {
+                return Err(ErrorKind::NotFound("Schema::None".to_string()).into());
+            }
+            Schema::Overworld(config, id) => self.get_overworld_tile(tile, config, id, table)?,
+            Schema::MetaTile(config, id, palidx) => {
+                self.get_meta_tile(tile, config, id, *palidx, table)?
+            }
+            Schema::Enemy(config, id, palidx) => {
+                self.get_enemy_sprite(tile, config, id, *palidx)?
+            }
+            Schema::Item(config, area_id) => self.get_item_sprite(tile, config, area_id, 0)?,
+            Schema::RawSprite(config, chr, pal_id, palette) => {
+                self.get_raw_sprite(tile, config, *chr, pal_id, *palette)?
+            }
+            Schema::RawTile(chr, palette) => self.get_raw_tile(tile, *chr, palette)?,
+        };
+        Ok(image)
+    }
+
+    fn _get_cached(&self, tile: u8, table: Option<&[u8]>) -> Result<Ref<'_, Image>> {
         {
             let mut cache = self.cache.borrow_mut();
             if !cache.contains_key(&tile) {
-                let image = match &self.schema {
-                    Schema::None => {
-                        return Err(ErrorKind::NotFound("Schema::None".to_string()).into());
-                    }
-                    Schema::Overworld(config, id) => self.get_overworld_tile(tile, config, id)?,
-                    Schema::MetaTile(config, id, palidx) => {
-                        self.get_meta_tile(tile, config, id, *palidx)?
-                    }
-                    Schema::Enemy(config, id, palidx) => {
-                        self.get_enemy_sprite(tile, config, id, *palidx)?
-                    }
-                    Schema::Item(config, area_id) => {
-                        self.get_item_sprite(tile, config, area_id, 0)?
-                    }
-                    Schema::RawSprite(config, chr, pal_id, palette) => {
-                        self.get_raw_sprite(tile, config, *chr, pal_id, *palette)?
-                    }
-                    Schema::RawTile(chr, palette) => self.get_raw_tile(tile, *chr, palette)?,
-                };
+                let image = self._get_raw(tile, table)?;
                 cache.insert(tile, image);
             }
         }
@@ -412,11 +431,31 @@ impl TileCache {
     }
 
     pub fn get(&self, tile: u8) -> Ref<'_, Image> {
-        match self._get(tile) {
+        match self._get_cached(tile, None) {
             Ok(v) => v,
             Err(e) => {
                 error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
-                self.error.borrow()
+                self.error_ref.borrow()
+            }
+        }
+    }
+
+    pub fn get_alternate(&self, tile: u8, table: &[u8]) -> Ref<'_, Image> {
+        match self._get_cached(tile, Some(table)) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
+                self.error_ref.borrow()
+            }
+        }
+    }
+
+    pub fn get_alternate_uncached(&self, tile: u8, table: &[u8]) -> Cow<'_, Image> {
+        match self._get_raw(tile, Some(table)) {
+            Ok(i) => Cow::Owned(i),
+            Err(e) => {
+                error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
+                Cow::Borrowed(&self.error)
             }
         }
     }

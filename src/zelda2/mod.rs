@@ -5,6 +5,7 @@ pub mod hacks;
 pub mod import;
 pub mod import_chr;
 pub mod items;
+pub mod metatile;
 pub mod objects;
 pub mod overworld;
 pub mod palette;
@@ -25,6 +26,8 @@ pub fn edit_factory(kind: &str, id: Option<&str>) -> Result<Box<dyn RomData>> {
         "EnemyGroup" => enemyattr::EnemyGroup::create(id),
         "Hacks" => hacks::Hacks::create(id),
         "ImportRom" => import::ImportRom::create(id),
+        "Metatile" => metatile::Metatile::create(id),
+        "MetatileGroup" => metatile::MetatileGroup::create(id),
         "Overworld" => overworld::Overworld::create(id),
         "Palette" => palette::Palette::create(id),
         "PaletteGroup" => palette::PaletteGroup::create(id),

@@ -47,6 +47,7 @@ pub mod config {
         pub max_door_index: usize,
         pub availability: Address,
         pub metatile_table: Address,
+        pub metatile_lengths: Vec<usize>,
         pub chr: Address,
 
         pub pet_names: HashMap<usize, String>,
@@ -80,7 +81,7 @@ pub mod config {
         }
 
         pub fn find(&self, path: &IdPath) -> Result<&config::SideviewGroup> {
-            path.check_range("sideview", 1..3)?;
+            path.check_range("sideview", 1..=3)?;
             for group in self.group.iter() {
                 if path.prefix(&group.id) {
                     return Ok(group);
