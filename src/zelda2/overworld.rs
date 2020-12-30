@@ -8,7 +8,7 @@ use crate::errors::*;
 use crate::gui::zelda2::overworld::OverworldGui;
 use crate::gui::zelda2::Gui;
 use crate::idpath;
-use crate::nes::{Address, Buffer, IdPath, MemoryAccess};
+use crate::nes::{Address, IdPath, MemoryAccess};
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
 
@@ -186,8 +186,8 @@ impl Map {
         }
     }
 
-    // Why can't I use 'rom: &dyn MemoryAccess' ?
-    fn decompress(&mut self, addr: Address, rom: &Buffer) -> Result<usize> {
+    fn decompress(&mut self, addr: Address, edit: &Rc<Edit>) -> Result<usize> {
+        let rom = edit.rom.borrow();
         self.data = vec![vec![0xf as u8; self.width]; self.height];
         let mut y = 0;
         let mut index = 0;
@@ -210,7 +210,25 @@ impl Map {
         Ok(index)
     }
 
-    fn compress(&self, overworld: &Overworld, config: &config::Config) -> CompressedMap {
+    fn compress(&self, overworld: &Overworld, edit: &Rc<Edit>) -> Result<CompressedMap> {
+        let config = Config::get(&edit.config())?;
+        let comp_boulder = edit
+            .meta
+            .borrow()
+            .extra
+            .get("compress_boulder")
+            .map(|v| v.as_str())
+            .unwrap_or("true")
+            .parse()?;
+        let comp_spider = edit
+            .meta
+            .borrow()
+            .extra
+            .get("compress_spider")
+            .map(|v| v.as_str())
+            .unwrap_or("true")
+            .parse()?;
+
         let mut map = CompressedMap::default();
         for (y, row) in self.data.iter().enumerate() {
             let mut x = 0;
@@ -220,7 +238,7 @@ impl Map {
                 let tile = row[x];
                 if let Some(conn) = overworld.connector_at(x, y) {
                     let index = conn.id.usize_last().unwrap();
-                    if let Some(palace) = config.palace_code(index) {
+                    if let Some(palace) = config.overworld.palace_code(index) {
                         want_compress = false;
                         map.palace_offset[palace] = map.data.len() as u16;
                         if let Some(h) = &conn.hidden {
@@ -237,8 +255,11 @@ impl Map {
                         }
                     }
                 }
-                if tile == 0x0E || tile == 0x0F {
-                    want_compress = false;
+                if tile == 0x0E {
+                    want_compress = comp_boulder;
+                }
+                if tile == 0x0F {
+                    want_compress = comp_spider;
                 }
 
                 while want_compress
@@ -254,7 +275,7 @@ impl Map {
                 x += 1;
             }
         }
-        map
+        Ok(map)
     }
 }
 
@@ -586,7 +607,7 @@ impl Overworld {
         Ok(overworld)
     }
 
-    pub fn skip_compress(&self, x: usize, y: usize) -> bool {
+    fn skip_compress(&self, x: usize, y: usize) -> bool {
         let x = x as i32;
         let y = y as i32;
         for c in self.connector.iter() {
@@ -612,6 +633,15 @@ impl Overworld {
         }
         None
     }
+
+    fn compress(&self, edit: &Rc<Edit>) -> Result<CompressedMap> {
+        self.map.compress(self, edit)
+    }
+
+    pub fn compressed_size(&self, edit: &Rc<Edit>) -> Result<usize> {
+        let compressed = self.compress(edit)?;
+        Ok(compressed.data.len())
+    }
 }
 
 #[typetag::serde]
@@ -632,7 +662,7 @@ impl RomData for Overworld {
             - config.overworld.y_offset;
         self.map.width = ocfg.width;
         self.map.height = ocfg.height;
-        self.map.decompress(addr, &edit.rom.borrow())?;
+        self.map.decompress(addr, &edit)?;
         self.encounter = edit
             .rom
             .borrow()
@@ -651,9 +681,9 @@ impl RomData for Overworld {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
+        let map = self.compress(&edit)?;
         let config = Config::get(&edit.config())?;
         let ocfg = config.overworld.find(&self.id)?;
-        let map = self.map.compress(self, &config.overworld);
         if map.data.len() >= config.overworld.overworld_len {
             return Err(ErrorKind::LengthError(format!(
                 "Overworld too big: compressed size of {} bytes is larger than {} bytes",
@@ -664,12 +694,10 @@ impl RomData for Overworld {
         }
         {
             let mut memory = edit.memory.borrow_mut();
-            let mut rom = edit.rom.borrow_mut();
-            let addr = rom.read_pointer(ocfg.pointer)?;
-
+            let addr = edit.rom.borrow().read_pointer(ocfg.pointer)?;
             let length = {
                 let mut orig = Map::new(ocfg.width, ocfg.height);
-                orig.decompress(addr, &rom)? as u16
+                orig.decompress(addr, &edit)? as u16
             };
 
             memory.free(addr, length);
@@ -680,6 +708,7 @@ impl RomData for Overworld {
                 addr,
                 map.data.len()
             );
+            let mut rom = edit.rom.borrow_mut();
             rom.write_bytes(addr, &map.data)?;
             rom.write_pointer(ocfg.pointer, addr)?;
 

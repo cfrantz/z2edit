@@ -29,6 +29,7 @@ pub struct OverworldGui {
     edit: Rc<Edit>,
     names: Vec<ImString>,
     overworld: Overworld,
+    compressed_size: usize,
     undo: UndoStack<Overworld>,
     cache: TileCache,
     selector: Selector,
@@ -76,7 +77,7 @@ impl OverworldGui {
 
         let mut undo = UndoStack::new(1000);
         undo.push(overworld.clone());
-        Ok(Box::new(OverworldGui {
+        let mut ret = Box::new(OverworldGui {
             visible: Visibility::Visible,
             changed: false,
             win_id: win_id,
@@ -84,6 +85,7 @@ impl OverworldGui {
             edit: edit,
             names: names,
             overworld: overworld,
+            compressed_size: 0,
             undo: undo,
             cache: cache,
             selector: Selector::new(selected),
@@ -98,7 +100,16 @@ impl OverworldGui {
             cursor: [0, 0],
             error: ErrorDialog::default(),
             multimap: None,
-        }))
+        });
+        ret.calculate_size();
+        Ok(ret)
+    }
+
+    fn calculate_size(&mut self) {
+        self.compressed_size = self
+            .overworld
+            .compressed_size(&self.edit)
+            .expect("OverworldGui::calculate_size");
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
@@ -189,6 +200,13 @@ impl OverworldGui {
             "Cursor:\n  X: {}\n  Y: {}",
             self.cursor[0],
             self.cursor[1]
+        ));
+
+        ui.text(im_str!(""));
+        ui.text(im_str!(
+            "Compressed Size:\n  {} / {} bytes",
+            self.compressed_size,
+            config.overworld.overworld_len
         ));
 
         ui.text(im_str!(""));
@@ -354,11 +372,13 @@ impl OverworldGui {
             KeyAction::Undo => {
                 if let Some(overworld) = self.undo.undo() {
                     self.overworld = overworld.clone();
+                    self.calculate_size();
                 }
             }
             KeyAction::Redo => {
                 if let Some(overworld) = self.undo.redo() {
                     self.overworld = overworld.clone();
+                    self.calculate_size();
                 }
             }
             KeyAction::None => {}
@@ -720,6 +740,7 @@ impl Gui for OverworldGui {
                     });
                 if changed {
                     self.undo.push(self.overworld.clone());
+                    self.calculate_size();
                 }
                 self.changed |= changed;
             });
@@ -743,6 +764,7 @@ impl Gui for OverworldGui {
                 self.edit.config().clone(),
                 self.overworld.id.clone(),
             ));
+            self.calculate_size();
             self.changed = false;
         }
     }

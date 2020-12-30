@@ -6,7 +6,8 @@ error_chain! {
     foreign_links {
         DecodeError(::ron::error::Error);
         Io(::std::io::Error);
-        Convert(::core::num::ParseIntError);
+        ParseIntError(::core::num::ParseIntError);
+        ParseBoolError(::std::str::ParseBoolError);
         Json(::serde_json::error::Error);
         PyErr(::pyo3::PyErr);
         WindowBuildError(::sdl2::video::WindowBuildError);
