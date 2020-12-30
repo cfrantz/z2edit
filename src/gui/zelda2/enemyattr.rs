@@ -113,7 +113,7 @@ impl EnemyGui {
             let mut pg = EnemyGroup::default();
             for enemy in group.enemy.iter() {
                 let mut p = Enemy {
-                    id: idpath!(group.id, enemy.id),
+                    id: group.id.extend(&enemy.id),
                     ..Default::default()
                 };
                 p.unpack(edit)?;
@@ -126,6 +126,7 @@ impl EnemyGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let mut edit = Box::new(EnemyGroup::default());
+        // Diff the changes against the original data.
         for (og, ng) in self.orig.iter().zip(self.group.iter()) {
             for (op, np) in og.data.iter().zip(ng.data.iter()) {
                 if op != np {
@@ -133,13 +134,9 @@ impl EnemyGui {
                 }
             }
         }
-        if edit.data.len() == 0 {
-            info!("EnemyGui: no changes to commit.");
-        } else {
-            let i = project.commit(self.commit_index, edit, None)?;
-            self.edit = project.get_commit(i)?;
-            self.commit_index = i;
-        }
+        let i = project.commit(self.commit_index, edit, None)?;
+        self.edit = project.get_commit(i)?;
+        self.commit_index = i;
         Ok(())
     }
 

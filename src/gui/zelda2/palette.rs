@@ -76,6 +76,7 @@ impl PaletteGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let mut edit = Box::new(PaletteGroup::default());
+        // Diff the changes against the original data.
         for (og, ng) in self.orig.iter().zip(self.group.iter()) {
             for (op, np) in og.data.iter().zip(ng.data.iter()) {
                 if op != np {
@@ -83,13 +84,9 @@ impl PaletteGui {
                 }
             }
         }
-        if edit.data.len() == 0 {
-            info!("PaletteGui: no changes to commit.");
-        } else {
-            let i = project.commit(self.commit_index, edit, None)?;
-            self.edit = project.get_commit(i)?;
-            self.commit_index = i;
-        }
+        let i = project.commit(self.commit_index, edit, None)?;
+        self.edit = project.get_commit(i)?;
+        self.commit_index = i;
         Ok(())
     }
 
