@@ -8,7 +8,6 @@ use crate::errors::*;
 use crate::gui::zelda2::Gui;
 use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
-use crate::idpath;
 use crate::zelda2::config::Config;
 use crate::zelda2::enemyattr::{config, Enemy, EnemyGroup};
 use crate::zelda2::project::{Edit, Project, RomData};

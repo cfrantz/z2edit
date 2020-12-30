@@ -6,7 +6,6 @@ use imgui::{im_str, ImString, MouseButton};
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
-use crate::gui::glhelper::color_as_f32;
 use crate::gui::glhelper::Image;
 use crate::gui::util::{draw_arrow, tooltip};
 use crate::gui::zelda2::sideview::SideviewGui;
