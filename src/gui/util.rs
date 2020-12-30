@@ -173,3 +173,38 @@ impl SelectBox {
             && self.y1 != isize::MIN
     }
 }
+
+pub fn draw_arrow(
+    a: [f32; 2],
+    b: [f32; 2],
+    color: [f32; 4],
+    width: f32,
+    arrow_pos: f32,
+    rootsize: f32,
+    ui: &imgui::Ui,
+) {
+    let delta = [b[0] - a[0], b[1] - a[1]];
+    let length = (delta[0] * delta[0] + delta[1] * delta[1]).sqrt();
+    let u = [delta[0] / length, delta[1] / length];
+    let v = [-u[1], u[0]];
+    let p = [
+        a[0] + u[0] * length * arrow_pos,
+        a[1] + u[1] * length * arrow_pos,
+    ];
+    let draw_list = ui.get_window_draw_list();
+
+    draw_list
+        .add_circle(a, rootsize, color)
+        .filled(true)
+        .build();
+    draw_list
+        .add_triangle(
+            [p[0] - v[0] * 10.0, p[1] - v[1] * 10.0],
+            [p[0] + v[0] * 10.0, p[1] + v[1] * 10.0],
+            [p[0] + u[0] * 20.0, p[1] + u[1] * 20.0],
+            color,
+        )
+        .filled(true)
+        .build();
+    draw_list.add_line(a, b, color).thickness(width).build();
+}

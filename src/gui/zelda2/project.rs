@@ -243,7 +243,7 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Sideview Editor")).build(ui) {
-                    match SideviewGui::new(&self.project.borrow_mut(py), -1) {
+                    match SideviewGui::new(&self.project.borrow_mut(py), -1, None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self
                             .error
@@ -268,10 +268,12 @@ impl ProjectGui {
         });
     }
 
-    fn dispose_widgets(&mut self) {
+    fn postprocess_widgets(&mut self) {
         let mut i = 0;
         while i != self.widgets.len() {
-            if self.widgets[i].wants_dispose() {
+            if let Some(w) = self.widgets[i].spawn() {
+                self.widgets.push(w);
+            } else if self.widgets[i].wants_dispose() {
                 self.widgets.remove(i);
             } else {
                 i += 1;
@@ -481,7 +483,7 @@ impl ProjectGui {
             // An autosave means the project was updated, so refresh the widgets as well.
             self.refresh();
         }
-        self.dispose_widgets();
+        self.postprocess_widgets();
         self.error.draw(ui);
         self.visible.change(visible, self.changed);
         if Some(true)

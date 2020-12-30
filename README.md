@@ -74,12 +74,13 @@ git submodule update --init --recursive
     - Remember project association with exported ROMs
     - CHR viewer / importer.
     - Metatile Editor (aka "Object table" in Z2Edit 1).
+    - Multimap viewer
+      - TODO: save layout/positioning info
 
 - Not Started
     - Drops (drop probabilities, hidden drops, pbag values)
     - Item Effects
     - Tile transforms
-    - Multimap viewer
     - Help documentation
 
 - Other Features

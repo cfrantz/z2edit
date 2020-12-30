@@ -59,7 +59,9 @@ impl Connectivity {
                 (conn.dest_overworld, 0)
             };
             let scfg = config.sideview.find_by_world(world, overworld, subworld)?;
-            self.explore_sideview(edit, &conn.id, &idpath!(scfg.id, conn.dest_map), scfg)?;
+            let dest = idpath!(scfg.id, conn.dest_map);
+            self.explore_sideview(edit, &conn.id, &dest, scfg)?;
+            self.connector.insert(conn.id.clone(), dest);
         }
         Ok(())
     }

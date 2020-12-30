@@ -23,11 +23,29 @@ pub struct Preferences {
     #[serde(default)]
     #[default = "fceux"]
     pub emulator: String,
+    #[serde(default)]
+    pub multimap: [[f32; 4]; 4],
 }
+
+const ZEROS: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
+
+const MULTIMAP_COLORS: [[f32; 4]; 4] = [
+    [0.8, 0.9, 0.0, 0.9],
+    [0.0, 1.0, 0.0, 0.9],
+    [0.0, 0.0, 1.0, 0.9],
+    [1.0, 0.0, 0.0, 0.9],
+];
+const MULTIMAP_NAMES: [&'static str; 4] = ["Screen 1", "Screen 2", "Screen 3", "Screen 4"];
 
 impl Preferences {
     pub fn from_reader(r: impl Read) -> Result<Self> {
-        ron::de::from_reader(r).map_err(|e| ErrorKind::DecodeError(e).into())
+        let mut pref: Self = ron::de::from_reader(r)?;
+        for (color, def) in pref.multimap.iter_mut().zip(MULTIMAP_COLORS.iter()) {
+            if *color == ZEROS {
+                *color = *def;
+            }
+        }
+        Ok(pref)
     }
 
     pub fn from_file(path: &Path) -> Result<Self> {
@@ -159,6 +177,20 @@ impl PreferencesGui {
                     .inputs(false)
                     .picker(true)
                     .build(&ui);
+
+                ui.separator();
+                ui.text("MultiMap Colors:");
+
+                for (i, color) in pref.multimap.iter_mut().enumerate() {
+                    changed |= imgui::ColorEdit::new(
+                        &im_str!("{} Connection Color", MULTIMAP_NAMES[i]),
+                        color,
+                    )
+                    .alpha(true)
+                    .inputs(false)
+                    .picker(true)
+                    .build(&ui);
+                }
 
                 ui.separator();
                 if ui.button(im_str!("Save"), [0.0, 0.0]) {

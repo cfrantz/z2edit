@@ -90,6 +90,17 @@ pub mod config {
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
 
+        pub fn name(&self, path: &IdPath) -> Result<String> {
+            let i = path.usize_last()?;
+            let group = self.find(path)?;
+            let name = if let Some(pet_name) = group.pet_names.get(&i) {
+                format!("{:02}: {} {} ({})", i, group.name, i, pet_name)
+            } else {
+                format!("{:02}: {} {}", i, group.name, i)
+            };
+            Ok(name)
+        }
+
         pub fn find_by_world(
             &self,
             world: usize,
@@ -233,13 +244,14 @@ impl Map {
         });
     }
 
-    pub fn has_elevator(&self) -> bool {
+    pub fn elevator(&self) -> Option<i32> {
         for item in self.data.iter() {
+            // "extra" object of kind 0x50 is an elevator.
             if item.y == 15 && item.kind == 0x50 {
-                return true;
+                return Some(item.x);
             }
         }
-        false
+        None
     }
 
     pub fn sort(&mut self) {
@@ -745,7 +757,7 @@ impl RomData for Sideview {
         self
     }
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        SideviewGui::new(project, commit_index)
+        SideviewGui::new(project, commit_index, None)
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {
@@ -914,7 +926,6 @@ pub struct Decompressor {
     pub item: [[u8; 64]; 13],
     pub bgtile: u8,
     pub layer: usize,
-    pub elevator: Option<usize>,
 }
 
 impl Decompressor {
@@ -928,7 +939,6 @@ impl Decompressor {
             item: [[0xFF; 64]; 13],
             bgtile: 0,
             layer: 0,
-            elevator: None,
         }
     }
 
@@ -1035,10 +1045,6 @@ impl Decompressor {
                 command.y, command.x, svcfg.kind, obj_kind, command.kind
             );
 
-            if extra && command.kind == 0x50 {
-                // If there is an elevator, remember its X coordinate.
-                self.elevator = Some(command.x as usize);
-            }
             if let Some(obj) = object.find(command.kind as u8, &svcfg.kind, &obj_kind) {
                 match &obj.render {
                     Renderer::Grid => self.draw_grid(xcursor, command.y, command.param, obj),
@@ -1094,7 +1100,6 @@ impl Decompressor {
         // Layer 0 is the background tile.
         // Layers 1 & 2 are map data.
         self.layer = 1;
-        self.elevator = None;
     }
 
     fn set(&mut self, x: usize, y: usize, val: u8) {

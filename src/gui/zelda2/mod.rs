@@ -3,6 +3,7 @@ pub mod enemyattr;
 pub mod hacks;
 pub mod import_chr;
 pub mod metatile;
+pub mod multimap;
 pub mod overworld;
 pub mod palette;
 pub mod project;
@@ -24,5 +25,8 @@ pub trait Gui {
     }
     fn window_id(&self) -> u64 {
         0
+    }
+    fn spawn(&mut self) -> Option<Box<dyn Gui>> {
+        None
     }
 }

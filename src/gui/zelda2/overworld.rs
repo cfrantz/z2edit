@@ -8,6 +8,7 @@ use imgui::{ImStr, ImString, MouseButton};
 use crate::errors::*;
 use crate::gui::util::{text_outlined, KeyAction};
 use crate::gui::util::{DragHelper, SelectBox};
+use crate::gui::zelda2::multimap::MultiMapGui;
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::ErrorDialog;
@@ -41,6 +42,7 @@ pub struct OverworldGui {
     conn_drag: DragHelper,
     cursor: [isize; 2],
     error: ErrorDialog,
+    multimap: Option<Box<dyn Gui>>,
 }
 
 impl OverworldGui {
@@ -95,6 +97,7 @@ impl OverworldGui {
             conn_drag: DragHelper::default(),
             cursor: [0, 0],
             error: ErrorDialog::default(),
+            multimap: None,
         }))
     }
 
@@ -405,6 +408,17 @@ impl OverworldGui {
             ui.separator();
             if ui.button(im_str!("Emulate"), [0.0, 0.0]) {
                 OverworldGui::emulate_at(conn, &self.edit, self.selector.value());
+            }
+            ui.same_line(0.0);
+            if ui.button(im_str!("View Area"), [0.0, 0.0]) {
+                self.multimap = match MultiMapGui::new(&self.edit, &conn.id) {
+                    Ok(mm) => Some(mm),
+                    Err(e) => {
+                        self.error
+                            .show("Connection", "Could not create MultiMap Viewer", Some(e));
+                        None
+                    }
+                };
             }
             changed |= OverworldGui::connection_edit(&mut conn, ui);
             ui.end_popup();
@@ -742,5 +756,9 @@ impl Gui for OverworldGui {
     }
     fn window_id(&self) -> u64 {
         self.win_id
+    }
+
+    fn spawn(&mut self) -> Option<Box<dyn Gui>> {
+        self.multimap.take()
     }
 }

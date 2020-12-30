@@ -61,7 +61,11 @@ pub struct SideviewGui {
 }
 
 impl SideviewGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
+    pub fn new(
+        project: &Project,
+        commit_index: isize,
+        which: Option<IdPath>,
+    ) -> Result<Box<dyn Gui>> {
         let edit = project.get_commit(commit_index)?;
         let config = Config::get(&edit.config())?;
 
@@ -77,7 +81,7 @@ impl SideviewGui {
         let mut ids = Vec::new();
         let mut selected = usize::MAX;
         let mut default_select = 0;
-        let north_palace = IdPath::from("west_hyrule/0");
+        let which = which.unwrap_or(IdPath::from("west_hyrule/0"));
         for group in config.sideview.group.iter() {
             for i in 0..group.length {
                 let name = if let Some(pet_name) = group.pet_names.get(&i) {
@@ -91,7 +95,7 @@ impl SideviewGui {
                 if sideview.id == path {
                     selected = ids.len() - 1;
                 }
-                if path == north_palace {
+                if path == which {
                     default_select = ids.len();
                 }
                 ids.push(path);
@@ -112,31 +116,12 @@ impl SideviewGui {
             &config.objects,
         );
 
-        let background = TileCache::new(
-            &edit,
-            Schema::MetaTile(
-                edit.config().clone(),
-                sideview.id.clone(),
-                sideview.map.background_palette,
-            ),
-        );
-        let item = TileCache::new(
-            &edit,
-            Schema::Item(edit.config().clone(), sideview.id.clone()),
-        );
-        let enemy = TileCache::new(
-            &edit,
-            Schema::Enemy(
-                edit.config().clone(),
-                sideview.enemy_group_id(),
-                sideview.map.sprite_palette,
-            ),
-        );
-
+        let background = TileCache::new(&edit, Schema::None);
+        let item = TileCache::new(&edit, Schema::None);
+        let enemy = TileCache::new(&edit, Schema::None);
         let mut undo = UndoStack::new(1000);
         undo.push(sideview.clone());
         let win_id = edit.win_id(commit_index);
-        let text_table = TextTable::from_rom(&edit)?;
         let mut ret = Box::new(SideviewGui {
             visible: Visibility::Visible,
             changed: false,
@@ -165,10 +150,11 @@ impl SideviewGui {
             enemies: Vec::new(),
             enemies_map: HashMap::new(),
             connections: Vec::new(),
-            text_table: text_table,
+            text_table: TextTable::default(),
             error: ErrorDialog::default(),
         });
         ret.list_object_names()?;
+        ret.reset_caches();
         Ok(ret)
     }
 
@@ -541,12 +527,14 @@ impl SideviewGui {
                     }
                 }
 
-                if c.dest_map != 63 && (i == 1 || i == 2) && self.decomp.elevator.is_some() {
+                if c.dest_map != 63 && (i == 1 || i == 2) && self.sideview.map.elevator().is_some()
+                {
                     let mut target = c.point_target_back.is_some();
                     ui.same_line(0.0);
                     if ui.checkbox(im_str!("Adjust target connection"), &mut target) {
                         if target {
-                            c.point_target_back = Some(self.decomp.elevator.unwrap() / 16);
+                            c.point_target_back =
+                                Some(self.sideview.map.elevator().unwrap() as usize / 16);
                         } else {
                             c.point_target_back = None;
                         }
