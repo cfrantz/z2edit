@@ -13,6 +13,7 @@ use crate::zelda2::project::{Edit, EditProxy, Project, RomData};
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct PythonScript {
+    pub file: Option<String>,
     pub code: String,
 }
 
@@ -40,6 +41,14 @@ impl RomData for PythonScript {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
+        let contents;
+        let code = if let Some(file) = &self.file {
+            let filepath = edit.subdir.path(file);
+            contents = std::fs::read_to_string(&filepath)?;
+            &contents
+        } else {
+            &self.code
+        };
         let gil = Python::acquire_gil();
         let py = gil.python();
         let proxy = Py::new(py, EditProxy::new(Rc::clone(edit)))?;
@@ -51,7 +60,7 @@ impl RomData for PythonScript {
             None,
             Some(locals),
         )?;
-        py.run(&self.code, None, Some(locals))?;
+        py.run(&code, None, Some(locals))?;
         AppContext::app().borrow(py).process_python_output();
         Ok(())
     }

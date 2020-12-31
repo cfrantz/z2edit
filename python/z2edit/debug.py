@@ -27,7 +27,7 @@ def db(address=None, length=64, b=None, rom=None):
     buf = []
 
     for i in range(length):
-        val = rom.read_byte(_last)
+        val = rom.read(_last)
         if i % 16 == 0:
             if i != 0:
                 print('  %s\n%04x: ' % (''.join(buf), _last.addr()), end='')
@@ -51,8 +51,8 @@ def dw(address=None, length=32, b=None, rom=None):
     buf = []
 
     for i in range(0, length):
-        val1 = rom.read_byte(_last)
-        val2 = rom.read_byte(_last + 1)
+        val1 = rom.read(_last)
+        val2 = rom.read(_last + 1)
         if i % 8 == 0:
             if i != 0:
                 print('  %s\n%04x: ' % (''.join(buf), _last.addr()), end='')

@@ -148,6 +148,7 @@ impl RomData for Hacks {
                     if let Some(hackitem) = &h.item.get(item.selected) {
                         info!("Applying hackitem '{}'", hackitem.name);
                         let p = PythonScript {
+                            file: None,
                             code: hackitem.code.clone(),
                         };
                         p.pack(edit)?;

@@ -1,3 +1,5 @@
+use std::convert::From;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use imgui;
@@ -18,6 +20,9 @@ pub struct PythonScriptGui {
     commit_index: isize,
     edit: Rc<Edit>,
     code: ImString,
+    filename: ImString,
+    is_file: bool,
+    relative_name: Option<String>,
     error: ErrorDialog,
 }
 
@@ -26,11 +31,18 @@ impl PythonScriptGui {
         let edit = project.get_commit(commit_index)?;
 
         let script = if commit_index == -1 {
-            "".to_owned()
+            PythonScript::default()
         } else {
             let edit = edit.edit.borrow();
-            let obj = edit.as_any().downcast_ref::<PythonScript>().unwrap();
-            obj.code.clone()
+            edit.as_any()
+                .downcast_ref::<PythonScript>()
+                .unwrap()
+                .clone()
+        };
+        let filename = if let Some(file) = &script.file {
+            ImString::from(edit.subdir.path(file).to_string_lossy().to_string())
+        } else {
+            ImString::default()
         };
 
         let win_id = edit.win_id(commit_index);
@@ -40,14 +52,53 @@ impl PythonScriptGui {
             win_id: win_id,
             commit_index: commit_index,
             edit: edit,
-            code: ImString::new(&script),
+            code: ImString::new(&script.code),
+            filename: filename,
+            is_file: script.file.is_some(),
+            relative_name: script.file,
             error: ErrorDialog::default(),
         }))
     }
 
+    fn file_dialog(&self, ftype: Option<&str>) -> Option<String> {
+        let result = nfd::open_file_dialog(ftype, None).expect("ImportChrBankGui::file_dialog");
+        match result {
+            nfd::Response::Okay(path) => Some(path),
+            _ => None,
+        }
+    }
+
+    fn load_file(&mut self) {
+        let fileresult = self.edit.subdir.relative_path(self.filename.to_str());
+        let filepath = match fileresult {
+            Ok(Some(p)) => p,
+            Ok(None) => PathBuf::from(self.filename.to_str()),
+            Err(e) => {
+                self.relative_name = None;
+                self.error.show("Load Python Code", "Could not determine the image filepath relative to the project.\nPlease save the project first.", Some(e));
+                return;
+            }
+        };
+        info!(
+            "Computing relative path: {:?} => {:?}",
+            self.filename.to_str(),
+            filepath
+        );
+        let new_path = self.edit.subdir.path(&filepath);
+        self.relative_name = match new_path.canonicalize().map_err(|e| e.into()) {
+            Ok(_) => Some(filepath.to_string_lossy().to_string()),
+            Err(e) => {
+                self.error
+                    .show("Load Python Code", "Could not load Python Code", Some(e));
+                None
+            }
+        };
+    }
+
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let edit = Box::new(PythonScript {
-            code: self.code.to_str().into(),
+            file: self.relative_name.clone(),
+            code: self.code.to_string(),
         });
         let i = project.commit(self.commit_index, edit, None)?;
         self.edit = project.get_commit(i)?;
@@ -77,6 +128,41 @@ impl Gui for PythonScriptGui {
                 let mut changed = self.changed;
                 ui.text("Script with local variables:");
                 ui.text("  edit: EditProxy with access to the ROM.");
+                ui.text("  asm: An assembler bound to the edit.");
+                ui.text("\n\n");
+
+                if ui.radio_button_bool(im_str!("File:"), self.is_file) {
+                    self.is_file = true;
+                    self.code.clear();
+                    self.changed |= true;
+                }
+                ui.same_line(0.0);
+                if ui
+                    .input_text(im_str!("##file"), &mut self.filename)
+                    .resize_buffer(true)
+                    .enter_returns_true(true)
+                    .read_only(!self.is_file)
+                    .build()
+                {
+                    self.load_file();
+                    changed |= true;
+                }
+                ui.same_line(0.0);
+                if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
+                    if let Some(filename) = self.file_dialog(None) {
+                        self.filename = ImString::new(filename);
+                        self.load_file();
+                        changed |= true;
+                    }
+                }
+
+                if ui.radio_button_bool(im_str!("Code:"), !self.is_file) {
+                    self.is_file = false;
+                    self.filename.clear();
+                    self.relative_name = None;
+                    self.changed |= true;
+                }
+                ui.same_line(0.0);
                 changed |= imgui::InputTextMultiline::new(
                     ui,
                     im_str!("##script"),
@@ -84,6 +170,7 @@ impl Gui for PythonScriptGui {
                     [0.0, 480.0],
                 )
                 .resize_buffer(true)
+                .read_only(self.is_file)
                 .build();
 
                 self.changed = changed;

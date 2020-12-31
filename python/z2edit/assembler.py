@@ -414,16 +414,22 @@ class Asm:
         self.rom = rom
         self.org = org
         self.bank = bank
+        self.reset()
+
+    def reset(self):
         self.symtab = {}
         self.code_fixup = {}
         self.data_fixup = {}
+        self.linenum = 0
 
     def asm(self, src, *, org=None, bank=None):
+        self.reset()
         if org is not None:
             self.org = org
         if bank is not None:
             self.bank = bank
         for line in src.split('\n'):
+            self.linenum += 1
             line = line.replace('\r', '')
             self.parse_line(line)
         self.apply_fixups()
@@ -510,7 +516,8 @@ class Asm:
         return None
 
     def parse_line(self, line):
-        # Strip comments and transform to lower case
+        orig_line = line
+        # Strip comments and transform to upper case
         (line, *_) = line.split(';', 1)
         line = line.upper()
 
@@ -542,7 +549,7 @@ class Asm:
         # Valid opcode?
         info = self.mnemonic.get(opcode)
         if info is None:
-            raise OpcodeError("Unkown opcode", opcode)
+            raise OpcodeError("Unkown opcode", opcode, self.linenum, orig_line)
 
         # Parse the operand and determine the addressing mode
         addr = 0
@@ -559,7 +566,7 @@ class Asm:
             mode |= 2; ope = p
         p = operand.find('(')
         if p != -1:
-            mode |= 4; ops = p
+            mode |= 4; ops = p+1
             p = operand.find(')')
             if p != -1 and p < ope: ope = p
 
@@ -591,15 +598,16 @@ class Asm:
             mode |= 32
 
         # Translate the mode guess into the real mode
+        omode = mode
         mode = self.xlate[mode]
         if mode is None:
-            raise OperandError("Invalid Operand", opcode, operand)
+            raise OperandError("Invalid Operand", opcode, operand, self.linenum, orig_line)
         if info[mode] == -1:
             if info[Asm.RELATIVE] != -1: mode = Asm.RELATIVE
             if info[Asm.IMPLIED] != -1: mode = Asm.IMPLIED
             if info[Asm.FAKE] != -1: mode = Asm.FAKE
         if info[mode] == -1:
-            raise OperandError("Invalid addressing mode", opcode, operand)
+            raise OperandError("Invalid addressing mode", opcode, operand, self.linenum, orig_line)
 
         # Write the assembled code into the ROM.
         if (mode == Asm.ABSOLUTE
@@ -627,7 +635,7 @@ class Asm:
             if fixup_resolved:
                 delta = addr - (self.org + 2)
                 if delta < -128 or delta > 127:
-                    raise OperandError("Bad displacement", self.org, delta)
+                    raise OperandError("Bad displacement", self.org, delta, self.linenum, orig_line)
             else:
                 delta = 0xff
             if not fixup_resolved:
@@ -640,18 +648,19 @@ class Asm:
             self.org += 1
         elif mode == Asm.FAKE:
             if not fixup_resolved:
-                raise OperandError("Unresolved symbol", opcode, operand)
+                raise OperandError("Unresolved symbol", opcode, operand, self.linenum, orig_line)
             if opcode == '.ORG':
+                print("Assembler: ORG changed %04x => %04x" % (self.org, addr))
                 self.org = addr
             elif opcode == ".ASSERT_ORG":
                 if self.org != addr:
-                    raise OperandError("ORG assertion failed", self.org, addr)
+                    raise OperandError("ORG assertion failed", self.org, addr, self.linenum, orig_line)
             elif opcode == ".BANK":
                 self.bank = addr
             elif opcode == "=":
                 self.symtab[label] = addr
         else:
-            raise OperandError("Invalid mode", mode)
+            raise OperandError("Invalid mode", mode, self.linenum, orig_line)
         return None
 
     def apply_fixups(self):

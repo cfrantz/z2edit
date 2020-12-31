@@ -16,6 +16,7 @@ use crate::zelda2::project::{Edit, Project, RomData};
 pub struct Metatile {
     pub id: IdPath,
     pub tile: HashMap<usize, [u8; 4]>,
+    pub palette: HashMap<usize, i32>,
 }
 
 impl Metatile {
@@ -63,6 +64,8 @@ impl RomData for Metatile {
                             .try_into()
                             .expect("Metatile::overworldtile"),
                     );
+                    self.palette
+                        .insert(i, rom.read(ocfg.tile_palette + i)? as i32);
                 }
             }
             "metatile" => {
@@ -95,8 +98,11 @@ impl RomData for Metatile {
         match kind {
             "overworldtile" => {
                 let ocfg = config.overworld.find(&self.id)?;
-                for (k, v) in self.tile.iter() {
+                for (&k, v) in self.tile.iter() {
                     rom.write_bytes(ocfg.objtable + k * 4, v)?;
+                    if let Some(&p) = self.palette.get(&k) {
+                        rom.write(ocfg.tile_palette + k, p as u8)?;
+                    }
                 }
             }
             "metatile" => {

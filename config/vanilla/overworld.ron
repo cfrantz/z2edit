@@ -136,4 +136,5 @@
     town_connectors: [44, 45, 46, 47, 48, 49, 50, 51],
     overworld_ram: 0x7c00,
     overworld_len: 896,
+    tileset: Vanilla,
 )

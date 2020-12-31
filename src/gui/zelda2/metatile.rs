@@ -31,6 +31,7 @@ pub struct MetatileGroupGui {
     subgroup_selected: i32,
     tile_selected: usize,
     tile_edit: [u8; 4],
+    tile_palette: Option<i32>,
     tile_image: Image,
     palette: i32,
     cache: TileCache,
@@ -73,6 +74,7 @@ impl MetatileGroupGui {
             subgroup_selected: 0,
             tile_selected: 0,
             tile_edit: [0; 4],
+            tile_palette: None,
             tile_image: Image::new_with_color(16, 16, 0xFFFF00FF),
             palette: 0,
             error: ErrorDialog::default(),
@@ -136,6 +138,7 @@ impl MetatileGroupGui {
             for key in orig.tile.keys() {
                 if orig.tile.get(key) == new.tile.get(key) {
                     new.tile.remove(key);
+                    new.palette.remove(key);
                 }
             }
         }
@@ -196,18 +199,27 @@ impl MetatileGroupGui {
                 } else {
                     None
                 };
-                let image = self
-                    .cache
-                    .get_alternate(i as u8, &self.group.data[self.group_selected].tile[&i]);
+                let image = self.cache.get_alternate(
+                    i as u8,
+                    &self.group.data[self.group_selected].tile[&i],
+                    self.group.data[self.group_selected]
+                        .palette
+                        .get(&i)
+                        .map(|v| *v),
+                );
                 if imgui::ImageButton::new(image.id, [32.0, 32.0])
                     .frame_padding(4)
                     .build(ui)
                 {
                     self.tile_selected = i;
                     self.tile_edit = self.group.data[self.group_selected].tile[&i];
+                    self.tile_palette = self.group.data[self.group_selected]
+                        .palette
+                        .get(&i)
+                        .map(|v| *v);
                     self.tile_image = self
                         .cache
-                        .get_alternate_uncached(i as u8, &self.tile_edit)
+                        .get_alternate_uncached(i as u8, &self.tile_edit, self.tile_palette)
                         .into_owned();
                     info!("selected tile {:02x} with {:x?}", i, self.tile_edit);
                     ui.open_popup(&im_str!("Edit Metatile ${:02x}", i));
@@ -229,6 +241,9 @@ impl MetatileGroupGui {
                 self.group.data[self.group_selected]
                     .tile
                     .insert(i, self.tile_edit);
+                if let Some(p) = self.tile_palette {
+                    self.group.data[self.group_selected].palette.insert(i, p);
+                }
                 self.reset_cache();
                 changed |= true;
             }
@@ -243,6 +258,7 @@ impl MetatileGroupGui {
             });
             ui.same_line_with_spacing(0.0, 32.0);
             ui.group(|| {
+                let mut internal_change = false;
                 let width = ui.push_item_width(48.0);
                 let indices = [0, 2, 1, 3];
                 for &i in indices.iter() {
@@ -258,14 +274,25 @@ impl MetatileGroupGui {
                         let x = u8::from_str_radix(val.to_str(), 16).unwrap_or(0);
                         if x != self.tile_edit[i] {
                             self.tile_edit[i] = x;
-                            self.tile_image = self
-                                .cache
-                                .get_alternate_uncached(self.tile_selected as u8, &self.tile_edit)
-                                .into_owned();
+                            internal_change = true;
                         }
                     }
                 }
                 width.pop(ui);
+                if let Some(p) = self.tile_palette.as_mut() {
+                    let width = ui.push_item_width(100.0);
+                    if ui.input_int(im_str!("Tile Palette"), p).build() {
+                        *p = clamp(*p, 0, 3);
+                        internal_change = true;
+                    }
+                    width.pop(ui);
+                }
+                if internal_change {
+                    self.tile_image = self
+                        .cache
+                        .get_alternate_uncached(which as u8, &self.tile_edit, self.tile_palette)
+                        .into_owned();
+                }
             });
             if ui.button(im_str!("  Ok  "), [0.0, 0.0]) {
                 changed = true;
@@ -286,7 +313,7 @@ impl Gui for MetatileGroupGui {
         if !visible {
             return;
         }
-        imgui::Window::new(&im_str!("CHR Import##{}", self.win_id))
+        imgui::Window::new(&im_str!("Metatile Editor##{}", self.win_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {
@@ -322,8 +349,8 @@ impl Gui for MetatileGroupGui {
         self.error.draw(ui);
         self.visible.change(visible, self.changed);
         self.visible.draw(
-            im_str!("CHR Import Changed"),
-            "There are unsaved changes in the CHR Import Editor.\nDo you want to discard them?",
+            im_str!("Metatiles Changed"),
+            "There are unsaved changes in the Metatile Editor.\nDo you want to discard them?",
             ui,
         );
     }

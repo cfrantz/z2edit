@@ -68,6 +68,18 @@ pub mod config {
         pub discriminator: Address,
     }
 
+    #[derive(Eq, PartialEq, Debug, Clone, Copy, Serialize, Deserialize)]
+    pub enum TileSetKind {
+        Vanilla,
+        CF207Hackjam2020,
+    }
+
+    impl Default for TileSetKind {
+        fn default() -> Self {
+            TileSetKind::Vanilla
+        }
+    }
+
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Config {
         pub mason_dixon_line: Address,
@@ -79,6 +91,7 @@ pub mod config {
         pub town_connectors: Vec<usize>,
         pub overworld_ram: u16,
         pub overworld_len: usize,
+        pub tileset: TileSetKind,
     }
 
     impl Config {
@@ -187,6 +200,22 @@ impl Map {
     }
 
     fn decompress(&mut self, addr: Address, edit: &Rc<Edit>) -> Result<usize> {
+        let config = Config::get(&edit.config())?;
+        match config.overworld.tileset {
+            config::TileSetKind::Vanilla => self.decompress_standard(addr, edit),
+            config::TileSetKind::CF207Hackjam2020 => self.decompress_hackjam2020(addr, edit),
+        }
+    }
+
+    fn compress(&self, overworld: &Overworld, edit: &Rc<Edit>) -> Result<CompressedMap> {
+        let config = Config::get(&edit.config())?;
+        match config.overworld.tileset {
+            config::TileSetKind::Vanilla => self.compress_standard(overworld, edit),
+            config::TileSetKind::CF207Hackjam2020 => self.compress_hackjam2020(overworld, edit),
+        }
+    }
+
+    fn decompress_standard(&mut self, addr: Address, edit: &Rc<Edit>) -> Result<usize> {
         let rom = edit.rom.borrow();
         self.data = vec![vec![0xf as u8; self.width]; self.height];
         let mut y = 0;
@@ -210,7 +239,40 @@ impl Map {
         Ok(index)
     }
 
-    fn compress(&self, overworld: &Overworld, edit: &Rc<Edit>) -> Result<CompressedMap> {
+    fn decompress_hackjam2020(&mut self, addr: Address, edit: &Rc<Edit>) -> Result<usize> {
+        let rom = edit.rom.borrow();
+        self.data = vec![vec![0xf as u8; self.width]; self.height];
+        let mut y = 0;
+        let mut index = 0;
+        while y < self.height {
+            let mut x = 0;
+            while x < self.width {
+                let val = rom.read(addr + index)?;
+                let mut tile = val & 0x0F;
+                let mut count = (val >> 4) as usize;
+                if tile == 0x0F && count > 0 {
+                    // Any tile F with a count > 0 represents an expansion tile
+                    // encoded in the next byte.
+                    index += 1;
+                    tile = rom.read(addr + index)?;
+                } else {
+                    // Standard encoding for all tiles 0-E and for a single tile F.
+                    count += 1;
+                }
+                for _ in 0..count {
+                    if x < self.width {
+                        self.data[y][x] = tile;
+                    }
+                    x += 1;
+                }
+                index += 1;
+            }
+            y += 1;
+        }
+        Ok(index)
+    }
+
+    fn compress_standard(&self, overworld: &Overworld, edit: &Rc<Edit>) -> Result<CompressedMap> {
         let config = Config::get(&edit.config())?;
         let comp_boulder = edit
             .meta
@@ -272,6 +334,71 @@ impl Map {
                     count += 1;
                 }
                 map.data.push(tile | count << 4);
+                x += 1;
+            }
+        }
+        Ok(map)
+    }
+
+    fn compress_hackjam2020(
+        &self,
+        overworld: &Overworld,
+        edit: &Rc<Edit>,
+    ) -> Result<CompressedMap> {
+        let config = Config::get(&edit.config())?;
+        let mut map = CompressedMap::default();
+        for (y, row) in self.data.iter().enumerate() {
+            let mut x = 0;
+            while x < self.width {
+                let mut count = 0u8;
+                let mut want_compress = true;
+                let tile = row[x];
+                if let Some(conn) = overworld.connector_at(x, y) {
+                    let index = conn.id.usize_last().unwrap();
+                    if let Some(palace) = config.overworld.palace_code(index) {
+                        want_compress = false;
+                        map.palace_offset[palace] = map.data.len() as u16;
+                        if let Some(h) = &conn.hidden {
+                            if h.hidden {
+                                map.hidden_palace = Some(tile);
+                            }
+                        }
+                    } else {
+                        if let Some(h) = &conn.hidden {
+                            if h.hidden {
+                                want_compress = false;
+                                map.hidden_town = Some(tile);
+                            }
+                        }
+                    }
+                }
+                if tile == 0x0E || tile == 0x0F {
+                    want_compress = false;
+                }
+                if tile >= 0x10 {
+                    // pre-increment the count for expansion tiles.
+                    count += 1;
+                }
+
+                while want_compress
+                    && count < 15
+                    && x + 1 < self.width
+                    && tile == row[x + 1]
+                    && !overworld.skip_compress(x + 1, y)
+                {
+                    x += 1;
+                    count += 1;
+                }
+                if tile < 0x10 {
+                    // Vanilla tiles get written in the usual way.
+                    map.data.push(tile | count << 4);
+                } else {
+                    // Expansion tiles are encoded as 0x_F, where the high
+                    // nibble is the number of tiles followed by a byte
+                    // with the tile ID.
+                    map.data.push(0x0F | count << 4);
+                    map.data.push(tile);
+                }
                 x += 1;
             }
         }

@@ -148,7 +148,8 @@ impl ImportChrBankGui {
             self.filename.to_str(),
             filepath
         );
-        self.overlay_image = match Image::load_bmp(&filepath) {
+        let new_path = self.edit.subdir.path(&filepath);
+        self.overlay_image = match Image::load_bmp(&new_path) {
             Ok(img) => {
                 self.import.file = filepath;
                 Some(img)

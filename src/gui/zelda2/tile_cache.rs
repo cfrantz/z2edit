@@ -186,13 +186,14 @@ impl TileCache {
         config: &str,
         id: &IdPath,
         table: Option<&[u8]>,
+        palidx: Option<i32>,
     ) -> Result<Image> {
         let config = Config::get(config)?;
         let ov = config.overworld.find(id)?;
 
         let rom = self.edit.rom.borrow();
         let table = table.unwrap_or(rom.read_bytes(ov.objtable + tile as usize * 4, 4)?);
-        let palidx = rom.read(ov.tile_palette + tile)?;
+        let palidx = palidx.unwrap_or(rom.read(ov.tile_palette + tile)? as i32);
 
         let chr = self.chr_override.unwrap_or(ov.chr);
         let palette = self.pal_override.unwrap_or(ov.palette);
@@ -397,12 +398,14 @@ impl TileCache {
         Ok(image)
     }
 
-    fn _get_raw(&self, tile: u8, table: Option<&[u8]>) -> Result<Image> {
+    fn _get_raw(&self, tile: u8, table: Option<&[u8]>, ovpal: Option<i32>) -> Result<Image> {
         let image = match &self.schema {
             Schema::None => {
                 return Err(ErrorKind::NotFound("Schema::None".to_string()).into());
             }
-            Schema::Overworld(config, id) => self.get_overworld_tile(tile, config, id, table)?,
+            Schema::Overworld(config, id) => {
+                self.get_overworld_tile(tile, config, id, table, ovpal)?
+            }
             Schema::MetaTile(config, id, palidx) => {
                 self.get_meta_tile(tile, config, id, *palidx, table)?
             }
@@ -418,11 +421,16 @@ impl TileCache {
         Ok(image)
     }
 
-    fn _get_cached(&self, tile: u8, table: Option<&[u8]>) -> Result<Ref<'_, Image>> {
+    fn _get_cached(
+        &self,
+        tile: u8,
+        table: Option<&[u8]>,
+        ovpal: Option<i32>,
+    ) -> Result<Ref<'_, Image>> {
         {
             let mut cache = self.cache.borrow_mut();
             if !cache.contains_key(&tile) {
-                let image = self._get_raw(tile, table)?;
+                let image = self._get_raw(tile, table, ovpal)?;
                 cache.insert(tile, image);
             }
         }
@@ -431,7 +439,7 @@ impl TileCache {
     }
 
     pub fn get(&self, tile: u8) -> Ref<'_, Image> {
-        match self._get_cached(tile, None) {
+        match self._get_cached(tile, None, None) {
             Ok(v) => v,
             Err(e) => {
                 error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
@@ -440,8 +448,8 @@ impl TileCache {
         }
     }
 
-    pub fn get_alternate(&self, tile: u8, table: &[u8]) -> Ref<'_, Image> {
-        match self._get_cached(tile, Some(table)) {
+    pub fn get_alternate(&self, tile: u8, table: &[u8], ovpal: Option<i32>) -> Ref<'_, Image> {
+        match self._get_cached(tile, Some(table), ovpal) {
             Ok(v) => v,
             Err(e) => {
                 error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
@@ -450,8 +458,13 @@ impl TileCache {
         }
     }
 
-    pub fn get_alternate_uncached(&self, tile: u8, table: &[u8]) -> Cow<'_, Image> {
-        match self._get_raw(tile, Some(table)) {
+    pub fn get_alternate_uncached(
+        &self,
+        tile: u8,
+        table: &[u8],
+        ovpal: Option<i32>,
+    ) -> Cow<'_, Image> {
+        match self._get_raw(tile, Some(table), ovpal) {
             Ok(i) => Cow::Owned(i),
             Err(e) => {
                 error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
