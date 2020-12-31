@@ -694,6 +694,7 @@ class Asm:
             if value is None:
                 raise FixupError("Unresolved symbol", sym, addr)
             for _ in range(size):
-                self.write(addr, val & 0xFF)
+                self.write(addr, value & 0xFF)
+                value >>= 8
                 addr += 1
         return None
