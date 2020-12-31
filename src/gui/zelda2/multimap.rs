@@ -1,13 +1,15 @@
+use std::any::Any;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 use imgui;
 use imgui::{im_str, ImString, MouseButton};
+use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
 use crate::gui::glhelper::Image;
-use crate::gui::util::{draw_arrow, tooltip};
+use crate::gui::util::draw_arrow;
 use crate::gui::zelda2::sideview::SideviewGui;
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
@@ -19,8 +21,30 @@ use crate::util::clamp;
 use crate::util::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::overworld::Connector;
-use crate::zelda2::project::{Edit, Project};
+use crate::zelda2::project::{Edit, Project, ProjectExtraData};
 use crate::zelda2::sideview::{Connection, Decompressor, Sideview};
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+struct RoomLayout {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[serde(default)]
+struct MultiMapLayout {
+    pub scale: f32,
+    pub spread: [f32; 2],
+    pub show_invalid_connections: bool,
+    pub layout: HashMap<usize, RoomLayout>,
+}
+
+#[typetag::serde]
+impl ProjectExtraData for MultiMapLayout {
+    fn as_any(&self) -> &dyn Any {
+        return self;
+    }
+}
 
 struct Room {
     pub id: IdPath,
@@ -28,8 +52,10 @@ struct Room {
     pub x: f32,
     pub y: f32,
     pub connection: Vec<Connection>,
+    pub door: Vec<Connection>,
     pub elevator: Option<f32>,
     pub cpoints: [(f32, f32); 4],
+    pub dpoints: [(f32, f32); 4],
     pub image: Image,
 }
 
@@ -40,7 +66,8 @@ pub struct MultiMapGui {
     edit: Rc<Edit>,
     scale: f32,
     spread: [f32; 2],
-    start: IdPath,
+    show_invalid_connections: bool,
+    conn_id: IdPath,
     rooms: HashMap<usize, Room>,
 
     background: TileCache,
@@ -52,12 +79,6 @@ pub struct MultiMapGui {
 
 impl MultiMapGui {
     pub fn new(edit: &Rc<Edit>, conn_id: &IdPath) -> Result<Box<dyn Gui>> {
-        let start = if let Some(id) = edit.overworld_connector(conn_id) {
-            id
-        } else {
-            return Err(ErrorKind::NotFound(format!("No destination map for {}", conn_id)).into());
-        };
-
         let mut ret = Box::new(MultiMapGui {
             visible: Visibility::Visible,
             changed: false,
@@ -65,7 +86,8 @@ impl MultiMapGui {
             edit: Rc::clone(&edit),
             scale: 0.25,
             spread: [1.25, 1.25],
-            start: start,
+            show_invalid_connections: true,
+            conn_id: conn_id.clone(),
             rooms: HashMap::new(),
             background: TileCache::new(&edit, Schema::None),
             enemy_cache: TileCache::new(&edit, Schema::None),
@@ -73,14 +95,51 @@ impl MultiMapGui {
             editor: None,
             error: ErrorDialog::default(),
         });
-        ret.explore()?;
+        ret.explore(true)?;
         Ok(ret)
     }
 
-    fn explore(&mut self) -> Result<()> {
-        self.explore_map(self.start.clone(), 0.0, 0.0, false)?;
-        self.normalize();
+    fn explore(&mut self, remember_layout: bool) -> Result<()> {
+        if let Some(id) = self.edit.overworld_connector(&self.conn_id) {
+            // FIXME: should look up the connector to get the screen number
+            // Link will enter.  For now, just enter on screen #0.
+            self.explore_map(id, 0, 0.0, 0.0, false)?;
+            if remember_layout {
+                self.load_layout();
+            }
+            self.normalize();
+        } else {
+            return Err(
+                ErrorKind::NotFound(format!("No destination map for {}", self.conn_id)).into(),
+            );
+        };
         Ok(())
+    }
+
+    fn load_layout(&mut self) {
+        let id = self.conn_id.extend("layout");
+        if let Some(layout) = self.edit.extra_data.get::<MultiMapLayout>(&id) {
+            self.scale = layout.scale;
+            self.spread = layout.spread;
+            self.show_invalid_connections = layout.show_invalid_connections;
+            for (k, v) in layout.layout.iter() {
+                if let Some(room) = self.rooms.get_mut(k) {
+                    room.x = v.x;
+                    room.y = v.y;
+                }
+            }
+        }
+    }
+    fn save_layout(&self) {
+        let mut layout = Box::new(MultiMapLayout::default());
+        layout.scale = self.scale;
+        layout.spread = self.spread;
+        layout.show_invalid_connections = self.show_invalid_connections;
+        for (&k, v) in self.rooms.iter() {
+            layout.layout.insert(k, RoomLayout { x: v.x, y: v.y });
+        }
+        let id = self.conn_id.extend("layout");
+        self.edit.extra_data.insert(id, layout);
     }
 
     fn normalize(&mut self) {
@@ -96,7 +155,14 @@ impl MultiMapGui {
         }
     }
 
-    fn explore_map(&mut self, start: IdPath, x: f32, y: f32, invalid: bool) -> Result<()> {
+    fn explore_map(
+        &mut self,
+        start: IdPath,
+        entry: usize,
+        x: f32,
+        y: f32,
+        invalid: bool,
+    ) -> Result<()> {
         let n = start.usize_last()?;
         if n > 62 {
             return Ok(());
@@ -109,37 +175,103 @@ impl MultiMapGui {
                 name: ImString::new(start.to_string()),
                 x: x,
                 y: y,
-                connection: if invalid {
-                    Vec::new()
-                } else {
-                    sideview.connection.clone()
-                },
+                connection: Vec::new(),
+                door: Vec::new(),
                 elevator: sideview.map.elevator().map(|e| (e * 16) as f32),
                 cpoints: [
                     (0.0, 104.0),
                     (384.0, 208.0),
-                    (896.0, 208.0),
+                    (640.0, 208.0),
                     (1024.0, 104.0),
+                ],
+                dpoints: [
+                    (128.0, 208.0),
+                    (384.0, 208.0),
+                    (640.0, 208.0),
+                    (896.0, 208.0),
                 ],
                 image: image,
             };
             let deltas = if let Some(xcoord) = sideview.map.elevator() {
                 room.cpoints[1] = ((xcoord * 16) as f32, 208.0);
                 room.cpoints[2] = ((xcoord * 16) as f32, 0.0);
-                [(-1024.0, 0.0), (0.0, 256.0), (0.0, -256.0), (1024.0, 0.0)]
+                [
+                    // Where to draw the next connected room.
+                    (-1024.0, 0.0),
+                    (0.0, 256.0),
+                    (0.0, -256.0),
+                    (1024.0, 0.0),
+                    // Where to draw the next door-connected room.
+                    (-1024.0, 200.0),
+                    (-384.0, 200.0),
+                    (384.0, 200.0),
+                    (1024.0, 200.0),
+                ]
             } else {
-                [(-1024.0, 0.0), (0.0, 256.0), (0.0, 256.0), (1024.0, 0.0)]
+                [
+                    // Where to draw the next connected room.
+                    (-1024.0, 0.0),
+                    (0.0, 256.0),
+                    (0.0, 256.0),
+                    (1024.0, 0.0),
+                    // Where to draw the next door-connected room.
+                    (-1024.0, 200.0),
+                    (-384.0, 200.0),
+                    (384.0, 200.0),
+                    (1024.0, 200.0),
+                ]
             };
             self.rooms.insert(n, room);
             if !invalid {
+                // Screen start/end for connection exploration.
+                let width = sideview.map.width as usize - 1;
+                let (ss, se) = if width == 3 {
+                    (0, 3)
+                } else if entry & 1 == 0 {
+                    (entry, entry + width)
+                } else {
+                    (entry - width, entry)
+                };
+
                 let start = start.pop();
-                for (i, c) in sideview.connection.iter().enumerate() {
-                    self.explore_map(
-                        start.extend(c.dest_map),
-                        x + deltas[i].0,
-                        y + deltas[i].1,
-                        c.dest_map == 0,
-                    )?;
+                for i in 0..4 {
+                    let conn = sideview.connection.get(i);
+                    if conn.is_some() && i >= ss && i <= se {
+                        let c = conn.unwrap();
+                        self.rooms.get_mut(&n).unwrap().connection.push(c.clone());
+                        self.explore_map(
+                            start.extend(c.dest_map),
+                            c.entry,
+                            x + deltas[i].0,
+                            y + deltas[i].1,
+                            c.dest_map == 0,
+                        )?;
+                    } else {
+                        self.rooms
+                            .get_mut(&n)
+                            .unwrap()
+                            .connection
+                            .push(Connection::outside());
+                    }
+
+                    let conn = sideview.door.get(i);
+                    if conn.is_some() && i >= ss && i <= se {
+                        let c = conn.unwrap();
+                        self.rooms.get_mut(&n).unwrap().door.push(c.clone());
+                        self.explore_map(
+                            start.extend(c.dest_map),
+                            c.entry,
+                            x + deltas[4 + i].0,
+                            y + deltas[4 + i].1,
+                            c.dest_map == 0,
+                        )?;
+                    } else {
+                        self.rooms
+                            .get_mut(&n)
+                            .unwrap()
+                            .door
+                            .push(Connection::outside());
+                    }
                 }
             }
         }
@@ -235,7 +367,7 @@ impl MultiMapGui {
         let spread = self.spread;
         for room in self.rooms.values() {
             for (i, c) in room.connection.iter().enumerate() {
-                if c.dest_map == 0 {
+                if c.dest_map == 0 && !self.show_invalid_connections {
                     continue;
                 }
                 if let Some(dest) = self.rooms.get(&c.dest_map) {
@@ -254,7 +386,26 @@ impl MultiMapGui {
                     } else {
                         scr[1] + spread[1] * scale * dest.y + dest.cpoints[c.entry].1 * scale
                     };
-                    draw_arrow([x0, y0], [x1, y1], colors[i], widths[i], 0.1, 10.0, ui);
+                    // Invalid connections get colors[8], which should be gray.
+                    let color = if c.dest_map == 0 {
+                        colors[8]
+                    } else {
+                        colors[i]
+                    };
+                    let width = if c.dest_map == 0 { 1.0 } else { widths[i] };
+                    draw_arrow([x0, y0], [x1, y1], color, width, 0.1, 10.0, ui);
+                }
+            }
+            for (i, c) in room.door.iter().enumerate() {
+                if c.dest_map == 0 {
+                    continue;
+                }
+                if let Some(dest) = self.rooms.get(&c.dest_map) {
+                    let x0 = scr[0] + spread[0] * scale * room.x + room.dpoints[i].0 * scale;
+                    let y0 = scr[1] + spread[1] * scale * room.y + room.dpoints[i].1 * scale;
+                    let x1 = scr[0] + spread[0] * scale * dest.x + dest.dpoints[c.entry].0 * scale;
+                    let y1 = scr[1] + spread[1] * scale * dest.y + dest.dpoints[c.entry].1 * scale;
+                    draw_arrow([x0, y0], [x1, y1], colors[4 + i], 2.0, 0.1, 10.0, ui);
                 }
             }
         }
@@ -267,6 +418,7 @@ impl MultiMapGui {
         scr_origin: [f32; 2],
         ui: &imgui::Ui,
     ) -> bool {
+        let mut changed = false;
         let config = Config::get(&self.edit.config()).expect("MultiMapGui::draw_multimap");
         self.draw_connections(origin, scr_origin, ui);
         let scale = self.scale;
@@ -275,22 +427,23 @@ impl MultiMapGui {
             let id = ui.push_id(n as i32);
             let x = origin[0] + spread[0] * scale * room.x;
             let y = origin[1] + spread[1] * scale * room.y;
+            ui.set_cursor_pos([x, y - 16.0]);
+            ui.text(
+                config
+                    .sideview
+                    .name(&room.id)
+                    .unwrap_or_else(|_err| room.id.to_string()),
+            );
             room.image.draw_at([x, y], scale, ui);
 
             ui.set_cursor_pos([x, y]);
             ui.invisible_button(&im_str!("##room"), [1024.0 * scale, 208.0 * scale]);
-            tooltip(
-                &config
-                    .sideview
-                    .name(&room.id)
-                    .expect("MultiMapGui::draw_multimap"),
-                ui,
-            );
             if ui.is_item_active() {
                 if ui.is_mouse_dragging(MouseButton::Left) {
                     let delta = ui.io().mouse_delta;
                     room.x += delta[0] / (scale * spread[0]);
                     room.y += delta[1] / (scale * spread[1]);
+                    changed |= true;
                 }
             }
             if ui.popup_context_item(im_str!("menu")) {
@@ -312,7 +465,7 @@ impl MultiMapGui {
             id.pop(ui);
         }
         self.normalize();
-        false
+        changed
     }
 }
 
@@ -326,23 +479,31 @@ impl Gui for MultiMapGui {
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {
+                let mut changed = false;
                 let width = ui.push_item_width(100.0);
                 if imgui::InputFloat::new(ui, im_str!("Scale"), &mut self.scale)
                     .step(0.125)
                     .build()
                 {
                     self.scale = clamp(self.scale, 0.125, 4.0);
+                    changed |= true;
                 }
                 width.pop(ui);
 
+                ui.same_line(0.0);
                 let width = ui.push_item_width(200.0);
-                imgui::Slider::new(im_str!("Spread"))
-                    .range(1.0..=2.0)
+                changed |= imgui::Slider::new(im_str!("Spread"))
+                    .range(1.0..=4.0)
                     .build_array(ui, &mut self.spread);
                 width.pop(ui);
 
+                ui.same_line(0.0);
+                changed |= ui.checkbox(
+                    im_str!("Show Invalid Connections"),
+                    &mut self.show_invalid_connections,
+                );
+
                 ui.separator();
-                let changed = false;
 
                 let size = ui.content_region_avail();
                 imgui::ChildWindow::new(1)
@@ -353,8 +514,12 @@ impl Gui for MultiMapGui {
                     .build(ui, || {
                         let origin = ui.cursor_pos();
                         let scr_origin = ui.cursor_screen_pos();
-                        self.draw_multimap(project, origin, scr_origin, ui);
+                        changed |= self.draw_multimap(project, origin, scr_origin, ui);
                     });
+                if changed {
+                    self.save_layout();
+                    changed = false;
+                }
                 self.changed |= changed;
             });
         self.error.draw(ui);

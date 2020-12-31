@@ -673,6 +673,16 @@ pub struct Connection {
     pub point_target_back: Option<usize>,
 }
 
+impl Connection {
+    pub fn outside() -> Self {
+        Self {
+            dest_map: 63,
+            entry: 0,
+            point_target_back: None,
+        }
+    }
+}
+
 impl From<u8> for Connection {
     fn from(a: u8) -> Connection {
         Connection {

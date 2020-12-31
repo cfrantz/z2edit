@@ -39,6 +39,8 @@ use crate::zelda2::import::{FileResource, ImportRom};
 pub struct Project {
     pub name: String,
     pub edits: Vec<Rc<Edit>>,
+    #[serde(default)]
+    pub extra_data: ProjectExtraDataContainer,
     #[serde(skip)]
     pub changed: Cell<bool>,
     #[serde(skip)]
@@ -73,6 +75,7 @@ impl Project {
             action: RefCell::default(),
             error: RefCell::default(),
             subdir: project.subdir.clone(),
+            extra_data: project.extra_data.clone(),
         });
         project.edits.push(commit);
         project.replay(0, -1)?;
@@ -91,8 +94,10 @@ impl Project {
 
     fn from_reader(r: impl Read) -> Result<Self> {
         let mut project: Project = serde_json::from_reader(r)?;
-        for e in project.edits.iter_mut() {
-            Rc::get_mut(e).unwrap().subdir = project.subdir.clone();
+        for edit in project.edits.iter_mut() {
+            let mut e = Rc::get_mut(edit).unwrap();
+            e.subdir = project.subdir.clone();
+            e.extra_data = project.extra_data.clone();
         }
         Ok(project)
     }
@@ -214,6 +219,7 @@ impl Project {
                 action: RefCell::default(),
                 error: RefCell::default(),
                 subdir: self.subdir.clone(),
+                extra_data: self.extra_data.clone(),
             });
             commit.edit.borrow().pack(&commit)?;
             commit
@@ -321,6 +327,8 @@ pub struct Edit {
     pub error: RefCell<String>,
     #[serde(skip)]
     pub subdir: RelativePath,
+    #[serde(skip)]
+    pub extra_data: ProjectExtraDataContainer,
 }
 
 #[derive(Debug, Default)]
@@ -487,6 +495,7 @@ impl EditProxy {
             action: RefCell::default(),
             error: RefCell::default(),
             subdir: self.edit.subdir.clone(),
+            extra_data: self.edit.extra_data.clone(),
         });
         Ok(EditProxy::new(commit))
     }
@@ -619,6 +628,47 @@ impl PySequenceProtocol for Project {
         match self.get_commit(index) {
             Ok(edit) => Ok(EditProxy { edit: edit }),
             Err(_) => Err(PyIndexError::new_err("list index out of range")),
+        }
+    }
+}
+
+#[typetag::serde(tag = "type")]
+pub trait ProjectExtraData
+where
+    Self: std::fmt::Debug,
+{
+    fn as_any(&self) -> &dyn Any;
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ProjectExtraDataContainer {
+    pub data: Rc<RefCell<HashMap<IdPath, Box<dyn ProjectExtraData>>>>,
+}
+
+impl ProjectExtraDataContainer {
+    pub fn insert(&self, id: IdPath, value: Box<dyn ProjectExtraData>) {
+        self.data.borrow_mut().insert(id, value);
+    }
+
+    pub fn remove(&self, id: &IdPath) {
+        self.data.borrow_mut().remove(id);
+    }
+
+    pub fn get<T>(&self, id: &IdPath) -> Option<Ref<'_, T>>
+    where
+        T: 'static,
+    {
+        let data = self.data.borrow();
+        if data.contains_key(id) {
+            if data.get(id).unwrap().as_any().is::<T>() {
+                Some(Ref::map(data, |d| {
+                    d.get(id).unwrap().as_any().downcast_ref::<T>().unwrap()
+                }))
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 }

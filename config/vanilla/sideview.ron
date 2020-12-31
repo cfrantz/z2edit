@@ -548,6 +548,7 @@
             metatile_lengths: [27, 27, 25, 43],
             chr: Chr(7, 0),
             pet_names: {
+                0: "Glitch Town",
             },
             background_id: Some("town_background"),
             background: [

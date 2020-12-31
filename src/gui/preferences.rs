@@ -24,26 +24,30 @@ pub struct Preferences {
     #[default = "fceux"]
     pub emulator: String,
     #[serde(default)]
-    pub multimap: [[f32; 4]; 4],
+    pub multimap: Vec<[f32; 4]>,
 }
 
-const ZEROS: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
-
-const MULTIMAP_COLORS: [[f32; 4]; 4] = [
+const MULTIMAP_COLORS: [[f32; 4]; 9] = [
     [0.8, 0.9, 0.0, 0.9],
     [0.0, 1.0, 0.0, 0.9],
     [0.0, 0.0, 1.0, 0.9],
     [1.0, 0.0, 0.0, 0.9],
+    [0.9, 0.5, 0.0, 0.9],
+    [0.9, 0.5, 0.0, 0.9],
+    [0.9, 0.5, 0.0, 0.9],
+    [0.9, 0.5, 0.0, 0.9],
+    [0.7, 0.7, 0.7, 0.5],
 ];
-const MULTIMAP_NAMES: [&'static str; 4] = ["Screen 1", "Screen 2", "Screen 3", "Screen 4"];
+const MULTIMAP_NAMES: [&'static str; 9] = [
+    "Screen 1", "Screen 2", "Screen 3", "Screen 4", "Door 1", "Door 2", "Door 3", "Door 4",
+    "Invalid",
+];
 
 impl Preferences {
     pub fn from_reader(r: impl Read) -> Result<Self> {
         let mut pref: Self = ron::de::from_reader(r)?;
-        for (color, def) in pref.multimap.iter_mut().zip(MULTIMAP_COLORS.iter()) {
-            if *color == ZEROS {
-                *color = *def;
-            }
+        for i in pref.multimap.len()..MULTIMAP_COLORS.len() {
+            pref.multimap.push(MULTIMAP_COLORS[i]);
         }
         Ok(pref)
     }
@@ -98,6 +102,28 @@ impl PreferencesGui {
             nfd::Response::Okay(path) => Some(path),
             _ => None,
         }
+    }
+    fn draw_connection_colors(
+        &self,
+        pref: &mut Preferences,
+        start: usize,
+        end: usize,
+        ui: &imgui::Ui,
+    ) -> bool {
+        let mut changed = false;
+        ui.group(|| {
+            for i in start..end {
+                changed |= imgui::ColorEdit::new(
+                    &im_str!("{} Connection Color", MULTIMAP_NAMES[i]),
+                    &mut pref.multimap[i],
+                )
+                .alpha(true)
+                .inputs(false)
+                .picker(true)
+                .build(&ui);
+            }
+        });
+        changed
     }
 
     pub fn draw(&mut self, ui: &imgui::Ui) {
@@ -180,17 +206,11 @@ impl PreferencesGui {
 
                 ui.separator();
                 ui.text("MultiMap Colors:");
-
-                for (i, color) in pref.multimap.iter_mut().enumerate() {
-                    changed |= imgui::ColorEdit::new(
-                        &im_str!("{} Connection Color", MULTIMAP_NAMES[i]),
-                        color,
-                    )
-                    .alpha(true)
-                    .inputs(false)
-                    .picker(true)
-                    .build(&ui);
-                }
+                changed |= self.draw_connection_colors(pref, 0, 4, ui);
+                ui.same_line(0.0);
+                changed |= self.draw_connection_colors(pref, 4, 8, ui);
+                ui.same_line(0.0);
+                changed |= self.draw_connection_colors(pref, 8, MULTIMAP_COLORS.len(), ui);
 
                 ui.separator();
                 if ui.button(im_str!("Save"), [0.0, 0.0]) {
