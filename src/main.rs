@@ -3,6 +3,7 @@ extern crate error_chain;
 extern crate chrono;
 extern crate directories;
 extern crate gl;
+extern crate pathdiff;
 extern crate sdl2;
 #[macro_use]
 extern crate smart_default;

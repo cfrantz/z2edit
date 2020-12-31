@@ -76,6 +76,9 @@ git submodule update --init --recursive
     - Metatile Editor (aka "Object table" in Z2Edit 1).
     - Multimap viewer
       - TODO: save layout/positioning info
+    - Relative-ize paths to location of project file (done for ImportChr)
+      - TODO: Figure out what to do for base ROM import.
+      - TODO: do something clever to remember the path in the autosave files.
 
 - Not Started
     - Drops (drop probabilities, hidden drops, pbag values)
@@ -91,7 +94,6 @@ git submodule update --init --recursive
     - Refactor some of the GUIs into common code
     - Add common methods to the `Edit` struct
     - Maybe add menubars to individual editor GUIs
-    - Relative-ize paths to location of project file (e.g. ImportChrBank)
     - Check on TileCache recreation after commits in Overworld & Sideview editors.
       - Create `Edit` instances as tentative commits.
     - Verify freespace upon import.

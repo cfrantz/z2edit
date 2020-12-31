@@ -134,9 +134,23 @@ impl ImportChrBankGui {
     }
 
     fn load_image(&mut self) {
-        self.overlay_image = match Image::load_bmp(self.filename.to_str()) {
+        let fileresult = self.edit.subdir.relative_path(self.filename.to_str());
+        let filepath = match fileresult {
+            Ok(Some(p)) => p.to_string_lossy().to_string(),
+            Ok(None) => self.filename.to_string(),
+            Err(e) => {
+                self.error.show("Load Image", "Could not determine the image filepath relative to the project.\nPlease save the project first.", Some(e));
+                return;
+            }
+        };
+        info!(
+            "Computing relative path: {:?} => {:?}",
+            self.filename.to_str(),
+            filepath
+        );
+        self.overlay_image = match Image::load_bmp(&filepath) {
             Ok(img) => {
-                self.import.file = self.filename.to_string();
+                self.import.file = filepath;
                 Some(img)
             }
             Err(e) => {

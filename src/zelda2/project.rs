@@ -27,6 +27,7 @@ use crate::nes::freespace::FreeSpace;
 use crate::nes::IdPath;
 use crate::nes::{Address, Buffer, MemoryAccess};
 use crate::util::pyaddress::PyAddress;
+use crate::util::relative_path::RelativePath;
 use crate::util::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::connectivity::Connectivity;
@@ -40,10 +41,17 @@ pub struct Project {
     pub edits: Vec<Rc<Edit>>,
     #[serde(skip)]
     pub changed: Cell<bool>,
+    #[serde(skip)]
+    pub subdir: RelativePath,
 }
 
 impl Project {
     pub fn new(name: &str, file: FileResource, config: &str, fix: bool) -> Result<Self> {
+        let mut project = Project {
+            name: name.to_owned(),
+            edits: Vec::new(),
+            ..Default::default()
+        };
         let mut extra = HashMap::new();
         extra.insert("project".to_owned(), name.to_owned());
         extra.insert("fix".to_owned(), fix.to_string());
@@ -64,12 +72,9 @@ impl Project {
             connectivity: RefCell::default(),
             action: RefCell::default(),
             error: RefCell::default(),
+            subdir: project.subdir.clone(),
         });
-        let project = Project {
-            name: name.to_owned(),
-            edits: vec![commit],
-            ..Default::default()
-        };
+        project.edits.push(commit);
         project.replay(0, -1)?;
         Ok(project)
     }
@@ -84,8 +89,19 @@ impl Project {
         )
     }
 
-    pub fn from_reader(r: impl Read) -> Result<Self> {
-        let project: Project = serde_json::from_reader(r)?;
+    fn from_reader(r: impl Read) -> Result<Self> {
+        let mut project: Project = serde_json::from_reader(r)?;
+        for e in project.edits.iter_mut() {
+            Rc::get_mut(e).unwrap().subdir = project.subdir.clone();
+        }
+        Ok(project)
+    }
+
+    pub fn from_file(filepath: &Path) -> Result<Self> {
+        let filepath = filepath.canonicalize()?;
+        let file = File::open(&filepath)?;
+        let project = Project::from_reader(file)?;
+        project.subdir.set(filepath.parent().unwrap());
         match project.replay(0, -1) {
             Ok(_) => {}
             Err(e) => error!("Replay error during loading: {:?}", e),
@@ -93,19 +109,18 @@ impl Project {
         Ok(project)
     }
 
-    pub fn from_file(filepath: &Path) -> Result<Self> {
-        let file = File::open(filepath)?;
-        Project::from_reader(file)
-    }
-
-    pub fn to_writer(&self, w: &mut impl Write) -> Result<()> {
+    fn to_writer(&self, w: &mut impl Write) -> Result<()> {
         serde_json::to_writer_pretty(w, self)?;
         self.changed.set(false);
         Ok(())
     }
 
-    pub fn to_file(&self, filepath: &Path) -> Result<()> {
-        let mut file = File::create(filepath)?;
+    pub fn to_file(&self, filepath: &Path, is_autosave: bool) -> Result<()> {
+        let mut file = File::create(&filepath)?;
+        if !is_autosave {
+            let filepath = filepath.canonicalize()?;
+            self.subdir.set(filepath.parent().unwrap());
+        }
         self.to_writer(&mut file)
     }
 
@@ -198,6 +213,7 @@ impl Project {
                 connectivity: RefCell::default(),
                 action: RefCell::default(),
                 error: RefCell::default(),
+                subdir: self.subdir.clone(),
             });
             commit.edit.borrow().pack(&commit)?;
             commit
@@ -303,6 +319,8 @@ pub struct Edit {
     pub action: RefCell<EditAction>,
     #[serde(skip)]
     pub error: RefCell<String>,
+    #[serde(skip)]
+    pub subdir: RelativePath,
 }
 
 #[derive(Debug, Default)]
@@ -468,6 +486,7 @@ impl EditProxy {
             connectivity: self.edit.connectivity.clone(),
             action: RefCell::default(),
             error: RefCell::default(),
+            subdir: self.edit.subdir.clone(),
         });
         Ok(EditProxy::new(commit))
     }
@@ -564,12 +583,29 @@ impl EditProxy {
             .overworld_connector(&id)
             .map(|s| s.to_string())
     }
+
+    pub fn relative_path(&self, other: &str) -> Result<Option<String>> {
+        match self.edit.subdir.relative_path(other) {
+            Ok(Some(p)) => Ok(Some(p.to_string_lossy().to_string())),
+            Ok(None) => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+
+    pub fn path(&self, path: &str) -> String {
+        self.edit.subdir.path(path).to_string_lossy().to_string()
+    }
+
+    pub fn subdir(&self) -> String {
+        self.edit.subdir.subdir().to_string_lossy().to_string()
+    }
 }
 
 #[pymethods]
 impl Project {
     fn save(&self, filename: &str) -> PyResult<()> {
-        self.to_file(&Path::new(filename)).map_err(|e| e.into())
+        self.to_file(&Path::new(filename), false)
+            .map_err(|e| e.into())
     }
 }
 

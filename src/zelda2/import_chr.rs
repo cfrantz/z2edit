@@ -54,7 +54,9 @@ impl RomData for ImportChrBank {
         let chr = Address::Chr(self.bank as isize, 0);
         let mut bank =
             cache.get_bank(chr, &self.palette, self.sprite_layout, self.border as u32)?;
-        let graphics = Image::load_bmp(&self.file)?;
+
+        let filepath = edit.subdir.path(&self.file);
+        let graphics = Image::load_bmp(&filepath)?;
         bank.overlay(&graphics, 0, 0);
         cache.put_bank(
             &bank,

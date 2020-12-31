@@ -75,7 +75,7 @@ impl ProjectGui {
 
     fn save(&mut self, py: Python) {
         if let Some(path) = &self.filename {
-            match self.project.borrow(py).to_file(&Path::new(&path)) {
+            match self.project.borrow(py).to_file(&Path::new(&path), false) {
                 Err(e) => self.error.show(
                     "Save",
                     &format!("Could not save project as {:?}", path),
@@ -94,21 +94,23 @@ impl ProjectGui {
     fn save_dialog(&mut self, py: Python, save_as: bool) {
         let result = nfd::open_save_dialog(Some("z2prj"), None).unwrap();
         match result {
-            nfd::Response::Okay(path) => match self.project.borrow(py).to_file(&Path::new(&path)) {
-                Err(e) => self.error.show(
-                    "Save",
-                    &format!("Could not save project as {:?}", path),
-                    Some(e),
-                ),
-                Ok(_) => {
-                    if !save_as {
-                        self.filename = Some(path);
+            nfd::Response::Okay(path) => {
+                match self.project.borrow(py).to_file(&Path::new(&path), false) {
+                    Err(e) => self.error.show(
+                        "Save",
+                        &format!("Could not save project as {:?}", path),
+                        Some(e),
+                    ),
+                    Ok(_) => {
+                        if !save_as {
+                            self.filename = Some(path);
+                        }
+                        self.changed = false;
+                        self.want_autosave = false;
+                        self.remove_autosave(py);
                     }
-                    self.changed = false;
-                    self.want_autosave = false;
-                    self.remove_autosave(py);
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -121,7 +123,7 @@ impl ProjectGui {
             format!("{}-autosave.z2prj", project.name)
         };
         let path = AppContext::data_file(&filename);
-        match project.to_file(&path) {
+        match project.to_file(&path, true) {
             Err(e) => error!("Could not save project as {:?}: {:?}", path, e),
             Ok(_) => {}
         }
