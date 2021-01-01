@@ -36,7 +36,7 @@ const MULTIMAP_COLORS: [[f32; 4]; 9] = [
     [0.9, 0.5, 0.0, 0.9],
     [0.9, 0.5, 0.0, 0.9],
     [0.9, 0.5, 0.0, 0.9],
-    [0.7, 0.7, 0.7, 0.5],
+    [0.4, 0.4, 0.4, 0.5],
 ];
 const MULTIMAP_NAMES: [&'static str; 9] = [
     "Screen 1", "Screen 2", "Screen 3", "Screen 4", "Door 1", "Door 2", "Door 3", "Door 4",
