@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::cell::{Cell, Ref, RefCell};
 use std::clone::Clone;
-use std::collections::HashMap;
+//use std::collections::HashMap;
 use std::convert::From;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -10,15 +10,15 @@ use std::process::Command;
 use std::rc::Rc;
 use std::vec::Vec;
 
-use whoami;
-
 use dict_derive::{FromPyObject, IntoPyObject};
+use indexmap::IndexMap;
 use pyo3::class::PySequenceProtocol;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use serde::{Deserialize, Serialize};
 use serde_json;
+use whoami;
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
@@ -54,7 +54,8 @@ impl Project {
             edits: Vec::new(),
             ..Default::default()
         };
-        let mut extra = HashMap::new();
+        //let mut extra = HashMap::new();
+        let mut extra = IndexMap::new();
         extra.insert("project".to_owned(), name.to_owned());
         extra.insert("fix".to_owned(), fix.to_string());
         let meta = Metadata {
@@ -207,7 +208,7 @@ impl Project {
                 timestamp: UTime::now(),
                 comment: String::default(),
                 config: last.next_config(),
-                extra: HashMap::new(),
+                extra: IndexMap::new(),
             };
 
             let commit = Rc::new(Edit {
@@ -275,7 +276,9 @@ pub struct Metadata {
     pub comment: String,
     pub config: String,
     #[serde(default)]
-    pub extra: HashMap<String, String>,
+    // TODO: should use IndexMap, but there is currently no implementation
+    // of FromPyObject and IntoPy<> for it.
+    pub extra: IndexMap<String, String>,
 }
 
 // TODO(cfrantz): should probably move this to gui
@@ -484,7 +487,7 @@ impl EditProxy {
             timestamp: UTime::now(),
             comment: String::default(),
             config: self.edit.next_config(),
-            extra: HashMap::new(),
+            extra: IndexMap::new(),
         };
         let commit = Rc::new(Edit {
             meta: RefCell::new(meta),
@@ -642,7 +645,7 @@ where
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ProjectExtraDataContainer {
-    pub data: Rc<RefCell<HashMap<IdPath, Box<dyn ProjectExtraData>>>>,
+    pub data: Rc<RefCell<IndexMap<IdPath, Box<dyn ProjectExtraData>>>>,
 }
 
 impl ProjectExtraDataContainer {

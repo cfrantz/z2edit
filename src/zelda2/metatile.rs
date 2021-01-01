@@ -1,8 +1,9 @@
 use std::any::Any;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::convert::TryInto;
 use std::rc::Rc;
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
@@ -15,8 +16,8 @@ use crate::zelda2::project::{Edit, Project, RomData};
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Metatile {
     pub id: IdPath,
-    pub tile: HashMap<usize, [u8; 4]>,
-    pub palette: HashMap<usize, i32>,
+    pub tile: IndexMap<usize, [u8; 4]>,
+    pub palette: IndexMap<usize, i32>,
 }
 
 impl Metatile {

@@ -1,9 +1,9 @@
 use std::any::Any;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 use imgui;
 use imgui::{im_str, ImString, MouseButton};
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
@@ -36,7 +36,7 @@ struct MultiMapLayout {
     pub scale: f32,
     pub spread: [f32; 2],
     pub show_invalid_connections: bool,
-    pub layout: HashMap<usize, RoomLayout>,
+    pub layout: IndexMap<usize, RoomLayout>,
 }
 
 #[typetag::serde]
@@ -68,7 +68,7 @@ pub struct MultiMapGui {
     spread: [f32; 2],
     show_invalid_connections: bool,
     conn_id: IdPath,
-    rooms: HashMap<usize, Room>,
+    rooms: IndexMap<usize, Room>,
 
     background: TileCache,
     enemy_cache: TileCache,
@@ -88,7 +88,7 @@ impl MultiMapGui {
             spread: [1.25, 1.25],
             show_invalid_connections: true,
             conn_id: conn_id.clone(),
-            rooms: HashMap::new(),
+            rooms: IndexMap::new(),
             background: TileCache::new(&edit, Schema::None),
             enemy_cache: TileCache::new(&edit, Schema::None),
             item_cache: TileCache::new(&edit, Schema::None),

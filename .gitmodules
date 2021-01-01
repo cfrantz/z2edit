@@ -6,4 +6,7 @@
 	url = https://github.com/cfrantz/rust-imgui-opengl-renderer.git
 [submodule "third_party/imgui-rs"]
 	path = third_party/imgui-rs
-	url = git@github.com:cfrantz/imgui-rs.git
+	url = https://github.com/cfrantz/imgui-rs.git
+[submodule "third_party/pyo3"]
+	path = third_party/pyo3
+	url = https://github.com/cfrantz/pyo3

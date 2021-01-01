@@ -135,22 +135,11 @@ impl MetatileGroupGui {
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let mut commit = Box::new(self.group.clone());
         for (orig, new) in self.orig.data.iter().zip(commit.data.iter_mut()) {
-            for key in orig.tile.keys() {
-                if orig.tile.get(key) == new.tile.get(key) {
-                    new.tile.remove(key);
-                    new.palette.remove(key);
-                }
-            }
+            new.tile.retain(|k, &mut v| Some(&v) != orig.tile.get(k));
+            new.palette
+                .retain(|k, &mut v| Some(&v) != orig.palette.get(k));
         }
-        let mut i = 0;
-        while i < commit.data.len() {
-            if commit.data[i].tile.is_empty() {
-                commit.data.remove(i);
-            } else {
-                i += 1;
-            }
-        }
-
+        commit.data.retain(|data| !data.tile.is_empty());
         let i = project.commit(self.commit_index, commit, None)?;
         self.edit = project.get_commit(i)?;
         self.commit_index = i;

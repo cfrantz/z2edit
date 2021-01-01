@@ -1,9 +1,11 @@
-use ron;
-use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::collections::HashMap;
 use std::convert::From;
 use std::rc::Rc;
+
+use indexmap::IndexMap;
+use ron;
+use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
 use crate::gui::zelda2::sideview::SideviewGui;
@@ -50,7 +52,7 @@ pub mod config {
         pub metatile_lengths: Vec<usize>,
         pub chr: Address,
 
-        pub pet_names: HashMap<usize, String>,
+        pub pet_names: IndexMap<usize, String>,
         #[serde(default)]
         pub background_id: Option<IdPath>,
         #[serde(default)]
