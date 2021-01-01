@@ -827,6 +827,18 @@ impl RomData for Sideview {
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.config())?;
+        let meta = edit.meta.borrow();
+        let unique = match meta.extra.get("commit_option").map(|s| s.as_str()) {
+            None | Some("unique") => true,
+            Some("keep_clones") => false,
+            Some(option) => {
+                return Err(ErrorKind::NotImplemented(format!(
+                    "No such commit option '{}'.  Expecting 'unique' or 'keep_clones'",
+                    option
+                ))
+                .into());
+            }
+        };
         let scfg = config.sideview.find(&self.id)?;
         let index = self.id.usize_last()?;
         if index >= scfg.length {
@@ -842,12 +854,43 @@ impl RomData for Sideview {
 
         // Map commands list
         let addr = rom.read_pointer(scfg.address + index * 2)?;
+        let mut duplicates = Vec::new();
+        for i in 0..63 {
+            if addr == rom.read_pointer(scfg.address + i * 2)? {
+                duplicates.push(i);
+            }
+        }
+        if duplicates.len() > 1 {
+            info!("Sideview map {} has duplicates: {:?}", self.id, duplicates);
+        }
         let length = rom.read(addr)? as u16;
-        memory.free(addr, length);
         let map_bytes = self.map.to_bytes();
-        let addr = memory.alloc_near(addr, map_bytes.len() as u16)?;
-        rom.write_bytes(addr, &map_bytes)?;
-        rom.write_pointer(scfg.address + index * 2, addr)?;
+        if duplicates.len() == 1 || !unique {
+            // Only one room, or we want to modify all duplicates to the same
+            // new room.
+            memory.free(addr, length);
+            let addr = memory.alloc_near(addr, map_bytes.len() as u16)?;
+            rom.write_bytes(addr, &map_bytes)?;
+            for i in duplicates.iter() {
+                rom.write_pointer(scfg.address + i * 2, addr)?;
+                info!(
+                    "Updated sideview pointer {} at {:x?} for replacement map at {:x?}",
+                    i,
+                    scfg.address + i * 2,
+                    addr
+                );
+            }
+        } else {
+            let addr = memory.alloc_near(addr, map_bytes.len() as u16)?;
+            rom.write_bytes(addr, &map_bytes)?;
+            rom.write_pointer(scfg.address + index * 2, addr)?;
+            info!(
+                "Updated sideview pointer {} at {:x?} for new map at {:x?}",
+                index,
+                scfg.address + index * 2,
+                addr
+            );
+        }
 
         // Room connections
         if index < scfg.max_connectable_index {
