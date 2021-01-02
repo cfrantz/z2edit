@@ -835,7 +835,7 @@ impl RomData for Sideview {
         if !scfg.background_layer {
             self.enemy = EnemyList::from_rom(edit, &self.id, &config)?;
 
-            if index < scfg.max_connectable_index {
+            if index <= scfg.max_connectable_index {
                 let table = rom.read_bytes(scfg.connections + index * 4, 4)?;
                 self.connection.push(Connection::from(table[0]));
                 self.connection.push(Connection::from(table[1]));
@@ -843,7 +843,7 @@ impl RomData for Sideview {
                 self.connection.push(Connection::from(table[3]));
             }
 
-            if index < scfg.max_door_index {
+            if index <= scfg.max_door_index {
                 let table = rom.read_bytes(scfg.doors + index * 4, 4)?;
                 self.door.push(Connection::from(table[0]));
                 self.door.push(Connection::from(table[1]));
@@ -928,7 +928,7 @@ impl RomData for Sideview {
         }
 
         // Room connections
-        if index < scfg.max_connectable_index {
+        if index <= scfg.max_connectable_index {
             let len = self.connection.len();
             if len != 0 && len != 4 {
                 return Err(ErrorKind::LengthError(
@@ -953,7 +953,7 @@ impl RomData for Sideview {
         }
 
         // Room doors
-        if index < scfg.max_door_index {
+        if index <= scfg.max_door_index {
             let len = self.door.len();
             if len != 0 && len != 4 {
                 return Err(ErrorKind::LengthError(
