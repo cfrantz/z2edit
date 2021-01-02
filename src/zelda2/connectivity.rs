@@ -50,13 +50,20 @@ impl Connectivity {
             } else {
                 conn.dest_world
             };
-            // The game treats both DM and MZ as "overworld 1", but the editor
-            // comprends them as subworlds: 0-1 and 2-1.
-            let (overworld, subworld) = if conn.dest_overworld == 1 {
-                // prefer maze island
-                (2, 1)
+            let (overworld, subworld) = if conn.dest_world == 0 && conn.dest_overworld == 0 {
+                // Overworld to caves/grass/etc.
+                (ocfg.overworld, ocfg.subworld)
             } else {
-                (conn.dest_overworld, 0)
+                // Overworld to another world (palace, town, etc)
+                // The game treats both DM and MZ as "overworld 1", but the editor
+                // comprends them as subworlds: 0-1 and 2-1.
+                if conn.dest_overworld == 1 {
+                    // Prefer Maze Island because the game is coded to only
+                    // permit a palace on MZ.
+                    (2, 1)
+                } else {
+                    (conn.dest_overworld, 0)
+                }
             };
             let scfg = config.sideview.find_by_world(world, overworld, subworld)?;
             let dest = idpath!(scfg.id, conn.dest_map);
