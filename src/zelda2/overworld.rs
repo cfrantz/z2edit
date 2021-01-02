@@ -577,7 +577,9 @@ impl Connector {
         for h in config.hidden.iter() {
             if rom.read(h.connector)? == index as u8
                 && rom.read(h.overworld)? == ocfg.overworld as u8
+                && ocfg.subworld == 0
             {
+                // For now we assume a hidden spot cannot be on DM or MZ.
                 return Ok(Some(h));
             }
         }

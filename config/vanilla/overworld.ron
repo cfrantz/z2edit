@@ -18,7 +18,7 @@
             width: 64,
             height: 75,
             raft_connector: 41,
-            raft_table: Prg(0, 8528),
+            raft_table: Prg(0, 0x8528),
             palace: (
                 to_stone_table: (Prg(1, 0x878f), 4),
                 chr_table: Prg(-1, 0xcd2a),
@@ -66,7 +66,7 @@
             width: 64,
             height: 75,
             raft_connector: 41,
-            raft_table: Prg(0, 8529),
+            raft_table: Prg(0, 0x8529),
             palace: (
                 to_stone_table: (Prg(2, 0x878f), 4),
                 chr_table: Prg(-1, 0xcd32),

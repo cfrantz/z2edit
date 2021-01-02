@@ -17,6 +17,7 @@ pub struct EditDetailsGui {
     user: ImString,
     comment: ImString,
     config: ImString,
+    skip_pack: bool,
     extra: Vec<(ImString, ImString)>,
 }
 
@@ -32,6 +33,7 @@ impl EditDetailsGui {
             user: ImString::new(&meta.user),
             comment: ImString::new(&meta.comment),
             config: ImString::new(&meta.config),
+            skip_pack: meta.skip_pack,
             extra: meta
                 .extra
                 .iter()
@@ -122,6 +124,7 @@ impl Gui for EditDetailsGui {
                 )
                 .resize_buffer(true)
                 .build();
+                self.changed |= ui.checkbox(im_str!("Disable this change"), &mut self.skip_pack);
                 ui.separator();
                 self.changed |= self.draw_extra(ui);
                 ui.separator();
@@ -132,6 +135,7 @@ impl Gui for EditDetailsGui {
                     meta.user = self.user.to_string();
                     meta.comment = self.comment.to_string();
                     meta.config = self.config.to_string();
+                    meta.skip_pack = self.skip_pack;
                     meta.extra = self
                         .extra
                         .iter()

@@ -119,7 +119,7 @@ impl FreeSpace {
         match address {
             Address::Prg(bank, _) => Ok(bank),
             _ => Err(ErrorKind::FreeSpaceError(format!(
-                "Address must by of type Prg: {:?}",
+                "Address must by of type Prg: {:x?}",
                 address
             ))
             .into()),
@@ -129,15 +129,15 @@ impl FreeSpace {
     pub fn register(&mut self, address: Address, length: u16) -> Result<()> {
         if self.contains(address) {
             return Err(ErrorKind::FreeSpaceError(format!(
-                "Address {:?} already in freespace",
+                "Address {:x?} already in freespace",
                 address
             ))
             .into());
         }
 
-        if self.contains(address + length) {
+        if self.contains(address + length - 1) {
             return Err(ErrorKind::FreeSpaceError(format!(
-                "Address {:?}+{} already in freespace",
+                "Address {:x?}+{} already in freespace",
                 address, length
             ))
             .into());
@@ -155,7 +155,7 @@ impl FreeSpace {
                 Ok(())
             }
             _ => Err(ErrorKind::FreeSpaceError(format!(
-                "Address must by of type Prg: {:?}",
+                "Address must by of type Prg: {:x?}",
                 address
             ))
             .into()),

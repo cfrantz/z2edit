@@ -393,15 +393,23 @@ impl EnemyList {
         let length = rom.read(addr)? as usize;
         let mut total = length;
         let mut data = Vec::new();
-        data.push(EnemyList::list_from_bytes(rom.read_bytes(addr, length)?));
-        let is_encounter = config.overworld.is_encounter(edit, id)?;
-        if is_encounter {
-            // For encounters, the large-encounter enemy list immediately
-            // follows the small-encounter list.
-            let addr = addr + length;
-            let length = rom.read(addr)? as usize;
-            total += length;
+        let mut is_encounter = false;
+        if ram_address.raw() >= 0x7000 && ram_address.raw() < 0x7400 {
             data.push(EnemyList::list_from_bytes(rom.read_bytes(addr, length)?));
+            is_encounter = config.overworld.is_encounter(edit, id)?;
+            if is_encounter {
+                // For encounters, the large-encounter enemy list immediately
+                // follows the small-encounter list.
+                let addr = addr + length;
+                let length = rom.read(addr)? as usize;
+                total += length;
+                data.push(EnemyList::list_from_bytes(rom.read_bytes(addr, length)?));
+            }
+        } else {
+            // east_hyrule/21 has a bad pointer which reads in a nonsense list.
+            // work around by just providing an empty list.
+            total = 0;
+            data.push(Vec::new());
         }
 
         debug!("EnemyList: {} read from {:x?} ({} bytes)", id, addr, total);
@@ -419,13 +427,36 @@ impl EnemyList {
         if !self.valid {
             return Ok(());
         }
+        let meta = edit.meta.borrow();
+        let unique = match meta.extra.get("enemy_option").map(|s| s.as_str()) {
+            None | Some("unique") => true,
+            Some("keep_clones") => false,
+            Some(option) => {
+                return Err(ErrorKind::NotImplemented(format!(
+                    "No such enemy option '{}'.  Expecting 'unique' or 'keep_clones'",
+                    option
+                ))
+                .into());
+            }
+        };
         let (el, n, mut all) = self.read_all(edit, id, config)?;
         let index = id.usize_last()?;
 
-        all[n * 63 + index] = self.clone();
+        let mut elist = self.clone();
+        elist.ram_address = 0;
+        if unique {
+            // Update a single entry with our unique ram address.
+            all[n * 63 + index] = elist;
+        } else {
+            // Update every entry who had the same address as our enemy list.
+            let addr = all[n * 63 + index].ram_address;
+            for item in all.iter_mut() {
+                if item.ram_address == addr {
+                    *item = elist.clone();
+                }
+            }
+        };
         self.write_text(edit, id, config)?;
-        // This list has been edited, so make it unique.
-        all[n * 63 + index].ram_address = 0;
 
         let mut rom = edit.rom.borrow_mut();
         let mut scfg = config.sideview.find(&el.ids[0])?;
@@ -831,17 +862,18 @@ impl RomData for Sideview {
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let config = Config::get(&edit.config())?;
         let meta = edit.meta.borrow();
-        let unique = match meta.extra.get("commit_option").map(|s| s.as_str()) {
+        let unique = match meta.extra.get("map_option").map(|s| s.as_str()) {
             None | Some("unique") => true,
             Some("keep_clones") => false,
             Some(option) => {
                 return Err(ErrorKind::NotImplemented(format!(
-                    "No such commit option '{}'.  Expecting 'unique' or 'keep_clones'",
+                    "No such map option '{}'.  Expecting 'unique' or 'keep_clones'",
                     option
                 ))
                 .into());
             }
         };
+
         let scfg = config.sideview.find(&self.id)?;
         let index = self.id.usize_last()?;
         if index >= scfg.length {
@@ -897,7 +929,8 @@ impl RomData for Sideview {
 
         // Room connections
         if index < scfg.max_connectable_index {
-            if self.connection.len() != 4 {
+            let len = self.connection.len();
+            if len != 0 && len != 4 {
                 return Err(ErrorKind::LengthError(
                     "Room connection table must be exactly 4 entries".to_string(),
                 )
@@ -921,7 +954,8 @@ impl RomData for Sideview {
 
         // Room doors
         if index < scfg.max_door_index {
-            if self.door.len() != 4 {
+            let len = self.door.len();
+            if len != 0 && len != 4 {
                 return Err(ErrorKind::LengthError(
                     "Room door table must be exactly 4 entries".to_string(),
                 )

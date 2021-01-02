@@ -133,7 +133,7 @@ impl RomData for ExperienceTable {
         for (i, val) in self.data.iter().enumerate() {
             rom.write(tcfg.address + i, *val as u8)?;
             if offset != 0 {
-                rom.write(tcfg.address + i, (*val >> 8) as u8)?;
+                rom.write(tcfg.address + offset + i, (*val >> 8) as u8)?;
             }
         }
         if let Some(game_name) = tcfg.game_name {

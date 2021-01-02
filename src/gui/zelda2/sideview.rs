@@ -93,7 +93,7 @@ impl SideviewGui {
                 names.push(name);
                 let path = idpath!(group.id, i);
                 if sideview.id == path {
-                    selected = ids.len() - 1;
+                    selected = ids.len();
                 }
                 if path == which {
                     default_select = ids.len();
@@ -282,11 +282,14 @@ impl SideviewGui {
                 .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
             self.items_map.insert(obj.offset as usize, i);
         }
-        let enemy_group = config.enemy.find_group(&self.sideview.enemy_group_id())?;
-        for (i, obj) in enemy_group.enemy.iter().enumerate() {
-            self.enemies
-                .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
-            self.enemies_map.insert(obj.offset as usize, i);
+        if !scfg.background_layer {
+            // No enemies for background layers.
+            let enemy_group = config.enemy.find_group(&self.sideview.enemy_group_id())?;
+            for (i, obj) in enemy_group.enemy.iter().enumerate() {
+                self.enemies
+                    .push((im_str!("{:02x}: {}", obj.offset, obj.name), obj.offset));
+                self.enemies_map.insert(obj.offset as usize, i);
+            }
         }
 
         let world = config.sideview.find(&self.sideview.id)?;
@@ -1350,6 +1353,7 @@ impl Gui for SideviewGui {
             return;
         }
         let config = Config::get(&self.edit.config()).unwrap();
+        let scfg = config.sideview.find(&self.sideview.id).unwrap();
         imgui::Window::new(&im_str!("Sideview##{}", self.win_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -1397,7 +1401,9 @@ impl Gui for SideviewGui {
                         let origin = ui.cursor_pos();
                         let scr_origin = ui.cursor_screen_pos();
                         changed |= self.draw_map(&config, origin, scr_origin, ui);
-                        changed |= self.draw_enemies(&config, origin, scr_origin, ui);
+                        if !scfg.background_layer {
+                            changed |= self.draw_enemies(&config, origin, scr_origin, ui);
+                        }
                         self.draw_selectbox(changed, scr_origin, ui);
                     });
                 imgui::TabBar::new(im_str!("Map Editor")).build(ui, || {
@@ -1405,14 +1411,24 @@ impl Gui for SideviewGui {
                         changed |= self.draw_map_command_tab(&config, ui);
                     });
                     imgui::TabItem::new(im_str!("Enemies")).build(ui, || {
-                        if self.sideview.enemy.is_encounter {
-                            ui.radio_button(im_str!("Small Encounter"), &mut self.enemy_list, 0);
-                            changed |= self.draw_enemies_tab(0, &config, ui);
-                            ui.separator();
-                            ui.radio_button(im_str!("Large Encounter"), &mut self.enemy_list, 1);
-                            changed |= self.draw_enemies_tab(1, &config, ui);
-                        } else {
-                            changed |= self.draw_enemies_tab(0, &config, ui);
+                        if !scfg.background_layer {
+                            if self.sideview.enemy.is_encounter {
+                                ui.radio_button(
+                                    im_str!("Small Encounter"),
+                                    &mut self.enemy_list,
+                                    0,
+                                );
+                                changed |= self.draw_enemies_tab(0, &config, ui);
+                                ui.separator();
+                                ui.radio_button(
+                                    im_str!("Large Encounter"),
+                                    &mut self.enemy_list,
+                                    1,
+                                );
+                                changed |= self.draw_enemies_tab(1, &config, ui);
+                            } else {
+                                changed |= self.draw_enemies_tab(0, &config, ui);
+                            }
                         }
                     });
                     imgui::TabItem::new(im_str!("Connections")).build(ui, || {

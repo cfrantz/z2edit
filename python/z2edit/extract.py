@@ -80,7 +80,7 @@ def extract_overworld(project, edit, config):
         print("extract_overworld: created", ov.id)
         overworld = edit.create("Overworld", ov.id)
         overworld.unpack()
-        meta_update(overworld, skip_pack=True)
+        meta_update(overworld, label=ov.id, skip_pack=True)
         project.append(overworld)
     return edit
 
@@ -92,7 +92,8 @@ def extract_sideview(project, edit, config):
             try:
                 sideview = edit.create("Sideview", idpath)
                 sideview.unpack()
-                meta_update(sideview, skip_pack=True)
+                meta_update(sideview, skip_pack=True, label=idpath,
+                    extra=dict(map_option='keep_clones', enemy_option='keep_clones'))
                 project.append(sideview)
             except Exception as e:
                 print(e)
