@@ -2,7 +2,9 @@
 
     freespace: [
         // Bank 0
-        (Prg(0, 0xaa40), 5408),
+        // The freespace really starts at 0xaa40, but the editor will patch
+        // code starting at $AA3F to implement the "Emulate At" feature.
+        (Prg(0, 0xab00), 5216),
         (Prg(0, 0xbfe0), 24),
 
         // Bank 1
