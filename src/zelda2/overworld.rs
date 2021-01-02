@@ -421,8 +421,11 @@ impl From<&Map> for JsonMap {
         let mut map = Vec::new();
         for row in a.data.iter() {
             let mut s = String::new();
-            for col in row.iter() {
-                s.push(JSONMAP_TRANSFORM[*col as usize] as char);
+            for &col in row.iter() {
+                let len = JSONMAP_TRANSFORM.len();
+                let col = col as usize;
+                let col = if col < len { col } else { len - 1 };
+                s.push(JSONMAP_TRANSFORM[col] as char);
             }
             map.push(s);
         }

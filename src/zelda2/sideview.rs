@@ -529,6 +529,7 @@ impl EnemyList {
 
     fn list_from_bytes(data: &[u8]) -> Vec<Enemy> {
         let length = data[0] as usize;
+        let length = if length % 2 == 0 { length - 1 } else { length };
         let mut list = Vec::new();
         let mut i = 1;
         while i < length {

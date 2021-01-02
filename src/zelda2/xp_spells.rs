@@ -74,6 +74,7 @@ pub mod config {
 }
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct ExperienceTable {
     pub id: IdPath,
     pub data: Vec<i32>,
@@ -168,6 +169,20 @@ impl RomData for ExperienceTable {
         }
         Ok(())
     }
+
+    fn to_text(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).map_err(|e| e.into())
+    }
+
+    fn from_text(&mut self, text: &str) -> Result<()> {
+        match serde_json::from_str(text) {
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
@@ -232,6 +247,20 @@ impl RomData for ExperienceValue {
         rom.write(values.enemy_xp_gfx + offset, self.sprites[0] as u8)?;
         rom.write(values.enemy_xp_gfx + offset + 16, self.sprites[1] as u8)?;
         Ok(())
+    }
+
+    fn to_text(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).map_err(|e| e.into())
+    }
+
+    fn from_text(&mut self, text: &str) -> Result<()> {
+        match serde_json::from_str(text) {
+            Ok(v) => {
+                *self = v;
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
     }
 }
 

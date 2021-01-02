@@ -64,6 +64,7 @@ impl Project {
             timestamp: UTime::now(),
             comment: String::default(),
             config: config.to_owned(),
+            skip_pack: false,
             extra: extra,
         };
         let config = Config::get(&meta.config)?;
@@ -171,8 +172,15 @@ impl Project {
             commit.rom.replace(last.rom.borrow().clone());
             commit.memory.replace(last.memory.borrow().clone());
         }
-        info!("Project::replay: {}.pack", commit.edit.borrow().name());
-        commit.edit.borrow().pack(&commit)?;
+        if commit.meta.borrow().skip_pack {
+            info!(
+                "Project::replay: skipped {}.pack",
+                commit.edit.borrow().name()
+            );
+        } else {
+            info!("Project::replay: {}.pack", commit.edit.borrow().name());
+            commit.edit.borrow().pack(&commit)?;
+        }
         commit
             .connectivity
             .replace(Connectivity::from_rom(&commit)?);
@@ -208,6 +216,7 @@ impl Project {
                 timestamp: UTime::now(),
                 comment: String::default(),
                 config: last.next_config(),
+                skip_pack: false,
                 extra: IndexMap::new(),
             };
 
@@ -222,29 +231,35 @@ impl Project {
                 subdir: self.subdir.clone(),
                 extra_data: self.extra_data.clone(),
             });
-            commit.edit.borrow().pack(&commit)?;
-            commit
-                .connectivity
-                .replace(Connectivity::from_rom(&commit)?);
-            self.edits.push(commit);
-            self.changed.set(true);
-            Ok(len)
+            self.commit_edit(index, &commit)
         } else if index < len {
-            let last = self.get_commit(index - 1)?;
             let commit = self.get_commit(index)?;
-            {
-                let mut meta = commit.meta.borrow_mut();
-                meta.user = whoami::username();
-                meta.timestamp = UTime::now();
-            }
             commit.edit.replace(edit);
-            commit.rom.replace(last.rom.borrow().clone());
-            self.replay(index, -1)?;
-            self.changed.set(true);
-            Ok(index)
+            self.commit_edit(index, &commit)
         } else {
             Err(ErrorKind::CommitIndexError(index).into())
         }
+    }
+
+    pub fn commit_edit(&mut self, index: isize, edit: &Rc<Edit>) -> Result<isize> {
+        let len = self.edits.len() as isize;
+        {
+            let mut meta = edit.meta.borrow_mut();
+            meta.user = whoami::username();
+            meta.timestamp = UTime::now();
+        }
+        let ret = if index == -1 {
+            self.edits.push(Rc::clone(edit));
+            len
+        } else if index < len {
+            self.edits[index as usize] = Rc::clone(edit);
+            index
+        } else {
+            return Err(ErrorKind::CommitIndexError(index).into());
+        };
+        self.replay(index, -1)?;
+        self.changed.set(true);
+        Ok(ret)
     }
 }
 
@@ -268,6 +283,9 @@ where
     fn as_any(&self) -> &dyn Any;
 }
 
+fn _is_false(value: &bool) -> bool {
+    !value
+}
 #[derive(Debug, Clone, Serialize, Deserialize, FromPyObject, IntoPyObject)]
 pub struct Metadata {
     pub label: String,
@@ -275,6 +293,8 @@ pub struct Metadata {
     pub timestamp: u64,
     pub comment: String,
     pub config: String,
+    #[serde(default, skip_serializing_if = "_is_false")]
+    pub skip_pack: bool,
     #[serde(default)]
     // TODO: should use IndexMap, but there is currently no implementation
     // of FromPyObject and IntoPy<> for it.
@@ -436,6 +456,7 @@ impl Edit {
 }
 
 #[pyclass(unsendable)]
+#[derive(Clone)]
 pub struct EditProxy {
     edit: Rc<Edit>,
 }
@@ -460,6 +481,7 @@ impl EditProxy {
 
     #[setter]
     fn set_meta(&self, meta: Metadata) -> PyResult<()> {
+        info!("set_meta: {:?}", meta);
         self.edit.meta.replace(meta);
         Ok(())
     }
@@ -487,6 +509,7 @@ impl EditProxy {
             timestamp: UTime::now(),
             comment: String::default(),
             config: self.edit.next_config(),
+            skip_pack: false,
             extra: IndexMap::new(),
         };
         let commit = Rc::new(Edit {
@@ -619,6 +642,10 @@ impl Project {
         self.to_file(&Path::new(filename), false)
             .map_err(|e| e.into())
     }
+
+    fn append(&mut self, edit: EditProxy) -> Result<isize> {
+        self.commit_edit(-1, &edit.edit)
+    }
 }
 
 #[pyproto]
@@ -632,6 +659,10 @@ impl PySequenceProtocol for Project {
             Ok(edit) => Ok(EditProxy { edit: edit }),
             Err(_) => Err(PyIndexError::new_err("list index out of range")),
         }
+    }
+    fn __setitem__(&mut self, index: isize, edit: EditProxy) -> Result<()> {
+        self.commit_edit(index, &edit.edit)?;
+        Ok(())
     }
 }
 
