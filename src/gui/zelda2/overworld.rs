@@ -426,10 +426,6 @@ impl OverworldGui {
             let index = conn.id.usize_last().unwrap();
             ui.text(im_str!("Overworld Connector {:02}", index));
             ui.separator();
-            if ui.button(im_str!("Emulate"), [0.0, 0.0]) {
-                OverworldGui::emulate_at(conn, &self.edit, self.selector.value());
-            }
-            ui.same_line(0.0);
             if ui.button(im_str!("View Area"), [0.0, 0.0]) {
                 self.multimap = match MultiMapGui::new(&self.edit, &conn.id) {
                     Ok(mm) => Some(mm),
@@ -440,6 +436,11 @@ impl OverworldGui {
                     }
                 };
             }
+            ui.same_line(0.0);
+            if ui.button(im_str!("Emulate"), [0.0, 0.0]) {
+                OverworldGui::emulate_at(conn, &self.edit, self.selector.value());
+            }
+
             changed |= OverworldGui::connection_edit(&mut conn, ui);
             ui.end_popup();
         }
