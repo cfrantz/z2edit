@@ -347,7 +347,7 @@ impl ProjectGui {
         let meta = edit.meta.borrow();
         let is_open = self.is_window_open(meta.timestamp);
         let mut error_state = error_state;
-        let header = if error_state {
+        let header = if error_state || meta.skip_pack {
             Some((GRAY_HEADER, GRAY_HEADER_HOVERED, GRAY_HEADER_ACTIVE))
         } else if !edit.error.borrow().is_empty() {
             error_state = true;
