@@ -93,3 +93,28 @@ impl Text {
         valid
     }
 }
+
+pub mod python {
+    use super::Text as RealText;
+    use pyo3::prelude::*;
+    use pyo3::types::PyBytes;
+
+    #[pyclass]
+    pub struct Text {
+        // Empty struct.
+    }
+
+    #[pymethods]
+    impl Text {
+        #[staticmethod]
+        fn to_zelda2<'p>(py: Python<'p>, s: &str) -> PyResult<&'p PyBytes> {
+            let bytes = RealText::to_zelda2(s);
+            Ok(PyBytes::new(py, &bytes))
+        }
+
+        #[staticmethod]
+        fn from_zelda2(z: &[u8]) -> String {
+            RealText::from_zelda2(z)
+        }
+    }
+}

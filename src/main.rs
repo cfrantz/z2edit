@@ -42,6 +42,7 @@ use crate::util::pyaddress::PyAddress;
 use crate::zelda2::config::Config as Zelda2Config;
 use crate::zelda2::config::PyConfig;
 use crate::zelda2::project::Project;
+use crate::zelda2::text_encoding::python::Text;
 
 fn setup_pythonpath() {
     if let Some(path) = std::env::var_os("PYTHONPATH") {
@@ -80,6 +81,7 @@ fn run(py: Python) -> Result<()> {
     app.borrow(py).pythonize(py, module)?;
     module.add_class::<PyAddress>()?;
     module.add_class::<Project>()?;
+    module.add_class::<Text>()?;
     module.setattr("app", app)?;
     let pycfg = Py::new(py, PyConfig {})?;
     module.setattr("config", pycfg)?;
