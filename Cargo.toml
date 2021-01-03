@@ -1,6 +1,6 @@
 [package]
 name = "z2e2"
-version = "0.1.0"
+version = "1.99.0"
 authors = ["Chris Frantz <frantzcj@gmail.com>"]
 edition = "2018"
 
