@@ -47,6 +47,7 @@ pub mod config {
         pub max_connectable_index: usize,
         pub doors: Address,
         pub max_door_index: usize,
+        pub door_objects: Vec<(ObjectKind, usize)>,
         pub availability: Address,
         pub metatile_table: Address,
         pub metatile_lengths: Vec<usize>,
@@ -254,6 +255,30 @@ impl Map {
             }
         }
         None
+    }
+
+    pub fn doors(&self, scfg: &config::SideviewGroup) -> [i32; 4] {
+        let mut ret = [-1; 4];
+        for item in self.data.iter() {
+            let obj = if item.y == 15 {
+                (
+                    ObjectKind::Extra,
+                    if item.kind < 0x10 {
+                        item.kind
+                    } else {
+                        item.kind & 0xF0
+                    },
+                )
+            } else if item.kind < 0x10 {
+                (ObjectKind::Small, item.kind)
+            } else {
+                (ObjectKind::Objset(self.objset), item.kind & 0xF0)
+            };
+            if scfg.door_objects.contains(&obj) {
+                ret[(item.x / 16) as usize] = item.x;
+            }
+        }
+        ret
     }
 
     pub fn sort(&mut self) {

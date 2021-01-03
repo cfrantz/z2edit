@@ -143,8 +143,8 @@ impl MultiMapGui {
     }
 
     fn normalize(&mut self) {
-        let mut xmin = 0.0;
-        let mut ymin = 0.0;
+        let mut xmin = f32::MAX;
+        let mut ymin = f32::MAX;
         for room in self.rooms.values() {
             xmin = if room.x < xmin { room.x } else { xmin };
             ymin = if room.y < ymin { room.y } else { ymin };
@@ -169,6 +169,9 @@ impl MultiMapGui {
         }
         if !self.rooms.contains_key(&n) {
             let sideview = Sideview::from_rom(&self.edit, start.clone())?;
+            let config = Config::get(&self.edit.config())?;
+            let scfg = config.sideview.find(&sideview.id)?;
+            let dpoints = sideview.map.doors(scfg);
             let image = self.render_map(&sideview)?;
             let mut room = Room {
                 id: start.clone(),
@@ -185,10 +188,10 @@ impl MultiMapGui {
                     (1024.0, 104.0),
                 ],
                 dpoints: [
-                    (128.0, 208.0),
-                    (384.0, 208.0),
-                    (640.0, 208.0),
-                    (896.0, 208.0),
+                    (dpoints[0] as f32 * 16.0, 208.0),
+                    (dpoints[1] as f32 * 16.0, 208.0),
+                    (dpoints[2] as f32 * 16.0, 208.0),
+                    (dpoints[3] as f32 * 16.0, 208.0),
                 ],
                 image: image,
             };
@@ -255,7 +258,7 @@ impl MultiMapGui {
                     }
 
                     let conn = sideview.door.get(i);
-                    if conn.is_some() && i >= ss && i <= se {
+                    if conn.is_some() && i >= ss && i <= se && dpoints[i] >= 0 {
                         let c = conn.unwrap();
                         self.rooms.get_mut(&n).unwrap().door.push(c.clone());
                         self.explore_map(
@@ -403,8 +406,8 @@ impl MultiMapGui {
                 if let Some(dest) = self.rooms.get(&c.dest_map) {
                     let x0 = scr[0] + spread[0] * scale * room.x + room.dpoints[i].0 * scale;
                     let y0 = scr[1] + spread[1] * scale * room.y + room.dpoints[i].1 * scale;
-                    let x1 = scr[0] + spread[0] * scale * dest.x + dest.dpoints[c.entry].0 * scale;
-                    let y1 = scr[1] + spread[1] * scale * dest.y + dest.dpoints[c.entry].1 * scale;
+                    let x1 = scr[0] + spread[0] * scale * dest.x + dest.cpoints[c.entry].0 * scale;
+                    let y1 = scr[1] + spread[1] * scale * dest.y + dest.cpoints[c.entry].1 * scale;
                     draw_arrow([x0, y0], [x1, y1], colors[4 + i], 2.0, 0.1, 10.0, ui);
                 }
             }
@@ -512,8 +515,12 @@ impl Gui for MultiMapGui {
                     .always_vertical_scrollbar(true)
                     .always_horizontal_scrollbar(true)
                     .build(ui, || {
-                        let origin = ui.cursor_pos();
-                        let scr_origin = ui.cursor_screen_pos();
+                        let mut origin = ui.cursor_pos();
+                        let mut scr_origin = ui.cursor_screen_pos();
+                        origin[0] += 16.0;
+                        origin[1] += 16.0;
+                        scr_origin[0] += 16.0;
+                        scr_origin[1] += 16.0;
                         changed |= self.draw_multimap(project, origin, scr_origin, ui);
                     });
                 if changed {
