@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ use crate::zelda2::project::{Edit, Project, RomData};
 #[derive(Debug, SmartDefault, Clone, Serialize, Deserialize)]
 pub struct ImportChrBank {
     pub bank: usize,
-    pub file: String,
+    pub file: PathBuf,
     #[default(_code = "[0xFF000000, 0xFF666666, 0xFFAAAAAA, 0xFFFFFFFF]")]
     pub palette: [u32; 4],
     #[default = true]

@@ -18,7 +18,7 @@ use crate::zelda2::project::{Edit, EditProxy, RomData};
 pub enum FileResource {
     Unknown,
     Vanilla,
-    Name(String),
+    Name(PathBuf),
 }
 
 impl Default for FileResource {
@@ -36,7 +36,7 @@ impl FileResource {
             )
             .into()),
             FileResource::Vanilla => {
-                if pref.vanilla_rom.is_empty() {
+                if !(pref.vanilla_rom.exists() && pref.vanilla_rom.is_file()) {
                     Err(ErrorKind::ConfigError(
                         "Set the location of the vanilla ROM in Prefences".to_string(),
                     )
@@ -65,14 +65,14 @@ impl ImportRom {
         }
     }
     pub fn from_file(filename: &str) -> Result<Box<ImportRom>> {
-        ImportRom::new(FileResource::Name(filename.to_owned()))
+        ImportRom::new(FileResource::Name(PathBuf::from(filename)))
     }
 
     pub fn new(file: FileResource) -> Result<Box<ImportRom>> {
         match &file {
             FileResource::Name(filename) => {
                 if !Path::new(&filename).is_file() {
-                    return Err(ErrorKind::NotFound(filename.clone()).into());
+                    return Err(ErrorKind::NotFound(format!("{:?}", filename)).into());
                 }
             }
             FileResource::Unknown => {

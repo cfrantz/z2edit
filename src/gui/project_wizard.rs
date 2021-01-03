@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+use std::convert::From;
+use std::path::PathBuf;
 
 use imgui;
 use imgui::im_str;
@@ -59,7 +61,7 @@ impl ProjectWizardGui {
     pub fn from_filename(filename: &str) -> ProjectWizardGui {
         let mut project = ProjectWizardGui::new();
         project.filename = ImString::new(filename);
-        project.rom = FileResource::Name(filename.to_string());
+        project.rom = FileResource::Name(PathBuf::from(filename));
         project
     }
 
@@ -104,7 +106,7 @@ impl ProjectWizardGui {
                     self.rom = FileResource::Vanilla;
                 }
                 if ui.radio_button_bool(im_str!("File:"), self.rom != FileResource::Vanilla) {
-                    self.rom = FileResource::Name(self.filename.to_string());
+                    self.rom = FileResource::Name(PathBuf::from(self.filename.to_str()));
                 }
                 ui.same_line(0.0);
                 if ui
@@ -112,12 +114,12 @@ impl ProjectWizardGui {
                     .resize_buffer(true)
                     .build()
                 {
-                    self.rom = FileResource::Name(self.filename.to_string());
+                    self.rom = FileResource::Name(PathBuf::from(self.filename.to_str()));
                 }
                 ui.same_line(0.0);
                 if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
-                        self.rom = FileResource::Name(filename.clone());
+                        self.rom = FileResource::Name(PathBuf::from(&filename));
                         self.filename = ImString::new(filename);
                     }
                 }

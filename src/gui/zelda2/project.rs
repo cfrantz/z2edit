@@ -330,7 +330,7 @@ impl ProjectGui {
                 }
             }
         }
-        if first_action != usize::MAX {
+        if first_action != usize::MAX && first_action < project.edits.len() {
             info!("Replay requested at {}", first_action);
             match project.replay(first_action as isize, -1) {
                 Err(e) => self.error.show("Edit Action", "Replay error", Some(e)),

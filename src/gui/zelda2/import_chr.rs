@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+use std::convert::From;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use imgui;
@@ -58,7 +60,7 @@ impl ImportChrBankGui {
             import.sprite_layout,
             import.border as u32,
         )?;
-        let filename = ImString::new(&import.file);
+        let filename = ImString::new(&import.file.to_string_lossy().to_string());
 
         let selected = import.bank;
         let win_id = edit.win_id(commit_index);
@@ -136,8 +138,8 @@ impl ImportChrBankGui {
     fn load_image(&mut self) {
         let fileresult = self.edit.subdir.relative_path(self.filename.to_str());
         let filepath = match fileresult {
-            Ok(Some(p)) => p.to_string_lossy().to_string(),
-            Ok(None) => self.filename.to_string(),
+            Ok(Some(p)) => p,
+            Ok(None) => PathBuf::from(self.filename.to_str()),
             Err(e) => {
                 self.error.show("Load Image", "Could not determine the image filepath relative to the project.\nPlease save the project first.", Some(e));
                 return;

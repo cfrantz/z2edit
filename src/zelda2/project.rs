@@ -5,7 +5,7 @@ use std::clone::Clone;
 use std::convert::From;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::rc::Rc;
 use std::vec::Vec;
@@ -88,7 +88,7 @@ impl Project {
         let now = UTime::now();
         Project::new(
             &format!("Project-{}", UTime::format(now, "%Y%m%d-%H%M")),
-            FileResource::Name(filename.to_owned()),
+            FileResource::Name(PathBuf::from(filename)),
             "vanilla",
             false,
         )

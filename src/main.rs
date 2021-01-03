@@ -44,21 +44,23 @@ use crate::zelda2::config::PyConfig;
 use crate::zelda2::project::Project;
 use crate::zelda2::text_encoding::python::Text;
 
-fn setup_pythonpath() {
-    if let Some(path) = std::env::var_os("PYTHONPATH") {
-        let mut paths = std::env::split_paths(&path).collect::<Vec<_>>();
-        let mut pydir = AppContext::installation_dir().expect("pydir");
-        pydir.push("python");
-        paths.push(pydir);
-        let new_path = std::env::join_paths(paths).expect("pythonpath");
-        info!("PYTHONPATH={:?}", new_path);
-        std::env::set_var("PYTHONPATH", &new_path);
+fn setup_pythonsite(py: Python) -> Result<()> {
+    let mut pydir = AppContext::installation_dir()?;
+    pydir.push("python");
+    info!("Configuring python sidedir: {:?}", pydir);
+    let module = PyModule::import(py, "site")?;
+    if let Some(dir) = pydir.to_str() {
+        module.call("addsitedir", (dir,), None)?;
+        Ok(())
+    } else {
+        Err(ErrorKind::NotFound(format!("Could not convert directory name: {:?}", pydir)).into())
     }
 }
 
 fn run(py: Python) -> Result<()> {
     let args = CommandlineArgs::from_args();
 
+    setup_pythonsite(py)?;
     // Force evaluation of the config early.
     let _ = Zelda2Config::get("vanilla");
 
@@ -103,7 +105,6 @@ fn main() {
     .unwrap()])
     .unwrap();
 
-    setup_pythonpath();
     let _mode = TerminalGuard::new();
     Python::with_gil(|py| {
         run(py).unwrap();

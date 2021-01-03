@@ -5,7 +5,7 @@ use ron;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
@@ -16,7 +16,7 @@ use crate::nes::Buffer;
 pub struct Preferences {
     #[serde(default)]
     #[default = ""]
-    pub vanilla_rom: String,
+    pub vanilla_rom: PathBuf,
     #[serde(default)]
     #[default(_code = "[0.0, 0.1, 0.25]")]
     pub background: [f32; 3],
@@ -44,11 +44,15 @@ const MULTIMAP_NAMES: [&'static str; 9] = [
 ];
 
 impl Preferences {
+    pub fn new() -> Preferences {
+        let mut pref = Preferences::default();
+        pref.check_colors();
+        pref
+    }
+
     pub fn from_reader(r: impl Read) -> Result<Self> {
         let mut pref: Self = ron::de::from_reader(r)?;
-        for i in pref.multimap.len()..MULTIMAP_COLORS.len() {
-            pref.multimap.push(MULTIMAP_COLORS[i]);
-        }
+        pref.check_colors();
         Ok(pref)
     }
 
@@ -62,6 +66,12 @@ impl Preferences {
         let val = ron::ser::to_string_pretty(self, pretty).unwrap();
         std::fs::write(path, &val)?;
         Ok(())
+    }
+
+    fn check_colors(&mut self) {
+        for i in self.multimap.len()..MULTIMAP_COLORS.len() {
+            self.multimap.push(MULTIMAP_COLORS[i]);
+        }
     }
 }
 
@@ -80,10 +90,10 @@ impl PreferencesGui {
     pub fn check_vanilla(&mut self) -> Result<bool> {
         let pref = AppContext::pref();
         if self.vanilla_hash.is_empty() {
-            if pref.vanilla_rom.is_empty() {
+            if !(pref.vanilla_rom.exists() && pref.vanilla_rom.is_file()) {
                 Ok(false)
             } else {
-                let buffer = Buffer::from_file(&Path::new(&pref.vanilla_rom), None)?;
+                let buffer = Buffer::from_file(&pref.vanilla_rom, None)?;
                 self.vanilla_hash = buffer.sha256();
                 Ok(self.vanilla_hash == VANILLA_HASH)
             }
@@ -140,20 +150,20 @@ impl PreferencesGui {
             .opened(&mut visible)
             .build(&ui, || {
                 ui.text("Vanilla ROM:");
-                let mut vanilla_rom = imgui::ImString::new(&pref.vanilla_rom);
+                let mut vanilla_rom = imgui::ImString::new(pref.vanilla_rom.to_string_lossy());
                 if ui
                     .input_text(im_str!("##vanilla"), &mut vanilla_rom)
                     .resize_buffer(true)
                     .build()
                 {
-                    pref.vanilla_rom = vanilla_rom.to_str().to_owned();
+                    pref.vanilla_rom = PathBuf::from(vanilla_rom.to_str());
                     self.vanilla_hash.clear();
                     changed |= true;
                 }
                 ui.same_line(0.0);
                 if ui.button(im_str!("Browse##vanilla"), [0.0, 0.0]) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
-                        pref.vanilla_rom = filename;
+                        pref.vanilla_rom = PathBuf::from(&filename);
                         self.vanilla_hash.clear();
                         changed |= true;
                     }
@@ -162,7 +172,7 @@ impl PreferencesGui {
                     Ok(true) => ui
                         .text_colored([0.0, 1.0, 0.0, 1.0], "SHA256 checksum matches Vanilla ROM."),
                     Ok(false) => {
-                        if pref.vanilla_rom.is_empty() {
+                        if !(pref.vanilla_rom.exists() && pref.vanilla_rom.is_file()) {
                             ui.text_colored(
                                 [1.0, 0.0, 0.0, 1.0],
                                 "Please provide the location of your unmodified Zelda II ROM",
@@ -242,7 +252,7 @@ impl PreferencesGui {
             )
         {
             let file = AppContext::config_file("preferences.ron");
-            *pref = Preferences::from_file(&file).unwrap_or_default();
+            *pref = Preferences::from_file(&file).unwrap_or(Preferences::new());
             self.changed = false;
         }
     }

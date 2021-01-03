@@ -22,7 +22,7 @@ pub struct PythonScriptGui {
     code: ImString,
     filename: ImString,
     is_file: bool,
-    relative_name: Option<String>,
+    relative_name: Option<PathBuf>,
     error: ErrorDialog,
 }
 
@@ -55,7 +55,7 @@ impl PythonScriptGui {
             code: ImString::new(&script.code),
             filename: filename,
             is_file: script.file.is_some(),
-            relative_name: script.file,
+            relative_name: script.file.clone(),
             error: ErrorDialog::default(),
         }))
     }
@@ -86,7 +86,7 @@ impl PythonScriptGui {
         );
         let new_path = self.edit.subdir.path(&filepath);
         self.relative_name = match new_path.canonicalize().map_err(|e| e.into()) {
-            Ok(_) => Some(filepath.to_string_lossy().to_string()),
+            Ok(_) => Some(filepath),
             Err(e) => {
                 self.error
                     .show("Load Python Code", "Could not load Python Code", Some(e));

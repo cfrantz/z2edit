@@ -70,7 +70,7 @@ impl AppContext {
             Err(e) => {
                 info!("Error reading preferences: {:?}", e);
                 info!("Using default preferences.");
-                Preferences::default()
+                Preferences::new()
             }
         };
 

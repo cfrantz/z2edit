@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use pyo3::prelude::*;
@@ -13,7 +14,7 @@ use crate::zelda2::project::{Edit, EditProxy, Project, RomData};
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct PythonScript {
-    pub file: Option<String>,
+    pub file: Option<PathBuf>,
     pub code: String,
 }
 
