@@ -138,7 +138,10 @@ impl PreferencesGui {
 
     pub fn draw(&mut self, ui: &imgui::Ui) {
         let mut visible = match self.check_vanilla() {
-            Ok(false) | Err(_) => true,
+            Ok(false) | Err(_) => {
+                self.visible = Visibility::Visible;
+                true
+            }
             Ok(true) => self.visible.as_bool(),
         };
         if !visible {
