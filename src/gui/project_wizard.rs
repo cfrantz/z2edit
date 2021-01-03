@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 use std::convert::From;
-use std::path::PathBuf;
 
 use imgui;
 use imgui::im_str;
 use imgui::ImString;
 
+use crate::util::relative_path::PathConverter;
 use crate::util::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::import::FileResource;
@@ -61,7 +61,7 @@ impl ProjectWizardGui {
     pub fn from_filename(filename: &str) -> ProjectWizardGui {
         let mut project = ProjectWizardGui::new();
         project.filename = ImString::new(filename);
-        project.rom = FileResource::Name(PathBuf::from(filename));
+        project.rom = FileResource::Name(PathConverter::from(filename));
         project
     }
 
@@ -106,7 +106,7 @@ impl ProjectWizardGui {
                     self.rom = FileResource::Vanilla;
                 }
                 if ui.radio_button_bool(im_str!("File:"), self.rom != FileResource::Vanilla) {
-                    self.rom = FileResource::Name(PathBuf::from(self.filename.to_str()));
+                    self.rom = FileResource::Name(PathConverter::from(self.filename.to_str()));
                 }
                 ui.same_line(0.0);
                 if ui
@@ -114,12 +114,12 @@ impl ProjectWizardGui {
                     .resize_buffer(true)
                     .build()
                 {
-                    self.rom = FileResource::Name(PathBuf::from(self.filename.to_str()));
+                    self.rom = FileResource::Name(PathConverter::from(self.filename.to_str()));
                 }
                 ui.same_line(0.0);
                 if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
-                        self.rom = FileResource::Name(PathBuf::from(&filename));
+                        self.rom = FileResource::Name(PathConverter::from(&filename));
                         self.filename = ImString::new(filename);
                     }
                 }

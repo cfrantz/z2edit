@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::convert::From;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use pyo3::prelude::*;
@@ -11,6 +11,7 @@ use crate::errors::*;
 use crate::gui::app_context::AppContext;
 use crate::nes::Buffer;
 use crate::nes::IdPath;
+use crate::util::relative_path::PathConverter;
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, EditProxy, RomData};
 
@@ -18,7 +19,7 @@ use crate::zelda2::project::{Edit, EditProxy, RomData};
 pub enum FileResource {
     Unknown,
     Vanilla,
-    Name(PathBuf),
+    Name(PathConverter),
 }
 
 impl Default for FileResource {
@@ -65,13 +66,13 @@ impl ImportRom {
         }
     }
     pub fn from_file(filename: &str) -> Result<Box<ImportRom>> {
-        ImportRom::new(FileResource::Name(PathBuf::from(filename)))
+        ImportRom::new(FileResource::Name(PathConverter::from(filename)))
     }
 
     pub fn new(file: FileResource) -> Result<Box<ImportRom>> {
         match &file {
             FileResource::Name(filename) => {
-                if !Path::new(&filename).is_file() {
+                if filename.as_ref().is_file() {
                     return Err(ErrorKind::NotFound(format!("{:?}", filename)).into());
                 }
             }

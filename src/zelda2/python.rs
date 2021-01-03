@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::any::Any;
-use std::path::PathBuf;
 use std::rc::Rc;
 
 use pyo3::prelude::*;
@@ -10,11 +9,12 @@ use crate::errors::*;
 use crate::gui::app_context::AppContext;
 use crate::gui::zelda2::python::PythonScriptGui;
 use crate::gui::zelda2::Gui;
+use crate::util::relative_path::PathConverter;
 use crate::zelda2::project::{Edit, EditProxy, Project, RomData};
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct PythonScript {
-    pub file: Option<PathBuf>,
+    pub file: Option<PathConverter>,
     pub code: String,
 }
 
@@ -44,7 +44,7 @@ impl RomData for PythonScript {
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
         let contents;
         let code = if let Some(file) = &self.file {
-            let filepath = edit.subdir.path(file);
+            let filepath = edit.subdir.path(file.as_ref());
             contents = std::fs::read_to_string(&filepath)?;
             &contents
         } else {

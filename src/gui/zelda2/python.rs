@@ -1,5 +1,5 @@
 use std::convert::From;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use imgui;
@@ -40,7 +40,12 @@ impl PythonScriptGui {
                 .clone()
         };
         let filename = if let Some(file) = &script.file {
-            ImString::from(edit.subdir.path(file).to_string_lossy().to_string())
+            ImString::from(
+                edit.subdir
+                    .path(file.as_ref())
+                    .to_string_lossy()
+                    .to_string(),
+            )
         } else {
             ImString::default()
         };
@@ -55,7 +60,7 @@ impl PythonScriptGui {
             code: ImString::new(&script.code),
             filename: filename,
             is_file: script.file.is_some(),
-            relative_name: script.file.clone(),
+            relative_name: script.file.map(|p| p.into()),
             error: ErrorDialog::default(),
         }))
     }
@@ -69,7 +74,10 @@ impl PythonScriptGui {
     }
 
     fn load_file(&mut self) {
-        let fileresult = self.edit.subdir.relative_path(self.filename.to_str());
+        let fileresult = self
+            .edit
+            .subdir
+            .relative_path(Path::new(self.filename.to_str()));
         let filepath = match fileresult {
             Ok(Some(p)) => p,
             Ok(None) => PathBuf::from(self.filename.to_str()),
@@ -97,7 +105,7 @@ impl PythonScriptGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let edit = Box::new(PythonScript {
-            file: self.relative_name.clone(),
+            file: self.relative_name.as_ref().map(|p| p.into()),
             code: self.code.to_string(),
         });
         let i = project.commit(self.commit_index, edit, None)?;

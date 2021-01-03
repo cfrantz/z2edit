@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::convert::From;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use imgui;
@@ -60,7 +60,7 @@ impl ImportChrBankGui {
             import.sprite_layout,
             import.border as u32,
         )?;
-        let filename = ImString::new(&import.file.to_string_lossy().to_string());
+        let filename = ImString::new(&import.file.to_string());
 
         let selected = import.bank;
         let win_id = edit.win_id(commit_index);
@@ -136,7 +136,10 @@ impl ImportChrBankGui {
     }
 
     fn load_image(&mut self) {
-        let fileresult = self.edit.subdir.relative_path(self.filename.to_str());
+        let fileresult = self
+            .edit
+            .subdir
+            .relative_path(Path::new(self.filename.to_str()));
         let filepath = match fileresult {
             Ok(Some(p)) => p,
             Ok(None) => PathBuf::from(self.filename.to_str()),
@@ -153,7 +156,7 @@ impl ImportChrBankGui {
         let new_path = self.edit.subdir.path(&filepath);
         self.overlay_image = match Image::load_bmp(&new_path) {
             Ok(img) => {
-                self.import.file = filepath;
+                self.import.file = filepath.into();
                 Some(img)
             }
             Err(e) => {

@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::path::PathBuf;
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
@@ -10,12 +9,13 @@ use crate::gui::zelda2::import_chr::ImportChrBankGui;
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::nes::Address;
+use crate::util::relative_path::PathConverter;
 use crate::zelda2::project::{Edit, Project, RomData};
 
 #[derive(Debug, SmartDefault, Clone, Serialize, Deserialize)]
 pub struct ImportChrBank {
     pub bank: usize,
-    pub file: PathBuf,
+    pub file: PathConverter,
     #[default(_code = "[0xFF000000, 0xFF666666, 0xFFAAAAAA, 0xFFFFFFFF]")]
     pub palette: [u32; 4],
     #[default = true]
@@ -56,7 +56,7 @@ impl RomData for ImportChrBank {
         let mut bank =
             cache.get_bank(chr, &self.palette, self.sprite_layout, self.border as u32)?;
 
-        let filepath = edit.subdir.path(&self.file);
+        let filepath = edit.subdir.path(&self.file.as_ref());
         let graphics = Image::load_bmp(&filepath)?;
         bank.overlay(&graphics, 0, 0);
         cache.put_bank(

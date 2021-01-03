@@ -1,11 +1,10 @@
 use std::any::Any;
 use std::cell::{Cell, Ref, RefCell};
 use std::clone::Clone;
-//use std::collections::HashMap;
 use std::convert::From;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use std::rc::Rc;
 use std::vec::Vec;
@@ -27,7 +26,7 @@ use crate::nes::freespace::FreeSpace;
 use crate::nes::IdPath;
 use crate::nes::{Address, Buffer, MemoryAccess};
 use crate::util::pyaddress::PyAddress;
-use crate::util::relative_path::RelativePath;
+use crate::util::relative_path::{PathConverter, RelativePath};
 use crate::util::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::connectivity::Connectivity;
@@ -88,7 +87,7 @@ impl Project {
         let now = UTime::now();
         Project::new(
             &format!("Project-{}", UTime::format(now, "%Y%m%d-%H%M")),
-            FileResource::Name(PathBuf::from(filename)),
+            FileResource::Name(PathConverter::from(filename)),
             "vanilla",
             false,
         )
@@ -620,7 +619,7 @@ impl EditProxy {
     }
 
     pub fn relative_path(&self, other: &str) -> Result<Option<String>> {
-        match self.edit.subdir.relative_path(other) {
+        match self.edit.subdir.relative_path(Path::new(other)) {
             Ok(Some(p)) => Ok(Some(p.to_string_lossy().to_string())),
             Ok(None) => Ok(None),
             Err(e) => Err(e),
