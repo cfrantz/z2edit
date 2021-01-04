@@ -10,7 +10,7 @@ use std::rc::Rc;
 
 #[derive(Clone, Debug, Default)]
 pub struct Connectivity {
-    connector: HashMap<IdPath, IdPath>,
+    per_screen: HashMap<IdPath, IdPath>,
 }
 
 impl Connectivity {
@@ -23,8 +23,14 @@ impl Connectivity {
         Ok(result)
     }
 
-    pub fn overworld_connector(&self, id: &IdPath) -> Option<&IdPath> {
-        self.connector.get(id)
+    pub fn overworld_connector(&self, room: &IdPath) -> Option<&IdPath> {
+        self.per_screen.get(room)
+    }
+
+    pub fn print(&self) {
+        for (k, v) in self.per_screen.iter() {
+            println!("{} => {}", k, v);
+        }
     }
 
     fn explore_overworld(
@@ -67,33 +73,72 @@ impl Connectivity {
             };
             let scfg = config.sideview.find_by_world(world, overworld, subworld)?;
             let dest = idpath!(scfg.id, conn.dest_map);
-            self.explore_sideview(edit, &conn.id, &dest, scfg)?;
-            self.connector.insert(conn.id.clone(), dest);
+            self.explore_per_screen(edit, &conn.id, &dest, conn.entry, scfg)?;
+            self.per_screen.insert(conn.id.clone(), dest);
         }
         Ok(())
     }
 
-    fn explore_sideview(
+    fn explore_per_screen(
         &mut self,
         edit: &Rc<Edit>,
         ovconn: &IdPath,
         id: &IdPath,
+        entry: usize,
         scfg: &sideview::config::SideviewGroup,
     ) -> Result<()> {
-        if self.connector.get(id) == None {
-            self.connector.insert(id.clone(), ovconn.clone());
+        let screen = id.extend(entry);
+        if self.per_screen.get(&screen) == None {
             let sv = sideview::Sideview::from_rom(edit, id.clone())?;
-            for c in sv.connection.iter() {
-                if c.dest_map == scfg.length {
-                    continue;
+
+            let width = sv.map.width as usize - 1;
+            let (ss, se) = if width >= 2 {
+                // Explore all four screens.
+                (0, 3)
+            } else if width == 0 {
+                // Explore exactly one screen.
+                (entry, entry)
+            } else if entry & 1 == 0 {
+                // Explore two screens, entry on an even room number.
+                (entry, entry + width)
+            } else {
+                // Explore two screens, entry on an odd room number.
+                (entry - width, entry)
+            };
+
+            for i in 0..4 {
+                if i >= ss && i <= se {
+                    let screen = id.extend(i);
+                    self.per_screen.insert(screen, ovconn.clone());
                 }
-                self.explore_sideview(edit, ovconn, &idpath!(scfg.id, c.dest_map), scfg)?;
             }
-            for c in sv.door.iter() {
-                if c.dest_map == scfg.length {
-                    continue;
+            for i in 0..4 {
+                let conn = sv.connection.get(i);
+                if conn.is_some() && i >= ss && i <= se {
+                    let c = conn.unwrap();
+                    if c.dest_map < scfg.length {
+                        self.explore_per_screen(
+                            edit,
+                            ovconn,
+                            &id.pop().extend(c.dest_map),
+                            c.entry,
+                            scfg,
+                        )?;
+                    }
                 }
-                self.explore_sideview(edit, ovconn, &idpath!(scfg.id, c.dest_map), scfg)?;
+                let conn = sv.door.get(i);
+                if conn.is_some() && i >= ss && i <= se {
+                    let c = conn.unwrap();
+                    if c.dest_map < scfg.length {
+                        self.explore_per_screen(
+                            edit,
+                            ovconn,
+                            &id.pop().extend(c.dest_map),
+                            c.entry,
+                            scfg,
+                        )?;
+                    }
+                }
             }
         }
         Ok(())

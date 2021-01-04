@@ -343,7 +343,9 @@ impl MultiMapGui {
             sideview.enemy_group_id(),
             sideview.map.sprite_palette,
         ));
-        if let Some(id) = self.edit.overworld_connector(&sideview.id) {
+        // Since we're just looking for palette info, we just get the overworld
+        // connector for screen 0 of this room.
+        if let Some(id) = self.edit.overworld_connector(&sideview.id.extend(0)) {
             let conn = Connector::from_rom(&self.edit, id).expect("reset_caches");
             if let Some(palace) = conn.palace {
                 let chr = Address::Chr(palace.chr_bank as isize, 0);

@@ -505,7 +505,7 @@ impl EnemyList {
                 // An empty enemy list, or empty pair will refer back to the
                 // empty token list at the beginning.
                 rom.write_word(scfg.enemies + i * 2, config.sideview.enemy_list_ram)?;
-                info!(
+                debug!(
                     "EnemyList: writing {}/{} as {:x?} (empty)",
                     scfg.id, i, config.sideview.enemy_list_ram
                 );
@@ -514,7 +514,7 @@ impl EnemyList {
 
             if let Some(ram_addr) = dedup.get(&enemy.ram_address) {
                 rom.write_word(scfg.enemies + i * 2, *ram_addr)?;
-                info!(
+                debug!(
                     "EnemyList: writing {}/{} as {:x?} (dedup)",
                     scfg.id, i, ram_addr
                 );
@@ -527,7 +527,7 @@ impl EnemyList {
                     + length;
                 rom.write_bytes(rom_addr, &list)?;
                 rom.write_word(scfg.enemies + i * 2, ram_addr)?;
-                info!(
+                debug!(
                     "EnemyList: writing {}/{} at {:x?} -> {:x?} ({} bytes)",
                     scfg.id,
                     i,
@@ -614,7 +614,7 @@ impl EnemyList {
         if enemy.kind < 10 {
             return None;
         }
-        let connection = if let Some(c) = edit.overworld_connector(&id) {
+        let connection = if let Some(c) = edit.overworld_connector(&id.extend(enemy.x / 16)) {
             c
         } else {
             return None;
@@ -634,6 +634,10 @@ impl EnemyList {
             .town_code(connection.usize_last().expect("get_text_info"))
         {
             let townsperson = enemy.kind - 10;
+            debug!(
+                "Mapping {} => {} =>  {} p={} c={}",
+                id, connection, town_text.id, townsperson, town_code
+            );
             Some((town_text, townsperson, town_code))
         } else {
             None

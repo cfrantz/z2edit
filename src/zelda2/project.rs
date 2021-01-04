@@ -164,22 +164,29 @@ impl Project {
             commit
                 .memory
                 .replace(FreeSpace::new(&config.misc.freespace)?);
+            // For commit zero, `pack` loads the ROM which is needed for
+            // the connectivity scan.
+            commit.edit.borrow().pack(&commit)?;
         } else {
             let last = &self.edits[index - 1];
             //info!("Project::replay: {}.unpack", commit.edit.borrow().name());
             //commit.edit.borrow_mut().unpack(last)?;
             commit.rom.replace(last.rom.borrow().clone());
             commit.memory.replace(last.memory.borrow().clone());
+            commit
+                .connectivity
+                .replace(last.connectivity.borrow().clone());
         }
         if commit.meta.borrow().skip_pack {
             info!(
                 "Project::replay: skipped {}.pack",
                 commit.edit.borrow().name()
             );
-        } else {
+        } else if index > 0 {
             info!("Project::replay: {}.pack", commit.edit.borrow().name());
             commit.edit.borrow().pack(&commit)?;
         }
+        // Rescan connectivity after pack, as connections may have changed.
         commit
             .connectivity
             .replace(Connectivity::from_rom(&commit)?);
@@ -230,6 +237,9 @@ impl Project {
                 subdir: self.subdir.clone(),
                 extra_data: self.extra_data.clone(),
             });
+            commit
+                .connectivity
+                .replace(Connectivity::from_rom(&commit)?);
             self.commit_edit(index, &commit)
         } else if index < len {
             let commit = self.get_commit(index)?;
