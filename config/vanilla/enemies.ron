@@ -129,7 +129,7 @@
             ],
         ),
         (
-            id: "a",
+            id: "10",
             offset: 10,
             name: "Acheman",
             chr: Chr(2, 0),
@@ -141,7 +141,7 @@
             ],
         ),
         (
-            id: "b",
+            id: "11",
             offset: 11,
             name: "Bubble Generator",
             chr: Chr(2, 0),
@@ -152,7 +152,7 @@
             ],
         ),
         (
-            id: "c",
+            id: "12",
             offset: 12,
             name: "Rock Generator",
             chr: Chr(2, 0),
@@ -163,7 +163,7 @@
             ],
         ),
         (
-            id: "d",
+            id: "13",
             offset: 13,
             name: "Red Deeler",
             chr: Chr(2, 0),
@@ -174,7 +174,7 @@
             ],
         ),
         (
-            id: "e",
+            id: "14",
             offset: 14,
             name: "Blue Deeler",
             chr: Chr(2, 0),
@@ -185,7 +185,7 @@
             ],
         ),
         (
-            id: "f",
+            id: "15",
             offset: 15,
             name: "Bago Bago Generator",
             chr: Chr(2, 0),
@@ -196,7 +196,7 @@
             ],
         ),
         (
-            id: "10",
+            id: "16",
             offset: 16,
             name: "Bago Bago",
             chr: Chr(2, 0),
@@ -207,7 +207,7 @@
             ],
         ),
         (
-            id: "11",
+            id: "17",
             offset: 17,
             name: "Red Octoroc (jumping)",
             chr: Chr(2, 0),
@@ -218,7 +218,7 @@
             ],
         ),
         (
-            id: "12",
+            id: "18",
             offset: 18,
             name: "Red Octoroc (moving)",
             chr: Chr(2, 0),
@@ -229,7 +229,7 @@
             ],
         ),
         (
-            id: "13",
+            id: "19",
             offset: 19,
             name: "Elevator",
             chr: Chr(2, 0),
@@ -243,7 +243,7 @@
             ],
         ),
         (
-            id: "14",
+            id: "20",
             offset: 20,
             name: "Orange Moblin",
             chr: Chr(2, 0),
@@ -255,7 +255,7 @@
             ],
         ),
         (
-            id: "15",
+            id: "21",
             offset: 21,
             name: "Red Moblin",
             chr: Chr(2, 0),
@@ -267,7 +267,7 @@
             ],
         ),
         (
-            id: "16",
+            id: "22",
             offset: 22,
             name: "Blue Moblin",
             chr: Chr(2, 0),
@@ -279,7 +279,7 @@
             ],
         ),
         (
-            id: "17",
+            id: "23",
             offset: 23,
             name: "Orange Diara",
             chr: Chr(2, 0),
@@ -291,7 +291,7 @@
             ],
         ),
         (
-            id: "18",
+            id: "24",
             offset: 24,
             name: "Red Diara",
             chr: Chr(2, 0),
@@ -303,7 +303,7 @@
             ],
         ),
         (
-            id: "19",
+            id: "25",
             offset: 25,
             name: "Orange Goryia",
             chr: Chr(2, 0),
@@ -315,7 +315,7 @@
             ],
         ),
         (
-            id: "1a",
+            id: "26",
             offset: 26,
             name: "Red Goryia",
             chr: Chr(2, 0),
@@ -327,7 +327,7 @@
             ],
         ),
         (
-            id: "1b",
+            id: "27",
             offset: 27,
             name: "Blue Goryia",
             chr: Chr(2, 0),
@@ -339,7 +339,7 @@
             ],
         ),
         (
-            id: "1c",
+            id: "28",
             offset: 28,
             name: "Lowder",
             chr: Chr(2, 0),
@@ -350,7 +350,7 @@
             ],
         ),
         (
-            id: "1d",
+            id: "29",
             offset: 29,
             name: "Moby Generator",
             chr: Chr(2, 0),
@@ -361,7 +361,7 @@
             ],
         ),
         (
-            id: "1e",
+            id: "30",
             offset: 30,
             name: "Moby",
             chr: Chr(2, 0),
@@ -372,7 +372,7 @@
             ],
         ),
         (
-            id: "1f",
+            id: "31",
             offset: 31,
             name: "Megmet",
             chr: Chr(2, 0),
@@ -383,7 +383,7 @@
             ],
         ),
         (
-            id: "20",
+            id: "32",
             offset: 32,
             name: "Geldarm",
             chr: Chr(2, 0),
@@ -396,7 +396,7 @@
             ],
         ),
         (
-            id: "21",
+            id: "33",
             offset: 33,
             name: "Dumb Moblin Generator",
             chr: Chr(2, 0),
@@ -408,7 +408,7 @@
             ],
         ),
         (
-            id: "22",
+            id: "34",
             offset: 34,
             name: "Dumb Moblin",
             chr: Chr(2, 0),
@@ -522,7 +522,7 @@
             ],
         ),
         (
-            id: "a",
+            id: "10",
             offset: 10,
             name: "Acheman",
             chr: Chr(4, 0),
@@ -534,7 +534,7 @@
             ],
         ),
         (
-            id: "b",
+            id: "11",
             offset: 11,
             name: "Bubble Generator",
             chr: Chr(4, 0),
@@ -545,7 +545,7 @@
             ],
         ),
         (
-            id: "c",
+            id: "12",
             offset: 12,
             name: "Rock Generator",
             chr: Chr(4, 0),
@@ -556,7 +556,7 @@
             ],
         ),
         (
-            id: "d",
+            id: "13",
             offset: 13,
             name: "Red Deeler",
             chr: Chr(4, 0),
@@ -567,7 +567,7 @@
             ],
         ),
         (
-            id: "e",
+            id: "14",
             offset: 14,
             name: "Blue Deeler",
             chr: Chr(4, 0),
@@ -578,7 +578,7 @@
             ],
         ),
         (
-            id: "f",
+            id: "15",
             offset: 15,
             name: "Bago Bago Generator",
             chr: Chr(4, 0),
@@ -589,7 +589,7 @@
             ],
         ),
         (
-            id: "10",
+            id: "16",
             offset: 16,
             name: "Bago Bago",
             chr: Chr(4, 0),
@@ -600,7 +600,7 @@
             ],
         ),
         (
-            id: "11",
+            id: "17",
             offset: 17,
             name: "Blue Octoroc (jumping)",
             chr: Chr(4, 0),
@@ -611,7 +611,7 @@
             ],
         ),
         (
-            id: "12",
+            id: "18",
             offset: 18,
             name: "Blue Octoroc (moving)",
             chr: Chr(4, 0),
@@ -622,7 +622,7 @@
             ],
         ),
         (
-            id: "13",
+            id: "19",
             offset: 19,
             name: "Elevator",
             chr: Chr(4, 0),
@@ -636,7 +636,7 @@
             ],
         ),
         (
-            id: "14",
+            id: "20",
             offset: 20,
             name: "Tektite",
             chr: Chr(4, 0),
@@ -648,7 +648,7 @@
             ],
         ),
         (
-            id: "15",
+            id: "21",
             offset: 21,
             name: "Eye",
             chr: Chr(4, 0),
@@ -659,7 +659,7 @@
             ],
         ),
         (
-            id: "16",
+            id: "22",
             offset: 22,
             name: "Leever",
             chr: Chr(4, 0),
@@ -670,7 +670,7 @@
             ],
         ),
         (
-            id: "17",
+            id: "23",
             offset: 23,
             name: "Boon",
             chr: Chr(4, 0),
@@ -681,7 +681,7 @@
             ],
         ),
         (
-            id: "18",
+            id: "24",
             offset: 24,
             name: "Balilisk",
             chr: Chr(4, 0),
@@ -692,7 +692,7 @@
             ],
         ),
         (
-            id: "19",
+            id: "25",
             offset: 25,
             name: "Scorpion",
             chr: Chr(4, 0),
@@ -704,7 +704,7 @@
             ],
         ),
         (
-            id: "1a",
+            id: "26",
             offset: 26,
             name: "Red Lizalfos",
             chr: Chr(4, 0),
@@ -716,7 +716,7 @@
             ],
         ),
         (
-            id: "1b",
+            id: "27",
             offset: 27,
             name: "Orange Lizalfos",
             chr: Chr(4, 0),
@@ -728,7 +728,7 @@
             ],
         ),
         (
-            id: "1c",
+            id: "28",
             offset: 28,
             name: "Blue Lizalfos",
             chr: Chr(4, 0),
@@ -740,7 +740,7 @@
             ],
         ),
         (
-            id: "1d",
+            id: "29",
             offset: 29,
             name: "Fence Lizalfos",
             chr: Chr(4, 0),
@@ -865,7 +865,7 @@
             ],
         ),
         (
-            id: "a",
+            id: "10",
             offset: 10,
             name: "Ache (talking) #0",
             chr: Chr(0, 0),
@@ -875,7 +875,7 @@
             ],
         ),
         (
-            id: "b",
+            id: "11",
             offset: 11,
             name: "Bit (talking) #1",
             chr: Chr(0, 0),
@@ -885,7 +885,7 @@
             ],
         ),
         (
-            id: "c",
+            id: "12",
             offset: 12,
             name: "Invisible Dialog (sign) #2",
             chr: Chr(0, 0),
@@ -895,7 +895,7 @@
             ],
         ),
         (
-            id: "d",
+            id: "13",
             offset: 13,
             name: "Immobile Blue Woman / River Man #3",
             chr: Chr(0, 0),
@@ -905,7 +905,7 @@
             ],
         ),
         (
-            id: "e",
+            id: "14",
             offset: 14,
             name: "Blue Lumberjack #4",
             chr: Chr(0, 0),
@@ -915,7 +915,7 @@
             ],
         ),
         (
-            id: "f",
+            id: "15",
             offset: 15,
             name: "Wizard #5",
             chr: Chr(6, 0),
@@ -927,7 +927,7 @@
             ],
         ),
         (
-            id: "10",
+            id: "16",
             offset: 16,
             name: "Little Kid #6",
             chr: Chr(6, 0),
@@ -939,7 +939,7 @@
             ],
         ),
         (
-            id: "11",
+            id: "17",
             offset: 17,
             name: "Immobile Blue Lady W/ Bowl #7",
             chr: Chr(6, 0),
@@ -951,7 +951,7 @@
             ],
         ),
         (
-            id: "12",
+            id: "18",
             offset: 18,
             name: "Immobile Red Granny #8",
             chr: Chr(6, 0),
@@ -963,7 +963,7 @@
             ],
         ),
         (
-            id: "13",
+            id: "19",
             offset: 19,
             name: "Idle Red Lumberjack #9",
             chr: Chr(0, 0),
@@ -973,7 +973,7 @@
             ],
         ),
         (
-            id: "14",
+            id: "20",
             offset: 20,
             name: "Idle Blue Lady W/ Bowl #10",
             chr: Chr(6, 0),
@@ -985,7 +985,7 @@
             ],
         ),
         (
-            id: "15",
+            id: "21",
             offset: 21,
             name: "Idle Blue Granny #11",
             chr: Chr(0, 0),
@@ -995,7 +995,7 @@
             ],
         ),
         (
-            id: "16",
+            id: "22",
             offset: 22,
             name: "Idle Red Lady #12",
             chr: Chr(6, 0),
@@ -1007,7 +1007,7 @@
             ],
         ),
         (
-            id: "17",
+            id: "23",
             offset: 23,
             name: "Life Lady #13",
             chr: Chr(6, 0),
@@ -1019,7 +1019,7 @@
             ],
         ),
         (
-            id: "18",
+            id: "24",
             offset: 24,
             name: "Magic Lady #14",
             chr: Chr(6, 0),
@@ -1031,7 +1031,7 @@
             ],
         ),
         (
-            id: "19",
+            id: "25",
             offset: 25,
             name: "Random Blue Lumberjack #15",
             chr: Chr(0, 0),
@@ -1041,7 +1041,7 @@
             ],
         ),
         (
-            id: "1a",
+            id: "26",
             offset: 26,
             name: "Random Red Lady W/ Bowl #16",
             chr: Chr(0, 0),
@@ -1051,7 +1051,7 @@
             ],
         ),
         (
-            id: "1b",
+            id: "27",
             offset: 27,
             name: "Random Red Granny #17",
             chr: Chr(0, 0),
@@ -1061,7 +1061,7 @@
             ],
         ),
         (
-            id: "1c",
+            id: "28",
             offset: 28,
             name: "Random Blue Lady #18",
             chr: Chr(0, 0),
@@ -1071,7 +1071,7 @@
             ],
         ),
         (
-            id: "1d",
+            id: "29",
             offset: 29,
             name: "Walking Blue Lumberjack #19",
             chr: Chr(6, 0),
@@ -1083,7 +1083,7 @@
             ],
         ),
         (
-            id: "1e",
+            id: "30",
             offset: 30,
             name: "Walking Red Guy #20",
             chr: Chr(0, 0),
@@ -1093,7 +1093,7 @@
             ],
         ),
         (
-            id: "1f",
+            id: "31",
             offset: 31,
             name: "Walking Red Guy #21",
             chr: Chr(6, 0),
@@ -1105,7 +1105,7 @@
             ],
         ),
         (
-            id: "20",
+            id: "32",
             offset: 32,
             name: "Walking Blue Lady #22",
             chr: Chr(6, 0),
@@ -1117,7 +1117,7 @@
             ],
         ),
         (
-            id: "21",
+            id: "33",
             offset: 33,
             name: "Mirror #23",
             chr: Chr(6, 0),
@@ -1128,7 +1128,7 @@
             ],
         ),
         (
-            id: "22",
+            id: "34",
             offset: 34,
             name: "Sign #24",
             chr: Chr(6, 0),
@@ -1139,7 +1139,7 @@
             ],
         ),
         (
-            id: "23",
+            id: "35",
             offset: 35,
             name: "Busy Townsperson Generator",
             chr: Chr(6, 0),
@@ -1273,7 +1273,7 @@
             ],
         ),
         (
-            id: "a",
+            id: "10",
             offset: 10,
             name: "Blue Skull Head",
             chr: Chr(8, 0),
@@ -1284,7 +1284,7 @@
             ],
         ),
         (
-            id: "b",
+            id: "11",
             offset: 11,
             name: "Tinsuit Generator",
             chr: Chr(8, 0),
@@ -1296,7 +1296,7 @@
             ],
         ),
         (
-            id: "c",
+            id: "12",
             offset: 12,
             name: "Tinsuit",
             chr: Chr(8, 0),
@@ -1308,7 +1308,7 @@
             ],
         ),
         (
-            id: "d",
+            id: "13",
             offset: 13,
             name: "Acid Dripper",
             chr: Chr(8, 0),
@@ -1319,7 +1319,7 @@
             ],
         ),
         (
-            id: "e",
+            id: "14",
             offset: 14,
             name: "Fast Bubble",
             chr: Chr(8, 0),
@@ -1330,7 +1330,7 @@
             ],
         ),
         (
-            id: "f",
+            id: "15",
             offset: 15,
             name: "Bago Bago Generator",
             chr: Chr(8, 0),
@@ -1341,7 +1341,7 @@
             ],
         ),
         (
-            id: "10",
+            id: "16",
             offset: 16,
             name: "Bago Bago",
             chr: Chr(8, 0),
@@ -1352,7 +1352,7 @@
             ],
         ),
         (
-            id: "11",
+            id: "17",
             offset: 17,
             name: "Rope (jumping)",
             chr: Chr(8, 0),
@@ -1363,7 +1363,7 @@
             ],
         ),
         (
-            id: "12",
+            id: "18",
             offset: 18,
             name: "Rope (moving)",
             chr: Chr(8, 0),
@@ -1374,7 +1374,7 @@
             ],
         ),
         (
-            id: "13",
+            id: "19",
             offset: 19,
             name: "Elevator",
             chr: Chr(8, 0),
@@ -1388,7 +1388,7 @@
             ],
         ),
         (
-            id: "14",
+            id: "20",
             offset: 20,
             name: "Crystal Spot",
             chr: Chr(8, 0),
@@ -1399,7 +1399,7 @@
             ],
         ),
         (
-            id: "15",
+            id: "21",
             offset: 21,
             name: "Crystal",
             chr: Chr(8, 0),
@@ -1410,7 +1410,7 @@
             ],
         ),
         (
-            id: "16",
+            id: "22",
             offset: 22,
             name: "Energy Ball Shooter (down/right)",
             chr: Chr(8, 0),
@@ -1421,7 +1421,7 @@
             ],
         ),
         (
-            id: "17",
+            id: "23",
             offset: 23,
             name: "Energy Ball Shooter (down/left)",
             chr: Chr(8, 0),
@@ -1432,7 +1432,7 @@
             ],
         ),
         (
-            id: "18",
+            id: "24",
             offset: 24,
             name: "Orange Ironknuckle",
             chr: Chr(8, 0),
@@ -1444,7 +1444,7 @@
             ],
         ),
         (
-            id: "19",
+            id: "25",
             offset: 25,
             name: "Red Ironknuckle",
             chr: Chr(8, 0),
@@ -1456,7 +1456,7 @@
             ],
         ),
         (
-            id: "1a",
+            id: "26",
             offset: 26,
             name: "Blue Ironknuckle",
             chr: Chr(8, 0),
@@ -1468,7 +1468,7 @@
             ],
         ),
         (
-            id: "1b",
+            id: "27",
             offset: 27,
             name: "Wolf Head Generator",
             chr: Chr(8, 0),
@@ -1479,7 +1479,7 @@
             ],
         ),
         (
-            id: "1c",
+            id: "28",
             offset: 28,
             name: "Wolf Head",
             chr: Chr(8, 0),
@@ -1490,7 +1490,7 @@
             ],
         ),
         (
-            id: "1d",
+            id: "29",
             offset: 29,
             name: "Mago",
             chr: Chr(8, 0),
@@ -1502,7 +1502,7 @@
             ],
         ),
         (
-            id: "1e",
+            id: "30",
             offset: 30,
             name: "Hammer Thrower",
             chr: Chr(8, 0),
@@ -1514,7 +1514,7 @@
             ],
         ),
         (
-            id: "1f",
+            id: "31",
             offset: 31,
             name: "Red Stalfos",
             chr: Chr(8, 0),
@@ -1526,7 +1526,7 @@
             ],
         ),
         (
-            id: "20",
+            id: "32",
             offset: 32,
             name: "Horse Head",
             chr: Chr(8, 0),
@@ -1539,7 +1539,7 @@
             ],
         ),
         (
-            id: "21",
+            id: "33",
             offset: 33,
             name: "Helmethead/gooma",
             chr: Chr(8, 0),
@@ -1552,7 +1552,7 @@
             ],
         ),
         (
-            id: "22",
+            id: "34",
             offset: 34,
             name: "Helmethead Head",
             chr: Chr(8, 0),
@@ -1563,7 +1563,7 @@
             ],
         ),
         (
-            id: "23",
+            id: "35",
             offset: 35,
             name: "Blue Stalfos",
             chr: Chr(8, 0),
@@ -1697,7 +1697,7 @@
             ],
         ),
         (
-            id: "a",
+            id: "10",
             offset: 10,
             name: "Rebonack Un-horsed",
             chr: Chr(18, 0),
@@ -1709,7 +1709,7 @@
             ],
         ),
         (
-            id: "b",
+            id: "11",
             offset: 11,
             name: "Rathead Generator",
             chr: Chr(18, 0),
@@ -1721,7 +1721,7 @@
             ],
         ),
         (
-            id: "c",
+            id: "12",
             offset: 12,
             name: "Rathead",
             chr: Chr(18, 0),
@@ -1733,7 +1733,7 @@
             ],
         ),
         (
-            id: "d",
+            id: "13",
             offset: 13,
             name: "Acid Dripper",
             chr: Chr(18, 0),
@@ -1744,7 +1744,7 @@
             ],
         ),
         (
-            id: "e",
+            id: "14",
             offset: 14,
             name: "Fast Bubble",
             chr: Chr(18, 0),
@@ -1755,7 +1755,7 @@
             ],
         ),
         (
-            id: "f",
+            id: "15",
             offset: 15,
             name: "Blue Skull Head",
             chr: Chr(18, 0),
@@ -1766,7 +1766,7 @@
             ],
         ),
         (
-            id: "10",
+            id: "16",
             offset: 16,
             name: "Flame",
             chr: Chr(18, 0),
@@ -1777,7 +1777,7 @@
             ],
         ),
         (
-            id: "11",
+            id: "17",
             offset: 17,
             name: "Rope",
             chr: Chr(18, 0),
@@ -1788,7 +1788,7 @@
             ],
         ),
         (
-            id: "12",
+            id: "18",
             offset: 18,
             name: "???(crash)",
             chr: Chr(0, 0),
@@ -1798,7 +1798,7 @@
             ],
         ),
         (
-            id: "13",
+            id: "19",
             offset: 19,
             name: "Elevator",
             chr: Chr(18, 0),
@@ -1812,7 +1812,7 @@
             ],
         ),
         (
-            id: "14",
+            id: "20",
             offset: 20,
             name: "Crystal Spot",
             chr: Chr(18, 0),
@@ -1823,7 +1823,7 @@
             ],
         ),
         (
-            id: "15",
+            id: "21",
             offset: 21,
             name: "Crystal",
             chr: Chr(18, 0),
@@ -1834,7 +1834,7 @@
             ],
         ),
         (
-            id: "16",
+            id: "22",
             offset: 22,
             name: "Energy Ball Shooter (down/right)",
             chr: Chr(18, 0),
@@ -1845,7 +1845,7 @@
             ],
         ),
         (
-            id: "17",
+            id: "23",
             offset: 23,
             name: "Energy Ball Shooter (down/left)",
             chr: Chr(18, 0),
@@ -1856,7 +1856,7 @@
             ],
         ),
         (
-            id: "18",
+            id: "24",
             offset: 24,
             name: "Orange Ironknuckle",
             chr: Chr(18, 0),
@@ -1868,7 +1868,7 @@
             ],
         ),
         (
-            id: "19",
+            id: "25",
             offset: 25,
             name: "Red Ironknuckle",
             chr: Chr(18, 0),
@@ -1880,7 +1880,7 @@
             ],
         ),
         (
-            id: "1a",
+            id: "26",
             offset: 26,
             name: "Blue Ironknuckle",
             chr: Chr(18, 0),
@@ -1892,7 +1892,7 @@
             ],
         ),
         (
-            id: "1b",
+            id: "27",
             offset: 27,
             name: "Wolf Head Generator",
             chr: Chr(18, 0),
@@ -1903,7 +1903,7 @@
             ],
         ),
         (
-            id: "1c",
+            id: "28",
             offset: 28,
             name: "Wolf Head",
             chr: Chr(18, 0),
@@ -1914,7 +1914,7 @@
             ],
         ),
         (
-            id: "1d",
+            id: "29",
             offset: 29,
             name: "Wizrobe",
             chr: Chr(18, 0),
@@ -1926,7 +1926,7 @@
             ],
         ),
         (
-            id: "1e",
+            id: "30",
             offset: 30,
             name: "Doom Knocker",
             chr: Chr(18, 0),
@@ -1938,7 +1938,7 @@
             ],
         ),
         (
-            id: "1f",
+            id: "31",
             offset: 31,
             name: "Red Stalfos Knight",
             chr: Chr(18, 0),
@@ -1950,7 +1950,7 @@
             ],
         ),
         (
-            id: "20",
+            id: "32",
             offset: 32,
             name: "Rebonack",
             chr: Chr(18, 0),
@@ -1962,7 +1962,7 @@
             ],
         ),
         (
-            id: "21",
+            id: "33",
             offset: 33,
             name: "Barba",
             chr: Chr(24, 0),
@@ -1976,7 +1976,7 @@
             ],
         ),
         (
-            id: "22",
+            id: "34",
             offset: 34,
             name: "Carock",
             chr: Chr(20, 0),
@@ -1989,7 +1989,7 @@
             ],
         ),
         (
-            id: "23",
+            id: "35",
             offset: 35,
             name: "Blue Stalfos Knight",
             chr: Chr(18, 0),
@@ -2122,7 +2122,7 @@
             ],
         ),
         (
-            id: "a",
+            id: "10",
             offset: 10,
             name: "Acheman",
             chr: Chr(12, 0),
@@ -2134,7 +2134,7 @@
             ],
         ),
         (
-            id: "b",
+            id: "11",
             offset: 11,
             name: "Bubble Generator",
             chr: Chr(12, 0),
@@ -2145,7 +2145,7 @@
             ],
         ),
         (
-            id: "c",
+            id: "12",
             offset: 12,
             name: "Rock Generator",
             chr: Chr(12, 0),
@@ -2156,7 +2156,7 @@
             ],
         ),
         (
-            id: "d",
+            id: "13",
             offset: 13,
             name: "Red Deeler",
             chr: Chr(12, 0),
@@ -2167,7 +2167,7 @@
             ],
         ),
         (
-            id: "e",
+            id: "14",
             offset: 14,
             name: "Blue Deeler",
             chr: Chr(12, 0),
@@ -2178,7 +2178,7 @@
             ],
         ),
         (
-            id: "f",
+            id: "15",
             offset: 15,
             name: "Fire Bago Bago Generator",
             chr: Chr(12, 0),
@@ -2189,7 +2189,7 @@
             ],
         ),
         (
-            id: "10",
+            id: "16",
             offset: 16,
             name: "Fire Bago Bago",
             chr: Chr(12, 0),
@@ -2200,7 +2200,7 @@
             ],
         ),
         (
-            id: "11",
+            id: "17",
             offset: 17,
             name: "Fire Rope (jumping)",
             chr: Chr(12, 0),
@@ -2211,7 +2211,7 @@
             ],
         ),
         (
-            id: "12",
+            id: "18",
             offset: 18,
             name: "Fire Rope (moving)",
             chr: Chr(12, 0),
@@ -2222,7 +2222,7 @@
             ],
         ),
         (
-            id: "13",
+            id: "19",
             offset: 19,
             name: "Elevator",
             chr: Chr(12, 0),
@@ -2236,7 +2236,7 @@
             ],
         ),
         (
-            id: "14",
+            id: "20",
             offset: 20,
             name: "Slow Bubble",
             chr: Chr(12, 0),
@@ -2247,7 +2247,7 @@
             ],
         ),
         (
-            id: "15",
+            id: "21",
             offset: 21,
             name: "Fast Bubble",
             chr: Chr(12, 0),
@@ -2258,7 +2258,7 @@
             ],
         ),
         (
-            id: "16",
+            id: "22",
             offset: 22,
             name: "Orange Skull Head",
             chr: Chr(12, 0),
@@ -2269,7 +2269,7 @@
             ],
         ),
         (
-            id: "17",
+            id: "23",
             offset: 23,
             name: "Large Bubble",
             chr: Chr(12, 0),
@@ -2281,7 +2281,7 @@
             ],
         ),
         (
-            id: "18",
+            id: "24",
             offset: 24,
             name: "Orange Fokka",
             chr: Chr(12, 0),
@@ -2293,7 +2293,7 @@
             ],
         ),
         (
-            id: "19",
+            id: "25",
             offset: 25,
             name: "Red Fokka",
             chr: Chr(12, 0),
@@ -2305,7 +2305,7 @@
             ],
         ),
         (
-            id: "1a",
+            id: "26",
             offset: 26,
             name: "Blue Fokka",
             chr: Chr(12, 0),
@@ -2317,7 +2317,7 @@
             ],
         ),
         (
-            id: "1b",
+            id: "27",
             offset: 27,
             name: "???(crash)",
             chr: Chr(0, 0),
@@ -2327,7 +2327,7 @@
             ],
         ),
         (
-            id: "1c",
+            id: "28",
             offset: 28,
             name: "???(crash)",
             chr: Chr(0, 0),
@@ -2337,7 +2337,7 @@
             ],
         ),
         (
-            id: "1d",
+            id: "29",
             offset: 29,
             name: "Fokkel (spicy Chicken)",
             chr: Chr(12, 0),
@@ -2349,7 +2349,7 @@
             ],
         ),
         (
-            id: "1e",
+            id: "30",
             offset: 30,
             name: "King Bot",
             chr: Chr(12, 0),
@@ -2361,7 +2361,7 @@
             ],
         ),
         (
-            id: "1f",
+            id: "31",
             offset: 31,
             name: "???(crash)",
             chr: Chr(0, 0),
@@ -2371,7 +2371,7 @@
             ],
         ),
         (
-            id: "20",
+            id: "32",
             offset: 32,
             name: "Barrier",
             chr: Chr(12, 0),
@@ -2389,7 +2389,7 @@
             ],
         ),
         (
-            id: "21",
+            id: "33",
             offset: 33,
             name: "???(crash)",
             chr: Chr(0, 0),
@@ -2399,7 +2399,7 @@
             ],
         ),
         (
-            id: "22",
+            id: "34",
             offset: 34,
             name: "Thunderbird",
             chr: Chr(12, 0),
@@ -2414,7 +2414,7 @@
             ],
         ),
         (
-            id: "23",
+            id: "35",
             offset: 35,
             name: "Dark Link Trigger",
             chr: Chr(12, 0),
