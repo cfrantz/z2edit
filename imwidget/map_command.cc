@@ -1234,6 +1234,7 @@ bool MapEnemyList::Draw() {
     }
 
     int i=0;
+    ImGui::PushID(is_large_ ? 1 : 0);
     for(auto it=data_.begin(); it<data_.end(); ++it, ++i) {
         ImGui::PushID(i | (is_large_ << 8));
         chg |= DrawOne(&*it, false);
@@ -1256,6 +1257,7 @@ bool MapEnemyList::Draw() {
     }
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Add a new enemy");
+    ImGui::PopID();
 
     if (large_) {
         ImGui::Separator();

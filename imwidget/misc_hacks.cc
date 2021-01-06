@@ -247,7 +247,7 @@ bool MiscellaneousHacks::DrawDynamicBanks() {
             ImGui::NextColumn();
             for(int i=0; i<16; i+=2) {
                 int addr = 0xbe60 + (ov * 5 + world) * 16 + i;
-                ImGui::PushID(addr);
+                ImGui::PushID(addr | (world << 16));
                 int room = mapper_->ReadPrgBank(0, addr + 0);
                 int bank = mapper_->ReadPrgBank(0, addr + 1);
                 snprintf(roombuf, sizeof(roombuf), "%d", room);
