@@ -34,6 +34,7 @@ bool EnemyListPack::IsEncounter(int area) {
     if (ovptr == 0 || ovptr == 0xFFFF)
         return false;
 
+    area = area % 63;
     for(const auto& e : encounters_) {
         if (e == area)
             return true;
