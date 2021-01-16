@@ -1,6 +1,9 @@
+use std::convert::From;
+
 use crate::errors::*;
 use crate::idpath;
 use crate::nes::IdPath;
+use crate::nes::MemoryAccess;
 use crate::zelda2::config::Config;
 use crate::zelda2::overworld;
 use crate::zelda2::project::Edit;
@@ -89,9 +92,15 @@ impl Connectivity {
     ) -> Result<()> {
         let screen = id.extend(entry);
         if self.per_screen.get(&screen) == None {
-            let sv = sideview::Sideview::from_rom(edit, id.clone())?;
-
-            let width = sv.map.width as usize - 1;
+            let index = id.usize_last()?;
+            let rom = edit.rom.borrow();
+            // We read the sideview structures directly out of ROM rather
+            // than using the sideview structs to decode them because we
+            // only care about the room width and its connections.
+            // By skiping the decoding, connectivity exploration is much
+            // faster.
+            let mapaddr = rom.read_pointer(scfg.address + index * 2)?;
+            let width = ((rom.read(mapaddr + 1)? >> 5) & 3) as usize;
             let (ss, se) = if width >= 2 {
                 // Explore all four screens.
                 (0, 3)
@@ -106,16 +115,14 @@ impl Connectivity {
                 (entry - width, entry)
             };
 
-            for i in 0..4 {
-                if i >= ss && i <= se {
-                    let screen = id.extend(i);
-                    self.per_screen.insert(screen, ovconn.clone());
-                }
+            for i in ss..=se {
+                let screen = id.extend(i);
+                self.per_screen.insert(screen, ovconn.clone());
             }
-            for i in 0..4 {
-                let conn = sv.connection.get(i);
-                if conn.is_some() && i >= ss && i <= se {
-                    let c = conn.unwrap();
+            if index <= scfg.max_connectable_index {
+                let table = rom.read_bytes(scfg.connections + index * 4, 4)?;
+                for i in ss..=se {
+                    let c = sideview::Connection::from(table[i]);
                     if c.dest_map < scfg.length {
                         self.explore_per_screen(
                             edit,
@@ -126,9 +133,11 @@ impl Connectivity {
                         )?;
                     }
                 }
-                let conn = sv.door.get(i);
-                if conn.is_some() && i >= ss && i <= se {
-                    let c = conn.unwrap();
+            }
+            if index <= scfg.max_door_index {
+                let table = rom.read_bytes(scfg.doors + index * 4, 4)?;
+                for i in ss..=se {
+                    let c = sideview::Connection::from(table[i]);
                     if c.dest_map < scfg.length {
                         self.explore_per_screen(
                             edit,

@@ -251,9 +251,10 @@ pub trait MemoryAccess {
         Ok(byte[0] as u16 | (byte[1] as u16) << 8)
     }
     fn read_pointer(&self, address: Address) -> Result<Address> {
-        let ptr = self.read_word(address)?;
+        let byte = self.read_bytes(address, 2)?;
+        let ptr = byte[0] as usize | (byte[1] as usize) << 8;
         // TODO: fail for enum type File
-        Ok(address.set_val(ptr as usize))
+        Ok(address.set_val(ptr))
     }
 
     fn read_bytes(&self, address: Address, length: usize) -> Result<&[u8]>;
