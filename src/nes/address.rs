@@ -291,6 +291,9 @@ pub trait MemoryAccess {
 
     // Apply a layout for memory access.
     fn apply_layout(&mut self, layout: Layout) -> Result<()>;
+
+    // Insert data into the vector at the specified address.
+    fn insert(&mut self, address: Address, value: &[u8]) -> Result<()>;
 }
 
 #[cfg(test)]

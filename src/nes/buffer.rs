@@ -147,6 +147,14 @@ impl MemoryAccess for Buffer {
         }
         Ok(())
     }
+
+    fn insert(&mut self, address: Address, value: &[u8]) -> Result<()> {
+        let offset = address.offset(1, &self.layout)?;
+        for (i, v) in value.iter().enumerate() {
+            self.data.insert(offset + i, *v);
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]

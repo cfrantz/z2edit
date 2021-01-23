@@ -176,6 +176,14 @@ impl Project {
             commit
                 .connectivity
                 .replace(last.connectivity.borrow().clone());
+
+            if *commit.config() != *last.config() {
+                let config = Config::get(&commit.config())?;
+                commit
+                    .rom
+                    .borrow_mut()
+                    .apply_layout(config.layout.clone())?;
+            }
         }
         if commit.meta.borrow().skip_pack {
             info!(
@@ -589,6 +597,10 @@ impl EditProxy {
             .rom
             .borrow_mut()
             .write_terminated(addr.address, val, terminator)
+    }
+
+    fn insert(&mut self, addr: PyAddress, val: &[u8]) -> Result<()> {
+        self.edit.rom.borrow_mut().insert(addr.address, val)
     }
 
     fn alloc(&mut self, addr: PyAddress, length: u16) -> Result<PyAddress> {
