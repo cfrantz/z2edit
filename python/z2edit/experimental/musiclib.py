@@ -4,6 +4,8 @@
 #
 ######################################################################
 import enum
+import sys
+from collections import defaultdict
 
 from z2edit import PyAddress
 
@@ -101,7 +103,7 @@ class Note(int):
 
     def __str__(self):
         p = self.pitch()
-        if p == Note.Rest: return "---."                                             
+        if p == Note.Rest: return "---."
         elif p == Note.Cs3:  return "C#3."
         elif p == Note.E3:   return "E3.."
         elif p == Note.G3:   return "G3.."
@@ -133,7 +135,8 @@ class Note(int):
         elif p == Note.As5:  return "A#5."
         elif p == Note.B5:   return "B5.."
         else:
-            return "????"
+            print('Error: value={}'.format(p), file=sys.stderr)
+            return "---."
 
 
 class Channel(enum.IntEnum):
@@ -141,6 +144,26 @@ class Channel(enum.IntEnum):
     Pulse2 = 2
     Triangle = 3
     Noise = 4
+
+    def __str__(self):
+        if self == Channel.Pulse1:
+            return "Pulse1"
+        elif self == Channel.Pulse2:
+            return "Pulse2"
+        elif self == Channel.Triangle:
+            return "Triangle"
+        elif self == Channel.Noise:
+            return "Noise"
+
+    def as_famistudio(self):
+        if self == Channel.Pulse1:
+            return "Square1"
+        elif self == Channel.Pulse2:
+            return "Square2"
+        elif self == Channel.Triangle:
+            return "Triangle"
+        elif self == Channel.Noise:
+            return "Noise"
 
 
 class Pattern(object):
@@ -310,6 +333,47 @@ class Song(object):
         }
 
     @staticmethod
+    def convert_all_to_famistudio(edit, filename='songs-fms.txt'):
+        song = Song.read_all_songs(edit)
+        with open(filename, 'wt') as f:
+            print('Project Version="2.3.2" TempoMode="FamiStudio" Name="Z2 Extract" Author="Z2Edit-2.0" Copyright="N/A"', file=f)
+            print(
+# Some crap instruments.
+"""	Instrument Name="Noise"
+		Envelope Type="Volume" Length="5" Values="15,12,10,10,0"
+	Instrument Name="Pulse1"
+		Envelope Type="Volume" Length="1" Values="12"
+	Instrument Name="Pulse2"
+		Envelope Type="Volume" Length="1" Values="12"
+	Instrument Name="Triangle"
+		Envelope Type="Volume" Length="1" Values="15"
+""", file=f)
+            ov = song['OverworldTheme'].with_intro(song['OverworldIntro'])
+            ov.as_famistudio('Overworld', fpqn=24, file=f)
+
+            song['BattleTheme'].as_famistudio('Battle', fpqn=24, file=f)
+            song['CaveItemFanfare'].as_famistudio('CaveItemFanfare', fpqn=24, file=f)
+
+            town = song['TownTheme'].with_intro(song['TownIntro'])
+            town.as_famistudio('Town', fpqn=28, file=f)
+            song['HouseTheme'].as_famistudio('House', fpqn=24, file=f)
+            song['TownItemFanfare'].as_famistudio('TownItemFanfare', fpqn=24, file=f)
+
+            palace = song['PalaceTheme'].with_intro(song['PalaceIntro'])
+            palace.as_famistudio('Palace', fpqn=24, file=f)
+            song['BossTheme'].as_famistudio('Boss', fpqn=24, file=f)
+            song['PalaceItemFanfare'].as_famistudio('PalaceItemFanfare', fpqn=24, file=f)
+            song['CrystalFanfare'].as_famistudio('CrystalFanfare', fpqn=24, file=f)
+
+            gp = song['GreatPalaceTheme'].with_intro(song['GreatPalaceIntro'])
+            gp.as_famistudio('Great Palace', fpqn=24, file=f)
+            song['GreatPalaceItemFanfare'].as_famistudio('GreatPalaceItemFanfare', fpqn=24, file=f)
+            song['FinalBossTheme'].as_famistudio('FinalBoss', fpqn=24, file=f)
+            song['TriforceFanfare'].as_famistudio('Triforce', fpqn=24, file=f)
+            song['ZeldaTheme'].as_famistudio('Zelda', fpqn=24, file=f)
+            song['CreditsTheme'].as_famistudio('Credits', fpqn=24, file=f)
+
+    @staticmethod
     def commit(edit, address, songs):
         if address == OVERWORLD_SONG_TABLE:
             table = bytes([0, 1, 2, 2, 3, 4, 4, 4])
@@ -365,6 +429,7 @@ class Song(object):
     def __init__(self, pattern=[], sequence=[]):
         self.pattern = pattern
         self.sequence = sequence
+        self.loop_point = 0
 
     def sequence_data(self, first):
         ret = bytearray()
@@ -384,3 +449,67 @@ class Song(object):
             print(pattern.to_string(Channel.Triangle))
             print(pattern.to_string(Channel.Noise))
             print()
+
+
+    def most_common_length(self):
+        length = defaultdict(int)
+        for p in self.pattern:
+            length[p.total_length()] += 1
+        lengths = sorted(length.items(), key=lambda x: x[1], reverse=True)
+        return lengths[0][0]
+
+    def pattern_as_famistudio(self, n, channel, length, fpqn, beat_len, scale, file=None):
+        print('\t\t\tPattern Name="{}-{}"'.format(channel, n), file=file)
+        time = 0
+        total = self.pattern[n].total_length()
+        while time < total:
+            for i, note in enumerate(self.pattern[n].notes[channel]):
+                name = str(note).replace('.', '')
+                if channel != Channel.Noise:
+                    name = name.replace('3', '2').replace('4', '3').replace('5', '4')
+
+                endtime = time + note.length() * fpqn // MIDI_PPQN
+                if name == '---':
+                    print('\t\t\t\tNote Time="{}" Value="Stop"'.format(time, name), file=file)
+                else:
+                    print('\t\t\t\tNote Time="{}" Value="{}" Instrument="{}"'.format(time, name, channel), file=file)
+                    if i+1 < len(self.pattern[n].notes[channel]):
+                        nextnote = self.pattern[n].notes[channel][i+1]
+                        if channel != Channel.Noise and nextnote.pitch() == note.pitch():
+                            print('\t\t\t\tNote Time="{}" Value="Stop"'.format(endtime-1, name), file=file)
+                time = endtime
+            if channel != Channel.Noise or time == 0:
+                # The noise channel needs to loop, the others do not.
+                break
+
+    def channel_as_famistudio(self, channel, length, fpqn, beat_len, scale, file=None):
+        print('\t\tChannel Type="{}"'.format(channel.as_famistudio()), file=file)
+        for i, n in enumerate(self.sequence):
+            p = self.pattern[n]
+            plen = p.total_length() *4 // MIDI_PPQN
+            if plen != length:
+                print('\t\tPatternCustomSettings Time="{}" Length="{}" NoteLength="{}" BeatLength="{}"'.format(i, plen, fpqn//4, beat_len), file=file)
+
+        for n in range(len(self.pattern)):
+            self.pattern_as_famistudio(n, channel, length, fpqn, beat_len, scale, file=file)
+        for i, n in enumerate(self.sequence):
+            print('\t\t\tPatternInstance Time="{}" Pattern="{}-{}"'.format(i, channel, n), file=file)
+
+    def as_famistudio(self, name, fpqn=32, scale=1, file=None):
+        mcl = self.most_common_length() * 4 // MIDI_PPQN
+        beat_len = 4
+
+        print('\tSong Name="{}" Length="{}" LoopPoint="{}" PatternLength="{}" BeatLength="{}" NoteLength="{}"'.format(
+            name, len(self.sequence), self.loop_point, mcl, beat_len, fpqn // 4), file=file)
+
+        self.channel_as_famistudio(Channel.Pulse1, mcl, fpqn, beat_len, scale, file=file)
+        self.channel_as_famistudio(Channel.Pulse2, mcl, fpqn, beat_len, scale, file=file)
+        self.channel_as_famistudio(Channel.Triangle, mcl, fpqn, beat_len, scale, file=file)
+        self.channel_as_famistudio(Channel.Noise, mcl, fpqn, beat_len, scale, file=file)
+
+    def with_intro(self, intro):
+        song = Song(intro.pattern[:], intro.sequence[:])
+        song.loop_point = len(intro.sequence)
+        song.pattern.extend(self.pattern)
+        song.sequence.extend(x+song.loop_point for x in self.sequence)
+        return song
