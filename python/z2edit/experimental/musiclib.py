@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from z2edit import PyAddress
 
-MIDI_PPQN = 96
+MIDI_PPQN = 120
 OVERWORLD_SONG_TABLE = PyAddress.prg(6, 0xa000)
 TOWN_SONG_TABLE      = PyAddress.prg(6, 0xa3ca)
 PALACE_SONG_TABLE    = PyAddress.prg(6, 0xa62f)
@@ -76,9 +76,8 @@ class Note(int):
     def duration(self):
         return self & 0xc1
 
-    def set_duration(self, duration):
-        self &= ~0xc1
-        self |= duration
+    def new_duration(self, duration):
+        return Note((self & 0x3e) | duration)
 
     def length(self):
         d = self.duration()
@@ -136,7 +135,7 @@ class Note(int):
         elif p == Note.B5:   return "B5.."
         else:
             print('Error: value={}'.format(p), file=sys.stderr)
-            return "---."
+            return "????"
 
 
 class Channel(enum.IntEnum):
@@ -266,7 +265,6 @@ class Pattern(object):
             if note == 0x00:
                 break
 
-            length += note.length()
             self.add_notes(channel, [note])
             # According to BGT, QuarterTriplet has special meaning when proceeded
             # by two EightTriplets and a special tempo flag is set.
@@ -275,11 +273,13 @@ class Pattern(object):
                 self.notes[channel][-2].duration() == Note.EighthTriplet and
                 self.notes[channel][-3].duration() == Note.EighthTriplet):
                 if self.tempo & 0x08:
-                    self.notes[channel][-1].set_duration(Note.EighthTriplet)
+                    self.notes[channel][-1] = self.notes[channel][-1].new_duration(Note.EighthTriplet)
                 else:
-                    self.notes[channel][-3].set_duration(Note.DottedEighth)
-                    self.notes[channel][-2].set_duration(Note.DottedEighth)
-                    self.notes[channel][-1].set_duration(Note.Eighth)
+                    self.notes[channel][-3] = self.notes[channel][-3].new_duration(Note.DottedEighth)
+                    self.notes[channel][-2] = self.notes[channel][-2].new_duration(Note.DottedEighth)
+                    self.notes[channel][-1] = self.notes[channel][-1].new_duration(Note.Eighth)
+
+            length += self.notes[channel][-1].length()
 
 
 class Song(object):
@@ -351,27 +351,27 @@ class Song(object):
             ov = song['OverworldTheme'].with_intro(song['OverworldIntro'])
             ov.as_famistudio('Overworld', fpqn=24, file=f)
 
-            song['BattleTheme'].as_famistudio('Battle', fpqn=24, file=f)
+            song['BattleTheme'].as_famistudio('Battle', fpqn=20, file=f)
             song['CaveItemFanfare'].as_famistudio('CaveItemFanfare', fpqn=24, file=f)
 
             town = song['TownTheme'].with_intro(song['TownIntro'])
             town.as_famistudio('Town', fpqn=28, file=f)
-            song['HouseTheme'].as_famistudio('House', fpqn=24, file=f)
+            song['HouseTheme'].as_famistudio('House', fpqn=28, file=f)
             song['TownItemFanfare'].as_famistudio('TownItemFanfare', fpqn=24, file=f)
 
             palace = song['PalaceTheme'].with_intro(song['PalaceIntro'])
             palace.as_famistudio('Palace', fpqn=24, file=f)
-            song['BossTheme'].as_famistudio('Boss', fpqn=24, file=f)
+            song['BossTheme'].as_famistudio('Boss', fpqn=20, file=f)
             song['PalaceItemFanfare'].as_famistudio('PalaceItemFanfare', fpqn=24, file=f)
             song['CrystalFanfare'].as_famistudio('CrystalFanfare', fpqn=24, file=f)
 
             gp = song['GreatPalaceTheme'].with_intro(song['GreatPalaceIntro'])
             gp.as_famistudio('Great Palace', fpqn=24, file=f)
             song['GreatPalaceItemFanfare'].as_famistudio('GreatPalaceItemFanfare', fpqn=24, file=f)
-            song['FinalBossTheme'].as_famistudio('FinalBoss', fpqn=24, file=f)
+            song['FinalBossTheme'].as_famistudio('FinalBoss', fpqn=20, file=f)
             song['TriforceFanfare'].as_famistudio('Triforce', fpqn=24, file=f)
             song['ZeldaTheme'].as_famistudio('Zelda', fpqn=24, file=f)
-            song['CreditsTheme'].as_famistudio('Credits', fpqn=24, file=f)
+            song['CreditsTheme'].as_famistudio('Credits', fpqn=28, file=f)
 
     @staticmethod
     def commit(edit, address, songs):
@@ -458,7 +458,7 @@ class Song(object):
         lengths = sorted(length.items(), key=lambda x: x[1], reverse=True)
         return lengths[0][0]
 
-    def pattern_as_famistudio(self, n, channel, length, fpqn, beat_len, scale, file=None):
+    def pattern_as_famistudio(self, n, channel, length, fpqn, beat_len, file=None):
         print('\t\t\tPattern Name="{}-{}"'.format(channel, n), file=file)
         time = 0
         total = self.pattern[n].total_length()
@@ -469,7 +469,7 @@ class Song(object):
                     name = name.replace('3', '2').replace('4', '3').replace('5', '4')
 
                 endtime = time + note.length() * fpqn // MIDI_PPQN
-                if name == '---':
+                if name == '---' or name == '????':
                     print('\t\t\t\tNote Time="{}" Value="Stop"'.format(time, name), file=file)
                 else:
                     print('\t\t\t\tNote Time="{}" Value="{}" Instrument="{}"'.format(time, name, channel), file=file)
@@ -482,30 +482,29 @@ class Song(object):
                 # The noise channel needs to loop, the others do not.
                 break
 
-    def channel_as_famistudio(self, channel, length, fpqn, beat_len, scale, file=None):
+    def channel_as_famistudio(self, channel, length, fpqn, beat_len, file=None):
         print('\t\tChannel Type="{}"'.format(channel.as_famistudio()), file=file)
         for i, n in enumerate(self.sequence):
             p = self.pattern[n]
-            plen = p.total_length() *4 // MIDI_PPQN
+            plen = p.total_length() * beat_len // MIDI_PPQN
             if plen != length:
-                print('\t\tPatternCustomSettings Time="{}" Length="{}" NoteLength="{}" BeatLength="{}"'.format(i, plen, fpqn//4, beat_len), file=file)
+                print('\t\tPatternCustomSettings Time="{}" Length="{}" NoteLength="{}" BeatLength="{}"'.format(i, plen, fpqn//beat_len, beat_len), file=file)
 
         for n in range(len(self.pattern)):
-            self.pattern_as_famistudio(n, channel, length, fpqn, beat_len, scale, file=file)
+            self.pattern_as_famistudio(n, channel, length, fpqn, beat_len, file=file)
         for i, n in enumerate(self.sequence):
             print('\t\t\tPatternInstance Time="{}" Pattern="{}-{}"'.format(i, channel, n), file=file)
 
-    def as_famistudio(self, name, fpqn=32, scale=1, file=None):
-        mcl = self.most_common_length() * 4 // MIDI_PPQN
-        beat_len = 4
+    def as_famistudio(self, name, fpqn=32, beat_len=4, file=None):
+        mcl = self.most_common_length() * beat_len // MIDI_PPQN
 
         print('\tSong Name="{}" Length="{}" LoopPoint="{}" PatternLength="{}" BeatLength="{}" NoteLength="{}"'.format(
-            name, len(self.sequence), self.loop_point, mcl, beat_len, fpqn // 4), file=file)
+            name, len(self.sequence), self.loop_point, mcl, beat_len, fpqn // beat_len), file=file)
 
-        self.channel_as_famistudio(Channel.Pulse1, mcl, fpqn, beat_len, scale, file=file)
-        self.channel_as_famistudio(Channel.Pulse2, mcl, fpqn, beat_len, scale, file=file)
-        self.channel_as_famistudio(Channel.Triangle, mcl, fpqn, beat_len, scale, file=file)
-        self.channel_as_famistudio(Channel.Noise, mcl, fpqn, beat_len, scale, file=file)
+        self.channel_as_famistudio(Channel.Pulse1, mcl, fpqn, beat_len, file=file)
+        self.channel_as_famistudio(Channel.Pulse2, mcl, fpqn, beat_len, file=file)
+        self.channel_as_famistudio(Channel.Triangle, mcl, fpqn, beat_len, file=file)
+        self.channel_as_famistudio(Channel.Noise, mcl, fpqn, beat_len, file=file)
 
     def with_intro(self, intro):
         song = Song(intro.pattern[:], intro.sequence[:])
