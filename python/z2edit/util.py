@@ -1,4 +1,5 @@
 import json
+import z2edit
 from z2edit import PyAddress
 
 class ObjectDict(dict):
@@ -91,3 +92,22 @@ def chr_swap(edit, a_tile, b_tile):
     b = edit.read_bytes(b_tile, 16)
     edit.write_bytes(a_tile, b)
     edit.write_bytes(b_tile, a)
+
+def version_tuple(version=z2edit.version):
+    (ver, *_) = version.split('-')
+    return tuple(map(int, ver.split('.')))
+
+def check_version(ver):
+    editor_version = version_tuple()
+    if callable(ver):
+        return ver(editor_version)
+    if isinstance(ver, str):
+        ver = version_tuple(ver)
+    if isinstance(ver, tuple):
+        return editor_version >= ver
+    print('Cannot compare editor version %r with %r' % (editor_version, ver))
+    return False
+
+def check_version_or_die(ver):
+    if not check_version(ver):
+        raise Exception('Require editor version >= %r' % ver, z2edit.version, ver)

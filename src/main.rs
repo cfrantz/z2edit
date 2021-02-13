@@ -2,6 +2,7 @@
 extern crate error_chain;
 extern crate chrono;
 extern crate directories;
+extern crate env_logger;
 extern crate gl;
 extern crate indexmap;
 extern crate pathdiff;
@@ -27,10 +28,12 @@ pub mod util;
 pub mod zelda2;
 
 use directories::ProjectDirs;
+use log::LevelFilter;
 use pyo3::prelude::*;
 use std::fs;
 use std::io;
 use structopt::StructOpt;
+use util::build;
 use util::TerminalGuard;
 
 use crate::errors::*;
@@ -83,6 +86,7 @@ fn run(py: Python) -> Result<()> {
     module.add_class::<Project>()?;
     module.add_class::<Text>()?;
     module.setattr("app", app)?;
+    module.setattr("version", build::version())?;
     let pycfg = Py::new(py, PyConfig {})?;
     module.setattr("config", pycfg)?;
 
@@ -95,7 +99,9 @@ fn run(py: Python) -> Result<()> {
 }
 
 fn main() {
-    env_logger::init();
+    let mut builder = env_logger::Builder::from_default_env();
+    builder.filter(None, LevelFilter::Info).init();
+    info!("Z2Edit version {}", build::version());
 
     let _mode = TerminalGuard::new();
     Python::with_gil(|py| {

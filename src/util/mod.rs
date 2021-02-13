@@ -21,3 +21,13 @@ pub fn clamp<T: PartialOrd>(a: T, mn: T, mx: T) -> T {
         a
     }
 }
+
+pub mod build {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+
+    pub fn version() -> &'static str {
+        let v = GIT_VERSION.unwrap_or(PKG_VERSION);
+        // Git tags start with 'v'
+        return v.trim_start_matches(|c: char| !c.is_digit(10));
+    }
+}

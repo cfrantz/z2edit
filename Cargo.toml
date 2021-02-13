@@ -3,11 +3,13 @@ name = "z2e2"
 version = "1.99.0"
 authors = ["Chris Frantz <frantzcj@gmail.com>"]
 edition = "2018"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 # Basic application stuff
+built = "0.4.4"
 chrono = "0.4"
 structopt = "0.3.18"
 log = "0.4"
@@ -47,3 +49,6 @@ imgui-sdl2 = {version="*", path="third_party/rust-imgui-sdl2" }
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.18"
+
+[build-dependencies]
+built = {version="0.4.4", features=["git2"]}
