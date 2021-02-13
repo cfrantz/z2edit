@@ -17,7 +17,6 @@ extern crate rand;
 extern crate rustyline;
 extern crate sha2;
 extern crate shellwords;
-extern crate simplelog;
 extern crate typetag;
 extern crate whoami;
 
@@ -29,7 +28,6 @@ pub mod zelda2;
 
 use directories::ProjectDirs;
 use pyo3::prelude::*;
-use simplelog::*;
 use std::fs;
 use std::io;
 use structopt::StructOpt;
@@ -97,13 +95,7 @@ fn run(py: Python) -> Result<()> {
 }
 
 fn main() {
-    CombinedLogger::init(vec![TermLogger::new(
-        LevelFilter::Info,
-        Config::default(),
-        TerminalMode::Mixed,
-    )
-    .unwrap()])
-    .unwrap();
+    env_logger::init();
 
     let _mode = TerminalGuard::new();
     Python::with_gil(|py| {
