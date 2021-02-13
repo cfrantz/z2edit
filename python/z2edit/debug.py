@@ -1,7 +1,8 @@
 import z2edit
-from z2edit import PyAddress
+from z2edit import PyAddress, Text
 
 _last = PyAddress.prg(-1, 0xc000)
+_z2text = False
 
 def _convert(address, b=None):
     global _last
@@ -13,15 +14,28 @@ def _convert(address, b=None):
         return PyAddress.prg(b, address)
     return PyAddress.prg(_last.bank()[1], address)
 
+def _chr(val):
+    global _z2text
+    if _z2text:
+        val = ord(Text.from_zelda2(bytes([val])))
+
+    val = chr(val) if val >= 32 and val < 127 else '.'
+    return val
 
 def _get_rom(rom):
     if rom is None:
         rom = z2edit.app[0][-1]
     return rom
 
+def set_text(text=None):
+    global _z2text
+    if text is not None:
+        _z2text = bool(text)
 
-def db(address=None, length=64, b=None, rom=None):
+
+def db(address=None, length=64, b=None, rom=None, text=None):
     global _last
+    set_text(text)
     _last = _convert(address, b)
     rom = _get_rom(rom)
     buf = []
@@ -36,7 +50,7 @@ def db(address=None, length=64, b=None, rom=None):
             buf = []
 
         print(' %02x' % val, end='')
-        buf.append(chr(val) if val >= 32 and val < 127 else '.')
+        buf.append(_chr(val))
         _last += 1
 
     i = 16 if length % 16 == 0 else length % 16
@@ -44,8 +58,9 @@ def db(address=None, length=64, b=None, rom=None):
     print('%*s  %s' % (i, '', ''.join(buf)))
 
 
-def dw(address=None, length=32, b=None, rom=None):
+def dw(address=None, length=32, b=None, rom=None, text=None):
     global _last
+    set_text(text)
     _last = _convert(address, b)
     rom = _get_rom(rom)
     buf = []
@@ -61,8 +76,8 @@ def dw(address=None, length=32, b=None, rom=None):
             buf = []
 
         print(' %02x%02x' % (val2, val1), end='')
-        buf.append(chr(val2) if val2 >= 32 and val2 < 127 else '.')
-        buf.append(chr(val1) if val1 >= 32 and val1 < 127 else '.')
+        buf.append(_chr(val2))
+        buf.append(_chr(val1))
         _last += 2
 
     i = 16 if length % 8 == 0 else length % 8
