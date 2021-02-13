@@ -1210,7 +1210,7 @@ impl SideviewGui {
                     &self.items,
                     &|x| Cow::Borrowed(&x.0),
                 ) {
-                    *item = self.objects[sel].1 as i32;
+                    *item = self.items[sel].1 as i32;
                     action.set(EditAction::Update);
                 }
                 width.pop(ui);
