@@ -15,8 +15,9 @@ else
     CARGO_RELEASE=""
 fi
 
-export PYO3_CROSS_INCLUDE_DIR=/usr/include/python3.8/
+export PYO3_CROSS_INCLUDE_DIR="${PROJECTDIR}/windows/python/include"
 export PYO3_CROSS_LIB_DIR="${PROJECTDIR}/windows/python/"
+export PYO3_CROSS_PYTHON_VERSION=3.8
 cargo build --target "x86_64-pc-windows-gnu" $CARGO_RELEASE
 
 PYTHON_FILES=$(find ./python -name "*.py")
