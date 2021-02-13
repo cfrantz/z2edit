@@ -72,7 +72,7 @@ impl ImportRom {
     pub fn new(file: FileResource) -> Result<Box<ImportRom>> {
         match &file {
             FileResource::Name(filename) => {
-                if filename.as_ref().is_file() {
+                if !filename.as_ref().is_file() {
                     return Err(ErrorKind::NotFound(format!("{:?}", filename)).into());
                 }
             }
