@@ -70,6 +70,7 @@ class Asm:
         ".ORG": [  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
         ".ASSERT_ORG": [  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
         ".BANK":[  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
+        ".REPEATB":[  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, 0xFF, ],
 
         "ADC": [ 0x6d, 0x7d, 0x79,   -1, 0x69,   -1, 0x61,   -1, 0x71,   -1, 0x65, 0x75,   -1,   -1, ],
         "AND": [ 0x2d, 0x3d, 0x39,   -1, 0x29,   -1, 0x21,   -1, 0x31,   -1, 0x25, 0x35,   -1,   -1, ],
@@ -515,6 +516,16 @@ class Asm:
                 val >>= 8
         return None
 
+    def repeatb(self, operand):
+        data = operand.split(',')
+        if len(data) != 2:
+            raise OperandError('Expecting exactly 2 operands')
+        length = self.parse_int(data[0].strip())
+        val = self.parse_int(data[1].strip())
+        for _ in range(length):
+            self.write(self.org, val & 0xFF)
+            self.org += 1
+
     def parse_line(self, line):
         orig_line = line
         # Strip comments and transform to upper case
@@ -545,6 +556,8 @@ class Asm:
         # Handle data definitions
         if opcode in ('.DB', '.DW', '.DD'):
             return self.parse_data(opcode, operand)
+        if opcode == '.REPEATB':
+            return self.repeatb(operand)
 
         # Valid opcode?
         info = self.mnemonic.get(opcode)
