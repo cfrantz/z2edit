@@ -19,11 +19,17 @@ pub struct Connectivity {
 impl Connectivity {
     pub fn from_rom(edit: &Rc<Edit>) -> Result<Self> {
         let mut result = Connectivity::default();
+        result.rescan(edit)?;
+        Ok(result)
+    }
+
+    pub fn rescan(&mut self, edit: &Rc<Edit>) -> Result<()> {
+        self.per_screen.clear();
         let config = Config::get(&edit.config())?;
         for ocfg in config.overworld.map.iter() {
-            result.explore_overworld(edit, ocfg, &config)?;
+            self.explore_overworld(edit, ocfg, &config)?;
         }
-        Ok(result)
+        Ok(())
     }
 
     pub fn overworld_connector(&self, room: &IdPath) -> Option<&IdPath> {

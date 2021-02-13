@@ -861,6 +861,7 @@ impl RomData for Overworld {
         for connector in self.connector.iter() {
             connector.pack(edit)?;
         }
+        edit.connectivity.borrow_mut().rescan(edit)?;
         Ok(())
     }
 

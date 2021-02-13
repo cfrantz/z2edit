@@ -167,6 +167,9 @@ impl Project {
             // For commit zero, `pack` loads the ROM which is needed for
             // the connectivity scan.
             commit.edit.borrow().pack(&commit)?;
+            commit
+                .connectivity
+                .replace(Connectivity::from_rom(&commit)?);
         } else {
             let last = &self.edits[index - 1];
             //info!("Project::replay: {}.unpack", commit.edit.borrow().name());
@@ -194,10 +197,6 @@ impl Project {
             info!("Project::replay: {}.pack", commit.edit.borrow().name());
             commit.edit.borrow().pack(&commit)?;
         }
-        // Rescan connectivity after pack, as connections may have changed.
-        commit
-            .connectivity
-            .replace(Connectivity::from_rom(&commit)?);
         Ok(())
     }
 

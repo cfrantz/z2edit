@@ -909,10 +909,6 @@ impl RomData for Sideview {
             return Err(ErrorKind::IndexError(index).into());
         }
 
-        // Enemy Lists.  Doing this first because the enemy list functions
-        // want to borrow 'rom', so take care of it before our own borrow.
-        self.enemy.write(edit, &self.id, &config)?;
-
         let mut rom = edit.rom.borrow_mut();
         let mut memory = edit.memory.borrow_mut();
 
@@ -1020,6 +1016,14 @@ impl RomData for Sideview {
             };
             rom.write(scfg.availability + index / 2, a)?;
         }
+
+        // Drop the mutable borrow of rom.
+        drop(rom);
+        edit.connectivity.borrow_mut().rescan(edit)?;
+        // Enemy Lists.  We do this last since the room edits can alter
+        // the connectivity.  In order for town dialogs to be assigned properly,
+        // we must have an accuracte connectivity map.
+        self.enemy.write(edit, &self.id, &config)?;
         Ok(())
     }
 
