@@ -103,6 +103,14 @@ impl DragHelper {
         }
     }
 
+    pub fn active(&self) -> Option<usize> {
+        self.number
+    }
+
+    pub fn any_delta(&self) -> Option<[f32; 2]> {
+        self.number.map(|_| self.amount)
+    }
+
     pub fn finalize(&mut self, number: usize) -> Option<[f32; 2]> {
         if Some(number) == self.number {
             self.number = None;

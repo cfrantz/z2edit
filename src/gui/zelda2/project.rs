@@ -2,13 +2,14 @@ use std::path::Path;
 use std::rc::Rc;
 
 use imgui;
-use imgui::{im_str, ImString, MenuItem, StyleColor};
+use imgui::{im_str, ImString, MenuItem, MouseButton, StyleColor};
 use nfd;
 use pyo3::prelude::*;
 use rand::Rng;
 
 use crate::errors::*;
 use crate::gui::app_context::AppContext;
+use crate::gui::util::DragHelper;
 use crate::gui::zelda2::edit::EditDetailsGui;
 use crate::gui::zelda2::enemyattr::EnemyGui;
 use crate::gui::zelda2::hacks::HacksGui;
@@ -35,6 +36,10 @@ const GRAY_HEADER: [f32; 4] = [0.5, 0.5, 0.5, 0.3];
 const GRAY_HEADER_HOVERED: [f32; 4] = [0.5, 0.5, 0.5, 0.8];
 const GRAY_HEADER_ACTIVE: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
 
+const DRAG_HEADER: [f32; 4] = [0.5, 0.5, 0.9, 0.3];
+const DRAG_HEADER_HOVERED: [f32; 4] = [0.5, 0.5, 0.9, 0.8];
+const DRAG_HEADER_ACTIVE: [f32; 4] = [0.5, 0.5, 0.9, 1.0];
+
 pub struct ProjectGui {
     pub visible: Visibility,
     pub changed: bool,
@@ -47,6 +52,9 @@ pub struct ProjectGui {
     pub history_pane: imgui::Id<'static>,
     pub editor_pane: imgui::Id<'static>,
     pub error: ErrorDialog,
+    pub history_origin: [f32; 2],
+    pub drag_helper: DragHelper,
+    pub drag_ypos: Vec<i32>,
 }
 
 impl ProjectGui {
@@ -64,6 +72,9 @@ impl ProjectGui {
             history_pane: imgui::Id::Int(0),
             editor_pane: imgui::Id::Int(0),
             error: ErrorDialog::default(),
+            history_origin: [0.0, 0.0],
+            drag_helper: DragHelper::default(),
+            drag_ypos: Vec::new(),
         })
     }
 
@@ -303,6 +314,24 @@ impl ProjectGui {
                     i += 1;
                 }
                 EditAction::MoveTo(pos) => {
+                    if !(pos == i || pos == i + 1) {
+                        let v = project.edits.remove(i);
+                        if pos < i {
+                            project.edits.insert(pos, v);
+                            if first_action == usize::MAX {
+                                first_action = i;
+                            }
+                        } else {
+                            project.edits.insert(pos - 1, v);
+                            if first_action == usize::MAX {
+                                first_action = pos - 1;
+                            }
+                        }
+                        self.changed = true;
+                        self.want_autosave = true;
+                    }
+                }
+                EditAction::Swap(_, pos) => {
                     project.edits.swap(i, pos);
                     if first_action == usize::MAX {
                         first_action = if i < pos { i } else { pos };
@@ -347,7 +376,12 @@ impl ProjectGui {
         let meta = edit.meta.borrow();
         let is_open = self.is_window_open(meta.timestamp);
         let mut error_state = error_state;
-        let header = if error_state || meta.skip_pack {
+        let drag_pos = self.drag_helper.delta(index as usize);
+        let cursor = ui.cursor_pos();
+
+        let header = if Some(index as usize) == self.drag_helper.active() {
+            Some((DRAG_HEADER, DRAG_HEADER_HOVERED, DRAG_HEADER_ACTIVE))
+        } else if error_state || meta.skip_pack {
             Some((GRAY_HEADER, GRAY_HEADER_HOVERED, GRAY_HEADER_ACTIVE))
         } else if !edit.error.borrow().is_empty() {
             error_state = true;
@@ -355,6 +389,25 @@ impl ProjectGui {
         } else {
             None
         };
+
+        if Some(index as usize) == self.drag_helper.active() {
+            ui.set_cursor_pos(drag_pos);
+        } else {
+            if let Some(d) = self.drag_helper.any_delta() {
+                let mut i = match self.drag_ypos.binary_search(&(d[1] as i32)) {
+                    Ok(v) => v as isize,
+                    Err(v) => v as isize,
+                };
+                if i < 1 {
+                    i = 1
+                };
+                if i == index && Some(i as usize - 1) != self.drag_helper.active() {
+                    let _ = imgui::ColorButton::new(im_str!("##dragto"), DRAG_HEADER_HOVERED)
+                        .size([200.0, 4.0])
+                        .build(ui);
+                }
+            }
+        }
         let color_id = header.map(|h| {
             ui.push_style_colors(&[
                 (StyleColor::Header, h.0),
@@ -363,8 +416,34 @@ impl ProjectGui {
             ])
         });
         let hdr = imgui::CollapsingHeader::new(&ImString::new(&meta.label)).build(ui);
-        if let Some(cid) = color_id {
-            cid.pop(ui);
+        color_id.map(|id| id.pop(ui));
+
+        if ui.is_item_active() {
+            if ui.is_mouse_dragging(MouseButton::Left) {
+                self.drag_helper.start(index as usize);
+                let mp = ui.io().mouse_pos;
+                let pos = [
+                    mp[0] - self.history_origin[0],
+                    mp[1] - self.history_origin[1],
+                ];
+                self.drag_helper.position(index as usize, pos);
+                ui.set_cursor_pos(cursor);
+                let id = ui.push_id(index as i32 | 0x7D000000);
+                let _ = imgui::CollapsingHeader::new(&ImString::new(&meta.label)).build(ui);
+                id.pop(ui);
+            }
+        } else {
+            if let Some(d) = self.drag_helper.finalize(index as usize) {
+                let mut i = match self.drag_ypos.binary_search(&(d[1] as i32)) {
+                    Ok(v) => v,
+                    Err(v) => v,
+                };
+                if i < 1 {
+                    i = 1
+                };
+                info!("Dragging to {} => {:?}", d[1], i);
+                edit.action.replace(EditAction::MoveTo(i));
+            }
         }
 
         if ui.popup_context_item(im_str!("menu")) {
@@ -397,13 +476,15 @@ impl ProjectGui {
                 .enabled(index > 1)
                 .build(ui)
             {
-                edit.action.replace(EditAction::MoveTo(index as usize - 1));
+                edit.action
+                    .replace(EditAction::Swap(index as usize, index as usize - 1));
             }
             if MenuItem::new(im_str!("Move Down"))
                 .enabled(index > 0 && index < len - 1)
                 .build(ui)
             {
-                edit.action.replace(EditAction::MoveTo(index as usize + 1));
+                edit.action
+                    .replace(EditAction::Swap(index as usize, index as usize + 1));
             }
             if MenuItem::new(im_str!("Delete"))
                 .enabled(index > 0)
@@ -461,9 +542,14 @@ impl ProjectGui {
                 let editlist = ui.push_id("editlist");
                 let edits = self.project.borrow(py).edits.len();
                 let mut error_state = false;
+                let mut drag_ypos = Vec::new();
+                self.history_origin = ui.cursor_screen_pos();
                 for i in 0..edits {
+                    let pos = ui.cursor_pos();
+                    drag_ypos.push(pos[1] as i32);
                     error_state = self.draw_edit(py, i as isize, error_state, ui);
                 }
+                self.drag_ypos = drag_ypos;
                 editlist.pop(ui);
             });
             token.end(ui);
