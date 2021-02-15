@@ -59,6 +59,7 @@
             sprites: [
                 0x8a,
             ],
+
         ),
         (
             id: "2",
@@ -760,32 +761,57 @@
         hp: Prg(3, 0x9421),
         xp: Prg(3, 0x94d5),
         table_len: 36,
+        town_table: Some((
+            // Enemies [0..35] have their tile mappings in the `mapping` table,
+            // except that in towns [1..6], enemies [13..26] have their
+            // tile mappings the tables referenced by `mapping2`.
+            // To make things easier, `mapping2` is extended to include entries
+            // for towns [0, 7] which point to the right place in the middle
+            // of `mapping`.
+            mapping: Prg(3, 0x94d5),
+            mapping2: [
+                Prg(3, 0x94e2),         // Town 0
+                Prg(3, 0x9630),         // Town 1
+                Prg(3, 0x9644),         // Town 2
+                Prg(3, 0x9658),         // Town 3
+                Prg(3, 0x966c),         // Town 4
+                Prg(3, 0x9680),         // Town 5
+                Prg(3, 0x9696),         // Town 6
+                Prg(3, 0x94e2),         // Town 7
+            ],
+            palette: Prg(3, 0x94f9),
+            table: Prg(3, 0x95d4),
+
+        )),
         enemy: [
         (
+
             id: "0",
             offset: 0,
             name: "Fairy",
-            chr: Chr(0, 0),
-            palette: 0,
-            size: (0, 0),
+            chr: Chr(6, 0),
+            palette: 1,
+            size: (8, 16),
             sprites: [
+                0x6a,
             ],
         ),
         (
             id: "1",
             offset: 1,
-            name: "Candle",
-            chr: Chr(0, 0),
-            palette: 0,
-            size: (0, 0),
+            name: "Red Jar",
+            chr: Chr(6, 0),
+            palette: 2,
+            size: (8, 16),
             sprites: [
+                0x8a,
             ],
         ),
         (
             id: "2",
             offset: 2,
             name: "Door",
-            chr: Chr(2, 0),
+            chr: Chr(6, 0),
             palette: 1,
             size: (8, 48),
             sprites: [
@@ -798,57 +824,63 @@
             id: "3",
             offset: 3,
             name: "Purple Keese",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
-            size: (0, 0),
+            size: (16, 16),
             sprites: [
+                0x4e, 0x4e,
             ],
         ),
         (
             id: "4",
             offset: 4,
             name: "Purble Bot",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
-            size: (0, 0),
+            size: (16, 16),
             sprites: [
+                0xb4, 0xb4,
             ],
         ),
         (
             id: "5",
             offset: 5,
             name: "Bit",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
-            size: (0, 0),
+            size: (16, 16),
             sprites: [
+                0xb4, 0xb4,
             ],
         ),
         (
             id: "6",
             offset: 6,
             name: "Purple Moa",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
-            size: (0, 0),
+            size: (16, 16),
             sprites: [
+                0xb6, 0xb8,
             ],
         ),
         (
             id: "7",
             offset: 7,
-            name: "Purple Keese(?)",
-            chr: Chr(0, 0),
+            name: "Purple Acheman(?)",
+            chr: Chr(6, 0),
             palette: 0,
-            size: (0, 0),
+            size: (16, 32),
             sprites: [
+                0x7c, 0x7e,
+                0x80, 0x82,
             ],
         ),
         (
             id: "8",
             offset: 8,
             name: "Gold Girl (crash?)",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -858,7 +890,7 @@
             id: "9",
             offset: 9,
             name: "Townsperson #??",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -868,27 +900,29 @@
             id: "10",
             offset: 10,
             name: "Ache (talking) #0",
-            chr: Chr(0, 0),
-            palette: 0,
-            size: (0, 0),
+            chr: Chr(6, 0),
+            palette: 2,
+            size: (16, 16),
             sprites: [
+                0x4e, 0x4e,
             ],
         ),
         (
             id: "11",
             offset: 11,
             name: "Bit (talking) #1",
-            chr: Chr(0, 0),
-            palette: 0,
-            size: (0, 0),
+            chr: Chr(6, 0),
+            palette: 3,
+            size: (16, 16),
             sprites: [
+                0xb4, 0xb4,
             ],
         ),
         (
             id: "12",
             offset: 12,
             name: "Invisible Dialog (sign) #2",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -898,7 +932,7 @@
             id: "13",
             offset: 13,
             name: "Immobile Blue Woman / River Man #3",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -908,7 +942,7 @@
             id: "14",
             offset: 14,
             name: "Blue Lumberjack #4",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -922,8 +956,6 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0x74, 0x76,
-                0xd4, 0xd6,
             ],
         ),
         (
@@ -934,8 +966,6 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xc0, 0xc2,
-                0xc4, 0xc6,
             ],
         ),
         (
@@ -946,8 +976,6 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xdc, 0xde,
-                0xe4, 0xe6,
             ],
         ),
         (
@@ -958,15 +986,13 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xf4, 0xf6,
-                0xf8, 0xfa,
             ],
         ),
         (
             id: "19",
             offset: 19,
             name: "Idle Red Lumberjack #9",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -980,15 +1006,13 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xdc, 0xde,
-                0xe4, 0xe6,
             ],
         ),
         (
             id: "21",
             offset: 21,
             name: "Idle Blue Granny #11",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -1002,8 +1026,6 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda,
-                0xe0, 0xe2,
             ],
         ),
         (
@@ -1014,8 +1036,6 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda,
-                0xe0, 0xe2,
             ],
         ),
         (
@@ -1026,15 +1046,13 @@
             palette: 1,
             size: (16, 32),
             sprites: [
-                0xf4, 0xf6,
-                0xf8, 0xfa,
             ],
         ),
         (
             id: "25",
             offset: 25,
             name: "Random Blue Lumberjack #15",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -1044,7 +1062,7 @@
             id: "26",
             offset: 26,
             name: "Random Red Lady W/ Bowl #16",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -1054,7 +1072,7 @@
             id: "27",
             offset: 27,
             name: "Random Red Granny #17",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -1064,7 +1082,7 @@
             id: "28",
             offset: 28,
             name: "Random Blue Lady #18",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -1078,15 +1096,13 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xc0, 0xc2,
-                0xc4, 0xc6,
             ],
         ),
         (
             id: "30",
             offset: 30,
             name: "Walking Red Guy #20",
-            chr: Chr(0, 0),
+            chr: Chr(6, 0),
             palette: 0,
             size: (0, 0),
             sprites: [
@@ -1100,8 +1116,6 @@
             palette: 2,
             size: (16, 32),
             sprites: [
-                0xc0, 0xc2,
-                0xc4, 0xc6,
             ],
         ),
         (
@@ -1112,8 +1126,6 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda,
-                0xe0, 0xe2,
             ],
         ),
         (
@@ -1146,8 +1158,6 @@
             palette: 3,
             size: (16, 32),
             sprites: [
-                0xd8, 0xda,
-                0xe0, 0xe2,
             ],
         ),
         ]
@@ -1171,6 +1181,7 @@
             sprites: [
                 0x6a,
             ],
+
         ),
         (
             id: "1",

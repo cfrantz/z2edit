@@ -58,6 +58,7 @@ pub struct SideviewGui {
     connections: Vec<ImString>,
     text_table: TextTable,
     error: ErrorDialog,
+    town_code: [u32; 4],
 }
 
 impl SideviewGui {
@@ -152,6 +153,7 @@ impl SideviewGui {
             connections: Vec::new(),
             text_table: TextTable::default(),
             error: ErrorDialog::default(),
+            town_code: [0u32; 4],
         });
         ret.list_object_names()?;
         ret.reset_caches();
@@ -211,6 +213,18 @@ impl SideviewGui {
             }
         }
         self.text_table = TextTable::from_rom(&self.edit).expect("reset_caches");
+        let config = Config::get(&self.edit.config()).expect("reset_caches");
+        for i in 0..4 {
+            if let Some(id) = self.edit.overworld_connector(&self.sideview.id.extend(i)) {
+                self.town_code[i] = config
+                    .overworld
+                    .town_code(id.usize_last().expect("reset_caches"))
+                    .unwrap_or(0) as u32;
+            } else {
+                self.town_code[i] = 0u32;
+            }
+        }
+        info!("town_code = {:?}", self.town_code);
     }
 
     fn list_object_names(&mut self) -> Result<()> {
@@ -803,9 +817,16 @@ impl SideviewGui {
         let y = oy as f32 * scale;
 
         {
+            let screen = (ox >> 4) as usize;
             let image = self
                 .enemy
-                .get(self.sideview.enemy.data[el][index].kind as u8);
+                ._get_cached(
+                    (self.town_code[screen] << 8)
+                        | (self.sideview.enemy.data[el][index].kind as u32),
+                    None,
+                    None,
+                )
+                .expect("draw_enemy_entity");
             image.draw_at([x + origin[0], y + origin[1]], self.scale, ui);
         }
         draw_list

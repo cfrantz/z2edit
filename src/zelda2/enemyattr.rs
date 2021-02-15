@@ -16,6 +16,14 @@ pub mod config {
     pub use crate::zelda2::items::config::Sprite;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct TownSpriteTable {
+        pub mapping: Address,
+        pub mapping2: Vec<Address>,
+        pub palette: Address,
+        pub table: Address,
+    }
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct EnemyGroup {
         pub id: IdPath,
         #[serde(default)]
@@ -26,6 +34,8 @@ pub mod config {
         pub hp: Address,
         pub xp: Address,
         pub table_len: u8,
+        #[serde(default)]
+        pub town_table: Option<TownSpriteTable>,
         pub enemy: Vec<Sprite>,
     }
 

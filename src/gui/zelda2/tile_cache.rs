@@ -32,7 +32,7 @@ pub enum Schema {
 pub struct TileCache {
     schema: Schema,
     edit: Rc<Edit>,
-    cache: RefCell<HashMap<u8, Image>>,
+    cache: RefCell<HashMap<u32, Image>>,
     error: Image,
     error_ref: RefCell<Image>,
     chr_override: Option<Address>,
@@ -50,7 +50,7 @@ impl TileCache {
         TileCache {
             schema: schema,
             edit: Rc::clone(edit),
-            cache: RefCell::new(HashMap::<u8, Image>::new()),
+            cache: RefCell::new(HashMap::<u32, Image>::new()),
             error: error_image.clone(),
             error_ref: RefCell::new(error_image),
             chr_override: None,
@@ -164,7 +164,7 @@ impl TileCache {
         Ok(())
     }
 
-    fn get_raw_tile(&self, tile: u8, chr: Address, palette: &[u32]) -> Result<Image> {
+    fn get_raw_tile(&self, tile: u32, chr: Address, palette: &[u32]) -> Result<Image> {
         let chr = self.chr_override.unwrap_or(chr);
         let mut image = Image::new(8, 8);
         self.blit_raw(
@@ -182,7 +182,7 @@ impl TileCache {
 
     fn get_overworld_tile(
         &self,
-        tile: u8,
+        tile: u32,
         config: &str,
         id: &IdPath,
         table: Option<&[u8]>,
@@ -248,7 +248,7 @@ impl TileCache {
 
     fn get_meta_tile(
         &self,
-        tile: u8,
+        tile: u32,
         config: &str,
         id: &IdPath,
         palidx: i32,
@@ -310,7 +310,7 @@ impl TileCache {
 
     fn get_raw_sprite(
         &self,
-        tile: u8,
+        tile: u32,
         config: &str,
         chr: Address,
         id: &IdPath,
@@ -328,17 +328,37 @@ impl TileCache {
         self.get_sprite_helper(&sprite_info, palette)
     }
 
-    fn get_enemy_sprite(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
+    fn get_enemy_sprite(&self, tile: u32, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
         let config = Config::get(config)?;
         let palette = config.palette.find_sprite(id, palidx as usize)?;
-        let (_, sprite_info) = config.enemy.find_by_index(id, tile)?;
-        self.get_sprite_helper(sprite_info, palette)
+        let (group, sprite_info) = config.enemy.find_by_index(id, tile as u8)?;
+        let mut sprite_info = sprite_info.clone();
+
+        if sprite_info.sprites.is_empty() {
+            if let Some(town_table) = &group.town_table {
+                let rom = self.edit.rom.borrow();
+                let town_code = (tile >> 8) as usize;
+                let tile = tile & 0xFF;
+                let index = if tile < 13 || tile >= 27 {
+                    rom.read(town_table.mapping + tile)?
+                } else {
+                    rom.read(town_table.mapping2[town_code] + tile - 13)?
+                };
+                let table = rom.read_bytes(town_table.table + (index & 0x7F), 4)?;
+                sprite_info.palette = rom.read(town_table.palette + tile)? & 0x3;
+                sprite_info.size = (16, 32);
+                for t in table {
+                    sprite_info.sprites.push(*t as i32);
+                }
+            }
+        }
+        self.get_sprite_helper(&sprite_info, palette)
     }
 
-    fn get_item_sprite(&self, tile: u8, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
+    fn get_item_sprite(&self, tile: u32, config: &str, id: &IdPath, palidx: i32) -> Result<Image> {
         let config = Config::get(config)?;
         let palette = config.palette.find_sprite(id, palidx as usize)?;
-        let mut sprite_info = config.items.find(tile)?.clone();
+        let mut sprite_info = config.items.find(tile as u8)?.clone();
 
         if sprite_info.sprites.is_empty() {
             let addr = config.items.sprite_table + tile * 2;
@@ -398,7 +418,7 @@ impl TileCache {
         Ok(image)
     }
 
-    fn _get_raw(&self, tile: u8, table: Option<&[u8]>, ovpal: Option<i32>) -> Result<Image> {
+    fn _get_raw(&self, tile: u32, table: Option<&[u8]>, ovpal: Option<i32>) -> Result<Image> {
         let image = match &self.schema {
             Schema::None => {
                 return Err(ErrorKind::NotFound("Schema::None".to_string()).into());
@@ -421,9 +441,9 @@ impl TileCache {
         Ok(image)
     }
 
-    fn _get_cached(
+    pub fn _get_cached(
         &self,
-        tile: u8,
+        tile: u32,
         table: Option<&[u8]>,
         ovpal: Option<i32>,
     ) -> Result<Ref<'_, Image>> {
@@ -439,7 +459,7 @@ impl TileCache {
     }
 
     pub fn get(&self, tile: u8) -> Ref<'_, Image> {
-        match self._get_cached(tile, None, None) {
+        match self._get_cached(tile as u32, None, None) {
             Ok(v) => v,
             Err(e) => {
                 error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
@@ -449,7 +469,7 @@ impl TileCache {
     }
 
     pub fn get_alternate(&self, tile: u8, table: &[u8], ovpal: Option<i32>) -> Ref<'_, Image> {
-        match self._get_cached(tile, Some(table), ovpal) {
+        match self._get_cached(tile as u32, Some(table), ovpal) {
             Ok(v) => v,
             Err(e) => {
                 error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
@@ -464,7 +484,7 @@ impl TileCache {
         table: &[u8],
         ovpal: Option<i32>,
     ) -> Cow<'_, Image> {
-        match self._get_raw(tile, Some(table), ovpal) {
+        match self._get_raw(tile as u32, Some(table), ovpal) {
             Ok(i) => Cow::Owned(i),
             Err(e) => {
                 error!("TileCache: could not look up 0x{:02x}: {:?}", tile, e);
