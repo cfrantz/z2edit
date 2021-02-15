@@ -1377,7 +1377,16 @@ impl Gui for SideviewGui {
         }
         let config = Config::get(&self.edit.config()).unwrap();
         let scfg = config.sideview.find(&self.sideview.id).unwrap();
-        imgui::Window::new(&im_str!("Sideview##{}", self.win_id))
+        let title = if self.commit_index == -1 {
+            im_str!(
+                "Sideview Editor: {}##{}",
+                self.names[self.selector.value()],
+                self.win_id
+            )
+        } else {
+            im_str!("{}##{}", self.edit.label(), self.win_id)
+        };
+        imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {

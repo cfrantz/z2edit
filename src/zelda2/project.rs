@@ -431,6 +431,10 @@ impl Edit {
         Ref::map(self.meta.borrow(), |meta| &meta.config)
     }
 
+    pub fn label(&self) -> Ref<'_, String> {
+        Ref::map(self.meta.borrow(), |meta| &meta.label)
+    }
+
     pub fn export(&self, filename: &Path) -> Result<String> {
         let rom = self.rom.borrow();
         rom.save(filename)?;

@@ -480,7 +480,8 @@ impl Gui for MultiMapGui {
         if !visible {
             return;
         }
-        imgui::Window::new(&im_str!("Multimap Viewer##{}", self.win_id))
+        let title = im_str!("Multimap: {}##{}", self.conn_id, self.win_id);
+        imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {

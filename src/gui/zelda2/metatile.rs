@@ -302,7 +302,12 @@ impl Gui for MetatileGroupGui {
         if !visible {
             return;
         }
-        imgui::Window::new(&im_str!("Metatile Editor##{}", self.win_id))
+        let title = if self.commit_index == -1 {
+            im_str!("Metatile Editor##{}", self.win_id)
+        } else {
+            im_str!("{}##{}", self.edit.label(), self.win_id)
+        };
+        imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {

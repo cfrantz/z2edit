@@ -96,7 +96,7 @@ impl EditDetailsGui {
 
 impl Gui for EditDetailsGui {
     fn draw(&mut self, project: &mut Project, ui: &imgui::Ui) {
-        let title = im_str!("{} Details", self.edit.meta.borrow().label);
+        let title = im_str!("Details: {}", self.edit.label());
         imgui::Window::new(&title)
             .unsaved_document(self.changed)
             .build(ui, || {
