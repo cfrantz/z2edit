@@ -155,12 +155,7 @@ impl RomData for TextTable {
             let index = item.id.usize_last()?;
             let str_ptr = rom.read_pointer(table + index * 2)?;
             let str_ptr = memory.alloc_near(str_ptr, item.text.len() as u16 + 1)?;
-            info!(
-                "Writing {:?} to {:x?}: '{}'",
-                item.id.to_string(),
-                str_ptr,
-                item.text
-            );
+            info!("Writing {} to {:x?}: '{}'", item.id, str_ptr, item.text);
             rom.write_pointer(table + index * 2, str_ptr)?;
             rom.write_terminated(str_ptr, &Text::to_zelda2(&item.text), 0xff)?;
         }

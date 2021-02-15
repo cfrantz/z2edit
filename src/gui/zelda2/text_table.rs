@@ -7,7 +7,6 @@ use crate::errors::*;
 use crate::gui::zelda2::Gui;
 use crate::gui::ErrorDialog;
 use crate::gui::Visibility;
-use crate::idpath;
 use crate::zelda2::config::Config;
 use crate::zelda2::project::{Edit, Project, RomData};
 use crate::zelda2::text_encoding::Text;
@@ -92,7 +91,7 @@ impl TextTableGui {
             for (j, (ot, nt)) in self.orig[i].iter().zip(self.text[i].iter()).enumerate() {
                 if ot != nt {
                     edit.data.push(TextItem {
-                        id: idpath!(tcfg.id, j),
+                        id: tcfg.id.extend(j),
                         text: nt.to_str().into(),
                     });
                 }
