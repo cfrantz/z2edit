@@ -34,6 +34,21 @@ class ObjectDict(dict):
         return json.dumps(self, indent=4)
 
 
+class Config(object):
+    "Config is a convenience proxy for configuration objects."
+
+    @staticmethod
+    def get(name):
+        return ObjectDict.from_json(z2edit.config[name])
+
+    @staticmethod
+    def put(name, config):
+        z2edit.config[name] = config.to_json()
+
+    @staticmethod
+    def keys():
+        return z2edit.config.keys()
+
 
 # A 4x8 bitmap for writing a hexcode into a CHR tile.
 _CHRXDIGITS = [
