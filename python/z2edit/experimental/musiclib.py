@@ -7,13 +7,13 @@ import enum
 import sys
 from collections import defaultdict
 
-from z2edit import PyAddress
+from z2edit import Address
 
 MIDI_PPQN = 120
-OVERWORLD_SONG_TABLE = PyAddress.prg(6, 0xa000)
-TOWN_SONG_TABLE      = PyAddress.prg(6, 0xa3ca)
-PALACE_SONG_TABLE    = PyAddress.prg(6, 0xa62f)
-GP_SONG_TABLE        = PyAddress.prg(6, 0xa936)
+OVERWORLD_SONG_TABLE = Address.prg(6, 0xa000)
+TOWN_SONG_TABLE      = Address.prg(6, 0xa3ca)
+PALACE_SONG_TABLE    = Address.prg(6, 0xa62f)
+GP_SONG_TABLE        = Address.prg(6, 0xa936)
 
 class Note(int):
 

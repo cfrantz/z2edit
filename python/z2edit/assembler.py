@@ -20,7 +20,7 @@ import re
 
 try:
     import z2edit
-    _address_adaptor = z2edit.PyAddress.prg
+    _address_adaptor = z2edit.Address.prg
 except ImportError:
     _address_adaptor = lambda bank, addr: (bank, addr)
 

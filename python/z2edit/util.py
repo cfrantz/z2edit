@@ -1,6 +1,6 @@
 import json
 import z2edit
-from z2edit import PyAddress
+from z2edit import Address
 
 class ObjectDict(dict):
     "ObjectDict is a `dict` with attribute access to the dictionary contents."
@@ -56,7 +56,7 @@ _CHRXDIGITS = [
 ]
 
 def Tile(bank, char):
-    return PyAddress.chr(bank, char*16)
+    return Address.chr(bank, char*16)
 
 def chr_clear(edit, tile, with_id=False):
     (seg, _) = tile.bank()

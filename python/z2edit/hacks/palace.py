@@ -1,5 +1,5 @@
 # Hacks for how to detect P2 vs P5.
-from z2edit import PyAddress
+from z2edit import Address
 
 def palace2_must_be_connection52(edit, asm):
     """Palace 2 must be connection #52"""
@@ -18,7 +18,7 @@ def palace2_must_be_connection52(edit, asm):
 def palace2_even_palace5_odd(edit, asm):
     """P2 even / P5 odd"""
     length = 7
-    freespace = edit.alloc_near(PyAddress.prg(4, 0xbfe0), length)
+    freespace = edit.alloc_near(Address.prg(4, 0xbfe0), length)
     print("Using freespace at {}".format(freespace))
     freespace = freespace.addr()
     asm(f"""
@@ -50,7 +50,7 @@ def palace2_even_palace5_odd(edit, asm):
 def palace2_odd_palace5_even(edit, asm):
     """P2 odd / P5 even"""
     length = 7
-    freespace = edit.alloc_near(PyAddress.prg(4, 0xbfe0), length)
+    freespace = edit.alloc_near(Address.prg(4, 0xbfe0), length)
     print("Using freespace at {}".format(freespace))
     freespace = freespace.addr()
     asm(f"""
@@ -83,7 +83,7 @@ def continue_from_palaces(edit, asm):
     length = 45
     # FIXME: should be able to use -1, but freespace allocator doesn't support it.
     bank = 7
-    freespace = edit.alloc_near(PyAddress.prg(bank, 0xd39a), length)
+    freespace = edit.alloc_near(Address.prg(bank, 0xd39a), length)
     print("Using freespace at {}".format(freespace))
     freespace = freespace.addr()
     asm(f"""

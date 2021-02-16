@@ -1,6 +1,6 @@
 import json
 import z2edit
-from z2edit import PyAddress
+from z2edit import Address
 from z2edit.util import ObjectDict
 
 class KeepoutFixup(object):
@@ -13,7 +13,7 @@ class KeepoutFixup(object):
 
     def report(self):
         for bank in range(8):
-            (chunks, total) = self.edit.report(PyAddress.prg(bank, 0))
+            (chunks, total) = self.edit.report(Address.prg(bank, 0))
             print("Bank {}: {} bytes in {} chunks".format(bank, total, chunks))
 
     def bank3_code_move(self):
@@ -22,14 +22,14 @@ class KeepoutFixup(object):
         # entry at $9bf9 points to the code in the keepout region.  Read it to
         # check if its in the keepout region (or maybe has already beend moved),
         # and then move it if needed.
-        ptr = PyAddress.prg(3, 0x9bf9)
+        ptr = Address.prg(3, 0x9bf9)
         code = self.edit.read_pointer(ptr)
         koaddr = self.address_in_keepout(code)
         if koaddr is not None:
             print('Code in bank3 at {} in keepout range at {}... '.format(code, koaddr), end='')
             # The code go anywhere, but 0x84da is optimial because its nearly
             # an exact match on size.
-            dst = self.edit.alloc_near(PyAddress.prg(3, 0x84da), 35)
+            dst = self.edit.alloc_near(Address.prg(3, 0x84da), 35)
             print('moved to {}.'.format(dst))
             self.copy_and_clear(dst, code, 35)
             self.edit.write_pointer(ptr, dst)
@@ -40,7 +40,7 @@ class KeepoutFixup(object):
 
     def address_in_keepout(self, addr):
         for (koaddr, kolen) in self.config.misc.freespace.keepout:
-            koaddr = PyAddress(koaddr)
+            koaddr = Address(koaddr)
             if addr.in_range(koaddr, kolen):
                 return koaddr
         return None
@@ -58,7 +58,7 @@ class KeepoutFixup(object):
 
     def check_group(self, group):
         for i in range(0, group.length):
-            grpaddr = PyAddress(group.address)
+            grpaddr = Address(group.address)
             mapaddr = self.edit.read_pointer(grpaddr + i*2)
             koaddr = self.address_in_keepout(mapaddr)
             if koaddr is not None:

@@ -1,5 +1,5 @@
 # Hacks related to magic spells
-from z2edit import PyAddress
+from z2edit import Address
 
 def flexible_bits(edit, asm):
     """Allow Spells to activate multiple effects based on set bits.
@@ -9,7 +9,7 @@ def flexible_bits(edit, asm):
     spell(s) to activate.
     """
     length = 8
-    freespace = edit.alloc_near(PyAddress.prg(0, 0xbfe0), length)
+    freespace = edit.alloc_near(Address.prg(0, 0xbfe0), length)
     print("Using freespace at {}".format(freespace))
     freespace = freespace.addr()
     asm(f"""

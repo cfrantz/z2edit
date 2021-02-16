@@ -39,7 +39,7 @@ use util::TerminalGuard;
 use crate::errors::*;
 use crate::gui::app::App;
 use crate::gui::app_context::{AppContext, CommandlineArgs};
-use crate::util::pyaddress::PyAddress;
+use crate::util::pyaddress::Address;
 use crate::zelda2::config::Config as Zelda2Config;
 use crate::zelda2::config::PyConfig;
 use crate::zelda2::project::Project;
@@ -82,7 +82,7 @@ fn run(py: Python) -> Result<()> {
 
     let module = PyModule::import(py, "z2edit")?;
     app.borrow(py).pythonize(py, module)?;
-    module.add_class::<PyAddress>()?;
+    module.add_class::<Address>()?;
     module.add_class::<Project>()?;
     module.add_class::<Text>()?;
     module.setattr("app", app)?;

@@ -1,5 +1,5 @@
 import z2edit
-from z2edit import PyAddress
+from z2edit import Address
 from z2edit.util import ObjectDict, Tile, chr_clear, chr_copy
 
 EMPTY = []
@@ -148,8 +148,8 @@ BANKS = [
 
 
 def chr_bank_copy(edit, dstbank, srcbank):
-    data = edit.read_bytes(PyAddress.chr(srcbank, 0), 4096)
-    edit.write_bytes(PyAddress.chr(dstbank, 0), data)
+    data = edit.read_bytes(Address.chr(srcbank, 0), 4096)
+    edit.write_bytes(Address.chr(dstbank, 0), data)
 
 # This version of an MMC5 conversion maintains a lot of compatability with
 # the way the vanilla game used MMC1:
@@ -165,16 +165,16 @@ def chr_bank_copy(edit, dstbank, srcbank):
 def hack(edit, asm):
     # Update the NES header to say we're using MMC5.  Preseve the low nybble
     # containing flags and write the mapper number into the upper nybble.
-    mapper = edit.read(PyAddress.file(6))
+    mapper = edit.read(Address.file(6))
     mapper = (mapper & 0xF) | 0x50
-    edit.write(PyAddress.file(6), mapper)
+    edit.write(Address.file(6), mapper)
 
     # Obliterate the per-bank bankswitch code since bank 7 is always mapped.
     # This frees up 112 bytes in each bank.
     blank = b'\xFF' * 112
     for bank in range(0, 7):
-        addr = PyAddress.prg(bank, 0xbf70)
-        edit.write_bytes(PyAddress.prg(bank, 0xbf70), blank)
+        addr = Address.prg(bank, 0xbf70)
+        edit.write_bytes(Address.prg(bank, 0xbf70), blank)
         edit.free(addr, len(blank))
 
     asm("""

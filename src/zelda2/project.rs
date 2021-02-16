@@ -25,7 +25,7 @@ use crate::gui::zelda2::Gui;
 use crate::nes::freespace::FreeSpace;
 use crate::nes::IdPath;
 use crate::nes::{Address, Buffer, MemoryAccess};
-use crate::util::pyaddress::PyAddress;
+use crate::util::pyaddress::Address as PyAddress;
 use crate::util::relative_path::{PathConverter, RelativePath};
 use crate::util::UTime;
 use crate::zelda2::config::Config;

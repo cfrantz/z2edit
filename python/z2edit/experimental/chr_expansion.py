@@ -1,5 +1,5 @@
 import z2edit
-from z2edit import PyAddress
+from z2edit import Address
 from z2edit.util import ObjectDict
 
 INES_CHR_LEN = 8192
@@ -20,7 +20,7 @@ def hack(edit, asm, num_chr_banks):
     # The vanilla layout considers the CHR banks as MMC1 considers them:
     # 4KiB banks.  Since we want to add banks to the end, we use the last
     # bank number.
-    address = PyAddress.chr(chr_layout.length // chr_layout.banksize, 0)
+    address = Address.chr(chr_layout.length // chr_layout.banksize, 0)
     edit.insert(address, blank)
 
 
@@ -30,7 +30,7 @@ def hack(edit, asm, num_chr_banks):
     z2edit.config[name] = config.to_json()
 
     # Update the header to contain the new count of CHR banks.
-    edit.write(PyAddress.file(5), chr_layout.length // INES_CHR_LEN)
+    edit.write(Address.file(5), chr_layout.length // INES_CHR_LEN)
 
     # Now tell the project about the new config
     meta['extra'] = {'next_config': name}

@@ -1,18 +1,18 @@
 import z2edit
-from z2edit import PyAddress, Text
+from z2edit import Address, Text
 
-_last = PyAddress.prg(-1, 0xc000)
+_last = Address.prg(-1, 0xc000)
 _z2text = False
 
 def _convert(address, b=None):
     global _last
-    if isinstance(address, PyAddress):
+    if isinstance(address, Address):
         return address
     if address is None:
         return _last
     if b is not None:
-        return PyAddress.prg(b, address)
-    return PyAddress.prg(_last.bank()[1], address)
+        return Address.prg(b, address)
+    return Address.prg(_last.bank()[1], address)
 
 def _chr(val):
     global _z2text
