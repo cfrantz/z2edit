@@ -1,0 +1,64 @@
+######################################################################
+# Disable jump unless jump spell activated
+# Jump-spell active means normal jump, not "high jump".
+######################################################################
+
+set bank 0
+set text 1
+
+asm b=0
+.org $bd00
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Part 1: helper code for jump and fast spells.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+fast_table:
+.db $26,$da
+
+fast_accel_check:
+    pha                     ; Save A, currently holding Link's speed
+    lda $076f               ; Get spell status
+    and #$08                ; Fairy spell is $08
+    bne fast_check          ; compare against the fast_table
+    pla                     ; Get speed
+    cmp $93b3,Y             ; Check against normal speed table
+    rts                     ; Return
+fast_check:
+    pla                     ; Get speed
+    cmp fast_table,Y        ; Check against fast speed table
+    rts                     ; Return
+jump_check:
+    lda $d0                     ; Is jump spell active
+    beq jump_check_done         ; no, nothing to do.
+    lda $0741                   ; Get buttons state
+jump_check_done:
+    rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Part 2: Patch our code into the jump routine
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+.org $94fe
+    jsr jump_check              ; replace button check with our check
+.org $9516
+    lda #0                      ; never use the high-jump code.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Part 3: Replace FAIRY with FAST
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Patch the two checks in the acceleration routine to use our
+; special check routine
+.org $93ff
+    jsr fast_accel_check
+.org $940e
+    jsr fast_accel_check
+; Disable FAIRY spell's normal function (point to RTS instruction).
+.org $8e4e
+    .dw $91ae
+
+.end
+
+
+######################################################################
+# Part 4: Rename FAIRY spell to FAST spell.
+######################################################################
+wtp 0x9c54 "FAST......."
