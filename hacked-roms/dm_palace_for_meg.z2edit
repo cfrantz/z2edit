@@ -1,0 +1,18 @@
+asm b=7 0
+;; Fix the overworld return logic to support palaces on DM.
+;; Maze Island is dead to us.
+
+.org $cd4a
+    lda $0706               ; overworld region
+    cmp #2                  ; region two is in bank 2
+    beq load_bank
+    lda #1                  ; regions zero and one are in bank 1
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+load_bank:
+
+.end
