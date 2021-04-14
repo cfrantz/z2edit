@@ -45,7 +45,7 @@ impl ErrorDialog {
 
             ui.popup_modal(&im_str!("Error: {}##{}", info.title, info.id))
                 .title_bar(true)
-                .build(|| {
+                .build(ui, || {
                     ui.text(&info.message);
                     ui.text("\n");
                     if let Some(error) = &info.error {

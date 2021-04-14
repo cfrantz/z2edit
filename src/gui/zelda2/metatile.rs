@@ -172,7 +172,7 @@ impl MetatileGroupGui {
             if i % 8 == 0 {
                 ui.text(im_str!("{:02x}: ", i));
             }
-            ui.same_line(32.0 + (i % 8) as f32 * 48.0);
+            ui.same_line_with_pos(32.0 + (i % 8) as f32 * 48.0);
             if self.group.data[self.group_selected].tile.get(&i).is_none() {
                 // Assumption: the first non-existent tile means end of the group.
                 break;

@@ -706,7 +706,7 @@ impl SideviewGui {
         }
 
         if !popup {
-            ui.same_line(120.0);
+            ui.same_line_with_pos(120.0);
         }
         let width = ui.push_item_width(100.0);
         let y = &mut self.sideview.enemy.data[el][index].y;
@@ -716,7 +716,7 @@ impl SideviewGui {
         }
 
         if !popup {
-            ui.same_line(320.0);
+            ui.same_line_with_pos(320.0);
         }
         {
             let x = &mut self.sideview.enemy.data[el][index].x;
@@ -729,7 +729,7 @@ impl SideviewGui {
 
         let width = ui.push_item_width(200.0);
         if !popup {
-            ui.same_line(510.0);
+            ui.same_line_with_pos(510.0);
         }
         let kind = &mut self.sideview.enemy.data[el][index].kind;
         let mut sel = self.enemies_map[kind];
@@ -742,7 +742,7 @@ impl SideviewGui {
         width.pop(ui);
 
         if !popup {
-            ui.same_line(760.0);
+            ui.same_line_with_pos(760.0);
             if ui.button(&im_str!("{}", fa::ICON_TRASH)) {
                 action.set(EditAction::Delete(index));
             }
@@ -755,7 +755,7 @@ impl SideviewGui {
             let mut dlg = dialog.usize_last().expect("draw_enemy_item.dialog") as i32;
             if !popup {
                 ui.new_line();
-                ui.same_line(120.0);
+                ui.same_line_with_pos(120.0);
             }
             if ui.input_int(&im_str!("##dialog{}", d), &mut dlg).build() {
                 dlg = clamp(dlg, 0, 255);
@@ -774,7 +774,7 @@ impl SideviewGui {
         if let Some(condition) = self.sideview.enemy.data[el][index].condition.as_mut() {
             let base = if !popup {
                 ui.new_line();
-                ui.same_line(120.0);
+                ui.same_line_with_pos(120.0);
                 272.0
             } else {
                 160.0
@@ -783,7 +783,7 @@ impl SideviewGui {
             ui.new_line();
 
             for i in 0..8 {
-                ui.same_line(base + 28.0 * i as f32);
+                ui.same_line_with_pos(base + 28.0 * i as f32);
                 let mask = 1u8 << (7 - i);
                 let mut bit = (*condition & mask) != 0;
                 if ui.checkbox(&im_str!("##b{}", i), &mut bit) {
@@ -1150,7 +1150,7 @@ impl SideviewGui {
         }
 
         if !popup {
-            ui.same_line(120.0);
+            ui.same_line_with_pos(120.0);
         }
         let y = &mut self.sideview.map.data[index].y;
         let label = match y {
@@ -1168,7 +1168,7 @@ impl SideviewGui {
         let y = self.sideview.map.data[index].y;
 
         if !popup {
-            ui.same_line(320.0);
+            ui.same_line_with_pos(320.0);
         }
         {
             let x = &mut self.sideview.map.data[index].x;
@@ -1182,7 +1182,7 @@ impl SideviewGui {
         let width = ui.push_item_width(200.0);
         if y < 13 {
             if !popup {
-                ui.same_line(510.0);
+                ui.same_line_with_pos(510.0);
             }
             let kind = &mut self.sideview.map.data[index].kind;
             let mut sel = self.objects_map[kind];
@@ -1197,7 +1197,7 @@ impl SideviewGui {
             }
         } else if y == 15 {
             if !popup {
-                ui.same_line(510.0);
+                ui.same_line_with_pos(510.0);
             }
             let kind = &mut self.sideview.map.data[index].kind;
             if let Some(sel) = self.extras_map.get(kind) {
@@ -1219,7 +1219,7 @@ impl SideviewGui {
 
         if y != 14 {
             if !popup {
-                ui.same_line(770.0);
+                ui.same_line_with_pos(770.0);
             }
             if self.sideview.map.data[index].kind == 0x0f {
                 let width = ui.push_item_width(200.0);
@@ -1246,7 +1246,7 @@ impl SideviewGui {
             }
         }
         if !popup {
-            ui.same_line(1020.0);
+            ui.same_line_with_pos(1020.0);
             if ui.button(&im_str!("{}", fa::ICON_TRASH)) {
                 action.set(EditAction::Delete(index));
             }
@@ -1274,7 +1274,7 @@ impl SideviewGui {
         let width = ui.push_item_width(100.0);
         ui.text("Map Properties");
 
-        ui.same_line(120.0);
+        ui.same_line_with_pos(120.0);
         if ui
             .input_int(im_str!("Width"), &mut self.sideview.map.width)
             .build()
@@ -1282,7 +1282,7 @@ impl SideviewGui {
             self.sideview.map.width = clamp(self.sideview.map.width, 1, 4);
             action.set(EditAction::Update);
         }
-        ui.same_line(320.0);
+        ui.same_line_with_pos(320.0);
         if ui
             .input_int(im_str!("Object Set"), &mut self.sideview.map.objset)
             .build()
@@ -1290,7 +1290,7 @@ impl SideviewGui {
             self.sideview.map.objset = clamp(self.sideview.map.objset, 0, 1);
             action.set(EditAction::CacheInvalidate);
         }
-        ui.same_line(540.0);
+        ui.same_line_with_pos(540.0);
         if ui.checkbox(
             im_str!("Cursor moves left"),
             &mut self.sideview.map.cursor_moves_left,
@@ -1300,22 +1300,22 @@ impl SideviewGui {
         ui.separator();
 
         ui.text("Flags");
-        ui.same_line(120.0);
+        ui.same_line_with_pos(120.0);
         if ui.checkbox(im_str!("Ceiling"), &mut self.sideview.map.ceiling) {
             action.set(EditAction::Update);
         }
-        ui.same_line(320.0);
+        ui.same_line_with_pos(320.0);
         if ui.checkbox(im_str!("Grass"), &mut self.sideview.map.grass) {
             action.set(EditAction::Update);
         }
-        ui.same_line(540.0);
+        ui.same_line_with_pos(540.0);
         if ui.checkbox(im_str!("Bushes"), &mut self.sideview.map.bushes) {
             action.set(EditAction::Update);
         }
         ui.separator();
 
         ui.text("Features");
-        ui.same_line(120.0);
+        ui.same_line_with_pos(120.0);
         if ui
             .input_int(im_str!("Tile Set"), &mut self.sideview.map.tileset)
             .build()
@@ -1323,7 +1323,7 @@ impl SideviewGui {
             self.sideview.map.tileset = clamp(self.sideview.map.tileset, 0, 7);
             action.set(EditAction::Update);
         }
-        ui.same_line(320.0);
+        ui.same_line_with_pos(320.0);
         if ui
             .input_int(im_str!("Floor Position"), &mut self.sideview.map.floor)
             .build()
@@ -1331,7 +1331,7 @@ impl SideviewGui {
             self.sideview.map.floor = clamp(self.sideview.map.floor, 0, 15);
             action.set(EditAction::Update);
         }
-        ui.same_line(540.0);
+        ui.same_line_with_pos(540.0);
         if ui
             .input_int(im_str!("BG Map"), &mut self.sideview.map.background_map)
             .build()
@@ -1342,7 +1342,7 @@ impl SideviewGui {
 
         ui.separator();
         ui.text("Palettes");
-        ui.same_line(120.0);
+        ui.same_line_with_pos(120.0);
         if ui
             .input_int(
                 im_str!("Background"),
@@ -1354,7 +1354,7 @@ impl SideviewGui {
                 clamp(self.sideview.map.background_palette, 0, 7);
             action.set(EditAction::PaletteChanged);
         }
-        ui.same_line(320.0);
+        ui.same_line_with_pos(320.0);
         if ui
             .input_int(im_str!("Sprite"), &mut self.sideview.map.sprite_palette)
             .build()

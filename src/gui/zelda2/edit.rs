@@ -46,7 +46,7 @@ impl EditDetailsGui {
         let mut action = EditAction::None;
         ui.text("Extra Data:");
         ui.text("Key");
-        ui.same_line(216.0);
+        ui.same_line_with_pos(216.0);
         ui.text("Value");
         for i in 0..self.extra.len() {
             let id = ui.push_id(i as i32);

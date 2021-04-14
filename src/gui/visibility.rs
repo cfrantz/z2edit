@@ -47,7 +47,7 @@ impl Visibility {
             *self = Visibility::Pending;
         }
         if *self == Visibility::Pending {
-            ui.popup_modal(id).build(|| {
+            ui.popup_modal(id).build(ui, || {
                 ui.text(text);
                 ui.text("\n");
                 if ui.button(im_str!(" Yes ")) {

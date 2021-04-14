@@ -115,7 +115,7 @@ impl PaletteGui {
                     }
                     style.pop(ui);
                 }
-                g.end(ui);
+                g.end();
                 ui.same_line();
                 if x == 0 {
                     let pos = ui.cursor_pos();

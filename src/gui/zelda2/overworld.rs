@@ -234,7 +234,7 @@ impl OverworldGui {
                 token.pop(ui);
             }
         }
-        group.end(ui);
+        group.end();
     }
 
     fn draw_map(&mut self, ui: &imgui::Ui) -> bool {

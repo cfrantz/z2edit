@@ -224,7 +224,7 @@ impl ExperienceTableGui {
             let value = &mut self.value[i].value;
             changed |= ui.input_int(im_str!("##value"), value).build();
             width.pop(ui);
-            ui.same_line(300.0);
+            ui.same_line_with_pos(300.0);
             let width = ui.push_item_width(48.0);
 
             let mut sprite = im_str!("{:02x}", self.value[i].sprites[0]);

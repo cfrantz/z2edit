@@ -119,7 +119,7 @@ impl App {
 
     fn draw(&self, py: Python, ui: &imgui::Ui) {
         ui.main_menu_bar(|| {
-            ui.menu(im_str!("File"), true, || {
+            ui.menu(im_str!("File"), || {
                 if MenuItem::new(im_str!("New Project")).build(ui) {
                     self.wizard.replace(ProjectWizardGui::new());
                     self.wizard.borrow_mut().show();
@@ -140,7 +140,7 @@ impl App {
                     self.running.set(false);
                 }
             });
-            ui.menu(im_str!("View"), true, || {
+            ui.menu(im_str!("View"), || {
                 MenuItem::new(im_str!("Console"))
                     .build_with_ref(ui, &mut self.console.borrow_mut().visible);
                 if MenuItem::new(im_str!("Preferences")).build(ui) {

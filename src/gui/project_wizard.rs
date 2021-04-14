@@ -91,7 +91,7 @@ impl ProjectWizardGui {
         ui.popup_modal(im_str!("Project Wizard"))
             .title_bar(true)
             .opened(&mut visible)
-            .build(|| {
+            .build(ui, || {
                 ui.text("New Project:");
                 ui.align_text_to_frame_padding();
 

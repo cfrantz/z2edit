@@ -167,7 +167,7 @@ impl ProjectGui {
 
     pub fn menu(&mut self, py: Python, ui: &imgui::Ui) {
         ui.menu_bar(|| {
-            ui.menu(im_str!("Project"), true, || {
+            ui.menu(im_str!("Project"), || {
                 if MenuItem::new(im_str!("Save")).build(ui) {
                     self.save(py);
                 }
@@ -189,7 +189,7 @@ impl ProjectGui {
                     self.visible.change(false, self.changed);
                 }
             });
-            ui.menu(im_str!("Edit"), true, || {
+            ui.menu(im_str!("Edit"), || {
                 if MenuItem::new(im_str!("Enemy Attributes")).build(ui) {
                     match EnemyGui::new(&self.project.borrow_mut(py), -1) {
                         Ok(gui) => self.widgets.push(gui),
@@ -552,7 +552,7 @@ impl ProjectGui {
                 self.drag_ypos = drag_ypos;
                 editlist.pop();
             });
-            token.end(ui);
+            token.end();
 
             let mut project = self.project.borrow_mut(py);
             let widgetlist = ui.push_id("widgetlist");
