@@ -1,6 +1,6 @@
 import z2edit
 from z2edit import Address
-from z2edit.util import ObjectDict, Tile, chr_clear, chr_copy
+from z2edit.util import ObjectDict, Config, Tile, chr_clear, chr_copy
 
 EMPTY = []
 
@@ -163,6 +163,9 @@ def chr_bank_copy(edit, dstbank, srcbank):
 # a time instead of two, allowing a full 256 sprites _and_ 256 background tiles.
 
 def hack(edit, asm):
+    meta = edit.meta
+    config = Config.get(meta['config'])
+
     # Update the NES header to say we're using MMC5.  Preseve the low nybble
     # containing flags and write the mapper number into the upper nybble.
     mapper = edit.read(Address.file(6))
@@ -182,7 +185,7 @@ def hack(edit, asm):
     bank7_code0 = $c000
 
     .org $c4d0
-        lda     #$44            ; Use vertical mirroing
+        lda     #$a4            ; Use vertical mirroing
         sta     $5105
 
     .org $ff70
@@ -211,11 +214,12 @@ def hack(edit, asm):
         jsr     bank7_chr_bank_switch__load_A
         lda     #$07
         jsr     bank7_Load_Bank_A_0x8000
+        cli                     ; FIXME: Want interrupts?
         jmp     bank7_code0
     .db $ea,$ea,$ea,$ea
     .db $ea,$ea,$ea,$ea
     .db $ea,$ea,$ea,$ea
-    .db $ea,$ea,$ea
+    .db $ea,$ea
 
 
     .org $ffb1
@@ -281,3 +285,19 @@ def hack(edit, asm):
             chr_clear(edit, Tile(bank, t), True)
         for t in sprites:
             chr_clear(edit, Tile(bgbank, t), True)
+
+    for sideview in config.sideview.group:
+        bank = sideview.chr.Chr[0]
+        sideview.chr.Chr[0] = 0x20 + bank // 2
+
+    for overworld in config.overworld.map:
+        bank = overworld.chr.Chr[0]
+        overworld.chr.Chr[0] = 0x20 + bank // 2
+
+    name = meta['config'] + '-mmc5'
+    Config.put(name, config)
+    # Now tell the project about the new config
+    meta['extra'] = {'next_config': name}
+    edit.meta = meta
+
+
