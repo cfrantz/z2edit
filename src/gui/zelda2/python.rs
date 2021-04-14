@@ -149,7 +149,7 @@ impl Gui for PythonScriptGui {
                     self.code.clear();
                     self.changed |= true;
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui
                     .input_text(im_str!("##file"), &mut self.filename)
                     .resize_buffer(true)
@@ -160,7 +160,7 @@ impl Gui for PythonScriptGui {
                     self.load_file();
                     changed |= true;
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
                     if let Some(filename) = self.file_dialog(None) {
                         self.filename = ImString::new(filename);
@@ -175,7 +175,7 @@ impl Gui for PythonScriptGui {
                     self.relative_name = None;
                     self.changed |= true;
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |= imgui::InputTextMultiline::new(
                     ui,
                     im_str!("##script"),

@@ -43,7 +43,7 @@ impl Selector {
                         self.open = false;
                         ui.close_current_popup();
                     }
-                    ui.same_line(0.0);
+                    ui.same_line();
                     if ui.button(im_str!("  No  "), [0.0, 0.0]) {
                         self.next = self.selected;
                         self.open = false;

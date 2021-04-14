@@ -94,7 +94,7 @@ impl PaletteGui {
         let mut result = None;
         ui.popup(name, || {
             for x in 0..16 {
-                //if x != 0 { ui.same_line(0.0); }
+                //if x != 0 { ui.same_line(); }
                 let g = ui.begin_group();
                 ui.text(if x == 0 {
                     im_str!("   {:02x}", x)
@@ -104,7 +104,7 @@ impl PaletteGui {
                 for y in 0..4 {
                     if x == 0 {
                         ui.text(im_str!("{:x}0", y));
-                        ui.same_line(0.0);
+                        ui.same_line();
                     }
                     let i = y * 16 + x;
                     let style =
@@ -116,7 +116,7 @@ impl PaletteGui {
                     style.pop(ui);
                 }
                 g.end(ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 if x == 0 {
                     let pos = ui.cursor_pos();
                     ui.set_cursor_pos([pos[0], pos[1] - 3.0]);
@@ -153,7 +153,7 @@ impl Gui for PaletteGui {
                     &names,
                 );
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self.error.show("PaletteGui", "Commit Error", Some(e)),
@@ -180,10 +180,10 @@ impl Gui for PaletteGui {
                         .enumerate()
                     {
                         let cindex = *color as usize;
-                        ui.same_line(0.0);
+                        ui.same_line();
                         if i % 4 == 0 {
                             ui.text(" ");
-                            ui.same_line(0.0);
+                            ui.same_line();
                         }
                         let style =
                             ui.push_style_color(imgui::StyleColor::Button, hwpalette::fget(cindex));

@@ -244,7 +244,7 @@ impl Gui for EnemyGui {
                 );
                 width.pop(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self.error.show("EnemyGui", "Commit Error", Some(e)),

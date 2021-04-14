@@ -108,7 +108,7 @@ impl ProjectWizardGui {
                 if ui.radio_button_bool(im_str!("File:"), self.rom != FileResource::Vanilla) {
                     self.rom = FileResource::Name(PathConverter::from(self.filename.to_str()));
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui
                     .input_text(im_str!("##file"), &mut self.filename)
                     .resize_buffer(true)
@@ -116,7 +116,7 @@ impl ProjectWizardGui {
                 {
                     self.rom = FileResource::Name(PathConverter::from(self.filename.to_str()));
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
                         self.rom = FileResource::Name(PathConverter::from(&filename));
@@ -142,7 +142,7 @@ impl ProjectWizardGui {
                     self.visible = false;
                     ui.close_current_popup();
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
                     self.visible = false;
                     ui.close_current_popup();

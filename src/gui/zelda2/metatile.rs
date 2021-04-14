@@ -252,7 +252,7 @@ impl MetatileGroupGui {
                 let indices = [0, 2, 1, 3];
                 for &i in indices.iter() {
                     if i & 2 != 0 {
-                        ui.same_line(0.0);
+                        ui.same_line();
                     }
                     let mut val = im_str!("{:02x}", self.tile_edit[i]);
                     if ui
@@ -287,7 +287,7 @@ impl MetatileGroupGui {
                 changed = true;
                 ui.close_current_popup();
             }
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
                 ui.close_current_popup();
             }
@@ -328,7 +328,7 @@ impl Gui for MetatileGroupGui {
                 width.pop(ui);
                 let mut changed = false;
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self.error.show("MetatileGroupGui", "Commit Error", Some(e)),

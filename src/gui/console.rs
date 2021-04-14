@@ -175,7 +175,7 @@ impl Console {
                     });
                 let prompt = exec.prompt();
                 ui.text(prompt);
-                ui.same_line(0.0);
+                ui.same_line();
                 if imgui::InputText::new(ui, im_str!(""), &mut self.input)
                     .enter_returns_true(true)
                     .build()

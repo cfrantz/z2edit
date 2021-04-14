@@ -55,7 +55,7 @@ impl Visibility {
                     ui.close_current_popup();
                     result = Some(true);
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("  No  "), [0.0, 0.0]) {
                     *self = Visibility::Visible;
                     ui.close_current_popup();

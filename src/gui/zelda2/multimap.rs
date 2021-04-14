@@ -496,14 +496,14 @@ impl Gui for MultiMapGui {
                 }
                 width.pop(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 let width = ui.push_item_width(200.0);
                 changed |= imgui::Slider::new(im_str!("Spread"))
                     .range(1.0..=4.0)
                     .build_array(ui, &mut self.spread);
                 width.pop(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |= ui.checkbox(
                     im_str!("Show Invalid Connections"),
                     &mut self.show_invalid_connections,

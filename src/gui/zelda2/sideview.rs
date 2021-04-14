@@ -524,7 +524,7 @@ impl SideviewGui {
                     &|x| Cow::Borrowed(&x),
                 );
                 width.pop(ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 let width = ui.push_item_width(100.0);
                 changed |= imgui::ComboBox::new(im_str!("Destination")).build_simple(
                     ui,
@@ -536,7 +536,7 @@ impl SideviewGui {
 
                 if c.dest_map != 63 && (i == 0 || i == 3) {
                     let mut target = c.point_target_back.is_some();
-                    ui.same_line(0.0);
+                    ui.same_line();
                     if ui.checkbox(im_str!("Adjust target connection"), &mut target) {
                         if target {
                             c.point_target_back = Some(3 - i);
@@ -549,7 +549,7 @@ impl SideviewGui {
                 if c.dest_map != 63 && (i == 1 || i == 2) && self.sideview.map.elevator().is_some()
                 {
                     let mut target = c.point_target_back.is_some();
-                    ui.same_line(0.0);
+                    ui.same_line();
                     if ui.checkbox(im_str!("Adjust target connection"), &mut target) {
                         if target {
                             c.point_target_back =
@@ -578,7 +578,7 @@ impl SideviewGui {
                     &|x| Cow::Borrowed(&x),
                 );
                 width.pop(ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 let width = ui.push_item_width(100.0);
                 changed |= imgui::ComboBox::new(im_str!("Destination")).build_simple(
                     ui,
@@ -589,7 +589,7 @@ impl SideviewGui {
                 width.pop(ui);
                 if c.dest_map != 63 {
                     let mut target = c.point_target_back.is_some();
-                    ui.same_line(0.0);
+                    ui.same_line();
                     if ui.checkbox(im_str!("Adjust target connection"), &mut target) {
                         if target {
                             c.point_target_back = Some(i);
@@ -689,14 +689,14 @@ impl SideviewGui {
                 action.set(EditAction::NewAt(index));
             }
             tooltip("Insert a new Enemy", ui);
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_UP), [0.0, 0.0]) {
                 if index > 0 {
                     action.set(EditAction::Swap(index, index - 1));
                 }
             }
             tooltip("Move Up", ui);
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN), [0.0, 0.0]) {
                 if index < self.sideview.enemy.data[el].len() - 1 {
                     action.set(EditAction::Swap(index, index + 1));
@@ -762,7 +762,7 @@ impl SideviewGui {
                 dialog.set(-1, dlg).unwrap();
                 action.set(EditAction::Update);
             }
-            ui.same_line(0.0);
+            ui.same_line();
             if let Some(textitem) = self.text_table.get(dialog) {
                 ui.text(&textitem.text);
             } else {
@@ -872,7 +872,7 @@ impl SideviewGui {
             if ui.button(im_str!("Copy"), [0.0, 0.0]) {
                 action.set(EditAction::CopyAt(index));
             }
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(im_str!("Delete"), [0.0, 0.0]) {
                 action.set(EditAction::Delete(index));
             }
@@ -1048,7 +1048,7 @@ impl SideviewGui {
             if ui.button(im_str!("Copy"), [0.0, 0.0]) {
                 action.set(EditAction::CopyAt(index));
             }
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(im_str!("Delete"), [0.0, 0.0]) {
                 action.set(EditAction::Delete(index));
             }
@@ -1133,14 +1133,14 @@ impl SideviewGui {
                 action.set(EditAction::NewAt(index));
             }
             tooltip("Insert a new Map Command", ui);
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_UP), [0.0, 0.0]) {
                 if index > 0 {
                     action.set(EditAction::Swap(index, index - 1));
                 }
             }
             tooltip("Move Up", ui);
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN), [0.0, 0.0]) {
                 if index < self.sideview.map.data.len() - 1 {
                     action.set(EditAction::Swap(index, index + 1));
@@ -1402,7 +1402,7 @@ impl Gui for SideviewGui {
                 }
                 width.pop(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 let width = ui.push_item_width(100.0);
                 if imgui::InputFloat::new(ui, im_str!("Scale"), &mut self.scale)
                     .step(0.25)
@@ -1412,7 +1412,7 @@ impl Gui for SideviewGui {
                 }
                 width.pop(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self.error.show("SideviewGui", "Commit Error", Some(e)),

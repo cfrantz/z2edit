@@ -76,10 +76,10 @@ impl Gui for StartGui {
                 changed |=
                     imgui::InputInt::new(ui, im_str!("Attack"), &mut self.start.level.attack)
                         .build();
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |=
                     imgui::InputInt::new(ui, im_str!("Magic"), &mut self.start.level.magic).build();
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |=
                     imgui::InputInt::new(ui, im_str!("Life"), &mut self.start.level.life).build();
 
@@ -108,7 +108,7 @@ impl Gui for StartGui {
 
                 ui.separator();
                 changed |= ui.checkbox(im_str!("Downstab"), &mut self.start.inventory.downstab);
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |= ui.checkbox(im_str!("Upstab"), &mut self.start.inventory.upstab);
 
                 ui.columns(2, im_str!("columns"), true);

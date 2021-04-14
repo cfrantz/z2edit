@@ -58,7 +58,7 @@ impl EditDetailsGui {
                 action.set(EditAction::Update);
             }
             width.pop(ui);
-            ui.same_line(0.0);
+            ui.same_line();
             let width = ui.push_item_width(400.0);
             if imgui::InputText::new(ui, im_str!("##value"), &mut self.extra[i].1)
                 .resize_buffer(true)
@@ -67,7 +67,7 @@ impl EditDetailsGui {
                 action.set(EditAction::Update);
             }
             width.pop(ui);
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(&im_str!("{}", fa::ICON_TRASH), [0.0, 0.0]) {
                 action.set(EditAction::Delete(i));
             }
@@ -146,7 +146,7 @@ impl Gui for EditDetailsGui {
                     self.visible = Visibility::Dispose;
                     self.changed = false;
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
                     self.visible = Visibility::Dispose;
                 }

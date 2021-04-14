@@ -219,7 +219,7 @@ impl ExperienceTableGui {
             ui.separator();
             let id = ui.push_id(i as i32);
             ui.text(im_str!("Experience Value {:x}:  ", i));
-            ui.same_line(0.0);
+            ui.same_line();
             let width = ui.push_item_width(100.0);
             let value = &mut self.value[i].value;
             changed |= ui.input_int(im_str!("##value"), value).build();
@@ -235,7 +235,7 @@ impl ExperienceTableGui {
                 self.value[i].sprites[0] = i32::from_str_radix(sprite.to_str(), 16).unwrap_or(0);
                 changed |= true;
             }
-            ui.same_line(0.0);
+            ui.same_line();
             let mut sprite = im_str!("{:02x}", self.value[i].sprites[1]);
             if imgui::InputText::new(ui, im_str!("##spr1"), &mut sprite)
                 .chars_hexadecimal(true)
@@ -246,7 +246,7 @@ impl ExperienceTableGui {
             }
             width.pop(ui);
 
-            ui.same_line(0.0);
+            ui.same_line();
             ui.same_line_with_spacing(0.0, 32.0);
             self.tile_cache
                 .get(self.value[i].sprites[0] as u8)
@@ -285,7 +285,7 @@ impl Gui for ExperienceTableGui {
                 );
                 width.pop(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self

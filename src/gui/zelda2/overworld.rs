@@ -212,7 +212,7 @@ impl OverworldGui {
         ui.text(im_str!("Tiles:"));
         for i in 0..overworld.objtable_len {
             if i % 4 != 0 {
-                ui.same_line(0.0);
+                ui.same_line();
             }
             let image = self.cache.get(i as u8);
             let token = if i == self.tile_selected {
@@ -435,7 +435,7 @@ impl OverworldGui {
                     }
                 };
             }
-            ui.same_line(0.0);
+            ui.same_line();
             if ui.button(im_str!("Emulate"), [0.0, 0.0]) {
                 OverworldGui::emulate_at(conn, &self.edit, self.selector.value());
             }
@@ -543,12 +543,12 @@ impl OverworldGui {
 
         ui.text("Position:");
         changed |= ui.input_int(im_str!("xpos"), &mut conn.x).build();
-        ui.same_line(0.0);
+        ui.same_line();
         changed |= ui.input_int(im_str!("ypos"), &mut conn.y).build();
 
         ui.text("Connects to:");
         changed |= ui.input_int(im_str!("Map"), &mut conn.dest_map).build();
-        ui.same_line(0.0);
+        ui.same_line();
         let width2 = ui.push_item_width(40.0);
         changed |= imgui::ComboBox::new(im_str!("W##world")).build_simple_string(
             ui,
@@ -564,7 +564,7 @@ impl OverworldGui {
                 &im_str!("7"),
             ],
         );
-        ui.same_line(0.0);
+        ui.same_line();
         changed |= imgui::ComboBox::new(im_str!("OV##overworld")).build_simple_string(
             ui,
             &mut conn.dest_overworld,
@@ -586,20 +586,20 @@ impl OverworldGui {
         );
 
         if let Some(hidden) = conn.hidden.as_mut() {
-            ui.same_line(0.0);
+            ui.same_line();
             changed |= ui.checkbox(im_str!("Hidden"), &mut hidden.hidden);
         }
 
         changed |= ui.checkbox(im_str!("Extern  "), &mut conn.external);
-        ui.same_line(0.0);
+        ui.same_line();
         changed |= ui.checkbox(im_str!("Second  "), &mut conn.second);
-        ui.same_line(0.0);
+        ui.same_line();
         changed |= ui.checkbox(im_str!("2 lower "), &mut conn.exit_2_lower);
 
         changed |= ui.checkbox(im_str!("Right   "), &mut conn.entry_right);
-        ui.same_line(0.0);
+        ui.same_line();
         changed |= ui.checkbox(im_str!("Passthru"), &mut conn.passthru);
-        ui.same_line(0.0);
+        ui.same_line();
         changed |= ui.checkbox(im_str!("Fall    "), &mut conn.fall);
 
         if let Some(palace) = conn.palace.as_mut() {
@@ -622,7 +622,7 @@ impl OverworldGui {
 
         let width = ui.push_item_width(100.0);
         changed |= ui.input_int(im_str!("##dest"), &mut e.dest_map).build();
-        ui.same_line(0.0);
+        ui.same_line();
         changed |= imgui::ComboBox::new(im_str!("##entry")).build_simple_string(
             ui,
             &mut e.entry,
@@ -654,12 +654,12 @@ impl OverworldGui {
             ui.separator();
             for (i, terrain) in config.overworld.terrain_name.iter().enumerate() {
                 ui.text(im_str!("{:10}", terrain));
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |=
                     OverworldGui::encounter_edit(&mut self.overworld.encounter[2 * i + 0], ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 ui.text(im_str!("  "));
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |=
                     OverworldGui::encounter_edit(&mut self.overworld.encounter[2 * i + 1], ui);
             }
@@ -705,20 +705,20 @@ impl Gui for OverworldGui {
                 }
                 width.pop(ui);
                 let mut changed = false;
-                ui.same_line(0.0);
+                ui.same_line();
                 ui.checkbox(im_str!("Show Connections"), &mut self.conn_show);
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Connections"), [0.0, 0.0]) {
                     ui.open_popup(im_str!("connections"));
                 }
                 changed |= self.draw_connection_dialog(ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Encounters"), [0.0, 0.0]) {
                     ui.open_popup(im_str!("encounters"));
                 }
                 changed |= self.draw_encounters_dialog(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 let width = ui.push_item_width(100.0);
                 if imgui::InputFloat::new(ui, im_str!("Scale"), &mut self.scale)
                     .step(0.25)
@@ -728,7 +728,7 @@ impl Gui for OverworldGui {
                 }
                 width.pop(ui);
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self.error.show("OverworldGui", "Commit Error", Some(e)),
@@ -739,7 +739,7 @@ impl Gui for OverworldGui {
                 ui.separator();
 
                 self.draw_tile_selection(ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 imgui::ChildWindow::new(1)
                     .movable(false)
                     .always_vertical_scrollbar(true)

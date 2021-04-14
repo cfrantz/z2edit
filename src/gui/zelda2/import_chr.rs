@@ -181,7 +181,7 @@ impl ImportChrBankGui {
         width.pop(ui);
 
         ui.text("File:");
-        ui.same_line(0.0);
+        ui.same_line();
         if ui
             .input_text(im_str!("##file"), &mut self.filename)
             .resize_buffer(true)
@@ -191,7 +191,7 @@ impl ImportChrBankGui {
             self.load_image();
             changed |= true;
         }
-        ui.same_line(0.0);
+        ui.same_line();
         if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
             if let Some(filename) = self.file_dialog(Some("bmp")) {
                 self.filename = ImString::new(filename);
@@ -206,7 +206,7 @@ impl ImportChrBankGui {
         let scale = 4.0;
         ui.text("");
         ui.text("   ");
-        ui.same_line(0.0);
+        ui.same_line();
         self.image.draw(scale, ui);
 
         for x in 0..16 {
@@ -273,11 +273,11 @@ impl Gui for ImportChrBankGui {
                 width.pop(ui);
                 let mut changed = false;
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Export Image"), [0.0, 0.0]) {
                     self.save_image();
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self.error.show("ImportChrBankGui", "Commit Error", Some(e)),

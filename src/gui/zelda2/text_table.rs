@@ -131,7 +131,7 @@ impl Gui for TextTableGui {
                     &names,
                 );
 
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Commit"), [0.0, 0.0]) {
                     match self.commit(project) {
                         Err(e) => self.error.show("TextTableGui", "Commit Error", Some(e)),
@@ -151,7 +151,7 @@ impl Gui for TextTableGui {
                 for (i, text) in self.text[self.selected].iter_mut().enumerate() {
                     let id = ui.push_id(i as i32);
                     ui.text(im_str!("{:>3}", i));
-                    ui.same_line(0.0);
+                    ui.same_line();
                     if ui.input_text(im_str!(""), text).resize_buffer(true).build() {
                         *text = ImString::new(Text::validate(text.to_str(), None));
                         changed = true;

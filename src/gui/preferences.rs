@@ -163,7 +163,7 @@ impl PreferencesGui {
                     self.vanilla_hash.clear();
                     changed |= true;
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Browse##vanilla"), [0.0, 0.0]) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
                         pref.vanilla_rom = PathBuf::from(&filename);
@@ -202,7 +202,7 @@ impl PreferencesGui {
                     pref.emulator = emulator.to_str().to_owned();
                     changed |= true;
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Browse##emulator"), [0.0, 0.0]) {
                     if let Some(filename) = self.file_dialog(None) {
                         pref.emulator = filename;
@@ -220,9 +220,9 @@ impl PreferencesGui {
                 ui.separator();
                 ui.text("MultiMap Colors:");
                 changed |= self.draw_connection_colors(pref, 0, 4, ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |= self.draw_connection_colors(pref, 4, 8, ui);
-                ui.same_line(0.0);
+                ui.same_line();
                 changed |= self.draw_connection_colors(pref, 8, MULTIMAP_COLORS.len(), ui);
 
                 ui.separator();
@@ -235,7 +235,7 @@ impl PreferencesGui {
                     changed = false;
                     self.visible = Visibility::Hidden;
                 }
-                ui.same_line(0.0);
+                ui.same_line();
                 if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
                     // FIXME: stupid.  Should maintain a local copy of preferences
                     // and discard that upon cancel.
