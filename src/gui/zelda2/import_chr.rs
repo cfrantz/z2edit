@@ -192,7 +192,7 @@ impl ImportChrBankGui {
             changed |= true;
         }
         ui.same_line();
-        if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
+        if ui.button(im_str!("Browse##file")) {
             if let Some(filename) = self.file_dialog(Some("bmp")) {
                 self.filename = ImString::new(filename);
                 self.load_image();
@@ -274,11 +274,11 @@ impl Gui for ImportChrBankGui {
                 let mut changed = false;
 
                 ui.same_line();
-                if ui.button(im_str!("Export Image"), [0.0, 0.0]) {
+                if ui.button(im_str!("Export Image")) {
                     self.save_image();
                 }
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("ImportChrBankGui", "Commit Error", Some(e)),
                         _ => {}

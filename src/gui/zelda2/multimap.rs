@@ -467,7 +467,7 @@ impl MultiMapGui {
                 }
                 ui.end_popup();
             }
-            id.pop(ui);
+            id.pop();
         }
         self.normalize();
         changed

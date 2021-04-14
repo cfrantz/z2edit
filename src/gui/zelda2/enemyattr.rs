@@ -245,7 +245,7 @@ impl Gui for EnemyGui {
                 width.pop(ui);
 
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("EnemyGui", "Commit Error", Some(e)),
                         _ => {}
@@ -269,7 +269,7 @@ impl Gui for EnemyGui {
                     let mut enemy = &mut self.group[self.selected].data[n];
                     let id = ui.push_id(n as i32);
                     self.changed |= EnemyGui::enemy_row(&mut enemy, &cfg, ui);
-                    id.pop(ui);
+                    id.pop();
                 }
                 ui.columns(1, im_str!(""), false);
                 ui.separator();

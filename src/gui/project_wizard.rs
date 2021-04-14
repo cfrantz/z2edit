@@ -117,7 +117,7 @@ impl ProjectWizardGui {
                     self.rom = FileResource::Name(PathConverter::from(self.filename.to_str()));
                 }
                 ui.same_line();
-                if ui.button(im_str!("Browse##file"), [0.0, 0.0]) {
+                if ui.button(im_str!("Browse##file")) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
                         self.rom = FileResource::Name(PathConverter::from(&filename));
                         self.filename = ImString::new(filename);
@@ -137,13 +137,13 @@ impl ProjectWizardGui {
                 ui.text(FIX_TEXT);
                 ui.separator();
 
-                if ui.button(im_str!("  Ok  "), [0.0, 0.0]) {
+                if ui.button(im_str!("  Ok  ")) {
                     result = true;
                     self.visible = false;
                     ui.close_current_popup();
                 }
                 ui.same_line();
-                if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
+                if ui.button(im_str!("Cancel")) {
                     self.visible = false;
                     ui.close_current_popup();
                 }

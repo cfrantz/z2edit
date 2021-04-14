@@ -163,7 +163,7 @@ impl App {
             let gui = Rc::clone(&self.project.borrow()[i]);
             let id = ui.push_id(i as i32);
             gui.borrow_mut().draw(py, ui);
-            id.pop(ui);
+            id.pop();
         }
         self.process_dispose();
         self.error.draw(ui);

@@ -425,7 +425,7 @@ impl OverworldGui {
             let index = conn.id.usize_last().unwrap();
             ui.text(im_str!("Overworld Connector {:02}", index));
             ui.separator();
-            if ui.button(im_str!("View Area"), [0.0, 0.0]) {
+            if ui.button(im_str!("View Area")) {
                 self.multimap = match MultiMapGui::new(&self.edit, &conn.id) {
                     Ok(mm) => Some(mm),
                     Err(e) => {
@@ -436,14 +436,14 @@ impl OverworldGui {
                 };
             }
             ui.same_line();
-            if ui.button(im_str!("Emulate"), [0.0, 0.0]) {
+            if ui.button(im_str!("Emulate")) {
                 OverworldGui::emulate_at(conn, &self.edit, self.selector.value());
             }
 
             changed |= OverworldGui::connection_edit(&mut conn, ui);
             ui.end_popup();
         }
-        id.pop(ui);
+        id.pop();
         (focus, changed)
     }
 
@@ -708,12 +708,12 @@ impl Gui for OverworldGui {
                 ui.same_line();
                 ui.checkbox(im_str!("Show Connections"), &mut self.conn_show);
                 ui.same_line();
-                if ui.button(im_str!("Connections"), [0.0, 0.0]) {
+                if ui.button(im_str!("Connections")) {
                     ui.open_popup(im_str!("connections"));
                 }
                 changed |= self.draw_connection_dialog(ui);
                 ui.same_line();
-                if ui.button(im_str!("Encounters"), [0.0, 0.0]) {
+                if ui.button(im_str!("Encounters")) {
                     ui.open_popup(im_str!("encounters"));
                 }
                 changed |= self.draw_encounters_dialog(ui);
@@ -729,7 +729,7 @@ impl Gui for OverworldGui {
                 width.pop(ui);
 
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("OverworldGui", "Commit Error", Some(e)),
                         _ => {}

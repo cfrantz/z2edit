@@ -50,13 +50,13 @@ impl Visibility {
             ui.popup_modal(id).build(|| {
                 ui.text(text);
                 ui.text("\n");
-                if ui.button(im_str!(" Yes "), [0.0, 0.0]) {
+                if ui.button(im_str!(" Yes ")) {
                     *self = Visibility::Dispose;
                     ui.close_current_popup();
                     result = Some(true);
                 }
                 ui.same_line();
-                if ui.button(im_str!("  No  "), [0.0, 0.0]) {
+                if ui.button(im_str!("  No  ")) {
                     *self = Visibility::Visible;
                     ui.close_current_popup();
                     result = Some(false);

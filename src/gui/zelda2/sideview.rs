@@ -559,7 +559,7 @@ impl SideviewGui {
                         }
                     }
                 }
-                id0.pop(ui);
+                id0.pop();
             }
         } else {
             ui.text(im_str!("No connections for {}", self.sideview.id));
@@ -598,7 +598,7 @@ impl SideviewGui {
                         }
                     }
                 }
-                id0.pop(ui);
+                id0.pop();
             }
         }
         changed
@@ -629,7 +629,7 @@ impl SideviewGui {
             ui.separator();
         }
         if self.sideview.enemy.data[el].len() == 0 {
-            if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(0));
             }
             tooltip("Insert a new Enemy", ui);
@@ -685,19 +685,19 @@ impl SideviewGui {
         let id0 = ui.push_id(0xEE00 | index as i32);
 
         if !popup {
-            if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(index));
             }
             tooltip("Insert a new Enemy", ui);
             ui.same_line();
-            if ui.button(&im_str!("{}", fa::ICON_ARROW_UP), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_ARROW_UP)) {
                 if index > 0 {
                     action.set(EditAction::Swap(index, index - 1));
                 }
             }
             tooltip("Move Up", ui);
             ui.same_line();
-            if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN)) {
                 if index < self.sideview.enemy.data[el].len() - 1 {
                     action.set(EditAction::Swap(index, index + 1));
                 }
@@ -743,7 +743,7 @@ impl SideviewGui {
 
         if !popup {
             ui.same_line(760.0);
-            if ui.button(&im_str!("{}", fa::ICON_TRASH), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_TRASH)) {
                 action.set(EditAction::Delete(index));
             }
             tooltip("Delete", ui);
@@ -794,7 +794,7 @@ impl SideviewGui {
             }
         }
 
-        id0.pop(ui);
+        id0.pop();
         Ok(action)
     }
 
@@ -869,16 +869,16 @@ impl SideviewGui {
                 self.draw_enemy_item(el, index, true, ui)
                     .expect("enemy_list"),
             );
-            if ui.button(im_str!("Copy"), [0.0, 0.0]) {
+            if ui.button(im_str!("Copy")) {
                 action.set(EditAction::CopyAt(index));
             }
             ui.same_line();
-            if ui.button(im_str!("Delete"), [0.0, 0.0]) {
+            if ui.button(im_str!("Delete")) {
                 action.set(EditAction::Delete(index));
             }
             ui.end_popup();
         }
-        id.pop(ui);
+        id.pop();
         Ok(action)
     }
 
@@ -1045,16 +1045,16 @@ impl SideviewGui {
         }
         if ui.popup_context_item(im_str!("properties")) {
             action.set(self.draw_map_command(index, true, ui).expect("map_command"));
-            if ui.button(im_str!("Copy"), [0.0, 0.0]) {
+            if ui.button(im_str!("Copy")) {
                 action.set(EditAction::CopyAt(index));
             }
             ui.same_line();
-            if ui.button(im_str!("Delete"), [0.0, 0.0]) {
+            if ui.button(im_str!("Delete")) {
                 action.set(EditAction::Delete(index));
             }
             ui.end_popup();
         }
-        id.pop(ui);
+        id.pop();
         Ok(action)
     }
 
@@ -1070,7 +1070,7 @@ impl SideviewGui {
             action.set(self.draw_map_command(i, false, ui).expect("map_command"));
         }
         if self.sideview.map.data.len() == 0 {
-            if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(0));
             }
             tooltip("Insert a new Map Command", ui);
@@ -1129,19 +1129,19 @@ impl SideviewGui {
         let id0 = ui.push_id(index as i32);
 
         if !popup {
-            if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(index));
             }
             tooltip("Insert a new Map Command", ui);
             ui.same_line();
-            if ui.button(&im_str!("{}", fa::ICON_ARROW_UP), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_ARROW_UP)) {
                 if index > 0 {
                     action.set(EditAction::Swap(index, index - 1));
                 }
             }
             tooltip("Move Up", ui);
             ui.same_line();
-            if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN)) {
                 if index < self.sideview.map.data.len() - 1 {
                     action.set(EditAction::Swap(index, index + 1));
                 }
@@ -1247,13 +1247,13 @@ impl SideviewGui {
         }
         if !popup {
             ui.same_line(1020.0);
-            if ui.button(&im_str!("{}", fa::ICON_TRASH), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_TRASH)) {
                 action.set(EditAction::Delete(index));
             }
             tooltip("Delete", ui);
         }
 
-        id0.pop(ui);
+        id0.pop();
         Ok(action)
     }
 
@@ -1413,7 +1413,7 @@ impl Gui for SideviewGui {
                 width.pop(ui);
 
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("SideviewGui", "Commit Error", Some(e)),
                         _ => {}

@@ -164,7 +164,7 @@ impl PreferencesGui {
                     changed |= true;
                 }
                 ui.same_line();
-                if ui.button(im_str!("Browse##vanilla"), [0.0, 0.0]) {
+                if ui.button(im_str!("Browse##vanilla")) {
                     if let Some(filename) = self.file_dialog(Some("nes")) {
                         pref.vanilla_rom = PathBuf::from(&filename);
                         self.vanilla_hash.clear();
@@ -203,7 +203,7 @@ impl PreferencesGui {
                     changed |= true;
                 }
                 ui.same_line();
-                if ui.button(im_str!("Browse##emulator"), [0.0, 0.0]) {
+                if ui.button(im_str!("Browse##emulator")) {
                     if let Some(filename) = self.file_dialog(None) {
                         pref.emulator = filename;
                         changed |= true;
@@ -226,7 +226,7 @@ impl PreferencesGui {
                 changed |= self.draw_connection_colors(pref, 8, MULTIMAP_COLORS.len(), ui);
 
                 ui.separator();
-                if ui.button(im_str!("Save"), [0.0, 0.0]) {
+                if ui.button(im_str!("Save")) {
                     let file = AppContext::config_file("preferences.ron");
                     match pref.save(&file) {
                         Err(e) => error!("Error saving preferences: {}", e),
@@ -236,7 +236,7 @@ impl PreferencesGui {
                     self.visible = Visibility::Hidden;
                 }
                 ui.same_line();
-                if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
+                if ui.button(im_str!("Cancel")) {
                     // FIXME: stupid.  Should maintain a local copy of preferences
                     // and discard that upon cancel.
                     let file = AppContext::config_file("preferences.ron");

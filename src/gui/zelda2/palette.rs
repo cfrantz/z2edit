@@ -109,7 +109,7 @@ impl PaletteGui {
                     let i = y * 16 + x;
                     let style =
                         ui.push_style_colors(&[(imgui::StyleColor::Button, hwpalette::fget(i))]);
-                    if ui.button(&im_str!("  ##{}", i), [0.0, 0.0]) {
+                    if ui.button(&im_str!("  ##{}", i)) {
                         result = Some(i as u8);
                         ui.close_current_popup();
                     }
@@ -154,7 +154,7 @@ impl Gui for PaletteGui {
                 );
 
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("PaletteGui", "Commit Error", Some(e)),
                         _ => {}
@@ -188,10 +188,10 @@ impl Gui for PaletteGui {
                         let style =
                             ui.push_style_color(imgui::StyleColor::Button, hwpalette::fget(cindex));
                         let label = im_str!("{:02x}##{}", color, n * 16 + i);
-                        if ui.button(&label, [0.0, 0.0]) {
+                        if ui.button(&label) {
                             ui.open_popup(&label);
                         }
-                        style.pop(ui);
+                        style.pop();
                         if let Some(update) = PaletteGui::color_selector(&label, ui) {
                             *color = update;
                             self.changed = true;

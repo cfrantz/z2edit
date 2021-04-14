@@ -205,7 +205,7 @@ impl ExperienceTableGui {
             let width = ui.push_item_width(100.0);
             changed |= ui.input_int(im_str!(""), data).build();
             width.pop(ui);
-            id.pop(ui);
+            id.pop();
             ui.next_column();
         }
 
@@ -255,7 +255,7 @@ impl ExperienceTableGui {
             self.tile_cache
                 .get(self.value[i].sprites[1] as u8)
                 .draw(2.0, ui);
-            id.pop(ui);
+            id.pop();
         }
         changed
     }
@@ -286,7 +286,7 @@ impl Gui for ExperienceTableGui {
                 width.pop(ui);
 
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self
                             .error
@@ -320,7 +320,7 @@ impl Gui for ExperienceTableGui {
                         let mut table = &mut self.group[self.selected].data[n];
                         let id = ui.push_id(&cfg.id);
                         self.changed |= ExperienceTableGui::table_row(&mut table, &cfg, ui);
-                        id.pop(ui);
+                        id.pop();
                     }
                     ui.columns(1, im_str!(""), false);
                 }

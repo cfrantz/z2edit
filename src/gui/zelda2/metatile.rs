@@ -283,12 +283,12 @@ impl MetatileGroupGui {
                         .into_owned();
                 }
             });
-            if ui.button(im_str!("  Ok  "), [0.0, 0.0]) {
+            if ui.button(im_str!("  Ok  ")) {
                 changed = true;
                 ui.close_current_popup();
             }
             ui.same_line();
-            if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
+            if ui.button(im_str!("Cancel")) {
                 ui.close_current_popup();
             }
         });
@@ -329,7 +329,7 @@ impl Gui for MetatileGroupGui {
                 let mut changed = false;
 
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("MetatileGroupGui", "Commit Error", Some(e)),
                         _ => {}

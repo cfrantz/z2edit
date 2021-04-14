@@ -52,7 +52,7 @@ impl ErrorDialog {
                         ui.text(im_str!("{}", error));
                     }
                     ui.separator();
-                    if ui.button(im_str!("Dismiss"), [0.0, 0.0]) {
+                    if ui.button(im_str!("Dismiss")) {
                         info.open = false;
                         info.title.clear();
                         info.message.clear();

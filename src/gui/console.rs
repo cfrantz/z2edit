@@ -171,7 +171,7 @@ impl Console {
                             ui.set_scroll_here_y();
                         }
                         self.scroll.set(false);
-                        spacing.pop(ui);
+                        spacing.pop();
                     });
                 let prompt = exec.prompt();
                 ui.text(prompt);

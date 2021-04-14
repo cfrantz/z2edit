@@ -430,7 +430,7 @@ impl ProjectGui {
                 ui.set_cursor_pos(cursor);
                 let id = ui.push_id(index as i32 | 0x7D000000);
                 let _ = imgui::CollapsingHeader::new(&ImString::new(&meta.label)).build(ui);
-                id.pop(ui);
+                id.pop();
             }
         } else {
             if let Some(d) = self.drag_helper.finalize(index as usize) {
@@ -504,7 +504,7 @@ impl ProjectGui {
                 ui.text_wrapped(&ImString::new(&meta.comment));
             }
         }
-        id.pop(ui);
+        id.pop();
         error_state
     }
 
@@ -550,7 +550,7 @@ impl ProjectGui {
                     error_state = self.draw_edit(py, i as isize, error_state, ui);
                 }
                 self.drag_ypos = drag_ypos;
-                editlist.pop(ui);
+                editlist.pop();
             });
             token.end(ui);
 
@@ -560,7 +560,7 @@ impl ProjectGui {
                 ui.set_next_window_dock_id(self.editor_pane, imgui::Condition::Once);
                 widget.draw(&mut project, ui);
             }
-            widgetlist.pop(ui);
+            widgetlist.pop();
         }
         self.process_editactions(py);
         let after = self.project.borrow(py).changed.get();

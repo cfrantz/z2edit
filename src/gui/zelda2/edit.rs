@@ -68,13 +68,13 @@ impl EditDetailsGui {
             }
             width.pop(ui);
             ui.same_line();
-            if ui.button(&im_str!("{}", fa::ICON_TRASH), [0.0, 0.0]) {
+            if ui.button(&im_str!("{}", fa::ICON_TRASH)) {
                 action.set(EditAction::Delete(i));
             }
             tooltip("Delete", ui);
-            id.pop(ui);
+            id.pop();
         }
-        if ui.button(&im_str!("{}", fa::ICON_COPY), [0.0, 0.0]) {
+        if ui.button(&im_str!("{}", fa::ICON_COPY)) {
             action.set(EditAction::New);
         }
         tooltip("New Key/Value Pair", ui);
@@ -129,7 +129,7 @@ impl Gui for EditDetailsGui {
                 self.changed |= self.draw_extra(ui);
                 ui.separator();
 
-                if ui.button(im_str!("  Ok  "), [0.0, 0.0]) {
+                if ui.button(im_str!("  Ok  ")) {
                     let mut meta = self.edit.meta.borrow_mut();
                     meta.label = self.label.to_string();
                     meta.user = self.user.to_string();
@@ -147,7 +147,7 @@ impl Gui for EditDetailsGui {
                     self.changed = false;
                 }
                 ui.same_line();
-                if ui.button(im_str!("Cancel"), [0.0, 0.0]) {
+                if ui.button(im_str!("Cancel")) {
                     self.visible = Visibility::Dispose;
                 }
             });

@@ -63,7 +63,7 @@ impl Gui for StartGui {
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("StartGui", "Commit Error", Some(e)),
                         _ => {}

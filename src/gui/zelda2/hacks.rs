@@ -105,7 +105,7 @@ impl Gui for HacksGui {
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("HacksGui", "Commit Error", Some(e)),
                         _ => {}

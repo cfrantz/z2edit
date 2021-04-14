@@ -132,7 +132,7 @@ impl Gui for TextTableGui {
                 );
 
                 ui.same_line();
-                if ui.button(im_str!("Commit"), [0.0, 0.0]) {
+                if ui.button(im_str!("Commit")) {
                     match self.commit(project) {
                         Err(e) => self.error.show("TextTableGui", "Commit Error", Some(e)),
                         _ => {}
@@ -156,9 +156,9 @@ impl Gui for TextTableGui {
                         *text = ImString::new(Text::validate(text.to_str(), None));
                         changed = true;
                     }
-                    id.pop(ui);
+                    id.pop();
                 }
-                group_id.pop(ui);
+                group_id.pop();
                 self.changed = changed;
             });
         self.error.draw(ui);
