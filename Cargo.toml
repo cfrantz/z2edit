@@ -43,7 +43,7 @@ sdl2 = "0.34"
 gl = "0.14.0"
 nfd = "0.0.4"
 #imgui = "0.5.0"
-imgui = {version="*", path="third_party/imgui-rs" }
+imgui = {version="*", path="third_party/imgui-rs/imgui" }
 imgui-opengl-renderer = {version="*", path="third_party/rust-imgui-opengl-renderer" }
 imgui-sdl2 = {version="*", path="third_party/rust-imgui-sdl2" }
 
