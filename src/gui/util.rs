@@ -17,17 +17,17 @@ impl KeyAction {
         let io = ui.io();
 
         if io.key_ctrl {
-            if ui.is_key_pressed(ui.key_index(Key::X)) {
+            if ui.is_key_pressed(Key::X) {
                 KeyAction::Cut
-            } else if ui.is_key_pressed(ui.key_index(Key::C)) {
+            } else if ui.is_key_pressed(Key::C) {
                 KeyAction::Copy
-            } else if ui.is_key_pressed(ui.key_index(Key::V)) {
+            } else if ui.is_key_pressed(Key::V) {
                 KeyAction::Paste
-            } else if ui.is_key_pressed(ui.key_index(Key::A)) {
+            } else if ui.is_key_pressed(Key::A) {
                 KeyAction::SelectAll
-            } else if ui.is_key_pressed(ui.key_index(Key::Z)) {
+            } else if ui.is_key_pressed(Key::Z) {
                 KeyAction::Undo
-            } else if ui.is_key_pressed(ui.key_index(Key::Y)) {
+            } else if ui.is_key_pressed(Key::Y) {
                 KeyAction::Redo
             } else {
                 KeyAction::None

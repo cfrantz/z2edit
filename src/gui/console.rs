@@ -184,10 +184,10 @@ impl Console {
                     self.add_item(0xfe88ccff, &format!("{} {}", prompt, line));
                     exec.exec(line, self);
                     self.input.clear();
-                    ui.set_keyboard_focus_here(imgui::FocusedWidget::Previous);
+                    ui.set_keyboard_focus_here();
                 }
                 if ui.is_item_hovered() {
-                    ui.set_keyboard_focus_here(imgui::FocusedWidget::Previous);
+                    ui.set_keyboard_focus_here();
                 }
             });
         self.visible = visible;

@@ -202,7 +202,11 @@ impl App {
                 data: include_bytes!("../../resources/fontawesome-webfont.ttf"),
                 size_pixels: 16.0,
                 config: Some(FontConfig {
-                    glyph_ranges: FontGlyphRanges::from_slice(&[fa::ICON_MIN, fa::ICON_MAX, 0]),
+                    glyph_ranges: FontGlyphRanges::from_slice(&[
+                        fa::ICON_MIN as u32,
+                        fa::ICON_MAX as u32,
+                        0,
+                    ]),
                     glyph_offset: [0.0, 3.0],
                     ..FontConfig::default()
                 }),
