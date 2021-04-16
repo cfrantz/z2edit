@@ -4,7 +4,7 @@ use std::i32;
 use std::rc::Rc;
 
 use imgui;
-use imgui::{im_str, ImStr, ImString};
+use imgui::{im_str, ImStr, ImString, TableColumnFlags, TableFlags};
 use once_cell::sync::Lazy;
 
 use crate::errors::*;
@@ -179,11 +179,12 @@ impl ExperienceTableGui {
 
         if config.id == "effects" {
             for c in COLUMNS.get("effects").unwrap().iter() {
+                ui.table_next_column();
                 ui.text(c);
-                ui.next_column();
             }
-            ui.separator();
+            ui.table_next_row();
         }
+        ui.table_next_column();
         if config.game_name.is_some() {
             let mut name = imgui::ImString::new(&xpt.game_name);
             if ui
@@ -198,15 +199,14 @@ impl ExperienceTableGui {
             ui.align_text_to_frame_padding();
             ui.text(im_str!("{}", config.name));
         }
-        ui.next_column();
 
         for (n, data) in xpt.data.iter_mut().enumerate() {
+            ui.table_next_column();
             let id = ui.push_id(n as i32);
             let width = ui.push_item_width(100.0);
             changed |= ui.input_int(im_str!(""), data).build();
             width.pop(ui);
             id.pop();
-            ui.next_column();
         }
 
         changed
@@ -303,28 +303,38 @@ impl Gui for ExperienceTableGui {
                     let columns = COLUMNS
                         .get(&config.experience.group[self.selected].id)
                         .unwrap();
-                    ui.columns(columns.len() as i32, im_str!("columns"), true);
+                    ui.begin_table_with_flags(
+                        im_str!("##table"),
+                        columns.len() as i32,
+                        TableFlags::ROW_BG
+                            | TableFlags::BORDERS
+                            | TableFlags::RESIZABLE
+                            | TableFlags::SCROLL_X
+                            | TableFlags::SCROLL_Y,
+                    );
                     ui.separator();
                     for (n, name) in columns.iter().enumerate() {
-                        ui.set_column_offset(n as i32, (130 * n) as f32);
-                        ui.text(name);
-                        ui.next_column();
+                        ui.table_setup_column_with_weight(
+                            name,
+                            TableColumnFlags::WIDTH_FIXED,
+                            130.0,
+                        );
                     }
+                    ui.table_headers_row();
                     self.gui_once_init = true;
                     for (n, cfg) in config.experience.group[self.selected]
                         .table
                         .iter()
                         .enumerate()
                     {
-                        ui.separator();
+                        ui.table_next_row();
                         let mut table = &mut self.group[self.selected].data[n];
                         let id = ui.push_id(&cfg.id);
                         self.changed |= ExperienceTableGui::table_row(&mut table, &cfg, ui);
                         id.pop();
                     }
-                    ui.columns(1, im_str!(""), false);
+                    ui.end_table();
                 }
-                ui.separator();
             });
         self.error.draw(ui);
         self.visible.change(visible, self.changed);

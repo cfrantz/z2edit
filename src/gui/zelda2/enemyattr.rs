@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use imgui;
-use imgui::{im_str, ImStr, ImString};
+use imgui::{im_str, ImStr, ImString, TableColumnFlags, TableFlags};
 use once_cell::sync::Lazy;
 
 use crate::errors::*;
@@ -141,13 +141,14 @@ impl EnemyGui {
 
     pub fn enemy_row(enemy: &mut Enemy, config: &config::Sprite, ui: &imgui::Ui) -> bool {
         let mut changed = false;
+        ui.table_next_column();
         ui.align_text_to_frame_padding();
         ui.text(im_str!("{:02x}: {}", config.offset, config.name));
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= imgui::InputInt::new(ui, im_str!("##hp"), &mut enemy.hp).build();
-        ui.next_column();
 
+        ui.table_next_column();
         let width = ui.push_item_width(40.0);
         changed |= imgui::ComboBox::new(im_str!("##pal")).build_simple_string(
             ui,
@@ -155,20 +156,20 @@ impl EnemyGui {
             &HEX[0..4],
         );
         width.pop(ui);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##steal"), &mut enemy.steal_xp);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##fire"), &mut enemy.need_fire);
-        ui.next_column();
 
+        ui.table_next_column();
         let width = ui.push_item_width(40.0);
         changed |=
             imgui::ComboBox::new(im_str!("##xp")).build_simple_string(ui, &mut enemy.xp, &HEX);
         width.pop(ui);
-        ui.next_column();
 
+        ui.table_next_column();
         let width = ui.push_item_width(60.0);
         changed |= imgui::ComboBox::new(im_str!("##dg")).build_simple_string(
             ui,
@@ -176,14 +177,14 @@ impl EnemyGui {
             &DROP_GROUP,
         );
         width.pop(ui);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##nobeam"), &mut enemy.no_beam);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##unk1"), &mut enemy.unknown1);
-        ui.next_column();
 
+        ui.table_next_column();
         let width = ui.push_item_width(40.0);
         changed |= imgui::ComboBox::new(im_str!("##damage")).build_simple_string(
             ui,
@@ -191,26 +192,25 @@ impl EnemyGui {
             &HEX,
         );
         width.pop(ui);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##nothunder"), &mut enemy.no_thunder);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##regen"), &mut enemy.regenerate);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##unk2"), &mut enemy.unknown2);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= ui.checkbox(im_str!("##nosword"), &mut enemy.no_sword);
-        ui.next_column();
 
+        ui.table_next_column();
         changed |= imgui::ComboBox::new(im_str!("##unk3")).build_simple_string(
             ui,
             &mut enemy.unknown3,
             &HEX,
         );
-        ui.next_column();
 
         changed
     }
@@ -254,25 +254,28 @@ impl Gui for EnemyGui {
                 }
 
                 let config = Config::get(&self.edit.config()).unwrap();
-                ui.columns(COLUMNS.len() as i32, im_str!("columns"), true);
-                ui.separator();
-                let mut offset = 0.0;
-                for (n, (name, width)) in COLUMNS.iter().enumerate() {
-                    ui.text(name);
-                    ui.set_column_offset(n as i32, offset);
-                    offset += *width;
-                    ui.next_column();
+                ui.begin_table_with_flags(
+                    im_str!("##table"),
+                    COLUMNS.len() as i32,
+                    TableFlags::ROW_BG
+                        | TableFlags::BORDERS
+                        | TableFlags::RESIZABLE
+                        | TableFlags::SCROLL_X
+                        | TableFlags::SCROLL_Y,
+                );
+                for (name, width) in COLUMNS.iter() {
+                    ui.table_setup_column_with_weight(name, TableColumnFlags::WIDTH_FIXED, *width);
                 }
+                ui.table_headers_row();
 
                 for (n, cfg) in config.enemy.0[self.selected].enemy.iter().enumerate() {
-                    ui.separator();
+                    ui.table_next_row();
                     let mut enemy = &mut self.group[self.selected].data[n];
                     let id = ui.push_id(n as i32);
                     self.changed |= EnemyGui::enemy_row(&mut enemy, &cfg, ui);
                     id.pop();
                 }
-                ui.columns(1, im_str!(""), false);
-                ui.separator();
+                ui.end_table();
             });
         self.error.draw(ui);
         self.visible.change(visible, self.changed);
