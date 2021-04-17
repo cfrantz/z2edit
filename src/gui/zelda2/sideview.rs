@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use imgui;
-use imgui::im_str;
-use imgui::{ImString, MouseButton};
+use imgui::{im_str, ImStr, ImString, MouseButton, TableColumnFlags, TableFlags};
 
 use crate::errors::*;
 use crate::gui::fa;
@@ -59,6 +58,24 @@ pub struct SideviewGui {
     text_table: TextTable,
     error: ErrorDialog,
     town_code: [u32; 4],
+}
+
+// This bit of silliness is to return constant ImStr's depedning on whether
+// the caller is in a popup or not.  The non-popup strings are turned into
+// ImGui IDs because we're displaying the widget in a table with a table
+// header with the relevant column labels.
+macro_rules! str_id {
+    ($popup:expr, $label:literal) => {
+        if $popup == false {
+            const __INPUT: &str = concat!("##", $label, "\0");
+            const RESULT: &'static ImStr = unsafe {
+                core::mem::transmute::<&'static [u8], &'static ImStr>(__INPUT.as_bytes())
+            };
+            RESULT
+        } else {
+            im_str!($label)
+        }
+    };
 }
 
 impl SideviewGui {
@@ -624,10 +641,34 @@ impl SideviewGui {
 
     fn draw_enemies_tab(&mut self, el: usize, config: &Config, ui: &imgui::Ui) -> bool {
         let mut action = EditAction::None;
+
+        ui.begin_table_with_flags(
+            im_str!("##enemy_list"),
+            8,
+            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+        );
+        ui.table_setup_column_with_weight(im_str!("New"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_setup_column_with_weight(im_str!("Up"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_setup_column_with_weight(im_str!("Dn"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_setup_column_with_weight(
+            im_str!("Y Position"),
+            TableColumnFlags::WIDTH_FIXED,
+            100.0,
+        );
+        ui.table_setup_column_with_weight(
+            im_str!("X Position"),
+            TableColumnFlags::WIDTH_FIXED,
+            100.0,
+        );
+        ui.table_setup_column_with_weight(im_str!("Enemy"), TableColumnFlags::WIDTH_FIXED, 400.0);
+        ui.table_setup_column_with_weight(im_str!("Del"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_headers_row();
+
         for i in 0..self.sideview.enemy.data[el].len() {
+            ui.table_next_row();
             action.set(self.draw_enemy_item(el, i, false, ui).expect("enemy_item"));
-            ui.separator();
         }
+        ui.end_table();
         if self.sideview.enemy.data[el].len() == 0 {
             if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(0));
@@ -674,6 +715,88 @@ impl SideviewGui {
         changed
     }
 
+    fn draw_enemy_dialog(&mut self, el: usize, index: usize, ui: &imgui::Ui) -> EditAction {
+        let mut action = EditAction::None;
+
+        if self.sideview.enemy.data[el][index].dialog.len() != 0 {
+            ui.begin_table_with_flags(
+                im_str!("##enemy_dialog"),
+                2,
+                TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+            );
+            ui.table_setup_column_with_weight(
+                im_str!("Text ID"),
+                TableColumnFlags::WIDTH_FIXED,
+                100.0,
+            );
+            ui.table_setup_column_with_weight(
+                im_str!("Dialog"),
+                TableColumnFlags::WIDTH_FIXED,
+                300.0,
+            );
+            ui.table_headers_row();
+
+            for d in 0..self.sideview.enemy.data[el][index].dialog.len() {
+                ui.table_next_row();
+                ui.table_next_column();
+                let dialog = &mut self.sideview.enemy.data[el][index].dialog[d];
+                let mut dlg = dialog.usize_last().expect("draw_enemy_dialog") as i32;
+                let width = ui.push_item_width(100.0);
+                if ui.input_int(&im_str!("##dialog{}", d), &mut dlg).build() {
+                    dlg = clamp(dlg, 0, 255);
+                    dialog.set(-1, dlg).unwrap();
+                    action.set(EditAction::Update);
+                }
+                width.pop(ui);
+                ui.table_next_column();
+                if let Some(textitem) = self.text_table.get(dialog) {
+                    ui.text(&textitem.text);
+                } else {
+                    ui.text(im_str!("No dialog {}", dialog));
+                }
+            }
+            ui.end_table();
+        }
+
+        if let Some(condition) = self.sideview.enemy.data[el][index].condition.as_mut() {
+            ui.begin_table_with_flags(
+                im_str!("##enemy_dialog_cond"),
+                9,
+                TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+            );
+            ui.table_setup_column_with_weight(
+                im_str!("Conditions"),
+                TableColumnFlags::WIDTH_FIXED,
+                100.0,
+            );
+            ui.table_setup_column_with_weight(im_str!("b7"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_setup_column_with_weight(im_str!("b6"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_setup_column_with_weight(im_str!("b5"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_setup_column_with_weight(im_str!("b4"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_setup_column_with_weight(im_str!("b3"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_setup_column_with_weight(im_str!("b2"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_setup_column_with_weight(im_str!("b1"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_setup_column_with_weight(im_str!("b0"), TableColumnFlags::WIDTH_FIXED, 16.0);
+            ui.table_headers_row();
+
+            ui.table_next_row();
+            ui.table_next_column();
+
+            for i in 0..8 {
+                ui.table_next_column();
+                let mask = 1u8 << (7 - i);
+                let mut bit = (*condition & mask) != 0;
+                if ui.checkbox(&im_str!("##b{}", i), &mut bit) {
+                    *condition &= !mask;
+                    *condition |= if bit { mask } else { 0 };
+                    action.set(EditAction::Update);
+                }
+            }
+            ui.end_table();
+        }
+        action
+    }
+
     fn draw_enemy_item(
         &mut self,
         el: usize,
@@ -685,18 +808,19 @@ impl SideviewGui {
         let id0 = ui.push_id(0xEE00 | index as i32);
 
         if !popup {
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(index));
             }
             tooltip("Insert a new Enemy", ui);
-            ui.same_line();
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_UP)) {
                 if index > 0 {
                     action.set(EditAction::Swap(index, index - 1));
                 }
             }
             tooltip("Move Up", ui);
-            ui.same_line();
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN)) {
                 if index < self.sideview.enemy.data[el].len() - 1 {
                     action.set(EditAction::Swap(index, index + 1));
@@ -706,94 +830,54 @@ impl SideviewGui {
         }
 
         if !popup {
-            ui.same_line_with_pos(120.0);
+            ui.table_next_column();
         }
         let width = ui.push_item_width(100.0);
         let y = &mut self.sideview.enemy.data[el][index].y;
-        if ui.input_int(im_str!("Y position"), y).build() {
+        if ui.input_int(str_id!(popup, "Y position"), y).build() {
             *y = clamp(*y, 0, 15);
             action.set(EditAction::Update);
         }
+        width.pop(ui);
 
         if !popup {
-            ui.same_line_with_pos(320.0);
+            ui.table_next_column();
         }
+        let width = ui.push_item_width(100.0);
         {
             let x = &mut self.sideview.enemy.data[el][index].x;
-            if ui.input_int(im_str!("X position"), x).build() {
+            if ui.input_int(str_id!(popup, "X position"), x).build() {
                 *x = clamp(*x, 0, 63);
                 action.set(EditAction::Update);
             }
         }
         width.pop(ui);
 
-        let width = ui.push_item_width(200.0);
         if !popup {
-            ui.same_line_with_pos(510.0);
+            ui.table_next_column();
         }
+        let width = ui.push_item_width(400.0);
         let kind = &mut self.sideview.enemy.data[el][index].kind;
         let mut sel = self.enemies_map[kind];
-        if imgui::ComboBox::new(im_str!("Enemy"))
-            .build_simple(ui, &mut sel, &self.enemies, &|x| Cow::Borrowed(&x.0))
-        {
+        if imgui::ComboBox::new(str_id!(popup, "Enemy")).build_simple(
+            ui,
+            &mut sel,
+            &self.enemies,
+            &|x| Cow::Borrowed(&x.0),
+        ) {
             *kind = self.enemies[sel].1 as usize;
             action.set(EditAction::Update);
         }
         width.pop(ui);
+        action.set(self.draw_enemy_dialog(el, index, ui));
 
         if !popup {
-            ui.same_line_with_pos(760.0);
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_TRASH)) {
                 action.set(EditAction::Delete(index));
             }
             tooltip("Delete", ui);
         }
-
-        let width = ui.push_item_width(100.0);
-        for d in 0..self.sideview.enemy.data[el][index].dialog.len() {
-            let dialog = &mut self.sideview.enemy.data[el][index].dialog[d];
-            let mut dlg = dialog.usize_last().expect("draw_enemy_item.dialog") as i32;
-            if !popup {
-                ui.new_line();
-                ui.same_line_with_pos(120.0);
-            }
-            if ui.input_int(&im_str!("##dialog{}", d), &mut dlg).build() {
-                dlg = clamp(dlg, 0, 255);
-                dialog.set(-1, dlg).unwrap();
-                action.set(EditAction::Update);
-            }
-            ui.same_line();
-            if let Some(textitem) = self.text_table.get(dialog) {
-                ui.text(&textitem.text);
-            } else {
-                ui.text(im_str!("No dialog {}", dialog));
-            }
-        }
-        width.pop(ui);
-
-        if let Some(condition) = self.sideview.enemy.data[el][index].condition.as_mut() {
-            let base = if !popup {
-                ui.new_line();
-                ui.same_line_with_pos(120.0);
-                272.0
-            } else {
-                160.0
-            };
-            ui.text("Condition satisfiers: b7  b6  b5  b4  b3  b2  b1  b0");
-            ui.new_line();
-
-            for i in 0..8 {
-                ui.same_line_with_pos(base + 28.0 * i as f32);
-                let mask = 1u8 << (7 - i);
-                let mut bit = (*condition & mask) != 0;
-                if ui.checkbox(&im_str!("##b{}", i), &mut bit) {
-                    *condition &= !mask;
-                    *condition |= if bit { mask } else { 0 };
-                    action.set(EditAction::Update);
-                }
-            }
-        }
-
         id0.pop();
         Ok(action)
     }
@@ -1065,10 +1149,39 @@ impl SideviewGui {
                 .expect("map_command_header"),
         );
         ui.text("\nMap Commands:");
-        ui.separator();
+
+        ui.begin_table_with_flags(
+            im_str!("##map_commands"),
+            8,
+            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+        );
+        ui.table_setup_column_with_weight(im_str!("New"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_setup_column_with_weight(im_str!("Up"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_setup_column_with_weight(im_str!("Dn"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_setup_column_with_weight(
+            im_str!("Y Position"),
+            TableColumnFlags::WIDTH_FIXED,
+            100.0,
+        );
+        ui.table_setup_column_with_weight(
+            im_str!("X Position"),
+            TableColumnFlags::WIDTH_FIXED,
+            100.0,
+        );
+        ui.table_setup_column_with_weight(im_str!("Object"), TableColumnFlags::WIDTH_FIXED, 200.0);
+        ui.table_setup_column_with_weight(
+            im_str!("Parameter"),
+            TableColumnFlags::WIDTH_FIXED,
+            200.0,
+        );
+        ui.table_setup_column_with_weight(im_str!("Del"), TableColumnFlags::WIDTH_FIXED, 20.0);
+        ui.table_headers_row();
+
         for i in 0..self.sideview.map.data.len() {
+            ui.table_next_row();
             action.set(self.draw_map_command(i, false, ui).expect("map_command"));
         }
+        ui.end_table();
         if self.sideview.map.data.len() == 0 {
             if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(0));
@@ -1129,18 +1242,19 @@ impl SideviewGui {
         let id0 = ui.push_id(index as i32);
 
         if !popup {
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_COPY)) {
                 action.set(EditAction::NewAt(index));
             }
             tooltip("Insert a new Map Command", ui);
-            ui.same_line();
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_UP)) {
                 if index > 0 {
                     action.set(EditAction::Swap(index, index - 1));
                 }
             }
             tooltip("Move Up", ui);
-            ui.same_line();
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_ARROW_DOWN)) {
                 if index < self.sideview.map.data.len() - 1 {
                     action.set(EditAction::Swap(index, index + 1));
@@ -1150,14 +1264,14 @@ impl SideviewGui {
         }
 
         if !popup {
-            ui.same_line_with_pos(120.0);
+            ui.table_next_column();
         }
         let y = &mut self.sideview.map.data[index].y;
-        let label = match y {
-            13 => im_str!("New floor "),
-            14 => im_str!("X-skip    "),
-            15 => im_str!("Extra obj "),
-            _ => im_str!("Y position"),
+        let (label, tip) = match y {
+            13 => (str_id!(popup, "New floor "), "New Floor"),
+            14 => (str_id!(popup, "X-skip    "), "X-Skip"),
+            15 => (str_id!(popup, "Extra obj "), "Extra Object"),
+            _ => (str_id!(popup, "Y position"), "Y Position"),
         };
 
         let width = ui.push_item_width(100.0);
@@ -1168,25 +1282,26 @@ impl SideviewGui {
         let y = self.sideview.map.data[index].y;
 
         if !popup {
-            ui.same_line_with_pos(320.0);
+            tooltip(tip, ui);
+            ui.table_next_column();
         }
         {
             let x = &mut self.sideview.map.data[index].x;
-            if ui.input_int(im_str!("X position"), x).build() {
+            if ui.input_int(str_id!(popup, "X position"), x).build() {
                 *x = clamp(*x, 0, 63);
                 action.set(EditAction::Update);
             }
         }
         width.pop(ui);
 
-        let width = ui.push_item_width(200.0);
+        if !popup {
+            ui.table_next_column();
+        }
         if y < 13 {
-            if !popup {
-                ui.same_line_with_pos(510.0);
-            }
+            let width = ui.push_item_width(200.0);
             let kind = &mut self.sideview.map.data[index].kind;
             let mut sel = self.objects_map[kind];
-            if imgui::ComboBox::new(im_str!("Object")).build_simple(
+            if imgui::ComboBox::new(str_id!(popup, "Object")).build_simple(
                 ui,
                 &mut sel,
                 &self.objects,
@@ -1195,14 +1310,13 @@ impl SideviewGui {
                 *kind = self.objects[sel].1 as usize;
                 action.set(EditAction::Update);
             }
+            width.pop(ui);
         } else if y == 15 {
-            if !popup {
-                ui.same_line_with_pos(510.0);
-            }
+            let width = ui.push_item_width(200.0);
             let kind = &mut self.sideview.map.data[index].kind;
             if let Some(sel) = self.extras_map.get(kind) {
                 let mut sel = *sel;
-                if imgui::ComboBox::new(im_str!("Object")).build_simple(
+                if imgui::ComboBox::new(str_id!(popup, "Object")).build_simple(
                     ui,
                     &mut sel,
                     &self.extras,
@@ -1214,18 +1328,18 @@ impl SideviewGui {
             } else {
                 ui.text(im_str!("Unknown: Extra/{:x?}", kind));
             }
+            width.pop(ui);
         }
-        width.pop(ui);
 
+        if !popup {
+            ui.table_next_column();
+        }
         if y != 14 {
-            if !popup {
-                ui.same_line_with_pos(770.0);
-            }
             if self.sideview.map.data[index].kind == 0x0f {
                 let width = ui.push_item_width(200.0);
                 let item = &mut self.sideview.map.data[index].param;
                 let mut sel = self.items_map[&(*item as usize)];
-                if imgui::ComboBox::new(im_str!("Item")).build_simple(
+                if imgui::ComboBox::new(str_id!(popup, "Item")).build_simple(
                     ui,
                     &mut sel,
                     &self.items,
@@ -1238,7 +1352,7 @@ impl SideviewGui {
             } else {
                 let width = ui.push_item_width(100.0);
                 let p = &mut self.sideview.map.data[index].param;
-                if ui.input_int(im_str!("Param"), p).build() {
+                if ui.input_int(str_id!(popup, "Param"), p).build() {
                     *p = clamp(*p, 0, if y == 13 { 255 } else { 15 });
                     action.set(EditAction::Update);
                 }
@@ -1246,7 +1360,7 @@ impl SideviewGui {
             }
         }
         if !popup {
-            ui.same_line_with_pos(1020.0);
+            ui.table_next_column();
             if ui.button(&im_str!("{}", fa::ICON_TRASH)) {
                 action.set(EditAction::Delete(index));
             }
@@ -1270,11 +1384,27 @@ impl SideviewGui {
         ui.text(im_str!("Map pointer at {:x?}", ptr));
         ui.text(im_str!("Map address is {:x?}", addr));
 
-        ui.separator();
-        let width = ui.push_item_width(100.0);
+        ui.begin_table_with_flags(
+            im_str!("##map_properties"),
+            4,
+            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+        );
+        ui.table_setup_column_with_weight(
+            im_str!("Map Header"),
+            TableColumnFlags::WIDTH_FIXED,
+            120.0,
+        );
+        ui.table_setup_column_with_weight(im_str!("##b"), TableColumnFlags::WIDTH_FIXED, 260.0);
+        ui.table_setup_column_with_weight(im_str!("##c"), TableColumnFlags::WIDTH_FIXED, 220.0);
+        ui.table_setup_column_with_weight(im_str!("##d"), TableColumnFlags::WIDTH_FIXED, 200.0);
+        ui.table_headers_row();
+
+        ui.table_next_row();
+        ui.table_next_column();
+        ui.align_text_to_frame_padding();
         ui.text("Map Properties");
 
-        ui.same_line_with_pos(120.0);
+        ui.table_next_column();
         if ui
             .input_int(im_str!("Width"), &mut self.sideview.map.width)
             .build()
@@ -1282,7 +1412,7 @@ impl SideviewGui {
             self.sideview.map.width = clamp(self.sideview.map.width, 1, 4);
             action.set(EditAction::Update);
         }
-        ui.same_line_with_pos(320.0);
+        ui.table_next_column();
         if ui
             .input_int(im_str!("Object Set"), &mut self.sideview.map.objset)
             .build()
@@ -1290,32 +1420,46 @@ impl SideviewGui {
             self.sideview.map.objset = clamp(self.sideview.map.objset, 0, 1);
             action.set(EditAction::CacheInvalidate);
         }
-        ui.same_line_with_pos(540.0);
+        ui.table_next_column();
         if ui.checkbox(
             im_str!("Cursor moves left"),
             &mut self.sideview.map.cursor_moves_left,
         ) {
             action.set(EditAction::Update);
         }
-        ui.separator();
 
+        ui.table_next_row();
+        ui.table_next_column();
+        ui.align_text_to_frame_padding();
         ui.text("Flags");
-        ui.same_line_with_pos(120.0);
+
+        ui.table_next_column();
         if ui.checkbox(im_str!("Ceiling"), &mut self.sideview.map.ceiling) {
             action.set(EditAction::Update);
         }
-        ui.same_line_with_pos(320.0);
+        ui.table_next_column();
         if ui.checkbox(im_str!("Grass"), &mut self.sideview.map.grass) {
             action.set(EditAction::Update);
         }
-        ui.same_line_with_pos(540.0);
+        ui.table_next_column();
         if ui.checkbox(im_str!("Bushes"), &mut self.sideview.map.bushes) {
             action.set(EditAction::Update);
         }
-        ui.separator();
 
+        ui.table_next_row();
+        ui.table_next_column();
+        ui.align_text_to_frame_padding();
         ui.text("Features");
-        ui.same_line_with_pos(120.0);
+
+        ui.table_next_column();
+        if ui
+            .input_int(im_str!("Floor Pos"), &mut self.sideview.map.floor)
+            .build()
+        {
+            self.sideview.map.floor = clamp(self.sideview.map.floor, 0, 15);
+            action.set(EditAction::Update);
+        }
+        ui.table_next_column();
         if ui
             .input_int(im_str!("Tile Set"), &mut self.sideview.map.tileset)
             .build()
@@ -1323,15 +1467,7 @@ impl SideviewGui {
             self.sideview.map.tileset = clamp(self.sideview.map.tileset, 0, 7);
             action.set(EditAction::Update);
         }
-        ui.same_line_with_pos(320.0);
-        if ui
-            .input_int(im_str!("Floor Position"), &mut self.sideview.map.floor)
-            .build()
-        {
-            self.sideview.map.floor = clamp(self.sideview.map.floor, 0, 15);
-            action.set(EditAction::Update);
-        }
-        ui.same_line_with_pos(540.0);
+        ui.table_next_column();
         if ui
             .input_int(im_str!("BG Map"), &mut self.sideview.map.background_map)
             .build()
@@ -1340,9 +1476,12 @@ impl SideviewGui {
             action.set(EditAction::Update);
         }
 
-        ui.separator();
+        ui.table_next_row();
+        ui.table_next_column();
+        ui.align_text_to_frame_padding();
         ui.text("Palettes");
-        ui.same_line_with_pos(120.0);
+
+        ui.table_next_column();
         if ui
             .input_int(
                 im_str!("Background"),
@@ -1354,7 +1493,7 @@ impl SideviewGui {
                 clamp(self.sideview.map.background_palette, 0, 7);
             action.set(EditAction::PaletteChanged);
         }
-        ui.same_line_with_pos(320.0);
+        ui.table_next_column();
         if ui
             .input_int(im_str!("Sprite"), &mut self.sideview.map.sprite_palette)
             .build()
@@ -1362,9 +1501,7 @@ impl SideviewGui {
             self.sideview.map.sprite_palette = clamp(self.sideview.map.sprite_palette, 0, 7);
             action.set(EditAction::PaletteChanged);
         }
-        width.pop(ui);
-        ui.separator();
-
+        ui.end_table();
         Ok(action)
     }
 }
