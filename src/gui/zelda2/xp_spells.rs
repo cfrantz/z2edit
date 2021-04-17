@@ -59,7 +59,7 @@ static COLUMNS: Lazy<HashMap<String, Vec<&ImStr>>> = Lazy::new(|| {
         im_str!("Level 7"),
         im_str!("Level 8"),
     ];
-    let spells = vec![
+    let spell_effects = vec![
         im_str!("Spell Effects"),
         im_str!("Shield"),
         im_str!("Jump"),
@@ -71,11 +71,16 @@ static COLUMNS: Lazy<HashMap<String, Vec<&ImStr>>> = Lazy::new(|| {
         im_str!("Thunder"),
     ];
 
+    let mut damage_group = levels.clone();
+    let mut spell_costs = levels.clone();
+    damage_group[0] = im_str!("Damage Group");
+    spell_costs[0] = im_str!("Spell");
+
     map.insert("level_up".into(), levelup);
-    map.insert("sword_power".into(), levels.clone());
-    map.insert("damage_group".into(), levels.clone());
-    map.insert("spell".into(), levels);
-    map.insert("effects".into(), spells);
+    map.insert("sword_power".into(), levels);
+    map.insert("damage_group".into(), damage_group);
+    map.insert("spell".into(), spell_costs);
+    map.insert("effects".into(), spell_effects);
     map
 });
 
@@ -215,18 +220,42 @@ impl ExperienceTableGui {
     pub fn xp_values(&mut self, ui: &imgui::Ui) -> bool {
         let mut changed = false;
 
+        ui.begin_table_with_flags(
+            im_str!("##table"),
+            4,
+            TableFlags::ROW_BG
+                | TableFlags::BORDERS
+                | TableFlags::RESIZABLE
+                | TableFlags::SCROLL_X
+                | TableFlags::SCROLL_Y,
+        );
+        ui.table_setup_column_with_weight(
+            im_str!("Experience Category"),
+            TableColumnFlags::WIDTH_FIXED,
+            150.0,
+        );
+        ui.table_setup_column_with_weight(im_str!("Points"), TableColumnFlags::WIDTH_FIXED, 100.0);
+        ui.table_setup_column_with_weight(
+            im_str!("Sprite IDs"),
+            TableColumnFlags::WIDTH_FIXED,
+            100.0,
+        );
+        ui.table_setup_column_with_weight(im_str!("Image"), TableColumnFlags::WIDTH_FIXED, 50.0);
+        ui.table_headers_row();
+
         for i in 0..self.value.len() {
-            ui.separator();
             let id = ui.push_id(i as i32);
-            ui.text(im_str!("Experience Value {:x}:  ", i));
-            ui.same_line();
+            ui.table_next_row();
+            ui.table_next_column();
+            ui.text(im_str!("{:X}", i));
+            ui.table_next_column();
             let width = ui.push_item_width(100.0);
             let value = &mut self.value[i].value;
             changed |= ui.input_int(im_str!("##value"), value).build();
             width.pop(ui);
-            ui.same_line_with_pos(300.0);
-            let width = ui.push_item_width(48.0);
 
+            ui.table_next_column();
+            let width = ui.push_item_width(48.0);
             let mut sprite = im_str!("{:02x}", self.value[i].sprites[0]);
             if imgui::InputText::new(ui, im_str!("##spr0"), &mut sprite)
                 .chars_hexadecimal(true)
@@ -246,8 +275,8 @@ impl ExperienceTableGui {
             }
             width.pop(ui);
 
-            ui.same_line();
-            ui.same_line_with_spacing(0.0, 32.0);
+            ui.table_next_column();
+            ui.same_line_with_spacing(10.0, 0.0);
             self.tile_cache
                 .get(self.value[i].sprites[0] as u8)
                 .draw(2.0, ui);
@@ -257,6 +286,7 @@ impl ExperienceTableGui {
                 .draw(2.0, ui);
             id.pop();
         }
+        ui.end_table();
         changed
     }
 }
@@ -312,8 +342,8 @@ impl Gui for ExperienceTableGui {
                             | TableFlags::SCROLL_X
                             | TableFlags::SCROLL_Y,
                     );
-                    ui.separator();
-                    for (n, name) in columns.iter().enumerate() {
+
+                    for name in columns.iter() {
                         ui.table_setup_column_with_weight(
                             name,
                             TableColumnFlags::WIDTH_FIXED,
