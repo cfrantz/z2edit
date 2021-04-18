@@ -1300,15 +1300,19 @@ impl SideviewGui {
         if y < 13 {
             let width = ui.push_item_width(200.0);
             let kind = &mut self.sideview.map.data[index].kind;
-            let mut sel = self.objects_map[kind];
-            if imgui::ComboBox::new(str_id!(popup, "Object")).build_simple(
-                ui,
-                &mut sel,
-                &self.objects,
-                &|x| Cow::Borrowed(&x.0),
-            ) {
-                *kind = self.objects[sel].1 as usize;
-                action.set(EditAction::Update);
+            if let Some(sel) = self.objects_map.get(kind) {
+                let mut sel = *sel;
+                if imgui::ComboBox::new(str_id!(popup, "Object")).build_simple(
+                    ui,
+                    &mut sel,
+                    &self.objects,
+                    &|x| Cow::Borrowed(&x.0),
+                ) {
+                    *kind = self.objects[sel].1 as usize;
+                    action.set(EditAction::Update);
+                }
+            } else {
+                ui.text(im_str!("Unknown: Object/{:x?}", kind));
             }
             width.pop(ui);
         } else if y == 15 {

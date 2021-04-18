@@ -31,6 +31,9 @@ impl IdPath {
     }
 
     pub fn prefix(&self, other: &IdPath) -> bool {
+        if other.len() == 0 {
+            return false;
+        }
         for (a, b) in self.0.iter().zip(other.0.iter()) {
             if a != b {
                 return false;
