@@ -107,13 +107,12 @@ impl PaletteGui {
                         ui.same_line();
                     }
                     let i = y * 16 + x;
-                    let style =
-                        ui.push_style_colors(&[(imgui::StyleColor::Button, hwpalette::fget(i))]);
+                    let style = ui.push_style_color(imgui::StyleColor::Button, hwpalette::fget(i));
                     if ui.button(&im_str!("  ##{}", i)) {
                         result = Some(i as u8);
                         ui.close_current_popup();
                     }
-                    style.pop(ui);
+                    style.pop();
                 }
                 g.end();
                 ui.same_line();

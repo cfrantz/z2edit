@@ -215,14 +215,14 @@ impl OverworldGui {
                 ui.same_line();
             }
             let image = self.cache.get(i as u8);
-            let token = if i == self.tile_selected {
-                Some(ui.push_style_colors(&[
-                    (imgui::StyleColor::Button, [0.9, 0.9, 0.9, 0.9]),
-                    (imgui::StyleColor::ButtonHovered, [1.0, 1.0, 1.0, 1.0]),
-                    (imgui::StyleColor::ButtonActive, [0.9, 0.9, 0.9, 0.9]),
-                ]))
+            let mut token = if i == self.tile_selected {
+                vec![
+                    ui.push_style_color(imgui::StyleColor::Button, [0.9, 0.9, 0.9, 0.9]),
+                    ui.push_style_color(imgui::StyleColor::ButtonHovered, [1.0, 1.0, 1.0, 1.0]),
+                    ui.push_style_color(imgui::StyleColor::ButtonActive, [0.9, 0.9, 0.9, 0.9]),
+                ]
             } else {
-                None
+                vec![]
             };
             if imgui::ImageButton::new(image.id, [32.0, 32.0])
                 .frame_padding(4)
@@ -230,9 +230,7 @@ impl OverworldGui {
             {
                 self.tile_selected = i;
             }
-            if let Some(token) = token {
-                token.pop(ui);
-            }
+            let _ = token.drain(..).map(|t| t.pop());
         }
         group.end();
     }

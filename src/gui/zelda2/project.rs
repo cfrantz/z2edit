@@ -380,14 +380,14 @@ impl ProjectGui {
         let cursor = ui.cursor_pos();
 
         let header = if Some(index as usize) == self.drag_helper.active() {
-            Some((DRAG_HEADER, DRAG_HEADER_HOVERED, DRAG_HEADER_ACTIVE))
+            vec![DRAG_HEADER, DRAG_HEADER_HOVERED, DRAG_HEADER_ACTIVE]
         } else if error_state || meta.skip_pack {
-            Some((GRAY_HEADER, GRAY_HEADER_HOVERED, GRAY_HEADER_ACTIVE))
+            vec![GRAY_HEADER, GRAY_HEADER_HOVERED, GRAY_HEADER_ACTIVE]
         } else if !edit.error.borrow().is_empty() {
             error_state = true;
-            Some((ERROR_HEADER, ERROR_HEADER_HOVERED, ERROR_HEADER_ACTIVE))
+            vec![ERROR_HEADER, ERROR_HEADER_HOVERED, ERROR_HEADER_ACTIVE]
         } else {
-            None
+            vec![]
         };
 
         if Some(index as usize) == self.drag_helper.active() {
@@ -408,15 +408,18 @@ impl ProjectGui {
                 }
             }
         }
-        let color_id = header.map(|h| {
-            ui.push_style_colors(&[
-                (StyleColor::Header, h.0),
-                (StyleColor::HeaderHovered, h.1),
-                (StyleColor::HeaderActive, h.2),
-            ])
-        });
+        let styles = [
+            StyleColor::Header,
+            StyleColor::HeaderHovered,
+            StyleColor::HeaderActive,
+        ];
+        let mut color_id = header
+            .iter()
+            .zip(styles.iter())
+            .map(|(col, style)| ui.push_style_color(*style, *col))
+            .collect::<Vec<_>>();
         let hdr = imgui::CollapsingHeader::new(&ImString::new(&meta.label)).build(ui);
-        color_id.map(|id| id.pop(ui));
+        let _ = color_id.drain(..).map(|id| id.pop());
 
         if ui.is_item_active() {
             if ui.is_mouse_dragging(MouseButton::Left) {

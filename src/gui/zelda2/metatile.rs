@@ -179,14 +179,14 @@ impl MetatileGroupGui {
             }
 
             {
-                let token = if i == self.tile_selected {
-                    Some(ui.push_style_colors(&[
-                        (imgui::StyleColor::Button, [0.9, 0.9, 0.9, 0.9]),
-                        (imgui::StyleColor::ButtonHovered, [1.0, 1.0, 1.0, 1.0]),
-                        (imgui::StyleColor::ButtonActive, [0.9, 0.9, 0.9, 0.9]),
-                    ]))
+                let mut token = if i == self.tile_selected {
+                    vec![
+                        ui.push_style_color(imgui::StyleColor::Button, [0.9, 0.9, 0.9, 0.9]),
+                        ui.push_style_color(imgui::StyleColor::ButtonHovered, [1.0, 1.0, 1.0, 1.0]),
+                        ui.push_style_color(imgui::StyleColor::ButtonActive, [0.9, 0.9, 0.9, 0.9]),
+                    ]
                 } else {
-                    None
+                    vec![]
                 };
                 let image = self.cache.get_alternate(
                     i as u8,
@@ -213,7 +213,7 @@ impl MetatileGroupGui {
                     info!("selected tile {:02x} with {:x?}", i, self.tile_edit);
                     ui.open_popup(&im_str!("Edit Metatile ${:02x}", i));
                 }
-                token.map(|t| t.pop(ui));
+                let _ = token.drain(..).map(|t| t.pop());
 
                 let tiles = &self.group.data[self.group_selected].tile[&i];
                 tooltip(
