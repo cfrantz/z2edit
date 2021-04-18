@@ -88,7 +88,7 @@ impl ProjectWizardGui {
             ui.open_popup(im_str!("Project Wizard"));
         }
 
-        ui.popup_modal(im_str!("Project Wizard"))
+        imgui::PopupModal::new(im_str!("Project Wizard"))
             .title_bar(true)
             .opened(&mut visible)
             .build(ui, || {

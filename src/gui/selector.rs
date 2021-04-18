@@ -34,7 +34,7 @@ impl Selector {
                     ui.open_popup(id);
                     self.open = true;
                 }
-                ui.popup_modal(id).build(ui, || {
+                imgui::PopupModal::new(id).build(ui, || {
                     ui.text(text);
                     ui.text("\n");
                     if ui.button(im_str!(" Yes ")) {

@@ -43,7 +43,7 @@ impl ErrorDialog {
                 info.open = true;
             }
 
-            ui.popup_modal(&im_str!("Error: {}##{}", info.title, info.id))
+            imgui::PopupModal::new(&im_str!("Error: {}##{}", info.title, info.id))
                 .title_bar(true)
                 .build(ui, || {
                     ui.text(&info.message);
