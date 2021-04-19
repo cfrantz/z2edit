@@ -419,7 +419,6 @@ impl ProjectGui {
             .map(|(col, style)| ui.push_style_color(*style, *col))
             .collect::<Vec<_>>();
         let hdr = imgui::CollapsingHeader::new(&ImString::new(&meta.label)).build(ui);
-        let _ = color_id.drain(..).map(|id| id.pop());
 
         if ui.is_item_active() {
             if ui.is_mouse_dragging(MouseButton::Left) {
@@ -448,6 +447,7 @@ impl ProjectGui {
                 edit.action.replace(EditAction::MoveTo(i));
             }
         }
+        let _ = color_id.drain(..).map(|id| id.pop());
 
         if ui.popup_context_item(im_str!("menu")) {
             if MenuItem::new(im_str!("Edit")).enabled(!is_open).build(ui) {
