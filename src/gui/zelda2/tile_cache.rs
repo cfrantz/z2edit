@@ -7,7 +7,7 @@ use crate::errors::*;
 use crate::gui::glhelper::Image;
 use crate::nes::hwpalette;
 use crate::nes::{Address, IdPath, MemoryAccess};
-use crate::zelda2::config::Config;
+use crate::zelda2::config::{ChrBankScheme, Config};
 use crate::zelda2::items::config::Sprite;
 use crate::zelda2::palette::config::Palette;
 use crate::zelda2::project::Edit;
@@ -79,6 +79,48 @@ impl TileCache {
         self.pal_override = addr;
     }
 
+    fn tile_mapping(&self, chr: Address, rom: &dyn MemoryAccess) -> Result<Address> {
+        match &self.schema {
+            Schema::None => Err(ErrorKind::NotFound("Schema::None".to_string()).into()),
+            Schema::RawTile(_, _) => Err(ErrorKind::NotFound("Schema::RawTile".to_string()).into()),
+            Schema::Overworld(config, _) | Schema::MetaTile(config, _, _) => {
+                let config = Config::get(config)?;
+                match config.misc.chr_bank_scheme {
+                    ChrBankScheme::Vanilla => Ok(chr),
+                    ChrBankScheme::MMC5_12By1K(table) => {
+                        let bank = chr.bank().unwrap().1;
+                        let subbank = chr.raw() as usize / 1024;
+                        let offset = chr.raw() as u16 % 1024;
+                        let remap = rom.read_bytes(table + (bank & !1) * 6, 12)?;
+                        Ok(Address::Chr(
+                            remap[8 + subbank] as isize / 4,
+                            1024 * (remap[8 + subbank] as u16 % 4) + offset,
+                        ))
+                    }
+                }
+            }
+            Schema::Enemy(config, _, _)
+            | Schema::Item(config, _)
+            | Schema::RawSprite(config, _, _, _) => {
+                let config = Config::get(config)?;
+                match config.misc.chr_bank_scheme {
+                    ChrBankScheme::Vanilla => Ok(chr),
+                    ChrBankScheme::MMC5_12By1K(table) => {
+                        let bank = chr.bank().unwrap().1;
+                        let subbank = chr.raw() as usize / 1024;
+                        let offset = chr.raw() as u16 % 1024;
+                        let remap = rom.read_bytes(table + (bank & !1) * 6, 12)?;
+                        let start = if bank & 1 == 0 { 0 } else { 4 };
+                        Ok(Address::Chr(
+                            remap[start + subbank] as isize / 4,
+                            1024 * (remap[start + subbank] as u16 % 4) + offset,
+                        ))
+                    }
+                }
+            }
+        }
+    }
+
     fn blit(
         &self,
         image: &mut Image,
@@ -98,6 +140,7 @@ impl TileCache {
                 0
             };
         }
+        let tileaddr = self.tile_mapping(tileaddr, &*rom)?;
         self.blit_raw(image, tileaddr, &palette, x0, y0, mirror, sprite)
     }
 
@@ -133,7 +176,7 @@ impl TileCache {
         Ok(())
     }
 
-    fn unblit(
+    fn unblit_raw(
         &self,
         image: &Image,
         tileaddr: Address,
@@ -200,7 +243,7 @@ impl TileCache {
         let mut image = Image::new(16, 16);
         self.blit(
             &mut image,
-            chr.set_val(table[0] as usize * 16),
+            chr + table[0] as usize * 16,
             palette + palidx * 4,
             0,
             0,
@@ -209,7 +252,7 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            chr.set_val(table[1] as usize * 16),
+            chr + table[1] as usize * 16,
             palette + palidx * 4,
             0,
             8,
@@ -218,7 +261,7 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            chr.set_val(table[2] as usize * 16),
+            chr + table[2] as usize * 16,
             palette + palidx * 4,
             8,
             0,
@@ -227,7 +270,7 @@ impl TileCache {
         )?;
         self.blit(
             &mut image,
-            chr.set_val(table[3] as usize * 16),
+            chr + table[3] as usize * 16,
             palette + palidx * 4,
             8,
             8,
@@ -237,6 +280,7 @@ impl TileCache {
 
         // If the tile is walkable water, darken it so it's visible as a
         // distinct entity on the map.
+        // TODO(cfrantz): Use config to control this.
         if tile == 13 {
             for p in image.pixels.iter_mut() {
                 *p = (*p >> 1) & 0x7f7f7f7f | 0xFF000000;
@@ -536,7 +580,7 @@ impl TileCache {
             .into());
         }
         self.bank_worker(sprite_layout, border, &mut |tile, x, y| {
-            self.unblit(&image, chr + tile * 16, palette, x, y)
+            self.unblit_raw(&image, chr + tile * 16, palette, x, y)
         })
     }
 

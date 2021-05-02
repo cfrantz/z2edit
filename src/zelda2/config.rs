@@ -28,11 +28,20 @@ impl freespace::config::Config {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ChrBankScheme {
+    // Normal MMC1 4K/8K CHR Bank pairs.
+    Vanilla,
+    // WIP MMC5 Expansion with a virtual bank table.
+    MMC5_12By1K(Address),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Miscellaneous {
     pub start: start::config::Config,
     pub freespace: freespace::config::Config,
     pub hacks: hacks::config::Config,
     pub world_to_bank: Address,
+    pub chr_bank_scheme: ChrBankScheme,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -85,6 +94,7 @@ impl Config {
                 freespace: freespace::config::Config::vanilla(),
                 hacks: hacks::config::Config::vanilla(),
                 world_to_bank: Address::Prg(-1, 0xc4b7),
+                chr_bank_scheme: ChrBankScheme::Vanilla,
             },
             palette: palette::config::Config::vanilla(),
             enemy: enemyattr::config::Config::vanilla(),

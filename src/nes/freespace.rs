@@ -243,6 +243,10 @@ impl FreeSpace {
         let mut total = 0;
         for f in self.freelist.iter() {
             if f.bank == bank && f.length > 0 {
+                info!(
+                    "Chunk {}: start=0x{:x?} length={}",
+                    chunks, f.address, f.length
+                );
                 chunks += 1;
                 total += f.length;
             }
