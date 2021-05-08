@@ -69,6 +69,11 @@ impl Buffer {
                     ..
                 } => o + l,
             };
+            info!(
+                "check_layout: length: expected={} actual={}",
+                length,
+                data.len()
+            );
             if length != data.len() {
                 bail!(ErrorKind::LayoutError(
                     "Layout length doesn't match data length".into()

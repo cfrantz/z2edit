@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::Address;
+use super::{Address, Layout};
 use crate::errors::*;
 
 pub mod config {
@@ -49,16 +49,34 @@ impl FreeSpaceRange {
 #[derive(Debug, Default, Clone)]
 pub struct FreeSpace {
     freelist: Vec<FreeSpaceRange>,
+    banks: isize,
 }
 
 impl FreeSpace {
-    pub fn new(config: &config::Config) -> Result<Self> {
+    pub fn new(config: &config::Config, layout: &Layout) -> Result<Self> {
         let mut space = FreeSpace::default();
         for item in config.freespace.iter() {
             FreeSpace::check_keepout_overlap(item.0, item.1, config);
             space.register(item.0, item.1 as u16)?;
         }
+        space.banks = layout.segment("prg")?.banks() as isize;
         Ok(space)
+    }
+
+    pub fn adjust_layout(&mut self, layout: &Layout) -> Result<()> {
+        let mut i = 0;
+        let len = self.freelist.len();
+        let oldtop = self.banks - 1;
+        self.banks = layout.segment("prg")?.banks() as isize;
+        let newtop = self.banks - 1;
+
+        while i < len {
+            if self.freelist[i].bank == oldtop {
+                self.freelist[i].bank = newtop;
+            }
+            i += 1;
+        }
+        Ok(())
     }
 
     fn check_keepout_overlap(addr: Address, length: usize, config: &config::Config) {
@@ -115,7 +133,22 @@ impl FreeSpace {
         }
     }
 
-    fn get_bank(address: Address) -> Result<isize> {
+    fn normalize_address(&self, address: Address) -> Result<Address> {
+        match address {
+            Address::Prg(bank, offset) => {
+                let bank = if bank < 0 { bank + self.banks } else { bank };
+                Ok(Address::Prg(bank, offset))
+            }
+            _ => Err(ErrorKind::FreeSpaceError(format!(
+                "Address must by of type Prg: {:x?}",
+                address
+            ))
+            .into()),
+        }
+    }
+
+    fn get_bank(&self, address: Address) -> Result<isize> {
+        let address = self.normalize_address(address)?;
         match address {
             Address::Prg(bank, _) => Ok(bank),
             _ => Err(ErrorKind::FreeSpaceError(format!(
@@ -127,6 +160,7 @@ impl FreeSpace {
     }
 
     pub fn register(&mut self, address: Address, length: u16) -> Result<()> {
+        let address = self.normalize_address(address)?;
         if self.contains(address) {
             return Err(ErrorKind::FreeSpaceError(format!(
                 "Address {:x?} already in freespace",
@@ -187,7 +221,7 @@ impl FreeSpace {
     }
 
     fn alloc_near_helper(&mut self, address: Address, length: u16, exact: bool) -> Result<Address> {
-        let bank = FreeSpace::get_bank(address)?;
+        let bank = self.get_bank(address)?;
         // Generate (delta from requested address, freespace index) tuples.
         let mut nearness = Vec::new();
         for (i, f) in self.freelist.iter().enumerate() {
@@ -223,7 +257,7 @@ impl FreeSpace {
     }
 
     pub fn alloc(&mut self, address: Address, length: u16) -> Result<Address> {
-        let bank = FreeSpace::get_bank(address)?;
+        let bank = self.get_bank(address)?;
         let mut result = self.alloc_exact_fit(bank, length);
         if result.is_err() {
             result = self.alloc_first_fit(bank, length);
@@ -238,7 +272,7 @@ impl FreeSpace {
         };
     }
     pub fn report(&self, address: Address) -> Result<(usize, u16)> {
-        let bank = FreeSpace::get_bank(address)?;
+        let bank = self.get_bank(address)?;
         let mut chunks = 0;
         let mut total = 0;
         for f in self.freelist.iter() {

@@ -71,7 +71,7 @@ impl Project {
             meta: RefCell::new(meta),
             edit: RefCell::new(ImportRom::new(file)?),
             rom: RefCell::default(),
-            memory: RefCell::new(FreeSpace::new(&config.misc.freespace)?),
+            memory: RefCell::new(FreeSpace::new(&config.misc.freespace, &config.layout)?),
             connectivity: RefCell::default(),
             action: RefCell::default(),
             error: RefCell::default(),
@@ -163,7 +163,7 @@ impl Project {
         if index == 0 {
             commit
                 .memory
-                .replace(FreeSpace::new(&config.misc.freespace)?);
+                .replace(FreeSpace::new(&config.misc.freespace, &config.layout)?);
             // For commit zero, `pack` loads the ROM which is needed for
             // the connectivity scan.
             commit.edit.borrow().pack(&commit)?;
@@ -186,6 +186,7 @@ impl Project {
                     .rom
                     .borrow_mut()
                     .apply_layout(config.layout.clone())?;
+                commit.memory.borrow_mut().adjust_layout(&config.layout)?;
             }
         }
         if commit.meta.borrow().skip_pack {

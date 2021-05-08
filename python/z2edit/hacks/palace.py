@@ -82,7 +82,7 @@ def continue_from_palaces(edit, asm):
     """Continue from any Palace"""
     length = 45
     # FIXME: should be able to use -1, but freespace allocator doesn't support it.
-    bank = 7
+    bank = -1
     freespace = edit.alloc_near(Address.prg(bank, 0xd39a), length)
     print("Using freespace at {}".format(freespace))
     freespace = freespace.addr()

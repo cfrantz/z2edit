@@ -176,6 +176,9 @@ BANKS = [
     (0x19, PALACE_BACKGROUND, PALACE_SPRITES),          # P6
 ]
 
+def Chr1k(bank, offset):
+    return Address.chr(bank//4, 1024*(bank%4) + offset)
+
 class ChrDedup(object):
     """Deduplicate CHR banks on 1KiB boundaries, thus reducing graphics
     duplication and opening up the MMC5 CHR arrangment for more graphics and
@@ -528,6 +531,8 @@ def hack(edit, asm, vbanks=False):
             bank = overworld.chr.Chr[0]
             overworld.chr.Chr[0] = 0x20 + bank // 2
     else:
+        # Monkey patch in a useful constructor method
+        Address.Chr1k = staticmethod(Chr1k)
         d = ChrDedup(edit)
         d.analyze()
         d.print()
