@@ -271,13 +271,15 @@ class ChrDedup(object):
                 self.edit.write(vbank_table + i, bank)
                 i += 1
 
-        vbank_routine_len = 26
+        vbank_routine_len = 33
         vbank_routine = self.edit.alloc(Address.prg(0, 0), vbank_routine_len)
         vbank_routine_end = vbank_routine.addr() + vbank_routine_len
 
         # 26 bytes
         asm(f"""
         VBANK_TABLE = {vbank_table.addr()}
+        VBANK_BG_RESTORE = $06ec
+        _BG_RESTORE_OFFSET = $06e4
 
         .bank 0
         .org {vbank_routine.addr()}
@@ -290,6 +292,10 @@ class ChrDedup(object):
         vbank_loop:
             lda VBANK_TABLE,x
             sta $5120,y
+            cpy #8
+            bcc vbank_incr
+            sta _BG_RESTORE_OFFSET,y
+        vbank_incr:
             inx
             iny
             cpy #12
@@ -303,7 +309,6 @@ class ChrDedup(object):
         .org $a86b
             jsr     bank0_chr_load_A
 
-        .bank 7
         .org $ff70
         bank7_code0 = $c000
         bank7_reset:
@@ -333,7 +338,7 @@ class ChrDedup(object):
             jsr     bank7_chr_bank_switch__load_A
             lda     #$07
             jsr     bank7_Load_Bank_A_0x8000
-            cli                     ; FIXME: Want interrupts?
+            nop ;cli                     ; FIXME: Want interrupts?
             jmp     bank7_code0
 
         .org $ffb1
@@ -341,7 +346,7 @@ class ChrDedup(object):
             ldx     #$80
             stx     $5115
             jsr     bank0_chr_load_A
-            jmp      bank7_Load_Bank_769_at_0x8000
+            jmp     bank7_Load_Bank_769_at_0x8000
         bank7_chr_helper_for_bank5:
             jsr     bank7_chr_bank_switch__load_A
             lda     #5
@@ -364,10 +369,15 @@ class ChrDedup(object):
         .db $ea,$ea,$ea,$ea
         .db $ea,$ea,$ea,$ea
         .db $ea,$ea,$ea
+        """)
 
+        # A bug in the assembler - fixups don't happen properly when using
+        # .bank directives to switch banks.
+        bank7_chr_helper_for_bank5 = asm.symtab['BANK7_CHR_HELPER_FOR_BANK5']
+        asm(f"""
         .bank 5
         .org $a728
-            jsr bank7_chr_helper_for_bank5
+            jsr {bank7_chr_helper_for_bank5}
         """)
 
 
@@ -450,7 +460,7 @@ def hack(edit, asm, vbanks=False):
         jsr     bank7_chr_bank_switch__load_A
         lda     #$07
         jsr     bank7_Load_Bank_A_0x8000
-        cli                     ; FIXME: Want interrupts?
+        nop ;cli                     ; FIXME: Want interrupts?
         jmp     bank7_code0
     .db $ea,$ea,$ea,$ea
     .db $ea,$ea,$ea,$ea

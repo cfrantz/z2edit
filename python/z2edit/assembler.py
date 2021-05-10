@@ -414,7 +414,7 @@ class Asm:
     def __init__(self, rom, org=0, bank=-1):
         self.rom = rom
         self.org = org
-        self.last_org = org
+        self.last_org = self.org
         self.bank = bank
         self.reset()
 
@@ -428,7 +428,7 @@ class Asm:
         self.reset()
         if org is not None:
             self.org = org
-            self.last_org = org
+            self.last_org = self.org
         if bank is not None:
             self.bank = bank
         for line in src.split('\n'):
@@ -466,7 +466,7 @@ class Asm:
     def dis(self, length, *, org=None, bank=None):
         if org is not None:
             self.org = org
-            self.last_org = addr
+            self.last_org = self.org
         if bank is not None:
             self.bank = bank
 
@@ -668,7 +668,7 @@ class Asm:
             if opcode == '.ORG':
                 print("Assembler: ORG changed %04x => %04x" % (self.org, addr))
                 self.org = addr
-                self.last_org = addr
+                self.last_org = self.org
             elif opcode == ".ASSERT_ORG":
                 if self.org != addr:
                     raise OperandError("ORG assertion failed on line %d (org=$%04x, expected=$%04x, delta since last org=%d)" % (

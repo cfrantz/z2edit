@@ -50,39 +50,40 @@ git submodule update --init --recursive
 
 ### TODO
 
-- Done (or at least a partial implementation)
+- Bugs or Enhancements
     - 6502 Assembler
-    - Console (python)
+      - Fixups don't happen properly when using mutlple `.bank` directives.
+      - `.assert_org` is tedious during development.
+      - No symbolic computation: `some_symbol+1`.
+      - Need global vs. local symbols.  Globals should be remembered
+        through the lifetime of the hack.
     - Emulate / Emulate at a location
-    - Enemy Attributes
-    - Experience & Spells
-    - Enemy XP values and graphics
-    - Import Rom
-    - Misc Hacks (still need to add several common misc hacks)
-    - Overworld editor
-    - Palette Editor
-    - Palace graphics banks and palettes (added to overworld connections)
-    - Python script execution
-    - Sideview editor
-      - TODO: copy/clone policy for maps which point to the same address
-    - Start Values
-    - Text Table
-    - Apply default fixes (move maps and code out of keepout regions)
+      - Need to add to the sideview editor.
+    - Console (python)
+      - Need to exec an init script to import common things.
     - Zelda 2 config updates & alternate configs
-    - Remember the location of the vanilla rom
-    - Periodic automatic save
-    - Remember project association with exported ROMs
-    - CHR viewer / importer.
-    - Metatile Editor (aka "Object table" in Z2Edit 1).
-    - Multimap viewer
+      - Better config management throughout the hack.
     - Relative-ize paths to location of project file (done for ImportChr)
-      - TODO: Figure out what to do for base ROM import.
       - TODO: do something clever to remember the path in the autosave files.
+      - TODO: figure out windows paths.
+    - CHR viewer / importer.
+      - Alternate sized CHR banks (1K/4K).
+      - Import CHR from a NES file.
+    - Misc Hacks
+      - still need to add several common misc hacks.
+    - Occasional observation of a commit getting overwritten during a replay
+      - not sure how to duplicate.
+      - seems related to commit index in each of the guis.
+      - need to refactor how editors and commits work.
+    - Freespace allocator: `alloc_exact` won't cut an existing region even if
+      the desired addresss/range is valid within the region.
 
 - Not Started
     - Drops (drop probabilities, hidden drops, pbag values)
     - Item Effects
     - Tile transforms
+    - Verify freespace when loading a ROM.
+      - Needed when loading already-hacked ROMs.
     - Help documentation
 
 - Other Features

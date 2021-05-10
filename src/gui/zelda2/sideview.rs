@@ -21,7 +21,7 @@ use crate::nes::MemoryAccess;
 use crate::util::clamp;
 use crate::util::undo::UndoStack;
 use crate::zelda2::config::Config;
-use crate::zelda2::objects::config::ObjectKind;
+use crate::zelda2::objects::config::{ObjectArea, ObjectKind};
 use crate::zelda2::overworld::Connector;
 use crate::zelda2::project::{Edit, EditAction, Project, RomData};
 use crate::zelda2::sideview::{Decompressor, Enemy, MapCommand, Sideview};
@@ -258,57 +258,52 @@ impl SideviewGui {
         self.enemies_map.clear();
         self.connections.clear();
 
-        for (i, obj) in config
-            .objects
-            .list(&scfg.kind, &ObjectKind::Small)
-            .iter()
-            .enumerate()
-        {
+        for i in 0..31 {
+            let id = if i < 0x10 { i } else { 0x10 + ((i & 0xF) << 4) };
             self.objects
-                .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
-            self.objects_map.insert(obj.id as usize, i);
-            debug!(
-                "object: {:?}/{:?}/{:x?} => {:?}",
-                scfg.kind,
-                ObjectKind::Small,
-                obj.id,
-                i
-            );
+                .push((im_str!("{:02x}: Undefined Object", id), id));
+            self.objects_map.insert(id as usize, i as usize);
+            debug!("init {:02x} -> {}", id, i);
+
+            if scfg.kind == ObjectArea::Town {
+                // Hack: only Towns have extra objects in the 00..0F range.
+                // All other extra objects in the game are in the 10..F0 range.
+                self.extras
+                    .push((im_str!("{:02x}: Undefined Extra", id), id));
+                self.extras_map.insert(id as usize, i as usize);
+            }
         }
-        let delta = self.objects.len();
-        for (i, obj) in config
+        if scfg.kind != ObjectArea::Town {
+            for i in 0..15 {
+                let id = 0x10 + (i << 4);
+                self.extras
+                    .push((im_str!("{:02x}: Undefined Extra", id), id));
+                self.extras_map.insert(id as usize, i as usize);
+            }
+        }
+
+        for obj in config.objects.list(&scfg.kind, &ObjectKind::Small).iter() {
+            self.objects[obj.id as usize] = (im_str!("{:02x}: {}", obj.id, obj.name), obj.id);
+        }
+        for obj in config
             .objects
             .list(&scfg.kind, &ObjectKind::Objset(self.sideview.map.objset))
             .iter()
-            .enumerate()
         {
-            self.objects
-                .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
-            self.objects_map.insert(obj.id as usize, i + delta);
-            debug!(
-                "object: {:?}/{:?}/{:x?} => {:?}",
-                scfg.kind,
-                ObjectKind::Objset(self.sideview.map.objset),
-                obj.id,
-                i + delta
-            );
+            let index = 0x10 + (obj.id >> 4) - 1;
+            self.objects[index as usize] = (im_str!("{:02x}: {}", obj.id, obj.name), obj.id);
         }
-        for (i, obj) in config
-            .objects
-            .list(&scfg.kind, &ObjectKind::Extra)
-            .iter()
-            .enumerate()
-        {
-            self.extras
-                .push((im_str!("{:02x}: {}", obj.id, obj.name), obj.id));
-            self.extras_map.insert(obj.id as usize, i);
-            debug!(
-                "object: {:?}/{:?}/{:x?} => {:?}",
-                scfg.kind,
-                ObjectKind::Extra,
-                obj.id,
-                i
-            );
+        for obj in config.objects.list(&scfg.kind, &ObjectKind::Extra).iter() {
+            let index = if scfg.kind == ObjectArea::Town {
+                if obj.id < 0x10 {
+                    obj.id
+                } else {
+                    0x10 + (obj.id >> 4) - 1
+                }
+            } else {
+                (obj.id >> 4) - 1
+            };
+            self.extras[index as usize] = (im_str!("{:02x}: {}", obj.id, obj.name), obj.id);
         }
         for (i, obj) in config.items.item.iter().enumerate() {
             self.items
