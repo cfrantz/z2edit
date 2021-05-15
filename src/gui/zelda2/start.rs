@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use imgui;
 use imgui::im_str;
+use imgui::ImString;
 
 use crate::errors::*;
 use crate::gui::zelda2::Gui;
@@ -13,26 +14,21 @@ use crate::zelda2::start::Start;
 pub struct StartGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
     edit: Rc<Edit>,
     start: Start,
     error: ErrorDialog,
 }
 
 impl StartGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let edit = edit.unwrap_or_else(|| project.create_edit("Start", None).unwrap());
 
         let mut start = Start::default();
         start.unpack(&edit)?;
 
-        let win_id = edit.win_id(commit_index);
         Ok(Box::new(StartGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
             edit: edit,
             start: start,
             error: ErrorDialog::default(),
@@ -40,11 +36,8 @@ impl StartGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let edit = Box::new(self.start.clone());
-        let i = project.commit(self.commit_index, edit, None)?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
-        Ok(())
+        let romdata = Box::new(self.start.clone());
+        project.commit_one(&self.edit, romdata)
     }
 }
 
@@ -54,11 +47,7 @@ impl Gui for StartGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("Start Values##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -151,6 +140,6 @@ impl Gui for StartGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

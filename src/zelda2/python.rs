@@ -67,7 +67,7 @@ impl RomData for PythonScript {
     }
 
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        PythonScriptGui::new(project, commit_index)
+        PythonScriptGui::new(project, Some(project.get_commit(commit_index)?))
     }
 
     fn to_text(&self) -> Result<String> {

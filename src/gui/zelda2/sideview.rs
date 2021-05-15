@@ -30,8 +30,7 @@ use crate::zelda2::text_table::TextTable;
 pub struct SideviewGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
+    is_new: bool,
     edit: Rc<Edit>,
     names: Vec<ImString>,
     ids: Vec<IdPath>,
@@ -81,13 +80,18 @@ macro_rules! str_id {
 impl SideviewGui {
     pub fn new(
         project: &Project,
-        commit_index: isize,
+        edit: Option<Rc<Edit>>,
         which: Option<IdPath>,
     ) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+        let is_new = edit.is_none();
+        let edit = edit.unwrap_or_else(|| {
+            project
+                .create_edit("Sideview", Some("west_hyrule/0"))
+                .unwrap()
+        });
         let config = Config::get(&edit.config())?;
 
-        let mut sideview = if commit_index == -1 {
+        let mut sideview = if is_new {
             Sideview::default()
         } else {
             let edit = edit.edit.borrow();
@@ -139,12 +143,10 @@ impl SideviewGui {
         let enemy = TileCache::new(&edit, Schema::None);
         let mut undo = UndoStack::new(1000);
         undo.push(sideview.clone());
-        let win_id = edit.win_id(commit_index);
         let mut ret = Box::new(SideviewGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
+            is_new: is_new,
             edit: edit,
             names: names,
             ids: ids,
@@ -178,19 +180,19 @@ impl SideviewGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let edit = Box::new(self.sideview.clone());
+        let romdata = Box::new(self.sideview.clone());
         let config = Config::get(&self.edit.config())?;
         let group = config.sideview.find(&self.sideview.id)?;
         let area = self.sideview.id.usize_last()?;
-        let name = if let Some(pet_name) = group.pet_names.get(&area) {
+        let suffix = if let Some(pet_name) = group.pet_names.get(&area) {
             format!("{} {} ({})", group.name, area, pet_name)
         } else {
             format!("{} {}", group.name, area)
         };
+        self.edit.set_label_suffix(&suffix);
 
-        let i = project.commit(self.commit_index, edit, Some(&name))?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
+        project.commit_one(&self.edit, romdata)?;
+        self.is_new = false;
         Ok(())
     }
 
@@ -1513,21 +1515,13 @@ impl Gui for SideviewGui {
         }
         let config = Config::get(&self.edit.config()).unwrap();
         let scfg = config.sideview.find(&self.sideview.id).unwrap();
-        let title = if self.commit_index == -1 {
-            im_str!(
-                "Sideview Editor: {}##{}",
-                self.names[self.selector.value()],
-                self.win_id
-            )
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {
                 let width = ui.push_item_width(400.0);
-                if self.commit_index == -1 {
+                if self.is_new {
                     imgui::ComboBox::new(im_str!("Area"))
                         .height(imgui::ComboBoxHeight::Large)
                         .build_simple(ui, self.selector.as_mut(), &self.names, &|x| {
@@ -1689,6 +1683,6 @@ impl Gui for SideviewGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

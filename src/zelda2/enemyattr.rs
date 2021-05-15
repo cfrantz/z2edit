@@ -242,7 +242,7 @@ impl RomData for EnemyGroup {
     }
 
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        EnemyGui::new(project, commit_index)
+        EnemyGui::new(project, Some(project.get_commit(commit_index)?))
     }
 
     fn to_text(&self) -> Result<String> {

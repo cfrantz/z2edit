@@ -453,7 +453,11 @@ impl MultiMapGui {
             }
             if ui.popup_context_item(im_str!("menu")) {
                 if imgui::MenuItem::new(im_str!("Edit")).build(ui) {
-                    self.editor = match SideviewGui::new(&project, -1, Some(room.id.clone())) {
+                    self.editor = match SideviewGui::new(
+                        &project,
+                        Some(Rc::clone(&self.edit)),
+                        Some(room.id.clone()),
+                    ) {
                         Ok(gui) => Some(gui),
                         Err(e) => {
                             self.error.show(

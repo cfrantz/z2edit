@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::any::Any;
 use std::cell::{Cell, Ref, RefCell};
 use std::clone::Clone;
@@ -66,6 +67,7 @@ impl Project {
             skip_pack: false,
             extra: extra,
         };
+        let mut rng = rand::thread_rng();
         let config = Config::get(&meta.config)?;
         let commit = Rc::new(Edit {
             meta: RefCell::new(meta),
@@ -77,6 +79,7 @@ impl Project {
             error: RefCell::default(),
             subdir: project.subdir.clone(),
             extra_data: project.extra_data.clone(),
+            random_id: rng.gen(),
         });
         project.edits.push(commit);
         project.replay(0, -1)?;
@@ -95,10 +98,12 @@ impl Project {
 
     fn from_reader(r: impl Read) -> Result<Self> {
         let mut project: Project = serde_json::from_reader(r)?;
+        let mut rng = rand::thread_rng();
         for edit in project.edits.iter_mut() {
             let mut e = Rc::get_mut(edit).unwrap();
             e.subdir = project.subdir.clone();
             e.extra_data = project.extra_data.clone();
+            e.random_id = rng.gen();
         }
         Ok(project)
     }
@@ -234,6 +239,7 @@ impl Project {
                 extra: IndexMap::new(),
             };
 
+            let mut rng = rand::thread_rng();
             let commit = Rc::new(Edit {
                 meta: RefCell::new(meta),
                 edit: RefCell::new(edit),
@@ -244,6 +250,7 @@ impl Project {
                 error: RefCell::default(),
                 subdir: self.subdir.clone(),
                 extra_data: self.extra_data.clone(),
+                random_id: rng.gen(),
             });
             commit
                 .connectivity
@@ -256,6 +263,55 @@ impl Project {
         } else {
             Err(ErrorKind::CommitIndexError(index).into())
         }
+    }
+
+    pub fn previous_commit_index(&self, edit: Option<&Rc<Edit>>) -> isize {
+        if let Some(e) = edit {
+            for i in 1..self.edits.len() {
+                if Rc::ptr_eq(e, &self.edits[i]) {
+                    return (i - 1) as isize;
+                }
+            }
+        }
+        // If no previous commit, return negative one.
+        -1
+    }
+
+    pub fn previous_commit(&self, edit: Option<&Rc<Edit>>) -> Rc<Edit> {
+        let i = self.previous_commit_index(edit);
+        if i >= 0 {
+            Rc::clone(&self.edits[i as usize])
+        } else {
+            Rc::clone(&self.edits.last().unwrap())
+        }
+    }
+
+    pub fn commit_one(&mut self, edit: &Rc<Edit>, romdata: Box<dyn RomData>) -> Result<()> {
+        let prev_index = self.previous_commit_index(Some(edit));
+        if prev_index == -1 {
+            let last = self.edits.last().unwrap();
+            {
+                let mut meta = edit.meta.borrow_mut();
+                meta.config = last.next_config();
+                meta.skip_pack = false;
+            }
+
+            edit.edit.replace(romdata);
+            edit.rom.replace(last.rom.borrow().clone());
+            edit.memory.replace(last.memory.borrow().clone());
+            edit.action.replace(Default::default());
+            edit.error.replace(Default::default());
+            edit.connectivity.replace(Connectivity::from_rom(&edit)?);
+
+            // Commit to end of list.
+            self.commit_edit(-1, &edit)?;
+        } else {
+            let index = prev_index + 1;
+            let commit = self.get_commit(index)?;
+            commit.edit.replace(romdata);
+            self.commit_edit(index, &commit)?;
+        }
+        Ok(())
     }
 
     pub fn commit_edit(&mut self, index: isize, edit: &Rc<Edit>) -> Result<isize> {
@@ -277,6 +333,10 @@ impl Project {
         self.replay(index, -1)?;
         self.changed.set(true);
         Ok(ret)
+    }
+
+    pub fn create_edit(&self, kind: &str, id: Option<&str>) -> Result<Rc<Edit>> {
+        self.edits.last().unwrap().create(kind, id)
     }
 }
 
@@ -369,6 +429,8 @@ pub struct Edit {
     pub subdir: RelativePath,
     #[serde(skip)]
     pub extra_data: ProjectExtraDataContainer,
+    #[serde(skip)]
+    pub random_id: u64,
 }
 
 #[derive(Debug, Default)]
@@ -419,6 +481,32 @@ impl EmulateAt {
 }
 
 impl Edit {
+    pub fn create(&self, kind: &str, id: Option<&str>) -> Result<Rc<Edit>> {
+        let meta = Metadata {
+            label: kind.to_owned(),
+            user: whoami::username(),
+            timestamp: UTime::now(),
+            comment: String::default(),
+            config: self.next_config(),
+            skip_pack: false,
+            extra: IndexMap::new(),
+        };
+        let mut rng = rand::thread_rng();
+        let edit = Rc::new(Edit {
+            meta: RefCell::new(meta),
+            edit: RefCell::new(edit_factory(kind, id)?),
+            rom: self.rom.clone(),
+            memory: self.memory.clone(),
+            connectivity: self.connectivity.clone(),
+            action: RefCell::default(),
+            error: RefCell::default(),
+            subdir: self.subdir.clone(),
+            extra_data: self.extra_data.clone(),
+            random_id: rng.gen(),
+        });
+        Ok(edit)
+    }
+
     pub fn next_config(&self) -> String {
         let meta = self.meta.borrow();
         if let Some(config) = meta.extra.get("next_config") {
@@ -434,6 +522,10 @@ impl Edit {
 
     pub fn label(&self) -> Ref<'_, String> {
         Ref::map(self.meta.borrow(), |meta| &meta.label)
+    }
+
+    pub fn set_label_suffix(&self, suffix: &str) {
+        self.meta.borrow_mut().label = format!("{}: {}", self.edit.borrow().name(), suffix);
     }
 
     pub fn export(&self, filename: &Path) -> Result<String> {
@@ -467,6 +559,15 @@ impl Edit {
             UTime::now()
         } else {
             self.meta.borrow().timestamp
+        }
+    }
+
+    pub fn title(&self) -> String {
+        let meta = self.meta.borrow();
+        if meta.label.is_empty() {
+            format!("{}##{}", self.edit.borrow().name(), self.random_id)
+        } else {
+            format!("{}##{}", meta.label, self.random_id)
         }
     }
 
@@ -524,27 +625,7 @@ impl EditProxy {
     }
 
     fn create(&self, kind: &str, id: Option<&str>) -> PyResult<EditProxy> {
-        let meta = Metadata {
-            label: kind.to_owned(),
-            user: whoami::username(),
-            timestamp: UTime::now(),
-            comment: String::default(),
-            config: self.edit.next_config(),
-            skip_pack: false,
-            extra: IndexMap::new(),
-        };
-        let commit = Rc::new(Edit {
-            meta: RefCell::new(meta),
-            edit: RefCell::new(edit_factory(kind, id)?),
-            rom: self.edit.rom.clone(),
-            memory: self.edit.memory.clone(),
-            connectivity: self.edit.connectivity.clone(),
-            action: RefCell::default(),
-            error: RefCell::default(),
-            subdir: self.edit.subdir.clone(),
-            extra_data: self.edit.extra_data.clone(),
-        });
-        Ok(EditProxy::new(commit))
+        Ok(EditProxy::new(self.edit.create(kind, id)?))
     }
 
     fn unpack(&self, proxy: Option<&EditProxy>) -> PyResult<()> {

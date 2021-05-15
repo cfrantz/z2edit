@@ -830,7 +830,7 @@ impl RomData for Sideview {
         self
     }
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        SideviewGui::new(project, commit_index, None)
+        SideviewGui::new(project, Some(project.get_commit(commit_index)?), None)
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {

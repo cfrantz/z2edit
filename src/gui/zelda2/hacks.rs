@@ -15,8 +15,6 @@ use crate::zelda2::project::{Edit, Project, RomData};
 pub struct HacksGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
     edit: Rc<Edit>,
     hacks: Hacks,
     titles: Vec<ImString>,
@@ -25,17 +23,14 @@ pub struct HacksGui {
 }
 
 impl HacksGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
-        let win_id = edit.win_id(commit_index);
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let edit = edit.unwrap_or_else(|| project.create_edit("Hacks", None).unwrap());
         let hacks = HacksGui::init(&edit)?;
         let (titles, names) = HacksGui::names(&edit)?;
 
         Ok(Box::new(HacksGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
             edit: edit,
             hacks: hacks,
             titles: titles,
@@ -82,11 +77,8 @@ impl HacksGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let edit = Box::new(self.hacks.clone());
-        let i = project.commit(self.commit_index, edit, None)?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
-        Ok(())
+        let romdata = Box::new(self.hacks.clone());
+        project.commit_one(&self.edit, romdata)
     }
 }
 
@@ -96,11 +88,7 @@ impl Gui for HacksGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("Miscellaneous Hacks##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -173,6 +161,6 @@ impl Gui for HacksGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

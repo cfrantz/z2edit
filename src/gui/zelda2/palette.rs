@@ -16,8 +16,6 @@ use crate::zelda2::project::{Edit, Project, RomData};
 pub struct PaletteGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
     edit: Rc<Edit>,
     names: Vec<ImString>,
     orig: Vec<PaletteGroup>,
@@ -27,27 +25,25 @@ pub struct PaletteGui {
 }
 
 impl PaletteGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let is_new = edit.is_none();
+        let edit = edit.unwrap_or_else(|| project.create_edit("PaletteGroup", None).unwrap());
         let config = Config::get(&edit.config())?;
         let mut names = Vec::new();
         for group in config.palette.0.iter() {
             names.push(ImString::new(&group.name));
         }
         let data = PaletteGui::read_palettes(&config, &edit)?;
-        let orig = if commit_index > 0 {
-            let prev = project.get_commit(commit_index - 1)?;
-            PaletteGui::read_palettes(&config, &prev)?
-        } else {
+        let orig = if is_new {
             data.clone()
+        } else {
+            let prev = project.previous_commit(Some(&edit));
+            PaletteGui::read_palettes(&config, &prev)?
         };
 
-        let win_id = edit.win_id(commit_index);
         Ok(Box::new(PaletteGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
             edit: edit,
             names: names,
             orig: orig,
@@ -75,19 +71,16 @@ impl PaletteGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let mut edit = Box::new(PaletteGroup::default());
+        let mut romdata = Box::new(PaletteGroup::default());
         // Diff the changes against the original data.
         for (og, ng) in self.orig.iter().zip(self.group.iter()) {
             for (op, np) in og.data.iter().zip(ng.data.iter()) {
                 if op != np {
-                    edit.data.push(np.clone());
+                    romdata.data.push(np.clone());
                 }
             }
         }
-        let i = project.commit(self.commit_index, edit, None)?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
-        Ok(())
+        project.commit_one(&self.edit, romdata)
     }
 
     pub fn color_selector(name: &ImStr, ui: &imgui::Ui) -> Option<u8> {
@@ -132,11 +125,7 @@ impl Gui for PaletteGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("Palette Editor##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -211,6 +200,6 @@ impl Gui for PaletteGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

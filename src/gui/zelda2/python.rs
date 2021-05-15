@@ -16,8 +16,6 @@ use crate::zelda2::python::PythonScript;
 pub struct PythonScriptGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
     edit: Rc<Edit>,
     code: ImString,
     filename: ImString,
@@ -27,10 +25,11 @@ pub struct PythonScriptGui {
 }
 
 impl PythonScriptGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let is_new = edit.is_none();
+        let edit = edit.unwrap_or_else(|| project.create_edit("PythonScript", None).unwrap());
 
-        let script = if commit_index == -1 {
+        let script = if is_new {
             PythonScript::default()
         } else {
             let edit = edit.edit.borrow();
@@ -50,12 +49,9 @@ impl PythonScriptGui {
             ImString::default()
         };
 
-        let win_id = edit.win_id(commit_index);
         Ok(Box::new(PythonScriptGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
             edit: edit,
             code: ImString::new(&script.code),
             filename: filename,
@@ -66,7 +62,7 @@ impl PythonScriptGui {
     }
 
     fn file_dialog(&self, ftype: Option<&str>) -> Option<String> {
-        let result = nfd::open_file_dialog(ftype, None).expect("ImportChrBankGui::file_dialog");
+        let result = nfd::open_file_dialog(ftype, None).expect("PythonScriptGui::file_dialog");
         match result {
             nfd::Response::Okay(path) => Some(path),
             _ => None,
@@ -104,13 +100,11 @@ impl PythonScriptGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let edit = Box::new(PythonScript {
+        let romdata = Box::new(PythonScript {
             file: self.relative_name.as_ref().map(|p| p.into()),
             code: self.code.to_string(),
         });
-        let i = project.commit(self.commit_index, edit, None)?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
+        project.commit_one(&self.edit, romdata)?;
         Ok(())
     }
 }
@@ -121,11 +115,7 @@ impl Gui for PythonScriptGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("Python Script##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -201,6 +191,6 @@ impl Gui for PythonScriptGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

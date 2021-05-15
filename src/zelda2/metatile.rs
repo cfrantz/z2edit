@@ -178,7 +178,7 @@ impl RomData for MetatileGroup {
         self
     }
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        MetatileGroupGui::new(project, commit_index)
+        MetatileGroupGui::new(project, Some(project.get_commit(commit_index)?))
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {

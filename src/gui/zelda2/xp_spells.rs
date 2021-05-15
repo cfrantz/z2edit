@@ -22,8 +22,6 @@ use crate::zelda2::xp_spells::{config, ExperienceTable, ExperienceTableGroup, Ex
 pub struct ExperienceTableGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
     edit: Rc<Edit>,
     names: Vec<ImString>,
     orig: Vec<ExperienceTableGroup>,
@@ -85,8 +83,10 @@ static COLUMNS: Lazy<HashMap<String, Vec<&ImStr>>> = Lazy::new(|| {
 });
 
 impl ExperienceTableGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let is_new = edit.is_none();
+        let edit =
+            edit.unwrap_or_else(|| project.create_edit("ExperienceTableGroup", None).unwrap());
         let config = Config::get(&edit.config())?;
         let mut names = Vec::new();
         for group in config.experience.group.iter() {
@@ -95,11 +95,11 @@ impl ExperienceTableGui {
         names.push(ImString::new("Experience Values & Graphics"));
 
         let (data, values) = ExperienceTableGui::read_tables(&config, &edit)?;
-        let (orig, values) = if commit_index > 0 {
-            let prev = project.get_commit(commit_index - 1)?;
-            ExperienceTableGui::read_tables(&config, &prev)?
-        } else {
+        let (orig, values) = if is_new {
             (data.clone(), values)
+        } else {
+            let prev = project.previous_commit(Some(&edit));
+            ExperienceTableGui::read_tables(&config, &prev)?
         };
 
         let tile_cache = TileCache::new(
@@ -111,12 +111,9 @@ impl ExperienceTableGui {
                 1,
             ),
         );
-        let win_id = edit.win_id(commit_index);
         Ok(Box::new(ExperienceTableGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
             edit: edit,
             names: names,
             orig: orig,
@@ -158,21 +155,17 @@ impl ExperienceTableGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let mut edit = Box::new(ExperienceTableGroup::default());
+        let mut romdata = Box::new(ExperienceTableGroup::default());
         for (og, ng) in self.orig.iter().zip(self.group.iter()) {
             for (ot, nt) in og.data.iter().zip(ng.data.iter()) {
                 if ot != nt {
-                    edit.data.push(nt.clone());
+                    romdata.data.push(nt.clone());
                 }
             }
         }
 
-        edit.value = self.value.clone();
-        let i = project.commit(self.commit_index, edit, None)?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
-
-        Ok(())
+        romdata.value = self.value.clone();
+        project.commit_one(&self.edit, romdata)
     }
 
     pub fn table_row(
@@ -297,11 +290,7 @@ impl Gui for ExperienceTableGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("ExperienceTable Editor##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -383,6 +372,6 @@ impl Gui for ExperienceTableGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

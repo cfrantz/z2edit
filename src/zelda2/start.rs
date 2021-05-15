@@ -168,7 +168,7 @@ impl RomData for Start {
     }
 
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        StartGui::new(project, commit_index)
+        StartGui::new(project, Some(project.get_commit(commit_index)?))
     }
 
     fn to_text(&self) -> Result<String> {

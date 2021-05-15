@@ -22,8 +22,7 @@ use crate::zelda2::project::{Edit, Project};
 pub struct ImportChrBankGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
+    is_new: bool,
     edit: Rc<Edit>,
     names: Vec<ImString>,
     filename: ImString,
@@ -36,11 +35,12 @@ pub struct ImportChrBankGui {
 }
 
 impl ImportChrBankGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let is_new = edit.is_none();
+        let edit = edit.unwrap_or_else(|| project.create_edit("ImportChrBank", None).unwrap());
         let config = Config::get(&edit.config())?;
 
-        let import = if commit_index == -1 {
+        let import = if is_new {
             ImportChrBank::default()
         } else {
             let obj = edit.edit.borrow();
@@ -63,12 +63,10 @@ impl ImportChrBankGui {
         let filename = ImString::new(&import.file.to_string());
 
         let selected = import.bank;
-        let win_id = edit.win_id(commit_index);
         Ok(Box::new(ImportChrBankGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
+            is_new: is_new,
             edit: edit,
             names: names,
             filename: filename,
@@ -82,14 +80,10 @@ impl ImportChrBankGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let label = format!("bank ${:02x}", self.selector.value());
-        let i = project.commit(
-            self.commit_index,
-            Box::new(self.import.clone()),
-            Some(&label),
-        )?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
+        self.edit
+            .set_label_suffix(&format!("bank ${:02x}", self.selector.value()));
+        project.commit_one(&self.edit, Box::new(self.import.clone()))?;
+        self.is_new = false;
         self.cache = TileCache::new(&self.edit, Schema::None);
         self.refresh_image();
         self.overlay_image = None;
@@ -250,17 +244,13 @@ impl Gui for ImportChrBankGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("CHR Import##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .build(ui, || {
                 let width = ui.push_item_width(200.0);
-                if self.commit_index == -1 {
+                if self.is_new {
                     imgui::ComboBox::new(im_str!("Bank")).build_simple(
                         ui,
                         self.selector.as_mut(),
@@ -317,6 +307,6 @@ impl Gui for ImportChrBankGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

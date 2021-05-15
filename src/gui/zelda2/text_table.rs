@@ -15,8 +15,7 @@ use crate::zelda2::text_table::{TextItem, TextTable};
 pub struct TextTableGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
+    is_new: bool,
     edit: Rc<Edit>,
     names: Vec<ImString>,
     orig: Vec<Vec<ImString>>,
@@ -26,8 +25,9 @@ pub struct TextTableGui {
 }
 
 impl TextTableGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let is_new = edit.is_none();
+        let edit = edit.unwrap_or_else(|| project.create_edit("TextTable", None).unwrap());
         let config = Config::get(&edit.config())?;
         let mut names = Vec::new();
         let mut orig = Vec::<Vec<ImString>>::new();
@@ -38,12 +38,10 @@ impl TextTableGui {
             text.push(Vec::new());
         }
 
-        let win_id = edit.win_id(commit_index);
         let mut ret = Box::new(TextTableGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
+            is_new: is_new,
             edit: edit,
             names: names,
             orig: orig,
@@ -56,18 +54,17 @@ impl TextTableGui {
     }
 
     pub fn read_text(&mut self, project: &Project) -> Result<()> {
-        let edit = project.get_commit(self.commit_index)?;
         let config = Config::get(&self.edit.config())?;
 
         let mut curr = TextTable::default();
-        curr.unpack(&edit)?;
-        let orig = if self.commit_index > 0 {
-            let p = project.get_commit(self.commit_index - 1)?;
+        curr.unpack(&self.edit)?;
+        let orig = if self.is_new {
+            curr.clone()
+        } else {
+            let p = project.previous_commit(Some(&self.edit));
             let mut prev = TextTable::default();
             prev.unpack(&p)?;
             prev
-        } else {
-            curr.clone()
         };
 
         for i in 0..self.orig.len() {
@@ -85,12 +82,12 @@ impl TextTableGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let config = Config::get(&self.edit.config())?;
-        let mut edit = Box::new(TextTable::default());
+        let mut romdata = Box::new(TextTable::default());
         for i in 0..self.text.len() {
             let tcfg = &config.text_table.table[i];
             for (j, (ot, nt)) in self.orig[i].iter().zip(self.text[i].iter()).enumerate() {
                 if ot != nt {
-                    edit.data.push(TextItem {
+                    romdata.data.push(TextItem {
                         id: tcfg.id.extend(j),
                         text: nt.to_str().into(),
                     });
@@ -98,10 +95,7 @@ impl TextTableGui {
             }
         }
 
-        let i = project.commit(self.commit_index, edit, None)?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
-        Ok(())
+        project.commit_one(&self.edit, romdata)
     }
 }
 
@@ -111,11 +105,7 @@ impl Gui for TextTableGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("TextTable Editor##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -174,6 +164,6 @@ impl Gui for TextTableGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }

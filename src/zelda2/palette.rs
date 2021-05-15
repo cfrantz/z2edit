@@ -175,7 +175,7 @@ impl RomData for PaletteGroup {
     }
 
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        PaletteGui::new(project, commit_index)
+        PaletteGui::new(project, Some(project.get_commit(commit_index)?))
     }
 
     fn to_text(&self) -> Result<String> {

@@ -162,7 +162,7 @@ impl RomData for Hacks {
     }
 
     fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        HacksGui::new(project, commit_index)
+        HacksGui::new(project, Some(project.get_commit(commit_index)?))
     }
 
     fn to_text(&self) -> Result<String> {

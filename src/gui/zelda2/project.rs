@@ -191,13 +191,13 @@ impl ProjectGui {
             });
             ui.menu(im_str!("Edit"), || {
                 if MenuItem::new(im_str!("Enemy Attributes")).build(ui) {
-                    match EnemyGui::new(&self.project.borrow_mut(py), -1) {
+                    match EnemyGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self.error.show("GUI", "Could not create EnemyGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Experience & Spells")).build(ui) {
-                    match ExperienceTableGui::new(&self.project.borrow_mut(py), -1) {
+                    match ExperienceTableGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => {
                             self.error
@@ -206,7 +206,7 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Import CHR Bank")).build(ui) {
-                    match ImportChrBankGui::new(&self.project.borrow_mut(py), -1) {
+                    match ImportChrBankGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => {
                             self.error
@@ -215,7 +215,7 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Metatile Editor")).build(ui) {
-                    match MetatileGroupGui::new(&self.project.borrow_mut(py), -1) {
+                    match MetatileGroupGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => {
                             self.error
@@ -224,14 +224,14 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Miscellaneous Hacks")).build(ui) {
-                    match HacksGui::new(&self.project.borrow_mut(py), -1) {
+                    match HacksGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self.error.show("GUI", "Could not create HacksGui", Some(e)),
                     };
                 }
 
                 if MenuItem::new(im_str!("Overworld Editor")).build(ui) {
-                    match OverworldGui::new(&self.project.borrow_mut(py), -1) {
+                    match OverworldGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self
                             .error
@@ -239,7 +239,7 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Palette")).build(ui) {
-                    match PaletteGui::new(&self.project.borrow_mut(py), -1) {
+                    match PaletteGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self
                             .error
@@ -247,7 +247,7 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Python Script")).build(ui) {
-                    match PythonScriptGui::new(&self.project.borrow_mut(py), -1) {
+                    match PythonScriptGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => {
                             self.error
@@ -256,7 +256,7 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Sideview Editor")).build(ui) {
-                    match SideviewGui::new(&self.project.borrow_mut(py), -1, None) {
+                    match SideviewGui::new(&self.project.borrow_mut(py), None, None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self
                             .error
@@ -264,13 +264,13 @@ impl ProjectGui {
                     };
                 }
                 if MenuItem::new(im_str!("Start Values")).build(ui) {
-                    match StartGui::new(&self.project.borrow_mut(py), -1) {
+                    match StartGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self.error.show("GUI", "Could not create StartGui", Some(e)),
                     };
                 }
                 if MenuItem::new(im_str!("Text Table")).build(ui) {
-                    match TextTableGui::new(&self.project.borrow_mut(py), -1) {
+                    match TextTableGui::new(&self.project.borrow_mut(py), None) {
                         Ok(gui) => self.widgets.push(gui),
                         Err(e) => self
                             .error

@@ -25,6 +25,7 @@ pub fn edit_factory(kind: &str, id: Option<&str>) -> Result<Box<dyn RomData>> {
         "Enemy" => enemyattr::Enemy::create(id),
         "EnemyGroup" => enemyattr::EnemyGroup::create(id),
         "Hacks" => hacks::Hacks::create(id),
+        "ImportChrBank" => import_chr::ImportChrBank::create(id),
         "ImportRom" => import::ImportRom::create(id),
         "Metatile" => metatile::Metatile::create(id),
         "MetatileGroup" => metatile::MetatileGroup::create(id),

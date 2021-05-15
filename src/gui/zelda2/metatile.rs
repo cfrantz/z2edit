@@ -21,8 +21,6 @@ use crate::zelda2::project::{Edit, Project};
 pub struct MetatileGroupGui {
     visible: Visibility,
     changed: bool,
-    win_id: u64,
-    commit_index: isize,
     edit: Rc<Edit>,
     names: Vec<ImString>,
     group: MetatileGroup,
@@ -39,16 +37,17 @@ pub struct MetatileGroupGui {
 }
 
 impl MetatileGroupGui {
-    pub fn new(project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        let edit = project.get_commit(commit_index)?;
+    pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        let is_new = edit.is_none();
+        let edit = edit.unwrap_or_else(|| project.create_edit("MetatileGroup", None).unwrap());
         let config = Config::get(&edit.config())?;
 
-        let (orig, group) = if commit_index == -1 {
+        let (orig, group) = if is_new {
             let group = MetatileGroup::from_rom(&edit)?;
             let orig = group.clone();
             (orig, group)
         } else {
-            let orig = MetatileGroup::from_rom(&project.get_commit(commit_index - 1)?)?;
+            let orig = MetatileGroup::from_rom(&project.previous_commit(Some(&edit)))?;
             let group = MetatileGroup::from_rom(&edit)?;
             (orig, group)
         };
@@ -59,12 +58,9 @@ impl MetatileGroupGui {
         }
 
         let cache = TileCache::new(&edit, Schema::None);
-        let win_id = edit.win_id(commit_index);
         let mut ret = Box::new(MetatileGroupGui {
             visible: Visibility::Visible,
             changed: false,
-            win_id: win_id,
-            commit_index: commit_index,
             edit: edit,
             names: names,
             group: group,
@@ -133,16 +129,14 @@ impl MetatileGroupGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        let mut commit = Box::new(self.group.clone());
-        for (orig, new) in self.orig.data.iter().zip(commit.data.iter_mut()) {
+        let mut romdata = Box::new(self.group.clone());
+        for (orig, new) in self.orig.data.iter().zip(romdata.data.iter_mut()) {
             new.tile.retain(|k, &mut v| Some(&v) != orig.tile.get(k));
             new.palette
                 .retain(|k, &mut v| Some(&v) != orig.palette.get(k));
         }
-        commit.data.retain(|data| !data.tile.is_empty());
-        let i = project.commit(self.commit_index, commit, None)?;
-        self.edit = project.get_commit(i)?;
-        self.commit_index = i;
+        romdata.data.retain(|data| !data.tile.is_empty());
+        project.commit_one(&self.edit, romdata)?;
         self.refresh();
         Ok(())
     }
@@ -302,11 +296,7 @@ impl Gui for MetatileGroupGui {
         if !visible {
             return;
         }
-        let title = if self.commit_index == -1 {
-            im_str!("Metatile Editor##{}", self.win_id)
-        } else {
-            im_str!("{}##{}", self.edit.label(), self.win_id)
-        };
+        let title = ImString::new(self.edit.title());
         imgui::Window::new(&title)
             .opened(&mut visible)
             .unsaved_document(self.changed)
@@ -357,6 +347,6 @@ impl Gui for MetatileGroupGui {
         self.visible == Visibility::Dispose
     }
     fn window_id(&self) -> u64 {
-        self.win_id
+        self.edit.random_id
     }
 }
