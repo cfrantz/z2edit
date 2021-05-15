@@ -78,7 +78,7 @@ impl HacksGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let romdata = Box::new(self.hacks.clone());
-        project.commit_one(&self.edit, romdata)
+        project.commit(&self.edit, romdata)
     }
 }
 

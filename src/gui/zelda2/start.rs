@@ -37,7 +37,7 @@ impl StartGui {
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let romdata = Box::new(self.start.clone());
-        project.commit_one(&self.edit, romdata)
+        project.commit(&self.edit, romdata)
     }
 }
 

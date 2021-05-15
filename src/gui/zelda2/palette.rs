@@ -80,7 +80,7 @@ impl PaletteGui {
                 }
             }
         }
-        project.commit_one(&self.edit, romdata)
+        project.commit(&self.edit, romdata)
     }
 
     pub fn color_selector(name: &ImStr, ui: &imgui::Ui) -> Option<u8> {

@@ -95,7 +95,7 @@ impl TextTableGui {
             }
         }
 
-        project.commit_one(&self.edit, romdata)
+        project.commit(&self.edit, romdata)
     }
 }
 

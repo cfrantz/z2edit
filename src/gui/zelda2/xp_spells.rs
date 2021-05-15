@@ -165,7 +165,7 @@ impl ExperienceTableGui {
         }
 
         romdata.value = self.value.clone();
-        project.commit_one(&self.edit, romdata)
+        project.commit(&self.edit, romdata)
     }
 
     pub fn table_row(

@@ -117,7 +117,7 @@ impl OverworldGui {
         let config = Config::get(&self.edit.config()).unwrap();
         let overworld = &config.overworld.map[self.selector.value()];
         self.edit.set_label_suffix(&overworld.name);
-        project.commit_one(&self.edit, Box::new(self.overworld.clone()))?;
+        project.commit(&self.edit, Box::new(self.overworld.clone()))?;
         self.is_new = false;
         Ok(())
     }

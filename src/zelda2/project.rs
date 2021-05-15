@@ -206,66 +206,12 @@ impl Project {
         Ok(())
     }
 
-    pub fn last_commit(&self) -> Rc<Edit> {
-        self.get_commit(-1).unwrap()
-    }
-
     pub fn get_commit(&self, index: isize) -> Result<Rc<Edit>> {
         let index = self.normalized_index(index)?;
         Ok(Rc::clone(&self.edits[index]))
     }
 
-    pub fn commit(
-        &mut self,
-        index: isize,
-        edit: Box<dyn RomData>,
-        suffix: Option<&str>,
-    ) -> Result<isize> {
-        let len = self.edits.len() as isize;
-        if index == -1 {
-            let last = self.get_commit(index)?;
-            let label = if let Some(suffix) = suffix {
-                format!("{}: {}", edit.name(), suffix)
-            } else {
-                edit.name()
-            };
-            let meta = Metadata {
-                label: label,
-                user: whoami::username(),
-                timestamp: UTime::now(),
-                comment: String::default(),
-                config: last.next_config(),
-                skip_pack: false,
-                extra: IndexMap::new(),
-            };
-
-            let mut rng = rand::thread_rng();
-            let commit = Rc::new(Edit {
-                meta: RefCell::new(meta),
-                edit: RefCell::new(edit),
-                rom: last.rom.clone(),
-                memory: last.memory.clone(),
-                connectivity: RefCell::default(),
-                action: RefCell::default(),
-                error: RefCell::default(),
-                subdir: self.subdir.clone(),
-                extra_data: self.extra_data.clone(),
-                random_id: rng.gen(),
-            });
-            commit
-                .connectivity
-                .replace(Connectivity::from_rom(&commit)?);
-            self.commit_edit(index, &commit)
-        } else if index < len {
-            let commit = self.get_commit(index)?;
-            commit.edit.replace(edit);
-            self.commit_edit(index, &commit)
-        } else {
-            Err(ErrorKind::CommitIndexError(index).into())
-        }
-    }
-
-    pub fn previous_commit_index(&self, edit: Option<&Rc<Edit>>) -> isize {
+    fn previous_commit_index(&self, edit: Option<&Rc<Edit>>) -> isize {
         if let Some(e) = edit {
             for i in 1..self.edits.len() {
                 if Rc::ptr_eq(e, &self.edits[i]) {
@@ -286,7 +232,7 @@ impl Project {
         }
     }
 
-    pub fn commit_one(&mut self, edit: &Rc<Edit>, romdata: Box<dyn RomData>) -> Result<()> {
+    pub fn commit(&mut self, edit: &Rc<Edit>, romdata: Box<dyn RomData>) -> Result<()> {
         let prev_index = self.previous_commit_index(Some(edit));
         if prev_index == -1 {
             let last = self.edits.last().unwrap();
@@ -314,7 +260,7 @@ impl Project {
         Ok(())
     }
 
-    pub fn commit_edit(&mut self, index: isize, edit: &Rc<Edit>) -> Result<isize> {
+    fn commit_edit(&mut self, index: isize, edit: &Rc<Edit>) -> Result<isize> {
         let len = self.edits.len() as isize;
         {
             let mut meta = edit.meta.borrow_mut();

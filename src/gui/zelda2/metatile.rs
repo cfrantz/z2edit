@@ -136,7 +136,7 @@ impl MetatileGroupGui {
                 .retain(|k, &mut v| Some(&v) != orig.palette.get(k));
         }
         romdata.data.retain(|data| !data.tile.is_empty());
-        project.commit_one(&self.edit, romdata)?;
+        project.commit(&self.edit, romdata)?;
         self.refresh();
         Ok(())
     }

@@ -191,7 +191,7 @@ impl SideviewGui {
         };
         self.edit.set_label_suffix(&suffix);
 
-        project.commit_one(&self.edit, romdata)?;
+        project.commit(&self.edit, romdata)?;
         self.is_new = false;
         Ok(())
     }

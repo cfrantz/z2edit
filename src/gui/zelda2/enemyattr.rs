@@ -129,7 +129,7 @@ impl EnemyGui {
                 }
             }
         }
-        project.commit_one(&self.edit, romdata)
+        project.commit(&self.edit, romdata)
     }
 
     pub fn enemy_row(enemy: &mut Enemy, config: &config::Sprite, ui: &imgui::Ui) -> bool {

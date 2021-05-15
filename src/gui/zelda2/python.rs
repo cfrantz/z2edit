@@ -104,7 +104,7 @@ impl PythonScriptGui {
             file: self.relative_name.as_ref().map(|p| p.into()),
             code: self.code.to_string(),
         });
-        project.commit_one(&self.edit, romdata)?;
+        project.commit(&self.edit, romdata)?;
         Ok(())
     }
 }

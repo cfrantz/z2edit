@@ -176,10 +176,7 @@ impl ProjectGui {
                 }
                 ui.separator();
                 if MenuItem::new(im_str!("Export ROM")).build(ui) {
-                    let edit = {
-                        let project = self.project.borrow(py);
-                        project.get_commit(-1).expect("Export ROM")
-                    };
+                    let edit = self.project.borrow(py).previous_commit(None);
                     if let Some(sha256) = self.export_dialog(&edit) {
                         self.autosave(py, Some(&sha256));
                     }
