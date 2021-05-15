@@ -829,8 +829,8 @@ impl RomData for Sideview {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        SideviewGui::new(project, Some(project.get_commit(commit_index)?), None)
+    fn gui(&self, project: &Project, edit: &Rc<Edit>) -> Result<Box<dyn Gui>> {
+        SideviewGui::new(project, Some(Rc::clone(edit)), None)
     }
 
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()> {

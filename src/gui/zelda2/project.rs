@@ -374,7 +374,7 @@ impl ProjectGui {
         let edit = project.get_commit(index).unwrap();
         let len = project.edits.len() as isize;
         let meta = edit.meta.borrow();
-        let is_open = self.is_window_open(meta.timestamp);
+        let is_open = self.is_window_open(edit.random_id);
         let mut error_state = error_state;
         let drag_pos = self.drag_helper.delta(index as usize);
         let cursor = ui.cursor_pos();
@@ -451,7 +451,7 @@ impl ProjectGui {
 
         if ui.popup_context_item(im_str!("menu")) {
             if MenuItem::new(im_str!("Edit")).enabled(!is_open).build(ui) {
-                match edit.edit.borrow().gui(&project, index) {
+                match edit.edit.borrow().gui(&project, &edit) {
                     Ok(gui) => self.widgets.push(gui),
                     Err(e) => self.error.show(
                         "GUI",

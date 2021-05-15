@@ -865,8 +865,8 @@ impl RomData for Overworld {
         Ok(())
     }
 
-    fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        OverworldGui::new(project, Some(project.get_commit(commit_index)?))
+    fn gui(&self, project: &Project, edit: &Rc<Edit>) -> Result<Box<dyn Gui>> {
+        OverworldGui::new(project, Some(Rc::clone(edit)))
     }
 
     fn to_text(&self) -> Result<String> {

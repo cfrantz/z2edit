@@ -42,8 +42,8 @@ impl RomData for ImportChrBank {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn gui(&self, project: &Project, commit_index: isize) -> Result<Box<dyn Gui>> {
-        ImportChrBankGui::new(project, Some(project.get_commit(commit_index)?))
+    fn gui(&self, project: &Project, edit: &Rc<Edit>) -> Result<Box<dyn Gui>> {
+        ImportChrBankGui::new(project, Some(Rc::clone(edit)))
     }
 
     fn unpack(&mut self, _edit: &Rc<Edit>) -> Result<()> {

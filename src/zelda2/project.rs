@@ -348,7 +348,7 @@ where
     fn name(&self) -> String;
     fn unpack(&mut self, edit: &Rc<Edit>) -> Result<()>;
     fn pack(&self, edit: &Rc<Edit>) -> Result<()>;
-    fn gui(&self, _project: &Project, _commit_index: isize) -> Result<Box<dyn Gui>> {
+    fn gui(&self, _project: &Project, _edit: &Rc<Edit>) -> Result<Box<dyn Gui>> {
         Err(ErrorKind::NotImplemented(self.name()).into())
     }
     fn to_text(&self) -> Result<String> {
