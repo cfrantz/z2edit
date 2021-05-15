@@ -184,12 +184,14 @@ impl SideviewGui {
         let config = Config::get(&self.edit.config())?;
         let group = config.sideview.find(&self.sideview.id)?;
         let area = self.sideview.id.usize_last()?;
-        let suffix = if let Some(pet_name) = group.pet_names.get(&area) {
-            format!("{} {} ({})", group.name, area, pet_name)
-        } else {
-            format!("{} {}", group.name, area)
-        };
-        self.edit.set_label_suffix(&suffix);
+        if self.edit.label().is_empty() {
+            let suffix = if let Some(pet_name) = group.pet_names.get(&area) {
+                format!("{} {} ({})", group.name, area, pet_name)
+            } else {
+                format!("{} {}", group.name, area)
+            };
+            self.edit.set_label_suffix(&suffix);
+        }
 
         project.commit(&self.edit, romdata)?;
         self.is_new = false;

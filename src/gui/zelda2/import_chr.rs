@@ -80,8 +80,10 @@ impl ImportChrBankGui {
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
-        self.edit
-            .set_label_suffix(&format!("bank ${:02x}", self.selector.value()));
+        if self.edit.label().is_empty() {
+            self.edit
+                .set_label_suffix(&format!("bank ${:02x}", self.selector.value()));
+        }
         project.commit(&self.edit, Box::new(self.import.clone()))?;
         self.is_new = false;
         self.cache = TileCache::new(&self.edit, Schema::None);

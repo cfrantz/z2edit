@@ -116,7 +116,9 @@ impl OverworldGui {
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
         let config = Config::get(&self.edit.config()).unwrap();
         let overworld = &config.overworld.map[self.selector.value()];
-        self.edit.set_label_suffix(&overworld.name);
+        if self.edit.label().is_empty() {
+            self.edit.set_label_suffix(&overworld.name);
+        }
         project.commit(&self.edit, Box::new(self.overworld.clone()))?;
         self.is_new = false;
         Ok(())
