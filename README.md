@@ -71,10 +71,6 @@ git submodule update --init --recursive
       - Import CHR from a NES file.
     - Misc Hacks
       - still need to add several common misc hacks.
-    - Occasional observation of a commit getting overwritten during a replay
-      - not sure how to duplicate.
-      - seems related to commit index in each of the guis.
-      - need to refactor how editors and commits work.
     - Freespace allocator: `alloc_exact` won't cut an existing region even if
       the desired addresss/range is valid within the region.
 
