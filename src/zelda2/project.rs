@@ -266,6 +266,9 @@ impl Project {
             let mut meta = edit.meta.borrow_mut();
             meta.user = whoami::username();
             meta.timestamp = UTime::now();
+            if meta.label.is_empty() {
+                meta.label = edit.edit.borrow().name().clone();
+            }
         }
         let ret = if index == -1 {
             self.edits.push(Rc::clone(edit));
@@ -429,7 +432,7 @@ impl EmulateAt {
 impl Edit {
     pub fn create(&self, kind: &str, id: Option<&str>) -> Result<Rc<Edit>> {
         let meta = Metadata {
-            label: kind.to_owned(),
+            label: String::default(),
             user: whoami::username(),
             timestamp: UTime::now(),
             comment: String::default(),
