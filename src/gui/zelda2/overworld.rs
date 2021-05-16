@@ -310,6 +310,9 @@ impl OverworldGui {
             if ui.is_mouse_clicked(MouseButton::Left) {
                 self.button_down = true;
             }
+            if ui.is_mouse_released(MouseButton::Right) {
+                self.select_drag = false;
+            }
             if ui.is_mouse_released(MouseButton::Left) {
                 self.button_down = false;
                 self.select_drag = false;
@@ -318,11 +321,12 @@ impl OverworldGui {
                 if self.selectbox.contains(tx, ty) {
                     for y in self.selectbox.y0..=self.selectbox.y1 {
                         for x in self.selectbox.x0..=self.selectbox.x1 {
-                            self.overworld.map.data[y as usize][x as usize] =
-                                self.tile_selected as u8;
+                            let new = self.tile_selected as u8;
+                            let orig = self.overworld.map.data[y as usize][x as usize];
+                            self.overworld.map.data[y as usize][x as usize] = new;
+                            changed |= new != orig;
                         }
                     }
-                    changed = true;
                 } else {
                     let new = self.tile_selected as u8;
                     let orig = self.overworld.map.data[ty as usize][tx as usize];
@@ -416,7 +420,7 @@ impl OverworldGui {
         );
         ui.set_cursor_pos(pos);
         ui.invisible_button(&im_str!("edit"), [16.0, 16.0]);
-        let focus = ui.is_item_focused();
+        let focus = ui.is_item_active();
         if ui.is_item_active() {
             if ui.is_mouse_dragging(MouseButton::Left) {
                 self.conn_drag.start(n);
