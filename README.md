@@ -40,7 +40,7 @@ to learn how to expunge the project file from version control history.
 
 - Rust
 - SDL + Imgui (user interface)
-- Ron (Rusty Object Notation for save files)
+- Ron (Rusty Object Notation for config files)
 - PyO3 (for Python Integration)
 
 ### Remember to initialize submodules

@@ -91,6 +91,10 @@ error_chain! {
             description("Not Found"),
             display("Not found: {}", message),
         }
+        RomDataError(message: String) {
+            description("RomData Error"),
+            display("RomData Error: {}", message),
+        }
     }
 }
 

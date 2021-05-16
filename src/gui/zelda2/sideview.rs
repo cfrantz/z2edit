@@ -83,6 +83,16 @@ impl SideviewGui {
         edit: Option<Rc<Edit>>,
         which: Option<IdPath>,
     ) -> Result<Box<dyn Gui>> {
+        if let Some(edit) = &edit {
+            let e = edit.edit.borrow();
+            if !e.as_any().is::<Sideview>() {
+                return Err(ErrorKind::RomDataError(format!(
+                    "Expected edit '{}' to contain a Sideview edit",
+                    edit.label()
+                ))
+                .into());
+            }
+        }
         let is_new = edit.is_none();
         let edit = edit.unwrap_or_else(|| {
             project

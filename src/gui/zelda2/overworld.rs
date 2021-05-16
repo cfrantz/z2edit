@@ -46,6 +46,16 @@ pub struct OverworldGui {
 
 impl OverworldGui {
     pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        if let Some(edit) = &edit {
+            let e = edit.edit.borrow();
+            if !e.as_any().is::<Overworld>() {
+                return Err(ErrorKind::RomDataError(format!(
+                    "Expected edit '{}' to contain an Overworld edit",
+                    edit.label()
+                ))
+                .into());
+            }
+        }
         let is_new = edit.is_none();
         let edit = edit.unwrap_or_else(|| {
             project

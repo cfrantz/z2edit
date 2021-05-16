@@ -36,6 +36,16 @@ pub struct ImportChrBankGui {
 
 impl ImportChrBankGui {
     pub fn new(project: &Project, edit: Option<Rc<Edit>>) -> Result<Box<dyn Gui>> {
+        if let Some(edit) = &edit {
+            let e = edit.edit.borrow();
+            if !e.as_any().is::<ImportChrBank>() {
+                return Err(ErrorKind::RomDataError(format!(
+                    "Expected edit '{}' to contain an ImportChrBank edit",
+                    edit.label()
+                ))
+                .into());
+            }
+        }
         let is_new = edit.is_none();
         let edit = edit.unwrap_or_else(|| project.create_edit("ImportChrBank", None).unwrap());
         let config = Config::get(&edit.config())?;
