@@ -316,7 +316,7 @@ impl ProjectGui {
                         if pos < i {
                             project.edits.insert(pos, v);
                             if first_action == usize::MAX {
-                                first_action = i;
+                                first_action = pos;
                             }
                         } else {
                             project.edits.insert(pos - 1, v);
