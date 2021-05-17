@@ -10,6 +10,7 @@ use crate::gui::fa;
 use crate::gui::util::tooltip;
 use crate::gui::util::KeyAction;
 use crate::gui::util::{DragHelper, SelectBox};
+use crate::gui::zelda2::emulate;
 use crate::gui::zelda2::tile_cache::{Schema, TileCache};
 use crate::gui::zelda2::Gui;
 use crate::gui::ErrorDialog;
@@ -1553,6 +1554,18 @@ impl Gui for SideviewGui {
                     self.scale = clamp(self.scale, 0.25, 4.0);
                 }
                 width.pop(ui);
+
+                ui.same_line();
+                match emulate::emulate_fourscreen(
+                    im_str!("Emulate"),
+                    ui,
+                    project,
+                    &self.edit,
+                    &self.sideview.id,
+                ) {
+                    Ok(_) => {}
+                    Err(e) => self.error.show("SideviewGui", "Emulator Error", Some(e)),
+                };
 
                 ui.same_line();
                 if ui.button(im_str!("Commit")) {

@@ -1,4 +1,5 @@
 pub mod edit;
+pub mod emulate;
 pub mod enemyattr;
 pub mod hacks;
 pub mod import_chr;
