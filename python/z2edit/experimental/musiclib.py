@@ -6,9 +6,14 @@
 import enum
 import sys
 from collections import defaultdict
+try:
+    import mido
+except:
+    mido = None
 
 from z2edit import Address
 
+totalm = 0
 MIDI_PPQN = 120
 OVERWORLD_SONG_TABLE = Address.prg(6, 0xa000)
 TOWN_SONG_TABLE      = Address.prg(6, 0xa3ca)
@@ -134,10 +139,49 @@ class Note(int):
         elif p == Note.As5:  return "A#5."
         elif p == Note.B5:   return "B5.."
         else:
-            print('Error: value={}'.format(p), file=sys.stderr)
+            print('Error: note value={}'.format(p), file=sys.stderr)
             return "????"
 
+    def as_midi(self):
+        p = self.pitch()
+        if p == Note.Rest:   return 0
+        elif p == Note.Cs3:  return 49
+        elif p == Note.E3:   return 52
+        elif p == Note.G3:   return 55
+        elif p == Note.Gs3:  return 56
+        elif p == Note.A3:   return 57
+        elif p == Note.As3:  return 58
+        elif p == Note.B3:   return 59
+        elif p == Note.C4:   return 60
+        elif p == Note.Cs4:  return 61
+        elif p == Note.D4:   return 62
+        elif p == Note.Ds4:  return 63
+        elif p == Note.E4:   return 64
+        elif p == Note.F4:   return 65
+        elif p == Note.Fs4:  return 66
+        elif p == Note.G4:   return 67
+        elif p == Note.Gs4:  return 68
+        elif p == Note.A4:   return 69
+        elif p == Note.As4:  return 70
+        elif p == Note.B4:   return 71
+        elif p == Note.C5:   return 72
+        elif p == Note.Cs5:  return 73
+        elif p == Note.D5:   return 74
+        elif p == Note.Ds5:  return 75
+        elif p == Note.E5:   return 76
+        elif p == Note.F5:   return 77
+        elif p == Note.Fs5:  return 78
+        elif p == Note.G5:   return 79
+        elif p == Note.A5:   return 81
+        elif p == Note.As5:  return 82
+        elif p == Note.B5:   return 83
+        else:
+            return 0
 
+
+# Apparently, the Z2 music engine actually has the pulse channels reversed.
+# This is not currently represented by the `Channel` enum except in the
+# `as_midi` helper function.
 class Channel(enum.IntEnum):
     Pulse1 = 1
     Pulse2 = 2
@@ -163,6 +207,26 @@ class Channel(enum.IntEnum):
             return "Triangle"
         elif self == Channel.Noise:
             return "Noise"
+
+    def as_midi(self):
+        if self == Channel.Pulse1:
+            return 1
+        elif self == Channel.Pulse2:
+            return 0
+        elif self == Channel.Triangle:
+            return 2
+        elif self == Channel.Noise:
+            return 9
+
+    def as_midi_instrument(self):
+        if self == Channel.Pulse1:
+            return 0
+        elif self == Channel.Pulse2:
+            return 0
+        elif self == Channel.Triangle:
+            return 34
+        elif self == Channel.Noise:
+            return 0
 
 
 class Pattern(object):
@@ -374,6 +438,33 @@ class Song(object):
             song['CreditsTheme'].as_famistudio('Credits', fpqn=28, file=f)
 
     @staticmethod
+    def convert_all_to_midi(edit):
+        song = Song.read_all_songs(edit)
+        song['OverworldIntro'].as_midi('overworld_intro', tempo=150)
+        song['OverworldTheme'].as_midi('overworld', tempo=150)
+        song['BattleTheme'].as_midi('battle', tempo=180)
+        song['CaveItemFanfare'].as_midi('cave_item_fanfare', tempo=150)
+
+        song['TownIntro'].as_midi('town_intro', tempo=128)
+        song['TownTheme'].as_midi('town', tempo=128)
+        song['HouseTheme'].as_midi('house', tempo=128)
+        song['TownItemFanfare'].as_midi('town_item_fanfare', tempo=150)
+
+        song['PalaceIntro'].as_midi('palace_intro', tempo=150)
+        song['PalaceTheme'].as_midi('palace', tempo=150)
+        song['BossTheme'].as_midi('boss', tempo=180)
+        song['PalaceItemFanfare'].as_midi('palace_item_fanfare', tempo=150)
+        song['CrystalFanfare'].as_midi('crystal_fanfare', tempo=150)
+
+        song['GreatPalaceIntro'].as_midi('gp_intro', tempo=150)
+        song['GreatPalaceTheme'].as_midi('gp', tempo=150)
+        song['GreatPalaceItemFanfare'].as_midi('gp_item_fanfare', tempo=150)
+        song['FinalBossTheme'].as_midi('final_boss', tempo=180)
+        song['TriforceFanfare'].as_midi('triforce', tempo=150)
+        song['ZeldaTheme'].as_midi('zelda', tempo=150)
+        song['CreditsTheme'].as_midi('credits', tempo=128)
+
+    @staticmethod
     def commit(edit, address, songs):
         if address == OVERWORLD_SONG_TABLE:
             table = bytes([0, 1, 2, 2, 3, 4, 4, 4])
@@ -482,6 +573,43 @@ class Song(object):
                 # The noise channel needs to loop, the others do not.
                 break
 
+    def pattern_as_midi(self, n, channel, track):
+        time = 0
+        total = self.pattern[n].total_length()
+        ch = channel.as_midi()
+        delay = 0
+        midinote = 0
+        prevnote = 0
+        while time < total:
+            for i, note in enumerate(self.pattern[n].notes[channel]):
+                endtime = time + note.length()
+                if channel == Channel.Noise:
+                    midinote = 38 # Snare drum
+                else:
+                    midinote = note.as_midi()
+                if prevnote:
+                    track.append(mido.Message('note_off', channel=ch, note=prevnote, time=delay))
+                    delay = 0
+                if midinote:
+                    if channel == Channel.Triangle:
+                        # Fuck yeah I think it should be two octaves down.
+                        midinote -= 24
+                    track.append(mido.Message('note_on', channel=ch, note=midinote, time=delay))
+                    delay = note.length()
+                else:
+                    midinote = 1
+                    # Musescore interprets this as a rest.
+                    track.append(mido.Message('note_off', channel=ch, note=1, velocity=0, time=delay))
+                    delay = note.length()
+                prevnote = midinote
+                time = endtime
+            if channel != Channel.Noise or time == 0:
+                # The noise channel needs to loop, the others do not.
+                break
+        if prevnote:
+            track.append(mido.Message('note_off', channel=ch, note=prevnote, time=delay))
+            delay = 0
+
     def channel_as_famistudio(self, channel, length, fpqn, beat_len, file=None):
         print('\t\tChannel Type="{}"'.format(channel.as_famistudio()), file=file)
         for i, n in enumerate(self.sequence):
@@ -495,6 +623,11 @@ class Song(object):
         for i, n in enumerate(self.sequence):
             print('\t\t\tPatternInstance Time="{}" Pattern="{}-{}"'.format(i, channel, n), file=file)
 
+    def channel_as_midi(self, channel, track):
+        track.append(mido.Message('program_change', channel=channel.as_midi(), program=channel.as_midi_instrument()))
+        for n in self.sequence:
+            self.pattern_as_midi(n, channel, track)
+
     def as_famistudio(self, name, fpqn=32, beat_len=4, file=None):
         mcl = self.most_common_length() * beat_len // MIDI_PPQN
 
@@ -505,6 +638,22 @@ class Song(object):
         self.channel_as_famistudio(Channel.Pulse2, mcl, fpqn, beat_len, file=file)
         self.channel_as_famistudio(Channel.Triangle, mcl, fpqn, beat_len, file=file)
         self.channel_as_famistudio(Channel.Noise, mcl, fpqn, beat_len, file=file)
+
+    def as_midi(self, name, tempo=120):
+        if not mido:
+            raise Exception("Need `mido` library to convert to MIDI")
+        midi = mido.MidiFile(type=1, ticks_per_beat=MIDI_PPQN)
+        # Flip channels 1 and 2 because of how Z2 encodes the pulse channels.
+        for c in (2,1,3,4):
+            channel = Channel(c)
+            track = midi.add_track()
+            track.append(mido.MetaMessage('track_name', name=str(channel)))
+            track.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(tempo)))
+            self.channel_as_midi(channel, track)
+
+        #midi.print_tracks()
+        name = "{}.mid".format(name)
+        midi.save(name)
 
     def with_intro(self, intro):
         song = Song(intro.pattern[:], intro.sequence[:])
