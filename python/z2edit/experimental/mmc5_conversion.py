@@ -317,9 +317,9 @@ class ChrDedup(object):
             ldx     #$00
             stx     $2000
             inx
-            stx     $5100           ; two 16k PRG banks
             lda     #3
-            sta     $5101           ; CHR mode: all 1K banks
+            sta     $5100           ; four 8k PRG banks
+            sta     $5101           ; CHR mode: all 1k banks
             stx     $5103           ; Allow writing to WRAM
         wait_ppu:
             lda     $2002
@@ -329,6 +329,8 @@ class ChrDedup(object):
             txs
 
             stx     $5117           ; Top bank is last bank
+            dex
+            stx     $5116           ; Top bank is last bank
             lda     #2
             sta     $5102           ; Allow writing to WRAM
 
@@ -336,22 +338,23 @@ class ChrDedup(object):
             sta     $5105
             lda     #0              ; Vbank 0
             jsr     bank7_chr_bank_switch__load_A
-            lda     #$07
-            jsr     bank7_Load_Bank_A_0x8000
+            ;lda     #$07
+            ;jsr     bank7_Load_Bank_A_0x8000
             nop ;cli                     ; FIXME: Want interrupts?
             jmp     bank7_code0
 
         .org $ffb1
         bank7_chr_bank_switch__load_A:
-            ldx     #$80
-            stx     $5115
+            tax
+            jsr     bank7_Load_Bank_0_at_0x8000
+            txa
             jsr     bank0_chr_load_A
             jmp     bank7_Load_Bank_769_at_0x8000
         bank7_chr_helper_for_bank5:
             jsr     bank7_chr_bank_switch__load_A
             lda     #5
             jmp     bank7_Load_Bank_A_0x8000
-            nop
+        .db $ea
 
         .assert_org $FFC5
         bank7_Load_Bank_0_at_0x8000:
@@ -362,13 +365,14 @@ class ChrDedup(object):
         bank7_Load_Bank_A_0x8000:
             asl
             ora     #$80
+            sta     $5114
+            ora     #1
             sta     $5115
             lda     #0
             rts
         ; Fill with NOPs
         .db $ea,$ea,$ea,$ea
-        .db $ea,$ea,$ea,$ea
-        .db $ea,$ea,$ea
+        .db $ea,$ea
         """)
 
         # A bug in the assembler - fixups don't happen properly when using
@@ -388,7 +392,9 @@ def chr_bank_copy(edit, dstbank, srcbank):
 # This version of an MMC5 conversion maintains a lot of compatability with
 # the way the vanilla game used MMC1:
 #
-# PRG banks are mapped as two 16KiB banks.
+# PRG banks are mapped as four 8KiB banks, but the bank switching routines
+# arrange to switch pairs of banks so the layout is still MMC1-like.
+#
 # CHR banks are mapped as 4KiB banks, but programmed into MMC in pairs so
 #    the layout is similar to MMC1.
 #
@@ -441,7 +447,6 @@ def hack(edit, asm, vbanks=False):
         ldx     #$00
         stx     $2000
         inx
-        stx     $5100           ; two 16k PRG banks
         stx     $5101           ; CHR mode 2x4k banks
         stx     $5103           ; Allow writing to WRAM
     wait_ppu:
@@ -451,7 +456,11 @@ def hack(edit, asm, vbanks=False):
         beq     wait_ppu
         txs
 
+        lda     #3
+        sta     $5100           ; four 8k PRG banks
         stx     $5117           ; Top bank is last bank
+        dex
+        stx     $5116           ; Top bank is last bank
         lda     #2
         sta     $5102           ; Allow writing to WRAM
 
@@ -464,9 +473,6 @@ def hack(edit, asm, vbanks=False):
         jmp     bank7_code0
     .db $ea,$ea,$ea,$ea
     .db $ea,$ea,$ea,$ea
-    .db $ea,$ea,$ea,$ea
-    .db $ea,$ea
-
 
     .org $ffb1
     bank7_chr_bank_switch__load_A:
@@ -489,13 +495,14 @@ def hack(edit, asm, vbanks=False):
     bank7_Load_Bank_A_0x8000:
         asl
         ora     #$80
+        sta     $5114
+        ora     #1
         sta     $5115
         lda     #0
         rts
     ; Fill with NOPs
     .db $ea,$ea,$ea,$ea
-    .db $ea,$ea,$ea,$ea
-    .db $ea,$ea,$ea
+    .db $ea,$ea
 
 
     ; Clean up stuff in bank zero - make it go via bank7's routines.
