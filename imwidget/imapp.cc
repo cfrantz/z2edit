@@ -16,7 +16,8 @@ ImApp* ImApp::singleton_;
 ImApp::ImApp(const std::string& name, int width, int height)
   : name_(name),
     width_(width),
-    height_(height)
+    height_(height),
+    running_(true)
 {
     singleton_ = this;
     SDL_Init(SDL_INIT_VIDEO |
@@ -103,7 +104,6 @@ void ImApp::SetTitle(const std::string& title, bool with_appname) {
 }
 
 void ImApp::Run() {
-    running_ = true;
     while(running_) {
         if (!ProcessEvents()) {
             running_ = false;
