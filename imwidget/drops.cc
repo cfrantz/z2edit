@@ -34,7 +34,7 @@ bool Drops::Draw() {
     } else if (drop_type_ == 1) {
         int i = 0;
         const auto& di = ConfigLoader<RomInfo>::GetConfig().drop_info();
-        for(const auto d : di.drops()) {
+        for(const auto& d : di.drops()) {
             DrawDropper(d, i);
             i++;
         }
@@ -113,7 +113,7 @@ void Drops::Unpack() {
         data_.small[i] = mapper_->Read(di.drop_table(), i) & 0x7f;
         data_.large[i] = mapper_->Read(di.drop_table(), i+8) & 0x7f;
     }
-    for(const auto d : di.drops()) {
+    for(const auto& d : di.drops()) {
         int item = d.item().address() ? mapper_->Read(d.item(), 0) : 0;
         int enemy = d.enemy().address() ? mapper_->Read(d.enemy(), 0) : 0;
         int hp = d.hp().address() ? mapper_->Read(d.hp(), 0) : 0;
@@ -127,11 +127,11 @@ void Drops::Pack() {
     
     mapper_->Write(di.counter(), 0, data_.counter);
     for(int i=0; i<8; i++) {
-        mapper_->Write(di.drop_table(), i, data_.small[i]);
-        mapper_->Write(di.drop_table(), i+8, data_.large[i]);
+        mapper_->Write(di.drop_table(), i, data_.small[i] | 0x80);
+        mapper_->Write(di.drop_table(), i+8, data_.large[i] | 0x80);
     }
     int i = 0;
-    for(const auto d : di.drops()) {
+    for(const auto& d : di.drops()) {
         if (d.item().address())
             mapper_->Write(d.item(), 0, data_.drop[i].item);
         if (d.enemy().address())
