@@ -418,14 +418,19 @@ class Asm:
         self.bank = bank
         self.reset()
 
-    def reset(self):
-        self.symtab = {}
+    def reset(self, symtab=None):
+        self.symtab = {} if symtab is None else symtab
         self.code_fixup = {}
         self.data_fixup = {}
         self.linenum = 0
 
-    def asm(self, src, *, org=None, bank=None):
-        self.reset()
+    def clean_local_labels(self, symtab, start_id='_'):
+        clean = [k for k in symtab.keys() if k.startswith(start_id)]
+        for k in clean:
+            del symtab[k]
+
+    def asm(self, src, *, org=None, bank=None, symtab=None):
+        self.reset(symtab)
         if org is not None:
             self.org = org
             self.last_org = self.org
@@ -436,9 +441,10 @@ class Asm:
             line = line.replace('\r', '')
             self.parse_line(line)
         self.apply_fixups()
+        self.clean_local_labels(self.symtab)
 
-    def __call__(self, src, *, org=None, bank=None):
-        self.asm(src, org=org, bank=bank)
+    def __call__(self, src, *, org=None, bank=None, symtab=None):
+        self.asm(src, org=org, bank=bank, symtab=symtab)
 
     def disassemble_one(self, pc):
         opcode = self.read(pc)
