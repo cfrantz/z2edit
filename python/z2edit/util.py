@@ -2,6 +2,13 @@ import json
 import z2edit
 from z2edit import Address
 
+class ConfigEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Address):
+            return ObjectDict.from_address(obj)
+        return json.JSONEncoder.default(self, obj)
+
+
 class ObjectDict(dict):
     "ObjectDict is a `dict` with attribute access to the dictionary contents."
 
@@ -31,7 +38,7 @@ class ObjectDict(dict):
         return {segment.capitalize(): [bank, address]}
 
     def to_json(self):
-        return json.dumps(self, indent=4)
+        return json.dumps(self, indent=4, cls=ConfigEncoder)
 
 
 class Config(object):
