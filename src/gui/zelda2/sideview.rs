@@ -210,6 +210,7 @@ impl SideviewGui {
     }
 
     pub fn reset_caches(&mut self) {
+        let config = Config::get(&self.edit.config()).expect("reset_caches");
         self.background.reset(Schema::MetaTile(
             self.edit.config().clone(),
             self.sideview.id.clone(),
@@ -230,22 +231,33 @@ impl SideviewGui {
             let conn = Connector::from_rom(&self.edit, id).expect("reset_caches");
             if let Some(palace) = conn.palace {
                 let chr = Address::Chr(palace.chr_bank as isize, 0);
-                // FIXME: look these addresses up from Palette.
-                let pal = if self.sideview.map.background_palette == 0 {
-                    Address::Prg(4, 0x8470) + palace.palette * 16
-                } else {
-                    Address::Prg(4, 0xbf00) + palace.palette * 16
+                let pal = match config.palette.find_palace(
+                    &self.sideview.id,
+                    palace.palette as usize + 1,
+                    self.sideview.map.background_palette == 0,
+                ) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        error!("Palace palette lookup: {:?}", e);
+                        config
+                            .palette
+                            .find_palace(
+                                &self.sideview.id,
+                                1,
+                                self.sideview.map.background_palette == 0,
+                            )
+                            .unwrap()
+                    }
                 };
                 self.background.set_chr_override(Some(chr.add_bank(1)));
                 self.item.set_chr_override(Some(chr));
                 self.enemy.set_chr_override(Some(chr));
                 if self.sideview.id.at(0) != "great_palace" {
-                    self.background.set_pal_override(Some(pal));
+                    self.background.set_pal_override(Some(pal.address));
                 }
             }
         }
         self.text_table = TextTable::from_rom(&self.edit).expect("reset_caches");
-        let config = Config::get(&self.edit.config()).expect("reset_caches");
         for i in 0..4 {
             if let Some(id) = self.edit.overworld_connector(&self.sideview.id.extend(i)) {
                 self.town_code[i] = config

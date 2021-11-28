@@ -30,7 +30,7 @@ impl PaletteGui {
         let edit = edit.unwrap_or_else(|| project.create_edit("PaletteGroup", None).unwrap());
         let config = Config::get(&edit.config())?;
         let mut names = Vec::new();
-        for group in config.palette.0.iter() {
+        for group in config.palette.group.iter() {
             names.push(ImString::new(&group.name));
         }
         let data = PaletteGui::read_palettes(&config, &edit)?;
@@ -55,7 +55,7 @@ impl PaletteGui {
 
     pub fn read_palettes(config: &Config, edit: &Rc<Edit>) -> Result<Vec<PaletteGroup>> {
         let mut data = Vec::new();
-        for group in config.palette.0.iter() {
+        for group in config.palette.group.iter() {
             let mut pg = PaletteGroup::default();
             for palette in group.palette.iter() {
                 let mut p = Palette {
@@ -160,7 +160,11 @@ impl Gui for PaletteGui {
                     "Palette 3"
                 ));
                 ui.separator();
-                for (n, p) in config.palette.0[self.selected].palette.iter().enumerate() {
+                for (n, p) in config.palette.group[self.selected]
+                    .palette
+                    .iter()
+                    .enumerate()
+                {
                     ui.text(im_str!("{:<20}", p.name));
                     for (i, color) in self.group[self.selected].data[n]
                         .data

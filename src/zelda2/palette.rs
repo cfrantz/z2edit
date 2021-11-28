@@ -1,6 +1,7 @@
 use ron;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::errors::*;
@@ -32,7 +33,10 @@ pub mod config {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct Config(pub Vec<config::PaletteGroup>);
+    pub struct Config {
+        pub alias: HashMap<String, String>,
+        pub group: Vec<config::PaletteGroup>,
+    }
 
     impl Config {
         pub fn to_string(&self) -> String {
@@ -42,7 +46,7 @@ pub mod config {
 
         pub fn find(&self, path: &IdPath) -> Result<&config::Palette> {
             path.check_len("palette", 2)?;
-            for group in self.0.iter() {
+            for group in self.group.iter() {
                 if path.at(0) == group.id {
                     for palette in group.palette.iter() {
                         if path.at(1) == palette.id {
@@ -54,15 +58,31 @@ pub mod config {
             Err(ErrorKind::IdPathNotFound(path.into()).into())
         }
 
+        pub fn find_palace(
+            &self,
+            path: &IdPath,
+            index: usize,
+            outdoor: bool,
+        ) -> Result<&config::Palette> {
+            let path0 = path.at(0);
+            let mut area = self
+                .alias
+                .get(path0)
+                .map(String::as_str)
+                .unwrap_or(path0)
+                .to_owned();
+            area.push_str(if outdoor { "_outdoor" } else { "_indoor" });
+            self.find(&idpath!(area, index))
+        }
+
         pub fn find_sprite(&self, path: &IdPath, index: usize) -> Result<&config::Palette> {
             let path0 = path.at(0);
-            let mut area = match path0 {
-                "palace_125" | "palace_346" => "palace".to_owned(),
-                "death_mountain" => "west_hyrule".to_owned(),
-                "maze_island" => "east_hyrule".to_owned(),
-                "item" => "west_hyrule".to_owned(),
-                _ => path0.to_owned(),
-            };
+            let mut area = self
+                .alias
+                .get(path0)
+                .map(String::as_str)
+                .unwrap_or(path0)
+                .to_owned();
             area.push_str("_sprites");
             self.find(&idpath!(area, index))
         }
