@@ -27,6 +27,7 @@ smart-default = "0.6.0"
 sha2 = "0.9.2"
 termcolor = "1.1"
 indexmap = {version="1.6.1", features=["serde"]}
+num_enum = "0.5.4"
 
 # Python integration stuff
 pyo3 = {version="0.13.0", path="third_party/pyo3", features=["indexmap"]}

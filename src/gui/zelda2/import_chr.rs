@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::convert::From;
+use std::convert::{From, TryFrom};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -15,8 +15,8 @@ use crate::gui::ErrorDialog;
 use crate::gui::{Selector, Visibility};
 use crate::nes::Address;
 use crate::util::clamp;
-use crate::zelda2::config::Config;
-use crate::zelda2::import_chr::ImportChrBank;
+use crate::zelda2::config::{ChrBankScheme, Config};
+use crate::zelda2::import_chr::{ChrBankKind, ImportChrBank};
 use crate::zelda2::project::{Edit, Project};
 
 pub struct ImportChrBankGui {
@@ -25,7 +25,9 @@ pub struct ImportChrBankGui {
     is_new: bool,
     edit: Rc<Edit>,
     names: Vec<ImString>,
+    schemes: Vec<ImString>,
     filename: ImString,
+    scheme: Selector,
     selector: Selector,
     cache: TileCache,
     image: Image,
@@ -58,12 +60,7 @@ impl ImportChrBankGui {
             import.clone()
         };
 
-        let mut names = Vec::new();
-        for i in 0..config.layout.segment("chr")?.banks() {
-            names.push(im_str!("CHR Bank ${:02x}", i));
-        }
-
-        let cache = TileCache::new(&edit, Schema::None);
+        let cache = TileCache::new(&edit, import.schema());
         let image = cache.get_bank(
             Address::Chr(import.bank as isize, 0),
             &import.palette,
@@ -72,21 +69,66 @@ impl ImportChrBankGui {
         )?;
         let filename = ImString::new(&import.file.to_string());
 
+        let schemes: Vec<ImString> = match config.misc.chr_bank_scheme {
+            ChrBankScheme::Vanilla => vec![ImString::new("Vanilla")],
+            ChrBankScheme::MMC5_12By1K(_) => vec![
+                ImString::new("Vanilla"),
+                ImString::new("MMC5 1k "),
+                ImString::new("MMC5 VBanks"),
+            ],
+        };
+        let kind = import.kind as usize;
+
         let selected = import.bank;
-        Ok(Box::new(ImportChrBankGui {
+        let mut obj = Box::new(ImportChrBankGui {
             visible: Visibility::Visible,
             changed: false,
             is_new: is_new,
             edit: edit,
-            names: names,
+            names: Vec::new(),
+            schemes: schemes,
             filename: filename,
             cache: cache,
             image: image,
             overlay_image: None,
+            scheme: Selector::new(kind),
             selector: Selector::new(selected),
             import: import,
             error: ErrorDialog::default(),
-        }))
+        });
+        obj.make_names()?;
+        Ok(obj)
+    }
+
+    fn make_names(&mut self) -> Result<()> {
+        let config = Config::get(&self.edit.config())?;
+        self.names.clear();
+        match self.import.schema() {
+            Schema::MMC1_4k => {
+                for i in 0..config.layout.segment("chr")?.banks() {
+                    self.names.push(im_str!("CHR Bank ${:02x}", i));
+                }
+            }
+            Schema::MMC5_1k => {
+                for i in 0..config.layout.segment("chr")?.banks() * 4 {
+                    self.names.push(im_str!("CHR Bank ${:02x}", i));
+                }
+            }
+            Schema::VBanks => {
+                for i in 0..(256 / 12) {
+                    self.names.push(im_str!("VBank ${:02x}", i));
+                }
+            }
+            _ => {
+                log::error!("Unimplemented: {:?}", self.import.schema());
+            }
+        }
+        Ok(())
+    }
+
+    fn set_kind(&mut self, index: usize) {
+        let x = ChrBankKind::try_from(index);
+        self.import.kind = x.unwrap_or(self.import.kind);
     }
 
     pub fn commit(&mut self, project: &mut Project) -> Result<()> {
@@ -96,7 +138,7 @@ impl ImportChrBankGui {
         }
         project.commit(&self.edit, Box::new(self.import.clone()))?;
         self.is_new = false;
-        self.cache = TileCache::new(&self.edit, Schema::None);
+        self.cache = TileCache::new(&self.edit, self.import.schema());
         self.refresh_image();
         self.overlay_image = None;
         Ok(())
@@ -209,7 +251,7 @@ impl ImportChrBankGui {
         ui.separator();
 
         let origin = ui.cursor_pos();
-        let scale = 4.0;
+        let scale = 2.0;
         ui.text("");
         ui.text("   ");
         ui.same_line();
@@ -224,22 +266,25 @@ impl ImportChrBankGui {
                 "{:02x}",
                 if self.import.sprite_layout { x * 2 } else { x }
             ));
+        }
 
+        let (_, h, _) = self.cache.bank_size(Address::Chr(0, 0)).unwrap();
+        for y in 0..(h as i32) {
             if self.import.sprite_layout {
-                if x % 2 == 0 {
+                if y % 2 == 0 {
                     ui.set_cursor_pos([
                         origin[0],
-                        origin[1] + 20.0 + scale * (x / 2 * (16 + self.import.border)) as f32,
+                        origin[1] + 20.0 + scale * (y / 2 * (16 + self.import.border)) as f32,
                     ]);
-                    ui.text(im_str!("{:02x}", x * 16));
+                    ui.text(im_str!("{:>3x}", y * 16));
                 }
             } else {
                 ui.set_cursor_pos([
                     origin[0],
-                    origin[1] + 20.0 + scale * (x * (8 + self.import.border)) as f32,
+                    origin[1] + 20.0 + scale * (y * (8 + self.import.border)) as f32,
                 ]);
 
-                ui.text(im_str!("{:02x}", x * 16));
+                ui.text(im_str!("{:>3x}", y * 16));
             }
         }
 
@@ -272,6 +317,19 @@ impl Gui for ImportChrBankGui {
                 } else {
                     ui.label_text(im_str!("Bank"), &self.names[self.selector.value()]);
                 }
+
+                ui.same_line();
+                if self.is_new {
+                    imgui::ComboBox::new(im_str!("Scheme")).build_simple(
+                        ui,
+                        self.scheme.as_mut(),
+                        &self.schemes,
+                        &|x| Cow::Borrowed(&x),
+                    );
+                } else {
+                    ui.label_text(im_str!("Bank"), &self.names[self.selector.value()]);
+                }
+
                 width.pop(ui);
                 let mut changed = false;
 
@@ -307,6 +365,21 @@ impl Gui for ImportChrBankGui {
             self.changed = false;
             self.import = ImportChrBank::default();
             self.import.bank = self.selector.value();
+            self.refresh_image();
+        }
+        if self.scheme.draw(
+            self.changed,
+            im_str!("CHR Import Changed"),
+            "There are unsaved changes in the CHR Import Editor.\nDo you want to discard them?",
+            ui,
+        ) {
+            self.changed = false;
+            self.import = ImportChrBank::default();
+            self.import.bank = self.selector.value();
+            self.set_kind(self.scheme.value());
+            self.make_names().unwrap();
+            self.selector.set(0);
+            self.cache.reset(self.import.schema());
             self.refresh_image();
         }
     }

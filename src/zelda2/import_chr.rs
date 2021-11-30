@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::rc::Rc;
 
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
@@ -12,8 +13,24 @@ use crate::nes::Address;
 use crate::util::relative_path::PathConverter;
 use crate::zelda2::project::{Edit, Project, RomData};
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, IntoPrimitive, TryFromPrimitive)]
+#[repr(usize)]
+pub enum ChrBankKind {
+    MMC1_4k,
+    MMC5_1k,
+    VBanks,
+}
+
+impl Default for ChrBankKind {
+    fn default() -> Self {
+        ChrBankKind::MMC1_4k
+    }
+}
+
 #[derive(Debug, SmartDefault, Clone, Serialize, Deserialize)]
 pub struct ImportChrBank {
+    #[serde(default)]
+    pub kind: ChrBankKind,
     pub bank: usize,
     pub file: PathConverter,
     #[default(_code = "[0xFF000000, 0xFF666666, 0xFFAAAAAA, 0xFFFFFFFF]")]
@@ -30,6 +47,14 @@ impl ImportChrBank {
             Ok(Box::new(Self::default()))
         } else {
             Err(ErrorKind::IdPathError("id forbidden".to_string()).into())
+        }
+    }
+
+    pub fn schema(&self) -> Schema {
+        match self.kind {
+            ChrBankKind::MMC1_4k => Schema::MMC1_4k,
+            ChrBankKind::MMC5_1k => Schema::MMC5_1k,
+            ChrBankKind::VBanks => Schema::VBanks,
         }
     }
 }
@@ -51,7 +76,7 @@ impl RomData for ImportChrBank {
     }
 
     fn pack(&self, edit: &Rc<Edit>) -> Result<()> {
-        let cache = TileCache::new(edit, Schema::None);
+        let cache = TileCache::new(edit, self.schema());
         let chr = Address::Chr(self.bank as isize, 0);
         let mut bank =
             cache.get_bank(chr, &self.palette, self.sprite_layout, self.border as u32)?;

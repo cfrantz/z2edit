@@ -22,6 +22,11 @@ impl Selector {
         &mut self.next
     }
 
+    pub fn set(&mut self, value: usize) {
+        self.selected = value;
+        self.next = value;
+    }
+
     pub fn value(&self) -> usize {
         self.selected
     }

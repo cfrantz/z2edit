@@ -26,6 +26,9 @@ pub enum Schema {
     Item(String, IdPath),
     RawSprite(String, Address, IdPath, u8),
     RawTile(Address, [u32; 4]),
+    MMC1_4k,
+    MMC5_1k,
+    VBanks,
 }
 
 #[derive(Debug)]
@@ -81,7 +84,9 @@ impl TileCache {
 
     fn tile_mapping(&self, chr: Address, rom: &dyn MemoryAccess) -> Result<Address> {
         match &self.schema {
-            Schema::None => Err(ErrorKind::NotFound("Schema::None".to_string()).into()),
+            Schema::None | Schema::MMC1_4k | Schema::MMC5_1k | Schema::VBanks => {
+                Err(ErrorKind::NotFound(format!("{:?}", self.schema)).into())
+            }
             Schema::RawTile(_, _) => Err(ErrorKind::NotFound("Schema::RawTile".to_string()).into()),
             Schema::Overworld(config, _) | Schema::MetaTile(config, _, _) => {
                 let config = Config::get(config)?;
@@ -464,9 +469,10 @@ impl TileCache {
 
     fn _get_raw(&self, tile: u32, table: Option<&[u8]>, ovpal: Option<i32>) -> Result<Image> {
         let image = match &self.schema {
-            Schema::None => {
-                return Err(ErrorKind::NotFound("Schema::None".to_string()).into());
+            Schema::None | Schema::MMC1_4k | Schema::MMC5_1k | Schema::VBanks => {
+                return Err(ErrorKind::NotFound(format!("{:?}", self.schema)).into())
             }
+
             Schema::Overworld(config, id) => {
                 self.get_overworld_tile(tile, config, id, table, ovpal)?
             }
@@ -537,6 +543,45 @@ impl TileCache {
         }
     }
 
+    fn vbank_chr(&self, chr: Address) -> Result<Address> {
+        let config = match &self.schema {
+            Schema::VBanks => Config::get(&self.edit.config())?,
+            _ => return Ok(chr),
+        };
+        match config.misc.chr_bank_scheme {
+            ChrBankScheme::Vanilla => {
+                return Err(ErrorKind::ConfigError(
+                    "VBanks not possible with ChrBankScheme::Vanilla".to_string(),
+                )
+                .into())
+            }
+            ChrBankScheme::MMC5_12By1K(table) => {
+                let bank = chr.bank().unwrap().1;
+                let subbank = chr.raw() as usize / 1024;
+                let offset = chr.raw() as u16 % 1024;
+                let rom = self.edit.rom.borrow();
+                let remap = rom.read_bytes(table + bank * 12, 12)?;
+                Ok(Address::Chr(
+                    remap[subbank] as isize / 4,
+                    1024 * (remap[subbank] as u16 % 4) + offset,
+                ))
+            }
+        }
+    }
+
+    pub fn bank_size(&self, chr: Address) -> Result<(u32, u32, Address)> {
+        match &self.schema {
+            Schema::MMC1_4k => Ok((16, 16, chr)),
+            Schema::VBanks => Ok((16, 48, chr)),
+            Schema::MMC5_1k => {
+                let b = chr.bank().unwrap().1;
+                let chr = Address::Chr(b / 4, b as u16 * 1024);
+                Ok((16, 4, chr))
+            }
+            _ => Err(ErrorKind::NotFound(format!("{:?}", self.schema)).into()),
+        }
+    }
+
     pub fn get_bank(
         &self,
         chr: Address,
@@ -544,15 +589,17 @@ impl TileCache {
         sprite_layout: bool,
         border: u32,
     ) -> Result<Image> {
-        let width = border + 16 * (8 + border);
+        let (w, h, chr) = self.bank_size(chr)?;
+        let width = border + w * (8 + border);
         let height = if sprite_layout {
-            border + 8 * (16 + border)
+            border + (h / 2) * (16 + border)
         } else {
-            border + 16 * (8 + border)
+            border + h * (8 + border)
         };
         let mut image = Image::new_with_color(width, height, 0xFFFF00FF);
         self.bank_worker(sprite_layout, border, &mut |tile, x, y| {
-            self.blit_raw(&mut image, chr + tile * 16, palette, x, y, false, false)
+            let chr = self.vbank_chr(chr + tile * 16)?;
+            self.blit_raw(&mut image, chr, palette, x, y, false, false)
         })?;
         image.update();
         Ok(image)
@@ -566,11 +613,12 @@ impl TileCache {
         sprite_layout: bool,
         border: u32,
     ) -> Result<()> {
-        let width = border + 16 * (8 + border);
+        let (w, h, chr) = self.bank_size(chr)?;
+        let width = border + w * (8 + border);
         let height = if sprite_layout {
-            border + 8 * (16 + border)
+            border + (h / 2) * (16 + border)
         } else {
-            border + 16 * (8 + border)
+            border + h * (8 + border)
         };
         if image.width != width || image.height != height {
             return Err(ErrorKind::TransformationError(format!(
@@ -580,7 +628,8 @@ impl TileCache {
             .into());
         }
         self.bank_worker(sprite_layout, border, &mut |tile, x, y| {
-            self.unblit_raw(&image, chr + tile * 16, palette, x, y)
+            let chr = self.vbank_chr(chr + tile * 16)?;
+            self.unblit_raw(&image, chr, palette, x, y)
         })
     }
 
@@ -588,9 +637,10 @@ impl TileCache {
     where
         F: FnMut(u32, u32, u32) -> Result<()>,
     {
+        let (w, h, _) = self.bank_size(Address::Chr(0, 0))?;
         if sprite_layout {
-            for y in 0..8 {
-                for x in 0..16 {
+            for y in 0..(h / 2) {
+                for x in 0..w {
                     let tile = y * 32 + x * 2;
                     work(tile, border + x * (8 + border), border + y * (16 + border))?;
                     work(
@@ -601,8 +651,8 @@ impl TileCache {
                 }
             }
         } else {
-            for y in 0..16 {
-                for x in 0..16 {
+            for y in 0..h {
+                for x in 0..w {
                     let tile = y * 16 + x;
                     work(tile, border + x * (8 + border), border + y * (8 + border))?;
                 }
