@@ -524,6 +524,19 @@ impl Edit {
         let conn = self.connectivity.borrow();
         conn.overworld_connector(id).map(|x| x.clone())
     }
+
+    pub fn copy_prg_bank(&self, frombank: isize, tobank: isize) -> Result<()> {
+        let mut rom = self.rom.borrow_mut();
+        let len = 16384;
+        let bytes = rom
+            .read_bytes(Address::Prg(frombank, 0x8000), len)?
+            .to_vec();
+        rom.write_bytes(Address::Prg(tobank, 0x8000), &bytes)?;
+
+        let mut mem = self.memory.borrow_mut();
+        mem.copy_bank(frombank, tobank);
+        Ok(())
+    }
 }
 
 #[pyclass(unsendable)]
@@ -635,6 +648,10 @@ impl EditProxy {
 
     fn insert(&mut self, addr: PyAddress, val: &[u8]) -> Result<()> {
         self.edit.rom.borrow_mut().insert(addr.address, val)
+    }
+
+    fn copy_prg_bank(&mut self, frombank: isize, tobank: isize) -> Result<()> {
+        self.edit.copy_prg_bank(frombank, tobank)
     }
 
     fn alloc(&mut self, addr: PyAddress, length: u16) -> Result<PyAddress> {

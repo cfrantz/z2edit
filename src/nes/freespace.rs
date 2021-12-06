@@ -159,6 +159,18 @@ impl FreeSpace {
         }
     }
 
+    pub fn copy_bank(&mut self, frombank: isize, tobank: isize) {
+        let mut newbank = Vec::new();
+        for f in self.freelist.iter() {
+            if f.bank == frombank {
+                let mut new = f.clone();
+                new.bank = tobank;
+                newbank.push(new);
+            }
+        }
+        self.freelist.extend(newbank);
+    }
+
     pub fn register(&mut self, address: Address, length: u16) -> Result<()> {
         let address = self.normalize_address(address)?;
         if self.contains(address) {

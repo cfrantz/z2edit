@@ -1,6 +1,13 @@
 import json
 import z2edit
 from z2edit import Address
+import copy
+
+def register_types():
+    from z2edit import Address
+    copy._deepcopy_dispatch[Address] = copy._deepcopy_atomic
+
+register_types()
 
 class ConfigEncoder(json.JSONEncoder):
     def default(self, obj):
