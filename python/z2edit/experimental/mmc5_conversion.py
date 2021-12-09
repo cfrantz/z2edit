@@ -309,6 +309,15 @@ class ChrDedup(object):
         .org $a86b
             jsr     bank0_chr_load_A
 
+        ; Fix up the gameover/save routine
+        .org $c33c
+            lda #0
+            jsr bank7_chr_helper_for_bank5
+            nop
+            nop
+            nop
+
+
         .org $ff70
         bank7_code0 = $c000
         bank7_reset:
@@ -352,6 +361,7 @@ class ChrDedup(object):
             jmp     bank7_Load_Bank_769_at_0x8000
         bank7_chr_helper_for_bank5:
             jsr     bank7_chr_bank_switch__load_A
+        bank7_load_startup_bank:
             lda     #5
             jmp     bank7_Load_Bank_A_0x8000
         .db $ea
