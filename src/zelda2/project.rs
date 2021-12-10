@@ -676,6 +676,10 @@ impl EditProxy {
         let mut mem = self.edit.memory.borrow_mut();
         mem.free(addr.address, length);
     }
+    fn bulkfree(&mut self, addr: PyAddress, length: u16, allow_overlap: bool) -> Result<()> {
+        let mut mem = self.edit.memory.borrow_mut();
+        mem.register(addr.address, length, allow_overlap)
+    }
 
     fn report(&self, addr: PyAddress) -> Result<(usize, u16)> {
         let mem = self.edit.memory.borrow();

@@ -35,10 +35,24 @@ impl FreeSpaceRange {
     fn adjacent(&self, other: &FreeSpaceRange) -> bool {
         self.bank == other.bank && self.address + self.length == other.address
     }
+    fn overlaps(&self, other: &FreeSpaceRange) -> bool {
+        if self.bank == other.bank {
+            if other.address >= self.address && other.address < self.address + self.length {
+                return true;
+            }
+        }
+        false
+    }
 
     fn extend(&mut self, other: &FreeSpaceRange) -> bool {
         if self.adjacent(other) {
             self.length += other.length;
+            true
+        } else if self.overlaps(other) {
+            let end = other.address + other.length;
+            if end > self.address + self.length {
+                self.length = end - self.address;
+            }
             true
         } else {
             false
@@ -57,7 +71,7 @@ impl FreeSpace {
         let mut space = FreeSpace::default();
         for item in config.freespace.iter() {
             FreeSpace::check_keepout_overlap(item.0, item.1, config);
-            space.register(item.0, item.1 as u16)?;
+            space.register(item.0, item.1 as u16, false)?;
         }
         space.banks = layout.segment("prg")?.banks() as isize;
         Ok(space)
@@ -129,6 +143,15 @@ impl FreeSpace {
                 self.freelist[i].extend(&next);
                 continue;
             }
+            if self.freelist[i].overlaps(&self.freelist[i + 1]) {
+                let next = self.freelist.remove(i + 1);
+                warn!(
+                    "Coalescing overlapping ranges: {:x?} {:x?}",
+                    self.freelist[i], next
+                );
+                self.freelist[i].extend(&next);
+                continue;
+            }
             i += 1;
         }
     }
@@ -171,22 +194,24 @@ impl FreeSpace {
         self.freelist.extend(newbank);
     }
 
-    pub fn register(&mut self, address: Address, length: u16) -> Result<()> {
+    pub fn register(&mut self, address: Address, length: u16, allow_overlap: bool) -> Result<()> {
         let address = self.normalize_address(address)?;
-        if self.contains(address) {
-            return Err(ErrorKind::FreeSpaceError(format!(
-                "Address {:x?} already in freespace",
-                address
-            ))
-            .into());
-        }
+        if !allow_overlap {
+            if self.contains(address) {
+                return Err(ErrorKind::FreeSpaceError(format!(
+                    "Address {:x?} already in freespace",
+                    address
+                ))
+                .into());
+            }
 
-        if self.contains(address + length - 1) {
-            return Err(ErrorKind::FreeSpaceError(format!(
-                "Address {:x?}+{} already in freespace",
-                address, length
-            ))
-            .into());
+            if self.contains(address + length - 1) {
+                return Err(ErrorKind::FreeSpaceError(format!(
+                    "Address {:x?}+{} already in freespace",
+                    address, length
+                ))
+                .into());
+            }
         }
         match address {
             Address::Prg(bank, addr) => {
@@ -278,7 +303,7 @@ impl FreeSpace {
     }
 
     pub fn free(&mut self, address: Address, length: u16) {
-        match self.register(address, length) {
+        match self.register(address, length, false) {
             Err(e) => panic!("{:?}", e),
             _ => {}
         };
