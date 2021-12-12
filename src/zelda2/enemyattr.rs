@@ -31,6 +31,7 @@ pub mod config {
         pub name: String,
         pub world: u8,
         pub overworld: u8,
+        pub address: (Address, u16),
         pub hp: Address,
         pub xp: Address,
         pub table_len: u8,
