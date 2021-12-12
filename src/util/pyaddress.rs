@@ -28,34 +28,40 @@ impl From<Address> for RealAddress {
 #[pymethods]
 impl Address {
     #[new]
-    fn new(init: &PyDict) -> PyResult<Address> {
-        let keys = init.keys();
-        if keys.len() == 1 {
-            let key = keys.get_item(0).extract::<String>()?;
-            let keylower = key.to_lowercase();
-            let val = init.get_item(&key).expect("Address dict value");
-            let val = val.downcast::<PyList>()?;
-            match keylower.as_str() {
-                "prg" => Ok(Address {
-                    address: RealAddress::Prg(
-                        val.get_item(0).extract::<isize>()?,
-                        val.get_item(1).extract::<u16>()?,
-                    ),
-                }),
-                "chr" => Ok(Address {
-                    address: RealAddress::Chr(
-                        val.get_item(0).extract::<isize>()?,
-                        val.get_item(1).extract::<u16>()?,
-                    ),
-                }),
+    fn new(value: &PyAny) -> PyResult<Address> {
+        if let Ok(init) = value.extract::<Address>() {
+            return Ok(init.clone());
+        } else if let Ok(init) = value.downcast::<PyDict>() {
+            let keys = init.keys();
+            if keys.len() == 1 {
+                let key = keys.get_item(0).extract::<String>()?;
+                let keylower = key.to_lowercase();
+                let val = init.get_item(&key).expect("Address dict value");
+                let val = val.downcast::<PyList>()?;
+                match keylower.as_str() {
+                    "prg" => Ok(Address {
+                        address: RealAddress::Prg(
+                            val.get_item(0).extract::<isize>()?,
+                            val.get_item(1).extract::<u16>()?,
+                        ),
+                    }),
+                    "chr" => Ok(Address {
+                        address: RealAddress::Chr(
+                            val.get_item(0).extract::<isize>()?,
+                            val.get_item(1).extract::<u16>()?,
+                        ),
+                    }),
 
-                _ => Err(PyNotImplementedError::new_err(format!(
-                    "Cannot create Address from {:?}",
-                    key
-                ))),
+                    _ => Err(PyNotImplementedError::new_err(format!(
+                        "Cannot create Address from {:?}",
+                        key
+                    ))),
+                }
+            } else {
+                Err(PyException::new_err("expected exactly one key in dict"))
             }
         } else {
-            Err(PyException::new_err("expected exactly one key in dict"))
+            Err(PyException::new_err("Unknown type"))
         }
     }
 
