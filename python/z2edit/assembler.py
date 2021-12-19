@@ -3,15 +3,16 @@
 #
 # This assembler is a python port of the assembler from Z2Edit 1.0.
 # Features:
-#   Standard 6502 opcodes
-#   Labels and fixups
-#   Data entry with .db / .dw / .dd pseudo ops
-#   Some defacto 6502 syntax: $ for hex, ! to force 16-bit operands.
+# - Standard 6502 opcodes
+# - Labels and fixups.
+# - Data entry with .db / .dw / .dd pseudo ops.
+# - Some defacto 6502 syntax:
+#     $ for hex.
+#     ! to force 16-bit operands.
+#     <, > to get the lo/hi byte of a word.
+# - Crappy expression support:
+#     An expression wrapped in square brackets is evaluated with python eval.
 # 
-# Not features:
-#   No expressions: can't use "foo+1" as an operand.
-#   Some defacto 6502 syntax not supported: < and > for lo/hi byte of a word.
-#
 # Bugs:
 #   yes.
 #
@@ -495,6 +496,17 @@ class Asm:
         self.rom.write_word(address, value & 0xFFFF)
 
     def parse_int(self, val):
+        result = self._parse_int(val)
+        if result is not None:
+            if val[0] == '<':
+                result = result & 0xFF
+            elif val[0] == '>':
+                result = result >> 8
+        return result
+
+    def _parse_int(self, val):
+        if val.startswith('<') or val.startswith('>'):
+            val = val[1:]
         if re.fullmatch(r'-?\$[0-9a-fA-F]+', val):
             return int(val.replace('$', ''), 16)
         elif (re.fullmatch(r'-?[0-9]+', val)
@@ -609,9 +621,8 @@ class Asm:
             addr = self.org
             mode |= 32 | 16
         elif operand:
-            try:
-                addr = self.symtab[operand]
-            except KeyError:
+            addr = self.lookup(operand)
+            if addr is None:
                 fixup_resolved = False
                 self.code_fixup[self.org] = operand
                 addr = 0xffff
@@ -690,7 +701,7 @@ class Asm:
 
     def apply_fixups(self):
         for (addr, (mode, sym)) in self.code_fixup.items():
-            value = self.symtab.get(sym)
+            value = self.lookup(sym)
             if value is None:
                 raise FixupError("Unresolved symbol", sym, addr)
 
@@ -715,7 +726,7 @@ class Asm:
                 raise FixupError("Invalid mode", mode, addr)
 
         for (addr, (size, sym)) in self.data_fixup.items():
-            value = self.symtab.get(sym)
+            value = self.lookup(sym)
             if value is None:
                 raise FixupError("Unresolved symbol", sym, addr)
             for _ in range(size):
@@ -723,3 +734,25 @@ class Asm:
                 value >>= 8
                 addr += 1
         return None
+
+    def lookup(self, sym):
+        if sym.startswith('[') and sym.endswith(']'):
+            sym = sym[1:-1].replace('$', '0x')
+            try:
+                return eval(sym, {}, self.symtab)
+            except Exception as ex:
+                return None
+
+        mod = None
+        if sym.startswith('<') or sym.startswith('>'):
+            mod = sym[0]
+            value = self.lookup(sym[1:])
+        else:
+            value = self.symtab.get(sym)
+
+        if value is not None:
+            if mod == '<':
+                value = value & 0xFF
+            elif mod == '>':
+                value = value >> 8
+        return value
