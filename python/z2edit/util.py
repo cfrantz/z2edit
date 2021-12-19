@@ -1,11 +1,10 @@
 import json
 import z2edit
 from z2edit import Address
-import copy
+import copy as _copy
 
 def register_types():
-    from z2edit import Address
-    copy._deepcopy_dispatch[Address] = copy._deepcopy_atomic
+    _copy._deepcopy_dispatch[Address] = _copy._deepcopy_atomic
 
 register_types()
 
@@ -33,6 +32,45 @@ class ObjectDict(dict):
             del self[name]
         else:
             raise AttributeError('No such attribute: ' + name)
+
+    def _get(self, objpath, default=Exception):
+        try:
+            obj = self
+            for k in objpath.split('.'):
+                if isinstance(obj, list):
+                    obj = obj[int(k, 0)]
+                else:
+                    obj = obj[k]
+            return obj
+        except (KeyError, IndexError) as ex:
+            if default is Exception:
+                raise ex
+            return default
+
+    def get(self, objpath, default=None):
+        return self._get(objpath, default)
+
+    def select(self, objpath, copy=False, **kwargs):
+        obj = self._get(objpath)
+        if not isinstance(obj, list):
+            raise Exception("Object {} is not a list".format(objpath))
+        if not kwargs:
+            return obj
+
+        result = []
+        for o in obj:
+            if all(v(o._get(k)) if callable(v) else v == o._get(k)
+                   for (k, v) in kwargs.items()):
+                result.append(o)
+        if copy:
+            result = _copy.deepcopy(result)
+        return result
+
+    def select_one(self, objpath, copy=False, **kwargs):
+        result = self.select(objpath, copy, **kwargs)
+        if len(result) != 1:
+            raise Exception("Expected exactly 1 of {}, found {}".format(objpath, len(result)))
+        return result[0]
 
     @staticmethod
     def from_json(text):
