@@ -3,9 +3,8 @@
 #include <zlib.h>
 
 #include "util/compress.h"
-#include "util/logging.h"
-#include "util/status.h"
-
+#include "absl/log/log.h"
+#include "absl/status/status.h"
 
 std::string ZLib::Compress(const std::string& data) {
     unsigned long size = compressBound(data.size());
@@ -13,13 +12,13 @@ std::string ZLib::Compress(const std::string& data) {
     buf.resize(size);
     if (compress2((unsigned char*)buf.data(), &size,
                   (const unsigned char*)data.data(), data.size(), -1) != Z_OK) {
-        LOG(FATAL, "Failed to compress rom buffer.");
+        LOG(FATAL) << "Failed to compress buffer.";
     }
     buf.resize(size);
     return buf;
 }
 
-StatusOr<std::string> ZLib::Uncompress(const std::string& data, int size) {
+absl::StatusOr<std::string> ZLib::Uncompress(const std::string& data, int size) {
     std::string result;
     if (size == 0)
         size = data.size() * 2;
@@ -34,13 +33,12 @@ StatusOr<std::string> ZLib::Uncompress(const std::string& data, int size) {
             break;
         }
         if (zret == Z_DATA_ERROR) {
-            return util::Status(util::error::Code::INVALID_ARGUMENT,
-                          "Compressed data corrputed");
+            return absl::InvalidArgumentError("compressed data invalid");
         }
 
         size *= 2;
         if (zret == Z_MEM_ERROR || size < 0) {
-            return util::Status(util::error::Code::ABORTED, "Out of memory");
+            return absl::AbortedError("out of memory");
         }
     }
     return result;

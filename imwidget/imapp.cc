@@ -1,15 +1,15 @@
-#include <gflags/gflags.h>
 #include "imapp.h"
+
 #include "imgui.h"
+#include "backends/imgui_impl_sdl2.h"
+#include "backends/imgui_impl_opengl3.h"
 #include "util/os.h"
 #include "util/gamecontrollerdb.h"
-#include "util/logging.h"
-#include "util/imgui_impl_sdl.h"
 #include "absl/strings/str_cat.h"
+#include "absl/flags/flag.h"
 
-DEFINE_double(hidpi, 1.0, "HiDPI scaling factor");
-DEFINE_string(controller_db, "", "Path to the SDL gamecontrollerdb.txt file");
-
+ABSL_FLAG(double, hidpi, 1.0, "HiDPI scaling factor");
+ABSL_FLAG(std::string, controller_db, "", "Path to the SDL gamecontrollerdb.txt file");
 
 ImApp* ImApp::singleton_;
 
@@ -25,45 +25,64 @@ ImApp::ImApp(const std::string& name, int width, int height)
              SDL_INIT_JOYSTICK |
              SDL_INIT_GAMECONTROLLER);
 
+    const char *glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     window_ = SDL_CreateWindow(name.c_str(),
                                SDL_WINDOWPOS_UNDEFINED,
                                SDL_WINDOWPOS_UNDEFINED,
                                width_, height_,
-                               SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+                               SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
     glcontext_ = SDL_GL_CreateContext(window_);
-    // Setup ImGui binding
+    SDL_GL_MakeCurrent(window_, glcontext_);
+    SDL_GL_SetSwapInterval(1); // Enable vsync
+                               //
+    // Setup ImGui
+    IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui_ImplSdl_SetHiDPIScale(FLAGS_hidpi);
-    ImGui_ImplSdlGL3_Init(window_);
-    clear_color_ = ImColor(114, 144, 154);
+    //ImGui_ImplSdl_SetHiDPIScale(absl::GetFlag(FLAGS_hidpi));
+
+    // Setup ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(window_, glcontext_);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    clear_color_ = ImColor(110, 110, 110);
     //fpsmgr_.SetRate(60);
 
     RegisterCommand("quit", "Quit the application.", this, &ImApp::Quit);
 }
 
 ImApp::~ImApp() {
-    ImGui_ImplSdlGL3_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
+
     SDL_GL_DeleteContext(glcontext_);
     SDL_DestroyWindow(window_);
     SDL_Quit();
 }
 
 void ImApp::InitControllers() {
-    if (FLAGS_controller_db.empty()) {
+    auto controller_db = absl::GetFlag(FLAGS_controller_db);
+    if (controller_db.empty()) {
         SDL_RWops* f = SDL_RWFromConstMem(kGameControllerDB,
                                           kGameControllerDB_len);
         SDL_GameControllerAddMappingsFromRW(f, 1);
     } else {
-        SDL_GameControllerAddMappingsFromFile(FLAGS_controller_db.c_str());
+        SDL_GameControllerAddMappingsFromFile(controller_db.c_str());
     }
 
     int controllers = 0;
@@ -116,7 +135,7 @@ bool ImApp::ProcessEvents() {
     SDL_Event event;
     bool done = false;
     while (SDL_PollEvent(&event)) {
-        ImGui_ImplSdlGL3_ProcessEvent(&event);
+        ImGui_ImplSDL2_ProcessEvent(&event);
         if (event.type == SDL_QUIT)
             done = true;
         ProcessEvent(&event);
@@ -133,7 +152,10 @@ void ImApp::BaseDraw() {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    ImGui_ImplSdlGL3_NewFrame(window_);
+    ImGui_ImplOpenGL3_NewFrame();                                            
+    ImGui_ImplSDL2_NewFrame();                                               
+    ImGui::NewFrame();
+
     console_.Draw();
     for(auto it=draw_callback_.begin(); it != draw_callback_.end();) {
         if ((*it)->visible()) {
@@ -147,7 +169,7 @@ void ImApp::BaseDraw() {
 
     Draw();
     ImGui::Render();
-    ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(window_);
     for(auto& widget : draw_added_) {
         draw_callback_.emplace_back(std::move(widget));

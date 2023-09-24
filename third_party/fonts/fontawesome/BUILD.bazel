@@ -1,0 +1,12 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "regular",
+    hdrs = [
+        "@com_github_iconfonts//:IconsFontAwesome6.h",
+    ],
+    data = [
+        "fa-regular-400.otf",
+        "fa-solid-900.otf",
+    ],
+)

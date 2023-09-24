@@ -1,0 +1,98 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "gamecontrollerdb",
+    srcs = ["gamecontrollerdb.cc"],
+    hdrs = ["gamecontrollerdb.h"],
+)
+
+cc_library(
+    name = "browser",
+    srcs = ["browser.cc"],
+    hdrs = ["browser.h"],
+)
+
+cc_library(
+    name = "compress",
+    srcs = ["compress.cc"],
+    hdrs = ["compress.h"],
+    linkopts = ["-lz"],
+    deps = [
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_library(
+    name = "config",
+    hdrs = ["config.h"],
+    deps = [
+        ":file",
+        ":os",
+        "@com_google_absl//absl/log",
+    ],
+)
+
+cc_library(
+    name = "crc",
+    srcs = ["crc.cc"],
+    hdrs = ["crc.h"],
+    linkopts = ["-lz"],
+)
+
+cc_library(
+    name = "file",
+    srcs = ["file.cc"],
+    hdrs = ["file.h"],
+    deps = [
+        ":posix_status",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "os",
+    srcs = ["os.cc"],
+    hdrs = ["os.h"],
+    deps = [
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "posix_status",
+    srcs = ["posix_status.cc"],
+    hdrs = ["posix_status.h"],
+    deps = [
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "fpsmgr",
+    hdrs = ["fpsmgr.h"],
+)
+
+cc_library(
+    name = "macros",
+    hdrs = ["macros.h"],
+)
+
+cc_library(
+    name = "imgui_sdl_opengl",
+    srcs = [
+        "fontawesome.h",
+        "imgui_impl_sdl.cpp",
+    ],
+    hdrs = [
+        "imgui_impl_sdl.h",
+    ],
+    deps = [
+        "//external:fontawesome",
+        "//external:imgui",
+    ],
+)

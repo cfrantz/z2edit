@@ -7,12 +7,11 @@
 #include <limits.h>
 
 #include "util/file.h"
-#include "util/status.h"
-#include "util/statusor.h"
+#include "util/posix_status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 
-StatusOr<Stat> Stat::Filename(const std::string& filename) {
+absl::StatusOr<Stat> Stat::Filename(const std::string& filename) {
     Stat s;
     if (stat(filename.c_str(), &s.stat_) == -1) {
         return util::PosixStatus(errno);
@@ -20,7 +19,7 @@ StatusOr<Stat> Stat::Filename(const std::string& filename) {
     return s;
 }
 
-StatusOr<Stat> Stat::FileDescriptor(int fd) {
+absl::StatusOr<Stat> Stat::FileDescriptor(int fd) {
     Stat s;
     if (fstat(fd, &s.stat_) == -1) {
         return util::PosixStatus(errno);
@@ -28,7 +27,7 @@ StatusOr<Stat> Stat::FileDescriptor(int fd) {
     return s;
 }
 
-StatusOr<Stat> Stat::Link(const std::string& filename) {
+absl::StatusOr<Stat> Stat::Link(const std::string& filename) {
     Stat s;
     if (stat(filename.c_str(), &s.stat_) == -1) {
         return util::PosixStatus(errno);
@@ -72,21 +71,21 @@ std::string File::Dirname(const std::string& path) {
     return std::string(dirname(buf));
 }
 
-util::Status File::Access(const std::string& path) {
+absl::Status File::Access(const std::string& path) {
     if (access(path.c_str(), F_OK) == -1) {
         return util::PosixStatus(errno);
     }
-    return util::Status();
+    return absl::OkStatus();
 }
 
-util::Status File::MakeDir(const std::string& path, mode_t mode) {
+absl::Status File::MakeDir(const std::string& path, mode_t mode) {
     if (mkdir(path.c_str(), mode) == -1) {
         return util::PosixStatus(errno);
     }
-    return util::Status();
+    return absl::OkStatus();
 }
 
-util::Status File::MakeDirs(const std::string& path, mode_t mode) {
+absl::Status File::MakeDirs(const std::string& path, mode_t mode) {
     std::vector<std::string> p = absl::StrSplit(path, absl::ByAnyChar("\\/"));
     if (p[0] == "") {
         p[0] = "/";
@@ -101,7 +100,7 @@ util::Status File::MakeDirs(const std::string& path, mode_t mode) {
                                  mpath.back() == '/' ? "" : "/",
                                  p.at(i));
         }
-        util::Status status = Access(mpath);
+        absl::Status status = Access(mpath);
         if (status.ok()) {
             continue;
         }
@@ -110,7 +109,7 @@ util::Status File::MakeDirs(const std::string& path, mode_t mode) {
             return status;
         }
     }
-    return util::Status();
+    return absl::OkStatus();
 }
 
 File::File(FILE* fp) : fp_(fp) {}
@@ -120,7 +119,7 @@ File::~File() {
 }
 
 Stat File::FStat() {
-    return Stat::FileDescriptor(fileno(fp_)).ValueOrDie();
+    return Stat::FileDescriptor(fileno(fp_)).value();
 }
 
 int64_t File::Length() {

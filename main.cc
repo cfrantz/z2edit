@@ -1,8 +1,9 @@
 #include <cstdio>
 #include <string>
-#include <gflags/gflags.h>
 
 #include "app.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "util/config.h"
 
 const char kUsage[] =
@@ -16,8 +17,8 @@ Flags:
 )ZZZ";
 
 int main(int argc, char *argv[]) {
-    gflags::SetUsageMessage(kUsage);
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    absl::SetProgramUsageMessage(kUsage);
+    absl::ParseCommandLine(argc, argv);
 
     project::App app("Empty Project");
     app.Init();

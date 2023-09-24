@@ -36,9 +36,9 @@ class DebugConsole: public ImWindowBase {
             void(DebugConsole* console, const char* line)> line_cb);
     void PopLineCallback();
   private:
-    int TextEditCallback(ImGuiTextEditCallbackData* data);
+    int TextEditCallback(ImGuiInputTextCallbackData* data);
 
-    static int TextEditCallbackStub(ImGuiTextEditCallbackData* data);
+    static int TextEditCallbackStub(ImGuiInputTextCallbackData* data);
 
     const char* name_;
     char inputbuf_[256];

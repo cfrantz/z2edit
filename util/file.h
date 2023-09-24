@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "util/status.h"
-#include "util/statusor.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 
 class Stat {
   public:
@@ -40,9 +40,9 @@ class Stat {
         IWOTH = S_IWOTH,
         IXOTH = S_IXOTH,
     };
-    static StatusOr<Stat> Filename(const std::string& filename);
-    static StatusOr<Stat> FileDescriptor(int fd);
-    static StatusOr<Stat> Link(const std::string& filename);
+    static absl::StatusOr<Stat> Filename(const std::string& filename);
+    static absl::StatusOr<Stat> FileDescriptor(int fd);
+    static absl::StatusOr<Stat> Link(const std::string& filename);
 
     inline bool IsRegular() const {
         return S_ISREG(Mode());
@@ -87,9 +87,9 @@ class File {
     static std::string Basename(const std::string& path);
     static std::string Dirname(const std::string& path);
 
-    static util::Status Access(const std::string& path);
-    static util::Status MakeDir(const std::string& path, mode_t mode=0755);
-    static util::Status MakeDirs(const std::string& path, mode_t mode=0755);
+    static absl::Status Access(const std::string& path);
+    static absl::Status MakeDir(const std::string& path, mode_t mode=0755);
+    static absl::Status MakeDirs(const std::string& path, mode_t mode=0755);
 
     virtual ~File();
     Stat FStat();

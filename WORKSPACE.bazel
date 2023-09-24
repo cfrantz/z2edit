@@ -1,0 +1,43 @@
+######################################################################
+# bazel rules
+######################################################################
+load("//third_party/bazel:repos.bzl", "bazel_repos")
+
+bazel_repos()
+
+load("//third_party/bazel:deps.bzl", "bazel_deps")
+
+bazel_deps()
+
+######################################################################
+# Google stuff: absl, googletest, protobuf
+######################################################################
+load("//third_party/google:repos.bzl", "google_repos")
+
+google_repos()
+
+load("//third_party/google:deps.bzl", "google_deps")
+
+google_deps()
+
+######################################################################
+# ImGui
+######################################################################
+load("//third_party/imgui:repos.bzl", "imgui_repos")
+
+imgui_repos()
+
+load("//third_party/imgui:deps.bzl", "imgui_deps")
+
+imgui_deps()
+
+######################################################################
+# fonts: FontAwesome
+######################################################################
+load("//third_party/fonts:repos.bzl", "fonts_repos")
+
+fonts_repos()
+
+load("//third_party/fonts:deps.bzl", "fonts_deps")
+
+fonts_deps()

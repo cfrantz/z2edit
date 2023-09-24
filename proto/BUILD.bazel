@@ -1,4 +1,4 @@
-package(default_visibility=["//visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
 ## proto_library(
 ##     name = "rominfo_proto",
@@ -7,7 +7,7 @@ package(default_visibility=["//visibility:public"])
 ##         "keybinds.proto",
 ##     ],
 ## )
-## 
+##
 ## cc_proto_library(
 ##     name = "rominfo",
 ##     deps = [":rominfo_proto"],

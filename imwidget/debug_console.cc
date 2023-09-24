@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include "imwidget/debug_console.h"
-#include "util/logging.h"
+#include "absl/log/log.h"
 
 DebugConsole::DebugConsole(const char* name)
   : ImWindowBase(false, false),
@@ -61,7 +61,7 @@ void  DebugConsole::AddLog(const char* fmt, ...) {
     while(end > log && (*end == '\r' || *end == '\n')) {
         *end-- = '\0';
     }
-    LOG(INFO, "$$ ", log);
+    LOG(INFO) << "$$ " << log;
 }
 
 bool DebugConsole::Draw() {
@@ -91,7 +91,7 @@ bool DebugConsole::Draw() {
     ImGui::Separator();
 
     ImGui::BeginChild("ScrollingRegion", ImVec2(0,
-                      -ImGui::GetItemsLineHeightWithSpacing()), false,
+                      -ImGui::GetFrameHeightWithSpacing()), false,
                       ImGuiWindowFlags_HorizontalScrollbar);
     if (ImGui::BeginPopupContextWindow()) {
         if (ImGui::Selectable("Clear")) ClearLog();
@@ -131,7 +131,7 @@ bool DebugConsole::Draw() {
         ImGui::PopStyleColor();
     }
     if (scroll_to_bottom_)
-        ImGui::SetScrollHere();
+        ImGui::SetScrollHereY();
     scroll_to_bottom_ = false;
     ImGui::PopStyleVar();
     ImGui::EndChild();
@@ -150,7 +150,7 @@ bool DebugConsole::Draw() {
     }
 
     // Demonstrate keeping auto focus on the input box
-    if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused()
+    if (ImGui::IsItemHovered() || (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows)
                                    && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 
@@ -241,13 +241,13 @@ void  DebugConsole::ExecCommand(const char* command_line) {
     }
 }
 
-int DebugConsole::TextEditCallbackStub(ImGuiTextEditCallbackData* data) {
+int DebugConsole::TextEditCallbackStub(ImGuiInputTextCallbackData* data) {
     // In C++11 you are better off using lambdas for this sort of forwarding callbacks
     DebugConsole* console = (DebugConsole*)data->UserData;
     return console->TextEditCallback(data);
 }
 
-int  DebugConsole::TextEditCallback(ImGuiTextEditCallbackData* data) {
+int  DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data) {
     //AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
     switch (data->EventFlag) {
     case ImGuiInputTextFlags_CallbackCompletion: {

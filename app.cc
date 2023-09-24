@@ -1,14 +1,12 @@
 #include <cstdio>
 
-#include <gflags/gflags.h>
 #include "app.h"
 #include "imgui.h"
+#include "absl/log/log.h"
 #include "absl/strings/match.h"
 #include "imwidget/error_dialog.h"
 #include "util/browser.h"
 #include "util/os.h"
-#include "util/logging.h"
-#include "util/imgui_impl_sdl.h"
 
 #include "version.h"
 
@@ -33,6 +31,7 @@ void App::Draw() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open", "Ctrl+O")) {
+#ifdef HAVE_NFD
                 char *filename = nullptr;
                 auto result = NFD_OpenDialog("z2prj;nes", nullptr, &filename);
                 if (result == NFD_OKAY) {
@@ -40,6 +39,9 @@ void App::Draw() {
                     save_filename_.assign(filename);
                 }
                 free(filename);
+#else
+            LOG(ERROR) << "File|Open";
+#endif
             }
 
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
@@ -49,6 +51,7 @@ void App::Draw() {
             }
             if (ImGui::MenuItem("Save As")) {
 save_as:
+#ifdef HAVE_NFD
                 char *filename = nullptr;
                 auto result = NFD_SaveDialog("z2prj", nullptr, &filename);
                 if (result == NFD_OKAY) {
@@ -71,6 +74,9 @@ save_as:
                     }
                 }
                 free(filename);
+#else
+            LOG(ERROR) << "File|SaveAs";
+#endif
             }
             ImGui::EndMenu();
         }

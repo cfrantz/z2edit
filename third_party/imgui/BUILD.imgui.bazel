@@ -1,0 +1,44 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "imgui",
+    srcs = [
+        "imgui.cpp",
+        "imgui_draw.cpp",
+        "imgui_tables.cpp",
+        "imgui_widgets.cpp",
+        "imstb_rectpack.h",
+        "imstb_textedit.h",
+        "imstb_truetype.h",
+    ],
+    hdrs = [
+        "imconfig.h",
+        "imgui.h",
+        "imgui_internal.h",
+    ],
+    linkopts = [
+        "-lm",
+        # FIXME(cfrantz): Detect whether we're building for linux or windows,
+        # and select the appropriate GL library
+        # "-lGL",
+        # "-lopengl32",
+    ],
+)
+
+cc_library(
+    name = "sdl_opengl3",
+    srcs = [
+        "backends/imgui_impl_opengl3.cpp",
+        "backends/imgui_impl_opengl3_loader.h",
+        "backends/imgui_impl_sdl2.cpp",
+    ],
+    hdrs = [
+        "backends/imgui_impl_opengl3.h",
+        "backends/imgui_impl_sdl2.h",
+    ],
+    copts = ["-I/usr/include/SDL2"],
+    includes = ["backends"],
+    deps = [
+        ":imgui",
+    ],
+)

@@ -8,10 +8,11 @@
 #include <windows.h>
 #endif
 
+#include "util/os.h"
+
+#include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
-#include "util/os.h"
-#include "util/logging.h"
 
 namespace os {
 namespace {
@@ -125,22 +126,22 @@ std::string Executable() {
 std::string ResourceDir(const std::string& name) {
     std::string exe = Executable();
     if (exe.find("_bazel_") != std::string::npos) {
-        LOG(INFO, "Executable contains '_bazel_'. Assuming ResourceDir is CWD.");
+        LOG(INFO) << "Executable contains '_bazel_'. Assuming ResourceDir is CWD.";
         return GetCWD();
     }
     std::vector<std::string> path = Split(exe);
     path.pop_back(); // Remove exe filename
 
 #ifdef _WIN32
-    LOG(INFO, "Windows: assuming ResourceDir is", Join(path));
+    LOG(INFO) << "Windows: assuming ResourceDir is" << Join(path);
 #else
     if (path.back() == "bin") {
         path.pop_back();
         path.push_back("share");
         path.push_back(name);
     } else {
-        LOG(INFO, "Unix: Did not find 'bin' in executable path. "
-                  "Assuming ResourcDir is ", Join(path));
+        LOG(INFO) << "Unix: Did not find 'bin' in executable path. "
+                  "Assuming ResourcDir is " << Join(path);
     }
 #endif
     return Join(path);
@@ -163,7 +164,7 @@ std::string DataPath(const std::vector<std::string>& components) {
         p = Split(home);
         p.push_back(absl::StrCat(".", GetApplicationName()));
     } else {
-        LOG(ERROR, "ConfigPath is unknown.");
+        LOG(ERROR) << "ConfigPath is unknown.";
     }
     p.insert(p.end(), components.begin(), components.end());
     return Join(p);
