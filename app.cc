@@ -13,6 +13,7 @@
 #ifdef HAVE_NFD
 #include "nfd.h"
 #endif
+#include "ImGuiFileDialog.h"
 
 
 namespace project {
@@ -28,6 +29,7 @@ void App::ProcessMessage(const std::string& msg, const void* extra) {
 
 void App::Draw() {
     ImGui::SetNextWindowSize(ImVec2(500,300), ImGuiCond_FirstUseEver);
+    auto* igfd = ImGuiFileDialog::Instance();
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open", "Ctrl+O")) {
@@ -40,7 +42,8 @@ void App::Draw() {
                 }
                 free(filename);
 #else
-            LOG(ERROR) << "File|Open";
+                igfd->OpenDialog("FileOpen", "Open File", ".*", ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
+
 #endif
             }
 
@@ -75,7 +78,7 @@ save_as:
                 }
                 free(filename);
 #else
-            LOG(ERROR) << "File|SaveAs";
+                igfd->OpenDialog("FileSaveAs", "Save File", ".*", ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
 #endif
             }
             ImGui::EndMenu();
@@ -107,6 +110,22 @@ save_as:
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+    }
+
+    if (igfd->Display("FileOpen")) {
+        if (igfd->IsOk()) {
+            std::string filename = igfd->GetFilePathName();
+            LOG(ERROR) << "File|Open: " << filename;
+            save_filename_ = filename;
+        }
+        igfd->Close();
+    }
+    if (igfd->Display("FileSaveAs")) {
+        if (igfd->IsOk()) {
+            std::string filename = igfd->GetFilePathName();
+            LOG(ERROR) << "File|SaveAs: " << filename;
+        }
+        igfd->Close();
     }
 
 #if 0

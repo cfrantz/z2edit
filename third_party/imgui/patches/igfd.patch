@@ -1,0 +1,13 @@
+diff --git a/ImGuiFileDialog.h b/ImGuiFileDialog.h
+index 61d1057..1046a22 100644
+--- a/ImGuiFileDialog.h
++++ b/ImGuiFileDialog.h
+@@ -1244,7 +1244,7 @@ struct IGFD_Thumbnail_Info {
+ 
+ #pragma region Includes
+ 
+-#include <imgui.h>
++#include "imgui.h"
+ 
+ #include <set>
+ #include <map>

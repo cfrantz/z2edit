@@ -30,6 +30,8 @@ cc_library(
         "//util:fpsmgr",
         "//util:os",
         "@com_google_absl//absl/log",
+        "@com_github_imgui//:imgui",
+        "@com_github_igfd//:igfd",
 
         # TODO(cfrantz): on ubuntu 16 with MIR, there is a library conflict
         # between MIR (linked with protobuf 2.6.1) and this program,

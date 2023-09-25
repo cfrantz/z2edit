@@ -1,0 +1,15 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "igfd",
+    srcs = [
+        "ImGuiFileDialog.cpp",
+        "ImGuiFileDialogConfig.h",
+    ],
+    hdrs = [
+        "ImGuiFileDialog.h",
+    ],
+    deps = [
+        "@com_github_imgui//:imgui",
+    ],
+)
