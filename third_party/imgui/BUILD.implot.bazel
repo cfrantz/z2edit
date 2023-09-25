@@ -1,0 +1,17 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "implot",
+    srcs = [
+        "implot.cpp",
+        "implot_demo.cpp",
+        "implot_items.cpp",
+        "implot_internal.h",
+    ],
+    hdrs = [
+        "implot.h",
+    ],
+    deps = [
+        "@com_github_imgui//:imgui",
+    ],
+)

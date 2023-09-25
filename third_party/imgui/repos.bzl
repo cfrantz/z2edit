@@ -5,11 +5,12 @@
 load("//rules:repo.bzl", "http_archive_or_local")
 
 IGFD_GITHASH = "845cfab617551b418d36be07606fe4e74d4c0a4c"
-IGFD_SHA256 = ""
+IGFD_SHA256 = "7e8baa6b1476237d14d0a48b69b66fc50c2f08c892de4fa86b1fe6346cf497a3"
 
 def imgui_repos(
         imgui = None,
-        igfd = None):
+        igfd = None,
+        implot = None):
     http_archive_or_local(
         name = "com_github_imgui",
         local = imgui,
@@ -26,4 +27,17 @@ def imgui_repos(
         url = "https://github.com/aiekick/ImGuiFileDialog/archive/{}.tar.gz".format(IGFD_GITHASH),
         strip_prefix = "ImGuiFileDialog-{}".format(IGFD_GITHASH),
         build_file = Label("//third_party/imgui:BUILD.igfd.bazel"),
+        patches = [
+            "//third_party/imgui/patches:igfd.patch",
+        ],
+        patch_args = ["-p1"],
+    )
+
+    http_archive_or_local(
+        name = "com_github_implot",
+        local = implot,
+        url = "https://github.com/epezent/implot/archive/refs/tags/v0.16.tar.gz",
+        sha256 = "",
+        strip_prefix = "implot-0.16",
+        build_file = Label("//third_party/imgui:BUILD.implot.bazel"),
     )

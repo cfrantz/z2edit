@@ -10,8 +10,8 @@ namespace project {
 
 class App: public ImApp {
   public:
-    App(const std::string& name) : ImApp(name, 1280, 720) {}
-    ~App() override {}
+    App(const std::string& name);
+    ~App() override;
 
     void Init() override;
     void ProcessEvent(SDL_Event* event) override;
@@ -21,6 +21,7 @@ class App: public ImApp {
     void Help(const std::string& topickey);
   private:
     std::string save_filename_;
+    bool plot_demo_ = false;
 };
 
 }  // namespace project

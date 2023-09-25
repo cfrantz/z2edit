@@ -14,9 +14,17 @@
 #include "nfd.h"
 #endif
 #include "ImGuiFileDialog.h"
+#include "implot.h"
 
 
 namespace project {
+
+App::App(const std::string& name) : ImApp(name, 1280, 720) {
+    ImPlot::CreateContext();
+}
+App::~App() {
+    ImPlot::DestroyContext();
+}
 
 void App::Init() {
 }
@@ -89,6 +97,7 @@ save_as:
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
+            ImGui::MenuItem("Implot Demo", nullptr, &plot_demo_);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Help")) {
@@ -127,7 +136,7 @@ save_as:
         }
         igfd->Close();
     }
-
+    ImPlot::ShowDemoWindow(&plot_demo_);
 #if 0
     if (!loaded_) {
         char *filename = nullptr;
