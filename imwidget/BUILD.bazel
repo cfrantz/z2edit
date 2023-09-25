@@ -20,6 +20,7 @@ cc_library(
         "@com_github_imgui//:imgui",
         "@com_github_imgui//:sdl_opengl3",
         "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/log",
     ],
 )
 

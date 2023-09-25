@@ -7,8 +7,9 @@
 #include "util/gamecontrollerdb.h"
 #include "absl/strings/str_cat.h"
 #include "absl/flags/flag.h"
+#include "absl/log/log.h"
 
-ABSL_FLAG(double, hidpi, 1.0, "HiDPI scaling factor");
+ABSL_FLAG(float, hidpi, 0.0, "HiDPI scaling factor");
 ABSL_FLAG(std::string, controller_db, "", "Path to the SDL gamecontrollerdb.txt file");
 
 ImApp* ImApp::singleton_;
@@ -44,16 +45,39 @@ ImApp::ImApp(const std::string& name, int width, int height)
     glcontext_ = SDL_GL_CreateContext(window_);
     SDL_GL_MakeCurrent(window_, glcontext_);
     SDL_GL_SetSwapInterval(1); // Enable vsync
-                               //
+
+    int ww=0, wh=0, gw=0, gh=0;
+    SDL_GetWindowSize(window_, &ww, &wh);
+    SDL_GL_GetDrawableSize(window_, &gw, &gh);
+    LOG(INFO) << "Window size: "
+        << ww << "/" << gw << " x "
+        << wh << "/" << gh;
+
+    float ddpi=0, hdpi=0, vdpi=0;
+    SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi);
+    LOG(INFO) << "DPI:"
+        << " ddpi:" << ddpi
+        << " hdpi:" << hdpi
+        << " vdpi:" << vdpi;
+
+    auto scale = absl::GetFlag(FLAGS_hidpi);
+    if (scale == 0.0) {
+        scale = ddpi / 96.0;
+        LOG(INFO) << "Calculated scale factor: " << scale;
+        LOG(INFO) << "Override with --hidpi=<value>";
+    }
+
     // Setup ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //ImGui_ImplSdl_SetHiDPIScale(absl::GetFlag(FLAGS_hidpi));
+    ImGuiIO& io = ImGui::GetIO();
 
     // Setup ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
+    auto& style = ImGui::GetStyle();
+    style.ScaleAllSizes(scale);
+    io.FontGlobalScale = scale;
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window_, glcontext_);
