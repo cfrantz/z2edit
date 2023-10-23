@@ -1,15 +1,17 @@
-#include <cstdio>
-#include <cstdint>
-#include <string>
-#include <vector>
+#include "util/file.h"
 
 #include <libgen.h>
 #include <limits.h>
 
-#include "util/file.h"
-#include "util/posix_status.h"
+#include <cstdint>
+#include <cstdio>
+#include <string>
+#include <vector>
+
+#include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
+#include "util/posix_status.h"
 
 absl::StatusOr<Stat> Stat::Filename(const std::string& filename) {
     Stat s;
@@ -38,22 +40,21 @@ absl::StatusOr<Stat> Stat::Link(const std::string& filename) {
 std::unique_ptr<File> File::Open(const std::string& filename,
                                  const std::string& mode) {
     FILE* fp = fopen(filename.c_str(), mode.c_str());
-    if (fp == nullptr)
-        return nullptr;
+    if (fp == nullptr) return nullptr;
     return std::unique_ptr<File>(new File(fp));
 }
 
-bool File::GetContents(const std::string& filename, std::string* contents) {
+absl::Status File::GetContents(const std::string& filename,
+                               std::string* contents) {
     std::unique_ptr<File> f(Open(filename, "rb"));
-    if (f == nullptr)
-        return false;
+    if (f == nullptr) return util::PosixStatus(errno);
     return f->Read(contents);
 }
 
-bool File::SetContents(const std::string& filename, const std::string& contents) {
+absl::Status File::SetContents(const std::string& filename,
+                               const std::string& contents) {
     std::unique_ptr<File> f(Open(filename, "wb"));
-    if (f == nullptr)
-        return false;
+    if (f == nullptr) return util::PosixStatus(errno);
     return f->Write(contents);
 }
 
@@ -92,13 +93,12 @@ absl::Status File::MakeDirs(const std::string& path, mode_t mode) {
     }
 
     std::string mpath;
-    for(size_t i=0; i<p.size(); ++i) {
+    for (size_t i = 0; i < p.size(); ++i) {
         if (i == 0) {
             mpath = p.at(i);
         } else {
-            mpath = absl::StrCat(mpath,
-                                 mpath.back() == '/' ? "" : "/",
-                                 p.at(i));
+            mpath =
+                absl::StrCat(mpath, mpath.back() == '/' ? "" : "/", p.at(i));
         }
         absl::Status status = Access(mpath);
         if (status.ok()) {
@@ -114,47 +114,47 @@ absl::Status File::MakeDirs(const std::string& path, mode_t mode) {
 
 File::File(FILE* fp) : fp_(fp) {}
 
-File::~File() {
-    Close();
-}
+File::~File() { Close(); }
 
-Stat File::FStat() {
-    return Stat::FileDescriptor(fileno(fp_)).value();
-}
+Stat File::FStat() { return Stat::FileDescriptor(fileno(fp_)).value(); }
 
 int64_t File::Length() {
-//	long pos = ftell(fp_);
-//	fseek(fp_, 0, SEEK_END);
-//	long end = ftell(fp_);
-//	fseek(fp_, pos, SEEK_SET);
-//	return end;
+    //	long pos = ftell(fp_);
+    //	fseek(fp_, 0, SEEK_END);
+    //	long end = ftell(fp_);
+    //	fseek(fp_, pos, SEEK_SET);
+    //	return end;
     return FStat().Size();
 }
 
-bool File::Read(void* buf, int64_t *len) {
+absl::Status File::Read(void* buf, int64_t* len) {
     *len = fread(buf, 1, *len, fp_);
-    return !ferror(fp_);
+    if (ferror(fp_)) {
+        return util::PosixStatus(errno);
+    }
+    return absl::OkStatus();
 }
 
-bool File::Read(std::string* buf, int64_t len) {
+absl::Status File::Read(std::string* buf, int64_t len) {
     buf->resize(len);
     return Read(&buf->front(), &len);
 }
 
-bool File::Read(std::string* buf) {
-    return Read(buf, Length());
-}
+absl::Status File::Read(std::string* buf) { return Read(buf, Length()); }
 
-bool File::Write(const void* buf, int64_t len) {
+absl::Status File::Write(const void* buf, int64_t len) {
     fwrite(buf, 1, len, fp_);
-    return !ferror(fp_);
+    if (ferror(fp_)) {
+        return util::PosixStatus(errno);
+    }
+    return absl::OkStatus();
 }
 
-bool File::Write(const std::string& buf, int64_t len) {
+absl::Status File::Write(const std::string& buf, int64_t len) {
     return Write(buf.data(), len);
 }
 
-bool File::Write(const std::string& buf) {
+absl::Status File::Write(const std::string& buf) {
     return Write(buf.data(), buf.size());
 }
 

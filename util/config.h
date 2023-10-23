@@ -50,7 +50,7 @@ class ConfigLoader {
 
         if (data) {
             pb = *data;
-        } else if (!File::GetContents(filename, &pb)) {
+        } else if (!File::GetContents(filename, &pb).ok()) {
             LOG(FATAL) << "Could not read '" << filename << "'.";
         }
         if (!google::protobuf::TextFormat::ParseFromString(pb, &local_config)) {

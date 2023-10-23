@@ -1,12 +1,12 @@
 #ifndef Z2HD_UTIL_FILE_H
 #define Z2HD_UTIL_FILE_H
-#include <cstdio>
-#include <cstdint>
-#include <memory>
-
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
+
+#include <cstdint>
+#include <cstdio>
+#include <memory>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -44,34 +44,16 @@ class Stat {
     static absl::StatusOr<Stat> FileDescriptor(int fd);
     static absl::StatusOr<Stat> Link(const std::string& filename);
 
-    inline bool IsRegular() const {
-        return S_ISREG(Mode());
-    }
-    inline bool IsDirectory() const {
-        return S_ISREG(Mode());
-    }
-    inline bool IsCharDev() const {
-        return S_ISREG(Mode());
-    }
-    inline bool IsBlockDev() const {
-        return S_ISREG(Mode());
-    }
-    inline bool IsFifo() const {
-        return S_ISREG(Mode());
-    }
-    inline bool IsSymlink() const {
-        return S_ISREG(Mode());
-    }
-    inline bool IsSocket() const {
-        return S_ISREG(Mode());
-    }
+    inline bool IsRegular() const { return S_ISREG(Mode()); }
+    inline bool IsDirectory() const { return S_ISREG(Mode()); }
+    inline bool IsCharDev() const { return S_ISREG(Mode()); }
+    inline bool IsBlockDev() const { return S_ISREG(Mode()); }
+    inline bool IsFifo() const { return S_ISREG(Mode()); }
+    inline bool IsSymlink() const { return S_ISREG(Mode()); }
+    inline bool IsSocket() const { return S_ISREG(Mode()); }
 
-    inline int64_t Size() const {
-        return stat_.st_size;
-    }
-    inline mode_t Mode() const {
-        return stat_.st_mode;
-    }
+    inline int64_t Size() const { return stat_.st_size; }
+    inline mode_t Mode() const { return stat_.st_mode; }
 
   private:
     struct stat stat_;
@@ -81,32 +63,35 @@ class File {
   public:
     static std::unique_ptr<File> Open(const std::string& filename,
                                       const std::string& mode);
-    static bool GetContents(const std::string& filename, std::string* contents);
-    static bool SetContents(const std::string& filename, const std::string& contents);
+    static absl::Status GetContents(const std::string& filename,
+                                    std::string* contents);
+    static absl::Status SetContents(const std::string& filename,
+                                    const std::string& contents);
 
     static std::string Basename(const std::string& path);
     static std::string Dirname(const std::string& path);
 
     static absl::Status Access(const std::string& path);
-    static absl::Status MakeDir(const std::string& path, mode_t mode=0755);
-    static absl::Status MakeDirs(const std::string& path, mode_t mode=0755);
+    static absl::Status MakeDir(const std::string& path, mode_t mode = 0755);
+    static absl::Status MakeDirs(const std::string& path, mode_t mode = 0755);
 
     virtual ~File();
     Stat FStat();
     int64_t Length();
 
-    bool Read(std::string* buf);
-    bool Read(std::string* buf, int64_t len);
-    bool Read(void* buf, int64_t *len);
-    bool Write(const std::string& buf);
-    bool Write(const std::string& buf, int64_t len);
-    bool Write(const void* buf, int64_t len);
+    absl::Status Read(std::string* buf);
+    absl::Status Read(std::string* buf, int64_t len);
+    absl::Status Read(void* buf, int64_t* len);
+    absl::Status Write(const std::string& buf);
+    absl::Status Write(const std::string& buf, int64_t len);
+    absl::Status Write(const void* buf, int64_t len);
 
     void Close();
+
   private:
     File(FILE* fp);
 
     FILE* fp_;
 };
 
-#endif // Z2HD_UTIL_FILE_H
+#endif  // Z2HD_UTIL_FILE_H
