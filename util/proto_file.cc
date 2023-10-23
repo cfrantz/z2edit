@@ -34,7 +34,7 @@ absl::Status ProtoFile::Save(const std::string& filename,
         }
         google::protobuf::io::FileOutputStream out(fd);
         if (!google::protobuf::TextFormat::Print(message, &out)) {
-            return absl::InternalError("serialization failed");
+            return absl::InternalError("text serialization failed");
         }
         close(fd);
         return absl::OkStatus();
@@ -68,13 +68,12 @@ absl::Status ProtoFile::Load(const std::string& filename,
         }
         google::protobuf::io::FileInputStream inp(fd);
         if (!google::protobuf::TextFormat::Parse(&inp, message)) {
-            return absl::InternalError("deserialization failed");
+            return absl::InternalError("text deserialization failed");
         }
         close(fd);
         return absl::OkStatus();
     } else if (type == Type::Binary) {
-        std::fstream inp(filename, std::ios_base::in | std::ios_base::trunc |
-                                       std::ios_base::binary);
+        std::fstream inp(filename, std::ios_base::in | std::ios_base::binary);
         if (!message->ParseFromIstream(&inp)) {
             return absl::InternalError("deserialization failed");
         }

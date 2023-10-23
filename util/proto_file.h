@@ -6,6 +6,7 @@
 #include "google/protobuf/message.h"
 
 class ProtoFile {
+  public:
     enum Type {
         Auto,
         Binary,
