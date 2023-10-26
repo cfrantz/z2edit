@@ -94,18 +94,3 @@ cc_library(
     name = "macros",
     hdrs = ["macros.h"],
 )
-
-cc_library(
-    name = "imgui_sdl_opengl",
-    srcs = [
-        "fontawesome.h",
-        "imgui_impl_sdl.cpp",
-    ],
-    hdrs = [
-        "imgui_impl_sdl.h",
-    ],
-    deps = [
-        "//external:fontawesome",
-        "//external:imgui",
-    ],
-)
