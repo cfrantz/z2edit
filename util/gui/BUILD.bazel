@@ -1,0 +1,34 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "flags",
+    srcs = ["flags.cc"],
+    hdrs = ["flags.h"],
+    textual_hdrs = [
+        "window_flags.inc",
+        "popup_flags.inc",
+        "table_flags.inc",
+        "style_var.inc",
+        "style_color.inc",
+        "color_edit_flags.inc",
+        "slider_flags.inc",
+        "input_text_flags.inc",
+    ],
+    deps = [
+        "//proto:gui_extension",
+        "@com_github_imgui//:imgui",
+        "@com_google_absl//absl/log",
+    ],
+)
+
+cc_library(
+    name = "widget",
+    srcs = ["widget.cc"],
+    hdrs = ["widget.h"],
+    deps = [
+        ":flags",
+        "//proto:gui_extension",
+        "@com_github_imgui//:imgui",
+        "@com_google_absl//absl/log",
+    ],
+)

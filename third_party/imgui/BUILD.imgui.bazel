@@ -11,11 +11,13 @@ cc_library(
         "imstb_rectpack.h",
         "imstb_textedit.h",
         "imstb_truetype.h",
+        "misc/cpp/imgui_stdlib.cpp",
     ],
     hdrs = [
         "imconfig.h",
         "imgui.h",
         "imgui_internal.h",
+        "misc/cpp/imgui_stdlib.h",
     ],
     linkopts = [
         "-lm",

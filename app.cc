@@ -7,6 +7,7 @@
 #include "imwidget/error_dialog.h"
 #include "util/browser.h"
 #include "util/os.h"
+#include "util/gui/widget.h"
 
 #include "version.h"
 
@@ -136,6 +137,7 @@ save_as:
         }
         igfd->Close();
     }
+    ImGui::ShowDemoWindow();
     ImPlot::ShowDemoWindow(&plot_demo_);
 #if 0
     if (!loaded_) {
@@ -150,6 +152,12 @@ save_as:
         free(filename);
     }
 #endif
+
+    if (msg_) {
+        if (auto g = gui::ProtoGui::Begin(msg_, nullptr); g) {
+            g.Draw();
+        }
+    }
 }
 
 void App::Help(const std::string& topickey) {

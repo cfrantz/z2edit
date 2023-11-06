@@ -4,7 +4,9 @@
 #include "app.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
+#include "absl/log/log.h"
 #include "util/config.h"
+#include "proto/gui_extension.pb.h"
 
 const char kUsage[] =
 R"ZZZ(<optional flags>
@@ -19,9 +21,11 @@ Flags:
 int main(int argc, char *argv[]) {
     absl::SetProgramUsageMessage(kUsage);
     absl::ParseCommandLine(argc, argv);
+    gui::proto::Foo foo;
 
     project::App app("Empty Project");
     app.Init();
+    app.SetMessage(&foo);
     app.Run();
     return 0;
 }

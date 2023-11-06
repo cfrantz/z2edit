@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 
 #include "imwidget/imapp.h"
+#include <google/protobuf/message.h>
 
 namespace project {
 
@@ -18,10 +19,12 @@ class App: public ImApp {
     void ProcessMessage(const std::string& msg, const void* extra) override;
     void Draw() override;
 
+    void SetMessage(google::protobuf::Message* msg) { msg_ = msg; }
     void Help(const std::string& topickey);
   private:
     std::string save_filename_;
     bool plot_demo_ = false;
+    google::protobuf::Message* msg_ = nullptr;
 };
 
 }  // namespace project

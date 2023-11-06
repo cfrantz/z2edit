@@ -1,0 +1,389 @@
+syntax = "proto3";
+import "google/protobuf/descriptor.proto";
+
+package gui.proto;
+
+message WindowFlags {
+    bool no_title_bar = 1;
+    bool no_resize = 2;
+    bool no_move = 3;
+    bool no_scrollbar = 4;
+    bool no_scroll_with_mouse = 5;
+    bool no_collapse = 6;
+    bool always_auto_resize = 7;
+    bool no_background = 8;
+    bool no_saved_settings = 9;
+    bool no_mouse_inputs = 10;
+    bool menu_bar = 11;
+    bool horizontal_scrollbar = 12;
+    bool no_focus_on_appearing = 13;
+    bool no_bring_to_front_on_focus = 14;
+    bool always_vertical_scrollbar = 15;
+    bool always_horizontal_scrollbar = 16;
+    bool always_use_window_padding = 17;
+    bool no_nav_inputs = 18;
+    bool no_nav_focus = 19;
+    bool unsaved_document = 20;
+}
+
+message PopupFlags {
+    bool mouse_button_left = 1;
+    bool mouse_button_right = 2;
+    bool mouse_button_middle = 3;
+    bool no_open_over_existing_popup = 4;
+    bool no_open_over_items = 5;
+    bool any_popup_id = 6;
+    bool any_popup_level = 7;
+    bool any_popup = 8;
+}
+
+message TableFlags {
+    bool resizable = 1;
+    bool reorderable = 2;
+    bool hideable = 3;
+    bool sortable = 4;
+    bool no_saved_settings = 5;
+    bool context_menu_in_body = 6;
+    bool row_bg = 7;
+    bool borders_inner_h = 8;
+    bool borders_outer_h = 9;
+    bool borders_inner_v = 10;
+    bool borders_outer_v = 11;
+    bool borders_h = 12;
+    bool borders_v = 13;
+    bool borders_inner = 14;
+    bool borders_outer = 15;
+    bool borders = 16;
+    bool no_borders_in_body = 17;
+    bool no_borders_in_body_until_resize = 18;
+    bool sizing_fixed_fit = 19;
+    bool sizing_fixed_same = 20;
+    bool sizing_stretch_prop = 21;
+    bool sizing_stretch_same = 22;
+    bool no_host_extend_x = 23;
+    bool no_host_extend_y = 24;
+    bool no_keep_columns_visible = 25;
+    bool precise_widths = 26;
+    bool no_clip = 27;
+    bool pad_outer_x = 28;
+    bool no_pad_outer_x = 29;
+    bool no_pad_inner_x = 30;
+    bool scroll_x = 31;
+    bool scroll_y = 32;
+    bool sort_multi = 33;
+    bool sort_tristate = 34;
+    // bool_highlight_hovered_column     = 35;
+}
+
+message InputTextFlags {
+    bool chars_decimal = 1;
+    bool chars_hexadecimal = 2;
+    bool chars_uppercase = 3;
+    bool chars_no_blank = 4;
+    bool auto_select_all = 5;
+    bool enter_returns_true = 6;
+    bool callback_completion = 7;
+    bool callback_history = 8;
+    bool callback_always = 9;
+    bool callback_char_filter = 10;
+    bool allow_tab_input = 11;
+    bool ctrl_enter_for_new_line = 12;
+    bool no_horizontal_scroll = 13;
+    bool always_overwrite = 14;
+    bool read_only = 15;
+    bool password = 16;
+    bool no_undo_redo = 17;
+    bool chars_scientific = 18;
+    bool callback_resize = 19;
+    bool callback_edit = 20;
+    bool escape_clears_all = 21;
+    bool multiline = 100;  // ignore=true
+    repeated float size = 101; // ignore=true type=ImVec2
+}
+
+message SliderFlags {
+    bool always_clamp            = 1;
+    bool logarithmic            = 2;
+    bool no_round_to_format        = 3;
+    bool no_input                = 4;
+}
+
+enum ColorEditType {
+   COLOR_EDIT_3 = 0;
+   COLOR_EDIT_4 = 1;
+   COLOR_PICKER_3 = 2;
+   COLOR_PICKER_4 = 3;
+}
+
+message ColorEditFlags {
+    bool no_alpha         = 1;
+    bool no_picker        = 2;
+    bool no_options       = 3;
+    bool no_small_preview  = 4;
+    bool no_inputs        = 5;
+    bool no_tooltip       = 6;
+    bool no_label         = 7;
+    bool no_side_preview   = 8;
+    bool no_drag_drop      = 9;
+    bool no_border        = 10;
+    bool alpha_bar        = 16;
+    bool alpha_preview    = 17;
+    bool alpha_preview_half= 18;
+    bool hdr             = 19;
+    bool display_rgb      = 20;
+    bool display_hsv      = 21;
+    bool display_hex      = 22;
+    bool uint8           = 23;
+    bool float_           = 24;
+    bool picker_hue_bar    = 25;
+    bool picker_hue_wheel  = 26;
+    bool input_rgb        = 27;
+    bool input_hsv        = 28;
+    ColorEditType type = 29; // ignore=true
+}
+
+message StyleVar {
+    repeated float alpha = 1;                // type=float
+    repeated float disabled_alpha = 2;       // type=float
+    repeated float window_padding = 3;       // type=ImVec2
+    repeated float window_rounding = 4;      // type=float
+    repeated float window_border_size = 5;   // type=float
+    repeated float window_min_size = 6;      // type=ImVec2
+    repeated float window_title_align = 7;   // type=ImVec2
+    repeated float child_rounding = 8;       // type=float
+    repeated float child_border_size = 9;    // type=float
+    repeated float popup_rounding = 10;      // type=float
+    repeated float popup_border_size = 11;   // type=float
+    repeated float frame_padding = 12;       // type=ImVec2
+    repeated float frame_rounding = 13;      // type=float
+    repeated float frame_border_size = 14;   // type=float
+    repeated float item_spacing = 15;        // type=ImVec2
+    repeated float item_inner_spacing = 16;  // type=ImVec2
+    repeated float indent_spacing = 17;      // type=float
+    repeated float cell_padding = 18;        // type=ImVec2
+    repeated float scrollbar_size = 19;      // type=float
+    repeated float scrollbar_rounding = 20;  // type=float
+    repeated float grab_min_size = 21;       // type=float
+    repeated float grab_rounding = 22;       // type=float
+    repeated float tab_rounding = 23;        // type=float
+    // repeated float -tab_bar_border_size = 24; // type=float
+    repeated float button_text_align = 25;           // type=ImVec2
+    repeated float selectable_text_align = 26;       // type=ImVec2
+    repeated float separator_text_border_size = 27;  // type=float
+    repeated float separator_text_align = 28;        // type=ImVec2
+    repeated float separator_text_padding = 29;      // type=ImVec2
+}
+
+message Col {
+    uint32 text = 1;
+    uint32 text_disabled = 2;
+    uint32 window_bg = 3;
+    uint32 child_bg = 4;
+    uint32 popup_bg = 5;
+    uint32 border = 6;
+    uint32 border_shadow = 7;
+    uint32 frame_bg = 8;
+    uint32 frame_bg_hovered = 9;
+    uint32 frame_bg_active = 10;
+    uint32 title_bg = 11;
+    uint32 title_bg_active = 12;
+    uint32 title_bg_collapsed = 13;
+    uint32 menu_bar_bg = 14;
+    uint32 scrollbar_bg = 15;
+    uint32 scrollbar_grab = 16;
+    uint32 scrollbar_grab_hovered = 17;
+    uint32 scrollbar_grab_active = 18;
+    uint32 check_mark = 19;
+    uint32 slider_grab = 20;
+    uint32 slider_grab_active = 21;
+    uint32 button = 22;
+    uint32 button_hovered = 23;
+    uint32 button_active = 24;
+    uint32 header = 25;
+    uint32 header_hovered = 26;
+    uint32 header_active = 27;
+    uint32 separator = 28;
+    uint32 separator_hovered = 29;
+    uint32 separator_active = 30;
+    uint32 resize_grip = 31;
+    uint32 resize_grip_hovered = 32;
+    uint32 resize_grip_active = 33;
+    uint32 tab = 34;
+    uint32 tab_hovered = 35;
+    uint32 tab_active = 36;
+    uint32 tab_unfocused = 37;
+    uint32 tab_unfocused_active = 38;
+    uint32 plot_lines = 39;
+    uint32 plot_lines_hovered = 40;
+    uint32 plot_histogram = 41;
+    uint32 plot_histogram_hovered = 42;
+    uint32 table_header_bg = 43;
+    uint32 table_border_strong = 44;
+    uint32 table_border_light = 45;
+    uint32 table_row_bg = 46;
+    uint32 table_row_bg_alt = 47;
+    uint32 text_selected_bg = 48;
+    uint32 drag_drop_target = 49;
+    uint32 nav_highlight = 50;
+    uint32 nav_windowing_highlight = 51;
+    uint32 nav_windowing_dim_bg = 52;
+    uint32 modal_window_dim_bg = 53;
+}
+
+message BeginWindow {
+    string name = 1;
+    WindowFlags flags = 2;
+}
+
+message BeginChild {
+    string id = 1;
+    float w = 2;
+    float h = 3;
+    bool border = 4;
+    WindowFlags flags = 5;
+}
+
+enum PopupContext {
+    NONE = 0;
+    ITEM = 1;
+    WINDOW = 2;
+    VOID = 3;
+}
+
+message BeginPopup {
+    string id = 1;
+    PopupContext context = 2;
+    PopupFlags flags = 3;
+}
+
+message BeginModal {
+    string name = 1;
+    WindowFlags flags = 2;
+}
+
+message BeginTable {
+    string id = 1;
+    int32 column = 2;
+    TableFlags flags = 3;
+    repeated float outer_size = 4;
+    float inner_width = 5;
+    repeated string header = 6;
+}
+
+message Begin {
+    oneof begin {
+        BeginWindow window = 1;
+        BeginChild child = 2;
+        bool grp = 3;
+        BeginPopup popup = 4;
+    }
+}
+
+message Scalar {
+    oneof scalar {
+        int32 s32 = 1;
+        uint32 u32 = 2;
+        int32 s64 = 3;
+        uint32 u64 = 4;
+        float f32 = 5;
+        double f64 = 6;
+    }
+}
+
+message ScalarDrag {
+    uint32 n = 1;
+    float speed = 2;
+    optional Scalar min = 3;
+    optional Scalar max = 4;
+    string format = 5;
+    SliderFlags flags = 6;
+}
+
+message ScalarSlider {
+    uint32 n = 1;
+    Scalar min = 2;
+    Scalar max = 3;
+    string format = 4;
+    SliderFlags flags = 5;
+}
+
+message ScalarInput {
+    uint32 n = 1;
+    optional Scalar step = 2;
+    optional Scalar fast = 3;
+    string format = 4;
+    InputTextFlags flags = 5;
+}
+
+extend google.protobuf.MessageOptions {
+    optional Begin begin = 50001;
+    optional StyleVar style = 50002;
+    optional Col color = 50003;
+    optional float default_width = 50004;
+    optional BeginTable table = 50005;
+}
+
+extend google.protobuf.FieldOptions {
+    optional string label = 50001;
+    optional float item_width = 50004;
+    optional ScalarDrag drag = 50010;
+    optional ScalarSlider slider = 50011;
+    optional ScalarInput input = 50012;
+    optional ColorEditFlags color_edit = 50013;
+    optional InputTextFlags input_text = 50014;
+}
+
+message Foo {
+    option (begin).window.name = "Hello World";
+    option (default_width) = 200;
+    option (style).window_rounding = 5.0;
+    option (table) = {
+        column: -1,
+        flags: { borders: true },
+        //header: ["Key", "Value"]
+    };
+
+    string foo = 1 [
+        (label) = "Foo string input",
+        (input_text).multiline = true
+    ];
+    int32 bar = 2 [
+        (label) = "Bar integer input",
+        (input).step.s32 = 1
+        //(input).fast.s32 = 10
+    ];
+    bool baz = 3 [(label) = "Baz bool input"];
+    float volume = 4 [
+        (label) = "Volume",
+        (slider) = {
+            min { f32: 0 },
+            max { f32: 1 },
+            format: "%.02f"
+        }
+    ];
+    double aspect = 5 [
+        (label) = "Aspect Ratio",
+        (drag) = {
+            speed: 0.01,
+            min { f64: 1.0 },
+            max { f64: 2.0 },
+            format: "%.03f"
+        }
+    ];
+
+    repeated float rgb = 6 [
+        (label) = "RGB values",
+        (item_width) = 400,
+        (drag) = {
+            n: 3,
+            speed: 0.01,
+            min { f32: 0.0 },
+            max { f32: 1.0 },
+            format: "%.03f"
+        }
+    ];
+    repeated float color = 7 [
+        (label) = "Color Edit",
+        (color_edit).type = COLOR_PICKER_3
+    ];
+}

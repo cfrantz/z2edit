@@ -29,10 +29,12 @@ cc_library(
         "//util:browser",
         "//util:fpsmgr",
         "//util:os",
+        "//util/gui:widget",
         "@com_google_absl//absl/log",
         "@com_github_imgui//:imgui",
         "@com_github_igfd//:igfd",
         "@com_github_implot//:implot",
+        "@com_google_protobuf//:protobuf",
 
         # TODO(cfrantz): on ubuntu 16 with MIR, there is a library conflict
         # between MIR (linked with protobuf 2.6.1) and this program,
@@ -78,6 +80,7 @@ cc_binary(
     }),
     deps = [
         ":app",
+        "//proto:gui_extension",
         "//util:config",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/flags:usage",

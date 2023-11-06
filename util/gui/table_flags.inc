@@ -1,0 +1,38 @@
+ImGuiTableFlags GetTableFlags(const proto::TableFlags& flags) {
+    ImGuiTableFlags f = 0;
+    if (flags.resizable()) f |= ImGuiTableFlags_Resizable;
+    if (flags.reorderable()) f |= ImGuiTableFlags_Reorderable;
+    if (flags.hideable()) f |= ImGuiTableFlags_Hideable;
+    if (flags.sortable()) f |= ImGuiTableFlags_Sortable;
+    if (flags.no_saved_settings()) f |= ImGuiTableFlags_NoSavedSettings;
+    if (flags.context_menu_in_body()) f |= ImGuiTableFlags_ContextMenuInBody;
+    if (flags.row_bg()) f |= ImGuiTableFlags_RowBg;
+    if (flags.borders_inner_h()) f |= ImGuiTableFlags_BordersInnerH;
+    if (flags.borders_outer_h()) f |= ImGuiTableFlags_BordersOuterH;
+    if (flags.borders_inner_v()) f |= ImGuiTableFlags_BordersInnerV;
+    if (flags.borders_outer_v()) f |= ImGuiTableFlags_BordersOuterV;
+    if (flags.borders_h()) f |= ImGuiTableFlags_BordersH;
+    if (flags.borders_v()) f |= ImGuiTableFlags_BordersV;
+    if (flags.borders_inner()) f |= ImGuiTableFlags_BordersInner;
+    if (flags.borders_outer()) f |= ImGuiTableFlags_BordersOuter;
+    if (flags.borders()) f |= ImGuiTableFlags_Borders;
+    if (flags.no_borders_in_body()) f |= ImGuiTableFlags_NoBordersInBody;
+    if (flags.no_borders_in_body_until_resize()) f |= ImGuiTableFlags_NoBordersInBodyUntilResize;
+    if (flags.sizing_fixed_fit()) f |= ImGuiTableFlags_SizingFixedFit;
+    if (flags.sizing_fixed_same()) f |= ImGuiTableFlags_SizingFixedSame;
+    if (flags.sizing_stretch_prop()) f |= ImGuiTableFlags_SizingStretchProp;
+    if (flags.sizing_stretch_same()) f |= ImGuiTableFlags_SizingStretchSame;
+    if (flags.no_host_extend_x()) f |= ImGuiTableFlags_NoHostExtendX;
+    if (flags.no_host_extend_y()) f |= ImGuiTableFlags_NoHostExtendY;
+    if (flags.no_keep_columns_visible()) f |= ImGuiTableFlags_NoKeepColumnsVisible;
+    if (flags.precise_widths()) f |= ImGuiTableFlags_PreciseWidths;
+    if (flags.no_clip()) f |= ImGuiTableFlags_NoClip;
+    if (flags.pad_outer_x()) f |= ImGuiTableFlags_PadOuterX;
+    if (flags.no_pad_outer_x()) f |= ImGuiTableFlags_NoPadOuterX;
+    if (flags.no_pad_inner_x()) f |= ImGuiTableFlags_NoPadInnerX;
+    if (flags.scroll_x()) f |= ImGuiTableFlags_ScrollX;
+    if (flags.scroll_y()) f |= ImGuiTableFlags_ScrollY;
+    if (flags.sort_multi()) f |= ImGuiTableFlags_SortMulti;
+    if (flags.sort_tristate()) f |= ImGuiTableFlags_SortTristate;
+    return f;
+}
