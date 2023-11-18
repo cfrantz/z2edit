@@ -155,7 +155,9 @@ save_as:
 
     if (msg_) {
         if (auto g = gui::ProtoGui::Begin(msg_, nullptr); g) {
-            g.Draw();
+            if (g.Draw()) {
+                LOG(INFO) << msg_->DebugString();
+            }
         }
     }
 }

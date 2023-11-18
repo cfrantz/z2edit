@@ -18,6 +18,7 @@ class ProtoGui {
     bool DrawScalarSliderField(const google::protobuf::FieldDescriptor* field);
     bool DrawScalarInputField(const google::protobuf::FieldDescriptor* field);
     bool DrawStringField(const google::protobuf::FieldDescriptor* field);
+    bool DrawEnumField(const google::protobuf::FieldDescriptor* field);
     bool DrawColorEditField(const google::protobuf::FieldDescriptor* field);
 
     ProtoGui() = default;

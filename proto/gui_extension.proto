@@ -97,49 +97,49 @@ message InputTextFlags {
     bool callback_resize = 19;
     bool callback_edit = 20;
     bool escape_clears_all = 21;
-    bool multiline = 100;  // ignore=true
-    repeated float size = 101; // ignore=true type=ImVec2
+    bool multiline = 100;       // ignore=true
+    repeated float size = 101;  // ignore=true type=ImVec2
 }
 
 message SliderFlags {
-    bool always_clamp            = 1;
-    bool logarithmic            = 2;
-    bool no_round_to_format        = 3;
-    bool no_input                = 4;
+    bool always_clamp = 1;
+    bool logarithmic = 2;
+    bool no_round_to_format = 3;
+    bool no_input = 4;
 }
 
 enum ColorEditType {
-   COLOR_EDIT_3 = 0;
-   COLOR_EDIT_4 = 1;
-   COLOR_PICKER_3 = 2;
-   COLOR_PICKER_4 = 3;
+    COLOR_EDIT_3 = 0;
+    COLOR_EDIT_4 = 1;
+    COLOR_PICKER_3 = 2;
+    COLOR_PICKER_4 = 3;
 }
 
 message ColorEditFlags {
-    bool no_alpha         = 1;
-    bool no_picker        = 2;
-    bool no_options       = 3;
-    bool no_small_preview  = 4;
-    bool no_inputs        = 5;
-    bool no_tooltip       = 6;
-    bool no_label         = 7;
-    bool no_side_preview   = 8;
-    bool no_drag_drop      = 9;
-    bool no_border        = 10;
-    bool alpha_bar        = 16;
-    bool alpha_preview    = 17;
-    bool alpha_preview_half= 18;
-    bool hdr             = 19;
-    bool display_rgb      = 20;
-    bool display_hsv      = 21;
-    bool display_hex      = 22;
-    bool uint8           = 23;
-    bool float_           = 24;
-    bool picker_hue_bar    = 25;
-    bool picker_hue_wheel  = 26;
-    bool input_rgb        = 27;
-    bool input_hsv        = 28;
-    ColorEditType type = 29; // ignore=true
+    bool no_alpha = 1;
+    bool no_picker = 2;
+    bool no_options = 3;
+    bool no_small_preview = 4;
+    bool no_inputs = 5;
+    bool no_tooltip = 6;
+    bool no_label = 7;
+    bool no_side_preview = 8;
+    bool no_drag_drop = 9;
+    bool no_border = 10;
+    bool alpha_bar = 16;
+    bool alpha_preview = 17;
+    bool alpha_preview_half = 18;
+    bool hdr = 19;
+    bool display_rgb = 20;
+    bool display_hsv = 21;
+    bool display_hex = 22;
+    bool uint8 = 23;
+    bool float_ = 24;
+    bool picker_hue_bar = 25;
+    bool picker_hue_wheel = 26;
+    bool input_rgb = 27;
+    bool input_hsv = 28;
+    ColorEditType type = 29;  // ignore=true
 }
 
 message StyleVar {
@@ -324,13 +324,28 @@ extend google.protobuf.MessageOptions {
 }
 
 extend google.protobuf.FieldOptions {
+    // Applies to all field types.
     optional string label = 50001;
+    // Applies to all field types.
     optional float item_width = 50004;
+    // Applies numeric field types.
     optional ScalarDrag drag = 50010;
+    // Applies numeric field types.
     optional ScalarSlider slider = 50011;
+    // Applies numeric field types.
     optional ScalarInput input = 50012;
+    // Applies to `repeated float` fields.
     optional ColorEditFlags color_edit = 50013;
+    // Applies to `string` fields.
     optional InputTextFlags input_text = 50014;
+}
+
+enum SampleEnum {
+    ZERO = 0;
+    ONE = 1;
+    TWO = 2;
+    THREE = 3;
+    FOUR = 4;
 }
 
 message Foo {
@@ -340,13 +355,11 @@ message Foo {
     option (table) = {
         column: -1,
         flags: { borders: true },
-        //header: ["Key", "Value"]
+        // header: ["Key", "Value"]
     };
 
-    string foo = 1 [
-        (label) = "Foo string input",
-        (input_text).multiline = true
-    ];
+    string foo = 1
+        [(label) = "Foo string input", (input_text).multiline = true];
     int32 bar = 2 [
         (label) = "Bar integer input",
         (input).step.s32 = 1
@@ -382,8 +395,7 @@ message Foo {
             format: "%.03f"
         }
     ];
-    repeated float color = 7 [
-        (label) = "Color Edit",
-        (color_edit).type = COLOR_PICKER_3
-    ];
+    repeated float color = 7
+        [(label) = "Color Edit", (color_edit).type = COLOR_PICKER_3];
+    SampleEnum sample_enum = 8;
 }

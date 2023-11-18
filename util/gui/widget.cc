@@ -678,6 +678,57 @@ bool ProtoGui::DrawStringField(const google::protobuf::FieldDescriptor* field) {
     return changed;
 }
 
+bool ProtoGui::DrawEnumField(const google::protobuf::FieldDescriptor* field) {
+    const auto& options = field->options();
+    bool rpt = field->is_repeated();
+    auto* reflection = message_->GetReflection();
+    int len = rpt ? reflection->FieldSize(*message_, field) : 1;
+    bool changed = false;
+    const auto* value = reflection->GetEnum(*message_, field);
+    const auto* type = value->type();
+    const char* items[type->value_count()];
+    for (int i = 0; i < type->value_count(); ++i) {
+        const auto* ev = type->value(i);
+        items[i] = ev->name().c_str();
+    }
+    ImGui::PushID(field->number());
+    for (int i = 0; i < len; ++i) {
+        if (rpt) {
+            ImGui::PushID(i);
+            value = reflection->GetRepeatedEnum(*message_, field, i);
+        } else {
+            value = reflection->GetEnum(*message_, field);
+        }
+        std::string_view label = options.HasExtension(proto::label)
+                                     ? options.GetExtension(proto::label)
+                                     : field->name();
+        if (columns_ == 0) {
+            /* nothing */
+        } else if (columns_ == -1) {
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(label);
+            ImGui::TableNextColumn();
+            label = empty();
+        } else {
+        }
+        int index = value->index();
+        if (ImGui::Combo(label, &index, items, type->value_count())) {
+            changed = true;
+            if (rpt) {
+                reflection->SetRepeatedEnum(message_, field, i,
+                                            type->value(index));
+            } else {
+                reflection->SetEnum(message_, field, type->value(index));
+            }
+        }
+        if (rpt) {
+            ImGui::PopID();
+        }
+    }
+    ImGui::PopID();
+    return changed;
+}
+
 bool ProtoGui::DrawColorEditField(
     const google::protobuf::FieldDescriptor* field) {
     const auto& options = field->options();
@@ -771,6 +822,8 @@ bool ProtoGui::Draw() {
                 changed |= DrawStringField(field);
                 break;
             case CppType::CPPTYPE_ENUM:
+                changed |= DrawEnumField(field);
+                break;
             case CppType::CPPTYPE_MESSAGE:
             default:
                 LOG(ERROR) << field->name() << ": unsupported CppType "
