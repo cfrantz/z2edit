@@ -12,6 +12,10 @@ namespace gui {
 namespace {
 using CppType = google::protobuf::FieldDescriptor::CppType;
 constexpr CppType NoType = static_cast<CppType>(0);
+const std::string& empty() {
+    static const std::string e;
+    return e;
+}
 }  // namespace
 
 ProtoGui ProtoGui::Begin(google::protobuf::Message* message, bool* p_open) {
@@ -28,14 +32,13 @@ ProtoGui ProtoGui::Begin(google::protobuf::Message* message, bool* p_open) {
             const auto& name =
                 !window.name().empty() ? window.name() : desc->name();
             const auto& flags = GetWindowFlags(window.flags());
-            val = ImGui::Begin(name.c_str(), p_open, flags);
+            val = ImGui::Begin(name, p_open, flags);
             break;
         }
         case proto::Begin::BeginCase::kChild: {
             const auto& child = begin.child();
-            const char* id = !child.id().empty() ? child.id().c_str() : nullptr;
             const auto& flags = GetWindowFlags(child.flags());
-            val = ImGui::BeginChild(id, ImVec2(child.w(), child.h()),
+            val = ImGui::BeginChild(child.id(), ImVec2(child.w(), child.h()),
                                     child.border(), flags);
             break;
         }
@@ -46,20 +49,19 @@ ProtoGui ProtoGui::Begin(google::protobuf::Message* message, bool* p_open) {
         }
         case proto::Begin::BeginCase::kPopup: {
             const auto& popup = begin.popup();
-            const char* id = !popup.id().empty() ? popup.id().c_str() : nullptr;
             const auto& flags = GetPopupFlags(popup.flags());
             switch (popup.context()) {
                 case proto::PopupContext::NONE:
-                    val = ImGui::BeginPopup(id, flags);
+                    val = ImGui::BeginPopup(popup.id(), flags);
                     break;
                 case proto::PopupContext::ITEM:
-                    val = ImGui::BeginPopupContextItem(id, flags);
+                    val = ImGui::BeginPopupContextItem(popup.id(), flags);
                     break;
                 case proto::PopupContext::WINDOW:
-                    val = ImGui::BeginPopupContextWindow(id, flags);
+                    val = ImGui::BeginPopupContextWindow(popup.id(), flags);
                     break;
                 case proto::PopupContext::VOID:
-                    val = ImGui::BeginPopupContextVoid(id, flags);
+                    val = ImGui::BeginPopupContextVoid(popup.id(), flags);
                     break;
                 default:
                     /* do nothing */;
@@ -84,11 +86,11 @@ ProtoGui ProtoGui::Begin(google::protobuf::Message* message, bool* p_open) {
         }
         columns = table.column();
         if (columns <= 0) columns = -1;
-        val = ImGui::BeginTable(table.id().c_str(), columns == -1 ? 2 : columns,
+        val = ImGui::BeginTable(table.id(), columns == -1 ? 2 : columns,
                                 GetTableFlags(table.flags()), outer_size,
                                 table.inner_width());
         for (const auto& header : table.header()) {
-            ImGui::TableSetupColumn(header.c_str());
+            ImGui::TableSetupColumn(header);
         }
         if (table.header_size()) ImGui::TableHeadersRow();
     }
@@ -437,16 +439,16 @@ bool ProtoGui::DrawBoolField(const google::protobuf::FieldDescriptor* field) {
             value = reflection->GetBool(*message_, field);
         }
 
-        const auto* label = options.HasExtension(proto::label)
-                                ? options.GetExtension(proto::label).c_str()
-                                : field->name().c_str();
+        std::string_view label = options.HasExtension(proto::label)
+                                     ? options.GetExtension(proto::label)
+                                     : field->name();
         if (columns_ == 0) {
             /* nothing */
         } else if (columns_ == -1) {
             ImGui::TableNextColumn();
             ImGui::TextUnformatted(label);
             ImGui::TableNextColumn();
-            label = "";
+            label = empty();
         } else {
         }
 
@@ -489,17 +491,17 @@ constexpr Scalar ZERO = {0};
                 } else {                                                       \
                     value = Scalar::Get(reflection, message_, field);          \
                 }                                                              \
-                const auto* label = (options.HasExtension(proto::label)        \
-                                         ? options.GetExtension(proto::label)  \
-                                         : field->name())                      \
-                                        .c_str();                              \
+                std::string_view label =                                       \
+                    options.HasExtension(proto::label)                         \
+                        ? options.GetExtension(proto::label)                   \
+                        : field->name();                                       \
                 if (columns_ == 0) {                                           \
                     /* nothing */                                              \
                 } else if (columns_ == -1) {                                   \
                     ImGui::TableNextColumn();                                  \
                     ImGui::TextUnformatted(label);                             \
                     ImGui::TableNextColumn();                                  \
-                    label = "";                                                \
+                    label = empty();                                           \
                 } else {                                                       \
                 }                                                              \
                 if (func_(label, GetDataType(field), &value, ##__VA_ARGS__)) { \
@@ -520,17 +522,16 @@ constexpr Scalar ZERO = {0};
             }                                                                  \
             Scalar value[n];                                                   \
             Scalar::GetRepeated(reflection, message_, field, value, n);        \
-            const auto* label = (options.HasExtension(proto::label)            \
-                                     ? options.GetExtension(proto::label)      \
-                                     : field->name())                          \
-                                    .c_str();                                  \
+            std::string_view label = options.HasExtension(proto::label)        \
+                                         ? options.GetExtension(proto::label)  \
+                                         : field->name();                      \
             if (columns_ == 0) {                                               \
                 /* nothing */                                                  \
             } else if (columns_ == -1) {                                       \
                 ImGui::TableNextColumn();                                      \
                 ImGui::TextUnformatted(label);                                 \
                 ImGui::TableNextColumn();                                      \
-                label = "";                                                    \
+                label = empty();                                               \
             } else {                                                           \
             }                                                                  \
             if (func_##N(label, GetDataType(field), &value, n,                 \
@@ -643,16 +644,16 @@ bool ProtoGui::DrawStringField(const google::protobuf::FieldDescriptor* field) {
         } else {
             value = reflection->GetString(*message_, field);
         }
-        const auto* label = options.HasExtension(proto::label)
-                                ? options.GetExtension(proto::label).c_str()
-                                : field->name().c_str();
+        std::string_view label = options.HasExtension(proto::label)
+                                     ? options.GetExtension(proto::label)
+                                     : field->name();
         if (columns_ == 0) {
             /* nothing */
         } else if (columns_ == -1) {
             ImGui::TableNextColumn();
             ImGui::TextUnformatted(label);
             ImGui::TableNextColumn();
-            label = "";
+            label = empty();
         } else {
         }
         bool ch;
@@ -697,16 +698,16 @@ bool ProtoGui::DrawColorEditField(
     bool changed = false;
 
     ImGui::PushID(field->number());
-    const auto* label = options.HasExtension(proto::label)
-                            ? options.GetExtension(proto::label).c_str()
-                            : field->name().c_str();
+    std::string_view label = options.HasExtension(proto::label)
+                                 ? options.GetExtension(proto::label)
+                                 : field->name();
     if (columns_ == 0) {
         /* nothing */
     } else if (columns_ == -1) {
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(label);
         ImGui::TableNextColumn();
-        label = "";
+        label = empty();
     } else {
     }
     float color[n];
