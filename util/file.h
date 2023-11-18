@@ -65,6 +65,14 @@ class File {
                                       const std::string& mode);
     static absl::Status GetContents(const std::string& filename,
                                     std::string* contents);
+    static absl::StatusOr<std::string> GetContents(const std::string& filename) {
+        std::string data;
+        absl::Status s = GetContents(filename, &data);
+        if (!s.ok()) {
+            return s;
+        }
+        return data;
+    }
     static absl::Status SetContents(const std::string& filename,
                                     const std::string& contents);
 

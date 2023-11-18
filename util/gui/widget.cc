@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include "proto/gui_extension.pb.h"
+#include "util/fontawesome.h"
 #include "util/gui/flags.h"
 namespace gui {
 namespace {
@@ -422,6 +423,123 @@ union Scalar {
     }
 };
 
+ProtoGui::RptOp ProtoGui::DrawRptOp(const proto::ListOptions& list) {
+    RptOp ret = RptOp::NONE;
+    if (list.add()) {
+        if (ImGui::Button(ICON_FA_SQUARE_PLUS)) ret = RptOp::INSERT;
+        ImGui::SameLine();
+    }
+    if (list.del()) {
+        if (ImGui::Button(ICON_FA_TRASH_CAN)) ret = RptOp::DELETE;
+        ImGui::SameLine();
+    }
+    if (list.swap()) {
+        if (ImGui::Button(ICON_FA_ARROW_DOWN)) ret = RptOp::MOVE_DOWN;
+        ImGui::SameLine();
+        if (ImGui::Button(ICON_FA_ARROW_UP)) ret = RptOp::MOVE_UP;
+        ImGui::SameLine();
+    }
+    return ret;
+}
+
+bool ProtoGui::PerformRptOp(const google::protobuf::FieldDescriptor* field,
+                            RptOp op, int index, int* length) {
+    auto* reflection = message_->GetReflection();
+    bool ret = false;
+    int len = length ? *length : 0;
+    switch (op) {
+        case RptOp::NONE:
+            break;
+        case RptOp::MOVE_DOWN:
+            if (index + 1 < len) {
+                reflection->SwapElements(message_, field, index, index + 1);
+                ret = true;
+            }
+            break;
+        case RptOp::MOVE_UP:
+            if (index - 1 >= 0) {
+                reflection->SwapElements(message_, field, index, index - 1);
+                ret = true;
+            }
+            break;
+        case RptOp::DELETE:
+            for (int i = index; i < len - 1; ++i) {
+                LOG(INFO) << "swap " << i << ":" << (i + 1) << "/" << len;
+                reflection->SwapElements(message_, field, i, i + 1);
+            }
+            reflection->RemoveLast(message_, field);
+            *length -= 1;
+            ret = true;
+            break;
+        case RptOp::INSERT:
+            switch (field->cpp_type()) {
+                case CppType::CPPTYPE_BOOL:
+                    reflection->AddBool(message_, field, false);
+                    break;
+                case CppType::CPPTYPE_INT32:
+                    reflection->AddInt32(message_, field, 0);
+                    break;
+                case CppType::CPPTYPE_INT64:
+                    reflection->AddInt64(message_, field, 0);
+                    break;
+                case CppType::CPPTYPE_UINT32:
+                    reflection->AddUInt32(message_, field, 0);
+                    break;
+                case CppType::CPPTYPE_UINT64:
+                    reflection->AddUInt64(message_, field, 0);
+                    break;
+                case CppType::CPPTYPE_FLOAT:
+                    reflection->AddFloat(message_, field, 0.0);
+                    break;
+                case CppType::CPPTYPE_DOUBLE:
+                    reflection->AddDouble(message_, field, 0.0);
+                    break;
+                case CppType::CPPTYPE_STRING:
+                    reflection->AddString(message_, field, "");
+                    break;
+                case CppType::CPPTYPE_ENUM:
+                    reflection->AddEnumValue(message_, field, 0);
+                    break;
+                case CppType::CPPTYPE_MESSAGE:
+                    reflection->AddMessage(message_, field);
+                    break;
+            }
+            for (int i = len - 1; i > index; --i) {
+                reflection->SwapElements(message_, field, i, i - 1);
+            }
+            ret = true;
+            break;
+    }
+    return ret;
+}
+
+bool ProtoGui::SolitaryAddButton(
+    const google::protobuf::FieldDescriptor* field) {
+    const auto& options = field->options();
+    if (!options.HasExtension(proto::list)) return false;
+    if (!options.GetExtension(proto::list).add()) return false;
+    std::string_view label = options.HasExtension(proto::label)
+                                 ? options.GetExtension(proto::label)
+                                 : field->name();
+    RptOp op = RptOp::NONE;
+    if (columns_ == 0) {
+        /* nothing */
+    } else if (columns_ == -1) {
+        ImGui::TableNextColumn();
+        if (ImGui::Button(ICON_FA_SQUARE_PLUS)) op = RptOp::INSERT;
+        ImGui::SameLine();
+        ImGui::TextUnformatted(label);
+        ImGui::TableNextColumn();
+        label = empty();
+    } else {
+    }
+    if (op == RptOp::INSERT) {
+        PerformRptOp(field, op, 0, nullptr);
+        return true;
+    }
+    return false;
+}
+
 bool ProtoGui::DrawBoolField(const google::protobuf::FieldDescriptor* field) {
     const auto& options = field->options();
     bool rpt = field->is_repeated();
@@ -442,10 +560,14 @@ bool ProtoGui::DrawBoolField(const google::protobuf::FieldDescriptor* field) {
         std::string_view label = options.HasExtension(proto::label)
                                      ? options.GetExtension(proto::label)
                                      : field->name();
+        RptOp rptop = RptOp::NONE;
         if (columns_ == 0) {
             /* nothing */
         } else if (columns_ == -1) {
             ImGui::TableNextColumn();
+            if (options.HasExtension(proto::list)) {
+                rptop = DrawRptOp(options.GetExtension(proto::list));
+            }
             ImGui::TextUnformatted(label);
             ImGui::TableNextColumn();
             label = empty();
@@ -460,9 +582,15 @@ bool ProtoGui::DrawBoolField(const google::protobuf::FieldDescriptor* field) {
                 reflection->SetBool(message_, field, value);
             }
         }
+        if (PerformRptOp(field, rptop, i, &len)) {
+            changed = true;
+        }
         if (rpt) {
             ImGui::PopID();
         }
+    }
+    if (len == 0 && SolitaryAddButton(field)) {
+        changed = true;
     }
     ImGui::PopID();
     return changed;
@@ -495,10 +623,14 @@ constexpr Scalar ZERO = {0};
                     options.HasExtension(proto::label)                         \
                         ? options.GetExtension(proto::label)                   \
                         : field->name();                                       \
+                RptOp rptop = RptOp::NONE;                                     \
                 if (columns_ == 0) {                                           \
                     /* nothing */                                              \
                 } else if (columns_ == -1) {                                   \
                     ImGui::TableNextColumn();                                  \
+                    if (options.HasExtension(proto::list)) {                   \
+                        rptop = DrawRptOp(options.GetExtension(proto::list));  \
+                    }                                                          \
                     ImGui::TextUnformatted(label);                             \
                     ImGui::TableNextColumn();                                  \
                     label = empty();                                           \
@@ -512,9 +644,15 @@ constexpr Scalar ZERO = {0};
                         value.Set(reflection, message_, field);                \
                     }                                                          \
                 }                                                              \
+                if (PerformRptOp(field, rptop, i, &len)) {                     \
+                    changed = true;                                            \
+                }                                                              \
                 if (rpt) {                                                     \
                     ImGui::PopID();                                            \
                 }                                                              \
+            }                                                                  \
+            if (len == 0 && SolitaryAddButton(field)) {                        \
+                changed = true;                                                \
             }                                                                  \
         } else {                                                               \
             for (; len < n; ++len) {                                           \
@@ -647,15 +785,20 @@ bool ProtoGui::DrawStringField(const google::protobuf::FieldDescriptor* field) {
         std::string_view label = options.HasExtension(proto::label)
                                      ? options.GetExtension(proto::label)
                                      : field->name();
+        RptOp rptop = RptOp::NONE;
         if (columns_ == 0) {
             /* nothing */
         } else if (columns_ == -1) {
             ImGui::TableNextColumn();
+            if (options.HasExtension(proto::list)) {
+                rptop = DrawRptOp(options.GetExtension(proto::list));
+            }
             ImGui::TextUnformatted(label);
             ImGui::TableNextColumn();
             label = empty();
         } else {
         }
+
         bool ch;
         if (multiline) {
             ch = ImGui::InputTextMultiline(label, &value, size, flags);
@@ -670,9 +813,15 @@ bool ProtoGui::DrawStringField(const google::protobuf::FieldDescriptor* field) {
                 reflection->SetString(message_, field, value);
             }
         }
+        if (PerformRptOp(field, rptop, i, &len)) {
+            changed = true;
+        }
         if (rpt) {
             ImGui::PopID();
         }
+    }
+    if (len == 0 && SolitaryAddButton(field)) {
+        changed = true;
     }
     ImGui::PopID();
     return changed;
@@ -684,7 +833,7 @@ bool ProtoGui::DrawEnumField(const google::protobuf::FieldDescriptor* field) {
     auto* reflection = message_->GetReflection();
     int len = rpt ? reflection->FieldSize(*message_, field) : 1;
     bool changed = false;
-    const auto* value = reflection->GetEnum(*message_, field);
+    const auto* value = field->default_value_enum();
     const auto* type = value->type();
     const char* items[type->value_count()];
     for (int i = 0; i < type->value_count(); ++i) {
@@ -702,10 +851,14 @@ bool ProtoGui::DrawEnumField(const google::protobuf::FieldDescriptor* field) {
         std::string_view label = options.HasExtension(proto::label)
                                      ? options.GetExtension(proto::label)
                                      : field->name();
+        RptOp rptop = RptOp::NONE;
         if (columns_ == 0) {
             /* nothing */
         } else if (columns_ == -1) {
             ImGui::TableNextColumn();
+            if (options.HasExtension(proto::list)) {
+                rptop = DrawRptOp(options.GetExtension(proto::list));
+            }
             ImGui::TextUnformatted(label);
             ImGui::TableNextColumn();
             label = empty();
@@ -721,9 +874,15 @@ bool ProtoGui::DrawEnumField(const google::protobuf::FieldDescriptor* field) {
                 reflection->SetEnum(message_, field, type->value(index));
             }
         }
+        if (PerformRptOp(field, rptop, i, &len)) {
+            changed = true;
+        }
         if (rpt) {
             ImGui::PopID();
         }
+    }
+    if (len == 0 && SolitaryAddButton(field)) {
+        changed = true;
     }
     ImGui::PopID();
     return changed;

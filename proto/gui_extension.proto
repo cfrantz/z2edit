@@ -315,6 +315,12 @@ message ScalarInput {
     InputTextFlags flags = 5;
 }
 
+message ListOptions {
+    bool swap = 1;
+    bool add = 2;
+    bool del = 3;
+}
+
 extend google.protobuf.MessageOptions {
     optional Begin begin = 50001;
     optional StyleVar style = 50002;
@@ -338,6 +344,8 @@ extend google.protobuf.FieldOptions {
     optional ColorEditFlags color_edit = 50013;
     // Applies to `string` fields.
     optional InputTextFlags input_text = 50014;
+    // Applies to repeated fields.
+    optional ListOptions list = 50015;
 }
 
 enum SampleEnum {
@@ -398,4 +406,11 @@ message Foo {
     repeated float color = 7
         [(label) = "Color Edit", (color_edit).type = COLOR_PICKER_3];
     SampleEnum sample_enum = 8;
+    repeated string zoo = 9 [
+        (list) = {
+            swap: true,
+            add: true,
+            del: true
+        }
+    ];
 }

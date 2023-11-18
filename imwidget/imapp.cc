@@ -4,6 +4,7 @@
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "util/os.h"
+#include "util/fontawesome.h"
 #include "util/gamecontrollerdb.h"
 #include "absl/strings/str_cat.h"
 #include "absl/flags/flag.h"
@@ -72,6 +73,10 @@ ImApp::ImApp(const std::string& name, int width, int height)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 
+    auto sts = LoadFontAwesome();
+    if (!sts.ok()) {
+        LOG(ERROR) << "Error loading fontawesome: " << sts;
+    }
     // Setup ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();

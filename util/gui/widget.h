@@ -2,6 +2,8 @@
 #define EMPTY_PROJECT_UTIL_GUI_WIDGET_H
 
 #include <google/protobuf/message.h>
+
+#include "proto/gui_extension.pb.h"
 namespace gui {
 
 class ProtoGui {
@@ -13,6 +15,17 @@ class ProtoGui {
     ~ProtoGui() { End(); }
 
   private:
+    enum RptOp {
+        NONE,
+        MOVE_UP,
+        MOVE_DOWN,
+        INSERT,
+        DELETE,
+    };
+    RptOp DrawRptOp(const proto::ListOptions& list);
+    bool PerformRptOp(const google::protobuf::FieldDescriptor* field, RptOp op,
+                      int index, int* length);
+    bool SolitaryAddButton(const google::protobuf::FieldDescriptor* field);
     bool DrawBoolField(const google::protobuf::FieldDescriptor* field);
     bool DrawScalarDragField(const google::protobuf::FieldDescriptor* field);
     bool DrawScalarSliderField(const google::protobuf::FieldDescriptor* field);
