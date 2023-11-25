@@ -57,6 +57,8 @@ cc_library(
     deps = [
         ":app",
         "//third_party/imgui:gui",
+        "@com_google_absl//absl/flags:commandlineflag",
+        "@com_google_absl//absl/flags:reflection",
         "@pybind11",
     ],
 )

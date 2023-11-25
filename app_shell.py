@@ -10,6 +10,22 @@ from application import gui
 flags = argparse.ArgumentParser(prog="app_shell", description="Description")
 flags.add_argument("--interactive", "-i", action="store_true", help="Start an interactive Python shell")
 
+class AbslFlag(argparse.Action):
+    """Absl Flags / argparse fusion."""
+
+    @staticmethod
+    def setup(parser):
+        """Setup a parser with all known absl flags."""
+        for name, flag in application.get_all_flags().items():
+            if flag.is_retired:
+                continue
+            parser.add_argument('--'+name, action=AbslFlag, help=flag.help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        flag = application.find_command_line_flag(self.dest)
+        flag.parse(values)
+        setattr(namespace, self.dest, values)
+
 class App(application.App):
     def __init__(self):
         super().__init__()
@@ -43,5 +59,6 @@ def main(args):
     return 0
 
 if __name__ == '__main__':
+    AbslFlag.setup(flags)
     args = flags.parse_args()
     sys.exit(main(args))
