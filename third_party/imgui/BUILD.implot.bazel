@@ -5,8 +5,8 @@ cc_library(
     srcs = [
         "implot.cpp",
         "implot_demo.cpp",
-        "implot_items.cpp",
         "implot_internal.h",
+        "implot_items.cpp",
     ],
     hdrs = [
         "implot.h",

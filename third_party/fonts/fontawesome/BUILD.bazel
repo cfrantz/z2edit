@@ -2,11 +2,11 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "regular",
-    deps = [
-        "@com_github_iconfonts//:fontawesome6",
-    ],
     data = [
         "fa-regular-400.otf",
         "fa-solid-900.otf",
+    ],
+    deps = [
+        "@com_github_iconfonts//:fontawesome6",
     ],
 )

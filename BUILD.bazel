@@ -1,3 +1,6 @@
+load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@pydeps//:requirements.bzl", "requirement")
+
 package(default_visibility = ["//visibility:public"])
 
 genrule(
@@ -22,6 +25,9 @@ cc_library(
         "-lSDL2_image",
         "-lSDL2_mixer",
         "-lSDL2_gfx",
+        "-lpthread",
+        "-lm",
+        "-lGL",
     ],
     deps = [
         "//imwidget:base",
@@ -35,6 +41,7 @@ cc_library(
         "@com_github_igfd//:igfd",
         "@com_github_implot//:implot",
         "@com_google_protobuf//:protobuf",
+        "@pybind11",
 
         # TODO(cfrantz): on ubuntu 16 with MIR, there is a library conflict
         # between MIR (linked with protobuf 2.6.1) and this program,
@@ -44,48 +51,75 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "application",
+    srcs = ["application.cc"],
+    deps = [
+        ":app",
+        "//third_party/imgui:gui",
+        "@pybind11",
+    ],
+)
+
+cc_shared_library(
+    name = "application_module",
+    shared_lib_name = "application.so",
+    deps = [
+        ":application",
+    ],
+)
+
 filegroup(
     name = "content",
     srcs = glob(["content/*.textpb"]),
 )
 
-cc_binary(
-    name = "application",
-    srcs = [
-        "main.cc",
-    ],
-    linkopts = select({
-        #":windows": [
-        #    "-lpthread",
-        #    "-lm",
-        #    "-lopengl32",
-        #    "-ldinput8",
-        #    "-ldxguid",
-        #    "-ldxerr8",
-        #    "-luser32",
-        #    "-lgdi32",
-        #    "-lwinmm",
-        #    "-limm32",
-        #    "-lole32",
-        #    "-loleaut32",
-        #    "-lshell32",
-        #    "-lversion",
-        #    "-luuid",
-        #],
-        "//conditions:default": [
-            "-lpthread",
-            "-lm",
-            "-lGL",
-        ],
-    }),
+py_binary(
+    name = "app_shell",
+    srcs = ["app_shell.py"],
+    data = [":application_module"],
     deps = [
-        ":app",
-        "//proto:gui_extension",
-        "//util:config",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_absl//absl/flags:usage",
+        requirement("ipython"),
     ],
 )
+
+#cc_binary(
+#    name = "application",
+#    srcs = [
+#        "main.cc",
+#    ],
+#    linkopts = select({
+#        #":windows": [
+#        #    "-lpthread",
+#        #    "-lm",
+#        #    "-lopengl32",
+#        #    "-ldinput8",
+#        #    "-ldxguid",
+#        #    "-ldxerr8",
+#        #    "-luser32",
+#        #    "-lgdi32",
+#        #    "-lwinmm",
+#        #    "-limm32",
+#        #    "-lole32",
+#        #    "-loleaut32",
+#        #    "-lshell32",
+#        #    "-lversion",
+#        #    "-luuid",
+#        #],
+#        "//conditions:default": [
+#            "-lpthread",
+#            "-lm",
+#            "-lGL",
+#        ],
+#    }),
+#    deps = [
+#        ":app",
+#        "//proto:gui_extension",
+#        "//util:config",
+#        "@com_google_absl//absl/flags:parse",
+#        "@com_google_absl//absl/flags:usage",
+#    ],
+#)
 
 #pkg_winzip(
 #    name = "application-windows",

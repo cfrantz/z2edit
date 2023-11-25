@@ -14,8 +14,8 @@ cc_library(
         "imwidget.h",
     ],
     deps = [
-        "//util:fpsmgr",
         "//util:fontawesome",
+        "//util:fpsmgr",
         "//util:gamecontrollerdb",
         "//util:os",
         "@com_github_imgui//:imgui",

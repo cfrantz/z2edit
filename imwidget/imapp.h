@@ -52,13 +52,13 @@ class ImApp {
     void AddDrawCallback(ImWindowBase* window);
     void HelpButton(const std::string& topickey, bool right_justify=false);
 
+    bool running_;
+    ImVec4 clear_color_;
   protected:
     virtual void AudioCallback(float* stream, int len);
     std::string name_;
     int width_;
     int height_;
-    bool running_;
-    ImVec4 clear_color_;
     DebugConsole console_;
     std::vector<std::unique_ptr<ImWindowBase>> draw_callback_;
 

@@ -1,0 +1,44 @@
+load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@pydeps//:requirements.bzl", "requirement")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(glob(["**"]))
+
+py_binary(
+    name = "generate_python_bindings",
+    srcs = ["generate_python_bindings.py"],
+    deps = [
+        requirement("ccsyspath"),
+        requirement("clang"),
+    ],
+)
+
+genrule(
+    name = "python_bindings",
+    srcs = [
+        "@com_github_imgui//:srcs",
+    ],
+    outs = ["gui_generated.cpp"],
+    cmd = """
+        $(location :generate_python_bindings) \
+            --include=external/com_github_imgui \
+            --output=$@
+
+        echo "================================================================="
+        echo "You need to manually copy the generated bindings:"
+        echo "cp $@ third_party/imgui_rs/gui.cpp"
+        echo "================================================================="
+    """,
+    tags = ["manual"],
+    tools = [":generate_python_bindings"],
+)
+
+cc_library(
+    name = "gui",
+    srcs = ["gui.cpp"],
+    deps = [
+        "@com_github_imgui//:imgui",
+        "@pybind11",
+    ],
+)

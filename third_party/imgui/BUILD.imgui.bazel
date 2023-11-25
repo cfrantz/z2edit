@@ -1,11 +1,19 @@
 package(default_visibility = ["//visibility:public"])
 
+filegroup(
+    name = "srcs",
+    srcs = glob([
+        "*.cpp",
+        "*.h",
+    ]),
+)
+
 cc_library(
     name = "imgui",
     srcs = [
         "imgui.cpp",
-        "imgui_draw.cpp",
         "imgui_demo.cpp",
+        "imgui_draw.cpp",
         "imgui_tables.cpp",
         "imgui_widgets.cpp",
         "imstb_rectpack.h",

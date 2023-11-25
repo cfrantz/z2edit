@@ -1,0 +1,15 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "headers",
+    srcs = glob(["include/**"]),
+)
+
+cc_library(
+    name = "pybind11",
+    hdrs = [":headers"],
+    includes = ["include"],
+    deps = [
+        "@python3//:python_headers",
+    ],
+)

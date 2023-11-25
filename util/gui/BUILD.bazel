@@ -27,8 +27,8 @@ cc_library(
     hdrs = ["widget.h"],
     deps = [
         ":flags",
-        "//util:fontawesome",
         "//proto:gui_extension",
+        "//util:fontawesome",
         "@com_github_imgui//:imgui",
         "@com_google_absl//absl/log",
     ],
