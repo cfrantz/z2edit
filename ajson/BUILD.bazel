@@ -1,0 +1,177 @@
+load("@rules_python//python:py_test.bzl", "py_test")
+load("@pydeps//:requirements.bzl", "requirement")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "types",
+    hdrs = ["types.h"],
+    deps = [
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "document",
+    hdrs = ["document.h"],
+    deps = [
+        ":types",
+        "//util:status",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "document_test",
+    srcs = ["document_test.cc"],
+    deps = [
+        ":document",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "reflect",
+    hdrs = [
+        "reflect.h",
+        "reflect_macros.h",
+    ],
+    deps = [
+        ":types",
+        "//util:macros",
+        "//util:status",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "reflect_test",
+    srcs = ["reflect_test.cc"],
+    deps = [
+        ":reflect",
+        ":test_lib",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "serialize",
+    srcs = ["serialize.cc"],
+    hdrs = ["serialize.h"],
+    deps = [
+        ":document",
+        ":reflect",
+        "//util:status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "deserialize",
+    srcs = ["deserialize.cc"],
+    hdrs = ["deserialize.h"],
+    deps = [
+        ":document",
+        ":reflect",
+        "//util:status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "deserialize_test",
+    srcs = ["deserialize_test.cc"],
+    deps = [
+        ":deserialize",
+        ":ajson",
+        ":relax",
+        ":test_lib",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ajson",
+    srcs = ["ajson.cc"],
+    hdrs = ["ajson.h"],
+    deps = [
+        ":serialize",
+        ":document",
+        ":reflect",
+        "//util:status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "ajson_test",
+    srcs = ["ajson_test.cc"],
+    deps = [
+        ":ajson",
+        ":serialize",
+        ":test_lib",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "test_lib",
+    hdrs = ["test_lib.h"],
+    deps = [
+        ":reflect",
+    ],
+)
+
+cc_library(
+    name = "py_test_lib",
+    srcs = ["py_test_lib.cc"],
+    hdrs = ["test_lib.h"],
+    defines = ["PYTHON_TESTING=1"],
+    deps = [
+        ":reflect",
+        "@pybind11",
+    ],
+)
+
+cc_shared_library(
+    name = "python_test_lib",
+    shared_lib_name = "python_test_lib.so",
+    deps = [
+        ":py_test_lib",
+    ],
+)
+
+py_test(
+    name = "pybind_test",
+    srcs = ["pybind_test.py"],
+    data = [":python_test_lib"],
+    deps = [
+        requirement("ipython"),
+    ],
+)
+
+cc_library(
+    name = "relax",
+    srcs = ["relax.cc"],
+    hdrs = ["relax.h"],
+    deps = [
+        ":document",
+        "//util:status",
+    ],
+)
+
+cc_test(
+    name = "relax_test",
+    srcs = ["relax_test.cc"],
+    deps = [
+        ":relax",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

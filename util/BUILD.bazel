@@ -107,3 +107,14 @@ cc_library(
     name = "macros",
     hdrs = ["macros.h"],
 )
+
+cc_library(
+    name = "status",
+    hdrs = ["status.h"],
+    deps = [
+        ":macros",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)

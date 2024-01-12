@@ -3,6 +3,9 @@
 
 #define PASTE_(x, y) x ## y
 #define PASTE(x, y) PASTE_(x, y)
+#define PASTE_LIST(x, y) PASTE(x, y),
+
+#define STRINGIFY(x) #x
 
 #define PP_NARG(...)    PP_NARG_(__VA_ARGS__, PP_RSEQ_N())
 #define PP_NARG_(...)   PP_ARG_N(__VA_ARGS__)
@@ -25,6 +28,11 @@
         19,18,17,16,15,14,13,12,11,10, \
         9,8,7,6,5,4,3,2,1,0
 
+/**
+ * Call macro `X` on each argument in the argument list.
+ */
+#define APPLYX_(M, ...) M(__VA_ARGS__)
+#define APPLYX(X, ...) APPLYX_(PASTE(APPLYX, PP_NARG(__VA_ARGS__)), X, __VA_ARGS__)
 #define APPLYX1(X, a0) X(a0)
 #define APPLYX2(X, a0, ...) X(a0) APPLYX1(X, __VA_ARGS__)
 #define APPLYX3(X, a0, ...) X(a0) APPLYX2(X, __VA_ARGS__)
@@ -55,8 +63,79 @@
 #define APPLYX28(X, a0, ...) X(a0) APPLYX27(X, __VA_ARGS__)
 #define APPLYX29(X, a0, ...) X(a0) APPLYX28(X, __VA_ARGS__)
 #define APPLYX30(X, a0, ...) X(a0) APPLYX29(X, __VA_ARGS__)
+#define APPLYX31(X, a0, ...) X(a0) APPLYX30(X, __VA_ARGS__)
+#define APPLYX32(X, a0, ...) X(a0) APPLYX31(X, __VA_ARGS__)
 
-#define APPLYX_(M, ...) M(__VA_ARGS__)
-#define APPLYX(X, ...) APPLYX_(PASTE(APPLYX, PP_NARG(__VA_ARGS__)), X, __VA_ARGS__)
+/**
+ * Call macro `W` on (k, arg) for each arg in the argument list.
+ */
+#define APPLYW_(M, k, ...) M(k, __VA_ARGS__)
+#define APPLYW(W, k, ...) APPLYW_(PASTE(APPLYW, PP_NARG(__VA_ARGS__)), W, k, __VA_ARGS__)
+
+#define APPLYW1(W,  k, a0) W(k, a0)
+#define APPLYW2(W,  k, a0, ...) W(k, a0) APPLYW1(W, k, __VA_ARGS__)
+#define APPLYW3(W,  k, a0, ...) W(k, a0) APPLYW2(W, k, __VA_ARGS__)
+#define APPLYW4(W,  k, a0, ...) W(k, a0) APPLYW3(W, k, __VA_ARGS__)
+#define APPLYW5(W,  k, a0, ...) W(k, a0) APPLYW4(W, k, __VA_ARGS__)
+#define APPLYW6(W,  k, a0, ...) W(k, a0) APPLYW5(W, k, __VA_ARGS__)
+#define APPLYW7(W,  k, a0, ...) W(k, a0) APPLYW6(W, k, __VA_ARGS__)
+#define APPLYW8(W,  k, a0, ...) W(k, a0) APPLYW7(W, k, __VA_ARGS__)
+#define APPLYW9(W,  k, a0, ...) W(k, a0) APPLYW8(W, k, __VA_ARGS__)
+#define APPLYW10(W, k,  a0, ...) W(k, a0) APPLYW9(W, k, __VA_ARGS__)
+#define APPLYW11(W, k,  a0, ...) W(k, a0) APPLYW10(W, k, __VA_ARGS__)
+#define APPLYW12(W, k,  a0, ...) W(k, a0) APPLYW11(W, k, __VA_ARGS__)
+#define APPLYW13(W, k,  a0, ...) W(k, a0) APPLYW12(W, k, __VA_ARGS__)
+#define APPLYW14(W, k,  a0, ...) W(k, a0) APPLYW13(W, k, __VA_ARGS__)
+#define APPLYW15(W, k,  a0, ...) W(k, a0) APPLYW14(W, k, __VA_ARGS__)
+#define APPLYW16(W, k,  a0, ...) W(k, a0) APPLYW15(W, k, __VA_ARGS__)
+#define APPLYW17(W, k,  a0, ...) W(k, a0) APPLYW16(W, k, __VA_ARGS__)
+#define APPLYW18(W, k,  a0, ...) W(k, a0) APPLYW17(W, k, __VA_ARGS__)
+#define APPLYW19(W, k,  a0, ...) W(k, a0) APPLYW18(W, k, __VA_ARGS__)
+#define APPLYW20(W, k,  a0, ...) W(k, a0) APPLYW19(W, k, __VA_ARGS__)
+#define APPLYW21(W, k,  a0, ...) W(k, a0) APPLYW20(W, k, __VA_ARGS__)
+#define APPLYW22(W, k,  a0, ...) W(k, a0) APPLYW21(W, k, __VA_ARGS__)
+#define APPLYW23(W, k,  a0, ...) W(k, a0) APPLYW22(W, k, __VA_ARGS__)
+#define APPLYW24(W, k,  a0, ...) W(k, a0) APPLYW23(W, k, __VA_ARGS__)
+#define APPLYW25(W, k,  a0, ...) W(k, a0) APPLYW24(W, k, __VA_ARGS__)
+#define APPLYW26(W, k,  a0, ...) W(k, a0) APPLYW25(W, k, __VA_ARGS__)
+#define APPLYW27(W, k,  a0, ...) W(k, a0) APPLYW26(W, k, __VA_ARGS__)
+#define APPLYW28(W, k,  a0, ...) W(k, a0) APPLYW27(W, k, __VA_ARGS__)
+#define APPLYW29(W, k,  a0, ...) W(k, a0) APPLYW28(W, k, __VA_ARGS__)
+#define APPLYW30(W, k,  a0, ...) W(k, a0) APPLYW29(W, k, __VA_ARGS__)
+#define APPLYW31(W, k,  a0, ...) W(k, a0) APPLYW30(W, k, __VA_ARGS__)
+#define APPLYW32(W, k,  a0, ...) W(k, a0) APPLYW31(W, k, __VA_ARGS__)
+
+// The preprocessor techniques below are explained at
+// https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms
+
+#define IIF(c) PASTE(IIF_, c)
+#define IIF_0(t, ...) __VA_ARGS__
+#define IIF_1(t, ...) t
+
+#define CHECK_N(x, n, ...) n
+#define CHECK(...) CHECK_N(__VA_ARGS__, 0,)
+#define PROBE(x) x, 1,
+
+#define NOT(x) CHECK(PASTE(NOT_, x))
+#define NOT_0 PROBE(~)
+
+#define IS_PAREN(x) CHECK(IS_PAREN_PROBE x)
+#define IS_PAREN_PROBE(...) PROBE(~)
+
+#define CALL(arglist_, macro_) \
+    IIF(IS_PAREN(arglist_))(macro_ arglist_, macro_(arglist_))
+
+#define EMPTY()
+#define DEFER(id) id EMPTY()
+#define OBSTRUCT(...) __VA_ARGS__ DEFER(EMPTY)()
+#define EXPAND(...) __VA_ARGS__
+
+#define EVAL(...) EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
+#define EVAL1(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
+#define EVAL2(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
+#define EVAL3(...) EVAL4(EVAL4(EVAL4(__VA_ARGS__)))
+#define EVAL4(...) EVAL5(EVAL5(EVAL5(__VA_ARGS__)))
+#define EVAL5(...) __VA_ARGS__
+
 
 #endif // PROTONES_UTIL_MACROS_H
