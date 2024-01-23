@@ -11,13 +11,14 @@ namespace ajson {
 
 class Serializer {
   public:
-    absl::StatusOr<std::unique_ptr<Document>> serialize(Ref r);
+    absl::StatusOr<std::shared_ptr<Document>> serialize(Ref r);
 
   private:
-    absl::StatusOr<std::unique_ptr<Document>> primitive(Ref r);
-    absl::StatusOr<std::unique_ptr<Document>> structure(Ref r);
-    absl::StatusOr<std::unique_ptr<Document>> vector(Ref r);
-    absl::StatusOr<std::unique_ptr<Document>> map(Ref r);
+    absl::StatusOr<std::shared_ptr<Document>> primitive(Ref r);
+    absl::StatusOr<std::shared_ptr<Document>> structure(Ref r);
+    absl::StatusOr<std::shared_ptr<Document>> vector(Ref r);
+    absl::StatusOr<std::shared_ptr<Document>> optional(Ref r);
+    absl::StatusOr<std::shared_ptr<Document>> map(Ref r);
     struct State {
         bool compact = false;
         Base base = Base::Decimal;

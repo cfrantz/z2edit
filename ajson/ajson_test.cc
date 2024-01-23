@@ -26,6 +26,7 @@ TEST(JsonEncode, StructBar) {
     JsonEncoder enc = JsonEncoder::Hjson();
     Serializer ser;
 
+    bar.foo.d = 9999;
     auto doc = ser.serialize(Ref::New(bar, "bar"));
     EXPECT_TRUE(doc.ok());
     auto val = enc.encode(doc->get());

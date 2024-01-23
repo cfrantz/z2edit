@@ -2,6 +2,7 @@
 #define EMPTY_PROJECT_AJSON_TYPES_H
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,7 @@ enum class TypeHint {
     Primitive,
     Struct,
     Vector,
+    Optional,
     Map,
 };
 
@@ -23,6 +25,25 @@ struct Typename {
     static std::string_view name();
     static absl::StatusOr<T> from_str(absl::string_view str);
     static absl::StatusOr<std::string> to_str(const T& val);
+};
+
+template <typename T>
+struct Typename<std::optional<T>> {
+    static std::string_view name() {
+        static std::string name_;
+        if (name_.empty()) {
+            name_ = absl::StrCat("std::optional<", Typename<T>::name(), ">");
+        }
+        return name_;
+    }
+    static absl::StatusOr<T> from_str(absl::string_view str) {
+        return absl::UnimplementedError(
+            "Cannot convert a optional from a string");
+    }
+    static absl::StatusOr<std::string> to_str(const T& val) {
+        return absl::UnimplementedError(
+            "Cannot convert a optional to a string");
+    }
 };
 
 template <typename T>

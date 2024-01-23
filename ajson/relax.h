@@ -30,11 +30,11 @@ class Relax {
     Relax(Options options) : options_(options) {}
     Relax() : Relax(Options{}) {}
 
-    absl::StatusOr<std::unique_ptr<Document>> parse(std::istream& in);
-    absl::StatusOr<std::unique_ptr<Document>> parse(const std::string& str);
+    absl::StatusOr<std::shared_ptr<Document>> parse(std::istream& in);
+    absl::StatusOr<std::shared_ptr<Document>> parse(const std::string& str);
 
   private:
-    typedef absl::StatusOr<std::unique_ptr<Document>> DocStatus;
+    typedef absl::StatusOr<std::shared_ptr<Document>> DocStatus;
     Options options_{};
 
     absl::Status error(std::string_view message, Location& loc);

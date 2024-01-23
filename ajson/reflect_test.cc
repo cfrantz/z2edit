@@ -54,6 +54,21 @@ TEST(RefVectorTest, Primitive) {
     EXPECT_FALSE(v.getitem("offset").ok());
 }
 
+// Tests that type-erased Ref works with optional.
+TEST(RefOptionalTest, Primitive) {
+    std::optional<int16_t> opt;
+    Ref v = Ref::New(opt, "opt");
+    EXPECT_EQ(*v.size(), 0);
+    EXPECT_FALSE(v.getitem("value").ok());
+
+    EXPECT_TRUE(v.add("value").ok());
+    *v.getitem("value")->value<int16_t>() = 55;
+    EXPECT_EQ(*v.getitem("value")->value<int16_t>(), 55);
+
+    EXPECT_TRUE(v.add("null").ok());
+    EXPECT_FALSE(v.getitem("value").ok());
+}
+
 // Tests that type-erased Ref works with maps.
 TEST(RefMapTest, String) {
     std::map<std::string, std::string> values = {

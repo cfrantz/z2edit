@@ -17,6 +17,7 @@ class Deserializer {
     absl::Status primitive(Ref r, const Document* doc);
     absl::Status structure(Ref r, const Document* doc);
     absl::Status vector(Ref r, const Document* doc);
+    absl::Status optional(Ref r, const Document* doc);
     absl::Status map(Ref r, const Document* doc);
 };
 

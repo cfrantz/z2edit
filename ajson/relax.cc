@@ -51,14 +51,15 @@ Relax::DocStatus Relax::parse(std::istream& in) {
             return error("unexpected value after document", trailer_loc);
         }
         if (doc->type() != document::Type::Fragment) {
-            doc = Document::Fragment(std::move(doc));
+            doc = Document::Fragment(doc);
         }
-        doc->extend(std::move(trailer)).IgnoreError();
+        doc->extend(trailer).IgnoreError();
     }
+    LOG(INFO) << "returning type=" << int(doc->type()) << " @" << doc.get();
     return doc;
 }
 
-absl::StatusOr<std::unique_ptr<Document>> Relax::parse(const std::string& str) {
+absl::StatusOr<std::shared_ptr<Document>> Relax::parse(const std::string& str) {
     std::stringstream in(str);
     return parse(in);
 }
@@ -66,11 +67,11 @@ absl::StatusOr<std::unique_ptr<Document>> Relax::parse(const std::string& str) {
 Relax::DocStatus Relax::parse_value(std::istream& in, Location& loc,
                                     char terminator) {
     int ch;
-    std::vector<std::unique_ptr<Document>> doc;
+    std::vector<std::shared_ptr<Document>> doc;
     RETURN_IF_ERROR(consume_space(in, loc));
     Location start = loc;
     for (;;) {
-        std::unique_ptr<Document> node;
+        std::shared_ptr<Document> node;
         ch = in.peek();
         if (ch == std::char_traits<char>::eof()) {
             // Nothing to do
@@ -79,12 +80,12 @@ Relax::DocStatus Relax::parse_value(std::istream& in, Location& loc,
             break;
         } else if (ch == '#') {
             ASSIGN_OR_RETURN(node, parse_hash_comment(in, loc));
-            doc.push_back(std::move(node));
+            doc.push_back(node);
             // A comment isn't a value.
             continue;
         } else if (ch == '/') {
             ASSIGN_OR_RETURN(node, parse_slash_comment(in, loc));
-            doc.push_back(std::move(node));
+            doc.push_back(node);
             // A comment isn't a value.
             continue;
         } else if (isdigit(ch) || ch == '.' || ch == '+' || ch == '-') {
@@ -102,15 +103,15 @@ Relax::DocStatus Relax::parse_value(std::istream& in, Location& loc,
             char buf[2] = {char(ch), 0};
             return error(absl::StrCat("unexpected character '", buf, "'"), loc);
         }
-        doc.push_back(std::move(node));
+        doc.push_back(node);
         break;
     }
     if (doc.size() == 0) {
         return nullptr;
     } else if (doc.size() == 1) {
-        return std::move(doc[0]);
+        return doc[0];
     } else {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Fragment{std::move(doc), start});
     }
 }
@@ -530,7 +531,7 @@ Relax::DocStatus Relax::parse_sequence(std::istream& in, Location& loc) {
                 if (ch == '\n') eol = true;
             } else if (next == '#' || next == '/') {
                 if (eol) break;
-                std::unique_ptr<Document> comment;
+                std::shared_ptr<Document> comment;
                 if (next == '#') {
                     ASSIGN_OR_RETURN(comment,
                                      parse_hash_comment(in, loc, &eol));
@@ -539,10 +540,9 @@ Relax::DocStatus Relax::parse_sequence(std::istream& in, Location& loc) {
                                      parse_slash_comment(in, loc, &eol));
                 }
                 if (item->type() != document::Type::Fragment) {
-                    item =
-                        Document::Fragment(std::move(item), std::move(comment));
+                    item = Document::Fragment(item, comment);
                 } else {
-                    item->append(std::move(comment)).IgnoreError();
+                    item->append(comment).IgnoreError();
                 }
             } else if (next == ',') {
                 get(in, loc).IgnoreError();
@@ -559,7 +559,7 @@ Relax::DocStatus Relax::parse_sequence(std::istream& in, Location& loc) {
                 return error("expecting ',' or newline", loc);
             }
         }
-        doc->append(std::move(item)).IgnoreError();
+        doc->append(item).IgnoreError();
     }
     // Consume the closing bracket.
     get(in, loc).IgnoreError();
@@ -581,14 +581,14 @@ Relax::DocStatus Relax::parse_mapping(std::istream& in, Location& loc) {
         if (item == nullptr) break;
         if (!item->has_value()) {
             // Handle an empty mapping with a coments inside.
-            doc->append(std::move(item)).IgnoreError();
+            doc->append(item).IgnoreError();
             continue;
         }
-        kvpair->extend(std::move(item)).IgnoreError();
+        kvpair->extend(item).IgnoreError();
         ASSIGN_OR_RETURN(auto colon, parse_value(in, loc, ':'));
         if (colon) {
             // TODO: check that `colon` contains no content
-            kvpair->extend(std::move(colon)).IgnoreError();
+            kvpair->extend(colon).IgnoreError();
         }
         ASSIGN_OR_RETURN(ch, get(in, loc));
         if (ch != ':') {
@@ -599,7 +599,7 @@ Relax::DocStatus Relax::parse_mapping(std::istream& in, Location& loc) {
         if (value == nullptr) {
             return error("expecting value", loc);
         }
-        kvpair->extend(std::move(value)).IgnoreError();
+        kvpair->extend(value).IgnoreError();
 
         // Look for a comma or newline, possibly with comments.
         // If we observe either a comma or newline, then we are ready for the
@@ -614,7 +614,7 @@ Relax::DocStatus Relax::parse_mapping(std::istream& in, Location& loc) {
                 if (ch == '\n') eol = true;
             } else if (next == '#' || next == '/') {
                 if (eol) break;
-                std::unique_ptr<Document> comment;
+                std::shared_ptr<Document> comment;
                 if (next == '#') {
                     ASSIGN_OR_RETURN(comment,
                                      parse_hash_comment(in, loc, &eol));
@@ -622,7 +622,7 @@ Relax::DocStatus Relax::parse_mapping(std::istream& in, Location& loc) {
                     ASSIGN_OR_RETURN(comment,
                                      parse_slash_comment(in, loc, &eol));
                 }
-                kvpair->extend(std::move(comment)).IgnoreError();
+                kvpair->extend(comment).IgnoreError();
             } else if (next == ',') {
                 get(in, loc).IgnoreError();
                 comma = true;
@@ -638,7 +638,7 @@ Relax::DocStatus Relax::parse_mapping(std::istream& in, Location& loc) {
                 return error("expecting ',' or newline", loc);
             }
         }
-        doc->append(std::move(kvpair)).IgnoreError();
+        doc->append(kvpair).IgnoreError();
     }
     // Consume the closing curly brace.
     get(in, loc).IgnoreError();

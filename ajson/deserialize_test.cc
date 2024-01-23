@@ -13,7 +13,8 @@ TEST(Deserialize, Foo) {
     const std::string text = R"({
         "a": 1,
         "b": true,
-        "c": "greeting"        
+        "c": "greeting",
+        "d": 9999
     })";
     auto doc = Relax().parse(text);
     EXPECT_TRUE(doc.ok());
@@ -26,6 +27,7 @@ TEST(Deserialize, Foo) {
     EXPECT_EQ(foo.a, 1);
     EXPECT_EQ(foo.b, true);
     EXPECT_EQ(foo.c, "greeting");
+    EXPECT_EQ(*foo.d, 9999);
 }
 
 TEST(Deserialize, Bar) {

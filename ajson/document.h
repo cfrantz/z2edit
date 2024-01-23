@@ -33,7 +33,7 @@ enum class Base : uint8_t {
     Hex = 16,
 };
 
-std::string _debug_string(Document* d);
+static std::string _debug_string(Document* d);
 
 struct Location {
     uint32_t line = 0;
@@ -119,7 +119,7 @@ struct Bytes {
 };
 
 struct Mapping {
-    std::vector<std::unique_ptr<Document>> value;
+    std::vector<std::shared_ptr<Document>> value;
     Location location{};
     std::string debug_string() {
         std::string a = "Mapping(";
@@ -134,7 +134,7 @@ struct Mapping {
 };
 
 struct Sequence {
-    std::vector<std::unique_ptr<Document>> value;
+    std::vector<std::shared_ptr<Document>> value;
     Location location{};
     std::string debug_string() {
         std::string a = "Sequence(";
@@ -149,7 +149,7 @@ struct Sequence {
 };
 
 struct Compact {
-    std::vector<std::unique_ptr<Document>> value;
+    std::vector<std::shared_ptr<Document>> value;
     Location location{};
     std::string debug_string() {
         std::string a = "Compact(";
@@ -164,7 +164,7 @@ struct Compact {
 };
 
 struct Fragment {
-    std::vector<std::unique_ptr<Document>> value;
+    std::vector<std::shared_ptr<Document>> value;
     Location location{};
     std::string debug_string() {
         std::string a = "Fragment(";
@@ -400,7 +400,7 @@ struct Document {
     Document(document::Compact&& n) : node(std::move(n)) {}
     Document(document::Fragment&& n) : node(std::move(n)) {}
 
-    absl::Status append(std::unique_ptr<Document> item) {
+    absl::Status append(std::shared_ptr<Document> item) {
         if (std::holds_alternative<document::Mapping>(node)) {
             std::get<document::Mapping>(node).value.push_back(std::move(item));
             return absl::OkStatus();
@@ -418,7 +418,7 @@ struct Document {
             absl::StrCat("Cannot append to a document node ", type()));
     }
 
-    absl::Status extend(std::unique_ptr<Document> item) {
+    absl::Status extend(std::shared_ptr<Document> item) {
         if (std::holds_alternative<document::Fragment>(node)) {
             if (std::holds_alternative<document::Fragment>(item->node)) {
                 auto& items = std::get<document::Fragment>(item->node).value;
@@ -436,110 +436,110 @@ struct Document {
             absl::StrCat("Cannot append to a document node ", type()));
     }
 
-    static std::unique_ptr<Document> Comment(
+    static std::shared_ptr<Document> Comment(
         std::string value, CommentFormat format = CommentFormat::None,
         Location location = Location{}) {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Comment{value, format, location});
     }
 
-    static std::unique_ptr<Document> String(
+    static std::shared_ptr<Document> String(
         std::string value, StringFormat format = StringFormat::None,
         Location location = Location{}) {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::String{value, format, location});
     }
 
-    static std::unique_ptr<Document> Boolean(bool value,
+    static std::shared_ptr<Document> Boolean(bool value,
                                              Location location = Location{}) {
-        return std::make_unique<Document>(document::Boolean{value, location});
+        return std::make_shared<Document>(document::Boolean{value, location});
     }
 
-    static std::unique_ptr<Document> Int(uint64_t value, bool negative,
+    static std::shared_ptr<Document> Int(uint64_t value, bool negative,
                                          Base base = Base::Decimal,
                                          uint8_t size = 0,
                                          Location location = Location{}) {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Int{value, negative, base, size, location});
     }
 
-    static std::unique_ptr<Document> Int(uint64_t value,
+    static std::shared_ptr<Document> Int(uint64_t value,
                                          Base base = Base::Decimal,
                                          uint8_t size = 0,
                                          Location location = Location{}) {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Int{value, false, base, size, location});
     }
 
-    static std::unique_ptr<Document> Int(int64_t value,
+    static std::shared_ptr<Document> Int(int64_t value,
                                          Base base = Base::Decimal,
                                          uint8_t size = 0,
                                          Location location = Location{}) {
         bool neg = value < 0;
         uint64_t v = neg ? -value : value;
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Int{v, neg, base, size, location});
     }
 
-    static std::unique_ptr<Document> Real(double value,
+    static std::shared_ptr<Document> Real(double value,
                                           Location location = Location{}) {
-        return std::make_unique<Document>(document::Real{value, location});
+        return std::make_shared<Document>(document::Real{value, location});
     }
 
-    static std::unique_ptr<Document> Null(Location location = Location{}) {
-        return std::make_unique<Document>(document::Null{location});
+    static std::shared_ptr<Document> Null(Location location = Location{}) {
+        return std::make_shared<Document>(document::Null{location});
     }
 
-    static std::unique_ptr<Document> Bytes(std::vector<uint8_t> value,
+    static std::shared_ptr<Document> Bytes(std::vector<uint8_t> value,
                                            Location location = Location{}) {
-        return std::make_unique<Document>(document::Bytes{value, location});
+        return std::make_shared<Document>(document::Bytes{value, location});
     }
 
-    static std::unique_ptr<Document> Mapping(
-        std::vector<std::unique_ptr<Document>> value,
+    static std::shared_ptr<Document> Mapping(
+        std::vector<std::shared_ptr<Document>> value,
         Location location = Location{}) {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Mapping{std::move(value), location});
     }
 
-    static std::unique_ptr<Document> Sequence(
-        std::vector<std::unique_ptr<Document>> value,
+    static std::shared_ptr<Document> Sequence(
+        std::vector<std::shared_ptr<Document>> value,
         Location location = Location{}) {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Sequence{std::move(value), location});
     }
 
-    static std::unique_ptr<Document> Compact(std::unique_ptr<Document> v0,
+    static std::shared_ptr<Document> Compact(std::shared_ptr<Document> v0,
                                              Location location = Location{}) {
-        std::vector<std::unique_ptr<Document>> v;
+        std::vector<std::shared_ptr<Document>> v;
         v.push_back(std::move(v0));
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Compact{std::move(v), location});
     }
 
-    static std::unique_ptr<Document> Fragment(
-        std::unique_ptr<Document> v0 = nullptr,
-        std::unique_ptr<Document> v1 = nullptr,
-        std::unique_ptr<Document> v2 = nullptr,
-        std::unique_ptr<Document> v3 = nullptr,
+    static std::shared_ptr<Document> Fragment(
+        std::shared_ptr<Document> v0 = nullptr,
+        std::shared_ptr<Document> v1 = nullptr,
+        std::shared_ptr<Document> v2 = nullptr,
+        std::shared_ptr<Document> v3 = nullptr,
         Location location = Location{}) {
-        std::vector<std::unique_ptr<Document>> v;
+        std::vector<std::shared_ptr<Document>> v;
         if (v0) v.push_back(std::move(v0));
         if (v1) v.push_back(std::move(v1));
         if (v2) v.push_back(std::move(v2));
         if (v3) v.push_back(std::move(v2));
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Fragment{std::move(v), location});
     }
-    static std::unique_ptr<Document> Fragment(
-        std::vector<std::unique_ptr<Document>> value,
+    static std::shared_ptr<Document> Fragment(
+        std::vector<std::shared_ptr<Document>> value,
         Location location = Location{}) {
-        return std::make_unique<Document>(
+        return std::make_shared<Document>(
             document::Fragment{std::move(value), location});
     }
 };
 
-std::string _debug_string(Document* d) { return d->debug_string(); }
+static std::string _debug_string(Document* d) { return d->debug_string(); }
 
 }  // namespace ajson
 

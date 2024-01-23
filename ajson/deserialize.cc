@@ -176,6 +176,20 @@ absl::Status Deserializer::vector(Ref r, const Document* doc) {
     return absl::OkStatus();
 }
 
+absl::Status Deserializer::optional(Ref r, const Document* doc) {
+    if (doc->type() == document::Type::Null) {
+        RETURN_IF_ERROR(r.add("null"));
+    } else {
+        ASSIGN_OR_RETURN(size_t has_value, r.size());
+        if (!has_value) {
+            RETURN_IF_ERROR(r.add("value"));
+        }
+        ASSIGN_OR_RETURN(auto slot, r.getitem("value"));
+        RETURN_IF_ERROR(deserialize(slot, doc));
+    }
+    return absl::OkStatus();
+}
+
 absl::Status Deserializer::map(Ref r, const Document* doc) {
     if (doc->type() != document::Type::Mapping) {
         return error(
@@ -227,6 +241,8 @@ absl::Status Deserializer::deserialize(Ref r, const Document* doc) {
             return structure(r, doc);
         case ::types::TypeHint::Vector:
             return vector(r, doc);
+        case ::types::TypeHint::Optional:
+            return optional(r, doc);
         case ::types::TypeHint::Map:
             return map(r, doc);
         default:

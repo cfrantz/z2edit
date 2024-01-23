@@ -22,6 +22,7 @@ cc_library(
     ],
 )
 
+
 cc_test(
     name = "document_test",
     srcs = ["document_test.cc"],

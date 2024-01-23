@@ -20,7 +20,7 @@ Serializer::State Serializer::apply_annotation(const Annotation& a) {
     return old;
 }
 
-absl::StatusOr<std::unique_ptr<Document>> Serializer::primitive(Ref r) {
+absl::StatusOr<std::shared_ptr<Document>> Serializer::primitive(Ref r) {
     ASSIGN_OR_RETURN(auto type, r.type());
     if (type == "bool") {
         return Document::Boolean(*r.value<bool>());
@@ -52,12 +52,12 @@ absl::StatusOr<std::unique_ptr<Document>> Serializer::primitive(Ref r) {
     }
 }
 
-absl::StatusOr<std::unique_ptr<Document>> Serializer::structure(Ref r) {
-    std::vector<std::unique_ptr<Document>> m;
+absl::StatusOr<std::shared_ptr<Document>> Serializer::structure(Ref r) {
+    std::vector<std::shared_ptr<Document>> m;
     ASSIGN_OR_RETURN(auto fields, r.fields());
     for (const auto& [key, annotation] : fields) {
         auto state = apply_annotation(annotation);
-        std::unique_ptr<Document> comment;
+        std::shared_ptr<Document> comment;
         if (!annotation.comment.empty()) {
             comment = Document::Comment(std::string(annotation.comment));
         }
@@ -71,7 +71,7 @@ absl::StatusOr<std::unique_ptr<Document>> Serializer::structure(Ref r) {
     return Document::Mapping(std::move(m));
 }
 
-absl::StatusOr<std::unique_ptr<Document>> Serializer::vector(Ref r) {
+absl::StatusOr<std::shared_ptr<Document>> Serializer::vector(Ref r) {
     document::Sequence s;
     ASSIGN_OR_RETURN(size_t len, r.size());
     for (size_t i = 0; i < len; ++i) {
@@ -79,11 +79,22 @@ absl::StatusOr<std::unique_ptr<Document>> Serializer::vector(Ref r) {
         ASSIGN_OR_RETURN(auto value, serialize(item));
         s.value.emplace_back(std::move(value));
     }
-    return std::make_unique<Document>(std::move(s));
+    return std::make_shared<Document>(std::move(s));
 }
 
-absl::StatusOr<std::unique_ptr<Document>> Serializer::map(Ref r) {
-    std::vector<std::unique_ptr<Document>> m;
+absl::StatusOr<std::shared_ptr<Document>> Serializer::optional(Ref r) {
+    document::Sequence s;
+    ASSIGN_OR_RETURN(size_t has_value, r.size());
+    if (has_value) {
+        ASSIGN_OR_RETURN(auto item, r.getitem("value"));
+        return serialize(item);
+    } else {
+        return Document::Null();
+    }
+}
+
+absl::StatusOr<std::shared_ptr<Document>> Serializer::map(Ref r) {
+    std::vector<std::shared_ptr<Document>> m;
     ASSIGN_OR_RETURN(auto fields, r.fields());
     // TODO: deal with non-string map keys.
     for (const auto& [key, annotation] : fields) {
@@ -97,9 +108,9 @@ absl::StatusOr<std::unique_ptr<Document>> Serializer::map(Ref r) {
     return Document::Mapping(std::move(m));
 }
 
-absl::StatusOr<std::unique_ptr<Document>> Serializer::serialize(Ref r) {
+absl::StatusOr<std::shared_ptr<Document>> Serializer::serialize(Ref r) {
     ASSIGN_OR_RETURN(auto hint, r.hint());
-    std::unique_ptr<Document> doc;
+    std::shared_ptr<Document> doc;
     switch (hint) {
         case ::types::TypeHint::Primitive: {
             ASSIGN_OR_RETURN(doc, primitive(r));
@@ -111,6 +122,10 @@ absl::StatusOr<std::unique_ptr<Document>> Serializer::serialize(Ref r) {
         }
         case ::types::TypeHint::Vector: {
             ASSIGN_OR_RETURN(doc, vector(r));
+            break;
+        }
+        case ::types::TypeHint::Optional: {
+            ASSIGN_OR_RETURN(doc, optional(r));
             break;
         }
         case ::types::TypeHint::Map: {

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -148,6 +149,53 @@ class Ref {
 
     /** A container for vector types. */
     template <typename T>
+    class Optional : public _Ref {
+      public:
+        static Optional<T>* New(std::optional<T>& v, std::string_view name) {
+            return new Optional(&v, name, ::types::Type::of_val(v));
+        }
+        absl::StatusOr<Ref> getitem(std::string_view key) override;
+        absl::StatusOr<std::map<std::string, Annotation>> fields() override {
+            static std::map<std::string, Annotation> value = {
+                {"value", Annotation{}}};
+            if (!ptr_->has_value()) {
+                return value;
+            } else {
+                return std::map<std::string, Annotation>();
+            }
+        }
+        std::string_view type() override { return type_; }
+        std::string_view name() override { return name_; }
+        ::types::TypeHint hint() override {
+            return ::types::TypeHint::Optional;
+        }
+        size_t size() override { return ptr_->has_value(); }
+        void* ptr() override { return ptr_; }
+        absl::Status add(const std::string& key) {
+            if (key == "value") {
+                if (ptr_->has_value())
+                    return absl::AlreadyExistsError(
+                        "value already in optional");
+                ptr_->emplace();
+            } else if (key == "null") {
+                ptr_->reset();
+            } else {
+                return absl::InvalidArgumentError("bad key for optional");
+            }
+            return absl::OkStatus();
+        }
+
+      private:
+        Optional(std::optional<T>* v, std::string_view name,
+                 std::string_view type)
+            : ptr_(v), name_(name), type_(type) {}
+        std::optional<T>* ptr_;
+        std::string_view name_;
+        std::string_view type_;
+    };
+
+    /** A container for vector types. */
+    template <typename T>
     class Vector : public _Ref {
       public:
         static Vector<T>* New(std::vector<T>& v, std::string_view name) {
@@ -211,6 +259,12 @@ class Ref {
     template <typename T>
     static Ref New(std::vector<T>& v, std::string_view name) {
         return Ref(Vector<T>::New(v, name));
+    }
+
+    /** Constructs a Ref for optional types. */
+    template <typename T>
+    static Ref New(std::optional<T>& v, std::string_view name) {
+        return Ref(Optional<T>::New(v, name));
     }
 
     /** Constructs a Ref for map types. */
@@ -448,6 +502,17 @@ absl::StatusOr<std::map<std::string, Annotation>> Ref::Map<K, V>::fields() {
     static std::map<std::string_view, Annotation> none;
     return &none;
 #endif
+}
+
+template <typename T>
+absl::StatusOr<Ref> Ref::Optional<T>::getitem(std::string_view key) {
+    if (!ptr_->has_value()) {
+        return absl::NotFoundError("no value in optional");
+    } else if (key != "value") {
+        return absl::InvalidArgumentError("bad key for optional");
+    } else {
+        return Ref::New(ptr_->value(), "value");
+    }
 }
 
 }  // namespace ajson

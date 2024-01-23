@@ -2,6 +2,10 @@
 #define EMPTY_PROJECT_AJSON_TEST_TYPES_H
 
 #include <cstdint>
+#include <map>
+#include <optional>
+#include <string>
+#include <vector>
 
 #include "ajson/reflect.h"
 
@@ -19,6 +23,8 @@ struct Foo : public ajson::Reflection {
     uint32_t a = 170;
     bool b = false;
     std::string c = "hello";
+    std::optional<int32_t> d;
+
     // clang-format off
     OBJECT_CONFIG(
         /*typename=*/ Foo,
@@ -26,7 +32,8 @@ struct Foo : public ajson::Reflection {
         /*field_list ... */
         (a, .comment="Field A", .format=ajson::format::Hex),
         b,
-        c
+        c,
+        d
     )
     // clang-format on
 };
