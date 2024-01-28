@@ -4,6 +4,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "absl/status/statusor.h"
@@ -13,11 +14,12 @@ namespace types {
 
 enum class TypeHint {
     Void,
+    Map,
+    Optional,
     Primitive,
     Struct,
+    Variant,
     Vector,
-    Optional,
-    Map,
 };
 
 template <typename T>
@@ -43,6 +45,24 @@ struct Typename<std::optional<T>> {
     static absl::StatusOr<std::string> to_str(const T& val) {
         return absl::UnimplementedError(
             "Cannot convert a optional to a string");
+    }
+};
+
+template <typename... T>
+struct Typename<std::variant<T...>> {
+    static std::string_view name() {
+        static std::string name_;
+        if (name_.empty()) {
+            name_ = absl::StrCat("std::variant<...>");
+        }
+        return name_;
+    }
+    static absl::StatusOr<std::variant<T...>> from_str(absl::string_view str) {
+        return absl::UnimplementedError(
+            "Cannot convert a variant from a string");
+    }
+    static absl::StatusOr<std::string> to_str(const std::variant<T...>& val) {
+        return absl::UnimplementedError("Cannot convert a variant to a string");
     }
 };
 

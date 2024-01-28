@@ -9,6 +9,7 @@ namespace ajson {
 PYBIND11_MODULE(python_test_lib, m) {
     Foo::pybind11_bind(m);
     Bar::pybind11_bind(m);
+    Baz::pybind11_bind(m);
 }
 
 }  // namespace ajson

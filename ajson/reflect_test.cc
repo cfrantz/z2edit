@@ -69,6 +69,22 @@ TEST(RefOptionalTest, Primitive) {
     EXPECT_FALSE(v.getitem("value").ok());
 }
 
+// Tests that type-erased Ref works with optional.
+TEST(RefVariantTest, Primitive) {
+    std::variant<int32_t, std::string> var = 555;
+    Ref v = Ref::New(var, "var,int,string");
+    // EXPECT_EQ(*v.size(), 0);
+    EXPECT_TRUE(v.getitem(0).ok());
+    *v.getitem("int")->value<int32_t>() = 555;
+
+    EXPECT_TRUE(v.add("string").ok());
+    EXPECT_FALSE(v.getitem("int").ok());
+    EXPECT_TRUE(v.getitem(1).ok());
+    *v.getitem("string")->value<std::string>() = "hello";
+
+    EXPECT_EQ(std::get<1>(var), "hello");
+}
+
 // Tests that type-erased Ref works with maps.
 TEST(RefMapTest, String) {
     std::map<std::string, std::string> values = {
@@ -108,7 +124,7 @@ TEST(Reflection, StructFoo) {
     Foo f;
 
     auto fields = f._fields();
-    EXPECT_THAT(fields, ElementsAre(Key("a"), Key("b"), Key("c")));
+    EXPECT_THAT(fields, ElementsAre(Key("a"), Key("b"), Key("c"), Key("d")));
 
     auto z = f._get("z");
     EXPECT_FALSE(z.ok());

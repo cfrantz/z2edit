@@ -2,6 +2,7 @@
 #define EMPTY_PROJECT_AJSON_SERIALIZE_H
 
 #include <memory>
+#include <string>
 
 #include "absl/status/statusor.h"
 #include "ajson/document.h"
@@ -16,6 +17,7 @@ class Serializer {
   private:
     absl::StatusOr<std::shared_ptr<Document>> primitive(Ref r);
     absl::StatusOr<std::shared_ptr<Document>> structure(Ref r);
+    absl::StatusOr<std::shared_ptr<Document>> variant(Ref r);
     absl::StatusOr<std::shared_ptr<Document>> vector(Ref r);
     absl::StatusOr<std::shared_ptr<Document>> optional(Ref r);
     absl::StatusOr<std::shared_ptr<Document>> map(Ref r);

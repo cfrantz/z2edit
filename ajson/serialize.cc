@@ -63,9 +63,8 @@ absl::StatusOr<std::shared_ptr<Document>> Serializer::structure(Ref r) {
         }
         ASSIGN_OR_RETURN(auto item, r.getitem(key));
         ASSIGN_OR_RETURN(auto value, serialize(item));
-        auto frag = Document::Fragment(std::move(comment),
-                                       Document::String(key), std::move(value));
-        m.emplace_back(std::move(frag));
+        auto frag = Document::Fragment(comment, Document::String(key), value);
+        m.push_back(frag);
         state_ = state;
     }
     return Document::Mapping(std::move(m));
@@ -77,7 +76,7 @@ absl::StatusOr<std::shared_ptr<Document>> Serializer::vector(Ref r) {
     for (size_t i = 0; i < len; ++i) {
         ASSIGN_OR_RETURN(auto item, r.getitem(i));
         ASSIGN_OR_RETURN(auto value, serialize(item));
-        s.value.emplace_back(std::move(value));
+        s.value.push_back(value);
     }
     return std::make_shared<Document>(std::move(s));
 }
@@ -93,6 +92,16 @@ absl::StatusOr<std::shared_ptr<Document>> Serializer::optional(Ref r) {
     }
 }
 
+absl::StatusOr<std::shared_ptr<Document>> Serializer::variant(Ref r) {
+    std::vector<std::shared_ptr<Document>> m;
+    ASSIGN_OR_RETURN(auto item, r.getitem("*"));
+    ASSIGN_OR_RETURN(auto key, item.name());
+    ASSIGN_OR_RETURN(auto value, serialize(item));
+    auto frag = Document::Fragment(Document::String(std::string(key)), value);
+    m.push_back(frag);
+    return Document::Mapping(std::move(m));
+}
+
 absl::StatusOr<std::shared_ptr<Document>> Serializer::map(Ref r) {
     std::vector<std::shared_ptr<Document>> m;
     ASSIGN_OR_RETURN(auto fields, r.fields());
@@ -101,8 +110,8 @@ absl::StatusOr<std::shared_ptr<Document>> Serializer::map(Ref r) {
         auto state = apply_annotation(annotation);
         ASSIGN_OR_RETURN(auto item, r.getitem(key));
         ASSIGN_OR_RETURN(auto value, serialize(item));
-        auto frag = Document::Fragment(Document::String(key), std::move(value));
-        m.emplace_back(std::move(frag));
+        auto frag = Document::Fragment(Document::String(key), value);
+        m.push_back(frag);
         state_ = state;
     }
     return Document::Mapping(std::move(m));
@@ -118,6 +127,10 @@ absl::StatusOr<std::shared_ptr<Document>> Serializer::serialize(Ref r) {
         }
         case ::types::TypeHint::Struct: {
             ASSIGN_OR_RETURN(doc, structure(r));
+            break;
+        }
+        case ::types::TypeHint::Variant: {
+            ASSIGN_OR_RETURN(doc, variant(r));
             break;
         }
         case ::types::TypeHint::Vector: {
@@ -136,7 +149,7 @@ absl::StatusOr<std::shared_ptr<Document>> Serializer::serialize(Ref r) {
             return absl::UnimplementedError("Not implemented");
     }
     if (state_.compact) {
-        doc = Document::Compact(std::move(doc));
+        doc = Document::Compact(doc);
     }
     return doc;
 }

@@ -20,7 +20,7 @@
     IIF(IS_PAREN(x))(__field_map2 x, __field_map2(x, /*nothing*/))
 
 #define __get_field(fld, ...) \
-    if (key == #fld) return ::ajson::Ref::New(fld, #fld);
+    if (key == #fld) return ::ajson::Ref::New(fld, #fld, ::ajson::Annotation{__VA_ARGS__}.metadata);
 #define _get_field(x) \
     IIF(IS_PAREN(x))(__get_field x, __get_field(x))
 

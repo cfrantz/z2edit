@@ -190,11 +190,14 @@ absl::Status Deserializer::optional(Ref r, const Document* doc) {
     return absl::OkStatus();
 }
 
-absl::Status Deserializer::map(Ref r, const Document* doc) {
+absl::Status Deserializer::map(Ref r, const Document* doc, bool is_variant) {
     if (doc->type() != document::Type::Mapping) {
         return error(
             absl::StrCat("expecting mapping but found ", doc->type_name()),
             doc->location());
+    }
+    if (is_variant && doc->as<document::Mapping>()->value.size() != 1) {
+        return error("expecting only one value for variant", doc->location());
     }
     for (const auto& kvpair : doc->as<document::Mapping>()->value) {
         if (!kvpair->has_value()) continue;
@@ -239,6 +242,8 @@ absl::Status Deserializer::deserialize(Ref r, const Document* doc) {
             return primitive(r, doc);
         case ::types::TypeHint::Struct:
             return structure(r, doc);
+        case ::types::TypeHint::Variant:
+            return map(r, doc, /*is_variant=*/true);
         case ::types::TypeHint::Vector:
             return vector(r, doc);
         case ::types::TypeHint::Optional:

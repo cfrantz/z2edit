@@ -38,6 +38,7 @@ cc_library(
     hdrs = [
         "reflect.h",
         "reflect_macros.h",
+        "variant_helpers.h",
     ],
     deps = [
         ":types",

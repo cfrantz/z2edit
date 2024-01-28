@@ -18,7 +18,7 @@ class Deserializer {
     absl::Status structure(Ref r, const Document* doc);
     absl::Status vector(Ref r, const Document* doc);
     absl::Status optional(Ref r, const Document* doc);
-    absl::Status map(Ref r, const Document* doc);
+    absl::Status map(Ref r, const Document* doc, bool is_variant = false);
 };
 
 }  // namespace ajson

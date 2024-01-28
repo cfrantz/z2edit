@@ -34,5 +34,20 @@ TEST(JsonEncode, StructBar) {
     std::cout << *val << "\n";
 }
 
+TEST(JsonEncode, StructBaz) {
+    Baz baz;
+    JsonEncoder enc;
+    Serializer ser;
+
+    baz.var = 9999;
+    LOG(INFO) << "serialize";
+    auto doc = ser.serialize(Ref::New(baz, "baz"));
+    EXPECT_TRUE(doc.ok());
+    LOG(INFO) << "encode";
+    auto val = enc.encode(doc->get());
+    EXPECT_TRUE(val.ok());
+    std::cout << *val << "\n";
+}
+
 }  // namespace
 }  // namespace ajson

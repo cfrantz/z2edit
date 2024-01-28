@@ -55,7 +55,6 @@ Relax::DocStatus Relax::parse(std::istream& in) {
         }
         doc->extend(trailer).IgnoreError();
     }
-    LOG(INFO) << "returning type=" << int(doc->type()) << " @" << doc.get();
     return doc;
 }
 

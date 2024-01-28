@@ -45,6 +45,7 @@ struct Annotation {
     std::string_view type;
     std::string_view comment;
     Format format{};
+    std::string_view metadata;
 };
 
 class Reflection;
@@ -66,6 +67,7 @@ class Ref {
         virtual std::string_view name() = 0;
         virtual ::types::TypeHint hint() = 0;
         virtual size_t size() { return 0; }
+        virtual size_t index() { return 0; }
         virtual void* ptr() = 0;
         virtual absl::Status add(const std::string& key) = 0;
     };
@@ -117,7 +119,7 @@ class Ref {
 
       private:
         void* ptr_;
-        std::string_view name_;
+        std::string name_;
         std::string_view type_;
     };
 
@@ -143,11 +145,11 @@ class Ref {
         Structure(Reflection* v, std::string_view name, std::string_view type)
             : ptr_(v), name_(name), type_(type) {}
         Reflection* ptr_;
-        std::string_view name_;
+        std::string name_;
         std::string_view type_;
     };
 
-    /** A container for vector types. */
+    /** A container for optional types. */
     template <typename T>
     class Optional : public _Ref {
       public:
@@ -190,8 +192,48 @@ class Ref {
                  std::string_view type)
             : ptr_(v), name_(name), type_(type) {}
         std::optional<T>* ptr_;
-        std::string_view name_;
+        std::string name_;
         std::string_view type_;
+    };
+
+    /** A container for variant types. */
+    template <typename... T>
+    class Variant : public _Ref {
+      public:
+        static Variant<T...>* New(std::variant<T...>& v, std::string_view name,
+                                  std::string_view metadata) {
+            return new Variant(&v, name, ::types::Type::of_val(v), metadata);
+        }
+        absl::StatusOr<Ref> getitem(std::string_view key) override;
+        absl::StatusOr<Ref> getitem(size_t index) override;
+        absl::StatusOr<std::map<std::string, Annotation>> fields() override;
+        std::string_view type() override { return type_; }
+        std::string_view name() override { return name_; }
+        ::types::TypeHint hint() override { return ::types::TypeHint::Variant; }
+        size_t size() override {
+            return std::variant_size_v<std::variant<T...>>;
+        }
+        size_t index() override { return ptr_->index(); }
+        void* ptr() override { return ptr_; }
+        absl::Status add(const std::string& key) override;
+
+      private:
+        Variant(std::variant<T...>* v, std::string_view name,
+                std::string_view type, std::string_view metadata)
+            : ptr_(v), type_(type) {
+            if (!metadata.empty()) {
+                if (metadata.starts_with("variant:")) {
+                    fields_ = absl::StrSplit(metadata.substr(8), ',');
+                } else {
+                    LOG(ERROR) << "Variant '" << name
+                               << "' has bad metadata: " << metadata;
+                }
+            }
+        }
+        std::variant<T...>* ptr_;
+        std::string_view type_;
+        std::string name_;
+        std::vector<std::string> fields_;
     };
 
     /** A container for vector types. */
@@ -218,7 +260,7 @@ class Ref {
         Vector(std::vector<T>* v, std::string_view name, std::string_view type)
             : ptr_(v), name_(name), type_(type) {}
         std::vector<T>* ptr_;
-        std::string_view name_;
+        std::string name_;
         std::string_view type_;
     };
 
@@ -247,7 +289,7 @@ class Ref {
             : ptr_(v), name_(name), type_(type) {}
         std::map<K, V>* ptr_;
         std::map<std::string, Annotation> keys_;
-        std::string_view name_;
+        std::string name_;
         std::string_view type_;
     };
 
@@ -255,64 +297,119 @@ class Ref {
     Ref(_Ref* v) : ref_(v) {}
 
   public:
+    /** Constructs a Ref for variant types. */
+    template <typename... T>
+    static Ref New(std::variant<T...>& v, std::string_view name,
+                   std::string_view metadata = "") {
+        return Ref(Variant<T...>::New(v, name, metadata));
+    }
+
     /** Constructs a Ref for vector types. */
     template <typename T>
-    static Ref New(std::vector<T>& v, std::string_view name) {
+    static Ref New(std::vector<T>& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "Vector '" << name << "' cannot accept metadata.";
         return Ref(Vector<T>::New(v, name));
     }
 
     /** Constructs a Ref for optional types. */
     template <typename T>
-    static Ref New(std::optional<T>& v, std::string_view name) {
+    static Ref New(std::optional<T>& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "Optional '" << name << "' cannot accept metadata.";
         return Ref(Optional<T>::New(v, name));
     }
 
     /** Constructs a Ref for map types. */
     template <typename K, typename V>
-    static Ref New(std::map<K, V>& v, std::string_view name) {
+    static Ref New(std::map<K, V>& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "Map '" << name << "' cannot accept metadata.";
         return Ref(Map<K, V>::New(v, name));
     }
 
     /** Constructs a Ref for struct types. */
     template <typename T>
-    static Ref New(T& v, std::string_view name) {
+    static Ref New(T& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "Structure '" << name << "' cannot accept metadata.";
         return Ref(Structure::New(v, name));
     }
 
-    static Ref New(bool& v, std::string_view name) {
+    static Ref New(bool& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "bool '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(uint8_t& v, std::string_view name) {
+    static Ref New(uint8_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "uint8_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(uint16_t& v, std::string_view name) {
+    static Ref New(uint16_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "uint16_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(uint32_t& v, std::string_view name) {
+    static Ref New(uint32_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "uint32_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(uint64_t& v, std::string_view name) {
+    static Ref New(uint64_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "uint64_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(int8_t& v, std::string_view name) {
+    static Ref New(int8_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "int8_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(int16_t& v, std::string_view name) {
+    static Ref New(int16_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "int16_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(int32_t& v, std::string_view name) {
+    static Ref New(int32_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "int32_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(int64_t& v, std::string_view name) {
+    static Ref New(int64_t& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "int64_t '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(float& v, std::string_view name) {
+    static Ref New(float& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "float '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(double& v, std::string_view name) {
+    static Ref New(double& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "double '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
-    static Ref New(std::string& v, std::string_view name) {
+    static Ref New(std::string& v, std::string_view name,
+                   std::string_view metadata = "") {
+        if (!metadata.empty())
+            LOG(ERROR) << "string '" << name << "' cannot accept metadata.";
         return Ref(new Primitive(v, name));
     }
 
@@ -396,6 +493,11 @@ class Ref {
         if (!ref_) return absl::UnknownError("Ref: internal ref is nullptr");
         return ref_->size();
     }
+    /** Gets the current index of a Ref (ie: variant). */
+    absl::StatusOr<size_t> index() {
+        if (!ref_) return absl::UnknownError("Ref: internal ref is nullptr");
+        return ref_->index();
+    }
     /** Gets field name of the Ref. */
     absl::StatusOr<std::string_view> name() {
         if (!ref_) return absl::UnknownError("Ref: internal ref is nullptr");
@@ -453,8 +555,7 @@ absl::StatusOr<Ref> Ref::Vector<T>::getitem(std::string_view key) {
     if (absl::SimpleAtoi(key, &index)) {
         return getitem(index);
     } else {
-        return absl::InvalidArgumentError(
-            absl::StrCat("Bad key for Vector: ", key));
+        return absl::NotFoundError(absl::StrCat("bad key: ", key));
     }
 }
 
@@ -463,8 +564,7 @@ absl::StatusOr<Ref> Ref::Vector<T>::getitem(size_t index) {
     if (index < ptr_->size()) {
         return Ref::New(ptr_->at(index), absl::StrCat(index));
     } else {
-        return absl::InvalidArgumentError(
-            absl::StrCat("Bad index for Vector: ", index));
+        return absl::NotFoundError(absl::StrCat("bad index: ", index));
     }
 }
 
@@ -513,6 +613,66 @@ absl::StatusOr<Ref> Ref::Optional<T>::getitem(std::string_view key) {
     } else {
         return Ref::New(ptr_->value(), "value");
     }
+}
+
+#include "ajson/variant_helpers.h"
+
+template <typename... T>
+absl::StatusOr<Ref> Ref::Variant<T...>::getitem(std::string_view key) {
+    size_t index = 0;
+    if (key == "*") {
+        return getitem(SIZE_MAX);
+    } else if (absl::SimpleAtoi(key, &index)) {
+        return getitem(index);
+    } else {
+        for (; index < fields_.size(); ++index) {
+            if (key == fields_[index]) {
+                return getitem(index);
+            }
+        }
+    }
+    return absl::NotFoundError(absl::StrCat("unknown variant: ", key));
+}
+
+template <typename... T>
+absl::StatusOr<Ref> Ref::Variant<T...>::getitem(size_t index) {
+    if (index == SIZE_MAX) index = ptr_->index();
+    std::string key;
+    if (index < fields_.size()) {
+        key = fields_[index];
+    } else {
+        LOG(ERROR) << "Variant '" << name_
+                   << "' does not have a name for variant " << index;
+        key = absl::StrCat(index);
+    }
+    return internal::VariantHelper<
+        std::variant_size_v<std::variant<T...>>>::get(index, key, *ptr_);
+}
+
+template <typename... T>
+absl::StatusOr<std::map<std::string, Annotation>> Ref::Variant<T...>::fields() {
+    std::map<std::string, Annotation> fields;
+    return fields;
+}
+
+template <typename... T>
+absl::Status Ref::Variant<T...>::add(const std::string& key) {
+    size_t index = 0;
+    if (absl::SimpleAtoi(key, &index)) {
+        return internal::VariantHelper<
+            std::variant_size_v<std::variant<T...>>>::emplace(index, *ptr_);
+    } else {
+        for (; index < fields_.size(); ++index) {
+            if (key == fields_[index]) {
+                return internal::VariantHelper<
+                    std::variant_size_v<std::variant<T...>>>::emplace(index,
+                                                                      *ptr_);
+            }
+        }
+        LOG(FATAL) << "Variant '" << name_ << "': unknown variant '" << key
+                   << "'.";
+    }
+    return absl::NotFoundError(absl::StrCat("unknown variant: ", key));
 }
 
 }  // namespace ajson

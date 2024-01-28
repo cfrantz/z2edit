@@ -56,5 +56,23 @@ TEST(Deserialize, Bar) {
     LOG(INFO) << *str;
 }
 
+TEST(Deserialize, Baz) {
+    const std::string text = R"({
+        "var": {
+            "sval": "hello there"
+        }
+    })";
+    auto doc = Relax().parse(text);
+    EXPECT_TRUE(doc.ok());
+
+    Baz baz;
+    Deserializer d;
+    auto result = d.deserialize(baz._ref(), doc->get());
+    if (!result.ok()) LOG(ERROR) << "baz: " << result;
+    EXPECT_TRUE(result.ok());
+    auto str = JsonEncoder().encode(baz);
+    LOG(INFO) << *str;
+}
+
 }  // namespace
 }  // namespace ajson

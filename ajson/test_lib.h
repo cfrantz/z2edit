@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "ajson/reflect.h"
@@ -78,5 +79,17 @@ struct Bar : public ajson::Reflection {
     // clang-format on
 };
 DEFINE_TYPE(Bar);
+
+struct Baz : public ajson::Reflection {
+    std::string name;
+    std::variant<int32_t, std::string, Foo> var;
+
+    OBJECT_CONFIG(
+        /*typename=*/Baz,
+        /*features=*/(reflection, maybe_pybind11),
+        /*field_list ... */
+        name, (var, .metadata = "variant:ival,sval,foo"))
+};
+DEFINE_TYPE(Baz);
 
 #endif  // EMPTY_PROJECT_AJSON_TEST_TYPES_H
