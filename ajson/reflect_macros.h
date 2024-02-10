@@ -47,9 +47,10 @@
     IIF(IS_PAREN(x))(__pybind11_registration x, __pybind11_registration(x))
 
 #define OBJECT_FEATURE_pybind11(typename_, ...) \
-    static void pybind11_bind(::pybind11::module_& pybind11_module_) { \
+    static ::pybind11::class_<typename_> \
+    pybind11_bind(::pybind11::module_& pybind11_module_) { \
         using Self = typename_; \
-        ::pybind11::class_<typename_>(pybind11_module_, #typename_) \
+        return ::pybind11::class_<typename_>(pybind11_module_, #typename_) \
             .def(::pybind11::init<>()) \
             APPLYX(_pybind11_registration, __VA_ARGS__) \
             ; \

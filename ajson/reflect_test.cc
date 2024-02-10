@@ -72,7 +72,7 @@ TEST(RefOptionalTest, Primitive) {
 // Tests that type-erased Ref works with optional.
 TEST(RefVariantTest, Primitive) {
     std::variant<int32_t, std::string> var = 555;
-    Ref v = Ref::New(var, "var,int,string");
+    Ref v = Ref::New(var, "var", "variant:int,string");
     // EXPECT_EQ(*v.size(), 0);
     EXPECT_TRUE(v.getitem(0).ok());
     *v.getitem("int")->value<int32_t>() = 555;

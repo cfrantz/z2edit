@@ -124,9 +124,9 @@ class Ref {
     };
 
     /** A container for struct types. */
+    template <typename T>
     class Structure : public _Ref {
       public:
-        template <typename T>
         static Structure* New(T& v, std::string_view name) {
             return new Structure(&v, name, ::types::Type::of_val(v));
         }
@@ -337,7 +337,7 @@ class Ref {
                    std::string_view metadata = "") {
         if (!metadata.empty())
             LOG(ERROR) << "Structure '" << name << "' cannot accept metadata.";
-        return Ref(Structure::New(v, name));
+        return Ref(Structure<T>::New(v, name));
     }
 
     static Ref New(bool& v, std::string_view name,
@@ -542,10 +542,13 @@ class Reflection {
     }
 };
 
-absl::StatusOr<Ref> Ref::Structure::getitem(std::string_view key) {
+template <typename T>
+absl::StatusOr<Ref> Ref::Structure<T>::getitem(std::string_view key) {
     return ptr_->_getitem(key);
 }
-absl::StatusOr<std::map<std::string, Annotation>> Ref::Structure::fields() {
+
+template <typename T>
+absl::StatusOr<std::map<std::string, Annotation>> Ref::Structure<T>::fields() {
     return ptr_->_fields();
 }
 
