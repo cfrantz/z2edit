@@ -37,25 +37,25 @@ absl::StatusOr<Stat> Stat::Link(const std::string& filename) {
     return s;
 }
 
-std::unique_ptr<File> File::Open(const std::string& filename,
+absl::StatusOr<std::unique_ptr<File>> File::Open(const std::string& filename,
                                  const std::string& mode) {
     FILE* fp = fopen(filename.c_str(), mode.c_str());
-    if (fp == nullptr) return nullptr;
+    if (fp == nullptr) return util::PosixStatus(errno);
     return std::unique_ptr<File>(new File(fp));
 }
 
 absl::Status File::GetContents(const std::string& filename,
                                std::string* contents) {
-    std::unique_ptr<File> f(Open(filename, "rb"));
-    if (f == nullptr) return util::PosixStatus(errno);
-    return f->Read(contents);
+    auto f = Open(filename, "rb");
+    if (!f.ok()) return f.status();
+    return (*f)->Read(contents);
 }
 
 absl::Status File::SetContents(const std::string& filename,
                                const std::string& contents) {
-    std::unique_ptr<File> f(Open(filename, "wb"));
-    if (f == nullptr) return util::PosixStatus(errno);
-    return f->Write(contents);
+    auto f = Open(filename, "rb");
+    if (!f.ok()) return f.status();
+    return (*f)->Write(contents);
 }
 
 std::string File::Basename(const std::string& path) {
@@ -133,6 +133,10 @@ absl::Status File::Read(void* buf, int64_t* len) {
         return util::PosixStatus(errno);
     }
     return absl::OkStatus();
+}
+
+absl::Status File::Read(void* buf, int64_t len) {
+    return Read(buf, &len);
 }
 
 absl::Status File::Read(std::string* buf, int64_t len) {

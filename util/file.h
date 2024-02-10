@@ -61,7 +61,7 @@ class Stat {
 
 class File {
   public:
-    static std::unique_ptr<File> Open(const std::string& filename,
+    static absl::StatusOr<std::unique_ptr<File>> Open(const std::string& filename,
                                       const std::string& mode);
     static absl::Status GetContents(const std::string& filename,
                                     std::string* contents);
@@ -90,6 +90,7 @@ class File {
     absl::Status Read(std::string* buf);
     absl::Status Read(std::string* buf, int64_t len);
     absl::Status Read(void* buf, int64_t* len);
+    absl::Status Read(void* buf, int64_t len);
     absl::Status Write(const std::string& buf);
     absl::Status Write(const std::string& buf, int64_t len);
     absl::Status Write(const void* buf, int64_t len);

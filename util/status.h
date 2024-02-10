@@ -1,6 +1,7 @@
 #ifndef EMPTY_PROJECT_UTIL_STATUS_H
 #define EMPTY_PROJECT_UTIL_STATUS_H
 
+#include <string>
 #include "util/macros.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -49,5 +50,9 @@ class StatusOrRef {
     absl::Status status_;
 
 };
+
+inline void status_exc(absl::Status status) {
+    if (!status.ok()) throw std::invalid_argument(std::string(status.message()));
+}
 
 #endif // EMPTY_PROJECT_UTIL_STATUS_H
