@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "nes/python.h"
 #include "app.h"
 
 namespace py = pybind11;
@@ -52,6 +53,8 @@ PYBIND11_MODULE(application, m) {
             std::map flags(all.cbegin(), all.cend());
             return flags;
     });
+
+    nes::nes_submodule(m);
 }
 
 }  // namespace project

@@ -1,3 +1,4 @@
 imgui.ini
 bazel-*
 uncommitted/**
+*.nes

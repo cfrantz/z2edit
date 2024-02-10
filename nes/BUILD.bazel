@@ -1,0 +1,51 @@
+load("@rules_python//python:py_test.bzl", "py_test")
+load("@pydeps//:requirements.bzl", "requirement")
+
+package(default_visibility = ["//visibility:public"])
+
+
+cc_library(
+    name = "address",
+    hdrs = ["address.h"],
+    srcs = ["address.cc"],
+    deps = [
+        "//ajson:reflect",
+        "@pybind11",
+        "@com_google_absl//absl/log",
+    ],
+)
+
+cc_test(
+    name = "address_test",
+    srcs = ["address_test.cc"],
+    linkopts = ["-lpython3.11"],
+    deps = [
+        ":address",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "nesfile",
+    hdrs = ["nesfile.h"],
+    srcs = ["nesfile.cc"],
+    deps = [
+        ":address",
+        "//ajson:reflect",
+        "//util:file",
+        "//util:status",
+        "@pybind11",
+    ],
+)
+
+cc_library(
+    name = "python",
+    srcs = ["python.cc"],
+    hdrs = ["python.h"],
+    deps = [
+        ":address",
+        ":nesfile",
+        "@pybind11",
+    ],
+)
