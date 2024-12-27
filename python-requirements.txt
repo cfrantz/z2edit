@@ -1,0 +1,6 @@
+pip
+ipython
+maturin
+patchelf
+clang
+ccsyspath
