@@ -2,21 +2,21 @@
 resolver = "2"
 members = [
     "rust/z2edit",
-#    "rust/imgui-rs/imgui",
-#    "rust/imgui-rs/imgui-sys",
-#    "rust/python_gui",
+    "rust/imgui-rs/imgui",
+    "rust/imgui-rs/imgui-sys",
+    "rust/python_gui",
 #    "rust/reflection",
 #    "rust/reflection_derive",
 ]
 
-#[workspace.dependencies]
-#imgui = {version="0.12.0", path="rust/imgui-rs/imgui"}
-#imgui-sys = {version="0.12.0", path="rust/imgui-rs/imgui-sys"}
-#
-#[patch.crates-io]
-#imgui = { path = "rust/imgui-rs/imgui" }
-#imgui-sys = { path = "rust/imgui-rs/imgui-sys" }
-#
-#[patch."https://github.com/imgui-rs/imgui-rs"]
-#imgui = { path = "rust/imgui-rs/imgui" }
-#imgui-sys = { path = "rust/imgui-rs/imgui-sys" }
+[workspace.dependencies]
+imgui = {version="0.12.0", path="rust/imgui-rs/imgui"}
+imgui-sys = {version="0.12.0", path="rust/imgui-rs/imgui-sys"}
+
+[patch.crates-io]
+imgui = { path = "rust/imgui-rs/imgui" }
+imgui-sys = { path = "rust/imgui-rs/imgui-sys" }
+
+[patch."https://github.com/imgui-rs/imgui-rs"]
+imgui = { path = "rust/imgui-rs/imgui" }
+imgui-sys = { path = "rust/imgui-rs/imgui-sys" }

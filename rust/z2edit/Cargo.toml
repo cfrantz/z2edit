@@ -9,4 +9,7 @@ name = "z2edit"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.23.3"
+python_gui = { path = "../python_gui" }
+imgui = { workspace = true, features = ["docking", "tables-api"] }
+pyo3 = { version="0.23.3", features=["anyhow"]}
+anyhow = { version = "1.0", features = ["backtrace"] }

@@ -4,3 +4,5 @@ maturin
 patchelf
 clang
 ccsyspath
+flake8
+black
