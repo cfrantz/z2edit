@@ -19,3 +19,4 @@ tests = [
 python-source = "python"
 features = ["pyo3/extension-module"]
 manifest-path = "rust/z2edit/Cargo.toml"
+module-name = "z2edit._z2edit"

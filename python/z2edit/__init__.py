@@ -1,6 +1,6 @@
-from .z2edit import *
+from ._z2edit import *
 
 
-__doc__ = z2edit.__doc__
-if hasattr(z2edit, "__all__"):
-    __all__ = z2edit.__all__
+__doc__ = _z2edit.__doc__
+if hasattr(_z2edit, "__all__"):
+    __all__ = _z2edit.__all__

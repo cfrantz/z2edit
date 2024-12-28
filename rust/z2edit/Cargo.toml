@@ -5,7 +5,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "z2edit"
+name = "_z2edit"
 crate-type = ["cdylib"]
 
 [dependencies]
@@ -13,3 +13,5 @@ python_gui = { path = "../python_gui" }
 imgui = { workspace = true, features = ["docking", "tables-api"] }
 pyo3 = { version="0.23.3", features=["anyhow"]}
 anyhow = { version = "1.0", features = ["backtrace"] }
+thiserror = "2.0.9"
+serde = { version = "1.0.217", features = ["derive"] }
