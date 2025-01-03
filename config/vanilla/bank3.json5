@@ -1,0 +1,26 @@
+{
+    bank: {
+        "3": {
+            palette: {
+                background: {
+                    name: "Towns",
+                    "0": { name: "Rauru/Nabooru",   address: {Prg: [3, 0x800e]}},
+                    "1": { name: "Ruto",            address: {Prg: [3, 0x801e]}},
+                    "2": { name: "Saria/New Kasuto",address: {Prg: [3, 0x802e]}},
+                    "3": { name: "Mido",            address: {Prg: [3, 0x803e]}},
+                    "4": { name: "Darunia",         address: {Prg: [3, 0x804e]}},
+                    "5": { name: "Kasuto",          address: {Prg: [3, 0x805e]}},
+                    "6": { name: "Indoors",         address: {Prg: [3, 0x806e]}},
+                    "7": { name: "Basement",        address: {Prg: [3, 0x807e]}},
+                },
+                sprite: {
+                    name: "Town Sprites",
+                    "0": { name: "Black Border",    address: {Prg: [3, 0x809e]}},
+                    "1": { name: "Dark Border",     address: {Prg: [3, 0x80ae]}},
+                    "2": { name: "Unused 2",        address: {Prg: [3, 0x80be]}},
+                    "3": { name: "Unused 3",        address: {Prg: [3, 0x80ce]}},
+                },
+            },
+        },
+    },
+}

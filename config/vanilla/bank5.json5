@@ -1,0 +1,23 @@
+{
+    bank: {
+        "5": {
+            palette: {
+                background: {
+                    name: "Great Palace (Outdoors)",
+                    "0": { name: "P7 (Great Palace)", address: {Prg: [5, 0x800e]}},
+                },
+                indoor: {
+                    name: "Great Palace (Indoors)",
+                    "0": { name: "P7 (Great Palace)", address: {Prg: [5, 0x801e]}},
+                },
+                sprite: {
+                    name: "Palace Sprites",
+                    "0": { name: "Black Border", address: {Prg: [5, 0x809e]}},
+                    "1": { name: "Dark Border",  address: {Prg: [5, 0x80ae]}},
+                    "2": { name: "Unused 2",     address: {Prg: [5, 0x80be]}},
+                    "3": { name: "Unused 3",     address: {Prg: [5, 0x80ce]}},
+                },
+            },
+        },
+    },
+}

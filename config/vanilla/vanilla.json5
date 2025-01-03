@@ -1,0 +1,11 @@
+{
+    name: "Vanilla",
+    // Include support is limited to inserting items into the "bank" field only.
+    include: [
+        "bank1.json5",
+        "bank2.json5",
+        "bank3.json5",
+        "bank4.json5",
+        "bank5.json5",
+    ],
+}

@@ -1,0 +1,33 @@
+{
+    bank: {
+        "4": {
+            palette: {
+                background: {
+                    name: "Palaces (Outdoors)",
+                    "0": { name: "P1 (Parapa)", address: {Prg: [4, 0x8470]}},
+                    "1": { name: "P2 (Midoro)", address: {Prg: [4, 0x8480]}},
+                    "2": { name: "P3 (Island)", address: {Prg: [4, 0x8490]}},
+                    "3": { name: "P4 (Maze)",   address: {Prg: [4, 0x84a0]}},
+                    "4": { name: "P5 (Water)",  address: {Prg: [4, 0x84b0]}},
+                    "5": { name: "P6 (Hidden)", address: {Prg: [4, 0x84c0]}},
+                },
+                indoor: {
+                    name: "Palaces (Indoors)",
+                    "0": { name: "P1 (Parapa)", address: {Prg: [4, 0xBF00]}},
+                    "1": { name: "P2 (Midoro)", address: {Prg: [4, 0xBF10]}},
+                    "2": { name: "P3 (Island)", address: {Prg: [4, 0xBF20]}},
+                    "3": { name: "P4 (Maze)",   address: {Prg: [4, 0xBF30]}},
+                    "4": { name: "P5 (Water)",  address: {Prg: [4, 0xBF40]}},
+                    "5": { name: "P6 (Hidden)", address: {Prg: [4, 0xBF50]}},
+                },
+                sprite: {
+                    name: "Palace Sprites",
+                    "0": { name: "Black Border", address: {Prg: [4, 0x809e]}},
+                    "1": { name: "Dark Border",  address: {Prg: [4, 0x80ae]}},
+                    "2": { name: "Unused 2",     address: {Prg: [4, 0x80be]}},
+                    "3": { name: "Unused 3",     address: {Prg: [4, 0x80ce]}},
+                },
+            },
+        },
+    },
+}

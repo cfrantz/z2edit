@@ -1,0 +1,27 @@
+{
+    bank: {
+        "2": {
+            palette: {
+                background: {
+                    name: "East Hyrule",
+                    "0": { name: "North Castle", address: {Prg: [2, 0x800e]}},
+                    "1": { name: "Cave",         address: {Prg: [2, 0x801e]}},
+                    "2": { name: "Desert",       address: {Prg: [2, 0x802e]}},
+                    "3": { name: "Grass",        address: {Prg: [2, 0x803e]}},
+                    "4": { name: "Forest",       address: {Prg: [2, 0x804e]}},
+                    "5": { name: "Swamp",        address: {Prg: [2, 0x805e]}},
+                    "6": { name: "Graveyard",    address: {Prg: [2, 0x806e]}},
+                    "7": { name: "Water",        address: {Prg: [2, 0x807e]}},
+                    "8": { name: "Dark Cave",    address: {Prg: [2, 0x808e]}},
+                },
+                sprite: {
+                    name: "East Hyrule Sprites",
+                    "0": { name: "Black Border", address: {Prg: [2, 0x809e]}},
+                    "1": { name: "Dark Border",  address: {Prg: [2, 0x80ae]}},
+                    "2": { name: "Unused 2",     address: {Prg: [2, 0x80be]}},
+                    "3": { name: "Unused 3",     address: {Prg: [2, 0x80ce]}},
+                },
+            },
+        },
+    },
+}

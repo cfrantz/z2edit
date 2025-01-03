@@ -12,6 +12,12 @@ pub enum Address {
     Cpu(u16),
 }
 
+impl Default for Address {
+    fn default() -> Self {
+        Address::Cpu(0)
+    }
+}
+
 #[pymethods]
 impl Address {
     pub fn offset(&self) -> usize {

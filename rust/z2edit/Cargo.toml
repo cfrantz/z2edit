@@ -11,7 +11,11 @@ crate-type = ["cdylib"]
 [dependencies]
 python_gui = { path = "../python_gui" }
 imgui = { workspace = true, features = ["docking", "tables-api"] }
-pyo3 = { version="0.23.3", features=["anyhow"]}
+pyo3 = { version="0.23.3", features=["anyhow", "indexmap", "serde"]}
 anyhow = { version = "1.0", features = ["backtrace"] }
 thiserror = "2.0.9"
 serde = { version = "1.0.217", features = ["derive"] }
+indexmap = { version = "2.7.0", features = ["serde"] }
+serde_annotate = { git = "https://github.com/lowRISC/serde-annotate" }
+log = "0.4.22"
+pyo3-log = "0.12.1"
