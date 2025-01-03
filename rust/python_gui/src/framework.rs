@@ -40,8 +40,9 @@ pub struct UiContext {
 impl UiContext {
     pub fn new(ui: &imgui::Ui) -> Self {
         unsafe {
+            // SAFETY: UiContext may not be held across frames.
             Self {
-                ui: std::mem::transmute(ui),
+                ui: std::mem::transmute::<&imgui::Ui, &'static imgui::Ui>(ui),
             }
         }
     }

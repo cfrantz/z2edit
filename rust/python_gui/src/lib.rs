@@ -13,7 +13,7 @@ pub fn as_submodule_of(m: &Bound<'_, PyModule>) -> PyResult<()> {
         let gui = Bound::from_owned_ptr_or_err(py, PyInit_gui())?;
         let gui = gui.downcast::<PyModule>()?;
         gui.add_class::<Framework>()?;
-        m.add_submodule(&gui)?;
+        m.add_submodule(gui)?;
         Ok(())
     })
 }
