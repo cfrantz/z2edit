@@ -19,3 +19,5 @@ indexmap = { version = "2.7.0", features = ["serde"] }
 serde_annotate = { git = "https://github.com/lowRISC/serde-annotate" }
 log = "0.4.22"
 pyo3-log = "0.12.1"
+serde_json = "1.0.134"
+typetag = "0.2.19"

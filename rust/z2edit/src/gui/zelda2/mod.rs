@@ -1,4 +1,3 @@
 pub mod banks;
 pub mod config;
-pub mod edit;
 pub mod palette;

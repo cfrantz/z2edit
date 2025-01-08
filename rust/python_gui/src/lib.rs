@@ -2,7 +2,7 @@ use pyo3::ffi;
 use pyo3::prelude::*;
 
 mod framework;
-pub use framework::Framework;
+pub use framework::{Framework, UiContext};
 
 extern "C" {
     fn PyInit_gui() -> *mut ffi::PyObject;

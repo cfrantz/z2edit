@@ -12,11 +12,11 @@ class Application(object):
         self.inner = None
         self.show_style_editor = False
         self.show_demo_window = False
+        self.windows = []
 
-    def extra_window(self, ui):
-        gui.begin("Python Window")
-        gui.text("Hello from Python!")
-        gui.end()
+
+    def load(self, config, rom):
+        self.windows.append(z2edit.ProjectGui(config, rom))
 
     def style_editor(self):
         if not self.show_style_editor:
@@ -66,7 +66,8 @@ class Application(object):
                 self.menu_bar()
                 self.style_editor()
                 self.demo_window()
-                self.extra_window(ui)
+                for window in self.windows:
+                    window.draw(ui)
                 self.inner.render_frame()
             else:
                 self.running = False
