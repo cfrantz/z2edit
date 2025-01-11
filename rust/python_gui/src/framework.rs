@@ -13,6 +13,8 @@ use sdl2::{
 };
 use send_wrapper::SendWrapper;
 
+use crate::Image;
+
 // Create a new glow context.
 fn glow_context(window: &Window) -> glow::Context {
     unsafe {
@@ -104,6 +106,7 @@ impl Framework {
         /* create platform and renderer */
         let platform = SdlPlatform::new(&mut imgui);
         let renderer = AutoRenderer::new(gl, &mut imgui).unwrap();
+        Image::initialize(renderer.gl_context());
 
         /* start main loop */
         let event_pump = sdl.event_pump().unwrap();
