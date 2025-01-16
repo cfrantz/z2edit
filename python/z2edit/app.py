@@ -1,10 +1,14 @@
 import argparse
 import IPython
 from threading import Thread
+import logging
 
 import z2edit
 from z2edit import gui
 
+LOG_LEVELS = {
+    "TRACE": 5,
+}
 
 class Application(object):
     def __init__(self):
@@ -61,6 +65,7 @@ class Application(object):
     def run(self):
         self.inner = gui.Framework("Z2Edit", 1280, 720)
         self.inner.set_scale(0.0)
+
         while self.running:
             if ui := self.inner.prepare_frame():
                 self.menu_bar()
@@ -73,6 +78,11 @@ class Application(object):
                 self.running = False
         self.inner = None
 
+    def interact(self):
+        a = self
+        IPython.embed()
+        self.running = False
+
 
 def main():
     p = argparse.ArgumentParser(prog="z2edit", description="Zelda2 Editor")
@@ -82,17 +92,22 @@ def main():
         action="store_true",
         help="Start an interactive Python shell",
     )
+    p.add_argument(
+        "--log",
+        type=str,
+        default="info",
+        help="Logging level",
+    )
     args = p.parse_args()
+    log = args.log.upper()
+    logging.getLogger().setLevel(LOG_LEVELS.get(log, log))
 
+    a = Application()
     if args.interactive:
-        a = Application()
-        thread = Thread(target=a.run)
-        thread.start()
-        IPython.embed()
-        a.running = False
-    else:
-        a = Application()
-        a.run()
+        # We start the interpreter on another thread because GUI resources
+        # always should be created/destroyed on the main thread.
+        Thread(target=a.interact).start()
+    a.run()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::path::Path;
 
 use anyhow::Result;
 use indexmap::IndexMap;
@@ -8,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::Error;
 use crate::nes::NesFile;
 use crate::zelda2::config::get_config;
-use crate::zelda2::edit::{Edit, EditList, GameData};
+use crate::zelda2::edit::EditList;
 
 pub mod config {
     use super::*;
@@ -27,12 +26,14 @@ pub mod config {
 
 impl config::GameBank {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+        log::debug!("GameBank::unpack {path}");
         for (k, v) in self.palette.iter() {
             v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
         Ok(())
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+        log::debug!("GameBank::pack {path}");
         for (k, v) in self.palette.iter() {
             v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -55,12 +56,14 @@ impl config::GameBank {
 
 impl config::GlobalBank {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+        log::debug!("GlobalBank::unpack {path}");
         for (k, v) in self.palette.iter() {
             v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
         Ok(())
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+        log::debug!("GlobalBank::pack {path}");
         for (k, v) in self.palette.iter() {
             v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
         }

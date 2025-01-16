@@ -5,13 +5,14 @@ use imgui::TreeNodeFlags;
 impl GuiTree for Game {
     fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
         let mut result = None;
+        result = result.or(self.chr.tree_node(ui, &format!("{path}/chr")));
         for (k, v) in self.bank.iter() {
             if ui.collapsing_header(format!("Bank {k}"), TreeNodeFlags::empty()) {
                 result = result.or(v.tree_node(ui, &format!("{path}/bank/{k}")));
             }
         }
         if ui.collapsing_header(format!("Global"), TreeNodeFlags::empty()) {
-            result = result.or(self.global.tree_node(ui, "{path}/global"));
+            result = result.or(self.global.tree_node(ui, &format!("{path}/global")));
         }
         result
     }

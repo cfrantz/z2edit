@@ -1,4 +1,3 @@
-use anyhow::Result;
 use pyo3::prelude::*;
 
 pub mod error;

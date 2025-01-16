@@ -1,7 +1,7 @@
 use crate::gui::{Gui, GuiTree};
 use crate::nes::NesFile;
 use crate::zelda2::config::Game;
-use crate::zelda2::edit::{Edit, EditList, GameData};
+use crate::zelda2::edit::EditList;
 use anyhow::Result;
 use pyo3::prelude::*;
 use python_gui::UiContext;
@@ -23,8 +23,6 @@ impl ProjectGui {
         let rom = NesFile::load(rom)?;
         let mut edits = EditList::default();
         config.unpack(&rom, "", &mut edits)?;
-        let x = serde_json::to_string_pretty(&edits)?;
-        log::info!("edits = {x}");
         Ok(Self {
             config,
             rom,

@@ -8,13 +8,15 @@ use serde::{Deserialize, Serialize};
 use crate::error::Error;
 use crate::nes::NesFile;
 use crate::zelda2::banks::config::{GameBank, GlobalBank};
-use crate::zelda2::edit::{Edit, EditList, GameData};
+use crate::zelda2::chr::config::ChrMemory;
+use crate::zelda2::edit::EditList;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Game {
     pub name: String,
     pub include: Vec<String>,
+    pub chr: ChrMemory,
     pub bank: IndexMap<String, GameBank>,
     pub global: GlobalBank,
 }
@@ -46,17 +48,21 @@ pub(super) fn get_config<T: Any>(item: &dyn Any) -> Result<&T> {
 
 impl Game {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+        log::debug!("Game unpack {path}");
+        self.chr.unpack(rom, &format!("{path}/chr"), edits)?;
         for (k, v) in self.bank.iter() {
             v.unpack(rom, &format!("{path}/bank/{k}"), edits)?;
         }
-        self.global.unpack(rom, "{path}/global", edits)?;
+        self.global.unpack(rom, &format!("{path}/global"), edits)?;
         Ok(())
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+        log::debug!("Game pack {path}");
+        self.chr.pack(rom, &format!("{path}/chr"), edits)?;
         for (k, v) in self.bank.iter() {
             v.pack(rom, &format!("{path}/bank/{k}"), edits)?;
         }
-        self.global.pack(rom, "{path}/global", edits)?;
+        self.global.pack(rom, &format!("{path}/global"), edits)?;
         Ok(())
     }
 
@@ -67,6 +73,7 @@ impl Game {
             .collect::<Vec<&str>>();
         match path.as_slice() {
             [] => get_config::<T>(self),
+            ["chr", ..] => self.chr.get::<T>(&path[1..]),
             ["bank", ref n, ..] => {
                 let bank = self
                     .bank
@@ -74,6 +81,7 @@ impl Game {
                     .ok_or(Error::NotFound(format!("bank/{n}")))?;
                 bank.get::<T>(&path[2..])
             }
+
             ["global", ..] => self.global.get::<T>(&path[1..]),
             _ => Err(Error::NotFound(format!("Game/{path:?}")).into()),
         }

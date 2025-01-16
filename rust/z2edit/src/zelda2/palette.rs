@@ -77,6 +77,7 @@ impl config::Palette {
 
 impl config::PaletteGroup {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+        log::debug!("PaletteGroup::unpack {path}");
         let mut pg = PaletteGroup::default();
         for (name, palette) in self.group.iter() {
             let length = palette.length.unwrap_or(16);
@@ -88,6 +89,7 @@ impl config::PaletteGroup {
     }
 
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+        log::debug!("PaletteGroup::pack {path}");
         if let Some(edit) = edits.get(path) {
             let pg = edit.data_ref::<PaletteGroup>()?;
             for (name, palette) in self.group.iter() {

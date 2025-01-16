@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum NesError {
-    #[error("Invalid Address")]
+    #[error("invalid address")]
     InvalidAddress,
+    #[error("negative bank not supported")]
+    NegativeBank,
 }

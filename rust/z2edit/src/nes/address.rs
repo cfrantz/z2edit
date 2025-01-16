@@ -1,3 +1,5 @@
+use super::NesError;
+use anyhow::{ensure, Result};
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -50,6 +52,29 @@ impl Address {
             Address::Chr(b, _) => Address::Chr(*b, offset as u16),
             Address::Chr1k(b, _) => Address::Chr1k(*b, offset as u16),
             Address::Cpu(_) => Address::Cpu(offset as u16),
+        }
+    }
+
+    pub fn norm_offset(&self) -> Result<usize> {
+        match self {
+            Address::File(x) => Ok(*x),
+            Address::Prg(b, x) => {
+                ensure!(*b >= 0, NesError::NegativeBank);
+                Ok((*b as usize) * 16384 + (*x as usize))
+            }
+            Address::Prg8k(b, x) => {
+                ensure!(*b >= 0, NesError::NegativeBank);
+                Ok((*b as usize) * 8192 + (*x as usize))
+            }
+            Address::Chr(b, x) => {
+                ensure!(*b >= 0, NesError::NegativeBank);
+                Ok((*b as usize) * 4096 + (*x as usize))
+            }
+            Address::Chr1k(b, x) => {
+                ensure!(*b >= 0, NesError::NegativeBank);
+                Ok((*b as usize) * 1024 + (*x as usize))
+            }
+            Address::Cpu(x) => Ok(*x as usize),
         }
     }
 

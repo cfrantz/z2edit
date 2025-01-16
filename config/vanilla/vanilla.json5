@@ -8,4 +8,8 @@
         "bank4.json5",
         "bank5.json5",
     ],
+    chr: {
+        schema: "Mmc1_4k",
+        banks: 32,
+    },
 }

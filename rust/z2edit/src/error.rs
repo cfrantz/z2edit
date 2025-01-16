@@ -8,4 +8,6 @@ pub enum Error {
     NotFound(String),
     #[error("not implemented: {0}")]
     NotImplemented(String),
+    #[error("configuration error: {0}")]
+    Configuration(String),
 }

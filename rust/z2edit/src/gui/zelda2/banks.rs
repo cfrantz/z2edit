@@ -1,6 +1,5 @@
 use crate::gui::GuiTree;
 use crate::zelda2::banks::config;
-use imgui::TreeNodeFlags;
 
 impl GuiTree for config::GameBank {
     fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
