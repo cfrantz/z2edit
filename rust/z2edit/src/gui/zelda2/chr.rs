@@ -1,5 +1,5 @@
 use crate::gui::project::ProjectGui;
-use crate::gui::{Gui, GuiTree};
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::zelda2::chr::{config, ChrBank, Layout};
 use anyhow::Result;
 
@@ -27,6 +27,9 @@ impl GuiTree for config::ChrMemory {
 }
 
 pub struct ChrBankEditor {
+    visible: Visibility,
+    error: ErrorDialog,
+    changed: bool,
     path: String,
     chr: ChrBank,
     image: Image,
@@ -36,6 +39,9 @@ pub struct ChrBankEditor {
 impl ChrBankEditor {
     pub fn new(chr: &ChrBank, path: &str) -> Result<Box<dyn Gui>> {
         Ok(Box::new(ChrBankEditor {
+            visible: Visibility::Visible,
+            error: ErrorDialog::default(),
+            changed: false,
             path: path.into(),
             chr: chr.clone(),
             image: chr.create_image(chr.border as u32, chr.layout)?,
@@ -83,9 +89,30 @@ impl ChrBankEditor {
 
 impl Gui for ChrBankEditor {
     fn draw(&mut self, ui: &imgui::Ui, project: &ProjectGui) -> Result<()> {
-        ui.window(format!("ChrBank##{}", self.path))
+        let mut visible = self.visible.as_bool();
+        if !visible {
+            return Ok(());
+        }
+        let result = ui
+            .window(format!("ChrBank##{}", self.path))
+            .opened(&mut visible)
+            .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
             .build(|| self.editor(ui, project))
-            .unwrap_or(Ok(()))
+            .unwrap_or(Ok(()));
+        self.error.draw(ui);
+        self.visible.change(visible, self.changed);
+        self.visible.draw(
+            "Palette Changed",
+            "There are unsaved chagnes in the Palette Editor.\nDo you want to discard them?",
+            ui,
+        );
+        result
+    }
+    fn wants_dispose(&self) -> bool {
+        self.visible == Visibility::Dispose
+    }
+    fn window_id(&self) -> u64 {
+        0
     }
 }

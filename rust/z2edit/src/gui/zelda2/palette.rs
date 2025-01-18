@@ -1,5 +1,5 @@
 use crate::gui::project::ProjectGui;
-use crate::gui::{Gui, GuiTree};
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::nes::hwpalette;
 use crate::zelda2::palette::{config, PaletteGroup};
 use anyhow::Result;
@@ -23,6 +23,9 @@ impl GuiTree for config::PaletteGroup {
 }
 
 pub struct PaletteGroupEditor {
+    visible: Visibility,
+    error: ErrorDialog,
+    changed: bool,
     path: String,
     palette: PaletteGroup,
 }
@@ -30,6 +33,9 @@ pub struct PaletteGroupEditor {
 impl PaletteGroupEditor {
     pub fn new(pg: &PaletteGroup, path: &str) -> Result<Box<dyn Gui>> {
         Ok(Box::new(PaletteGroupEditor {
+            visible: Visibility::Visible,
+            error: ErrorDialog::default(),
+            changed: false,
             path: path.into(),
             palette: pg.clone(),
         }))
@@ -102,6 +108,7 @@ impl PaletteGroupEditor {
                             style.pop();
                             if let Some(update) = Self::color_selector(&label, ui) {
                                 *color = update;
+                                self.changed = true;
                             }
                         }
                     }
@@ -114,9 +121,32 @@ impl PaletteGroupEditor {
 
 impl Gui for PaletteGroupEditor {
     fn draw(&mut self, ui: &imgui::Ui, project: &ProjectGui) -> Result<()> {
-        ui.window(format!("Palette##{}", self.path))
+        let mut visible = self.visible.as_bool();
+        if !visible {
+            return Ok(());
+        }
+        let result = ui
+            .window(format!("Palette##{}", self.path))
+            .opened(&mut visible)
+            .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
             .build(|| self.editor(ui, project))
-            .unwrap_or(Ok(()))
+            .unwrap_or(Ok(()));
+        self.error.draw(ui);
+        self.visible.change(visible, self.changed);
+        self.visible.draw(
+            "Palette Changed",
+            "There are unsaved chagnes in the Palette Editor.\nDo you want to discard them?",
+            ui,
+        );
+        result
+    }
+
+    fn wants_dispose(&self) -> bool {
+        self.visible == Visibility::Dispose
+    }
+
+    fn window_id(&self) -> u64 {
+        0
     }
 }

@@ -47,10 +47,18 @@ impl ProjectGui {
                     }
                 }
 
-                for window in self.windows.lock().unwrap().iter_mut() {
-                    match window.draw(ui, &self) {
+                let mut windows = self.windows.lock().unwrap();
+                let mut i = 0;
+                while i < windows.len() {
+                    match windows[i].draw(ui, &self) {
                         Ok(()) => {}
                         Err(e) => log::error!("Error editing: {e}"),
+                    }
+
+                    if windows[i].wants_dispose() {
+                        windows.remove(i);
+                    } else {
+                        i += 1;
                     }
                 }
             });
