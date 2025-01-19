@@ -1,8 +1,8 @@
 use crate::gui::GuiTree;
-use crate::zelda2::config::Game;
+use crate::zelda2::config::Config;
 use imgui::TreeNodeFlags;
 
-impl GuiTree for Game {
+impl GuiTree for Config {
     fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
         let mut result = None;
         result = result.or(self.chr.tree_node(ui, &format!("{path}/chr")));

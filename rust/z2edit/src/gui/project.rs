@@ -1,6 +1,6 @@
 use crate::gui::{Gui, GuiTree};
 use crate::nes::NesFile;
-use crate::zelda2::config::Game;
+use crate::zelda2::config::Config;
 use crate::zelda2::edit::EditList;
 use anyhow::Result;
 use pyo3::prelude::*;
@@ -11,7 +11,7 @@ use rfd::FileDialog;
 
 #[pyclass]
 pub struct ProjectGui {
-    pub config: Game,
+    pub config: Config,
     pub rom: NesFile,
     pub edits: EditList,
     pub windows: Mutex<Vec<Box<dyn Gui>>>,
@@ -75,7 +75,7 @@ impl ProjectGui {
 impl ProjectGui {
     #[new]
     fn new(config: &str, rom: &str) -> Result<Self> {
-        let config = Game::load(config)?;
+        let config = Config::load(config)?;
         let rom = NesFile::load(rom)?;
         let mut edits = EditList::default();
         config.unpack(&rom, "", &mut edits)?;
