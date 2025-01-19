@@ -2,6 +2,8 @@ import argparse
 import IPython
 from threading import Thread
 import logging
+import sys
+import os.path
 
 import z2edit
 from z2edit import gui
@@ -10,14 +12,15 @@ LOG_LEVELS = {
     "TRACE": 5,
 }
 
+
 class Application(object):
-    def __init__(self):
+    def __init__(self, dirs):
         self.running = True
         self.inner = None
         self.show_style_editor = False
         self.show_demo_window = False
         self.windows = []
-
+        self.dirs = dirs 
 
     def load(self, config, rom):
         self.windows.append(z2edit.ProjectGui(config, rom))
@@ -41,8 +44,20 @@ class Application(object):
         gui.begin_main_menu_bar()
 
         if gui.begin_menu("File"):
-            gui.menu_item("New")
-            gui.menu_item("Open")
+            if gui.menu_item("New"):
+                # FIXME: remember where user's vanilla zelda2 ROM is.
+                self.load(
+                    os.path.join(self.dirs.install, "config/vanilla/vanilla.json5"),
+                    os.path.join(self.dirs.install, "zelda2.nes"),
+                )
+
+            if gui.menu_item("Open"):
+                dlg = z2edit.FileDialog()
+                dlg.add_filter("Z2 Project", ["z2prj"])
+                dlg.add_filter("All", ["*"])
+                file = dlg.pick_file()
+                print(f"file = {file}")
+
             gui.menu_item("Save")
             gui.end_menu()
 
@@ -102,7 +117,12 @@ def main():
     log = args.log.upper()
     logging.getLogger().setLevel(LOG_LEVELS.get(log, log))
 
-    a = Application()
+    instdir = os.path.dirname(sys.argv[0])
+    if instdir.endswith("python/z2edit"):
+        instdir = os.path.normpath(os.path.join(instdir, "../.."))
+    z2edit.Directories.init(instdir)
+
+    a = Application(z2edit.Directories.get())
     if args.interactive:
         # We start the interpreter on another thread because GUI resources
         # always should be created/destroyed on the main thread.

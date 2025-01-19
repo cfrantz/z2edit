@@ -3,8 +3,8 @@ use std::path::Path;
 
 use anyhow::Result;
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
 use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 use crate::nes::NesFile;
