@@ -4,6 +4,7 @@ mod error_dialog;
 pub mod project;
 mod visibility;
 pub mod zelda2;
+//pub mod rfd_adapter;
 
 use error_dialog::ErrorDialog;
 use project::ProjectGui;

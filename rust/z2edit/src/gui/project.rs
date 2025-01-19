@@ -7,6 +7,8 @@ use pyo3::prelude::*;
 use python_gui::UiContext;
 use std::sync::Mutex;
 
+use rfd::FileDialog;
+
 #[pyclass]
 pub struct ProjectGui {
     pub config: Game,
@@ -15,27 +17,31 @@ pub struct ProjectGui {
     pub windows: Mutex<Vec<Box<dyn Gui>>>,
 }
 
-#[pymethods]
 impl ProjectGui {
-    #[new]
-    fn new(config: &str, rom: &str) -> Result<Self> {
-        let config = Game::load(config)?;
-        let rom = NesFile::load(rom)?;
-        let mut edits = EditList::default();
-        config.unpack(&rom, "", &mut edits)?;
-        Ok(Self {
-            config,
-            rom,
-            edits,
-            windows: Default::default(),
-        })
+    fn menu(&mut self, ui: &imgui::Ui) {
+        ui.menu_bar(|| {
+            self.menu_project(ui);
+        });
     }
 
-    fn draw(&mut self, ctx: &UiContext) {
-        let ui = ctx.ui;
+    fn menu_project(&mut self, ui: &imgui::Ui) {
+        ui.menu("Project", || {
+            if ui.menu_item("Save") {}
+            if ui.menu_item("Save As") {}
+            ui.separator();
+            if ui.menu_item("Export ROM") {}
+            if ui.menu_item("Export Patch") {}
+            ui.separator();
+            if ui.menu_item("Close") {}
+        });
+    }
+
+    fn draw(&mut self, ui: &imgui::Ui) {
         ui.window("Project")
+            .menu_bar(true)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
             .build(|| {
+                self.menu(ui);
                 if let Some(node) = self.config.tree_node(ui, "") {
                     if let Some(edit) = self.edits.get(&node) {
                         match edit.data.gui(&node) {
@@ -62,5 +68,27 @@ impl ProjectGui {
                     }
                 }
             });
+    }
+}
+
+#[pymethods]
+impl ProjectGui {
+    #[new]
+    fn new(config: &str, rom: &str) -> Result<Self> {
+        let config = Game::load(config)?;
+        let rom = NesFile::load(rom)?;
+        let mut edits = EditList::default();
+        config.unpack(&rom, "", &mut edits)?;
+        Ok(Self {
+            config,
+            rom,
+            edits,
+            windows: Default::default(),
+        })
+    }
+
+    #[pyo3(name = "draw")]
+    fn _draw(&mut self, ctx: &UiContext) {
+        self.draw(ctx.ui)
     }
 }
