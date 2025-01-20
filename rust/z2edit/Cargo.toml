@@ -25,3 +25,5 @@ typetag = "0.2.19"
 rand = "0.8.5"
 rfd = {version = "0.15.2", features = ["gtk3"],  default-features = false }
 directories = "6.0.0"
+sha2 = "0.10.8"
+hex = "0.4.3"

@@ -2,6 +2,7 @@ use anyhow::Result;
 
 mod error_dialog;
 pub mod file_dialog;
+pub mod preferences;
 pub mod project;
 mod visibility;
 pub mod zelda2;

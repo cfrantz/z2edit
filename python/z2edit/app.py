@@ -14,26 +14,20 @@ LOG_LEVELS = {
 
 
 class Application(object):
-    def __init__(self, dirs):
+    def __init__(self, args, dirs):
         self.running = True
         self.inner = None
         self.show_style_editor = False
         self.show_demo_window = False
         self.windows = []
         self.dirs = dirs 
+        self.preferences_file = os.path.join(self.dirs.config_dir, args.preferences)
+        self.preferences = z2edit.AppPreferences()
+        self.preferences.load(self.preferences_file)
+        self.preferences_gui = None;
 
     def load(self, config, rom):
         self.windows.append(z2edit.ProjectGui(config, rom))
-
-    def style_editor(self):
-        if not self.show_style_editor:
-            return
-        (window, self.show_style_editor) = gui.begin(
-            "Style Editor", self.show_style_editor
-        )
-        if window:
-            gui.show_style_editor(gui.get_style())
-        gui.end()
 
     def demo_window(self):
         if not self.show_demo_window:
@@ -65,8 +59,8 @@ class Application(object):
             gui.menu_item("Cut")
             gui.menu_item("Copy")
             gui.menu_item("Paste")
-            if gui.menu_item("Style Preferences"):
-                self.show_style_editor = True
+            if gui.menu_item("Preferences"):
+                self.preferences_gui.show()
             gui.end_menu()
 
         if gui.begin_menu("View"):
@@ -80,11 +74,14 @@ class Application(object):
     def run(self):
         self.inner = gui.Framework("Z2Edit", 1280, 720)
         self.inner.set_scale(0.0)
+        self.inner.background = self.preferences.background
+        self.inner.style = self.preferences.imgui_style
+        self.preferences_gui = z2edit.AppPreferencesGui(self.preferences_file)
 
         while self.running:
             if ui := self.inner.prepare_frame():
                 self.menu_bar()
-                self.style_editor()
+                self.preferences_gui.draw(ui)
                 self.demo_window()
                 for window in self.windows:
                     window.draw(ui)
@@ -113,6 +110,13 @@ def main():
         default="info",
         help="Logging level",
     )
+    p.add_argument(
+        "--preferences",
+        type=str,
+        default="preferences.json",
+        help="Preferences file (relative to $XDG_CONFIG_HOME/z2edit)",
+    )
+
     args = p.parse_args()
     log = args.log.upper()
     logging.getLogger().setLevel(LOG_LEVELS.get(log, log))
@@ -122,7 +126,7 @@ def main():
         instdir = os.path.normpath(os.path.join(instdir, "../.."))
     z2edit.Directories.init(instdir)
 
-    a = Application(z2edit.Directories.get())
+    a = Application(args, z2edit.Directories.get())
     if args.interactive:
         # We start the interpreter on another thread because GUI resources
         # always should be created/destroyed on the main thread.

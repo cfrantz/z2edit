@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use pyo3::prelude::*;
+use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -190,5 +191,9 @@ impl NesFile {
         self.write_bytes(address, value)?;
         self.write(address + value.len(), terminator)?;
         Ok(())
+    }
+
+    pub fn sha256(&self) -> String {
+        hex::encode(Sha256::digest(&self.data))
     }
 }
