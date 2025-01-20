@@ -1565,9 +1565,12 @@ dependencies = [
  "imgui-glow-renderer",
  "imgui-sdl2-support",
  "imgui-sys",
+ "indexmap",
  "pyo3",
  "sdl2",
  "send_wrapper",
+ "serde",
+ "serde_json",
  "winit",
  "zerocopy 0.8.14",
 ]

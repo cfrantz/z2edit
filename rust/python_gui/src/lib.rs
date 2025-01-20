@@ -3,8 +3,10 @@ use pyo3::prelude::*;
 
 mod framework;
 mod image;
+mod style;
 pub use framework::{Framework, UiContext};
 pub use image::{Color, Image};
+pub use style::{JsonDirection, JsonStyle};
 
 extern "C" {
     fn PyInit_gui() -> *mut ffi::PyObject;
@@ -17,6 +19,8 @@ pub fn as_submodule_of(m: &Bound<'_, PyModule>) -> PyResult<()> {
         gui.add_class::<Framework>()?;
         gui.add_class::<Color>()?;
         gui.add_class::<Image>()?;
+        gui.add_class::<JsonStyle>()?;
+        gui.add_class::<JsonDirection>()?;
         m.add_submodule(gui)?;
         Ok(())
     })

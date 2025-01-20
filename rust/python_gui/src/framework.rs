@@ -13,7 +13,7 @@ use sdl2::{
 };
 use send_wrapper::SendWrapper;
 
-use crate::Image;
+use crate::{Image, JsonStyle};
 
 // Create a new glow context.
 fn glow_context(window: &Window) -> glow::Context {
@@ -31,6 +31,8 @@ pub struct Framework {
     renderer: SendWrapper<AutoRenderer>,
     imgui: SendWrapper<Context>,
     dpi: f32,
+    #[pyo3(get, set)]
+    background: [f32; 3],
 }
 
 #[pyclass(unsendable)]
@@ -119,6 +121,7 @@ impl Framework {
             renderer: SendWrapper::new(renderer),
             imgui: SendWrapper::new(imgui),
             dpi,
+            background: [0.0625, 0.0625, 0.0625],
         })
     }
 
@@ -130,6 +133,16 @@ impl Framework {
         let style = self.imgui.style_mut();
         style.scale_all_sizes(scale);
         self.imgui.io_mut().font_global_scale = scale;
+    }
+
+    #[getter]
+    pub fn get_style(&self) -> JsonStyle {
+        JsonStyle::from(self.imgui.style())
+    }
+
+    #[setter]
+    pub fn set_style(&mut self, style: &JsonStyle) {
+        *self.imgui.style_mut() = imgui::Style::from(style);
     }
 
     pub fn prepare_frame(&mut self) -> Option<UiContext> {
@@ -153,7 +166,16 @@ impl Framework {
     pub fn render_frame(&mut self, py: Python<'_>) {
         py.allow_threads(|| {
             let draw_data = self.imgui.render();
-            unsafe { self.renderer.gl_context().clear(glow::COLOR_BUFFER_BIT) };
+            unsafe {
+                let gl = self.renderer.gl_context();
+                gl.clear_color(
+                    self.background[0],
+                    self.background[1],
+                    self.background[2],
+                    1.0,
+                );
+                gl.clear(glow::COLOR_BUFFER_BIT);
+            };
             if draw_data.draw_lists_count() > 0 {
                 self.renderer.render(draw_data).unwrap();
             }
