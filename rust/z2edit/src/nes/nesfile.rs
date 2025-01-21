@@ -8,8 +8,15 @@ use std::path::Path;
 use crate::nes::{Address, NesError};
 
 #[pyclass]
+#[derive(Default, Clone)]
 pub struct NesFile {
     data: Vec<u8>,
+}
+
+impl std::fmt::Debug for NesFile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "NesFile({})", self.sha256())
+    }
 }
 
 impl NesFile {

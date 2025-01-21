@@ -1,7 +1,7 @@
-use crate::gui::project::ProjectGui;
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::nes::hwpalette;
 use crate::zelda2::palette::{config, PaletteGroup};
+use crate::zelda2::project::Project;
 use anyhow::Result;
 
 use imgui::{TableColumnSetup, TableFlags};
@@ -72,7 +72,7 @@ impl PaletteGroupEditor {
         result
     }
 
-    fn editor(&mut self, ui: &imgui::Ui, project: &ProjectGui) -> Result<()> {
+    fn editor(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()> {
         let cfg = project.config.get::<config::PaletteGroup>(&self.path)?;
         if let Some(_table) = ui.begin_table_header_with_flags(
             self.path.as_str(),
@@ -120,7 +120,7 @@ impl PaletteGroupEditor {
 }
 
 impl Gui for PaletteGroupEditor {
-    fn draw(&mut self, ui: &imgui::Ui, project: &ProjectGui) -> Result<()> {
+    fn draw(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()> {
         let mut visible = self.visible.as_bool();
         if !visible {
             return Ok(());

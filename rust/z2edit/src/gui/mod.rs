@@ -1,14 +1,16 @@
 use anyhow::Result;
 
+use crate::zelda2::project::Project;
+
 mod error_dialog;
 pub mod file_dialog;
 pub mod preferences;
 pub mod project;
 mod visibility;
+pub mod wizard;
 pub mod zelda2;
 
 use error_dialog::ErrorDialog;
-use project::ProjectGui;
 use visibility::Visibility;
 
 pub trait GuiTree: Send + Sync + 'static {
@@ -16,7 +18,7 @@ pub trait GuiTree: Send + Sync + 'static {
 }
 
 pub trait Gui: Send + Sync + 'static {
-    fn draw(&mut self, ui: &imgui::Ui, project: &ProjectGui) -> Result<()>;
+    fn draw(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()>;
     fn wants_dispose(&self) -> bool;
     fn window_id(&self) -> u64;
 }

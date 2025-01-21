@@ -1,20 +1,20 @@
-use crate::gui::{Gui, GuiTree};
-use crate::nes::NesFile;
-use crate::zelda2::config::Config;
-use crate::zelda2::edit::EditList;
 use anyhow::Result;
 use pyo3::prelude::*;
 use python_gui::UiContext;
+use rfd::FileDialog;
 use std::sync::Mutex;
 
-use rfd::FileDialog;
+use crate::gui::{ErrorDialog, Gui, GuiTree};
+use crate::zelda2::project::Project;
 
 #[pyclass]
 pub struct ProjectGui {
-    pub config: Config,
-    pub rom: NesFile,
-    pub edits: EditList,
-    pub windows: Mutex<Vec<Box<dyn Gui>>>,
+    #[pyo3(get)]
+    project: Py<Project>,
+    #[pyo3(get, set)]
+    filename: String,
+    windows: Mutex<Vec<Box<dyn Gui>>>,
+    error: ErrorDialog,
 }
 
 impl ProjectGui {
@@ -26,8 +26,29 @@ impl ProjectGui {
 
     fn menu_project(&mut self, ui: &imgui::Ui) {
         ui.menu("Project", || {
-            if ui.menu_item("Save") {}
-            if ui.menu_item("Save As") {}
+            if ui.menu_item("Save") {
+                let result = if self.filename.is_empty() {
+                    self.save_as()
+                } else {
+                    self.save()
+                };
+                if let Err(e) = result {
+                    self.error.show(
+                        "Error Saving File",
+                        &format!("Error saving {:?}", self.filename),
+                        e,
+                    );
+                }
+            }
+            if ui.menu_item("Save As") {
+                if let Err(e) = self.save_as() {
+                    self.error.show(
+                        "Error Saving File",
+                        &format!("Error saving {:?}", self.filename),
+                        e,
+                    );
+                }
+            }
             ui.separator();
             if ui.menu_item("Export ROM") {}
             if ui.menu_item("Export Patch") {}
@@ -36,14 +57,15 @@ impl ProjectGui {
         });
     }
 
-    fn draw(&mut self, ui: &imgui::Ui) {
-        ui.window("Project")
+    fn draw<'p>(&mut self, py: Python<'p>, ui: &imgui::Ui) {
+        ui.window(format!("{}", self.project.borrow(py).name))
             .menu_bar(true)
-            .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
+            .size([1900.0, 900.0], imgui::Condition::FirstUseEver)
             .build(|| {
                 self.menu(ui);
-                if let Some(node) = self.config.tree_node(ui, "") {
-                    if let Some(edit) = self.edits.get(&node) {
+                let project = self.project.borrow(py);
+                if let Some(node) = project.config.tree_node(ui, "") {
+                    if let Some(edit) = project.edits.get(&node) {
                         match edit.data.gui(&node) {
                             Ok(editor) => self.windows.lock().unwrap().push(editor),
                             Err(e) => log::error!("Create editor gui: {e}"),
@@ -56,7 +78,7 @@ impl ProjectGui {
                 let mut windows = self.windows.lock().unwrap();
                 let mut i = 0;
                 while i < windows.len() {
-                    match windows[i].draw(ui, &self) {
+                    match windows[i].draw(ui, &*project) {
                         Ok(()) => {}
                         Err(e) => log::error!("Error editing: {e}"),
                     }
@@ -68,27 +90,47 @@ impl ProjectGui {
                     }
                 }
             });
+        self.error.draw(ui);
     }
 }
 
 #[pymethods]
 impl ProjectGui {
     #[new]
-    fn new(config: &str, rom: &str) -> Result<Self> {
-        let config = Config::load(config)?;
-        let rom = NesFile::load(rom)?;
-        let mut edits = EditList::default();
-        config.unpack(&rom, "", &mut edits)?;
+    fn new(project: Py<Project>) -> Result<Self> {
         Ok(Self {
-            config,
-            rom,
-            edits,
+            project,
+            filename: String::default(),
             windows: Default::default(),
+            error: ErrorDialog::default(),
         })
     }
 
     #[pyo3(name = "draw")]
-    fn _draw(&mut self, ctx: &UiContext) {
-        self.draw(ctx.ui)
+    fn _draw<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
+        self.draw(py, ctx.ui)
+    }
+
+    fn save_as(&mut self) -> Result<()> {
+        Python::with_gil(|py| {
+            if let Some(filename) = FileDialog::new()
+                .set_title(format!("Save As: {}", self.project.borrow(py).name))
+                .add_filter("Z2 Project", &["z2prj"])
+                .add_filter("All", &["*"])
+                .save_file()
+            {
+                self.filename = filename.to_string_lossy().into();
+                self.save()
+            } else {
+                Ok(())
+            }
+        })
+    }
+
+    fn save(&self) -> Result<()> {
+        Python::with_gil(|py| {
+            let project = self.project.borrow(py);
+            project.save(&self.filename)
+        })
     }
 }

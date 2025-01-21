@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::path::Path;
+use std::sync::OnceLock;
 
 use anyhow::Result;
 use indexmap::IndexMap;
@@ -12,10 +13,13 @@ use crate::zelda2::banks::config::{GameBank, GlobalBank};
 use crate::zelda2::chr::config::ChrMemory;
 use crate::zelda2::edit::EditList;
 
+static mut CONFIGS: OnceLock<IndexMap<String, Config>> = OnceLock::new();
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 #[pyclass]
 pub struct Config {
+    #[pyo3(get)]
     pub name: String,
     pub include: Vec<String>,
     pub chr: ChrMemory,
@@ -35,6 +39,48 @@ impl Config {
             game.bank.extend(data.bank);
         }
         Ok(game)
+    }
+
+    fn _get() -> &'static IndexMap<String, Config> {
+        unsafe { CONFIGS.get_or_init(IndexMap::default) }
+    }
+
+    fn _get_mut() -> &'static mut IndexMap<String, Config> {
+        let _ = Self::_get();
+        unsafe { CONFIGS.get_mut().unwrap() }
+    }
+}
+
+#[pymethods]
+impl Config {
+    #[staticmethod]
+    #[pyo3(name = "load")]
+    fn _load(path: &str) -> Result<()> {
+        let cfg = Self::load(path)?;
+        Self::_get_mut().insert(cfg.name.clone(), cfg);
+        Ok(())
+    }
+
+    #[staticmethod]
+    pub fn keys() -> Vec<String> {
+        Self::_get().keys().map(|s| s.clone()).collect()
+    }
+
+    #[staticmethod]
+    pub fn named(name: &str) -> Option<Config> {
+        Self::_get().get(name).cloned()
+    }
+
+    #[staticmethod]
+    pub fn insert(json: &str) -> Result<()> {
+        let cfg = serde_annotate::from_str::<Config>(json)?;
+        Self::_get_mut().insert(cfg.name.clone(), cfg);
+        Ok(())
+    }
+
+    #[getter]
+    pub fn get_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
     }
 }
 

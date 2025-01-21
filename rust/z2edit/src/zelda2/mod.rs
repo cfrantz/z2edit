@@ -3,3 +3,5 @@ pub mod chr;
 pub mod config;
 pub mod edit;
 pub mod palette;
+pub mod project;
+pub mod rom;

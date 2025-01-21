@@ -1,6 +1,6 @@
-use crate::gui::project::ProjectGui;
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::zelda2::chr::{config, ChrBank, Layout};
+use crate::zelda2::project::Project;
 use anyhow::Result;
 
 use imgui::TreeNodeFlags;
@@ -49,7 +49,7 @@ impl ChrBankEditor {
         }))
     }
 
-    fn editor(&mut self, ui: &imgui::Ui, _project: &ProjectGui) -> Result<()> {
+    fn editor(&mut self, ui: &imgui::Ui, _project: &Project) -> Result<()> {
         //let cfg = project.config.get::<config::PaletteGroup>(&self.path)?;
         let width = ui.push_item_width(100.0);
         if ui.input_scalar("Scale", &mut self.scale).step(1).build() {
@@ -88,7 +88,7 @@ impl ChrBankEditor {
 }
 
 impl Gui for ChrBankEditor {
-    fn draw(&mut self, ui: &imgui::Ui, project: &ProjectGui) -> Result<()> {
+    fn draw(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()> {
         let mut visible = self.visible.as_bool();
         if !visible {
             return Ok(());

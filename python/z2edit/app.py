@@ -25,9 +25,25 @@ class Application(object):
         self.preferences = z2edit.AppPreferences()
         self.preferences.load(self.preferences_file)
         self.preferences_gui = None;
+        self.wizard = None
+        if args.new:
+            self.wizard = z2edit.ProjectWizardGui()
+            self.wizard.done = True
 
-    def load(self, config, rom):
-        self.windows.append(z2edit.ProjectGui(config, rom))
+    def new_project(self):
+        project = z2edit.Project(self.wizard.name, self.wizard.rom, self.wizard.config, self.wizard.fix)
+        self.windows.append(z2edit.ProjectGui(project))
+        self.wizard = None
+
+    def load_project(self, filename):
+        if filename is None:
+            dlg = z2edit.FileDialog()
+            dlg.add_filter("Z2 Project", ["z2prj"])
+            dlg.add_filter("All", ["*"])
+            filename = dlg.pick_file()
+        if filename is not None:
+            project = z2edit.Project.load(filename)
+            self.windows.append(z2edit.ProjectGui(project))
 
     def demo_window(self):
         if not self.show_demo_window:
@@ -39,20 +55,12 @@ class Application(object):
 
         if gui.begin_menu("File"):
             if gui.menu_item("New"):
-                # FIXME: remember where user's vanilla zelda2 ROM is.
-                self.load(
-                    os.path.join(self.dirs.install, "config/vanilla/vanilla.json5"),
-                    os.path.join(self.dirs.install, "zelda2.nes"),
-                )
-
+                self.wizard = z2edit.ProjectWizardGui()
             if gui.menu_item("Open"):
-                dlg = z2edit.FileDialog()
-                dlg.add_filter("Z2 Project", ["z2prj"])
-                dlg.add_filter("All", ["*"])
-                file = dlg.pick_file()
-                print(f"file = {file}")
-
-            gui.menu_item("Save")
+                self.load_project(None)
+            gui.separator()
+            if gui.menu_item("Quit"):
+                self.running = False
             gui.end_menu()
 
         if gui.begin_menu("Edit"):
@@ -83,6 +91,10 @@ class Application(object):
                 self.menu_bar()
                 self.preferences_gui.draw(ui)
                 self.demo_window()
+                if self.wizard:
+                    if self.wizard.draw(ui):
+                        self.new_project()
+
                 for window in self.windows:
                     window.draw(ui)
                 self.inner.render_frame()
@@ -105,6 +117,11 @@ def main():
         help="Start an interactive Python shell",
     )
     p.add_argument(
+        "--new",
+        action="store_true",
+        help="Start a new project",
+    )
+    p.add_argument(
         "--log",
         type=str,
         default="info",
@@ -125,8 +142,10 @@ def main():
     if instdir.endswith("python/z2edit"):
         instdir = os.path.normpath(os.path.join(instdir, "../.."))
     z2edit.Directories.init(instdir)
+    dirs = z2edit.Directories.get()
+    z2edit.Config.load(os.path.join(dirs.install, "config/vanilla/vanilla.json5"))
 
-    a = Application(args, z2edit.Directories.get())
+    a = Application(args, dirs)
     if args.interactive:
         # We start the interpreter on another thread because GUI resources
         # always should be created/destroyed on the main thread.

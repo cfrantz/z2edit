@@ -1,13 +1,11 @@
-use anyhow::{anyhow, Result};
 use pyo3::prelude::*;
-use std::path::PathBuf;
-use std::sync::OnceLock;
 
 pub mod app_preferences;
 pub mod dirs;
 pub mod error;
 pub mod gui;
 pub mod nes;
+pub mod util;
 pub mod zelda2;
 
 pub use app_preferences::AppPreferences;
@@ -26,5 +24,8 @@ fn _z2edit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<gui::project::ProjectGui>()?;
     m.add_class::<gui::file_dialog::FileDialog>()?;
     m.add_class::<gui::preferences::AppPreferencesGui>()?;
+    m.add_class::<gui::wizard::ProjectWizardGui>()?;
+    m.add_class::<zelda2::config::Config>()?;
+    m.add_class::<zelda2::project::Project>()?;
     Ok(())
 }
