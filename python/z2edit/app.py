@@ -80,7 +80,7 @@ class Application(object):
         pass
 
     def run(self):
-        self.inner = gui.Framework("Z2Edit", 1280, 720)
+        self.inner = gui.Framework("Z2Edit", 1900, 900)
         self.inner.set_scale(0.0)
         self.inner.background = self.preferences.background
         self.inner.style = self.preferences.imgui_style

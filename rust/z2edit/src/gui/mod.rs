@@ -18,7 +18,7 @@ pub trait GuiTree: Send + Sync + 'static {
 }
 
 pub trait Gui: Send + Sync + 'static {
-    fn draw(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()>;
+    fn draw(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()>;
     fn wants_dispose(&self) -> bool;
     fn window_id(&self) -> u64;
 }

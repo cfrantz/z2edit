@@ -17,7 +17,7 @@ struct Inner {
 
 impl ErrorDialog {
     pub fn show(&self, title: &str, message: &str, error: Error) {
-        log::error!("{title}: {message} {error}");
+        log::error!("{title}: {message} {error:?}");
         let mut inner = self.inner.lock().unwrap();
         inner.id = rand::random();
         inner.title = title.into();
@@ -37,7 +37,7 @@ impl ErrorDialog {
                 .build(|| {
                     ui.text(format!("{}\n\n", inner.message));
                     if let Some(error) = &inner.error {
-                        ui.text(format!("{}", error));
+                        ui.text(format!("{error:?}"));
                     }
                     ui.separator();
                     if ui.button("Dismiss") {

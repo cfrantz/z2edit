@@ -131,7 +131,7 @@ impl config::ChrMemory {
                     for bank in 0..self.banks {
                         if let Some(edit) = edits.get(&format!("{path}/{bank}")) {
                             log::debug!("ChrMemory::pack {path}/{bank}");
-                            let _chr = edit.data_ref::<ChrMemory>()?;
+                            let _chr = edit.data_ref::<ChrBank>()?;
                             // Do it
                         }
                     }

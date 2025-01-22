@@ -6,8 +6,9 @@ use std::path::Path;
 
 use crate::error::Error;
 use crate::nes::NesFile;
+use crate::util::time::UTime;
 use crate::zelda2::config::Config;
-use crate::zelda2::edit::EditList;
+use crate::zelda2::edit::{EditList, GameData};
 use crate::zelda2::rom::FileResource;
 use crate::AppPreferences;
 
@@ -88,6 +89,31 @@ impl Project {
         std::fs::write(path, &doc).with_context(|| format!("Could not write {path:?}"))?;
         Ok(())
     }
+
+    fn pack(&self) -> Result<NesFile> {
+        let mut rom = self.rom.clone();
+        self.config.pack(&mut rom, "", &self.edits)?;
+        Ok(rom)
+    }
+
+    pub fn export_rom<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let rom = self
+            .pack()
+            .with_context(|| format!("Packing {}", self.name))?;
+        let path = path.as_ref();
+        rom.save(path).with_context(|| format!("Saving {path:?}"))
+    }
+
+    pub fn commit(&mut self, path: &str, data: Box<dyn GameData>) -> Result<()> {
+        let edit = self
+            .edits
+            .get_mut(path)
+            .ok_or_else(|| Error::NotFound(path.into()))?;
+        edit.data = data;
+        edit.meta.timestamp = UTime::now();
+        edit.meta.user = whoami::username();
+        Ok(())
+    }
 }
 
 #[pymethods]
@@ -113,5 +139,10 @@ impl Project {
     #[pyo3(name = "save")]
     fn _save(&self, path: &str) -> Result<()> {
         self.save(path)
+    }
+
+    #[pyo3(name = "export_rom")]
+    pub fn _export_rom(&self, path: &str) -> Result<()> {
+        self.export_rom(path)
     }
 }

@@ -52,14 +52,11 @@ impl Edit {
         T: GameData,
     {
         Ok(self.data.as_any().downcast_ref::<T>().ok_or_else(|| {
-            Error::Cast(
-                format!(
-                    "Cannot downcast {} to {}",
-                    self.data.name(),
-                    std::any::type_name::<T>()
-                )
-                .into(),
-            )
+            Error::Cast(format!(
+                "Cannot downcast {} to {}",
+                self.data.name(),
+                std::any::type_name::<T>()
+            ))
         })?)
     }
 }

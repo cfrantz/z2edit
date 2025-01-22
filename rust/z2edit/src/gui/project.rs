@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use pyo3::prelude::*;
 use python_gui::UiContext;
 use rfd::FileDialog;
@@ -49,8 +49,13 @@ impl ProjectGui {
                     );
                 }
             }
+
             ui.separator();
-            if ui.menu_item("Export ROM") {}
+            if ui.menu_item("Export ROM") {
+                if let Err(e) = self.export_rom() {
+                    self.error.show("Error Exporting ROM", "Error:", e);
+                }
+            }
             if ui.menu_item("Export Patch") {}
             ui.separator();
             if ui.menu_item("Close") {}
@@ -60,10 +65,10 @@ impl ProjectGui {
     fn draw<'p>(&mut self, py: Python<'p>, ui: &imgui::Ui) {
         ui.window(format!("{}", self.project.borrow(py).name))
             .menu_bar(true)
-            .size([1900.0, 900.0], imgui::Condition::FirstUseEver)
+            .size([1000.0, 800.0], imgui::Condition::FirstUseEver)
             .build(|| {
                 self.menu(ui);
-                let project = self.project.borrow(py);
+                let mut project = self.project.borrow_mut(py);
                 if let Some(node) = project.config.tree_node(ui, "") {
                     if let Some(edit) = project.edits.get(&node) {
                         match edit.data.gui(&node) {
@@ -78,7 +83,7 @@ impl ProjectGui {
                 let mut windows = self.windows.lock().unwrap();
                 let mut i = 0;
                 while i < windows.len() {
-                    match windows[i].draw(ui, &*project) {
+                    match windows[i].draw(ui, &mut *project) {
                         Ok(()) => {}
                         Err(e) => log::error!("Error editing: {e}"),
                     }
@@ -131,6 +136,22 @@ impl ProjectGui {
         Python::with_gil(|py| {
             let project = self.project.borrow(py);
             project.save(&self.filename)
+        })
+    }
+
+    fn export_rom(&mut self) -> Result<()> {
+        Python::with_gil(|py| {
+            let project = self.project.borrow(py);
+            if let Some(filename) = FileDialog::new()
+                .set_title(format!("Export ROM: {}", project.name))
+                .add_filter("NES ROM", &["nes"])
+                .add_filter("All", &["*"])
+                .save_file()
+            {
+                project.export_rom(&filename)
+            } else {
+                Ok(())
+            }
         })
     }
 }

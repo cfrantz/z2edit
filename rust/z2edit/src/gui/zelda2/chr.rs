@@ -49,7 +49,7 @@ impl ChrBankEditor {
         }))
     }
 
-    fn editor(&mut self, ui: &imgui::Ui, _project: &Project) -> Result<()> {
+    fn editor(&mut self, ui: &imgui::Ui, _project: &mut Project) -> Result<()> {
         //let cfg = project.config.get::<config::PaletteGroup>(&self.path)?;
         let width = ui.push_item_width(100.0);
         if ui.input_scalar("Scale", &mut self.scale).step(1).build() {
@@ -88,7 +88,7 @@ impl ChrBankEditor {
 }
 
 impl Gui for ChrBankEditor {
-    fn draw(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()> {
+    fn draw(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
         let mut visible = self.visible.as_bool();
         if !visible {
             return Ok(());

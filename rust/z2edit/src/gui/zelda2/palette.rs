@@ -72,7 +72,20 @@ impl PaletteGroupEditor {
         result
     }
 
-    fn editor(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()> {
+    fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
+        if ui.button("Commit") {
+            match project.commit(&self.path, Box::new(self.palette.clone())) {
+                Ok(()) => self.changed = false,
+                Err(e) => self.error.show(
+                    "Commit Error",
+                    &format!("Error comitting {:?}", self.path),
+                    e,
+                ),
+            }
+        }
+        ui.same_line();
+        ui.text(&self.path);
+
         let cfg = project.config.get::<config::PaletteGroup>(&self.path)?;
         if let Some(_table) = ui.begin_table_header_with_flags(
             self.path.as_str(),
@@ -120,7 +133,7 @@ impl PaletteGroupEditor {
 }
 
 impl Gui for PaletteGroupEditor {
-    fn draw(&mut self, ui: &imgui::Ui, project: &Project) -> Result<()> {
+    fn draw(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
         let mut visible = self.visible.as_bool();
         if !visible {
             return Ok(());
