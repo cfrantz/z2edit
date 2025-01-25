@@ -3,6 +3,7 @@
 # NES ROMs
 *.nes
 *.z2prj
+/private
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

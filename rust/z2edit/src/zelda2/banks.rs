@@ -11,6 +11,7 @@ use crate::zelda2::edit::EditList;
 
 pub mod config {
     use super::*;
+    use crate::zelda2::items::config::Items;
     use crate::zelda2::palette::config::PaletteGroup;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -20,6 +21,7 @@ pub mod config {
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct GlobalBank {
+        pub item: Items,
         pub palette: IndexMap<String, PaletteGroup>,
     }
 }
@@ -57,6 +59,7 @@ impl config::GameBank {
 impl config::GlobalBank {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
         log::debug!("GlobalBank::unpack {path}");
+        self.item.unpack(rom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
             v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -64,6 +67,7 @@ impl config::GlobalBank {
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("GlobalBank::pack {path}");
+        self.item.pack(rom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
             v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -72,6 +76,7 @@ impl config::GlobalBank {
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
         match path {
             [] => get_config::<T>(self),
+            ["item", ..] => self.item.get(&path[1..]),
             ["palette", ref n, ..] => {
                 let palette = self
                     .palette

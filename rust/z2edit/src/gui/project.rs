@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use pyo3::prelude::*;
 use python_gui::UiContext;
 use rfd::FileDialog;
