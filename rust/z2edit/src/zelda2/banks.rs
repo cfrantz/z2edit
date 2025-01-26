@@ -11,15 +11,19 @@ use crate::zelda2::edit::EditList;
 
 pub mod config {
     use super::*;
+    use crate::zelda2::enemies::config::EnemyGroup;
     use crate::zelda2::items::config::Items;
     use crate::zelda2::palette::config::PaletteGroup;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    #[serde(default)]
     pub struct GameBank {
         pub palette: IndexMap<String, PaletteGroup>,
+        pub enemy: IndexMap<String, EnemyGroup>,
     }
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    #[serde(default)]
     pub struct GlobalBank {
         pub item: Items,
         pub palette: IndexMap<String, PaletteGroup>,
@@ -32,12 +36,18 @@ impl config::GameBank {
         for (k, v) in self.palette.iter() {
             v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
+        for (k, v) in self.enemy.iter() {
+            v.unpack(rom, &format!("{path}/enemy/{k}"), edits)?;
+        }
         Ok(())
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("GameBank::pack {path}");
         for (k, v) in self.palette.iter() {
             v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
+        }
+        for (k, v) in self.enemy.iter() {
+            v.pack(rom, &format!("{path}/enemy/{k}"), edits)?;
         }
         Ok(())
     }
@@ -51,6 +61,14 @@ impl config::GameBank {
                     .ok_or(Error::NotFound(format!("palette/{n}")))?;
                 palette.get::<T>(&path[2..])
             }
+            ["enemy", ref n, ..] => {
+                let enemy = self
+                    .enemy
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("enemy/{n}")))?;
+                enemy.get::<T>(&path[2..])
+            }
+
             _ => Err(Error::NotFound(format!("GameBank/{path:?}")).into()),
         }
     }
