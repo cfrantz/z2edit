@@ -51,6 +51,74 @@
                                  -1,      -1,      -1, -1,
                             0x400AC, 0x400AC, 0x400AC, -1] },
             },
-        }
+        },
+        enemy_xp: {
+            lo: {Prg: [-1, 0xddc0]},
+            hi: {Prg: [-1, 0xdddc]},
+            graphics: {Prg: [-1, 0xdd4c]},
+        },
+        experience: {
+            "level_up": {
+                name: "Level Ups",
+                group: [
+                    { name: "Attack", address: {Prg: [0, 0x9671]}, graphics: {Prg: [0, 0x9e32]}, offset: -24,
+                      header: [
+                          "XP for Level",
+                          "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Level 7", "Level 8", "1 Up"
+                      ]
+                    },
+                    { name: "Magic",  address: {Prg: [0, 0x9679]}, graphics: {Prg: [0, 0x9e32]}, offset: -24},
+                    { name: "Life",   address: {Prg: [0, 0x9681]}, graphics: {Prg: [0, 0x9e32]}, offset: -24},
+                    { name: "Sword",  address: {Prg: [-1, 0xee6d]},
+                      header: [
+                          "Sword Power",
+                          "Level 1 ", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Level 7", "Level 8"
+                      ]
+                    },
+                ],
+            },
+            "damage_group": {
+                name: "Damage Groups",
+                group: [
+                    { name: "Damage Code 0", address: {Prg: [-1, 0xe2af]},
+                      header: [
+                          "Damage per Level",
+                          "Level 1 ", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Level 7", "Level 8"
+                      ]
+                    },
+                    { name: "Damage Code 1", address: {Prg: [-1, 0xe2b7]}},
+                    { name: "Damage Code 2", address: {Prg: [-1, 0xe2bf]}},
+                    { name: "Damage Code 3", address: {Prg: [-1, 0xe2c7]}},
+                    { name: "Damage Code 4", address: {Prg: [-1, 0xe2cf]}},
+                    { name: "Damage Code 5", address: {Prg: [-1, 0xe2d7]}},
+                    { name: "Damage Code 6", address: {Prg: [-1, 0xe2df]}},
+                    { name: "Damage Code 7", address: {Prg: [-1, 0xe2e7]}},
+                ],
+            },
+            "spell_costs": {
+                name: "Spell Costs",
+                group: [
+                    { name: "Shield",  address: {Prg: [0, 0x8d7b]}, game_text: {Prg: [0, 0x9c2a]},
+                      header: [
+                          "Magic per Level",
+                          "Level 1 ", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Level 7", "Level 8"
+                      ]
+                    },
+                    { name: "Jump",    address: {Prg: [0, 0x8d83]}, game_text: {Prg: [0, 0x9c38]}},
+                    { name: "Life",    address: {Prg: [0, 0x8d8b]}, game_text: {Prg: [0, 0x9c46]}},
+                    { name: "Fairy",   address: {Prg: [0, 0x8d93]}, game_text: {Prg: [0, 0x9c54]}},
+                    { name: "Fire",    address: {Prg: [0, 0x8d9b]}, game_text: {Prg: [0, 0x9c62]}},
+                    { name: "Reflect", address: {Prg: [0, 0x8da3]}, game_text: {Prg: [0, 0x9c70]}},
+                    { name: "Spell",   address: {Prg: [0, 0x8dab]}, game_text: {Prg: [0, 0x9c7e]}},
+                    { name: "Thunder", address: {Prg: [0, 0x8db3]}, game_text: {Prg: [0, 0x9c8c]}},
+                    { name: "Effect",  address: {Prg: [0, 0x8dbb]},
+                      header: [
+                          "Spell Effect",
+                          "Shield", "Jump", "Life", "Fairy", "Fire", "Reflect", "Spell", "Thunder"
+                      ]
+                    },
+                ],
+            },
+        },
     }
 }

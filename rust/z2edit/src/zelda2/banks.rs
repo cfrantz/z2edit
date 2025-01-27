@@ -12,6 +12,7 @@ use crate::zelda2::edit::EditList;
 pub mod config {
     use super::*;
     use crate::zelda2::enemies::config::EnemyGroup;
+    use crate::zelda2::experience::config::{EnemyExperience, ExperienceTableGroup};
     use crate::zelda2::items::config::Items;
     use crate::zelda2::palette::config::PaletteGroup;
 
@@ -27,6 +28,8 @@ pub mod config {
     pub struct GlobalBank {
         pub item: Items,
         pub palette: IndexMap<String, PaletteGroup>,
+        pub enemy_xp: EnemyExperience,
+        pub experience: IndexMap<String, ExperienceTableGroup>,
     }
 }
 
@@ -81,6 +84,13 @@ impl config::GlobalBank {
         for (k, v) in self.palette.iter() {
             v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
+        self.enemy_xp
+            .unpack(rom, &format!("{path}/enemy_xp"), edits)?;
+        for (k, v) in self.experience.iter() {
+            v.unpack(rom, &format!("{path}/experience/{k}"), edits)?;
+        }
+        self.enemy_xp
+            .unpack(rom, &format!("{path}/enemy_xp"), edits)?;
         Ok(())
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
@@ -89,6 +99,11 @@ impl config::GlobalBank {
         for (k, v) in self.palette.iter() {
             v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
+        for (k, v) in self.experience.iter() {
+            v.pack(rom, &format!("{path}/experience/{k}"), edits)?;
+        }
+        self.enemy_xp
+            .pack(rom, &format!("{path}/enemy_xp"), edits)?;
         Ok(())
     }
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
@@ -101,6 +116,14 @@ impl config::GlobalBank {
                     .get(*n)
                     .ok_or(Error::NotFound(format!("palette/{n}")))?;
                 palette.get::<T>(&path[2..])
+            }
+            ["enemy_xp", ..] => self.enemy_xp.get(&path[1..]),
+            ["experience", ref n, ..] => {
+                let experience = self
+                    .experience
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("experience/{n}")))?;
+                experience.get::<T>(&path[2..])
             }
             _ => Err(Error::NotFound(format!("GlobalBank/{path:?}")).into()),
         }
