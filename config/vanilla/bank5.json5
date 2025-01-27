@@ -17,6 +17,16 @@
                     "2": { name: "Unused 2",     address: {Prg: [5, 0x80be]}},
                     "3": { name: "Unused 3",     address: {Prg: [5, 0x80ce]}},
                 },
+                title: {
+                    name: "Title Screen",
+                    background: { name: "Background", address: {Prg: [5, 0xaf40]}},
+                    sprites:    { name: "Sprites",    address: {Prg: [5, 0xaf50]}},
+                },
+                select: {
+                    name: "Select Screen",
+                    background: { name: "Background", address: {Prg: [5, 0xbbf8]}, length: 4},
+                    sprites:    { name: "Sprites",    address: {Prg: [5, 0xbc08]}, length: 4},
+                },
             },
             enemy: {
                 "0": {
