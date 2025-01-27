@@ -20,6 +20,7 @@ class Application(object):
         self.show_style_editor = False
         self.show_demo_window = False
         self.windows = []
+        self.args = args
         self.dirs = dirs 
         self.preferences_file = os.path.join(self.dirs.config_dir, args.preferences)
         self.preferences = z2edit.AppPreferences()
@@ -81,7 +82,7 @@ class Application(object):
 
     def run(self):
         self.inner = gui.Framework("Z2Edit", 1900, 900)
-        self.inner.set_scale(0.0)
+        self.inner.set_scale(self.args.dpi)
         self.inner.background = self.preferences.background
         self.inner.style = self.preferences.imgui_style
         self.preferences_gui = z2edit.AppPreferencesGui(self.preferences_file)
@@ -117,10 +118,17 @@ def main():
         help="Start an interactive Python shell",
     )
     p.add_argument(
+        "--dpi",
+        type=float,
+        default=0.0,
+        help="Set the DPI scaling factor",
+    )
+    p.add_argument(
         "--new",
         action="store_true",
         help="Start a new project",
     )
+
     p.add_argument(
         "--log",
         type=str,
