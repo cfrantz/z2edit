@@ -8,3 +8,4 @@ pub mod items;
 pub mod palette;
 pub mod project;
 pub mod rom;
+pub mod start;

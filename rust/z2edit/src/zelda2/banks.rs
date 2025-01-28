@@ -15,6 +15,7 @@ pub mod config {
     use crate::zelda2::experience::config::{EnemyExperience, ExperienceTableGroup};
     use crate::zelda2::items::config::Items;
     use crate::zelda2::palette::config::PaletteGroup;
+    use crate::zelda2::start::config::StartValues;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     #[serde(default)]
@@ -30,6 +31,7 @@ pub mod config {
         pub palette: IndexMap<String, PaletteGroup>,
         pub enemy_xp: EnemyExperience,
         pub experience: IndexMap<String, ExperienceTableGroup>,
+        pub start: StartValues,
     }
 }
 
@@ -91,6 +93,7 @@ impl config::GlobalBank {
         }
         self.enemy_xp
             .unpack(rom, &format!("{path}/enemy_xp"), edits)?;
+        self.start.unpack(rom, &format!("{path}/start"), edits)?;
         Ok(())
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
@@ -104,6 +107,7 @@ impl config::GlobalBank {
         }
         self.enemy_xp
             .pack(rom, &format!("{path}/enemy_xp"), edits)?;
+        self.start.pack(rom, &format!("{path}/start"), edits)?;
         Ok(())
     }
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
@@ -125,6 +129,7 @@ impl config::GlobalBank {
                     .ok_or(Error::NotFound(format!("experience/{n}")))?;
                 experience.get::<T>(&path[2..])
             }
+            ["start", ..] => self.start.get(&path[1..]),
             _ => Err(Error::NotFound(format!("GlobalBank/{path:?}")).into()),
         }
     }

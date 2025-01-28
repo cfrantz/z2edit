@@ -135,5 +135,9 @@
                 ],
             },
         },
+        start: {
+            values: {Prg: [5, 0xbae3]},
+            lives: {Prg: [-1, 0xc359]},
+        }
     }
 }
