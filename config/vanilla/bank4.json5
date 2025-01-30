@@ -1,6 +1,27 @@
 {
     bank: {
         "4": {
+            drops: {
+                dropper: {
+                    "hidden_jar": {
+                        name: "Palace 1/2/5 Hidden Jar",
+                        enemy_group: "/bank/4/enemy/0",
+                        item: {Prg: [4, 0xb84c]},
+                    },
+                    "acid_dripper": {
+                        name: "Acid Dripper",
+                        enemy_group: "/bank/4/enemy/0",
+                        enemy: {Prg: [4, 0x9917]},
+                    },
+                    "hidden_jar_enemy": {
+                        name: "Palace 3/4/6 Hidden Jar or Enemy",
+                        enemy_group: "/bank/4/enemy/1",
+                        item: {Prg: [4, 0xaf6f]},
+                        enemy: {Prg: [4, 0xaf82]},
+                        hp: {Prg: [4, 0xaf7e]},
+                    },
+                },
+            },
             palette: {
                 background: {
                     name: "Palaces (Outdoors)",

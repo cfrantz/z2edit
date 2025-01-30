@@ -1,6 +1,17 @@
 {
     bank: {
         "5": {
+            drops: {
+                dropper: {
+                    "hidden_jar_enemy": {
+                        name: "Great Palace Hidden Jar or Enemy",
+                        enemy_group: "/bank/5/enemy/0",
+                        item: {Prg: [5, 0xa52f]},
+                        enemy: {Prg: [5, 0xa540]},
+                        hp: {Prg: [5, 0xa53c]},
+                    },
+                },
+            },
             palette: {
                 background: {
                     name: "Great Palace (Outdoors)",

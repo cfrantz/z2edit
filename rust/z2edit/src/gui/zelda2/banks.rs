@@ -11,6 +11,11 @@ impl GuiTree for config::GameBank {
                     .map(|x| Option::replace(&mut result, x));
             }
         });
+        if let Some(drop) = &self.drops {
+            let _ = drop
+                .tree_node(ui, &format!("{path}/drops"))
+                .map(|x| Option::replace(&mut result, x));
+        }
         ui.tree_node_config(format!("Enemies##{path}")).build(|| {
             for (k, v) in self.enemy.iter() {
                 let _ = v
@@ -32,6 +37,11 @@ impl GuiTree for config::GlobalBank {
                     .map(|x| Option::replace(&mut result, x));
             }
         });
+        let _ = self
+            .drops
+            .tree_node(ui, &format!("{path}/drops"))
+            .map(|x| Option::replace(&mut result, x));
+
         ui.tree_node_config(format!("Experience##{path}"))
             .build(|| {
                 for (k, v) in self.experience.iter() {

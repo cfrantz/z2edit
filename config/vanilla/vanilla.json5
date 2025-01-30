@@ -13,6 +13,14 @@
         banks: 32,
     },
     global: {
+        drops: {
+            table: {
+                counter: {Prg: [-1, 0xe8a0]},
+                small: {Prg: [-1, 0xe870]},
+                large: {Prg: [-1, 0xe878]},
+                length: 8,
+            },
+        },
         palette: {
             overworld: {
                 name: "Overworld",

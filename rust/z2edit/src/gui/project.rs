@@ -30,7 +30,7 @@ impl ProjectGui {
                 let result = if self.filename.is_empty() {
                     self.save_as()
                 } else {
-                    self.save()
+                    self.save(true)
                 };
                 if let Err(e) = result {
                     self.error.show(
@@ -125,17 +125,18 @@ impl ProjectGui {
                 .save_file()
             {
                 self.filename = filename.to_string_lossy().into();
-                self.save()
+                self.save(true)
             } else {
                 Ok(())
             }
         })
     }
 
-    fn save(&self) -> Result<()> {
+    #[pyo3(signature = (filter = true))]
+    fn save(&self, filter: bool) -> Result<()> {
         Python::with_gil(|py| {
             let project = self.project.borrow(py);
-            project.save(&self.filename)
+            project.save(&self.filename, filter)
         })
     }
 

@@ -11,6 +11,7 @@ use crate::zelda2::edit::EditList;
 
 pub mod config {
     use super::*;
+    use crate::zelda2::drops::config::DropInfo;
     use crate::zelda2::enemies::config::EnemyGroup;
     use crate::zelda2::experience::config::{EnemyExperience, ExperienceTableGroup};
     use crate::zelda2::items::config::Items;
@@ -20,17 +21,19 @@ pub mod config {
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     #[serde(default)]
     pub struct GameBank {
-        pub palette: IndexMap<String, PaletteGroup>,
+        pub drops: Option<DropInfo>,
         pub enemy: IndexMap<String, EnemyGroup>,
+        pub palette: IndexMap<String, PaletteGroup>,
     }
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     #[serde(default)]
     pub struct GlobalBank {
         pub item: Items,
-        pub palette: IndexMap<String, PaletteGroup>,
+        pub drops: DropInfo,
         pub enemy_xp: EnemyExperience,
         pub experience: IndexMap<String, ExperienceTableGroup>,
+        pub palette: IndexMap<String, PaletteGroup>,
         pub start: StartValues,
     }
 }
@@ -38,6 +41,9 @@ pub mod config {
 impl config::GameBank {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
         log::debug!("GameBank::unpack {path}");
+        for drop in self.drops.iter() {
+            drop.unpack(rom, &format!("{path}/drops"), edits)?;
+        }
         for (k, v) in self.palette.iter() {
             v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -48,6 +54,9 @@ impl config::GameBank {
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("GameBank::pack {path}");
+        for drop in self.drops.iter() {
+            drop.pack(rom, &format!("{path}/drops"), edits)?;
+        }
         for (k, v) in self.palette.iter() {
             v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -59,6 +68,9 @@ impl config::GameBank {
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
         match path {
             [] => get_config::<T>(self),
+            ["drops", ..] if self.drops.is_some() => {
+                self.drops.as_ref().unwrap().get::<T>(&path[1..])
+            }
             ["palette", ref n, ..] => {
                 let palette = self
                     .palette
@@ -82,6 +94,7 @@ impl config::GameBank {
 impl config::GlobalBank {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
         log::debug!("GlobalBank::unpack {path}");
+        self.drops.unpack(rom, &format!("{path}/drops"), edits)?;
         self.item.unpack(rom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
             v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
@@ -98,6 +111,7 @@ impl config::GlobalBank {
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("GlobalBank::pack {path}");
+        self.drops.pack(rom, &format!("{path}/drops"), edits)?;
         self.item.pack(rom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
             v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
@@ -113,6 +127,7 @@ impl config::GlobalBank {
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
         match path {
             [] => get_config::<T>(self),
+            ["drops", ..] => self.drops.get::<T>(&path[1..]),
             ["item", ..] => self.item.get(&path[1..]),
             ["palette", ref n, ..] => {
                 let palette = self

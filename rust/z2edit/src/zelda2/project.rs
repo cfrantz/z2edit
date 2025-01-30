@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use pyo3::prelude::*;
 use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};
+use std::cell::Cell;
 use std::path::Path;
 
 use crate::error::Error;
@@ -27,13 +28,17 @@ pub struct Project {
     pub config: Config,
 }
 
+thread_local! {
+    static FILTER_EDITLIST: Cell<bool> = Cell::new(true);
+}
+
 fn serialize_editlist<S>(edits: &EditList, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     let mut map = serializer.serialize_map(Some(edits.len()))?;
     for (k, v) in edits.iter() {
-        if v.meta.timestamp != 0 {
+        if !FILTER_EDITLIST.get() || v.meta.timestamp != 0 {
             map.serialize_entry(k, v)?;
         }
     }
@@ -82,10 +87,12 @@ impl Project {
         project.setup()
     }
 
-    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn save<P: AsRef<Path>>(&self, path: P, filter: bool) -> Result<()> {
         let path = path.as_ref();
-        let doc = serde_annotate::serialize(self)?;
-        let doc = doc.to_json5().to_string();
+        FILTER_EDITLIST.set(filter);
+        let doc = serde_annotate::serialize(self);
+        FILTER_EDITLIST.set(true);
+        let doc = doc?.to_json5().to_string();
         std::fs::write(path, &doc).with_context(|| format!("Could not write {path:?}"))?;
         Ok(())
     }
@@ -136,9 +143,12 @@ impl Project {
         Self::load(path)
     }
 
-    #[pyo3(name = "save")]
-    fn _save(&self, path: &str) -> Result<()> {
-        self.save(path)
+    #[pyo3(
+        name = "save",
+        signature = (path, filter=true)
+    )]
+    fn _save(&self, path: &str, filter: bool) -> Result<()> {
+        self.save(path, filter)
     }
 
     #[pyo3(name = "export_rom")]
