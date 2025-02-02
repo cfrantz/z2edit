@@ -5,6 +5,7 @@ use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::path::Path;
+use std::process::Command;
 
 use crate::error::Error;
 use crate::nes::NesFile;
@@ -204,6 +205,19 @@ impl Project {
     #[setter]
     fn set_config(&mut self, json: &str) -> Result<()> {
         self.config = serde_annotate::from_str(json)?;
+        Ok(())
+    }
+
+    pub fn emulate(&self) -> Result<()> {
+        let mut tmp = std::env::temp_dir();
+        tmp.push("z2edit");
+        std::fs::create_dir_all(&tmp).with_context(|| format!("Creating {:?}", tmp))?;
+        tmp.push(format!("{}.nes", self.name));
+
+        self.export_rom(&tmp)?;
+        let mut emulator = shellwords::split(&AppPreferences::get().emulator)?;
+        emulator.push(tmp.to_str().unwrap().into());
+        Command::new(&emulator[0]).args(&emulator[1..]).spawn()?;
         Ok(())
     }
 

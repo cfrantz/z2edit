@@ -51,6 +51,13 @@ impl ProjectGui {
             }
 
             ui.separator();
+            if ui.menu_item("Emulate") {
+                if let Err(e) = Python::with_gil(|py| self.project.borrow(py).emulate()) {
+                    self.error
+                        .show("Error Emulating", "Error starting emulator", e);
+                }
+            }
+            ui.separator();
             if ui.menu_item("Export ROM") {
                 if let Err(e) = self.export_rom() {
                     self.error.show("Error Exporting ROM", "Error:", e);
