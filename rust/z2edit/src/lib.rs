@@ -28,5 +28,8 @@ fn _z2edit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<gui::wizard::ProjectWizardGui>()?;
     m.add_class::<zelda2::config::Config>()?;
     m.add_class::<zelda2::project::Project>()?;
+    m.add_class::<zelda2::edit::Edit>()?;
+    m.add_class::<zelda2::edit::EditProxy>()?;
+    m.add_class::<zelda2::edit::Metadata>()?;
     Ok(())
 }

@@ -5,12 +5,14 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use crate::nes::freespace::{config, Alloc, FreeSpace};
 use crate::nes::{Address, NesError};
 
 #[pyclass]
 #[derive(Default, Clone)]
 pub struct NesFile {
     data: Vec<u8>,
+    freespace: FreeSpace,
 }
 
 impl std::fmt::Debug for NesFile {
@@ -24,7 +26,10 @@ impl NesFile {
     pub fn from_reader(r: &mut impl Read) -> Result<Self> {
         let mut data = Vec::new();
         r.read_to_end(&mut data)?;
-        Ok(Self { data })
+        Ok(Self {
+            data,
+            ..Default::default()
+        })
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
@@ -35,6 +40,10 @@ impl NesFile {
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         std::fs::write(path, &self.data)?;
         Ok(())
+    }
+
+    pub fn register(&mut self, data: &config::FreeSpace) -> Result<()> {
+        self.freespace.register(data)
     }
 
     fn _bank(b: i16, banks: usize) -> usize {
@@ -202,5 +211,24 @@ impl NesFile {
 
     pub fn sha256(&self) -> String {
         hex::encode(Sha256::digest(&self.data))
+    }
+
+    #[pyo3(name = "register")]
+    fn _register(&mut self, json: &str) -> Result<()> {
+        let data = serde_annotate::from_str(json)?;
+        self.register(&data)
+    }
+
+    #[pyo3(signature = (address, length, policy=Alloc::Best))]
+    pub fn alloc(&mut self, address: Address, length: u16, policy: Alloc) -> Result<Address> {
+        self.freespace.alloc(address, length, policy)
+    }
+
+    pub fn free(&mut self, address: Address, length: u16) -> Result<()> {
+        self.freespace.free(address, length)
+    }
+
+    pub fn report(&self) -> String {
+        self.freespace.to_string()
     }
 }

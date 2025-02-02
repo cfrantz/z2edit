@@ -28,6 +28,13 @@ impl GameData for PaletteGroup {
     fn gui(&self, name: &str) -> Result<Box<dyn Gui>> {
         crate::gui::zelda2::palette::PaletteGroupEditor::new(self, name)
     }
+    fn to_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
+    }
+    fn from_json(&mut self, json: &str) -> Result<()> {
+        *self = serde_json::from_str(json)?;
+        Ok(())
+    }
 }
 
 pub mod config {

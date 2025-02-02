@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use pyo3::exceptions::PyKeyError;
 use pyo3::prelude::*;
 use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};
@@ -6,29 +7,29 @@ use std::cell::Cell;
 use std::path::Path;
 
 use crate::error::Error;
-use crate::nes::freespace::{Alloc, FreeSpace};
-use crate::nes::{Address, NesFile};
+use crate::nes::NesFile;
 use crate::util::time::UTime;
 use crate::zelda2::config::Config;
-use crate::zelda2::edit::{EditList, GameData};
+use crate::zelda2::edit::{EditList, EditProxy, GameData};
 use crate::zelda2::rom::FileResource;
 use crate::AppPreferences;
 
-#[pyclass]
 #[derive(Debug, Default, Serialize, Deserialize)]
+#[pyclass(sequence)]
 pub struct Project {
+    #[pyo3(get, set)]
     pub name: String,
     pub start: FileResource,
     pub configuration: String,
+    #[pyo3(get, set)]
     pub fixups: bool,
     #[serde(serialize_with = "serialize_editlist")]
     pub edits: EditList,
     #[serde(skip)]
+    #[pyo3(get)]
     pub rom: NesFile,
     #[serde(skip)]
     pub config: Config,
-    #[serde(skip)]
-    pub freespace: FreeSpace,
 }
 
 thread_local! {
@@ -69,12 +70,12 @@ impl Project {
             FileResource::File(ref f) => NesFile::load(f)?,
         };
         self.config = config;
-        self.freespace.register(&self.config.global.freespace)?;
-        for bank in self.config.bank.values() {
-            self.freespace.register(&bank.freespace)?;
-        }
-        log::info!("{}", self.freespace);
         self.rom = rom;
+        self.rom.register(&self.config.global.freespace)?;
+        for bank in self.config.bank.values() {
+            self.rom.register(&bank.freespace)?;
+        }
+        log::info!("{}", self.rom.report());
         self.apply_fixes()?;
         let mut edits = self.unpack()?;
         // Place any edits in the project over the top of what was unpacked
@@ -164,16 +165,34 @@ impl Project {
         self.export_rom(path)
     }
 
-    #[pyo3(signature = (address, length, policy=Alloc::Best))]
-    pub fn alloc(&mut self, address: Address, length: u16, policy: Alloc) -> Result<Address> {
-        self.freespace.alloc(address, length, policy)
+    #[getter]
+    fn get_config(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(&self.config)?)
     }
 
-    pub fn free(&mut self, address: Address, length: u16) -> Result<()> {
-        self.freespace.free(address, length)
+    #[setter]
+    fn set_config(&mut self, json: &str) -> Result<()> {
+        self.config = serde_annotate::from_str(json)?;
+        Ok(())
     }
 
-    pub fn report(&self) -> String {
-        self.freespace.to_string()
+    #[pyo3(name = "edits")]
+    fn _edits(&self) -> Vec<String> {
+        self.edits.keys().map(|s| s.clone()).collect()
+    }
+
+    fn __getitem__(self_: PyRef<'_, Self>, key: &str) -> Result<EditProxy> {
+        if self_.edits.contains_key(key) {
+            Ok(EditProxy::new(self_.into(), key.into()))
+        } else {
+            Err(PyKeyError::new_err(key.to_string()).into())
+        }
+    }
+
+    fn __delitem_(&mut self, key: &str) -> Result<()> {
+        self.edits
+            .shift_remove(key)
+            .ok_or(PyKeyError::new_err(key.to_string()))?;
+        Ok(())
     }
 }

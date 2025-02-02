@@ -34,6 +34,13 @@ impl GameData for ExperienceTableGroup {
     fn gui(&self, name: &str) -> Result<Box<dyn Gui>> {
         crate::gui::zelda2::experience::ExperienceTableGroupEditor::new(self, name)
     }
+    fn to_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
+    }
+    fn from_json(&mut self, json: &str) -> Result<()> {
+        *self = serde_json::from_str(json)?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -60,6 +67,13 @@ impl GameData for EnemyExperience {
     }
     fn gui(&self, name: &str) -> Result<Box<dyn Gui>> {
         crate::gui::zelda2::experience::EnemyExperienceEditor::new(self, name)
+    }
+    fn to_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
+    }
+    fn from_json(&mut self, json: &str) -> Result<()> {
+        *self = serde_json::from_str(json)?;
+        Ok(())
     }
 }
 

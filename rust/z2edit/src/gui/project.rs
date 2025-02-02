@@ -111,6 +111,14 @@ impl ProjectGui {
         })
     }
 
+    #[getter]
+    fn name(&self) -> String {
+        Python::with_gil(|py| {
+            let project = self.project.borrow(py);
+            project.name.clone()
+        })
+    }
+
     #[pyo3(name = "draw")]
     fn _draw<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
         self.draw(py, ctx.ui)

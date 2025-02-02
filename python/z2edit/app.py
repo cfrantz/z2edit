@@ -11,9 +11,12 @@ from z2edit import gui
 LOG_LEVELS = {
     "TRACE": 5,
 }
+logger = logging.getLogger(__name__)
 
 
 class Application(object):
+    _instance = None
+
     def __init__(self, args, dirs):
         self.running = True
         self.inner = None
@@ -30,6 +33,22 @@ class Application(object):
         if args.new:
             self.wizard = z2edit.ProjectWizardGui()
             self.wizard.done = True
+
+        if not Application._instance:
+            Application._instance = self
+        else:
+            logger.error("An application instance already exists")
+
+    @classmethod
+    def get(cls):
+        return cls._instance
+
+    def project(self, name=None):
+        for window in self.windows:
+            if isinstance(window, z2edit.ProjectGui):
+                if name is None or name == window.name:
+                    return window.project
+        return None
 
     def new_project(self):
         project = z2edit.Project(self.wizard.name, self.wizard.rom, self.wizard.config, self.wizard.fix)
