@@ -16,6 +16,7 @@ pub mod config {
     use crate::zelda2::enemies::config::EnemyGroup;
     use crate::zelda2::experience::config::{EnemyExperience, ExperienceTableGroup};
     use crate::zelda2::items::config::Items;
+    use crate::zelda2::misc_hacks::config::Miscellaneous;
     use crate::zelda2::palette::config::PaletteGroup;
     use crate::zelda2::start::config::StartValues;
 
@@ -37,6 +38,7 @@ pub mod config {
         pub experience: IndexMap<String, ExperienceTableGroup>,
         pub palette: IndexMap<String, PaletteGroup>,
         pub start: StartValues,
+        pub misc: Miscellaneous,
         pub freespace: FreeSpace,
     }
 }
@@ -97,6 +99,7 @@ impl config::GameBank {
 impl config::GlobalBank {
     pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
         log::debug!("GlobalBank::unpack {path}");
+        self.misc.unpack(rom, &format!("{path}/misc"), edits)?;
         self.drops.unpack(rom, &format!("{path}/drops"), edits)?;
         self.item.unpack(rom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
@@ -114,6 +117,7 @@ impl config::GlobalBank {
     }
     pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("GlobalBank::pack {path}");
+        self.misc.pack(rom, &format!("{path}/misc"), edits)?;
         self.drops.pack(rom, &format!("{path}/drops"), edits)?;
         self.item.pack(rom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
@@ -130,6 +134,7 @@ impl config::GlobalBank {
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
         match path {
             [] => get_config::<T>(self),
+            ["misc", ..] => self.misc.get::<T>(&path[1..]),
             ["drops", ..] => self.drops.get::<T>(&path[1..]),
             ["item", ..] => self.item.get(&path[1..]),
             ["palette", ref n, ..] => {

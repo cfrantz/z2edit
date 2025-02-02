@@ -147,6 +147,17 @@
             values: {Prg: [5, 0xbae3]},
             lives: {Prg: [-1, 0xc359]},
         }
+        misc: {
+            walk_anywhere: {Prg: [0, 0x871e]},
+            item_pickup_delay: {Prg: [-1, 0xe53c]},
+            text_delay: [ {Prg: [3, 0xb615]}, {Prg: [3, 0xb657]}, {Prg: [3, 0xb74e]} ],
+            beam_sword_time: {Prg: [0, 0x986e]},
+            beam_sword_speed: {Prg: [0, 0x9819]},
+            elevator_speed: {Prg: [-1, 0xd8bf]},
+            fairy_speed: {Prg: [0, 0x92aa]},
+            hack: {
+            },
+        },
         freespace: {
             freespace: [
                 {address: {Prg: [0, 0xAB00]}, length: 5232 },

@@ -55,6 +55,10 @@ impl GuiTree for config::GlobalBank {
             .tree_node(ui, &format!("{path}/enemy_xp"))
             .map(|x| Option::replace(&mut result, x));
         let _ = self
+            .misc
+            .tree_node(ui, &format!("{path}/misc"))
+            .map(|x| Option::replace(&mut result, x));
+        let _ = self
             .start
             .tree_node(ui, &format!("{path}/start"))
             .map(|x| Option::replace(&mut result, x));
