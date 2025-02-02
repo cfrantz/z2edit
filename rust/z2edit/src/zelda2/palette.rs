@@ -1,5 +1,6 @@
 use anyhow::Result;
 use indexmap::IndexMap;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
@@ -60,14 +61,14 @@ pub mod config {
 
 /***
 impl config::Palette {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &mut EditList) -> Result<()> {
         let length = self.length.unwrap_or(16);
         let data = rom.read_bytes(self.address, length)?.to_vec();
         edits.insert(path.into(), Edit::new(Palette { data }.into()));
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         if let Some(edit) = edits.get(path) {
             let palette = edit.data_ref::<Palette>()?;
             rom.write_bytes(self.address, &palette.data)?;
@@ -83,9 +84,15 @@ impl config::Palette {
 ***/
 
 impl config::PaletteGroup {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("PaletteGroup::unpack {path}");
         let mut pg = PaletteGroup::default();
+        let rom = rrom.borrow();
         for (name, palette) in self.group.iter() {
             let length = palette.length.unwrap_or(16);
             let data = rom.read_bytes(palette.address, length)?.to_vec();
@@ -95,10 +102,11 @@ impl config::PaletteGroup {
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("PaletteGroup::pack {path}");
         if let Some(edit) = edits.get(path) {
             let pg = edit.data_ref::<PaletteGroup>()?;
+            let mut rom = rrom.borrow_mut();
             for (name, palette) in self.group.iter() {
                 if let Some(data) = pg.group.get(name) {
                     rom.write_bytes(palette.address, &data)?;

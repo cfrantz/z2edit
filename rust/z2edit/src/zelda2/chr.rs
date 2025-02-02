@@ -1,4 +1,5 @@
 use anyhow::{ensure, Result};
+use pyo3::prelude::*;
 use python_gui::{Color, Image};
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -100,8 +101,14 @@ pub mod config {
 }
 
 impl config::ChrMemory {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("ChrMemory::unpack {path}");
+        let rom = rrom.borrow();
         let length = rom.chr_banks() * 8192;
         let data = rom.read_bytes(Address::Chr(0, 0), length)?.to_vec();
         let orig = Arc::new(Mutex::new(data.clone()));
@@ -137,7 +144,7 @@ impl config::ChrMemory {
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("ChrMemory::pack {path}");
         if let Some(edit) = edits.get(path) {
             match self.schema {
@@ -152,6 +159,7 @@ impl config::ChrMemory {
                 }
             }
             let chr = edit.data_ref::<ChrMemory>()?;
+            let mut rom = rrom.borrow_mut();
             rom.write_bytes(Address::Chr(0, 0), chr.data.lock().unwrap().as_slice())?;
         } else {
             log::warn!("No data for {path:?}");

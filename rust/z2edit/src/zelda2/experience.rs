@@ -1,4 +1,5 @@
 use anyhow::Result;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
@@ -114,9 +115,15 @@ impl config::ExperienceTableGroup {
     // Zelda2 uses 0xD0 - 0xD9 as the digits 0-9.
     const CHR_DIGITS: u8 = 0xD0;
 
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("ExperienceTableGroup::unpack {path}");
         let mut eg = ExperienceTableGroup::default();
+        let rom = rrom.borrow();
         for et in self.group.iter() {
             let mut table = ExperienceTable::default();
             for i in 0..8 {
@@ -137,10 +144,11 @@ impl config::ExperienceTableGroup {
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("ExperienceTableGroup::pack {path}");
         if let Some(edit) = edits.get(path) {
             let eg = edit.data_ref::<ExperienceTableGroup>()?;
+            let mut rom = rrom.borrow_mut();
             for (et, table) in self.group.iter().zip(eg.group.iter()) {
                 for (i, val) in table.data.iter().enumerate() {
                     rom.write(et.address + i, *val as u8)?;
@@ -193,9 +201,15 @@ impl config::ExperienceTableGroup {
 }
 
 impl config::EnemyExperience {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("EnemyExperience::unpack {path}");
         let mut ee = EnemyExperience::default();
+        let rom = rrom.borrow();
         for i in 0..16 {
             ee.data.push(ExperienceValue {
                 value: rom.read(self.lo + i)? as u16 | (rom.read(self.hi + i)? as u16) << 8,
@@ -208,10 +222,11 @@ impl config::EnemyExperience {
         edits.insert(path.into(), Edit::new(ee.into()));
         Ok(())
     }
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("EnemyExperience::pack {path}");
         if let Some(edit) = edits.get(path) {
             let ee = edit.data_ref::<EnemyExperience>()?;
+            let mut rom = rrom.borrow_mut();
             for (i, ev) in ee.data.iter().enumerate() {
                 rom.write(self.lo + i, ev.value as u8)?;
                 rom.write(self.hi + i, (ev.value >> 8) as u8)?;

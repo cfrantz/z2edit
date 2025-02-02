@@ -8,8 +8,8 @@ use std::path::Path;
 use crate::nes::freespace::{config, Alloc, FreeSpace};
 use crate::nes::{Address, NesError};
 
-#[pyclass]
 #[derive(Default, Clone)]
+#[pyclass]
 pub struct NesFile {
     data: Vec<u8>,
     freespace: FreeSpace,

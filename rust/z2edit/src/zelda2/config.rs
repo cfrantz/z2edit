@@ -1,11 +1,10 @@
-use std::any::Any;
-use std::path::Path;
-use std::sync::OnceLock;
-
 use anyhow::Result;
 use indexmap::IndexMap;
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::path::Path;
+use std::sync::OnceLock;
 
 use crate::error::Error;
 use crate::nes::NesFile;
@@ -95,22 +94,27 @@ pub(super) fn get_config<T: Any>(item: &dyn Any) -> Result<&T> {
 }
 
 impl Config {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("Config unpack {path}");
-        self.chr.unpack(rom, &format!("{path}/chr"), edits)?;
+        self.chr.unpack(rrom, &format!("{path}/chr"), edits)?;
         for (k, v) in self.bank.iter() {
-            v.unpack(rom, &format!("{path}/bank/{k}"), edits)?;
+            v.unpack(rrom, &format!("{path}/bank/{k}"), edits)?;
         }
-        self.global.unpack(rom, &format!("{path}/global"), edits)?;
+        self.global.unpack(rrom, &format!("{path}/global"), edits)?;
         Ok(())
     }
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("Config pack {path}");
-        self.chr.pack(rom, &format!("{path}/chr"), edits)?;
+        self.chr.pack(rrom, &format!("{path}/chr"), edits)?;
         for (k, v) in self.bank.iter() {
-            v.pack(rom, &format!("{path}/bank/{k}"), edits)?;
+            v.pack(rrom, &format!("{path}/bank/{k}"), edits)?;
         }
-        self.global.pack(rom, &format!("{path}/global"), edits)?;
+        self.global.pack(rrom, &format!("{path}/global"), edits)?;
         Ok(())
     }
 

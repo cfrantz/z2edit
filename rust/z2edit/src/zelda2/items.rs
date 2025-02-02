@@ -1,5 +1,6 @@
 use anyhow::Result;
 use indexmap::IndexMap;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
@@ -34,12 +35,17 @@ pub mod config {
 }
 
 impl config::Items {
-    pub fn unpack(&self, _rom: &NesFile, path: &str, _edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        _rrom: &Bound<'_, NesFile>,
+        path: &str,
+        _edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("Items::unpack {path}");
         Ok(())
     }
 
-    pub fn pack(&self, _rom: &mut NesFile, path: &str, _edits: &EditList) -> Result<()> {
+    pub fn pack(&self, _rrom: &Bound<'_, NesFile>, path: &str, _edits: &EditList) -> Result<()> {
         log::debug!("Items::pack {path}");
         Ok(())
     }

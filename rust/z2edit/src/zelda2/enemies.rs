@@ -1,5 +1,6 @@
 use anyhow::Result;
 use indexmap::IndexMap;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
@@ -72,9 +73,15 @@ pub mod config {
 }
 
 impl config::EnemyGroup {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("EnemyGroup::unpack {path}");
         let mut eg = EnemyGroup::default();
+        let rom = rrom.borrow();
         for index in self.group.keys() {
             let i = index.parse::<usize>()?;
             let hp = rom.read(self.hp + i)?;
@@ -105,10 +112,11 @@ impl config::EnemyGroup {
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("EnemyGroup::pack {path}");
         if let Some(edit) = edits.get(path) {
             let eg = edit.data_ref::<EnemyGroup>()?;
+            let mut rom = rrom.borrow_mut();
             for index in self.group.keys() {
                 if let Some(enemy) = eg.group.get(index) {
                     let i = index.parse::<usize>()?;

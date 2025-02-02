@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
@@ -83,9 +84,15 @@ pub mod config {
 }
 
 impl config::DropInfo {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("DropInfo::unpack {path}");
         let mut di = DropInfo::default();
+        let rom = rrom.borrow();
         if let Some(table) = &self.table {
             di.table = Some(DropTable {
                 counter: rom.read(table.counter)?,
@@ -107,10 +114,11 @@ impl config::DropInfo {
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("DropInfo::pack {path}");
         if let Some(edit) = edits.get(path) {
             let di = edit.data_ref::<DropInfo>()?;
+            let mut rom = rrom.borrow_mut();
             if let Some(table) = &self.table {
                 let values = di
                     .table

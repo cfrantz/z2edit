@@ -156,15 +156,111 @@
             elevator_speed: {Prg: [-1, 0xd8bf]},
             fairy_speed: {Prg: [0, 0x92aa]},
             hack: {
+                overworld_breakblocks: {
+                    name: "Overworld Breakable Blocks",
+                    detail: {
+                        vanilla: {
+                            name: "Vanilla (break-blocks are black tiles)"
+                        },
+                        classic: {
+                            name: "Classic (Break-blocks are the same tiles as palaces)",
+                            code: "from z2edit.hacks import breakblocks\nbreakblocks.classic(rom)\n",
+                        },
+                    }
+                },
+                palace_continue: {
+                    name: "Palace Continue",
+                    detail: {
+                        vanilla: {
+                            name: "Vanilla (continue only from GP)",
+                        },
+                        continue: {
+                            name: "Continue from Palaces",
+                            code: "from z2edit.hacks import palace\npalace.continue_from_palaces(rom)\n",
+                        },
+                    },
+                },
+                palace_to_stone: {
+                    name: "Palaces to Stone",
+                    detail: {
+                        vanilla: {
+                            name: "Vanilla (palaces turn to stone w/ original coding error)",
+                        },
+                        fixed: {
+                            name: "Fixed",
+                            code: "from z2edit.hacks import palace\npalace.to_stone_fixed(rom)\n",
+                        },
+                        never: {
+                            name: "Never Turn to Stone",
+                            code: "from z2edit.hacks import palace\npalace.to_stone_never(rom)\n",
+                        },
+                    }
+                },
+                palace5_detect: {
+                    name: "Palaces 5 Detect",
+                    detail: {
+                        vanilla: {
+                            name: "Vanilla (P5 on overworld 2)",
+                        },
+                        p2_conn_52: {
+                            name: "Palace 2 must be connection #52",
+                            code: "from z2edit.hacks import palace\npalace.palace2_must_be_connection52(rom)\n",
+                        },
+                        p2even_p5odd: {
+                            name: "Palace 2 even / Palace 5 odd",
+                            code: "from z2edit.hacks import palace\npalace.palace2_even_palace5_odd(rom)\n",
+                        },
+                        p2odd_p5even: {
+                            name: "Palace 2 odd/ Palace 5 even",
+                            code: "from z2edit.hacks import palace\npalace.palace5_even_palace2_odd(rom)\n",
+                        },
+                    },
+                },
+                spell_bits: {
+                    name: "Spell Bits",
+                    detail: {
+                        vanilla: {
+                            name: "Vanilla (fixed bit positions)",
+                        },
+                        flexible: {
+                            name: "Flexible (bit positions define effect type)",
+                            code: "from z2edit.hacks import spells\nspells.flexible_bits(rom)\n",
+                        },
+                    },
+                },
+                spell_cast: {
+                    name: "Spell Casting",
+                    detail: {
+                        vanilla: {
+                            name: "Vanilla (activate menu between each spell cast)",
+                        },
+                        fast: {
+                            name: "Fast (no menuing required between spell casts)",
+                            code: "from z2edit.hacks import spells\nspells.fast_casting(rom)\n",
+                        },
+                    },
+                },
+                spell_restrictions: {
+                    name: "Spell Restrictions",
+                    detail: {
+                        vanilla: {
+                            name: "Vanilla (Magic Containers == Town Number)",
+                        },
+                        fast: {
+                            name: "No Restrictions (can get spells with any number of MCs)",
+                            code: "from z2edit.hacks import spells\nspells.no_restrictions(rom)\n",
+                        },
+                    },
+                },
             },
         },
         freespace: {
             freespace: [
                 {address: {Prg: [0, 0xAB00]}, length: 5232 },
                 {address: {Prg: [0, 0xBFE0]}, length: 24 },
-                {address: {Prg: [7, 0xD39A]}, length: 48 },
-                {address: {Prg: [7, 0xFFEA]}, length: 38 },
-                {address: {Prg: [7, 0xFF4C]}, length: 36 }
+                {address: {Prg: [-1, 0xD39A]}, length: 48 },
+                {address: {Prg: [-1, 0xFFEA]}, length: 38 },
+                {address: {Prg: [-1, 0xFF4C]}, length: 36 }
             ],
         }
     }

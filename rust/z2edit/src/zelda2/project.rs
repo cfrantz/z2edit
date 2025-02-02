@@ -14,7 +14,7 @@ use crate::zelda2::edit::{EditList, EditProxy, GameData};
 use crate::zelda2::rom::FileResource;
 use crate::AppPreferences;
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 #[pyclass(sequence)]
 pub struct Project {
     #[pyo3(get, set)]
@@ -25,11 +25,21 @@ pub struct Project {
     pub fixups: bool,
     #[serde(serialize_with = "serialize_editlist")]
     pub edits: EditList,
+
     #[serde(skip)]
     #[pyo3(get)]
-    pub rom: NesFile,
+    pub rom: Py<NesFile>,
     #[serde(skip)]
     pub config: Config,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct LoadFile {
+    name: String,
+    start: FileResource,
+    configuration: String,
+    fixups: bool,
+    edits: EditList,
 }
 
 thread_local! {
@@ -56,7 +66,7 @@ impl Project {
 
     fn unpack(&self) -> Result<EditList> {
         let mut edits = EditList::default();
-        self.config.unpack(&self.rom, "", &mut edits)?;
+        Python::with_gil(|py| self.config.unpack(self.rom.bind(py), "", &mut edits))?;
         Ok(edits)
     }
 
@@ -65,17 +75,18 @@ impl Project {
             "configuration {:?}",
             self.configuration
         )))?;
-        let rom = match self.start {
+
+        self.config = config;
+        let mut rom = match self.start {
             FileResource::Vanilla() => NesFile::load(&AppPreferences::get().vanilla_rom)?,
             FileResource::File(ref f) => NesFile::load(f)?,
         };
-        self.config = config;
-        self.rom = rom;
-        self.rom.register(&self.config.global.freespace)?;
+        rom.register(&self.config.global.freespace)?;
         for bank in self.config.bank.values() {
-            self.rom.register(&bank.freespace)?;
+            rom.register(&bank.freespace)?;
         }
-        log::info!("{}", self.rom.report());
+        log::info!("{}", rom.report());
+        self.rom = Python::with_gil(|py| Py::new(py, rom))?;
         self.apply_fixes()?;
         let mut edits = self.unpack()?;
         // Place any edits in the project over the top of what was unpacked
@@ -91,8 +102,18 @@ impl Project {
         let path = path.as_ref();
         let data =
             std::fs::read_to_string(path).with_context(|| format!("Could not read {path:?}"))?;
-        let project = serde_annotate::from_str::<Self>(&data)
+        let data = serde_annotate::from_str::<LoadFile>(&data)
             .with_context(|| format!("Could not parse {path:?}"))?;
+        let rom = Python::with_gil(|py| Py::new(py, NesFile::default()))?;
+        let project = Project {
+            name: data.name,
+            start: data.start,
+            configuration: data.configuration,
+            fixups: data.fixups,
+            edits: data.edits,
+            rom,
+            config: Config::default(),
+        };
         project.setup()
     }
 
@@ -107,9 +128,11 @@ impl Project {
     }
 
     fn pack(&self) -> Result<NesFile> {
-        let mut rom = self.rom.clone();
-        self.config.pack(&mut rom, "", &self.edits)?;
-        Ok(rom)
+        Python::with_gil(|py| {
+            let rom = Py::new(py, self.rom.borrow(py).clone())?;
+            self.config.pack(rom.bind(py), "", &self.edits)?;
+            Ok(rom.extract(py)?)
+        })
     }
 
     pub fn export_rom<P: AsRef<Path>>(&self, path: P) -> Result<()> {
@@ -135,13 +158,21 @@ impl Project {
 #[pymethods]
 impl Project {
     #[new]
-    pub fn new(name: &str, start: FileResource, configuration: &str, fixups: bool) -> Result<Self> {
+    pub fn new<'p>(
+        py: Python<'p>,
+        name: &str,
+        start: FileResource,
+        configuration: &str,
+        fixups: bool,
+    ) -> Result<Self> {
         let project = Project {
             name: name.into(),
             start,
             configuration: configuration.into(),
             fixups,
-            ..Default::default()
+            edits: EditList::default(),
+            rom: Py::new(py, NesFile::default())?,
+            config: Config::default(),
         };
         project.setup()
     }

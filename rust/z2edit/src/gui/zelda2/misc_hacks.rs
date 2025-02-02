@@ -137,6 +137,34 @@ impl MiscellaneousEditor {
                 .build();
             self.misc.fairy_speed = self.misc.fairy_speed.clamp(0, i8::MAX);
             width.end();
+
+            let cfg = project.config.get::<config::Miscellaneous>(&self.path)?;
+            for (key, hack) in cfg.hack.iter() {
+                ui.table_next_row();
+                ui.table_next_column();
+                ui.text(&hack.name);
+                ui.table_next_column();
+                let (default, detail) = hack.detail.get_index(0).expect("hack has no details");
+                let value = self.misc.hack.get(key).unwrap_or(default).clone();
+                let preview = hack.detail.get(&value).unwrap_or(detail);
+                let width = ui.push_item_width(-1.0);
+                if let Some(_combo) = ui.begin_combo(&format!("##{key}"), &preview.name) {
+                    for (id, detail) in hack.detail.iter() {
+                        if id == &value {
+                            ui.set_item_default_focus();
+                        }
+                        if ui
+                            .selectable_config(&detail.name)
+                            .selected(id == &value)
+                            .build()
+                        {
+                            self.misc.hack.insert(key.clone(), id.clone());
+                            self.changed |= true;
+                        }
+                    }
+                }
+                width.end();
+            }
         }
         Ok(())
     }

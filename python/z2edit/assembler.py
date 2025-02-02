@@ -18,6 +18,9 @@
 #
 ######################################################################
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:
     from . import _z2edit
@@ -717,7 +720,7 @@ class Asm:
                     "Unresolved symbol", opcode, operand, self.linenum, orig_line
                 )
             if opcode == ".ORG":
-                print("Assembler: ORG changed %04x => %04x" % (self.org, addr))
+                logger.debug("Assembler: ORG changed %04x => %04x", self.org, addr)
                 self.org = addr
                 self.last_org = self.org
             elif opcode == ".ASSERT_ORG":

@@ -1,8 +1,8 @@
-use std::any::Any;
-
 use anyhow::Result;
 use indexmap::IndexMap;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 
 use crate::error::Error;
 use crate::nes::NesFile;
@@ -44,29 +44,34 @@ pub mod config {
 }
 
 impl config::GameBank {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("GameBank::unpack {path}");
         for drop in self.drops.iter() {
-            drop.unpack(rom, &format!("{path}/drops"), edits)?;
+            drop.unpack(rrom, &format!("{path}/drops"), edits)?;
         }
         for (k, v) in self.palette.iter() {
-            v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
+            v.unpack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
         for (k, v) in self.enemy.iter() {
-            v.unpack(rom, &format!("{path}/enemy/{k}"), edits)?;
+            v.unpack(rrom, &format!("{path}/enemy/{k}"), edits)?;
         }
         Ok(())
     }
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("GameBank::pack {path}");
         for drop in self.drops.iter() {
-            drop.pack(rom, &format!("{path}/drops"), edits)?;
+            drop.pack(rrom, &format!("{path}/drops"), edits)?;
         }
         for (k, v) in self.palette.iter() {
-            v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
+            v.pack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
         for (k, v) in self.enemy.iter() {
-            v.pack(rom, &format!("{path}/enemy/{k}"), edits)?;
+            v.pack(rrom, &format!("{path}/enemy/{k}"), edits)?;
         }
         Ok(())
     }
@@ -97,38 +102,43 @@ impl config::GameBank {
 }
 
 impl config::GlobalBank {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("GlobalBank::unpack {path}");
-        self.misc.unpack(rom, &format!("{path}/misc"), edits)?;
-        self.drops.unpack(rom, &format!("{path}/drops"), edits)?;
-        self.item.unpack(rom, &format!("{path}/item"), edits)?;
+        self.misc.unpack(rrom, &format!("{path}/misc"), edits)?;
+        self.drops.unpack(rrom, &format!("{path}/drops"), edits)?;
+        self.item.unpack(rrom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
-            v.unpack(rom, &format!("{path}/palette/{k}"), edits)?;
+            v.unpack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
         self.enemy_xp
-            .unpack(rom, &format!("{path}/enemy_xp"), edits)?;
+            .unpack(rrom, &format!("{path}/enemy_xp"), edits)?;
         for (k, v) in self.experience.iter() {
-            v.unpack(rom, &format!("{path}/experience/{k}"), edits)?;
+            v.unpack(rrom, &format!("{path}/experience/{k}"), edits)?;
         }
         self.enemy_xp
-            .unpack(rom, &format!("{path}/enemy_xp"), edits)?;
-        self.start.unpack(rom, &format!("{path}/start"), edits)?;
+            .unpack(rrom, &format!("{path}/enemy_xp"), edits)?;
+        self.start.unpack(rrom, &format!("{path}/start"), edits)?;
         Ok(())
     }
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("GlobalBank::pack {path}");
-        self.misc.pack(rom, &format!("{path}/misc"), edits)?;
-        self.drops.pack(rom, &format!("{path}/drops"), edits)?;
-        self.item.pack(rom, &format!("{path}/item"), edits)?;
+        self.misc.pack(rrom, &format!("{path}/misc"), edits)?;
+        self.drops.pack(rrom, &format!("{path}/drops"), edits)?;
+        self.item.pack(rrom, &format!("{path}/item"), edits)?;
         for (k, v) in self.palette.iter() {
-            v.pack(rom, &format!("{path}/palette/{k}"), edits)?;
+            v.pack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
         for (k, v) in self.experience.iter() {
-            v.pack(rom, &format!("{path}/experience/{k}"), edits)?;
+            v.pack(rrom, &format!("{path}/experience/{k}"), edits)?;
         }
         self.enemy_xp
-            .pack(rom, &format!("{path}/enemy_xp"), edits)?;
-        self.start.pack(rom, &format!("{path}/start"), edits)?;
+            .pack(rrom, &format!("{path}/enemy_xp"), edits)?;
+        self.start.pack(rrom, &format!("{path}/start"), edits)?;
         Ok(())
     }
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {

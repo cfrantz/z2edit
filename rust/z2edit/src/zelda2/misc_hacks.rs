@@ -1,7 +1,10 @@
 use anyhow::Result;
 use indexmap::IndexMap;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::ffi::CString;
 
 use crate::error::Error;
 use crate::gui::Gui;
@@ -50,6 +53,7 @@ pub mod config {
     #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
     pub struct HackDetail {
         pub name: String,
+        #[serde(default)]
         pub code: String,
     }
 
@@ -74,9 +78,15 @@ pub mod config {
 }
 
 impl config::Miscellaneous {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("Miscellaneous::unpack {path}");
         let mut misc = Miscellaneous::default();
+        let rom = rrom.borrow();
         misc.walk_anywhere = rom.read(self.walk_anywhere)? == 0;
         misc.item_pickup_delay = rom.read(self.item_pickup_delay)?;
         misc.text_delay = rom.read(self.text_delay[0])? as i8;
@@ -96,39 +106,52 @@ impl config::Miscellaneous {
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("Miscellaneous::pack {path}");
         if let Some(edit) = edits.get(path) {
             let misc = edit.data_ref::<Miscellaneous>()?;
-            rom.write(self.walk_anywhere, if misc.walk_anywhere { 0 } else { 2 })?;
-            rom.write(self.item_pickup_delay, misc.item_pickup_delay as u8)?;
+            {
+                let mut rom = rrom.borrow_mut();
+                rom.write(self.walk_anywhere, if misc.walk_anywhere { 0 } else { 2 })?;
+                rom.write(self.item_pickup_delay, misc.item_pickup_delay as u8)?;
 
-            let delay0 = misc.text_delay;
-            let delay1 = if delay0 - 0x1f < 0 { 0 } else { delay0 - 0x1f };
-            let delay2 = if delay0 - 0x25 < 0 { 0 } else { delay0 - 0x25 };
-            rom.write(self.text_delay[0], delay0 as u8)?;
-            rom.write(self.text_delay[1], delay1 as u8)?;
-            rom.write(self.text_delay[2], delay2 as u8)?;
+                let delay0 = misc.text_delay;
+                let delay1 = if delay0 - 0x1f < 0 { 0 } else { delay0 - 0x1f };
+                let delay2 = if delay0 - 0x25 < 0 { 0 } else { delay0 - 0x25 };
+                rom.write(self.text_delay[0], delay0 as u8)?;
+                rom.write(self.text_delay[1], delay1 as u8)?;
+                rom.write(self.text_delay[2], delay2 as u8)?;
 
-            rom.write(self.beam_sword_time, (255 - misc.beam_sword_time) as u8)?;
-            rom.write(self.beam_sword_speed, misc.beam_sword_speed as u8)?;
-            rom.write(self.elevator_speed + 1, misc.elevator_speed as u8)?;
-            rom.write(self.elevator_speed + 2, -misc.elevator_speed as u8)?;
+                rom.write(self.beam_sword_time, (255 - misc.beam_sword_time) as u8)?;
+                rom.write(self.beam_sword_speed, misc.beam_sword_speed as u8)?;
+                rom.write(self.elevator_speed + 1, misc.elevator_speed as u8)?;
+                rom.write(self.elevator_speed + 2, -misc.elevator_speed as u8)?;
 
-            rom.write(self.fairy_speed + 1, misc.fairy_speed as u8)?;
-            rom.write(self.fairy_speed + 2, -misc.fairy_speed as u8)?;
-            rom.write(self.fairy_speed + 4 + 1, misc.fairy_speed as u8)?;
-            rom.write(self.fairy_speed + 4 + 2, -misc.fairy_speed as u8)?;
-            rom.write(self.fairy_speed + 8 + 1, misc.fairy_speed as u8)?;
-            rom.write(self.fairy_speed + 8 + 2, -misc.fairy_speed as u8)?;
+                rom.write(self.fairy_speed + 1, misc.fairy_speed as u8)?;
+                rom.write(self.fairy_speed + 2, -misc.fairy_speed as u8)?;
+                rom.write(self.fairy_speed + 4 + 1, misc.fairy_speed as u8)?;
+                rom.write(self.fairy_speed + 4 + 2, -misc.fairy_speed as u8)?;
+                rom.write(self.fairy_speed + 8 + 1, misc.fairy_speed as u8)?;
+                rom.write(self.fairy_speed + 8 + 2, -misc.fairy_speed as u8)?;
+            }
 
             // TODO: need to eval this in python with a ref to the project.
-            //for (name, which) in misc.hack.iter() {
-            //    let hack = self.hack.get(name).ok_or(Error::NotFound(format!("Miscellaneous::hack[{name}]")).into())?;
-            //    let detail = hack.get(which).ok_or(Error::NotFound(format!("Miscellaneous::hack detail {which}")).into())?;
-
-            //    }
-            //}
+            for (name, which) in misc.hack.iter() {
+                let hack = self
+                    .hack
+                    .get(name)
+                    .ok_or(Error::NotFound(format!("Miscellaneous::hack[{name}]")))?;
+                let detail = hack.detail.get(which).ok_or(Error::NotFound(format!(
+                    "Miscellaneous::hack detail {which}"
+                )))?;
+                Python::with_gil(|py| -> Result<()> {
+                    let locals = PyDict::new(py);
+                    locals.set_item("rom", rrom)?;
+                    let code = CString::new(detail.code.clone())?;
+                    py.run(&code, None, Some(&locals))?;
+                    Ok(())
+                })?
+            }
         } else {
             log::warn!("No data for {path:?}");
         }

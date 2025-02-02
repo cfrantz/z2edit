@@ -1,4 +1,5 @@
 use anyhow::Result;
+use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
@@ -86,8 +87,14 @@ pub mod config {
 }
 
 impl config::StartValues {
-    pub fn unpack(&self, rom: &NesFile, path: &str, edits: &mut EditList) -> Result<()> {
+    pub fn unpack(
+        &self,
+        rrom: &Bound<'_, NesFile>,
+        path: &str,
+        edits: &mut EditList,
+    ) -> Result<()> {
         log::debug!("StartValues::unpack {path}");
+        let rom = rrom.borrow();
         let tech = rom.read(self.values + 31)?;
         let sv = StartValues {
             level: Levels {
@@ -126,10 +133,11 @@ impl config::StartValues {
         Ok(())
     }
 
-    pub fn pack(&self, rom: &mut NesFile, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("StartValues::pack {path}");
         if let Some(edit) = edits.get(path) {
             let sv = edit.data_ref::<StartValues>()?;
+            let mut rom = rrom.borrow_mut();
             rom.write(self.values + 0, sv.level.attack)?;
             rom.write(self.values + 1, sv.level.magic)?;
             rom.write(self.values + 2, sv.level.life)?;
