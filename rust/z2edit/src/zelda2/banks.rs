@@ -11,6 +11,7 @@ use crate::zelda2::edit::EditList;
 
 pub mod config {
     use super::*;
+    use crate::nes::freespace::config::FreeSpace;
     use crate::zelda2::drops::config::DropInfo;
     use crate::zelda2::enemies::config::EnemyGroup;
     use crate::zelda2::experience::config::{EnemyExperience, ExperienceTableGroup};
@@ -24,6 +25,7 @@ pub mod config {
         pub drops: Option<DropInfo>,
         pub enemy: IndexMap<String, EnemyGroup>,
         pub palette: IndexMap<String, PaletteGroup>,
+        pub freespace: FreeSpace,
     }
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -35,6 +37,7 @@ pub mod config {
         pub experience: IndexMap<String, ExperienceTableGroup>,
         pub palette: IndexMap<String, PaletteGroup>,
         pub start: StartValues,
+        pub freespace: FreeSpace,
     }
 }
 

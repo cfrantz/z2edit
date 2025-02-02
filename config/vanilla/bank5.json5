@@ -87,6 +87,23 @@
                     },
                 },
             },
+            freespace: {
+                freespace: [
+                    {address: {Prg: [5, 0x84C2]}, length: 14 },
+                    {address: {Prg: [5, 0x84E0]}, length: 16 },
+                    {address: {Prg: [5, 0x84F4]}, length: 12 },
+                    {address: {Prg: [5, 0x8705]}, length: 22 },
+                    {address: {Prg: [5, 0x8B31]}, length: 31 },
+                    {address: {Prg: [5, 0x93AE]}, length: 82 },
+                    {address: {Prg: [5, 0xA54F]}, length: 177 },
+                    {address: {Prg: [5, 0xBDA1]}, length: 447 },
+                    {address: {Prg: [5, 0xBFE0]}, length: 24 },
+                ],
+                keepout: [
+                    {address: {Prg: [5, 0x88A0]}, length: 432 },
+                    {address: {Prg: [5, 0x871B]}, length: 389 },
+                ],
+            },
         },
     },
 }

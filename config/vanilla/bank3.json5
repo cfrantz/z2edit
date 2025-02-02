@@ -69,6 +69,20 @@
                     },
                 },
             },
+            freespace: {
+                freespace: [
+                    {address: {Prg: [3, 0x84DA]}, length: 38 },
+                    {address: {Prg: [3, 0x8CA0]}, length: 1104 },
+                    {address: {Prg: [3, 0x9134]}, length: 716 },
+                    {address: {Prg: [3, 0x9D0A]}, length: 758 },
+                    {address: {Prg: [3, 0xB803]}, length: 1901 },
+                    {address: {Prg: [3, 0xBFE0]}, length: 24 },
+                ],
+                keepout: [
+                    {address: {Prg: [3, 0x88A0]}, length: 1024 },
+                    {address: {Prg: [3, 0x871B]}, length: 389 },
+                ],
+            },
         },
     },
 }

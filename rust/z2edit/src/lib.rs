@@ -21,6 +21,7 @@ fn _z2edit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<app_preferences::MultiMap>()?;
     m.add_class::<nes::NesFile>()?;
     m.add_class::<nes::Address>()?;
+    m.add_class::<nes::freespace::Alloc>()?;
     m.add_class::<gui::project::ProjectGui>()?;
     m.add_class::<gui::file_dialog::FileDialog>()?;
     m.add_class::<gui::preferences::AppPreferencesGui>()?;

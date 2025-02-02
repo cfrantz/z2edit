@@ -6,7 +6,8 @@ use std::cell::Cell;
 use std::path::Path;
 
 use crate::error::Error;
-use crate::nes::NesFile;
+use crate::nes::freespace::{Alloc, FreeSpace};
+use crate::nes::{Address, NesFile};
 use crate::util::time::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::edit::{EditList, GameData};
@@ -26,6 +27,8 @@ pub struct Project {
     pub rom: NesFile,
     #[serde(skip)]
     pub config: Config,
+    #[serde(skip)]
+    pub freespace: FreeSpace,
 }
 
 thread_local! {
@@ -66,6 +69,11 @@ impl Project {
             FileResource::File(ref f) => NesFile::load(f)?,
         };
         self.config = config;
+        self.freespace.register(&self.config.global.freespace)?;
+        for bank in self.config.bank.values() {
+            self.freespace.register(&bank.freespace)?;
+        }
+        log::info!("{}", self.freespace);
         self.rom = rom;
         self.apply_fixes()?;
         let mut edits = self.unpack()?;
@@ -154,5 +162,18 @@ impl Project {
     #[pyo3(name = "export_rom")]
     pub fn _export_rom(&self, path: &str) -> Result<()> {
         self.export_rom(path)
+    }
+
+    #[pyo3(signature = (address, length, policy=Alloc::Best))]
+    pub fn alloc(&mut self, address: Address, length: u16, policy: Alloc) -> Result<Address> {
+        self.freespace.alloc(address, length, policy)
+    }
+
+    pub fn free(&mut self, address: Address, length: u16) -> Result<()> {
+        self.freespace.free(address, length)
+    }
+
+    pub fn report(&self) -> String {
+        self.freespace.to_string()
     }
 }

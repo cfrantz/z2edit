@@ -147,5 +147,14 @@
             values: {Prg: [5, 0xbae3]},
             lives: {Prg: [-1, 0xc359]},
         }
+        freespace: {
+            freespace: [
+                {address: {Prg: [0, 0xAB00]}, length: 5232 },
+                {address: {Prg: [0, 0xBFE0]}, length: 24 },
+                {address: {Prg: [7, 0xD39A]}, length: 48 },
+                {address: {Prg: [7, 0xFFEA]}, length: 38 },
+                {address: {Prg: [7, 0xFF4C]}, length: 36 }
+            ],
+        }
     }
 }

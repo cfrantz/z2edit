@@ -143,6 +143,25 @@
                     },
                 },
             },
+            freespace: {
+                freespace: [
+                    {address: {Prg: [4, 0x83DC]}, length: 148 },
+                    {address: {Prg: [4, 0x84F0]}, length: 16 },
+                    {address: {Prg: [4, 0x870E]}, length: 13 },
+                    {address: {Prg: [4, 0x8EC3]}, length: 1341 },
+                    {address: {Prg: [4, 0x9EE0]}, length: 288 },
+                    {address: {Prg: [4, 0xA1E3]}, length: 21 },
+                    {address: {Prg: [4, 0xA3FB]}, length: 69 },
+                    {address: {Prg: [4, 0xA539]}, length: 263 },
+                    {address: {Prg: [4, 0xA765]}, length: 411 },
+                    {address: {Prg: [4, 0xBFE0]}, length: 24 },
+                ],
+                keepout: [
+                    {address: {Prg: [4, 0x88A0]}, length: 1024 },
+                    {address: {Prg: [4, 0x871B]}, length: 389 },
+                    {address: {Prg: [4, 0xA1F8]}, length: 252 },
+                ],
+            },
         },
     },
 }

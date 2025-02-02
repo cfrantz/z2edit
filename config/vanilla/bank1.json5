@@ -100,6 +100,17 @@
                     },
                 },
             },
+            freespace: {
+                freespace: [
+                    {address: {Prg: [1, 0xA970]}, length: 5616 },
+                    {address: {Prg: [1, 0xBFE0]}, length: 24 },
+                ],
+                keepout: [
+                    {address: {Prg: [1, 0x88A0]}, length: 1024 },
+                    {address: {Prg: [1, 0x871B]}, length: 389 },
+                    {address: {Prg: [1, 0xA1F8]}, length: 252 },
+                ],
+            },
         },
     },
 }

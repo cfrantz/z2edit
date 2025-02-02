@@ -3,7 +3,7 @@ use anyhow::{ensure, Result};
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 #[pyclass]
 pub enum Address {
     File(usize),
@@ -127,3 +127,75 @@ macro_rules! address_math {
 }
 
 address_math!(u8, u16, u32, u64, usize, i8, i16, i32, i64, isize);
+
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
+pub struct AddressRange {
+    pub address: Address,
+    pub length: u16,
+}
+
+impl AddressRange {
+    fn same_bank(&self, address: Address) -> bool {
+        if std::mem::discriminant(&self.address) != std::mem::discriminant(&address) {
+            return false;
+        }
+        if self.address.bank() != address.bank() {
+            return false;
+        }
+        true
+    }
+
+    pub fn contains(&self, other: &AddressRange) -> bool {
+        if !self.same_bank(other.address) {
+            return false;
+        }
+        let start = self.address.offset();
+        let end = start + self.length as usize;
+        let other_start = other.address.offset();
+        let other_end = other_start + other.length as usize;
+        start <= other_start && other_end <= end
+    }
+
+    pub fn adjacent(&self, other: &AddressRange) -> bool {
+        if !self.same_bank(other.address) {
+            return false;
+        }
+        let end = self.address.offset() + self.length as usize;
+        let addr = other.address.offset();
+        end == addr
+    }
+
+    pub fn overlaps(&self, other: &AddressRange) -> bool {
+        if !self.same_bank(other.address) {
+            return false;
+        }
+        let start = self.address.offset();
+        let end = start + self.length as usize;
+        let other_start = other.address.offset();
+        let other_end = other_start + other.length as usize;
+        (start <= other_start && other_start < end) || (start < other_end && other_end <= end)
+    }
+
+    pub fn cut(&mut self, length: u16) -> Result<AddressRange> {
+        if length <= self.length {
+            let result = AddressRange {
+                address: self.address,
+                length,
+            };
+            self.address = self.address + length;
+            self.length -= length;
+            Ok(result)
+        } else {
+            Err(NesError::RangeTooSmall(*self, length).into())
+        }
+    }
+
+    pub fn extend(&mut self, other: &AddressRange) -> bool {
+        if self.adjacent(other) {
+            self.length += other.length;
+            true
+        } else {
+            false
+        }
+    }
+}
