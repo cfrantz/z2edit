@@ -144,6 +144,14 @@ impl Project {
         rom.save(path).with_context(|| format!("Saving {path:?}"))
     }
 
+    pub fn data_ref<T: GameData>(&self, path: &str) -> Result<&T> {
+        let edit = self
+            .edits
+            .get(path)
+            .ok_or_else(|| Error::NotFound(path.into()))?;
+        edit.data_ref::<T>()
+    }
+
     pub fn commit(&mut self, path: &str, data: Box<dyn GameData>) -> Result<()> {
         let edit = self
             .edits

@@ -4,6 +4,7 @@ pub mod config;
 pub mod drops;
 pub mod enemies;
 pub mod experience;
+pub mod metatile;
 pub mod misc_hacks;
 pub mod palette;
 pub mod start;

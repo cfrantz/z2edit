@@ -4,6 +4,13 @@ use crate::zelda2::banks::config;
 impl GuiTree for config::GameBank {
     fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
         let mut result = None;
+        ui.tree_node_config(format!("Metatile##{path}")).build(|| {
+            for (k, v) in self.metatile.iter() {
+                let _ = v
+                    .tree_node(ui, &format!("{path}/metatile/{k}"))
+                    .map(|x| Option::replace(&mut result, x));
+            }
+        });
         ui.tree_node_config(format!("Palette##{path}")).build(|| {
             for (k, v) in self.palette.iter() {
                 let _ = v
@@ -11,6 +18,7 @@ impl GuiTree for config::GameBank {
                     .map(|x| Option::replace(&mut result, x));
             }
         });
+
         if let Some(drop) = &self.drops {
             let _ = drop
                 .tree_node(ui, &format!("{path}/drops"))
@@ -34,6 +42,13 @@ impl GuiTree for config::GlobalBank {
             for (k, v) in self.palette.iter() {
                 let _ = v
                     .tree_node(ui, &format!("{path}/palette/{k}"))
+                    .map(|x| Option::replace(&mut result, x));
+            }
+        });
+        ui.tree_node_config(format!("Metatile##{path}")).build(|| {
+            for (k, v) in self.metatile.iter() {
+                let _ = v
+                    .tree_node(ui, &format!("{path}/metatile/{k}"))
                     .map(|x| Option::replace(&mut result, x));
             }
         });

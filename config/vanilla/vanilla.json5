@@ -38,6 +38,16 @@
                 },
             },
         },
+        metatile: {
+            overworld: {
+                name: "Overworld",
+                pointers: 0,
+                address: {Prg: [0, 0x87a3]},
+                length: [16],
+                tile_palette: {Prg: [0, 0x87e3]},
+                palette: "/global/palette/overworld",
+            },
+        },
         item: {
             sprite_table: {Prg: [-1, 0xEE7F]},
             item: {

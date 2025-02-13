@@ -21,6 +21,15 @@
                     "3": { name: "Unused 3",        address: {Prg: [3, 0x80ce]}},
                 },
             },
+            metatile: {
+                background: {
+                    name: "Towns",
+                    pointers: 4,
+                    address: {Prg: [3, 0x8500]},
+                    length: [27, 27, 25, 43],
+                    palette: "/bank/3/palette/background",
+                },
+            },
             enemy: {
                 "0": {
                     name: "Towns",

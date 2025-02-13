@@ -16,6 +16,7 @@ pub mod config {
     use crate::zelda2::enemies::config::EnemyGroup;
     use crate::zelda2::experience::config::{EnemyExperience, ExperienceTableGroup};
     use crate::zelda2::items::config::Items;
+    use crate::zelda2::metatile::config::MetatileGroup;
     use crate::zelda2::misc_hacks::config::Miscellaneous;
     use crate::zelda2::palette::config::PaletteGroup;
     use crate::zelda2::start::config::StartValues;
@@ -25,6 +26,7 @@ pub mod config {
     pub struct GameBank {
         pub drops: Option<DropInfo>,
         pub enemy: IndexMap<String, EnemyGroup>,
+        pub metatile: IndexMap<String, MetatileGroup>,
         pub palette: IndexMap<String, PaletteGroup>,
         pub freespace: FreeSpace,
     }
@@ -36,6 +38,7 @@ pub mod config {
         pub drops: DropInfo,
         pub enemy_xp: EnemyExperience,
         pub experience: IndexMap<String, ExperienceTableGroup>,
+        pub metatile: IndexMap<String, MetatileGroup>,
         pub palette: IndexMap<String, PaletteGroup>,
         pub start: StartValues,
         pub misc: Miscellaneous,
@@ -54,6 +57,9 @@ impl config::GameBank {
         for drop in self.drops.iter() {
             drop.unpack(rrom, &format!("{path}/drops"), edits)?;
         }
+        for (k, v) in self.metatile.iter() {
+            v.unpack(rrom, &format!("{path}/metatile/{k}"), edits)?;
+        }
         for (k, v) in self.palette.iter() {
             v.unpack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -66,6 +72,9 @@ impl config::GameBank {
         log::debug!("GameBank::pack {path}");
         for drop in self.drops.iter() {
             drop.pack(rrom, &format!("{path}/drops"), edits)?;
+        }
+        for (k, v) in self.metatile.iter() {
+            v.pack(rrom, &format!("{path}/metatile/{k}"), edits)?;
         }
         for (k, v) in self.palette.iter() {
             v.pack(rrom, &format!("{path}/palette/{k}"), edits)?;
@@ -87,6 +96,13 @@ impl config::GameBank {
                     .get(*n)
                     .ok_or(Error::NotFound(format!("palette/{n}")))?;
                 palette.get::<T>(&path[2..])
+            }
+            ["metatile", ref n, ..] => {
+                let metatile = self
+                    .metatile
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("metatile/{n}")))?;
+                metatile.get::<T>(&path[2..])
             }
             ["enemy", ref n, ..] => {
                 let enemy = self
@@ -112,6 +128,9 @@ impl config::GlobalBank {
         self.misc.unpack(rrom, &format!("{path}/misc"), edits)?;
         self.drops.unpack(rrom, &format!("{path}/drops"), edits)?;
         self.item.unpack(rrom, &format!("{path}/item"), edits)?;
+        for (k, v) in self.metatile.iter() {
+            v.unpack(rrom, &format!("{path}/metatile/{k}"), edits)?;
+        }
         for (k, v) in self.palette.iter() {
             v.unpack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -130,6 +149,9 @@ impl config::GlobalBank {
         self.misc.pack(rrom, &format!("{path}/misc"), edits)?;
         self.drops.pack(rrom, &format!("{path}/drops"), edits)?;
         self.item.pack(rrom, &format!("{path}/item"), edits)?;
+        for (k, v) in self.metatile.iter() {
+            v.pack(rrom, &format!("{path}/metatile/{k}"), edits)?;
+        }
         for (k, v) in self.palette.iter() {
             v.pack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -153,6 +175,13 @@ impl config::GlobalBank {
                     .get(*n)
                     .ok_or(Error::NotFound(format!("palette/{n}")))?;
                 palette.get::<T>(&path[2..])
+            }
+            ["metatile", ref n, ..] => {
+                let metatile = self
+                    .metatile
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("metatile/{n}")))?;
+                metatile.get::<T>(&path[2..])
             }
             ["enemy_xp", ..] => self.enemy_xp.get(&path[1..]),
             ["experience", ref n, ..] => {

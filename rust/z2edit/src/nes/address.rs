@@ -78,6 +78,20 @@ impl Address {
         }
     }
 
+    pub fn is_chr(&self) -> bool {
+        match self {
+            Address::Chr(_, _) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_prg(&self) -> bool {
+        match self {
+            Address::Prg(_, _) => true,
+            _ => false,
+        }
+    }
+
     fn __repr__(&self) -> String {
         format!("{self:?}")
     }

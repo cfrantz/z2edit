@@ -7,6 +7,7 @@ pub mod file_dialog;
 pub mod preferences;
 pub mod project;
 mod visibility;
+pub mod widgets;
 pub mod wizard;
 pub mod zelda2;
 

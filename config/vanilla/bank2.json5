@@ -22,6 +22,15 @@
                     "3": { name: "Unused 3",     address: {Prg: [2, 0x80ce]}},
                 },
             },
+            metatile: {
+                background: {
+                    name: "East Hyrule",
+                    pointers: 4,
+                    address: {Prg: [2, 0x8500]},
+                    length: [34, 34, 18, 11],
+                    palette: "/bank/2/palette/background",
+                },
+            },
             enemy: {
                 "0": {
                     name: "East Hyrule",
