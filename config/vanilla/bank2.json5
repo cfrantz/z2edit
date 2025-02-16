@@ -31,6 +31,18 @@
                     palette: "/bank/2/palette/background",
                 },
             },
+            encounters: {
+                address: {Prg: [2, 0x8409]},
+                terrain: [
+                    "Desert",
+                    "Grass",
+                    "Forest",
+                    "Swamp",
+                    "Grave",
+                    "Road",
+                    "Lava",
+                ],
+            },
             enemy: {
                 "0": {
                     name: "East Hyrule",

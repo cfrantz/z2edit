@@ -10,4 +10,6 @@ pub enum Error {
     NotImplemented(String),
     #[error("configuration error: {0}")]
     Configuration(String),
+    #[error("map error: {0}")]
+    Map(String),
 }

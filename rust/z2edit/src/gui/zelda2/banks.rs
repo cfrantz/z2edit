@@ -4,6 +4,23 @@ use crate::zelda2::banks::config;
 impl GuiTree for config::GameBank {
     fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
         let mut result = None;
+        if let Some(drop) = &self.drops {
+            let _ = drop
+                .tree_node(ui, &format!("{path}/drops"))
+                .map(|x| Option::replace(&mut result, x));
+        }
+        if let Some(encounter) = &self.encounters {
+            let _ = encounter
+                .tree_node(ui, &format!("{path}/encounters"))
+                .map(|x| Option::replace(&mut result, x));
+        }
+        ui.tree_node_config(format!("Enemies##{path}")).build(|| {
+            for (k, v) in self.enemy.iter() {
+                let _ = v
+                    .tree_node(ui, &format!("{path}/enemy/{k}"))
+                    .map(|x| Option::replace(&mut result, x));
+            }
+        });
         ui.tree_node_config(format!("Metatile##{path}")).build(|| {
             for (k, v) in self.metatile.iter() {
                 let _ = v
@@ -15,19 +32,6 @@ impl GuiTree for config::GameBank {
             for (k, v) in self.palette.iter() {
                 let _ = v
                     .tree_node(ui, &format!("{path}/palette/{k}"))
-                    .map(|x| Option::replace(&mut result, x));
-            }
-        });
-
-        if let Some(drop) = &self.drops {
-            let _ = drop
-                .tree_node(ui, &format!("{path}/drops"))
-                .map(|x| Option::replace(&mut result, x));
-        }
-        ui.tree_node_config(format!("Enemies##{path}")).build(|| {
-            for (k, v) in self.enemy.iter() {
-                let _ = v
-                    .tree_node(ui, &format!("{path}/enemy/{k}"))
                     .map(|x| Option::replace(&mut result, x));
             }
         });

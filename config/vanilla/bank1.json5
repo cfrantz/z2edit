@@ -31,6 +31,18 @@
                     palette: "/bank/1/palette/background",
                 },
             },
+            encounters: {
+                address: {Prg: [1, 0x8409]},
+                terrain: [
+                    "Desert",
+                    "Grass",
+                    "Forest",
+                    "Swamp",
+                    "Grave",
+                    "Road",
+                    "Lava",
+                ],
+            },
             enemy: {
                 "0": {
                     name: "West Hyrule",

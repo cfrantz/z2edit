@@ -3,6 +3,7 @@ pub mod chr;
 pub mod config;
 pub mod drops;
 pub mod edit;
+pub mod encounters;
 pub mod enemies;
 pub mod experience;
 pub mod items;
