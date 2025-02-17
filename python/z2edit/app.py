@@ -22,6 +22,7 @@ class Application(object):
         self.inner = None
         self.show_style_editor = False
         self.show_demo_window = False
+        self.show_metrics_window = False
         self.windows = []
         self.args = args
         self.dirs = dirs 
@@ -66,9 +67,10 @@ class Application(object):
             self.windows.append(z2edit.ProjectGui(project))
 
     def demo_window(self):
-        if not self.show_demo_window:
-            return
-        self.show_demo_window = gui.show_demo_window(self.show_demo_window)
+        if self.show_demo_window:
+            self.show_demo_window = gui.show_demo_window(self.show_demo_window)
+        if self.show_metrics_window:
+            self.show_metrics_window = gui.show_metrics_window(self.show_metrics_window)
 
     def menu_bar(self):
         gui.begin_main_menu_bar()
@@ -94,6 +96,8 @@ class Application(object):
         if gui.begin_menu("View"):
             if gui.menu_item("Demo Window"):
                 self.show_demo_window = True
+            if gui.menu_item("Metrics Window"):
+                self.show_metrics_window = True
             gui.end_menu()
 
         gui.end_main_menu_bar()

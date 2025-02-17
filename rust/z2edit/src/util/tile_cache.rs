@@ -6,6 +6,7 @@ use std::sync::OnceLock;
 use crate::error::Error;
 use crate::nes::{hwpalette, Address};
 use crate::zelda2::chr::ChrMemory;
+use crate::zelda2::metatile::MetatileGroup;
 use crate::zelda2::palette::PaletteGroup;
 use crate::zelda2::project::Project;
 
@@ -140,6 +141,44 @@ impl GfxCache {
             palette,
             kind,
             buf,
+        )
+    }
+
+    pub fn metatile<'a>(
+        project: &'a Project,
+        chr: Address,
+        palette_group: &str,
+        group: &str,
+        metatile: &str,
+        tile: u8,
+    ) -> Result<&'a Image> {
+        if !chr.is_chr() {
+            return Err(anyhow!("TileCache::raw {chr:?} is not a CHR address"));
+        }
+        let meta = project.data_ref::<MetatileGroup>(metatile)?;
+        // The palette subgroup is usually the top two bits of the metatile id.
+        let mut pgroup = (tile >> 6) as usize;
+        let mgroup = meta.group.get(&pgroup).ok_or_else(|| {
+            Error::NotFound(format!("Metatile group {pgroup} not found in {metatile}"))
+        })?;
+        let tile = tile & 0x3f;
+        let val = mgroup
+            .tile
+            .get(tile as usize)
+            .ok_or_else(|| Error::NotFound(format!("Tile {tile} not found in {metatile}")))?;
+        if let Some(&pal) = mgroup.palette.get(tile as usize) {
+            // Some metatile groups (e.g. overworlds) define their own palettes
+            // rather than encoding the palette in the tile id.
+            pgroup = pal as usize;
+        }
+        Self::get(
+            project,
+            chr.bank().unwrap() as u16,
+            palette_group,
+            group,
+            pgroup as usize,
+            GfxKind::Metatile,
+            val.to_be_bytes(),
         )
     }
 

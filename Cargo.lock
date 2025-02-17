@@ -883,7 +883,7 @@ dependencies = [
 [[package]]
 name = "imgui-sdl2-support"
 version = "0.13.0"
-source = "git+https://github.com/imgui-rs/imgui-sdl2-support#0a918d3d0c70b873503afa03c8977d725a7145f4"
+source = "git+https://github.com/imgui-rs/imgui-sdl2-support?rev=0a918d3d0c70b873503afa03c8977d725a7145f4#0a918d3d0c70b873503afa03c8977d725a7145f4"
 dependencies = [
  "imgui",
  "sdl2",

@@ -19,6 +19,7 @@ pub mod config {
     use crate::zelda2::items::config::Items;
     use crate::zelda2::metatile::config::MetatileGroup;
     use crate::zelda2::misc_hacks::config::Miscellaneous;
+    use crate::zelda2::overworld::config::Overworld;
     use crate::zelda2::palette::config::PaletteGroup;
     use crate::zelda2::start::config::StartValues;
 
@@ -29,6 +30,7 @@ pub mod config {
         pub encounters: Option<Encounters>,
         pub enemy: IndexMap<String, EnemyGroup>,
         pub metatile: IndexMap<String, MetatileGroup>,
+        pub overworld: IndexMap<String, Overworld>,
         pub palette: IndexMap<String, PaletteGroup>,
         pub freespace: FreeSpace,
     }
@@ -68,6 +70,9 @@ impl config::GameBank {
         for (k, v) in self.metatile.iter() {
             v.unpack(rrom, &format!("{path}/metatile/{k}"), edits)?;
         }
+        for (k, v) in self.overworld.iter() {
+            v.unpack(rrom, &format!("{path}/overworld/{k}"), edits)?;
+        }
         for (k, v) in self.palette.iter() {
             v.unpack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
@@ -86,6 +91,9 @@ impl config::GameBank {
         }
         for (k, v) in self.metatile.iter() {
             v.pack(rrom, &format!("{path}/metatile/{k}"), edits)?;
+        }
+        for (k, v) in self.overworld.iter() {
+            v.pack(rrom, &format!("{path}/overworld/{k}"), edits)?;
         }
         for (k, v) in self.palette.iter() {
             v.pack(rrom, &format!("{path}/palette/{k}"), edits)?;
@@ -114,6 +122,13 @@ impl config::GameBank {
                     .get(*n)
                     .ok_or(Error::NotFound(format!("metatile/{n}")))?;
                 metatile.get::<T>(&path[2..])
+            }
+            ["overworld", ref n, ..] => {
+                let overworld = self
+                    .overworld
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("overworld/{n}")))?;
+                overworld.get::<T>(&path[2..])
             }
             ["palette", ref n, ..] => {
                 let palette = self

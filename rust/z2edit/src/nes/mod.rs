@@ -6,4 +6,5 @@ pub mod nesfile;
 
 pub use address::{Address, AddressRange};
 pub use error::NesError;
+pub use freespace::Alloc;
 pub use nesfile::NesFile;

@@ -28,6 +28,13 @@ impl GuiTree for config::GameBank {
                     .map(|x| Option::replace(&mut result, x));
             }
         });
+        ui.tree_node_config(format!("Overworld##{path}")).build(|| {
+            for (k, v) in self.overworld.iter() {
+                let _ = v
+                    .tree_node(ui, &format!("{path}/overworld/{k}"))
+                    .map(|x| Option::replace(&mut result, x));
+            }
+        });
         ui.tree_node_config(format!("Palette##{path}")).build(|| {
             for (k, v) in self.palette.iter() {
                 let _ = v

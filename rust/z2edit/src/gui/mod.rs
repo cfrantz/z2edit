@@ -6,6 +6,7 @@ mod error_dialog;
 pub mod file_dialog;
 pub mod preferences;
 pub mod project;
+pub mod util;
 mod visibility;
 pub mod widgets;
 pub mod wizard;

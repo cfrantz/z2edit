@@ -12,4 +12,6 @@ pub enum Error {
     Configuration(String),
     #[error("map error: {0}")]
     Map(String),
+    #[error("length error: {0}")]
+    Length(String),
 }
