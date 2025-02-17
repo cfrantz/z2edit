@@ -389,10 +389,12 @@ impl From<&JsonStyle> for imgui::Style {
             hover_delay_short: style.hover_delay_short,
             hover_delay_normal: style.hover_delay_normal,
             hover_flags_for_tooltip_mouse: unsafe {
-                std::mem::transmute(style.hover_flags_for_tooltip_mouse)
+                // SAFETY: HoveredFlags underlying type is u32.
+                std::mem::transmute::<u32, imgui::HoveredFlags>(style.hover_flags_for_tooltip_mouse)
             },
             hover_flags_for_tooltip_nav: unsafe {
-                std::mem::transmute(style.hover_flags_for_tooltip_nav)
+                // SAFETY: HoveredFlags underlying type is u32.
+                std::mem::transmute::<u32, imgui::HoveredFlags>(style.hover_flags_for_tooltip_nav)
             },
         }
     }

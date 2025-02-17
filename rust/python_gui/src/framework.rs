@@ -35,6 +35,21 @@ pub struct Framework {
     background: [f32; 3],
 }
 
+struct ClipboardBackend(sdl2::clipboard::ClipboardUtil);
+
+impl imgui::ClipboardBackend for ClipboardBackend {
+    fn get(&mut self) -> Option<String> {
+        if self.0.has_clipboard_text() {
+            self.0.clipboard_text().ok()
+        } else {
+            None
+        }
+    }
+    fn set(&mut self, value: &str) {
+        let _ = self.0.set_clipboard_text(value);
+    }
+}
+
 #[pyclass(unsendable)]
 #[repr(transparent)]
 pub struct UiContext {
@@ -48,6 +63,30 @@ impl UiContext {
             Self {
                 ui: std::mem::transmute::<&imgui::Ui, &'static imgui::Ui>(ui),
             }
+        }
+    }
+}
+
+impl Framework {
+    // FIXME: re-evaluate this when upgrading imgui.
+    fn handle_modifier_bug(ui: &imgui::Ui) {
+        use imgui::Key;
+        let io = unsafe {
+            // SAFETY: No one else is touching `io` at this time.
+            #[allow(mutable_transmutes)]
+            std::mem::transmute::<&imgui::Io, &mut imgui::Io>(ui.io())
+        };
+        if ui.is_key_down(Key::LeftShift) || ui.is_key_down(Key::RightShift) {
+            io.key_shift = true;
+        }
+        if ui.is_key_down(Key::LeftAlt) || ui.is_key_down(Key::RightAlt) {
+            io.key_alt = true;
+        }
+        if ui.is_key_down(Key::LeftCtrl) || ui.is_key_down(Key::RightCtrl) {
+            io.key_ctrl = true;
+        }
+        if ui.is_key_down(Key::LeftSuper) || ui.is_key_down(Key::RightSuper) {
+            io.key_super = true;
         }
     }
 }
@@ -104,6 +143,7 @@ impl Framework {
             .add_font(&[imgui::FontSource::DefaultFontData { config: None }]);
 
         imgui.io_mut().config_flags |= ConfigFlags::DOCKING_ENABLE;
+        imgui.set_clipboard_backend(ClipboardBackend(window.subsystem().clipboard()));
 
         /* create platform and renderer */
         let platform = SdlPlatform::new(&mut imgui);
@@ -153,14 +193,24 @@ impl Framework {
             if let Event::Quit { .. } = event {
                 return None;
             }
+            /*
+            if let Event::KeyDown { ref keymod, .. } = event {
+                Self::handle_key_modifier(self.imgui.io_mut(), keymod, true);
+            }
+            if let Event::KeyUp { ref keymod, .. } = event {
+                Self::handle_key_modifier(self.imgui.io_mut(), keymod, false);
+            }
+            */
         }
 
         /* call prepare_frame before calling imgui.new_frame() */
         self.platform
             .prepare_frame(&mut self.imgui, &self.window, &self.event_pump);
 
-        let ui = UiContext::new(self.imgui.new_frame());
-        Some(ui)
+        let ui = self.imgui.new_frame();
+        Self::handle_modifier_bug(ui);
+        // Wrap the `ui` for python.
+        Some(UiContext::new(ui))
     }
 
     pub fn render_frame(&mut self, py: Python<'_>) {
