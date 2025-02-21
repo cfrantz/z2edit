@@ -9,4 +9,5 @@ pub mod metatile;
 pub mod misc_hacks;
 pub mod overworld;
 pub mod palette;
+pub mod sideview;
 pub mod start;

@@ -13,4 +13,5 @@ pub mod overworld;
 pub mod palette;
 pub mod project;
 pub mod rom;
+pub mod sideview;
 pub mod start;

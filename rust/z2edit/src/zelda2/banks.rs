@@ -21,6 +21,7 @@ pub mod config {
     use crate::zelda2::misc_hacks::config::Miscellaneous;
     use crate::zelda2::overworld::config::Overworld;
     use crate::zelda2::palette::config::PaletteGroup;
+    use crate::zelda2::sideview::config::SideviewGroup;
     use crate::zelda2::start::config::StartValues;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -32,6 +33,7 @@ pub mod config {
         pub metatile: IndexMap<String, MetatileGroup>,
         pub overworld: IndexMap<String, Overworld>,
         pub palette: IndexMap<String, PaletteGroup>,
+        pub sideview: Option<SideviewGroup>,
         pub freespace: FreeSpace,
     }
 
@@ -76,6 +78,9 @@ impl config::GameBank {
         for (k, v) in self.palette.iter() {
             v.unpack(rrom, &format!("{path}/palette/{k}"), edits)?;
         }
+        for sideview in self.sideview.iter() {
+            sideview.unpack(rrom, &format!("{path}/sideview"), edits)?;
+        }
         Ok(())
     }
     pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
@@ -97,6 +102,9 @@ impl config::GameBank {
         }
         for (k, v) in self.palette.iter() {
             v.pack(rrom, &format!("{path}/palette/{k}"), edits)?;
+        }
+        for sideview in self.sideview.iter() {
+            sideview.pack(rrom, &format!("{path}/sideview"), edits)?;
         }
         Ok(())
     }
@@ -136,6 +144,9 @@ impl config::GameBank {
                     .get(*n)
                     .ok_or(Error::NotFound(format!("palette/{n}")))?;
                 palette.get::<T>(&path[2..])
+            }
+            ["sideview", ..] if self.sideview.is_some() => {
+                self.sideview.as_ref().unwrap().get::<T>(&path[1..])
             }
 
             _ => Err(Error::NotFound(format!("GameBank/{path:?}")).into()),

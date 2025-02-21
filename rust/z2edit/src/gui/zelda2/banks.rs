@@ -14,34 +14,52 @@ impl GuiTree for config::GameBank {
                 .tree_node(ui, &format!("{path}/encounters"))
                 .map(|x| Option::replace(&mut result, x));
         }
-        ui.tree_node_config(format!("Enemies##{path}")).build(|| {
-            for (k, v) in self.enemy.iter() {
-                let _ = v
-                    .tree_node(ui, &format!("{path}/enemy/{k}"))
-                    .map(|x| Option::replace(&mut result, x));
-            }
-        });
-        ui.tree_node_config(format!("Metatile##{path}")).build(|| {
-            for (k, v) in self.metatile.iter() {
-                let _ = v
-                    .tree_node(ui, &format!("{path}/metatile/{k}"))
-                    .map(|x| Option::replace(&mut result, x));
-            }
-        });
-        ui.tree_node_config(format!("Overworld##{path}")).build(|| {
-            for (k, v) in self.overworld.iter() {
-                let _ = v
-                    .tree_node(ui, &format!("{path}/overworld/{k}"))
-                    .map(|x| Option::replace(&mut result, x));
-            }
-        });
-        ui.tree_node_config(format!("Palette##{path}")).build(|| {
-            for (k, v) in self.palette.iter() {
-                let _ = v
-                    .tree_node(ui, &format!("{path}/palette/{k}"))
-                    .map(|x| Option::replace(&mut result, x));
-            }
-        });
+        if !self.enemy.is_empty() {
+            ui.tree_node_config(format!("Enemies##{path}")).build(|| {
+                for (k, v) in self.enemy.iter() {
+                    let _ = v
+                        .tree_node(ui, &format!("{path}/enemy/{k}"))
+                        .map(|x| Option::replace(&mut result, x));
+                }
+            });
+        }
+        if !self.metatile.is_empty() {
+            ui.tree_node_config(format!("Metatile##{path}")).build(|| {
+                for (k, v) in self.metatile.iter() {
+                    let _ = v
+                        .tree_node(ui, &format!("{path}/metatile/{k}"))
+                        .map(|x| Option::replace(&mut result, x));
+                }
+            });
+        }
+        if !self.overworld.is_empty() {
+            ui.tree_node_config(format!("Overworld##{path}")).build(|| {
+                for (k, v) in self.overworld.iter() {
+                    let _ = v
+                        .tree_node(ui, &format!("{path}/overworld/{k}"))
+                        .map(|x| Option::replace(&mut result, x));
+                }
+            });
+        }
+        if !self.palette.is_empty() {
+            ui.tree_node_config(format!("Palette##{path}")).build(|| {
+                for (k, v) in self.palette.iter() {
+                    let _ = v
+                        .tree_node(ui, &format!("{path}/palette/{k}"))
+                        .map(|x| Option::replace(&mut result, x));
+                }
+            });
+        }
+        if let Some(sideview) = &self.sideview {
+            ui.tree_node_config(format!("Sideview##{path}")).build(|| {
+                for (k, v) in sideview.group.iter() {
+                    let _ = v
+                        .tree_node(ui, &format!("{path}/sideview/{k}"))
+                        .map(|x| Option::replace(&mut result, x));
+                }
+            });
+        }
+
         result
     }
 }

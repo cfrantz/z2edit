@@ -12,11 +12,12 @@ pub enum Address {
     Chr(i16, u16),
     Chr1k(i16, u16),
     Cpu(u16),
+    NullPtr(),
 }
 
 impl Default for Address {
     fn default() -> Self {
-        Address::Cpu(0)
+        Address::NullPtr()
     }
 }
 
@@ -30,6 +31,7 @@ impl Address {
             Address::Chr(_, x) => *x as usize,
             Address::Chr1k(_, x) => *x as usize,
             Address::Cpu(x) => *x as usize,
+            Address::NullPtr() => 0,
         }
     }
 
@@ -41,6 +43,7 @@ impl Address {
             Address::Chr(x, _) => Some(*x),
             Address::Chr1k(x, _) => Some(*x),
             Address::Cpu(_) => None,
+            Address::NullPtr() => None,
         }
     }
 
@@ -52,6 +55,7 @@ impl Address {
             Address::Chr(b, _) => Address::Chr(*b, offset as u16),
             Address::Chr1k(b, _) => Address::Chr1k(*b, offset as u16),
             Address::Cpu(_) => Address::Cpu(offset as u16),
+            Address::NullPtr() => Address::NullPtr(),
         }
     }
 
@@ -75,6 +79,7 @@ impl Address {
                 Ok((*b as usize) * 1024 + (*x as usize))
             }
             Address::Cpu(x) => Ok(*x as usize),
+            Address::NullPtr() => Err(NesError::InvalidAddress.into()),
         }
     }
 
@@ -89,6 +94,22 @@ impl Address {
         match self {
             Address::Prg(_, _) => true,
             _ => false,
+        }
+    }
+
+    pub fn is_null(&self) -> bool {
+        match self {
+            Address::NullPtr() => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_valid(&self) -> bool {
+        match self {
+            Address::NullPtr() => false,
+            Address::Prg(_, x) => *x != 0 && *x != 0xFFFF,
+            Address::Prg8k(_, x) => *x != 0 && *x != 0xFFFF,
+            _ => true,
         }
     }
 
@@ -116,6 +137,7 @@ macro_rules! address_math {
                     Address::Chr(b, x) => Address::Chr(b, x.wrapping_add(rhs as u16)),
                     Address::Chr1k(b, x) => Address::Chr1k(b, x.wrapping_add(rhs as u16)),
                     Address::Cpu(x) => Address::Cpu(x.wrapping_add(rhs as u16)),
+                    Address::NullPtr() => Address::NullPtr(),
                 }
             }
         }
@@ -129,6 +151,7 @@ macro_rules! address_math {
                     Address::Chr(b, x) => Address::Chr(b, x.wrapping_sub(rhs as u16)),
                     Address::Chr1k(b, x) => Address::Chr1k(b, x.wrapping_sub(rhs as u16)),
                     Address::Cpu(x) => Address::Cpu(x.wrapping_sub(rhs as u16)),
+                    Address::NullPtr() => Address::NullPtr(),
                 }
             }
         }

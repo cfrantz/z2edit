@@ -72,6 +72,17 @@ impl From<Encounter> for u8 {
     }
 }
 
+impl Encounters {
+    pub fn is_encounter(&self, area: u8) -> bool {
+        for enc in self.north.values().chain(self.south.values()) {
+            if area == enc.area {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 impl config::Encounters {
     pub fn unpack(
         &self,
