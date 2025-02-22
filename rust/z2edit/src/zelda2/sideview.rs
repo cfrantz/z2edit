@@ -118,6 +118,7 @@ pub mod config {
         pub palette: String,
         pub background: Option<String>,
         pub encounters: Option<String>,
+        pub enemy_group: Option<String>,
     }
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]

@@ -187,6 +187,7 @@
                     metatile: "/bank/4/metatile/background",
                     palette: "/bank/4/palette",
                     background: "/bank/4/sideview/background",
+                    enemy_group: "/bank/4/enemy/0",
                 },
                 "1": {
                     name: "Palace 3/4/6",
@@ -205,6 +206,7 @@
                     metatile: "/bank/4/metatile/background",
                     palette: "/bank/4/palette",
                     background: "/bank/4/sideview/background",
+                    enemy_group: "/bank/4/enemy/1",
                 },
                 enemy_ram_offset: 0x7000,
                 enemy_rom_offset: 0x88a0,

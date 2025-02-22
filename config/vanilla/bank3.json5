@@ -114,6 +114,7 @@
                     metatile: "/bank/3/metatile/background",
                     palette: "/bank/3/palette",
                     background: "/bank/3/sideview/background",
+                    enemy_group: "/bank/3/enemy/0",
                 },
                 enemy_ram_offset: 0x7000,
                 enemy_rom_offset: 0x88a0,

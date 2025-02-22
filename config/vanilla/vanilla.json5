@@ -8,6 +8,12 @@
         "bank4.json5",
         "bank5.json5",
     ],
+    include_render_info: [
+        "render_caves.json5",
+        "render_towns.json5",
+        "render_palaces.json5",
+        "render_gp.json5",
+    ],
     chr: {
         schema: "Mmc1_4k",
         banks: 32,

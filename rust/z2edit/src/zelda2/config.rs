@@ -11,6 +11,7 @@ use crate::nes::NesFile;
 use crate::zelda2::banks::config::{GameBank, GlobalBank};
 use crate::zelda2::chr::config::ChrMemory;
 use crate::zelda2::edit::EditList;
+use crate::zelda2::object::RenderInfo;
 
 static mut CONFIGS: OnceLock<IndexMap<String, Config>> = OnceLock::new();
 
@@ -21,6 +22,7 @@ pub struct Config {
     #[pyo3(get)]
     pub name: String,
     pub include: Vec<String>,
+    pub include_render_info: Vec<String>,
     pub chr: ChrMemory,
     pub bank: IndexMap<String, GameBank>,
     pub global: GlobalBank,
@@ -37,6 +39,13 @@ impl Config {
             let data = serde_annotate::from_str::<Config>(&data)?;
             game.bank.extend(data.bank);
         }
+        for i in game.include_render_info.iter() {
+            path.set_file_name(i);
+            let data = std::fs::read_to_string(&path)?;
+            let data = serde_annotate::from_str::<IndexMap<String, RenderInfo>>(&data)?;
+            game.global.render.extend(data);
+        }
+
         Ok(game)
     }
 

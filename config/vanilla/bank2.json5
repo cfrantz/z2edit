@@ -188,6 +188,7 @@
                     palette: "/bank/2/palette",
                     background: "/bank/2/sideview/background",
                     encounters: "/bank/2/encounters",
+                    enemy_group: "/bank/2/enemy/0",
                 },
                 "1": {
                     name: "Death Mountain",
@@ -207,6 +208,7 @@
                     palette: "/bank/2/palette",
                     background: "/bank/2/sideview/background",
                     encounters: "/bank/2/encounters",
+                    enemy_group: "/bank/2/enemy/0",
                 },
                 enemy_ram_offset: 0x7000,
                 enemy_rom_offset: 0x88a0,

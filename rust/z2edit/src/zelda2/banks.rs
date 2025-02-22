@@ -19,6 +19,7 @@ pub mod config {
     use crate::zelda2::items::config::Items;
     use crate::zelda2::metatile::config::MetatileGroup;
     use crate::zelda2::misc_hacks::config::Miscellaneous;
+    use crate::zelda2::object::RenderInfo;
     use crate::zelda2::overworld::config::Overworld;
     use crate::zelda2::palette::config::PaletteGroup;
     use crate::zelda2::sideview::config::SideviewGroup;
@@ -49,6 +50,7 @@ pub mod config {
         pub start: StartValues,
         pub misc: Miscellaneous,
         pub freespace: FreeSpace,
+        pub render: IndexMap<String, RenderInfo>,
     }
 }
 
@@ -229,6 +231,13 @@ impl config::GlobalBank {
                 experience.get::<T>(&path[2..])
             }
             ["start", ..] => self.start.get(&path[1..]),
+            ["render", ref n, ..] => {
+                let render = self
+                    .render
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("render/{n}")))?;
+                get_config::<T>(render)
+            }
             _ => Err(Error::NotFound(format!("GlobalBank/{path:?}")).into()),
         }
     }
