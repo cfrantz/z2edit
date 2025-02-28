@@ -125,7 +125,7 @@ impl Image {
             gl.tex_image_2d(
                 glow::TEXTURE_2D,
                 0,
-                glow::RGBA as i32,
+                glow::SRGB8_ALPHA8 as i32,
                 width as i32,
                 height as i32,
                 0,
@@ -133,6 +133,7 @@ impl Image {
                 glow::UNSIGNED_BYTE,
                 Some(pixels),
             );
+            gl.bind_texture(glow::TEXTURE_2D, None);
             texture
         }
     }
@@ -150,9 +151,10 @@ impl Image {
                 w as i32,
                 h as i32,
                 glow::RGBA,
-                glow::UNSIGNED_INT_8_8_8_8_REV,
+                glow::UNSIGNED_BYTE,
                 glow::PixelUnpackData::Slice(pixels),
             );
+            gl.bind_texture(glow::TEXTURE_2D, None);
         }
     }
 
