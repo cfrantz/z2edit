@@ -29,7 +29,8 @@ pub struct BackgroundTiles {
     pub ceiling: [u8; 2],
     pub floor: [u8; 2],
     pub background: u8,
-    pub alternate: Option<u8>,
+    #[serde(default)]
+    pub alternate: u8,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

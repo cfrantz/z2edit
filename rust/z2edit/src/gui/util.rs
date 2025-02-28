@@ -1,6 +1,28 @@
 use imgui::Key;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EditAction {
+    None,
+    New,
+    NewAt(usize),
+    MoveTo(usize),
+    CopyAt(usize),
+    Delete(usize),
+    Swap(usize, usize),
+    Drag,
+    Update,
+    CacheInvalidate,
+}
+
+impl EditAction {
+    pub fn set(&mut self, val: EditAction) {
+        if val != EditAction::None {
+            *self = val;
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyAction {
     None,
     Cut,

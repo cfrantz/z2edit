@@ -113,7 +113,8 @@
                     max_door_index: 0,
                     metatile: "/bank/5/metatile/background",
                     palette: "/bank/5/palette",
-                    background: "/bank/5/sideview/background",
+                    render_info: "/global/render/great_palace",
+                    is_background_layer: true,
                 },
                 "0": {
                     name: "Great Palace",
@@ -131,6 +132,7 @@
                     max_door_index: 0,
                     metatile: "/bank/5/metatile/background",
                     palette: "/bank/5/palette",
+                    render_info: "/global/render/great_palace",
                     background: "/bank/5/sideview/background",
                     enemy_group: "/bank/5/enemy/0",
                 },

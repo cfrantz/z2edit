@@ -95,7 +95,8 @@
                     max_door_index: 0,
                     metatile: "/bank/3/metatile/background",
                     palette: "/bank/3/palette",
-                    background: "/bank/3/sideview/background",
+                    render_info: "/global/render/towns",
+                    is_background_layer: true,
                 },
                 "0": {
                     name: "Towns",
@@ -113,6 +114,7 @@
                     max_door_index: 28,
                     metatile: "/bank/3/metatile/background",
                     palette: "/bank/3/palette",
+                    render_info: "/global/render/towns",
                     background: "/bank/3/sideview/background",
                     enemy_group: "/bank/3/enemy/0",
                 },

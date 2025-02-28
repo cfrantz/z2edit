@@ -7,6 +7,13 @@ pub trait Combo<K: Eq + Hash + Clone, V> {
     fn combo<F>(&self, ui: &imgui::Ui, label: impl AsRef<str>, selected: &mut K, f: F) -> bool
     where
         F: for<'a> Fn(&'a K, &'a V) -> Cow<'a, str>;
+
+    fn index_combo<I, F>(&self, ui: &imgui::Ui, label: impl AsRef<str>, selected: &mut I, f: F) -> bool
+    where
+        I: TryInto<usize> + TryFrom<usize> + Copy,
+        <I as TryFrom<usize>>::Error: std::fmt::Debug,
+        <I as TryInto<usize>>::Error: std::fmt::Debug,
+        F: for<'a> Fn(&'a K, &'a V) -> Cow<'a, str>;
 }
 
 impl<K: Eq + Hash + Clone, V> Combo<K, V> for IndexMap<K, V> {
@@ -32,6 +39,39 @@ impl<K: Eq + Hash + Clone, V> Combo<K, V> for IndexMap<K, V> {
                     .build()
                 {
                     selected.clone_from(k);
+                    changed = true;
+                }
+            }
+        }
+        changed
+    }
+
+    fn index_combo<I, F>(&self, ui: &imgui::Ui, label: impl AsRef<str>, selected: &mut I, f: F) -> bool
+    where
+        I: TryInto<usize> + TryFrom<usize> + Copy,
+        <I as TryFrom<usize>>::Error: std::fmt::Debug,
+        <I as TryInto<usize>>::Error: std::fmt::Debug,
+        F: for<'a> Fn(&'a K, &'a V) -> Cow<'a, str>,
+    {
+        let index: usize = (*selected).try_into().expect("usize from selected");
+        let preview = if let Some((k, v)) = self.get_index(index) {
+            f(k, v)
+        } else {
+            "<unknown>".into()
+        };
+
+        let mut changed = false;
+        if let Some(_combo) = ui.begin_combo(label, preview) {
+            for (i, (k, v)) in self.iter().enumerate() {
+                if index == i {
+                    ui.set_item_default_focus();
+                }
+                if ui
+                    .selectable_config(f(k, v))
+                    .selected(index == i)
+                    .build()
+                {
+                    *selected = i.try_into().expect("usize to selected");
                     changed = true;
                 }
             }
