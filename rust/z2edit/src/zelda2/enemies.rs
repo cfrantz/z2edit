@@ -58,7 +58,7 @@ impl GameData for EnemyGroup {
 
 pub mod config {
     use super::*;
-    use crate::zelda2::items::config::Sprite;
+    use crate::zelda2::items::Sprite;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct EnemyGroup {
@@ -152,6 +152,13 @@ impl config::EnemyGroup {
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
         match path {
             [] => get_config::<T>(self),
+            [n] => {
+                let sprite = self
+                    .group
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("EnemyGroup/{path:?}")))?;
+                get_config::<T>(sprite)
+            }
             _ => Err(Error::NotFound(format!("EnemyGroup/{path:?}")).into()),
         }
     }

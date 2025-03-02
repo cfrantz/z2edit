@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use crate::gui::util::{text_outlined, DragHelper, KeyAction, SelectBox};
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
-use crate::util::tile_cache::GfxCache;
+use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::util::undo::UndoStack;
 use crate::zelda2::metatile::MetatileGroup;
 use crate::zelda2::overworld::{config, Connector, JsonMap, Map, Overworld};
@@ -172,14 +172,13 @@ impl OverworldEditor {
             if i % 4 != 0 {
                 ui.same_line();
             }
-            let image = GfxCache::metatile(
+            let image = GfxCache::get(
                 project,
-                cfg.chr,
                 &cfg.palette, // idpath of a palette group.
                 "background", // key of a full palette within a group.
-                &cfg.metatile,
-                i as u8,
+                GfxKind::Metatile(cfg.chr, cfg.metatile.clone(), i as u8),
             )?;
+
             let _style = if i == self.tile_selected {
                 Some((
                     ui.push_style_color(imgui::StyleColor::Button, [0.9, 0.9, 0.9, 0.9]),
@@ -332,14 +331,13 @@ impl OverworldEditor {
         let scale = 16.0 * self.scale;
         for (y, row) in self.overworld.map.data.iter().enumerate() {
             for (x, &col) in row.iter().enumerate() {
-                let image = GfxCache::metatile(
+                let image = GfxCache::get(
                     project,
-                    cfg.chr,
                     &cfg.palette, // idpath of a palette group.
                     "background", // key of a full palette within a group.
-                    &cfg.metatile,
-                    col,
+                    GfxKind::Metatile(cfg.chr, cfg.metatile.clone(), col),
                 )?;
+
                 let xo = origin[0] + x as f32 * scale;
                 let yo = origin[1] + y as f32 * scale;
                 image.draw_at([xo, yo], self.scale, ui);

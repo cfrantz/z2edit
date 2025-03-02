@@ -6,23 +6,24 @@ use std::sync::OnceLock;
 use crate::error::Error;
 use crate::nes::{hwpalette, Address};
 use crate::zelda2::chr::ChrMemory;
+use crate::zelda2::items::{Items, Sprite};
 use crate::zelda2::metatile::MetatileGroup;
 use crate::zelda2::palette::PaletteGroup;
 use crate::zelda2::project::Project;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum GfxKind {
-    Tile = 1,
-    Sprite = 2,
-    Metatile = 4,
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GfxKind {
+    RawTile(Address, [u8; 4], u8),
+    Metatile(Address, String, u8),
+    Enemy(String, u8),
+    Item(u8),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GfxKey {
     chrbank: u16,
-    kind: GfxKind,
-    tiles: [u8; 4],
     palette: [u8; 4],
+    kind: GfxKind,
 }
 
 static mut CACHE: OnceLock<HashMap<String, GfxCache>> = OnceLock::new();
@@ -44,166 +45,225 @@ impl GfxCache {
         cache.get_mut(&project.name).unwrap()
     }
 
-    fn _render(chrdata: &[u8], key: &GfxKey) -> Image {
-        let (width, height) = match key.kind {
-            GfxKind::Tile => (8, 8),
-            GfxKind::Sprite => (8, 16),
-            GfxKind::Metatile => (16, 16),
-        };
-        let base = key.chrbank as usize * 4096;
-        let mut image = Image::new(width, height);
-
-        for (i, &tile) in key.tiles[0..(key.kind as usize)].iter().enumerate() {
-            let xofs = (i as u32 & 2) * 4;
-            let yofs = (i as u32 & 1) * 8;
-            let base = base + (tile as usize * 16);
-            for y in 0..8 {
-                let mut lo = chrdata[base + y].reverse_bits() as usize;
-                let mut hi = chrdata[base + y + 8].reverse_bits() as usize;
-                for x in 0..8 {
-                    let color = (lo & 1) + ((hi & 1) << 1);
-                    let color = key.palette[color];
-                    let color = Color::new(hwpalette::get(color as usize));
-                    image.set_pixel(xofs + (x as u32), yofs + (y as u32), color);
-                    lo >>= 1;
-                    hi >>= 1;
-                }
+    fn _render_tile(
+        image: &mut Image,
+        chrdata: &[u8],
+        chrbank: u16,
+        palette: &[u8],
+        xofs: u32,
+        yofs: u32,
+        tile: i32,
+    ) {
+        if tile == -1 {
+            return;
+        }
+        let base = chrbank as usize * 4096 + (tile & 0xFF) as usize * 16;
+        let ty = ((tile >> 8) & 0xFF) as u32;
+        let tx = ((tile >> 16) & 0xFF) as u32;
+        let mirror = tile & 0x1000000 != 0;
+        for y in 0..8 {
+            let mut lo = chrdata[base + y];
+            let mut hi = chrdata[base + y + 8];
+            if !mirror {
+                lo = lo.reverse_bits();
+                hi = hi.reverse_bits();
             }
+            for x in 0..8 {
+                let color = (lo & 1) + ((hi & 1) << 1);
+                let color = palette[color as usize];
+                let color = Color::new(hwpalette::get(color as usize));
+                image.set_pixel(xofs + tx + (x as u32), yofs + ty + (y as u32), color);
+                lo >>= 1;
+                hi >>= 1;
+            }
+        }
+    }
+
+    fn _render_metatile(chrdata: &[u8], chrbank: u16, palette: &[u8], tile: &[u8]) -> Image {
+        let mut image = Image::new(16, 16);
+        Self::_render_tile(&mut image, chrdata, chrbank, palette, 0, 0, tile[0] as i32);
+        Self::_render_tile(&mut image, chrdata, chrbank, palette, 0, 8, tile[1] as i32);
+        Self::_render_tile(&mut image, chrdata, chrbank, palette, 8, 0, tile[2] as i32);
+        Self::_render_tile(&mut image, chrdata, chrbank, palette, 8, 8, tile[3] as i32);
+        image.update();
+        image
+    }
+
+    fn _render_one_sprite(
+        image: &mut Image,
+        chrdata: &[u8],
+        chrbank: u16,
+        palette: &[u8],
+        xofs: u32,
+        yofs: u32,
+        sprite: i32,
+    ) {
+        let bank_delta = (sprite & 1) as u16;
+        let sprite = sprite & !1;
+        Self::_render_tile(
+            image,
+            chrdata,
+            chrbank + bank_delta,
+            palette,
+            xofs,
+            yofs,
+            sprite,
+        );
+        Self::_render_tile(
+            image,
+            chrdata,
+            chrbank + bank_delta,
+            palette,
+            xofs,
+            yofs + 8,
+            sprite + 1,
+        );
+    }
+
+    fn _render_sprite(chrdata: &[u8], chrbank: u16, palette: &[u8], sprite: &Sprite) -> Image {
+        let mut image = Image::new(sprite.size[0], sprite.size[1]);
+        let mut y = 0;
+        let mut i = 0;
+        while y < sprite.size[1] {
+            let mut x = 0;
+            while x < sprite.size[0] {
+                Self::_render_one_sprite(
+                    &mut image,
+                    chrdata,
+                    chrbank,
+                    palette,
+                    x,
+                    y,
+                    sprite.sprites[i],
+                );
+                i += 1;
+                x += 8;
+            }
+            y += 16;
         }
         image.update();
         image
     }
 
-    fn _get(&mut self, chrdata: &[u8], key: GfxKey) -> &Image {
-        if !self.cache.contains_key(&key) {
-            let image = Self::_render(chrdata, &key);
-            self.cache.insert(key.clone(), image);
-        }
-        self.cache.get(&key).unwrap()
-    }
-
-    fn get<'a>(
+    pub fn get<'a>(
         project: &'a Project,
-        chrbank: u16,
         palette_group: &str,
         group: &str,
-        palette: usize,
         kind: GfxKind,
-        tiles: [u8; 4],
     ) -> Result<&'a Image> {
-        let cache = Self::project(project);
         let pgroup = project.data_ref::<PaletteGroup>(palette_group)?;
         let paldata = pgroup
             .group
             .get(group)
             .ok_or_else(|| Error::NotFound(format!("{palette_group}/{group}")))?;
-        let chrdata = project.data_ref::<ChrMemory>("/chr")?;
-        let palette = palette * 4;
-
-        let data = chrdata.data.lock().unwrap();
-        Ok(cache._get(
-            data.as_slice(),
-            GfxKey {
-                chrbank,
-                kind,
-                tiles,
-                palette: paldata[palette..palette + 4].try_into()?,
-            },
-        ))
-    }
-
-    pub fn raw<'a>(
-        project: &'a Project,
-        chr: Address,
-        palette_group: &str,
-        group: &str,
-        palette: usize,
-        tiles: &[u8],
-    ) -> Result<&'a Image> {
-        if !chr.is_chr() {
-            return Err(anyhow!("TileCache::raw {chr:?} is not a CHR address"));
-        }
-        let (kind, buf) = match tiles.len() {
-            1 => (GfxKind::Tile, [tiles[0], 0, 0, 0]),
-            2 => (GfxKind::Sprite, [tiles[0], tiles[1], 0, 0]),
-            4 => (GfxKind::Metatile, [tiles[0], tiles[1], tiles[2], tiles[3]]),
-            _ => {
-                return Err(
-                    Error::NotImplemented(format!("GfxCache tile length {}", tiles.len())).into(),
-                )
+        let key = match kind {
+            GfxKind::RawTile(ref address, ref _data, ref palette) => {
+                if !address.is_chr() {
+                    return Err(anyhow!("TileCache::get {address:?} is not a CHR address"));
+                }
+                let palette = *palette as usize * 4;
+                GfxKey {
+                    chrbank: address.bank().unwrap() as u16,
+                    palette: paldata[palette..palette + 4].try_into()?,
+                    kind,
+                }
+            }
+            GfxKind::Metatile(ref address, ref meta_group, ref tile) => {
+                if !address.is_chr() {
+                    return Err(anyhow!("TileCache::get {address:?} is not a CHR address"));
+                }
+                let meta_group = project.data_ref::<MetatileGroup>(meta_group)?;
+                let gindex = *tile as usize >> 6;
+                let group = meta_group
+                    .group
+                    .get(&gindex)
+                    .ok_or_else(|| anyhow!("No metatile group for tile {tile:02x}"))?;
+                let palette = group
+                    .palette
+                    .get((*tile & 0x3f) as usize)
+                    .map(|x| *x as usize)
+                    .unwrap_or(gindex)
+                    * 4;
+                GfxKey {
+                    chrbank: address.bank().unwrap() as u16,
+                    palette: paldata[palette..palette + 4].try_into()?,
+                    kind,
+                }
+            }
+            GfxKind::Enemy(ref enemy_group, ref enemy) => {
+                let sprite = project
+                    .config
+                    .get::<Sprite>(&format!("{enemy_group}/{enemy}"))?;
+                let palette = sprite.palette as usize * 4;
+                GfxKey {
+                    chrbank: sprite.chr.bank().unwrap() as u16,
+                    palette: paldata[palette..palette + 4].try_into()?,
+                    kind,
+                }
+            }
+            GfxKind::Item(ref item) => {
+                let sprite = project
+                    .config
+                    .get::<Sprite>(&format!("/global/item/{item}"))?;
+                let palette = sprite.palette as usize * 4;
+                GfxKey {
+                    chrbank: sprite.chr.bank().unwrap() as u16,
+                    palette: paldata[palette..palette + 4].try_into()?,
+                    kind,
+                }
             }
         };
-        Self::get(
-            project,
-            chr.bank().unwrap() as u16,
-            palette_group,
-            group,
-            palette,
-            kind,
-            buf,
-        )
-    }
 
-    pub fn metatile<'a>(
-        project: &'a Project,
-        chr: Address,
-        palette_group: &str,
-        group: &str,
-        metatile: &str,
-        tile: u8,
-    ) -> Result<&'a Image> {
-        if !chr.is_chr() {
-            return Err(anyhow!("TileCache::raw {chr:?} is not a CHR address"));
+        let my = Self::project(project);
+        let chr_memory = project.data_ref::<ChrMemory>("/chr")?;
+        let chrdata = chr_memory.data.lock().unwrap();
+        if !my.cache.contains_key(&key) {
+            let image = match key.kind {
+                GfxKind::RawTile(ref _address, ref data, ref _palette) => {
+                    Self::_render_metatile(&*chrdata, key.chrbank, &key.palette, data)
+                }
+                GfxKind::Metatile(ref _address, ref meta_group, ref tile) => {
+                    let mgroup = project.data_ref::<MetatileGroup>(meta_group)?;
+                    let gindex = *tile as usize >> 6;
+                    let group = mgroup
+                        .group
+                        .get(&gindex)
+                        .ok_or_else(|| anyhow!("No metatile group for tile {tile:02x}"))?;
+                    let data = group
+                        .tile
+                        .get((*tile & 0x3f) as usize)
+                        .copied()
+                        .ok_or_else(|| Error::NotFound(format!("Metatile {meta_group}/{tile}")))?;
+                    Self::_render_metatile(
+                        &*chrdata,
+                        key.chrbank,
+                        &key.palette,
+                        &data.to_be_bytes(),
+                    )
+                }
+                GfxKind::Enemy(ref enemy_group, ref enemy) => {
+                    let sprite = project
+                        .config
+                        .get::<Sprite>(&format!("{enemy_group}/{enemy}"))?;
+                    Self::_render_sprite(&*chrdata, key.chrbank, &key.palette, sprite)
+                }
+                GfxKind::Item(ref item) => {
+                    let sprite = if *item < 128 {
+                        let items = project.data_ref::<Items>("/global/item")?;
+                        items
+                            .item
+                            .get(item)
+                            .ok_or_else(|| Error::NotFound(format!("Item /global/items/{item}")))?
+                    } else {
+                        project
+                            .config
+                            .get::<Sprite>(&format!("/global/item/fake/{item}"))?
+                    };
+                    Self::_render_sprite(&*chrdata, key.chrbank, &key.palette, sprite)
+                }
+            };
+            my.cache.insert(key.clone(), image);
         }
-        let meta = project.data_ref::<MetatileGroup>(metatile)?;
-        // The palette subgroup is usually the top two bits of the metatile id.
-        let mut pgroup = (tile >> 6) as usize;
-        let mgroup = meta.group.get(&pgroup).ok_or_else(|| {
-            Error::NotFound(format!("Metatile group {pgroup} not found in {metatile}"))
-        })?;
-        let tile = tile & 0x3f;
-        let val = mgroup
-            .tile
-            .get(tile as usize)
-            .ok_or_else(|| Error::NotFound(format!("Tile {tile} not found in {metatile}")))?;
-        if let Some(&pal) = mgroup.palette.get(tile as usize) {
-            // Some metatile groups (e.g. overworlds) define their own palettes
-            // rather than encoding the palette in the tile id.
-            pgroup = pal as usize;
-        }
-        Self::get(
-            project,
-            chr.bank().unwrap() as u16,
-            palette_group,
-            group,
-            pgroup as usize,
-            GfxKind::Metatile,
-            val.to_be_bytes(),
-        )
-    }
-
-    pub fn sprite<'a>(
-        project: &'a Project,
-        chr: Address,
-        palette_group: &str,
-        group: &str,
-        palette: usize,
-        sprite: u8,
-    ) -> Result<&'a Image> {
-        if !chr.is_chr() {
-            return Err(anyhow!("TileCache::raw {chr:?} is not a CHR address"));
-        }
-        let bank_delta = (sprite & 1) as u16;
-        let sprite = sprite & !1;
-        let chrbank = (chr.bank().unwrap() as u16 & !1) + bank_delta;
-        Self::get(
-            project,
-            chrbank,
-            palette_group,
-            group,
-            palette,
-            GfxKind::Sprite,
-            [sprite, sprite + 1, 0, 0],
-        )
+        Ok(my.cache.get(&key).unwrap())
     }
 }

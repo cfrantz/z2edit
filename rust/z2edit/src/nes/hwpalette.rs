@@ -31,15 +31,13 @@ fn color_as_f32(color: u32) -> [f32; 4] {
 }
 
 pub fn get(index: usize) -> u32 {
-    // Out-of-bounds index returns black.
-    let index = if index < PALETTE.len() { index } else { 0x0f };
-    PALETTE[index]
+    // Out-of-bounds index returns transparent.
+    PALETTE.get(index).copied().unwrap_or(0)
 }
 
 pub fn glget(index: usize) -> u32 {
-    // Out-of-bounds index returns black.
-    let index = if index < PALETTE.len() { index } else { 0x0f };
-    let color = PALETTE[index];
+    // Out-of-bounds index returns transparent.
+    let color = get(index);
     let r = (color >> R_SHIFT) & 0xFF;
     let g = (color >> G_SHIFT) & 0xFF;
     let b = (color >> B_SHIFT) & 0xFF;
@@ -48,7 +46,6 @@ pub fn glget(index: usize) -> u32 {
 }
 
 pub fn fget(index: usize) -> [f32; 4] {
-    // Out-of-bounds index returns black.
-    let index = if index < PALETTE.len() { index } else { 0x0f };
-    FPALETTE[index]
+    // Out-of-bounds index returns transparent.
+    FPALETTE.get(index).copied().unwrap_or([0.0, 0.0, 0.0, 0.0])
 }

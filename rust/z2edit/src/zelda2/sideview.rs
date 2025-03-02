@@ -10,8 +10,8 @@ use crate::nes::{Address, AddressRange, Alloc, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::encounters::Encounters;
+use crate::zelda2::object::{BackgroundTiles, Object, RenderInfo, Renderer};
 use crate::zelda2::project::Project;
-use crate::zelda2::object::{BackgroundTiles, Object, Renderer, RenderInfo};
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct MapCommand {
@@ -162,7 +162,11 @@ impl config::SideviewAreas {
                     Sideview::default()
                 }
             };
-            let i = if self.is_background_layer {index+1} else {index};
+            let i = if self.is_background_layer {
+                index + 1
+            } else {
+                index
+            };
             edits.insert(format!("{path}/{i}"), Edit::new(sv.into()));
         }
         Ok(())
@@ -305,7 +309,6 @@ impl Map {
     pub fn sort(&mut self) {
         Map::sort_data(&mut self.data);
     }
-
 }
 
 impl From<u8> for Connection {
@@ -457,41 +460,49 @@ impl Decompressor {
         }
     }
 
-    pub fn decompress(
-        &mut self,
-        path: &str,
-        sideview: &Sideview,
-        project: &Project,
-    ) -> Result<()> {
+    pub fn decompress(&mut self, path: &str, sideview: &Sideview, project: &Project) -> Result<()> {
         let map = &sideview.map;
         let mut xcursor = 0;
         let mut floor = map.floor as usize;
         let mut ceiling = map.ceiling;
         let cfg = project.config.get::<config::SideviewAreas>(path)?;
         let render = project.config.get::<RenderInfo>(&cfg.render_info)?;
-        let (_, background) = &render.background.get_index(map.tileset as usize).ok_or_else(|| Error::NotFound(format!("Background info for tileset {}", map.tileset)))?;
+        let (_, background) = &render
+            .background
+            .get_index(map.tileset as usize)
+            .ok_or_else(|| {
+                Error::NotFound(format!("Background info for tileset {}", map.tileset))
+            })?;
         let width = Decompressor::WIDTH as u8;
 
         log::debug!("Render {}:", path);
         log::debug!(
             "ObjSet={} Width={} Grass={} Bushes={}",
-            map.objset, map.width, map.grass, map.bushes
+            map.objset,
+            map.width,
+            map.grass,
+            map.bushes
         );
         log::debug!(
             "Ceiling={} Floor={} Tileset={}",
-            map.ceiling, map.floor, map.tileset
+            map.ceiling,
+            map.floor,
+            map.tileset
         );
         log::debug!(
             "SprPal={} BgPal={} BgMap={}",
-            map.sprite_palette, map.background_palette, map.background_map
+            map.sprite_palette,
+            map.background_palette,
+            map.background_map
         );
 
         self.bgtile = background.background;
         self.clear();
 
         if map.background_map != 0 {
-            let background = cfg.background.as_ref().ok_or_else(|| Error::Configuration(
-                    "No background path specified in config".into()))?;
+            let background = cfg.background.as_ref().ok_or_else(|| {
+                Error::Configuration("No background path specified in config".into())
+            })?;
             let bgpath = format!("{background}/{}", map.background_map);
             if let Some(edit) = project.edits.get(&bgpath) {
                 let bgmap = edit.data_ref::<Sideview>()?;
@@ -520,7 +531,10 @@ impl Decompressor {
                 ceiling = command.param & 0x80 == 0;
                 log::debug!(
                     "Render NewFloor @ y={:02} x={:02}: floor={} ceiling={}",
-                    command.y, command.x, floor, ceiling
+                    command.y,
+                    command.x,
+                    floor,
+                    ceiling
                 );
                 continue;
             } else if command.y == 14 {
@@ -564,7 +578,10 @@ impl Decompressor {
 
             log::debug!(
                 "Render Object   @ y={:02} x={:02}: {}/{:02x}",
-                command.y, command.x, kind, command.kind
+                command.y,
+                command.x,
+                kind,
+                command.kind
             );
 
             if let Some(obj) = object.get(&command.kind) {
@@ -586,12 +603,7 @@ impl Decompressor {
                     Renderer::Item => self.draw_item(xcursor, command.y, command.param, obj),
                 }
             } else {
-                log::error!(
-                    "Cannot render {:?}: {}/{:02x}",
-                    path,
-                    kind,
-                    command.kind
-                );
+                log::error!("Cannot render {:?}: {}/{:02x}", path, kind, command.kind);
             }
         }
         // Finish rendering to end of room.

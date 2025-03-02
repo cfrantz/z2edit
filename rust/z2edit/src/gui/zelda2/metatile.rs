@@ -4,7 +4,7 @@ use imgui::{StyleColor, TableFlags};
 use crate::gui::widgets::Combo;
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::nes::Address;
-use crate::util::tile_cache::GfxCache;
+use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::metatile::{config, MetatileGroup};
 use crate::zelda2::palette;
 use crate::zelda2::project::Project;
@@ -164,11 +164,8 @@ impl MetatileGroupEditor {
                 }
                 ui.table_next_column();
 
-                let subpalette = group
-                    .palette
-                    .get(i)
-                    .map(|x| *x as usize)
-                    .unwrap_or(self.group);
+                let subpalette = group.palette.get(i).copied().unwrap_or(self.group as u8);
+                /*
                 let image = GfxCache::raw(
                     project,
                     self.bank,
@@ -177,6 +174,15 @@ impl MetatileGroupEditor {
                     subpalette,    // subpalette within that palette.
                     &tile.to_be_bytes(),
                 )?;
+                */
+
+                let image = GfxCache::get(
+                    project,
+                    &cfg.palette,  // idpath of a palette group.
+                    &self.palette, // key of a full palette within a group.
+                    GfxKind::RawTile(self.bank, tile.to_be_bytes(), subpalette),
+                )?;
+
                 if ui.image_button(
                     &format!("##img{i}"),
                     image.imgui_id(),
