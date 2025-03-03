@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 
 use imgui::{ConfigFlags, Context};
+use imgui::{FontConfig, FontGlyphRanges, FontSource};
 use imgui_glow_renderer::glow;
 use imgui_glow_renderer::glow::HasContext;
 use imgui_glow_renderer::AutoRenderer;
@@ -13,6 +14,7 @@ use sdl2::{
 };
 use send_wrapper::SendWrapper;
 
+use crate::fa;
 use crate::{Image, JsonStyle};
 
 // Create a new glow context.
@@ -138,9 +140,22 @@ impl Framework {
         imgui.set_log_filename(None);
 
         /* setup platform and renderer, and fonts to imgui */
-        imgui
-            .fonts()
-            .add_font(&[imgui::FontSource::DefaultFontData { config: None }]);
+        imgui.fonts().add_font(&[
+            FontSource::DefaultFontData { config: None },
+            FontSource::TtfData {
+                data: include_bytes!("../fonts/fontawesome-webfont.ttf"),
+                size_pixels: 16.0,
+                config: Some(FontConfig {
+                    glyph_ranges: FontGlyphRanges::from_slice(&[
+                        fa::ICON_MIN as u32,
+                        fa::ICON_MAX as u32,
+                        0,
+                    ]),
+                    glyph_offset: [0.0, 3.0],
+                    ..Default::default()
+                }),
+            },
+        ]);
 
         imgui.io_mut().config_flags |= ConfigFlags::DOCKING_ENABLE;
         imgui.set_clipboard_backend(ClipboardBackend(window.subsystem().clipboard()));
