@@ -14,12 +14,9 @@
             },
             palette: {
                 background: {
-                    name: "Great Palace (Outdoors)",
-                    "0": { name: "P7 (Great Palace)", address: {Prg: [5, 0x800e]}},
-                },
-                indoor: {
-                    name: "Great Palace (Indoors)",
-                    "0": { name: "P7 (Great Palace)", address: {Prg: [5, 0x801e]}},
+                    name: "Great Palace",
+                    "0": { name: "P7 (Great Palace, outdoor)", address: {Prg: [5, 0x800e]}},
+                    "1": { name: "P7 (Great Palace, indoor)", address: {Prg: [5, 0x801e]}},
                 },
                 sprite: {
                     name: "Palace Sprites",

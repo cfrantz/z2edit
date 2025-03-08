@@ -141,13 +141,13 @@ impl EnemyGroupEditor {
                 | TableFlags::SCROLL_X
                 | TableFlags::SCROLL_Y,
         ) {
-            for (n, enemy) in cfg.group.iter() {
-                let _id = ui.push_id(n);
+            for (&n, enemy) in cfg.group.iter() {
+                let _id = ui.push_id_usize(n as usize);
                 ui.table_next_row();
                 ui.table_next_column();
                 ui.align_text_to_frame_padding();
-                ui.text(format!("{}: {}", n, enemy.name));
-                if let Some(e) = self.enemy.group.get_mut(n) {
+                ui.text(format!("{:02x}: {}", n, enemy.name));
+                if let Some(e) = self.enemy.group.get_mut(&n) {
                     self.changed |= Self::draw_row(e, ui);
                 }
             }

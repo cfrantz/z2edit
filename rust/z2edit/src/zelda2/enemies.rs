@@ -30,7 +30,7 @@ pub struct Enemy {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EnemyGroup {
-    pub group: IndexMap<String, Enemy>,
+    pub group: IndexMap<u8, Enemy>,
 }
 
 #[typetag::serde]
@@ -68,7 +68,7 @@ pub mod config {
         pub hp: Address,
         pub xp: Address,
         pub table_len: usize,
-        pub group: IndexMap<String, Sprite>,
+        pub group: IndexMap<u8, Sprite>,
     }
 }
 
@@ -82,14 +82,13 @@ impl config::EnemyGroup {
         log::debug!("EnemyGroup::unpack {path}");
         let mut eg = EnemyGroup::default();
         let rom = rrom.borrow();
-        for index in self.group.keys() {
-            let i = index.parse::<usize>()?;
-            let hp = rom.read(self.hp + i)?;
-            let xp0 = rom.read(self.xp + i)?;
-            let xp1 = rom.read(self.xp + i + self.table_len * 1)?;
-            let xp3 = rom.read(self.xp + i + self.table_len * 3)?;
+        for &index in self.group.keys() {
+            let hp = rom.read(self.hp + index)?;
+            let xp0 = rom.read(self.xp + index)?;
+            let xp1 = rom.read(self.xp + index + self.table_len * 1)?;
+            let xp3 = rom.read(self.xp + index + self.table_len * 3)?;
             eg.group.insert(
-                index.into(),
+                index,
                 Enemy {
                     hp,
                     palette: (xp0 >> 6) as usize,
@@ -117,10 +116,8 @@ impl config::EnemyGroup {
         if let Some(edit) = edits.get(path) {
             let eg = edit.data_ref::<EnemyGroup>()?;
             let mut rom = rrom.borrow_mut();
-            for index in self.group.keys() {
-                if let Some(enemy) = eg.group.get(index) {
-                    let i = index.parse::<usize>()?;
-
+            for &index in self.group.keys() {
+                if let Some(enemy) = eg.group.get(&index) {
                     let xp0 = (enemy.palette << 6) as u8
                         | if enemy.need_fire { 0x20 } else { 0x00 }
                         | if enemy.steal_xp { 0x10 } else { 0x00 }
@@ -138,10 +135,10 @@ impl config::EnemyGroup {
                         | if enemy.unknown2 { 0x10 } else { 0x00 }
                         | enemy.unknown3 as u8;
 
-                    rom.write(self.hp + i, enemy.hp)?;
-                    rom.write(self.xp + i + self.table_len * 0, xp0)?;
-                    rom.write(self.xp + i + self.table_len * 1, xp1)?;
-                    rom.write(self.xp + i + self.table_len * 3, xp3)?;
+                    rom.write(self.hp + index, enemy.hp)?;
+                    rom.write(self.xp + index + self.table_len * 0, xp0)?;
+                    rom.write(self.xp + index + self.table_len * 1, xp1)?;
+                    rom.write(self.xp + index + self.table_len * 3, xp3)?;
                 }
             }
         } else {
@@ -155,7 +152,7 @@ impl config::EnemyGroup {
             [n] => {
                 let sprite = self
                     .group
-                    .get(*n)
+                    .get(&n.parse::<u8>()?)
                     .ok_or(Error::NotFound(format!("EnemyGroup/{path:?}")))?;
                 get_config::<T>(sprite)
             }

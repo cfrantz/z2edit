@@ -69,24 +69,22 @@ impl ProjectGui {
         });
     }
 
+    fn edit_tree<'p>(&self, py: Python<'p>, ui: &imgui::Ui) {
+        let project = self.project.borrow(py);
+        if let Some(node) = project.config.tree_node(ui, "") {
+            self.edit(&node);
+        }
+    }
+
     fn draw<'p>(&mut self, py: Python<'p>, ui: &imgui::Ui) {
         ui.window(format!("{}", self.project.borrow(py).name))
             .menu_bar(true)
             .size([1000.0, 800.0], imgui::Condition::FirstUseEver)
             .build(|| {
                 self.menu(ui);
-                let mut project = self.project.borrow_mut(py);
-                if let Some(node) = project.config.tree_node(ui, "") {
-                    if let Some(edit) = project.edits.get(&node) {
-                        match edit.data.gui(&node) {
-                            Ok(editor) => self.windows.lock().unwrap().push(editor),
-                            Err(e) => log::error!("Create editor gui: {e}"),
-                        };
-                    } else {
-                        log::error!("No such edit: {node}");
-                    }
-                }
+                self.edit_tree(py, ui);
 
+                let mut project = self.project.borrow_mut(py);
                 let mut windows = self.windows.lock().unwrap();
                 let mut i = 0;
                 while i < windows.len() {
@@ -94,7 +92,9 @@ impl ProjectGui {
                         Ok(()) => {}
                         Err(e) => log::error!("Error editing: {e}"),
                     }
-
+                    if let Some(window) = windows[i].spawned() {
+                        windows.push(window);
+                    }
                     if windows[i].wants_dispose() {
                         windows.remove(i);
                     } else {
@@ -129,6 +129,20 @@ impl ProjectGui {
     #[pyo3(name = "draw")]
     fn _draw<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
         self.draw(py, ctx.ui)
+    }
+
+    pub fn edit(&self, node: &str) {
+        Python::with_gil(|py| {
+            let project = self.project.borrow(py);
+            if let Some(edit) = project.edits.get(node) {
+                match edit.data.gui(node) {
+                    Ok(editor) => self.windows.lock().unwrap().push(editor),
+                    Err(e) => log::error!("Create editor gui: {e}"),
+                };
+            } else {
+                log::error!("No such edit: {node}");
+            }
+        })
     }
 
     fn save_as(&mut self) -> Result<()> {

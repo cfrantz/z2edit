@@ -8,7 +8,13 @@ pub trait Combo<K: Eq + Hash + Clone, V> {
     where
         F: for<'a> Fn(&'a K, &'a V) -> Cow<'a, str>;
 
-    fn index_combo<I, F>(&self, ui: &imgui::Ui, label: impl AsRef<str>, selected: &mut I, f: F) -> bool
+    fn index_combo<I, F>(
+        &self,
+        ui: &imgui::Ui,
+        label: impl AsRef<str>,
+        selected: &mut I,
+        f: F,
+    ) -> bool
     where
         I: TryInto<usize> + TryFrom<usize> + Copy,
         <I as TryFrom<usize>>::Error: std::fmt::Debug,
@@ -46,7 +52,13 @@ impl<K: Eq + Hash + Clone, V> Combo<K, V> for IndexMap<K, V> {
         changed
     }
 
-    fn index_combo<I, F>(&self, ui: &imgui::Ui, label: impl AsRef<str>, selected: &mut I, f: F) -> bool
+    fn index_combo<I, F>(
+        &self,
+        ui: &imgui::Ui,
+        label: impl AsRef<str>,
+        selected: &mut I,
+        f: F,
+    ) -> bool
     where
         I: TryInto<usize> + TryFrom<usize> + Copy,
         <I as TryFrom<usize>>::Error: std::fmt::Debug,
@@ -66,11 +78,7 @@ impl<K: Eq + Hash + Clone, V> Combo<K, V> for IndexMap<K, V> {
                 if index == i {
                     ui.set_item_default_focus();
                 }
-                if ui
-                    .selectable_config(f(k, v))
-                    .selected(index == i)
-                    .build()
-                {
+                if ui.selectable_config(f(k, v)).selected(index == i).build() {
                     *selected = i.try_into().expect("usize to selected");
                     changed = true;
                 }

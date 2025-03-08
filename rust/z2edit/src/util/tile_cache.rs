@@ -54,9 +54,6 @@ impl GfxCache {
         yofs: u32,
         tile: i32,
     ) {
-        if tile == -1 {
-            return;
-        }
         let base = chrbank as usize * 4096 + (tile & 0xFF) as usize * 16;
         let ty = ((tile >> 8) & 0xFF) as u32;
         let tx = ((tile >> 16) & 0xFF) as u32;
@@ -127,15 +124,10 @@ impl GfxCache {
         while y < sprite.size[1] {
             let mut x = 0;
             while x < sprite.size[0] {
-                Self::_render_one_sprite(
-                    &mut image,
-                    chrdata,
-                    chrbank,
-                    palette,
-                    x,
-                    y,
-                    sprite.sprites[i],
-                );
+                let id = sprite.sprites.get(i).copied().unwrap_or(-1);
+                if id != -1 {
+                    Self::_render_one_sprite(&mut image, chrdata, chrbank, palette, x, y, id);
+                }
                 i += 1;
                 x += 8;
             }
@@ -202,9 +194,12 @@ impl GfxCache {
                 }
             }
             GfxKind::Item(ref item) => {
-                let sprite = project
-                    .config
-                    .get::<Sprite>(&format!("/global/item/{item}"))?;
+                let path = if *item < 128 {
+                    format!("/global/item/{item}")
+                } else {
+                    format!("/global/item/fake/{item}")
+                };
+                let sprite = project.config.get::<Sprite>(&path)?;
                 let palette = sprite.palette as usize * 4;
                 GfxKey {
                     chrbank: sprite.chr.bank().unwrap() as u16,

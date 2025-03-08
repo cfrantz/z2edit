@@ -1,21 +1,23 @@
 use anyhow::Result;
 use indexmap::IndexMap;
+use python_gui::fa;
 
-use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
-use crate::zelda2::project::Project;
-use crate::zelda2::sideview::{config, Sideview, Decompressor};
-use crate::zelda2::palette::config::PaletteGroup;
+use crate::gui::util::{tooltip, DragHelper, EditAction};
 use crate::gui::widgets::Combo;
-use crate::gui::util::{EditAction, tooltip};
-use crate::zelda2::object::{Object, RenderInfo};
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::util::tile_cache::{GfxCache, GfxKind};
+use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
-use crate::util::tile_cache::GfxCache;
+use crate::zelda2::object::{Object, RenderInfo};
+use crate::zelda2::palette::config::PaletteGroup;
+use crate::zelda2::project::Project;
+use crate::zelda2::sideview::{config, Decompressor, Enemy, MapCommand, Sideview};
 
-use imgui::{TableColumnSetup, TableColumnFlags, TableFlags};
+use imgui::{MouseButton, TableColumnFlags, TableColumnSetup, TableFlags};
 
 fn weight(name: &str, weight: f32) -> TableColumnSetup<&str> {
     TableColumnSetup {
-        name, 
+        name,
         flags: TableColumnFlags::WIDTH_FIXED,
         init_width_or_weight: weight,
         ..Default::default()
@@ -28,7 +30,11 @@ impl GuiTree for config::SideviewAreas {
         let name = &self.name;
         ui.tree_node_config(format!("{name}##{path}")).build(|| {
             for index in 0..self.length {
-                let i = if self.is_background_layer {index+1} else {index};
+                let i = if self.is_background_layer {
+                    index + 1
+                } else {
+                    index
+                };
                 let path = format!("{path}/{i}");
                 ui.tree_node_config(format!("Area {i}##{path}"))
                     .leaf(true)
@@ -44,30 +50,56 @@ impl GuiTree for config::SideviewAreas {
     }
 }
 
+macro_rules! str_id {
+    ($popup:expr, $label:literal) => {
+        if $popup == false {
+            concat!("##", $label)
+        } else {
+            $label
+        }
+    };
+}
+
 pub struct SideviewEditor {
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
     path: String,
+    base: String,
+    area: u8,
     sideview: Sideview,
     decompressor: Decompressor,
+    drag_helper: DragHelper,
+    enemy_list: usize,
     scale: f32,
     need_update: bool,
     objects: IndexMap<u8, Object>,
+    area_names: IndexMap<u8, String>,
+    spawn: Option<Box<dyn Gui>>,
 }
 
 impl SideviewEditor {
+    const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+    const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+
     pub fn new(sv: &Sideview, path: &str) -> Result<Box<dyn Gui>> {
+        let (base, area) = path.rsplit_once('/').expect("sideview path");
         Ok(Box::new(SideviewEditor {
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
             path: path.into(),
+            base: base.into(),
+            area: area.parse()?,
             sideview: sv.clone(),
             decompressor: Decompressor::new(),
+            drag_helper: DragHelper::default(),
+            enemy_list: 0,
             scale: 2.0,
             need_update: true,
             objects: IndexMap::default(),
+            area_names: IndexMap::default(),
+            spawn: None,
         }))
     }
 
@@ -84,31 +116,229 @@ impl SideviewEditor {
         Ok(())
     }
 
-    fn draw_map_commands_header(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<EditAction> {
+    fn draw_enemy_item(
+        &mut self,
+        el: usize,
+        index: usize,
+        popup: bool,
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<EditAction> {
         let mut action = EditAction::None;
-        let config = project.config.get::<config::SideviewAreas>(&self.path)?;
-        if let Some(_table) = ui.begin_table_with_flags("map_properties", 4, TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE) {
-            ui.table_next_row();
+        let _id = ui.push_id_usize(index | 0xEE00);
+
+        if !popup {
             ui.table_next_column();
-            ui.table_header("Map Properties");
+            if ui.button(&format!("{}", fa::ICON_COPY)) {
+                action = EditAction::NewAt(index);
+            }
+            tooltip("Insert a new Enemy", ui);
 
             ui.table_next_column();
-            if ui.input_scalar("Width", &mut self.sideview.map.width).step(1).build() {
+            if ui.button(&format!("{}", fa::ICON_ARROW_UP)) {
+                if index > 0 {
+                    action = EditAction::Swap(index, index - 1);
+                }
+            }
+            tooltip("Move Up", ui);
+
+            ui.table_next_column();
+            if ui.button(&format!("{}", fa::ICON_ARROW_DOWN)) {
+                if index < self.sideview.enemy.data[el].len() - 1 {
+                    action = EditAction::Swap(index, index + 1);
+                }
+            }
+            tooltip("Move Down", ui);
+        }
+        if !popup {
+            ui.table_next_column();
+        }
+        {
+            let _width = ui.push_item_width(100.0);
+            let y = &mut self.sideview.enemy.data[el][index].y;
+            if ui
+                .input_scalar(str_id!(popup, "Y Position"), y)
+                .step(1)
+                .build()
+            {
+                *y = (*y).clamp(0, 15);
+                action.set(EditAction::Update);
+            }
+        }
+
+        if !popup {
+            ui.table_next_column();
+        }
+        {
+            let _width = ui.push_item_width(100.0);
+            let x = &mut self.sideview.enemy.data[el][index].x;
+            if ui
+                .input_scalar(str_id!(popup, "X Position"), x)
+                .step(1)
+                .build()
+            {
+                *x = (*x).clamp(0, 63);
+                action.set(EditAction::Update);
+            }
+        }
+
+        if !popup {
+            ui.table_next_column();
+        }
+        {
+            let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+            let enemies = project
+                .config
+                .get::<EnemyGroup>(&config.enemy_group.as_ref().unwrap())?;
+            let _width = ui.push_item_width(400.0);
+            let kind = &mut self.sideview.enemy.data[el][index].kind;
+            if enemies
+                .group
+                .combo(ui, str_id!(popup, "Enemy"), kind, |k, v| {
+                    format!("{:02x}: {}", k, v.name).into()
+                })
+            {
+                action = EditAction::Update;
+            }
+        }
+        if !popup {
+            ui.table_next_column();
+            if ui.button(&format!("{}", fa::ICON_TRASH)) {
+                action.set(EditAction::Delete(index));
+            }
+            tooltip("Delete", ui);
+        }
+        Ok(action)
+    }
+
+    fn draw_enemy_entity(
+        &mut self,
+        el: usize,
+        index: usize,
+        origin: [f32; 2],
+        scr_origin: [f32; 2],
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<EditAction> {
+        let mut action = EditAction::None;
+        let draw_list = ui.get_window_draw_list();
+        let scale = self.scale * 16.0;
+        let _id = ui.push_id_usize(0xEE00 | index);
+
+        let ox = self.sideview.enemy.data[el][index].x;
+        let oy = self.sideview.enemy.data[el][index].y;
+        let kind = self.sideview.enemy.data[el][index].kind;
+        let x = ox as f32 * scale;
+        let y = oy as f32 * scale;
+
+        {
+            let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+            let _screen = (ox >> 4) as usize;
+            let image = GfxCache::get(
+                project,
+                &format!("{}/sprite", config.palette), // idpath of a palette group.
+                &format!("{}", self.sideview.map.sprite_palette),
+                GfxKind::Enemy(config.enemy_group.as_ref().cloned().unwrap(), kind),
+            )?;
+            image.draw_at([x + origin[0], y + origin[1]], self.scale, ui);
+        }
+        draw_list
+            .add_rect(
+                [x + scr_origin[0], y + scr_origin[1]],
+                [x + scr_origin[0] + scale, y + scr_origin[1] + scale],
+                Self::RED,
+            )
+            .thickness(2.0)
+            .build();
+
+        ui.set_cursor_pos([x + origin[0], y + origin[1]]);
+        ui.invisible_button("edit", [scale, scale]);
+        if ui.is_item_active() {
+            if ui.is_mouse_dragging(MouseButton::Left) {
+                let mp = ui.io().mouse_pos;
+                let mp = [mp[0] - scr_origin[0], mp[1] - scr_origin[1]];
+                // Use a constant to make enemy drag and map drags unique.
+                self.drag_helper.start(0xEE00 | index);
+                self.drag_helper.position(0xEE00 | index, mp);
+                let x = ((mp[0] / scale) as u8).clamp(0, 64);
+                let y = ((mp[1] / scale) as u8).clamp(0, 12);
+
+                if x != ox {
+                    self.sideview.enemy.data[el][index].x = x;
+                    action.set(EditAction::Drag);
+                }
+                if y != oy {
+                    self.sideview.enemy.data[el][index].y = y;
+                    action.set(EditAction::Drag);
+                }
+            }
+        } else {
+            if let Some(_) = self.drag_helper.finalize(0xEE00 | index) {
+                action.set(EditAction::Update);
+            }
+        }
+        if let Some(_token) = ui.begin_popup_context_item() {
+            action.set(self.draw_enemy_item(el, index, true, ui, project)?);
+            if ui.button("Copy") {
+                action.set(EditAction::CopyAt(index));
+            }
+            ui.same_line();
+            if ui.button("Delete") {
+                action.set(EditAction::Delete(index));
+            }
+        }
+        Ok(action)
+    }
+
+    fn draw_map_commands_header(
+        &mut self,
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<EditAction> {
+        let mut action = EditAction::None;
+        let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+        if let Some(_table) = ui.begin_table_header_with_flags(
+            "map_properties",
+            [
+                weight("Category", 200.0),
+                weight("Parameters", 350.0),
+                weight("", 350.0),
+                weight("", 350.0),
+            ],
+            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+        ) {
+            ui.table_next_row();
+            ui.table_next_column();
+            ui.text("Map Properties");
+
+            ui.table_next_column();
+            if ui
+                .input_scalar("Width", &mut self.sideview.map.width)
+                .step(1)
+                .build()
+            {
                 action = EditAction::Update;
             }
             ui.table_next_column();
-            if ui.input_scalar("Object Set", &mut self.sideview.map.objset).step(1).build() {
+            if ui
+                .input_scalar("Object Set", &mut self.sideview.map.objset)
+                .step(1)
+                .build()
+            {
                 self.sideview.map.objset = self.sideview.map.objset.clamp(0, 1);
                 action = EditAction::Update;
             }
             ui.table_next_column();
-            if ui.checkbox("Cursor Moves Left", &mut self.sideview.map.cursor_moves_left) {
+            if ui.checkbox(
+                "Cursor Moves Left",
+                &mut self.sideview.map.cursor_moves_left,
+            ) {
                 action = EditAction::Update;
             }
 
             ui.table_next_row();
             ui.table_next_column();
-            ui.table_header("Flags");
+            ui.text("Flags");
 
             ui.table_next_column();
             if ui.checkbox("Ceiling", &mut self.sideview.map.ceiling) {
@@ -125,69 +355,97 @@ impl SideviewEditor {
 
             ui.table_next_row();
             ui.table_next_column();
-            ui.table_header("Features");
+            ui.text("Features");
 
             ui.table_next_column();
-            if ui.input_scalar("Floor Pos", &mut self.sideview.map.floor).step(1).build() {
+            if ui
+                .input_scalar("Floor Pos", &mut self.sideview.map.floor)
+                .step(1)
+                .build()
+            {
                 self.sideview.map.floor = self.sideview.map.floor.clamp(0, 15);
                 action = EditAction::Update;
             }
             ui.table_next_column();
-            if ui.input_scalar("Tile Set", &mut self.sideview.map.tileset).step(1).build() {
+            if ui
+                .input_scalar("Tile Set", &mut self.sideview.map.tileset)
+                .step(1)
+                .build()
+            {
                 self.sideview.map.tileset = self.sideview.map.tileset.clamp(0, 7);
                 action = EditAction::Update;
             }
             ui.table_next_column();
-            if ui.input_scalar("BG Map", &mut self.sideview.map.background_map).step(1).build() {
+            if ui
+                .input_scalar("BG Map", &mut self.sideview.map.background_map)
+                .step(1)
+                .build()
+            {
                 self.sideview.map.background_map = self.sideview.map.background_map.clamp(0, 7);
                 action = EditAction::Update;
             }
 
             ui.table_next_row();
             ui.table_next_column();
-            ui.table_header("Palettes");
+            ui.text("Palettes");
 
             ui.table_next_column();
-            let bgpal = project.config.get::<PaletteGroup>(&format!("{}/background", config.palette))?;
-            if bgpal.group.index_combo(ui, "Background", &mut self.sideview.map.background_palette, |_, v| {
-                v.name.as_str().into()
-            }) {
+            let bgpal = project
+                .config
+                .get::<PaletteGroup>(&format!("{}/background", config.palette))?;
+            if bgpal.group.index_combo(
+                ui,
+                "Background",
+                &mut self.sideview.map.background_palette,
+                |_, v| v.name.as_str().into(),
+            ) {
                 action = EditAction::Update;
             }
             ui.table_next_column();
-            let sprpal = project.config.get::<PaletteGroup>(&format!("{}/sprite", config.palette))?;
-            if sprpal.group.index_combo(ui, "Sprites", &mut self.sideview.map.sprite_palette, |_, v| {
-                v.name.as_str().into()
-            }) {
+            let sprpal = project
+                .config
+                .get::<PaletteGroup>(&format!("{}/sprite", config.palette))?;
+            if sprpal.group.index_combo(
+                ui,
+                "Sprites",
+                &mut self.sideview.map.sprite_palette,
+                |_, v| v.name.as_str().into(),
+            ) {
                 action = EditAction::Update;
             }
         }
         Ok(action)
     }
 
-    fn draw_map_command(&mut self, index: usize, popup:bool, ui: &imgui::Ui, project: &mut Project) -> Result<EditAction> {
+    fn draw_map_command(
+        &mut self,
+        index: usize,
+        popup: bool,
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<EditAction> {
         let mut action = EditAction::None;
         let _id = ui.push_id_usize(index);
 
         if !popup {
             ui.table_next_column();
-            if ui.button("Cp") {
+            if ui.button(&format!("{}", fa::ICON_COPY)) {
                 action = EditAction::NewAt(index);
             }
             tooltip("Insert a new Map Command", ui);
-            
+
             ui.table_next_column();
-            if ui.button("Up") {
+            if ui.button(&format!("{}", fa::ICON_ARROW_UP)) {
                 if index > 0 {
-                    action = EditAction::Swap(index, index-1);
+                    action = EditAction::Swap(index, index - 1);
                 }
             }
             tooltip("Move Up", ui);
 
             ui.table_next_column();
-            if ui.button("Dn") {
+            if ui.button(&format!("{}", fa::ICON_ARROW_DOWN)) {
                 if index < self.sideview.map.data.len() - 1 {
-                    action = EditAction::Swap(index, index+1);
+                    action = EditAction::Swap(index, index + 1);
                 }
             }
             tooltip("Move Down", ui);
@@ -198,15 +456,11 @@ impl SideviewEditor {
         }
 
         let y = self.sideview.map.data[index].y;
-        let (label, tip) = match (popup, y) {
-            (true, 13) => ("New Floor ", "New Floor"),
-            (true, 14) => ("X-Skip    ", "X-Skip"),
-            (true, 15) => ("Extra Obj ", "Extra Object"),
-            (true,  _) => ("Y Position", "Y Position"),
-            (false, 13) => ("##New Floor ", "New Floor"),
-            (false, 14) => ("##X-Skip    ", "X-Skip"),
-            (false, 15) => ("##Extra Obj ", "Extra Object"),
-            (false,  _) => ("##Y Position", "Y Position"),
+        let (label, tip) = match y {
+            13 => (str_id!(popup, "New Floor "), "New Floor"),
+            14 => (str_id!(popup, "X-Skip    "), "X-Skip"),
+            15 => (str_id!(popup, "Extra Obj "), "Extra Object"),
+            _ => (str_id!(popup, "Y Position"), "Y Position"),
         };
         let width = ui.push_item_width(100.0);
         let y = &mut self.sideview.map.data[index].y;
@@ -223,36 +477,46 @@ impl SideviewEditor {
         {
             let _width = ui.push_item_width(100.0);
             let x = &mut self.sideview.map.data[index].x;
-            let (label, tip) = match popup {
-                true => ("X Position", "X Position"),
-                false => ("##X Position", "X Position"),
-            };
-            if ui.input_scalar(label, x).step(1).build() {
+            if ui
+                .input_scalar(str_id!(popup, "X Position"), x)
+                .step(1)
+                .build()
+            {
                 *x = (*x).clamp(0, 63);
                 action = EditAction::Update;
             }
             if !popup {
-                tooltip(tip, ui);
+                tooltip("X Position", ui);
                 ui.table_next_column();
             }
         }
         if y < 13 {
-            let _width = ui.push_item_width(200.0);
+            let _width = ui.push_item_width(300.0);
             let kind = &mut self.sideview.map.data[index].kind;
             if let Some(_sel) = self.objects.get(kind) {
-                if self.objects.combo(ui, "##Object", kind, |_k, v| v.name.as_str().into()) {
+                if self
+                    .objects
+                    .combo(ui, str_id!(popup, "Object"), kind, |k, v| {
+                        format!("{k:02x}: {}", v.name).into()
+                    })
+                {
                     action = EditAction::Update;
                 }
             } else {
                 ui.text(format!("Unknown: Object/{:02x}", kind));
             }
         } else if y == 15 {
-            let _width = ui.push_item_width(200.0);
+            let _width = ui.push_item_width(300.0);
             let config = project.config.get::<config::SideviewAreas>(&self.path)?;
             let render = project.config.get::<RenderInfo>(&config.render_info)?;
             let kind = &mut self.sideview.map.data[index].kind;
             if let Some(_sel) = render.extra.get(kind) {
-                if render.extra.combo(ui, "##Extra", kind, |_k, v| v.name.as_str().into()) {
+                if render
+                    .extra
+                    .combo(ui, str_id!(popup, "Extra"), kind, |k, v| {
+                        format!("{k:02x}: {}", v.name).into()
+                    })
+                {
                     action = EditAction::Update;
                 }
             } else {
@@ -264,24 +528,29 @@ impl SideviewEditor {
         }
         if y != 14 {
             if self.sideview.map.data[index].kind == 0x0F {
-                let _width = ui.push_item_width(200.0);
+                let _width = ui.push_item_width(300.0);
                 let item = &mut self.sideview.map.data[index].param;
-                let items = project.config.get::<Items>("/global/items")?;
-                if items.item.index_combo(ui, "##Items", item, |_k, v| v.name.as_str().into()) {
+                let items = project.config.get::<Items>("/global/item")?;
+                if items
+                    .item
+                    .index_combo(ui, str_id!(popup, "Items"), item, |_k, v| {
+                        v.name.as_str().into()
+                    })
+                {
                     action = EditAction::Update;
                 }
             } else {
                 let _width = ui.push_item_width(100.0);
                 let p = &mut self.sideview.map.data[index].param;
-                if ui.input_scalar("##Param", p).step(1).build() {
-                    *p = (*p).clamp(0, if y==13 {255} else {15});
+                if ui.input_scalar(str_id!(popup, "Param"), p).step(1).build() {
+                    *p = (*p).clamp(0, if y == 13 { 255 } else { 15 });
                     action = EditAction::Update;
                 }
             }
         }
         if !popup {
             ui.table_next_column();
-            if ui.button("Del") {
+            if ui.button(&format!("{}", fa::ICON_TRASH)) {
                 action = EditAction::Delete(index);
             }
             tooltip("Delete", ui);
@@ -289,23 +558,29 @@ impl SideviewEditor {
         Ok(action)
     }
 
-    fn draw_map_command_tab(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<EditAction> {
+    fn draw_map_command_tab(
+        &mut self,
+        ui: &imgui::Ui,
+        project: &mut Project,
+    ) -> Result<EditAction> {
         let mut action = EditAction::None;
+        ui.text("Map Header:");
         action.set(self.draw_map_commands_header(&ui, project)?);
-        if let Some(_table) = ui.begin_table_header_with_flags("map_commands",
-
+        ui.text("Map Commands:");
+        if let Some(_table) = ui.begin_table_header_with_flags(
+            "map_commands",
             [
-            weight("New", 20.0),
-            weight("Up", 20.0),
-            weight("Dn", 20.0),
-            weight("Y Position", 100.0),
-            weight("X Position", 100.0),
-            weight("Object", 200.0),
-            weight("Parameter", 200.0),
-            weight("Del", 20.0),
+                weight("New", 32.0),
+                weight("Up", 24.0),
+                weight("Dn", 24.0),
+                weight("Y Position", 130.0),
+                weight("X Position", 130.0),
+                weight("Object", 300.0),
+                weight("Parameter", 300.0),
+                weight("Del", 32.0),
             ],
-
-            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE) {
+            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+        ) {
             for i in 0..self.sideview.map.data.len() {
                 ui.table_next_row();
                 action.set(self.draw_map_command(i, false, ui, project)?);
@@ -313,25 +588,451 @@ impl SideviewEditor {
         }
         Ok(action)
     }
-    fn draw_map(&self, origin: [f32;2], ui: &imgui::Ui, project: &Project) -> Result<()> {
+
+    fn draw_map_entity(
+        &mut self,
+        index: usize,
+        origin: [f32; 2],
+        scr_origin: [f32; 2],
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<EditAction> {
+        let mut action = EditAction::None;
+        let draw_list = ui.get_window_draw_list();
+        let scale = self.scale * 16.0;
+        let _id = ui.push_id_usize(index);
+
+        let ox = self.sideview.map.data[index].x;
+        let oy = self.sideview.map.data[index].y;
+        let x = ox as f32 * scale;
+        let y = if oy < 13 {
+            oy as f32 * scale
+        } else {
+            13.0 * scale
+        };
+
+        draw_list
+            .add_rect(
+                [x + scr_origin[0], y + scr_origin[1]],
+                [x + scr_origin[0] + scale, y + scr_origin[1] + scale],
+                Self::WHITE,
+            )
+            .thickness(2.0)
+            .build();
+        if oy == 13 {
+            for i in 0..4 {
+                let tick = i as f32;
+                draw_list
+                    .add_line(
+                        [
+                            x + scr_origin[0] + (tick + 1.0) * 4.0 * self.scale,
+                            y + scr_origin[1] + 8.0 * self.scale,
+                        ],
+                        [
+                            x + scr_origin[0] + tick * 4.0 * self.scale,
+                            y + scr_origin[1] + 14.0 * self.scale,
+                        ],
+                        Self::WHITE,
+                    )
+                    .build();
+            }
+        } else if oy == 14 {
+            draw_list
+                .add_triangle(
+                    [
+                        x + scr_origin[0] + 4.0 * self.scale,
+                        y + scr_origin[1] + 4.0 * self.scale,
+                    ],
+                    [
+                        x + scr_origin[0] + 12.0 * self.scale,
+                        y + scr_origin[1] + 8.0 * self.scale,
+                    ],
+                    [
+                        x + scr_origin[0] + 4.0 * self.scale,
+                        y + scr_origin[1] + 12.0 * self.scale,
+                    ],
+                    [1.0, 1.0, 1.0, 1.0],
+                )
+                .filled(true)
+                .build();
+        }
+        ui.set_cursor_pos([x + origin[0], y + origin[1]]);
+        ui.invisible_button("edit", [scale, scale]);
+        if ui.is_item_hovered() {
+            let delta = ui.io().mouse_wheel as i8;
+            if delta != 0 {
+                self.sideview.map.data[index].param =
+                    (self.sideview.map.data[index].param as i8 - delta).clamp(0, 15) as u8;
+                action.set(EditAction::Update);
+            }
+        }
+        if ui.is_item_active() {
+            if ui.is_mouse_dragging(MouseButton::Left) {
+                let mp = ui.io().mouse_pos;
+                let mp = [mp[0] - scr_origin[0], mp[1] - scr_origin[1]];
+                self.drag_helper.start(index);
+                self.drag_helper.position(index, mp);
+                let x = ((mp[0] / scale) as u8).clamp(0, 64);
+                let y = ((mp[1] / scale) as u8).clamp(0, 12);
+
+                if x != ox {
+                    self.sideview.map.data[index].x = x;
+                    action.set(EditAction::Drag);
+                }
+                if oy < 13 && y != oy {
+                    self.sideview.map.data[index].y = y;
+                    action.set(EditAction::Drag);
+                }
+            }
+        } else {
+            if let Some(_) = self.drag_helper.finalize(index) {
+                action.set(EditAction::Update);
+            }
+        }
+        if let Some(_token) = ui.begin_popup_context_item() {
+            action.set(self.draw_map_command(index, true, ui, project)?);
+            if ui.button("Copy") {
+                action.set(EditAction::CopyAt(index));
+            }
+            ui.same_line();
+            if ui.button("Delete") {
+                action.set(EditAction::Delete(index));
+            }
+        }
+        Ok(action)
+    }
+
+    fn draw_enemies_tab(
+        &mut self,
+        el: usize,
+        ui: &imgui::Ui,
+        project: &mut Project,
+    ) -> Result<EditAction> {
+        let mut action = EditAction::None;
+        if let Some(_table) = ui.begin_table_header_with_flags(
+            "map_commands",
+            [
+                weight("New", 32.0),
+                weight("Up", 24.0),
+                weight("Dn", 24.0),
+                weight("Y Position", 130.0),
+                weight("X Position", 130.0),
+                weight("Enemy", 400.0),
+                weight("Del", 32.0),
+            ],
+            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+        ) {
+            for i in 0..self.sideview.enemy.data[el].len() {
+                ui.table_next_row();
+                action.set(self.draw_enemy_item(el, i, false, ui, project)?);
+            }
+        }
+        if self.sideview.enemy.data[el].is_empty() {
+            if ui.button(&format!("{}", fa::ICON_COPY)) {
+                action.set(EditAction::NewAt(0));
+            }
+            tooltip("Insert a new Enemy", ui);
+        }
+        Ok(action)
+    }
+
+    fn process_enemy_action(&mut self, el: usize, action: EditAction) -> bool {
+        let changed = match action {
+            EditAction::None => false,
+            EditAction::Swap(i, j) => {
+                self.sideview.enemy.data[el].swap(i, j);
+                true
+            }
+            EditAction::NewAt(i) => {
+                self.sideview.enemy.data[el].insert(i, Enemy::default());
+                true
+            }
+            EditAction::CopyAt(i) => {
+                let item = self.sideview.enemy.data[el][i].clone();
+                self.sideview.enemy.data[el].insert(i, item);
+                true
+            }
+            EditAction::Delete(i) => {
+                self.sideview.enemy.data[el].remove(i);
+                true
+            }
+            EditAction::Drag => false,
+            EditAction::Update => true,
+            _ => {
+                log::info!("map_commands: unhandled edit action {:?}", action);
+                false
+            }
+        };
+        changed
+    }
+
+    fn draw_map(
+        &mut self,
+        origin: [f32; 2],
+        scr_origin: [f32; 2],
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<bool> {
         let scale = 16.0 * self.scale;
         let config = project.config.get::<config::SideviewAreas>(&self.path)?;
         for y in 0..Decompressor::HEIGHT {
-        for x in 0..Decompressor::WIDTH {
-            let image = GfxCache::metatile(
-                project,
-                config.chr,
-                &format!("{}/background", config.palette), // idpath of a palette group.
-                &format!("{}", self.sideview.map.background_palette),
-                &config.metatile,
-                self.decompressor.data[y][x],
-            )?;
-            let xo = origin[0] + x as f32 * scale;
-            let yo = origin[1] + y as f32 * scale;
-            image.draw_at([xo, yo], self.scale, ui);
+            for x in 0..Decompressor::WIDTH {
+                let image = GfxCache::get(
+                    project,
+                    &format!("{}/background", config.palette), // idpath of a palette group.
+                    &format!("{}", self.sideview.map.background_palette),
+                    GfxKind::Metatile(
+                        config.chr,
+                        config.metatile.clone(),
+                        self.decompressor.data[y][x],
+                    ),
+                )?;
+                let xo = origin[0] + x as f32 * scale;
+                let yo = origin[1] + y as f32 * scale;
+                image.draw_at([xo, yo], self.scale, ui);
+            }
         }
+
+        for y in 0..Decompressor::HEIGHT {
+            for x in 0..Decompressor::WIDTH {
+                let item = self.decompressor.item[y][x];
+                if item != 255 {
+                    let image = GfxCache::get(
+                        project,
+                        &format!("{}/sprite", config.palette), // idpath of a palette group.
+                        &format!("{}", self.sideview.map.sprite_palette),
+                        GfxKind::Item(item),
+                    )?;
+                    let xo = origin[0] + x as f32 * scale;
+                    let yo = origin[1] + y as f32 * scale;
+                    image.draw_at([xo, yo], self.scale, ui);
+                    let screen = x / 16;
+                    if item != 0xEE && self.sideview.availability.get(screen) == Some(&false) {
+                        let radius = std::cmp::max(image.width, image.height) as f32 * self.scale
+                            / 2.0
+                            - 2.0;
+                        let draw_list = ui.get_window_draw_list();
+                        let xc =
+                            scr_origin[0] + (x as u32 * 16 + image.width / 2) as f32 * self.scale;
+                        let yc =
+                            scr_origin[1] + (y as u32 * 16 + image.height / 2) as f32 * self.scale;
+                        draw_list
+                            .add_circle([xc, yc], radius, Self::RED)
+                            .thickness(2.0)
+                            .build();
+                        draw_list
+                            .add_line(
+                                [xc - radius, yc - radius],
+                                [xc + radius, yc + radius],
+                                Self::RED,
+                            )
+                            .thickness(2.0)
+                            .build();
+                    }
+                }
+            }
         }
-        Ok(())
+
+        if let Some(_enemy_group) = &config.enemy_group {
+            for index in 0..self.sideview.enemy.data[self.enemy_list].len() {
+                self.draw_enemy_entity(self.enemy_list, index, origin, scr_origin, ui, project)?;
+            }
+        }
+
+        let mut action = EditAction::None;
+        for i in 0..self.sideview.map.data.len() {
+            action.set(self.draw_map_entity(i, origin, scr_origin, ui, project)?);
+        }
+        Ok(self.process_map_action(action))
+    }
+
+    fn process_map_action(&mut self, action: EditAction) -> bool {
+        let changed = match action {
+            EditAction::None => false,
+            EditAction::Swap(i, j) => {
+                self.sideview.map.data.swap(i, j);
+                true
+            }
+            EditAction::NewAt(i) => {
+                self.sideview.map.data.insert(i, MapCommand::default());
+                true
+            }
+            EditAction::CopyAt(i) => {
+                let item = self.sideview.map.data[i].clone();
+                self.sideview.map.data.insert(i, item);
+                true
+            }
+            EditAction::Delete(i) => {
+                self.sideview.map.data.remove(i);
+                true
+            }
+            EditAction::Drag => false,
+            EditAction::Update => true,
+            _ => {
+                log::info!("map_commands: unhandled edit action {:?}", action);
+                false
+            }
+        };
+        if changed || action == EditAction::Drag {
+            self.need_update = true;
+        }
+        changed
+    }
+
+    fn draw_connections_tab(&mut self, ui: &imgui::Ui, project: &Project) -> Result<bool> {
+        let mut changed = false;
+        let labels = [
+            "Screen 1 (Left)",
+            "Screen 2 (Down)",
+            "Screen 3 (Up)",
+            "Screen 4 (Right)",
+        ];
+        if !self.sideview.connection.is_empty() {
+            ui.text("Connection Table:");
+            if let Some(_table) = ui.begin_table_header_with_flags(
+                "connections",
+                [
+                    weight("Exit", 200.0),
+                    weight("Destination", 350.0),
+                    weight("Screen", 200.0),
+                    weight("Adjust Target", 150.0),
+                    weight("Edit Target", 200.0),
+                ],
+                TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+            ) {
+                for (i, c) in self.sideview.connection.iter_mut().enumerate() {
+                    let _id = ui.push_id_usize(i as usize | 0xCC00);
+                    ui.table_next_row();
+                    ui.table_next_column();
+                    ui.text(labels[i]);
+
+                    ui.table_next_column();
+                    let width = ui.push_item_width(-1.0);
+                    changed |= self
+                        .area_names
+                        .combo(ui, "##destination", &mut c.area, |_, v| v.as_str().into());
+                    width.end();
+
+                    ui.table_next_column();
+                    let width = ui.push_item_width(-1.0);
+                    let mut screen = c.screen as usize;
+                    if ui.combo_simple_string(
+                        "##screen",
+                        &mut screen,
+                        &["Screen 1", "Screen 2", "Screen 3", "Screen 4"],
+                    ) {
+                        c.screen = screen as u8;
+                        changed |= true;
+                    }
+                    width.end();
+
+                    ui.table_next_column();
+                    if c.area != 63 && (i == 0 || i == 3) {
+                        let mut target = c.point_target_back.is_some();
+                        if ui.checkbox("##adjust", &mut target) {
+                            changed |= true;
+                            if target {
+                                c.point_target_back = Some((3 - i) as u8);
+                            } else {
+                                c.point_target_back = None;
+                            }
+                        }
+                    }
+                    // FIXME: check elevator
+                    if c.area != 63 && (i == 1 || i == 2) {
+                        let mut target = c.point_target_back.is_some();
+                        if ui.checkbox("##adjust", &mut target) {
+                            changed |= true;
+                            if target {
+                                c.point_target_back = Some((2 - i) as u8);
+                            } else {
+                                c.point_target_back = None;
+                            }
+                        }
+                    }
+                    ui.table_next_column();
+                    if c.area != 63 && ui.button("Edit") {
+                        let node = format!("{}/{}", self.base, c.area);
+                        if let Some(edit) = project.edits.get(&node) {
+                            self.spawn = Some(edit.data.gui(&node)?);
+                        }
+                    }
+                }
+            }
+        } else {
+            ui.text(format!("No connections for {}", self.path));
+        }
+
+        if !self.sideview.door.is_empty() {
+            ui.text("\n\nDoor Table:");
+            if let Some(_table) = ui.begin_table_header_with_flags(
+                "connections",
+                [
+                    weight("Door", 200.0),
+                    weight("Destination", 350.0),
+                    weight("Screen", 200.0),
+                    weight("Adjust Target", 150.0),
+                    weight("Edit Target", 200.0),
+                ],
+                TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+            ) {
+                for (i, c) in self.sideview.door.iter_mut().enumerate() {
+                    let _id = ui.push_id_usize(i as usize | 0xCC00);
+                    ui.table_next_row();
+                    ui.table_next_column();
+                    ui.text(format!("Screen {i}"));
+
+                    ui.table_next_column();
+                    let width = ui.push_item_width(-1.0);
+                    changed |= self
+                        .area_names
+                        .combo(ui, "##destination", &mut c.area, |_, v| v.as_str().into());
+                    width.end();
+
+                    ui.table_next_column();
+                    let width = ui.push_item_width(-1.0);
+                    let mut screen = c.screen as usize;
+                    if ui.combo_simple_string(
+                        "##screen",
+                        &mut screen,
+                        &["Screen 1", "Screen 2", "Screen 3", "Screen 4"],
+                    ) {
+                        c.screen = screen as u8;
+                        changed |= true;
+                    }
+                    width.end();
+
+                    ui.table_next_column();
+                    if c.area != 63 {
+                        let mut target = c.point_target_back.is_some();
+                        if ui.checkbox("##adjust", &mut target) {
+                            changed |= true;
+                            if target {
+                                c.point_target_back = Some(i as u8);
+                            } else {
+                                c.point_target_back = None;
+                            }
+                        }
+                    }
+                    ui.table_next_column();
+                    if c.area != 63 && ui.button("Edit") {
+                        let node = format!("{}/{}", self.base, c.area);
+                        if let Some(edit) = project.edits.get(&node) {
+                            self.spawn = Some(edit.data.gui(&node)?);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(changed)
+    }
+
+    fn draw_availability_tab(&mut self, ui: &imgui::Ui) -> Result<bool> {
+        let mut changed = false;
+        for (i, a) in self.sideview.availability.iter_mut().enumerate() {
+            changed |= ui.checkbox(&format!("Screen {}", i + 1), a);
+        }
+        Ok(changed)
     }
 
     fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
@@ -348,19 +1049,73 @@ impl SideviewEditor {
         ui.same_line();
         ui.text(&self.path);
 
-        //let cfg = project.config.get::<config::SideviewAreas>(&self.path)?;
+        if self.area_names.is_empty() {
+            let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+            for index in 0..63 {
+                self.area_names.insert(
+                    index,
+                    config
+                        .area_names
+                        .get(&index)
+                        .as_ref()
+                        .map(|name| format!("Area {index:02}: {name}"))
+                        .unwrap_or_else(|| format!("Area {index:02}")),
+                );
+            }
+            self.area_names.insert(63, "Outside".into());
+        }
         if self.need_update {
             self.refresh_objects(project)?;
-            self.decompressor.decompress(&self.path, &self.sideview, project)?;
-            for s in self.decompressor.to_strings().iter() {
-                eprintln!("{s}");
-            }
+            self.decompressor
+                .decompress(&self.path, &self.sideview, project)?;
             self.need_update = false;
         }
 
-        let origin = ui.cursor_pos();
-        self.draw_map(origin, ui, project)?;
-        self.draw_map_command_tab(ui, project)?;
+        let size = ui.content_region_avail();
+        if let Some(change) = ui
+            .child_window("1")
+            .movable(false)
+            .size([size[0], 16.0 * 16.0 * self.scale])
+            .always_vertical_scrollbar(true)
+            .always_horizontal_scrollbar(true)
+            .build(|| {
+                let origin = ui.cursor_pos();
+                let scr_origin = ui.cursor_screen_pos();
+                self.draw_map(origin, scr_origin, ui, project)
+            })
+            .transpose()?
+        {
+            self.changed |= change;
+        }
+        if let Some(_tab_bar) = ui.tab_bar("sideview_tabs") {
+            if let Some(_item) = ui.tab_item("Map Commands") {
+                let action = self.draw_map_command_tab(ui, project)?;
+                self.changed |= self.process_map_action(action);
+            }
+            if let Some(_item) = ui.tab_item("Enemies") {
+                let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+                if config.is_encounter(self.area, &project.edits)? {
+                    self.sideview.enemy.data.resize_with(2, Default::default);
+                    ui.radio_button("Small Encounter", &mut self.enemy_list, 0);
+                    let action = self.draw_enemies_tab(0, ui, project)?;
+                    self.changed |= self.process_enemy_action(0, action);
+                    ui.radio_button("Large Encounter", &mut self.enemy_list, 1);
+                    let action = self.draw_enemies_tab(1, ui, project)?;
+                    self.changed |= self.process_enemy_action(1, action);
+                } else {
+                    self.sideview.enemy.data.resize_with(1, Default::default);
+                    self.enemy_list = 0;
+                    let action = self.draw_enemies_tab(0, ui, project)?;
+                    self.changed |= self.process_enemy_action(0, action);
+                }
+            }
+            if let Some(_item) = ui.tab_item("Connections") {
+                self.changed |= self.draw_connections_tab(ui, project)?;
+            }
+            if let Some(_item) = ui.tab_item("Availability") {
+                self.changed |= self.draw_availability_tab(ui)?;
+            }
+        }
 
         Ok(())
     }
@@ -395,5 +1150,9 @@ impl Gui for SideviewEditor {
 
     fn window_id(&self) -> u64 {
         0
+    }
+
+    fn spawned(&mut self) -> Option<Box<dyn Gui>> {
+        self.spawn.take()
     }
 }

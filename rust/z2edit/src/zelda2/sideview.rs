@@ -49,9 +49,7 @@ pub struct Enemy {
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct EnemyList {
-    pub data: Vec<Enemy>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub secondary: Vec<Enemy>,
+    pub data: Vec<Vec<Enemy>>,
     #[serde(skip)]
     pub ram_address: Address,
 }
@@ -123,6 +121,7 @@ pub mod config {
         pub background: Option<String>,
         pub encounters: Option<String>,
         pub enemy_group: Option<String>,
+        pub area_names: IndexMap<u8, String>,
     }
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -146,16 +145,8 @@ impl config::SideviewAreas {
         log::debug!("SideviewAreas::unpack {path}");
         let rom = rrom.borrow();
         for index in 0..self.length {
-            let is_encounter = self
-                .encounters
-                .as_ref()
-                .map(|v| edits.get(v))
-                .flatten()
-                .map(|edit| edit.data_ref::<Encounters>())
-                .transpose()?
-                .map(|e| e.is_encounter(index as u8))
-                .unwrap_or(false);
-            let sv = match Sideview::from_rom(&*rom, group, self, index, is_encounter) {
+            let enc = self.is_encounter(index as u8, edits)?;
+            let sv = match Sideview::from_rom(&*rom, group, self, index, enc) {
                 Ok(sv) => sv,
                 Err(e) => {
                     log::error!("Error reading {path}/{index} from ROM: {e}");
@@ -186,6 +177,17 @@ impl config::SideviewAreas {
             log::warn!("No data for {path:?}");
         }
         Ok(())
+    }
+    pub fn is_encounter(&self, area: u8, edits: &EditList) -> Result<bool> {
+        Ok(self
+            .encounters
+            .as_ref()
+            .map(|path| edits.get(path))
+            .flatten()
+            .map(|edit| edit.data_ref::<Encounters>())
+            .transpose()?
+            .map(|enc| enc.is_encounter(area))
+            .unwrap_or(false))
     }
 }
 
@@ -340,12 +342,14 @@ impl EnemyList {
         {
             let len = rom.read(addr)? as usize;
             total += len;
-            list.data = Self::list_from_bytes(rom.read_bytes(addr, len)?);
+            list.data
+                .push(Self::list_from_bytes(rom.read_bytes(addr, len)?));
             if is_encounter {
                 let addr = addr + len;
                 let len = rom.read(addr)? as usize;
                 total += len;
-                list.secondary = Self::list_from_bytes(rom.read_bytes(addr, len)?);
+                list.data
+                    .push(Self::list_from_bytes(rom.read_bytes(addr, len)?));
             }
         }
         log::debug!("EnemyList: index {index} read from {addr:x?} ({total} bytes)");
@@ -419,7 +423,7 @@ impl Sideview {
             Vec::new()
         };
         let door = if cfg.doors.is_valid() && index <= cfg.max_door_index {
-            let table = rom.read_bytes(cfg.connections + index * 4, 4)?;
+            let table = rom.read_bytes(cfg.doors + index * 4, 4)?;
             table
                 .iter()
                 .map(|&v| Connection::from(v))

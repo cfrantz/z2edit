@@ -23,4 +23,7 @@ pub trait Gui: Send + Sync + 'static {
     fn draw(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()>;
     fn wants_dispose(&self) -> bool;
     fn window_id(&self) -> u64;
+    fn spawned(&mut self) -> Option<Box<dyn Gui>> {
+        None
+    }
 }
