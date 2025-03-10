@@ -81,7 +81,7 @@
             sideview: {
                 background: {
                     name: "Backgrounds",
-                    world: 3,
+                    world: 1,
                     overworld: 0,
                     subworld: 0,
                     length: 7,
@@ -100,7 +100,7 @@
                 },
                 "0": {
                     name: "Towns",
-                    world: 3,
+                    world: 1,
                     overworld: 0,
                     subworld: 0,
                     length: 63,
@@ -109,7 +109,7 @@
                     availability: {Prg:[5,0xbb75]},
                     enemylist: {Prg:[3,0x85a1]},
                     connections: {Prg:[3,0x871b]},
-                    max_connectable_index: 30,
+                    max_connectable_index: 62,
                     doors: {Prg:[3,0x8817]},
                     max_door_index: 28,
                     metatile: "/bank/3/metatile/background",

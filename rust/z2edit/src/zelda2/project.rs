@@ -11,6 +11,7 @@ use crate::error::Error;
 use crate::nes::NesFile;
 use crate::util::time::UTime;
 use crate::zelda2::config::Config;
+use crate::zelda2::connectivity::Connectivity;
 use crate::zelda2::edit::{EditList, EditProxy, GameData};
 use crate::zelda2::rom::FileResource;
 use crate::AppPreferences;
@@ -32,6 +33,8 @@ pub struct Project {
     pub rom: Py<NesFile>,
     #[serde(skip)]
     pub config: Config,
+    #[serde(skip)]
+    pub connectivity: Connectivity,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -96,6 +99,8 @@ impl Project {
             edits.insert(name, edit);
         }
         self.edits = edits;
+        self.connectivity.scan(&self)?;
+        self.connectivity.report();
         Ok(self)
     }
 
@@ -114,6 +119,7 @@ impl Project {
             edits: data.edits,
             rom,
             config: Config::default(),
+            connectivity: Connectivity::default(),
         };
         project.setup()
     }
@@ -182,6 +188,7 @@ impl Project {
             edits: EditList::default(),
             rom: Py::new(py, NesFile::default())?,
             config: Config::default(),
+            connectivity: Connectivity::default(),
         };
         project.setup()
     }

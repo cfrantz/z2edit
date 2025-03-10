@@ -124,7 +124,7 @@
                     availability: {Prg:[5,0xbbd5]},
                     enemylist: {Prg:[5,0x85a1]},
                     connections: {Prg:[5,0x871b]},
-                    max_connectable_index: 30,
+                    max_connectable_index: 62,
                     doors: {Prg:[5,0x8817]},
                     max_door_index: 0,
                     metatile: "/bank/5/metatile/background",

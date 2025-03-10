@@ -118,6 +118,8 @@ pub mod config {
         pub palette: String,
         pub render_info: String,
         pub is_background_layer: bool,
+        // Set to true for reglular palaces, but not for Great Palace.
+        pub is_palace: bool,
         pub background: Option<String>,
         pub encounters: Option<String>,
         pub enemy_group: Option<String>,
@@ -287,11 +289,21 @@ impl Map {
             floor: data[2] & 0x0f,
             tileset: (data[2] >> 4) & 7,
             sprite_palette: (data[3] >> 6) & 3,
-            background_palette: (data[3] >> 3) & 3,
+            background_palette: (data[3] >> 3) & 7,
             background_map: data[3] & 7,
             cursor_moves_left,
             data: commands,
         }
+    }
+
+    pub fn elevator(&self) -> Option<u8> {
+        for item in self.data.iter() {
+            // An "extra" object of kind 0x50 is an elevator.
+            if item.y == 15 && item.kind == 0x50 {
+                return Some(item.x);
+            }
+        }
+        None
     }
 
     fn sort_data(data: &mut Vec<MapCommand>) {
@@ -311,6 +323,107 @@ impl Map {
     pub fn sort(&mut self) {
         Map::sort_data(&mut self.data);
     }
+
+    fn optimize(&self) -> Vec<MapCommand> {
+        let mut data = self.data.clone();
+        if !self.cursor_moves_left {
+            Map::sort_data(&mut data);
+        }
+        // Strip out all "skip to screen" commands, as we'll
+        // recreate them exactly where they're needed.
+        data.retain(|elem| elem.y != 14);
+
+        let mut x = 0i8;
+        let mut i = 0;
+        while i < data.len() {
+            let delta = data[i].x as i8 - x;
+            if delta < 0 || delta > 15 {
+                // If we need to move too far, insert a "skip to screen" command.
+                let newx = data[i].x & !15;
+                data.insert(
+                    i,
+                    MapCommand {
+                        y: 14,
+                        x: newx / 16,
+                        ..Default::default()
+                    },
+                );
+                x = newx as i8;
+                i += 1;
+            } else {
+                // Otherwise, just remember the last x coordinate.
+                x = data[i].x as i8;
+            }
+            i += 1;
+        }
+        data
+    }
+
+    fn to_relative(&self) -> Vec<MapCommand> {
+        let mut result = Vec::new();
+        let mut x = 0;
+        for item in self.optimize().iter() {
+            let mut command = item.clone();
+            if item.y != 14 {
+                // Not an X-skip; compute distance relative to prior command.
+                command.x -= x;
+                x = item.x;
+            } else {
+                // Is an X-skip, set new last position.
+                x = item.x * 16;
+            }
+            result.push(command);
+        }
+        result
+    }
+
+    fn to_bytes(&self) -> Vec<u8> {
+        let mut result = Vec::new();
+        result.push(0); // length (filled in later).
+        result.push(
+            // flags
+            ((self.objset as u8) << 7)
+                | ((self.width - 1) as u8 & 3) << 5
+                | if self.grass { 8 } else { 0 }
+                | if self.bushes { 4 } else { 0 },
+        );
+        result.push(
+            // floor & tileset.
+            if self.ceiling { 0x00 } else { 0x80 }
+                | self.floor as u8 & 0x0F
+                | (self.tileset as u8 & 7) << 4,
+        );
+        result.push(
+            // palettes.
+            ((self.sprite_palette as u8 & 3) << 6)
+                | ((self.background_palette as u8 & 7) << 3)
+                | (self.background_map as u8 & 7),
+        );
+
+        let commands = self.to_relative();
+        for c in commands.iter() {
+            let xy = (c.x as u8 & 0xF) | (c.y as u8 & 0xF) << 4;
+            let kind = match c.y {
+                13 => c.param as u8,
+                14 => 0,
+                _ => {
+                    if c.kind < 0x10 {
+                        c.kind as u8
+                    } else {
+                        c.kind as u8 | c.param as u8 & 0x0F
+                    }
+                }
+            };
+            result.push(xy);
+            result.push(kind);
+            if c.kind == 0x0F {
+                // Collectables are 3 bytes.
+                result.push(c.param as u8);
+            }
+        }
+        result[0] = result.len() as u8;
+        result
+    }
 }
 
 impl From<u8> for Connection {
@@ -318,6 +431,15 @@ impl From<u8> for Connection {
         Connection {
             area: val >> 2,
             screen: val & 3,
+            ..Default::default()
+        }
+    }
+}
+
+impl Connection {
+    pub fn outside() -> Self {
+        Connection {
+            area: 63,
             ..Default::default()
         }
     }

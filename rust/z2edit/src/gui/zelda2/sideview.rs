@@ -5,10 +5,12 @@ use python_gui::fa;
 use crate::gui::util::{tooltip, DragHelper, EditAction};
 use crate::gui::widgets::Combo;
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
 use crate::zelda2::object::{Object, RenderInfo};
+use crate::zelda2::overworld::Overworld;
 use crate::zelda2::palette::config::PaletteGroup;
 use crate::zelda2::project::Project;
 use crate::zelda2::sideview::{config, Decompressor, Enemy, MapCommand, Sideview};
@@ -67,6 +69,9 @@ pub struct SideviewEditor {
     path: String,
     base: String,
     area: u8,
+    screen: u8,
+    chr: Option<Address>,
+    background: String,
     sideview: Sideview,
     decompressor: Decompressor,
     drag_helper: DragHelper,
@@ -91,6 +96,9 @@ impl SideviewEditor {
             path: path.into(),
             base: base.into(),
             area: area.parse()?,
+            screen: 0,
+            chr: None,
+            background: "background".into(),
             sideview: sv.clone(),
             decompressor: Decompressor::new(),
             drag_helper: DragHelper::default(),
@@ -392,7 +400,7 @@ impl SideviewEditor {
             ui.table_next_column();
             let bgpal = project
                 .config
-                .get::<PaletteGroup>(&format!("{}/background", config.palette))?;
+                .get::<PaletteGroup>(&format!("{}/{}", config.palette, self.background))?;
             if bgpal.group.index_combo(
                 ui,
                 "Background",
@@ -779,10 +787,10 @@ impl SideviewEditor {
             for x in 0..Decompressor::WIDTH {
                 let image = GfxCache::get(
                     project,
-                    &format!("{}/background", config.palette), // idpath of a palette group.
+                    &format!("{}/{}", config.palette, self.background), // idpath of a palette group.
                     &format!("{}", self.sideview.map.background_palette),
                     GfxKind::Metatile(
-                        config.chr,
+                        self.chr.unwrap_or(config.chr),
                         config.metatile.clone(),
                         self.decompressor.data[y][x],
                     ),
@@ -1048,9 +1056,15 @@ impl SideviewEditor {
         }
         ui.same_line();
         ui.text(&self.path);
+        ui.separator();
+        let width = ui.push_item_width(150.0);
+        if ui.input_scalar("Scale", &mut self.scale).step(0.25).build() {
+            self.scale = self.scale.clamp(0.25, 8.0);
+        }
+        width.end();
 
+        let config = project.config.get::<config::SideviewAreas>(&self.path)?;
         if self.area_names.is_empty() {
-            let config = project.config.get::<config::SideviewAreas>(&self.path)?;
             for index in 0..63 {
                 self.area_names.insert(
                     index,
@@ -1065,6 +1079,28 @@ impl SideviewEditor {
             self.area_names.insert(63, "Outside".into());
         }
         if self.need_update {
+            if config.is_palace {
+                if let Some(connector) = project
+                    .connectivity
+                    .get(&format!("{}/{}", self.path, self.screen))
+                {
+                    let (overworld, conn) = connector.rsplit_once('/').expect("connectivity path");
+                    let conn = conn.parse::<u8>()?;
+                    let overworld = project.data_ref::<Overworld>(overworld)?;
+                    if let Some(palace) = overworld
+                        .connection
+                        .get(&conn)
+                        .map(|c| c.palace.as_ref())
+                        .flatten()
+                    {
+                        self.background = palace.palette.to_string();
+                        self.chr = Some(Address::Chr(palace.chr_bank as i16 + 1, 0));
+                    } else {
+                        self.background = "background".to_string();
+                    }
+                }
+            }
+
             self.refresh_objects(project)?;
             self.decompressor
                 .decompress(&self.path, &self.sideview, project)?;

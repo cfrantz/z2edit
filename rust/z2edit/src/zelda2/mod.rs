@@ -1,6 +1,7 @@
 pub mod banks;
 pub mod chr;
 pub mod config;
+pub mod connectivity;
 pub mod drops;
 pub mod edit;
 pub mod encounters;
