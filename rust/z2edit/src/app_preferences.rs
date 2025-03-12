@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[pyclass(eq, eq_int)]
-pub enum MultiMap {
+pub enum MultiMapColor {
     #[default]
     Invalid,
     Screen1,
@@ -22,6 +22,22 @@ pub enum MultiMap {
     Door4,
 }
 
+impl From<usize> for MultiMapColor {
+    fn from(val: usize) -> Self {
+        match val {
+            0 => MultiMapColor::Screen1,
+            1 => MultiMapColor::Screen2,
+            2 => MultiMapColor::Screen3,
+            3 => MultiMapColor::Screen4,
+            4 => MultiMapColor::Door1,
+            5 => MultiMapColor::Door2,
+            6 => MultiMapColor::Door3,
+            7 => MultiMapColor::Door4,
+            _ => MultiMapColor::Invalid,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AppPreferences {
@@ -29,7 +45,7 @@ pub struct AppPreferences {
     pub emulator: String,
     pub flips_patcher: String,
     pub background: [f32; 3],
-    pub multimap: IndexMap<MultiMap, [f32; 4]>,
+    pub multimap: IndexMap<MultiMapColor, [f32; 4]>,
     pub imgui_style: JsonStyle,
 }
 
@@ -41,15 +57,15 @@ impl Default for AppPreferences {
             flips_patcher: String::default(),
             background: [0.0625, 0.0625, 0.0625],
             multimap: IndexMap::from([
-                (MultiMap::Invalid, [0.4, 0.4, 0.4, 0.5]),
-                (MultiMap::Screen1, [0.8, 0.9, 0.0, 0.9]),
-                (MultiMap::Screen2, [0.0, 1.0, 0.0, 0.9]),
-                (MultiMap::Screen3, [0.0, 0.0, 1.0, 0.9]),
-                (MultiMap::Screen4, [1.0, 0.0, 0.0, 0.9]),
-                (MultiMap::Door1, [0.9, 0.5, 0.0, 0.9]),
-                (MultiMap::Door2, [0.9, 0.5, 0.0, 0.9]),
-                (MultiMap::Door3, [0.9, 0.5, 0.0, 0.9]),
-                (MultiMap::Door4, [0.9, 0.5, 0.0, 0.9]),
+                (MultiMapColor::Invalid, [0.4, 0.4, 0.4, 0.5]),
+                (MultiMapColor::Screen1, [0.8, 0.9, 0.0, 0.9]),
+                (MultiMapColor::Screen2, [0.0, 1.0, 0.0, 0.9]),
+                (MultiMapColor::Screen3, [0.0, 0.0, 1.0, 0.9]),
+                (MultiMapColor::Screen4, [1.0, 0.0, 0.0, 0.9]),
+                (MultiMapColor::Door1, [0.9, 0.5, 0.0, 0.9]),
+                (MultiMapColor::Door2, [0.9, 0.5, 0.0, 0.9]),
+                (MultiMapColor::Door3, [0.9, 0.5, 0.0, 0.9]),
+                (MultiMapColor::Door4, [0.9, 0.5, 0.0, 0.9]),
             ]),
             imgui_style: JsonStyle::default(),
         }
@@ -165,11 +181,11 @@ impl AppPreferencesProxy {
     }
 
     #[getter]
-    fn get_multimap(&self) -> IndexMap<MultiMap, [f32; 4]> {
+    fn get_multimap(&self) -> IndexMap<MultiMapColor, [f32; 4]> {
         AppPreferences::get().multimap.clone()
     }
     #[setter]
-    fn set_multimap(&self, value: IndexMap<MultiMap, [f32; 4]>) {
+    fn set_multimap(&self, value: IndexMap<MultiMapColor, [f32; 4]>) {
         AppPreferences::get_mut().multimap = value;
     }
 

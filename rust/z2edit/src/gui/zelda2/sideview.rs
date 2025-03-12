@@ -783,12 +783,17 @@ impl SideviewEditor {
     ) -> Result<bool> {
         let scale = 16.0 * self.scale;
         let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+        let background_palette = if config.is_palace {
+            (self.sideview.map.background_palette != 0) as u8
+        } else {
+            self.sideview.map.background_palette
+        };
         for y in 0..Decompressor::HEIGHT {
             for x in 0..Decompressor::WIDTH {
                 let image = GfxCache::get(
                     project,
                     &format!("{}/{}", config.palette, self.background), // idpath of a palette group.
-                    &format!("{}", self.sideview.map.background_palette),
+                    &format!("{}", background_palette),
                     GfxKind::Metatile(
                         self.chr.unwrap_or(config.chr),
                         config.metatile.clone(),

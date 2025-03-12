@@ -1,6 +1,8 @@
 use anyhow::Result;
 
+use crate::error::Error;
 use crate::gui::util::{text_outlined, DragHelper, KeyAction, SelectBox};
+use crate::gui::zelda2::multimap::MultiMapGui;
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::util::undo::UndoStack;
@@ -42,6 +44,7 @@ pub struct OverworldEditor {
     cursor: [isize; 2],
     compressed_size: usize,
     overworld: Overworld,
+    spawn: Option<Box<dyn Gui>>,
 }
 
 impl OverworldEditor {
@@ -80,6 +83,7 @@ impl OverworldEditor {
             cursor: [0, 0],
             compressed_size: 0,
             overworld: ov.clone(),
+            spawn: None,
         }))
     }
 
@@ -195,21 +199,59 @@ impl OverworldEditor {
         Ok(())
     }
 
-    fn draw_connection_dialog(&mut self, ui: &imgui::Ui) -> bool {
+    fn draw_multimap_button(
+        &mut self,
+        conn: usize,
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<()> {
+        if ui.button("View Area") {
+            let target = format!("{}/{}", self.path, conn);
+            log::info!("Multimap for {target}");
+            match MultiMapGui::new(&target, project) {
+                Ok(m) => self.spawn = Some(m),
+                Err(e) => log::error!("Error spawning multimap: {e}"),
+            };
+        }
+        Ok(())
+    }
+    fn draw_emulator_button(
+        &mut self,
+        conn: usize,
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<()> {
+        if ui.button("Emulate") {
+            let target = format!("{}/{}", self.path, conn);
+            if let Some(svid) = project.connectivity.get(&target) {
+                project.emulate(Some(&svid))?;
+            } else {
+                return Err(
+                    Error::NotFound(format!("No destination map for {}", self.path)).into(),
+                );
+            }
+        }
+        Ok(())
+    }
+
+    fn draw_connection_dialog(&mut self, ui: &imgui::Ui, project: &Project) -> bool {
         let mut changed = false;
         if let Some(_popup) = ui.begin_popup("connections") {
             ui.combo_simple_string("Connection", &mut self.conn_selected, &Self::CONNECTIONS);
             ui.separator();
-            changed |=
-                Self::connection_edit(&mut self.overworld.connection[self.conn_selected], ui);
+            changed |= Self::connection_edit(
+                &mut self.overworld.connection[self.conn_selected],
+                ui,
+                project,
+            );
         }
         changed
     }
 
-    fn connection_edit(conn: &mut Connector, ui: &imgui::Ui) -> bool {
+    fn connection_edit(conn: &mut Connector, ui: &imgui::Ui, _project: &Project) -> bool {
         let mut changed = false;
-        let _width = ui.push_item_width(100.0);
 
+        let _width = ui.push_item_width(100.0);
         ui.text("Position:");
         changed |= ui.input_scalar("xpos", &mut conn.x).step(1).build();
         ui.same_line();
@@ -273,8 +315,8 @@ impl OverworldEditor {
         changed
     }
 
-    fn draw_connection(&mut self, ui: &imgui::Ui, n: usize) -> (bool, bool) {
-        let Some((key, conn)) = self.overworld.connection.get_index_mut(n) else {
+    fn draw_connection(&mut self, ui: &imgui::Ui, n: usize, project: &Project) -> (bool, bool) {
+        let Some((_, conn)) = self.overworld.connection.get_index_mut(n) else {
             return (false, false);
         };
         let mut changed = false;
@@ -286,7 +328,7 @@ impl OverworldEditor {
             conn.y as f32 * scale + delta[1],
         ];
         ui.set_cursor_pos(pos);
-        text_outlined(ui, Self::MAGENTA, &format!("{key:02}"));
+        text_outlined(ui, Self::MAGENTA, &format!("{n:02}"));
         ui.set_cursor_pos(pos);
         ui.invisible_button("edit", [16.0, 16.0]);
         let focus = ui.is_item_active();
@@ -304,17 +346,19 @@ impl OverworldEditor {
                 changed = true;
             }
         }
+        let _ = conn;
+
         if let Some(_token) = ui.begin_popup_context_item() {
-            ui.text(format!("Overworld Connector {key:02}"));
+            ui.text(format!("Overworld Connector {n:02}"));
             ui.separator();
-            if ui.button("View Area") {
-                log::error!("Not Yet: No multimap yet");
-            }
+            let _ = self.draw_multimap_button(n, ui, project);
             ui.same_line();
-            if ui.button("Emulate") {
-                log::error!("Not Yet: No emulate yet");
+            if let Err(e) = self.draw_emulator_button(n, ui, project) {
+                self.error
+                    .show("Emulation Error", "Error spawning emulator", e);
             }
-            changed |= Self::connection_edit(conn, ui);
+            let (_, conn) = self.overworld.connection.get_index_mut(n).unwrap();
+            changed |= Self::connection_edit(conn, ui, project);
         }
         id.pop();
         (focus, changed)
@@ -351,7 +395,7 @@ impl OverworldEditor {
         if self.conn_show {
             let mut focused = false;
             for i in 0..self.overworld.connection.len() {
-                let (f, c) = self.draw_connection(ui, i);
+                let (f, c) = self.draw_connection(ui, i, project);
                 focused |= f;
                 changed |= c;
             }
@@ -491,7 +535,7 @@ impl OverworldEditor {
         if ui.button("Connections") {
             ui.open_popup("connections");
         }
-        self.changed |= self.draw_connection_dialog(ui);
+        self.changed |= self.draw_connection_dialog(ui, project);
         ui.same_line();
         let width = ui.push_item_width(100.0);
         ui.input_scalar("Scale", &mut self.scale).step(0.25).build();
@@ -547,5 +591,8 @@ impl Gui for OverworldEditor {
 
     fn window_id(&self) -> u64 {
         0
+    }
+    fn spawned(&mut self) -> Option<Box<dyn Gui>> {
+        self.spawn.take()
     }
 }

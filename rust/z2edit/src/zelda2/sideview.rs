@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{ensure, Result};
 use indexmap::IndexMap;
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -6,7 +6,7 @@ use std::any::Any;
 
 use crate::error::Error;
 use crate::gui::Gui;
-use crate::nes::{Address, AddressRange, Alloc, NesFile};
+use crate::nes::{Address, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::encounters::Encounters;
@@ -206,8 +206,9 @@ impl config::SideviewGroup {
         }
         Ok(())
     }
-    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
+    pub fn pack(&self, _rrom: &Bound<'_, NesFile>, path: &str, _edits: &EditList) -> Result<()> {
         log::debug!("SideviewGroup::pack {path}");
+        /*
         let Some((p1, _)) = path.rsplit_once('/') else {
             return Err(anyhow!("SidviewGroup::pack: bad path {path:?}"));
         };
@@ -218,6 +219,7 @@ impl config::SideviewGroup {
             return Err(anyhow!("SidviewGroup::pack: no group for {group:?}"));
         };
         cfg.pack(self, rrom, path, edits)?;
+        */
         Ok(())
     }
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
@@ -234,6 +236,8 @@ impl config::SideviewGroup {
     }
 }
 
+// FIXME: Temporary until packing sideview areas is ready.
+#[allow(dead_code)]
 impl Map {
     fn from_bytes(data: &[u8]) -> Self {
         let len = data[0] as usize;

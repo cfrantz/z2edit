@@ -7,6 +7,7 @@ pub mod enemies;
 pub mod experience;
 pub mod metatile;
 pub mod misc_hacks;
+pub mod multimap;
 pub mod overworld;
 pub mod palette;
 pub mod sideview;

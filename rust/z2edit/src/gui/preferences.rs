@@ -4,7 +4,7 @@ use python_gui::{JsonStyle, UiContext};
 use rfd::FileDialog;
 use std::path::PathBuf;
 
-use crate::app_preferences::{AppPreferences, MultiMap};
+use crate::app_preferences::{AppPreferences, MultiMapColor};
 use crate::gui::{ErrorDialog, Visibility};
 use crate::nes::NesFile;
 
@@ -176,7 +176,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Invalid Connection",
-                self.pref.multimap.get_mut(&MultiMap::Invalid).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Invalid).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -184,7 +184,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Screen 1 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Screen1).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Screen1).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -192,7 +192,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Screen 2 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Screen2).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Screen2).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -200,7 +200,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Screen 3 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Screen3).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Screen3).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -208,7 +208,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Screen 4 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Screen4).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Screen4).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -216,7 +216,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Door 1 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Door1).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Door1).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -224,7 +224,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Door 2 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Door2).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Door2).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -232,7 +232,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Door 3 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Door3).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Door3).unwrap(),
             )
             .picker(true)
             .inputs(false)
@@ -240,7 +240,7 @@ impl AppPreferencesGui {
         self.changed |= ui
             .color_edit4_config(
                 "Door 4 Connection",
-                self.pref.multimap.get_mut(&MultiMap::Door4).unwrap(),
+                self.pref.multimap.get_mut(&MultiMapColor::Door4).unwrap(),
             )
             .picker(true)
             .inputs(false)

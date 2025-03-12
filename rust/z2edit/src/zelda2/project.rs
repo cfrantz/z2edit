@@ -8,11 +8,12 @@ use std::path::Path;
 use std::process::Command;
 
 use crate::error::Error;
+use crate::nes::Address;
 use crate::nes::NesFile;
 use crate::util::time::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::connectivity::Connectivity;
-use crate::zelda2::edit::{EditList, EditProxy, GameData};
+use crate::zelda2::edit::{Edit, EditList, EditProxy, GameData};
 use crate::zelda2::rom::FileResource;
 use crate::AppPreferences;
 
@@ -168,6 +169,81 @@ impl Project {
         edit.meta.user = whoami::username();
         Ok(())
     }
+
+    pub fn insert(&mut self, path: String, data: Box<dyn GameData>) {
+        let mut edit = Edit::from_data(data);
+        edit.meta.timestamp = UTime::now();
+        edit.meta.user = whoami::username();
+        self.edits.insert(path, edit);
+    }
+
+    fn emulator_prepare(&self, sideview_path: &str, rom: &mut NesFile) -> Result<()> {
+        use crate::zelda2::overworld::{config, Overworld};
+        use crate::zelda2::sideview::config::SideviewAreas;
+        if let Some(ovid) = self.connectivity.get(sideview_path) {
+            // The overworld path stored in the connectivity data is of the
+            // form: /bank/<num>/overworld/<index>/<connector>
+            let (ovpath, connector) = ovid.rsplit_once('/').expect("overworld connector");
+            let ovcfg = self
+                .config
+                .get::<config::Overworld>(ovpath)
+                .context(format!("Find overworld config for {ovid}"))?;
+            let overworld = self
+                .data_ref::<Overworld>(ovpath)
+                .context(format!("Find overworld for {ovid}"))?;
+            let mut connector = connector.parse::<u8>()?;
+
+            let svcfg = self
+                .config
+                .get::<SideviewAreas>(sideview_path)
+                .context(format!("Find sideview config for {sideview_path}"))?;
+            // The sideview path will be of the form:
+            // /bank/<num>/sideview/<index>/<area>/<screen>
+            let path = sideview_path
+                .trim_start_matches('/')
+                .split('/')
+                .collect::<Vec<_>>();
+            let bank = path[1].parse::<u8>()?;
+            let area = path[4].parse::<u8>()?;
+            // If the sideview path includes a screen number, use it.
+            let screen = if path.len() == 6 {
+                path[5].parse::<u8>()?
+            } else {
+                overworld.connection[connector as usize].screen
+            };
+            let mut world = svcfg.world;
+            if world == 1 && ovcfg.overworld == 2 {
+                // Overworld 2 towns are world 2, but the editor models all towns as world 1.
+                world += 1;
+            }
+            let town_code = ovcfg.town_code(connector).map(|code| code as u8);
+            if town_code.is_some() {
+                // Always use the even connector for towns.
+                connector &= 0xFE;
+            }
+            let at = EmulateAt {
+                bank,
+                overworld: if ovcfg.subworld != 0 {
+                    ovcfg.subworld
+                } else {
+                    ovcfg.overworld
+                },
+                world,
+                town_code: town_code.unwrap_or(0),
+                palace_code: ovcfg
+                    .palace_code(connector)
+                    .map(|code| code as u8)
+                    .unwrap_or(0),
+                connector,
+                area,
+                screen,
+                prev_overworld: ovcfg.overworld,
+            };
+            at.patch(rom)
+        } else {
+            Err(Error::NotFound(format!("No overworld connector for for {sideview_path}")).into())
+        }
+    }
 }
 
 #[pymethods]
@@ -223,15 +299,28 @@ impl Project {
         Ok(())
     }
 
-    pub fn emulate(&self) -> Result<()> {
+    #[pyo3(signature = (sideview_path=None))]
+    pub fn emulate(&self, sideview_path: Option<&str>) -> Result<()> {
         let mut tmp = std::env::temp_dir();
         tmp.push("z2edit");
         std::fs::create_dir_all(&tmp).with_context(|| format!("Creating {:?}", tmp))?;
         tmp.push(format!("{}.nes", self.name));
+        log::info!("Emulate filename: {tmp:?}");
 
-        self.export_rom(&tmp)?;
+        let mut rom = self
+            .pack()
+            .with_context(|| format!("Packing {}", self.name))?;
+        log::info!("ROM packed");
+        if let Some(path) = sideview_path {
+            self.emulator_prepare(path, &mut rom)?;
+            log::info!("ROM patched");
+        }
+        rom.save(&tmp).with_context(|| format!("Saving {tmp:?}"))?;
+        log::info!("ROM saved");
+
         let mut emulator = shellwords::split(&AppPreferences::get().emulator)?;
         emulator.push(tmp.to_str().unwrap().into());
+        log::info!("Spawn: {emulator:?}");
         Command::new(&emulator[0]).args(&emulator[1..]).spawn()?;
         Ok(())
     }
@@ -253,6 +342,54 @@ impl Project {
         self.edits
             .shift_remove(key)
             .ok_or(PyKeyError::new_err(key.to_string()))?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+#[pyclass]
+#[pyo3(get_all, set_all)]
+pub struct EmulateAt {
+    pub bank: u8,
+    pub overworld: u8,
+    pub world: u8,
+    pub town_code: u8,
+    pub palace_code: u8,
+    pub connector: u8,
+    pub area: u8,
+    pub screen: u8,
+    pub prev_overworld: u8,
+}
+
+impl EmulateAt {
+    fn patch(&self, rom: &mut NesFile) -> Result<()> {
+        let facing = if self.screen < 3 { 0 } else { 1 };
+        #[rustfmt::skip]
+        let code = [
+            0xa9, self.bank,        // LDA #bank
+            0x8d, 0x69, 0x07,       // STA $0769
+            0xa9, self.overworld,   // LDA #overworld
+            0x8d, 0x06, 0x07,       // STA $0706
+            0xa9, self.world,       // LDA #world
+            0x8d, 0x07, 0x07,       // STA $0707
+            0xa9, self.town_code,   // LDA #town_code
+            0x8d, 0x6b, 0x05,       // STA $056b
+            0xa9, self.palace_code, // LDA #palace_code
+            0x8d, 0x6c, 0x05,       // STA $056c
+            0xa9, self.connector,   // LDA #connector
+            0x8d, 0x48, 0x07,       // STA $0748
+            0xa9, self.area,        // LDA #area
+            0x8d, 0x61, 0x05,       // STA $0561
+            0xa9, self.screen,      // LDA #screen
+            0x8d, 0x5c, 0x07,       // STA $075c
+            0xa9, facing,           // LDA #facing
+            0x8d, 0x01, 0x07,       // STA $0701
+            0xa9, self.prev_overworld, // LDA #prev_overworld
+            0x8d, 0x0a, 0x07,       // STA $070a
+            0x60,                   // RTS
+        ];
+        let addr = Address::Prg(0, 0xAA3F);
+        rom.write_bytes(addr, &code)?;
         Ok(())
     }
 }

@@ -5,7 +5,7 @@ use std::sync::Mutex;
 use crate::error::Error;
 use crate::zelda2::overworld::Overworld;
 use crate::zelda2::project::Project;
-use crate::zelda2::sideview::config::{SideviewAreas, SideviewGroup};
+use crate::zelda2::sideview::config::SideviewAreas;
 use crate::zelda2::sideview::Sideview;
 
 /// Maintains a connectivity map between the overworld and sideview areas.
@@ -33,7 +33,7 @@ impl Connectivity {
 
     pub fn report(&self) {
         for (a, b) in self.per_screen.lock().unwrap().iter() {
-            //log::info!("{a} => {b}");
+            log::debug!("{a} => {b}");
         }
     }
 
@@ -93,7 +93,11 @@ impl Connectivity {
             };
             self.explore_per_screen(&oconn, &path, conn.area, conn.screen, project)?;
             let id = format!("{path}/{}", conn.area);
-            self.per_screen.lock().unwrap().insert(oconn, id);
+            self.per_screen
+                .lock()
+                .unwrap()
+                .insert(oconn.clone(), id.clone());
+            self.per_screen.lock().unwrap().insert(id, oconn);
         }
         Ok(())
     }

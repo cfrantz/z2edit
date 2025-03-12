@@ -48,9 +48,13 @@ impl Edit {
     where
         T: GameData,
     {
+        Self::from_data(data as Box<dyn GameData>)
+    }
+
+    pub fn from_data(data: Box<dyn GameData>) -> Self {
         Self {
             meta: Metadata::default(),
-            data: data as Box<dyn GameData>,
+            data,
         }
     }
 

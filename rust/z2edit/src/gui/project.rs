@@ -52,7 +52,7 @@ impl ProjectGui {
 
             ui.separator();
             if ui.menu_item("Emulate") {
-                if let Err(e) = Python::with_gil(|py| self.project.borrow(py).emulate()) {
+                if let Err(e) = Python::with_gil(|py| self.project.borrow(py).emulate(None)) {
                     self.error
                         .show("Error Emulating", "Error starting emulator", e);
                 }
