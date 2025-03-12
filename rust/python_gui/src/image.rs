@@ -261,7 +261,7 @@ impl Image {
                     break;
                 }
                 let i = ((y + y0) * self.width + x + x0) as usize;
-                let j = ((y + y0) * other.width + x + x0) as usize;
+                let j = (y * other.width + x) as usize;
                 self.pixels[i] = self.pixels[i].blend(other.pixels[j]);
             }
         }
