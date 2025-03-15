@@ -59,6 +59,16 @@ impl GuiTree for config::GameBank {
                 }
             });
         }
+        if !self.text_table.is_empty() {
+            ui.tree_node_config(format!("Text Table##{path}"))
+                .build(|| {
+                    for (k, v) in self.text_table.iter() {
+                        let _ = v
+                            .tree_node(ui, &format!("{path}/text_table/{k}"))
+                            .map(|x| Option::replace(&mut result, x));
+                    }
+                });
+        }
 
         result
     }

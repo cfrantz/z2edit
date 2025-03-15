@@ -12,3 +12,4 @@ pub mod overworld;
 pub mod palette;
 pub mod sideview;
 pub mod start;
+pub mod text_table;

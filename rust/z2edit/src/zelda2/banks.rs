@@ -24,6 +24,7 @@ pub mod config {
     use crate::zelda2::palette::config::PaletteGroup;
     use crate::zelda2::sideview::config::SideviewGroup;
     use crate::zelda2::start::config::StartValues;
+    use crate::zelda2::text_table::config::TextTable;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     #[serde(default)]
@@ -35,6 +36,7 @@ pub mod config {
         pub overworld: IndexMap<String, Overworld>,
         pub palette: IndexMap<String, PaletteGroup>,
         pub sideview: Option<SideviewGroup>,
+        pub text_table: IndexMap<String, TextTable>,
         pub freespace: FreeSpace,
     }
 
@@ -83,6 +85,9 @@ impl config::GameBank {
         for sideview in self.sideview.iter() {
             sideview.unpack(rrom, &format!("{path}/sideview"), edits)?;
         }
+        for (k, v) in self.text_table.iter() {
+            v.unpack(rrom, &format!("{path}/text_table/{k}"), edits)?;
+        }
         Ok(())
     }
     pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
@@ -107,6 +112,9 @@ impl config::GameBank {
         }
         for sideview in self.sideview.iter() {
             sideview.pack(rrom, &format!("{path}/sideview"), edits)?;
+        }
+        for (k, v) in self.text_table.iter() {
+            v.pack(rrom, &format!("{path}/text_table/{k}"), edits)?;
         }
         Ok(())
     }
@@ -149,6 +157,13 @@ impl config::GameBank {
             }
             ["sideview", ..] if self.sideview.is_some() => {
                 self.sideview.as_ref().unwrap().get::<T>(&path[1..])
+            }
+            ["text_table", ref n, ..] => {
+                let text_table = self
+                    .text_table
+                    .get(*n)
+                    .ok_or(Error::NotFound(format!("text_table/{n}")))?;
+                text_table.get::<T>(&path[2..])
             }
 
             _ => Err(Error::NotFound(format!("GameBank/{path:?}")).into()),
