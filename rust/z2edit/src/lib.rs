@@ -31,5 +31,6 @@ fn _z2edit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<zelda2::edit::Edit>()?;
     m.add_class::<zelda2::edit::EditProxy>()?;
     m.add_class::<zelda2::edit::Metadata>()?;
+    m.add_class::<zelda2::text_encoding::Text>()?;
     Ok(())
 }

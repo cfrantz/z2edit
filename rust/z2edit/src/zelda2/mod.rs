@@ -17,3 +17,4 @@ pub mod project;
 pub mod rom;
 pub mod sideview;
 pub mod start;
+pub mod text_encoding;
