@@ -4,7 +4,7 @@ use std::path::Path;
 
 fn main() {
     let pythoninc =
-        std::env::var("PYTHON_HEADERS").unwrap_or("/usr/include/python3.12".to_string());
+        std::env::var("PYTHON_HEADERS").unwrap_or("/usr/include/python3.13".to_string());
 
     let cimgui_include_path =
         std::env::var_os("DEP_IMGUI_THIRD_PARTY").expect("DEP_IMGUI_THIRD_PARTY not defined");
