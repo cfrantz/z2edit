@@ -135,7 +135,7 @@ impl config::Miscellaneous {
                 rom.write(self.fairy_speed + 8 + 2, -misc.fairy_speed as u8)?;
             }
 
-            // TODO: need to eval this in python with a ref to the project.
+            // FIXME: need to eval this in python with a ref to the project.
             for (name, which) in misc.hack.iter() {
                 let hack = self
                     .hack

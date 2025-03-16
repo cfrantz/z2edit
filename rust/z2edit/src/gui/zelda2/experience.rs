@@ -220,7 +220,7 @@ impl EnemyExperienceEditor {
         for (i, sprite) in exp.sprites.iter().enumerate() {
             let image = GfxCache::get(
                 project,
-                // TODO: maybe don't hardcode the palette and chrbank.
+                // FIXME: maybe don't hardcode the palette and chrbank.
                 "/bank/1/palette/sprite",
                 "0",
                 GfxKind::RawSprite(Address::Chr(2, 0), *sprite, 2),
