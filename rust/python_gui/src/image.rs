@@ -7,6 +7,7 @@ use sdl2::surface::Surface;
 use send_wrapper::SendWrapper;
 use std::path::Path;
 use std::rc::Rc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
 use zerocopy::{FromBytes, Immutable, IntoBytes};
 
@@ -83,6 +84,7 @@ pub struct Image {
     pub height: u32,
     #[pyo3(get, set)]
     pub pixels: Vec<Color>,
+    needs_update: AtomicBool,
 }
 
 impl Image {
@@ -170,6 +172,10 @@ impl Image {
     }
 
     pub fn draw(&self, scale: f32, ui: &imgui::Ui) {
+        if self.needs_update.load(Ordering::Relaxed) {
+            self.update();
+            self.needs_update.store(false, Ordering::Relaxed);
+        }
         let w = self.width as f32 * scale;
         let h = self.height as f32 * scale;
         imgui::Image::new(self.imgui_id(), [w, h]).build(ui);
@@ -215,7 +221,7 @@ impl Image {
                 pixels[(y * w4)..((y + 1) * w4)]
                     .clone_from_slice(&p[(y * pitch)..((y + 1) * pitch)]);
             }
-            image.update();
+            self.needs_update.store(true, Ordering::Relaxed);
             Ok(image)
         })
     }
@@ -237,6 +243,7 @@ impl Image {
             width,
             height,
             pixels,
+            needs_update: AtomicBool::new(false),
         }
     }
 
@@ -265,7 +272,7 @@ impl Image {
                 self.pixels[i] = self.pixels[i].blend(other.pixels[j]);
             }
         }
-        self.update();
+        self.needs_update.store(true, Ordering::Relaxed);
     }
 
     #[pyo3(name = "draw")]
@@ -293,6 +300,7 @@ impl Image {
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         let i = (y * self.width + x) as usize;
         self.pixels[i] = color;
+        self.needs_update.store(true, Ordering::Relaxed);
     }
 }
 
