@@ -126,13 +126,19 @@ impl GfxCache {
         let mut i = 0;
         while y < sprite.size[1] {
             let mut x = 0;
+            let mut last = -1;
             while x < sprite.size[0] {
-                let id = sprite.sprites.get(i).copied().unwrap_or(-1);
+                let mut id = sprite.sprites.get(i).copied().unwrap_or(-1);
                 if id != -1 {
+                    if id == last {
+                        // If its the same as the last sprite, mirror it.
+                        id |= 0x0100_0000;
+                    }
                     Self::_render_one_sprite(&mut image, chrdata, chrbank, palette, x, y, id);
                 }
                 i += 1;
                 x += 8;
+                last = id;
             }
             y += 16;
         }

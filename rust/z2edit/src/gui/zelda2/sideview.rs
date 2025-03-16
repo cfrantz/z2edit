@@ -850,17 +850,28 @@ impl SideviewEditor {
             }
         }
 
+        let mut changed = false;
         if let Some(_enemy_group) = &config.enemy_group {
+            let mut action = EditAction::None;
             for index in 0..self.sideview.enemy.data[self.enemy_list].len() {
-                self.draw_enemy_entity(self.enemy_list, index, origin, scr_origin, ui, project)?;
+                action.set(self.draw_enemy_entity(
+                    self.enemy_list,
+                    index,
+                    origin,
+                    scr_origin,
+                    ui,
+                    project,
+                )?);
             }
+            changed |= self.process_enemy_action(self.enemy_list, action);
         }
 
         let mut action = EditAction::None;
         for i in 0..self.sideview.map.data.len() {
             action.set(self.draw_map_entity(i, origin, scr_origin, ui, project)?);
         }
-        Ok(self.process_map_action(action))
+        changed |= self.process_map_action(action);
+        Ok(changed)
     }
 
     fn process_map_action(&mut self, action: EditAction) -> bool {

@@ -330,7 +330,7 @@ impl OverworldEditor {
         ui.set_cursor_pos(pos);
         text_outlined(ui, Self::MAGENTA, &format!("{n:02}"));
         ui.set_cursor_pos(pos);
-        ui.invisible_button("edit", [16.0, 16.0]);
+        ui.invisible_button("edit", [scale, scale]);
         let focus = ui.is_item_active();
         if focus {
             if ui.is_mouse_dragging(MouseButton::Left) {
