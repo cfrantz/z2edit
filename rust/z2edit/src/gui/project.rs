@@ -1,5 +1,6 @@
 use anyhow::Result;
 use pyo3::prelude::*;
+use python_gui::docking::{Dock, DockNodeFlags};
 use python_gui::UiContext;
 use rfd::FileDialog;
 use std::sync::Mutex;
@@ -15,6 +16,11 @@ pub struct ProjectGui {
     filename: String,
     windows: Mutex<Vec<Box<dyn Gui>>>,
     error: ErrorDialog,
+    window_id: u32,
+    dock_id: imgui::Id,
+    edit_list: imgui::Id,
+    edit_list_title: String,
+    editor_pane: imgui::Id,
 }
 
 impl ProjectGui {
@@ -77,31 +83,52 @@ impl ProjectGui {
     }
 
     fn draw<'p>(&mut self, py: Python<'p>, ui: &imgui::Ui) {
-        ui.window(format!("{}", self.project.borrow(py).name))
-            .menu_bar(true)
-            .size([1000.0, 800.0], imgui::Condition::FirstUseEver)
-            .build(|| {
-                self.menu(ui);
-                self.edit_tree(py, ui);
+        let size = [1000.0, 900.0];
+        ui.window(format!(
+            "{}##{}",
+            self.project.borrow(py).name,
+            self.window_id
+        ))
+        .menu_bar(true)
+        .size(size, imgui::Condition::FirstUseEver)
+        .build(|| {
+            if !Dock.dock_builder_has_node(self.dock_id) {
+                Dock.dock_builder_remove_node(self.dock_id);
+                Dock.dock_builder_add_node(self.dock_id, DockNodeFlags::DOCK_SPACE);
+                Dock.dock_builder_set_node_size(self.dock_id, size);
+                let (lhs, rhs) =
+                    Dock.dock_builder_split_node(self.dock_id, imgui::Direction::Left, 0.35);
+                self.edit_list = lhs;
+                self.editor_pane = rhs;
+                Dock.dock_builder_dock_window(&self.edit_list_title, self.edit_list);
+                Dock.dock_builder_finish(self.dock_id);
+            }
 
-                let mut project = self.project.borrow_mut(py);
-                let mut windows = self.windows.lock().unwrap();
-                let mut i = 0;
-                while i < windows.len() {
-                    match windows[i].draw(ui, &mut *project) {
-                        Ok(()) => {}
-                        Err(e) => log::error!("Error editing: {e}"),
-                    }
-                    if let Some(window) = windows[i].spawned() {
-                        windows.push(window);
-                    }
-                    if windows[i].wants_dispose() {
-                        windows.remove(i);
-                    } else {
-                        i += 1;
-                    }
-                }
-            });
+            Dock.dock_space(self.dock_id, [0.0, 0.0]);
+            self.menu(ui);
+            ui.window(&self.edit_list_title)
+                .build(|| self.edit_tree(py, ui));
+        });
+
+        let mut project = self.project.borrow_mut(py);
+        let mut windows = self.windows.lock().unwrap();
+        let mut i = 0;
+        while i < windows.len() {
+            Dock.set_next_window_dock_id(self.editor_pane, imgui::Condition::Once);
+            match windows[i].draw(ui, &mut *project) {
+                Ok(()) => {}
+                Err(e) => log::error!("Error editing: {e}"),
+            }
+            if let Some(window) = windows[i].spawned() {
+                windows.push(window);
+            }
+            if windows[i].wants_dispose() {
+                windows.remove(i);
+            } else {
+                i += 1;
+            }
+        }
+
         self.error.draw(ui);
     }
 }
@@ -110,11 +137,18 @@ impl ProjectGui {
 impl ProjectGui {
     #[new]
     fn new(project: Py<Project>) -> Result<Self> {
+        let dock_val: u32 = rand::random();
+        let dock_id = unsafe { std::mem::transmute::<u32, imgui::Id>(dock_val) };
         Ok(Self {
             project,
             filename: String::default(),
             windows: Default::default(),
             error: ErrorDialog::default(),
+            window_id: rand::random(),
+            dock_id,
+            edit_list: Default::default(),
+            edit_list_title: format!("Edit List##{dock_val}"),
+            editor_pane: Default::default(),
         })
     }
 
