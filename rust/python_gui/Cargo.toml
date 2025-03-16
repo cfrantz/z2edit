@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bitflags = "1"
 pyo3 = { version="0.23.3", features=["anyhow", "indexmap", "serde"]}
 imgui-sys = {workspace = true, features=["docking"]}
 imgui = { workspace = true, features = ["docking", "tables-api"] }

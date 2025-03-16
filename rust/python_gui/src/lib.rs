@@ -1,6 +1,7 @@
 use pyo3::ffi;
 use pyo3::prelude::*;
 
+pub mod docking;
 pub mod font_awesome_5;
 mod framework;
 mod image;
