@@ -1,11 +1,14 @@
+use anyhow::Result;
+use imgui::{TableColumnSetup, TableFlags};
+
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::nes::Address;
+use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::experience::{
     config, EnemyExperience, ExperienceTable, ExperienceTableGroup, ExperienceValue,
 };
 use crate::zelda2::project::Project;
-use anyhow::Result;
-
-use imgui::{TableColumnSetup, TableFlags};
+use crate::zelda2::text_encoding::Text;
 
 impl GuiTree for config::ExperienceTableGroup {
     fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
@@ -58,8 +61,7 @@ impl ExperienceTableGroupEditor {
             let _width = ui.push_item_width(-1.0);
             let mut name = exp.game_text.clone();
             if ui.input_text("##text", &mut name).build() {
-                // FIXME: Text::validate(...)
-                exp.game_text = name;
+                exp.game_text = Text::validate(&name, Some(8));
                 changed = true;
             }
         } else {
@@ -186,7 +188,12 @@ impl EnemyExperienceEditor {
         }))
     }
 
-    fn draw_row(i: usize, exp: &mut ExperienceValue, ui: &imgui::Ui) -> bool {
+    fn draw_row(
+        i: usize,
+        exp: &mut ExperienceValue,
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<bool> {
         let mut changed = false;
         ui.table_next_row();
         ui.table_next_column();
@@ -208,11 +215,19 @@ impl EnemyExperienceEditor {
         width.end();
 
         ui.table_next_column();
-        let width = ui.push_item_width(-1.0);
-        ui.text("TODO Image");
-        width.end();
-
-        changed
+        let [x, y] = ui.cursor_pos();
+        let scale = 2.0;
+        for (i, sprite) in exp.sprites.iter().enumerate() {
+            let image = GfxCache::get(
+                project,
+                // TODO: maybe don't hardcode the palette and chrbank.
+                "/bank/1/palette/sprite",
+                "0",
+                GfxKind::RawSprite(Address::Chr(2, 0), *sprite, 2),
+            )?;
+            image.draw_at([x + i as f32 * 8.0 * scale, y], scale, ui);
+        }
+        Ok(changed)
     }
 
     fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
@@ -245,7 +260,7 @@ impl EnemyExperienceEditor {
         ) {
             for (i, exp) in self.experience.data.iter_mut().enumerate() {
                 let _id = ui.push_id_usize(i);
-                self.changed |= Self::draw_row(i, exp, ui);
+                self.changed |= Self::draw_row(i, exp, ui, project)?;
             }
         }
         Ok(())

@@ -14,6 +14,7 @@ use crate::zelda2::project::Project;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GfxKind {
     RawTile(Address, [u8; 4], u8),
+    RawSprite(Address, u8, u8),
     Metatile(Address, String, u8),
     Enemy(String, u8),
     Item(u8),
@@ -160,6 +161,17 @@ impl GfxCache {
                     kind,
                 }
             }
+            GfxKind::RawSprite(ref address, ref _data, ref palette) => {
+                if !address.is_chr() {
+                    return Err(anyhow!("TileCache::get {address:?} is not a CHR address"));
+                }
+                let palette = *palette as usize * 4;
+                GfxKey {
+                    chrbank: address.bank().unwrap() as u16,
+                    palette: paldata[palette..palette + 4].try_into()?,
+                    kind,
+                }
+            }
             GfxKind::Metatile(ref address, ref meta_group, ref tile) => {
                 if !address.is_chr() {
                     return Err(anyhow!("TileCache::get {address:?} is not a CHR address"));
@@ -216,6 +228,20 @@ impl GfxCache {
             let image = match key.kind {
                 GfxKind::RawTile(ref _address, ref data, ref _palette) => {
                     Self::_render_metatile(&*chrdata, key.chrbank, &key.palette, data)
+                }
+                GfxKind::RawSprite(ref _address, ref data, ref _palette) => {
+                    let mut image = Image::new(8, 16);
+                    Self::_render_one_sprite(
+                        &mut image,
+                        &*chrdata,
+                        key.chrbank,
+                        &key.palette,
+                        0,
+                        0,
+                        *data as i32,
+                    );
+                    image.update();
+                    image
                 }
                 GfxKind::Metatile(ref _address, ref meta_group, ref tile) => {
                     let mgroup = project.data_ref::<MetatileGroup>(meta_group)?;

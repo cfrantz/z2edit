@@ -8,6 +8,7 @@ use crate::gui::Gui;
 use crate::nes::{Address, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
+use crate::zelda2::text_encoding::Text;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExperienceTable {
@@ -133,10 +134,8 @@ impl config::ExperienceTableGroup {
                 }
                 table.data.push(val);
             }
-            if let Some(_game_text) = et.game_text {
-                // TODO:
-                // Text::from_zelda2(rom.read_bytes(self.game_text, 8)?);
-                table.game_text = et.name.clone();
+            if let Some(game_text) = et.game_text {
+                table.game_text = Text::from_zelda2(rom.read_bytes(game_text, 8)?);
             }
             eg.group.push(table);
         }
@@ -176,15 +175,12 @@ impl config::ExperienceTableGroup {
                         }
                     }
                 }
-                if let Some(_game_text) = et.game_text {
-                    let _len = if table.game_text.len() < 8 {
-                        table.game_text.len()
-                    } else {
-                        8
-                    };
-                    // TODO:
-                    // Text::from_zelda2(rom.read_bytes(self.game_text, 8)?);
-                    // rom.write_bytes(game_text, &Text::to_zelda2(&self.game_text[0..len]))?;
+                if let Some(game_text) = et.game_text {
+                    let mut text = table.game_text.clone();
+                    while text.len() < 8 {
+                        text.push('.');
+                    }
+                    rom.write_bytes(game_text, &Text::to_zelda2(&text[0..8]))?;
                 }
             }
         } else {
