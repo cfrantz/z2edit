@@ -35,7 +35,6 @@ Z2Edit saves its edit list as a plain-text JSON file, allowing for:
 
 - Enhance CHR graphics import/export
 - Complete the sideview editor
-  - Correctly display town NPCs
   - Edit townspeople text IDs
   - Edit townspeople dialog activation bitmasks
   - Pack sideview maps, enemylists, etc back into the ROM

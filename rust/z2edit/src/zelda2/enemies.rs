@@ -61,6 +61,22 @@ pub mod config {
     use crate::zelda2::items::Sprite;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+    pub struct TownTable {
+        /// In towns, enemies[0..35] have their sprite IDs in the `mapping` table,
+        /// except that in towns [1..6], enemies [13..26] have their IDs in the
+        /// tables referenced by `mapping2`.  To make sprite rendering easier,
+        /// mapping2 should include entries for town 0 and 7 which point to the
+        /// correct address in the middle of `mapping`.
+        pub mapping: Address,
+        pub mapping2: Vec<Address>,
+        /// A table of palette ids for each enemy (ie 0..3).
+        pub palette: Address,
+        /// The actual sprite IDs; the indices retrived from mapping/mapping2 are
+        /// used to look up the sprtie IDs in this table.
+        pub table: Address,
+    }
+
+    #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct EnemyGroup {
         pub name: String,
         pub address: Address,
@@ -68,6 +84,8 @@ pub mod config {
         pub hp: Address,
         pub xp: Address,
         pub table_len: usize,
+        #[serde(default)]
+        pub town_table: Option<TownTable>,
         pub group: IndexMap<u8, Sprite>,
     }
 }

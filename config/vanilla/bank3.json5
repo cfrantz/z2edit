@@ -38,6 +38,23 @@
                     hp: {Prg: [3, 0x9421]},
                     xp: {Prg: [3, 0x94d5]},
                     table_len: 36,
+                    // See the comments for enemies::config::TownTable to understand
+                    // these addresses.
+                    town_table: {
+                        mapping: {Prg: [3, 0x94d5]},
+                        mapping2: [
+                            {Prg: [3, 0x94e2]},
+                            {Prg: [3, 0x9630]},
+                            {Prg: [3, 0x9644]},
+                            {Prg: [3, 0x9658]},
+                            {Prg: [3, 0x966c]},
+                            {Prg: [3, 0x9680]},
+                            {Prg: [3, 0x9696]},
+                            {Prg: [3, 0x94e2]},
+                        ],
+                        palette: {Prg: [3, 0x94f9]},
+                        table: {Prg: [3, 0x95d4]},
+                    },
                     group: {
                         "0": { offset: 0, name: "Fairy", chr: {Chr: [6, 0]}, palette: 1, size: [8, 16], sprites: [0x6a] },
                         "1": { offset: 1, name: "Red Jar", chr: {Chr: [6, 0]}, palette: 2, size: [8, 16], sprites: [0x8a] },

@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use pyo3::prelude::*;
 use python_gui::{Color, Image};
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -6,6 +7,7 @@ use std::sync::OnceLock;
 use crate::error::Error;
 use crate::nes::{hwpalette, Address};
 use crate::zelda2::chr::ChrMemory;
+use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::{Items, Sprite};
 use crate::zelda2::metatile::MetatileGroup;
 use crate::zelda2::palette::PaletteGroup;
@@ -16,7 +18,7 @@ pub enum GfxKind {
     RawTile(Address, [u8; 4], u8),
     RawSprite(Address, u8, u8),
     Metatile(Address, String, u8),
-    Enemy(String, u8),
+    Enemy(String, u16),
     Item(u8),
 }
 
@@ -195,10 +197,22 @@ impl GfxCache {
                 }
             }
             GfxKind::Enemy(ref enemy_group, ref enemy) => {
-                let sprite = project
-                    .config
-                    .get::<Sprite>(&format!("{enemy_group}/{enemy}"))?;
-                let palette = sprite.palette as usize * 4;
+                let group = project.config.get::<EnemyGroup>(enemy_group)?;
+                let enemy = *enemy as u8;
+                let sprite = group
+                    .group
+                    .get(&enemy)
+                    .ok_or_else(|| anyhow!("No sprite for enemy {enemy}"))?;
+                let palette = if let Some(town_table) = &group.town_table {
+                    // FIXME: This reads from the ROM rather than an abstract data structure in the
+                    // project.
+                    Python::with_gil(|py| project.rom.borrow(py).read(town_table.palette + enemy))?
+                        & 0x03
+                } else {
+                    sprite.palette
+                };
+                let palette = palette as usize * 4;
+
                 GfxKey {
                     chrbank: sprite.chr.bank().unwrap() as u16,
                     palette: paldata[palette..palette + 4].try_into()?,
@@ -263,10 +277,30 @@ impl GfxCache {
                     )
                 }
                 GfxKind::Enemy(ref enemy_group, ref enemy) => {
-                    let sprite = project
-                        .config
-                        .get::<Sprite>(&format!("{enemy_group}/{enemy}"))?;
-                    Self::_render_sprite(&*chrdata, key.chrbank, &key.palette, sprite)
+                    let group = project.config.get::<EnemyGroup>(enemy_group)?;
+                    let town_code = (*enemy >> 8) as usize;
+                    let enemy = *enemy as u8;
+                    let mut sprite = group
+                        .group
+                        .get(&enemy)
+                        .cloned()
+                        .ok_or_else(|| anyhow!("No sprite for enemy {enemy}"))?;
+                    if let Some(town_table) = &group.town_table {
+                        // FIXME: This reads from the ROM rather than an abstract data structure
+                        // in the project.
+                        Python::with_gil(|py| -> Result<()> {
+                            let rom = project.rom.borrow(py);
+                            let index = match enemy {
+                                13..27 => rom.read(town_table.mapping2[town_code] + enemy - 13)?,
+                                _ => rom.read(town_table.mapping + enemy)?,
+                            };
+                            for s in rom.read_bytes(town_table.table + (index & 0x7f), 4)? {
+                                sprite.sprites.push(*s as i32);
+                            }
+                            Ok(())
+                        })?;
+                    }
+                    Self::_render_sprite(&*chrdata, key.chrbank, &key.palette, &sprite)
                 }
                 GfxKind::Item(ref item) => {
                     let sprite = if *item < 128 {

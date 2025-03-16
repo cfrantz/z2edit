@@ -10,6 +10,7 @@ use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
 use crate::zelda2::object::{Object, RenderInfo};
+use crate::zelda2::overworld::config::Overworld as OverworldConfig;
 use crate::zelda2::overworld::Overworld;
 use crate::zelda2::palette::config::PaletteGroup;
 use crate::zelda2::project::Project;
@@ -80,6 +81,7 @@ pub struct SideviewEditor {
     need_update: bool,
     objects: IndexMap<u8, Object>,
     area_names: IndexMap<u8, String>,
+    town_code: [u16; 4],
     spawn: Option<Box<dyn Gui>>,
 }
 
@@ -107,6 +109,7 @@ impl SideviewEditor {
             need_update: true,
             objects: IndexMap::default(),
             area_names: IndexMap::default(),
+            town_code: [0; 4],
             spawn: None,
         }))
     }
@@ -235,13 +238,14 @@ impl SideviewEditor {
 
         let ox = self.sideview.enemy.data[el][index].x;
         let oy = self.sideview.enemy.data[el][index].y;
-        let kind = self.sideview.enemy.data[el][index].kind;
+        let kind = self.sideview.enemy.data[el][index].kind as u16;
         let x = ox as f32 * scale;
         let y = oy as f32 * scale;
 
         {
             let config = project.config.get::<config::SideviewAreas>(&self.path)?;
-            let _screen = (ox >> 4) as usize;
+            let screen = (ox >> 4) as usize;
+            let kind = kind | (self.town_code[screen] << 8);
             let image = GfxCache::get(
                 project,
                 &format!("{}/sprite", config.palette), // idpath of a palette group.
@@ -1103,6 +1107,17 @@ impl SideviewEditor {
                     } else {
                         self.background = "background".to_string();
                     }
+                }
+            }
+            for i in 0..4 {
+                let screen = format!("{}/{i}", self.path);
+                if let Some(connector) = project.connectivity.get(&screen) {
+                    let (overworld, conn) = connector.rsplit_once('/').expect("connectivity path");
+                    let conn = conn.parse::<u8>()?;
+                    let overworld = project.config.get::<OverworldConfig>(overworld)?;
+                    self.town_code[i] = overworld.town_code(conn).unwrap_or(0) as u16;
+                } else {
+                    self.town_code[i] = 0;
                 }
             }
 

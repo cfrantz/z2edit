@@ -412,7 +412,10 @@ impl MultiMapGui {
                 project,
                 &format!("{}/sprite", config.palette), // idpath of a palette group.
                 &format!("{}", sideview.map.sprite_palette),
-                GfxKind::Enemy(config.enemy_group.as_ref().cloned().unwrap(), enemy.kind),
+                GfxKind::Enemy(
+                    config.enemy_group.as_ref().cloned().unwrap(),
+                    enemy.kind as u16,
+                ),
             )?;
             image.overlay(&im, enemy.x as u32 * 16, enemy.y as u32 * 16);
         }
