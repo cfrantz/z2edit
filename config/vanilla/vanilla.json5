@@ -90,6 +90,33 @@
                                  -1,      -1,      -1, -1,
                             0x400AC, 0x400AC, 0x400AC, -1] },
             },
+            effects: {
+                town_base: 0x797,
+                magic_base: 0x77b,
+                effect: {
+                    "Trophy": {
+                        load: {Prg: [-1, 0xe830]},
+                        bits: {Prg: [-1, 0xe833]},
+                        save: {Prg: [-1, 0xe835]},
+                    },
+                    "Medicine": {
+                        load: {Prg: [-1, 0xe83e]},
+                        bits: {Prg: [-1, 0xe841]},
+                        save: {Prg: [-1, 0xe843]},
+                    },
+                    "Child": {
+                        load: {Prg: [-1, 0xe822]},
+                        bits: {Prg: [-1, 0xe825]},
+                        save: {Prg: [-1, 0xe827]},
+                    },
+                    "Magic Containers": {
+                        load: {Prg: [-1, 0xe7dc]},
+                        bits: {Prg: [-1, 0xe7df]},
+                        save: {Prg: [-1, 0xe7e1]},
+                        count: {Prg: [-1, 0xe7d8]},
+                    },
+                },
+            }
         },
         enemy_xp: {
             lo: {Prg: [-1, 0xddc0]},

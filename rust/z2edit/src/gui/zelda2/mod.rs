@@ -5,6 +5,7 @@ pub mod drops;
 pub mod encounters;
 pub mod enemies;
 pub mod experience;
+pub mod items;
 pub mod metatile;
 pub mod misc_hacks;
 pub mod multimap;
