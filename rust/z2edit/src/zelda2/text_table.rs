@@ -13,6 +13,26 @@ use crate::zelda2::text_encoding::Text;
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct TextTable {
     pub data: IndexMap<u8, String>,
+    pub index: Vec<Vec<u8>>,
+    pub conditions: Vec<u8>,
+}
+
+impl TextTable {
+    pub fn get_text_ids(&self, enemy: u8, town_code: u8) -> (Option<u8>, Option<u8>, Option<u8>) {
+        if enemy < 10 {
+            return (None, None, None);
+        }
+        let town_code = town_code as usize;
+        let person = (enemy - 10) as usize;
+        let dialog = self.index[0].get(person * 4 + town_code).copied();
+        let dialog2 = self.index[1].get(person * 4 + town_code).copied();
+        let condition = if person >= 9 && person < 13 {
+            self.conditions.get((person - 9) * 4 + town_code).copied()
+        } else {
+            None
+        };
+        (dialog, dialog2, condition)
+    }
 }
 
 #[typetag::serde]
@@ -41,13 +61,13 @@ impl GameData for TextTable {
 pub mod config {
     use super::*;
 
-    #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
-    #[serde(default)]
+    #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
     pub struct TextTable {
         pub name: String,
         pub pointer: Address,
-        pub dialog_conditions: Address,
+        pub offset: u8,
         pub length: u8,
+        pub conditions: AddressRange,
         pub index: Vec<AddressRange>,
     }
 }
@@ -67,6 +87,16 @@ impl config::TextTable {
             let text = rom.read_pointer(table + i * 2)?;
             tt.data
                 .insert(i, Text::from_zelda2(rom.read_terminated(text, 0xff)?));
+        }
+        for person in 0..4 {
+            for town in 0..4 {
+                tt.conditions
+                    .push(rom.read(self.conditions.address + person * 8 + self.offset * 4 + town)?);
+            }
+        }
+        for index in self.index.iter() {
+            tt.index
+                .push(rom.read_bytes(index.address, index.length as usize)?.into());
         }
 
         edits.insert(path.into(), Edit::new(tt.into()));
@@ -94,6 +124,17 @@ impl config::TextTable {
                 let tptr = rom.alloc(tptr, text.len() as u16 + 1, Alloc::Near)?;
                 rom.write_pointer(table + i * 2, tptr)?;
                 rom.write_terminated(tptr, &text, 0xff)?;
+            }
+            for (i, &byte) in tt.conditions.iter().enumerate() {
+                let person = i / 4;
+                let town = i % 4;
+                rom.write(
+                    self.conditions.address + person * 8 + self.offset * 4 + town,
+                    byte,
+                )?;
+            }
+            for (index, data) in self.index.iter().zip(tt.index.iter()) {
+                rom.write_bytes(index.address, data)?;
             }
         } else {
             log::warn!("No data for {path:?}");

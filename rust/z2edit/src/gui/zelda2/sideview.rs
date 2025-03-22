@@ -15,6 +15,7 @@ use crate::zelda2::overworld::Overworld;
 use crate::zelda2::palette::config::PaletteGroup;
 use crate::zelda2::project::Project;
 use crate::zelda2::sideview::{config, Decompressor, Enemy, MapCommand, Sideview};
+use crate::zelda2::text_table::TextTable;
 
 use imgui::{MouseButton, TableColumnFlags, TableColumnSetup, TableFlags};
 
@@ -81,6 +82,7 @@ pub struct SideviewEditor {
     need_update: bool,
     objects: IndexMap<u8, Object>,
     area_names: IndexMap<u8, String>,
+    world: [u8; 4],
     town_code: [u16; 4],
     spawn: Option<Box<dyn Gui>>,
 }
@@ -109,6 +111,7 @@ impl SideviewEditor {
             need_update: true,
             objects: IndexMap::default(),
             area_names: IndexMap::default(),
+            world: [0; 4],
             town_code: [0; 4],
             spawn: None,
         }))
@@ -125,6 +128,102 @@ impl SideviewEditor {
             self.objects.extend(render.objset1.clone());
         }
         Ok(())
+    }
+
+    fn draw_enemy_dialog(
+        &mut self,
+        el: usize,
+        index: usize,
+        ui: &imgui::Ui,
+        project: &Project,
+    ) -> Result<EditAction> {
+        let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+        let Some(text_table) = &config.text_table else {
+            return Ok(EditAction::None);
+        };
+        let screen = (self.sideview.enemy.data[el][index].x / 16) as usize;
+        let world = self.world[screen];
+        let town_code = self.town_code[screen] as u8;
+        let text_table = project.data_ref::<TextTable>(&format!("{text_table}/{world}"))?;
+        let dialog = text_table.get_text_ids(self.sideview.enemy.data[el][index].kind, town_code);
+        if dialog == (None, None, None) {
+            return Ok(EditAction::None);
+        }
+        let (dialog1, dialog2, conditions) = dialog;
+        let mut action = EditAction::None;
+        if let Some(_table) = ui.begin_table_header_with_flags(
+            "dialogs",
+            [weight("Text ID", 150.0), weight("Dialog", 650.0)],
+            TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+        ) {
+            if let Some(mut dialog) = self.sideview.enemy.data[el][index].dialog.or(dialog1) {
+                ui.table_next_row();
+                ui.table_next_column();
+                let width = ui.push_item_width(-1.0);
+                if ui.input_scalar("##dialog1", &mut dialog).step(1).build() {
+                    self.sideview.enemy.data[el][index].dialog = Some(dialog);
+                    action.set(EditAction::Update);
+                }
+                width.end();
+                ui.table_next_column();
+                if let Some(text) = text_table.data.get(&dialog) {
+                    ui.text(text);
+                    tooltip(text, ui);
+                } else {
+                    ui.text(format!("No dialog {dialog}"));
+                }
+            }
+            if let Some(mut dialog) = self.sideview.enemy.data[el][index].dialog2.or(dialog2) {
+                ui.table_next_row();
+                ui.table_next_column();
+                let width = ui.push_item_width(-1.0);
+                if ui.input_scalar("##dialog2", &mut dialog).step(1).build() {
+                    self.sideview.enemy.data[el][index].dialog = Some(dialog);
+                    action.set(EditAction::Update);
+                }
+                width.end();
+                ui.table_next_column();
+                if let Some(text) = text_table.data.get(&dialog) {
+                    ui.text(text);
+                    tooltip(text, ui);
+                } else {
+                    ui.text(format!("No dialog {dialog}"));
+                }
+            }
+        }
+        if let Some(mut condition) = self.sideview.enemy.data[el][index].condition.or(conditions) {
+            if let Some(_table) = ui.begin_table_header_with_flags(
+                "conditions",
+                [
+                    weight("Conditions", 150.0),
+                    weight("b7", 32.0),
+                    weight("b6", 32.0),
+                    weight("b5", 32.0),
+                    weight("b4", 32.0),
+                    weight("b3", 32.0),
+                    weight("b2", 32.0),
+                    weight("b1", 32.0),
+                    weight("b0", 32.0),
+                ],
+                TableFlags::ROW_BG | TableFlags::BORDERS | TableFlags::RESIZABLE,
+            ) {
+                ui.table_next_row();
+                ui.table_next_column();
+                ui.text("Bit mask");
+                for i in 0..8 {
+                    ui.table_next_column();
+                    let mask = 1u8 << (7 - i);
+                    let mut bit = (condition & mask) != 0;
+                    if ui.checkbox(&format!("##b{i}"), &mut bit) {
+                        condition &= !mask;
+                        condition |= if bit { mask } else { 0 };
+                        self.sideview.enemy.data[el][index].condition = Some(condition);
+                        action.set(EditAction::Update);
+                    }
+                }
+            }
+        }
+        Ok(action)
     }
 
     fn draw_enemy_item(
@@ -209,8 +308,9 @@ impl SideviewEditor {
                     format!("{:02x}: {}", k, v.name).into()
                 })
             {
-                action = EditAction::Update;
+                action.set(EditAction::Update);
             }
+            action.set(self.draw_enemy_dialog(el, index, ui, project)?);
         }
         if !popup {
             ui.table_next_column();
@@ -1125,12 +1225,20 @@ impl SideviewEditor {
                 if let Some(connector) = project.connectivity.get(&screen) {
                     let (overworld, conn) = connector.rsplit_once('/').expect("connectivity path");
                     let conn = conn.parse::<u8>()?;
-                    let overworld = project.config.get::<OverworldConfig>(overworld)?;
-                    self.town_code[i] = overworld.town_code(conn).unwrap_or(0) as u16;
+                    let ovcfg = project.config.get::<OverworldConfig>(overworld)?;
+                    self.town_code[i] = ovcfg.town_code(conn).unwrap_or(0) as u16;
+                    let overworld = project.data_ref::<Overworld>(overworld)?;
+                    self.world[i] = overworld.connection[conn as usize].dest_world;
                 } else {
                     self.town_code[i] = 0;
+                    self.world[i] = 0;
                 }
             }
+            log::info!(
+                "Detected world={:?} town_code={:?}",
+                self.world,
+                self.town_code
+            );
 
             self.refresh_objects(project)?;
             self.decompressor

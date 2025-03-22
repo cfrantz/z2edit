@@ -1,5 +1,6 @@
 use anyhow::{ensure, Result};
 use indexmap::IndexMap;
+use itertools::join;
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -41,8 +42,10 @@ pub struct Enemy {
     pub x: u8,
     pub y: u8,
     pub kind: u8,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub dialog: Vec<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dialog: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dialog2: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub condition: Option<u8>,
 }
@@ -123,6 +126,7 @@ pub mod config {
         pub background: Option<String>,
         pub encounters: Option<String>,
         pub enemy_group: Option<String>,
+        pub text_table: Option<String>,
         pub area_names: IndexMap<u8, String>,
     }
 
@@ -155,12 +159,29 @@ impl config::SideviewAreas {
                     Sideview::default()
                 }
             };
+            let mut edit = Edit::new(sv.into());
+
+            // check for aliases
+            let addr = rom.read_pointer(self.address + index * 2)?;
+            let mut alias = Vec::new();
+            for j in 0..self.length {
+                if j != index {
+                    let a = rom.read_pointer(self.address + j * 2)?;
+                    if a == addr {
+                        alias.push(j);
+                    }
+                }
+            }
+            if !alias.is_empty() {
+                edit.meta.extra.insert("alias".into(), join(&alias, ","));
+            }
+
             let i = if self.is_background_layer {
                 index + 1
             } else {
                 index
             };
-            edits.insert(format!("{path}/{i}"), Edit::new(sv.into()));
+            edits.insert(format!("{path}/{i}"), edit);
         }
         Ok(())
     }
