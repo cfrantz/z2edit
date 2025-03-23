@@ -98,6 +98,7 @@
             sideview: {
                 background: {
                     name: "Backgrounds",
+                    area_kind: "Town",
                     world: 1,
                     overworld: 0,
                     subworld: 0,
@@ -114,9 +115,11 @@
                     palette: "/bank/3/palette",
                     render_info: "/global/render/towns",
                     is_background_layer: true,
+                    leak: [1],
                 },
                 "0": {
                     name: "Towns",
+                    area_kind: "Town",
                     world: 1,
                     overworld: 0,
                     subworld: 0,
@@ -137,7 +140,8 @@
                     text_table: "/bank/3/text_table",
                 },
                 enemy_ram_offset: 0x7000,
-                enemy_rom_offset: 0x88a0,
+                enemy_rom_offset: {Prg:[3,0x88a0]},
+                enemy_length: 288,
             },
             text_table: {
                 // The text tables are keyed by world rather than by integer index.

@@ -96,6 +96,7 @@
             sideview: {
                 background: {
                     name: "Backgrounds",
+                    area_kind: "GreatPalace",
                     world: 5,
                     overworld: 0,
                     subworld: 0,
@@ -115,6 +116,7 @@
                 },
                 "0": {
                     name: "Great Palace",
+                    area_kind: "GreatPalace",
                     world: 5,
                     overworld: 0,
                     subworld: 0,
@@ -134,7 +136,8 @@
                     enemy_group: "/bank/5/enemy/0",
                 },
                 enemy_ram_offset: 0x7000,
-                enemy_rom_offset: 0x88a0,
+                enemy_rom_offset: {Prg:[5,0x88a0]},
+                enemy_length: 312,
             },
             freespace: {
                 freespace: [

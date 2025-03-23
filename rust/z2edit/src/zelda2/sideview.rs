@@ -1,5 +1,5 @@
 use anyhow::{ensure, Result};
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use itertools::join;
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -7,9 +7,9 @@ use std::any::Any;
 
 use crate::error::Error;
 use crate::gui::Gui;
-use crate::nes::{Address, NesFile};
+use crate::nes::{Address, Alloc, NesFile};
 use crate::zelda2::config::get_config;
-use crate::zelda2::edit::{Edit, EditList, GameData};
+use crate::zelda2::edit::{Edit, EditList, GameData, Metadata};
 use crate::zelda2::encounters::Encounters;
 use crate::zelda2::object::{BackgroundTiles, Object, RenderInfo, Renderer};
 use crate::zelda2::project::Project;
@@ -98,6 +98,15 @@ impl GameData for Sideview {
     }
 }
 
+#[derive(Eq, PartialEq, Debug, Default, Clone, Copy, Serialize, Deserialize)]
+pub enum AreaKind {
+    #[default]
+    Overworld,
+    Town,
+    Palace,
+    GreatPalace,
+}
+
 pub mod config {
     use super::*;
 
@@ -105,6 +114,7 @@ pub mod config {
     #[serde(default)]
     pub struct SideviewAreas {
         pub name: String,
+        pub area_kind: AreaKind,
         pub world: u8,
         pub overworld: u8,
         pub subworld: u8,
@@ -121,13 +131,17 @@ pub mod config {
         pub palette: String,
         pub render_info: String,
         pub is_background_layer: bool,
-        // Set to true for reglular palaces, but not for Great Palace.
-        pub is_palace: bool,
         pub background: Option<String>,
         pub encounters: Option<String>,
         pub enemy_group: Option<String>,
         pub text_table: Option<String>,
         pub area_names: IndexMap<u8, String>,
+        // Area indices that we should intentionally memory-leak.
+        // We don't track duplicates between categories (e.g. "background" and "0").
+        // In the vanilla game, background[2] is a duplicate of all town wizard basements,
+        // so to prevent a double-free, we just leak background[2] so alloc/free works properly
+        // when we get to the wizard basements.
+        pub leak: IndexSet<usize>,
     }
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -136,7 +150,8 @@ pub mod config {
         #[serde(flatten)]
         pub group: IndexMap<String, SideviewAreas>,
         pub enemy_ram_offset: usize,
-        pub enemy_rom_offset: usize,
+        pub enemy_rom_offset: Address,
+        pub enemy_length: usize,
     }
 }
 
@@ -159,6 +174,7 @@ impl config::SideviewAreas {
                     Sideview::default()
                 }
             };
+            let empty_enemies = sv.enemy.is_empty();
             let mut edit = Edit::new(sv.into());
 
             // check for aliases
@@ -176,6 +192,29 @@ impl config::SideviewAreas {
                 edit.meta.extra.insert("alias".into(), join(&alias, ","));
             }
 
+            // check for enemy list aliases
+            if !empty_enemies {
+                let addr = rom.read_pointer(self.enemylist + index * 2)?;
+                let mut alias = Vec::new();
+                for j in 0..self.length {
+                    if j != index {
+                        let a = rom.read_pointer(self.enemylist + j * 2)?;
+                        if a == addr {
+                            alias.push(j);
+                        }
+                    }
+                }
+                if !alias.is_empty() {
+                    edit.meta
+                        .extra
+                        .insert("enemy-alias".into(), join(&alias, ","));
+                }
+            }
+
+            if self.leak.contains(&index) {
+                edit.meta.extra.insert("leak".into(), "true".into());
+            }
+
             let i = if self.is_background_layer {
                 index + 1
             } else {
@@ -185,22 +224,54 @@ impl config::SideviewAreas {
         }
         Ok(())
     }
+
     pub fn pack(
         &self,
-        _group: &config::SideviewGroup,
+        group: &config::SideviewGroup,
         rrom: &Bound<'_, NesFile>,
         path: &str,
         edits: &EditList,
+        packed_enemies: &mut PackedEnemies,
     ) -> Result<()> {
         log::debug!("SideviewAreas::pack {path}");
-        if let Some(edit) = edits.get(path) {
-            let mut _rom = rrom.borrow_mut();
-            let _sv = edit.data_ref::<Sideview>()?;
-        } else {
-            log::warn!("No data for {path:?}");
+        let mut done = IndexSet::new();
+        for index in 0..self.length {
+            let i = if self.is_background_layer {
+                index + 1
+            } else {
+                index
+            };
+            let mut rom = rrom.borrow_mut();
+            let path = format!("{path}/{i}");
+            log::debug!("SideviewAreas::pack {path}");
+            if let Some(edit) = edits.get(&path) {
+                let enemy_alias = edit
+                    .meta
+                    .extra
+                    .get("enemy-alias")
+                    .map(|a| {
+                        a.split(',')
+                            .map(|a| a.parse::<usize>())
+                            .collect::<Result<Vec<_>, std::num::ParseIntError>>()
+                    })
+                    .unwrap_or_else(|| Ok(Vec::new()))?;
+                packed_enemies.set_duplicates(index, &enemy_alias);
+
+                let sv = edit.data_ref::<Sideview>()?;
+                sv.to_rom(
+                    &mut rom,
+                    group,
+                    self,
+                    index,
+                    packed_enemies,
+                    &edit.meta,
+                    &mut done,
+                )?;
+            }
         }
         Ok(())
     }
+
     pub fn is_encounter(&self, area: u8, edits: &EditList) -> Result<bool> {
         Ok(self
             .encounters
@@ -227,20 +298,31 @@ impl config::SideviewGroup {
         }
         Ok(())
     }
-    pub fn pack(&self, _rrom: &Bound<'_, NesFile>, path: &str, _edits: &EditList) -> Result<()> {
+    pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("SideviewGroup::pack {path}");
-        /*
-        let Some((p1, _)) = path.rsplit_once('/') else {
-            return Err(anyhow!("SidviewGroup::pack: bad path {path:?}"));
-        };
-        let Some((_, group)) = p1.rsplit_once('/') else {
-            return Err(anyhow!("SidviewGroup::pack: bad path {path:?}"));
-        };
-        let Some(cfg) = self.group.get(group) else {
-            return Err(anyhow!("SidviewGroup::pack: no group for {group:?}"));
-        };
-        cfg.pack(self, rrom, path, edits)?;
-        */
+        // The enemy list is per-bank, even when there are two sideview groups in a bank.
+        // We have to track duplicates because the area of the ROM holding the enemy list
+        // is often sized exactly to what the bank needs.
+        //
+        // We reset duplicate tracking between the per-bank sideview groups.
+        let mut enemylist = PackedEnemies::new(self.group[0].area_kind);
+        for (k, cfg) in self.group.iter() {
+            enemylist.reset_duplicates();
+            cfg.pack(self, rrom, &format!("{path}/{k}"), edits, &mut enemylist)?;
+        }
+        // Once the entire enemylist has been packed, we can write the whole thing to ROM.
+        if enemylist.data.len() <= self.enemy_length {
+            let mut rom = rrom.borrow_mut();
+            enemylist.data.resize(self.enemy_length, 0xff);
+            rom.write_bytes(self.enemy_rom_offset, &enemylist.data)?;
+        } else {
+            return Err(Error::Length(format!(
+                "Enemy list too big for {path}.  {} > {}",
+                enemylist.data.len(),
+                self.enemy_length
+            ))
+            .into());
+        }
         Ok(())
     }
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
@@ -307,7 +389,7 @@ impl Map {
         }
         Map {
             objset: if data[1] & 0x80 != 0 { 1 } else { 0 },
-            width: ((data[1] >> 5) & 3) + 1,
+            width: ((data[1] >> 5) & 3),
             grass: data[1] & 8 == 8,
             bushes: data[1] & 4 == 4,
             ceiling: data[2] & 0x80 == 0,
@@ -408,7 +490,7 @@ impl Map {
         result.push(
             // flags
             ((self.objset as u8) << 7)
-                | ((self.width - 1) as u8 & 3) << 5
+                | (self.width & 3) << 5
                 | if self.grass { 8 } else { 0 }
                 | if self.bushes { 4 } else { 0 },
         );
@@ -461,6 +543,12 @@ impl From<u8> for Connection {
     }
 }
 
+impl From<&Connection> for u8 {
+    fn from(val: &Connection) -> Self {
+        (val.screen & 3) | (val.area << 2)
+    }
+}
+
 impl Connection {
     pub fn outside() -> Self {
         Connection {
@@ -478,7 +566,7 @@ impl EnemyList {
         index: usize,
         is_encounter: bool,
     ) -> Result<Self> {
-        let delta = group.enemy_rom_offset - group.enemy_ram_offset;
+        let delta = group.enemy_rom_offset.offset() - group.enemy_ram_offset;
         let ram_addr = rom.read_pointer(cfg.enemylist + index * 2)?;
         let addr = ram_addr + delta;
         let mut list = Self::default();
@@ -522,6 +610,25 @@ impl EnemyList {
             i += 2;
         }
         list
+    }
+
+    fn to_bytes(&self) -> Vec<u8> {
+        let mut result = Vec::new();
+        for list in self.data.iter() {
+            result.push(list.len() as u8 * 2 + 1);
+            for enemy in list.iter() {
+                let y = if enemy.y <= 1 { 0 } else { enemy.y - 2 };
+                let xy = (y << 4) | (enemy.x & 0x0F);
+                let kind = (enemy.x & 0x30) << 2 | (enemy.kind & 0x3f);
+                result.push(xy);
+                result.push(kind);
+            }
+        }
+        result
+    }
+
+    fn is_empty(&self) -> bool {
+        self.data.is_empty() || self.data.iter().all(|x| x.is_empty())
     }
 }
 
@@ -578,6 +685,7 @@ impl Sideview {
         } else {
             Vec::new()
         };
+
         Ok(Sideview {
             map,
             enemy,
@@ -585,6 +693,80 @@ impl Sideview {
             availability,
             door,
         })
+    }
+
+    fn to_rom(
+        &self,
+        rom: &mut NesFile,
+        group: &config::SideviewGroup,
+        cfg: &config::SideviewAreas,
+        index: usize,
+        packed_enemies: &mut PackedEnemies,
+        meta: &Metadata,
+        done: &mut IndexSet<usize>,
+    ) -> Result<()> {
+        if !done.contains(&index) {
+            let addr = rom.read_pointer(cfg.address + index * 2)?;
+            let leak = meta.extra.get("leak").map(String::as_str) == Some("true");
+            if addr.is_valid() && !leak {
+                let length = rom.read(addr)? as usize;
+                let length = length.max(4);
+                rom.free(addr, length as u16)?;
+                log::debug!("Sideview::to_rom freed old map @ {addr:x?} length={length} bytes");
+            }
+            let data = self.map.to_bytes();
+            let addr = rom.alloc(addr, data.len() as u16, Alloc::Near)?;
+            rom.write_bytes(addr, &data)?;
+            rom.write_pointer(cfg.address + index * 2, addr)?;
+            done.insert(index);
+
+            let duplicates = meta
+                .extra
+                .get("alias")
+                .map(|a| {
+                    a.split(',')
+                        .map(|a| a.parse::<usize>())
+                        .collect::<Result<Vec<_>, std::num::ParseIntError>>()
+                })
+                .unwrap_or_else(|| Ok(Vec::new()))?;
+
+            for &duplicate in duplicates.iter() {
+                done.insert(duplicate);
+                rom.write_pointer(cfg.address + duplicate * 2, addr)?;
+            }
+        }
+
+        if cfg.enemylist.is_valid() {
+            let offset = packed_enemies.add(index, &self.enemy) + (group.enemy_ram_offset as u16);
+            rom.write_word(cfg.enemylist + index * 2, offset)?;
+        }
+
+        if cfg.availability.is_valid() {
+            let avail = if self.availability[0] { 8 } else { 0 }
+                | if self.availability[1] { 4 } else { 0 }
+                | if self.availability[2] { 2 } else { 0 }
+                | if self.availability[3] { 1 } else { 0 };
+            let a = rom.read(cfg.availability + index / 2)?;
+            let a = if index & 1 == 0 {
+                (a & 0x0F) | (avail << 4)
+            } else {
+                (a & 0xF0) | (avail << 0)
+            };
+            rom.write(cfg.availability + index / 2, a)?;
+        }
+
+        if cfg.connections.is_valid() && index <= cfg.max_connectable_index {
+            for (i, c) in self.connection.iter().enumerate() {
+                rom.write(cfg.connections + index * 4 + i, u8::from(c))?;
+            }
+        }
+
+        if cfg.doors.is_valid() && index <= cfg.max_door_index {
+            for (i, c) in self.door.iter().enumerate() {
+                rom.write(cfg.doors + index * 4 + i, u8::from(c))?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -980,5 +1162,63 @@ impl Decompressor {
             result.push(row);
         }
         result
+    }
+}
+
+#[derive(Debug)]
+pub struct PackedEnemies {
+    data: Vec<u8>,
+    offsets: Vec<u16>,
+    duplicates: IndexMap<usize, usize>,
+}
+
+impl PackedEnemies {
+    pub fn new(area_kind: AreaKind) -> Self {
+        let data = if area_kind == AreaKind::Overworld {
+            vec![1, 1]
+        } else {
+            vec![1]
+        };
+        Self {
+            data,
+            offsets: Vec::new(),
+            duplicates: IndexMap::new(),
+        }
+    }
+
+    pub fn reset_duplicates(&mut self) {
+        self.duplicates.clear();
+    }
+
+    pub fn set_duplicates(&mut self, index: usize, duplicates: &[usize]) {
+        for d in duplicates {
+            self.duplicates.insert(*d, index);
+        }
+    }
+
+    pub fn add(&mut self, index: usize, enemies: &EnemyList) -> u16 {
+        let bank = self.offsets.len() / 63;
+        let area = self.offsets.len() % 63;
+        let mut position = self.data.len() as u16;
+        let enemies = enemies.to_bytes();
+        if enemies.len() > 2 {
+            // An enemy list must be at least 3 bytes long.
+            if let Some(dup) = self.duplicates.get(&index).copied() {
+                position = self.offsets[dup + bank * 63];
+            } else {
+                self.data.extend(&enemies);
+            }
+        } else {
+            // An empty enemy list will be 1 byte long; a pair of empty lists (for an encounter
+            // area) will be 2 bytes long.  Re-use the fixed empty-pair at the beginning of
+            // the list.
+            position = 0;
+        }
+        self.offsets.push(position);
+        log::info!(
+            "Packing enemylist {bank}:{area} at offset {position}; len={}",
+            self.data.len()
+        );
+        position
     }
 }

@@ -1,7 +1,12 @@
-from ._z2edit import Address
+from z2edit.app import Application
+from z2edit import Address
 
 _last = Address.Prg(-1, 0xC000)
 
+def _get_rom(rom):
+    if rom is None:
+        rom = Application.get().project().rom
+    return rom
 
 def _convert(address, b=None):
     global _last
@@ -23,6 +28,7 @@ def db(address=None, length=64, b=None, rom=None):
     global _last
     _last = _convert(address, b)
     buf = []
+    rom = _get_rom(rom)
 
     for i in range(length):
         val = rom.read(_last)
@@ -45,6 +51,7 @@ def dw(address=None, length=32, b=None, rom=None):
     global _last
     _last = _convert(address, b)
     buf = []
+    rom = _get_rom(rom)
 
     for i in range(length):
         val1 = rom.read(_last)

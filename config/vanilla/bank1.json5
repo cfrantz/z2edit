@@ -166,6 +166,7 @@
             sideview: {
                 background: {
                     name: "Backgrounds",
+                    area_kind: "Overworld",
                     world: 0,
                     overworld: 0,
                     subworld: 0,
@@ -185,6 +186,7 @@
                 },
                 "0": {
                     name: "West Hyrule",
+                    area_kind: "Overworld",
                     world: 0,
                     overworld: 0,
                     subworld: 0,
@@ -206,6 +208,7 @@
                 },
                 "1": {
                     name: "Death Mountain",
+                    area_kind: "Overworld",
                     world: 0,
                     overworld: 0,
                     subworld: 1,
@@ -226,7 +229,8 @@
                     enemy_group: "/bank/1/enemy/0",
                 },
                 enemy_ram_offset: 0x7000,
-                enemy_rom_offset: 0x88a0,
+                enemy_rom_offset: {Prg:[1,0x88a0]},
+                enemy_length: 924,
             },
             freespace: {
                 freespace: [

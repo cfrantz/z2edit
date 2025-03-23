@@ -172,6 +172,7 @@
             sideview: {
                 background: {
                     name: "Backgrounds",
+                    area_kind: "Palace",
                     world: 3,
                     overworld: 0,
                     subworld: 0,
@@ -191,6 +192,7 @@
                 },
                 "0": {
                     name: "Palace 1/2/5",
+                    area_kind: "Palace",
                     world: 3,
                     overworld: 0,
                     subworld: 0,
@@ -208,10 +210,10 @@
                     render_info: "/global/render/palaces",
                     background: "/bank/4/sideview/background",
                     enemy_group: "/bank/4/enemy/0",
-                    is_palace: true,
                 },
                 "1": {
                     name: "Palace 3/4/6",
+                    area_kind: "Palace",
                     world: 4,
                     overworld: 0,
                     subworld: 0,
@@ -229,10 +231,10 @@
                     render_info: "/global/render/palaces",
                     background: "/bank/4/sideview/background",
                     enemy_group: "/bank/4/enemy/1",
-                    is_palace: true,
                 },
                 enemy_ram_offset: 0x7000,
-                enemy_rom_offset: 0x88a0,
+                enemy_rom_offset: {Prg:[4,0x88a0]},
+                enemy_length: 979,
             },
             freespace: {
                 freespace: [

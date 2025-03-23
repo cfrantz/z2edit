@@ -14,7 +14,7 @@ use crate::zelda2::overworld::config::Overworld as OverworldConfig;
 use crate::zelda2::overworld::Overworld;
 use crate::zelda2::palette::config::PaletteGroup;
 use crate::zelda2::project::Project;
-use crate::zelda2::sideview::{config, Decompressor, Enemy, MapCommand, Sideview};
+use crate::zelda2::sideview::{config, AreaKind, Decompressor, Enemy, MapCommand, Sideview};
 use crate::zelda2::text_table::TextTable;
 
 use imgui::{MouseButton, TableColumnFlags, TableColumnSetup, TableFlags};
@@ -887,7 +887,7 @@ impl SideviewEditor {
     ) -> Result<bool> {
         let scale = 16.0 * self.scale;
         let config = project.config.get::<config::SideviewAreas>(&self.path)?;
-        let background_palette = if config.is_palace {
+        let background_palette = if config.area_kind == AreaKind::Palace {
             (self.sideview.map.background_palette != 0) as u8
         } else {
             self.sideview.map.background_palette
@@ -1199,7 +1199,7 @@ impl SideviewEditor {
             self.area_names.insert(63, "Outside".into());
         }
         if self.need_update {
-            if config.is_palace {
+            if config.area_kind == AreaKind::Palace {
                 if let Some(connector) = project
                     .connectivity
                     .get(&format!("{}/{}", self.path, self.screen))

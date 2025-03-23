@@ -16,7 +16,7 @@ use crate::zelda2::edit::GameData;
 use crate::zelda2::overworld::Overworld;
 use crate::zelda2::project::Project;
 use crate::zelda2::sideview::config::SideviewAreas;
-use crate::zelda2::sideview::{Connection, Decompressor, Sideview};
+use crate::zelda2::sideview::{AreaKind, Connection, Decompressor, Sideview};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct RoomLayout {
@@ -357,7 +357,7 @@ impl MultiMapGui {
         let mut background = "background".to_string();
         let mut chr = config.chr;
 
-        if config.is_palace {
+        if config.area_kind == AreaKind::Palace {
             if let Some(connector) = project.connectivity.get(&format!("{path}/0")) {
                 let (overworld, conn) = connector.rsplit_once('/').expect("connectivity path");
                 let conn = conn.parse::<u8>()?;
@@ -374,7 +374,7 @@ impl MultiMapGui {
             }
         }
 
-        let background_palette = if config.is_palace {
+        let background_palette = if config.area_kind == AreaKind::Palace {
             (sideview.map.background_palette != 0) as u8
         } else {
             sideview.map.background_palette
