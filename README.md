@@ -35,9 +35,9 @@ Z2Edit saves its edit list as a plain-text JSON file, allowing for:
 
 - Enhance CHR graphics import/export
 - Complete the sideview editor
-  - Edit townspeople text IDs
-  - Edit townspeople dialog activation bitmasks
-  - Pack sideview maps, enemylists, etc back into the ROM
+  - Handle duplicate rooms & enemy lists.
+- Add "default fixes" which move items out of various bank keepout memory
+  regions and expand enemylist areas to their full 1KB allowance.
 - Adjust widget sizing in the GUI
 - Add a help system to the editor
 - Write help documentation
@@ -54,6 +54,11 @@ code.  The Python interpreter is used to provide an interactive command
 shell and as a mechanism for extending the editor or adding custom code
 to hacks.
 
+The project uses [`maturin`](https://www.maturin.rs/index.html) to manage
+building the Python extension module (which uses `cargo` under the hood
+to build Rust code).
+
+One-time workspace initialization:
 ```
 ### Initialize submodules:
 $ git submodule update --init --recursive
@@ -68,3 +73,11 @@ $ source .venv/bin/activate
 $ pip install -U -r python-requirements.txt
 ```
 
+Building:
+```
+### Activate the virtual environment:
+$ source .venv/bin/activate
+
+### Compile the rust module:
+(.venv)$ maturin develop
+```
