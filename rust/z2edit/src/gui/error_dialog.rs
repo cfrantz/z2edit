@@ -13,6 +13,8 @@ struct Inner {
     title: String,
     message: String,
     error: Option<Error>,
+    choices: Vec<String>,
+    choice: Option<usize>,
 }
 
 impl ErrorDialog {
@@ -23,6 +25,24 @@ impl ErrorDialog {
         inner.title = title.into();
         inner.message = message.into();
         inner.error = Some(error);
+        inner.choices = vec!["Dismiss".to_string()];
+        inner.choice = None;
+    }
+
+    pub fn show_choice(&self, title: &str, message: &str, choice: &[&str]) -> Option<usize> {
+        let mut inner = self.inner.lock().unwrap();
+        if inner.choice.is_some() {
+            return inner.choice.take();
+        }
+        if inner.title.is_empty() {
+            log::error!("{title}: {message}");
+            inner.id = rand::random();
+            inner.title = title.into();
+            inner.message = message.into();
+            inner.error = None;
+            inner.choices = choice.iter().map(|s| s.to_string()).collect();
+        }
+        None
     }
 
     pub fn draw(&self, ui: &imgui::Ui) {
@@ -40,11 +60,16 @@ impl ErrorDialog {
                         ui.text(format!("{error:?}"));
                     }
                     ui.separator();
-                    if ui.button("Dismiss") {
-                        inner.open = false;
-                        inner.title.clear();
-                        inner.message.clear();
-                        ui.close_current_popup();
+
+                    for i in 0..inner.choices.len() {
+                        if ui.button(&inner.choices[i]) {
+                            inner.choice = Some(i);
+                            inner.open = false;
+                            inner.title.clear();
+                            inner.message.clear();
+                            ui.close_current_popup();
+                        }
+                        ui.same_line();
                     }
                 });
         }

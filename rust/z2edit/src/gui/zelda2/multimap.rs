@@ -77,6 +77,7 @@ pub struct MultiMapGui {
     spread: [f32; 2],
     show_invalid_connections: bool,
     rooms: IndexMap<u8, Room>,
+    sequence: usize,
     spawn: Option<Box<dyn Gui>>,
 }
 
@@ -91,6 +92,7 @@ impl MultiMapGui {
             spread: [1.3, 1.3],
             show_invalid_connections: false,
             rooms: IndexMap::default(),
+            sequence: project.connectivity.sequence(),
             spawn: None,
         });
         ret.explore(true, project)?;
@@ -473,6 +475,11 @@ impl MultiMapGui {
 
     fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
         let mut changed = false;
+        if self.sequence != project.connectivity.sequence() {
+            self.rooms.clear();
+            self.explore(true, project)?;
+            self.sequence = project.connectivity.sequence();
+        }
         let width = ui.push_item_width(120.0);
         if ui
             .input_scalar("Scale", &mut self.scale)

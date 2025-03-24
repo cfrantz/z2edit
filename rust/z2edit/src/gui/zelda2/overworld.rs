@@ -515,9 +515,15 @@ impl OverworldEditor {
         Ok(changed)
     }
 
+    fn commit(&self, project: &mut Project) -> Result<()> {
+        project.commit(&self.path, Box::new(self.overworld.clone()))?;
+        project.connectivity.scan(project)?;
+        Ok(())
+    }
+
     fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
         if ui.button("Commit") {
-            match project.commit(&self.path, Box::new(self.overworld.clone())) {
+            match self.commit(project) {
                 Ok(()) => self.changed = false,
                 Err(e) => self.error.show(
                     "Commit Error",

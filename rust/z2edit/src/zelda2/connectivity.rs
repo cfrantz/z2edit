@@ -1,5 +1,6 @@
 use anyhow::Result;
 use indexmap::IndexMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 
 use crate::error::Error;
@@ -15,6 +16,7 @@ use crate::zelda2::sideview::Sideview;
 #[derive(Debug, Default)]
 pub struct Connectivity {
     per_screen: Mutex<IndexMap<String, String>>,
+    sequence: AtomicUsize,
 }
 
 impl Connectivity {
@@ -24,7 +26,12 @@ impl Connectivity {
                 self.explore_overworld(bank, id, project)?;
             }
         }
+        let _ = self.sequence.fetch_add(1, Ordering::SeqCst);
         Ok(())
+    }
+
+    pub fn sequence(&self) -> usize {
+        self.sequence.load(Ordering::Relaxed)
     }
 
     pub fn get(&self, path: &str) -> Option<String> {

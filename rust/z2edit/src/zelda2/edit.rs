@@ -70,6 +70,19 @@ impl Edit {
             ))
         })?)
     }
+
+    pub fn data_mut<T>(&mut self) -> Result<&mut T>
+    where
+        T: GameData,
+    {
+        let name = self.data.name().clone();
+        Ok(self.data.as_any_mut().downcast_mut::<T>().ok_or_else(|| {
+            Error::Cast(format!(
+                "Cannot downcast {name} to {}",
+                std::any::type_name::<T>()
+            ))
+        })?)
+    }
 }
 
 #[pymethods]

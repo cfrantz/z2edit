@@ -13,11 +13,15 @@ use crate::zelda2::text_encoding::Text;
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct TextTable {
     pub data: IndexMap<u8, String>,
+}
+
+#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
+pub struct TextIds {
     pub index: Vec<Vec<u8>>,
     pub conditions: Vec<u8>,
 }
 
-impl TextTable {
+impl TextIds {
     pub fn get_text_ids(&self, enemy: u8, town_code: u8) -> (Option<u8>, Option<u8>, Option<u8>) {
         if enemy < 10 {
             return (None, None, None);
@@ -32,6 +36,38 @@ impl TextTable {
             None
         };
         (dialog, dialog2, condition)
+    }
+
+    pub fn set_text_ids(
+        &mut self,
+        enemy: u8,
+        town_code: u8,
+        dialog: Option<u8>,
+        dialog2: Option<u8>,
+        conditions: Option<u8>,
+    ) -> bool {
+        if enemy < 10 {
+            return false;
+        }
+
+        let town_code = town_code as usize;
+        let person = (enemy - 10) as usize;
+        let mut changed = false;
+        if let Some(d) = dialog {
+            self.index[0][person * 4 + town_code] = d;
+            changed = true;
+        }
+        if let Some(d) = dialog2 {
+            self.index[1][person * 4 + town_code] = d;
+            changed = true;
+        }
+        if person >= 9 && person < 13 {
+            if let Some(c) = conditions {
+                self.conditions[(person - 9) * 4 + town_code] = c;
+                changed = true;
+            }
+        }
+        changed
     }
 }
 
@@ -48,6 +84,26 @@ impl GameData for TextTable {
     }
     fn gui(&self, name: &str) -> Result<Box<dyn Gui>> {
         crate::gui::zelda2::text_table::TextTableEditor::new(self, name)
+    }
+    fn to_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
+    }
+    fn from_json(&mut self, json: &str) -> Result<()> {
+        *self = serde_json::from_str(json)?;
+        Ok(())
+    }
+}
+
+#[typetag::serde]
+impl GameData for TextIds {
+    fn name(&self) -> String {
+        "TextIds".into()
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
     fn to_json(&self) -> Result<String> {
         Ok(serde_json::to_string_pretty(self)?)
@@ -81,6 +137,7 @@ impl config::TextTable {
     ) -> Result<()> {
         log::debug!("TextTable::unpack {path}");
         let mut tt = TextTable::default();
+        let mut ids = TextIds::default();
         let rom = rrom.borrow();
         let table = rom.read_pointer(self.pointer)?;
         for i in 0..self.length {
@@ -90,15 +147,16 @@ impl config::TextTable {
         }
         for person in 0..4 {
             for town in 0..4 {
-                tt.conditions
+                ids.conditions
                     .push(rom.read(self.conditions.address + person * 8 + self.offset * 4 + town)?);
             }
         }
         for index in self.index.iter() {
-            tt.index
+            ids.index
                 .push(rom.read_bytes(index.address, index.length as usize)?.into());
         }
 
+        edits.insert(format!("{path}:ids"), Edit::new(ids.into()));
         edits.insert(path.into(), Edit::new(tt.into()));
         Ok(())
     }
@@ -125,7 +183,12 @@ impl config::TextTable {
                 rom.write_pointer(table + i * 2, tptr)?;
                 rom.write_terminated(tptr, &text, 0xff)?;
             }
-            for (i, &byte) in tt.conditions.iter().enumerate() {
+        }
+        if let Some(edit) = edits.get(&format!("{path}:ids")) {
+            let ids = edit.data_ref::<TextIds>()?;
+            let mut rom = rrom.borrow_mut();
+
+            for (i, &byte) in ids.conditions.iter().enumerate() {
                 let person = i / 4;
                 let town = i % 4;
                 rom.write(
@@ -133,7 +196,7 @@ impl config::TextTable {
                     byte,
                 )?;
             }
-            for (index, data) in self.index.iter().zip(tt.index.iter()) {
+            for (index, data) in self.index.iter().zip(ids.index.iter()) {
                 rom.write_bytes(index.address, data)?;
             }
         } else {

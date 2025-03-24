@@ -159,6 +159,23 @@ impl Project {
         edit.data_ref::<T>()
     }
 
+    pub fn data_mut<T: GameData>(&mut self, path: &str) -> Result<&mut T> {
+        let edit = self
+            .edits
+            .get_mut(path)
+            .ok_or_else(|| Error::NotFound(path.into()))?;
+        edit.data_mut::<T>()
+    }
+
+    pub fn update_timestamp(&mut self, path: &str) -> Result<()> {
+        let edit = self
+            .edits
+            .get_mut(path)
+            .ok_or_else(|| Error::NotFound(path.into()))?;
+        edit.meta.timestamp = UTime::now();
+        Ok(())
+    }
+
     pub fn commit(&mut self, path: &str, data: Box<dyn GameData>) -> Result<()> {
         let edit = self
             .edits

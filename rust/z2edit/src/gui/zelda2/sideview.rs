@@ -1,5 +1,5 @@
 use anyhow::Result;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use python_gui::fa;
 
 use crate::gui::util::{tooltip, DragHelper, EditAction};
@@ -15,7 +15,7 @@ use crate::zelda2::overworld::Overworld;
 use crate::zelda2::palette::config::PaletteGroup;
 use crate::zelda2::project::Project;
 use crate::zelda2::sideview::{config, AreaKind, Decompressor, Enemy, MapCommand, Sideview};
-use crate::zelda2::text_table::TextTable;
+use crate::zelda2::text_table::{TextIds, TextTable};
 
 use imgui::{MouseButton, TableColumnFlags, TableColumnSetup, TableFlags};
 
@@ -84,6 +84,7 @@ pub struct SideviewEditor {
     area_names: IndexMap<u8, String>,
     world: [u8; 4],
     town_code: [u16; 4],
+    sequence: usize,
     spawn: Option<Box<dyn Gui>>,
 }
 
@@ -113,6 +114,7 @@ impl SideviewEditor {
             area_names: IndexMap::default(),
             world: [0; 4],
             town_code: [0; 4],
+            sequence: 0,
             spawn: None,
         }))
     }
@@ -144,12 +146,14 @@ impl SideviewEditor {
         let screen = (self.sideview.enemy.data[el][index].x / 16) as usize;
         let world = self.world[screen];
         let town_code = self.town_code[screen] as u8;
-        let text_table = project.data_ref::<TextTable>(&format!("{text_table}/{world}"))?;
-        let dialog = text_table.get_text_ids(self.sideview.enemy.data[el][index].kind, town_code);
+        let text_ids = project.data_ref::<TextIds>(&format!("{text_table}/{world}:ids"))?;
+        let dialog = text_ids.get_text_ids(self.sideview.enemy.data[el][index].kind, town_code);
         if dialog == (None, None, None) {
             return Ok(EditAction::None);
         }
         let (dialog1, dialog2, conditions) = dialog;
+        let text_table = project.data_ref::<TextTable>(&format!("{text_table}/{world}"))?;
+
         let mut action = EditAction::None;
         if let Some(_table) = ui.begin_table_header_with_flags(
             "dialogs",
@@ -178,7 +182,7 @@ impl SideviewEditor {
                 ui.table_next_column();
                 let width = ui.push_item_width(-1.0);
                 if ui.input_scalar("##dialog2", &mut dialog).step(1).build() {
-                    self.sideview.enemy.data[el][index].dialog = Some(dialog);
+                    self.sideview.enemy.data[el][index].dialog2 = Some(dialog);
                     action.set(EditAction::Update);
                 }
                 width.end();
@@ -1163,9 +1167,72 @@ impl SideviewEditor {
         Ok(changed)
     }
 
+    fn commit(&mut self, project: &mut Project) -> Result<()> {
+        project.commit(&self.path, Box::new(self.sideview.clone()))?;
+        let (max_connectable_index, max_door_index, text_table) = {
+            let config = project.config.get::<config::SideviewAreas>(&self.path)?;
+            (
+                config.max_connectable_index as u8,
+                config.max_door_index as u8,
+                config.text_table.clone(),
+            )
+        };
+
+        for (i, c) in self.sideview.connection.iter().enumerate() {
+            if c.area < max_connectable_index {
+                if let Some(screen) = c.point_target_back {
+                    let path = format!("{}/{}", self.base, c.area);
+                    project.update_timestamp(&path)?;
+                    let target = project.data_mut::<Sideview>(&path)?;
+                    let screen = screen as usize;
+                    target.connection[screen].area = self.area;
+                    target.connection[screen].screen = i as u8;
+                }
+            }
+        }
+        for (i, c) in self.sideview.door.iter().enumerate() {
+            if c.area < max_door_index {
+                if let Some(screen) = c.point_target_back {
+                    let path = format!("{}/{}", self.base, c.area);
+                    project.update_timestamp(&path)?;
+                    let target = project.data_mut::<Sideview>(&path)?;
+                    let screen = screen as usize;
+                    target.door[screen].area = self.area;
+                    target.door[screen].screen = i as u8;
+                }
+            }
+        }
+
+        if let Some(text_table) = text_table.as_ref() {
+            let mut worlds = IndexSet::new();
+            for enemy in self.sideview.enemy.data[0].iter() {
+                let screen = (enemy.x / 16) as usize;
+                let world = self.world[screen];
+                let town_code = self.town_code[screen] as u8;
+                let text_ids = project.data_mut::<TextIds>(&format!("{text_table}/{world}:ids"))?;
+                if text_ids.set_text_ids(
+                    enemy.kind,
+                    town_code,
+                    enemy.dialog,
+                    enemy.dialog2,
+                    enemy.condition,
+                ) {
+                    worlds.insert(world);
+                }
+            }
+            for world in worlds.iter() {
+                project.update_timestamp(&format!("{text_table}/{world}:ids"))?;
+            }
+        }
+
+        project.connectivity.scan(project)?;
+        self.sequence = project.connectivity.sequence();
+        Ok(())
+    }
+
     fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
         if ui.button("Commit") {
-            match project.commit(&self.path, Box::new(self.sideview.clone())) {
+            match self.commit(project) {
                 Ok(()) => self.changed = false,
                 Err(e) => self.error.show(
                     "Commit Error",
@@ -1199,6 +1266,9 @@ impl SideviewEditor {
             self.area_names.insert(63, "Outside".into());
         }
         if self.need_update {
+            if self.sequence == 0 {
+                self.sequence = project.connectivity.sequence();
+            }
             if config.area_kind == AreaKind::Palace {
                 if let Some(connector) = project
                     .connectivity
@@ -1244,6 +1314,30 @@ impl SideviewEditor {
             self.decompressor
                 .decompress(&self.path, &self.sideview, project)?;
             self.need_update = false;
+        }
+        if self.sequence != project.connectivity.sequence() {
+            if self.changed {
+                if let Some(choice) = self.error.show_choice(
+                    "Connectivity Changed",
+                    "\
+The game map connectivity has changed which might have affected the
+entrances, exits and doors of this room.
+
+Do you want to reload this room?",
+                    &["Reload", "Dismiss"],
+                ) {
+                    log::info!("choice = {choice}");
+                    if choice == 0 {
+                        self.need_update = true;
+                        self.sideview = project.data_ref::<Sideview>(&self.path)?.clone();
+                    }
+                    self.sequence = project.connectivity.sequence();
+                }
+            } else {
+                self.need_update = true;
+                self.sideview = project.data_ref::<Sideview>(&self.path)?.clone();
+                self.sequence = project.connectivity.sequence();
+            }
         }
 
         let size = ui.content_region_avail();
