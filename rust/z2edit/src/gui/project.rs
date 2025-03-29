@@ -5,6 +5,7 @@ use python_gui::UiContext;
 use rfd::FileDialog;
 use std::sync::Mutex;
 
+use crate::gui::zelda2::metadata::MetadataEditor;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction};
 use crate::zelda2::project::Project;
 
@@ -80,6 +81,7 @@ impl ProjectGui {
         match project.config.tree_node(ui, "") {
             TreeAction::None => {}
             TreeAction::Edit(node) => self.edit(&node),
+            TreeAction::Metadata(node) => self.edit_metadata(&node),
         }
     }
 
@@ -173,6 +175,20 @@ impl ProjectGui {
                 match edit.data.gui(node) {
                     Ok(editor) => self.windows.lock().unwrap().push(editor),
                     Err(e) => log::error!("Create editor gui: {e}"),
+                };
+            } else {
+                log::error!("No such edit: {node}");
+            }
+        })
+    }
+
+    pub fn edit_metadata(&self, node: &str) {
+        Python::with_gil(|py| {
+            let project = self.project.borrow(py);
+            if let Some(edit) = project.edits.get(node) {
+                match MetadataEditor::new(&edit.meta, node) {
+                    Ok(editor) => self.windows.lock().unwrap().push(editor),
+                    Err(e) => log::error!("Create metadata gui: {e}"),
                 };
             } else {
                 log::error!("No such edit: {node}");

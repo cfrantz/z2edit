@@ -16,9 +16,7 @@ impl GuiTree for config::ChrMemory {
                     .leaf(true)
                     .build(|| {});
                 if let Some(_token) = ui.begin_popup_context_item() {
-                    if ui.menu_item("Edit") {
-                        result = TreeAction::Edit(item);
-                    }
+                    result.menu(ui, &item);
                 }
             }
         }

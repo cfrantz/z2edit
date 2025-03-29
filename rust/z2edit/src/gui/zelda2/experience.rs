@@ -18,9 +18,7 @@ impl GuiTree for config::ExperienceTableGroup {
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
-            if ui.menu_item("Edit") {
-                result = TreeAction::Edit(path.into());
-            }
+            result.menu(ui, &path);
         }
         result
     }
@@ -159,9 +157,7 @@ impl GuiTree for config::EnemyExperience {
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
-            if ui.menu_item("Edit") {
-                result = TreeAction::Edit(path.into());
-            }
+            result.menu(ui, &path);
         }
         result
     }

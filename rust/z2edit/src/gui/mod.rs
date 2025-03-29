@@ -19,12 +19,22 @@ use visibility::Visibility;
 pub enum TreeAction {
     None,
     Edit(String),
+    Metadata(String),
 }
 
 impl TreeAction {
     pub fn set(&mut self, action: TreeAction) {
         if action != TreeAction::None {
             *self = action;
+        }
+    }
+
+    pub fn menu(&mut self, ui: &imgui::Ui, path: &str) {
+        if ui.menu_item("Edit") {
+            *self = TreeAction::Edit(path.into());
+        }
+        if ui.menu_item("Metadata") {
+            *self = TreeAction::Metadata(path.into());
         }
     }
 }

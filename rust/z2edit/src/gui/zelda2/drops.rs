@@ -14,9 +14,7 @@ impl GuiTree for config::DropInfo {
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
-            if ui.menu_item("Edit") {
-                result = TreeAction::Edit(path.into());
-            }
+            result.menu(ui, &path);
         }
         result
     }
