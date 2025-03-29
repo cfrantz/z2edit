@@ -69,6 +69,7 @@ struct Room {
 }
 
 pub struct MultiMapGui {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -84,6 +85,7 @@ pub struct MultiMapGui {
 impl MultiMapGui {
     pub fn new(path: &str, project: &Project) -> Result<Box<dyn Gui>> {
         let mut ret = Box::new(MultiMapGui {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -539,7 +541,7 @@ impl Gui for MultiMapGui {
             return Ok(());
         }
         let result = ui
-            .window(format!("MultiMap##{}", self.path))
+            .window(format!("MultiMap##{}", self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -557,10 +559,6 @@ impl Gui for MultiMapGui {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
-    }
-
-    fn window_id(&self) -> u64 {
-        0
     }
 
     fn spawned(&mut self) -> Option<Box<dyn Gui>> {

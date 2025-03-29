@@ -22,6 +22,7 @@ impl GuiTree for config::TextTable {
 }
 
 pub struct TextTableEditor {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -32,6 +33,7 @@ pub struct TextTableEditor {
 impl TextTableEditor {
     pub fn new(tt: &TextTable, path: &str) -> Result<Box<dyn Gui>> {
         Ok(Box::new(TextTableEditor {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -87,7 +89,7 @@ impl Gui for TextTableEditor {
             return Ok(());
         }
         let result = ui
-            .window(format!("Text Table##{}", self.path))
+            .window(format!("Text Table##{}", self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -105,9 +107,5 @@ impl Gui for TextTableEditor {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
-    }
-
-    fn window_id(&self) -> u64 {
-        0
     }
 }

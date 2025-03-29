@@ -65,6 +65,7 @@ macro_rules! str_id {
 }
 
 pub struct SideviewEditor {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -95,6 +96,7 @@ impl SideviewEditor {
     pub fn new(sv: &Sideview, path: &str) -> Result<Box<dyn Gui>> {
         let (base, area) = path.rsplit_once('/').expect("sideview path");
         Ok(Box::new(SideviewEditor {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -1397,7 +1399,7 @@ impl Gui for SideviewEditor {
             return Ok(());
         }
         let result = ui
-            .window(format!("Sideview##{}", self.path))
+            .window(format!("Sideview##{}", self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -1415,10 +1417,6 @@ impl Gui for SideviewEditor {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
-    }
-
-    fn window_id(&self) -> u64 {
-        0
     }
 
     fn spawned(&mut self) -> Option<Box<dyn Gui>> {

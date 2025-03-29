@@ -23,6 +23,7 @@ impl GuiTree for config::PaletteGroup {
 }
 
 pub struct PaletteGroupEditor {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -33,6 +34,7 @@ pub struct PaletteGroupEditor {
 impl PaletteGroupEditor {
     pub fn new(pg: &PaletteGroup, path: &str) -> Result<Box<dyn Gui>> {
         Ok(Box::new(PaletteGroupEditor {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -139,7 +141,7 @@ impl Gui for PaletteGroupEditor {
             return Ok(());
         }
         let result = ui
-            .window(format!("Palette##{}", self.path))
+            .window(format!("Palette##{}", self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -157,9 +159,5 @@ impl Gui for PaletteGroupEditor {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
-    }
-
-    fn window_id(&self) -> u64 {
-        0
     }
 }

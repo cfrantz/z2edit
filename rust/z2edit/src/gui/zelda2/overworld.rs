@@ -28,6 +28,7 @@ impl GuiTree for config::Overworld {
 }
 
 pub struct OverworldEditor {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -67,6 +68,7 @@ impl OverworldEditor {
         let mut undo = UndoStack::new(1000);
         undo.reset(ov.clone());
         Ok(Box::new(OverworldEditor {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -575,7 +577,7 @@ impl Gui for OverworldEditor {
             return Ok(());
         }
         let result = ui
-            .window(format!("Overworld##{}", self.path))
+            .window(format!("Overworld##{}", self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -595,9 +597,6 @@ impl Gui for OverworldEditor {
         self.visible == Visibility::Dispose
     }
 
-    fn window_id(&self) -> u64 {
-        0
-    }
     fn spawned(&mut self) -> Option<Box<dyn Gui>> {
         self.spawn.take()
     }

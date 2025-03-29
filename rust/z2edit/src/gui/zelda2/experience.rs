@@ -27,6 +27,7 @@ impl GuiTree for config::ExperienceTableGroup {
 }
 
 pub struct ExperienceTableGroupEditor {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -37,6 +38,7 @@ pub struct ExperienceTableGroupEditor {
 impl ExperienceTableGroupEditor {
     pub fn new(eg: &ExperienceTableGroup, path: &str) -> Result<Box<dyn Gui>> {
         Ok(Box::new(ExperienceTableGroupEditor {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -129,7 +131,7 @@ impl Gui for ExperienceTableGroupEditor {
             .config
             .get::<config::ExperienceTableGroup>(&self.path)?;
         let result = ui
-            .window(format!("{}##{}", config.name, self.path))
+            .window(format!("{}##{}", config.name, self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -147,10 +149,6 @@ impl Gui for ExperienceTableGroupEditor {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
-    }
-
-    fn window_id(&self) -> u64 {
-        0
     }
 }
 
@@ -170,6 +168,7 @@ impl GuiTree for config::EnemyExperience {
 }
 
 pub struct EnemyExperienceEditor {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -180,6 +179,7 @@ pub struct EnemyExperienceEditor {
 impl EnemyExperienceEditor {
     pub fn new(ee: &EnemyExperience, path: &str) -> Result<Box<dyn Gui>> {
         Ok(Box::new(EnemyExperienceEditor {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -274,7 +274,7 @@ impl Gui for EnemyExperienceEditor {
             return Ok(());
         }
         let result = ui
-            .window(format!("Enemy XP##{}", self.path))
+            .window(format!("Enemy XP##{}", self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -292,9 +292,5 @@ impl Gui for EnemyExperienceEditor {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
-    }
-
-    fn window_id(&self) -> u64 {
-        0
     }
 }

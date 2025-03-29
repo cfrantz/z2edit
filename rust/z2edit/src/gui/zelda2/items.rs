@@ -21,6 +21,7 @@ impl GuiTree for config::Items {
 }
 
 pub struct ItemsEditor {
+    window_id: usize,
     visible: Visibility,
     error: ErrorDialog,
     changed: bool,
@@ -49,6 +50,7 @@ impl ItemsEditor {
     ];
     pub fn new(it: &Items, path: &str) -> Result<Box<dyn Gui>> {
         Ok(Box::new(ItemsEditor {
+            window_id: rand::random(),
             visible: Visibility::Visible,
             error: ErrorDialog::default(),
             changed: false,
@@ -126,7 +128,7 @@ impl Gui for ItemsEditor {
             return Ok(());
         }
         let result = ui
-            .window(format!("Items##{}", self.path))
+            .window(format!("Items##{}", self.window_id))
             .opened(&mut visible)
             .unsaved_document(self.changed)
             .size([1280.0, 720.0], imgui::Condition::FirstUseEver)
@@ -144,9 +146,5 @@ impl Gui for ItemsEditor {
 
     fn wants_dispose(&self) -> bool {
         self.visible == Visibility::Dispose
-    }
-
-    fn window_id(&self) -> u64 {
-        0
     }
 }
