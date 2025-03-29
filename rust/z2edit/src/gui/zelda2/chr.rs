@@ -1,4 +1,4 @@
-use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::zelda2::chr::{config, ChrBank, Layout};
 use crate::zelda2::project::Project;
 use anyhow::Result;
@@ -7,8 +7,8 @@ use imgui::TreeNodeFlags;
 use python_gui::Image;
 
 impl GuiTree for config::ChrMemory {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
-        let mut result = None;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+        let mut result = TreeAction::None;
         if ui.collapsing_header(format!("CHR Banks"), TreeNodeFlags::empty()) {
             for bank in 0..self.banks {
                 let item = format!("{path}/{bank}");
@@ -17,7 +17,7 @@ impl GuiTree for config::ChrMemory {
                     .build(|| {});
                 if let Some(_token) = ui.begin_popup_context_item() {
                     if ui.menu_item("Edit") {
-                        result = Some(item);
+                        result = TreeAction::Edit(item);
                     }
                 }
             }

@@ -2,7 +2,7 @@ use anyhow::Result;
 use imgui::{StyleColor, TableFlags};
 
 use crate::gui::widgets::Combo;
-use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::metatile::{config, MetatileGroup};
@@ -10,14 +10,14 @@ use crate::zelda2::palette;
 use crate::zelda2::project::Project;
 
 impl GuiTree for config::MetatileGroup {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
-        let mut result = None;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+        let mut result = TreeAction::None;
         ui.tree_node_config(format!("{}##{path}", self.name))
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
             if ui.menu_item("Edit") {
-                result = Some(path.into());
+                result = TreeAction::Edit(path.into());
             }
         }
         result

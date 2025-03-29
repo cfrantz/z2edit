@@ -5,7 +5,7 @@ use python_gui::UiContext;
 use rfd::FileDialog;
 use std::sync::Mutex;
 
-use crate::gui::{ErrorDialog, Gui, GuiTree};
+use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction};
 use crate::zelda2::project::Project;
 
 #[pyclass]
@@ -77,8 +77,9 @@ impl ProjectGui {
 
     fn edit_tree<'p>(&self, py: Python<'p>, ui: &imgui::Ui) {
         let project = self.project.borrow(py);
-        if let Some(node) = project.config.tree_node(ui, "") {
-            self.edit(&node);
+        match project.config.tree_node(ui, "") {
+            TreeAction::None => {}
+            TreeAction::Edit(node) => self.edit(&node),
         }
     }
 

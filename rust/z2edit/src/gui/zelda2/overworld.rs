@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::error::Error;
 use crate::gui::util::{text_outlined, DragHelper, KeyAction, SelectBox};
 use crate::gui::zelda2::multimap::MultiMapGui;
-use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::util::undo::UndoStack;
 use crate::zelda2::metatile::MetatileGroup;
@@ -13,14 +13,14 @@ use crate::zelda2::project::Project;
 use imgui::{MouseButton, StyleVar};
 
 impl GuiTree for config::Overworld {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
-        let mut result = None;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+        let mut result = TreeAction::None;
         ui.tree_node_config(format!("{}##{path}", self.name))
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
             if ui.menu_item("Edit") {
-                result = Some(path.into());
+                result = TreeAction::Edit(path.into());
             }
         }
         result

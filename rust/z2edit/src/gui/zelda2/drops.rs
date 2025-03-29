@@ -1,4 +1,4 @@
-use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::zelda2::drops::{config, DropInfo, Dropper};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
@@ -8,14 +8,14 @@ use anyhow::Result;
 use imgui::{TableColumnSetup, TableFlags};
 
 impl GuiTree for config::DropInfo {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
-        let mut result = None;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+        let mut result = TreeAction::None;
         ui.tree_node_config(format!("Drops##{path}"))
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
             if ui.menu_item("Edit") {
-                result = Some(path.into());
+                result = TreeAction::Edit(path.into());
             }
         }
         result

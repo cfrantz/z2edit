@@ -1,7 +1,7 @@
 use anyhow::Result;
 use imgui::{TableColumnSetup, TableFlags};
 
-use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::experience::{
@@ -11,15 +11,15 @@ use crate::zelda2::project::Project;
 use crate::zelda2::text_encoding::Text;
 
 impl GuiTree for config::ExperienceTableGroup {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
-        let mut result = None;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+        let mut result = TreeAction::None;
         let name = &self.name;
         ui.tree_node_config(format!("{name}##{path}"))
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
             if ui.menu_item("Edit") {
-                result = Some(path.into());
+                result = TreeAction::Edit(path.into());
             }
         }
         result
@@ -153,14 +153,14 @@ impl Gui for ExperienceTableGroupEditor {
 }
 
 impl GuiTree for config::EnemyExperience {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
-        let mut result = None;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+        let mut result = TreeAction::None;
         ui.tree_node_config(format!("Enemy XP##{path}"))
             .leaf(true)
             .build(|| {});
         if let Some(_token) = ui.begin_popup_context_item() {
             if ui.menu_item("Edit") {
-                result = Some(path.into());
+                result = TreeAction::Edit(path.into());
             }
         }
         result

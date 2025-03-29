@@ -4,7 +4,7 @@ use python_gui::fa;
 
 use crate::gui::util::{tooltip, DragHelper, EditAction};
 use crate::gui::widgets::Combo;
-use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::enemies::config::EnemyGroup;
@@ -29,8 +29,8 @@ fn weight(name: &str, weight: f32) -> TableColumnSetup<&str> {
 }
 
 impl GuiTree for config::SideviewAreas {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String> {
-        let mut result = None;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+        let mut result = TreeAction::None;
         let name = &self.name;
         ui.tree_node_config(format!("{name}##{path}")).build(|| {
             for index in 0..self.length {
@@ -45,7 +45,7 @@ impl GuiTree for config::SideviewAreas {
                     .build(|| {});
                 if let Some(_token) = ui.begin_popup_context_item() {
                     if ui.menu_item("Edit") {
-                        result.replace(path);
+                        result = TreeAction::Edit(path);
                     }
                 }
             }

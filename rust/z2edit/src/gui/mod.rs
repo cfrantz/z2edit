@@ -15,8 +15,22 @@ pub mod zelda2;
 use error_dialog::ErrorDialog;
 use visibility::Visibility;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TreeAction {
+    None,
+    Edit(String),
+}
+
+impl TreeAction {
+    pub fn set(&mut self, action: TreeAction) {
+        if action != TreeAction::None {
+            *self = action;
+        }
+    }
+}
+
 pub trait GuiTree: Send + Sync + 'static {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> Option<String>;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction;
 }
 
 pub trait Gui: Send + Sync + 'static {
