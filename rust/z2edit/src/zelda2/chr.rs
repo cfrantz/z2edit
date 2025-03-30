@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use python_gui::{Color, Image};
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use crate::error::Error;
@@ -10,6 +11,7 @@ use crate::gui::Gui;
 use crate::nes::{Address, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
+use crate::zelda2::project::Project;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ChrMemory {
@@ -61,6 +63,7 @@ pub struct ChrBank {
     pub address: Address,
     pub layout: Layout,
     pub border: i32,
+    pub overlay: Vec<String>,
     #[serde(skip)]
     pub data: Arc<Mutex<Vec<u8>>>,
     #[serde(skip)]
@@ -152,15 +155,16 @@ impl config::ChrMemory {
                     for bank in 0..self.banks {
                         if let Some(edit) = edits.get(&format!("{path}/{bank}")) {
                             log::debug!("ChrMemory::pack {path}/{bank}");
-                            let _chr = edit.data_ref::<ChrBank>()?;
-                            // Do it
+                            let chr = edit.data_ref::<ChrBank>()?;
+                            chr.apply()?;
                         }
                     }
                 }
             }
-            let chr = edit.data_ref::<ChrMemory>()?;
+
+            let mem = edit.data_ref::<ChrMemory>()?;
             let mut rom = rrom.borrow_mut();
-            rom.write_bytes(Address::Chr(0, 0), chr.data.lock().unwrap().as_slice())?;
+            rom.write_bytes(Address::Chr(0, 0), mem.data.lock().unwrap().as_slice())?;
         } else {
             log::warn!("No data for {path:?}");
         }
@@ -177,6 +181,26 @@ impl config::ChrMemory {
 }
 
 impl ChrBank {
+    fn copy_orig(&self) {
+        let len = match self.schema {
+            ChrSchema::Mmc1_4k => 4096,
+        };
+        let base = self.address.norm_offset().expect("chr address");
+        let orig = self.orig.lock().unwrap();
+        let mut data = self.data.lock().unwrap();
+        data[base..base + len].copy_from_slice(&orig[base..base + len]);
+    }
+
+    pub fn apply(&self) -> Result<()> {
+        self.copy_orig();
+        for overlay in self.overlay.iter() {
+            if !overlay.is_empty() {
+                self.import(overlay)?;
+            }
+        }
+        Ok(())
+    }
+
     pub fn create_image(&self, border: u32, layout: Layout) -> Result<Image> {
         let (nw, nh, tw, th, mult) = match (self.schema, layout) {
             (ChrSchema::Mmc1_4k, Layout::Tile) => (16, 16, 8, 8, 1),
@@ -218,7 +242,73 @@ impl ChrBank {
                 }
             }
         }
-        image.update();
         Ok(image)
+    }
+
+    pub fn parse_image(&self, border: u32, layout: Layout, image: &Image) {
+        let (nw, nh, tw, th, mult) = match (self.schema, layout) {
+            (ChrSchema::Mmc1_4k, Layout::Tile) => (16, 16, 8, 8, 1),
+            (ChrSchema::Mmc1_4k, Layout::Sprite) => (16, 8, 8, 16, 2),
+        };
+        let base = self.address.norm_offset().expect("chr address");
+        let mut data = self.data.lock().unwrap();
+        for y in 0..nh {
+            for x in 0..nw {
+                let mut tile = mult * (y * nw + x);
+                for yy in 0..th {
+                    if layout == Layout::Sprite && yy == 8 {
+                        tile += 1;
+                    }
+                    let mut lo = data[base + (tile * 16 + yy % 8) as usize];
+                    let mut hi = data[base + (tile * 16 + 8 + yy % 8) as usize];
+                    for xx in 0..tw {
+                        let color = image.get_pixel(
+                            border + x * (tw + border) + xx,
+                            border + y * (th + border) + yy,
+                        );
+                        if color.a != 0 {
+                            let avg = color.average();
+                            let mask = 1u8 << ((tw - 1) - xx);
+                            let (hibit, lobit) = if avg > 0xAA {
+                                (mask, mask)
+                            } else if avg > 0x55 {
+                                (mask, 0)
+                            } else if avg > 0x00 {
+                                (0, mask)
+                            } else {
+                                (0, 0)
+                            };
+                            lo = (lo & !mask) | lobit;
+                            hi = (hi & !mask) | hibit;
+                        }
+                    }
+                    data[base + (tile * 16 + yy % 8) as usize] = lo;
+                    data[base + (tile * 16 + 8 + yy % 8) as usize] = hi;
+                }
+            }
+        }
+    }
+
+    pub fn import<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        // FIXME: Naughty use of global variable to know the project path.
+        let path = Project::path().join(path.as_ref());
+        let image = Image::load_bmp(path)?;
+        let (border, layout) = match (image.width, image.height) {
+            (128, 128) => (0, self.layout),
+            (145, 145) => (1, Layout::Tile),
+            (145, 137) => (1, Layout::Sprite),
+            (162, 162) => (2, Layout::Tile),
+            (162, 146) => (2, Layout::Sprite),
+            _ => {
+                return Err(Error::NotImplemented(format!(
+                    "Cannot process image size {}x{}",
+                    image.width, image.height
+                ))
+                .into())
+            }
+        };
+
+        self.parse_image(border, layout, &image);
+        Ok(())
     }
 }

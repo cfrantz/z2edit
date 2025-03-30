@@ -54,6 +54,13 @@ impl Color {
         ]
     }
 
+    pub fn average(&self) -> u32 {
+        let r = self.r as u32;
+        let b = self.g as u32;
+        let g = self.b as u32;
+        (r + g + b) / 3
+    }
+
     pub fn blend(&self, other: Color) -> Color {
         let [r1, g1, b1, _] = self.to_f32();
         let [r2, g2, b2, a2] = other.to_f32();
@@ -207,7 +214,7 @@ impl Image {
         Ok(())
     }
 
-    pub fn load_bmp<P: AsRef<Path>>(&self, path: P) -> Result<Image> {
+    pub fn load_bmp<P: AsRef<Path>>(path: P) -> Result<Image> {
         let surface = Surface::load_bmp(path).map_err(|e| anyhow!("Surface::load_bmp: {e}"))?;
         let surface = surface
             .convert_format(PixelFormatEnum::ABGR8888)
@@ -221,7 +228,7 @@ impl Image {
                 pixels[(y * w4)..((y + 1) * w4)]
                     .clone_from_slice(&p[(y * pitch)..((y + 1) * pitch)]);
             }
-            self.needs_update.store(true, Ordering::Relaxed);
+            image.needs_update.store(true, Ordering::Relaxed);
             Ok(image)
         })
     }
@@ -288,8 +295,9 @@ impl Image {
         self.save_bmp(path)
     }
     #[pyo3(name = "load_bmp")]
-    fn _load_bmp(&self, path: &str) -> Result<Image> {
-        self.load_bmp(path)
+    #[staticmethod]
+    fn _load_bmp(path: &str) -> Result<Image> {
+        Self::load_bmp(path)
     }
 
     #[getter]
@@ -302,6 +310,12 @@ impl Image {
         self.pixels[i] = color;
         self.needs_update.store(true, Ordering::Relaxed);
     }
+
+    pub fn get_pixel(&self, x: u32, y: u32) -> Color {
+        let i = (y * self.width + x) as usize;
+        self.pixels[i]
+    }
+
 }
 
 impl Drop for Image {

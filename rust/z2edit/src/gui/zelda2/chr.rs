@@ -1,10 +1,14 @@
+use anyhow::Result;
+use imgui::TreeNodeFlags;
+use imgui::{TableColumnFlags, TableColumnSetup, TableFlags};
+use python_gui::fa;
+use python_gui::Image;
+use rfd::FileDialog;
+
+use crate::gui::util::tooltip;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::zelda2::chr::{config, ChrBank, Layout};
 use crate::zelda2::project::Project;
-use anyhow::Result;
-
-use imgui::TreeNodeFlags;
-use python_gui::Image;
 
 impl GuiTree for config::ChrMemory {
     fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
@@ -81,8 +85,87 @@ impl ChrBankEditor {
                 .create_image(self.chr.border as u32, self.chr.layout)?;
         }
         width.end();
-
         self.image.draw(self.scale as f32, ui);
+
+        let mut changed = false;
+        if let Some(_table) = ui.begin_table_header_with_flags(
+            "overlay",
+            [
+                TableColumnSetup {
+                    name: "Image file",
+                    flags: TableColumnFlags::WIDTH_STRETCH,
+                    ..Default::default()
+                },
+                TableColumnSetup {
+                    name: "Browse",
+                    flags: TableColumnFlags::WIDTH_FIXED,
+                    init_width_or_weight: 100.0,
+                    ..Default::default()
+                },
+                TableColumnSetup {
+                    name: "Del",
+                    flags: TableColumnFlags::WIDTH_FIXED,
+                    init_width_or_weight: 32.0,
+                    ..Default::default()
+                },
+            ],
+            TableFlags::BORDERS,
+        ) {
+            let mut delindex = None;
+            for (i, filename) in self.chr.overlay.iter_mut().enumerate() {
+                let _id = ui.push_id_usize(i);
+                ui.table_next_row();
+                ui.table_next_column();
+                let width = ui.push_item_width(-1.0);
+                changed |= ui
+                    .input_text("##filename", filename)
+                    .enter_returns_true(true)
+                    .build();
+                width.end();
+
+                ui.table_next_column();
+                let width = ui.push_item_width(-1.0);
+                if ui.button("Browse") {
+                    if let Some(bmp) = FileDialog::new()
+                        .set_title("Load image")
+                        .add_filter("BMP", &["bmp"])
+                        .add_filter("All", &["*"])
+                        .pick_file()
+                    {
+                        *filename = bmp.to_string_lossy().into();
+                        changed |= true;
+                    }
+                }
+                width.end();
+
+                ui.table_next_column();
+                if ui.button(&format!("{}", fa::ICON_TRASH)) {
+                    delindex = Some(i);
+                    changed |= true;
+                }
+                tooltip("Remove overlay", ui);
+            }
+
+            if let Some(i) = delindex {
+                self.chr.overlay.remove(i);
+            }
+            if ui.button(&format!("{}", fa::ICON_COPY)) {
+                self.chr.overlay.push(Default::default());
+            }
+            tooltip("Add overlay", ui);
+        }
+
+        if changed {
+            match self.chr.apply() {
+                Ok(_) => {}
+                Err(e) => self.error.show("Load Image", "Error loading image", e),
+            }
+            self.image = self
+                .chr
+                .create_image(self.chr.border as u32, self.chr.layout)?;
+        }
+        self.changed |= changed;
+
         Ok(())
     }
 }

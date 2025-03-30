@@ -1,10 +1,11 @@
 use anyhow::{Context, Result};
+use pathdiff::diff_paths;
 use pyo3::exceptions::PyKeyError;
 use pyo3::prelude::*;
 use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};
-use std::cell::Cell;
-use std::path::Path;
+use std::cell::{Cell, RefCell};
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::error::Error;
@@ -36,6 +37,9 @@ pub struct Project {
     pub config: Config,
     #[serde(skip)]
     pub connectivity: Connectivity,
+    #[serde(skip)]
+    #[pyo3(get, set)]
+    pub project_path: PathBuf,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -49,6 +53,7 @@ struct LoadFile {
 
 thread_local! {
     static FILTER_EDITLIST: Cell<bool> = Cell::new(true);
+    static PROJECT_PATH: RefCell<PathBuf> = RefCell::default();
 }
 
 fn serialize_editlist<S>(edits: &EditList, serializer: S) -> Result<S::Ok, S::Error>
@@ -107,6 +112,14 @@ impl Project {
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
+        let project_path =
+            path.canonicalize()?
+                .parent()
+                .map(|p| p.to_owned())
+                .ok_or(Error::NotFound(format!(
+                    "Cannot find parent path of {path:?}"
+                )))?;
+        log::info!("Project path is {project_path:?}");
         let data =
             std::fs::read_to_string(path).with_context(|| format!("Could not read {path:?}"))?;
         let data = serde_annotate::from_str::<LoadFile>(&data)
@@ -121,6 +134,7 @@ impl Project {
             rom,
             config: Config::default(),
             connectivity: Connectivity::default(),
+            project_path,
         };
         project.setup()
     }
@@ -138,6 +152,7 @@ impl Project {
     fn pack(&self) -> Result<NesFile> {
         Python::with_gil(|py| {
             let rom = Py::new(py, self.rom.borrow(py).clone())?;
+            PROJECT_PATH.replace(self.project_path.clone());
             self.config.pack(rom.bind(py), "", &self.edits)?;
             Ok(rom.extract(py)?)
         })
@@ -282,6 +297,7 @@ impl Project {
             rom: Py::new(py, NesFile::default())?,
             config: Config::default(),
             connectivity: Connectivity::default(),
+            project_path: PathBuf::default(),
         };
         project.setup()
     }
@@ -290,6 +306,11 @@ impl Project {
     #[pyo3(name = "load")]
     fn _load(path: &str) -> Result<Self> {
         Self::load(path)
+    }
+
+    #[staticmethod]
+    pub fn path() -> PathBuf {
+        PROJECT_PATH.with_borrow(|path| path.clone())
     }
 
     #[pyo3(

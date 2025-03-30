@@ -64,7 +64,6 @@ impl Connectivity {
         for (cid, conn) in ov.connection.iter() {
             let hidden = conn.hidden.unwrap_or(false);
             if (conn.y >= 128 && !hidden) || (conn.external && conn.dest_world == 0) {
-                log::info!("{overworld}: skipping {cid}: {conn:?}");
                 continue;
             }
 
