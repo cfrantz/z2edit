@@ -88,8 +88,8 @@ impl ChrBankEditor {
                 .chr
                 .create_image(self.chr.border as u32, self.chr.layout)?;
         }
-        ui.same_line();
         width.end();
+        ui.same_line();
 
         let width = ui.push_item_width(200.0);
         let mut layout = self.chr.layout as usize;
@@ -103,6 +103,24 @@ impl ChrBankEditor {
                 .create_image(self.chr.border as u32, self.chr.layout)?;
         }
         width.end();
+        ui.same_line();
+
+        if ui.button("Export Image") {
+            if let Some(bmp) = FileDialog::new()
+                .set_title("Save image")
+                .add_filter("BMP", &["bmp"])
+                .add_filter("All", &["*"])
+                .save_file()
+            {
+                match self.image.save_bmp(&bmp) {
+                    Ok(_) => {}
+                    Err(e) => self
+                        .error
+                        .show("Save Error", &format!("Error saving {bmp:?}"), e),
+                }
+            }
+        }
+
         self.image.draw(self.scale as f32, ui);
 
         let mut changed = false;

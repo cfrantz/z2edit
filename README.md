@@ -33,9 +33,8 @@ Z2Edit saves its edit list as a plain-text JSON file, allowing for:
 
 ## TODOs
 
-- Enhance CHR graphics import/export
-- Complete the sideview editor
-  - Handle duplicate rooms & enemy lists.
+- Better handling of duplicate rooms & enemy lists.
+  - Currently duplicates must be manually managed via the **Metadata** editor.
 - Add "default fixes" which move items out of various bank keepout memory
   regions and expand enemylist areas to their full 1KB allowance.
 - Adjust widget sizing in the GUI
