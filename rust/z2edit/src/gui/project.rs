@@ -215,7 +215,7 @@ impl ProjectGui {
     #[pyo3(signature = (filter = true))]
     fn save(&self, filter: bool) -> Result<()> {
         Python::with_gil(|py| {
-            let project = self.project.borrow(py);
+            let mut project = self.project.borrow_mut(py);
             project.save(&self.filename, filter)
         })
     }

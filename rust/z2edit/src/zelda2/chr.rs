@@ -1,4 +1,5 @@
 use anyhow::{ensure, Result};
+use pathdiff::diff_paths;
 use pyo3::prelude::*;
 use python_gui::{Color, Image};
 use serde::{Deserialize, Serialize};
@@ -89,6 +90,15 @@ impl GameData for ChrBank {
     }
     fn from_json(&mut self, json: &str) -> Result<()> {
         *self = serde_json::from_str(json)?;
+        Ok(())
+    }
+    fn fixup_paths(&mut self, project_path: &Path) -> Result<()> {
+        for overlay in self.overlay.iter_mut() {
+            if let Some(path) = diff_paths(&*overlay, project_path) {
+                *overlay = path.to_string_lossy().into();
+            }
+            *overlay = overlay.replace('\\', "/");
+        }
         Ok(())
     }
 }

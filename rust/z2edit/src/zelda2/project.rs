@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use pathdiff::diff_paths;
 use pyo3::exceptions::PyKeyError;
 use pyo3::prelude::*;
 use serde::ser::{SerializeMap, Serializer};
@@ -120,6 +119,7 @@ impl Project {
                     "Cannot find parent path of {path:?}"
                 )))?;
         log::info!("Project path is {project_path:?}");
+
         let data =
             std::fs::read_to_string(path).with_context(|| format!("Could not read {path:?}"))?;
         let data = serde_annotate::from_str::<LoadFile>(&data)
@@ -139,8 +139,21 @@ impl Project {
         project.setup()
     }
 
-    pub fn save<P: AsRef<Path>>(&self, path: P, filter: bool) -> Result<()> {
+    pub fn save<P: AsRef<Path>>(&mut self, path: P, filter: bool) -> Result<()> {
         let path = path.as_ref();
+        let project_path =
+            path.canonicalize()?
+                .parent()
+                .map(|p| p.to_owned())
+                .ok_or(Error::NotFound(format!(
+                    "Cannot find parent path of {path:?}"
+                )))?;
+        log::info!("Project path is {project_path:?}");
+        for edit in self.edits.values_mut() {
+            edit.fixup_paths(&project_path)?;
+        }
+        self.project_path = project_path;
+
         FILTER_EDITLIST.set(filter);
         let doc = serde_annotate::serialize(self);
         FILTER_EDITLIST.set(true);
@@ -317,7 +330,7 @@ impl Project {
         name = "save",
         signature = (path, filter=true)
     )]
-    fn _save(&self, path: &str, filter: bool) -> Result<()> {
+    fn _save(&mut self, path: &str, filter: bool) -> Result<()> {
         self.save(path, filter)
     }
 

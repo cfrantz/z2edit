@@ -48,6 +48,11 @@ impl GfxCache {
         cache.get_mut(&project.name).unwrap()
     }
 
+    pub fn clear(project: &Project) {
+        let cache = Self::project(project);
+        cache.cache.clear();
+    }
+
     fn _render_tile(
         image: &mut Image,
         chrdata: &[u8],

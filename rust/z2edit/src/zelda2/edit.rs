@@ -3,6 +3,7 @@ use indexmap::IndexMap;
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::path::Path;
 
 use crate::error::Error;
 use crate::gui::Gui;
@@ -31,6 +32,10 @@ pub trait GameData: std::fmt::Debug + Send + Sync + 'static {
     }
     fn to_json(&self) -> Result<String>;
     fn from_json(&mut self, json: &str) -> Result<()>;
+    fn fixup_paths(&mut self, _project_path: &Path) -> Result<()> {
+        // Most objects don't need path fixup.
+        Ok(())
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -56,6 +61,10 @@ impl Edit {
             meta: Metadata::default(),
             data,
         }
+    }
+
+    pub fn fixup_paths(&mut self, project_path: &Path) -> Result<()> {
+        self.data.fixup_paths(project_path)
     }
 
     pub fn data_ref<T>(&self) -> Result<&T>

@@ -7,6 +7,7 @@ use rfd::FileDialog;
 
 use crate::gui::util::tooltip;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
+use crate::util::tile_cache::GfxCache;
 use crate::zelda2::chr::{config, ChrBank, Layout};
 use crate::zelda2::project::Project;
 
@@ -53,8 +54,25 @@ impl ChrBankEditor {
         }))
     }
 
-    fn editor(&mut self, ui: &imgui::Ui, _project: &mut Project) -> Result<()> {
-        //let cfg = project.config.get::<config::PaletteGroup>(&self.path)?;
+    fn commit(&self, project: &mut Project) -> Result<()> {
+        project.commit(&self.path, Box::new(self.chr.clone()))?;
+        GfxCache::clear(project);
+        Ok(())
+    }
+
+    fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
+        if ui.button("Commit") {
+            match self.commit(project) {
+                Ok(()) => self.changed = false,
+                Err(e) => self.error.show(
+                    "Commit Error",
+                    &format!("Error comitting {:?}", self.path),
+                    e,
+                ),
+            }
+        }
+        ui.same_line();
+        ui.text(&self.path);
         let width = ui.push_item_width(100.0);
         if ui.input_scalar("Scale", &mut self.scale).step(1).build() {
             self.scale = self.scale.clamp(1, 8);
