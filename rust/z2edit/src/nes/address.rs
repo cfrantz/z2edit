@@ -1,6 +1,9 @@
 use super::NesError;
 use anyhow::{ensure, Result};
+use pyo3::class::basic::CompareOp;
+use pyo3::exceptions::{PyException, PyKeyError, PyNotImplementedError};
 use pyo3::prelude::*;
+use pyo3::types::{PyDict, PyList};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
@@ -23,6 +26,48 @@ impl Default for Address {
 
 #[pymethods]
 impl Address {
+    #[new]
+    fn new(value: &Bound<'_, PyAny>) -> PyResult<Self> {
+        if let Ok(init) = value.extract::<Address>() {
+            return Ok(init.clone());
+        } else if let Ok(init) = value.downcast::<PyDict>() {
+            let keys = init.keys();
+            if keys.len() != 1 {
+                return Err(PyException::new_err("expected exactly one key in dict"));
+            }
+            let key = keys.get_item(0)?.extract::<String>()?;
+            let keylower = key.to_lowercase();
+            let val = init.values().get_item(0)?;
+            let val = val.downcast::<PyList>()?;
+            match keylower.as_str() {
+                "prg" => Ok(Address::Prg(
+                    val.get_item(0)?.extract::<i16>()?,
+                    val.get_item(1)?.extract::<u16>()?,
+                )),
+                "prg8k" => Ok(Address::Prg8k(
+                    val.get_item(0)?.extract::<i16>()?,
+                    val.get_item(1)?.extract::<u16>()?,
+                )),
+                "chr" => Ok(Address::Chr(
+                    val.get_item(0)?.extract::<i16>()?,
+                    val.get_item(1)?.extract::<u16>()?,
+                )),
+                "chr1k" => Ok(Address::Chr1k(
+                    val.get_item(0)?.extract::<i16>()?,
+                    val.get_item(1)?.extract::<u16>()?,
+                )),
+                "file" => Ok(Address::File(val.get_item(0)?.extract::<usize>()?)),
+                "cpu" => Ok(Address::Cpu(val.get_item(0)?.extract::<u16>()?)),
+                "null" | "nullptr" => Ok(Address::NullPtr()),
+                _ => Err(PyNotImplementedError::new_err(format!(
+                    "Cannot create Address from {key:?}"
+                ))),
+            }
+        } else {
+            Err(PyException::new_err("Unknown type"))
+        }
+    }
+
     pub fn offset(&self) -> usize {
         match self {
             Address::File(x) => *x,
@@ -114,7 +159,7 @@ impl Address {
     }
 
     fn __repr__(&self) -> String {
-        format!("{self:?}")
+        format!("{self:x?}")
     }
 
     fn __add__(&self, rhs: isize) -> Self {
@@ -122,6 +167,31 @@ impl Address {
     }
     fn __sub__(&self, rhs: isize) -> Self {
         *self - rhs
+    }
+
+    fn __hash__(&self) -> usize {
+        match self {
+            Address::File(x) => 0x1000_0000_0000_0000 | (*x as usize),
+            Address::Prg(b, x) => 0x2000_0000_0000_0000 | (*b as usize) << 48 | (*x as usize),
+            Address::Chr(b, x) => 0x3000_0000_0000_0000 | (*b as usize) << 48 | (*x as usize),
+            Address::Prg8k(b, x) => 0x4000_0000_0000_0000 | (*b as usize) << 48 | (*x as usize),
+            Address::Chr1k(b, x) => 0x5000_0000_0000_0000 | (*b as usize) << 48 | (*x as usize),
+            Address::Cpu(x) => *x as usize,
+            Address::NullPtr() => 0,
+        }
+    }
+
+    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<bool> {
+        let other = other
+            .extract::<Address>()
+            .unwrap_or(Address::File(usize::MAX));
+        match op {
+            CompareOp::Eq => Ok(*self == other),
+            CompareOp::Ne => Ok(*self != other),
+            _ => Err(PyNotImplementedError::new_err(format!(
+                "CompareOp::{op:?} not implemented for Address"
+            ))),
+        }
     }
 }
 
@@ -166,12 +236,39 @@ macro_rules! address_math {
 address_math!(u8, u16, u32, u64, usize, i8, i16, i32, i64, isize);
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
+#[pyclass]
+#[pyo3(get_all, set_all)]
 pub struct AddressRange {
     pub address: Address,
     pub length: u16,
 }
 
+#[pymethods]
 impl AddressRange {
+    #[new]
+    fn new(value: &Bound<'_, PyAny>) -> PyResult<Self> {
+        if let Ok(init) = value.extract::<AddressRange>() {
+            return Ok(init.clone());
+        } else if let Ok(init) = value.downcast::<PyDict>() {
+            let keys = init.keys();
+            if keys.len() != 2 {
+                return Err(PyException::new_err("expected exactly two keys in dict"));
+            }
+            let address = init
+                .get_item("address")?
+                .ok_or_else(|| PyKeyError::new_err("missing key `address`"))?;
+            let length = init
+                .get_item("length")?
+                .ok_or_else(|| PyKeyError::new_err("missing key `address`"))?
+                .extract::<u16>()?;
+            Ok(AddressRange {
+                address: Address::new(&address)?,
+                length,
+            })
+        } else {
+            Err(PyException::new_err("Unknown type"))
+        }
+    }
     fn same_bank(&self, address: Address) -> bool {
         if std::mem::discriminant(&self.address) != std::mem::discriminant(&address) {
             return false;
@@ -191,6 +288,16 @@ impl AddressRange {
         let other_start = other.address.offset();
         let other_end = other_start + other.length as usize;
         start <= other_start && other_end <= end
+    }
+
+    pub fn contains_addr(&self, other: Address) -> bool {
+        if !self.same_bank(other) {
+            return false;
+        }
+        let start = self.address.offset();
+        let end = start + self.length as usize;
+        let addr = other.offset();
+        start <= addr && addr < end
     }
 
     pub fn adjacent(&self, other: &AddressRange) -> bool {
@@ -234,5 +341,13 @@ impl AddressRange {
         } else {
             false
         }
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "AddressRange({:x?} to {:x?})",
+            self.address,
+            self.address + self.length
+        )
     }
 }

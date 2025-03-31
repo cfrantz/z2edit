@@ -35,8 +35,6 @@ Z2Edit saves its edit list as a plain-text JSON file, allowing for:
 
 - Better handling of duplicate rooms & enemy lists.
   - Currently duplicates must be manually managed via the **Metadata** editor.
-- Add "default fixes" which move items out of various bank keepout memory
-  regions and expand enemylist areas to their full 1KB allowance.
 - Adjust widget sizing in the GUI
 - Add a help system to the editor
 - Write help documentation

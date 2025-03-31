@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use pyo3::exceptions::PyKeyError;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};
 use std::cell::{Cell, RefCell};
@@ -69,7 +70,14 @@ where
 }
 
 impl Project {
-    fn apply_fixes(&mut self) -> Result<()> {
+    fn apply_fixes<'p>(py: Python<'p>, slf: &Py<Self>) -> Result<()> {
+        let locals = PyDict::new(py);
+        locals.set_item("project", slf)?;
+        py.run(
+            c"import z2edit.fix\nz2edit.fix.fix_all(project)\n",
+            None,
+            Some(&locals),
+        )?;
         Ok(())
     }
 
@@ -79,37 +87,44 @@ impl Project {
         Ok(edits)
     }
 
-    fn setup(mut self) -> Result<Self> {
-        let config = Config::named(&self.configuration).ok_or(Error::NotFound(format!(
-            "configuration {:?}",
-            self.configuration
-        )))?;
+    fn setup<'p>(py: Python<'p>, slf: Py<Self>) -> Result<Py<Self>> {
+        {
+            let mut this = slf.borrow_mut(py);
+            let config = Config::named(&this.configuration).ok_or(Error::NotFound(format!(
+                "configuration {:?}",
+                this.configuration
+            )))?;
 
-        self.config = config;
-        let mut rom = match self.start {
-            FileResource::Vanilla() => NesFile::load(&AppPreferences::get().vanilla_rom)?,
-            FileResource::File(ref f) => NesFile::load(f)?,
-        };
-        rom.register(&self.config.global.freespace)?;
-        for bank in self.config.bank.values() {
-            rom.register(&bank.freespace)?;
+            this.config = config;
+            let mut rom = match this.start {
+                FileResource::Vanilla() => NesFile::load(&AppPreferences::get().vanilla_rom)?,
+                FileResource::File(ref f) => NesFile::load(f)?,
+            };
+            rom.register(&this.config.global.freespace)?;
+            for bank in this.config.bank.values() {
+                rom.register(&bank.freespace)?;
+            }
+            log::info!("{}", rom.report());
+            this.rom = Python::with_gil(|py| Py::new(py, rom))?;
         }
-        log::info!("{}", rom.report());
-        self.rom = Python::with_gil(|py| Py::new(py, rom))?;
-        self.apply_fixes()?;
-        let mut edits = self.unpack()?;
-        // Place any edits in the project over the top of what was unpacked
-        // from the ROM.
-        for (name, edit) in self.edits {
-            edits.insert(name, edit);
+        Self::apply_fixes(py, &slf)?;
+        {
+            let mut this = slf.borrow_mut(py);
+            let edits = this.unpack()?;
+            // Insert into the edit list any item unpacked from the ROM that
+            // doesn't already exist in the edit list.
+            for (name, edit) in edits {
+                if !this.edits.contains_key(&name) {
+                    this.edits.insert(name, edit);
+                }
+            }
+            this.connectivity.scan(&this)?;
+            this.connectivity.report();
         }
-        self.edits = edits;
-        self.connectivity.scan(&self)?;
-        self.connectivity.report();
-        Ok(self)
+        Ok(slf)
     }
 
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn load<'p, P: AsRef<Path>>(py: Python<'p>, path: P) -> Result<Py<Self>> {
         let path = path.as_ref();
         let project_path =
             path.canonicalize()?
@@ -124,19 +139,22 @@ impl Project {
             std::fs::read_to_string(path).with_context(|| format!("Could not read {path:?}"))?;
         let data = serde_annotate::from_str::<LoadFile>(&data)
             .with_context(|| format!("Could not parse {path:?}"))?;
-        let rom = Python::with_gil(|py| Py::new(py, NesFile::default()))?;
-        let project = Project {
-            name: data.name,
-            start: data.start,
-            configuration: data.configuration,
-            fixups: data.fixups,
-            edits: data.edits,
-            rom,
-            config: Config::default(),
-            connectivity: Connectivity::default(),
-            project_path,
-        };
-        project.setup()
+        let rom = Py::new(py, NesFile::default())?;
+        let project = Py::new(
+            py,
+            Project {
+                name: data.name,
+                start: data.start,
+                configuration: data.configuration,
+                fixups: data.fixups,
+                edits: data.edits,
+                rom,
+                config: Config::default(),
+                connectivity: Connectivity::default(),
+                project_path,
+            },
+        )?;
+        Self::setup(py, project)
     }
 
     pub fn save<P: AsRef<Path>>(&mut self, path: P, filter: bool) -> Result<()> {
@@ -300,25 +318,28 @@ impl Project {
         start: FileResource,
         configuration: &str,
         fixups: bool,
-    ) -> Result<Self> {
-        let project = Project {
-            name: name.into(),
-            start,
-            configuration: configuration.into(),
-            fixups,
-            edits: EditList::default(),
-            rom: Py::new(py, NesFile::default())?,
-            config: Config::default(),
-            connectivity: Connectivity::default(),
-            project_path: PathBuf::default(),
-        };
-        project.setup()
+    ) -> Result<Py<Self>> {
+        let project = Py::new(
+            py,
+            Project {
+                name: name.into(),
+                start,
+                configuration: configuration.into(),
+                fixups,
+                edits: EditList::default(),
+                rom: Py::new(py, NesFile::default())?,
+                config: Config::default(),
+                connectivity: Connectivity::default(),
+                project_path: PathBuf::default(),
+            },
+        )?;
+        Self::setup(py, project)
     }
 
     #[staticmethod]
     #[pyo3(name = "load")]
-    fn _load(path: &str) -> Result<Self> {
-        Self::load(path)
+    fn _load<'p>(py: Python<'p>, path: &str) -> Result<Py<Self>> {
+        Self::load(py, path)
     }
 
     #[staticmethod]
