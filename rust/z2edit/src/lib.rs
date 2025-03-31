@@ -11,11 +11,17 @@ pub mod zelda2;
 pub use app_preferences::AppPreferences;
 pub use dirs::Directories;
 
+#[pyfunction]
+fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 fn _z2edit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     pyo3_log::init();
     python_gui::as_submodule_of(m)?;
+    m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_class::<Directories>()?;
     m.add_class::<app_preferences::AppPreferencesProxy>()?;
     m.add_class::<app_preferences::MultiMapColor>()?;

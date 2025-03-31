@@ -170,7 +170,7 @@ impl config::SideviewAreas {
             let sv = match Sideview::from_rom(&*rom, group, self, index, enc) {
                 Ok(sv) => sv,
                 Err(e) => {
-                    log::error!("Error reading {path}/{index} from ROM: {e}");
+                    log::warn!("Reading {path}/{index} from ROM: {e}");
                     Sideview::default()
                 }
             };
