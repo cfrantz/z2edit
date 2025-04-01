@@ -30,17 +30,21 @@
         palette: {
             overworld: {
                 name: "Overworld",
-                background: { name: "Background", address: {Prg: [-1, 0xc45b]}},
-                sprites: { name: "Sprites", address: {Prg: [-1, 0xc46b]}},
-            }
+                group: {
+                    background: { name: "Background", address: {Prg: [-1, 0xc45b]}},
+                    sprites: { name: "Sprites", address: {Prg: [-1, 0xc46b]}},
+                },
+            },
             special: {
                 name: "Special Palettes",
-                shield: { name: "Shield Spell", address: {Prg: [0, 0x8e8e]}, length: 1},
-                darklink: { name: "Dark Link Fight", address: {Prg: [-1, 0xc47f]}},
-                post_darklink: {
-                    name: "Post DL Fight",
-                    address: {Prg: [-1, 0xc493]},
-                    magic_background: {Prg: [5, 0x981c]},
+                group: {
+                    shield: { name: "Shield Spell", address: {Prg: [0, 0x8e8e]}, length: 1},
+                    darklink: { name: "Dark Link Fight", address: {Prg: [-1, 0xc47f]}},
+                    post_darklink: {
+                        name: "Post DL Fight",
+                        address: {Prg: [-1, 0xc493]},
+                        magic_background: {Prg: [5, 0x981c]},
+                    },
                 },
             },
         },

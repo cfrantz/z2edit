@@ -60,10 +60,8 @@ class KeepoutFixup(object):
 
     def check_bank(self, bank):
         path = f'bank/{bank}/sideview'
-        groups = self.config.get(path)
-        for (name, group) in groups.items():
-            if not (name.isdigit() or name=='background'):
-                continue
+        sideview = self.config.get(path)
+        for (name, group) in sideview.group.items():
             grpaddr = Address(group.address)
             for i in range(0, group.length):
                 mapaddr = self.rom.read_pointer(grpaddr + i*2)
@@ -76,7 +74,7 @@ class KeepoutFixup(object):
                         self.moved[mapaddr] = newaddr
                         logging.info(f'... moved to {newaddr}')
                     self.rom.write_pointer(grpaddr + i*2, self.moved[mapaddr])
-        groups.enemy_length = 1024 if bank !=5 else 432
+        sideview.enemy_length = 1024 if bank != 5 else 432
 
     def check(self):
         self.bank3_code_move()

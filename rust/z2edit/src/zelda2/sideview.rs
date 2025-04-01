@@ -147,7 +147,6 @@ pub mod config {
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     #[serde(default)]
     pub struct SideviewGroup {
-        #[serde(flatten)]
         pub group: IndexMap<String, SideviewAreas>,
         pub enemy_ram_offset: usize,
         pub enemy_rom_offset: Address,

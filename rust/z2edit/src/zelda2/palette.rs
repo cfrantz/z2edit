@@ -54,7 +54,6 @@ pub mod config {
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     pub struct PaletteGroup {
         pub name: String,
-        #[serde(flatten)]
         pub group: IndexMap<String, Palette>,
     }
 }
