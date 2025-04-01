@@ -3,8 +3,7 @@
 use std::path::Path;
 
 fn main() {
-    let pythoninc =
-        std::env::var("PYTHON_HEADERS").unwrap_or("/usr/include/python3.13".to_string());
+    let python3 = pkg_config::probe_library("python3").expect("You need python3");
 
     let cimgui_include_path =
         std::env::var_os("DEP_IMGUI_THIRD_PARTY").expect("DEP_IMGUI_THIRD_PARTY not defined");
@@ -16,7 +15,7 @@ fn main() {
         .include(&cimgui_include_path)
         .include(&imgui_include_path)
         .include("../pybind11/include")
-        .include(pythoninc)
+        .includes(python3.include_paths)
         .compile("gui");
 
     println!("cargo::rustc-link-lib=static=gui");
