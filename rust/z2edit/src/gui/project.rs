@@ -78,7 +78,7 @@ impl ProjectGui {
 
     fn edit_tree<'p>(&self, py: Python<'p>, ui: &imgui::Ui) {
         let project = self.project.borrow(py);
-        match project.config.tree_node(ui, "") {
+        match project.config.tree_node(ui, "", &*project) {
             TreeAction::None => {}
             TreeAction::Edit(node) => self.edit(&node),
             TreeAction::Metadata(node) => self.edit_metadata(&node),

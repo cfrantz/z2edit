@@ -2,6 +2,7 @@ use anyhow::Result;
 use indexmap::{IndexMap, IndexSet};
 use python_gui::fa;
 
+use crate::gui::util::edit_tree_node;
 use crate::gui::util::{tooltip, DragHelper, EditAction};
 use crate::gui::widgets::Combo;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
@@ -29,7 +30,7 @@ fn weight(name: &str, weight: f32) -> TableColumnSetup<&str> {
 }
 
 impl GuiTree for config::SideviewAreas {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+    fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {
         let mut result = TreeAction::None;
         let name = &self.name;
         ui.tree_node_config(format!("{name}##{path}")).build(|| {
@@ -40,9 +41,7 @@ impl GuiTree for config::SideviewAreas {
                     index
                 };
                 let path = format!("{path}/{i}");
-                ui.tree_node_config(format!("Area {i}##{path}"))
-                    .leaf(true)
-                    .build(|| {});
+                edit_tree_node(ui, &format!("Area {i}"), &path, project);
                 if let Some(_token) = ui.begin_popup_context_item() {
                     result.menu(ui, &path);
                 }

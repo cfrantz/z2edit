@@ -40,7 +40,7 @@ impl TreeAction {
 }
 
 pub trait GuiTree: Send + Sync + 'static {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction;
+    fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction;
 }
 
 pub trait Gui: Send + Sync + 'static {

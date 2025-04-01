@@ -1,3 +1,4 @@
+use crate::gui::util::edit_tree_node;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::zelda2::project::Project;
 use crate::zelda2::start::{config, StartValues};
@@ -6,11 +7,9 @@ use anyhow::Result;
 use imgui::TableFlags;
 
 impl GuiTree for config::StartValues {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+    fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {
         let mut result = TreeAction::None;
-        ui.tree_node_config(format!("Start Values##{path}"))
-            .leaf(true)
-            .build(|| {});
+        edit_tree_node(ui, "Start Values", path, project);
         if let Some(_token) = ui.begin_popup_context_item() {
             result.menu(ui, &path);
         }

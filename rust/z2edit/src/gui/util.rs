@@ -1,4 +1,7 @@
-use imgui::Key;
+use imgui::{Key, StyleColor};
+
+use crate::app_preferences::AppPreferences;
+use crate::zelda2::project::Project;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EditAction {
@@ -235,4 +238,21 @@ pub fn draw_arrow(
         .filled(true)
         .build();
     draw_list.add_line(a, b, color).thickness(width).build();
+}
+
+pub fn edit_tree_node(ui: &imgui::Ui, name: &str, path: &str, project: &Project) {
+    let _color = if let Some(edit) = project.edits.get(path) {
+        if edit.meta.timestamp == 0 {
+            ui.push_style_color(StyleColor::Text, ui.style_color(StyleColor::Text))
+        } else {
+            let pref = AppPreferences::get();
+            ui.push_style_color(StyleColor::Text, pref.item_edited)
+        }
+    } else {
+        ui.push_style_color(StyleColor::Text, ui.style_color(StyleColor::Text))
+    };
+
+    ui.tree_node_config(format!("{name}##{path}"))
+        .leaf(true)
+        .build(|| {});
 }

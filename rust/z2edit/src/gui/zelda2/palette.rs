@@ -1,3 +1,4 @@
+use crate::gui::util::edit_tree_node;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::nes::hwpalette;
 use crate::zelda2::palette::{config, PaletteGroup};
@@ -7,12 +8,9 @@ use anyhow::Result;
 use imgui::{TableColumnSetup, TableFlags};
 
 impl GuiTree for config::PaletteGroup {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+    fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {
         let mut result = TreeAction::None;
-        let name = &self.name;
-        ui.tree_node_config(format!("{name}##{path}"))
-            .leaf(true)
-            .build(|| {});
+        edit_tree_node(ui, &self.name, path, project);
         if let Some(_token) = ui.begin_popup_context_item() {
             result.menu(ui, &path);
         }

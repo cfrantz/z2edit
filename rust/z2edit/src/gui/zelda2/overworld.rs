@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::error::Error;
+use crate::gui::util::edit_tree_node;
 use crate::gui::util::{text_outlined, DragHelper, KeyAction, SelectBox};
 use crate::gui::zelda2::multimap::MultiMapGui;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
@@ -13,11 +14,9 @@ use crate::zelda2::project::Project;
 use imgui::{MouseButton, StyleVar};
 
 impl GuiTree for config::Overworld {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+    fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {
         let mut result = TreeAction::None;
-        ui.tree_node_config(format!("{}##{path}", self.name))
-            .leaf(true)
-            .build(|| {});
+        edit_tree_node(ui, &self.name, path, project);
         if let Some(_token) = ui.begin_popup_context_item() {
             result.menu(ui, &path);
         }

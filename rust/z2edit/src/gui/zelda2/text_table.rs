@@ -1,17 +1,16 @@
 use anyhow::Result;
 use imgui::{TableColumnSetup, TableFlags};
 
+use crate::gui::util::edit_tree_node;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::zelda2::project::Project;
 use crate::zelda2::text_encoding::Text;
 use crate::zelda2::text_table::{config, TextTable};
 
 impl GuiTree for config::TextTable {
-    fn tree_node(&self, ui: &imgui::Ui, path: &str) -> TreeAction {
+    fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {
         let mut result = TreeAction::None;
-        ui.tree_node_config(format!("{}##{path}", self.name))
-            .leaf(true)
-            .build(|| {});
+        edit_tree_node(ui, &self.name, path, project);
         if let Some(_token) = ui.begin_popup_context_item() {
             result.menu(ui, &path);
         }

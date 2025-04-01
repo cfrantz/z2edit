@@ -45,6 +45,7 @@ pub struct AppPreferences {
     pub emulator: String,
     pub flips_patcher: String,
     pub background: [f32; 3],
+    pub item_edited: [f32; 4],
     pub multimap: IndexMap<MultiMapColor, [f32; 4]>,
     pub imgui_style: JsonStyle,
 }
@@ -56,6 +57,7 @@ impl Default for AppPreferences {
             emulator: "fceux".into(),
             flips_patcher: String::default(),
             background: [0.0625, 0.0625, 0.0625],
+            item_edited: [0.0, 0.9, 0.0, 1.0],
             multimap: IndexMap::from([
                 (MultiMapColor::Invalid, [0.4, 0.4, 0.4, 0.5]),
                 (MultiMapColor::Screen1, [0.8, 0.9, 0.0, 0.9]),
