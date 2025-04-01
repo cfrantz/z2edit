@@ -127,6 +127,11 @@ impl Config {
         Ok(())
     }
 
+    pub fn post_unpack_fixup(&self, path: &str, edits: &mut EditList) -> Result<()> {
+        self.chr.post_unpack_fixup(&format!("{path}/chr"), edits)?;
+        Ok(())
+    }
+
     pub fn get<T: Any>(&self, path: &str) -> Result<&T> {
         let path = path
             .trim_start_matches('/')

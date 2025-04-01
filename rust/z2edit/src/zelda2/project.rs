@@ -110,14 +110,19 @@ impl Project {
         Self::apply_fixes(py, &slf)?;
         {
             let mut this = slf.borrow_mut(py);
-            let edits = this.unpack()?;
-            // Insert into the edit list any item unpacked from the ROM that
-            // doesn't already exist in the edit list.
-            for (name, edit) in edits {
-                if !this.edits.contains_key(&name) {
-                    this.edits.insert(name, edit);
-                }
+
+            // Unpack the entire game's data structures from the ROM.
+            let mut romdata = this.unpack()?;
+
+            // Overlay our edits over the top of the base ROM data.
+            for (name, edit) in std::mem::take(&mut this.edits) {
+                romdata.insert(name, edit);
             }
+
+            // Perorm any fixups and then attach the fixed editlist back to the project.
+            this.config.post_unpack_fixup("", &mut romdata)?;
+            this.edits = romdata;
+
             this.connectivity.scan(&this)?;
             this.connectivity.report();
         }

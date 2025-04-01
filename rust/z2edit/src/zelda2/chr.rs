@@ -181,6 +181,34 @@ impl config::ChrMemory {
         Ok(())
     }
 
+    pub fn post_unpack_fixup(&self, path: &str, edits: &mut EditList) -> Result<()> {
+        // ChrBank objects are special: they share their CHR data with a single
+        // ChrMemory object and they don't save the CHR data into the save file.
+        // Upon reloading, we have to re-establish the shared data structure with the
+        // original ChrMemory object.
+        if let Some(edit) = edits.get(path) {
+            let (orig, data) = {
+                let chrmem = edit.data_ref::<ChrMemory>()?;
+                (Arc::clone(&chrmem.orig), Arc::clone(&chrmem.data))
+            };
+            for bank in 0..self.banks {
+                if let Some(edit) = edits.get_mut(&format!("{path}/{bank}")) {
+                    let chrbank = edit.data_mut::<ChrBank>()?;
+                    let empty = chrbank.orig.lock().unwrap().is_empty()
+                        || chrbank.data.lock().unwrap().is_empty();
+                    if empty {
+                        chrbank.orig = Arc::clone(&orig);
+                        chrbank.data = Arc::clone(&data);
+                    }
+                    chrbank.apply()?;
+                }
+            }
+        } else {
+            log::warn!("No data for {path:?}");
+        }
+        Ok(())
+    }
+
     pub fn get<T: Any>(&self, path: &[&str]) -> Result<&T> {
         match path {
             [] => get_config::<T>(self),
