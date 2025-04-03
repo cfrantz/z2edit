@@ -18,6 +18,6 @@ fn main() {
         .includes(python3.include_paths)
         .compile("gui");
 
-    println!("cargo::rustc-link-lib=static=gui");
-    println!("cargo::rerun-if-changed=gui.cpp");
+    println!("cargo:rustc-link-lib=static=gui");
+    println!("cargo:rerun-if-changed=gui.cpp");
 }
