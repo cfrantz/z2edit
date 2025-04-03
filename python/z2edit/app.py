@@ -35,6 +35,12 @@ class Application(object):
             self.wizard = z2edit.ProjectWizardGui()
             self.wizard.done = True
 
+        if args.project:
+            if args.project.endswith(".nes"):
+                self.wizard = z2edit.ProjectWizardGui(args.project)
+            else:
+                self.load_project(args.project)
+
         if not Application._instance:
             Application._instance = self
         else:
@@ -59,7 +65,7 @@ class Application(object):
     def load_project(self, filename):
         if filename is None:
             dlg = z2edit.FileDialog()
-            dlg.add_filter("Z2 Project", ["z2prj"])
+            dlg.add_filter("Z2 Project", ["z2e3"])
             dlg.add_filter("All", ["*"])
             filename = dlg.pick_file()
         if filename is not None:
@@ -163,6 +169,13 @@ def main():
         type=str,
         default="preferences.json",
         help="Preferences file (relative to $XDG_CONFIG_HOME/z2edit)",
+    )
+    p.add_argument(
+        "project",
+        metavar="PROJECT",
+        type=str,
+        nargs="?",
+        help="Project file",
     )
 
     args = p.parse_args()

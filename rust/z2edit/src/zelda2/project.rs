@@ -179,13 +179,10 @@ if project.pre_unpack_hook:
 
     pub fn save<P: AsRef<Path>>(&mut self, path: P, filter: bool) -> Result<()> {
         let path = path.as_ref();
-        let project_path =
-            path.canonicalize()?
-                .parent()
-                .map(|p| p.to_owned())
-                .ok_or(Error::NotFound(format!(
-                    "Cannot find parent path of {path:?}"
-                )))?;
+        let project_path = path.parent().ok_or(Error::NotFound(format!(
+            "Cannot find parent path of {path:?}"
+        )))?;
+        let project_path = project_path.canonicalize()?;
         log::info!("Project path is {project_path:?}");
         for edit in self.edits.values_mut() {
             edit.fixup_paths(&project_path)?;

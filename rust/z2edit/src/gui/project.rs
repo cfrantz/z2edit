@@ -200,7 +200,7 @@ impl ProjectGui {
         Python::with_gil(|py| {
             if let Some(filename) = FileDialog::new()
                 .set_title(format!("Save As: {}", self.project.borrow(py).name))
-                .add_filter("Z2 Project", &["z2prj"])
+                .add_filter("Z2 Project", &["z2e3"])
                 .add_filter("All", &["*"])
                 .save_file()
             {

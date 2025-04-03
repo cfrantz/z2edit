@@ -117,10 +117,15 @@ impl ProjectWizardGui {
 #[pymethods]
 impl ProjectWizardGui {
     #[new]
-    pub fn new() -> ProjectWizardGui {
+    #[pyo3(signature = (filename=None))]
+    pub fn new(filename: Option<&str>) -> ProjectWizardGui {
         let now = UTime::now();
         ProjectWizardGui {
             name: format!("Project-{}", UTime::format(now, "%Y%m%d-%H%M")),
+            rom: filename
+                .map(|f| FileResource::File(f.into()))
+                .unwrap_or(FileResource::default()),
+            filename: filename.map(|f| f.into()).unwrap_or(String::default()),
             ..Default::default()
         }
     }
