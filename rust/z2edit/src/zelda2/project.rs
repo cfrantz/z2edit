@@ -27,6 +27,9 @@ pub struct Project {
     pub configuration: String,
     #[pyo3(get, set)]
     pub fixups: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[pyo3(get, set)]
+    pub pre_unpack_hook: Option<String>,
     #[serde(serialize_with = "serialize_editlist")]
     pub edits: EditList,
 
@@ -48,6 +51,7 @@ struct LoadFile {
     start: FileResource,
     configuration: String,
     fixups: bool,
+    pre_unpack_hook: Option<String>,
     edits: EditList,
 }
 
@@ -74,7 +78,17 @@ impl Project {
         let locals = PyDict::new(py);
         locals.set_item("project", slf)?;
         py.run(
-            c"import z2edit.fix\nz2edit.fix.fix_all(project)\n",
+            cr#"import z2edit.fix
+import logging
+logger = logging.getLogger()
+
+z2edit.fix.fix_all(project)
+if project.pre_unpack_hook:
+    import site
+    logger.info(f'Adding sitedir {project.project_path}')
+    site.addsitedir(project.project_path)
+    exec(project.pre_unpack_hook)
+"#,
             None,
             Some(&locals),
         )?;
@@ -152,6 +166,7 @@ impl Project {
                 start: data.start,
                 configuration: data.configuration,
                 fixups: data.fixups,
+                pre_unpack_hook: data.pre_unpack_hook,
                 edits: data.edits,
                 rom,
                 config: Config::default(),
@@ -331,6 +346,7 @@ impl Project {
                 start,
                 configuration: configuration.into(),
                 fixups,
+                pre_unpack_hook: None,
                 edits: EditList::default(),
                 rom: Py::new(py, NesFile::default())?,
                 config: Config::default(),
