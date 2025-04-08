@@ -166,7 +166,7 @@
                         subworld: 0,
                         length: 7,
                         chr: {Chr:[5,0]},
-                        address: {Prg:[1, 0x8000]},
+                        address: {Prg:[2, 0x8000]},
                         availability: {NullPtr:[]},
                         enemylist: {NullPtr:[]},
                         connections: {NullPtr:[]},

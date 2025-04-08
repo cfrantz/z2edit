@@ -24,7 +24,7 @@
             },
             metatile: {
                 background: {
-                    name: "Palces",
+                    name: "Palaces",
                     pointers: 4,
                     address: {Prg: [4, 0x8500]},
                     length: [15, 15, 6, 18]

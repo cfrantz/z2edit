@@ -120,7 +120,6 @@
                         palette: "/bank/3/palette",
                         render_info: "/global/render/towns",
                         is_background_layer: true,
-                        leak: [1],
                     },
                     "0": {
                         name: "Towns",
