@@ -242,6 +242,8 @@ impl MultiMapGui {
                 let width = sideview.map.width as usize;
                 let (ss, se) = if width >= 2 {
                     (0, 3)
+                } else if width == 0 {
+                    (screen, screen)
                 } else if screen & 1 == 0 {
                     (screen, screen + width)
                 } else {
@@ -269,7 +271,13 @@ impl MultiMapGui {
                             .push(Connection::outside());
                     }
 
-                    let c = sideview.door.get(i);
+                    // Get the door connection, but only if a door object actually
+                    // exists for screen `i` in the map.
+                    let c = sideview
+                        .map
+                        .doors(config)
+                        .get(i)
+                        .and_then(|_| sideview.door.get(i));
                     if c.is_some() && i >= ss && i <= se {
                         let c = c.unwrap();
                         self.rooms.get_mut(&n).unwrap().door.push(c.clone());

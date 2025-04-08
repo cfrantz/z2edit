@@ -184,8 +184,10 @@ impl config::Overworld {
                 orig.decompress(self, &*rom)?
             };
             let addr = rom.read_pointer(self.pointer)?;
+            log::debug!("    freeing {length} bytes at {addr:x?}");
             rom.free(addr, length as u16)?;
             let addr = rom.alloc(addr, map.data.len() as u16, Alloc::Best)?;
+            log::debug!("    allocated {} bytes at {addr:x?}", map.data.len());
             rom.write_bytes(addr, &map.data)?;
             rom.write_pointer(self.pointer, addr)?;
 

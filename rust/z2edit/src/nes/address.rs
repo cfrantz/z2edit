@@ -162,6 +162,10 @@ impl Address {
         format!("{self:x?}")
     }
 
+    fn __str__(&self) -> String {
+        format!("0x{:04x}", self.offset())
+    }
+
     fn __add__(&self, rhs: isize) -> Self {
         *self + rhs
     }

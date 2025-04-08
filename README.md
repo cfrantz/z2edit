@@ -35,9 +35,15 @@ Z2Edit saves its edit list as a plain-text JSON file, allowing for:
 
 - Better handling of duplicate rooms & enemy lists.
   - Currently duplicates must be manually managed via the **Metadata** editor.
-- Adjust widget sizing in the GUI
 - Add a help system to the editor
 - Write help documentation
+
+### Known Bugs
+- Adjust widget sizing in the GUI
+- In the multimap viewer, there is sometimes an error in drawing all of the
+  connection arrows.  I believe this happens in towns because towns use
+  several reduced-width rooms and the multimap doesn't re-explore rooms that
+  have already been expored.
 
 ## Project Development Setup
 

@@ -3,6 +3,7 @@
 # NES ROMs
 *.nes
 *.z2prj
+*.z2e3
 /private
 
 # Byte-compiled / optimized / DLL files

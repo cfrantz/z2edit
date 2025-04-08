@@ -56,6 +56,7 @@ class KeepoutFixup(object):
         length = self.rom.read(mapaddr)
         newaddr = self.rom.alloc(mapaddr, length)
         self.copy_and_clear(newaddr, mapaddr, length)
+        logging.info(f'... moved {length} bytes to {newaddr}')
         return newaddr
 
     def check_bank(self, bank):
@@ -72,7 +73,6 @@ class KeepoutFixup(object):
                     else:
                         newaddr = self.move_map(mapaddr)
                         self.moved[mapaddr] = newaddr
-                        logging.info(f'... moved to {newaddr}')
                     self.rom.write_pointer(grpaddr + i*2, self.moved[mapaddr])
         sideview.enemy_length = 1024 if bank != 5 else 432
 

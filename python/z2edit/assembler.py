@@ -525,7 +525,7 @@ class Asm:
             val = val[1:]
         if re.fullmatch(r"-?\$[0-9a-fA-F]+", val):
             return int(val.replace("$", ""), 16)
-        elif re.fullmatch(r"-?[0-9]+", val) or re.fullmatch(r"-?0x[0-9a-fA-F]+", val):
+        elif re.fullmatch(r"-?[0-9]+", val) or re.fullmatch(r"-?0X[0-9a-fA-F]+", val):
             return int(val, 0)
         return None
 

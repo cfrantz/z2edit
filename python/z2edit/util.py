@@ -78,11 +78,17 @@ class ObjectDict(dict):
     def from_json(text):
         return json.loads(text, object_hook=ObjectDict)
 
-    #@staticmethod
-    #def from_address(pyaddr):
-    #    (segment, bank) = pyaddr.bank()
-    #    address = pyaddr.addr()
-    #    return {segment.capitalize(): [bank, address]}
+    @staticmethod
+    def from_address(address):
+        ty = repr(address)
+        rest = []
+        if ty != 'NullPtr':
+            (ty, _) = ty.split('(')
+            bank = address.bank()
+            if bank is not None:
+                rest.append(bank)
+            rest.append(address.offset())
+        return {ty: rest}
 
     def to_json(self):
         return json.dumps(self, indent=4, cls=ConfigEncoder)
@@ -107,44 +113,39 @@ _CHRXDIGITS = [
     [ 7, 4, 4, 7, 4, 4, 4, 0 ],    # F
 ]
 
-#def Tile(bank, char):
-#    return Address.chr(bank, char*16)
-#
-#def chr_clear(edit, tile, with_id=False):
-#    (seg, _) = tile.bank()
-#    if seg != "chr":
-#        raise Exception('tile address not in "chr" segment')
-#
-#    char = tile.addr() >> 4
-#    for y in range(8):
-#        if with_id:
-#            val = _CHRXDIGITS[char>>4][y] << 4 | _CHRXDIGITS[char&0xF][y]
-#        else:
-#            val = 0
-#        edit.write(tile + y, val)
-#        edit.write(tile + y + 8, val)
-#
-#def chr_copy(edit, dst_tile, src_tile):
-#    (seg, _) = dst_tile.bank()
-#    if seg != "chr":
-#        raise Exception('dst_tile address not in "chr" segment')
-#    (seg, _) = src_tile.bank()
-#    if seg != "chr":
-#        raise Exception('src_tile address not in "chr" segment')
-#    edit.write_bytes(dst_tile, edit.read_bytes(src_tile, 16))
-#
-#def chr_swap(edit, a_tile, b_tile):
-#    (seg, _) = a_tile.bank()
-#    if seg != "chr":
-#        raise Exception('a_tile address not in "chr" segment')
-#    (seg, _) = b_tile.bank()
-#    if seg != "chr":
-#        raise Exception('b_tile address not in "chr" segment')
-#    a = edit.read_bytes(a_tile, 16)
-#    b = edit.read_bytes(b_tile, 16)
-#    edit.write_bytes(a_tile, b)
-#    edit.write_bytes(b_tile, a)
-#
+def Tile(bank, char):
+    return Address.Chr(bank, char*16)
+
+def chr_clear(rom, tile, with_id=False):
+    if not isinstance(tile, Address.Chr):
+        raise Exception('tile address not in "chr" segment')
+
+    char = tile.offset() >> 4
+    for y in range(8):
+        if with_id:
+            val = _CHRXDIGITS[char>>4][y] << 4 | _CHRXDIGITS[char&0xF][y]
+        else:
+            val = 0
+        rom.write(tile + y, val)
+        rom.write(tile + y + 8, val)
+
+def chr_copy(rom, dst_tile, src_tile):
+    if not isinstance(dst_tile, Address.Chr):
+        raise Exception('dst_tile address not in "chr" segment')
+    if not isinstance(src_tile, Address.Chr):
+        raise Exception('src_tile address not in "chr" segment')
+    rom.write_bytes(dst_tile, rom.read_bytes(src_tile, 16))
+
+def chr_swap(rom, a_tile, b_tile):
+    if not isinstance(a_tile, Address.Chr):
+        raise Exception('a_tile address not in "chr" segment')
+    if not isinstance(b_tile, Address.Chr):
+        raise Exception('b_tile address not in "chr" segment')
+    a = rom.read_bytes(a_tile, 16)
+    b = rom.read_bytes(b_tile, 16)
+    rom.write_bytes(a_tile, b)
+    rom.write_bytes(b_tile, a)
+
 #def version_tuple(version=z2edit.version):
 #    (ver, *_) = version.split('-')
 #    return tuple(map(int, ver.split('.')))

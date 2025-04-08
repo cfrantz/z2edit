@@ -126,6 +126,7 @@ pub mod config {
         pub connections: Address,
         pub max_connectable_index: usize,
         pub doors: Address,
+        pub door_objects: IndexSet<u8>,
         pub max_door_index: usize,
         pub metatile: String,
         pub palette: String,
@@ -410,6 +411,16 @@ impl Map {
             }
         }
         None
+    }
+
+    pub fn doors(&self, config: &config::SideviewAreas) -> Vec<Option<u8>> {
+        let mut result = vec![None; 4];
+        for item in self.data.iter() {
+            if config.door_objects.contains(&item.kind) {
+                result[(item.x / 16) as usize] = Some(item.x);
+            }
+        }
+        result
     }
 
     fn sort_data(data: &mut Vec<MapCommand>) {
@@ -709,12 +720,17 @@ impl Sideview {
             let leak = meta.extra.get("leak").map(String::as_str) == Some("true");
             if addr.is_valid() && !leak {
                 let length = rom.read(addr)? as usize;
-                let length = length.max(4);
+                //let length = length.max(4);
+                let length = length;
+                log::debug!("Sideview::to_rom freeing old map @ {addr:x?} length={length} bytes");
                 rom.free(addr, length as u16)?;
-                log::debug!("Sideview::to_rom freed old map @ {addr:x?} length={length} bytes");
             }
             let data = self.map.to_bytes();
             let addr = rom.alloc(addr, data.len() as u16, Alloc::Near)?;
+            log::debug!(
+                "Sideview::to_rom writing new map @ {addr:x?} length={} bytes",
+                data.len()
+            );
             rom.write_bytes(addr, &data)?;
             rom.write_pointer(cfg.address + index * 2, addr)?;
             done.insert(index);

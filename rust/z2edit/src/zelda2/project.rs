@@ -153,6 +153,7 @@ if project.pre_unpack_hook:
                     "Cannot find parent path of {path:?}"
                 )))?;
         log::info!("Project path is {project_path:?}");
+        PROJECT_PATH.replace(project_path.clone());
 
         let data =
             std::fs::read_to_string(path).with_context(|| format!("Could not read {path:?}"))?;
