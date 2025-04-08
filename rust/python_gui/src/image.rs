@@ -7,7 +7,7 @@ use sdl2::surface::Surface;
 use send_wrapper::SendWrapper;
 use std::path::Path;
 use std::rc::Rc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::OnceLock;
 use zerocopy::{FromBytes, Immutable, IntoBytes};
 
@@ -84,7 +84,7 @@ static GL_CONTEXT: OnceLock<SendWrapper<Rc<glow::Context>>> = OnceLock::new();
 
 #[pyclass(unsendable)]
 pub struct Image {
-    pub id: glow::Texture,
+    pub id: AtomicU32,
     #[pyo3(get, set)]
     pub width: u32,
     #[pyo3(get, set)]
@@ -174,8 +174,14 @@ impl Image {
         }
     }
 
+    fn gl_texture(&self) -> glow::Texture {
+        let id = self.get_id();
+        glow::NativeTexture(id.try_into().expect("Texture initialized"))
+    }
+
     pub fn imgui_id(&self) -> imgui::TextureId {
-        imgui::TextureId::new(self.id.0.get() as usize)
+        let id = self.get_id();
+        imgui::TextureId::new(id as usize)
     }
 
     pub fn draw(&self, scale: f32, ui: &imgui::Ui) {
@@ -244,25 +250,29 @@ impl Image {
     #[staticmethod]
     pub fn with_color(width: u32, height: u32, color: Color) -> Self {
         let pixels = vec![color; (width * height) as usize];
-        let id = Self::gl_new_image(width, height, pixels.as_bytes());
         Image {
-            id,
+            id: AtomicU32::new(0),
             width,
             height,
             pixels,
-            needs_update: AtomicBool::new(false),
+            needs_update: AtomicBool::new(true),
         }
     }
 
     pub fn update(&self) {
-        Self::gl_update_image(
-            self.id,
-            0,
-            0,
-            self.width,
-            self.height,
-            self.pixels.as_bytes(),
-        );
+        if self.get_id() == 0 {
+            let id = Self::gl_new_image(self.width, self.height, self.pixels.as_bytes());
+            self.id.store(id.0.get(), Ordering::Relaxed);
+        } else {
+            Self::gl_update_image(
+                self.gl_texture(),
+                0,
+                0,
+                self.width,
+                self.height,
+                self.pixels.as_bytes(),
+            );
+        }
     }
 
     pub fn overlay(&mut self, other: &Image, x0: u32, y0: u32) {
@@ -302,7 +312,7 @@ impl Image {
 
     #[getter]
     fn get_id(&self) -> u32 {
-        self.id.0.get()
+        self.id.load(Ordering::Relaxed)
     }
 
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
@@ -315,11 +325,12 @@ impl Image {
         let i = (y * self.width + x) as usize;
         self.pixels[i]
     }
-
 }
 
 impl Drop for Image {
     fn drop(&mut self) {
-        Self::gl_delete_image(self.id);
+        if self.get_id() != 0 {
+            Self::gl_delete_image(self.gl_texture());
+        }
     }
 }
