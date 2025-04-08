@@ -240,7 +240,7 @@
             },
             freespace: {
                 freespace: [
-                    {address: {Prg: [1, 0xA970]}, length: 5616 },
+                    {address: {Prg: [1, 0xA9D0]}, length: 5520 },
                     {address: {Prg: [1, 0xBFE0]}, length: 24 },
                 ],
                 keepout: [
