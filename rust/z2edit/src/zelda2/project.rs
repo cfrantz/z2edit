@@ -198,15 +198,6 @@ if project.pre_unpack_hook:
         Ok(())
     }
 
-    fn pack(&self) -> Result<NesFile> {
-        Python::with_gil(|py| {
-            let rom = Py::new(py, self.rom.borrow(py).clone())?;
-            PROJECT_PATH.replace(self.project_path.clone());
-            self.config.pack(rom.bind(py), "", &self.edits)?;
-            Ok(rom.extract(py)?)
-        })
-    }
-
     pub fn export_rom<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let rom = self
             .pack()
@@ -388,6 +379,15 @@ impl Project {
     fn set_config(&mut self, json: &str) -> Result<()> {
         self.config = serde_annotate::from_str(json)?;
         Ok(())
+    }
+
+    fn pack(&self) -> Result<NesFile> {
+        Python::with_gil(|py| {
+            let rom = Py::new(py, self.rom.borrow(py).clone())?;
+            PROJECT_PATH.replace(self.project_path.clone());
+            self.config.pack(rom.bind(py), "", &self.edits)?;
+            Ok(rom.extract(py)?)
+        })
     }
 
     #[pyo3(signature = (sideview_path=None))]

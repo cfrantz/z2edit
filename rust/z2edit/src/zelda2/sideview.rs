@@ -1,4 +1,5 @@
 use anyhow::{ensure, Result};
+use indexmap::map::Entry;
 use indexmap::{IndexMap, IndexSet};
 use itertools::join;
 use pyo3::prelude::*;
@@ -9,12 +10,12 @@ use crate::error::Error;
 use crate::gui::Gui;
 use crate::nes::{Address, Alloc, NesFile};
 use crate::zelda2::config::get_config;
-use crate::zelda2::edit::{Edit, EditList, GameData, Metadata};
+use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::encounters::Encounters;
 use crate::zelda2::object::{BackgroundTiles, Object, RenderInfo, Renderer};
 use crate::zelda2::project::Project;
 
-#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize, Hash)]
 pub struct MapCommand {
     pub x: u8,
     pub y: u8,
@@ -22,7 +23,7 @@ pub struct MapCommand {
     pub param: u8,
 }
 
-#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize, Hash)]
 pub struct Map {
     pub objset: u8,
     pub width: u8,
@@ -179,6 +180,9 @@ impl config::SideviewAreas {
 
             // check for aliases
             let addr = rom.read_pointer(self.address + index * 2)?;
+            edit.meta
+                .extra
+                .insert("original-address".into(), format!("{addr:x?}"));
             let mut alias = Vec::new();
             for j in 0..self.length {
                 if j != index {
@@ -232,9 +236,10 @@ impl config::SideviewAreas {
         path: &str,
         edits: &EditList,
         packed_enemies: &mut PackedEnemies,
+        free: &mut IndexSet<Address>,
+        done: &mut IndexMap<Map, Address>,
     ) -> Result<()> {
         log::debug!("SideviewAreas::pack {path}");
-        let mut done = IndexSet::new();
         for index in 0..self.length {
             let i = if self.is_background_layer {
                 index + 1
@@ -244,7 +249,29 @@ impl config::SideviewAreas {
             let mut rom = rrom.borrow_mut();
             let path = format!("{path}/{i}");
             log::debug!("SideviewAreas::pack {path}");
+
             if let Some(edit) = edits.get(&path) {
+                // Are we supposed to leak this memory block?
+                let leak = edit
+                    .meta
+                    .extra
+                    .get("leak")
+                    .map(|v| v == "true")
+                    .unwrap_or(false);
+
+                let addr = rom.read_pointer(self.address + index * 2)?;
+                if !free.contains(&addr) && !leak {
+                    // Free memory if not already freed.
+                    if addr.is_valid() {
+                        let len = rom.read(addr)?;
+                        log::debug!("Freeing {len} bytes at {addr:x?} for index {index}");
+                        rom.free(addr, len as u16)?;
+                        free.insert(addr);
+                    } else {
+                        log::debug!("Skipping invalid address {addr:x?} for index {index}");
+                    }
+                }
+
                 let enemy_alias = edit
                     .meta
                     .extra
@@ -258,15 +285,7 @@ impl config::SideviewAreas {
                 packed_enemies.set_duplicates(index, &enemy_alias);
 
                 let sv = edit.data_ref::<Sideview>()?;
-                sv.to_rom(
-                    &mut rom,
-                    group,
-                    self,
-                    index,
-                    packed_enemies,
-                    &edit.meta,
-                    &mut done,
-                )?;
+                sv.to_rom(&mut rom, group, self, index, packed_enemies, done)?;
             }
         }
         Ok(())
@@ -300,6 +319,8 @@ impl config::SideviewGroup {
     }
     pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("SideviewGroup::pack {path}");
+        let mut free = IndexSet::new();
+        let mut done = IndexMap::new();
         // The enemy list is per-bank, even when there are two sideview groups in a bank.
         // We have to track duplicates because the area of the ROM holding the enemy list
         // is often sized exactly to what the bank needs.
@@ -308,7 +329,15 @@ impl config::SideviewGroup {
         let mut enemylist = PackedEnemies::new(self.group[0].area_kind);
         for (k, cfg) in self.group.iter() {
             enemylist.reset_duplicates();
-            cfg.pack(self, rrom, &format!("{path}/{k}"), edits, &mut enemylist)?;
+            cfg.pack(
+                self,
+                rrom,
+                &format!("{path}/{k}"),
+                edits,
+                &mut enemylist,
+                &mut free,
+                &mut done,
+            )?;
         }
         // Once the entire enemylist has been packed, we can write the whole thing to ROM.
         if enemylist.data.len() <= self.enemy_length {
@@ -712,44 +741,26 @@ impl Sideview {
         cfg: &config::SideviewAreas,
         index: usize,
         packed_enemies: &mut PackedEnemies,
-        meta: &Metadata,
-        done: &mut IndexSet<usize>,
+        done: &mut IndexMap<Map, Address>,
     ) -> Result<()> {
-        if !done.contains(&index) {
-            let addr = rom.read_pointer(cfg.address + index * 2)?;
-            let leak = meta.extra.get("leak").map(String::as_str) == Some("true");
-            if addr.is_valid() && !leak {
-                let length = rom.read(addr)? as usize;
-                //let length = length.max(4);
-                let length = length;
-                log::debug!("Sideview::to_rom freeing old map @ {addr:x?} length={length} bytes");
-                rom.free(addr, length as u16)?;
+        let addr = match done.entry(self.map.clone()) {
+            Entry::Occupied(o) => {
+                let addr = *o.get();
+                log::debug!("Sideview::to_rom index {index} is identical to map at {addr:x?}");
+                addr
             }
-            let data = self.map.to_bytes();
-            let addr = rom.alloc(addr, data.len() as u16, Alloc::Near)?;
-            log::debug!(
-                "Sideview::to_rom writing new map @ {addr:x?} length={} bytes",
-                data.len()
-            );
-            rom.write_bytes(addr, &data)?;
-            rom.write_pointer(cfg.address + index * 2, addr)?;
-            done.insert(index);
-
-            let duplicates = meta
-                .extra
-                .get("alias")
-                .map(|a| {
-                    a.split(',')
-                        .map(|a| a.parse::<usize>())
-                        .collect::<Result<Vec<_>, std::num::ParseIntError>>()
-                })
-                .unwrap_or_else(|| Ok(Vec::new()))?;
-
-            for &duplicate in duplicates.iter() {
-                done.insert(duplicate);
-                rom.write_pointer(cfg.address + duplicate * 2, addr)?;
+            Entry::Vacant(v) => {
+                let data = v.key().to_bytes();
+                let addr = rom.alloc(cfg.address, data.len() as u16, Alloc::Best)?;
+                log::debug!(
+                    "Sideview::to_rom allocated {} bytes at {addr:x?}",
+                    data.len()
+                );
+                rom.write_bytes(addr, &data)?;
+                *v.insert(addr)
             }
-        }
+        };
+        rom.write_pointer(cfg.address + index * 2, addr)?;
 
         if cfg.enemylist.is_valid() {
             let offset = packed_enemies.add(index, &self.enemy) + (group.enemy_ram_offset as u16);
@@ -757,10 +768,23 @@ impl Sideview {
         }
 
         if cfg.availability.is_valid() {
-            let avail = if self.availability[0] { 8 } else { 0 }
-                | if self.availability[1] { 4 } else { 0 }
-                | if self.availability[2] { 2 } else { 0 }
-                | if self.availability[3] { 1 } else { 0 };
+            let avail = if self.availability.get(0).copied().unwrap_or(false) {
+                8
+            } else {
+                0
+            } | if self.availability.get(1).copied().unwrap_or(false) {
+                4
+            } else {
+                0
+            } | if self.availability.get(2).copied().unwrap_or(false) {
+                2
+            } else {
+                0
+            } | if self.availability.get(3).copied().unwrap_or(false) {
+                1
+            } else {
+                0
+            };
             let a = rom.read(cfg.availability + index / 2)?;
             let a = if index & 1 == 0 {
                 (a & 0x0F) | (avail << 4)
