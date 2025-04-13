@@ -251,7 +251,7 @@ impl ChrBank {
         );
         let colors = [
             Color::new(0xFF000000),
-            Color::new(0xFF555555),
+            Color::new(0xFF666666),
             Color::new(0xFFAAAAAA),
             Color::new(0xFFFFFFFF),
         ];
@@ -309,7 +309,7 @@ impl ChrBank {
                             let mask = 1u8 << ((tw - 1) - xx);
                             let (hibit, lobit) = if avg > 0xAA {
                                 (mask, mask)
-                            } else if avg > 0x55 {
+                            } else if avg > 0x66 {
                                 (mask, 0)
                             } else if avg > 0x00 {
                                 (0, mask)

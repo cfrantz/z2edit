@@ -22,6 +22,8 @@ pub struct ProjectGui {
     edit_list: imgui::Id,
     edit_list_title: String,
     editor_pane: imgui::Id,
+    #[pyo3(get)]
+    wants_dispose: bool,
 }
 
 impl ProjectGui {
@@ -72,7 +74,9 @@ impl ProjectGui {
             }
             if ui.menu_item("Export Patch") {}
             ui.separator();
-            if ui.menu_item("Close") {}
+            if ui.menu_item("Close") {
+                self.wants_dispose = true;
+            }
         });
     }
 
@@ -152,6 +156,7 @@ impl ProjectGui {
             edit_list: Default::default(),
             edit_list_title: format!("Edit List##{dock_val}"),
             editor_pane: Default::default(),
+            wants_dispose: false,
         })
     }
 

@@ -70,7 +70,9 @@ class Application(object):
             filename = dlg.pick_file()
         if filename is not None:
             project = z2edit.Project.load(filename)
-            self.windows.append(z2edit.ProjectGui(project))
+            gui = z2edit.ProjectGui(project)
+            gui.filename = filename
+            self.windows.append(gui)
 
     def demo_window(self):
         if self.show_demo_window:
@@ -128,6 +130,7 @@ class Application(object):
                 for window in self.windows:
                     window.draw(ui)
                 self.inner.render_frame()
+                self.windows = [w for w in self.windows if not w.wants_dispose]
             else:
                 self.running = False
         self.inner = None
