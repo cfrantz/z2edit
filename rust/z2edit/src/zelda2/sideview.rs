@@ -54,8 +54,6 @@ pub struct Enemy {
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct EnemyList {
     pub data: Vec<Vec<Enemy>>,
-    #[serde(skip)]
-    pub ram_address: Address,
 }
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
@@ -276,16 +274,9 @@ impl config::SideviewAreas {
                     .meta
                     .extra
                     .get("enemy-alias")
-                    .map(|a| {
-                        a.split(',')
-                            .map(|a| a.parse::<usize>())
-                            .collect::<Result<Vec<_>, std::num::ParseIntError>>()
-                    })
-                    .unwrap_or_else(|| Ok(Vec::new()))?;
-                packed_enemies.set_duplicates(index, &enemy_alias);
-
+                    .is_some();
                 let sv = edit.data_ref::<Sideview>()?;
-                sv.to_rom(&mut rom, group, self, index, packed_enemies, done)?;
+                sv.to_rom(&mut rom, group, self, index, enemy_alias, packed_enemies, done)?;
             }
         }
         Ok(())
@@ -445,7 +436,7 @@ impl Map {
     pub fn doors(&self, config: &config::SideviewAreas) -> Vec<Option<u8>> {
         let mut result = vec![None; 4];
         for item in self.data.iter() {
-            if config.door_objects.contains(&item.kind) {
+            if item.y < 13 && config.door_objects.contains(&item.kind) {
                 result[(item.x / 16) as usize] = Some(item.x);
             }
         }
@@ -740,6 +731,7 @@ impl Sideview {
         group: &config::SideviewGroup,
         cfg: &config::SideviewAreas,
         index: usize,
+        enemy_alias: bool,
         packed_enemies: &mut PackedEnemies,
         done: &mut IndexMap<Map, Address>,
     ) -> Result<()> {
@@ -763,7 +755,7 @@ impl Sideview {
         rom.write_pointer(cfg.address + index * 2, addr)?;
 
         if cfg.enemylist.is_valid() {
-            let offset = packed_enemies.add(index, &self.enemy) + (group.enemy_ram_offset as u16);
+            let offset = packed_enemies.add(index, enemy_alias, &self.enemy) + (group.enemy_ram_offset as u16);
             rom.write_word(cfg.enemylist + index * 2, offset)?;
         }
 
@@ -1208,7 +1200,7 @@ impl Decompressor {
 pub struct PackedEnemies {
     data: Vec<u8>,
     offsets: Vec<u16>,
-    duplicates: IndexMap<usize, usize>,
+    duplicates: IndexMap<Vec<u8>, usize>,
 }
 
 impl PackedEnemies {
@@ -1229,21 +1221,19 @@ impl PackedEnemies {
         self.duplicates.clear();
     }
 
-    pub fn set_duplicates(&mut self, index: usize, duplicates: &[usize]) {
-        for d in duplicates {
-            self.duplicates.insert(*d, index);
-        }
-    }
-
-    pub fn add(&mut self, index: usize, enemies: &EnemyList) -> u16 {
+    pub fn add(&mut self, index: usize, maybe_duplicate: bool, enemies: &EnemyList) -> u16 {
         let bank = self.offsets.len() / 63;
         let area = self.offsets.len() % 63;
         let mut position = self.data.len() as u16;
         let enemies = enemies.to_bytes();
         if enemies.len() > 2 {
-            // An enemy list must be at least 3 bytes long.
-            if let Some(dup) = self.duplicates.get(&index).copied() {
-                position = self.offsets[dup + bank * 63];
+            if maybe_duplicate {
+                if let Some(&i) = self.duplicates.get(&enemies) {
+                    position = self.offsets[i];
+                } else {
+                    self.data.extend(&enemies);
+                    self.duplicates.insert(enemies, index);
+                }
             } else {
                 self.data.extend(&enemies);
             }

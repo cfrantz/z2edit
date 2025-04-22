@@ -235,11 +235,11 @@
                         },
                         fixed: {
                             name: "Fixed",
-                            code: "from z2edit.hacks import palace\npalace.to_stone_fixed(rom)\n",
+                            code: "from z2edit.hacks import palace\npalace.palaces_to_stone_fixed(rom)\n",
                         },
                         never: {
                             name: "Never Turn to Stone",
-                            code: "from z2edit.hacks import palace\npalace.to_stone_never(rom)\n",
+                            code: "from z2edit.hacks import palace\npalace.palaces_to_stone_never(rom)\n",
                         },
                     }
                 },

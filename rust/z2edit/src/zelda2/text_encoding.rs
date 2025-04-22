@@ -74,7 +74,7 @@ impl Text {
         for ch in z.iter() {
             let ch = ZELDA2_TO_ASCII[*ch as usize];
             if ch == 0 {
-                s.push('?');
+                s.push('~');
             } else {
                 s.push(ch as char);
             }

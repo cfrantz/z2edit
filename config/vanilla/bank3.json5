@@ -136,6 +136,7 @@
                         max_connectable_index: 62,
                         doors: {Prg:[3,0x8817]},
                         max_door_index: 28,
+                        door_objects: [0, 1, 2, 3],
                         metatile: "/bank/3/metatile/background",
                         palette: "/bank/3/palette",
                         render_info: "/global/render/towns",

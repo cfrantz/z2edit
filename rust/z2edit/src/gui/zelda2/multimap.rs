@@ -184,6 +184,7 @@ impl MultiMapGui {
             } else {
                 format!("Area {n:02}")
             };
+            let doors = sideview.map.doors(config);
             let mut room = Room {
                 path: start.into(),
                 name,
@@ -199,10 +200,10 @@ impl MultiMapGui {
                     [1024.0, 104.0],
                 ],
                 dpoints: [
-                    [8.0 * 16.0, 208.0],
-                    [24.0 * 16.0, 208.0],
-                    [40.0 * 16.0, 208.0],
-                    [56.0 * 16.0, 208.0],
+                    [doors[0].unwrap_or(8) as f32 * 16.0, 208.0],
+                    [doors[1].unwrap_or(24) as f32 * 16.0, 208.0],
+                    [doors[2].unwrap_or(40) as f32 * 16.0, 208.0],
+                    [doors[3].unwrap_or(56) as f32 * 16.0, 208.0],
                 ],
                 image,
             };
@@ -273,10 +274,7 @@ impl MultiMapGui {
 
                     // Get the door connection, but only if a door object actually
                     // exists for screen `i` in the map.
-                    let c = sideview
-                        .map
-                        .doors(config)
-                        .get(i)
+                    let c = doors[i]
                         .and_then(|_| sideview.door.get(i));
                     if c.is_some() && i >= ss && i <= se {
                         let c = c.unwrap();

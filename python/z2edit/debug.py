@@ -1,5 +1,5 @@
 from z2edit.app import Application
-from z2edit import Address
+from z2edit import Address, Text
 
 _last = Address.Prg(-1, 0xC000)
 
@@ -20,7 +20,7 @@ def _convert(address, b=None):
 
 
 def _chr(val):
-    val = chr(val) if val >= 32 and val < 127 else "."
+    val = Text.from_zelda2(bytes([val]))
     return val
 
 

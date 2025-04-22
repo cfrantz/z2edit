@@ -143,7 +143,11 @@ impl SideviewEditor {
             return Ok(EditAction::None);
         };
         let screen = (self.sideview.enemy.data[el][index].x / 16) as usize;
-        let world = self.world[screen];
+        let mut world = self.world[screen];
+        if world == 0 {
+            // If we don't know the town world, assume world 1.
+            world = 1;
+        }
         let town_code = self.town_code[screen] as u8;
         let text_ids = project.data_ref::<TextIds>(&format!("{text_table}/{world}:ids"))?;
         let dialog = text_ids.get_text_ids(self.sideview.enemy.data[el][index].kind, town_code);
@@ -1206,7 +1210,11 @@ impl SideviewEditor {
             let mut worlds = IndexSet::new();
             for enemy in self.sideview.enemy.data[0].iter() {
                 let screen = (enemy.x / 16) as usize;
-                let world = self.world[screen];
+                let mut world = self.world[screen];
+                if world == 0 {
+                    // If we don't know the town world, assume world 1.
+                    world = 1;
+                }
                 let town_code = self.town_code[screen] as u8;
                 let text_ids = project.data_mut::<TextIds>(&format!("{text_table}/{world}:ids"))?;
                 if text_ids.set_text_ids(
