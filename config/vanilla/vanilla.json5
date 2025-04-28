@@ -28,6 +28,31 @@
             },
         },
         palette: {
+            darklink: {
+                name: "Dark Link",
+                group: {
+                    darklink: { name: "Dark Link Fight", address: {Prg: [-1, 0xc47f]}},
+                    post_darklink: {
+                        name: "Post DL Fight",
+                        address: {Prg: [-1, 0xc493]},
+                        magic_background: {Prg: [5, 0x981c]},
+                    },
+                },
+            },
+            falling: {
+                name: "Falling in a Pit",
+                group: {
+                    falling: { name: "Falling Background", address: {Prg: [0, 0xa839]}},
+                    falling_sprites: { name: "Falling Background (Sprites)", address: {Prg: [0, 0xa849]}},
+                },
+            },
+            lives: {
+                name: "Lives/Ready Screen",
+                group: {
+                    lives: { name: "Lives Screen", address: {Prg: [-1, 0xc44c]}, length: 4},
+                    lives_sprites: { name: "Lives Screen (Sprites)", address: {Prg: [-1, 0xc453]}, length: 4},
+                },
+            },
             overworld: {
                 name: "Overworld",
                 group: {
@@ -35,16 +60,10 @@
                     sprites: { name: "Sprites", address: {Prg: [-1, 0xc46b]}},
                 },
             },
-            special: {
-                name: "Special Palettes",
+            shield: {
+                name: "Shield Spell",
                 group: {
                     shield: { name: "Shield Spell", address: {Prg: [0, 0x8e8e]}, length: 1},
-                    darklink: { name: "Dark Link Fight", address: {Prg: [-1, 0xc47f]}},
-                    post_darklink: {
-                        name: "Post DL Fight",
-                        address: {Prg: [-1, 0xc493]},
-                        magic_background: {Prg: [5, 0x981c]},
-                    },
                 },
             },
         },
