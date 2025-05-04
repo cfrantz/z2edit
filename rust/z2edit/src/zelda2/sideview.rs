@@ -270,13 +270,17 @@ impl config::SideviewAreas {
                     }
                 }
 
-                let enemy_alias = edit
-                    .meta
-                    .extra
-                    .get("enemy-alias")
-                    .is_some();
+                let enemy_alias = edit.meta.extra.get("enemy-alias").is_some();
                 let sv = edit.data_ref::<Sideview>()?;
-                sv.to_rom(&mut rom, group, self, index, enemy_alias, packed_enemies, done)?;
+                sv.to_rom(
+                    &mut rom,
+                    group,
+                    self,
+                    index,
+                    enemy_alias,
+                    packed_enemies,
+                    done,
+                )?;
             }
         }
         Ok(())
@@ -755,7 +759,8 @@ impl Sideview {
         rom.write_pointer(cfg.address + index * 2, addr)?;
 
         if cfg.enemylist.is_valid() {
-            let offset = packed_enemies.add(index, enemy_alias, &self.enemy) + (group.enemy_ram_offset as u16);
+            let offset = packed_enemies.add(index, enemy_alias, &self.enemy)
+                + (group.enemy_ram_offset as u16);
             rom.write_word(cfg.enemylist + index * 2, offset)?;
         }
 

@@ -274,8 +274,7 @@ impl MultiMapGui {
 
                     // Get the door connection, but only if a door object actually
                     // exists for screen `i` in the map.
-                    let c = doors[i]
-                        .and_then(|_| sideview.door.get(i));
+                    let c = doors[i].and_then(|_| sideview.door.get(i));
                     if c.is_some() && i >= ss && i <= se {
                         let c = c.unwrap();
                         self.rooms.get_mut(&n).unwrap().door.push(c.clone());
