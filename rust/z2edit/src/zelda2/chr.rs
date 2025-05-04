@@ -49,6 +49,7 @@ impl GameData for ChrMemory {
 pub enum ChrSchema {
     #[default]
     Mmc1_4k,
+    Mmc5_1k,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -131,44 +132,46 @@ impl config::ChrMemory {
             orig: Arc::clone(&orig),
         };
         edits.insert(path.into(), Edit::new(chr.into()));
-        match self.schema {
-            ChrSchema::Mmc1_4k => {
-                ensure!(
-                    self.banks == length / 4096,
-                    Error::Configuration(format!(
-                        "ChrMemory::banks incorrect (got {} but expecting {})",
-                        self.banks,
-                        length / 4096
-                    ))
-                );
-                for bank in 0..self.banks {
-                    let chr = ChrBank {
-                        schema: self.schema,
-                        address: Address::Chr(bank as i16, 0),
-                        data: Arc::clone(&data),
-                        orig: Arc::clone(&orig),
-                        ..Default::default()
-                    };
-                    log::debug!("ChrMemory::unpack {path}/{bank}");
-                    edits.insert(format!("{path}/{bank}"), Edit::new(chr.into()));
-                }
-            }
+        let banksz = match self.schema {
+            ChrSchema::Mmc1_4k => 4096,
+            ChrSchema::Mmc5_1k => 1024,
         };
+
+        ensure!(
+            self.banks == length / banksz,
+            Error::Configuration(format!(
+                "ChrMemory::banks incorrect (got {} but expecting {})",
+                self.banks,
+                length / banksz
+            ))
+        );
+
+        for bank in 0..self.banks {
+            let address = match self.schema {
+                ChrSchema::Mmc1_4k => Address::Chr(bank as i16, 0),
+                ChrSchema::Mmc5_1k => Address::Chr1k(bank as i16, 0),
+            };
+            let chr = ChrBank {
+                schema: self.schema,
+                address,
+                data: Arc::clone(&data),
+                orig: Arc::clone(&orig),
+                ..Default::default()
+            };
+            log::debug!("ChrMemory::unpack {path}/{bank}");
+            edits.insert(format!("{path}/{bank}"), Edit::new(chr.into()));
+        }
         Ok(())
     }
 
     pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("ChrMemory::pack {path}");
         if let Some(edit) = edits.get(path) {
-            match self.schema {
-                ChrSchema::Mmc1_4k => {
-                    for bank in 0..self.banks {
-                        if let Some(edit) = edits.get(&format!("{path}/{bank}")) {
-                            log::debug!("ChrMemory::pack {path}/{bank}");
-                            let chr = edit.data_ref::<ChrBank>()?;
-                            chr.apply()?;
-                        }
-                    }
+            for bank in 0..self.banks {
+                if let Some(edit) = edits.get(&format!("{path}/{bank}")) {
+                    log::debug!("ChrMemory::pack {path}/{bank}");
+                    let chr = edit.data_ref::<ChrBank>()?;
+                    chr.apply()?;
                 }
             }
 
@@ -222,6 +225,7 @@ impl ChrBank {
     fn copy_orig(&self) {
         let len = match self.schema {
             ChrSchema::Mmc1_4k => 4096,
+            ChrSchema::Mmc5_1k => 1024,
         };
         let base = self.address.norm_offset().expect("chr address");
         let orig = self.orig.lock().unwrap();
@@ -243,6 +247,8 @@ impl ChrBank {
         let (nw, nh, tw, th, mult) = match (self.schema, layout) {
             (ChrSchema::Mmc1_4k, Layout::Tile) => (16, 16, 8, 8, 1),
             (ChrSchema::Mmc1_4k, Layout::Sprite) => (16, 8, 8, 16, 2),
+            (ChrSchema::Mmc5_1k, Layout::Tile) => (16, 4, 8, 8, 1),
+            (ChrSchema::Mmc5_1k, Layout::Sprite) => (16, 2, 8, 16, 2),
         };
         let mut image = Image::with_color(
             border + nw * (tw + border),
@@ -287,6 +293,8 @@ impl ChrBank {
         let (nw, nh, tw, th, mult) = match (self.schema, layout) {
             (ChrSchema::Mmc1_4k, Layout::Tile) => (16, 16, 8, 8, 1),
             (ChrSchema::Mmc1_4k, Layout::Sprite) => (16, 8, 8, 16, 2),
+            (ChrSchema::Mmc5_1k, Layout::Tile) => (16, 4, 8, 8, 1),
+            (ChrSchema::Mmc5_1k, Layout::Sprite) => (16, 2, 8, 16, 2),
         };
         let base = self.address.norm_offset().expect("chr address");
         let mut data = self.data.lock().unwrap();
@@ -331,16 +339,21 @@ impl ChrBank {
         // FIXME: Naughty use of global variable to know the project path.
         let path = Project::path().join(path.as_ref());
         let image = Image::load_bmp(path)?;
-        let (border, layout) = match (image.width, image.height) {
-            (128, 128) => (0, self.layout),
-            (145, 145) => (1, Layout::Tile),
-            (145, 137) => (1, Layout::Sprite),
-            (162, 162) => (2, Layout::Tile),
-            (162, 146) => (2, Layout::Sprite),
+        let (border, layout) = match (self.schema, image.width, image.height) {
+            (ChrSchema::Mmc1_4k, 128, 128) => (0, self.layout),
+            (ChrSchema::Mmc1_4k, 145, 145) => (1, Layout::Tile),
+            (ChrSchema::Mmc1_4k, 145, 137) => (1, Layout::Sprite),
+            (ChrSchema::Mmc1_4k, 162, 162) => (2, Layout::Tile),
+            (ChrSchema::Mmc1_4k, 162, 146) => (2, Layout::Sprite),
+            (ChrSchema::Mmc5_1k, 128, 32) => (0, self.layout),
+            (ChrSchema::Mmc5_1k, 145, 37) => (1, Layout::Tile),
+            (ChrSchema::Mmc5_1k, 145, 35) => (1, Layout::Sprite),
+            (ChrSchema::Mmc5_1k, 162, 41) => (2, Layout::Tile),
+            (ChrSchema::Mmc5_1k, 162, 38) => (2, Layout::Sprite),
             _ => {
                 return Err(Error::NotImplemented(format!(
-                    "Cannot process image size {}x{}",
-                    image.width, image.height
+                    "Cannot process image size {}x{} for schema {:?}",
+                    image.width, image.height, self.schema,
                 ))
                 .into())
             }

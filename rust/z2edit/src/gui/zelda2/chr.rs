@@ -9,7 +9,7 @@ use crate::gui::util::edit_tree_node;
 use crate::gui::util::tooltip;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::util::tile_cache::GfxCache;
-use crate::zelda2::chr::{config, ChrBank, Layout};
+use crate::zelda2::chr::{config, ChrBank, ChrSchema, Layout};
 use crate::zelda2::project::Project;
 
 impl GuiTree for config::ChrMemory {
@@ -146,7 +146,11 @@ impl ChrBankEditor {
             ui.table_next_row();
             ui.table_next_column();
             let [x, y] = ui.cursor_pos();
-            for n in 0..16 {
+            let size = match self.chr.schema {
+                ChrSchema::Mmc1_4k => 16,
+                ChrSchema::Mmc5_1k => 4,
+            };
+            for n in 0..size {
                 if layout == 0 {
                     let yofs = n as f32 * (self.chr.border as f32 + 8.0) * scale;
                     ui.set_cursor_pos([x, y + yofs]);
