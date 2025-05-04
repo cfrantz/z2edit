@@ -120,7 +120,47 @@ impl ChrBankEditor {
             }
         }
 
-        self.image.draw(self.scale as f32, ui);
+        if let Some(_table) =
+            ui.begin_table_with_flags("image", 2, TableFlags::RESIZABLE | TableFlags::BORDERS)
+        {
+            let scale = self.scale as f32;
+            ui.table_setup_column_with(TableColumnSetup {
+                name: "",
+                flags: TableColumnFlags::WIDTH_FIXED,
+                init_width_or_weight: 48.0,
+                ..Default::default()
+            });
+            ui.table_next_row();
+            ui.table_next_column();
+            // Empty cell
+
+            ui.table_next_column();
+            let [x, y] = ui.cursor_pos();
+            for n in 0..16 {
+                let xofs = n as f32 * (self.chr.border as f32 + 8.0) * scale;
+                ui.set_cursor_pos([x + xofs, y]);
+                let id = if layout == 0 { n } else { n * 2 };
+                ui.text(format!("{id:02x}"));
+            }
+
+            ui.table_next_row();
+            ui.table_next_column();
+            let [x, y] = ui.cursor_pos();
+            for n in 0..16 {
+                if layout == 0 {
+                    let yofs = n as f32 * (self.chr.border as f32 + 8.0) * scale;
+                    ui.set_cursor_pos([x, y + yofs]);
+                    ui.text(format!("{:02x}", n << 4));
+                } else if n & 1 == 0 {
+                    let yofs = (n / 2) as f32 * (self.chr.border as f32 + 16.0) * scale;
+                    ui.set_cursor_pos([x, y + yofs]);
+                    ui.text(format!("{:02x}", n << 4));
+                }
+            }
+
+            ui.table_next_column();
+            self.image.draw(scale, ui);
+        }
 
         let mut changed = false;
         if let Some(_table) = ui.begin_table_header_with_flags(
