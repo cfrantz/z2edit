@@ -6,12 +6,13 @@ use std::sync::OnceLock;
 
 use crate::error::Error;
 use crate::nes::{hwpalette, Address};
-use crate::zelda2::chr::ChrMemory;
+use crate::zelda2::chr::{ChrMemory, ChrSchema};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::{Items, Sprite};
 use crate::zelda2::metatile::MetatileGroup;
 use crate::zelda2::palette::PaletteGroup;
 use crate::zelda2::project::Project;
+use crate::zelda2::vchr::{self, VirtualChr};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GfxKind {
@@ -53,16 +54,56 @@ impl GfxCache {
         cache.cache.clear();
     }
 
+    fn maybe_remap(project: &Project, chrbank: u16, tile: i32, background: bool) -> Result<usize> {
+        if let Ok(config) = project.config.get::<vchr::config::VirtualChr>("/vchr") {
+            match config.schema {
+                ChrSchema::Mmc5_1k => {
+                    // When using MMC5 vbanks, we maintain a table of 1K banks
+                    // mapped into the normal low/high PPU bank space.  Furthermore,
+                    // if the tile is a background tile, MMC5 has a magical
+                    // background-only bank.
+                    //
+                    // We look up the vchr bank for the classic chr bank number
+                    // and then calculate the true 1K bank based on the tile ID.
+                    // Finally, we calculate the actual memory offset based on
+                    // the low bits of the tile ID.
+                    let chrbank = chrbank as usize;
+                    let vbanks =
+                        project.data_ref::<VirtualChr>(&format!("/vchr/{}", chrbank / 2))?;
+                    let t = tile as usize & 0xFF;
+                    let subbank = if background {
+                        t / 0x40 + 8
+                    } else {
+                        t / 0x40 + 4 * (chrbank & 1)
+                    };
+                    log::info!(
+                        "remapped chr{chrbank} to offset {subbank} -> {:02x}",
+                        vbanks.data[subbank]
+                    );
+                    Ok(vbanks.data[subbank] as usize * 1024 + (t % 0x40) * 16)
+                }
+                _ => Err(Error::Configuration(format!(
+                    "VBanks not implemented for schema {:?}",
+                    config.schema
+                ))
+                .into()),
+            }
+        } else {
+            // When there are no vbanks, the chrbank/tile calculation just calculates
+            // the tile offset in a given bank.
+            Ok(chrbank as usize * 4096 + (tile & 0xFF) as usize * 16)
+        }
+    }
+
     fn _render_tile(
         image: &mut Image,
         chrdata: &[u8],
-        chrbank: u16,
+        base: usize,
         palette: &[u8],
         xofs: u32,
         yofs: u32,
         tile: i32,
     ) {
-        let base = chrbank as usize * 4096 + (tile & 0xFF) as usize * 16;
         let ty = ((tile >> 8) & 0xFF) as u32;
         let tx = ((tile >> 16) & 0xFF) as u32;
         let mirror = tile & 0x1000000 != 0;
@@ -84,17 +125,34 @@ impl GfxCache {
         }
     }
 
-    fn _render_metatile(chrdata: &[u8], chrbank: u16, palette: &[u8], tile: &[u8]) -> Image {
+    fn _render_metatile(
+        project: &Project,
+        chrdata: &[u8],
+        chrbank: u16,
+        palette: &[u8],
+        tile: &[u8],
+    ) -> Result<Image> {
         let mut image = Image::new(16, 16);
-        Self::_render_tile(&mut image, chrdata, chrbank, palette, 0, 0, tile[0] as i32);
-        Self::_render_tile(&mut image, chrdata, chrbank, palette, 0, 8, tile[1] as i32);
-        Self::_render_tile(&mut image, chrdata, chrbank, palette, 8, 0, tile[2] as i32);
-        Self::_render_tile(&mut image, chrdata, chrbank, palette, 8, 8, tile[3] as i32);
+        const COORD: [(u32, u32); 4] = [(0, 0), (0, 8), (8, 0), (8, 8)];
+
+        for i in 0..4 {
+            let base = Self::maybe_remap(project, chrbank, tile[i] as i32, true)?;
+            Self::_render_tile(
+                &mut image,
+                chrdata,
+                base,
+                palette,
+                COORD[i].0,
+                COORD[i].1,
+                tile[i] as i32,
+            );
+        }
         image.update();
-        image
+        Ok(image)
     }
 
     fn _render_one_sprite(
+        project: &Project,
         image: &mut Image,
         chrdata: &[u8],
         chrbank: u16,
@@ -102,30 +160,24 @@ impl GfxCache {
         xofs: u32,
         yofs: u32,
         sprite: i32,
-    ) {
+    ) -> Result<()> {
         let bank_delta = (sprite & 1) as u16;
         let sprite = sprite & !1;
-        Self::_render_tile(
-            image,
-            chrdata,
-            chrbank + bank_delta,
-            palette,
-            xofs,
-            yofs,
-            sprite,
-        );
-        Self::_render_tile(
-            image,
-            chrdata,
-            chrbank + bank_delta,
-            palette,
-            xofs,
-            yofs + 8,
-            sprite + 1,
-        );
+        let base = Self::maybe_remap(project, chrbank + bank_delta, sprite, false)?;
+        Self::_render_tile(image, chrdata, base, palette, xofs, yofs, sprite);
+
+        let base = Self::maybe_remap(project, chrbank + bank_delta, sprite + 1, false)?;
+        Self::_render_tile(image, chrdata, base, palette, xofs, yofs + 8, sprite + 1);
+        Ok(())
     }
 
-    fn _render_sprite(chrdata: &[u8], chrbank: u16, palette: &[u8], sprite: &Sprite) -> Image {
+    fn _render_sprite(
+        project: &Project,
+        chrdata: &[u8],
+        chrbank: u16,
+        palette: &[u8],
+        sprite: &Sprite,
+    ) -> Result<Image> {
         let mut image = Image::new(sprite.size[0], sprite.size[1]);
         let mut y = 0;
         let mut i = 0;
@@ -139,7 +191,9 @@ impl GfxCache {
                         // If its the same as the last sprite, mirror it.
                         id |= 0x0100_0000;
                     }
-                    Self::_render_one_sprite(&mut image, chrdata, chrbank, palette, x, y, id);
+                    Self::_render_one_sprite(
+                        project, &mut image, chrdata, chrbank, palette, x, y, id,
+                    )?;
                 }
                 i += 1;
                 x += 8;
@@ -148,7 +202,7 @@ impl GfxCache {
             y += 16;
         }
         image.update();
-        image
+        Ok(image)
     }
 
     pub fn get<'a>(
@@ -252,11 +306,12 @@ impl GfxCache {
         if !my.cache.contains_key(&key) {
             let image = match key.kind {
                 GfxKind::RawTile(ref _address, ref data, ref _palette) => {
-                    Self::_render_metatile(&*chrdata, key.chrbank, &key.palette, data)
+                    Self::_render_metatile(project, &*chrdata, key.chrbank, &key.palette, data)?
                 }
                 GfxKind::RawSprite(ref _address, ref data, ref _palette) => {
                     let mut image = Image::new(8, 16);
                     Self::_render_one_sprite(
+                        project,
                         &mut image,
                         &*chrdata,
                         key.chrbank,
@@ -264,7 +319,7 @@ impl GfxCache {
                         0,
                         0,
                         *data as i32,
-                    );
+                    )?;
                     image.update();
                     image
                 }
@@ -281,11 +336,12 @@ impl GfxCache {
                         .copied()
                         .ok_or_else(|| Error::NotFound(format!("Metatile {meta_group}/{tile}")))?;
                     Self::_render_metatile(
+                        project,
                         &*chrdata,
                         key.chrbank,
                         &key.palette,
                         &data.to_be_bytes(),
-                    )
+                    )?
                 }
                 GfxKind::Enemy(ref enemy_group, ref enemy) => {
                     let group = project.config.get::<EnemyGroup>(enemy_group)?;
@@ -311,7 +367,7 @@ impl GfxCache {
                             Ok(())
                         })?;
                     }
-                    Self::_render_sprite(&*chrdata, key.chrbank, &key.palette, &sprite)
+                    Self::_render_sprite(project, &*chrdata, key.chrbank, &key.palette, &sprite)?
                 }
                 GfxKind::Item(ref item) => {
                     let sprite = if *item < 128 {
@@ -325,7 +381,7 @@ impl GfxCache {
                             .config
                             .get::<Sprite>(&format!("/global/item/fake/{item}"))?
                     };
-                    Self::_render_sprite(&*chrdata, key.chrbank, &key.palette, sprite)
+                    Self::_render_sprite(project, &*chrdata, key.chrbank, &key.palette, sprite)?
                 }
             };
             my.cache.insert(key.clone(), image);

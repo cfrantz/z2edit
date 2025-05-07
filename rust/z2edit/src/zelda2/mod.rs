@@ -19,3 +19,4 @@ pub mod sideview;
 pub mod start;
 pub mod text_encoding;
 pub mod text_table;
+pub mod vchr;

@@ -12,6 +12,7 @@ use crate::zelda2::banks::config::{GameBank, GlobalBank};
 use crate::zelda2::chr::config::ChrMemory;
 use crate::zelda2::edit::EditList;
 use crate::zelda2::object::RenderInfo;
+use crate::zelda2::vchr::config::VirtualChr;
 
 static mut CONFIGS: OnceLock<IndexMap<String, Config>> = OnceLock::new();
 
@@ -24,6 +25,8 @@ pub struct Config {
     pub include: Vec<String>,
     pub include_render_info: Vec<String>,
     pub chr: ChrMemory,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vchr: Option<VirtualChr>,
     pub bank: IndexMap<String, GameBank>,
     pub global: GlobalBank,
 }
@@ -111,6 +114,9 @@ impl Config {
     ) -> Result<()> {
         log::debug!("Config unpack {path}");
         self.chr.unpack(rrom, &format!("{path}/chr"), edits)?;
+        for vchr in self.vchr.iter() {
+            vchr.unpack(rrom, &format!("{path}/vchr"), edits)?;
+        }
         for (k, v) in self.bank.iter() {
             v.unpack(rrom, &format!("{path}/bank/{k}"), edits)?;
         }
@@ -120,6 +126,9 @@ impl Config {
     pub fn pack(&self, rrom: &Bound<'_, NesFile>, path: &str, edits: &EditList) -> Result<()> {
         log::debug!("Config pack {path}");
         self.chr.pack(rrom, &format!("{path}/chr"), edits)?;
+        for vchr in self.vchr.iter() {
+            vchr.pack(rrom, &format!("{path}/vchr"), edits)?;
+        }
         for (k, v) in self.bank.iter() {
             v.pack(rrom, &format!("{path}/bank/{k}"), edits)?;
         }
@@ -140,6 +149,10 @@ impl Config {
         match path.as_slice() {
             [] => get_config::<T>(self),
             ["chr", ..] => self.chr.get::<T>(&path[1..]),
+            ["vchr", ..] => {
+                let vchr = self.vchr.as_ref().ok_or(Error::NotFound(format!("vchr")))?;
+                vchr.get::<T>(&path[1..])
+            }
             ["bank", ref n, ..] => {
                 let bank = self
                     .bank
