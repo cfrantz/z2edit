@@ -191,6 +191,46 @@ impl FreeSpace {
             Err(NesError::NoMemory(format!("no freespace zone {zone:?}")).into())
         }
     }
+
+    /// Frees a large range of address space, consuming pre-existing overlapping
+    /// regions into the large block.  Creates a new bank if one doesn't
+    /// already exist.
+    ///
+    /// This call is used when performing major edits on a bank or registering
+    /// freespace in a new bank.
+    pub fn bulkfree(&mut self, address: Address, length: u16) -> Result<()> {
+        let zone = Zone::try_from(address)?;
+        let mut block = AddressRange { address, length };
+        if let Some(list) = self.freelist.get_mut(&zone) {
+            let mut i = 0;
+            while i < list.len() {
+                if block.extend(&list[i]) {
+                    list.remove(i);
+                } else {
+                    i += 1;
+                }
+            }
+            list.push(block);
+            Self::_normalize(list);
+            Ok(())
+        } else {
+            self.register_one(block)
+        }
+    }
+
+    pub fn copy_zone(&mut self, oldbank: i16, newbank: i16) -> Result<()> {
+        let oldzone = Zone::Prg(oldbank);
+        let newzone = Zone::Prg(newbank);
+        if let Some(mut list) = self.freelist.get(&oldzone).cloned() {
+            for item in list.iter_mut() {
+                item.address = item.address.with_bank(newbank);
+            }
+            self.freelist.insert(newzone, list);
+            Ok(())
+        } else {
+            Err(NesError::NoMemory(format!("no freespace zone {oldzone:?}")).into())
+        }
+    }
 }
 
 impl std::fmt::Display for FreeSpace {

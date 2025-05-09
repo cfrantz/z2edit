@@ -214,6 +214,14 @@ impl NesFile {
         hex::encode(Sha256::digest(&self.data))
     }
 
+    pub fn copy_prg_bank(&mut self, oldbank: i16, newbank: i16) -> Result<()> {
+        self.freespace.copy_zone(oldbank, newbank)?;
+        let src = self.offset(Address::Prg(oldbank, 0))?;
+        let dst = self.offset(Address::Prg(newbank, 0))?;
+        self.data.copy_within(src..src+16384, dst);
+        Ok(())
+    }
+
     #[pyo3(name = "register")]
     fn _register(&mut self, json: &str) -> Result<()> {
         let data = serde_annotate::from_str(json)?;
@@ -227,6 +235,10 @@ impl NesFile {
 
     pub fn free(&mut self, address: Address, length: u16) -> Result<()> {
         self.freespace.free(address, length)
+    }
+
+    pub fn bulkfree(&mut self, address: Address, length: u16) -> Result<()> {
+        self.freespace.bulkfree(address, length)
     }
 
     pub fn report(&self) -> String {
