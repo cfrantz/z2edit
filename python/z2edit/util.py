@@ -52,6 +52,42 @@ class ObjectDict(dict):
     def get(self, objpath, default=None):
         return self._get(objpath, default)
 
+
+    def query(self, objpath, **kwargs):
+        """
+        Query objects from an ObjectDict.
+
+        objdict.query("bank/*/sideview/group/{name}/availability", name=lambda k,v: k != "foo")
+        """
+        if isinstance(objpath, str):
+            if objpath.startswith('/'):
+                objpath = objpath[1:]
+            objpath = objpath.split('/')
+        return dict(self._query(self, objpath, [], kwargs))
+
+    @staticmethod
+    def _query(item, objpath, qpath, qparam):
+        if not objpath:
+            yield ('/'.join(qpath), item)
+        elif objpath[0] == '*':
+            items = enumerate(item) if isinstance(item, list) else item.items()
+            for k, v in items:
+                yield from ObjectDict._query(v, objpath[1:], qpath+[k], qparam)
+        elif objpath[0].startswith('{') and objpath[0].endswith('}'):
+            qf = qparam[objpath[0][1:-1]]
+            items = enumerate(item) if isinstance(item, list) else item.items()
+            for k, v in items:
+                if qf(k, v):
+                    yield from ObjectDict._query(v, objpath[1:], qpath+[k], qparam)
+        else:
+            try:
+                node = objpath[0]
+                if isinstance(item, list):
+                    node = int(node, 0)
+                yield from ObjectDict._query(item[node], objpath[1:], qpath+[str(node)], qparam)
+            except (KeyError, IndexError):
+                pass
+
     def select(self, objpath, copy=False, **kwargs):
         obj = self._get(objpath)
         if not isinstance(obj, list):
