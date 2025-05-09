@@ -66,6 +66,21 @@
                     shield: { name: "Shield Spell", address: {Prg: [0, 0x8e8e]}, length: 1},
                 },
             },
+            title: {
+                name: "Title Screen",
+                group: {
+                    background: { name: "Background", address: {Prg: [5, 0xaf40]}},
+                    sprites:    { name: "Sprites",    address: {Prg: [5, 0xaf50]}},
+                },
+            },
+            select: {
+                name: "Select Screen",
+                group: {
+                    background: { name: "Background", address: {Prg: [5, 0xbbf8]}, length: 4},
+                    sprites:    { name: "Sprites",    address: {Prg: [5, 0xbc08]}, length: 4},
+                },
+            },
+
         },
         metatile: {
             overworld: {

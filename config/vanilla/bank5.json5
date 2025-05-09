@@ -29,20 +29,6 @@
                         "3": { name: "Unused 3",     address: {Prg: [5, 0x80ce]}},
                     },
                 },
-                title: {
-                    name: "Title Screen",
-                    group: {
-                        background: { name: "Background", address: {Prg: [5, 0xaf40]}},
-                        sprites:    { name: "Sprites",    address: {Prg: [5, 0xaf50]}},
-                    },
-                },
-                select: {
-                    name: "Select Screen",
-                    group: {
-                        background: { name: "Background", address: {Prg: [5, 0xbbf8]}, length: 4},
-                        sprites:    { name: "Sprites",    address: {Prg: [5, 0xbc08]}, length: 4},
-                    },
-                },
             },
             metatile: {
                 background: {
