@@ -29,6 +29,14 @@ fn weight(name: &str, weight: f32) -> TableColumnSetup<&str> {
     }
 }
 
+fn popup_width(popup: bool, width: f32) -> f32 {
+    if popup {
+        width
+    } else {
+        -1.0
+    }
+}
+
 impl GuiTree for config::SideviewAreas {
     fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {
         let mut result = TreeAction::None;
@@ -271,7 +279,7 @@ impl SideviewEditor {
             ui.table_next_column();
         }
         {
-            let _width = ui.push_item_width(100.0);
+            let _width = ui.push_item_width(popup_width(popup, 120.0));
             let y = &mut self.sideview.enemy.data[el][index].y;
             if ui
                 .input_scalar(str_id!(popup, "Y Position"), y)
@@ -287,7 +295,7 @@ impl SideviewEditor {
             ui.table_next_column();
         }
         {
-            let _width = ui.push_item_width(100.0);
+            let _width = ui.push_item_width(popup_width(popup, 120.0));
             let x = &mut self.sideview.enemy.data[el][index].x;
             if ui
                 .input_scalar(str_id!(popup, "X Position"), x)
@@ -307,7 +315,7 @@ impl SideviewEditor {
             let enemies = project
                 .config
                 .get::<EnemyGroup>(&config.enemy_group.as_ref().unwrap())?;
-            let _width = ui.push_item_width(400.0);
+            let _width = ui.push_item_width(popup_width(popup, 400.0));
             let kind = &mut self.sideview.enemy.data[el][index].kind;
             if enemies
                 .group
@@ -581,7 +589,7 @@ impl SideviewEditor {
             15 => (str_id!(popup, "Extra Obj "), "Extra Object"),
             _ => (str_id!(popup, "Y Position"), "Y Position"),
         };
-        let width = ui.push_item_width(100.0);
+        let width = ui.push_item_width(popup_width(popup, 120.0));
         let y = &mut self.sideview.map.data[index].y;
         if ui.input_scalar(label, y).step(1).build() {
             *y = (*y).clamp(0, 15);
@@ -594,7 +602,7 @@ impl SideviewEditor {
             ui.table_next_column();
         }
         {
-            let _width = ui.push_item_width(100.0);
+            let _width = ui.push_item_width(popup_width(popup, 120.0));
             let x = &mut self.sideview.map.data[index].x;
             if ui
                 .input_scalar(str_id!(popup, "X Position"), x)
@@ -610,7 +618,7 @@ impl SideviewEditor {
             }
         }
         if y < 13 {
-            let _width = ui.push_item_width(300.0);
+            let _width = ui.push_item_width(popup_width(popup, 300.0));
             let kind = &mut self.sideview.map.data[index].kind;
             if let Some(_sel) = self.objects.get(kind) {
                 if self
@@ -625,7 +633,7 @@ impl SideviewEditor {
                 ui.text(format!("Unknown: Object/{:02x}", kind));
             }
         } else if y == 15 {
-            let _width = ui.push_item_width(300.0);
+            let _width = ui.push_item_width(popup_width(popup, 300.0));
             let config = project.config.get::<config::SideviewAreas>(&self.path)?;
             let render = project.config.get::<RenderInfo>(&config.render_info)?;
             let kind = &mut self.sideview.map.data[index].kind;
@@ -645,9 +653,28 @@ impl SideviewEditor {
         if !popup {
             ui.table_next_column();
         }
-        if y != 14 {
+        if y == 13 {
+            let _width = ui.push_item_width(popup_width(popup, 120.0));
+            let mut param = self.sideview.map.data[index].param & 0xF;
+            let mut ceiling = self.sideview.map.data[index].param & 0x80 == 0;
+            if ui
+                .input_scalar(str_id!(popup, "Param"), &mut param)
+                .step(1)
+                .build()
+            {
+                param = param.clamp(0, 15);
+                action = EditAction::Update;
+            }
+            if popup {
+                ui.same_line();
+            }
+            if ui.checkbox("Ceiling##ceiling", &mut ceiling) {
+                action = EditAction::Update;
+            }
+            self.sideview.map.data[index].param = if ceiling { param } else { param | 0x80 };
+        } else if y != 14 {
             if self.sideview.map.data[index].kind == 0x0F {
-                let _width = ui.push_item_width(300.0);
+                let _width = ui.push_item_width(popup_width(popup, 300.0));
                 let item = &mut self.sideview.map.data[index].param;
                 let items = project.config.get::<Items>("/global/item")?;
                 if items
@@ -659,10 +686,10 @@ impl SideviewEditor {
                     action = EditAction::Update;
                 }
             } else {
-                let _width = ui.push_item_width(100.0);
+                let _width = ui.push_item_width(popup_width(popup, 120.0));
                 let p = &mut self.sideview.map.data[index].param;
                 if ui.input_scalar(str_id!(popup, "Param"), p).step(1).build() {
-                    *p = (*p).clamp(0, if y == 13 { 255 } else { 15 });
+                    *p = (*p).clamp(0, 15);
                     action = EditAction::Update;
                 }
             }

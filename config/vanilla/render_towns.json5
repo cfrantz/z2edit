@@ -12,7 +12,7 @@
                 background: 0x44,
             },
             "Outdoors": {
-                ceiling: [0x40, 0x40],
+                ceiling: [0x53, 0x53],
                 floor: [0x53, 0x53],
                 background: 0x40,
             },
