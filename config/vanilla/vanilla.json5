@@ -60,6 +60,12 @@
                     sprites: { name: "Sprites", address: {Prg: [-1, 0xc46b]}},
                 },
             },
+            post_magic: {
+                name: "Post Magic Casting",
+                group: {
+                    post_magic: { name: "Post Magic Cast", address: {Prg: [0, 0x90da]}, length: 1},
+                },
+            },
             shield: {
                 name: "Shield Spell",
                 group: {
