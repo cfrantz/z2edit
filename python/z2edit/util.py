@@ -63,7 +63,7 @@ class ObjectDict(dict):
             if objpath.startswith('/'):
                 objpath = objpath[1:]
             objpath = objpath.split('/')
-        return dict(self._query(self, objpath, [], kwargs))
+        yield from self._query(self, objpath, [], kwargs)
 
     @staticmethod
     def _query(item, objpath, qpath, qparam):
@@ -79,7 +79,7 @@ class ObjectDict(dict):
             for k, v in items:
                 if qf(k, v):
                     yield from ObjectDict._query(v, objpath[1:], qpath+[k], qparam)
-        else:
+        elif item is not None:
             try:
                 node = objpath[0]
                 if isinstance(item, list):
@@ -87,6 +87,8 @@ class ObjectDict(dict):
                 yield from ObjectDict._query(item[node], objpath[1:], qpath+[str(node)], qparam)
             except (KeyError, IndexError):
                 pass
+        else:
+            return
 
     def select(self, objpath, copy=False, **kwargs):
         obj = self._get(objpath)
