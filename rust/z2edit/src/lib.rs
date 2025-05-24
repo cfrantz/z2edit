@@ -1,10 +1,10 @@
 use pyo3::prelude::*;
+use nes;
 
 pub mod app_preferences;
 pub mod dirs;
 pub mod error;
 pub mod gui;
-pub mod nes;
 pub mod util;
 pub mod zelda2;
 

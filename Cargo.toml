@@ -5,6 +5,7 @@ members = [
     "rust/imgui-rs/imgui",
     "rust/imgui-rs/imgui-sys",
     "rust/python_gui",
+    "rust/nes",
 #    "rust/reflection",
 #    "rust/reflection_derive",
 ]

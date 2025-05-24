@@ -10,7 +10,7 @@ use crate::error::Error;
 use crate::gui::util::draw_arrow;
 use crate::gui::zelda2::sideview::SideviewEditor;
 use crate::gui::{ErrorDialog, Gui, Visibility};
-use crate::nes::Address;
+use nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::edit::GameData;
 use crate::zelda2::overworld::Overworld;

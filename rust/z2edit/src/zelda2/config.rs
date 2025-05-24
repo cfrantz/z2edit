@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use crate::error::Error;
-use crate::nes::NesFile;
+use nes::NesFile;
 use crate::zelda2::banks::config::{GameBank, GlobalBank};
 use crate::zelda2::chr::config::ChrMemory;
 use crate::zelda2::edit::EditList;

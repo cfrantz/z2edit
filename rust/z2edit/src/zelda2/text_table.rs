@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 use crate::gui::Gui;
-use crate::nes::{Address, AddressRange, Alloc, NesFile};
+use nes::{Address, AddressRange, Alloc, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::text_encoding::Text;

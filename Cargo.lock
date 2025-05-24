@@ -1136,6 +1136,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "nes"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "hex",
+ "imgui",
+ "imgui-sys",
+ "indexmap",
+ "log",
+ "pyo3",
+ "python_gui",
+ "serde",
+ "serde_annotate",
+ "sha2",
+ "thiserror 2.0.9",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2936,6 +2954,7 @@ dependencies = [
  "indexmap",
  "itertools",
  "log",
+ "nes",
  "pathdiff",
  "pyo3",
  "pyo3-log",

@@ -3,7 +3,7 @@ use imgui::{TableColumnSetup, TableFlags};
 
 use crate::gui::util::edit_tree_node;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
-use crate::nes::Address;
+use nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::experience::{
     config, EnemyExperience, ExperienceTable, ExperienceTableGroup, ExperienceValue,

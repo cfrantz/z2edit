@@ -5,8 +5,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use crate::nes::freespace::{config, Alloc, FreeSpace};
-use crate::nes::{Address, NesError};
+use crate::freespace::{config, Alloc, FreeSpace};
+use crate::{Address, NesError};
 
 #[derive(Default, Clone)]
 #[pyclass]

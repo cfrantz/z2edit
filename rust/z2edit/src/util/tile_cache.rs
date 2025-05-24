@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use crate::error::Error;
-use crate::nes::{hwpalette, Address};
+use nes::{hwpalette, Address};
 use crate::zelda2::chr::{ChrMemory, ChrSchema};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::{Items, Sprite};

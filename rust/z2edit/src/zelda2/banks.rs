@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 use crate::error::Error;
-use crate::nes::NesFile;
+use nes::NesFile;
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::EditList;
 
 pub mod config {
     use super::*;
-    use crate::nes::freespace::config::FreeSpace;
+    use nes::freespace::config::FreeSpace;
     use crate::zelda2::drops::config::DropInfo;
     use crate::zelda2::encounters::config::Encounters;
     use crate::zelda2::enemies::config::EnemyGroup;

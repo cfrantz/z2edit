@@ -1,16 +1,15 @@
 [package]
-name = "z2edit"
-version = "2.99.0"
+name = "nes"
+version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "_z2edit"
-crate-type = ["cdylib"]
+name = "nes"
+#crate-type = ["cdylib"]
 
 [dependencies]
 python_gui = { path = "../python_gui" }
-nes = { path = "../nes" }
 imgui = { workspace = true, features = ["docking", "tables-api"] }
 imgui-sys = { workspace = true, features = ["docking"] }
 pyo3 = { version="0.23.3", features=["anyhow", "indexmap", "serde"]}
@@ -18,18 +17,18 @@ anyhow = { version = "1.0", features = ["backtrace"] }
 thiserror = "2.0.9"
 serde = { version = "1.0.217", features = ["derive"] }
 indexmap = { version = "2.7.0", features = ["serde"] }
-serde_annotate = { git = "https://github.com/lowRISC/serde-annotate" }
 log = "0.4.22"
-pyo3-log = "0.12.1"
-serde_json = "1.0.134"
-typetag = "0.2.19"
-rand = "0.8.5"
-rfd = {version = "0.15.2", features = ["gtk3"],  default-features = false }
-directories = "6.0.0"
+serde_annotate = { git = "https://github.com/lowRISC/serde-annotate" }
+#pyo3-log = "0.12.1"
+#serde_json = "1.0.134"
+#typetag = "0.2.19"
+#rand = "0.8.5"
+#rfd = {version = "0.15.2", features = ["gtk3"],  default-features = false }
+#directories = "6.0.0"
 sha2 = "0.10.8"
 hex = "0.4.3"
-chrono = "0.4.39"
-whoami = "1.5.2"
-shellwords = "1.1.0"
-itertools = "0.14.0"
-pathdiff = "0.2.3"
+#chrono = "0.4.39"
+#whoami = "1.5.2"
+#shellwords = "1.1.0"
+#itertools = "0.14.0"
+#pathdiff = "0.2.3"

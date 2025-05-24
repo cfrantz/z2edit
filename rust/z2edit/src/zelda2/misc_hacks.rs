@@ -8,7 +8,7 @@ use std::ffi::CString;
 
 use crate::error::Error;
 use crate::gui::Gui;
-use crate::nes::{Address, NesFile};
+use nes::{Address, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 

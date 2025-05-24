@@ -6,7 +6,7 @@ use std::any::Any;
 
 use crate::error::Error;
 use crate::gui::Gui;
-use crate::nes::{Address, AddressRange, Alloc, NesFile};
+use nes::{Address, AddressRange, Alloc, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 

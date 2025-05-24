@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use crate::app_preferences::{AppPreferences, MultiMapColor};
 use crate::gui::{ErrorDialog, Visibility};
-use crate::nes::NesFile;
+use nes::NesFile;
 
 #[pyclass]
 pub struct AppPreferencesGui {

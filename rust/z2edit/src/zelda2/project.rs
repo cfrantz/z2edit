@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::error::Error;
-use crate::nes::Address;
-use crate::nes::NesFile;
+use nes::Address;
+use nes::NesFile;
 use crate::util::time::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::connectivity::Connectivity;

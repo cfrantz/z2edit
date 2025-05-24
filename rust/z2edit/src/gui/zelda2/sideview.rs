@@ -6,7 +6,7 @@ use crate::gui::util::edit_tree_node;
 use crate::gui::util::{tooltip, DragHelper, EditAction};
 use crate::gui::widgets::Combo;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
-use crate::nes::Address;
+use nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
