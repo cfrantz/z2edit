@@ -15,6 +15,7 @@ pub enum Address {
     Chr(i16, u16),
     Chr1k(i16, u16),
     Cpu(u16),
+    Ppu(u16),
     NullPtr(),
 }
 
@@ -58,6 +59,7 @@ impl Address {
                 )),
                 "file" => Ok(Address::File(val.get_item(0)?.extract::<usize>()?)),
                 "cpu" => Ok(Address::Cpu(val.get_item(0)?.extract::<u16>()?)),
+                "ppu" => Ok(Address::Ppu(val.get_item(0)?.extract::<u16>()?)),
                 "null" | "nullptr" => Ok(Address::NullPtr()),
                 _ => Err(PyNotImplementedError::new_err(format!(
                     "Cannot create Address from {key:?}"
@@ -76,6 +78,7 @@ impl Address {
             Address::Chr(_, x) => *x as usize,
             Address::Chr1k(_, x) => *x as usize,
             Address::Cpu(x) => *x as usize,
+            Address::Ppu(x) => *x as usize,
             Address::NullPtr() => 0,
         }
     }
@@ -88,6 +91,7 @@ impl Address {
             Address::Chr(x, _) => Some(*x),
             Address::Chr1k(x, _) => Some(*x),
             Address::Cpu(_) => None,
+            Address::Ppu(_) => None,
             Address::NullPtr() => None,
         }
     }
@@ -100,6 +104,7 @@ impl Address {
             Address::Chr(b, _) => Address::Chr(*b, offset as u16),
             Address::Chr1k(b, _) => Address::Chr1k(*b, offset as u16),
             Address::Cpu(_) => Address::Cpu(offset as u16),
+            Address::Ppu(_) => Address::Ppu(offset as u16),
             Address::NullPtr() => Address::NullPtr(),
         }
     }
@@ -112,6 +117,7 @@ impl Address {
             Address::Chr(_, offset) => Address::Chr(bank, *offset ),
             Address::Chr1k(_, offset) => Address::Chr1k(bank, *offset ),
             Address::Cpu(offset) => Address::Cpu(*offset ),
+            Address::Ppu(offset) => Address::Ppu(*offset ),
             Address::NullPtr() => Address::NullPtr(),
         }
     }
@@ -136,6 +142,7 @@ impl Address {
                 Ok((*b as usize) * 1024 + (*x as usize))
             }
             Address::Cpu(x) => Ok(*x as usize),
+            Address::Ppu(x) => Ok(*x as usize),
             Address::NullPtr() => Err(NesError::InvalidAddress.into()),
         }
     }
@@ -193,6 +200,7 @@ impl Address {
             Address::Prg8k(b, x) => 0x4000_0000_0000_0000 | (*b as usize) << 48 | (*x as usize),
             Address::Chr1k(b, x) => 0x5000_0000_0000_0000 | (*b as usize) << 48 | (*x as usize),
             Address::Cpu(x) => *x as usize,
+            Address::Ppu(x) => 0x6000_0000_0000_0000 | (*x as usize),
             Address::NullPtr() => 0,
         }
     }
@@ -223,6 +231,7 @@ macro_rules! address_math {
                     Address::Chr(b, x) => Address::Chr(b, x.wrapping_add(rhs as u16)),
                     Address::Chr1k(b, x) => Address::Chr1k(b, x.wrapping_add(rhs as u16)),
                     Address::Cpu(x) => Address::Cpu(x.wrapping_add(rhs as u16)),
+                    Address::Ppu(x) => Address::Ppu(x.wrapping_add(rhs as u16)),
                     Address::NullPtr() => Address::NullPtr(),
                 }
             }
@@ -237,6 +246,7 @@ macro_rules! address_math {
                     Address::Chr(b, x) => Address::Chr(b, x.wrapping_sub(rhs as u16)),
                     Address::Chr1k(b, x) => Address::Chr1k(b, x.wrapping_sub(rhs as u16)),
                     Address::Cpu(x) => Address::Cpu(x.wrapping_sub(rhs as u16)),
+                    Address::Ppu(x) => Address::Ppu(x.wrapping_sub(rhs as u16)),
                     Address::NullPtr() => Address::NullPtr(),
                 }
             }

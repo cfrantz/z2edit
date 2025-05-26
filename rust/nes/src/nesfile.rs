@@ -58,6 +58,7 @@ impl NesFile {
         match addr {
             Address::File(x) => Ok(x),
             Address::Cpu(_) => Err(NesError::InvalidAddress.into()),
+            Address::Ppu(_) => Err(NesError::InvalidAddress.into()),
             Address::NullPtr() => Err(NesError::InvalidAddress.into()),
             Address::Prg(b, x) => {
                 // Prg banks are 16K.
