@@ -1,23 +1,8 @@
 use pyo3::prelude::*;
 use super::cpu6502_info::{AddressingMode, INFO, NAMES};
 use serde::{Deserialize, Serialize};
-use bitflags::bitflags;
 use crate::Nes;
 use crate::Address;
-
-bitflags! {
-    #[derive(Default, Serialize, Deserialize)]
-    pub struct CpuFlags: u8 {
-        const C = 0b00000001;
-        const Z = 0b00000010;
-        const I = 0b00000100;
-        const D = 0b00001000;
-        const B = 0b00010000;
-        const U = 0b00100000;
-        const V = 0b01000000;
-        const N = 0b10000000;
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[pyclass]
@@ -25,7 +10,7 @@ pub struct Cpu6502 {
     pub a: u8,
     pub x: u8,
     pub y: u8,
-    pub p: CpuFlags,
+    pub p: u8,
     pub sp: u8,
     pub pc: u16,
     pub reset_pending: bool,
@@ -41,7 +26,7 @@ impl Default for Cpu6502 {
             a: 0,
             x: 0,
             y: 0,
-            p: CpuFlags::default(),
+            p: Self::FLAG_U, // Default flags often include U
             sp: 0,
             pc: 0,
             reset_pending: true,
@@ -55,6 +40,17 @@ impl Default for Cpu6502 {
 
 
 impl Cpu6502 {
+    // Flag constants
+    const FLAG_C: u8 = 0b00000001;
+    const FLAG_Z: u8 = 0b00000010;
+    const FLAG_I: u8 = 0b00000100;
+    const FLAG_D: u8 = 0b00001000;
+    const FLAG_B: u8 = 0b00010000; // Break command
+    const FLAG_U: u8 = 0b00100000; // Unused, always 1
+    const FLAG_V: u8 = 0b01000000; // Overflow
+    const FLAG_N: u8 = 0b10000000; // Negative
+
+
     fn read16<'py>(nes: &Bound<'py, Nes>, address: u16) -> u16 {
         Nes::read(nes, Address::Cpu(address)) as u16 | (Nes::read(nes, Address::Cpu(address + 1)) as u16) << 8
     }
@@ -92,42 +88,42 @@ impl Cpu6502 {
     }
 
     pub fn cpustate(&self) -> String {
-        let c = if self.p.contains(CpuFlags::C) {
+        let c = if (self.p & Self::FLAG_C) != 0 {
             "C"
         } else {
             "c"
         };
-        let z = if self.p.contains(CpuFlags::Z) {
+        let z = if (self.p & Self::FLAG_Z) != 0 {
             "Z"
         } else {
             "z"
         };
-        let i = if self.p.contains(CpuFlags::I) {
+        let i = if (self.p & Self::FLAG_I) != 0 {
             "I"
         } else {
             "i"
         };
-        let d = if self.p.contains(CpuFlags::D) {
+        let d = if (self.p & Self::FLAG_D) != 0 {
             "D"
         } else {
             "d"
         };
-        let b = if self.p.contains(CpuFlags::B) {
+        let b = if (self.p & Self::FLAG_B) != 0 {
             "B"
         } else {
             "b"
         };
-        let u = if self.p.contains(CpuFlags::U) {
+        let u = if (self.p & Self::FLAG_U) != 0 {
             "U"
         } else {
             "u"
         };
-        let v = if self.p.contains(CpuFlags::V) {
+        let v = if (self.p & Self::FLAG_V) != 0 {
             "V"
         } else {
             "v"
         };
-        let n = if self.p.contains(CpuFlags::N) {
+        let n = if (self.p & Self::FLAG_N) != 0 {
             "N"
         } else {
             "n"
@@ -187,30 +183,30 @@ impl Cpu6502 {
 
     fn set_z(&mut self, val: u8) {
         if val == 0 {
-            self.p.insert(CpuFlags::Z);
+            self.p |= Self::FLAG_Z;
         } else {
-            self.p.remove(CpuFlags::Z);
+            self.p &= !Self::FLAG_Z;
         }
     }
     fn set_n(&mut self, val: u8) {
         if val & 0x80 == 0x80 {
-            self.p.insert(CpuFlags::N);
+            self.p |= Self::FLAG_N;
         } else {
-            self.p.remove(CpuFlags::N);
+            self.p &= !Self::FLAG_N;
         }
     }
     fn set_c(&mut self, val: bool) {
         if val {
-            self.p.insert(CpuFlags::C);
+            self.p |= Self::FLAG_C;
         } else {
-            self.p.remove(CpuFlags::C);
+            self.p &= !Self::FLAG_C;
         }
     }
     fn set_v(&mut self, val: bool) {
         if val {
-            self.p.insert(CpuFlags::V);
+            self.p |= Self::FLAG_V;
         } else {
-            self.p.remove(CpuFlags::V);
+            self.p &= !Self::FLAG_V;
         }
     }
 
@@ -222,7 +218,6 @@ impl Cpu6502 {
         self.set_zn(a.wrapping_sub(b));
         self.set_c(a >= b);
     }
-
     pub fn get_pc(&self) -> u16 {
         self.pc
     }
@@ -254,7 +249,7 @@ impl Cpu6502 {
         let c = self.cycles;
         if self.reset_pending {
             self.reset_pending = false;
-            self.p = CpuFlags::U | CpuFlags::B | CpuFlags::I;
+            self.p = Self::FLAG_U | Self::FLAG_B | Self::FLAG_I;
             self.sp = 0xFD;
             self.a = 0;
             self.x = 0;
@@ -263,15 +258,15 @@ impl Cpu6502 {
         } else if self.nmi_pending {
             self.nmi_pending = false;
             self.push16(nes, self.pc);
-            self.push(nes, (self.p | CpuFlags::B).bits);
-            self.p.insert(CpuFlags::I);
+            self.push(nes, self.p | Self::FLAG_B);
+            self.p |= Self::FLAG_I;
             self.pc = Cpu6502::read16(nes, 0xFFFAu16);
             self.cycles += 7;
-        } else if self.irq_pending && !self.p.contains(CpuFlags::I) {
+        } else if self.irq_pending && (self.p & Self::FLAG_I) == 0 {
             self.irq_pending = false;
             self.push16(nes, self.pc);
-            self.push(nes, (self.p | CpuFlags::B).bits);
-            self.p.insert(CpuFlags::I);
+            self.push(nes, self.p | Self::FLAG_B);
+            self.p |= Self::FLAG_I;
             self.pc = Cpu6502::read16(nes, 0xFFFEu16);
             self.cycles += 7;
         }
@@ -333,8 +328,8 @@ impl Cpu6502 {
             // BRK
             0x00 => {
                 self.push16(nes, self.pc.wrapping_add(1));
-                self.push(nes, (self.p | CpuFlags::B).bits);
-                self.p |= CpuFlags::I;
+                self.push(nes, self.p | Self::FLAG_B);
+                self.p |= Self::FLAG_I;
                 self.pc = Cpu6502::read16(nes, 0xFFFEu16);
             }
 
@@ -359,11 +354,11 @@ impl Cpu6502 {
             }
 
             // PHP
-            0x08 => self.push(nes, (self.p | CpuFlags::B).bits),
+            0x08 => self.push(nes, self.p | Self::FLAG_B | Self::FLAG_U), // B and U are set on stack
             // BPL nn
-            0x10 => self.branch(opaddr, !self.p.contains(CpuFlags::N)),
+            0x10 => self.branch(opaddr, (self.p & Self::FLAG_N) == 0),
             // CLC
-            0x18 => self.p.remove(CpuFlags::C),
+            0x18 => self.p &= !Self::FLAG_C,
             // JSR
             0x20 => {
                 self.push16(nes, self.pc.wrapping_sub(1));
@@ -384,7 +379,7 @@ impl Cpu6502 {
             // ROL <mem> opaddrs
             0x26 | 0x2e | 0x36 | 0x3e => {
                 let r = Nes::read(nes, Address::Cpu(opaddr)) as u16;
-                let carry = if self.p.contains(CpuFlags::C) {
+                let carry = if self.p & Self::FLAG_C != 0 {
                     1u16
                 } else {
                     0u16
@@ -395,11 +390,11 @@ impl Cpu6502 {
                 Nes::write(nes, Address::Cpu(opaddr), r as u8);
             }
             // PLP
-            0x28 => self.p.bits = (self.pull(nes) & 0xEF) | 0x20,
+            0x28 => self.p = (self.pull(nes) & !Self::FLAG_B) | Self::FLAG_U,
             // ROL A
             0x2a => {
                 let r = self.a as u16;
-                let carry = if self.p.contains(CpuFlags::C) {
+                let carry = if self.p & Self::FLAG_C != 0 {
                     1u16
                 } else {
                     0u16
@@ -410,12 +405,12 @@ impl Cpu6502 {
                 self.a = r as u8;
             }
             // BMI nn
-            0x30 => self.branch(opaddr, self.p.contains(CpuFlags::N)),
+            0x30 => self.branch(opaddr, (self.p & Self::FLAG_N) != 0),
             // SEC
-            0x38 => self.p.insert(CpuFlags::C),
+            0x38 => self.p |= Self::FLAG_C,
             // RTI
             0x40 => {
-                self.p.bits = (self.pull(nes) & 0xEF) | 0x20;
+                self.p = (self.pull(nes) & !Self::FLAG_B) | Self::FLAG_U;
                 self.pc = self.pull16(nes);
             }
 
@@ -435,7 +430,7 @@ impl Cpu6502 {
             // PHA
             0x48 => self.push(nes, self.a),
             // BVC nn
-            0x50 => self.branch(opaddr, !self.p.contains(CpuFlags::V)),
+            0x50 => self.branch(opaddr, (self.p & Self::FLAG_V) == 0),
             // JMP nnnn, JMP (nnnn)
             0x4c | 0x6c => self.pc = opaddr,
 
@@ -446,7 +441,7 @@ impl Cpu6502 {
                 self.set_zn(self.a);
             }
             // CLI
-            0x58 => self.p.remove(CpuFlags::I),
+            0x58 => self.p &= !Self::FLAG_I,
             // RTS
             0x60 => self.pc = self.pull16(nes).wrapping_add(1),
 
@@ -454,7 +449,7 @@ impl Cpu6502 {
             0x61 | 0x65 | 0x69 | 0x6d | 0x71 | 0x75 | 0x79 | 0x7d => {
                 let a = self.a;
                 let b = Nes::read(nes, Address::Cpu(opaddr));
-                let carry = if self.p.contains(CpuFlags::C) {
+                let carry = if (self.p & Self::FLAG_C) != 0 {
                     1u16
                 } else {
                     0u16
@@ -469,7 +464,7 @@ impl Cpu6502 {
             // ROR <mem>
             0x66 | 0x6e | 0x76 | 0x7e => {
                 let val = Nes::read(nes, Address::Cpu(opaddr));
-                let carry = if self.p.contains(CpuFlags::C) {
+                let carry = if (self.p & Self::FLAG_C) != 0 {
                     1u8
                 } else {
                     0u8
@@ -487,7 +482,7 @@ impl Cpu6502 {
             // ROR A
             0x6a => {
                 let val = self.a;
-                let carry = if self.p.contains(CpuFlags::C) {
+                let carry = if (self.p & Self::FLAG_C) != 0 {
                     1u8
                 } else {
                     0u8
@@ -497,9 +492,9 @@ impl Cpu6502 {
                 self.set_zn(self.a);
             }
             // BVC nn
-            0x70 => self.branch(opaddr, self.p.contains(CpuFlags::V)),
+            0x70 => self.branch(opaddr, (self.p & Self::FLAG_V) != 0),
             // SEI
-            0x78 => self.p.insert(CpuFlags::I),
+            0x78 => self.p |= Self::FLAG_I,
 
             // STA <mem> opcodes
             0x81 | 0x85 | 0x8d | 0x91 | 0x95 | 0x99 | 0x9d => {
@@ -523,7 +518,7 @@ impl Cpu6502 {
             }
 
             // BCC nn
-            0x90 => self.branch(opaddr, !self.p.contains(CpuFlags::C)),
+            0x90 => self.branch(opaddr, (self.p & Self::FLAG_C) == 0),
 
             // TYA
             0x98 => {
@@ -561,9 +556,9 @@ impl Cpu6502 {
             }
 
             // BCS nn
-            0xb0 => self.branch(opaddr, self.p.contains(CpuFlags::C)),
+            0xb0 => self.branch(opaddr, (self.p & Self::FLAG_C) != 0),
             // CLV
-            0xB8 => self.p.remove(CpuFlags::V),
+            0xB8 => self.p &= !Self::FLAG_V,
             // TSX
             0xba => {
                 self.x = self.sp;
@@ -593,10 +588,10 @@ impl Cpu6502 {
                 self.set_zn(self.x);
             }
             // BNE nn
-            0xd0 => self.branch(opaddr, !self.p.contains(CpuFlags::Z)),
+            0xd0 => self.branch(opaddr, (self.p & Self::FLAG_Z) == 0),
 
             // CLD
-            0xd8 => self.p.remove(CpuFlags::D),
+            0xd8 => self.p &= !Self::FLAG_D,
             // CPX opcodes
             0xe0 | 0xe4 | 0xec => self.compare(self.x, Nes::read(nes, Address::Cpu(opaddr))),
 
@@ -604,7 +599,7 @@ impl Cpu6502 {
             0xe1 | 0xe5 | 0xe9 | 0xed | 0xf1 | 0xf5 | 0xf9 | 0xfd => {
                 let a = self.a;
                 let b = Nes::read(nes, Address::Cpu(opaddr));
-                let ncarry = if self.p.contains(CpuFlags::C) {
+                let ncarry = if (self.p & Self::FLAG_C) != 0 {
                     0i16
                 } else {
                     1i16
@@ -631,9 +626,9 @@ impl Cpu6502 {
             // NOP
             0xea => {}
             // BEQ nn
-            0xf0 => self.branch(opaddr, self.p.contains(CpuFlags::Z)),
+            0xf0 => self.branch(opaddr, (self.p & Self::FLAG_Z) != 0),
             //SED
-            0xf8 => self.p.insert(CpuFlags::D),
+            0xf8 => self.p |= Self::FLAG_D,
 
             _ => {
                 // Illegal opcode.
