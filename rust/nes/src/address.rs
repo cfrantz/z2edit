@@ -295,6 +295,23 @@ impl AddressRange {
             Err(PyException::new_err("Unknown type"))
         }
     }
+
+    #[staticmethod]
+    pub fn cpu(a: u16, length: u16) -> AddressRange {
+        AddressRange {
+            address: Address::Cpu(a),
+            length,
+        }
+    }
+
+    #[staticmethod]
+    pub fn ppu(a: u16, length: u16) -> AddressRange {
+        AddressRange {
+            address: Address::Ppu(a),
+            length,
+        }
+    }
+
     fn same_bank(&self, address: Address) -> bool {
         if std::mem::discriminant(&self.address) != std::mem::discriminant(&address) {
             return false;

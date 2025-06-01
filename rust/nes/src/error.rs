@@ -16,4 +16,7 @@ pub enum NesError {
     RangeTooSmall(AddressRange, u16),
     #[error("no freespace available: {0}")]
     NoMemory(String),
+    #[error("unsupported mapper: {0}")]
+    UnsupportedMapper(u16),
+
 }

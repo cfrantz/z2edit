@@ -25,10 +25,14 @@ fn _z2edit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Directories>()?;
     m.add_class::<app_preferences::AppPreferencesProxy>()?;
     m.add_class::<app_preferences::MultiMapColor>()?;
+
+    /*
     m.add_class::<nes::NesFile>()?;
     m.add_class::<nes::Address>()?;
     m.add_class::<nes::AddressRange>()?;
     m.add_class::<nes::freespace::Alloc>()?;
+    */
+
     m.add_class::<gui::project::ProjectGui>()?;
     m.add_class::<gui::file_dialog::FileDialog>()?;
     m.add_class::<gui::preferences::AppPreferencesGui>()?;
@@ -39,5 +43,7 @@ fn _z2edit(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<zelda2::edit::EditProxy>()?;
     m.add_class::<zelda2::edit::Metadata>()?;
     m.add_class::<zelda2::text_encoding::Text>()?;
+
+    nes::as_submodule_of("_z2edit", m)?;
     Ok(())
 }

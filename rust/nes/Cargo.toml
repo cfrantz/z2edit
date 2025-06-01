@@ -10,6 +10,7 @@ name = "nes"
 
 [dependencies]
 python_gui = { path = "../python_gui" }
+bitflags = "1"
 imgui = { workspace = true, features = ["docking", "tables-api"] }
 imgui-sys = { workspace = true, features = ["docking"] }
 pyo3 = { version="0.23.3", features=["anyhow", "indexmap", "serde"]}
@@ -19,10 +20,10 @@ serde = { version = "1.0.217", features = ["derive"] }
 indexmap = { version = "2.7.0", features = ["serde"] }
 log = "0.4.22"
 serde_annotate = { git = "https://github.com/lowRISC/serde-annotate" }
+rand = "0.8.5"
 #pyo3-log = "0.12.1"
 #serde_json = "1.0.134"
 #typetag = "0.2.19"
-#rand = "0.8.5"
 #rfd = {version = "0.15.2", features = ["gtk3"],  default-features = false }
 #directories = "6.0.0"
 sha2 = "0.10.8"

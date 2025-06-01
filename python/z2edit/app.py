@@ -7,6 +7,7 @@ import os.path
 
 import z2edit
 from z2edit import gui
+from z2edit import nes
 
 LOG_LEVELS = {
     "TRACE": 5,
@@ -31,6 +32,7 @@ class Application(object):
         self.preferences.load(self.preferences_file)
         self.preferences_gui = None;
         self.wizard = None
+        self.rom_to_emulate = None
         if args.new:
             self.wizard = z2edit.ProjectWizardGui()
             self.wizard.done = True
@@ -119,6 +121,7 @@ class Application(object):
         self.preferences_gui = z2edit.AppPreferencesGui(self.preferences_file)
 
         while self.running:
+            self._emulator()
             if ui := self.inner.prepare_frame():
                 self.menu_bar()
                 self.preferences_gui.draw(ui)
@@ -134,6 +137,19 @@ class Application(object):
             else:
                 self.running = False
         self.inner = None
+
+    def emulator(self, rom):
+        self.rom_to_emulate = rom
+
+    def _emulator(self):
+        if not self.rom_to_emulate:
+            return
+        rom = self.rom_to_emulate
+        self.rom_to_emulate = None
+        if isinstance(rom, str):
+            rom = nes.NesFile.load(rom)
+        emu = nes.Nes(rom)
+        self.windows.append(nes.EmulatorGui(emu))
 
     def interact(self):
         a = self

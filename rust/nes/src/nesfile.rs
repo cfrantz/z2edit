@@ -121,6 +121,23 @@ impl NesFile {
         (self.data[6] >> 4 | self.data[7] & 0xF0) as u16
     }
 
+    /// Return the mirror mode in the header.
+    /// - false: vertical arrangement (mirrored horizontally) or mapper-controlled.
+    /// - true: horizontal arrangement (mirrored vertically).
+    pub fn mirror(&self) -> bool {
+        self.data[6] & 0x01 != 0
+    }
+
+    /// Return whether the cart uses four-screen arrangement.
+    pub fn fourscreen(&self) -> bool {
+        self.data[6] & 0x08 != 0
+    }
+
+    /// Return whether the cart has a battery or other non-volatile memory.
+    pub fn battery(&self) -> bool {
+        self.data[6] & 0x02 != 0
+    }
+
     /// Insert data into the NES ROM.
     /// This function will cause the ROM to grow.  Be sure to adjust
     /// the header appropriately.
@@ -244,5 +261,19 @@ impl NesFile {
 
     pub fn report(&self) -> String {
         self.freespace.to_string()
+    }
+
+    /// Return a mirroed VRAM addres according to the mirror/fourscreen bits
+    /// in the NES header.
+    pub fn mirror_address(&self, address: u16) -> u16 {
+        let address = address & 0x0FFF;
+        if self.fourscreen() {
+            address
+        } else if self.mirror() {
+            address & !0x0800
+        } else {
+            let a11 = address & 0x0800;
+            (address & !0x0c00) | (a11 >> 1)
+        }
     }
 }

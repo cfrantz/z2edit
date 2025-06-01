@@ -24,8 +24,9 @@ logger = logging.getLogger(__name__)
 
 try:
     from . import _z2edit
+    from _z2edit.nes import Address
 
-    _address_adaptor = _z2edit.Address.Prg
+    _address_adaptor = Address.Prg
 except ImportError:
     _address_adaptor = lambda bank, addr: (bank, addr)
 
