@@ -1,6 +1,6 @@
 use crate::{Address, AddressRange, Nes};
 
-pub(crate) trait Peripheral {
+pub trait Peripheral {
     fn write(&mut self, nes: &Nes, address: Address, value: u8);
     fn read(&mut self, nes: &Nes, address: Address) -> u8; // PPU read can have side effects
     fn tick(&mut self, nes: &Nes);
