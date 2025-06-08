@@ -3,18 +3,18 @@ mod apu_noise;
 mod apu_pulse;
 mod apu_triangle;
 
-use crate::Address;
 use crate::apu::apu_dmc::ApuDmc;
 use crate::apu::apu_noise::ApuNoise;
 use crate::apu::apu_pulse::ApuPulse;
 use crate::apu::apu_triangle::ApuTriangle;
+use crate::peripheral::Peripheral;
 use crate::system::Nes;
+use crate::Address;
 use serde::{Deserialize, Serialize};
 use std::default::Default;
-use pyo3::prelude::*;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[pyclass]
+// No longer a pyclass directly, Nes will hold Arc<Mutex<Apu>>
 pub struct Apu {
     cycle: u64,
     frame_period: u8,
@@ -31,7 +31,7 @@ pub struct Apu {
 impl Apu {
     const FRAME_COUNTER_RATE: f64 = (Nes::FREQUENCY as f64) / 240.0;
     //const SAMPLE_RATE: f64 = (Nes::FREQUENCY as f64) / (Nes::SAMPLE_RATE as f64);
-    const SAMPLE_RATE: f64 = ((Nes::FREQUENCY as f64) / (Nes::FPS as f64)) / (48000.0/59.9);
+    const SAMPLE_RATE: f64 = ((Nes::FREQUENCY as f64) / (Nes::FPS as f64)) / (48000.0 / 59.9);
     pub fn new() -> Self {
         Apu {
             pulse0: ApuPulse::new(0),
@@ -42,7 +42,7 @@ impl Apu {
             ..Default::default()
         }
     }
-    fn step_timer<'py>(&mut self, nes: &Bound<'py, Nes>) {
+    fn step_timer(&mut self, nes: &Nes) {
         if self.cycle % 2 == 0 {
             self.pulse0.step_timer();
             self.pulse1.step_timer();
@@ -67,7 +67,7 @@ impl Apu {
         self.triangle.step_length();
         self.noise.step_length();
     }
-    fn step_frame_counter<'py>(&mut self, nes: &Bound<'py, Nes>) {
+    fn step_frame_counter(&mut self, nes: &Nes) {
         if self.frame_period == 4 {
             self.frame_value = (self.frame_value + 1) % 4;
             self.step_envelope();
@@ -90,7 +90,6 @@ impl Apu {
         }
     }
 
-
     fn set_frame_counter(&mut self, val: u8) {
         self.frame_period = 4 + (val >> 7);
         self.frame_irq = (val & 0x40) == 0;
@@ -104,9 +103,8 @@ impl Apu {
     }
 }
 
-#[pymethods]
-impl Apu {
-    pub fn write<'py>(&mut self, nes: &Bound<'py, Nes>, address: Address, val: u8) {
+impl Peripheral for Apu {
+    fn write(&mut self, nes: &Nes, address: Address, val: u8) {
         let Address::Cpu(address) = address else {
             return;
         };
@@ -122,7 +120,7 @@ impl Apu {
         }
     }
 
-    pub fn read<'py>(&mut self, _nes: &Bound<'py, Nes>, address: Address) -> u8 {
+    fn read(&mut self, _nes: &Nes, address: Address) -> u8 {
         let Address::Cpu(address) = address else {
             return 0xFF;
         };
@@ -138,7 +136,7 @@ impl Apu {
         }
     }
 
-    pub fn tick<'py>(&mut self, nes: &Bound<'py, Nes>) {
+    fn tick(&mut self, nes: &Nes) {
         let c1 = self.cycle as f64;
         self.cycle += 1;
         let c2 = self.cycle as f64;
@@ -154,11 +152,11 @@ impl Apu {
         let s1 = (c1 / Self::SAMPLE_RATE) as usize;
         let s2 = (c2 / Self::SAMPLE_RATE) as usize;
         if s1 != s2 {
-            Nes::audio_sample(nes, "APU: Pulse 0", self.pulse0.output());
-            Nes::audio_sample(nes, "APU: Pulse 1", self.pulse1.output());
-            Nes::audio_sample(nes, "APU: Triangle", self.triangle.output());
-            Nes::audio_sample(nes, "APU: Noise", self.noise.output());
-            Nes::audio_sample(nes, "APU: DMC", self.dmc.output());
+            nes.audio_sample("APU: Pulse 0", self.pulse0.output());
+            nes.audio_sample("APU: Pulse 1", self.pulse1.output());
+            nes.audio_sample("APU: Triangle", self.triangle.output());
+            nes.audio_sample("APU: Noise", self.noise.output());
+            nes.audio_sample("APU: DMC", self.dmc.output());
         }
     }
 }

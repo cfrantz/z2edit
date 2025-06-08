@@ -1,13 +1,11 @@
-use serde::{Deserialize, Serialize};
-use pyo3::prelude::*;
-
-use crate::Address;
+use crate::peripheral::Peripheral;
 use crate::system::Nes;
+use crate::Address;
+use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[pyclass]
 pub struct Controller {
-    #[pyo3(get, set)]
     pub buttons: u8,
     index: u8,
     strobe: u8,
@@ -65,38 +63,39 @@ pub struct Controllers {
 impl Default for Controllers {
     fn default() -> Self {
         Controllers {
-            controller: vec![
-                Controller::default(),
-                Controller::default(),
-            ],
+            controller: vec![Controller::default(), Controller::default()],
         }
     }
 }
 
-#[pymethods]
 impl Controllers {
-    #[new]
     pub fn new() -> Self {
         Self::default()
     }
+}
 
-    pub fn read<'py>(&mut self, _nes: &Bound<'py, Nes>, address: Address) -> u8 {
+impl Peripheral for Controllers {
+    fn read(&mut self, _nes: &Nes, address: Address) -> u8 {
         match address {
             Address::Cpu(0x4016) => self.controller[0].read(),
             Address::Cpu(0x4017) => self.controller[1].read(),
             _ => 0xFF,
         }
-
     }
 
-    pub fn write<'py>(&mut self, _nes: &Bound<'py, Nes>, address: Address, val: u8) {
+    fn write(&mut self, _nes: &Nes, address: Address, val: u8) {
         match address {
             Address::Cpu(0x4016) => {
                 for c in self.controller.iter_mut() {
                     c.write(val);
                 }
             }
-            _ => {},
+            _ => {}
         }
+    }
+
+    fn tick(&mut self, _nes: &Nes) {
+        // Controllers typically don't have a clock tick in the same way
+        // other APU/PPU components do. Their state changes based on input.
     }
 }

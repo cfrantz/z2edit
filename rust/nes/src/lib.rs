@@ -2,26 +2,26 @@ use pyo3::prelude::*;
 use pyo3::py_run;
 
 pub mod address;
+pub(crate) mod apu;
+pub(crate) mod controller;
+pub(crate) mod cpu;
 mod error;
 pub mod freespace;
+pub(crate) mod gui;
 pub mod hwpalette;
+pub(crate) mod mapper;
 pub mod nesfile;
-pub(crate) mod apu;
-pub(crate) mod cpu;
+pub(crate) mod peripheral;
 pub(crate) mod ppu;
 pub(crate) mod ram;
-pub(crate) mod system;
 pub(crate) mod stall;
-pub(crate) mod controller;
-pub(crate) mod mapper;
-pub(crate) mod gui;
+pub(crate) mod system;
 
 pub use address::{Address, AddressRange};
 pub use error::NesError;
 pub use freespace::Alloc;
 pub use nesfile::NesFile;
 pub use system::Nes;
-
 
 #[pyfunction]
 fn version() -> String {
@@ -47,7 +47,11 @@ pub fn nes(m: &Bound<'_, PyModule>) -> PyResult<()> {
 pub fn as_submodule_of(parent: &str, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let name = format!("{parent}.nes");
     let module = PyModule::new(m.py(), "nes")?;
-    py_run!(m.py(), module, &format!("import sys; sys.modules['{name}'] = module"));
+    py_run!(
+        m.py(),
+        module,
+        &format!("import sys; sys.modules['{name}'] = module")
+    );
     _nes(&module)?;
     m.add_submodule(&module)?;
     Ok(())

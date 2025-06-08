@@ -112,12 +112,12 @@ impl Address {
     pub fn with_bank(&self, bank: i16) -> Self {
         match self {
             Address::File(offset) => Address::File(*offset),
-            Address::Prg(_, offset) => Address::Prg(bank, *offset ),
-            Address::Prg8k(_, offset) => Address::Prg8k(bank, *offset ),
-            Address::Chr(_, offset) => Address::Chr(bank, *offset ),
-            Address::Chr1k(_, offset) => Address::Chr1k(bank, *offset ),
-            Address::Cpu(offset) => Address::Cpu(*offset ),
-            Address::Ppu(offset) => Address::Ppu(*offset ),
+            Address::Prg(_, offset) => Address::Prg(bank, *offset),
+            Address::Prg8k(_, offset) => Address::Prg8k(bank, *offset),
+            Address::Chr(_, offset) => Address::Chr(bank, *offset),
+            Address::Chr1k(_, offset) => Address::Chr1k(bank, *offset),
+            Address::Cpu(offset) => Address::Cpu(*offset),
+            Address::Ppu(offset) => Address::Ppu(*offset),
             Address::NullPtr() => Address::NullPtr(),
         }
     }
@@ -383,8 +383,10 @@ impl AddressRange {
             true
         } else if self.overlaps(other) {
             let start = std::cmp::min(self.address.offset(), other.address.offset());
-            let end = std::cmp::max(self.address.offset() + self.length as usize,
-                other.address.offset() + other.length as usize);
+            let end = std::cmp::max(
+                self.address.offset() + self.length as usize,
+                other.address.offset() + other.length as usize,
+            );
             let length = end - start;
             self.address = self.address.with_offset(start);
             self.length = length as u16;

@@ -41,12 +41,14 @@ pub struct ApuNoise {
 
     constant_volume: u8,
     pub reg: Registers,
+    pub channel_volume: f32,
 }
 
 impl ApuNoise {
     pub fn new() -> Self {
         ApuNoise {
             shift_register: 1,
+            channel_volume: 0.25,
             ..Default::default()
         }
     }
@@ -80,7 +82,7 @@ impl ApuNoise {
     }
 
     pub fn output(&mut self) -> f32 {
-        self.internal_output() as f32 / 15.0
+        self.channel_volume * self.internal_output() as f32 / 15.0
     }
 
     fn internal_output(&self) -> u8 {
@@ -126,12 +128,12 @@ impl ApuNoise {
         }
     }
 
-    pub fn write<'py>(&mut self, _nes: &Bound<'py, Nes>, addr: u16, val: u8) {
+    pub fn write<'py>(&mut self, _nes: &Nes, addr: u16, val: u8) {
         match addr & 3 {
             0 => self.set_control(val),
             2 => self.set_period(val),
             3 => self.set_length(val),
-            _ => {},
+            _ => {}
         }
     }
 }

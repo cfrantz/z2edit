@@ -35,11 +35,15 @@ pub struct ApuDmc {
     irq: bool,
 
     pub reg: Registers,
+    pub channel_volume: f32,
 }
 
 impl ApuDmc {
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            channel_volume: 0.25,
+            ..Default::default()
+        }
     }
     pub fn active(&self) -> bool {
         self.current_length != 0
@@ -72,10 +76,10 @@ impl ApuDmc {
     }
 
     pub fn output(&mut self) -> f32 {
-        self.value as f32 / 127.0
+        self.channel_volume * self.value as f32 / 127.0
     }
 
-    pub fn step_timer<'py>(&mut self, nes: &Bound<'py, Nes>) {
+    pub fn step_timer<'py>(&mut self, nes: &Nes) {
         if self.enabled {
             self.step_reader(nes);
             if self.tick_value == 0 {
@@ -86,10 +90,10 @@ impl ApuDmc {
             }
         }
     }
-    pub fn step_reader<'py>(&mut self, nes: &Bound<'py, Nes>) {
+    pub fn step_reader<'py>(&mut self, nes: &Nes) {
         if self.current_length > 0 && self.bit_count == 0 {
-            Nes::dma_stall(nes, 4, false);
-            self.shift_register = Nes::read(nes, Address::Cpu(self.current_address));
+            nes.dma_stall(4, false);
+            self.shift_register = nes.read(Address::Cpu(self.current_address));
             self.bit_count = 8;
             self.current_address = self.current_address.wrapping_add(1);
             if self.current_address == 0 {
@@ -119,13 +123,13 @@ impl ApuDmc {
         self.current_length = self.sample_length;
     }
 
-    pub fn write<'py>(&mut self, _nes: &Bound<'py, Nes>, addr: u16, val: u8) {
+    pub fn write<'py>(&mut self, _nes: &Nes, addr: u16, val: u8) {
         match addr & 3 {
             0 => self.set_control(val),
             1 => self.set_value(val),
             2 => self.set_address(val),
             3 => self.set_length(val),
-            _ => {},
+            _ => {}
         }
     }
 }

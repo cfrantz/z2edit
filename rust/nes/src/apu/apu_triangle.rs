@@ -37,11 +37,15 @@ pub struct ApuTriangle {
     counter_value: u8,
 
     pub reg: Registers,
+    pub channel_volume: f32,
 }
 
 impl ApuTriangle {
     pub fn new() -> Self {
-            Default::default()
+        Self {
+            channel_volume: 0.25,
+            ..Default::default()
+        }
     }
     pub fn active(&self) -> bool {
         self.length_value != 0
@@ -70,7 +74,7 @@ impl ApuTriangle {
     }
 
     pub fn output(&mut self) -> f32 {
-        self.internal_output() as f32 / 15.0
+        self.channel_volume * self.internal_output() as f32 / 15.0
     }
 
     fn internal_output(&self) -> u8 {
@@ -111,12 +115,12 @@ impl ApuTriangle {
         }
     }
 
-    pub fn write<'py>(&mut self, _nes: &Bound<'py, Nes>, addr: u16, val: u8) {
+    pub fn write<'py>(&mut self, _nes: &Nes, addr: u16, val: u8) {
         match addr & 3 {
             0 => self.set_control(val),
             2 => self.set_timer_low(val),
             3 => self.set_timer_high(val),
-            _ => {},
+            _ => {}
         }
     }
 }

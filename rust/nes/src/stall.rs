@@ -1,28 +1,33 @@
 use pyo3::prelude::*;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 #[derive(Default)]
 #[pyclass]
 pub struct Stall {
-    #[pyo3(get, set)]
-    pub(crate) cycles: u64,
-    pub(crate) odd_cycle: bool,
+    pub(crate) cycles: AtomicU64,
+    pub(crate) odd_cycle: AtomicBool,
 }
 
 #[pymethods]
 impl Stall {
-    pub fn clear(&mut self) -> u64 {
-        let cycles = self.cycles;
-        self.cycles = 0;
-        self.odd_cycle = false;
-        cycles
+    pub fn clear(&self, is_odd: bool) -> u64 {
+        let cycles = self.cycles.load(Ordering::SeqCst);
+        let odd_cycle = self.odd_cycle.load(Ordering::SeqCst);
+        self.cycles.store(0, Ordering::Relaxed);
+        self.odd_cycle.store(false, Ordering::Relaxed);
+        if odd_cycle && is_odd {
+            cycles + 1
+        } else {
+            cycles
+        }
     }
 
-    pub fn stall(&mut self, cycles: u64, odd_cycle: bool) {
-        self.cycles = cycles;
-        self.odd_cycle = odd_cycle;
+    pub fn stall(&self, cycles: u64, odd_cycle: bool) {
+        self.cycles.store(cycles, Ordering::Relaxed);
+        self.odd_cycle.store(odd_cycle, Ordering::Relaxed);
     }
 
     pub fn stalling(&self) -> bool {
-        self.cycles != 0
+        self.cycles.load(Ordering::SeqCst) != 0
     }
 }

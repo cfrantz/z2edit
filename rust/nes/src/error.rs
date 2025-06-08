@@ -18,5 +18,4 @@ pub enum NesError {
     NoMemory(String),
     #[error("unsupported mapper: {0}")]
     UnsupportedMapper(u16),
-
 }

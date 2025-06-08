@@ -236,7 +236,7 @@ impl NesFile {
         self.freespace.copy_zone(oldbank, newbank)?;
         let src = self.offset(Address::Prg(oldbank, 0))?;
         let dst = self.offset(Address::Prg(newbank, 0))?;
-        self.data.copy_within(src..src+16384, dst);
+        self.data.copy_within(src..src + 16384, dst);
         Ok(())
     }
 

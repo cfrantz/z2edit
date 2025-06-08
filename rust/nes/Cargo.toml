@@ -10,6 +10,7 @@ name = "nes"
 
 [dependencies]
 python_gui = { path = "../python_gui" }
+sdl2 = "0.37"
 bitflags = "1"
 imgui = { workspace = true, features = ["docking", "tables-api"] }
 imgui-sys = { workspace = true, features = ["docking"] }
@@ -28,6 +29,7 @@ rand = "0.8.5"
 #directories = "6.0.0"
 sha2 = "0.10.8"
 hex = "0.4.3"
+parking_lot = { version = "0.12.4", features = ["serde", "deadlock_detection"] }
 #chrono = "0.4.39"
 #whoami = "1.5.2"
 #shellwords = "1.1.0"

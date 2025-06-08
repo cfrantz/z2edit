@@ -1,15 +1,14 @@
 use anyhow::{anyhow, ensure, Result};
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::io::{Read, Write};
 use std::fs::File;
-use serde::{Serialize, Deserialize};
-use pyo3::prelude::*;
+use std::io::{Read, Write};
 
-use crate::{Address};
+use crate::peripheral::Peripheral;
 use crate::system::Nes;
+use crate::Address;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[pyclass(eq, eq_int)]
 pub enum RamKind {
     Ram,
     PaletteRam,
@@ -18,7 +17,6 @@ pub enum RamKind {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-#[pyclass]
 pub struct Ram {
     kind: RamKind,
     data: Vec<u8>,
@@ -37,7 +35,10 @@ impl Ram {
         match addr {
             Address::Cpu(x) => Ok(x as usize),
             Address::Ppu(x) => Ok(x as usize),
-            _ => Err(anyhow!("Address {addr:x?} not supporte for RamKind::{:?}", self.kind)),
+            _ => Err(anyhow!(
+                "Address {addr:x?} not supported for RamKind::{:?}",
+                self.kind
+            )),
         }
     }
 
@@ -50,17 +51,11 @@ impl Ram {
     }
 }
 
-#[pymethods]
-impl Ram {
-    #[new]
-    pub fn py_new<'p>(py: Python<'p>, kind: RamKind, size: usize) -> Result<Py<Self>> {
-        Ok(Py::new(py, Ram::new(kind, size)?)?)
-    }
-
-    pub fn read<'py>(&mut self, _nes: &Bound<'py, Nes>, address: Address) -> u8 {
+impl Peripheral for Ram {
+    fn read(&mut self, _nes: &Nes, address: Address) -> u8 {
         match self.validate_address(address) {
             Ok(addr) => {
-                let mask  = self.data.len() - 1;
+                let mask = self.data.len() - 1;
                 let mut addr = addr & mask;
                 if self.kind == RamKind::PaletteRam && addr >= 16 && addr % 4 == 0 {
                     addr -= 16;
@@ -74,10 +69,10 @@ impl Ram {
         }
     }
 
-    pub fn write<'py>(&mut self, _nes: &Bound<'py, Nes>, address: Address, val: u8) {
+    fn write(&mut self, _nes: &Nes, address: Address, val: u8) {
         match self.validate_address(address) {
             Ok(addr) => {
-                let mask  = self.data.len() - 1;
+                let mask = self.data.len() - 1;
                 let mut addr = addr & mask;
                 if self.kind == RamKind::PaletteRam && addr >= 16 && addr % 4 == 0 {
                     addr -= 16;
@@ -90,12 +85,14 @@ impl Ram {
         }
     }
 
-    pub fn tick<'py>(&mut self, _nes: &Bound<'py, Nes>) {
+    fn tick(&mut self, _nes: &Nes) {
         // If the RamKind is WRAM and its battery backed, then every N
         // ticks, save it to disk.
     }
+}
 
-    fn load(&mut self, path: &str) -> Result<()> {
+impl Ram {
+    pub fn load(&mut self, path: &str) -> Result<()> {
         let mut f = File::open(path)?;
         f.read_exact(&mut self.data)?;
         Ok(())

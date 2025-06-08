@@ -1,8 +1,8 @@
-use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{Nes, Address};
 use crate::hwpalette;
+use crate::peripheral::Peripheral;
+use crate::{Address, Nes};
 
 // The `EXPAND` tables expand the 8 bits of a byte into 8 zero-or-1 nybbles in
 // a 32-bit word.  The byte-to-word expansions are used to quickly calculate
@@ -15,8 +15,8 @@ const fn expand<const N: usize>(left: bool) -> [u32; N] {
         let n = i as u32;
         let mut j = 0;
         while j < 8 {
-            let x = if left {7-j} else {j};
-            data = (data<<4) | (n>>x) & 1;
+            let x = if left { 7 - j } else { j };
+            data = (data << 4) | (n >> x) & 1;
             j += 1;
         }
         a[i] = data;
@@ -71,7 +71,6 @@ pub struct ScrollPosition {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[pyclass]
 pub struct Ppu {
     pub cycle: isize,
     pub scanline: isize,
@@ -131,7 +130,7 @@ impl Ppu {
         self.t = (self.t & 0xF3FF) | (nt << 10);
     }
 
-    fn read_status(&mut self) -> u8 {
+    fn read_status_impl(&mut self) -> u8 {
         let result =
             (self.last_regval & 0x1F) | self.status | if self.nmi.occurred { 0x80 } else { 0x00 };
         self.nmi.occurred = false;
@@ -140,7 +139,7 @@ impl Ppu {
         result
     }
 
-    fn set_scroll(&mut self, val: u8) {
+    fn set_scroll_impl(&mut self, val: u8) {
         let val = val as u16;
         if self.w == false {
             self.t = (self.t & 0xFFE0) | (val >> 3);
@@ -153,7 +152,7 @@ impl Ppu {
         }
     }
 
-    fn set_address(&mut self, val: u8) {
+    fn set_address_impl(&mut self, val: u8) {
         let val = val as u16;
         if self.w == false {
             self.t = (self.t & 0x80FF) | (val & 0x3F) << 8;
@@ -165,8 +164,8 @@ impl Ppu {
         }
     }
 
-    fn set_data<'p>(&mut self, nes: &Bound<'p, Nes>, val: u8) {
-        Nes::write(nes, Address::Ppu(self.v), val);
+    fn set_data_impl(&mut self, nes: &Nes, val: u8) {
+        nes.write(Address::Ppu(self.v), val);
         self.v += if (self.control & CTRL_INCREMENT) != 0 {
             32
         } else {
@@ -174,12 +173,12 @@ impl Ppu {
         };
     }
 
-    fn read_data<'p>(&mut self, nes: &Bound<'p, Nes>) -> u8 {
-        let mut val = Nes::read(nes, Address::Ppu(self.v));
+    fn read_data_impl(&mut self, nes: &Nes) -> u8 {
+        let mut val = nes.read(Address::Ppu(self.v));
         if self.v % 0x4000 < 0x3F00 {
             std::mem::swap(&mut self.last_data, &mut val);
         } else {
-            self.last_data = Nes::read(nes, Address::Ppu(self.v - 0x1000));
+            self.last_data = nes.read(Address::Ppu(self.v - 0x1000));
         }
         self.v += if (self.control & CTRL_INCREMENT) != 0 {
             32
@@ -189,14 +188,14 @@ impl Ppu {
         val
     }
 
-    fn set_dma<'p>(&mut self, nes: &Bound<'p, Nes>, val: u8) {
+    fn set_dma_impl(&mut self, nes: &Nes, val: u8) {
         let mut addr = (val as u16) << 8;
         for _ in 0..256 {
-            self.oam[self.oam_addr as usize] = Nes::read(nes, Address::Cpu(addr));
+            self.oam[self.oam_addr as usize] = nes.read(Address::Cpu(addr));
             self.oam_addr = self.oam_addr.wrapping_add(1);
             addr = addr.wrapping_add(1);
         }
-        Nes::dma_stall(nes, 513, true);
+        nes.dma_stall(513, true);
     }
 
     fn nmi_change(&mut self) {
@@ -267,31 +266,31 @@ impl Ppu {
         }
     }
 
-    fn fetch_nametable_byte<'p>(&mut self, nes: &Bound<'p, Nes>) {
-        self.nametable = Nes::read(nes, Address::Ppu(0x2000 | (self.v & 0x0FFF)));
+    fn fetch_nametable_byte_impl(&mut self, nes: &Nes) {
+        self.nametable = nes.read(Address::Ppu(0x2000 | (self.v & 0x0FFF)));
     }
-    fn fetch_attribute_byte<'p>(&mut self, nes: &Bound<'p, Nes>) {
+    fn fetch_attribute_byte_impl(&mut self, nes: &Nes) {
         let a = 0x23C0 | (self.v & 0x0C00) | ((self.v >> 4) & 0x38) | ((self.v >> 2) & 7);
         let shift = ((self.v >> 4) & 4) | (self.v & 2);
-        self.attrtable = (Nes::read(nes, Address::Ppu(a)) >> shift) & 3;
+        self.attrtable = (nes.read(Address::Ppu(a)) >> shift) & 3;
     }
-    fn fetch_low_tile_byte<'p>(&mut self, nes: &Bound<'p, Nes>) {
+    fn fetch_low_tile_byte_impl(&mut self, nes: &Nes) {
         let bgtable = if (self.control & CTRL_BGTABLE) != 0 {
             0x1000u16
         } else {
             0u16
         };
         let a = bgtable + (16 * self.nametable as u16) + ((self.v >> 12) & 7);
-        self.low_tile = Nes::read(nes, Address::Ppu(a));
+        self.low_tile = nes.read(Address::Ppu(a));
     }
-    fn fetch_high_tile_byte<'p>(&mut self, nes: &Bound<'p, Nes>) {
+    fn fetch_high_tile_byte_impl(&mut self, nes: &Nes) {
         let bgtable = if (self.control & CTRL_BGTABLE) != 0 {
             0x1000u16
         } else {
             0u16
         };
         let a = bgtable + (16 * self.nametable as u16) + ((self.v >> 12) & 7);
-        self.high_tile = Nes::read(nes, Address::Ppu(a + 8));
+        self.high_tile = nes.read(Address::Ppu(a + 8));
     }
 
     fn sprite_pixel(&self) -> (usize, u8) {
@@ -312,7 +311,7 @@ impl Ppu {
         (0, 0)
     }
 
-    fn render_pixel<'p>(&mut self, nes: &Bound<'p, Nes>) {
+    fn render_pixel_impl(&mut self, nes: &Nes) {
         let x = (self.cycle - 1) as u32;
         let y = self.scanline as u32;
         let mut background = self.background_pixel();
@@ -345,11 +344,11 @@ impl Ppu {
                 color = sprite | 0x10;
             }
         }
-        let color = Nes::read(nes, Address::Ppu(0x3F00 | color as u16));
-        Nes::set_pixel(nes, x, y, hwpalette::PALETTE[color as usize]);
+        let color = nes.read(Address::Ppu(0x3F00 | color as u16));
+        nes.set_pixel(x, y, hwpalette::PALETTE[color as usize]);
     }
 
-    fn fetch_sprite_pattern<'p>(&mut self, nes: &Bound<'p, Nes>, n: usize, row: isize) -> u32 {
+    fn fetch_sprite_pattern_impl(&mut self, nes: &Nes, n: usize, row: isize) -> u32 {
         let mut tile = self.oam[n * 4 + 1] as u16;
         let attr = self.oam[n * 4 + 2];
         let table;
@@ -378,8 +377,8 @@ impl Ppu {
 
         let addr = table + tile * 16 + (row as u16);
         let a = (attr & 3) as u32;
-        let lo = Nes::read(nes, Address::Ppu(addr)) as usize;
-        let hi = Nes::read(nes, Address::Ppu(addr+8)) as usize;
+        let lo = nes.read(Address::Ppu(addr)) as usize;
+        let hi = nes.read(Address::Ppu(addr + 8)) as usize;
         let result = 0x11111111u32 * (a << 2);
         if (attr & 0x40) != 0 {
             result | EXPAND_R[lo] | EXPAND_R[hi] << 1
@@ -388,7 +387,7 @@ impl Ppu {
         }
     }
 
-    fn evaluate_sprites<'p>(&mut self, nes: &Bound<'p, Nes>) {
+    fn evaluate_sprites_impl(&mut self, nes: &Nes) {
         let height = if (self.control & CTRL_SPRITESIZE) != 0 {
             16isize
         } else {
@@ -405,7 +404,7 @@ impl Ppu {
                 continue;
             }
             if count < self.sprite.len() {
-                self.sprite[count].pattern = self.fetch_sprite_pattern(nes, i, row);
+                self.sprite[count].pattern = self.fetch_sprite_pattern_impl(nes, i, row);
                 self.sprite[count].position = x;
                 self.sprite[count].priority = (a & 0x20) != 0;
                 self.sprite[count].index = i as u8;
@@ -419,7 +418,7 @@ impl Ppu {
         self.sprite_count = count;
     }
 
-    fn clock<'p>(&mut self, nes: &Bound<'p, Nes>) -> bool {
+    fn clock_impl(&mut self, nes: &Nes) -> bool {
         if self.dead > 0 {
             self.dead -= 1;
             return false;
@@ -428,7 +427,7 @@ impl Ppu {
         if self.nmi.delay > 0 {
             self.nmi.delay -= 1;
             if self.nmi.delay == 0 && self.nmi.occurred && self.nmi.output {
-                Nes::signal_nmi(nes);
+                nes.signal_nmi();
             }
         }
         if (self.mask & (MASK_SHOWBG | MASK_SHOWSPRITES)) != 0 {
@@ -455,13 +454,14 @@ impl Ppu {
     }
 }
 
-#[pymethods]
-impl Ppu {
-    pub fn write<'p>(&mut self, nes: &Bound<'p, Nes>, address: Address, val: u8) {
-        let Address::Cpu(addr) = address else { return ; };
+impl Peripheral for Ppu {
+    fn write(&mut self, nes: &Nes, address: Address, val: u8) {
+        let Address::Cpu(addr) = address else {
+            return;
+        };
         self.last_regval = val;
         if addr == 0x4014 {
-            return self.set_dma(nes, val);
+            return self.set_dma_impl(nes, val);
         }
         match addr & 7 {
             0 => self.set_control(val),
@@ -471,25 +471,27 @@ impl Ppu {
                 self.oam[self.oam_addr as usize] = val;
                 self.oam_addr = self.oam_addr.wrapping_add(1);
             }
-            5 => self.set_scroll(val),
-            6 => self.set_address(val),
-            7 => self.set_data(nes, val),
+            5 => self.set_scroll_impl(val),
+            6 => self.set_address_impl(val),
+            7 => self.set_data_impl(nes, val),
             _ => {}
         }
     }
 
-    pub fn read<'p>(&mut self, nes: &Bound<'p, Nes>, address: Address) -> u8 {
-        let Address::Cpu(addr) = address else { return 0xff; };
-        match addr & 7{
-            2 => self.read_status(),
+    fn read(&mut self, nes: &Nes, address: Address) -> u8 {
+        let Address::Cpu(addr) = address else {
+            return 0xff;
+        };
+        match addr & 7 {
+            2 => self.read_status_impl(),
             4 => self.oam[self.oam_addr as usize],
-            7 => self.read_data(nes),
+            7 => self.read_data_impl(nes),
             _ => 0,
         }
     }
 
-    pub fn tick<'p>(&mut self, nes: &Bound<'p, Nes>) {
-        if self.clock(nes) {
+    fn tick(&mut self, nes: &Nes) {
+        if self.clock_impl(nes) {
             let pre_line = self.scanline == 261;
             let visible_line = self.scanline < 240;
             let render_line = pre_line || visible_line;
@@ -497,17 +499,17 @@ impl Ppu {
             let visible_cycle = self.cycle > 0 && self.cycle <= 256;
             let fetch_cycle = prefetch_cycle || visible_cycle;
             if visible_line && visible_cycle {
-                self.render_pixel(nes);
+                self.render_pixel_impl(nes);
             }
             if (self.mask & (MASK_SHOWBG | MASK_SHOWSPRITES)) != 0 {
                 if render_line && fetch_cycle {
                     self.tiledata <<= 4;
                     match self.cycle % 8 {
                         0 => self.store_tile_data(),
-                        1 => self.fetch_nametable_byte(nes),
-                        3 => self.fetch_attribute_byte(nes),
-                        5 => self.fetch_low_tile_byte(nes),
-                        7 => self.fetch_high_tile_byte(nes),
+                        1 => self.fetch_nametable_byte_impl(nes),
+                        3 => self.fetch_attribute_byte_impl(nes),
+                        5 => self.fetch_low_tile_byte_impl(nes),
+                        7 => self.fetch_high_tile_byte_impl(nes),
                         _ => {}
                     };
                 }
@@ -528,7 +530,7 @@ impl Ppu {
                 }
                 if self.cycle == 257 {
                     if visible_line {
-                        self.evaluate_sprites(nes);
+                        self.evaluate_sprites_impl(nes);
                     } else {
                         self.sprite_count = 0;
                     }

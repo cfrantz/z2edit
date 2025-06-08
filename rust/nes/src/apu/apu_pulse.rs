@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::system::Nes;
 use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
 
 const DUTY_TABLE: [[u8; 8]; 4] = [
     [0, 1, 0, 0, 0, 0, 0, 0],
@@ -52,12 +52,14 @@ pub struct ApuPulse {
 
     constant_volume: u8,
     pub reg: Registers,
+    pub channel_volume: f32,
 }
 
 impl ApuPulse {
     pub fn new(channel: u8) -> Self {
         ApuPulse {
             channel: channel,
+            channel_volume: 0.25,
             ..Default::default()
         }
     }
@@ -101,7 +103,7 @@ impl ApuPulse {
     }
 
     pub fn output(&mut self) -> f32 {
-        self.internal_output() as f32 / 15.0
+        self.channel_volume * self.internal_output() as f32 / 15.0
     }
 
     fn internal_output(&self) -> u8 {
@@ -176,13 +178,13 @@ impl ApuPulse {
         }
     }
 
-    pub fn write<'py>(&mut self, _nes: &Bound<'py, Nes>, addr: u16, val: u8) {
-        match addr  & 3 {
+    pub fn write<'py>(&mut self, _nes: &Nes, addr: u16, val: u8) {
+        match addr & 3 {
             0 => self.set_control(val),
             1 => self.set_sweep(val),
             2 => self.set_timer_low(val),
             3 => self.set_timer_high(val),
-            _ => {},
+            _ => {}
         }
     }
 }
