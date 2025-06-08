@@ -1,12 +1,14 @@
 use pyo3::ffi;
 use pyo3::prelude::*;
 
+mod audio;
 pub mod docking;
 pub mod font_awesome_5;
 mod framework;
 mod image;
 mod style;
 
+pub use audio::AudioOut;
 pub use font_awesome_5 as fa;
 pub use framework::{Framework, UiContext};
 pub use image::{Color, Image};

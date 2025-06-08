@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use std::io::Cursor;
 
 use imgui::{ConfigFlags, Context};
 use imgui::{FontConfig, FontGlyphRanges, FontSource};
@@ -8,12 +9,14 @@ use imgui_glow_renderer::AutoRenderer;
 use imgui_sdl2_support::SdlPlatform;
 use pyo3::prelude::*;
 use sdl2::{
+    controller::GameController,
     event::Event,
     video::{GLProfile, SwapInterval, Window},
-    EventPump,
+    EventPump, GameControllerSubsystem, Sdl,
 };
 use send_wrapper::SendWrapper;
 
+use crate::audio::AudioOut;
 use crate::fa;
 use crate::{Image, JsonStyle};
 
@@ -26,6 +29,7 @@ fn glow_context(window: &Window) -> glow::Context {
 
 #[pyclass(unsendable)]
 pub struct Framework {
+    sdl: Sdl,
     window: SendWrapper<Window>,
     _gl_context: sdl2::video::GLContext,
     platform: SdlPlatform,
@@ -35,6 +39,9 @@ pub struct Framework {
     dpi: f32,
     #[pyo3(get, set)]
     background: [f32; 3],
+    gcss: GameControllerSubsystem,
+    audio: Option<AudioOut>,
+    controllers: Vec<GameController>,
 }
 
 struct ClipboardBackend(sdl2::clipboard::ClipboardUtil);
@@ -53,17 +60,20 @@ impl imgui::ClipboardBackend for ClipboardBackend {
 }
 
 #[pyclass(unsendable)]
-#[repr(transparent)]
 pub struct UiContext {
     pub ui: &'static imgui::Ui,
+    pub events: Vec<Event>,
+    pub audio: Option<&'static AudioOut>,
 }
 
 impl UiContext {
-    pub fn new(ui: &imgui::Ui) -> Self {
+    pub fn new(ui: &imgui::Ui, events: Vec<Event>, audio: Option<&AudioOut>) -> Self {
         unsafe {
             // SAFETY: UiContext may not be held across frames.
             Self {
                 ui: std::mem::transmute::<&imgui::Ui, &'static imgui::Ui>(ui),
+                events,
+                audio: std::mem::transmute::<Option<&AudioOut>, Option<&'static AudioOut>>(audio),
             }
         }
     }
@@ -90,6 +100,12 @@ impl Framework {
         if ui.is_key_down(Key::LeftSuper) || ui.is_key_down(Key::RightSuper) {
             io.key_super = true;
         }
+    }
+    fn _audio(&self) -> Result<&AudioOut> {
+        self.audio.as_ref().ok_or(anyhow!("audio not initialized"))
+    }
+    fn _audio_mut(&mut self) -> Result<&mut AudioOut> {
+        self.audio.as_mut().ok_or(anyhow!("audio not initialized"))
     }
 }
 
@@ -132,6 +148,10 @@ impl Framework {
         /* create new glow and imgui contexts */
         let gl = glow_context(&window);
 
+        let gcss = sdl
+            .game_controller()
+            .map_err(|e| anyhow!("SDL game_controller: {e}"))?;
+
         /* create context */
         let mut imgui = Context::create();
 
@@ -143,7 +163,7 @@ impl Framework {
         imgui.fonts().add_font(&[
             FontSource::DefaultFontData { config: None },
             FontSource::TtfData {
-                data: include_bytes!("../fonts/fontawesome-webfont.ttf"),
+                data: include_bytes!("../resources/fonts/fontawesome-webfont.ttf"),
                 size_pixels: 16.0,
                 config: Some(FontConfig {
                     glyph_ranges: FontGlyphRanges::from_slice(&[
@@ -169,6 +189,7 @@ impl Framework {
         let event_pump = sdl.event_pump().unwrap();
 
         Ok(Framework {
+            sdl,
             window: SendWrapper::new(window),
             _gl_context,
             platform,
@@ -177,7 +198,37 @@ impl Framework {
             imgui: SendWrapper::new(imgui),
             dpi,
             background: [0.0625, 0.0625, 0.0625],
+            gcss,
+            audio: None,
+            controllers: Vec::default(),
         })
+    }
+
+    pub fn audio_init(&mut self, freq: i32, channels: u8, samples: u16) -> Result<()> {
+        let audio_subsystem = self.sdl.audio().map_err(|e| anyhow!("SDL audio: {e}"))?;
+        self.audio
+            .replace(AudioOut::new(&audio_subsystem, freq, channels, samples)?);
+        Ok(())
+    }
+
+    pub fn open_controller(&mut self) -> Result<()> {
+        let controllerdb = include_bytes!("../resources/gamecontrollerdb.txt");
+        self.gcss
+            .load_mappings_from_read(&mut Cursor::new(controllerdb))?;
+        for i in 0..self
+            .gcss
+            .num_joysticks()
+            .map_err(|e| anyhow!("SDL num_joysticks: {e}"))?
+        {
+            let name = self.gcss.name_for_index(i).unwrap_or("unknown".into());
+            if self.gcss.is_game_controller(i) {
+                log::info!("Opening controller {i}: {name}");
+                self.controllers.push(self.gcss.open(i)?);
+            } else {
+                log::info!("Skipping joystick {i}: {name}");
+            }
+        }
+        Ok(())
     }
 
     pub fn set_scale(&mut self, scale: f32) {
@@ -201,7 +252,9 @@ impl Framework {
     }
 
     pub fn prepare_frame(&mut self) -> Option<UiContext> {
+        let mut events = Vec::with_capacity(10);
         for event in self.event_pump.poll_iter() {
+            events.push(event.clone());
             /* pass all events to imgui platfrom */
             self.platform.handle_event(&mut self.imgui, &event);
 
@@ -225,7 +278,7 @@ impl Framework {
         let ui = self.imgui.new_frame();
         Self::handle_modifier_bug(ui);
         // Wrap the `ui` for python.
-        Some(UiContext::new(ui))
+        Some(UiContext::new(ui, events, self.audio.as_ref()))
     }
 
     pub fn render_frame(&mut self, py: Python<'_>) {
