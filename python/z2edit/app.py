@@ -115,6 +115,9 @@ class Application(object):
 
     def run(self):
         self.inner = gui.Framework("Z2Edit", 1900, 900)
+        self.inner.audio_init(48000, 1, 1024)
+        self.inner.open_controller()
+
         self.inner.set_scale(self.args.dpi)
         self.inner.background = self.preferences.background
         self.inner.style = self.preferences.imgui_style
@@ -132,6 +135,7 @@ class Application(object):
 
                 for window in self.windows:
                     window.draw(ui)
+
                 self.inner.render_frame()
                 self.windows = [w for w in self.windows if not w.wants_dispose]
             else:

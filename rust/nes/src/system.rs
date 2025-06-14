@@ -133,6 +133,7 @@ impl Nes {
 impl Nes {
     #[new]
     pub fn new(py: Python<'_>, rom: NesFile) -> Result<Py<Self>> {
+        rom.log_header();
         let mapper = mapper::new(&rom)?;
         let mut nes = Nes {
             rom: Arc::new(Mutex::new(rom)),

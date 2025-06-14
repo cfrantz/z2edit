@@ -47,11 +47,14 @@ impl NesFile {
     }
 
     fn _bank(b: i16, banks: usize) -> usize {
+        /*
         if b < 0 {
             banks - (-b) as usize
         } else {
             b as usize
         }
+        */
+        (b as usize) & (banks - 1)
     }
 
     fn offset(&self, addr: Address) -> Result<usize> {
@@ -136,6 +139,18 @@ impl NesFile {
     /// Return whether the cart has a battery or other non-volatile memory.
     pub fn battery(&self) -> bool {
         self.data[6] & 0x02 != 0
+    }
+
+    pub fn log_header(&self) {
+        log::info!("sha256: {}", self.sha256());
+        log::info!("prg banks: {} 16K banks", self.prg_banks());
+        log::info!("chr banks: {} 8K banks", self.chr_banks());
+        log::info!(
+            "mirror={} fourscreen={} battery={}",
+            self.mirror(),
+            self.fourscreen(),
+            self.battery()
+        );
     }
 
     /// Insert data into the NES ROM.

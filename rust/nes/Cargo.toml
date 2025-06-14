@@ -35,3 +35,6 @@ parking_lot = { version = "0.12.4", features = ["serde", "deadlock_detection"] }
 #shellwords = "1.1.0"
 #itertools = "0.14.0"
 #pathdiff = "0.2.3"
+
+[build-dependencies]
+cc = "1.0"
