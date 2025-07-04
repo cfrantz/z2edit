@@ -452,6 +452,14 @@ impl Ppu {
         }
         true
     }
+
+    pub fn rendering_enabled(&self) -> bool {
+        self.mask & (MASK_SHOWBG | MASK_SHOWSPRITES) != 0
+    }
+
+    pub fn sprite_size(&self) -> bool {
+        self.control & CTRL_SPRITESIZE != 0
+    }
 }
 
 impl Peripheral for Ppu {

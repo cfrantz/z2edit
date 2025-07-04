@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex};
 mod cnrom;
 mod mmc1;
 mod mmc3;
+mod mmc5;
 mod uxrom;
 mod vrc7;
 mod vrc7_audio;
@@ -18,6 +19,7 @@ pub fn new(rom: &NesFile) -> Result<Arc<Mutex<Box<dyn Peripheral + Send + Sync>>
         1 => Ok(Arc::new(Mutex::new(Box::new(mmc1::MMC1::new(rom)?)))),
         3 => Ok(Arc::new(Mutex::new(Box::new(cnrom::CNROM::new(rom)?)))),
         4 => Ok(Arc::new(Mutex::new(Box::new(mmc3::MMC3::new(rom)?)))),
+        5 => Ok(Arc::new(Mutex::new(Box::new(mmc5::MMC5::new(rom)?)))),
         85 => Ok(Arc::new(Mutex::new(Box::new(vrc7::Vrc7::new(rom)?)))),
         _ => Err(NesError::UnsupportedMapper(rom.mapper()).into()),
     }

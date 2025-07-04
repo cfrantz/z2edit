@@ -5,7 +5,7 @@ mod apu_triangle;
 
 use crate::apu::apu_dmc::ApuDmc;
 use crate::apu::apu_noise::ApuNoise;
-use crate::apu::apu_pulse::ApuPulse;
+pub use crate::apu::apu_pulse::ApuPulse;
 use crate::apu::apu_triangle::ApuTriangle;
 use crate::peripheral::Peripheral;
 use crate::system::Nes;
@@ -29,9 +29,9 @@ pub struct Apu {
 }
 
 impl Apu {
-    const FRAME_COUNTER_RATE: f64 = (Nes::FREQUENCY as f64) / 240.0;
+    pub const FRAME_COUNTER_RATE: f64 = (Nes::FREQUENCY as f64) / 240.0;
     //const SAMPLE_RATE: f64 = (Nes::FREQUENCY as f64) / (Nes::SAMPLE_RATE as f64);
-    const SAMPLE_RATE: f64 = ((Nes::FREQUENCY as f64) / (Nes::FPS as f64)) / (48000.0 / 59.9);
+    pub const SAMPLE_RATE: f64 = ((Nes::FREQUENCY as f64) / (Nes::FPS as f64)) / (48000.0 / 59.9);
     pub fn new() -> Self {
         Apu {
             pulse0: ApuPulse::new(0),
