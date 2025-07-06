@@ -95,7 +95,8 @@ class Emulator(object):
             self.preferences.visible = not self.preferences.visible
 
     def view_menu(self):
-        pass
+        if gui.menu_item("Controllers", "", self._emulator.controller_debug):
+            self._emulator.controller_debug = not self._emulator.controller_debug
 
     def draw(self, ui):
         if self.on_root:
@@ -132,6 +133,8 @@ class Emulator(object):
                 self._emulator.draw_image(ui, self.scale, self.aspect)
         self.preferences.draw()
         gui.end()
+        if self._emulator:
+            self._emulator.draw_debug_windows(ui)
         if self.on_root:
             gui.pop_style_var(3)
 

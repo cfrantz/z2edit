@@ -8,6 +8,7 @@ use sdl2::controller::Button;
 use sdl2::event::Event;
 
 use crate::controller::Controller;
+use crate::gui::controller::ControllerDebug;
 use crate::system::Nes;
 use crate::NesFile;
 
@@ -18,6 +19,7 @@ pub struct EmulatorGui {
     window_id: u32,
     #[pyo3(get)]
     wants_dispose: bool,
+    controller: ControllerDebug,
 }
 
 fn xbox_to_nes(xbox: &Button) -> u8 {
@@ -97,6 +99,7 @@ impl EmulatorGui {
             nes,
             window_id: rand::random(),
             wants_dispose: false,
+            controller: ControllerDebug::default(),
         }
     }
 
@@ -105,6 +108,15 @@ impl EmulatorGui {
         let nesfile = NesFile::load(filename)?;
         let nes = Nes::new(py, nesfile)?;
         Ok(Self::new(nes))
+    }
+
+    #[getter]
+    fn get_controller_debug(&self) -> bool {
+        self.controller.visible
+    }
+    #[setter]
+    fn set_controller_debug(&mut self, v: bool) {
+        self.controller.visible = v;
     }
 
     fn handle_input<'p>(&self, py: Python<'p>, ctx: &UiContext) {
@@ -175,5 +187,10 @@ impl EmulatorGui {
         let nes = self.nes.borrow(py);
         let image = nes.image.lock().expect("Failed to lock image");
         image.draw_aspect(scale, aspect, ctx.ui);
+    }
+
+    fn draw_debug_windows<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
+        let nes = self.nes.borrow(py);
+        self.controller.draw(&*nes, ctx.ui);
     }
 }
