@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 
 use crate::peripheral::Peripheral;
 use crate::ram::{Ram, RamKind};
@@ -145,6 +146,13 @@ impl Peripheral for UxROM {
 
     fn tick(&mut self, _nes: &Nes) {
         // UxROM typically doesn't have complex clock-based logic
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 
     fn decode_address(&self) -> Vec<AddressRange> {

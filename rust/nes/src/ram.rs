@@ -1,5 +1,6 @@
 use anyhow::{anyhow, ensure, Result};
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 use std::fmt;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -88,6 +89,13 @@ impl Peripheral for Ram {
     fn tick(&mut self, _nes: &Nes) {
         // If the RamKind is WRAM and its battery backed, then every N
         // ticks, save it to disk.
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 

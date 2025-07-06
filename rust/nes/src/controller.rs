@@ -1,8 +1,10 @@
+use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::any::Any;
+
 use crate::peripheral::Peripheral;
 use crate::system::Nes;
 use crate::Address;
-use pyo3::prelude::*;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Controller {
@@ -97,5 +99,11 @@ impl Peripheral for Controllers {
     fn tick(&mut self, _nes: &Nes) {
         // Controllers typically don't have a clock tick in the same way
         // other APU/PPU components do. Their state changes based on input.
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }

@@ -41,9 +41,9 @@ impl Emu2413 {
             for i in 0..9 {
                 output[i] = p.ch_out[i] as f32 / 2048.0;
             }
-            //for i in 9..14 {
-            //    output[i] += p.ch_out[i] as f32 / 2048.0;
-            //}
+            for i in 9..14 {
+                output[9] += p.ch_out[i] as f32 / 2048.0;
+            }
             output
         }
     }

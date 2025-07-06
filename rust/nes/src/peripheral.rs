@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use crate::{Address, AddressRange, Nes};
 
 pub trait Peripheral {
@@ -7,4 +9,7 @@ pub trait Peripheral {
     fn decode_address(&self) -> Vec<AddressRange> {
         Vec::default()
     }
+
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 
 use crate::hwpalette;
 use crate::peripheral::Peripheral;
@@ -552,5 +553,11 @@ impl Peripheral for Ppu {
                 self.status = 0;
             }
         }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }

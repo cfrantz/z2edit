@@ -1,16 +1,18 @@
+use anyhow::Result;
+use std::any::Any;
+use std::sync::{Arc, Mutex};
+
 use crate::error::NesError;
 use crate::peripheral::Peripheral;
 use crate::NesFile;
 use crate::{Address, AddressRange, Nes};
-use anyhow::Result;
-use std::sync::{Arc, Mutex};
 
-mod cnrom;
-mod mmc1;
-mod mmc3;
-mod mmc5;
-mod uxrom;
-mod vrc7;
+pub mod cnrom;
+pub mod mmc1;
+pub mod mmc3;
+pub mod mmc5;
+pub mod uxrom;
+pub mod vrc7;
 mod vrc7_audio;
 
 pub fn new(rom: &NesFile) -> Result<Arc<Mutex<Box<dyn Peripheral + Send + Sync>>>> {
@@ -35,6 +37,13 @@ impl Peripheral for Box<dyn Peripheral + Send + Sync> {
     fn tick(&mut self, nes: &Nes) {
         (**self).tick(nes)
     }
+    fn as_any(&self) -> &dyn Any {
+        (**self).as_any()
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        (**self).as_any_mut()
+    }
+
     fn decode_address(&self) -> Vec<AddressRange> {
         (**self).decode_address()
     }

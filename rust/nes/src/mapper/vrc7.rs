@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 
 use crate::mapper::simple_mirror_address;
 use crate::mapper::vrc7_audio::Emu2413;
@@ -255,6 +256,12 @@ impl Peripheral for Vrc7 {
                 }
             }
         }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 
     fn decode_address(&self) -> Vec<AddressRange> {

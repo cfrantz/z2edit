@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 
 use crate::peripheral::Peripheral;
 use crate::ram::{Ram, RamKind};
@@ -142,6 +143,12 @@ impl Peripheral for CNROM {
 
     fn tick(&mut self, _nes: &Nes) {
         // CNROM typically doesn't have complex clock-based logic
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 
     fn decode_address(&self) -> Vec<AddressRange> {

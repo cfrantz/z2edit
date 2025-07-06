@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 
 use crate::apu::{Apu, ApuPulse};
 use crate::mapper::simple_mirror_address;
@@ -50,7 +51,7 @@ pub struct MMC5 {
     ext_ram: Ram,
     wram: Ram,
 
-    pulse: [ApuPulse; 2],
+    pub(crate) pulse: [ApuPulse; 2],
 }
 
 impl MMC5 {
@@ -548,6 +549,12 @@ impl Peripheral for MMC5 {
             self.check_timer(nes);
             self.emulate_audio(nes);
         }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 
     fn decode_address(&self) -> Vec<AddressRange> {

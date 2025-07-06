@@ -1,17 +1,18 @@
+use serde::{Deserialize, Serialize};
+use std::any::Any;
+
 mod apu_dmc;
 mod apu_noise;
 mod apu_pulse;
 mod apu_triangle;
 
-use crate::apu::apu_dmc::ApuDmc;
-use crate::apu::apu_noise::ApuNoise;
+pub use crate::apu::apu_dmc::ApuDmc;
+pub use crate::apu::apu_noise::ApuNoise;
 pub use crate::apu::apu_pulse::ApuPulse;
-use crate::apu::apu_triangle::ApuTriangle;
+pub use crate::apu::apu_triangle::ApuTriangle;
 use crate::peripheral::Peripheral;
 use crate::system::Nes;
 use crate::Address;
-use serde::{Deserialize, Serialize};
-use std::default::Default;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 // No longer a pyclass directly, Nes will hold Arc<Mutex<Apu>>
@@ -158,5 +159,11 @@ impl Peripheral for Apu {
             nes.audio_sample("APU: Noise", self.noise.output());
             nes.audio_sample("APU: DMC", self.dmc.output());
         }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
