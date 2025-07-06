@@ -184,14 +184,18 @@ impl Image {
         imgui::TextureId::new(id as usize)
     }
 
-    pub fn draw(&self, scale: f32, ui: &imgui::Ui) {
+    pub fn draw_aspect(&self, scale: f32, aspect: f32, ui: &imgui::Ui) {
         if self.needs_update.load(Ordering::Relaxed) {
             self.update();
             self.needs_update.store(false, Ordering::Relaxed);
         }
-        let w = self.width as f32 * scale;
+        let w = self.width as f32 * scale * aspect;
         let h = self.height as f32 * scale;
         imgui::Image::new(self.imgui_id(), [w, h]).build(ui);
+    }
+
+    pub fn draw(&self, scale: f32, ui: &imgui::Ui) {
+        self.draw_aspect(scale, 1.0, ui);
     }
 
     pub fn draw_at(&self, position: [f32; 2], scale: f32, ui: &imgui::Ui) {
@@ -292,6 +296,10 @@ impl Image {
         self.needs_update.store(true, Ordering::Relaxed);
     }
 
+    #[pyo3(name = "draw_aspect")]
+    fn _draw_aspect(&self, scale: f32, aspect: f32, ui: &UiContext) {
+        self.draw_aspect(scale, aspect, ui.ui)
+    }
     #[pyo3(name = "draw")]
     fn _draw(&self, scale: f32, ui: &UiContext) {
         self.draw(scale, ui.ui)

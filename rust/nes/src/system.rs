@@ -12,6 +12,7 @@ use crate::ppu::Ppu;
 use crate::ram::{Ram, RamKind};
 use crate::stall::Stall;
 use crate::{Address, AddressRange, NesFile};
+use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
 
 #[pyclass]
@@ -28,6 +29,7 @@ pub struct Nes {
     pub image: Arc<Mutex<Image>>,
     pub stall: Stall,
     pub audio: Arc<Mutex<IndexMap<String, Vec<f32>>>>,
+    pub volume: AtomicI32,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral + Send + Sync>>)>,
 }
 
@@ -119,9 +121,10 @@ impl Nes {
     fn audio_play(&self, audio: &AudioOut) -> Result<()> {
         let mut buf = vec![0.0; 1024];
         let mut data = self.audio.lock().expect("Failed to lock audio");
+        let volume = self.get_volume();
         for channel in data.values_mut() {
             for (i, sample) in channel.drain(0..1024).enumerate() {
-                buf[i] += sample;
+                buf[i] += sample * volume;
             }
         }
         audio.play(buf)?;
@@ -148,10 +151,23 @@ impl Nes {
             image: Arc::new(Mutex::new(Image::new(256, 240))),
             stall: Stall::default(),
             audio: Arc::default(),
+            volume: AtomicI32::new(1 << 24),
             peripherals: Vec::default(),
         };
         nes.register_peripherals()?;
         Ok(Py::new(py, nes)?)
+    }
+
+    #[setter]
+    pub fn set_volume(&self, volume: f32) {
+        let volume = (volume * 16777216.0) as i32;
+        self.volume.store(volume, Ordering::Relaxed);
+    }
+
+    #[getter]
+    pub fn get_volume(&self) -> f32 {
+        let volume = self.volume.load(Ordering::Relaxed);
+        volume as f32 / 16777216.0
     }
 
     pub fn emulate_frame(&self, audio: &AudioOut) {

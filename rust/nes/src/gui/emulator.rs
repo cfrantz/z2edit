@@ -1,3 +1,4 @@
+use anyhow::Result;
 use imgui::Key;
 use pyo3::prelude::*;
 use python_gui::UiContext;
@@ -8,6 +9,7 @@ use sdl2::event::Event;
 
 use crate::controller::Controller;
 use crate::system::Nes;
+use crate::NesFile;
 
 #[pyclass]
 pub struct EmulatorGui {
@@ -85,72 +87,6 @@ impl EmulatorGui {
             _ => {}
         }
     }
-
-    fn draw<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
-        let ui = ctx.ui;
-        ui.window(format!("Emulator {}", self.window_id)).build(|| {
-            let nes = self.nes.borrow(py);
-            {
-                let mut ctrl = nes.controllers.lock().expect("lock controllers");
-                if ui.is_window_focused() {
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::UpArrow,
-                        Controller::BUTTON_UP,
-                    );
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::DownArrow,
-                        Controller::BUTTON_DOWN,
-                    );
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::LeftArrow,
-                        Controller::BUTTON_LEFT,
-                    );
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::RightArrow,
-                        Controller::BUTTON_RIGHT,
-                    );
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::LeftCtrl,
-                        Controller::BUTTON_B,
-                    );
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::LeftAlt,
-                        Controller::BUTTON_A,
-                    );
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::LeftShift,
-                        Controller::BUTTON_START,
-                    );
-                    Self::handle_button(
-                        ui,
-                        &mut ctrl.controller[0],
-                        Key::Tab,
-                        Controller::BUTTON_SELECT,
-                    );
-                }
-                for event in ctx.events.iter() {
-                    Self::handle_event(&mut ctrl.controller[0], event);
-                }
-            }
-            nes.emulate_frame(ctx.audio.expect("no audio out"));
-            let image = nes.image.lock().expect("Failed to lock image");
-            image.draw(4.0, ui);
-        });
-    }
 }
 
 #[pymethods]
@@ -164,8 +100,80 @@ impl EmulatorGui {
         }
     }
 
-    #[pyo3(name = "draw")]
-    fn _draw<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
-        self.draw(py, ctx)
+    #[staticmethod]
+    pub fn from_file<'p>(py: Python<'p>, filename: &str) -> Result<Self> {
+        let nesfile = NesFile::load(filename)?;
+        let nes = Nes::new(py, nesfile)?;
+        Ok(Self::new(nes))
+    }
+
+    fn handle_input<'p>(&self, py: Python<'p>, ctx: &UiContext) {
+        let ui = ctx.ui;
+        let nes = self.nes.borrow(py);
+        let mut ctrl = nes.controllers.lock().expect("lock controllers");
+        if ui.is_window_focused() {
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::UpArrow,
+                Controller::BUTTON_UP,
+            );
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::DownArrow,
+                Controller::BUTTON_DOWN,
+            );
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::LeftArrow,
+                Controller::BUTTON_LEFT,
+            );
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::RightArrow,
+                Controller::BUTTON_RIGHT,
+            );
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::LeftCtrl,
+                Controller::BUTTON_B,
+            );
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::LeftAlt,
+                Controller::BUTTON_A,
+            );
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::LeftShift,
+                Controller::BUTTON_START,
+            );
+            Self::handle_button(
+                ui,
+                &mut ctrl.controller[0],
+                Key::Tab,
+                Controller::BUTTON_SELECT,
+            );
+        }
+        for event in ctx.events.iter() {
+            Self::handle_event(&mut ctrl.controller[0], event);
+        }
+    }
+
+    fn emulate_frame<'p>(&self, py: Python<'p>, ctx: &UiContext) {
+        let nes = self.nes.borrow(py);
+        nes.emulate_frame(ctx.audio.expect("no audio out"));
+    }
+
+    fn draw_image<'p>(&self, py: Python<'p>, ctx: &UiContext, scale: f32, aspect: f32) {
+        let nes = self.nes.borrow(py);
+        let image = nes.image.lock().expect("Failed to lock image");
+        image.draw_aspect(scale, aspect, ctx.ui);
     }
 }
