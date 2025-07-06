@@ -95,6 +95,8 @@ class Emulator(object):
             self.preferences.visible = not self.preferences.visible
 
     def view_menu(self):
+        if gui.menu_item("Audio", "", self._emulator.apu_debug):
+            self._emulator.apu_debug = not self._emulator.apu_debug
         if gui.menu_item("CHR Viewer", "", self._emulator.chr_debug):
             self._emulator.chr_debug = not self._emulator.chr_debug
         if gui.menu_item("Controllers", "", self._emulator.controller_debug):

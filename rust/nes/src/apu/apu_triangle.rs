@@ -38,12 +38,16 @@ pub struct ApuTriangle {
 
     pub reg: Registers,
     pub channel_volume: f32,
+    pub debug_buf: Vec<f32>,
+    pub debug_idx: usize,
 }
 
 impl ApuTriangle {
+    const DEBUG_BUF_SZ: usize = Nes::SAMPLE_RATE as usize / (Nes::FPS as usize);
     pub fn new() -> Self {
         Self {
             channel_volume: 0.25,
+            debug_buf: vec![0.0; Self::DEBUG_BUF_SZ],
             ..Default::default()
         }
     }
@@ -74,7 +78,10 @@ impl ApuTriangle {
     }
 
     pub fn output(&mut self) -> f32 {
-        self.channel_volume * self.internal_output() as f32 / 15.0
+        let data = self.internal_output() as f32 / 15.0;
+        self.debug_buf[self.debug_idx] = data;
+        self.debug_idx = (self.debug_idx + 1) % self.debug_buf.len();
+        data * self.channel_volume
     }
 
     fn internal_output(&self) -> u8 {

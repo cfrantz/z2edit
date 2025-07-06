@@ -11,6 +11,29 @@ use crate::NesFile;
 use crate::{Address, AddressRange};
 
 #[derive(Serialize, Deserialize)]
+pub struct OplDebug {
+    pub volume: u8,
+    pub flo: u8,
+    pub fhi: u8,
+    pub debug_buf: Vec<f32>,
+    pub debug_idx: usize,
+    pub channel_volume: f32,
+}
+
+impl Default for OplDebug {
+    fn default() -> Self {
+        OplDebug {
+            volume: 0,
+            flo: 0,
+            fhi: 0,
+            debug_buf: vec![0f32; 800],
+            debug_idx: 0,
+            channel_volume: 1.00,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Vrc7 {
     cycles: u64,
     prg_banks: u8,
@@ -23,7 +46,7 @@ pub struct Vrc7 {
     irq_counter: u16,
     cycle_counter: u16,
     opl_index: usize,
-    opl_frequency: [u16; Self::VRC7_AUDIO_CHANNELS],
+    pub(crate) opl_debug: [OplDebug; Self::VRC7_AUDIO_CHANNELS],
     #[serde(skip)]
     opll: Emu2413,
 
@@ -61,7 +84,7 @@ impl Vrc7 {
             irq_counter: 0,
             cycle_counter: 0,
             opl_index: 0,
-            opl_frequency: [0; Self::VRC7_AUDIO_CHANNELS],
+            opl_debug: std::array::from_fn(|_| OplDebug::default()),
             opll: Emu2413::new(3579545, 48000),
             wram: Ram::new(RamKind::WRam, 8192)?,
         })
@@ -86,14 +109,9 @@ impl Vrc7 {
         self.opll.write_reg(self.opl_index as u32, val);
         // Update some local copies of register values for creating debug displays.
         match self.opl_index {
-            0x10..=0x18 => {
-                self.opl_frequency[self.opl_index & 0x0F] &= 0xFF00;
-                self.opl_frequency[self.opl_index & 0x0F] |= val as u16;
-            }
-            0x20..=0x28 => {
-                self.opl_frequency[self.opl_index & 0x0F] &= 0x00FF;
-                self.opl_frequency[self.opl_index & 0x0F] |= (val as u16) << 8;
-            }
+            0x10..=0x1F => self.opl_debug[self.opl_index & 0x0F].flo = val,
+            0x20..=0x2F => self.opl_debug[self.opl_index & 0x0F].fhi = val,
+            0x30..=0x3F => self.opl_debug[self.opl_index & 0x0F].volume = val,
             _ => {}
         }
     }
@@ -239,8 +257,10 @@ impl Peripheral for Vrc7 {
         if s1 != s2 {
             let output = self.opll.output();
             let mut sum = 0.0;
-            for &v in output.iter() {
-                sum += v;
+            for (&v, dbg) in output.iter().zip(self.opl_debug.iter_mut()) {
+                dbg.debug_buf[dbg.debug_idx] = v;
+                dbg.debug_idx = (dbg.debug_idx + 1) % dbg.debug_buf.len();
+                sum += v * dbg.channel_volume;
             }
             sum = sum / (output.len() as f32);
             nes.audio_sample("vrc7", sum);
