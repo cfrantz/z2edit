@@ -9,6 +9,7 @@ use sdl2::event::Event;
 
 use crate::controller::Controller;
 use crate::gui::controller::ControllerDebug;
+use crate::gui::ppu::PpuDebug;
 use crate::system::Nes;
 use crate::NesFile;
 
@@ -20,6 +21,7 @@ pub struct EmulatorGui {
     #[pyo3(get)]
     wants_dispose: bool,
     controller: ControllerDebug,
+    ppu: PpuDebug,
 }
 
 fn xbox_to_nes(xbox: &Button) -> u8 {
@@ -100,6 +102,7 @@ impl EmulatorGui {
             window_id: rand::random(),
             wants_dispose: false,
             controller: ControllerDebug::default(),
+            ppu: PpuDebug::new(),
         }
     }
 
@@ -117,6 +120,24 @@ impl EmulatorGui {
     #[setter]
     fn set_controller_debug(&mut self, v: bool) {
         self.controller.visible = v;
+    }
+
+    #[getter]
+    fn get_vram_debug(&self) -> bool {
+        self.ppu.vram_visible
+    }
+    #[setter]
+    fn set_vram_debug(&mut self, v: bool) {
+        self.ppu.vram_visible = v;
+    }
+
+    #[getter]
+    fn get_chr_debug(&self) -> bool {
+        self.ppu.chr_visible
+    }
+    #[setter]
+    fn set_chr_debug(&mut self, v: bool) {
+        self.ppu.chr_visible = v;
     }
 
     fn handle_input<'p>(&self, py: Python<'p>, ctx: &UiContext) {
@@ -192,5 +213,6 @@ impl EmulatorGui {
     fn draw_debug_windows<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
         let nes = self.nes.borrow(py);
         self.controller.draw(&*nes, ctx.ui);
+        self.ppu.draw(&*nes, ctx.ui);
     }
 }

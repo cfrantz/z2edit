@@ -95,8 +95,12 @@ class Emulator(object):
             self.preferences.visible = not self.preferences.visible
 
     def view_menu(self):
+        if gui.menu_item("CHR Viewer", "", self._emulator.chr_debug):
+            self._emulator.chr_debug = not self._emulator.chr_debug
         if gui.menu_item("Controllers", "", self._emulator.controller_debug):
             self._emulator.controller_debug = not self._emulator.controller_debug
+        if gui.menu_item("VRAM Viewer", "", self._emulator.vram_debug):
+            self._emulator.vram_debug = not self._emulator.vram_debug
 
     def draw(self, ui):
         if self.on_root:

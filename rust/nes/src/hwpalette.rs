@@ -21,7 +21,7 @@ const G_SHIFT: usize = 8;
 const B_SHIFT: usize = 16;
 const A_SHIFT: usize = 24;
 
-fn color_as_f32(color: u32) -> [f32; 4] {
+pub fn color_as_f32(color: u32) -> [f32; 4] {
     [
         ((color >> R_SHIFT) & 0xFF) as f32 / 255.0,
         ((color >> G_SHIFT) & 0xFF) as f32 / 255.0,
