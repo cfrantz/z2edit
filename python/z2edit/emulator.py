@@ -203,7 +203,7 @@ class EmulatorApp(object):
         self.emulator = Emulator(rom, True)
 
     def interact(self):
-        a = self
+        emulator = self.emulator
         IPython.embed()
         self.running = False
 

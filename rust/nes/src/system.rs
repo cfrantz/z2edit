@@ -1,5 +1,6 @@
 use anyhow::Result;
 use indexmap::IndexMap;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use python_gui::{AudioOut, Color, Image};
 
@@ -15,7 +16,7 @@ use crate::{Address, AddressRange, NesFile};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
 
-#[pyclass]
+#[pyclass(sequence)]
 pub struct Nes {
     pub rom: Arc<Mutex<NesFile>>,
     pub cpu: Arc<Mutex<Cpu6502>>,
@@ -130,6 +131,41 @@ impl Nes {
         audio.play(buf)?;
         Ok(())
     }
+    pub fn read(&self, addr: Address) -> u8 {
+        let mut result = 0xff;
+        let mut decode = 0;
+        //log::debug!("read {addr:x?}.");
+        for (range, peripheral_arc) in self.peripherals.iter() {
+            if range.contains_addr(addr) {
+                decode += 1;
+                let mut peripheral = peripheral_arc
+                    .lock()
+                    .expect("Failed to lock peripheral for read");
+                result &= peripheral.read(self, addr);
+            }
+        }
+        if decode == 0 {
+            log::debug!("Reading {addr:x?} had no peripheral decode (open bus).");
+        }
+        result
+    }
+
+    pub fn write(&self, addr: Address, value: u8) {
+        let mut decode = 0;
+        //log::debug!("write {addr:x?} {value:02x}.");
+        for (range, peripheral_arc) in self.peripherals.iter() {
+            if range.contains_addr(addr) {
+                decode += 1;
+                let mut peripheral = peripheral_arc
+                    .lock()
+                    .expect("Failed to lock peripheral for write");
+                peripheral.write(self, addr, value);
+            }
+        }
+        if decode == 0 {
+            log::debug!("Writing {addr:x?} value {value:02x} had no peripheral decode.");
+        }
+    }
 }
 
 #[pymethods]
@@ -234,39 +270,37 @@ impl Nes {
         }
     }
 
-    pub fn read(&self, addr: Address) -> u8 {
-        let mut result = 0xff;
-        let mut decode = 0;
-        //log::debug!("read {addr:x?}.");
-        for (range, peripheral_arc) in self.peripherals.iter() {
-            if range.contains_addr(addr) {
-                decode += 1;
-                let mut peripheral = peripheral_arc
-                    .lock()
-                    .expect("Failed to lock peripheral for read");
-                result &= peripheral.read(self, addr);
-            }
+    #[pyo3(name = "read")]
+    pub fn _read<'p>(&self, py: Python<'p>, addr: PyObject) -> PyResult<u8> {
+        if let Ok(a) = addr.extract::<Address>(py) {
+            Ok(self.read(a))
+        } else if let Ok(a) = addr.extract::<u16>(py) {
+            Ok(self.read(Address::Cpu(a)))
+        } else {
+            Err(PyTypeError::new_err("unknown address type"))
         }
-        if decode == 0 {
-            log::debug!("Reading {addr:x?} had no peripheral decode (open bus).");
-        }
-        result
     }
 
-    pub fn write(&self, addr: Address, value: u8) {
-        let mut decode = 0;
-        //log::debug!("write {addr:x?} {value:02x}.");
-        for (range, peripheral_arc) in self.peripherals.iter() {
-            if range.contains_addr(addr) {
-                decode += 1;
-                let mut peripheral = peripheral_arc
-                    .lock()
-                    .expect("Failed to lock peripheral for write");
-                peripheral.write(self, addr, value);
-            }
+    #[pyo3(name = "write")]
+    pub fn _write<'p>(&self, py: Python<'p>, addr: PyObject, val: u8) -> PyResult<()> {
+        if let Ok(a) = addr.extract::<Address>(py) {
+            self.write(a, val);
+            Ok(())
+        } else if let Ok(a) = addr.extract::<u16>(py) {
+            self.write(Address::Cpu(a), val);
+            Ok(())
+        } else {
+            Err(PyTypeError::new_err("unknown address type"))
         }
-        if decode == 0 {
-            log::debug!("Writing {addr:x?} value {value:02x} had no peripheral decode.");
-        }
+    }
+
+    fn __len__(&self) -> usize {
+        65536
+    }
+    fn __getitem__<'p>(&self, py: Python<'p>, addr: PyObject) -> PyResult<u8> {
+        self._read(py, addr)
+    }
+    fn __setitem__<'p>(&self, py: Python<'p>, addr: PyObject, val: u8) -> PyResult<()> {
+        self._write(py, addr, val)
     }
 }
