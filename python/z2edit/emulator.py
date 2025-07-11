@@ -101,6 +101,8 @@ class Emulator(object):
             self._emulator.chr_debug = not self._emulator.chr_debug
         if gui.menu_item("Controllers", "", self._emulator.controller_debug):
             self._emulator.controller_debug = not self._emulator.controller_debug
+        if gui.menu_item("Memory", "", self._emulator.memory_debug):
+            self._emulator.memory_debug = not self._emulator.memory_debug
         if gui.menu_item("VRAM Viewer", "", self._emulator.vram_debug):
             self._emulator.vram_debug = not self._emulator.vram_debug
 

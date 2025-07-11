@@ -10,6 +10,7 @@ use sdl2::event::Event;
 use crate::controller::Controller;
 use crate::gui::apu::ApuDebug;
 use crate::gui::controller::ControllerDebug;
+use crate::gui::memory::MemoryDebug;
 use crate::gui::ppu::PpuDebug;
 use crate::system::Nes;
 use crate::NesFile;
@@ -21,8 +22,9 @@ pub struct EmulatorGui {
     window_id: u32,
     #[pyo3(get)]
     wants_dispose: bool,
-    controller: ControllerDebug,
     apu: ApuDebug,
+    controller: ControllerDebug,
+    memory: MemoryDebug,
     ppu: PpuDebug,
 }
 
@@ -105,6 +107,7 @@ impl EmulatorGui {
             wants_dispose: false,
             controller: ControllerDebug::default(),
             apu: ApuDebug::new(),
+            memory: MemoryDebug::default(),
             ppu: PpuDebug::new(),
         }
     }
@@ -132,6 +135,15 @@ impl EmulatorGui {
     #[setter]
     fn set_controller_debug(&mut self, v: bool) {
         self.controller.visible = v;
+    }
+
+    #[getter]
+    fn get_memory_debug(&self) -> bool {
+        self.memory.visible
+    }
+    #[setter]
+    fn set_memory_debug(&mut self, v: bool) {
+        self.memory.visible = v;
     }
 
     #[getter]
@@ -226,6 +238,7 @@ impl EmulatorGui {
         let nes = self.nes.borrow(py);
         self.controller.draw(&*nes, ctx.ui);
         self.apu.draw(&*nes, ctx.ui);
+        self.memory.draw(&*nes, ctx.ui);
         self.ppu.draw(&*nes, ctx.ui);
     }
 }
