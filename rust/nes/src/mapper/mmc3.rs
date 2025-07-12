@@ -249,6 +249,7 @@ impl Peripheral for MMC3 {
     }
 
     fn tick(&mut self, nes: &Nes) {
+        self.wram.tick(nes);
         use crate::ppu::{MASK_SHOWBG, MASK_SHOWSPRITES};
         let ppu = nes.ppu.lock().expect("mmc3 failed to lock ppu");
         if ppu.cycle == 280

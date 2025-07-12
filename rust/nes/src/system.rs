@@ -31,6 +31,7 @@ pub struct Nes {
     pub stall: Stall,
     pub audio: Arc<Mutex<IndexMap<String, Vec<f32>>>>,
     pub volume: AtomicI32,
+    pub name: Arc<Mutex<String>>,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral + Send + Sync>>)>,
 }
 
@@ -188,6 +189,7 @@ impl Nes {
             stall: Stall::default(),
             audio: Arc::default(),
             volume: AtomicI32::new(1 << 24),
+            name: Arc::new(Mutex::new(String::default())),
             peripherals: Vec::default(),
         };
         nes.register_peripherals()?;
@@ -204,6 +206,18 @@ impl Nes {
     pub fn get_volume(&self) -> f32 {
         let volume = self.volume.load(Ordering::Relaxed);
         volume as f32 / 16777216.0
+    }
+
+    #[setter]
+    pub fn set_name(&self, name: &str) {
+        let mut n = self.name.lock().unwrap();
+        *n = name.to_string();
+    }
+
+    #[getter]
+    pub fn get_name(&self) -> String {
+        let n = self.name.lock().unwrap();
+        n.clone()
     }
 
     pub fn emulate_frame(&self, audio: &AudioOut) {

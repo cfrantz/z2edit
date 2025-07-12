@@ -141,8 +141,9 @@ impl Peripheral for CNROM {
         }
     }
 
-    fn tick(&mut self, _nes: &Nes) {
+    fn tick(&mut self, nes: &Nes) {
         // CNROM typically doesn't have complex clock-based logic
+        self.wram.tick(nes);
     }
     fn as_any(&self) -> &dyn Any {
         self

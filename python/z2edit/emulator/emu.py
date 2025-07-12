@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import importlib
+import os
 
 import z2edit
 from z2edit.emulator.plugin import Plugin
@@ -64,6 +65,7 @@ class Emulator(object):
     def _load_rom(self, rom):
         if isinstance(rom, str):
             self._emulator = nes.EmulatorGui.from_file(rom)
+            self.nes.name = os.path.basename(rom)
         else:
             self._emulator = nes.EmulatorGui(rom)
 

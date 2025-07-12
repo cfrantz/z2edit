@@ -210,8 +210,9 @@ impl Peripheral for MMC1 {
         }
     }
 
-    fn tick(&mut self, _nes: &Nes) {
+    fn tick(&mut self, nes: &Nes) {
         // MMC1 typically doesn't have complex clock-based logic
+        self.wram.tick(nes);
     }
     fn as_any(&self) -> &dyn Any {
         self

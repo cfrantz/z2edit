@@ -531,6 +531,7 @@ impl Peripheral for MMC5 {
     }
 
     fn tick(&mut self, nes: &Nes) {
+        self.wram.tick(nes);
         {
             // Remember some PPU state so the rest of the mapper
             // can function.

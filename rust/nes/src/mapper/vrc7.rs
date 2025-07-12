@@ -250,6 +250,7 @@ impl Peripheral for Vrc7 {
     }
 
     fn tick(&mut self, nes: &Nes) {
+        self.wram.tick(nes);
         let c = self.cycles;
         self.cycles += 1;
         let s1 = ((c as f64) / Self::SAMPLE_RATE) as u64;

@@ -1,4 +1,5 @@
 use anyhow::{anyhow, ensure, Result};
+use python_gui::Directories;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::fmt;
@@ -20,6 +21,7 @@ pub enum RamKind {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Ram {
     kind: RamKind,
+    cycle: u64,
     data: Vec<u8>,
 }
 
@@ -32,6 +34,7 @@ impl fmt::Debug for Ram {
 }
 
 impl Ram {
+    pub const SAVE_FREQUENCY: u64 = 3 * Nes::FREQUENCY as u64;
     fn validate_address(&self, addr: Address) -> Result<usize> {
         match addr {
             Address::Cpu(x) => Ok(x as usize),
@@ -47,6 +50,7 @@ impl Ram {
         ensure!(size.is_power_of_two(), "RAM size must be a power of two");
         Ok(Ram {
             kind,
+            cycle: 0,
             data: vec![0u8; size],
         })
     }
@@ -86,9 +90,25 @@ impl Peripheral for Ram {
         }
     }
 
-    fn tick(&mut self, _nes: &Nes) {
-        // If the RamKind is WRAM and its battery backed, then every N
-        // ticks, save it to disk.
+    fn tick(&mut self, nes: &Nes) {
+        if self.kind == RamKind::WRam && self.cycle % Self::SAVE_FREQUENCY == 0 {
+            let rom = nes.rom.lock().expect("failed to lock rom");
+            if rom.battery() {
+                let name = nes.name.lock().expect("failed to lock filename");
+                let datadir = Directories::get().data_dir.display();
+                let name = format!("{datadir}/{name}.sram");
+                if self.cycle == 0 {
+                    if let Err(e) = self.load(&name) {
+                        log::error!("Failed to load SRAM file {name}: {e}");
+                    }
+                } else {
+                    if let Err(e) = self.save(&name) {
+                        log::error!("Failed to save SRAM file {name}: {e}");
+                    }
+                }
+            }
+        }
+        self.cycle += 1;
     }
 
     fn as_any(&self) -> &dyn Any {
