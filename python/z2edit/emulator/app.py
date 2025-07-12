@@ -82,6 +82,7 @@ def main():
         "--plugin",
         "-p",
         type=str,
+        default=[],
         action="append",
         help="Plugin to load",
     )
