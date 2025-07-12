@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
-import argparse
-import IPython
-from threading import Thread
 import logging
-import sys
-import os.path
+import importlib
 
 import z2edit
+from z2edit.emulator.plugin import Plugin
 from z2edit import gui
 from z2edit import nes
 
-LOG_LEVELS = {
-    "TRACE": 5,
-}
 logger = logging.getLogger(__name__)
 
 
@@ -52,10 +46,20 @@ class Emulator(object):
         self.volume = 1.0
         self.preferences = Preferences(self)
         self.running = True
+        self.plugins = []
 
     @property
     def nes(self):
         return self._emulator.nes
+
+    def load_plugin(self, name):
+        plugin = importlib.import_module(name)
+        p = plugin.create(self)
+        print(p)
+        if isinstance(p, Plugin):
+            self.plugins.append(p)
+        else:
+            logger.error("Requested plugin %s isn't a Plugin", name)
 
     def _load_rom(self, rom):
         if isinstance(rom, str):
@@ -82,10 +86,14 @@ class Emulator(object):
         if gui.begin_menu("View"):
             self.view_menu()
             gui.end_menu()
+        for p in self.plugins:
+            p.menu_bar()
 
     def file_menu(self):
         if gui.menu_item("Open"):
             self.load_rom(None)
+        for p in self.plugins:
+            p.menu("File")
         gui.separator()
         if gui.menu_item("Quit"):
             self.running = False
@@ -93,6 +101,8 @@ class Emulator(object):
     def edit_menu(self):
         if gui.menu_item("Preferences", "", self.preferences.visible):
             self.preferences.visible = not self.preferences.visible
+        for p in self.plugins:
+            p.menu("Edit")
 
     def view_menu(self):
         if gui.menu_item("Audio", "", self._emulator.apu_debug):
@@ -105,6 +115,8 @@ class Emulator(object):
             self._emulator.memory_debug = not self._emulator.memory_debug
         if gui.menu_item("VRAM Viewer", "", self._emulator.vram_debug):
             self._emulator.vram_debug = not self._emulator.vram_debug
+        for p in self.plugins:
+            p.menu("View")
 
     def draw(self, ui):
         if self.on_root:
@@ -138,123 +150,16 @@ class Emulator(object):
                 self._emulator.nes.volume = self.volume
                 self._emulator.handle_input(ui)
                 self._emulator.emulate_frame(ui)
+                for p in self.plugins:
+                    p.run_per_frame()
                 self._emulator.draw_image(ui, self.scale, self.aspect)
+                for p in self.plugins:
+                    p.draw_image()
         self.preferences.draw()
+        for p in self.plugins:
+            p.draw()
         gui.end()
         if self._emulator:
             self._emulator.draw_debug_windows(ui)
         if self.on_root:
             gui.pop_style_var(3)
-
-
-class EmulatorApp(object):
-    _instance = None
-
-    def __init__(self, args, dirs):
-        self.running = True
-        self.inner = None
-        self.show_style_editor = False
-        self.show_demo_window = False
-        self.show_metrics_window = False
-        self.windows = []
-        self.args = args
-        self.dirs = dirs
-        self.preferences_gui = None
-        self.rom_to_emulate = None
-        self.emulator = Emulator(None, True)
-        if args.rom:
-            self.emulator.load_rom(args.rom)
-
-        if not EmulatorApp._instance:
-            EmulatorApp._instance = self
-        else:
-            logger.error("An application instance already exists")
-
-    @classmethod
-    def get(cls):
-        return cls._instance
-
-    def run(self):
-        self.inner = gui.Framework("Z2Edit", 1900, 900)
-        self.inner.audio_init(48000, 1, 1024)
-        self.inner.open_controller()
-
-        self.inner.set_scale(self.args.dpi)
-        self.inner.background = [0.3, 0.3, 0.3]
-
-        while self.running and self.emulator.running:
-            self._emulator()
-            if ui := self.inner.prepare_frame():
-                self.emulator.draw(ui)
-                for window in self.windows:
-                    window.draw(ui)
-
-                self.inner.render_frame()
-                self.windows = [w for w in self.windows if not w.wants_dispose]
-            else:
-                self.running = False
-        self.inner = None
-
-    def _emulator(self):
-        if not self.rom_to_emulate:
-            return
-        rom = self.rom_to_emulate
-        self.rom_to_emulate = None
-        if isinstance(rom, str):
-            rom = nes.NesFile.load(rom)
-        self.emulator = Emulator(rom, True)
-
-    def interact(self):
-        emulator = self.emulator
-        IPython.embed()
-        self.running = False
-
-
-def main():
-    p = argparse.ArgumentParser(prog="z2edit", description="Zelda2 Editor")
-    p.add_argument(
-        "--interactive",
-        "-i",
-        action="store_true",
-        help="Start an interactive Python shell",
-    )
-    p.add_argument(
-        "--dpi",
-        type=float,
-        default=0.0,
-        help="Set the DPI scaling factor",
-    )
-    p.add_argument(
-        "--log",
-        type=str,
-        default="info",
-        help="Logging level",
-    )
-    p.add_argument(
-        "rom",
-        metavar="ROM",
-        type=str,
-        nargs="?",
-        help="NES ROM file",
-    )
-
-    args = p.parse_args()
-    log = args.log.upper()
-    logging.getLogger().setLevel(LOG_LEVELS.get(log, log))
-
-    instdir = os.path.dirname(sys.argv[0])
-    if instdir.endswith("python/z2edit"):
-        instdir = os.path.normpath(os.path.join(instdir, "../.."))
-    z2edit.Directories.init(instdir)
-    dirs = z2edit.Directories.get()
-
-    a = EmulatorApp(args, dirs)
-    if args.interactive:
-        # We start the interpreter on another thread because GUI resources
-        # always should be created/destroyed on the main thread.
-        Thread(target=a.interact).start()
-    a.run()
-
-
-if __name__ == "__main__":
-    main()
