@@ -208,8 +208,8 @@ def main():
     instdir = os.path.dirname(sys.argv[0])
     if instdir.endswith("python/z2edit"):
         instdir = os.path.normpath(os.path.join(instdir, "../.."))
-    z2edit.Directories.init(instdir)
-    dirs = z2edit.Directories.get()
+    gui.Directories.init("org", "CF207", "Z2Edit", instdir)
+    dirs = gui.Directories.get()
     z2edit.Config.load(os.path.join(dirs.install, "config/vanilla/vanilla.json5"))
 
     a = Application(args, dirs)

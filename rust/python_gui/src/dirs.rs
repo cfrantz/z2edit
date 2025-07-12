@@ -24,9 +24,14 @@ impl Directories {
 #[pymethods]
 impl Directories {
     #[staticmethod]
-    pub fn init(install: PathBuf) -> Result<()> {
+    pub fn init(
+        qualifier: &str,
+        organization: &str,
+        application: &str,
+        install: PathBuf,
+    ) -> Result<()> {
         let base = directories::BaseDirs::new().ok_or_else(|| anyhow!("Cannot find home_dir"))?;
-        let project = directories::ProjectDirs::from("org", "CF207", "Z2Edit")
+        let project = directories::ProjectDirs::from(qualifier, organization, application)
             .ok_or_else(|| anyhow!("Cannot find home_dir"))?;
 
         DIRS.set(Directories {

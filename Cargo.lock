@@ -1676,6 +1676,7 @@ dependencies = [
  "anyhow",
  "bitflags 1.3.2",
  "cc",
+ "directories",
  "glow 0.16.0",
  "image",
  "imgui",
@@ -2983,7 +2984,6 @@ version = "2.99.0"
 dependencies = [
  "anyhow",
  "chrono",
- "directories",
  "hex",
  "imgui",
  "imgui-sys",
