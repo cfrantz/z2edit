@@ -1161,6 +1161,7 @@ dependencies = [
  "sdl2",
  "serde",
  "serde_annotate",
+ "serde_json",
  "sha2",
  "thiserror 2.0.9",
  "typetag",

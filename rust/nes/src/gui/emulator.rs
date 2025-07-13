@@ -1,7 +1,7 @@
 use anyhow::Result;
 use imgui::Key;
 use pyo3::prelude::*;
-use python_gui::UiContext;
+use python_gui::{Directories, UiContext};
 
 use sdl2::controller::Axis;
 use sdl2::controller::Button;
@@ -10,6 +10,7 @@ use sdl2::event::Event;
 use crate::controller::Controller;
 use crate::gui::apu::ApuDebug;
 use crate::gui::controller::ControllerDebug;
+use crate::gui::key::{CommandKey, InputMap};
 use crate::gui::memory::MemoryDebug;
 use crate::gui::ppu::PpuDebug;
 use crate::system::Nes;
@@ -26,6 +27,8 @@ pub struct EmulatorGui {
     controller: ControllerDebug,
     memory: MemoryDebug,
     ppu: PpuDebug,
+    input_map: InputMap,
+    state_slot: u32,
 }
 
 fn xbox_to_nes(xbox: &Button) -> u8 {
@@ -95,6 +98,28 @@ impl EmulatorGui {
             _ => {}
         }
     }
+
+    fn state_filename(&self, nes: &Nes) -> String {
+        let datadir = Directories::get().data_dir.display();
+        let name = nes.name.lock().unwrap();
+        format!("{datadir}/{name}.state{}", self.state_slot)
+    }
+
+    fn save_state(&self, nes: &Nes) -> Result<()> {
+        let state = nes.save_state();
+        let filename = self.state_filename(nes);
+        let state = serde_json::to_string_pretty(&state)?;
+        std::fs::write(filename, state)?;
+        Ok(())
+    }
+
+    fn restore_state(&self, nes: &Nes) -> Result<()> {
+        let filename = self.state_filename(nes);
+        let state = std::fs::read_to_string(filename)?;
+        let state = serde_json::from_str(&state)?;
+        let state = nes.restore_state(&state);
+        Ok(())
+    }
 }
 
 #[pymethods]
@@ -109,6 +134,8 @@ impl EmulatorGui {
             apu: ApuDebug::new(),
             memory: MemoryDebug::default(),
             ppu: PpuDebug::new(),
+            input_map: InputMap::default(),
+            state_slot: 0,
         }
     }
 
@@ -164,70 +191,65 @@ impl EmulatorGui {
         self.ppu.chr_visible = v;
     }
 
-    fn handle_input<'p>(&self, py: Python<'p>, ctx: &UiContext) {
+    fn handle_input<'p>(&mut self, py: Python<'p>, ctx: &UiContext) {
         let ui = ctx.ui;
         let nes = self.nes.borrow(py);
-        let mut ctrl = nes.controllers.lock().expect("lock controllers");
+        let mut controllers = nes.controllers.lock().expect("lock controllers");
+        for event in ctx.events.iter() {
+            Self::handle_event(&mut controllers.controller[0], event);
+        }
         if ui.is_window_focused() {
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::UpArrow,
-                Controller::BUTTON_UP,
-            );
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::DownArrow,
-                Controller::BUTTON_DOWN,
-            );
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::LeftArrow,
-                Controller::BUTTON_LEFT,
-            );
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::RightArrow,
-                Controller::BUTTON_RIGHT,
-            );
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::LeftCtrl,
-                Controller::BUTTON_B,
-            );
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::LeftAlt,
-                Controller::BUTTON_A,
-            );
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::LeftShift,
-                Controller::BUTTON_START,
-            );
-            Self::handle_button(
-                ui,
-                &mut ctrl.controller[0],
-                Key::Tab,
-                Controller::BUTTON_SELECT,
-            );
-
-            if ui.is_key_pressed(Key::Pause) {
-                nes.set_pause(!nes.get_pause());
-            }
-            if ui.is_key_pressed(Key::Backslash) {
-                nes.set_pause(true);
-                nes.set_frame_step(true);
+            for (ctrl, binds) in controllers
+                .controller
+                .iter_mut()
+                .zip(self.input_map.controller.iter())
+            {
+                for (&key, &button) in binds.iter() {
+                    Self::handle_button(ui, ctrl, key.into(), button.into());
+                }
             }
         }
-        for event in ctx.events.iter() {
-            Self::handle_event(&mut ctrl.controller[0], event);
+        drop(controllers);
+
+        if ui.is_window_focused() {
+            for (&key, &command) in self.input_map.command.iter() {
+                if ui.is_key_pressed(key.into()) {
+                    match command {
+                        CommandKey::SystemPause => nes.set_pause(!nes.get_pause()),
+                        CommandKey::SystemFrameStep => {
+                            nes.set_pause(true);
+                            nes.set_frame_step(true);
+                        }
+                        CommandKey::SystemSaveState => {
+                            if let Err(e) = self.save_state(&nes) {
+                                log::error!("Error saving state: {e}");
+                            }
+                        }
+                        CommandKey::SystemRestoreState => {
+                            if let Err(e) = self.restore_state(&nes) {
+                                log::error!("Error restoring state: {e}");
+                            }
+                        }
+                        CommandKey::SelectState0
+                        | CommandKey::SelectState1
+                        | CommandKey::SelectState2
+                        | CommandKey::SelectState3
+                        | CommandKey::SelectState4
+                        | CommandKey::SelectState5
+                        | CommandKey::SelectState6
+                        | CommandKey::SelectState7
+                        | CommandKey::SelectState8
+                        | CommandKey::SelectState9 => {
+                            let slot = command as u32 - CommandKey::SelectState0 as u32;
+                            log::info!("Selected state slot {slot}");
+                            self.state_slot = slot;
+                        }
+                        _ => {
+                            log::error!("{command:?} not implemented");
+                        }
+                    }
+                }
+            }
         }
     }
 
