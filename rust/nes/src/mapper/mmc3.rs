@@ -3,13 +3,13 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 use crate::mapper::simple_mirror_address;
-use crate::peripheral::Peripheral;
+use crate::peripheral::{Mapper, Peripheral};
 use crate::ram::{Ram, RamKind};
 use crate::system::Nes;
 use crate::NesFile;
 use crate::{Address, AddressRange};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MMC3 {
     irq_enable: bool,
     register: u8,
@@ -57,6 +57,11 @@ impl MMC3 {
     }
 }
 
+impl Mapper for MMC3 {
+    fn clone(&self) -> Box<dyn Mapper> {
+        Box::new(Clone::clone(self))
+    }
+}
 impl MMC3 {
     fn write_bank_select(&mut self, val: u8) {
         self.prg_mode = (val >> 6) & 1;

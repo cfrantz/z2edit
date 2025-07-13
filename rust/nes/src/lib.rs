@@ -21,7 +21,7 @@ pub use address::{Address, AddressRange};
 pub use error::NesError;
 pub use freespace::Alloc;
 pub use nesfile::NesFile;
-pub use system::Nes;
+pub use system::{Nes, NesState};
 
 #[pyfunction]
 fn version() -> String {
@@ -31,6 +31,7 @@ fn version() -> String {
 fn _nes(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_class::<Nes>()?;
+    m.add_class::<NesState>()?;
     m.add_class::<NesFile>()?;
     m.add_class::<Address>()?;
     m.add_class::<AddressRange>()?;

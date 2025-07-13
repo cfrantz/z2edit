@@ -3,13 +3,13 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 use crate::mapper::simple_mirror_address;
-use crate::peripheral::Peripheral;
+use crate::peripheral::{Mapper, Peripheral};
 use crate::ram::{Ram, RamKind};
 use crate::system::Nes;
 use crate::NesFile;
 use crate::{Address, AddressRange};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MMC1 {
     shift_register: u8,
     control: u8,
@@ -105,6 +105,12 @@ impl MMC1 {
             !self.control & 3
         };
         simple_mirror_address(mode, address)
+    }
+}
+
+impl Mapper for MMC1 {
+    fn clone(&self) -> Box<dyn Mapper> {
+        Box::new(Clone::clone(self))
     }
 }
 

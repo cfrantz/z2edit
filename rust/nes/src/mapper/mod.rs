@@ -3,7 +3,7 @@ use std::any::Any;
 use std::sync::{Arc, Mutex};
 
 use crate::error::NesError;
-use crate::peripheral::Peripheral;
+use crate::peripheral::{Mapper, Peripheral};
 use crate::NesFile;
 use crate::{Address, AddressRange, Nes};
 
@@ -15,7 +15,7 @@ pub mod uxrom;
 pub mod vrc7;
 mod vrc7_audio;
 
-pub fn new(rom: &NesFile) -> Result<Arc<Mutex<Box<dyn Peripheral + Send + Sync>>>> {
+pub fn new(rom: &NesFile) -> Result<Arc<Mutex<Box<dyn Mapper>>>> {
     match rom.mapper() {
         0 | 2 => Ok(Arc::new(Mutex::new(Box::new(uxrom::UxROM::new(rom)?)))),
         1 => Ok(Arc::new(Mutex::new(Box::new(mmc1::MMC1::new(rom)?)))),
@@ -27,7 +27,9 @@ pub fn new(rom: &NesFile) -> Result<Arc<Mutex<Box<dyn Peripheral + Send + Sync>>
     }
 }
 
-impl Peripheral for Box<dyn Peripheral + Send + Sync> {
+// We need this forwarding impl so that Box<dyn Mapper> can be coerced
+// to dyn Peripheral for the peripheral memory map.
+impl Peripheral for Box<dyn Mapper> {
     fn write(&mut self, nes: &Nes, address: Address, value: u8) {
         (**self).write(nes, address, value)
     }
@@ -43,7 +45,6 @@ impl Peripheral for Box<dyn Peripheral + Send + Sync> {
     fn as_any_mut(&mut self) -> &mut dyn Any {
         (**self).as_any_mut()
     }
-
     fn decode_address(&self) -> Vec<AddressRange> {
         (**self).decode_address()
     }

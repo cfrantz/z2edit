@@ -8,13 +8,26 @@ use crate::apu::Apu;
 use crate::controller::Controllers;
 use crate::cpu::Cpu6502;
 use crate::mapper;
-use crate::peripheral::Peripheral;
+use crate::peripheral::{Mapper, Peripheral};
 use crate::ppu::Ppu;
 use crate::ram::{Ram, RamKind};
 use crate::stall::Stall;
 use crate::{Address, AddressRange, NesFile};
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
+
+#[pyclass]
+pub struct NesState {
+    pub cpu: Cpu6502,
+    pub apu: Apu,
+    pub ppu: Ppu,
+    pub ram: Ram,
+    pub vram: Ram,
+    pub pram: Ram,
+    pub mapper: Box<dyn Mapper>,
+    pub controllers: Controllers,
+    pub stall: Stall,
+}
 
 #[pyclass(sequence)]
 pub struct Nes {
@@ -25,7 +38,7 @@ pub struct Nes {
     pub ram: Arc<Mutex<Ram>>,
     pub vram: Arc<Mutex<Ram>>,
     pub pram: Arc<Mutex<Ram>>,
-    pub mapper: Arc<Mutex<Box<dyn Peripheral + Send + Sync>>>,
+    pub mapper: Arc<Mutex<Box<dyn Mapper>>>,
     pub controllers: Arc<Mutex<Controllers>>,
     pub image: Arc<Mutex<Image>>,
     pub stall: Stall,
@@ -34,7 +47,7 @@ pub struct Nes {
     pub name: Arc<Mutex<String>>,
     pub pause: AtomicBool,
     pub frame_step: AtomicBool,
-    peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral + Send + Sync>>)>,
+    peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral>>)>,
 }
 
 impl Nes {
@@ -42,11 +55,7 @@ impl Nes {
     pub const SAMPLE_RATE: u32 = 48000;
     pub const FPS: f64 = 60.0998;
 
-    fn register_peripheral(
-        &mut self,
-        addr_range: AddressRange,
-        p: Arc<Mutex<dyn Peripheral + Send + Sync>>,
-    ) {
+    fn register_peripheral(&mut self, addr_range: AddressRange, p: Arc<Mutex<dyn Peripheral>>) {
         self.peripherals.push((addr_range, p));
     }
 
@@ -54,26 +63,26 @@ impl Nes {
         // Although RAM is only 2K, it decodes in the first 4K of address space.
         self.register_peripheral(
             AddressRange::cpu(0, 0x1000),
-            Arc::clone(&self.ram) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.ram) as Arc<Mutex<dyn Peripheral>>,
         );
 
         // The PPU has only 8 registers, but it's mirrored from 0x2000 to 0x3FFF.
         self.register_peripheral(
             AddressRange::cpu(0x2000, 0x2000),
-            Arc::clone(&self.ppu) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.ppu) as Arc<Mutex<dyn Peripheral>>,
         );
         // The OAM DMA register is located at 0x4014.  Although this register is
         // part of the CPU/APU part, we model it as part of the PPU in this emulator.
         self.register_peripheral(
             AddressRange::cpu(0x4014, 1),
-            Arc::clone(&self.ppu) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.ppu) as Arc<Mutex<dyn Peripheral>>,
         );
         // The PPU has a built-in RAM for mapping 2-bit color values into the
         // NES's total 64 possible colors.  Although this RAM is internal to the
         // PPU, we model it as a separate RAM here.
         self.register_peripheral(
             AddressRange::ppu(0x3F00, 256),
-            Arc::clone(&self.pram) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.pram) as Arc<Mutex<dyn Peripheral>>,
         );
 
         // The APU decodes from 0x4000-0x4013, 0x4015 and 0x4017.  On the NES, the
@@ -81,21 +90,21 @@ impl Nes {
         // for these registers (ie: no mirroring).
         self.register_peripheral(
             AddressRange::cpu(0x4000, 0x14),
-            Arc::clone(&self.apu) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.apu) as Arc<Mutex<dyn Peripheral>>,
         );
         self.register_peripheral(
             AddressRange::cpu(0x4015, 0x01),
-            Arc::clone(&self.apu) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.apu) as Arc<Mutex<dyn Peripheral>>,
         );
         self.register_peripheral(
             AddressRange::cpu(0x4017, 0x01),
-            Arc::clone(&self.apu) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.apu) as Arc<Mutex<dyn Peripheral>>,
         );
 
         // The controllers decode at 0x4016 and 0x4017.
         self.register_peripheral(
             AddressRange::cpu(0x4016, 2),
-            Arc::clone(&self.controllers) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+            Arc::clone(&self.controllers) as Arc<Mutex<dyn Peripheral>>,
         );
 
         // Query the mapper's address ranges and register them.
@@ -107,7 +116,7 @@ impl Nes {
         for range in mapper_ranges {
             self.register_peripheral(
                 range,
-                Arc::clone(&self.mapper) as Arc<Mutex<dyn Peripheral + Send + Sync>>,
+                Arc::clone(&self.mapper) as Arc<Mutex<dyn Peripheral>>,
             );
         }
         Ok(())
@@ -242,6 +251,35 @@ impl Nes {
     #[getter]
     pub fn get_frame_step(&self) -> bool {
         self.frame_step.load(Ordering::Relaxed)
+    }
+
+    pub fn save_state(&self) -> NesState {
+        NesState {
+            cpu: self.cpu.lock().unwrap().clone(),
+            apu: self.apu.lock().unwrap().clone(),
+            ppu: self.ppu.lock().unwrap().clone(),
+            ram: self.ram.lock().unwrap().clone(),
+            vram: self.vram.lock().unwrap().clone(),
+            pram: self.pram.lock().unwrap().clone(),
+            mapper: self.mapper.lock().unwrap().clone(),
+            controllers: self.controllers.lock().unwrap().clone(),
+            stall: self.stall.clone(),
+        }
+    }
+
+    pub fn restore_state(&self, state: &NesState) {
+        self.cpu.lock().unwrap().clone_from(&state.cpu);
+        self.apu.lock().unwrap().clone_from(&state.apu);
+        self.ppu.lock().unwrap().clone_from(&state.ppu);
+        self.ram.lock().unwrap().clone_from(&state.ram);
+        self.vram.lock().unwrap().clone_from(&state.vram);
+        self.pram.lock().unwrap().clone_from(&state.pram);
+        *self.mapper.lock().unwrap() = state.mapper.clone();
+        self.controllers
+            .lock()
+            .unwrap()
+            .clone_from(&state.controllers);
+        self.stall.clone_from(&state.stall);
     }
 
     pub fn emulate_frame(&self, audio: &AudioOut) {

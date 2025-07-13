@@ -4,13 +4,13 @@ use std::any::Any;
 
 use crate::mapper::simple_mirror_address;
 use crate::mapper::vrc7_audio::Emu2413;
-use crate::peripheral::Peripheral;
+use crate::peripheral::{Mapper, Peripheral};
 use crate::ram::{Ram, RamKind};
 use crate::system::Nes;
 use crate::NesFile;
 use crate::{Address, AddressRange};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct OplDebug {
     pub volume: u8,
     pub flo: u8,
@@ -33,7 +33,7 @@ impl Default for OplDebug {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Vrc7 {
     cycles: u64,
     prg_banks: u8,
@@ -117,6 +117,11 @@ impl Vrc7 {
     }
 }
 
+impl Mapper for Vrc7 {
+    fn clone(&self) -> Box<dyn Mapper> {
+        Box::new(Clone::clone(self))
+    }
+}
 impl Peripheral for Vrc7 {
     fn read(&mut self, nes: &Nes, address: Address) -> u8 {
         let rom = nes.rom.lock().expect("Failed to lock ROM for read");

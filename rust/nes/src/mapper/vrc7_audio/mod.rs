@@ -15,6 +15,16 @@ impl Default for Emu2413 {
     }
 }
 
+impl Clone for Emu2413 {
+    fn clone(&self) -> Self {
+        let c = Self::default();
+        unsafe {
+            *c.p = *self.p;
+        }
+        c
+    }
+}
+
 impl Emu2413 {
     pub const CHANNELS: usize = 10;
 

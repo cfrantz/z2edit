@@ -8,6 +8,15 @@ pub struct Stall {
     pub(crate) odd_cycle: AtomicBool,
 }
 
+impl Clone for Stall {
+    fn clone(&self) -> Self {
+        Stall {
+            cycles: self.cycles.load(Ordering::SeqCst).into(),
+            odd_cycle: self.odd_cycle.load(Ordering::SeqCst).into(),
+        }
+    }
+}
+
 #[pymethods]
 impl Stall {
     pub fn clear(&self, is_odd: bool) -> u64 {
@@ -29,5 +38,12 @@ impl Stall {
 
     pub fn stalling(&self) -> bool {
         self.cycles.load(Ordering::SeqCst) != 0
+    }
+
+    pub fn clone_from(&self, source: &Stall) {
+        self.cycles
+            .store(self.cycles.load(Ordering::SeqCst), Ordering::Relaxed);
+        self.odd_cycle
+            .store(self.odd_cycle.load(Ordering::SeqCst), Ordering::Relaxed);
     }
 }

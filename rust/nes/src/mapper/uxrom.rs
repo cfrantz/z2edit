@@ -2,13 +2,13 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
-use crate::peripheral::Peripheral;
+use crate::peripheral::{Mapper, Peripheral};
 use crate::ram::{Ram, RamKind};
 use crate::system::Nes;
 use crate::NesFile;
 use crate::{Address, AddressRange};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UxROM {
     prg_banks: u8,
     prg_bank1: u8,
@@ -28,6 +28,11 @@ impl UxROM {
     }
 }
 
+impl Mapper for UxROM {
+    fn clone(&self) -> Box<dyn Mapper> {
+        Box::new(Clone::clone(self))
+    }
+}
 impl Peripheral for UxROM {
     fn read(&mut self, nes: &Nes, address: Address) -> u8 {
         let rom = nes.rom.lock().expect("Failed to lock ROM for read");

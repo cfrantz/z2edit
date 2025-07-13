@@ -2,13 +2,13 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
-use crate::peripheral::Peripheral;
+use crate::peripheral::{Mapper, Peripheral};
 use crate::ram::{Ram, RamKind};
 use crate::system::Nes;
 use crate::NesFile;
 use crate::{Address, AddressRange};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CNROM {
     chr_banks: u8,
     chr_bank1: u8,
@@ -23,6 +23,12 @@ impl CNROM {
             chr_bank1: 0,
             wram: Ram::new(RamKind::WRam, 8192)?,
         })
+    }
+}
+
+impl Mapper for CNROM {
+    fn clone(&self) -> Box<dyn Mapper> {
+        Box::new(Clone::clone(self))
     }
 }
 
