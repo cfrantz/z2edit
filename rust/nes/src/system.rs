@@ -13,7 +13,7 @@ use crate::ppu::Ppu;
 use crate::ram::{Ram, RamKind};
 use crate::stall::Stall;
 use crate::{Address, AddressRange, NesFile};
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
 
 #[pyclass(sequence)]
@@ -32,6 +32,8 @@ pub struct Nes {
     pub audio: Arc<Mutex<IndexMap<String, Vec<f32>>>>,
     pub volume: AtomicI32,
     pub name: Arc<Mutex<String>>,
+    pub pause: AtomicBool,
+    pub frame_step: AtomicBool,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral + Send + Sync>>)>,
 }
 
@@ -189,6 +191,8 @@ impl Nes {
             stall: Stall::default(),
             audio: Arc::default(),
             volume: AtomicI32::new(1 << 24),
+            pause: AtomicBool::default(),
+            frame_step: AtomicBool::default(),
             name: Arc::new(Mutex::new(String::default())),
             peripherals: Vec::default(),
         };
@@ -220,7 +224,36 @@ impl Nes {
         n.clone()
     }
 
+    #[setter]
+    pub fn set_pause(&self, pause: bool) {
+        self.pause.store(pause, Ordering::Relaxed);
+    }
+
+    #[getter]
+    pub fn get_pause(&self) -> bool {
+        self.pause.load(Ordering::Relaxed)
+    }
+
+    #[setter]
+    pub fn set_frame_step(&self, frame_step: bool) {
+        self.frame_step.store(frame_step, Ordering::Relaxed);
+    }
+
+    #[getter]
+    pub fn get_frame_step(&self) -> bool {
+        self.frame_step.load(Ordering::Relaxed)
+    }
+
     pub fn emulate_frame(&self, audio: &AudioOut) {
+        let pause = self.pause.load(Ordering::Relaxed);
+        let frame_step = self.frame_step.load(Ordering::Relaxed);
+        if pause {
+            if !frame_step {
+                return;
+            }
+            self.frame_step.store(false, Ordering::Relaxed);
+        }
+
         let initial_frame = self.ppu.lock().expect("Failed to lock PPU").frame;
         while self.ppu.lock().expect("Failed to lock PPU").frame == initial_frame {
             if !self.tick() {

@@ -217,6 +217,14 @@ impl EmulatorGui {
                 Key::Tab,
                 Controller::BUTTON_SELECT,
             );
+
+            if ui.is_key_pressed(Key::Pause) {
+                nes.set_pause(!nes.get_pause());
+            }
+            if ui.is_key_pressed(Key::Backslash) {
+                nes.set_pause(true);
+                nes.set_frame_step(true);
+            }
         }
         for event in ctx.events.iter() {
             Self::handle_event(&mut ctrl.controller[0], event);
