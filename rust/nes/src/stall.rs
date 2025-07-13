@@ -1,7 +1,8 @@
 use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 #[pyclass]
 pub struct Stall {
     pub(crate) cycles: AtomicU64,

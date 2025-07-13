@@ -24,7 +24,7 @@ serde_annotate = { git = "https://github.com/lowRISC/serde-annotate" }
 rand = "0.8.5"
 #pyo3-log = "0.12.1"
 #serde_json = "1.0.134"
-#typetag = "0.2.19"
+typetag = "0.2.20"
 #rfd = {version = "0.15.2", features = ["gtk3"],  default-features = false }
 #directories = "6.0.0"
 sha2 = "0.10.8"

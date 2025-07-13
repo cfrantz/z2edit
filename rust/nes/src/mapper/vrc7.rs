@@ -117,6 +117,7 @@ impl Vrc7 {
     }
 }
 
+#[typetag::serde(name = "VRC7")]
 impl Mapper for Vrc7 {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))

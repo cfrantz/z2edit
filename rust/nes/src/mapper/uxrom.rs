@@ -28,6 +28,7 @@ impl UxROM {
     }
 }
 
+#[typetag::serde(name = "UxROM")]
 impl Mapper for UxROM {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))

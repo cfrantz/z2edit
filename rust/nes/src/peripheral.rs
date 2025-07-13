@@ -14,6 +14,7 @@ pub trait Peripheral: Send + Sync {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
+#[typetag::serde]
 pub trait Mapper: Peripheral {
     fn clone(&self) -> Box<dyn Mapper>;
 }

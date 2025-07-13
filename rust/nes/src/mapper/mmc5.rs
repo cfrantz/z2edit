@@ -392,6 +392,7 @@ impl MMC5 {
     }
 }
 
+#[typetag::serde(name = "MMC5")]
 impl Mapper for MMC5 {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))

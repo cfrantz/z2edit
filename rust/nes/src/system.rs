@@ -3,6 +3,7 @@ use indexmap::IndexMap;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use python_gui::{AudioOut, Color, Image};
+use serde::{Deserialize, Serialize};
 
 use crate::apu::Apu;
 use crate::controller::Controllers;
@@ -17,6 +18,7 @@ use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
 
 #[pyclass]
+#[derive(Serialize, Deserialize)]
 pub struct NesState {
     pub cpu: Cpu6502,
     pub apu: Apu,
