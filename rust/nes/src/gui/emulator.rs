@@ -215,6 +215,7 @@ impl EmulatorGui {
             for (&key, &command) in self.input_map.command.iter() {
                 if ui.is_key_pressed(key.into()) {
                     match command {
+                        CommandKey::SystemReset => nes.reset(),
                         CommandKey::SystemPause => nes.set_pause(!nes.get_pause()),
                         CommandKey::SystemFrameStep => {
                             nes.set_pause(true);

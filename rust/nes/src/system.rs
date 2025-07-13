@@ -196,7 +196,7 @@ impl Nes {
             ram: Arc::new(Mutex::new(Ram::new(RamKind::Ram, 2048)?)),
             vram: Arc::new(Mutex::new(Ram::new(RamKind::VRam, 2048)?)),
             pram: Arc::new(Mutex::new(Ram::new(RamKind::PaletteRam, 32)?)),
-            mapper,
+            mapper: Arc::new(Mutex::new(mapper)),
             controllers: Arc::new(Mutex::new(Controllers::new())),
             image: Arc::new(Mutex::new(Image::new(256, 240))),
             stall: Stall::default(),
@@ -209,6 +209,16 @@ impl Nes {
         };
         nes.register_peripherals()?;
         Ok(Py::new(py, nes)?)
+    }
+
+    pub fn reset(&self) {
+        *self.cpu.lock().unwrap() = Cpu6502::default();
+        *self.apu.lock().unwrap() = Apu::new();
+        *self.ppu.lock().unwrap() = Ppu::new();
+        *self.controllers.lock().unwrap() = Controllers::new();
+        *self.mapper.lock().unwrap() =
+            mapper::new(&self.rom.lock().unwrap()).expect("failed to create mapper");
+        let _ = self.stall.clear(false);
     }
 
     #[setter]
