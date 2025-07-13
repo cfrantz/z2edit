@@ -47,19 +47,29 @@ impl Cpu6502 {
     const FLAG_V: u8 = 0b01000000; // Overflow
     const FLAG_N: u8 = 0b10000000; // Negative
 
-    fn read16(nes: &Nes, address: u16) -> u16 {
-        nes.read(Address::Cpu(address)) as u16 | (nes.read(Address::Cpu(address + 1)) as u16) << 8
+    fn read(&self, nes: &Nes, address: u16) -> u8 {
+        nes.read(Address::Cpu(address))
     }
 
-    fn read16bug(nes: &Nes, address: u16) -> u16 {
+    fn write(&self, nes: &Nes, address: u16, value: u8) {
+        nes.write(Address::Cpu(address), value);
+    }
+
+    fn read16(&self, nes: &Nes, address: u16) -> u16 {
+        u16::from_le_bytes([self.read(nes, address), self.read(nes, address + 1)])
+    }
+
+    fn read16bug(&self, nes: &Nes, address: u16) -> u16 {
         // When reading the high byte of a word, the address increments,
         // but doesn't carry from low address byte to the high address byte.
-        nes.read(Address::Cpu(address)) as u16
-            | (nes.read(Address::Cpu((address & 0xFF00) | ((address + 1) & 0x00FF))) as u16) << 8
+        u16::from_le_bytes([
+            self.read(nes, address),
+            self.read(nes, (address & 0xFF00) | ((address + 1) & 0x00FF)),
+        ])
     }
 
     fn push(&mut self, nes: &Nes, value: u8) {
-        nes.write(Address::Cpu(0x100u16 | self.sp as u16), value);
+        self.write(nes, 0x100u16 | self.sp as u16, value);
         self.sp = self.sp.wrapping_sub(1);
     }
     fn push16(&mut self, nes: &Nes, value: u16) {
@@ -68,7 +78,7 @@ impl Cpu6502 {
     }
     fn pull(&mut self, nes: &Nes) -> u8 {
         self.sp = self.sp.wrapping_add(1);
-        nes.read(Address::Cpu(0x100u16 | self.sp as u16))
+        self.read(nes, 0x100u16 | self.sp as u16)
     }
     fn pull16(&mut self, nes: &Nes) -> u16 {
         self.pull(nes) as u16 | (self.pull(nes) as u16) << 8
@@ -249,68 +259,68 @@ impl Cpu6502 {
             self.a = 0;
             self.x = 0;
             self.y = 0;
-            self.pc = Cpu6502::read16(nes, 0xFFFCu16);
+            self.pc = self.read16(nes, 0xFFFCu16);
         } else if self.nmi_pending {
             self.nmi_pending = false;
             self.push16(nes, self.pc);
             self.push(nes, self.p | Self::FLAG_B);
             self.p |= Self::FLAG_I;
-            self.pc = Cpu6502::read16(nes, 0xFFFAu16);
+            self.pc = self.read16(nes, 0xFFFAu16);
             self.cycles += 7;
         } else if self.irq_pending && (self.p & Self::FLAG_I) == 0 {
             self.irq_pending = false;
             self.push16(nes, self.pc);
             self.push(nes, self.p | Self::FLAG_B);
             self.p |= Self::FLAG_I;
-            self.pc = Cpu6502::read16(nes, 0xFFFEu16);
+            self.pc = self.read16(nes, 0xFFFEu16);
             self.cycles += 7;
         }
 
         // Read opcode from memory, then compute the opaddr address,
         // next PC and cycles consumed.
         let iaddr = self.pc;
-        let opcode = nes.read(Address::Cpu(iaddr));
+        let opcode = self.read(nes, iaddr);
         let info = INFO[opcode as usize];
         let pc1 = self.pc.wrapping_add(1);
         self.pc = self.pc.wrapping_add(info.size as u16);
         self.cycles += info.cycles as u64;
         let opaddr = match info.mode {
-            AddressingMode::Absolute => Cpu6502::read16(nes, pc1),
+            AddressingMode::Absolute => self.read16(nes, pc1),
             AddressingMode::AbsoluteX => {
-                let addr = Cpu6502::read16(nes, pc1);
+                let addr = self.read16(nes, pc1);
                 let newaddr = addr.wrapping_add(self.x as u16);
                 self.cycles += Cpu6502::pages_differ(addr, newaddr, info.page, 0);
                 newaddr
             }
             AddressingMode::AbsoluteY => {
-                let addr = Cpu6502::read16(nes, pc1);
+                let addr = self.read16(nes, pc1);
                 let newaddr = addr.wrapping_add(self.y as u16);
                 self.cycles += Cpu6502::pages_differ(addr, newaddr, info.page, 0);
                 newaddr
             }
             AddressingMode::IndexedIndirect => {
-                let operand = nes.read(Address::Cpu(pc1));
-                Cpu6502::read16(nes, operand.wrapping_add(self.x) as u16)
+                let operand = self.read(nes, pc1);
+                self.read16(nes, operand.wrapping_add(self.x) as u16)
             }
             AddressingMode::Indirect => {
-                let operand = Cpu6502::read16(nes, pc1);
-                Cpu6502::read16bug(nes, operand)
+                let operand = self.read16(nes, pc1);
+                self.read16bug(nes, operand)
             }
             AddressingMode::IndirectIndexed => {
-                let operand = nes.read(Address::Cpu(pc1));
-                let addr = Cpu6502::read16(nes, operand as u16);
+                let operand = self.read(nes, pc1);
+                let addr = self.read16(nes, operand as u16);
                 let newaddr = addr.wrapping_add(self.y as u16);
                 self.cycles += Cpu6502::pages_differ(addr, newaddr, info.page, 0);
                 newaddr
             }
-            AddressingMode::ZeroPage => nes.read(Address::Cpu(pc1)) as u16,
-            AddressingMode::ZeroPageX => (nes.read(Address::Cpu(pc1)).wrapping_add(self.x)) as u16,
-            AddressingMode::ZeroPageY => (nes.read(Address::Cpu(pc1)).wrapping_add(self.y)) as u16,
+            AddressingMode::ZeroPage => self.read(nes, pc1) as u16,
+            AddressingMode::ZeroPageX => self.read(nes, pc1).wrapping_add(self.x) as u16,
+            AddressingMode::ZeroPageY => self.read(nes, pc1).wrapping_add(self.y) as u16,
             AddressingMode::Immediate => pc1,
             AddressingMode::Accumulator => 0,
             AddressingMode::Implied => 0,
             AddressingMode::Relative => {
-                let mut disp = nes.read(Address::Cpu(pc1)) as u16;
+                let mut disp = self.read(nes, pc1) as u16;
                 if disp & 0x80 == 0x80 {
                     disp |= 0xFF00;
                 }
@@ -325,20 +335,20 @@ impl Cpu6502 {
                 self.push16(nes, self.pc.wrapping_add(1));
                 self.push(nes, self.p | Self::FLAG_B);
                 self.p |= Self::FLAG_I;
-                self.pc = Cpu6502::read16(nes, 0xFFFEu16);
+                self.pc = self.read16(nes, 0xFFFEu16);
             }
 
             // ORA <mem> opcodes
             0x01 | 0x05 | 0x09 | 0x0d | 0x11 | 0x15 | 0x19 | 0x1d => {
-                self.a |= nes.read(Address::Cpu(opaddr));
+                self.a |= self.read(nes, opaddr);
                 self.set_zn(self.a);
             }
             // ASL <mem>
             0x06 | 0x0e | 0x16 | 0x1e => {
-                let val = nes.read(Address::Cpu(opaddr));
+                let val = self.read(nes, opaddr);
                 self.set_c(val & 0x80 != 0);
                 self.set_zn(val << 1);
-                nes.write(Address::Cpu(opaddr), val << 1);
+                self.write(nes, opaddr, val << 1);
             }
 
             // ASL A
@@ -361,19 +371,19 @@ impl Cpu6502 {
             }
             // AND <mem> opcodes
             0x21 | 0x25 | 0x29 | 0x2d | 0x31 | 0x35 | 0x39 | 0x3d => {
-                self.a &= nes.read(Address::Cpu(opaddr));
+                self.a &= self.read(nes, opaddr);
                 self.set_zn(self.a);
             }
             // BIT <mem> opcodes
             0x24 | 0x2c => {
-                let val = nes.read(Address::Cpu(opaddr));
+                let val = self.read(nes, opaddr);
                 self.set_v(val & 0x40 == 0x40);
                 self.set_z(val & self.a);
                 self.set_n(val);
             }
             // ROL <mem> opaddrs
             0x26 | 0x2e | 0x36 | 0x3e => {
-                let r = nes.read(Address::Cpu(opaddr)) as u16;
+                let r = self.read(nes, opaddr) as u16;
                 let carry = if self.p & Self::FLAG_C != 0 {
                     1u16
                 } else {
@@ -382,7 +392,7 @@ impl Cpu6502 {
                 let r = (r << 1) | carry;
                 self.set_c(r >= 0x100);
                 self.set_zn(r as u8);
-                nes.write(Address::Cpu(opaddr), r as u8);
+                self.write(nes, opaddr, r as u8);
             }
             // PLP
             0x28 => self.p = (self.pull(nes) & !Self::FLAG_B) | Self::FLAG_U,
@@ -411,15 +421,15 @@ impl Cpu6502 {
 
             // EOR <mem> opcodes
             0x41 | 0x45 | 0x49 | 0x4d | 0x51 | 0x55 | 0x59 | 0x5d => {
-                self.a ^= nes.read(Address::Cpu(opaddr));
+                self.a ^= self.read(nes, opaddr);
                 self.set_zn(self.a);
             }
             // LSR <mem>
             0x46 | 0x4e | 0x56 | 0x5e => {
-                let val = nes.read(Address::Cpu(opaddr));
+                let val = self.read(nes, opaddr);
                 self.set_c(val & 0x01 != 0);
                 self.set_zn(val >> 1);
-                nes.write(Address::Cpu(opaddr), val >> 1);
+                self.write(nes, opaddr, val >> 1);
             }
 
             // PHA
@@ -443,7 +453,7 @@ impl Cpu6502 {
             // ADC <mem> opcodes
             0x61 | 0x65 | 0x69 | 0x6d | 0x71 | 0x75 | 0x79 | 0x7d => {
                 let a = self.a;
-                let b = nes.read(Address::Cpu(opaddr));
+                let b = self.read(nes, opaddr);
                 let carry = if (self.p & Self::FLAG_C) != 0 {
                     1u16
                 } else {
@@ -458,7 +468,7 @@ impl Cpu6502 {
 
             // ROR <mem>
             0x66 | 0x6e | 0x76 | 0x7e => {
-                let val = nes.read(Address::Cpu(opaddr));
+                let val = self.read(nes, opaddr);
                 let carry = if (self.p & Self::FLAG_C) != 0 {
                     1u8
                 } else {
@@ -467,7 +477,7 @@ impl Cpu6502 {
                 let a = (val >> 1) | (carry << 7);
                 self.set_c(val & 0x01 != 0);
                 self.set_zn(a);
-                nes.write(Address::Cpu(opaddr), a);
+                self.write(nes, opaddr, a);
             }
             // PLA
             0x68 => {
@@ -493,13 +503,13 @@ impl Cpu6502 {
 
             // STA <mem> opcodes
             0x81 | 0x85 | 0x8d | 0x91 | 0x95 | 0x99 | 0x9d => {
-                nes.write(Address::Cpu(opaddr), self.a);
+                self.write(nes, opaddr, self.a);
             }
 
             // STY <mem> opcodes
-            0x84 | 0x8c | 0x94 => nes.write(Address::Cpu(opaddr), self.y),
+            0x84 | 0x8c | 0x94 => self.write(nes, opaddr, self.y),
             // STX <mem> opcodes
-            0x86 | 0x8e | 0x96 => nes.write(Address::Cpu(opaddr), self.x),
+            0x86 | 0x8e | 0x96 => self.write(nes, opaddr, self.x),
 
             // DEY
             0x88 => {
@@ -525,17 +535,17 @@ impl Cpu6502 {
 
             // LDY <mem> opcodes
             0xa0 | 0xa4 | 0xac | 0xb4 | 0xbc => {
-                self.y = nes.read(Address::Cpu(opaddr));
+                self.y = self.read(nes, opaddr);
                 self.set_zn(self.y);
             }
             // LDX <mem> opcodes
             0xa2 | 0xa6 | 0xae | 0xb6 | 0xbe => {
-                self.x = nes.read(Address::Cpu(opaddr));
+                self.x = self.read(nes, opaddr);
                 self.set_zn(self.x);
             }
             // LDA <mem> opcodes
             0xA1 | 0xA5 | 0xA9 | 0xAd | 0xB1 | 0xB5 | 0xB9 | 0xBd => {
-                self.a = nes.read(Address::Cpu(opaddr));
+                self.a = self.read(nes, opaddr);
                 self.set_zn(self.a);
             }
 
@@ -561,15 +571,15 @@ impl Cpu6502 {
             }
 
             // CPY opcodes
-            0xc0 | 0xc4 | 0xcc => self.compare(self.y, nes.read(Address::Cpu(opaddr))),
+            0xc0 | 0xc4 | 0xcc => self.compare(self.y, self.read(nes, opaddr)),
             // CMP opcodes
             0xc1 | 0xc5 | 0xc9 | 0xcd | 0xd1 | 0xd5 | 0xd9 | 0xdd => {
-                self.compare(self.a, nes.read(Address::Cpu(opaddr)))
+                self.compare(self.a, self.read(nes, opaddr))
             }
             // DEC <mem> opcodes
             0xc6 | 0xce | 0xd6 | 0xde => {
-                let val = nes.read(Address::Cpu(opaddr)).wrapping_sub(1);
-                nes.write(Address::Cpu(opaddr), val);
+                let val = self.read(nes, opaddr).wrapping_sub(1);
+                self.write(nes, opaddr, val);
                 self.set_zn(val);
             }
             // INY
@@ -588,12 +598,12 @@ impl Cpu6502 {
             // CLD
             0xd8 => self.p &= !Self::FLAG_D,
             // CPX opcodes
-            0xe0 | 0xe4 | 0xec => self.compare(self.x, nes.read(Address::Cpu(opaddr))),
+            0xe0 | 0xe4 | 0xec => self.compare(self.x, self.read(nes, opaddr)),
 
             // SBC <mem> opcodes
             0xe1 | 0xe5 | 0xe9 | 0xed | 0xf1 | 0xf5 | 0xf9 | 0xfd => {
                 let a = self.a;
-                let b = nes.read(Address::Cpu(opaddr));
+                let b = self.read(nes, opaddr);
                 let ncarry = if (self.p & Self::FLAG_C) != 0 {
                     0i16
                 } else {
@@ -608,8 +618,8 @@ impl Cpu6502 {
 
             // INC <mem> opcodes
             0xe6 | 0xee | 0xf6 | 0xfe => {
-                let val = nes.read(Address::Cpu(opaddr)).wrapping_add(1);
-                nes.write(Address::Cpu(opaddr), val);
+                let val = self.read(nes, opaddr).wrapping_add(1);
+                self.write(nes, opaddr, val);
                 self.set_zn(val);
             }
 
