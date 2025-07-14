@@ -44,7 +44,7 @@ class Emulator(object):
         self.on_root = on_root
         self.scale = 4.0
         self.aspect = 1.333
-        self.volume = 1.0
+        self.volume = 0.25
         self.preferences = Preferences(self)
         self.running = True
         self.plugins = []
@@ -56,7 +56,6 @@ class Emulator(object):
     def load_plugin(self, name):
         plugin = importlib.import_module(name)
         p = plugin.create(self)
-        print(p)
         if isinstance(p, Plugin):
             self.plugins.append(p)
         else:
@@ -154,9 +153,10 @@ class Emulator(object):
                 self._emulator.emulate_frame(ui)
                 for p in self.plugins:
                     p.run_per_frame()
+                origin = gui.get_cursor_screen_pos()
                 self._emulator.draw_image(ui, self.scale, self.aspect)
                 for p in self.plugins:
-                    p.draw_image()
+                    p.draw_image(origin)
         self.preferences.draw()
         for p in self.plugins:
             p.draw()

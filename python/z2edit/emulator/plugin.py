@@ -5,7 +5,7 @@ class Plugin(object):
     def run_per_frame(self):
         pass
 
-    def draw_image(self):
+    def draw_image(self, origin):
         pass
 
     def draw(self):

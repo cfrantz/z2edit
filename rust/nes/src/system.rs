@@ -50,6 +50,10 @@ pub struct Nes {
     pub pause: AtomicBool,
     pub frame_step: AtomicBool,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral>>)>,
+
+    pub(crate) read_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
+    pub(crate) write_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
+    pub(crate) exec_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
 }
 
 impl Nes {
@@ -180,6 +184,16 @@ impl Nes {
             log::debug!("Writing {addr:x?} value {value:02x} had no peripheral decode.");
         }
     }
+
+    fn extract_address(py: Python<'_>, addr: PyObject) -> PyResult<Address> {
+        if let Ok(a) = addr.extract::<Address>(py) {
+            Ok(a)
+        } else if let Ok(a) = addr.extract::<u16>(py) {
+            Ok(Address::Cpu(a))
+        } else {
+            Err(PyTypeError::new_err("unknown address type"))
+        }
+    }
 }
 
 #[pymethods]
@@ -206,6 +220,9 @@ impl Nes {
             frame_step: AtomicBool::default(),
             name: Arc::new(Mutex::new(String::default())),
             peripherals: Vec::default(),
+            read_cb: Arc::default(),
+            write_cb: Arc::default(),
+            exec_cb: Arc::default(),
         };
         nes.register_peripherals()?;
         Ok(Py::new(py, nes)?)
@@ -369,26 +386,49 @@ impl Nes {
 
     #[pyo3(name = "read")]
     pub fn _read<'p>(&self, py: Python<'p>, addr: PyObject) -> PyResult<u8> {
-        if let Ok(a) = addr.extract::<Address>(py) {
-            Ok(self.read(a))
-        } else if let Ok(a) = addr.extract::<u16>(py) {
-            Ok(self.read(Address::Cpu(a)))
+        let addr = Self::extract_address(py, addr)?;
+        Ok(self.read(addr))
+    }
+
+    pub fn read_i8<'p>(&self, py: Python<'p>, addr: PyObject) -> PyResult<i8> {
+        let addr = Self::extract_address(py, addr)?;
+        Ok(self.read(addr) as i8)
+    }
+
+    pub fn read_u16<'p>(&self, py: Python<'p>, addr: PyObject, hiaddr: PyObject) -> PyResult<u16> {
+        let addr = Self::extract_address(py, addr)?;
+        let hiaddr = if hiaddr.is_none(py) {
+            addr + 1
         } else {
-            Err(PyTypeError::new_err("unknown address type"))
-        }
+            Self::extract_address(py, hiaddr)?
+        };
+        Ok(u16::from_le_bytes([self.read(addr), self.read(hiaddr)]))
     }
 
     #[pyo3(name = "write")]
     pub fn _write<'p>(&self, py: Python<'p>, addr: PyObject, val: u8) -> PyResult<()> {
-        if let Ok(a) = addr.extract::<Address>(py) {
-            self.write(a, val);
-            Ok(())
-        } else if let Ok(a) = addr.extract::<u16>(py) {
-            self.write(Address::Cpu(a), val);
-            Ok(())
+        let addr = Self::extract_address(py, addr)?;
+        self.write(addr, val);
+        Ok(())
+    }
+
+    pub fn write_u16<'p>(
+        &self,
+        py: Python<'p>,
+        addr: PyObject,
+        hiaddr: PyObject,
+        val: u16,
+    ) -> PyResult<()> {
+        let addr = Self::extract_address(py, addr)?;
+        let hiaddr = if hiaddr.is_none(py) {
+            addr + 1
         } else {
-            Err(PyTypeError::new_err("unknown address type"))
-        }
+            Self::extract_address(py, hiaddr)?
+        };
+        let [lo, hi] = val.to_le_bytes();
+        self.write(addr, lo);
+        self.write(hiaddr, hi);
+        Ok(())
     }
 
     fn __len__(&self) -> usize {
@@ -399,5 +439,53 @@ impl Nes {
     }
     fn __setitem__<'p>(&self, py: Python<'p>, addr: PyObject, val: u8) -> PyResult<()> {
         self._write(py, addr, val)
+    }
+
+    pub fn set_read_callback<'p>(
+        &self,
+        py: Python<'p>,
+        addr: u16,
+        callback: PyObject,
+    ) -> PyResult<()> {
+        //let addr = Self::extract_address(py, addr)?;
+        let mut read_cb = self.read_cb.lock().expect("failed to lock read_cb");
+        if callback.is_none(py) {
+            read_cb.remove(&addr);
+        } else {
+            read_cb.insert(addr, callback);
+        }
+        Ok(())
+    }
+
+    pub fn set_write_callback<'p>(
+        &self,
+        py: Python<'p>,
+        addr: u16,
+        callback: PyObject,
+    ) -> PyResult<()> {
+        //let addr = Self::extract_address(py, addr)?;
+        let mut write_cb = self.write_cb.lock().expect("failed to lock write_cb");
+        if callback.is_none(py) {
+            write_cb.remove(&addr);
+        } else {
+            write_cb.insert(addr, callback);
+        }
+        Ok(())
+    }
+
+    pub fn set_exec_callback<'p>(
+        &self,
+        py: Python<'p>,
+        addr: u16,
+        callback: PyObject,
+    ) -> PyResult<()> {
+        //let addr = Self::extract_address(py, addr)?;
+        let mut exec_cb = self.exec_cb.lock().expect("failed to lock exec_cb");
+        if callback.is_none(py) {
+            exec_cb.remove(&addr);
+        } else {
+            exec_cb.insert(addr, callback);
+        }
+        Ok(())
     }
 }

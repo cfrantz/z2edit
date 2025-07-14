@@ -1,8 +1,13 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
+#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include <limits>
+
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 
 //#define IMGUI_HAS_DOCK       1
 #include "imgui.h"
@@ -60,7 +65,22 @@ PYBIND11_MODULE(gui, gui)
     Vec2.def(py::init<float, float>()
     , py::arg("_x")
     , py::arg("_y")
-    );
+    )
+        // Hack: add in the math ops for Vec2.
+        .def(py::self * float())
+        .def(py::self / float())
+        .def(py::self + py::self)
+        .def(py::self - py::self)
+        .def(py::self * py::self)
+        .def(py::self / py::self)
+        .def(py::self += py::self)
+        .def(py::self -= py::self)
+        .def(py::self *= float())
+        .def(py::self /= float())
+        .def("__mul__", [](float b, const ImVec2 &a) {
+            return a * b;
+        }, py::is_operator());
+
     py::class_<ImVec4> Vec4(gui, "Vec4");
     Vec4.def_readwrite("x", &ImVec4::x);
     Vec4.def_readwrite("y", &ImVec4::y);

@@ -1,9 +1,13 @@
+use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
+
 use super::cpu6502_info::{AddressingMode, INFO, NAMES};
 use crate::Address;
 use crate::Nes;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[pyclass]
+#[pyo3(get_all, set_all)]
 pub struct Cpu6502 {
     pub a: u8,
     pub x: u8,
@@ -48,10 +52,42 @@ impl Cpu6502 {
     const FLAG_N: u8 = 0b10000000; // Negative
 
     fn read(&self, nes: &Nes, address: u16) -> u8 {
-        nes.read(Address::Cpu(address))
+        let mut result = nes.read(Address::Cpu(address));
+        let read_cb = nes.read_cb.lock().expect("failed to lock read_cb");
+        if let Some(callback) = read_cb.get(&address) {
+            result = Python::with_gil(|py| {
+                match callback
+                    .call1(py, (address, result))
+                    .and_then(|val| val.extract::<u8>(py))
+                {
+                    Ok(val) => val,
+                    Err(e) => {
+                        log::error!("Read callback for {address:x?} failed: {e}");
+                        result
+                    }
+                }
+            });
+        }
+        result
     }
 
     fn write(&self, nes: &Nes, address: u16, value: u8) {
+        let mut value = value;
+        let write_cb = nes.write_cb.lock().expect("failed to lock write_cb");
+        if let Some(callback) = write_cb.get(&address) {
+            value = Python::with_gil(|py| {
+                match callback
+                    .call1(py, (address, value))
+                    .and_then(|val| val.extract::<u8>(py))
+                {
+                    Ok(val) => val,
+                    Err(e) => {
+                        log::error!("Write callback for {address:x?} failed: {e}");
+                        value
+                    }
+                }
+            });
+        }
         nes.write(Address::Cpu(address), value);
     }
 
