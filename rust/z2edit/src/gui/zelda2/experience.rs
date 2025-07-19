@@ -3,13 +3,13 @@ use imgui::{TableColumnSetup, TableFlags};
 
 use crate::gui::util::edit_tree_node;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
-use nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::experience::{
     config, EnemyExperience, ExperienceTable, ExperienceTableGroup, ExperienceValue,
 };
 use crate::zelda2::project::Project;
 use crate::zelda2::text_encoding::Text;
+use nes::Address;
 
 impl GuiTree for config::ExperienceTableGroup {
     fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {

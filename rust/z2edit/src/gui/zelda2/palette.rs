@@ -1,9 +1,9 @@
 use crate::gui::util::edit_tree_node;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
-use nes::hwpalette;
 use crate::zelda2::palette::{config, PaletteGroup};
 use crate::zelda2::project::Project;
 use anyhow::Result;
+use nes::hwpalette;
 
 use imgui::{TableColumnSetup, TableFlags};
 

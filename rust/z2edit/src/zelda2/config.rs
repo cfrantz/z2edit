@@ -7,12 +7,12 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use crate::error::Error;
-use nes::NesFile;
 use crate::zelda2::banks::config::{GameBank, GlobalBank};
 use crate::zelda2::chr::config::ChrMemory;
 use crate::zelda2::edit::EditList;
 use crate::zelda2::object::RenderInfo;
 use crate::zelda2::vchr::config::VirtualChr;
+use nes::NesFile;
 
 static mut CONFIGS: OnceLock<IndexMap<String, Config>> = OnceLock::new();
 

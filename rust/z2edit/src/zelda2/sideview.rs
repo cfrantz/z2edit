@@ -8,12 +8,12 @@ use std::any::Any;
 
 use crate::error::Error;
 use crate::gui::Gui;
-use nes::{Address, Alloc, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::encounters::Encounters;
 use crate::zelda2::object::{BackgroundTiles, Object, RenderInfo, Renderer};
 use crate::zelda2::project::Project;
+use nes::{Address, Alloc, NesFile};
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize, Hash)]
 pub struct MapCommand {

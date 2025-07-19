@@ -1,5 +1,5 @@
-use pyo3::prelude::*;
 use nes;
+use pyo3::prelude::*;
 
 pub mod app_preferences;
 pub mod dirs;

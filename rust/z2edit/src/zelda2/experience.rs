@@ -5,10 +5,10 @@ use std::any::Any;
 
 use crate::error::Error;
 use crate::gui::Gui;
-use nes::{Address, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::text_encoding::Text;
+use nes::{Address, NesFile};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExperienceTable {

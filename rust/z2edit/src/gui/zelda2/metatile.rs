@@ -4,11 +4,11 @@ use imgui::{StyleColor, TableFlags};
 use crate::gui::util::edit_tree_node;
 use crate::gui::widgets::Combo;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
-use nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::metatile::{config, MetatileGroup};
 use crate::zelda2::palette;
 use crate::zelda2::project::Project;
+use nes::Address;
 
 impl GuiTree for config::MetatileGroup {
     fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {

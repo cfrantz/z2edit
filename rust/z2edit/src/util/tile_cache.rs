@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use crate::error::Error;
-use nes::{hwpalette, Address};
 use crate::zelda2::chr::{ChrMemory, ChrSchema};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::{Items, Sprite};
@@ -13,6 +12,7 @@ use crate::zelda2::metatile::MetatileGroup;
 use crate::zelda2::palette::PaletteGroup;
 use crate::zelda2::project::Project;
 use crate::zelda2::vchr::{self, VirtualChr};
+use nes::{hwpalette, Address};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GfxKind {

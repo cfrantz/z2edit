@@ -5,13 +5,12 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 use crate::error::Error;
-use nes::NesFile;
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::EditList;
+use nes::NesFile;
 
 pub mod config {
     use super::*;
-    use nes::freespace::config::FreeSpace;
     use crate::zelda2::drops::config::DropInfo;
     use crate::zelda2::encounters::config::Encounters;
     use crate::zelda2::enemies::config::EnemyGroup;
@@ -25,6 +24,7 @@ pub mod config {
     use crate::zelda2::sideview::config::SideviewGroup;
     use crate::zelda2::start::config::StartValues;
     use crate::zelda2::text_table::config::TextTable;
+    use nes::freespace::config::FreeSpace;
 
     #[derive(Debug, Default, Clone, Serialize, Deserialize)]
     #[serde(default)]

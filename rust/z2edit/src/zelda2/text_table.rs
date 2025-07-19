@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 use crate::gui::Gui;
-use nes::{Address, AddressRange, Alloc, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::text_encoding::Text;
+use nes::{Address, AddressRange, Alloc, NesFile};
 
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct TextTable {

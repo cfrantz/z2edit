@@ -6,9 +6,9 @@ use std::any::Any;
 
 use crate::error::Error;
 use crate::gui::Gui;
-use nes::{Address, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
+use nes::{Address, NesFile};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PaletteGroup {

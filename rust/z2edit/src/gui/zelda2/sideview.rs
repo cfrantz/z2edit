@@ -6,7 +6,6 @@ use crate::gui::util::edit_tree_node;
 use crate::gui::util::{tooltip, DragHelper, EditAction};
 use crate::gui::widgets::Combo;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
-use nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
@@ -17,6 +16,7 @@ use crate::zelda2::palette::config::PaletteGroup;
 use crate::zelda2::project::Project;
 use crate::zelda2::sideview::{config, AreaKind, Decompressor, Enemy, MapCommand, Sideview};
 use crate::zelda2::text_table::{TextIds, TextTable};
+use nes::Address;
 
 use imgui::{MouseButton, TableColumnFlags, TableColumnSetup, TableFlags};
 

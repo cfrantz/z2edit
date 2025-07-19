@@ -9,10 +9,10 @@ use std::sync::{Arc, Mutex};
 
 use crate::error::Error;
 use crate::gui::Gui;
-use nes::{Address, NesFile};
 use crate::zelda2::config::get_config;
 use crate::zelda2::edit::{Edit, EditList, GameData};
 use crate::zelda2::project::Project;
+use nes::{Address, NesFile};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ChrMemory {
