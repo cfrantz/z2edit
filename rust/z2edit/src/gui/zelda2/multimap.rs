@@ -1,6 +1,7 @@
 use anyhow::Result;
 use imgui::MouseButton;
 use indexmap::IndexMap;
+use pyo3::prelude::*;
 use python_gui::Image;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -10,13 +11,13 @@ use crate::error::Error;
 use crate::gui::util::draw_arrow;
 use crate::gui::zelda2::sideview::SideviewEditor;
 use crate::gui::{ErrorDialog, Gui, Visibility};
-use nes::Address;
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::edit::GameData;
 use crate::zelda2::overworld::Overworld;
 use crate::zelda2::project::Project;
 use crate::zelda2::sideview::config::SideviewAreas;
 use crate::zelda2::sideview::{AreaKind, Connection, Decompressor, Sideview};
+use nes::Address;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct RoomLayout {
@@ -470,7 +471,9 @@ impl MultiMapGui {
                 if let Some(_token) = ui.begin_menu("Emulate") {
                     for screen in 0..=3 {
                         if ui.menu_item(format!("Screen {}", screen + 1)) {
-                            project.emulate(Some(&format!("{}/{screen}", room.path)))?;
+                            Python::with_gil(|py| {
+                                project.emulate(py, Some(&format!("{}/{screen}", room.path)))
+                            })?;
                         }
                     }
                 }

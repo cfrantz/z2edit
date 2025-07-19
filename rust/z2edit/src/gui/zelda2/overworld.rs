@@ -1,4 +1,5 @@
 use anyhow::Result;
+use pyo3::prelude::*;
 
 use crate::error::Error;
 use crate::gui::util::edit_tree_node;
@@ -223,7 +224,7 @@ impl OverworldEditor {
         if ui.button("Emulate") {
             let target = format!("{}/{}", self.path, conn);
             if let Some(svid) = project.connectivity.get(&target) {
-                project.emulate(Some(&svid))?;
+                Python::with_gil(|py| project.emulate(py, Some(&svid)))?;
             } else {
                 return Err(
                     Error::NotFound(format!("No destination map for {}", self.path)).into(),

@@ -37,7 +37,7 @@ class Preferences(object):
 
 class Emulator(object):
 
-    def __init__(self, rom=None, on_root=False):
+    def __init__(self, rom=None, on_root=False, title="Emulator"):
         self._emulator = None
         if rom:
             self._load_rom(rom)
@@ -48,6 +48,12 @@ class Emulator(object):
         self.preferences = Preferences(self)
         self.running = True
         self.plugins = []
+        self.title = title
+        self.visible = True
+
+    @property
+    def wants_dispose(self):
+        return not self.visible
 
     @property
     def nes(self):
@@ -66,7 +72,7 @@ class Emulator(object):
             self._emulator = nes.EmulatorGui.from_file(rom)
             self.nes.name = os.path.basename(rom)
         else:
-            self._emulator = nes.EmulatorGui(rom)
+            self._emulator = nes.EmulatorGui(nes.Nes(rom))
 
     def load_rom(self, filename):
         if filename is None:
@@ -140,7 +146,7 @@ class Emulator(object):
         else:
             root_flags = gui.WindowFlags.MENU_BAR
 
-        (w, _) = gui.begin("emulator", flags=root_flags)
+        (w, self.visible) = gui.begin(self.title, self.visible, flags=root_flags)
         if w:
             if not self.on_root:
                 gui.begin_menu_bar()

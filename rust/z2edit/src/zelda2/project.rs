@@ -9,14 +9,14 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::error::Error;
-use nes::Address;
-use nes::NesFile;
 use crate::util::time::UTime;
 use crate::zelda2::config::Config;
 use crate::zelda2::connectivity::Connectivity;
 use crate::zelda2::edit::{Edit, EditList, EditProxy, GameData};
 use crate::zelda2::rom::FileResource;
 use crate::AppPreferences;
+use nes::Address;
+use nes::NesFile;
 
 #[derive(Debug, Serialize)]
 #[pyclass(sequence)]
@@ -198,12 +198,13 @@ if project.pre_unpack_hook:
         Ok(())
     }
 
-    pub fn export_rom<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn export_rom<'p, P: AsRef<Path>>(&self, py: Python<'p>, path: P) -> Result<()> {
         let rom = self
-            .pack()
+            .pack(py)
             .with_context(|| format!("Packing {}", self.name))?;
         let path = path.as_ref();
-        rom.save(path).with_context(|| format!("Saving {path:?}"))
+        let r = rom.borrow(py);
+        r.save(path).with_context(|| format!("Saving {path:?}"))
     }
 
     pub fn data_ref<T: GameData>(&self, path: &str) -> Result<&T> {
@@ -366,8 +367,8 @@ impl Project {
     }
 
     #[pyo3(name = "export_rom")]
-    pub fn _export_rom(&self, path: &str) -> Result<()> {
-        self.export_rom(path)
+    pub fn _export_rom<'p>(&self, py: Python<'p>, path: &str) -> Result<()> {
+        self.export_rom(py, path)
     }
 
     #[getter]
@@ -381,38 +382,51 @@ impl Project {
         Ok(())
     }
 
-    fn pack(&self) -> Result<NesFile> {
-        Python::with_gil(|py| {
-            let rom = Py::new(py, self.rom.borrow(py).clone())?;
-            PROJECT_PATH.replace(self.project_path.clone());
-            self.config.pack(rom.bind(py), "", &self.edits)?;
-            Ok(rom.extract(py)?)
-        })
+    fn pack<'p>(&self, py: Python<'p>) -> Result<Py<NesFile>> {
+        let rom = Py::new(py, self.rom.borrow(py).clone())?;
+        PROJECT_PATH.replace(self.project_path.clone());
+        self.config.pack(rom.bind(py), "", &self.edits)?;
+        Ok(rom)
     }
 
     #[pyo3(signature = (sideview_path=None))]
-    pub fn emulate(&self, sideview_path: Option<&str>) -> Result<()> {
-        let mut tmp = std::env::temp_dir();
-        tmp.push("z2edit");
-        std::fs::create_dir_all(&tmp).with_context(|| format!("Creating {:?}", tmp))?;
-        tmp.push(format!("{}.nes", self.name));
-        log::info!("Emulate filename: {tmp:?}");
-
-        let mut rom = self
-            .pack()
+    pub fn emulate<'p>(&self, py: Python<'p>, sideview_path: Option<&str>) -> Result<()> {
+        let rom = self
+            .pack(py)
             .with_context(|| format!("Packing {}", self.name))?;
         log::info!("ROM packed");
         if let Some(path) = sideview_path {
-            self.emulator_prepare(path, &mut rom)?;
+            self.emulator_prepare(path, &mut *rom.borrow_mut(py))?;
             log::info!("ROM patched");
         }
-        rom.save(&tmp).with_context(|| format!("Saving {tmp:?}"))?;
-        log::info!("ROM saved");
 
-        let mut emulator = shellwords::split(&AppPreferences::get().emulator)?;
-        emulator.push(tmp.to_str().unwrap().into());
-        log::info!("Spawn: {emulator:?}");
-        Command::new(&emulator[0]).args(&emulator[1..]).spawn()?;
+        let mut args = shellwords::split(&AppPreferences::get().emulator)?;
+        if args[0] == "builtin" {
+            args.remove(0);
+            let locals = PyDict::new(py);
+            locals.set_item("args", args)?;
+            locals.set_item("rom", rom)?;
+            py.run(
+                c"from z2edit.app import Application; Application.get().emulate(args, rom)",
+                None,
+                Some(&locals),
+            )?;
+        } else {
+            let mut tmp = std::env::temp_dir();
+            tmp.push("z2edit");
+            std::fs::create_dir_all(&tmp).with_context(|| format!("Creating {:?}", tmp))?;
+            tmp.push(format!("{}.nes", self.name));
+            log::info!("Emulate filename: {tmp:?}");
+
+            rom.borrow(py)
+                .save(&tmp)
+                .with_context(|| format!("Saving {tmp:?}"))?;
+            log::info!("ROM saved");
+            args.push(tmp.to_str().unwrap().into());
+            log::info!("Spawn: {args:?}");
+            Command::new(&args[0]).args(&args[1..]).spawn()?;
+        }
+
         Ok(())
     }
 

@@ -51,10 +51,10 @@ class EmulatorApp(object):
 
         self.inner.set_scale(self.args.dpi)
         self.inner.background = [0.3, 0.3, 0.3]
+        self.windows.append(self.emulator)
 
         while self.running and self.emulator.running:
             if ui := self.inner.prepare_frame():
-                self.emulator.draw(ui)
                 for window in self.windows:
                     window.draw(ui)
 

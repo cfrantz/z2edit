@@ -8,11 +8,34 @@ import os.path
 import z2edit
 from z2edit import gui
 from z2edit import nes
+from z2edit.emulator.emu import Emulator
 
 LOG_LEVELS = {
     "TRACE": 5,
 }
 logger = logging.getLogger(__name__)
+
+
+# This parser is used when spawning the internal emulator from
+# the main gui.
+emulator_parser = argparse.ArgumentParser(
+    prog="emulator", description="Z2Edit Emulator"
+)
+emulator_parser.add_argument(
+    "--plugin",
+    "-p",
+    type=str,
+    default=[],
+    action="append",
+    help="Plugin to load",
+)
+emulator_parser.add_argument(
+    "rom",
+    metavar="ROM",
+    type=str,
+    nargs="?",
+    help="NES ROM file",
+)
 
 
 class Application(object):
@@ -26,13 +49,13 @@ class Application(object):
         self.show_metrics_window = False
         self.windows = []
         self.args = args
-        self.dirs = dirs 
+        self.dirs = dirs
         self.preferences_file = os.path.join(self.dirs.config_dir, args.preferences)
         self.preferences = z2edit.AppPreferences()
         self.preferences.load(self.preferences_file)
-        self.preferences_gui = None;
+        self.preferences_gui = None
         self.wizard = None
-        self.rom_to_emulate = None
+        self.emulator_args = emulator_parser.parse_args([])
         if args.new:
             self.wizard = z2edit.ProjectWizardGui()
             self.wizard.done = True
@@ -60,7 +83,9 @@ class Application(object):
         return None
 
     def new_project(self):
-        project = z2edit.Project(self.wizard.name, self.wizard.rom, self.wizard.config, self.wizard.fix)
+        project = z2edit.Project(
+            self.wizard.name, self.wizard.rom, self.wizard.config, self.wizard.fix
+        )
         self.windows.append(z2edit.ProjectGui(project))
         self.wizard = None
 
@@ -142,18 +167,28 @@ class Application(object):
                 self.running = False
         self.inner = None
 
-    def emulator(self, rom):
-        self.rom_to_emulate = rom
+    def emulate(self, args, rom=None):
+        # We parse args and stash in an instance variable so we can spawn
+        # the emulator from the interactive commandline thread as well as
+        # from the gui.
+        self.emulator_args = emulator_parser.parse_args(args)
+        if rom:
+            if self.emulator_args.rom:
+                logger.error("Overriding %s with %s", self.emulator_args.rom, rom)
+            self.emulator_args.rom = rom
 
     def _emulator(self):
-        if not self.rom_to_emulate:
-            return
-        rom = self.rom_to_emulate
-        self.rom_to_emulate = None
-        if isinstance(rom, str):
-            rom = nes.NesFile.load(rom)
-        emu = nes.Nes(rom)
-        self.windows.append(nes.EmulatorGui(emu))
+        if rom := self.emulator_args.rom:
+            try:
+                self.emulator_args.rom = None
+                if isinstance(rom, str):
+                    rom = nes.NesFile.load(rom)
+                emu = Emulator(rom)
+                for p in self.emulator_args.plugin:
+                    emu.load_plugin(p)
+                self.windows.append(emu)
+            except Exception as e:
+                logger.error("Error creating emulator: %s", e)
 
     def interact(self):
         a = self

@@ -27,13 +27,13 @@ pub struct ProjectGui {
 }
 
 impl ProjectGui {
-    fn menu(&mut self, ui: &imgui::Ui) {
+    fn menu<'p>(&mut self, py: Python<'p>, ui: &imgui::Ui) {
         ui.menu_bar(|| {
-            self.menu_project(ui);
+            self.menu_project(py, ui);
         });
     }
 
-    fn menu_project(&mut self, ui: &imgui::Ui) {
+    fn menu_project<'p>(&mut self, py: Python<'p>, ui: &imgui::Ui) {
         ui.menu("Project", || {
             if ui.menu_item("Save") {
                 let result = if self.filename.is_empty() {
@@ -61,14 +61,14 @@ impl ProjectGui {
 
             ui.separator();
             if ui.menu_item("Emulate") {
-                if let Err(e) = Python::with_gil(|py| self.project.borrow(py).emulate(None)) {
+                if let Err(e) = self.project.borrow(py).emulate(py, None) {
                     self.error
                         .show("Error Emulating", "Error starting emulator", e);
                 }
             }
             ui.separator();
             if ui.menu_item("Export ROM") {
-                if let Err(e) = self.export_rom() {
+                if let Err(e) = self.export_rom(py) {
                     self.error.show("Error Exporting ROM", "Error:", e);
                 }
             }
@@ -112,7 +112,7 @@ impl ProjectGui {
             }
 
             Dock.dock_space(self.dock_id, [0.0, 0.0]);
-            self.menu(ui);
+            self.menu(py, ui);
             ui.window(&self.edit_list_title)
                 .build(|| self.edit_tree(py, ui));
         });
@@ -225,19 +225,17 @@ impl ProjectGui {
         })
     }
 
-    fn export_rom(&mut self) -> Result<()> {
-        Python::with_gil(|py| {
-            let project = self.project.borrow(py);
-            if let Some(filename) = FileDialog::new()
-                .set_title(format!("Export ROM: {}", project.name))
-                .add_filter("NES ROM", &["nes"])
-                .add_filter("All", &["*"])
-                .save_file()
-            {
-                project.export_rom(&filename)
-            } else {
-                Ok(())
-            }
-        })
+    fn export_rom<'p>(&mut self, py: Python<'p>) -> Result<()> {
+        let project = self.project.borrow(py);
+        if let Some(filename) = FileDialog::new()
+            .set_title(format!("Export ROM: {}", project.name))
+            .add_filter("NES ROM", &["nes"])
+            .add_filter("All", &["*"])
+            .save_file()
+        {
+            project.export_rom(py, &filename)
+        } else {
+            Ok(())
+        }
     }
 }
