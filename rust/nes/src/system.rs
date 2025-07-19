@@ -450,7 +450,7 @@ impl Nes {
         //let addr = Self::extract_address(py, addr)?;
         let mut read_cb = self.read_cb.lock().expect("failed to lock read_cb");
         if callback.is_none(py) {
-            read_cb.remove(&addr);
+            read_cb.shift_remove(&addr);
         } else {
             read_cb.insert(addr, callback);
         }
@@ -466,7 +466,7 @@ impl Nes {
         //let addr = Self::extract_address(py, addr)?;
         let mut write_cb = self.write_cb.lock().expect("failed to lock write_cb");
         if callback.is_none(py) {
-            write_cb.remove(&addr);
+            write_cb.shift_remove(&addr);
         } else {
             write_cb.insert(addr, callback);
         }
@@ -482,7 +482,7 @@ impl Nes {
         //let addr = Self::extract_address(py, addr)?;
         let mut exec_cb = self.exec_cb.lock().expect("failed to lock exec_cb");
         if callback.is_none(py) {
-            exec_cb.remove(&addr);
+            exec_cb.shift_remove(&addr);
         } else {
             exec_cb.insert(addr, callback);
         }

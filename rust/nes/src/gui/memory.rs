@@ -9,10 +9,6 @@ pub struct MemoryDebug {
 }
 
 impl MemoryDebug {
-    pub fn new() -> Self {
-        MemoryDebug { visible: false }
-    }
-
     pub fn hexdump(nes: &Nes, address: Address, length: usize) -> String {
         let mut data = String::with_capacity(length as usize * 80 / 16);
 

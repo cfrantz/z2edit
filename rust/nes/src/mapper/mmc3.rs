@@ -25,8 +25,7 @@ pub struct MMC3 {
 }
 
 impl MMC3 {
-    pub fn new(rom: &NesFile) -> Result<Self> {
-        let last_prg = Address::Prg(-1, 0);
+    pub fn new(_rom: &NesFile) -> Result<Self> {
         Ok(Self {
             irq_enable: false,
             register: 0,

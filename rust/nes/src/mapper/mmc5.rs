@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 use crate::apu::{Apu, ApuPulse};
-use crate::mapper::simple_mirror_address;
 use crate::peripheral::{Mapper, Peripheral};
 use crate::ram::{Ram, RamKind};
 use crate::system::Nes;

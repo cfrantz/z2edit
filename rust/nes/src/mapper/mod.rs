@@ -1,6 +1,5 @@
 use anyhow::Result;
 use std::any::Any;
-use std::sync::{Arc, Mutex};
 
 use crate::error::NesError;
 use crate::peripheral::{Mapper, Peripheral};

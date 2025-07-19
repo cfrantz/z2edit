@@ -18,10 +18,6 @@ fn color(active: u8) -> [f32; 4] {
 }
 
 impl ControllerDebug {
-    pub fn new() -> Self {
-        ControllerDebug { visible: false }
-    }
-
     fn draw_controller(&self, num: usize, c: &Controller, ui: &imgui::Ui) {
         ui.group(|| {
             ui.text(format!("Controller {}", num));

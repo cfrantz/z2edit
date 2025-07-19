@@ -26,7 +26,6 @@ const PALETTE_NAMES: [&str; 8] = [
 pub struct PpuDebug {
     pub chr_visible: bool,
     pub vram_visible: bool,
-    chr_pixels: Vec<u32>,
     chr_palette: [Option<u8>; 2],
     chr_image: [Image; 2],
     best_color: [Vec<u8>; 2],
@@ -40,7 +39,6 @@ impl PpuDebug {
         PpuDebug {
             chr_visible: false,
             vram_visible: false,
-            chr_pixels: vec![0u32; 128 * 128],
             chr_palette: [None; 2],
             chr_image: [Image::new(128, 128), Image::new(128, 128)],
             best_color: [vec![0; 256], vec![0; 256]],

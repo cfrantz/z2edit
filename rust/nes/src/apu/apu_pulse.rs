@@ -1,5 +1,4 @@
 use crate::system::Nes;
-use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 
 const DUTY_TABLE: [[u8; 8]; 4] = [

@@ -57,7 +57,6 @@ impl Vrc7 {
     const VRC7_AUDIO_CHANNELS: usize = Emu2413::CHANNELS;
     const SAMPLE_RATE: f64 = ((3.0 * Nes::FREQUENCY as f64) / (Nes::FPS as f64)) / (48000.0 / 59.9);
     pub fn new(rom: &NesFile) -> Result<Self> {
-        let banks = u8::try_from(rom.prg_banks())?;
         Ok(Self {
             cycles: 0,
             prg_banks: u8::try_from(rom.prg_banks())?,

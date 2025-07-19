@@ -23,8 +23,7 @@ pub struct MMC1 {
 }
 
 impl MMC1 {
-    pub fn new(rom: &NesFile) -> Result<Self> {
-        let last_prg = Address::Prg(-1, 0);
+    pub fn new(_rom: &NesFile) -> Result<Self> {
         Ok(Self {
             shift_register: 0x10,
             control: 0,

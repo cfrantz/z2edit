@@ -43,8 +43,8 @@ impl Stall {
 
     pub fn clone_from(&self, source: &Stall) {
         self.cycles
-            .store(self.cycles.load(Ordering::SeqCst), Ordering::Relaxed);
+            .store(source.cycles.load(Ordering::SeqCst), Ordering::Relaxed);
         self.odd_cycle
-            .store(self.odd_cycle.load(Ordering::SeqCst), Ordering::Relaxed);
+            .store(source.odd_cycle.load(Ordering::SeqCst), Ordering::Relaxed);
     }
 }

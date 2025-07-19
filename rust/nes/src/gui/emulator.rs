@@ -20,7 +20,6 @@ use crate::NesFile;
 pub struct EmulatorGui {
     #[pyo3(get)]
     nes: Py<Nes>,
-    window_id: u32,
     #[pyo3(get)]
     wants_dispose: bool,
     apu: ApuDebug,
@@ -117,7 +116,7 @@ impl EmulatorGui {
         let filename = self.state_filename(nes);
         let state = std::fs::read_to_string(filename)?;
         let state = serde_json::from_str(&state)?;
-        let state = nes.restore_state(&state);
+        nes.restore_state(&state);
         Ok(())
     }
 }
@@ -128,7 +127,6 @@ impl EmulatorGui {
     pub fn new(nes: Py<Nes>) -> Self {
         Self {
             nes,
-            window_id: rand::random(),
             wants_dispose: false,
             controller: ControllerDebug::default(),
             apu: ApuDebug::new(),
