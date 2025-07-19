@@ -34,17 +34,17 @@ pub const CTRL_INCREMENT: u8 = 0x04u8;
 pub const CTRL_SPRITETABLE: u8 = 0x08u8;
 pub const CTRL_BGTABLE: u8 = 0x10u8;
 pub const CTRL_SPRITESIZE: u8 = 0x20u8;
-pub const CTRL_MASTER: u8 = 0x40u8;
+pub const _CTRL_MASTER: u8 = 0x40u8;
 pub const CTRL_NMI: u8 = 0x80u8;
 
-pub const MASK_GRAYSCALE: u8 = 0x01u8;
+pub const _MASK_GRAYSCALE: u8 = 0x01u8;
 pub const MASK_SHOWLEFTBG: u8 = 0x02u8;
 pub const MASK_SHOWLEFTSPRITE: u8 = 0x04u8;
 pub const MASK_SHOWBG: u8 = 0x08u8;
 pub const MASK_SHOWSPRITES: u8 = 0x10u8;
-pub const MASK_REDTINT: u8 = 0x20u8;
-pub const MASK_GREENTINT: u8 = 0x40u8;
-pub const MASK_BLUETINT: u8 = 0x80u8;
+pub const _MASK_REDTINT: u8 = 0x20u8;
+pub const _MASK_GREENTINT: u8 = 0x40u8;
+pub const _MASK_BLUETINT: u8 = 0x80u8;
 
 pub const SPRITE_OVERFLOW: u8 = 0x20u8;
 pub const SPRITE_ZEROHIT: u8 = 0x40u8;
