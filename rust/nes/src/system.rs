@@ -150,38 +150,75 @@ impl Nes {
         Ok(())
     }
     pub fn read(&self, addr: Address) -> u8 {
-        let mut result = 0xff;
-        let mut decode = 0;
-        //log::debug!("read {addr:x?}.");
-        for (range, peripheral_arc) in self.peripherals.iter() {
-            if range.contains_addr(addr) {
-                decode += 1;
-                let mut peripheral = peripheral_arc
-                    .lock()
-                    .expect("Failed to lock peripheral for read");
-                result &= peripheral.read(self, addr);
+        match addr {
+            Address::Cpu(_) | Address::Ppu(_) => {
+                let mut result = 0xff;
+                let mut decode = 0;
+                //log::debug!("read {addr:x?}.");
+                for (range, peripheral_arc) in self.peripherals.iter() {
+                    if range.contains_addr(addr) {
+                        decode += 1;
+                        let mut peripheral = peripheral_arc
+                            .lock()
+                            .expect("Failed to lock peripheral for read");
+                        result &= peripheral.read(self, addr);
+                    }
+                }
+                if decode == 0 {
+                    log::debug!("Reading {addr:x?} had no peripheral decode (open bus).");
+                }
+                result
             }
+            Address::File(_)
+            | Address::Prg(_, _)
+            | Address::Prg8k(_, _)
+            | Address::Chr(_, _)
+            | Address::Chr1k(_, _) => self
+                .rom
+                .lock()
+                .expect("Failed to lock rom for read")
+                .read(addr)
+                .unwrap_or(0xff),
+            Address::NullPtr() => 0xff,
         }
-        if decode == 0 {
-            log::debug!("Reading {addr:x?} had no peripheral decode (open bus).");
-        }
-        result
     }
 
     pub fn write(&self, addr: Address, value: u8) {
-        let mut decode = 0;
-        //log::debug!("write {addr:x?} {value:02x}.");
-        for (range, peripheral_arc) in self.peripherals.iter() {
-            if range.contains_addr(addr) {
-                decode += 1;
-                let mut peripheral = peripheral_arc
-                    .lock()
-                    .expect("Failed to lock peripheral for write");
-                peripheral.write(self, addr, value);
+        match addr {
+            Address::Cpu(_) | Address::Ppu(_) => {
+                let mut decode = 0;
+                //log::debug!("write {addr:x?} {value:02x}.");
+                for (range, peripheral_arc) in self.peripherals.iter() {
+                    if range.contains_addr(addr) {
+                        decode += 1;
+                        let mut peripheral = peripheral_arc
+                            .lock()
+                            .expect("Failed to lock peripheral for write");
+                        peripheral.write(self, addr, value);
+                    }
+                }
+                if decode == 0 {
+                    log::debug!("Writing {addr:x?} value {value:02x} had no peripheral decode.");
+                }
             }
-        }
-        if decode == 0 {
-            log::debug!("Writing {addr:x?} value {value:02x} had no peripheral decode.");
+            Address::File(_)
+            | Address::Prg(_, _)
+            | Address::Prg8k(_, _)
+            | Address::Chr(_, _)
+            | Address::Chr1k(_, _) => {
+                if self
+                    .rom
+                    .lock()
+                    .expect("Failed to lock rom for write")
+                    .write(addr, value)
+                    .is_err()
+                {
+                    log::debug!("Writing {addr:x?} value {value:02x} failed.");
+                }
+            }
+            Address::NullPtr() => {
+                log::debug!("Writing {addr:x?} value {value:02x} is nonsense.");
+            }
         }
     }
 
