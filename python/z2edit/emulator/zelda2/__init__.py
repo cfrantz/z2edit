@@ -6,12 +6,14 @@
 from z2edit import gui
 from z2edit.emulator import plugin
 from . import hitbox
+from . import cheats
 
 
 class Zelda2(plugin.Plugin):
 
     def __init__(self, emulator):
         super().__init__(emulator)
+        self.cheats = cheats.Cheats(emulator)
         self.hitbox_visible = False
         self.hitbox = [hitbox.LinkHitbox(emulator)]
         self.hitbox.extend(hitbox.EnemyHitbox(emulator, i) for i in range(13))
@@ -55,6 +57,8 @@ class Zelda2(plugin.Plugin):
                 self.z2goto(5, 2, 5, 9, 2, 54, 54)
             gui.end_menu()
         if gui.begin_menu("Cheats"):
+            if gui.menu_item("Cheats", "", selected=self.cheats.visible):
+                self.cheats.visible = not self.cheats.visible
             if gui.menu_item("Show Hitboxes", "", selected=self.hitbox_visible):
                 self.hitbox_visible = not self.hitbox_visible
             gui.end_menu()
@@ -74,6 +78,9 @@ class Zelda2(plugin.Plugin):
     def run_per_frame(self):
         for h in self.hitbox:
             h.update()
+
+    def draw(self):
+        self.cheats.draw()
 
     def draw_image(self, origin):
         if self.hitbox_visible:
