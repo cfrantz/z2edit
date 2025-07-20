@@ -46,15 +46,15 @@ impl NesFile {
         self.freespace.register(data)
     }
 
-    fn _bank(b: i16, banks: usize) -> usize {
-        /*
-        if b < 0 {
-            banks - (-b) as usize
+    fn _bank(b: i16, banks: usize) -> Result<usize> {
+        if banks.is_power_of_two() {
+            Ok((b as usize) & (banks - 1))
         } else {
-            b as usize
+            Err(
+                NesError::InvalidNesFile(format!("non-power-of-two number of banks: {banks}"))
+                    .into(),
+            )
         }
-        */
-        (b as usize) & (banks - 1)
     }
 
     fn offset(&self, addr: Address) -> Result<usize> {
@@ -65,20 +65,20 @@ impl NesFile {
             Address::NullPtr() => Err(NesError::InvalidAddress.into()),
             Address::Prg(b, x) => {
                 // Prg banks are 16K.
-                let bank = Self::_bank(b, self.prg_banks());
+                let bank = Self::_bank(b, self.prg_banks())?;
                 Ok(Self::HEADER_SZ + bank * 16384 + (x & 0x3FFF) as usize)
             }
             Address::Prg8k(b, x) => {
                 // Prg8k banks are 8K.  Since the iNES header advertises the
                 // number of 16k PRG banks, we double it for this calculation.
-                let bank = Self::_bank(b, self.prg_banks() * 2);
+                let bank = Self::_bank(b, self.prg_banks() * 2)?;
                 Ok(Self::HEADER_SZ + bank * 8192 + (x & 0x1FFF) as usize)
             }
             Address::Chr(b, x) => {
                 // Chr banks are 4K.  Since the iNES header advertises the
                 // number of 8k CHR banks, we double it for this calculation.
                 // The CHR section starts after the HEADER and PRG sections.
-                let bank = Self::_bank(b, self.chr_banks() * 2);
+                let bank = Self::_bank(b, self.chr_banks() * 2)?;
                 let chrstart = Self::HEADER_SZ + self.prg_banks() * 16384;
                 Ok(chrstart + bank * 4096 + (x & 0x0FFF) as usize)
             }
@@ -86,7 +86,7 @@ impl NesFile {
                 // Chr1k banks are 1K.  Since the iNES header advertises the
                 // number of 8k CHR banks, we multiply by 8 for this calculation.
                 // The CHR section starts after the HEADER and PRG sections.
-                let bank = Self::_bank(b, self.chr_banks() * 8);
+                let bank = Self::_bank(b, self.chr_banks() * 8)?;
                 let chrstart = Self::HEADER_SZ + self.prg_banks() * 16384;
                 Ok(chrstart + bank * 1024 + (x & 0x03FF) as usize)
             }

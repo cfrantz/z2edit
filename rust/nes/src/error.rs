@@ -18,4 +18,6 @@ pub enum NesError {
     NoMemory(String),
     #[error("unsupported mapper: {0}")]
     UnsupportedMapper(u16),
+    #[error("invalid nes file: {0}")]
+    InvalidNesFile(String),
 }
