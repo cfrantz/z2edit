@@ -61,6 +61,15 @@ impl Mapper for MMC3 {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))
     }
+    fn cpu_to_address(&self, cpuaddr: u16) -> Address {
+        match cpuaddr {
+            0x8000..=0x9FFF => self.prg_offset[0] + cpuaddr,
+            0xA000..=0xBFFF => self.prg_offset[1] + cpuaddr,
+            0xC000..=0xDFFF => self.prg_offset[2] + cpuaddr,
+            0xE000..=0xFFFF => self.prg_offset[3] + cpuaddr,
+            _ => Address::Cpu(cpuaddr),
+        }
+    }
 }
 impl MMC3 {
     fn write_bank_select(&mut self, val: u8) {

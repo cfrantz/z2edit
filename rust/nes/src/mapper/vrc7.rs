@@ -121,7 +121,17 @@ impl Mapper for Vrc7 {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))
     }
+    fn cpu_to_address(&self, cpuaddr: u16) -> Address {
+        match cpuaddr {
+            0x8000..=0x9FFF => self.prg_bank[0] + cpuaddr,
+            0xA000..=0xBFFF => self.prg_bank[1] + cpuaddr,
+            0xC000..=0xDFFF => self.prg_bank[2] + cpuaddr,
+            0xE000..=0xFFFF => self.prg_bank[3] + cpuaddr,
+            _ => Address::Cpu(cpuaddr),
+        }
+    }
 }
+
 impl Peripheral for Vrc7 {
     fn read(&mut self, nes: &Nes, address: Address) -> u8 {
         let rom = nes.rom.lock().expect("Failed to lock ROM for read");

@@ -396,7 +396,50 @@ impl Mapper for MMC5 {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))
     }
+
+    fn cpu_to_address(&self, cpuaddr: u16) -> Address {
+        // FIXME: maybe replace translate_prg with something more like this function
+        // so that address banking calculations use the Address::{Prg, Prg8k} abstractions.
+        match cpuaddr {
+            0x8000..=0xFFFF => {
+                match self.prg_mode {
+                    // Mode 0 is 1 x 32KiB mode
+                    0 => {
+                        let bank =
+                            (self._prg_bank(4) & !3) + if cpuaddr & 0x4000 != 0 { 2 } else { 0 };
+                        Address::Prg(bank as i16, cpuaddr)
+                    }
+                    // Mode 1 is 2 x 16KiB mode
+                    1 => {
+                        let index = if cpuaddr & 0x4000 != 0 { 4 } else { 2 };
+                        let bank = self._prg_bank(index) & !1;
+                        Address::Prg(bank as i16, cpuaddr)
+                    }
+                    // Mode 2 is 16KiB + 2 x 8KiB mode
+                    2 => {
+                        if cpuaddr & 0x4000 != 0 {
+                            let index = if cpuaddr & 0x2000 != 0 { 4 } else { 3 };
+                            let bank = self._prg_bank(index);
+                            Address::Prg8k(bank as i16, cpuaddr)
+                        } else {
+                            let bank = self._prg_bank(2) & !1;
+                            Address::Prg(bank as i16, cpuaddr)
+                        }
+                    }
+                    // Mode 3 is 4 x 8KiB banks
+                    3 => {
+                        let index = (cpuaddr >> 13) & 3;
+                        let bank = self._prg_bank(index as usize + 1);
+                        Address::Prg8k(bank as i16, cpuaddr)
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            _ => Address::Cpu(cpuaddr),
+        }
+    }
 }
+
 impl Peripheral for MMC5 {
     fn read(&mut self, nes: &Nes, address: Address) -> u8 {
         let rom = nes.rom.lock().expect("Failed to lock ROM for read");

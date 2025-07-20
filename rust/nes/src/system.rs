@@ -54,6 +54,9 @@ pub struct Nes {
     pub(crate) read_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
     pub(crate) write_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
     pub(crate) exec_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
+
+    pub trace: AtomicBool,
+    pub tracebuf: Arc<Mutex<IndexMap<Address, u64>>>,
 }
 
 impl Nes {
@@ -231,6 +234,16 @@ impl Nes {
             Err(PyTypeError::new_err("unknown address type"))
         }
     }
+
+    fn trace_cycles(&self, pc: u16, cycles: u64) {
+        let addr = self.mapper.lock().unwrap().cpu_to_address(pc);
+        let mut tracebuf = self.tracebuf.lock().unwrap();
+        if let Some(time) = tracebuf.get_mut(&addr) {
+            *time += cycles;
+        } else {
+            tracebuf.insert(addr, cycles);
+        }
+    }
 }
 
 #[pymethods]
@@ -260,6 +273,8 @@ impl Nes {
             read_cb: Arc::default(),
             write_cb: Arc::default(),
             exec_cb: Arc::default(),
+            trace: AtomicBool::default(),
+            tracebuf: Arc::default(),
         };
         nes.register_peripherals()?;
         Ok(Py::new(py, nes)?)
@@ -319,6 +334,26 @@ impl Nes {
         self.frame_step.load(Ordering::Relaxed)
     }
 
+    #[setter]
+    pub fn set_trace(&self, trace: bool) {
+        self.trace.store(trace, Ordering::Relaxed);
+    }
+
+    #[getter]
+    pub fn get_trace(&self) -> bool {
+        self.trace.load(Ordering::Relaxed)
+    }
+
+    #[setter]
+    pub fn set_tracebuf(&self, tracebuf: IndexMap<Address, u64>) {
+        *self.tracebuf.lock().unwrap() = tracebuf;
+    }
+
+    #[getter]
+    pub fn get_tracebuf(&self) -> IndexMap<Address, u64> {
+        self.tracebuf.lock().unwrap().clone()
+    }
+
     pub fn save_state(&self) -> NesState {
         NesState {
             cpu: self.cpu.lock().unwrap().clone(),
@@ -348,25 +383,27 @@ impl Nes {
         self.stall.clone_from(&state.stall);
     }
 
-    pub fn emulate_frame(&self, audio: &AudioOut) {
+    pub fn emulate_frame(&self, audio: &AudioOut) -> bool {
         let pause = self.pause.load(Ordering::Relaxed);
         let frame_step = self.frame_step.load(Ordering::Relaxed);
         if pause {
             if !frame_step {
-                return;
+                return false;
             }
             self.frame_step.store(false, Ordering::Relaxed);
+        }
+
+        if self.audio_ready() {
+            let _ = self.audio_play(audio);
         }
 
         let initial_frame = self.ppu.lock().expect("Failed to lock PPU").frame;
         while self.ppu.lock().expect("Failed to lock PPU").frame == initial_frame {
             if !self.tick() {
-                break;
+                return false;
             }
         }
-        if self.audio_ready() {
-            let _ = self.audio_play(audio);
-        }
+        true
     }
 
     pub fn tick(&self) -> bool {
@@ -379,7 +416,12 @@ impl Nes {
             } else {
                 //let (op, _) = Cpu6502::disassemble(self, cpu.pc);
                 //log::info!("{op:<30} {}", cpu.cpustate());
-                cpu.execute(self)
+                let pc = cpu.pc;
+                let n = cpu.execute(self);
+                if self.trace.load(Ordering::Relaxed) {
+                    self.trace_cycles(pc, n);
+                }
+                n
             }
         };
         for _ in 0..n {
@@ -524,5 +566,43 @@ impl Nes {
             exec_cb.insert(addr, callback);
         }
         Ok(())
+    }
+
+    /// Return the number of 16K PRG banks in the NES ROM.
+    #[getter]
+    pub fn rom_prg_banks(&self) -> usize {
+        self.rom.lock().unwrap().prg_banks()
+    }
+
+    /// Return the number of 8K CHR banks in the NES ROM.
+    #[getter]
+    pub fn rom_chr_banks(&self) -> usize {
+        self.rom.lock().unwrap().chr_banks()
+    }
+
+    /// Return the mapper used by the NES ROM.
+    #[getter]
+    pub fn rom_mapper(&self) -> u16 {
+        self.rom.lock().unwrap().mapper()
+    }
+
+    /// Return the mirror mode in the header.
+    /// - false: vertical arrangement (mirrored horizontally) or mapper-controlled.
+    /// - true: horizontal arrangement (mirrored vertically).
+    #[getter]
+    pub fn rom_mirror(&self) -> bool {
+        self.rom.lock().unwrap().mirror()
+    }
+
+    /// Return whether the cart uses four-screen arrangement.
+    #[getter]
+    pub fn rom_fourscreen(&self) -> bool {
+        self.rom.lock().unwrap().fourscreen()
+    }
+
+    /// Return whether the cart has a battery or other non-volatile memory.
+    #[getter]
+    pub fn rom_battery(&self) -> bool {
+        self.rom.lock().unwrap().battery()
     }
 }

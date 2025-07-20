@@ -31,6 +31,16 @@ impl Mapper for CNROM {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))
     }
+
+    fn cpu_to_address(&self, cpuaddr: u16) -> Address {
+        match cpuaddr {
+            0x8000..=0xFFFF => {
+                let bank = (cpuaddr & 0x7FFF) / 0x4000;
+                Address::Prg(bank as i16, cpuaddr)
+            }
+            _ => Address::Cpu(cpuaddr),
+        }
+    }
 }
 
 impl Peripheral for CNROM {

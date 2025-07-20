@@ -252,9 +252,9 @@ impl EmulatorGui {
         }
     }
 
-    fn emulate_frame<'p>(&self, py: Python<'p>, ctx: &UiContext) {
+    fn emulate_frame<'p>(&self, py: Python<'p>, ctx: &UiContext) -> bool {
         let nes = self.nes.borrow(py);
-        nes.emulate_frame(ctx.audio.expect("no audio out"));
+        nes.emulate_frame(ctx.audio.expect("no audio out"))
     }
 
     fn draw_image<'p>(&self, py: Python<'p>, ctx: &UiContext, scale: f32, aspect: f32) {

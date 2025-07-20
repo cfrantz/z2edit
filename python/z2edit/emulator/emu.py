@@ -156,9 +156,9 @@ class Emulator(object):
             if self._emulator:
                 self._emulator.nes.volume = self.volume
                 self._emulator.handle_input(ui)
-                self._emulator.emulate_frame(ui)
-                for p in self.plugins:
-                    p.run_per_frame()
+                if self._emulator.emulate_frame(ui):
+                    for p in self.plugins:
+                        p.run_per_frame()
                 origin = gui.get_cursor_screen_pos()
                 self._emulator.draw_image(ui, self.scale, self.aspect)
                 for p in self.plugins:

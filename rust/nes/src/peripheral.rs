@@ -17,4 +17,5 @@ pub trait Peripheral: Send + Sync {
 #[typetag::serde]
 pub trait Mapper: Peripheral {
     fn clone(&self) -> Box<dyn Mapper>;
+    fn cpu_to_address(&self, cpuaddr: u16) -> Address;
 }

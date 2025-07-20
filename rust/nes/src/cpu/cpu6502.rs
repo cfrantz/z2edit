@@ -30,7 +30,7 @@ impl Default for Cpu6502 {
             y: 0,
             p: Self::FLAG_U, // Default flags often include U
             sp: 0,
-            pc: 0,
+            pc: 0xFFFC,
             reset_pending: true,
             nmi_pending: false,
             irq_pending: false,

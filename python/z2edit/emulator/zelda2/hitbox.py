@@ -43,6 +43,7 @@ class EnemyHitbox(object):
         self.hbsz = gui.Vec2(0, 0)
         self.dragging = False
         self.locked = False
+        self.exists = False
         self.emulator.nes.set_read_callback(0x2A + self.index, self.mem_cb)
         self.emulator.nes.set_read_callback(0x4E + self.index, self.mem_cb)
         self.emulator.nes.set_read_callback(0x3C + self.index, self.mem_cb)
@@ -153,6 +154,7 @@ class LinkHitbox(object):
         self.swsz = gui.Vec2(0, 0)
         self.dragging = False
         self.locked = False
+        self.exists = False
 
     def update(self):
         nes = self.emulator.nes

@@ -112,6 +112,14 @@ impl Mapper for MMC1 {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))
     }
+
+    fn cpu_to_address(&self, cpuaddr: u16) -> Address {
+        match cpuaddr {
+            0x8000..=0xBFFF => self.prg_offset[0] + cpuaddr,
+            0xC000..=0xFFFF => self.prg_offset[1] + cpuaddr,
+            _ => Address::Cpu(cpuaddr),
+        }
+    }
 }
 
 impl Peripheral for MMC1 {

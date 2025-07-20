@@ -33,6 +33,13 @@ impl Mapper for UxROM {
     fn clone(&self) -> Box<dyn Mapper> {
         Box::new(Clone::clone(self))
     }
+    fn cpu_to_address(&self, cpuaddr: u16) -> Address {
+        match cpuaddr {
+            0x8000..=0xBFFF => Address::Prg(self.prg_bank1 as i16, cpuaddr),
+            0xC000..=0xFFFF => Address::Prg(self.prg_bank2 as i16, cpuaddr),
+            _ => Address::Cpu(cpuaddr),
+        }
+    }
 }
 impl Peripheral for UxROM {
     fn read(&mut self, nes: &Nes, address: Address) -> u8 {
