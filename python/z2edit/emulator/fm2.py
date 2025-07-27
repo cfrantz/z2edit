@@ -29,7 +29,7 @@ class Fm2Movie(plugin.Plugin):
     def run_pre_frame(self):
         fnum = self.emulator.nes.frame + 2
         if frame := self.frames.get(fnum):
-            logger.info("Frame %d = %r", fnum, frame)
+            # logger.info("Frame %d = %r", fnum, frame)
             for i, buttons in enumerate(frame.get("buttons", [])):
                 self.emulator.nes.controller_value(i, buttons)
 

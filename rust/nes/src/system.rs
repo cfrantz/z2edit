@@ -49,6 +49,7 @@ pub struct Nes {
     pub name: Arc<Mutex<String>>,
     pub pause: AtomicBool,
     pub frame_step: AtomicBool,
+    pub frame_lock: AtomicBool,
     pub frame: AtomicI64,
     pub remainder: AtomicI64,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral>>)>,
@@ -151,7 +152,11 @@ impl Nes {
                 buf[i] += sample * volume;
             }
         }
-        audio.play(buf)?;
+        if self.frame_lock.load(Ordering::Relaxed) {
+            audio.play(buf)?;
+        } else {
+            audio.try_play(buf)?;
+        }
         Ok(())
     }
     pub fn read(&self, addr: Address) -> u8 {
@@ -273,6 +278,7 @@ impl Nes {
             volume: AtomicI32::new(1 << 24),
             pause: AtomicBool::default(),
             frame_step: AtomicBool::default(),
+            frame_lock: AtomicBool::new(true),
             frame: AtomicI64::default(),
             remainder: AtomicI64::default(),
             name: Arc::new(Mutex::new(String::default())),
@@ -347,6 +353,16 @@ impl Nes {
     #[getter]
     pub fn get_frame_step(&self) -> bool {
         self.frame_step.load(Ordering::Relaxed)
+    }
+
+    #[setter]
+    pub fn set_frame_lock(&self, frame_lock: bool) {
+        self.frame_lock.store(frame_lock, Ordering::Relaxed);
+    }
+
+    #[getter]
+    pub fn get_frame_lock(&self) -> bool {
+        self.frame_lock.load(Ordering::Relaxed)
     }
 
     #[setter]

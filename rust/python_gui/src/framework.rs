@@ -251,6 +251,20 @@ impl Framework {
         *self.imgui.style_mut() = imgui::Style::from(style);
     }
 
+    #[getter]
+    pub fn get_swap_interval(&self) -> i32 {
+        self.window.subsystem().gl_get_swap_interval() as i32
+    }
+
+    #[setter]
+    pub fn set_swap_interval(&self, value: i32) -> Result<()> {
+        self.window
+            .subsystem()
+            .gl_set_swap_interval(value)
+            .map_err(|e| anyhow!("set_swap_interval: {e}"))?;
+        Ok(())
+    }
+
     pub fn prepare_frame(&mut self) -> Option<UiContext> {
         let mut events = Vec::with_capacity(10);
         for event in self.event_pump.poll_iter() {

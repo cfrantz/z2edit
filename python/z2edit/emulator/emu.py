@@ -32,6 +32,9 @@ class Preferences(object):
             _, self.emulator.volume = gui.drag_float(
                 "Volume", self.emulator.volume, 0.01, 0.01, 1.0, "%.02f"
             )
+
+            framerate = gui.get_io().framerate
+            gui.text(f"Framerate: {framerate:.2f}")
         gui.end()
 
 
@@ -50,6 +53,7 @@ class Emulator(object):
         self.plugins = []
         self.title = title
         self.visible = True
+        self.frame_lock = True
 
     @property
     def wants_dispose(self):
@@ -155,6 +159,7 @@ class Emulator(object):
                 gui.end_menu_bar()
 
             if self._emulator:
+                self._emulator.nes.frame_lock = self.frame_lock
                 self._emulator.nes.volume = self.volume
                 self._emulator.handle_input(ui)
                 if not self.nes.pause or self.nes.frame_step:

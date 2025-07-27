@@ -30,6 +30,7 @@ class EmulatorApp(object):
         self.dirs = dirs
         self.preferences_gui = None
         self.emulator = Emulator(None, True)
+        self._frame_lock = getattr(args, "frame_lock", True)
         if args.rom:
             self.emulator.load_rom(args.rom)
         for p in args.plugin:
@@ -44,6 +45,16 @@ class EmulatorApp(object):
     def get(cls):
         return cls._instance
 
+    @property
+    def frame_lock(self):
+        return self._frame_lock
+
+    @frame_lock.setter
+    def frame_lock(self, value):
+        self.inner.swap_interval = 1 if value else 0
+        self.emulator.frame_lock = value
+        self._frame_lock = value
+
     def run(self):
         self.inner = gui.Framework("NES Emulator", 1900, 900)
         self.inner.audio_init(48000, 1, 1024)
@@ -51,6 +62,7 @@ class EmulatorApp(object):
 
         self.inner.set_scale(self.args.dpi)
         self.inner.background = [0.3, 0.3, 0.3]
+        self.frame_lock = self._frame_lock
         self.windows.append(self.emulator)
 
         while self.running and self.emulator.running:
@@ -77,6 +89,12 @@ def main():
         "-i",
         action="store_true",
         help="Start an interactive Python shell",
+    )
+    p.add_argument(
+        "--frame-lock",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Lock the framerate to vsync",
     )
     p.add_argument(
         "--plugin",

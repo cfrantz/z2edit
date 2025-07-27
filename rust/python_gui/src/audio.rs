@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use sdl2::audio::{AudioCallback, AudioDevice, AudioSpecDesired, AudioStatus};
 use sdl2::AudioSubsystem;
 use std::sync::mpsc;
+use std::sync::mpsc::TrySendError;
 
 pub struct AudioPlayback {
     receiver: mpsc::Receiver<Vec<f32>>,
@@ -63,5 +64,12 @@ impl AudioOut {
     pub fn play(&self, data: Vec<f32>) -> Result<()> {
         self.sender.send(data)?;
         Ok(())
+    }
+    pub fn try_play(&self, data: Vec<f32>) -> Result<()> {
+        match self.sender.try_send(data) {
+            Ok(()) => Ok(()),
+            Err(TrySendError::Full(_)) => Ok(()),
+            Err(x) => Err(x.into()),
+        }
     }
 }
