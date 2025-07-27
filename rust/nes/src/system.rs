@@ -14,7 +14,7 @@ use crate::ppu::Ppu;
 use crate::ram::{Ram, RamKind};
 use crate::stall::Stall;
 use crate::{Address, AddressRange, NesFile};
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicI64, Ordering};
 use std::sync::{Arc, Mutex};
 
 #[pyclass]
@@ -49,11 +49,13 @@ pub struct Nes {
     pub name: Arc<Mutex<String>>,
     pub pause: AtomicBool,
     pub frame_step: AtomicBool,
+    pub frame: AtomicI64,
+    pub remainder: AtomicI64,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral>>)>,
 
     pub(crate) read_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
     pub(crate) write_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
-    pub(crate) exec_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
+    pub(crate) exec_cb: Arc<Mutex<IndexMap<Address, PyObject>>>,
 
     pub trace: AtomicBool,
     pub tracebuf: Arc<Mutex<IndexMap<Address, u64>>>,
@@ -235,13 +237,12 @@ impl Nes {
         }
     }
 
-    fn trace_cycles(&self, pc: u16, cycles: u64) {
-        let addr = self.mapper.lock().unwrap().cpu_to_address(pc);
+    fn trace_cycles(&self, pc: Address, cycles: u64) {
         let mut tracebuf = self.tracebuf.lock().unwrap();
-        if let Some(time) = tracebuf.get_mut(&addr) {
+        if let Some(time) = tracebuf.get_mut(&pc) {
             *time += cycles;
         } else {
-            tracebuf.insert(addr, cycles);
+            tracebuf.insert(pc, cycles);
         }
     }
 }
@@ -262,12 +263,18 @@ impl Nes {
             pram: Arc::new(Mutex::new(Ram::new(RamKind::PaletteRam, 32)?)),
             mapper: Arc::new(Mutex::new(mapper)),
             controllers: Arc::new(Mutex::new(Controllers::new())),
-            image: Arc::new(Mutex::new(Image::new(256, 240))),
+            image: Arc::new(Mutex::new(Image::with_color(
+                256,
+                240,
+                Color::new(0xFF999999),
+            ))),
             stall: Stall::default(),
             audio: Arc::default(),
             volume: AtomicI32::new(1 << 24),
             pause: AtomicBool::default(),
             frame_step: AtomicBool::default(),
+            frame: AtomicI64::default(),
+            remainder: AtomicI64::default(),
             name: Arc::new(Mutex::new(String::default())),
             peripherals: Vec::default(),
             read_cb: Arc::default(),
@@ -287,7 +294,10 @@ impl Nes {
         *self.controllers.lock().unwrap() = Controllers::new();
         *self.mapper.lock().unwrap() =
             mapper::new(&self.rom.lock().unwrap()).expect("failed to create mapper");
+        *self.image.lock().unwrap() = Image::with_color(256, 240, Color::new(0xFF999999));
         let _ = self.stall.clear(false);
+        self.frame.store(0, Ordering::Relaxed);
+        self.remainder.store(0, Ordering::Relaxed);
     }
 
     #[setter]
@@ -322,6 +332,11 @@ impl Nes {
     #[getter]
     pub fn get_pause(&self) -> bool {
         self.pause.load(Ordering::Relaxed)
+    }
+
+    #[getter]
+    pub fn get_frame(&self) -> i64 {
+        self.frame.load(Ordering::Relaxed)
     }
 
     #[setter]
@@ -397,8 +412,21 @@ impl Nes {
             let _ = self.audio_play(audio);
         }
 
-        let initial_frame = self.ppu.lock().expect("Failed to lock PPU").frame;
-        while self.ppu.lock().expect("Failed to lock PPU").frame == initial_frame {
+        let start = self.cpu.lock().unwrap().cycles as i64 * 2;
+        let eof = start + 59561 + self.remainder.load(Ordering::Relaxed);
+        loop {
+            let cycles = self.cpu.lock().unwrap().cycles as i64 * 2;
+            if cycles >= eof {
+                let _f = self.frame.fetch_add(1, Ordering::Relaxed);
+                //log::info!(
+                //    "Frame {_f} ended on cycle {} ({}, {})",
+                //    cycles / 2,
+                //    (cycles - start) / 2,
+                //    eof - cycles
+                //);
+                self.remainder.store(eof - cycles, Ordering::Relaxed);
+                break;
+            }
             if !self.tick() {
                 return false;
             }
@@ -415,8 +443,24 @@ impl Nes {
                 n
             } else {
                 //let (op, _) = Cpu6502::disassemble(self, cpu.pc);
-                //log::info!("{op:<30} {}", cpu.cpustate());
-                let pc = cpu.pc;
+                //log::info!("          {}", cpu.cpustate());
+                //log::info!("{:<10}{op:<30}", cpu.cycles);
+
+                let pc = self.mapper.lock().unwrap().cpu_to_address(cpu.pc);
+                let exec_cb = self.exec_cb.lock().expect("failed to lock exec_cb");
+                if let Some(callback) = exec_cb.get(&pc) {
+                    Python::with_gil(|py| {
+                        match callback
+                            .call1(py, (cpu.clone(),))
+                            .and_then(|val| val.extract::<Cpu6502>(py))
+                        {
+                            Ok(val) => *cpu = val,
+                            Err(e) => {
+                                log::error!("Exec callback for {pc:x?} failed: {e}");
+                            }
+                        }
+                    });
+                }
                 let n = cpu.execute(self);
                 if self.trace.load(Ordering::Relaxed) {
                     self.trace_cycles(pc, n);
@@ -435,6 +479,27 @@ impl Nes {
             }
         }
         n > 0
+    }
+
+    pub fn controller_set(&self, index: usize, value: u8) {
+        let mut controllers = self.controllers.lock().unwrap();
+        if let Some(ctrl) = controllers.controller.get_mut(index) {
+            ctrl.set(value);
+        }
+    }
+
+    pub fn controller_clear(&self, index: usize, value: u8) {
+        let mut controllers = self.controllers.lock().unwrap();
+        if let Some(ctrl) = controllers.controller.get_mut(index) {
+            ctrl.clear(value);
+        }
+    }
+
+    pub fn controller_value(&self, index: usize, value: u8) {
+        let mut controllers = self.controllers.lock().unwrap();
+        if let Some(ctrl) = controllers.controller.get_mut(index) {
+            ctrl.buttons = value;
+        }
     }
 
     pub fn signal_nmi(&self) {
@@ -555,7 +620,7 @@ impl Nes {
     pub fn set_exec_callback<'p>(
         &self,
         py: Python<'p>,
-        addr: u16,
+        addr: Address,
         callback: PyObject,
     ) -> PyResult<()> {
         //let addr = Self::extract_address(py, addr)?;

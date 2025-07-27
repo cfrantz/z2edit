@@ -107,6 +107,9 @@ pub struct Ppu {
 impl Ppu {
     pub fn new() -> Self {
         Ppu {
+            cycle: 341 - 18,
+            scanline: 239,
+            dead: 1 * 262 * 341,
             oam: vec![0u8; 256],
             sprite: vec![Sprite::default(); 8],
             scroll: vec![ScrollPosition::default(); 262],

@@ -35,10 +35,13 @@ class Execution(object):
 
     @visible.setter
     def visible(self, value):
-        self._visible = value
+        if value != self._visible:
+            self._visible = value
         self.emulator.nes.trace = value
 
     def update(self):
+        if not self.visible:
+            return
         self.bank.clear()
         self.cpuaddr.clear()
         self.total = 1

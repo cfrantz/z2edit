@@ -133,7 +133,7 @@ impl Peripheral for Apu {
                     | if self.noise.active() { 0x08 } else { 0x00 }
                     | if self.dmc.active() { 0x10 } else { 0x00 }
             }
-            _ => 0,
+            _ => 0xff,
         }
     }
 

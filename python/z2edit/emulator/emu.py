@@ -60,8 +60,9 @@ class Emulator(object):
         return self._emulator.nes
 
     def load_plugin(self, name):
+        (name, *args) = name.split(":")
         plugin = importlib.import_module(name)
-        p = plugin.create(self)
+        p = plugin.create(self, args)
         if isinstance(p, Plugin):
             self.plugins.append(p)
         else:
@@ -156,9 +157,13 @@ class Emulator(object):
             if self._emulator:
                 self._emulator.nes.volume = self.volume
                 self._emulator.handle_input(ui)
-                if self._emulator.emulate_frame(ui):
+                if not self.nes.pause or self.nes.frame_step:
                     for p in self.plugins:
-                        p.run_per_frame()
+                        p.run_pre_frame()
+                    if self._emulator.emulate_frame(ui):
+                        for p in self.plugins:
+                            p.run_per_frame()
+
                 origin = gui.get_cursor_screen_pos()
                 self._emulator.draw_image(ui, self.scale, self.aspect)
                 for p in self.plugins:

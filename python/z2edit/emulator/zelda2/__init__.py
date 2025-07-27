@@ -94,5 +94,5 @@ class Zelda2(plugin.Plugin):
                 h.draw_image(origin)
 
 
-def create(emulator):
+def create(emulator, args):
     return Zelda2(emulator)
