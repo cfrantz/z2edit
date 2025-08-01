@@ -31,6 +31,7 @@ class EmulatorApp(object):
         self.preferences_gui = None
         self.emulator = Emulator(None, True)
         self._frame_lock = getattr(args, "frame_lock", True)
+        self.need_interactive_thread = args.interactive
         if args.rom:
             self.emulator.load_rom(args.rom)
         for p in args.plugin:
@@ -74,6 +75,17 @@ class EmulatorApp(object):
                 self.windows = [w for w in self.windows if not w.wants_dispose]
             else:
                 self.running = False
+            if self.need_interactive_thread:
+                self.need_interactive_thread = False
+                # We start the interpreter on another thread because GUI
+                # resources always should be created/destroyed on the main
+                # thread.
+                # We also want to do this after using the SDL event pump at
+                # least once, as it seems that if we start this thread
+                # before then, then there is a chance that SDL will get
+                # blocked forever on an internal mutex.
+                Thread(target=self.interact).start()
+
         self.inner = None
 
     def interact(self):
@@ -135,8 +147,4 @@ def main():
     dirs = gui.Directories.get()
 
     a = EmulatorApp(args, dirs)
-    if args.interactive:
-        # We start the interpreter on another thread because GUI resources
-        # always should be created/destroyed on the main thread.
-        Thread(target=a.interact).start()
     a.run()
