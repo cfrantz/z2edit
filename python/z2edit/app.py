@@ -56,6 +56,7 @@ class Application(object):
         self.preferences_gui = None
         self.wizard = None
         self.emulator_args = emulator_parser.parse_args([])
+        self.need_interactive_thread = args.interactive
         if args.new:
             self.wizard = z2edit.ProjectWizardGui()
             self.wizard.done = True
@@ -165,6 +166,17 @@ class Application(object):
                 self.windows = [w for w in self.windows if not w.wants_dispose]
             else:
                 self.running = False
+            if self.need_interactive_thread:
+                self.need_interactive_thread = False
+                # We start the interpreter on another thread because GUI
+                # resources always should be created/destroyed on the main
+                # thread.
+                # We also want to do this after using the SDL event pump at
+                # least once, as it seems that if we start this thread
+                # before then, then there is a chance that SDL will get
+                # blocked forever on an internal mutex.
+                Thread(target=self.interact).start()
+
         self.inner = None
 
     def emulate(self, args, rom=None):
@@ -248,10 +260,6 @@ def main():
     z2edit.Config.load(os.path.join(dirs.install, "config/vanilla/vanilla.json5"))
 
     a = Application(args, dirs)
-    if args.interactive:
-        # We start the interpreter on another thread because GUI resources
-        # always should be created/destroyed on the main thread.
-        Thread(target=a.interact).start()
     a.run()
 
 
