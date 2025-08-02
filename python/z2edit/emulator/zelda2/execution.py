@@ -74,3 +74,16 @@ class Execution(object):
         for addr, count in pairs[0:20]:
             gui.text("%r: %d (%.2f)" % (addr, count, count / self.total * 100))
         gui.end()
+
+
+class Bank7Tracker(object):
+    def __init__(self, emulator):
+        self.emulator = emulator
+        self.report = collections.defaultdict(lambda: collections.defaultdict(int))
+        for pc in range(0xC000, 0xFFFF):
+            self.emulator.nes.set_exec_callback(Address.Prg(-1, pc), self.callback)
+
+    def callback(self, cpu):
+        a = self.emulator.nes.cpu_to_address(0x8000)
+        self.report[cpu.pc][a.bank()] += 1
+        return cpu
