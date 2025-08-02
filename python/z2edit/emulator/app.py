@@ -6,9 +6,9 @@ import logging
 import sys
 import os.path
 
-from emu import Emulator
 import z2edit
 from z2edit import gui
+from z2edit.emulator.emu import Emulator
 
 LOG_LEVELS = {
     "TRACE": 5,
