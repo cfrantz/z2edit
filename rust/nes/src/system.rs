@@ -686,4 +686,9 @@ impl Nes {
     pub fn rom_battery(&self) -> bool {
         self.rom.lock().unwrap().battery()
     }
+
+    /// Get the PRG address of a raw CPU address.
+    fn cpu_to_address(&self, cpu: u16) -> Address {
+        self.mapper.lock().unwrap().cpu_to_address(cpu)
+    }
 }
