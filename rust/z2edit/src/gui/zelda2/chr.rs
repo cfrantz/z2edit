@@ -1,4 +1,5 @@
 use anyhow::Result;
+use hex_color::HexColor;
 use imgui::TreeNodeFlags;
 use imgui::{TableColumnFlags, TableColumnSetup, TableFlags};
 use python_gui::fa;
@@ -9,7 +10,7 @@ use crate::gui::util::edit_tree_node;
 use crate::gui::util::tooltip;
 use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
 use crate::util::tile_cache::GfxCache;
-use crate::zelda2::chr::{config, ChrBank, ChrSchema, Layout};
+use crate::zelda2::chr::{config, ChrBank, ChrSchema, Layout, Overlay};
 use crate::zelda2::project::Project;
 
 impl GuiTree for config::ChrMemory {
@@ -36,6 +37,7 @@ pub struct ChrBankEditor {
     path: String,
     chr: ChrBank,
     image: Image,
+    old_image: Image,
     scale: i32,
 }
 
@@ -49,6 +51,7 @@ impl ChrBankEditor {
             path: path.into(),
             chr: chr.clone(),
             image: chr.create_image(chr.border as u32, chr.layout)?,
+            old_image: chr.create_image(chr.border as u32, chr.layout)?,
             scale: 4,
         }))
     }
@@ -57,6 +60,52 @@ impl ChrBankEditor {
         project.commit(&self.path, Box::new(self.chr.clone()))?;
         GfxCache::clear(project);
         Ok(())
+    }
+
+    fn edit_palette_list(ui: &imgui::Ui, overlay: &mut Overlay) -> bool {
+        let mut changed = false;
+        let mut delindex = None;
+        for (n, (color, index)) in overlay.palette.iter_mut().enumerate() {
+            let _id = ui.push_id_usize(n);
+            let mut col = [
+                color.r as f32 / 255.0,
+                color.g as f32 / 255.0,
+                color.b as f32 / 255.0,
+            ];
+            if ui
+                .color_edit3_config("##col", &mut col)
+                .picker(true)
+                .inputs(false)
+                .build()
+            {
+                color.r = (col[0] * 255.0) as u8;
+                color.g = (col[1] * 255.0) as u8;
+                color.b = (col[2] * 255.0) as u8;
+                changed |= true;
+            }
+            tooltip("Input Image Color", ui);
+            ui.same_line();
+            if ui.input_scalar("##index", index).step(1).build() {
+                *index = (*index).clamp(0, 3);
+                changed |= true;
+            }
+            tooltip("NES palette index", ui);
+            ui.same_line();
+            if ui.button(&format!("{}", fa::ICON_TRASH)) {
+                delindex = Some(n);
+                changed |= true;
+            }
+            tooltip("Delete palette", ui);
+        }
+        if let Some(i) = delindex {
+            overlay.palette.remove(i);
+        }
+        if ui.button(&format!("{}", fa::ICON_COPY)) {
+            overlay.palette.push((HexColor::rgb(0, 0, 0), 0));
+            changed |= true;
+        }
+        tooltip("Add palette", ui);
+        changed
     }
 
     fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
@@ -171,8 +220,14 @@ impl ChrBankEditor {
             "overlay",
             [
                 TableColumnSetup {
-                    name: "Image file",
+                    name: "Image File",
                     flags: TableColumnFlags::WIDTH_STRETCH,
+                    ..Default::default()
+                },
+                TableColumnSetup {
+                    name: "Image Palette",
+                    flags: TableColumnFlags::WIDTH_FIXED,
+                    init_width_or_weight: 300.0,
                     ..Default::default()
                 },
                 TableColumnSetup {
@@ -191,16 +246,21 @@ impl ChrBankEditor {
             TableFlags::BORDERS,
         ) {
             let mut delindex = None;
-            for (i, filename) in self.chr.overlay.iter_mut().enumerate() {
+            for (i, overlay) in self.chr.overlay.iter_mut().enumerate() {
                 let _id = ui.push_id_usize(i);
                 ui.table_next_row();
                 ui.table_next_column();
                 let width = ui.push_item_width(-1.0);
                 changed |= ui
-                    .input_text("##filename", filename)
+                    .input_text("##filename", &mut overlay.path)
                     .enter_returns_true(true)
                     .build();
                 width.end();
+
+                ui.table_next_column();
+                if !overlay.path.is_empty() {
+                    changed |= Self::edit_palette_list(ui, &mut *overlay);
+                }
 
                 ui.table_next_column();
                 let width = ui.push_item_width(-1.0);
@@ -211,7 +271,7 @@ impl ChrBankEditor {
                         .add_filter("All", &["*"])
                         .pick_file()
                     {
-                        *filename = bmp.to_string_lossy().into();
+                        overlay.path = bmp.to_string_lossy().into();
                         changed |= true;
                     }
                 }
@@ -239,9 +299,13 @@ impl ChrBankEditor {
                 Ok(_) => {}
                 Err(e) => self.error.show("Load Image", "Error loading image", e),
             }
-            self.image = self
+            // To prevent glitching during updates, we "double buffer" the updated
+            // image.  This prevents the `Image` drop handler from destroying the
+            // opengl image ID while we're still displaying it.
+            self.old_image = self
                 .chr
                 .create_image(self.chr.border as u32, self.chr.layout)?;
+            std::mem::swap(&mut self.image, &mut self.old_image);
         }
         self.changed |= changed;
 
