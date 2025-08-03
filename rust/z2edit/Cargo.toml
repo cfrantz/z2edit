@@ -32,3 +32,4 @@ whoami = "1.5.2"
 shellwords = "1.1.0"
 itertools = "0.14.0"
 pathdiff = "0.2.3"
+hex_color = { version = "3.0.0", features = ["serde"] }

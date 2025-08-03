@@ -1,4 +1,6 @@
 use anyhow::{ensure, Result};
+use hex_color::HexColor;
+use indexmap::IndexMap;
 use pathdiff::diff_paths;
 use pyo3::prelude::*;
 use python_gui::{Color, Image};
@@ -59,13 +61,50 @@ pub enum Layout {
     Sprite = 1,
 }
 
+#[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct HexColorRgb(#[serde(with = "hex_color::rgb")] HexColor);
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct OverlaySerialized {
+    pub path: String,
+    #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
+    pub palette: IndexMap<HexColorRgb, u32>,
+}
+
+impl From<Overlay> for OverlaySerialized {
+    fn from(x: Overlay) -> Self {
+        OverlaySerialized {
+            path: x.path.clone(),
+            palette: IndexMap::from_iter(x.palette.iter().map(|v| (HexColorRgb(v.0), v.1))),
+        }
+    }
+}
+
+impl From<OverlaySerialized> for Overlay {
+    fn from(x: OverlaySerialized) -> Self {
+        Overlay {
+            path: x.path.clone(),
+            palette: Vec::from_iter(x.palette.iter().map(|(k, &v)| (k.0, v))),
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[serde(from = "OverlaySerialized", into = "OverlaySerialized")]
+pub struct Overlay {
+    pub path: String,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub palette: Vec<(HexColor, u32)>,
+}
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ChrBank {
     pub schema: ChrSchema,
     pub address: Address,
     pub layout: Layout,
     pub border: i32,
-    pub overlay: Vec<String>,
+    pub overlay: Vec<Overlay>,
     #[serde(skip)]
     pub data: Arc<Mutex<Vec<u8>>>,
     #[serde(skip)]
@@ -95,10 +134,10 @@ impl GameData for ChrBank {
     }
     fn fixup_paths(&mut self, project_path: &Path) -> Result<()> {
         for overlay in self.overlay.iter_mut() {
-            if let Some(path) = diff_paths(&*overlay, project_path) {
-                *overlay = path.to_string_lossy().into();
+            if let Some(path) = diff_paths(&overlay.path, project_path) {
+                overlay.path = path.to_string_lossy().into();
             }
-            *overlay = overlay.replace('\\', "/");
+            overlay.path = overlay.path.replace('\\', "/");
         }
         Ok(())
     }
@@ -236,9 +275,7 @@ impl ChrBank {
     pub fn apply(&self) -> Result<()> {
         self.copy_orig();
         for overlay in self.overlay.iter() {
-            if !overlay.is_empty() {
-                self.import(overlay)?;
-            }
+            self.import(overlay)?;
         }
         Ok(())
     }
@@ -289,7 +326,13 @@ impl ChrBank {
         Ok(image)
     }
 
-    pub fn parse_image(&self, border: u32, layout: Layout, image: &Image) {
+    pub fn parse_image(
+        &self,
+        border: u32,
+        layout: Layout,
+        image: &Image,
+        palette: &IndexMap<HexColor, u32>,
+    ) {
         let (nw, nh, tw, th, mult) = match (self.schema, layout) {
             (ChrSchema::Mmc1_4k, Layout::Tile) => (16, 16, 8, 8, 1),
             (ChrSchema::Mmc1_4k, Layout::Sprite) => (16, 8, 8, 16, 2),
@@ -313,16 +356,25 @@ impl ChrBank {
                             border + y * (th + border) + yy,
                         );
                         if color.a != 0 {
-                            let avg = color.average();
                             let mask = 1u8 << ((tw - 1) - xx);
-                            let (hibit, lobit) = if avg > 0xAA {
-                                (mask, mask)
-                            } else if avg > 0x66 {
-                                (mask, 0)
-                            } else if avg > 0x00 {
-                                (0, mask)
-                            } else {
-                                (0, 0)
+                            let lookup = HexColor::rgb(color.r, color.g, color.b);
+                            let (hibit, lobit) = match palette.get(&lookup) {
+                                Some(3) => (mask, mask),
+                                Some(2) => (mask, 0),
+                                Some(1) => (0, mask),
+                                Some(0) => (0, 0),
+                                _ => {
+                                    let avg = color.average();
+                                    if avg > 0xAA {
+                                        (mask, mask)
+                                    } else if avg > 0x66 {
+                                        (mask, 0)
+                                    } else if avg > 0x00 {
+                                        (0, mask)
+                                    } else {
+                                        (0, 0)
+                                    }
+                                }
                             };
                             lo = (lo & !mask) | lobit;
                             hi = (hi & !mask) | hibit;
@@ -335,9 +387,9 @@ impl ChrBank {
         }
     }
 
-    pub fn import<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn import(&self, overlay: &Overlay) -> Result<()> {
         // FIXME: Naughty use of global variable to know the project path.
-        let path = Project::path().join(path.as_ref());
+        let path = Project::path().join(overlay.path.as_str());
         let image = Image::load_bmp(path)?;
         let (border, layout) = match (self.schema, image.width, image.height) {
             (ChrSchema::Mmc1_4k, 128, 128) => (0, self.layout),
@@ -359,7 +411,8 @@ impl ChrBank {
             }
         };
 
-        self.parse_image(border, layout, &image);
+        let palette = IndexMap::from_iter(overlay.palette.iter().map(|v| (v.0, v.1)));
+        self.parse_image(border, layout, &image, &palette);
         Ok(())
     }
 }
