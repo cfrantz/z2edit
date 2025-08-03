@@ -120,7 +120,7 @@ impl StartValuesEditor {
             ui.table_next_column();
             let width = ui.push_item_width(-1.0);
             self.changed |= ui
-                .input_scalar("##crystals", &mut self.start.inventory.magic)
+                .input_scalar("##crystals", &mut self.start.inventory.crystals)
                 .step(1)
                 .build();
             width.end();
@@ -131,7 +131,7 @@ impl StartValuesEditor {
             ui.table_next_column();
             let width = ui.push_item_width(-1.0);
             self.changed |= ui
-                .input_scalar("##lives", &mut self.start.inventory.magic)
+                .input_scalar("##lives", &mut self.start.inventory.lives)
                 .step(1)
                 .build();
             width.end();
