@@ -1,5 +1,6 @@
 use anyhow::Result;
 use pyo3::prelude::*;
+use python_gui::{Color, Image};
 
 use crate::error::Error;
 use crate::gui::util::edit_tree_node;
@@ -42,6 +43,7 @@ pub struct OverworldEditor {
     tile_selected: usize,
     cursor: [isize; 2],
     compressed_size: usize,
+    shaded: Image,
     overworld: Overworld,
     spawn: Option<Box<dyn Gui>>,
 }
@@ -82,6 +84,7 @@ impl OverworldEditor {
             tile_selected: 0,
             cursor: [0, 0],
             compressed_size: 0,
+            shaded: Image::with_color(16, 16, Color::new(0x80808080)),
             overworld: ov.clone(),
             spawn: None,
         }))
@@ -161,8 +164,10 @@ impl OverworldEditor {
             self.overworld.map.width, self.overworld.map.height,
         ));
         ui.text(format!(
-            "Cursor:\n  X: {}\n  Y: {}\n\n",
-            self.cursor[0], self.cursor[1],
+            "Cursor:\n  X: {}\n  Y: {}\n  Tile: {}\n",
+            self.cursor[0],
+            self.cursor[1],
+            self.overworld.map.data[self.cursor[1] as usize][self.cursor[0] as usize]
         ));
         ui.text(format!(
             "Compressed Size:\n  {} / {} bytes\n\n",
@@ -385,6 +390,11 @@ impl OverworldEditor {
                 let xo = origin[0] + x as f32 * scale;
                 let yo = origin[1] + y as f32 * scale;
                 image.draw_at([xo, yo], self.scale, ui);
+                if col == 13 {
+                    // FIXME: Hardcoded the walkable water tile.  Probably should be an item in
+                    // config.
+                    self.shaded.draw_at([xo, yo], self.scale, ui);
+                }
             }
         }
 
@@ -543,7 +553,7 @@ impl OverworldEditor {
         }
         self.changed |= self.draw_connection_dialog(ui, project);
         ui.same_line();
-        let width = ui.push_item_width(100.0);
+        let width = ui.push_item_width(150.0);
         ui.input_scalar("Scale", &mut self.scale).step(0.25).build();
         width.end();
 
