@@ -57,6 +57,7 @@ class Application(object):
         self.wizard = None
         self.emulator_args = emulator_parser.parse_args([])
         self.need_interactive_thread = args.interactive
+        self.emulator_io_initialized = False
         if args.new:
             self.wizard = z2edit.ProjectWizardGui()
             self.wizard.done = True
@@ -141,9 +142,6 @@ class Application(object):
 
     def run(self):
         self.inner = gui.Framework("Z2Edit", 1900, 900)
-        self.inner.audio_init(48000, 1, 1024)
-        self.inner.open_controller()
-
         self.inner.set_scale(self.args.dpi)
         self.inner.background = self.preferences.background
         self.inner.style = self.preferences.imgui_style
@@ -193,6 +191,10 @@ class Application(object):
         if rom := self.emulator_args.rom:
             try:
                 self.emulator_args.rom = None
+                if not self.emulator_io_initialized:
+                    self.inner.audio_init(48000, 1, 1024)
+                    self.inner.open_controller()
+                    self.emulator_io_initialized = True
                 if isinstance(rom, str):
                     rom = nes.NesFile.load(rom)
                 emu = Emulator(rom)
