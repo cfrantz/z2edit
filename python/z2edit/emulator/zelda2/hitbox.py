@@ -47,7 +47,10 @@ class EnemyHitbox(object):
         self.emulator.nes.set_read_callback(0x2A + self.index, self.mem_cb)
         self.emulator.nes.set_read_callback(0x4E + self.index, self.mem_cb)
         self.emulator.nes.set_read_callback(0x3C + self.index, self.mem_cb)
-        self.enemy_list_size(self.ENEMY_LIST_SIZE)
+        list_size = self.emulator.nes.read(0xfff8)
+        if list_size == 1:
+            list_size = self.ENEMY_LIST_SIZE
+        self.enemy_list_size(list_size)
 
     def mem_cb(self, addr, val):
         """Trap CPU memory reads so we can place enemies arbitrarily."""
