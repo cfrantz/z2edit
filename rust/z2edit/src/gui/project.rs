@@ -5,8 +5,9 @@ use python_gui::UiContext;
 use rfd::FileDialog;
 use std::sync::Mutex;
 
+use crate::gui::util::TreeAction;
 use crate::gui::zelda2::metadata::MetadataEditor;
-use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction};
+use crate::gui::{ErrorDialog, Gui, GuiTree};
 use crate::zelda2::project::Project;
 
 #[pyclass]

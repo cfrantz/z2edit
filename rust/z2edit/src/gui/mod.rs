@@ -13,31 +13,8 @@ pub mod wizard;
 pub mod zelda2;
 
 use error_dialog::ErrorDialog;
+use util::TreeAction;
 use visibility::Visibility;
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum TreeAction {
-    None,
-    Edit(String),
-    Metadata(String),
-}
-
-impl TreeAction {
-    pub fn set(&mut self, action: TreeAction) {
-        if action != TreeAction::None {
-            *self = action;
-        }
-    }
-
-    pub fn menu(&mut self, ui: &imgui::Ui, path: &str) {
-        if ui.menu_item("Edit") {
-            *self = TreeAction::Edit(path.into());
-        }
-        if ui.menu_item("Metadata") {
-            *self = TreeAction::Metadata(path.into());
-        }
-    }
-}
 
 pub trait GuiTree: Send + Sync + 'static {
     fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction;

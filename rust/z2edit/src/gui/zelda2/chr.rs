@@ -8,7 +8,8 @@ use rfd::FileDialog;
 
 use crate::gui::util::edit_tree_node;
 use crate::gui::util::tooltip;
-use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
+use crate::gui::util::TreeAction;
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::util::tile_cache::GfxCache;
 use crate::zelda2::chr::{config, ChrBank, ChrSchema, Layout, Overlay};
 use crate::zelda2::project::Project;
@@ -19,10 +20,12 @@ impl GuiTree for config::ChrMemory {
         if ui.collapsing_header(format!("CHR Banks"), TreeNodeFlags::empty()) {
             for bank in 0..self.banks {
                 let item = format!("{path}/{bank}");
-                edit_tree_node(ui, &format!("CHR Bank {bank}"), &item, project);
-                if let Some(_token) = ui.begin_popup_context_item() {
-                    result.menu(ui, &item);
-                }
+                result.set(edit_tree_node(
+                    ui,
+                    &format!("CHR Bank {bank}"),
+                    &item,
+                    project,
+                ));
             }
         }
         result

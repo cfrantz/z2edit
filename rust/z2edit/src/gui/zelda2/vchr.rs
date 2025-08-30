@@ -3,8 +3,8 @@ use imgui::TreeNodeFlags;
 use imgui::{TableColumnFlags, TableColumnSetup, TableFlags};
 use python_gui::Image;
 
-use crate::gui::util::edit_tree_node;
-use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
+use crate::gui::util::{edit_tree_node, TreeAction};
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::util::tile_cache::GfxCache;
 use crate::zelda2::chr::{ChrBank, ChrSchema, Layout};
 use crate::zelda2::project::Project;
@@ -16,10 +16,12 @@ impl GuiTree for config::VirtualChr {
         if ui.collapsing_header(format!("Virtual Banks"), TreeNodeFlags::empty()) {
             for bank in 0..self.banks {
                 let item = format!("{path}/{bank}");
-                edit_tree_node(ui, &format!("Virtual Bank {bank}"), &item, project);
-                if let Some(_token) = ui.begin_popup_context_item() {
-                    result.menu(ui, &item);
-                }
+                result.set(edit_tree_node(
+                    ui,
+                    &format!("Virtual Bank {bank}"),
+                    &item,
+                    project,
+                ));
             }
         }
         result

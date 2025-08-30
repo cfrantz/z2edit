@@ -2,10 +2,10 @@ use anyhow::Result;
 use indexmap::{IndexMap, IndexSet};
 use python_gui::fa;
 
-use crate::gui::util::edit_tree_node;
+use crate::gui::util::{edit_tree_node, TreeAction};
 use crate::gui::util::{tooltip, DragHelper, EditAction};
 use crate::gui::widgets::Combo;
-use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
@@ -49,10 +49,7 @@ impl GuiTree for config::SideviewAreas {
                     index
                 };
                 let path = format!("{path}/{i}");
-                edit_tree_node(ui, &format!("Area {i}"), &path, project);
-                if let Some(_token) = ui.begin_popup_context_item() {
-                    result.menu(ui, &path);
-                }
+                result.set(edit_tree_node(ui, &format!("Area {i}"), &path, project));
             }
         });
         result

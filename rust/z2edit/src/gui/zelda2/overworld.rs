@@ -3,10 +3,10 @@ use pyo3::prelude::*;
 use python_gui::{Color, Image};
 
 use crate::error::Error;
-use crate::gui::util::edit_tree_node;
+use crate::gui::util::{edit_tree_node, TreeAction};
 use crate::gui::util::{text_outlined, DragHelper, KeyAction, SelectBox};
 use crate::gui::zelda2::multimap::MultiMapGui;
-use crate::gui::{ErrorDialog, Gui, GuiTree, TreeAction, Visibility};
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::util::tile_cache::{GfxCache, GfxKind};
 use crate::util::undo::UndoStack;
 use crate::zelda2::metatile::MetatileGroup;
@@ -17,12 +17,7 @@ use imgui::{MouseButton, StyleVar};
 
 impl GuiTree for config::Overworld {
     fn tree_node(&self, ui: &imgui::Ui, path: &str, project: &Project) -> TreeAction {
-        let mut result = TreeAction::None;
-        edit_tree_node(ui, &self.name, path, project);
-        if let Some(_token) = ui.begin_popup_context_item() {
-            result.menu(ui, &path);
-        }
-        result
+        edit_tree_node(ui, &self.name, path, project)
     }
 }
 

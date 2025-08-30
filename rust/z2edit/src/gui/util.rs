@@ -1,7 +1,31 @@
-use imgui::{Key, StyleColor};
+use imgui::{Key, MouseButton, StyleColor};
 
 use crate::app_preferences::AppPreferences;
 use crate::zelda2::project::Project;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TreeAction {
+    None,
+    Edit(String),
+    Metadata(String),
+}
+
+impl TreeAction {
+    pub fn set(&mut self, action: TreeAction) {
+        if action != TreeAction::None {
+            *self = action;
+        }
+    }
+
+    pub fn menu(&mut self, ui: &imgui::Ui, path: &str) {
+        if ui.menu_item("Edit") {
+            *self = TreeAction::Edit(path.into());
+        }
+        if ui.menu_item("Metadata") {
+            *self = TreeAction::Metadata(path.into());
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EditAction {
@@ -240,7 +264,8 @@ pub fn draw_arrow(
     draw_list.add_line(a, b, color).thickness(width).build();
 }
 
-pub fn edit_tree_node(ui: &imgui::Ui, name: &str, path: &str, project: &Project) {
+pub fn edit_tree_node(ui: &imgui::Ui, name: &str, path: &str, project: &Project) -> TreeAction {
+    let mut result = TreeAction::None;
     let _color = if let Some(edit) = project.edits.get(path) {
         if edit.meta.timestamp == 0 {
             ui.push_style_color(StyleColor::Text, ui.style_color(StyleColor::Text))
@@ -255,4 +280,11 @@ pub fn edit_tree_node(ui: &imgui::Ui, name: &str, path: &str, project: &Project)
     ui.tree_node_config(format!("{name}##{path}"))
         .leaf(true)
         .build(|| {});
+    if ui.is_item_hovered() && ui.is_mouse_double_clicked(MouseButton::Left) {
+        result.set(TreeAction::Edit(path.into()));
+    }
+    if let Some(_token) = ui.begin_popup_context_item() {
+        result.menu(ui, &path);
+    }
+    result
 }

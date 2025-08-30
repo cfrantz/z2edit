@@ -1,4 +1,5 @@
-use crate::gui::{GuiTree, TreeAction};
+use crate::gui::util::TreeAction;
+use crate::gui::GuiTree;
 use crate::zelda2::config::Config;
 use crate::zelda2::project::Project;
 use imgui::TreeNodeFlags;
