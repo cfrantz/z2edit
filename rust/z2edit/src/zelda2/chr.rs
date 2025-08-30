@@ -389,7 +389,7 @@ impl ChrBank {
 
     pub fn import(&self, overlay: &Overlay) -> Result<()> {
         // FIXME: Naughty use of global variable to know the project path.
-        let path = Project::path().join(overlay.path.as_str());
+        let path = Project::path(&overlay.path);
         let image = Image::load_bmp(path)?;
         let (border, layout) = match (self.schema, image.width, image.height) {
             (ChrSchema::Mmc1_4k, 128, 128) => (0, self.layout),

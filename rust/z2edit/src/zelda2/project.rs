@@ -317,6 +317,10 @@ if project.pre_unpack_hook:
             Err(Error::NotFound(format!("No overworld connector for for {sideview_path}")).into())
         }
     }
+
+    pub fn path<P: AsRef<Path>>(path: P) -> PathBuf {
+        PROJECT_PATH.with_borrow(|p| p.join(path))
+    }
 }
 
 #[pymethods]
@@ -353,9 +357,9 @@ impl Project {
         Self::load(py, path)
     }
 
-    #[staticmethod]
-    pub fn path() -> PathBuf {
-        PROJECT_PATH.with_borrow(|path| path.clone())
+    #[pyo3(name = "path", signature = (localpath=""))]
+    fn _path(&self, localpath: &str) -> PathBuf {
+        self.project_path.join(localpath)
     }
 
     #[pyo3(
