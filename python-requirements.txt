@@ -6,3 +6,6 @@ clang
 ccsyspath
 flake8
 black
+mido
+python-rtmidi
+dataclasses-json
