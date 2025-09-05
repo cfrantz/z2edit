@@ -5,14 +5,15 @@
 
 import logging
 import mido
+from pprint import pprint
 
 from z2edit import gui
 from z2edit.emulator import plugin
 
 from .channel import MidiChannel
 from .apu import Apu
-from .apu import VoiceType
-
+from .datatypes import MidiConfig
+from .configs import basic_config
 
 logger = logging.getLogger(__name__)
 
@@ -62,16 +63,15 @@ class Midi(plugin.Plugin):
         self.open_input(self.port_index)
         self.input_selector = InputSelector(self)
         self.apu = Apu(emulator)
-        self.channel = [
-            MidiChannel(
-                [
-                    VoiceType.PULSE0,
-                    VoiceType.PULSE1,
-                    VoiceType.MMC5_PULSE0,
-                    VoiceType.MMC5_PULSE1,
-                ]
-            )
-        ]
+        self.channel = {}
+
+        config = basic_config(
+            self.args.get("config", "builtin"), mapper=self.emulator.nes.rom_mapper
+        )
+        for i, c in config.channel.items():
+            if not 1 <= i <= 16:
+                raise Exception(f"Midi channels must be in [1..16]; got {i}")
+            self.channel[i - 1] = MidiChannel(config=config, channel=c)
 
     def menu_bar(self):
         """Hook into the menubar and some menus."""
@@ -106,10 +106,12 @@ class Midi(plugin.Plugin):
             return
 
         for message in self.port.iter_pending():
-            logger.info("Midi message: %s", message)
-            self.channel[message.channel].process(message)
+            if channel := self.channel.get(message.channel):
+                channel.process(message)
+            else:
+                logger.error("No midi channel: %s", message)
 
-        for channel in self.channel:
+        for channel in self.channel.values():
             channel.tick(self.apu)
 
     def draw(self):
