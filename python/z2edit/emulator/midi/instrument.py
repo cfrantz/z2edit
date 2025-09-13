@@ -63,8 +63,6 @@ class Envelope(object):
 
     @property
     def value(self):
-        if self.state == EnvelopeState.OFF:
-            return 0
 
         prev = (0, 0)
         frame = None
@@ -74,9 +72,13 @@ class Envelope(object):
                 break
             prev = (fr, val)
 
-        if frame is None:
+        if self.state == EnvelopeState.OFF or frame is None:
+            # TODO: what should we do when the envelope is off?
+            # If we return the last point, the instrument can
+            # keep processing all envelopes until they all reach
+            # the OFF state.
             self.state = EnvelopeState.OFF
-            return 0
+            return prev[1]
         if frame[0] == self.frame:
             return frame[1]
 
@@ -134,7 +136,25 @@ class Instrument(object):
 
     @property
     def state(self):
-        return self.volume.state
+        # Sample each envelope and only return OFF when they all
+        # reach the OFF state.
+        states = [
+                self.volume.state,
+                self.arpeggio.state,
+                self.pitch.state,
+                self.duty.state,
+        ]
+        on = False; release = False; off = False
+        for s in states:
+            if s == EnvelopeState.ON: on += 1
+            if s == EnvelopeState.RELEASE: release += 1
+            if s == EnvelopeState.OFF: off += 1
+
+        if off == len(states):
+            return EnvelopeState.OFF
+        if on:
+            return EnvelopeState.ON
+        return EnvelopeState.RELEASE
 
     @property
     def active(self):

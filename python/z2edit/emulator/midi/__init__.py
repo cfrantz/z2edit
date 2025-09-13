@@ -54,6 +54,10 @@ class Midi(plugin.Plugin):
         self.port = None
         self.port_index = 0
         self.refresh_inputs()
+        try:
+            self.channel_debug = int(self.args.get("channel_debug"))
+        except:
+            self.channel_debug = 0
         if name := self.args.get("port"):
             for i, input in enumerate(self.inputs):
                 if name in input:
@@ -107,6 +111,8 @@ class Midi(plugin.Plugin):
 
         for message in self.port.iter_pending():
             if channel := self.channel.get(message.channel):
+                if self.channel_debug & (1 << message.channel):
+                    logger.info("%s", message)
                 channel.process(message)
             else:
                 logger.error("No midi channel: %s", message)
