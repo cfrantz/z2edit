@@ -32,25 +32,31 @@ def basic_config(name, mapper):
                 kind=InstrumentKind.NES2A03,
                 volume=Envelope(
                     kind=EnvelopeKind.VOLUME,
-                    points={0: 8, 2: 15, 8: 10, 9: 10, 20: 0},
+                    points={0: 15, 1: 15, 8: 10, 9: 10, 20: 0},
                     loop=8,
                     release=9,
                     missing_value=MissingValue.INTERPOLATE,
                 ),
+
                 arpeggio=None,
-                pitch=Envelope(
-                    kind=EnvelopeKind.PITCH,
-                    points={0: 0, 4: 2, 8: 0, 12: -2, 16: 0, 20: 0},
-                    loop=0,
-                    release=16,
-                    missing_value=MissingValue.LAST,
-                ),
+                pitch=None,
                 hipitch=None,
                 duty=Envelope(
                     kind=EnvelopeKind.DUTY,
                     points={0: 2, 1: 2, 20: 2},
                     loop=0,
                     release=1,
+                    missing_value=MissingValue.LAST,
+                ),
+            ),
+            "triangle": Instrument(
+                name="triangle",
+                kind=InstrumentKind.NES2A03,
+                volume=Envelope(
+                    kind=EnvelopeKind.VOLUME,
+                    points={0: 0, 1: 15},
+                    loop=-1,
+                    release=-1,
                     missing_value=MissingValue.LAST,
                 ),
             ),
@@ -101,9 +107,7 @@ def basic_config(name, mapper):
     if name == "builtin":
         cfg.channel[1] = ChannelConfig(voice=[VoiceKind.PULSE0], instrument="pulse")
         cfg.channel[2] = ChannelConfig(voice=[VoiceKind.PULSE1], instrument="pulse")
-        cfg.channel[3] = ChannelConfig(
-            voice=[VoiceKind.TRIANGLE], note_offset=12, instrument="default"
-        )
+        cfg.channel[3] = ChannelConfig( voice=[VoiceKind.TRIANGLE], note_offset=24, instrument="triangle")
         if mapper == 5:
             cfg.channel[4] = ChannelConfig(
                 voice=[VoiceKind.MMC5_PULSE0], instrument="pulse"
