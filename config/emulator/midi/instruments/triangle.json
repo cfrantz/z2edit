@@ -1,0 +1,13 @@
+{
+    "name": "triangle",
+    "kind": "nes2a03",
+    "volume": {
+        "points": {
+            "0": 0,
+            "1": 15
+        },
+        "loop": -1,
+        "release": -1,
+        "missing_value": "last"
+    }
+}

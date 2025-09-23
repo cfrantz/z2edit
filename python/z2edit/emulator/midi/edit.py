@@ -291,9 +291,10 @@ class InstrumentEditor(object):
     def __init__(self, midi):
         self.midi = midi
         self._visible = True
-        self.selected = None
-        self.selindex = -1
+        self.selindex = 0
+        self.instrument = self.midi.config.instrument[self.selindex]
         self.window_id = random.randint(0, 0xFFFFFFFF)
+        self.nes2a03_setup()
 
     @property
     def visible(self):
@@ -305,20 +306,12 @@ class InstrumentEditor(object):
             self._visible = value
 
     def _instrument_selector(self):
-        instruments = list(self.midi.config.instrument.keys())
-        try:
-            self.selindex = instruments.index(self.selected)
-        except ValueError:
-            self.selindex = 0
-            self.selected = instruments[self.selindex]
-            self.instrument = self.midi.config.instrument[self.selected]
-            self.nes2a03_setup()
-
+        instruments = [i.name for i in self.midi.config.instrument]
+        self.selindex = clamp(self.selindex, 0, len(instruments) - 1)
         (changed, index) = gui.combo("Instrument", self.selindex, instruments)
         if changed:
             self.selindex = index
-            self.selected = instruments[self.selindex]
-            self.instrument = self.midi.config.instrument[self.selected]
+            self.instrument = self.midi.config.instrument[self.selindex]
             self.nes2a03_setup()
         return changed
 
@@ -379,20 +372,8 @@ class InstrumentEditor(object):
             (changed, name) = gui.input_text("##name", instrument.name, 80)
             gui.pop_item_width()
             if changed:
-                instrument.name = name
-
-            gui.table_next_row()
-            gui.table_next_column()
-            gui.text("Nickname")
-            gui.table_next_column()
-            gui.push_item_width(-1.0)
-            (changed, name) = gui.input_text("##nicname", self.selected, 80)
-            gui.pop_item_width()
-            if changed:
                 # TODO: error if the new name already exists.
-                del self.midi.config.instrument[self.selected]
-                self.selected = name
-                self.midi.config.instrument[self.selected] = instrument
+                instrument.name = name
 
             for name, env in self.envelopes.items():
                 gui.push_id(name)

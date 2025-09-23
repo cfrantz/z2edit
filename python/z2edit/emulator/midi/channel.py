@@ -28,10 +28,7 @@ class MidiChannel(object):
             self.instrument = channel.instrument
             self.pad = channel.pad
         self.config = config if config else MidiConfig()
-        self.keys = [
-            Instrument(config=self.config.instrument.get(self.instrument))
-            for _ in range(128)
-        ]
+        self.keys = [None for _ in range(128)]
 
     def choose_voice(self, inst):
         # If the voice is already playing, we don't have to do anything.
@@ -67,12 +64,20 @@ class MidiChannel(object):
 
         self.n_pressed += 1
         note = msg.note + self.note_offset
-        if trigger := self.pad.get(note, self.pad.get(0)):
+        if trigger := self.pad.get(note, self.pad.get(-1)):
             if trigger.instrument == "__skip__":
+                # The existence of the "__skip__" instrument in the pad list
+                # causes `note_on` to make no sound.  If the "__skip__"
+                # instrument is absent, and we don't trigger a "pad", then
+                # we'll note_on the default instrument for this channel.
                 return
             self.keys[note] = Instrument(
-                config=self.config.instrument.get(trigger.instrument),
+                config=self.config.get_instrument(trigger.instrument),
                 timer=trigger.timer,
+            )
+        else:
+            self.keys[note] = Instrument(
+                config=self.config.get_instrument(self.instrument),
             )
 
         inst = self.keys[note]
@@ -81,7 +86,9 @@ class MidiChannel(object):
 
     def note_off(self, msg):
         note = msg.note + self.note_offset
-        self.keys[note].note_off()
+        if inst := self.keys[note]:
+            inst.note_off()
+            self.keys[note] = None
 
     def process(self, msg):
         if handler := getattr(self, msg.type, None):

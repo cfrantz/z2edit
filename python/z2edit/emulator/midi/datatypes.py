@@ -66,7 +66,6 @@ class MissingValue(enum.StrEnum):
 
 @dataclass
 class Envelope(DataClassJsonMixin):
-    kind: EnvelopeKind
     points: dict[int, int]
     loop: Optional[int] = None
     release: Optional[int] = None
@@ -91,7 +90,6 @@ class Envelope(DataClassJsonMixin):
 
         return (
             Envelope(
-                kind=EnvelopeKind.UNKNOWN,
                 points={i: v for i, v in enumerate(sequence)},
                 loop=loop,
                 release=release,
@@ -180,7 +178,6 @@ class Instrument(DataClassJsonMixin):
             if present:
                 print(f"Parsing env {i} at {offset}")
                 env, offset = Envelope.from_fti(buffer, offset)
-                env.kind = list(EnvelopeKind)[i + 1]
                 if i == 0:
                     self.volume = env
                 if i == 1:
@@ -263,4 +260,15 @@ class ChannelConfig(DataClassJsonMixin):
 class MidiConfig(DataClassJsonMixin):
     name: str = "empty"
     channel: dict[int, ChannelConfig] = field(default_factory=dict)
-    instrument: dict[str, Instrument] = field(default_factory=dict)
+    instrument: list[Instrument] = field(default_factory=list)
+    load_instruments: list[str] = field(default_factory=list)
+
+    def get_instrument(self, name):
+        if isinstance(name, str):
+            for i, inst in enumerate(self.instrument):
+                if name == inst.name:
+                    name = i
+                    break
+            else:
+                name = 0
+        return self.instrument[name]

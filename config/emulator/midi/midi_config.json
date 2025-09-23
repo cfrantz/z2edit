@@ -1,0 +1,85 @@
+{
+    "name": "builtin",
+    "channel": {
+        "1": {
+            "voice": [
+                "apu_pulse0"
+            ],
+            "note_offset": 0,
+            "instrument": "pulse"
+        },
+        "2": {
+            "voice": [
+                "apu_pulse1"
+            ],
+            "note_offset": 0,
+            "instrument": "pulse"
+        },
+        "3": {
+            "voice": [
+                "apu_triangle"
+            ],
+            "note_offset": 24,
+            "instrument": "triangle"
+        },
+        "10": {
+            "voice": [
+                "apu_noise"
+            ],
+            "note_offset": 0,
+            "instrument": "default",
+            "pad": {
+                "36": {
+                    "instrument": "hihat",
+                    "timer": 14
+                },
+                "38": {
+                    "instrument": "snare",
+                    "timer": 10
+                },
+                "41": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "45": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "47": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "48": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "50": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "49": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "57": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "42": {
+                    "instrument": "snare",
+                    "timer": 6
+                },
+                "-1": {
+                    "instrument": "__skip__",
+                    "timer": 0
+                }
+            }
+        }
+    },
+    "load_instruments": [
+        "instruments/pulse.json",
+        "instruments/triangle.json",
+        "instruments/snare.json",
+        "instruments/hihat.json"
+    ]
+}

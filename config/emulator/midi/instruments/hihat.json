@@ -1,0 +1,19 @@
+{
+    "name": "hihat",
+    "kind": "nes2a03",
+    "volume": {
+        "kind": "volume",
+        "points": {
+            "0": 10,
+            "1": 6,
+            "2": 4,
+            "3": 3,
+            "4": 2,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "9": 0
+        },
+        "missing_value": "last"
+    }
+}

@@ -1,8 +1,13 @@
 ######################################################################
 # Some basic configurations
 ######################################################################
+import os
+import logging
 
 from .datatypes import *
+from z2edit import gui
+
+logger = logging.getLogger(__name__)
 
 
 def basic_config(name, mapper):
@@ -22,48 +27,44 @@ def basic_config(name, mapper):
                     49: Trigger(instrument="snare", timer=0x6),  # Crash
                     57: Trigger(instrument="snare", timer=0x6),  # Crash 2
                     42: Trigger(instrument="snare", timer=0x6),  # Closed HH
-                    0: Trigger(instrument="__skip__", timer=0),  # Default: no sound
+                    -1: Trigger(instrument="__skip__", timer=0),  # Default: no sound
                 },
             ),
         },
-        instrument={
-            "pulse": Instrument(
+        instrument=[
+            Instrument(
                 name="pulse",
                 kind=InstrumentKind.NES2A03,
                 volume=Envelope(
-                    kind=EnvelopeKind.VOLUME,
                     points={0: 15, 1: 15, 8: 10, 9: 10, 20: 0},
                     loop=8,
                     release=9,
                     missing_value=MissingValue.INTERPOLATE,
                 ),
-                arpeggio=Envelope(EnvelopeKind.ARPEGGIO, {}),
-                pitch=Envelope(EnvelopeKind.ARPEGGIO, {}),
+                arpeggio=Envelope({}),
+                pitch=Envelope({}),
                 hipitch=None,
                 duty=Envelope(
-                    kind=EnvelopeKind.DUTY,
                     points={0: 2, 1: 2, 20: 2},
                     loop=0,
                     release=1,
                     missing_value=MissingValue.LAST,
                 ),
             ),
-            "triangle": Instrument(
+            Instrument(
                 name="triangle",
                 kind=InstrumentKind.NES2A03,
                 volume=Envelope(
-                    kind=EnvelopeKind.VOLUME,
                     points={0: 0, 1: 15},
                     loop=-1,
                     release=-1,
                     missing_value=MissingValue.LAST,
                 ),
             ),
-            "snare": Instrument(
+            Instrument(
                 name="snare",
                 kind=InstrumentKind.NES2A03,
                 volume=Envelope(
-                    kind=EnvelopeKind.VOLUME,
                     points={
                         0: 15,
                         1: 12,
@@ -81,11 +82,10 @@ def basic_config(name, mapper):
                     missing_value=MissingValue.LAST,
                 ),
             ),
-            "hat": Instrument(
+            Instrument(
                 name="hat",
                 kind=InstrumentKind.NES2A03,
                 volume=Envelope(
-                    kind=EnvelopeKind.VOLUME,
                     points={
                         0: 10,
                         1: 6,
@@ -100,7 +100,7 @@ def basic_config(name, mapper):
                     missing_value=MissingValue.LAST,
                 ),
             ),
-        },
+        ],
     )
 
     if name == "builtin":
@@ -129,5 +129,33 @@ def basic_config(name, mapper):
     return cfg
 
 
+def _load_config(name):
+    cfgdir = os.path.dirname(name)
+    cfg = open(name, "rt").read()
+    cfg = MidiConfig.from_json(cfg)
+    for file in cfg.load_instruments:
+        path = os.path.join(cfgdir, file)
+        (_, ext) = os.path.splitext(path)
+        logger.info("Loading instrument %r", path)
+        data = open(path, "rb").read()
+        if ext == ".fti":
+            cfg.instrument.append(Instrument.parse_fti(data))
+        else:
+            cfg.instrument.append(Instrument.from_json(data))
+    return cfg
+
+
 def load_config(name, mapper):
-    return basic_config(name, mapper)
+    dirs = gui.Directories.get()
+    dirs = [
+        os.getcwd(),
+        os.path.join(dirs.install, "config/emulator/midi"),
+    ]
+    for d in dirs:
+        path = os.path.join(d, name)
+        if os.path.exists(path):
+            logger.info("Loading config %r", path)
+            return _load_config(path)
+    else:
+        logger.info("Using built-in config %r", name)
+        return basic_config(name, mapper)

@@ -18,9 +18,7 @@ class Envelope(object):
     ):
         self.frame = 0
         if not config:
-            config = datatypes.Envelope(
-                datatypes.EnvelopeKind.UNKNOWN, points, loop, release, missing
-            )
+            config = datatypes.Envelope(points, loop, release, missing)
         self.config = config
         self.state = EnvelopeState.OFF
 
