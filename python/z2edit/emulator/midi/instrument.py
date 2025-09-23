@@ -5,7 +5,7 @@
 import logging
 
 from .datatypes import InstrumentKind, EnvelopeState, MissingValue
-from .frequency import frequency, timer_value
+from .frequency import frequency, timer_value, DMC_FREQ
 from . import datatypes
 
 logger = logging.getLogger(__name__)
@@ -116,6 +116,8 @@ class Instrument(object):
         self.pitch = Envelope(points={0: 0})
         self.duty = Envelope(points={0: 2})
         self.timer = timer
+        self.dpcm_map = {}
+        self.sample = {}
         if config:
             self.kind = config.kind
             self.name = config.name
@@ -127,15 +129,25 @@ class Instrument(object):
                 self.pitch = Envelope(config=config.pitch)
             if config.duty:
                 self.duty = Envelope(config=config.duty)
+            if config.dpcm:
+                self.dpcm_map = {i: v for i, v in enumerate(config.dpcm)}
+            if config.sample:
+                self.sample = config.sample
         self.note = 0
         self.velocity = 0
         self.seq = 0
+        self.dpcm = None
+        self.dpcm_sample = bytes()
+        self.dpcm_length = 0
+        self.dpcm_per_frame = 0
 
     def tick(self):
         self.volume.tick()
         self.arpeggio.tick()
         self.pitch.tick()
         self.duty.tick()
+        if self.dpcm_length > 0:
+            self.dpcm_length -= self.dpcm_per_frame
 
     def note_on(self, note, velocity=127, seq=0):
         self.note = note
@@ -145,6 +157,14 @@ class Instrument(object):
         self.arpeggio.note_on()
         self.pitch.note_on()
         self.duty.note_on()
+        if (dpcm := self.dpcm_map.get(note)) is not None:
+            if (sample := self.sample.get(dpcm.sample)) is not None:
+                self.dpcm = dpcm
+                self.dpcm_sample = sample.data
+                self.dpcm_length = sample.size
+                self.dpcm_per_frame = int(DMC_FREQ[dpcm.pitch] / 60.0988)
+            else:
+                logger.error("No DPCM sample found for %r", dpcm)
 
     def note_off(self):
         self.volume.note_off()
@@ -161,6 +181,9 @@ class Instrument(object):
 
     @property
     def state(self):
+        if self.dpcm_length > 0:
+            return EnvelopeState.ON
+
         # Sample each envelope and only return OFF when they all
         # reach the OFF state.
         states = [
@@ -169,9 +192,9 @@ class Instrument(object):
             self.pitch.state,
             self.duty.state,
         ]
-        on = False
-        release = False
-        off = False
+        on = 0
+        release = 0
+        off = 0
         for s in states:
             if s == EnvelopeState.ON:
                 on += 1
@@ -197,6 +220,17 @@ class Instrument(object):
 
     @property
     def value(self):
+        if self.dpcm_map:
+            if dpcm := self.dpcm:
+                self.dpcm = None
+                return {
+                    "frequency": dpcm.frequency,
+                    "sample": self.dpcm_sample,
+                    "size": self.dpcm_length,
+                }
+            else:
+                return {}
+
         if self.timer is None:
             f = frequency(self.note + self.arpeggio.value)
             timer = timer_value(f) + self.pitch.value

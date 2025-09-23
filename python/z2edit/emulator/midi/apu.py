@@ -120,15 +120,48 @@ class Noise(object):
             self.emulator.nes[self.address + 3] = 0xF8
 
 
+class Dmc(object):
+
+    def __init__(self, emulator, address):
+        self.emulator = emulator
+        self.address = address
+
+    def write(self, **kwargs):
+
+        active = self.emulator.nes.mem[0x4015] & 0x10
+
+        if (f := kwargs.get("frequency")) is not None:
+            loop = kwargs.get("loop", False)
+            f |= 0x60 if loop else 0
+            self.emulator.nes[self.address + 0] = f
+            active = True
+
+        size = None
+        if (sample := kwargs.get("sample")) is not None:
+            addr = (0xFF80 - len(sample)) & 0xFFC0
+            self.emulator.nes.write(addr, sample)
+            self.emulator.nes[self.address + 2] = addr
+            size = len(sample)
+            active = True
+
+        if (size := kwargs.get("size", size)) is not None:
+            self.emulator.nes[self.address + 3] = size
+            active = True
+
+        if active:
+            self.emulator.nes[0x4015] = 0x1F
+
+
 class Apu(object):
 
     def __init__(self, emulator):
         self.emulator = emulator
         self.voice = {
-            VoiceKind.PULSE0: Pulse(emulator, 0x4000),
-            VoiceKind.PULSE1: Pulse(emulator, 0x4004),
-            VoiceKind.TRIANGLE: Triangle(emulator, 0x4008),
-            VoiceKind.NOISE: Noise(emulator, 0x400C),
+            VoiceKind.APU_PULSE0: Pulse(emulator, 0x4000),
+            VoiceKind.APU_PULSE1: Pulse(emulator, 0x4004),
+            VoiceKind.APU_TRIANGLE: Triangle(emulator, 0x4008),
+            VoiceKind.APU_NOISE: Noise(emulator, 0x400C),
+            VoiceKind.APU_DMC: Dmc(emulator, 0x4010),
         }
         self.emulator.nes[0x4015] = 0x0F
         mapper = emulator.nes.rom_mapper

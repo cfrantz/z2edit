@@ -10,7 +10,7 @@ def basic_config(name, mapper):
         name="builtin",
         channel={
             10: ChannelConfig(
-                voice=[VoiceKind.NOISE],
+                voice=[VoiceKind.APU_NOISE],
                 pad={
                     36: Trigger(instrument="hat", timer=0xE),  # Kick
                     38: Trigger(instrument="snare", timer=0xA),  # Snare
@@ -104,10 +104,10 @@ def basic_config(name, mapper):
     )
 
     if name == "builtin":
-        cfg.channel[1] = ChannelConfig(voice=[VoiceKind.PULSE0], instrument="pulse")
-        cfg.channel[2] = ChannelConfig(voice=[VoiceKind.PULSE1], instrument="pulse")
+        cfg.channel[1] = ChannelConfig(voice=[VoiceKind.APU_PULSE0], instrument="pulse")
+        cfg.channel[2] = ChannelConfig(voice=[VoiceKind.APU_PULSE1], instrument="pulse")
         cfg.channel[3] = ChannelConfig(
-            voice=[VoiceKind.TRIANGLE], note_offset=24, instrument="triangle"
+            voice=[VoiceKind.APU_TRIANGLE], note_offset=24, instrument="triangle"
         )
         if mapper == 5:
             cfg.channel[4] = ChannelConfig(
@@ -117,13 +117,17 @@ def basic_config(name, mapper):
                 voice=[VoiceKind.MMC5_PULSE1], instrument="pulse"
             )
     elif name == "builtin-poly":
-        voices = [VoiceKind.PULSE0, VoiceKind.PULSE1]
+        voices = [VoiceKind.APU_PULSE0, VoiceKind.APU_PULSE1]
         if mapper == 5:
             voices.extend([VoiceKind.MMC5_PULSE0, VoiceKind.MMC5_PULSE1])
         cfg.channel[1] = ChannelConfig(voice=voices, instrument="pulse")
         cfg.channel[2] = ChannelConfig(
-            voice=[VoiceKind.TRIANGLE], note_offset=12, instrument="default"
+            voice=[VoiceKind.APU_TRIANGLE], note_offset=12, instrument="default"
         )
     else:
         raise Exception(f"No builtin config named {name!r}")
     return cfg
+
+
+def load_config(name, mapper):
+    return basic_config(name, mapper)

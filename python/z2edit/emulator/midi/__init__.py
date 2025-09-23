@@ -13,7 +13,7 @@ from z2edit.emulator import plugin
 from .channel import MidiChannel
 from .apu import Apu
 from .datatypes import MidiConfig
-from .configs import basic_config
+from .configs import load_config
 from .edit import InstrumentEditor
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class Midi(plugin.Plugin):
         self.channel = {}
         self.active_values = {}
 
-        self.config = basic_config(
+        self.config = load_config(
             self.args.get("config", "builtin"), mapper=self.emulator.nes.rom_mapper
         )
         for i, c in self.config.channel.items():
