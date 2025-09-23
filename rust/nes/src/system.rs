@@ -566,10 +566,19 @@ impl Nes {
     }
 
     #[pyo3(name = "write")]
-    pub fn _write<'p>(&self, py: Python<'p>, addr: PyObject, val: u8) -> PyResult<()> {
+    pub fn _write<'p>(&self, py: Python<'p>, addr: PyObject, val: PyObject) -> PyResult<()> {
         let addr = Self::extract_address(py, addr)?;
-        self.write(addr, val);
-        Ok(())
+        if let Ok(val) = val.extract::<u8>(py) {
+            self.write(addr, val);
+            Ok(())
+        } else if let Ok(val) = val.extract::<Vec<u8>>(py) {
+            for (i, &v) in val.iter().enumerate() {
+                self.write(addr + i, v);
+            }
+            Ok(())
+        } else {
+            Err(PyTypeError::new_err("bad data type"))
+        }
     }
 
     pub fn write_u16<'p>(
@@ -598,7 +607,9 @@ impl Nes {
         self._read(py, addr)
     }
     fn __setitem__<'p>(&self, py: Python<'p>, addr: PyObject, val: u8) -> PyResult<()> {
-        self._write(py, addr, val)
+        let addr = Self::extract_address(py, addr)?;
+        self.write(addr, val);
+        Ok(())
     }
 
     pub fn set_read_callback<'p>(
