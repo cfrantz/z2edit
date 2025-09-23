@@ -19,6 +19,7 @@ class VoiceKind(enum.StrEnum):
 
 
 class EnvelopeKind(enum.StrEnum):
+    UNKNOWN = enum.auto()
     VOLUME = enum.auto()
     ARPEGGIO = enum.auto()
     PITCH = enum.auto()

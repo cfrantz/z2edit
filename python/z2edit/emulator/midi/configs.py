@@ -37,9 +37,8 @@ def basic_config(name, mapper):
                     release=9,
                     missing_value=MissingValue.INTERPOLATE,
                 ),
-
-                arpeggio=None,
-                pitch=None,
+                arpeggio=Envelope(EnvelopeKind.ARPEGGIO, {}),
+                pitch=Envelope(EnvelopeKind.ARPEGGIO, {}),
                 hipitch=None,
                 duty=Envelope(
                     kind=EnvelopeKind.DUTY,
@@ -107,7 +106,9 @@ def basic_config(name, mapper):
     if name == "builtin":
         cfg.channel[1] = ChannelConfig(voice=[VoiceKind.PULSE0], instrument="pulse")
         cfg.channel[2] = ChannelConfig(voice=[VoiceKind.PULSE1], instrument="pulse")
-        cfg.channel[3] = ChannelConfig( voice=[VoiceKind.TRIANGLE], note_offset=24, instrument="triangle")
+        cfg.channel[3] = ChannelConfig(
+            voice=[VoiceKind.TRIANGLE], note_offset=24, instrument="triangle"
+        )
         if mapper == 5:
             cfg.channel[4] = ChannelConfig(
                 voice=[VoiceKind.MMC5_PULSE0], instrument="pulse"

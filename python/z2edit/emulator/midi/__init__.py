@@ -14,6 +14,7 @@ from .channel import MidiChannel
 from .apu import Apu
 from .datatypes import MidiConfig
 from .configs import basic_config
+from .edit import InstrumentEditor
 
 logger = logging.getLogger(__name__)
 
@@ -68,20 +69,25 @@ class Midi(plugin.Plugin):
         self.input_selector = InputSelector(self)
         self.apu = Apu(emulator)
         self.channel = {}
+        self.active_values = {}
 
-        config = basic_config(
+        self.config = basic_config(
             self.args.get("config", "builtin"), mapper=self.emulator.nes.rom_mapper
         )
-        for i, c in config.channel.items():
+        for i, c in self.config.channel.items():
             if not 1 <= i <= 16:
                 raise Exception(f"Midi channels must be in [1..16]; got {i}")
-            self.channel[i - 1] = MidiChannel(config=config, channel=c)
+            self.channel[i - 1] = MidiChannel(self, config=self.config, channel=c)
+
+        self.windows = []
 
     def menu_bar(self):
         """Hook into the menubar and some menus."""
         if gui.begin_menu("Midi"):
             if gui.menu_item("Input", ""):
                 self.input_selector.visible = True
+            if gui.menu_item("Instrument Editor", ""):
+                self.windows.append(InstrumentEditor(self))
             gui.end_menu()
 
     def refresh_inputs(self):
@@ -122,6 +128,8 @@ class Midi(plugin.Plugin):
 
     def draw(self):
         self.input_selector.draw()
+        for w in self.windows:
+            w.draw()
 
 
 def create(emulator, args):

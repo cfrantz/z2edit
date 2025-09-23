@@ -6,6 +6,7 @@ import logging
 
 from .datatypes import InstrumentKind, EnvelopeState, MissingValue
 from .frequency import frequency, timer_value
+from . import datatypes
 
 logger = logging.getLogger(__name__)
 
@@ -16,16 +17,32 @@ class Envelope(object):
         self, points={}, loop=-1, release=-1, missing=MissingValue.LAST, config=None
     ):
         self.frame = 0
-        self.loop = loop
-        self.release = release
-        self.points = sorted(points.items())
-        self.missing_value = missing
-        if config:
-            self.loop = -1 if config.loop is None else config.loop
-            self.release = -1 if config.release is None else config.release
-            self.missing_value = config.missing_value
-            self.points = sorted(config.points.items())
+        if not config:
+            config = datatypes.Envelope(
+                datatypes.EnvelopeKind.UNKNOWN, points, loop, release, missing
+            )
+        self.config = config
         self.state = EnvelopeState.OFF
+
+    @property
+    def loop(self):
+        v = self.config.loop
+        return v if v is not None else -1
+
+    @property
+    def release(self):
+        v = self.config.release
+        return v if v is not None else -1
+
+    @property
+    def missing_value(self):
+        return self.config.missing_value
+
+    @property
+    def points(self):
+        if not self.config.points:
+            return [(0, 0)]
+        return sorted(self.config.points.items())
 
     def note_on(self):
         self.frame = 0
@@ -63,7 +80,6 @@ class Envelope(object):
 
     @property
     def value(self):
-
         prev = (0, 0)
         frame = None
         for fr, val in self.points:
@@ -94,6 +110,7 @@ class Envelope(object):
 class Instrument(object):
     def __init__(self, config=None, timer=None):
         self.kind = InstrumentKind.NES2A03
+        self.name = "unknown"
         self.volume = Envelope(points={0: 15, 1: 0}, loop=0, release=1)
         self.arpeggio = Envelope(points={0: 0})
         self.pitch = Envelope(points={0: 0})
@@ -101,6 +118,7 @@ class Instrument(object):
         self.timer = timer
         if config:
             self.kind = config.kind
+            self.name = config.name
             if config.volume:
                 self.volume = Envelope(config=config.volume)
             if config.arpeggio:
@@ -134,21 +152,33 @@ class Instrument(object):
         self.pitch.note_off()
         self.duty.note_off()
 
+    def update_active_values(self, active_values):
+        values = {}
+        for e in ("volume", "arpeggio", "pitch", "duty"):
+            env = getattr(self, e)
+            values[e] = (env.state, env.frame, env.value)
+        active_values[self.name] = values
+
     @property
     def state(self):
         # Sample each envelope and only return OFF when they all
         # reach the OFF state.
         states = [
-                self.volume.state,
-                self.arpeggio.state,
-                self.pitch.state,
-                self.duty.state,
+            self.volume.state,
+            self.arpeggio.state,
+            self.pitch.state,
+            self.duty.state,
         ]
-        on = False; release = False; off = False
+        on = False
+        release = False
+        off = False
         for s in states:
-            if s == EnvelopeState.ON: on += 1
-            if s == EnvelopeState.RELEASE: release += 1
-            if s == EnvelopeState.OFF: off += 1
+            if s == EnvelopeState.ON:
+                on += 1
+            if s == EnvelopeState.RELEASE:
+                release += 1
+            if s == EnvelopeState.OFF:
+                off += 1
 
         if off == len(states):
             return EnvelopeState.OFF

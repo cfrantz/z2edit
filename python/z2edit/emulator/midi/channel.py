@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 class MidiChannel(object):
 
-    def __init__(self, voices=[], config=None, channel=None):
+    def __init__(self, midi, voices=[], config=None, channel=None):
+        self.midi = midi
         self.note_offset = 0
         self.instrument = None
         self.n_pressed = 0
@@ -92,6 +93,7 @@ class MidiChannel(object):
         for voice, inst in self.voices.items():
             if inst:
                 apu.write(voice, **inst[-1].value)
+                inst[-1].update_active_values(self.midi.active_values)
                 state = EnvelopeState.RELEASE
                 for i in inst:
                     i.tick()
