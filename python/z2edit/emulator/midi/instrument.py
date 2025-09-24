@@ -128,7 +128,7 @@ class Instrument(object):
             if config.duty:
                 self.duty = Envelope(config=config.duty)
             if config.dpcm:
-                self.dpcm_map = {i: v for i, v in enumerate(config.dpcm)}
+                self.dpcm_map = {v.note: v for v in config.dpcm}
             if config.sample:
                 self.sample = config.sample
         self.note = 0
@@ -222,7 +222,7 @@ class Instrument(object):
             if dpcm := self.dpcm:
                 self.dpcm = None
                 return {
-                    "frequency": dpcm.frequency,
+                    "frequency": dpcm.pitch,
                     "sample": self.dpcm_sample,
                     "size": self.dpcm_length,
                 }

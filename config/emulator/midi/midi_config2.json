@@ -1,19 +1,21 @@
 {
     "name": "builtin",
     "channel": {
-        "4": {
+        "1": {
             "voice": [
-                "apu_pulse0"
+                "apu_pulse0",
+                "mmc5_pulse0"
             ],
             "note_offset": 0,
-            "instrument": "pulse"
+            "instrument": "reverb"
         },
         "2": {
             "voice": [
-                "apu_pulse1"
+                "apu_pulse1",
+                "mmc5_pulse1"
             ],
             "note_offset": 0,
-            "instrument": "pulse"
+            "instrument": "reverb"
         },
         "3": {
             "voice": [
@@ -22,7 +24,7 @@
             "note_offset": 24,
             "instrument": "triangle"
         },
-        "1": {
+        "4": {
             "voice": [
                 "apu_dmc"
             ],
@@ -84,6 +86,7 @@
     },
     "load_instruments": [
         "instruments/pulse.json",
+        "instruments/reverb.json",
         "instruments/triangle.json",
         "instruments/snare.json",
         "instruments/hihat.json",

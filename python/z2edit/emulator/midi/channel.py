@@ -4,6 +4,7 @@
 
 import logging
 from pprint import pprint
+import mido
 
 from .instrument import Instrument
 from .datatypes import EnvelopeState, MidiConfig
@@ -14,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 class MidiChannel(object):
 
-    def __init__(self, midi, voices=[], config=None, channel=None):
+    def __init__(self, midi, chnum, voices=[], config=None, channel=None):
         self.midi = midi
+        self.chnum = chnum
         self.note_offset = 0
         self.instrument = None
         self.n_pressed = 0
@@ -58,34 +60,55 @@ class MidiChannel(object):
         candidate = rel_cand or on_cand
         self.voices[candidate].append(inst)
 
+    def retrigger(self, type, channel, note, velocity):
+        msg = mido.Message(type, channel=channel, note=note, velocity=velocity)
+        if channel := self.midi.channel.get(channel):
+            channel.process(msg)
+
     def note_on(self, msg):
         if msg.velocity == 0:
             return self.note_off(msg)
 
         self.n_pressed += 1
         note = msg.note + self.note_offset
-        if trigger := self.pad.get(note, self.pad.get(-1)):
+        trigger = self.pad.get(note, self.pad.get(-1))
+        if trigger:
             if trigger.instrument == "__skip__":
                 # The existence of the "__skip__" instrument in the pad list
                 # causes `note_on` to make no sound.  If the "__skip__"
                 # instrument is absent, and we don't trigger a "pad", then
                 # we'll note_on the default instrument for this channel.
                 return
-            self.keys[note] = Instrument(
-                config=self.config.get_instrument(trigger.instrument),
-                timer=trigger.timer,
-            )
-        else:
+            if trigger.instrument:
+                self.keys[note] = Instrument(
+                    config=self.config.get_instrument(trigger.instrument),
+                    timer=trigger.timer,
+                )
+            for chan, target_note in trigger.remap.items():
+                if chan == self.chnum:
+                    note = target_note
+                    trigger = None
+                else:
+                    self.retrigger("note_on", chan - 1, target_note, msg.velocity)
+
+        if not trigger:
             self.keys[note] = Instrument(
                 config=self.config.get_instrument(self.instrument),
             )
 
-        inst = self.keys[note]
-        inst.note_on(note, msg.velocity, seq=self.n_pressed)
-        voice = self.choose_voice(inst)
+        if inst := self.keys[note]:
+            inst.note_on(note, msg.velocity, seq=self.n_pressed)
+            voice = self.choose_voice(inst)
 
     def note_off(self, msg):
         note = msg.note + self.note_offset
+        if trigger := self.pad.get(note, self.pad.get(-1)):
+            for chan, target_note in trigger.remap.items():
+                if chan == self.chnum:
+                    note = target_note
+                else:
+                    self.retrigger("note_off", chan - 1, target_note, msg.velocity)
+
         if inst := self.keys[note]:
             inst.note_off()
             self.keys[note] = None

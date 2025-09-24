@@ -1,0 +1,44 @@
+{
+    "name": "reverb",
+    "kind": "nes2a03",
+    "volume": {
+        "points": {
+            "0": 15,
+            "1": 15,
+            "8": 10,
+            "9": 10,
+            "20": 0,
+            "21": 5,
+            "40": 0,
+            "41": 4,
+            "60": 0,
+            "61": 3,
+            "80": 0,
+            "81": 2,
+            "100": 0
+        },
+        "loop": 8,
+        "release": 9,
+        "missing_value": "interpolate"
+    },
+    "arpeggio": {
+        "points": {},
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "pitch": {
+        "points": {},
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "duty": {
+        "points": {
+            "0": 2
+        },
+        "loop": -1,
+        "release": -1,
+        "missing_value": "last"
+    }
+}

@@ -5,6 +5,7 @@
 import enum
 import logging
 
+from z2edit import Address
 from .frequency import F_CPU
 from .datatypes import VoiceKind
 
@@ -128,7 +129,7 @@ class Dmc(object):
 
     def write(self, **kwargs):
 
-        active = self.emulator.nes.mem[0x4015] & 0x10
+        active = self.emulator.nes[0x4015] & 0x10
 
         if (f := kwargs.get("frequency")) is not None:
             loop = kwargs.get("loop", False)
@@ -139,13 +140,13 @@ class Dmc(object):
         size = None
         if (sample := kwargs.get("sample")) is not None:
             addr = (0xFF80 - len(sample)) & 0xFFC0
-            self.emulator.nes.write(addr, sample)
-            self.emulator.nes[self.address + 2] = addr
+            self.emulator.nes.write(Address.Prg(-1, addr), sample)
+            self.emulator.nes[self.address + 2] = (addr >> 6) & 0xFF
             size = len(sample)
             active = True
 
         if (size := kwargs.get("size", size)) is not None:
-            self.emulator.nes[self.address + 3] = size
+            self.emulator.nes[self.address + 3] = (size >> 4) & 0xFF
             active = True
 
         if active:

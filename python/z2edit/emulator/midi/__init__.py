@@ -77,7 +77,7 @@ class Midi(plugin.Plugin):
         for i, c in self.config.channel.items():
             if not 1 <= i <= 16:
                 raise Exception(f"Midi channels must be in [1..16]; got {i}")
-            self.channel[i - 1] = MidiChannel(self, config=self.config, channel=c)
+            self.channel[i - 1] = MidiChannel(self, i, config=self.config, channel=c)
 
         self.windows = []
 

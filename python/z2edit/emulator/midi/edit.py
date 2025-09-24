@@ -317,15 +317,14 @@ class InstrumentEditor(object):
 
     def nes2a03_setup(self):
         instrument = self.instrument
-        k = InstrumentKind.NES2A03
         if not instrument.volume:
-            instrument.volume = Envelope(k, points={0: 15, 1: 0}, loop=0, release=1)
+            instrument.volume = Envelope(points={0: 15, 1: 0}, loop=0, release=1)
         if not instrument.arpeggio:
-            instrument.arpeggio = Envelope(k, points={0: 0}, loop=-1, release=-1)
+            instrument.arpeggio = Envelope(points={0: 0}, loop=-1, release=-1)
         if not instrument.pitch:
-            instrument.pitch = Envelope(k, points={0: 0}, loop=-1, release=-1)
+            instrument.pitch = Envelope(points={0: 0}, loop=-1, release=-1)
         if not instrument.duty:
-            instrument.duty = Envelope(k, points={0: 2}, loop=-1, release=-1)
+            instrument.duty = Envelope(points={0: 2}, loop=-1, release=-1)
 
         self.envelopes = {
             "Volume": EnvelopeGraph(

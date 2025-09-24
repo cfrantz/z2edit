@@ -8,7 +8,7 @@ import struct
 import logging
 from typing import Optional
 from dataclasses import dataclass, field
-from dataclasses_json import DataClassJsonMixin, config, dataclass_json
+from dataclasses_json import DataClassJsonMixin, config
 from marshmallow import fields
 
 logger = logging.getLogger(__name__)
@@ -66,6 +66,21 @@ class MissingValue(enum.StrEnum):
 
 @dataclass
 class Envelope(DataClassJsonMixin):
+    """
+    Represents an envelope for sound playback (e.g. volume, apreggio, pitch
+    or duty cycle).
+
+    Attributes:
+        points: A dict mapping frame number to value.
+        loop: The frame to return to upon reaching the release frame while the
+              note is still in the "on" state.
+        release: The frame that represents the release phase of the envelope.
+                 Prior to note-off, upon reaching this frame, the envelope will
+                 return to the loop point.
+        missing_value: The policy for supplying frame values not explicitly listed
+                       in the points mapping.  Either "interpolate" or "last".
+    """
+
     points: dict[int, int]
     loop: Optional[int] = None
     release: Optional[int] = None
@@ -100,6 +115,16 @@ class Envelope(DataClassJsonMixin):
 
 @dataclass
 class DpcmAssignment(DataClassJsonMixin):
+    """
+    A DPCM note assignment.
+
+    Attributes:
+        note: The MIDI note number.
+        sample: The sample to play for `note`.
+        pitch: The DMC pitch/frequency value (0-15).
+        loop: Whether this DPCM sample should loop.
+    """
+
     note: int
     sample: int
     pitch: int
@@ -120,9 +145,17 @@ class DpcmAssignment(DataClassJsonMixin):
         )
 
 
-@dataclass_json
 @dataclass
-class DpcmSample:
+class DpcmSample(DataClassJsonMixin):
+    """
+    A DPCM sample.
+
+    Attributes:
+        name: The name of the sample.
+        size: The length of the sample.
+        data: The DPCM encoded sample data.
+    """
+
     name: str
     size: int
     data: bytes = field(
@@ -155,6 +188,21 @@ class DpcmSample:
 
 @dataclass
 class Instrument(DataClassJsonMixin):
+    """
+    A NES Instrument.
+
+    Attributes:
+        name: The name of the instrument.
+        kind: The kind of instrument (e.g. 2A03, VRC6, VRC7, etc).
+        volume: A volume envelope.
+        arpeggio: An arpeggio envelope.
+        pitch: A pitch envelope.
+        hipitch: A hipitch envelope (unused).
+        duty: A duty cycle envelope.
+        dpcm: A list of DPCM assignments.
+        sample: A mapping of DPCM samples (integer index to sample).
+    """
+
     name: str
     kind: InstrumentKind = InstrumentKind.NES2A03
     volume: Optional[Envelope] = None
@@ -244,12 +292,34 @@ class Instrument(DataClassJsonMixin):
 
 @dataclass
 class Trigger(DataClassJsonMixin):
-    instrument: str
-    timer: int
+    """
+    A "pad" trigger.  Used to trigger noise or DPCM samples.
+
+    Attributes:
+        instrument: The instrument (envelope) to use on this channel.
+        timer: The timer value to use (on this channel)
+        remap: A mapping of channel to note to trigger notes on other channels.
+    """
+
+    instrument: Optional[str] = None
+    timer: int = 0
+    remap: dict[int, int] = field(default_factory=dict)
 
 
 @dataclass
 class ChannelConfig(DataClassJsonMixin):
+    """
+    A channel configuration.
+
+    Attributes:
+        voice: A set of NES voices to use (e.g. APU_PULSE0, APU_TRIANGLE,
+               MMC5_PULSE0).
+        note_offset: Number of semitones added to the note before playing.
+        instrument: The instrument to play on this channel.
+        pad: A set of "pads" which allow triggering other effects or notes when
+             a particular note is played.
+    """
+
     voice: list[VoiceKind]
     note_offset: int = 0
     instrument: str = "default"
@@ -258,6 +328,18 @@ class ChannelConfig(DataClassJsonMixin):
 
 @dataclass
 class MidiConfig(DataClassJsonMixin):
+    """
+    A MIDI configuration for the emulator.
+
+    Attributes:
+        name: The name of this configuration.
+        channel: A mapping of MIDI channel numbers (1-based) to channel
+                 configurations.
+        instrument: A list of instruments known to this configuration.
+        load_instruments: A list of filenames of instruments to load into
+                          this configuration.
+    """
+
     name: str = "empty"
     channel: dict[int, ChannelConfig] = field(default_factory=dict)
     instrument: list[Instrument] = field(default_factory=list)
