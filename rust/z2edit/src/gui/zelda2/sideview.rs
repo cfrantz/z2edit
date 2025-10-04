@@ -1,5 +1,6 @@
 use anyhow::Result;
 use indexmap::{IndexMap, IndexSet};
+use pyo3::prelude::*;
 use python_gui::fa;
 
 use crate::gui::util::{edit_tree_node, TreeAction};
@@ -981,6 +982,18 @@ impl SideviewEditor {
             }
         }
 
+        if let Some(_token) = ui.begin_popup_context_window() {
+            if let Some(_token) = ui.begin_menu("Emulate") {
+                for screen in 0..=3 {
+                    if ui.menu_item(format!("Screen {}", screen + 1)) {
+                        Python::with_gil(|py| {
+                            project.emulate(py, Some(&format!("{}/{screen}", self.path)))
+                        })?;
+                    }
+                }
+            }
+        }
+
         let mut changed = false;
         if let Some(_enemy_group) = &config.enemy_group {
             let mut action = EditAction::None;
@@ -1002,6 +1015,7 @@ impl SideviewEditor {
             action.set(self.draw_map_entity(i, origin, scr_origin, ui, project)?);
         }
         changed |= self.process_map_action(action);
+
         Ok(changed)
     }
 
