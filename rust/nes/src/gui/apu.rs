@@ -12,6 +12,31 @@ pub struct ApuDebug {
 }
 
 impl ApuDebug {
+    // The frequency of concert A is 440Hz
+    // const A4: f64 = 440.0;
+    // We calculate the frequency of C-1 (midi note 0) by computing the
+    // frequency of C above A4 and then dividing down by six octaves.
+    // const Cminus1: f64 = Self::A4 * (2.0f64).powf(3.0/12.0) / 64.0;
+    const C_MINUS_1: f64 = 8.175798915643707;
+
+    const NOTE_NAMES: [&'static str; 12] = [
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+    ];
+
+    fn timer_to_freq(timer: u16, clk: f64) -> f64 {
+        (Nes::FREQUENCY as f64) / (16.0 * clk * (timer as f64 + 1.0))
+    }
+
+    fn freq_to_note(f: f64) -> (&'static str, i32, i32) {
+        // Compute number of cents above C-1.
+        let cents = (1200.0 * (f / Self::C_MINUS_1).log2()) as i32;
+        let semitone = (cents + 50) / 100;
+        let octave = semitone / 12;
+        let note = semitone % 12;
+        let cents = cents - (100 * semitone);
+        (Self::NOTE_NAMES[note as usize], octave, cents)
+    }
+
     pub fn new() -> Self {
         ApuDebug { visible: false }
     }
@@ -26,12 +51,12 @@ impl ApuDebug {
             .build();
         ui.same_line();
         ui.group(|| {
+            let timer = ((pulse.reg.timer_hi as u16) << 8) | (pulse.reg.timer_lo as u16);
+            let f = Self::timer_to_freq(timer & 0x7FF, 1.0);
+            let (note, octave, cents) = Self::freq_to_note(f);
             ui.text(format!("Control: {:02x}", pulse.reg.control));
             ui.text(format!("Sweep:   {:02x}", pulse.reg.sweep));
-            ui.text(format!(
-                "Timer:   {:02x}{:02x}",
-                pulse.reg.timer_hi, pulse.reg.timer_lo
-            ));
+            ui.text(format!("Timer:   {timer:04x} {note}{octave}{cents:+}c"));
         });
         ui.slider_config(&name, 0.0f32, 1.0f32)
             .display_format("%.02f")
@@ -48,11 +73,11 @@ impl ApuDebug {
             .build();
         ui.same_line();
         ui.group(|| {
+            let timer = ((triangle.reg.timer_hi as u16) << 8) | (triangle.reg.timer_lo as u16);
+            let f = Self::timer_to_freq(timer & 0x7FF, 2.0);
+            let (note, octave, cents) = Self::freq_to_note(f);
             ui.text(format!("Control: {:02x}", triangle.reg.control));
-            ui.text(format!(
-                "Timer:   {:02x}{:02x}",
-                triangle.reg.timer_hi, triangle.reg.timer_lo
-            ));
+            ui.text(format!("Timer:   {timer:04x} {note}{octave}{cents:+}c"));
         });
         ui.slider_config("Triangle", 0.0f32, 1.0f32)
             .display_format("%.02f")
