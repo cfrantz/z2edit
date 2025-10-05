@@ -40,10 +40,10 @@ class Preferences(object):
 
 class Emulator(object):
 
-    def __init__(self, rom=None, on_root=False, title="Emulator"):
+    def __init__(self, rom=None, rom_name=None, on_root=False, title="Emulator"):
         self._emulator = None
         if rom:
-            self._load_rom(rom)
+            self._load_rom(rom, rom_name)
         self.on_root = on_root
         self.scale = 4.0
         self.aspect = 1.333
@@ -72,12 +72,14 @@ class Emulator(object):
         else:
             logger.error("Requested plugin %s isn't a Plugin", name)
 
-    def _load_rom(self, rom):
+    def _load_rom(self, rom, rom_name=None):
         if isinstance(rom, str):
             self._emulator = nes.EmulatorGui.from_file(rom)
             self.nes.name = os.path.basename(rom)
         else:
             self._emulator = nes.EmulatorGui(nes.Nes(rom))
+        if rom_name:
+            self.nes.name = rom_name
 
     def load_rom(self, filename):
         if filename is None:

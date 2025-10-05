@@ -101,6 +101,7 @@ impl EmulatorGui {
     fn state_filename(&self, nes: &Nes) -> String {
         let datadir = Directories::get().data_dir.display();
         let name = nes.name.lock().unwrap();
+        let name = name.as_deref().unwrap_or("anonymous");
         format!("{datadir}/{name}.state{}", self.state_slot)
     }
 

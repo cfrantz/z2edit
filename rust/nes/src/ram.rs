@@ -94,16 +94,17 @@ impl Peripheral for Ram {
         if self.kind == RamKind::WRam && self.cycle % Self::SAVE_FREQUENCY == 0 {
             let rom = nes.rom.lock().expect("failed to lock rom");
             if rom.battery() {
-                let name = nes.name.lock().expect("failed to lock filename");
-                let datadir = Directories::get().data_dir.display();
-                let name = format!("{datadir}/{name}.sram");
-                if self.cycle == 0 {
-                    if let Err(e) = self.load(&name) {
-                        log::error!("Failed to load SRAM file {name}: {e}");
-                    }
-                } else {
-                    if let Err(e) = self.save(&name) {
-                        log::error!("Failed to save SRAM file {name}: {e}");
+                if let Some(name) = nes.name.lock().expect("failed to lock filename").as_deref() {
+                    let datadir = Directories::get().data_dir.display();
+                    let name = format!("{datadir}/{name}.sram");
+                    if self.cycle == 0 {
+                        if let Err(e) = self.load(&name) {
+                            log::error!("Failed to load SRAM file {name}: {e}");
+                        }
+                    } else {
+                        if let Err(e) = self.save(&name) {
+                            log::error!("Failed to save SRAM file {name}: {e}");
+                        }
                     }
                 }
             }

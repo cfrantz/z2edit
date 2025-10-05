@@ -46,7 +46,7 @@ pub struct Nes {
     pub stall: Stall,
     pub audio: Arc<Mutex<IndexMap<String, Vec<f32>>>>,
     pub volume: AtomicI32,
-    pub name: Arc<Mutex<String>>,
+    pub name: Arc<Mutex<Option<String>>>,
     pub pause: AtomicBool,
     pub frame_step: AtomicBool,
     pub frame_lock: AtomicBool,
@@ -281,7 +281,7 @@ impl Nes {
             frame_lock: AtomicBool::new(true),
             frame: AtomicI64::default(),
             remainder: AtomicI64::default(),
-            name: Arc::new(Mutex::new(String::default())),
+            name: Arc::new(Mutex::new(None)),
             peripherals: Vec::default(),
             read_cb: Arc::default(),
             write_cb: Arc::default(),
@@ -319,13 +319,13 @@ impl Nes {
     }
 
     #[setter]
-    pub fn set_name(&self, name: &str) {
+    pub fn set_name(&self, name: Option<&str>) {
         let mut n = self.name.lock().unwrap();
-        *n = name.to_string();
+        *n = name.map(str::to_string);
     }
 
     #[getter]
-    pub fn get_name(&self) -> String {
+    pub fn get_name(&self) -> Option<String> {
         let n = self.name.lock().unwrap();
         n.clone()
     }

@@ -53,6 +53,7 @@ class Fm2Movie(plugin.Plugin):
                     logger.info("TAS: %s", line)
         logger.info("Parsed %d frame records", len(self.frames))
         self.emulator.nes.reset()
+        self.emulator.nes.name = None
 
     def parse(self, line):
         if m := self.CONTROLLER.match(line):

@@ -30,6 +30,12 @@ emulator_parser.add_argument(
     help="Plugin to load",
 )
 emulator_parser.add_argument(
+    "--name",
+    type=str,
+    default="z2edit-zelda2-test",
+    help="Name of the ROM",
+)
+emulator_parser.add_argument(
     "rom",
     metavar="ROM",
     type=str,
@@ -197,7 +203,7 @@ class Application(object):
                     self.emulator_io_initialized = True
                 if isinstance(rom, str):
                     rom = nes.NesFile.load(rom)
-                emu = Emulator(rom)
+                emu = Emulator(rom, self.emulator_args.name)
                 for p in self.emulator_args.plugin:
                     emu.load_plugin(p)
                 self.windows.append(emu)
