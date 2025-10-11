@@ -179,7 +179,7 @@
                     },
                     { name: "Magic",  address: {Prg: [0, 0x9679]}, graphics: {Prg: [0, 0x9e3a]}, offset: -24},
                     { name: "Life",   address: {Prg: [0, 0x9681]}, graphics: {Prg: [0, 0x9e42]}, offset: -24},
-                    { name: "Sword",  address: {Prg: [-1, 0xee6d]},
+                    { name: "Sword",  address: {Prg: [-1, 0xe66d]},
                       header: [
                           "Sword Power",
                           "Level 1 ", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Level 7", "Level 8"
