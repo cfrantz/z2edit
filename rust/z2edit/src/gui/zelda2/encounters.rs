@@ -35,16 +35,20 @@ impl EncountersEditor {
 
     fn edit_one(e: &mut Encounter, ui: &imgui::Ui) -> bool {
         let mut changed = false;
-        let _width = ui.push_item_width(100.0);
-        ui.text("Area:");
-        ui.same_line();
-        changed |= ui.input_scalar("##Area", &mut e.area).step(1).build();
-        ui.same_line();
-        ui.text("  Screen:");
-        ui.same_line();
-        if ui.input_scalar("##Screen", &mut e.screen).step(1).build() {
-            e.screen = e.screen.clamp(0, 3);
-            changed = true;
+        if let Some(_table) = ui.begin_table("areascreen", 2) {
+            ui.table_next_row();
+            ui.table_next_column();
+            let width = ui.push_item_width(-1.0);
+            changed |= ui.input_scalar("##Area", &mut e.area).step(1).build();
+            width.end();
+
+            ui.table_next_column();
+            let width = ui.push_item_width(-1.0);
+            if ui.input_scalar("##Screen", &mut e.screen).step(1).build() {
+                e.screen = e.screen.clamp(0, 3);
+                changed = true;
+            }
+            width.end();
         }
         changed
     }
@@ -69,8 +73,8 @@ impl EncountersEditor {
             &format!("##encounters"),
             [
                 TableColumnSetup::new("Terrain"),
-                TableColumnSetup::new("North"),
-                TableColumnSetup::new("South"),
+                TableColumnSetup::new("North (Area/Screen)"),
+                TableColumnSetup::new("South (Area/Screen)"),
             ],
             TableFlags::BORDERS,
         ) {
