@@ -29,7 +29,7 @@ class EmulatorApp(object):
         self.args = args
         self.dirs = dirs
         self.preferences_gui = None
-        self.emulator = Emulator(None, True)
+        self.emulator = Emulator(None, on_root=True)
         self._frame_lock = getattr(args, "frame_lock", True)
         self.need_interactive_thread = args.interactive
         if args.rom:

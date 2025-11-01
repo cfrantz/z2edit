@@ -8,6 +8,7 @@ from z2edit.emulator import plugin
 from . import hitbox
 from . import cheats
 from . import execution
+from . import gamestate
 
 
 class Zelda2(plugin.Plugin):
@@ -19,6 +20,7 @@ class Zelda2(plugin.Plugin):
         self.hitbox_visible = False
         self.hitbox = [hitbox.LinkHitbox(emulator)]
         self.hitbox.extend(hitbox.EnemyHitbox(emulator, i) for i in range(13))
+        self.gamestate = gamestate.GameState(emulator)
 
     def menu_bar(self):
         """Hook into the menubar and some menus."""
@@ -65,6 +67,8 @@ class Zelda2(plugin.Plugin):
                 self.hitbox_visible = not self.hitbox_visible
             if gui.menu_item("Execution Profile", "", selected=self.execution.visible):
                 self.execution.visible = not self.execution.visible
+            if gui.menu_item("Game State", "", selected=self.gamestate.visible):
+                self.gamestate.visible = not self.gamestate.visible
             gui.end_menu()
 
     def z2goto(self, a, b, c, d, e, f, g):
@@ -87,6 +91,7 @@ class Zelda2(plugin.Plugin):
     def draw(self):
         self.cheats.draw()
         self.execution.draw()
+        self.gamestate.draw()
 
     def draw_image(self, origin):
         if self.hitbox_visible:
