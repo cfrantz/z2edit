@@ -37,6 +37,7 @@
                     address: {Prg: [5, 0x8500]},
                     length: [17, 17, 9, 7],
                     palette: "/bank/5/palette/background",
+                    chr: {Chr: [11, 0]},
                 },
             },
             enemy: {

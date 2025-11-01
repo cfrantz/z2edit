@@ -29,6 +29,7 @@
                     address: {Prg: [4, 0x8500]},
                     length: [15, 15, 6, 18]
                     palette: "/bank/4/palette/background",
+                    chr: {Chr: [9, 0]},
                 },
             },
             palette: {

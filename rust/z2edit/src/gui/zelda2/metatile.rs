@@ -42,7 +42,7 @@ impl MetatileGroupEditor {
             group: 0,
             palette: String::default(),
             scale: 4.0,
-            bank: Address::Chr(3, 0),
+            bank: Address::Chr(-1, 0),
             selected: 0,
         }))
     }
@@ -67,6 +67,13 @@ impl MetatileGroupEditor {
         if self.palette.is_empty() {
             let (k, _) = pcfg.group.get_index(0).expect("PaletteGroup empty");
             self.palette.clone_from(k);
+        }
+        if self.bank.bank() == Some(-1) {
+            if cfg.chr.is_chr() {
+                self.bank = cfg.chr;
+            } else {
+                self.bank = Address::Chr(3, 0);
+            }
         }
 
         if let Some(_table) = ui.begin_table_with_flags("metatile", 2, TableFlags::BORDERS) {

@@ -65,6 +65,8 @@ pub mod config {
         pub tile_palette: Option<Address>,
         /// Idpath of palettes used to color these metatiles.
         pub palette: String,
+        /// Default CHR bank of this group.
+        pub chr: Address,
     }
 }
 

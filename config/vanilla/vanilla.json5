@@ -96,6 +96,7 @@
                 length: [16],
                 tile_palette: {Prg: [0, 0x87e3]},
                 palette: "/global/palette/overworld",
+                chr: {Chr: [17, 0]},
             },
         },
         item: {

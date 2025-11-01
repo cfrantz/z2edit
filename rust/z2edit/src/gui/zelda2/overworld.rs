@@ -40,6 +40,7 @@ pub struct OverworldEditor {
     compressed_size: usize,
     shaded: Image,
     overworld: Overworld,
+    max_tiles: u8,
     spawn: Option<Box<dyn Gui>>,
 }
 
@@ -81,6 +82,7 @@ impl OverworldEditor {
             compressed_size: 0,
             shaded: Image::with_color(16, 16, Color::new(0x80808080)),
             overworld: ov.clone(),
+            max_tiles: 16,
             spawn: None,
         }))
     }
@@ -196,6 +198,7 @@ impl OverworldEditor {
                 self.tile_selected = i;
             }
         }
+        self.max_tiles = group.tile.len() as u8;
         Ok(())
     }
 
@@ -374,18 +377,19 @@ impl OverworldEditor {
         bounds[1] += ui.scroll_y();
         let scale = 16.0 * self.scale;
         for (y, row) in self.overworld.map.data.iter().enumerate() {
-            for (x, &col) in row.iter().enumerate() {
+            for (x, &tile) in row.iter().enumerate() {
+                let tile = tile % self.max_tiles;
                 let image = GfxCache::get(
                     project,
                     &cfg.palette, // idpath of a palette group.
                     "background", // key of a full palette within a group.
-                    GfxKind::Metatile(cfg.chr, cfg.metatile.clone(), col),
+                    GfxKind::Metatile(cfg.chr, cfg.metatile.clone(), tile),
                 )?;
 
                 let xo = origin[0] + x as f32 * scale;
                 let yo = origin[1] + y as f32 * scale;
                 image.draw_at([xo, yo], self.scale, ui);
-                if col == 13 {
+                if tile == 13 {
                     // FIXME: Hardcoded the walkable water tile.  Probably should be an item in
                     // config.
                     self.shaded.draw_at([xo, yo], self.scale, ui);

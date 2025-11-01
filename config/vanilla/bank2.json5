@@ -33,6 +33,7 @@
                     address: {Prg: [2, 0x8500]},
                     length: [34, 34, 18, 11],
                     palette: "/bank/2/palette/background",
+                    chr: {Chr: [3, 0]},
                 },
             },
             encounters: {
