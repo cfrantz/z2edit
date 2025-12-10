@@ -45,7 +45,7 @@ class Cheats(object):
         self.emulator.nes.set_read_callback(0x773, self.invincible_cb)
         self.emulator.nes.set_read_callback(0x774, self.invincible_cb)
 
-    def invincible_cb(self, addr, val):
+    def invincible_cb(self, cpu, addr, val):
         """Implement invicibility by trapping CPU reads to health values."""
         # On each read of 773/774, val will hold the value read from
         # memory.  We can return a different value if we want.

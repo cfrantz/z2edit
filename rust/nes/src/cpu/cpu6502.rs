@@ -57,7 +57,7 @@ impl Cpu6502 {
         if let Some(callback) = read_cb.get(&address) {
             result = Python::with_gil(|py| {
                 match callback
-                    .call1(py, (address, result))
+                    .call1(py, (self.clone(), address, result))
                     .and_then(|val| val.extract::<u8>(py))
                 {
                     Ok(val) => val,
@@ -77,7 +77,7 @@ impl Cpu6502 {
         if let Some(callback) = write_cb.get(&address) {
             value = Python::with_gil(|py| {
                 match callback
-                    .call1(py, (address, value))
+                    .call1(py, (self.clone(), address, value))
                     .and_then(|val| val.extract::<u8>(py))
                 {
                     Ok(val) => val,
