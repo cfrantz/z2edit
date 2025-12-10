@@ -113,6 +113,18 @@ class MidiChannel(object):
             inst.note_off()
             self.keys[note] = None
 
+    def program_change(self, msg):
+        program = msg.program + 1
+        self.instrument = self.config.midi_program.get(program, 0)
+        logger.info(
+            "program_change: ch=%d prog=%d => %s", self.chnum, program, self.instrument
+        )
+
+    def midi_panic(self):
+        for inst in self.keys:
+            if inst:
+                inst.note_off()
+
     def process(self, msg):
         if handler := getattr(self, msg.type, None):
             handler(msg)
@@ -126,6 +138,8 @@ class MidiChannel(object):
                 inst[-1].update_active_values(self.midi.active_values)
                 state = EnvelopeState.RELEASE
                 for i in inst:
+                    # Compute values, forcing evaluation of the release->off transition
+                    _ = i.value
                     i.tick()
                     if i.state >= state:
                         state = i.state

@@ -1,0 +1,38 @@
+{
+    "name": "plink",
+    "kind": "nes2a03",
+    "volume": {
+        "points": {
+            "0": 15,
+            "1": 15,
+            "8": 10,
+            "9": 10,
+            "20": 0
+        },
+        "loop": 8,
+        "release": 9,
+        "missing_value": "interpolate"
+    },
+    "arpeggio": {
+        "points": {},
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "pitch": {
+        "points": {},
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "duty": {
+        "points": {
+            "0": 1,
+            "4": 2,
+            "5": 2
+        },
+        "loop": 4,
+        "release": 5,
+        "missing_value": "last"
+    }
+}

@@ -344,6 +344,7 @@ class MidiConfig(DataClassJsonMixin):
     channel: dict[int, ChannelConfig] = field(default_factory=dict)
     instrument: list[Instrument] = field(default_factory=list)
     load_instruments: list[str] = field(default_factory=list)
+    midi_program: dict[int, str] = field(default_factory=dict)
 
     def get_instrument(self, name):
         if isinstance(name, str):

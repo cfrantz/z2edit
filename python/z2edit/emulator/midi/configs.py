@@ -2,10 +2,10 @@
 # Some basic configurations
 ######################################################################
 import os
+import re
 import logging
 
 from .datatypes import *
-from z2edit import gui
 
 logger = logging.getLogger(__name__)
 
@@ -129,33 +129,19 @@ def basic_config(name, mapper):
     return cfg
 
 
-def _load_config(name):
+def load_config(name):
     cfgdir = os.path.dirname(name)
     cfg = open(name, "rt").read()
+    cfg = re.sub("//.*$", "", cfg, flags=re.M)
     cfg = MidiConfig.from_json(cfg)
     for file in cfg.load_instruments:
         path = os.path.join(cfgdir, file)
         (_, ext) = os.path.splitext(path)
         logger.info("Loading instrument %r", path)
-        data = open(path, "rb").read()
         if ext == ".fti":
+            data = open(path, "rb").read()
             cfg.instrument.append(Instrument.parse_fti(data))
         else:
+            data = open(path, "rt").read()
             cfg.instrument.append(Instrument.from_json(data))
     return cfg
-
-
-def load_config(name, mapper):
-    dirs = gui.Directories.get()
-    dirs = [
-        os.getcwd(),
-        os.path.join(dirs.install, "config/emulator/midi"),
-    ]
-    for d in dirs:
-        path = os.path.join(d, name)
-        if os.path.exists(path):
-            logger.info("Loading config %r", path)
-            return _load_config(path)
-    else:
-        logger.info("Using built-in config %r", name)
-        return basic_config(name, mapper)

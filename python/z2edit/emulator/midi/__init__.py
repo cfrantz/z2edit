@@ -4,6 +4,7 @@
 ######################################################################
 
 import logging
+import os
 import mido
 from pprint import pprint
 
@@ -13,10 +14,26 @@ from z2edit.emulator import plugin
 from .channel import MidiChannel
 from .apu import Apu
 from .datatypes import MidiConfig
-from .configs import load_config
 from .edit import InstrumentEditor
+from . import configs
 
 logger = logging.getLogger(__name__)
+
+
+def load_config(name, mapper):
+    dirs = gui.Directories.get()
+    dirs = [
+        os.getcwd(),
+        os.path.join(dirs.install, "config/emulator/midi"),
+    ]
+    for d in dirs:
+        path = os.path.join(d, name)
+        if os.path.exists(path):
+            logger.info("Loading config %r", path)
+            return configs.load_config(path)
+    else:
+        logger.info("Using built-in config %r", name)
+        return configs.basic_config(name, mapper)
 
 
 class InputSelector(object):
@@ -44,6 +61,10 @@ class InputSelector(object):
         )
         if changed:
             self.midi.open_input(self.midi.port_index)
+
+        gui.separator()
+        if gui.button("MIDI Panic"):
+            self.midi.midi_panic()
         gui.end()
 
 
@@ -110,6 +131,10 @@ class Midi(plugin.Plugin):
             logger.error(
                 "Error opening port [%d: %s]: %s", index, self.inputs[index], e
             )
+
+    def midi_panic(self):
+        for channel in self.channel.values():
+            channel.midi_panic()
 
     def run_pre_frame(self):
         if self.port is None:

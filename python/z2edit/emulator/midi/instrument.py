@@ -104,6 +104,15 @@ class Envelope(object):
         else:
             logger.error("Invalid missing_value: %d", self.missing_value)
 
+    def all_points(self):
+        self.state = EnvelopeState.ON
+        self.frame = 0
+        points = []
+        while self.state != EnvelopeState.OFF:
+            points.append(self.value)
+            self.frame += 1
+        return points
+
 
 class Instrument(object):
     def __init__(self, config=None, timer=None):

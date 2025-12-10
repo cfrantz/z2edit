@@ -19,8 +19,22 @@
             "voice": [
                 "apu_triangle"
             ],
-            "note_offset": 12,
+            "note_offset": 24,
             "instrument": "triangle"
+        },
+        "4": {
+            "voice": [
+                "mmc5_pulse0"
+            ],
+            "note_offset": 0,
+            "instrument": "pulse"
+        },
+        "5": {
+            "voice": [
+                "mmc5_pulse1"
+            ],
+            "note_offset": 0,
+            "instrument": "pulse"
         },
         "10": {
             "voice": [
@@ -85,8 +99,17 @@
     "load_instruments": [
         "instruments/pulse.json",
         "instruments/triangle.json",
+        "instruments/plink.json",
+        "instruments/violin.json",
         "instruments/snare.json",
         "instruments/hihat.json",
         "instruments/drumkit.json"
-    ]
+    ],
+    "midi_program": {
+        "1": "pulse",         // Piano
+        "27": "plink",        // Acoustic guitar
+        "38": "triangle",     // Slap bass 2
+        "45": "violin",       // Tremolo strings
+        "128": "triangle"
+    }
 }
