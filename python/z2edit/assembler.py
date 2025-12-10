@@ -429,11 +429,12 @@ class Asm:
     ]
     # fmt: on
 
-    def __init__(self, rom, org=0, bank=-1):
+    def __init__(self, rom, org=0, bank=-1, address_adaptor=nes_address_adaptor):
         self.rom = rom
         self.org = org
         self.last_org = self.org
         self.bank = bank
+        self.address_adaptor = address_adaptor
         self.reset()
 
     def reset(self, symtab=None):
@@ -501,15 +502,15 @@ class Asm:
         return None
 
     def read(self, address):
-        address = nes_address_adaptor(self.bank, address)
+        address = self.address_adaptor(self.bank, address)
         return self.rom.read(address)
 
     def write(self, address, value):
-        address = nes_address_adaptor(self.bank, address)
+        address = self.address_adaptor(self.bank, address)
         self.rom.write(address, value & 0xFF)
 
     def write16(self, address, value):
-        address = nes_address_adaptor(self.bank, address)
+        address = self.address_adaptor(self.bank, address)
         self.rom.write_word(address, value & 0xFFFF)
 
     def parse_int(self, val):
