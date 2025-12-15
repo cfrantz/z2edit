@@ -36,6 +36,7 @@ fn _nes(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Address>()?;
     m.add_class::<AddressRange>()?;
     m.add_class::<cpu::Cpu6502>()?;
+    m.add_class::<cpu::HaltState>()?;
     m.add_class::<freespace::Alloc>()?;
     m.add_class::<gui::emulator::EmulatorGui>()?;
     Ok(())

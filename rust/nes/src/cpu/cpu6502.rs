@@ -5,6 +5,14 @@ use super::cpu6502_info::{AddressingMode, INFO, NAMES};
 use crate::Address;
 use crate::Nes;
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[pyclass(eq, eq_int)]
+pub enum HaltState {
+    Running = 0,
+    Halted = 1,
+    Continue = 2,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[pyclass]
 #[pyo3(get_all, set_all)]
@@ -18,8 +26,9 @@ pub struct Cpu6502 {
     pub reset_pending: bool,
     pub nmi_pending: bool,
     pub irq_pending: bool,
-    pub halted: bool,
+    pub halted: HaltState,
     pub cycles: u64,
+    pub single_step: u32,
 }
 
 impl Default for Cpu6502 {
@@ -34,8 +43,9 @@ impl Default for Cpu6502 {
             reset_pending: true,
             nmi_pending: false,
             irq_pending: false,
-            halted: false,
+            halted: HaltState::Running,
             cycles: 0,
+            single_step: 0,
         }
     }
 }
@@ -274,7 +284,7 @@ impl Cpu6502 {
     }
     pub fn reset(&mut self) {
         self.reset_pending = true;
-        self.halted = false;
+        self.halted = HaltState::Running;
     }
 
     pub fn trace(&mut self, nes: &Nes) -> String {
@@ -284,7 +294,7 @@ impl Cpu6502 {
     }
 
     pub fn execute(&mut self, nes: &Nes) -> u64 {
-        if self.halted {
+        if self.halted == HaltState::Halted {
             return 0;
         }
         let c = self.cycles;
@@ -673,8 +683,9 @@ impl Cpu6502 {
 
             _ => {
                 // Illegal opcode.
-                self.halted = true;
-                log::error!("Illegal opcode at ${:4x} = {:2x}", iaddr, opcode);
+                self.halted = HaltState::Halted;
+                let pc = nes.mapper.lock().unwrap().cpu_to_address(iaddr);
+                log::error!("Illegal opcode at ${:x?} = {:2x}", pc, opcode);
             }
         };
 

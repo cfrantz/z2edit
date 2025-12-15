@@ -10,6 +10,10 @@ from z2edit import gui
 from z2edit import nes
 from z2edit.emulator.emu import Emulator
 
+# Helpful to have these imported for interactive use cases
+from z2edit import Address
+from z2edit.assembler import Asm
+
 LOG_LEVELS = {
     "TRACE": 5,
 }
@@ -192,6 +196,13 @@ class Application(object):
             if self.emulator_args.rom:
                 logger.error("Overriding %s with %s", self.emulator_args.rom, rom)
             self.emulator_args.rom = rom
+
+    @property
+    def emulator(self):
+        for w in self.windows:
+            if isinstance(w, Emulator):
+                return w
+        return None
 
     def _emulator(self):
         if rom := self.emulator_args.rom:

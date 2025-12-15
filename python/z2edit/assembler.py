@@ -19,16 +19,25 @@
 ######################################################################
 import re
 import logging
+import enum
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
 try:
     from . import _z2edit
-    from _z2edit.nes import Address
+    from _z2edit.nes import Address, Nes, HaltState
 
     _address_adaptor = Address.Prg
 except ImportError:
     _address_adaptor = lambda bank, addr: (bank, addr)
+    Address = None
+    Nes = None
+
+    class HaltState(enum.enumInt):
+        Running = 0
+        Halted = 1
+        Continue = 2
 
 
 class OpcodeError(Exception):
@@ -430,7 +439,15 @@ class Asm:
     # fmt: on
 
     def __init__(self, rom, org=0, bank=-1, address_adaptor=nes_address_adaptor):
-        self.rom = rom
+        if isinstance(rom, Nes):
+            self.nes = rom
+            self.rom = self.nes.rom
+            self.nes.set_step_callback(self._breakpoint)
+        else:
+            self.nes = None
+            self.rom = rom
+        self.breakpoints = defaultdict(int)
+        self._until = None
         self.org = org
         self.last_org = self.org
         self.bank = bank
@@ -447,6 +464,66 @@ class Asm:
         clean = [k for k in symtab.keys() if k.startswith(start_id)]
         for k in clean:
             del symtab[k]
+
+    @staticmethod
+    def _as_addr(addr, bank=None):
+        if isinstance(addr, int) and isinstance(bank, int):
+            addr = Address.Prg(bank, addr)
+        if not isinstance(addr, Address):
+            raise Exception(f"Invalid address type: {type(addr)}")
+        return addr
+
+    def breakpoint(self, addr, bank=None, quiet=False):
+        addr = self._as_addr(addr, bank)
+        self.breakpoints[addr] += 1
+        self.nes.set_exec_callback(addr, self._breakpoint)
+        if self.breakpoints[addr] == 1 and not quiet:
+            print(f"Breakpoint set at {addr!r}")
+
+    def clear(self, addr, bank=None):
+        addr = self._as_addr(addr, bank)
+        if n := self.breakpoints[addr]:
+            self.breakpoints[addr] -= 1
+            if n == 1:
+                self.nes.set_exec_callback(addr, None)
+                del self.breakpoints[addr]
+
+    def _breakpoint(self, cpu):
+        addr = self.nes.cpu_to_address(cpu.pc)
+        if addr == self._until:
+            self.clear(addr)
+        else:
+            print(f"Hit breakpoint at {addr!r}")
+        print(
+            f"A={cpu.a:02x} X={cpu.x:02x} Y={cpu.y:02x} SP=1{cpu.sp:02x} PC={cpu.pc:04x} flags={cpu.p:02x}"
+        )
+        sz, text = self.disassemble_one(addr)
+        print(text)
+        cpu.halted = HaltState.Halted
+        return cpu
+
+    def step(self, instr=1, until=None):
+        cpu = self.nes.cpu
+        if cpu.halted != HaltState.Halted:
+            print("Not halted!")
+        if isinstance(until, int):
+            until = self._as_addr(until, self._nexti.bank())
+        if until:
+            self.breakpoint(until, quiet=True)
+            instr = 0
+        else:
+            cpu.single_step = instr
+        cpu.halted = HaltState.Continue
+        self.nes.cpu = cpu
+
+    def cont(self):
+        cpu = self.nes.cpu
+        if cpu.halted == HaltState.Halted:
+            print("Continuing")
+            cpu.halted = HaltState.Continue
+            self.nes.cpu = cpu
+        else:
+            print("Not halted!")
 
     def asm(self, src, *, org=None, bank=None, symtab=None):
         self.reset(symtab)
@@ -467,24 +544,28 @@ class Asm:
 
     def disassemble_one(self, pc):
         opcode = self.read(pc)
+        if isinstance(pc, Address):
+            offset = pc.offset()
+        else:
+            offset = pc
         name = self.names[opcode]
         if "02x" in name:
             size = 2
             arg1 = self.read(pc + 1)
-            r1 = "%04x: %02x%02x" % (pc, opcode, arg1)
+            r1 = "%04x: %02x%02x" % (offset, opcode, arg1)
             r2 = name % (arg1)
             if (opcode & 0x1F) == 0x10:
-                dest = pc + 2 + -128 + (0x80 ^ arg1)
+                dest = offset + 2 + -128 + (0x80 ^ arg1)
                 r2 += "   ;[dest=%04x]" % dest
         elif "04x" in name:
             size = 3
             arg1 = self.read(pc + 1)
             arg2 = self.read(pc + 2)
-            r1 = "%04x: %02x%02x%02x" % (pc, opcode, arg1, arg2)
+            r1 = "%04x: %02x%02x%02x" % (offset, opcode, arg1, arg2)
             r2 = name % (arg1 | (arg2 << 8))
         else:
             size = 1
-            r1 = "%04x: %02x" % (pc, opcode)
+            r1 = "%04x: %02x" % (offset, opcode)
             r2 = name
         return (size, "%-20s%s" % (r1, r2))
 
@@ -502,7 +583,8 @@ class Asm:
         return None
 
     def read(self, address):
-        address = self.address_adaptor(self.bank, address)
+        if not isinstance(address, Address):
+            address = self.address_adaptor(self.bank, address)
         return self.rom.read(address)
 
     def write(self, address, value):

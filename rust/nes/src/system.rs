@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::apu::Apu;
 use crate::controller::Controllers;
-use crate::cpu::Cpu6502;
+use crate::cpu::{Cpu6502, HaltState};
 use crate::mapper;
 use crate::peripheral::{Mapper, Peripheral};
 use crate::ppu::Ppu;
@@ -56,7 +56,8 @@ pub struct Nes {
 
     pub(crate) read_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
     pub(crate) write_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
-    pub(crate) exec_cb: Arc<Mutex<IndexMap<Address, PyObject>>>,
+    pub(crate) exec_cb: Arc<Mutex<IndexMap<Address, Py<PyAny>>>>,
+    pub(crate) step_cb: Arc<Mutex<Option<Py<PyAny>>>>,
 
     pub trace: AtomicBool,
     pub tracebuf: Arc<Mutex<IndexMap<Address, u64>>>,
@@ -286,6 +287,7 @@ impl Nes {
             read_cb: Arc::default(),
             write_cb: Arc::default(),
             exec_cb: Arc::default(),
+            step_cb: Arc::default(),
             trace: AtomicBool::default(),
             tracebuf: Arc::default(),
         };
@@ -457,29 +459,68 @@ impl Nes {
                 let n = self.stall.clear(cpu.cycles % 2 == 1);
                 cpu.cycles += n;
                 n
+            } else if cpu.halted == HaltState::Halted {
+                0
             } else {
                 //let (op, _) = Cpu6502::disassemble(self, cpu.pc);
                 //log::info!("          {}", cpu.cpustate());
                 //log::info!("{:<10}{op:<30}", cpu.cycles);
 
                 let pc = self.mapper.lock().unwrap().cpu_to_address(cpu.pc);
-                let exec_cb = self.exec_cb.lock().expect("failed to lock exec_cb");
-                if let Some(callback) = exec_cb.get(&pc) {
+                if cpu.halted == HaltState::Running {
+                    // We only process exec callbacks when the CPU is not halted.
                     Python::with_gil(|py| {
-                        match callback
-                            .call1(py, (cpu.clone(),))
-                            .and_then(|val| val.extract::<Cpu6502>(py))
-                        {
-                            Ok(val) => *cpu = val,
-                            Err(e) => {
-                                log::error!("Exec callback for {pc:x?} failed: {e}");
+                        let exec_cb = self
+                            .exec_cb
+                            .lock()
+                            .expect("failed to lock exec_cb")
+                            .get(&pc)
+                            .map(|cb| cb.clone_ref(py));
+                        if let Some(callback) = exec_cb {
+                            match callback
+                                .call1(py, (cpu.clone(),))
+                                .and_then(|val| val.extract::<Cpu6502>(py))
+                            {
+                                Ok(val) => *cpu = val,
+                                Err(e) => {
+                                    log::error!("Exec callback for {pc:x?} failed: {e}");
+                                }
                             }
                         }
                     });
                 }
+                if cpu.halted == HaltState::Continue {
+                    cpu.halted = HaltState::Running;
+                }
                 let n = cpu.execute(self);
                 if self.trace.load(Ordering::Relaxed) {
                     self.trace_cycles(pc, n);
+                }
+                if cpu.single_step > 0 {
+                    cpu.single_step -= 1;
+                    if cpu.single_step == 0 {
+                        // When the single-step counter reaches zero, we call the step callback.
+                        Python::with_gil(|py| {
+                            let step_cb = self
+                                .step_cb
+                                .lock()
+                                .expect("failed to lock step_cb")
+                                .as_ref()
+                                .map(|cb| cb.clone_ref(py));
+                            if let Some(callback) = step_cb {
+                                let pc = self.mapper.lock().unwrap().cpu_to_address(cpu.pc);
+                                match callback
+                                    .call1(py, (cpu.clone(),))
+                                    .and_then(|val| val.extract::<Cpu6502>(py))
+                                {
+                                    Ok(val) => *cpu = val,
+                                    Err(e) => {
+                                        log::error!("Step callback for {pc:x?} failed: {e}");
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }
                 n
             }
@@ -658,6 +699,35 @@ impl Nes {
             exec_cb.insert(addr, callback);
         }
         Ok(())
+    }
+
+    pub fn set_step_callback<'p>(&self, py: Python<'p>, callback: PyObject) -> PyResult<()> {
+        //let addr = Self::extract_address(py, addr)?;
+        let mut step_cb = self.step_cb.lock().expect("failed to lock step_cb");
+        if callback.is_none(py) {
+            let _ = step_cb.take();
+        } else {
+            step_cb.replace(callback);
+        }
+        Ok(())
+    }
+
+    /// Return a copy of the ROM.
+    #[getter]
+    pub fn get_rom(&self) -> NesFile {
+        self.rom.lock().unwrap().clone()
+    }
+
+    /// Return a copy of the CPU state.
+    #[getter]
+    pub fn get_cpu(&self) -> Cpu6502 {
+        self.cpu.lock().unwrap().clone()
+    }
+
+    /// Update the current CPU state.
+    #[setter]
+    pub fn set_cpu(&self, cpu: Cpu6502) {
+        *self.cpu.lock().unwrap() = cpu
     }
 
     /// Return the number of 16K PRG banks in the NES ROM.
