@@ -192,6 +192,10 @@ impl config::Overworld {
             rom.write_pointer(self.pointer, addr)?;
 
             for (i, &offset) in map.palace_offset.iter().enumerate() {
+                if i >= self.palace.length {
+                    log::warn!("Skipping palace offset {i} in {path}");
+                    continue;
+                }
                 if offset != 0 {
                     rom.write_word(
                         self.palace.stone_table + i * 2,
@@ -450,6 +454,16 @@ impl Overworld {
         None
     }
 
+    fn skip_compress(&self, x: usize, y: usize, cfg: &config::Overworld) -> bool {
+        if let Some((index, conn)) = self.connector_at(x, y) {
+            log::info!("skip_compress at {x},{y} because of {index}");
+            if conn.hidden == Some(true) || cfg.palace_code(index).is_some() {
+                return true;
+            }
+        }
+        false
+    }
+
     fn decompress(&mut self, cfg: &config::Overworld, rom: &NesFile) -> Result<usize> {
         match cfg.consts.schema {
             config::Schema::Vanilla => self.decompress_standard(cfg, rom),
@@ -516,8 +530,11 @@ impl Overworld {
                     }
                 }
                 let mut count = 0u8;
-                while want_compress && count < 15 && x + 1 < self.map.width && tile == row[x + 1]
-                // TODO: && !overworld.skip_compress(x + 1, y)
+                while want_compress
+                    && count < 15
+                    && x + 1 < self.map.width
+                    && tile == row[x + 1]
+                    && !self.skip_compress(x + 1, y, cfg)
                 {
                     x += 1;
                     count += 1;
@@ -594,7 +611,12 @@ impl Overworld {
                     // pre-increment the count for expansion tiles.
                     count += 1;
                 }
-                while want_compress && count < 15 && x + 1 < self.map.width && tile == row[x + 1] {
+                while want_compress
+                    && count < 15
+                    && x + 1 < self.map.width
+                    && tile == row[x + 1]
+                    && !self.skip_compress(x + 1, y, cfg)
+                {
                     x += 1;
                     count += 1;
                 }

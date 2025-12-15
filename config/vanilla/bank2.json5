@@ -153,7 +153,7 @@
                         stone_table: {Prg: [2, 0x8795]},
                         chr_table: {Prg: [-1, 0xcd2e]},
                         palette_table: {Prg: [-1, 0xcd39]},
-                        length: 4,
+                        length: 1,
                     },
                 },
             }
