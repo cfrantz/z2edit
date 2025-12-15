@@ -306,7 +306,7 @@ impl MMC5 {
             let tile = self.vsplit_mode as isize & 0x1f;
             // Re-compute the PPU position from scanline/cycle data.
             let mut scanline = self.ppu_scanline;
-            let mut pputile = self.ppu_cycle + 15;
+            let mut pputile = self.ppu_cycle + 16;
             if pputile >= 336 {
                 // PPU fetches the next line's first two tiles during HBlank.
                 pputile -= 336;
