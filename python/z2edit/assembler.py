@@ -495,10 +495,12 @@ class Asm:
         else:
             print(f"Hit breakpoint at {addr!r}")
         print(
-            f"A={cpu.a:02x} X={cpu.x:02x} Y={cpu.y:02x} SP=1{cpu.sp:02x} PC={cpu.pc:04x} flags={cpu.p:02x}"
+            f"A={cpu.a:02x} X={cpu.x:02x} Y={cpu.y:02x} SP=1{cpu.sp:02x} PC={repr(addr)} flags={cpu.p:02x}"
         )
         sz, text = self.disassemble_one(addr)
         print(text)
+        self.org = addr.offset()
+        self.bank = addr.bank()
         cpu.halted = HaltState.Halted
         return cpu
 
@@ -507,7 +509,7 @@ class Asm:
         if cpu.halted != HaltState.Halted:
             print("Not halted!")
         if isinstance(until, int):
-            until = self._as_addr(until, self._nexti.bank())
+            until = self._as_addr(until, self.bank)
         if until:
             self.breakpoint(until, quiet=True)
             instr = 0
