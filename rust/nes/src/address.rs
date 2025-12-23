@@ -161,6 +161,22 @@ impl Address {
         }
     }
 
+    /// Naively translate Prg8K to Prg, on the assumption that Prg8k banks are
+    /// mapped consecutively.
+    pub fn as_naive_prg(&self) -> Result<Address> {
+        match self {
+            Address::Prg(b, x) => Ok(Address::Prg(*b, *x)),
+            Address::Prg8k(b, x) => {
+                if b & 1 != 0 {
+                    Ok(Address::Prg(b / 2, x | 0x2000))
+                } else {
+                    Ok(Address::Prg(b / 2, x & !0x2000))
+                }
+            }
+            _ => Err(NesError::InvalidAddress.into()),
+        }
+    }
+
     pub fn is_null(&self) -> bool {
         match self {
             Address::NullPtr() => true,

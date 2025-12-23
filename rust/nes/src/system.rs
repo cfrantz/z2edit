@@ -52,6 +52,7 @@ pub struct Nes {
     pub frame_lock: AtomicBool,
     pub frame: AtomicI64,
     pub remainder: AtomicI64,
+    pub naive_prg8k: AtomicBool,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral>>)>,
 
     pub(crate) read_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
@@ -282,6 +283,7 @@ impl Nes {
             frame_lock: AtomicBool::new(true),
             frame: AtomicI64::default(),
             remainder: AtomicI64::default(),
+            naive_prg8k: AtomicBool::default(),
             name: Arc::new(Mutex::new(None)),
             peripherals: Vec::default(),
             read_cb: Arc::default(),
@@ -387,6 +389,16 @@ impl Nes {
         self.tracebuf.lock().unwrap().clone()
     }
 
+    #[setter]
+    pub fn set_naive_prg8k(&self, val: bool) {
+        self.naive_prg8k.store(val, Ordering::Relaxed);
+    }
+
+    #[getter]
+    pub fn get_naive_prg8k(&self) -> bool {
+        self.naive_prg8k.load(Ordering::Relaxed)
+    }
+
     pub fn save_state(&self) -> NesState {
         NesState {
             cpu: self.cpu.lock().unwrap().clone(),
@@ -466,7 +478,7 @@ impl Nes {
                 //log::info!("          {}", cpu.cpustate());
                 //log::info!("{:<10}{op:<30}", cpu.cycles);
 
-                let pc = self.mapper.lock().unwrap().cpu_to_address(cpu.pc);
+                let pc = self.cpu_to_address(cpu.pc).expect("cpu.pc to address");
                 if cpu.halted == HaltState::Running {
                     // We only process exec callbacks when the CPU is not halted.
                     Python::with_gil(|py| {
@@ -508,7 +520,7 @@ impl Nes {
                                 .as_ref()
                                 .map(|cb| cb.clone_ref(py));
                             if let Some(callback) = step_cb {
-                                let pc = self.mapper.lock().unwrap().cpu_to_address(cpu.pc);
+                                let pc = self.cpu_to_address(cpu.pc).expect("cpu.pc to address");
                                 match callback
                                     .call1(py, (cpu.clone(),))
                                     .and_then(|val| val.extract::<Cpu6502>(py))
@@ -769,7 +781,12 @@ impl Nes {
     }
 
     /// Get the PRG address of a raw CPU address.
-    fn cpu_to_address(&self, cpu: u16) -> Address {
-        self.mapper.lock().unwrap().cpu_to_address(cpu)
+    fn cpu_to_address(&self, cpu: u16) -> Result<Address> {
+        let addr = self.mapper.lock().unwrap().cpu_to_address(cpu);
+        if self.naive_prg8k.load(Ordering::Relaxed) {
+            addr.as_naive_prg()
+        } else {
+            Ok(addr)
+        }
     }
 }
