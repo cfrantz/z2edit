@@ -1249,7 +1249,7 @@ impl PackedEnemies {
             position = 0;
         }
         self.offsets.push(position);
-        log::info!(
+        log::debug!(
             "Packing enemylist {bank}:{area} at offset {position}; len={}",
             self.data.len()
         );
