@@ -693,3 +693,51 @@ impl Cpu6502 {
         self.cycles - c
     }
 }
+
+#[pymethods]
+impl Cpu6502 {
+    pub fn flags(&self) -> String {
+        let mut bits = [0u8; 8];
+        bits[7] = if (self.p & Self::FLAG_C) != 0 {
+            b'C'
+        } else {
+            b'c'
+        };
+        bits[6] = if (self.p & Self::FLAG_Z) != 0 {
+            b'Z'
+        } else {
+            b'z'
+        };
+        bits[5] = if (self.p & Self::FLAG_I) != 0 {
+            b'I'
+        } else {
+            b'i'
+        };
+        bits[4] = if (self.p & Self::FLAG_D) != 0 {
+            b'D'
+        } else {
+            b'd'
+        };
+        bits[3] = if (self.p & Self::FLAG_B) != 0 {
+            b'B'
+        } else {
+            b'b'
+        };
+        bits[2] = if (self.p & Self::FLAG_U) != 0 {
+            b'U'
+        } else {
+            b'u'
+        };
+        bits[1] = if (self.p & Self::FLAG_V) != 0 {
+            b'V'
+        } else {
+            b'v'
+        };
+        bits[0] = if (self.p & Self::FLAG_N) != 0 {
+            b'N'
+        } else {
+            b'n'
+        };
+        unsafe { std::str::from_utf8_unchecked(&bits).to_string() }
+    }
+}

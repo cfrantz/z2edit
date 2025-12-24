@@ -495,7 +495,7 @@ class Asm:
         else:
             print(f"Hit breakpoint at {addr!r}")
         print(
-            f"A={cpu.a:02x} X={cpu.x:02x} Y={cpu.y:02x} SP=1{cpu.sp:02x} PC={repr(addr)} flags={cpu.p:02x}"
+            f"PC={addr!r} A={cpu.a:02x} X={cpu.x:02x} Y={cpu.y:02x} SP=1{cpu.sp:02x} flags={cpu.flags()} ({cpu.p:02x})"
         )
         sz, text = self.disassemble_one(addr)
         print(text)
