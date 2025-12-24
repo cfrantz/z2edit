@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 bitflags = "1"
-pyo3 = { version="0.23.3", features=["anyhow", "indexmap", "serde"]}
+pyo3.workspace = true
 imgui-sys = {workspace = true, features=["docking"]}
 imgui = { workspace = true, features = ["docking", "tables-api"] }
 imgui-sdl2-support = { version = "0.13.0", git="https://github.com/imgui-rs/imgui-sdl2-support", rev="0a918d3d0c70b873503afa03c8977d725a7145f4" }

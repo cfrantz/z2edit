@@ -13,6 +13,7 @@ members = [
 [workspace.dependencies]
 imgui = {version="0.12.0", path="rust/imgui-rs/imgui"}
 imgui-sys = {version="0.12.0", path="rust/imgui-rs/imgui-sys"}
+pyo3 = { version="0.23.3", features=["anyhow", "indexmap", "serde"]}
 
 [patch.crates-io]
 imgui = { path = "rust/imgui-rs/imgui" }
