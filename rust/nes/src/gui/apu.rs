@@ -41,10 +41,24 @@ impl ApuDebug {
         ApuDebug { visible: false }
     }
 
+    fn find_rising_edge(buf: &[f32], idx: usize) -> usize {
+        let len = buf.len();
+        let mid = (idx + len / 2) % len;
+        let mut ofs = 1;
+        while (mid + ofs) % len != mid && buf[(mid + ofs) % len] < (1.0 / 15.0) {
+            ofs += 1;
+        }
+        while (mid + ofs) % len != mid && buf[(mid + ofs) % len] >= (1.0 / 15.0) {
+            ofs += 1;
+        }
+        ofs % len
+    }
+
     fn draw_pulse(ui: &imgui::Ui, pulse: &mut ApuPulse, name: &str) {
+        let ofs = Self::find_rising_edge(&pulse.debug_buf, pulse.debug_idx);
         ui.plot_lines(format!("##{name}"), &pulse.debug_buf)
             .overlay_text(&name)
-            .values_offset(pulse.debug_idx)
+            .values_offset(pulse.debug_idx + ofs)
             .scale_min(0.0)
             .scale_max(1.0)
             .graph_size([0.0, 128.0])
@@ -64,9 +78,10 @@ impl ApuDebug {
     }
 
     fn draw_triangle(ui: &imgui::Ui, triangle: &mut ApuTriangle) {
+        let ofs = Self::find_rising_edge(&triangle.debug_buf, triangle.debug_idx);
         ui.plot_lines("##triangle", &triangle.debug_buf)
             .overlay_text("Triangle")
-            .values_offset(triangle.debug_idx)
+            .values_offset(triangle.debug_idx + ofs)
             .scale_min(0.0)
             .scale_max(1.0)
             .graph_size([0.0, 128.0])
@@ -85,9 +100,10 @@ impl ApuDebug {
     }
 
     fn draw_noise(ui: &imgui::Ui, noise: &mut ApuNoise) {
+        let ofs = Self::find_rising_edge(&noise.debug_buf, noise.debug_idx);
         ui.plot_lines("##noise", &noise.debug_buf)
             .overlay_text("Noise")
-            .values_offset(noise.debug_idx)
+            .values_offset(noise.debug_idx + ofs)
             .scale_min(0.0)
             .scale_max(1.0)
             .graph_size([0.0, 128.0])
