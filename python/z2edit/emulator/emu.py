@@ -88,7 +88,7 @@ class Emulator(object):
             dlg.add_filter("All", ["*"])
             filename = dlg.pick_file()
         if filename is not None:
-            self._load_rom(filename)
+            self._load_rom(str(filename))
 
     def menu_bar(self):
         if gui.begin_menu("File"):

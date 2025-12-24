@@ -108,7 +108,7 @@ class Application(object):
             dlg.add_filter("All", ["*"])
             filename = dlg.pick_file()
         if filename is not None:
-            project = z2edit.Project.load(filename)
+            project = z2edit.Project.load(str(filename))
             gui = z2edit.ProjectGui(project)
             gui.filename = filename
             self.windows.append(gui)
