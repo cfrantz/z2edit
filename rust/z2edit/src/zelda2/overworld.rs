@@ -456,7 +456,7 @@ impl Overworld {
 
     fn skip_compress(&self, x: usize, y: usize, cfg: &config::Overworld) -> bool {
         if let Some((index, conn)) = self.connector_at(x, y) {
-            log::info!("skip_compress at {x},{y} because of {index}");
+            log::debug!("skip_compress at {x},{y} because of connection {index}");
             if conn.hidden == Some(true) || cfg.palace_code(index).is_some() {
                 return true;
             }
