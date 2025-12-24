@@ -296,7 +296,7 @@ impl Framework {
     }
 
     pub fn render_frame(&mut self, py: Python<'_>) {
-        py.allow_threads(|| {
+        py.detach(|| {
             let draw_data = self.imgui.render();
             unsafe {
                 let gl = self.renderer.gl_context();

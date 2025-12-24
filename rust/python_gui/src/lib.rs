@@ -21,9 +21,9 @@ extern "C" {
 }
 
 pub fn as_submodule_of(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    Python::with_gil(|py| unsafe {
+    Python::attach(|py| unsafe {
         let gui = Bound::from_owned_ptr_or_err(py, PyInit_gui())?;
-        let gui = gui.downcast::<PyModule>()?;
+        let gui = gui.cast::<PyModule>()?;
         gui.add_class::<Directories>()?;
         gui.add_class::<Framework>()?;
         gui.add_class::<Color>()?;

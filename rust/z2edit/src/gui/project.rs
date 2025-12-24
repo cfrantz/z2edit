@@ -163,7 +163,7 @@ impl ProjectGui {
 
     #[getter]
     fn name(&self) -> String {
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let project = self.project.borrow(py);
             project.name.clone()
         })
@@ -175,7 +175,7 @@ impl ProjectGui {
     }
 
     pub fn edit(&self, node: &str) {
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let project = self.project.borrow(py);
             if let Some(edit) = project.edits.get(node) {
                 match edit.data.gui(node) {
@@ -189,7 +189,7 @@ impl ProjectGui {
     }
 
     pub fn edit_metadata(&self, node: &str) {
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let project = self.project.borrow(py);
             if let Some(edit) = project.edits.get(node) {
                 match MetadataEditor::new(&edit.meta, node) {
@@ -203,7 +203,7 @@ impl ProjectGui {
     }
 
     fn save_as(&mut self) -> Result<()> {
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             if let Some(filename) = FileDialog::new()
                 .set_title(format!("Save As: {}", self.project.borrow(py).name))
                 .add_filter("Z2 Project", &["z2e3"])
@@ -220,7 +220,7 @@ impl ProjectGui {
 
     #[pyo3(signature = (filter = true))]
     fn save(&self, filter: bool) -> Result<()> {
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let mut project = self.project.borrow_mut(py);
             project.save(&self.filename, filter)
         })

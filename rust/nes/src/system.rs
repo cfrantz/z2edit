@@ -55,8 +55,8 @@ pub struct Nes {
     pub naive_prg8k: AtomicBool,
     peripherals: Vec<(AddressRange, Arc<Mutex<dyn Peripheral>>)>,
 
-    pub(crate) read_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
-    pub(crate) write_cb: Arc<Mutex<IndexMap<u16, PyObject>>>,
+    pub(crate) read_cb: Arc<Mutex<IndexMap<u16, Py<PyAny>>>>,
+    pub(crate) write_cb: Arc<Mutex<IndexMap<u16, Py<PyAny>>>>,
     pub(crate) exec_cb: Arc<Mutex<IndexMap<Address, Py<PyAny>>>>,
     pub(crate) step_cb: Arc<Mutex<Option<Py<PyAny>>>>,
 
@@ -234,7 +234,7 @@ impl Nes {
         }
     }
 
-    fn extract_address(py: Python<'_>, addr: PyObject) -> PyResult<Address> {
+    fn extract_address(py: Python<'_>, addr: Py<PyAny>) -> PyResult<Address> {
         if let Ok(a) = addr.extract::<Address>(py) {
             Ok(a)
         } else if let Ok(a) = addr.extract::<u16>(py) {
@@ -481,7 +481,7 @@ impl Nes {
                 let pc = self.cpu_to_address(cpu.pc).expect("cpu.pc to address");
                 if cpu.halted == HaltState::Running {
                     // We only process exec callbacks when the CPU is not halted.
-                    Python::with_gil(|py| {
+                    Python::attach(|py| {
                         let exec_cb = self
                             .exec_cb
                             .lock()
@@ -489,10 +489,11 @@ impl Nes {
                             .get(&pc)
                             .map(|cb| cb.clone_ref(py));
                         if let Some(callback) = exec_cb {
-                            match callback
-                                .call1(py, (cpu.clone(),))
-                                .and_then(|val| val.extract::<Cpu6502>(py))
-                            {
+                            match callback.call1(py, (cpu.clone(),)).and_then(
+                                |val: Py<PyAny>| -> Result<Cpu6502, PyErr> {
+                                    Ok(val.extract::<Cpu6502>(py)?)
+                                },
+                            ) {
                                 Ok(val) => *cpu = val,
                                 Err(e) => {
                                     log::error!("Exec callback for {pc:x?} failed: {e}");
@@ -512,7 +513,7 @@ impl Nes {
                     cpu.single_step -= 1;
                     if cpu.single_step == 0 {
                         // When the single-step counter reaches zero, we call the step callback.
-                        Python::with_gil(|py| {
+                        Python::attach(|py| {
                             let step_cb = self
                                 .step_cb
                                 .lock()
@@ -521,10 +522,11 @@ impl Nes {
                                 .map(|cb| cb.clone_ref(py));
                             if let Some(callback) = step_cb {
                                 let pc = self.cpu_to_address(cpu.pc).expect("cpu.pc to address");
-                                match callback
-                                    .call1(py, (cpu.clone(),))
-                                    .and_then(|val| val.extract::<Cpu6502>(py))
-                                {
+                                match callback.call1(py, (cpu.clone(),)).and_then(
+                                    |val: Py<PyAny>| -> Result<Cpu6502, PyErr> {
+                                        Ok(val.extract::<Cpu6502>(py)?)
+                                    },
+                                ) {
                                     Ok(val) => *cpu = val,
                                     Err(e) => {
                                         log::error!("Step callback for {pc:x?} failed: {e}");
@@ -598,17 +600,22 @@ impl Nes {
     }
 
     #[pyo3(name = "read")]
-    pub fn _read<'p>(&self, py: Python<'p>, addr: PyObject) -> PyResult<u8> {
+    pub fn _read<'p>(&self, py: Python<'p>, addr: Py<PyAny>) -> PyResult<u8> {
         let addr = Self::extract_address(py, addr)?;
         Ok(self.read(addr))
     }
 
-    pub fn read_i8<'p>(&self, py: Python<'p>, addr: PyObject) -> PyResult<i8> {
+    pub fn read_i8<'p>(&self, py: Python<'p>, addr: Py<PyAny>) -> PyResult<i8> {
         let addr = Self::extract_address(py, addr)?;
         Ok(self.read(addr) as i8)
     }
 
-    pub fn read_u16<'p>(&self, py: Python<'p>, addr: PyObject, hiaddr: PyObject) -> PyResult<u16> {
+    pub fn read_u16<'p>(
+        &self,
+        py: Python<'p>,
+        addr: Py<PyAny>,
+        hiaddr: Py<PyAny>,
+    ) -> PyResult<u16> {
         let addr = Self::extract_address(py, addr)?;
         let hiaddr = if hiaddr.is_none(py) {
             addr + 1
@@ -619,7 +626,7 @@ impl Nes {
     }
 
     #[pyo3(name = "write")]
-    pub fn _write<'p>(&self, py: Python<'p>, addr: PyObject, val: PyObject) -> PyResult<()> {
+    pub fn _write<'p>(&self, py: Python<'p>, addr: Py<PyAny>, val: Py<PyAny>) -> PyResult<()> {
         let addr = Self::extract_address(py, addr)?;
         if let Ok(val) = val.extract::<u8>(py) {
             self.write(addr, val);
@@ -637,8 +644,8 @@ impl Nes {
     pub fn write_u16<'p>(
         &self,
         py: Python<'p>,
-        addr: PyObject,
-        hiaddr: PyObject,
+        addr: Py<PyAny>,
+        hiaddr: Py<PyAny>,
         val: u16,
     ) -> PyResult<()> {
         let addr = Self::extract_address(py, addr)?;
@@ -656,10 +663,10 @@ impl Nes {
     fn __len__(&self) -> usize {
         65536
     }
-    fn __getitem__<'p>(&self, py: Python<'p>, addr: PyObject) -> PyResult<u8> {
+    fn __getitem__<'p>(&self, py: Python<'p>, addr: Py<PyAny>) -> PyResult<u8> {
         self._read(py, addr)
     }
-    fn __setitem__<'p>(&self, py: Python<'p>, addr: PyObject, val: u8) -> PyResult<()> {
+    fn __setitem__<'p>(&self, py: Python<'p>, addr: Py<PyAny>, val: u8) -> PyResult<()> {
         let addr = Self::extract_address(py, addr)?;
         self.write(addr, val);
         Ok(())
@@ -669,7 +676,7 @@ impl Nes {
         &self,
         py: Python<'p>,
         addr: u16,
-        callback: PyObject,
+        callback: Py<PyAny>,
     ) -> PyResult<()> {
         //let addr = Self::extract_address(py, addr)?;
         let mut read_cb = self.read_cb.lock().expect("failed to lock read_cb");
@@ -685,7 +692,7 @@ impl Nes {
         &self,
         py: Python<'p>,
         addr: u16,
-        callback: PyObject,
+        callback: Py<PyAny>,
     ) -> PyResult<()> {
         //let addr = Self::extract_address(py, addr)?;
         let mut write_cb = self.write_cb.lock().expect("failed to lock write_cb");
@@ -701,7 +708,7 @@ impl Nes {
         &self,
         py: Python<'p>,
         addr: Address,
-        callback: PyObject,
+        callback: Py<PyAny>,
     ) -> PyResult<()> {
         //let addr = Self::extract_address(py, addr)?;
         let mut exec_cb = self.exec_cb.lock().expect("failed to lock exec_cb");
@@ -713,7 +720,7 @@ impl Nes {
         Ok(())
     }
 
-    pub fn set_step_callback<'p>(&self, py: Python<'p>, callback: PyObject) -> PyResult<()> {
+    pub fn set_step_callback<'p>(&self, py: Python<'p>, callback: Py<PyAny>) -> PyResult<()> {
         //let addr = Self::extract_address(py, addr)?;
         let mut step_cb = self.step_cb.lock().expect("failed to lock step_cb");
         if callback.is_none(py) {

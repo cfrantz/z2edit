@@ -97,7 +97,7 @@ if project.pre_unpack_hook:
 
     fn unpack(&self) -> Result<EditList> {
         let mut edits = EditList::default();
-        Python::with_gil(|py| self.config.unpack(self.rom.bind(py), "", &mut edits))?;
+        Python::attach(|py| self.config.unpack(self.rom.bind(py), "", &mut edits))?;
         Ok(edits)
     }
 
@@ -119,7 +119,7 @@ if project.pre_unpack_hook:
                 rom.register(&bank.freespace)?;
             }
             log::info!("{}", rom.report());
-            this.rom = Python::with_gil(|py| Py::new(py, rom))?;
+            this.rom = Python::attach(|py| Py::new(py, rom))?;
         }
         Self::apply_fixes(py, &slf)?;
         {

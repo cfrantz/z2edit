@@ -986,7 +986,7 @@ impl SideviewEditor {
             if let Some(_token) = ui.begin_menu("Emulate") {
                 for screen in 0..=3 {
                     if ui.menu_item(format!("Screen {}", screen + 1)) {
-                        Python::with_gil(|py| {
+                        Python::attach(|py| {
                             project.emulate(py, Some(&format!("{}/{screen}", self.path)))
                         })?;
                     }

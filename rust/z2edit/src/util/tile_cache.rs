@@ -271,7 +271,7 @@ impl GfxCache {
                 let palette = if let Some(town_table) = &group.town_table {
                     // FIXME: This reads from the ROM rather than an abstract data structure in the
                     // project.
-                    Python::with_gil(|py| project.rom.borrow(py).read(town_table.palette + enemy))?
+                    Python::attach(|py| project.rom.borrow(py).read(town_table.palette + enemy))?
                         & 0x03
                 } else {
                     sprite.palette
@@ -355,7 +355,7 @@ impl GfxCache {
                     if let Some(town_table) = &group.town_table {
                         // FIXME: This reads from the ROM rather than an abstract data structure
                         // in the project.
-                        Python::with_gil(|py| -> Result<()> {
+                        Python::attach(|py| -> Result<()> {
                             let rom = project.rom.borrow(py);
                             let index = match enemy {
                                 13..27 => rom.read(town_table.mapping2[town_code] + enemy - 13)?,

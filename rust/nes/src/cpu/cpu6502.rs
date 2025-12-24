@@ -65,7 +65,7 @@ impl Cpu6502 {
         let mut result = nes.read(Address::Cpu(address));
         let read_cb = nes.read_cb.lock().expect("failed to lock read_cb");
         if let Some(callback) = read_cb.get(&address) {
-            result = Python::with_gil(|py| {
+            result = Python::attach(|py| {
                 match callback
                     .call1(py, (self.clone(), address, result))
                     .and_then(|val| val.extract::<u8>(py))
@@ -85,7 +85,7 @@ impl Cpu6502 {
         let mut value = value;
         let write_cb = nes.write_cb.lock().expect("failed to lock write_cb");
         if let Some(callback) = write_cb.get(&address) {
-            value = Python::with_gil(|py| {
+            value = Python::attach(|py| {
                 match callback
                     .call1(py, (self.clone(), address, value))
                     .and_then(|val| val.extract::<u8>(py))

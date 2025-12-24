@@ -31,7 +31,7 @@ impl Address {
     fn new(value: &Bound<'_, PyAny>) -> PyResult<Self> {
         if let Ok(init) = value.extract::<Address>() {
             return Ok(init.clone());
-        } else if let Ok(init) = value.downcast::<PyDict>() {
+        } else if let Ok(init) = value.cast::<PyDict>() {
             let keys = init.keys();
             if keys.len() != 1 {
                 return Err(PyException::new_err("expected exactly one key in dict"));
@@ -39,7 +39,7 @@ impl Address {
             let key = keys.get_item(0)?.extract::<String>()?;
             let keylower = key.to_lowercase();
             let val = init.values().get_item(0)?;
-            let val = val.downcast::<PyList>()?;
+            let val = val.cast::<PyList>()?;
             match keylower.as_str() {
                 "prg" => Ok(Address::Prg(
                     val.get_item(0)?.extract::<i16>()?,
@@ -291,7 +291,7 @@ impl AddressRange {
     fn new(value: &Bound<'_, PyAny>) -> PyResult<Self> {
         if let Ok(init) = value.extract::<AddressRange>() {
             return Ok(init.clone());
-        } else if let Ok(init) = value.downcast::<PyDict>() {
+        } else if let Ok(init) = value.cast::<PyDict>() {
             let keys = init.keys();
             if keys.len() != 2 {
                 return Err(PyException::new_err("expected exactly two keys in dict"));

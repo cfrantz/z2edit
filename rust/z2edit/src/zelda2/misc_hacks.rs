@@ -144,7 +144,7 @@ impl config::Miscellaneous {
                 let detail = hack.detail.get(which).ok_or(Error::NotFound(format!(
                     "Miscellaneous::hack detail {which}"
                 )))?;
-                Python::with_gil(|py| -> Result<()> {
+                Python::attach(|py| -> Result<()> {
                     let locals = PyDict::new(py);
                     locals.set_item("rom", rrom)?;
                     let code = CString::new(detail.code.clone())?;
