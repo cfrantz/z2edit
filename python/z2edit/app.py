@@ -204,6 +204,13 @@ class Application(object):
                 return w
         return None
 
+    @property
+    def asm(self):
+        if emulator := self.emulator:
+            emulator.nes.naive_prk8k = True
+            return Asm(emulator.nes)
+        return None
+
     def _emulator(self):
         if rom := self.emulator_args.rom:
             try:
