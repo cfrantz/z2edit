@@ -168,6 +168,13 @@
             },
         },
         objset0: {
+            "0x10": {
+                name: "Wooden Fence",
+                render: "TopUnique",
+                width: 1,
+                height: 2,
+                metatile: [0x4c, 0x4b],
+            },
             "0x20": {
                 name: "Forest Ceiling",
                 render: "Horizontal",
