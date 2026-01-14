@@ -18,7 +18,7 @@ impl GuiTree for config::VirtualChr {
                 let item = format!("{path}/{bank}");
                 result.set(edit_tree_node(
                     ui,
-                    &format!("Virtual Bank {bank}"),
+                    &format!("Virtual Bank {bank} (${bank:02X})"),
                     &item,
                     project,
                 ));

@@ -56,8 +56,8 @@ pub enum ChrSchema {
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Layout {
-    #[default]
     Tile = 0,
+    #[default]
     Sprite = 1,
 }
 

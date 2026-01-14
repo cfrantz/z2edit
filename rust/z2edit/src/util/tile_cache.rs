@@ -76,7 +76,7 @@ impl GfxCache {
                     } else {
                         t / 0x40 + 4 * (chrbank & 1)
                     };
-                    log::info!(
+                    log::debug!(
                         "remapped chr{chrbank} to offset {subbank} -> {:02x}",
                         vbanks.data[subbank]
                     );

@@ -22,7 +22,7 @@ impl GuiTree for config::ChrMemory {
                 let item = format!("{path}/{bank}");
                 result.set(edit_tree_node(
                     ui,
-                    &format!("CHR Bank {bank}"),
+                    &format!("CHR Bank {bank} (${bank:02X})"),
                     &item,
                     project,
                 ));
