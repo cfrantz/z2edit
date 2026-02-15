@@ -18,8 +18,10 @@ class Zelda2(plugin.Plugin):
         self.cheats = cheats.Cheats(emulator)
         self.execution = execution.Execution(emulator)
         self.hitbox_visible = False
+        self.collision_visible = False
         self.hitbox = [hitbox.LinkHitbox(emulator)]
         self.hitbox.extend(hitbox.EnemyHitbox(emulator, i) for i in range(13))
+        self.collision = hitbox.CollisionDetect(emulator)
         self.gamestate = gamestate.GameState(emulator)
 
     def menu_bar(self):
@@ -65,6 +67,10 @@ class Zelda2(plugin.Plugin):
                 self.cheats.visible = not self.cheats.visible
             if gui.menu_item("Show Hitboxes", "", selected=self.hitbox_visible):
                 self.hitbox_visible = not self.hitbox_visible
+            if gui.menu_item(
+                "Show Collision Checks", "", selected=self.collision_visible
+            ):
+                self.collision_visible = not self.collision_visible
             if gui.menu_item("Execution Profile", "", selected=self.execution.visible):
                 self.execution.visible = not self.execution.visible
             if gui.menu_item("Game State", "", selected=self.gamestate.visible):
@@ -86,6 +92,7 @@ class Zelda2(plugin.Plugin):
     def run_per_frame(self):
         for h in self.hitbox:
             h.update()
+        self.collision.update()
         self.execution.update()
 
     def draw(self):
@@ -97,6 +104,8 @@ class Zelda2(plugin.Plugin):
         if self.hitbox_visible:
             for h in self.hitbox:
                 h.draw_image(origin)
+        if self.collision_visible:
+            self.collision.draw_image(origin)
 
 
 def create(emulator, args):

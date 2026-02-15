@@ -39,6 +39,7 @@ class EnemyHitbox(object):
         self.emulator = emulator
         self.index = index
         self.name = "enemy%d" % index
+        self.sizecode = -1
         self.hb = gui.Vec2(0, 0)
         self.hbsz = gui.Vec2(0, 0)
         self.dragging = False
@@ -97,10 +98,10 @@ class EnemyHitbox(object):
             self.exists = nes[0x87 + self.index - 6]
             if self.exists > 15:
                 self.exists = 0
-        self.entype = nes[self.sizecodes + self.enemyid]
+        self.sizecode = nes[self.sizecodes + self.enemyid]
 
         # Compute the hitbox.
-        ofs = (self.entype * 4) & 0xFF
+        ofs = (self.sizecode * 4) & 0xFF
         self.hb.x = self.xscr + nes.read_i8(self.SIZETABLE + ofs + 0)
         self.hb.y = self.ypos + nes.read_i8(self.SIZETABLE + ofs + 2)
         self.hbsz.x = nes[self.SIZETABLE + ofs + 1]
@@ -256,3 +257,58 @@ class LinkHitbox(object):
                 self.ypos += delta.y
         else:
             self.dragging = False
+
+
+class CollisionDetect(object):
+    SOLID = 0xFF000000
+    AABB = 0x60FFFFFF
+    SHIELD1 = 0x60FF0000
+    SHIELD2 = 0x600000FF
+
+    def __init__(self, emulator):
+        self.emulator = emulator
+        self.boxes = []
+        self.exists = True
+        self.emulator.nes.set_exec_callback(Address.Prg(-1, 0xEA13), self.aabb_cb)
+        self.emulator.nes.set_exec_callback(Address.Prg(-1, 0xE616), self.aabb_cb)
+        self.emulator.nes.set_exec_callback(Address.Prg(-1, 0xE99B), self.aabb_cb)
+
+    def aabb_cb(self, cpu):
+        nes = self.emulator.nes
+        if cpu.pc == 0xEA13:
+            self.boxes.append(
+                (gui.Vec2(nes[0], nes[1]), gui.Vec2(nes[2], nes[3]), self.AABB)
+            )
+            self.boxes.append(
+                (gui.Vec2(nes[4], nes[5]), gui.Vec2(nes[6], nes[7]), self.AABB)
+            )
+        elif cpu.pc == 0xE616:
+            self.boxes.append(
+                (gui.Vec2(nes[4], nes[5]), gui.Vec2(nes[6], nes[7]), self.SHIELD1)
+            )
+        elif cpu.pc == 0xE99B:
+            self.boxes.append(
+                (gui.Vec2(nes[0], nes[1]), gui.Vec2(nes[2], nes[3]), self.SHIELD2)
+            )
+        return cpu
+
+    def update(self):
+        pass
+
+    def draw_image(self, origin):
+        boxes = self.boxes
+        self.boxes = []
+
+        if not self.exists:
+            return
+
+        scale = gui.Vec2(
+            self.emulator.scale * self.emulator.aspect, self.emulator.scale
+        )
+        dl = gui.get_window_draw_list()
+        for box in boxes:
+            dl.add_rect_filled(
+                origin + box[0] * scale,
+                origin + (box[0] + box[1]) * scale,
+                box[2],
+            )

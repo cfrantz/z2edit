@@ -217,6 +217,13 @@ class GameState(object):
 
             gui.table_next_row()
             gui.table_next_column()
+            gui.text("Animation Frame")
+            for i in range(6):
+                gui.table_next_column()
+                gui.text(f"{nes[0x81+i]:02x}")
+
+            gui.table_next_row()
+            gui.table_next_column()
             gui.text("Stun timer")
             for i in range(6):
                 gui.table_next_column()
@@ -228,5 +235,12 @@ class GameState(object):
             for i in range(6):
                 gui.table_next_column()
                 gui.text(f"{nes[0x48e+i]:02x}")
+
+            gui.table_next_row()
+            gui.table_next_column()
+            gui.text("Enemy AI")
+            for i in range(6):
+                gui.table_next_column()
+                gui.text(f"{nes[0xaf+i]:02x}")
 
             gui.end_table()
