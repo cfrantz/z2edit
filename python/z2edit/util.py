@@ -5,7 +5,8 @@ import copy as _copy
 
 
 def register_types():
-    _copy._deepcopy_dispatch[Address] = _copy._deepcopy_atomic
+    # _copy._deepcopy_dispatch[Address] = _copy._deepcopy_atomic
+    pass
 
 
 register_types()
@@ -129,7 +130,7 @@ class ObjectDict(dict):
         ty = repr(address)
         rest = []
         if ty != "NullPtr":
-            (ty, _) = ty.split("(")
+            ty, _ = ty.split("(")
             bank = address.bank()
             if bank is not None:
                 rest.append(bank)
@@ -208,20 +209,25 @@ def chr_swap(rom, a_tile, b_tile):
     rom.write_bytes(a_tile, b)
     rom.write_bytes(b_tile, a)
 
+
 def chr_parse(rom, tile, strdata):
     if not isinstance(tile, (Address.Chr, Address.Chr1k)):
         raise Exception('tile address not in "chr" segment')
 
-    strdata = list(filter(lambda x: bool(x),
-                  map(lambda x: x.strip(), strdata.split('\n'))))
-    data = bytearray(2*len(strdata))
+    strdata = list(
+        filter(lambda x: bool(x), map(lambda x: x.strip(), strdata.split("\n")))
+    )
+    data = bytearray(2 * len(strdata))
     for y, line in enumerate(strdata):
         offset = 16 * (y // 8) + (y % 8)
         for x, ch in enumerate(line):
             ch = int(ch)
-            if ch & 1: data[offset] |= 1 << (7-x)
-            if ch & 2: data[offset+8] |= 1 << (7-x)
+            if ch & 1:
+                data[offset] |= 1 << (7 - x)
+            if ch & 2:
+                data[offset + 8] |= 1 << (7 - x)
     rom.write_bytes(tile, bytes(data))
+
 
 # def version_tuple(version=z2edit.version):
 #    (ver, *_) = version.split('-')
