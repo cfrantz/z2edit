@@ -267,6 +267,7 @@ class CollisionDetect(object):
 
     def __init__(self, emulator):
         self.emulator = emulator
+        self.frame = 0
         self.boxes = []
         self.exists = True
         self.emulator.nes.set_exec_callback(Address.Prg(-1, 0xEA13), self.aabb_cb)
@@ -275,20 +276,39 @@ class CollisionDetect(object):
 
     def aabb_cb(self, cpu):
         nes = self.emulator.nes
+        if nes.frame != self.frame:
+            self.boxes = []
+            self.frame = nes.frame
+        sp = 0x100 | cpu.sp
+        stack = [sp]
+        while sp < 0x200:
+            stack.append(nes[sp])
+            sp += 1
+
         if cpu.pc == 0xEA13:
             self.boxes.append(
-                (gui.Vec2(nes[0], nes[1]), gui.Vec2(nes[2], nes[3]), self.AABB)
+                (gui.Vec2(nes[0], nes[1]), gui.Vec2(nes[2], nes[3]), self.AABB, stack)
             )
             self.boxes.append(
-                (gui.Vec2(nes[4], nes[5]), gui.Vec2(nes[6], nes[7]), self.AABB)
+                (gui.Vec2(nes[4], nes[5]), gui.Vec2(nes[6], nes[7]), self.AABB, stack)
             )
         elif cpu.pc == 0xE616:
             self.boxes.append(
-                (gui.Vec2(nes[4], nes[5]), gui.Vec2(nes[6], nes[7]), self.SHIELD1)
+                (
+                    gui.Vec2(nes[4], nes[5]),
+                    gui.Vec2(nes[6], nes[7]),
+                    self.SHIELD1,
+                    stack,
+                )
             )
         elif cpu.pc == 0xE99B:
             self.boxes.append(
-                (gui.Vec2(nes[0], nes[1]), gui.Vec2(nes[2], nes[3]), self.SHIELD2)
+                (
+                    gui.Vec2(nes[0], nes[1]),
+                    gui.Vec2(nes[2], nes[3]),
+                    self.SHIELD2,
+                    stack,
+                )
             )
         return cpu
 
@@ -297,7 +317,7 @@ class CollisionDetect(object):
 
     def draw_image(self, origin):
         boxes = self.boxes
-        self.boxes = []
+        # self.boxes = []
 
         if not self.exists:
             return
@@ -306,9 +326,21 @@ class CollisionDetect(object):
             self.emulator.scale * self.emulator.aspect, self.emulator.scale
         )
         dl = gui.get_window_draw_list()
-        for box in boxes:
+        for i, box in enumerate(boxes):
+            borg = origin + box[0] * scale
             dl.add_rect_filled(
-                origin + box[0] * scale,
+                borg,
                 origin + (box[0] + box[1]) * scale,
                 box[2],
+            )
+            torg = origin + gui.Vec2(32, 32) * scale + gui.Vec2(0, 30 * i)
+            dl.add_text(
+                torg, self.SOLID | self.AABB, " ".join(f"{x:02x}" for x in box[3])
+            )
+            dl.add_line(torg + gui.Vec2(-10, 15), borg, box[2] | self.SOLID, 2.0)
+            dl.add_line(
+                torg + gui.Vec2(-10, 15),
+                torg + gui.Vec2(0, 15),
+                box[2] | self.SOLID,
+                2.0,
             )
