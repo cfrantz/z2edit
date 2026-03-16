@@ -91,11 +91,12 @@ impl OverworldEditor {
         if self.selectbox.valid() {
             // FIXME: should use normalized selectbox coords.
             let mut map = Map::default();
-            map.width = (self.selectbox.x1 - self.selectbox.x0 + 1) as usize;
-            map.height = (self.selectbox.y1 - self.selectbox.y0 + 1) as usize;
-            for y in self.selectbox.y0..=self.selectbox.y1 {
+            let selection = self.selectbox.clone().normalized();
+            map.width = (selection.x1 - selection.x0 + 1) as usize;
+            map.height = (selection.y1 - selection.y0 + 1) as usize;
+            for y in selection.y0..=selection.y1 {
                 let mut row = Vec::new();
-                for x in self.selectbox.x0..=self.selectbox.x1 {
+                for x in selection.x0..=selection.x1 {
                     row.push(self.overworld.map.data[y as usize][x as usize]);
                 }
                 map.data.push(row);
@@ -397,6 +398,15 @@ impl OverworldEditor {
             }
         }
 
+        let draw_list = ui.get_window_draw_list();
+        let io = ui.io();
+        let mouse_pos = io.mouse_pos;
+        let mx = mouse_pos[0] - scr_origin[0];
+        let my = mouse_pos[1] - scr_origin[1];
+        let tx = if mx >= 0.0 { (mx / scale) as isize } else { -1 };
+        let ty = if my >= 0.0 { (my / scale) as isize } else { -1 };
+        let modifier = io.key_ctrl | io.key_shift | io.key_alt | io.key_super;
+
         // Manage the connection list here so we can abort before all of
         // tile editing stuff.  This is important because we want to handle
         // connection mouse events first and skip processing tile-edit mouse
@@ -408,19 +418,18 @@ impl OverworldEditor {
                 focused |= f;
                 changed |= c;
             }
+            if self.conn_drag.active().is_some() {
+                let x = scr_origin[0] + tx as f32 * scale;
+                let y = scr_origin[1] + ty as f32 * scale;
+                draw_list
+                    .add_rect([x, y], [x + scale, y + scale], Self::MAGENTA)
+                    .thickness(2.0)
+                    .build();
+            }
             if focused {
                 return Ok(changed);
             }
         }
-
-        let draw_list = ui.get_window_draw_list();
-        let io = ui.io();
-        let mouse_pos = io.mouse_pos;
-        let mx = mouse_pos[0] - scr_origin[0];
-        let my = mouse_pos[1] - scr_origin[1];
-        let tx = if mx >= 0.0 { (mx / scale) as isize } else { -1 };
-        let ty = if my >= 0.0 { (my / scale) as isize } else { -1 };
-        let modifier = io.key_ctrl | io.key_shift | io.key_alt | io.key_super;
 
         if ui.is_window_hovered()
             && tx >= 0
