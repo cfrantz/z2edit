@@ -328,6 +328,33 @@ impl PpuDebug {
         ));
     }
 
+    fn ppu_mask(&mut self, nes: &Nes, ui: &imgui::Ui) {
+        let mut ppu = nes.ppu.lock().expect("ppu_mask");
+        ui.text(format!(
+            "{}{}{} {} {} {} {} {}",
+            if ppu.mask & 0x80 == 0 { "b" } else { "B" },
+            if ppu.mask & 0x40 == 0 { "g" } else { "G" },
+            if ppu.mask & 0x20 == 0 { "r" } else { "R" },
+            if ppu.mask & 0x10 == 0 { "spr" } else { "SPR" },
+            if ppu.mask & 0x08 == 0 { "bg" } else { "BG" },
+            if ppu.mask & 0x04 == 0 { "lspr" } else { "LSPR" },
+            if ppu.mask & 0x02 == 0 { "lbg" } else { "LBG" },
+            if ppu.mask & 0x01 == 0 { "gr" } else { "GR" },
+        ));
+        ui.same_line();
+        ui.checkbox("Sprites", &mut ppu.dbg_render_sprites);
+        ui.same_line();
+        ui.checkbox("Background", &mut ppu.dbg_render_background);
+    }
+    pub const _MASK_GRAYSCALE: u8 = 0x01u8;
+    pub const MASK_SHOWLEFTBG: u8 = 0x02u8;
+    pub const MASK_SHOWLEFTSPRITE: u8 = 0x04u8;
+    pub const MASK_SHOWBG: u8 = 0x08u8;
+    pub const MASK_SHOWSPRITES: u8 = 0x10u8;
+    pub const _MASK_REDTINT: u8 = 0x20u8;
+    pub const _MASK_GREENTINT: u8 = 0x40u8;
+    pub const _MASK_BLUETINT: u8 = 0x80u8;
+
     fn draw_vram(&mut self, nes: &Nes, ui: &imgui::Ui) {
         if !self.vram_visible {
             return;
@@ -335,6 +362,8 @@ impl PpuDebug {
         let mut visible = self.vram_visible;
         ui.window("VRAM View").opened(&mut visible).build(|| {
             self.ppu_ctrl(nes, ui);
+            ui.same_line();
+            self.ppu_mask(nes, ui);
             ui.same_line();
             ui.color_edit4_config("Overlay", &mut self.scr_overlay)
                 .alpha(true)

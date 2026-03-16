@@ -102,6 +102,8 @@ pub struct Ppu {
     sprite: Vec<Sprite>,
     sprite_count: usize,
     pub scroll: Vec<ScrollPosition>,
+    pub dbg_render_background: bool,
+    pub dbg_render_sprites: bool,
 }
 
 impl Ppu {
@@ -113,6 +115,8 @@ impl Ppu {
             oam: vec![0u8; 256],
             sprite: vec![Sprite::default(); 8],
             scroll: vec![ScrollPosition::default(); 262],
+            dbg_render_background: true,
+            dbg_render_sprites: true,
             ..Default::default()
         }
     }
@@ -333,19 +337,36 @@ impl Ppu {
 
         let b = background % 4 != 0;
         let s = sprite % 4 != 0;
+        sprite |= 0x10;
 
         if !b {
-            color = if s { sprite | 0x10 } else { 0 };
+            color = if self.dbg_render_sprites && s {
+                sprite
+            } else {
+                0
+            };
         } else if !s {
-            color = background;
+            color = if self.dbg_render_background {
+                background
+            } else {
+                0
+            };
         } else {
             if self.sprite[i].index == 0 && x < 255 {
                 self.status |= SPRITE_ZEROHIT;
             }
             if self.sprite[i].priority {
-                color = background;
+                color = if self.dbg_render_background {
+                    background
+                } else {
+                    sprite
+                };
             } else {
-                color = sprite | 0x10;
+                color = if self.dbg_render_sprites {
+                    sprite
+                } else {
+                    background
+                };
             }
         }
         let color = nes.read(Address::Ppu(0x3F00 | color as u16));

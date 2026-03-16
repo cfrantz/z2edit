@@ -40,10 +40,17 @@ class Preferences(object):
 
 class Emulator(object):
 
-    def __init__(self, rom=None, rom_name=None, on_root=False, title="Emulator"):
+    def __init__(
+        self,
+        rom=None,
+        rom_name=None,
+        on_root=False,
+        title="Emulator",
+        naive_prg8k=False,
+    ):
         self._emulator = None
         if rom:
-            self._load_rom(rom, rom_name)
+            self._load_rom(rom, rom_name, naive_prg8k)
         self.on_root = on_root
         self.scale = 4.0
         self.aspect = 1.333
@@ -64,7 +71,7 @@ class Emulator(object):
         return self._emulator.nes
 
     def load_plugin(self, name):
-        (name, *args) = name.split(":")
+        name, *args = name.split(":")
         plugin = importlib.import_module(name)
         p = plugin.create(self, args)
         if isinstance(p, Plugin):
@@ -72,7 +79,7 @@ class Emulator(object):
         else:
             logger.error("Requested plugin %s isn't a Plugin", name)
 
-    def _load_rom(self, rom, rom_name=None):
+    def _load_rom(self, rom, rom_name=None, naive_prg8k=False):
         if isinstance(rom, str):
             self._emulator = nes.EmulatorGui.from_file(rom)
             self.nes.name = os.path.basename(rom)
@@ -80,6 +87,7 @@ class Emulator(object):
             self._emulator = nes.EmulatorGui(nes.Nes(rom))
         if rom_name:
             self.nes.name = rom_name
+        self.nes.naive_prg8k = naive_prg8k
 
     def load_rom(self, filename):
         if filename is None:
@@ -153,7 +161,7 @@ class Emulator(object):
         else:
             root_flags = gui.WindowFlags.MENU_BAR
 
-        (w, self.visible) = gui.begin(self.title, self.visible, flags=root_flags)
+        w, self.visible = gui.begin(self.title, self.visible, flags=root_flags)
         if w:
             if not self.on_root:
                 gui.begin_menu_bar()

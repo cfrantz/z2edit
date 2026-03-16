@@ -790,8 +790,14 @@ impl Nes {
     /// Get the PRG address of a raw CPU address.
     fn cpu_to_address(&self, cpu: u16) -> Result<Address> {
         let addr = self.mapper.lock().unwrap().cpu_to_address(cpu);
-        if self.naive_prg8k.load(Ordering::Relaxed) {
-            addr.as_naive_prg()
+        let addr = if self.naive_prg8k.load(Ordering::Relaxed) {
+            addr.as_naive_prg()?
+        } else {
+            addr
+        };
+        let maxbank = (self.rom_prg_banks() - 1) as i16;
+        if addr.bank() == Some(maxbank) {
+            Ok(addr.with_bank(-1))
         } else {
             Ok(addr)
         }

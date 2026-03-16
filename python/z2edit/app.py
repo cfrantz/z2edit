@@ -207,7 +207,6 @@ class Application(object):
     @property
     def asm(self):
         if emulator := self.emulator:
-            emulator.nes.naive_prk8k = True
             return Asm(emulator.nes)
         return None
 
@@ -221,7 +220,7 @@ class Application(object):
                     self.emulator_io_initialized = True
                 if isinstance(rom, str):
                     rom = nes.NesFile.load(rom)
-                emu = Emulator(rom, self.emulator_args.name)
+                emu = Emulator(rom, self.emulator_args.name, naive_prg8k=True)
                 for p in self.emulator_args.plugin:
                     emu.load_plugin(p)
                 self.windows.append(emu)
