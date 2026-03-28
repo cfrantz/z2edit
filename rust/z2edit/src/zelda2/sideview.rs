@@ -798,8 +798,17 @@ impl Sideview {
         }
 
         if cfg.doors.is_valid() && index <= cfg.max_door_index {
+            if !self.door.is_empty() {
+                log::info!("Writing door table at {:x?} ({:x?})of {:x?}",
+                    cfg.doors+index*4,
+                    (cfg.doors+index*4).norm_offset()?,
+                    self.door.iter().map(u8::from).collect::<Vec<_>>());
+            }
+            let door_at = self.map.doors(cfg);
             for (i, c) in self.door.iter().enumerate() {
-                rom.write(cfg.doors + index * 4 + i, u8::from(c))?;
+                if door_at[i].is_some() {
+                    rom.write(cfg.doors + index * 4 + i, u8::from(c))?;
+                }
             }
         }
         Ok(())

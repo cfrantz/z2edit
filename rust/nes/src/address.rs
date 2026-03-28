@@ -127,19 +127,19 @@ impl Address {
             Address::File(x) => Ok(*x),
             Address::Prg(b, x) => {
                 ensure!(*b >= 0, NesError::NegativeBank);
-                Ok((*b as usize) * 16384 + (*x as usize))
+                Ok((*b as usize) * 16384 + (*x as usize) % 16384)
             }
             Address::Prg8k(b, x) => {
                 ensure!(*b >= 0, NesError::NegativeBank);
-                Ok((*b as usize) * 8192 + (*x as usize))
+                Ok((*b as usize) * 8192 + (*x as usize) % 8192)
             }
             Address::Chr(b, x) => {
                 ensure!(*b >= 0, NesError::NegativeBank);
-                Ok((*b as usize) * 4096 + (*x as usize))
+                Ok((*b as usize) * 4096 + (*x as usize) % 4096)
             }
             Address::Chr1k(b, x) => {
                 ensure!(*b >= 0, NesError::NegativeBank);
-                Ok((*b as usize) * 1024 + (*x as usize))
+                Ok((*b as usize) * 1024 + (*x as usize) % 1024)
             }
             Address::Cpu(x) => Ok(*x as usize),
             Address::Ppu(x) => Ok(*x as usize),
