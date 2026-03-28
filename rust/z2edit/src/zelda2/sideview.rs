@@ -38,6 +38,13 @@ pub struct Map {
     pub cursor_moves_left: bool,
     pub data: Vec<MapCommand>,
 }
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct MapPaste {
+    pub commands: Vec<MapCommand>,
+    pub width: usize,
+    pub height: usize,
+}
 #[derive(Eq, PartialEq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Enemy {
     pub x: u8,

@@ -4,10 +4,11 @@ use pyo3::prelude::*;
 use python_gui::fa;
 
 use crate::gui::util::{edit_tree_node, TreeAction};
-use crate::gui::util::{tooltip, DragHelper, EditAction};
+use crate::gui::util::{tooltip, DragHelper, EditAction, KeyAction, SelectBox};
 use crate::gui::widgets::Combo;
 use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::util::tile_cache::{GfxCache, GfxKind};
+use crate::util::undo::UndoStack;
 use crate::zelda2::enemies::config::EnemyGroup;
 use crate::zelda2::items::config::Items;
 use crate::zelda2::object::{Object, RenderInfo};
@@ -15,7 +16,7 @@ use crate::zelda2::overworld::config::Overworld as OverworldConfig;
 use crate::zelda2::overworld::Overworld;
 use crate::zelda2::palette::config::PaletteGroup;
 use crate::zelda2::project::Project;
-use crate::zelda2::sideview::{config, AreaKind, Decompressor, Enemy, MapCommand, Sideview};
+use crate::zelda2::sideview::{config, AreaKind, Decompressor, Enemy, MapCommand, MapPaste, Sideview};
 use crate::zelda2::text_table::{TextIds, TextTable};
 use nes::Address;
 
@@ -88,6 +89,10 @@ pub struct SideviewEditor {
     area_names: IndexMap<u8, String>,
     world: [u8; 4],
     town_code: [u16; 4],
+    selectbox: SelectBox,
+    select_drag: bool,
+    button_down: bool,
+    undo: UndoStack<Sideview>,
     sequence: usize,
     spawn: Option<Box<dyn Gui>>,
 }
@@ -119,9 +124,84 @@ impl SideviewEditor {
             area_names: IndexMap::default(),
             world: [0; 4],
             town_code: [0; 4],
+            selectbox: SelectBox::default(),
+            select_drag: false,
+            button_down: false,
+            undo: {
+                let mut u = UndoStack::new(64);
+                u.push(sv.clone());
+                u
+            },
             sequence: 0,
             spawn: None,
         }))
+    }
+
+    fn copy_to_clipboard(&self, ui: &imgui::Ui) {
+        if !self.selectbox.valid() {
+            return;
+        }
+        let norm = self.selectbox.normalized();
+        let mut commands = Vec::new();
+        for cmd in self.sideview.map.data.iter() {
+            if cmd.x >= norm.x0 as u8 && cmd.x <= norm.x1 as u8 {
+                // Special Y-coordinates (14, 15) are always included if they fall
+                // within the X-range of the selection, and are not normalized.
+                if cmd.y >= 14 || (cmd.y >= norm.y0 as u8 && cmd.y <= norm.y1 as u8) {
+                    let mut new_cmd = cmd.clone();
+                    new_cmd.x -= norm.x0 as u8;
+                    if new_cmd.y < 14 {
+                        new_cmd.y -= norm.y0 as u8;
+                    }
+                    commands.push(new_cmd);
+                }
+            }
+        }
+        if !commands.is_empty() {
+            let paste = MapPaste {
+                commands,
+                width: (norm.x1 - norm.x0 + 1) as usize,
+                height: (norm.y1 - norm.y0 + 1) as usize,
+            };
+            if let Ok(json) = serde_json::to_string(&paste) {
+                ui.set_clipboard_text(json);
+            }
+        }
+    }
+
+    fn paste_from_clipboard(&mut self, ui: &imgui::Ui, tx: isize, ty: isize) -> bool {
+        if let Some(json) = ui.clipboard_text() {
+            if let Ok(paste) = serde_json::from_str::<MapPaste>(&json) {
+                for cmd in paste.commands {
+                    let mut new_cmd = cmd.clone();
+                    new_cmd.x += tx as u8;
+                    if new_cmd.y < 14 {
+                        new_cmd.y += ty as u8;
+                    }
+                    self.sideview.map.data.push(new_cmd);
+                }
+                return true;
+            }
+        }
+        false
+    }
+
+    fn draw_selectbox(&self, origin: [f32; 2], ui: &imgui::Ui) {
+        if self.selectbox.valid() {
+            let norm = self.selectbox.normalized();
+            let p0 = [
+                origin[0] + norm.x0 as f32 * 16.0 * self.scale,
+                origin[1] + norm.y0 as f32 * 16.0 * self.scale,
+            ];
+            let p1 = [
+                origin[0] + (norm.x1 + 1) as f32 * 16.0 * self.scale,
+                origin[1] + (norm.y1 + 1) as f32 * 16.0 * self.scale,
+            ];
+            ui.get_window_draw_list()
+                .add_rect(p0, p1, [1.0, 1.0, 1.0, 1.0])
+                .thickness(2.0)
+                .build();
+        }
     }
 
     fn refresh_objects(&mut self, project: &Project) -> Result<()> {
@@ -982,19 +1062,63 @@ impl SideviewEditor {
             }
         }
 
-        if let Some(_token) = ui.begin_popup_context_window() {
-            if let Some(_token) = ui.begin_menu("Emulate") {
-                for screen in 0..=3 {
-                    if ui.menu_item(format!("Screen {}", screen + 1)) {
-                        Python::attach(|py| {
-                            project.emulate(py, Some(&format!("{}/{screen}", self.path)))
-                        })?;
-                    }
+        let mut changed = false;
+        let io = ui.io();
+        let mouse_pos = io.mouse_pos;
+        let mx = mouse_pos[0] - scr_origin[0] + 8.0 * self.scale;
+        let my = mouse_pos[1] - scr_origin[1] + 8.0 * self.scale;
+        let tx = if mx >= 0.0 { (mx / scale) as isize } else { -1 };
+        let ty = if my >= 0.0 { (my / scale) as isize } else { -1 };
+        let modifier = io.key_ctrl | io.key_shift | io.key_alt | io.key_super;
+
+        if ui.is_window_hovered()
+            && tx >= 0
+            && tx < Decompressor::WIDTH as isize
+            && ty >= 0
+            && ty < Decompressor::HEIGHT as isize
+        {
+            if ui.is_mouse_clicked(MouseButton::Left) {
+                self.button_down = true;
+                if io.key_ctrl {
+                    self.selectbox.init(tx, ty);
+                    self.select_drag = true;
+                } else {
+                    self.selectbox = SelectBox::default();
+                }
+            } else if ui.is_mouse_clicked(MouseButton::Right) {
+                self.selectbox.init(tx, ty);
+                self.select_drag = true;
+            } else if ui.is_mouse_released(MouseButton::Right) {
+                self.select_drag = false;
+            } else if ui.is_mouse_released(MouseButton::Left) {
+                self.button_down = false;
+                self.select_drag = false;
+            }
+
+            if self.select_drag
+                && (ui.is_mouse_dragging(MouseButton::Left)
+                    || ui.is_mouse_dragging(MouseButton::Right))
+            {
+                self.selectbox.drag(tx, ty);
+            }
+
+            if !modifier && !self.select_drag && self.button_down {
+                // In sideview, we don't really have "tile painting" in the same way.
+                // But we can clear the selectbox if we click elsewhere.
+                if !self.selectbox.contains(tx, ty) {
+                    self.selectbox = SelectBox::default();
+                }
+            }
+
+            if KeyAction::get(ui) == KeyAction::Paste {
+                if self.paste_from_clipboard(ui, tx, ty) {
+                    self.changed = true;
+                    self.need_update = true;
+                    self.undo.push(self.sideview.clone());
                 }
             }
         }
 
-        let mut changed = false;
         if let Some(_enemy_group) = &config.enemy_group {
             let mut action = EditAction::None;
             for index in 0..self.sideview.enemy.data[self.enemy_list].len() {
@@ -1016,6 +1140,7 @@ impl SideviewEditor {
         }
         changed |= self.process_map_action(action);
 
+        self.draw_selectbox(scr_origin, ui);
         Ok(changed)
     }
 
@@ -1276,14 +1401,52 @@ impl SideviewEditor {
     }
 
     fn editor(&mut self, ui: &imgui::Ui, project: &mut Project) -> Result<()> {
+        let key_action = KeyAction::get(ui);
+        match key_action {
+            KeyAction::Undo => {
+                if let Some(sv) = self.undo.undo() {
+                    self.sideview = sv.clone();
+                    self.need_update = true;
+                    self.changed = true;
+                }
+            }
+            KeyAction::Redo => {
+                if let Some(sv) = self.undo.redo() {
+                    self.sideview = sv.clone();
+                    self.need_update = true;
+                    self.changed = true;
+                }
+            }
+            KeyAction::Copy => {
+                self.copy_to_clipboard(ui);
+            }
+            _ => {}
+        }
+
         if ui.button("Commit") {
             match self.commit(project) {
-                Ok(()) => self.changed = false,
+                Ok(()) => {
+                    self.changed = false;
+                    self.undo.reset(self.sideview.clone());
+                }
                 Err(e) => self.error.show(
                     "Commit Error",
                     &format!("Error comitting {:?}", self.path),
                     e,
                 ),
+            }
+        }
+        ui.same_line();
+        if ui.button("Emulate") {
+            ui.open_popup("emulate_popup");
+        }
+        if let Some(_token) = ui.begin_popup("emulate_popup") {
+            for screen in 0..=3 {
+                if ui.menu_item(format!("Screen {}", screen + 1)) {
+                    Python::attach(|py| {
+                        project.emulate(py, Some(&format!("{}/{screen}", self.path)))
+                    })?;
+                }
             }
         }
         ui.same_line();

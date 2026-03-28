@@ -11,6 +11,10 @@ The project is designed with a high-performance Rust core (for ROM manipulation,
 - **`rust/python_gui`**: A standalone, high-performance framework for building hybrid Rust/Python applications using the `Dear ImGui` toolkit.
 - **`rust/z2edit`**: The game-specific implementation that consumes the other crates to provide the ROM editor's logic.
 
+## Communication & Clarification
+- If any instruction or architectural direction is ambiguous, you **must** ask the user for clarification before proceeding with the implementation. Never make assumptions that lead to implementing logic with uncertainty (e.g., leaving questions in code comments).
+- **Commit Approval:** Do not perform git commits unless specifically approved by the user or if the user temporarily countermands this instruction.
+
 ## Directory Navigation & `ABOUT.md` Context
 
 This project uses `ABOUT.md` files in nearly every subdirectory to provide localized architectural and technical context. **Before investigating a specific subdirectory, always check for an `ABOUT.md` file.**
