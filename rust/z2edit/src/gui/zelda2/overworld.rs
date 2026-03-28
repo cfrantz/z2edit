@@ -577,6 +577,7 @@ impl OverworldEditor {
                     self.calculate_size(project)?;
                 }
                 if changed {
+                    self.changed = true;
                     self.undo.push(self.overworld.clone());
                 }
                 Ok(())
