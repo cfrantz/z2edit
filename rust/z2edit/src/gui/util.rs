@@ -189,7 +189,8 @@ impl Default for SelectBox {
 
 impl SelectBox {
     pub fn contains(&self, x: isize, y: isize) -> bool {
-        x >= self.x0 && x <= self.x1 && y >= self.y0 && y <= self.y1
+        let norm = self.normalized();
+        x >= norm.x0 && x <= norm.x1 && y >= norm.y0 && y <= norm.y1
     }
 
     pub fn init(&mut self, x: isize, y: isize) {

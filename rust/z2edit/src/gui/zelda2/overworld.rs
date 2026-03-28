@@ -457,10 +457,11 @@ impl OverworldEditor {
             }
             if !modifier && !self.select_drag && self.button_down {
                 if self.selectbox.contains(tx, ty) {
-                    for y in self.selectbox.y0..=self.selectbox.y1 {
-                        for x in self.selectbox.x0..=self.selectbox.x1 {
+                    let norm = self.selectbox.normalized();
+                    for y in norm.y0..=norm.y1 {
+                        for x in norm.x0..=norm.x1 {
                             let new = self.tile_selected as u8;
-                            let orig = self.overworld.map.data[ty as usize][tx as usize];
+                            let orig = self.overworld.map.data[y as usize][x as usize];
                             self.overworld.map.data[y as usize][x as usize] = new;
                             changed |= new != orig;
                         }
