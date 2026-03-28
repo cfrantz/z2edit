@@ -43,6 +43,9 @@ pub struct Project {
     #[serde(skip)]
     #[pyo3(get, set)]
     pub project_path: PathBuf,
+    #[serde(skip)]
+    #[pyo3(get, set)]
+    pub changed: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -173,6 +176,7 @@ if project.pre_unpack_hook:
                 config: Config::default(),
                 connectivity: Connectivity::default(),
                 project_path,
+                changed: false,
             },
         )?;
         Self::setup(py, project)
@@ -195,6 +199,7 @@ if project.pre_unpack_hook:
         FILTER_EDITLIST.set(true);
         let doc = doc?.to_json5().to_string();
         std::fs::write(path, &doc).with_context(|| format!("Could not write {path:?}"))?;
+        self.changed = false;
         Ok(())
     }
 
@@ -240,6 +245,7 @@ if project.pre_unpack_hook:
         edit.data = data;
         edit.meta.timestamp = UTime::now();
         edit.meta.user = whoami::username();
+        self.changed = true;
         Ok(())
     }
 
@@ -248,6 +254,7 @@ if project.pre_unpack_hook:
         edit.meta.timestamp = UTime::now();
         edit.meta.user = whoami::username();
         self.edits.insert(path, edit);
+        self.changed = true;
     }
 
     fn emulator_prepare(&self, sideview_path: &str, rom: &mut NesFile) -> Result<()> {
@@ -346,6 +353,7 @@ impl Project {
                 config: Config::default(),
                 connectivity: Connectivity::default(),
                 project_path: PathBuf::default(),
+                changed: false,
             },
         )?;
         Self::setup(py, project)

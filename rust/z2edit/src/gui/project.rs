@@ -7,7 +7,7 @@ use std::sync::Mutex;
 
 use crate::gui::util::TreeAction;
 use crate::gui::zelda2::metadata::MetadataEditor;
-use crate::gui::{ErrorDialog, Gui, GuiTree};
+use crate::gui::{ErrorDialog, Gui, GuiTree, Visibility};
 use crate::zelda2::project::Project;
 
 #[pyclass]
@@ -15,16 +15,15 @@ pub struct ProjectGui {
     #[pyo3(get)]
     project: Py<Project>,
     #[pyo3(get, set)]
-    filename: String,
+    pub filename: String,
     windows: Mutex<Vec<Box<dyn Gui>>>,
     error: ErrorDialog,
     window_id: u32,
+    visible: Visibility,
     dock_id: imgui::Id,
     edit_list: imgui::Id,
     edit_list_title: String,
     editor_pane: imgui::Id,
-    #[pyo3(get)]
-    wants_dispose: bool,
 }
 
 impl ProjectGui {
@@ -76,7 +75,12 @@ impl ProjectGui {
             if ui.menu_item("Export Patch") {}
             ui.separator();
             if ui.menu_item("Close") {
-                self.wants_dispose = true;
+                let changed = self.project.borrow(py).changed;
+                self.visible = if changed {
+                    Visibility::Changed
+                } else {
+                    Visibility::Dispose
+                };
             }
         });
     }
@@ -91,13 +95,21 @@ impl ProjectGui {
     }
 
     fn draw<'p>(&mut self, py: Python<'p>, ui: &imgui::Ui) {
+        let mut opened = self.visible.as_bool();
+        if !opened {
+            return;
+        }
+
         let size = [1000.0, 900.0];
+        let project_changed = self.project.borrow(py).changed;
         ui.window(format!(
             "{}##{}",
             self.project.borrow(py).name,
             self.window_id
         ))
+        .opened(&mut opened)
         .menu_bar(true)
+        .unsaved_document(project_changed)
         .size(size, imgui::Condition::FirstUseEver)
         .build(|| {
             if !Dock.dock_builder_has_node(self.dock_id) {
@@ -117,6 +129,13 @@ impl ProjectGui {
             ui.window(&self.edit_list_title)
                 .build(|| self.edit_tree(py, ui));
         });
+
+        self.visible.change(opened, project_changed);
+        self.visible.draw(
+            "Project Changed",
+            "There are unsaved changes in the Project.\nDo you want to discard them?",
+            ui,
+        );
 
         let mut project = self.project.borrow_mut(py);
         let mut windows = self.windows.lock().unwrap();
@@ -153,12 +172,17 @@ impl ProjectGui {
             windows: Default::default(),
             error: ErrorDialog::default(),
             window_id: rand::random(),
+            visible: Visibility::Visible,
             dock_id,
             edit_list: Default::default(),
             edit_list_title: format!("Edit List##{dock_val}"),
             editor_pane: Default::default(),
-            wants_dispose: false,
         })
+    }
+
+    #[getter]
+    fn wants_dispose(&self) -> bool {
+        self.visible == Visibility::Dispose
     }
 
     #[getter]
