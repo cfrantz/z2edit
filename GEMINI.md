@@ -14,7 +14,7 @@ The project is designed with a high-performance Rust core (for ROM manipulation,
 ## Communication & Clarification
 - If any instruction or architectural direction is ambiguous, you **must** ask the user for clarification before proceeding with the implementation. Never make assumptions that lead to implementing logic with uncertainty (e.g., leaving questions in code comments).
 - **Commit Approval:** Do not perform git commits unless specifically approved by the user or if the user temporarily countermands this instruction.
-- **Commit Format:** When committing, you **must** use the `--signoff` (or `-s`) flag. Additionally, override the commit author to include `+gemini` in the email address (e.g., `git commit --author="Chris Frantz <frantzcj+gemini@gmail.com>" -s ...`).
+- **Commit Format:** When committing, you **must** use the `--signoff` (or `-s`) flag. Additionally, you **must** include a trailer identifying the AI assistant by using the `--trailer "AI-assistant: Gemini"` flag (e.g., `git commit -s --trailer "AI-assistant: Gemini" ...`). Do not override the commit author's email address.
 
 ## Directory Navigation & `ABOUT.md` Context
 
