@@ -1,23 +1,20 @@
 # About `rust/nes/src`
 
-The files in this subdirectory implement useful utilities for dealing with NES ROM images (so-called `.nes` files) as well as a reasonably accurate NES emulator.  The utility structs/functions and the emulatore have bindings to python via the `pyo3` crate.
+This crate implements a general-purpose Nintendo Entertainment System (NES) emulation core designed for broad compatibility with a wide range of games. It serves as the high-performance engine for a hybrid Rust/Python emulator application.
 
-The following files exist in this subdirectory:
-- address.rs: Rust representation of NES address of different types (Cartridge PRG and CHR types, CPU address and .nes file offsets).
-- controller.rs: Emulates the NES controllers.
-- error.rs: Errors local to this crate.
-- freespace.rs: Utilities for managing free-space areas within a NES ROM.
-- hwpalette.rs: The traditional NES hardware color palette expressed as RGB constants.
-- lib.rs: The `nes` crate root.
-- nesfile.rs: Structs for dealing with .nes files.
-- peripheral.rs: A peripheral abstraction for the NES emulator.
-- ppu.rs: Emulates the NES Picture Processing Unit (aka PPU).
-- ram.rs: Emulates the RAM in the NES.
-- stall.rs: Helps the emulator manage CPU stall conditions because of DMA.
-- system.rs: The NES emulator.
+### Key Features
+- **General Compatibility**: Implements core NES hardware and numerous mappers to support a vast library of titles.
+- **Hybrid Architecture**: Leverages `pyo3` to expose the emulation core to Python, enabling high-level logic and plugins to be written in a more flexible language.
+- **Extensible Plugin System**: The core is designed to be extended via Python-based plugins (found in `python/z2edit/emulator`) for tasks like specialized debugging, MIDI synthesis, and input recording.
 
-The following additional subdirectories exist:
-- apu: Emulates the NES Audio Processing Unit (aka APU).
-- cpu: Emulates the NES 6502 CPU.
-- gui: Builds the emulator debug GUIs.
-- mapper: Contains emulations of several NES memory mapper chips.
+### Core Components
+- `system.rs`: The central emulator coordinator.
+- `cpu/`: Instruction-accurate 6502 CPU emulation.
+- `ppu.rs`: Cycle-accurate Picture Processing Unit emulation.
+- `apu/`: Audio Processing Unit emulation for all standard NES channels.
+- `mapper/`: Support for various NES memory mappers (MMC1, MMC3, MMC5, VRC7, etc.).
+- `nesfile.rs`: Utilities for parsing and managing `.nes` ROM images.
+- `address.rs`: Unified representation of NES memory and file offsets.
+- `gui/`: Debug and visualization interfaces built on the `python_gui` framework.
+
+Other files provide essential hardware support, including `controller.rs`, `ram.rs`, `stall.rs` (DMA handling), and `freespace.rs` for ROM modification tasks.

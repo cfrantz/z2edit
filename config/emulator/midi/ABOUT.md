@@ -1,3 +1,8 @@
 # About `config/emulator/midi`
 
-These are sample instrument configurations for z2edit's built-in NES emulator's midi plugin.  These files allow the user to experiment with different NES instrument settings as though the NES emulator were a MIDI synthesizer.
+This directory contains instrument and channel configurations for the NES emulator's **MIDI Synthesis Plugin** (located in `python/z2edit/emulator/midi/`).
+
+### Usage
+These JSON files allow the emulator to function as a MIDI-controlled synthesizer. They map MIDI channels and program changes to specific NES APU configurations (Pulse, Triangle, Noise, and DMC). By modifying these files, users can customize how the NES hardware responds to MIDI input, enabling experimental sound design and music composition using the emulator's core.
+
+The configurations specify parameters like duty cycles, envelope settings, and hardware sweep registers for the emulation of various instruments.

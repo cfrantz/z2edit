@@ -1,27 +1,16 @@
 # About `rust/z2edit/src/zelda2`
 
-This subdirectory contains the data model and ROM pack/unpack routines for the z2edit editor.
+This module implements the data model and ROM manipulation routines for "Zelda II: The Adventure of Link". It acts as the "source of truth" for the editor, managing how game data is interpreted from the ROM and how edits are tracked.
 
-- banks.rs: Models the game PRG banks in the ROM.
-- chr.rs: Handles the CHR graphics banks in the ROM.
-- config.rs: Constructs the entire configuration data structure from the other items in this subdir.
-- connectivity.rs: Models the sideview connectivity relationships in the game.
-- drops.rs: Handles the 6-count drop table and the palace dripper enemies and what items they drop.
-- edit.rs: Models a single edit in the editor and provides a pyo3 binding.
-- encounters.rs: Handles the overworld encounters table.
-- enemies.rs: Handles the per-bank enemy properties.
-- experience.rs: Handles the experience tables for Life, Magic and Attack.
-- items.rs: Handles the collectable item properties.
-- metatile.rs: Handles the metatile tables that construct 16x16 background objects from 8x8 tiles.
-- misc_hacks.rs: Handles the miscellaneous hacks provided by the editor.
-- mod.rs: The root of the module.
-- object.rs: Represents background objects used by the sideview editor.
-- overworld.rs: Handles overworld maps and the overworld connections table.
-- palette.rs: Handles palette tables in the ROM.
-- project.rs: Models a romhack project by representing the complete collection of edits made by the user.
-- rom.rs: Models the initial starting ROM for a romhack project.
-- sideview.rs: Handles the sideview areas in the game.  Includes sideview maps, enemy and item placement, townspeople text selection and sideview connectivity and doorway connectivity.
-- start.rs: Handles the initial start values of the game.
-- text_encoding.rs: Translates text between ASCII encoding and the proprietary Zelda2 encoding.
-- text_table.rs: Models the text table for text content spoken by NPCs in the game.
-- vchr.rs: Models the Virtual CHR table, which is a proprietary CHR expansion mechanism that may be employed by romhacks.
+### Core Architecture
+- **`Project` (`project.rs`)**: Represents the complete collection of user edits. Instead of modifying the base ROM directly, the editor tracks discrete `Edit` objects, allowing for non-destructive modification and easy undo/redo support.
+- **`Edit` (`edit.rs`)**: A serializable representation of a single change to the game data, exposed to Python via `pyo3`.
+- **`Config` (`config.rs`)**: A central registry that maps the game's physical ROM layout (offsets, sizes, banks) to the high-level data structures used by the editor.
+
+### Subsystems
+- **Map Editing**: `overworld.rs` (Overworld) and `sideview.rs` (Levels, Towns, Palaces).
+- **Game Objects**: `enemies.rs`, `items.rs`, and `object.rs`.
+- **Stat Tables**: `experience.rs`, `drops.rs`, and `encounters.rs`.
+- **Visuals**: `palette.rs`, `chr.rs`, and `metatile.rs`.
+- **Text**: `text_table.rs` and `text_encoding.rs` for proprietary Zelda 2 strings.
+- **ROM Management**: `rom.rs` (base ROM loading) and `vchr.rs` (Virtual CHR expansion).

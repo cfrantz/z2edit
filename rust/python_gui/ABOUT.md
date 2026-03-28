@@ -1,15 +1,20 @@
 # About `rust/python_gui`
 
-This rust crate is a `pyo3` binding to create a generic application framework for rust+python programs using the `Dear ImGui` gui toolkit.
+This crate provides a general-purpose, high-performance framework for building hybrid Rust and Python applications using the `Dear ImGui` toolkit. It is designed to be a reusable foundation for any project requiring a seamless GUI bridge between the two languages.
 
-In the `src` subdirectory, you'll find the following modules:
-- audio.rs: A basic audio framework based on SDL2 audio support.
-- dirs.rs: A basic wrapper around the `directories` crate.
-- docking.rs: Helper functions for manipulating ImGUI docking support.
-- font_awesome_5.rs: `const` definitions for FontAwesome.
-- framework.rs: A basic application framework for creating a window and running the main loop of an SDL2-based ImGUI application.
-- image.rs: A basic wrapper around SDL2 BMP image support.
-- lib.rs: The `python_gui` crate root.
-- style.rs: A basic wrapper around ImGUI's `Style` structure.
+### Architecture
+The framework avoids "double-binding" ImGUI by providing a unified bridge:
+1. **Rust Side**: Provides the application lifecycle (SDL2), audio/font support, and `pyo3` bindings for core utilities.
+2. **Python Side**: Provides direct access to ImGUI via `pybind11` (see `gui.cpp`), allowing Python components to participate in the rendering loop alongside Rust logic.
 
-In addition to binding some basic application building blocks from rust to Python, this module includes the file `gui.cpp`.  This file is a `pybind11` binding from ImGUI to python.  This is necessary to provide the Python components of an application access to ImGUI without having to "double-bind" ImGUI (e.g. ImGUI C++ bound to rust via the `imgui` crate then bound to python via `pyo3`).  This binding was created with the script `generate_python_bindings.py` and a bit of hand tweaking.
+### Core Modules
+- `audio.rs`: SDL2-based audio framework.
+- `dirs.rs`: Cross-platform directory management.
+- `docking.rs`: ImGUI docking layout helpers.
+- `font_awesome_5.rs`: FontAwesome icon constants.
+- `framework.rs`: The main application loop and window management.
+- `image.rs`: SDL2 image loading support.
+- `lib.rs`: The crate root and `pyo3` entry point.
+- `style.rs`: ImGUI style customization.
+
+The `gui.cpp` file and `generate_python_bindings.py` script manage the direct C++/Python ImGUI bindings that enable the framework's hybrid capabilities.

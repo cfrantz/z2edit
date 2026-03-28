@@ -1,21 +1,34 @@
-# Gemini context for z2edit
+# Gemini Context: z2edit
 
-This projct is `z2edit`, an editor and romhacking tool for the 8-bit Nintendo Entertainment System game "Zelda II: The Adventure of Link" (aka "Zelda 2" or "Zelda2").
+`z2edit` is a comprehensive ROM editor and development environment for the NES game "Zelda II: The Adventure of Link". It is built as a modular, hybrid application using Rust, Python, and C++.
 
-This project is a multi-lingual project using Rust, Python and C++.  There are `ABOUT.md` files in many subdirectories of this codebase that contain important context about the code in those subdirectories.
+## Core Architecture: Hybrid Rust/Python
 
-The files ere in the root of the project are:
-- Cargo.lock: lock file for the Cargo build system.
-- Cargo.toml: configuration file for the Cargo build system.
-- config: subdirectory with z2edit configuration data.
-- emulator: A symlink to z2edit's built-in NES emulator.
-- private: A subdirectory of work-in-progress files and other non-project resources useful to the author during development.
-- pyproject.toml: Python project configuration.
-- python: A subdirectory with python source code.
-- python-requirements.txt: Python PyPI dependencies.
-- README.md: The github user-visible README file.
-- rust: A subdirectory with rust source code.
-- rust-toolchain.toml: Rust toolchain configuration.
-- target: Cargo buildsystem output.
-- util: Utilities that may be of use during build (currently out of date).
-- z2edit: A symlink to the python startup script for the application.
+The project is designed with a high-performance Rust core (for ROM manipulation, emulation, and heavy GUI rendering) and a flexible Python shell (for application logic, extensibility, and scripting). 
+
+### Key Frameworks
+- **`rust/nes`**: A general-purpose NES emulation core designed for broad compatibility.
+- **`rust/python_gui`**: A standalone, high-performance framework for building hybrid Rust/Python applications using the `Dear ImGui` toolkit.
+- **`rust/z2edit`**: The game-specific implementation that consumes the other crates to provide the ROM editor's logic.
+
+## Directory Navigation & `ABOUT.md` Context
+
+This project uses `ABOUT.md` files in nearly every subdirectory to provide localized architectural and technical context. **Before investigating a specific subdirectory, always check for an `ABOUT.md` file.**
+
+### Root Directory Overview
+- `config/`: JSON5-based game schemas and emulator plugin configurations. (See `config/ABOUT.md`).
+- `python/`: The Python shell, extension modules, and the emulator's plugin system. (See `python/z2edit/ABOUT.md`).
+- `rust/`: The high-performance core logic, divided into several crates. (See `rust/ABOUT.md`).
+- `.venv/`: The local Python virtual environment. It contains the configuration and installed modules listed in `python-requirements.txt`. This directory is **not under source control** because virtual environments are system-dependent (e.g., based on the local Python version).
+- `z2edit`: A symlink to the Python entry point for the application.
+- `emulator`: A symlink to the standalone emulator application.
+- `Cargo.toml`/`Cargo.lock`: Configuration for the Rust build system.
+- `pyproject.toml`/`python-requirements.txt`: Configuration for the Python environment and its dependencies.
+
+## Extension & Extensibility
+The NES emulator includes a Python-based plugin system (located in `python/z2edit/emulator/`) for tasks like specialized debugging, MIDI synthesis, and movie playback. (See `python/z2edit/emulator/ABOUT.md`).
+
+## Developer Resources
+- `private/`: Workspace for in-progress files and internal documentation (ignored by source control).
+- `util/`: Build-related utilities (may be out-of-date).
+- `README.md`: High-level project information for users.

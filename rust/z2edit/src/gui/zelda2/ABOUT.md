@@ -1,21 +1,28 @@
 # About `rust/z2edit/src/gui/zelda2`
 
-- banks.rs: Builds the banks GUI tree structure.
-- chr.rs: An editor for working with CHR banks.
-- config.rs: Builds the toplevel GUI tree based on the config.
-- drops.rs: An editor for adjusting the drop table and dripper enemies.
-- encounters.rs: An editor for adjusting the overworld encounters table.
-- enemies.rs: An editor for adjusting enemy properties.
-- experience.rs: An editor for adjusting experience values.
-- items.rs: An editor for adjusting item conditions.
-- metadata.rs: An editor for editing metadata in the project.
-- metatile.rs: An editor for adjusting metatile graphics.
-- misc_hacks.rs: An editor for selecting and adjusting misc hacks.
-- mod.rs: The root of the module.
-- multimap.rs: A GUI for visualizing an entire connected sideview area (like a palace or town).
-- overworld.rs: An editor for editing the overworld and overworld connections table.
-- palette.rs: An editor for adjusting color palettes.
-- sideview.rs: An editor for editing sideview areas, enemy placements, item availability and sideview connections.
-- start.rs: An editor for adjusting the game start properties.
-- text_table.rs: An editor for editing the text spoken by townspeople.
-- vchr.rs: An editor for adjusting the proprietary `vchr` table.
+This subdirectory contains the specialized GUI editors for the "Zelda II: The Adventure of Link" ROM components. Each module is built to provide an intuitive interface for complex ROM data structures.
+
+### Map & World Editors
+- **`overworld.rs`**: Editor for overworld maps and connection tables.
+- **`sideview.rs`**: The primary level editor for sideview areas, enemy/item placement, and connectivity.
+- **`multimap.rs`**: A visualization tool for entire connected sideview areas (e.g., palaces, towns).
+
+### Graphics & Visuals
+- **`chr.rs` & `vchr.rs`**: Editors for standard and virtual (extended) CHR banks.
+- **`metatile.rs`**: Editor for background 16x16 metatiles.
+- **`palette.rs`**: A specialized color palette editor for game visuals.
+
+### Game Mechanics & Stats
+- **`enemies.rs`**: Editor for global enemy properties.
+- **`drops.rs`**: Controls the enemy drop table and dripper properties.
+- **`encounters.rs`**: Editor for overworld encounter triggers.
+- **`experience.rs`**: Adjusts the level-up tables for Life, Magic, and Attack.
+- **`items.rs`**: Editor for collectable item availability and conditions.
+- **`start.rs`**: Editor for initial starting properties (stats, items, position).
+
+### Data & Misc
+- **`banks.rs`**: Visual representation and navigation of PRG ROM banks.
+- **`text_table.rs`**: Editor for NPC dialogue and town text.
+- **`metadata.rs`**: Editor for project-level information and notes.
+- **`misc_hacks.rs`**: Selection and adjustment of built-in ROM patches.
+- **`config.rs`**: Core GUI initialization logic driven by the vanilla configuration.
