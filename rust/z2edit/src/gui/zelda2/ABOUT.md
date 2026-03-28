@@ -1,0 +1,21 @@
+# About `rust/z2edit/src/gui/zelda2`
+
+- banks.rs: Builds the banks GUI tree structure.
+- chr.rs: An editor for working with CHR banks.
+- config.rs: Builds the toplevel GUI tree based on the config.
+- drops.rs: An editor for adjusting the drop table and dripper enemies.
+- encounters.rs: An editor for adjusting the overworld encounters table.
+- enemies.rs: An editor for adjusting enemy properties.
+- experience.rs: An editor for adjusting experience values.
+- items.rs: An editor for adjusting item conditions.
+- metadata.rs: An editor for editing metadata in the project.
+- metatile.rs: An editor for adjusting metatile graphics.
+- misc_hacks.rs: An editor for selecting and adjusting misc hacks.
+- mod.rs: The root of the module.
+- multimap.rs: A GUI for visualizing an entire connected sideview area (like a palace or town).
+- overworld.rs: An editor for editing the overworld and overworld connections table.
+- palette.rs: An editor for adjusting color palettes.
+- sideview.rs: An editor for editing sideview areas, enemy placements, item availability and sideview connections.
+- start.rs: An editor for adjusting the game start properties.
+- text_table.rs: An editor for editing the text spoken by townspeople.
+- vchr.rs: An editor for adjusting the proprietary `vchr` table.
