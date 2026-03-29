@@ -810,6 +810,12 @@ impl SideviewEditor {
                 action.set(self.draw_map_command(i, false, ui, project)?);
             }
         }
+        if self.sideview.map.data.is_empty() {
+            if ui.button(&format!("{}", fa::ICON_COPY)) {
+                action.set(EditAction::NewAt(0));
+            }
+            tooltip("Insert a new Map Command", ui);
+        }
         Ok(action)
     }
 
