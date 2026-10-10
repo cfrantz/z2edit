@@ -39,6 +39,11 @@ pub struct MMC5 {
     timer_irq: u8,
     timer_running: bool,
 
+    pcm_mode: u8,
+    pcm_irq_enabled: bool,
+    pcm_irq_trip: bool,
+    pcm_dac: u8,
+
     clock_divider: u8,
     bg_fetch: bool,
     ppu_rendering_enabled: bool,
@@ -80,6 +85,11 @@ impl MMC5 {
             timer_irq: 0,
             timer_running: false,
 
+            pcm_mode: 0,
+            pcm_irq_enabled: false,
+            pcm_irq_trip: false,
+            pcm_dac: 0,
+
             clock_divider: 0,
             bg_fetch: false,
             ppu_rendering_enabled: false,
@@ -98,6 +108,14 @@ impl MMC5 {
 
     fn read_register(&mut self, addr: u16) -> u8 {
         match addr {
+            0x5010 => {
+                let mut val = 0x01; // Default MMC5A revision bit
+                if self.pcm_irq_trip {
+                    val |= 0x80;
+                }
+                self.pcm_irq_trip = false;
+                val
+            }
             0x5100 => self.prg_mode,
             0x5101 => self.chr_mode,
             0x5102 => self.prg_ram_protect[0],
@@ -132,8 +150,24 @@ impl MMC5 {
         }
     }
 
-    fn write_register(&mut self, addr: u16, val: u8) {
+    fn write_register(&mut self, nes: &Nes, addr: u16, val: u8) {
         match addr {
+            0x5010 => {
+                self.pcm_mode = val & 0x01;
+                self.pcm_irq_enabled = (val & 0x80) != 0;
+            }
+            0x5011 => {
+                if self.pcm_mode == 0 {
+                    if val == 0 {
+                        self.pcm_irq_trip = true;
+                        if self.pcm_irq_enabled {
+                            nes.signal_irq();
+                        }
+                    } else {
+                        self.pcm_dac = val;
+                    }
+                }
+            }
             0x5000 => self.pulse[0].set_control(val),
             0x5001 => { /* MMC5 pulse channels have no sweep unit. */ }
             0x5002 => self.pulse[0].set_timer_low(val),
@@ -171,6 +205,7 @@ impl MMC5 {
             0x5209 => {
                 self.timer = (self.timer & 0xFF00) | (val as u16);
                 self.timer_running = true;
+                self.timer_irq &= !0x80;
             }
             0x520a => {
                 self.timer = (self.timer & 0x00FF) | ((val as u16) << 8);
@@ -387,6 +422,7 @@ impl MMC5 {
         if s1 != s2 {
             nes.audio_sample("MMC5: Pulse 0", self.pulse[0].output());
             nes.audio_sample("MMC5: Pulse 1", self.pulse[1].output());
+            nes.audio_sample("MMC5: PCM", self.pcm_dac as f32 / 127.0);
         }
     }
 }
@@ -464,15 +500,28 @@ impl Peripheral for MMC5 {
                 0x8000..=0xFFFF => {
                     // Because of the complexity of MMC5 PRG modes, we just
                     // calculate the file offset rather than using the Prg variants.
-                    let addr = self.translate_prg(addr);
-                    let a = Address::File(16 + addr);
-                    match rom.read(a) {
+                    let translated = self.translate_prg(addr);
+                    let a = Address::File(16 + translated);
+                    let val = match rom.read(a) {
                         Ok(v) => v,
                         Err(e) => {
                             log::error!("MMC5 failed to read rom {a:x?}: {e}");
                             0xff
                         }
+                    };
+
+                    // MMC5 PCM Read-Mode Auto-Update
+                    if self.pcm_mode == 1 && (0x8000..=0xBFFF).contains(&addr) {
+                        if val == 0 {
+                            self.pcm_irq_trip = true;
+                            if self.pcm_irq_enabled {
+                                nes.signal_irq();
+                            }
+                        } else {
+                            self.pcm_dac = val;
+                        }
                     }
+                    val
                 }
                 _ => {
                     log::warn!("MMC5: unhandled CPU read: address={:04x}", addr);
@@ -517,7 +566,7 @@ impl Peripheral for MMC5 {
     fn write(&mut self, nes: &Nes, address: Address, val: u8) {
         match address {
             Address::Cpu(addr) => match addr {
-                0x5000..=0x57FF => self.write_register(addr, val),
+                0x5000..=0x57FF => self.write_register(nes, addr, val),
                 0x5800..=0x5BFF => {
                     log::warn!(
                         "MMC5: unknown register write: address={:04x} value={:02x}",

@@ -1,0 +1,31 @@
+{
+    "name": "static",
+    "kind": "nes2a03",
+    "volume": {
+        "points": {
+            "0": 15
+        },
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "arpeggio": {
+        "points": {},
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "pitch": {
+        "points": {},
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "duty": {
+        "points": {},
+        "loop": null,
+        "release": null,
+        "missing_value": "last"
+    },
+    "bend_range": 15
+}

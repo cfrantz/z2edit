@@ -212,6 +212,7 @@ class Instrument(DataClassJsonMixin):
     duty: Optional[Envelope] = None
     dpcm: list[DpcmAssignment] = field(default_factory=list)
     sample: dict[int, DpcmSample] = field(default_factory=dict)
+    bend_range: Optional[int] = None
 
     def _parse_basic(self, buffer, offset):
         (count,) = struct.unpack_from("<B", buffer, offset)

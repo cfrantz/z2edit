@@ -113,6 +113,15 @@ class MidiChannel(object):
             inst.note_off()
             self.keys[note] = None
 
+    def pitchwheel(self, msg):
+        bend = msg.pitch / 8192.0
+        logger.info(f"pitchwheel={msg}")
+        for i, inst in enumerate(self.keys):
+            if inst:
+                logger.info(f"    applying {bend=} to {i}")
+                inst.pitch_bend(bend)
+
+
     def program_change(self, msg):
         program = msg.program + 1
         self.instrument = self.config.midi_program.get(program, 0)

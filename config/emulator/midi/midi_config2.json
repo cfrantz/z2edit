@@ -77,6 +77,22 @@
                     "instrument": "snare",
                     "timer": 6
                 },
+                "60": {"instrument":"static", "timer": 0},
+                "61": {"instrument":"static", "timer": 1},
+                "62": {"instrument":"static", "timer": 2},
+                "63": {"instrument":"static", "timer": 3},
+                "64": {"instrument":"static", "timer": 4},
+                "65": {"instrument":"static", "timer": 5},
+                "66": {"instrument":"static", "timer": 6},
+                "67": {"instrument":"static", "timer": 7},
+                "68": {"instrument":"static", "timer": 8},
+                "69": {"instrument":"static", "timer": 9},
+                "70": {"instrument":"static", "timer": 10},
+                "71": {"instrument":"static", "timer": 11},
+                "72": {"instrument":"static", "timer": 12},
+                "73": {"instrument":"static", "timer": 13},
+                "74": {"instrument":"static", "timer": 14},
+                "75": {"instrument":"static", "timer": 15},
                 "-1": {
                     "instrument": "__skip__",
                     "timer": 0
@@ -86,6 +102,7 @@
     },
     "load_instruments": [
         "instruments/pulse.json",
+        "instruments/static.json",
         "instruments/reverb.json",
         "instruments/triangle.json",
         "instruments/snare.json",

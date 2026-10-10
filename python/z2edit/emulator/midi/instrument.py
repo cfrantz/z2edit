@@ -125,6 +125,7 @@ class Instrument(object):
         self.timer = timer
         self.dpcm_map = {}
         self.sample = {}
+        self.bend_range = 1200
         if config:
             self.kind = config.kind
             self.name = config.name
@@ -140,6 +141,8 @@ class Instrument(object):
                 self.dpcm_map = {v.note: v for v in config.dpcm}
             if config.sample:
                 self.sample = config.sample
+            if config.bend_range:
+                self.bend_range = config.bend_range
         self.note = 0
         self.velocity = 0
         self.seq = 0
@@ -147,6 +150,7 @@ class Instrument(object):
         self.dpcm_sample = bytes()
         self.dpcm_length = 0
         self.dpcm_per_frame = 0
+        self.bend = 0
 
     def tick(self):
         self.volume.tick()
@@ -155,6 +159,10 @@ class Instrument(object):
         self.duty.tick()
         if self.dpcm_length > 0:
             self.dpcm_length -= self.dpcm_per_frame
+
+    def pitch_bend(self, bend):
+        self.bend = int(bend * self.bend_range)
+        logger.info(f"{bend=} -> {self.bend}")
 
     def note_on(self, note, velocity=127, seq=0):
         self.note = note
@@ -239,10 +247,11 @@ class Instrument(object):
                 return {}
 
         if self.timer is None:
-            f = frequency(self.note + self.arpeggio.value)
+            f = frequency(self.note + self.arpeggio.value, self.bend)
             timer = timer_value(f) + self.pitch.value
         else:
-            timer = self.timer + self.pitch.value
+            timer = self.timer + self.pitch.value + self.bend
+            timer = min(max(0, timer), 0x7ff)
         return {
             "timer": timer,
             "volume": int(self.volume.value * self.velocity),
