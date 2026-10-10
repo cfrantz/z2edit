@@ -18,6 +18,10 @@ class Fm2Movie(plugin.Plugin):
     def __init__(self, emulator, args):
         super().__init__(emulator)
         self.frames = {}
+        # Frame offset between the emulator's frame counter and the movie's
+        # input records.  This depends on the emulator that recorded the
+        # movie (e.g. 0 works for FCEUX 2.1.5 movies).
+        self.offset = 2
         if args:
             self.load_movie(args[0])
 
@@ -27,7 +31,7 @@ class Fm2Movie(plugin.Plugin):
                 self.load_movie(None)
 
     def run_pre_frame(self):
-        fnum = self.emulator.nes.frame + 2
+        fnum = self.emulator.nes.frame + self.offset
         if frame := self.frames.get(fnum):
             # logger.info("Frame %d = %r", fnum, frame)
             for i, buttons in enumerate(frame.get("buttons", [])):

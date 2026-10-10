@@ -6,6 +6,7 @@ use python_gui::{AudioOut, Color, Image};
 use serde::{Deserialize, Serialize};
 
 use crate::apu::Apu;
+use crate::cdl::{Cdl, JumpKind};
 use crate::controller::Controllers;
 use crate::cpu::{Cpu6502, HaltState};
 use crate::mapper;
@@ -15,6 +16,8 @@ use crate::ram::{Ram, RamKind};
 use crate::stall::Stall;
 use crate::{Address, AddressRange, NesFile};
 use std::sync::atomic::{AtomicBool, AtomicI32, AtomicI64, Ordering};
+use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::sync::{Arc, Mutex};
 
 #[pyclass]
@@ -62,6 +65,11 @@ pub struct Nes {
 
     pub trace: AtomicBool,
     pub tracebuf: Arc<Mutex<IndexMap<Address, u64>>>,
+
+    pub(crate) cdl_enabled: AtomicBool,
+    pub(crate) cdl: Arc<Mutex<Option<Cdl>>>,
+
+    trace_log: Arc<Mutex<Option<BufWriter<File>>>>,
 }
 
 impl Nes {
@@ -244,6 +252,103 @@ impl Nes {
         }
     }
 
+    /// Convert a CPU address into an offset into PRG ROM, if the address
+    /// is currently mapped to PRG ROM.
+    fn cpu_to_prg_offset(&self, cpu: u16) -> Option<usize> {
+        if cpu < 0x6000 {
+            return None;
+        }
+        let addr = self.mapper.lock().unwrap().cpu_to_address(cpu);
+        self.rom.lock().unwrap().prg_offset(addr)
+    }
+
+    #[inline]
+    pub(crate) fn cdl_active(&self) -> bool {
+        self.cdl_enabled.load(Ordering::Relaxed)
+    }
+
+    /// Mark `len` bytes starting at CPU address `cpu` with `flags` in the CDL.
+    pub(crate) fn cdl_mark(&self, cpu: u16, len: u16, flags: u8) {
+        let mut cdl = self.cdl.lock().unwrap();
+        if let Some(cdl) = cdl.as_mut() {
+            for i in 0..len {
+                let a = cpu.wrapping_add(i);
+                if let Some(offset) = self.cpu_to_prg_offset(a) {
+                    cdl.mark(offset, a, flags);
+                }
+            }
+        }
+    }
+
+    /// Note that an interrupt is being taken, so that subsequent CDL
+    /// accesses aren't attributed to the previous instruction.
+    pub(crate) fn cdl_interrupt(&self) {
+        if let Some(cdl) = self.cdl.lock().unwrap().as_mut() {
+            cdl.current = None;
+        }
+    }
+
+    /// Record an indirect control transfer in the CDL.
+    pub(crate) fn cdl_jump(&self, kind: JumpKind, src: u16, dst: u16) {
+        let src_offset = self.cpu_to_prg_offset(src).unwrap_or(usize::MAX);
+        let dst_offset = self.cpu_to_prg_offset(dst);
+        let mut cdl = self.cdl.lock().unwrap();
+        if let Some(cdl) = cdl.as_mut() {
+            cdl.jumps.insert((kind, src_offset, dst, dst_offset));
+            if let Some(offset) = dst_offset {
+                cdl.mark(offset, dst, Cdl::INDIRECT_TARGET);
+            }
+        }
+    }
+
+    fn emulate_frame_inner(&self) -> bool {
+        let start = self.cpu.lock().unwrap().cycles as i64 * 2;
+        let eof = start + 59561 + self.remainder.load(Ordering::Relaxed);
+        loop {
+            let cycles = self.cpu.lock().unwrap().cycles as i64 * 2;
+            if cycles >= eof {
+                let _f = self.frame.fetch_add(1, Ordering::Relaxed);
+                //log::info!(
+                //    "Frame {_f} ended on cycle {} ({}, {})",
+                //    cycles / 2,
+                //    (cycles - start) / 2,
+                //    eof - cycles
+                //);
+                self.remainder.store(eof - cycles, Ordering::Relaxed);
+                break;
+            }
+            if !self.tick() {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Write one instruction to the trace log, if tracing.
+    fn trace_instruction(&self, cpu: &Cpu6502) {
+        let mut log = self.trace_log.lock().unwrap();
+        if let Some(w) = log.as_mut() {
+            let bank = match self.mapper.lock().unwrap().cpu_to_address(cpu.pc) {
+                addr @ (Address::Prg(..) | Address::Prg8k(..)) => self
+                    .rom
+                    .lock()
+                    .unwrap()
+                    .prg_offset(addr)
+                    .map(|o| format!("{:>2}", o / 16384))
+                    .unwrap_or_else(|| " ?".into()),
+                _ => " -".into(),
+            };
+            let (dis, _) = Cpu6502::disassemble(self, cpu.pc);
+            let _ = writeln!(
+                w,
+                "{:>7} {:>10} {bank}:{dis:<30} {}",
+                self.frame.load(Ordering::Relaxed),
+                cpu.cycles,
+                cpu.cpustate()
+            );
+        }
+    }
+
     fn trace_cycles(&self, pc: Address, cycles: u64) {
         let mut tracebuf = self.tracebuf.lock().unwrap();
         if let Some(time) = tracebuf.get_mut(&pc) {
@@ -292,6 +397,9 @@ impl Nes {
             step_cb: Arc::default(),
             trace: AtomicBool::default(),
             tracebuf: Arc::default(),
+            cdl_enabled: AtomicBool::default(),
+            cdl: Arc::default(),
+            trace_log: Arc::default(),
         };
         nes.register_peripherals()?;
         Ok(Py::new(py, nes)?)
@@ -428,6 +536,58 @@ impl Nes {
         self.stall.clone_from(&state.stall);
     }
 
+    /// Start (or restart) code/data logging.
+    pub fn cdl_start(&self) {
+        let size = self.rom_prg_banks() * 16384;
+        *self.cdl.lock().unwrap() = Some(Cdl::new(size));
+        self.cdl_enabled.store(true, Ordering::Relaxed);
+    }
+
+    /// Stop code/data logging and return the log.
+    pub fn cdl_stop(&self) -> Option<Cdl> {
+        self.cdl_enabled.store(false, Ordering::Relaxed);
+        self.cdl.lock().unwrap().take()
+    }
+
+    /// Start writing an instruction trace to `path`.  Each line holds the
+    /// frame number, CPU cycle, PRG bank, disassembly and CPU state.
+    pub fn trace_start(&self, path: &str) -> Result<()> {
+        *self.trace_log.lock().unwrap() = Some(BufWriter::new(File::create(path)?));
+        Ok(())
+    }
+
+    /// Stop writing the instruction trace.
+    pub fn trace_stop(&self) -> Result<()> {
+        if let Some(mut w) = self.trace_log.lock().unwrap().take() {
+            w.flush()?;
+        }
+        Ok(())
+    }
+
+    /// Return a copy of the current code/data log.
+    #[getter]
+    pub fn get_cdl(&self) -> Option<Cdl> {
+        self.cdl.lock().unwrap().clone()
+    }
+
+    /// Emulate `n` frames without audio or video output.
+    /// Returns the number of frames emulated, which may be fewer than
+    /// requested if the CPU halts.  If `pre_frame` is given, it is called
+    /// with the frame number before each frame is emulated.
+    #[pyo3(signature = (n, pre_frame=None))]
+    pub fn run_frames(&self, py: Python<'_>, n: u64, pre_frame: Option<Py<PyAny>>) -> PyResult<u64> {
+        for i in 0..n {
+            if let Some(cb) = &pre_frame {
+                cb.call1(py, (self.get_frame(),))?;
+            }
+            if !self.emulate_frame_inner() {
+                return Ok(i);
+            }
+            self.audio.lock().expect("Failed to lock audio").clear();
+        }
+        Ok(n)
+    }
+
     pub fn emulate_frame(&self, audio: &AudioOut) -> bool {
         let pause = self.pause.load(Ordering::Relaxed);
         let frame_step = self.frame_step.load(Ordering::Relaxed);
@@ -441,27 +601,7 @@ impl Nes {
         if self.audio_ready() {
             let _ = self.audio_play(audio);
         }
-
-        let start = self.cpu.lock().unwrap().cycles as i64 * 2;
-        let eof = start + 59561 + self.remainder.load(Ordering::Relaxed);
-        loop {
-            let cycles = self.cpu.lock().unwrap().cycles as i64 * 2;
-            if cycles >= eof {
-                let _f = self.frame.fetch_add(1, Ordering::Relaxed);
-                //log::info!(
-                //    "Frame {_f} ended on cycle {} ({}, {})",
-                //    cycles / 2,
-                //    (cycles - start) / 2,
-                //    eof - cycles
-                //);
-                self.remainder.store(eof - cycles, Ordering::Relaxed);
-                break;
-            }
-            if !self.tick() {
-                return false;
-            }
-        }
-        true
+        self.emulate_frame_inner()
     }
 
     pub fn tick(&self) -> bool {
@@ -504,6 +644,11 @@ impl Nes {
                 }
                 if cpu.halted == HaltState::Continue {
                     cpu.halted = HaltState::Running;
+                }
+                // Don't trace a step that only dispatches an interrupt.
+                let irq = cpu.irq_pending && cpu.p & 0x04 == 0;
+                if cpu.halted == HaltState::Running && !cpu.reset_pending && !cpu.nmi_pending && !irq {
+                    self.trace_instruction(&cpu);
                 }
                 let n = cpu.execute(self);
                 if self.trace.load(Ordering::Relaxed) {

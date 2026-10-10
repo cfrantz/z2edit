@@ -3,6 +3,7 @@ use pyo3::py_run;
 
 pub mod address;
 pub(crate) mod apu;
+pub mod cdl;
 pub(crate) mod controller;
 pub(crate) mod cpu;
 mod error;
@@ -37,6 +38,8 @@ fn _nes(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<AddressRange>()?;
     m.add_class::<cpu::Cpu6502>()?;
     m.add_class::<cpu::HaltState>()?;
+    m.add_class::<cdl::Cdl>()?;
+    m.add_class::<cdl::JumpKind>()?;
     m.add_class::<freespace::Alloc>()?;
     m.add_class::<gui::emulator::EmulatorGui>()?;
     Ok(())

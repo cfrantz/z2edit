@@ -111,6 +111,16 @@ impl NesFile {
             }
         }
     }
+
+    /// Return the offset of a PRG address relative to the start of PRG ROM.
+    pub(crate) fn prg_offset(&self, addr: Address) -> Option<usize> {
+        match addr {
+            Address::Prg(..) | Address::Prg8k(..) => {
+                self.offset(addr).ok().map(|x| x - Self::HEADER_SZ)
+            }
+            _ => None,
+        }
+    }
 }
 
 #[pymethods]

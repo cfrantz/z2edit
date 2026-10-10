@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::cpu6502_info::{AddressingMode, INFO, NAMES};
+use crate::cdl::{Cdl, JumpKind};
 use crate::Address;
 use crate::Nes;
 
@@ -99,6 +100,20 @@ impl Cpu6502 {
             });
         }
         nes.write(Address::Cpu(address), value);
+    }
+
+    /// Read an instruction's data operand, recording the access in the CDL.
+    fn read_data(&self, nes: &Nes, address: u16, mode: AddressingMode) -> u8 {
+        if nes.cdl_active() {
+            match mode {
+                AddressingMode::Immediate => {}
+                AddressingMode::IndexedIndirect | AddressingMode::IndirectIndexed => {
+                    nes.cdl_mark(address, 1, Cdl::DATA | Cdl::DATA_INDIRECT)
+                }
+                _ => nes.cdl_mark(address, 1, Cdl::DATA),
+            }
+        }
+        self.read(nes, address)
     }
 
     fn read16(&self, nes: &Nes, address: u16) -> u16 {
@@ -225,6 +240,16 @@ impl Cpu6502 {
         }
     }
 
+    /// Determine whether `addr` is the return address of a `JSR` (ie: the
+    /// instruction 3 bytes prior is a `JSR`).  Only ROM addresses are checked
+    /// to avoid side effects of reading hardware registers.
+    fn follows_jsr(&self, nes: &Nes, addr: u16) -> bool {
+        if addr < 0x8003 {
+            return true;
+        }
+        nes.read(Address::Cpu(addr - 3)) == 0x20
+    }
+
     fn branch(&mut self, target: u16, cond: bool) {
         if cond {
             self.cycles += Cpu6502::pages_differ(self.pc, target, 2, 1);
@@ -306,6 +331,11 @@ impl Cpu6502 {
             self.x = 0;
             self.y = 0;
             self.pc = self.read16(nes, 0xFFFCu16);
+            if nes.cdl_active() {
+                nes.cdl_interrupt();
+                nes.cdl_mark(0xFFFC, 2, Cdl::DATA);
+                nes.cdl_jump(JumpKind::Vector, 0xFFFC, self.pc);
+            }
         } else if self.nmi_pending {
             self.nmi_pending = false;
             self.push16(nes, self.pc);
@@ -313,6 +343,14 @@ impl Cpu6502 {
             self.p |= Self::FLAG_I;
             self.pc = self.read16(nes, 0xFFFAu16);
             self.cycles += 7;
+            if nes.cdl_active() {
+                nes.cdl_interrupt();
+                nes.cdl_mark(0xFFFA, 2, Cdl::DATA);
+                nes.cdl_jump(JumpKind::Vector, 0xFFFA, self.pc);
+            }
+            // Dispatching the interrupt is its own step so that exec
+            // callbacks see the first instruction of the handler.
+            return self.cycles - c;
         } else if self.irq_pending && (self.p & Self::FLAG_I) == 0 {
             self.irq_pending = false;
             self.push16(nes, self.pc);
@@ -320,6 +358,14 @@ impl Cpu6502 {
             self.p |= Self::FLAG_I;
             self.pc = self.read16(nes, 0xFFFEu16);
             self.cycles += 7;
+            if nes.cdl_active() {
+                nes.cdl_interrupt();
+                nes.cdl_mark(0xFFFE, 2, Cdl::DATA);
+                nes.cdl_jump(JumpKind::Vector, 0xFFFE, self.pc);
+            }
+            // Dispatching the interrupt is its own step so that exec
+            // callbacks see the first instruction of the handler.
+            return self.cycles - c;
         }
 
         // Read opcode from memory, then compute the opaddr address,
@@ -330,6 +376,13 @@ impl Cpu6502 {
         let pc1 = self.pc.wrapping_add(1);
         self.pc = self.pc.wrapping_add(info.size as u16);
         self.cycles += info.cycles as u64;
+        let cdl = nes.cdl_active();
+        if cdl {
+            nes.cdl_mark(iaddr, 1, Cdl::OPCODE);
+            if info.size > 1 {
+                nes.cdl_mark(pc1, info.size as u16 - 1, Cdl::OPERAND);
+            }
+        }
         let opaddr = match info.mode {
             AddressingMode::Absolute => self.read16(nes, pc1),
             AddressingMode::AbsoluteX => {
@@ -386,12 +439,12 @@ impl Cpu6502 {
 
             // ORA <mem> opcodes
             0x01 | 0x05 | 0x09 | 0x0d | 0x11 | 0x15 | 0x19 | 0x1d => {
-                self.a |= self.read(nes, opaddr);
+                self.a |= self.read_data(nes, opaddr, info.mode);
                 self.set_zn(self.a);
             }
             // ASL <mem>
             0x06 | 0x0e | 0x16 | 0x1e => {
-                let val = self.read(nes, opaddr);
+                let val = self.read_data(nes, opaddr, info.mode);
                 self.set_c(val & 0x80 != 0);
                 self.set_zn(val << 1);
                 self.write(nes, opaddr, val << 1);
@@ -414,22 +467,25 @@ impl Cpu6502 {
             0x20 => {
                 self.push16(nes, self.pc.wrapping_sub(1));
                 self.pc = opaddr;
+                if cdl {
+                    nes.cdl_mark(opaddr, 1, Cdl::SUB_ENTRY);
+                }
             }
             // AND <mem> opcodes
             0x21 | 0x25 | 0x29 | 0x2d | 0x31 | 0x35 | 0x39 | 0x3d => {
-                self.a &= self.read(nes, opaddr);
+                self.a &= self.read_data(nes, opaddr, info.mode);
                 self.set_zn(self.a);
             }
             // BIT <mem> opcodes
             0x24 | 0x2c => {
-                let val = self.read(nes, opaddr);
+                let val = self.read_data(nes, opaddr, info.mode);
                 self.set_v(val & 0x40 == 0x40);
                 self.set_z(val & self.a);
                 self.set_n(val);
             }
             // ROL <mem> opaddrs
             0x26 | 0x2e | 0x36 | 0x3e => {
-                let r = self.read(nes, opaddr) as u16;
+                let r = self.read_data(nes, opaddr, info.mode) as u16;
                 let carry = if self.p & Self::FLAG_C != 0 {
                     1u16
                 } else {
@@ -467,12 +523,12 @@ impl Cpu6502 {
 
             // EOR <mem> opcodes
             0x41 | 0x45 | 0x49 | 0x4d | 0x51 | 0x55 | 0x59 | 0x5d => {
-                self.a ^= self.read(nes, opaddr);
+                self.a ^= self.read_data(nes, opaddr, info.mode);
                 self.set_zn(self.a);
             }
             // LSR <mem>
             0x46 | 0x4e | 0x56 | 0x5e => {
-                let val = self.read(nes, opaddr);
+                let val = self.read_data(nes, opaddr, info.mode);
                 self.set_c(val & 0x01 != 0);
                 self.set_zn(val >> 1);
                 self.write(nes, opaddr, val >> 1);
@@ -483,7 +539,23 @@ impl Cpu6502 {
             // BVC nn
             0x50 => self.branch(opaddr, (self.p & Self::FLAG_V) == 0),
             // JMP nnnn, JMP (nnnn)
-            0x4c | 0x6c => self.pc = opaddr,
+            0x4c => {
+                self.pc = opaddr;
+                if cdl {
+                    // Record the referenced bank only.
+                    nes.cdl_mark(opaddr, 1, 0);
+                }
+            }
+            0x6c => {
+                self.pc = opaddr;
+                if cdl {
+                    // The pointer itself may live in ROM (e.g. a fixed vector).
+                    let ptr = self.read16(nes, pc1);
+                    nes.cdl_mark(ptr, 1, Cdl::DATA);
+                    nes.cdl_mark((ptr & 0xFF00) | (ptr.wrapping_add(1) & 0x00FF), 1, Cdl::DATA);
+                    nes.cdl_jump(JumpKind::Indirect, iaddr, opaddr);
+                }
+            }
 
             // LSR A
             0x4a => {
@@ -494,12 +566,17 @@ impl Cpu6502 {
             // CLI
             0x58 => self.p &= !Self::FLAG_I,
             // RTS
-            0x60 => self.pc = self.pull16(nes).wrapping_add(1),
+            0x60 => {
+                self.pc = self.pull16(nes).wrapping_add(1);
+                if cdl && !self.follows_jsr(nes, self.pc) {
+                    nes.cdl_jump(JumpKind::RtsDispatch, iaddr, self.pc);
+                }
+            }
 
             // ADC <mem> opcodes
             0x61 | 0x65 | 0x69 | 0x6d | 0x71 | 0x75 | 0x79 | 0x7d => {
                 let a = self.a;
-                let b = self.read(nes, opaddr);
+                let b = self.read_data(nes, opaddr, info.mode);
                 let carry = if (self.p & Self::FLAG_C) != 0 {
                     1u16
                 } else {
@@ -514,7 +591,7 @@ impl Cpu6502 {
 
             // ROR <mem>
             0x66 | 0x6e | 0x76 | 0x7e => {
-                let val = self.read(nes, opaddr);
+                let val = self.read_data(nes, opaddr, info.mode);
                 let carry = if (self.p & Self::FLAG_C) != 0 {
                     1u8
                 } else {
@@ -581,17 +658,17 @@ impl Cpu6502 {
 
             // LDY <mem> opcodes
             0xa0 | 0xa4 | 0xac | 0xb4 | 0xbc => {
-                self.y = self.read(nes, opaddr);
+                self.y = self.read_data(nes, opaddr, info.mode);
                 self.set_zn(self.y);
             }
             // LDX <mem> opcodes
             0xa2 | 0xa6 | 0xae | 0xb6 | 0xbe => {
-                self.x = self.read(nes, opaddr);
+                self.x = self.read_data(nes, opaddr, info.mode);
                 self.set_zn(self.x);
             }
             // LDA <mem> opcodes
             0xA1 | 0xA5 | 0xA9 | 0xAd | 0xB1 | 0xB5 | 0xB9 | 0xBd => {
-                self.a = self.read(nes, opaddr);
+                self.a = self.read_data(nes, opaddr, info.mode);
                 self.set_zn(self.a);
             }
 
@@ -617,14 +694,14 @@ impl Cpu6502 {
             }
 
             // CPY opcodes
-            0xc0 | 0xc4 | 0xcc => self.compare(self.y, self.read(nes, opaddr)),
+            0xc0 | 0xc4 | 0xcc => self.compare(self.y, self.read_data(nes, opaddr, info.mode)),
             // CMP opcodes
             0xc1 | 0xc5 | 0xc9 | 0xcd | 0xd1 | 0xd5 | 0xd9 | 0xdd => {
-                self.compare(self.a, self.read(nes, opaddr))
+                self.compare(self.a, self.read_data(nes, opaddr, info.mode))
             }
             // DEC <mem> opcodes
             0xc6 | 0xce | 0xd6 | 0xde => {
-                let val = self.read(nes, opaddr).wrapping_sub(1);
+                let val = self.read_data(nes, opaddr, info.mode).wrapping_sub(1);
                 self.write(nes, opaddr, val);
                 self.set_zn(val);
             }
@@ -644,12 +721,12 @@ impl Cpu6502 {
             // CLD
             0xd8 => self.p &= !Self::FLAG_D,
             // CPX opcodes
-            0xe0 | 0xe4 | 0xec => self.compare(self.x, self.read(nes, opaddr)),
+            0xe0 | 0xe4 | 0xec => self.compare(self.x, self.read_data(nes, opaddr, info.mode)),
 
             // SBC <mem> opcodes
             0xe1 | 0xe5 | 0xe9 | 0xed | 0xf1 | 0xf5 | 0xf9 | 0xfd => {
                 let a = self.a;
-                let b = self.read(nes, opaddr);
+                let b = self.read_data(nes, opaddr, info.mode);
                 let ncarry = if (self.p & Self::FLAG_C) != 0 {
                     0i16
                 } else {
@@ -664,7 +741,7 @@ impl Cpu6502 {
 
             // INC <mem> opcodes
             0xe6 | 0xee | 0xf6 | 0xfe => {
-                let val = self.read(nes, opaddr).wrapping_add(1);
+                let val = self.read_data(nes, opaddr, info.mode).wrapping_add(1);
                 self.write(nes, opaddr, val);
                 self.set_zn(val);
             }
