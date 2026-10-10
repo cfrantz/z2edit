@@ -11,4 +11,5 @@ This directory contains the Python components of the NES emulator and its plugin
 The emulator supports runtime extensibility through plugins located here:
 - `zelda2/`: A game-specific plugin providing deep state inspection, memory mapping, and specialized debug views for "Zelda II: The Adventure of Link".
 - `midi/`: A plugin that transforms the NES emulator into a MIDI-controlled synthesizer, utilizing the APU's audio channels.
+- `symbols.py`: Loads a symbol table produced by `reverse/tools/symbols.py`, providing name/address lookup and breakpoints/watchpoints by symbol name.
 - `fm2.py`: Provides support for loading and playing FCEUX movie (`.fm2`) files for input recording and playback.
