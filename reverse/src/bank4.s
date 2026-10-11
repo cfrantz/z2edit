@@ -1357,9 +1357,9 @@ loc_4_99ED:
     sta     statMeter               ; $99ED
 
 loc_4_99F0:
-    lda     ram_074F                ; $99F0
+    lda     hudRedraw               ; $99F0
     ora     #$80                    ; $99F3
-    sta     ram_074F                ; $99F5
+    sta     hudRedraw               ; $99F5
     jsr     sub_D6C1                ; $99F8
     lda     drawOffscreen+1         ; $99FB
     and     #$0C                    ; $99FD
@@ -3059,7 +3059,7 @@ dat_4_AFB9:
     .byte   $FF, $30, $D0                                                   ; $AFB9
 
 loc_4_AFBC:
-    lda     ram_0728                ; $AFBC
+    lda     scrollFrozen            ; $AFBC
     beq     loc_4_AFC6              ; $AFBF
     lda     #$09                    ; $AFC1
     jsr     sub_4_9C45              ; $AFC3
@@ -3425,7 +3425,7 @@ loc_4_B20C:
     rts                             ; $B20C
 
 sub_4_B20D:
-    lda     ram_0728                ; $B20D
+    lda     scrollFrozen            ; $B20D
     bne     loc_4_B225              ; $B210
     lda     scrollXHi               ; $B212
     beq     loc_4_B23C              ; $B215
@@ -3433,7 +3433,7 @@ sub_4_B20D:
     sta     timerFast+12            ; $B219
     lda     #$08                    ; $B21C
     sta     musicRequest            ; $B21E
-    inc     ram_0728                ; $B220
+    inc     scrollFrozen            ; $B220
     bne     loc_4_B23C              ; $B223
 
 loc_4_B225:
@@ -3461,7 +3461,7 @@ loc_4_B23F:
     ldy     enemyType,x             ; $B23F
     lda     sramEnemyHitbox,y       ; $B241
     bmi     loc_4_B260              ; $B244
-    lda     ram_0728                ; $B246
+    lda     scrollFrozen            ; $B246
     beq     loc_4_B250              ; $B249
     lda     #$06                    ; $B24B
     jsr     sub_4_9C45              ; $B24D
@@ -4018,7 +4018,7 @@ loc_4_B5C5:
     lda     objXVelocity+1,x        ; $B5C9
     ora     objState+1,x            ; $B5CB
     beq     loc_4_B600              ; $B5CD
-    lda     ram_0728                ; $B5CF
+    lda     scrollFrozen            ; $B5CF
     beq     loc_4_B600              ; $B5D2
     lda     ram_00AF,x              ; $B5D4
     ldy     #$09                    ; $B5D6
@@ -5360,13 +5360,13 @@ loc_4_BE85:
     jmp     sub_F0D7                ; $BE88
 
 sub_4_BE8B:
-    lda     ram_0728                ; $BE8B
+    lda     scrollFrozen            ; $BE8B
     bne     loc_4_BE9C              ; $BE8E
     lda     scrollXHi               ; $BE90
     beq     loc_4_BEF0              ; $BE93
     lda     #$08                    ; $BE95
     sta     musicRequest            ; $BE97
-    inc     ram_0728                ; $BE99
+    inc     scrollFrozen            ; $BE99
 
 loc_4_BE9C:
     ldy     enemyType,x             ; $BE9C

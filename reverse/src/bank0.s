@@ -26,7 +26,15 @@
 dat_0_80D5:
     .byte   $7F, $52, $01, $58, $8F, $7B, $03, $58, $7F, $52, $01, $A0, $8F, $7B, $03, $A0; $80D5
 
-sub_0_80E5:
+; ---------------------------------------------------------------------------
+; NorthCastle_DrawSprites
+;
+; In the first area of the game (North Castle: world 0, region 0, area 0),
+; draw four extra sprites from dat_0_80D5 at fixed positions in the area.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+NorthCastle_DrawSprites:
     lda     currentWorld            ; $80E5
     ora     areaId                  ; $80E8
     ora     currentRegion           ; $80EB
@@ -121,7 +129,7 @@ loc_0_8149:
     lda     #$00                    ; $818D
     sta     objXVelocity+13         ; $818F
     sta     objXVelocity+14         ; $8191
-    sta     ram_074C                ; $8193
+    sta     dialogType              ; $8193
     sta     objXVelocity            ; $8196
     sta     objState                ; $8198
     sta     ram_0768                ; $819A
@@ -798,7 +806,7 @@ loc_0_85EB:
 
 loc_0_85FB:
     lda     #$00                    ; $85FB
-    sta     ram_074C                ; $85FD
+    sta     dialogType              ; $85FD
 
 loc_0_8600:
     rts                             ; $8600
@@ -1471,7 +1479,7 @@ sub_0_8A57:
     tay                             ; $8A65
 
 loc_0_8A66:
-    lda     ram_0420,y              ; $8A66
+    lda     breakingBlockXHi+1,y    ; $8A66
     sta     enemyStunTimer+2,y      ; $8A69
     lda     swordY,y                ; $8A6C
     sta     ram_0470,y              ; $8A6F
@@ -1879,7 +1887,7 @@ loc_0_8CF7:
     sta     linkAttackFrame,y       ; $8CFA
     dey                             ; $8CFD
     bne     loc_0_8CF7              ; $8CFE
-    sta     ram_0728                ; $8D00
+    sta     scrollFrozen            ; $8D00
     sta     spellFlash              ; $8D03
     dey                             ; $8D06
     sty     ppuBuffer1              ; $8D07
@@ -1962,7 +1970,7 @@ SpellFlags:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Spell_Update:
-    lda     ram_074C                ; $8DC3
+    lda     dialogType              ; $8DC3
     ora     pauseState              ; $8DC6
     ora     ram_00DE                ; $8DC9
     bne     loc_0_8E1F              ; $8DCB
@@ -1995,9 +2003,9 @@ loc_0_8DF5:
     sta     spellActive             ; $8E01
     iny                             ; $8E04
     sty     spellLastCast           ; $8E05
-    lda     ram_074F                ; $8E08
+    lda     hudRedraw               ; $8E08
     ora     #$80                    ; $8E0B
-    sta     ram_074F                ; $8E0D
+    sta     hudRedraw               ; $8E0D
     lda     #$20                    ; $8E10
     cpy     #$06                    ; $8E12
     bcc     loc_0_8E18              ; $8E14
@@ -3428,32 +3436,41 @@ dat_0_9689:
 dat_0_968B:
     .byte   $20, $68                                                        ; $968B
 
-sub_0_968D:
+; ---------------------------------------------------------------------------
+; Hud_Update
+;
+; Open the level up dialog (dialogType = DIALOG_LEVEL_UP) when experience
+; reaches experienceNext; then, if there is room in ppuBuffer0, redraw the
+; parts of the status bar flagged in hudRedraw (Hud_Draw).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Hud_Update:
     lda     experience+1            ; $968D
     sec                             ; $9690
     sbc     experienceNext+1        ; $9691
     lda     experience              ; $9694
     sbc     experienceNext          ; $9697
     bcc     loc_0_96A1              ; $969A
-    lda     #$01                    ; $969C
-    sta     ram_074C                ; $969E
+    lda     #DIALOG_LEVEL_UP        ; $969C
+    sta     dialogType              ; $969E
 
 loc_0_96A1:
     ldy     ppuBuffer0Len           ; $96A1
     cpy     #$08                    ; $96A4
     bcs     loc_0_971C              ; $96A6
 
-sub_0_96A8:
+Hud_Draw:
     ldx     #$00                    ; $96A8
     lda     ram_0750                ; $96AA
-    bit     ram_074F                ; $96AD
+    bit     hudRedraw               ; $96AD
     beq     loc_0_971F              ; $96B0
     bit     ram_0750                ; $96B2
     bpl     loc_0_9723              ; $96B5
 
 loc_0_96B7:
-    asl     ram_074F                ; $96B7
-    lsr     ram_074F                ; $96BA
+    asl     hudRedraw               ; $96B7
+    lsr     hudRedraw               ; $96BA
     lda     dat_0_962E,x            ; $96BD
     sta     ppuBuffer0,y            ; $96C0
     iny                             ; $96C3
@@ -3519,9 +3536,9 @@ loc_0_971F:
     bvc     loc_0_971C              ; $9721
 
 loc_0_9723:
-    lda     ram_074F                ; $9723
+    lda     hudRedraw               ; $9723
     and     #$BF                    ; $9726
-    sta     ram_074F                ; $9728
+    sta     hudRedraw               ; $9728
     ldy     ppuBuffer0Len           ; $972B
 
 loc_0_972E:
@@ -3647,7 +3664,7 @@ Spell_FireEffect:
     cmp     #$04                    ; $97F6
     bcs     loc_0_97FC              ; $97F8
 
-sub_0_97FA:
+LinkProjectile_Spawn:
     ldx     #$00                    ; $97FA
 
 loc_0_97FC:
@@ -3693,7 +3710,7 @@ loc_0_981B:
     lda     #$01                    ; $9833
     sta     objYHi+13,x             ; $9835
     lsr     a                       ; $9837
-    sta     ram_05CA,x              ; $9838
+    sta     linkProjectileTimer,x   ; $9838
     ldy     linkWalkDir             ; $983B
     sty     ram_006D,x              ; $983D
     lda     dat_0_9818,y            ; $983F
@@ -3703,7 +3720,16 @@ loc_0_981B:
 dat_0_9845:
     .byte   $38, $40                                                        ; $9845
 
-sub_0_9847:
+; ---------------------------------------------------------------------------
+; LinkProjectile_Update
+;
+; At full life, fire the sword beam (LinkProjectile_Spawn) unless the fire
+; spell is active (which fires its own).  Then update Link's projectiles:
+; slot 13, and slot 14 too from attack level 4.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+LinkProjectile_Update:
     lda     spellActive             ; $9847
     and     #$10                    ; $984A
     bne     loc_0_9878              ; $984C
@@ -3717,14 +3743,14 @@ sub_0_9847:
     sbc     #$01                    ; $9857
     cmp     statMeter+STAT_METER_LIFE ; $9859
     bne     loc_0_9878              ; $985C
-    jsr     sub_0_97FA              ; $985E
+    jsr     LinkProjectile_Spawn    ; $985E
     bcc     loc_0_9878              ; $9861
     lda     objY                    ; $9863
     ldy     linkAttackStanding      ; $9865
     adc     dat_0_9817,y            ; $9868
     sta     objY+13,x               ; $986B
     lda     #$D2                    ; $986D
-    sta     ram_05CA                ; $986F
+    sta     linkProjectileTimer     ; $986F
     lda     sfxRequest+3            ; $9872
     ora     #$08                    ; $9874
     sta     sfxRequest+3            ; $9876
@@ -3737,20 +3763,20 @@ loc_0_9878:
     inx                             ; $9881
 
 loc_0_9882:
-    jsr     sub_0_9888              ; $9882
+    jsr     LinkProjectile_UpdateOne ; $9882
     dex                             ; $9885
     bmi     loc_0_98BF              ; $9886
 
-sub_0_9888:
+LinkProjectile_UpdateOne:
     stx     currentObject           ; $9888
     lda     dat_0_9845,x            ; $988A
     sta     objOamOffset+13,x       ; $988D
     lda     objState+13,x           ; $988F
     beq     loc_0_98BF              ; $9891
     bmi     loc_0_9908              ; $9893
-    lda     ram_05CA,x              ; $9895
+    lda     linkProjectileTimer,x   ; $9895
     beq     loc_0_98A3              ; $9898
-    inc     ram_05CA,x              ; $989A
+    inc     linkProjectileTimer,x   ; $989A
     cmp     #$F2                    ; $989D
     beq     loc_0_98BD              ; $989F
     bne     sub_0_98A6              ; $98A1
@@ -3800,7 +3826,7 @@ loc_0_98C0:
     sta     oamBuffer+2,y           ; $98DD
     lda     #$84                    ; $98E0
     sta     oamBuffer+1,y           ; $98E2
-    lda     ram_05CA,x              ; $98E5
+    lda     linkProjectileTimer,x   ; $98E5
     beq     loc_0_98FB              ; $98E8
     lda     #$32                    ; $98EA
     sta     oamBuffer+1,y           ; $98EC
@@ -3838,17 +3864,26 @@ loc_0_9908:
 loc_0_9924:
     rts                             ; $9924
 
-sub_0_9925:
+; ---------------------------------------------------------------------------
+; Scroll_Update
+;
+; Side view: scroll the screen to follow Link, within the area's limits
+; (sramScrollMinPage, sramScrollMaxPage).  Does nothing in single-screen
+; areas or while scrollFrozen is set.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Scroll_Update:
     ldy     areaLastPage            ; $9925
     beq     loc_0_9924              ; $9927
-    lda     ram_0728                ; $9929
+    lda     scrollFrozen            ; $9929
     bne     loc_0_9924              ; $992C
     sta     ram_05C9                ; $992E
     lda     a:ram_0014              ; $9931
     sta     temp0                   ; $9934
     ldx     objFacing               ; $9936
     lda     scrollXHi               ; $9938
-    cmp     sram_69C1,y             ; $993B
+    cmp     sramScrollMinPage,y     ; $993B
     bmi     loc_0_9949              ; $993E
     bne     loc_0_9955              ; $9940
     lda     scrollX                 ; $9942
@@ -3870,7 +3905,7 @@ loc_0_9955:
     adc     #$02                    ; $9959
     lda     scrollXHi               ; $995B
     adc     #$00                    ; $995E
-    cmp     sram_69C4,y             ; $9960
+    cmp     sramScrollMaxPage,y     ; $9960
     bne     loc_0_9977              ; $9963
     dex                             ; $9965
     beq     loc_0_9971              ; $9966
@@ -4931,7 +4966,7 @@ Game_ShowContinueScreen:
     lda     #$05                    ; $A1B3
     sta     gameMode                ; $A1B5
     lda     #$00                    ; $A1B8
-    sta     ram_074C                ; $A1BA
+    sta     dialogType              ; $A1BA
     sta     pauseState              ; $A1BD
     sta     ram_0525                ; $A1C0
     sta     menuCursor              ; $A1C3
@@ -5170,7 +5205,7 @@ loc_0_A315:
 
 loc_0_A31C:
     lda     #$C0                    ; $A31C
-    sta     ram_074F                ; $A31E
+    sta     hudRedraw               ; $A31E
     lda     #$08                    ; $A321
     sta     sfxRequest+2            ; $A323
 
@@ -5189,7 +5224,7 @@ loc_0_A329:
 
 loc_0_A338:
     lda     #$00                    ; $A338
-    sta     ram_074C                ; $A33A
+    sta     dialogType              ; $A33A
     sta     ram_0525                ; $A33D
     sta     pauseState              ; $A340
     sta     ram_0567                ; $A343
@@ -5758,9 +5793,9 @@ loc_0_A68B:
 
 loc_0_A6A8:
     sta     ram_0487                ; $A6A8
-    lda     ram_074F                ; $A6AB
+    lda     hudRedraw               ; $A6AB
     ora     #$C0                    ; $A6AE
-    sta     ram_074F                ; $A6B0
+    sta     hudRedraw               ; $A6B0
     jmp     loc_0_A325              ; $A6B3
 
 loc_0_A6B6:
@@ -5780,22 +5815,30 @@ dat_0_A6BD:
     .byte   $95, $C2, $C3, $C2, $C3, $68, $69, $69, $68, $BE, $BF, $C0, $C1, $C2, $C3, $C2; $A6BD
     .byte   $C3, $68, $69, $69, $68                                         ; $A6CD
 
-sub_0_A6D2:
+; ---------------------------------------------------------------------------
+; BreakingBlocks_Update
+;
+; Animate the blocks being broken (up to 5).  When a block's animation
+; ends, replace it in the area tile map with tile $42.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+BreakingBlocks_Update:
     ldx     #$04                    ; $A6D2
 
 loc_0_A6D4:
     stx     currentObject           ; $A6D4
-    jsr     sub_0_A6DD              ; $A6D6
+    jsr     BreakingBlock_Update    ; $A6D6
     dex                             ; $A6D9
     bpl     loc_0_A6D4              ; $A6DA
 
 loc_0_A6DC:
     rts                             ; $A6DC
 
-sub_0_A6DD:
-    lda     ram_041A,x              ; $A6DD
+BreakingBlock_Update:
+    lda     breakingBlockTimer,x    ; $A6DD
     beq     loc_0_A6DC              ; $A6E0
-    inc     ram_041A,x              ; $A6E2
+    inc     breakingBlockTimer,x    ; $A6E2
     tay                             ; $A6E5
     bmi     loc_0_A711              ; $A6E6
     cmp     #$12                    ; $A6E8
@@ -5803,14 +5846,14 @@ sub_0_A6DD:
 
 loc_0_A6EC:
     lda     #$00                    ; $A6EC
-    sta     ram_041A,x              ; $A6EE
+    sta     breakingBlockTimer,x    ; $A6EE
 
 loc_0_A6F1:
-    lda     ram_0433,x              ; $A6F1
+    lda     breakingBlockMapPtrLo,x ; $A6F1
     sta     temp0                   ; $A6F4
-    lda     ram_0438,x              ; $A6F6
+    lda     breakingBlockMapPtrHi,x ; $A6F6
     sta     temp1                   ; $A6F9
-    ldy     ram_042E,x              ; $A6FB
+    ldy     breakingBlockMapOffset,x ; $A6FB
     lda     #$42                    ; $A6FE
     sta     (temp0),y               ; $A700
     rts                             ; $A702
@@ -5851,14 +5894,14 @@ loc_0_A726:
     lda     dat_0_A6BD,y            ; $A73C
     sta     ppuBuffer1+9,x          ; $A73F
     ldx     currentObject           ; $A742
-    lda     ram_041F,x              ; $A744
+    lda     breakingBlockXHi,x      ; $A744
     and     #$01                    ; $A747
     asl     a                       ; $A749
     asl     a                       ; $A74A
     pha                             ; $A74B
-    lda     ram_0429,x              ; $A74C
+    lda     breakingBlockY,x        ; $A74C
     sta     temp2                   ; $A74F
-    lda     ram_0424,x              ; $A751
+    lda     breakingBlockX,x        ; $A751
     sta     temp3                   ; $A754
     lda     #$08                    ; $A756
     sta     temp0                   ; $A758

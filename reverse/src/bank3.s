@@ -1432,7 +1432,7 @@ loc_3_99B0:
 
 sub_3_99B9:
     lda     drawOffscreen+1         ; $99B9
-    ora     ram_074C                ; $99BB
+    ora     dialogType              ; $99BB
     bne     loc_3_9A1C              ; $99BE
     lda     enemyType,x             ; $99C0
     cmp     #$0A                    ; $99C2
@@ -1457,7 +1457,7 @@ loc_3_99CB:
     bcc     loc_3_9A1C              ; $99E8
     jsr     sub_3_98F9              ; $99EA
     ldy     #$04                    ; $99ED
-    sty     ram_074C                ; $99EF
+    sty     dialogType              ; $99EF
     sty     ram_00DE                ; $99F2
     inc     ram_05C3,x              ; $99F4
     lda     #$0B                    ; $99F7
@@ -1501,7 +1501,7 @@ loc_3_9A28:
 
 loc_3_9A33:
     lda     #$02                    ; $9A33
-    sta     ram_074C                ; $9A35
+    sta     dialogType              ; $9A35
     sta     ram_00DE                ; $9A38
     inc     ram_05C3,x              ; $9A3A
     lda     #$00                    ; $9A3D
@@ -3143,7 +3143,7 @@ loc_3_B579:
     bne     loc_3_B589              ; $B57B
 
 loc_3_B57D:
-    ldx     ram_074C                ; $B57D
+    ldx     dialogType              ; $B57D
     cpx     #$02                    ; $B580
     beq     loc_3_B589              ; $B582
     inc     temp5                   ; $B584
@@ -3261,7 +3261,7 @@ loc_3_B65E:
     jmp     loc_3_B752              ; $B66F
 
 loc_3_B672:
-    lda     ram_074C                ; $B672
+    lda     dialogType              ; $B672
     cmp     #$04                    ; $B675
     beq     loc_3_B621              ; $B677
     lda     #$C0                    ; $B679
@@ -3428,7 +3428,7 @@ loc_3_B776:
     bne     loc_3_B7A2              ; $B788
     lda     #$00                    ; $B78A
     sta     pauseState              ; $B78C
-    sta     ram_074C                ; $B78F
+    sta     dialogType              ; $B78F
     sta     ram_0525                ; $B792
     sta     ram_00DE                ; $B795
     sta     ram_048D                ; $B797
@@ -3496,7 +3496,7 @@ loc_3_B7F0:
     lda     #$08                    ; $B7F0
     sta     sfxRequest+2            ; $B7F2
     lda     #$00                    ; $B7F4
-    sta     ram_074C                ; $B7F6
+    sta     dialogType              ; $B7F6
     sta     ram_0525                ; $B7F9
     sta     pauseState              ; $B7FC
     sta     ram_0567                ; $B7FF

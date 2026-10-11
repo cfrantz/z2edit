@@ -1872,7 +1872,7 @@ loc_5_97DE:
     jsr     Enemy_Draw              ; $97E0
     lda     scrollXHi               ; $97E3
     beq     loc_5_980C              ; $97E6
-    inc     ram_0728                ; $97E8
+    inc     scrollFrozen            ; $97E8
     lda     #$00                    ; $97EB
     sta     objXVelocity            ; $97ED
     lda     objCollision            ; $97EF
@@ -3279,9 +3279,9 @@ loc_5_A091:
 ; (end of code not executed in the test movies)
 
 loc_5_A094:
-    lda     ram_074F                ; $A094
+    lda     hudRedraw               ; $A094
     ora     #$80                    ; $A097
-    sta     ram_074F                ; $A099
+    sta     hudRedraw               ; $A099
     jsr     sub_D6C1                ; $A09C
     lda     enemyType,x             ; $A09F
     cmp     #$17                    ; $A0A1
@@ -3677,11 +3677,11 @@ dat_5_A351:
     .byte   $FC, $F8, $F0                                                   ; $A356
 
 loc_5_A359:
-    lda     ram_0728                ; $A359
+    lda     scrollFrozen            ; $A359
     bne     loc_5_A36B              ; $A35C
     lda     scrollXHi               ; $A35E
     beq     loc_5_A3BD              ; $A361
-    inc     ram_0728                ; $A363
+    inc     scrollFrozen            ; $A363
     lda     #$90                    ; $A366
     sta     timerFast+3,x           ; $A368
 

@@ -10,7 +10,7 @@ variables in `src/ram.inc`.
 | 0 | Link | bank 0 player code, `sub_E079` |
 | 1-6 | enemies | `Enemy_Update`, `Enemy_UpdateCommon`, `Enemy_MoveX`, `Enemy_MoveY` |
 | 7-12 | enemy projectiles | `Projectile_Update`, `Projectile_Move` |
-| 13-14 | Link's projectiles | `sub_0_97FA`, `sub_0_98A6` |
+| 13-14 | Link's projectiles | `LinkProjectile_Spawn`, `sub_0_98A6` |
 | 15 | unused | |
 | 16 | sword tip probe, for breaking blocks | `sub_E1E6` |
 

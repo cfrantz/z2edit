@@ -147,7 +147,7 @@ Nmi_Bank5:
 ;      frameCounter and the RNG, and runs the game (Game_RunState).
 ; It returns with bank 0 mapped.
 ;
-; Status:  confirmed (the meaning of renderingOff, ram_0768, ram_074C and
+; Status:  confirmed (the meaning of renderingOff, ram_0768, dialogType and
 ;          ram_00DE is provisional)
 ; ---------------------------------------------------------------------------
 Nmi:
@@ -268,11 +268,11 @@ Nmi:
     jsr     sub_C1CD                ; $C14B
 
 @checkPaused:
-    ; Skip the game while paused or in a dialog (ram_074C), except in
+    ; Skip the game while paused or in a dialog (dialogType), except in
     ; pauseState 3-6 of a dialog.
-    lda     ram_074C                ; $C14E
+    lda     dialogType              ; $C14E
     beq     @notInDialog            ; $C151
-    cmp     #$02                    ; $C153
+    cmp     #DIALOG_TALK            ; $C153
     bcc     @done                   ; $C155
     lda     pauseState              ; $C157
     cmp     #$03                    ; $C15A
@@ -391,14 +391,14 @@ sub_C1DD:
 loc_C206:
     lda     pauseState              ; $C206
     beq     loc_C218                ; $C209
-    lda     ram_074C                ; $C20B
+    lda     dialogType              ; $C20B
     cmp     #$02                    ; $C20E
     bcs     loc_C218                ; $C210
     jsr     Oam_HideAllButSprite0   ; $C212
-    jsr     sub_0_968D              ; $C215
+    jsr     Hud_Update              ; $C215
 
 loc_C218:
-    lda     ram_074C                ; $C218
+    lda     dialogType              ; $C218
     bne     loc_C233                ; $C21B
     jmp     loc_0_9D91              ; $C21D
 
@@ -1653,7 +1653,7 @@ loc_CA26:
     dex                             ; $CA29
     bpl     loc_CA26                ; $CA2A
     lda     #$00                    ; $CA2C
-    sta     ram_074C                ; $CA2E
+    sta     dialogType              ; $CA2E
     sta     pauseState              ; $CA31
     sta     ram_0525                ; $CA34
     sta     ram_00DE                ; $CA37
@@ -2721,14 +2721,14 @@ dat_D0D1:
 loc_D0FC:
     jsr     Mmc1_SetPrgBank0        ; $D0FC
     lda     #$80                    ; $D0FF
-    sta     ram_074F                ; $D101
+    sta     hudRedraw               ; $D101
     sta     ram_0750                ; $D104
     ldy     ppuBuffer0Len           ; $D107
-    jsr     sub_0_96A8              ; $D10A
+    jsr     Hud_Draw                ; $D10A
     lda     #$40                    ; $D10D
-    sta     ram_074F                ; $D10F
+    sta     hudRedraw               ; $D10F
     ldy     ppuBuffer0Len           ; $D112
-    jsr     sub_0_96A8              ; $D115
+    jsr     Hud_Draw                ; $D115
     lda     #$07                    ; $D118
 
 loc_D11A:
@@ -3421,9 +3421,9 @@ loc_D415:
 
 loc_D41C:
     sta     statMeter,x             ; $D41C
-    lda     ram_074F                ; $D41F
+    lda     hudRedraw               ; $D41F
     ora     dat_D3CA,x              ; $D422
-    sta     ram_074F                ; $D425
+    sta     hudRedraw               ; $D425
     lda     ram_07FB                ; $D428
     cmp     #$10                    ; $D42B
     beq     loc_D433                ; $D42D
@@ -3490,12 +3490,12 @@ loc_D477:
 ; (end of code not executed in the test movies)
 
 loc_D4A3:
-    lda     ram_074F                ; $D4A3
+    lda     hudRedraw               ; $D4A3
     ora     #$40                    ; $D4A6
-    sta     ram_074F                ; $D4A8
+    sta     hudRedraw               ; $D4A8
 
 loc_D4AB:
-    lda     ram_074C                ; $D4AB
+    lda     dialogType              ; $D4AB
     cmp     #$02                    ; $D4AE
     bcs     loc_D4CE                ; $D4B0
 
@@ -3518,7 +3518,7 @@ loc_D4C2:
     sty     PPUSCROLL               ; $D4CB
 
 loc_D4CE:
-    jsr     sub_0_968D              ; $D4CE
+    jsr     Hud_Update              ; $D4CE
     ; Beep while Link's life is low.
     lda     statMeterDisplay+1      ; $D4D1
     cmp     #$20                    ; $D4D4
@@ -3541,13 +3541,13 @@ loc_D4F3:
     lda     #$00                    ; $D4F6
     sta     ram_0754                ; $D4F8
     sta     ram_05E7                ; $D4FB
-    jsr     sub_0_9925              ; $D4FE
+    jsr     Scroll_Update           ; $D4FE
     jsr     Mmc1_SetPrgBankArea     ; $D501
     jsr     Enemies_Update          ; $D504
     jsr     Mmc1_SetPrgBank0        ; $D507
-    jsr     sub_0_80E5              ; $D50A
-    jsr     sub_0_9847              ; $D50D
-    jsr     sub_0_A6D2              ; $D510
+    jsr     NorthCastle_DrawSprites ; $D50A
+    jsr     LinkProjectile_Update   ; $D50D
+    jsr     BreakingBlocks_Update   ; $D510
     lda     linkLandingTimer        ; $D513
     beq     loc_D51F                ; $D516
     dec     linkLandingTimer        ; $D518
@@ -5429,22 +5429,22 @@ loc_E0FC:
     sta     (temp14),y              ; $E100
     jsr     sub_E292                ; $E102
     lda     #$81                    ; $E105
-    sta     ram_041A,x              ; $E107
+    sta     breakingBlockTimer,x    ; $E107
     lda     #$02                    ; $E10A
     sta     sfxRequest+1            ; $E10C
     lda     objY                    ; $E10E
     clc                             ; $E110
     adc     #$20                    ; $E111
     and     #$F0                    ; $E113
-    sta     ram_0429,x              ; $E115
+    sta     breakingBlockY,x        ; $E115
     lda     objX                    ; $E118
     clc                             ; $E11A
     adc     #$0F                    ; $E11B
     and     #$F0                    ; $E11D
-    sta     ram_0424,x              ; $E11F
+    sta     breakingBlockX,x        ; $E11F
     lda     objXHi                  ; $E122
     adc     #$00                    ; $E124
-    sta     ram_041F,x              ; $E126
+    sta     breakingBlockXHi,x      ; $E126
     ldx     #$00                    ; $E129
 
 loc_E12B:
@@ -5471,7 +5471,7 @@ loc_E12B:
     lda     timerFast+2             ; $E150
     bne     loc_E19E                ; $E153
     lda     drawOffscreen           ; $E155
-    ldy     ram_0728                ; $E157
+    ldy     scrollFrozen            ; $E157
     beq     loc_E16F                ; $E15A
     and     #$09                    ; $E15C
     beq     loc_E16E                ; $E15E
@@ -5632,17 +5632,17 @@ loc_E235:
     sta     (temp14),y              ; $E23E
     jsr     sub_E292                ; $E240
     lda     #$01                    ; $E243
-    sta     ram_041A,x              ; $E245
+    sta     breakingBlockTimer,x    ; $E245
     lda     #$04                    ; $E248
     sta     sfxRequest+1            ; $E24A
     lda     objY+16                 ; $E24C
     and     #$F0                    ; $E24E
-    sta     ram_0429,x              ; $E250
+    sta     breakingBlockY,x        ; $E250
     lda     objX+16                 ; $E253
     and     #$F0                    ; $E255
-    sta     ram_0424,x              ; $E257
+    sta     breakingBlockX,x        ; $E257
     lda     objXHi+16               ; $E25A
-    sta     ram_041F,x              ; $E25C
+    sta     breakingBlockXHi,x      ; $E25C
     lda     objState                ; $E25F
     sec                             ; $E261
     sbc     #$08                    ; $E262
@@ -5684,7 +5684,7 @@ sub_E292:
     ldx     #$04                    ; $E292
 
 loc_E294:
-    lda     ram_041A,x              ; $E294
+    lda     breakingBlockTimer,x    ; $E294
     beq     loc_E29E                ; $E297
     dex                             ; $E299
     bpl     loc_E294                ; $E29A
@@ -5693,11 +5693,11 @@ loc_E294:
 loc_E29E:
     ldy     temp2                   ; $E29E
     tya                             ; $E2A0
-    sta     ram_042E,x              ; $E2A1
+    sta     breakingBlockMapOffset,x ; $E2A1
     lda     temp14                  ; $E2A4
-    sta     ram_0433,x              ; $E2A6
+    sta     breakingBlockMapPtrLo,x ; $E2A6
     lda     temp15                  ; $E2A9
-    sta     ram_0438,x              ; $E2AB
+    sta     breakingBlockMapPtrHi,x ; $E2AB
 
 dat_E2AE:
     rts                             ; $E2AE
@@ -5764,9 +5764,9 @@ loc_E32F:
     sec                             ; $E334
     sbc     temp12                  ; $E335
     sta     statMeter+STAT_METER_LIFE ; $E337
-    lda     ram_074F                ; $E33A
+    lda     hudRedraw               ; $E33A
     ora     #$40                    ; $E33D
-    sta     ram_074F                ; $E33F
+    sta     hudRedraw               ; $E33F
     bcs     loc_E34C                ; $E342
     lda     #$00                    ; $E344
     sta     statMeter+STAT_METER_LIFE ; $E346
@@ -6393,7 +6393,7 @@ loc_E6CB:
     and     #$20                    ; $E6D2
     beq     loc_E6DD                ; $E6D4
     ldy     ram_0011                ; $E6D6
-    lda     ram_05CA,y              ; $E6D8
+    lda     linkProjectileTimer,y   ; $E6D8
     bne     loc_E6E6                ; $E6DB
 
 loc_E6DD:
@@ -6521,10 +6521,10 @@ loc_E79A:
     sta     sfxRequest+3            ; $E79C
     cpy     #$08                    ; $E79E
     bne     loc_E7BB                ; $E7A0
-    lda     ram_0728                ; $E7A2
+    lda     scrollFrozen            ; $E7A2
     beq     loc_E7B5                ; $E7A5
     lda     #$00                    ; $E7A7
-    sta     ram_0728                ; $E7A9
+    sta     scrollFrozen            ; $E7A9
     lda     ram_07FB                ; $E7AC
     bne     loc_E7B5                ; $E7AF
     lda     #$02                    ; $E7B1

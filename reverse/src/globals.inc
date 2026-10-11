@@ -13,19 +13,19 @@ GLOBALS_INC = 1
 
 .global Nmi
 
-.global sub_0_80E5
+.global NorthCastle_DrawSprites
 .global loc_0_8CE1
 .global Spell_Update
 .global Link_Run
-.global sub_0_968D
-.global sub_0_96A8
-.global sub_0_9847
-.global sub_0_9925
+.global Hud_Update
+.global Hud_Draw
+.global LinkProjectile_Update
+.global Scroll_Update
 .global loc_0_99E6
 .global sub_0_9A04
 .global loc_0_9D54
 .global loc_0_9D91
-.global sub_0_A6D2
+.global BreakingBlocks_Update
 .global loc_0_A7AB
 .global sub_0_AA08
 .global sub_2_8368
