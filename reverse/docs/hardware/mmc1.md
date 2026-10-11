@@ -85,7 +85,7 @@ form:
 ```
 
 Examples: `Overworld_GetTerrain` (calls `OverworldBank::GetTerrain`), `Overworld_UpdatePalaceStones`
-(`OverworldBank::UpdatePalaceStones`), `sub_E024` (`OverworldBank::sub_83A1`).
+(`OverworldBank::UpdatePalaceStones`), `Overworld_QueueMapStrip` (`OverworldBank::QueueMapStrip`).
 
 ## Bank Interfaces
 

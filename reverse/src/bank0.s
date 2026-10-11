@@ -693,7 +693,7 @@ loc_0_8503:
     beq     loc_0_8512              ; $8506
     lda     #$04                    ; $8508
     sta     sfxRequest+1            ; $850A
-    jsr     sub_E024                ; $850C
+    jsr     Overworld_QueueMapStrip ; $850C
     jmp     loc_DFD2                ; $850F
 
 loc_0_8512:

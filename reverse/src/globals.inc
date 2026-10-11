@@ -70,7 +70,7 @@ GLOBALS_INC = 1
 .global JumpTable
 .global sub_D55E
 .global Enemy_HurtLinkOnContact
-.global sub_D959
+.global Enemy_UpdateLanding
 .global Enemy_SkipAiIfStunned
 .global Enemy_Land
 .global Enemy_StopY
@@ -102,7 +102,7 @@ GLOBALS_INC = 1
 .global Overworld_UseFlute
 .global Overworld_ReadMapRun
 .global Overworld_UpdatePalaceStones
-.global sub_E024
+.global Overworld_QueueMapStrip
 .global Link_PlaceOnGround
 .global Link_CheckBg
 .global loc_E187

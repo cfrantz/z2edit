@@ -3829,7 +3829,7 @@ loc_4_B47D:
     rts                             ; $B484
 
 loc_4_B485:
-    jsr     sub_D959                ; $B485
+    jsr     Enemy_UpdateLanding     ; $B485
     jmp     Enemy_HurtLinkOnContact ; $B488
 
 loc_4_B48B:

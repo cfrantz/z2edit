@@ -4231,7 +4231,7 @@ loc_D818:
     sta     timerFast+TIMER_ENEMY,x ; $D827
     lda     rng+1,x                 ; $D82A
     bmi     loc_D832                ; $D82D
-    jsr     sub_D86C                ; $D82F
+    jsr     Enemy_ShootIfFacingLink ; $D82F
 
 loc_D832:
     jsr     Enemy_MoveX             ; $D832
@@ -4250,7 +4250,15 @@ loc_D842:
     jsr     Enemy_SkipAiIfStunned   ; $D842
     jsr     Enemy_FaceLink          ; $D845
 
-sub_D848:
+; ---------------------------------------------------------------------------
+; Enemy_Hop
+;
+; Enemy AI helper: hop every 128 frames (Y velocity -$20), fall, and land.
+;
+; In:      x = enemy index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_Hop:
     inc     ram_00AF,x              ; $D848
     lda     ram_00AF,x              ; $D84A
     and     #$7F                    ; $D84C
@@ -4271,7 +4279,15 @@ loc_D867:
     lda     objYVelocity+1,x        ; $D867
     bne     loc_D885                ; $D86A
 
-sub_D86C:
+; ---------------------------------------------------------------------------
+; Enemy_ShootIfFacingLink
+;
+; If enemy x is facing Link, fire a projectile of type 3.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_ShootIfFacingLink:
     lda     objFacing+1,x           ; $D86C
     pha                             ; $D86E
     jsr     Enemy_FaceLink          ; $D86F
@@ -4294,7 +4310,7 @@ dat_D886:
 
 loc_D888:
     jsr     Enemy_SkipAiIfStunned   ; $D888
-    jsr     sub_D848                ; $D88B
+    jsr     Enemy_Hop               ; $D88B
     lda     objCollision+1,x        ; $D88E
     and     #$03                    ; $D890
     beq     loc_D897                ; $D892
@@ -4319,7 +4335,7 @@ loc_D8A9:
     sta     timerFast+TIMER_ENEMY,x ; $D8B5
     lda     objCollision+1,x        ; $D8B8
     and     #$04                    ; $D8BA
-    bne     sub_D86C                ; $D8BC
+    bne     Enemy_ShootIfFacingLink ; $D8BC
 
 loc_D8BE:
     rts                             ; $D8BE
@@ -4415,7 +4431,16 @@ loc_D947:
     jmp     Enemy_Remove            ; $D956
 ; (end of code not executed in the test movies)
 
-sub_D959:
+; ---------------------------------------------------------------------------
+; Enemy_UpdateLanding
+;
+; Enemy AI helper: update enemy x's background collision and, on landing,
+; snap it to the tile and set its next jump.
+;
+; In:      x = enemy index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_UpdateLanding:
     jsr     Enemy_UpdateWithBg      ; $D959
     lda     objCollision+1,x        ; $D95C
     and     #$04                    ; $D95E
@@ -5646,9 +5671,17 @@ Overworld_UpdatePalaceStones:
     jsr     OverworldBank::UpdatePalaceStones ; $E01E
     jmp     Mmc1_SetPrgBank0        ; $E021
 
-sub_E024:
+; ---------------------------------------------------------------------------
+; Overworld_QueueMapStrip
+;
+; Queue a strip of the overworld map, scrolled into view, in ppuBuffer0
+; (OverworldBank::QueueMapStrip).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_QueueMapStrip:
     jsr     Mmc1_SetPrgBankArea     ; $E024
-    jsr     OverworldBank::sub_83A1 ; $E027
+    jsr     OverworldBank::QueueMapStrip ; $E027
     jmp     Mmc1_SetPrgBank0        ; $E02A
 ; (unreferenced: $E02D-$E02F, 3 bytes)
     .byte   $FF, $FF, $FF                                                   ; $E02D
@@ -6153,7 +6186,7 @@ Link_TakeDamage:
     lda     #$01                    ; $E314
     sta     ram_00E9                ; $E316
     sta     temp0                   ; $E318
-    jsr     sub_E399                ; $E31A
+    jsr     Link_KnockBack          ; $E31A
     lda     temp12                  ; $E31D
     asl     a                       ; $E31F
     asl     a                       ; $E320
@@ -6214,7 +6247,7 @@ Enemy_KnockBack:
     bne     loc_E381                ; $E377
     lda     #$18                    ; $E379
     sta     timerFast+1             ; $E37B
-    jsr     sub_E399                ; $E37E
+    jsr     Link_KnockBack          ; $E37E
 
 loc_E381:
     lda     objFacing+1,x           ; $E381
@@ -6235,7 +6268,16 @@ loc_E395:
     sta     ram_043E,x              ; $E395
     rts                             ; $E398
 
-sub_E399:
+; ---------------------------------------------------------------------------
+; Link_KnockBack
+;
+; Push Link away from enemy x (horizontal velocity from dat_E36C), unless a
+; wall is in the way.
+;
+; In:      x = enemy index, temp0 = strength (0 = weak)
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_KnockBack:
     lda     objCollision            ; $E399
     and     #$03                    ; $E39B
     sta     temp13                  ; $E39D

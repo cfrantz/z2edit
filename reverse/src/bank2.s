@@ -474,14 +474,14 @@ loc_2_838E:
 ; (end of code not executed in the test movies)
 
 loc_2_838F:
-    jsr     sub_2_83A1              ; $838F
+    jsr     Overworld_QueueMapStrip_Bank2 ; $838F
     jmp     sub_DF79                ; $8392
 
 dat_2_8395:
     .byte   $0A, $00, $00, $82, $6C, $6C, $00, $00, $82, $6C, $6C, $FF      ; $8395
 
-sub_2_83A1:
-    .assert sub_2_83A1 = OverworldBank::sub_83A1, error, "interface address moved"
+Overworld_QueueMapStrip_Bank2:
+    .assert Overworld_QueueMapStrip_Bank2 = OverworldBank::QueueMapStrip, error, "interface address moved"
     jsr     sub_DF01                ; $83A1
     lda     #$00                    ; $83A4
     sta     ram_007D                ; $83A6

@@ -452,8 +452,8 @@ Overworld_UseFlute_Bank1:
 dat_1_8395:
     .byte   $0A, $00, $00, $82, $6C, $6C, $00, $00, $82, $6C, $6C, $FF      ; $8395
 
-sub_1_83A1:
-    .assert sub_1_83A1 = OverworldBank::sub_83A1, error, "interface address moved"
+Overworld_QueueMapStrip_Bank1:
+    .assert Overworld_QueueMapStrip_Bank1 = OverworldBank::QueueMapStrip, error, "interface address moved"
     jsr     sub_DF01                ; $83A1
     lda     #$00                    ; $83A4
     sta     ram_007D                ; $83A6

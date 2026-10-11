@@ -24,7 +24,7 @@ INTERFACES_INC = 1
 ; Overworld banks (1: West Hyrule / Death Mountain, 2: East Hyrule /
 ; Maze Island).  Also area banks.
 .scope OverworldBank
-    sub_83A1        = $83A1     ; routine
+    QueueMapStrip   = $83A1     ; queue a strip of the overworld map in ppuBuffer0
     GetTerrain      = $83CF     ; terrain at overworld tile (temp0, temp1) -> temp2
     Encounters      = $8409     ; overworld encounter table, by terrain
     UpdatePalaceStones = $879B  ; show palaces as stone once their crystals are placed
