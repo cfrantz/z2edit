@@ -9,12 +9,12 @@
 
 ; (unreferenced: $8000-$800D, 14 bytes)
 
-dat_5_8000:
-    .assert dat_5_8000 = AreaBank::BackgroundAreas, error, "interface address moved"
+BackgroundAreas_Bank5:
+    .assert BackgroundAreas_Bank5 = AreaBank::BackgroundAreas, error, "interface address moved"
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00; $8000
 
-dat_5_800E:
-    .assert dat_5_800E = AreaBank::Palettes, error, "interface address moved"
+AreaPalettes_Bank5:
+    .assert AreaPalettes_Bank5 = AreaBank::Palettes, error, "interface address moved"
     .byte   $0F, $30, $12, $16, $0F, $07, $27, $37, $0F, $27, $16, $0F, $0F, $30, $10, $00; $800E
     .byte   $0F, $30, $12, $16, $0F, $07, $27, $37, $0F, $07, $16, $30, $0F, $3C, $1C, $0C; $801E
     .byte   $0F, $30, $12, $16, $0F, $00, $10, $30, $0F, $36, $16, $07, $0F, $23, $03, $0F; $802E
@@ -516,13 +516,13 @@ dat_5_84D8:
 ; (unreferenced: $84F4-$8501, 14 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF      ; $84F4
 
-dat_5_8500:
-    .assert dat_5_8500 = AreaBank::MetatilePtrs, error, "interface address moved"
+MetatilePtrs_Bank5:
+    .assert MetatilePtrs_Bank5 = AreaBank::MetatilePtrs, error, "interface address moved"
     .byte   $C7, $82                                                        ; $8500
     .byte   $C7, $82, $0B, $83, $2F, $83                                    ; $8502
 
-dat_5_8508:
-    .assert dat_5_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
+OverworldMapPtrs_Bank5:
+    .assert OverworldMapPtrs_Bank5 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $FF, $FF                                                        ; $8508
 ; (unreferenced: $850A-$850B, 2 bytes)
     .byte   $FF, $FF                                                        ; $850A
@@ -660,8 +660,8 @@ SpecialTiles_Bank5:
 ; (unreferenced: $8892-$889F, 14 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8892
 
-dat_5_88A0:
-    .assert dat_5_88A0 = AreaBank::EnemyLists, error, "interface address moved"
+EnemyLists_Bank5:
+    .assert EnemyLists_Bank5 = AreaBank::EnemyLists, error, "interface address moved"
     .byte   $01, $03, $01, $60, $07, $7A, $44, $7D, $44, $7F, $44, $03, $4D, $1D, $05, $0F; $88A0
     .byte   $0F, $00, $CF, $05, $5B, $5D, $1B, $D5, $05, $0B, $56, $04, $96, $0D, $65, $51; $88B0
     .byte   $77, $51, $79, $51, $70, $D1, $72, $D1, $64, $D1, $09, $20, $54, $28, $54, $3E; $88C0
@@ -678,9 +678,7 @@ dat_5_88A0:
     .byte   $43, $0B, $56, $7E, $43, $72, $83, $04, $96, $07, $28, $19, $3D, $04, $36, $44; $8970
     .byte   $0D, $47, $04, $4B, $04, $42, $44, $57, $44, $6F, $44, $6C, $C0, $07, $65, $43; $8980
     .byte   $70, $9A, $64, $C3, $05, $0B, $56, $04, $96, $05, $4A, $1D, $61, $44, $05, $5B; $8990
-
-dat_5_89A0:
-    .assert dat_5_89A0 = AreaBank::EnemyLists+256, error, "interface address moved"
+    .assert EnemyLists_Bank5+256 = AreaBank::EnemyLists+256, error, "interface address moved"
     .byte   $5A, $1A, $D5, $03, $17, $DE, $09, $6C, $15, $2C, $43, $21, $83, $63, $D5, $05; $89A0
     .byte   $0F, $0F, $00, $CF, $07, $2F, $57, $43, $97, $0C, $C0, $05, $77, $05, $77, $45; $89B0
     .byte   $03, $21, $A2, $03, $1D, $63, $03, $71, $DD, $03, $70, $D1, $03, $3F, $45, $03; $89C0
@@ -697,9 +695,7 @@ dat_5_89A0:
     .byte   $81, $65, $72, $09, $24, $F5, $23, $F7, $06, $00, $28, $50, $20, $AF, $16, $60; $8A70
     .byte   $05, $08, $10, $23, $D4, $08, $60, $9E, $6F, $9F, $DD, $80, $A0, $3F, $63, $9C; $8A80
     .byte   $B1, $B1, $DC, $0E, $4B, $60, $0E, $08, $D4, $08, $60, $9B, $42, $00, $44, $00; $8A90
-
-dat_5_8AA0:
-    .assert dat_5_8AA0 = AreaBank::EnemyLists+512, error, "interface address moved"
+    .assert EnemyLists_Bank5+512 = AreaBank::EnemyLists+512, error, "interface address moved"
     .byte   $44, $00, $62, $B3, $42, $00, $62, $C9, $42, $00, $44, $00, $92, $95, $42, $00; $8AA0
     .byte   $60, $93, $80, $23, $64, $B3, $40, $00, $B0, $06, $B1, $06, $B1, $06, $B1, $06; $8AB0
     .byte   $41, $00, $60, $C7, $B0, $06, $B1, $06, $B1, $06, $B1, $06, $41, $00, $B0, $06; $8AC0

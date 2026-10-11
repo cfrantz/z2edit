@@ -8,8 +8,8 @@
 .segment "BANK1"
 
 
-dat_1_8000:
-    .assert dat_1_8000 = AreaBank::BackgroundAreas, error, "interface address moved"
+BackgroundAreas_Bank1:
+    .assert BackgroundAreas_Bank1 = AreaBank::BackgroundAreas, error, "interface address moved"
     .byte   $3C, $8C                                                        ; $8000
 ; (unreferenced: $8002-$8007, 6 bytes)
     .byte   $54, $8C, $68, $8C, $7C, $8C                                    ; $8002
@@ -17,8 +17,8 @@ dat_1_8000:
 ; (unreferenced: $800A-$800D, 4 bytes)
     .byte   $A8, $8C, $00, $00                                              ; $800A
 
-dat_1_800E:
-    .assert dat_1_800E = AreaBank::Palettes, error, "interface address moved"
+AreaPalettes_Bank1:
+    .assert AreaPalettes_Bank1 = AreaBank::Palettes, error, "interface address moved"
     .byte   $0F, $30, $12, $16, $0F, $36, $16, $07, $0F, $00, $10, $30, $0F, $23, $03, $0F; $800E
     .byte   $0F, $30, $12, $16, $0F, $37, $27, $06, $0F, $27, $16, $0F, $0F, $30, $10, $00; $801E
     .byte   $22, $30, $12, $16, $22, $29, $17, $09, $22, $30, $36, $27, $22, $30, $10, $00; $802E
@@ -46,58 +46,58 @@ Area_DrawLargeObject_Bank1:
     lda     areaBuildPos            ; $80F5
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
-    bne     loc_1_8103              ; $80FC
+    bne     @loc_8103               ; $80FC
     txa                             ; $80FE
     clc                             ; $80FF
     adc     #$0F                    ; $8100
     tax                             ; $8102
 
-loc_1_8103:
+@loc_8103:
     txa                             ; $8103
     jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   $0000                   ; $8107  (not observed)
-    .word   loc_1_81F3              ; $8109
-    .word   loc_1_81F3              ; $810B
-    .word   loc_1_81F3              ; $810D
-    .word   sub_1_8201              ; $810F
-    .word   sub_1_8201              ; $8111
-    .word   sub_1_8201              ; $8113
-    .word   sub_1_8201              ; $8115
-    .word   sub_1_8201              ; $8117
-    .word   sub_1_8201              ; $8119
-    .word   sub_1_8201              ; $811B
-    .word   sub_1_8201              ; $811D
-    .word   loc_1_8217              ; $811F  (not observed)
-    .word   loc_1_821D              ; $8121
-    .word   loc_1_821D              ; $8123
-    .word   loc_1_821D              ; $8125
-    .word   loc_1_828A              ; $8127
-    .word   loc_1_8265              ; $8129  (not observed)
-    .word   loc_1_82D5              ; $812B  (not observed)
-    .word   loc_1_82BA              ; $812D
+    .word   Area_DrawObjectTwoRows_Bank1 ; $8109
+    .word   Area_DrawObjectTwoRows_Bank1 ; $810B
+    .word   Area_DrawObjectTwoRows_Bank1 ; $810D
+    .word   Area_DrawObjectRow_Bank1 ; $810F
+    .word   Area_DrawObjectRow_Bank1 ; $8111
+    .word   Area_DrawObjectRow_Bank1 ; $8113
+    .word   Area_DrawObjectRow_Bank1 ; $8115
+    .word   Area_DrawObjectRow_Bank1 ; $8117
+    .word   Area_DrawObjectRow_Bank1 ; $8119
+    .word   Area_DrawObjectRow_Bank1 ; $811B
+    .word   Area_DrawObjectRow_Bank1 ; $811D
+    .word   Area_DrawObjectColumn_Bank1 ; $811F  (not observed)
+    .word   Area_DrawObjectPillar_Bank1 ; $8121
+    .word   Area_DrawObjectPillar_Bank1 ; $8123
+    .word   Area_DrawObjectPillar_Bank1 ; $8125
+    .word   Area_DrawLava_Bank1     ; $8127
+    .word   Area_DrawCactus_Bank1   ; $8129  (not observed)
+    .word   Area_DrawCactus2_Bank1  ; $812B  (not observed)
+    .word   Area_PlaceElevator_Bank1 ; $812D
 
 Area_DrawSmallObject_Bank1:
     .assert Area_DrawSmallObject_Bank1 = AreaBank::DrawSmallObject, error, "interface address moved"
     txa                             ; $812F
     jsr     JumpTable               ; $8130
 ; (inline jump table)
-    .word   loc_1_82F9              ; $8133  (not observed)
-    .word   loc_1_82EE              ; $8135  (not observed)
-    .word   loc_1_82F2              ; $8137  (not observed)
-    .word   loc_1_82C8              ; $8139  (not observed)
-    .word   loc_1_8313              ; $813B
-    .word   loc_1_82C1              ; $813D  (not observed)
-    .word   loc_1_8340              ; $813F
-    .word   loc_1_8340              ; $8141
-    .word   loc_1_8331              ; $8143
-    .word   loc_1_8352              ; $8145
-    .word   loc_1_8358              ; $8147
-    .word   loc_1_8358              ; $8149
-    .word   loc_1_8358              ; $814B
-    .word   loc_1_8358              ; $814D
-    .word   loc_1_8358              ; $814F
-    .word   loc_1_8358              ; $8151
+    .word   Area_DrawHeadstone_Bank1 ; $8133  (not observed)
+    .word   Area_DrawCross_Bank1    ; $8135  (not observed)
+    .word   Area_DrawAngledCross_Bank1 ; $8137  (not observed)
+    .word   Area_DrawTreeStump_Bank1 ; $8139  (not observed)
+    .word   Area_DrawStonehenge_Bank1 ; $813B
+    .word   Area_PlaceLockedDoor_Bank1 ; $813D  (not observed)
+    .word   Area_DrawSleepingZelda_Bank1 ; $813F
+    .word   Area_DrawSleepingZelda_Bank1 ; $8141
+    .word   Area_DrawPit_Bank1      ; $8143
+    .word   Area_DrawLargeCloud_Bank1 ; $8145
+    .word   Area_DrawSmallCloud_Bank1 ; $8147
+    .word   Area_DrawSmallCloud_Bank1 ; $8149
+    .word   Area_DrawSmallCloud_Bank1 ; $814B
+    .word   Area_DrawSmallCloud_Bank1 ; $814D
+    .word   Area_DrawSmallCloud_Bank1 ; $814F
+    .word   Area_DrawSmallCloud_Bank1 ; $8151
 ; End of the jump table: data follows.
     .byte   $42, $42                                                        ; $8153
 ; (unreferenced: $8155-$8155, 1 bytes)
@@ -140,7 +140,7 @@ Area_DrawSmallObject_Bank1:
     .byte   $40, $55                                                        ; $8197
     .byte   $53, $53                                                        ; $8199
 
-dat_1_819B:
+AreaFloorRecordsLo_Bank1:
     .byte   $53, $5C, $65                                                   ; $819B
 ; (unreferenced: $819E-$819E, 1 bytes)
     .byte   $6E                                                             ; $819E
@@ -152,7 +152,7 @@ dat_1_819B:
 Overworld_SetFloorTiles_Bank1:
     .assert Overworld_SetFloorTiles_Bank1 = OverworldBank::SetFloorTiles, error, "interface address moved"
     ldx     ram_010C                ; $81A3
-    lda     dat_1_819B,x            ; $81A6
+    lda     AreaFloorRecordsLo_Bank1,x ; $81A6
     sta     temp12                  ; $81A9
     lda     #$81                    ; $81AB
     sta     temp13                  ; $81AD
@@ -162,10 +162,8 @@ Overworld_SetFloorTiles_Bank1:
     rts                             ; $81B6
 ; (unreferenced: $81B7-$81BC, 6 bytes)
 
-dat_1_81B7:
+AreaObjectTiles_Bank1:
     .byte   $40                                                             ; $81B7
-
-dat_1_81B8:
     .byte   $40, $8C, $8D, $8C, $8D                                         ; $81B8
     .byte   $C0, $C1                                                        ; $81BD
 ; (unreferenced: $81BF-$81C4, 6 bytes)
@@ -176,10 +174,8 @@ dat_1_81B8:
     .byte   $86, $85                                                        ; $81D3
 ; (unreferenced: $81D5-$81D6, 2 bytes)
 
-dat_1_81D5:
+AreaObjectTiles2_Bank1:
     .byte   $40                                                             ; $81D5
-
-dat_1_81D6:
     .byte   $40                                                             ; $81D6
     .byte   $52, $53, $53, $55, $4D, $5D, $54, $54                          ; $81D7
 ; (unreferenced: $81DF-$81E2, 4 bytes)
@@ -189,37 +185,73 @@ dat_1_81D6:
     .byte   $51, $51, $61, $61                                              ; $81EB
     .byte   $52, $53, $59, $5A                                              ; $81EF
 
-loc_1_81F3:
-    jsr     sub_1_8201              ; $81F3
+; ---------------------------------------------------------------------------
+; Area_DrawObjectTwoRows_Bank1
+;
+; Large objects of two rows: the main tile, then the second tile below.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectTwoRows_Bank1:
+    jsr     Area_DrawObjectRow_Bank1 ; $81F3
     lda     temp0                   ; $81F6
     sta     ram_0112                ; $81F8
     jsr     AreaMap_NextBuildRow    ; $81FB
-    jmp     loc_1_8204              ; $81FE
+    jmp     Area_FillObjectRow_Bank1 ; $81FE
 
-sub_1_8201:
-    jsr     sub_1_8247              ; $8201
+; ---------------------------------------------------------------------------
+; Area_DrawObjectRow_Bank1
+;
+; Large objects drawn as one row of the object's width (areaObjectType &
+; $0F, plus one) in its main tile.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectRow_Bank1:
+    jsr     Area_GetObjectTiles_Bank1 ; $8201
 
-loc_1_8204:
+; ---------------------------------------------------------------------------
+; Area_FillObjectRow_Bank1
+;
+; Fill a row of the object's width with tile ram_0112.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_FillObjectRow_Bank1:
     lda     areaObjectType          ; $8204
     and     #$0F                    ; $8207
     tax                             ; $8209
     jsr     AreaMap_GetPagePtr      ; $820A
 
-loc_1_820D:
+@loop:
     lda     ram_0112                ; $820D
     jsr     AreaMap_PutTileRight    ; $8210
     dex                             ; $8213
-    bpl     loc_1_820D              ; $8214
+    bpl     @loop                   ; $8214
     rts                             ; $8216
 ; (code below not executed in the test movies)
 
-loc_1_8217:
-    jsr     sub_1_8247              ; $8217
-    jmp     loc_1_8234              ; $821A
+; ---------------------------------------------------------------------------
+; Area_DrawObjectColumn_Bank1
+;
+; Large objects drawn as a column of the object's size.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectColumn_Bank1:
+    jsr     Area_GetObjectTiles_Bank1 ; $8217
+    jmp     Area_FillObjectColumn_Bank1 ; $821A
 ; (end of code not executed in the test movies)
 
-loc_1_821D:
-    jsr     sub_1_8247              ; $821D
+; ---------------------------------------------------------------------------
+; Area_DrawObjectPillar_Bank1
+;
+; Large objects with a top tile over a column of the second tile.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectPillar_Bank1:
+    jsr     Area_GetObjectTiles_Bank1 ; $821D
     jsr     AreaMap_GetPagePtr      ; $8220
     lda     ram_0112                ; $8223
     jsr     AreaMap_PutTileDown     ; $8226
@@ -228,42 +260,68 @@ loc_1_821D:
     lda     temp0                   ; $822F
     sta     ram_0112                ; $8231
 
-loc_1_8234:
+; ---------------------------------------------------------------------------
+; Area_FillObjectColumn_Bank1
+;
+; Fill a column of the object's size with tile ram_0112.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_FillObjectColumn_Bank1:
     lda     areaObjectType          ; $8234
     and     #$0F                    ; $8237
     tax                             ; $8239
     jsr     AreaMap_GetPagePtr      ; $823A
 
-loc_1_823D:
+@loop:
     lda     ram_0112                ; $823D
     jsr     AreaMap_PutTileDown     ; $8240
     dex                             ; $8243
-    bpl     loc_1_823D              ; $8244
+    bpl     @loop                   ; $8244
     rts                             ; $8246
 
-sub_1_8247:
+; ---------------------------------------------------------------------------
+; Area_GetObjectTiles_Bank1
+;
+; Load the tiles of large object x (its dispatch index): from
+; AreaObjectTiles2 if bit 7 of the area header's second byte is set (z2edit's
+; object set 1), else AreaObjectTiles (set 0); ram_0112 the main tile,
+; temp0 the second.
+;
+; In:      x = object index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_GetObjectTiles_Bank1:
     txa                             ; $8247
     asl     a                       ; $8248
     tax                             ; $8249
     ldy     #$01                    ; $824A
     lda     (areaDataPtr),y         ; $824C
     asl     a                       ; $824E
-    lda     dat_1_81D5,x            ; $824F
-    bcs     loc_1_8257              ; $8252
-    lda     dat_1_81B7,x            ; $8254
+    lda     AreaObjectTiles2_Bank1,x ; $824F
+    bcs     @loc_8257               ; $8252
+    lda     AreaObjectTiles_Bank1,x ; $8254
 
-loc_1_8257:
+@loc_8257:
     sta     ram_0112                ; $8257
-    lda     dat_1_81D6,x            ; $825A
-    bcs     loc_1_8262              ; $825D
-    lda     dat_1_81B8,x            ; $825F
+    lda     AreaObjectTiles2_Bank1+1,x ; $825A
+    bcs     @loc_8262               ; $825D
+    lda     AreaObjectTiles_Bank1+1,x ; $825F
 
-loc_1_8262:
+@loc_8262:
     sta     temp0                   ; $8262
     rts                             ; $8264
 ; (code below not executed in the test movies)
 
-loc_1_8265:
+; ---------------------------------------------------------------------------
+; Area_DrawCactus_Bank1
+;
+; Large extra $30 (z2edit: cactus 1): from row 9 upward, the object's
+; size of tile $47 topped by $46.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCactus_Bank1:
     jsr     AreaMap_GetPagePtrY     ; $8265
     lda     areaBuildPos            ; $8268
     and     #$0F                    ; $826B
@@ -274,7 +332,7 @@ loc_1_8265:
     and     #$0F                    ; $8276
     tax                             ; $8278
 
-loc_1_8279:
+@loop:
     lda     #$47                    ; $8279
     sta     (temp14),y              ; $827B
     tya                             ; $827D
@@ -282,13 +340,21 @@ loc_1_8279:
     sbc     #$10                    ; $827F
     tay                             ; $8281
     dex                             ; $8282
-    bne     loc_1_8279              ; $8283
+    bne     @loop                   ; $8283
     lda     #$46                    ; $8285
     sta     (temp14),y              ; $8287
     rts                             ; $8289
 ; (end of code not executed in the test movies)
 
-loc_1_828A:
+; ---------------------------------------------------------------------------
+; Area_DrawLava_Bank1
+;
+; Large extra $20 (z2edit: lava): the object's width from row $A, a row of
+; tile $80, then $89 down to row $C.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawLava_Bank1:
     lda     areaBuildPos            ; $828A
     and     #$0F                    ; $828D
     ora     #$A0                    ; $828F
@@ -296,37 +362,59 @@ loc_1_828A:
     lda     #$80                    ; $8294
     sta     ram_0112                ; $8296
 
-loc_1_8299:
+@loop:
     lda     areaObjectType          ; $8299
     and     #$0F                    ; $829C
     tax                             ; $829E
     jsr     AreaMap_GetPagePtr      ; $829F
 
-loc_1_82A2:
+@loop2:
     lda     ram_0112                ; $82A2
     jsr     AreaMap_PutTileRight    ; $82A5
     dex                             ; $82A8
-    bpl     loc_1_82A2              ; $82A9
+    bpl     @loop2                  ; $82A9
     lda     #$89                    ; $82AB
     sta     ram_0112                ; $82AD
     jsr     AreaMap_NextBuildRow    ; $82B0
     and     #$F0                    ; $82B3
     cmp     #$D0                    ; $82B5
-    bcc     loc_1_8299              ; $82B7
+    bcc     @loop                   ; $82B7
     rts                             ; $82B9
 
-loc_1_82BA:
+; ---------------------------------------------------------------------------
+; Area_PlaceElevator_Bank1
+;
+; Large extra $50: the area's elevator is at this column (elevatorPos).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_PlaceElevator_Bank1:
     lda     areaBuildColumn         ; $82BA
     sta     elevatorPos             ; $82BD
     rts                             ; $82C0
 ; (code below not executed in the test movies)
 
-loc_1_82C1:
+; ---------------------------------------------------------------------------
+; Area_PlaceLockedDoor_Bank1
+;
+; Small object $05: the area's locked door is at this column
+; (lockedDoorPos).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_PlaceLockedDoor_Bank1:
     lda     areaBuildColumn         ; $82C1
     sta     lockedDoorPos           ; $82C4
     rts                             ; $82C7
 
-loc_1_82C8:
+; ---------------------------------------------------------------------------
+; Area_DrawTreeStump_Bank1
+;
+; Small object $03: a tree stump, tiles $5B over $5C.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawTreeStump_Bank1:
     jsr     AreaMap_GetPagePtr      ; $82C8
     lda     #$5B                    ; $82CB
     jsr     AreaMap_PutTileDown     ; $82CD
@@ -334,7 +422,14 @@ loc_1_82C8:
     sta     (temp14),y              ; $82D2
     rts                             ; $82D4
 
-loc_1_82D5:
+; ---------------------------------------------------------------------------
+; Area_DrawCactus2_Bank1
+;
+; Large extra $40 (z2edit: cactus 2): tiles $49 at row 9 and $48 above.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCactus2_Bank1:
     jsr     AreaMap_GetPagePtrY     ; $82D5
     lda     areaBuildPos            ; $82D8
     and     #$0F                    ; $82DB
@@ -349,96 +444,161 @@ loc_1_82D5:
     lda     #$48                    ; $82E9
     sta     (temp14),y              ; $82EB
     rts                             ; $82ED
-; (end of code not executed in the test movies)
-; (unreferenced: $82EE-$82F8, 11 bytes)
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_1_82EE:
-    .byte   $A2, $00, $F0, $09                                              ; $82EE
+; ---------------------------------------------------------------------------
+; Area_DrawCross_Bank1
+;
+; Small object $01: a cross (GraveTiles entry 0).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCross_Bank1:
+    ldx     #$00                    ; $82EE
+    beq     Area_DrawGraveTile_Bank1 ; $82F0
 
-loc_1_82F2:
-    .byte   $A2, $01, $D0, $05                                              ; $82F2
+; ---------------------------------------------------------------------------
+; Area_DrawAngledCross_Bank1
+;
+; Small object $02: an angled cross (GraveTiles entry 1).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawAngledCross_Bank1:
+    ldx     #$01                    ; $82F2
+    bne     Area_DrawGraveTile_Bank1 ; $82F4
+; (end of disassembled code)
 
-dat_1_82F6:
+
+GraveTiles_Bank1:
     .byte   $C6, $C7, $C5                                                   ; $82F6
 ; (code below not executed in the test movies)
 
-loc_1_82F9:
+; ---------------------------------------------------------------------------
+; Area_DrawHeadstone_Bank1
+;
+; Small object $00: a headstone (GraveTiles entry 2).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawHeadstone_Bank1:
     ldx     #$02                    ; $82F9
+
+; ---------------------------------------------------------------------------
+; Area_DrawGraveTile_Bank1
+;
+; Put GraveTiles[x] at the object's position.
+;
+; In:      x = grave
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_DrawGraveTile_Bank1:
     jsr     AreaMap_GetPagePtr      ; $82FB
-    lda     dat_1_82F6,x            ; $82FE
+    lda     GraveTiles_Bank1,x      ; $82FE
     sta     (temp14),y              ; $8301
 ; (end of code not executed in the test movies)
 
 loc_1_8303:
     rts                             ; $8303
 
-dat_1_8304:
+StonehengeTiles_Bank1:
     .byte   $56, $57, $57, $58, $FF, $59, $40, $40, $59, $FF, $5A, $40, $40, $5A, $FF; $8304
 
-loc_1_8313:
+; ---------------------------------------------------------------------------
+; Area_DrawStonehenge_Bank1
+;
+; Small object $04: the stonehenge, from StonehengeTiles (rows ended by
+; $FF).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawStonehenge_Bank1:
     ldx     #$00                    ; $8313
 
-loc_1_8315:
+@loc_8315:
     jsr     AreaMap_GetPagePtr      ; $8315
 
-loc_1_8318:
-    lda     dat_1_8304,x            ; $8318
+@loc_8318:
+    lda     StonehengeTiles_Bank1,x ; $8318
     cmp     #$FF                    ; $831B
-    beq     loc_1_8326              ; $831D
+    beq     @loc_8326               ; $831D
     jsr     AreaMap_PutTileRight    ; $831F
     inx                             ; $8322
-    jmp     loc_1_8318              ; $8323
+    jmp     @loc_8318               ; $8323
 
-loc_1_8326:
+@loc_8326:
     cpx     #$0E                    ; $8326
     beq     loc_1_8303              ; $8328
     jsr     AreaMap_NextBuildRow    ; $832A
     inx                             ; $832D
-    jmp     loc_1_8315              ; $832E
+    jmp     @loc_8315               ; $832E
 
-loc_1_8331:
+; ---------------------------------------------------------------------------
+; Area_DrawPit_Bank1
+;
+; Small object $08: a pit, background tile $40 down to row $C.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawPit_Bank1:
     jsr     AreaMap_GetPagePtr      ; $8331
 
-loc_1_8334:
+@loop:
     lda     #$40                    ; $8334
     jsr     AreaMap_PutTileDown     ; $8336
     and     #$F0                    ; $8339
     cmp     #$D0                    ; $833B
-    bcc     loc_1_8334              ; $833D
+    bcc     @loop                   ; $833D
     rts                             ; $833F
 
-loc_1_8340:
+; ---------------------------------------------------------------------------
+; Area_DrawSleepingZelda_Bank1
+;
+; Small objects $06 and $07: Zelda asleep, tiles $4E and $4F (North
+; Castle).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawSleepingZelda_Bank1:
     jsr     AreaMap_GetPagePtr      ; $8340
     ldx     #$01                    ; $8343
     lda     #$4E                    ; $8345
-    bne     loc_1_834B              ; $8347
+    bne     @loc_834B               ; $8347
 
-loc_1_8349:
+@loop:
     lda     #$4F                    ; $8349
 
-loc_1_834B:
+@loc_834B:
     sta     (temp14),y              ; $834B
     iny                             ; $834D
     dex                             ; $834E
-    bpl     loc_1_8349              ; $834F
+    bpl     @loop                   ; $834F
     rts                             ; $8351
 
-loc_1_8352:
+Area_DrawLargeCloud_Bank1:
     ldx     #$00                    ; $8352
-    beq     loc_1_835A              ; $8354
+    beq     Area_DrawCloud_Bank1    ; $8354
 
-dat_1_8356:
+CloudTiles_Bank1:
     .byte   $C3, $C4                                                        ; $8356
 
-loc_1_8358:
+Area_DrawSmallCloud_Bank1:
     ldx     #$01                    ; $8358
 
-loc_1_835A:
+; ---------------------------------------------------------------------------
+; Area_DrawCloud_Bank1
+;
+; Draw a cloud: tile $C2 and CloudTiles[x] to its right.
+;
+; In:      x = 0 large, 1 small
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCloud_Bank1:
     jsr     AreaMap_GetPagePtr      ; $835A
     lda     #$C2                    ; $835D
     sta     (temp14),y              ; $835F
     iny                             ; $8361
-    lda     dat_1_8356,x            ; $8362
+    lda     CloudTiles_Bank1,x      ; $8362
     sta     (temp14),y              ; $8365
     rts                             ; $8367
 ; (unreferenced: $8368-$8394, 45 bytes)
@@ -459,11 +619,11 @@ Overworld_QueueMapStrip_Bank1:
     sta     overworldMoveFrames     ; $83A6
     ldy     #$0B                    ; $83A8
 
-loc_1_83AA:
+@loop:
     lda     dat_1_8395,y            ; $83AA
     sta     ppuBuffer0Len,y         ; $83AD
     dey                             ; $83B0
-    bpl     loc_1_83AA              ; $83B1
+    bpl     @loop                   ; $83B1
     lda     overworldDrawAddrHi     ; $83B3
     sta     ppuBuffer0              ; $83B5
     sta     ppuBuffer0+5            ; $83B8
@@ -482,20 +642,20 @@ Overworld_GetTerrain_Bank1:
     .assert Overworld_GetTerrain_Bank1 = OverworldBank::GetTerrain, error, "interface address moved"
     lda     temp0                   ; $83CF
     cmp     #$40                    ; $83D1
-    bcs     loc_1_8404              ; $83D3
+    bcs     @loc_8404               ; $83D3
     lda     temp1                   ; $83D5
     sec                             ; $83D7
     sbc     #$1E                    ; $83D8
     sta     temp4                   ; $83DA
     cmp     #$4B                    ; $83DC
-    bcs     loc_1_8404              ; $83DE
+    bcs     @loc_8404               ; $83DE
     jsr     sub_1_93AC              ; $83E0
     inc     temp0                   ; $83E3
     lda     #$00                    ; $83E5
     sta     temp3                   ; $83E7
     ldx     #$03                    ; $83E9
 
-loc_1_83EB:
+@loc_83EB:
     lda     (temp14),y              ; $83EB
     and     #$0F                    ; $83ED
     sta     temp2                   ; $83EF
@@ -508,15 +668,15 @@ loc_1_83EB:
     adc     temp3                   ; $83F8
     sta     temp3                   ; $83FA
     cmp     temp0                   ; $83FC
-    bcs     loc_1_8408              ; $83FE
+    bcs     @done                   ; $83FE
     iny                             ; $8400
-    jmp     loc_1_83EB              ; $8401
+    jmp     @loc_83EB               ; $8401
 
-loc_1_8404:
+@loc_8404:
     lda     #$0C                    ; $8404
     sta     temp2                   ; $8406
 
-loc_1_8408:
+@done:
     rts                             ; $8408
 ; (unreferenced: $8409-$8412, 10 bytes)
 
@@ -559,13 +719,13 @@ dat_1_8409:
     .byte   $99, $99, $99, $99, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $84E3
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $84F3
 
-dat_1_8500:
-    .assert dat_1_8500 = AreaBank::MetatilePtrs, error, "interface address moved"
+MetatilePtrs_Bank1:
+    .assert MetatilePtrs_Bank1 = AreaBank::MetatilePtrs, error, "interface address moved"
     .byte   $17, $84                                                        ; $8500
     .byte   $17, $84, $9F, $84, $7D, $93                                    ; $8502
 
-dat_1_8508:
-    .assert dat_1_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
+OverworldMapPtrs_Bank1:
+    .assert OverworldMapPtrs_Bank1 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $5C, $90, $4C, $A6                                              ; $8508
 
 Area_IsSolidTile_Bank1:
@@ -683,15 +843,15 @@ Overworld_UpdatePalaceStones_Bank1:
     .assert Overworld_UpdatePalaceStones_Bank1 = OverworldBank::UpdatePalaceStones, error, "interface address moved"
     ldx     #$02                    ; $879B
 
-loc_1_879D:
+@loop:
     lda     dat_1_8797,x            ; $879D
     cmp     #$FF                    ; $87A0
-    beq     loc_1_87C2              ; $87A2
+    beq     @loc_87C2               ; $87A2
     tay                             ; $87A4
     lda     itemOwned,y             ; $87A5
-    beq     loc_1_87C2              ; $87A8
+    beq     @loc_87C2               ; $87A8
     lda     crystalPlaced,y         ; $87AA
-    beq     loc_1_87C2              ; $87AD
+    beq     @loc_87C2               ; $87AD
     txa                             ; $87AF
     asl     a                       ; $87B0
     tay                             ; $87B1
@@ -703,9 +863,9 @@ loc_1_879D:
     lda     #$0B                    ; $87BE
     sta     (temp14),y              ; $87C0
 
-loc_1_87C2:
+@loc_87C2:
     dex                             ; $87C2
-    bpl     loc_1_879D              ; $87C3
+    bpl     @loop                   ; $87C3
     rts                             ; $87C5
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $87C6
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $87D6
@@ -724,8 +884,8 @@ loc_1_87C2:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8887
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                     ; $8897
 
-dat_1_88A0:
-    .assert dat_1_88A0 = AreaBank::EnemyLists, error, "interface address moved"
+EnemyLists_Bank1:
+    .assert EnemyLists_Bank1 = AreaBank::EnemyLists, error, "interface address moved"
     .byte   $01, $01, $03, $7A, $5C, $01, $0B, $6F, $11, $72, $51, $75, $51, $7A, $51, $76; $88A0
     .byte   $9A, $01, $0B, $79, $1C, $75, $5C, $7F, $5C, $7B, $9A, $7D, $9C, $01, $07, $09; $88B0
     .byte   $07, $0D, $07, $08, $4A, $01, $0D, $7A, $1F, $70, $5F, $72, $5F, $7A, $59, $7C; $88C0
@@ -742,9 +902,7 @@ dat_1_88A0:
     .byte   $0D, $13, $4D, $17, $8D, $00, $A1, $09, $7B, $14, $15, $8D, $76, $94, $1C, $8D; $8970
     .byte   $0F, $7F, $0C, $3A, $20, $3E, $20, $1A, $60, $31, $A0, $38, $A0, $70, $8C, $09; $8980
     .byte   $67, $1C, $5A, $1B, $56, $9B, $6A, $9C, $09, $7E, $04, $70, $5F, $7E, $44, $71; $8990
-
-dat_1_89A0:
-    .assert dat_1_89A0 = AreaBank::EnemyLists+256, error, "interface address moved"
+    .assert EnemyLists_Bank1+256 = AreaBank::EnemyLists+256, error, "interface address moved"
     .byte   $9F, $07, $76, $1F, $60, $59, $6F, $59, $11, $72, $06, $48, $06, $7E, $06, $60; $89A0
     .byte   $46, $2D, $46, $6F, $46, $49, $86, $5E, $86, $0D, $35, $06, $79, $18, $6D, $06; $89B0
     .byte   $5F, $46, $45, $98, $3A, $86, $0B, $74, $12, $77, $11, $7F, $11, $73, $91, $7B; $89C0
@@ -761,9 +919,7 @@ dat_1_89A0:
     .byte   $76, $01, $76, $C1, $01, $03, $76, $81, $01, $01, $11, $39, $1F, $3B, $1F, $3D; $8A70
     .byte   $1F, $44, $5F, $5C, $5F, $64, $9F, $7C, $9F, $7E, $9F, $0F, $6A, $04, $5C, $04; $8A80
     .byte   $7D, $55, $6F, $44, $76, $95, $6C, $84, $74, $C4, $0F, $6C, $11, $4E, $11, $20; $8A90
-
-dat_1_8AA0:
-    .assert dat_1_8AA0 = AreaBank::EnemyLists+512, error, "interface address moved"
+    .assert EnemyLists_Bank1+512 = AreaBank::EnemyLists+512, error, "interface address moved"
     .byte   $51, $70, $9B, $2F, $91, $41, $D1, $63, $D1, $0F, $0D, $07, $03, $47, $0A, $4A; $8AA0
     .byte   $7B, $5C, $01, $C7, $74, $DC, $05, $CA, $0B, $7B, $12, $63, $52, $5B, $52, $43; $8AB0
     .byte   $92, $3D, $92, $05, $0F, $0F, $00, $CF, $0F, $7A, $5F, $7D, $5F, $7F, $5F, $70; $8AC0
@@ -780,9 +936,7 @@ dat_1_8AA0:
     .byte   $5F, $73, $97, $7D, $9C, $7F, $9C, $72, $DC, $09, $6D, $03, $50, $58, $76, $43; $8B70
     .byte   $7B, $D8, $03, $50, $83, $09, $32, $51, $3C, $51, $47, $91, $2D, $91, $0B, $6E; $8B80
     .byte   $14, $60, $52, $46, $92, $4E, $92, $21, $D4, $09, $57, $58, $40, $94, $3A, $98; $8B90
-
-dat_1_8BA0:
-    .assert dat_1_8BA0 = AreaBank::EnemyLists+768, error, "interface address moved"
+    .assert EnemyLists_Bank1+768 = AreaBank::EnemyLists+768, error, "interface address moved"
     .byte   $24, $D4, $0F, $6E, $14, $51, $54, $58, $54, $41, $94, $38, $94, $3C, $94, $23; $8BA0
     .byte   $D4, $0B, $6A, $18, $68, $58, $6C, $58, $66, $98, $63, $D8, $09, $6A, $14, $60; $8BB0
     .byte   $98, $64, $98, $62, $D4, $05, $06, $57, $01, $D7, $0B, $3A, $04, $68, $58, $6A; $8BC0
@@ -1175,10 +1329,10 @@ Projectile_Bubble_Bank1:
     inc     ram_044C,x              ; $9649
     lda     ram_044C,x              ; $964C
     and     #$10                    ; $964F
-    beq     loc_1_9655              ; $9651
+    beq     @loc_9655               ; $9651
     ldy     #$FC                    ; $9653
 
-loc_1_9655:
+@loc_9655:
     sty     objXVelocity+7,x        ; $9655
     jmp     Projectile_MoveAndCheck_Bank1 ; $9657
 
@@ -1213,22 +1367,22 @@ Projectile_Boomerang_Bank1:
     jsr     Projectile_FallIfDeflected_Bank1 ; $9664
     lda     frameCounter            ; $9667
     lsr     a                       ; $9669
-    bcc     loc_1_9680              ; $966A
+    bcc     @loc_9680               ; $966A
     lda     #$80                    ; $966C
     sta     sfxRequest+1            ; $966E
     lda     objYVelocity+7,x        ; $9670
-    bmi     loc_1_967D              ; $9673
-    beq     loc_1_9680              ; $9675
+    bmi     @loc_967D               ; $9673
+    beq     @loc_9680               ; $9675
     dec     objYVelocity+7,x        ; $9677
     dec     objYVelocity+7,x        ; $967A
 
-loc_1_967D:
+@loc_967D:
     inc     objYVelocity+7,x        ; $967D
 
-loc_1_9680:
+@loc_9680:
     lda     ram_044C,x              ; $9680
-    bmi     loc_1_96B4              ; $9683
-    bne     loc_1_96B1              ; $9685
+    bmi     @loc_96B4               ; $9683
+    bne     @loc_96B1               ; $9685
     ldy     ram_0458,x              ; $9687
     lda     BoomerangYSpeeds_Bank1,y ; $968A
     sta     objYVelocity+7,x        ; $968D
@@ -1239,22 +1393,22 @@ loc_1_9680:
     sta     objXVelocity+7,x        ; $9699
     ldy     #$02                    ; $969B
     cmp     #$00                    ; $969D
-    bmi     loc_1_96A2              ; $969F
+    bmi     @loc_96A2               ; $969F
     dey                             ; $96A1
 
-loc_1_96A2:
+@loc_96A2:
     sty     objFacing+7,x           ; $96A2
     and     #$3F                    ; $96A4
     cmp     #$20                    ; $96A6
-    bne     loc_1_96B4              ; $96A8
+    bne     @loc_96B4               ; $96A8
     lda     #$FF                    ; $96AA
     sta     ram_044C,x              ; $96AC
-    bne     loc_1_96B4              ; $96AF
+    bne     @loc_96B4               ; $96AF
 
-loc_1_96B1:
+@loc_96B1:
     dec     ram_044C,x              ; $96B1
 
-loc_1_96B4:
+@loc_96B4:
     jsr     Projectile_MoveAndCheck_Bank1 ; $96B4
     ldy     ram_044C,x              ; $96B7
     dey                             ; $96BA
@@ -1270,11 +1424,11 @@ loc_1_96B4:
     jsr     Hitbox_SetB             ; $96CE
     ldy     #$03                    ; $96D1
 
-loc_1_96D3:
+@loop:
     lda     a:temp4,y               ; $96D3
     sta     a:temp0,y               ; $96D6
     dey                             ; $96D9
-    bpl     loc_1_96D3              ; $96DA
+    bpl     @loop                   ; $96DA
     ldx     currentObject           ; $96DC
     jsr     Projectile_GetHitbox    ; $96DE
     jsr     Hitbox_Overlap          ; $96E1
@@ -1296,10 +1450,10 @@ loc_1_96EA:
 Projectile_FallIfDeflected_Bank1:
     ldy     #$02                    ; $96EB
     lda     objXVelocity+7,x        ; $96ED
-    bmi     loc_1_96F2              ; $96EF
+    bmi     @loc_96F2               ; $96EF
     dey                             ; $96F1
 
-loc_1_96F2:
+@loc_96F2:
     tya                             ; $96F2
     cmp     objFacing+7,x           ; $96F3
     beq     loc_1_96EA              ; $96F5
@@ -1321,12 +1475,12 @@ Projectile_MoveAndCheck_Bank1:
     jsr     Projectile_Move         ; $96FF
     lda     drawOffscreen+2         ; $9702
     and     #$FC                    ; $9704
-    beq     loc_1_970D              ; $9706
+    beq     @loc_970D               ; $9706
     lda     #$00                    ; $9708
     sta     objState+7,x            ; $970A
     rts                             ; $970C
 
-loc_1_970D:
+@loc_970D:
     jsr     Projectile_Draw_Bank1   ; $970D
     jsr     DoNothing               ; $9710
 dat_1_9715 := * + 2
@@ -1392,7 +1546,7 @@ dat_1_9759:
 ; (end of disassembled code)
 
 
-loc_1_976D:
+@loc_976D:
     lda     frameCounter            ; $976D
     asl     a                       ; $976F
     asl     a                       ; $9770
@@ -1401,9 +1555,9 @@ loc_1_976D:
     asl     a                       ; $9773
     and     #$80                    ; $9774
     ora     oamBuffer+2,y           ; $9776
-    bne     loc_1_9785              ; $9779
+    bne     @loc_9785               ; $9779
 
-loc_1_977B:
+@loc_977B:
     lda     frameCounter            ; $977B
     asl     a                       ; $977D
     asl     a                       ; $977E
@@ -1413,7 +1567,7 @@ loc_1_977B:
     asl     a                       ; $9782
     and     #$43                    ; $9783
 
-loc_1_9785:
+@loc_9785:
     sta     oamBuffer+2,y           ; $9785
     rts                             ; $9788
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -1422,10 +1576,10 @@ dat_1_9789:
     lda     enemyStunTimer,x        ; $9789
     pha                             ; $978C
     lda     overworldBuffer+94,x    ; $978D
-    beq     loc_1_9794              ; $9790
+    beq     @loc_9794               ; $9790
     sta     temp3                   ; $9792
 
-loc_1_9794:
+@loc_9794:
     lda     #$00                    ; $9794
     sta     drawOffscreen+1         ; $9796
     sta     enemyStunTimer,x        ; $9798
@@ -1440,24 +1594,24 @@ loc_1_9794:
 dat_1_97A5:
     .byte   $02, $82, $C2, $42                                              ; $97A5
 
-loc_1_97A9:
+@loc_97A9:
     lda     frameCounter            ; $97A9
     lsr     a                       ; $97AB
     lsr     a                       ; $97AC
     and     #$03                    ; $97AD
     ldy     objFacing+7,x           ; $97AF
     dey                             ; $97B1
-    bne     loc_1_97B6              ; $97B2
+    bne     @loc_97B6               ; $97B2
     eor     #$03                    ; $97B4
 
-loc_1_97B6:
+@loc_97B6:
     tay                             ; $97B6
     lda     dat_1_97A5,y            ; $97B7
     ldy     objOamOffset+7,x        ; $97BA
     sta     oamBuffer+2,y           ; $97BC
     rts                             ; $97BF
 
-loc_1_97C0:
+@loc_97C0:
     lda     frameCounter            ; $97C0
     and     #$04                    ; $97C2
     sta     temp0                   ; $97C4
@@ -1468,20 +1622,20 @@ loc_1_97C0:
     ldx     #$02                    ; $97CE
     lda     frameCounter            ; $97D0
     and     #$08                    ; $97D2
-    bne     loc_1_97D8              ; $97D4
+    bne     @loc_97D8               ; $97D4
     ldx     #$C2                    ; $97D6
 
-loc_1_97D8:
+@loc_97D8:
     stx     temp0                   ; $97D8
     ldx     currentObject           ; $97DA
     lda     objFacing+7,x           ; $97DC
     cmp     #$01                    ; $97DE
-    bne     loc_1_97E8              ; $97E0
+    bne     @loc_97E8               ; $97E0
     lda     temp0                   ; $97E2
     eor     #$40                    ; $97E4
     sta     temp0                   ; $97E6
 
-loc_1_97E8:
+@loc_97E8:
     lda     temp0                   ; $97E8
     sta     oamBuffer+2,y           ; $97EA
 
@@ -1505,14 +1659,14 @@ Moblin_ThrowSpear:
 ; (code below not executed in the test movies)
     ldy     #$05                    ; $97F2
 
-loc_1_97F4:
+@loop:
     lda     a:objState+7,y          ; $97F4
-    beq     loc_1_97FD              ; $97F7
+    beq     @loc_97FD               ; $97F7
     dey                             ; $97F9
-    bpl     loc_1_97F4              ; $97FA
+    bpl     @loop                   ; $97FA
     rts                             ; $97FC
 
-loc_1_97FD:
+@loc_97FD:
     sta     ram_045E,y              ; $97FD
     lda     #$05                    ; $9800
     sta     a:objState+7,y          ; $9802
@@ -1544,11 +1698,11 @@ loc_1_97FD:
     sta     objYVelocity+7,y        ; $983F
     lda     enemyType,x             ; $9842
     cmp     #$14                    ; $9844
-    bne     loc_1_984D              ; $9846
+    bne     @done                   ; $9846
     lda     #$01                    ; $9848
     sta     ram_045E,y              ; $984A
 
-loc_1_984D:
+@done:
     rts                             ; $984D
 ; (end of code not executed in the test movies)
 
@@ -1563,21 +1717,21 @@ loc_1_984D:
 Generator_Init_Bank1:
     ldy     #$05                    ; $984E
 
-loc_1_9850:
+@loop:
     cpy     currentObject           ; $9850
-    beq     loc_1_9860              ; $9852
+    beq     @loc_9860               ; $9852
     lda     a:enemyActive,y         ; $9854
-    beq     loc_1_9860              ; $9857
+    beq     @loc_9860               ; $9857
     lda     a:enemyType,y           ; $9859
     cmp     enemyType,x             ; $985C
-    beq     loc_1_9864              ; $985E
+    beq     @loc_9864               ; $985E
 
-loc_1_9860:
+@loc_9860:
     dey                             ; $9860
-    bpl     loc_1_9850              ; $9861
+    bpl     @loop                   ; $9861
     rts                             ; $9863
 
-loc_1_9864:
+@loc_9864:
     tya                             ; $9864
     tax                             ; $9865
     jsr     Enemy_Despawn           ; $9866
@@ -1624,21 +1778,21 @@ Megmet_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $987E
     lda     objCollision+1,x        ; $9881
     and     #$08                    ; $9883
-    beq     loc_1_988C              ; $9885
+    beq     @loc_988C               ; $9885
     jsr     Enemy_StopY             ; $9887
     inc     objY+1,x                ; $988A
 
-loc_1_988C:
+@loc_988C:
     lda     objCollision+1,x        ; $988C
     and     #$03                    ; $988E
-    beq     loc_1_9895              ; $9890
+    beq     @loc_9895               ; $9890
     jsr     Enemy_TurnAround        ; $9892
 
-loc_1_9895:
+@loc_9895:
     jsr     Enemy_MoveX             ; $9895
     lda     objCollision+1,x        ; $9898
     and     #$04                    ; $989A
-    beq     loc_1_98B2              ; $989C
+    beq     @loc_98B2               ; $989C
     lda     rng+1,x                 ; $989E
     and     #$01                    ; $98A1
     tay                             ; $98A3
@@ -1648,7 +1802,7 @@ loc_1_9895:
     lda     MegmetXSpeeds,y         ; $98AD
     sta     objXVelocity+1,x        ; $98B0
 
-loc_1_98B2:
+@loc_98B2:
     lda     #$30                    ; $98B2
     sta     temp0                   ; $98B4
     sta     temp2                   ; $98B6
@@ -1682,10 +1836,10 @@ Lowder_Ai:
     iny                             ; $98D8
     tya                             ; $98D9
     cmp     objFacing+1,x           ; $98DA
-    bne     loc_1_98E0              ; $98DC
+    bne     @loc_98E0               ; $98DC
     asl     objXVelocity+1,x        ; $98DE
 
-loc_1_98E0:
+@loc_98E0:
     jsr     Enemy_MoveX             ; $98E0
     pla                             ; $98E3
     sta     objXVelocity+1,x        ; $98E4
@@ -1693,40 +1847,40 @@ loc_1_98E0:
     clc                             ; $98E8
     adc     #$10                    ; $98E9
     cmp     objY+1,x                ; $98EB
-    bne     loc_1_9901              ; $98ED
+    bne     @loc_9901               ; $98ED
     lda     timerFast+TIMER_ENEMY,x ; $98EF
-    bne     loc_1_9901              ; $98F2
+    bne     @loc_9901               ; $98F2
     lda     #$A0                    ; $98F4
     sta     timerFast+TIMER_ENEMY,x ; $98F6
     jsr     Enemy_FaceLink          ; $98F9
     lda     LowderSpeeds,y          ; $98FC
     sta     objXVelocity+1,x        ; $98FF
 
-loc_1_9901:
+@loc_9901:
     lda     objCollision+1,x        ; $9901
     and     #$04                    ; $9903
-    beq     loc_1_9910              ; $9905
+    beq     @loc_9910               ; $9905
     jsr     Enemy_Land              ; $9907
     lda     objCollision+1,x        ; $990A
     and     #$03                    ; $990C
-    beq     loc_1_992A              ; $990E
+    beq     @loc_992A               ; $990E
 
-loc_1_9910:
+@loc_9910:
     lda     objState+1,x            ; $9910
-    beq     loc_1_991F              ; $9912
+    beq     @loc_991F               ; $9912
     lda     #$20                    ; $9914
     sta     temp0                   ; $9916
     lda     #$03                    ; $9918
     sta     temp2                   ; $991A
     jmp     Enemy_MoveYWithGravity  ; $991C
 
-loc_1_991F:
+@loc_991F:
     inc     objState+1,x            ; $991F
     jsr     Enemy_TurnAround        ; $9921
     jsr     Enemy_MoveX             ; $9924
     jmp     Enemy_MoveX             ; $9927
 
-loc_1_992A:
+@loc_992A:
     sta     objState+1,x            ; $992A
 
 dat_1_992C:
@@ -1746,9 +1900,9 @@ dat_1_992C:
 ; ---------------------------------------------------------------------------
 DumbMoblinGenerator_Ai:
     lda     ram_05C9                ; $992F
-    bne     loc_1_994E              ; $9932
+    bne     @done                   ; $9932
     jsr     MobyGenerator_Ai        ; $9934
-    bcs     loc_1_994E              ; $9937
+    bcs     @done                   ; $9937
     ldx     temp0                   ; $9939
     dec     enemyHp,x               ; $993B
     lda     #$22                    ; $993D
@@ -1760,7 +1914,7 @@ DumbMoblinGenerator_Ai:
     sta     objY+1,x                ; $994A
     ldx     currentObject           ; $994C
 
-loc_1_994E:
+@done:
     rts                             ; $994E
 
 ; ---------------------------------------------------------------------------
@@ -1782,10 +1936,10 @@ DumbMoblin_Ai:
     jsr     Enemy_MoveYAndFall      ; $9963
     lda     objCollision+1,x        ; $9966
     and     #$04                    ; $9968
-    beq     loc_1_996F              ; $996A
+    beq     @done                   ; $996A
     jmp     Enemy_Land              ; $996C
 
-loc_1_996F:
+@done:
     rts                             ; $996F
 ; (end of disassembled code)
 
@@ -1807,20 +1961,20 @@ dat_1_9970:
 ; ---------------------------------------------------------------------------
 MoblinGoriya_Ai:
     lda     objState+1,x            ; $9972
-    beq     loc_1_99EB              ; $9974
+    beq     @loc_99EB               ; $9974
     and     #$01                    ; $9976
-    bne     loc_1_9980              ; $9978
+    bne     @loc_9980               ; $9978
     jsr     Enemy_Draw              ; $997A
     jsr     Projectile_CheckLinkReflect ; $997D
 
-loc_1_9980:
+@loc_9980:
     lda     timerFast+TIMER_ENEMY,x ; $9980
-    bne     loc_1_99EB              ; $9983
+    bne     @loc_99EB               ; $9983
     lda     enemyType,x             ; $9985
     cmp     #$19                    ; $9987
-    bcc     loc_1_99C9              ; $9989
+    bcc     @loc_99C9               ; $9989
     jsr     Enemy_FireProjectile    ; $998B
-    bcs     loc_1_99C6              ; $998E
+    bcs     @loc_99C6               ; $998E
     txa                             ; $9990
     sta     ram_045E,y              ; $9991
     lda     a:objFacing+7,y         ; $9994
@@ -1836,10 +1990,10 @@ loc_1_9980:
     lda     rng+1,x                 ; $99AB
     and     #$10                    ; $99AE
     ldx     ram_0458,y              ; $99B0
-    beq     loc_1_99B7              ; $99B3
+    beq     @loc_99B7               ; $99B3
     lda     #$F0                    ; $99B5
 
-loc_1_99B7:
+@loc_99B7:
     sta     objYVelocity+7,y        ; $99B7
     ldx     currentObject           ; $99BA
     lda     #$20                    ; $99BC
@@ -1847,35 +2001,35 @@ loc_1_99B7:
     lda     #$06                    ; $99C1
     sta     a:objState+7,y          ; $99C3
 
-loc_1_99C6:
-    jmp     loc_1_99EE              ; $99C6
+@loc_99C6:
+    jmp     @loc_99EE               ; $99C6
 
-loc_1_99C9:
+@loc_99C9:
     inc     objState+1,x            ; $99C9
     lda     objState+1,x            ; $99CB
     cmp     #$03                    ; $99CD
-    beq     loc_1_99EE              ; $99CF
+    beq     @loc_99EE               ; $99CF
     cmp     #$05                    ; $99D1
-    bcs     loc_1_99EE              ; $99D3
+    bcs     @loc_99EE               ; $99D3
     cmp     #$04                    ; $99D5
-    bne     loc_1_99E6              ; $99D7
+    bne     @loc_99E6               ; $99D7
     lda     enemyType,x             ; $99D9
     cmp     #$15                    ; $99DB
-    beq     loc_1_99E6              ; $99DD
+    beq     @loc_99E6               ; $99DD
 ; (code below not executed in the test movies)
     jsr     Moblin_ThrowSpear       ; $99DF
     lda     #$05                    ; $99E2
     sta     objState+1,x            ; $99E4
 ; (end of code not executed in the test movies)
 
-loc_1_99E6:
+@loc_99E6:
     lda     #$10                    ; $99E6
     sta     timerFast+TIMER_ENEMY,x ; $99E8
 
-loc_1_99EB:
+@loc_99EB:
     jmp     loc_1_99F2              ; $99EB
 
-loc_1_99EE:
+@loc_99EE:
 dat_1_99EF := * + 1
     lda     #$00                    ; $99EE
     sta     objState+1,x            ; $99F0
@@ -1885,14 +2039,14 @@ loc_1_99F2:
     ldy     enemyType,x             ; $99F4
 dat_1_99F7 := * + 1
     cpy     #$14                    ; $99F6
-    beq     loc_1_99FE              ; $99F8
+    beq     @loc_99FE               ; $99F8
     cpy     #$19                    ; $99FA
-    bcc     loc_1_9A00              ; $99FC
+    bcc     @loc_9A00               ; $99FC
 
-loc_1_99FE:
+@loc_99FE:
     lda     #$60                    ; $99FE
 
-loc_1_9A00:
+@loc_9A00:
     jmp     Fighter_Move            ; $9A00
 ; (unreferenced: $9A03-$9A03, 1 bytes)
     .byte   $03                                                             ; $9A03
@@ -1940,38 +2094,38 @@ Fighter_Move:
     jsr     Enemy_MoveYAndFall      ; $9A2F
     lda     objCollision+1,x        ; $9A32
     and     #$04                    ; $9A34
-    beq     loc_1_9A3B              ; $9A36
+    beq     @loc_9A3B               ; $9A36
     jsr     Enemy_Land              ; $9A38
 
-loc_1_9A3B:
+@loc_9A3B:
     jsr     Fighter_KnockBack       ; $9A3B
     jsr     Enemy_FaceLink          ; $9A3E
     lda     temp15                  ; $9A41
     clc                             ; $9A43
     adc     ram_05E5                ; $9A44
     cmp     ram_05E6                ; $9A47
-    bcc     loc_1_9A6B              ; $9A4A
+    bcc     @loc_9A6B               ; $9A4A
     lda     temp15                  ; $9A4C
     adc     #$50                    ; $9A4E
     cmp     #$A0                    ; $9A50
-    bcs     loc_1_9A64              ; $9A52
+    bcs     @loc_9A64               ; $9A52
     lda     enemyType,x             ; $9A54
     cmp     #$18                    ; $9A56
-    bcs     loc_1_9A61              ; $9A58
+    bcs     @loc_9A61               ; $9A58
     lda     objState+1,x            ; $9A5A
-    bne     loc_1_9A61              ; $9A5C
+    bne     @loc_9A61               ; $9A5C
     jsr     Fighter_StartAttack     ; $9A5E
 
-loc_1_9A61:
+@loc_9A61:
     jsr     Enemy_FaceLink          ; $9A61
 
-loc_1_9A64:
+@loc_9A64:
     lda     dat_1_9A13,y            ; $9A64
     asl     a                       ; $9A67
     sta     objXVelocity+1,x        ; $9A68
     rts                             ; $9A6A
 
-loc_1_9A6B:
+@loc_9A6B:
     ldy     enemyType,x             ; $9A6B
     lda     dat_1_99F7,y            ; $9A6D
     inc     enemyAiState,x          ; $9A70
@@ -1995,28 +2149,28 @@ Fighter_StartAttack:
     ldy     #$01                    ; $9A82
     lda     enemyType,x             ; $9A84
     cmp     #$14                    ; $9A86
-    beq     loc_1_9AA2              ; $9A88
+    beq     @loc_9AA2               ; $9A88
     cmp     #$17                    ; $9A8A
-    beq     loc_1_9AA4              ; $9A8C
+    beq     @loc_9AA4               ; $9A8C
     cmp     #$18                    ; $9A8E
-    beq     loc_1_9AA4              ; $9A90
+    beq     @loc_9AA4               ; $9A90
     lda     rng+1,x                 ; $9A92
     lsr     a                       ; $9A95
-    bcs     loc_1_9A9E              ; $9A96
+    bcs     @loc_9A9E               ; $9A96
     and     #$02                    ; $9A98
     tay                             ; $9A9A
     iny                             ; $9A9B
-    bne     loc_1_9AA4              ; $9A9C
+    bne     @loc_9AA4               ; $9A9C
 
-loc_1_9A9E:
+@loc_9A9E:
     lda     linkStanding            ; $9A9E
-    bne     loc_1_9AA4              ; $9AA0
+    bne     @loc_9AA4               ; $9AA0
 
-loc_1_9AA2:
+@loc_9AA2:
     iny                             ; $9AA2
     iny                             ; $9AA3
 
-loc_1_9AA4:
+@loc_9AA4:
     sty     objState+1,x            ; $9AA4
     lda     #$18                    ; $9AA6
     sta     timerFast+TIMER_ENEMY,x ; $9AA8
@@ -2030,21 +2184,21 @@ loc_1_9AAB:
     lda     linkDirHeld             ; $9AB5
 
 dat_1_9AB8:
-    beq     loc_1_9ABE              ; $9AB8
+    beq     @loc_9ABE               ; $9AB8
     lda     objXVelocity            ; $9ABA
-    bne     loc_1_9AC9              ; $9ABC
+    bne     @loc_9AC9               ; $9ABC
 
-loc_1_9ABE:
+@loc_9ABE:
     ldy     #$04                    ; $9ABE
     lda     frameCounter            ; $9AC0
     and     #$40                    ; $9AC2
-    bne     loc_1_9AC8              ; $9AC4
+    bne     @loc_9AC8               ; $9AC4
     ldy     #$FC                    ; $9AC6
 
-loc_1_9AC8:
+@loc_9AC8:
     tya                             ; $9AC8
 
-loc_1_9AC9:
+@loc_9AC9:
     sta     objXVelocity+1,x        ; $9AC9
     asl     a                       ; $9ACB
     ror     objXVelocity+1,x        ; $9ACC
@@ -2064,34 +2218,34 @@ loc_1_9ACE:
 ; ---------------------------------------------------------------------------
 Daira_Attack:
     lda     objState+1,x            ; $9AD1
-    beq     loc_1_9B04              ; $9AD3
+    beq     @done                   ; $9AD3
     lda     timerFast+TIMER_ENEMY,x ; $9AD5
-    bne     loc_1_9B04              ; $9AD8
+    bne     @done                   ; $9AD8
     inc     objState+1,x            ; $9ADA
     ldy     enemyType,x             ; $9ADC
     lda     objState+1,x            ; $9ADE
     cmp     dat_1_9AB8,y            ; $9AE0
-    beq     loc_1_9B05              ; $9AE3
+    beq     @loc_9B05               ; $9AE3
     cmp     #$02                    ; $9AE5
-    bne     loc_1_9AFF              ; $9AE7
+    bne     @loc_9AFF               ; $9AE7
     jsr     Enemy_Draw              ; $9AE9
     jsr     Projectile_CheckLinkReflect ; $9AEC
     lda     enemyType,x             ; $9AEF
     cmp     #$18                    ; $9AF1
-    bne     loc_1_9AFF              ; $9AF3
+    bne     @loc_9AFF               ; $9AF3
     jsr     Enemy_FireProjectile    ; $9AF5
-    bcs     loc_1_9AFF              ; $9AF8
+    bcs     @loc_9AFF               ; $9AF8
     lda     #$07                    ; $9AFA
     sta     a:objState+7,y          ; $9AFC
 
-loc_1_9AFF:
+@loc_9AFF:
     lda     #$05                    ; $9AFF
     sta     timerFast+TIMER_ENEMY,x ; $9B01
 
-loc_1_9B04:
+@done:
     rts                             ; $9B04
 
-loc_1_9B05:
+@loc_9B05:
     lda     #$00                    ; $9B05
     sta     objState+1,x            ; $9B07
     rts                             ; $9B09
@@ -2106,18 +2260,18 @@ loc_1_9B05:
 ; ---------------------------------------------------------------------------
 Fighter_KnockBack:
     lda     ram_043E,x              ; $9B0A
-    beq     loc_1_9B1E              ; $9B0D
+    beq     @loc_9B1E               ; $9B0D
     dec     ram_043E,x              ; $9B0F
-    bpl     loc_1_9B1A              ; $9B12
+    bpl     @loc_9B1A               ; $9B12
     inc     ram_043E,x              ; $9B14
     inc     ram_043E,x              ; $9B17
 
-loc_1_9B1A:
+@loc_9B1A:
     sta     objXVelocity+1,x        ; $9B1A
     pla                             ; $9B1C
     pla                             ; $9B1D
 
-loc_1_9B1E:
+@loc_9B1E:
     jmp     Enemy_MoveXUnlessWall_Bank1 ; $9B1E
 
 loc_1_9B21:
@@ -2157,23 +2311,23 @@ dat_1_9B2D:
 MobyGenerator_Ai:
     lda     frameCounter            ; $9B31
     and     #$7F                    ; $9B33
-    bne     loc_1_9B44              ; $9B35
+    bne     @loc_9B44               ; $9B35
     lda     enemyType,x             ; $9B37
     sta     temp13                  ; $9B39
     ldx     #$05                    ; $9B3B
 
-loc_1_9B3D:
+@loop:
     lda     enemyActive,x           ; $9B3D
-    beq     loc_1_9B48              ; $9B3F
+    beq     @loc_9B48               ; $9B3F
     dex                             ; $9B41
-    bpl     loc_1_9B3D              ; $9B42
+    bpl     @loop                   ; $9B42
 
-loc_1_9B44:
+@loc_9B44:
     ldx     currentObject           ; $9B44
     sec                             ; $9B46
     rts                             ; $9B47
 
-loc_1_9B48:
+@loc_9B48:
     inc     enemyActive,x           ; $9B48
     lda     #$FF                    ; $9B4A
     sta     a:enemySramIndex,x      ; $9B4C
@@ -2186,11 +2340,11 @@ loc_1_9B48:
     tay                             ; $9B5D
     lda     temp13                  ; $9B5E
     cmp     #$21                    ; $9B60
-    bne     loc_1_9B66              ; $9B62
+    bne     @loc_9B66               ; $9B62
     iny                             ; $9B64
     iny                             ; $9B65
 
-loc_1_9B66:
+@loc_9B66:
     lda     scrollX                 ; $9B66
     adc     dat_1_9B2D,y            ; $9B69
     sta     objX+1,x                ; $9B6C
@@ -2225,13 +2379,13 @@ Moby_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $9B94
     lda     objY+1,x                ; $9B97
     cmp     objY                    ; $9B99
-    bcc     loc_1_9BA7              ; $9B9B
+    bcc     @loc_9BA7               ; $9B9B
     ldy     objFacing+1,x           ; $9B9D
     lda     dat_1_9B2A,y            ; $9B9F
     sta     objXVelocity+1,x        ; $9BA2
     jsr     Enemy_StopY             ; $9BA4
 
-loc_1_9BA7:
+@loc_9BA7:
     jsr     Enemy_MoveY             ; $9BA7
     jsr     Enemy_MoveX             ; $9BAA
     jsr     Enemy_UpdateCommon      ; $9BAD
@@ -2255,17 +2409,17 @@ dat_1_9BB3:
 ; ---------------------------------------------------------------------------
 Geldarm_Ai:
     lda     enemyAiState,x          ; $9BB5
-    bne     loc_1_9BEE              ; $9BB7
+    bne     @loc_9BEE               ; $9BB7
     ldy     objFacing+1,x           ; $9BB9
-    bne     loc_1_9BCA              ; $9BBB
+    bne     @loc_9BCA               ; $9BBB
     lda     objY+1,x                ; $9BBD
     clc                             ; $9BBF
     adc     dat_1_9BB3,y            ; $9BC0
     sta     objY+1,x                ; $9BC3
     lda     timerFast+3,x           ; $9BC5
-    bne     loc_1_9C35              ; $9BC8
+    bne     @loc_9C35               ; $9BC8
 
-loc_1_9BCA:
+@loc_9BCA:
     lda     objY+1,x                ; $9BCA
     clc                             ; $9BCC
     adc     dat_1_9BB3,y            ; $9BCD
@@ -2275,20 +2429,20 @@ loc_1_9BCA:
     lda     objState+1,x            ; $9BD7
     sec                             ; $9BD9
     sbc     objY+1,x                ; $9BDA
-    bne     loc_1_9BE6              ; $9BDC
+    bne     @loc_9BE6               ; $9BDC
     lda     #$80                    ; $9BDE
     sta     timerFast+3,x           ; $9BE0
-    jmp     loc_1_9C2C              ; $9BE3
+    jmp     @loc_9C2C               ; $9BE3
 
-loc_1_9BE6:
+@loc_9BE6:
     cmp     #$40                    ; $9BE6
-    bne     loc_1_9C3D              ; $9BE8
+    bne     @loc_9C3D               ; $9BE8
     lda     #$01                    ; $9BEA
     sta     enemyAiState,x          ; $9BEC
 
-loc_1_9BEE:
+@loc_9BEE:
     lda     drawOffscreen+1         ; $9BEE
-    bne     loc_1_9C3D              ; $9BF0
+    bne     @loc_9C3D               ; $9BF0
     lda     objY+1,x                ; $9BF2
     adc     #$08                    ; $9BF4
     sta     temp5                   ; $9BF6
@@ -2302,37 +2456,37 @@ loc_1_9BEE:
     sta     temp6                   ; $9C05
     jsr     Sword_GetHitbox         ; $9C07
     jsr     Hitbox_Overlap          ; $9C0A
-    bcc     loc_1_9C1E              ; $9C0D
+    bcc     @loc_9C1E               ; $9C0D
     lda     #$00                    ; $9C0F
     sta     enemyAiState,x          ; $9C11
     lda     #$01                    ; $9C13
     sta     timerFast+3,x           ; $9C15
     lda     #$10                    ; $9C18
     sta     sfxRequest+1            ; $9C1A
-    bne     loc_1_9C2C              ; $9C1C
+    bne     @loc_9C2C               ; $9C1C
 
-loc_1_9C1E:
+@loc_9C1E:
     jsr     Link_GetHitbox          ; $9C1E
     jsr     Hitbox_Overlap          ; $9C21
-    bcc     loc_1_9C29              ; $9C24
+    bcc     @loc_9C29               ; $9C24
     jsr     Link_HurtByEnemy        ; $9C26
 
-loc_1_9C29:
-    jmp     loc_1_9C3D              ; $9C29
+@loc_9C29:
+    jmp     @loc_9C3D               ; $9C29
 
-loc_1_9C2C:
+@loc_9C2C:
     lda     objFacing+1,x           ; $9C2C
     eor     #$01                    ; $9C2E
     sta     objFacing+1,x           ; $9C30
-    jmp     loc_1_9C3D              ; $9C32
+    jmp     @loc_9C3D               ; $9C32
 
-loc_1_9C35:
+@loc_9C35:
     lda     objY+1,x                ; $9C35
     sec                             ; $9C37
     sbc     dat_1_9BB3,y            ; $9C38
     sta     objY+1,x                ; $9C3B
 
-loc_1_9C3D:
+@loc_9C3D:
     jsr     Enemy_UpdateCommon      ; $9C3D
     jmp     Enemy_HurtLinkOnContact ; $9C40
 
@@ -2365,10 +2519,10 @@ DumbMoblin_Draw:
     ldx     #$38                    ; $9C62
     lda     frameCounter            ; $9C64
     and     #$08                    ; $9C66
-    bne     loc_1_9C6C              ; $9C68
+    bne     @loc_9C6C               ; $9C68
     ldx     #$4A                    ; $9C6A
 
-loc_1_9C6C:
+@loc_9C6C:
     jmp     Sprite_DrawEnemyPairKeepX ; $9C6C
 ; (end of disassembled code)
 
@@ -2383,22 +2537,22 @@ loc_1_9C6C:
 Goriya_Draw:
     ldy     #$0C                    ; $9C6F
     lda     objState+1,x            ; $9C71
-    beq     loc_1_9C7D              ; $9C73
+    beq     @loc_9C7D               ; $9C73
     cmp     #$01                    ; $9C75
-    bne     loc_1_9C8B              ; $9C77
+    bne     @loc_9C8B               ; $9C77
     ldy     #$08                    ; $9C79
-    bne     loc_1_9C8B              ; $9C7B
+    bne     @loc_9C8B               ; $9C7B
 
-loc_1_9C7D:
+@loc_9C7D:
     ldy     #$00                    ; $9C7D
     lda     objXVelocity+1,x        ; $9C7F
-    beq     loc_1_9C8B              ; $9C81
+    beq     @loc_9C8B               ; $9C81
     lda     frameCounter            ; $9C83
     and     #$08                    ; $9C85
-    beq     loc_1_9C8B              ; $9C87
+    beq     @loc_9C8B               ; $9C87
     ldy     #$04                    ; $9C89
 
-loc_1_9C8B:
+@loc_9C8B:
     tya                             ; $9C8B
     ldy     objOamOffset+1,x        ; $9C8C
     tax                             ; $9C8E
@@ -2430,32 +2584,32 @@ Moblin_Draw:
     sta     ram_00D9                ; $9CA6
     lda     objState+1,x            ; $9CA8
     cmp     #$02                    ; $9CAA
-    bne     loc_1_9CB8              ; $9CAC
+    bne     @loc_9CB8               ; $9CAC
     lda     timerFast+TIMER_ENEMY,x ; $9CAE
     cmp     #$08                    ; $9CB1
     lda     objState+1,x            ; $9CB3
-    bcs     loc_1_9CB8              ; $9CB5
+    bcs     @loc_9CB8               ; $9CB5
     lsr     a                       ; $9CB7
 
-loc_1_9CB8:
+@loc_9CB8:
     sta     ram_05E4                ; $9CB8
     tax                             ; $9CBB
     lda     dat_1_9C95,x            ; $9CBC
     cpx     #$00                    ; $9CBF
-    bne     loc_1_9CD4              ; $9CC1
+    bne     @loc_9CD4               ; $9CC1
     ldx     currentObject           ; $9CC3
     ldy     objXVelocity+1,x        ; $9CC5
-    beq     loc_1_9CD4              ; $9CC7
+    beq     @loc_9CD4               ; $9CC7
     ldy     #$24                    ; $9CC9
     lda     frameCounter            ; $9CCB
     and     #$08                    ; $9CCD
-    beq     loc_1_9CD3              ; $9CCF
+    beq     @loc_9CD3               ; $9CCF
     ldy     #$1E                    ; $9CD1
 
-loc_1_9CD3:
+@loc_9CD3:
     tya                             ; $9CD3
 
-loc_1_9CD4:
+@loc_9CD4:
     ldx     currentObject           ; $9CD4
     ldy     objOamOffset+1,x        ; $9CD6
     tax                             ; $9CD8
@@ -2464,27 +2618,27 @@ loc_1_9CD4:
     stx     temp13                  ; $9CDF
     ldx     currentObject           ; $9CE1
     lda     drawOffscreen+1         ; $9CE3
-    bne     loc_1_9D56              ; $9CE5
+    bne     @loc_9D56               ; $9CE5
     lda     ram_05E4                ; $9CE7
-    beq     loc_1_9D56              ; $9CEA
+    beq     @loc_9D56               ; $9CEA
     cmp     #$01                    ; $9CEC
-    bne     loc_1_9CF6              ; $9CEE
+    bne     @loc_9CF6               ; $9CEE
     lda     temp2                   ; $9CF0
     eor     #$03                    ; $9CF2
     sta     temp2                   ; $9CF4
 
-loc_1_9CF6:
+@loc_9CF6:
     lda     temp0                   ; $9CF6
     sec                             ; $9CF8
     sbc     #$18                    ; $9CF9
     sta     temp0                   ; $9CFB
     lda     ram_05E4                ; $9CFD
     cmp     #$03                    ; $9D00
-    bcc     loc_1_9D08              ; $9D02
+    bcc     @loc_9D08               ; $9D02
     lda     objY+1,x                ; $9D04
     sta     temp0                   ; $9D06
 
-loc_1_9D08:
+@loc_9D08:
     lda     ram_05E4                ; $9D08
     tax                             ; $9D0B
     dex                             ; $9D0C
@@ -2492,23 +2646,23 @@ loc_1_9D08:
     tax                             ; $9D10
     lda     ram_00D9                ; $9D11
     cmp     #$01                    ; $9D13
-    bne     loc_1_9D19              ; $9D15
+    bne     @loc_9D19               ; $9D15
     inx                             ; $9D17
     inx                             ; $9D18
 
-loc_1_9D19:
+@loc_9D19:
     tya                             ; $9D19
     pha                             ; $9D1A
     lda     dat_1_9C9B,x            ; $9D1B
     ldx     currentObject           ; $9D1E
     ldy     timerFast+TIMER_ENEMY,x ; $9D20
     cpy     #$03                    ; $9D23
-    bcc     loc_1_9D2C              ; $9D25
+    bcc     @loc_9D2C               ; $9D25
     cpy     #$0D                    ; $9D27
-    bcs     loc_1_9D2C              ; $9D29
+    bcs     @loc_9D2C               ; $9D29
     asl     a                       ; $9D2B
 
-loc_1_9D2C:
+@loc_9D2C:
     clc                             ; $9D2C
     adc     temp1                   ; $9D2D
     sta     temp1                   ; $9D2F
@@ -2520,11 +2674,11 @@ loc_1_9D2C:
     clc                             ; $9D3B
     adc     #$01                    ; $9D3C
     and     #$03                    ; $9D3E
-    bne     loc_1_9D56              ; $9D40
+    bne     @loc_9D56               ; $9D40
     lda     #$F3                    ; $9D42
     ldx     ram_00D9                ; $9D44
     cpx     #$02                    ; $9D46
-    beq     loc_1_9D50              ; $9D48
+    beq     @loc_9D50               ; $9D48
 ; (code below not executed in the test movies)
     lda     #$0C                    ; $9D4A
     iny                             ; $9D4C
@@ -2533,11 +2687,11 @@ loc_1_9D2C:
     iny                             ; $9D4F
 ; (end of code not executed in the test movies)
 
-loc_1_9D50:
+@loc_9D50:
     adc     oamBuffer - 5,y         ; $9D50
     sta     oamBuffer - 5,y         ; $9D53
 
-loc_1_9D56:
+@loc_9D56:
     ldx     currentObject           ; $9D56
     rts                             ; $9D58
 
@@ -2585,40 +2739,40 @@ loc_1_9D6B:
     sta     ram_00D9                ; $9D74
     lda     objCollision+1,x        ; $9D76
     and     #$04                    ; $9D78
-    beq     loc_1_9D91              ; $9D7A
+    beq     @loc_9D91               ; $9D7A
     lda     objXVelocity+1,x        ; $9D7C
-    beq     loc_1_9D91              ; $9D7E
+    beq     @loc_9D91               ; $9D7E
     clc                             ; $9D80
     adc     #$08                    ; $9D81
     tay                             ; $9D83
     lda     #$08                    ; $9D84
     cpy     #$11                    ; $9D86
-    bcc     loc_1_9D8B              ; $9D88
+    bcc     @loc_9D8B               ; $9D88
     lsr     a                       ; $9D8A
 
-loc_1_9D8B:
+@loc_9D8B:
     and     frameCounter            ; $9D8B
-    bne     loc_1_9D91              ; $9D8D
+    bne     @loc_9D91               ; $9D8D
     inc     temp13                  ; $9D8F
 
-loc_1_9D91:
+@loc_9D91:
     ldy     objState+1,x            ; $9D91
     dey                             ; $9D93
     sty     temp14                  ; $9D94
     ldy     objOamOffset+1,x        ; $9D96
     ldx     #$16                    ; $9D98
     lda     temp13                  ; $9D9A
-    bne     loc_1_9DA0              ; $9D9C
+    bne     @loc_9DA0               ; $9D9C
     ldx     #$1A                    ; $9D9E
 
-loc_1_9DA0:
+@loc_9DA0:
     jsr     Sprite_DrawEnemyPair    ; $9DA0
     jsr     Sprite_DrawEnemyPair    ; $9DA3
     lda     drawOffscreen+1         ; $9DA6
-    bne     loc_1_9DEE              ; $9DA8
+    bne     @loc_9DEE               ; $9DA8
     ldx     temp14                  ; $9DAA
-    bmi     loc_1_9DEE              ; $9DAC
-    bne     loc_1_9DBC              ; $9DAE
+    bmi     @loc_9DEE               ; $9DAC
+    bne     @loc_9DBC               ; $9DAE
     lda     temp2                   ; $9DB0
     eor     #$03                    ; $9DB2
     sta     temp2                   ; $9DB4
@@ -2626,7 +2780,7 @@ loc_1_9DA0:
     ora     #$80                    ; $9DB8
     sta     temp3                   ; $9DBA
 
-loc_1_9DBC:
+@loc_9DBC:
     lda     dat_1_9D59,x            ; $9DBC
     tax                             ; $9DBF
     jsr     Sprite_DrawEnemyPairKeepX ; $9DC0
@@ -2638,13 +2792,13 @@ loc_1_9DBC:
     sta     oamBuffer - 4,y         ; $9DCE
     lda     ram_00D9                ; $9DD1
     lsr     a                       ; $9DD3
-    bcc     loc_1_9DDB              ; $9DD4
+    bcc     @loc_9DDB               ; $9DD4
     txa                             ; $9DD6
     clc                             ; $9DD7
     adc     #$03                    ; $9DD8
     tax                             ; $9DDA
 
-loc_1_9DDB:
+@loc_9DDB:
     lda     dat_1_9D5F,x            ; $9DDB
     pha                             ; $9DDE
     clc                             ; $9DDF
@@ -2655,7 +2809,7 @@ loc_1_9DDB:
     adc     oamBuffer - 1,y         ; $9DE8
     sta     oamBuffer - 1,y         ; $9DEB
 
-loc_1_9DEE:
+@loc_9DEE:
     ldx     currentObject           ; $9DEE
     rts                             ; $9DF0
 
@@ -2695,11 +2849,11 @@ Megmet_Draw:
     lda     objYVelocity+1,x        ; $9DFB
     ldx     #$40                    ; $9DFE
     cmp     #$02                    ; $9E00
-    bmi     loc_1_9E06              ; $9E02
+    bmi     @loc_9E06               ; $9E02
     inx                             ; $9E04
     inx                             ; $9E05
 
-loc_1_9E06:
+@loc_9E06:
     jmp     Sprite_DrawEnemyPairKeepX ; $9E06
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -2722,11 +2876,11 @@ dat_1_9E0A:
 ; ---------------------------------------------------------------------------
 Geldarm_Draw:
     lda     enemyStunTimer,x        ; $9E0C
-    beq     loc_1_9E15              ; $9E0F
+    beq     @loc_9E15               ; $9E0F
     and     #$03                    ; $9E11
     sta     temp3                   ; $9E13
 
-loc_1_9E15:
+@loc_9E15:
     lda     drawOffscreen+1         ; $9E15
     and     #$08                    ; $9E17
     bne     dat_1_9E09              ; $9E19
@@ -2737,15 +2891,15 @@ loc_1_9E15:
     sbc     objY+1,x                ; $9E22
     sta     temp2                   ; $9E24
 
-loc_1_9E26:
+@loc_9E26:
     cmp     #$05                    ; $9E26
-    bcc     loc_1_9E32              ; $9E28
+    bcc     @loc_9E32               ; $9E28
     inc     temp0                   ; $9E2A
     sec                             ; $9E2C
     sbc     #$05                    ; $9E2D
-    jmp     loc_1_9E26              ; $9E2F
+    jmp     @loc_9E26               ; $9E2F
 
-loc_1_9E32:
+@loc_9E32:
     sta     temp1                   ; $9E32
     ldy     objOamOffset+1,x        ; $9E34
     tya                             ; $9E36
@@ -2757,31 +2911,31 @@ loc_1_9E32:
     lda     #$62                    ; $9E41
     sta     oamBuffer+1,y           ; $9E43
     lda     temp2                   ; $9E46
-    bne     loc_1_9E53              ; $9E48
+    bne     @loc_9E53               ; $9E48
     tya                             ; $9E4A
     clc                             ; $9E4B
     adc     #$04                    ; $9E4C
     sta     temp15                  ; $9E4E
-    jmp     loc_1_9E70              ; $9E50
+    jmp     @loc_9E70               ; $9E50
 
-loc_1_9E53:
+@loc_9E53:
     lda     oamBuffer,y             ; $9E53
     clc                             ; $9E56
     adc     temp0                   ; $9E57
     sta     oamBuffer+4,y           ; $9E59
     lda     temp1                   ; $9E5C
-    beq     loc_1_9E6B              ; $9E5E
+    beq     @loc_9E6B               ; $9E5E
     dec     temp1                   ; $9E60
     lda     oamBuffer+4,y           ; $9E62
     clc                             ; $9E65
     adc     #$01                    ; $9E66
     sta     oamBuffer+4,y           ; $9E68
 
-loc_1_9E6B:
+@loc_9E6B:
     lda     #$64                    ; $9E6B
     sta     oamBuffer+5,y           ; $9E6D
 
-loc_1_9E70:
+@loc_9E70:
     lda     frameCounter            ; $9E70
     and     #$10                    ; $9E72
     asl     a                       ; $9E74
@@ -2797,10 +2951,10 @@ loc_1_9E70:
     iny                             ; $9E88
     iny                             ; $9E89
     cpy     temp15                  ; $9E8A
-    bne     loc_1_9E53              ; $9E8C
+    bne     @loc_9E53               ; $9E8C
     ldy     objOamOffset+1,x        ; $9E8E
     lda     enemyAiState,x          ; $9E90
-    beq     loc_1_9EAF              ; $9E92
+    beq     @loc_9EAF               ; $9E92
     lda     frameCounter            ; $9E94
     and     #$20                    ; $9E96
     lsr     a                       ; $9E98
@@ -2817,7 +2971,7 @@ loc_1_9E70:
     adc     dat_1_9E0A,x            ; $9EA9
     sta     oamBuffer+3,y           ; $9EAC
 
-loc_1_9EAF:
+@loc_9EAF:
     ldx     currentObject           ; $9EAF
     rts                             ; $9EB1
 ; (end of disassembled code)

@@ -8,14 +8,14 @@
 .segment "BANK4"
 
 
-dat_4_8000:
-    .assert dat_4_8000 = AreaBank::BackgroundAreas, error, "interface address moved"
+BackgroundAreas_Bank4:
+    .assert BackgroundAreas_Bank4 = AreaBank::BackgroundAreas, error, "interface address moved"
     .byte   $1F, $86, $FC, $A0, $63, $A1                                    ; $8000
 ; (unreferenced: $8006-$800D, 8 bytes)
     .byte   $E5, $82, $E5, $82, $E5, $82, $E5, $82                          ; $8006
 
-dat_4_800E:
-    .assert dat_4_800E = AreaBank::Palettes, error, "interface address moved"
+AreaPalettes_Bank4:
+    .assert AreaPalettes_Bank4 = AreaBank::Palettes, error, "interface address moved"
     .byte   $22, $30, $12, $16, $22, $0F, $10, $30, $22, $27, $17, $0F, $22, $30, $10, $0F; $800E
     .byte   $0F, $30, $12, $16, $0F, $00, $10, $30, $0F, $00, $16, $30, $0F, $3C, $1C, $0C; $801E
     .byte   $0F, $30, $12, $16, $0F, $0C, $1C, $3C, $0F, $0C, $16, $30, $0F, $37, $27, $07; $802E
@@ -514,13 +514,13 @@ dat_4_84D8:
 ; (unreferenced: $84F0-$8501, 18 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $84F0
 
-dat_4_8500:
-    .assert dat_4_8500 = AreaBank::MetatilePtrs, error, "interface address moved"
+MetatilePtrs_Bank4:
+    .assert MetatilePtrs_Bank4 = AreaBank::MetatilePtrs, error, "interface address moved"
     .byte   $3D, $83                                                        ; $8500
     .byte   $3D, $83, $79, $83, $91, $83                                    ; $8502
 
-dat_4_8508:
-    .assert dat_4_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
+OverworldMapPtrs_Bank4:
+    .assert OverworldMapPtrs_Bank4 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $FF, $FF, $FF, $FF                                              ; $8508
 
 Area_IsSolidTile_Bank4:
@@ -613,8 +613,8 @@ SpecialTiles_Bank4:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8887
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                     ; $8897
 
-dat_4_88A0:
-    .assert dat_4_88A0 = AreaBank::EnemyLists, error, "interface address moved"
+EnemyLists_Bank4:
+    .assert EnemyLists_Bank4 = AreaBank::EnemyLists, error, "interface address moved"
     .byte   $01, $05, $72, $8C, $17, $CC, $09, $7A, $04, $76, $4C, $7E, $4C, $78, $DE, $09; $88A0
     .byte   $74, $0C, $10, $9F, $23, $C4, $45, $C4, $05, $0F, $0B, $00, $CB, $07, $0F, $0B; $88B0
     .byte   $13, $86, $00, $CB, $05, $15, $5F, $10, $DF, $09, $18, $06, $7A, $04, $19, $5F; $88C0
@@ -631,9 +631,7 @@ dat_4_88A0:
     .byte   $92, $70, $D2, $07, $CD, $07, $5C, $84, $3F, $9E, $7A, $C5, $07, $50, $CC, $51; $8970
     .byte   $CC, $52, $D9, $07, $1C, $23, $76, $98, $78, $D9, $03, $0B, $48, $0D, $20, $96; $8980
     .byte   $77, $91, $6B, $91, $5F, $91, $43, $D1, $37, $D1, $07, $70, $46, $4E, $46, $1F; $8990
-
-dat_4_89A0:
-    .assert dat_4_89A0 = AreaBank::EnemyLists+256, error, "interface address moved"
+    .assert EnemyLists_Bank4+256 = AreaBank::EnemyLists+256, error, "interface address moved"
     .byte   $86, $05, $0B, $4A, $04, $8A, $07, $77, $59, $0C, $4D, $73, $99, $07, $7F, $18; $89A0
     .byte   $7D, $5A, $14, $D9, $0B, $1F, $07, $70, $58, $7E, $58, $2A, $85, $15, $D8, $07; $89B0
     .byte   $1F, $06, $72, $5D, $74, $DD, $0B, $2B, $06, $7D, $19, $2B, $46, $40, $C5, $38; $89C0
@@ -650,9 +648,7 @@ dat_4_89A0:
     .byte   $7C, $44, $71, $84, $76, $C4, $04, $8A, $05, $4F, $07, $0B, $48, $03, $4A, $05; $8A70
     .byte   $05, $78, $5E, $74, $DE, $0B, $7A, $04, $76, $4C, $7E, $4C, $78, $DE, $5D, $C5; $8A80
     .byte   $09, $67, $04, $49, $04, $46, $C4, $68, $C4, $03, $4A, $05, $0D, $10, $50, $1B; $8A90
-
-dat_4_8AA0:
-    .assert dat_4_8AA0 = AreaBank::EnemyLists+512, error, "interface address moved"
+    .assert EnemyLists_Bank4+512 = AreaBank::EnemyLists+512, error, "interface address moved"
     .byte   $4F, $10, $90, $14, $8F, $10, $D0, $2B, $C5, $05, $13, $86, $1C, $8E, $07, $7B; $8AA0
     .byte   $5E, $7A, $83, $1F, $A3, $0D, $7F, $0B, $58, $43, $5D, $43, $51, $83, $53, $83; $8AB0
     .byte   $70, $CB, $05, $0F, $07, $0B, $48, $09, $5C, $03, $5F, $43, $45, $9E, $54, $C3; $8AC0
@@ -669,9 +665,7 @@ dat_4_8AA0:
     .byte   $7E, $8C, $72, $CC, $77, $DE, $07, $14, $63, $16, $5F, $76, $9A, $07, $7F, $1B; $8B70
     .byte   $7B, $85, $70, $DB, $0B, $71, $5D, $76, $44, $7A, $44, $73, $DD, $75, $C4, $09; $8B80
     .byte   $24, $10, $29, $10, $0B, $4F, $04, $8F, $0D, $10, $50, $22, $5E, $10, $90, $16; $8B90
-
-dat_4_8BA0:
-    .assert dat_4_8BA0 = AreaBank::EnemyLists+768, error, "interface address moved"
+    .assert EnemyLists_Bank4+768 = AreaBank::EnemyLists+768, error, "interface address moved"
     .byte   $9F, $10, $D0, $62, $CE, $03, $4A, $05, $0B, $1A, $23, $10, $4C, $13, $4C, $12; $8BA0
     .byte   $E3, $18, $C7, $09, $39, $06, $38, $46, $15, $CE, $79, $C6, $07, $75, $5D, $78; $8BB0
     .byte   $9D, $7D, $9E, $07, $7B, $1A, $2E, $45, $79, $9A, $0F, $40, $56, $7A, $5D, $4F; $8BC0
@@ -1285,9 +1279,9 @@ HammerThrower_Draw:
     jsr     Sprite_DrawEnemyPair    ; $97F1
     jsr     Sprite_DrawEnemyPairKeepX ; $97F4
     lda     timerFast+TIMER_ENEMY,x ; $97F7
-    beq     loc_4_9814              ; $97FA
+    beq     @done                   ; $97FA
     lda     drawOffscreen+1         ; $97FC
-    bne     loc_4_9814              ; $97FE
+    bne     @done                   ; $97FE
     lda     objY+1,x                ; $9800
     sta     temp0                   ; $9802
     lda     objFacing+1,x           ; $9804
@@ -1299,10 +1293,10 @@ HammerThrower_Draw:
     ldx     #$2A                    ; $980F
     jsr     Sprite_DrawEnemyPairKeepX ; $9811
 
-loc_4_9814:
+@done:
     rts                             ; $9814
 ; The rts byte is also the base of the table HorseHeadFrames (entry 0 is the rts).
-HorseHeadFrames := loc_4_9814
+HorseHeadFrames := @done
     .byte   $64                                                             ; $9815
 
 HorseHeadDrawOffsets:
@@ -4046,15 +4040,15 @@ Carock_Init:
     jsr     Area_TestFlag           ; $B109
     ldx     currentObject           ; $B10C
     cmp     #$00                    ; $B10E
-    bne     loc_4_B114              ; $B110
+    bne     @done                   ; $B110
 ; (code below not executed in the test movies)
     sta     enemyActive,x           ; $B112
 ; (end of code not executed in the test movies)
 
-loc_4_B114:
+@done:
     rts                             ; $B114
 ; The rts byte is also the base of the table BarbaFlameXOffsets (entry 0 is the rts).
-BarbaFlameXOffsets := loc_4_B114
+BarbaFlameXOffsets := @done
 ; (unreferenced: $B115-$B11B, 7 bytes)
     .byte   $10, $F8                                                        ; $B115
 
@@ -5645,15 +5639,15 @@ OrangeMoa_Appear:
 ; ---------------------------------------------------------------------------
 OrangeMoa_Wait:
     lda     timerFast+TIMER_ENEMY,x ; $B96D
-    bne     loc_4_B979              ; $B970
+    bne     @done                   ; $B970
     lda     #$40                    ; $B972
     sta     timerFast+TIMER_ENEMY,x ; $B974
     inc     enemyAiState,x          ; $B977
 
-loc_4_B979:
+@done:
     rts                             ; $B979
 ; The rts byte is also the base of the table OrangeMoaAccel (entry 0 is the rts).
-OrangeMoaAccel := loc_4_B979
+OrangeMoaAccel := @done
     .byte   $01, $FF                                                        ; $B97A
 
 ; ---------------------------------------------------------------------------
@@ -5801,7 +5795,7 @@ SkullHead_Ai:
     and     #$0C                    ; $BA22
     beq     @loc_BA2E               ; $BA24
     lda     ram_05C9                ; $BA26
-    bne     loc_4_BA53              ; $BA29
+    bne     @done                   ; $BA29
     jsr     SkullHead_Init          ; $BA2B
 
 @loc_BA2E:
@@ -5823,10 +5817,10 @@ SkullHead_Ai:
     jsr     Enemy_UpdateCommon      ; $BA4D
     jmp     Enemy_HurtLinkOnContact ; $BA50
 
-loc_4_BA53:
+@done:
     rts                             ; $BA53
 ; The rts byte is also the base of the table BossPaceSpeeds (entry 0 is the rts).
-BossPaceSpeeds := loc_4_BA53
+BossPaceSpeeds := @done
 
 HammerThrowerSpeeds:
     .byte   $08, $F8, $08                                                   ; $BA54
@@ -5893,13 +5887,13 @@ HammerThrower_Ai:
     jsr     Enemy_HurtLinkOnContact ; $BAB4
     lda     frameCounter            ; $BAB7
     and     #$0F                    ; $BAB9
-    bne     loc_4_BAC0              ; $BABB
+    bne     @done                   ; $BABB
     jmp     Enemy_FaceLink          ; $BABD
 
-loc_4_BAC0:
+@done:
     rts                             ; $BAC0
 ; The rts byte is also the base of the table HelmetheadShotSpeeds (entry 0 is the rts).
-HelmetheadShotSpeeds := loc_4_BAC0
+HelmetheadShotSpeeds := @done
 ; (unreferenced: $BAC1-$BAC1, 1 bytes)
     .byte   $F0                                                             ; $BAC1
     .byte   $10                                                             ; $BAC2

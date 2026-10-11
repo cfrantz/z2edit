@@ -8,14 +8,14 @@
 .segment "BANK2"
 
 
-dat_2_8000:
-    .assert dat_2_8000 = AreaBank::BackgroundAreas, error, "interface address moved"
+BackgroundAreas_Bank2:
+    .assert BackgroundAreas_Bank2 = AreaBank::BackgroundAreas, error, "interface address moved"
     .byte   $62, $8C                                                        ; $8000
 ; (unreferenced: $8002-$800D, 12 bytes)
     .byte   $7A, $8C, $8E, $8C, $A2, $8C, $BC, $8C, $CE, $8C, $00, $00      ; $8002
 
-dat_2_800E:
-    .assert dat_2_800E = AreaBank::Palettes, error, "interface address moved"
+AreaPalettes_Bank2:
+    .assert AreaPalettes_Bank2 = AreaBank::Palettes, error, "interface address moved"
     .byte   $0F, $30, $12, $16, $0F, $36, $16, $07, $0F, $00, $10, $30, $0F, $23, $03, $0F; $800E
     .byte   $0F, $30, $12, $16, $0F, $37, $27, $06, $0F, $27, $16, $0F, $0F, $30, $10, $00; $801E
     .byte   $22, $30, $12, $16, $22, $29, $17, $09, $22, $30, $36, $27, $22, $30, $10, $00; $802E
@@ -43,58 +43,58 @@ Area_DrawLargeObject_Bank2:
     lda     areaBuildPos            ; $80F5
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
-    bne     loc_2_8103              ; $80FC
+    bne     @loc_8103               ; $80FC
     txa                             ; $80FE
     clc                             ; $80FF
     adc     #$0F                    ; $8100
     tax                             ; $8102
 
-loc_2_8103:
+@loc_8103:
     txa                             ; $8103
     jsr     JumpTable               ; $8104
 ; (inline jump table)
-    .word   loc_2_938F              ; $8107
-    .word   loc_2_81F3              ; $8109
-    .word   loc_2_81F3              ; $810B
-    .word   loc_2_81F3              ; $810D
-    .word   sub_2_8201              ; $810F
-    .word   sub_2_8201              ; $8111
-    .word   sub_2_8201              ; $8113
-    .word   sub_2_8201              ; $8115
-    .word   sub_2_8201              ; $8117
-    .word   sub_2_8201              ; $8119
-    .word   sub_2_8201              ; $811B
-    .word   sub_2_8201              ; $811D
-    .word   loc_2_8217              ; $811F  (not observed)
-    .word   sub_2_821D              ; $8121
-    .word   sub_2_821D              ; $8123
-    .word   sub_2_821D              ; $8125
-    .word   loc_2_828A              ; $8127
-    .word   loc_2_8265              ; $8129
-    .word   loc_2_82D5              ; $812B
-    .word   loc_2_82BA              ; $812D  (not observed)
+    .word   Area_DrawPillarSlope_Bank2 ; $8107
+    .word   Area_DrawObjectTwoRows_Bank2 ; $8109
+    .word   Area_DrawObjectTwoRows_Bank2 ; $810B
+    .word   Area_DrawObjectTwoRows_Bank2 ; $810D
+    .word   Area_DrawObjectRow_Bank2 ; $810F
+    .word   Area_DrawObjectRow_Bank2 ; $8111
+    .word   Area_DrawObjectRow_Bank2 ; $8113
+    .word   Area_DrawObjectRow_Bank2 ; $8115
+    .word   Area_DrawObjectRow_Bank2 ; $8117
+    .word   Area_DrawObjectRow_Bank2 ; $8119
+    .word   Area_DrawObjectRow_Bank2 ; $811B
+    .word   Area_DrawObjectRow_Bank2 ; $811D
+    .word   Area_DrawObjectColumn_Bank2 ; $811F  (not observed)
+    .word   Area_DrawObjectPillar_Bank2 ; $8121
+    .word   Area_DrawObjectPillar_Bank2 ; $8123
+    .word   Area_DrawObjectPillar_Bank2 ; $8125
+    .word   Area_DrawLava_Bank2     ; $8127
+    .word   Area_DrawCactus_Bank2   ; $8129
+    .word   Area_DrawCactus2_Bank2  ; $812B
+    .word   Area_PlaceElevator_Bank2 ; $812D  (not observed)
 
 Area_DrawSmallObject_Bank2:
     .assert Area_DrawSmallObject_Bank2 = AreaBank::DrawSmallObject, error, "interface address moved"
     txa                             ; $812F
     jsr     JumpTable               ; $8130
 ; (inline jump table)
-    .word   loc_2_82F9              ; $8133  (not observed)
-    .word   loc_2_82EE              ; $8135  (not observed)
-    .word   loc_2_82F2              ; $8137  (not observed)
-    .word   loc_2_82C8              ; $8139  (not observed)
-    .word   loc_2_8313              ; $813B  (not observed)
-    .word   loc_2_82C1              ; $813D  (not observed)
-    .word   loc_2_8340              ; $813F  (not observed)
-    .word   loc_2_8340              ; $8141  (not observed)
-    .word   loc_2_8331              ; $8143  (not observed)
-    .word   loc_2_8352              ; $8145
-    .word   loc_2_8358              ; $8147
-    .word   loc_2_8358              ; $8149
-    .word   loc_2_8358              ; $814B
-    .word   loc_2_8358              ; $814D
-    .word   loc_2_8358              ; $814F
-    .word   loc_2_8358              ; $8151
+    .word   Area_DrawHeadstone_Bank2 ; $8133  (not observed)
+    .word   Area_DrawCross_Bank2    ; $8135  (not observed)
+    .word   Area_DrawAngledCross_Bank2 ; $8137  (not observed)
+    .word   Area_DrawTreeStump_Bank2 ; $8139  (not observed)
+    .word   Area_DrawStonehenge_Bank2 ; $813B  (not observed)
+    .word   Area_PlaceLockedDoor_Bank2 ; $813D  (not observed)
+    .word   Area_DrawSleepingZelda_Bank2 ; $813F  (not observed)
+    .word   Area_DrawSleepingZelda_Bank2 ; $8141  (not observed)
+    .word   Area_DrawPit_Bank2      ; $8143  (not observed)
+    .word   Area_DrawLargeCloud_Bank2 ; $8145
+    .word   Area_DrawSmallCloud_Bank2 ; $8147
+    .word   Area_DrawSmallCloud_Bank2 ; $8149
+    .word   Area_DrawSmallCloud_Bank2 ; $814B
+    .word   Area_DrawSmallCloud_Bank2 ; $814D
+    .word   Area_DrawSmallCloud_Bank2 ; $814F
+    .word   Area_DrawSmallCloud_Bank2 ; $8151
 ; End of the jump table: data follows.
     .byte   $42, $42                                                        ; $8153
 ; (unreferenced: $8155-$8155, 1 bytes)
@@ -140,7 +140,7 @@ Area_DrawSmallObject_Bank2:
     .byte   $40, $55                                                        ; $8197
     .byte   $53, $53                                                        ; $8199
 
-dat_2_819B:
+AreaFloorRecordsLo_Bank2:
     .byte   $53, $5C, $65, $6E, $77, $80                                    ; $819B
 ; (unreferenced: $81A1-$81A1, 1 bytes)
     .byte   $89                                                             ; $81A1
@@ -149,7 +149,7 @@ dat_2_819B:
 Overworld_SetFloorTiles_Bank2:
     .assert Overworld_SetFloorTiles_Bank2 = OverworldBank::SetFloorTiles, error, "interface address moved"
     ldx     ram_010C                ; $81A3
-    lda     dat_2_819B,x            ; $81A6
+    lda     AreaFloorRecordsLo_Bank2,x ; $81A6
     sta     temp12                  ; $81A9
     lda     #$81                    ; $81AB
     sta     temp13                  ; $81AD
@@ -159,10 +159,8 @@ Overworld_SetFloorTiles_Bank2:
     rts                             ; $81B6
 ; (unreferenced: $81B7-$81C6, 16 bytes)
 
-dat_2_81B7:
+AreaObjectTiles_Bank2:
     .byte   $40                                                             ; $81B7
-
-dat_2_81B8:
     .byte   $40, $8C, $8D, $8C, $8D, $C0, $C1, $8D, $8E, $61, $61, $40, $40, $81, $81; $81B8
     .byte   $82, $82                                                        ; $81C7
 ; (unreferenced: $81C9-$81CC, 4 bytes)
@@ -174,10 +172,8 @@ dat_2_81B8:
 ; (unreferenced: $81D3-$81D6, 4 bytes)
     .byte   $86, $85                                                        ; $81D3
 
-dat_2_81D5:
+AreaObjectTiles2_Bank2:
     .byte   $40                                                             ; $81D5
-
-dat_2_81D6:
     .byte   $40                                                             ; $81D6
     .byte   $52, $53, $53, $55, $4D, $5D                                    ; $81D7
 ; (unreferenced: $81DD-$81E4, 8 bytes)
@@ -192,37 +188,72 @@ dat_2_81D6:
 ; (unreferenced: $81F1-$81F2, 2 bytes)
     .byte   $59, $5A                                                        ; $81F1
 
-loc_2_81F3:
-    jsr     sub_2_8201              ; $81F3
+; ---------------------------------------------------------------------------
+; Area_DrawObjectTwoRows_Bank2
+;
+; Same as Area_DrawObjectTwoRows_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectTwoRows_Bank2:
+    jsr     Area_DrawObjectRow_Bank2 ; $81F3
     lda     temp0                   ; $81F6
     sta     ram_0112                ; $81F8
     jsr     AreaMap_NextBuildRow    ; $81FB
-    jmp     loc_2_8204              ; $81FE
+    jmp     Area_FillObjectRow_Bank2 ; $81FE
 
-sub_2_8201:
-    jsr     sub_2_8247              ; $8201
+; ---------------------------------------------------------------------------
+; Area_DrawObjectRow_Bank2
+;
+; Same as Area_DrawObjectRow_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectRow_Bank2:
+    jsr     Area_GetObjectTiles_Bank2 ; $8201
 
-loc_2_8204:
+; ---------------------------------------------------------------------------
+; Area_FillObjectRow_Bank2
+;
+; Same as Area_FillObjectRow_Bank1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_FillObjectRow_Bank2:
     lda     areaObjectType          ; $8204
     and     #$0F                    ; $8207
     tax                             ; $8209
     jsr     AreaMap_GetPagePtr      ; $820A
 
-loc_2_820D:
+@loop:
     lda     ram_0112                ; $820D
     jsr     AreaMap_PutTileRight    ; $8210
     dex                             ; $8213
-    bpl     loc_2_820D              ; $8214
+    bpl     @loop                   ; $8214
     rts                             ; $8216
 ; (code below not executed in the test movies)
 
-loc_2_8217:
-    jsr     sub_2_8247              ; $8217
-    jmp     loc_2_8234              ; $821A
+; ---------------------------------------------------------------------------
+; Area_DrawObjectColumn_Bank2
+;
+; Same as Area_DrawObjectColumn_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectColumn_Bank2:
+    jsr     Area_GetObjectTiles_Bank2 ; $8217
+    jmp     Area_FillObjectColumn_Bank2 ; $821A
 ; (end of code not executed in the test movies)
 
-sub_2_821D:
-    jsr     sub_2_8247              ; $821D
+; ---------------------------------------------------------------------------
+; Area_DrawObjectPillar_Bank2
+;
+; Same as Area_DrawObjectPillar_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawObjectPillar_Bank2:
+    jsr     Area_GetObjectTiles_Bank2 ; $821D
     jsr     AreaMap_GetPagePtr      ; $8220
     lda     ram_0112                ; $8223
     jsr     AreaMap_PutTileDown     ; $8226
@@ -231,41 +262,62 @@ sub_2_821D:
     lda     temp0                   ; $822F
     sta     ram_0112                ; $8231
 
-loc_2_8234:
+; ---------------------------------------------------------------------------
+; Area_FillObjectColumn_Bank2
+;
+; Same as Area_FillObjectColumn_Bank1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_FillObjectColumn_Bank2:
     lda     areaObjectType          ; $8234
     and     #$0F                    ; $8237
     tax                             ; $8239
     jsr     AreaMap_GetPagePtr      ; $823A
 
-loc_2_823D:
+@loop:
     lda     ram_0112                ; $823D
     jsr     AreaMap_PutTileDown     ; $8240
     dex                             ; $8243
-    bpl     loc_2_823D              ; $8244
+    bpl     @loop                   ; $8244
     rts                             ; $8246
 
-sub_2_8247:
+; ---------------------------------------------------------------------------
+; Area_GetObjectTiles_Bank2
+;
+; Same as Area_GetObjectTiles_Bank1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_GetObjectTiles_Bank2:
     txa                             ; $8247
     asl     a                       ; $8248
     tax                             ; $8249
     ldy     #$01                    ; $824A
     lda     (areaDataPtr),y         ; $824C
     asl     a                       ; $824E
-    lda     dat_2_81D5,x            ; $824F
-    bcs     loc_2_8257              ; $8252
-    lda     dat_2_81B7,x            ; $8254
+    lda     AreaObjectTiles2_Bank2,x ; $824F
+    bcs     @loc_8257               ; $8252
+    lda     AreaObjectTiles_Bank2,x ; $8254
 
-loc_2_8257:
+@loc_8257:
     sta     ram_0112                ; $8257
-    lda     dat_2_81D6,x            ; $825A
-    bcs     loc_2_8262              ; $825D
-    lda     dat_2_81B8,x            ; $825F
+    lda     AreaObjectTiles2_Bank2+1,x ; $825A
+    bcs     @loc_8262               ; $825D
+    lda     AreaObjectTiles_Bank2+1,x ; $825F
 
-loc_2_8262:
+@loc_8262:
     sta     temp0                   ; $8262
     rts                             ; $8264
 
-loc_2_8265:
+; ---------------------------------------------------------------------------
+; Area_DrawCactus_Bank2
+;
+; Same as Area_DrawCactus_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCactus_Bank2:
     jsr     AreaMap_GetPagePtrY     ; $8265
     lda     areaBuildPos            ; $8268
     and     #$0F                    ; $826B
@@ -276,7 +328,7 @@ loc_2_8265:
     and     #$0F                    ; $8276
     tax                             ; $8278
 
-loc_2_8279:
+@loop:
     lda     #$47                    ; $8279
     sta     (temp14),y              ; $827B
     tya                             ; $827D
@@ -284,12 +336,19 @@ loc_2_8279:
     sbc     #$10                    ; $827F
     tay                             ; $8281
     dex                             ; $8282
-    bne     loc_2_8279              ; $8283
+    bne     @loop                   ; $8283
     lda     #$46                    ; $8285
     sta     (temp14),y              ; $8287
     rts                             ; $8289
 
-loc_2_828A:
+; ---------------------------------------------------------------------------
+; Area_DrawLava_Bank2
+;
+; Same as Area_DrawLava_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawLava_Bank2:
     lda     areaBuildPos            ; $828A
     and     #$0F                    ; $828D
     ora     #$A0                    ; $828F
@@ -297,37 +356,58 @@ loc_2_828A:
     lda     #$80                    ; $8294
     sta     ram_0112                ; $8296
 
-loc_2_8299:
+@loop:
     lda     areaObjectType          ; $8299
     and     #$0F                    ; $829C
     tax                             ; $829E
     jsr     AreaMap_GetPagePtr      ; $829F
 
-loc_2_82A2:
+@loop2:
     lda     ram_0112                ; $82A2
     jsr     AreaMap_PutTileRight    ; $82A5
     dex                             ; $82A8
-    bpl     loc_2_82A2              ; $82A9
+    bpl     @loop2                  ; $82A9
     lda     #$89                    ; $82AB
     sta     ram_0112                ; $82AD
     jsr     AreaMap_NextBuildRow    ; $82B0
     and     #$F0                    ; $82B3
     cmp     #$D0                    ; $82B5
-    bcc     loc_2_8299              ; $82B7
+    bcc     @loop                   ; $82B7
     rts                             ; $82B9
 ; (code below not executed in the test movies)
 
-loc_2_82BA:
+; ---------------------------------------------------------------------------
+; Area_PlaceElevator_Bank2
+;
+; Same as Area_PlaceElevator_Bank1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_PlaceElevator_Bank2:
     lda     areaBuildColumn         ; $82BA
     sta     elevatorPos             ; $82BD
     rts                             ; $82C0
 
-loc_2_82C1:
+; ---------------------------------------------------------------------------
+; Area_PlaceLockedDoor_Bank2
+;
+; Same as Area_PlaceLockedDoor_Bank1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_PlaceLockedDoor_Bank2:
     lda     areaBuildColumn         ; $82C1
     sta     lockedDoorPos           ; $82C4
     rts                             ; $82C7
 
-loc_2_82C8:
+; ---------------------------------------------------------------------------
+; Area_DrawTreeStump_Bank2
+;
+; Same as Area_DrawTreeStump_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawTreeStump_Bank2:
     jsr     AreaMap_GetPagePtr      ; $82C8
     lda     #$5B                    ; $82CB
     jsr     AreaMap_PutTileDown     ; $82CD
@@ -336,7 +416,14 @@ loc_2_82C8:
     rts                             ; $82D4
 ; (end of code not executed in the test movies)
 
-loc_2_82D5:
+; ---------------------------------------------------------------------------
+; Area_DrawCactus2_Bank2
+;
+; Same as Area_DrawCactus2_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCactus2_Bank2:
     jsr     AreaMap_GetPagePtrY     ; $82D5
     lda     areaBuildPos            ; $82D8
     and     #$0F                    ; $82DB
@@ -351,22 +438,56 @@ loc_2_82D5:
     lda     #$48                    ; $82E9
     sta     (temp14),y              ; $82EB
     rts                             ; $82ED
-; (unreferenced: $82EE-$82F8, 11 bytes)
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_2_82EE:
-    .byte   $A2, $00, $F0, $09                                              ; $82EE
+; ---------------------------------------------------------------------------
+; Area_DrawCross_Bank2
+;
+; Same as Area_DrawCross_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCross_Bank2:
+    ldx     #$00                    ; $82EE
+    beq     Area_DrawGraveTile_Bank2 ; $82F0
 
-loc_2_82F2:
-    .byte   $A2, $01, $D0, $05                                              ; $82F2
+; ---------------------------------------------------------------------------
+; Area_DrawAngledCross_Bank2
+;
+; Same as Area_DrawAngledCross_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawAngledCross_Bank2:
+    ldx     #$01                    ; $82F2
+    bne     Area_DrawGraveTile_Bank2 ; $82F4
+; (end of disassembled code)
 
-dat_2_82F6:
+
+GraveTiles_Bank2:
     .byte   $C6, $C7, $C5                                                   ; $82F6
 ; (code below not executed in the test movies)
 
-loc_2_82F9:
+; ---------------------------------------------------------------------------
+; Area_DrawHeadstone_Bank2
+;
+; Same as Area_DrawHeadstone_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawHeadstone_Bank2:
     ldx     #$02                    ; $82F9
+
+; ---------------------------------------------------------------------------
+; Area_DrawGraveTile_Bank2
+;
+; Same as Area_DrawGraveTile_Bank1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_DrawGraveTile_Bank2:
     jsr     AreaMap_GetPagePtr      ; $82FB
-    lda     dat_2_82F6,x            ; $82FE
+    lda     GraveTiles_Bank2,x      ; $82FE
     sta     (temp14),y              ; $8301
 
 loc_2_8303:
@@ -374,75 +495,103 @@ loc_2_8303:
 ; (end of code not executed in the test movies)
 ; (unreferenced: $8304-$8312, 15 bytes)
 
-dat_2_8304:
+StonehengeTiles_Bank2:
     .byte   $56, $57, $57, $58, $FF, $59, $40, $40, $59, $FF, $5A, $40, $40, $5A, $FF; $8304
 ; (code below not executed in the test movies)
 
-loc_2_8313:
+; ---------------------------------------------------------------------------
+; Area_DrawStonehenge_Bank2
+;
+; Same as Area_DrawStonehenge_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawStonehenge_Bank2:
     ldx     #$00                    ; $8313
 
-loc_2_8315:
+@loc_8315:
     jsr     AreaMap_GetPagePtr      ; $8315
 
-loc_2_8318:
-    lda     dat_2_8304,x            ; $8318
+@loc_8318:
+    lda     StonehengeTiles_Bank2,x ; $8318
     cmp     #$FF                    ; $831B
-    beq     loc_2_8326              ; $831D
+    beq     @loc_8326               ; $831D
     jsr     AreaMap_PutTileRight    ; $831F
     inx                             ; $8322
-    jmp     loc_2_8318              ; $8323
+    jmp     @loc_8318               ; $8323
 
-loc_2_8326:
+@loc_8326:
     cpx     #$0E                    ; $8326
     beq     loc_2_8303              ; $8328
     jsr     AreaMap_NextBuildRow    ; $832A
     inx                             ; $832D
-    jmp     loc_2_8315              ; $832E
+    jmp     @loc_8315               ; $832E
 
-loc_2_8331:
+; ---------------------------------------------------------------------------
+; Area_DrawPit_Bank2
+;
+; Same as Area_DrawPit_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawPit_Bank2:
     jsr     AreaMap_GetPagePtr      ; $8331
 
-loc_2_8334:
+@loop:
     lda     #$40                    ; $8334
     jsr     AreaMap_PutTileDown     ; $8336
     and     #$F0                    ; $8339
     cmp     #$D0                    ; $833B
-    bcc     loc_2_8334              ; $833D
+    bcc     @loop                   ; $833D
     rts                             ; $833F
 
-loc_2_8340:
+; ---------------------------------------------------------------------------
+; Area_DrawSleepingZelda_Bank2
+;
+; Same as Area_DrawSleepingZelda_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawSleepingZelda_Bank2:
     jsr     AreaMap_GetPagePtr      ; $8340
     ldx     #$01                    ; $8343
     lda     #$4E                    ; $8345
-    bne     loc_2_834B              ; $8347
+    bne     @loc_834B               ; $8347
 
-loc_2_8349:
+@loop:
     lda     #$4F                    ; $8349
 
-loc_2_834B:
+@loc_834B:
     sta     (temp14),y              ; $834B
     iny                             ; $834D
     dex                             ; $834E
-    bpl     loc_2_8349              ; $834F
+    bpl     @loop                   ; $834F
     rts                             ; $8351
 ; (end of code not executed in the test movies)
 
-loc_2_8352:
+Area_DrawLargeCloud_Bank2:
     ldx     #$00                    ; $8352
-    beq     loc_2_835A              ; $8354
+    beq     Area_DrawCloud_Bank2    ; $8354
 
-dat_2_8356:
+CloudTiles_Bank2:
     .byte   $C3, $C4                                                        ; $8356
 
-loc_2_8358:
+Area_DrawSmallCloud_Bank2:
     ldx     #$01                    ; $8358
 
-loc_2_835A:
+; ---------------------------------------------------------------------------
+; Area_DrawCloud_Bank2
+;
+; Same as Area_DrawCloud_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawCloud_Bank2:
     jsr     AreaMap_GetPagePtr      ; $835A
     lda     #$C2                    ; $835D
     sta     (temp14),y              ; $835F
     iny                             ; $8361
-    lda     dat_2_8356,x            ; $8362
+    lda     CloudTiles_Bank2,x      ; $8362
     sta     (temp14),y              ; $8365
     rts                             ; $8367
 
@@ -450,30 +599,30 @@ Overworld_UseFlute_Bank2:
     .assert Overworld_UseFlute_Bank2 = OverworldBank::UseFlute, error, "interface address moved"
     lda     currentRegion           ; $8368
     cmp     #$02                    ; $836B
-    bne     loc_2_838E              ; $836D
+    bne     @done                   ; $836D
     lda     overworldY              ; $836F
     cmp     #$64                    ; $8371
-    bne     loc_2_8387              ; $8373
+    bne     @loc_8387               ; $8373
     lda     overworldX              ; $8375
     cmp     #$2D                    ; $8377
-    bne     loc_2_8387              ; $8379
+    bne     @loc_8387               ; $8379
     lda     #$0B                    ; $837B
     sta     ppuStringSelect         ; $837D
     inc     temp1                   ; $8380
     inc     temp1                   ; $8382
     jmp     Overworld_CheckSpecialTerrain ; $8384
 
-loc_2_8387:
+@loc_8387:
     lda     overworldTerrain        ; $8387
     cmp     #$0F                    ; $838A
-    beq     loc_2_838F              ; $838C
+    beq     @loc_838F               ; $838C
 ; (code below not executed in the test movies)
 
-loc_2_838E:
+@done:
     rts                             ; $838E
 ; (end of code not executed in the test movies)
 
-loc_2_838F:
+@loc_838F:
     jsr     Overworld_QueueMapStrip_Bank2 ; $838F
     jmp     Overworld_CheckSpecialTerrain ; $8392
 
@@ -487,11 +636,11 @@ Overworld_QueueMapStrip_Bank2:
     sta     overworldMoveFrames     ; $83A6
     ldy     #$0B                    ; $83A8
 
-loc_2_83AA:
+@loop:
     lda     dat_2_8395,y            ; $83AA
     sta     ppuBuffer0Len,y         ; $83AD
     dey                             ; $83B0
-    bpl     loc_2_83AA              ; $83B1
+    bpl     @loop                   ; $83B1
     lda     overworldDrawAddrHi     ; $83B3
     sta     ppuBuffer0              ; $83B5
     sta     ppuBuffer0+5            ; $83B8
@@ -510,20 +659,20 @@ Overworld_GetTerrain_Bank2:
     .assert Overworld_GetTerrain_Bank2 = OverworldBank::GetTerrain, error, "interface address moved"
     lda     temp0                   ; $83CF
     cmp     #$40                    ; $83D1
-    bcs     loc_2_8404              ; $83D3
+    bcs     @loc_8404               ; $83D3
     lda     temp1                   ; $83D5
     sec                             ; $83D7
     sbc     #$1E                    ; $83D8
     sta     temp4                   ; $83DA
     cmp     #$4B                    ; $83DC
-    bcs     loc_2_8404              ; $83DE
+    bcs     @loc_8404               ; $83DE
     jsr     sub_2_93BA              ; $83E0
     inc     temp0                   ; $83E3
     lda     #$00                    ; $83E5
     sta     temp3                   ; $83E7
     ldx     #$03                    ; $83E9
 
-loc_2_83EB:
+@loc_83EB:
     lda     (temp14),y              ; $83EB
     and     #$0F                    ; $83ED
     sta     temp2                   ; $83EF
@@ -536,15 +685,15 @@ loc_2_83EB:
     adc     temp3                   ; $83F8
     sta     temp3                   ; $83FA
     cmp     temp0                   ; $83FC
-    bcs     loc_2_8408              ; $83FE
+    bcs     @done                   ; $83FE
     iny                             ; $8400
-    jmp     loc_2_83EB              ; $8401
+    jmp     @loc_83EB               ; $8401
 
-loc_2_8404:
+@loc_8404:
     lda     #$0C                    ; $8404
     sta     temp2                   ; $8406
 
-loc_2_8408:
+@done:
     rts                             ; $8408
 
 dat_2_8409:
@@ -594,13 +743,13 @@ dat_2_8409:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $84E7
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                     ; $84F7
 
-dat_2_8500:
-    .assert dat_2_8500 = AreaBank::MetatilePtrs, error, "interface address moved"
+MetatilePtrs_Bank2:
+    .assert MetatilePtrs_Bank2 = AreaBank::MetatilePtrs, error, "interface address moved"
     .byte   $17, $84                                                        ; $8500
     .byte   $17, $84, $9F, $84, $60, $93                                    ; $8502
 
-dat_2_8508:
-    .assert dat_2_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
+OverworldMapPtrs_Bank2:
+    .assert OverworldMapPtrs_Bank2 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $46, $90, $4C, $A6                                              ; $8508
 
 Area_IsSolidTile_Bank2:
@@ -721,18 +870,18 @@ Overworld_UpdatePalaceStones_Bank2:
     ldx     #$03                    ; $879B
     lda     currentRegion           ; $879D
     cmp     #$02                    ; $87A0
-    bne     loc_2_87A6              ; $87A2
+    bne     @loc_87A6               ; $87A2
     ldx     #$01                    ; $87A4
 
-loc_2_87A6:
+@loc_87A6:
     lda     dat_2_8797,x            ; $87A6
     cmp     #$FF                    ; $87A9
-    beq     loc_2_87CB              ; $87AB
+    beq     @loc_87CB               ; $87AB
     tay                             ; $87AD
     lda     itemOwned,y             ; $87AE
-    beq     loc_2_87CB              ; $87B1
+    beq     @loc_87CB               ; $87B1
     lda     crystalPlaced,y         ; $87B3
-    beq     loc_2_87CB              ; $87B6
+    beq     @loc_87CB               ; $87B6
     txa                             ; $87B8
     asl     a                       ; $87B9
     tay                             ; $87BA
@@ -744,13 +893,13 @@ loc_2_87A6:
     lda     #$0B                    ; $87C7
     sta     (temp14),y              ; $87C9
 
-loc_2_87CB:
+@loc_87CB:
     cpx     #$03                    ; $87CB
-    beq     loc_2_87D2              ; $87CD
+    beq     @done                   ; $87CD
     dex                             ; $87CF
-    bpl     loc_2_87A6              ; $87D0
+    bpl     @loc_87A6               ; $87D0
 
-loc_2_87D2:
+@done:
     rts                             ; $87D2
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $87D3
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $87E3
@@ -768,8 +917,8 @@ loc_2_87D2:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8887
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                     ; $8897
 
-dat_2_88A0:
-    .assert dat_2_88A0 = AreaBank::EnemyLists, error, "interface address moved"
+EnemyLists_Bank2:
+    .assert EnemyLists_Bank2 = AreaBank::EnemyLists, error, "interface address moved"
     .byte   $01, $01, $11, $63, $16, $6A, $11, $6E, $16, $61, $56, $6D, $56, $61, $91, $66; $88A0
     .byte   $96, $6B, $96, $0D, $66, $16, $6E, $16, $61, $58, $6E, $56, $63, $96, $6A, $96; $88B0
     .byte   $07, $6D, $14, $62, $54, $69, $94, $07, $68, $14, $08, $57, $66, $94, $0D, $44; $88C0
@@ -786,9 +935,7 @@ dat_2_88A0:
     .byte   $43, $46, $3C, $46, $48, $86, $4B, $9C, $03, $00, $57, $01, $0D, $25, $06, $3B; $8970
     .byte   $15, $30, $46, $29, $46, $41, $95, $3A, $86, $0D, $45, $1C, $27, $06, $3E, $06; $8980
     .byte   $2A, $46, $42, $9C, $36, $86, $07, $70, $0F, $1D, $58, $7F, $CF, $01, $03, $67; $8990
-
-dat_2_89A0:
-    .assert dat_2_89A0 = AreaBank::EnemyLists+256, error, "interface address moved"
+    .assert EnemyLists_Bank2+256 = AreaBank::EnemyLists+256, error, "interface address moved"
     .byte   $99, $01, $0D, $7F, $0B, $2D, $12, $32, $52, $51, $92, $71, $D2, $7F, $CB, $01; $89A0
     .byte   $07, $70, $0F, $1D, $58, $7F, $CF, $01, $09, $07, $06, $5A, $19, $3D, $46, $52; $89B0
     .byte   $99, $07, $56, $1A, $08, $57, $46, $9C, $09, $08, $0A, $06, $4A, $06, $8A, $70; $89C0
@@ -805,9 +952,7 @@ dat_2_89A0:
     .byte   $1B, $5A, $55, $30, $86, $47, $86, $6A, $86, $5D, $9B, $01, $0D, $5B, $1A, $5A; $8A70
     .byte   $55, $60, $86, $46, $86, $59, $86, $5D, $9A, $01, $0D, $5B, $1B, $5A, $55, $30; $8A80
     .byte   $86, $47, $86, $6A, $86, $5D, $9B, $03, $76, $C1, $03, $76, $81, $03, $79, $99; $8A90
-
-dat_2_8AA0:
-    .assert dat_2_8AA0 = AreaBank::EnemyLists+512, error, "interface address moved"
+    .assert EnemyLists_Bank2+512 = AreaBank::EnemyLists+512, error, "interface address moved"
     .byte   $01, $01, $11, $39, $1F, $3B, $1F, $3D, $1F, $44, $5F, $5C, $5F, $64, $9F, $7C; $8AA0
     .byte   $9F, $7E, $9F, $0F, $6A, $04, $5C, $04, $7D, $55, $6F, $44, $76, $95, $6C, $84; $8AB0
     .byte   $74, $C4, $0F, $6C, $11, $4E, $11, $20, $51, $70, $9B, $2F, $91, $41, $D1, $63; $8AC0
@@ -824,9 +969,7 @@ dat_2_8AA0:
     .byte   $01, $7E, $04, $53, $57, $66, $44, $42, $84, $29, $97, $25, $C4, $0F, $7F, $11; $8B70
     .byte   $73, $51, $75, $51, $79, $81, $7C, $91, $7E, $91, $71, $D1, $0B, $76, $58, $07; $8B80
     .byte   $8A, $79, $9C, $7D, $9C, $08, $CA, $05, $76, $57, $7F, $98, $0F, $78, $5F, $79; $8B90
-
-dat_2_8BA0:
-    .assert dat_2_8BA0 = AreaBank::EnemyLists+768, error, "interface address moved"
+    .assert EnemyLists_Bank2+768 = AreaBank::EnemyLists+768, error, "interface address moved"
     .byte   $5F, $7B, $5F, $73, $97, $7D, $9C, $7F, $9C, $72, $DC, $09, $6D, $03, $50, $58; $8BA0
     .byte   $76, $43, $7B, $D8, $03, $50, $83, $09, $32, $51, $3C, $51, $47, $91, $2D, $91; $8BB0
     .byte   $09, $60, $52, $46, $92, $4E, $92, $21, $D4, $07, $57, $58, $40, $94, $24, $D4; $8BC0
@@ -976,27 +1119,36 @@ dat_2_8BA0:
 dat_2_938C:
     .byte   $52, $8F, $C9                                                   ; $938C
 
-loc_2_938F:
+; ---------------------------------------------------------------------------
+; Area_DrawPillarSlope_Bank2
+;
+; Large object $10 in bank 2: the pillar of object $E0 in every column to
+; the end of the area (four pages), each one row taller than the last.
+; (Bank 1's table has $0000 for this object.)
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawPillarSlope_Bank2:
     lda     #$03                    ; $938F
     sta     temp5                   ; $9391
     lda     areaBuildPos            ; $9393
     sta     temp4                   ; $9396
 
-loc_2_9398:
+@loop:
     ldx     #$0D                    ; $9398
-    jsr     sub_2_821D              ; $939A
+    jsr     Area_DrawObjectPillar_Bank2 ; $939A
     inc     areaObjectType          ; $939D
     inc     temp4                   ; $93A0
     lda     temp4                   ; $93A2
     sta     areaBuildPos            ; $93A4
     and     #$0F                    ; $93A7
-    bne     loc_2_9398              ; $93A9
+    bne     @loop                   ; $93A9
     lda     #$30                    ; $93AB
     sta     temp4                   ; $93AD
     sta     areaBuildPos            ; $93AF
     inc     areaBuildPage           ; $93B2
     dec     temp5                   ; $93B5
-    bpl     loc_2_9398              ; $93B7
+    bpl     @loop                   ; $93B7
     rts                             ; $93B9
 
 sub_2_93BA:
@@ -1185,10 +1337,10 @@ Projectile_Bubble_Bank2:
     inc     overworldBuffer+76,x    ; $9639
     lda     overworldBuffer+76,x    ; $963C
     and     #$10                    ; $963F
-    beq     loc_2_9645              ; $9641
+    beq     @loc_9645               ; $9641
     ldy     #$FC                    ; $9643
 
-loc_2_9645:
+@loc_9645:
     sty     objXVelocity+7,x        ; $9645
     jmp     Projectile_MoveAndCheck_Bank2 ; $9647
 ; (end of disassembled code)
@@ -1204,10 +1356,10 @@ loc_2_9645:
 Projectile_Rock_Bank2:
     ldy     #$02                    ; $964A
     lda     objXVelocity+7,x        ; $964C
-    bmi     loc_2_9651              ; $964E
+    bmi     @loc_9651               ; $964E
     dey                             ; $9650
 
-loc_2_9651:
+@loc_9651:
     tya                             ; $9651
     cmp     objFacing+7,x           ; $9652
     beq     Projectile_Straight_Bank2 ; $9654
@@ -1290,7 +1442,7 @@ Projectile_Draw_Bank2:
     sta     oamBuffer+1,y           ; $96AD
     jmp     (temp14)                ; $96B0
 
-loc_2_96B3:
+@loc_96B3:
     lda     frameCounter            ; $96B3
     and     #$03                    ; $96B5
     sta     oamBuffer+2,y           ; $96B7
@@ -1316,7 +1468,7 @@ dat_2_96BF:
 ; (end of disassembled code)
 
 
-loc_2_96D3:
+@loc_96D3:
     lda     frameCounter            ; $96D3
     asl     a                       ; $96D5
     asl     a                       ; $96D6
@@ -1325,7 +1477,7 @@ loc_2_96D3:
     asl     a                       ; $96D9
     and     #$80                    ; $96DA
     ora     oamBuffer+2,y           ; $96DC
-    bne     loc_2_96EB              ; $96DF
+    bne     @loc_96EB               ; $96DF
 ; (code below not executed in the test movies)
     lda     frameCounter            ; $96E1
     asl     a                       ; $96E3
@@ -1337,24 +1489,24 @@ loc_2_96D3:
     and     #$43                    ; $96E9
 ; (end of code not executed in the test movies)
 
-loc_2_96EB:
+@loc_96EB:
     sta     oamBuffer+2,y           ; $96EB
     rts                             ; $96EE
 
 dat_2_96EF:
     .byte   $03, $43, $C3, $83                                              ; $96EF
 
-loc_2_96F3:
+@loc_96F3:
     lda     frameCounter            ; $96F3
     lsr     a                       ; $96F5
     lsr     a                       ; $96F6
     and     #$03                    ; $96F7
     ldy     objFacing+7,x           ; $96F9
     dey                             ; $96FB
-    bne     loc_2_9700              ; $96FC
+    bne     @loc_9700               ; $96FC
     eor     #$03                    ; $96FE
 
-loc_2_9700:
+@loc_9700:
     tay                             ; $9700
     lda     dat_2_96EF,y            ; $9701
     ldy     objOamOffset+7,x        ; $9704
@@ -1371,21 +1523,21 @@ loc_2_9700:
 Generator_Init_Bank2:
     ldy     #$05                    ; $970A
 
-loc_2_970C:
+@loop:
     cpy     currentObject           ; $970C
-    beq     loc_2_971C              ; $970E
+    beq     @loc_971C               ; $970E
     lda     a:enemyActive,y         ; $9710
-    beq     loc_2_971C              ; $9713
+    beq     @loc_971C               ; $9713
     lda     a:enemyType,y           ; $9715
     cmp     enemyType,x             ; $9718
-    beq     loc_2_9720              ; $971A
+    beq     @loc_9720               ; $971A
 
-loc_2_971C:
+@loc_971C:
     dey                             ; $971C
-    bpl     loc_2_970C              ; $971D
+    bpl     @loop                   ; $971D
     rts                             ; $971F
 
-loc_2_9720:
+@loc_9720:
     tya                             ; $9720
     tax                             ; $9721
     jsr     Enemy_Despawn           ; $9722
@@ -1413,29 +1565,29 @@ dat_2_9728:
 RockThrower_Ai:
     jsr     Enemy_FaceLink          ; $9730
     lda     objState+1,x            ; $9733
-    beq     loc_2_977C              ; $9735
+    beq     @loc_977C               ; $9735
     ldy     enemyVulnerability,x    ; $9737
-    bne     loc_2_9773              ; $973A
+    bne     @loc_9773               ; $973A
     inc     a:objState+1,x          ; $973C
     cmp     #$02                    ; $973F
-    beq     loc_2_9778              ; $9741
+    beq     @loc_9778               ; $9741
     lda     #$10                    ; $9743
     sta     enemyVulnerability,x    ; $9745
     jsr     Enemy_DropRock_Bank2    ; $9748
-    bcs     loc_2_977C              ; $974B
+    bcs     @loc_977C               ; $974B
     lda     temp15                  ; $974D
-    bpl     loc_2_9753              ; $974F
+    bpl     @loc_9753               ; $974F
     eor     #$FF                    ; $9751
 
-loc_2_9753:
+@loc_9753:
     lsr     a                       ; $9753
     lsr     a                       ; $9754
     ldx     objFacing+7,y           ; $9755
     dex                             ; $9757
-    beq     loc_2_975C              ; $9758
+    beq     @loc_975C               ; $9758
     eor     #$FF                    ; $975A
 
-loc_2_975C:
+@loc_975C:
     adc     objXVelocity            ; $975C
     sta     a:objXVelocity+7,y      ; $975E
     lda     objY                    ; $9761
@@ -1448,30 +1600,30 @@ loc_2_975C:
     lda     dat_2_9728,x            ; $9769
     sta     objYVelocity+7,y        ; $976C
     ldx     currentObject           ; $976F
-    bpl     loc_2_977C              ; $9771
+    bpl     @loc_977C               ; $9771
 
-loc_2_9773:
+@loc_9773:
     dec     enemyVulnerability,x    ; $9773
-    bpl     loc_2_977C              ; $9776
+    bpl     @loc_977C               ; $9776
 
-loc_2_9778:
+@loc_9778:
     lda     #$00                    ; $9778
     sta     objState+1,x            ; $977A
 
-loc_2_977C:
+@loc_977C:
     jsr     Enemy_Draw              ; $977C
     lda     enemyAiState,x          ; $977F
     and     #$03                    ; $9781
     jsr     JumpTable               ; $9783
 ; (inline jump table)
-    .word   loc_2_978E              ; $9786
-    .word   loc_2_97B7              ; $9788
-    .word   loc_2_97C8              ; $978A
-    .word   loc_2_97DA              ; $978C
+    .word   @loc_978E               ; $9786
+    .word   @loc_97B7               ; $9788
+    .word   @loc_97C8               ; $978A
+    .word   @loc_97DA               ; $978C
 
-loc_2_978E:
+@loc_978E:
     lda     timerFast+TIMER_ENEMY,x ; $978E
-    bne     loc_2_97B6              ; $9791
+    bne     @done                   ; $9791
     lda     rng+1,x                 ; $9793
     lsr     a                       ; $9796
     adc     #$40                    ; $9797
@@ -1488,58 +1640,58 @@ loc_2_978E:
     and     #$1F                    ; $97AD
     adc     #$24                    ; $97AF
 
-loc_2_97B1:
+@loc_97B1:
     sta     timerFast+TIMER_ENEMY,x ; $97B1
     inc     enemyAiState,x          ; $97B4
 
-loc_2_97B6:
+@done:
     rts                             ; $97B6
 
-loc_2_97B7:
+@loc_97B7:
     lda     timerFast+TIMER_ENEMY,x ; $97B7
-    beq     loc_2_97C5              ; $97BA
+    beq     @loc_97C5               ; $97BA
     lda     objY+1,x                ; $97BC
     cmp     #$4C                    ; $97BE
-    bcc     loc_2_97C4              ; $97C0
+    bcc     @done2                  ; $97C0
     dec     objY+1,x                ; $97C2
 
-loc_2_97C4:
+@done2:
     rts                             ; $97C4
 
-loc_2_97C5:
+@loc_97C5:
     inc     enemyAiState,x          ; $97C5
     rts                             ; $97C7
 
-loc_2_97C8:
+@loc_97C8:
     lda     objY+1,x                ; $97C8
     cmp     #$45                    ; $97CA
-    bcc     loc_2_97D1              ; $97CC
+    bcc     @loc_97D1               ; $97CC
     dec     objY+1,x                ; $97CE
     rts                             ; $97D0
 
-loc_2_97D1:
+@loc_97D1:
     lda     rng+1,x                 ; $97D1
     lsr     a                       ; $97D4
 
-loc_2_97D5:
+@loc_97D5:
     ora     #$40                    ; $97D5
-    jmp     loc_2_97B1              ; $97D7
+    jmp     @loc_97B1               ; $97D7
 
-loc_2_97DA:
+@loc_97DA:
     lda     timerFast+TIMER_ENEMY,x ; $97DA
-    beq     loc_2_97D5              ; $97DD
+    beq     @loc_97D5               ; $97DD
     cmp     #$11                    ; $97DF
-    bcc     loc_2_97F0              ; $97E1
+    bcc     @loc_97F0               ; $97E1
     lda     objState+1,x            ; $97E3
-    bne     loc_2_97EF              ; $97E5
+    bne     @done3                  ; $97E5
     inc     a:objState+1,x          ; $97E7
     lda     #$10                    ; $97EA
     sta     enemyVulnerability,x    ; $97EC
 
-loc_2_97EF:
+@done3:
     rts                             ; $97EF
 
-loc_2_97F0:
+@loc_97F0:
     inc     objY+1,x                ; $97F0
     rts                             ; $97F2
 
@@ -1579,62 +1731,62 @@ Tektite_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $9805
     jsr     Enemy_Draw              ; $9808
     lda     objYVelocity+1,x        ; $980B
-    beq     loc_2_9814              ; $980E
+    beq     @loc_9814               ; $980E
     and     #$02                    ; $9810
-    beq     loc_2_9820              ; $9812
+    beq     @loc_9820               ; $9812
 
-loc_2_9814:
+@loc_9814:
     inc     enemyAiState,x          ; $9814
     lda     enemyAiState,x          ; $9816
     cmp     #$11                    ; $9818
-    bne     loc_2_9820              ; $981A
+    bne     @loc_9820               ; $981A
     lda     #$F1                    ; $981C
     sta     enemyAiState,x          ; $981E
 
-loc_2_9820:
+@loc_9820:
     cmp     #$F8                    ; $9820
-    bne     loc_2_9837              ; $9822
+    bne     @loc_9837               ; $9822
     lda     rng+1,x                 ; $9824
     lsr     a                       ; $9827
-    bcc     loc_2_9837              ; $9828
+    bcc     @loc_9837               ; $9828
     lda     objCollision+1,x        ; $982A
     and     #$04                    ; $982C
-    beq     loc_2_9837              ; $982E
+    beq     @loc_9837               ; $982E
     lda     #$C5                    ; $9830
     sta     objYVelocity+1,x        ; $9832
     dec     objY+1,x                ; $9835
 
-loc_2_9837:
+@loc_9837:
     jsr     Enemy_Fall_Bank2        ; $9837
     lda     objCollision+1,x        ; $983A
     and     #$03                    ; $983C
-    beq     loc_2_9843              ; $983E
+    beq     @loc_9843               ; $983E
     jsr     Enemy_TurnAround        ; $9840
 
-loc_2_9843:
+@loc_9843:
     ldy     objFacing+1,x           ; $9843
     dey                             ; $9845
     lda     objYVelocity+1,x        ; $9846
-    bne     loc_2_9854              ; $9849
+    bne     @loc_9854               ; $9849
     jsr     Enemy_FaceLink          ; $984B
     lda     objCollision+1,x        ; $984E
     and     #$04                    ; $9850
-    bne     loc_2_985C              ; $9852
+    bne     @loc_985C               ; $9852
 
-loc_2_9854:
+@loc_9854:
     lda     dat_2_9803,y            ; $9854
     sta     objXVelocity+1,x        ; $9857
     jsr     Enemy_MoveX             ; $9859
 
-loc_2_985C:
+@loc_985C:
     lda     frameCounter            ; $985C
     and     #$3F                    ; $985E
-    bne     loc_2_987F              ; $9860
+    bne     @loc_987F               ; $9860
     lda     rng+1,x                 ; $9862
     and     #$01                    ; $9865
-    bne     loc_2_987F              ; $9867
+    bne     @loc_987F               ; $9867
     jsr     Enemy_FireProjectile    ; $9869
-    bcs     loc_2_987F              ; $986C
+    bcs     @loc_987F               ; $986C
     lda     #$06                    ; $986E
     sta     a:objState+7,y          ; $9870
     sty     temp0                   ; $9873
@@ -1643,15 +1795,15 @@ loc_2_985C:
     ldy     temp0                   ; $987A
     sta     a:objY+7,y              ; $987C
 
-loc_2_987F:
+@loc_987F:
     ldy     #$80                    ; $987F
     lda     enemyAiState,x          ; $9881
     adc     #$08                    ; $9883
     cmp     #$10                    ; $9885
-    bcc     loc_2_988B              ; $9887
+    bcc     @loc_988B               ; $9887
     ldy     #$89                    ; $9889
 
-loc_2_988B:
+@loc_988B:
     sty     sramEnemyHitbox+20      ; $988B
     ldy     #$01                    ; $988E
     inx                             ; $9890
@@ -1659,21 +1811,21 @@ loc_2_988B:
     ldx     currentObject           ; $9894
     lda     objYHi+1,x              ; $9896
     cmp     #$02                    ; $9898
-    bcc     loc_2_989F              ; $989A
+    bcc     @loc_989F               ; $989A
 ; (code below not executed in the test movies)
     jmp     Enemy_Despawn           ; $989C
 ; (end of code not executed in the test movies)
 
-loc_2_989F:
+@loc_989F:
     lda     drawOffscreen+1         ; $989F
     and     #$FC                    ; $98A1
-    beq     loc_2_98AE              ; $98A3
+    beq     @loc_98AE               ; $98A3
     lda     objCollision+1,x        ; $98A5
     and     #$0F                    ; $98A7
     sta     objCollision+1,x        ; $98A9
     jmp     Enemy_DespawnIfFar      ; $98AB
 
-loc_2_98AE:
+@loc_98AE:
     jsr     Enemy_CheckProjectileHits ; $98AE
     jsr     Enemy_CheckSwordHit     ; $98B1
     jsr     Enemy_CheckLinkContact  ; $98B4
@@ -1695,13 +1847,13 @@ dat_2_98BA:
 Eye_Ai:
     jsr     Enemy_HurtLinkOnContact ; $98BC
     lda     timerFast+TIMER_ENEMY,x ; $98BF
-    beq     loc_2_98C7              ; $98C2
+    beq     @loc_98C7               ; $98C2
     jmp     Enemy_UpdateCommon      ; $98C4
 
-loc_2_98C7:
+@loc_98C7:
     lda     enemyAiState,x          ; $98C7
     and     #$20                    ; $98C9
-    beq     loc_2_98DE              ; $98CB
+    beq     @loc_98DE               ; $98CB
     lda     enemyAiState,x          ; $98CD
     asl     a                       ; $98CF
     asl     a                       ; $98D0
@@ -1712,14 +1864,14 @@ loc_2_98C7:
     sta     objYVelocity+1,x        ; $98D8
     jsr     Enemy_MoveY             ; $98DB
 
-loc_2_98DE:
+@loc_98DE:
     inc     enemyAiState,x          ; $98DE
     lda     enemyAiState,x          ; $98E0
     and     #$3F                    ; $98E2
-    bne     loc_2_98E9              ; $98E4
+    bne     @loc_98E9               ; $98E4
     jsr     Enemy_FaceLink          ; $98E6
 
-loc_2_98E9:
+@loc_98E9:
     ldy     objFacing+1,x           ; $98E9
     lda     dat_2_98B9,y            ; $98EB
     sta     objXVelocity+1,x        ; $98EE
@@ -1731,11 +1883,11 @@ loc_2_98E9:
     jsr     Enemy_UpdateCommon      ; $98FE
     lda     rng+1,x                 ; $9901
     and     #$1F                    ; $9904
-    bne     loc_2_990D              ; $9906
+    bne     @done                   ; $9906
     lda     #$3F                    ; $9908
     sta     timerFast+TIMER_ENEMY,x ; $990A
 
-loc_2_990D:
+@done:
     rts                             ; $990D
 
 dat_2_990E:
@@ -1758,14 +1910,14 @@ Leever_Ai:
     and     #$03                    ; $991B
     jsr     JumpTable               ; $991D
 ; (inline jump table)
-    .word   loc_2_9928              ; $9920
-    .word   loc_2_9950              ; $9922
-    .word   loc_2_996C              ; $9924
-    .word   loc_2_997C              ; $9926
+    .word   @loc_9928               ; $9920
+    .word   @loc_9950               ; $9922
+    .word   @loc_996C               ; $9924
+    .word   @loc_997C               ; $9926
 
-loc_2_9928:
+@loc_9928:
     lda     timerFast+TIMER_ENEMY,x ; $9928
-    bne     loc_2_994F              ; $992B
+    bne     @done                   ; $992B
     lda     #$50                    ; $992D
     sta     timerFast+TIMER_ENEMY,x ; $992F
     lda     rng+1,x                 ; $9932
@@ -1781,22 +1933,22 @@ loc_2_9928:
     sta     objY+1,x                ; $994B
     inc     enemyAiState,x          ; $994D
 
-loc_2_994F:
+@done:
     rts                             ; $994F
 
-loc_2_9950:
+@loc_9950:
     lda     timerFast+TIMER_ENEMY,x ; $9950
-    beq     loc_2_9960              ; $9953
+    beq     @loc_9960               ; $9953
     cmp     #$1A                    ; $9955
-    bcs     loc_2_995F              ; $9957
+    bcs     @done2                  ; $9957
     and     #$01                    ; $9959
-    bne     loc_2_995F              ; $995B
+    bne     @done2                  ; $995B
     dec     objY+1,x                ; $995D
 
-loc_2_995F:
+@done2:
     rts                             ; $995F
 
-loc_2_9960:
+@loc_9960:
     inc     enemyAiState,x          ; $9960
     lda     rng+1,x                 ; $9962
     lsr     a                       ; $9965
@@ -1804,20 +1956,20 @@ loc_2_9960:
     sta     timerFast+TIMER_ENEMY,x ; $9968
     rts                             ; $996B
 
-loc_2_996C:
+@loc_996C:
     jsr     Enemy_MoveX             ; $996C
     lda     timerFast+TIMER_ENEMY,x ; $996F
-    bne     loc_2_997B              ; $9972
+    bne     @done3                  ; $9972
     inc     enemyAiState,x          ; $9974
     lda     #$20                    ; $9976
     sta     timerFast+TIMER_ENEMY,x ; $9978
 
-loc_2_997B:
+@done3:
     rts                             ; $997B
 
-loc_2_997C:
+@loc_997C:
     lda     timerFast+TIMER_ENEMY,x ; $997C
-    beq     loc_2_9960              ; $997F
+    beq     @loc_9960               ; $997F
     lsr     a                       ; $9981
     bcc     loc_2_9986              ; $9982
 dat_2_9985 := * + 1
@@ -1844,26 +1996,26 @@ dat_2_9987:
 Boon_Ai:
     lda     objY+1,x                ; $9989
     cmp     #$70                    ; $998B
-    bcs     loc_2_9998              ; $998D
+    bcs     @loc_9998               ; $998D
     lda     frameCounter            ; $998F
     and     #$1F                    ; $9991
-    bne     loc_2_9998              ; $9993
+    bne     @loc_9998               ; $9993
     jsr     Enemy_DropRock_Bank2    ; $9995
 
-loc_2_9998:
+@loc_9998:
     ldy     #$01                    ; $9998
     lda     objXVelocity+1,x        ; $999A
-    bpl     loc_2_999F              ; $999C
+    bpl     @loc_999F               ; $999C
     iny                             ; $999E
 
-loc_2_999F:
+@loc_999F:
     sty     objFacing+1,x           ; $999F
     jsr     Enemy_SkipAiIfStunned   ; $99A1
     jsr     Enemy_UpdateCommon      ; $99A4
     jsr     Enemy_HurtLinkOnContact ; $99A7
     jsr     Enemy_FaceLink          ; $99AA
     lda     enemyAiState,x          ; $99AD
-    bne     loc_2_99D2              ; $99AF
+    bne     @loc_99D2               ; $99AF
     sta     objState+1,x            ; $99B1
     lda     #$30                    ; $99B3
     sta     objY+1,x                ; $99B5
@@ -1880,15 +2032,15 @@ loc_2_999F:
     inc     enemyAiState,x          ; $99CF
     rts                             ; $99D1
 
-loc_2_99D2:
+@loc_99D2:
     lda     drawOffscreen+1         ; $99D2
     and     #$CC                    ; $99D4
-    beq     loc_2_99DA              ; $99D6
+    beq     @loc_99DA               ; $99D6
     dec     enemyAiState,x          ; $99D8
 
-loc_2_99DA:
+@loc_99DA:
     lda     timerFast+3,x           ; $99DA
-    bne     loc_2_99EF              ; $99DD
+    bne     @loc_99EF               ; $99DD
     lda     rng+1,x                 ; $99DF
     pha                             ; $99E2
     and     #$0F                    ; $99E3
@@ -1898,7 +2050,7 @@ loc_2_99DA:
     and     #$03                    ; $99EB
     sta     objState+1,x            ; $99ED
 
-loc_2_99EF:
+@loc_99EF:
     lda     objState+1,x            ; $99EF
     jsr     JumpTable               ; $99F1
 ; (end of disassembled code)
@@ -1961,64 +2113,64 @@ dat_2_9A27:
 Basilisk_Ai:
     lda     frameCounter            ; $9A2A
     and     #$3F                    ; $9A2C
-    bne     loc_2_9A3A              ; $9A2E
+    bne     @loc_9A3A               ; $9A2E
     lda     rng+1,x                 ; $9A30
     lsr     a                       ; $9A33
-    bcc     loc_2_9A3A              ; $9A34
+    bcc     @loc_9A3A               ; $9A34
     lda     #$0A                    ; $9A36
     sta     objState+1,x            ; $9A38
 
-loc_2_9A3A:
+@loc_9A3A:
     jsr     Enemy_Fall_Bank2        ; $9A3A
     lda     #$80                    ; $9A3D
     ldy     timerFast+TIMER_ENEMY,x ; $9A3F
-    bne     loc_2_9A46              ; $9A42
+    bne     @loc_9A46               ; $9A42
     lda     #$89                    ; $9A44
 
-loc_2_9A46:
+@loc_9A46:
     sta     sramEnemyHitbox+24      ; $9A46
     jsr     Enemy_UpdateCommon      ; $9A49
     jsr     Enemy_HurtLinkOnContact ; $9A4C
     jsr     Enemy_KnockBackOrWalk_Bank2 ; $9A4F
     lda     frameCounter            ; $9A52
     and     #$3F                    ; $9A54
-    bne     loc_2_9A5B              ; $9A56
+    bne     @loc_9A5B               ; $9A56
     jsr     Enemy_FaceLink          ; $9A58
 
-loc_2_9A5B:
+@loc_9A5B:
     lda     #$00                    ; $9A5B
     sta     objXVelocity+1,x        ; $9A5D
     lda     timerFast+TIMER_ENEMY,x ; $9A5F
-    bne     loc_2_9A70              ; $9A62
+    bne     @loc_9A70               ; $9A62
     lda     frameCounter            ; $9A64
-    bne     loc_2_9A6D              ; $9A66
+    bne     @loc_9A6D               ; $9A66
     lda     #$50                    ; $9A68
     sta     timerFast+TIMER_ENEMY,x ; $9A6A
 
-loc_2_9A6D:
+@loc_9A6D:
     jsr     Enemy_Pace_Bank2        ; $9A6D
 
-loc_2_9A70:
+@loc_9A70:
     lda     objState+1,x            ; $9A70
-    beq     loc_2_9AAD              ; $9A72
+    beq     @done                   ; $9A72
     dec     objState+1,x            ; $9A74
-    bne     loc_2_9AAD              ; $9A76
+    bne     @done                   ; $9A76
     jsr     Enemy_FireProjectile    ; $9A78
-    bcs     loc_2_9AAD              ; $9A7B
+    bcs     @done                   ; $9A7B
     lda     #$06                    ; $9A7D
     sta     a:objState+7,y          ; $9A7F
     lda     a:objY+7,y              ; $9A82
     adc     #$04                    ; $9A85
     sta     a:objY+7,y              ; $9A87
     lda     timerFast+TIMER_ENEMY,x ; $9A8A
-    bne     loc_2_9A99              ; $9A8D
+    bne     @loc_9A99               ; $9A8D
     lda     a:objY+7,y              ; $9A8F
     clc                             ; $9A92
     adc     #$0C                    ; $9A93
     sta     a:objY+7,y              ; $9A95
     rts                             ; $9A98
 
-loc_2_9A99:
+@loc_9A99:
     ldx     objFacing+7,y           ; $9A99
     lda     a:objX+7,y              ; $9A9B
     adc     dat_2_9A25,x            ; $9A9E
@@ -2027,7 +2179,7 @@ loc_2_9A99:
     adc     dat_2_9A27,x            ; $9AA7
     sta     a:objXHi+7,y            ; $9AAA
 
-loc_2_9AAD:
+@done:
     rts                             ; $9AAD
 
 ; ---------------------------------------------------------------------------
@@ -2043,53 +2195,53 @@ loc_2_9AAD:
 Scorpion_Ai:
     jsr     Enemy_Fall_Bank2        ; $9AAE
     lda     objState+1,x            ; $9AB1
-    bne     loc_2_9AC3              ; $9AB3
+    bne     @loc_9AC3               ; $9AB3
     jsr     Enemy_Draw              ; $9AB5
     lda     #$03                    ; $9AB8
     sta     enemyVulnerability,x    ; $9ABA
     jsr     Enemy_CheckProjectileHitsSpecial ; $9ABD
-    jmp     loc_2_9AC5              ; $9AC0
+    jmp     @loc_9AC5               ; $9AC0
 
-loc_2_9AC3:
+@loc_9AC3:
     dec     objState+1,x            ; $9AC3
 
-loc_2_9AC5:
+@loc_9AC5:
     jsr     Enemy_UpdateCommon      ; $9AC5
     jsr     Enemy_HurtLinkOnContact ; $9AC8
     jsr     Enemy_KnockBackOrWalk_Bank2 ; $9ACB
     lda     frameCounter            ; $9ACE
     and     #$3F                    ; $9AD0
-    bne     loc_2_9AD7              ; $9AD2
+    bne     @loc_9AD7               ; $9AD2
     jsr     Enemy_FaceLink          ; $9AD4
 
-loc_2_9AD7:
+@loc_9AD7:
     lda     rng+1,x                 ; $9AD7
     eor     #$FF                    ; $9ADA
     and     #$FC                    ; $9ADC
-    bne     loc_2_9AE4              ; $9ADE
+    bne     @loc_9AE4               ; $9ADE
     lda     #$20                    ; $9AE0
     sta     objState+1,x            ; $9AE2
 
-loc_2_9AE4:
+@loc_9AE4:
     lda     rng+2,x                 ; $9AE4
     and     #$3F                    ; $9AE7
-    bne     loc_2_9AF0              ; $9AE9
+    bne     @loc_9AF0               ; $9AE9
     lda     #$10                    ; $9AEB
     sta     timerFast+TIMER_ENEMY,x ; $9AED
 
-loc_2_9AF0:
+@loc_9AF0:
     lda     #$00                    ; $9AF0
     sta     objXVelocity+1,x        ; $9AF2
     jsr     Enemy_Pace_Bank2        ; $9AF4
     lda     timerFast+TIMER_ENEMY,x ; $9AF7
     cmp     #$08                    ; $9AFA
-    bne     loc_2_9B08              ; $9AFC
+    bne     @done                   ; $9AFC
     jsr     Enemy_FireProjectile    ; $9AFE
-    bcs     loc_2_9B08              ; $9B01
+    bcs     @done                   ; $9B01
     lda     #$04                    ; $9B03
     sta     a:objState+7,y          ; $9B05
 
-loc_2_9B08:
+@done:
     rts                             ; $9B08
 
 ; ---------------------------------------------------------------------------
@@ -2105,18 +2257,18 @@ Enemy_Pace_Bank2:
     ldy     objFacing+1,x           ; $9B0B
     lda     enemyAiState,x          ; $9B0D
     and     #$C0                    ; $9B0F
-    bne     loc_2_9B18              ; $9B11
+    bne     @loc_9B18               ; $9B11
     lda     loc_2_9A23,y            ; $9B13
-    bne     loc_2_9B21              ; $9B16
+    bne     @loc_9B21               ; $9B16
 
-loc_2_9B18:
+@loc_9B18:
     asl     a                       ; $9B18
     bne     loc_2_9B23              ; $9B19
     lda     loc_2_9A23,y            ; $9B1B
     asl     a                       ; $9B1E
     eor     #$FF                    ; $9B1F
 
-loc_2_9B21:
+@loc_9B21:
     sta     objXVelocity+1,x        ; $9B21
 
 loc_2_9B23:
@@ -2135,11 +2287,11 @@ Enemy_KnockBackOrWalk_Bank2:
     beq     loc_2_9B39              ; $9B27
 ; (code below not executed in the test movies)
     dec     ram_043E,x              ; $9B29
-    bpl     loc_2_9B34              ; $9B2C
+    bpl     @loc_9B34               ; $9B2C
     inc     ram_043E,x              ; $9B2E
     inc     ram_043E,x              ; $9B31
 
-loc_2_9B34:
+@loc_9B34:
     sta     objXVelocity+1,x        ; $9B34
     jsr     Enemy_UpdateBgCollision ; $9B36
 ; (end of code not executed in the test movies)
@@ -2161,13 +2313,13 @@ loc_2_9B39:
 Enemy_Fall_Bank2:
     jsr     Enemy_UpdateBgCollision ; $9B42
     lda     objYVelocity+1,x        ; $9B45
-    bmi     loc_2_9B53              ; $9B48
+    bmi     @loc_9B53               ; $9B48
     lda     objCollision+1,x        ; $9B4A
     and     #$04                    ; $9B4C
-    beq     loc_2_9B53              ; $9B4E
+    beq     @loc_9B53               ; $9B4E
     jmp     Enemy_Land              ; $9B50
 
-loc_2_9B53:
+@loc_9B53:
     jmp     Enemy_MoveYAndFall      ; $9B53
 
 ; ---------------------------------------------------------------------------
@@ -2183,14 +2335,14 @@ OrangeLizalfos_Ai:
     lda     objState+1,x            ; $9B59
     beq     loc_2_9B7E              ; $9B5B
     cmp     #$02                    ; $9B5D
-    beq     loc_2_9B65              ; $9B5F
+    beq     @loc_9B65               ; $9B5F
     cmp     #$05                    ; $9B61
-    bne     loc_2_9B68              ; $9B63
+    bne     @loc_9B68               ; $9B63
 
-loc_2_9B65:
+@loc_9B65:
     jsr     Projectile_CheckLink    ; $9B65
 
-loc_2_9B68:
+@loc_9B68:
     lda     timerFast+TIMER_ENEMY,x ; $9B68
     bne     loc_2_9B7E              ; $9B6B
 dat_2_9B6E := * + 1
@@ -2240,14 +2392,14 @@ loc_2_9B96:
     sta     ram_05E5                ; $9B9F
     lda     joypadPressed           ; $9BA2
     and     #$40                    ; $9BA4
-    beq     loc_2_9BB4              ; $9BA6
+    beq     @loc_9BB4               ; $9BA6
     lda     rng+1,x                 ; $9BA8
     and     #$03                    ; $9BAB
-    beq     loc_2_9BB4              ; $9BAD
+    beq     @loc_9BB4               ; $9BAD
     lda     linkStanding            ; $9BAF
     sta     enemyVulnerability,x    ; $9BB1
 
-loc_2_9BB4:
+@loc_9BB4:
     jsr     Enemy_CheckProjectileHitsSpecial ; $9BB4
     jsr     Enemy_UpdateBgCollision ; $9BB7
     ldy     #$01                    ; $9BBA
@@ -2256,35 +2408,35 @@ loc_2_9BB4:
     ldx     currentObject           ; $9BC0
     lda     objYHi+1,x              ; $9BC2
     cmp     #$02                    ; $9BC4
-    bcc     loc_2_9BCB              ; $9BC6
+    bcc     @loc_9BCB               ; $9BC6
 ; (code below not executed in the test movies)
     jmp     Enemy_Despawn           ; $9BC8
 ; (end of code not executed in the test movies)
 
-loc_2_9BCB:
+@loc_9BCB:
     lda     drawOffscreen+1         ; $9BCB
     and     #$FC                    ; $9BCD
-    beq     loc_2_9BDD              ; $9BCF
+    beq     @loc_9BDD               ; $9BCF
     lda     objCollision+1,x        ; $9BD1
     and     #$0F                    ; $9BD3
     sta     objCollision+1,x        ; $9BD5
     jsr     Enemy_DespawnIfFar      ; $9BD7
-    jmp     loc_2_9BE6              ; $9BDA
+    jmp     @loc_9BE6               ; $9BDA
 
-loc_2_9BDD:
+@loc_9BDD:
     jsr     Enemy_CheckProjectileHits ; $9BDD
     jsr     Enemy_CheckSwordHit     ; $9BE0
     jsr     Enemy_CheckLinkContact  ; $9BE3
 
-loc_2_9BE6:
+@loc_9BE6:
     jsr     Enemy_HurtLinkOnContact ; $9BE6
     jsr     Enemy_MoveYAndFall      ; $9BE9
     lda     objCollision+1,x        ; $9BEC
     and     #$04                    ; $9BEE
-    beq     loc_2_9BF5              ; $9BF0
+    beq     @loc_9BF5               ; $9BF0
     jsr     Enemy_Land              ; $9BF2
 
-loc_2_9BF5:
+@loc_9BF5:
     jsr     Lizalfos_KnockBack      ; $9BF5
     jsr     Enemy_FaceLink          ; $9BF8
     lda     temp15                  ; $9BFB
@@ -2296,11 +2448,11 @@ loc_2_9BF5:
     clc                             ; $9C08
     adc     #$50                    ; $9C09
     cmp     #$A0                    ; $9C0B
-    bcs     loc_2_9C15              ; $9C0D
+    bcs     @loc_9C15               ; $9C0D
     jsr     sub_2_9C1C              ; $9C0F
     jsr     Enemy_FaceLink          ; $9C12
 
-loc_2_9C15:
+@loc_9C15:
     lda     dat_2_9B8B,y            ; $9C15
     asl     a                       ; $9C18
     sta     objXVelocity+1,x        ; $9C19
@@ -2308,80 +2460,80 @@ loc_2_9C15:
 
 sub_2_9C1C:
     lda     objState+1,x            ; $9C1C
-    bne     loc_2_9C66              ; $9C1E
+    bne     @loc_9C66               ; $9C1E
     lda     linkJumpState           ; $9C20
-    beq     loc_2_9C34              ; $9C23
+    beq     @loc_9C34               ; $9C23
     ldy     #$01                    ; $9C25
     lda     objY                    ; $9C27
     adc     #$0A                    ; $9C29
     cmp     objY+1,x                ; $9C2B
-    bcc     loc_2_9C30              ; $9C2D
+    bcc     @loc_9C30               ; $9C2D
     dey                             ; $9C2F
 
-loc_2_9C30:
+@loc_9C30:
     tya                             ; $9C30
     sta     enemyVulnerability,x    ; $9C31
 
-loc_2_9C34:
+@loc_9C34:
     inc     enemyAiState,x          ; $9C34
     ldy     enemyType,x             ; $9C36
     lda     dat_2_9B6E,y            ; $9C38
     and     enemyAiState,x          ; $9C3B
-    bne     loc_2_9C66              ; $9C3D
+    bne     @loc_9C66               ; $9C3D
     lda     rng+1,x                 ; $9C3F
     and     #$03                    ; $9C42
-    bne     loc_2_9C4A              ; $9C44
+    bne     @loc_9C4A               ; $9C44
     lda     #$C0                    ; $9C46
     sta     enemyAiState,x          ; $9C48
 
-loc_2_9C4A:
+@loc_9C4A:
     ldy     #$01                    ; $9C4A
     lda     enemyType,x             ; $9C4C
     cmp     #$1B                    ; $9C4E
-    bne     loc_2_9C5F              ; $9C50
+    bne     @loc_9C5F               ; $9C50
     lda     rng+1,x                 ; $9C52
     lsr     a                       ; $9C55
-    bcs     loc_2_9C5C              ; $9C56
+    bcs     @loc_9C5C               ; $9C56
     lda     linkStanding            ; $9C58
-    bne     loc_2_9C5F              ; $9C5A
+    bne     @loc_9C5F               ; $9C5A
 
-loc_2_9C5C:
+@loc_9C5C:
     iny                             ; $9C5C
     iny                             ; $9C5D
     iny                             ; $9C5E
 
-loc_2_9C5F:
+@loc_9C5F:
     sty     objState+1,x            ; $9C5F
     lda     #$18                    ; $9C61
     sta     timerFast+TIMER_ENEMY,x ; $9C63
 
-loc_2_9C66:
+@loc_9C66:
     lda     #$00                    ; $9C66
     sta     objXVelocity+1,x        ; $9C68
     lda     objCollision            ; $9C6A
     and     #$03                    ; $9C6C
-    bne     loc_2_9C89              ; $9C6E
+    bne     @done                   ; $9C6E
     lda     linkDirHeld             ; $9C70
-    beq     loc_2_9C79              ; $9C73
+    beq     @loc_9C79               ; $9C73
     lda     objXVelocity            ; $9C75
-    bne     loc_2_9C84              ; $9C77
+    bne     @loc_9C84               ; $9C77
 
-loc_2_9C79:
+@loc_9C79:
     ldy     #$04                    ; $9C79
     lda     frameCounter            ; $9C7B
     and     #$40                    ; $9C7D
-    bne     loc_2_9C83              ; $9C7F
+    bne     @loc_9C83               ; $9C7F
     ldy     #$FC                    ; $9C81
 
-loc_2_9C83:
+@loc_9C83:
     tya                             ; $9C83
 
-loc_2_9C84:
+@loc_9C84:
     sta     objXVelocity+1,x        ; $9C84
     asl     a                       ; $9C86
     ror     objXVelocity+1,x        ; $9C87
 
-loc_2_9C89:
+@done:
     rts                             ; $9C89
 ; (unreferenced: $9C8A-$9CB9, 48 bytes)
     .byte   $B5, $AF, $4A, $B0, $14, $BD, $04, $05, $D0, $07, $F6, $AF, $A9, $40, $9D, $04; $9C8A
@@ -2405,22 +2557,22 @@ dat_2_9CBB:
 ; ---------------------------------------------------------------------------
 Lizalfos_Attack:
     lda     objState+1,x            ; $9CBE
-    beq     loc_2_9D07              ; $9CC0
+    beq     @done                   ; $9CC0
     lda     timerFast+TIMER_ENEMY,x ; $9CC2
-    bne     loc_2_9D07              ; $9CC5
+    bne     @done                   ; $9CC5
     inc     objState+1,x            ; $9CC7
     lda     objState+1,x            ; $9CC9
     cmp     #$04                    ; $9CCB
-    beq     loc_2_9D08              ; $9CCD
+    beq     @loc_9D08               ; $9CCD
     cmp     #$02                    ; $9CCF
-    bne     loc_2_9D02              ; $9CD1
+    bne     @loc_9D02               ; $9CD1
     jsr     Enemy_Draw              ; $9CD3
     jsr     Projectile_CheckLinkReflect ; $9CD6
     lda     enemyType,x             ; $9CD9
     cmp     #$1C                    ; $9CDB
-    bne     loc_2_9D02              ; $9CDD
+    bne     @loc_9D02               ; $9CDD
     jsr     Enemy_FireProjectile    ; $9CDF
-    bcs     loc_2_9D02              ; $9CE2
+    bcs     @loc_9D02               ; $9CE2
     ldx     objFacing+7,y           ; $9CE4
     lda     a:objX+7,y              ; $9CE6
     adc     dat_2_9CB9,x            ; $9CE9
@@ -2431,16 +2583,16 @@ Lizalfos_Attack:
     lda     #$07                    ; $9CF8
     sta     a:objState+7,y          ; $9CFA
     ldx     currentObject           ; $9CFD
-    jmp     loc_2_9D08              ; $9CFF
+    jmp     @loc_9D08               ; $9CFF
 
-loc_2_9D02:
+@loc_9D02:
     lda     #$05                    ; $9D02
     sta     timerFast+TIMER_ENEMY,x ; $9D04
 
-loc_2_9D07:
+@done:
     rts                             ; $9D07
 
-loc_2_9D08:
+@loc_9D08:
     lda     #$00                    ; $9D08
     sta     objState+1,x            ; $9D0A
     rts                             ; $9D0C
@@ -2456,18 +2608,18 @@ loc_2_9D08:
 ; ---------------------------------------------------------------------------
 Lizalfos_KnockBack:
     lda     ram_043E,x              ; $9D13
-    beq     loc_2_9D27              ; $9D16
+    beq     @loc_9D27               ; $9D16
     dec     ram_043E,x              ; $9D18
-    bpl     loc_2_9D23              ; $9D1B
+    bpl     @loc_9D23               ; $9D1B
     inc     ram_043E,x              ; $9D1D
     inc     ram_043E,x              ; $9D20
 
-loc_2_9D23:
+@loc_9D23:
     sta     objXVelocity+1,x        ; $9D23
     pla                             ; $9D25
     pla                             ; $9D26
 
-loc_2_9D27:
+@loc_9D27:
 dat_2_9D29 := * + 2
     jmp     loc_2_9B39              ; $9D27
     .byte   $08, $FC, $FC                                                   ; $9D2A
@@ -2492,9 +2644,9 @@ RockThrower_Draw:
     ldx     #$2C                    ; $9D38
     jsr     Sprite_DrawEnemyPairKeepX ; $9D3A
     lda     drawOffscreen+1         ; $9D3D
-    bne     loc_2_9DA9              ; $9D3F
+    bne     @loc_9DA9               ; $9D3F
     lda     objState+1,x            ; $9D41
-    beq     loc_2_9DA9              ; $9D43
+    beq     @loc_9DA9               ; $9D43
     tax                             ; $9D45
     lda     #$23                    ; $9D46
     sta     oamBuffer+1,y           ; $9D48
@@ -2503,44 +2655,44 @@ RockThrower_Draw:
     sta     oamBuffer,y             ; $9D50
     lda     oamBuffer - 6,y         ; $9D53
     cpx     #$02                    ; $9D56
-    bne     loc_2_9D5C              ; $9D58
+    bne     @loc_9D5C               ; $9D58
     eor     #$C0                    ; $9D5A
 
-loc_2_9D5C:
+@loc_9D5C:
     sta     oamBuffer+2,y           ; $9D5C
     sta     oamBuffer+6,y           ; $9D5F
     lda     temp2                   ; $9D62
     lsr     a                       ; $9D64
-    bne     loc_2_9D69              ; $9D65
+    bne     @loc_9D69               ; $9D65
     inx                             ; $9D67
     inx                             ; $9D68
 
-loc_2_9D69:
+@loc_9D69:
     stx     temp14                  ; $9D69
     sty     temp15                  ; $9D6B
     lda     dat_2_9D29,x            ; $9D6D
     cpx     #$01                    ; $9D70
-    beq     loc_2_9D78              ; $9D72
+    beq     @loc_9D78               ; $9D72
     cpx     #$03                    ; $9D74
-    bne     loc_2_9D81              ; $9D76
+    bne     @loc_9D81               ; $9D76
 
-loc_2_9D78:
+@loc_9D78:
     ldx     currentObject           ; $9D78
     ldy     enemyVulnerability,x    ; $9D7A
     cpy     #$07                    ; $9D7D
-    bcs     loc_2_9D82              ; $9D7F
+    bcs     @loc_9D82               ; $9D7F
 
-loc_2_9D81:
+@loc_9D81:
     asl     a                       ; $9D81
 
-loc_2_9D82:
+@loc_9D82:
     clc                             ; $9D82
     adc     temp1                   ; $9D83
     ldy     temp15                  ; $9D85
     sta     oamBuffer+3,y           ; $9D87
     lda     temp14                  ; $9D8A
     and     #$01                    ; $9D8C
-    beq     loc_2_9DA9              ; $9D8E
+    beq     @loc_9DA9               ; $9D8E
     ldx     temp2                   ; $9D90
     lda     oamBuffer+3,y           ; $9D92
     clc                             ; $9D95
@@ -2552,7 +2704,7 @@ loc_2_9D82:
     sbc     #$03                    ; $9DA4
     sta     oamBuffer+4,y           ; $9DA6
 
-loc_2_9DA9:
+@loc_9DA9:
     ldx     currentObject           ; $9DA9
     rts                             ; $9DAB
 
@@ -2567,32 +2719,32 @@ Tektite_Draw:
     ldx     #$00                    ; $9DAC
     lda     sramEnemyHitbox+20      ; $9DAE
     cmp     #$89                    ; $9DB1
-    bne     loc_2_9DB7              ; $9DB3
+    bne     @loc_9DB7               ; $9DB3
     ldx     #$04                    ; $9DB5
 
-loc_2_9DB7:
+@loc_9DB7:
     jsr     Sprite_DrawEnemyPair    ; $9DB7
     jsr     Sprite_DrawEnemyPairKeepX ; $9DBA
     lda     enemyAiState,x          ; $9DBD
-    bpl     loc_2_9DC3              ; $9DBF
+    bpl     @loc_9DC3               ; $9DBF
     eor     #$FF                    ; $9DC1
 
-loc_2_9DC3:
+@loc_9DC3:
     sta     temp0                   ; $9DC3
     lda     oamBuffer - 16,y        ; $9DC5
     cmp     #$F0                    ; $9DC8
-    bcs     loc_2_9DD1              ; $9DCA
+    bcs     @loc_9DD1               ; $9DCA
     adc     temp0                   ; $9DCC
     sta     oamBuffer - 16,y        ; $9DCE
 
-loc_2_9DD1:
+@loc_9DD1:
     lda     oamBuffer - 12,y        ; $9DD1
     cmp     #$F0                    ; $9DD4
-    bcs     loc_2_9DDD              ; $9DD6
+    bcs     @done                   ; $9DD6
     adc     temp0                   ; $9DD8
     sta     oamBuffer - 12,y        ; $9DDA
 
-loc_2_9DDD:
+@done:
     rts                             ; $9DDD
 
 ; ---------------------------------------------------------------------------
@@ -2606,10 +2758,10 @@ Eye_Draw:
     lda     timerFast+TIMER_ENEMY,x ; $9DDE
     ldx     #$0A                    ; $9DE1
     asl     a                       ; $9DE3
-    beq     loc_2_9DE8              ; $9DE4
+    beq     @loc_9DE8               ; $9DE4
     ldx     #$08                    ; $9DE6
 
-loc_2_9DE8:
+@loc_9DE8:
     jmp     Sprite_DrawEnemyPairKeepX ; $9DE8
 
 ; ---------------------------------------------------------------------------
@@ -2643,11 +2795,11 @@ Boon_Draw:
     ldx     #$10                    ; $9E01
     lda     frameCounter            ; $9E03
     lsr     a                       ; $9E05
-    bcc     loc_2_9E0A              ; $9E06
+    bcc     @loc_9E0A               ; $9E06
     inx                             ; $9E08
     inx                             ; $9E09
 
-loc_2_9E0A:
+@loc_9E0A:
 dat_2_9E0C := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $9E0A
 ; (end of disassembled code)
@@ -2674,7 +2826,7 @@ Basilisk_Draw:
     ora     ram_0753                ; $9E15
     sta     temp3                   ; $9E18
     lda     timerFast+TIMER_ENEMY,x ; $9E1A
-    bne     loc_2_9E7C              ; $9E1D
+    bne     @loc_9E7C               ; $9E1D
     lda     temp0                   ; $9E1F
     clc                             ; $9E21
     adc     #$10                    ; $9E22
@@ -2682,27 +2834,27 @@ Basilisk_Draw:
     lda     objXVelocity+1,x        ; $9E26
     ldx     #$14                    ; $9E28
     cmp     #$00                    ; $9E2A
-    beq     loc_2_9E3F              ; $9E2C
-    bpl     loc_2_9E32              ; $9E2E
+    beq     @loc_9E3F               ; $9E2C
+    bpl     @loc_9E32               ; $9E2E
     eor     #$FF                    ; $9E30
 
-loc_2_9E32:
+@loc_9E32:
     cmp     #$09                    ; $9E32
     lda     #$04                    ; $9E34
-    bcs     loc_2_9E39              ; $9E36
+    bcs     @loc_9E39               ; $9E36
     asl     a                       ; $9E38
 
-loc_2_9E39:
+@loc_9E39:
     and     frameCounter            ; $9E39
-    bne     loc_2_9E3F              ; $9E3B
+    bne     @loc_9E3F               ; $9E3B
     ldx     #$16                    ; $9E3D
 
-loc_2_9E3F:
+@loc_9E3F:
     jsr     Sprite_DrawEnemyPairKeepX ; $9E3F
     ldx     temp2                   ; $9E42
     lda     drawOffscreen+1         ; $9E44
     and     dat_2_9E10,x            ; $9E46
-    bne     loc_2_9E79              ; $9E49
+    bne     @loc_9E79               ; $9E49
     lda     temp0                   ; $9E4B
     sec                             ; $9E4D
     sbc     #$10                    ; $9E4E
@@ -2717,18 +2869,18 @@ loc_2_9E3F:
     sta     oamBuffer+3,y           ; $9E64
     ldx     currentObject           ; $9E67
     lda     objState+1,x            ; $9E69
-    beq     loc_2_9E79              ; $9E6B
+    beq     @loc_9E79               ; $9E6B
     ldx     temp2                   ; $9E6D
     lda     oamBuffer+3,y           ; $9E6F
     clc                             ; $9E72
     adc     dat_2_9E0E,x            ; $9E73
     sta     oamBuffer+3,y           ; $9E76
 
-loc_2_9E79:
+@loc_9E79:
     ldx     currentObject           ; $9E79
     rts                             ; $9E7B
 
-loc_2_9E7C:
+@loc_9E7C:
     ldx     #$18                    ; $9E7C
     jsr     Sprite_DrawEnemyPair    ; $9E7E
     jmp     Sprite_DrawEnemyPairKeepX ; $9E81
@@ -2744,26 +2896,26 @@ Scorpion_Draw:
     lda     timerFast+TIMER_ENEMY,x ; $9E84
     ldx     #$20                    ; $9E87
     asl     a                       ; $9E89
-    beq     loc_2_9E8E              ; $9E8A
+    beq     @loc_9E8E               ; $9E8A
     ldx     #$22                    ; $9E8C
 
-loc_2_9E8E:
+@loc_9E8E:
     jsr     Sprite_DrawEnemyPairKeepX ; $9E8E
     lda     objXVelocity+1,x        ; $9E91
     ldx     #$1C                    ; $9E93
     asl     a                       ; $9E95
-    beq     loc_2_9EA0              ; $9E96
+    beq     @loc_9EA0               ; $9E96
     lda     frameCounter            ; $9E98
     and     #$04                    ; $9E9A
-    bne     loc_2_9EA0              ; $9E9C
+    bne     @loc_9EA0               ; $9E9C
     ldx     #$1E                    ; $9E9E
 
-loc_2_9EA0:
+@loc_9EA0:
     jsr     Sprite_DrawEnemyPairKeepX ; $9EA0
     ldx     temp2                   ; $9EA3
     lda     drawOffscreen+1         ; $9EA5
     and     dat_2_9E10,x            ; $9EA7
-    bne     loc_2_9ED2              ; $9EAA
+    bne     @loc_9ED2               ; $9EAA
     lda     temp0                   ; $9EAC
     sec                             ; $9EAE
     sbc     #$10                    ; $9EAF
@@ -2778,14 +2930,14 @@ loc_2_9EA0:
     lda     objState+1,x            ; $9EC5
     ldx     #$EE                    ; $9EC7
     asl     a                       ; $9EC9
-    beq     loc_2_9ECE              ; $9ECA
+    beq     @loc_9ECE               ; $9ECA
     ldx     #$FA                    ; $9ECC
 
-loc_2_9ECE:
+@loc_9ECE:
     txa                             ; $9ECE
     sta     oamBuffer+1,y           ; $9ECF
 
-loc_2_9ED2:
+@loc_9ED2:
     ldx     currentObject           ; $9ED2
 
 dat_2_9ED4:
@@ -2810,38 +2962,38 @@ Lizalfos_Draw:
     lda     enemyVulnerability,x    ; $9EE8
     ldx     #$24                    ; $9EEB
     asl     a                       ; $9EED
-    bne     loc_2_9EF2              ; $9EEE
+    bne     @loc_9EF2               ; $9EEE
     ldx     #$2C                    ; $9EF0
 
-loc_2_9EF2:
+@loc_9EF2:
     pla                             ; $9EF2
-    beq     loc_2_9F05              ; $9EF3
+    beq     @loc_9F05               ; $9EF3
     lda     ram_00D9                ; $9EF5
     and     #$04                    ; $9EF7
-    beq     loc_2_9F05              ; $9EF9
+    beq     @loc_9F05               ; $9EF9
     lda     frameCounter            ; $9EFB
     and     #$08                    ; $9EFD
-    bne     loc_2_9F05              ; $9EFF
+    bne     @loc_9F05               ; $9EFF
     inx                             ; $9F01
     inx                             ; $9F02
     inx                             ; $9F03
     inx                             ; $9F04
 
-loc_2_9F05:
+@loc_9F05:
     jsr     Sprite_DrawEnemyPair    ; $9F05
     jsr     Sprite_DrawEnemyPairKeepX ; $9F08
     lda     drawOffscreen+1         ; $9F0B
     and     #$FC                    ; $9F0D
-    bne     loc_2_9F84              ; $9F0F
+    bne     @done                   ; $9F0F
     lda     enemyType,x             ; $9F11
     sta     ram_00D9                ; $9F13
     lda     objY+1,x                ; $9F15
     sta     temp0                   ; $9F17
     lda     objState+1,x            ; $9F19
-    beq     loc_2_9F84              ; $9F1B
+    beq     @done                   ; $9F1B
     tax                             ; $9F1D
     cpx     #$04                    ; $9F1E
-    bcc     loc_2_9F2B              ; $9F20
+    bcc     @loc_9F2B               ; $9F20
     dex                             ; $9F22
     dex                             ; $9F23
     dex                             ; $9F24
@@ -2849,32 +3001,32 @@ loc_2_9F05:
     adc     #$08                    ; $9F27
     sta     temp0                   ; $9F29
 
-loc_2_9F2B:
+@loc_9F2B:
     stx     temp15                  ; $9F2B
     lda     temp2                   ; $9F2D
     lsr     a                       ; $9F2F
-    bcc     loc_2_9F35              ; $9F30
+    bcc     @loc_9F35               ; $9F30
     inx                             ; $9F32
     inx                             ; $9F33
     inx                             ; $9F34
 
-loc_2_9F35:
+@loc_9F35:
     lda     dat_2_9ED4,x            ; $9F35
     sty     temp7                   ; $9F38
     ldx     currentObject           ; $9F3A
     ldy     enemyType,x             ; $9F3C
     cpy     #$1A                    ; $9F3E
-    beq     loc_2_9F4D              ; $9F40
+    beq     @loc_9F4D               ; $9F40
     ldy     timerFast+TIMER_ENEMY,x ; $9F42
     cpy     #$03                    ; $9F45
-    bcc     loc_2_9F4E              ; $9F47
+    bcc     @loc_9F4E               ; $9F47
     cpy     #$09                    ; $9F49
-    bcs     loc_2_9F4E              ; $9F4B
+    bcs     @loc_9F4E               ; $9F4B
 
-loc_2_9F4D:
+@loc_9F4D:
     asl     a                       ; $9F4D
 
-loc_2_9F4E:
+@loc_9F4E:
     clc                             ; $9F4E
     adc     temp1                   ; $9F4F
     sta     temp1                   ; $9F51
@@ -2882,35 +3034,35 @@ loc_2_9F4E:
     ldx     temp15                  ; $9F55
     lda     ram_00D9                ; $9F57
     cmp     #$1B                    ; $9F59
-    beq     loc_2_9F7A              ; $9F5B
+    beq     @loc_9F7A               ; $9F5B
     cpx     #$03                    ; $9F5D
-    bne     loc_2_9F67              ; $9F5F
+    bne     @loc_9F67               ; $9F5F
     lda     temp0                   ; $9F61
     adc     #$0D                    ; $9F63
     sta     temp0                   ; $9F65
 
-loc_2_9F67:
+@loc_9F67:
     cpx     #$02                    ; $9F67
-    bne     loc_2_9F7D              ; $9F69
+    bne     @loc_9F7D               ; $9F69
     lda     temp2                   ; $9F6B
     eor     #$03                    ; $9F6D
     sta     temp2                   ; $9F6F
     lda     temp3                   ; $9F71
     ora     #$80                    ; $9F73
     sta     temp3                   ; $9F75
-    jmp     loc_2_9F7D              ; $9F77
+    jmp     @loc_9F7D               ; $9F77
 
-loc_2_9F7A:
+@loc_9F7A:
     inx                             ; $9F7A
     inx                             ; $9F7B
     inx                             ; $9F7C
 
-loc_2_9F7D:
+@loc_9F7D:
     lda     dat_2_9EDA,x            ; $9F7D
     tax                             ; $9F80
     jmp     Sprite_DrawEnemyPairKeepX ; $9F81
 
-loc_2_9F84:
+@done:
     rts                             ; $9F84
 ; (unreferenced: $9F85-$A047, 195 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $9F85
