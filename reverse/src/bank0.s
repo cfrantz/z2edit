@@ -23,14 +23,14 @@
     .byte   $23, $F1, $46, $55, $23, $F9, $46, $05, $FF                     ; $80C0
     .byte   $3F, $00, $08, $16, $30, $0F, $0F, $16, $30, $27, $0F, $FF      ; $80C9
 
-dat_0_80D5:
+NorthCastleSprites:
     .byte   $7F, $52, $01, $58, $8F, $7B, $03, $58, $7F, $52, $01, $A0, $8F, $7B, $03, $A0; $80D5
 
 ; ---------------------------------------------------------------------------
 ; NorthCastle_DrawSprites
 ;
 ; In the first area of the game (North Castle: world 0, region 0, area 0),
-; draw four extra sprites from dat_0_80D5 at fixed positions in the area.
+; draw four extra sprites from NorthCastleSprites at fixed positions in the area.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -42,7 +42,7 @@ NorthCastle_DrawSprites:
     ldx     #$0F                    ; $80F0
 
 @loop:
-    lda     dat_0_80D5,x            ; $80F2
+    lda     NorthCastleSprites,x    ; $80F2
     sta     oamBuffer+80,x          ; $80F5
     dex                             ; $80F8
     bpl     @loop                   ; $80F9
@@ -2483,14 +2483,12 @@ Spell_ReflectEffect:
     .byte   $F4, $F4, $30, $31, $30, $31, $30, $31, $F4, $F4, $F4, $30, $31, $30, $49, $4A; $8E9C
     .byte   $31, $30, $31, $F4, $30, $31, $30, $31, $FF, $FF, $30, $31, $30, $31; $8EAC
 
-dat_0_8EBA:
+BigDoorString:
     .byte   $23, $F5, $43, $5F, $23, $ED, $43, $FF, $23, $E5, $43, $FF, $23, $DD, $43, $FF; $8EBA
     .byte   $23, $D5, $43, $FF, $23, $CD, $43, $FF                          ; $8ECA
 
-dat_0_8ED2:
+BigDoorRowPtrs:
     .byte   $9C                                                             ; $8ED2
-
-dat_0_8ED3:
     .byte   $8E, $A6, $8E, $B0, $8E                                         ; $8ED3
 
 BigDoor_Update:
@@ -2532,9 +2530,9 @@ BigDoor_Update:
     bpl     @loc_8F26               ; $8F12
     asl     a                       ; $8F14
     tay                             ; $8F15
-    lda     dat_0_8ED2,y            ; $8F16
+    lda     BigDoorRowPtrs,y        ; $8F16
     sta     temp2                   ; $8F19
-    lda     dat_0_8ED3,y            ; $8F1B
+    lda     BigDoorRowPtrs+1,y      ; $8F1B
     sta     temp3                   ; $8F1E
     jsr     Ppu_QueueString10       ; $8F20
     inx                             ; $8F23
@@ -2559,7 +2557,7 @@ BigDoor_Update:
     ldx     #$00                    ; $8F3C
 
 @loop2:
-    lda     dat_0_8EBA,x            ; $8F3E
+    lda     BigDoorString,x         ; $8F3E
     sta     ppuBuffer1,x            ; $8F41
     inx                             ; $8F44
     cpx     #$18                    ; $8F45
@@ -2603,17 +2601,17 @@ Ppu_QueueString10:
     bne     @loop                   ; $8F77
     rts                             ; $8F79
 
-dat_0_8F7A:
+BigDoorOpenTopTiles:
     .byte   $E1, $DF, $E0, $DF, $DE                                         ; $8F7A
 
-dat_0_8F7F:
+BigDoorOpenTiles:
     .byte   $E2, $E2, $D6, $E2, $E2                                         ; $8F7F
 
 ; ---------------------------------------------------------------------------
 ; BigDoor_DrawOpen
 ;
 ; Draw the opened big door into the area tile map: five columns of tiles
-; from dat_0_8F7A/dat_0_8F7F, down to tile row $B0.  Called by
+; from BigDoorOpenTopTiles/BigDoorOpenTiles, down to tile row $B0.  Called by
 ; BigDoor_Update when bigDoorCounter reaches $0F.
 ;
 ; Status:  confirmed
@@ -2629,13 +2627,13 @@ BigDoor_DrawOpen:
 
 @loc_8F92:
     ldy     temp2                   ; $8F92
-    lda     dat_0_8F7A,x            ; $8F94
+    lda     BigDoorOpenTopTiles,x   ; $8F94
 
 @loc_8F97:
     jsr     AreaMap_PutTileDown     ; $8F97
     cmp     #$B0                    ; $8F9A
     bcs     @loc_8FA4               ; $8F9C
-    lda     dat_0_8F7F,x            ; $8F9E
+    lda     BigDoorOpenTiles,x      ; $8F9E
     jmp     @loc_8F97               ; $8FA1
 
 @loc_8FA4:
@@ -2644,16 +2642,12 @@ BigDoor_DrawOpen:
     bpl     @loc_8F92               ; $8FA7
     rts                             ; $8FA9
 
-dat_0_8FAA:
+FallPaletteString:
     .byte   $3F, $00, $04, $0F, $2C, $1C, $0C, $FF                          ; $8FAA
 
-dat_0_8FB2:
+FallPaletteColors:
     .byte   $2C                                                             ; $8FB2
-
-dat_0_8FB3:
     .byte   $1C                                                             ; $8FB3
-
-dat_0_8FB4:
     .byte   $0C, $2C, $1C                                                   ; $8FB4
 
 ; ---------------------------------------------------------------------------
@@ -2698,7 +2692,7 @@ Mode_FallAnimate:
     ldx     #$07                    ; $8FF8
 
 @loop:
-    lda     dat_0_8FAA,x            ; $8FFA
+    lda     FallPaletteString,x     ; $8FFA
     sta     ppuBuffer0,x            ; $8FFD
     dex                             ; $9000
     bpl     @loop                   ; $9001
@@ -2710,11 +2704,11 @@ Mode_FallAnimate:
     sty     ram_0484                ; $900F
 
 @loc_9012:
-    lda     dat_0_8FB2,y            ; $9012
+    lda     FallPaletteColors,y     ; $9012
     sta     ppuBuffer0+4            ; $9015
-    lda     dat_0_8FB3,y            ; $9018
+    lda     FallPaletteColors+1,y   ; $9018
     sta     ppuBuffer0+5            ; $901B
-    lda     dat_0_8FB4,y            ; $901E
+    lda     FallPaletteColors+2,y   ; $901E
     sta     ppuBuffer0+6            ; $9021
     lda     objY                    ; $9024
     cmp     #$E8                    ; $9026
@@ -2746,7 +2740,7 @@ Link_Run:
     .word   Link_Control            ; $9041
     .word   Link_Sink               ; $9043
 
-dat_0_9045:
+AreaEntryXOffsets:
     .byte   $08, $D8                                                        ; $9045
 
 ; ---------------------------------------------------------------------------
@@ -2779,7 +2773,7 @@ Link_EnterArea:
     bcs     @loc_9079               ; $9063
     ldy     areaEntrySide           ; $9065
     lda     scrollX                 ; $9068
-    adc     dat_0_9045,y            ; $906B
+    adc     AreaEntryXOffsets,y     ; $906B
     sta     objX                    ; $906E
     lda     scrollXHi               ; $9070
     adc     #$00                    ; $9073
@@ -2921,7 +2915,7 @@ Area_PlaceElevatorAndDoor:
     sta     areaLastPage            ; $914A
     bpl     @loc_911E               ; $914C
 
-dat_0_914E:
+ElevatorYPositions:
     .byte   $10, $C0                                                        ; $914E
 
 ; ---------------------------------------------------------------------------
@@ -2960,7 +2954,7 @@ Elevator_Place:
     lsr     a                       ; $917C
     lsr     a                       ; $917D
     tay                             ; $917E
-    lda     dat_0_914E,y            ; $917F
+    lda     ElevatorYPositions,y    ; $917F
     sta     objY+1                  ; $9182
     adc     #$08                    ; $9184
     sta     objY                    ; $9186
@@ -3172,7 +3166,7 @@ Link_UpdatePalette:
 ; (unreferenced: $92A9-$92AA, 2 bytes)
     .byte   $F0                                                             ; $92A9
 
-dat_0_92AA:
+LinkControlXVelocities:
     .byte   $10                                                             ; $92AA
     .byte   $18, $E8                                                        ; $92AB
 ; (unreferenced: $92AD-$92AD, 1 bytes)
@@ -3182,7 +3176,7 @@ dat_0_92AA:
     .byte   $FF                                                             ; $92B1
     .byte   $00, $18                                                        ; $92B2
 
-dat_0_92B4:
+LinkControlYVelocities:
     .byte   $E8, $00, $00                                                   ; $92B4
 ; (unreferenced: $92B7-$92B7, 1 bytes)
     .byte   $FF                                                             ; $92B7
@@ -3249,9 +3243,9 @@ Link_Control:
     sta     objFacing               ; $931C
 
 @loc_931E:
-    lda     dat_0_92AA,y            ; $931E
+    lda     LinkControlXVelocities,y ; $931E
     sta     objXVelocity            ; $9321
-    lda     dat_0_92B4,y            ; $9323
+    lda     LinkControlYVelocities,y ; $9323
     sta     objYVelocity            ; $9326
     jsr     Link_CheckBg            ; $9329
     lda     objCollision            ; $932C
@@ -3880,11 +3874,11 @@ Link_MoveX:
 @done:
     rts                             ; $962D
 
-dat_0_962E:
+HudLeftTemplate:
     .byte   $20, $4A, $01, $D1, $20, $62, $0B, $D1, $F4, $F9, $F4, $F4, $F4, $F4, $F4, $F4; $962E
     .byte   $F4, $F4, $FF                                                   ; $963E
 
-dat_0_9641:
+HudRightTemplate:
     .byte   $20, $52, $01, $D1, $20, $6E, $10, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $D0; $9641
     .byte   $D0, $D0, $D0, $CE, $D0, $D0, $D0                               ; $9651
 
@@ -3906,10 +3900,10 @@ LevelUpCostLo:
 ; (unreferenced: $9682-$9688, 7 bytes)
     .byte   $96, $90, $20, $DC, $C4, $A0, $28                               ; $9682
 
-dat_0_9689:
+MeterSpriteTiles:
     .byte   $70, $6E                                                        ; $9689
 
-dat_0_968B:
+MeterSpriteXOffsets:
     .byte   $20, $68                                                        ; $968B
 
 ; ---------------------------------------------------------------------------
@@ -3955,7 +3949,7 @@ Hud_Draw:
 Hud_DrawLeftHalf:
     asl     hudRedraw               ; $96B7
     lsr     hudRedraw               ; $96BA
-    lda     dat_0_962E,x            ; $96BD
+    lda     HudLeftTemplate,x       ; $96BD
     sta     ppuBuffer0,y            ; $96C0
     iny                             ; $96C3
     inx                             ; $96C4
@@ -4055,7 +4049,7 @@ Hud_DrawRightHalf:
     ldy     ppuBuffer0Len           ; $972B
 
 @loop:
-    lda     dat_0_9641,x            ; $972E
+    lda     HudRightTemplate,x      ; $972E
     sta     ppuBuffer0,y            ; $9731
     iny                             ; $9734
     inx                             ; $9735
@@ -4128,10 +4122,8 @@ Hud_DrawRightHalf:
 @loc_97B6:
     jmp     Hud_FinishHalf          ; $97B6
 
-dat_0_97B9:
+MeterSpritePtr:
     .byte   $F8                                                             ; $97B9
-
-dat_0_97BA:
     .byte   $02                                                             ; $97BA
 
 ; ---------------------------------------------------------------------------
@@ -4144,9 +4136,9 @@ dat_0_97BA:
 ; ---------------------------------------------------------------------------
 Hud_DrawMeterSprites:
     ldx     #$01                    ; $97BB
-    lda     dat_0_97B9              ; $97BD
+    lda     MeterSpritePtr          ; $97BD
     sta     temp0                   ; $97C0
-    lda     dat_0_97BA              ; $97C2
+    lda     MeterSpritePtr+1        ; $97C2
     sta     temp1                   ; $97C5
 
 @loop:
@@ -4161,7 +4153,7 @@ Hud_DrawMeterSprites:
     lda     #$0F                    ; $97D0
     sta     (temp0),y               ; $97D2
     iny                             ; $97D4
-    lda     dat_0_9689,x            ; $97D5
+    lda     MeterSpriteTiles,x      ; $97D5
     sta     (temp0),y               ; $97D8
     iny                             ; $97DA
     lda     #$21                    ; $97DB
@@ -4171,7 +4163,7 @@ Hud_DrawMeterSprites:
     lsr     a                       ; $97E3
     lsr     a                       ; $97E4
     clc                             ; $97E5
-    adc     dat_0_968B,x            ; $97E6
+    adc     MeterSpriteXOffsets,x   ; $97E6
     sta     (temp0),y               ; $97E9
     pla                             ; $97EB
     tax                             ; $97EC
@@ -4215,13 +4207,11 @@ LinkProjectile_TrySpawn:
     clc                             ; $9813
     rts                             ; $9814
 
-dat_0_9815:
+LinkProjectileYOffsets:
     .byte   $0D, $04                                                        ; $9815
-
-dat_0_9817:
     .byte   $09                                                             ; $9817
 
-dat_0_9818:
+LinkProjectileSpeeds:
     .byte   $FF, $20, $E0                                                   ; $9818
 
 ; ---------------------------------------------------------------------------
@@ -4241,7 +4231,7 @@ LinkProjectile_Start:
     sta     objXHi+13,x             ; $9827
     lda     objY                    ; $9829
     ldy     a:linkStanding          ; $982B
-    adc     dat_0_9815,y            ; $982E
+    adc     LinkProjectileYOffsets,y ; $982E
     sta     objY+13,x               ; $9831
     lda     #$01                    ; $9833
     sta     objYHi+13,x             ; $9835
@@ -4249,11 +4239,11 @@ LinkProjectile_Start:
     sta     linkProjectileTimer,x   ; $9838
     ldy     linkWalkDir             ; $983B
     sty     ram_006D,x              ; $983D
-    lda     dat_0_9818,y            ; $983F
+    lda     LinkProjectileSpeeds,y  ; $983F
     sta     objXVelocity+13,x       ; $9842
     rts                             ; $9844
 
-dat_0_9845:
+LinkProjectileOamOffsets:
     .byte   $38, $40                                                        ; $9845
 
 ; ---------------------------------------------------------------------------
@@ -4283,7 +4273,7 @@ LinkProjectile_Update:
     bcc     @loc_9878               ; $9861
     lda     objY                    ; $9863
     ldy     linkAttackStanding      ; $9865
-    adc     dat_0_9817,y            ; $9868
+    adc     LinkProjectileYOffsets+2,y ; $9868
     sta     objY+13,x               ; $986B
     lda     #$D2                    ; $986D
     sta     linkProjectileTimer     ; $986F
@@ -4305,7 +4295,7 @@ LinkProjectile_Update:
 
 LinkProjectile_UpdateOne:
     stx     currentObject           ; $9888
-    lda     dat_0_9845,x            ; $988A
+    lda     LinkProjectileOamOffsets,x ; $988A
     sta     objOamOffset+13,x       ; $988D
     lda     objState+13,x           ; $988F
     beq     LinkProjectile_Done     ; $9891
@@ -6788,16 +6778,10 @@ LevelUp_ApplyChoice:
     lda     #$20                    ; $A6B6
     bne     @loc_A6A8               ; $A6B8
 
-dat_0_A6BA:
+BreakingBlockTiles:
     .byte   $94                                                             ; $A6BA
-
-dat_0_A6BB:
     .byte   $95                                                             ; $A6BB
-
-dat_0_A6BC:
     .byte   $94                                                             ; $A6BC
-
-dat_0_A6BD:
     .byte   $95, $C2, $C3, $C2, $C3, $68, $69, $69, $68, $BE, $BF, $C0, $C1, $C2, $C3, $C2; $A6BD
     .byte   $C3, $68, $69, $69, $68                                         ; $A6CD
 
@@ -6878,13 +6862,13 @@ BreakingBlock_Update:
 @loc_A726:
     tay                             ; $A726
     ldx     ppuBuffer1Len           ; $A727
-    lda     dat_0_A6BA,y            ; $A72A
+    lda     BreakingBlockTiles,y    ; $A72A
     sta     ppuBuffer1+3,x          ; $A72D
-    lda     dat_0_A6BB,y            ; $A730
+    lda     BreakingBlockTiles+1,y  ; $A730
     sta     ppuBuffer1+4,x          ; $A733
-    lda     dat_0_A6BC,y            ; $A736
+    lda     BreakingBlockTiles+2,y  ; $A736
     sta     ppuBuffer1+8,x          ; $A739
-    lda     dat_0_A6BD,y            ; $A73C
+    lda     BreakingBlockTiles+3,y  ; $A73C
     sta     ppuBuffer1+9,x          ; $A73F
     ldx     currentObject           ; $A742
     lda     breakingBlockXHi,x      ; $A744
@@ -7120,7 +7104,7 @@ Fall_FillNametable:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $A96E
     .byte   $FF                                                             ; $A97E
 
-dat_0_A97F:
+NewGameSramData:
     .byte   $FF                                                             ; $A97F
     .byte   $21, $85, $10, $E2, $DC, $E1, $E2, $E5, $E2, $E7, $E4, $CF, $CF, $CF, $F4, $F4; $A980
     .byte   $F4, $FC, $F4, $FF, $3F, $10, $04, $12, $0F, $0F, $0F, $FF, $20, $CA, $83, $F4; $A990
@@ -7162,7 +7146,7 @@ Game_StartAtNorthCastle:
     ldy     #$88                    ; $AA34
 
 @loop2:
-    lda     dat_0_A97F,y            ; $AA36
+    lda     NewGameSramData,y       ; $AA36
     sta     sram_6957,y             ; $AA39
     dey                             ; $AA3C
     bne     @loop2                  ; $AA3D
