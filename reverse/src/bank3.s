@@ -1284,7 +1284,7 @@ Wizard_Ai:
     lda     objCollision            ; $97C3
     lda     linkJumpState           ; $97C5
     bne     loc_3_97D3              ; $97C8
-    stx     ram_048B                ; $97CA
+    stx     dialogPerson            ; $97CA
     jmp     Townsperson_StartTalk   ; $97CD
 ; (unreferenced: $97D0-$97D2, 3 bytes)
     .byte   $FE, $C3, $05                                                   ; $97D0
@@ -1657,7 +1657,7 @@ loc_3_99CB:
     lda     objCollision+1,x        ; $99CE
     and     #$10                    ; $99D0
     beq     loc_3_9A1C              ; $99D2
-    stx     ram_048B                ; $99D4
+    stx     dialogPerson            ; $99D4
     lda     gameMode                ; $99D7
     cmp     #$16                    ; $99DA
     bne     loc_3_9A1D              ; $99DC
@@ -2259,371 +2259,354 @@ loc_3_9CAE:
     .byte   $82, $65, $32, $61, $40, $B1, $61, $62, $87, $6B, $66, $62, $81, $01, $51, $33; $A224
     .byte   $70, $63, $FA, $06                                              ; $A234
 
-dat_3_A238:
-    .byte   $31                                                             ; $A238
-; (unreferenced: $A239-$A244, 12 bytes)
-    .byte   $31, $31, $31, $31, $31, $31, $31, $0B, $14, $1F, $2A, $33      ; $A239
-    .byte   $19, $24, $2F                                                   ; $A245
-; (unreferenced: $A248-$A24B, 4 bytes)
-    .byte   $1E, $19, $1C, $2D                                              ; $A248
-    .byte   $0F, $18, $23, $2E                                              ; $A24C
-; (unreferenced: $A250-$A252, 3 bytes)
-    .byte   $0C, $0F, $1C                                                   ; $A250
-    .byte   $30                                                             ; $A253
-; (unreferenced: $A254-$A25F, 12 bytes)
-    .byte   $08, $12, $1C, $26, $20, $21, $1C, $26, $0A, $16, $1C, $26      ; $A254
-    .byte   $22                                                             ; $A260
-; (unreferenced: $A261-$A261, 1 bytes)
-    .byte   $16                                                             ; $A261
-    .byte   $16                                                             ; $A262
-; (unreferenced: $A263-$A264, 2 bytes)
-    .byte   $26, $0A                                                        ; $A263
-    .byte   $0F, $1C, $2B, $0D, $0D                                         ; $A265
-; (unreferenced: $A26A-$A26D, 4 bytes)
-    .byte   $1C, $26, $00, $00                                              ; $A26A
-    .byte   $00                                                             ; $A26E
-; (unreferenced: $A26F-$A270, 2 bytes)
-    .byte   $00, $02                                                        ; $A26F
-    .byte   $02                                                             ; $A271
-; (unreferenced: $A272-$A293, 34 bytes)
-    .byte   $02, $02, $04, $04, $04, $04, $05, $05, $05, $05, $06, $06, $06, $06, $07, $07; $A272
-    .byte   $07, $07, $10, $13, $1C, $27, $09, $12, $1C, $26, $0A, $11, $20, $28, $09, $12; $A282
-    .byte   $1B, $26                                                        ; $A292
-    .byte   $15                                                             ; $A294
-; (unreferenced: $A295-$A295, 1 bytes)
-    .byte   $15                                                             ; $A295
-    .byte   $15                                                             ; $A296
-; (unreferenced: $A297-$A2A9, 19 bytes)
-    .byte   $29, $0B, $14, $1D, $2A                                         ; $A297
+WestTextIds:
+    .byte   $31, $31, $31, $31, $31, $31, $31, $31, $0B, $14, $1F, $2A, $33, $19, $24, $2F; $A238
+    .byte   $1E, $19, $1C, $2D, $0F, $18, $23, $2E, $0C, $0F, $1C, $30, $08, $12, $1C, $26; $A248
+    .byte   $20, $21, $1C, $26, $0A, $16, $1C, $26, $22, $16, $16, $26, $0A, $0F, $1C, $2B; $A258
+    .byte   $0D, $0D, $1C, $26, $00, $00, $00, $00, $02, $02, $02, $02, $04, $04, $04, $04; $A268
+    .byte   $05, $05, $05, $05, $06, $06, $06, $06, $07, $07, $07, $07, $10, $13, $1C, $27; $A278
+    .byte   $09, $12, $1C, $26, $0A, $11, $20, $28, $09, $12, $1B, $26, $15, $15, $15, $29; $A288
+    .byte   $0B, $14, $1D, $2A                                              ; $A298
 
-dat_3_A29C:
-    .byte   $32, $32, $32, $32, $32, $32, $32, $32, $32, $32, $32, $32, $33, $0F; $A29C
-    .byte   $25                                                             ; $A2AA
-; (unreferenced: $A2AB-$A2AF, 5 bytes)
-    .byte   $10, $1E, $1A, $1C, $2B                                         ; $A2AB
-    .byte   $0F, $18, $23, $2E                                              ; $A2B0
-; (unreferenced: $A2B4-$A2C3, 16 bytes)
-    .byte   $0A, $0F, $1C, $26, $0A, $0F, $1C, $26, $0A, $21, $1C, $26, $0A, $17, $1C, $26; $A2B4
-    .byte   $22                                                             ; $A2C4
-; (unreferenced: $A2C5-$A2C5, 1 bytes)
-    .byte   $17                                                             ; $A2C5
-    .byte   $17                                                             ; $A2C6
-; (unreferenced: $A2C7-$A2C8, 2 bytes)
-    .byte   $26, $0A                                                        ; $A2C7
-    .byte   $0F, $1C, $2C, $0E, $0E                                         ; $A2C9
-; (unreferenced: $A2CE-$A2D1, 4 bytes)
-    .byte   $1C, $26, $01, $01                                              ; $A2CE
-    .byte   $01                                                             ; $A2D2
-; (unreferenced: $A2D3-$A2D4, 2 bytes)
-    .byte   $01, $03                                                        ; $A2D3
-    .byte   $03                                                             ; $A2D5
-; (unreferenced: $A2D6-$A2E8, 19 bytes)
-    .byte   $03, $03, $10, $10, $10, $10                                    ; $A2D6
+WestTextIdsMet:
+    .byte   $32, $32, $32, $32, $32, $32, $32, $32, $32, $32, $32, $32, $33, $0F, $25, $10; $A29C
+    .byte   $1E, $1A, $1C, $2B, $0F, $18, $23, $2E, $0A, $0F, $1C, $26, $0A, $0F, $1C, $26; $A2AC
+    .byte   $0A, $21, $1C, $26, $0A, $17, $1C, $26, $22, $17, $17, $26, $0A, $0F, $1C, $2C; $A2BC
+    .byte   $0E, $0E, $1C, $26, $01, $01, $01, $01, $03, $03, $03, $03, $10, $10, $10, $10; $A2CC
 
-dat_3_A2DC:
-    .byte   $21, $21, $21, $21, $21, $21, $21, $21, $0A, $1A, $10, $2A, $0A ; $A2DC
-    .byte   $1E                                                             ; $A2E9
-; (unreferenced: $A2EA-$A2EF, 6 bytes)
-    .byte   $1F, $00, $0F, $15, $1F, $00                                    ; $A2EA
-    .byte   $11, $11, $11, $2B                                              ; $A2F0
-; (unreferenced: $A2F4-$A308, 21 bytes)
-    .byte   $0A, $15, $10, $00, $0C, $15, $1F, $00, $0A, $15, $28, $00, $0A, $15, $1F, $00; $A2F4
-    .byte   $0A, $15, $1F, $00, $0A                                         ; $A304
-    .byte   $1B, $26                                                        ; $A309
-; (unreferenced: $A30B-$A30B, 1 bytes)
-    .byte   $00                                                             ; $A30B
-    .byte   $0D                                                             ; $A30C
-; (unreferenced: $A30D-$A314, 8 bytes)
-    .byte   $15, $1F, $00, $00, $00, $00, $00, $02                          ; $A30D
-    .byte   $02                                                             ; $A315
-; (unreferenced: $A316-$A337, 34 bytes)
-    .byte   $02, $02, $04, $04, $04, $04, $05, $05, $05, $05, $06, $06, $06, $06, $07, $07; $A316
-    .byte   $07, $07, $09, $17, $24, $00, $0C, $17, $20, $00, $08, $16, $25, $00, $0A, $14; $A326
-    .byte   $1F, $00                                                        ; $A336
-    .byte   $0B                                                             ; $A338
-; (unreferenced: $A339-$A353, 27 bytes)
-    .byte   $18, $23, $2A, $0A, $19, $22, $16                               ; $A339
+EastTextIds:
+    .byte   $21, $21, $21, $21, $21, $21, $21, $21, $0A, $1A, $10, $2A, $0A, $1E, $1F, $00; $A2DC
+    .byte   $0F, $15, $1F, $00, $11, $11, $11, $2B, $0A, $15, $10, $00, $0C, $15, $1F, $00; $A2EC
+    .byte   $0A, $15, $28, $00, $0A, $15, $1F, $00, $0A, $15, $1F, $00, $0A, $1B, $26, $00; $A2FC
+    .byte   $0D, $15, $1F, $00, $00, $00, $00, $00, $02, $02, $02, $02, $04, $04, $04, $04; $A30C
+    .byte   $05, $05, $05, $05, $06, $06, $06, $06, $07, $07, $07, $07, $09, $17, $24, $00; $A31C
+    .byte   $0C, $17, $20, $00, $08, $16, $25, $00, $0A, $14, $1F, $00, $0B, $18, $23, $2A; $A32C
+    .byte   $0A, $19, $22, $16                                              ; $A33C
 
-dat_3_A340:
+EastTextIdsMet:
     .byte   $2D, $2D, $2D, $2D, $2D, $2D, $2D, $2D, $00, $00, $00, $00, $0A, $15, $1F, $00; $A340
-    .byte   $0F, $15, $1F, $00                                              ; $A350
-    .byte   $12, $1D, $29, $2C                                              ; $A354
-; (unreferenced: $A358-$A36C, 21 bytes)
-    .byte   $0A, $15, $10, $00, $0A, $15, $1F, $00, $0A, $15, $1F, $00, $0A, $15, $1F, $00; $A358
-    .byte   $0A, $15, $1F, $00, $0A                                         ; $A368
-    .byte   $1C, $27                                                        ; $A36D
-; (unreferenced: $A36F-$A36F, 1 bytes)
-    .byte   $00                                                             ; $A36F
-    .byte   $0E                                                             ; $A370
-; (unreferenced: $A371-$A378, 8 bytes)
-    .byte   $15, $1F, $00, $01, $01, $01, $01, $03                          ; $A371
-    .byte   $03                                                             ; $A379
-; (unreferenced: $A37A-$A552, 473 bytes)
-    .byte   $03, $03, $13, $13, $13, $13, $E9, $E5, $DE, $DA, $EC, $DE, $F4, $E5, $DE, $ED; $A37A
-    .byte   $FD, $E6, $DE, $F4, $E1, $DE, $E5, $E9, $FD, $F2, $E8, $EE, $CF, $F4, $DC, $E8; $A38A
-    .byte   $E6, $DE, $FD, $E2, $E7, $EC, $E2, $DD, $DE, $CF, $FF, $E2, $F4, $DC, $DA, $E7; $A39A
-    .byte   $FD, $EB, $DE, $EC, $ED, $E8, $EB, $DE, $FD, $F2, $E8, $EE, $EB, $F4, $E5, $E2; $A3AA
-    .byte   $DF, $DE, $CF, $FF, $EC, $ED, $E8, $E9, $F4, $DA, $E7, $DD, $FD, $EB, $DE, $EC; $A3BA
-    .byte   $ED, $F4, $E1, $DE, $EB, $DE, $CF, $FF, $E2, $F4, $DC, $DA, $E7, $F4, $E0, $E2; $A3CA
-    .byte   $EF, $DE, $FD, $F2, $E8, $EE, $F4, $E6, $DA, $E0, $E2, $DC, $CF, $FE, $DC, $E8; $A3DA
-    .byte   $E6, $DE, $F4, $DB, $DA, $DC, $E4, $FD, $DA, $E7, $F2, $ED, $E2, $E6, $DE, $CF; $A3EA
-    .byte   $FF, $E2, $F4, $DA, $E6, $F4, $E6, $EE, $DC, $E1, $FD, $ED, $E8, $E8, $F4, $DB; $A3FA
-    .byte   $EE, $EC, $F2, $FD, $ED, $E8, $F4, $ED, $DA, $E5, $E4, $F4, $ED, $E8, $FD, $DA; $A40A
-    .byte   $F4, $EC, $ED, $EB, $DA, $E7, $E0, $DE, $EB, $CF, $FF, $E1, $DE, $E5, $E5, $E8; $A41A
-    .byte   $36, $FF, $E1, $DE, $E5, $E5, $E8, $FD, $F2, $E8, $EE, $E7, $E0, $FD, $DF, $DE; $A42A
-    .byte   $E5, $E5, $E8, $F0, $CF, $FF, $EC, $E8, $EB, $EB, $F2, $CF, $FD, $E2, $F4, $E4; $A43A
-    .byte   $E7, $E8, $F0, $FD, $E7, $E8, $ED, $E1, $E2, $E7, $E0, $CF, $FF, $DE, $DA, $DC; $A44A
-    .byte   $E1, $F4, $ED, $E8, $F0, $E7, $FD, $E1, $DA, $EC, $F4, $DA, $F4, $F0, $E2, $EC; $A45A
-    .byte   $DE, $FD, $E6, $DA, $E7, $CF, $F4, $E5, $DE, $DA, $EB, $E7, $FD, $DF, $EB, $E8; $A46A
-    .byte   $E6, $F4, $E1, $E2, $E6, $CF, $FF, $DF, $E2, $E7, $DD, $F4, $ED, $E1, $DE, $FD; $A47A
-    .byte   $E1, $DE, $DA, $EB, $ED, $F4, $E2, $E7, $FD, $EC, $E8, $EE, $ED, $E1, $DE, $EB; $A48A
-    .byte   $E7, $FD, $E9, $DA, $EB, $DA, $E9, $DA, $CF, $FF, $E8, $E7, $E5, $F2, $F4, $ED; $A49A
-    .byte   $E1, $DE, $FD, $E1, $DA, $E6, $E6, $DE, $EB, $F4, $DC, $DA, $E7, $FD, $DD, $DE; $A4AA
-    .byte   $EC, $ED, $EB, $E8, $F2, $F4, $DA, $FD, $EB, $E8, $DA, $DD, $DB, $E5, $E8, $DC; $A4BA
-    .byte   $E4, $CF, $FF, $F0, $DE, $E5, $DC, $E8, $E6, $DE, $FD, $F4, $F4, $ED, $E8, $FD; $A4CA
-    .byte   $F4, $EB, $DA, $EE, $EB, $EE, $FF, $E0, $DE, $ED, $F4, $DC, $DA, $E7, $DD, $E5; $A4DA
-    .byte   $DE, $FD, $E2, $E7, $F4, $E9, $DA, $EB, $DA, $E9, $DA, $FD, $E9, $DA, $E5, $DA; $A4EA
-    .byte   $DC, $DE, $CF, $FD, $E0, $E8, $F4, $F0, $DE, $EC, $ED, $CF, $FF, $E0, $E8, $EB; $A4FA
-    .byte   $E2, $F2, $DA, $F4, $E8, $DF, $FD, $ED, $DA, $E7, $ED, $DA, $EB, $E2, $FD, $EC; $A50A
-    .byte   $ED, $E8, $E5, $DE, $F4, $E8, $EE, $EB, $FD, $ED, $EB, $E8, $E9, $E1, $F2, $CF; $A51A
-    .byte   $FF, $F2, $E8, $EE, $F4, $EC, $DA, $EF, $DE, $DD, $FD, $ED, $E1, $DE, $F4, $ED; $A52A
-    .byte   $EB, $E8, $E9, $E1, $F2, $FE, $DC, $E8, $E6, $DE, $F4, $EC, $DE, $DE, $FD, $E6; $A53A
-    .byte   $F2, $F4, $EE, $E7, $DC, $E5, $DE, $CF, $FF                     ; $A54A
-    .byte   $E2, $E7, $F4, $E9, $DA, $EB, $DA, $E9, $DA, $FD, $DD, $DE, $EC, $DE, $EB, $ED; $A553
-    .byte   $F4, $EE, $EC, $DE, $FD, $ED, $E1, $E2, $EC, $F4, $E6, $DA, $E0, $E2, $DC, $FD; $A563
-    .byte   $ED, $E8, $F4, $EC, $EE, $EB, $EF, $E2, $EF, $DE, $FF           ; $A573
-; (unreferenced: $A57E-$A679, 252 bytes)
-    .byte   $E2, $F4, $DC, $DA, $E7, $E7, $E8, $ED, $FD, $E1, $DE, $E5, $E9, $F4, $F2, $E8; $A57E
-    .byte   $EE, $FD, $DA, $E7, $F2, $E6, $E8, $EB, $DE, $CF, $FD, $E0, $E8, $F4, $E7, $E8; $A58E
-    .byte   $F0, $CF, $FF, $E1, $DA, $E6, $E6, $DE, $EB, $CF, $CF, $CF, $FE, $EC, $E9, $DE; $A59E
-    .byte   $DC, $ED, $DA, $DC, $E5, $DE, $FD, $EB, $E8, $DC, $E4, $CF, $CF, $CF, $FD, $DD; $A5AE
-    .byte   $DE, $DA, $ED, $E1, $F4, $E6, $ED, $E7, $CF, $FF, $DD, $E8, $F4, $E7, $E8, $ED; $A5BE
-    .byte   $F4, $E0, $E8, $FD, $EC, $E8, $EE, $ED, $E1, $FD, $F0, $E2, $ED, $E1, $E8, $EE; $A5CE
-    .byte   $ED, $F4, $DA, $FD, $DC, $DA, $E7, $DD, $E5, $DE, $CF, $FF, $DF, $E2, $E7, $DD; $A5DE
-    .byte   $F4, $E6, $DA, $E0, $E2, $DC, $FD, $E2, $E7, $F4, $DA, $F4, $DC, $DA, $EF, $DE; $A5EE
-    .byte   $FD, $EC, $E8, $EE, $ED, $E1, $F4, $E8, $DF, $FD, $ED, $E1, $DE, $F4, $DC, $DA; $A5FE
-    .byte   $EC, $ED, $E5, $DE, $CF, $FF, $ED, $E8, $F0, $E7, $FD, $F4, $E8, $DF, $FD, $EB; $A60E
-    .byte   $EE, $ED, $E8, $FF, $E2, $F4, $DF, $E8, $EE, $E7, $DD, $F4, $DA, $FD, $E6, $E2; $A61E
-    .byte   $EB, $EB, $E8, $EB, $FD, $EE, $E7, $DD, $DE, $EB, $F4, $ED, $E1, $DE, $FD, $ED; $A62E
-    .byte   $DA, $DB, $E5, $DE, $CF, $FF, $E2, $F4, $E5, $E8, $EC, $ED, $FD, $E6, $F2, $F4; $A63E
-    .byte   $E6, $E2, $EB, $EB, $E8, $EB, $CF, $FF, $E8, $E1, $36, $F4, $F2, $E8, $EE, $FD; $A64E
-    .byte   $DF, $E8, $EE, $E7, $DD, $F4, $E6, $F2, $FD, $E6, $E2, $EB, $EB, $E8, $EB, $36; $A65E
-    .byte   $FD, $DF, $E8, $E5, $E5, $E8, $F0, $F4, $E6, $DE, $CF, $FF      ; $A66E
-    .byte   $F0, $E2, $ED, $E1, $F4, $ED, $E1, $E2, $EC, $FD, $F2, $E8, $EE, $F4, $DC, $DA; $A67A
-    .byte   $E7, $FD, $E3, $EE, $E6, $E9, $F4, $EF, $DE, $EB, $F2, $FD, $E1, $E2, $E0, $E1; $A68A
-    .byte   $CF, $FF                                                        ; $A69A
-; (unreferenced: $A69C-$A7D8, 317 bytes)
-    .byte   $E2, $F4, $DA, $E6, $FD, $DE, $EB, $EB, $E8, $EB, $CF, $FF, $EC, $E8, $EE, $ED; $A69C
-    .byte   $E1, $F4, $E8, $DF, $FD, $E4, $E2, $E7, $E0, $EC, $F4, $ED, $E8, $E6, $DB, $FD; $A6AC
-    .byte   $E2, $E7, $F4, $E6, $E2, $DD, $E8, $F4, $E2, $EC, $FD, $DA, $F4, $ED, $EE, $E7; $A6BC
-    .byte   $E7, $DE, $E5, $CF, $FF, $E2, $E7, $F4, $E6, $E2, $DD, $E8, $EB, $E8, $FD, $EC; $A6CC
-    .byte   $F0, $DA, $E6, $E9, $F4, $DF, $E2, $E7, $DD, $FD, $DA, $F4, $E1, $DA, $E7, $DD; $A6DC
-    .byte   $F2, $FD, $E0, $E5, $E8, $EF, $DE, $CF, $FF, $DE, $F2, $DE, $EC, $F4, $E8, $DF; $A6EC
-    .byte   $FD, $E0, $DA, $E7, $E8, $E7, $F4, $DA, $EB, $DE, $FD, $DE, $EF, $DE, $EB, $F2; $A6FC
-    .byte   $F0, $E1, $DE, $EB, $DE, $FD, $DB, $DE, $F4, $DC, $DA, $EB, $DE, $DF, $EE, $E5; $A70C
-    .byte   $FF, $F0, $DA, $ED, $DE, $EB, $F4, $ED, $E8, $F0, $E7, $FD, $F4, $F4, $F4, $F4; $A71C
-    .byte   $E8, $DF, $FD, $F4, $F4, $EC, $DA, $EB, $E2, $DA, $FF, $E2, $DF, $F4, $DA, $E5; $A72C
-    .byte   $E5, $FD, $DE, $E5, $EC, $DE, $F4, $DF, $DA, $E2, $E5, $EC, $FD, $EE, $EC, $DE; $A73C
-    .byte   $F4, $DF, $E2, $EB, $DE, $CF, $FF, $E7, $E8, $ED, $E1, $E2, $E7, $E0, $CF, $FF; $A74C
-    .byte   $EB, $DE, $ED, $EE, $EB, $E7, $F4, $ED, $E1, $DE, $FD, $DC, $EB, $F2, $EC, $ED; $A75C
-    .byte   $DA, $E5, $F4, $ED, $E8, $FD, $ED, $E1, $DE, $F4, $E9, $DA, $E5, $DA, $DC, $DE; $A76C
-    .byte   $FD, $E2, $E7, $F4, $E9, $DA, $EB, $DA, $E9, $DA, $CF, $FF, $EE, $EC, $DE, $F4; $A77C
-    .byte   $E4, $DE, $F2, $EC, $FD, $E2, $E7, $F4, $E9, $DA, $E5, $DA, $DC, $DE, $EC, $FD; $A78C
-    .byte   $ED, $E1, $DE, $F2, $F4, $DA, $EB, $DE, $FD, $DF, $E8, $EE, $E7, $DD, $F4, $E2; $A79C
-    .byte   $E7, $CF, $FF, $ED, $DA, $E5, $E4, $F4, $F0, $E2, $ED, $E1, $FD, $E6, $F2, $F4; $A7AC
-    .byte   $DF, $DA, $ED, $E1, $DE, $EB, $FD, $DB, $DE, $DF, $E8, $EB, $DE, $F4, $F2, $E8; $A7BC
-    .byte   $EE, $FD, $E5, $DE, $DA, $EF, $DE, $F4, $ED, $E8, $F0, $E7, $FF ; $A7CC
-    .byte   $EE, $EC, $DE, $F4, $ED, $E1, $E2, $EC, $FD, $E6, $DA, $E0, $E2, $DC, $F4, $ED; $A7D9
-    .byte   $E8, $FD, $EB, $DE, $EC, $ED, $E8, $EB, $DE, $FD, $F2, $E8, $EE, $EB, $F4, $E5; $A7E9
-    .byte   $E2, $DF, $DE, $CF, $FF                                         ; $A7F9
-; (unreferenced: $A7FE-$A822, 37 bytes)
-    .byte   $E8, $E7, $E5, $F2, $F4, $ED, $E8, $F0, $E7, $FD, $DF, $E8, $E5, $E4, $F4, $E6; $A7FE
-    .byte   $DA, $F2, $FD, $DC, $EB, $E8, $EC, $EC, $F4, $ED, $E1, $E2, $EC, $FD, $EB, $E2; $A80E
-    .byte   $EF, $DE, $EB, $36, $FF                                         ; $A81E
-    .byte   $F2, $E8, $EE, $F4, $E4, $E7, $E8, $F0, $FD, $DB, $DA, $E0, $EE, $34, $F4, $ED; $A823
-    .byte   $E1, $DE, $E7, $FD, $E2, $F4, $DC, $DA, $E7, $F4, $E1, $DE, $E5, $E9, $FD, $F2; $A833
-    .byte   $E8, $EE, $F4, $DC, $EB, $E8, $EC, $EC, $CF, $FF                ; $A843
-; (unreferenced: $A84D-$A978, 300 bytes)
-    .byte   $E7, $E8, $F4, $E8, $E7, $DE, $F4, $E2, $EC, $FD, $E1, $DE, $EB, $DE, $F4, $DB; $A84D
-    .byte   $EE, $ED, $F4, $DA, $FD, $DC, $E1, $EE, $EB, $DC, $E1, $DB, $DE, $E5, $E5, $FD; $A85D
-    .byte   $F0, $E2, $E5, $E5, $F4, $EB, $E2, $E7, $E0, $CF, $FF, $ED, $E1, $DE, $F4, $E2; $A86D
-    .byte   $EC, $E5, $DA, $E7, $DD, $FD, $E9, $DA, $E5, $DA, $DC, $DE, $F4, $E2, $E7, $FD; $A87D
-    .byte   $ED, $E1, $DE, $F4, $EC, $E8, $EE, $ED, $E1, $FD, $E1, $DA, $EC, $F4, $DA, $F4; $A88D
-    .byte   $EB, $DA, $DF, $ED, $FF, $DF, $E2, $E7, $DD, $F4, $E6, $DA, $E0, $E2, $DC, $FD; $A89D
-    .byte   $E2, $E7, $F4, $DA, $F4, $DC, $DA, $EF, $DE, $FD, $E2, $E7, $F4, $E6, $E8, $EB; $A8AD
-    .byte   $EE, $E0, $DE, $FD, $EC, $F0, $DA, $E6, $E9, $CF, $FF, $E1, $DA, $EB, $DB, $E8; $A8BD
-    .byte   $EB, $FD, $F4, $ED, $E8, $F0, $E7, $FD, $F4, $F4, $E8, $DF, $FD, $F4, $E6, $E2; $A8CD
-    .byte   $DD, $E8, $FF, $ED, $E1, $DE, $F4, $DD, $E8, $E8, $EB, $FD, $F0, $E2, $E5, $E5; $A8DD
-    .byte   $F4, $E7, $E8, $ED, $FD, $E8, $E9, $DE, $E7, $CF, $F4, $E2, $ED, $EC, $FD, $EF; $A8ED
-    .byte   $DE, $EB, $F2, $F4, $EA, $EE, $E2, $DE, $ED, $FF, $E9, $E5, $DE, $DA, $EC, $DE; $A8FD
-    .byte   $CF, $F4, $E6, $F2, $FD, $DD, $DA, $EE, $E0, $E1, $ED, $DE, $EB, $FD, $E2, $EC; $A90D
-    .byte   $F4, $EC, $E2, $DC, $E4, $CF, $FD, $E1, $DE, $E5, $E9, $F4, $E1, $DE, $EB, $36; $A91D
-    .byte   $FF, $ED, $E1, $DE, $F4, $F0, $DA, $ED, $DE, $EB, $FD, $E8, $DF, $F4, $E5, $E2; $A92D
-    .byte   $DF, $DE, $36, $FD, $EA, $EE, $E2, $DC, $E4, $F4, $DC, $E8, $E6, $DE, $FD, $F0; $A93D
-    .byte   $E2, $ED, $E1, $F4, $E6, $DE, $CF, $FF, $DA, $EC, $E4, $F4, $DE, $EB, $EB, $E8; $A94D
-    .byte   $EB, $FD, $E8, $DF, $F4, $EB, $EE, $ED, $E8, $FD, $DA, $DB, $E8, $EE, $ED, $F4; $A95D
-    .byte   $ED, $E1, $DE, $FD, $E9, $DA, $E5, $DA, $DC, $DE, $CF, $FF      ; $A96D
-    .byte   $ED, $E1, $E2, $EC, $F4, $E6, $DA, $E0, $E2, $DC, $FD, $F0, $E8, $EB, $DD, $F4; $A979
-    .byte   $F0, $E2, $E5, $E5, $FD, $E0, $E2, $EF, $DE, $F4, $F2, $E8, $EE, $FD, $E9, $E8; $A989
-    .byte   $F0, $DE, $EB, $CF, $FF, $F0, $E1, $DE, $E7, $F4, $F2, $E8, $EE, $FD, $E3, $EE; $A999
-    .byte   $E6, $E9, $F4, $E9, $EB, $DE, $EC, $EC, $FD, $DD, $E8, $F0, $E7, $F0, $DA, $EB; $A9A9
-    .byte   $DD, $FD, $ED, $E8, $F4, $EC, $ED, $DA, $DB, $CF, $FF           ; $A9B9
-; (unreferenced: $A9C4-$AC12, 591 bytes)
-    .byte   $DB, $DA, $E0, $EE, $F4, $E2, $EC, $F4, $E6, $F2, $FD, $E7, $DA, $E6, $DE, $CF; $A9C4
-    .byte   $F4, $EC, $E1, $E8, $F0, $FD, $E6, $F2, $F4, $E7, $E8, $ED, $DE, $F4, $ED, $E8; $A9D4
-    .byte   $FD, $EB, $E2, $EF, $DE, $EB, $F4, $E6, $DA, $E7, $CF, $FF, $F3, $F3, $F3, $CF; $A9E4
-    .byte   $CF, $CF, $FF, $E5, $DE, $ED, $F4, $E6, $DE, $F4, $DB, $DE, $36, $FD, $E6, $DA; $A9F4
-    .byte   $EC, $ED, $DE, $EB, $F4, $E2, $EC, $FD, $E2, $E7, $F4, $F0, $E8, $E8, $DD, $EC; $AA04
-    .byte   $FD, $E7, $F4, $E8, $DF, $F4, $EB, $E2, $EF, $DE, $EB, $FF, $ED, $E1, $E2, $EC; $AA14
-    .byte   $F4, $E2, $EC, $FD, $E4, $E2, $E7, $E0, $EC, $F4, $ED, $E8, $E6, $DB, $FF, $EC; $AA24
-    .byte   $ED, $E8, $E9, $F4, $DB, $F2, $FD, $DF, $E8, $EB, $F4, $DA, $F0, $E1, $E2, $E5; $AA34
-    .byte   $DE, $FF, $EB, $DE, $EF, $E2, $EF, $DE, $DD, $36, $FF, $EB, $DE, $EC, $ED, $F4; $AA44
-    .byte   $E1, $DE, $EB, $DE, $CF, $FF, $E1, $E8, $F0, $F4, $DA, $DB, $E8, $EE, $ED, $FD; $AA54
-    .byte   $ED, $E1, $DA, $ED, $34, $F4, $E2, $ED, $EC, $FD, $E6, $F2, $F4, $EC, $E9, $DE; $AA64
-    .byte   $DC, $E2, $DA, $E5, $FD, $E6, $DE, $DD, $E2, $DC, $E2, $E7, $DE, $CF, $FF, $E2; $AA74
-    .byte   $F4, $E4, $E7, $E8, $F0, $FD, $E7, $E8, $ED, $E1, $E2, $E7, $E0, $CF, $FF, $E9; $AA84
-    .byte   $E5, $DE, $DA, $EC, $DE, $FD, $EC, $DA, $EF, $DE, $F4, $E8, $EE, $EB, $FD, $ED; $AA94
-    .byte   $E8, $F0, $E7, $36, $FF, $F2, $E8, $EE, $F4, $E6, $EE, $EC, $ED, $FD, $EC, $DA; $AAA4
-    .byte   $EF, $DE, $FD, $E1, $F2, $EB, $EE, $E5, $DE, $36, $FF, $E2, $F4, $DC, $DA, $E7; $AAB4
-    .byte   $F4, $E7, $E8, $ED, $FD, $E1, $DE, $E5, $E9, $F4, $F2, $E8, $EE, $CF, $FF, $ED; $AAC4
-    .byte   $E1, $DE, $F4, $EB, $E2, $EF, $DE, $EB, $FD, $DD, $DE, $EF, $E2, $E5, $F4, $DE; $AAD4
-    .byte   $DA, $ED, $EC, $FD, $ED, $E1, $E8, $EC, $DE, $F4, $F0, $E1, $E8, $FD, $DA, $EB; $AAE4
-    .byte   $DE, $F4, $F0, $DE, $DA, $E4, $CF, $FF, $E3, $EE, $E6, $E9, $F4, $E2, $E7, $F4; $AAF4
-    .byte   $DA, $FD, $E1, $E8, $E5, $DE, $F4, $E2, $E7, $FD, $ED, $E1, $DE, $F4, $E9, $DA; $AB04
-    .byte   $E5, $DA, $DC, $DE, $FD, $E2, $DF, $F4, $F2, $E8, $EE, $F4, $E0, $E8, $CF, $FF; $AB14
-    .byte   $F0, $DE, $E5, $DC, $E8, $E6, $DE, $FD, $F4, $F4, $ED, $E8, $FD, $E7, $DA, $DB; $AB24
-    .byte   $E8, $E8, $EB, $EE, $FF, $F0, $DA, $E7, $ED, $F4, $ED, $E8, $FD, $E0, $DE, $ED; $AB34
-    .byte   $F4, $EC, $E8, $E6, $DE, $FD, $F0, $DA, $ED, $DE, $EB, $34, $FF, $EC, $DE, $DE; $AB44
-    .byte   $F4, $DA, $F4, $E6, $DA, $E7, $FD, $E2, $E7, $F4, $DD, $DA, $EB, $EE, $E7, $E2; $AB54
-    .byte   $DA, $FD, $DB, $DE, $DF, $E8, $EB, $DE, $F4, $ED, $E1, $DE, $FD, $E2, $EC, $E5; $AB64
-    .byte   $DA, $E7, $DD, $EC, $CF, $FF, $E2, $F4, $DA, $E6, $FD, $ED, $E1, $E2, $EB, $EC; $AB74
-    .byte   $ED, $F2, $CF, $FF, $F2, $E8, $EE, $F4, $E1, $DA, $EF, $DE, $FD, $F0, $DA, $ED; $AB84
-    .byte   $DE, $EB, $CF, $FD, $DC, $E8, $E6, $DE, $F4, $ED, $E8, $FD, $E6, $F2, $F4, $E1; $AB94
-    .byte   $E8, $EE, $EC, $DE, $CF, $FF, $F0, $E2, $ED, $E1, $F4, $DB, $E8, $E8, $ED, $EC; $ABA4
-    .byte   $FD, $E2, $F4, $DC, $E8, $EE, $E5, $DD, $FD, $F0, $DA, $E5, $E4, $F4, $E8, $E7; $ABB4
-    .byte   $FD, $ED, $E1, $DE, $F4, $F0, $DA, $ED, $DE, $EB, $CF, $FF, $DE, $DA, $EC, $ED; $ABC4
-    .byte   $F4, $E8, $DF, $FD, $ED, $EB, $E2, $E9, $E5, $DE, $F4, $DE, $F2, $DE, $FD, $EB; $ABD4
-    .byte   $E8, $DC, $E4, $F4, $DA, $ED, $FD, $EC, $DE, $DA, $EC, $E1, $E8, $EB, $DE, $CF; $ABE4
-    .byte   $FF, $DC, $E8, $E6, $DE, $F4, $DB, $DA, $DC, $E4, $FD, $F0, $E1, $DE, $E7, $F4; $ABF4
-    .byte   $F2, $E8, $EE, $FD, $DA, $EB, $DE, $F4, $EB, $DE, $DA, $DD, $F2, $CF, $FF; $AC04
-    .byte   $ED, $E1, $E2, $EC, $F4, $E6, $DA, $E0, $E2, $DC, $FD, $F0, $E2, $E5, $E5, $F4; $AC13
-    .byte   $E6, $DA, $E4, $DE, $FD, $F2, $E8, $EE, $EB, $F4, $EC, $F0, $E8, $EB, $DD, $FD; $AC23
-    .byte   $EC, $E1, $E8, $E8, $ED, $F4, $DF, $E2, $EB, $DE, $FF           ; $AC33
-; (unreferenced: $AC3E-$AD99, 348 bytes)
-    .byte   $F2, $E8, $EE, $F4, $E4, $E7, $E8, $F0, $FD, $DA, $E5, $E5, $F4, $E2, $F4, $DC; $AC3E
-    .byte   $DA, $E7, $FD, $ED, $DE, $DA, $DC, $E1, $F4, $F2, $E8, $EE, $CF, $FD, $E0, $E8; $AC4E
-    .byte   $CF, $FF, $ED, $E1, $DE, $F4, $DD, $DE, $EF, $E2, $E5, $FD, $DD, $E8, $DE, $EC; $AC5E
-    .byte   $F4, $E7, $E8, $ED, $FD, $E5, $E2, $E4, $DE, $F4, $E7, $E8, $E2, $EC, $DE, $FF; $AC6E
-    .byte   $DA, $F4, $E9, $E8, $F0, $DE, $EB, $DF, $EE, $E5, $FD, $E4, $E7, $E2, $E0, $E1; $AC7E
-    .byte   $ED, $FD, $E5, $E2, $EF, $DE, $EC, $F4, $E2, $E7, $FD, $ED, $E1, $E2, $EC, $F4; $AC8E
-    .byte   $ED, $E8, $F0, $E7, $CF, $FF, $E6, $DA, $E0, $E2, $DC, $F4, $E4, $DE, $F2, $FD; $AC9E
-    .byte   $EB, $DE, $DA, $DD, $EC, $CF, $CF, $CF, $FE, $ED, $EB, $DE, $DA, $EC, $EE, $EB; $ACAE
-    .byte   $DE, $FD, $E8, $DF, $F4, $E4, $DA, $EC, $EE, $ED, $E8, $FF, $ED, $E1, $DE, $F4; $ACBE
-    .byte   $E9, $DA, $E5, $DA, $DC, $DE, $FD, $E1, $DA, $EC, $F4, $DA, $FD, $DF, $DA, $E5; $ACCE
-    .byte   $EC, $DE, $F4, $F0, $DA, $E5, $E5, $FF, $E6, $E8, $EE, $E7, $ED, $DA, $E2, $E7; $ACDE
-    .byte   $FD, $F4, $ED, $E8, $F0, $E7, $F4, $E8, $DF, $FD, $F4, $DD, $DA, $EB, $EE, $E7; $ACEE
-    .byte   $E2, $DA, $FF, $E2, $ED, $F4, $E2, $EC, $F4, $EC, $DA, $E2, $DD, $FD, $ED, $E1; $ACFE
-    .byte   $DE, $F4, $DE, $DA, $EC, $ED, $FD, $E8, $DF, $F4, $E7, $DA, $DB, $E8, $E8, $EB; $AD0E
-    .byte   $EE, $FD, $E1, $DA, $EC, $CF, $CF, $CF, $FF, $ED, $E1, $DE, $EB, $DE, $F4, $E2; $AD1E
-    .byte   $EC, $FD, $EC, $E8, $E6, $DE, $E8, $E7, $DE, $FD, $DB, $DE, $E1, $E2, $E7, $DD; $AD2E
-    .byte   $F4, $ED, $E1, $DE, $FD, $DD, $E8, $E8, $EB, $36, $FF, $EB, $DE, $EC, $DC, $EE; $AD3E
-    .byte   $DE, $F4, $ED, $E1, $DE, $FD, $E4, $E2, $DD, $E7, $DA, $E9, $E9, $DE, $DD, $FD; $AD4E
-    .byte   $DC, $E1, $E2, $E5, $DD, $F4, $E8, $E7, $FD, $ED, $E1, $DE, $F4, $E2, $EC, $E5; $AD5E
-    .byte   $DA, $E7, $DD, $FF, $F2, $E8, $EE, $F4, $DA, $EB, $DE, $F4, $DA, $FD, $E1, $DE; $AD6E
-    .byte   $EB, $E8, $F4, $DF, $E8, $EB, $FD, $EC, $DA, $EF, $E2, $E7, $E0, $F4, $E6, $F2; $AD7E
-    .byte   $FD, $DC, $E1, $E2, $E5, $DD, $CF, $DC, $E8, $E6, $DE, $FF      ; $AD8E
-    .byte   $ED, $E1, $E2, $EC, $F4, $E6, $DA, $E0, $E2, $DC, $FD, $F0, $E2, $E5, $E5, $FD; $AD9A
-    .byte   $EC, $ED, $EB, $DE, $E7, $E0, $ED, $E1, $DE, $E7, $FD, $DA, $F4, $EC, $E1, $E2; $ADAA
-    .byte   $DE, $E5, $DD, $CF, $FF, $F0, $E1, $DE, $E7, $F4, $F2, $E8, $EE, $FD, $E3, $EE; $ADBA
-    .byte   $E6, $E9, $F4, $E9, $EB, $DE, $EC, $EC, $FD, $EE, $E9, $F4, $ED, $E8, $F4, $EC; $ADCA
-    .byte   $ED, $DA, $DB, $CF, $FF                                         ; $ADDA
-; (unreferenced: $ADDF-$AF0E, 304 bytes)
-    .byte   $F0, $DE, $F4, $E1, $DA, $DD, $FD, $ED, $E8, $F4, $DF, $E5, $DE, $DE, $FD, $E4; $ADDF
-    .byte   $DA, $EC, $EE, $ED, $E8, $CF, $FF, $ED, $E1, $DE, $F4, $E8, $E5, $DD, $FD, $E6; $ADEF
-    .byte   $DA, $E7, $F4, $F0, $E1, $E8, $FD, $EB, $DE, $E6, $DA, $E2, $E7, $EC, $FD, $E1; $ADFF
-    .byte   $DA, $EC, $F4, $E6, $DA, $E0, $E2, $DC, $CF, $FF, $32, $32, $32, $32, $32, $FF; $AE0F
-    .byte   $E1, $E2, $DD, $DD, $DE, $E7, $FD, $F4, $ED, $E8, $F0, $E7, $FD, $F4, $F4, $E8; $AE1F
-    .byte   $DF, $FD, $E4, $DA, $EC, $EE, $ED, $E8, $FF, $E5, $E8, $E8, $E4, $EC, $F4, $E5; $AE2F
-    .byte   $E2, $E4, $DE, $FD, $E2, $F4, $DC, $DA, $E7, $F4, $E0, $DE, $ED, $FD, $E2, $E7; $AE3F
-    .byte   $F4, $ED, $E1, $DE, $FD, $DF, $E2, $EB, $DE, $E9, $E5, $DA, $DC, $DE, $CF, $FF; $AE4F
-    .byte   $DC, $DA, $E5, $E5, $F4, $DF, $E8, $EB, $FD, $E1, $DE, $E5, $E9, $F4, $DA, $ED; $AE5F
-    .byte   $FD, $ED, $E1, $DE, $F4, $ED, $E1, $EB, $DE, $DE, $FD, $DE, $F2, $DE, $F4, $EB; $AE6F
-    .byte   $E8, $DC, $E4, $EC, $CF, $FF, $ED, $E1, $DE, $F4, $E1, $E8, $E5, $DE, $FD, $E2; $AE7F
-    .byte   $E7, $F4, $E9, $DA, $E5, $DA, $DC, $DE, $FD, $E2, $EC, $F4, $DE, $E7, $DD, $E5; $AE8F
-    .byte   $DE, $EC, $EC, $FD, $ED, $EB, $DA, $E9, $CF, $FF, $DD, $E8, $F4, $F2, $E8, $EE; $AE9F
-    .byte   $FD, $E1, $DA, $EF, $DE, $F4, $ED, $E1, $DE, $FD, $D7, $F4, $E6, $DA, $E0, $E2; $AEAF
-    .byte   $DC, $FD, $DC, $E8, $E7, $ED, $DA, $E2, $E7, $DE, $EB, $EC, $FF, $F2, $E8, $EE; $AEBF
-    .byte   $FD, $DD, $DE, $EC, $DE, $EB, $EF, $DE, $FD, $E6, $F2, $F4, $E1, $DE, $E5, $E9; $AECF
-    .byte   $CF, $FD, $DF, $E8, $E5, $E5, $E8, $F0, $F4, $E6, $DE, $CF, $FF, $ED, $E1, $DE; $AEDF
-    .byte   $EB, $DE, $F4, $E2, $EC, $FD, $DA, $F4, $EC, $DE, $DC, $EB, $DE, $ED, $FD, $DA; $AEEF
-    .byte   $ED, $F4, $DE, $DD, $E0, $DE, $FD, $E8, $DF, $F4, $ED, $E8, $F0, $E7, $CF, $FF; $AEFF
-    .byte   $EB, $DE, $E6, $DE, $E6, $DB, $DE, $EB, $FD, $ED, $E1, $DE, $F4, $E6, $DA, $E0; $AF0F
-    .byte   $E2, $DC, $FD, $F0, $E8, $EB, $DD, $CF, $FF                     ; $AF1F
-; (unreferenced: $AF28-$AF70, 73 bytes)
-    .byte   $E4, $DA, $EC, $EE, $ED, $E8, $CF, $FD, $EC, $ED, $EB, $DA, $E7, $E0, $DE, $CF; $AF28
-    .byte   $CF, $CF, $FE, $E2, $ED, $F4, $E2, $EC, $FD, $DD, $DE, $EC, $DE, $EB, $ED, $DE; $AF38
-    .byte   $DD, $CF, $FF, $ED, $E1, $DE, $F4, $ED, $E8, $F0, $E7, $FD, $E2, $EC, $F4, $DD; $AF48
-    .byte   $DE, $DA, $DD, $CF, $FE, $E5, $E8, $E8, $E4, $F4, $DE, $DA, $EC, $ED, $FD, $E2; $AF58
-    .byte   $E7, $F4, $F0, $E8, $E8, $DD, $EC, $CF, $FF                     ; $AF68
-    .byte   $E2, $F4, $DC, $DA, $E7, $F4, $E0, $E2, $EF, $DE, $FD, $F2, $E8, $EE, $F4, $E6; $AF71
-    .byte   $E8, $EC, $ED, $FD, $E9, $E8, $F0, $DE, $EB, $DF, $EE, $E5, $FD, $E6, $DA, $E0; $AF81
-    .byte   $E2, $DC, $CF, $FF                                              ; $AF91
-; (unreferenced: $AF95-$AFBD, 41 bytes)
-    .byte   $F2, $E8, $EE, $F4, $DA, $EB, $DE, $FD, $E9, $DE, $EB, $EC, $E2, $EC, $ED, $DE; $AF95
-    .byte   $E7, $ED, $FD, $DF, $E2, $E7, $DD, $F4, $E1, $DE, $DA, $EB, $ED, $FD, $E8, $EF; $AFA5
-    .byte   $DE, $EB, $F4, $E8, $DC, $DE, $DA, $E7, $FF                     ; $AFB5
-    .byte   $80, $A3, $A5, $A3                                              ; $AFBE
-; (unreferenced: $AFC2-$AFD9, 24 bytes)
-    .byte   $BE, $A3, $D2, $A3, $FB, $A3, $25, $A4, $2C, $A4, $40, $A4, $57, $A4, $81, $A4; $AFC2
-    .byte   $A4, $A4, $CD, $A4, $E1, $A4, $07, $A5                          ; $AFD2
-    .byte   $2B, $A5, $53, $A5                                              ; $AFDA
-; (unreferenced: $AFDE-$AFE7, 10 bytes)
-    .byte   $7E, $A5, $A1, $A5, $C8, $A5, $EA, $A5, $14, $A6                ; $AFDE
-    .byte   $22, $A6                                                        ; $AFE8
-; (unreferenced: $AFEA-$AFEB, 2 bytes)
-    .byte   $44, $A6                                                        ; $AFEA
-    .byte   $56, $A6, $7A, $A6                                              ; $AFEC
-; (unreferenced: $AFF0-$B001, 18 bytes)
-    .byte   $9C, $A6, $A8, $A6, $D1, $A6, $F5, $A6, $1D, $A7, $37, $A7, $53, $A7, $5C, $A7; $AFF0
-    .byte   $88, $A7                                                        ; $B000
-    .byte   $AF, $A7, $D9, $A7                                              ; $B002
-; (unreferenced: $B006-$B007, 2 bytes)
-    .byte   $FE, $A7                                                        ; $B006
-    .byte   $23, $A8                                                        ; $B008
-; (unreferenced: $B00A-$B015, 12 bytes)
-    .byte   $4D, $A8, $78, $A8, $A2, $A8, $C8, $A8, $E0, $A8, $07, $A9      ; $B00A
-    .byte   $2E, $A9                                                        ; $B016
-; (unreferenced: $B018-$B019, 2 bytes)
-    .byte   $55, $A9                                                        ; $B018
-    .byte   $79, $A9, $9E, $A9, $C4, $A9                                    ; $B01A
-; (unreferenced: $B020-$B029, 10 bytes)
-    .byte   $F0, $A9, $F7, $A9, $20, $AA, $33, $AA, $46, $AA                ; $B020
-    .byte   $4F, $AA, $5A, $AA                                              ; $B02A
-; (unreferenced: $B02E-$B03B, 14 bytes)
-    .byte   $83, $AA, $93, $AA, $A9, $AA, $BF, $AA, $D3, $AA, $FC, $AA, $24, $AB; $B02E
-    .byte   $39, $AB                                                        ; $B03C
-; (unreferenced: $B03E-$B041, 4 bytes)
-    .byte   $51, $AB, $7A, $AB                                              ; $B03E
-    .byte   $88, $AB                                                        ; $B042
-; (unreferenced: $B044-$B049, 6 bytes)
-    .byte   $AA, $AB, $D0, $AB, $F5, $AB                                    ; $B044
-    .byte   $13, $AC                                                        ; $B04A
-; (unreferenced: $B04C-$B05D, 18 bytes)
-    .byte   $3E, $AC, $60, $AC, $7E, $AC, $A4, $AC, $CA, $AC, $E6, $AC, $01, $AD, $27, $AD; $B04C
-    .byte   $49, $AD                                                        ; $B05C
-    .byte   $72, $AD, $9A, $AD, $BF, $AD                                    ; $B05E
-; (unreferenced: $B064-$B073, 16 bytes)
-    .byte   $DF, $AD, $F6, $AD, $19, $AE, $1F, $AE, $38, $AE, $5F, $AE, $85, $AE, $A9, $AE; $B064
-    .byte   $CC, $AE                                                        ; $B074
-; (unreferenced: $B076-$B077, 2 bytes)
-    .byte   $EC, $AE                                                        ; $B076
-    .byte   $0F, $AF                                                        ; $B078
-; (unreferenced: $B07A-$B07D, 4 bytes)
-    .byte   $28, $AF, $4B, $AF                                              ; $B07A
-    .byte   $71, $AF                                                        ; $B07E
-; (unreferenced: $B080-$B081, 2 bytes)
-    .byte   $95, $AF                                                        ; $B080
+    .byte   $0F, $15, $1F, $00, $12, $1D, $29, $2C, $0A, $15, $10, $00, $0A, $15, $1F, $00; $A350
+    .byte   $0A, $15, $1F, $00, $0A, $15, $1F, $00, $0A, $15, $1F, $00, $0A, $1C, $27, $00; $A360
+    .byte   $0E, $15, $1F, $00, $01, $01, $01, $01, $03, $03, $03, $03, $13, $13, $13, $13; $A370
 
+TownText:
+    .byte   $E9, $E5, $DE, $DA, $EC, $DE, $F4, $E5, $DE, $ED, $FD, $E6, $DE, $F4, $E1, $DE; $A380
+    .byte   $E5, $E9, $FD, $F2, $E8, $EE, $CF, $F4, $DC, $E8, $E6, $DE, $FD, $E2, $E7, $EC; $A390
+    .byte   $E2, $DD, $DE, $CF, $FF, $E2, $F4, $DC, $DA, $E7, $FD, $EB, $DE, $EC, $ED, $E8; $A3A0
+    .byte   $EB, $DE, $FD, $F2, $E8, $EE, $EB, $F4, $E5, $E2, $DF, $DE, $CF, $FF, $EC, $ED; $A3B0
+    .byte   $E8, $E9, $F4, $DA, $E7, $DD, $FD, $EB, $DE, $EC, $ED, $F4, $E1, $DE, $EB, $DE; $A3C0
+    .byte   $CF, $FF, $E2, $F4, $DC, $DA, $E7, $F4, $E0, $E2, $EF, $DE, $FD, $F2, $E8, $EE; $A3D0
+    .byte   $F4, $E6, $DA, $E0, $E2, $DC, $CF, $FE, $DC, $E8, $E6, $DE, $F4, $DB, $DA, $DC; $A3E0
+    .byte   $E4, $FD, $DA, $E7, $F2, $ED, $E2, $E6, $DE, $CF, $FF, $E2, $F4, $DA, $E6, $F4; $A3F0
+    .byte   $E6, $EE, $DC, $E1, $FD, $ED, $E8, $E8, $F4, $DB, $EE, $EC, $F2, $FD, $ED, $E8; $A400
+    .byte   $F4, $ED, $DA, $E5, $E4, $F4, $ED, $E8, $FD, $DA, $F4, $EC, $ED, $EB, $DA, $E7; $A410
+    .byte   $E0, $DE, $EB, $CF, $FF, $E1, $DE, $E5, $E5, $E8, $36, $FF, $E1, $DE, $E5, $E5; $A420
+    .byte   $E8, $FD, $F2, $E8, $EE, $E7, $E0, $FD, $DF, $DE, $E5, $E5, $E8, $F0, $CF, $FF; $A430
+    .byte   $EC, $E8, $EB, $EB, $F2, $CF, $FD, $E2, $F4, $E4, $E7, $E8, $F0, $FD, $E7, $E8; $A440
+    .byte   $ED, $E1, $E2, $E7, $E0, $CF, $FF, $DE, $DA, $DC, $E1, $F4, $ED, $E8, $F0, $E7; $A450
+    .byte   $FD, $E1, $DA, $EC, $F4, $DA, $F4, $F0, $E2, $EC, $DE, $FD, $E6, $DA, $E7, $CF; $A460
+    .byte   $F4, $E5, $DE, $DA, $EB, $E7, $FD, $DF, $EB, $E8, $E6, $F4, $E1, $E2, $E6, $CF; $A470
+    .byte   $FF, $DF, $E2, $E7, $DD, $F4, $ED, $E1, $DE, $FD, $E1, $DE, $DA, $EB, $ED, $F4; $A480
+    .byte   $E2, $E7, $FD, $EC, $E8, $EE, $ED, $E1, $DE, $EB, $E7, $FD, $E9, $DA, $EB, $DA; $A490
+    .byte   $E9, $DA, $CF, $FF, $E8, $E7, $E5, $F2, $F4, $ED, $E1, $DE, $FD, $E1, $DA, $E6; $A4A0
+    .byte   $E6, $DE, $EB, $F4, $DC, $DA, $E7, $FD, $DD, $DE, $EC, $ED, $EB, $E8, $F2, $F4; $A4B0
+    .byte   $DA, $FD, $EB, $E8, $DA, $DD, $DB, $E5, $E8, $DC, $E4, $CF, $FF, $F0, $DE, $E5; $A4C0
+    .byte   $DC, $E8, $E6, $DE, $FD, $F4, $F4, $ED, $E8, $FD, $F4, $EB, $DA, $EE, $EB, $EE; $A4D0
+    .byte   $FF, $E0, $DE, $ED, $F4, $DC, $DA, $E7, $DD, $E5, $DE, $FD, $E2, $E7, $F4, $E9; $A4E0
+    .byte   $DA, $EB, $DA, $E9, $DA, $FD, $E9, $DA, $E5, $DA, $DC, $DE, $CF, $FD, $E0, $E8; $A4F0
+    .byte   $F4, $F0, $DE, $EC, $ED, $CF, $FF, $E0, $E8, $EB, $E2, $F2, $DA, $F4, $E8, $DF; $A500
+    .byte   $FD, $ED, $DA, $E7, $ED, $DA, $EB, $E2, $FD, $EC, $ED, $E8, $E5, $DE, $F4, $E8; $A510
+    .byte   $EE, $EB, $FD, $ED, $EB, $E8, $E9, $E1, $F2, $CF, $FF, $F2, $E8, $EE, $F4, $EC; $A520
+    .byte   $DA, $EF, $DE, $DD, $FD, $ED, $E1, $DE, $F4, $ED, $EB, $E8, $E9, $E1, $F2, $FE; $A530
+    .byte   $DC, $E8, $E6, $DE, $F4, $EC, $DE, $DE, $FD, $E6, $F2, $F4, $EE, $E7, $DC, $E5; $A540
+    .byte   $DE, $CF, $FF, $E2, $E7, $F4, $E9, $DA, $EB, $DA, $E9, $DA, $FD, $DD, $DE, $EC; $A550
+    .byte   $DE, $EB, $ED, $F4, $EE, $EC, $DE, $FD, $ED, $E1, $E2, $EC, $F4, $E6, $DA, $E0; $A560
+    .byte   $E2, $DC, $FD, $ED, $E8, $F4, $EC, $EE, $EB, $EF, $E2, $EF, $DE, $FF, $E2, $F4; $A570
+    .byte   $DC, $DA, $E7, $E7, $E8, $ED, $FD, $E1, $DE, $E5, $E9, $F4, $F2, $E8, $EE, $FD; $A580
+    .byte   $DA, $E7, $F2, $E6, $E8, $EB, $DE, $CF, $FD, $E0, $E8, $F4, $E7, $E8, $F0, $CF; $A590
+    .byte   $FF, $E1, $DA, $E6, $E6, $DE, $EB, $CF, $CF, $CF, $FE, $EC, $E9, $DE, $DC, $ED; $A5A0
+    .byte   $DA, $DC, $E5, $DE, $FD, $EB, $E8, $DC, $E4, $CF, $CF, $CF, $FD, $DD, $DE, $DA; $A5B0
+    .byte   $ED, $E1, $F4, $E6, $ED, $E7, $CF, $FF, $DD, $E8, $F4, $E7, $E8, $ED, $F4, $E0; $A5C0
+    .byte   $E8, $FD, $EC, $E8, $EE, $ED, $E1, $FD, $F0, $E2, $ED, $E1, $E8, $EE, $ED, $F4; $A5D0
+    .byte   $DA, $FD, $DC, $DA, $E7, $DD, $E5, $DE, $CF, $FF, $DF, $E2, $E7, $DD, $F4, $E6; $A5E0
+    .byte   $DA, $E0, $E2, $DC, $FD, $E2, $E7, $F4, $DA, $F4, $DC, $DA, $EF, $DE, $FD, $EC; $A5F0
+    .byte   $E8, $EE, $ED, $E1, $F4, $E8, $DF, $FD, $ED, $E1, $DE, $F4, $DC, $DA, $EC, $ED; $A600
+    .byte   $E5, $DE, $CF, $FF, $ED, $E8, $F0, $E7, $FD, $F4, $E8, $DF, $FD, $EB, $EE, $ED; $A610
+    .byte   $E8, $FF, $E2, $F4, $DF, $E8, $EE, $E7, $DD, $F4, $DA, $FD, $E6, $E2, $EB, $EB; $A620
+    .byte   $E8, $EB, $FD, $EE, $E7, $DD, $DE, $EB, $F4, $ED, $E1, $DE, $FD, $ED, $DA, $DB; $A630
+    .byte   $E5, $DE, $CF, $FF, $E2, $F4, $E5, $E8, $EC, $ED, $FD, $E6, $F2, $F4, $E6, $E2; $A640
+    .byte   $EB, $EB, $E8, $EB, $CF, $FF, $E8, $E1, $36, $F4, $F2, $E8, $EE, $FD, $DF, $E8; $A650
+    .byte   $EE, $E7, $DD, $F4, $E6, $F2, $FD, $E6, $E2, $EB, $EB, $E8, $EB, $36, $FD, $DF; $A660
+    .byte   $E8, $E5, $E5, $E8, $F0, $F4, $E6, $DE, $CF, $FF, $F0, $E2, $ED, $E1, $F4, $ED; $A670
+    .byte   $E1, $E2, $EC, $FD, $F2, $E8, $EE, $F4, $DC, $DA, $E7, $FD, $E3, $EE, $E6, $E9; $A680
+    .byte   $F4, $EF, $DE, $EB, $F2, $FD, $E1, $E2, $E0, $E1, $CF, $FF, $E2, $F4, $DA, $E6; $A690
+    .byte   $FD, $DE, $EB, $EB, $E8, $EB, $CF, $FF, $EC, $E8, $EE, $ED, $E1, $F4, $E8, $DF; $A6A0
+    .byte   $FD, $E4, $E2, $E7, $E0, $EC, $F4, $ED, $E8, $E6, $DB, $FD, $E2, $E7, $F4, $E6; $A6B0
+    .byte   $E2, $DD, $E8, $F4, $E2, $EC, $FD, $DA, $F4, $ED, $EE, $E7, $E7, $DE, $E5, $CF; $A6C0
+    .byte   $FF, $E2, $E7, $F4, $E6, $E2, $DD, $E8, $EB, $E8, $FD, $EC, $F0, $DA, $E6, $E9; $A6D0
+    .byte   $F4, $DF, $E2, $E7, $DD, $FD, $DA, $F4, $E1, $DA, $E7, $DD, $F2, $FD, $E0, $E5; $A6E0
+    .byte   $E8, $EF, $DE, $CF, $FF, $DE, $F2, $DE, $EC, $F4, $E8, $DF, $FD, $E0, $DA, $E7; $A6F0
+    .byte   $E8, $E7, $F4, $DA, $EB, $DE, $FD, $DE, $EF, $DE, $EB, $F2, $F0, $E1, $DE, $EB; $A700
+    .byte   $DE, $FD, $DB, $DE, $F4, $DC, $DA, $EB, $DE, $DF, $EE, $E5, $FF, $F0, $DA, $ED; $A710
+    .byte   $DE, $EB, $F4, $ED, $E8, $F0, $E7, $FD, $F4, $F4, $F4, $F4, $E8, $DF, $FD, $F4; $A720
+    .byte   $F4, $EC, $DA, $EB, $E2, $DA, $FF, $E2, $DF, $F4, $DA, $E5, $E5, $FD, $DE, $E5; $A730
+    .byte   $EC, $DE, $F4, $DF, $DA, $E2, $E5, $EC, $FD, $EE, $EC, $DE, $F4, $DF, $E2, $EB; $A740
+    .byte   $DE, $CF, $FF, $E7, $E8, $ED, $E1, $E2, $E7, $E0, $CF, $FF, $EB, $DE, $ED, $EE; $A750
+    .byte   $EB, $E7, $F4, $ED, $E1, $DE, $FD, $DC, $EB, $F2, $EC, $ED, $DA, $E5, $F4, $ED; $A760
+    .byte   $E8, $FD, $ED, $E1, $DE, $F4, $E9, $DA, $E5, $DA, $DC, $DE, $FD, $E2, $E7, $F4; $A770
+    .byte   $E9, $DA, $EB, $DA, $E9, $DA, $CF, $FF, $EE, $EC, $DE, $F4, $E4, $DE, $F2, $EC; $A780
+    .byte   $FD, $E2, $E7, $F4, $E9, $DA, $E5, $DA, $DC, $DE, $EC, $FD, $ED, $E1, $DE, $F2; $A790
+    .byte   $F4, $DA, $EB, $DE, $FD, $DF, $E8, $EE, $E7, $DD, $F4, $E2, $E7, $CF, $FF, $ED; $A7A0
+    .byte   $DA, $E5, $E4, $F4, $F0, $E2, $ED, $E1, $FD, $E6, $F2, $F4, $DF, $DA, $ED, $E1; $A7B0
+    .byte   $DE, $EB, $FD, $DB, $DE, $DF, $E8, $EB, $DE, $F4, $F2, $E8, $EE, $FD, $E5, $DE; $A7C0
+    .byte   $DA, $EF, $DE, $F4, $ED, $E8, $F0, $E7, $FF, $EE, $EC, $DE, $F4, $ED, $E1, $E2; $A7D0
+    .byte   $EC, $FD, $E6, $DA, $E0, $E2, $DC, $F4, $ED, $E8, $FD, $EB, $DE, $EC, $ED, $E8; $A7E0
+    .byte   $EB, $DE, $FD, $F2, $E8, $EE, $EB, $F4, $E5, $E2, $DF, $DE, $CF, $FF, $E8, $E7; $A7F0
+    .byte   $E5, $F2, $F4, $ED, $E8, $F0, $E7, $FD, $DF, $E8, $E5, $E4, $F4, $E6, $DA, $F2; $A800
+    .byte   $FD, $DC, $EB, $E8, $EC, $EC, $F4, $ED, $E1, $E2, $EC, $FD, $EB, $E2, $EF, $DE; $A810
+    .byte   $EB, $36, $FF, $F2, $E8, $EE, $F4, $E4, $E7, $E8, $F0, $FD, $DB, $DA, $E0, $EE; $A820
+    .byte   $34, $F4, $ED, $E1, $DE, $E7, $FD, $E2, $F4, $DC, $DA, $E7, $F4, $E1, $DE, $E5; $A830
+    .byte   $E9, $FD, $F2, $E8, $EE, $F4, $DC, $EB, $E8, $EC, $EC, $CF, $FF, $E7, $E8, $F4; $A840
+    .byte   $E8, $E7, $DE, $F4, $E2, $EC, $FD, $E1, $DE, $EB, $DE, $F4, $DB, $EE, $ED, $F4; $A850
+    .byte   $DA, $FD, $DC, $E1, $EE, $EB, $DC, $E1, $DB, $DE, $E5, $E5, $FD, $F0, $E2, $E5; $A860
+    .byte   $E5, $F4, $EB, $E2, $E7, $E0, $CF, $FF, $ED, $E1, $DE, $F4, $E2, $EC, $E5, $DA; $A870
+    .byte   $E7, $DD, $FD, $E9, $DA, $E5, $DA, $DC, $DE, $F4, $E2, $E7, $FD, $ED, $E1, $DE; $A880
+    .byte   $F4, $EC, $E8, $EE, $ED, $E1, $FD, $E1, $DA, $EC, $F4, $DA, $F4, $EB, $DA, $DF; $A890
+    .byte   $ED, $FF, $DF, $E2, $E7, $DD, $F4, $E6, $DA, $E0, $E2, $DC, $FD, $E2, $E7, $F4; $A8A0
+    .byte   $DA, $F4, $DC, $DA, $EF, $DE, $FD, $E2, $E7, $F4, $E6, $E8, $EB, $EE, $E0, $DE; $A8B0
+    .byte   $FD, $EC, $F0, $DA, $E6, $E9, $CF, $FF, $E1, $DA, $EB, $DB, $E8, $EB, $FD, $F4; $A8C0
+    .byte   $ED, $E8, $F0, $E7, $FD, $F4, $F4, $E8, $DF, $FD, $F4, $E6, $E2, $DD, $E8, $FF; $A8D0
+    .byte   $ED, $E1, $DE, $F4, $DD, $E8, $E8, $EB, $FD, $F0, $E2, $E5, $E5, $F4, $E7, $E8; $A8E0
+    .byte   $ED, $FD, $E8, $E9, $DE, $E7, $CF, $F4, $E2, $ED, $EC, $FD, $EF, $DE, $EB, $F2; $A8F0
+    .byte   $F4, $EA, $EE, $E2, $DE, $ED, $FF, $E9, $E5, $DE, $DA, $EC, $DE, $CF, $F4, $E6; $A900
+    .byte   $F2, $FD, $DD, $DA, $EE, $E0, $E1, $ED, $DE, $EB, $FD, $E2, $EC, $F4, $EC, $E2; $A910
+    .byte   $DC, $E4, $CF, $FD, $E1, $DE, $E5, $E9, $F4, $E1, $DE, $EB, $36, $FF, $ED, $E1; $A920
+    .byte   $DE, $F4, $F0, $DA, $ED, $DE, $EB, $FD, $E8, $DF, $F4, $E5, $E2, $DF, $DE, $36; $A930
+    .byte   $FD, $EA, $EE, $E2, $DC, $E4, $F4, $DC, $E8, $E6, $DE, $FD, $F0, $E2, $ED, $E1; $A940
+    .byte   $F4, $E6, $DE, $CF, $FF, $DA, $EC, $E4, $F4, $DE, $EB, $EB, $E8, $EB, $FD, $E8; $A950
+    .byte   $DF, $F4, $EB, $EE, $ED, $E8, $FD, $DA, $DB, $E8, $EE, $ED, $F4, $ED, $E1, $DE; $A960
+    .byte   $FD, $E9, $DA, $E5, $DA, $DC, $DE, $CF, $FF, $ED, $E1, $E2, $EC, $F4, $E6, $DA; $A970
+    .byte   $E0, $E2, $DC, $FD, $F0, $E8, $EB, $DD, $F4, $F0, $E2, $E5, $E5, $FD, $E0, $E2; $A980
+    .byte   $EF, $DE, $F4, $F2, $E8, $EE, $FD, $E9, $E8, $F0, $DE, $EB, $CF, $FF, $F0, $E1; $A990
+    .byte   $DE, $E7, $F4, $F2, $E8, $EE, $FD, $E3, $EE, $E6, $E9, $F4, $E9, $EB, $DE, $EC; $A9A0
+    .byte   $EC, $FD, $DD, $E8, $F0, $E7, $F0, $DA, $EB, $DD, $FD, $ED, $E8, $F4, $EC, $ED; $A9B0
+    .byte   $DA, $DB, $CF, $FF, $DB, $DA, $E0, $EE, $F4, $E2, $EC, $F4, $E6, $F2, $FD, $E7; $A9C0
+    .byte   $DA, $E6, $DE, $CF, $F4, $EC, $E1, $E8, $F0, $FD, $E6, $F2, $F4, $E7, $E8, $ED; $A9D0
+    .byte   $DE, $F4, $ED, $E8, $FD, $EB, $E2, $EF, $DE, $EB, $F4, $E6, $DA, $E7, $CF, $FF; $A9E0
+    .byte   $F3, $F3, $F3, $CF, $CF, $CF, $FF, $E5, $DE, $ED, $F4, $E6, $DE, $F4, $DB, $DE; $A9F0
+    .byte   $36, $FD, $E6, $DA, $EC, $ED, $DE, $EB, $F4, $E2, $EC, $FD, $E2, $E7, $F4, $F0; $AA00
+    .byte   $E8, $E8, $DD, $EC, $FD, $E7, $F4, $E8, $DF, $F4, $EB, $E2, $EF, $DE, $EB, $FF; $AA10
+    .byte   $ED, $E1, $E2, $EC, $F4, $E2, $EC, $FD, $E4, $E2, $E7, $E0, $EC, $F4, $ED, $E8; $AA20
+    .byte   $E6, $DB, $FF, $EC, $ED, $E8, $E9, $F4, $DB, $F2, $FD, $DF, $E8, $EB, $F4, $DA; $AA30
+    .byte   $F0, $E1, $E2, $E5, $DE, $FF, $EB, $DE, $EF, $E2, $EF, $DE, $DD, $36, $FF, $EB; $AA40
+    .byte   $DE, $EC, $ED, $F4, $E1, $DE, $EB, $DE, $CF, $FF, $E1, $E8, $F0, $F4, $DA, $DB; $AA50
+    .byte   $E8, $EE, $ED, $FD, $ED, $E1, $DA, $ED, $34, $F4, $E2, $ED, $EC, $FD, $E6, $F2; $AA60
+    .byte   $F4, $EC, $E9, $DE, $DC, $E2, $DA, $E5, $FD, $E6, $DE, $DD, $E2, $DC, $E2, $E7; $AA70
+    .byte   $DE, $CF, $FF, $E2, $F4, $E4, $E7, $E8, $F0, $FD, $E7, $E8, $ED, $E1, $E2, $E7; $AA80
+    .byte   $E0, $CF, $FF, $E9, $E5, $DE, $DA, $EC, $DE, $FD, $EC, $DA, $EF, $DE, $F4, $E8; $AA90
+    .byte   $EE, $EB, $FD, $ED, $E8, $F0, $E7, $36, $FF, $F2, $E8, $EE, $F4, $E6, $EE, $EC; $AAA0
+    .byte   $ED, $FD, $EC, $DA, $EF, $DE, $FD, $E1, $F2, $EB, $EE, $E5, $DE, $36, $FF, $E2; $AAB0
+    .byte   $F4, $DC, $DA, $E7, $F4, $E7, $E8, $ED, $FD, $E1, $DE, $E5, $E9, $F4, $F2, $E8; $AAC0
+    .byte   $EE, $CF, $FF, $ED, $E1, $DE, $F4, $EB, $E2, $EF, $DE, $EB, $FD, $DD, $DE, $EF; $AAD0
+    .byte   $E2, $E5, $F4, $DE, $DA, $ED, $EC, $FD, $ED, $E1, $E8, $EC, $DE, $F4, $F0, $E1; $AAE0
+    .byte   $E8, $FD, $DA, $EB, $DE, $F4, $F0, $DE, $DA, $E4, $CF, $FF, $E3, $EE, $E6, $E9; $AAF0
+    .byte   $F4, $E2, $E7, $F4, $DA, $FD, $E1, $E8, $E5, $DE, $F4, $E2, $E7, $FD, $ED, $E1; $AB00
+    .byte   $DE, $F4, $E9, $DA, $E5, $DA, $DC, $DE, $FD, $E2, $DF, $F4, $F2, $E8, $EE, $F4; $AB10
+    .byte   $E0, $E8, $CF, $FF, $F0, $DE, $E5, $DC, $E8, $E6, $DE, $FD, $F4, $F4, $ED, $E8; $AB20
+    .byte   $FD, $E7, $DA, $DB, $E8, $E8, $EB, $EE, $FF, $F0, $DA, $E7, $ED, $F4, $ED, $E8; $AB30
+    .byte   $FD, $E0, $DE, $ED, $F4, $EC, $E8, $E6, $DE, $FD, $F0, $DA, $ED, $DE, $EB, $34; $AB40
+    .byte   $FF, $EC, $DE, $DE, $F4, $DA, $F4, $E6, $DA, $E7, $FD, $E2, $E7, $F4, $DD, $DA; $AB50
+    .byte   $EB, $EE, $E7, $E2, $DA, $FD, $DB, $DE, $DF, $E8, $EB, $DE, $F4, $ED, $E1, $DE; $AB60
+    .byte   $FD, $E2, $EC, $E5, $DA, $E7, $DD, $EC, $CF, $FF, $E2, $F4, $DA, $E6, $FD, $ED; $AB70
+    .byte   $E1, $E2, $EB, $EC, $ED, $F2, $CF, $FF, $F2, $E8, $EE, $F4, $E1, $DA, $EF, $DE; $AB80
+    .byte   $FD, $F0, $DA, $ED, $DE, $EB, $CF, $FD, $DC, $E8, $E6, $DE, $F4, $ED, $E8, $FD; $AB90
+    .byte   $E6, $F2, $F4, $E1, $E8, $EE, $EC, $DE, $CF, $FF, $F0, $E2, $ED, $E1, $F4, $DB; $ABA0
+    .byte   $E8, $E8, $ED, $EC, $FD, $E2, $F4, $DC, $E8, $EE, $E5, $DD, $FD, $F0, $DA, $E5; $ABB0
+    .byte   $E4, $F4, $E8, $E7, $FD, $ED, $E1, $DE, $F4, $F0, $DA, $ED, $DE, $EB, $CF, $FF; $ABC0
+    .byte   $DE, $DA, $EC, $ED, $F4, $E8, $DF, $FD, $ED, $EB, $E2, $E9, $E5, $DE, $F4, $DE; $ABD0
+    .byte   $F2, $DE, $FD, $EB, $E8, $DC, $E4, $F4, $DA, $ED, $FD, $EC, $DE, $DA, $EC, $E1; $ABE0
+    .byte   $E8, $EB, $DE, $CF, $FF, $DC, $E8, $E6, $DE, $F4, $DB, $DA, $DC, $E4, $FD, $F0; $ABF0
+    .byte   $E1, $DE, $E7, $F4, $F2, $E8, $EE, $FD, $DA, $EB, $DE, $F4, $EB, $DE, $DA, $DD; $AC00
+    .byte   $F2, $CF, $FF, $ED, $E1, $E2, $EC, $F4, $E6, $DA, $E0, $E2, $DC, $FD, $F0, $E2; $AC10
+    .byte   $E5, $E5, $F4, $E6, $DA, $E4, $DE, $FD, $F2, $E8, $EE, $EB, $F4, $EC, $F0, $E8; $AC20
+    .byte   $EB, $DD, $FD, $EC, $E1, $E8, $E8, $ED, $F4, $DF, $E2, $EB, $DE, $FF, $F2, $E8; $AC30
+    .byte   $EE, $F4, $E4, $E7, $E8, $F0, $FD, $DA, $E5, $E5, $F4, $E2, $F4, $DC, $DA, $E7; $AC40
+    .byte   $FD, $ED, $DE, $DA, $DC, $E1, $F4, $F2, $E8, $EE, $CF, $FD, $E0, $E8, $CF, $FF; $AC50
+    .byte   $ED, $E1, $DE, $F4, $DD, $DE, $EF, $E2, $E5, $FD, $DD, $E8, $DE, $EC, $F4, $E7; $AC60
+    .byte   $E8, $ED, $FD, $E5, $E2, $E4, $DE, $F4, $E7, $E8, $E2, $EC, $DE, $FF, $DA, $F4; $AC70
+    .byte   $E9, $E8, $F0, $DE, $EB, $DF, $EE, $E5, $FD, $E4, $E7, $E2, $E0, $E1, $ED, $FD; $AC80
+    .byte   $E5, $E2, $EF, $DE, $EC, $F4, $E2, $E7, $FD, $ED, $E1, $E2, $EC, $F4, $ED, $E8; $AC90
+    .byte   $F0, $E7, $CF, $FF, $E6, $DA, $E0, $E2, $DC, $F4, $E4, $DE, $F2, $FD, $EB, $DE; $ACA0
+    .byte   $DA, $DD, $EC, $CF, $CF, $CF, $FE, $ED, $EB, $DE, $DA, $EC, $EE, $EB, $DE, $FD; $ACB0
+    .byte   $E8, $DF, $F4, $E4, $DA, $EC, $EE, $ED, $E8, $FF, $ED, $E1, $DE, $F4, $E9, $DA; $ACC0
+    .byte   $E5, $DA, $DC, $DE, $FD, $E1, $DA, $EC, $F4, $DA, $FD, $DF, $DA, $E5, $EC, $DE; $ACD0
+    .byte   $F4, $F0, $DA, $E5, $E5, $FF, $E6, $E8, $EE, $E7, $ED, $DA, $E2, $E7, $FD, $F4; $ACE0
+    .byte   $ED, $E8, $F0, $E7, $F4, $E8, $DF, $FD, $F4, $DD, $DA, $EB, $EE, $E7, $E2, $DA; $ACF0
+    .byte   $FF, $E2, $ED, $F4, $E2, $EC, $F4, $EC, $DA, $E2, $DD, $FD, $ED, $E1, $DE, $F4; $AD00
+    .byte   $DE, $DA, $EC, $ED, $FD, $E8, $DF, $F4, $E7, $DA, $DB, $E8, $E8, $EB, $EE, $FD; $AD10
+    .byte   $E1, $DA, $EC, $CF, $CF, $CF, $FF, $ED, $E1, $DE, $EB, $DE, $F4, $E2, $EC, $FD; $AD20
+    .byte   $EC, $E8, $E6, $DE, $E8, $E7, $DE, $FD, $DB, $DE, $E1, $E2, $E7, $DD, $F4, $ED; $AD30
+    .byte   $E1, $DE, $FD, $DD, $E8, $E8, $EB, $36, $FF, $EB, $DE, $EC, $DC, $EE, $DE, $F4; $AD40
+    .byte   $ED, $E1, $DE, $FD, $E4, $E2, $DD, $E7, $DA, $E9, $E9, $DE, $DD, $FD, $DC, $E1; $AD50
+    .byte   $E2, $E5, $DD, $F4, $E8, $E7, $FD, $ED, $E1, $DE, $F4, $E2, $EC, $E5, $DA, $E7; $AD60
+    .byte   $DD, $FF, $F2, $E8, $EE, $F4, $DA, $EB, $DE, $F4, $DA, $FD, $E1, $DE, $EB, $E8; $AD70
+    .byte   $F4, $DF, $E8, $EB, $FD, $EC, $DA, $EF, $E2, $E7, $E0, $F4, $E6, $F2, $FD, $DC; $AD80
+    .byte   $E1, $E2, $E5, $DD, $CF, $DC, $E8, $E6, $DE, $FF, $ED, $E1, $E2, $EC, $F4, $E6; $AD90
+    .byte   $DA, $E0, $E2, $DC, $FD, $F0, $E2, $E5, $E5, $FD, $EC, $ED, $EB, $DE, $E7, $E0; $ADA0
+    .byte   $ED, $E1, $DE, $E7, $FD, $DA, $F4, $EC, $E1, $E2, $DE, $E5, $DD, $CF, $FF, $F0; $ADB0
+    .byte   $E1, $DE, $E7, $F4, $F2, $E8, $EE, $FD, $E3, $EE, $E6, $E9, $F4, $E9, $EB, $DE; $ADC0
+    .byte   $EC, $EC, $FD, $EE, $E9, $F4, $ED, $E8, $F4, $EC, $ED, $DA, $DB, $CF, $FF, $F0; $ADD0
+    .byte   $DE, $F4, $E1, $DA, $DD, $FD, $ED, $E8, $F4, $DF, $E5, $DE, $DE, $FD, $E4, $DA; $ADE0
+    .byte   $EC, $EE, $ED, $E8, $CF, $FF, $ED, $E1, $DE, $F4, $E8, $E5, $DD, $FD, $E6, $DA; $ADF0
+    .byte   $E7, $F4, $F0, $E1, $E8, $FD, $EB, $DE, $E6, $DA, $E2, $E7, $EC, $FD, $E1, $DA; $AE00
+    .byte   $EC, $F4, $E6, $DA, $E0, $E2, $DC, $CF, $FF, $32, $32, $32, $32, $32, $FF, $E1; $AE10
+    .byte   $E2, $DD, $DD, $DE, $E7, $FD, $F4, $ED, $E8, $F0, $E7, $FD, $F4, $F4, $E8, $DF; $AE20
+    .byte   $FD, $E4, $DA, $EC, $EE, $ED, $E8, $FF, $E5, $E8, $E8, $E4, $EC, $F4, $E5, $E2; $AE30
+    .byte   $E4, $DE, $FD, $E2, $F4, $DC, $DA, $E7, $F4, $E0, $DE, $ED, $FD, $E2, $E7, $F4; $AE40
+    .byte   $ED, $E1, $DE, $FD, $DF, $E2, $EB, $DE, $E9, $E5, $DA, $DC, $DE, $CF, $FF, $DC; $AE50
+    .byte   $DA, $E5, $E5, $F4, $DF, $E8, $EB, $FD, $E1, $DE, $E5, $E9, $F4, $DA, $ED, $FD; $AE60
+    .byte   $ED, $E1, $DE, $F4, $ED, $E1, $EB, $DE, $DE, $FD, $DE, $F2, $DE, $F4, $EB, $E8; $AE70
+    .byte   $DC, $E4, $EC, $CF, $FF, $ED, $E1, $DE, $F4, $E1, $E8, $E5, $DE, $FD, $E2, $E7; $AE80
+    .byte   $F4, $E9, $DA, $E5, $DA, $DC, $DE, $FD, $E2, $EC, $F4, $DE, $E7, $DD, $E5, $DE; $AE90
+    .byte   $EC, $EC, $FD, $ED, $EB, $DA, $E9, $CF, $FF, $DD, $E8, $F4, $F2, $E8, $EE, $FD; $AEA0
+    .byte   $E1, $DA, $EF, $DE, $F4, $ED, $E1, $DE, $FD, $D7, $F4, $E6, $DA, $E0, $E2, $DC; $AEB0
+    .byte   $FD, $DC, $E8, $E7, $ED, $DA, $E2, $E7, $DE, $EB, $EC, $FF, $F2, $E8, $EE, $FD; $AEC0
+    .byte   $DD, $DE, $EC, $DE, $EB, $EF, $DE, $FD, $E6, $F2, $F4, $E1, $DE, $E5, $E9, $CF; $AED0
+    .byte   $FD, $DF, $E8, $E5, $E5, $E8, $F0, $F4, $E6, $DE, $CF, $FF, $ED, $E1, $DE, $EB; $AEE0
+    .byte   $DE, $F4, $E2, $EC, $FD, $DA, $F4, $EC, $DE, $DC, $EB, $DE, $ED, $FD, $DA, $ED; $AEF0
+    .byte   $F4, $DE, $DD, $E0, $DE, $FD, $E8, $DF, $F4, $ED, $E8, $F0, $E7, $CF, $FF, $EB; $AF00
+    .byte   $DE, $E6, $DE, $E6, $DB, $DE, $EB, $FD, $ED, $E1, $DE, $F4, $E6, $DA, $E0, $E2; $AF10
+    .byte   $DC, $FD, $F0, $E8, $EB, $DD, $CF, $FF, $E4, $DA, $EC, $EE, $ED, $E8, $CF, $FD; $AF20
+    .byte   $EC, $ED, $EB, $DA, $E7, $E0, $DE, $CF, $CF, $CF, $FE, $E2, $ED, $F4, $E2, $EC; $AF30
+    .byte   $FD, $DD, $DE, $EC, $DE, $EB, $ED, $DE, $DD, $CF, $FF, $ED, $E1, $DE, $F4, $ED; $AF40
+    .byte   $E8, $F0, $E7, $FD, $E2, $EC, $F4, $DD, $DE, $DA, $DD, $CF, $FE, $E5, $E8, $E8; $AF50
+    .byte   $E4, $F4, $DE, $DA, $EC, $ED, $FD, $E2, $E7, $F4, $F0, $E8, $E8, $DD, $EC, $CF; $AF60
+    .byte   $FF, $E2, $F4, $DC, $DA, $E7, $F4, $E0, $E2, $EF, $DE, $FD, $F2, $E8, $EE, $F4; $AF70
+    .byte   $E6, $E8, $EC, $ED, $FD, $E9, $E8, $F0, $DE, $EB, $DF, $EE, $E5, $FD, $E6, $DA; $AF80
+    .byte   $E0, $E2, $DC, $CF, $FF, $F2, $E8, $EE, $F4, $DA, $EB, $DE, $FD, $E9, $DE, $EB; $AF90
+    .byte   $EC, $E2, $EC, $ED, $DE, $E7, $ED, $FD, $DF, $E2, $E7, $DD, $F4, $E1, $DE, $DA; $AFA0
+    .byte   $EB, $ED, $FD, $E8, $EF, $DE, $EB, $F4, $E8, $DC, $DE, $DA, $E7, $FF; $AFB0
+
+WestTextPtrs:
+    .word   TownText+0              ; $AFBE  text 0
+    .word   TownText+37             ; $AFC0  text 1
+    .word   TownText+62             ; $AFC2  text 2
+    .word   TownText+82             ; $AFC4  text 3
+    .word   TownText+123            ; $AFC6  text 4
+    .word   TownText+165            ; $AFC8  text 5
+    .word   TownText+172            ; $AFCA  text 6
+    .word   TownText+192            ; $AFCC  text 7
+    .word   TownText+215            ; $AFCE  text 8
+    .word   TownText+257            ; $AFD0  text 9
+    .word   TownText+292            ; $AFD2  text 10
+    .word   TownText+333            ; $AFD4  text 11
+    .word   TownText+353            ; $AFD6  text 12
+    .word   TownText+391            ; $AFD8  text 13
+    .word   TownText+427            ; $AFDA  text 14
+    .word   TownText+467            ; $AFDC  text 15
+    .word   TownText+510            ; $AFDE  text 16
+    .word   TownText+545            ; $AFE0  text 17
+    .word   TownText+584            ; $AFE2  text 18
+    .word   TownText+618            ; $AFE4  text 19
+    .word   TownText+660            ; $AFE6  text 20
+    .word   TownText+674            ; $AFE8  text 21
+    .word   TownText+708            ; $AFEA  text 22
+    .word   TownText+726            ; $AFEC  text 23
+    .word   TownText+762            ; $AFEE  text 24
+    .word   TownText+796            ; $AFF0  text 25
+    .word   TownText+808            ; $AFF2  text 26
+    .word   TownText+849            ; $AFF4  text 27
+    .word   TownText+885            ; $AFF6  text 28
+    .word   TownText+925            ; $AFF8  text 29
+    .word   TownText+951            ; $AFFA  text 30
+    .word   TownText+979            ; $AFFC  text 31
+    .word   TownText+988            ; $AFFE  text 32
+    .word   TownText+1032           ; $B000  text 33
+    .word   TownText+1071           ; $B002  text 34
+    .word   TownText+1113           ; $B004  text 35
+    .word   TownText+1150           ; $B006  text 36
+    .word   TownText+1187           ; $B008  text 37
+    .word   TownText+1229           ; $B00A  text 38
+    .word   TownText+1272           ; $B00C  text 39
+    .word   TownText+1314           ; $B00E  text 40
+    .word   TownText+1352           ; $B010  text 41
+    .word   TownText+1376           ; $B012  text 42
+    .word   TownText+1415           ; $B014  text 43
+    .word   TownText+1454           ; $B016  text 44
+    .word   TownText+1493           ; $B018  text 45
+    .word   TownText+1529           ; $B01A  text 46
+    .word   TownText+1566           ; $B01C  text 47
+    .word   TownText+1604           ; $B01E  text 48
+    .word   TownText+1648           ; $B020  text 49
+    .word   TownText+1655           ; $B022  text 50
+    .word   TownText+1696           ; $B024  text 51
+
+EastTextPtrs:
+    .word   TownText+1715           ; $B026  text 0
+    .word   TownText+1734           ; $B028  text 1
+    .word   TownText+1743           ; $B02A  text 2
+    .word   TownText+1754           ; $B02C  text 3
+    .word   TownText+1795           ; $B02E  text 4
+    .word   TownText+1811           ; $B030  text 5
+    .word   TownText+1833           ; $B032  text 6
+    .word   TownText+1855           ; $B034  text 7
+    .word   TownText+1875           ; $B036  text 8
+    .word   TownText+1916           ; $B038  text 9
+    .word   TownText+1956           ; $B03A  text 10
+    .word   TownText+1977           ; $B03C  text 11
+    .word   TownText+2001           ; $B03E  text 12
+    .word   TownText+2042           ; $B040  text 13
+    .word   TownText+2056           ; $B042  text 14
+    .word   TownText+2090           ; $B044  text 15
+    .word   TownText+2128           ; $B046  text 16
+    .word   TownText+2165           ; $B048  text 17
+    .word   TownText+2195           ; $B04A  text 18
+    .word   TownText+2238           ; $B04C  text 19
+    .word   TownText+2272           ; $B04E  text 20
+    .word   TownText+2302           ; $B050  text 21
+    .word   TownText+2340           ; $B052  text 22
+    .word   TownText+2378           ; $B054  text 23
+    .word   TownText+2406           ; $B056  text 24
+    .word   TownText+2433           ; $B058  text 25
+    .word   TownText+2471           ; $B05A  text 26
+    .word   TownText+2505           ; $B05C  text 27
+    .word   TownText+2546           ; $B05E  text 28
+    .word   TownText+2586           ; $B060  text 29
+    .word   TownText+2623           ; $B062  text 30
+    .word   TownText+2655           ; $B064  text 31
+    .word   TownText+2678           ; $B066  text 32
+    .word   TownText+2713           ; $B068  text 33
+    .word   TownText+2719           ; $B06A  text 34
+    .word   TownText+2744           ; $B06C  text 35
+    .word   TownText+2783           ; $B06E  text 36
+    .word   TownText+2821           ; $B070  text 37
+    .word   TownText+2857           ; $B072  text 38
+    .word   TownText+2892           ; $B074  text 39
+    .word   TownText+2924           ; $B076  text 40
+    .word   TownText+2959           ; $B078  text 41
+    .word   TownText+2984           ; $B07A  text 42
+    .word   TownText+3019           ; $B07C  text 43
+    .word   TownText+3057           ; $B07E  text 44
+    .word   TownText+3093           ; $B080  text 45
+
+; ---------------------------------------------------------------------------
+; Dialog_Update
+;
+; Town conversations (dialogType 2-4), run from Menu_UpdateTownDialog with
+; the town bank mapped.  Splits the screen under the status bar (except
+; in state 12), then runs state pauseState:
+;    0 Menu_NextState_Bank3     7 Dialog_PrintText
+;    1 Dialog_Open              8 Dialog_Reward
+;    2 Dialog_NextState         9 Dialog_WaitForB
+;    3 Menu_ComputeAttrs_Bank3 10 Menu_ComputeAttrs_Bank3
+;    4 Dialog_OpenRow          11 Menu_CloseRow_Bank3
+;    5 Dialog_ChooseText       12 Dialog_Finish
+;    6 Dialog_NextState
+; The window is drawn and erased with bank 3's copies of the pause menu's
+; routines (Menu_*_Bank3).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Dialog_Update:
     lda     pauseState              ; $B082
     cmp     #$0C                    ; $B085
@@ -2656,35 +2639,50 @@ loc_3_B0AE:
     jsr     JumpTable               ; $B0AE
 ; (inline jump table)
     .word   Menu_NextState_Bank3    ; $B0B1
-    .word   loc_3_B0CB              ; $B0B3
-    .word   loc_3_B621              ; $B0B5
+    .word   Dialog_Open             ; $B0B3
+    .word   Dialog_NextState        ; $B0B5
     .word   Menu_ComputeAttrs_Bank3 ; $B0B7
-    .word   loc_3_B0D2              ; $B0B9
-    .word   loc_3_B480              ; $B0BB
-    .word   loc_3_B621              ; $B0BD
-    .word   loc_3_B6A2              ; $B0BF
-    .word   loc_3_B75B              ; $B0C1
-    .word   loc_3_B7A6              ; $B0C3
+    .word   Dialog_OpenRow          ; $B0B9
+    .word   Dialog_ChooseText       ; $B0BB
+    .word   Dialog_NextState        ; $B0BD
+    .word   Dialog_PrintText        ; $B0BF
+    .word   Dialog_Reward           ; $B0C1
+    .word   Dialog_WaitForB         ; $B0C3
     .word   Menu_ComputeAttrs_Bank3 ; $B0C5
     .word   Menu_CloseRow_Bank3     ; $B0C7
-    .word   loc_3_B7B2              ; $B0C9
+    .word   Dialog_Finish           ; $B0C9
 
-loc_3_B0CB:
+; ---------------------------------------------------------------------------
+; Dialog_Open
+;
+; Play the dialog sound (pulse 2 effect $08) and go to the next state.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_Open:
     lda     #$08                    ; $B0CB
     sta     sfxRequest+2            ; $B0CD
-    jmp     loc_3_B621              ; $B0CF
+    jmp     Dialog_NextState        ; $B0CF
 
-loc_3_B0D2:
+; ---------------------------------------------------------------------------
+; Dialog_OpenRow
+;
+; Queue the next of the window's five row pairs (DialogRowPtrs,
+; DialogRow2Ptrs) with its attributes; after the fifth, go on.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_OpenRow:
     lda     menuRow                 ; $B0D2
     asl     a                       ; $B0D5
     tay                             ; $B0D6
-    lda     dat_3_B3F3,y            ; $B0D7
+    lda     DialogRowPtrs,y         ; $B0D7
     sta     temp2                   ; $B0DA
-    lda     dat_3_B3F4,y            ; $B0DC
+    lda     DialogRowPtrs+1,y       ; $B0DC
     sta     temp3                   ; $B0DF
-    lda     dat_3_B3FD,y            ; $B0E1
+    lda     DialogRow2Ptrs,y        ; $B0E1
     sta     temp4                   ; $B0E4
-    lda     dat_3_B3FE,y            ; $B0E6
+    lda     DialogRow2Ptrs+1,y      ; $B0E6
     sta     temp5                   ; $B0E9
     ldy     #$0D                    ; $B0EB
 
@@ -3209,91 +3207,109 @@ AreaMap_GetPagePtr_Bank3:
     sta     temp15                  ; $B3F0
     rts                             ; $B3F2
 
-dat_3_B3F3:
-    .byte   $07                                                             ; $B3F3
+; Dialog window rows (Dialog_OpenRow): the top and bottom tile rows of each
+; of its five row pairs, and the two row patterns.
+DialogRowPtrs:
+    .word   DialogBorderRow, DialogMiddleRow, DialogMiddleRow, DialogMiddleRow ; $B3F3
+    .word   DialogMiddleRow         ; $B3FB
 
-dat_3_B3F4:
-    .byte   $B4, $15, $B4, $15, $B4, $15, $B4, $15, $B4                     ; $B3F4
+DialogRow2Ptrs:
+    .word   DialogMiddleRow, DialogMiddleRow, DialogMiddleRow, DialogMiddleRow ; $B3FD
+    .word   DialogBorderRow         ; $B405
 
-dat_3_B3FD:
-    .byte   $15                                                             ; $B3FD
+DialogBorderRow:
+    .byte   $CA, $CB, $CB, $CB, $CB, $CB, $CB, $CB, $CB, $CB, $CB, $CB, $CB, $CA; $B407
 
-dat_3_B3FE:
-    .byte   $B4, $15, $B4, $15, $B4, $15, $B4, $07, $B4, $CA, $CB, $CB, $CB, $CB, $CB, $CB; $B3FE
-    .byte   $CB, $CB, $CB, $CB, $CB, $CB, $CA, $CC, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $B40E
-    .byte   $F4, $F4, $F4                                                   ; $B41E
+DialogMiddleRow:
+    .byte   $CC, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $CC; $B415
 
-dat_3_B421:
-    .byte   $F4                                                             ; $B421
-
-dat_3_B422:
-    .byte   $CC, $BE, $AF, $26, $B0                                         ; $B422
+; Text pointer table of each town world (indexed by currentWorld, from 1).
+TownTextTables:
+    .word   WestTextPtrs, EastTextPtrs ; $B423
 ; (unreferenced: $B427-$B42A, 4 bytes)
-    .byte   $80, $40, $20, $10                                              ; $B427
 
-dat_3_B42B:
-    .byte   $08                                                             ; $B42B
-; (unreferenced: $B42C-$B437, 12 bytes)
-    .byte   $04, $02                                                        ; $B42C
+TownFlagBits:
+    .byte   $80, $40, $20, $10, $08, $04, $02                               ; $B427
 
-dat_3_B42E:
-    .byte   $00, $40, $00, $00, $00, $00, $00, $00, $01, $00                ; $B42E
-    .byte   $01                                                             ; $B438
-; (unreferenced: $B439-$B440, 8 bytes)
-    .byte   $00, $00, $00, $00, $00, $00, $00, $00                          ; $B439
-    .byte   $40                                                             ; $B441
-; (unreferenced: $B442-$B442, 1 bytes)
-    .byte   $00                                                             ; $B442
-    .byte   $20, $08                                                        ; $B443
-; (unreferenced: $B445-$B446, 2 bytes)
-    .byte   $00, $00                                                        ; $B445
-    .byte   $10                                                             ; $B447
-; (unreferenced: $B448-$B449, 2 bytes)
-    .byte   $00, $00                                                        ; $B448
-    .byte   $01                                                             ; $B44A
-; (unreferenced: $B44B-$B453, 9 bytes)
-    .byte   $00, $00, $00                                                   ; $B44B
+TownFlagChecks:
+    .byte   $00, $40, $00, $00, $00, $00, $00, $00                          ; $B42E
+    .byte   $01, $00, $01, $00, $00, $00, $00, $00                          ; $B436
+    .byte   $00, $00, $00, $40, $00, $20, $08, $00                          ; $B43E
+    .byte   $00, $10, $00, $00, $01, $00, $00, $00                          ; $B446
 
-dat_3_B44E:
-    .byte   $B9                                                             ; $B44E
 
-dat_3_B44F:
-    .byte   $B5, $B9, $B5, $C7, $B5                                         ; $B44F
-    .byte   $A3, $B4                                                        ; $B454
-; (unreferenced: $B456-$B457, 2 bytes)
-    .byte   $EE, $B4                                                        ; $B456
-    .byte   $18, $B5, $4E, $B5                                              ; $B458
-; (unreferenced: $B45C-$B461, 6 bytes)
-    .byte   $4E, $B5, $4E, $B5, $60, $B5                                    ; $B45C
-    .byte   $60, $B5, $60, $B5, $60, $B5, $7D, $B5, $7D, $B5                ; $B462
-; (unreferenced: $B46C-$B47B, 16 bytes)
-    .byte   $C7, $B5, $C7, $B5, $C7, $B5, $C7, $B5, $92, $B5, $92, $B5, $92, $B5, $92, $B5; $B46C
-    .byte   $AE, $B5                                                        ; $B47C
-; (unreferenced: $B47E-$B47F, 2 bytes)
-    .byte   $C7, $B5                                                        ; $B47E
+; Dialog_ChooseText's handler for each person type, $0A-$22: it decides
+; whether the condition for the second text is met (and what is given).
+DialogHandlers:
+    .word   Dialog_SleepyCreature   ; $B44E  type $0A
+    .word   Dialog_SleepyCreature   ; $B450  type $0B
+    .word   Dialog_SelectText       ; $B452  type $0C
+    .word   Dialog_TechniqueMan     ; $B454  type $0D
+    .word   Dialog_Type0E           ; $B456  type $0E
+    .word   Dialog_Wizard           ; $B458  type $0F
+    .word   Dialog_SetTalked        ; $B45A  type $10
+    .word   Dialog_SetTalked        ; $B45C  type $11
+    .word   Dialog_SetTalked        ; $B45E  type $12
+    .word   Dialog_CheckTownFlag    ; $B460  type $13
+    .word   Dialog_CheckTownFlag    ; $B462  type $14
+    .word   Dialog_CheckTownFlag    ; $B464  type $15
+    .word   Dialog_CheckTownFlag    ; $B466  type $16
+    .word   Dialog_HouseLady        ; $B468  type $17
+    .word   Dialog_HouseLady        ; $B46A  type $18
+    .word   Dialog_SelectText       ; $B46C  type $19
+    .word   Dialog_SelectText       ; $B46E  type $1A
+    .word   Dialog_SelectText       ; $B470  type $1B
+    .word   Dialog_SelectText       ; $B472  type $1C
+    .word   Dialog_Type1D           ; $B474  type $1D
+    .word   Dialog_Type1D           ; $B476  type $1E
+    .word   Dialog_Type1D           ; $B478  type $1F
+    .word   Dialog_Type1D           ; $B47A  type $20
+    .word   Dialog_Mirror           ; $B47C  type $21
+    .word   Dialog_SelectText       ; $B47E  type $22
 
-loc_3_B480:
+; ---------------------------------------------------------------------------
+; Dialog_ChooseText
+;
+; Choose what the person (dialogPerson) says: run the handler of its type
+; (DialogHandlers, with y = townCode), which may grant something and
+; decides whether the condition for the second text is met (temp5), then
+; Dialog_SelectText.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_ChooseText:
     lda     #$00                    ; $B480
     sta     temp5                   ; $B482
-    sta     ram_048C                ; $B484
-    ldx     ram_048B                ; $B487
+    sta     dialogAlreadyDone       ; $B484
+    ldx     dialogPerson            ; $B487
     lda     enemyType,x             ; $B48A
     sec                             ; $B48C
     sbc     #$0A                    ; $B48D
     sta     temp0                   ; $B48F
     asl     a                       ; $B491
     tay                             ; $B492
-    lda     dat_3_B44E,y            ; $B493
+    lda     DialogHandlers,y            ; $B493
     sta     temp2                   ; $B496
-    lda     dat_3_B44F,y            ; $B498
+    lda     DialogHandlers+1,y            ; $B498
     sta     temp3                   ; $B49B
     ldy     townCode                ; $B49D
     jmp     (temp2)                 ; $B4A0
 
-loc_3_B4A3:
+; ---------------------------------------------------------------------------
+; Dialog_TechniqueMan
+;
+; Type $0D.  Saria: if Bagu's note was read (townFlags+3 bit 3), the river
+; man lets Link cross (techniques bit 0) and says so.  Mido: teaches the
+; downstab (techniques bit 4).  Rauru: nothing.  Any other town: teaches
+; the upstab (techniques bit 2; in the game, the knight of Darunia).  A
+; technique already learned gives the "already done" text.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_TechniqueMan:
     cpy     #$02                    ; $B4A3
     bne     loc_3_B4BB              ; $B4A5
-    lda     ram_079A                ; $B4A7
+    lda     townFlags+3             ; $B4A7
     and     #$08                    ; $B4AA
     beq     loc_3_B4B8              ; $B4AC
     lda     techniques              ; $B4AE
@@ -3302,7 +3318,7 @@ loc_3_B4A3:
     inc     temp5                   ; $B4B6
 
 loc_3_B4B8:
-    jmp     loc_3_B5C7              ; $B4B8
+    jmp     Dialog_SelectText       ; $B4B8
 
 loc_3_B4BB:
     cpy     #$03                    ; $B4BB
@@ -3312,7 +3328,7 @@ loc_3_B4BB:
     beq     loc_3_B4CB              ; $B4C4
 ; (code below not executed in the test movies)
     inc     temp5                   ; $B4C6
-    inc     ram_048C                ; $B4C8
+    inc     dialogAlreadyDone       ; $B4C8
 ; (end of code not executed in the test movies)
 
 loc_3_B4CB:
@@ -3328,7 +3344,7 @@ loc_3_B4D3:
     beq     loc_3_B4E3              ; $B4DC
 ; (code below not executed in the test movies)
     inc     temp5                   ; $B4DE
-    inc     ram_048C                ; $B4E0
+    inc     dialogAlreadyDone       ; $B4E0
 ; (end of code not executed in the test movies)
 
 loc_3_B4E3:
@@ -3339,19 +3355,65 @@ loc_3_B4E8:
     sta     techniques              ; $B4E8
 
 loc_3_B4EB:
-    jmp     loc_3_B5C7              ; $B4EB
-; (unreferenced: $B4EE-$B517, 42 bytes)
-    .byte   $C0, $03, $D0, $0B, $AD, $96, $07, $09, $02, $8D, $96, $07, $4C, $C7, $B5, $C0; $B4EE
-    .byte   $01, $D0, $0C, $AD, $96, $07, $29, $02, $F0, $02, $E6, $05, $4C, $C7, $B5, $C0; $B4FE
-    .byte   $00, $F0, $F9, $AD, $8A, $07, $D0, $F2, $F0, $F2                ; $B50E
+    jmp     Dialog_SelectText       ; $B4EB
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_3_B518:
+; ---------------------------------------------------------------------------
+; Dialog_Type0E
+;
+; Type $0E.  Mido: sets techniques bit 1 (told to ask Error of Ruto).
+; Ruto: Error's second text (the tunnel south of the King's tomb) once
+; that bit is set.  Rauru: nothing.  Other towns: the second text if Link
+; has the cross.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_Type0E:
+    cpy     #$03                    ; $B4EE
+    bne     loc_3_B4FD              ; $B4F0
+    lda     techniques              ; $B4F2
+    ora     #$02                    ; $B4F5
+    sta     techniques              ; $B4F7
+    jmp     Dialog_SelectText       ; $B4FA
+
+loc_3_B4FD:
+    cpy     #$01                    ; $B4FD
+    bne     loc_3_B50D              ; $B4FF
+    lda     techniques              ; $B501
+    and     #$02                    ; $B504
+    beq     loc_3_B50A              ; $B506
+
+loc_3_B508:
+    inc     temp5                   ; $B508
+
+loc_3_B50A:
+    jmp     Dialog_SelectText       ; $B50A
+
+loc_3_B50D:
+    cpy     #$00                    ; $B50D
+    beq     loc_3_B50A              ; $B50F
+    lda     itemOwned+5             ; $B511
+    bne     loc_3_B508              ; $B514
+    beq     loc_3_B50A              ; $B516
+; (end of disassembled code)
+
+
+; ---------------------------------------------------------------------------
+; Dialog_Wizard
+;
+; Type $0F, the town's wizard: gives spell townCode if Link has at least
+; townCode + 1 magic containers (the second text), and selects it if it is
+; the first spell; a spell already owned gives the "already done" text.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_Wizard:
     sty     temp1                   ; $B518
     inc     temp1                   ; $B51A
     lda     spellOwned,y            ; $B51C
     beq     loc_3_B526              ; $B51F
 ; (code below not executed in the test movies)
-    inc     ram_048C                ; $B521
+    inc     dialogAlreadyDone       ; $B521
     bne     loc_3_B52D              ; $B524
 ; (end of code not executed in the test movies)
 
@@ -3381,19 +3443,36 @@ loc_3_B541:
     sty     spellCursor             ; $B548
 
 loc_3_B54B:
-    jmp     loc_3_B5C7              ; $B54B
+    jmp     Dialog_SelectText       ; $B54B
 
-loc_3_B54E:
+; ---------------------------------------------------------------------------
+; Dialog_SetTalked
+;
+; Types $10-$12: set this person's bit (TownFlagBits+4) in the town's
+; townFlags.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_SetTalked:
     lda     temp0                   ; $B54E
     sec                             ; $B550
     sbc     #$06                    ; $B551
     tax                             ; $B553
-    lda     ram_0797,y              ; $B554
-    ora     dat_3_B42B,x            ; $B557
-    sta     ram_0797,y              ; $B55A
-    jmp     loc_3_B5C7              ; $B55D
+    lda     townFlags,y             ; $B554
+    ora     TownFlagBits+4,x        ; $B557
+    sta     townFlags,y             ; $B55A
+    jmp     Dialog_SelectText       ; $B55D
 
-loc_3_B560:
+; ---------------------------------------------------------------------------
+; Dialog_CheckTownFlag
+;
+; Types $13-$16: the second text, and the person turns to lead Link to a
+; door, if the town's townFlags has the bit for this type and town
+; (TownFlagChecks); always in Rauru.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_CheckTownFlag:
     cpy     #$00                    ; $B560
     beq     loc_3_B579              ; $B562
     sty     temp1                   ; $B564
@@ -3405,40 +3484,109 @@ loc_3_B560:
     asl     a                       ; $B56D
     adc     temp1                   ; $B56E
     tax                             ; $B570
-    lda     ram_0797,y              ; $B571
-    and     dat_3_B42E,x            ; $B574
-    beq     loc_3_B5C7              ; $B577
+    lda     townFlags,y             ; $B571
+    and     TownFlagChecks,x        ; $B574
+    beq     Dialog_SelectText       ; $B577
 
 loc_3_B579:
     inc     temp5                   ; $B579
     bne     loc_3_B589              ; $B57B
 
-loc_3_B57D:
+; ---------------------------------------------------------------------------
+; Dialog_HouseLady
+;
+; Types $17-$18, the life and magic ladies: outside, she turns toward her
+; door (dialogType 2); inside her house (dialogType 4) the second text, and
+; the restoring follows (Dialog_Reward).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_HouseLady:
     ldx     dialogType              ; $B57D
     cpx     #$02                    ; $B580
     beq     loc_3_B589              ; $B582
     inc     temp5                   ; $B584
-    jmp     loc_3_B5C7              ; $B586
+    jmp     Dialog_SelectText       ; $B586
 
 loc_3_B589:
-    ldx     ram_048B                ; $B589
+    ldx     dialogPerson            ; $B589
     jsr     Townsperson_TurnToDoor  ; $B58C
-    jmp     loc_3_B5C7              ; $B58F
-; (unreferenced: $B592-$B5AD, 28 bytes)
-    .byte   $A5, $00, $38, $E9, $13, $AA, $B9, $97, $07, $1D, $27, $B4, $99, $97, $07, $4C; $B592
-    .byte   $C7, $B5, $A5, $00, $38, $E9, $04, $85, $00, $4C, $C7, $B5      ; $B5A2
+    jmp     Dialog_SelectText       ; $B58F
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_3_B5AE:
-    lda     ram_0797,y              ; $B5AE
+; ---------------------------------------------------------------------------
+; Dialog_Type1D
+;
+; Types $1D-$20: meant to set a townFlags bit, but the index (type - $13)
+; points past TownFlagBits into zeros, so nothing is set.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_Type1D:
+    lda     temp0                   ; $B592
+    sec                             ; $B594
+    sbc     #$13                    ; $B595
+    tax                             ; $B597
+    lda     townFlags,y             ; $B598
+    ora     TownFlagBits,x          ; $B59B
+    sta     townFlags,y             ; $B59E
+    jmp     Dialog_SelectText       ; $B5A1
+    lda     temp0                   ; $B5A4
+    sec                             ; $B5A6
+    sbc     #$04                    ; $B5A7
+    sta     temp0                   ; $B5A9
+    jmp     Dialog_SelectText       ; $B5AB
+; (end of disassembled code)
+
+
+; ---------------------------------------------------------------------------
+; Dialog_Mirror
+;
+; Type $21, the mirror: sets bit 0 of the town's townFlags (the mirror
+; found).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_Mirror:
+    lda     townFlags,y             ; $B5AE
     ora     #$01                    ; $B5B1
-    sta     ram_0797,y              ; $B5B3
-    jmp     loc_3_B5C7              ; $B5B6
-; (unreferenced: $B5B9-$B5C6, 14 bytes)
-    .byte   $BD, $A5, $05, $C9, $04, $90, $07, $A9, $04, $9D, $A5, $05, $E6, $05; $B5B9
+    sta     townFlags,y             ; $B5B3
+    jmp     Dialog_SelectText       ; $B5B6
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_3_B5C7:
+; ---------------------------------------------------------------------------
+; Dialog_SleepyCreature
+;
+; Types $0A and $0B (the talking Ache and Bit): "ZZZ..." until ram_05A5,x
+; reaches 4, then the second text ("LET ME BE! MASTER IS IN WOODS N OF
+; RIVER").
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_SleepyCreature:
+    lda     ram_05A5,x              ; $B5B9
+    cmp     #$04                    ; $B5BC
+    bcc     Dialog_SelectText       ; $B5BE
+    lda     #$04                    ; $B5C0
+    sta     ram_05A5,x              ; $B5C2
+    inc     temp5                   ; $B5C5
+; (end of disassembled code)
+
+
+; ---------------------------------------------------------------------------
+; Dialog_SelectText
+;
+; Look up the text: row temp0 (the type - $0A, or $0F when dialogAlreadyDone)
+; and column townCode & 3 of WestTextIds or EastTextIds (WestTextIdsMet /
+; EastTextIdsMet if the condition was met), then its pointer in the
+; world's table (TownTextTables) into dialogTextPtr.  Start printing after
+; 42 frames at the window's first column and line.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_SelectText:
     lda     temp0                   ; $B5C7
-    ldx     ram_048C                ; $B5C9
+    ldx     dialogAlreadyDone       ; $B5C9
     beq     loc_3_B5D0              ; $B5CC
 ; (code below not executed in the test movies)
     lda     #$0F                    ; $B5CE
@@ -3453,19 +3601,19 @@ loc_3_B5D0:
     clc                             ; $B5D9
     adc     temp0                   ; $B5DA
     tay                             ; $B5DC
-    lda     dat_3_A238,y            ; $B5DD
+    lda     WestTextIds,y           ; $B5DD
     ldx     temp5                   ; $B5E0
     beq     loc_3_B5E7              ; $B5E2
-    lda     dat_3_A29C,y            ; $B5E4
+    lda     WestTextIdsMet,y        ; $B5E4
 
 loc_3_B5E7:
     ldx     currentWorld            ; $B5E7
     cpx     #$02                    ; $B5EA
     bne     loc_3_B5F8              ; $B5EC
-    lda     dat_3_A2DC,y            ; $B5EE
+    lda     EastTextIds,y           ; $B5EE
     ldx     temp5                   ; $B5F1
     beq     loc_3_B5F8              ; $B5F3
-    lda     dat_3_A340,y            ; $B5F5
+    lda     EastTextIdsMet,y        ; $B5F5
 
 loc_3_B5F8:
     asl     a                       ; $B5F8
@@ -3473,22 +3621,29 @@ loc_3_B5F8:
     lda     currentWorld            ; $B5FA
     asl     a                       ; $B5FD
     tax                             ; $B5FE
-    lda     dat_3_B421,x            ; $B5FF
+    lda     TownTextTables-2,x      ; $B5FF
     sta     temp0                   ; $B602
-    lda     dat_3_B422,x            ; $B604
+    lda     TownTextTables-1,x      ; $B604
     sta     temp1                   ; $B607
     lda     (temp0),y               ; $B609
-    sta     ram_0569                ; $B60B
+    sta     dialogTextPtr           ; $B60B
     iny                             ; $B60E
     lda     (temp0),y               ; $B60F
-    sta     ram_056A                ; $B611
+    sta     dialogTextPtr+1         ; $B611
     lda     #$2A                    ; $B614
     sta     menuTimer               ; $B616
     lda     #$00                    ; $B619
-    sta     ram_0489                ; $B61B
-    sta     ram_048A                ; $B61E
+    sta     dialogColumn            ; $B61B
+    sta     dialogLineOffset        ; $B61E
 
-loc_3_B621:
+; ---------------------------------------------------------------------------
+; Dialog_NextState
+;
+; Advance pauseState.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_NextState:
     inc     pauseState              ; $B621
     rts                             ; $B624
 ; (unreferenced: $B625-$B638, 20 bytes)
@@ -3499,21 +3654,29 @@ loc_3_B639:
     lda     townCode                ; $B639
     cmp     #$03                    ; $B63C
     bcs     loc_3_B64A              ; $B63E
-    bcc     loc_3_B690              ; $B640
+    bcc     Dialog_EndText          ; $B640
 
 loc_3_B642:
     ldy     townCode                ; $B642
     lda     spellOwned,y            ; $B645
-    beq     loc_3_B690              ; $B648
+    beq     Dialog_EndText          ; $B648
 
 loc_3_B64A:
-    lda     ram_048C                ; $B64A
-    bne     loc_3_B690              ; $B64D
+    lda     dialogAlreadyDone       ; $B64A
+    bne     Dialog_EndText          ; $B64D
     lda     #$04                    ; $B64F
     sta     sfxRequest              ; $B651
-    jmp     loc_3_B621              ; $B653
+    jmp     Dialog_NextState        ; $B653
 
-loc_3_B656:
+; ---------------------------------------------------------------------------
+; Dialog_NewLine
+;
+; Start the next line (two tile rows down) after a pause of 11 frames
+; ($FD) or 45 frames.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_NewLine:
     ldy     #$0B                    ; $B656
     cmp     #$FD                    ; $B658
     beq     loc_3_B65E              ; $B65A
@@ -3524,43 +3687,79 @@ loc_3_B656:
 loc_3_B65E:
     sty     menuTimer               ; $B65E
     lda     #$00                    ; $B661
-    sta     ram_0489                ; $B663
-    lda     ram_048A                ; $B666
+    sta     dialogColumn            ; $B663
+    lda     dialogLineOffset        ; $B666
     clc                             ; $B669
     adc     #$40                    ; $B66A
-    sta     ram_048A                ; $B66C
+    sta     dialogLineOffset        ; $B66C
     jmp     loc_3_B752              ; $B66F
 
-loc_3_B672:
+; ---------------------------------------------------------------------------
+; Dialog_TextDone
+;
+; The text is printed.  In a lady's house, go on to Dialog_Reward.  For a
+; wizard who gave a spell, or a technique taught, flash the screen with
+; the spell sound and go on to Dialog_Reward; otherwise skip it
+; (Dialog_EndText).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_TextDone:
     lda     dialogType              ; $B672
     cmp     #$04                    ; $B675
-    beq     loc_3_B621              ; $B677
+    beq     Dialog_NextState        ; $B677
     lda     #$C0                    ; $B679
     sta     spellFlash              ; $B67B
     lda     #$40                    ; $B67E
     sta     ram_049E                ; $B680
-    ldx     ram_048B                ; $B683
+    ldx     dialogPerson            ; $B683
     lda     enemyType,x             ; $B686
     cmp     #$0F                    ; $B688
     beq     loc_3_B642              ; $B68A
     cmp     #$0D                    ; $B68C
     beq     loc_3_B639              ; $B68E
 
-loc_3_B690:
+; ---------------------------------------------------------------------------
+; Dialog_EndText
+;
+; Stop the flash and skip Dialog_Reward.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_EndText:
     lda     #$00                    ; $B690
     sta     spellFlash              ; $B692
     sta     ram_049E                ; $B695
     inc     pauseState              ; $B698
-    jmp     loc_3_B621              ; $B69B
+    jmp     Dialog_NextState        ; $B69B
 
-loc_3_B69E:
+; ---------------------------------------------------------------------------
+; Dialog_Wait
+;
+; Count menuTimer down.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_Wait:
     dec     menuTimer               ; $B69E
     rts                             ; $B6A1
 
-loc_3_B6A2:
+; ---------------------------------------------------------------------------
+; Dialog_PrintText
+;
+; Print the text, one letter every 5 frames with the typing sound
+; (sfxRequest $60), as two-tile columns: a byte >= $C0 is a tile; below
+; that, the low six bits are the tile and bits 7-6 put a mark above it.
+; $FD ends a line (a short pause), $FE a line with a long pause, $FF the
+; text (Dialog_TextDone).  B skips to the end, except for wizards and type
+; $0D.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_PrintText:
     lda     #$00                    ; $B6A2
     sta     ram_0766                ; $B6A4
-    ldx     ram_048B                ; $B6A7
+    ldx     dialogPerson            ; $B6A7
     lda     enemyType,x             ; $B6AA
     cmp     #$0D                    ; $B6AC
     beq     loc_3_B6BA              ; $B6AE
@@ -3568,24 +3767,24 @@ loc_3_B6A2:
     beq     loc_3_B6BA              ; $B6B2
     lda     joypadPressed           ; $B6B4
     and     #$40                    ; $B6B6
-    bne     loc_3_B672              ; $B6B8
+    bne     Dialog_TextDone         ; $B6B8
 
 loc_3_B6BA:
     lda     menuTimer               ; $B6BA
-    bne     loc_3_B69E              ; $B6BD
+    bne     Dialog_Wait             ; $B6BD
     inc     ram_0766                ; $B6BF
     ldx     #$F4                    ; $B6C2
-    lda     ram_0569                ; $B6C4
+    lda     dialogTextPtr           ; $B6C4
     sta     temp0                   ; $B6C7
-    lda     ram_056A                ; $B6C9
+    lda     dialogTextPtr+1         ; $B6C9
     sta     temp1                   ; $B6CC
     ldy     #$00                    ; $B6CE
     lda     (temp0),y               ; $B6D0
     cmp     #$FF                    ; $B6D2
-    beq     loc_3_B672              ; $B6D4
+    beq     Dialog_TextDone         ; $B6D4
     cmp     #$FD                    ; $B6D6
     bcc     loc_3_B6DD              ; $B6D8
-    jmp     loc_3_B656              ; $B6DA
+    jmp     Dialog_NewLine          ; $B6DA
 
 loc_3_B6DD:
     asl     a                       ; $B6DD
@@ -3615,7 +3814,7 @@ loc_3_B6F2:
 
 loc_3_B6F6:
     sta     ppuBuffer0+4            ; $B6F6
-    lda     ram_0489                ; $B6F9
+    lda     dialogColumn            ; $B6F9
     asl     a                       ; $B6FC
     asl     a                       ; $B6FD
     asl     a                       ; $B6FE
@@ -3642,7 +3841,7 @@ loc_3_B6F6:
     lsr     a                       ; $B722
     lsr     a                       ; $B723
     adc     #$E0                    ; $B724
-    adc     ram_048A                ; $B726
+    adc     dialogLineOffset        ; $B726
     sta     ppuBuffer0+1            ; $B729
     lda     a:temp3                 ; $B72C
     adc     #$00                    ; $B72F
@@ -3656,22 +3855,31 @@ loc_3_B6F6:
     sta     ppuBuffer0Len           ; $B743
     lda     #$60                    ; $B746
     sta     sfxRequest              ; $B748
-    inc     ram_0489                ; $B74A
+    inc     dialogColumn            ; $B74A
     lda     #$05                    ; $B74D
     sta     menuTimer               ; $B74F
 
 loc_3_B752:
-    inc     ram_0569                ; $B752
+    inc     dialogTextPtr           ; $B752
     bne     loc_3_B75A              ; $B755
 ; (code below not executed in the test movies)
-    inc     ram_056A                ; $B757
+    inc     dialogTextPtr+1         ; $B757
 ; (end of code not executed in the test movies)
 
 loc_3_B75A:
     rts                             ; $B75A
 
-loc_3_B75B:
-    ldx     ram_048B                ; $B75B
+; ---------------------------------------------------------------------------
+; Dialog_Reward
+;
+; After a gift: for a wizard or a technique, once the spell sound is over,
+; play the item fanfare (a wizard's conversation ends here); in a lady's
+; house, refill Link's life (type $17) or magic (type $18).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_Reward:
+    ldx     dialogPerson            ; $B75B
     lda     enemyType,x             ; $B75E
     ldx     #$00                    ; $B760
     cmp     #$0F                    ; $B762
@@ -3693,7 +3901,7 @@ loc_3_B776:
     beq     loc_3_B7A5              ; $B77B
     lda     #$10                    ; $B77D
     sta     musicRequest            ; $B77F
-    ldx     ram_048B                ; $B781
+    ldx     dialogPerson            ; $B781
     lda     enemyType,x             ; $B784
     cmp     #$0F                    ; $B786
     bne     loc_3_B7A2              ; $B788
@@ -3716,7 +3924,14 @@ loc_3_B7A2:
 loc_3_B7A5:
     rts                             ; $B7A5
 
-loc_3_B7A6:
+; ---------------------------------------------------------------------------
+; Dialog_WaitForB
+;
+; Wait for B, unless nothing was printed (ram_0766).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Dialog_WaitForB:
     lda     ram_0766                ; $B7A6
     beq     loc_3_B7A2              ; $B7A9
     lda     joypadPressed           ; $B7AB
@@ -3726,7 +3941,17 @@ loc_3_B7A6:
     rts                             ; $B7B1
 ; (end of code not executed in the test movies)
 
-loc_3_B7B2:
+; ---------------------------------------------------------------------------
+; Dialog_Finish
+;
+; After the window closes: clear the conversation state; in Saria and
+; Darunia, if the person was a walking townsperson ($19-$1C), it may turn
+; into a bat (type $03) with probability 103/256
+; (Dialog_MaybeTurnToBat).  Then Dialog_Close.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Dialog_Finish:
     ldy     #$05                    ; $B7B2
     lda     #$00                    ; $B7B4
 
@@ -3738,12 +3963,12 @@ loc_3_B7B6:
     sta     ram_048D                ; $B7BE
     lda     townCode                ; $B7C1
     cmp     #$02                    ; $B7C4
-    beq     loc_3_B7CC              ; $B7C6
+    beq     Dialog_MaybeTurnToBat   ; $B7C6
     cmp     #$05                    ; $B7C8
     bne     Dialog_Close            ; $B7CA
 
-loc_3_B7CC:
-    ldx     ram_048B                ; $B7CC
+Dialog_MaybeTurnToBat:
+    ldx     dialogPerson            ; $B7CC
     lda     enemyType,x             ; $B7CF
     cmp     #$19                    ; $B7D1
     bcc     Dialog_Close            ; $B7D3
@@ -3763,6 +3988,14 @@ loc_3_B7CC:
     sta     objXVelocity+1,x        ; $B7EE
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Dialog_Close
+;
+; End the conversation: the dialog sound, and clear dialogType, menuRow,
+; pauseState and fluteActive.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Dialog_Close:
     lda     #$08                    ; $B7F0
     sta     sfxRequest+2            ; $B7F2

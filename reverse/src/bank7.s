@@ -8065,9 +8065,9 @@ Item_Collect:
     ldy     experience,x            ; $E7D4
     cpy     #$07                    ; $E7D7
     bcc     @loc_E7E3               ; $E7D9
-    lda     ram_079D                ; $E7DB
+    lda     townFlags+6             ; $E7DB
     ora     #$08                    ; $E7DE
-    sta     ram_079D                ; $E7E0
+    sta     townFlags+6             ; $E7E0
 
 @loc_E7E3:
     tya                             ; $E7E3
@@ -8114,8 +8114,8 @@ Item_CollectExpBag:
 ; Collect an item of kind $10 and up, with the item fanfare: a magic jar
 ; ($10 adds $10 to statMeterPending, one block of magic; $11 fills the
 ; meter, statContainers * $10), a 1-up doll ($12, one more life), or one
-; of three items that set a flag (kind $13: ram_079C bit 5, $14: ram_0798
-; bit 4, $15: ram_079A bit 6).  Magic jars play sound effect 8 instead of
+; of three items that set a flag (kind $13: townFlags+5 bit 5, $14: townFlags+1
+; bit 4, $15: townFlags+3 bit 6).  Magic jars play sound effect 8 instead of
 ; the fanfare.
 ;
 ; Status:  confirmed
@@ -8133,25 +8133,25 @@ Item_CollectSpecial:
 @loc_E81D:
     cpy     #$13                    ; $E81D
     bne     @loc_E82B               ; $E81F
-    lda     ram_079C                ; $E821
+    lda     townFlags+5             ; $E821
     ora     #$20                    ; $E824
-    sta     ram_079C                ; $E826
+    sta     townFlags+5             ; $E826
     bne     @loc_E86D               ; $E829
 
 @loc_E82B:
     cpy     #$14                    ; $E82B
     bne     @loc_E839               ; $E82D
-    lda     ram_0798                ; $E82F
+    lda     townFlags+1             ; $E82F
     ora     #$10                    ; $E832
-    sta     ram_0798                ; $E834
+    sta     townFlags+1             ; $E834
     bne     @loc_E86D               ; $E837
 
 @loc_E839:
     cpy     #$15                    ; $E839
     bne     @loc_E847               ; $E83B
-    lda     ram_079A                ; $E83D
+    lda     townFlags+3             ; $E83D
     ora     #$40                    ; $E840
-    sta     ram_079A                ; $E842
+    sta     townFlags+3             ; $E842
     bne     @loc_E86D               ; $E845
 
 @loc_E847:

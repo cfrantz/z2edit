@@ -2273,7 +2273,7 @@ loc_6_9805:
     jsr     Sq1_VibratoSfx          ; $9811
     jmp     loc_6_98E9              ; $9814
 
-Sfx_Shared60:
+Sfx_TextLetter:
     lda     #$06                    ; $9817
     ldx     #$00                    ; $9819
     jsr     Sfx_StartSharedOnNoise  ; $981B
@@ -2282,7 +2282,7 @@ Sfx_Shared60:
     lda     #$08                    ; $9823
     sta     NOISE_HI                ; $9825
 
-Sfx_Shared60Step:
+Sfx_TextLetterStep:
     ldy     ram_07F3                ; $9828
     lda     dat_6_969F,y            ; $982B
     sta     NOISE_VOL               ; $982E
@@ -2425,7 +2425,7 @@ loc_6_98E9:
 ;   $80 Sfx_BossDeath: a boss dying (Enemy_DieStep); also a locked door
 ;       opening (LockedDoor_Ai)
 ;   $C0 Sfx_Fairy: a fairy appearing (Fairy_Ai), or boarding the raft
-;   $60 Sfx_Shared60: a town event that draws tiles one at a time (bank 3
+;   $60 Sfx_TextLetter: a town event that draws tiles one at a time (bank 3
 ;       $B748)
 ; $C0 and $60 are checked before the single bits.
 ;
@@ -2515,7 +2515,7 @@ Sfx_UpdateShared:
     jmp     Sfx_Fairy               ; $997E
 
 @loc_9981:
-    jmp     Sfx_Shared60            ; $9981
+    jmp     Sfx_TextLetter          ; $9981
 
 @loc_9984:
     jmp     Sfx_DeathStep           ; $9984
@@ -2547,7 +2547,7 @@ Sfx_UpdateShared:
     jmp     Sfx_FairyStep           ; $999C
 
 @loc_999F:
-    jmp     Sfx_Shared60Step        ; $999F
+    jmp     Sfx_TextLetterStep      ; $999F
 
 Sfx_Spell:
     lda     #$60                    ; $99A2

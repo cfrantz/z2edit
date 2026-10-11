@@ -169,10 +169,10 @@ oamRotation             = $0485     ; rotates the enemies' sprite slots each fra
 areaNoCeiling           = $0486     ; bit 7 set: the area has no ceiling
 menuRepeatTimer         = $0487     ; frames until a held Up/Down moves a menu cursor again
 menuCursor              = $0488     ; selected menu item: on the continue screen, 0 = Continue, 1 = Save
-ram_0489                = $0489
-ram_048A                = $048A
-ram_048B                = $048B
-ram_048C                = $048C
+dialogColumn            = $0489
+dialogLineOffset        = $048A
+dialogPerson            = $048B
+dialogAlreadyDone       = $048C
 ram_048D                = $048D
 enemyDropItem           = $048E     ; [6] item the enemy drops when killed, 0 = none
 linkDeathPending        = $0494     ; nonzero to start the death sequence
@@ -209,8 +209,7 @@ statMeterDisplay        = $0564     ; [2] magic and life as shown on the meters
 menuTimer               = $0566
 fluteActive             = $0567     ; set (to 8) when the flute is played; while set, Flute_Update plays the tune (menuTimer) and Link cannot move
 flutePlayed             = $0568     ; nonzero after the flute is played on the overworld, until its effect is applied
-ram_0569                = $0569
-ram_056A                = $056A
+dialogTextPtr           = $0569
 townCode                = $056B     ; town being visited (provisional)
 palaceCode              = $056C     ; palace being visited (provisional)
 ram_056D                = $056D
@@ -359,11 +358,7 @@ crystalPlaced           = $078D     ; [6] nonzero once the palace's crystal is p
 keyCount                = $0793     ; number of keys held
 crystalsRemaining       = $0794     ; palaces still to be sealed with a crystal (starts at 6)
 techniques              = $0796     ; sword techniques learned; see TECH_*
-ram_0797                = $0797
-ram_0798                = $0798
-ram_079A                = $079A
-ram_079C                = $079C
-ram_079D                = $079D
+townFlags               = $0797
 continueCount           = $079F     ; times the continue screen has been shown, saved with the game
 secondQuest             = $07A0     ; nonzero for a second quest file (provisional)
 playerName              = $07A1     ; [8] player name, as tile numbers ($F4 = blank)
