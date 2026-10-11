@@ -56,8 +56,8 @@ GLOBALS_INC = 1
 .global sub_C947
 .global sub_CB18
 .global sub_D03D
-.global sub_D168
-.global sub_D174
+.global Game_CheckModeChange
+.global Game_CheckStateChange
 .global sub_D19B
 .global sub_D1CE
 .global sub_D20A
@@ -66,7 +66,7 @@ GLOBALS_INC = 1
 .global sub_D266
 .global sub_D281
 .global sub_D29C
-.global sub_D2EC
+.global Ppu_WriteStrings
 .global Joypad_Update
 .global sub_D385
 .global sub_D55E

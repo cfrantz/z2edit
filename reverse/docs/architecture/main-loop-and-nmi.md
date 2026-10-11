@@ -18,7 +18,8 @@ longer than one frame.
 
 ```
 loop:
-    wait until game state ($0736) is $08 or $14 and $076C is 1
+    wait until gameState is GAME_STATE_PLAY and
+               gameMode is GAME_MODE_LOAD_AREA or GAME_MODE_LOAD_ROOM
     nmiMode = NMI_MODE_SOUND_ONLY
     load the area (sub_C4CB)
     nmiMode = NMI_MODE_GAME
@@ -64,3 +65,44 @@ While idle, the loop uses only `a` and the flags.
 
 Button bits are the `JOY_*` constants in `hardware.inc` (A = bit 7 ...
 Right = bit 0).
+
+## Game State Machine
+
+The game NMI runs `Game_RunState`, a hierarchy of state machines:
+
+| Level | Variable | Changed means |
+|-------|----------|---------------|
+| state | `gameState` ($076C) | `gameMode`, `gameStep` and `gameSubStep` restart at 0 |
+| mode | `gameMode` ($0736) | `gameStep` and `gameSubStep` restart at 0 |
+| step | `gameStep` ($0738) | `gameSubStep` restarts at 0 |
+| sub-step | `gameSubStep` ($073D) | |
+
+Each level keeps the value it had when last checked (`gameStatePrev`,
+`gameModePrev`, `gameStepPrev`); `Game_CheckStateChange`,
+`Game_CheckModeChange` and `Game_CheckStepChange` compare and reset the
+lower levels, then return the current value for an inline jump table.
+
+`gameState` values (`GAME_STATE_*`):
+
+| Value | State |
+|-------|-------|
+| 0 | begin: set `lives` to 3, go to state 1 |
+| 1 | play: dispatch on `gameMode` |
+| 2 | death: Link's death animation; then lose a life (go to state 6), or show the continue screen when no lives remain.  Pressing Up+A on controller 2 enters the continue screen directly. |
+| 6 | respawn after losing a life, then back to state 1 (provisional) |
+
+States 3, 4 and 5 have not been identified.  On the title screens bank 5
+uses `gameState` for its own states.
+
+Common `gameMode` sequences in state 1, from `tools/watch.py` over the
+no-glitch movie:
+
+- entering a side-view area: $07 -> $08 (`GAME_MODE_LOAD_AREA`, loaded by
+  `Main_Loop`) -> $09 -> $0A -> $0B (`GAME_MODE_SIDE_VIEW`), then $10 when
+  Link leaves the area, followed by $07 for the next area or $01 for the
+  overworld;
+- moving to a connected room (e.g. by elevator): $12 -> $13 -> $14
+  (`GAME_MODE_LOAD_ROOM`) -> $15 -> $09;
+- the overworld: $00/$01 -> ... -> $05 (`GAME_MODE_OVERWORLD`) -> $06 ->
+  $07 when Link enters an area.
+

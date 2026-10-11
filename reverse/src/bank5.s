@@ -121,11 +121,11 @@ dat_5_8177:
 loc_5_817B:
     ldx     ram_010C                ; $817B
     lda     dat_5_8177,x            ; $817E
-    sta     ram_000C                ; $8181
+    sta     temp12                  ; $8181
     lda     #$81                    ; $8183
-    sta     ram_000D                ; $8185
+    sta     temp13                  ; $8185
     ldy     #$08                    ; $8187
-    lda     (ram_000C),y            ; $8189
+    lda     (temp12),y              ; $8189
     sta     ram_010D                ; $818B
     rts                             ; $818E
 
@@ -146,7 +146,7 @@ dat_5_81AE := * + 1
 
 loc_5_81B3:
     jsr     sub_5_81AD              ; $81B3
-    lda     ram_0000                ; $81B6
+    lda     temp0                   ; $81B6
     sta     ram_0112                ; $81B8
     jsr     sub_DF4C                ; $81BB
 
@@ -174,7 +174,7 @@ loc_5_81D7:
     jsr     sub_DF56                ; $81E0
     sta     ram_0730                ; $81E3
     dec     ram_0731                ; $81E6
-    lda     ram_0000                ; $81E9
+    lda     temp0                   ; $81E9
     sta     ram_0112                ; $81EB
 
 loc_5_81EE:
@@ -208,7 +208,7 @@ loc_5_8211:
     lda     dat_5_8190,x            ; $8219
 
 loc_5_821C:
-    sta     ram_0000                ; $821C
+    sta     temp0                   ; $821C
     rts                             ; $821E
 
 loc_5_821F:
@@ -278,7 +278,7 @@ loc_5_8280:
     lda     dat_5_8276,x            ; $8283
     jsr     sub_DF56                ; $8286
     lda     dat_5_827A,x            ; $8289
-    sta     (ram_000E),y            ; $828C
+    sta     (temp14),y              ; $828C
     rts                             ; $828E
 
 loc_5_828F:
@@ -302,7 +302,7 @@ loc_5_82A8:
     lda     #$87                    ; $82A8
 
 loc_5_82AA:
-    sta     (ram_000E),y            ; $82AA
+    sta     (temp14),y              ; $82AA
     iny                             ; $82AC
     dex                             ; $82AD
     bpl     loc_5_82A8              ; $82AE
@@ -321,10 +321,10 @@ loc_5_82B7:
 loc_5_82B9:
     jsr     sub_C944                ; $82B9
     lda     #$C2                    ; $82BC
-    sta     (ram_000E),y            ; $82BE
+    sta     (temp14),y              ; $82BE
     iny                             ; $82C0
     lda     dat_5_82B5,x            ; $82C1
-    sta     (ram_000E),y            ; $82C4
+    sta     (temp14),y              ; $82C4
     rts                             ; $82C6
     .byte   $F4, $F4, $F4, $F4                                              ; $82C7
 ; (unreferenced: $82CB-$82CE, 4 bytes)
@@ -657,12 +657,12 @@ dat_5_8BBB:
     .byte   $17, $27, $37, $37                                              ; $8BBB
 
 loc_5_8BBF:
-    ldx     ram_0301                ; $8BBF
+    ldx     ppuBuffer0Len           ; $8BBF
     ldy     #$00                    ; $8BC2
 
 loc_5_8BC4:
     lda     dat_5_8BB3,y            ; $8BC4
-    sta     ram_0302,x              ; $8BC7
+    sta     ppuBuffer0,x            ; $8BC7
     inx                             ; $8BCA
     iny                             ; $8BCB
     cpy     #$08                    ; $8BCC
@@ -673,9 +673,9 @@ loc_5_8BC4:
     and     #$03                    ; $8BD4
     tay                             ; $8BD6
     lda     dat_5_8BBB,y            ; $8BD7
-    sta     ram_02FF,x              ; $8BDA
+    sta     oamBuffer+255,x         ; $8BDA
     dex                             ; $8BDD
-    stx     ram_0301                ; $8BDE
+    stx     ppuBuffer0Len           ; $8BDE
     lda     ram_0761                ; $8BE1
     jsr     sub_D385                ; $8BE4
 ; (inline jump table)
@@ -705,13 +705,13 @@ loc_5_8C1D:
 
 loc_5_8C1F:
     lda     dat_5_8C05,y            ; $8C1F
-    sta     ram_0230,y              ; $8C22
+    sta     oamBuffer+48,y          ; $8C22
     dey                             ; $8C25
     bpl     loc_5_8C1F              ; $8C26
     lda     #$03                    ; $8C28
-    sta     ram_0232                ; $8C2A
+    sta     oamBuffer+50            ; $8C2A
     ora     #$40                    ; $8C2D
-    sta     ram_0236                ; $8C2F
+    sta     oamBuffer+54            ; $8C2F
     jsr     sub_5_8C38              ; $8C32
     jmp     sub_5_8C44              ; $8C35
 
@@ -720,7 +720,7 @@ sub_5_8C38:
 
 loc_5_8C3A:
     lda     dat_5_8C0D,y            ; $8C3A
-    sta     ram_0210,y              ; $8C3D
+    sta     oamBuffer+16,y          ; $8C3D
     dey                             ; $8C40
     bpl     loc_5_8C3A              ; $8C41
     rts                             ; $8C43
@@ -783,20 +783,20 @@ loc_5_8C8D:
     asl     a                       ; $8C90
     tay                             ; $8C91
     lda     objY+15,x               ; $8C92
-    sta     ram_0230,y              ; $8C94
-    sta     ram_0234,y              ; $8C97
+    sta     oamBuffer+48,y          ; $8C94
+    sta     oamBuffer+52,y          ; $8C97
     lda     #$D6                    ; $8C9A
-    sta     ram_0231,y              ; $8C9C
-    sta     ram_0235,y              ; $8C9F
+    sta     oamBuffer+49,y          ; $8C9C
+    sta     oamBuffer+53,y          ; $8C9F
     lda     #$03                    ; $8CA2
-    sta     ram_0232,y              ; $8CA4
+    sta     oamBuffer+50,y          ; $8CA4
     ora     #$40                    ; $8CA7
-    sta     ram_0236,y              ; $8CA9
+    sta     oamBuffer+54,y          ; $8CA9
     lda     objXHi,x                ; $8CAC
-    sta     ram_0233,y              ; $8CAE
+    sta     oamBuffer+51,y          ; $8CAE
     clc                             ; $8CB1
     adc     #$08                    ; $8CB2
-    sta     ram_0237,y              ; $8CB4
+    sta     oamBuffer+55,y          ; $8CB4
     dex                             ; $8CB7
     bpl     loc_5_8C8D              ; $8CB8
     rts                             ; $8CBA
@@ -827,16 +827,16 @@ loc_5_8CE2:
 ; (end of code not executed in the test movies)
 
 loc_5_8CE3:
-    ldx     ram_0301                ; $8CE3
+    ldx     ppuBuffer0Len           ; $8CE3
     cpx     #$19                    ; $8CE6
     bcs     loc_5_8CE2              ; $8CE8
     dec     ram_074B                ; $8CEA
     lda     #$3F                    ; $8CED
-    sta     ram_0302,x              ; $8CEF
+    sta     ppuBuffer0,x            ; $8CEF
     lda     #$10                    ; $8CF2
-    sta     ram_0303,x              ; $8CF4
+    sta     ppuBuffer0+1,x          ; $8CF4
     lda     #$04                    ; $8CF7
-    sta     ram_0304,x              ; $8CF9
+    sta     ppuBuffer0+2,x          ; $8CF9
     ldy     #$03                    ; $8CFC
     lda     (ram_00D4),y            ; $8CFE
     iny                             ; $8D00
@@ -859,11 +859,11 @@ loc_5_8D10:
 
 loc_5_8D1A:
     lda     sram_69CE,y             ; $8D1A
-    sta     ram_0306,x              ; $8D1D
+    sta     ppuBuffer0+4,x          ; $8D1D
     lda     sram_69D4,y             ; $8D20
-    sta     ram_0307,x              ; $8D23
+    sta     ppuBuffer0+5,x          ; $8D23
     lda     sram_69DA,y             ; $8D26
-    sta     ram_0308,x              ; $8D29
+    sta     ppuBuffer0+6,x          ; $8D29
     lda     ram_074B                ; $8D2C
     asl     a                       ; $8D2F
     bcs     loc_5_8D34              ; $8D30
@@ -873,13 +873,13 @@ loc_5_8D1A:
 
 loc_5_8D34:
     lda     sram_69C8,y             ; $8D34
-    sta     ram_0305,x              ; $8D37
+    sta     ppuBuffer0+3,x          ; $8D37
     lda     #$FF                    ; $8D3A
-    sta     ram_0309,x              ; $8D3C
+    sta     ppuBuffer0+7,x          ; $8D3C
     txa                             ; $8D3F
     clc                             ; $8D40
     adc     #$07                    ; $8D41
-    sta     ram_0301                ; $8D43
+    sta     ppuBuffer0Len           ; $8D43
     lda     ram_074B                ; $8D46
     bne     loc_5_8D8C              ; $8D49
 ; (code below not executed in the test movies)
@@ -892,17 +892,17 @@ dat_5_8D4E:
 
 loc_5_8D64:
     ldy     #$00                    ; $8D64
-    ldx     ram_0301                ; $8D66
+    ldx     ppuBuffer0Len           ; $8D66
 
 loc_5_8D69:
     lda     dat_5_8D4E,y            ; $8D69
-    sta     ram_0302,x              ; $8D6C
+    sta     ppuBuffer0,x            ; $8D6C
     inx                             ; $8D6F
     iny                             ; $8D70
     cpy     #$16                    ; $8D71
     bne     loc_5_8D69              ; $8D73
     dex                             ; $8D75
-    stx     ram_0301                ; $8D76
+    stx     ppuBuffer0Len           ; $8D76
     jsr     sub_5_8C8B              ; $8D79
     jsr     sub_5_8C38              ; $8D7C
     jsr     sub_5_8C44              ; $8D7F
@@ -922,18 +922,18 @@ dat_5_8DAD:
     .byte   $23, $D8, $48, $0F, $23, $E0, $50, $00, $23, $F0, $48, $F0, $FF ; $8DAD
 
 loc_5_8DBA:
-    ldx     ram_0301                ; $8DBA
+    ldx     ppuBuffer0Len           ; $8DBA
     ldy     #$00                    ; $8DBD
 
 loc_5_8DBF:
     lda     dat_5_8DAD,y            ; $8DBF
-    sta     ram_0302,x              ; $8DC2
+    sta     ppuBuffer0,x            ; $8DC2
     inx                             ; $8DC5
     iny                             ; $8DC6
     cpy     #$0D                    ; $8DC7
     bne     loc_5_8DBF              ; $8DC9
     dex                             ; $8DCB
-    stx     ram_0301                ; $8DCC
+    stx     ppuBuffer0Len           ; $8DCC
     jsr     sub_5_8DD5              ; $8DCF
     jmp     sub_5_8C44              ; $8DD2
 
@@ -942,7 +942,7 @@ sub_5_8DD5:
 
 loc_5_8DD7:
     lda     dat_5_8D8D,y            ; $8DD7
-    sta     ram_0210,y              ; $8DDA
+    sta     oamBuffer+16,y          ; $8DDA
     dey                             ; $8DDD
     bpl     loc_5_8DD7              ; $8DDE
     rts                             ; $8DE0
@@ -973,9 +973,9 @@ loc_5_8E26:
     and     #$0F                    ; $8E28
     bne     loc_5_8E6E              ; $8E2A
     lda     #$21                    ; $8E2C
-    sta     ram_0000                ; $8E2E
+    sta     temp0                   ; $8E2E
     lda     #$CB                    ; $8E30
-    sta     ram_0001                ; $8E32
+    sta     temp1                   ; $8E32
     lda     objXHi+3                ; $8E34
 
 loc_5_8E36:
@@ -984,12 +984,12 @@ loc_5_8E36:
     sec                             ; $8E3A
     sbc     #$0A                    ; $8E3B
     pha                             ; $8E3D
-    lda     ram_0001                ; $8E3E
+    lda     temp1                   ; $8E3E
     clc                             ; $8E40
     adc     #$40                    ; $8E41
-    sta     ram_0001                ; $8E43
+    sta     temp1                   ; $8E43
     bcc     loc_5_8E49              ; $8E45
-    inc     ram_0000                ; $8E47
+    inc     temp0                   ; $8E47
 
 loc_5_8E49:
     pla                             ; $8E49
@@ -998,16 +998,16 @@ loc_5_8E49:
 loc_5_8E4D:
     inc     objXHi+3                ; $8E4D
     clc                             ; $8E4F
-    adc     ram_0001                ; $8E50
-    sta     ram_0303                ; $8E52
-    lda     ram_0000                ; $8E55
-    sta     ram_0302                ; $8E57
+    adc     temp1                   ; $8E50
+    sta     ppuBuffer0+1            ; $8E52
+    lda     temp0                   ; $8E55
+    sta     ppuBuffer0              ; $8E57
     lda     #$01                    ; $8E5A
-    sta     ram_0304                ; $8E5C
+    sta     ppuBuffer0+2            ; $8E5C
     lda     dat_5_8DE1,x            ; $8E5F
-    sta     ram_0305                ; $8E62
+    sta     ppuBuffer0+3            ; $8E62
     lda     #$FF                    ; $8E65
-    sta     ram_0306                ; $8E67
+    sta     ppuBuffer0+4            ; $8E67
     lda     #$02                    ; $8E6A
     sta     ram_00EF                ; $8E6C
 
@@ -1036,7 +1036,7 @@ loc_5_8E83:
 
 loc_5_8E8E:
     lda     #$21                    ; $8E8E
-    sta     objState+14             ; $8E90
+    sta     objYHi+14               ; $8E90
     lda     #$60                    ; $8E92
     sta     ram_0028                ; $8E94
     lda     #$D8                    ; $8E96
@@ -1061,15 +1061,15 @@ loc_5_8EAE:
     lda     ram_0028                ; $8EB8
     clc                             ; $8EBA
     adc     #$20                    ; $8EBB
-    sta     ram_0303                ; $8EBD
-    lda     objState+14             ; $8EC0
+    sta     ppuBuffer0+1            ; $8EBD
+    lda     objYHi+14               ; $8EC0
     adc     #$00                    ; $8EC2
-    sta     ram_0302                ; $8EC4
+    sta     ppuBuffer0              ; $8EC4
     ldx     #$06                    ; $8EC7
 
 loc_5_8EC9:
     lda     dat_5_8EA1,x            ; $8EC9
-    sta     ram_0304,x              ; $8ECC
+    sta     ppuBuffer0+2,x          ; $8ECC
     dex                             ; $8ECF
     bpl     loc_5_8EC9              ; $8ED0
     lda     objY+9                  ; $8ED2
@@ -1077,14 +1077,14 @@ loc_5_8EC9:
     lsr     a                       ; $8ED6
     tax                             ; $8ED7
     lda     objY+5                  ; $8ED8
-    sta     ram_0307                ; $8EDA
+    sta     ppuBuffer0+5            ; $8EDA
     cmp     #$F0                    ; $8EDD
     bne     loc_5_8EE3              ; $8EDF
     ldx     #$01                    ; $8EE1
 
 loc_5_8EE3:
     lda     dat_5_8EA8,x            ; $8EE3
-    sta     ram_0309                ; $8EE6
+    sta     ppuBuffer0+7            ; $8EE6
     inc     objY+9                  ; $8EE9
     lda     objY+9                  ; $8EEB
     and     #$03                    ; $8EED
@@ -1117,7 +1117,7 @@ loc_5_8F1B:
     lda     objY+14                 ; $8F1B
     bne     loc_5_8F62              ; $8F1D
     lda     #$00                    ; $8F1F
-    sta     ram_0000                ; $8F21
+    sta     temp0                   ; $8F21
     jsr     sub_5_8FF6              ; $8F23
     inc     objXHi+4                ; $8F26
     lda     objXHi+4                ; $8F28
@@ -1129,13 +1129,13 @@ loc_5_8F1B:
     clc                             ; $8F34
     adc     #$20                    ; $8F35
     sta     ram_0028                ; $8F37
-    lda     objState+14             ; $8F39
+    lda     objYHi+14               ; $8F39
     adc     #$00                    ; $8F3B
-    sta     objState+14             ; $8F3D
+    sta     objYHi+14               ; $8F3D
     lda     ram_0761                ; $8F3F
     cmp     #$0D                    ; $8F42
     beq     loc_5_8F52              ; $8F44
-    lda     objState+14             ; $8F46
+    lda     objYHi+14               ; $8F46
     cmp     #$22                    ; $8F48
     bne     loc_5_8F52              ; $8F4A
     lda     ram_0028                ; $8F4C
@@ -1143,7 +1143,7 @@ loc_5_8F1B:
     beq     loc_5_8F62              ; $8F50
 
 loc_5_8F52:
-    lda     objState+14             ; $8F52
+    lda     objYHi+14               ; $8F52
     cmp     #$23                    ; $8F54
     bne     loc_5_8F65              ; $8F56
     lda     ram_0028                ; $8F58
@@ -1165,17 +1165,17 @@ loc_5_8F68:
 sub_5_8F6B:
     jsr     sub_5_8DD5              ; $8F6B
     lda     #$75                    ; $8F6E
-    sta     ram_0213                ; $8F70
-    sta     ram_0223                ; $8F73
+    sta     oamBuffer+19            ; $8F70
+    sta     oamBuffer+35            ; $8F73
     lda     #$7D                    ; $8F76
-    sta     ram_0217                ; $8F78
-    sta     ram_0227                ; $8F7B
+    sta     oamBuffer+23            ; $8F78
+    sta     oamBuffer+39            ; $8F7B
     lda     #$7B                    ; $8F7E
-    sta     ram_021B                ; $8F80
-    sta     ram_022B                ; $8F83
+    sta     oamBuffer+27            ; $8F80
+    sta     oamBuffer+43            ; $8F83
     lda     #$83                    ; $8F86
-    sta     ram_021F                ; $8F88
-    sta     ram_022F                ; $8F8B
+    sta     oamBuffer+31            ; $8F88
+    sta     oamBuffer+47            ; $8F8B
     rts                             ; $8F8E
 
 dat_5_8F8F:
@@ -1188,7 +1188,7 @@ loc_5_8F9E:
 
 loc_5_8FA4:
     lda     dat_5_8F8F,y            ; $8FA4
-    sta     ram_0302,y              ; $8FA7
+    sta     ppuBuffer0,y            ; $8FA7
     dey                             ; $8FAA
     bpl     loc_5_8FA4              ; $8FAB
     lda     #$01                    ; $8FAD
@@ -1204,7 +1204,7 @@ loc_5_8FB4:
     and     #$07                    ; $8FBA
     bne     loc_5_8FF5              ; $8FBC
     lda     #$10                    ; $8FBE
-    sta     ram_0000                ; $8FC0
+    sta     temp0                   ; $8FC0
     jsr     sub_5_8FF6              ; $8FC2
     inc     objXHi+4                ; $8FC5
     lda     objXHi+4                ; $8FC7
@@ -1216,9 +1216,9 @@ loc_5_8FB4:
     sec                             ; $8FD3
     sbc     #$20                    ; $8FD4
     sta     ram_0028                ; $8FD6
-    lda     objState+14             ; $8FD8
+    lda     objYHi+14               ; $8FD8
     sbc     #$00                    ; $8FDA
-    sta     objState+14             ; $8FDC
+    sta     objYHi+14               ; $8FDC
     cmp     #$21                    ; $8FDE
     bne     loc_5_8FF5              ; $8FE0
     lda     ram_0028                ; $8FE2
@@ -1241,37 +1241,37 @@ sub_5_8FF6:
     lda     objXHi+4                ; $8FF8
     asl     a                       ; $8FFA
     asl     a                       ; $8FFB
-    ora     ram_0000                ; $8FFC
+    ora     temp0                   ; $8FFC
     tay                             ; $8FFE
-    lda     objState+14             ; $8FFF
-    sta     ram_0302                ; $9001
+    lda     objYHi+14               ; $8FFF
+    sta     ppuBuffer0              ; $9001
     lda     ram_0028                ; $9004
-    sta     ram_0303                ; $9006
+    sta     ppuBuffer0+1            ; $9006
     clc                             ; $9009
     adc     #$20                    ; $900A
-    sta     ram_0326                ; $900C
-    lda     objState+14             ; $900F
+    sta     ppuBuffer0+36           ; $900C
+    lda     objYHi+14               ; $900F
     adc     #$00                    ; $9011
-    sta     ram_0325                ; $9013
+    sta     ppuBuffer0+35           ; $9013
     lda     #$20                    ; $9016
-    sta     ram_0304                ; $9018
-    sta     ram_0327                ; $901B
+    sta     ppuBuffer0+2            ; $9018
+    sta     ppuBuffer0+37           ; $901B
 
 loc_5_901E:
     lda     dat_5_8EFB,y            ; $901E
-    sta     ram_0305,x              ; $9021
+    sta     ppuBuffer0+3,x          ; $9021
     lda     dat_5_8EFC,y            ; $9024
-    sta     ram_0306,x              ; $9027
+    sta     ppuBuffer0+4,x          ; $9027
     lda     dat_5_8EFD,y            ; $902A
-    sta     ram_0328,x              ; $902D
+    sta     ppuBuffer0+38,x         ; $902D
     lda     dat_5_8EFE,y            ; $9030
-    sta     ram_0329,x              ; $9033
+    sta     ppuBuffer0+39,x         ; $9033
     inx                             ; $9036
     inx                             ; $9037
     cpx     #$20                    ; $9038
     bne     loc_5_901E              ; $903A
     lda     #$FF                    ; $903C
-    sta     ram_0348                ; $903E
+    sta     ppuBuffer0+70           ; $903E
     rts                             ; $9041
 
 loc_5_9042:
@@ -1301,7 +1301,7 @@ loc_5_9075:
 
 loc_5_9077:
     lda     dat_5_9058,y            ; $9077
-    sta     ram_0302,y              ; $907A
+    sta     ppuBuffer0,y            ; $907A
     dey                             ; $907D
     bpl     loc_5_9077              ; $907E
     lda     #$11                    ; $9080
@@ -1314,19 +1314,19 @@ loc_5_9077:
 
 loc_5_908D:
     lda     #$00                    ; $908D
-    sta     ram_0002                ; $908F
+    sta     temp2                   ; $908F
     lda     objX+7                  ; $9091
     asl     a                       ; $9093
     tay                             ; $9094
     lda     dat_5_9259,y            ; $9095
-    sta     ram_0000                ; $9098
+    sta     temp0                   ; $9098
     lda     dat_5_925A,y            ; $909A
-    sta     ram_0001                ; $909D
+    sta     temp1                   ; $909D
     ldy     #$00                    ; $909F
 
 loc_5_90A1:
-    lda     (ram_0000),y            ; $90A1
-    sta     ram_0302,y              ; $90A3
+    lda     (temp0),y               ; $90A1
+    sta     ppuBuffer0,y            ; $90A3
     iny                             ; $90A6
     cmp     #$FF                    ; $90A7
     bne     loc_5_90A1              ; $90A9
@@ -1367,18 +1367,18 @@ loc_5_9109:
     asl     a                       ; $9111
     tax                             ; $9112
     lda     dat_5_90B6,x            ; $9113
-    sta     ram_0000                ; $9116
+    sta     temp0                   ; $9116
     lda     dat_5_90B7,x            ; $9118
-    sta     ram_0001                ; $911B
+    sta     temp1                   ; $911B
     lda     #$3F                    ; $911D
-    sta     ram_0302                ; $911F
+    sta     ppuBuffer0              ; $911F
     lda     objX+7                  ; $9122
     and     #$01                    ; $9124
     tax                             ; $9126
     lda     dat_5_90FA,x            ; $9127
-    sta     ram_0303                ; $912A
+    sta     ppuBuffer0+1            ; $912A
     lda     #$04                    ; $912D
-    sta     ram_0304                ; $912F
+    sta     ppuBuffer0+2            ; $912F
     lda     objX+8                  ; $9132
     asl     a                       ; $9134
     asl     a                       ; $9135
@@ -1386,14 +1386,14 @@ loc_5_9109:
     ldx     #$00                    ; $9137
 
 loc_5_9139:
-    lda     (ram_0000),y            ; $9139
-    sta     ram_0305,x              ; $913B
+    lda     (temp0),y               ; $9139
+    sta     ppuBuffer0+3,x          ; $913B
     iny                             ; $913E
     inx                             ; $913F
     cpx     #$04                    ; $9140
     bne     loc_5_9139              ; $9142
     lda     #$FF                    ; $9144
-    sta     ram_0309                ; $9146
+    sta     ppuBuffer0+7            ; $9146
     inc     objX+8                  ; $9149
     ldy     objX+8                  ; $914B
     lda     dat_5_90AE,y            ; $914D
@@ -1449,7 +1449,7 @@ loc_5_9194:
 
 loc_5_919C:
     lda     dat_5_916E,y            ; $919C
-    sta     ram_0302,y              ; $919F
+    sta     ppuBuffer0,y            ; $919F
     dey                             ; $91A2
     bpl     loc_5_919C              ; $91A3
 
@@ -1468,15 +1468,15 @@ loc_5_91B3:
     dec     objY+14                 ; $91B3
     bne     loc_5_921B              ; $91B5
     lda     dat_5_90B6              ; $91B7
-    sta     ram_0000                ; $91BA
+    sta     temp0                   ; $91BA
     lda     dat_5_90B7              ; $91BC
-    sta     ram_0001                ; $91BF
+    sta     temp1                   ; $91BF
     lda     #$3F                    ; $91C1
-    sta     ram_0302                ; $91C3
+    sta     ppuBuffer0              ; $91C3
     lda     #$00                    ; $91C6
-    sta     ram_0303                ; $91C8
+    sta     ppuBuffer0+1            ; $91C8
     lda     #$04                    ; $91CB
-    sta     ram_0304                ; $91CD
+    sta     ppuBuffer0+2            ; $91CD
     lda     objX+8                  ; $91D0
     asl     a                       ; $91D2
     asl     a                       ; $91D3
@@ -1484,18 +1484,18 @@ loc_5_91B3:
     ldx     #$00                    ; $91D5
 
 loc_5_91D7:
-    lda     (ram_0000),y            ; $91D7
-    sta     ram_0305,x              ; $91D9
+    lda     (temp0),y               ; $91D7
+    sta     ppuBuffer0+3,x          ; $91D9
     iny                             ; $91DC
     inx                             ; $91DD
     cpx     #$04                    ; $91DE
     bne     loc_5_91D7              ; $91E0
     lda     #$3F                    ; $91E2
-    sta     ram_0309                ; $91E4
+    sta     ppuBuffer0+7            ; $91E4
     lda     #$08                    ; $91E7
-    sta     ram_030A                ; $91E9
+    sta     ppuBuffer0+8            ; $91E9
     lda     #$04                    ; $91EC
-    sta     ram_030B                ; $91EE
+    sta     ppuBuffer0+9            ; $91EE
     ldx     #$00                    ; $91F1
     lda     objX+8                  ; $91F3
     asl     a                       ; $91F5
@@ -1504,14 +1504,14 @@ loc_5_91D7:
     tay                             ; $91F9
 
 loc_5_91FA:
-    lda     (ram_0000),y            ; $91FA
-    sta     ram_030C,x              ; $91FC
+    lda     (temp0),y               ; $91FA
+    sta     ppuBuffer0+10,x         ; $91FC
     iny                             ; $91FF
     inx                             ; $9200
     cpx     #$04                    ; $9201
     bne     loc_5_91FA              ; $9203
     lda     #$FF                    ; $9205
-    sta     ram_030C,x              ; $9207
+    sta     ppuBuffer0+10,x         ; $9207
     inc     objX+8                  ; $920A
     lda     objX+8                  ; $920C
     cmp     #$08                    ; $920E
@@ -1627,10 +1627,10 @@ dat_5_962A:
 
 loc_5_962C:
     lda     #$02                    ; $962C
-    sta     ram_0002                ; $962E
+    sta     temp2                   ; $962E
     lda     frameCounter            ; $9630
     and     #$03                    ; $9632
-    sta     ram_0003                ; $9634
+    sta     temp3                   ; $9634
     ldx     #$5A                    ; $9636
     jmp     loc_EF03                ; $9638
 
@@ -1639,10 +1639,10 @@ sub_5_963B:
     sbc     #$30                    ; $963D
     sta     objY+1,x                ; $963F
     ldy     objFacing               ; $9641
-    lda     ram_072C                ; $9643
+    lda     scrollX                 ; $9643
     adc     dat_5_965E,y            ; $9646
     sta     objX+1,x                ; $9649
-    lda     ram_072A                ; $964B
+    lda     scrollXHi               ; $964B
     adc     #$00                    ; $964E
     sta     objXHi+1,x              ; $9650
     lda     dat_5_9660,y            ; $9652
@@ -1689,9 +1689,9 @@ loc_5_9689:
 
 loc_5_9695:
     ldx     #$4A                    ; $9695
-    lda     ram_0002                ; $9697
+    lda     temp2                   ; $9697
     eor     #$03                    ; $9699
-    sta     ram_0002                ; $969B
+    sta     temp2                   ; $969B
     jmp     sub_F0D7                ; $969D
 
 loc_5_96A0:
@@ -1701,7 +1701,7 @@ loc_5_96A0:
 loc_5_96A5:
     ldy     #$50                    ; $96A5
     lda     #$02                    ; $96A7
-    sta     ram_0002                ; $96A9
+    sta     temp2                   ; $96A9
     ldx     #$3C                    ; $96AB
     jsr     sub_F1F4                ; $96AD
     jsr     sub_F0D7                ; $96B0
@@ -1712,55 +1712,55 @@ loc_5_96A5:
     and     #$0F                    ; $96B8
     sta     ram_00C9                ; $96BA
     lda     objY+1,x                ; $96BC
-    sta     ram_0000                ; $96BE
-    lda     ram_0001                ; $96C0
+    sta     temp0                   ; $96BE
+    lda     temp1                   ; $96C0
     clc                             ; $96C2
     adc     #$10                    ; $96C3
-    sta     ram_0001                ; $96C5
-    dec     ram_0002                ; $96C7
+    sta     temp1                   ; $96C5
+    dec     temp2                   ; $96C7
     ldx     #$3C                    ; $96C9
     jsr     sub_F1F4                ; $96CB
-    lda     ram_0000                ; $96CE
+    lda     temp0                   ; $96CE
     sec                             ; $96D0
     sbc     ram_00D9                ; $96D1
     jsr     sub_F0D7                ; $96D3
     lda     objY+1,x                ; $96D6
-    sta     ram_0270                ; $96D8
-    sta     ram_0278                ; $96DB
+    sta     oamBuffer+112           ; $96D8
+    sta     oamBuffer+120           ; $96DB
     adc     #$10                    ; $96DE
-    sta     ram_0274                ; $96E0
-    sta     ram_027C                ; $96E3
+    sta     oamBuffer+116           ; $96E0
+    sta     oamBuffer+124           ; $96E3
     lda     frameCounter            ; $96E6
     and     #$10                    ; $96E8
     lsr     a                       ; $96EA
     lsr     a                       ; $96EB
     lsr     a                       ; $96EC
     lsr     a                       ; $96ED
-    sta     ram_0005                ; $96EE
+    sta     temp5                   ; $96EE
     adc     ram_00CD                ; $96F0
     sec                             ; $96F2
     sbc     #$08                    ; $96F3
-    sta     ram_0273                ; $96F5
-    sta     ram_0277                ; $96F8
+    sta     oamBuffer+115           ; $96F5
+    sta     oamBuffer+119           ; $96F8
     lda     ram_00CD                ; $96FB
     clc                             ; $96FD
     adc     #$20                    ; $96FE
     sec                             ; $9700
-    sbc     ram_0005                ; $9701
-    sta     ram_027B                ; $9703
-    sta     ram_027F                ; $9706
+    sbc     temp5                   ; $9701
+    sta     oamBuffer+123           ; $9703
+    sta     oamBuffer+127           ; $9706
     lda     #$F0                    ; $9709
-    sta     ram_0271                ; $970B
-    sta     ram_0279                ; $970E
+    sta     oamBuffer+113           ; $970B
+    sta     oamBuffer+121           ; $970E
     lda     #$F6                    ; $9711
-    sta     ram_0275                ; $9713
-    sta     ram_027D                ; $9716
-    lda     ram_0252                ; $9719
-    sta     ram_0272                ; $971C
-    sta     ram_0276                ; $971F
+    sta     oamBuffer+117           ; $9713
+    sta     oamBuffer+125           ; $9716
+    lda     oamBuffer+82            ; $9719
+    sta     oamBuffer+114           ; $971C
+    sta     oamBuffer+118           ; $971F
     ora     #$40                    ; $9722
-    sta     ram_027A                ; $9724
-    sta     ram_027E                ; $9727
+    sta     oamBuffer+122           ; $9724
+    sta     oamBuffer+126           ; $9727
     lda     objX+1,x                ; $972A
     pha                             ; $972C
     sec                             ; $972D
@@ -1779,15 +1779,15 @@ loc_5_96A5:
 ; (code below not executed in the test movies)
     bpl     loc_5_974F              ; $9745
     ldy     #$F8                    ; $9747
-    sty     ram_0270                ; $9749
-    sty     ram_0274                ; $974C
+    sty     oamBuffer+112           ; $9749
+    sty     oamBuffer+116           ; $974C
 
 loc_5_974F:
     asl     a                       ; $974F
     beq     loc_5_975A              ; $9750
     ldy     #$F8                    ; $9752
-    sty     ram_0278                ; $9754
-    sty     ram_027C                ; $9757
+    sty     oamBuffer+120           ; $9754
+    sty     oamBuffer+124           ; $9757
 ; (end of code not executed in the test movies)
 
 loc_5_975A:
@@ -1806,7 +1806,7 @@ loc_5_9764:
     jsr     sub_DBCE                ; $9769
     bcs     loc_5_9795              ; $976C
     lda     #$0C                    ; $976E
-    sta     a:ram_0087,y            ; $9770
+    sta     a:objState+7,y          ; $9770
     lda     ram_051B,x              ; $9773
     and     #$1F                    ; $9776
     adc     objY+1,x                ; $9778
@@ -1839,7 +1839,7 @@ loc_5_9796:
     lda     #$02                    ; $97AA
     sta     ram_0753                ; $97AC
     lsr     a                       ; $97AF
-    sta     objState+1              ; $97B0
+    sta     objYHi+1                ; $97B0
     sta     enemyActive             ; $97B2
     lsr     a                       ; $97B4
     sta     enemyActive,x           ; $97B5
@@ -1870,7 +1870,7 @@ loc_5_97C6:
 loc_5_97DE:
     inc     ram_00AF                ; $97DE
     jsr     sub_EF11                ; $97E0
-    lda     ram_072A                ; $97E3
+    lda     scrollXHi               ; $97E3
     beq     loc_5_980C              ; $97E6
     inc     ram_0728                ; $97E8
     lda     #$00                    ; $97EB
@@ -1881,7 +1881,7 @@ loc_5_97DE:
     lda     #$A0                    ; $97F5
     sta     objY                    ; $97F7
     lda     #$03                    ; $97F9
-    sta     ram_0080                ; $97FB
+    sta     objState                ; $97FB
     lsr     a                       ; $97FD
     sta     linkWalkDir             ; $97FE
     asl     a                       ; $9800
@@ -1936,7 +1936,7 @@ loc_5_983E:
     cmp     #$81                    ; $9841
     bne     loc_5_9852              ; $9843
     lda     #$0D                    ; $9845
-    sta     ram_0725                ; $9847
+    sta     ppuStringSelect         ; $9847
     lda     #$80                    ; $984A
     sta     ram_00EB                ; $984C
     lda     #$04                    ; $984E
@@ -1963,7 +1963,7 @@ loc_5_9864:
 
 loc_5_9874:
     lda     #$0A                    ; $9874
-    sta     ram_0081                ; $9876
+    sta     objState+1              ; $9876
     jmp     sub_5_9A77              ; $9878
 
 loc_5_987B:
@@ -1976,7 +1976,7 @@ loc_5_987B:
 
 loc_5_9887:
     lda     #$06                    ; $9887
-    sta     ram_0081                ; $9889
+    sta     objState+1              ; $9889
     jmp     sub_5_9A77              ; $988B
 
 loc_5_988E:
@@ -2001,7 +2001,7 @@ loc_5_9897:
 
 loc_5_98AD:
     lda     #$0A                    ; $98AD
-    sta     ram_0081                ; $98AF
+    sta     objState+1              ; $98AF
     jsr     sub_5_9A0F              ; $98B1
     lda     objY+1                  ; $98B4
     cmp     #$F0                    ; $98B6
@@ -2199,7 +2199,7 @@ loc_5_99CC:
     lda     #$02                    ; $99D7
 
 loc_5_99D9:
-    sta     ram_0081                ; $99D9
+    sta     objState+1              ; $99D9
     rts                             ; $99DB
 
 dat_5_99DC:
@@ -2227,7 +2227,7 @@ loc_5_99F6:
 
 loc_5_99FF:
     lda     dat_5_99DC,y            ; $99FF
-    sta     ram_0081                ; $9A02
+    sta     objState+1              ; $9A02
     rts                             ; $9A04
 
 loc_5_9A05:
@@ -2237,7 +2237,7 @@ loc_5_9A05:
     asl     a                       ; $9A0B
 
 loc_5_9A0C:
-    sta     ram_0081                ; $9A0C
+    sta     objState+1              ; $9A0C
     rts                             ; $9A0E
 
 sub_5_9A0F:
@@ -2276,9 +2276,9 @@ loc_5_9A3C:
 
 loc_5_9A3F:
     lda     #$3C                    ; $9A3F
-    sta     ram_0000                ; $9A41
+    sta     temp0                   ; $9A41
     lda     #$04                    ; $9A43
-    sta     ram_0002                ; $9A45
+    sta     temp2                   ; $9A45
 dat_5_9A49 := * + 2
     jmp     sub_DECE                ; $9A47
     .byte   $04, $05                                                        ; $9A4A
@@ -2314,7 +2314,7 @@ loc_5_9A6A:
 
 loc_5_9A71:
     lda     dat_5_9A49,y            ; $9A71
-    sta     ram_0081                ; $9A74
+    sta     objState+1              ; $9A74
 
 loc_5_9A76:
     rts                             ; $9A76
@@ -2352,23 +2352,23 @@ sub_5_9A8D:
     lda     ram_00CD                ; $9A9C
     adc     #$08                    ; $9A9E
     adc     dat_5_9A84,y            ; $9AA0
-    sta     ram_0004                ; $9AA3
+    sta     temp4                   ; $9AA3
     lda     #$06                    ; $9AA5
-    sta     ram_0006                ; $9AA7
+    sta     temp6                   ; $9AA7
     ldy     ram_0018                ; $9AA9
     lda     objY+1                  ; $9AAB
     adc     dat_5_9A87,y            ; $9AAD
-    sta     ram_0005                ; $9AB0
+    sta     temp5                   ; $9AB0
     lda     #$09                    ; $9AB2
-    sta     ram_0007                ; $9AB4
+    sta     temp7                   ; $9AB4
     jsr     sub_E9F9                ; $9AB6
     bcs     loc_5_9AF5              ; $9AB9
     jsr     sub_E942                ; $9ABB
     ldy     ram_0018                ; $9ABE
     lda     objY+1                  ; $9AC0
-    sta     ram_0005                ; $9AC2
+    sta     temp5                   ; $9AC2
     lda     #$1D                    ; $9AC4
-    sta     ram_0007                ; $9AC6
+    sta     temp7                   ; $9AC6
     jsr     sub_E9F9                ; $9AC8
     bcc     loc_5_9B07              ; $9ACB
     ldy     #$00                    ; $9ACD
@@ -2396,7 +2396,7 @@ loc_5_9AF4:
 
 loc_5_9AF5:
     lda     #$00                    ; $9AF5
-    sta     ram_000B                ; $9AF7
+    sta     temp11                  ; $9AF7
     jsr     sub_E371                ; $9AF9
     lda     objXVelocity            ; $9AFC
     eor     #$FF                    ; $9AFE
@@ -2419,14 +2419,14 @@ loc_5_9B07:
 loc_5_9B15:
     pla                             ; $9B15
     adc     dat_5_9A89,y            ; $9B16
-    sta     ram_0004                ; $9B19
+    sta     temp4                   ; $9B19
     lda     #$0E                    ; $9B1B
-    sta     ram_0006                ; $9B1D
+    sta     temp6                   ; $9B1D
     lda     ram_0481                ; $9B1F
     adc     #$03                    ; $9B22
-    sta     ram_0005                ; $9B24
+    sta     temp5                   ; $9B24
     lda     #$02                    ; $9B26
-    sta     ram_0007                ; $9B28
+    sta     temp7                   ; $9B28
     jsr     sub_E9F9                ; $9B2A
     bcs     loc_5_9AF5              ; $9B2D
     jsr     sub_E975                ; $9B2F
@@ -2441,7 +2441,7 @@ loc_5_9B3A:
     cmp     #$81                    ; $9B3D
     bne     loc_5_9B46              ; $9B3F
     lda     #$0E                    ; $9B41
-    sta     ram_0725                ; $9B43
+    sta     ppuStringSelect         ; $9B43
 
 loc_5_9B46:
     lda     ram_0479                ; $9B46
@@ -2452,7 +2452,7 @@ loc_5_9B46:
 
 loc_5_9B53:
     lda     #$03                    ; $9B53
-    sta     ram_0080                ; $9B55
+    sta     objState                ; $9B55
     ldy     ram_0504                ; $9B57
     bne     loc_5_9B73              ; $9B5A
     lsr     a                       ; $9B5C
@@ -2513,13 +2513,13 @@ loc_5_9BA8:
     ldy     ram_0512                ; $9BAC
     beq     loc_5_9BBA              ; $9BAF
     lda     #$0B                    ; $9BB1
-    sta     ram_0080                ; $9BB3
+    sta     objState                ; $9BB3
     inc     ram_00AF                ; $9BB5
     jmp     sub_EF11                ; $9BB7
 
 loc_5_9BBA:
     lda     #$03                    ; $9BBA
-    sta     ram_076C                ; $9BBC
+    sta     gameState               ; $9BBC
     lda     #$00                    ; $9BBF
     sta     PPUMASK                 ; $9BC1
     inc     ram_0726                ; $9BC4
@@ -2529,7 +2529,7 @@ loc_5_9BC8:
     jsr     sub_EA1C                ; $9BC8
     bcc     loc_5_9C45              ; $9BCB
     lda     #$F4                    ; $9BCD
-    sta     ram_0087,x              ; $9BCF
+    sta     objState+7,x            ; $9BCF
     rts                             ; $9BD1
 
 loc_5_9BD2:
@@ -2612,13 +2612,13 @@ loc_5_9C45:
     beq     loc_5_9C60              ; $9C4F
     and     #$F0                    ; $9C51
     bne     loc_5_9C5B              ; $9C53
-    lda     ram_0087,x              ; $9C55
+    lda     objState+7,x            ; $9C55
     cmp     #$07                    ; $9C57
     beq     loc_5_9C5F              ; $9C59
 
 loc_5_9C5B:
     lda     #$00                    ; $9C5B
-    sta     ram_0087,x              ; $9C5D
+    sta     objState+7,x            ; $9C5D
 
 loc_5_9C5F:
     rts                             ; $9C5F
@@ -2633,16 +2633,16 @@ loc_5_9C69:
     beq     loc_5_9C5B              ; $9C6B
     ldy     ram_0097,x              ; $9C6D
     lda     objY+7,x                ; $9C6F
-    sta     ram_0000                ; $9C71
+    sta     temp0                   ; $9C71
     lda     #$02                    ; $9C73
-    sta     ram_0002                ; $9C75
+    sta     temp2                   ; $9C75
     lsr     a                       ; $9C77
-    sta     ram_0003                ; $9C78
+    sta     temp3                   ; $9C78
     lsr     a                       ; $9C7A
     sta     ram_00C9                ; $9C7B
     lda     objX+7,x                ; $9C7D
-    sbc     ram_072C                ; $9C7F
-    sta     ram_0001                ; $9C82
+    sbc     scrollX                 ; $9C7F
+    sta     temp1                   ; $9C82
     lda     objXVelocity+7,x        ; $9C84
     ldx     #$00                    ; $9C86
     cmp     #$08                    ; $9C88
@@ -2659,31 +2659,31 @@ dat_5_9C96:
     .byte   $40, $00                                                        ; $9C97
 
 sub_5_9C99:
-    lda     ram_0087,x              ; $9C99
+    lda     objState+7,x            ; $9C99
     pha                             ; $9C9B
     asl     a                       ; $9C9C
     tay                             ; $9C9D
-    lda     sram_6EC0,y             ; $9C9E
-    sta     ram_000E                ; $9CA1
-    lda     sram_6EC1,y             ; $9CA3
-    sta     ram_000F                ; $9CA6
+    lda     sramEnemyData+448,y     ; $9C9E
+    sta     temp14                  ; $9CA1
+    lda     sramEnemyData+449,y     ; $9CA3
+    sta     temp15                  ; $9CA6
     ldy     ram_0097,x              ; $9CA8
     lda     objY+7,x                ; $9CAA
-    sta     ram_0200,y              ; $9CAC
+    sta     oamBuffer,y             ; $9CAC
     lda     ram_00CE                ; $9CAF
-    sta     ram_0203,y              ; $9CB1
+    sta     oamBuffer+3,y           ; $9CB1
     pla                             ; $9CB4
     tay                             ; $9CB5
-    lda     sram_6EAD,y             ; $9CB6
+    lda     sramEnemyData+429,y     ; $9CB6
     pha                             ; $9CB9
-    lda     sram_6EB6,y             ; $9CBA
+    lda     sramEnemyData+438,y     ; $9CBA
     ldy     objFacing+7,x           ; $9CBD
     ora     dat_5_9C96,y            ; $9CBF
     ldy     ram_0097,x              ; $9CC2
-    sta     ram_0202,y              ; $9CC4
+    sta     oamBuffer+2,y           ; $9CC4
     pla                             ; $9CC7
-    sta     ram_0201,y              ; $9CC8
-    jmp     (ram_000E)              ; $9CCB
+    sta     oamBuffer+1,y           ; $9CC8
+    jmp     (temp14)                ; $9CCB
 
 loc_5_9CCE:
     jsr     sub_5_9D18              ; $9CCE
@@ -2697,16 +2697,16 @@ loc_5_9CCE:
     beq     loc_5_9CEB              ; $9CE1
     ldy     ram_0097,x              ; $9CE3
     lda     #$F8                    ; $9CE5
-    sta     ram_0200,y              ; $9CE7
+    sta     oamBuffer,y             ; $9CE7
     rts                             ; $9CEA
 
 loc_5_9CEB:
     ldy     ram_0097,x              ; $9CEB
-    lda     ram_0202,y              ; $9CED
+    lda     oamBuffer+2,y           ; $9CED
     and     #$43                    ; $9CF0
-    sta     ram_0202,y              ; $9CF2
+    sta     oamBuffer+2,y           ; $9CF2
     lda     #$52                    ; $9CF5
-    sta     ram_0201,y              ; $9CF7
+    sta     oamBuffer+1,y           ; $9CF7
 
 loc_5_9CFA:
     rts                             ; $9CFA
@@ -2714,8 +2714,8 @@ loc_5_9CFA:
 loc_5_9CFB:
     lda     frameCounter            ; $9CFB
     and     #$03                    ; $9CFD
-    ora     ram_0202,y              ; $9CFF
-    sta     ram_0202,y              ; $9D02
+    ora     oamBuffer+2,y           ; $9CFF
+    sta     oamBuffer+2,y           ; $9D02
     rts                             ; $9D05
 
 loc_5_9D06:
@@ -2746,7 +2746,7 @@ sub_5_9D18:
     and     #$C3                    ; $9D20
 
 loc_5_9D22:
-    sta     ram_0202,y              ; $9D22
+    sta     oamBuffer+2,y           ; $9D22
     rts                             ; $9D25
 
 dat_5_9D26:
@@ -2757,7 +2757,7 @@ dat_5_9D28:
 
 loc_5_9D2C:
     jsr     sub_EF11                ; $9D2C
-    lda     ram_0081,x              ; $9D2F
+    lda     objState+1,x            ; $9D2F
     beq     loc_5_9D77              ; $9D31
     and     #$01                    ; $9D33
     bne     loc_5_9D5A              ; $9D35
@@ -2765,8 +2765,8 @@ loc_5_9D2C:
     tya                             ; $9D3A
     bmi     loc_5_9D57              ; $9D3B
     lda     #$05                    ; $9D3D
-    sta     a:ram_0087,y            ; $9D3F
-    lda     ram_0081,x              ; $9D42
+    sta     a:objState+7,y          ; $9D3F
+    lda     objState+1,x            ; $9D42
     lsr     a                       ; $9D44
     and     #$01                    ; $9D45
     tax                             ; $9D47
@@ -2776,7 +2776,7 @@ loc_5_9D2C:
     adc     objY+1,x                ; $9D4E
     sta     a:objY+7,y              ; $9D50
     lda     #$00                    ; $9D53
-    sta     ram_0081,x              ; $9D55
+    sta     objState+1,x            ; $9D55
 
 loc_5_9D57:
     jsr     sub_E563                ; $9D57
@@ -2784,8 +2784,8 @@ loc_5_9D57:
 loc_5_9D5A:
     lda     ram_0504,x              ; $9D5A
     bne     loc_5_9D70              ; $9D5D
-    inc     ram_0081,x              ; $9D5F
-    lda     ram_0081,x              ; $9D61
+    inc     objState+1,x            ; $9D5F
+    lda     objState+1,x            ; $9D61
     cmp     #$03                    ; $9D63
     beq     loc_5_9D73              ; $9D65
     cmp     #$05                    ; $9D67
@@ -2799,7 +2799,7 @@ loc_5_9D70:
 
 loc_5_9D73:
     lda     #$00                    ; $9D73
-    sta     ram_0081,x              ; $9D75
+    sta     objState+1,x            ; $9D75
 ; (end of code not executed in the test movies)
 
 loc_5_9D77:
@@ -2809,7 +2809,7 @@ loc_5_9D77:
     inx                             ; $9D7F
     jsr     sub_F27D                ; $9D80
     ldx     ram_0010                ; $9D83
-    lda     objState+1,x            ; $9D85
+    lda     objYHi+1,x              ; $9D85
     cmp     #$02                    ; $9D87
     bcc     loc_5_9D8E              ; $9D89
 ; (code below not executed in the test movies)
@@ -2903,7 +2903,7 @@ loc_5_9E15:
     sta     objXVelocity+1,x        ; $9E15
     asl     a                       ; $9E17
     ror     objXVelocity+1,x        ; $9E18
-    lda     ram_0081,x              ; $9E1A
+    lda     objState+1,x            ; $9E1A
     bne     loc_5_9E37              ; $9E1C
 
 loc_5_9E1E:
@@ -2916,7 +2916,7 @@ loc_5_9E1E:
     and     #$02                    ; $9E2C
     tay                             ; $9E2E
     iny                             ; $9E2F
-    sty     ram_0081,x              ; $9E30
+    sty     objState+1,x            ; $9E30
     lda     #$18                    ; $9E32
     sta     ram_0504,x              ; $9E34
 
@@ -2973,7 +2973,7 @@ loc_5_9E6B:
     jsr     sub_DBCE                ; $9E79
     bcs     loc_5_9E98              ; $9E7C
     lda     #$07                    ; $9E7E
-    sta     a:ram_0087,y            ; $9E80
+    sta     a:objState+7,y          ; $9E80
     lda     #$E0                    ; $9E83
     sta     objYVelocity+7,y        ; $9E85
     ldx     objFacing+7,y           ; $9E88
@@ -3027,11 +3027,11 @@ loc_5_9ED5:
     ldy     #$03                    ; $9ED5
 
 loc_5_9ED7:
-    sty     ram_0003                ; $9ED7
-    stx     sram_6F03               ; $9ED9
+    sty     temp3                   ; $9ED7
+    stx     sramEnemyData+515       ; $9ED9
     ldy     #$50                    ; $9EDC
     lda     #$02                    ; $9EDE
-    sta     ram_0002                ; $9EE0
+    sta     temp2                   ; $9EE0
     ldx     #$2C                    ; $9EE2
     jsr     sub_F1F4                ; $9EE4
     jsr     sub_F1F4                ; $9EE7
@@ -3045,12 +3045,12 @@ loc_5_9ED7:
     and     #$0F                    ; $9EF8
     sta     ram_00C9                ; $9EFA
     lda     objY+1,x                ; $9EFC
-    sta     ram_0000                ; $9EFE
-    lda     ram_0001                ; $9F00
+    sta     temp0                   ; $9EFE
+    lda     temp1                   ; $9F00
     clc                             ; $9F02
     adc     #$10                    ; $9F03
-    sta     ram_0001                ; $9F05
-    dec     ram_0002                ; $9F07
+    sta     temp1                   ; $9F05
+    dec     temp2                   ; $9F07
     ldx     #$2C                    ; $9F09
     jsr     sub_F1F4                ; $9F0B
     jsr     sub_F1F4                ; $9F0E
@@ -3061,44 +3061,44 @@ loc_5_9ED7:
     and     #$06                    ; $9F1C
     lsr     a                       ; $9F1E
     adc     #$0C                    ; $9F1F
-    sta     ram_0000                ; $9F21
+    sta     temp0                   ; $9F21
     lda     objY+1,x                ; $9F23
-    sta     ram_02A0                ; $9F25
-    sta     ram_02AC                ; $9F28
-    adc     ram_0000                ; $9F2B
-    sta     ram_02A4                ; $9F2D
-    sta     ram_02B0                ; $9F30
-    adc     ram_0000                ; $9F33
-    sta     ram_02A8                ; $9F35
-    sta     ram_02B4                ; $9F38
+    sta     oamBuffer+160           ; $9F25
+    sta     oamBuffer+172           ; $9F28
+    adc     temp0                   ; $9F2B
+    sta     oamBuffer+164           ; $9F2D
+    sta     oamBuffer+176           ; $9F30
+    adc     temp0                   ; $9F33
+    sta     oamBuffer+168           ; $9F35
+    sta     oamBuffer+180           ; $9F38
     lda     ram_00CD                ; $9F3B
     sec                             ; $9F3D
     sbc     #$08                    ; $9F3E
-    sta     ram_02A3                ; $9F40
-    sta     ram_02A7                ; $9F43
-    sta     ram_02AB                ; $9F46
+    sta     oamBuffer+163           ; $9F40
+    sta     oamBuffer+167           ; $9F43
+    sta     oamBuffer+171           ; $9F46
     clc                             ; $9F49
     adc     #$28                    ; $9F4A
-    sta     ram_02AF                ; $9F4C
-    sta     ram_02B3                ; $9F4F
-    sta     ram_02B7                ; $9F52
+    sta     oamBuffer+175           ; $9F4C
+    sta     oamBuffer+179           ; $9F4F
+    sta     oamBuffer+183           ; $9F52
     lda     #$0F                    ; $9F55
-    sta     ram_02A1                ; $9F57
-    sta     ram_02AD                ; $9F5A
+    sta     oamBuffer+161           ; $9F57
+    sta     oamBuffer+173           ; $9F5A
     lda     #$15                    ; $9F5D
-    sta     ram_02A5                ; $9F5F
-    sta     ram_02B1                ; $9F62
+    sta     oamBuffer+165           ; $9F5F
+    sta     oamBuffer+177           ; $9F62
     lda     #$1B                    ; $9F65
-    sta     ram_02A9                ; $9F67
-    sta     ram_02B5                ; $9F6A
-    lda     ram_0252                ; $9F6D
-    sta     ram_02A2                ; $9F70
-    sta     ram_02A6                ; $9F73
-    sta     ram_02AA                ; $9F76
+    sta     oamBuffer+169           ; $9F67
+    sta     oamBuffer+181           ; $9F6A
+    lda     oamBuffer+82            ; $9F6D
+    sta     oamBuffer+162           ; $9F70
+    sta     oamBuffer+166           ; $9F73
+    sta     oamBuffer+170           ; $9F76
     ora     #$40                    ; $9F79
-    sta     ram_02AE                ; $9F7B
-    sta     ram_02B2                ; $9F7E
-    sta     ram_02B6                ; $9F81
+    sta     oamBuffer+174           ; $9F7B
+    sta     oamBuffer+178           ; $9F7E
+    sta     oamBuffer+182           ; $9F81
     lda     objX+1,x                ; $9F84
     pha                             ; $9F86
     sec                             ; $9F87
@@ -3116,17 +3116,17 @@ loc_5_9ED7:
     beq     loc_5_9FBA              ; $9F9D
     bpl     loc_5_9FAC              ; $9F9F
     ldy     #$F8                    ; $9FA1
-    sty     ram_02A0                ; $9FA3
-    sty     ram_02A4                ; $9FA6
-    sty     ram_02A8                ; $9FA9
+    sty     oamBuffer+160           ; $9FA3
+    sty     oamBuffer+164           ; $9FA6
+    sty     oamBuffer+168           ; $9FA9
 
 loc_5_9FAC:
     asl     a                       ; $9FAC
     beq     loc_5_9FBA              ; $9FAD
     ldy     #$F8                    ; $9FAF
-    sty     ram_02AC                ; $9FB1
-    sty     ram_02B0                ; $9FB4
-    sty     ram_02B4                ; $9FB7
+    sty     oamBuffer+172           ; $9FB1
+    sty     oamBuffer+176           ; $9FB4
+    sty     oamBuffer+180           ; $9FB7
 
 loc_5_9FBA:
     pla                             ; $9FBA
@@ -3190,15 +3190,15 @@ loc_5_A008:
     tax                             ; $A00B
     jsr     sub_F1F4                ; $A00C
     jsr     sub_F0D7                ; $A00F
-    lda     ram_0081,x              ; $A012
+    lda     objState+1,x            ; $A012
     beq     loc_5_A058              ; $A014
-    sta     ram_0006                ; $A016
+    sta     temp6                   ; $A016
     tax                             ; $A018
-    lda     ram_0000                ; $A019
+    lda     temp0                   ; $A019
     clc                             ; $A01B
     adc     dat_5_9FCF,x            ; $A01C
-    sta     ram_0000                ; $A01F
-    lda     ram_0002                ; $A021
+    sta     temp0                   ; $A01F
+    lda     temp2                   ; $A021
     cmp     #$01                    ; $A023
     bne     loc_5_A02B              ; $A025
     inx                             ; $A027
@@ -3209,7 +3209,7 @@ loc_5_A008:
 loc_5_A02B:
     lda     dat_5_9FC7,x            ; $A02B
     ldx     ram_0010                ; $A02E
-    sty     ram_0007                ; $A030
+    sty     temp7                   ; $A030
     ldy     ram_0504,x              ; $A032
     cpy     #$03                    ; $A035
     bcc     loc_5_A03E              ; $A037
@@ -3219,15 +3219,15 @@ loc_5_A02B:
 
 loc_5_A03E:
     clc                             ; $A03E
-    adc     ram_0001                ; $A03F
-    sta     ram_0001                ; $A041
-    ldy     ram_0007                ; $A043
-    ldx     ram_0006                ; $A045
+    adc     temp1                   ; $A03F
+    sta     temp1                   ; $A041
+    ldy     temp7                   ; $A043
+    ldx     temp6                   ; $A045
     cpx     #$04                    ; $A047
     bne     loc_5_A051              ; $A049
-    lda     ram_0003                ; $A04B
+    lda     temp3                   ; $A04B
     ora     #$80                    ; $A04D
-    sta     ram_0003                ; $A04F
+    sta     temp3                   ; $A04F
 
 loc_5_A051:
     lda     dat_5_9FC3,x            ; $A051
@@ -3306,7 +3306,7 @@ loc_5_A0B6:
 loc_5_A0C0:
     lda     #$01                    ; $A0C0
     sta     a:enemyActive,y         ; $A0C2
-    sta     a:objState+1,y          ; $A0C5
+    sta     a:objYHi+1,y            ; $A0C5
     lda     enemyHp,x               ; $A0C8
     sta     a:enemyHp,y             ; $A0CA
     lda     #$15                    ; $A0CD
@@ -3374,18 +3374,18 @@ loc_5_A132:
 
 loc_5_A133:
     lda     #$02                    ; $A133
-    sta     ram_0002                ; $A135
+    sta     temp2                   ; $A135
     lda     frameCounter            ; $A137
     lsr     a                       ; $A139
     and     #$03                    ; $A13A
-    sta     ram_0003                ; $A13C
+    sta     temp3                   ; $A13C
     ldx     #$40                    ; $A13E
     lda     ram_00C9                ; $A140
     pha                             ; $A142
     asl     ram_00C9                ; $A143
-    lda     ram_0001                ; $A145
+    lda     temp1                   ; $A145
     adc     #$08                    ; $A147
-    sta     ram_0001                ; $A149
+    sta     temp1                   ; $A149
     jsr     sub_F1F4                ; $A14B
     jsr     sub_EF08                ; $A14E
     jsr     sub_F1F4                ; $A151
@@ -3393,13 +3393,13 @@ loc_5_A133:
     pla                             ; $A157
     and     #$09                    ; $A158
     bne     loc_5_A178              ; $A15A
-    lda     ram_0000                ; $A15C
+    lda     temp0                   ; $A15C
     sec                             ; $A15E
     sbc     #$18                    ; $A15F
-    sta     ram_0000                ; $A161
-    lda     ram_0001                ; $A163
+    sta     temp0                   ; $A161
+    lda     temp1                   ; $A163
     sbc     #$08                    ; $A165
-    sta     ram_0001                ; $A167
+    sta     temp1                   ; $A167
     jsr     sub_F0D7                ; $A169
     jsr     sub_EF08                ; $A16C
     lda     ram_01FF,y              ; $A16F
@@ -3426,7 +3426,7 @@ loc_5_A188:
     lda     #$01                    ; $A18D
     sta     a:enemyActive,y         ; $A18F
     sta     ram_040E,y              ; $A192
-    sta     a:objState+1,y          ; $A195
+    sta     a:objYHi+1,y            ; $A195
     lsr     a                       ; $A198
     sta     a:objCollision+1,y      ; $A199
     lda     objX+1,x                ; $A19C
@@ -3452,16 +3452,16 @@ loc_5_A1C9:
     rts                             ; $A1C9
 
 loc_5_A1CA:
-    lda     ram_0081,x              ; $A1CA
+    lda     objState+1,x            ; $A1CA
     bne     loc_5_A1DF              ; $A1CC
     lda     ram_00C9                ; $A1CE
     bne     loc_5_A1C9              ; $A1D0
     jsr     sub_DC91                ; $A1D2
-    lda     ram_000F                ; $A1D5
+    lda     temp15                  ; $A1D5
     adc     #$30                    ; $A1D7
     cmp     #$60                    ; $A1D9
     bcs     loc_5_A1C9              ; $A1DB
-    inc     ram_0081,x              ; $A1DD
+    inc     objState+1,x            ; $A1DD
 
 loc_5_A1DF:
     lda     objCollision+1,x        ; $A1DF
@@ -3519,12 +3519,12 @@ loc_5_A234:
     sta     objXVelocity+1,x        ; $A24D
     sta     objXHi+4                ; $A24F
     sta     objX+4                  ; $A251
-    sta     ram_0084                ; $A253
+    sta     objState+4              ; $A253
     lda     #$40                    ; $A255
     sta     ram_00EC                ; $A257
     lda     #$03                    ; $A259
     sta     ram_00AF,x              ; $A25B
-    sta     ram_0080                ; $A25D
+    sta     objState                ; $A25D
 
 loc_5_A25F:
     lda     ram_00C9                ; $A25F
@@ -3559,15 +3559,15 @@ loc_5_A28D:
 
 loc_5_A290:
     lda     dat_5_A210,x            ; $A290
-    sta     ram_0363,y              ; $A293
+    sta     ppuBuffer1,y            ; $A293
     inx                             ; $A296
     iny                             ; $A297
     cpy     #$08                    ; $A298
     bne     loc_5_A290              ; $A29A
     lda     #$07                    ; $A29C
-    sta     ram_0362                ; $A29E
+    sta     ppuBuffer1Len           ; $A29E
     lda     #$01                    ; $A2A1
-    sta     ram_0725                ; $A2A3
+    sta     ppuStringSelect         ; $A2A3
 
 loc_5_A2A6:
     rts                             ; $A2A6
@@ -3576,7 +3576,7 @@ loc_5_A2A7:
     lda     objXHi+4                ; $A2A7
     bne     loc_5_A2B7              ; $A2A9
     lda     #$81                    ; $A2AB
-    sta     ram_0084                ; $A2AD
+    sta     objState+4              ; $A2AD
     lda     #$A2                    ; $A2AF
     sta     objX+4                  ; $A2B1
     lda     #$26                    ; $A2B3
@@ -3601,7 +3601,7 @@ loc_5_A2C4:
     lda     objXVelocity+1,x        ; $A2CC
     and     #$04                    ; $A2CE
     beq     loc_5_A2E6              ; $A2D0
-    ldy     ram_0084                ; $A2D2
+    ldy     objState+4              ; $A2D2
     ldx     #$06                    ; $A2D4
     lda     #$40                    ; $A2D6
 
@@ -3610,25 +3610,25 @@ loc_5_A2D8:
     iny                             ; $A2DB
     dex                             ; $A2DC
     bpl     loc_5_A2D8              ; $A2DD
-    lda     ram_0084                ; $A2DF
+    lda     objState+4              ; $A2DF
     sec                             ; $A2E1
     sbc     #$10                    ; $A2E2
-    sta     ram_0084                ; $A2E4
+    sta     objState+4              ; $A2E4
 
 loc_5_A2E6:
     lda     objXHi+4                ; $A2E6
-    sta     ram_0363                ; $A2E8
+    sta     ppuBuffer1              ; $A2E8
     lda     objX+4                  ; $A2EB
-    sta     ram_0364                ; $A2ED
+    sta     ppuBuffer1+1            ; $A2ED
     ldx     #$0C                    ; $A2F0
-    stx     ram_0365                ; $A2F2
+    stx     ppuBuffer1+2            ; $A2F2
     lda     #$FF                    ; $A2F5
-    sta     ram_0372                ; $A2F7
+    sta     ppuBuffer1+15           ; $A2F7
     dex                             ; $A2FA
 
 loc_5_A2FB:
     lda     #$F4                    ; $A2FB
-    sta     ram_0366,x              ; $A2FD
+    sta     ppuBuffer1+3,x          ; $A2FD
     dex                             ; $A300
     bpl     loc_5_A2FB              ; $A301
     lda     objX+4                  ; $A303
@@ -3639,9 +3639,9 @@ loc_5_A2FB:
     sbc     #$00                    ; $A30C
     sta     objXHi+4                ; $A30E
     lda     #$0F                    ; $A310
-    sta     ram_0362                ; $A312
+    sta     ppuBuffer1Len           ; $A312
     lda     #$01                    ; $A315
-    sta     ram_0725                ; $A317
+    sta     ppuStringSelect         ; $A317
     ldx     ram_0010                ; $A31A
     rts                             ; $A31C
 ; (unreferenced: $A31D-$A33A, 30 bytes)
@@ -3679,14 +3679,14 @@ dat_5_A351:
 loc_5_A359:
     lda     ram_0728                ; $A359
     bne     loc_5_A36B              ; $A35C
-    lda     ram_072A                ; $A35E
+    lda     scrollXHi               ; $A35E
     beq     loc_5_A3BD              ; $A361
     inc     ram_0728                ; $A363
     lda     #$90                    ; $A366
     sta     ram_0504,x              ; $A368
 
 loc_5_A36B:
-    lda     sram_6E3F               ; $A36B
+    lda     sramEnemyData+319       ; $A36B
     bpl     loc_5_A3C2              ; $A36E
     ldy     ram_040E,x              ; $A370
     bne     loc_5_A3BD              ; $A373
@@ -3700,7 +3700,7 @@ loc_5_A36B:
 loc_5_A380:
     stx     ram_0010                ; $A380
     lda     #$00                    ; $A382
-    sta     ram_0087,x              ; $A384
+    sta     objState+7,x            ; $A384
     lda     enemyActive,x           ; $A386
     beq     loc_5_A3B2              ; $A388
     cmp     #$01                    ; $A38A
@@ -3716,7 +3716,7 @@ loc_5_A380:
     and     #$88                    ; $A39C
     bne     loc_5_A3B2              ; $A39E
     ldy     enemyType,x             ; $A3A0
-    lda     sram_6E41,y             ; $A3A2
+    lda     sramEnemyData+321,y     ; $A3A2
     ldy     #$09                    ; $A3A5
     and     #$A0                    ; $A3A7
     bmi     loc_5_A3B2              ; $A3A9
@@ -3763,7 +3763,7 @@ loc_5_A3DB:
     beq     loc_5_A3EF              ; $A3DF
     sta     enemyActive,x           ; $A3E1
     lda     #$FF                    ; $A3E3
-    sta     sram_6E3F               ; $A3E5
+    sta     sramEnemyData+319       ; $A3E5
     sta     ram_0504,x              ; $A3E8
     lsr     a                       ; $A3EB
     sta     ram_040E,x              ; $A3EC
@@ -3792,7 +3792,7 @@ loc_5_A407:
     jsr     sub_DBCE                ; $A40B
     bcs     loc_5_A436              ; $A40E
     lda     #$08                    ; $A410
-    sta     a:ram_0087,y            ; $A412
+    sta     a:objState+7,y          ; $A412
     lda     objX+1,x                ; $A415
     adc     #$0C                    ; $A417
     sta     a:objX+7,y              ; $A419
@@ -3850,7 +3850,7 @@ dat_5_A46F:
 
 loc_5_A472:
     lda     #$02                    ; $A472
-    sta     ram_0002                ; $A474
+    sta     temp2                   ; $A474
     ldx     #$36                    ; $A476
     lda     ram_00AF                ; $A478
     and     #$18                    ; $A47A
@@ -3873,18 +3873,18 @@ loc_5_A491:
     lda     objY+1                  ; $A491
     clc                             ; $A493
     adc     dat_5_A46F,x            ; $A494
-    sta     ram_0000                ; $A497
+    sta     temp0                   ; $A497
     lda     ram_00CD                ; $A499
     clc                             ; $A49B
     adc     dat_5_A46C,x            ; $A49C
-    sta     ram_0001                ; $A49F
+    sta     temp1                   ; $A49F
     lda     ram_00C9                ; $A4A1
     asl     a                       ; $A4A3
     asl     a                       ; $A4A4
     and     #$0F                    ; $A4A5
     sta     ram_00C9                ; $A4A7
     lda     #$03                    ; $A4A9
-    sta     ram_0003                ; $A4AB
+    sta     temp3                   ; $A4AB
     ldx     #$3A                    ; $A4AD
     jsr     sub_F0D7                ; $A4AF
     lda     #$43                    ; $A4B2
@@ -3898,12 +3898,12 @@ dat_5_A4C0:
     .byte   $17, $27, $37, $37                                              ; $A4C0
 
 sub_5_A4C4:
-    ldx     ram_0301                ; $A4C4
+    ldx     ppuBuffer0Len           ; $A4C4
     ldy     #$00                    ; $A4C7
 
 loc_5_A4C9:
     lda     dat_5_A4B8,y            ; $A4C9
-    sta     ram_0302,x              ; $A4CC
+    sta     ppuBuffer0,x            ; $A4CC
     inx                             ; $A4CF
     iny                             ; $A4D0
     cpy     #$08                    ; $A4D1
@@ -3914,25 +3914,25 @@ loc_5_A4C9:
     and     #$03                    ; $A4D9
     tay                             ; $A4DB
     lda     dat_5_A4C0,y            ; $A4DC
-    sta     ram_02FF,x              ; $A4DF
+    sta     oamBuffer+255,x         ; $A4DF
     dex                             ; $A4E2
-    stx     ram_0301                ; $A4E3
+    stx     ppuBuffer0Len           ; $A4E3
     ldx     ram_0010                ; $A4E6
     rts                             ; $A4E8
 
 sub_5_A4E9:
-    sta     ram_0000                ; $A4E9
+    sta     temp0                   ; $A4E9
     ldy     #$00                    ; $A4EB
     lda     enemyHp,x               ; $A4ED
     clc                             ; $A4EF
 
 loc_5_A4F0:
-    sbc     ram_0000                ; $A4F0
+    sbc     temp0                   ; $A4F0
     iny                             ; $A4F2
     bcs     loc_5_A4F0              ; $A4F3
     ldx     #$1C                    ; $A4F5
     lda     #$70                    ; $A4F7
-    sta     ram_0000                ; $A4F9
+    sta     temp0                   ; $A4F9
 
 loc_5_A4FB:
     lda     #$70                    ; $A4FB
@@ -3941,15 +3941,15 @@ loc_5_A4FB:
     lda     #$6E                    ; $A500
 
 loc_5_A502:
-    sta     ram_02C1,x              ; $A502
+    sta     oamBuffer+193,x         ; $A502
     lda     #$01                    ; $A505
-    sta     ram_02C2,x              ; $A507
+    sta     oamBuffer+194,x         ; $A507
     lda     #$10                    ; $A50A
-    sta     ram_02C3,x              ; $A50C
-    lda     ram_0000                ; $A50F
-    sta     ram_02C0,x              ; $A511
+    sta     oamBuffer+195,x         ; $A50C
+    lda     temp0                   ; $A50F
+    sta     oamBuffer+192,x         ; $A511
     adc     #$F8                    ; $A514
-    sta     ram_0000                ; $A516
+    sta     temp0                   ; $A516
     dex                             ; $A518
     dex                             ; $A519
     dex                             ; $A51A
@@ -4035,14 +4035,14 @@ loc_5_A62C:
     sta     OAMADDR                 ; $A639
     lda     #$02                    ; $A63C
     sta     OAMDMA                  ; $A63E
-    lda     ram_0725                ; $A641
+    lda     ppuStringSelect         ; $A641
     asl     a                       ; $A644
     tax                             ; $A645
     lda     dat_5_A600,x            ; $A646
-    sta     ram_0000                ; $A649
+    sta     temp0                   ; $A649
     lda     dat_5_A601,x            ; $A64B
-    sta     ram_0001                ; $A64E
-    jsr     sub_D2EC                ; $A650
+    sta     temp1                   ; $A64E
+    jsr     Ppu_WriteStrings        ; $A650
     lda     #$3F                    ; $A653
     sta     PPUADDR                 ; $A655
     ldy     #$00                    ; $A658
@@ -4057,10 +4057,10 @@ loc_5_A62C:
     sta     PPUSCROLL               ; $A670
     lda     ppuMaskShadow           ; $A673
     sta     PPUMASK                 ; $A675
-    sty     ram_0301                ; $A678
-    sty     ram_0725                ; $A67B
+    sty     ppuBuffer0Len           ; $A678
+    sty     ppuStringSelect         ; $A67B
     dey                             ; $A67E
-    sty     ram_0302                ; $A67F
+    sty     ppuBuffer0              ; $A67F
     jsr     sub_C032                ; $A682
     lda     joypadHeld              ; $A685
     sta     ram_0744                ; $A687
@@ -4102,7 +4102,7 @@ loc_5_A6A8:
     rts                             ; $A6D8
 
 sub_5_A6D9:
-    jsr     sub_D174                ; $A6D9
+    jsr     Game_CheckStateChange   ; $A6D9
     jsr     sub_D385                ; $A6DC
 ; (inline jump table)
     .word   loc_5_A6F0              ; $A6DF
@@ -4113,7 +4113,7 @@ loc_5_A6E5:
     lda     #NMI_MODE_GAME          ; $A6E5
     sta     nmiMode                 ; $A6E7
     lda     #$00                    ; $A6EA
-    sta     ram_076C                ; $A6EC
+    sta     gameState               ; $A6EC
     rts                             ; $A6EF
 
 loc_5_A6F0:
@@ -4125,7 +4125,7 @@ loc_5_A6F0:
     lda     #$00                    ; $A6FD
 
 loc_5_A6FF:
-    jsr     sub_D168                ; $A6FF
+    jsr     Game_CheckModeChange    ; $A6FF
     jsr     sub_D385                ; $A702
 ; (inline jump table)
     .word   loc_5_A70F              ; $A705
@@ -4181,7 +4181,7 @@ loc_5_A749:
     ora     objY+13                 ; $A750
     sta     ppuCtrlShadow           ; $A752
     sta     PPUCTRL                 ; $A754
-    lda     objState+14             ; $A757
+    lda     objYHi+14               ; $A757
     ldy     ram_0028                ; $A759
     sta     PPUADDR                 ; $A75B
     sty     PPUADDR                 ; $A75E
@@ -4233,7 +4233,7 @@ sub_5_A795:
     sta     ram_0568                ; $A7B4
     sta     ram_073E                ; $A7B7
     inc     ram_0726                ; $A7BA
-    inc     ram_076C                ; $A7BD
+    inc     gameState               ; $A7BD
 
 loc_5_A7C0:
     rts                             ; $A7C0
@@ -4261,7 +4261,7 @@ sub_5_A8C1:
 
 loc_5_A8C3:
     lda     dat_5_A7C1,y            ; $A8C3
-    sta     ram_0200,y              ; $A8C6
+    sta     oamBuffer,y             ; $A8C6
     dey                             ; $A8C9
     cpy     #$FF                    ; $A8CA
     bne     loc_5_A8C3              ; $A8CC
@@ -4275,10 +4275,10 @@ sub_5_A8CF:
 ; (code below not executed in the test movies)
 
 loc_5_A8D7:
-    inc     ram_0267,x              ; $A8D7
-    lda     ram_0267,x              ; $A8DA
+    inc     oamBuffer+103,x         ; $A8D7
+    lda     oamBuffer+103,x         ; $A8DA
     and     #$23                    ; $A8DD
-    sta     ram_0267,x              ; $A8DF
+    sta     oamBuffer+103,x         ; $A8DF
     dex                             ; $A8E2
     dex                             ; $A8E3
     dex                             ; $A8E4
@@ -4290,32 +4290,32 @@ loc_5_A8E8:
     lda     frameCounter            ; $A8E8
     bne     loc_5_A8EE              ; $A8EA
 ; (code below not executed in the test movies)
-    inc     objState+13             ; $A8EC
+    inc     objYHi+13               ; $A8EC
 ; (end of code not executed in the test movies)
 
 loc_5_A8EE:
-    lda     ram_026C                ; $A8EE
+    lda     oamBuffer+108           ; $A8EE
     cmp     #$37                    ; $A8F1
     bcc     loc_5_A8FE              ; $A8F3
 ; (code below not executed in the test movies)
     lda     #$00                    ; $A8F5
-    sta     objState+13             ; $A8F7
+    sta     objYHi+13               ; $A8F7
     lda     #$F8                    ; $A8F9
-    sta     ram_026C                ; $A8FB
+    sta     oamBuffer+108           ; $A8FB
 ; (end of code not executed in the test movies)
 
 loc_5_A8FE:
-    lda     objState+13             ; $A8FE
+    lda     objYHi+13               ; $A8FE
     beq     loc_5_A917              ; $A900
 ; (code below not executed in the test movies)
     lda     frameCounter            ; $A902
     and     #$03                    ; $A904
     bne     loc_5_A917              ; $A906
-    inc     ram_026C                ; $A908
-    inc     ram_026C                ; $A90B
-    inc     ram_026F                ; $A90E
-    inc     ram_026F                ; $A911
-    inc     ram_026F                ; $A914
+    inc     oamBuffer+108           ; $A908
+    inc     oamBuffer+108           ; $A90B
+    inc     oamBuffer+111           ; $A90E
+    inc     oamBuffer+111           ; $A911
+    inc     oamBuffer+111           ; $A914
 ; (end of code not executed in the test movies)
 
 loc_5_A917:
@@ -4329,10 +4329,10 @@ sub_5_A918:
 ; (code below not executed in the test movies)
 
 loc_5_A920:
-    inc     ram_02D3,x              ; $A920
-    lda     ram_02D3,x              ; $A923
+    inc     oamBuffer+211,x         ; $A920
+    lda     oamBuffer+211,x         ; $A923
     and     #$03                    ; $A926
-    sta     ram_02D3,x              ; $A928
+    sta     oamBuffer+211,x         ; $A928
     dex                             ; $A92B
     dex                             ; $A92C
     dex                             ; $A92D
@@ -4421,7 +4421,7 @@ loc_5_AB7F:
     ora     objY+13                 ; $AB86
     sta     ppuCtrlShadow           ; $AB88
     sta     PPUCTRL                 ; $AB8A
-    lda     objState+14             ; $AB8D
+    lda     objYHi+14               ; $AB8D
     ldy     ram_0028                ; $AB8F
     sta     PPUADDR                 ; $AB91
     sty     PPUADDR                 ; $AB94
@@ -4513,51 +4513,51 @@ loc_5_AC31:
 
 loc_5_AC3D:
     lda     objY+2                  ; $AC3D
-    sta     ram_0302                ; $AC3F
+    sta     ppuBuffer0              ; $AC3F
     lda     objY+3                  ; $AC42
-    sta     ram_0303                ; $AC44
+    sta     ppuBuffer0+1            ; $AC44
     jsr     sub_5_AEC1              ; $AC47
     lda     objY+2                  ; $AC4A
-    sta     ram_0325                ; $AC4C
+    sta     ppuBuffer0+35           ; $AC4C
     lda     objY+3                  ; $AC4F
-    sta     ram_0326                ; $AC51
+    sta     ppuBuffer0+36           ; $AC51
     lda     #$20                    ; $AC54
-    sta     ram_0304                ; $AC56
-    sta     ram_0327                ; $AC59
+    sta     ppuBuffer0+2            ; $AC56
+    sta     ppuBuffer0+37           ; $AC59
     ldy     #$1F                    ; $AC5C
 
 loc_5_AC5E:
     lda     dat_5_AC11,y            ; $AC5E
-    sta     ram_0305,y              ; $AC61
-    sta     ram_0328,y              ; $AC64
+    sta     ppuBuffer0+3,y          ; $AC61
+    sta     ppuBuffer0+38,y         ; $AC64
     dey                             ; $AC67
     bpl     loc_5_AC5E              ; $AC68
     lda     #$FF                    ; $AC6A
-    sta     ram_0348                ; $AC6C
+    sta     ppuBuffer0+70           ; $AC6C
     inc     ram_0761                ; $AC6F
     rts                             ; $AC72
 
 loc_5_AC73:
     ldx     objY+10                 ; $AC73
     lda     dat_5_AAE5,x            ; $AC75
-    sta     ram_0000                ; $AC78
+    sta     temp0                   ; $AC78
     lda     dat_5_AAF4,x            ; $AC7A
-    sta     ram_0001                ; $AC7D
+    sta     temp1                   ; $AC7D
     ldy     #$1D                    ; $AC7F
     lda     objY+2                  ; $AC81
-    sta     ram_0302                ; $AC83
+    sta     ppuBuffer0              ; $AC83
     lda     objY+3                  ; $AC86
     clc                             ; $AC88
     adc     #$03                    ; $AC89
-    sta     ram_0303                ; $AC8B
-    sty     ram_0304                ; $AC8E
+    sta     ppuBuffer0+1            ; $AC8B
+    sty     ppuBuffer0+2            ; $AC8E
     lda     #$FF                    ; $AC91
-    sta     ram_0305,y              ; $AC93
+    sta     ppuBuffer0+3,y          ; $AC93
     dey                             ; $AC96
 
 loc_5_AC97:
-    lda     (ram_0000),y            ; $AC97
-    sta     ram_0305,y              ; $AC99
+    lda     (temp0),y               ; $AC97
+    sta     ppuBuffer0+3,y          ; $AC99
     dey                             ; $AC9C
     bpl     loc_5_AC97              ; $AC9D
     jsr     sub_5_AEC1              ; $AC9F
@@ -4578,22 +4578,22 @@ loc_5_ACA8:
 loc_5_ACB8:
     ldx     objY+9                  ; $ACB8
     lda     dat_5_AB13,x            ; $ACBA
-    sta     ram_0002                ; $ACBD
+    sta     temp2                   ; $ACBD
     lda     dat_5_AB1B,x            ; $ACBF
-    sta     ram_0003                ; $ACC2
+    sta     temp3                   ; $ACC2
     ldy     #$08                    ; $ACC4
     lda     objY+4                  ; $ACC6
-    sta     ram_0302                ; $ACC8
+    sta     ppuBuffer0              ; $ACC8
     lda     objY+5                  ; $ACCB
-    sta     ram_0303                ; $ACCD
-    sty     ram_0304                ; $ACD0
+    sta     ppuBuffer0+1            ; $ACCD
+    sty     ppuBuffer0+2            ; $ACD0
     lda     #$FF                    ; $ACD3
-    sta     ram_0305,y              ; $ACD5
+    sta     ppuBuffer0+3,y          ; $ACD5
     dey                             ; $ACD8
 
 loc_5_ACD9:
-    lda     (ram_0002),y            ; $ACD9
-    sta     ram_0305,y              ; $ACDB
+    lda     (temp2),y               ; $ACD9
+    sta     ppuBuffer0+3,y          ; $ACDB
     dey                             ; $ACDE
     bpl     loc_5_ACD9              ; $ACDF
     lda     objY+5                  ; $ACE1
@@ -4617,22 +4617,22 @@ loc_5_ACF6:
 sub_5_ACFA:
     ldx     objY+8                  ; $ACFA
     lda     dat_5_AB23,x            ; $ACFC
-    sta     ram_0000                ; $ACFF
+    sta     temp0                   ; $ACFF
     lda     dat_5_AB41,x            ; $AD01
-    sta     ram_0001                ; $AD04
+    sta     temp1                   ; $AD04
     ldy     #$20                    ; $AD06
     lda     objY                    ; $AD08
-    sta     ram_0302                ; $AD0A
+    sta     ppuBuffer0              ; $AD0A
     lda     objY+1                  ; $AD0D
-    sta     ram_0303                ; $AD0F
-    sty     ram_0304                ; $AD12
+    sta     ppuBuffer0+1            ; $AD0F
+    sty     ppuBuffer0+2            ; $AD12
     lda     #$FF                    ; $AD15
-    sta     ram_0305,y              ; $AD17
+    sta     ppuBuffer0+3,y          ; $AD17
     dey                             ; $AD1A
 
 loc_5_AD1B:
-    lda     (ram_0000),y            ; $AD1B
-    sta     ram_0305,y              ; $AD1D
+    lda     (temp0),y               ; $AD1B
+    sta     ppuBuffer0+3,y          ; $AD1D
     dey                             ; $AD20
     bpl     loc_5_AD1B              ; $AD21
     lda     objY+1                  ; $AD23
@@ -4684,28 +4684,28 @@ dat_5_AD64:
 
 sub_5_AD7C:
     lda     #$14                    ; $AD7C
-    sta     ram_0002                ; $AD7E
+    sta     temp2                   ; $AD7E
     lda     #$B2                    ; $AD80
-    sta     ram_0003                ; $AD82
+    sta     temp3                   ; $AD82
     ldy     #$18                    ; $AD84
     lda     objY+6                  ; $AD86
-    sta     ram_0302                ; $AD88
-    sta     ram_031D                ; $AD8B
+    sta     ppuBuffer0              ; $AD88
+    sta     ppuBuffer0+27           ; $AD8B
     lda     objY+7                  ; $AD8E
-    sta     ram_0303                ; $AD90
+    sta     ppuBuffer0+1            ; $AD90
     eor     #$20                    ; $AD93
-    sta     ram_031E                ; $AD95
-    sty     ram_0304                ; $AD98
-    sty     ram_031F                ; $AD9B
+    sta     ppuBuffer0+28           ; $AD95
+    sty     ppuBuffer0+2            ; $AD98
+    sty     ppuBuffer0+29           ; $AD9B
     lda     #$FF                    ; $AD9E
-    sta     ram_0320,y              ; $ADA0
+    sta     ppuBuffer0+30,y         ; $ADA0
     dey                             ; $ADA3
 
 loc_5_ADA4:
-    lda     (ram_0002),y            ; $ADA4
-    sta     ram_0305,y              ; $ADA6
+    lda     (temp2),y               ; $ADA4
+    sta     ppuBuffer0+3,y          ; $ADA6
     lda     dat_5_AD64,y            ; $ADA9
-    sta     ram_0320,y              ; $ADAC
+    sta     ppuBuffer0+30,y         ; $ADAC
     dey                             ; $ADAF
     bpl     loc_5_ADA4              ; $ADB0
     lda     objY+7                  ; $ADB2
@@ -4720,18 +4720,18 @@ loc_5_ADA4:
     sta     objY+7                  ; $ADC3
 
 loc_5_ADC5:
-    inc     objState+14             ; $ADC5
-    inc     objState+14             ; $ADC7
-    lda     objState+14             ; $ADC9
+    inc     objYHi+14               ; $ADC5
+    inc     objYHi+14               ; $ADC7
+    lda     objYHi+14               ; $ADC9
     and     #$04                    ; $ADCB
     beq     loc_5_ADDD              ; $ADCD
     lda     objY+13                 ; $ADCF
     eor     #$02                    ; $ADD1
     sta     objY+13                 ; $ADD3
-    lda     objState+14             ; $ADD5
+    lda     objYHi+14               ; $ADD5
     and     #$28                    ; $ADD7
     eor     #$08                    ; $ADD9
-    sta     objState+14             ; $ADDB
+    sta     objYHi+14               ; $ADDB
 
 loc_5_ADDD:
     jmp     loc_5_AD5E              ; $ADDD
@@ -4739,7 +4739,7 @@ loc_5_ADDD:
 
 sub_5_ADE0:
     lda     #$2A                    ; $ADE0
-    sta     objState+14             ; $ADE2
+    sta     objYHi+14               ; $ADE2
     lda     #$20                    ; $ADE4
     sta     objY                    ; $ADE6
     lda     #$28                    ; $ADE8
@@ -4867,7 +4867,7 @@ loc_5_AF19:
 ; (end of code not executed in the test movies)
 
 loc_5_AF1F:
-    lda     ram_073D                ; $AF1F
+    lda     gameSubStep             ; $AF1F
     jsr     sub_D385                ; $AF22
 ; (inline jump table)
     .word   sub_D266                ; $AF25
@@ -4876,13 +4876,13 @@ loc_5_AF1F:
 
 loc_5_AF2B:
     lda     #$01                    ; $AF2B
-    sta     ram_0725                ; $AF2D
-    inc     ram_073D                ; $AF30
+    sta     ppuStringSelect         ; $AF2D
+    inc     gameSubStep             ; $AF30
     rts                             ; $AF33
 
 loc_5_AF34:
     lda     #$04                    ; $AF34
-    sta     ram_0725                ; $AF36
+    sta     ppuStringSelect         ; $AF36
     inc     gameMode                ; $AF39
     rts                             ; $AF3C
     .byte   $3F, $00, $20, $0F, $30, $1C, $15, $0F, $2B, $0F, $00, $0F, $01, $12, $21, $0F; $AF3D
@@ -4935,7 +4935,7 @@ loc_5_AF34:
 
 loc_5_B22D:
     jsr     sub_D24C                ; $B22D
-    jsr     sub_D168                ; $B230
+    jsr     Game_CheckModeChange    ; $B230
     jsr     sub_D385                ; $B233
 ; (inline jump table)
     .word   loc_5_B242              ; $B236
@@ -4961,7 +4961,7 @@ loc_5_B24E:
 
 loc_5_B250:
     lda     dat_5_BC19,y            ; $B250
-    sta     sram_7F00,y             ; $B253
+    sta     sramOverworldMap+768,y  ; $B253
     iny                             ; $B256
     cpy     #$A6                    ; $B257
     bcc     loc_5_B250              ; $B259
@@ -4976,7 +4976,7 @@ loc_5_B261:
     ldy     ram_073E                ; $B26D
     bne     loc_5_B27B              ; $B270
     lda     #$02                    ; $B272
-    sta     ram_0725                ; $B274
+    sta     ppuStringSelect         ; $B274
     inc     ram_073E                ; $B277
     rts                             ; $B27A
 
@@ -4985,9 +4985,9 @@ loc_5_B27B:
     bne     loc_5_B28B              ; $B27C
     inc     ram_073E                ; $B27E
     lda     #$05                    ; $B281
-    sta     ram_0725                ; $B283
+    sta     ppuStringSelect         ; $B283
     lda     #$00                    ; $B286
-    sta     objState                ; $B288
+    sta     objYHi                  ; $B288
     rts                             ; $B28A
 
 loc_5_B28B:
@@ -4999,7 +4999,7 @@ loc_5_B28B:
     lda     #$00                    ; $B296
     sta     ram_073E                ; $B298
     sta     ram_073B                ; $B29B
-    lda     objState                ; $B29E
+    lda     objYHi                  ; $B29E
     cmp     #$03                    ; $B2A0
     bne     loc_5_B2AA              ; $B2A2
     lda     #$01                    ; $B2A4
@@ -5016,16 +5016,16 @@ loc_5_B2AA:
 ; (end of code not executed in the test movies)
 
 loc_5_B2B4:
-    lda     objState                ; $B2B4
+    lda     objYHi                  ; $B2B4
     sta     saveSlot                ; $B2B6
     jsr     Save_Load               ; $B2B9
-    lda     ram_07A0                ; $B2BC
+    lda     secondQuest             ; $B2BC
     cmp     #$01                    ; $B2BF
     bne     loc_5_B2EE              ; $B2C1
 ; (code below not executed in the test movies)
     lda     ram_0796                ; $B2C3
     and     #$14                    ; $B2C6
-    sta     ram_0000                ; $B2C8
+    sta     temp0                   ; $B2C8
     ldy     #$29                    ; $B2CA
 
 loc_5_B2CC:
@@ -5042,10 +5042,10 @@ loc_5_B2D9:
     dey                             ; $B2DF
     cpy     #$FF                    ; $B2E0
     bne     loc_5_B2D9              ; $B2E2
-    lda     ram_0000                ; $B2E4
+    lda     temp0                   ; $B2E4
     sta     ram_0796                ; $B2E6
     lda     #$02                    ; $B2E9
-    sta     ram_07A0                ; $B2EB
+    sta     secondQuest             ; $B2EB
 ; (end of code not executed in the test movies)
 
 loc_5_B2EE:
@@ -5062,7 +5062,7 @@ loc_5_B2F9:
     sta     lives,y                 ; $B2F9
     iny                             ; $B2FC
     bne     loc_5_B2F9              ; $B2FD
-    inc     ram_076C                ; $B2FF
+    inc     gameState               ; $B2FF
     rts                             ; $B302
 
 loc_5_B303:
@@ -5071,88 +5071,88 @@ loc_5_B303:
     beq     loc_5_B319              ; $B307
     lda     #$04                    ; $B309
     sta     ram_00EB                ; $B30B
-    inc     objState                ; $B30D
-    lda     objState                ; $B30F
+    inc     objYHi                  ; $B30D
+    lda     objYHi                  ; $B30F
     cmp     #$05                    ; $B311
     bne     loc_5_B319              ; $B313
     lda     #$00                    ; $B315
-    sta     objState                ; $B317
+    sta     objYHi                  ; $B317
 
 loc_5_B319:
-    lda     objState                ; $B319
+    lda     objYHi                  ; $B319
     bne     loc_5_B32F              ; $B31B
-    lda     objState+1              ; $B31D
+    lda     objYHi+1                ; $B31D
     and     #$01                    ; $B31F
     beq     loc_5_B328              ; $B321
-    inc     objState                ; $B323
+    inc     objYHi                  ; $B323
     jmp     loc_5_B32F              ; $B325
 
 loc_5_B328:
     lda     #$40                    ; $B328
-    sta     objState+2              ; $B32A
+    sta     objYHi+2                ; $B32A
     jmp     loc_5_B384              ; $B32C
 
 loc_5_B32F:
-    lda     objState                ; $B32F
+    lda     objYHi                  ; $B32F
     cmp     #$01                    ; $B331
     bne     loc_5_B347              ; $B333
-    lda     objState+1              ; $B335
+    lda     objYHi+1                ; $B335
     and     #$02                    ; $B337
     beq     loc_5_B340              ; $B339
-    inc     objState                ; $B33B
+    inc     objYHi                  ; $B33B
     jmp     loc_5_B347              ; $B33D
 
 loc_5_B340:
     lda     #$58                    ; $B340
-    sta     objState+2              ; $B342
+    sta     objYHi+2                ; $B342
     jmp     loc_5_B384              ; $B344
 
 loc_5_B347:
-    lda     objState                ; $B347
+    lda     objYHi                  ; $B347
     cmp     #$02                    ; $B349
     bne     loc_5_B35F              ; $B34B
-    lda     objState+1              ; $B34D
+    lda     objYHi+1                ; $B34D
     and     #$04                    ; $B34F
     beq     loc_5_B358              ; $B351
-    inc     objState                ; $B353
+    inc     objYHi                  ; $B353
     jmp     loc_5_B35F              ; $B355
 
 loc_5_B358:
     lda     #$70                    ; $B358
-    sta     objState+2              ; $B35A
+    sta     objYHi+2                ; $B35A
     jmp     loc_5_B384              ; $B35C
 
 loc_5_B35F:
-    lda     objState                ; $B35F
+    lda     objYHi                  ; $B35F
     cmp     #$03                    ; $B361
     bne     loc_5_B375              ; $B363
-    lda     objState+1              ; $B365
+    lda     objYHi+1                ; $B365
     bne     loc_5_B36E              ; $B367
-    inc     objState                ; $B369
+    inc     objYHi                  ; $B369
     jmp     loc_5_B375              ; $B36B
 
 loc_5_B36E:
     lda     #$90                    ; $B36E
-    sta     objState+2              ; $B370
+    sta     objYHi+2                ; $B370
     jmp     loc_5_B384              ; $B372
 
 loc_5_B375:
-    lda     objState+1              ; $B375
+    lda     objYHi+1                ; $B375
     cmp     #$07                    ; $B377
     bne     loc_5_B380              ; $B379
 ; (code below not executed in the test movies)
-    dec     objState                ; $B37B
+    dec     objYHi                  ; $B37B
     jmp     loc_5_B35F              ; $B37D
 ; (end of code not executed in the test movies)
 
 loc_5_B380:
     lda     #$A8                    ; $B380
-    sta     objState+2              ; $B382
+    sta     objYHi+2                ; $B382
 
 loc_5_B384:
     lda     #$1C                    ; $B384
     sta     a:objX                  ; $B386
-    ldy     objState+2              ; $B389
+    ldy     objYHi+2                ; $B389
     jsr     sub_5_B574              ; $B38B
     lda     #$40                    ; $B38E
     ldy     #$28                    ; $B390
@@ -5160,36 +5160,36 @@ loc_5_B384:
     jsr     sub_5_B5B5              ; $B395
     ldx     #$08                    ; $B398
     lda     #$43                    ; $B39A
-    sta     ram_0000                ; $B39C
+    sta     temp0                   ; $B39C
 
 loc_5_B39E:
-    lsr     ram_0002                ; $B39E
+    lsr     temp2                   ; $B39E
     bcc     loc_5_B3B6              ; $B3A0
 ; (code below not executed in the test movies)
-    lda     ram_0000                ; $B3A2
-    sta     ram_0218,x              ; $B3A4
+    lda     temp0                   ; $B3A2
+    sta     oamBuffer+24,x          ; $B3A4
     lda     #$D2                    ; $B3A7
-    sta     ram_0219,x              ; $B3A9
+    sta     oamBuffer+25,x          ; $B3A9
     lda     #$01                    ; $B3AC
-    sta     ram_021A,x              ; $B3AE
+    sta     oamBuffer+26,x          ; $B3AE
     lda     #$30                    ; $B3B1
-    sta     ram_021B,x              ; $B3B3
+    sta     oamBuffer+27,x          ; $B3B3
 ; (end of code not executed in the test movies)
 
 loc_5_B3B6:
-    lda     ram_0000                ; $B3B6
+    lda     temp0                   ; $B3B6
     clc                             ; $B3B8
     adc     #$18                    ; $B3B9
-    sta     ram_0000                ; $B3BB
+    sta     temp0                   ; $B3BB
     dex                             ; $B3BD
     dex                             ; $B3BE
     dex                             ; $B3BF
     dex                             ; $B3C0
     bpl     loc_5_B39E              ; $B3C1
     lda     #$21                    ; $B3C3
-    sta     ram_0000                ; $B3C5
+    sta     temp0                   ; $B3C5
     lda     #$07                    ; $B3C7
-    sta     ram_0001                ; $B3C9
+    sta     temp1                   ; $B3C9
     jsr     sub_5_B529              ; $B3CB
     rts                             ; $B3CE
 
@@ -5261,7 +5261,7 @@ loc_5_B425:
     ldy     ram_073E                ; $B425
     bne     loc_5_B433              ; $B428
     lda     #$06                    ; $B42A
-    sta     ram_0725                ; $B42C
+    sta     ppuStringSelect         ; $B42C
     inc     ram_073E                ; $B42F
     rts                             ; $B432
 
@@ -5269,10 +5269,10 @@ loc_5_B433:
     dey                             ; $B433
     bne     loc_5_B443              ; $B434
     lda     #$07                    ; $B436
-    sta     ram_0725                ; $B438
+    sta     ppuStringSelect         ; $B438
     inc     ram_073E                ; $B43B
     lda     #$00                    ; $B43E
-    sta     objState                ; $B440
+    sta     objYHi                  ; $B440
     rts                             ; $B442
 
 loc_5_B443:
@@ -5281,7 +5281,7 @@ loc_5_B443:
     lda     joypadPressed           ; $B448
     and     #$10                    ; $B44A
     beq     loc_5_B4A6              ; $B44C
-    lda     objState                ; $B44E
+    lda     objYHi                  ; $B44E
     cmp     #$03                    ; $B450
     bne     loc_5_B462              ; $B452
     lda     #$00                    ; $B454
@@ -5292,40 +5292,40 @@ loc_5_B443:
     rts                             ; $B461
 
 loc_5_B462:
-    lda     objState                ; $B462
+    lda     objYHi                  ; $B462
     asl     a                       ; $B464
     tax                             ; $B465
     lda     SaveBackupStatsPtrs,x   ; $B466
-    sta     ram_0000                ; $B469
+    sta     temp0                   ; $B469
     lda     SaveBackupStatsPtrs+1,x ; $B46B
-    sta     ram_0001                ; $B46E
+    sta     temp1                   ; $B46E
     ldy     #SAVE_STATS_SIZE - 1    ; $B470
 
 loc_5_B472:
     lda     SaveDefaultStats,y      ; $B472
-    sta     (ram_0000),y            ; $B475
+    sta     (temp0),y               ; $B475
     dey                             ; $B477
     bpl     loc_5_B472              ; $B478
     lda     #$08                    ; $B47A
     sta     ram_00EB                ; $B47C
     iny                             ; $B47E
     lda     SaveDefaultWorldPtr     ; $B47F
-    sta     ram_0000                ; $B482
+    sta     temp0                   ; $B482
     lda     SaveDefaultWorldPtr+1   ; $B484
-    sta     ram_0001                ; $B487
+    sta     temp1                   ; $B487
     lda     SaveBackupWorldPtrs,x   ; $B489
-    sta     ram_0002                ; $B48C
+    sta     temp2                   ; $B48C
     lda     SaveBackupWorldPtrs+1,x ; $B48E
-    sta     ram_0003                ; $B491
+    sta     temp3                   ; $B491
 
 loc_5_B493:
-    lda     (ram_0000),y            ; $B493
-    sta     (ram_0002),y            ; $B495
+    lda     (temp0),y               ; $B493
+    sta     (temp2),y               ; $B495
     jsr     Save_AdvancePointers    ; $B497
-    lda     ram_0000                ; $B49A
+    lda     temp0                   ; $B49A
     cmp     #<SaveDefaultWorldEnd   ; $B49C
     bne     loc_5_B493              ; $B49E
-    lda     ram_0001                ; $B4A0
+    lda     temp1                   ; $B4A0
     cmp     #>SaveDefaultWorldEnd   ; $B4A2
     bne     loc_5_B493              ; $B4A4
 
@@ -5335,16 +5335,16 @@ loc_5_B4A6:
     beq     loc_5_B4BC              ; $B4AA
     lda     #$04                    ; $B4AC
     sta     ram_00EB                ; $B4AE
-    inc     objState                ; $B4B0
-    lda     objState                ; $B4B2
+    inc     objYHi                  ; $B4B0
+    lda     objYHi                  ; $B4B2
     cmp     #$04                    ; $B4B4
     bne     loc_5_B4BC              ; $B4B6
     lda     #$00                    ; $B4B8
-    sta     objState                ; $B4BA
+    sta     objYHi                  ; $B4BA
 
 loc_5_B4BC:
     jsr     sub_5_B502              ; $B4BC
-    lda     objState                ; $B4BF
+    lda     objYHi                  ; $B4BF
     cmp     #$03                    ; $B4C1
     beq     loc_5_B4D5              ; $B4C3
     asl     a                       ; $B4C5
@@ -5353,19 +5353,19 @@ loc_5_B4BC:
     adc     #$01                    ; $B4C9
 
 loc_5_B4CB:
-    and     objState+1              ; $B4CB
+    and     objYHi+1                ; $B4CB
     beq     loc_5_B4D5              ; $B4CD
-    inc     objState                ; $B4CF
+    inc     objYHi                  ; $B4CF
     asl     a                       ; $B4D1
     jmp     loc_5_B4CB              ; $B4D2
 
 loc_5_B4D5:
-    ldx     objState                ; $B4D5
+    ldx     objYHi                  ; $B4D5
     lda     dat_5_B421,x            ; $B4D7
-    sta     objState+2              ; $B4DA
+    sta     objYHi+2                ; $B4DA
     lda     #$4C                    ; $B4DC
     sta     a:objX                  ; $B4DE
-    ldy     objState+2              ; $B4E1
+    ldy     objYHi+2                ; $B4E1
     dey                             ; $B4E3
     dey                             ; $B4E4
     dey                             ; $B4E5
@@ -5375,9 +5375,9 @@ loc_5_B4D5:
     ldy     #$58                    ; $B4EC
     jsr     sub_5_B596              ; $B4EE
     lda     #$20                    ; $B4F1
-    sta     ram_0000                ; $B4F3
+    sta     temp0                   ; $B4F3
     lda     #$CD                    ; $B4F5
-    sta     ram_0001                ; $B4F7
+    sta     temp1                   ; $B4F7
     jsr     sub_5_B529              ; $B4F9
     rts                             ; $B4FC
 ; (end of code not executed in the test movies)
@@ -5393,25 +5393,25 @@ dat_5_B4FD:
 
 sub_5_B502:
     lda     #$00                    ; $B502
-    sta     objState+1              ; $B504
+    sta     objYHi+1                ; $B504
     ldx     #$04                    ; $B506
 
 loc_5_B508:
     lda     dat_5_B23C,x            ; $B508
-    sta     ram_0000                ; $B50B
+    sta     temp0                   ; $B50B
     lda     dat_5_B23D,x            ; $B50D
-    sta     ram_0001                ; $B510
+    sta     temp1                   ; $B510
     ldy     #$07                    ; $B512
 
 loc_5_B514:
-    lda     (ram_0000),y            ; $B514
+    lda     (temp0),y               ; $B514
     cmp     #$F4                    ; $B516
     bne     loc_5_B524              ; $B518
     dey                             ; $B51A
     bpl     loc_5_B514              ; $B51B
     lda     dat_5_B4FD,x            ; $B51D
-    ora     objState+1              ; $B520
-    sta     objState+1              ; $B522
+    ora     objYHi+1                ; $B520
+    sta     objYHi+1                ; $B522
 
 loc_5_B524:
     dex                             ; $B524
@@ -5428,31 +5428,31 @@ loc_5_B52D:
     asl     a                       ; $B52E
     tay                             ; $B52F
     lda     dat_5_B23C,y            ; $B530
-    sta     ram_0002                ; $B533
+    sta     temp2                   ; $B533
     lda     dat_5_B23D,y            ; $B535
-    sta     ram_0003                ; $B538
-    lda     ram_0000                ; $B53A
-    sta     ram_0302,x              ; $B53C
-    lda     ram_0001                ; $B53F
-    sta     ram_0303,x              ; $B541
+    sta     temp3                   ; $B538
+    lda     temp0                   ; $B53A
+    sta     ppuBuffer0,x            ; $B53C
+    lda     temp1                   ; $B53F
+    sta     ppuBuffer0+1,x          ; $B541
     lda     #$08                    ; $B544
-    sta     ram_0304,x              ; $B546
+    sta     ppuBuffer0+2,x          ; $B546
     ldy     #$00                    ; $B549
 
 loc_5_B54B:
-    lda     (ram_0002),y            ; $B54B
-    sta     ram_0305,x              ; $B54D
+    lda     (temp2),y               ; $B54B
+    sta     ppuBuffer0+3,x          ; $B54D
     inx                             ; $B550
     iny                             ; $B551
     cpy     #$08                    ; $B552
     bne     loc_5_B54B              ; $B554
-    lda     ram_0001                ; $B556
+    lda     temp1                   ; $B556
     clc                             ; $B558
     adc     #$60                    ; $B559
-    sta     ram_0001                ; $B55B
-    lda     ram_0000                ; $B55D
+    sta     temp1                   ; $B55B
+    lda     temp0                   ; $B55D
     adc     #$00                    ; $B55F
-    sta     ram_0000                ; $B561
+    sta     temp0                   ; $B561
     pla                             ; $B563
     clc                             ; $B564
     adc     #$01                    ; $B565
@@ -5462,27 +5462,27 @@ loc_5_B54B:
     cpx     #$21                    ; $B56A
     bne     loc_5_B52D              ; $B56C
     lda     #$FF                    ; $B56E
-    sta     ram_0302,x              ; $B570
+    sta     ppuBuffer0,x            ; $B570
     rts                             ; $B573
 
 sub_5_B574:
-    inc     objState+4              ; $B574
+    inc     objYHi+4                ; $B574
     ldx     #$68                    ; $B576
-    lda     objState+4              ; $B578
+    lda     objYHi+4                ; $B578
     and     #$04                    ; $B57A
     beq     loc_5_B580              ; $B57C
     inx                             ; $B57E
     inx                             ; $B57F
 
 loc_5_B580:
-    stx     objState+3              ; $B580
-    sty     ram_0200                ; $B582
+    stx     objYHi+3                ; $B580
+    sty     oamBuffer               ; $B582
     lda     #$01                    ; $B585
-    sta     ram_0202                ; $B587
+    sta     oamBuffer+2             ; $B587
     lda     a:objX                  ; $B58A
-    sta     ram_0203                ; $B58D
-    lda     objState+3              ; $B590
-    sta     ram_0201                ; $B592
+    sta     oamBuffer+3             ; $B58D
+    lda     objYHi+3                ; $B590
+    sta     oamBuffer+1             ; $B592
     rts                             ; $B595
 
 sub_5_B596:
@@ -5490,13 +5490,13 @@ sub_5_B596:
 
 loc_5_B598:
     pha                             ; $B598
-    sta     ram_020C,x              ; $B599
+    sta     oamBuffer+12,x          ; $B599
     tya                             ; $B59C
-    sta     ram_020F,x              ; $B59D
+    sta     oamBuffer+15,x          ; $B59D
     lda     #$D0                    ; $B5A0
-    sta     ram_020D,x              ; $B5A2
+    sta     oamBuffer+13,x          ; $B5A2
     lda     #$00                    ; $B5A5
-    sta     ram_020E,x              ; $B5A7
+    sta     oamBuffer+14,x          ; $B5A7
     pla                             ; $B5AA
     clc                             ; $B5AB
     adc     #$18                    ; $B5AC
@@ -5509,22 +5509,22 @@ loc_5_B598:
 
 sub_5_B5B5:
     lda     #$00                    ; $B5B5
-    sta     ram_0002                ; $B5B7
+    sta     temp2                   ; $B5B7
     ldy     #$29                    ; $B5B9
     ldx     #$04                    ; $B5BB
 
 loc_5_B5BD:
     lda     SaveStatsPtrs,x         ; $B5BD
-    sta     ram_0000                ; $B5C0
+    sta     temp0                   ; $B5C0
     lda     SaveStatsPtrs+1,x       ; $B5C2
-    sta     ram_0001                ; $B5C5
-    asl     ram_0002                ; $B5C7
-    lda     (ram_0000),y            ; $B5C9
+    sta     temp1                   ; $B5C5
+    asl     temp2                   ; $B5C7
+    lda     (temp0),y               ; $B5C9
     beq     loc_5_B5D3              ; $B5CB
 ; (code below not executed in the test movies)
-    lda     ram_0002                ; $B5CD
+    lda     temp2                   ; $B5CD
     ora     #$01                    ; $B5CF
-    sta     ram_0002                ; $B5D1
+    sta     temp2                   ; $B5D1
 ; (end of code not executed in the test movies)
 
 loc_5_B5D3:
@@ -5546,50 +5546,50 @@ sub_5_B5D8:
 sub_5_B5EA:
     lda     sramBackupStats,x             ; $B5EA
     ora     #$D0                    ; $B5ED
-    sta     sram_7F3A,y             ; $B5EF
+    sta     sramOverworldMap+826,y  ; $B5EF
     lda     sramBackupStats+1,x     ; $B5F2
     ora     #$D0                    ; $B5F5
-    sta     sram_7F3E,y             ; $B5F7
+    sta     sramOverworldMap+830,y  ; $B5F7
     lda     sramBackupStats+2,x     ; $B5FA
     ora     #$D0                    ; $B5FD
-    sta     sram_7F42,y             ; $B5FF
+    sta     sramOverworldMap+834,y  ; $B5FF
     rts                             ; $B602
 
 sub_5_B603:
     ldx     #$28                    ; $B603
     lda     #$00                    ; $B605
-    sta     ram_0002                ; $B607
+    sta     temp2                   ; $B607
     jsr     sub_5_B623              ; $B609
     lda     #$28                    ; $B60C
     clc                             ; $B60E
     adc     #$32                    ; $B60F
     tax                             ; $B611
     lda     #$06                    ; $B612
-    sta     ram_0002                ; $B614
+    sta     temp2                   ; $B614
     jsr     sub_5_B623              ; $B616
     lda     #$28                    ; $B619
     clc                             ; $B61B
     adc     #$64                    ; $B61C
     tax                             ; $B61E
     lda     #$0C                    ; $B61F
-    sta     ram_0002                ; $B621
+    sta     temp2                   ; $B621
 
 sub_5_B623:
     lda     #$00                    ; $B623
-    sta     ram_0000                ; $B625
+    sta     temp0                   ; $B625
     lda     sramBackupStats,x             ; $B627
     jsr     sub_5_B8D2              ; $B62A
-    ldx     ram_0002                ; $B62D
-    sta     sram_7F79,x             ; $B62F
+    ldx     temp2                   ; $B62D
+    sta     sramOverworldMap+889,x  ; $B62F
     tya                             ; $B632
-    sta     sram_7F78,x             ; $B633
-    lda     ram_0000                ; $B636
-    sta     sram_7F77,x             ; $B638
+    sta     sramOverworldMap+888,x  ; $B633
+    lda     temp0                   ; $B636
+    sta     sramOverworldMap+887,x  ; $B638
     rts                             ; $B63B
 
 sub_5_B63C:
     jsr     sub_5_B502              ; $B63C
-    lda     objState+1              ; $B63F
+    lda     objYHi+1                ; $B63F
     and     #$01                    ; $B641
     beq     loc_5_B64C              ; $B643
     ldx     #$00                    ; $B645
@@ -5597,7 +5597,7 @@ sub_5_B63C:
     jsr     sub_5_B663              ; $B649
 
 loc_5_B64C:
-    lda     objState+1              ; $B64C
+    lda     objYHi+1                ; $B64C
     and     #$02                    ; $B64E
     beq     loc_5_B659              ; $B650
     ldx     #$0E                    ; $B652
@@ -5605,7 +5605,7 @@ loc_5_B64C:
     jsr     sub_5_B663              ; $B656
 
 loc_5_B659:
-    lda     objState+1              ; $B659
+    lda     objYHi+1                ; $B659
     and     #$04                    ; $B65B
     beq     loc_5_B677              ; $B65D
     ldx     #$1C                    ; $B65F
@@ -5613,12 +5613,12 @@ loc_5_B659:
 
 sub_5_B663:
     lda     #$F4                    ; $B663
-    sta     sram_7F3A,x             ; $B665
-    sta     sram_7F3E,x             ; $B668
-    sta     sram_7F42,x             ; $B66B
-    sta     sram_7F77,y             ; $B66E
-    sta     sram_7F78,y             ; $B671
-    sta     sram_7F79,y             ; $B674
+    sta     sramOverworldMap+826,x  ; $B665
+    sta     sramOverworldMap+830,x  ; $B668
+    sta     sramOverworldMap+834,x  ; $B66B
+    sta     sramOverworldMap+887,y  ; $B66E
+    sta     sramOverworldMap+888,y  ; $B671
+    sta     sramOverworldMap+889,y  ; $B674
 
 loc_5_B677:
     rts                             ; $B677
@@ -5627,13 +5627,13 @@ loc_5_B678:
     ldy     ram_073E                ; $B678
     bne     loc_5_B692              ; $B67B
     lda     #$06                    ; $B67D
-    sta     ram_0725                ; $B67F
+    sta     ppuStringSelect         ; $B67F
     inc     ram_073E                ; $B682
     lda     #$00                    ; $B685
-    sta     objState                ; $B687
-    sta     objState+5              ; $B689
-    sta     objState+6              ; $B68B
-    sta     objState+7              ; $B68D
+    sta     objYHi                  ; $B687
+    sta     objYHi+5                ; $B689
+    sta     objYHi+6                ; $B68B
+    sta     objYHi+7                ; $B68D
     jmp     sub_5_B502              ; $B68F
 
 loc_5_B692:
@@ -5642,7 +5642,7 @@ loc_5_B692:
     lda     joypadPressed           ; $B697
     and     #$10                    ; $B699
     beq     loc_5_B6AC              ; $B69B
-    lda     objState                ; $B69D
+    lda     objYHi                  ; $B69D
     cmp     #$03                    ; $B69F
     bne     loc_5_B6AC              ; $B6A1
     lda     #$00                    ; $B6A3
@@ -5656,24 +5656,24 @@ loc_5_B6AC:
     beq     loc_5_B6C6              ; $B6B0
     lda     #$04                    ; $B6B2
     sta     ram_00EB                ; $B6B4
-    inc     objState                ; $B6B6
-    lda     objState                ; $B6B8
+    inc     objYHi                  ; $B6B6
+    lda     objYHi                  ; $B6B8
     cmp     #$04                    ; $B6BA
     bne     loc_5_B6C2              ; $B6BC
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B6BE
-    sta     objState                ; $B6C0
+    sta     objYHi                  ; $B6C0
 ; (end of code not executed in the test movies)
 
 loc_5_B6C2:
     lda     #$00                    ; $B6C2
-    sta     objState+5              ; $B6C4
+    sta     objYHi+5                ; $B6C4
 
 loc_5_B6C6:
-    lda     objState+1              ; $B6C6
+    lda     objYHi+1                ; $B6C6
     ora     #$08                    ; $B6C8
-    sta     objState+1              ; $B6CA
-    lda     objState                ; $B6CC
+    sta     objYHi+1                ; $B6CA
+    lda     objYHi                  ; $B6CC
     cmp     #$03                    ; $B6CE
     beq     loc_5_B6E4              ; $B6D0
     asl     a                       ; $B6D2
@@ -5683,22 +5683,22 @@ loc_5_B6C6:
 
 loc_5_B6D8:
     tay                             ; $B6D8
-    and     objState+1              ; $B6D9
+    and     objYHi+1                ; $B6D9
     bne     loc_5_B6E4              ; $B6DB
 ; (code below not executed in the test movies)
-    inc     objState                ; $B6DD
+    inc     objYHi                  ; $B6DD
     tya                             ; $B6DF
     asl     a                       ; $B6E0
     jmp     loc_5_B6D8              ; $B6E1
 ; (end of code not executed in the test movies)
 
 loc_5_B6E4:
-    ldx     objState                ; $B6E4
+    ldx     objYHi                  ; $B6E4
     lda     dat_5_B421,x            ; $B6E6
-    sta     objState+2              ; $B6E9
+    sta     objYHi+2                ; $B6E9
     lda     #$4C                    ; $B6EB
     sta     a:objX                  ; $B6ED
-    ldy     objState+2              ; $B6F0
+    ldy     objYHi+2                ; $B6F0
     dey                             ; $B6F2
     dey                             ; $B6F3
     dey                             ; $B6F4
@@ -5707,12 +5707,12 @@ loc_5_B6E4:
     lda     #$2C                    ; $B6F9
     ldy     #$58                    ; $B6FB
     jsr     sub_5_B596              ; $B6FD
-    lda     objState+2              ; $B700
+    lda     objYHi+2                ; $B700
     cmp     #$78                    ; $B702
     bne     loc_5_B711              ; $B704
     lda     #$F8                    ; $B706
-    sta     ram_0204                ; $B708
-    sta     ram_0208                ; $B70B
+    sta     oamBuffer+4             ; $B708
+    sta     oamBuffer+8             ; $B70B
     jmp     loc_5_B8C4              ; $B70E
 
 loc_5_B711:
@@ -5721,18 +5721,18 @@ loc_5_B711:
     beq     loc_5_B727              ; $B715
     lda     #$01                    ; $B717
     sta     ram_00EB                ; $B719
-    inc     objState+5              ; $B71B
-    lda     objState+5              ; $B71D
+    inc     objYHi+5                ; $B71B
+    lda     objYHi+5                ; $B71D
     cmp     #$08                    ; $B71F
     bne     loc_5_B727              ; $B721
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B723
-    sta     objState+5              ; $B725
+    sta     objYHi+5                ; $B725
 ; (end of code not executed in the test movies)
 
 loc_5_B727:
     lda     #$68                    ; $B727
-    ldx     objState+5              ; $B729
+    ldx     objYHi+5                ; $B729
 
 loc_5_B72B:
     beq     loc_5_B734              ; $B72B
@@ -5743,7 +5743,7 @@ loc_5_B72B:
 
 loc_5_B734:
     sta     objXSubpixel            ; $B734
-    lda     objState+2              ; $B737
+    lda     objYHi+2                ; $B737
     cmp     #$78                    ; $B739
     bne     loc_5_B73F              ; $B73B
 ; (code below not executed in the test movies)
@@ -5751,43 +5751,43 @@ loc_5_B734:
 ; (end of code not executed in the test movies)
 
 loc_5_B73F:
-    sta     objState+11             ; $B73F
-    lda     objState+4              ; $B741
+    sta     objYHi+11               ; $B73F
+    lda     objYHi+4                ; $B741
     and     #$08                    ; $B743
     beq     loc_5_B74B              ; $B745
     lda     #$F8                    ; $B747
-    sta     objState+11             ; $B749
+    sta     objYHi+11               ; $B749
 
 loc_5_B74B:
-    lda     objState+11             ; $B74B
-    sta     ram_0204                ; $B74D
-    dec     ram_0204                ; $B750
+    lda     objYHi+11               ; $B74B
+    sta     oamBuffer+4             ; $B74D
+    dec     oamBuffer+4             ; $B750
     lda     objXSubpixel            ; $B753
-    sta     ram_0207                ; $B756
+    sta     oamBuffer+7             ; $B756
     lda     #$FF                    ; $B759
-    sta     ram_0205                ; $B75B
+    sta     oamBuffer+5             ; $B75B
     lda     #$03                    ; $B75E
-    sta     ram_0206                ; $B760
+    sta     oamBuffer+6             ; $B760
     lda     joypadHeld              ; $B763
     and     #$0F                    ; $B765
     bne     loc_5_B772              ; $B767
     lda     #$00                    ; $B769
-    sta     objState+8              ; $B76B
-    sta     objState+9              ; $B76D
+    sta     objYHi+8                ; $B76B
+    sta     objYHi+9                ; $B76D
     jmp     loc_5_B831              ; $B76F
 
 loc_5_B772:
-    lda     objState+8              ; $B772
+    lda     objYHi+8                ; $B772
     beq     loc_5_B78E              ; $B774
 ; (code below not executed in the test movies)
-    inc     objState+9              ; $B776
-    lda     objState+9              ; $B778
+    inc     objYHi+9                ; $B776
+    lda     objYHi+9                ; $B778
     cmp     #$1F                    ; $B77A
     bmi     loc_5_B78B              ; $B77C
     and     #$07                    ; $B77E
     bne     loc_5_B78B              ; $B780
     lda     #$20                    ; $B782
-    sta     objState+9              ; $B784
+    sta     objYHi+9                ; $B784
     jmp     loc_5_B78E              ; $B786
 ; (end of code not executed in the test movies)
 ; (unreferenced: $B789-$B78A, 2 bytes)
@@ -5800,7 +5800,7 @@ loc_5_B78B:
 
 loc_5_B78E:
     lda     #$01                    ; $B78E
-    sta     objState+8              ; $B790
+    sta     objYHi+8                ; $B790
     lda     #$02                    ; $B792
     sta     ram_00EB                ; $B794
     lda     joypadHeld              ; $B796
@@ -5808,60 +5808,60 @@ loc_5_B78E:
     beq     loc_5_B7F2              ; $B79A
     cmp     #$01                    ; $B79C
     bne     loc_5_B7CF              ; $B79E
-    inc     objState+6              ; $B7A0
-    lda     objState+6              ; $B7A2
+    inc     objYHi+6                ; $B7A0
+    lda     objYHi+6                ; $B7A2
     cmp     #$0B                    ; $B7A4
     bne     loc_5_B7AE              ; $B7A6
-    inc     objState+7              ; $B7A8
+    inc     objYHi+7                ; $B7A8
     lda     #$00                    ; $B7AA
-    sta     objState+6              ; $B7AC
+    sta     objYHi+6                ; $B7AC
 
 loc_5_B7AE:
-    lda     objState+7              ; $B7AE
+    lda     objYHi+7                ; $B7AE
     cmp     #$04                    ; $B7B0
     bne     loc_5_B7BA              ; $B7B2
     lda     #$00                    ; $B7B4
-    sta     objState+6              ; $B7B6
-    sta     objState+7              ; $B7B8
+    sta     objYHi+6                ; $B7B6
+    sta     objYHi+7                ; $B7B8
 
 loc_5_B7BA:
-    lda     objState+7              ; $B7BA
+    lda     objYHi+7                ; $B7BA
     cmp     #$02                    ; $B7BC
     bne     loc_5_B7CC              ; $B7BE
-    lda     objState+6              ; $B7C0
+    lda     objYHi+6                ; $B7C0
     cmp     #$06                    ; $B7C2
     bne     loc_5_B7CC              ; $B7C4
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B7C6
-    sta     objState+6              ; $B7C8
-    inc     objState+7              ; $B7CA
+    sta     objYHi+6                ; $B7C8
+    inc     objYHi+7                ; $B7CA
 ; (end of code not executed in the test movies)
 
 loc_5_B7CC:
     jmp     loc_5_B831              ; $B7CC
 
 loc_5_B7CF:
-    dec     objState+6              ; $B7CF
+    dec     objYHi+6                ; $B7CF
     bpl     loc_5_B7E3              ; $B7D1
-    dec     objState+7              ; $B7D3
+    dec     objYHi+7                ; $B7D3
     lda     #$0A                    ; $B7D5
-    sta     objState+6              ; $B7D7
-    lda     objState+7              ; $B7D9
+    sta     objYHi+6                ; $B7D7
+    lda     objYHi+7                ; $B7D9
     cmp     #$02                    ; $B7DB
     bne     loc_5_B7E3              ; $B7DD
 ; (code below not executed in the test movies)
     lda     #$05                    ; $B7DF
-    sta     objState+6              ; $B7E1
+    sta     objYHi+6                ; $B7E1
 ; (end of code not executed in the test movies)
 
 loc_5_B7E3:
-    lda     objState+7              ; $B7E3
+    lda     objYHi+7                ; $B7E3
     bpl     loc_5_B7EF              ; $B7E5
 ; (code below not executed in the test movies)
     lda     #$03                    ; $B7E7
-    sta     objState+7              ; $B7E9
+    sta     objYHi+7                ; $B7E9
     lda     #$0A                    ; $B7EB
-    sta     objState+6              ; $B7ED
+    sta     objYHi+6                ; $B7ED
 ; (end of code not executed in the test movies)
 
 loc_5_B7EF:
@@ -5871,51 +5871,51 @@ loc_5_B7F2:
     lda     joypadHeld              ; $B7F2
     and     #$08                    ; $B7F4
     beq     loc_5_B814              ; $B7F6
-    dec     objState+7              ; $B7F8
+    dec     objYHi+7                ; $B7F8
     bpl     loc_5_B803              ; $B7FA
     lda     #$03                    ; $B7FC
-    sta     objState+7              ; $B7FE
+    sta     objYHi+7                ; $B7FE
     jmp     loc_5_B811              ; $B800
 
 loc_5_B803:
-    lda     objState+6              ; $B803
+    lda     objYHi+6                ; $B803
     cmp     #$06                    ; $B805
     bmi     loc_5_B811              ; $B807
-    lda     objState+7              ; $B809
+    lda     objYHi+7                ; $B809
     cmp     #$02                    ; $B80B
     bne     loc_5_B811              ; $B80D
 ; (code below not executed in the test movies)
-    dec     objState+7              ; $B80F
+    dec     objYHi+7                ; $B80F
 ; (end of code not executed in the test movies)
 
 loc_5_B811:
     jmp     loc_5_B831              ; $B811
 
 loc_5_B814:
-    inc     objState+7              ; $B814
-    lda     objState+7              ; $B816
+    inc     objYHi+7                ; $B814
+    lda     objYHi+7                ; $B816
     cmp     #$04                    ; $B818
     bne     loc_5_B823              ; $B81A
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B81C
-    sta     objState+7              ; $B81E
+    sta     objYHi+7                ; $B81E
     jmp     loc_5_B831              ; $B820
 ; (end of code not executed in the test movies)
 
 loc_5_B823:
-    lda     objState+6              ; $B823
+    lda     objYHi+6                ; $B823
     cmp     #$06                    ; $B825
     bmi     loc_5_B831              ; $B827
-    lda     objState+7              ; $B829
+    lda     objYHi+7                ; $B829
     cmp     #$02                    ; $B82B
     bne     loc_5_B831              ; $B82D
 ; (code below not executed in the test movies)
-    inc     objState+7              ; $B82F
+    inc     objYHi+7                ; $B82F
 ; (end of code not executed in the test movies)
 
 loc_5_B831:
     lda     #$30                    ; $B831
-    ldx     objState+6              ; $B833
+    ldx     objYHi+6                ; $B833
 
 loc_5_B835:
     beq     loc_5_B83E              ; $B835
@@ -5925,9 +5925,9 @@ loc_5_B835:
     jmp     loc_5_B835              ; $B83B
 
 loc_5_B83E:
-    sta     objState+10             ; $B83E
+    sta     objYHi+10               ; $B83E
     lda     #$90                    ; $B840
-    ldx     objState+7              ; $B842
+    ldx     objYHi+7                ; $B842
 
 loc_5_B844:
     beq     loc_5_B84D              ; $B844
@@ -5937,37 +5937,37 @@ loc_5_B844:
     jmp     loc_5_B844              ; $B84A
 
 loc_5_B84D:
-    sta     objState+12             ; $B84D
-    lda     objState+9              ; $B84F
+    sta     objYHi+12               ; $B84D
+    lda     objYHi+9                ; $B84F
     cmp     #$1F                    ; $B851
     bpl     loc_5_B85F              ; $B853
-    lda     objState+4              ; $B855
+    lda     objYHi+4                ; $B855
     and     #$08                    ; $B857
     beq     loc_5_B85F              ; $B859
     lda     #$F8                    ; $B85B
-    sta     objState+12             ; $B85D
+    sta     objYHi+12               ; $B85D
 
 loc_5_B85F:
-    lda     objState+12             ; $B85F
-    sta     ram_0244                ; $B861
-    dec     ram_0244                ; $B864
-    lda     objState+10             ; $B867
-    sta     ram_0247                ; $B869
+    lda     objYHi+12               ; $B85F
+    sta     oamBuffer+68            ; $B861
+    dec     oamBuffer+68            ; $B864
+    lda     objYHi+10               ; $B867
+    sta     oamBuffer+71            ; $B869
     lda     #$FF                    ; $B86C
-    sta     ram_0245                ; $B86E
+    sta     oamBuffer+69            ; $B86E
     lda     #$03                    ; $B871
-    sta     ram_0246                ; $B873
+    sta     oamBuffer+70            ; $B873
     ldx     #$1C                    ; $B876
 
 loc_5_B878:
     lda     #$C7                    ; $B878
-    sta     ram_0224,x              ; $B87A
+    sta     oamBuffer+36,x          ; $B87A
     lda     #$F5                    ; $B87D
-    sta     ram_0225,x              ; $B87F
+    sta     oamBuffer+37,x          ; $B87F
     lda     #$00                    ; $B882
-    sta     ram_0226,x              ; $B884
+    sta     oamBuffer+38,x          ; $B884
     lda     #$10                    ; $B887
-    sta     ram_0227,x              ; $B889
+    sta     oamBuffer+39,x          ; $B889
     dex                             ; $B88C
     dex                             ; $B88D
     dex                             ; $B88E
@@ -5976,8 +5976,8 @@ loc_5_B878:
     lda     joypadPressed           ; $B892
     and     #$80                    ; $B894
     beq     loc_5_B8C4              ; $B896
-    ldx     objState+7              ; $B898
-    lda     objState+6              ; $B89A
+    ldx     objYHi+7                ; $B898
+    lda     objYHi+6                ; $B89A
 
 loc_5_B89C:
     cpx     #$00                    ; $B89C
@@ -5989,7 +5989,7 @@ loc_5_B89C:
 
 loc_5_B8A7:
     pha                             ; $B8A7
-    ldy     objState+5              ; $B8A8
+    ldy     objYHi+5                ; $B8A8
     bne     loc_5_B8AE              ; $B8AA
 ; (code below not executed in the test movies)
     ldy     #$08                    ; $B8AC
@@ -5997,23 +5997,23 @@ loc_5_B8A7:
 
 loc_5_B8AE:
     dey                             ; $B8AE
-    lda     objState                ; $B8AF
+    lda     objYHi                  ; $B8AF
     asl     a                       ; $B8B1
     tax                             ; $B8B2
     lda     dat_5_B23C,x            ; $B8B3
-    sta     ram_0000                ; $B8B6
+    sta     temp0                   ; $B8B6
     lda     dat_5_B23D,x            ; $B8B8
-    sta     ram_0001                ; $B8BB
+    sta     temp1                   ; $B8BB
     pla                             ; $B8BD
     tax                             ; $B8BE
     lda     dat_5_BD75,x            ; $B8BF
-    sta     (ram_0000),y            ; $B8C2
+    sta     (temp0),y               ; $B8C2
 
 loc_5_B8C4:
     lda     #$20                    ; $B8C4
-    sta     ram_0000                ; $B8C6
+    sta     temp0                   ; $B8C6
     lda     #$CD                    ; $B8C8
-    sta     ram_0001                ; $B8CA
+    sta     temp1                   ; $B8CA
     jmp     sub_5_B529              ; $B8CC
 ; (unreferenced: $B8CF-$B8D1, 3 bytes)
     .byte   $4C, $05, $CF                                                   ; $B8CF
@@ -6026,24 +6026,24 @@ loc_5_B8D4:
     sec                             ; $B8D5
     sbc     #$E8                    ; $B8D6
     bcs     loc_5_B8DC              ; $B8D8
-    dec     ram_0000                ; $B8DA
+    dec     temp0                   ; $B8DA
 
 loc_5_B8DC:
-    dec     ram_0000                ; $B8DC
-    dec     ram_0000                ; $B8DE
-    dec     ram_0000                ; $B8E0
+    dec     temp0                   ; $B8DC
+    dec     temp0                   ; $B8DE
+    dec     temp0                   ; $B8E0
     bpl     loc_5_B8D4              ; $B8E2
     clc                             ; $B8E4
     adc     #$E8                    ; $B8E5
     bcc     loc_5_B8EB              ; $B8E7
-    inc     ram_0000                ; $B8E9
+    inc     temp0                   ; $B8E9
 
 loc_5_B8EB:
-    inc     ram_0000                ; $B8EB
-    inc     ram_0000                ; $B8ED
-    inc     ram_0000                ; $B8EF
+    inc     temp0                   ; $B8EB
+    inc     temp0                   ; $B8ED
+    inc     temp0                   ; $B8EF
     dey                             ; $B8F1
-    sty     ram_0001                ; $B8F2
+    sty     temp1                   ; $B8F2
     ldy     #$D0                    ; $B8F4
 
 loc_5_B8F6:
@@ -6051,11 +6051,11 @@ loc_5_B8F6:
     sec                             ; $B8F7
     sbc     #$64                    ; $B8F8
     bcs     loc_5_B8F6              ; $B8FA
-    dec     ram_0000                ; $B8FC
+    dec     temp0                   ; $B8FC
     bpl     loc_5_B8F6              ; $B8FE
     adc     #$64                    ; $B900
     dey                             ; $B902
-    sty     ram_0000                ; $B903
+    sty     temp0                   ; $B903
     ldy     #$D0                    ; $B905
 
 loc_5_B907:
@@ -6073,27 +6073,27 @@ loc_5_B907:
 ; Load save file saveSlot into RAM: its stats into statLevel..playerName and
 ; its world state into saveWorld.
 ;
-; Clobbers: a, x, y, ram_0000-ram_000D
+; Clobbers: a, x, y, temp0-temp13
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_Load:
     jsr     Save_SetPointersCurrent ; $B911
 
 loc_5_B914:
-    lda     (ram_0000),y            ; $B914
+    lda     (temp0),y               ; $B914
     sta     statLevel,y             ; $B916
     dey                             ; $B919
     bpl     loc_5_B914              ; $B91A
     iny                             ; $B91C
 
 loc_5_B91D:
-    lda     (ram_0002),y            ; $B91D
-    sta     (ram_0004),y            ; $B91F
+    lda     (temp2),y               ; $B91D
+    sta     (temp4),y               ; $B91F
     jsr     Save_AdvancePointers    ; $B921
-    lda     ram_0006                ; $B924
+    lda     temp6                   ; $B924
     cmp     #<SaveDefaultWorldEnd   ; $B926
     bne     loc_5_B91D              ; $B928
-    lda     ram_0007                ; $B92A
+    lda     temp7                   ; $B92A
     cmp     #>SaveDefaultWorldEnd   ; $B92C
     bne     loc_5_B91D              ; $B92E
     rts                             ; $B930
@@ -6118,7 +6118,7 @@ SaveDefaultWorldPtr:
 ; Anything else (new battery RAM): initialize the file from
 ; SaveDefaultStats and SaveDefaultWorld.
 ;
-; Clobbers: a, x, y, ram_0000-ram_000D
+; Clobbers: a, x, y, temp0-temp13
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_CheckFiles:
@@ -6128,7 +6128,7 @@ loc_5_B962:
     txa                             ; $B962
     jsr     Save_SetPointers        ; $B963
     ldy     #$00                    ; $B966
-    lda     (ram_000C),y            ; $B968
+    lda     (temp12),y              ; $B968
     cmp     #SAVE_STATUS_VALID      ; $B96A
     beq     loc_5_B9A3              ; $B96C
     cmp     #SAVE_STATUS_WRITING_BACKUP ; $B96E
@@ -6139,37 +6139,37 @@ loc_5_B962:
 
 loc_5_B978:
     lda     SaveDefaultStats,y      ; $B978
-    sta     (ram_0000),y            ; $B97B
+    sta     (temp0),y               ; $B97B
     dey                             ; $B97D
     bpl     loc_5_B978              ; $B97E
     iny                             ; $B980
 
 loc_5_B981:
-    lda     (ram_0006),y            ; $B981
-    sta     (ram_0002),y            ; $B983
-    inc     ram_0006                ; $B985
+    lda     (temp6),y               ; $B981
+    sta     (temp2),y               ; $B983
+    inc     temp6                   ; $B985
     bne     loc_5_B98B              ; $B987
 ; (code below not executed in the test movies)
-    inc     ram_0007                ; $B989
+    inc     temp7                   ; $B989
 ; (end of code not executed in the test movies)
 
 loc_5_B98B:
-    inc     ram_0002                ; $B98B
+    inc     temp2                   ; $B98B
     bne     loc_5_B991              ; $B98D
-    inc     ram_0003                ; $B98F
+    inc     temp3                   ; $B98F
 
 loc_5_B991:
-    lda     ram_0006                ; $B991
+    lda     temp6                   ; $B991
     cmp     #<SaveDefaultWorldEnd   ; $B993
     bne     loc_5_B981              ; $B995
-    lda     ram_0007                ; $B997
+    lda     temp7                   ; $B997
     cmp     #>SaveDefaultWorldEnd   ; $B999
     bne     loc_5_B981              ; $B99B
 
 loc_5_B99D:
     ldy     #$00                    ; $B99D
     lda     #SAVE_STATUS_VALID      ; $B99F
-    sta     (ram_000C),y            ; $B9A1
+    sta     (temp12),y              ; $B9A1
 
 loc_5_B9A3:
     dex                             ; $B9A3
@@ -6181,24 +6181,24 @@ loc_5_B9A7:
     ldy     #SAVE_STATS_SIZE - 1    ; $B9A7
 
 loc_5_B9A9:
-    lda     (ram_0008),y            ; $B9A9
-    sta     (ram_0000),y            ; $B9AB
+    lda     (temp8),y               ; $B9A9
+    sta     (temp0),y               ; $B9AB
     dey                             ; $B9AD
     bpl     loc_5_B9A9              ; $B9AE
     iny                             ; $B9B0
 
 loc_5_B9B1:
-    lda     (ram_000A),y            ; $B9B1
-    sta     (ram_0002),y            ; $B9B3
+    lda     (temp10),y              ; $B9B1
+    sta     (temp2),y               ; $B9B3
     txa                             ; $B9B5
     pha                             ; $B9B6
     jsr     Save_AdvancePointers    ; $B9B7
     pla                             ; $B9BA
     tax                             ; $B9BB
-    lda     ram_0006                ; $B9BC
+    lda     temp6                   ; $B9BC
     cmp     #<SaveDefaultWorldEnd   ; $B9BE
     bne     loc_5_B9B1              ; $B9C0
-    lda     ram_0007                ; $B9C2
+    lda     temp7                   ; $B9C2
     cmp     #>SaveDefaultWorldEnd   ; $B9C4
     beq     loc_5_B99D              ; $B9C6
     bne     loc_5_B9B1              ; $B9C8
@@ -6210,59 +6210,59 @@ loc_5_B9B1:
 ; area, then from the backup to the file; the file's status records the
 ; progress so that Save_CheckFiles can recover from a reset part-way.
 ;
-; Clobbers: a, x, y, ram_0000-ram_000D
+; Clobbers: a, x, y, temp0-temp13
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_Write:
     jsr     Save_SetPointersCurrent ; $B9CA
     ldy     #$00                    ; $B9CD
     lda     #SAVE_STATUS_WRITING_BACKUP ; $B9CF
-    sta     (ram_000C),y            ; $B9D1
+    sta     (temp12),y              ; $B9D1
     ldy     #SAVE_STATS_SIZE - 1    ; $B9D3
 
 loc_5_B9D5:
     lda     statLevel,y             ; $B9D5
-    sta     (ram_0008),y            ; $B9D8
+    sta     (temp8),y               ; $B9D8
     dey                             ; $B9DA
     bpl     loc_5_B9D5              ; $B9DB
     iny                             ; $B9DD
 
 loc_5_B9DE:
-    lda     (ram_0004),y            ; $B9DE
-    sta     (ram_000A),y            ; $B9E0
+    lda     (temp4),y               ; $B9DE
+    sta     (temp10),y              ; $B9E0
     jsr     Save_AdvancePointers    ; $B9E2
-    lda     ram_0006                ; $B9E5
+    lda     temp6                   ; $B9E5
     cmp     #<SaveDefaultWorldEnd   ; $B9E7
     bne     loc_5_B9DE              ; $B9E9
-    lda     ram_0007                ; $B9EB
+    lda     temp7                   ; $B9EB
     cmp     #>SaveDefaultWorldEnd   ; $B9ED
     bne     loc_5_B9DE              ; $B9EF
     lda     #SAVE_STATUS_WRITING_FILE ; $B9F1
-    sta     (ram_000C),y            ; $B9F3
+    sta     (temp12),y              ; $B9F3
     jsr     Save_SetPointersCurrent ; $B9F5
 
 loc_5_B9F8:
-    lda     (ram_0008),y            ; $B9F8
-    sta     (ram_0000),y            ; $B9FA
+    lda     (temp8),y               ; $B9F8
+    sta     (temp0),y               ; $B9FA
     dey                             ; $B9FC
     bpl     loc_5_B9F8              ; $B9FD
     iny                             ; $B9FF
 
 loc_5_BA00:
-    lda     (ram_000A),y            ; $BA00
-    sta     (ram_0002),y            ; $BA02
+    lda     (temp10),y              ; $BA00
+    sta     (temp2),y               ; $BA02
     jsr     Save_AdvancePointers    ; $BA04
-    lda     ram_0006                ; $BA07
+    lda     temp6                   ; $BA07
     cmp     #<SaveDefaultWorldEnd   ; $BA09
     bne     loc_5_BA00              ; $BA0B
-    lda     ram_0007                ; $BA0D
+    lda     temp7                   ; $BA0D
     cmp     #>SaveDefaultWorldEnd   ; $BA0F
     bne     loc_5_BA00              ; $BA11
 ; (end of code not executed in the test movies)
 
 loc_5_BA13:
     lda     #SAVE_STATUS_VALID      ; $BA13
-    sta     (ram_000C),y            ; $BA15
+    sta     (temp12),y              ; $BA15
     rts                             ; $BA17
 
 ; ---------------------------------------------------------------------------
@@ -6272,31 +6272,31 @@ loc_5_BA13:
 ; the file screens to commit changes made to the backup.
 ;
 ; In:      a = save file
-; Clobbers: a, x, y, ram_0000-ram_000D
+; Clobbers: a, x, y, temp0-temp13
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Save_RestoreFromBackup:
     jsr     Save_SetPointers        ; $BA18
     ldy     #$00                    ; $BA1B
     lda     #SAVE_STATUS_WRITING_FILE ; $BA1D
-    sta     (ram_000C),y            ; $BA1F
+    sta     (temp12),y              ; $BA1F
     ldy     #SAVE_STATS_SIZE - 1    ; $BA21
 
 loc_5_BA23:
-    lda     (ram_0008),y            ; $BA23
-    sta     (ram_0000),y            ; $BA25
+    lda     (temp8),y               ; $BA23
+    sta     (temp0),y               ; $BA25
     dey                             ; $BA27
     bpl     loc_5_BA23              ; $BA28
     iny                             ; $BA2A
 
 loc_5_BA2B:
-    lda     (ram_000A),y            ; $BA2B
-    sta     (ram_0002),y            ; $BA2D
+    lda     (temp10),y              ; $BA2B
+    sta     (temp2),y               ; $BA2D
     jsr     Save_AdvancePointers    ; $BA2F
-    lda     ram_0006                ; $BA32
+    lda     temp6                   ; $BA32
     cmp     #<SaveDefaultWorldEnd   ; $BA34
     bne     loc_5_BA2B              ; $BA36
-    lda     ram_0007                ; $BA38
+    lda     temp7                   ; $BA38
     cmp     #>SaveDefaultWorldEnd   ; $BA3A
     beq     loc_5_BA13              ; $BA3C
 ; (code below not executed in the test movies)
@@ -6310,7 +6310,7 @@ loc_5_BA2B:
 ; edit.
 ;
 ; In:      x = save file
-; Clobbers: a, y, ram_0000-ram_000D
+; Clobbers: a, y, temp0-temp13
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Save_CopyToBackup:
@@ -6318,28 +6318,28 @@ Save_CopyToBackup:
     jsr     Save_SetPointers        ; $BA41
     ldy     #$00                    ; $BA44
     lda     #SAVE_STATUS_WRITING_BACKUP ; $BA46
-    sta     (ram_000C),y            ; $BA48
+    sta     (temp12),y              ; $BA48
     ldy     #SAVE_STATS_SIZE - 1    ; $BA4A
 
 loc_5_BA4C:
-    lda     (ram_0000),y            ; $BA4C
-    sta     (ram_0008),y            ; $BA4E
+    lda     (temp0),y               ; $BA4C
+    sta     (temp8),y               ; $BA4E
     dey                             ; $BA50
     bpl     loc_5_BA4C              ; $BA51
     iny                             ; $BA53
 
 loc_5_BA54:
-    lda     (ram_0002),y            ; $BA54
-    sta     (ram_000A),y            ; $BA56
+    lda     (temp2),y               ; $BA54
+    sta     (temp10),y              ; $BA56
     txa                             ; $BA58
     pha                             ; $BA59
     jsr     Save_AdvancePointers    ; $BA5A
     pla                             ; $BA5D
     tax                             ; $BA5E
-    lda     ram_0006                ; $BA5F
+    lda     temp6                   ; $BA5F
     cmp     #<SaveDefaultWorldEnd   ; $BA61
     bne     loc_5_BA54              ; $BA63
-    lda     ram_0007                ; $BA65
+    lda     temp7                   ; $BA65
     cmp     #>SaveDefaultWorldEnd   ; $BA67
     bne     loc_5_BA54              ; $BA69
     rts                             ; $BA6B
@@ -6359,11 +6359,11 @@ Save_SetPointersCurrent:
 ; Save_SetPointers
 ;
 ; Set up the pointers used to copy save file a:
-; ram_0000 = file stats, ram_0002 = file world state,
-; ram_0004 = saveWorld, ram_0006 = SaveDefaultWorld (also the loop counter:
+; temp0 = file stats, temp2 = file world state,
+; temp4 = saveWorld, temp6 = SaveDefaultWorld (also the loop counter:
 ; copies end when it reaches SaveDefaultWorldEnd),
-; ram_0008 = backup stats, ram_000A = backup world state,
-; ram_000C = file status.
+; temp8 = backup stats, temp10 = backup world state,
+; temp12 = file status.
 ;
 ; In:      a = save file
 ; Out:     y = SAVE_STATS_SIZE - 1
@@ -6374,40 +6374,40 @@ Save_SetPointers:
     asl     a                       ; $BA6F
     tay                             ; $BA70
     lda     SaveStatsPtrs,y         ; $BA71
-    sta     ram_0000                ; $BA74
+    sta     temp0                   ; $BA74
     lda     SaveStatsPtrs+1,y       ; $BA76
-    sta     ram_0001                ; $BA79
+    sta     temp1                   ; $BA79
     lda     SaveWorldPtrs,y         ; $BA7B
-    sta     ram_0002                ; $BA7E
+    sta     temp2                   ; $BA7E
     lda     SaveWorldPtrs+1,y       ; $BA80
-    sta     ram_0003                ; $BA83
+    sta     temp3                   ; $BA83
     lda     #<saveWorld             ; $BA85
-    sta     ram_0004                ; $BA87
+    sta     temp4                   ; $BA87
     lda     #>saveWorld             ; $BA89
-    sta     ram_0005                ; $BA8B
+    sta     temp5                   ; $BA8B
     lda     SaveDefaultWorldPtr     ; $BA8D
-    sta     ram_0006                ; $BA90
+    sta     temp6                   ; $BA90
     lda     SaveDefaultWorldPtr+1   ; $BA92
-    sta     ram_0007                ; $BA95
+    sta     temp7                   ; $BA95
     lda     SaveBackupStatsPtrs,y   ; $BA97
-    sta     ram_0008                ; $BA9A
+    sta     temp8                   ; $BA9A
     lda     SaveBackupStatsPtrs+1,y ; $BA9C
-    sta     ram_0009                ; $BA9F
+    sta     temp9                   ; $BA9F
     lda     SaveBackupWorldPtrs,y   ; $BAA1
-    sta     ram_000A                ; $BAA4
+    sta     temp10                  ; $BAA4
     lda     SaveBackupWorldPtrs+1,y ; $BAA6
-    sta     ram_000B                ; $BAA9
+    sta     temp11                  ; $BAA9
     lda     SaveStatusPtrs,y        ; $BAAB
-    sta     ram_000C                ; $BAAE
+    sta     temp12                  ; $BAAE
     lda     SaveStatusPtrs+1,y      ; $BAB0
-    sta     ram_000D                ; $BAB3
+    sta     temp13                  ; $BAB3
     ldy     #SAVE_STATS_SIZE - 1    ; $BAB5
     rts                             ; $BAB7
 
 ; ---------------------------------------------------------------------------
 ; Save_AdvancePointers
 ;
-; Increment the six 16-bit pointers at ram_0000-ram_000B.
+; Increment the six 16-bit pointers at temp0-temp11.
 ;
 ; Clobbers: x
 ; Status:  confirmed
@@ -6416,9 +6416,9 @@ Save_AdvancePointers:
     ldx     #$0A                    ; $BAB8
 
 loc_5_BABA:
-    inc     ram_0000,x              ; $BABA
+    inc     temp0,x                 ; $BABA
     bne     loc_5_BAC0              ; $BABC
-    inc     ram_0001,x              ; $BABE
+    inc     temp1,x                 ; $BABE
 
 loc_5_BAC0:
     dex                             ; $BAC0

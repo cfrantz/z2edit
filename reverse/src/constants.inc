@@ -8,6 +8,24 @@ NMI_MODE_SOUND_ONLY     = $40   ; bit 7 clear: Nmi_SoundOnly
 NMI_MODE_BANK5          = $80   ; bit 7 set, bit 6 clear: Nmi_Bank5
 NMI_MODE_GAME           = $C0   ; bits 7 and 6 set: game NMI
 
+; gameState values during the game (bank 5 uses other values on the title
+; screens).
+GAME_STATE_BEGIN        = 0     ; start or continue: lives = 3
+GAME_STATE_PLAY         = 1
+GAME_STATE_DEATH        = 2     ; Link died, or the continue screen was requested
+GAME_STATE_RESPAWN      = 6     ; restart after losing a life (provisional)
+
+; gameMode values in GAME_STATE_PLAY.
+GAME_MODE_OVERWORLD     = $05   ; (provisional)
+GAME_MODE_LOAD_AREA     = $08   ; Main_Loop loads the area being entered
+GAME_MODE_SIDE_VIEW     = $0B
+GAME_MODE_LOAD_ROOM     = $14   ; Main_Loop loads a connected room (provisional)
+
+; ppuStringSelect values that select the RAM buffers.
+PPU_STRING_BUFFER0      = 0
+PPU_STRING_BUFFER1      = 1
+PPU_STRING_BUFFER2      = 2
+
 ; Object slots: indexes into the obj* arrays in ram.inc.
 OBJ_SLOT_LINK           = 0
 OBJ_SLOT_ENEMY          = 1     ; 1-6: enemies
