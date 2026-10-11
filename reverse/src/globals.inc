@@ -164,8 +164,8 @@ GLOBALS_INC = 1
 .global Town_SetFloorTiles
 .global Town_DrawLargeObject
 .global Town_DrawSmallObject
-.global loc_4_8167
-.global loc_5_817B
+.global Palace_SetFloorTiles_Bank4
+.global Palace_SetFloorTiles_Bank5
 
 .endif
 

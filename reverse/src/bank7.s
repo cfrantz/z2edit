@@ -1564,9 +1564,9 @@ Area_SetFloorTiles:
     .word   OverworldBank::SetFloorTiles ; $C81F
     .word   Town_SetFloorTiles      ; $C821
     .word   Town_SetFloorTiles      ; $C823
-    .word   loc_4_8167              ; $C825
-    .word   loc_4_8167              ; $C827
-    .word   loc_5_817B              ; $C829
+    .word   Palace_SetFloorTiles_Bank4 ; $C825
+    .word   Palace_SetFloorTiles_Bank4 ; $C827
+    .word   Palace_SetFloorTiles_Bank5 ; $C829
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawFloorColumn
