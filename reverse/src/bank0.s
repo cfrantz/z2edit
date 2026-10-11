@@ -2294,7 +2294,7 @@ loc_0_8F0F:
     sta     temp2                   ; $8F19
     lda     dat_0_8ED3,y            ; $8F1B
     sta     temp3                   ; $8F1E
-    jsr     sub_0_8F58              ; $8F20
+    jsr     Ppu_QueueString10       ; $8F20
     inx                             ; $8F23
     inx                             ; $8F24
     inx                             ; $8F25
@@ -2333,7 +2333,15 @@ loc_0_8F4F:
 loc_0_8F57:
     rts                             ; $8F57
 
-sub_0_8F58:
+; ---------------------------------------------------------------------------
+; Ppu_QueueString10
+;
+; Queue a PPU string of 10 bytes from (temp2) to PPU address temp0:temp1 in
+; ppuBuffer1 at x, and select ppuBuffer1 for the next NMI.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ppu_QueueString10:
     lda     #$01                    ; $8F58
     sta     ppuStringSelect         ; $8F5A
     lda     temp0                   ; $8F5D
@@ -2605,7 +2613,7 @@ Area_PlaceElevatorAndDoor:
     bne     loc_0_912F              ; $90F0
     lda     elevatorPos             ; $90F2
     beq     loc_0_90FA              ; $90F5
-    jsr     sub_0_9150              ; $90F7
+    jsr     Elevator_Place          ; $90F7
 
 loc_0_90FA:
     lda     lockedDoorPos           ; $90FA
@@ -2665,7 +2673,15 @@ loc_0_912F:
 dat_0_914E:
     .byte   $10, $C0                                                        ; $914E
 
-sub_0_9150:
+; ---------------------------------------------------------------------------
+; Elevator_Place
+;
+; Place the area's elevator at column a: it is enemy slot 0, of type $13
+; (which is never despawned and cannot be hit).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Elevator_Place:
     ldy     #$00                    ; $9150
     sty     objXHi+1                ; $9152
     asl     a                       ; $9154
@@ -2713,7 +2729,7 @@ loc_0_9188:
 ; ---------------------------------------------------------------------------
 Link_Sink:
     lda     #$00                    ; $918E
-    sta     a:ram_0014              ; $9190
+    sta     a:linkDeltaX            ; $9190
     lda     objY                    ; $9193
     cmp     #$D0                    ; $9195
     bcc     loc_0_919C              ; $9197
@@ -2721,7 +2737,7 @@ Link_Sink:
 
 loc_0_919C:
     inc     objY                    ; $919C
-    jsr     sub_0_93AC              ; $919E
+    jsr     Link_SetHurtPose        ; $919E
     jmp     Link_Draw               ; $91A1
 
 Spell_FairyEffect:
@@ -2923,7 +2939,7 @@ dat_0_92B4:
 ; ---------------------------------------------------------------------------
 Link_Control:
     ldx     #$00                    ; $92BF
-    stx     a:ram_0014              ; $92C1
+    stx     a:linkDeltaX            ; $92C1
     lda     chimneyTimer            ; $92C4
     beq     loc_0_92E9              ; $92C7
     inc     chimneyTimer            ; $92C9
@@ -2932,7 +2948,7 @@ Link_Control:
     bcs     loc_0_92E1              ; $92D1
     inc     objY                    ; $92D3
     lda     #$20                    ; $92D5
-    sta     ram_0752                ; $92D7
+    sta     linkSlowed              ; $92D7
     lda     #$06                    ; $92DA
     sta     objState                ; $92DC
     jmp     Link_Draw               ; $92DE
@@ -2945,7 +2961,7 @@ loc_0_92E1:
 loc_0_92E9:
     lda     ram_00DE                ; $92E9
     bne     loc_0_9340              ; $92EB
-    lda     ram_0752                ; $92ED
+    lda     linkSlowed              ; $92ED
     ora     ram_0753                ; $92F0
     sta     ram_0753                ; $92F3
     ; The fairy flies in the direction held on the D-pad.
@@ -2984,7 +3000,7 @@ loc_0_931E:
 loc_0_9336:
     and     joypadHeld              ; $9336
     bne     loc_0_9340              ; $9338
-    jsr     sub_0_9610              ; $933A
+    jsr     Link_MoveX              ; $933A
     jmp     Obj_MoveY               ; $933D
 
 loc_0_9340:
@@ -3019,7 +3035,7 @@ loc_0_936B:
     lda     timerFast+TIMER_LINK_HURT ; $936B
     beq     loc_0_9379              ; $936E
     jsr     Link_UpdateJump         ; $9370
-    jsr     sub_0_93A3              ; $9373
+    jsr     Link_ShowHurt           ; $9373
     jmp     loc_0_938A              ; $9376
 
 loc_0_9379:
@@ -3053,13 +3069,21 @@ loc_0_9395:
 loc_0_93A2:
     rts                             ; $93A2
 
-sub_0_93A3:
+; ---------------------------------------------------------------------------
+; Link_ShowHurt
+;
+; While Link is knocked back: animate his walk unless he is against a wall,
+; then show the hurt pose (Link_SetHurtPose: objState = $0A).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_ShowHurt:
     lda     objCollision            ; $93A3
     and     #$03                    ; $93A5
-    bne     sub_0_93AC              ; $93A7
+    bne     Link_SetHurtPose        ; $93A7
     jsr     Link_AnimateWalk        ; $93A9
 
-sub_0_93AC:
+Link_SetHurtPose:
     lda     #$0A                    ; $93AC
     sta     objState                ; $93AE
 
@@ -3185,7 +3209,7 @@ loc_0_9438:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Link_AnimateWalk:
-    jsr     sub_0_9610              ; $943A
+    jsr     Link_MoveX              ; $943A
     lda     objXVelocity            ; $943D
 
 loc_0_943F:
@@ -3519,8 +3543,17 @@ Link_PlaySwordSound:
 loc_0_960F:
     rts                             ; $960F
 
-sub_0_9610:
-    lda     ram_0752                ; $9610
+; ---------------------------------------------------------------------------
+; Link_MoveX
+;
+; Move Link horizontally by his velocity (Obj_MoveX), and keep the pixels
+; moved in linkDeltaX.  While linkSlowed is set, he moves only on alternate
+; frames, with a splashing sound.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_MoveX:
+    lda     linkSlowed              ; $9610
     beq     loc_0_9626              ; $9613
     lda     frameCounter            ; $9615
     lsr     a                       ; $9617
@@ -3535,7 +3568,7 @@ sub_0_9610:
 loc_0_9626:
     ldx     #$00                    ; $9626
     jsr     Obj_MoveX               ; $9628
-    sta     ram_0014                ; $962B
+    sta     linkDeltaX              ; $962B
 
 loc_0_962D:
     rts                             ; $962D
@@ -3910,12 +3943,21 @@ LinkProjectile_UpdateOne:
     inc     linkProjectileTimer,x   ; $989A
     cmp     #$F2                    ; $989D
     beq     loc_0_98BD              ; $989F
-    bne     sub_0_98A6              ; $98A1
+    bne     LinkProjectile_Move     ; $98A1
 
 loc_0_98A3:
-    jsr     sub_0_9901              ; $98A3
+    jsr     LinkProjectile_PlaySound ; $98A3
 
-sub_0_98A6:
+; ---------------------------------------------------------------------------
+; LinkProjectile_Move
+;
+; Move Link's projectile x (slot x + 13) and remove it once it leaves the
+; screen.
+;
+; In:      x = Link projectile index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+LinkProjectile_Move:
     txa                             ; $98A6
     clc                             ; $98A7
     adc     #$0D                    ; $98A8
@@ -3972,14 +4014,14 @@ loc_0_98FB:
     sta     oamBuffer+3,y           ; $98FD
     rts                             ; $9900
 
-sub_0_9901:
+LinkProjectile_PlaySound:
     lda     sfxRequest+1            ; $9901
     ora     #$40                    ; $9903
     sta     sfxRequest+1            ; $9905
     rts                             ; $9907
 
 loc_0_9908:
-    jsr     sub_0_98A6              ; $9908
+    jsr     LinkProjectile_Move     ; $9908
     ldy     objOamOffset+13,x       ; $990B
     lda     objState+13,x           ; $990D
     jsr     Projectile_SetSparkTile ; $990F
@@ -4010,7 +4052,7 @@ Scroll_Update:
     lda     scrollFrozen            ; $9929
     bne     loc_0_9924              ; $992C
     sta     ram_05C9                ; $992E
-    lda     a:ram_0014              ; $9931
+    lda     a:linkDeltaX            ; $9931
     sta     temp0                   ; $9934
     ldx     objFacing               ; $9936
     lda     scrollXHi               ; $9938

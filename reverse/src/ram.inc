@@ -28,7 +28,7 @@ currentObject           = $0010     ; object slot or index being updated, saved 
 ram_0011                = $0011
 frameCounter            = $0012     ; incremented by the game NMI every frame
 linkFairy               = $0013     ; 0 = Link, 8 = fairy; also an offset into the collision probe tables
-ram_0014                = $0014
+linkDeltaX              = $0014     ; pixels Link moved horizontally this frame
 ram_0015                = $0015
 linkStanding            = $0017     ; 1 = standing, 0 = crouching (lower hitbox and shield)
 ram_0018                = $0018
@@ -318,7 +318,7 @@ ram_074E                = $074E
 hudRedraw               = $074F     ; parts of the status bar to redraw: bit 7 = magic, bit 6 = life/experience (provisional)
 ram_0750                = $0750
 ram_0751                = $0751
-ram_0752                = $0752
+linkSlowed              = $0752     ; nonzero while Link wades through special tiles low in the area: he moves at half speed (provisional)
 ram_0753                = $0753
 ram_0754                = $0754
 experiencePending       = $0755     ; (16-bit, big-endian) experience still to be added to experience

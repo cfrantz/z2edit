@@ -5790,7 +5790,7 @@ Link_CheckBgInBank:
     ldy     #$1D                    ; $E093
     jsr     Obj_GetBgTile           ; $E095
     lda     #$00                    ; $E098
-    sta     ram_0752                ; $E09A
+    sta     linkSlowed              ; $E09A
     lda     temp3                   ; $E09D
     cmp     AreaBank::SpecialTiles+6 ; $E09F  lava
     bne     loc_E0B0                ; $E0A2
@@ -5812,7 +5812,7 @@ loc_E0BA:
     cpy     #$A5                    ; $E0BC
     bcc     loc_E0C5                ; $E0BE
     ldy     #$20                    ; $E0C0
-    sty     ram_0752                ; $E0C2
+    sty     linkSlowed              ; $E0C2
 
 loc_E0C5:
     cmp     AreaBank::SpecialTiles+5 ; $E0C5  crumbling floor
@@ -7806,7 +7806,7 @@ loc_EC17:
     sta     swordY,x                ; $EC1B
     lda     linkFairy               ; $EC1E
     bne     loc_EBB8                ; $EC20
-    lda     ram_0752                ; $EC22
+    lda     linkSlowed              ; $EC22
     beq     loc_EC40                ; $EC25
     lda     objY                    ; $EC27
     bpl     loc_EC40                ; $EC29
@@ -7835,16 +7835,16 @@ loc_EC40:
     lda     drawOffscreen           ; $EC49
     and     #$C0                    ; $EC4B
     bne     loc_EC62                ; $EC4D
-    lda     ram_0752                ; $EC4F
+    lda     linkSlowed              ; $EC4F
     pha                             ; $EC52
     lda     chimneyTimer            ; $EC53
     bne     loc_EC5B                ; $EC56
-    sta     ram_0752                ; $EC58
+    sta     linkSlowed              ; $EC58
 
 loc_EC5B:
     jsr     Link_DrawSprites        ; $EC5B
     pla                             ; $EC5E
-    sta     ram_0752                ; $EC5F
+    sta     linkSlowed              ; $EC5F
 
 loc_EC62:
     lda     drawOffscreen           ; $EC62
@@ -8096,7 +8096,7 @@ loc_EDE7:
 
 loc_EDF1:
     ora     temp1                   ; $EDF1
-    ora     ram_0752,x              ; $EDF3
+    ora     linkSlowed,x            ; $EDF3
     ldx     linkMode                ; $EDF6
     dex                             ; $EDF8
     beq     loc_EDFD                ; $EDF9
