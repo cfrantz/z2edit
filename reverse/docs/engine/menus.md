@@ -28,14 +28,14 @@ the playfield, a row at a time, and erased the same way:
    SRAM (`sramMenuText`).
 2. The text is filled in: `Pause_FillText` (keys, crystals, lives, spell
    costs) or `LevelUp_FillText` (next level costs, prompts, level bars).
-3. `Menu_ComputeAttrs` builds the attribute bytes under the window
+3. `Menu_ComputeAttrs_Bank0` builds the attribute bytes under the window
    (`menuAttrs`) from the palette bits of the area tiles there.
 4. The window opens a row per frame (`Pause_OpenRow`, `LevelUp_OpenRow`):
    each row's tiles come from row pointer tables (`PauseMenuRowPtrs`,
    `LevelUpRowPtrs` and their second-row tables) pointing into
    `MenuRowTemplates` and `sramMenuText`, and are queued with their
-   attribute bytes by `Menu_DrawRowAttrs` in `ppuBuffer1`.
-5. When the menu closes, `Menu_CloseRow` redraws each row from the area
+   attribute bytes by `Menu_DrawRowAttrs_Bank0` in `ppuBuffer1`.
+5. When the menu closes, `Menu_CloseRow_Bank0` redraws each row from the area
    tile map, and `Menu_Close` clears the menu state.
 
 While a menu is open, the screen is split under the status bar by the
@@ -51,11 +51,11 @@ menu code itself (`Hud_SplitScreen`, or the timed loop at the start of
 | 0 | not paused: Start pauses (`Pause_Update`) |
 | 1 | `Menu_CopyTextTemplate` |
 | 2 | `Pause_FillText` |
-| 3 | `Menu_ComputeAttrs` |
+| 3 | `Menu_ComputeAttrs_Bank0` |
 | 4 | `Pause_OpenRow`, until 10 rows are drawn |
 | 5 | `Pause_MenuOpen`: Up/Down choose a spell (`spellCursor`); Start closes; Up+A on controller 2 goes to the continue screen (`Game_ShowContinueScreen`) |
-| 6 | `Menu_ComputeAttrs` |
-| 7 | `Menu_CloseRow` |
+| 6 | `Menu_ComputeAttrs_Bank0` |
+| 7 | `Menu_CloseRow_Bank0` |
 | 8 | `Menu_Close` |
 
 On the overworld there is no window: Start pauses and mutes the sound
@@ -74,13 +74,13 @@ Opened by `Hud_Update` when `experience` reaches `experienceNext`.
 | 0 | `Menu_Skip` |
 | 1 | `Menu_CopyTextTemplate` |
 | 2 | `LevelUp_FillText`: for each stat (attack, magic, life), its next cost and, where experience is enough, the prompt |
-| 3 | `Menu_ComputeAttrs` |
+| 3 | `Menu_ComputeAttrs_Bank0` |
 | 4 | `LevelUp_OpenRow` |
 | 5 | `LevelUp_ChooseStat`: Up/Down move `levelUpCursor` over the stats that can be raised and Cancel; Start raises the stat (at level 8, adds a life instead) and takes its cost from `experience` |
 | 6 | `LevelUp_ApplyChoice` |
 | 7 | `LevelUp_BlinkChoice`: blink the choice while the fanfare plays |
-| 8 | `Menu_ComputeAttrs` |
-| 9 | `Menu_CloseRow` |
+| 8 | `Menu_ComputeAttrs_Bank0` |
+| 9 | `Menu_CloseRow_Bank0` |
 | 10 | `Menu_Close` |
 
 Level costs are in `LevelUpCostHi`/`LevelUpCostLo`; the window shows them

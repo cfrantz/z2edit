@@ -34,7 +34,7 @@ GLOBALS_INC = 1
 .global dat_3_8817
 .global dat_3_9624
 .global dat_3_9625
-.global loc_3_B082
+.global Dialog_Update
 .global dat_4_8470
 .global loc_4_9A46
 .global dat_4_BF00

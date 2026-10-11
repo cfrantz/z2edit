@@ -2624,7 +2624,7 @@ dat_3_A340:
 ; (unreferenced: $B080-$B081, 2 bytes)
     .byte   $95, $AF                                                        ; $B080
 
-loc_3_B082:
+Dialog_Update:
     lda     pauseState              ; $B082
     cmp     #$0C                    ; $B085
     beq     loc_3_B0AE              ; $B087
@@ -2655,18 +2655,18 @@ loc_3_B09F:
 loc_3_B0AE:
     jsr     JumpTable               ; $B0AE
 ; (inline jump table)
-    .word   loc_3_B107              ; $B0B1
+    .word   Menu_NextState_Bank3    ; $B0B1
     .word   loc_3_B0CB              ; $B0B3
     .word   loc_3_B621              ; $B0B5
-    .word   loc_3_B350              ; $B0B7
+    .word   Menu_ComputeAttrs_Bank3 ; $B0B7
     .word   loc_3_B0D2              ; $B0B9
     .word   loc_3_B480              ; $B0BB
     .word   loc_3_B621              ; $B0BD
     .word   loc_3_B6A2              ; $B0BF
     .word   loc_3_B75B              ; $B0C1
     .word   loc_3_B7A6              ; $B0C3
-    .word   loc_3_B350              ; $B0C5
-    .word   loc_3_B183              ; $B0C7
+    .word   Menu_ComputeAttrs_Bank3 ; $B0C5
+    .word   Menu_CloseRow_Bank3     ; $B0C7
     .word   loc_3_B7B2              ; $B0C9
 
 loc_3_B0CB:
@@ -2695,31 +2695,31 @@ loc_3_B0ED:
     sta     menuRowTiles2,y         ; $B0F4
     dey                             ; $B0F7
     bpl     loc_3_B0ED              ; $B0F8
-    jsr     sub_3_B10B              ; $B0FA
+    jsr     Menu_DrawRowAttrs_Bank3 ; $B0FA
     inc     menuRow                 ; $B0FD
     lda     menuRow                 ; $B100
     cmp     #$05                    ; $B103
     bcc     loc_3_B10A              ; $B105
 
-loc_3_B107:
+Menu_NextState_Bank3:
     inc     pauseState              ; $B107
 
 loc_3_B10A:
     rts                             ; $B10A
 
-sub_3_B10B:
-    jsr     sub_3_B2F2              ; $B10B
+Menu_DrawRowAttrs_Bank3:
+    jsr     Menu_BeginRow_Bank3     ; $B10B
 
 loc_3_B10E:
-    jsr     sub_3_B15F              ; $B10E
+    jsr     Menu_GetAttrAddress_Bank3 ; $B10E
     and     #$FE                    ; $B111
     asl     a                       ; $B113
     asl     a                       ; $B114
     adc     #$C8                    ; $B115
-    jsr     sub_3_B304              ; $B117
+    jsr     Menu_QueueAttrHeader_Bank3 ; $B117
     lda     #$0F                    ; $B11A
     sta     temp5                   ; $B11C
-    jsr     sub_3_B317              ; $B11E
+    jsr     Menu_CheckAttrAlignment_Bank3 ; $B11E
     beq     loc_3_B12F              ; $B121
     lda     temp4                   ; $B123
     bne     loc_3_B13D              ; $B125
@@ -2749,10 +2749,10 @@ loc_3_B13D:
 loc_3_B146:
     and     menuAttrs,x             ; $B146
     sta     menuAttrs,x             ; $B149
-    jsr     sub_3_B335              ; $B14C
+    jsr     Menu_NextAttr_Bank3     ; $B14C
     bcc     loc_3_B10E              ; $B14F
 
-loc_3_B151:
+Menu_EndRowString_Bank3:
     lda     #$FF                    ; $B151
     sta     ppuBuffer1,y            ; $B153
     sty     ppuBuffer1Len           ; $B156
@@ -2760,7 +2760,7 @@ loc_3_B151:
     sta     ppuStringSelect         ; $B15B
     rts                             ; $B15E
 
-sub_3_B15F:
+Menu_GetAttrAddress_Bank3:
     lda     temp1                   ; $B15F
     clc                             ; $B161
     adc     #$78                    ; $B162
@@ -2785,10 +2785,10 @@ sub_3_B15F:
     sta     temp2                   ; $B180
     rts                             ; $B182
 
-loc_3_B183:
+Menu_CloseRow_Bank3:
     dec     menuRow                 ; $B183
     bpl     loc_3_B18B              ; $B186
-    jmp     loc_3_B107              ; $B188
+    jmp     Menu_NextState_Bank3    ; $B188
 
 loc_3_B18B:
     lda     scrollX                 ; $B18B
@@ -2797,7 +2797,7 @@ loc_3_B18B:
     tax                             ; $B191
     lda     scrollXHi               ; $B192
     adc     #$00                    ; $B195
-    jsr     sub_3_B3E5              ; $B197
+    jsr     AreaMap_GetPagePtr_Bank3 ; $B197
     txa                             ; $B19A
     lsr     a                       ; $B19B
     lsr     a                       ; $B19C
@@ -2858,10 +2858,10 @@ loc_3_B1CF:
     inc     temp0                   ; $B1EF
     cpx     #$0E                    ; $B1F1
     bcc     loc_3_B1CF              ; $B1F3
-    jsr     sub_3_B2F2              ; $B1F5
+    jsr     Menu_BeginRow_Bank3     ; $B1F5
 
 loc_3_B1F8:
-    jsr     sub_3_B15F              ; $B1F8
+    jsr     Menu_GetAttrAddress_Bank3 ; $B1F8
     lsr     a                       ; $B1FB
     clc                             ; $B1FC
     adc     #$01                    ; $B1FD
@@ -2869,8 +2869,8 @@ loc_3_B1F8:
     asl     a                       ; $B200
     asl     a                       ; $B201
     adc     #$C0                    ; $B202
-    jsr     sub_3_B304              ; $B204
-    jsr     sub_3_B317              ; $B207
+    jsr     Menu_QueueAttrHeader_Bank3 ; $B204
+    jsr     Menu_CheckAttrAlignment_Bank3 ; $B207
     lda     #$F0                    ; $B20A
     sta     temp6                   ; $B20C
     lda     scrollX                 ; $B20E
@@ -2908,14 +2908,14 @@ loc_3_B23B:
 
 loc_3_B23D:
     and     menuAttrs,x             ; $B23D
-    jsr     sub_3_B335              ; $B240
+    jsr     Menu_NextAttr_Bank3     ; $B240
     bcs     loc_3_B248              ; $B243
     jmp     loc_3_B1F8              ; $B245
 
 loc_3_B248:
-    jmp     loc_3_B151              ; $B248
+    jmp     Menu_EndRowString_Bank3 ; $B248
 
-sub_3_B24B:
+Menu_QueueRowTiles_Bank3:
     ldy     ppuBuffer1Len           ; $B24B
     lda     #$C0                    ; $B24E
     sta     temp7                   ; $B250
@@ -3024,8 +3024,8 @@ loc_3_B2E6:
 loc_3_B2F1:
     rts                             ; $B2F1
 
-sub_3_B2F2:
-    jsr     sub_3_B24B              ; $B2F2
+Menu_BeginRow_Bank3:
+    jsr     Menu_QueueRowTiles_Bank3 ; $B2F2
     lda     scrollXHi               ; $B2F5
     sta     temp0                   ; $B2F8
     lda     scrollX                 ; $B2FA
@@ -3034,7 +3034,7 @@ sub_3_B2F2:
     sta     temp4                   ; $B301
     rts                             ; $B303
 
-sub_3_B304:
+Menu_QueueAttrHeader_Bank3:
     adc     temp3                   ; $B304
     sta     ppuBuffer1+1,y          ; $B306
     lda     #$01                    ; $B309
@@ -3046,7 +3046,7 @@ sub_3_B304:
     tax                             ; $B315
     rts                             ; $B316
 
-sub_3_B317:
+Menu_CheckAttrAlignment_Bank3:
     lda     #$F0                    ; $B317
     sta     temp6                   ; $B319
     lda     scrollX                 ; $B31B
@@ -3066,7 +3066,7 @@ sub_3_B32A:
     sta     temp15                  ; $B332
     rts                             ; $B334
 
-sub_3_B335:
+Menu_NextAttr_Bank3:
     sta     ppuBuffer1+3,y          ; $B335
     iny                             ; $B338
     iny                             ; $B339
@@ -3084,14 +3084,14 @@ sub_3_B335:
     cmp     #$04                    ; $B34D
     rts                             ; $B34F
 
-loc_3_B350:
+Menu_ComputeAttrs_Bank3:
     lda     scrollX                 ; $B350
     clc                             ; $B353
     adc     #$78                    ; $B354
     tax                             ; $B356
     lda     scrollXHi               ; $B357
     adc     #$00                    ; $B35A
-    jsr     sub_3_B3E5              ; $B35C
+    jsr     AreaMap_GetPagePtr_Bank3 ; $B35C
     txa                             ; $B35F
     and     #$E0                    ; $B360
     lsr     a                       ; $B362
@@ -3112,7 +3112,7 @@ loc_3_B371:
     sta     temp2                   ; $B373
 
 loc_3_B375:
-    jsr     sub_3_B3B9              ; $B375
+    jsr     Menu_AddTileAttr_Bank3  ; $B375
     tya                             ; $B378
     clc                             ; $B379
     adc     #$10                    ; $B37A
@@ -3161,9 +3161,9 @@ loc_3_B3A4:
     inx                             ; $B3B1
     dec     temp0                   ; $B3B2
     bne     loc_3_B36D              ; $B3B4
-    jmp     loc_3_B107              ; $B3B6
+    jmp     Menu_NextState_Bank3    ; $B3B6
 
-sub_3_B3B9:
+Menu_AddTileAttr_Bank3:
     tya                             ; $B3B9
     asl     a                       ; $B3BA
     asl     a                       ; $B3BB
@@ -3194,18 +3194,18 @@ loc_3_B3D9:
     sta     menuAttrs,x             ; $B3D9
     rts                             ; $B3DC
 
-dat_3_B3DD:
+AreaPagePtrsLo_Bank3:
     .byte   $00, $D0, $A0, $70                                              ; $B3DD
 
-dat_3_B3E1:
+AreaPagePtrsHi_Bank3:
     .byte   $60, $60, $61, $62                                              ; $B3E1
 
-sub_3_B3E5:
+AreaMap_GetPagePtr_Bank3:
     and     #$03                    ; $B3E5
     tay                             ; $B3E7
-    lda     dat_3_B3DD,y            ; $B3E8
+    lda     AreaPagePtrsLo_Bank3,y  ; $B3E8
     sta     temp14                  ; $B3EB
-    lda     dat_3_B3E1,y            ; $B3ED
+    lda     AreaPagePtrsHi_Bank3,y  ; $B3ED
     sta     temp15                  ; $B3F0
     rts                             ; $B3F2
 
@@ -3740,19 +3740,19 @@ loc_3_B7B6:
     cmp     #$02                    ; $B7C4
     beq     loc_3_B7CC              ; $B7C6
     cmp     #$05                    ; $B7C8
-    bne     loc_3_B7F0              ; $B7CA
+    bne     Dialog_Close            ; $B7CA
 
 loc_3_B7CC:
     ldx     ram_048B                ; $B7CC
     lda     enemyType,x             ; $B7CF
     cmp     #$19                    ; $B7D1
-    bcc     loc_3_B7F0              ; $B7D3
+    bcc     Dialog_Close            ; $B7D3
     cmp     #$1D                    ; $B7D5
-    bcs     loc_3_B7F0              ; $B7D7
+    bcs     Dialog_Close            ; $B7D7
 ; (code below not executed in the test movies)
     lda     rng+2,x                 ; $B7D9
     cmp     #$67                    ; $B7DC
-    bcs     loc_3_B7F0              ; $B7DE
+    bcs     Dialog_Close            ; $B7DE
     lda     #$03                    ; $B7E0
     sta     enemyType,x             ; $B7E2
     sta     objState+1,x            ; $B7E4
@@ -3763,7 +3763,7 @@ loc_3_B7CC:
     sta     objXVelocity+1,x        ; $B7EE
 ; (end of code not executed in the test movies)
 
-loc_3_B7F0:
+Dialog_Close:
     lda     #$08                    ; $B7F0
     sta     sfxRequest+2            ; $B7F2
     lda     #$00                    ; $B7F4

@@ -493,7 +493,7 @@ Menu_UpdateTownDialog:
     cmp     #$05                    ; $C245
     bcs     Menu_UpdateOther        ; $C247
     jsr     Mmc1_SetPrgBankArea     ; $C249
-    jmp     loc_3_B082              ; $C24C
+    jmp     Dialog_Update           ; $C24C
 
 Menu_CopyPtrFromArea:
     jsr     Mmc1_SetPrgBankArea     ; $C24F

@@ -4706,7 +4706,7 @@ Scroll_LoadColumnTiles:
     lda     columnPage+1            ; $9A86
 
 @loc_9A89:
-    jsr     AreaMap_GetPagePtrBank0 ; $9A89
+    jsr     AreaMap_GetPagePtr_Bank0 ; $9A89
     txa                             ; $9A8C
     tay                             ; $9A8D
     ldx     #$00                    ; $9A8E
@@ -4723,26 +4723,26 @@ Scroll_LoadColumnTiles:
     bne     @loop                   ; $9A9D
     rts                             ; $9A9F
 
-dat_0_9AA0:
+AreaPagePtrsLo_Bank0:
     .byte   $00, $D0, $A0, $70                                              ; $9AA0
 
-dat_0_9AA4:
+AreaPagePtrsHi_Bank0:
     .byte   $60, $60, $61, $62                                              ; $9AA4
 
 ; ---------------------------------------------------------------------------
-; AreaMap_GetPagePtrBank0
+; AreaMap_GetPagePtr_Bank0
 ;
 ; Bank 0's copy of AreaMap_GetPagePtr: point temp14 at page a & 3 of the
 ; area tile map.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-AreaMap_GetPagePtrBank0:
+AreaMap_GetPagePtr_Bank0:
     and     #$03                    ; $9AA8
     tay                             ; $9AAA
-    lda     dat_0_9AA0,y            ; $9AAB
+    lda     AreaPagePtrsLo_Bank0,y  ; $9AAB
     sta     temp14                  ; $9AAE
-    lda     dat_0_9AA4,y            ; $9AB0
+    lda     AreaPagePtrsHi_Bank0,y  ; $9AB0
     sta     temp15                  ; $9AB3
     rts                             ; $9AB5
 
@@ -4930,7 +4930,7 @@ LevelUpBarPtrs:
 ; split the screen under the status bar, then run the step for pauseState:
 ; copy and fill in the window's text (LevelUp_FillText), open the window a
 ; row at a time, let the player choose a stat (LevelUp_ChooseStat), blink
-; the choice while the fanfare plays, then close the window (Menu_CloseRow)
+; the choice while the fanfare plays, then close the window (Menu_CloseRow_Bank0)
 ; and clear the dialog (Menu_Close).
 ;
 ; Status:  confirmed
@@ -4963,13 +4963,13 @@ LevelUp_Update:
     .word   Menu_Skip               ; $9D7B
     .word   Menu_CopyTextTemplate   ; $9D7D
     .word   LevelUp_FillText        ; $9D7F
-    .word   Menu_ComputeAttrs       ; $9D81
+    .word   Menu_ComputeAttrs_Bank0 ; $9D81
     .word   LevelUp_OpenRow         ; $9D83
     .word   LevelUp_ChooseStat      ; $9D85
     .word   LevelUp_ApplyChoice     ; $9D87
     .word   LevelUp_BlinkChoice     ; $9D89
-    .word   Menu_ComputeAttrs       ; $9D8B
-    .word   Menu_CloseRow           ; $9D8D
+    .word   Menu_ComputeAttrs_Bank0 ; $9D8B
+    .word   Menu_CloseRow_Bank0     ; $9D8D
     .word   Menu_Close              ; $9D8F
 
 ; ---------------------------------------------------------------------------
@@ -5061,11 +5061,11 @@ Pause_RunState:
     .word   Pause_DoNothing         ; $9DE4
     .word   Menu_CopyTextTemplate   ; $9DE6
     .word   Pause_FillText          ; $9DE8
-    .word   Menu_ComputeAttrs       ; $9DEA
+    .word   Menu_ComputeAttrs_Bank0 ; $9DEA
     .word   Pause_OpenRow           ; $9DEC
     .word   Pause_MenuOpen          ; $9DEE
-    .word   Menu_ComputeAttrs       ; $9DF0
-    .word   Menu_CloseRow           ; $9DF2
+    .word   Menu_ComputeAttrs_Bank0 ; $9DF0
+    .word   Menu_CloseRow_Bank0     ; $9DF2
     .word   Menu_Close              ; $9DF4
 
 ; ---------------------------------------------------------------------------
@@ -5583,7 +5583,7 @@ LevelUp_BlinkChoice:
     lda     musicPlaying            ; $A0F4
     cmp     #$10                    ; $A0F7
     beq     @loc_A0FE               ; $A0F9
-    jmp     Menu_NextState          ; $A0FB
+    jmp     Menu_NextState_Bank0    ; $A0FB
 
 @loc_A0FE:
     lda     ppuBuffer0Len           ; $A0FE
@@ -5612,7 +5612,7 @@ LevelUp_BlinkChoice:
     bpl     @loop                   ; $A12E
 
 @loc_A130:
-    jsr     Menu_DrawRowAttrs       ; $A130
+    jsr     Menu_DrawRowAttrs_Bank0 ; $A130
     pla                             ; $A133
     sta     menuRow                 ; $A134
 
@@ -5629,7 +5629,7 @@ LevelUp_BlinkChoice:
 @loc_A140:
     lda     menuRepeatTimer         ; $A140
     bne     @done                   ; $A143
-    jmp     Menu_NextState          ; $A145
+    jmp     Menu_NextState_Bank0    ; $A145
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
@@ -5874,23 +5874,23 @@ Pause_CheckStartDone:
     rts                             ; $A26A
 
 ; ---------------------------------------------------------------------------
-; Menu_ComputeAttrs
+; Menu_ComputeAttrs_Bank0
 ;
 ; Pause and level up step: compute the attribute bytes under the menu
 ; window (menuAttrs) from the palette bits of the area tiles under it
-; (Menu_AddTileAttr), so the window's rows can be drawn and erased with
+; (Menu_AddTileAttr_Bank0), so the window's rows can be drawn and erased with
 ; the right colors.  Then advance pauseState.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Menu_ComputeAttrs:
+Menu_ComputeAttrs_Bank0:
     lda     scrollX                 ; $A26B
     clc                             ; $A26E
     adc     #$78                    ; $A26F
     tax                             ; $A271
     lda     scrollXHi               ; $A272
     adc     #$00                    ; $A275
-    jsr     AreaMap_GetPagePtrBank0 ; $A277
+    jsr     AreaMap_GetPagePtr_Bank0 ; $A277
     txa                             ; $A27A
     and     #$E0                    ; $A27B
     lsr     a                       ; $A27D
@@ -5911,7 +5911,7 @@ Menu_ComputeAttrs:
     sta     temp2                   ; $A28E
 
 @loop3:
-    jsr     Menu_AddTileAttr        ; $A290
+    jsr     Menu_AddTileAttr_Bank0  ; $A290
     tya                             ; $A293
     clc                             ; $A294
     adc     #$10                    ; $A295
@@ -5963,7 +5963,7 @@ Menu_ComputeAttrs:
     jmp     Pause_NextState         ; $A2D1
 
 ; ---------------------------------------------------------------------------
-; Menu_AddTileAttr
+; Menu_AddTileAttr_Bank0
 ;
 ; Add the palette bits (bits 7-6) of area tile (temp14),y to attribute
 ; byte menuAttrs,x, in the quadrant given by bit 4 of y (left or right)
@@ -5971,7 +5971,7 @@ Menu_ComputeAttrs:
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Menu_AddTileAttr:
+Menu_AddTileAttr_Bank0:
     tya                             ; $A2D4
     asl     a                       ; $A2D5
     asl     a                       ; $A2D6
@@ -6028,17 +6028,17 @@ Pause_OpenRow:
 ; ---------------------------------------------------------------------------
 ; Menu_DrawOpenRow
 ;
-; Draw the loaded menu window row (Menu_DrawRowAttrs) and move to the
+; Draw the loaded menu window row (Menu_DrawRowAttrs_Bank0) and move to the
 ; next; after the 10th row, advance pauseState.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_DrawOpenRow:
-    jsr     Menu_DrawRowAttrs       ; $A301
+    jsr     Menu_DrawRowAttrs_Bank0 ; $A301
     inc     menuRow                 ; $A304
     lda     menuRow                 ; $A307
     cmp     #$0A                    ; $A30A
-    bcs     Menu_NextState          ; $A30C
+    bcs     Menu_NextState_Bank0    ; $A30C
     rts                             ; $A30E
 
 ; ---------------------------------------------------------------------------
@@ -6053,7 +6053,7 @@ Pause_OverworldMute:
 ; (code below not executed in the test movies)
     lda     #$01                    ; $A30F
     sta     soundMute               ; $A311
-    bne     Menu_NextState          ; $A313
+    bne     Menu_NextState_Bank0    ; $A313
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
@@ -6066,7 +6066,7 @@ Pause_OverworldMute:
 Flute_Start:
     lda     #$88                    ; $A315
     sta     menuTimer               ; $A317
-    bne     Menu_NextState          ; $A31A
+    bne     Menu_NextState_Bank0    ; $A31A
 
 ; ---------------------------------------------------------------------------
 ; Menu_TextReady
@@ -6082,13 +6082,13 @@ Menu_TextReady:
     sta     sfxRequest+2            ; $A323
 
 ; ---------------------------------------------------------------------------
-; Menu_NextState
+; Menu_NextState_Bank0
 ;
 ; Advance pauseState.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Menu_NextState:
+Menu_NextState_Bank0:
     inc     pauseState              ; $A325
     rts                             ; $A328
 
@@ -6103,7 +6103,7 @@ Flute_Wait:
     dec     menuTimer               ; $A329
     lda     menuTimer               ; $A32C
     cmp     #$FF                    ; $A32F
-    beq     Menu_NextState          ; $A331
+    beq     Menu_NextState_Bank0    ; $A331
     rts                             ; $A333
 
 ; ---------------------------------------------------------------------------
@@ -6162,29 +6162,29 @@ Menu_CopyTextTemplate:
     bne     @loop2                  ; $A35D
 
 ; ---------------------------------------------------------------------------
-; Menu_DrawRowAttrs
+; Menu_DrawRowAttrs_Bank0
 ;
-; Draw a row of the pause menu window: its tiles (Menu_BeginRow) and then
+; Draw a row of the pause menu window: its tiles (Menu_BeginRow_Bank0) and then
 ; its attribute bytes, masked so that only the window's quadrants change
 ; (menuAttrs), and send ppuBuffer1 with the next NMI.
-; Menu_GetAttrAddress, Menu_QueueAttrHeader, Menu_CheckAttrAlignment and
-; Menu_NextAttr build the attribute strings.
+; Menu_GetAttrAddress_Bank0, Menu_QueueAttrHeader_Bank0, Menu_CheckAttrAlignment_Bank0 and
+; Menu_NextAttr_Bank0 build the attribute strings.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Menu_DrawRowAttrs:
-    jsr     Menu_BeginRow           ; $A35F
+Menu_DrawRowAttrs_Bank0:
+    jsr     Menu_BeginRow_Bank0     ; $A35F
 
 @loop:
-    jsr     Menu_GetAttrAddress     ; $A362
+    jsr     Menu_GetAttrAddress_Bank0 ; $A362
     and     #$FE                    ; $A365
     asl     a                       ; $A367
     asl     a                       ; $A368
     adc     #$C8                    ; $A369
-    jsr     Menu_QueueAttrHeader    ; $A36B
+    jsr     Menu_QueueAttrHeader_Bank0 ; $A36B
     lda     #$0F                    ; $A36E
     sta     temp5                   ; $A370
-    jsr     Menu_CheckAttrAlignment ; $A372
+    jsr     Menu_CheckAttrAlignment_Bank0 ; $A372
     beq     @loc_A383               ; $A375
     lda     temp4                   ; $A377
     bne     @loc_A391               ; $A379
@@ -6214,17 +6214,17 @@ Menu_DrawRowAttrs:
 @loc_A39A:
     and     menuAttrs,x             ; $A39A
     sta     menuAttrs,x             ; $A39D
-    jsr     Menu_NextAttr           ; $A3A0
+    jsr     Menu_NextAttr_Bank0     ; $A3A0
     bcc     @loop                   ; $A3A3
 
 ; ---------------------------------------------------------------------------
-; Menu_EndRowString
+; Menu_EndRowString_Bank0
 ;
 ; End ppuBuffer1's string at y and send it with the next NMI.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Menu_EndRowString:
+Menu_EndRowString_Bank0:
     lda     #$FF                    ; $A3A5
     sta     ppuBuffer1,y            ; $A3A7
     sty     ppuBuffer1Len           ; $A3AA
@@ -6232,7 +6232,7 @@ Menu_EndRowString:
     sta     ppuStringSelect         ; $A3AF
     rts                             ; $A3B2
 
-Menu_GetAttrAddress:
+Menu_GetAttrAddress_Bank0:
     lda     temp1                   ; $A3B3
     clc                             ; $A3B5
     adc     #$78                    ; $A3B6
@@ -6258,7 +6258,7 @@ Menu_GetAttrAddress:
     rts                             ; $A3D6
 
 ; ---------------------------------------------------------------------------
-; Menu_CloseRow
+; Menu_CloseRow_Bank0
 ;
 ; Close the pause menu window one row at a time: rebuild row menuRow from
 ; the area tiles under it (menuUnderRow, through the area's metatiles) and
@@ -6266,7 +6266,7 @@ Menu_GetAttrAddress:
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Menu_CloseRow:
+Menu_CloseRow_Bank0:
     dec     menuRow                 ; $A3D7
     bpl     @loc_A3DF               ; $A3DA
     jmp     Pause_NextState         ; $A3DC
@@ -6278,7 +6278,7 @@ Menu_CloseRow:
     tax                             ; $A3E5
     lda     scrollXHi               ; $A3E6
     adc     #$00                    ; $A3E9
-    jsr     AreaMap_GetPagePtrBank0 ; $A3EB
+    jsr     AreaMap_GetPagePtr_Bank0 ; $A3EB
     txa                             ; $A3EE
     lsr     a                       ; $A3EF
     lsr     a                       ; $A3F0
@@ -6339,10 +6339,10 @@ Menu_CloseRow:
     inc     temp0                   ; $A443
     cpx     #$0E                    ; $A445
     bcc     @loop2                  ; $A447
-    jsr     Menu_BeginRow           ; $A449
+    jsr     Menu_BeginRow_Bank0     ; $A449
 
 @loc_A44C:
-    jsr     Menu_GetAttrAddress     ; $A44C
+    jsr     Menu_GetAttrAddress_Bank0 ; $A44C
     lsr     a                       ; $A44F
     clc                             ; $A450
     adc     #$01                    ; $A451
@@ -6350,8 +6350,8 @@ Menu_CloseRow:
     asl     a                       ; $A454
     asl     a                       ; $A455
     adc     #$C0                    ; $A456
-    jsr     Menu_QueueAttrHeader    ; $A458
-    jsr     Menu_CheckAttrAlignment ; $A45B
+    jsr     Menu_QueueAttrHeader_Bank0 ; $A458
+    jsr     Menu_CheckAttrAlignment_Bank0 ; $A45B
     lda     #$F0                    ; $A45E
     sta     temp6                   ; $A460
     lda     scrollX                 ; $A462
@@ -6389,24 +6389,24 @@ Menu_CloseRow:
 
 @loc_A491:
     and     menuAttrs,x             ; $A491
-    jsr     Menu_NextAttr           ; $A494
+    jsr     Menu_NextAttr_Bank0     ; $A494
     bcs     @loc_A49C               ; $A497
     jmp     @loc_A44C               ; $A499
 
 @loc_A49C:
-    jmp     Menu_EndRowString       ; $A49C
+    jmp     Menu_EndRowString_Bank0 ; $A49C
 
 ; ---------------------------------------------------------------------------
-; Menu_QueueRowTiles
+; Menu_QueueRowTiles_Bank0
 ;
 ; Queue the two tile rows of the pause menu window for row menuRow
 ; (menuRowTiles, menuRowTiles2) in ppuBuffer1, as PPU strings split where
-; the window crosses from one nametable to the other.  Menu_BeginRow does
+; the window crosses from one nametable to the other.  Menu_BeginRow_Bank0 does
 ; this and sets temp0:temp1 to the scroll position for the attribute bytes.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Menu_QueueRowTiles:
+Menu_QueueRowTiles_Bank0:
     ldy     ppuBuffer1Len           ; $A49F
     lda     #$C0                    ; $A4A2
     sta     temp7                   ; $A4A4
@@ -6515,8 +6515,8 @@ Menu_QueueRowTiles:
 @done:
     rts                             ; $A545
 
-Menu_BeginRow:
-    jsr     Menu_QueueRowTiles      ; $A546
+Menu_BeginRow_Bank0:
+    jsr     Menu_QueueRowTiles_Bank0 ; $A546
     lda     scrollXHi               ; $A549
     sta     temp0                   ; $A54C
     lda     scrollX                 ; $A54E
@@ -6525,7 +6525,7 @@ Menu_BeginRow:
     sta     temp4                   ; $A555
     rts                             ; $A557
 
-Menu_QueueAttrHeader:
+Menu_QueueAttrHeader_Bank0:
     adc     temp3                   ; $A558
     sta     ppuBuffer1+1,y          ; $A55A
     lda     #$01                    ; $A55D
@@ -6537,7 +6537,7 @@ Menu_QueueAttrHeader:
     tax                             ; $A569
     rts                             ; $A56A
 
-Menu_CheckAttrAlignment:
+Menu_CheckAttrAlignment_Bank0:
     lda     #$F0                    ; $A56B
     sta     temp6                   ; $A56D
     lda     scrollX                 ; $A56F
@@ -6557,7 +6557,7 @@ Math_AddToTemp14:
     sta     temp15                  ; $A586
     rts                             ; $A588
 
-Menu_NextAttr:
+Menu_NextAttr_Bank0:
     sta     ppuBuffer1+3,y          ; $A589
     iny                             ; $A58C
     iny                             ; $A58D
@@ -6772,7 +6772,7 @@ LevelUp_ApplyChoice:
     lda     LevelUpStatRows,y       ; $A696
     sta     menuRow                 ; $A699
     jsr     LevelUp_LoadRow         ; $A69C
-    jsr     Menu_DrawRowAttrs       ; $A69F
+    jsr     Menu_DrawRowAttrs_Bank0 ; $A69F
     pla                             ; $A6A2
     sta     menuRow                 ; $A6A3
     lda     #$60                    ; $A6A6
@@ -6782,7 +6782,7 @@ LevelUp_ApplyChoice:
     lda     hudRedraw               ; $A6AB
     ora     #$C0                    ; $A6AE
     sta     hudRedraw               ; $A6B0
-    jmp     Menu_NextState          ; $A6B3
+    jmp     Menu_NextState_Bank0    ; $A6B3
 
 @loc_A6B6:
     lda     #$20                    ; $A6B6
