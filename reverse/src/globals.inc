@@ -144,7 +144,7 @@ GLOBALS_INC = 1
 .global Area_DrawMetatileColumn
 
 .global Mode_Overworld
-.global Death_QueueBank0String
+.global Death_QueueRedPalette
 .global Mode_OverworldSetup
 .global Mode_RaftStart
 .global Mode_Raft

@@ -33,7 +33,7 @@ Tools that drive the emulator need the Python extension built with
   table (`--word` writes known addresses by name), turning labels inside
   it into `NAME+k`.
 - `header.py`: Adds or replaces routine header comments from a file of
-  `=== Name` blocks.
+  `=== Name` blocks; `--status confirmed NAME...` sets their status.
 - `label.py`: Finds or creates a label at a bank/address, splitting `.byte`
   lines or using `name := * + k` as needed.
 - `bank_usage.py`: Plays a movie and reports which PRG bank executes in
@@ -50,5 +50,13 @@ Tools that drive the emulator need the Python extension built with
   or address), with the frame number and the writing routine.
 - `snap.py`: Saves screenshots (and prints memory) at chosen frames of a
   movie, or where variables take given values (`--when gameMode=0x11`).
+- `play.py`: Plays a movie until given variables hold given values, then
+  takes over with scripted input (and memory pokes), logging changes to
+  watched variables and taking screenshots; for exercising code the
+  movies never reach.
+- `routine_report.py`: For each routine with a header, its status, whether
+  the movies ran it, and the variables it was seen to read and write;
+  `--provisional` lists only provisional routines, for checking headers
+  against the traces.
 - `check_docs.py`: Reports symbol names in `docs/` that no longer exist in
   the source.  Run by `make verify`.

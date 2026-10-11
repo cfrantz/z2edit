@@ -340,10 +340,11 @@ Nmi:
 ; Sound_UpdateSometimes
 ;
 ; Run Sound_Update on 216 of every 256 calls (soundPacer accumulates $D8).
-; Called once per row by the long overworld drawing loop, presumably to
-; keep the music at tempo.
+; Called once per row by the long overworld map indexing loop
+; (Mode_IndexOverworldMap), which runs outside the NMI, so that the music
+; keeps playing at about its normal speed.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sound_UpdateSometimes:
     lda     soundPacer              ; $C1B6
@@ -386,7 +387,7 @@ Sound_UpdateDone:
 ; (dialogType >= 2, handled in the town bank).  Elsewhere it dispatches on
 ; pauseState.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_UpdateMenus:
     jsr     Mmc1_SetPrgBank0        ; $C1CD
@@ -438,7 +439,7 @@ Game_UpdateSideViewMenus:
 ; (Pause_CheckStart, Pause_OverworldMute, Pause_OverworldWait,
 ; Pause_OverworldUnmute).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_UpdateOther:
     lda     pauseState              ; $C220
@@ -457,7 +458,7 @@ Menu_UpdateOther:
 ; Side view dialogs: the level up window (LevelUp_Update) for
 ; dialogType 1; town conversations (Menu_UpdateTownDialog) for 2-4.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_UpdateDialog:
     cmp     #$02                    ; $C233
@@ -470,7 +471,7 @@ Menu_UpdateDialog:
 ; The flute, by pauseState: Menu_Skip, Flute_Start, Flute_Wait,
 ; Menu_Close.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flute_Update:
     jsr     JumpTable               ; $C23A
@@ -486,7 +487,7 @@ Flute_Update:
 ; Town conversations (dialogType 2-4), run by the town bank; dialogType
 ; 5 and up goes to Menu_UpdateOther.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_UpdateTownDialog:
     cmp     #$05                    ; $C245
@@ -505,7 +506,7 @@ Menu_CopyPtrFromArea:
 ; Copy the word at (temp14),y to menuRowTiles,x / menuRowTiles2,x and advance x.
 ; Menu_CopyPtrFromArea does it with the area bank mapped.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_CopyPtr:
     lda     (temp14),y              ; $C258
@@ -548,7 +549,7 @@ AreaFlagEven:
 ; (and its address in temp0 + y), with carry set for an odd areaId.
 ;
 ; In:      x = flag
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_ClearFlag:
     jsr     Area_GetFlagByte        ; $C295
@@ -592,7 +593,7 @@ Area_GetFlagByte:
 ; Run one frame of the game: dispatch on gameState, and for most states on
 ; gameMode.  Called by the game NMI.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_RunState:
     ldy     #$00                    ; $C2CA
@@ -663,7 +664,7 @@ GameState_Death:
 ; Map bank 5 and go back to the title screen (gameState 0 in bank 5's NMI
 ; mode).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_ReturnToTitle:
     lda     #$05                    ; $C33C
@@ -979,7 +980,7 @@ AreaEnemyListTables:
 ; layer (AreaBank::BackgroundAreas, if the area has one) and then the area
 ; itself into sramAreaTiles, set the scroll limits, and advance gameMode.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_Load:
     lda     #$30                    ; $C4CB
@@ -1191,7 +1192,7 @@ Mode_StartSideView:
 ; entry scroll (Area_SaveEntryScroll) and load the area (gameMode $14,
 ; GAME_MODE_LOAD_ROOM).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_EnterArea:
     inc     gameMode                ; $C63E
@@ -1204,7 +1205,7 @@ Mode_EnterArea:
 ; direction linkUpDownHeld (e.g. by elevator) from sramRoomConnections, and set
 ; areaId and the scroll position for it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FindConnectedRoom:
     jsr     Mmc1_SetPrgBankArea     ; $C644
@@ -1246,7 +1247,7 @@ Mode_FindConnectedRoom:
 ; (Scroll_SavePageState), set areaStartPage to 4 to start from it, and
 ; blank the screen for the next mode.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_SaveEntryScroll:
     ldx     #$04                    ; $C67C
@@ -1261,7 +1262,7 @@ Area_SaveEntryScroll:
 ; gameMode $0C: save the entry scroll before falling into an area
 ; (Area_SaveEntryScroll); the fall follows in gameModes $0D-$0F.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FallSaveScroll:
     jsr     Mmc1_SetPrgBank0        ; $C68A
@@ -1272,7 +1273,7 @@ Mode_FallSaveScroll:
 ;
 ; Save the scroll state for page x in the SRAM tables at sram_6982 and up.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_SavePageState:
     lda     ppuScrollX              ; $C690
@@ -1341,7 +1342,7 @@ Game_Wait:
 ; gameMode $0E: start the fall into an area: Link appears at the top of the
 ; screen (Y = $10), with the area's music.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FallStart:
     inc     ram_0704                ; $C6EF
@@ -1366,7 +1367,7 @@ Mode_FallStart:
 ; gameMode $15: after loading a room, put Link on the ground
 ; (Link_PlaceOnGround) and draw the area (gameMode $09).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_PlaceLink:
     lda     ram_071F                ; $C70C
@@ -1380,7 +1381,7 @@ Mode_PlaceLink:
 ;
 ; Death gameMode 2: set the death animation timer and turn rendering on.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_StartAnimation:
     lda     #$07                    ; $C71A
@@ -1426,7 +1427,7 @@ FloorPatterns:
 ; change the floor pattern from their column on.  The world's floor tiles
 ; come from Area_SetFloorTiles.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawFloors:
     lda     #$00                    ; $C755
@@ -1551,7 +1552,7 @@ Area_DrawFloors:
 ; routine in its area bank (OverworldBank::SetFloorTiles in the overworld
 ; banks).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_SetFloorTiles:
     lda     currentWorld            ; $C819
@@ -1571,7 +1572,7 @@ Area_SetFloorTiles:
 ; (FloorPatterns, 2 bytes per pattern: a bit per row) and the world's floor
 ; tiles (temp12).  Empty tiles ($40, and $42 over $40) are left alone.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawFloorColumn:
     lda     areaObjectType          ; $C82B
@@ -1658,7 +1659,7 @@ Area_DrawFloorColumn:
 ; sets areaLastPage from the header and resets the elevator and locked door
 ; positions.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DecodeObjects:
     lda     #$00                    ; $C89D
@@ -1732,7 +1733,7 @@ Area_DecodeObjects:
 ; Area_DrawSmallObject likewise draws a small object
 ; (AreaBank::DrawSmallObject).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawLargeObject:
     ldx     areaObjectType          ; $C912
@@ -1802,7 +1803,7 @@ AreaMap_GetPagePtrY:
 ; position's column is added to areaBuildColumn, so columns are relative to
 ; the previous object (Area_AdvanceColumn), and areaBuildPage is updated.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_NextObjectPos:
     jsr     Area_CheckPageSkip      ; $C95C
@@ -1855,7 +1856,7 @@ Area_CheckPageSkip:
 ; Area object $0F: an item, whose kind is in the following byte.  It is
 ; placed as an object in a free enemy slot.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_PlaceItem:
     ldx     #$05                    ; $C9A5
@@ -1915,7 +1916,7 @@ dat_C9EA:
 ; flashing palette until timerSlow runs out, then switch to CHR bank $10
 ; and advance.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_Animate:
     jsr     Mmc1_SetPrgBank0        ; $C9EE
@@ -1952,16 +1953,16 @@ Ppu_SelectString:
 ; ---------------------------------------------------------------------------
 ; Death_LoseLife
 ;
-; Death sequence step, by gameSubStep: run bank 0's step ($8140), then
-; lose a life.  With lives left, go to GAME_STATE_RESPAWN; with none left,
+; Death sequence step, by gameSubStep: turn the background red
+; (Death_QueueRedPalette), then lose a life.  With lives left, go to GAME_STATE_RESPAWN; with none left,
 ; set up the game over screen (not reached in the test movies).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_LoseLife:
     jsr     JumpTableBySubStep      ; $CA1B
 ; (inline jump table)
-    .word   Death_QueueBank0String  ; $CA1E
+    .word   Death_QueueRedPalette   ; $CA1E
     .word   @loc_CA24               ; $CA20
     .word   @loc_CA72               ; $CA22  (not observed)
 
@@ -2034,7 +2035,7 @@ Death_LoseLife:
 ; If menuCursor selects saving, go on to the next mode (Death_SaveGame)
 ; instead.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_ContinueMenu:
     lda     joypadHeld              ; $CA85
@@ -2153,10 +2154,9 @@ Stat_FillMeter:
 ; GameState_StartEnding
 ;
 ; gameState 3: map bank 5 and its CHR bank and go on to GameState_Ending,
-; which runs bank 5's ending sequence (provisional: not reached in the test
-; movies).
+; which runs bank 5's ending sequence.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GameState_StartEnding:
     lda     #$0E                    ; $CB27
@@ -2176,7 +2176,7 @@ dat_CB32:
 ; gameMode $06: enter the overworld location Link is standing on
 ; (areaLocation), or return to the overworld map if there is none.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_EnterLocation:
     jsr     Mmc1_SetPrgBankArea     ; $CB35
@@ -2205,7 +2205,7 @@ Mode_EnterLocation:
 ; leading into a side view area, its area and start page (Location_GetArea).
 ;
 ; In:      y = location
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Location_Enter:
     lda     sramLocX,y              ; $CB59
@@ -2315,7 +2315,7 @@ Location_Enter:
 ; encounter area for the terrain (OverworldBank::Encounters, by region
 ; half) at Link's position, and enter it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Location_EnterEncounter:
     ldy     currentRegion           ; $CC0F
@@ -2348,7 +2348,7 @@ Location_EnterEncounter:
 ; location has bit 5 of sramLocDest set or starts on page 0 or 3, which
 ; go to Location_CheckFallEntry.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Location_ChooseEntry:
     lda     sramLocDest,y           ; $CC40
@@ -2367,7 +2367,7 @@ Location_ChooseEntry:
 ; gameMode $12, or $0C to fall in if the location has the fall flag
 ; (sramLocDest bit 7).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Location_SetupEntry:
     and     #$01                    ; $CC50
@@ -2421,7 +2421,7 @@ Location_SetupEntryDone:
 ; If location y is entered by falling (sramLocDest bit 7), set it up from
 ; page 1 (Location_SetupEntry).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Location_CheckFallEntry:
     lda     sramLocDest,y           ; $CC89
@@ -2462,7 +2462,7 @@ Location_GetArea:
 ; Mode_ReturnToOverworld for a location with Y = 0 and X other than $3D:
 ; put Link at Y $66.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 ReturnToOverworld_SetY66:
     lda     #$66                    ; $CCAF
@@ -2476,7 +2476,7 @@ ReturnToOverworld_SetY66:
 ; beside it for locations with sramLocDest bit 6), then go on to set up
 ; the overworld.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_ReturnToOverworld:
     lda     #$00                    ; $CCB3
@@ -2496,7 +2496,7 @@ Mode_ReturnToOverworld:
 ; Set overworldY to a and overworldX from location y (part of
 ; Mode_ReturnToOverworld).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 ReturnToOverworld_SetPosition:
     and     #$7F                    ; $CCCC
@@ -2894,7 +2894,7 @@ Game_NextMode:
 ; Mode_LoadWorld in a side view world: go to gameMode $07 to enter the
 ; area.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LoadWorld_EnterArea:
     lda     #$07                    ; $CF09
@@ -2905,7 +2905,7 @@ LoadWorld_EnterArea:
 ; Set gameMode to a and start the area music ($01, or $08 in the Great
 ; Palace).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LoadWorld_SetMode:
     sta     gameMode                ; $CF0B
@@ -2952,7 +2952,7 @@ World_GetIndex:
 ; gameMode $09: draw a newly loaded area, one step per frame
 ; (gameSubStep).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_DrawArea:
     jsr     Mmc1_SetPrgBankArea     ; $CF3C
@@ -2972,7 +2972,7 @@ Mode_DrawArea:
 ; $FC-$FF leaves to the overworld (gameMode $01); otherwise enter the
 ; connected area (gameMode $07).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_LeaveArea:
     jsr     Oam_HideAll             ; $CF4C
@@ -3062,7 +3062,7 @@ Mode_LeaveArea:
 ; Go to gameMode $07 to enter the next area, stopping the area music unless
 ; Link is arriving by elevator (ram_0704).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_EnterNextArea:
     ldx     ram_0704                ; $CFEC
@@ -3074,7 +3074,7 @@ Game_EnterNextArea:
 ;
 ; Set areaMusic to a and go to gameMode $07.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_EnterNextAreaWithMusic:
     sta     areaMusic               ; $CFF3
@@ -3084,7 +3084,7 @@ Game_EnterNextAreaWithMusic:
 ;
 ; Go to gameMode $07 to enter the next area.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_EnterNextAreaKeepMusic:
     lda     #$07                    ; $CFF6
@@ -3106,7 +3106,7 @@ Game_SetMode:
 ; gameMode $16: Link has gone through a door (in a town).  Find the area
 ; behind it from the town bank's door table at $8817, then enter it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_EnterDoor:
     jsr     Mmc1_SetPrgBankArea     ; $CFFC
@@ -3145,7 +3145,7 @@ Mode_EnterDoor:
 ;
 ; Request music $80.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Music_Request80:
     lda     #$80                    ; $D03D
@@ -3197,7 +3197,7 @@ Death_DrawContinueScreen:
 ; Mode_DrawArea step 2: queue the area's background palette and sprite
 ; palette (by header byte 3) from sramAreaPalettes.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DrawArea_QueuePalettes:
     ldy     #$03                    ; $D05B
@@ -3280,7 +3280,7 @@ HudTemplate:
 ; Mode_DrawArea step 3: draw the status bar (Hud_Draw) and queue its
 ; template (HudTemplate, PPU string 7).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DrawArea_DrawHud:
     jsr     Mmc1_SetPrgBank0        ; $D0FC
@@ -3312,7 +3312,7 @@ Game_NextSubStepString:
 ; Mode_DrawArea step 4: draw the area's columns (Scroll_DrawColumnStep)
 ; and spawn enemies into the empty slots, then advance gameMode.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DrawArea_DrawColumns:
     jsr     Mmc1_SetPrgBank0        ; $D120
@@ -3608,7 +3608,7 @@ Obj_MoveY:
 ; Shared tail of Obj_MoveX and Obj_MoveY: return a = the pushed value
 ; plus temp0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_MoveFinish:
     pla                             ; $D247
@@ -4022,7 +4022,7 @@ dat_D3CA:
 ; sequence (GAME_STATE_DEATH) when linkDeathPending is set, otherwise runs bank 0's
 ; side view code (Spell_Update) and refills the meters from statMeterPending.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_SideView:
     lda     linkDeathPending        ; $D3CC
@@ -4234,7 +4234,7 @@ Mode_SideView:
 ; Enemy projectile x hit something (state negative): draw it as a spark
 ; (Projectile_SetSparkTile) while its state counts up to 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Spark:
     ldy     objOamOffset+7,x        ; $D548
@@ -4256,7 +4256,7 @@ Projectile_Spark:
 ; Set the projectile sprite at oamBuffer,y to tile $78 or $7A (by bit 3 of
 ; a), palette 1.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_SetSparkTile:
     and     #$08                    ; $D55E
@@ -4396,7 +4396,7 @@ dat_D5FB:
 ; ENEMY_STATE_EMPTY: spawn the area's next enemy into this slot when the
 ; screen scrolls far enough (Enemy_Spawn).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_TrySpawn:
     lda     ram_0759                ; $D603
@@ -5321,7 +5321,7 @@ dat_DB50:
 ;
 ; In:      x = enemy index
 ; Out:     carry set if no projectile slot was free; y = projectile index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_FireProjectile:
     ldy     #$05                    ; $DBCE
@@ -5360,7 +5360,7 @@ Projectile_FindFree:
 ;
 ; In:      y = highest projectile index to try
 ; Out:     carry clear and y = projectile index, or carry set if none
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_FindFreeFrom:
     lda     a:objState+7,y          ; $DBFD
@@ -5449,7 +5449,7 @@ Enemy_FaceLink:
 ; ENEMY_STATE_DYING: wait out the enemy's death timer, then go on to
 ; ENEMY_STATE_SHOW_EXP.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Die:
     lda     timerFast+TIMER_ENEMY,x ; $DCAE
@@ -5486,7 +5486,7 @@ dat_DCD3:
 ; A step of an enemy's death (Enemy_Die): flash the screen for some
 ; enemies (y = $68).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DieStep:
     cpy     #$68                    ; $DCDB
@@ -5545,7 +5545,7 @@ Enemy_DieStep:
 ; enemy list remembers them (Enemy_Remove).
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_RemoveAfterDeath:
     ldy     enemyType,x             ; $DD34
@@ -5561,7 +5561,7 @@ Enemy_RemoveAfterDeath:
 ; enemyActive.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Despawn:
     ldy     enemySramIndex,x        ; $DD3D
@@ -5587,7 +5587,7 @@ ExperienceTilesRight:
 ; ENEMY_STATE_SHOW_EXP: draw the experience the enemy was worth
 ; (ExperienceTilesLeft/Right by enemyExpClass) while its timer runs.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_ShowExperience:
     lda     timerFast+TIMER_ENEMY,x ; $DD6C
@@ -5649,7 +5649,7 @@ dat_DDDC:
 ; Add the experience for enemy x's experience class to experiencePending
 ; (or drop an item, Enemy_DropItem, for a negative class).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_AwardExperience:
     lda     enemyExpClass,x         ; $DDEC
@@ -5685,7 +5685,7 @@ Enemy_AwardExperience:
 ; an object of type 1 (an item), standing still.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DropItem:
     jsr     Enemy_RemoveAfterDeath  ; $DE20
@@ -5723,7 +5723,7 @@ Enemy_UpdateWithBg:
 ; screen (Enemy_CheckCollisions).
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_UpdateCommon:
     ldy     #$01                    ; $DE40
@@ -5768,7 +5768,7 @@ Enemy_CheckCollisions:
 ; screen.  Enemy types below 3 and type $13 are never despawned.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DespawnIfFar:
     lda     enemyType,x             ; $DE6C
@@ -5911,7 +5911,7 @@ AreaMap_PutTileRight:
 ; rows per screen) and set up the overworld drawing variables
 ; ($0077-$007E).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_SetMapPosition:
     lda     overworldTargetY        ; $DF01
@@ -6127,7 +6127,7 @@ Area_GetMetatilePtr:
 ;
 ; In:      temp0 = X, temp1 = Y
 ; Out:     temp2 = terrain
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_GetTerrain:
     jsr     Mmc1_SetPrgBankArea     ; $DFEF
@@ -6141,7 +6141,7 @@ Overworld_GetTerrain:
 ; (OverworldBank::UseFlute in the area bank); e.g. at one place in East
 ; Hyrule it changes the map.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_UseFlute:
     jsr     Mmc1_SetPrgBankArea     ; $DFF8
@@ -6181,7 +6181,7 @@ Overworld_ReadMapRun:
 ; Show the region's palaces as stone once their crystals have been placed
 ; (OverworldBank::UpdatePalaceStones).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_UpdatePalaceStones:
     jsr     Mmc1_SetPrgBankArea     ; $E01B
@@ -6194,7 +6194,7 @@ Overworld_UpdatePalaceStones:
 ; Queue a strip of the overworld map, scrolled into view, in ppuBuffer0
 ; (OverworldBank::QueueMapStrip).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueMapStrip:
     jsr     Mmc1_SetPrgBankArea     ; $E024
@@ -6209,7 +6209,7 @@ Overworld_QueueMapStrip:
 ; Place Link on the ground: starting from Y = $AF, move him up 16 pixels at
 ; a time while he is inside something solid.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_PlaceOnGround:
     lda     #$AF                    ; $E030
@@ -6250,7 +6250,7 @@ ProbeCollisionBits:
 ; door enters it (gameMode $16), and crouching on a chimney sinks him into
 ; it (chimneyTimer).  Then probe for walls in the direction he faces.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_CheckBg:
     jsr     Mmc1_SetPrgBankArea     ; $E070
@@ -6416,7 +6416,7 @@ Link_CheckBgInBank:
 ;
 ; Set gameMode to a and leave the area (Area_Exit).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_ExitToMode:
     sta     gameMode                ; $E187
@@ -6426,7 +6426,7 @@ Area_ExitToMode:
 ;
 ; Leave the side view area: blank the screen and despawn the enemies.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_Exit:
     inc     renderingOff            ; $E18A
@@ -6460,7 +6460,7 @@ Link_CheckBgInBankDone:
 ; screen, advance gameMode (to $0C, falling into the area below) and leave
 ; the area.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_CheckFellOut:
     lda     linkFairy               ; $E19E
@@ -6500,7 +6500,7 @@ Obj_ProbeBgPair:
 ; of the first one that hits a solid tile (AreaBank::IsSolidTile).
 ;
 ; In:      x = object slot, temp0 = first probe, temp1 = count - 1
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_ProbeBg:
     ldy     temp0                   ; $E1BE
@@ -6691,7 +6691,7 @@ LinkDamage:
 ; (sramEnemyDamage bits 3-0) through Link_TakeDamage.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_HurtByEnemy:
     ldy     enemyType,x             ; $E2EF
@@ -6724,7 +6724,7 @@ Link_HurtByEnemy:
 ; counted every 20 frames).  Does nothing while he is invulnerable.
 ;
 ; In:      a = damage class
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_TakeDamage:
     sta     temp12                  ; $E30D
@@ -6811,7 +6811,7 @@ Enemy_KnockBack:
 ; Set enemy x's knockback speed (ram_043E) from dat_E369,y, doubled while
 ; it is stunned.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_SetKnockBack:
     lda     dat_E369,y              ; $E38C
@@ -6830,7 +6830,7 @@ Enemy_SetKnockBack:
 ; wall is in the way.
 ;
 ; In:      x = enemy index, temp0 = strength (0 = weak)
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_KnockBack:
     lda     objCollision            ; $E399
@@ -6852,7 +6852,7 @@ Link_KnockBack:
 ;
 ; Link_SetKnockBackVelocity for the other direction.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_KnockBackOtherWay:
     iny                             ; $E3B1
@@ -6863,7 +6863,7 @@ Link_KnockBackOtherWay:
 ;
 ; Set Link's X velocity from dat_E36C,y.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_SetKnockBackVelocity:
     lda     dat_E36C,y              ; $E3B3
@@ -6887,7 +6887,7 @@ Link_KnockBackDone:
 ; then against Link (Projectile_HitLinkBody).  Used by the enemy
 ; projectile routines in the area banks.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_CheckLinkAlternate:
     lda     frameCounter            ; $E3B9
@@ -6979,7 +6979,7 @@ ProjectileDeflectSpeeds:
 ; it back up and away.
 ;
 ; In:      x = projectile index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Deflect:
     lda     #$10                    ; $E431
@@ -7006,7 +7006,7 @@ Projectile_CheckLinkAlternateDone:
 ; If enemy projectile x touches Link, remove it (unless it survives
 ; hitting him) and hurt him unless he is invulnerable.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_HitLinkBody:
     jsr     Link_GetHitbox          ; $E442
@@ -7035,7 +7035,7 @@ Projectile_HitLinkBody:
 ; with sramProjectileFlags bit 3 have a taller box.
 ;
 ; In:      x = projectile index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_GetHitbox:
     ldy     objState+7,x            ; $E469
@@ -7074,7 +7074,7 @@ DoNothing:
 ; Test enemy x against Link's projectiles (objects 13 and 14).
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckProjectileHits:
     lda     enemyActive,x           ; $E48B
@@ -7141,7 +7141,7 @@ LinkProjectile_GetHitbox:
 ; every other frame, alternating between odd and even enemies.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckLinkContact:
     lda     enemyType,x             ; $E4D9
@@ -7230,7 +7230,7 @@ dat_E556:
 ; otherwise only his body (Projectile_CheckLinkBody).
 ;
 ; In:      x = projectile index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_CheckLinkReflect:
     lda     reflectSpellActive      ; $E558
@@ -7247,7 +7247,7 @@ Projectile_CheckLinkReflect:
 ; against Link (hurt him).
 ;
 ; In:      x = projectile index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_CheckLink:
     jsr     Shield_GetHitbox        ; $E563
@@ -7308,7 +7308,7 @@ dat_E5B7:
 ; Enemy_CheckProjectileHitsSpecial tests it against Link's projectiles.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_GetSpecialHitbox:
     lda     objY+1,x                ; $E5BA
@@ -7356,7 +7356,7 @@ Enemy_GetSpecialHitboxDone:
 ; Set box B (temp4-temp7, see Hitbox_Overlap) to Link's shield, from the
 ; position of its sprite (sprite 4 of Link's sprites).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Shield_GetHitbox:
     ldy     objOamOffset+1,x        ; $E5F3
@@ -7427,7 +7427,7 @@ Enemy_CheckProjectileHitsSpecial:
 ; The sword hit an enemy that it cannot hurt: play the clink sound, and
 ; bounce Link up off a downward thrust.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_SwordClink:
     lda     #$02                    ; $E654
@@ -7460,7 +7460,7 @@ SwordDamage:
 ; the enemy type can be hit by it).
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckSwordHit:
     lda     swordY                  ; $E677
@@ -7486,7 +7486,7 @@ Enemy_CheckSwordHit:
 ;
 ; In:      x = enemy index
 ; Out:     carry set if hit
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckHit:
     ldy     enemyType,x             ; $E694
@@ -7503,7 +7503,7 @@ Enemy_CheckHit:
 ;
 ; Clear enemy x's hit flag (objCollision bit 5) and return carry clear.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_ClearHitFlag:
     lda     objCollision+1,x        ; $E6A6
@@ -7536,7 +7536,7 @@ Enemy_CheckHitDone:
 ; The sword (or a Link projectile, temp11) hit enemy x: clink off enemies
 ; it cannot hurt, otherwise damage it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_HitBySword:
     ldy     enemyType,x             ; $E6AE
@@ -7557,7 +7557,7 @@ Enemy_HitBySword:
 
 @loc_E6CB:
     lda     temp11                  ; $E6CB
-    beq     Enemy_CheckDownThrust   ; $E6CD
+    beq     Enemy_CheckUpThrust     ; $E6CD
     lda     sramEnemyAttr,y         ; $E6CF
     and     #$20                    ; $E6D2
     beq     @loc_E6DD               ; $E6D4
@@ -7569,7 +7569,7 @@ Enemy_HitBySword:
     ldy     enemyType,x             ; $E6DD
     lda     sramEnemyDamage,y       ; $E6DF
     and     #$20                    ; $E6E2
-    beq     Enemy_CheckDownThrust   ; $E6E4
+    beq     Enemy_CheckUpThrust     ; $E6E4
 
 @loc_E6E6:
     ldy     ram_0011                ; $E6E6
@@ -7590,13 +7590,14 @@ LinkProjectile_Disintegrate:
     rts                             ; $E6F2
 
 ; ---------------------------------------------------------------------------
-; Enemy_CheckDownThrust
+; Enemy_CheckUpThrust
 ;
-; Check Link's downward thrust (pose 8) against enemy x: only from above.
+; During Link's upward thrust (pose 8) with the sword, an enemy below him
+; is not hit (Enemy_ClearHitFlag); one above him stops his rise.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Enemy_CheckDownThrust:
+Enemy_CheckUpThrust:
     lda     objState                ; $E6F3
     cmp     #$08                    ; $E6F5
     bne     @loc_E708               ; $E6F7
@@ -7635,7 +7636,7 @@ Enemy_CheckDownThrust:
 ;
 ; In:      x = enemy index, y = attack level (1-8)
 ; Out:     carry set
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_TakeDamage:
     lda     #$30                    ; $E726
@@ -7694,7 +7695,7 @@ Enemy_TakeDamage:
 ; fanfare.
 ;
 ; In:      x = object (enemy index)
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_Collect:
     lda     ram_00AF,x              ; $E771
@@ -7784,7 +7785,7 @@ dat_E7E6:
 ; Collect an experience bag (item kinds 9-13): award its experience
 ; (Enemy_Kill with the class from dat_E7E6) with a sound.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_CollectExpBag:
     jsr     Enemy_Kill              ; $E7F4
@@ -7802,10 +7803,14 @@ Item_CollectExpBag:
 ; ---------------------------------------------------------------------------
 ; Item_CollectSpecial
 ;
-; Collect a special item (kind $10 and up): the fanfare, then a 1-up
-; doll ($12), ...
+; Collect an item of kind $10 and up, with the item fanfare: a magic jar
+; ($10 adds $10 to statMeterPending, one block of magic; $11 fills the
+; meter, statContainers * $10), a 1-up doll ($12, one more life), or one
+; of three items that set a flag (kind $13: ram_079C bit 5, $14: ram_0798
+; bit 4, $15: ram_079A bit 6).  Magic jars play sound effect 8 instead of
+; the fanfare.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_CollectSpecial:
     lda     #$10                    ; $E80C
@@ -7881,7 +7886,7 @@ dat_E870:
 ; item.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Kill:
     ldy     enemyType,x             ; $E880
@@ -8062,7 +8067,7 @@ dat_E9A0:
 ; swordY.  Downward and upward thrusts (objState 8, 9) use a different
 ; vertical offset.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sword_GetHitbox:
     ldy     #$00                    ; $E9A2
@@ -8107,11 +8112,13 @@ dat_E9D6:
 ; ---------------------------------------------------------------------------
 ; Link_GetShieldHitbox
 ;
-; Set box A (temp0-temp3, see Hitbox_Overlap) to a small box in front of
-; Link, in the direction he is walking (linkWalkDir), at a height that
-; depends on linkStanding: probably his shield.
+; Set box A (temp0-temp3, see Hitbox_Overlap) to Link's shield: a small
+; box in front of him, in the direction he is walking (linkWalkDir), at a
+; height that depends on linkStanding (high standing, low crouching).
+; Projectile_CheckLinkAlternate tests projectiles against it before his
+; body.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_GetShieldHitbox:
     ldy     linkWalkDir             ; $E9D8
@@ -8183,7 +8190,7 @@ Projectile_HitsBgAnyHeight:
 ;
 ; In:      x = projectile index
 ; Out:     carry set if the tile is solid
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_HitsBg:
     ldy     #$1F                    ; $EA1C
@@ -8194,7 +8201,7 @@ Projectile_HitsBg:
 ; Test enemy projectile x against the background at probe y if it is low
 ; enough (Y >= $90).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_HitsBgCheckLow:
     lda     objY+7,x                ; $EA1E
@@ -8207,7 +8214,7 @@ Projectile_HitsBgCheckLow:
 ; Test enemy projectile x against the background at probe y; carry set if
 ; it hits a solid tile.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_HitsBgProbe:
     txa                             ; $EA24
@@ -8322,7 +8329,7 @@ dat_EAE4:
 ; Out:     a = temp3 = tile; temp14-temp15 = tile map pointer and
 ;          temp2 = row offset, so that the caller can change the tile
 ; Clobbers: y, temp12
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_GetBgTile:
     sty     temp12                  ; $EAE8
@@ -8409,7 +8416,7 @@ dat_EBB0:
 ;
 ; Draw the fairy (Link under the fairy spell), bobbing up and down.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_DrawFairy:
     lda     drawOffscreen           ; $EBB8
@@ -8468,7 +8475,7 @@ Link_Draw:
 ;
 ; Draw Link's body sprites (part of Link_Draw).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_DrawBody:
     ldx     ram_0011                ; $EC02
@@ -8624,7 +8631,7 @@ Link_DrawBody:
 ; Place Link's sword (swordX, swordY) in front of him, for his walking
 ; direction.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sword_UpdatePosition:
     ldx     ram_0011                ; $ECEA
@@ -8646,7 +8653,7 @@ Sword_UpdatePosition:
 ; Set the sword's hit position (swordY, swordX) for object ram_0011 from
 ; its pose.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sword_UpdateHitPosition:
     ldx     ram_0011                ; $ED02
@@ -8705,7 +8712,7 @@ Sword_UpdateHitPosition:
 ; Set the sword's position from its sprite and continue with
 ; Sword_UpdateHitPosition.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sword_SetPositionFromSprite:
     ldx     ram_0011                ; $ED67
@@ -8722,7 +8729,7 @@ dat_ED77 := * + 2
 ;
 ; Write a column of Link's sprites with tiles from dat_EB25.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_DrawSprites:
     sty     temp8                   ; $ED7A
@@ -8888,7 +8895,7 @@ dat_EEAD:
 ;
 ; Draw a dying enemy (from Enemy_Die).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DrawDying:
     cpy     #$18                    ; $EEB2
@@ -8945,7 +8952,7 @@ Enemy_DrawDying:
 ; Draw a sprite pair from the table (Sprite_DrawPairFromTable) and flip
 ; the last sprite horizontally (Sprite_FlipPrevious).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_DrawPairFlipped:
     jsr     Sprite_DrawPairFromTable ; $EF03
@@ -8955,7 +8962,7 @@ Sprite_DrawPairFlipped:
 ;
 ; Restore x from currentObject and flip the previous sprite.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_FlipPreviousForObject:
     ldx     currentObject           ; $EF06
@@ -8974,7 +8981,7 @@ Sprite_FlipPrevious:
 ; sramEnemyAttr), and jump to its draw routine from sramEnemyDrawPtrs.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Draw:
     lda     enemyStunTimer,x        ; $EF11
@@ -9373,7 +9380,7 @@ Sprite_SetPairAttr:
 ; Hide those of the enemy's sprite columns that are off screen
 ; (drawOffscreen+1), starting at oamBuffer,y.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_HideOffscreen:
     lda     #$08                    ; $F1D7
@@ -9407,7 +9414,7 @@ Sprite_HideOffscreen:
 ; the tiles from a ROM table instead; Sprite_DrawEnemyPairKeepX reloads x
 ; from currentObject afterwards.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_DrawEnemyPair:
     lda     temp2                   ; $F1F4
@@ -9451,7 +9458,7 @@ Sprite_DrawPairFromTable:
 ;
 ; Draw a sprite pair with attributes a (Sprite_SetPairAttr).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_DrawPairWithAttr:
     pha                             ; $F236
@@ -9564,7 +9571,7 @@ Obj_ComputeScreenPos:
 ; Like Obj_ComputeScreenPos, but test 8 horizontal probe points, for wide
 ; objects.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_ComputeWideOffscreen:
     lda     #$00                    ; $F2D3
@@ -9777,7 +9784,7 @@ dat_FD80:
 ; when attrColumnPending is set.
 ;
 ; Clobbers: a, x, temp0, temp1
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_WriteAttrColumn:
     lda     ram_0720                ; $FD82
@@ -9839,7 +9846,7 @@ ContinueScreenText:
 ; Death gameMode $0A: the continue screen's Save choice.  Blink the choice
 ; (Death_BlinkSaveChoice), save the game, then go back to the title screen.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_SaveAndQuit:
     jsr     Game_CheckStepChange    ; $FE76
@@ -9860,7 +9867,7 @@ SaveBlinkString:
 ; Blink the Save choice on the continue screen for saveBlinkTimer frames,
 ; by rewriting one attribute byte ($23D3) through SaveBlinkString.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_BlinkSaveChoice:
     lda     saveBlinkTimer          ; $FE87
@@ -9898,7 +9905,7 @@ Death_BlinkSaveChoice:
 ; Expand area tiles into metatiles (AreaBank::MetatilePtrs), with the area
 ; bank mapped, for drawing.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawMetatileColumn:
     jsr     Mmc1_SetPrgBankArea     ; $FED0

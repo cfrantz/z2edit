@@ -2,6 +2,7 @@
 """Add or replace routine header comments.
 
     header.py FILE [FILE ...]
+    header.py --status STATUS NAME [NAME ...]
 
 Each FILE holds blocks like:
 
@@ -15,6 +16,9 @@ A block's text becomes the header above the label `Routine_Name:` in
 whichever src/*.s file defines it (replacing an existing header there).
 A block without a Status line gets `Status:  provisional`.  Lines are
 copied as they are, so wrap them to 76 columns.
+
+--status sets the Status line of the named routines' headers (e.g. to
+`confirmed`).
 """
 import glob
 import os
@@ -78,11 +82,34 @@ def apply(files, name, text):
     raise SystemExit(f"label {name} not found")
 
 
+def set_status(files, status, names):
+    todo = set(names)
+    for path, lines in files.items():
+        for i, line in enumerate(lines):
+            if line == RULE and i + 1 < len(lines) and lines[i + 1][2:].strip() in todo:
+                name = lines[i + 1][2:].strip()
+                j = i + 2
+                while j < len(lines) and lines[j] != RULE:
+                    if lines[j].startswith("; Status:"):
+                        lines[j] = f"; Status:  {status}"
+                        todo.discard(name)
+                        break
+                    j += 1
+    if todo:
+        raise SystemExit("no header with a Status line: " + " ".join(sorted(todo)))
+
+
 def main():
     files = {}
     for path in sorted(glob.glob(os.path.join(SRC, "*.s"))):
         with open(path) as f:
             files[path] = f.read().split("\n")
+    if sys.argv[1:2] == ["--status"]:
+        set_status(files, sys.argv[2], sys.argv[3:])
+        for path, lines in files.items():
+            with open(path, "w") as f:
+                f.write("\n".join(lines))
+        return 0
     changed = set()
     for arg in sys.argv[1:]:
         for name, text in parse(arg):

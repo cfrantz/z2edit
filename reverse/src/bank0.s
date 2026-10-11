@@ -32,7 +32,7 @@ dat_0_80D5:
 ; In the first area of the game (North Castle: world 0, region 0, area 0),
 ; draw four extra sprites from dat_0_80D5 at fixed positions in the area.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 NorthCastle_DrawSprites:
     lda     currentWorld            ; $80E5
@@ -83,14 +83,14 @@ NorthCastle_DrawSprites:
     rts                             ; $813F
 
 ; ---------------------------------------------------------------------------
-; Death_QueueBank0String
+; Death_QueueRedPalette
 ;
-; Death sequence step: queue PPU string 5 (the palette at $80C9 in bank
-; 0) and advance gameSubStep.
+; Death sequence step: queue PPU string 5, the red palette at $80C9 in bank
+; 0 (background $16), and advance gameSubStep.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Death_QueueBank0String:
+Death_QueueRedPalette:
     lda     #$05                    ; $8140
     sta     ppuStringSelect         ; $8142
     inc     gameSubStep             ; $8145
@@ -171,7 +171,7 @@ Mode_RaftStart:
 ;
 ; Draw Link on the raft (overworld sprites 0 and 1), facing raftDirection.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Raft_Draw:
     jsr     Overworld_DrawLinkAtX   ; $81BD
@@ -199,7 +199,7 @@ Raft_Draw:
 ; End of the raft ride: blank the screen and go to gameMode $06 to enter
 ; the location at the dock.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Raft_Arrive:
     inc     renderingOff            ; $81E5
@@ -215,7 +215,7 @@ Raft_Arrive:
 ;
 ; Move the raft one step in raftDirection.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Raft_Move:
     ldy     raftDirection           ; $81F6
@@ -314,7 +314,7 @@ dat_0_8281:
 ; Check whether an encounter starts on the overworld, from the terrain under
 ; Link and the encounter timer (timerSlow+8); safe in parts of region 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_CheckEncounter:
     lda     currentRegion           ; $8284
@@ -444,7 +444,7 @@ Overworld_CheckEncounter:
 ; ram_0759 and ram_075A, then enter it (Overworld_EnterLocation).
 ; Encounters that leave the screen are removed.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawEncounters:
     ldx     #$07                    ; $8332
@@ -588,7 +588,7 @@ Overworld_DrawEncounters:
 ;
 ; Move the overworld encounter sprites (every 16 frames).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_UpdateEncounters:
     lda     frameCounter            ; $841B
@@ -713,7 +713,7 @@ OverworldDirDY:
 ; Work out the tile Link is moving toward (overworldTargetY,
 ; overworldTargetX) from overworldDirection, and read the D-pad to move.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_HandleInput:
     ldy     overworldDirection      ; $84BF
@@ -800,7 +800,7 @@ dat_0_8555:
 ; location ($29) needs the raft (outside region 1); on a raft dock
 ; (RaftDockX, RaftDockY) Link rides the raft instead (gameMode $17).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_Overworld:
     lda     #$00                    ; $8558
@@ -882,7 +882,7 @@ Mode_Overworld:
 ; to the next gameMode (Mode_EnterLocation).  Sets ram_07AD on the
 ; special position of regions 1 and 2.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_EnterLocation:
     ldy     currentRegion           ; $85D5
@@ -932,7 +932,7 @@ Mode_OverworldDone:
 ; position to draw (overworldTargetX/Y, Overworld_SetMapPosition), and
 ; continue with Overworld_ContinueMove.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_StartMove:
     lda     joypadHeld              ; $8601
@@ -1043,7 +1043,7 @@ Overworld_MoveDone:
 ;
 ; Set the map position to draw for a move up.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_StartMoveUp:
     lda     overworldX              ; $869F
@@ -1064,7 +1064,7 @@ Overworld_StartMoveUp:
 ; drawing the new column (Overworld_DrawColumnStep) or row
 ; (Overworld_DrawRowStep).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_ContinueMove:
     lda     overworldTerrain        ; $86AF
@@ -1135,7 +1135,7 @@ Overworld_ContinueMove:
 ; which he can cross with the boots.
 ;
 ; Out:     carry clear if he can walk there
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_CanWalk:
     jsr     Overworld_UpdateTerrain ; $870F
@@ -1162,7 +1162,7 @@ Overworld_CanWalk:
 ;
 ; Draw Link on the overworld (sprites 0 and 1), facing overworldDirection.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawLink:
     lda     #$84                    ; $8726
@@ -1380,7 +1380,7 @@ Mode_IndexOverworldMapDone:
 ; shift the decoded rows (Overworld_ScrollRowBuffer), queue the row's
 ; attributes (Overworld_QueueRowAttrs), then idle.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawRowStep:
     lda     a:overworldDrawStep     ; $88B3
@@ -1405,7 +1405,7 @@ Overworld_DrawRowStep:
 ; (Overworld_DecodeNextColumns), queue the attributes in two parts, then
 ; idle.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawColumnStep:
     lda     overworldMoveFrames     ; $88C7
@@ -1434,7 +1434,7 @@ Overworld_DrawColumnStep:
 ; the row index (Overworld_GetRowPtr, Overworld_ReadMapRun); rows outside
 ; the map are ocean ($0B) or $0C.  Advance overworldDrawStep.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeColumn:
     lda     overworldDirection      ; $88E8
@@ -1505,7 +1505,7 @@ Overworld_DecodeColumn:
 ; terrain) as vertical PPU strings at overworldDrawAddrHi/Lo, splitting
 ; the column where it wraps from one nametable to the other.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnTiles:
     lda     overworldDrawAddrHi     ; $8948
@@ -1654,7 +1654,7 @@ OverworldRowSteps:
 ; Move to the next map row in the direction of travel (OverworldRowSteps)
 ; and decode it, or skip to the attribute step on odd rows.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_NextRow:
     lda     overworldDirection      ; $8A1A
@@ -1729,7 +1729,7 @@ Overworld_ScrollRowBuffer:
 ; Queue the eight attribute bytes for the decoded rows, built from the
 ; terrain palettes (OverworldTerrainPalettes).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueRowAttrs:
     lda     ram_0077                ; $8A79
@@ -1808,7 +1808,7 @@ Overworld_QueueRowAttrs:
 ; beside it (or 15 columns away, Overworld_DecodeFarColumn), for the
 ; attribute bytes, which cover two columns.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeNextColumns:
     lda     overworldTargetX        ; $8B02
@@ -1833,7 +1833,7 @@ Overworld_DecodeNextColumns:
 ; Copy the decoded column to overworldBuffer+$E8, decode the column at
 ; overworldTargetX, and restore overworldTargetX from the stack.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeColumnPair:
     ldx     #$17                    ; $8B1A
@@ -1857,7 +1857,7 @@ OverworldFarColumnSteps:
 ; Move overworldTargetX by OverworldFarColumnSteps (+15 or -15) and decode
 ; the column pair there.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeFarColumn:
     dey                             ; $8B2E
@@ -1872,7 +1872,7 @@ Overworld_DecodeFarColumn:
 ;
 ; Queue the attribute bytes for the top part of the column (11 rows).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnAttrsTop:
     lda     #$0B                    ; $8B3A
@@ -1886,7 +1886,7 @@ Overworld_QueueColumnAttrsTop:
 ; Queue attribute bytes for the decoded column pair, one per two rows,
 ; until temp11 rows are done, then advance overworldDrawStep.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnAttrs:
     jsr     Overworld_QueueAttrAddress ; $8B42
@@ -1921,7 +1921,7 @@ Overworld_QueueColumnAttrs:
 ;
 ; Queue the attribute bytes for the rest of the column (to row 24).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnAttrsBottom:
     lda     #$18                    ; $8B6E
@@ -1965,7 +1965,7 @@ Overworld_QueueAttrAddress:
 ; the four terrains it covers, and put it in ppuBuffer0.  Attr_SetBottomRight
 ; .. Attr_SetTopLeft shift a 2-bit palette into place and OR it in.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueAttrByte:
     lda     #$00                    ; $8BA8
@@ -2011,7 +2011,7 @@ Overworld_QueueAttrByte:
 ; 6 (bits 7-6), Attr_SetBottomLeft by 4, Attr_SetTopRight by 2, and
 ; Attr_SetTopLeft not at all (bits 1-0).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Attr_SetBottomRight:
     asl     a                       ; $8BEF
@@ -2038,7 +2038,7 @@ Attr_SetTopLeft:
 ; overworldBuffer+$80, from X = temp0 + $10, after filling the row with
 ; ocean.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeRowAt:
     ldx     #$3E                    ; $8BFE
@@ -2077,7 +2077,7 @@ Overworld_DecodeRowAt:
 ; Decode one row of the compressed overworld map (Overworld_ReadMapRun)
 ; into overworldBuffer.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeRow:
     jsr     Overworld_ReadMapRun    ; $8C30
@@ -2129,7 +2129,7 @@ Overworld_GetRowPtr:
 ; Queue one tile row of the decoded map row (OverworldTileMetatiles) at
 ; overworldDrawAddrHi/Lo, 32 tiles.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueRowTiles:
     lda     overworldDrawAddrHi     ; $8C57
@@ -2223,7 +2223,7 @@ Sprite0Init:
 ; scroll for areaStartPage from the SRAM page tables, reseed rng, start
 ; the area's music and turn rendering on.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SideView_Start:
     ldy     #$03                    ; $8CE1
@@ -2324,7 +2324,7 @@ SpellFlags:
 ; QUIRK: a spell that costs one more than the magic left is still cast, and
 ; leaves the magic at 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Spell_Update:
     lda     dialogType              ; $8DC3
@@ -2614,7 +2614,7 @@ dat_0_8F7F:
 ; from dat_0_8F7A/dat_0_8F7F, down to tile row $B0.  Called by
 ; BigDoor_Update when bigDoorCounter reaches $0F.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BigDoor_DrawOpen:
     lda     #$00                    ; $8F84
@@ -2659,7 +2659,7 @@ dat_0_8FB4:
 ;
 ; gameMode $0F: show Link falling down the blank screen.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FallAnimate:
     inc     objY                    ; $8FB7
@@ -2755,7 +2755,7 @@ dat_0_9045:
 ; him; place the elevator and locked door; start the area's music; go to
 ; LINK_MODE_CONTROL.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_EnterArea:
     lda     #$03                    ; $9047
@@ -2855,7 +2855,7 @@ Link_EnterArea:
 ; Place the area's elevator (elevatorPos) and locked door (lockedDoorPos),
 ; if any, as objects.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_PlaceElevatorAndDoor:
     lda     ram_0759                ; $90ED
@@ -2928,7 +2928,7 @@ dat_0_914E:
 ; Place the area's elevator at column a: it is enemy slot 0, of type $13
 ; (which is never despawned and cannot be hit).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Elevator_Place:
     ldy     #$00                    ; $9150
@@ -3101,7 +3101,7 @@ Spell_ThunderEffect:
 ; ppuBuffer0, flashing through colors from the palette tables in SRAM
 ; (sram_69C8 and following).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdatePalette:
     lda     ram_0751                ; $9235
@@ -3193,7 +3193,7 @@ dat_0_92B4:
 ; a chimney (chimneyTimer), the fairy's flight in eight directions, and
 ; otherwise walking, jumping and attacking.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_Control:
     ldx     #$00                    ; $92BF
@@ -3333,7 +3333,7 @@ Link_Control:
 ; While Link is knocked back: animate his walk unless he is against a wall,
 ; then show the hurt pose (Link_SetHurtPose: objState = $0A).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_ShowHurt:
     lda     objCollision            ; $93A3
@@ -3380,7 +3380,7 @@ LinkWalkFrameTimes:
 ; - otherwise, on the ground, slow down by 1 per frame.
 ; Then animate the walk.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdateXVelocity:
     lda     timerFast+TIMER_LINK_ENTER ; $93BC
@@ -3471,7 +3471,7 @@ Link_AnimateWalkIfFree:
 ; still shows pose 3.
 ; Link_AnimateWalkIfFree first checks for a wall (objCollision bits 1-0).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_AnimateWalk:
     jsr     Link_MoveX              ; $943A
@@ -3482,7 +3482,7 @@ Link_AnimateWalk:
 ;
 ; Link_AnimateWalk with a = Link's X velocity.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_AnimateWalkVelocity:
     ldy     linkJumpState           ; $943F
@@ -3540,7 +3540,7 @@ LinkAttackLastFrames:
 ; Advance Link's sword attack animation (linkAttackFrame), standing or
 ; crouching (linkAttackStanding), and stop him when it ends on the ground.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdateAttack:
     ldy     linkAttackFrame         ; $9483
@@ -3577,7 +3577,7 @@ Link_SetPose:
 ; playing the sword sound on the frame the sword is out, and end it after
 ; LinkAttackLastFrames.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_NextAttackFrame:
     tya                             ; $949E
@@ -3627,7 +3627,7 @@ Link_UpdateAttackDone:
 ; the upward thrust pose (objState 8) and holding Down the downward thrust
 ; (objState 9), once those techniques are learned.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdateJump:
     lda     ram_0754                ; $94C5
@@ -3852,7 +3852,7 @@ Link_PlaySwordSoundDone:
 ; moved in linkDeltaX.  While linkSlowed is set, he moves only on alternate
 ; frames, with a splashing sound.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_MoveX:
     lda     linkSlowed              ; $9610
@@ -3914,7 +3914,7 @@ dat_0_968B:
 ; reaches experienceNext; then, if there is room in ppuBuffer0, redraw the
 ; parts of the status bar flagged in hudRedraw (Hud_Draw).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_Update:
     lda     experience+1            ; $968D
@@ -3945,7 +3945,7 @@ Hud_Draw:
 ; Queue the left half of the status bar (magic and attack levels and the
 ; magic meter) from its template.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_DrawLeftHalf:
     asl     hudRedraw               ; $96B7
@@ -4003,7 +4003,7 @@ Hud_DrawLeftHalf:
 ;
 ; Switch hudHalf to the other half and set the buffer length.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_FinishHalf:
     lda     hudHalf                 ; $970E
@@ -4019,7 +4019,7 @@ Hud_FinishHalf:
 ;
 ; Skip to Hud_DrawMeterSprites.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_SkipToMeterSprites:
     jmp     Hud_DrawMeterSprites    ; $971C
@@ -4029,7 +4029,7 @@ Hud_SkipToMeterSprites:
 ;
 ; Choose which half of the status bar to draw from hudRedraw and hudHalf.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_CheckHalf:
     bmi     Hud_DrawLeftHalf        ; $971F
@@ -4041,7 +4041,7 @@ Hud_CheckHalf:
 ; Queue the right half of the status bar (life level, experience, next
 ; level and the life meter) from its template.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_DrawRightHalf:
     lda     hudRedraw               ; $9723
@@ -4135,7 +4135,7 @@ dat_0_97BA:
 ; Draw the two sprites that show the partly filled last block of the magic
 ; and life meters (statMeterDisplay).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_DrawMeterSprites:
     ldx     #$01                    ; $97BB
@@ -4189,7 +4189,7 @@ LinkProjectile_Spawn:
 ; Spawn a projectile for Link in a free slot among 13..13+x, on the frame
 ; of his attack when the sword is out; carry set if spawned.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_TrySpawn:
     ldy     linkAttackFrame         ; $97FC
@@ -4224,7 +4224,7 @@ dat_0_9818:
 ;
 ; Start Link projectile x beside Link, moving in his direction.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Start:
     inc     objState+13,x           ; $981B
@@ -4258,7 +4258,7 @@ dat_0_9845:
 ; spell is active (which fires its own).  Then update Link's projectiles:
 ; slot 13, and slot 14 too from attack level 4.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Update:
     lda     spellActive             ; $9847
@@ -4363,7 +4363,7 @@ LinkProjectile_Done:
 ;
 ; Draw Link projectile x (the sword beam, or the fire spell's flame).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Draw:
     ldy     objOamOffset+13,x       ; $98C0
@@ -4414,7 +4414,7 @@ LinkProjectile_PlaySound:
 ; Link projectile x hit something: move and draw it as a spark
 ; (Projectile_SetSparkTile) while its state counts up.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Spark:
     jsr     LinkProjectile_Move     ; $9908
@@ -4447,7 +4447,7 @@ Scroll_UpdateDone:
 ; (sramScrollMinPage, sramScrollMaxPage).  Does nothing in single-screen
 ; areas or while scrollFrozen is set.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_Update:
     ldy     areaLastPage            ; $9925
@@ -4584,7 +4584,7 @@ Scroll_SetRightEdgeDone:
 ; columnDrawStep), tracking the left and right edges in columnPage and
 ; columnIndex.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_DrawColumns:
     lda     columnDrawStep          ; $99E6
@@ -4638,7 +4638,7 @@ Scroll_DrawColumnStep:
 ; Advance columnIndex (and columnPage at the end of a page, wrapping after
 ; the area's last page) at the edge being drawn.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_AdvanceColumn:
     lda     ram_0720                ; $9A30
@@ -4689,7 +4689,7 @@ Scroll_AdvanceColumn:
 ;
 ; Copy the 13 area tiles of the column being drawn into columnTiles.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_LoadColumnTiles:
     lda     ram_0720                ; $9A77
@@ -4750,7 +4750,7 @@ NametableHiBytes:
 ; Queue the tiles of one half of the metatile column being drawn as a
 ; vertical PPU string in ppuBuffer2.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_QueueColumnTiles:
     lda     ram_0720                ; $9AB8
@@ -4800,7 +4800,7 @@ Scroll_QueueColumnTiles:
 ;
 ; Ask for the attribute column to be drawn (attrColumnPending).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_RequestAttrColumn:
     lda     #$01                    ; $9B13
@@ -4812,7 +4812,7 @@ Scroll_RequestAttrColumn:
 ;
 ; Draw the items Link owns (itemOwned) in the pause menu.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_DrawItems:
     lda     scrollX                 ; $9B19
@@ -5069,7 +5069,7 @@ Pause_RunState:
 ; Move a menu cursor with Up and Down, repeating while held
 ; (menuRepeatTimer).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_MoveCursor:
     lda     joypadHeldPrev          ; $9DF6
@@ -5528,7 +5528,7 @@ Exp_ComputeNextOfLevelUps:
 ; it.  Exp_UpdateAfterLevelUp then sets experienceNext to the cheapest of
 ; those (Exp_ComputeNextOfLevelUps).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Exp_FindLevelUps:
     ldx     #$02                    ; $A0CE
@@ -5571,7 +5571,7 @@ Exp_FindLevelUpsDone:
 ; (musicPlaying = $10), blink the chosen stat's prompt row.  Then go to
 ; the next step.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_BlinkChoice:
     dec     menuRepeatTimer         ; $A0F1
@@ -5711,7 +5711,7 @@ Pause_OverworldWait:
 ; Go to the continue screen (GAME_STATE_DEATH, gameMode 5) without dying.
 ; Reached when Up+A is held on controller 2.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_ShowContinueScreen:
     jsr     Oam_HideAll             ; $A1A5
@@ -5874,7 +5874,7 @@ Pause_CheckStartDone:
 ; (Menu_AddTileAttr), so the window's rows can be drawn and erased with
 ; the right colors.  Then advance pauseState.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_ComputeAttrs:
     lda     scrollX                 ; $A26B
@@ -5962,7 +5962,7 @@ Menu_ComputeAttrs:
 ; byte menuAttrs,x, in the quadrant given by bit 4 of y (left or right)
 ; and bit 7 of temp1 (top or bottom).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_AddTileAttr:
     tya                             ; $A2D4
@@ -6052,7 +6052,7 @@ Pause_OverworldMute:
 ;
 ; Flute step 1: start the flute's countdown (menuTimer = $88 frames).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flute_Start:
     lda     #$88                    ; $A315
@@ -6064,7 +6064,7 @@ Flute_Start:
 ;
 ; Redraw the status bar, play sound effect 8, and advance pauseState.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_TextReady:
     lda     #$C0                    ; $A31C
@@ -6088,7 +6088,7 @@ Menu_NextState:
 ;
 ; Flute step 2: count down menuTimer, then advance pauseState.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flute_Wait:
     dec     menuTimer               ; $A329
@@ -6159,7 +6159,7 @@ Menu_CopyTextTemplate:
 ; Menu_GetAttrAddress, Menu_QueueAttrHeader, Menu_CheckAttrAlignment and
 ; Menu_NextAttr build the attribute strings.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_DrawRowAttrs:
     jsr     Menu_BeginRow           ; $A35F
@@ -6211,7 +6211,7 @@ Menu_DrawRowAttrs:
 ;
 ; End ppuBuffer1's string at y and send it with the next NMI.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_EndRowString:
     lda     #$FF                    ; $A3A5
@@ -6253,7 +6253,7 @@ Menu_GetAttrAddress:
 ; the area tiles under it (menuUnderRow, through the area's metatiles) and
 ; draw it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_CloseRow:
     dec     menuRow                 ; $A3D7
@@ -6393,7 +6393,7 @@ Menu_CloseRow:
 ; the window crosses from one nametable to the other.  Menu_BeginRow does
 ; this and sets temp0:temp1 to the scroll position for the attribute bytes.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_QueueRowTiles:
     ldy     ppuBuffer1Len           ; $A49F
@@ -6570,7 +6570,7 @@ Menu_NextAttr:
 ; Count the thousands in the 16-bit number temp0:a, as a digit tile
 ; ($D0 = '0'), for showing numbers on the screen.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Math_Digit1000:
     ldy     #$D0                    ; $A5A4
@@ -6750,7 +6750,7 @@ LevelUpStatRows:
 ; Cancel), set the blink time (menuRepeatTimer), redraw the status bar and
 ; advance pauseState.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_ApplyChoice:
     ldy     levelUpCursor           ; $A68B
@@ -6796,7 +6796,7 @@ dat_0_A6BD:
 ; Animate the blocks being broken (up to 5).  When a block's animation
 ; ends, replace it in the area tile map with tile $42.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BreakingBlocks_Update:
     ldx     #$04                    ; $A6D2
@@ -7019,7 +7019,7 @@ Saria_BuildBridge:
 ; fall flag, sramLocDest bit 7).  Clear the screen and set a dark palette
 ; (FallPalette), one step per frame.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FallBlankScreen:
     lda     gameSubStep             ; $A82A
@@ -7041,7 +7041,7 @@ FallPalette:
 ;
 ; Falling into an area, step 1: hide the sprites and queue FallPalette.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fall_LoadPalette:
     jsr     Oam_HideAll             ; $A85A
@@ -7059,7 +7059,7 @@ FallNametableTiles:
 ; Falling into an area, step 2: fill the nametable at $2000 with the fall
 ; background (FallNametableTiles) and advance gameMode.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fall_FillNametable:
     lda     #$02                    ; $A869
@@ -7127,7 +7127,7 @@ dat_0_A97F:
 ; Put Link at the start of the game, in North Castle (world 0, region 0,
 ; area 0), with full meters.  Called when a game begins or continues.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_StartAtNorthCastle:
     sta     gameStep                ; $AA08
