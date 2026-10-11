@@ -5,6 +5,14 @@
 .ifndef GLOBALS_INC
 GLOBALS_INC = 1
 
+.global sub_5_B9CA
+
+.global RomHeaderChecksums
+
+.global Main
+
+.global Nmi
+
 .global sub_0_80E5
 .global loc_0_8CE1
 .global sub_0_8DC3
@@ -32,7 +40,7 @@ GLOBALS_INC = 1
 .global loc_5_8B69
 .global loc_5_8BBF
 .global loc_5_9764
-.global loc_5_A610
+.global Bank5_Nmi
 .global sub_5_A6A0
 .global sub_6_8000
 .global sub_6_9000
@@ -59,7 +67,7 @@ GLOBALS_INC = 1
 .global sub_D281
 .global sub_D29C
 .global sub_D2EC
-.global sub_D346
+.global Joypad_Update
 .global sub_D385
 .global sub_D55E
 .global sub_D6C1

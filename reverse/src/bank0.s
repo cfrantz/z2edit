@@ -82,9 +82,9 @@ loc_0_8140:
 
 loc_0_8149:
     lda     #$0F                    ; $8149
-    jsr     sub_0_BF9D              ; $814B
+    jsr     Mmc1_SetControl_Bank0   ; $814B
     lda     #$10                    ; $814E
-    jsr     sub_0_BFB1              ; $8150
+    jsr     Mmc1_SetChrBank_Bank0   ; $8150
     jsr     sub_E01B                ; $8153
     lda     #$FC                    ; $8156
     sta     ram_0081                ; $8158
@@ -107,13 +107,13 @@ loc_0_8149:
     asl     a                       ; $8179
     asl     a                       ; $817A
     asl     a                       ; $817B
-    sta     ram_00FC                ; $817C
+    sta     ppuScrollY              ; $817C
     lda     ram_0076                ; $817E
     asl     a                       ; $8180
     asl     a                       ; $8181
     asl     a                       ; $8182
     asl     a                       ; $8183
-    sta     ram_00FD                ; $8184
+    sta     ppuScrollX              ; $8184
     tya                             ; $8186
     asl     a                       ; $8187
     and     #$02                    ; $8188
@@ -353,7 +353,7 @@ loc_0_82F7:
     asl     a                       ; $830E
     asl     a                       ; $830F
     clc                             ; $8310
-    adc     ram_00FD                ; $8311
+    adc     ppuScrollX              ; $8311
     sta     ram_004E,x              ; $8313
     ldy     ram_000B                ; $8315
     lda     dat_0_8246,y            ; $8317
@@ -407,7 +407,7 @@ loc_0_8342:
     adc     ram_0575,x              ; $835C
     sta     ram_004E,x              ; $835F
     sec                             ; $8361
-    sbc     ram_00FD                ; $8362
+    sbc     ppuScrollX              ; $8362
     sta     ram_0283,y              ; $8364
     clc                             ; $8367
     adc     #$08                    ; $8368
@@ -549,7 +549,7 @@ loc_0_8435:
     ldy     #$01                    ; $844F
     lda     ram_004E,x              ; $8451
     sec                             ; $8453
-    sbc     ram_00FD                ; $8454
+    sbc     ppuScrollX              ; $8454
     cmp     ram_0203                ; $8456
     bcc     loc_0_845D              ; $8459
     ldy     #$FF                    ; $845B
@@ -564,7 +564,7 @@ loc_0_8464:
     sec                             ; $8467
     sbc     ram_004E,x              ; $8468
     clc                             ; $846A
-    adc     ram_00FD                ; $846B
+    adc     ppuScrollX              ; $846B
     clc                             ; $846D
     adc     #$10                    ; $846E
     cmp     #$20                    ; $8470
@@ -656,7 +656,7 @@ loc_0_84F1:
     rts                             ; $84F1
 
 loc_0_84F2:
-    lda     ram_00F5                ; $84F2
+    lda     joypadPressed           ; $84F2
     and     #$80                    ; $84F4
     beq     loc_0_8512              ; $84F6
     lda     ram_0563                ; $84F8
@@ -674,7 +674,7 @@ loc_0_8503:
     jmp     loc_DFD2                ; $850F
 
 loc_0_8512:
-    lda     ram_00F5                ; $8512
+    lda     joypadPressed           ; $8512
     and     #$40                    ; $8514
     beq     loc_0_8527              ; $8516
     lda     ram_0789                ; $8518
@@ -804,7 +804,7 @@ loc_0_8600:
     rts                             ; $8600
 
 loc_0_8601:
-    lda     ram_00F7                ; $8601
+    lda     joypadHeld              ; $8601
     and     #$0F                    ; $8603
     beq     loc_0_8600              ; $8605
     sta     ram_0070                ; $8607
@@ -924,11 +924,11 @@ loc_0_86BB:
     lda     ram_0562                ; $86BF
     and     #$03                    ; $86C2
     beq     loc_0_86D6              ; $86C4
-    dec     ram_00FD                ; $86C6
+    dec     ppuScrollX              ; $86C6
     lsr     a                       ; $86C8
     bcc     loc_0_86CF              ; $86C9
-    inc     ram_00FD                ; $86CB
-    inc     ram_00FD                ; $86CD
+    inc     ppuScrollX              ; $86CB
+    inc     ppuScrollX              ; $86CD
 
 loc_0_86CF:
     lda     ram_0075                ; $86CF
@@ -941,23 +941,23 @@ loc_0_86D6:
     lsr     a                       ; $86DA
     lsr     a                       ; $86DB
     bcc     loc_0_86EE              ; $86DC
-    inc     ram_00FC                ; $86DE
+    inc     ppuScrollY              ; $86DE
     inc     ram_007F                ; $86E0
-    lda     ram_00FC                ; $86E2
+    lda     ppuScrollY              ; $86E2
     cmp     #$F0                    ; $86E4
     bne     loc_0_8704              ; $86E6
     lda     #$00                    ; $86E8
-    sta     ram_00FC                ; $86EA
+    sta     ppuScrollY              ; $86EA
     beq     loc_0_86FC              ; $86EC
 
 loc_0_86EE:
-    dec     ram_00FC                ; $86EE
+    dec     ppuScrollY              ; $86EE
     dec     ram_007F                ; $86F0
-    lda     ram_00FC                ; $86F2
+    lda     ppuScrollY              ; $86F2
     cmp     #$FF                    ; $86F4
     bne     loc_0_8704              ; $86F6
     lda     #$EF                    ; $86F8
-    sta     ram_00FC                ; $86FA
+    sta     ppuScrollY              ; $86FA
 
 loc_0_86FC:
     lda     ram_0747                ; $86FC
@@ -1904,7 +1904,7 @@ loc_0_8CF7:
     and     #$01                    ; $8D3C
     sta     ram_0746                ; $8D3E
     lda     sram_69B3,y             ; $8D41
-    sta     a:ram_00FD              ; $8D44
+    sta     a:ppuScrollX            ; $8D44
     lda     sram_69AC,y             ; $8D47
     sta     ram_072C                ; $8D4A
     and     #$10                    ; $8D4D
@@ -1952,7 +1952,7 @@ sub_0_8DC3:
     iny                             ; $8DD0
     cpy     ram_074A                ; $8DD1
     beq     loc_0_8E1F              ; $8DD4
-    lda     ram_00F5                ; $8DD6
+    lda     joypadPressed           ; $8DD6
     and     #$20                    ; $8DD8
     beq     loc_0_8E1F              ; $8DDA
     ldy     ram_0749                ; $8DDC
@@ -2738,16 +2738,16 @@ loc_0_92E9:
     sta     ram_0070                ; $92FD
     lda     #$02                    ; $92FF
     sta     ram_00EF                ; $9301
-    lda     ram_00F7                ; $9303
+    lda     joypadHeld              ; $9303
     and     #$0C                    ; $9305
     sta     ram_0743                ; $9307
-    lda     ram_00F7                ; $930A
+    lda     joypadHeld              ; $930A
     and     #$0F                    ; $930C
     beq     loc_0_9340              ; $930E
     tay                             ; $9310
     and     ram_05E7                ; $9311
     bne     loc_0_9340              ; $9314
-    lda     ram_00F7                ; $9316
+    lda     joypadHeld              ; $9316
     and     #$03                    ; $9318
     beq     loc_0_931E              ; $931A
     sta     ram_005F                ; $931C
@@ -2765,7 +2765,7 @@ loc_0_931E:
     ora     #$08                    ; $9334
 
 loc_0_9336:
-    and     ram_00F7                ; $9336
+    and     joypadHeld              ; $9336
     bne     loc_0_9340              ; $9338
     jsr     sub_0_9610              ; $933A
     jmp     sub_D20A                ; $933D
@@ -3100,7 +3100,7 @@ loc_0_951C:
 
 loc_0_952D:
     ldy     #$48                    ; $952D
-    lda     ram_00F7                ; $952F
+    lda     joypadHeld              ; $952F
     and     #$80                    ; $9531
     beq     loc_0_953C              ; $9533
     lda     ram_057D                ; $9535
@@ -3144,7 +3144,7 @@ loc_0_956C:
     lda     ram_0796                ; $9574
     and     #$04                    ; $9577
     beq     loc_0_9582              ; $9579
-    lda     ram_00F7                ; $957B
+    lda     joypadHeld              ; $957B
     and     #$08                    ; $957D
     beq     loc_0_9582              ; $957F
     tay                             ; $9581
@@ -3171,7 +3171,7 @@ loc_0_959B:
     rts                             ; $959B
 
 sub_0_959C:
-    lda     ram_00F7                ; $959C
+    lda     joypadHeld              ; $959C
     and     #$87                    ; $959E
     beq     loc_0_95B5              ; $95A0
     ldy     ram_0400                ; $95A2
@@ -3184,7 +3184,7 @@ sub_0_959C:
     sta     ram_0070                ; $95B3
 
 loc_0_95B5:
-    lda     ram_00F7                ; $95B5
+    lda     joypadHeld              ; $95B5
     and     #$0C                    ; $95B7
     sta     ram_0743                ; $95B9
     ldy     #$00                    ; $95BC
@@ -3194,14 +3194,14 @@ loc_0_95B5:
 
 loc_0_95C3:
     sty     a:ram_0017              ; $95C3
-    lda     ram_00F7                ; $95C6
+    lda     joypadHeld              ; $95C6
     and     #$03                    ; $95C8
     sta     ram_0742                ; $95CA
     beq     loc_0_95D1              ; $95CD
     sta     ram_009F                ; $95CF
 
 loc_0_95D1:
-    lda     ram_00F5                ; $95D1
+    lda     joypadPressed           ; $95D1
     and     #$C0                    ; $95D3
     sta     ram_0741                ; $95D5
     and     #$40                    ; $95D8
@@ -3789,7 +3789,7 @@ loc_0_99BD:
     clc                             ; $99BE
     adc     ram_072C                ; $99BF
     sta     ram_072C                ; $99C2
-    sta     ram_00FD                ; $99C5
+    sta     ppuScrollX              ; $99C5
     lda     ram_072A                ; $99C7
     adc     ram_0000                ; $99CA
     sta     ram_072A                ; $99CC
@@ -4117,10 +4117,10 @@ loc_0_9D56:
 loc_0_9D59:
     bit     PPUSTATUS               ; $9D59
     bvc     loc_0_9D59              ; $9D5C
-    lda     ram_00FF                ; $9D5E
+    lda     ppuCtrlShadow           ; $9D5E
     ora     ram_0746                ; $9D60
-    sta     ram_00FF                ; $9D63
-    ldx     ram_00FD                ; $9D65
+    sta     ppuCtrlShadow           ; $9D63
+    ldx     ppuScrollX              ; $9D65
     ldy     #$10                    ; $9D67
 
 loc_0_9D69:
@@ -4150,7 +4150,7 @@ loc_0_9D91:
     lda     ram_0744                ; $9D96
     and     #$10                    ; $9D99
     sta     ram_0000                ; $9D9B
-    lda     ram_00F7                ; $9D9D
+    lda     joypadHeld              ; $9D9D
     and     #$10                    ; $9D9F
     beq     loc_0_9DCC              ; $9DA1
     cmp     ram_0000                ; $9DA3
@@ -4166,10 +4166,10 @@ loc_0_9DAC:
 sub_0_9DB0:
     bit     PPUSTATUS               ; $9DB0
     bvc     sub_0_9DB0              ; $9DB3
-    lda     ram_00FF                ; $9DB5
+    lda     ppuCtrlShadow           ; $9DB5
     ora     ram_0746                ; $9DB7
-    sta     ram_00FF                ; $9DBA
-    ldx     ram_00FD                ; $9DBC
+    sta     ppuCtrlShadow           ; $9DBA
+    ldx     ppuScrollX              ; $9DBC
     ldy     #$10                    ; $9DBE
 
 loc_0_9DC0:
@@ -4211,7 +4211,7 @@ sub_0_9DF6:
     sta     ram_0001                ; $9DFB
     lda     #$0C                    ; $9DFD
     sta     ram_0000                ; $9DFF
-    lda     ram_00F7                ; $9E01
+    lda     joypadHeld              ; $9E01
     and     #$0C                    ; $9E03
     bit     ram_0000                ; $9E05
     beq     loc_0_9E1D              ; $9E07
@@ -4312,7 +4312,7 @@ loc_0_9E98:
     sbc     dat_0_9670,x            ; $9EAB
     lda     ram_0775                ; $9EAE
     sbc     dat_0_9658,x            ; $9EB1
-    lda     ram_00F7                ; $9EB4
+    lda     joypadHeld              ; $9EB4
     bcc     loc_0_9E82              ; $9EB6
     bcs     loc_0_9ECA              ; $9EB8
 
@@ -4323,7 +4323,7 @@ loc_0_9EBA:
     ora     ram_0004                ; $9EC1
     bne     loc_0_9ECA              ; $9EC3
 ; (code below not executed in the test movies)
-    lda     ram_00F7                ; $9EC5
+    lda     joypadHeld              ; $9EC5
     jmp     loc_0_9E82              ; $9EC7
 ; (end of code not executed in the test movies)
 
@@ -4392,7 +4392,7 @@ loc_0_9F34:
     sta     ram_0305,y              ; $9F3A
 
 loc_0_9F3D:
-    lda     ram_00F7                ; $9F3D
+    lda     joypadHeld              ; $9F3D
     and     #$10                    ; $9F3F
     bit     ram_0744                ; $9F41
     bne     loc_0_9FBC              ; $9F44
@@ -4797,7 +4797,7 @@ loc_0_A1D6:
     rts                             ; $A1DC
 
 loc_0_A1DD:
-    lda     ram_00F8                ; $A1DD
+    lda     joypadHeld+1            ; $A1DD
     cmp     #$88                    ; $A1DF
     beq     loc_0_A1A5              ; $A1E1
     ldy     #$07                    ; $A1E3
@@ -4872,7 +4872,7 @@ loc_0_A256:
     lda     ram_0744                ; $A256
     and     #$10                    ; $A259
     sta     ram_0000                ; $A25B
-    lda     ram_00F7                ; $A25D
+    lda     joypadHeld              ; $A25D
     and     #$10                    ; $A25F
     beq     loc_0_A26A              ; $A261
     cmp     ram_0000                ; $A263
@@ -5760,10 +5760,10 @@ loc_0_A7AD:
 loc_0_A7B1:
     bit     PPUSTATUS               ; $A7B1
     bvc     loc_0_A7B1              ; $A7B4
-    lda     ram_00FF                ; $A7B6
+    lda     ppuCtrlShadow           ; $A7B6
     ora     ram_0746                ; $A7B8
-    sta     ram_00FF                ; $A7BB
-    ldx     ram_00FD                ; $A7BD
+    sta     ppuCtrlShadow           ; $A7BB
+    ldx     ppuScrollX              ; $A7BD
     ldy     #$10                    ; $A7BF
 
 loc_0_A7C1:
@@ -5862,8 +5862,8 @@ dat_0_A866:
 
 loc_0_A869:
     lda     #$02                    ; $A869
-    jsr     sub_0_BFB1              ; $A86B
-    lda     ram_00FF                ; $A86E
+    jsr     Mmc1_SetChrBank_Bank0   ; $A86B
+    lda     ppuCtrlShadow           ; $A86E
     and     #$FB                    ; $A870
     sta     PPUCTRL                 ; $A872
     lda     PPUSTATUS               ; $A875
@@ -6287,35 +6287,5 @@ loc_0_AA36:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF40
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF50
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF60
-    .byte   $78, $D8, $A2, $00, $8E, $00, $20, $E8, $AD, $02, $20, $10, $FB, $CA, $F0, $F8; $BF70
-    .byte   $9A, $8E, $00, $80, $8E, $00, $A0, $8E, $00, $C0, $8E, $00, $E0, $A9, $0F, $20; $BF80
-    .byte   $9D, $BF, $20, $B1, $BF, $A9, $07, $20, $CC, $BF, $4C, $00, $C0 ; $BF90
 
-sub_0_BF9D:
-    sta     MMC1_CONTROL            ; $BF9D
-    lsr     a                       ; $BFA0
-    sta     MMC1_CONTROL            ; $BFA1
-    lsr     a                       ; $BFA4
-    sta     MMC1_CONTROL            ; $BFA5
-    lsr     a                       ; $BFA8
-    sta     MMC1_CONTROL            ; $BFA9
-    lsr     a                       ; $BFAC
-    sta     MMC1_CONTROL            ; $BFAD
-    rts                             ; $BFB0
-
-sub_0_BFB1:
-    sta     MMC1_CHR0               ; $BFB1
-    lsr     a                       ; $BFB4
-    sta     MMC1_CHR0               ; $BFB5
-    lsr     a                       ; $BFB8
-    sta     MMC1_CHR0               ; $BFB9
-    lsr     a                       ; $BFBC
-    sta     MMC1_CHR0               ; $BFBD
-    lsr     a                       ; $BFC0
-    sta     MMC1_CHR0               ; $BFC1
-    rts                             ; $BFC4
-; (unreferenced: $BFC5-$BFFF, 59 bytes)
-    .byte   $A9, $00, $F0, $03, $AD, $69, $07, $8D, $00, $E0, $4A, $8D, $00, $E0, $4A, $8D; $BFC5
-    .byte   $00, $E0, $4A, $8D, $00, $E0, $4A, $8D, $00, $E0, $60, $FF, $FF, $FF, $FF, $FF; $BFD5
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BFE5
-    .byte   $FF, $FF, $FF, $FF, $FF, $7B, $C0, $70, $BF, $F0, $FF           ; $BFF5
+    ResetStub 0

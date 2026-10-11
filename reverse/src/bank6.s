@@ -10,7 +10,7 @@
 
 sub_6_8000:
     lda     #$FF                    ; $8000
-    sta     $4017                   ; $8002
+    sta     APU_FRAME               ; $8002
     lda     #$0F                    ; $8005
     sta     SND_CHN                 ; $8007
     jsr     sub_6_821B              ; $800A
@@ -931,7 +931,7 @@ sub_6_9000:
 
 loc_6_900B:
     lda     #$FF                    ; $900B
-    sta     $4017                   ; $900D
+    sta     APU_FRAME               ; $900D
     jsr     sub_6_920B              ; $9010
     jsr     sub_6_990B              ; $9013
     jsr     sub_6_92F4              ; $9016
@@ -3478,13 +3478,6 @@ dat_6_A93B:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF39
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF49
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF59
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $78, $D8, $A2, $00, $8E, $00, $20, $E8, $AD; $BF69
-    .byte   $02, $20, $10, $FB, $CA, $F0, $F8, $9A, $8E, $00, $80, $8E, $00, $A0, $8E, $00; $BF79
-    .byte   $C0, $8E, $00, $E0, $A9, $0F, $20, $9D, $BF, $20, $B1, $BF, $A9, $07, $20, $CC; $BF89
-    .byte   $BF, $4C, $00, $C0, $8D, $00, $80, $4A, $8D, $00, $80, $4A, $8D, $00, $80, $4A; $BF99
-    .byte   $8D, $00, $80, $4A, $8D, $00, $80, $60, $8D, $00, $A0, $4A, $8D, $00, $A0, $4A; $BFA9
-    .byte   $8D, $00, $A0, $4A, $8D, $00, $A0, $4A, $8D, $00, $A0, $60, $A9, $00, $F0, $03; $BFB9
-    .byte   $AD, $69, $07, $8D, $00, $E0, $4A, $8D, $00, $E0, $4A, $8D, $00, $E0, $4A, $8D; $BFC9
-    .byte   $00, $E0, $4A, $8D, $00, $E0, $60, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BFD9
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BFE9
-    .byte   $FF, $7B, $C0, $70, $BF, $F0, $FF                               ; $BFF9
+    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF                               ; $BF69
+
+    ResetStub 6

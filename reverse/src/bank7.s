@@ -8,35 +8,61 @@
 .segment "BANK7"
 
 
-loc_C000:
+; ---------------------------------------------------------------------------
+; Main
+;
+; Entered from Reset.  Disables rendering and NMI, then runs the bank 5
+; initialization (title screen setup), which sets nmiMode to
+; NMI_MODE_BANK5 and enables NMI.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Main:
     lda     #$00                    ; $C000
     sta     PPUMASK                 ; $C002
     sta     PPUCTRL                 ; $C005
     lda     #$05                    ; $C008
-    jsr     sub_FFCC                ; $C00A
+    jsr     Mmc1_SetPrgBank         ; $C00A
     jsr     sub_5_A6A0              ; $C00D
 
-loc_C010:
+; ---------------------------------------------------------------------------
+; Main_Loop
+;
+; The main thread.  Almost all game logic runs in the NMI handler; the main
+; thread only waits for an area load request and performs it outside of
+; the NMI, because loading takes longer than one frame.
+;
+; A load is requested when the game state (ram_0736) is $08 or $14 and
+; ram_076C is 1.  While loading, nmiMode is NMI_MODE_SOUND_ONLY so the
+; NMI only keeps the music playing (and restores areaPrgBank, the bank
+; the loader is using).
+;
+; While idle, the loop uses only a and the flags; the game NMI saves only
+; those, and leaves bank 0 mapped, which this loop doesn't care about.
+;
+; Status:  confirmed (purpose of ram_0736 / ram_076C values provisional)
+; ---------------------------------------------------------------------------
+Main_Loop:
     lda     ram_0736                ; $C010
     cmp     #$08                    ; $C013
-    beq     loc_C01B                ; $C015
+    beq     @checkLoadRequest       ; $C015
     cmp     #$14                    ; $C017
-    bne     loc_C010                ; $C019
+    bne     Main_Loop               ; $C019
 
-loc_C01B:
+@checkLoadRequest:
     lda     ram_076C                ; $C01B
     cmp     #$01                    ; $C01E
-    bne     loc_C010                ; $C020
-    lda     #$40                    ; $C022
-    sta     ram_0100                ; $C024
+    bne     Main_Loop               ; $C020
+    lda     #NMI_MODE_SOUND_ONLY    ; $C022
+    sta     nmiMode                 ; $C024
     jsr     sub_C4CB                ; $C027
-    lda     #$C0                    ; $C02A
-    sta     ram_0100                ; $C02C
-    jmp     loc_C010                ; $C02F
+    lda     #NMI_MODE_GAME          ; $C02A
+    sta     nmiMode                 ; $C02C
+    jmp     Main_Loop               ; $C02F
 
 sub_C032:
     lda     #$06                    ; $C032
-    jsr     sub_FFCC                ; $C034
+    jsr     Mmc1_SetPrgBank         ; $C034
     jsr     sub_6_8000              ; $C037
     jmp     sub_C388                ; $C03A
 
@@ -53,55 +79,86 @@ dat_C03E:
 dat_C05D:
     .byte   $00, $61, $A2                                                   ; $C05D
 
-loc_C060:
+; ---------------------------------------------------------------------------
+; Nmi_SoundOnly
+;
+; NMI handler used while the main thread is busy (nmiMode bit 7 clear):
+; only updates sound, then restores the bank the main thread was using.
+; Saves all registers, since the main thread is running real code.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Nmi_SoundOnly:
     pha                             ; $C060
     txa                             ; $C061
     pha                             ; $C062
     tya                             ; $C063
     pha                             ; $C064
     lda     #$06                    ; $C065
-    jsr     sub_FFCC                ; $C067
+    jsr     Mmc1_SetPrgBank         ; $C067
     jsr     sub_6_9000              ; $C06A
-    jsr     sub_FFC9                ; $C06D
+    jsr     Mmc1_SetPrgBankArea     ; $C06D
     pla                             ; $C070
     tay                             ; $C071
     pla                             ; $C072
     tax                             ; $C073
     pla                             ; $C074
-    plp                             ; $C075
+    plp                             ; $C075  pushed by Nmi
     rti                             ; $C076
 
-loc_C077:
+; ---------------------------------------------------------------------------
+; Nmi_Bank5
+;
+; NMI handler for the title screen and other bank 5 screens (nmiMode =
+; NMI_MODE_BANK5).  Jumps to the handler at $A610 in whatever bank is
+; mapped, which must be bank 5.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Nmi_Bank5:
     plp                             ; $C077
-    jmp     loc_5_A610              ; $C078
+    jmp     Bank5_Nmi               ; $C078
 
-loc_C07B:
+; ---------------------------------------------------------------------------
+; Nmi
+;
+; NMI entry point.  Dispatches on nmiMode:
+;   bit 7 clear:          Nmi_SoundOnly  (main thread is loading an area)
+;   bit 7 set, bit 6 clear: Nmi_Bank5    (title / bank 5 screens)
+;   bits 7 and 6 set:     the game NMI below, which runs the game.
+;
+; The game NMI saves only a (and the flags); see Main_Loop.  It maps bank 6
+; to update sound and then bank 0, and returns with bank 0 still mapped.
+;
+; Status:  confirmed (dispatch); the game NMI body is not yet analyzed.
+; ---------------------------------------------------------------------------
+Nmi:
     php                             ; $C07B
-    bit     ram_0100                ; $C07C
-    bpl     loc_C060                ; $C07F
-    bvc     loc_C077                ; $C081
+    bit     nmiMode                 ; $C07C
+    bpl     Nmi_SoundOnly           ; $C07F
+    bvc     Nmi_Bank5               ; $C081
     plp                             ; $C083
     pha                             ; $C084
-    lda     ram_00FF                ; $C085
+    lda     ppuCtrlShadow           ; $C085
     and     #$7C                    ; $C087
     ora     ram_0747                ; $C089
-    sta     ram_00FF                ; $C08C
+    sta     ppuCtrlShadow           ; $C08C
     sta     PPUCTRL                 ; $C08E
     lda     ram_0727                ; $C091
     beq     loc_C096                ; $C094
 
 loc_C096:
     ldy     #$00                    ; $C096
-    lda     ram_00FE                ; $C098
+    lda     ppuMaskShadow           ; $C098
     and     #$E0                    ; $C09A
     ldy     ram_0726                ; $C09C
     bne     loc_C0A8                ; $C09F
-    lda     ram_00FE                ; $C0A1
+    lda     ppuMaskShadow           ; $C0A1
     ora     #$18                    ; $C0A3
     ora     ram_0768                ; $C0A5
 
 loc_C0A8:
-    sta     ram_00FE                ; $C0A8
+    sta     ppuMaskShadow           ; $C0A8
     and     #$E1                    ; $C0AA
     sta     PPUMASK                 ; $C0AC
     ldx     PPUSTATUS               ; $C0AF
@@ -132,16 +189,16 @@ loc_C0CA:
     sty     PPUADDR                 ; $C0E9
     lda     ram_0768                ; $C0EC
     bne     loc_C103                ; $C0EF
-    lda     ram_00FF                ; $C0F1
+    lda     ppuCtrlShadow           ; $C0F1
     sta     PPUCTRL                 ; $C0F3
     ldx     PPUSTATUS               ; $C0F6
-    lda     ram_00FD                ; $C0F9
+    lda     ppuScrollX              ; $C0F9
     sta     PPUSCROLL               ; $C0FB
-    lda     ram_00FC                ; $C0FE
+    lda     ppuScrollY              ; $C0FE
     sta     PPUSCROLL               ; $C100
 
 loc_C103:
-    lda     ram_00FE                ; $C103
+    lda     ppuMaskShadow           ; $C103
     sta     PPUMASK                 ; $C105
     ldx     ram_0725                ; $C108
     beq     loc_C11C                ; $C10B
@@ -167,9 +224,9 @@ loc_C11C:
 loc_C12C:
     sta     ram_0725                ; $C12C
     jsr     sub_C1C1                ; $C12F
-    lda     ram_00F7                ; $C132
+    lda     joypadHeld              ; $C132
     sta     ram_0744                ; $C134
-    jsr     sub_D346                ; $C137
+    jsr     Joypad_Update           ; $C137
     lda     ram_00DE                ; $C13A
     beq     loc_C146                ; $C13C
     lda     ram_0763                ; $C13E
@@ -236,9 +293,9 @@ loc_C19B:
 
 loc_C1A8:
     lda     PPUSTATUS               ; $C1A8
-    lda     ram_00FF                ; $C1AB
+    lda     ppuCtrlShadow           ; $C1AB
     ora     #$80                    ; $C1AD
-    sta     ram_00FF                ; $C1AF
+    sta     ppuCtrlShadow           ; $C1AF
     sta     PPUCTRL                 ; $C1B1
     pla                             ; $C1B4
     rti                             ; $C1B5
@@ -252,20 +309,20 @@ sub_C1B6:
 
 sub_C1C1:
     lda     #$06                    ; $C1C1
-    jsr     sub_FFCC                ; $C1C3
+    jsr     Mmc1_SetPrgBank         ; $C1C3
     jsr     sub_6_9000              ; $C1C6
-    jmp     sub_FFC5                ; $C1C9
+    jmp     Mmc1_SetPrgBank0        ; $C1C9
 
 loc_C1CC:
     rts                             ; $C1CC
 
 sub_C1CD:
-    jsr     sub_FFC5                ; $C1CD
+    jsr     Mmc1_SetPrgBank0        ; $C1CD
     lda     ram_0736                ; $C1D0
     cmp     #$0B                    ; $C1D3
     bne     loc_C220                ; $C1D5
     jsr     sub_C1DD                ; $C1D7
-    jmp     sub_FFC9                ; $C1DA
+    jmp     Mmc1_SetPrgBankArea     ; $C1DA
 
 sub_C1DD:
     jsr     sub_CF30                ; $C1DD
@@ -327,13 +384,13 @@ loc_C23A:
 loc_C245:
     cmp     #$05                    ; $C245
     bcs     loc_C220                ; $C247
-    jsr     sub_FFC9                ; $C249
+    jsr     Mmc1_SetPrgBankArea     ; $C249
     jmp     loc_3_B082              ; $C24C
 
 sub_C24F:
-    jsr     sub_FFC9                ; $C24F
+    jsr     Mmc1_SetPrgBankArea     ; $C24F
     jsr     sub_C258                ; $C252
-    jmp     sub_FFC5                ; $C255
+    jmp     Mmc1_SetPrgBank0        ; $C255
 
 sub_C258:
     lda     (ram_000E),y            ; $C258
@@ -472,17 +529,17 @@ loc_C31E:
 
 loc_C33C:
     lda     #$05                    ; $C33C
-    jsr     sub_FFCC                ; $C33E
-    jsr     sub_FFB1                ; $C341
-    lda     #$80                    ; $C344
-    sta     ram_0100                ; $C346
+    jsr     Mmc1_SetPrgBank         ; $C33E
+    jsr     Mmc1_SetChrBank         ; $C341
+    lda     #NMI_MODE_BANK5         ; $C344
+    sta     nmiMode                 ; $C346
     lda     #$00                    ; $C349
     sta     ram_076C                ; $C34B
     rts                             ; $C34E
 ; (end of code not executed in the test movies)
 
 loc_C34F:
-    jsr     sub_FFC5                ; $C34F
+    jsr     Mmc1_SetPrgBank0        ; $C34F
     jsr     sub_D293                ; $C352
     jsr     sub_0_AA08              ; $C355
 
@@ -520,7 +577,7 @@ loc_C382:
 
 sub_C388:
     lda     #$05                    ; $C388
-    jmp     sub_FFCC                ; $C38A
+    jmp     Mmc1_SetPrgBank         ; $C38A
 ; (code below not executed in the test movies)
 
 loc_C38D:
@@ -549,7 +606,7 @@ loc_C3A5:
 
 loc_C3B5:
     lda     ram_076E                ; $C3B5
-    jsr     sub_FFB1                ; $C3B8
+    jsr     Mmc1_SetChrBank         ; $C3B8
     jsr     sub_D266                ; $C3BB
     ldy     #$13                    ; $C3BE
 
@@ -678,13 +735,13 @@ dat_C4C8:
 sub_C4CB:
     lda     #$30                    ; $C4CB
     sta     PPUCTRL                 ; $C4CD
-    lda     #$0E                    ; $C4D0
-    jsr     sub_FF9D                ; $C4D2
-    jsr     sub_FFC9                ; $C4D5
-    lda     ram_00FF                ; $C4D8
+    lda     #MMC1_MIRROR_VERTICAL | MMC1_PRG_FIX_LAST | MMC1_CHR_8K ; $C4D0
+    jsr     Mmc1_SetControl         ; $C4D2
+    jsr     Mmc1_SetPrgBankArea     ; $C4D5
+    lda     ppuCtrlShadow           ; $C4D8
     sta     PPUCTRL                 ; $C4DA
     jsr     sub_D29C                ; $C4DD
-    sta     a:ram_00FD              ; $C4E0
+    sta     a:ppuScrollX            ; $C4E0
     sta     ram_0747                ; $C4E3
     sta     ram_072A                ; $C4E6
     sta     ram_072B                ; $C4E9
@@ -794,9 +851,9 @@ loc_C579:
     pha                             ; $C5A8
     lda     ram_00D5                ; $C5A9
     pha                             ; $C5AB
-    lda     $8000,x                 ; $C5AC
+    lda     AreaBank::dat_8000,x    ; $C5AC
     sta     ram_00D4                ; $C5AF
-    lda     $8001,x                 ; $C5B1
+    lda     AreaBank::dat_8000+1,x  ; $C5B1
     sta     ram_00D5                ; $C5B4
     jsr     sub_C755                ; $C5B6
     jsr     sub_C89D                ; $C5B9
@@ -863,8 +920,8 @@ loc_C5F9:
 
 loc_C62F:
     lda     ram_076E                ; $C62F
-    jsr     sub_FFB1                ; $C632
-    jsr     sub_FFC5                ; $C635
+    jsr     Mmc1_SetChrBank         ; $C632
+    jsr     Mmc1_SetPrgBank0        ; $C635
     jmp     loc_0_8CE1              ; $C638
 ; (unreferenced: $C63B-$C63D, 3 bytes)
     .byte   $4C, $C9, $FF                                                   ; $C63B
@@ -874,7 +931,7 @@ loc_C63E:
     jmp     loc_C68A                ; $C641
 
 loc_C644:
-    jsr     sub_FFC9                ; $C644
+    jsr     Mmc1_SetPrgBankArea     ; $C644
     lda     ram_0561                ; $C647
     asl     a                       ; $C64A
     asl     a                       ; $C64B
@@ -914,11 +971,11 @@ loc_C67C:
     jmp     loc_C722                ; $C687
 
 loc_C68A:
-    jsr     sub_FFC5                ; $C68A
+    jsr     Mmc1_SetPrgBank0        ; $C68A
     jmp     loc_C67C                ; $C68D
 
 sub_C690:
-    lda     ram_00FD                ; $C690
+    lda     ppuScrollX              ; $C690
     and     #$F0                    ; $C692
     sta     sram_69B3,x             ; $C694
     lda     ram_071F                ; $C697
@@ -1421,7 +1478,7 @@ dat_C9EA:
     .byte   $12, $16, $2A, $16                                              ; $C9EA
 
 loc_C9EE:
-    jsr     sub_FFC5                ; $C9EE
+    jsr     Mmc1_SetPrgBank0        ; $C9EE
     lda     #$0A                    ; $C9F1
     sta     ram_0080                ; $C9F3
     jsr     sub_EBF0                ; $C9F5
@@ -1435,7 +1492,7 @@ loc_C9EE:
     lda     #$0F                    ; $CA08
     sta     sram_696F               ; $CA0A
     lda     #$10                    ; $CA0D
-    jsr     sub_FFB1                ; $CA0F
+    jsr     Mmc1_SetChrBank         ; $CA0F
     inc     ram_0736                ; $CA12
 
 loc_CA15:
@@ -1501,7 +1558,7 @@ loc_CA71:
 loc_CA72:
     lda     #$00                    ; $CA72
     sta     ram_0726                ; $CA74
-    lda     ram_00F7                ; $CA77
+    lda     joypadHeld              ; $CA77
     and     #$10                    ; $CA79
     bne     loc_CA82                ; $CA7B
     lda     ram_0501                ; $CA7D
@@ -1512,7 +1569,7 @@ loc_CA82:
 ; (end of code not executed in the test movies)
 
 loc_CA85:
-    lda     ram_00F7                ; $CA85
+    lda     joypadHeld              ; $CA85
     and     #$30                    ; $CA87
     asl     a                       ; $CA89
     asl     a                       ; $CA8A
@@ -1629,7 +1686,7 @@ dat_CB32:
     .byte   $4C                                                             ; $CB34
 
 loc_CB35:
-    jsr     sub_FFC9                ; $CB35
+    jsr     Mmc1_SetPrgBankArea     ; $CB35
     ldy     ram_0748                ; $CB38
     cpy     #$FF                    ; $CB3B
     bne     loc_CB42                ; $CB3D
@@ -1761,7 +1818,7 @@ loc_CC0F:
     asl     a                       ; $CC22
     adc     ram_0000                ; $CC23
     tay                             ; $CC25
-    lda     $8409,y                 ; $CC26
+    lda     OverworldBank::dat_8409,y ; $CC26
     ldy     #$3E                    ; $CC29
     sta     sram_6A7E,y             ; $CC2B
     lda     ram_0073                ; $CC2E
@@ -1791,7 +1848,7 @@ sub_CC50:
     ldx     #$06                    ; $CC5E
     stx     ram_0735                ; $CC60
     ldx     #$00                    ; $CC63
-    stx     ram_00FD                ; $CC65
+    stx     ppuScrollX              ; $CC65
     stx     ram_072C                ; $CC67
     ldx     ram_075C                ; $CC6A
     stx     ram_003B                ; $CC6D
@@ -1878,7 +1935,7 @@ loc_CCF2:
     dec     ram_0074                ; $CCF7
 
 loc_CCF9:
-    jsr     sub_FFC5                ; $CCF9
+    jsr     Mmc1_SetPrgBank0        ; $CCF9
     jmp     loc_CF05                ; $CCFC
 
 loc_CCFF:
@@ -1952,9 +2009,9 @@ loc_CD57:
     lda     #$02                    ; $CD57
 
 loc_CD59:
-    sta     ram_0769                ; $CD59
-    jsr     sub_FFCC                ; $CD5C
-    lda     ram_0769                ; $CD5F
+    sta     areaPrgBank             ; $CD59
+    jsr     Mmc1_SetPrgBank         ; $CD5C
+    lda     areaPrgBank             ; $CD5F
     ldy     ram_0707                ; $CD62
     cpy     #$03                    ; $CD65
     bcc     loc_CD78                ; $CD67
@@ -1986,34 +2043,34 @@ loc_CD8A:
     ldy     #$00                    ; $CD98
 
 loc_CD9A:
-    lda     $88A0,y                 ; $CD9A
+    lda     AreaBank::dat_88A0,y    ; $CD9A
     sta     sram_7000,y             ; $CD9D
     iny                             ; $CDA0
     bne     loc_CD9A                ; $CDA1
 
 loc_CDA3:
-    lda     $89A0,y                 ; $CDA3
+    lda     AreaBank::dat_89A0,y    ; $CDA3
     sta     sram_7100,y             ; $CDA6
     iny                             ; $CDA9
     bne     loc_CDA3                ; $CDAA
 
 loc_CDAC:
-    lda     $8AA0,y                 ; $CDAC
+    lda     AreaBank::dat_8AA0,y    ; $CDAC
     sta     sram_7200,y             ; $CDAF
     iny                             ; $CDB2
     bne     loc_CDAC                ; $CDB3
 
 loc_CDB5:
-    lda     $8BA0,y                 ; $CDB5
+    lda     AreaBank::dat_8BA0,y    ; $CDB5
     sta     sram_7300,y             ; $CDB8
     iny                             ; $CDBB
     bne     loc_CDB5                ; $CDBC
     ldx     ram_0706                ; $CDBE
     lda     dat_CD27,x              ; $CDC1
     tax                             ; $CDC4
-    lda     $8508,x                 ; $CDC5
+    lda     AreaBank::dat_8508,x    ; $CDC5
     sta     ram_0002                ; $CDC8
-    lda     $8509,x                 ; $CDCA
+    lda     AreaBank::dat_8508+1,x  ; $CDCA
     sta     ram_0003                ; $CDCD
 
 loc_CDCF:
@@ -2067,7 +2124,7 @@ loc_CE0B:
     ldy     #$00                    ; $CE15
 
 loc_CE17:
-    lda     $800E,y                 ; $CE17
+    lda     AreaBank::dat_800E,y    ; $CE17
     sta     sram_7919,y             ; $CE1A
     iny                             ; $CE1D
     cpy     #$E0                    ; $CE1E
@@ -2121,7 +2178,7 @@ loc_CE63:
     ldx     #$00                    ; $CE66
 
 loc_CE68:
-    lda     $84D8,y                 ; $CE68
+    lda     PalaceBank::dat_84D8,y  ; $CE68
     sta     sram_79C5,x             ; $CE6B
     sta     sram_79D5,x             ; $CE6E
     iny                             ; $CE71
@@ -2234,9 +2291,9 @@ loc_CF1D:
 
 loc_CF21:
     lda     #$05                    ; $CF21
-    jsr     sub_FFCC                ; $CF23
-    jsr     $B9CA                   ; $CF26
-    jsr     sub_FFC9                ; $CF29
+    jsr     Mmc1_SetPrgBank         ; $CF23
+    jsr     sub_5_B9CA              ; $CF26
+    jsr     Mmc1_SetPrgBankArea     ; $CF29
     inc     ram_0738                ; $CF2C
     rts                             ; $CF2F
 ; (end of code not executed in the test movies)
@@ -2250,7 +2307,7 @@ sub_CF30:
     rts                             ; $CF3B
 
 loc_CF3C:
-    jsr     sub_FFC9                ; $CF3C
+    jsr     Mmc1_SetPrgBankArea     ; $CF3C
     jsr     sub_D382                ; $CF3F
 ; (inline jump table)
     .word   loc_D25E                ; $CF42
@@ -2261,7 +2318,7 @@ loc_CF3C:
 
 loc_CF4C:
     jsr     sub_D24C                ; $CF4C
-    jsr     sub_FFC9                ; $CF4F
+    jsr     Mmc1_SetPrgBankArea     ; $CF4F
     lda     ram_0561                ; $CF52
     ldy     ram_0707                ; $CF55
     bne     loc_CF60                ; $CF58
@@ -2357,7 +2414,7 @@ loc_CFF8:
     rts                             ; $CFFB
 
 loc_CFFC:
-    jsr     sub_FFC9                ; $CFFC
+    jsr     Mmc1_SetPrgBankArea     ; $CFFC
     lda     ram_0561                ; $CFFF
     asl     a                       ; $D002
     asl     a                       ; $D003
@@ -2397,13 +2454,13 @@ loc_D041:
 
 loc_D042:
     lda     #$02                    ; $D042
-    jsr     sub_FFB1                ; $D044
+    jsr     Mmc1_SetChrBank         ; $D044
     jsr     sub_D266                ; $D047
     jmp     loc_CF05                ; $D04A
 
 loc_D04D:
     lda     #$06                    ; $D04D
-    jsr     sub_FFB1                ; $D04F
+    jsr     Mmc1_SetChrBank         ; $D04F
     jsr     sub_D382                ; $D052
 ; (inline jump table)
     .word   sub_D266                ; $D055
@@ -2474,7 +2531,7 @@ loc_D0B8:
     .byte   $20, $6D, $01, $F7, $20, $7A, $05, $CE, $D0, $D0, $D0, $D0, $4C, $02, $03; $D0ED
 
 loc_D0FC:
-    jsr     sub_FFC5                ; $D0FC
+    jsr     Mmc1_SetPrgBank0        ; $D0FC
     lda     #$80                    ; $D0FF
     sta     ram_074F                ; $D101
     sta     ram_0750                ; $D104
@@ -2491,9 +2548,9 @@ loc_D11A:
     jmp     loc_D158                ; $D11D
 
 loc_D120:
-    jsr     sub_FFC5                ; $D120
+    jsr     Mmc1_SetPrgBank0        ; $D120
     jsr     sub_0_9A04              ; $D123
-    jsr     sub_FFC9                ; $D126
+    jsr     Mmc1_SetPrgBankArea     ; $D126
     ldx     #$05                    ; $D129
 
 loc_D12B:
@@ -2719,8 +2776,8 @@ loc_D269:
     lda     #$20                    ; $D269
     jsr     sub_D263                ; $D26B
     lda     #$00                    ; $D26E
-    sta     ram_00FC                ; $D270
-    sta     ram_00FD                ; $D272
+    sta     ppuScrollY              ; $D270
+    sta     ppuScrollX              ; $D272
     sta     ram_0746                ; $D274
     sta     PPUSCROLL               ; $D277
     sta     PPUSCROLL               ; $D27A
@@ -2839,7 +2896,7 @@ loc_D307:
     lda     (ram_0000),y            ; $D314
     asl     a                       ; $D316
     pha                             ; $D317
-    lda     ram_00FF                ; $D318
+    lda     ppuCtrlShadow           ; $D318
     ora     #$04                    ; $D31A
     bcs     loc_D320                ; $D31C
     and     #$FB                    ; $D31E
@@ -2877,43 +2934,67 @@ loc_D330:
     inc     ram_0001                ; $D341
     jmp     sub_D2EC                ; $D343
 
-sub_D346:
-    jsr     sub_D367                ; $D346
-    lda     ram_00F5                ; $D349
+; ---------------------------------------------------------------------------
+; Joypad_Update
+;
+; Read both controllers and compute newly pressed and held buttons.
+; Joypad 1 is read repeatedly until two consecutive reads agree, to guard
+; against corrupted reads (e.g. from the DPCM/controller read conflict).
+; Joypad 2 is not re-checked.
+;
+; Out:      joypadPressed,x = buttons pressed this frame but not last frame
+;           joypadHeld,x    = buttons currently held
+;           (x = 0 for joypad 1, 1 for joypad 2)
+; Clobbers: a, x, y, ram_0000
+; Status:   confirmed
+; ---------------------------------------------------------------------------
+Joypad_Update:
+    jsr     Joypad_Read             ; $D346
+    lda     joypadPressed           ; $D349
     sta     ram_0000                ; $D34B
-    jsr     sub_D367                ; $D34D
-    lda     ram_00F5                ; $D350
+    jsr     Joypad_Read             ; $D34D
+    lda     joypadPressed           ; $D350
     cmp     ram_0000                ; $D352
-    bne     sub_D346                ; $D354
+    bne     Joypad_Update           ; $D354
     ldx     #$01                    ; $D356
 
-loc_D358:
-    lda     ram_00F5,x              ; $D358
+@computePressed:
+    lda     joypadPressed,x         ; $D358
     tay                             ; $D35A
-    eor     ram_00F7,x              ; $D35B
-    and     ram_00F5,x              ; $D35D
-    sta     ram_00F5,x              ; $D35F
-    sty     ram_00F7,x              ; $D361
+    eor     joypadHeld,x            ; $D35B
+    and     joypadPressed,x         ; $D35D
+    sta     joypadPressed,x         ; $D35F
+    sty     joypadHeld,x            ; $D361
     dex                             ; $D363
-    bpl     loc_D358                ; $D364
+    bpl     @computePressed         ; $D364
     rts                             ; $D366
 
-sub_D367:
+; ---------------------------------------------------------------------------
+; Joypad_Read
+;
+; Strobe the controllers and read 8 buttons from each, leaving the raw
+; button state in joypadPressed (joypad 1) and joypadPressed+1 (joypad 2).
+; See the JOY_* constants for the bit layout.
+;
+; Clobbers: a, x
+; Status:   confirmed
+; ---------------------------------------------------------------------------
+Joypad_Read:
     ldx     #$01                    ; $D367
     stx     JOY1                    ; $D369
     dex                             ; $D36C
     stx     JOY1                    ; $D36D
     ldx     #$08                    ; $D370
 
-loc_D372:
+@readBit:
     lda     JOY1                    ; $D372
     lsr     a                       ; $D375
-    rol     ram_00F5                ; $D376
-    lda     $4017                   ; $D378
+    rol     joypadPressed           ; $D376
+    lda     JOY2                    ; $D378
     lsr     a                       ; $D37B
-    rol     ram_00F6                ; $D37C
+    rol     joypadPressed+1         ; $D37C
     dex                             ; $D37E
-    bne     loc_D372                ; $D37F
+    bne     @readBit                ; $D37F
     rts                             ; $D381
 
 sub_D382:
@@ -2956,7 +3037,7 @@ loc_D3CC:
     jmp     loc_E18A                ; $D3E6
 
 loc_D3E9:
-    jsr     sub_FFC5                ; $D3E9
+    jsr     Mmc1_SetPrgBank0        ; $D3E9
     jsr     sub_0_8DC3              ; $D3EC
     lda     ram_0012                ; $D3EF
     and     #$01                    ; $D3F1
@@ -3068,10 +3149,10 @@ loc_D4AB:
 loc_D4B2:
     bit     PPUSTATUS               ; $D4B2
     bvc     loc_D4B2                ; $D4B5
-    lda     ram_00FF                ; $D4B7
+    lda     ppuCtrlShadow           ; $D4B7
     ora     ram_0746                ; $D4B9
-    sta     ram_00FF                ; $D4BC
-    ldx     ram_00FD                ; $D4BE
+    sta     ppuCtrlShadow           ; $D4BC
+    ldx     ppuScrollX              ; $D4BE
     ldy     #$10                    ; $D4C0
 
 loc_D4C2:
@@ -3105,9 +3186,9 @@ loc_D4F3:
     sta     ram_0754                ; $D4F8
     sta     ram_05E7                ; $D4FB
     jsr     sub_0_9925              ; $D4FE
-    jsr     sub_FFC9                ; $D501
+    jsr     Mmc1_SetPrgBankArea     ; $D501
     jsr     sub_D5A7                ; $D504
-    jsr     sub_FFC5                ; $D507
+    jsr     Mmc1_SetPrgBank0        ; $D507
     jsr     sub_0_80E5              ; $D50A
     jsr     sub_0_9847              ; $D50D
     jsr     sub_0_A6D2              ; $D510
@@ -3640,7 +3721,7 @@ loc_D8FB:
     lda     #$0B                    ; $D90A
     sta     ram_0734                ; $D90C
     lda     #$00                    ; $D90F
-    sta     ram_00FD                ; $D911
+    sta     ppuScrollX              ; $D911
     sta     ram_072C                ; $D913
     lda     #$13                    ; $D916
     jmp     loc_E187                ; $D918
@@ -4581,7 +4662,7 @@ dat_DF68:
     .byte   $FF                                                             ; $DF78
 
 sub_DF79:
-    jsr     $83CF                   ; $DF79
+    jsr     OverworldBank::sub_83CF ; $DF79
 
 loc_DF7C:
     lda     (ram_000E),y            ; $DF7C
@@ -4635,34 +4716,34 @@ loc_DFD1:
     rts                             ; $DFD1
 
 loc_DFD2:
-    jsr     sub_FFC9                ; $DFD2
+    jsr     Mmc1_SetPrgBankArea     ; $DFD2
     jsr     sub_DF79                ; $DFD5
-    jmp     sub_FFC5                ; $DFD8
+    jmp     Mmc1_SetPrgBank0        ; $DFD8
 
 sub_DFDB:
-    jsr     sub_FFC9                ; $DFDB
+    jsr     Mmc1_SetPrgBankArea     ; $DFDB
     jsr     sub_DFE4                ; $DFDE
-    jmp     sub_FFC5                ; $DFE1
+    jmp     Mmc1_SetPrgBank0        ; $DFE1
 
 sub_DFE4:
-    lda     $8500,y                 ; $DFE4
+    lda     AreaBank::dat_8500,y    ; $DFE4
     sta     ram_000E                ; $DFE7
-    lda     $8501,y                 ; $DFE9
+    lda     AreaBank::dat_8500+1,y  ; $DFE9
     sta     ram_000F                ; $DFEC
     rts                             ; $DFEE
 
 sub_DFEF:
-    jsr     sub_FFC9                ; $DFEF
-    jsr     $83CF                   ; $DFF2
-    jmp     sub_FFC5                ; $DFF5
+    jsr     Mmc1_SetPrgBankArea     ; $DFEF
+    jsr     OverworldBank::sub_83CF ; $DFF2
+    jmp     Mmc1_SetPrgBank0        ; $DFF5
 
 sub_DFF8:
-    jsr     sub_FFC9                ; $DFF8
+    jsr     Mmc1_SetPrgBankArea     ; $DFF8
     jsr     sub_2_8368              ; $DFFB
-    jmp     sub_FFC5                ; $DFFE
+    jmp     Mmc1_SetPrgBank0        ; $DFFE
 
 sub_E001:
-    jsr     sub_FFC9                ; $E001
+    jsr     Mmc1_SetPrgBankArea     ; $E001
     lda     (ram_000E),y            ; $E004
     and     #$0F                    ; $E006
     sta     ram_0002                ; $E008
@@ -4675,19 +4756,19 @@ sub_E001:
     adc     ram_0003                ; $E011
     sta     ram_0003                ; $E013
     pha                             ; $E015
-    jsr     sub_FFC5                ; $E016
+    jsr     Mmc1_SetPrgBank0        ; $E016
     pla                             ; $E019
     rts                             ; $E01A
 
 sub_E01B:
-    jsr     sub_FFC9                ; $E01B
-    jsr     $879B                   ; $E01E
-    jmp     sub_FFC5                ; $E021
+    jsr     Mmc1_SetPrgBankArea     ; $E01B
+    jsr     OverworldBank::sub_879B ; $E01E
+    jmp     Mmc1_SetPrgBank0        ; $E021
 
 sub_E024:
-    jsr     sub_FFC9                ; $E024
-    jsr     $83A1                   ; $E027
-    jmp     sub_FFC5                ; $E02A
+    jsr     Mmc1_SetPrgBankArea     ; $E024
+    jsr     OverworldBank::sub_83A1 ; $E027
+    jmp     Mmc1_SetPrgBank0        ; $E02A
 ; (unreferenced: $E02D-$E02F, 3 bytes)
     .byte   $FF, $FF, $FF                                                   ; $E02D
 
@@ -4721,9 +4802,9 @@ dat_E04E:
     .byte   $01, $02, $01, $02, $04, $08                                    ; $E06A
 
 sub_E070:
-    jsr     sub_FFC9                ; $E070
+    jsr     Mmc1_SetPrgBankArea     ; $E070
     jsr     sub_E079                ; $E073
-    jmp     sub_FFC5                ; $E076
+    jmp     Mmc1_SetPrgBank0        ; $E076
 
 sub_E079:
     ldx     #$00                    ; $E079
@@ -4745,7 +4826,7 @@ sub_E079:
     lda     #$00                    ; $E098
     sta     ram_0752                ; $E09A
     lda     ram_0003                ; $E09D
-    cmp     $8520                   ; $E09F
+    cmp     AreaBank::dat_851A+6    ; $E09F
     bne     loc_E0B0                ; $E0A2
     lda     #$01                    ; $E0A4
     sta     ram_00E9                ; $E0A6
@@ -4755,9 +4836,9 @@ sub_E079:
     rts                             ; $E0AF
 
 loc_E0B0:
-    cmp     $8521                   ; $E0B0
+    cmp     AreaBank::dat_851A+7    ; $E0B0
     beq     loc_E0BA                ; $E0B3
-    cmp     $8522                   ; $E0B5
+    cmp     AreaBank::dat_851A+8    ; $E0B5
     bne     loc_E0C5                ; $E0B8
 
 loc_E0BA:
@@ -4768,15 +4849,15 @@ loc_E0BA:
     sty     ram_0752                ; $E0C2
 
 loc_E0C5:
-    cmp     $851F                   ; $E0C5
+    cmp     AreaBank::dat_851A+5    ; $E0C5
     beq     loc_E0FC                ; $E0C8
-    cmp     $851A                   ; $E0CA
+    cmp     AreaBank::dat_851A      ; $E0CA
     beq     loc_E0E6                ; $E0CD
-    cmp     $851C                   ; $E0CF
+    cmp     AreaBank::dat_851A+2    ; $E0CF
     beq     loc_E0E6                ; $E0D2
-    cmp     $851B                   ; $E0D4
+    cmp     AreaBank::dat_851A+1    ; $E0D4
     beq     loc_E0E6                ; $E0D7
-    cmp     $851D                   ; $E0D9
+    cmp     AreaBank::dat_851A+3    ; $E0D9
     bne     loc_E0F9                ; $E0DC
     lda     ram_0017                ; $E0DE
     bne     loc_E0F9                ; $E0E0
@@ -4786,7 +4867,7 @@ loc_E0E5:
     rts                             ; $E0E5
 
 loc_E0E6:
-    lda     ram_00F7                ; $E0E6
+    lda     joypadHeld              ; $E0E6
     and     #$08                    ; $E0E8
     beq     loc_E0F9                ; $E0EA
     lda     ram_0479                ; $E0EC
@@ -4926,7 +5007,7 @@ sub_E1B8:
 sub_E1BE:
     ldy     ram_0000                ; $E1BE
     jsr     sub_EAE8                ; $E1C0
-    jsr     $850C                   ; $E1C3
+    jsr     AreaBank::sub_850C      ; $E1C3
     bcc     loc_E1D2                ; $E1C6
     ldy     ram_0000                ; $E1C8
     lda     ram_00A7,x              ; $E1CA
@@ -4947,9 +5028,9 @@ dat_E1DB:
     .byte   $04, $FC                                                        ; $E1DB
 
 sub_E1DD:
-    jsr     sub_FFC9                ; $E1DD
+    jsr     Mmc1_SetPrgBankArea     ; $E1DD
     jsr     sub_E1E6                ; $E1E0
-    jmp     sub_FFC5                ; $E1E3
+    jmp     Mmc1_SetPrgBank0        ; $E1E3
 
 sub_E1E6:
     lda     ram_0480                ; $E1E6
@@ -4989,9 +5070,9 @@ loc_E214:
     ldx     #$10                    ; $E223
     ldy     #$1C                    ; $E225
     jsr     sub_EAE8                ; $E227
-    cmp     $851E                   ; $E22A
+    cmp     AreaBank::dat_851A+4    ; $E22A
     beq     loc_E235                ; $E22D
-    jsr     $850C                   ; $E22F
+    jsr     AreaBank::sub_850C      ; $E22F
     bcs     loc_E26A                ; $E232
 
 loc_E234:
@@ -6231,7 +6312,7 @@ loc_EA24:
     adc     #$07                    ; $EA26
     tax                             ; $EA28
     jsr     sub_EAE8                ; $EA29
-    jsr     $850C                   ; $EA2C
+    jsr     AreaBank::sub_850C      ; $EA2C
     ldx     ram_0010                ; $EA2F
 
 loc_EA31:
@@ -7705,7 +7786,7 @@ loc_FEA6:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF                                    ; $FECA
 
 sub_FED0:
-    jsr     sub_FFC9                ; $FED0
+    jsr     Mmc1_SetPrgBankArea     ; $FED0
 
 loc_FED3:
     stx     ram_0001                ; $FED3
@@ -7717,9 +7798,9 @@ loc_FED3:
     rol     a                       ; $FEDE
     asl     a                       ; $FEDF
     tay                             ; $FEE0
-    lda     $8500,y                 ; $FEE1
+    lda     AreaBank::dat_8500,y    ; $FEE1
     sta     ram_000E                ; $FEE4
-    lda     $8501,y                 ; $FEE6
+    lda     AreaBank::dat_8500+1,y  ; $FEE6
     sta     ram_000F                ; $FEE9
     lda     ram_0464,x              ; $FEEB
     and     #$3F                    ; $FEEE
@@ -7777,37 +7858,65 @@ loc_FF36:
     inx                             ; $FF44
     cpx     #$0D                    ; $FF45
     bcc     loc_FED3                ; $FF47
-    jmp     sub_FFC5                ; $FF49
+    jmp     Mmc1_SetPrgBank0        ; $FF49
 ; (unreferenced: $FF4C-$FF6F, 36 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $FF4C
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $FF5C
     .byte   $FF, $FF, $FF, $FF                                              ; $FF6C
 
-loc_FF70:
+; ---------------------------------------------------------------------------
+; Reset
+;
+; Power-on / reset entry point.  Waits for the PPU to warm up, resets the
+; MMC1 and configures it, then starts the game at Main.
+;
+; Every switchable bank has a copy of this code at $BF70 (Reset_BankN),
+; because the bank mapped at $8000 is unknown at power-on.
+;
+; MMC1 configuration:
+;   control = $0F: horizontal mirroring, PRG mode 3 (switchable 16K bank at
+;                  $8000, last bank fixed at $C000), 8K CHR mode.
+;   CHR     = 0
+;   PRG     = 7
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Reset:
     sei                             ; $FF70
     cld                             ; $FF71
     ldx     #$00                    ; $FF72
-    stx     PPUCTRL                 ; $FF74
-    inx                             ; $FF77
+    stx     PPUCTRL                 ; $FF74  disable NMI
+    inx                             ; $FF77  x = 1: wait for two vblanks
 
-loc_FF78:
+@waitVblank:
     lda     PPUSTATUS               ; $FF78
-    bpl     loc_FF78                ; $FF7B
+    bpl     @waitVblank             ; $FF7B
     dex                             ; $FF7D
-    beq     loc_FF78                ; $FF7E
-    txs                             ; $FF80
+    beq     @waitVblank             ; $FF7E
+    txs                             ; $FF80  x = $FF: empty stack
+    ; Writing a value with bit 7 set resets the MMC1 shift register.
     stx     MMC1_CONTROL            ; $FF81
     stx     MMC1_CHR0               ; $FF84
     stx     MMC1_CHR1               ; $FF87
     stx     MMC1_PRG                ; $FF8A
-    lda     #$0F                    ; $FF8D
-    jsr     sub_FF9D                ; $FF8F
-    jsr     sub_FFB1                ; $FF92
+    lda     #MMC1_MIRROR_HORIZONTAL | MMC1_PRG_FIX_LAST | MMC1_CHR_8K ; $FF8D
+    jsr     Mmc1_SetControl         ; $FF8F
+    jsr     Mmc1_SetChrBank         ; $FF92  a = 0 after Mmc1_SetControl
     lda     #$07                    ; $FF95
-    jsr     sub_FFCC                ; $FF97
-    jmp     loc_C000                ; $FF9A
+    jsr     Mmc1_SetPrgBank         ; $FF97
+    jmp     Main                    ; $FF9A
 
-sub_FF9D:
+; ---------------------------------------------------------------------------
+; Mmc1_SetControl
+;
+; Write the MMC1 control register (mirroring, PRG and CHR bank modes).
+; MMC1 registers are loaded serially: five writes of bit 0, LSB first.
+;
+; In:       a = value (5 bits)
+; Out:      a = value >> 4
+; Status:   confirmed
+; ---------------------------------------------------------------------------
+Mmc1_SetControl:
     sta     MMC1_CONTROL            ; $FF9D
     lsr     a                       ; $FFA0
     sta     MMC1_CONTROL            ; $FFA1
@@ -7819,7 +7928,17 @@ sub_FF9D:
     sta     MMC1_CONTROL            ; $FFAD
     rts                             ; $FFB0
 
-sub_FFB1:
+; ---------------------------------------------------------------------------
+; Mmc1_SetChrBank
+;
+; Select the CHR ROM bank.  The game uses 8K CHR mode, so this selects an
+; 8K bank (the low bit of the value is ignored).
+;
+; In:       a = 4K bank number
+; Out:      a = value >> 4
+; Status:   confirmed
+; ---------------------------------------------------------------------------
+Mmc1_SetChrBank:
     sta     MMC1_CHR0               ; $FFB1
     lsr     a                       ; $FFB4
     sta     MMC1_CHR0               ; $FFB5
@@ -7831,14 +7950,35 @@ sub_FFB1:
     sta     MMC1_CHR0               ; $FFC1
     rts                             ; $FFC4
 
-sub_FFC5:
+; ---------------------------------------------------------------------------
+; Mmc1_SetPrgBank0
+; Mmc1_SetPrgBankArea
+; Mmc1_SetPrgBank
+;
+; Select the 16K PRG bank mapped at $8000-$BFFF.
+;   Mmc1_SetPrgBank0:    select bank 0.
+;   Mmc1_SetPrgBankArea: select areaPrgBank (the bank the main thread
+;                        expects; used after temporarily mapping another).
+;   Mmc1_SetPrgBank:     select bank a.
+;
+; Bit 4 of the PRG register enables PRG RAM when clear; bank numbers 0-7
+; leave it clear, so SRAM stays enabled.
+;
+; The serial write is not atomic.  An NMI that switches banks in the middle
+; of it would corrupt the result; see nmiMode.
+;
+; In:       a = bank (Mmc1_SetPrgBank only)
+; Out:      a = bank >> 4
+; Status:   confirmed
+; ---------------------------------------------------------------------------
+Mmc1_SetPrgBank0:
     lda     #$00                    ; $FFC5
-    beq     sub_FFCC                ; $FFC7
+    beq     Mmc1_SetPrgBank         ; $FFC7  always taken
 
-sub_FFC9:
-    lda     ram_0769                ; $FFC9
+Mmc1_SetPrgBankArea:
+    lda     areaPrgBank             ; $FFC9
 
-sub_FFCC:
+Mmc1_SetPrgBank:
     sta     MMC1_PRG                ; $FFCC
     lsr     a                       ; $FFCF
     sta     MMC1_PRG                ; $FFD0
@@ -7849,13 +7989,35 @@ sub_FFCC:
     lsr     a                       ; $FFDB
     sta     MMC1_PRG                ; $FFDC
     rts                             ; $FFDF
-; (unreferenced: $FFE0-$FFF9, 26 bytes)
-    .byte   $4C, $45, $47, $45, $4E, $44, $20, $4F, $46, $20, $5A, $45, $4C, $44, $41, $32; $FFE0
 
-loc_FFF0:
-    .byte   $98, $F2, $DD, $DB, $33, $04, $01, $0F, $01, $00                ; $FFF0
+; ---------------------------------------------------------------------------
+; RomHeader
+;
+; Nintendo's internal ROM header.  Not used by the game.
+;   $FFE0  title, ASCII, 16 bytes
+;   $FFF0  PRG ROM checksum (big-endian).  QUIRK: does not match the PRG
+;          ROM (a 16-bit byte sum excluding these two bytes is $E3EF); it
+;          is presumably stale.
+;   $FFF2  CHR ROM checksum (big-endian; matches: 16-bit sum of CHR ROM)
+;   $FFF4  PRG/CHR ROM sizes
+;   $FFF5  board type
+;   $FFF6  title encoding (1 = ASCII)
+;   $FFF7  title length - 1
+;   $FFF8  licensee (1 = Nintendo)
+;   $FFF9  header checksum ($FFF2-$FFF9 sum to zero)
+;
+; Status:  provisional (field meanings from NESdev; the checksums verified)
+; ---------------------------------------------------------------------------
+RomHeader:
+    .byte   "LEGEND OF ZELDA2"      ; $FFE0
+
+RomHeaderChecksums:
+    .dbyt   $98F2                   ; $FFF0  PRG checksum (stale)
+    .dbyt   $DDDB                   ; $FFF2  CHR checksum
+    .byte   $33, $04, $01, $0F, $01, $00 ; $FFF4
 
 ; Interrupt vectors.
-    .word   loc_C07B                ; $FFFA  NMI
-    .word   loc_FF70                ; $FFFC  RESET
-    .word   loc_FFF0                ; $FFFE  IRQ
+    .word   Nmi                     ; $FFFA  NMI
+    .word   Reset                   ; $FFFC  RESET
+    ; IRQs are never enabled; the vector points into the ROM header.
+    .word   RomHeaderChecksums      ; $FFFE  IRQ

@@ -7,12 +7,18 @@
 
 .segment "BANK1"
 
+
+dat_1_8000:
+    .assert dat_1_8000 = AreaBank::dat_8000, error, "interface address moved"
     .byte   $3C, $8C                                                        ; $8000
 ; (unreferenced: $8002-$8007, 6 bytes)
     .byte   $54, $8C, $68, $8C, $7C, $8C                                    ; $8002
     .byte   $96, $8C                                                        ; $8008
 ; (unreferenced: $800A-$800D, 4 bytes)
     .byte   $A8, $8C, $00, $00                                              ; $800A
+
+dat_1_800E:
+    .assert dat_1_800E = AreaBank::dat_800E, error, "interface address moved"
     .byte   $0F, $30, $12, $16, $0F, $36, $16, $07, $0F, $00, $10, $30, $0F, $23, $03, $0F; $800E
     .byte   $0F, $30, $12, $16, $0F, $37, $27, $06, $0F, $27, $16, $0F, $0F, $30, $10, $00; $801E
     .byte   $22, $30, $12, $16, $22, $29, $17, $09, $22, $30, $36, $27, $22, $30, $10, $00; $802E
@@ -440,6 +446,7 @@ dat_1_8395:
     .byte   $0A, $00, $00, $82, $6C, $6C, $00, $00, $82, $6C, $6C, $FF      ; $8395
 
 sub_1_83A1:
+    .assert sub_1_83A1 = OverworldBank::sub_83A1, error, "interface address moved"
     jsr     sub_DF01                ; $83A1
     lda     #$00                    ; $83A4
     sta     ram_007D                ; $83A6
@@ -465,6 +472,7 @@ loc_1_83AA:
     rts                             ; $83CE
 
 sub_1_83CF:
+    .assert sub_1_83CF = OverworldBank::sub_83CF, error, "interface address moved"
     lda     ram_0000                ; $83CF
     cmp     #$40                    ; $83D1
     bcs     loc_1_8404              ; $83D3
@@ -504,6 +512,9 @@ loc_1_8404:
 loc_1_8408:
     rts                             ; $8408
 ; (unreferenced: $8409-$8412, 10 bytes)
+
+dat_1_8409:
+    .assert dat_1_8409 = OverworldBank::dat_8409, error, "interface address moved"
     .byte   $5D, $5E, $62, $63, $67, $68, $6F, $70, $74, $75                ; $8409
     .byte   $79, $7A                                                        ; $8413
 ; (unreferenced: $8415-$8416, 2 bytes)
@@ -539,10 +550,19 @@ loc_1_8408:
     .byte   $36, $36, $37, $37, $48, $49, $4A, $4B                          ; $84DB
 ; (unreferenced: $84E3-$8501, 31 bytes)
     .byte   $99, $99, $99, $99, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $84E3
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $17, $84; $84F3
-    .byte   $17, $84, $9F, $84, $7D, $93, $5C, $90, $4C, $A6                ; $8502
+    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $84F3
+
+dat_1_8500:
+    .assert dat_1_8500 = AreaBank::dat_8500, error, "interface address moved"
+    .byte   $17, $84                ; $8500
+    .byte   $17, $84, $9F, $84, $7D, $93 ; $8502
+
+dat_1_8508:
+    .assert dat_1_8508 = AreaBank::dat_8508, error, "interface address moved"
+    .byte   $5C, $90, $4C, $A6      ; $8508
 
 sub_1_850C:
+    .assert sub_1_850C = AreaBank::sub_850C, error, "interface address moved"
     pha                             ; $850C
     and     #$C0                    ; $850D
     clc                             ; $850F
@@ -554,6 +574,9 @@ sub_1_850C:
     pla                             ; $8515
     cmp     dat_1_93A9,y            ; $8516
     rts                             ; $8519
+
+dat_1_851A:
+    .assert dat_1_851A = AreaBank::dat_851A, error, "interface address moved"
     .byte   $00, $00, $00, $00, $61, $60, $80, $87, $91, $B5, $8C, $99, $8D ; $851A
 ; (unreferenced: $8527-$852A, 4 bytes)
     .byte   $99, $8D, $B5, $8C                                              ; $8527
@@ -650,6 +673,7 @@ dat_1_8797:
     .byte   $00, $01, $02, $03                                              ; $8797
 
 sub_1_879B:
+    .assert sub_1_879B = OverworldBank::sub_879B, error, "interface address moved"
     ldx     #$02                    ; $879B
 
 loc_1_879D:
@@ -692,6 +716,9 @@ loc_1_87C2:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8877
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8887
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                     ; $8897
+
+dat_1_88A0:
+    .assert dat_1_88A0 = AreaBank::dat_88A0, error, "interface address moved"
     .byte   $01, $01, $03, $7A, $5C, $01, $0B, $6F, $11, $72, $51, $75, $51, $7A, $51, $76; $88A0
     .byte   $9A, $01, $0B, $79, $1C, $75, $5C, $7F, $5C, $7B, $9A, $7D, $9C, $01, $07, $09; $88B0
     .byte   $07, $0D, $07, $08, $4A, $01, $0D, $7A, $1F, $70, $5F, $72, $5F, $7A, $59, $7C; $88C0
@@ -708,6 +735,9 @@ loc_1_87C2:
     .byte   $0D, $13, $4D, $17, $8D, $00, $A1, $09, $7B, $14, $15, $8D, $76, $94, $1C, $8D; $8970
     .byte   $0F, $7F, $0C, $3A, $20, $3E, $20, $1A, $60, $31, $A0, $38, $A0, $70, $8C, $09; $8980
     .byte   $67, $1C, $5A, $1B, $56, $9B, $6A, $9C, $09, $7E, $04, $70, $5F, $7E, $44, $71; $8990
+
+dat_1_89A0:
+    .assert dat_1_89A0 = AreaBank::dat_89A0, error, "interface address moved"
     .byte   $9F, $07, $76, $1F, $60, $59, $6F, $59, $11, $72, $06, $48, $06, $7E, $06, $60; $89A0
     .byte   $46, $2D, $46, $6F, $46, $49, $86, $5E, $86, $0D, $35, $06, $79, $18, $6D, $06; $89B0
     .byte   $5F, $46, $45, $98, $3A, $86, $0B, $74, $12, $77, $11, $7F, $11, $73, $91, $7B; $89C0
@@ -724,6 +754,9 @@ loc_1_87C2:
     .byte   $76, $01, $76, $C1, $01, $03, $76, $81, $01, $01, $11, $39, $1F, $3B, $1F, $3D; $8A70
     .byte   $1F, $44, $5F, $5C, $5F, $64, $9F, $7C, $9F, $7E, $9F, $0F, $6A, $04, $5C, $04; $8A80
     .byte   $7D, $55, $6F, $44, $76, $95, $6C, $84, $74, $C4, $0F, $6C, $11, $4E, $11, $20; $8A90
+
+dat_1_8AA0:
+    .assert dat_1_8AA0 = AreaBank::dat_8AA0, error, "interface address moved"
     .byte   $51, $70, $9B, $2F, $91, $41, $D1, $63, $D1, $0F, $0D, $07, $03, $47, $0A, $4A; $8AA0
     .byte   $7B, $5C, $01, $C7, $74, $DC, $05, $CA, $0B, $7B, $12, $63, $52, $5B, $52, $43; $8AB0
     .byte   $92, $3D, $92, $05, $0F, $0F, $00, $CF, $0F, $7A, $5F, $7D, $5F, $7F, $5F, $70; $8AC0
@@ -740,6 +773,9 @@ loc_1_87C2:
     .byte   $5F, $73, $97, $7D, $9C, $7F, $9C, $72, $DC, $09, $6D, $03, $50, $58, $76, $43; $8B70
     .byte   $7B, $D8, $03, $50, $83, $09, $32, $51, $3C, $51, $47, $91, $2D, $91, $0B, $6E; $8B80
     .byte   $14, $60, $52, $46, $92, $4E, $92, $21, $D4, $09, $57, $58, $40, $94, $3A, $98; $8B90
+
+dat_1_8BA0:
+    .assert dat_1_8BA0 = AreaBank::dat_8BA0, error, "interface address moved"
     .byte   $24, $D4, $0F, $6E, $14, $51, $54, $58, $54, $41, $94, $38, $94, $3C, $94, $23; $8BA0
     .byte   $D4, $0B, $6A, $18, $68, $58, $6C, $58, $66, $98, $63, $D8, $09, $6A, $14, $60; $8BB0
     .byte   $98, $64, $98, $62, $D4, $05, $06, $57, $01, $D7, $0B, $3A, $04, $68, $58, $6A; $8BC0
@@ -1910,7 +1946,13 @@ loc_1_9D69:
     lda     #$F5                    ; $9D69
 
 loc_1_9D6B:
-    sta     MMC1_CONTROL+$15E6      ; $9D6B
+    ; BUG: writes to ROM at $95E6, i.e. to the MMC1 control register.
+    ; Probably intended ram_05E6 (used nearby).  Harmless: a is $F5 or $F6,
+    ; and a write with bit 7 set only resets the MMC1 shift register and
+    ; re-selects PRG mode 3, which is already selected; no other MMC1 write
+    ; can be in progress here.
+    ; Status: provisional
+    sta     $95E6                   ; $9D6B
     lda     #$00                    ; $9D6E
     sta     ram_000D                ; $9D70
     lda     ram_0002                ; $9D72
@@ -2587,13 +2629,6 @@ sub_1_9EB2:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF3C
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF4C
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF5C
-    .byte   $FF, $FF, $FF, $FF, $78, $D8, $A2, $00, $8E, $00, $20, $E8, $AD, $02, $20, $10; $BF6C
-    .byte   $FB, $CA, $F0, $F8, $9A, $8E, $00, $80, $8E, $00, $A0, $8E, $00, $C0, $8E, $00; $BF7C
-    .byte   $E0, $A9, $0F, $20, $9D, $BF, $20, $B1, $BF, $A9, $07, $20, $CC, $BF, $4C, $00; $BF8C
-    .byte   $C0, $8D, $00, $80, $4A, $8D, $00, $80, $4A, $8D, $00, $80, $4A, $8D, $00, $80; $BF9C
-    .byte   $4A, $8D, $00, $80, $60, $8D, $00, $A0, $4A, $8D, $00, $A0, $4A, $8D, $00, $A0; $BFAC
-    .byte   $4A, $8D, $00, $A0, $4A, $8D, $00, $A0, $60, $A9, $00, $F0, $03, $AD, $69, $07; $BFBC
-    .byte   $8D, $00, $E0, $4A, $8D, $00, $E0, $4A, $8D, $00, $E0, $4A, $8D, $00, $E0, $4A; $BFCC
-    .byte   $8D, $00, $E0, $60, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BFDC
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $7B, $C0; $BFEC
-    .byte   $70, $BF, $F0, $FF                                              ; $BFFC
+    .byte   $FF, $FF, $FF, $FF                                              ; $BF6C
+
+    ResetStub 1

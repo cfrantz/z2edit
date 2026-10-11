@@ -8,5 +8,6 @@ ZELDA2_INC = 1
 .include "constants.inc"
 .include "interfaces.inc"
 .include "globals.inc"
+.include "resetstub.inc"
 
 .endif

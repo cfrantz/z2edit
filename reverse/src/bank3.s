@@ -7,9 +7,15 @@
 
 .segment "BANK3"
 
+
+dat_3_8000:
+    .assert dat_3_8000 = AreaBank::dat_8000, error, "interface address moved"
     .byte   $5C, $9B, $48, $9B                                              ; $8000
 ; (unreferenced: $8004-$800D, 10 bytes)
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00                ; $8004
+
+dat_3_800E:
+    .assert dat_3_800E = AreaBank::dat_800E, error, "interface address moved"
     .byte   $22, $30, $12, $16, $22, $30, $29, $0F, $22, $27, $17, $0F, $22, $30, $10, $0F; $800E
     .byte   $22, $30, $12, $16, $22, $30, $28, $0F, $22, $28, $18, $0F, $22, $30, $26, $0F; $801E
     .byte   $22, $30, $12, $16, $22, $37, $2A, $0F, $22, $30, $1C, $0F, $22, $30, $1A, $0F; $802E
@@ -479,12 +485,21 @@ loc_3_83BE:
 ; (unreferenced: $84DA-$8501, 40 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $84DA
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $84EA
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $A2, $86                          ; $84FA
-    .byte   $A2, $86, $CA, $83, $2E, $84, $FF, $FF                          ; $8502
+    .byte   $FF, $FF, $FF, $FF, $FF, $FF ; $84FA
+
+dat_3_8500:
+    .assert dat_3_8500 = AreaBank::dat_8500, error, "interface address moved"
+    .byte   $A2, $86                ; $8500
+    .byte   $A2, $86, $CA, $83, $2E, $84 ; $8502
+
+dat_3_8508:
+    .assert dat_3_8508 = AreaBank::dat_8508, error, "interface address moved"
+    .byte   $FF, $FF                ; $8508
 ; (unreferenced: $850A-$850B, 2 bytes)
     .byte   $FF, $FF                                                        ; $850A
 
 sub_3_850C:
+    .assert sub_3_850C = AreaBank::sub_850C, error, "interface address moved"
     pha                             ; $850C
     and     #$C0                    ; $850D
     clc                             ; $850F
@@ -496,6 +511,9 @@ sub_3_850C:
     pla                             ; $8515
     cmp     dat_3_870E,y            ; $8516
     rts                             ; $8519
+
+dat_3_851A:
+    .assert dat_3_851A = AreaBank::dat_851A, error, "interface address moved"
     .byte   $54, $EA, $58, $59, $00, $00, $92, $00, $00                     ; $851A
 ; (unreferenced: $8523-$8524, 2 bytes)
     .byte   $C0, $89                                                        ; $8523
@@ -670,6 +688,9 @@ dat_3_8817:
 ; (unreferenced: $8883-$889F, 29 bytes)
     .byte   $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8883
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $8893
+
+dat_3_88A0:
+    .assert dat_3_88A0 = AreaBank::dat_88A0, error, "interface address moved"
     .byte   $0D, $7A, $22, $7F, $23, $79, $60, $72, $94, $70, $E3, $7A, $DF, $0B, $7D, $17; $88A0
     .byte   $7F, $23, $72, $92, $70, $E3, $75, $E2, $0D, $78, $22, $7F, $23, $7D, $51, $70; $88B0
     .byte   $E3, $73, $D6, $7A, $DD, $0D, $7F, $23, $79, $58, $7E, $5F, $75, $97, $70, $E3; $88C0
@@ -686,6 +707,9 @@ dat_3_8817:
     .byte   $A0, $70, $E3, $78, $E1, $0F, $74, $22, $7F, $23, $75, $55, $71, $51, $7C, $9E; $8970
     .byte   $70, $E3, $75, $D8, $0B, $79, $17, $7F, $23, $77, $5F, $76, $DD, $70, $E3, $01; $8980
     .byte   $11, $78, $06, $5A, $06, $68, $46, $5A, $46, $68, $86, $5A, $86, $68, $C6, $78; $8990
+
+dat_3_89A0:
+    .assert dat_3_89A0 = AreaBank::dat_89A0, error, "interface address moved"
     .byte   $C6, $05, $75, $4E, $38, $8A, $03, $6D, $A2, $03, $79, $CC, $03, $76, $E1, $0B; $89A0
     .byte   $78, $06, $5A, $46, $68, $86, $76, $C6, $77, $E1, $03, $79, $52, $03, $79, $E2; $89B0
     .byte   $36, $60, $A0, $01, $F7, $10, $F2, $10, $F1, $06, $F2, $11, $24, $26, $40, $56; $89C0
@@ -702,6 +726,9 @@ dat_3_8817:
     .byte   $F1, $07, $F1, $09, $85, $E2, $1A, $60, $A0, $11, $FC, $06, $F8, $15, $E2, $00; $8A70
     .byte   $6C, $22, $80, $72, $81, $01, $F3, $77, $69, $22, $80, $72, $81, $01, $F3, $01; $8A80
     .byte   $34, $60, $A0, $11, $F0, $00, $36, $24, $50, $54, $51, $C1, $82, $00, $F3, $63; $8A90
+
+dat_3_8AA0:
+    .assert dat_3_8AA0 = AreaBank::dat_8AA0, error, "interface address moved"
     .byte   $36, $24, $50, $54, $51, $C1, $82, $01, $63, $24, $80, $74, $83, $00, $F3, $67; $8AA0
     .byte   $A9, $0A, $A1, $0A, $A2, $0A, $A1, $0A, $A1, $0A, $A2, $0A, $F2, $63, $66, $74; $8AB0
     .byte   $83, $01, $F4, $01, $24, $60, $A0, $11, $F0, $00, $F6, $69, $3C, $2A, $50, $5A; $8AC0
@@ -725,6 +752,9 @@ loc_3_8B95:
     tax                             ; $8B9A
     lda     ram_0730                ; $8B9B
     and     #$0F                    ; $8B9E
+
+dat_3_8BA0:
+    .assert dat_3_8BA0 = AreaBank::dat_8BA0, error, "interface address moved"
     ora     #$A0                    ; $8BA0
     sta     ram_0730                ; $8BA2
     jsr     sub_C944                ; $8BA5
@@ -1000,7 +1030,7 @@ loc_3_96F0:
     sta     ram_00AF,x              ; $970D
     lda     #$B0                    ; $970F
     sta     ram_002A,x              ; $9711
-    lda     ram_00F7                ; $9713
+    lda     joypadHeld              ; $9713
     and     #$03                    ; $9715
     bne     loc_3_971B              ; $9717
     lda     ram_0002                ; $9719
@@ -1465,7 +1495,7 @@ loc_3_9A1D:
 loc_3_9A28:
     lda     ram_00AF,x              ; $9A28
     bne     loc_3_9A4F              ; $9A2A
-    lda     a:ram_00F5              ; $9A2C
+    lda     a:joypadPressed         ; $9A2C
     and     #$40                    ; $9A2F
     beq     loc_3_9A4F              ; $9A31
 
@@ -2337,10 +2367,10 @@ loc_3_B08B:
 loc_3_B08F:
     bit     PPUSTATUS               ; $B08F
     bvc     loc_3_B08F              ; $B092
-    lda     ram_00FF                ; $B094
+    lda     ppuCtrlShadow           ; $B094
     ora     ram_0746                ; $B096
-    sta     ram_00FF                ; $B099
-    ldx     ram_00FD                ; $B09B
+    sta     ppuCtrlShadow           ; $B099
+    ldx     ppuScrollX              ; $B09B
     ldy     #$10                    ; $B09D
 
 loc_3_B09F:
@@ -3265,7 +3295,7 @@ loc_3_B6A2:
     beq     loc_3_B6BA              ; $B6AE
     cmp     #$0F                    ; $B6B0
     beq     loc_3_B6BA              ; $B6B2
-    lda     ram_00F5                ; $B6B4
+    lda     joypadPressed           ; $B6B4
     and     #$40                    ; $B6B6
     bne     loc_3_B672              ; $B6B8
 
@@ -3418,7 +3448,7 @@ loc_3_B7A5:
 loc_3_B7A6:
     lda     ram_0766                ; $B7A6
     beq     loc_3_B7A2              ; $B7A9
-    lda     ram_00F5                ; $B7AB
+    lda     joypadPressed           ; $B7AB
     and     #$40                    ; $B7AD
     bne     loc_3_B7A2              ; $B7AF
 ; (code below not executed in the test movies)
@@ -3590,13 +3620,6 @@ loc_3_B7F0:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF33
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF43
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BF53
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $78, $D8, $A2; $BF63
-    .byte   $00, $8E, $00, $20, $E8, $AD, $02, $20, $10, $FB, $CA, $F0, $F8, $9A, $8E, $00; $BF73
-    .byte   $80, $8E, $00, $A0, $8E, $00, $C0, $8E, $00, $E0, $A9, $0F, $20, $9D, $BF, $20; $BF83
-    .byte   $B1, $BF, $A9, $07, $20, $CC, $BF, $4C, $00, $C0, $8D, $00, $80, $4A, $8D, $00; $BF93
-    .byte   $80, $4A, $8D, $00, $80, $4A, $8D, $00, $80, $4A, $8D, $00, $80, $60, $8D, $00; $BFA3
-    .byte   $A0, $4A, $8D, $00, $A0, $4A, $8D, $00, $A0, $4A, $8D, $00, $A0, $4A, $8D, $00; $BFB3
-    .byte   $A0, $60, $A9, $00, $F0, $03, $AD, $69, $07, $8D, $00, $E0, $4A, $8D, $00, $E0; $BFC3
-    .byte   $4A, $8D, $00, $E0, $4A, $8D, $00, $E0, $4A, $8D, $00, $E0, $60, $FF, $FF, $FF; $BFD3
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BFE3
-    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $7B, $C0, $70, $BF, $F0, $FF ; $BFF3
+    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $BF63
+
+    ResetStub 3

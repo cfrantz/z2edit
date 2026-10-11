@@ -231,7 +231,11 @@ without needing to hold the whole game in mind.
   movie playback, published as test vectors so an independent
   implementation can be checked against the original.
 
-## Initial High-Level Knowledge (to be verified in Phase 1)
+## Initial High-Level Knowledge
+
+Verified in Phase 1 unless marked *(unverified)*; details are in
+`docs/architecture/bank-layout.md`, `docs/hardware/mmc1.md` and
+`docs/architecture/main-loop-and-nmi.md`.
 
 - The game is for the 8-bit Nintendo Entertainment System (NES), written in
   6502 assembly in the mid-1980s.  The code is not structured in a modern
@@ -240,21 +244,31 @@ without needing to hold the whole game in mind.
   CHR.
 - The game uses the Nintendo MMC1 mapper with a fixed bank at $C000-$FFFF
   and a switchable bank at $8000-$BFFF, plus 8 KiB of battery-backed RAM at
-  $6000-$7FFF.
-  - Bank 7 is always mapped at $C000-$FFFF.  It contains common code: the
-    main idle loop, the NMI handler, display management, movement, game
-    physics and common enemy routines.
-  - Bank 0 contains per-frame common code and is typically mapped for a
-    portion of each frame.
+  $6000-$7FFF.  Every switchable bank carries a copy of the reset code at
+  $BF70.
+- Almost all game logic runs in the NMI handler; the main thread only
+  performs area loads.
+  - Bank 7 is always mapped at $C000-$FFFF.  It contains the reset code,
+    the main idle loop, the NMI handler, the bank-switching routines and
+    most of the game logic: it executes 80-90% of the NMI's cycles during
+    gameplay.  The logic includes display management, movement, game
+    physics and common enemy routines *(unverified)*.
+  - Bank 0 contains per-frame game logic (5-10% of the NMI's cycles).  The
+    game NMI maps it every gameplay frame and leaves it mapped.
+  - Banks 1-5 are the area banks; `areaPrgBank` ($0769) selects one from
+    the world ($0707) and region ($0706).  They share a common layout at
+    fixed addresses (`src/interfaces.inc`).
   - Bank 1 contains the West Hyrule and Death Mountain overworlds and the
     maps of their sideview battle areas.
   - Bank 2 contains the East Hyrule and Maze Island overworlds and their
-    sideview battle areas.
+    sideview battle areas.  Banks 1 and 2 share most of their code.
   - Bank 3 contains towns, town NPC routines and NPC dialog (worlds 1 & 2 in
     game terminology).
   - Bank 4 contains the palaces and palace enemy routines (worlds 3 & 4).
   - Bank 5 contains the Great Palace and its enemy routines (world 5), plus
-    the title screen, save-file selection and new-game initialization (e.g.
-    the initial item-presence bitmaps).
+    the title screen and other non-gameplay screens, which run under their
+    own NMI handler.  Save-file selection and new-game initialization
+    (e.g. the initial item-presence bitmaps) are *(unverified)*.
   - Bank 6 contains music and sound effects, called once per frame.  It has
-    two music players: one for the title screen and one for gameplay.
+    two entry points: $8000 for the bank 5 screens and $9000 for gameplay
+    (whether these are two separate music players is *(unverified)*).

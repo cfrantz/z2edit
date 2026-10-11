@@ -13,3 +13,5 @@ The ca65 disassembly of Zelda II.  These files were generated once by
 - `constants.inc`: game-wide constants and enumerations.
 - `interfaces.inc`: bank interfaces (see `../CONVENTIONS.md`).
 - `globals.inc`: `.global` declarations for labels referenced across banks.
+- `resetstub.inc`: the `ResetStub` macro: the reset code and vectors present
+  at $BF70 in every switchable bank.
