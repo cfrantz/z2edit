@@ -34,13 +34,13 @@ GLOBALS_INC = 1
 .global dat_3_8817
 .global TownPersonTilePtrs
 .global Dialog_Update
-.global dat_4_8470
-.global loc_4_9A46
-.global dat_4_BF00
+.global PalaceOutdoorPalettes
+.global Boss_SpawnDeathSpark_Bank4
+.global PalaceIndoorPalettes
 .global Ending_LoadArea
 .global Ending_DrawCurtainTop
 .global Ending_Run
-.global loc_5_9764
+.global Boss_SpawnDeathSpark_Bank5
 .global Bank5_Nmi
 .global Game_PowerOnInit
 .global Sound_TitleEngine

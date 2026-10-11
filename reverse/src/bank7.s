@@ -2760,7 +2760,7 @@ Mode_LoadWorld:
     ldx     #$00                    ; $CE3C
 
 @loop13:
-    lda     dat_4_8470,y            ; $CE3E
+    lda     PalaceOutdoorPalettes,y ; $CE3E
     sta     sramAreaPalettes,x      ; $CE41
     iny                             ; $CE44
     inx                             ; $CE45
@@ -2770,7 +2770,7 @@ Mode_LoadWorld:
     tay                             ; $CE4B
 
 @loop14:
-    lda     dat_4_BF00,y            ; $CE4C
+    lda     PalaceIndoorPalettes,y  ; $CE4C
     sta     sramAreaPalettes,x      ; $CE4F
     iny                             ; $CE52
     inx                             ; $CE53
@@ -5837,10 +5837,10 @@ Enemy_DieStep:
     jsr     World_GetIndex          ; $DD27
     cmp     #$0F                    ; $DD2A
     bne     @loc_DD31               ; $DD2C
-    jmp     loc_5_9764              ; $DD2E
+    jmp     Boss_SpawnDeathSpark_Bank5 ; $DD2E
 
 @loc_DD31:
-    jmp     loc_4_9A46              ; $DD31
+    jmp     Boss_SpawnDeathSpark_Bank4 ; $DD31
 
 ; ---------------------------------------------------------------------------
 ; Enemy_RemoveAfterDeath

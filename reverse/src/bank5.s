@@ -2295,7 +2295,14 @@ KingBot_Draw:
     sta     drawOffscreen+1         ; $9761
     rts                             ; $9763
 
-loc_5_9764:
+; ---------------------------------------------------------------------------
+; Boss_SpawnDeathSpark_Bank5
+;
+; Bank 5's copy of Boss_SpawnDeathSpark_Bank4, used in the Great Palace.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Boss_SpawnDeathSpark_Bank5:
     lda     frameCounter            ; $9764
     lsr     a                       ; $9766
     bcs     @done                   ; $9767
