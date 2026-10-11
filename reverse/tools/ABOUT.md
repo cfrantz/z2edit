@@ -13,6 +13,9 @@ Tools that drive the emulator need the Python extension built with
   combines logs from several runs.
 - `bootstrap.py`: Generates the initial ca65 disassembly in `src/` from the
   ROM and a CDL.  Run once; it refuses to overwrite existing bank files.
+  Known limitation: an inline jump table followed by data that is read
+  indirectly (e.g. a PPU string) was extended over that data; the cases
+  found so far have been fixed by hand in `src/`.
 - `symbols.py`: Converts the ld65 debug file into `build/zelda2.sym.json`
   for the emulator's `symbols` plugin and other tools.  Run by `make`.
 - `trace.py`: Writes a per-instruction trace for a range of frames of a

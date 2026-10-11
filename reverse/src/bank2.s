@@ -95,7 +95,8 @@ loc_2_812F:
     .word   loc_2_8358              ; $814D
     .word   loc_2_8358              ; $814F
     .word   loc_2_8358              ; $8151
-    .word   $4242                   ; $8153
+; End of the jump table: data follows.
+    .byte   $42, $42                                                        ; $8153
 ; (unreferenced: $8155-$8155, 1 bytes)
     .byte   $54                                                             ; $8155
     .byte   $52, $42, $42, $55, $53, $53, $40, $40                          ; $8156

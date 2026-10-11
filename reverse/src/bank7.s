@@ -537,20 +537,20 @@ GameState_Play:
 ; (inline jump table)
     .word   Mode_LoadWorld          ; $C2EC  mode $00
     .word   loc_CCB3                ; $C2EE  mode $01
-    .word   loc_0_8149              ; $C2F0  mode $02
-    .word   loc_0_87F3              ; $C2F2  mode $03
+    .word   Mode_OverworldSetup     ; $C2F0  mode $02
+    .word   Mode_IndexOverworldMap  ; $C2F2  mode $03
     .word   Game_UnblankAndNextMode ; $C2F4  mode $04
     .word   Mode_Overworld          ; $C2F6  mode $05
     .word   Mode_EnterLocation      ; $C2F8  mode $06
-    .word   loc_C4A4                ; $C2FA  mode $07
+    .word   Mode_PrepareLoad        ; $C2FA  mode $07
     .word   Game_Wait               ; $C2FC  mode $08
     .word   Mode_DrawArea           ; $C2FE  mode $09
     .word   loc_C62F                ; $C300  mode $0A
     .word   Mode_SideView           ; $C302  mode $0B
     .word   loc_C68A                ; $C304  mode $0C
-    .word   loc_0_A82A              ; $C306  mode $0D
+    .word   Mode_0D                 ; $C306  mode $0D
     .word   loc_C6EF                ; $C308  mode $0E
-    .word   loc_0_8FB7              ; $C30A  mode $0F
+    .word   Mode_0F                 ; $C30A  mode $0F
     .word   Mode_LeaveArea          ; $C30C  mode $10
     .word   loc_C397                ; $C30E  mode $11
     .word   loc_C63E                ; $C310  mode $12
@@ -558,8 +558,8 @@ GameState_Play:
     .word   Game_Wait               ; $C314  mode $14
     .word   loc_C70C                ; $C316  mode $15
     .word   Mode_EnterDoor          ; $C318  mode $16
-    .word   loc_0_81B1              ; $C31A  mode $17
-    .word   loc_0_8207              ; $C31C  mode $18
+    .word   Mode_RaftStart          ; $C31A  mode $17
+    .word   Mode_Raft               ; $C31C  mode $18
 
 GameState_Death:
     jsr     Game_CheckModeChange    ; $C31E
@@ -772,7 +772,7 @@ dat_C490:
     .byte   $3F, $00, $10, $0F, $30, $12, $16, $0F, $07                     ; $C490
     .byte   $27, $37, $0F, $07, $16, $30, $0F, $3C, $1C, $0C, $FF           ; $C499
 
-loc_C4A4:
+Mode_PrepareLoad:
     jmp     Game_BlankAndNextMode   ; $C4A4
 ; (unreferenced: $C4A7-$C4AE, 8 bytes)
 
@@ -8551,7 +8551,6 @@ loc_FED3:
     lda     (temp14),y              ; $FF07
     sta     ppuBuffer2+4,x          ; $FF09
     ldy     temp4                   ; $FF0C
-loc_FF0F := * + 1
     lda     temp5                   ; $FF0E
     bne     loc_FF20                ; $FF10
     lda     temp1                   ; $FF12

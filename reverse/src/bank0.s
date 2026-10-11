@@ -88,7 +88,7 @@ loc_0_8140:
     inc     gameSubStep             ; $8145
     rts                             ; $8148
 
-loc_0_8149:
+Mode_OverworldSetup:
     lda     #$0F                    ; $8149
     jsr     Mmc1_SetControl_Bank0   ; $814B
     lda     #$10                    ; $814E
@@ -151,7 +151,7 @@ dat_0_81AE:
 ; (unreferenced: $81B0-$81B0, 1 bytes)
     .byte   $00                                                             ; $81B0
 
-loc_0_81B1:
+Mode_RaftStart:
     jsr     sub_0_8222              ; $81B1
     jsr     sub_0_81F6              ; $81B4
     beq     loc_0_81E5              ; $81B7
@@ -201,7 +201,7 @@ dat_0_8204:
 ; (unreferenced: $8206-$8206, 1 bytes)
     .byte   $78                                                             ; $8206
 
-loc_0_8207:
+Mode_Raft:
     inc     objState                ; $8207
     jsr     sub_0_81F6              ; $8209
     jsr     sub_0_81BD              ; $820C
@@ -1120,7 +1120,7 @@ dat_0_87A3:
 dat_0_87E3:
     .byte   $02, $01, $02, $01, $03, $00, $00, $00, $01, $01, $01, $01, $03, $03, $01, $01; $87E3
 
-loc_0_87F3:
+Mode_IndexOverworldMap:
     lda     #$00                    ; $87F3
     sta     temp14                  ; $87F5
     lda     #$7C                    ; $87F7
@@ -2314,7 +2314,7 @@ dat_0_8FB3:
 dat_0_8FB4:
     .byte   $0C, $2C, $1C                                                   ; $8FB4
 
-loc_0_8FB7:
+Mode_0F:
     inc     objY                    ; $8FB7
     inc     objY                    ; $8FB9
     lda     objY                    ; $8FBB
@@ -6060,31 +6060,20 @@ loc_0_A809:
 loc_0_A829:
     rts                             ; $A829
 
-loc_0_A82A:
+Mode_0D:
     lda     gameSubStep             ; $A82A
     jsr     JumpTable               ; $A82D
 ; (inline jump table)
     .word   Ppu_ClearNametables     ; $A830
     .word   loc_0_A85A              ; $A832
     .word   loc_0_A869              ; $A834
-    .word   $003F                   ; $A836
-    .word   $0F20                   ; $A838
-    .word   $1C2C                   ; $A83A
-    .word   $0F0C                   ; $A83C
-    .word   $1C2C                   ; $A83E
-    .word   $0F0C                   ; $A840
-    .word   $1C2C                   ; $A842
-    .word   $0F0C                   ; $A844
-    .word   $1C2C                   ; $A846
-    .word   $0F0C                   ; $A848
-    .word   $3618                   ; $A84A
-    .word   $0F2A                   ; $A84C
-    .word   $0F0F                   ; $A84E
-    .word   $0F0F                   ; $A850
-    .word   $0F0F                   ; $A852
-    .word   $0F0F                   ; $A854
-    .word   $0F30                   ; $A856
-    .word   loc_FF0F                ; $A858
+
+; PPU update string (PpuStringPtrs entry 6): 32 palette bytes at $3F00.
+dat_0_A836:
+    .byte   $3F, $00, $20                                                   ; $A836
+    .byte   $0F, $2C, $1C, $0C, $0F, $2C, $1C, $0C, $0F, $2C, $1C, $0C, $0F, $2C, $1C, $0C; $A839
+    .byte   $0F, $18, $36, $2A, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $30, $0F, $0F; $A849
+    .byte   $FF                                                             ; $A859
 
 loc_0_A85A:
     jsr     Oam_HideAll             ; $A85A
