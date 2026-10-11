@@ -279,7 +279,7 @@ ppuStringSelect         = $0725     ; PPU update string sent by the next NMI; se
 renderingOff            = $0726     ; nonzero to keep rendering off (the NMI leaves PPUMASK rendering bits clear)
 ram_0727                = $0727
 scrollFrozen            = $0728     ; nonzero to stop the screen scrolling
-ram_0729                = $0729
+menusPending            = $0729     ; set by a mode handler so that the next NMI runs Game_UpdateMenus (provisional)
 scrollXHi               = $072A     ; high byte of the side view horizontal scroll position
 ram_072B                = $072B
 scrollX                 = $072C     ; low byte of the side view horizontal scroll position
@@ -287,7 +287,7 @@ ram_072D                = $072D
 areaDataLength          = $072E     ; length of the area data
 areaDataOffset          = $072F     ; offset of the next object in the area data
 areaBuildPos            = $0730     ; tile position (row * 16 + column) while building an area's tile map (provisional)
-ram_0731                = $0731
+areaObjectType          = $0731     ; type of the area object being decoded, or the floor pattern
 ram_0732                = $0732
 ram_0733                = $0733
 ram_0734                = $0734
@@ -369,7 +369,7 @@ secondQuest             = $07A0     ; nonzero for a second quest file (provision
 playerName              = $07A1     ; [8] player name, as tile numbers ($F4 = blank)
 raftDirection           = $07A9     ; raft direction: 1 = right, 2 = left
 ram_07AA                = $07AA
-ram_07AB                = $07AB
+soundPacer              = $07AB     ; accumulator for Sound_UpdateSometimes
 ram_07AC                = $07AC
 ram_07AD                = $07AD
 attrColumnPending       = $07AE     ; nonzero when attrColumn should be written by the next NMI

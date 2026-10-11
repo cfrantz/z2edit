@@ -34,8 +34,8 @@ dat_1_800E:
     .byte   $FF, $18, $36, $2A, $FF, $16, $27, $30, $FF, $0F, $2A, $30, $FF, $0F, $16, $26; $80CE
     .byte   $FF, $01, $21, $11, $FF, $16, $27, $30, $FF, $0F, $0F, $0F, $FF, $0F, $0F, $0F; $80DE
 
-loc_1_80EE:
-    .assert loc_1_80EE = AreaBank::sub_80EE, error, "interface address moved"
+Area_DrawLargeObject_Bank1:
+    .assert Area_DrawLargeObject_Bank1 = AreaBank::DrawLargeObject, error, "interface address moved"
     txa                             ; $80EE
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
@@ -77,8 +77,8 @@ loc_1_8103:
     .word   loc_1_82D5              ; $812B  (not observed)
     .word   loc_1_82BA              ; $812D
 
-loc_1_812F:
-    .assert loc_1_812F = AreaBank::sub_812F, error, "interface address moved"
+Area_DrawSmallObject_Bank1:
+    .assert Area_DrawSmallObject_Bank1 = AreaBank::DrawSmallObject, error, "interface address moved"
     txa                             ; $812F
     jsr     JumpTable               ; $8130
 ; (inline jump table)
@@ -149,8 +149,8 @@ dat_1_819B:
     .byte   $80                                                             ; $81A0
     .byte   $89, $92                                                        ; $81A1
 
-loc_1_81A3:
-    .assert loc_1_81A3 = OverworldBank::sub_81A3, error, "interface address moved"
+Overworld_SetFloorTiles_Bank1:
+    .assert Overworld_SetFloorTiles_Bank1 = OverworldBank::SetFloorTiles, error, "interface address moved"
     ldx     ram_010C                ; $81A3
     lda     dat_1_819B,x            ; $81A6
     sta     temp12                  ; $81A9
@@ -200,7 +200,7 @@ sub_1_8201:
     jsr     sub_1_8247              ; $8201
 
 loc_1_8204:
-    lda     ram_0731                ; $8204
+    lda     areaObjectType          ; $8204
     and     #$0F                    ; $8207
     tax                             ; $8209
     jsr     AreaMap_GetPagePtr      ; $820A
@@ -224,12 +224,12 @@ loc_1_821D:
     lda     ram_0112                ; $8223
     jsr     AreaMap_PutTileDown     ; $8226
     sta     areaBuildPos            ; $8229
-    dec     ram_0731                ; $822C
+    dec     areaObjectType          ; $822C
     lda     temp0                   ; $822F
     sta     ram_0112                ; $8231
 
 loc_1_8234:
-    lda     ram_0731                ; $8234
+    lda     areaObjectType          ; $8234
     and     #$0F                    ; $8237
     tax                             ; $8239
     jsr     AreaMap_GetPagePtr      ; $823A
@@ -270,7 +270,7 @@ loc_1_8265:
     ora     #$90                    ; $826D
     sta     areaBuildPos            ; $826F
     tay                             ; $8272
-    lda     ram_0731                ; $8273
+    lda     areaObjectType          ; $8273
     and     #$0F                    ; $8276
     tax                             ; $8278
 
@@ -297,7 +297,7 @@ loc_1_828A:
     sta     ram_0112                ; $8296
 
 loc_1_8299:
-    lda     ram_0731                ; $8299
+    lda     areaObjectType          ; $8299
     and     #$0F                    ; $829C
     tax                             ; $829E
     jsr     AreaMap_GetPagePtr      ; $829F

@@ -742,7 +742,7 @@ Mode_Overworld:
     lda     #$00                    ; $8558
     sta     ram_07AC                ; $855A
     sta     ram_07AD                ; $855D
-    inc     ram_0729                ; $8560
+    inc     menusPending            ; $8560
     jsr     sub_0_8284              ; $8563
     jsr     Overworld_UpdateEncounters ; $8566
     jsr     Overworld_DrawLink      ; $8569
@@ -802,7 +802,7 @@ loc_0_85AE:
     asl     a                       ; $85C4
     sta     objState+1              ; $85C5
     asl     a                       ; $85C7
-    sta     ram_0729                ; $85C8
+    sta     menusPending            ; $85C8
     lda     #$17                    ; $85CB
     sta     gameMode                ; $85CD
     bne     loc_0_85FB              ; $85D0
@@ -824,7 +824,7 @@ loc_0_85D5:
 
 loc_0_85EB:
     lda     #$00                    ; $85EB
-    sta     ram_0729                ; $85ED
+    sta     menusPending            ; $85ED
     inc     renderingOff            ; $85F0
     inc     gameMode                ; $85F3
     lda     #$06                    ; $85F6
@@ -1185,7 +1185,7 @@ loc_0_882C:
     asl     a                       ; $885F
     ora     temp0                   ; $8860
     sta     ram_0077                ; $8862
-    jsr     sub_C1B6                ; $8864
+    jsr     Sound_UpdateSometimes   ; $8864
     ldx     #$00                    ; $8867
     stx     ram_007E                ; $8869
     dec     objXVelocity+1          ; $886B
@@ -5439,9 +5439,9 @@ loc_0_A423:
     asl     a                       ; $A436
     tay                             ; $A437
     ldx     temp1                   ; $A438
-    jsr     sub_C24F                ; $A43A
+    jsr     Menu_CopyPtrFromArea    ; $A43A
     iny                             ; $A43D
-    jsr     sub_C24F                ; $A43E
+    jsr     Menu_CopyPtrFromArea    ; $A43E
     stx     temp1                   ; $A441
     inc     temp0                   ; $A443
     cpx     #$0E                    ; $A445

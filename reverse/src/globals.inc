@@ -45,9 +45,9 @@ GLOBALS_INC = 1
 .global Sound_TitleEngine
 .global Sound_Engine
 .global Sound_UpdateTitle
-.global sub_C1B6
-.global sub_C24F
-.global sub_C258
+.global Sound_UpdateSometimes
+.global Menu_CopyPtrFromArea
+.global Menu_CopyPtr
 .global Area_ClearFlag
 .global Area_TestFlag
 .global Game_BlankAndNextMode

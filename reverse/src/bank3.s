@@ -31,8 +31,8 @@ dat_3_800E:
     .byte   $FF, $18, $36, $2A, $FF, $16, $27, $30, $FF, $0F, $2A, $30, $FF, $0F, $16, $26; $80CE
     .byte   $FF, $18, $36, $2A, $FF, $16, $27, $30, $FF, $11, $21, $30, $FF, $07, $16, $30; $80DE
 
-loc_3_80EE:
-    .assert loc_3_80EE = AreaBank::sub_80EE, error, "interface address moved"
+Area_DrawLargeObject_Bank3:
+    .assert Area_DrawLargeObject_Bank3 = AreaBank::DrawLargeObject, error, "interface address moved"
     ldx     #$00                    ; $80EE
     beq     loc_3_8104              ; $80F0
 
@@ -64,7 +64,7 @@ loc_3_8104:
     sta     ram_0112                ; $8113
 
 loc_3_8116:
-    lda     ram_0731                ; $8116
+    lda     areaObjectType          ; $8116
     and     #$0F                    ; $8119
     tax                             ; $811B
     jsr     AreaMap_GetPagePtr      ; $811C
@@ -120,7 +120,7 @@ loc_3_8157:
     sta     temp1                   ; $815F
 
 loc_3_8161:
-    lda     ram_0731                ; $8161
+    lda     areaObjectType          ; $8161
     and     #$0F                    ; $8164
     tax                             ; $8166
     jsr     AreaMap_GetPagePtr      ; $8167
@@ -180,7 +180,7 @@ loc_3_81A8:
     sta     areaBuildPos            ; $81B3
 
 loc_3_81B6:
-    lda     ram_0731                ; $81B6
+    lda     areaObjectType          ; $81B6
     and     #$0F                    ; $81B9
     tax                             ; $81BB
     jsr     AreaMap_GetPagePtr      ; $81BC
@@ -205,7 +205,7 @@ loc_3_81D2:
     sta     areaBuildPos            ; $81DD
 
 loc_3_81E0:
-    lda     ram_0731                ; $81E0
+    lda     areaObjectType          ; $81E0
     and     #$0F                    ; $81E3
     tax                             ; $81E5
     jsr     AreaMap_GetPagePtr      ; $81E6
@@ -216,7 +216,7 @@ loc_3_81E9:
     dex                             ; $81EE
     bpl     loc_3_81E9              ; $81EF
     jsr     sub_DF4C                ; $81F1
-    dec     ram_0731                ; $81F4
+    dec     areaObjectType          ; $81F4
     dec     temp4                   ; $81F7
     bpl     loc_3_81E0              ; $81F9
     rts                             ; $81FB
@@ -348,7 +348,7 @@ loc_3_830A:
     sta     temp0                   ; $8316
 
 loc_3_8318:
-    lda     ram_0731                ; $8318
+    lda     areaObjectType          ; $8318
     and     #$0F                    ; $831B
     tax                             ; $831D
     jsr     AreaMap_GetPagePtr      ; $831E
@@ -370,9 +370,9 @@ dat_3_8337:
     .byte   $D3, $CC, $CC                                                   ; $8337
 
 loc_3_833A:
-    lda     ram_0731                ; $833A
+    lda     areaObjectType          ; $833A
     and     #$0F                    ; $833D
-    sta     ram_0731                ; $833F
+    sta     areaObjectType          ; $833F
     lda     areaBuildPos            ; $8342
     and     #$0F                    ; $8345
     ora     #$40                    ; $8347
@@ -389,7 +389,7 @@ loc_3_8351:
     dex                             ; $8357
     bpl     loc_3_8351              ; $8358
     jsr     sub_DF4C                ; $835A
-    dec     ram_0731                ; $835D
+    dec     areaObjectType          ; $835D
     bpl     loc_3_834C              ; $8360
     rts                             ; $8362
 
@@ -408,7 +408,7 @@ loc_3_8374:
     ldx     temp0                   ; $8374
     lda     dat_3_8363,x            ; $8376
     sta     temp1                   ; $8379
-    lda     ram_0731                ; $837B
+    lda     areaObjectType          ; $837B
     and     #$0F                    ; $837E
     tax                             ; $8380
     jsr     AreaMap_GetPagePtr      ; $8381
@@ -748,7 +748,7 @@ dat_3_8AA0:
     .byte   $01, $8D, $58, $07, $60                                         ; $8B90
 
 loc_3_8B95:
-    lda     ram_0731                ; $8B95
+    lda     areaObjectType          ; $8B95
     and     #$0F                    ; $8B98
     tax                             ; $8B9A
     lda     areaBuildPos            ; $8B9B
@@ -1721,8 +1721,8 @@ loc_3_9B9B:
     txa                             ; $9B9B
     jsr     JumpTable               ; $9B9C
 ; (inline jump table)
-    .word   loc_3_80EE              ; $9B9F
-    .word   loc_3_80EE              ; $9BA1
+    .word   Area_DrawLargeObject_Bank3 ; $9B9F
+    .word   Area_DrawLargeObject_Bank3 ; $9BA1
     .word   loc_3_80F2              ; $9BA3
     .word   loc_3_80F6              ; $9BA5
     .word   loc_3_813B              ; $9BA7
@@ -1833,7 +1833,7 @@ loc_3_9C5E:
     rts                             ; $9C6C
 
 loc_3_9C6D:
-    lda     ram_0731                ; $9C6D
+    lda     areaObjectType          ; $9C6D
     and     #$0F                    ; $9C70
     tax                             ; $9C72
     ldy     areaBuildPos            ; $9C73
@@ -1856,7 +1856,7 @@ loc_3_9C83:
     rts                             ; $9C8B
 
 loc_3_9C8C:
-    lda     ram_0731                ; $9C8C
+    lda     areaObjectType          ; $9C8C
     and     #$0F                    ; $9C8F
     tax                             ; $9C91
     ldy     areaBuildPos            ; $9C92
@@ -2581,9 +2581,9 @@ loc_3_B1CF:
     asl     a                       ; $B1E2
     tay                             ; $B1E3
     ldx     temp1                   ; $B1E4
-    jsr     sub_C258                ; $B1E6
+    jsr     Menu_CopyPtr            ; $B1E6
     iny                             ; $B1E9
-    jsr     sub_C258                ; $B1EA
+    jsr     Menu_CopyPtr            ; $B1EA
     stx     temp1                   ; $B1ED
     inc     temp0                   ; $B1EF
     cpx     #$0E                    ; $B1F1

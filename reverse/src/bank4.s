@@ -31,8 +31,8 @@ dat_4_800E:
     .byte   $FF, $18, $36, $2A, $FF, $16, $27, $30, $FF, $0F, $1C, $2C, $FF, $0F, $15, $25; $80CE
     .byte   $FF, $01, $21, $11, $FF, $16, $27, $30, $FF, $0F, $0F, $0F, $FF, $0F, $0F, $0F; $80DE
 
-loc_4_80EE:
-    .assert loc_4_80EE = AreaBank::sub_80EE, error, "interface address moved"
+Area_DrawLargeObject_Bank4:
+    .assert Area_DrawLargeObject_Bank4 = AreaBank::DrawLargeObject, error, "interface address moved"
     txa                             ; $80EE
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
@@ -74,8 +74,8 @@ loc_4_8103:
     .word   loc_4_820E              ; $812B
     .word   loc_4_823E              ; $812D
 
-loc_4_812F:
-    .assert loc_4_812F = AreaBank::sub_812F, error, "interface address moved"
+Area_DrawSmallObject_Bank4:
+    .assert Area_DrawSmallObject_Bank4 = AreaBank::DrawSmallObject, error, "interface address moved"
     txa                             ; $812F
     jsr     JumpTable               ; $8130
 ; (inline jump table)
@@ -147,7 +147,7 @@ loc_4_819F:
     jsr     sub_DF4C                ; $81AA
 
 sub_4_81AD:
-    lda     ram_0731                ; $81AD
+    lda     areaObjectType          ; $81AD
     and     #$0F                    ; $81B0
     tax                             ; $81B2
     jsr     AreaMap_GetPagePtr      ; $81B3
@@ -169,12 +169,12 @@ loc_4_81C6:
     lda     ram_0112                ; $81CC
     jsr     AreaMap_PutTileDown     ; $81CF
     sta     areaBuildPos            ; $81D2
-    dec     ram_0731                ; $81D5
+    dec     areaObjectType          ; $81D5
     lda     temp0                   ; $81D8
     sta     ram_0112                ; $81DA
 
 loc_4_81DD:
-    lda     ram_0731                ; $81DD
+    lda     areaObjectType          ; $81DD
     and     #$0F                    ; $81E0
     tax                             ; $81E2
     jsr     AreaMap_GetPagePtr      ; $81E3
@@ -216,7 +216,7 @@ loc_4_820E:
     sta     ram_0112                ; $821A
 
 loc_4_821D:
-    lda     ram_0731                ; $821D
+    lda     areaObjectType          ; $821D
     and     #$0F                    ; $8220
     tax                             ; $8222
     jsr     AreaMap_GetPagePtr      ; $8223
@@ -303,7 +303,7 @@ loc_4_82AA:
     jmp     loc_4_829C              ; $82B3
 
 loc_4_82B6:
-    lda     ram_0731                ; $82B6
+    lda     areaObjectType          ; $82B6
     and     #$0F                    ; $82B9
     tax                             ; $82BB
     jsr     AreaMap_GetPagePtr      ; $82BC

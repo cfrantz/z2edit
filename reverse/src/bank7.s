@@ -263,9 +263,9 @@ Nmi:
     bne     @checkPaused            ; $C144
 
 @checkPerFrame:
-    lda     ram_0729                ; $C146
+    lda     menusPending            ; $C146
     beq     @checkPaused            ; $C149
-    jsr     sub_C1CD                ; $C14B
+    jsr     Game_UpdateMenus        ; $C14B
 
 @checkPaused:
     ; Skip the game while paused or in a dialog (dialogType), except in
@@ -336,11 +336,20 @@ Nmi:
     pla                             ; $C1B4
     rti                             ; $C1B5
 
-sub_C1B6:
-    lda     ram_07AB                ; $C1B6
+; ---------------------------------------------------------------------------
+; Sound_UpdateSometimes
+;
+; Run Sound_Update on 216 of every 256 calls (soundPacer accumulates $D8).
+; Called once per row by the long overworld drawing loop, presumably to
+; keep the music at tempo.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sound_UpdateSometimes:
+    lda     soundPacer              ; $C1B6
     clc                             ; $C1B9
     adc     #$D8                    ; $C1BA
-    sta     ram_07AB                ; $C1BC
+    sta     soundPacer              ; $C1BC
     bcc     loc_C1CC                ; $C1BF
 
 ; ---------------------------------------------------------------------------
@@ -360,15 +369,27 @@ Sound_Update:
 loc_C1CC:
     rts                             ; $C1CC
 
-sub_C1CD:
+; ---------------------------------------------------------------------------
+; Game_UpdateMenus
+;
+; Run the pause menu and dialogs, from the game NMI, when the current mode
+; has asked for it (menusPending).  In side view this is
+; Game_UpdateSideViewMenus: a scripted event in one town area, then the
+; pause menu (pauseState), the level up dialog (bank 0) and conversations
+; (dialogType >= 2, handled in the town bank).  Elsewhere it dispatches on
+; pauseState.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Game_UpdateMenus:
     jsr     Mmc1_SetPrgBank0        ; $C1CD
     lda     gameMode                ; $C1D0
     cmp     #$0B                    ; $C1D3
     bne     loc_C220                ; $C1D5
-    jsr     sub_C1DD                ; $C1D7
+    jsr     Game_UpdateSideViewMenus ; $C1D7
     jmp     Mmc1_SetPrgBankArea     ; $C1DA
 
-sub_C1DD:
+Game_UpdateSideViewMenus:
     jsr     World_GetIndex          ; $C1DD
     cmp     #$01                    ; $C1E0
     bne     loc_C206                ; $C1E2
@@ -431,12 +452,20 @@ loc_C245:
     jsr     Mmc1_SetPrgBankArea     ; $C249
     jmp     loc_3_B082              ; $C24C
 
-sub_C24F:
+Menu_CopyPtrFromArea:
     jsr     Mmc1_SetPrgBankArea     ; $C24F
-    jsr     sub_C258                ; $C252
+    jsr     Menu_CopyPtr            ; $C252
     jmp     Mmc1_SetPrgBank0        ; $C255
 
-sub_C258:
+; ---------------------------------------------------------------------------
+; Menu_CopyPtr
+;
+; Copy the word at (temp14),y to ram_053E,x / ram_054C,x and advance x.
+; Menu_CopyPtrFromArea does it with the area bank mapped.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_CopyPtr:
     lda     (temp14),y              ; $C258
     sta     ram_053E,x              ; $C25A
     iny                             ; $C25D
@@ -526,7 +555,7 @@ Area_GetFlagByte:
 Game_RunState:
     ldy     #$00                    ; $C2CA
     sty     ram_0727                ; $C2CC
-    sty     ram_0729                ; $C2CF
+    sty     menusPending            ; $C2CF
     jsr     Game_CheckStateChange   ; $C2D2
     jsr     JumpTable               ; $C2D5
 ; (inline jump table)
@@ -947,15 +976,15 @@ loc_C579:
     sta     areaDataPtr             ; $C5AF
     lda     AreaBank::BackgroundAreas+1,x ; $C5B1
     sta     areaDataPtr+1           ; $C5B4
-    jsr     Area_DecodeObjects      ; $C5B6
-    jsr     sub_C89D                ; $C5B9
+    jsr     Area_DrawFloors         ; $C5B6
+    jsr     Area_DecodeObjects      ; $C5B9
     pla                             ; $C5BC
     sta     areaDataPtr+1           ; $C5BD
     pla                             ; $C5BF
     sta     areaDataPtr             ; $C5C0
 
 loc_C5C2:
-    jsr     Area_DecodeObjects      ; $C5C2
+    jsr     Area_DrawFloors         ; $C5C2
     ldy     #$01                    ; $C5C5
     lda     (areaDataPtr),y         ; $C5C7
     and     #$1C                    ; $C5C9
@@ -990,7 +1019,7 @@ loc_C5E0:
 ; (end of code not executed in the test movies)
 
 loc_C5F9:
-    jsr     sub_C89D                ; $C5F9
+    jsr     Area_DecodeObjects      ; $C5F9
     lda     #$03                    ; $C5FC
     sta     ram_071B                ; $C5FE
     lsr     a                       ; $C601
@@ -1200,20 +1229,22 @@ Game_UnblankAndNextMode:
     sta     renderingOff            ; $C72F
     jmp     Game_NextMode           ; $C732
 
-dat_C735:
+FloorPatterns:
     .byte   $C1, $83, $C1, $87, $C1, $8F, $C1, $9F, $C1, $BF, $C1, $7F, $C3, $FF, $C7, $FF; $C735
     .byte   $E0, $03, $F0, $03, $F8, $03, $FC, $03, $FE, $83, $FF, $C3, $FF, $E3, $FF, $FF; $C745
 
 ; ---------------------------------------------------------------------------
-; Area_DecodeObjects
+; Area_DrawFloors
 ;
-; Decode the area at areaDataPtr into the tile map: the header (byte 0 =
-; length, byte 2 = floor pattern, areaNoCeiling and background) and then
-; the objects from offset 4.
+; First pass over the area data at areaDataPtr: draw the floor and ceiling
+; across the area.  Byte 2 of the header gives the starting floor pattern
+; (FloorPatterns), areaNoCeiling and the background; objects in row $D
+; change the floor pattern from their column on.  The world's floor tiles
+; come from Area_SetFloorTiles.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
-Area_DecodeObjects:
+Area_DrawFloors:
     lda     #$00                    ; $C755
     sta     ram_010A                ; $C757
     sta     ram_010B                ; $C75A
@@ -1221,7 +1252,7 @@ Area_DecodeObjects:
     ldy     #$02                    ; $C760
     lda     (areaDataPtr),y         ; $C762
     and     #$0F                    ; $C764
-    sta     ram_0731                ; $C766
+    sta     areaObjectType          ; $C766
     lda     (areaDataPtr),y         ; $C769
     and     #$80                    ; $C76B
     sta     areaNoCeiling           ; $C76D
@@ -1234,7 +1265,7 @@ Area_DecodeObjects:
     sta     ram_010C                ; $C778
     lda     #$04                    ; $C77B
     sta     areaDataOffset          ; $C77D
-    jsr     sub_C819                ; $C780
+    jsr     Area_SetFloorTiles      ; $C780
     ldy     #$00                    ; $C783
     lda     (areaDataPtr),y         ; $C785
     sta     areaDataLength          ; $C787
@@ -1288,7 +1319,7 @@ loc_C7C6:
     lda     (areaDataPtr),y         ; $C7D0
     pha                             ; $C7D2
     and     #$0F                    ; $C7D3
-    sta     ram_0731                ; $C7D5
+    sta     areaObjectType          ; $C7D5
     pla                             ; $C7D8
     and     #$80                    ; $C7D9
     sta     areaNoCeiling           ; $C7DB
@@ -1312,7 +1343,7 @@ loc_C7F0:
     lda     ram_010B                ; $C7F3
     and     #$0F                    ; $C7F6
     sta     temp10                  ; $C7F8
-    jsr     sub_C82B                ; $C7FA
+    jsr     Area_DrawFloorColumn    ; $C7FA
     inc     ram_010B                ; $C7FD
     lda     ram_010B                ; $C800
     cmp     #$40                    ; $C803
@@ -1329,19 +1360,37 @@ loc_C812:
 loc_C818:
     rts                             ; $C818
 
-sub_C819:
+; ---------------------------------------------------------------------------
+; Area_SetFloorTiles
+;
+; Set up the floor and ceiling tiles for the current world, through a
+; routine in its area bank (OverworldBank::SetFloorTiles in the overworld
+; banks).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_SetFloorTiles:
     lda     currentWorld            ; $C819
     jsr     JumpTable               ; $C81C
 ; (inline jump table)
-    .word   OverworldBank::sub_81A3 ; $C81F
+    .word   OverworldBank::SetFloorTiles ; $C81F
     .word   loc_3_8647              ; $C821
     .word   loc_3_8647              ; $C823
     .word   loc_4_8167              ; $C825
     .word   loc_4_8167              ; $C827
     .word   loc_5_817B              ; $C829
 
-sub_C82B:
-    lda     ram_0731                ; $C82B
+; ---------------------------------------------------------------------------
+; Area_DrawFloorColumn
+;
+; Draw one column of floor and ceiling from floor pattern areaObjectType
+; (FloorPatterns, 2 bytes per pattern: a bit per row) and the world's floor
+; tiles (temp12).  Empty tiles ($40, and $42 over $40) are left alone.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawFloorColumn:
+    lda     areaObjectType          ; $C82B
     asl     a                       ; $C82E
     tay                             ; $C82F
     ldx     #$05                    ; $C830
@@ -1364,7 +1413,7 @@ loc_C846:
 loc_C84C:
     sty     temp8                   ; $C84C
     ldx     ram_010F                ; $C84E
-    lda     dat_C735,y              ; $C851
+    lda     FloorPatterns,y         ; $C851
     and     ram_010E                ; $C854
     cpx     #$00                    ; $C857
     beq     loc_C85F                ; $C859
@@ -1413,7 +1462,21 @@ loc_C878:
     sta     temp10                  ; $C89A
     rts                             ; $C89C
 
-sub_C89D:
+; ---------------------------------------------------------------------------
+; Area_DecodeObjects
+;
+; Second pass over the area data: draw its objects into the tile map.  Each
+; object is a position (row * 16 + column) and a type (areaObjectType):
+; types $10 and up are large objects with a size in the low nibble
+; (Area_DrawLargeObject), type $0F takes an extra byte
+; (Area_DrawExtraObject), and the rest are small objects
+; (Area_DrawSmallObject).  Objects in row $D only move the position.  Also
+; sets areaLastPage from the header and resets the elevator and locked door
+; positions.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DecodeObjects:
     lda     #$00                    ; $C89D
     sta     areaBuildPage           ; $C89F
     sta     ram_010A                ; $C8A2
@@ -1441,7 +1504,7 @@ loc_C8C5:
     jsr     sub_C988                ; $C8CA
     iny                             ; $C8CD
     lda     (areaDataPtr),y         ; $C8CE
-    sta     ram_0731                ; $C8D0
+    sta     areaObjectType          ; $C8D0
     iny                             ; $C8D3
     sty     areaDataOffset          ; $C8D4
     jsr     sub_C95F                ; $C8D7
@@ -1454,22 +1517,22 @@ loc_C8C5:
     rts                             ; $C8E8
 
 loc_C8E9:
-    lda     ram_0731                ; $C8E9
+    lda     areaObjectType          ; $C8E9
     and     #$F0                    ; $C8EC
     beq     loc_C8F6                ; $C8EE
-    jsr     sub_C912                ; $C8F0
+    jsr     Area_DrawLargeObject    ; $C8F0
     jmp     loc_C909                ; $C8F3
 
 loc_C8F6:
-    lda     ram_0731                ; $C8F6
+    lda     areaObjectType          ; $C8F6
     cmp     #$0F                    ; $C8F9
     bne     loc_C906                ; $C8FB
-    jsr     sub_C9A5                ; $C8FD
+    jsr     Area_DrawExtraObject    ; $C8FD
     inc     areaDataOffset          ; $C900
     jmp     loc_C909                ; $C903
 
 loc_C906:
-    jsr     sub_C927                ; $C906
+    jsr     Area_DrawSmallObject    ; $C906
 
 loc_C909:
     ldy     areaDataOffset          ; $C909
@@ -1477,29 +1540,39 @@ loc_C909:
     bne     loc_C8C5                ; $C90F
     rts                             ; $C911
 
-sub_C912:
-    ldx     ram_0731                ; $C912
+; ---------------------------------------------------------------------------
+; Area_DrawLargeObject
+;
+; Draw large object areaObjectType, by world: the area bank's
+; AreaBank::DrawLargeObject, or the town bank's own routine.
+; Area_DrawSmallObject likewise draws a small object
+; (AreaBank::DrawSmallObject).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawLargeObject:
+    ldx     areaObjectType          ; $C912
     lda     currentWorld            ; $C915
     jsr     JumpTable               ; $C918
 ; (inline jump table)
-    .word   AreaBank::sub_80EE      ; $C91B
+    .word   AreaBank::DrawLargeObject ; $C91B
     .word   loc_3_9B86              ; $C91D
     .word   loc_3_9B86              ; $C91F
-    .word   AreaBank::sub_80EE      ; $C921
-    .word   AreaBank::sub_80EE      ; $C923
-    .word   AreaBank::sub_80EE      ; $C925
+    .word   AreaBank::DrawLargeObject ; $C921
+    .word   AreaBank::DrawLargeObject ; $C923
+    .word   AreaBank::DrawLargeObject ; $C925
 
-sub_C927:
-    ldx     ram_0731                ; $C927
+Area_DrawSmallObject:
+    ldx     areaObjectType          ; $C927
     lda     currentWorld            ; $C92A
     jsr     JumpTable               ; $C92D
 ; (inline jump table)
-    .word   AreaBank::sub_812F      ; $C930
+    .word   AreaBank::DrawSmallObject ; $C930
     .word   loc_3_9BCB              ; $C932
     .word   loc_3_9BCB              ; $C934
-    .word   AreaBank::sub_812F      ; $C936
-    .word   AreaBank::sub_812F      ; $C938
-    .word   AreaBank::sub_812F      ; $C93A
+    .word   AreaBank::DrawSmallObject ; $C936
+    .word   AreaBank::DrawSmallObject ; $C938
+    .word   AreaBank::DrawSmallObject ; $C93A
 
 ; Start of each page of the area tile map.
 AreaMapPagesLo:
@@ -1581,7 +1654,7 @@ sub_C988:
 loc_C9A4:
     rts                             ; $C9A4
 
-sub_C9A5:
+Area_DrawExtraObject:
     ldx     #$05                    ; $C9A5
 
 loc_C9A7:
@@ -3645,7 +3718,7 @@ loc_D538:
     cmp     #$0B                    ; $D53B
     bne     loc_D545                ; $D53D
     inc     ram_0727                ; $D53F
-    inc     ram_0729                ; $D542
+    inc     menusPending            ; $D542
 
 loc_D545:
     jmp     loc_0_99E6              ; $D545
