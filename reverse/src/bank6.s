@@ -115,12 +115,10 @@ loc_6_8143:
 sub_6_8147:
     ldx     #$04                    ; $8147
     bne     loc_6_8122              ; $8149
-; (code below not executed in the test movies)
 
 sub_6_814B:
     ldx     #$08                    ; $814B
     bne     loc_6_8122              ; $814D
-; (end of code not executed in the test movies)
 
 sub_6_814F:
     and     #$0F                    ; $814F
@@ -133,11 +131,9 @@ sub_6_814F:
 sub_6_815A:
     lda     ram_00E6                ; $815A
     bne     loc_6_8160              ; $815C
-; (code below not executed in the test movies)
 
 sub_6_815E:
     lda     sfxRequest+1            ; $815E
-; (end of code not executed in the test movies)
 
 loc_6_8160:
     ldx     #$00                    ; $8160
@@ -147,11 +143,9 @@ loc_6_8160:
 sub_6_8167:
     lda     ram_00E6                ; $8167
     bne     loc_6_816D              ; $8169
-; (code below not executed in the test movies)
 
 sub_6_816B:
     lda     sfxRequest              ; $816B
-; (end of code not executed in the test movies)
 
 loc_6_816D:
     ldx     #$04                    ; $816D
@@ -286,7 +280,6 @@ sub_6_821B:
     lsr     a                       ; $8238
     bcs     loc_6_8249              ; $8239
     rts                             ; $823B
-; (code below not executed in the test movies)
 
 loc_6_823C:
     lda     #$1F                    ; $823C
@@ -310,7 +303,6 @@ loc_6_8249:
     sta     SQ1_HI                  ; $8261
     sta     SQ2_HI                  ; $8264
     jmp     loc_6_8204              ; $8267
-; (end of code not executed in the test movies)
 
 sub_6_826A:
     lda     soundMute               ; $826A
@@ -351,7 +343,6 @@ sub_6_8293:
 
 loc_6_82AC:
     rts                             ; $82AC
-; (code below not executed in the test movies)
 
 loc_6_82AD:
     cmp     #$01                    ; $82AD
@@ -379,7 +370,6 @@ loc_6_82C5:
 
 loc_6_82CD:
     lda     #$02                    ; $82CD
-; (end of code not executed in the test movies)
 
 loc_6_82CF:
     sta     ram_00E8                ; $82CF
@@ -441,11 +431,9 @@ loc_6_82EF:
     sta     sfxRequest+2            ; $833E
     sta     sfxRequest+3            ; $8340
     bne     loc_6_8347              ; $8342
-; (code below not executed in the test movies)
 
 loc_6_8344:
     jmp     loc_6_82EF              ; $8344
-; (end of code not executed in the test movies)
 
 loc_6_8347:
     lda     ram_07EE                ; $8347
@@ -456,7 +444,6 @@ loc_6_8347:
     lda     ram_07ED                ; $8353
     cmp     #$08                    ; $8356
     bne     loc_6_837F              ; $8358
-; (code below not executed in the test movies)
     lda     ram_07EC                ; $835A
     jsr     sub_6_8120              ; $835D
     beq     loc_6_837F              ; $8360
@@ -476,7 +463,6 @@ loc_6_837A:
 
 loc_6_837C:
     sta     ram_07FA                ; $837C
-; (end of code not executed in the test movies)
 
 loc_6_837F:
     dec     sfxRequest              ; $837F
@@ -516,11 +502,9 @@ loc_6_83A1:
     inc     ram_07EA                ; $83BD
     lda     ram_07EA                ; $83C0
     bne     loc_6_83C7              ; $83C3
-; (code below not executed in the test movies)
 
 loc_6_83C5:
     lda     #$5F                    ; $83C5
-; (end of code not executed in the test movies)
 
 loc_6_83C7:
     sta     musicPlaying            ; $83C7
@@ -535,9 +519,7 @@ loc_6_83CF:
     lda     ram_00E8                ; $83D3
     and     #$01                    ; $83D5
     bne     loc_6_83DC              ; $83D7
-; (code below not executed in the test movies)
     jsr     sub_6_816B              ; $83D9
-; (end of code not executed in the test movies)
 
 loc_6_83DC:
     lda     musicPlaying            ; $83DC
@@ -560,15 +542,12 @@ loc_6_83E6:
     bne     loc_6_840A              ; $83FB
     lda     ram_07FA                ; $83FD
     beq     loc_6_8407              ; $8400
-; (code below not executed in the test movies)
     lsr     a                       ; $8402
     lsr     a                       ; $8403
     dec     ram_07FA                ; $8404
-; (end of code not executed in the test movies)
 
 loc_6_8407:
     jmp     loc_6_844D              ; $8407
-; (code below not executed in the test movies)
 
 loc_6_840A:
     lda     ram_00E3                ; $840A
@@ -612,7 +591,6 @@ loc_6_843C:
     lsr     a                       ; $8448
     lsr     a                       ; $8449
     dec     ram_07F9                ; $844A
-; (end of code not executed in the test movies)
 
 loc_6_844D:
     clc                             ; $844D
@@ -626,7 +604,6 @@ loc_6_844D:
 loc_6_845B:
     ldy     ram_00E4                ; $845B
     beq     loc_6_8496              ; $845D
-; (code below not executed in the test movies)
     dec     sfxRequest+2            ; $845F
     beq     loc_6_846B              ; $8461
     bne     loc_6_8490              ; $8463
@@ -664,7 +641,6 @@ loc_6_8490:
     lda     sfxRequest+2            ; $8490
     cmp     #$04                    ; $8492
     bne     loc_6_849B              ; $8494
-; (end of code not executed in the test movies)
 
 loc_6_8496:
     lda     #$00                    ; $8496
@@ -673,7 +649,6 @@ loc_6_8496:
 loc_6_849B:
     lda     ram_00E5                ; $849B
     beq     dat_6_84D9              ; $849D
-; (code below not executed in the test movies)
     dec     sfxRequest+3            ; $849F
     beq     loc_6_84AB              ; $84A1
     bne     dat_6_84D9              ; $84A3
@@ -706,7 +681,6 @@ loc_6_84BC:
 loc_6_84D4:
     lda     ram_07FC                ; $84D4
     sta     sfxRequest+3            ; $84D7
-; (end of code not executed in the test movies)
 
 dat_6_84D9:
     rts                             ; $84D9

@@ -3,6 +3,8 @@
 #   make           assemble and link build/zelda2.nes and build/zelda2.sym.json
 #   make verify    check that build/zelda2.nes is identical to the reference
 #   make status    update the generated section of STATUS.md
+#   make movies    write the scripted input movies (build/movies/*.fm2) that
+#                  cover what the test movies skip; see tools/ABOUT.md
 #   make clean     remove build products (the CDL logs in build/ are kept)
 
 CC65_BIN ?= /opt/cc65/bin
@@ -20,7 +22,7 @@ INCS     := $(wildcard $(SRC)/*.inc)
 OUT      := $(BUILD)/zelda2.nes
 SYMS     := $(BUILD)/zelda2.sym.json
 
-.PHONY: all verify status clean
+.PHONY: all verify status movies clean
 
 all: $(OUT) $(SYMS)
 
@@ -57,6 +59,21 @@ verify: $(OUT) $(SYMS)
 
 status: $(SYMS)
 	python3 tools/status.py --cdl $(BUILD)/zelda2.cdl --symbols $(SYMS) --src $(SRC) --status STATUS.md
+
+# Scripted runs for tools/cdl_movie.py, covering screens the test movies
+# skip.  title_idle: the title screen left alone (the story scroll, twice
+# round).  file_select: register two names, eliminate one, start a game.
+MAKE_MOVIE := python3 tools/make_movie.py
+
+movies: | $(BUILD)
+	mkdir -p $(BUILD)/movies
+	$(MAKE_MOVIE) $(BUILD)/movies/title_idle.fm2 --frames 8200
+	$(MAKE_MOVIE) $(BUILD)/movies/file_select.fm2 --frames 1700 \
+		60:START 200:START 300:A 330:RIGHT 360:A 390:DOWN 420:A 450:B \
+		480:LEFT:40 540:UP:40 600:A 640:SELECT 680:A 720:SELECT \
+		760:SELECT 800:START 860:SELECT 900:SELECT 940:SELECT 980:START \
+		1040:SELECT 1080:START 1120:SELECT 1160:SELECT 1200:START \
+		1260:SELECT 1300:SELECT 1340:START 1400:START
 
 clean:
 	rm -f $(OBJS) $(BUILD)/chr.bin $(OUT) $(BUILD)/zelda2.dbg $(BUILD)/zelda2.labels $(BUILD)/zelda2.map $(SYMS)

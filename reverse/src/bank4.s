@@ -987,7 +987,6 @@ loc_4_9744:
     cmp     objFacing+7,x           ; $9745
     bne     loc_4_9761              ; $9747
     beq     loc_4_975C              ; $9749
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank4
@@ -997,6 +996,7 @@ loc_4_9744:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank4:
+; (code below not executed in the test movies)
     jsr     Projectile_PlaySound_Bank4 ; $974B
 ; (end of code not executed in the test movies)
 
@@ -3173,7 +3173,6 @@ loc_4_AD8D:
 loc_4_AD90:
     ldx     currentObject           ; $AD90
     bpl     loc_4_ADB4              ; $AD92
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank4B
@@ -3184,6 +3183,7 @@ loc_4_AD90:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank4B:
+; (code below not executed in the test movies)
     jsr     Projectile_PlaySound_Bank4 ; $AD94
     jsr     Projectile_HitsBg       ; $AD97
     bcs     Projectile_Spark_Bank4B ; $AD9A

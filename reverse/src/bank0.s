@@ -3000,7 +3000,6 @@ Spell_FairyEffect:
 
 @done:
     rts                             ; $91AE
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Spell_TurnEnemiesToBots
@@ -3015,6 +3014,7 @@ Spell_FairyEffect:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Spell_TurnEnemiesToBots:
+; (code below not executed in the test movies)
     lda     spellActive             ; $91AF
     and     #$BF                    ; $91B2
     sta     spellActive             ; $91B4
@@ -5705,10 +5705,12 @@ Menu_Skip:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_OverworldWait:
+; (code below not executed in the test movies)
     jsr     Pause_CheckStart        ; $A19C
     lda     joypadHeld+1            ; $A19F
     cmp     #JOY_UP | JOY_A         ; $A1A1  Up+A on controller 2
     bne     Game_ShowContinueScreenDone ; $A1A3
+; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Game_ShowContinueScreen
@@ -6048,9 +6050,11 @@ Menu_DrawOpenRow:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_OverworldMute:
+; (code below not executed in the test movies)
     lda     #$01                    ; $A30F
     sta     soundMute               ; $A311
     bne     Menu_NextState          ; $A313
+; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Flute_Start
@@ -6111,8 +6115,10 @@ Flute_Wait:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_OverworldUnmute:
+; (code below not executed in the test movies)
     lda     #$00                    ; $A334
     sta     soundMute               ; $A336
+; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Menu_Close

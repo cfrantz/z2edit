@@ -656,7 +656,6 @@ GameState_Death:
     .word   Death_ContinueMenu      ; $C336
     .word   Death_SaveAndQuit       ; $C338  (not observed)
     .word   Game_ReturnToTitle      ; $C33A  (not observed)
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Game_ReturnToTitle
@@ -667,6 +666,7 @@ GameState_Death:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_ReturnToTitle:
+; (code below not executed in the test movies)
     lda     #$05                    ; $C33C
     jsr     Mmc1_SetPrgBank         ; $C33E
     jsr     Mmc1_SetChrBank         ; $C341
@@ -739,7 +739,6 @@ GameState_Ending:
 Mmc1_SetPrgBank5:
     lda     #$05                    ; $C388
     jmp     Mmc1_SetPrgBank         ; $C38A
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; GameState_SaveAfterEnding
@@ -753,8 +752,10 @@ Mmc1_SetPrgBank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GameState_SaveAfterEnding:
+; (code below not executed in the test movies)
     jsr     Game_CheckModeChange    ; $C38D
     jsr     JumpTable               ; $C390
+; (end of code not executed in the test movies)
 ; (inline jump table)
     .word   Mode_SaveAfterEnding    ; $C393  (not observed)
     .word   Game_ReturnToTitle      ; $C395  (not observed)
@@ -2560,6 +2561,7 @@ ReturnToOverworld_SetPosition:
 Mode_SaveAfterEnding:
     jsr     Game_CheckStepChange    ; $CD19
     jsr     JumpTable               ; $CD1C
+; (end of code not executed in the test movies)
 ; (inline jump table)
     .word   Death_SaveGame          ; $CD1F  (not observed)
     .word   Game_NextMode           ; $CD21
@@ -10309,7 +10311,6 @@ ContinueScreenText:
     .byte   $F4, $F4, $DB, $EE, $ED, $ED, $E8, $E7, $F4, $F4, $DA, $EC, $F4, $F4, $F2, $E8; $FE4B
     .byte   $EE, $22, $C5, $16, $ED, $EE, $EB, $E7, $F4, $E9, $E8, $F0, $DE, $EB, $F4, $E8; $FE5B
     .byte   $DF, $DF, $CF, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FF           ; $FE6B
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Death_SaveAndQuit
@@ -10320,8 +10321,10 @@ ContinueScreenText:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_SaveAndQuit:
+; (code below not executed in the test movies)
     jsr     Game_CheckStepChange    ; $FE76
     jsr     JumpTable               ; $FE79
+; (end of code not executed in the test movies)
 ; (inline jump table)
     .word   Death_BlinkSaveChoice   ; $FE7C  (not observed)
     .word   Death_SaveGame          ; $FE7E  (not observed)
@@ -10330,7 +10333,6 @@ Death_SaveAndQuit:
 ; PPU string for Death_BlinkSaveChoice: one attribute byte at $23D3.
 SaveBlinkString:
     .byte   $23, $D3, $01, $00, $FF                                         ; $FE82
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Death_BlinkSaveChoice
@@ -10341,6 +10343,7 @@ SaveBlinkString:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Death_BlinkSaveChoice:
+; (code below not executed in the test movies)
     lda     saveBlinkTimer          ; $FE87
     beq     @loc_FEA6               ; $FE8A
     dec     saveBlinkTimer          ; $FE8C

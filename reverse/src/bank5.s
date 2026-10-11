@@ -4665,7 +4665,6 @@ loc_5_A749:
     lda     ppuScrollY              ; $A76A
     cmp     #$60                    ; $A76C
     bne     loc_5_A787              ; $A76E
-; (code below not executed in the test movies)
     lda     #$80                    ; $A770
     sta     timerFast+3             ; $A772
     jsr     sub_5_A795              ; $A775
@@ -4677,18 +4676,15 @@ loc_5_A749:
 loc_5_A781:
     inc     gameMode                ; $A781
     jmp     sub_5_A795              ; $A784
-; (end of code not executed in the test movies)
 
 loc_5_A787:
     lda     ram_00E8                ; $A787
     cmp     #$02                    ; $A789
     bne     sub_5_A795              ; $A78B
-; (code below not executed in the test movies)
     lda     frameCounter            ; $A78D
     and     #$03                    ; $A78F
     bne     sub_5_A795              ; $A791
     inc     ppuScrollY              ; $A793
-; (end of code not executed in the test movies)
 
 sub_5_A795:
     lda     joypadHeld              ; $A795
@@ -4746,7 +4742,6 @@ sub_5_A8CF:
     lda     frameCounter            ; $A8D1
     and     #$0F                    ; $A8D3
     bne     loc_5_A8E8              ; $A8D5
-; (code below not executed in the test movies)
 
 loc_5_A8D7:
     inc     oamBuffer+103,x         ; $A8D7
@@ -4758,30 +4753,24 @@ loc_5_A8D7:
     dex                             ; $A8E4
     dex                             ; $A8E5
     bpl     loc_5_A8D7              ; $A8E6
-; (end of code not executed in the test movies)
 
 loc_5_A8E8:
     lda     frameCounter            ; $A8E8
     bne     loc_5_A8EE              ; $A8EA
-; (code below not executed in the test movies)
     inc     objYHi+13               ; $A8EC
-; (end of code not executed in the test movies)
 
 loc_5_A8EE:
     lda     oamBuffer+108           ; $A8EE
     cmp     #$37                    ; $A8F1
     bcc     loc_5_A8FE              ; $A8F3
-; (code below not executed in the test movies)
     lda     #$00                    ; $A8F5
     sta     objYHi+13               ; $A8F7
     lda     #$F8                    ; $A8F9
     sta     oamBuffer+108           ; $A8FB
-; (end of code not executed in the test movies)
 
 loc_5_A8FE:
     lda     objYHi+13               ; $A8FE
     beq     loc_5_A917              ; $A900
-; (code below not executed in the test movies)
     lda     frameCounter            ; $A902
     and     #$03                    ; $A904
     bne     loc_5_A917              ; $A906
@@ -4790,7 +4779,6 @@ loc_5_A8FE:
     inc     oamBuffer+111           ; $A90E
     inc     oamBuffer+111           ; $A911
     inc     oamBuffer+111           ; $A914
-; (end of code not executed in the test movies)
 
 loc_5_A917:
     rts                             ; $A917
@@ -4800,7 +4788,6 @@ sub_5_A918:
     lda     frameCounter            ; $A91A
     and     #$07                    ; $A91C
     bne     loc_5_A931              ; $A91E
-; (code below not executed in the test movies)
 
 loc_5_A920:
     inc     oamBuffer+211,x         ; $A920
@@ -4812,7 +4799,6 @@ loc_5_A920:
     dex                             ; $A92D
     dex                             ; $A92E
     bpl     loc_5_A920              ; $A92F
-; (end of code not executed in the test movies)
 
 loc_5_A931:
     rts                             ; $A931
@@ -4867,7 +4853,6 @@ dat_5_AB41:
     .byte   $B0, $B0, $B0, $B0, $B0, $B0, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1; $AB41
     .byte   $B0, $B0, $B0, $B0, $B0, $B0, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $69, $AF; $AB51
     .byte   $84, $AF, $AA, $AF, $C6, $AF, $DB, $AF, $EF, $AF, $14, $B0      ; $AB61
-; (code below not executed in the test movies)
 
 loc_5_AB6D:
     ldy     #$00                    ; $AB6D
@@ -4948,7 +4933,6 @@ loc_5_ABE5:
     .word   sub_5_ACFA              ; $ABF1  (not observed)
     .word   sub_5_AD7C              ; $ABF3  (not observed)
     .word   loc_5_AE15              ; $ABF5  (not observed)
-; (code below not executed in the test movies)
 
 loc_5_ABF7:
     jsr     sub_5_AC07              ; $ABF7
@@ -4969,13 +4953,11 @@ sub_5_AC07:
 
 loc_5_AC10:
     rts                             ; $AC10
-; (end of code not executed in the test movies)
 ; (unreferenced: $AC11-$AC30, 32 bytes)
 
 dat_5_AC11:
     .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $AC11
     .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FD; $AC21
-; (code below not executed in the test movies)
 
 loc_5_AC31:
     lda     ppuScrollY              ; $AC31
@@ -5148,13 +5130,11 @@ loc_5_AD5E:
     lda     #$00                    ; $AD5E
     sta     ram_0761                ; $AD60
     rts                             ; $AD63
-; (end of code not executed in the test movies)
 ; (unreferenced: $AD64-$AD7B, 24 bytes)
 
 dat_5_AD64:
     .byte   $00, $00, $00, $00, $00, $00, $00, $CC, $00, $00, $00, $00, $00, $00, $00, $CC; $AD64
     .byte   $00, $00, $00, $00, $00, $00, $00, $CC                          ; $AD74
-; (code below not executed in the test movies)
 
 sub_5_AD7C:
     lda     #$14                    ; $AD7C
@@ -5209,7 +5189,6 @@ loc_5_ADC5:
 
 loc_5_ADDD:
     jmp     loc_5_AD5E              ; $ADDD
-; (end of code not executed in the test movies)
 
 sub_5_ADE0:
     lda     #$2A                    ; $ADE0
@@ -5238,13 +5217,13 @@ sub_5_ADE0:
     lda     #$02                    ; $AE10
     sta     objY+13                 ; $AE12
     rts                             ; $AE14
-; (code below not executed in the test movies)
 
 loc_5_AE15:
     lda     ppuNametable            ; $AE15
     bne     loc_5_AE4A              ; $AE18
     lda     timerFast+3             ; $AE1A
     beq     loc_5_AE30              ; $AE1D
+; (code below not executed in the test movies)
     jsr     sub_5_AC07              ; $AE1F
     lda     #$01                    ; $AE22
     sta     objXHi+4                ; $AE24
@@ -5253,6 +5232,7 @@ loc_5_AE15:
     bne     loc_5_AE49              ; $AE2A
     lda     #$00                    ; $AE2C
     sta     objXHi+4                ; $AE2E
+; (end of code not executed in the test movies)
 
 loc_5_AE30:
     lda     objY+8                  ; $AE30
@@ -5288,7 +5268,6 @@ loc_5_AE55:
     .byte   $11, $AC, $99, $05, $03, $88, $10, $F7, $A5, $34, $C9, $07, $F0, $16, $A0, $00; $AE97
     .byte   $B1, $00, $C5, $2B, $D0, $0E, $C8, $B1, $00, $29, $F0, $C5, $2C, $D0, $05, $20; $AEA7
     .byte   $EE, $AE, $E6, $34, $20, $C1, $AE, $E6, $35, $60                ; $AEB7
-; (code below not executed in the test movies)
 
 sub_5_AEC1:
     lda     objY+3                  ; $AEC1
@@ -5313,11 +5292,9 @@ sub_5_AEC1:
 
 loc_5_AEE6:
     rts                             ; $AEE6
-; (end of code not executed in the test movies)
 ; (unreferenced: $AEE7-$AF01, 27 bytes)
     .byte   $1B, $26, $1C, $15, $14, $25, $1A, $A6, $34, $BC, $E7, $AE, $A9, $FF, $99, $25; $AEE7
     .byte   $03, $88, $B1, $00, $99, $25, $03, $88, $10, $F8, $60           ; $AEF7
-; (code below not executed in the test movies)
 
 loc_5_AF02:
     jsr     sub_5_ACFA              ; $AF02
@@ -5338,7 +5315,6 @@ loc_5_AF13:
 loc_5_AF19:
     jsr     sub_5_AD7C              ; $AF19
     jmp     loc_5_AF0F              ; $AF1C
-; (end of code not executed in the test movies)
 
 loc_5_AF1F:
     lda     gameSubStep             ; $AF1F
@@ -5483,11 +5459,9 @@ loc_5_B28B:
 loc_5_B2AA:
     cmp     #$04                    ; $B2AA
     bne     loc_5_B2B4              ; $B2AC
-; (code below not executed in the test movies)
     lda     #$02                    ; $B2AE
     sta     gameMode                ; $B2B0
     rts                             ; $B2B3
-; (end of code not executed in the test movies)
 
 loc_5_B2B4:
     lda     objYHi                  ; $B2B4
@@ -5697,7 +5671,6 @@ loc_5_B3F4:
     lda     #$00                    ; $B3F4
     sta     gameMode                ; $B3F6
     rts                             ; $B3F9
-; (code below not executed in the test movies)
 
 loc_5_B3FA:
     lda     ram_073B                ; $B3FA
@@ -5729,7 +5702,6 @@ loc_5_B41D:
 
 dat_5_B421:
     .byte   $30, $48, $60, $78                                              ; $B421
-; (code below not executed in the test movies)
 
 loc_5_B425:
     ldy     ram_073E                ; $B425
@@ -5854,7 +5826,6 @@ loc_5_B4D5:
     sta     temp1                   ; $B4F7
     jsr     sub_5_B529              ; $B4F9
     rts                             ; $B4FC
-; (end of code not executed in the test movies)
 
 dat_5_B4FD:
     .byte   $01                                                             ; $B4FD
@@ -6159,12 +6130,10 @@ loc_5_B6D8:
     tay                             ; $B6D8
     and     objYHi+1                ; $B6D9
     bne     loc_5_B6E4              ; $B6DB
-; (code below not executed in the test movies)
     inc     objYHi                  ; $B6DD
     tya                             ; $B6DF
     asl     a                       ; $B6E0
     jmp     loc_5_B6D8              ; $B6E1
-; (end of code not executed in the test movies)
 
 loc_5_B6E4:
     ldx     objYHi                  ; $B6E4
@@ -6253,7 +6222,6 @@ loc_5_B74B:
 loc_5_B772:
     lda     objYHi+8                ; $B772
     beq     loc_5_B78E              ; $B774
-; (code below not executed in the test movies)
     inc     objYHi+9                ; $B776
     lda     objYHi+9                ; $B778
     cmp     #$1F                    ; $B77A
@@ -6263,14 +6231,11 @@ loc_5_B772:
     lda     #$20                    ; $B782
     sta     objYHi+9                ; $B784
     jmp     loc_5_B78E              ; $B786
-; (end of code not executed in the test movies)
 ; (unreferenced: $B789-$B78A, 2 bytes)
     .byte   $F0, $03                                                        ; $B789
-; (code below not executed in the test movies)
 
 loc_5_B78B:
     jmp     loc_5_B831              ; $B78B
-; (end of code not executed in the test movies)
 
 loc_5_B78E:
     lda     #$01                    ; $B78E
@@ -6358,9 +6323,7 @@ loc_5_B803:
     lda     objYHi+7                ; $B809
     cmp     #$02                    ; $B80B
     bne     loc_5_B811              ; $B80D
-; (code below not executed in the test movies)
     dec     objYHi+7                ; $B80F
-; (end of code not executed in the test movies)
 
 loc_5_B811:
     jmp     loc_5_B831              ; $B811

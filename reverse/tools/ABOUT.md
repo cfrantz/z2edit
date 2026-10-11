@@ -65,5 +65,11 @@ Tools that drive the emulator need the Python extension built with
 - `name_at.py`: Names the code or data at addresses, whatever label (or
   none, or a cheap local) is there now.
 - `resymbolize.py`: Rewrites `.word` table entries with current names.
+- `make_movie.py`: Writes an FM2 movie from power-on with scripted button
+  presses (`K:BUTTONS[:LEN]`).  `make movies` writes the scripted runs
+  (title screen left alone, file select menus) that were merged into
+  `build/zelda2.cdl` with the two test movies.
+- `mark_unexecuted.py`: Rewrites the "not executed in the test movies"
+  markers of bank files from the CDL, after new runs are merged.
 - `check_docs.py`: Reports symbol names in `docs/` that no longer exist in
   the source.  Run by `make verify`.

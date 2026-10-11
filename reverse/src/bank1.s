@@ -1492,7 +1492,6 @@ dat_1_97ED:
 
 dat_1_97EF:
     .byte   $D8, $00, $00                                                   ; $97EF
-; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Moblin_ThrowSpear
@@ -1503,6 +1502,7 @@ dat_1_97EF:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Moblin_ThrowSpear:
+; (code below not executed in the test movies)
     ldy     #$05                    ; $97F2
 
 loc_1_97F4:
