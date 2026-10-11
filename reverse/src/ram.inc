@@ -174,7 +174,7 @@ ram_048A                = $048A
 ram_048B                = $048B
 ram_048C                = $048C
 ram_048D                = $048D
-ram_048E                = $048E
+enemyDropItem           = $048E     ; [6] item the enemy drops when killed, 0 = none
 linkDeathPending        = $0494     ; nonzero to start the death sequence
 linkAttackStanding      = $0495     ; 1 if the current attack was started standing, 0 crouching
 linkLandingTimer        = $0497     ; frames Link stays crouched after a hard landing
@@ -461,7 +461,7 @@ sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy
 sramEnemyAttr           = $6DD5     ; [36] bits 7-6 = sprite palette, bit 4 = drains experience; experience (provisional)
 sramEnemyDamage         = $6DF9     ; [36] bits 7-6 = item drop group, bits 3-0 = damage class of each enemy type
 sramEnemyHitbox         = $6E1D     ; [36] hitbox of each enemy type: offset into EnemyHitboxes / 4
-sramEnemyFlags          = $6E41     ; [36] bit 4 = not hurt by the sword, bits 3-0 = background collision probe set
+sramEnemyFlags          = $6E41     ; [36] bit 6 = comes back after dying, bit 4 = not hurt by the sword, bits 3-0 = background collision probe set
 sramEnemyDrawPtrs       = $6E65     ; [36] (16-bit) routine that draws each enemy type
 sram_6EAD               = $6EAD     ; [9]
 sram_6EB6               = $6EB6     ; [8]

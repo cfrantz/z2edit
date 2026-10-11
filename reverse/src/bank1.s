@@ -193,7 +193,7 @@ loc_1_81F3:
     jsr     sub_1_8201              ; $81F3
     lda     temp0                   ; $81F6
     sta     ram_0112                ; $81F8
-    jsr     sub_DF4C                ; $81FB
+    jsr     AreaMap_NextBuildRow    ; $81FB
     jmp     loc_1_8204              ; $81FE
 
 sub_1_8201:
@@ -309,7 +309,7 @@ loc_1_82A2:
     bpl     loc_1_82A2              ; $82A9
     lda     #$89                    ; $82AB
     sta     ram_0112                ; $82AD
-    jsr     sub_DF4C                ; $82B0
+    jsr     AreaMap_NextBuildRow    ; $82B0
     and     #$F0                    ; $82B3
     cmp     #$D0                    ; $82B5
     bcc     loc_1_8299              ; $82B7
@@ -392,7 +392,7 @@ loc_1_8318:
 loc_1_8326:
     cpx     #$0E                    ; $8326
     beq     loc_1_8303              ; $8328
-    jsr     sub_DF4C                ; $832A
+    jsr     AreaMap_NextBuildRow    ; $832A
     inx                             ; $832D
     jmp     loc_1_8315              ; $832E
 
@@ -1403,7 +1403,7 @@ loc_1_98B2:
     sta     temp0                   ; $98B4
     sta     temp2                   ; $98B6
     jsr     Enemy_MoveYWithGravity  ; $98B8
-    jsr     sub_DE3D                ; $98BB
+    jsr     Enemy_UpdateWithBg      ; $98BB
     jmp     Enemy_HurtLinkOnContact ; $98BE
 
 dat_1_98C1:
@@ -1412,7 +1412,7 @@ dat_1_98C1:
 loc_1_98C3:
     jsr     Enemy_SkipAiIfStunned   ; $98C3
     jsr     Enemy_HurtLinkOnContact ; $98C6
-    jsr     sub_DE3D                ; $98C9
+    jsr     Enemy_UpdateWithBg      ; $98C9
     lda     objXVelocity+1,x        ; $98CC
     pha                             ; $98CE
     lda     objFacing+1,x           ; $98CF
@@ -1591,7 +1591,7 @@ loc_1_9A22:
     sta     ram_05E5                ; $9A22
     asl     a                       ; $9A25
     sta     ram_05E6                ; $9A26
-    jsr     sub_DE3D                ; $9A29
+    jsr     Enemy_UpdateWithBg      ; $9A29
     jsr     Enemy_HurtLinkOnContact ; $9A2C
     jsr     Enemy_MoveYAndFall      ; $9A2F
     lda     objCollision+1,x        ; $9A32

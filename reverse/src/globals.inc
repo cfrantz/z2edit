@@ -78,7 +78,7 @@ GLOBALS_INC = 1
 .global Enemy_FaceLink
 .global Enemy_Despawn
 .global Enemy_Remove
-.global sub_DE3D
+.global Enemy_UpdateWithBg
 .global Enemy_UpdateCommon
 .global Enemy_DespawnIfFar
 .global Enemy_MoveX
@@ -89,8 +89,8 @@ GLOBALS_INC = 1
 .global AreaMap_PutTileRight
 .global sub_DF01
 .global Math_DivMod15
-.global sub_DF4A
-.global sub_DF4C
+.global AreaMap_PutTileNextBuildRow
+.global AreaMap_NextBuildRow
 .global AreaMap_PutTileDown
 .global AreaMap_NextRow
 .global sub_DF79

@@ -74,7 +74,7 @@ loc_3_811F:
     jsr     AreaMap_PutTileRight    ; $8122
     dex                             ; $8125
     bpl     loc_3_811F              ; $8126
-    jsr     sub_DF4C                ; $8128
+    jsr     AreaMap_NextBuildRow    ; $8128
     pla                             ; $812B
     tax                             ; $812C
     dex                             ; $812D
@@ -131,7 +131,7 @@ loc_3_816A:
     dex                             ; $816F
     bne     loc_3_816A              ; $8170
     lda     temp1                   ; $8172
-    jsr     sub_DF4A                ; $8174
+    jsr     AreaMap_PutTileNextBuildRow ; $8174
     and     #$F0                    ; $8177
     cmp     #$B0                    ; $8179
     bne     loc_3_8161              ; $817B
@@ -190,7 +190,7 @@ loc_3_81BF:
     jsr     AreaMap_PutTileRight    ; $81C1
     dex                             ; $81C4
     bpl     loc_3_81BF              ; $81C5
-    jsr     sub_DF4C                ; $81C7
+    jsr     AreaMap_NextBuildRow    ; $81C7
     inc     areaBuildPos            ; $81CA
     dec     temp4                   ; $81CD
     bpl     loc_3_81B6              ; $81CF
@@ -215,7 +215,7 @@ loc_3_81E9:
     jsr     AreaMap_PutTileRight    ; $81EB
     dex                             ; $81EE
     bpl     loc_3_81E9              ; $81EF
-    jsr     sub_DF4C                ; $81F1
+    jsr     AreaMap_NextBuildRow    ; $81F1
     dec     areaObjectType          ; $81F4
     dec     temp4                   ; $81F7
     bpl     loc_3_81E0              ; $81F9
@@ -290,7 +290,7 @@ loc_3_82B7:
     iny                             ; $82BC
     dex                             ; $82BD
     lda     dat_3_82AE,x            ; $82BE
-    jsr     sub_DF4A                ; $82C1
+    jsr     AreaMap_PutTileNextBuildRow ; $82C1
     tay                             ; $82C4
     dex                             ; $82C5
     bpl     loc_3_82B7              ; $82C6
@@ -331,7 +331,7 @@ loc_3_82F8:
     sta     (temp14),y              ; $82FA
     iny                             ; $82FC
     lda     #$49                    ; $82FD
-    jsr     sub_DF4A                ; $82FF
+    jsr     AreaMap_PutTileNextBuildRow ; $82FF
     tay                             ; $8302
     and     #$F0                    ; $8303
     cmp     #$B0                    ; $8305
@@ -360,7 +360,7 @@ loc_3_8321:
     bpl     loc_3_8321              ; $8327
     lda     #$92                    ; $8329
     sta     temp0                   ; $832B
-    jsr     sub_DF4C                ; $832D
+    jsr     AreaMap_NextBuildRow    ; $832D
     and     #$F0                    ; $8330
     cmp     #$D0                    ; $8332
     bcc     loc_3_8318              ; $8334
@@ -388,7 +388,7 @@ loc_3_8351:
     iny                             ; $8356
     dex                             ; $8357
     bpl     loc_3_8351              ; $8358
-    jsr     sub_DF4C                ; $835A
+    jsr     AreaMap_NextBuildRow    ; $835A
     dec     areaObjectType          ; $835D
     bpl     loc_3_834C              ; $8360
     rts                             ; $8362
@@ -418,7 +418,7 @@ loc_3_8384:
     jsr     AreaMap_PutTileRight    ; $8386
     dex                             ; $8389
     bpl     loc_3_8384              ; $838A
-    jsr     sub_DF4C                ; $838C
+    jsr     AreaMap_NextBuildRow    ; $838C
     dec     temp0                   ; $838F
     bpl     loc_3_8374              ; $8391
     rts                             ; $8393
@@ -1807,7 +1807,7 @@ loc_3_9C41:
     bmi     loc_3_9C55              ; $9C48
     cpx     #$04                    ; $9C4A
     bne     loc_3_9C41              ; $9C4C
-    jsr     sub_DF4C                ; $9C4E
+    jsr     AreaMap_NextBuildRow    ; $9C4E
     tay                             ; $9C51
     jmp     loc_3_9C41              ; $9C52
 

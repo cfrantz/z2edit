@@ -144,7 +144,7 @@ loc_4_819F:
     jsr     sub_4_81AD              ; $81A2
     lda     temp0                   ; $81A5
     sta     ram_0112                ; $81A7
-    jsr     sub_DF4C                ; $81AA
+    jsr     AreaMap_NextBuildRow    ; $81AA
 
 sub_4_81AD:
     lda     areaObjectType          ; $81AD
@@ -228,7 +228,7 @@ loc_4_8226:
     bpl     loc_4_8226              ; $822D
     lda     #$84                    ; $822F
     sta     ram_0112                ; $8231
-    jsr     sub_DF4C                ; $8234
+    jsr     AreaMap_NextBuildRow    ; $8234
     and     #$F0                    ; $8237
     cmp     #$D0                    ; $8239
     bcc     loc_4_821D              ; $823B
@@ -297,7 +297,7 @@ loc_4_829C:
 loc_4_82AA:
     cpx     #$18                    ; $82AA
     beq     loc_4_827D              ; $82AC
-    jsr     sub_DF4C                ; $82AE
+    jsr     AreaMap_NextBuildRow    ; $82AE
     tay                             ; $82B1
     inx                             ; $82B2
     jmp     loc_4_829C              ; $82B3
@@ -313,7 +313,7 @@ loc_4_82BF:
     jsr     AreaMap_PutTileRight    ; $82C1
     dex                             ; $82C4
     bpl     loc_4_82BF              ; $82C5
-    jsr     sub_DF4C                ; $82C7
+    jsr     AreaMap_NextBuildRow    ; $82C7
     cmp     #$D0                    ; $82CA
     bcc     loc_4_82B6              ; $82CC
     rts                             ; $82CE
@@ -1344,7 +1344,7 @@ loc_4_99D1:
     jsr     Enemy_SkipAiIfStunned   ; $99D1
     jsr     Enemy_MoveX             ; $99D4
     jsr     Enemy_MoveY             ; $99D7
-    jsr     sub_DE3D                ; $99DA
+    jsr     Enemy_UpdateWithBg      ; $99DA
     lda     objCollision+1,x        ; $99DD
     and     #$10                    ; $99DF
     beq     loc_4_99F0              ; $99E1
@@ -3242,7 +3242,7 @@ loc_4_B0D7:
     sta     objXVelocity+1,x        ; $B0E2
     jsr     Enemy_MoveYAndFall      ; $B0E4
     jsr     sub_4_9E17              ; $B0E7
-    jsr     sub_DE3D                ; $B0EA
+    jsr     Enemy_UpdateWithBg      ; $B0EA
     jsr     Enemy_HurtLinkOnContact ; $B0ED
     lda     objCollision+1,x        ; $B0F0
     and     #$04                    ; $B0F2
@@ -3640,7 +3640,7 @@ loc_4_B361:
     rts                             ; $B361
 
 loc_4_B362:
-    jsr     sub_DE3D                ; $B362
+    jsr     Enemy_UpdateWithBg      ; $B362
     jsr     Enemy_HurtLinkOnContact ; $B365
     lda     objCollision+1,x        ; $B368
     and     #$04                    ; $B36A
@@ -4524,7 +4524,7 @@ loc_4_B919:
     sta     objYVelocity+1,x        ; $B91A
     jsr     Enemy_MoveY             ; $B91D
     jsr     Enemy_MoveX             ; $B920
-    jsr     sub_DE3D                ; $B923
+    jsr     Enemy_UpdateWithBg      ; $B923
     jsr     Enemy_HurtLinkOnContact ; $B926
 
 loc_4_B929:
@@ -4761,7 +4761,7 @@ loc_4_BA90:
 
 loc_4_BAAE:
     jsr     sub_4_9E17              ; $BAAE
-    jsr     sub_DE3D                ; $BAB1
+    jsr     Enemy_UpdateWithBg      ; $BAB1
     jsr     Enemy_HurtLinkOnContact ; $BAB4
     lda     frameCounter            ; $BAB7
     and     #$0F                    ; $BAB9
@@ -5008,7 +5008,7 @@ sub_4_BC4E:
     jsr     Enemy_Draw              ; $BC4E
     jsr     sub_4_9E17              ; $BC51
     jsr     sub_E617                ; $BC54
-    jsr     sub_DE3D                ; $BC57
+    jsr     Enemy_UpdateWithBg      ; $BC57
     jsr     Enemy_HurtLinkOnContact ; $BC5A
     lda     #$01                    ; $BC5D
     cmp     enemyActive,x           ; $BC5F
@@ -5077,7 +5077,7 @@ loc_4_BCAF:
 
 loc_4_BCBC:
     jsr     Enemy_SkipAiIfStunned   ; $BCBC
-    jsr     sub_DE3D                ; $BCBF
+    jsr     Enemy_UpdateWithBg      ; $BCBF
     jsr     Enemy_HurtLinkOnContact ; $BCC2
     lda     objCollision+1,x        ; $BCC5
     and     #$04                    ; $BCC7

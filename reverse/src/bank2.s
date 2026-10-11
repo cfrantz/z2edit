@@ -196,7 +196,7 @@ loc_2_81F3:
     jsr     sub_2_8201              ; $81F3
     lda     temp0                   ; $81F6
     sta     ram_0112                ; $81F8
-    jsr     sub_DF4C                ; $81FB
+    jsr     AreaMap_NextBuildRow    ; $81FB
     jmp     loc_2_8204              ; $81FE
 
 sub_2_8201:
@@ -310,7 +310,7 @@ loc_2_82A2:
     bpl     loc_2_82A2              ; $82A9
     lda     #$89                    ; $82AB
     sta     ram_0112                ; $82AD
-    jsr     sub_DF4C                ; $82B0
+    jsr     AreaMap_NextBuildRow    ; $82B0
     and     #$F0                    ; $82B3
     cmp     #$D0                    ; $82B5
     bcc     loc_2_8299              ; $82B7
@@ -395,7 +395,7 @@ loc_2_8318:
 loc_2_8326:
     cpx     #$0E                    ; $8326
     beq     loc_2_8303              ; $8328
-    jsr     sub_DF4C                ; $832A
+    jsr     AreaMap_NextBuildRow    ; $832A
     inx                             ; $832D
     jmp     loc_2_8315              ; $832E
 

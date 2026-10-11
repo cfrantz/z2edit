@@ -4235,7 +4235,7 @@ loc_D818:
 
 loc_D832:
     jsr     Enemy_MoveX             ; $D832
-    jmp     sub_DE3D                ; $D835
+    jmp     Enemy_UpdateWithBg      ; $D835
 
 loc_D838:
     lda     objCollision+1,x        ; $D838
@@ -4260,7 +4260,7 @@ sub_D848:
 
 loc_D855:
     jsr     Enemy_MoveYAndFall      ; $D855
-    jsr     sub_DE3D                ; $D858
+    jsr     Enemy_UpdateWithBg      ; $D858
     jsr     Enemy_HurtLinkOnContact ; $D85B
     lda     objCollision+1,x        ; $D85E
     and     #$04                    ; $D860
@@ -4416,7 +4416,7 @@ loc_D947:
 ; (end of code not executed in the test movies)
 
 sub_D959:
-    jsr     sub_DE3D                ; $D959
+    jsr     Enemy_UpdateWithBg      ; $D959
     lda     objCollision+1,x        ; $D95C
     and     #$04                    ; $D95E
     beq     loc_D98B                ; $D960
@@ -4577,7 +4577,7 @@ loc_DA47:
 
 loc_DA54:
     jsr     Enemy_MoveYAndFall      ; $DA54
-    jsr     sub_DE3D                ; $DA57
+    jsr     Enemy_UpdateWithBg      ; $DA57
     jsr     Enemy_HurtLinkOnContact ; $DA5A
     lda     objY+1,x                ; $DA5D
     cmp     #$60                    ; $DA5F
@@ -4662,7 +4662,7 @@ dat_DACD:
 
 loc_DACF:
     jsr     Enemy_SkipAiIfStunned   ; $DACF
-    jsr     sub_DE54                ; $DAD2
+    jsr     Enemy_CheckCollisions   ; $DAD2
     ; In region 2 the enemy is only visible with the cross.
     lda     currentRegion           ; $DAD5
     cmp     #$02                    ; $DAD8
@@ -5036,7 +5036,17 @@ loc_DD27:
 loc_DD31:
     jmp     loc_4_9A46              ; $DD31
 
-sub_DD34:
+; ---------------------------------------------------------------------------
+; Enemy_RemoveAfterDeath
+;
+; Remove enemy x after it has died.  Enemy types with sramEnemyFlags bit 6
+; come back (Enemy_Despawn); others stay gone for as long as the area's
+; enemy list remembers them (Enemy_Remove).
+;
+; In:      x = enemy index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_RemoveAfterDeath:
     ldy     enemyType,x             ; $DD34
     lda     sramEnemyFlags,y        ; $DD36
     and     #$40                    ; $DD39
@@ -5134,7 +5144,7 @@ dat_DDDC:
 
 loc_DDEC:
     lda     enemyExpClass,x         ; $DDEC
-    bmi     sub_DE20                ; $DDEF
+    bmi     Enemy_DropItem          ; $DDEF
     tay                             ; $DDF1
     lda     dat_DDC0,y              ; $DDF2
     clc                             ; $DDF5
@@ -5151,19 +5161,28 @@ loc_DDEC:
     sta     objX+1,x                ; $DE10
     lsr     a                       ; $DE12
     sta     objY+1,x                ; $DE13
-    jsr     sub_DE20                ; $DE15
+    jsr     Enemy_DropItem          ; $DE15
     lda     #$08                    ; $DE18
     sta     ram_00AF,x              ; $DE1A
     rts                             ; $DE1C
 
 loc_DE1D:
-    jmp     sub_DD34                ; $DE1D
+    jmp     Enemy_RemoveAfterDeath  ; $DE1D
 
-sub_DE20:
-    jsr     sub_DD34                ; $DE20
+; ---------------------------------------------------------------------------
+; Enemy_DropItem
+;
+; Replace killed enemy x by the item it drops (enemyDropItem): it becomes
+; an object of type 1 (an item), standing still.
+;
+; In:      x = enemy index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_DropItem:
+    jsr     Enemy_RemoveAfterDeath  ; $DE20
     lda     #$02                    ; $DE23
     sta     sfxRequest+3            ; $DE25
-    lda     ram_048E,x              ; $DE27
+    lda     enemyDropItem,x         ; $DE27
     sta     ram_00AF,x              ; $DE2A
     lda     #$FF                    ; $DE2C
     sta     enemySramIndex,x        ; $DE2E
@@ -5175,7 +5194,15 @@ sub_DE20:
     sta     enemyHp,x               ; $DE3A
     rts                             ; $DE3C
 
-sub_DE3D:
+; ---------------------------------------------------------------------------
+; Enemy_UpdateWithBg
+;
+; Enemy_UpdateBgCollision, then Enemy_UpdateCommon.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_UpdateWithBg:
     jsr     Enemy_UpdateBgCollision ; $DE3D
 
 ; ---------------------------------------------------------------------------
@@ -5184,7 +5211,7 @@ sub_DE3D:
 ; Per-frame update shared by all enemies: compute the screen position;
 ; despawn the enemy if it has fallen below the screen (objYHi >= 2);
 ; otherwise draw it and check collisions, and despawn it if it is far off
-; screen (sub_DE54).
+; screen (Enemy_CheckCollisions).
 ;
 ; In:      x = enemy index
 ; Status:  provisional
@@ -5202,7 +5229,16 @@ Enemy_UpdateCommon:
 loc_DE51:
     jsr     Enemy_Draw              ; $DE51
 
-sub_DE54:
+; ---------------------------------------------------------------------------
+; Enemy_CheckCollisions
+;
+; If enemy x is off screen, clear its hit flags and despawn it if it is far
+; away; otherwise test it against Link's projectiles, the sword and Link.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_CheckCollisions:
     lda     drawOffscreen+1         ; $DE54
     and     #$FC                    ; $DE56
     beq     loc_DE63                ; $DE58
@@ -5418,10 +5454,18 @@ loc_DF41:
     adc     #$0F                    ; $DF47
     rts                             ; $DF49
 
-sub_DF4A:
+AreaMap_PutTileNextBuildRow:
     sta     (temp14),y              ; $DF4A
 
-sub_DF4C:
+; ---------------------------------------------------------------------------
+; AreaMap_NextBuildRow
+;
+; Move areaBuildPos down one row.  AreaMap_PutTileNextBuildRow stores a at
+; (temp14),y first.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+AreaMap_NextBuildRow:
     lda     areaBuildPos            ; $DF4C
     clc                             ; $DF4F
     adc     #$10                    ; $DF50
@@ -7053,7 +7097,7 @@ Enemy_Kill:
 loc_E8B8:
     tay                             ; $E8B8
     lda     dat_E870,y              ; $E8B9
-    sta     ram_048E,x              ; $E8BC
+    sta     enemyDropItem,x         ; $E8BC
 
 loc_E8BF:
     ldx     currentObject           ; $E8BF
