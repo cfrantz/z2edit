@@ -98,16 +98,16 @@ loc_0_8149:
     sta     objState+1              ; $8158
     lda     #$04                    ; $815A
     sta     overworldDirection      ; $815C
-    lda     objXVelocity+4          ; $815F
+    lda     overworldX              ; $815F
     sec                             ; $8161
     sbc     #$08                    ; $8162
-    sta     objXVelocity+6          ; $8164
-    lda     objXVelocity+3          ; $8166
+    sta     overworldTargetX        ; $8164
+    lda     overworldY              ; $8166
     sec                             ; $8168
     sbc     #$0B                    ; $8169
-    sta     objXVelocity+5          ; $816B
+    sta     overworldTargetY        ; $816B
     jsr     sub_DF01                ; $816D
-    lda     objXVelocity+3          ; $8170
+    lda     overworldY              ; $8170
     sec                             ; $8172
     sbc     #$07                    ; $8173
     jsr     Math_DivMod15           ; $8175
@@ -116,7 +116,7 @@ loc_0_8149:
     asl     a                       ; $817A
     asl     a                       ; $817B
     sta     ppuScrollY              ; $817C
-    lda     objXVelocity+6          ; $817E
+    lda     overworldTargetX        ; $817E
     asl     a                       ; $8180
     asl     a                       ; $8181
     asl     a                       ; $8182
@@ -127,8 +127,8 @@ loc_0_8149:
     and     #$02                    ; $8188
     sta     ppuNametable            ; $818A
     lda     #$00                    ; $818D
-    sta     objXVelocity+13         ; $818F
-    sta     objXVelocity+14         ; $8191
+    sta     ram_007D                ; $818F
+    sta     ram_007E                ; $8191
     sta     dialogType              ; $8193
     sta     objXVelocity            ; $8196
     sta     objState                ; $8198
@@ -164,7 +164,7 @@ sub_0_81BD:
     sta     oamBuffer+1             ; $81C2
     lda     #$47                    ; $81C5
     sta     oamBuffer+5             ; $81C7
-    ldy     ram_07A9                ; $81CA
+    ldy     raftDirection           ; $81CA
     lda     dat_0_81AE,y            ; $81CD
     sta     oamBuffer+2             ; $81D0
     sta     oamBuffer+6             ; $81D3
@@ -188,7 +188,7 @@ loc_0_81E5:
     rts                             ; $81F5
 
 sub_0_81F6:
-    ldy     ram_07A9                ; $81F6
+    ldy     raftDirection           ; $81F6
     sty     overworldDirection      ; $81F9
     lda     objState+1              ; $81FC
     clc                             ; $81FE
@@ -206,7 +206,7 @@ loc_0_8207:
     jsr     sub_0_81F6              ; $8209
     jsr     sub_0_81BD              ; $820C
     jsr     sub_0_8222              ; $820F
-    ldy     ram_07A9                ; $8212
+    ldy     raftDirection           ; $8212
     ldx     dat_0_8204,y            ; $8215
     cpx     objState                ; $8218
     bne     loc_0_8221              ; $821A
@@ -266,7 +266,7 @@ dat_0_8281:
 sub_0_8284:
     lda     currentRegion           ; $8284
     bne     loc_0_828F              ; $8287
-    lda     objXVelocity+3          ; $8289
+    lda     overworldY              ; $8289
     cmp     #$3C                    ; $828B
     bcc     loc_0_8293              ; $828D
 
@@ -279,11 +279,11 @@ loc_0_8293:
     bne     loc_0_82AF              ; $8296
 
 loc_0_8298:
-    lda     objXVelocity+3          ; $8298
+    lda     overworldY              ; $8298
     sta     temp1                   ; $829A
-    lda     objXVelocity+4          ; $829C
+    lda     overworldX              ; $829C
     sta     temp0                   ; $829E
-    jsr     sub_DFEF                ; $82A0
+    jsr     Overworld_GetTerrain    ; $82A0
     lda     temp2                   ; $82A3
     ldy     #$06                    ; $82A5
 
@@ -519,7 +519,14 @@ loc_0_8412:
 loc_0_841A:
     rts                             ; $841A
 
-sub_0_841B:
+; ---------------------------------------------------------------------------
+; Overworld_UpdateEncounters
+;
+; Move the overworld encounter sprites (every 16 frames).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_UpdateEncounters:
     lda     frameCounter            ; $841B
     and     #$0F                    ; $841D
     bne     loc_0_8432              ; $841F
@@ -615,7 +622,7 @@ loc_0_84A1:
     jmp     loc_0_842F              ; $84AA
 ; (unreferenced: $84AD-$84AD, 1 bytes)
 
-dat_0_84AD:
+OverworldDirDX:
     .byte   $00                                                             ; $84AD
     .byte   $01, $FF                                                        ; $84AE
 ; (unreferenced: $84B0-$84B0, 1 bytes)
@@ -626,7 +633,7 @@ dat_0_84AD:
     .byte   $00                                                             ; $84B5
 ; (unreferenced: $84B6-$84B6, 1 bytes)
 
-dat_0_84B6:
+OverworldDirDY:
     .byte   $00                                                             ; $84B6
     .byte   $00, $00                                                        ; $84B7
 ; (unreferenced: $84B9-$84B9, 1 bytes)
@@ -636,25 +643,33 @@ dat_0_84B6:
     .byte   $00, $00, $00                                                   ; $84BB
     .byte   $FF                                                             ; $84BE
 
-sub_0_84BF:
+; ---------------------------------------------------------------------------
+; Overworld_HandleInput
+;
+; Work out the tile Link is moving toward (overworldTargetY,
+; overworldTargetX) from overworldDirection, and read the D-pad to move.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_HandleInput:
     ldy     overworldDirection      ; $84BF
-    lda     objXVelocity+3          ; $84C2
+    lda     overworldY              ; $84C2
     clc                             ; $84C4
-    adc     dat_0_84B6,y            ; $84C5
-    sta     objXVelocity+5          ; $84C8
+    adc     OverworldDirDY,y        ; $84C5
+    sta     overworldTargetY        ; $84C8
     sta     temp1                   ; $84CA
-    lda     objXVelocity+4          ; $84CC
+    lda     overworldX              ; $84CC
     clc                             ; $84CE
-    adc     dat_0_84AD,y            ; $84CF
-    sta     objXVelocity+6          ; $84D2
-    jsr     sub_0_8A0D              ; $84D4
+    adc     OverworldDirDX,y        ; $84CF
+    sta     overworldTargetX        ; $84D2
+    jsr     Overworld_GetTerrainAtX ; $84D4
     lda     ram_0568                ; $84D7
     beq     loc_0_84F2              ; $84DA
     lda     ram_0567                ; $84DC
     bne     loc_0_84F1              ; $84DF
-    lda     objXVelocity+4          ; $84E1
+    lda     overworldX              ; $84E1
     sta     temp0                   ; $84E3
-    lda     objXVelocity+3          ; $84E5
+    lda     overworldY              ; $84E5
     sta     temp1                   ; $84E7
     jsr     sub_DFF8                ; $84E9
     lda     #$00                    ; $84EC
@@ -695,10 +710,10 @@ loc_0_8512:
 loc_0_8527:
     rts                             ; $8527
 
-dat_0_8528:
+RaftDockX:
     .byte   $3D, $07                                                        ; $8528
 
-dat_0_852A:
+RaftDockY:
     .byte   $4D                                                             ; $852A
 ; (unreferenced: $852B-$8553, 41 bytes)
     .byte   $34, $34, $20, $40, $62, $36, $24, $59, $5B, $4B, $4C, $17, $3E, $0B, $39, $2E; $852B
@@ -712,36 +727,47 @@ dat_0_8553:
 dat_0_8555:
     .byte   $28, $28, $34                                                   ; $8555
 
-loc_0_8558:
+; ---------------------------------------------------------------------------
+; Mode_Overworld
+;
+; GAME_MODE_OVERWORLD: one frame on the overworld.  Check for encounters,
+; update the encounter sprites, draw Link, and move him; when he stops on a
+; location (sramLocY, sramLocX), set areaLocation and enter it.  The raft
+; location ($29) needs the raft (outside region 1); on a raft dock
+; (RaftDockX, RaftDockY) Link rides the raft instead (gameMode $17).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_Overworld:
     lda     #$00                    ; $8558
     sta     ram_07AC                ; $855A
     sta     ram_07AD                ; $855D
     inc     ram_0729                ; $8560
     jsr     sub_0_8284              ; $8563
-    jsr     sub_0_841B              ; $8566
-    jsr     sub_0_8726              ; $8569
-    lda     objXVelocity+13         ; $856C
+    jsr     Overworld_UpdateEncounters ; $8566
+    jsr     Overworld_DrawLink      ; $8569
+    lda     ram_007D                ; $856C
     beq     loc_0_8573              ; $856E
     jmp     loc_0_86AF              ; $8570
 
 loc_0_8573:
-    jsr     sub_0_84BF              ; $8573
+    jsr     Overworld_HandleInput   ; $8573
     lda     objXVelocity            ; $8576
     bne     loc_0_857D              ; $8578
     jmp     loc_0_8601              ; $857A
 
 loc_0_857D:
-    jsr     sub_0_8A07              ; $857D
+    jsr     Overworld_UpdateTerrain ; $857D
     ldx     #$3D                    ; $8580
 
 loc_0_8582:
     lda     sramLocY,x              ; $8582
     and     #$7F                    ; $8585
-    cmp     objXVelocity+3          ; $8587
+    cmp     overworldY              ; $8587
     bne     loc_0_8594              ; $8589
     lda     sramLocX,x              ; $858B
     and     #$3F                    ; $858E
-    cmp     objXVelocity+4          ; $8590
+    cmp     overworldX              ; $8590
     beq     loc_0_8599              ; $8592
 
 loc_0_8594:
@@ -763,14 +789,14 @@ loc_0_85A9:
     ldx     #$01                    ; $85AC
 
 loc_0_85AE:
-    lda     objXVelocity+4          ; $85AE
-    cmp     dat_0_8528,x            ; $85B0
+    lda     overworldX              ; $85AE
+    cmp     RaftDockX,x             ; $85B0
     bne     loc_0_85D2              ; $85B3
-    lda     objXVelocity+3          ; $85B5
-    cmp     dat_0_852A,x            ; $85B7
+    lda     overworldY              ; $85B5
+    cmp     RaftDockY,x             ; $85B7
     bne     loc_0_85D2              ; $85BA
     inx                             ; $85BC
-    stx     ram_07A9                ; $85BD
+    stx     raftDirection           ; $85BD
     lda     #$C0                    ; $85C0
     sta     sfxRequest              ; $85C2
     asl     a                       ; $85C4
@@ -788,10 +814,10 @@ loc_0_85D2:
 loc_0_85D5:
     ldy     currentRegion           ; $85D5
     beq     loc_0_85EB              ; $85D8
-    lda     objXVelocity+3          ; $85DA
+    lda     overworldY              ; $85DA
     cmp     dat_0_8553,y            ; $85DC
     bne     loc_0_85EB              ; $85DF
-    lda     objXVelocity+4          ; $85E1
+    lda     overworldX              ; $85E1
     cmp     dat_0_8555,y            ; $85E3
     bne     loc_0_85EB              ; $85E6
     sta     ram_07AD                ; $85E8
@@ -820,26 +846,26 @@ loc_0_8601:
     bcc     loc_0_863A              ; $860A
     lda     #$01                    ; $860C
     sta     overworldDirection      ; $860E
-    inc     objXVelocity+4          ; $8611
+    inc     overworldX              ; $8611
     jsr     sub_0_870F              ; $8613
     bcc     loc_0_861B              ; $8616
-    dec     objXVelocity+4          ; $8618
+    dec     overworldX              ; $8618
     rts                             ; $861A
 
 loc_0_861B:
-    lda     objXVelocity+4          ; $861B
+    lda     overworldX              ; $861B
     adc     #$07                    ; $861D
-    sta     objXVelocity+6          ; $861F
-    lda     objXVelocity+3          ; $8621
+    sta     overworldTargetX        ; $861F
+    lda     overworldY              ; $8621
     sec                             ; $8623
     sbc     #$0B                    ; $8624
-    sta     objXVelocity+5          ; $8626
+    sta     overworldTargetY        ; $8626
     jsr     sub_DF01                ; $8628
-    lda     objXVelocity+7          ; $862B
+    lda     ram_0077                ; $862B
     lsr     a                       ; $862D
     bcc     loc_0_8637              ; $862E
-    dec     objXVelocity+5          ; $8630
-    lda     objXVelocity+5          ; $8632
+    dec     overworldTargetY        ; $8630
+    lda     overworldTargetY        ; $8632
     jsr     sub_DF01                ; $8634
 
 loc_0_8637:
@@ -850,26 +876,26 @@ loc_0_863A:
     bcc     loc_0_866B              ; $863B
     lda     #$02                    ; $863D
     sta     overworldDirection      ; $863F
-    dec     objXVelocity+4          ; $8642
+    dec     overworldX              ; $8642
     jsr     sub_0_870F              ; $8644
     bcc     loc_0_864C              ; $8647
-    inc     objXVelocity+4          ; $8649
+    inc     overworldX              ; $8649
     rts                             ; $864B
 
 loc_0_864C:
-    lda     objXVelocity+4          ; $864C
+    lda     overworldX              ; $864C
     sbc     #$07                    ; $864E
-    sta     objXVelocity+6          ; $8650
-    lda     objXVelocity+3          ; $8652
+    sta     overworldTargetX        ; $8650
+    lda     overworldY              ; $8652
     sec                             ; $8654
     sbc     #$0B                    ; $8655
-    sta     objXVelocity+5          ; $8657
+    sta     overworldTargetY        ; $8657
     jsr     sub_DF01                ; $8659
-    lda     objXVelocity+7          ; $865C
+    lda     ram_0077                ; $865C
     lsr     a                       ; $865E
     bcc     loc_0_8668              ; $865F
-    dec     objXVelocity+5          ; $8661
-    lda     objXVelocity+5          ; $8663
+    dec     overworldTargetY        ; $8661
+    lda     overworldTargetY        ; $8663
     jsr     sub_DF01                ; $8665
 
 loc_0_8668:
@@ -880,42 +906,42 @@ loc_0_866B:
     bcc     loc_0_8690              ; $866C
     lda     #$04                    ; $866E
     sta     overworldDirection      ; $8670
-    inc     objXVelocity+3          ; $8673
+    inc     overworldY              ; $8673
     jsr     sub_0_870F              ; $8675
     bcc     loc_0_867D              ; $8678
-    dec     objXVelocity+3          ; $867A
+    dec     overworldY              ; $867A
     rts                             ; $867C
 
 loc_0_867D:
-    lda     objXVelocity+4          ; $867D
+    lda     overworldX              ; $867D
     sbc     #$07                    ; $867F
-    sta     objXVelocity+6          ; $8681
-    lda     objXVelocity+3          ; $8683
+    sta     overworldTargetX        ; $8681
+    lda     overworldY              ; $8683
     clc                             ; $8685
     adc     #$0B                    ; $8686
-    sta     objXVelocity+5          ; $8688
+    sta     overworldTargetY        ; $8688
     jsr     sub_DF01                ; $868A
     jmp     loc_0_86AF              ; $868D
 
 loc_0_8690:
     lda     #$08                    ; $8690
     sta     overworldDirection      ; $8692
-    dec     objXVelocity+3          ; $8695
+    dec     overworldY              ; $8695
     jsr     sub_0_870F              ; $8697
     bcc     loc_0_869F              ; $869A
-    inc     objXVelocity+3          ; $869C
+    inc     overworldY              ; $869C
 
 loc_0_869E:
     rts                             ; $869E
 
 loc_0_869F:
-    lda     objXVelocity+4          ; $869F
+    lda     overworldX              ; $869F
     sbc     #$07                    ; $86A1
-    sta     objXVelocity+6          ; $86A3
-    lda     objXVelocity+3          ; $86A5
+    sta     overworldTargetX        ; $86A3
+    lda     overworldY              ; $86A5
     sec                             ; $86A7
     sbc     #$0B                    ; $86A8
-    sta     objXVelocity+5          ; $86AA
+    sta     overworldTargetY        ; $86AA
     jsr     sub_DF01                ; $86AC
 
 loc_0_86AF:
@@ -927,7 +953,7 @@ loc_0_86AF:
     bcc     loc_0_869E              ; $86B9
 
 loc_0_86BB:
-    dec     objXVelocity+13         ; $86BB
+    dec     ram_007D                ; $86BB
     inc     objYHi+13               ; $86BD
     lda     overworldDirection      ; $86BF
     and     #$03                    ; $86C2
@@ -939,7 +965,7 @@ loc_0_86BB:
     inc     ppuScrollX              ; $86CD
 
 loc_0_86CF:
-    lda     objXVelocity+5          ; $86CF
+    lda     overworldTargetY        ; $86CF
     sta     temp1                   ; $86D1
     jmp     loc_0_88C7              ; $86D3
 
@@ -973,14 +999,14 @@ loc_0_86FC:
     sta     ppuNametable            ; $8701
 
 loc_0_8704:
-    lda     objXVelocity+6          ; $8704
+    lda     overworldTargetX        ; $8704
     sta     temp0                   ; $8706
-    lda     objXVelocity+5          ; $8708
+    lda     overworldTargetY        ; $8708
     sta     temp1                   ; $870A
     jmp     sub_0_88B3              ; $870C
 
 sub_0_870F:
-    jsr     sub_0_8A07              ; $870F
+    jsr     Overworld_UpdateTerrain ; $870F
     cmp     #$0D                    ; $8712
     bne     loc_0_871B              ; $8714
     ldy     itemOwned+ITEM_BOOTS    ; $8716
@@ -999,7 +1025,14 @@ loc_0_8721:
     sta     objXVelocity            ; $8723
     rts                             ; $8725
 
-sub_0_8726:
+; ---------------------------------------------------------------------------
+; Overworld_DrawLink
+;
+; Draw Link on the overworld (sprites 0 and 1), facing overworldDirection.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_DrawLink:
     lda     #$84                    ; $8726
 
 sub_0_8728:
@@ -1023,7 +1056,7 @@ sub_0_8728:
     lsr     a                       ; $874E
     sta     oamBuffer+2             ; $874F
     ldx     #$77                    ; $8752
-    lda     objXVelocity+13         ; $8754
+    lda     ram_007D                ; $8754
     beq     loc_0_875E              ; $8756
     and     #$08                    ; $8758
     bne     loc_0_875E              ; $875A
@@ -1044,7 +1077,7 @@ loc_0_8763:
 loc_0_876B:
     stx     oamBuffer+1             ; $876B
     ldx     #$40                    ; $876E
-    lda     objXVelocity+13         ; $8770
+    lda     ram_007D                ; $8770
     beq     loc_0_8779              ; $8772
     and     #$08                    ; $8774
     bne     loc_0_8779              ; $8776
@@ -1121,12 +1154,12 @@ loc_0_880A:
     cmp     #$4B                    ; $8824
     bne     loc_0_8801              ; $8826
     lda     #$00                    ; $8828
-    sta     objXVelocity+14         ; $882A
+    sta     ram_007E                ; $882A
 
 loc_0_882C:
-    lda     objXVelocity+6          ; $882C
+    lda     overworldTargetX        ; $882C
     sta     temp0                   ; $882E
-    lda     objXVelocity+5          ; $8830
+    lda     overworldTargetY        ; $8830
     sta     temp1                   ; $8832
     jsr     sub_0_88B3              ; $8834
     lda     #$02                    ; $8837
@@ -1138,11 +1171,11 @@ loc_0_882C:
     sta     ppuBuffer0Len           ; $8844
     lda     #$FF                    ; $8847
     sta     ppuBuffer0              ; $8849
-    lda     objXVelocity+14         ; $884C
+    lda     ram_007E                ; $884C
     cmp     #$06                    ; $884E
     bne     loc_0_882C              ; $8850
-    inc     objXVelocity+5          ; $8852
-    lda     objXVelocity+5          ; $8854
+    inc     overworldTargetY        ; $8852
+    lda     overworldTargetY        ; $8854
     jsr     Math_DivMod15           ; $8856
     sta     temp0                   ; $8859
     tya                             ; $885B
@@ -1151,10 +1184,10 @@ loc_0_882C:
     asl     a                       ; $885E
     asl     a                       ; $885F
     ora     temp0                   ; $8860
-    sta     objXVelocity+7          ; $8862
+    sta     ram_0077                ; $8862
     jsr     sub_C1B6                ; $8864
     ldx     #$00                    ; $8867
-    stx     objXVelocity+14         ; $8869
+    stx     ram_007E                ; $8869
     dec     objXVelocity+1          ; $886B
     bne     loc_0_882C              ; $886D
     ldy     #$07                    ; $886F
@@ -1167,7 +1200,7 @@ loc_0_8871:
     stx     objYHi+13               ; $8877
     lda     #$08                    ; $8879
     sta     timerSlow+8             ; $887B
-    jsr     sub_0_8A07              ; $887E
+    jsr     Overworld_UpdateTerrain ; $887E
     lda     ram_07AA                ; $8881
     ora     ram_07AD                ; $8884
     bne     loc_0_889E              ; $8887
@@ -1199,7 +1232,7 @@ loc_0_88B2:
     rts                             ; $88B2
 
 sub_0_88B3:
-    lda     a:objXVelocity+14       ; $88B3
+    lda     a:ram_007E              ; $88B3
     jsr     JumpTable               ; $88B6
 ; (inline jump table)
     .word   loc_0_8BFE              ; $88B9
@@ -1211,10 +1244,10 @@ sub_0_88B3:
     .word   loc_DFD1                ; $88C5
 
 loc_0_88C7:
-    lda     objXVelocity+13         ; $88C7
+    lda     ram_007D                ; $88C7
     cmp     #$0E                    ; $88C9
     bcs     loc_0_88B2              ; $88CB
-    lda     objXVelocity+14         ; $88CD
+    lda     ram_007E                ; $88CD
     jsr     JumpTable               ; $88CF
 ; (inline jump table)
     .word   sub_0_88E8              ; $88D2
@@ -1233,7 +1266,7 @@ sub_0_88E8:
     lda     overworldDirection      ; $88E8
     lsr     a                       ; $88EB
     bcs     loc_0_88F0              ; $88EC
-    inc     objXVelocity+10         ; $88EE
+    inc     ram_007A                ; $88EE
 
 loc_0_88F0:
     ldx     #$17                    ; $88F0
@@ -1241,7 +1274,7 @@ loc_0_88F0:
     ldy     currentRegion           ; $88F4
     cpy     #$02                    ; $88F7
     bcs     loc_0_8903              ; $88F9
-    ldy     objXVelocity+6          ; $88FB
+    ldy     overworldTargetX        ; $88FB
     cpy     #$0C                    ; $88FD
     bpl     loc_0_8903              ; $88FF
     lda     #$0B                    ; $8901
@@ -1250,15 +1283,15 @@ loc_0_8903:
     sta     ram_04D0,x              ; $8903
     dex                             ; $8906
     bpl     loc_0_8903              ; $8907
-    lda     objXVelocity+9          ; $8909
-    sta     objXVelocity+11         ; $890B
-    lda     objXVelocity+10         ; $890D
-    sta     objXVelocity+12         ; $890F
-    lda     objXVelocity+5          ; $8911
+    lda     ram_0079                ; $8909
+    sta     ram_007B                ; $890B
+    lda     ram_007A                ; $890D
+    sta     ram_007C                ; $890F
+    lda     overworldTargetY        ; $8911
     sec                             ; $8913
     sbc     #$1E                    ; $8914
     sta     temp10                  ; $8916
-    lda     objXVelocity+6          ; $8918
+    lda     overworldTargetX        ; $8918
     cmp     #$40                    ; $891A
     bcs     loc_0_8941              ; $891C
     ldx     #$00                    ; $891E
@@ -1274,7 +1307,7 @@ loc_0_8920:
 loc_0_892D:
     jsr     sub_E001                ; $892D
     iny                             ; $8930
-    cmp     objXVelocity+6          ; $8931
+    cmp     overworldTargetX        ; $8931
     bcc     loc_0_892D              ; $8933
     lda     temp2                   ; $8935
     sta     ram_04D0,x              ; $8937
@@ -1286,16 +1319,16 @@ loc_0_893A:
     bne     loc_0_8920              ; $893F
 
 loc_0_8941:
-    inc     objXVelocity+14         ; $8941
+    inc     ram_007E                ; $8941
     lda     #$00                    ; $8943
     sta     linkStanding            ; $8945
     rts                             ; $8947
 
 loc_0_8948:
-    lda     objXVelocity+9          ; $8948
+    lda     ram_0079                ; $8948
     sta     ppuBuffer0              ; $894A
     sta     temp14                  ; $894D
-    lda     objXVelocity+10         ; $894F
+    lda     ram_007A                ; $894F
     sta     ppuBuffer0+1            ; $8951
     sta     temp15                  ; $8954
     lda     #$00                    ; $8956
@@ -1312,7 +1345,7 @@ loc_0_895E:
     lda     overworldDirection      ; $8966
     lsr     a                       ; $8969
     beq     loc_0_8976              ; $896A
-    lda     objXVelocity+14         ; $896C
+    lda     ram_007E                ; $896C
     and     #$04                    ; $896E
     bne     loc_0_897E              ; $8970
     inx                             ; $8972
@@ -1320,7 +1353,7 @@ loc_0_895E:
     bne     loc_0_897E              ; $8974
 
 loc_0_8976:
-    lda     objXVelocity+14         ; $8976
+    lda     ram_007E                ; $8976
     and     #$04                    ; $8978
     beq     loc_0_897E              ; $897A
     inx                             ; $897C
@@ -1344,7 +1377,7 @@ loc_0_897E:
     sta     ppuBuffer0+2            ; $899A
     lda     #$FF                    ; $899D
     sta     ppuBuffer0+4,y          ; $899F
-    lda     objXVelocity+14         ; $89A2
+    lda     ram_007E                ; $89A2
     and     #$04                    ; $89A4
     bne     loc_0_89AE              ; $89A6
     sta     linkStanding            ; $89A8
@@ -1355,21 +1388,21 @@ loc_0_89AE:
     lda     #$07                    ; $89AE
 
 loc_0_89B0:
-    sta     objXVelocity+14         ; $89B0
+    sta     ram_007E                ; $89B0
     lda     overworldDirection      ; $89B2
     lsr     a                       ; $89B5
     beq     loc_0_89BD              ; $89B6
-    dec     objXVelocity+12         ; $89B8
+    dec     ram_007C                ; $89B8
     jmp     loc_0_89BF              ; $89BA
 
 loc_0_89BD:
-    inc     objXVelocity+12         ; $89BD
+    inc     ram_007C                ; $89BD
 
 loc_0_89BF:
-    lda     objXVelocity+11         ; $89BF
-    sta     objXVelocity+9          ; $89C1
-    lda     objXVelocity+12         ; $89C3
-    sta     objXVelocity+10         ; $89C5
+    lda     ram_007B                ; $89BF
+    sta     ram_0079                ; $89C1
+    lda     ram_007C                ; $89C3
+    sta     ram_007A                ; $89C5
     rts                             ; $89C7
 
 loc_0_89C8:
@@ -1397,26 +1430,34 @@ loc_0_89E6:
     sta     ppuBuffer0+2            ; $89EA
     lda     #$FF                    ; $89ED
     sta     ppuBuffer0+4,y          ; $89EF
-    lda     objXVelocity+10         ; $89F2
+    lda     ram_007A                ; $89F2
     and     #$1F                    ; $89F4
-    sta     objXVelocity+10         ; $89F6
-    lda     objXVelocity+9          ; $89F8
+    sta     ram_007A                ; $89F6
+    lda     ram_0079                ; $89F8
     eor     #$08                    ; $89FA
     and     #$F8                    ; $89FC
-    sta     objXVelocity+9          ; $89FE
+    sta     ram_0079                ; $89FE
     lda     temp7                   ; $8A00
     sta     linkStanding            ; $8A02
-    inc     objXVelocity+14         ; $8A04
+    inc     ram_007E                ; $8A04
     rts                             ; $8A06
 
-sub_0_8A07:
-    lda     objXVelocity+3          ; $8A07
+; ---------------------------------------------------------------------------
+; Overworld_UpdateTerrain
+;
+; Set overworldTerrain to the terrain under Link.  Overworld_GetTerrainAtX
+; gets the terrain at X = a, Y = temp1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Overworld_UpdateTerrain:
+    lda     overworldY              ; $8A07
     sta     temp1                   ; $8A09
-    lda     objXVelocity+4          ; $8A0B
+    lda     overworldX              ; $8A0B
 
-sub_0_8A0D:
+Overworld_GetTerrainAtX:
     sta     temp0                   ; $8A0D
-    jsr     sub_DFEF                ; $8A0F
+    jsr     Overworld_GetTerrain    ; $8A0F
     lda     temp2                   ; $8A12
     sta     overworldTerrain        ; $8A14
     rts                             ; $8A17
@@ -1428,7 +1469,7 @@ loc_0_8A1A:
     lda     overworldDirection      ; $8A1A
     and     #$04                    ; $8A1D
     beq     loc_0_8A31              ; $8A1F
-    lda     objXVelocity+7          ; $8A21
+    lda     ram_0077                ; $8A21
     and     #$0F                    ; $8A23
     cmp     #$0E                    ; $8A25
     beq     loc_0_8A31              ; $8A27
@@ -1437,11 +1478,11 @@ loc_0_8A1A:
 
 loc_0_8A2C:
     lda     #$06                    ; $8A2C
-    sta     objXVelocity+14         ; $8A2E
+    sta     ram_007E                ; $8A2E
     rts                             ; $8A30
 
 loc_0_8A31:
-    lda     objXVelocity+7          ; $8A31
+    lda     ram_0077                ; $8A31
     lsr     a                       ; $8A33
     bcs     loc_0_8A2C              ; $8A34
 
@@ -1452,7 +1493,7 @@ loc_0_8A36:
     lsr     a                       ; $8A3E
     lsr     a                       ; $8A3F
     tay                             ; $8A40
-    lda     objXVelocity+5          ; $8A41
+    lda     overworldTargetY        ; $8A41
     adc     dat_0_8A18,y            ; $8A43
     sta     temp1                   ; $8A46
     jmp     loc_0_8BFE              ; $8A48
@@ -1468,11 +1509,11 @@ loc_0_8A4D:
     rts                             ; $8A56
 
 sub_0_8A57:
-    lda     objXVelocity+6          ; $8A57
+    lda     overworldTargetX        ; $8A57
     and     #$0F                    ; $8A59
     beq     loc_0_8A76              ; $8A5B
     tax                             ; $8A5D
-    lda     objXVelocity+6          ; $8A5E
+    lda     overworldTargetX        ; $8A5E
     clc                             ; $8A60
     adc     #$10                    ; $8A61
     and     #$F0                    ; $8A63
@@ -1488,16 +1529,16 @@ loc_0_8A66:
     bne     loc_0_8A66              ; $8A74
 
 loc_0_8A76:
-    inc     objXVelocity+14         ; $8A76
+    inc     ram_007E                ; $8A76
     rts                             ; $8A78
 
 loc_0_8A79:
-    lda     objXVelocity+7          ; $8A79
+    lda     ram_0077                ; $8A79
     and     #$10                    ; $8A7B
     lsr     a                       ; $8A7D
     ora     #$23                    ; $8A7E
     sta     ppuBuffer0              ; $8A80
-    lda     objXVelocity+7          ; $8A83
+    lda     ram_0077                ; $8A83
     and     #$0E                    ; $8A85
     asl     a                       ; $8A87
     asl     a                       ; $8A88
@@ -1505,7 +1546,7 @@ loc_0_8A79:
     sta     ppuBuffer0+1            ; $8A8B
     lda     #$08                    ; $8A8E
     sta     ppuBuffer0+2            ; $8A90
-    lda     objXVelocity+6          ; $8A93
+    lda     overworldTargetX        ; $8A93
     adc     #$10                    ; $8A95
     and     #$F0                    ; $8A97
     tay                             ; $8A99
@@ -1531,7 +1572,7 @@ loc_0_8A9E:
     lda     overworldDirection      ; $8AC9
     and     #$04                    ; $8ACC
     beq     loc_0_8AF0              ; $8ACE
-    lda     objXVelocity+7          ; $8AD0
+    lda     ram_0077                ; $8AD0
     and     #$0F                    ; $8AD2
     cmp     #$0E                    ; $8AD4
     beq     loc_0_8AF0              ; $8AD6
@@ -1558,11 +1599,11 @@ loc_0_8AF0:
     bcc     loc_0_8A9E              ; $8AF8
     lda     #$FF                    ; $8AFA
     sta     ppuBuffer0+11           ; $8AFC
-    inc     objXVelocity+14         ; $8AFF
+    inc     ram_007E                ; $8AFF
     rts                             ; $8B01
 
 loc_0_8B02:
-    lda     objXVelocity+6          ; $8B02
+    lda     overworldTargetX        ; $8B02
     pha                             ; $8B04
     and     #$01                    ; $8B05
     eor     #$01                    ; $8B07
@@ -1572,11 +1613,11 @@ loc_0_8B02:
     bne     loc_0_8B2E              ; $8B0E
     cpy     #$02                    ; $8B10
     beq     loc_0_8B18              ; $8B12
-    dec     objXVelocity+6          ; $8B14
-    dec     objXVelocity+6          ; $8B16
+    dec     overworldTargetX        ; $8B14
+    dec     overworldTargetX        ; $8B16
 
 loc_0_8B18:
-    inc     objXVelocity+6          ; $8B18
+    inc     overworldTargetX        ; $8B18
 
 loc_0_8B1A:
     ldx     #$17                    ; $8B1A
@@ -1588,7 +1629,7 @@ loc_0_8B1C:
     bpl     loc_0_8B1C              ; $8B23
     jsr     sub_0_88E8              ; $8B25
     pla                             ; $8B28
-    sta     objXVelocity+6          ; $8B29
+    sta     overworldTargetX        ; $8B29
     rts                             ; $8B2B
 
 dat_0_8B2C:
@@ -1596,10 +1637,10 @@ dat_0_8B2C:
 
 loc_0_8B2E:
     dey                             ; $8B2E
-    lda     objXVelocity+6          ; $8B2F
+    lda     overworldTargetX        ; $8B2F
     clc                             ; $8B31
     adc     dat_0_8B2C,y            ; $8B32
-    sta     objXVelocity+6          ; $8B35
+    sta     overworldTargetX        ; $8B35
     jmp     loc_0_8B1A              ; $8B37
 
 loc_0_8B3A:
@@ -1610,17 +1651,17 @@ loc_0_8B3A:
 
 loc_0_8B42:
     jsr     sub_0_8B76              ; $8B42
-    lda     objXVelocity+7          ; $8B45
+    lda     ram_0077                ; $8B45
     and     #$0F                    ; $8B47
     cmp     #$0E                    ; $8B49
     beq     loc_0_8B51              ; $8B4B
-    inc     objXVelocity+5          ; $8B4D
+    inc     overworldTargetY        ; $8B4D
     inc     objXVelocity+2          ; $8B4F
 
 loc_0_8B51:
-    inc     objXVelocity+5          ; $8B51
+    inc     overworldTargetY        ; $8B51
     inc     objXVelocity+2          ; $8B53
-    lda     objXVelocity+5          ; $8B55
+    lda     overworldTargetY        ; $8B55
     jsr     Math_DivMod15           ; $8B57
     sta     temp0                   ; $8B5A
     tya                             ; $8B5C
@@ -1629,11 +1670,11 @@ loc_0_8B51:
     asl     a                       ; $8B5F
     asl     a                       ; $8B60
     ora     temp0                   ; $8B61
-    sta     objXVelocity+7          ; $8B63
+    sta     ram_0077                ; $8B63
     lda     objXVelocity+2          ; $8B65
     cmp     temp11                  ; $8B67
     bcc     loc_0_8B42              ; $8B69
-    inc     objXVelocity+14         ; $8B6B
+    inc     ram_007E                ; $8B6B
     rts                             ; $8B6D
 
 loc_0_8B6E:
@@ -1644,18 +1685,18 @@ loc_0_8B6E:
 
 sub_0_8B76:
     stx     temp14                  ; $8B76
-    lda     objXVelocity+7          ; $8B78
+    lda     ram_0077                ; $8B78
     and     #$10                    ; $8B7A
     lsr     a                       ; $8B7C
     ora     #$23                    ; $8B7D
     sta     ppuBuffer0,x            ; $8B7F
-    lda     objXVelocity+7          ; $8B82
+    lda     ram_0077                ; $8B82
     and     #$0E                    ; $8B84
     asl     a                       ; $8B86
     asl     a                       ; $8B87
     ora     #$C0                    ; $8B88
     sta     temp0                   ; $8B8A
-    lda     objXVelocity+6          ; $8B8C
+    lda     overworldTargetX        ; $8B8C
     lsr     a                       ; $8B8E
     and     #$07                    ; $8B8F
     ora     temp0                   ; $8B91
@@ -1688,7 +1729,7 @@ sub_0_8BA8:
     ldx     ram_04E8,y              ; $8BCC
     lda     dat_0_87E3,x            ; $8BCF
     jsr     sub_0_8BEF              ; $8BD2
-    lda     objXVelocity+6          ; $8BD5
+    lda     overworldTargetX        ; $8BD5
     lsr     a                       ; $8BD7
     bcs     loc_0_8BEE              ; $8BD8
     lda     ppuBuffer0+3,x          ; $8BDA
@@ -1771,7 +1812,7 @@ loc_0_8C39:
     jmp     sub_0_8C30              ; $8C42
 
 loc_0_8C45:
-    inc     objXVelocity+14         ; $8C45
+    inc     ram_007E                ; $8C45
     rts                             ; $8C47
 
 sub_0_8C48:
@@ -1785,9 +1826,9 @@ sub_0_8C48:
     rts                             ; $8C56
 
 loc_0_8C57:
-    lda     objXVelocity+9          ; $8C57
+    lda     ram_0079                ; $8C57
     sta     ppuBuffer0              ; $8C59
-    lda     objXVelocity+10         ; $8C5C
+    lda     ram_007A                ; $8C5C
     and     #$E0                    ; $8C5E
     sta     ppuBuffer0+1            ; $8C60
     lda     #$20                    ; $8C63
@@ -1820,7 +1861,7 @@ loc_0_8C86:
     ldy     temp6                   ; $8C89
     lda     #$01                    ; $8C8B
     sta     temp8                   ; $8C8D
-    lda     a:objXVelocity+14       ; $8C8F
+    lda     a:ram_007E              ; $8C8F
     cmp     #$02                    ; $8C92
     beq     loc_0_8C97              ; $8C94
     inx                             ; $8C96
@@ -1840,27 +1881,27 @@ loc_0_8C97:
     bne     loc_0_8C78              ; $8CAC
     lda     #$FF                    ; $8CAE
     sta     ppuBuffer0+35           ; $8CB0
-    lda     objXVelocity+10         ; $8CB3
+    lda     ram_007A                ; $8CB3
     clc                             ; $8CB5
     adc     #$20                    ; $8CB6
-    sta     objXVelocity+10         ; $8CB8
-    lda     objXVelocity+9          ; $8CBA
+    sta     ram_007A                ; $8CB8
+    lda     ram_0079                ; $8CBA
     adc     #$00                    ; $8CBC
-    sta     objXVelocity+9          ; $8CBE
+    sta     ram_0079                ; $8CBE
     and     #$03                    ; $8CC0
     cmp     #$03                    ; $8CC2
     bne     loc_0_8CDC              ; $8CC4
-    lda     objXVelocity+10         ; $8CC6
+    lda     ram_007A                ; $8CC6
     and     #$F0                    ; $8CC8
     cmp     #$C0                    ; $8CCA
     bcc     loc_0_8CDC              ; $8CCC
-    lda     objXVelocity+10         ; $8CCE
+    lda     ram_007A                ; $8CCE
     and     #$1F                    ; $8CD0
-    sta     objXVelocity+10         ; $8CD2
-    lda     objXVelocity+9          ; $8CD4
+    sta     ram_007A                ; $8CD2
+    lda     ram_0079                ; $8CD4
     eor     #$08                    ; $8CD6
     and     #$F8                    ; $8CD8
-    sta     objXVelocity+9          ; $8CDA
+    sta     ram_0079                ; $8CDA
 
 loc_0_8CDC:
     rts                             ; $8CDC

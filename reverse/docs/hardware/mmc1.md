@@ -84,7 +84,7 @@ form:
     jmp     Mmc1_SetPrgBank0        ; return to bank 0
 ```
 
-Examples: `sub_DFEF` (calls `OverworldBank::sub_83CF`), `sub_E01B`
+Examples: `Overworld_GetTerrain` (calls `OverworldBank::GetTerrain`), `sub_E01B`
 (`OverworldBank::sub_879B`), `sub_E024` (`OverworldBank::sub_83A1`).
 
 ## Bank Interfaces

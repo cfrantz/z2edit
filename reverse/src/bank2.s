@@ -15,7 +15,7 @@ dat_2_8000:
     .byte   $7A, $8C, $8E, $8C, $A2, $8C, $BC, $8C, $CE, $8C, $00, $00      ; $8002
 
 dat_2_800E:
-    .assert dat_2_800E = AreaBank::dat_800E, error, "interface address moved"
+    .assert dat_2_800E = AreaBank::Palettes, error, "interface address moved"
     .byte   $0F, $30, $12, $16, $0F, $36, $16, $07, $0F, $00, $10, $30, $0F, $23, $03, $0F; $800E
     .byte   $0F, $30, $12, $16, $0F, $37, $27, $06, $0F, $27, $16, $0F, $0F, $30, $10, $00; $801E
     .byte   $22, $30, $12, $16, $22, $29, $17, $09, $22, $30, $36, $27, $22, $30, $10, $00; $802E
@@ -446,10 +446,10 @@ sub_2_8368:
     lda     currentRegion           ; $8368
     cmp     #$02                    ; $836B
     bne     loc_2_838E              ; $836D
-    lda     objXVelocity+3          ; $836F
+    lda     overworldY              ; $836F
     cmp     #$64                    ; $8371
     bne     loc_2_8387              ; $8373
-    lda     objXVelocity+4          ; $8375
+    lda     overworldX              ; $8375
     cmp     #$2D                    ; $8377
     bne     loc_2_8387              ; $8379
     lda     #$0B                    ; $837B
@@ -479,7 +479,7 @@ sub_2_83A1:
     .assert sub_2_83A1 = OverworldBank::sub_83A1, error, "interface address moved"
     jsr     sub_DF01                ; $83A1
     lda     #$00                    ; $83A4
-    sta     objXVelocity+13         ; $83A6
+    sta     ram_007D                ; $83A6
     ldy     #$0B                    ; $83A8
 
 loc_2_83AA:
@@ -487,22 +487,22 @@ loc_2_83AA:
     sta     ppuBuffer0Len,y         ; $83AD
     dey                             ; $83B0
     bpl     loc_2_83AA              ; $83B1
-    lda     objXVelocity+9          ; $83B3
+    lda     ram_0079                ; $83B3
     sta     ppuBuffer0              ; $83B5
     sta     ppuBuffer0+5            ; $83B8
-    lda     objXVelocity+10         ; $83BB
+    lda     ram_007A                ; $83BB
     sta     ppuBuffer0+1            ; $83BD
     clc                             ; $83C0
     adc     #$01                    ; $83C1
     sta     ppuBuffer0+6            ; $83C3
-    lda     objXVelocity+6          ; $83C6
+    lda     overworldTargetX        ; $83C6
     sta     temp0                   ; $83C8
-    lda     objXVelocity+5          ; $83CA
+    lda     overworldTargetY        ; $83CA
     sta     temp1                   ; $83CC
     rts                             ; $83CE
 
-sub_2_83CF:
-    .assert sub_2_83CF = OverworldBank::sub_83CF, error, "interface address moved"
+Overworld_GetTerrain_Bank2:
+    .assert Overworld_GetTerrain_Bank2 = OverworldBank::GetTerrain, error, "interface address moved"
     lda     temp0                   ; $83CF
     cmp     #$40                    ; $83D1
     bcs     loc_2_8404              ; $83D3
@@ -595,7 +595,7 @@ dat_2_8500:
     .byte   $17, $84, $9F, $84, $60, $93                                    ; $8502
 
 dat_2_8508:
-    .assert dat_2_8508 = AreaBank::dat_8508, error, "interface address moved"
+    .assert dat_2_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $46, $90, $4C, $A6                                              ; $8508
 
 sub_2_850C:
@@ -764,7 +764,7 @@ loc_2_87D2:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                     ; $8897
 
 dat_2_88A0:
-    .assert dat_2_88A0 = AreaBank::dat_88A0, error, "interface address moved"
+    .assert dat_2_88A0 = AreaBank::EnemyLists, error, "interface address moved"
     .byte   $01, $01, $11, $63, $16, $6A, $11, $6E, $16, $61, $56, $6D, $56, $61, $91, $66; $88A0
     .byte   $96, $6B, $96, $0D, $66, $16, $6E, $16, $61, $58, $6E, $56, $63, $96, $6A, $96; $88B0
     .byte   $07, $6D, $14, $62, $54, $69, $94, $07, $68, $14, $08, $57, $66, $94, $0D, $44; $88C0
@@ -783,7 +783,7 @@ dat_2_88A0:
     .byte   $2A, $46, $42, $9C, $36, $86, $07, $70, $0F, $1D, $58, $7F, $CF, $01, $03, $67; $8990
 
 dat_2_89A0:
-    .assert dat_2_89A0 = AreaBank::dat_89A0, error, "interface address moved"
+    .assert dat_2_89A0 = AreaBank::EnemyLists+256, error, "interface address moved"
     .byte   $99, $01, $0D, $7F, $0B, $2D, $12, $32, $52, $51, $92, $71, $D2, $7F, $CB, $01; $89A0
     .byte   $07, $70, $0F, $1D, $58, $7F, $CF, $01, $09, $07, $06, $5A, $19, $3D, $46, $52; $89B0
     .byte   $99, $07, $56, $1A, $08, $57, $46, $9C, $09, $08, $0A, $06, $4A, $06, $8A, $70; $89C0
@@ -802,7 +802,7 @@ dat_2_89A0:
     .byte   $86, $47, $86, $6A, $86, $5D, $9B, $03, $76, $C1, $03, $76, $81, $03, $79, $99; $8A90
 
 dat_2_8AA0:
-    .assert dat_2_8AA0 = AreaBank::dat_8AA0, error, "interface address moved"
+    .assert dat_2_8AA0 = AreaBank::EnemyLists+512, error, "interface address moved"
     .byte   $01, $01, $11, $39, $1F, $3B, $1F, $3D, $1F, $44, $5F, $5C, $5F, $64, $9F, $7C; $8AA0
     .byte   $9F, $7E, $9F, $0F, $6A, $04, $5C, $04, $7D, $55, $6F, $44, $76, $95, $6C, $84; $8AB0
     .byte   $74, $C4, $0F, $6C, $11, $4E, $11, $20, $51, $70, $9B, $2F, $91, $41, $D1, $63; $8AC0
@@ -821,7 +821,7 @@ dat_2_8AA0:
     .byte   $8A, $79, $9C, $7D, $9C, $08, $CA, $05, $76, $57, $7F, $98, $0F, $78, $5F, $79; $8B90
 
 dat_2_8BA0:
-    .assert dat_2_8BA0 = AreaBank::dat_8BA0, error, "interface address moved"
+    .assert dat_2_8BA0 = AreaBank::EnemyLists+768, error, "interface address moved"
     .byte   $5F, $7B, $5F, $73, $97, $7D, $9C, $7F, $9C, $72, $DC, $09, $6D, $03, $50, $58; $8BA0
     .byte   $76, $43, $7B, $D8, $03, $50, $83, $09, $32, $51, $3C, $51, $47, $91, $2D, $91; $8BB0
     .byte   $09, $60, $52, $46, $92, $4E, $92, $21, $D4, $07, $57, $58, $40, $94, $24, $D4; $8BC0

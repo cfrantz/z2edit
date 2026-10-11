@@ -53,6 +53,15 @@ objXVelocity            = $0070     ; [15] X velocity
 ; state instead.
 overworldY              = $0073     ; Link's Y position on the overworld map
 overworldX              = $0074     ; Link's X position on the overworld map
+overworldTargetY        = $0075     ; Y of the tile Link is moving toward on the overworld
+overworldTargetX        = $0076     ; X of the tile Link is moving toward on the overworld
+ram_0077                = $0077
+ram_0079                = $0079
+ram_007A                = $007A
+ram_007B                = $007B
+ram_007C                = $007C
+ram_007D                = $007D
+ram_007E                = $007E
 ram_007F                = $007F
 objState                = $0080     ; [15] per-object state: Link's animation, an enemy's behavior state, a projectile's type (provisional)
 objOamOffset            = $0090     ; [15] offset in oamBuffer of the object's sprites; rotated every frame (oamRotation) to spread sprite flicker
@@ -210,7 +219,7 @@ ram_0552                = $0552
 ram_055A                = $055A
 areaId                  = $0561     ; area within the world (provisional)
 overworldDirection      = $0562     ; direction Link is facing on the overworld (provisional)
-overworldTerrain        = $0563     ; terrain type in front of Link on the overworld (provisional)
+overworldTerrain        = $0563     ; terrain type under Link on the overworld
 statMeterDisplay        = $0564     ; [2] magic and life as shown on the meters (provisional)
 ram_0566                = $0566
 ram_0567                = $0567
@@ -373,7 +382,7 @@ ram_079D                = $079D
 continueCount           = $079F     ; times the continue screen has been shown, saved with the game
 secondQuest             = $07A0     ; nonzero for a second quest file (provisional)
 playerName              = $07A1     ; [8] player name, as tile numbers ($F4 = blank)
-ram_07A9                = $07A9
+raftDirection           = $07A9     ; raft direction: 1 = right, 2 = left
 ram_07AA                = $07AA
 ram_07AB                = $07AB
 ram_07AC                = $07AC
@@ -477,7 +486,7 @@ sram_6EB6               = $6EB6     ; [8]
 sram_6EBE               = $6EBE
 sram_6EC0               = $6EC0     ; (16-bit)
 sramEnemyTiles          = $6ED4     ; sprite tile numbers for drawing enemies
-sramEnemyLists          = $7000     ; [1024] enemies of each area, from AreaBank::dat_88A0
+sramEnemyLists          = $7000     ; [1024] enemies of each area, from AreaBank::EnemyLists
 ; Save files (battery-backed).  The status bytes are SAVE_STATUS_*.
 ; ---------------------------------------------------------------------------
 sramSaveStatus0         = $7400     ; save file 0 status
@@ -493,7 +502,7 @@ sram_781A               = $781A
 sram_7881               = $7881
 sram_788F               = $788F
 sram_7900               = $7900
-sramAreaPalettes        = $7919     ; [224] area palettes, from AreaBank::dat_800E
+sramAreaPalettes        = $7919     ; [224] area palettes, from AreaBank::Palettes
 sramOverworldMap        = $7C00     ; [896] compressed overworld map of the region
 
 .endif

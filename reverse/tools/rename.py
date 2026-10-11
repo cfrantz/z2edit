@@ -111,7 +111,7 @@ def main():
     mapping = dict(pairs)
     exprs = {old for old, new in pairs if "+" in new}
     pattern = re.compile(r"\b(" + "|".join(re.escape(o) for o in mapping) + r")\b(\+(\d+)\b)?")
-    declaration = re.compile(r"^([A-Za-z_]\w*)\s*=")
+    declaration = re.compile(r"^\s*([A-Za-z_]\w*)\s*=")
 
     def replace(m):
         new, n = mapping[m.group(1)], m.group(3)

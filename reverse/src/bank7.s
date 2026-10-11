@@ -1955,7 +1955,7 @@ loc_CBF8:
 
 loc_CC0F:
     ldy     currentRegion           ; $CC0F
-    lda     objXVelocity+3          ; $CC12
+    lda     overworldY              ; $CC12
     cmp     dat_CB32,y              ; $CC14
     lda     #$00                    ; $CC17
     rol     a                       ; $CC19
@@ -1969,9 +1969,9 @@ loc_CC0F:
     lda     OverworldBank::dat_8409,y ; $CC26
     ldy     #$3E                    ; $CC29
     sta     sramLocArea,y           ; $CC2B
-    lda     objXVelocity+3          ; $CC2E
+    lda     overworldY              ; $CC2E
     sta     sramLocY,y              ; $CC30
-    lda     objXVelocity+4          ; $CC33
+    lda     overworldX              ; $CC33
     sta     sramLocX,y              ; $CC35
     jsr     sub_CB59                ; $CC38
     lda     #$00                    ; $CC3B
@@ -2119,7 +2119,7 @@ loc_CD19:
 LocationTablePtrs:
     .word   $861F, $A0FC                                                    ; $CD23
 
-; Offset into AreaBank::dat_8508 (the compressed overworld map pointers) for
+; Offset into AreaBank::OverworldMapPtrs (the compressed overworld map pointers) for
 ; each overworld region.
 RegionOverworldMapOffsets:
     .byte   $00, $02, $00                                                   ; $CD27
@@ -2205,34 +2205,34 @@ loc_CD8A:
     ldy     #$00                    ; $CD98
 
 loc_CD9A:
-    lda     AreaBank::dat_88A0,y    ; $CD9A
+    lda     AreaBank::EnemyLists,y  ; $CD9A
     sta     sramEnemyLists,y        ; $CD9D
     iny                             ; $CDA0
     bne     loc_CD9A                ; $CDA1
 
 loc_CDA3:
-    lda     AreaBank::dat_89A0,y    ; $CDA3
+    lda     AreaBank::EnemyLists+256,y ; $CDA3
     sta     sramEnemyLists+256,y    ; $CDA6
     iny                             ; $CDA9
     bne     loc_CDA3                ; $CDAA
 
 loc_CDAC:
-    lda     AreaBank::dat_8AA0,y    ; $CDAC
+    lda     AreaBank::EnemyLists+512,y ; $CDAC
     sta     sramEnemyLists+512,y    ; $CDAF
     iny                             ; $CDB2
     bne     loc_CDAC                ; $CDB3
 
 loc_CDB5:
-    lda     AreaBank::dat_8BA0,y    ; $CDB5
+    lda     AreaBank::EnemyLists+768,y ; $CDB5
     sta     sramEnemyLists+768,y    ; $CDB8
     iny                             ; $CDBB
     bne     loc_CDB5                ; $CDBC
     ldx     currentRegion           ; $CDBE
     lda     RegionOverworldMapOffsets,x ; $CDC1
     tax                             ; $CDC4
-    lda     AreaBank::dat_8508,x    ; $CDC5
+    lda     AreaBank::OverworldMapPtrs,x ; $CDC5
     sta     temp2                   ; $CDC8
-    lda     AreaBank::dat_8508+1,x  ; $CDCA
+    lda     AreaBank::OverworldMapPtrs+1,x ; $CDCA
     sta     temp3                   ; $CDCD
 
 loc_CDCF:
@@ -2286,7 +2286,7 @@ loc_CE0B:
     ldy     #$00                    ; $CE15
 
 loc_CE17:
-    lda     AreaBank::dat_800E,y    ; $CE17
+    lda     AreaBank::Palettes,y    ; $CE17
     sta     sramAreaPalettes,y      ; $CE1A
     iny                             ; $CE1D
     cpy     #$E0                    ; $CE1E
@@ -5111,7 +5111,7 @@ loc_DF00:
     rts                             ; $DF00
 
 sub_DF01:
-    lda     objXVelocity+5          ; $DF01
+    lda     overworldTargetY        ; $DF01
     jsr     Math_DivMod15           ; $DF03
     sta     temp0                   ; $DF06
     tya                             ; $DF08
@@ -5121,11 +5121,11 @@ sub_DF01:
     asl     a                       ; $DF0C
     ora     temp0                   ; $DF0D
     sta     temp10                  ; $DF0F
-    sta     objXVelocity+7          ; $DF11
+    sta     ram_0077                ; $DF11
     lda     #$08                    ; $DF13
     sta     temp0                   ; $DF15
     asl     a                       ; $DF17
-    sta     objXVelocity+13         ; $DF18
+    sta     ram_007D                ; $DF18
     lda     temp10                  ; $DF1A
     asl     a                       ; $DF1C
     asl     a                       ; $DF1D
@@ -5136,18 +5136,18 @@ sub_DF01:
     asl     a                       ; $DF23
     rol     temp0                   ; $DF24
     sta     temp1                   ; $DF26
-    lda     objXVelocity+6          ; $DF28
+    lda     overworldTargetX        ; $DF28
     and     #$0F                    ; $DF2A
     asl     a                       ; $DF2C
     adc     temp1                   ; $DF2D
-    sta     objXVelocity+10         ; $DF2F
+    sta     ram_007A                ; $DF2F
     lda     temp10                  ; $DF31
     and     #$10                    ; $DF33
     lsr     a                       ; $DF35
     ora     temp0                   ; $DF36
-    sta     objXVelocity+9          ; $DF38
+    sta     ram_0079                ; $DF38
     lda     #$00                    ; $DF3A
-    sta     objXVelocity+14         ; $DF3C
+    sta     ram_007E                ; $DF3C
     rts                             ; $DF3E
 
 ; ---------------------------------------------------------------------------
@@ -5206,7 +5206,7 @@ dat_DF6A:
     .byte   $FF                                                             ; $DF78
 
 sub_DF79:
-    jsr     OverworldBank::sub_83CF ; $DF79
+    jsr     OverworldBank::GetTerrain ; $DF79
 
 loc_DF7C:
     lda     (temp14),y              ; $DF7C
@@ -5276,9 +5276,19 @@ sub_DFE4:
     sta     temp15                  ; $DFEC
     rts                             ; $DFEE
 
-sub_DFEF:
+; ---------------------------------------------------------------------------
+; Overworld_GetTerrain
+;
+; Get the terrain at an overworld tile, from the region's compressed map
+; (OverworldBank::GetTerrain in the area bank).
+;
+; In:      temp0 = X, temp1 = Y
+; Out:     temp2 = terrain
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_GetTerrain:
     jsr     Mmc1_SetPrgBankArea     ; $DFEF
-    jsr     OverworldBank::sub_83CF ; $DFF2
+    jsr     OverworldBank::GetTerrain ; $DFF2
     jmp     Mmc1_SetPrgBank0        ; $DFF5
 
 sub_DFF8:

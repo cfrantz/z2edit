@@ -99,7 +99,7 @@ GLOBALS_INC = 1
 .global loc_DFD2
 .global sub_DFDB
 .global sub_DFE4
-.global sub_DFEF
+.global Overworld_GetTerrain
 .global sub_DFF8
 .global sub_E001
 .global sub_E01B
