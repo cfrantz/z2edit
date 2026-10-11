@@ -2549,7 +2549,7 @@ sub_0_9150:
     beq     loc_0_9188              ; $9172
     lda     #$70                    ; $9174
     sta     objX                    ; $9176
-    lda     ram_0743                ; $9178
+    lda     linkUpDownHeld          ; $9178
     lsr     a                       ; $917B
     lsr     a                       ; $917C
     lsr     a                       ; $917D
@@ -2561,7 +2561,7 @@ sub_0_9150:
 
 loc_0_9188:
     lda     #$00                    ; $9188
-    sta     ram_0743                ; $918A
+    sta     linkUpDownHeld          ; $918A
     rts                             ; $918D
 
 ; ---------------------------------------------------------------------------
@@ -2818,7 +2818,7 @@ loc_0_92E9:
     sta     sfxRequest+3            ; $9301
     lda     joypadHeld              ; $9303
     and     #$0C                    ; $9305
-    sta     ram_0743                ; $9307
+    sta     linkUpDownHeld          ; $9307
     lda     joypadHeld              ; $930A
     and     #$0F                    ; $930C
     beq     loc_0_9340              ; $930E
@@ -2886,7 +2886,7 @@ loc_0_936B:
 loc_0_9379:
     lda     timerFast+2             ; $9379
     bne     loc_0_9381              ; $937C
-    jsr     sub_0_959C              ; $937E
+    jsr     Link_ReadInput          ; $937E
 
 loc_0_9381:
     jsr     Link_UpdateXVelocity    ; $9381
@@ -3103,7 +3103,7 @@ dat_0_9481:
 ; Link_UpdateAttack
 ;
 ; Advance Link's sword attack animation (linkAttackFrame), standing or
-; crouching (ram_0495), and stop him when it ends on the ground.
+; crouching (linkAttackStanding), and stop him when it ends on the ground.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -3111,7 +3111,7 @@ Link_UpdateAttack:
     ldy     linkAttackFrame         ; $9483
     beq     loc_0_94C2              ; $9486
     dey                             ; $9488
-    ldx     ram_0495                ; $9489
+    ldx     linkAttackStanding      ; $9489
     lda     timerFast+9             ; $948C
     beq     loc_0_949E              ; $948F
     dex                             ; $9491
@@ -3136,9 +3136,9 @@ loc_0_949E:
     sta     timerFast+9             ; $94A7
     inc     linkAttackFrame         ; $94AA
     iny                             ; $94AD
-    cpy     ram_0495                ; $94AE
+    cpy     linkAttackStanding      ; $94AE
     bne     loc_0_94C2              ; $94B1
-    jmp     sub_0_960B              ; $94B3
+    jmp     Link_PlaySwordSound     ; $94B3
 
 loc_0_94B6:
     lda     #$00                    ; $94B6
@@ -3165,8 +3165,9 @@ loc_0_94C2:
 ; (1/256 pixel per frame per frame), or $30 while A is held on the way up,
 ; to a terminal velocity of 5.  Hitting a ceiling (objCollision bit 3) on
 ; the way up stops the rise.  Landing from full speed crouches Link for a
-; moment (linkLandingTimer).  With the downward thrust (techniques bit 2),
-; holding Down while falling uses the thrust pose.
+; moment (linkLandingTimer).  In the air, holding Up on the way up gives
+; the upward thrust pose (objState 8) and holding Down the downward thrust
+; (objState 9), once those techniques are learned.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -3202,7 +3203,7 @@ loc_0_94F8:
     and     #$F0                    ; $94FA
     sta     objY                    ; $94FC
     lda     linkButtonsPressed      ; $94FE
-    and     #$80                    ; $9501
+    and     #JOY_A                  ; $9501
     beq     loc_0_94C2              ; $9503
     ldy     #$00                    ; $9505
     sty     linkAttackFrame         ; $9507
@@ -3230,7 +3231,7 @@ loc_0_951C:
 loc_0_952D:
     ldy     #$48                    ; $952D
     lda     joypadHeld              ; $952F
-    and     #$80                    ; $9531
+    and     #JOY_A                  ; $9531
     beq     loc_0_953C              ; $9533
     lda     objYVelocity            ; $9535
     bpl     loc_0_953C              ; $9538
@@ -3271,10 +3272,10 @@ loc_0_956C:
     beq     loc_0_958C              ; $9570
     ldy     #$06                    ; $9572
     lda     techniques              ; $9574
-    and     #$04                    ; $9577
+    and     #TECH_UPWARD_THRUST     ; $9577
     beq     loc_0_9582              ; $9579
     lda     joypadHeld              ; $957B
-    and     #$08                    ; $957D
+    and     #JOY_UP                 ; $957D
     beq     loc_0_9582              ; $957F
     tay                             ; $9581
 
@@ -3289,7 +3290,7 @@ loc_0_958A:
 
 loc_0_958C:
     lda     techniques              ; $958C
-    and     #$10                    ; $958F
+    and     #TECH_DOWNWARD_THRUST   ; $958F
     beq     loc_0_959B              ; $9591
     lda     linkStanding            ; $9593
     bne     loc_0_959B              ; $9595
@@ -3299,9 +3300,21 @@ loc_0_958C:
 loc_0_959B:
     rts                             ; $959B
 
-sub_0_959C:
+; ---------------------------------------------------------------------------
+; Link_ReadInput
+;
+; Read the controller for Link: crouch while Down is held (linkStanding),
+; the direction held (linkDirHeld, and linkWalkDir for the last one),
+; Up/Down (linkUpDownHeld, e.g. for elevators), and A/B pressed
+; (linkButtonsPressed).  B starts a sword attack, standing or crouching
+; (linkAttackStanding), in direction linkAttackDir; Link stops if he is on
+; the ground.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Link_ReadInput:
     lda     joypadHeld              ; $959C
-    and     #$87                    ; $959E
+    and     #JOY_A | JOY_DOWN | JOY_LEFT | JOY_RIGHT ; $959E
     beq     loc_0_95B5              ; $95A0
     ldy     linkAttackFrame         ; $95A2
     cpy     #$04                    ; $95A5
@@ -3314,29 +3327,29 @@ sub_0_959C:
 
 loc_0_95B5:
     lda     joypadHeld              ; $95B5
-    and     #$0C                    ; $95B7
-    sta     ram_0743                ; $95B9
+    and     #JOY_UP | JOY_DOWN      ; $95B7
+    sta     linkUpDownHeld          ; $95B9
     ldy     #$00                    ; $95BC
-    and     #$04                    ; $95BE
+    and     #JOY_DOWN               ; $95BE
     bne     loc_0_95C3              ; $95C0
     iny                             ; $95C2
 
 loc_0_95C3:
     sty     a:linkStanding          ; $95C3
     lda     joypadHeld              ; $95C6
-    and     #$03                    ; $95C8
+    and     #JOY_LEFT | JOY_RIGHT   ; $95C8
     sta     linkDirHeld             ; $95CA
     beq     loc_0_95D1              ; $95CD
     sta     linkWalkDir             ; $95CF
 
 loc_0_95D1:
     lda     joypadPressed           ; $95D1
-    and     #$C0                    ; $95D3
+    and     #JOY_A | JOY_B          ; $95D3
     sta     linkButtonsPressed      ; $95D5
-    and     #$40                    ; $95D8
+    and     #JOY_B                  ; $95D8
     beq     loc_0_960F              ; $95DA
     lda     linkWalkDir             ; $95DC
-    sta     ram_044A                ; $95DE
+    sta     linkAttackDir           ; $95DE
     lda     linkJumpState           ; $95E1
     bne     loc_0_95ED              ; $95E4
     lda     timerFast+1             ; $95E6
@@ -3349,7 +3362,7 @@ loc_0_95ED:
     beq     loc_0_95FC              ; $95F2
     cmp     #$04                    ; $95F4
     bne     loc_0_960F              ; $95F6
-    jsr     sub_0_960B              ; $95F8
+    jsr     Link_PlaySwordSound     ; $95F8
     iny                             ; $95FB
 
 loc_0_95FC:
@@ -3357,10 +3370,10 @@ loc_0_95FC:
     lda     #$06                    ; $95FF
     sta     timerFast+9             ; $9601
     lda     linkStanding            ; $9604
-    sta     ram_0495                ; $9606
+    sta     linkAttackStanding      ; $9606
     bne     loc_0_960F              ; $9609
 
-sub_0_960B:
+Link_PlaySwordSound:
     lda     #$20                    ; $960B
     sta     sfxRequest+1            ; $960D
 
@@ -3640,7 +3653,7 @@ sub_0_97FA:
 loc_0_97FC:
     ldy     linkAttackFrame         ; $97FC
     dey                             ; $97FF
-    cpy     ram_0495                ; $9800
+    cpy     linkAttackStanding      ; $9800
     bne     loc_0_9813              ; $9803
     lda     timerFast+9             ; $9805
     cmp     #$05                    ; $9808
@@ -3707,7 +3720,7 @@ sub_0_9847:
     jsr     sub_0_97FA              ; $985E
     bcc     loc_0_9878              ; $9861
     lda     objY                    ; $9863
-    ldy     ram_0495                ; $9865
+    ldy     linkAttackStanding      ; $9865
     adc     dat_0_9817,y            ; $9868
     sta     objY+13,x               ; $986B
     lda     #$D2                    ; $986D

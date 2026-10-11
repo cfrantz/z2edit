@@ -1008,7 +1008,7 @@ loc_C63E:
 ; Mode_FindConnectedRoom
 ;
 ; gameMode $13: find the area connected to the current one in the
-; direction ram_0743 (e.g. by elevator) from sramRoomConnections, and set
+; direction linkUpDownHeld (e.g. by elevator) from sramRoomConnections, and set
 ; areaId and the scroll position for it.
 ;
 ; Status:  provisional
@@ -1019,7 +1019,7 @@ Mode_FindConnectedRoom:
     asl     a                       ; $C64A
     asl     a                       ; $C64B
     adc     #$01                    ; $C64C
-    ldy     ram_0743                ; $C64E
+    ldy     linkUpDownHeld          ; $C64E
     cpy     #$08                    ; $C651
     bne     loc_C657                ; $C653
     adc     #$00                    ; $C655
@@ -4053,17 +4053,17 @@ loc_D8C2:
     lda     #$00                    ; $D8CB
     sta     linkJumpState           ; $D8CD
     sta     objYVelocity            ; $D8D0
-    lda     ram_0743                ; $D8D3
+    lda     linkUpDownHeld          ; $D8D3
     lsr     a                       ; $D8D6
     lsr     a                       ; $D8D7
     tay                             ; $D8D8
     lda     dat_D8BF,y              ; $D8D9
     sta     objYVelocity+1,x        ; $D8DC
-    lda     ram_0743                ; $D8DF
+    lda     linkUpDownHeld          ; $D8DF
     beq     loc_D8F4                ; $D8E2
     lda     objCollision            ; $D8E4
     and     #$0C                    ; $D8E6
-    eor     ram_0743                ; $D8E8
+    eor     linkUpDownHeld          ; $D8E8
     beq     loc_D8FB                ; $D8EB
     lda     #$20                    ; $D8ED
     sta     sfxRequest+3            ; $D8EF

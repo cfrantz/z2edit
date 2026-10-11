@@ -53,7 +53,9 @@ pixels per frame (`LinkJumpVelocity`, `LinkJumpVelocityFrac`).  Gravity is
 $48/256 pixel per frame per frame, or $30/256 while A is held on the way
 up, so holding A jumps higher.  The terminal velocity is 5 pixels per
 frame.  Hitting a ceiling on the way up stops the rise.  Landing at full
-speed makes Link crouch for a few frames (`linkLandingTimer`).
+speed makes Link crouch for a few frames (`linkLandingTimer`).  Once the
+techniques are learned (`techniques`, `TECH_*`), holding Up on the way up
+gives the upward thrust, and holding Down in the air the downward thrust.
 
 ## Fairy
 

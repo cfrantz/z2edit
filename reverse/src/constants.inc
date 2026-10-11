@@ -21,6 +21,10 @@ GAME_MODE_LOAD_AREA     = $08   ; Main_Loop loads the area being entered
 GAME_MODE_SIDE_VIEW     = $0B
 GAME_MODE_LOAD_ROOM     = $14   ; Main_Loop loads a connected room (provisional)
 
+; techniques bits.
+TECH_UPWARD_THRUST      = $04
+TECH_DOWNWARD_THRUST    = $10
+
 ; linkMode values.
 LINK_MODE_ENTER         = 0     ; being placed in a new area
 LINK_MODE_CONTROL       = 1     ; under the player's control
