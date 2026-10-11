@@ -5481,7 +5481,7 @@ Overworld_SetMapPosition:
     ora     temp0                   ; $DF36
     sta     ram_0079                ; $DF38
     lda     #$00                    ; $DF3A
-    sta     ram_007E                ; $DF3C
+    sta     overworldDrawStep       ; $DF3C
     rts                             ; $DF3E
 
 ; ---------------------------------------------------------------------------

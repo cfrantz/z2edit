@@ -128,7 +128,7 @@ Mode_OverworldSetup:
     sta     ppuNametable            ; $818A
     lda     #$00                    ; $818D
     sta     ram_007D                ; $818F
-    sta     ram_007E                ; $8191
+    sta     overworldDrawStep       ; $8191
     sta     dialogType              ; $8193
     sta     objXVelocity            ; $8196
     sta     objState                ; $8198
@@ -152,13 +152,20 @@ dat_0_81AE:
     .byte   $00                                                             ; $81B0
 
 Mode_RaftStart:
-    jsr     sub_0_8222              ; $81B1
-    jsr     sub_0_81F6              ; $81B4
+    jsr     Raft_Wait               ; $81B1
+    jsr     Raft_Move               ; $81B4
     beq     loc_0_81E5              ; $81B7
     cmp     #$F0                    ; $81B9
     bcs     loc_0_81E5              ; $81BB
 
-sub_0_81BD:
+; ---------------------------------------------------------------------------
+; Raft_Draw
+;
+; Draw Link on the raft (overworld sprites 0 and 1), facing raftDirection.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Raft_Draw:
     jsr     sub_0_8728              ; $81BD
     lda     #$45                    ; $81C0
     sta     oamBuffer+1             ; $81C2
@@ -187,7 +194,14 @@ loc_0_81E5:
     sta     ram_07AA                ; $81F2
     rts                             ; $81F5
 
-sub_0_81F6:
+; ---------------------------------------------------------------------------
+; Raft_Move
+;
+; Move the raft one step in raftDirection.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Raft_Move:
     ldy     raftDirection           ; $81F6
     sty     overworldDirection      ; $81F9
     lda     objState+1              ; $81FC
@@ -203,9 +217,9 @@ dat_0_8204:
 
 Mode_Raft:
     inc     objState                ; $8207
-    jsr     sub_0_81F6              ; $8209
-    jsr     sub_0_81BD              ; $820C
-    jsr     sub_0_8222              ; $820F
+    jsr     Raft_Move               ; $8209
+    jsr     Raft_Draw               ; $820C
+    jsr     Raft_Wait               ; $820F
     ldy     raftDirection           ; $8212
     ldx     dat_0_8204,y            ; $8215
     cpx     objState                ; $8218
@@ -216,7 +230,15 @@ Mode_Raft:
 loc_0_8221:
     rts                             ; $8221
 
-sub_0_8222:
+; ---------------------------------------------------------------------------
+; Raft_Wait
+;
+; QUIRK: meant to act only every 16th frame, but both of its branches
+; return, so it does nothing.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Raft_Wait:
     lda     frameCounter            ; $8222
     and     #$0F                    ; $8224
     bne     loc_0_8221              ; $8226
@@ -467,7 +489,7 @@ loc_0_83AB:
     bcs     loc_0_83FD              ; $83BF
     lda     objXVelocity            ; $83C1
     pha                             ; $83C3
-    jsr     sub_0_870F              ; $83C4
+    jsr     Overworld_CanWalk       ; $83C4
     pla                             ; $83C7
     sta     objXVelocity            ; $83C8
     ldx     objState                ; $83CA
@@ -847,7 +869,7 @@ loc_0_8601:
     lda     #$01                    ; $860C
     sta     overworldDirection      ; $860E
     inc     overworldX              ; $8611
-    jsr     sub_0_870F              ; $8613
+    jsr     Overworld_CanWalk       ; $8613
     bcc     loc_0_861B              ; $8616
     dec     overworldX              ; $8618
     rts                             ; $861A
@@ -877,7 +899,7 @@ loc_0_863A:
     lda     #$02                    ; $863D
     sta     overworldDirection      ; $863F
     dec     overworldX              ; $8642
-    jsr     sub_0_870F              ; $8644
+    jsr     Overworld_CanWalk       ; $8644
     bcc     loc_0_864C              ; $8647
     inc     overworldX              ; $8649
     rts                             ; $864B
@@ -907,7 +929,7 @@ loc_0_866B:
     lda     #$04                    ; $866E
     sta     overworldDirection      ; $8670
     inc     overworldY              ; $8673
-    jsr     sub_0_870F              ; $8675
+    jsr     Overworld_CanWalk       ; $8675
     bcc     loc_0_867D              ; $8678
     dec     overworldY              ; $867A
     rts                             ; $867C
@@ -927,7 +949,7 @@ loc_0_8690:
     lda     #$08                    ; $8690
     sta     overworldDirection      ; $8692
     dec     overworldY              ; $8695
-    jsr     sub_0_870F              ; $8697
+    jsr     Overworld_CanWalk       ; $8697
     bcc     loc_0_869F              ; $869A
     inc     overworldY              ; $869C
 
@@ -1003,9 +1025,19 @@ loc_0_8704:
     sta     temp0                   ; $8706
     lda     overworldTargetY        ; $8708
     sta     temp1                   ; $870A
-    jmp     sub_0_88B3              ; $870C
+    jmp     Overworld_DrawStep      ; $870C
 
-sub_0_870F:
+; ---------------------------------------------------------------------------
+; Overworld_CanWalk
+;
+; Check the terrain under Link on the overworld (Overworld_UpdateTerrain).
+; Terrain $0B and above blocks him (his velocity is cleared), except $0D,
+; which he can cross with the boots.
+;
+; Out:     carry clear if he can walk there
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_CanWalk:
     jsr     Overworld_UpdateTerrain ; $870F
     cmp     #$0D                    ; $8712
     bne     loc_0_871B              ; $8714
@@ -1154,14 +1186,14 @@ loc_0_880A:
     cmp     #$4B                    ; $8824
     bne     loc_0_8801              ; $8826
     lda     #$00                    ; $8828
-    sta     ram_007E                ; $882A
+    sta     overworldDrawStep       ; $882A
 
 loc_0_882C:
     lda     overworldTargetX        ; $882C
     sta     temp0                   ; $882E
     lda     overworldTargetY        ; $8830
     sta     temp1                   ; $8832
-    jsr     sub_0_88B3              ; $8834
+    jsr     Overworld_DrawStep      ; $8834
     lda     #$02                    ; $8837
     sta     temp0                   ; $8839
     lda     #$03                    ; $883B
@@ -1171,7 +1203,7 @@ loc_0_882C:
     sta     ppuBuffer0Len           ; $8844
     lda     #$FF                    ; $8847
     sta     ppuBuffer0              ; $8849
-    lda     ram_007E                ; $884C
+    lda     overworldDrawStep       ; $884C
     cmp     #$06                    ; $884E
     bne     loc_0_882C              ; $8850
     inc     overworldTargetY        ; $8852
@@ -1187,7 +1219,7 @@ loc_0_882C:
     sta     ram_0077                ; $8862
     jsr     Sound_UpdateSometimes   ; $8864
     ldx     #$00                    ; $8867
-    stx     ram_007E                ; $8869
+    stx     overworldDrawStep       ; $8869
     dec     objXVelocity+1          ; $886B
     bne     loc_0_882C              ; $886D
     ldy     #$07                    ; $886F
@@ -1231,8 +1263,15 @@ loc_0_88AF:
 loc_0_88B2:
     rts                             ; $88B2
 
-sub_0_88B3:
-    lda     a:ram_007E              ; $88B3
+; ---------------------------------------------------------------------------
+; Overworld_DrawStep
+;
+; Run the current step of drawing the overworld map (overworldDrawStep).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_DrawStep:
+    lda     a:overworldDrawStep     ; $88B3
     jsr     JumpTable               ; $88B6
 ; (inline jump table)
     .word   loc_0_8BFE              ; $88B9
@@ -1247,10 +1286,10 @@ loc_0_88C7:
     lda     ram_007D                ; $88C7
     cmp     #$0E                    ; $88C9
     bcs     loc_0_88B2              ; $88CB
-    lda     ram_007E                ; $88CD
+    lda     overworldDrawStep       ; $88CD
     jsr     JumpTable               ; $88CF
 ; (inline jump table)
-    .word   sub_0_88E8              ; $88D2
+    .word   Overworld_SetupDrawRow  ; $88D2
     .word   loc_0_8948              ; $88D4
     .word   loc_0_8948              ; $88D6
     .word   loc_0_8948              ; $88D8
@@ -1262,7 +1301,7 @@ loc_0_88C7:
     .word   loc_0_8B6E              ; $88E4
     .word   loc_DFD1                ; $88E6
 
-sub_0_88E8:
+Overworld_SetupDrawRow:
     lda     overworldDirection      ; $88E8
     lsr     a                       ; $88EB
     bcs     loc_0_88F0              ; $88EC
@@ -1319,7 +1358,7 @@ loc_0_893A:
     bne     loc_0_8920              ; $893F
 
 loc_0_8941:
-    inc     ram_007E                ; $8941
+    inc     overworldDrawStep       ; $8941
     lda     #$00                    ; $8943
     sta     linkStanding            ; $8945
     rts                             ; $8947
@@ -1345,7 +1384,7 @@ loc_0_895E:
     lda     overworldDirection      ; $8966
     lsr     a                       ; $8969
     beq     loc_0_8976              ; $896A
-    lda     ram_007E                ; $896C
+    lda     overworldDrawStep       ; $896C
     and     #$04                    ; $896E
     bne     loc_0_897E              ; $8970
     inx                             ; $8972
@@ -1353,7 +1392,7 @@ loc_0_895E:
     bne     loc_0_897E              ; $8974
 
 loc_0_8976:
-    lda     ram_007E                ; $8976
+    lda     overworldDrawStep       ; $8976
     and     #$04                    ; $8978
     beq     loc_0_897E              ; $897A
     inx                             ; $897C
@@ -1377,7 +1416,7 @@ loc_0_897E:
     sta     ppuBuffer0+2            ; $899A
     lda     #$FF                    ; $899D
     sta     ppuBuffer0+4,y          ; $899F
-    lda     ram_007E                ; $89A2
+    lda     overworldDrawStep       ; $89A2
     and     #$04                    ; $89A4
     bne     loc_0_89AE              ; $89A6
     sta     linkStanding            ; $89A8
@@ -1388,7 +1427,7 @@ loc_0_89AE:
     lda     #$07                    ; $89AE
 
 loc_0_89B0:
-    sta     ram_007E                ; $89B0
+    sta     overworldDrawStep       ; $89B0
     lda     overworldDirection      ; $89B2
     lsr     a                       ; $89B5
     beq     loc_0_89BD              ; $89B6
@@ -1439,7 +1478,7 @@ loc_0_89E6:
     sta     ram_0079                ; $89FE
     lda     temp7                   ; $8A00
     sta     linkStanding            ; $8A02
-    inc     ram_007E                ; $8A04
+    inc     overworldDrawStep       ; $8A04
     rts                             ; $8A06
 
 ; ---------------------------------------------------------------------------
@@ -1478,7 +1517,7 @@ loc_0_8A1A:
 
 loc_0_8A2C:
     lda     #$06                    ; $8A2C
-    sta     ram_007E                ; $8A2E
+    sta     overworldDrawStep       ; $8A2E
     rts                             ; $8A30
 
 loc_0_8A31:
@@ -1529,7 +1568,7 @@ loc_0_8A66:
     bne     loc_0_8A66              ; $8A74
 
 loc_0_8A76:
-    inc     ram_007E                ; $8A76
+    inc     overworldDrawStep       ; $8A76
     rts                             ; $8A78
 
 loc_0_8A79:
@@ -1599,7 +1638,7 @@ loc_0_8AF0:
     bcc     loc_0_8A9E              ; $8AF8
     lda     #$FF                    ; $8AFA
     sta     ppuBuffer0+11           ; $8AFC
-    inc     ram_007E                ; $8AFF
+    inc     overworldDrawStep       ; $8AFF
     rts                             ; $8B01
 
 loc_0_8B02:
@@ -1627,7 +1666,7 @@ loc_0_8B1C:
     sta     ram_04E8,x              ; $8B1F
     dex                             ; $8B22
     bpl     loc_0_8B1C              ; $8B23
-    jsr     sub_0_88E8              ; $8B25
+    jsr     Overworld_SetupDrawRow  ; $8B25
     pla                             ; $8B28
     sta     overworldTargetX        ; $8B29
     rts                             ; $8B2B
@@ -1674,7 +1713,7 @@ loc_0_8B51:
     lda     objXVelocity+2          ; $8B65
     cmp     temp11                  ; $8B67
     bcc     loc_0_8B42              ; $8B69
-    inc     ram_007E                ; $8B6B
+    inc     overworldDrawStep       ; $8B6B
     rts                             ; $8B6D
 
 loc_0_8B6E:
@@ -1812,7 +1851,7 @@ loc_0_8C39:
     jmp     sub_0_8C30              ; $8C42
 
 loc_0_8C45:
-    inc     ram_007E                ; $8C45
+    inc     overworldDrawStep       ; $8C45
     rts                             ; $8C47
 
 sub_0_8C48:
@@ -1861,7 +1900,7 @@ loc_0_8C86:
     ldy     temp6                   ; $8C89
     lda     #$01                    ; $8C8B
     sta     temp8                   ; $8C8D
-    lda     a:ram_007E              ; $8C8F
+    lda     a:overworldDrawStep     ; $8C8F
     cmp     #$02                    ; $8C92
     beq     loc_0_8C97              ; $8C94
     inx                             ; $8C96
