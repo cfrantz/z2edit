@@ -981,33 +981,75 @@ sub_1_93AC:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93DC
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93EC
     .byte   $FF, $FF, $FF, $FF                                              ; $93FC
-    .byte   $39, $96, $47, $96, $5A, $96, $34, $96, $3E, $96, $64, $96, $39, $96, $00, $00; $9400
-    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $80, $41, $81, $49, $42, $93, $00; $9410
-    .byte   $00, $00, $00, $00, $03, $03, $03, $08, $03, $00, $00, $08, $02, $02, $03, $04; $9420
-    .byte   $03, $03, $04, $04, $00, $04, $0C, $12, $12, $18, $0C, $0E, $12, $04, $03, $03; $9430
-    .byte   $04, $08, $00, $02, $00, $AD, $95, $20, $96, $AD, $95, $AD, $95, $AD, $95, $AD; $9440
-    .byte   $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $4E, $98, $4E, $98, $25; $9450
-    .byte   $96, $25, $96, $4E, $98, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $31, $96, $31; $9460
-    .byte   $96, $31, $96, $31, $96, $31, $96, $31, $96, $31, $96, $31, $96, $AD, $95, $4E; $9470
-    .byte   $98, $AD, $95, $AD, $95, $6C, $98, $4E, $98, $AD, $95, $00, $00, $1E, $D9, $59; $9480
-    .byte   $D9, $91, $D9, $47, $DA, $0C, $DA, $2B, $DA, $CF, $DA, $53, $DB, $98, $AB, $E9; $9490
-    .byte   $AB, $53, $DB, $15, $DC, $4F, $DC, $DF, $D6, $DF, $D6, $8F, $D7, $E1, $D7, $42; $94A0
-    .byte   $D8, $88, $D8, $C2, $D8, $72, $99, $72, $99, $72, $99, $15, $9A, $15, $9A, $72; $94B0
-    .byte   $99, $72, $99, $72, $99, $C3, $98, $31, $9B, $94, $9B, $7E, $98, $B5, $9B, $2F; $94C0
-    .byte   $99, $4F, $99, $00, $00, $40, $40, $40, $C2, $C1, $81, $94, $C2, $80, $90, $84; $94D0
-    .byte   $10, $10, $81, $C2, $02, $92, $84, $84, $40, $44, $85, $C5, $48, $89, $45, $85; $94E0
-    .byte   $C6, $C2, $00, $51, $C3, $83, $00, $50, $02, $30, $30, $30, $41, $40, $40, $42; $94F0
-    .byte   $40, $31, $31, $42, $30, $30, $40, $40, $31, $41, $41, $41, $30, $41, $41, $41; $9500
-    .byte   $A2, $A2, $61, $61, $A1, $40, $30, $00, $41, $51, $30, $40, $00, $0F, $0F, $04; $9510
-    .byte   $02, $01, $01, $01, $01, $01, $01, $80, $01, $01, $01, $01, $01, $01, $01, $01; $9520
-    .byte   $03, $80, $80, $80, $80, $80, $80, $80, $80, $01, $01, $01, $01, $85, $00, $80; $9530
-    .byte   $05, $96, $86, $96, $46, $46, $46, $06, $40, $96, $06, $40, $90, $90, $06, $06; $9540
-    .byte   $90, $06, $06, $06, $90, $00, $00, $00, $00, $00, $00, $00, $00, $06, $96, $06; $9550
-    .byte   $06, $00, $00, $00, $00, $DD, $F0, $12, $F1, $3A, $F1, $C2, $EF, $91, $EF, $91; $9560
-    .byte   $EF, $F2, $EF, $7E, $F1, $D2, $EF, $D2, $EF, $7E, $F1, $00, $00, $00, $00, $27; $9570
-    .byte   $F0, $27, $F0, $AD, $95, $B9, $F0, $A8, $F0, $A8, $F0, $47, $EF, $A4, $9C, $A4; $9580
-    .byte   $9C, $A4, $9C, $65, $9D, $69, $9D, $6F, $9C, $6F, $9C, $6F, $9C, $F1, $9D, $AD; $9590
-    .byte   $95, $F6, $9D, $FB, $9D, $0C, $9E, $AD, $95, $43, $9C, $00, $00 ; $95A0
+
+ProjectilePtrs_Bank1:
+    .word   loc_1_9639, loc_1_9647, loc_1_965A, loc_1_9634 ; $9400
+    .word   $963E, loc_1_9664, loc_1_9639, $0000 ; $9408
+    .word   $0000, $0000, $0000     ; $9410
+
+ProjectileUnused_Bank1:
+    .byte   $00                                                             ; $9416
+
+ProjectileFlags_Bank1:
+    .byte   $00, $00, $80, $41, $81, $49, $42, $93, $00, $00                ; $9417
+
+EnemyHp_Bank1:
+    .byte   $00, $00, $00, $03, $03, $03, $08, $03, $00, $00, $08, $02      ; $9421
+    .byte   $02, $03, $04, $03, $03, $04, $04, $00, $04, $0C, $12, $12      ; $942D
+    .byte   $18, $0C, $0E, $12, $04, $03, $03, $04, $08, $00, $02, $00      ; $9439
+
+EnemyInitPtrs_Bank1:
+    .word   loc_1_95AD, loc_1_9620, loc_1_95AD, loc_1_95AD ; $9445
+    .word   loc_1_95AD, loc_1_95AD, loc_1_95AD, loc_1_95AD ; $944D
+    .word   loc_1_95AD, loc_1_95AD, loc_1_95AD, loc_1_984E ; $9455
+    .word   loc_1_984E, $9625, $9625, loc_1_984E ; $945D
+    .word   loc_1_95AD, loc_1_95AD, loc_1_95AD, loc_1_95AD ; $9465
+    .word   loc_1_9631, loc_1_9631, loc_1_9631, loc_1_9631 ; $946D
+    .word   loc_1_9631, loc_1_9631, loc_1_9631, loc_1_9631 ; $9475
+    .word   loc_1_95AD, loc_1_984E, loc_1_95AD, loc_1_95AD ; $947D
+    .word   $986C, loc_1_984E, loc_1_95AD, $0000 ; $9485
+
+EnemyAiPtrs_Bank1:
+    .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
+    .word   Bot_Ai, Bit_Ai, Moa_Ai, Ache_Ai ; $9495
+    .word   $AB98, $ABE9, Ache_Ai, BubbleGenerator_Ai ; $949D
+    .word   RockGenerator_Ai, Deeler_Ai, Deeler_Ai, BagoBagoGenerator_Ai ; $94A5
+    .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
+    .word   loc_1_9972, loc_1_9972, loc_1_9972, loc_1_9A15 ; $94B5
+    .word   loc_1_9A15, loc_1_9972, loc_1_9972, loc_1_9972 ; $94BD
+    .word   loc_1_98C3, $9B31, $9B94, loc_1_987E ; $94C5
+    .word   $9BB5, $992F, $994F, $0000 ; $94CD
+
+EnemyAttr_Bank1:
+    .byte   $40, $40, $40, $C2, $C1, $81, $94, $C2, $80, $90, $84, $10      ; $94D5
+    .byte   $10, $81, $C2, $02, $92, $84, $84, $40, $44, $85, $C5, $48      ; $94E1
+    .byte   $89, $45, $85, $C6, $C2, $00, $51, $C3, $83, $00, $50, $02      ; $94ED
+
+EnemyDamage_Bank1:
+    .byte   $30, $30, $30, $41, $40, $40, $42, $40, $31, $31, $42, $30      ; $94F9
+    .byte   $30, $40, $40, $31, $41, $41, $41, $30, $41, $41, $41, $A2      ; $9505
+    .byte   $A2, $61, $61, $A1, $40, $30, $00, $41, $51, $30, $40, $00      ; $9511
+
+EnemyHitbox_Bank1:
+    .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $80, $01      ; $951D
+    .byte   $01, $01, $01, $01, $01, $01, $01, $03, $80, $80, $80, $80      ; $9529
+    .byte   $80, $80, $80, $80, $01, $01, $01, $01, $85, $00, $80, $05      ; $9535
+
+EnemyFlags_Bank1:
+    .byte   $96, $86, $96, $46, $46, $46, $06, $40, $96, $06, $40, $90      ; $9541
+    .byte   $90, $06, $06, $90, $06, $06, $06, $90, $00, $00, $00, $00      ; $954D
+    .byte   $00, $00, $00, $00, $06, $96, $06, $06, $00, $00, $00, $00      ; $9559
+
+EnemyDrawPtrs_Bank1:
+    .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
+    .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
+    .word   Enemy08_Draw, Enemy08_Draw, Ache_Draw, $0000 ; $9575
+    .word   $0000, Deeler_Draw, Deeler_Draw, loc_1_95AD ; $957D
+    .word   BagoBago_Draw, Octorok_Draw, Octorok_Draw, Elevator_Draw ; $9585
+    .word   loc_1_9CA4, loc_1_9CA4, loc_1_9CA4, loc_1_9D65 ; $958D
+    .word   loc_1_9D69, loc_1_9C6F, loc_1_9C6F, loc_1_9C6F ; $9595
+    .word   loc_1_9DF1, loc_1_95AD, $9DF6, loc_1_9DFB ; $959D
+    .word   $9E0C, loc_1_95AD, $9C43, $0000 ; $95A5
 
 loc_1_95AD:
     rts                             ; $95AD
@@ -1022,12 +1064,12 @@ loc_1_95AD:
 
 loc_1_9620:
     lda     #$11                    ; $9620
-    sta     ram_00AF,x              ; $9622
+    sta     enemyAiState,x          ; $9622
     rts                             ; $9624
     .byte   $B5, $2A, $8D, $DD, $05, $18, $69, $60, $8D, $DC, $05, $60      ; $9625
 
 loc_1_9631:
-    dec     ram_00AF,x              ; $9631
+    dec     enemyAiState,x          ; $9631
     rts                             ; $9633
 
 loc_1_9634:
@@ -1630,14 +1672,14 @@ loc_1_9A64:
 loc_1_9A6B:
     ldy     enemyType,x             ; $9A6B
     lda     dat_1_99F7,y            ; $9A6D
-    inc     ram_00AF,x              ; $9A70
-    and     ram_00AF,x              ; $9A72
+    inc     enemyAiState,x          ; $9A70
+    and     enemyAiState,x          ; $9A72
     bne     loc_1_9AAB              ; $9A74
     lda     rng+1,x                 ; $9A76
     and     dat_1_99EF,y            ; $9A79
     bne     sub_1_9A82              ; $9A7C
     lda     #$E0                    ; $9A7E
-    sta     ram_00AF,x              ; $9A80
+    sta     enemyAiState,x          ; $9A80
 
 sub_1_9A82:
     ldy     #$01                    ; $9A82

@@ -729,33 +729,75 @@ dat_4_8BA0:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93D4
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93E4
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF      ; $93F4
-    .byte   $4E, $97, $4E, $97, $3D, $97, $4B, $97, $3D, $97, $40, $99, $B9, $98, $F8, $98; $9400
-    .byte   $00, $00, $00, $00, $00, $00, $67, $97, $00, $03, $41, $86, $53, $92, $A3, $80; $9410
-    .byte   $00, $00, $00, $00, $03, $04, $FF, $FA, $10, $00, $00, $38, $02, $02, $FA, $FA; $9420
-    .byte   $08, $08, $0C, $0C, $00, $00, $00, $00, $00, $10, $18, $38, $02, $02, $20, $10; $9430
-    .byte   $08, $20, $30, $50, $0C, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD; $9440
-    .byte   $95, $AA, $98, $AD, $95, $AD, $95, $AD, $95, $F4, $B9, $28, $9A, $B6, $98, $AD; $9450
-    .byte   $95, $AE, $98, $28, $9A, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $73, $9A, $73; $9460
-    .byte   $9A, $FC, $B8, $FC, $B8, $AD, $95, $AD, $95, $AD, $95, $28, $9A, $AD, $95, $AD; $9470
-    .byte   $95, $AD, $95, $AD, $95, $A1, $BC, $7E, $BC, $AD, $95, $AD, $95, $1E, $D9, $59; $9480
-    .byte   $D9, $91, $D9, $47, $DA, $0C, $DA, $3E, $B8, $D1, $99, $09, $B9, $98, $AB, $E9; $9490
-    .byte   $AB, $20, $BA, $C1, $9E, $BC, $BC, $BF, $B9, $D1, $99, $8F, $D7, $E1, $D7, $42; $94A0
-    .byte   $D8, $88, $D8, $C2, $D8, $D4, $9A, $8B, $9A, $DD, $9B, $DD, $9B, $8C, $9C, $8C; $94B0
-    .byte   $9C, $8C, $9C, $61, $B8, $BB, $B8, $C5, $B7, $57, $BA, $5A, $96, $5F, $BB, $C3; $94C0
-    .byte   $BA, $EF, $BC, $5A, $96, $40, $40, $40, $C2, $C1, $80, $87, $57, $C0, $C0, $D5; $94D0
-    .byte   $00, $50, $80, $87, $00, $93, $C5, $C5, $40, $00, $00, $00, $00, $47, $89, $CA; $94E0
-    .byte   $93, $93, $4B, $87, $86, $87, $CA, $C0, $C7, $30, $30, $30, $41, $41, $20, $00; $94F0
-    .byte   $83, $31, $31, $00, $30, $00, $30, $00, $30, $42, $41, $41, $30, $30, $30, $30; $9500
-    .byte   $30, $A2, $A3, $23, $31, $01, $33, $A2, $A1, $32, $33, $31, $A1, $0F, $0F, $04; $9510
-    .byte   $02, $01, $01, $01, $01, $01, $01, $01, $00, $80, $01, $01, $00, $01, $01, $01; $9520
-    .byte   $03, $06, $00, $00, $00, $80, $80, $80, $00, $01, $80, $80, $80, $07, $07, $07; $9530
-    .byte   $80, $96, $86, $96, $46, $46, $86, $46, $40, $90, $86, $40, $80, $40, $90, $46; $9540
-    .byte   $90, $06, $06, $06, $90, $90, $90, $90, $90, $00, $00, $00, $00, $00, $00, $00; $9550
-    .byte   $00, $C0, $C0, $80, $00, $DD, $F0, $12, $F1, $3A, $F1, $C2, $EF, $91, $EF, $AD; $9560
-    .byte   $95, $B0, $B7, $F2, $EF, $D2, $EF, $D2, $EF, $33, $B8, $AD, $95, $CC, $97, $EC; $9570
-    .byte   $98, $B0, $B7, $AD, $95, $B9, $F0, $A8, $F0, $A8, $F0, $47, $EF, $AD, $95, $AD; $9580
-    .byte   $95, $AD, $95, $AD, $95, $45, $9E, $45, $9E, $45, $9E, $AD, $95, $04, $B9, $7B; $9590
-    .byte   $BE, $E1, $97, $ED, $BD, $1D, $98, $75, $BD, $D0, $BD, $ED, $BD ; $95A0
+
+ProjectilePtrs_Bank4:
+    .word   loc_4_974E, loc_4_974E, loc_4_973D, $974B ; $9400
+    .word   loc_4_973D, loc_4_9940, loc_4_98B9, loc_4_98F8 ; $9408
+    .word   $0000, $0000, $0000     ; $9410
+
+ProjectileUnused_Bank4:
+    .byte   $67                                                             ; $9416
+
+ProjectileFlags_Bank4:
+    .byte   $97, $00, $03, $41, $86, $53, $92, $A3, $80, $00                ; $9417
+
+EnemyHp_Bank4:
+    .byte   $00, $00, $00, $03, $04, $FF, $FA, $10, $00, $00, $38, $02      ; $9421
+    .byte   $02, $FA, $FA, $08, $08, $0C, $0C, $00, $00, $00, $00, $00      ; $942D
+    .byte   $10, $18, $38, $02, $02, $20, $10, $08, $20, $30, $50, $0C      ; $9439
+
+EnemyInitPtrs_Bank4:
+    .word   loc_4_95AD, loc_4_95AD, loc_4_95AD, loc_4_95AD ; $9445
+    .word   loc_4_95AD, loc_4_95AD, loc_4_98AA, loc_4_95AD ; $944D
+    .word   loc_4_95AD, loc_4_95AD, sub_4_B9F4, loc_4_9A28 ; $9455
+    .word   loc_4_98B6, loc_4_95AD, loc_4_98AE, loc_4_9A28 ; $945D
+    .word   loc_4_95AD, loc_4_95AD, loc_4_95AD, loc_4_95AD ; $9465
+    .word   loc_4_9A73, loc_4_9A73, loc_4_B8FC, loc_4_B8FC ; $946D
+    .word   loc_4_95AD, loc_4_95AD, loc_4_95AD, loc_4_9A28 ; $9475
+    .word   loc_4_95AD, loc_4_95AD, loc_4_95AD, loc_4_95AD ; $947D
+    .word   sub_4_BCA1, loc_4_BC7E, loc_4_95AD, loc_4_95AD ; $9485
+
+EnemyAiPtrs_Bank4:
+    .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
+    .word   Bot_Ai, loc_4_B83E, loc_4_99D1, loc_4_B909 ; $9495
+    .word   loc_4_AB98, loc_4_ABE9, loc_4_BA20, loc_4_9EC1 ; $949D
+    .word   loc_4_BCBC, loc_4_B9BF, loc_4_99D1, BagoBagoGenerator_Ai ; $94A5
+    .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
+    .word   loc_4_9AD4, sub_4_9A8B, loc_4_9BDD, loc_4_9BDD ; $94B5
+    .word   sub_4_9C8C, sub_4_9C8C, sub_4_9C8C, sub_4_B861 ; $94BD
+    .word   loc_4_B8BB, loc_4_B7C5, loc_4_BA57, loc_4_965A ; $94C5
+    .word   loc_4_BB5F, loc_4_BAC3, loc_4_BCEF, loc_4_965A ; $94CD
+
+EnemyAttr_Bank4:
+    .byte   $40, $40, $40, $C2, $C1, $80, $87, $57, $C0, $C0, $D5, $00      ; $94D5
+    .byte   $50, $80, $87, $00, $93, $C5, $C5, $40, $00, $00, $00, $00      ; $94E1
+    .byte   $47, $89, $CA, $93, $93, $4B, $87, $86, $87, $CA, $C0, $C7      ; $94ED
+
+EnemyDamage_Bank4:
+    .byte   $30, $30, $30, $41, $41, $20, $00, $83, $31, $31, $00, $30      ; $94F9
+    .byte   $00, $30, $00, $30, $42, $41, $41, $30, $30, $30, $30, $30      ; $9505
+    .byte   $A2, $A3, $23, $31, $01, $33, $A2, $A1, $32, $33, $31, $A1      ; $9511
+
+EnemyHitbox_Bank4:
+    .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $01, $00      ; $951D
+    .byte   $80, $01, $01, $00, $01, $01, $01, $03, $06, $00, $00, $00      ; $9529
+    .byte   $80, $80, $80, $00, $01, $80, $80, $80, $07, $07, $07, $80      ; $9535
+
+EnemyFlags_Bank4:
+    .byte   $96, $86, $96, $46, $46, $86, $46, $40, $90, $86, $40, $80      ; $9541
+    .byte   $40, $90, $46, $90, $06, $06, $06, $90, $90, $90, $90, $90      ; $954D
+    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $C0, $C0, $80, $00      ; $9559
+
+EnemyDrawPtrs_Bank4:
+    .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
+    .word   Bot_Draw, loc_4_95AD, loc_4_B7B0, Moa_Draw ; $956D
+    .word   Enemy08_Draw, Enemy08_Draw, loc_4_B833, loc_4_95AD ; $9575
+    .word   loc_4_97CC, loc_4_98EC, loc_4_B7B0, loc_4_95AD ; $957D
+    .word   BagoBago_Draw, Octorok_Draw, Octorok_Draw, Elevator_Draw ; $9585
+    .word   loc_4_95AD, loc_4_95AD, loc_4_95AD, loc_4_95AD ; $958D
+    .word   loc_4_9E45, loc_4_9E45, loc_4_9E45, loc_4_95AD ; $9595
+    .word   loc_4_B904, loc_4_BE7B, loc_4_97E1, loc_4_BDED ; $959D
+    .word   loc_4_981D, loc_4_BD75, loc_4_BDD0, loc_4_BDED ; $95A5
 
 loc_4_95AD:
     rts                             ; $95AD
@@ -775,7 +817,7 @@ dat_4_9657:
     .byte   $37, $0A, $F2                                                   ; $9657
 
 loc_4_965A:
-    lda     ram_00AF,x              ; $965A
+    lda     enemyAiState,x          ; $965A
     bne     loc_4_966B              ; $965C
     lda     drawOffscreen+1         ; $965E
     beq     loc_4_966B              ; $9660
@@ -788,7 +830,7 @@ loc_4_965A:
 loc_4_966B:
     lda     #$01                    ; $966B
     sta     enemyVulnerability,x    ; $966D
-    sta     ram_00AF,x              ; $9670
+    sta     enemyAiState,x          ; $9670
     jsr     Enemy_Draw              ; $9672
     jsr     Enemy_CheckProjectileHitsSpecial ; $9675
     lda     objState+1,x            ; $9678
@@ -1006,7 +1048,7 @@ loc_4_97C2:
 
 loc_4_97CC:
     inc     temp0                   ; $97CC
-    lda     ram_00AF,x              ; $97CE
+    lda     enemyAiState,x          ; $97CE
     ldx     #$7A                    ; $97D0
     lsr     a                       ; $97D2
     bcc     loc_4_97D7              ; $97D3
@@ -1065,7 +1107,7 @@ dat_4_981A:
 
 loc_4_981D:
     ldy     #$50                    ; $981D
-    lda     ram_00AF,x              ; $981F
+    lda     enemyAiState,x          ; $981F
     ldx     #$58                    ; $9821
     and     #$7F                    ; $9823
     beq     loc_4_9832              ; $9825
@@ -1489,7 +1531,7 @@ loc_4_9AD4:
     jsr     sub_4_9A8B              ; $9ADB
 
 loc_4_9ADE:
-    lda     ram_00AF,x              ; $9ADE
+    lda     enemyAiState,x          ; $9ADE
     jsr     JumpTable               ; $9AE0
 ; (inline jump table)
     .word   loc_4_9AEB              ; $9AE3
@@ -1509,7 +1551,7 @@ loc_4_9AEB:
     lda     objCollision            ; $9AFD
     and     #$04                    ; $9AFF
     beq     loc_4_9B2A              ; $9B01
-    inc     ram_00AF,x              ; $9B03
+    inc     enemyAiState,x          ; $9B03
     inc     ram_00DE                ; $9B05
     lda     #$03                    ; $9B07
     sta     objState                ; $9B09
@@ -1541,7 +1583,7 @@ loc_4_9B2B:
     cmp     #$62                    ; $9B31
     bne     loc_4_9B46              ; $9B33
     sta     ram_0767                ; $9B35
-    inc     ram_00AF,x              ; $9B38
+    inc     enemyAiState,x          ; $9B38
     lda     #$40                    ; $9B3A
     sta     musicRequest            ; $9B3C
     lda     #$02                    ; $9B3E
@@ -1558,7 +1600,7 @@ loc_4_9B47:
     dey                             ; $9B4C
     sty     statMeterPending        ; $9B4D
     sty     statMeterPending+1      ; $9B50
-    inc     ram_00AF,x              ; $9B53
+    inc     enemyAiState,x          ; $9B53
 
 loc_4_9B55:
     rts                             ; $9B55
@@ -1855,7 +1897,7 @@ loc_4_9D24:
     lda     rng+1,x                 ; $9D2E
     and     #$03                    ; $9D31
     ora     #$04                    ; $9D33
-    sta     ram_0401,x              ; $9D35
+    sta     enemyAiDir,x            ; $9D35
 
 loc_4_9D38:
     lda     enemyType,x             ; $9D38
@@ -1939,21 +1981,21 @@ loc_4_9DAD:
 loc_4_9DB0:
     lda     objState+1,x            ; $9DB0
     bne     loc_4_9DED              ; $9DB2
-    lda     ram_0401,x              ; $9DB4
+    lda     enemyAiDir,x            ; $9DB4
     beq     loc_4_9DBF              ; $9DB7
-    dec     ram_0401,x              ; $9DB9
+    dec     enemyAiDir,x            ; $9DB9
     jmp     loc_4_9DD2              ; $9DBC
 
 loc_4_9DBF:
     lda     #$3F                    ; $9DBF
-    inc     ram_00AF,x              ; $9DC1
-    and     ram_00AF,x              ; $9DC3
+    inc     enemyAiState,x          ; $9DC1
+    and     enemyAiState,x          ; $9DC3
     bne     loc_4_9DED              ; $9DC5
     lda     rng+1,x                 ; $9DC7
     and     #$0F                    ; $9DCA
     bne     loc_4_9DD2              ; $9DCC
     lda     #$E0                    ; $9DCE
-    sta     ram_00AF,x              ; $9DD0
+    sta     enemyAiState,x          ; $9DD0
 
 loc_4_9DD2:
     ldy     #$01                    ; $9DD2
@@ -1980,7 +2022,7 @@ loc_4_9DED:
     rts                             ; $9DED
 
 loc_4_9DEE:
-    lda     ram_00AF,x              ; $9DEE
+    lda     enemyAiState,x          ; $9DEE
     lsr     a                       ; $9DF0
     bcs     loc_4_9E03              ; $9DF1
     lda     timerFast+TIMER_ENEMY,x ; $9DF3
@@ -2003,7 +2045,7 @@ loc_4_9E03:
 sub_4_9E0F:
     lda     #$50                    ; $9E0F
     sta     timerFast+TIMER_ENEMY,x ; $9E11
-    inc     ram_00AF,x              ; $9E14
+    inc     enemyAiState,x          ; $9E14
 
 loc_4_9E16:
     rts                             ; $9E16
@@ -2352,33 +2394,75 @@ loc_4_9EDF:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $A8D6
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $A8E6
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                ; $A8F6
-    .byte   $9E, $AD, $9E, $AD, $A8, $AD, $94, $AD, $A8, $AD, $0D, $AD, $B9, $98, $F8, $98; $A900
-    .byte   $29, $AD, $00, $00, $00, $00, $E0, $AD, $00, $03, $41, $85, $53, $93, $A3, $80; $A910
-    .byte   $C3, $00, $00, $00, $03, $04, $FF, $FA, $10, $00, $00, $08, $02, $02, $02, $FA; $A920
-    .byte   $38, $08, $0C, $0C, $00, $00, $00, $00, $00, $10, $18, $38, $02, $02, $01, $20; $A930
-    .byte   $18, $48, $C0, $10, $20, $AD, $AA, $AD, $AA, $AD, $AA, $AD, $AA, $AD, $AA, $AD; $A940
-    .byte   $AA, $55, $AF, $AD, $AA, $AD, $AA, $AD, $AA, $AD, $AA, $28, $9A, $3C, $B3, $AD; $A950
-    .byte   $AA, $59, $AF, $AD, $AC, $7D, $B4, $AD, $AA, $AD, $AA, $AD, $AA, $73, $9A, $73; $A960
-    .byte   $9A, $FC, $B8, $FC, $B8, $AD, $AA, $AD, $AA, $AD, $AA, $28, $9A, $AD, $AA, $AD; $A970
-    .byte   $AA, $AD, $AA, $AD, $AA, $91, $AF, $FE, $B0, $07, $B1, $AD, $AA, $1E, $D9, $59; $A980
-    .byte   $D9, $91, $D9, $47, $DA, $0C, $DA, $61, $AF, $D1, $99, $09, $B9, $98, $AB, $E9; $A990
-    .byte   $AB, $3F, $B2, $43, $B3, $62, $B3, $BF, $B9, $D1, $99, $DA, $AC, $85, $B4, $42; $A9A0
-    .byte   $D8, $88, $D8, $C2, $D8, $D4, $9A, $8B, $9A, $DD, $9B, $DD, $9B, $8C, $9C, $8C; $A9B0
-    .byte   $9C, $8C, $9C, $61, $B8, $BB, $B8, $4F, $AE, $AD, $B0, $5A, $96, $BC, $AF, $1F; $A9C0
-    .byte   $B1, $7B, $AE, $5A, $96, $40, $40, $40, $C3, $C1, $80, $87, $57, $C0, $C0, $CC; $A9D0
-    .byte   $00, $50, $80, $87, $D5, $83, $C5, $C5, $40, $00, $00, $00, $00, $47, $89, $CA; $A9E0
-    .byte   $93, $93, $89, $C9, $87, $CC, $4E, $8C, $C8, $30, $30, $30, $41, $41, $20, $00; $A9F0
-    .byte   $83, $31, $31, $30, $30, $00, $30, $00, $40, $32, $41, $41, $30, $30, $30, $30; $AA00
-    .byte   $30, $A2, $A3, $23, $30, $01, $B3, $23, $A2, $33, $35, $33, $A3, $0F, $0F, $04; $AA10
-    .byte   $02, $01, $01, $01, $01, $01, $01, $80, $00, $80, $01, $01, $01, $0F, $01, $01; $AA20
-    .byte   $03, $06, $00, $00, $00, $80, $80, $80, $00, $01, $80, $80, $80, $08, $0A, $0B; $AA30
-    .byte   $80, $96, $86, $96, $46, $46, $46, $06, $06, $90, $86, $C0, $90, $40, $90, $06; $AA40
-    .byte   $40, $56, $06, $06, $90, $90, $90, $90, $90, $00, $00, $00, $80, $00, $00, $00; $AA50
-    .byte   $00, $C0, $C0, $C0, $00, $DD, $F0, $12, $F1, $3A, $F1, $C2, $EF, $91, $EF, $AD; $AA60
-    .byte   $AA, $B0, $B7, $F2, $EF, $D2, $EF, $D2, $EF, $12, $AF, $AD, $AA, $8A, $B3, $EC; $AA70
-    .byte   $98, $B0, $B7, $A2, $AC, $8B, $B4, $A8, $F0, $A8, $F0, $47, $EF, $AD, $AA, $AD; $AA80
-    .byte   $AA, $AD, $AA, $AD, $AA, $45, $9E, $45, $9E, $45, $9E, $AD, $AA, $04, $B9, $2C; $AA90
-    .byte   $B4, $26, $AF, $ED, $BD, $A8, $B3, $90, $B2, $39, $B4, $ED, $BD ; $AAA0
+
+ProjectilePtrs_Bank4B:
+    .word   loc_4_AD9E, loc_4_AD9E, loc_4_ADA8, $AD94 ; $A900
+    .word   loc_4_ADA8, loc_4_AD0D, loc_4_98B9, loc_4_98F8 ; $A908
+    .word   loc_4_AD29, $0000, $0000 ; $A910
+
+ProjectileUnused_Bank4B:
+    .byte   $E0                                                             ; $A916
+
+ProjectileFlags_Bank4B:
+    .byte   $AD, $00, $03, $41, $85, $53, $93, $A3, $80, $C3                ; $A917
+
+EnemyHp_Bank4B:
+    .byte   $00, $00, $00, $03, $04, $FF, $FA, $10, $00, $00, $08, $02      ; $A921
+    .byte   $02, $02, $FA, $38, $08, $0C, $0C, $00, $00, $00, $00, $00      ; $A92D
+    .byte   $10, $18, $38, $02, $02, $01, $20, $18, $48, $C0, $10, $20      ; $A939
+
+EnemyInitPtrs_Bank4B:
+    .word   loc_4_AAAD, loc_4_AAAD, loc_4_AAAD, loc_4_AAAD ; $A945
+    .word   loc_4_AAAD, loc_4_AAAD, loc_4_AF55, loc_4_AAAD ; $A94D
+    .word   loc_4_AAAD, loc_4_AAAD, loc_4_AAAD, loc_4_9A28 ; $A955
+    .word   loc_4_B33C, loc_4_AAAD, loc_4_AF59, sub_4_ACAD ; $A95D
+    .word   loc_4_B47D, loc_4_AAAD, loc_4_AAAD, loc_4_AAAD ; $A965
+    .word   loc_4_9A73, loc_4_9A73, loc_4_B8FC, loc_4_B8FC ; $A96D
+    .word   loc_4_AAAD, loc_4_AAAD, loc_4_AAAD, loc_4_9A28 ; $A975
+    .word   loc_4_AAAD, loc_4_AAAD, loc_4_AAAD, loc_4_AAAD ; $A97D
+    .word   loc_4_AF91, loc_4_B0FE, loc_4_B107, loc_4_AAAD ; $A985
+
+EnemyAiPtrs_Bank4B:
+    .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $A98D
+    .word   Bot_Ai, loc_4_AF61, loc_4_99D1, loc_4_B909 ; $A995
+    .word   loc_4_AB98, loc_4_ABE9, loc_4_B23F, loc_4_B343 ; $A99D
+    .word   loc_4_B362, loc_4_B9BF, loc_4_99D1, loc_4_ACDA ; $A9A5
+    .word   loc_4_B485, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $A9AD
+    .word   loc_4_9AD4, sub_4_9A8B, loc_4_9BDD, loc_4_9BDD ; $A9B5
+    .word   sub_4_9C8C, sub_4_9C8C, sub_4_9C8C, sub_4_B861 ; $A9BD
+    .word   loc_4_B8BB, loc_4_AE4F, loc_4_B0AD, loc_4_965A ; $A9C5
+    .word   loc_4_AFBC, loc_4_B11F, loc_4_AE7B, loc_4_965A ; $A9CD
+
+EnemyAttr_Bank4B:
+    .byte   $40, $40, $40, $C3, $C1, $80, $87, $57, $C0, $C0, $CC, $00      ; $A9D5
+    .byte   $50, $80, $87, $D5, $83, $C5, $C5, $40, $00, $00, $00, $00      ; $A9E1
+    .byte   $47, $89, $CA, $93, $93, $89, $C9, $87, $CC, $4E, $8C, $C8      ; $A9ED
+
+EnemyDamage_Bank4B:
+    .byte   $30, $30, $30, $41, $41, $20, $00, $83, $31, $31, $30, $30      ; $A9F9
+    .byte   $00, $30, $00, $40, $32, $41, $41, $30, $30, $30, $30, $30      ; $AA05
+    .byte   $A2, $A3, $23, $30, $01, $B3, $23, $A2, $33, $35, $33, $A3      ; $AA11
+
+EnemyHitbox_Bank4B:
+    .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $80, $00      ; $AA1D
+    .byte   $80, $01, $01, $01, $0F, $01, $01, $03, $06, $00, $00, $00      ; $AA29
+    .byte   $80, $80, $80, $00, $01, $80, $80, $80, $08, $0A, $0B, $80      ; $AA35
+
+EnemyFlags_Bank4B:
+    .byte   $96, $86, $96, $46, $46, $46, $06, $06, $90, $86, $C0, $90      ; $AA41
+    .byte   $40, $90, $06, $40, $56, $06, $06, $90, $90, $90, $90, $90      ; $AA4D
+    .byte   $00, $00, $00, $80, $00, $00, $00, $00, $C0, $C0, $C0, $00      ; $AA59
+
+EnemyDrawPtrs_Bank4B:
+    .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $AA65
+    .word   Bot_Draw, loc_4_AAAD, loc_4_B7B0, Moa_Draw ; $AA6D
+    .word   Enemy08_Draw, Enemy08_Draw, loc_4_AF12, loc_4_AAAD ; $AA75
+    .word   loc_4_B38A, loc_4_98EC, loc_4_B7B0, loc_4_ACA2 ; $AA7D
+    .word   loc_4_B48B, Octorok_Draw, Octorok_Draw, Elevator_Draw ; $AA85
+    .word   loc_4_AAAD, loc_4_AAAD, loc_4_AAAD, loc_4_AAAD ; $AA8D
+    .word   loc_4_9E45, loc_4_9E45, loc_4_9E45, loc_4_AAAD ; $AA95
+    .word   loc_4_B904, loc_4_B42C, loc_4_AF26, loc_4_BDED ; $AA9D
+    .word   loc_4_B3A8, loc_4_B290, loc_4_B439, loc_4_BDED ; $AAA5
 
 loc_4_AAAD:
     rts                             ; $AAAD
@@ -2435,7 +2519,7 @@ loc_4_ABB0:
     sta     objYHi+1,x              ; $ABCD
     sta     objXHi+1,x              ; $ABCF
     jsr     Enemy_StopY             ; $ABD1
-    sta     ram_00AF,x              ; $ABD4
+    sta     enemyAiState,x          ; $ABD4
     stx     currentObject           ; $ABD6
     jsr     Enemy_UpdateBgCollision ; $ABD8
     lda     objCollision+1,x        ; $ABDB
@@ -2456,10 +2540,10 @@ loc_4_ABE8:
 loc_4_ABE9:
     lda     #$00                    ; $ABE9
     sta     enemyStunTimer,x        ; $ABEB
-    lda     ram_00AF,x              ; $ABEE
+    lda     enemyAiState,x          ; $ABEE
     beq     loc_4_AC00              ; $ABF0
     inc     objY+1,x                ; $ABF2
-    inc     ram_00AF,x              ; $ABF4
+    inc     enemyAiState,x          ; $ABF4
     cmp     #$10                    ; $ABF6
     bne     loc_4_ABFD              ; $ABF8
     jmp     Enemy_Remove            ; $ABFA
@@ -2482,7 +2566,7 @@ loc_4_AC00:
 ; (end of code not executed in the test movies)
 
 loc_4_AC19:
-    inc     ram_00AF,x              ; $AC19
+    inc     enemyAiState,x          ; $AC19
     lda     #$04                    ; $AC1B
     sta     sfxRequest+1            ; $AC1D
 
@@ -2572,7 +2656,7 @@ sub_4_ACAD:
     lda     dat_4_ACD2,y            ; $ACC4
     sta     objXVelocity+1,x        ; $ACC7
     jsr     Enemy_StopY             ; $ACC9
-    sta     ram_00AF,x              ; $ACCC
+    sta     enemyAiState,x          ; $ACCC
 dat_4_ACD0 := * + 2
     jmp     Enemy_FaceLink          ; $ACCE
     .byte   $EF                                                             ; $ACD1
@@ -2599,7 +2683,7 @@ loc_4_ACDA:
 
 loc_4_ACE8:
     jsr     Enemy_SkipAiIfStunned   ; $ACE8
-    lda     ram_00AF,x              ; $ACEB
+    lda     enemyAiState,x          ; $ACEB
     and     #$01                    ; $ACED
     tay                             ; $ACEF
     lda     objYVelocity+1,x        ; $ACF0
@@ -2608,7 +2692,7 @@ loc_4_ACE8:
     sta     objYVelocity+1,x        ; $ACF7
     cmp     dat_4_ACD7,y            ; $ACFA
     bne     loc_4_AD01              ; $ACFD
-    inc     ram_00AF,x              ; $ACFF
+    inc     enemyAiState,x          ; $ACFF
 
 loc_4_AD01:
     jsr     Enemy_MoveY             ; $AD01
@@ -2830,8 +2914,8 @@ loc_4_AE4F:
     lda     #$00                    ; $AE4F
     sta     objState+1,x            ; $AE51
     jsr     Enemy_FaceLink          ; $AE53
-    dec     ram_00AF,x              ; $AE56
-    lda     ram_00AF,x              ; $AE58
+    dec     enemyAiState,x          ; $AE56
+    lda     enemyAiState,x          ; $AE58
     cmp     #$C0                    ; $AE5A
     bcc     loc_4_AE64              ; $AE5C
     lsr     a                       ; $AE5E
@@ -2845,7 +2929,7 @@ loc_4_AE64:
     jsr     sub_4_AED3              ; $AE6A
 
 loc_4_AE6D:
-    lda     ram_00AF,x              ; $AE6D
+    lda     enemyAiState,x          ; $AE6D
     cmp     #$40                    ; $AE6F
     bcc     loc_4_AEBD              ; $AE71
     cmp     #$80                    ; $AE73
@@ -2862,8 +2946,8 @@ loc_4_AE7B:
     lda     #$00                    ; $AE86
     sta     objState+1,x            ; $AE88
     jsr     Enemy_FaceLink          ; $AE8A
-    dec     ram_00AF,x              ; $AE8D
-    lda     ram_00AF,x              ; $AE8F
+    dec     enemyAiState,x          ; $AE8D
+    lda     enemyAiState,x          ; $AE8F
     cmp     #$F0                    ; $AE91
     bcc     loc_4_AE9B              ; $AE93
     lsr     a                       ; $AE95
@@ -2877,7 +2961,7 @@ loc_4_AE9B:
     jsr     sub_4_AED3              ; $AEA1
 
 loc_4_AEA4:
-    lda     ram_00AF,x              ; $AEA4
+    lda     enemyAiState,x          ; $AEA4
     cmp     #$D0                    ; $AEA6
     bcc     loc_4_AEBD              ; $AEA8
     cmp     #$E0                    ; $AEAA
@@ -2897,7 +2981,7 @@ loc_4_AEBA:
 loc_4_AEBD:
     lda     #$00                    ; $AEBD
     sta     enemyStunTimer,x        ; $AEBF
-    sta     ram_00AF,x              ; $AEC2
+    sta     enemyAiState,x          ; $AEC2
     lda     rng+1,x                 ; $AEC4
     cmp     #$E0                    ; $AEC7
     bcc     loc_4_AECC              ; $AEC9
@@ -3001,7 +3085,7 @@ loc_4_AF61:
     and     #$20                    ; $AF6A
     beq     loc_4_AF90              ; $AF6C
     lda     #$11                    ; $AF6E
-    sta     ram_00AF,x              ; $AF70
+    sta     enemyAiState,x          ; $AF70
     lda     #$00                    ; $AF72
     sta     enemyHp,x               ; $AF74
     ldy     #$01                    ; $AF76
@@ -3140,9 +3224,9 @@ loc_4_B04C:
     rts                             ; $B04C
 
 loc_4_B04D:
-    lda     ram_00AF,x              ; $B04D
+    lda     enemyAiState,x          ; $B04D
     beq     loc_4_B05A              ; $B04F
-    dec     ram_00AF,x              ; $B051
+    dec     enemyAiState,x          ; $B051
     cmp     #$10                    ; $B053
     bne     loc_4_B05A              ; $B055
 ; (code below not executed in the test movies)
@@ -3164,10 +3248,10 @@ loc_4_B05A:
     adc     #$08                    ; $B06C
     cmp     #$11                    ; $B06E
     bcs     loc_4_B07A              ; $B070
-    lda     ram_00AF,x              ; $B072
+    lda     enemyAiState,x          ; $B072
     bne     loc_4_B07A              ; $B074
     lda     #$1F                    ; $B076
-    sta     ram_00AF,x              ; $B078
+    sta     enemyAiState,x          ; $B078
 
 loc_4_B07A:
     lda     timerFast+TIMER_ENEMY,x ; $B07A
@@ -3214,7 +3298,7 @@ loc_4_B0AD:
     sta     objYVelocity+1,x        ; $B0B3
 
 loc_4_B0B6:
-    lda     ram_00AF,x              ; $B0B6
+    lda     enemyAiState,x          ; $B0B6
     and     #$7F                    ; $B0B8
     bne     loc_4_B0C1              ; $B0BA
     lda     #$10                    ; $B0BC
@@ -3232,7 +3316,7 @@ loc_4_B0C1:
     sta     ram_044C,y              ; $B0D4
 
 loc_4_B0D7:
-    lda     ram_00AF,x              ; $B0D7
+    lda     enemyAiState,x          ; $B0D7
     asl     a                       ; $B0D9
     asl     a                       ; $B0DA
     lda     #$00                    ; $B0DB
@@ -3248,7 +3332,7 @@ loc_4_B0D7:
     and     #$04                    ; $B0F2
     beq     loc_4_B0FB              ; $B0F4
     jsr     Enemy_Land              ; $B0F6
-    inc     ram_00AF,x              ; $B0F9
+    inc     enemyAiState,x          ; $B0F9
 
 loc_4_B0FB:
     jmp     Enemy_FaceLink          ; $B0FB
@@ -3474,7 +3558,7 @@ loc_4_B250:
     jsr     Enemy_CheckProjectileHitsSpecial ; $B253
     lda     frameCounter            ; $B256
     and     #$40                    ; $B258
-    sta     ram_0401,x              ; $B25A
+    sta     enemyAiDir,x            ; $B25A
     jsr     sub_4_9C8C              ; $B25D
 
 loc_4_B260:
@@ -3650,7 +3734,7 @@ loc_4_B362:
     sta     objY+1,x                ; $B372
     lda     #$F0                    ; $B374
     sta     objYVelocity+1,x        ; $B376
-    inc     ram_00AF,x              ; $B379
+    inc     enemyAiState,x          ; $B379
 
 loc_4_B37B:
     jsr     Enemy_MoveYAndFall      ; $B37B
@@ -3664,7 +3748,7 @@ loc_4_B387:
 
 loc_4_B38A:
     inc     temp0                   ; $B38A
-    lda     ram_00AF,x              ; $B38C
+    lda     enemyAiState,x          ; $B38C
     ldx     #$B8                    ; $B38E
     lsr     a                       ; $B390
     bcc     loc_4_B395              ; $B391
@@ -3683,7 +3767,7 @@ dat_4_B398:
     .byte   $08, $06, $04, $02                                              ; $B3A4
 
 loc_4_B3A8:
-    lda     ram_00AF,x              ; $B3A8
+    lda     enemyAiState,x          ; $B3A8
     lsr     a                       ; $B3AA
     lsr     a                       ; $B3AB
     sta     ram_00D9                ; $B3AC
@@ -3770,7 +3854,7 @@ loc_4_B424:
     rts                             ; $B42B
 
 loc_4_B42C:
-    lda     ram_00AF,x              ; $B42C
+    lda     enemyAiState,x          ; $B42C
     ldx     #$1E                    ; $B42E
     cmp     #$C0                    ; $B430
     bcs     loc_4_B436              ; $B432
@@ -3794,7 +3878,7 @@ loc_4_B439:
     sta     temp1                   ; $B44D
 
 loc_4_B44F:
-    lda     ram_00AF,x              ; $B44F
+    lda     enemyAiState,x          ; $B44F
     ldx     #$A0                    ; $B451
     cmp     #$F0                    ; $B453
     bcs     loc_4_B459              ; $B455
@@ -3808,7 +3892,7 @@ loc_4_B459:
     sta     temp1                   ; $B464
     lda     objY+1,x                ; $B466
     sta     temp0                   ; $B468
-    lda     ram_00AF,x              ; $B46A
+    lda     enemyAiState,x          ; $B46A
     ldx     #$A6                    ; $B46C
     cmp     #$F0                    ; $B46E
     bcs     loc_4_B474              ; $B470
@@ -3829,7 +3913,7 @@ loc_4_B47D:
     rts                             ; $B484
 
 loc_4_B485:
-    jsr     Enemy_UpdateLanding     ; $B485
+    jsr     Item_Fall               ; $B485
     jmp     Enemy_HurtLinkOnContact ; $B488
 
 loc_4_B48B:
@@ -3875,7 +3959,7 @@ loc_4_B4AD:
     sta     objFacing+1,x           ; $B4D4
 
 loc_4_B4D6:
-    lda     ram_00AF,x              ; $B4D6
+    lda     enemyAiState,x          ; $B4D6
     asl     a                       ; $B4D8
     sta     objXVelocity+1,x        ; $B4D9
     beq     loc_4_B4EC              ; $B4DB
@@ -3888,7 +3972,7 @@ loc_4_B4E0:
     lda     frameCounter            ; $B4E5
     lsr     a                       ; $B4E7
     bcc     loc_4_B4EC              ; $B4E8
-    dec     ram_00AF,x              ; $B4EA
+    dec     enemyAiState,x          ; $B4EA
 
 loc_4_B4EC:
     lda     temp15                  ; $B4EC
@@ -3900,10 +3984,10 @@ loc_4_B4F2:
     bcc     loc_4_B4FF              ; $B4F4
 
 sub_4_B4F6:
-    lda     ram_00AF,x              ; $B4F6
+    lda     enemyAiState,x          ; $B4F6
     and     #$7F                    ; $B4F8
     ora     #$10                    ; $B4FA
-    sta     ram_00AF,x              ; $B4FC
+    sta     enemyAiState,x          ; $B4FC
     rts                             ; $B4FE
 
 loc_4_B4FF:
@@ -3931,7 +4015,7 @@ loc_4_B511:
     jsr     sub_4_B557              ; $B51F
 
 loc_4_B522:
-    lda     ram_00AF,x              ; $B522
+    lda     enemyAiState,x          ; $B522
     asl     a                       ; $B524
     bne     loc_4_B53A              ; $B525
     lda     rng+1,x                 ; $B527
@@ -3940,8 +4024,8 @@ loc_4_B522:
     jsr     sub_4_B4F6              ; $B52E
     lda     rng+1,x                 ; $B531
     and     #$80                    ; $B534
-    ora     ram_00AF,x              ; $B536
-    sta     ram_00AF,x              ; $B538
+    ora     enemyAiState,x          ; $B536
+    sta     enemyAiState,x          ; $B538
 
 loc_4_B53A:
     rts                             ; $B53A
@@ -4023,7 +4107,7 @@ loc_4_B5C5:
     beq     loc_4_B600              ; $B5CD
     lda     scrollFrozen            ; $B5CF
     beq     loc_4_B600              ; $B5D2
-    lda     ram_00AF,x              ; $B5D4
+    lda     enemyAiState,x          ; $B5D4
     ldy     #$09                    ; $B5D6
     and     #$7F                    ; $B5D8
     beq     loc_4_B5E7              ; $B5DA
@@ -4310,8 +4394,8 @@ dat_4_B7C2:
 
 loc_4_B7C5:
     jsr     Enemy_FaceLink          ; $B7C5
-    dec     ram_00AF,x              ; $B7C8
-    lda     ram_00AF,x              ; $B7CA
+    dec     enemyAiState,x          ; $B7C8
+    lda     enemyAiState,x          ; $B7CA
     cmp     #$E0                    ; $B7CC
     bcc     loc_4_B7D6              ; $B7CE
     lsr     a                       ; $B7D0
@@ -4340,7 +4424,7 @@ loc_4_B7D6:
     ldx     currentObject           ; $B805
 
 loc_4_B807:
-    lda     ram_00AF,x              ; $B807
+    lda     enemyAiState,x          ; $B807
     cmp     #$A0                    ; $B809
     bcc     loc_4_B81E              ; $B80B
     cmp     #$C0                    ; $B80D
@@ -4384,7 +4468,7 @@ loc_4_B83E:
     and     #$20                    ; $B847
     beq     loc_4_B85E              ; $B849
     lda     #$11                    ; $B84B
-    sta     ram_00AF,x              ; $B84D
+    sta     enemyAiState,x          ; $B84D
     lda     #$01                    ; $B84F
     sta     enemyType,x             ; $B851
     sta     enemyHp,x               ; $B853
@@ -4450,7 +4534,7 @@ loc_4_B896:
     sta     objXVelocity+1,x        ; $B8AB
     lda     #$FF                    ; $B8AD
     sta     enemySramIndex,x        ; $B8AF
-    sta     ram_00AF,x              ; $B8B1
+    sta     enemyAiState,x          ; $B8B1
     iny                             ; $B8B3
     sty     objFacing+1,x           ; $B8B4
     stx     temp0                   ; $B8B6
@@ -4460,8 +4544,8 @@ loc_4_B896:
 loc_4_B8BB:
     jsr     Enemy_UpdateCommon      ; $B8BB
     jsr     Enemy_HurtLinkOnContact ; $B8BE
-    inc     ram_00AF,x              ; $B8C1
-    lda     ram_00AF,x              ; $B8C3
+    inc     enemyAiState,x          ; $B8C1
+    lda     enemyAiState,x          ; $B8C3
     lsr     a                       ; $B8C5
     lsr     a                       ; $B8C6
     lsr     a                       ; $B8C7
@@ -4469,7 +4553,7 @@ loc_4_B8BB:
     lsr     a                       ; $B8C9
     lsr     a                       ; $B8CA
     bcs     loc_4_B8F0              ; $B8CB
-    lda     ram_00AF,x              ; $B8CD
+    lda     enemyAiState,x          ; $B8CD
     and     #$3F                    ; $B8CF
     bne     loc_4_B8ED              ; $B8D1
     lda     objFacing+1,x           ; $B8D3
@@ -4510,7 +4594,7 @@ loc_4_B904:
     jmp     loc_4_9EBA              ; $B906
 
 loc_4_B909:
-    lda     ram_00AF,x              ; $B909
+    lda     enemyAiState,x          ; $B909
     and     #$03                    ; $B90B
     beq     loc_4_B929              ; $B90D
     ldy     #$04                    ; $B90F
@@ -4528,7 +4612,7 @@ loc_4_B919:
     jsr     Enemy_HurtLinkOnContact ; $B926
 
 loc_4_B929:
-    lda     ram_00AF,x              ; $B929
+    lda     enemyAiState,x          ; $B929
     and     #$03                    ; $B92B
     jsr     JumpTable               ; $B92D
 ; (inline jump table)
@@ -4565,7 +4649,7 @@ loc_4_B93C:
 
 loc_4_B967:
     sta     timerFast+TIMER_ENEMY,x ; $B967
-    inc     ram_00AF,x              ; $B96A
+    inc     enemyAiState,x          ; $B96A
 
 loc_4_B96C:
     rts                             ; $B96C
@@ -4575,7 +4659,7 @@ loc_4_B96D:
     bne     loc_4_B979              ; $B970
     lda     #$40                    ; $B972
     sta     timerFast+TIMER_ENEMY,x ; $B974
-    inc     ram_00AF,x              ; $B977
+    inc     enemyAiState,x          ; $B977
 
 loc_4_B979:
     rts                             ; $B979
@@ -4593,7 +4677,7 @@ loc_4_B97C:
     rts                             ; $B98D
 
 loc_4_B98E:
-    inc     ram_00AF,x              ; $B98E
+    inc     enemyAiState,x          ; $B98E
     rts                             ; $B990
 
 loc_4_B991:
@@ -4601,7 +4685,7 @@ loc_4_B991:
     beq     loc_4_B99C              ; $B993
     lda     #$BF                    ; $B995
     sta     timerFast+TIMER_ENEMY,x ; $B997
-    inc     ram_00AF,x              ; $B99A
+    inc     enemyAiState,x          ; $B99A
 
 loc_4_B99C:
     lda     frameCounter            ; $B99C
@@ -4626,8 +4710,8 @@ loc_4_B9BE:
 
 loc_4_B9BF:
     jsr     Enemy_Draw              ; $B9BF
-    inc     ram_00AF,x              ; $B9C2
-    lda     ram_00AF,x              ; $B9C4
+    inc     enemyAiState,x          ; $B9C2
+    lda     enemyAiState,x          ; $B9C4
     and     #$3F                    ; $B9C6
     bne     loc_4_B9F3              ; $B9C8
     jsr     Enemy_FireProjectile    ; $B9CA
@@ -4664,7 +4748,7 @@ sub_4_B9F4:
     lda     dat_4_BA19,y            ; $BA0B
     sta     objXVelocity+1,x        ; $BA0E
     jsr     Enemy_StopY             ; $BA10
-    sta     ram_00AF,x              ; $BA13
+    sta     enemyAiState,x          ; $BA13
 dat_4_BA17 := * + 2
     jmp     Enemy_FaceLink          ; $BA15
     .byte   $EF                                                             ; $BA18
@@ -4688,7 +4772,7 @@ loc_4_BA20:
 
 loc_4_BA2E:
     jsr     Enemy_SkipAiIfStunned   ; $BA2E
-    lda     ram_00AF,x              ; $BA31
+    lda     enemyAiState,x          ; $BA31
     and     #$01                    ; $BA33
     tay                             ; $BA35
     lda     objYVelocity+1,x        ; $BA36
@@ -4697,7 +4781,7 @@ loc_4_BA2E:
     sta     objYVelocity+1,x        ; $BA3D
     cmp     dat_4_BA1E,y            ; $BA40
     bne     loc_4_BA47              ; $BA43
-    inc     ram_00AF,x              ; $BA45
+    inc     enemyAiState,x          ; $BA45
 
 loc_4_BA47:
     jsr     Enemy_MoveY             ; $BA47
@@ -4718,7 +4802,7 @@ loc_4_BA57:
     sta     objYVelocity+1,x        ; $BA5D
 
 loc_4_BA60:
-    lda     ram_00AF,x              ; $BA60
+    lda     enemyAiState,x          ; $BA60
     cmp     #$D8                    ; $BA62
     bcs     loc_4_BA6D              ; $BA64
     and     #$1F                    ; $BA66
@@ -4743,7 +4827,7 @@ loc_4_BA6D:
     sta     a:objXVelocity+7,y      ; $BA8D
 
 loc_4_BA90:
-    lda     ram_00AF,x              ; $BA90
+    lda     enemyAiState,x          ; $BA90
     asl     a                       ; $BA92
     asl     a                       ; $BA93
     lda     #$00                    ; $BA94
@@ -4752,7 +4836,7 @@ loc_4_BA90:
     lda     dat_4_BA54,y            ; $BA98
     sta     objXVelocity+1,x        ; $BA9B
     jsr     Enemy_MoveYAndFall      ; $BA9D
-    inc     ram_00AF,x              ; $BAA0
+    inc     enemyAiState,x          ; $BAA0
     jsr     Enemy_UpdateBgCollision ; $BAA2
     lda     objCollision+1,x        ; $BAA5
     and     #$04                    ; $BAA7
@@ -4833,7 +4917,7 @@ loc_4_BAFA:
     sta     a:enemyType,y           ; $BB2F
     lda     #$00                    ; $BB32
     sta     enemyVulnerability,y    ; $BB34
-    sta     a:ram_00AF,y            ; $BB37
+    sta     a:enemyAiState,y        ; $BB37
     lda     #$D0                    ; $BB3A
     sta     objYVelocity+1,y        ; $BB3C
     sta     a:enemyHp,y             ; $BB3F
@@ -4896,7 +4980,7 @@ loc_4_BB90:
 loc_4_BB94:
     lda     #$00                    ; $BB94
     sta     objXVelocity+1,x        ; $BB96
-    lda     ram_00AF,x              ; $BB98
+    lda     enemyAiState,x          ; $BB98
     asl     a                       ; $BB9A
     beq     loc_4_BBB2              ; $BB9B
     bcc     loc_4_BBA0              ; $BB9D
@@ -4911,7 +4995,7 @@ loc_4_BBA0:
     lda     frameCounter            ; $BBAB
     lsr     a                       ; $BBAD
     bcc     loc_4_BBB2              ; $BBAE
-    dec     ram_00AF,x              ; $BBB0
+    dec     enemyAiState,x          ; $BBB0
 
 loc_4_BBB2:
     lda     temp15                  ; $BBB2
@@ -4923,10 +5007,10 @@ loc_4_BBB8:
     bcc     loc_4_BBC5              ; $BBBA
 
 sub_4_BBBC:
-    lda     ram_00AF,x              ; $BBBC
+    lda     enemyAiState,x          ; $BBBC
     and     #$7F                    ; $BBBE
     ora     #$10                    ; $BBC0
-    sta     ram_00AF,x              ; $BBC2
+    sta     enemyAiState,x          ; $BBC2
 
 loc_4_BBC4:
     rts                             ; $BBC4
@@ -4966,7 +5050,7 @@ loc_4_BBD7:
     jsr     sub_4_BC23              ; $BBF5
 
 loc_4_BBF8:
-    lda     ram_00AF,x              ; $BBF8
+    lda     enemyAiState,x          ; $BBF8
     asl     a                       ; $BBFA
     bne     loc_4_BC10              ; $BBFB
     lda     rng+1,x                 ; $BBFD
@@ -4975,8 +5059,8 @@ loc_4_BBF8:
     jsr     sub_4_BBBC              ; $BC04
     lda     rng+1,x                 ; $BC07
     and     #$80                    ; $BC0A
-    ora     ram_00AF,x              ; $BC0C
-    sta     ram_00AF,x              ; $BC0E
+    ora     enemyAiState,x          ; $BC0C
+    sta     enemyAiState,x          ; $BC0E
 
 loc_4_BC10:
     rts                             ; $BC10
@@ -5085,7 +5169,7 @@ loc_4_BCBC:
     jsr     Enemy_Land              ; $BCCB
     lda     #$F0                    ; $BCCE
     sta     objYVelocity+1,x        ; $BCD0
-    inc     ram_00AF,x              ; $BCD3
+    inc     enemyAiState,x          ; $BCD3
 
 loc_4_BCD5:
     jsr     Enemy_MoveYAndFall      ; $BCD5
@@ -5116,14 +5200,14 @@ loc_4_BCEF:
     jsr     Enemy_HurtLinkOnContact ; $BCF5
     jsr     Enemy_MoveX             ; $BCF8
     lda     objY+1,x                ; $BCFB
-    ldy     ram_00AF,x              ; $BCFD
+    ldy     enemyAiState,x          ; $BCFD
     cpy     #$03                    ; $BCFF
     bcs     loc_4_BD24              ; $BD01
     cmp     #$C4                    ; $BD03
     bcc     loc_4_BD21              ; $BD05
     lda     #$30                    ; $BD07
     sta     timerFast+TIMER_ENEMY,x ; $BD09
-    inc     ram_00AF,x              ; $BD0C
+    inc     enemyAiState,x          ; $BD0C
     lda     dat_4_BCEC,y            ; $BD0E
     sta     objYVelocity+1,x        ; $BD11
     lda     #$10                    ; $BD14
@@ -5157,7 +5241,7 @@ loc_4_BD3D:
 loc_4_BD3E:
     sta     enemyVulnerability,x    ; $BD3E
     jsr     Enemy_MoveY             ; $BD41
-    lda     ram_00AF,x              ; $BD44
+    lda     enemyAiState,x          ; $BD44
     and     #$01                    ; $BD46
     tay                             ; $BD48
     lda     objYVelocity+1,x        ; $BD49
@@ -5166,7 +5250,7 @@ loc_4_BD3E:
     sta     objYVelocity+1,x        ; $BD50
     cmp     dat_4_BCE4,y            ; $BD53
     bne     loc_4_BD5A              ; $BD56
-    inc     ram_00AF,x              ; $BD58
+    inc     enemyAiState,x          ; $BD58
 
 loc_4_BD5A:
     lda     frameCounter            ; $BD5A
@@ -5176,8 +5260,8 @@ loc_4_BD5A:
     sta     objXVelocity+1,x        ; $BD64
 
 loc_4_BD66:
-    inc     ram_0401,x              ; $BD66
-    lda     ram_0401,x              ; $BD69
+    inc     enemyAiDir,x            ; $BD66
+    lda     enemyAiDir,x            ; $BD69
     asl     a                       ; $BD6C
     bne     loc_4_BD72              ; $BD6D
     jsr     sub_4_9BE5              ; $BD6F
@@ -5196,7 +5280,7 @@ loc_4_BD75:
 
 loc_4_BD7D:
     ldy     #$50                    ; $BD7D
-    lda     ram_00AF,x              ; $BD7F
+    lda     enemyAiState,x          ; $BD7F
     ldx     #$6C                    ; $BD81
     and     #$7F                    ; $BD83
     beq     loc_4_BD92              ; $BD85
@@ -5352,7 +5436,7 @@ loc_4_BE7A:
     rts                             ; $BE7A
 
 loc_4_BE7B:
-    lda     ram_00AF,x              ; $BE7B
+    lda     enemyAiState,x          ; $BE7B
     ldx     #$1A                    ; $BE7D
     cmp     #$D3                    ; $BE7F
     bcs     loc_4_BE85              ; $BE81

@@ -71,7 +71,7 @@ ram_00A0                = $00A0
 enemyType               = $00A1     ; [6] enemy type, by enemy index
 objCollision            = $00A7     ; [7] collision bits: 3-0 = background above, below, left, right; for enemies, bit 4 = touching Link, bit 5 = hit
 linkWalkFrame           = $00AE     ; walking animation frame, 0-2
-ram_00AF                = $00AF
+enemyAiState            = $00AF     ; [6] per-enemy AI state; its meaning depends on the type (items: the item kind, bit 7 = not saved)
 ram_00B0                = $00B0
 linkMode                = $00B5     ; Link's mode in the side view; see LINK_MODE_*
 enemyActive             = $00B6     ; [6] enemy state; see ENEMY_STATE_*
@@ -139,7 +139,7 @@ objXSubpixel            = $03D6     ; [15] fractional part of the X position (Ob
 objYFrac                = $03E6     ; [13] fraction: of the Y position (Obj_MoveY) or of objYVelocity (Obj_MoveYWithGravity)
 overworldBuffer         = $0400     ; [256] on the overworld only: map decoding and drawing buffers; the side view uses this RAM for other things
 linkAttackFrame         = $0400     ; sword attack animation frame, 0 = not attacking
-ram_0401                = $0401
+enemyAiDir              = $0401     ; [6] per-enemy direction or variable used by some AI routines (provisional)
 enemyStunTimer          = $040E     ; [6] while nonzero the enemy is stunned and flashes; counts down each time it is drawn
 enemyExpClass           = $0414     ; [6] experience class of a killed enemy, for ExperienceTilesLeft/Right
 breakingBlockTimer      = $041A     ; [5] blocks being broken: animation timer, 0 = none
@@ -233,6 +233,8 @@ ram_05CC                = $05CC
 ram_05D3                = $05D3
 ram_05DA                = $05DA
 ram_05DB                = $05DB
+ram_05DC                = $05DC
+ram_05DD                = $05DD
 ram_05DE                = $05DE
 ram_05E2                = $05E2
 ram_05E3                = $05E3
@@ -456,7 +458,7 @@ sramDoors               = $6BF8     ; [96] side view doors (provisional)
 sramProjectilePtrs      = $6D00     ; [11] (16-bit) routine for each projectile type (objState+7 - 1); first of the enemy definition tables, from the area bank at $9400 ($A900 in world 4)
 sramProjectileFlags     = $6D17     ; [10] per projectile type: bits 7-6 = $80 reflectable, bit 5 = survives hitting Link, bit 3 = large hitbox (provisional)
 sramEnemyHp             = $6D21     ; [36] hit points of each enemy type
-sram_6D45               = $6D45     ; [36] (16-bit) per enemy type
+sramEnemyInitPtrs       = $6D45     ; [36] (16-bit) routine run when each enemy type spawns (Enemy_Spawn)
 sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy type every frame
 sramEnemyAttr           = $6DD5     ; [36] bits 7-6 = sprite palette, bit 4 = drains experience; experience (provisional)
 sramEnemyDamage         = $6DF9     ; [36] bits 7-6 = item drop group, bits 3-0 = damage class of each enemy type

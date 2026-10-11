@@ -58,5 +58,12 @@ Tools that drive the emulator need the Python extension built with
   the movies ran it, and the variables it was seen to read and write;
   `--provisional` lists only provisional routines, for checking headers
   against the traces.
+- `enemy_table.py`: Decodes each enemy group's definition tables (hit
+  points, experience, damage, flags, and init/AI/draw routines by name).
+- `disasm.py`: Disassembles a run of `.byte` data into instructions (code
+  the movies never ran, which the bootstrap left as data).
+- `name_at.py`: Names the code or data at addresses, whatever label (or
+  none, or a cheap local) is there now.
+- `resymbolize.py`: Rewrites `.word` table entries with current names.
 - `check_docs.py`: Reports symbol names in `docs/` that no longer exist in
   the source.  Run by `make verify`.

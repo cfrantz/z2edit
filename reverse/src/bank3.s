@@ -902,33 +902,75 @@ loc_3_8BA8:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93D5
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93E5
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF           ; $93F5
-    .byte   $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95; $9400
-    .byte   $AD, $95, $AD, $95, $AD, $95, $AD, $95, $00, $00, $00, $00, $00, $00, $00, $00; $9410
-    .byte   $00, $00, $00, $00, $00, $00, $00, $30, $00, $00, $00, $08, $00, $00, $00, $00; $9420
-    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00; $9430
-    .byte   $00, $00, $00, $00, $00, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD; $9440
-    .byte   $95, $AD, $95, $AD, $95, $6B, $97, $6B, $97, $6B, $97, $6B, $97, $6B, $97, $6B; $9450
-    .byte   $97, $6B, $97, $6B, $97, $6B, $97, $6B, $97, $6B, $97, $56, $97, $56, $97, $56; $9460
-    .byte   $97, $56, $97, $6B, $97, $6B, $97, $6B, $97, $6B, $97, $6B, $97, $6B, $97, $43; $9470
-    .byte   $97, $43, $97, $43, $97, $43, $97, $6B, $97, $6B, $97, $B2, $96, $1E, $D9, $59; $9480
-    .byte   $D9, $91, $D9, $A8, $96, $0C, $DA, $2B, $DA, $CF, $DA, $53, $DB, $78, $98, $78; $9490
-    .byte   $98, $93, $97, $83, $97, $BD, $9A, $93, $97, $93, $97, $A9, $97, $93, $97, $93; $94A0
-    .byte   $97, $93, $97, $D4, $97, $D4, $97, $D4, $97, $D4, $97, $D4, $97, $D4, $97, $78; $94B0
-    .byte   $98, $78, $98, $78, $98, $78, $98, $78, $98, $78, $98, $78, $98, $78, $98, $BD; $94C0
-    .byte   $9A, $BD, $9A, $E0, $96, $40, $40, $40, $C2, $C0, $80, $C6, $C3, $00, $00, $80; $94D0
-    .byte   $C0, $00, $18, $10, $20, $34, $08, $18, $10, $08, $18, $00, $00, $18, $10, $08; $94E0
-    .byte   $18, $00, $10, $2C, $2C, $00, $00, $00, $00, $00, $00, $00, $02, $00, $00, $03; $94F0
-    .byte   $00, $01, $02, $00, $00, $00, $83, $83, $01, $82, $83, $82, $02, $03, $03, $02; $9500
-    .byte   $02, $01, $03, $02, $02, $03, $03, $02, $02, $03, $00, $00, $00, $01, $01, $04; $9510
-    .byte   $00, $01, $01, $01, $01, $0C, $0C, $0C, $0C, $00, $0C, $0C, $0C, $0C, $0C, $0C; $9520
-    .byte   $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $00, $00; $9530
-    .byte   $00, $86, $86, $86, $06, $06, $06, $06, $00, $80, $80, $80, $80, $80, $80, $80; $9540
-    .byte   $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80; $9550
-    .byte   $80, $80, $80, $80, $80, $DD, $F0, $12, $F1, $3A, $F1, $7E, $F1, $91, $EF, $91; $9560
-    .byte   $EF, $F2, $EF, $7E, $F1, $E8, $9A, $E8, $9A, $7E, $F1, $91, $EF, $AD, $95, $E8; $9570
-    .byte   $9A, $E8, $9A, $C8, $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8; $9580
-    .byte   $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8, $9A, $E8; $9590
-    .byte   $9A, $E8, $9A, $E8, $9A, $E8, $9A, $AD, $95, $AD, $95, $AD, $95 ; $95A0
+
+ProjectilePtrs_Bank3:
+    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9400
+    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9408
+    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9410
+
+ProjectileUnused_Bank3:
+    .byte   $AD                                                             ; $9416
+
+ProjectileFlags_Bank3:
+    .byte   $95, $00, $00, $00, $00, $00, $00, $00, $00, $00                ; $9417
+
+EnemyHp_Bank3:
+    .byte   $00, $00, $00, $00, $00, $00, $30, $00, $00, $00, $08, $00      ; $9421
+    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00      ; $942D
+    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00      ; $9439
+
+EnemyInitPtrs_Bank3:
+    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9445
+    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $944D
+    .word   sub_3_976B, sub_3_976B, sub_3_976B, sub_3_976B ; $9455
+    .word   sub_3_976B, sub_3_976B, sub_3_976B, sub_3_976B ; $945D
+    .word   sub_3_976B, sub_3_976B, sub_3_976B, loc_3_9756 ; $9465
+    .word   loc_3_9756, loc_3_9756, loc_3_9756, sub_3_976B ; $946D
+    .word   sub_3_976B, sub_3_976B, sub_3_976B, sub_3_976B ; $9475
+    .word   sub_3_976B, loc_3_9743, loc_3_9743, loc_3_9743 ; $947D
+    .word   loc_3_9743, sub_3_976B, sub_3_976B, loc_3_96B2 ; $9485
+
+EnemyAiPtrs_Bank3:
+    .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, $96A8 ; $948D
+    .word   Bot_Ai, Bit_Ai, Moa_Ai, Ache_Ai ; $9495
+    .word   loc_3_9878, loc_3_9878, loc_3_9793, loc_3_9783 ; $949D
+    .word   loc_3_9ABD, loc_3_9793, loc_3_9793, loc_3_97A9 ; $94A5
+    .word   loc_3_9793, loc_3_9793, loc_3_9793, loc_3_97D4 ; $94AD
+    .word   loc_3_97D4, loc_3_97D4, loc_3_97D4, loc_3_97D4 ; $94B5
+    .word   loc_3_97D4, loc_3_9878, loc_3_9878, loc_3_9878 ; $94BD
+    .word   loc_3_9878, loc_3_9878, loc_3_9878, loc_3_9878 ; $94C5
+    .word   loc_3_9878, loc_3_9ABD, loc_3_9ABD, loc_3_96E0 ; $94CD
+
+EnemyAttr_Bank3:
+    .byte   $40, $40, $40, $C2, $C0, $80, $C6, $C3, $00, $00, $80, $C0      ; $94D5
+    .byte   $00, $18, $10, $20, $34, $08, $18, $10, $08, $18, $00, $00      ; $94E1
+    .byte   $18, $10, $08, $18, $00, $10, $2C, $2C, $00, $00, $00, $00      ; $94ED
+
+EnemyDamage_Bank3:
+    .byte   $00, $00, $00, $02, $00, $00, $03, $00, $01, $02, $00, $00      ; $94F9
+    .byte   $00, $83, $83, $01, $82, $83, $82, $02, $03, $03, $02, $02      ; $9505
+    .byte   $01, $03, $02, $02, $03, $03, $02, $02, $03, $00, $00, $00      ; $9511
+
+EnemyHitbox_Bank3:
+    .byte   $01, $01, $04, $00, $01, $01, $01, $01, $0C, $0C, $0C, $0C      ; $951D
+    .byte   $00, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C      ; $9529
+    .byte   $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $00, $00, $00      ; $9535
+
+EnemyFlags_Bank3:
+    .byte   $86, $86, $86, $06, $06, $06, $06, $00, $80, $80, $80, $80      ; $9541
+    .byte   $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80      ; $954D
+    .byte   $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80      ; $9559
+
+EnemyDrawPtrs_Bank3:
+    .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Ache_Draw ; $9565
+    .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
+    .word   loc_3_9AE8, loc_3_9AE8, Ache_Draw, Bot_Draw ; $9575
+    .word   loc_3_95AD, loc_3_9AE8, loc_3_9AE8, loc_3_9AC8 ; $957D
+    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $9585
+    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $958D
+    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $9595
+    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $959D
+    .word   loc_3_9AE8, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $95A5
 
 loc_3_95AD:
     rts                             ; $95AD
@@ -996,7 +1038,7 @@ dat_3_96DE:
     .byte   $FF, $01                                                        ; $96DE
 
 loc_3_96E0:
-    inc     ram_00AF,x              ; $96E0
+    inc     enemyAiState,x          ; $96E0
     bne     loc_3_96EF              ; $96E2
     ldx     #$05                    ; $96E4
 
@@ -1028,7 +1070,7 @@ loc_3_96F0:
     lda     #$01                    ; $9708
     sta     objYHi+1,x              ; $970A
     lsr     a                       ; $970C
-    sta     ram_00AF,x              ; $970D
+    sta     enemyAiState,x          ; $970D
     lda     #$B0                    ; $970F
     sta     objY+1,x                ; $9711
     lda     joypadHeld              ; $9713
@@ -1079,7 +1121,7 @@ loc_3_9756:
 
 sub_3_975D:
     lda     #$80                    ; $975D
-    sta     ram_00AF,x              ; $975F
+    sta     enemyAiState,x          ; $975F
     ldy     objFacing+1,x           ; $9761
     lda     objX+1,x                ; $9763
     clc                             ; $9765
@@ -1110,7 +1152,7 @@ loc_3_9783:
     lda     #$00                    ; $978F
 
 loc_3_9791:
-    sta     ram_00AF,x              ; $9791
+    sta     enemyAiState,x          ; $9791
 
 loc_3_9793:
     jsr     sub_3_9A9B              ; $9793
@@ -1122,7 +1164,7 @@ loc_3_9793:
 
 loc_3_97A2:
     lda     #$00                    ; $97A2
-    sta     ram_00AF,x              ; $97A4
+    sta     enemyAiState,x          ; $97A4
     jmp     sub_3_99B9              ; $97A6
 
 loc_3_97A9:
@@ -1150,7 +1192,7 @@ loc_3_97D3:
 
 loc_3_97D4:
     jsr     sub_3_9A9B              ; $97D4
-    lda     ram_00AF,x              ; $97D7
+    lda     enemyAiState,x          ; $97D7
     beq     loc_3_983F              ; $97D9
     bpl     loc_3_983C              ; $97DB
     cmp     #$80                    ; $97DD
@@ -1174,19 +1216,19 @@ loc_3_97D4:
     jmp     loc_3_9946              ; $9805
 
 loc_3_9808:
-    inc     ram_00AF,x              ; $9808
+    inc     enemyAiState,x          ; $9808
     cmp     #$90                    ; $980A
     bcc     loc_3_981B              ; $980C
-    lda     ram_00AF,x              ; $980E
+    lda     enemyAiState,x          ; $980E
     pha                             ; $9810
     lda     #$01                    ; $9811
-    sta     ram_00AF,x              ; $9813
+    sta     enemyAiState,x          ; $9813
     jsr     sub_3_9A8A              ; $9815
     pla                             ; $9818
-    sta     ram_00AF,x              ; $9819
+    sta     enemyAiState,x          ; $9819
 
 loc_3_981B:
-    lda     ram_00AF,x              ; $981B
+    lda     enemyAiState,x          ; $981B
     cmp     #$90                    ; $981D
     bne     loc_3_9824              ; $981F
     jmp     loc_3_994A              ; $9821
@@ -1200,7 +1242,7 @@ loc_3_982B:
     cmp     #$B0                    ; $982B
     bne     loc_3_983B              ; $982D
     lda     #$00                    ; $982F
-    sta     ram_00AF,x              ; $9831
+    sta     enemyAiState,x          ; $9831
     lda     #$90                    ; $9833
     sta     ram_05BD,x              ; $9835
     jmp     sub_3_994E              ; $9838
@@ -1250,7 +1292,7 @@ loc_3_9878:
     jsr     sub_3_9A9B              ; $9878
     jsr     sub_3_99B9              ; $987B
     jsr     sub_3_9A8A              ; $987E
-    lda     ram_00AF,x              ; $9881
+    lda     enemyAiState,x          ; $9881
     bne     loc_3_98BC              ; $9883
     jsr     sub_3_9A68              ; $9885
     lda     enemyType,x             ; $9888
@@ -1268,7 +1310,7 @@ loc_3_9896:
     bne     loc_3_98BB              ; $989D
 
 sub_3_989F:
-    inc     ram_00AF,x              ; $989F
+    inc     enemyAiState,x          ; $989F
     lda     ram_00DC                ; $98A1
     sta     ram_058D,x              ; $98A3
     lda     ram_00DD                ; $98A6
@@ -1285,7 +1327,7 @@ loc_3_98BB:
     rts                             ; $98BB
 
 loc_3_98BC:
-    inc     ram_00AF,x              ; $98BC
+    inc     enemyAiState,x          ; $98BC
     cmp     #$10                    ; $98BE
     bne     loc_3_98C5              ; $98C0
     jmp     loc_3_9946              ; $98C2
@@ -1450,7 +1492,7 @@ loc_3_99CB:
     lda     gameMode                ; $99D7
     cmp     #$16                    ; $99DA
     bne     loc_3_9A1D              ; $99DC
-    lda     ram_00AF,x              ; $99DE
+    lda     enemyAiState,x          ; $99DE
     cmp     #$40                    ; $99E0
     bcc     loc_3_9A1C              ; $99E2
     lda     enemyType,x             ; $99E4
@@ -1494,7 +1536,7 @@ loc_3_9A1D:
     bcc     loc_3_9A4F              ; $9A26
 
 loc_3_9A28:
-    lda     ram_00AF,x              ; $9A28
+    lda     enemyAiState,x          ; $9A28
     bne     loc_3_9A4F              ; $9A2A
     lda     a:joypadPressed         ; $9A2C
     and     #$40                    ; $9A2F
@@ -1618,7 +1660,7 @@ loc_3_9AC8:
 loc_3_9AE8:
     lda     objXVelocity+1,x        ; $9AE8
     sta     temp9                   ; $9AEA
-    lda     ram_00AF,x              ; $9AEC
+    lda     enemyAiState,x          ; $9AEC
     pha                             ; $9AEE
     lda     ram_05C3,x              ; $9AEF
     sta     temp5                   ; $9AF2
@@ -3487,7 +3529,7 @@ loc_3_B7CC:
     sta     enemyType,x             ; $B7E2
     sta     objState+1,x            ; $B7E4
     lda     #$80                    ; $B7E6
-    sta     ram_00AF,x              ; $B7E8
+    sta     enemyAiState,x          ; $B7E8
     asl     a                       ; $B7EA
     sta     objYVelocity+1,x        ; $B7EB
     sta     objXVelocity+1,x        ; $B7EE

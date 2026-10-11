@@ -38,8 +38,9 @@ def symbolizer(bank):
     try:
         with open(os.path.join(HERE, "../build/zelda2.sym.json")) as f:
             for lab in json.load(f)["labels"]:
-                if lab["bank"] == bank and not lab["name"].startswith("@"):
-                    exact.setdefault(lab["addr"], lab["name"])
+                if lab["bank"] in (bank, 7) and not lab["name"].startswith("@"):
+                    if (lab["bank"] == 7) == (lab["addr"] >= 0xC000):
+                        exact.setdefault(lab["addr"], lab["name"])
     except FileNotFoundError:
         pass
     ram = []
@@ -48,11 +49,14 @@ def symbolizer(bank):
             m = RAM_DECL.match(line)
             if m:
                 ram.append((int(m.group(2), 16), int(m.group(3) or 1), m.group(1)))
+    ram.sort(reverse=True)
 
     def name(v):
         if 0x8000 <= v and v in exact:
             return exact[v]
         for base, size, n in ram:
+            if v < 0x6000:
+                break
             if base <= v < base + size and not n.startswith(("ram_", "sram_")):
                 return n if v == base else f"{n}+{v - base}"
         return f"${v:04X}"

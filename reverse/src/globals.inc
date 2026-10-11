@@ -70,7 +70,7 @@ GLOBALS_INC = 1
 .global JumpTable
 .global Projectile_SetSparkTile
 .global Enemy_HurtLinkOnContact
-.global Enemy_UpdateLanding
+.global Item_Fall
 .global Enemy_SkipAiIfStunned
 .global Enemy_Land
 .global Enemy_StopY
@@ -166,3 +166,32 @@ GLOBALS_INC = 1
 .global loc_5_817B
 
 .endif
+
+; Enemy routines in bank 7 named in the area banks' enemy tables.
+.global Ache_Ai
+.global Ache_Draw
+.global BagoBagoGenerator_Ai
+.global BagoBago_Ai
+.global BagoBago_Draw
+.global Bit_Ai
+.global Bot_Ai
+.global Bot_Draw
+.global BubbleGenerator_Ai
+.global Deeler_Ai
+.global Deeler_Draw
+.global Elevator_Ai
+.global Elevator_Draw
+.global Enemy08_Draw
+.global Fairy_Ai
+.global Fairy_Draw
+.global Item_Draw
+.global LockedDoor_Ai
+.global LockedDoor_Draw
+.global Moa_Ai
+.global Moa_Draw
+.global Myu_Ai
+.global Myu_Draw
+.global OctorokHopping_Ai
+.global OctorokWalking_Ai
+.global Octorok_Draw
+.global RockGenerator_Ai

@@ -1901,7 +1901,7 @@ Area_PlaceItem:
     sta     objYVelocity+1,x        ; $C9DF
     ldy     areaDataOffset          ; $C9E2
     lda     (areaDataPtr),y         ; $C9E5
-    sta     ram_00AF,x              ; $C9E7
+    sta     enemyAiState,x          ; $C9E7
 
 @done:
     rts                             ; $C9E9
@@ -4505,7 +4505,7 @@ Enemy_Spawn:
     sta     objYHi+1,x              ; $D695
     lsr     a                       ; $D697
     sta     enemyStunTimer,x        ; $D698
-    sta     ram_00AF,x              ; $D69B
+    sta     enemyAiState,x          ; $D69B
     sta     objState+1,x            ; $D69D
     sta     ram_043E,x              ; $D69F
     sta     objYVelocity+1,x        ; $D6A2
@@ -4517,9 +4517,9 @@ Enemy_Spawn:
     tya                             ; $D6B2
     asl     a                       ; $D6B3
     tay                             ; $D6B4
-    lda     sram_6D45,y             ; $D6B5
+    lda     sramEnemyInitPtrs,y     ; $D6B5
     sta     temp14                  ; $D6B8
-    lda     sram_6D45+1,y           ; $D6BA
+    lda     sramEnemyInitPtrs+1,y   ; $D6BA
     jmp     JumpToTemp14            ; $D6BD
 
 ; ---------------------------------------------------------------------------
@@ -4575,25 +4575,123 @@ JumpToTemp14:
     jmp     (temp14)                ; $D6D8
 ; (unreferenced: $D6DB-$D78A, 176 bytes)
 ; Unused: an enemy routine and its data, which nothing refers to.
-    .byte   $20, $F0, $08, $F8, $20, $02, $DA, $20, $C1, $D6, $B5, $AF, $10, $03, $4C, $50; $D6DB
-    .byte   $D7, $20, $91, $DC, $B5, $AF, $D0, $1E, $A5, $0F, $69, $40, $C9, $80, $90, $0B; $D6EB
-    .byte   $B9, $DD, $D6, $95, $71, $20, $B8, $DE, $4C, $4D, $D7, $BD, $1B, $05, $29, $1F; $D6FB
-    .byte   $05, $C9, $D0, $EC, $F6, $AF, $B5, $AF, $4A, $A8, $B5, $2A, $D9, $DC, $05, $D0; $D70B
-    .byte   $0C, $B5, $AF, $C9, $02, $D0, $ED, $A9, $00, $95, $AF, $F0, $25, $B5, $A1, $C9; $D71B
-    .byte   $0E, $D0, $16, $B5, $2A, $C9, $8E, $90, $10, $76, $AF, $A9, $00, $95, $71, $A9; $D72B
-    .byte   $20, $9D, $7E, $05, $9D, $04, $05, $D0, $2F, $B9, $DB, $D6, $9D, $7E, $05, $20; $D73B
-    .byte   $C8, $DE, $4C, $40, $DE, $BD, $04, $05, $D0, $1E, $BD, $1B, $05, $29, $3F, $09; $D74B
-    .byte   $40, $9D, $04, $05, $20, $91, $DC, $B9, $DD, $D6, $0A, $0A, $95, $71, $BD, $1B; $D75B
-    .byte   $05, $29, $07, $09, $E8, $9D, $7E, $05, $20, $B8, $DE, $20, $C8, $DE, $FE, $7E; $D76B
-    .byte   $05, $20, $3D, $DE, $B5, $A8, $29, $04, $F0, $05, $20, $C1, $DA, $95, $71, $60; $D77B
 
-dat_D78B:
+DeelerYSpeeds:
+    .byte   $20, $F0                                                        ; $D6DB
+
+DeelerXSpeeds:
+    .byte   $08, $F8                                                        ; $D6DD
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+Deeler_Ai:
+    jsr     Enemy_SkipAiIfStunned   ; $D6DF
+    jsr     Enemy_HurtLinkOnContact ; $D6E2
+    lda     enemyAiState,x          ; $D6E5
+    bpl     loc_D6EC                ; $D6E7
+    jmp     loc_D750                ; $D6E9
+
+loc_D6EC:
+    jsr     Enemy_FaceLink          ; $D6EC
+    lda     enemyAiState,x          ; $D6EF
+    bne     loc_D711                ; $D6F1
+    lda     temp15                  ; $D6F3
+    adc     #$40                    ; $D6F5
+    cmp     #$80                    ; $D6F7
+    bcc     loc_D706                ; $D6F9
+
+loc_D6FB:
+    lda     DeelerXSpeeds,y         ; $D6FB
+    sta     objXVelocity+1,x        ; $D6FE
+    jsr     Enemy_MoveX             ; $D700
+    jmp     loc_D74D                ; $D703
+
+loc_D706:
+    lda     rng+1,x                 ; $D706
+    and     #$1F                    ; $D709
+    ora     drawOffscreen+1         ; $D70B
+    bne     loc_D6FB                ; $D70D
+
+loc_D70F:
+    inc     enemyAiState,x          ; $D70F
+
+loc_D711:
+    lda     enemyAiState,x          ; $D711
+    lsr     a                       ; $D713
+    tay                             ; $D714
+    lda     objY+1,x                ; $D715
+    cmp     ram_05DC,y              ; $D717
+    bne     loc_D728                ; $D71A
+    lda     enemyAiState,x          ; $D71C
+    cmp     #$02                    ; $D71E
+    bne     loc_D70F                ; $D720
+    lda     #$00                    ; $D722
+    sta     enemyAiState,x          ; $D724
+    beq     loc_D74D                ; $D726
+
+loc_D728:
+    lda     enemyType,x             ; $D728
+    cmp     #$0E                    ; $D72A
+    bne     loc_D744                ; $D72C
+    lda     objY+1,x                ; $D72E
+    cmp     #$8E                    ; $D730
+    bcc     loc_D744                ; $D732
+    ror     enemyAiState,x          ; $D734
+    lda     #$00                    ; $D736
+    sta     objXVelocity+1,x        ; $D738
+    lda     #$20                    ; $D73A
+    sta     objYVelocity+1,x        ; $D73C
+    sta     timerFast+3,x           ; $D73F
+    bne     loc_D773                ; $D742
+
+loc_D744:
+    lda     DeelerYSpeeds,y         ; $D744
+    sta     objYVelocity+1,x        ; $D747
+    jsr     Enemy_MoveY             ; $D74A
+
+loc_D74D:
+    jmp     Enemy_UpdateCommon      ; $D74D
+
+loc_D750:
+    lda     timerFast+3,x           ; $D750
+    bne     loc_D773                ; $D753
+    lda     rng+1,x                 ; $D755
+    and     #$3F                    ; $D758
+    ora     #$40                    ; $D75A
+    sta     timerFast+3,x           ; $D75C
+    jsr     Enemy_FaceLink          ; $D75F
+    lda     DeelerXSpeeds,y         ; $D762
+    asl     a                       ; $D765
+    asl     a                       ; $D766
+    sta     objXVelocity+1,x        ; $D767
+    lda     rng+1,x                 ; $D769
+    and     #$07                    ; $D76C
+    ora     #$E8                    ; $D76E
+    sta     objYVelocity+1,x        ; $D770
+
+loc_D773:
+    jsr     Enemy_MoveX             ; $D773
+    jsr     Enemy_MoveY             ; $D776
+    inc     objYVelocity+1,x        ; $D779
+    jsr     Enemy_UpdateWithBg      ; $D77C
+    lda     objCollision+1,x        ; $D77F
+    and     #$04                    ; $D781
+    beq     loc_D78A                ; $D783
+    jsr     Enemy_Land              ; $D785
+    sta     objXVelocity+1,x        ; $D788
+
+loc_D78A:
+    rts                             ; $D78A
+; (end of disassembled code)
+
+
+BagoBagoSpawnX:
     .byte   $10, $F0                                                        ; $D78B
 
-dat_D78D:
+BagoBagoSpawnSpeeds:
     .byte   $20, $E0                                                        ; $D78D
 
-@loc_D78F:
+
+BagoBagoGenerator_Ai:
     lda     frameCounter            ; $D78F
     and     #$7F                    ; $D791
     bne     @loc_D79E               ; $D793
@@ -4618,12 +4716,12 @@ dat_D78D:
     and     #$01                    ; $D7AC
     tay                             ; $D7AE
     lda     scrollX                 ; $D7AF
-    adc     dat_D78B,y              ; $D7B2
+    adc     BagoBagoSpawnX,y        ; $D7B2
     sta     objX+1,x                ; $D7B5
     lda     scrollXHi               ; $D7B7
     adc     #$00                    ; $D7BA
     sta     objXHi+1,x              ; $D7BC
-    lda     dat_D78D,y              ; $D7BE
+    lda     BagoBagoSpawnSpeeds,y   ; $D7BE
     sta     objXVelocity+1,x        ; $D7C1
     lda     #$D0                    ; $D7C3
     sta     objY+1,x                ; $D7C5
@@ -4641,10 +4739,11 @@ dat_D78D:
     ldx     currentObject           ; $D7DC
     rts                             ; $D7DE
 
-dat_D7DF:
+BagoBagoSpeeds:
     .byte   $10, $F0                                                        ; $D7DF
 
-@loc_D7E1:
+
+BagoBago_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $D7E1
     lda     drawOffscreen+1         ; $D7E4
     and     #$0C                    ; $D7E6
@@ -4656,17 +4755,17 @@ dat_D7DF:
 
 @loc_D7F1:
     jsr     Enemy_HurtLinkOnContact ; $D7F1
-    lda     ram_00AF,x              ; $D7F4
+    lda     enemyAiState,x          ; $D7F4
     bne     @loc_D838               ; $D7F6
     lda     objCollision+1,x        ; $D7F8
     and     #$04                    ; $D7FA
     beq     @loc_D812               ; $D7FC
     lda     objYVelocity+1,x        ; $D7FE
     bmi     @loc_D812               ; $D801
-    inc     ram_00AF,x              ; $D803
+    inc     enemyAiState,x          ; $D803
     jsr     Enemy_Land              ; $D805
     jsr     Enemy_FaceLink          ; $D808
-    lda     dat_D7DF,y              ; $D80B
+    lda     BagoBagoSpeeds,y        ; $D80B
     sta     objXVelocity+1,x        ; $D80E
     bne     @loc_D838               ; $D810
 
@@ -4695,12 +4794,13 @@ dat_D7DF:
     lda     objCollision+1,x        ; $D838
     and     #$04                    ; $D83A
     bne     @loc_D840               ; $D83C
-    sta     ram_00AF,x              ; $D83E
+    sta     enemyAiState,x          ; $D83E
 
 @loc_D840:
     bpl     @loc_D818               ; $D840
 
-@loc_D842:
+
+OctorokHopping_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $D842
     jsr     Enemy_FaceLink          ; $D845
 
@@ -4713,8 +4813,8 @@ dat_D7DF:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Enemy_Hop:
-    inc     ram_00AF,x              ; $D848
-    lda     ram_00AF,x              ; $D84A
+    inc     enemyAiState,x          ; $D848
+    lda     enemyAiState,x          ; $D84A
     and     #$7F                    ; $D84C
     bne     @loc_D855               ; $D84E
     lda     #$E0                    ; $D850
@@ -4766,10 +4866,11 @@ Enemy_ShootIfFacingLink:
 Enemy_ShootIfFacingLinkDone:
     rts                             ; $D885
 
-dat_D886:
+OctorokSpeeds:
     .byte   $08, $F8                                                        ; $D886
 
-@loc_D888:
+
+OctorokWalking_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $D888
     jsr     Enemy_Hop               ; $D88B
     lda     objCollision+1,x        ; $D88E
@@ -4779,12 +4880,12 @@ dat_D886:
 
 @loc_D897:
     jsr     Enemy_MoveX             ; $D897
-    lda     ram_00AF,x              ; $D89A
+    lda     enemyAiState,x          ; $D89A
     asl     a                       ; $D89C
     cmp     #$80                    ; $D89D
     bne     @loc_D8A9               ; $D89F
     jsr     Enemy_FaceLink          ; $D8A1
-    lda     dat_D886,y              ; $D8A4
+    lda     OctorokSpeeds,y         ; $D8A4
     sta     objXVelocity+1,x        ; $D8A7
 
 @loc_D8A9:
@@ -4801,10 +4902,11 @@ dat_D886:
 @done:
     rts                             ; $D8BE
 
-dat_D8BF:
+ElevatorSpeeds:
     .byte   $00, $18, $E8                                                   ; $D8BF
 
-@loc_D8C2:
+
+Elevator_Ai:
     lda     objCollision+1,x        ; $D8C2
     and     #$10                    ; $D8C4
     beq     @loc_D91B               ; $D8C6
@@ -4816,7 +4918,7 @@ dat_D8BF:
     lsr     a                       ; $D8D6
     lsr     a                       ; $D8D7
     tay                             ; $D8D8
-    lda     dat_D8BF,y              ; $D8D9
+    lda     ElevatorSpeeds,y        ; $D8D9
     sta     objYVelocity+1,x        ; $D8DC
     lda     linkUpDownHeld          ; $D8DF
     beq     @loc_D8F4               ; $D8E2
@@ -4853,7 +4955,8 @@ dat_D8BF:
 @loc_D91B:
     jmp     Enemy_UpdateCommon      ; $D91B
 
-@loc_D91E:
+
+Fairy_Ai:
     lda     drawOffscreen+1         ; $D91E
     and     #$08                    ; $D920
     bne     @loc_D931               ; $D922
@@ -4866,13 +4969,13 @@ dat_D8BF:
 
 @loc_D931:
     jsr     Enemy_UpdateCommon      ; $D931
-    ldy     ram_00AF,x              ; $D934
+    ldy     enemyAiState,x          ; $D934
     bne     @loc_D947               ; $D936
     lda     objCollision+1,x        ; $D938
     and     #$10                    ; $D93A
     beq     @done                   ; $D93C
 ; (code below not executed in the test movies)
-    inc     ram_00AF,x              ; $D93E
+    inc     enemyAiState,x          ; $D93E
     inc     ram_00DE                ; $D940
     dey                             ; $D942
     sty     statMeterPending+1      ; $D943
@@ -4893,7 +4996,7 @@ dat_D8BF:
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
-; Enemy_UpdateLanding
+; Item_Fall
 ;
 ; Enemy AI helper: update enemy x's background collision and, on landing,
 ; snap it to the tile and set its next jump.
@@ -4901,7 +5004,7 @@ dat_D8BF:
 ; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
-Enemy_UpdateLanding:
+Item_Fall:
     jsr     Enemy_UpdateWithBg      ; $D959
     lda     objCollision+1,x        ; $D95C
     and     #$04                    ; $D95E
@@ -4909,7 +5012,7 @@ Enemy_UpdateLanding:
     lda     objY+1,x                ; $D962
     and     #$F0                    ; $D964
     sta     objY+1,x                ; $D966
-    lda     ram_00AF,x              ; $D968
+    lda     enemyAiState,x          ; $D968
     and     #$7F                    ; $D96A
     tay                             ; $D96C
     lda     #$FF                    ; $D96D
@@ -4935,13 +5038,14 @@ Enemy_UpdateLanding:
     inc     objYVelocity+1,x        ; $D98B
     jmp     Enemy_MoveY             ; $D98E
 
-@loc_D991:
+
+LockedDoor_Ai:
     jsr     Enemy_UpdateCommon      ; $D991
-    ldy     ram_00AF,x              ; $D994
+    ldy     enemyAiState,x          ; $D994
     beq     @loc_D9BA               ; $D996
-    inc     ram_00AF,x              ; $D998
+    inc     enemyAiState,x          ; $D998
     cpy     #$11                    ; $D99A
-    bne     Enemy_UpdateLandingDone ; $D99C
+    bne     Item_FallDone           ; $D99C
     lda     #$F0                    ; $D99E
     sta     objState+7              ; $D9A0
     lda     objX+1,x                ; $D9A2
@@ -4961,7 +5065,7 @@ Enemy_UpdateLanding:
     lda     objCollision+1,x        ; $D9BA
     and     #$10                    ; $D9BC
     sta     ram_05E7                ; $D9BE
-    beq     Enemy_UpdateLandingDone ; $D9C1
+    beq     Item_FallDone           ; $D9C1
     lda     linkFairy               ; $D9C3
     bne     @loc_D9D0               ; $D9C5
     lda     #$00                    ; $D9C7
@@ -4978,7 +5082,7 @@ Enemy_UpdateLanding:
     lda     itemOwned+ITEM_MAGIC_KEY ; $D9DA
     bne     @loc_D9E7               ; $D9DD
     lda     keyCount                ; $D9DF
-    beq     Enemy_UpdateLandingDone ; $D9E2
+    beq     Item_FallDone           ; $D9E2
     dec     keyCount                ; $D9E4
 
 @loc_D9E7:
@@ -4992,22 +5096,22 @@ Enemy_UpdateLanding:
     asl     a                       ; $D9F5
     sta     objXVelocity            ; $D9F6
     sta     objYVelocity            ; $D9F8
-    inc     ram_00AF,x              ; $D9FB
+    inc     enemyAiState,x          ; $D9FB
 
 ; ---------------------------------------------------------------------------
-; Enemy_UpdateLandingDone
+; Item_FallDone
 ;
-; Return (shared tail of Enemy_UpdateLanding).
+; Return (shared tail of Item_Fall).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Enemy_UpdateLandingDone:
+Item_FallDone:
     rts                             ; $D9FD
 
-dat_D9FE:
+BotJumpSpeeds:
     .byte   $10, $F0                                                        ; $D9FE
 
-dat_DA00:
+MyuPauseTimes:
     .byte   $C0, $40                                                        ; $DA00
 
 ; ---------------------------------------------------------------------------
@@ -5022,12 +5126,13 @@ dat_DA00:
 ; ---------------------------------------------------------------------------
 Enemy_SkipAiIfStunned:
     lda     enemyStunTimer,x        ; $DA02
-    beq     Enemy_UpdateLandingDone ; $DA05
+    beq     Item_FallDone           ; $DA05
     pla                             ; $DA07
     pla                             ; $DA08
     jmp     Enemy_UpdateCommon      ; $DA09
 
-@loc_DA0C:
+
+Bot_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DA0C
     lda     objCollision+1,x        ; $DA0F
     and     #$04                    ; $DA11
@@ -5038,13 +5143,14 @@ Enemy_SkipAiIfStunned:
     lda     #$E5                    ; $DA1B
     sta     objYVelocity+1,x        ; $DA1D
     jsr     Enemy_FaceLink          ; $DA20
-    lda     dat_D9FE,y              ; $DA23
+    lda     BotJumpSpeeds,y         ; $DA23
     sta     objXVelocity+1,x        ; $DA26
 
 @loc_DA28:
-    jmp     @loc_DA47               ; $DA28
+    jmp     Myu_Ai                  ; $DA28
 
-@loc_DA2B:
+
+Bit_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DA2B
     txa                             ; $DA2E
     asl     a                       ; $DA2F
@@ -5054,21 +5160,23 @@ Enemy_SkipAiIfStunned:
     asl     a                       ; $DA33
     ora     frameCounter            ; $DA34
     cmp     #$C0                    ; $DA36
-    bcc     @loc_DA47               ; $DA38
+    bcc     Myu_Ai                  ; $DA38
     lda     #$40                    ; $DA3A
     sta     ram_05DA                ; $DA3C
     lda     #$C0                    ; $DA3F
     sta     ram_05DB                ; $DA41
-    jmp     @loc_DA54               ; $DA44
+    jmp     Myu_Move                ; $DA44
 
-@loc_DA47:
+
+Myu_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DA47
     lda     #$20                    ; $DA4A
     sta     ram_05DA                ; $DA4C
     lda     #$E0                    ; $DA4F
     sta     ram_05DB                ; $DA51
 
-@loc_DA54:
+
+Myu_Move:
     jsr     Enemy_MoveYAndFall      ; $DA54
     jsr     Enemy_UpdateWithBg      ; $DA57
     jsr     Enemy_HurtLinkOnContact ; $DA5A
@@ -5087,7 +5195,7 @@ Enemy_SkipAiIfStunned:
 
 @loc_DA72:
     jsr     Enemy_Land              ; $DA72
-    lda     ram_00AF,x              ; $DA75
+    lda     enemyAiState,x          ; $DA75
     beq     @loc_DA7D               ; $DA77
     sta     objState+1,x            ; $DA79
     bne     @loc_DAA4               ; $DA7B
@@ -5106,7 +5214,7 @@ Enemy_SkipAiIfStunned:
     bne     @loc_DAA4               ; $DA91
 
 @loc_DA93:
-    ldy     ram_0401,x              ; $DA93
+    ldy     enemyAiDir,x            ; $DA93
     lda     ram_05DA,y              ; $DA96
     sta     objXVelocity+1,x        ; $DA99
     lda     objCollision+1,x        ; $DA9B
@@ -5117,16 +5225,16 @@ Enemy_SkipAiIfStunned:
 @loc_DAA4:
     lda     timerFast+TIMER_ENEMY,x ; $DAA4
     bne     @done                   ; $DAA7
-    lda     ram_00AF,x              ; $DAA9
+    lda     enemyAiState,x          ; $DAA9
     eor     #$01                    ; $DAAB
-    sta     ram_00AF,x              ; $DAAD
+    sta     enemyAiState,x          ; $DAAD
     tay                             ; $DAAF
     lda     rng+1,x                 ; $DAB0
     and     #$3F                    ; $DAB3
-    ora     dat_DA00,y              ; $DAB5
+    ora     MyuPauseTimes,y         ; $DAB5
     sta     timerFast+TIMER_ENEMY,x ; $DAB8
     and     #$01                    ; $DABB
-    sta     ram_0401,x              ; $DABD
+    sta     enemyAiDir,x            ; $DABD
 
 @done:
     rts                             ; $DAC0
@@ -5150,10 +5258,11 @@ Enemy_StopY:
     sta     objYVelocity+1,x        ; $DAC9
     rts                             ; $DACC
 
-dat_DACD:
+MoaSpeeds:
     .byte   $08, $F8                                                        ; $DACD
 
-@loc_DACF:
+
+Moa_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DACF
     jsr     Enemy_CheckCollisions   ; $DAD2
     ; In region 2 the enemy is only visible with the cross.
@@ -5172,7 +5281,7 @@ dat_DACD:
     lda     objXVelocity+1,x        ; $DAEA
     pha                             ; $DAEC
     adc     objXVelocity            ; $DAED
-    adc     dat_DACD,y              ; $DAEF
+    adc     MoaSpeeds,y             ; $DAEF
     sta     objXVelocity+1,x        ; $DAF2
     jsr     Enemy_MoveX             ; $DAF4
     pla                             ; $DAF7
@@ -5184,11 +5293,11 @@ dat_DACD:
 
 @loc_DB00:
     sty     objFacing+1,x           ; $DB00
-    lda     ram_00AF,x              ; $DB02
+    lda     enemyAiState,x          ; $DB02
     bne     @loc_DB2D               ; $DB04
     lda     timerFast+TIMER_ENEMY,x ; $DB06
     bne     @done                   ; $DB09
-    inc     ram_00AF,x              ; $DB0B
+    inc     enemyAiState,x          ; $DB0B
     lda     rng+1,x                 ; $DB0D
     and     #$01                    ; $DB10
     tay                             ; $DB12
@@ -5203,17 +5312,17 @@ dat_DACD:
     ldy     #$01                    ; $DB1F
 
 @loc_DB21:
-    lda     dat_DACD,y              ; $DB21
+    lda     MoaSpeeds,y             ; $DB21
     sta     objYVelocity+1,x        ; $DB24
     lda     objFacing+1,x           ; $DB27
-    sta     ram_0401,x              ; $DB29
+    sta     enemyAiDir,x            ; $DB29
 
 @done:
     rts                             ; $DB2C
 
 @loc_DB2D:
     jsr     Enemy_MoveY             ; $DB2D
-    ldy     ram_0401,x              ; $DB30
+    ldy     enemyAiDir,x            ; $DB30
     dey                             ; $DB33
     beq     @loc_DB3F               ; $DB34
     inc     objXVelocity+1,x        ; $DB36
@@ -5229,7 +5338,7 @@ dat_DACD:
     bne     @done2                  ; $DB45
 
 @loc_DB47:
-    dec     ram_00AF,x              ; $DB47
+    dec     enemyAiState,x          ; $DB47
     lda     #$20                    ; $DB49
     sta     timerFast+TIMER_ENEMY,x ; $DB4B
 
@@ -5242,14 +5351,15 @@ dat_DB4F:
 dat_DB50:
     .byte   $08, $20, $E0                                                   ; $DB50
 
-@loc_DB53:
+
+Ache_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DB53
     lda     enemyType,x             ; $DB56
     cmp     #$0A                    ; $DB58
     bne     @loc_DB79               ; $DB5A
-    lda     ram_00AF,x              ; $DB5C
+    lda     enemyAiState,x          ; $DB5C
     beq     @loc_DB79               ; $DB5E
-    dec     ram_00AF,x              ; $DB60
+    dec     enemyAiState,x          ; $DB60
     cmp     #$18                    ; $DB62
     bne     @loc_DB73               ; $DB64
     jsr     Enemy_FireProjectile    ; $DB66
@@ -5296,7 +5406,7 @@ dat_DB50:
     dec     objYVelocity+1,x        ; $DBAB
     bne     @loc_DBB4               ; $DBAE
     lda     #$30                    ; $DBB0
-    sta     ram_00AF,x              ; $DBB2
+    sta     enemyAiState,x          ; $DBB2
 
 @loc_DBB4:
     jsr     Enemy_MoveY             ; $DBB4
@@ -5346,6 +5456,8 @@ Enemy_FireProjectile:
 @done:
     rts                             ; $DBF8
 ; (unreferenced: $DBF9-$DBFA, 2 bytes)
+
+dat_DBF9:
     .byte   $10, $F0                                                        ; $DBF9
 
 Projectile_FindFree:
@@ -5379,9 +5491,10 @@ Projectile_FindFreeFrom:
     clc                             ; $DC13
     rts                             ; $DC14
 
-@loc_DC15:
-    inc     ram_00AF,x              ; $DC15
-    lda     ram_00AF,x              ; $DC17
+
+BubbleGenerator_Ai:
+    inc     enemyAiState,x          ; $DC15
+    lda     enemyAiState,x          ; $DC17
     and     #$1F                    ; $DC19
     bne     @done                   ; $DC1B
     jsr     Projectile_FindFree     ; $DC1D
@@ -5403,11 +5516,48 @@ Projectile_FindFreeFrom:
 @done:
     rts                             ; $DC44
 ; (unreferenced: $DC45-$DC90, 76 bytes)
-    .byte   $0C, $F4, $03, $13, $F3, $E3, $D3, $C3, $03, $13, $A5, $12, $29, $1F, $D0, $3B; $DC45
-    .byte   $20, $FB, $DB, $B0, $36, $BD, $1B, $05, $29, $07, $AA, $A5, $29, $7D, $47, $DC; $DC55
-    .byte   $99, $30, $00, $8A, $29, $01, $99, $4C, $04, $AA, $AD, $2C, $07, $7D, $45, $DC; $DC65
-    .byte   $99, $54, $00, $AD, $2A, $07, $69, $00, $99, $42, $00, $BD, $F9, $DB, $99, $77; $DC75
-    .byte   $00, $E8, $96, $66, $A6, $10, $A9, $01, $99, $87, $00, $60      ; $DC85
+
+RockSpawnX:
+    .byte   $0C, $F4                                                        ; $DC45
+
+RockSpawnY:
+    .byte   $03, $13, $F3, $E3, $D3, $C3, $03, $13                          ; $DC47
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+RockGenerator_Ai:
+    lda     frameCounter            ; $DC4F
+    and     #$1F                    ; $DC51
+    bne     loc_DC90                ; $DC53
+    jsr     Projectile_FindFree     ; $DC55
+    bcs     loc_DC90                ; $DC58
+    lda     rng+1,x                 ; $DC5A
+    and     #$07                    ; $DC5D
+    tax                             ; $DC5F
+    lda     objY                    ; $DC60
+    adc     RockSpawnY,x            ; $DC62
+    sta     a:objY+7,y              ; $DC65
+    txa                             ; $DC68
+    and     #$01                    ; $DC69
+    sta     ram_044C,y              ; $DC6B
+    tax                             ; $DC6E
+    lda     scrollX                 ; $DC6F
+    adc     RockSpawnX,x            ; $DC72
+    sta     a:objX+7,y              ; $DC75
+    lda     scrollXHi               ; $DC78
+    adc     #$00                    ; $DC7B
+    sta     a:objXHi+7,y            ; $DC7D
+    lda     dat_DBF9,x              ; $DC80
+    sta     a:objXVelocity+7,y      ; $DC83
+    inx                             ; $DC86
+    stx     objFacing+7,y           ; $DC87
+    ldx     currentObject           ; $DC89
+    lda     #$01                    ; $DC8B
+    sta     a:objState+7,y          ; $DC8D
+
+loc_DC90:
+    rts                             ; $DC90
+; (end of disassembled code)
+
 
 ; ---------------------------------------------------------------------------
 ; Enemy_FaceLink
@@ -5672,7 +5822,7 @@ Enemy_AwardExperience:
     sta     objY+1,x                ; $DE13
     jsr     Enemy_DropItem          ; $DE15
     lda     #$08                    ; $DE18
-    sta     ram_00AF,x              ; $DE1A
+    sta     enemyAiState,x          ; $DE1A
     rts                             ; $DE1C
 
 @loc_DE1D:
@@ -5692,7 +5842,7 @@ Enemy_DropItem:
     lda     #$02                    ; $DE23
     sta     sfxRequest+3            ; $DE25
     lda     enemyDropItem,x         ; $DE27
-    sta     ram_00AF,x              ; $DE2A
+    sta     enemyAiState,x          ; $DE2A
     lda     #$FF                    ; $DE2C
     sta     enemySramIndex,x        ; $DE2E
     lda     #$01                    ; $DE30
@@ -7187,7 +7337,7 @@ Enemy_CheckLinkContact:
     lda     enemyType,x             ; $E51E
     cmp     #ENEMY_TYPE_ITEM        ; $E520
     bne     @done                   ; $E522
-    lda     ram_00AF,x              ; $E524
+    lda     enemyAiState,x          ; $E524
     and     #$7F                    ; $E526
     cmp     #$08                    ; $E528
     bcc     @loc_E538               ; $E52A
@@ -7205,7 +7355,7 @@ Enemy_CheckLinkContact:
     lda     #$00                    ; $E540
     sta     objYVelocity            ; $E542
     sta     objXVelocity            ; $E545
-    lda     ram_00AF,x              ; $E547
+    lda     enemyAiState,x          ; $E547
     and     #$7F                    ; $E549
     sta     ram_049D                ; $E54B
     rts                             ; $E54E
@@ -7668,7 +7818,7 @@ Enemy_TakeDamage:
     jmp     Enemy_Kill              ; $E752
 
 @loc_E755:
-    lda     ram_00AF,x              ; $E755
+    lda     enemyAiState,x          ; $E755
     and     #$7F                    ; $E757
     cmp     #$08                    ; $E759
     bcc     @loc_E769               ; $E75B
@@ -7698,7 +7848,7 @@ Enemy_TakeDamage:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_Collect:
-    lda     ram_00AF,x              ; $E771
+    lda     enemyAiState,x          ; $E771
     bmi     @loc_E77D               ; $E773
     lda     objXHi+1,x              ; $E775
     tax                             ; $E777
@@ -7706,7 +7856,7 @@ Item_Collect:
     ldx     currentObject           ; $E77B
 
 @loc_E77D:
-    lda     ram_00AF,x              ; $E77D
+    lda     enemyAiState,x          ; $E77D
     and     #$7F                    ; $E77F
     tay                             ; $E781
     cpy     #$08                    ; $E782
@@ -7789,7 +7939,7 @@ dat_E7E6:
 ; ---------------------------------------------------------------------------
 Item_CollectExpBag:
     jsr     Enemy_Kill              ; $E7F4
-    lda     ram_00AF,x              ; $E7F7
+    lda     enemyAiState,x          ; $E7F7
     and     #$7F                    ; $E7F9
     tay                             ; $E7FB
     lda     dat_E7E6,y              ; $E7FC
@@ -9014,7 +9164,8 @@ Enemy_Draw:
     ldy     objOamOffset+1,x        ; $EF42
     jmp     (temp14)                ; $EF44
 
-@loc_EF47:
+
+Elevator_Draw:
     ldx     #$06                    ; $EF47
     jsr     Sprite_DrawPairFromTable ; $EF49
     dex                             ; $EF4C
@@ -9056,7 +9207,8 @@ Enemy_Draw:
     ldx     currentObject           ; $EF8E
     rts                             ; $EF90
 
-@loc_EF91:
+
+Bot_Draw:
     lda     #$02                    ; $EF91
     sta     temp2                   ; $EF93
     lda     objState+1,x            ; $EF95
@@ -9071,7 +9223,7 @@ Enemy_Draw:
     tya                             ; $EFA2
     tax                             ; $EFA3
     ldy     currentObject           ; $EFA4
-    lda     a:ram_00AF,y            ; $EFA6
+    lda     a:enemyAiState,y        ; $EFA6
     beq     @loc_EFB7               ; $EFA9
     lda     frameCounter            ; $EFAB
     and     #$04                    ; $EFAD
@@ -9086,7 +9238,8 @@ Enemy_Draw:
     ldx     currentObject           ; $EFBF
     rts                             ; $EFC1
 
-@loc_EFC2:
+
+Myu_Draw:
     lda     #$02                    ; $EFC2
     sta     temp2                   ; $EFC4
     lda     objState+1,x            ; $EFC6
@@ -9099,10 +9252,11 @@ Enemy_Draw:
 @loc_EFCF:
     jmp     Sprite_DrawPairFlipped  ; $EFCF
 
-@loc_EFD2:
+
+Enemy08_Draw:
     lda     #$02                    ; $EFD2
     sta     temp2                   ; $EFD4
-    lda     ram_00AF,x              ; $EFD6
+    lda     enemyAiState,x          ; $EFD6
     ldx     #$20                    ; $EFD8
     cmp     #$00                    ; $EFDA
     beq     @loc_EFE6               ; $EFDC
@@ -9114,10 +9268,11 @@ Enemy_Draw:
 @loc_EFE6:
     jmp     Sprite_DrawPairFromTableKeepX ; $EFE6
 
-dat_EFE9:
+MoaWobble:
     .byte   $03, $03, $02, $02, $01, $01, $00, $00, $00                     ; $EFE9
 
-@loc_EFF2:
+
+Moa_Draw:
     lda     #$01                    ; $EFF2
     sta     temp2                   ; $EFF4
     lda     objXVelocity+1,x        ; $EFF6
@@ -9147,22 +9302,90 @@ dat_EFE9:
     tax                             ; $F019
     lda     oamBuffer+7,y           ; $F01A
     sec                             ; $F01D
-    sbc     dat_EFE9,x              ; $F01E
+    sbc     MoaWobble,x             ; $F01E
     sta     oamBuffer+7,y           ; $F021
     ldx     currentObject           ; $F024
     rts                             ; $F026
-; (unreferenced: $F027-$F0A7, 129 bytes)
-    .byte   $A5, $03, $B4, $AF, $D0, $02, $09, $80, $C0, $00, $10, $04, $E6, $00, $E6, $00; $F027
-    .byte   $85, $03, $B4, $91, $A5, $12, $4A, $4A, $4A, $29, $01, $AA, $E8, $86, $02, $A2; $F037
-    .byte   $10, $20, $C6, $F0, $A5, $C9, $29, $0C, $D0, $56, $B5, $AF, $30, $52, $B4, $91; $F047
-    .byte   $B5, $2A, $38, $ED, $DD, $05, $F0, $48, $A0, $FF, $C8, $38, $E9, $03, $10, $FA; $F057
-    .byte   $84, $00, $B4, $91, $A5, $12, $4A, $A5, $00, $90, $02, $A9, $00, $4A, $18, $6D; $F067
-    .byte   $DD, $05, $99, $08, $02, $65, $00, $99, $0C, $02, $65, $00, $99, $10, $02, $A5; $F077
-    .byte   $CD, $99, $0B, $02, $99, $0F, $02, $99, $13, $02, $A9, $01, $99, $0A, $02, $99; $F087
-    .byte   $0E, $02, $99, $12, $02, $A9, $BE, $99, $09, $02, $99, $0D, $02, $99, $11, $02; $F097
-    .byte   $60                                                             ; $F0A7
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-@loc_F0A8:
+Deeler_Draw:
+    lda     temp3                   ; $F027
+    ldy     enemyAiState,x          ; $F029
+    bne     loc_F02F                ; $F02B
+    ora     #$80                    ; $F02D
+
+loc_F02F:
+    cpy     #$00                    ; $F02F
+    bpl     loc_F037                ; $F031
+    inc     temp0                   ; $F033
+    inc     temp0                   ; $F035
+
+loc_F037:
+    sta     temp3                   ; $F037
+    ldy     objOamOffset+1,x        ; $F039
+    lda     frameCounter            ; $F03B
+    lsr     a                       ; $F03D
+    lsr     a                       ; $F03E
+    lsr     a                       ; $F03F
+    and     #$01                    ; $F040
+    tax                             ; $F042
+    inx                             ; $F043
+    stx     temp2                   ; $F044
+    ldx     #$10                    ; $F046
+    jsr     Sprite_DrawPairFromTableKeepX ; $F048
+    lda     drawOffscreen+1         ; $F04B
+    and     #$0C                    ; $F04D
+    bne     loc_F0A7                ; $F04F
+    lda     enemyAiState,x          ; $F051
+    bmi     loc_F0A7                ; $F053
+    ldy     objOamOffset+1,x        ; $F055
+    lda     objY+1,x                ; $F057
+    sec                             ; $F059
+    sbc     ram_05DD                ; $F05A
+    beq     loc_F0A7                ; $F05D
+    ldy     #$FF                    ; $F05F
+
+loc_F061:
+    iny                             ; $F061
+    sec                             ; $F062
+    sbc     #$03                    ; $F063
+    bpl     loc_F061                ; $F065
+    sty     temp0                   ; $F067
+    ldy     objOamOffset+1,x        ; $F069
+    lda     frameCounter            ; $F06B
+    lsr     a                       ; $F06D
+    lda     temp0                   ; $F06E
+    bcc     loc_F074                ; $F070
+    lda     #$00                    ; $F072
+
+loc_F074:
+    lsr     a                       ; $F074
+    clc                             ; $F075
+    adc     ram_05DD                ; $F076
+    sta     oamBuffer+8,y           ; $F079
+    adc     temp0                   ; $F07C
+    sta     oamBuffer+12,y          ; $F07E
+    adc     temp0                   ; $F081
+    sta     oamBuffer+16,y          ; $F083
+    lda     drawScreenX+1           ; $F086
+    sta     oamBuffer+11,y          ; $F088
+    sta     oamBuffer+15,y          ; $F08B
+    sta     oamBuffer+19,y          ; $F08E
+    lda     #$01                    ; $F091
+    sta     oamBuffer+10,y          ; $F093
+    sta     oamBuffer+14,y          ; $F096
+    sta     oamBuffer+18,y          ; $F099
+    lda     #$BE                    ; $F09C
+    sta     oamBuffer+9,y           ; $F09E
+    sta     oamBuffer+13,y          ; $F0A1
+    sta     oamBuffer+17,y          ; $F0A4
+
+loc_F0A7:
+    rts                             ; $F0A7
+; (end of disassembled code)
+
+
+Octorok_Draw:
     lda     temp0                   ; $F0A8
     cmp     #$B5                    ; $F0AA
     bcc     @loc_F0B5               ; $F0AC
@@ -9174,7 +9397,8 @@ dat_EFE9:
     lda     #$12                    ; $F0B5
     bne     Sprite_DrawAnimatedPairFromTable ; $F0B7
 
-@loc_F0B9:
+
+BagoBago_Draw:
     lda     #$0C                    ; $F0B9
 
 ; ---------------------------------------------------------------------------
@@ -9214,7 +9438,8 @@ Sprite_DrawEnemyPairKeepX:
     ldx     currentObject           ; $F0DA
     rts                             ; $F0DC
 
-@loc_F0DD:
+
+Fairy_Draw:
     lda     drawOffscreen+1         ; $F0DD
     and     #$08                    ; $F0DF
     bne     Sprite_Return           ; $F0E1
@@ -9252,10 +9477,11 @@ Sprite_Return:
     rts                             ; $F10B
     .byte   $03, $02, $00, $01, $01, $01                                    ; $F10C
 
-@loc_F112:
+
+Item_Draw:
     lda     #$02                    ; $F112
     sta     temp2                   ; $F114
-    lda     ram_00AF,x              ; $F116
+    lda     enemyAiState,x          ; $F116
     and     #$7F                    ; $F118
     tax                             ; $F11A
     pha                             ; $F11B
@@ -9278,7 +9504,8 @@ Sprite_Return:
 @loc_F137:
     jmp     Sprite_FlipPrevious     ; $F137
 
-@loc_F13A:
+
+LockedDoor_Draw:
     lda     drawOffscreen+1         ; $F13A
     and     #$08                    ; $F13C
     bne     @done                   ; $F13E
@@ -9289,11 +9516,11 @@ Sprite_Return:
     sta     oamBuffer,y             ; $F147
     adc     #$10                    ; $F14A
     sec                             ; $F14C
-    sbc     ram_00AF,x              ; $F14D
+    sbc     enemyAiState,x          ; $F14D
     sta     oamBuffer+4,y           ; $F14F
     lda     temp0                   ; $F152
     clc                             ; $F154
-    adc     ram_00AF,x              ; $F155
+    adc     enemyAiState,x          ; $F155
     sta     oamBuffer+8,y           ; $F157
     lda     temp1                   ; $F15A
     sta     oamBuffer+3,y           ; $F15C
@@ -9312,11 +9539,12 @@ Sprite_Return:
 @done:
     rts                             ; $F17D
 
-@loc_F17E:
+
+Ache_Draw:
     lda     enemyType,x             ; $F17E
     cmp     #$0A                    ; $F180
     bne     @loc_F188               ; $F182
-    lda     ram_00AF,x              ; $F184
+    lda     enemyAiState,x          ; $F184
     bne     @loc_F1AD               ; $F186
 
 @loc_F188:
