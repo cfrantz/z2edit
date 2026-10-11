@@ -609,7 +609,7 @@ Overworld_UseFlute_Bank1:
     .byte   $2D, $D0, $0C, $A9, $0B, $8D, $25, $07, $E6, $01, $E6, $01, $4C, $79, $DF, $AD; $8378
     .byte   $63, $05, $C9, $0F, $F0, $01, $60, $20, $A1, $83, $4C, $79, $DF ; $8388
 
-dat_1_8395:
+MapStripHeader_Bank1:
     .byte   $0A, $00, $00, $82, $6C, $6C, $00, $00, $82, $6C, $6C, $FF      ; $8395
 
 Overworld_QueueMapStrip_Bank1:
@@ -620,7 +620,7 @@ Overworld_QueueMapStrip_Bank1:
     ldy     #$0B                    ; $83A8
 
 @loop:
-    lda     dat_1_8395,y            ; $83AA
+    lda     MapStripHeader_Bank1,y  ; $83AA
     sta     ppuBuffer0Len,y         ; $83AD
     dey                             ; $83B0
     bpl     @loop                   ; $83B1
@@ -680,8 +680,8 @@ Overworld_GetTerrain_Bank1:
     rts                             ; $8408
 ; (unreferenced: $8409-$8412, 10 bytes)
 
-dat_1_8409:
-    .assert dat_1_8409 = OverworldBank::Encounters, error, "interface address moved"
+Encounters_Bank1:
+    .assert Encounters_Bank1 = OverworldBank::Encounters, error, "interface address moved"
     .byte   $5D, $5E, $62, $63, $67, $68, $6F, $70, $74, $75                ; $8409
     .byte   $79, $7A                                                        ; $8413
 ; (unreferenced: $8415-$8416, 2 bytes)
@@ -842,13 +842,11 @@ SpecialTiles_Bank1:
     .byte   $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC, $FC; $876F
     .byte   $10, $C0, $C3, $11, $D4, $02, $DE, $03, $D4, $04, $D8, $03, $D2, $02, $DC, $03; $877F
 
-dat_1_878F:
+PalaceStoneMapPtrs_Bank1:
     .byte   $18                                                             ; $878F
-
-dat_1_8790:
     .byte   $7C, $76, $7D, $EA, $7E, $A6, $7D                               ; $8790
 
-dat_1_8797:
+PalaceStonePalaces_Bank1:
     .byte   $00, $01, $02, $03                                              ; $8797
 
 Overworld_UpdatePalaceStones_Bank1:
@@ -856,7 +854,7 @@ Overworld_UpdatePalaceStones_Bank1:
     ldx     #$02                    ; $879B
 
 @loop:
-    lda     dat_1_8797,x            ; $879D
+    lda     PalaceStonePalaces_Bank1,x ; $879D
     cmp     #$FF                    ; $87A0
     beq     @loc_87C2               ; $87A2
     tay                             ; $87A4
@@ -867,9 +865,9 @@ Overworld_UpdatePalaceStones_Bank1:
     txa                             ; $87AF
     asl     a                       ; $87B0
     tay                             ; $87B1
-    lda     dat_1_878F,y            ; $87B2
+    lda     PalaceStoneMapPtrs_Bank1,y ; $87B2
     sta     temp14                  ; $87B5
-    lda     dat_1_8790,y            ; $87B7
+    lda     PalaceStoneMapPtrs_Bank1+1,y ; $87B7
     sta     temp15                  ; $87BA
     ldy     #$00                    ; $87BC
     lda     #$0B                    ; $87BE

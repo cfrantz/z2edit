@@ -150,10 +150,12 @@ Mode_OverworldSetup:
 
 dat_0_81AC:
     rts                             ; $81AC
+; The rts byte is also the base of RaftSteps: raft steps by raftDirection (+1, -1).
+RaftSteps := dat_0_81AC
     .byte   $01                                                             ; $81AD
 ; (unreferenced: $81AE-$81AE, 1 bytes)
 
-dat_0_81AE:
+RaftSpriteAttrs:
     .byte   $FF                                                             ; $81AE
     .byte   $40                                                             ; $81AF
 ; (unreferenced: $81B0-$81B0, 1 bytes)
@@ -180,7 +182,7 @@ Raft_Draw:
     lda     #$47                    ; $81C5
     sta     oamBuffer+5             ; $81C7
     ldy     raftDirection           ; $81CA
-    lda     dat_0_81AE,y            ; $81CD
+    lda     RaftSpriteAttrs,y       ; $81CD
     sta     oamBuffer+2             ; $81D0
     sta     oamBuffer+6             ; $81D3
     cpy     #$01                    ; $81D6
@@ -222,11 +224,13 @@ Raft_Move:
     sty     overworldDirection      ; $81F9
     lda     objState+1              ; $81FC
     clc                             ; $81FE
-    adc     dat_0_81AC,y            ; $81FF
+    adc     RaftSteps,y             ; $81FF
     sta     objState+1              ; $8202
 
 dat_0_8204:
     rts                             ; $8204
+; The rts byte is also the base of RaftStopX: where the raft stops, by raftDirection.
+RaftStopX := dat_0_8204
     .byte   $80                                                             ; $8205
 ; (unreferenced: $8206-$8206, 1 bytes)
     .byte   $78                                                             ; $8206
@@ -237,7 +241,7 @@ Mode_Raft:
     jsr     Raft_Draw               ; $820C
     jsr     Raft_Wait               ; $820F
     ldy     raftDirection           ; $8212
-    ldx     dat_0_8204,y            ; $8215
+    ldx     RaftStopX,y             ; $8215
     cpx     objState                ; $8218
     bne     Mode_RaftDone           ; $821A
     lda     #$05                    ; $821C
@@ -267,45 +271,43 @@ Raft_Wait:
     bne     Mode_RaftDone           ; $8226
     rts                             ; $8228
 
-dat_0_8229:
+EncounterPositions:
     .byte   $58, $76, $98, $7A, $38, $74, $B8, $7C                          ; $8229
 ; (unreferenced: $8231-$8231, 1 bytes)
 
-dat_0_8231:
+EncounterTerrains:
     .byte   $00                                                             ; $8231
     .byte   $05, $04, $06, $07, $08, $0A                                    ; $8232
 ; (unreferenced: $8238-$8238, 1 bytes)
 
-dat_0_8238:
+EncounterPositionSets:
     .byte   $00                                                             ; $8238
     .byte   $01, $01, $00, $01, $00, $00                                    ; $8239
 ; (unreferenced: $823F-$823F, 1 bytes)
 
-dat_0_823F:
+EncounterDelays:
     .byte   $00                                                             ; $823F
     .byte   $20, $18, $18, $20, $09, $03                                    ; $8240
 ; (unreferenced: $8246-$8246, 1 bytes)
 
-dat_0_8246:
+EncounterLifetimes:
     .byte   $00                                                             ; $8246
     .byte   $0A, $0A, $18, $18, $30, $30                                    ; $8247
 ; (unreferenced: $824D-$824D, 1 bytes)
 
-dat_0_824D:
+EncounterChances:
     .byte   $00                                                             ; $824D
     .byte   $60, $B0, $D0, $00, $60, $D0, $F0, $00, $60, $C0, $E0, $00, $50, $BB, $F0, $00; $824E
     .byte   $57, $D7, $F8, $00, $57, $D7, $FF                               ; $825E
 
-dat_0_8265:
+EncounterKinds:
     .byte   $01, $02, $01, $01, $01, $01, $01, $02, $02, $01, $02, $01, $01, $03, $01, $03; $8265
 
-dat_0_8275:
+EncounterSpriteTiles:
     .byte   $4D                                                             ; $8275
-
-dat_0_8276:
     .byte   $4F, $51, $53, $49, $4B, $4B, $49, $81, $83, $85, $87           ; $8276
 
-dat_0_8281:
+EncounterSpriteAttrs:
     .byte   $02, $02, $03                                                   ; $8281
 
 ; ---------------------------------------------------------------------------
@@ -341,7 +343,7 @@ Overworld_CheckEncounter:
     ldy     #$06                    ; $82A5
 
 @loop:
-    cmp     dat_0_8231,y            ; $82A7
+    cmp     EncounterTerrains,y     ; $82A7
     beq     @loc_82B0               ; $82AA
     dey                             ; $82AC
     bne     @loop                   ; $82AD
@@ -352,7 +354,7 @@ Overworld_CheckEncounter:
 @loc_82B0:
     lda     objYHi+13               ; $82B0
     beq     @loc_82BA               ; $82B2
-    lda     dat_0_823F,y            ; $82B4
+    lda     EncounterDelays,y       ; $82B4
     sta     timerSlow+8             ; $82B7
 
 @loc_82BA:
@@ -360,7 +362,7 @@ Overworld_CheckEncounter:
     and     #$03                    ; $82BD
     sta     temp0                   ; $82BF
     sty     temp11                  ; $82C1
-    lda     dat_0_8238,y            ; $82C3
+    lda     EncounterPositionSets,y ; $82C3
     asl     a                       ; $82C6
     asl     a                       ; $82C7
     ora     #$03                    ; $82C8
@@ -377,7 +379,7 @@ Overworld_CheckEncounter:
 
 @loop2:
     lda     rng+1                   ; $82D9
-    cmp     dat_0_824D,y            ; $82DC
+    cmp     EncounterChances,y      ; $82DC
     bcs     @loc_82E4               ; $82DF
     dey                             ; $82E1
     bne     @loop2                  ; $82E2
@@ -403,12 +405,12 @@ Overworld_CheckEncounter:
     cmp     temp10                  ; $82F9
     beq     @loc_8324               ; $82FB
     ldy     temp9                   ; $82FD
-    lda     dat_0_8229,y            ; $82FF
+    lda     EncounterPositions,y    ; $82FF
     and     #$F0                    ; $8302
     clc                             ; $8304
     adc     ram_007F                ; $8305
     sta     objY+1,x                ; $8307
-    lda     dat_0_8229,y            ; $8309
+    lda     EncounterPositions,y    ; $8309
     asl     a                       ; $830C
     asl     a                       ; $830D
     asl     a                       ; $830E
@@ -417,10 +419,10 @@ Overworld_CheckEncounter:
     adc     ppuScrollX              ; $8311
     sta     objX+1,x                ; $8313
     ldy     temp11                  ; $8315
-    lda     dat_0_8246,y            ; $8317
+    lda     EncounterLifetimes,y    ; $8317
     sta     timerSlow,x             ; $831A
     ldy     temp8                   ; $831D
-    lda     dat_0_8265,y            ; $831F
+    lda     EncounterKinds,y        ; $831F
     sta     objState+2,x            ; $8322
 
 @loc_8324:
@@ -494,7 +496,7 @@ Overworld_DrawEncounters:
     lda     objState+2,x            ; $8377
     tax                             ; $8379
     dex                             ; $837A
-    lda     dat_0_8281,x            ; $837B
+    lda     EncounterSpriteAttrs,x  ; $837B
     sta     oamBuffer+130,y         ; $837E
     sta     oamBuffer+134,y         ; $8381
     txa                             ; $8384
@@ -503,9 +505,9 @@ Overworld_DrawEncounters:
     clc                             ; $8387
     adc     temp7                   ; $8388
     tax                             ; $838A
-    lda     dat_0_8275,x            ; $838B
+    lda     EncounterSpriteTiles,x  ; $838B
     sta     oamBuffer+129,y         ; $838E
-    lda     dat_0_8276,x            ; $8391
+    lda     EncounterSpriteTiles+1,x ; $8391
     sta     oamBuffer+133,y         ; $8394
     pla                             ; $8397
     tax                             ; $8398
@@ -784,11 +786,11 @@ RaftDockY:
     .byte   $02, $08, $08, $3C, $15, $FF, $3A, $3C, $66, $49, $3C, $21, $63, $51, $FF, $FF; $853B
     .byte   $3C, $3E, $2D, $04, $17, $03, $22, $3D                          ; $854B
 
-dat_0_8553:
+SpecialSpotY:
     .byte   $FF                                                             ; $8553
     .byte   $43                                                             ; $8554
 
-dat_0_8555:
+SpecialSpotX:
     .byte   $28, $28, $34                                                   ; $8555
 
 ; ---------------------------------------------------------------------------
@@ -888,10 +890,10 @@ Overworld_EnterLocation:
     ldy     currentRegion           ; $85D5
     beq     @loc_85EB               ; $85D8
     lda     overworldY              ; $85DA
-    cmp     dat_0_8553,y            ; $85DC
+    cmp     SpecialSpotY,y          ; $85DC
     bne     @loc_85EB               ; $85DF
     lda     overworldX              ; $85E1
-    cmp     dat_0_8555,y            ; $85E3
+    cmp     SpecialSpotX,y          ; $85E3
     bne     @loc_85EB               ; $85E6
     sta     ram_07AD                ; $85E8
 

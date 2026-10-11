@@ -46,6 +46,19 @@ a table of row pointers in SRAM when the overworld is set up, and
 
 ## Encounters
 
+`Overworld_CheckEncounter` starts a group of encounter sprites when the
+encounter timer (`timerSlow+8`) runs out, if the terrain under Link is
+one of `EncounterTerrains`: grass (5), desert (4), forest (6), swamp (7),
+graveyard (8) and lava ($A); not roads.  (Outside the north of region
+0, `objYHi+13` lets a group start without waiting for the timer.)  By
+the terrain it resets the timer
+(`EncounterDelays`), sets how long the sprites stay (`EncounterLifetimes`),
+and picks one of two sets of starting positions (`EncounterPositionSets`,
+`EncounterPositions`).  A random number against the terrain's four
+thresholds (`EncounterChances`) chooses the strength, which sets the kinds
+of the up to three sprites (`EncounterKinds`; drawn with
+`EncounterSpriteTiles` and `EncounterSpriteAttrs`).
+
 Encounter sprites wander toward Link.  When one touches him on terrain
 where encounters happen, `Overworld_DrawEncounters` sets `areaLocation`
 to $FF and enters it like a location; `Location_EnterEncounter` then
@@ -59,3 +72,19 @@ to: another region, a town, a palace, or a side view area
 (`Location_GetArea`), and how Link enters it (`Location_SetupEntry`,
 `Location_CheckFallEntry` for a hole that he falls into).  Returning,
 `Mode_ReturnToOverworld` puts him back beside the location he left.
+
+## Palaces as Stone
+
+`Overworld_UpdatePalaceStones` (`OverworldBank::UpdatePalaceStones`, run
+when the overworld is set up) turns a palace into stone on the map once
+Link has both its item (`itemOwned`, same index as the palace: candle,
+glove, raft, boots, flute, cross) and placed its crystal
+(`crystalPlaced`): it writes tile $0B at the palace's place in the map
+(`PalaceStoneMapPtrs_Bank1`, `PalaceStonePalaces_Bank1`; bank 2 has its
+own).
+
+## The Raft
+
+On a raft dock with the raft (`Overworld_EnterLocation`), Link rides
+across the water (`Mode_Raft`), moving by `RaftSteps` in `raftDirection`
+until he reaches the other dock (`RaftStopX`).
