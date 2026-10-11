@@ -14,6 +14,15 @@ memory at the takeover.  Prints every change of the --watch variables
 with the frame (relative to the takeover) and the writing routine, and
 saves screenshots at the --shot frames to build/snap/play-K.png.
 Runs --frames frames (default 300) after the takeover.
+
+--at VAR=VALUE[,VAR=VALUE...] patches the end of Game_StartAtNorthCastle
+(bank 0 $AA3F, the free space after it) to store the values, so that a
+new game starts there instead of at North Castle, as z2edit's "emulate
+at" does: e.g. with build/movies/file_select.fm2, which starts a game.
+The location variables are areaPrgBank, currentRegion, currentWorld,
+townCode, palaceCode, areaLocation, areaId, areaStartPage, areaEntrySide
+and prevRegion.  --invincible keeps Link's life and magic full (the
+zelda2 plugin's cheat: reads of statMeter return the maximum).
 """
 import argparse
 import os
@@ -23,6 +32,7 @@ from PIL import Image
 
 import headless
 from watch import resolve
+from z2edit import Address
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUTTONS = {"A": 0x01, "B": 0x02, "SELECT": 0x04, "START": 0x08,
@@ -58,6 +68,8 @@ def main():
     p.add_argument("--shot", action="append", type=int, default=[])
     p.add_argument("--frames", type=int, default=300)
     p.add_argument("--out", default=os.path.join(HERE, "../build/snap"))
+    p.add_argument("--at", default=None)
+    p.add_argument("--invincible", action="store_true")
     args = p.parse_args()
 
     emu = headless.emulator(args.rom)
@@ -68,6 +80,24 @@ def main():
         var, _, value = c.partition("=")
         conds.append((resolve(sym, var), int(value, 0)))
     presses = [parse_press(s) for s in args.press]
+    if args.at:
+        code = []
+        for c in args.at.split(","):
+            var, _, value = c.partition("=")
+            addr = resolve(sym, var)
+            code += [0xA9, int(value, 0), 0x8D, addr & 0xFF, addr >> 8]
+        code.append(0x60)
+        for k, b in enumerate(code):
+            emu[Address.Prg(0, 0xAA3F + k)] = b
+    if args.invincible:
+        meter = resolve(sym, "statMeter")
+        containers = resolve(sym, "statContainers")
+
+        def full(cpu, address, value):
+            return 32 * emu.read(containers + address - meter) - 1
+
+        emu.set_read_callback(meter, full)
+        emu.set_read_callback(meter + 1, full)
     pokes = []
     for s in args.poke:
         var, _, value = s.partition("=")

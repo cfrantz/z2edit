@@ -6,7 +6,9 @@ Tools that drive the emulator need the Python extension built with
 `maturin develop` (see the top-level README).
 
 - `headless.py`: Helpers for running the emulator without a GUI (loading
-  ROMs, FM2 movies and symbol tables).
+  ROMs, FM2 movies and symbol tables), and `Checkpoint`, which saves the
+  emulator's state and restores it with a movie still in sync (for
+  re-running from a late frame without replaying the whole movie).
 - `cdl_movie.py`: Plays FM2 movies headlessly with the emulator's Code/Data
   Logger enabled and writes `build/<name>.cdl`, `.jumps.json`, `.refs.json`
   `.ram.json` (RAM accesses by instruction) and `.progress.tsv`.  `--merge`
@@ -53,7 +55,9 @@ Tools that drive the emulator need the Python extension built with
 - `play.py`: Plays a movie until given variables hold given values, then
   takes over with scripted input (and memory pokes), logging changes to
   watched variables and taking screenshots; for exercising code the
-  movies never reach.
+  movies never reach.  `--at VAR=VALUE,...` starts a new game at a chosen area
+  (with `build/movies/file_select.fm2`, in about 12 seconds), and
+  `--invincible` keeps Link's meters full.
 - `routine_report.py`: For each routine with a header, its status, whether
   the movies ran it, and the variables it was seen to read and write;
   `--provisional` lists only provisional routines, for checking headers

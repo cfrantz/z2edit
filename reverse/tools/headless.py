@@ -37,3 +37,24 @@ def movie(emu, filename):
 def symbols(emu, filename):
     """Load a symbol table produced by tools/symbols.py."""
     return Symbols(SimpleNamespace(nes=emu), [filename])
+
+
+class Checkpoint:
+    """An emulator state, restorable with a movie still in sync.
+
+    The emulator's frame counter (which a movie uses to pick its input) is
+    not part of the saved state, so restoring shifts the movie's offset by
+    the difference.  States live in memory only (NesState is not exposed
+    for saving to disk).
+    """
+
+    def __init__(self, emu, mv=None):
+        self.emu, self.mv = emu, mv
+        self.state = emu.save_state()
+        self.frame = emu.frame
+        self.offset = mv.offset if mv else None
+
+    def restore(self):
+        self.emu.restore_state(self.state)
+        if self.mv:
+            self.mv.offset = self.offset + (self.frame - self.emu.frame)
