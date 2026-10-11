@@ -903,22 +903,27 @@ loc_3_8BA8:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93E5
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF           ; $93F5
 
+; Routine of each projectile type (1-11), copied to sramProjectilePtrs.
 ProjectilePtrs_Bank3:
     .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9400
     .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9408
     .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9410
 
+; Unused byte between the enemy definition tables.
 ProjectileUnused_Bank3:
     .byte   $AD                                                             ; $9416
 
+; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
 ProjectileFlags_Bank3:
     .byte   $95, $00, $00, $00, $00, $00, $00, $00, $00, $00                ; $9417
 
+; Hit points of each enemy type (sramEnemyHp).
 EnemyHp_Bank3:
     .byte   $00, $00, $00, $00, $00, $00, $30, $00, $00, $00, $08, $00      ; $9421
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00      ; $942D
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00      ; $9439
 
+; Spawn routine of each enemy type (sramEnemyInitPtrs).
 EnemyInitPtrs_Bank3:
     .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9445
     .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $944D
@@ -930,6 +935,7 @@ EnemyInitPtrs_Bank3:
     .word   Townsperson_Init, Townsperson_InitWalking, Townsperson_InitWalking, Townsperson_InitWalking ; $947D
     .word   Townsperson_InitWalking, Townsperson_Init, Townsperson_Init, Generator_Init_Bank3 ; $9485
 
+; Routine run every frame by each enemy type (sramEnemyAiPtrs).
 EnemyAiPtrs_Bank3:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, TownBat_Ai ; $948D
     .word   Bot_Ai, Bit_Ai, Moa_Ai, Ache_Ai ; $9495
@@ -941,26 +947,31 @@ EnemyAiPtrs_Bank3:
     .word   Townsperson_WalkAi, Townsperson_WalkAi, Townsperson_WalkAi, Townsperson_WalkAi ; $94C5
     .word   Townsperson_WalkAi, Sign_Ai, Sign_Ai, TownspersonGenerator_Ai ; $94CD
 
+; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
 EnemyAttr_Bank3:
     .byte   $40, $40, $40, $C2, $C0, $80, $C6, $C3, $00, $00, $80, $C0      ; $94D5
     .byte   $00, $18, $10, $20, $34, $08, $18, $10, $08, $18, $00, $00      ; $94E1
     .byte   $18, $10, $08, $18, $00, $10, $2C, $2C, $00, $00, $00, $00      ; $94ED
 
+; Drop group, flags and damage class of each enemy type (sramEnemyDamage; see docs/entities).
 EnemyDamage_Bank3:
     .byte   $00, $00, $00, $02, $00, $00, $03, $00, $01, $02, $00, $00      ; $94F9
     .byte   $00, $83, $83, $01, $82, $83, $82, $02, $03, $03, $02, $02      ; $9505
     .byte   $01, $03, $02, $02, $03, $03, $02, $02, $03, $00, $00, $00      ; $9511
 
+; Hitbox of each enemy type (sramEnemyHitbox).
 EnemyHitbox_Bank3:
     .byte   $01, $01, $04, $00, $01, $01, $01, $01, $0C, $0C, $0C, $0C      ; $951D
     .byte   $00, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C      ; $9529
     .byte   $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $00, $00, $00      ; $9535
 
+; Flags and collision probe set of each enemy type (sramEnemyFlags; see docs/entities).
 EnemyFlags_Bank3:
     .byte   $86, $86, $86, $06, $06, $06, $06, $00, $80, $80, $80, $80      ; $9541
     .byte   $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80      ; $954D
     .byte   $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80      ; $9559
 
+; Routine that draws each enemy type (sramEnemyDrawPtrs).
 EnemyDrawPtrs_Bank3:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Ache_Draw ; $9565
     .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
@@ -972,6 +983,13 @@ EnemyDrawPtrs_Bank3:
     .word   Townsperson_Draw, Townsperson_Draw, Townsperson_Draw, Townsperson_Draw ; $959D
     .word   Townsperson_Draw, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $95A5
 
+; ---------------------------------------------------------------------------
+; Enemy_InitNone_Bank3
+;
+; Spawn routine that does nothing (rts).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank3:
     rts                             ; $95AD
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00; $95AE
@@ -1000,6 +1018,13 @@ dat_3_969A:
     .byte   $10, $08, $18, $00, $00, $18, $10, $08, $18, $00, $10, $3C, $18, $00; $969A
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; TownBat_Ai
+;
+; Town bat: despawned when off screen, otherwise an Ache (Ache_Ai).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 TownBat_Ai:
     lda     drawOffscreen+1         ; $96A8
     beq     loc_3_96AF              ; $96AA
@@ -1010,6 +1035,13 @@ loc_3_96AF:
 ; (end of disassembled code)
 
 
+; ---------------------------------------------------------------------------
+; Generator_Init_Bank3
+;
+; Spawn routine of generators: despawn any other enemy of the same type.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Generator_Init_Bank3:
     ldy     #$05                    ; $96B2
 
@@ -1046,6 +1078,14 @@ dat_3_96DC:
 dat_3_96DE:
     .byte   $FF, $01                                                        ; $96DE
 
+; ---------------------------------------------------------------------------
+; TownspersonGenerator_Ai
+;
+; Every 256 frames, if a slot is free, send a walking townsperson
+; (TownspersonGeneratorTypes) in from the left or right edge.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 TownspersonGenerator_Ai:
     inc     enemyAiState,x          ; $96E0
     bne     loc_3_96EF              ; $96E2
@@ -1111,6 +1151,14 @@ dat_3_9740:
     rts                             ; $9740
     .byte   $F2, $0E                                                        ; $9741
 
+; ---------------------------------------------------------------------------
+; Townsperson_InitWalking
+;
+; Spawn routine of walking townspeople: walk toward Link at the type's
+; speed.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_InitWalking:
     jsr     Enemy_FaceLink          ; $9743
     sty     temp0                   ; $9746
@@ -1122,12 +1170,27 @@ Townsperson_InitWalking:
     sta     objXVelocity+1,x        ; $9751
     jmp     Townsperson_Init        ; $9753
 
+; ---------------------------------------------------------------------------
+; Townsperson_InitIdle
+;
+; Spawn routine of idle townspeople: 8 pixels higher, then
+; Townsperson_InitAtDoor.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_InitIdle:
     lda     objY+1,x                ; $9756
     sec                             ; $9758
     sbc     #$08                    ; $9759
     sta     objY+1,x                ; $975B
 
+; ---------------------------------------------------------------------------
+; Townsperson_InitAtDoor
+;
+; Start a townsperson at a door (enemyAiState $80), offset in its facing.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_InitAtDoor:
     lda     #$80                    ; $975D
     sta     enemyAiState,x          ; $975F
@@ -1137,6 +1200,13 @@ Townsperson_InitAtDoor:
     adc     dat_3_9740,y            ; $9766
     sta     objX+1,x                ; $9769
 
+; ---------------------------------------------------------------------------
+; Townsperson_Init
+;
+; Clear a townsperson's state (ram_05A5 and following).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_Init:
     lda     #$00                    ; $976B
     sta     ram_05A5,x              ; $976D
@@ -1151,6 +1221,13 @@ dat_3_9780:
     rts                             ; $9780
     .byte   $10, $00                                                        ; $9781
 
+; ---------------------------------------------------------------------------
+; TalkingBit_Ai
+;
+; A Bit that can be talked to, hopping in place.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 TalkingBit_Ai:
     lda     frameCounter            ; $9783
     and     #$80                    ; $9785
@@ -1163,6 +1240,14 @@ TalkingBit_Ai:
 loc_3_9791:
     sta     enemyAiState,x          ; $9791
 
+; ---------------------------------------------------------------------------
+; Townsperson_StandAi
+;
+; A townsperson standing in place, turning toward Link every 64 frames; can
+; be talked to.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_StandAi:
     jsr     Townsperson_FaceLinkWhileTalking ; $9793
     jsr     sub_3_9A8D              ; $9796
@@ -1176,6 +1261,14 @@ loc_3_97A2:
     sta     enemyAiState,x          ; $97A4
     jmp     Townsperson_CheckTalk   ; $97A6
 
+; ---------------------------------------------------------------------------
+; Wizard_Ai
+;
+; The wizard: starts talking (Townsperson_StartTalk) when Link comes within
+; $20 pixels on the ground.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Wizard_Ai:
     jsr     Townsperson_FaceLinkWhileTalking ; $97A9
     jsr     sub_3_9A8D              ; $97AC
@@ -1199,6 +1292,14 @@ Wizard_Ai:
 loc_3_97D3:
     rts                             ; $97D3
 
+; ---------------------------------------------------------------------------
+; HouseLady_Ai
+;
+; A person waiting by a house (the life and magic ladies): walks to and
+; through its door, opening and closing it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HouseLady_Ai:
     jsr     Townsperson_FaceLinkWhileTalking ; $97D4
     lda     enemyAiState,x          ; $97D7
@@ -1297,6 +1398,14 @@ sub_3_9870:
     bne     loc_3_983C              ; $9873
     jmp     Townsperson_WalkAndTalk ; $9875
 
+; ---------------------------------------------------------------------------
+; Townsperson_WalkAi
+;
+; A walking townsperson: walks the street, can be talked to, and enters
+; doors.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_WalkAi:
     jsr     Townsperson_FaceLinkWhileTalking ; $9878
     jsr     Townsperson_CheckTalk   ; $987B
@@ -1318,6 +1427,14 @@ loc_3_9896:
     cmp     #$8B                    ; $989B
     bne     loc_3_98BB              ; $989D
 
+; ---------------------------------------------------------------------------
+; Townsperson_StartDoor
+;
+; Note the door in front of the townsperson (its tile map address) and start
+; opening it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_StartDoor:
     inc     enemyAiState,x          ; $989F
     lda     ram_00DC                ; $98A1
@@ -1376,6 +1493,13 @@ loc_3_98F6:
     jsr     Enemy_Despawn           ; $98F6
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Door_SetClosedTile
+;
+; Put the closed door tile ($53) back in the area tile map.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Door_SetClosedTile:
     lda     ram_058D,x              ; $98F9
     sta     temp0                   ; $98FC
@@ -1412,14 +1536,35 @@ DoorTilesBottom:
     .byte   $4A, $40, $40, $41, $40, $48, $4A, $FF, $FF, $FF, $FF, $48, $4A, $40, $40, $40; $9934
     .byte   $40, $48                                                        ; $9944
 
+; ---------------------------------------------------------------------------
+; Door_QueueOpen
+;
+; Queue the open door's tiles (DoorTilesTop, DoorTilesBottom).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Door_QueueOpen:
     ldx     #$00                    ; $9946
     beq     loc_3_9950              ; $9948
 
+; ---------------------------------------------------------------------------
+; Door_QueueHalf
+;
+; Queue the half-open door's tiles.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Door_QueueHalf:
     ldx     #$06                    ; $994A
     bne     loc_3_9950              ; $994C
 
+; ---------------------------------------------------------------------------
+; Door_QueueClosed
+;
+; Queue the closed door's tiles.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Door_QueueClosed:
     ldx     #$0C                    ; $994E
 
@@ -1477,11 +1622,26 @@ loc_3_9961:
     ldx     currentObject           ; $99AD
     rts                             ; $99AF
 
+; ---------------------------------------------------------------------------
+; Townsperson_WalkAndTalk
+;
+; Walk, draw, and check for being talked to.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_WalkAndTalk:
     jsr     Townsperson_FaceLinkWhileTalking ; $99B0
     jsr     Townsperson_DrawOrDespawn ; $99B3
     jsr     Townsperson_Walk        ; $99B6
 
+; ---------------------------------------------------------------------------
+; Townsperson_CheckTalk
+;
+; If Link touches the townsperson and presses B, start a conversation; a
+; lady being followed through her door starts dialogType 4.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_CheckTalk:
     lda     drawOffscreen+1         ; $99B9
     ora     dialogType              ; $99BB
@@ -1551,6 +1711,14 @@ loc_3_9A28:
     and     #$40                    ; $9A2F
     beq     loc_3_9A4F              ; $9A31
 
+; ---------------------------------------------------------------------------
+; Townsperson_StartTalk
+;
+; Start a conversation (dialogType 2) with townsperson x, freezing the game
+; and stopping Link.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_StartTalk:
     lda     #$02                    ; $9A33
     sta     dialogType              ; $9A35
@@ -1568,6 +1736,13 @@ Townsperson_StartTalk:
 loc_3_9A4F:
     rts                             ; $9A4F
 
+; ---------------------------------------------------------------------------
+; Townsperson_TurnToDoor
+;
+; Turn the townsperson toward its door.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_TurnToDoor:
     lda     #$FF                    ; $9A50
     sta     ram_05BD,x              ; $9A52
@@ -1585,6 +1760,13 @@ loc_3_9A60:
 loc_3_9A67:
     rts                             ; $9A67
 
+; ---------------------------------------------------------------------------
+; Townsperson_Walk
+;
+; Move the townsperson and update its facing every 16 frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_Walk:
     jsr     Enemy_MoveX             ; $9A68
     inc     ram_05B1,x              ; $9A6B
@@ -1606,6 +1788,13 @@ loc_3_9A84:
 loc_3_9A89:
     rts                             ; $9A89
 
+; ---------------------------------------------------------------------------
+; Townsperson_DrawOrDespawn
+;
+; Despawn the townsperson if far off screen, otherwise draw it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_DrawOrDespawn:
     jsr     Enemy_DespawnIfFar      ; $9A8A
 
@@ -1623,6 +1812,14 @@ loc_3_9A98:
 dat_3_9A99:
     .byte   $02, $01                                                        ; $9A99
 
+; ---------------------------------------------------------------------------
+; Townsperson_FaceLinkWhileTalking
+;
+; While the townsperson is talking, turn it (and Link) to face each other
+; and skip the rest of its AI.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_FaceLinkWhileTalking:
     lda     ram_05C3,x              ; $9A9B
     beq     loc_3_9A98              ; $9A9E
@@ -1644,12 +1841,26 @@ loc_3_9AB8:
     pla                             ; $9AB9
     jmp     Enemy_Draw              ; $9ABA
 
+; ---------------------------------------------------------------------------
+; Sign_Ai
+;
+; Signs and the mirror: invisible, can be talked to (read).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Sign_Ai:
     lda     #$00                    ; $9ABD
     sta     ram_05BD,x              ; $9ABF
     jsr     Townsperson_CheckTalk   ; $9AC2
     jmp     Enemy_DespawnIfFar      ; $9AC5
 
+; ---------------------------------------------------------------------------
+; Wizard_Draw
+;
+; Draw the wizard (or his spell's flash).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Wizard_Draw:
     lda     ram_049E                ; $9AC8
     beq     Townsperson_Draw        ; $9ACB
@@ -1666,6 +1877,14 @@ Wizard_Draw:
     ldx     #$4C                    ; $9AE3
     jmp     loc_3_9B3F              ; $9AE5
 
+; ---------------------------------------------------------------------------
+; Townsperson_Draw
+;
+; Draw a townsperson: tiles from sramEnemyAttr, palette from sramEnemyDamage
+; (bit 7: one pose), walking animation by speed.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Townsperson_Draw:
     lda     objXVelocity+1,x        ; $9AE8
     sta     temp9                   ; $9AEA

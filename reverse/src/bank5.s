@@ -1581,22 +1581,27 @@ dat_5_925A:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93EE
     .byte   $FF, $FF                                                        ; $93FE
 
+; Routine of each projectile type (1-11), copied to sramProjectilePtrs.
 ProjectilePtrs_Bank5:
     .word   Projectile_Straight_Bank5, Projectile_Straight_Bank5, Projectile_Arc_Bank5, Projectile_Fireball_Bank5 ; $9400
     .word   Projectile_Rock_Bank5, $0000, Projectile_RollingFlame_Bank5, Projectile_Fireball_Bank5 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
+; Unused byte between the enemy definition tables.
 ProjectileUnused_Bank5:
     .byte   $69                                                             ; $9416
 
+; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
 ProjectileFlags_Bank5:
     .byte   $9C, $00, $03, $81, $86, $53, $82, $A4, $86, $86                ; $9417
 
+; Hit points of each enemy type (sramEnemyHp).
 EnemyHp_Bank5:
     .byte   $00, $00, $00, $18, $30, $FF, $06, $04, $00, $00, $02, $02      ; $9421
     .byte   $02, $04, $06, $08, $08, $0C, $0C, $00, $FF, $FF, $60, $FF      ; $942D
     .byte   $00, $30, $60, $00, $02, $90, $38, $00, $00, $00, $C0, $F8      ; $9439
 
+; Spawn routine of each enemy type (sramEnemyInitPtrs).
 EnemyInitPtrs_Bank5:
     .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $9445
     .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $944D
@@ -1608,6 +1613,7 @@ EnemyInitPtrs_Bank5:
     .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $947D
     .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Thunderbird_Init, DarkLink_Init ; $9485
 
+; Routine run every frame by each enemy type (sramEnemyAiPtrs).
 EnemyAiPtrs_Bank5:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
     .word   Bot_Ai, HiddenJar_Ai_Bank5, Moa_Ai, Ache_Ai ; $9495
@@ -1619,26 +1625,31 @@ EnemyAiPtrs_Bank5:
     .word   dat_5_9E67, Fokkeru_Ai, KingBot_Ai, $0000 ; $94C5
     .word   Barrier_Ai, $0000, Thunderbird_Ai, DarkLink_Ai ; $94CD
 
+; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
 EnemyAttr_Bank5:
     .byte   $40, $40, $40, $C4, $C4, $84, $D3, $C2, $C0, $D0, $80, $00      ; $94D5
     .byte   $00, $82, $C3, $05, $95, $85, $85, $40, $C5, $C5, $55, $C0      ; $94E1
     .byte   $48, $88, $C9, $90, $90, $8B, $C0, $02, $02, $02, $CF, $4A      ; $94ED
 
+; Drop group, flags and damage class of each enemy type (sramEnemyDamage; see docs/entities).
 EnemyDamage_Bank5:
     .byte   $30, $30, $30, $43, $43, $63, $41, $40, $53, $53, $42, $50      ; $94F9
     .byte   $40, $40, $40, $33, $43, $44, $44, $30, $03, $03, $43, $33      ; $9505
     .byte   $35, $35, $35, $00, $00, $34, $33, $01, $36, $01, $35, $34      ; $9511
 
+; Hitbox of each enemy type (sramEnemyHitbox).
 EnemyHitbox_Bank5:
     .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $81, $01      ; $951D
     .byte   $01, $01, $01, $01, $01, $01, $01, $03, $01, $01, $01, $80      ; $9529
     .byte   $80, $80, $80, $00, $01, $80, $90, $00, $0D, $00, $00, $0E      ; $9535
 
+; Flags and collision probe set of each enemy type (sramEnemyFlags; see docs/entities).
 EnemyFlags_Bank5:
     .byte   $96, $86, $96, $46, $46, $46, $06, $40, $90, $86, $00, $90      ; $9541
     .byte   $90, $06, $06, $90, $06, $06, $06, $90, $C6, $C6, $C0, $C6      ; $954D
     .byte   $00, $00, $00, $00, $00, $00, $80, $06, $96, $06, $26, $86      ; $9559
 
+; Routine that draws each enemy type (sramEnemyDrawPtrs).
 EnemyDrawPtrs_Bank5:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
     .word   Bot_Draw, Enemy_InitNone_Bank5, Moa_Draw, Ache_Draw ; $956D
@@ -1650,6 +1661,13 @@ EnemyDrawPtrs_Bank5:
     .word   Enemy_InitNone_Bank5, Fokkeru_Draw, KingBot_Draw, $0000 ; $959D
     .word   $0000, $0000, Thunderbird_Draw, DarkLink_DrawTrigger ; $95A5
 
+; ---------------------------------------------------------------------------
+; Enemy_InitNone_Bank5
+;
+; Spawn routine that does nothing (rts).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank5:
     rts                             ; $95AD
     .byte   $CE, $CE, $84, $3F, $53, $52, $3F, $3F, $00, $03, $00, $01, $01, $00, $01, $01; $95AE
@@ -1670,6 +1688,13 @@ dat_5_9624:
 dat_5_962A:
     .byte   $10, $F0                                                        ; $962A
 
+; ---------------------------------------------------------------------------
+; GpBubble_Draw
+;
+; Draw a bubble.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 GpBubble_Draw:
     lda     #$02                    ; $962C
     sta     temp2                   ; $962E
@@ -1679,6 +1704,13 @@ GpBubble_Draw:
     ldx     #$5A                    ; $9636
     jmp     Sprite_DrawPairFlipped  ; $9638
 
+; ---------------------------------------------------------------------------
+; GpSkullHead_Init
+;
+; Spawn routine of skull heads: $30 above Link, at the side he faces.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 GpSkullHead_Init:
     lda     objY                    ; $963B
     sbc     #$30                    ; $963D
@@ -1707,6 +1739,13 @@ dat_5_9663:
 dat_5_9665:
     .byte   $38, $C8                                                        ; $9665
 
+; ---------------------------------------------------------------------------
+; GpSkullHead_Ai
+;
+; Skull head: flies across in a wave; respawns when it leaves the screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 GpSkullHead_Ai:
     lda     drawOffscreen+1         ; $9667
     and     #$0C                    ; $9669
@@ -1732,6 +1771,13 @@ loc_5_9689:
     jsr     Enemy_UpdateCommon      ; $968F
     jmp     Enemy_HurtLinkOnContact ; $9692
 
+; ---------------------------------------------------------------------------
+; GpSkullHead_Draw
+;
+; Draw a skull head.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 GpSkullHead_Draw:
     ldx     #$4A                    ; $9695
     lda     temp2                   ; $9697
@@ -1739,10 +1785,24 @@ GpSkullHead_Draw:
     sta     temp2                   ; $969B
     jmp     Sprite_DrawEnemyPairKeepX ; $969D
 
+; ---------------------------------------------------------------------------
+; FireOctorok_Draw
+;
+; Draw a fire Octorok.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 FireOctorok_Draw:
     lda     #$46                    ; $96A0
     jmp     Sprite_DrawAnimatedEnemyPair ; $96A2
 
+; ---------------------------------------------------------------------------
+; KingBot_Draw
+;
+; Draw King Bot.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 KingBot_Draw:
     ldy     #$50                    ; $96A5
     lda     #$02                    ; $96A7
@@ -1870,6 +1930,14 @@ loc_5_9764:
 loc_5_9795:
     rts                             ; $9795
 
+; ---------------------------------------------------------------------------
+; DarkLink_Init
+;
+; Spawn routine of the Dark Link trigger: put Dark Link (8 hit points) in
+; slot 0 at the trigger's place.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Init:
     lda     #$23                    ; $9796
     sta     enemyType               ; $9798
@@ -1898,6 +1966,15 @@ DarkLink_Init:
 ; (unreferenced: $97C4-$97C5, 2 bytes)
     .byte   $03, $FD                                                        ; $97C4
 
+; ---------------------------------------------------------------------------
+; DarkLink_Ai
+;
+; Dark Link, by objFacing+4: DarkLink_WaitForLink, DarkLink_Appear,
+; DarkLink_Separate, DarkLink_Fight, DarkLink_Defeated,
+; DarkLink_WalkLinkToCenter, DarkLink_ShowTriforce, DarkLink_StartEnding.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Ai:
     jsr     DarkLink_FlashPalette   ; $97C6
     lda     objFacing+4             ; $97C9
@@ -1912,6 +1989,14 @@ DarkLink_Ai:
     .word   DarkLink_ShowTriforce   ; $97DA
     .word   DarkLink_StartEnding    ; $97DC
 
+; ---------------------------------------------------------------------------
+; DarkLink_WaitForLink
+;
+; When Link reaches page 1 and lands, freeze the scroll, stand him at Y $A0
+; and freeze the game.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_WaitForLink:
     inc     enemyAiState            ; $97DE
     jsr     Enemy_Draw              ; $97E0
@@ -1945,6 +2030,13 @@ loc_5_980A:
 loc_5_980C:
     rts                             ; $980C
 
+; ---------------------------------------------------------------------------
+; DarkLink_Appear
+;
+; Flash the screen; the shadow appears at Link's position.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Appear:
     lda     timerFast+3             ; $980D
     bne     loc_5_982C              ; $9810
@@ -1976,6 +2068,13 @@ loc_5_9839:
 loc_5_983B:
     jmp     Enemy_Draw              ; $983B
 
+; ---------------------------------------------------------------------------
+; DarkLink_Separate
+;
+; The shadow steps out of Link and lands; then the fight music.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Separate:
     lda     spellFlash              ; $983E
     cmp     #$81                    ; $9841
@@ -2011,6 +2110,15 @@ loc_5_9874:
     sta     objState+1              ; $9876
     jmp     DarkLink_Draw           ; $9878
 
+; ---------------------------------------------------------------------------
+; DarkLink_Fight
+;
+; The fight: react to Link (DarkLink_ReactToLink), move, jump, attack, draw,
+; test swords (DarkLink_CheckSword) and contact.  When its hit points run
+; out it sinks away.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Fight:
     ldy     timerFast+4             ; $987B
     beq     loc_5_988E              ; $987E
@@ -2075,6 +2183,15 @@ loc_5_98D3:
     jsr     Enemy_CheckLinkContact  ; $98E5
     jmp     Enemy_HurtLinkOnContact ; $98E8
 
+; ---------------------------------------------------------------------------
+; DarkLink_ReactToLink
+;
+; By the distance to Link: up close, mirror his crouch when he attacks,
+; sometimes jump away, or turn away for a moment; farther, face him now and
+; then.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_ReactToLink:
     lda     objX+1                  ; $98EB
     sbc     objX                    ; $98ED
@@ -2208,6 +2325,13 @@ dat_5_999E:
 dat_5_99A2:
     .byte   $14, $EC                                                        ; $99A2
 
+; ---------------------------------------------------------------------------
+; DarkLink_UpdateXVelocity
+;
+; Set the shadow's X speed while it is moving away (timerFast+5).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_UpdateXVelocity:
     lda     timerFast+5             ; $99A4
     beq     loc_5_99B1              ; $99A7
@@ -2224,6 +2348,14 @@ loc_5_99B1:
 loc_5_99B7:
     rts                             ; $99B7
 
+; ---------------------------------------------------------------------------
+; DarkLink_UpdateJump
+;
+; Move the shadow vertically and land at Y $A0; set its pose for jumping or
+; walking.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_UpdateJump:
     jsr     DarkLink_Move           ; $99B8
     lda     objY+1                  ; $99BB
@@ -2285,6 +2417,13 @@ loc_5_9A0C:
     sta     objState+1              ; $9A0C
     rts                             ; $9A0E
 
+; ---------------------------------------------------------------------------
+; DarkLink_Move
+;
+; Turn the shadow toward Link and move it, keeping it on the screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Move:
     jsr     Enemy_FaceLink          ; $9A0F
     lda     objFacing+1             ; $9A12
@@ -2333,6 +2472,13 @@ dat_5_9A49 := * + 2
 ; (unreferenced: $9A4F-$9A4F, 1 bytes)
     .byte   $06                                                             ; $9A4F
 
+; ---------------------------------------------------------------------------
+; DarkLink_UpdateAttack
+;
+; Advance the shadow's sword attack.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_UpdateAttack:
     ldy     enemyAiDir              ; $9A50
     beq     loc_5_9A76              ; $9A53
@@ -2364,6 +2510,13 @@ loc_5_9A71:
 loc_5_9A76:
     rts                             ; $9A76
 
+; ---------------------------------------------------------------------------
+; DarkLink_Draw
+;
+; Draw the shadow with Link's sprites (Link_DrawBody for object 1).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Draw:
     ldy     #$01                    ; $9A77
     sty     ram_0011                ; $9A79
@@ -2387,6 +2540,15 @@ dat_5_9A89:
 dat_5_9A8B:
     .byte   $F6, $0A                                                        ; $9A8B
 
+; ---------------------------------------------------------------------------
+; DarkLink_CheckSword
+;
+; Test the shadow's sword against Link's shield (blocked: knockback) and
+; body, and Link's sword against the shadow (a hit takes a point and knocks
+; it back).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_CheckSword:
     lda     objFacing+3             ; $9A8D
     ora     linkJumpState           ; $9A8F
@@ -2481,6 +2643,13 @@ loc_5_9B15:
     jmp     Link_HurtByEnemy        ; $9B37
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; DarkLink_Defeated
+;
+; After the shadow is beaten, wait for Link to land.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_Defeated:
     lda     spellFlash              ; $9B3A
     cmp     #$81                    ; $9B3D
@@ -2495,6 +2664,13 @@ loc_5_9B46:
     lda     #$80                    ; $9B4E
     jmp     loc_5_9805              ; $9B50
 
+; ---------------------------------------------------------------------------
+; DarkLink_WalkLinkToCenter
+;
+; Walk Link to the middle of the room.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_WalkLinkToCenter:
     lda     #$03                    ; $9B53
     sta     objState                ; $9B55
@@ -2537,6 +2713,13 @@ loc_5_9B83:
     sta     objY+1                  ; $9B8C
     jmp     loc_5_980A              ; $9B8E
 
+; ---------------------------------------------------------------------------
+; DarkLink_ShowTriforce
+;
+; Show the Triforce, with the screen flashing and music.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_ShowTriforce:
     lda     timerSlow+4             ; $9B91
     cmp     #$02                    ; $9B94
@@ -2552,6 +2735,13 @@ DarkLink_ShowTriforce:
 loc_5_9BA5:
     jmp     Enemy_Draw              ; $9BA5
 
+; ---------------------------------------------------------------------------
+; DarkLink_StartEnding
+;
+; Hold Link's pose, then start the ending (gameState 3).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_StartEnding:
     lda     #$02                    ; $9BA8
     sta     linkWalkDir             ; $9BAA
@@ -2570,6 +2760,13 @@ loc_5_9BBA:
     inc     renderingOff            ; $9BC4
     rts                             ; $9BC7
 
+; ---------------------------------------------------------------------------
+; Projectile_Fireball_Bank5
+;
+; Projectile types 4 and 8: fly until they hit the background, then spark.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank5:
     jsr     Projectile_HitsBg       ; $9BC8
     bcc     loc_5_9C45              ; $9BCB
@@ -2577,6 +2774,13 @@ Projectile_Fireball_Bank5:
     sta     objState+7,x            ; $9BCF
     rts                             ; $9BD1
 
+; ---------------------------------------------------------------------------
+; Projectile_Rock_Bank5
+;
+; Projectile type 5: fly straight, falling once deflected.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Rock_Bank5:
     ldy     #$02                    ; $9BD2
     lda     objXVelocity+7,x        ; $9BD4
@@ -2589,6 +2793,14 @@ loc_5_9BD9:
     bne     loc_5_9C42              ; $9BDC
     jmp     Projectile_Arc_Bank5    ; $9BDE
 
+; ---------------------------------------------------------------------------
+; Projectile_RollingFlame_Bank5
+;
+; Projectile type 7 (Fokkeru's fireball): falls to the floor, then rolls
+; along it and shoots off to one side.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_RollingFlame_Bank5:
     jsr     Projectile_HitsBgAnyHeight ; $9BE1
     bcc     loc_5_9C45              ; $9BE4
@@ -2642,6 +2854,13 @@ loc_5_9C23:
 loc_5_9C3B:
     dec     objXVelocity+7,x        ; $9C3B
 
+; ---------------------------------------------------------------------------
+; Projectile_Arc_Bank5
+;
+; Projectile type 3: arc with gravity.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Arc_Bank5:
     lda     #$FE                    ; $9C3D
     sta     objYVelocity+7,x        ; $9C3F
@@ -2652,6 +2871,13 @@ loc_5_9C42:
 loc_5_9C45:
     inc     objYVelocity+7,x        ; $9C45
 
+; ---------------------------------------------------------------------------
+; Projectile_Straight_Bank5
+;
+; Projectile types 1 and 2: fly straight.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Straight_Bank5:
     jsr     Projectile_Move         ; $9C48
     lda     drawOffscreen+2         ; $9C4B
@@ -2705,6 +2931,13 @@ dat_5_9C96:
     rts                             ; $9C96
     .byte   $40, $00                                                        ; $9C97
 
+; ---------------------------------------------------------------------------
+; Projectile_Draw_Bank5
+;
+; Draw projectile x by its type.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Draw_Bank5:
     lda     objState+7,x            ; $9C99
     pha                             ; $9C9B
@@ -2802,6 +3035,14 @@ dat_5_9D26:
 dat_5_9D28:
     .byte   $0A, $00, $3F, $1F                                              ; $9D28
 
+; ---------------------------------------------------------------------------
+; Fokka_Ai
+;
+; Fokka (bird knight): guards at the height Link attacks or jumps, attacks
+; high or low, throws its sword (projectile type 5), and jumps at random.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Fokka_Ai:
     jsr     Enemy_Draw              ; $9D2C
     lda     objState+1,x            ; $9D2F
@@ -2979,6 +3220,14 @@ loc_5_9E38:
 loc_5_9E41:
     rts                             ; $9E41
 
+; ---------------------------------------------------------------------------
+; Enemy_KnockBackOrWalk_Bank5
+;
+; While knocked back (ram_043E), move by the knockback (on the ground,
+; except Fokkeru); otherwise move unless against a wall.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank5:
     ldy     ram_043E,x              ; $9E42
     beq     loc_5_9E63              ; $9E45
@@ -3010,6 +3259,14 @@ dat_5_9E67:
 dat_5_9E68:
     .byte   $FC, $08, $F8                                                   ; $9E68
 
+; ---------------------------------------------------------------------------
+; Fokkeru_Ai
+;
+; Fokkeru: bounces about at random and spits a fireball (projectile type 7)
+; every 64 frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Fokkeru_Ai:
     jsr     Enemy_KnockBackOrWalk_Bank5 ; $9E6B
     jsr     Enemy_FaceLink          ; $9E6E
@@ -3055,6 +3312,13 @@ loc_5_9EBB:
 loc_5_9EBE:
     rts                             ; $9EBE
 
+; ---------------------------------------------------------------------------
+; Thunderbird_Draw
+;
+; Draw the Thunderbird (its face changes as it is hurt).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Thunderbird_Draw:
     lda     enemyHp,x               ; $9EBF
     ldx     #$29                    ; $9EC1
@@ -3193,6 +3457,13 @@ dat_5_9FC7:
 dat_5_9FCF:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9FCF
 
+; ---------------------------------------------------------------------------
+; Fokka_Draw
+;
+; Draw a Fokka and its sword.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Fokka_Draw:
     lda     enemyVulnerability,x    ; $9FD4
     ldy     #$00                    ; $9FD7
@@ -3285,6 +3556,13 @@ loc_5_A058:
     ldx     currentObject           ; $A058
     rts                             ; $A05A
 
+; ---------------------------------------------------------------------------
+; Fokkeru_Draw
+;
+; Draw a Fokkeru.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Fokkeru_Draw:
     lda     enemyAiState,x          ; $A05B
     pha                             ; $A05D
@@ -3306,6 +3584,14 @@ loc_5_A06F:
     jsr     Sprite_DrawEnemyPair    ; $A06F
     jmp     Sprite_DrawEnemyPairKeepX ; $A072
 
+; ---------------------------------------------------------------------------
+; GpBubble_Ai
+;
+; Bubbles: fly diagonally, bouncing, draining magic while touching Link.  A
+; large bubble ($17), once hit, splits into two fast bubbles.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 GpBubble_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $A075
     jsr     Enemy_MoveX             ; $A078
@@ -3405,10 +3691,24 @@ loc_5_A119:
     sta     objYVelocity+1,x        ; $A121
     jmp     Enemy_MoveY             ; $A124
 
+; ---------------------------------------------------------------------------
+; GpSlowBubble_Init
+;
+; Spawn routine of slow bubbles: speed $F0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 GpSlowBubble_Init:
     lda     #$F0                    ; $A127
     bne     loc_5_A12D              ; $A129
 
+; ---------------------------------------------------------------------------
+; GpFastBubble_Init
+;
+; Spawn routine of fast bubbles: speed $E0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 GpFastBubble_Init:
     lda     #$E0                    ; $A12B
 
@@ -3419,6 +3719,13 @@ loc_5_A12D:
 loc_5_A132:
     rts                             ; $A132
 
+; ---------------------------------------------------------------------------
+; LargeBubble_Draw
+;
+; Draw a large bubble.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 LargeBubble_Draw:
     lda     #$02                    ; $A133
     sta     temp2                   ; $A135
@@ -3461,6 +3768,14 @@ dat_5_A17A:
     rts                             ; $A17A
     .byte   $04, $08, $00, $08, $04                                         ; $A17B
 
+; ---------------------------------------------------------------------------
+; KingBot_Ai
+;
+; King Bot: wakes when Link is within $30 pixels, hops toward him; below 48
+; hit points it bursts into five Bots.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 KingBot_Ai:
     lda     enemyHp,x               ; $A180
     cmp     #$30                    ; $A182
@@ -3550,6 +3865,15 @@ dat_5_A210:
 ; (unreferenced: $A230-$A233, 4 bytes)
     .byte   $04, $05, $06, $04                                              ; $A230
 
+; ---------------------------------------------------------------------------
+; Barrier_Ai
+;
+; The Great Palace barrier: flashes, hurts Link on contact (kills a fairy);
+; when all crystals are placed and Link comes near, it dissolves column by
+; column.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barrier_Ai:
     lda     enemyAiState,x          ; $A234
     bne     loc_5_A2A7              ; $A236
@@ -3693,6 +4017,13 @@ loc_5_A2FB:
     rts                             ; $A31C
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Generator_Init_Bank5
+;
+; Spawn routine of generators: despawn any other enemy of the same type.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Generator_Init_Bank5:
     ldy     #$05                    ; $A31D
 
@@ -3719,6 +4050,13 @@ loc_5_A333:
 ; (end of disassembled code)
 
 
+; ---------------------------------------------------------------------------
+; Thunderbird_Init
+;
+; Spawn routine of the Thunderbird: only while its area flag is set.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Thunderbird_Init:
     ldx     #$01                    ; $A33B
     jsr     Area_TestFlag           ; $A33D
@@ -3747,6 +4085,16 @@ dat_5_A351:
     .byte   $10, $FE                                                        ; $A354
     .byte   $FC, $F8, $F0                                                   ; $A356
 
+; ---------------------------------------------------------------------------
+; Thunderbird_Ai
+;
+; Thunderbird: when Link reaches it, the scroll freezes; it flies, bobbing,
+; turning toward him every 32 frames, and spits fireballs (projectile type
+; 8) every 32 frames (16 below 96 hit points).  It cannot be hurt until its
+; hit points are below 192 (by Thunder).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Thunderbird_Ai:
     lda     scrollFrozen            ; $A359
     bne     loc_5_A36B              ; $A35C
@@ -3919,6 +4267,13 @@ dat_5_A46C:
 dat_5_A46F:
     .byte   $00, $F0, $E0                                                   ; $A46F
 
+; ---------------------------------------------------------------------------
+; DarkLink_DrawTrigger
+;
+; Draw the Dark Link trigger (the shadow's spawn).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_DrawTrigger:
     lda     #$02                    ; $A472
     sta     temp2                   ; $A474
@@ -3968,6 +4323,13 @@ dat_5_A4B8:
 dat_5_A4C0:
     .byte   $17, $27, $37, $37                                              ; $A4C0
 
+; ---------------------------------------------------------------------------
+; DarkLink_FlashPalette
+;
+; Queue the flashing palette of the Dark Link room.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DarkLink_FlashPalette:
     ldx     ppuBuffer0Len           ; $A4C4
     ldy     #$00                    ; $A4C7
@@ -3991,6 +4353,13 @@ loc_5_A4C9:
     ldx     currentObject           ; $A4E6
     rts                             ; $A4E8
 
+; ---------------------------------------------------------------------------
+; Boss_DrawHpBar_Bank5
+;
+; Draw a boss's hit point bar; same as Boss_DrawHpBar.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_DrawHpBar_Bank5:
     sta     temp0                   ; $A4E9
     ldy     #$00                    ; $A4EB
@@ -4029,6 +4398,14 @@ loc_5_A502:
     ldx     currentObject           ; $A51E
     rts                             ; $A520
 
+; ---------------------------------------------------------------------------
+; HiddenJar_Ai_Bank5
+;
+; Hidden object: when struck by the sword, becomes a jar (or, half the time,
+; a red Fokka).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HiddenJar_Ai_Bank5:
     lda     drawOffscreen+1         ; $A521
     bne     loc_5_A54E              ; $A523

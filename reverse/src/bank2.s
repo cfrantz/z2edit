@@ -1014,22 +1014,27 @@ sub_2_93BA:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93E9
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF                               ; $93F9
 
+; Routine of each projectile type (1-11), copied to sramProjectilePtrs.
 ProjectilePtrs_Bank2:
     .word   Projectile_Straight_Bank2, Projectile_Bubble_Bank2, Projectile_Rock_Bank2, Projectile_Fireball_Bank2 ; $9400
     .word   Projectile_Straight_Bank2, Projectile_Straight_Bank2, Projectile_Straight_Bank2, Projectile_FallingRock_Bank2 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
+; Unused byte between the enemy definition tables.
 ProjectileUnused_Bank2:
     .byte   $00                                                             ; $9416
 
+; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
 ProjectileFlags_Bank2:
     .byte   $00, $00, $80, $41, $83, $01, $03, $94, $81, $00                ; $9417
 
+; Hit points of each enemy type (sramEnemyHp).
 EnemyHp_Bank2:
     .byte   $00, $00, $00, $03, $04, $04, $30, $08, $00, $00, $08, $02      ; $9421
     .byte   $02, $0C, $0C, $08, $08, $0C, $0C, $00, $18, $10, $10, $08      ; $942D
     .byte   $30, $20, $30, $20, $38, $01, $00, $00, $00, $00, $00, $00      ; $9439
 
+; Spawn routine of each enemy type (sramEnemyInitPtrs).
 EnemyInitPtrs_Bank2:
     .word   Enemy_InitNone_Bank2, RedJar_Init_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $9445
     .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $944D
@@ -1041,6 +1046,7 @@ EnemyInitPtrs_Bank2:
     .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $947D
     .word   $0000, $0000, $0000, $0000 ; $9485
 
+; Routine run every frame by each enemy type (sramEnemyAiPtrs).
 EnemyAiPtrs_Bank2:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
     .word   Bot_Ai, Bit_Ai, Moa_Ai, Ache_Ai ; $9495
@@ -1052,26 +1058,31 @@ EnemyAiPtrs_Bank2:
     .word   loc_2_9B90, loc_2_9730, $0000, $0000 ; $94C5
     .word   $0000, $0000, $0000, $0000 ; $94CD
 
+; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
 EnemyAttr_Bank2:
     .byte   $40, $40, $40, $C3, $C1, $81, $D7, $C4, $80, $90, $84, $10      ; $94D5
     .byte   $10, $83, $C4, $10, $93, $C5, $C5, $40, $E7, $85, $C4, $C7      ; $94E1
     .byte   $E7, $CA, $89, $4A, $CB, $87, $00, $00, $00, $00, $00, $00      ; $94ED
 
+; Drop group, flags and damage class of each enemy type (sramEnemyDamage; see docs/entities).
 EnemyDamage_Bank2:
     .byte   $30, $30, $30, $41, $41, $40, $43, $42, $31, $31, $42, $30      ; $94F9
     .byte   $30, $42, $42, $32, $42, $41, $41, $30, $82, $44, $44, $81      ; $9505
     .byte   $83, $A4, $34, $B3, $34, $22, $00, $00, $00, $00, $00, $00      ; $9511
 
+; Hitbox of each enemy type (sramEnemyHitbox).
 EnemyHitbox_Bank2:
     .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $80, $01      ; $951D
     .byte   $01, $01, $01, $01, $01, $01, $01, $03, $81, $01, $01, $01      ; $9529
     .byte   $81, $89, $80, $80, $80, $80, $00, $00, $00, $00, $00, $00      ; $9535
 
+; Flags and collision probe set of each enemy type (sramEnemyFlags; see docs/entities).
 EnemyFlags_Bank2:
     .byte   $96, $86, $96, $46, $46, $46, $06, $46, $96, $86, $40, $90      ; $9541
     .byte   $90, $06, $06, $90, $06, $06, $06, $90, $00, $00, $00, $00      ; $954D
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00      ; $9559
 
+; Routine that draws each enemy type (sramEnemyDrawPtrs).
 EnemyDrawPtrs_Bank2:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
     .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
@@ -1083,6 +1094,13 @@ EnemyDrawPtrs_Bank2:
     .word   loc_2_9EE1, loc_2_9D32, $0000, $0000 ; $959D
     .word   $0000, $0000, $0000, $0000 ; $95A5
 
+; ---------------------------------------------------------------------------
+; Enemy_InitNone_Bank2
+;
+; Spawn routine that does nothing (rts).  Same as Enemy_InitNone_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank2:
     rts                             ; $95AD
     .byte   $A8, $AA, $AE, $84, $CE, $CE, $27, $AE, $00, $01, $01, $02, $01, $03, $03, $03; $95AE
@@ -1093,6 +1111,14 @@ Enemy_InitNone_Bank2:
     .byte   $19, $1B, $1D, $13, $1F, $17, $1D, $13, $21, $1B, $23, $25, $F5, $27, $2B, $F5; $95FE
     .byte   $29, $2B                                                        ; $960E
 
+; ---------------------------------------------------------------------------
+; RedJar_Init_Bank2
+;
+; Spawn routine of the red jar: item kind $11 (full magic), moved 3 pixels
+; right.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 RedJar_Init_Bank2:
     lda     #$11                    ; $9610
     sta     enemyAiState,x          ; $9612
@@ -1102,6 +1128,14 @@ RedJar_Init_Bank2:
     rts                             ; $961A
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Deeler_Init_Bank2
+;
+; Spawn routine of Deelers; same as Deeler_Init_Bank1.  Not executed in the
+; test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Deeler_Init_Bank2:
     lda     objY+1,x                ; $961B
     sta     ram_05DD                ; $961D
@@ -1112,18 +1146,40 @@ Deeler_Init_Bank2:
 ; (end of disassembled code)
 
 
+; ---------------------------------------------------------------------------
+; Projectile_Fireball_Bank2
+;
+; Projectile type 4 (fireball): with a sound, flies straight.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank2:
     lda     sfxRequest+1            ; $9627
     ora     #$40                    ; $9629
     sta     sfxRequest+1            ; $962B
     bne     Projectile_Straight_Bank2 ; $962D
 
+; ---------------------------------------------------------------------------
+; Projectile_Straight_Bank2
+;
+; Projectile types 1 and 5-7: fly straight.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Straight_Bank2:
     lda     #$00                    ; $962F
     sta     objYVelocity+7,x        ; $9631
     jmp     Projectile_MoveAndCheck_Bank2 ; $9634
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Projectile_Bubble_Bank2
+;
+; Projectile type 2 (lava fireball): rises, swaying every 16 frames.  Not
+; executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Bubble_Bank2:
     ldy     #$04                    ; $9637
     inc     overworldBuffer+76,x    ; $9639
@@ -1138,6 +1194,13 @@ loc_2_9645:
 ; (end of disassembled code)
 
 
+; ---------------------------------------------------------------------------
+; Projectile_Rock_Bank2
+;
+; Projectile type 3 (rock): flies straight, falling once deflected.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Rock_Bank2:
     ldy     #$02                    ; $964A
     lda     objXVelocity+7,x        ; $964C
@@ -1151,6 +1214,14 @@ loc_2_9651:
     inc     objYVelocity+7,x        ; $9656
     bne     loc_2_9662              ; $9659
 
+; ---------------------------------------------------------------------------
+; Projectile_FallingRock_Bank2
+;
+; Projectile type 8 (dropped rock): falls with gravity until it hits the
+; background, then sparks.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_FallingRock_Bank2:
     jsr     Projectile_HitsBg       ; $965B
     lda     #$F3                    ; $965E
@@ -1159,6 +1230,14 @@ Projectile_FallingRock_Bank2:
 loc_2_9662:
     inc     objYVelocity+7,x        ; $9662
 
+; ---------------------------------------------------------------------------
+; Projectile_MoveAndCheck_Bank2
+;
+; Move projectile x, remove it off screen, draw it (Projectile_Draw_Bank2)
+; and test it against Link.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank2:
     jsr     Projectile_Move         ; $9665
     lda     drawOffscreen+2         ; $9668
@@ -1177,6 +1256,13 @@ dat_2_967B := * + 2
     jmp     Projectile_CheckLinkAlternate ; $9679
     .byte   $40, $00                                                        ; $967C
 
+; ---------------------------------------------------------------------------
+; Projectile_Draw_Bank2
+;
+; Draw projectile x by its type (sram_6EAD, sram_6EB6, sram_6EC0).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Draw_Bank2:
     lda     objState+7,x            ; $967E
     pha                             ; $9680
@@ -1275,6 +1361,13 @@ loc_2_9700:
     sta     oamBuffer+2,y           ; $9706
     rts                             ; $9709
 
+; ---------------------------------------------------------------------------
+; Generator_Init_Bank2
+;
+; Spawn routine of generators: despawn any other enemy of the same type.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Generator_Init_Bank2:
     ldy     #$05                    ; $970A
 
@@ -1440,6 +1533,14 @@ loc_2_97F0:
     inc     objY+1,x                ; $97F0
     rts                             ; $97F2
 
+; ---------------------------------------------------------------------------
+; Leever_Init
+;
+; Spawn routine of Leevers: a random start delay; its hiding depth
+; (objState) is $1C below its spawn point.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Leever_Init:
     lda     rng+1,x                 ; $97F3
     sta     timerFast+TIMER_ENEMY,x ; $97F6
@@ -1772,6 +1873,13 @@ loc_2_9A07:
 ; (end of disassembled code)
 
 
+; ---------------------------------------------------------------------------
+; Enemy_DropRock_Bank2
+;
+; Fire projectile type 8 (a rock dropped with no speed) from enemy x.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_DropRock_Bank2:
     jsr     Enemy_FireProjectile    ; $9A11
     bcs     loc_2_9A23              ; $9A14
@@ -1915,6 +2023,14 @@ loc_2_9AF0:
 loc_2_9B08:
     rts                             ; $9B08
 
+; ---------------------------------------------------------------------------
+; Enemy_Pace_Bank2
+;
+; Walk back and forth: enemyAiState counts up, and its bits 7-6 choose the
+; speed and direction.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_Pace_Bank2:
     inc     enemyAiState,x          ; $9B09
     ldy     objFacing+1,x           ; $9B0B
@@ -1937,6 +2053,14 @@ loc_2_9B21:
 loc_2_9B23:
     rts                             ; $9B23
 
+; ---------------------------------------------------------------------------
+; Enemy_KnockBackOrWalk_Bank2
+;
+; While knocked back (ram_043E), move by the knockback; otherwise walk
+; unless against a wall.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank2:
     lda     ram_043E,x              ; $9B24
     beq     loc_2_9B39              ; $9B27
@@ -1957,6 +2081,14 @@ loc_2_9B39:
     bne     loc_2_9B23              ; $9B3D
     jmp     Enemy_MoveX             ; $9B3F
 
+; ---------------------------------------------------------------------------
+; Enemy_Fall_Bank2
+;
+; Update enemy x's background collision and fall with gravity, landing on
+; the ground.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_Fall_Bank2:
     jsr     Enemy_UpdateBgCollision ; $9B42
     lda     objYVelocity+1,x        ; $9B45
@@ -2177,6 +2309,14 @@ dat_2_9CB9:
 dat_2_9CBB:
     .byte   $F8, $00, $FF                                                   ; $9CBB
 
+; ---------------------------------------------------------------------------
+; Lizalfos_Attack
+;
+; Advance a Lizalfos' attack (objState), testing its weapon against Link's
+; shield and body; the blue Lizalfos throws it (projectile type 7).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Lizalfos_Attack:
     lda     objState+1,x            ; $9CBE
     beq     loc_2_9D07              ; $9CC0
@@ -2221,6 +2361,13 @@ loc_2_9D08:
 ; (unreferenced: $9D0D-$9D12, 6 bytes)
     .byte   $00, $00, $00, $00, $00, $00                                    ; $9D0D
 
+; ---------------------------------------------------------------------------
+; Lizalfos_KnockBack
+;
+; While knocked back (ram_043E), move by the knockback instead of the AI.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Lizalfos_KnockBack:
     lda     ram_043E,x              ; $9D13
     beq     loc_2_9D27              ; $9D16

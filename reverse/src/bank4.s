@@ -730,22 +730,27 @@ dat_4_8BA0:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93E4
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF      ; $93F4
 
+; Routine of each projectile type (1-11), copied to sramProjectilePtrs.
 ProjectilePtrs_Bank4:
     .word   Projectile_Straight_Bank4, Projectile_Straight_Bank4, Projectile_Rock_Bank4, Projectile_Fireball_Bank4 ; $9400
     .word   Projectile_Rock_Bank4, Projectile_Fall_Bank4, Projectile_Flame_Bank4, Projectile_AcidDrop_Bank4 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
+; Unused byte between the enemy definition tables.
 ProjectileUnused_Bank4:
     .byte   $67                                                             ; $9416
 
+; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
 ProjectileFlags_Bank4:
     .byte   $97, $00, $03, $41, $86, $53, $92, $A3, $80, $00                ; $9417
 
+; Hit points of each enemy type (sramEnemyHp).
 EnemyHp_Bank4:
     .byte   $00, $00, $00, $03, $04, $FF, $FA, $10, $00, $00, $38, $02      ; $9421
     .byte   $02, $FA, $FA, $08, $08, $0C, $0C, $00, $00, $00, $00, $00      ; $942D
     .byte   $10, $18, $38, $02, $02, $20, $10, $08, $20, $30, $50, $0C      ; $9439
 
+; Spawn routine of each enemy type (sramEnemyInitPtrs).
 EnemyInitPtrs_Bank4:
     .word   Enemy_InitNone_Bank4, Enemy_InitNone_Bank4, Enemy_InitNone_Bank4, Enemy_InitNone_Bank4 ; $9445
     .word   Enemy_InitNone_Bank4, Enemy_InitNone_Bank4, SlowBubble_Init, Enemy_InitNone_Bank4 ; $944D
@@ -757,6 +762,7 @@ EnemyInitPtrs_Bank4:
     .word   Enemy_InitNone_Bank4, Enemy_InitNone_Bank4, Enemy_InitNone_Bank4, Enemy_InitNone_Bank4 ; $947D
     .word   Boss_Init, Helmethead_Init, Enemy_InitNone_Bank4, Enemy_InitNone_Bank4 ; $9485
 
+; Routine run every frame by each enemy type (sramEnemyAiPtrs).
 EnemyAiPtrs_Bank4:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
     .word   Bot_Ai, HiddenJar_Ai, Bubble_Ai, OrangeMoa_Ai ; $9495
@@ -768,26 +774,31 @@ EnemyAiPtrs_Bank4:
     .word   WolfHead_Ai, Mago_Ai, HammerThrower_Ai, Stalfos_Ai ; $94C5
     .word   HorseHead_Ai, Helmethead_Ai, HelmetheadHead_Ai, Stalfos_Ai ; $94CD
 
+; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
 EnemyAttr_Bank4:
     .byte   $40, $40, $40, $C2, $C1, $80, $87, $57, $C0, $C0, $D5, $00      ; $94D5
     .byte   $50, $80, $87, $00, $93, $C5, $C5, $40, $00, $00, $00, $00      ; $94E1
     .byte   $47, $89, $CA, $93, $93, $4B, $87, $86, $87, $CA, $C0, $C7      ; $94ED
 
+; Drop group, flags and damage class of each enemy type (sramEnemyDamage; see docs/entities).
 EnemyDamage_Bank4:
     .byte   $30, $30, $30, $41, $41, $20, $00, $83, $31, $31, $00, $30      ; $94F9
     .byte   $00, $30, $00, $30, $42, $41, $41, $30, $30, $30, $30, $30      ; $9505
     .byte   $A2, $A3, $23, $31, $01, $33, $A2, $A1, $32, $33, $31, $A1      ; $9511
 
+; Hitbox of each enemy type (sramEnemyHitbox).
 EnemyHitbox_Bank4:
     .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $01, $00      ; $951D
     .byte   $80, $01, $01, $00, $01, $01, $01, $03, $06, $00, $00, $00      ; $9529
     .byte   $80, $80, $80, $00, $01, $80, $80, $80, $07, $07, $07, $80      ; $9535
 
+; Flags and collision probe set of each enemy type (sramEnemyFlags; see docs/entities).
 EnemyFlags_Bank4:
     .byte   $96, $86, $96, $46, $46, $86, $46, $40, $90, $86, $40, $80      ; $9541
     .byte   $40, $90, $46, $90, $06, $06, $06, $90, $90, $90, $90, $90      ; $954D
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $C0, $C0, $80, $00      ; $9559
 
+; Routine that draws each enemy type (sramEnemyDrawPtrs).
 EnemyDrawPtrs_Bank4:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
     .word   Bot_Draw, Enemy_InitNone_Bank4, Bubble_Draw, Moa_Draw ; $956D
@@ -799,6 +810,13 @@ EnemyDrawPtrs_Bank4:
     .word   WolfHead_Draw, Mago_Draw, HammerThrower_Draw, Stalfos_Draw ; $959D
     .word   HorseHead_Draw, Helmethead_Draw, HelmetheadHead_Draw, Stalfos_Draw ; $95A5
 
+; ---------------------------------------------------------------------------
+; Enemy_InitNone_Bank4
+;
+; Spawn routine that does nothing (rts).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank4:
     rts                             ; $95AD
     .byte   $CE, $CE, $AE, $3F, $53, $EE, $52, $61, $00, $03, $00, $02, $01, $00, $01, $01; $95AE
@@ -816,6 +834,16 @@ Enemy_InitNone_Bank4:
 dat_4_9657:
     .byte   $37, $0A, $F2                                                   ; $9657
 
+; ---------------------------------------------------------------------------
+; Stalfos_Ai
+;
+; Stalfos (red $1F, blue $23): while off screen it waits at Y $40; then it
+; falls, faces Link, walks to within $1E pixels and slashes
+; (Enemy_StartSwing); the blue Stalfos also jumps at him (1 in 4).  Only its
+; unshielded part can be hit (Enemy_CheckProjectileHitsSpecial).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Stalfos_Ai:
     lda     enemyAiState,x          ; $965A
     bne     loc_4_966B              ; $965C
@@ -941,6 +969,13 @@ loc_4_972B:
 ; (unreferenced: $972E-$973C, 15 bytes)
     .byte   $A0, $04, $A5, $12, $29, $10, $F0, $02, $A0, $FC, $94, $77, $4C, $43, $99; $972E
 
+; ---------------------------------------------------------------------------
+; Projectile_Rock_Bank4
+;
+; Projectile types 3 and 5: fly straight, falling once deflected.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Rock_Bank4:
     ldy     #$02                    ; $973D
     lda     objXVelocity+7,x        ; $973F
@@ -954,10 +989,25 @@ loc_4_9744:
     beq     loc_4_975C              ; $9749
 ; (code below not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Projectile_Fireball_Bank4
+;
+; Projectile type 4: with a sound, flies straight.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank4:
     jsr     Projectile_PlaySound_Bank4 ; $974B
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Projectile_Straight_Bank4
+;
+; Projectile types 1 and 2: fly straight; removed near the bottom of the
+; screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Straight_Bank4:
     lda     objY+7,x                ; $974E
     cmp     #$C5                    ; $9750
@@ -1007,15 +1057,36 @@ loc_4_978F:
     sta     oamBuffer - 2,y         ; $9794
     rts                             ; $9797
 
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlicker_Bank4
+;
+; Projectile draw: cycle the palette every frame.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank4:
     lda     frameCounter            ; $9798
     and     #$03                    ; $979A
     ora     oamBuffer+2,y           ; $979C
     sta     oamBuffer+2,y           ; $979F
 
+; ---------------------------------------------------------------------------
+; Projectile_DrawNothing_Bank4
+;
+; Projectile draw that does nothing (rts).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_DrawNothing_Bank4:
     rts                             ; $97A2
 
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlash_Bank4
+;
+; Projectile draw: flash the palette.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank4:
     lda     frameCounter            ; $97A3
     asl     a                       ; $97A5
@@ -1031,6 +1102,13 @@ Projectile_DrawFlash_Bank4:
 dat_4_97B1:
     .byte   $02, $82, $C2, $42                                              ; $97B1
 
+; ---------------------------------------------------------------------------
+; Projectile_DrawSpin_Bank4
+;
+; Projectile draw: spin (flip the sprite by its facing and the frame).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank4:
     lda     frameCounter            ; $97B5
     lsr     a                       ; $97B7
@@ -1048,6 +1126,13 @@ loc_4_97C2:
     sta     oamBuffer+2,y           ; $97C8
     rts                             ; $97CB
 
+; ---------------------------------------------------------------------------
+; Tinsuit_Draw
+;
+; Draw a Tinsuit (or Rathead).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Tinsuit_Draw:
     inc     temp0                   ; $97CC
     lda     enemyAiState,x          ; $97CE
@@ -1064,6 +1149,13 @@ dat_4_97DC := * + 2
 ; (unreferenced: $97DF-$97E0, 2 bytes)
     .byte   $40, $00                                                        ; $97DF
 
+; ---------------------------------------------------------------------------
+; HammerThrower_Draw
+;
+; Draw the hammer thrower and its hammer.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HammerThrower_Draw:
     lda     objCollision+1,x        ; $97E1
     ldx     #$22                    ; $97E3
@@ -1107,6 +1199,13 @@ dat_4_981A:
 ; (unreferenced: $981B-$981C, 2 bytes)
     .byte   $02, $FE                                                        ; $981B
 
+; ---------------------------------------------------------------------------
+; HorseHead_Draw
+;
+; Draw Horsehead and his mace.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HorseHead_Draw:
     ldy     #$50                    ; $981D
     lda     enemyAiState,x          ; $981F
@@ -1187,10 +1286,24 @@ loc_4_9870:
 loc_4_98A9:
     rts                             ; $98A9
 
+; ---------------------------------------------------------------------------
+; SlowBubble_Init
+;
+; Spawn routine of slow bubbles: X and Y speed $F0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SlowBubble_Init:
     lda     #$F0                    ; $98AA
     bne     loc_4_98B0              ; $98AC
 
+; ---------------------------------------------------------------------------
+; FastBubble_Init
+;
+; Spawn routine of fast bubbles: X and Y speed $E0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 FastBubble_Init:
     lda     #$E0                    ; $98AE
 
@@ -1199,10 +1312,25 @@ loc_4_98B0:
     sta     objYVelocity+1,x        ; $98B2
     rts                             ; $98B5
 
+; ---------------------------------------------------------------------------
+; Tinsuit_Init
+;
+; Spawn routine of Tinsuits: double the X speed.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Tinsuit_Init:
     asl     objXVelocity+1,x        ; $98B6
     rts                             ; $98B8
 
+; ---------------------------------------------------------------------------
+; Projectile_Flame_Bank4
+;
+; Projectile type 7 (flame): with a sound, slows down, falls to the floor
+; and burns there for ram_044C frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Flame_Bank4:
     jsr     Projectile_PlaySound_Bank4 ; $98B9
     lda     ram_044C,x              ; $98BC
@@ -1239,6 +1367,13 @@ loc_4_98D9:
 loc_4_98E9:
     jmp     Projectile_Fall_Bank4   ; $98E9
 
+; ---------------------------------------------------------------------------
+; AcidDripper_Draw
+;
+; Draw the acid dripper.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 AcidDripper_Draw:
     lda     temp0                   ; $98EC
     clc                             ; $98EE
@@ -1247,6 +1382,14 @@ AcidDripper_Draw:
     ldx     #$18                    ; $98F3
     jmp     Sprite_DrawEnemyPairKeepX ; $98F5
 
+; ---------------------------------------------------------------------------
+; Projectile_AcidDrop_Bank4
+;
+; Projectile type 8 (acid drop): falls; when it hits the floor it becomes a
+; Bot (enemy type 4) if a slot is free, or sparks.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_AcidDrop_Bank4:
     jsr     Projectile_HitsBg       ; $98F8
     ldy     #$02                    ; $98FB
@@ -1285,9 +1428,25 @@ loc_4_993C:
     lda     #$F2                    ; $993C
     bne     loc_4_995C              ; $993E
 
+; ---------------------------------------------------------------------------
+; Projectile_Fall_Bank4
+;
+; Projectile type 6 (hammer): fall with gravity, then
+; Projectile_MoveAndCheck_Bank4.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Fall_Bank4:
     inc     objYVelocity+7,x        ; $9940
 
+; ---------------------------------------------------------------------------
+; Projectile_MoveAndCheck_Bank4
+;
+; Move projectile x, remove it off screen (except types 6 and 8), draw it
+; and test it against Link.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank4:
     jsr     Projectile_Move         ; $9943
     lda     drawOffscreen+2         ; $9946
@@ -1301,6 +1460,13 @@ Projectile_MoveAndCheck_Bank4:
     cpy     #$08                    ; $9956
     beq     loc_4_995E              ; $9958
 
+; ---------------------------------------------------------------------------
+; Projectile_Remove_Bank4
+;
+; Remove projectile x.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Remove_Bank4:
     lda     #$00                    ; $995A
 
@@ -1317,6 +1483,13 @@ dat_4_9967 := * + 2
     jmp     Projectile_CheckLinkAlternate ; $9965
     .byte   $40, $00                                                        ; $9968
 
+; ---------------------------------------------------------------------------
+; Projectile_Draw_Bank4
+;
+; Draw projectile x by its type (sram_6EAD, sram_6EB6, sram_6EC0).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Draw_Bank4:
     lda     objState+7,x            ; $996A
     pha                             ; $996C
@@ -1344,6 +1517,13 @@ Projectile_Draw_Bank4:
     sta     oamBuffer+1,y           ; $9999
     jmp     (temp14)                ; $999C
 
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlame_Bank4
+;
+; Draw a flame, blinking as it burns out.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_DrawFlame_Bank4:
     ldy     ram_044C,x              ; $999F
     cpy     #$50                    ; $99A2
@@ -1384,6 +1564,15 @@ loc_4_99CA:
 loc_4_99D0:
     rts                             ; $99D0
 
+; ---------------------------------------------------------------------------
+; Bubble_Ai
+;
+; Bubble (flaming skull): flies diagonally, bouncing off walls, floors,
+; ceilings and the screen edges.  While touching Link it drains a point of
+; magic each frame (and hurts him).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Bubble_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $99D1
     jsr     Enemy_MoveX             ; $99D4
@@ -1438,6 +1627,13 @@ loc_4_9A19:
 loc_4_9A27:
     rts                             ; $9A27
 
+; ---------------------------------------------------------------------------
+; Generator_Init_Bank4
+;
+; Spawn routine of generators: despawn any other enemy of the same type.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Generator_Init_Bank4:
     ldy     #$05                    ; $9A28
 
@@ -1486,6 +1682,14 @@ loc_4_9A46:
 loc_4_9A72:
     rts                             ; $9A72
 
+; ---------------------------------------------------------------------------
+; Crystal_Init
+;
+; Spawn routine of the crystal spot: if the crystal is already placed (area
+; flag 3 clear), become the crystal ($15); put it at ($7C, $62).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Crystal_Init:
     ldx     #$03                    ; $9A73
     jsr     Area_TestFlag           ; $9A75
@@ -1504,6 +1708,13 @@ loc_4_9A82:
     sta     objX+1,x                ; $9A88
     rts                             ; $9A8A
 
+; ---------------------------------------------------------------------------
+; Crystal_Ai
+;
+; The placed crystal: draw it (tile $3D) with its palette cycling.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Crystal_Ai:
     lda     drawOffscreen+1         ; $9A8B
     and     #$08                    ; $9A8D
@@ -1526,6 +1737,15 @@ loc_4_9AA9:
     .byte   $09, $09, $0F, $0F, $0F, $32, $64, $64, $2C, $2C, $2C, $BC, $BC, $BC, $E8, $E8; $9ABA
     .byte   $E8, $DC, $DC, $DC, $C4, $C4, $C4, $A0, $A0, $A0                ; $9ACA
 
+; ---------------------------------------------------------------------------
+; CrystalSpot_Ai
+;
+; The statue where the crystal goes, by enemyAiState: CrystalSpot_Wait,
+; CrystalSpot_Rise, CrystalSpot_WaitMusic, CrystalSpot_Finish; the palette
+; flashes meanwhile (CrystalSpot_FlashPalette).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 CrystalSpot_Ai:
     jsr     CrystalSpot_FlashPalette ; $9AD4
     lda     objState+1,x            ; $9AD7
@@ -1541,6 +1761,15 @@ loc_4_9ADE:
     .word   CrystalSpot_WaitMusic   ; $9AE7
     .word   CrystalSpot_Finish      ; $9AE9
 
+; ---------------------------------------------------------------------------
+; CrystalSpot_Wait
+;
+; When Link stands on the spot with a crystal, freeze the game, take the
+; crystal (crystalsRemaining), mark it placed (crystalPlaced) and start the
+; fanfare.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 CrystalSpot_Wait:
     lda     drawOffscreen+1         ; $9AEB
     bne     loc_4_9B2A              ; $9AED
@@ -1578,6 +1807,14 @@ loc_4_9B22:
 loc_4_9B2A:
     rts                             ; $9B2A
 
+; ---------------------------------------------------------------------------
+; CrystalSpot_Rise
+;
+; Raise the crystal to Y $62, then start the palette flash and the next
+; step.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 CrystalSpot_Rise:
     dec     objY+1,x                ; $9B2B
     lda     objY+1,x                ; $9B2D
@@ -1596,6 +1833,13 @@ CrystalSpot_Rise:
 loc_4_9B46:
     rts                             ; $9B46
 
+; ---------------------------------------------------------------------------
+; CrystalSpot_WaitMusic
+;
+; When the music ends, fill Link's meters (statMeterPending).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 CrystalSpot_WaitMusic:
     ldy     musicPlaying            ; $9B47
     bne     loc_4_9B55              ; $9B4A
@@ -1607,6 +1851,15 @@ CrystalSpot_WaitMusic:
 loc_4_9B55:
     rts                             ; $9B55
 
+; ---------------------------------------------------------------------------
+; CrystalSpot_Finish
+;
+; When the meters are full, unfreeze the game, give Link the experience for
+; his next level, make the spot a crystal in the area's enemy list, clear
+; the area flag and restart the music.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 CrystalSpot_Finish:
     lda     statMeterPending        ; $9B56
     ora     statMeterPending+1      ; $9B59
@@ -1640,6 +1893,14 @@ dat_4_9B89:
 dat_4_9B8D:
     .byte   $3F, $0C, $04, $0F, $3C, $1C, $0C, $FF                          ; $9B8D
 
+; ---------------------------------------------------------------------------
+; CrystalSpot_FlashPalette
+;
+; While ram_0767 counts, queue a flashing background palette; at the end,
+; the area's own colors.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 CrystalSpot_FlashPalette:
     lda     ram_0767                ; $9B95
     beq     loc_4_9BCC              ; $9B98
@@ -1683,12 +1944,29 @@ dat_4_9BD5:
 ; (unreferenced: $9BDB-$9BDC, 2 bytes)
     .byte   $0D, $0B                                                        ; $9BDB
 
+; ---------------------------------------------------------------------------
+; EnergyBallShooter_Ai
+;
+; Statue that shoots energy balls: every 32 frames while on screen, fire one
+; at Link (Enemy_FireAimedBall).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 EnergyBallShooter_Ai:
     lda     frameCounter            ; $9BDD
     and     #$1F                    ; $9BDF
     ora     drawOffscreen+1         ; $9BE1
     bne     loc_4_9C3E              ; $9BE3
 
+; ---------------------------------------------------------------------------
+; Enemy_FireAimedBall
+;
+; Fire an energy ball (projectile type 1) from enemy x at Link, if he is on
+; the side it faces, with a speed chosen by his distance; carry set if none
+; was fired.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_FireAimedBall:
     jsr     Enemy_FireProjectile    ; $9BE5
     bcs     loc_4_9C3E              ; $9BE8
@@ -1747,6 +2025,14 @@ loc_4_9C3F:
     sta     a:objState+7,y          ; $9C41
     rts                             ; $9C44
 
+; ---------------------------------------------------------------------------
+; Boss_DrawHpBar
+;
+; Draw a boss's hit points as a bar of 8 sprites, one per a (hit points per
+; block).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_DrawHpBar:
     sta     temp0                   ; $9C45
     ldy     #$00                    ; $9C47
@@ -1804,6 +2090,17 @@ dat_4_9C82:
 ; (unreferenced: $9C8B-$9C8B, 1 bytes)
     .byte   $A0                                                             ; $9C8B
 
+; ---------------------------------------------------------------------------
+; Ironknuckle_Ai
+;
+; Iron Knuckles ($18-$1A, and the unhorsed Rebonack): on Link's level, face
+; him and keep their distance, guarding at the height he attacks (on B) or
+; jumps; attack high or low at random (the blue one throws swords,
+; projectile type 5).  Otherwise pace back and forth, turning every $50
+; frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Ironknuckle_Ai:
     jsr     Enemy_Draw              ; $9C8C
     lda     enemyType,x             ; $9C8F
@@ -2052,6 +2349,14 @@ sub_4_9E0F:
 loc_4_9E16:
     rts                             ; $9E16
 
+; ---------------------------------------------------------------------------
+; Enemy_KnockBackOrWalk_Bank4
+;
+; While knocked back (ram_043E), move by the knockback; otherwise move
+; unless against a wall.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank4:
     lda     ram_043E,x              ; $9E17
     beq     loc_4_9E2C              ; $9E1A
@@ -2078,6 +2383,14 @@ dat_4_9E38:
 dat_4_9E40:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9E40
 
+; ---------------------------------------------------------------------------
+; Ironknuckle_Draw
+;
+; Draw an Iron Knuckle, its shield at the guarded height, and its sword when
+; attacking.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Ironknuckle_Draw:
     lda     enemyVulnerability,x    ; $9E45
     ldy     #$00                    ; $9E48
@@ -2162,6 +2475,14 @@ dat_4_9EBC := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $9EBA
     .byte   $0C, $F4, $14, $EC                                              ; $9EBD
 
+; ---------------------------------------------------------------------------
+; TinsuitGenerator_Ai
+;
+; Every 128 frames, if a slot is free, spawn a Tinsuit ($0C) on the floor (Y
+; $B0), moving at a random speed.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 TinsuitGenerator_Ai:
     jsr     WolfHeadGenerator_Ai    ; $9EC1
     bcs     loc_4_9EDF              ; $9EC4
@@ -2397,22 +2718,27 @@ loc_4_9EDF:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $A8E6
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                ; $A8F6
 
+; Routine of each projectile type (1-11), copied to sramProjectilePtrs.
 ProjectilePtrs_Bank4B:
     .word   Projectile_Straight_Bank4B, Projectile_Straight_Bank4B, Projectile_Rock_Bank4B, Projectile_Fireball_Bank4B ; $A900
     .word   Projectile_Rock_Bank4B, Projectile_Mace_Bank4B, Projectile_Flame_Bank4, Projectile_AcidDrop_Bank4 ; $A908
     .word   Projectile_CarockBeam, $0000, $0000 ; $A910
 
+; Unused byte between the enemy definition tables.
 ProjectileUnused_Bank4B:
     .byte   $E0                                                             ; $A916
 
+; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
 ProjectileFlags_Bank4B:
     .byte   $AD, $00, $03, $41, $85, $53, $93, $A3, $80, $C3                ; $A917
 
+; Hit points of each enemy type (sramEnemyHp).
 EnemyHp_Bank4B:
     .byte   $00, $00, $00, $03, $04, $FF, $FA, $10, $00, $00, $08, $02      ; $A921
     .byte   $02, $02, $FA, $38, $08, $0C, $0C, $00, $00, $00, $00, $00      ; $A92D
     .byte   $10, $18, $38, $02, $02, $01, $20, $18, $48, $C0, $10, $20      ; $A939
 
+; Spawn routine of each enemy type (sramEnemyInitPtrs).
 EnemyInitPtrs_Bank4B:
     .word   Enemy_InitNone_Bank4B, Enemy_InitNone_Bank4B, Enemy_InitNone_Bank4B, Enemy_InitNone_Bank4B ; $A945
     .word   Enemy_InitNone_Bank4B, Enemy_InitNone_Bank4B, SlowBubble_Init_Bank4B, Enemy_InitNone_Bank4B ; $A94D
@@ -2424,6 +2750,7 @@ EnemyInitPtrs_Bank4B:
     .word   Enemy_InitNone_Bank4B, Enemy_InitNone_Bank4B, Enemy_InitNone_Bank4B, Enemy_InitNone_Bank4B ; $A97D
     .word   Rebonack_Init, Barba_Init, Carock_Init, Enemy_InitNone_Bank4B ; $A985
 
+; Routine run every frame by each enemy type (sramEnemyAiPtrs).
 EnemyAiPtrs_Bank4B:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $A98D
     .word   Bot_Ai, HiddenJarOrIronknuckle_Ai, Bubble_Ai, OrangeMoa_Ai ; $A995
@@ -2435,26 +2762,31 @@ EnemyAiPtrs_Bank4B:
     .word   WolfHead_Ai, Wizrobe_Ai, DoomKnocker_Ai, Stalfos_Ai ; $A9C5
     .word   Rebonack_Ai, Barba_Ai, Carock_Ai, Stalfos_Ai ; $A9CD
 
+; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
 EnemyAttr_Bank4B:
     .byte   $40, $40, $40, $C3, $C1, $80, $87, $57, $C0, $C0, $CC, $00      ; $A9D5
     .byte   $50, $80, $87, $D5, $83, $C5, $C5, $40, $00, $00, $00, $00      ; $A9E1
     .byte   $47, $89, $CA, $93, $93, $89, $C9, $87, $CC, $4E, $8C, $C8      ; $A9ED
 
+; Drop group, flags and damage class of each enemy type (sramEnemyDamage; see docs/entities).
 EnemyDamage_Bank4B:
     .byte   $30, $30, $30, $41, $41, $20, $00, $83, $31, $31, $30, $30      ; $A9F9
     .byte   $00, $30, $00, $40, $32, $41, $41, $30, $30, $30, $30, $30      ; $AA05
     .byte   $A2, $A3, $23, $30, $01, $B3, $23, $A2, $33, $35, $33, $A3      ; $AA11
 
+; Hitbox of each enemy type (sramEnemyHitbox).
 EnemyHitbox_Bank4B:
     .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $80, $00      ; $AA1D
     .byte   $80, $01, $01, $01, $0F, $01, $01, $03, $06, $00, $00, $00      ; $AA29
     .byte   $80, $80, $80, $00, $01, $80, $80, $80, $08, $0A, $0B, $80      ; $AA35
 
+; Flags and collision probe set of each enemy type (sramEnemyFlags; see docs/entities).
 EnemyFlags_Bank4B:
     .byte   $96, $86, $96, $46, $46, $46, $06, $06, $90, $86, $C0, $90      ; $AA41
     .byte   $40, $90, $06, $40, $56, $06, $06, $90, $90, $90, $90, $90      ; $AA4D
     .byte   $00, $00, $00, $80, $00, $00, $00, $00, $C0, $C0, $C0, $00      ; $AA59
 
+; Routine that draws each enemy type (sramEnemyDrawPtrs).
 EnemyDrawPtrs_Bank4B:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $AA65
     .word   Bot_Draw, Enemy_InitNone_Bank4B, Bubble_Draw, Moa_Draw ; $AA6D
@@ -2466,6 +2798,13 @@ EnemyDrawPtrs_Bank4B:
     .word   WolfHead_Draw, Wizrobe_Draw, DoomKnocker_Draw, Stalfos_Draw ; $AA9D
     .word   Rebonack_Draw, Barba_Draw, Carock_Draw, Stalfos_Draw ; $AAA5
 
+; ---------------------------------------------------------------------------
+; Enemy_InitNone_Bank4B
+;
+; Spawn routine that does nothing (rts), in the second palace group's block.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank4B:
     rts                             ; $AAAD
     .byte   $CE, $CE, $AE, $3F, $53, $EE, $52, $61, $DC, $03, $00, $02, $01, $00, $03, $01; $AAAE
@@ -2484,6 +2823,15 @@ Enemy_InitNone_Bank4B:
     .byte   $2F, $F5, $09, $0B, $0D, $0F, $F5, $19, $11, $13, $15, $17, $1B, $F5, $31, $33; $AB7E
     .byte   $45, $47, $31, $33, $49, $4B, $35, $37, $52, $F5                ; $AB8E
 
+; ---------------------------------------------------------------------------
+; FallingBlockGenerator_Ai
+;
+; Every 16 frames, if a slot is free, drop a block (type 9) from the top of
+; the screen at a random X ($60 or more); none is dropped where there is a
+; ceiling.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 FallingBlockGenerator_Ai:
     lda     drawOffscreen+1         ; $AB98
     bne     loc_4_ABE8              ; $AB9A
@@ -2539,6 +2887,15 @@ loc_4_ABE4:
 loc_4_ABE8:
     rts                             ; $ABE8
 
+; ---------------------------------------------------------------------------
+; FallingBlock_Ai
+;
+; A falling block: falls; if it hits Link (hurting him) or is struck by the
+; sword, it shatters; when it lands it becomes a solid block in the area's
+; tile map (and on the screen).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 FallingBlock_Ai:
     lda     #$00                    ; $ABE9
     sta     enemyStunTimer,x        ; $ABEB
@@ -2637,6 +2994,13 @@ loc_4_AC1F:
     ldx     currentObject           ; $AC9F
     rts                             ; $ACA1
 
+; ---------------------------------------------------------------------------
+; SkullHead_Draw_Bank4B
+;
+; Draw a skull head (second palace group).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SkullHead_Draw_Bank4B:
     ldx     #$C0                    ; $ACA2
     lda     temp2                   ; $ACA4
@@ -2644,6 +3008,14 @@ SkullHead_Draw_Bank4B:
     sta     temp2                   ; $ACA8
     jmp     Sprite_DrawEnemyPairKeepX ; $ACAA
 
+; ---------------------------------------------------------------------------
+; SkullHead_Init_Bank4B
+;
+; Spawn routine of skull heads: $24 above Link, at the screen's side that he
+; faces, flying across (second palace group).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SkullHead_Init_Bank4B:
     lda     objY                    ; $ACAD
     sbc     #$24                    ; $ACAF
@@ -2675,6 +3047,14 @@ dat_4_ACD7:
 loc_4_ACD9:
     rts                             ; $ACD9
 
+; ---------------------------------------------------------------------------
+; SkullHead_Ai_Bank4B
+;
+; Skull head (second palace group): flies across in a wave; respawns when it
+; leaves the screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SkullHead_Ai_Bank4B:
     lda     drawOffscreen+1         ; $ACDA
     and     #$0C                    ; $ACDC
@@ -2702,6 +3082,14 @@ loc_4_AD01:
     jsr     Enemy_UpdateCommon      ; $AD07
     jmp     Enemy_HurtLinkOnContact ; $AD0A
 
+; ---------------------------------------------------------------------------
+; Projectile_Mace_Bank4B
+;
+; Projectile type 6 (Doomknocker's mace): flies out and turns back after a
+; while.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Mace_Bank4B:
     lda     ram_044C,x              ; $AD0D
     beq     loc_4_AD17              ; $AD10
@@ -2719,6 +3107,15 @@ loc_4_AD17:
     sta     ram_044C,x              ; $AD23
     jmp     loc_4_AD90              ; $AD26
 
+; ---------------------------------------------------------------------------
+; Projectile_CarockBeam
+;
+; Projectile type 9 (Wizzrobe's and Carock's beam): flies straight; once
+; sent back with the reflect spell, it damages its thrower (Carock can only
+; be hurt this way).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_CarockBeam:
     lda     ram_044C,x              ; $AD29
     bne     loc_4_AD90              ; $AD2C
@@ -2778,6 +3175,14 @@ loc_4_AD90:
     bpl     loc_4_ADB4              ; $AD92
 ; (code below not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Projectile_Fireball_Bank4B
+;
+; Projectile type 4: with a sound, flies straight until it hits the
+; background.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank4B:
     jsr     Projectile_PlaySound_Bank4 ; $AD94
     jsr     Projectile_HitsBg       ; $AD97
@@ -2785,15 +3190,37 @@ Projectile_Fireball_Bank4B:
     bcc     Projectile_MoveAndCheck_Bank4B ; $AD9C
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Projectile_Straight_Bank4B
+;
+; Projectile types 1 and 2: fly straight; removed near the bottom of the
+; screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Straight_Bank4B:
     lda     objY+7,x                ; $AD9E
     cmp     #$C5                    ; $ADA0
     bcc     Projectile_MoveAndCheck_Bank4B ; $ADA2
 
+; ---------------------------------------------------------------------------
+; Projectile_Spark_Bank4B
+;
+; Turn projectile x into a spark ($F2).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Spark_Bank4B:
     lda     #$F2                    ; $ADA4
     bne     loc_4_ADD4              ; $ADA6
 
+; ---------------------------------------------------------------------------
+; Projectile_Rock_Bank4B
+;
+; Projectile types 3 and 5: fly straight, falling once deflected.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_Rock_Bank4B:
     ldy     #$02                    ; $ADA8
     lda     objXVelocity+7,x        ; $ADAA
@@ -2813,6 +3240,14 @@ loc_4_ADB9:
     inc     objYVelocity+7,x        ; $ADB9
     inc     objYVelocity+7,x        ; $ADBC
 
+; ---------------------------------------------------------------------------
+; Projectile_MoveAndCheck_Bank4B
+;
+; Move projectile x, remove it off screen (except type 8), draw it and test
+; it against Link.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank4B:
     jsr     Projectile_Move         ; $ADBF
     lda     drawOffscreen+2         ; $ADC2
@@ -2914,6 +3349,15 @@ dat_4_AE4A:
 dat_4_AE4C:
     .byte   $FF, $20, $E0                                                   ; $AE4C
 
+; ---------------------------------------------------------------------------
+; Wizrobe_Ai
+;
+; Wizzrobe (second palace group): appears at a random place, blinks, fires a
+; beam (Wizrobe_FireBeam) at $B0 of its cycle, stays for a while, then
+; vanishes.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Wizrobe_Ai:
     lda     #$00                    ; $AE4F
     sta     objState+1,x            ; $AE51
@@ -2942,6 +3386,14 @@ loc_4_AE6D:
     bcc     loc_4_AEBA              ; $AE78
     rts                             ; $AE7A
 
+; ---------------------------------------------------------------------------
+; Carock_Ai
+;
+; Carock (palace 4 boss): appears and vanishes like a Wizzrobe, firing
+; beams; his hit points are shown (Boss_DrawHpBar).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Carock_Ai:
     jsr     Boss_UpdateIntro_Bank4B ; $AE7B
     jsr     Boss_CheckDeath_Bank4B  ; $AE7E
@@ -2997,6 +3449,13 @@ loc_4_AECC:
     sta     objXHi+1,x              ; $AED0
     rts                             ; $AED2
 
+; ---------------------------------------------------------------------------
+; Wizrobe_FireBeam
+;
+; Fire a beam (projectile type 9) from enemy x in its facing.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Wizrobe_FireBeam:
     sta     temp0                   ; $AED3
     lda     drawOffscreen+1         ; $AED5
@@ -3028,6 +3487,13 @@ Wizrobe_FireBeam:
 loc_4_AF11:
     rts                             ; $AF11
 
+; ---------------------------------------------------------------------------
+; RebonackUnhorsed_Draw
+;
+; Draw the unhorsed Rebonack (as an Iron Knuckle).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 RebonackUnhorsed_Draw:
     ldy     #$80                    ; $AF12
     sty     objOamOffset+1,x        ; $AF14
@@ -3043,6 +3509,13 @@ dat_4_AF21 := * + 2
 ; (unreferenced: $AF24-$AF25, 2 bytes)
     .byte   $40, $00                                                        ; $AF24
 
+; ---------------------------------------------------------------------------
+; DoomKnocker_Draw
+;
+; Draw a Doomknocker and its mace.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DoomKnocker_Draw:
     lda     objCollision+1,x        ; $AF26
     ldx     #$22                    ; $AF28
@@ -3069,10 +3542,24 @@ loc_4_AF36:
     ldx     #$2A                    ; $AF50
     jmp     Sprite_DrawEnemyPairKeepX ; $AF52
 
+; ---------------------------------------------------------------------------
+; SlowBubble_Init_Bank4B
+;
+; Spawn routine of slow bubbles (second palace group).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SlowBubble_Init_Bank4B:
     lda     #$F0                    ; $AF55
     bne     loc_4_AF5B              ; $AF57
 
+; ---------------------------------------------------------------------------
+; FastBubble_Init_Bank4B
+;
+; Spawn routine of fast bubbles (second palace group).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 FastBubble_Init_Bank4B:
     lda     #$E0                    ; $AF59
 
@@ -3081,6 +3568,14 @@ loc_4_AF5B:
     sta     objYVelocity+1,x        ; $AF5D
     rts                             ; $AF60
 
+; ---------------------------------------------------------------------------
+; HiddenJarOrIronknuckle_Ai
+;
+; Hidden object (second palace group): when struck by the sword, becomes a
+; red jar, or half the time a red Iron Knuckle (24 hit points).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HiddenJarOrIronknuckle_Ai:
     lda     drawOffscreen+1         ; $AF61
     bne     loc_4_AF90              ; $AF63
@@ -3110,6 +3605,14 @@ loc_4_AF83:
 loc_4_AF90:
     rts                             ; $AF90
 
+; ---------------------------------------------------------------------------
+; Rebonack_Init
+;
+; Spawn routine of Rebonack: only while his area flag is set; at ($20 on
+; page 2, Y $AC).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Rebonack_Init:
     ldx     #$01                    ; $AF91
     jsr     Area_TestFlag           ; $AF93
@@ -3149,6 +3652,15 @@ dat_4_AFB8:
 dat_4_AFB9:
     .byte   $FF, $30, $D0                                                   ; $AFB9
 
+; ---------------------------------------------------------------------------
+; Rebonack_Ai
+;
+; Rebonack (palace 3 boss) on his horse: bobs and charges back and forth at
+; Link; below 36 hit points he is knocked off (the unhorsed Rebonack, type
+; $0A, appears in slot 4).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Rebonack_Ai:
     lda     scrollFrozen            ; $AFBC
     beq     loc_4_AFC6              ; $AFBF
@@ -3295,6 +3807,14 @@ loc_4_B0A9:
 dat_4_B0AA:
     .byte   $08, $F8, $08                                                   ; $B0AA
 
+; ---------------------------------------------------------------------------
+; DoomKnocker_Ai
+;
+; Doomknocker: paces, jumps every 256 frames, and throws its mace
+; (projectile type 6), which comes back.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 DoomKnocker_Ai:
     lda     frameCounter            ; $B0AD
     bne     loc_4_B0B6              ; $B0AF
@@ -3341,12 +3861,28 @@ loc_4_B0D7:
 loc_4_B0FB:
     jmp     Enemy_FaceLink          ; $B0FB
 
+; ---------------------------------------------------------------------------
+; Barba_Init
+;
+; Spawn routine of Barba: start hidden below the screen (Y $F0); then
+; Carock_Init.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barba_Init:
     lda     #$00                    ; $B0FE
     sta     ram_0499                ; $B100
     lda     #$F0                    ; $B103
     sta     objY+1,x                ; $B105
 
+; ---------------------------------------------------------------------------
+; Carock_Init
+;
+; Spawn routine of bosses in the second palace group: only while their area
+; flag is set.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Carock_Init:
     ldx     #$01                    ; $B107
     jsr     Area_TestFlag           ; $B109
@@ -3368,6 +3904,14 @@ dat_4_B117:
 ; (unreferenced: $B11D-$B11E, 2 bytes)
     .byte   $18, $B8                                                        ; $B11D
 
+; ---------------------------------------------------------------------------
+; Barba_Ai
+;
+; Barba (palace 6 boss), by ram_0499: Barba_Wait, Barba_Rise, Barba_Breathe,
+; Barba_Sink.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barba_Ai:
     jsr     Boss_UpdateIntro_Bank4B ; $B11F
     jsr     sub_4_B1DE              ; $B122
@@ -3384,6 +3928,13 @@ Barba_Ai:
     .word   Barba_Breathe           ; $B13C
     .word   Barba_Sink              ; $B13E  (not observed)
 
+; ---------------------------------------------------------------------------
+; Barba_Wait
+;
+; Wait, then pick one of eight X positions to rise at.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barba_Wait:
     lda     timerFast+TIMER_ENEMY,x ; $B140
     bne     loc_4_B153              ; $B143
@@ -3397,6 +3948,13 @@ Barba_Wait:
 loc_4_B153:
     rts                             ; $B153
 
+; ---------------------------------------------------------------------------
+; Barba_Rise
+;
+; Rise out of the lava (3 pixels a frame) to Y $80.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barba_Rise:
     lda     objY+1,x                ; $B154
     cmp     #$80                    ; $B156
@@ -3412,6 +3970,14 @@ loc_4_B161:
     inc     ram_0499                ; $B166
     rts                             ; $B169
 
+; ---------------------------------------------------------------------------
+; Barba_Breathe
+;
+; Bob and breathe fireballs (projectile type 4, at four times the speed) at
+; Link for a while.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barba_Breathe:
     lda     timerFast+TIMER_ENEMY,x ; $B16A
     beq     loc_4_B1BF              ; $B16D
@@ -3467,6 +4033,13 @@ loc_4_B1BF:
     inc     ram_0499                ; $B1C4
     rts                             ; $B1C7
 
+; ---------------------------------------------------------------------------
+; Barba_Sink
+;
+; Sink back into the lava, then wait $60 frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barba_Sink:
     lda     objY+1,x                ; $B1C8
     cmp     #$F0                    ; $B1CA
@@ -3488,10 +4061,25 @@ sub_4_B1DE:
     asl     a                       ; $B1E0
     bne     Boss_DrawAndCheck_Bank4B ; $B1E1
 
+; ---------------------------------------------------------------------------
+; Boss_DrawAndCheck_Bank4B
+;
+; Draw the boss and test it against Link, then Boss_CheckDeath_Bank4B.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_DrawAndCheck_Bank4B:
     jsr     Enemy_Draw              ; $B1E3
     jsr     Enemy_HurtLinkOnContact ; $B1E6
 
+; ---------------------------------------------------------------------------
+; Boss_CheckDeath_Bank4B
+;
+; When the boss has been killed, mark it dying (its hitbox entry = $FF) and
+; stun it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_CheckDeath_Bank4B:
     lda     enemyType,x             ; $B1E9
     cmp     #$22                    ; $B1EB
@@ -3515,6 +4103,14 @@ loc_4_B1F6:
 loc_4_B20C:
     rts                             ; $B20C
 
+; ---------------------------------------------------------------------------
+; Boss_UpdateIntro_Bank4B
+;
+; Freeze the scroll and start the boss music when Link reaches the boss;
+; when the boss has died, finish it off.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_UpdateIntro_Bank4B:
     lda     scrollFrozen            ; $B20D
     bne     loc_4_B225              ; $B210
@@ -3548,6 +4144,13 @@ loc_4_B23C:
 loc_4_B23E:
     rts                             ; $B23E
 
+; ---------------------------------------------------------------------------
+; RebonackUnhorsed_Ai
+;
+; The unhorsed Rebonack: fights like an Iron Knuckle (Ironknuckle_Ai).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 RebonackUnhorsed_Ai:
     ldy     enemyType,x             ; $B23F
     lda     sramEnemyHitbox,y       ; $B241
@@ -3589,6 +4192,13 @@ dat_4_B288:
 dat_4_B28C:
     .byte   $88, $76, $64, $76                                              ; $B28C
 
+; ---------------------------------------------------------------------------
+; Barba_Draw
+;
+; Draw Barba's head and neck.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Barba_Draw:
     lda     temp0                   ; $B290
     sta     temp13                  ; $B292
@@ -3701,6 +4311,13 @@ loc_4_B304:
 loc_4_B339:
     jmp     Sprite_DrawEnemyPairKeepX ; $B339
 
+; ---------------------------------------------------------------------------
+; Rathead_Init
+;
+; Spawn routine of Ratheads: double the X speed.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Rathead_Init:
     asl     objXVelocity+1,x        ; $B33C
 
@@ -3708,6 +4325,13 @@ dat_4_B33E:
     rts                             ; $B33E
     .byte   $0C, $F4, $14, $EC                                              ; $B33F
 
+; ---------------------------------------------------------------------------
+; RatheadGenerator_Ai
+;
+; Every 128 frames, if a slot is free, spawn a Rathead on the floor.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 RatheadGenerator_Ai:
     jsr     WolfHeadGenerator_Ai    ; $B343
     bcs     loc_4_B361              ; $B346
@@ -3727,6 +4351,13 @@ RatheadGenerator_Ai:
 loc_4_B361:
     rts                             ; $B361
 
+; ---------------------------------------------------------------------------
+; Rathead_Ai
+;
+; Rathead: hops along the floor, turning at walls.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Rathead_Ai:
     jsr     Enemy_UpdateWithBg      ; $B362
     jsr     Enemy_HurtLinkOnContact ; $B365
@@ -3750,6 +4381,13 @@ loc_4_B37B:
 loc_4_B387:
     jmp     Enemy_MoveX             ; $B387
 
+; ---------------------------------------------------------------------------
+; Rathead_Draw
+;
+; Draw a Rathead.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Rathead_Draw:
     inc     temp0                   ; $B38A
     lda     enemyAiState,x          ; $B38C
@@ -3770,6 +4408,13 @@ dat_4_B398:
     .byte   $02, $04, $06                                                   ; $B3A1
     .byte   $08, $06, $04, $02                                              ; $B3A4
 
+; ---------------------------------------------------------------------------
+; Rebonack_Draw
+;
+; Draw Rebonack on his horse.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Rebonack_Draw:
     lda     enemyAiState,x          ; $B3A8
     lsr     a                       ; $B3AA
@@ -3857,6 +4502,13 @@ loc_4_B424:
     sta     objOamOffset+1,x        ; $B429
     rts                             ; $B42B
 
+; ---------------------------------------------------------------------------
+; Wizrobe_Draw
+;
+; Draw a Wizzrobe.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Wizrobe_Draw:
     lda     enemyAiState,x          ; $B42C
     ldx     #$1E                    ; $B42E
@@ -3867,6 +4519,13 @@ Wizrobe_Draw:
 loc_4_B436:
     jmp     Sprite_DrawEnemyPair3_Bank4 ; $B436
 
+; ---------------------------------------------------------------------------
+; Carock_Draw
+;
+; Draw Carock.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Carock_Draw:
     lda     temp1                   ; $B439
     clc                             ; $B43B
@@ -3905,10 +4564,24 @@ loc_4_B459:
 loc_4_B474:
     jsr     Sprite_DrawEnemyPair    ; $B474
 
+; ---------------------------------------------------------------------------
+; Sprite_DrawEnemyPair3_Bank4
+;
+; Draw two sprite pairs (Sprite_DrawEnemyPair, Sprite_DrawEnemyPairKeepX).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Sprite_DrawEnemyPair3_Bank4:
     jsr     Sprite_DrawEnemyPair    ; $B477
     jmp     Sprite_DrawEnemyPairKeepX ; $B47A
 
+; ---------------------------------------------------------------------------
+; Flame_Init
+;
+; Spawn routine of flames: 4 pixels right.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Flame_Init:
     lda     objX+1,x                ; $B47D
     clc                             ; $B47F
@@ -3916,10 +4589,24 @@ Flame_Init:
     sta     objX+1,x                ; $B482
     rts                             ; $B484
 
+; ---------------------------------------------------------------------------
+; Flame_Ai
+;
+; Flame: falls to the floor (Item_Fall) and burns; touching it hurts.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Flame_Ai:
     jsr     Item_Fall               ; $B485
     jmp     Enemy_HurtLinkOnContact ; $B488
 
+; ---------------------------------------------------------------------------
+; Flame_Draw
+;
+; Draw a flame.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Flame_Draw:
     lda     drawOffscreen+1         ; $B48B
     and     #$08                    ; $B48D
@@ -3942,6 +4629,14 @@ Flame_Draw:
 loc_4_B4AC:
     rts                             ; $B4AC
 
+; ---------------------------------------------------------------------------
+; Gooma_Ai
+;
+; Gooma (palace 5 boss): paces toward and away from Link and swings his ball
+; and chain (Gooma_Attack); his hit points are shown.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Gooma_Ai:
     lda     #$06                    ; $B4AD
     sta     enemyVulnerability,x    ; $B4AF
@@ -4034,6 +4729,13 @@ loc_4_B522:
 loc_4_B53A:
     rts                             ; $B53A
 
+; ---------------------------------------------------------------------------
+; Gooma_Attack
+;
+; Advance Gooma's swing; at its end, a long swing.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Gooma_Attack:
     lda     objState+1,x            ; $B53B
     beq     loc_4_B55C              ; $B53D
@@ -4054,6 +4756,13 @@ loc_4_B551:
     lda     #$0F                    ; $B555
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Gooma_StartAttack
+;
+; Start a swing of Gooma's ball and chain lasting a frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Gooma_StartAttack:
     sta     timerFast+TIMER_ENEMY,x ; $B557
     inc     objState+1,x            ; $B55A
@@ -4090,6 +4799,13 @@ dat_4_B59E:
 dat_4_B5A6:
     .byte   $04, $FC, $F8, $FC, $04, $0C, $10, $0C                          ; $B5A6
 
+; ---------------------------------------------------------------------------
+; Gooma_Draw
+;
+; Draw Gooma and his ball and chain.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Gooma_Draw:
     lda     objY+1,x                ; $B5AE
     sta     temp0                   ; $B5B0
@@ -4310,6 +5026,13 @@ loc_4_B728:
     sta     objOamOffset+1,x        ; $B72A
     rts                             ; $B72C
 
+; ---------------------------------------------------------------------------
+; Gooma_DrawPart
+;
+; Draw part of Gooma.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Gooma_DrawPart:
     lda     dat_4_B55D,x            ; $B72D
     sta     oamBuffer+1,y           ; $B730
@@ -4379,6 +5102,13 @@ loc_4_B787:
 ; (unreferenced: $B7A8-$B7AF, 8 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                          ; $B7A8
 
+; ---------------------------------------------------------------------------
+; Bubble_Draw
+;
+; Draw a bubble.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Bubble_Draw:
     lda     #$02                    ; $B7B0
     sta     temp2                   ; $B7B2
@@ -4396,6 +5126,15 @@ dat_4_B7C0:
 dat_4_B7C2:
     .byte   $FF, $0C, $F4                                                   ; $B7C2
 
+; ---------------------------------------------------------------------------
+; Mago_Ai
+;
+; Wizzrobe (first palace group): appears at a random place, blinks, casts a
+; flame (projectile type 7) along the floor, stays for a while, then
+; vanishes.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Mago_Ai:
     jsr     Enemy_FaceLink          ; $B7C5
     dec     enemyAiState,x          ; $B7C8
@@ -4457,6 +5196,13 @@ loc_4_B81E:
     sta     enemyStunTimer,x        ; $B82F
     rts                             ; $B832
 
+; ---------------------------------------------------------------------------
+; SkullHead_Draw
+;
+; Draw a skull head.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SkullHead_Draw:
     ldx     #$82                    ; $B833
     lda     temp2                   ; $B835
@@ -4464,6 +5210,13 @@ SkullHead_Draw:
     sta     temp2                   ; $B839
     jmp     Sprite_DrawEnemyPairKeepX ; $B83B
 
+; ---------------------------------------------------------------------------
+; HiddenJar_Ai
+;
+; Hidden object: when struck by the sword, becomes a red jar.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HiddenJar_Ai:
     lda     drawOffscreen+1         ; $B83E
     bne     loc_4_B85E              ; $B840
@@ -4487,12 +5240,27 @@ loc_4_B85E:
 dat_4_B85F:
     .byte   $08, $F8                                                        ; $B85F
 
+; ---------------------------------------------------------------------------
+; WolfHeadGenerator_Ai
+;
+; Every 128 frames, spawn a wolf head (Enemy_SpawnFlyer_Bank4).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 WolfHeadGenerator_Ai:
     lda     frameCounter            ; $B861
     asl     a                       ; $B863
     ora     ram_05C9                ; $B864
     bne     loc_4_B872              ; $B867
 
+; ---------------------------------------------------------------------------
+; Enemy_SpawnFlyer_Bank4
+;
+; Spawn a wolf head ($1C, 2 hit points) at Link's height at the left or
+; right edge, flying inward; carry set if no slot was free.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_SpawnFlyer_Bank4:
     ldx     #$05                    ; $B869
 
@@ -4545,6 +5313,14 @@ loc_4_B896:
     ldx     currentObject           ; $B8B8
     rts                             ; $B8BA
 
+; ---------------------------------------------------------------------------
+; WolfHead_Ai
+;
+; Wolf head: flies across, weaving up and down every 64 frames, and fires an
+; energy ball (projectile type 1) at Link every 64 frames when facing him.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 WolfHead_Ai:
     jsr     Enemy_UpdateCommon      ; $B8BB
     jsr     Enemy_HurtLinkOnContact ; $B8BE
@@ -4586,6 +5362,14 @@ loc_4_B8F0:
     sta     objYVelocity+1,x        ; $B8F6
     jmp     Enemy_MoveY             ; $B8F9
 
+; ---------------------------------------------------------------------------
+; EnergyBallShooter_Init
+;
+; Spawn routine of energy ball shooters: facing by type ($16 right, $17
+; left).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 EnergyBallShooter_Init:
     lda     enemyType,x             ; $B8FC
     sec                             ; $B8FE
@@ -4593,10 +5377,25 @@ EnergyBallShooter_Init:
     sta     objFacing+1,x           ; $B901
     rts                             ; $B903
 
+; ---------------------------------------------------------------------------
+; WolfHead_Draw
+;
+; Draw a wolf head.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 WolfHead_Draw:
     ldx     #$16                    ; $B904
     jmp     loc_4_9EBA              ; $B906
 
+; ---------------------------------------------------------------------------
+; OrangeMoa_Ai
+;
+; Orange Moa: flies in from the side Link faces, rises away while drifting,
+; and drops flames (projectile type 7) as it passes.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 OrangeMoa_Ai:
     lda     enemyAiState,x          ; $B909
     and     #$03                    ; $B90B
@@ -4697,6 +5496,13 @@ loc_4_B99C:
     ora     objCollision+1,x        ; $B9A0
     bne     loc_4_B9BE              ; $B9A2
 
+; ---------------------------------------------------------------------------
+; Enemy_DropFlame_Bank4
+;
+; Drop a flame (projectile type 7, no speed) from enemy x.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_DropFlame_Bank4:
     jsr     Enemy_FireProjectile    ; $B9A4
     bcs     loc_4_B9BE              ; $B9A7
@@ -4712,6 +5518,13 @@ Enemy_DropFlame_Bank4:
 loc_4_B9BE:
     rts                             ; $B9BE
 
+; ---------------------------------------------------------------------------
+; AcidDripper_Ai
+;
+; Acid dripper: every 64 frames, drip acid (projectile type 8).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 AcidDripper_Ai:
     jsr     Enemy_Draw              ; $B9BF
     inc     enemyAiState,x          ; $B9C2
@@ -4738,6 +5551,13 @@ AcidDripper_Ai:
 loc_4_B9F3:
     rts                             ; $B9F3
 
+; ---------------------------------------------------------------------------
+; SkullHead_Init
+;
+; Spawn routine of skull heads: $20 above Link, at the side he faces.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SkullHead_Init:
     lda     objY                    ; $B9F4
     sbc     #$20                    ; $B9F6
@@ -4766,6 +5586,13 @@ dat_4_BA1C:
 dat_4_BA1E:
     .byte   $30, $D0                                                        ; $BA1E
 
+; ---------------------------------------------------------------------------
+; SkullHead_Ai
+;
+; Skull head: flies across in a wave; respawns when it leaves the screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 SkullHead_Ai:
     lda     drawOffscreen+1         ; $BA20
     and     #$0C                    ; $BA22
@@ -4799,6 +5626,14 @@ loc_4_BA53:
 dat_4_BA54:
     .byte   $08, $F8, $08                                                   ; $BA54
 
+; ---------------------------------------------------------------------------
+; HammerThrower_Ai
+;
+; Hammer thrower: paces, jumps every 256 frames, swings, and throws a hammer
+; in a high arc (projectile type 6).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HammerThrower_Ai:
     lda     frameCounter            ; $BA57
     bne     loc_4_BA60              ; $BA59
@@ -4862,6 +5697,15 @@ loc_4_BAC0:
     .byte   $F0                                                             ; $BAC1
     .byte   $10                                                             ; $BAC2
 
+; ---------------------------------------------------------------------------
+; Helmethead_Ai
+;
+; Helmethead (palace 2 boss; Gooma_Ai in palace 5): paces (Boss_Pace), fires
+; an energy ball every 128 frames; each hit on his head knocks off a helmet
+; (HelmetheadHead_Ai), up to two.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Helmethead_Ai:
     lda     currentRegion           ; $BAC3
     beq     loc_4_BACB              ; $BAC6
@@ -4946,6 +5790,14 @@ loc_4_BB55:
 loc_4_BB5E:
     rts                             ; $BB5E
 
+; ---------------------------------------------------------------------------
+; HorseHead_Ai
+;
+; Horsehead (palace 1 boss): paces (Boss_Pace) and swings his mace
+; (HorseHead_Attack); his hit points are shown.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HorseHead_Ai:
     jsr     Boss_UpdateIntro        ; $BB5F
     jsr     Boss_UpdateCommon       ; $BB62
@@ -4957,6 +5809,14 @@ HorseHead_Ai:
 loc_4_BB6F:
     lda     #$04                    ; $BB6F
 
+; ---------------------------------------------------------------------------
+; Boss_Pace
+;
+; Pace toward and away from Link by enemyAiState, attacking when facing him;
+; draw the hit point bar (a hit points per block).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_Pace:
     jsr     Boss_DrawHpBar          ; $BB71
     lda     objFacing+1,x           ; $BB74
@@ -5069,6 +5929,13 @@ loc_4_BBF8:
 loc_4_BC10:
     rts                             ; $BC10
 
+; ---------------------------------------------------------------------------
+; HorseHead_Attack
+;
+; Advance Horsehead's mace swing.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HorseHead_Attack:
     lda     objState+1,x            ; $BC11
     beq     loc_4_BC2A              ; $BC13
@@ -5080,6 +5947,13 @@ HorseHead_Attack:
     dey                             ; $BC20
     sty     objState+1,x            ; $BC21
 
+; ---------------------------------------------------------------------------
+; Enemy_StartSwing
+;
+; Start a sword or mace swing: next objState, 15 frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy_StartSwing:
     inc     objState+1,x            ; $BC23
     lda     #$0F                    ; $BC25
@@ -5092,6 +5966,14 @@ loc_4_BC2A:
     .byte   $B0, $0B, $EE, $DE, $05, $AD, $DE, $05, $29, $40, $D0, $01, $C8, $B9, $54, $BA; $BC3B
     .byte   $95, $71, $60                                                   ; $BC4B
 
+; ---------------------------------------------------------------------------
+; Boss_UpdateCommon
+;
+; Draw the boss, apply knockback, test it against Link and his projectiles;
+; when it has been killed, mark it dying and skip the rest of its AI.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_UpdateCommon:
     jsr     Enemy_Draw              ; $BC4E
     jsr     Enemy_KnockBackOrWalk_Bank4 ; $BC51
@@ -5126,6 +6008,14 @@ dat_4_BC7A:
 dat_4_BC7C:
     .byte   $07, $11                                                        ; $BC7C
 
+; ---------------------------------------------------------------------------
+; Helmethead_Init
+;
+; Spawn routine of Helmethead/Gooma: Boss_Init, then hit points, attributes,
+; damage and hitbox by region (Helmethead or Gooma).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Helmethead_Init:
     jsr     Boss_Init               ; $BC7E
     ldy     #$00                    ; $BC81
@@ -5144,6 +6034,14 @@ loc_4_BC89:
     sta     sramEnemyHitbox+33      ; $BC9D
     rts                             ; $BCA0
 
+; ---------------------------------------------------------------------------
+; Boss_Init
+;
+; Spawn routine of bosses: only while their area flag is set; vulnerable
+; part 2, hitbox 7.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_Init:
     ldx     #$01                    ; $BCA1
     jsr     Area_TestFlag           ; $BCA3
@@ -5163,6 +6061,13 @@ loc_4_BCAF:
     sta     sramEnemyHitbox,y       ; $BCB8
     rts                             ; $BCBB
 
+; ---------------------------------------------------------------------------
+; Tinsuit_Ai
+;
+; Tinsuit: hops along the floor (Y speed -$10 on landing), turning at walls.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Tinsuit_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $BCBC
     jsr     Enemy_UpdateWithBg      ; $BCBF
@@ -5198,6 +6103,14 @@ dat_4_BCE8:
 dat_4_BCEC:
     .byte   $E0, $F0, $F8                                                   ; $BCEC
 
+; ---------------------------------------------------------------------------
+; HelmetheadHead_Ai
+;
+; A helmet knocked off Helmethead: bounces about and fires energy balls at
+; Link every 128 frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HelmetheadHead_Ai:
     jsr     Enemy_Draw              ; $BCEF
     jsr     Enemy_CheckLinkContact  ; $BCF2
@@ -5277,6 +6190,13 @@ loc_4_BD72:
     .byte   $FC                                                             ; $BD73
     .byte   $04                                                             ; $BD74
 
+; ---------------------------------------------------------------------------
+; Helmethead_Draw
+;
+; Draw Helmethead.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Helmethead_Draw:
     lda     currentRegion           ; $BD75
     beq     loc_4_BD7D              ; $BD78
@@ -5332,6 +6252,13 @@ loc_4_BDCD:
 dat_4_BDCE:
     .byte   $68, $80                                                        ; $BDCE
 
+; ---------------------------------------------------------------------------
+; HelmetheadHead_Draw
+;
+; Draw a flying helmet.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 HelmetheadHead_Draw:
     ldy     objState+1,x            ; $BDD0
     lda     dat_4_BDCE,y            ; $BDD2
@@ -5352,6 +6279,13 @@ dat_4_BDEA := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $BDE8
     .byte   $10, $F0                                                        ; $BDEB
 
+; ---------------------------------------------------------------------------
+; Stalfos_Draw
+;
+; Draw a Stalfos and its sword.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Stalfos_Draw:
     tya                             ; $BDED
     pha                             ; $BDEE
@@ -5439,6 +6373,13 @@ loc_4_BE57:
 loc_4_BE7A:
     rts                             ; $BE7A
 
+; ---------------------------------------------------------------------------
+; Mago_Draw
+;
+; Draw a Wizzrobe (first palace group).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Mago_Draw:
     lda     enemyAiState,x          ; $BE7B
     ldx     #$1A                    ; $BE7D
@@ -5450,6 +6391,15 @@ loc_4_BE85:
     jsr     Sprite_DrawEnemyPair    ; $BE85
     jmp     Sprite_DrawEnemyPairKeepX ; $BE88
 
+; ---------------------------------------------------------------------------
+; Boss_UpdateIntro
+;
+; Freeze the scroll and start the boss music when Link reaches page 1 of the
+; boss room; when the boss has died, destroy the other enemies and stop the
+; music.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Boss_UpdateIntro:
     lda     scrollFrozen            ; $BE8B
     bne     loc_4_BE9C              ; $BE8E
@@ -5519,6 +6469,13 @@ loc_4_BEF0:
 loc_4_BEF5:
     rts                             ; $BEF5
 
+; ---------------------------------------------------------------------------
+; Projectile_PlaySound_Bank4
+;
+; Play sound effect $40 on channel 1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Projectile_PlaySound_Bank4:
     lda     sfxRequest+1            ; $BEF6
     ora     #$40                    ; $BEF8

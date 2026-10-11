@@ -982,22 +982,27 @@ sub_1_93AC:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93EC
     .byte   $FF, $FF, $FF, $FF                                              ; $93FC
 
+; Routine of each projectile type (1-11), copied to sramProjectilePtrs.
 ProjectilePtrs_Bank1:
     .word   Projectile_Straight_Bank1, Projectile_Bubble_Bank1, Projectile_Rock_Bank1, Projectile_Fireball_Bank1 ; $9400
     .word   Projectile_Falling_Bank1, Projectile_Boomerang_Bank1, Projectile_Straight_Bank1, $0000 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
+; Unused byte between the enemy definition tables.
 ProjectileUnused_Bank1:
     .byte   $00                                                             ; $9416
 
+; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
 ProjectileFlags_Bank1:
     .byte   $00, $00, $80, $41, $81, $49, $42, $93, $00, $00                ; $9417
 
+; Hit points of each enemy type (sramEnemyHp).
 EnemyHp_Bank1:
     .byte   $00, $00, $00, $03, $03, $03, $08, $03, $00, $00, $08, $02      ; $9421
     .byte   $02, $03, $04, $03, $03, $04, $04, $00, $04, $0C, $12, $12      ; $942D
     .byte   $18, $0C, $0E, $12, $04, $03, $03, $04, $08, $00, $02, $00      ; $9439
 
+; Spawn routine of each enemy type (sramEnemyInitPtrs).
 EnemyInitPtrs_Bank1:
     .word   Enemy_InitNone_Bank1, RedJar_Init_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $9445
     .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $944D
@@ -1009,6 +1014,7 @@ EnemyInitPtrs_Bank1:
     .word   Enemy_InitNone_Bank1, Generator_Init_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $947D
     .word   Geldarm_Init, Generator_Init_Bank1, Enemy_InitNone_Bank1, $0000 ; $9485
 
+; Routine run every frame by each enemy type (sramEnemyAiPtrs).
 EnemyAiPtrs_Bank1:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
     .word   Bot_Ai, Bit_Ai, Moa_Ai, Ache_Ai ; $9495
@@ -1020,26 +1026,31 @@ EnemyAiPtrs_Bank1:
     .word   Lowder_Ai, MobyGenerator_Ai, Moby_Ai, Megmet_Ai ; $94C5
     .word   Geldarm_Ai, DumbMoblinGenerator_Ai, DumbMoblin_Ai, $0000 ; $94CD
 
+; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
 EnemyAttr_Bank1:
     .byte   $40, $40, $40, $C2, $C1, $81, $94, $C2, $80, $90, $84, $10      ; $94D5
     .byte   $10, $81, $C2, $02, $92, $84, $84, $40, $44, $85, $C5, $48      ; $94E1
     .byte   $89, $45, $85, $C6, $C2, $00, $51, $C3, $83, $00, $50, $02      ; $94ED
 
+; Drop group, flags and damage class of each enemy type (sramEnemyDamage; see docs/entities).
 EnemyDamage_Bank1:
     .byte   $30, $30, $30, $41, $40, $40, $42, $40, $31, $31, $42, $30      ; $94F9
     .byte   $30, $40, $40, $31, $41, $41, $41, $30, $41, $41, $41, $A2      ; $9505
     .byte   $A2, $61, $61, $A1, $40, $30, $00, $41, $51, $30, $40, $00      ; $9511
 
+; Hitbox of each enemy type (sramEnemyHitbox).
 EnemyHitbox_Bank1:
     .byte   $0F, $0F, $04, $02, $01, $01, $01, $01, $01, $01, $80, $01      ; $951D
     .byte   $01, $01, $01, $01, $01, $01, $01, $03, $80, $80, $80, $80      ; $9529
     .byte   $80, $80, $80, $80, $01, $01, $01, $01, $85, $00, $80, $05      ; $9535
 
+; Flags and collision probe set of each enemy type (sramEnemyFlags; see docs/entities).
 EnemyFlags_Bank1:
     .byte   $96, $86, $96, $46, $46, $46, $06, $40, $96, $06, $40, $90      ; $9541
     .byte   $90, $06, $06, $90, $06, $06, $06, $90, $00, $00, $00, $00      ; $954D
     .byte   $00, $00, $00, $00, $06, $96, $06, $06, $00, $00, $00, $00      ; $9559
 
+; Routine that draws each enemy type (sramEnemyDrawPtrs).
 EnemyDrawPtrs_Bank1:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
     .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
