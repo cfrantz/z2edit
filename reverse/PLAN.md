@@ -167,6 +167,13 @@ count.
 - Shared services: RNG, math helpers, object/entity slot management,
   collision, physics, HUD.
 
+Status (2026-10-11): every subroutine entry point in banks 0 and 7 is
+named, with headers; many names are provisional.  Documented in
+`docs/architecture/` and `docs/engine/` (Link, enemies, the side view
+frame, areas).  Remaining: confirm provisional names, turn internal
+`loc_` labels into local labels as routines are documented in full, and
+check documented behavior against traces.
+
 ### Phase 4: Subsystems
 
 Each is a self-contained work area; order is flexible after Phase 3.
