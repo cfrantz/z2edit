@@ -235,12 +235,12 @@ loc_4_8226:
     rts                             ; $823D
 
 loc_4_823E:
-    lda     ram_010A                ; $823E
+    lda     areaBuildColumn         ; $823E
     sta     elevatorPos             ; $8241
     rts                             ; $8244
 
 loc_4_8245:
-    lda     ram_010A                ; $8245
+    lda     areaBuildColumn         ; $8245
     sta     lockedDoorPos           ; $8248
     rts                             ; $824B
 ; (unreferenced: $824C-$8258, 13 bytes)

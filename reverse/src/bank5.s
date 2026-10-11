@@ -242,13 +242,13 @@ loc_5_8237:
     rts                             ; $824E
 
 loc_5_824F:
-    lda     ram_010A                ; $824F
+    lda     areaBuildColumn         ; $824F
     sta     elevatorPos             ; $8252
     rts                             ; $8255
 ; (code below not executed in the test movies)
 
 loc_5_8256:
-    lda     ram_010A                ; $8256
+    lda     areaBuildColumn         ; $8256
     sta     lockedDoorPos           ; $8259
     rts                             ; $825C
 ; (end of code not executed in the test movies)

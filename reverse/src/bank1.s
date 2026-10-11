@@ -316,13 +316,13 @@ loc_1_82A2:
     rts                             ; $82B9
 
 loc_1_82BA:
-    lda     ram_010A                ; $82BA
+    lda     areaBuildColumn         ; $82BA
     sta     elevatorPos             ; $82BD
     rts                             ; $82C0
 ; (code below not executed in the test movies)
 
 loc_1_82C1:
-    lda     ram_010A                ; $82C1
+    lda     areaBuildColumn         ; $82C1
     sta     lockedDoorPos           ; $82C4
     rts                             ; $82C7
 

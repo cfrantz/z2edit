@@ -318,12 +318,12 @@ loc_2_82A2:
 ; (code below not executed in the test movies)
 
 loc_2_82BA:
-    lda     ram_010A                ; $82BA
+    lda     areaBuildColumn         ; $82BA
     sta     elevatorPos             ; $82BD
     rts                             ; $82C0
 
 loc_2_82C1:
-    lda     ram_010A                ; $82C1
+    lda     areaBuildColumn         ; $82C1
     sta     lockedDoorPos           ; $82C4
     rts                             ; $82C7
 

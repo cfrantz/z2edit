@@ -959,7 +959,7 @@ loc_C579:
     sta     ram_07AF                ; $C58F
     lda     #$00                    ; $C592
     sta     areaDataOffset          ; $C594
-    sta     ram_010A                ; $C597
+    sta     areaBuildColumn         ; $C597
     ldy     #$03                    ; $C59A
     lda     (areaDataPtr),y         ; $C59C
     and     #$07                    ; $C59E
@@ -994,13 +994,13 @@ loc_C5C2:
     dey                             ; $C5CE
     sty     areaBuildPage           ; $C5CF
     lda     dat_C4AF,x              ; $C5D2
-    sta     ram_010A                ; $C5D5
+    sta     areaBuildColumn         ; $C5D5
     beq     loc_C5F9                ; $C5D8
 ; (code below not executed in the test movies)
 
 loc_C5DA:
     jsr     AreaMap_GetPagePtrY     ; $C5DA
-    ldy     ram_010A                ; $C5DD
+    ldy     areaBuildColumn         ; $C5DD
 
 loc_C5E0:
     ; QUIRK: the loads of temp0 here and below are overwritten unused.
@@ -1246,7 +1246,7 @@ FloorPatterns:
 ; ---------------------------------------------------------------------------
 Area_DrawFloors:
     lda     #$00                    ; $C755
-    sta     ram_010A                ; $C757
+    sta     areaBuildColumn         ; $C757
     sta     ram_010B                ; $C75A
     sta     areaBuildPage           ; $C75D
     ldy     #$02                    ; $C760
@@ -1276,7 +1276,7 @@ loc_C78A:
 loc_C78D:
     lda     (areaDataPtr),y         ; $C78D
     sta     areaBuildPos            ; $C78F
-    jsr     sub_C95C                ; $C792
+    jsr     Area_NextObjectPos      ; $C792
 
 loc_C795:
     lda     ram_010B                ; $C795
@@ -1286,7 +1286,7 @@ loc_C795:
     lsr     a                       ; $C79B
     sta     areaBuildPage           ; $C79C
     jsr     AreaMap_GetPagePtrY     ; $C79F
-    lda     ram_010A                ; $C7A2
+    lda     areaBuildColumn         ; $C7A2
     cmp     ram_010B                ; $C7A5
     beq     loc_C7C6                ; $C7A8
     bpl     loc_C7F0                ; $C7AA
@@ -1348,7 +1348,7 @@ loc_C7F0:
     lda     ram_010B                ; $C800
     cmp     #$40                    ; $C803
     beq     loc_C818                ; $C805
-    lda     ram_010A                ; $C807
+    lda     areaBuildColumn         ; $C807
     cmp     ram_010B                ; $C80A
     bpl     loc_C812                ; $C80D
     jmp     loc_C78A                ; $C80F
@@ -1468,8 +1468,8 @@ loc_C878:
 ; Second pass over the area data: draw its objects into the tile map.  Each
 ; object is a position (row * 16 + column) and a type (areaObjectType):
 ; types $10 and up are large objects with a size in the low nibble
-; (Area_DrawLargeObject), type $0F takes an extra byte
-; (Area_DrawExtraObject), and the rest are small objects
+; (Area_DrawLargeObject), type $0F is an item, with its kind in an extra
+; byte (Area_PlaceItem), and the rest are small objects
 ; (Area_DrawSmallObject).  Objects in row $D only move the position.  Also
 ; sets areaLastPage from the header and resets the elevator and locked door
 ; positions.
@@ -1479,7 +1479,7 @@ loc_C878:
 Area_DecodeObjects:
     lda     #$00                    ; $C89D
     sta     areaBuildPage           ; $C89F
-    sta     ram_010A                ; $C8A2
+    sta     areaBuildColumn         ; $C8A2
     sta     elevatorPos             ; $C8A5
     sta     lockedDoorPos           ; $C8A8
     tay                             ; $C8AB
@@ -1501,13 +1501,13 @@ Area_DecodeObjects:
 loc_C8C5:
     lda     (areaDataPtr),y         ; $C8C5
     sta     areaBuildPos            ; $C8C7
-    jsr     sub_C988                ; $C8CA
+    jsr     Area_CheckPageSkip      ; $C8CA
     iny                             ; $C8CD
     lda     (areaDataPtr),y         ; $C8CE
     sta     areaObjectType          ; $C8D0
     iny                             ; $C8D3
     sty     areaDataOffset          ; $C8D4
-    jsr     sub_C95F                ; $C8D7
+    jsr     Area_AdvanceColumn      ; $C8D7
     lda     areaBuildPos            ; $C8DA
     and     #$F0                    ; $C8DD
     cmp     #$D0                    ; $C8DF
@@ -1527,7 +1527,7 @@ loc_C8F6:
     lda     areaObjectType          ; $C8F6
     cmp     #$0F                    ; $C8F9
     bne     loc_C906                ; $C8FB
-    jsr     Area_DrawExtraObject    ; $C8FD
+    jsr     Area_PlaceItem          ; $C8FD
     inc     areaDataOffset          ; $C900
     jmp     loc_C909                ; $C903
 
@@ -1609,15 +1609,26 @@ AreaMap_GetPagePtrY:
     tay                             ; $C95A
     rts                             ; $C95B
 
-sub_C95C:
-    jsr     sub_C988                ; $C95C
+; ---------------------------------------------------------------------------
+; Area_NextObjectPos
+;
+; Advance to the position of the next area object (areaBuildPos): a
+; position in row $E jumps to the start of page (pos & 3)
+; (Area_CheckPageSkip), reading the following position; then the
+; position's column is added to areaBuildColumn, so columns are relative to
+; the previous object (Area_AdvanceColumn), and areaBuildPage is updated.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_NextObjectPos:
+    jsr     Area_CheckPageSkip      ; $C95C
 
-sub_C95F:
+Area_AdvanceColumn:
     lda     areaBuildPos            ; $C95F
     and     #$0F                    ; $C962
     clc                             ; $C964
-    adc     ram_010A                ; $C965
-    sta     ram_010A                ; $C968
+    adc     areaBuildColumn         ; $C965
+    sta     areaBuildColumn         ; $C968
     and     #$0F                    ; $C96B
     pha                             ; $C96D
     lda     areaBuildPos            ; $C96E
@@ -1626,7 +1637,7 @@ sub_C95F:
     pla                             ; $C976
     ora     areaBuildPos            ; $C977
     sta     areaBuildPos            ; $C97A
-    lda     ram_010A                ; $C97D
+    lda     areaBuildColumn         ; $C97D
     lsr     a                       ; $C980
     lsr     a                       ; $C981
     lsr     a                       ; $C982
@@ -1634,7 +1645,7 @@ sub_C95F:
     sta     areaBuildPage           ; $C984
     rts                             ; $C987
 
-sub_C988:
+Area_CheckPageSkip:
     lda     areaBuildPos            ; $C988
     and     #$F0                    ; $C98B
     cmp     #$E0                    ; $C98D
@@ -1645,7 +1656,7 @@ sub_C988:
     asl     a                       ; $C997
     asl     a                       ; $C998
     asl     a                       ; $C999
-    sta     ram_010A                ; $C99A
+    sta     areaBuildColumn         ; $C99A
     iny                             ; $C99D
     iny                             ; $C99E
     lda     (areaDataPtr),y         ; $C99F
@@ -1654,7 +1665,15 @@ sub_C988:
 loc_C9A4:
     rts                             ; $C9A4
 
-Area_DrawExtraObject:
+; ---------------------------------------------------------------------------
+; Area_PlaceItem
+;
+; Area object $0F: an item, whose kind is in the following byte.  It is
+; placed as an object in a free enemy slot.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_PlaceItem:
     ldx     #$05                    ; $C9A5
 
 loc_C9A7:
