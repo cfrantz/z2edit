@@ -744,11 +744,13 @@ Mmc1_SetPrgBank5:
 ; ---------------------------------------------------------------------------
 ; GameState_SaveAfterEnding
 ;
-; gameState 5 (GAME_STATE_SAVE_AFTER_ENDING), entered when the ending
-; finishes: save the game (Mode_SaveAfterEnding) and return to the title
-; screen (Game_ReturnToTitle).  Not reached in the test movies.
+; gameState 5 (GAME_STATE_SAVE_AFTER_ENDING), entered when Start is pressed
+; on the ending's last screen ("PUSH START TO REPLAY"): save the game
+; (Mode_SaveAfterEnding) and return to the title screen
+; (Game_ReturnToTitle).  Not reached in the test movies; checked with
+; tools/play.py on the 100AK movie.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GameState_SaveAfterEnding:
     jsr     Game_CheckModeChange    ; $C38D
@@ -2553,7 +2555,7 @@ ReturnToOverworld_SetPosition:
 ;
 ; Save the game (Death_SaveGame), then advance gameMode.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_SaveAfterEnding:
     jsr     Game_CheckStepChange    ; $CD19

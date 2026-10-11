@@ -3009,6 +3009,9 @@ Spell_FairyEffect:
 ; enemy on the screen (except those with sramEnemyDamage bit 4) into a
 ; Bot (enemy type 4), stopped and with no hit points.
 ;
+; Casting SPELL in a palace reaches here (checked with tools/play.py; no
+; enemies were on the screen to see them change).
+;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Spell_TurnEnemiesToBots:

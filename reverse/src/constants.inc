@@ -15,7 +15,7 @@ GAME_STATE_PLAY         = 1
 GAME_STATE_DEATH        = 2     ; Link died, or the continue screen was requested
 GAME_STATE_START_ENDING = 3
 GAME_STATE_ENDING       = 4     ; bank 5's ending sequence
-GAME_STATE_SAVE_AFTER_ENDING = 5 ; save, then back to the title screen (provisional)
+GAME_STATE_SAVE_AFTER_ENDING = 5 ; save, then back to the title screen
 GAME_STATE_RESPAWN      = 6     ; restart after losing a life
 
 ; gameMode values in GAME_STATE_PLAY.
