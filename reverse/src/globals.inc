@@ -108,7 +108,7 @@ GLOBALS_INC = 1
 .global sub_E070
 .global loc_E187
 .global Link_HurtByEnemy
-.global sub_E371
+.global Enemy_KnockBack
 .global loc_E3B9
 .global sub_E469
 .global sub_E48A
@@ -130,11 +130,11 @@ GLOBALS_INC = 1
 .global sub_EA14
 .global sub_EA18
 .global sub_EA1C
-.global sub_EA32
+.global Enemy_UpdateBgCollision
 .global Link_Draw
 .global sub_EC02
 .global loc_EF03
-.global sub_EF08
+.global Sprite_FlipPrevious
 .global Enemy_Draw
 .global sub_F0C6
 .global sub_F0CC

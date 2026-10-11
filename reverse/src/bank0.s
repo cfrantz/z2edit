@@ -2719,7 +2719,7 @@ loc_0_91FB:
     and     #$88                    ; $9217
     bne     loc_0_922D              ; $9219
     ldy     enemyType,x             ; $921B
-    lda     sram_6E41,y             ; $921D
+    lda     sramEnemyFlags,y        ; $921D
     ldy     #$09                    ; $9220
     and     #$A0                    ; $9222
     bmi     loc_0_922D              ; $9224

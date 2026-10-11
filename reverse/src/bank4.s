@@ -838,7 +838,7 @@ loc_4_96C0:
     jsr     Enemy_CheckSwordHit     ; $96C3
     jsr     Enemy_CheckLinkContact  ; $96C6
     jsr     Enemy_MoveYAndFall      ; $96C9
-    jsr     sub_EA32                ; $96CC
+    jsr     Enemy_UpdateBgCollision ; $96CC
     jsr     Enemy_HurtLinkOnContact ; $96CF
     jsr     Enemy_FaceLink          ; $96D2
     lda     objCollision+1,x        ; $96D5
@@ -960,7 +960,7 @@ loc_4_976E:
 loc_4_978F:
     jsr     sub_F0C6                ; $978F
     lda     #$41                    ; $9792
-    sta     ram_01FE,y              ; $9794
+    sta     oamBuffer - 2,y         ; $9794
     rts                             ; $9797
 
 loc_4_9798:
@@ -1814,7 +1814,7 @@ loc_4_9CDF:
 
 loc_4_9CE3:
     jsr     sub_E617                ; $9CE3
-    jsr     sub_EA32                ; $9CE6
+    jsr     Enemy_UpdateBgCollision ; $9CE6
     ldy     #$01                    ; $9CE9
     inx                             ; $9CEB
     jsr     Obj_ComputeScreenPos    ; $9CEC
@@ -2018,7 +2018,7 @@ sub_4_9E17:
 
 loc_4_9E27:
     sta     objXVelocity+1,x        ; $9E27
-    jsr     sub_EA32                ; $9E29
+    jsr     Enemy_UpdateBgCollision ; $9E29
 
 loc_4_9E2C:
     lda     objCollision+1,x        ; $9E2C
@@ -2437,7 +2437,7 @@ loc_4_ABB0:
     jsr     Enemy_StopY             ; $ABD1
     sta     ram_00AF,x              ; $ABD4
     stx     currentObject           ; $ABD6
-    jsr     sub_EA32                ; $ABD8
+    jsr     Enemy_UpdateBgCollision ; $ABD8
     lda     objCollision+1,x        ; $ABDB
     and     #$04                    ; $ABDD
     beq     loc_4_ABE4              ; $ABDF
@@ -2469,7 +2469,7 @@ loc_4_ABFD:
 
 loc_4_AC00:
     jsr     Enemy_MoveYAndFall      ; $AC00
-    jsr     sub_EA32                ; $AC03
+    jsr     Enemy_UpdateBgCollision ; $AC03
     jsr     Enemy_CheckSwordHit     ; $AC06
     jsr     Enemy_CheckLinkContact  ; $AC09
     lda     objCollision+1,x        ; $AC0C
@@ -2777,7 +2777,7 @@ loc_4_ADE7:
 loc_4_AE08:
     jsr     sub_F0C6                ; $AE08
     lda     #$41                    ; $AE0B
-    sta     ram_01FE,y              ; $AE0D
+    sta     oamBuffer - 2,y         ; $AE0D
 
 loc_4_AE10:
     rts                             ; $AE10
@@ -4126,7 +4126,7 @@ loc_4_B671:
     ldy     temp5                   ; $B675
     sta     oamBuffer+3,y           ; $B677
     sta     oamBuffer+7,y           ; $B67A
-    lda     ram_01FE,y              ; $B67D
+    lda     oamBuffer - 2,y         ; $B67D
     sta     oamBuffer+2,y           ; $B680
     sta     oamBuffer+6,y           ; $B683
     lda     objY+1,x                ; $B686
@@ -4753,7 +4753,7 @@ loc_4_BA90:
     sta     objXVelocity+1,x        ; $BA9B
     jsr     Enemy_MoveYAndFall      ; $BA9D
     inc     ram_00AF,x              ; $BAA0
-    jsr     sub_EA32                ; $BAA2
+    jsr     Enemy_UpdateBgCollision ; $BAA2
     lda     objCollision+1,x        ; $BAA5
     and     #$04                    ; $BAA7
     beq     loc_4_BAAE              ; $BAA9
@@ -5213,7 +5213,7 @@ loc_4_BD92:
     lda     drawOffscreen+1         ; $BD98
     and     #$0C                    ; $BD9A
     bne     loc_4_BD72              ; $BD9C
-    lda     ram_01F0,y              ; $BD9E
+    lda     oamBuffer - 16,y        ; $BD9E
     sec                             ; $BDA1
     sbc     #$0C                    ; $BDA2
     adc     ram_05DE                ; $BDA4
@@ -5320,13 +5320,13 @@ loc_4_BE31:
     lda     ram_00D9                ; $BE3E
     cmp     #$38                    ; $BE40
     bne     loc_4_BE57              ; $BE42
-    lda     ram_01F2,y              ; $BE44
+    lda     oamBuffer - 14,y        ; $BE44
     and     #$3F                    ; $BE47
-    sta     ram_01F2,y              ; $BE49
-    sta     ram_01FA,y              ; $BE4C
+    sta     oamBuffer - 14,y        ; $BE49
+    sta     oamBuffer - 6,y         ; $BE4C
     ora     #$40                    ; $BE4F
-    sta     ram_01F6,y              ; $BE51
-    sta     ram_01FE,y              ; $BE54
+    sta     oamBuffer - 10,y        ; $BE51
+    sta     oamBuffer - 2,y         ; $BE54
 
 loc_4_BE57:
     lda     objState+1,x            ; $BE57
@@ -5403,7 +5403,7 @@ loc_4_BEB3:
     and     #$88                    ; $BECF
     bne     loc_4_BEE5              ; $BED1
     ldy     enemyType,x             ; $BED3
-    lda     sram_6E41,y             ; $BED5
+    lda     sramEnemyFlags,y        ; $BED5
     ldy     #$09                    ; $BED8
     and     #$A0                    ; $BEDA
     bmi     loc_4_BEE5              ; $BEDC

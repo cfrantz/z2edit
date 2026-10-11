@@ -1164,7 +1164,7 @@ loc_3_97D4:
     adc     #$60                    ; $97EF
     cmp     #$C0                    ; $97F1
     bcs     loc_3_983B              ; $97F3
-    jsr     sub_EA32                ; $97F5
+    jsr     Enemy_UpdateBgCollision ; $97F5
     jsr     sub_3_989F              ; $97F8
     ldy     objFacing+1,x           ; $97FB
     lda     objX+1,x                ; $97FD
@@ -1262,7 +1262,7 @@ loc_3_9878:
     bcc     loc_3_98BB              ; $9894
 
 loc_3_9896:
-    jsr     sub_EA32                ; $9896
+    jsr     Enemy_UpdateBgCollision ; $9896
     lda     ram_00D9                ; $9899
     cmp     #$8B                    ; $989B
     bne     loc_3_98BB              ; $989D

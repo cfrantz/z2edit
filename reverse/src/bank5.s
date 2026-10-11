@@ -2400,7 +2400,7 @@ loc_5_9AF4:
 loc_5_9AF5:
     lda     #$00                    ; $9AF5
     sta     temp11                  ; $9AF7
-    jsr     sub_E371                ; $9AF9
+    jsr     Enemy_KnockBack         ; $9AF9
     lda     objXVelocity            ; $9AFC
     eor     #$FF                    ; $9AFE
     sta     objXVelocity+1          ; $9B00
@@ -2655,7 +2655,7 @@ loc_5_9C69:
 loc_5_9C8E:
     jsr     sub_F0C6                ; $9C8E
     lda     #$41                    ; $9C91
-    sta     ram_01FE,y              ; $9C93
+    sta     oamBuffer - 2,y         ; $9C93
 
 dat_5_9C96:
     rts                             ; $9C96
@@ -2807,7 +2807,7 @@ loc_5_9D73:
 
 loc_5_9D77:
     jsr     sub_E617                ; $9D77
-    jsr     sub_EA32                ; $9D7A
+    jsr     Enemy_UpdateBgCollision ; $9D7A
     ldy     #$01                    ; $9D7D
     inx                             ; $9D7F
     jsr     Obj_ComputeScreenPos    ; $9D80
@@ -2953,7 +2953,7 @@ loc_5_9E53:
 
 loc_5_9E5E:
     sty     objXVelocity+1,x        ; $9E5E
-    jsr     sub_EA32                ; $9E60
+    jsr     Enemy_UpdateBgCollision ; $9E60
 
 loc_5_9E63:
     jmp     loc_5_9E38              ; $9E63
@@ -3390,9 +3390,9 @@ loc_5_A133:
     adc     #$08                    ; $A147
     sta     temp1                   ; $A149
     jsr     Sprite_DrawEnemyPair    ; $A14B
-    jsr     sub_EF08                ; $A14E
+    jsr     Sprite_FlipPrevious     ; $A14E
     jsr     Sprite_DrawEnemyPair    ; $A151
-    jsr     sub_EF08                ; $A154
+    jsr     Sprite_FlipPrevious     ; $A154
     pla                             ; $A157
     and     #$09                    ; $A158
     bne     loc_5_A178              ; $A15A
@@ -3404,11 +3404,11 @@ loc_5_A133:
     sbc     #$08                    ; $A165
     sta     temp1                   ; $A167
     jsr     Sprite_DrawEnemyPairKeepX ; $A169
-    jsr     sub_EF08                ; $A16C
-    lda     ram_01FF,y              ; $A16F
+    jsr     Sprite_FlipPrevious     ; $A16C
+    lda     oamBuffer - 1,y         ; $A16F
     clc                             ; $A172
     adc     #$10                    ; $A173
-    sta     ram_01FF,y              ; $A175
+    sta     oamBuffer - 1,y         ; $A175
 
 loc_5_A178:
     ldx     currentObject           ; $A178
@@ -3719,7 +3719,7 @@ loc_5_A380:
     and     #$88                    ; $A39C
     bne     loc_5_A3B2              ; $A39E
     ldy     enemyType,x             ; $A3A0
-    lda     sram_6E41,y             ; $A3A2
+    lda     sramEnemyFlags,y        ; $A3A2
     ldy     #$09                    ; $A3A5
     and     #$A0                    ; $A3A7
     bmi     loc_5_A3B2              ; $A3A9
@@ -3891,7 +3891,7 @@ loc_5_A491:
     ldx     #$3A                    ; $A4AD
     jsr     Sprite_DrawEnemyPairKeepX ; $A4AF
     lda     #$43                    ; $A4B2
-    sta     ram_01FE,y              ; $A4B4
+    sta     oamBuffer - 2,y         ; $A4B4
     rts                             ; $A4B7
 
 dat_5_A4B8:

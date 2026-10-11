@@ -4306,7 +4306,7 @@ loc_D9BA:
     lda     #$00                    ; $D9C7
     sta     temp5                   ; $D9C9
     sta     temp11                  ; $D9CB
-    jsr     sub_E371                ; $D9CD
+    jsr     Enemy_KnockBack         ; $D9CD
 
 loc_D9D0:
     jsr     Enemy_FaceLink          ; $D9D0
@@ -4863,7 +4863,7 @@ loc_DD31:
 
 sub_DD34:
     ldy     enemyType,x             ; $DD34
-    lda     sram_6E41,y             ; $DD36
+    lda     sramEnemyFlags,y        ; $DD36
     and     #$40                    ; $DD39
     beq     Enemy_Remove            ; $DD3B
 
@@ -5001,7 +5001,7 @@ sub_DE20:
     rts                             ; $DE3C
 
 sub_DE3D:
-    jsr     sub_EA32                ; $DE3D
+    jsr     Enemy_UpdateBgCollision ; $DE3D
 
 ; ---------------------------------------------------------------------------
 ; Enemy_UpdateCommon
@@ -5908,7 +5908,7 @@ dat_E369:
 dat_E36C:
     .byte   $0C, $04, $FC, $0D, $F3                                         ; $E36C
 
-sub_E371:
+Enemy_KnockBack:
     lda     #$00                    ; $E371
     sta     temp0                   ; $E373
     lda     temp11                  ; $E375
@@ -6272,7 +6272,7 @@ sub_E563:
     sta     sfxRequest              ; $E570
     lda     #$00                    ; $E572
     sta     temp11                  ; $E574
-    jmp     sub_E371                ; $E576
+    jmp     Enemy_KnockBack         ; $E576
 ; (end of code not executed in the test movies)
 
 sub_E579:
@@ -6417,7 +6417,7 @@ loc_E654:
     rts                             ; $E669
 
 loc_E66A:
-    jmp     sub_E371                ; $E66A
+    jmp     Enemy_KnockBack         ; $E66A
 
 ; Hit points a sword hit takes from an enemy, by attack level 1-8.
 SwordDamage:
@@ -6440,7 +6440,7 @@ Enemy_CheckSwordHit:
     cmp     #$F8                    ; $E67A
     beq     loc_E6A6                ; $E67C
     ldy     enemyType,x             ; $E67E
-    lda     sram_6E41,y             ; $E680
+    lda     sramEnemyFlags,y        ; $E680
     and     #$10                    ; $E683
     bne     loc_E6A6                ; $E685
     lda     enemyActive,x           ; $E687
@@ -6583,7 +6583,7 @@ Enemy_TakeDamage:
     lda     objState                ; $E741
     cmp     #$09                    ; $E743
     beq     loc_E74A                ; $E745
-    jsr     sub_E371                ; $E747
+    jsr     Enemy_KnockBack         ; $E747
 
 loc_E74A:
     sec                             ; $E74A
@@ -7097,9 +7097,9 @@ loc_EA24:
 loc_EA31:
     rts                             ; $EA31
 
-sub_EA32:
+Enemy_UpdateBgCollision:
     ldy     enemyType,x             ; $EA32
-    lda     sram_6E41,y             ; $EA34
+    lda     sramEnemyFlags,y        ; $EA34
     and     #$0F                    ; $EA37
     sta     temp9                   ; $EA39
     inx                             ; $EA3B
@@ -7743,7 +7743,7 @@ loc_EEC7:
     lda     dat_EEAD,x              ; $EEF4
     tax                             ; $EEF7
     jsr     Sprite_DrawPairFromTable ; $EEF8
-    jsr     sub_EF08                ; $EEFB
+    jsr     Sprite_FlipPrevious     ; $EEFB
     pla                             ; $EEFE
     bpl     loc_EF06                ; $EEFF
     dex                             ; $EF01
@@ -7755,10 +7755,10 @@ loc_EF03:
 loc_EF06:
     ldx     currentObject           ; $EF06
 
-sub_EF08:
-    lda     ram_01FE,y              ; $EF08
+Sprite_FlipPrevious:
+    lda     oamBuffer - 2,y         ; $EF08
     ora     #$40                    ; $EF0B
-    sta     ram_01FE,y              ; $EF0D
+    sta     oamBuffer - 2,y         ; $EF0D
     rts                             ; $EF10
 
 ; ---------------------------------------------------------------------------
@@ -7822,11 +7822,11 @@ loc_EF47:
     sta     oamBuffer,y             ; $EF61
     sec                             ; $EF64
     sbc     #$28                    ; $EF65
-    sta     ram_01F4,y              ; $EF67
+    sta     oamBuffer - 12,y        ; $EF67
     lda     temp1                   ; $EF6A
     clc                             ; $EF6C
     adc     #$10                    ; $EF6D
-    sta     ram_01F7,y              ; $EF6F
+    sta     oamBuffer - 9,y         ; $EF6F
     sta     oamBuffer+3,y           ; $EF72
     ldx     #$AC                    ; $EF75
     lda     drawOffscreen+1         ; $EF77
@@ -7836,10 +7836,10 @@ loc_EF47:
 
 loc_EF7F:
     txa                             ; $EF7F
-    sta     ram_01F5,y              ; $EF80
+    sta     oamBuffer - 11,y        ; $EF80
     sta     oamBuffer+1,y           ; $EF83
     lda     #$01                    ; $EF86
-    sta     ram_01F6,y              ; $EF88
+    sta     oamBuffer - 10,y        ; $EF88
     sta     oamBuffer+2,y           ; $EF8B
     ldx     currentObject           ; $EF8E
     rts                             ; $EF90
@@ -7864,13 +7864,13 @@ loc_EF9F:
     lda     frameCounter            ; $EFAB
     and     #$04                    ; $EFAD
     bne     loc_EFB7                ; $EFAF
-    inc     ram_01FB,x              ; $EFB1
-    dec     ram_01FF,x              ; $EFB4
+    inc     oamBuffer - 5,x         ; $EFB1
+    dec     oamBuffer - 1,x         ; $EFB4
 
 loc_EFB7:
-    lda     ram_01FA,x              ; $EFB7
+    lda     oamBuffer - 6,x         ; $EFB7
     ora     #$40                    ; $EFBA
-    sta     ram_01FE,x              ; $EFBC
+    sta     oamBuffer - 2,x         ; $EFBC
     ldx     currentObject           ; $EFBF
     rts                             ; $EFC1
 
@@ -8042,13 +8042,13 @@ loc_F125:
     adc     #$2E                    ; $F127
     tax                             ; $F129
     jsr     sub_F0C6                ; $F12A
-    lda     ram_01FD,y              ; $F12D
+    lda     oamBuffer - 3,y         ; $F12D
     cmp     #$F5                    ; $F130
     bne     loc_F137                ; $F132
-    sta     ram_01FC,y              ; $F134
+    sta     oamBuffer - 4,y         ; $F134
 
 loc_F137:
-    jmp     sub_EF08                ; $F137
+    jmp     Sprite_FlipPrevious     ; $F137
 
 loc_F13A:
     lda     drawOffscreen+1         ; $F13A
@@ -8106,11 +8106,11 @@ loc_F188:
     sta     temp3                   ; $F19D
     lda     #$16                    ; $F19F
     jsr     sub_F0BB                ; $F1A1
-    jmp     sub_EF08                ; $F1A4
+    jmp     Sprite_FlipPrevious     ; $F1A4
 
 loc_F1A7:
     jsr     sub_F0C6                ; $F1A7
-    jmp     sub_EF08                ; $F1AA
+    jmp     Sprite_FlipPrevious     ; $F1AA
 
 loc_F1AD:
     ldx     #$1A                    ; $F1AD

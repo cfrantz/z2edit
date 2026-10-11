@@ -118,19 +118,6 @@ ram_010D                = $010D
 ram_010E                = $010E
 ram_010F                = $010F
 ram_0112                = $0112
-ram_01F0                = $01F0
-ram_01F2                = $01F2
-ram_01F4                = $01F4
-ram_01F5                = $01F5
-ram_01F6                = $01F6
-ram_01F7                = $01F7
-ram_01F8                = $01F8
-ram_01FA                = $01FA
-ram_01FB                = $01FB
-ram_01FC                = $01FC
-ram_01FD                = $01FD
-ram_01FE                = $01FE
-ram_01FF                = $01FF
 ; ---------------------------------------------------------------------------
 ; Sprites and PPU updates
 ; ---------------------------------------------------------------------------
@@ -474,7 +461,7 @@ sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy
 sramEnemyAttr           = $6DD5     ; [36] bits 7-6 = sprite palette, bit 4 = drains experience; experience (provisional)
 sramEnemyDamage         = $6DF9     ; [36] bits 7-6 = item drop group, bits 3-0 = damage class of each enemy type
 sramEnemyHitbox         = $6E1D     ; [36] hitbox of each enemy type: offset into EnemyHitboxes / 4
-sram_6E41               = $6E41     ; [36] per enemy type
+sramEnemyFlags          = $6E41     ; [36] bit 4 = not hurt by the sword, bits 3-0 = background collision probe set
 sramEnemyDrawPtrs       = $6E65     ; [36] (16-bit) routine that draws each enemy type
 sram_6EAD               = $6EAD     ; [9]
 sram_6EB6               = $6EB6     ; [8]

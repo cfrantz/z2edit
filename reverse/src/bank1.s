@@ -1926,8 +1926,8 @@ loc_1_9D2C:
 ; (end of code not executed in the test movies)
 
 loc_1_9D50:
-    adc     ram_01FB,y              ; $9D50
-    sta     ram_01FB,y              ; $9D53
+    adc     oamBuffer - 5,y         ; $9D50
+    sta     oamBuffer - 5,y         ; $9D53
 
 loc_1_9D56:
     ldx     currentObject           ; $9D56
@@ -2012,8 +2012,8 @@ loc_1_9DBC:
     ldx     temp14                  ; $9DC5
     clc                             ; $9DC7
     adc     dat_1_9D5C,x            ; $9DC8
-    sta     ram_01F8,y              ; $9DCB
-    sta     ram_01FC,y              ; $9DCE
+    sta     oamBuffer - 8,y         ; $9DCB
+    sta     oamBuffer - 4,y         ; $9DCE
     lda     ram_00D9                ; $9DD1
     lsr     a                       ; $9DD3
     bcc     loc_1_9DDB              ; $9DD4
@@ -2026,12 +2026,12 @@ loc_1_9DDB:
     lda     dat_1_9D5F,x            ; $9DDB
     pha                             ; $9DDE
     clc                             ; $9DDF
-    adc     ram_01FB,y              ; $9DE0
-    sta     ram_01FB,y              ; $9DE3
+    adc     oamBuffer - 5,y         ; $9DE0
+    sta     oamBuffer - 5,y         ; $9DE3
     pla                             ; $9DE6
     clc                             ; $9DE7
-    adc     ram_01FF,y              ; $9DE8
-    sta     ram_01FF,y              ; $9DEB
+    adc     oamBuffer - 1,y         ; $9DE8
+    sta     oamBuffer - 1,y         ; $9DEB
 
 loc_1_9DEE:
     ldx     currentObject           ; $9DEE

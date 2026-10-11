@@ -1788,7 +1788,7 @@ sub_2_9B24:
 
 loc_2_9B34:
     sta     objXVelocity+1,x        ; $9B34
-    jsr     sub_EA32                ; $9B36
+    jsr     Enemy_UpdateBgCollision ; $9B36
 ; (end of code not executed in the test movies)
 
 loc_2_9B39:
@@ -1798,7 +1798,7 @@ loc_2_9B39:
     jmp     Enemy_MoveX             ; $9B3F
 
 sub_2_9B42:
-    jsr     sub_EA32                ; $9B42
+    jsr     Enemy_UpdateBgCollision ; $9B42
     lda     objYVelocity+1,x        ; $9B45
     bmi     loc_2_9B53              ; $9B48
     lda     objCollision+1,x        ; $9B4A
@@ -1871,7 +1871,7 @@ loc_2_9B96:
 
 loc_2_9BB4:
     jsr     sub_E617                ; $9BB4
-    jsr     sub_EA32                ; $9BB7
+    jsr     Enemy_UpdateBgCollision ; $9BB7
     ldy     #$01                    ; $9BBA
     inx                             ; $9BBC
     jsr     Obj_ComputeScreenPos    ; $9BBD
@@ -2101,7 +2101,7 @@ loc_2_9D32:
     lda     temp0                   ; $9D4B
     adc     dat_2_9D2D,x            ; $9D4D
     sta     oamBuffer,y             ; $9D50
-    lda     ram_01FA,y              ; $9D53
+    lda     oamBuffer - 6,y         ; $9D53
     cpx     #$02                    ; $9D56
     bne     loc_2_9D5C              ; $9D58
     eor     #$C0                    ; $9D5A
@@ -2172,18 +2172,18 @@ loc_2_9DB7:
 
 loc_2_9DC3:
     sta     temp0                   ; $9DC3
-    lda     ram_01F0,y              ; $9DC5
+    lda     oamBuffer - 16,y        ; $9DC5
     cmp     #$F0                    ; $9DC8
     bcs     loc_2_9DD1              ; $9DCA
     adc     temp0                   ; $9DCC
-    sta     ram_01F0,y              ; $9DCE
+    sta     oamBuffer - 16,y        ; $9DCE
 
 loc_2_9DD1:
-    lda     ram_01F4,y              ; $9DD1
+    lda     oamBuffer - 12,y        ; $9DD1
     cmp     #$F0                    ; $9DD4
     bcs     loc_2_9DDD              ; $9DD6
     adc     temp0                   ; $9DD8
-    sta     ram_01F4,y              ; $9DDA
+    sta     oamBuffer - 12,y        ; $9DDA
 
 loc_2_9DDD:
     rts                             ; $9DDD
@@ -2205,9 +2205,9 @@ loc_2_9DEB:
     sta     temp3                   ; $9DF1
     lda     #$0C                    ; $9DF3
     jsr     sub_F0CC                ; $9DF5
-    lda     ram_01FE,y              ; $9DF8
+    lda     oamBuffer - 2,y         ; $9DF8
     ora     #$40                    ; $9DFB
-    sta     ram_01FE,y              ; $9DFD
+    sta     oamBuffer - 2,y         ; $9DFD
     rts                             ; $9E00
 ; (unreferenced: $9E01-$9E0C, 12 bytes)
     .byte   $A2, $10, $A5, $12, $4A, $90, $02, $E8, $E8, $4C, $D7           ; $9E01
@@ -2260,7 +2260,7 @@ loc_2_9E3F:
     sec                             ; $9E4D
     sbc     #$10                    ; $9E4E
     sta     oamBuffer,y             ; $9E50
-    lda     ram_01FE,y              ; $9E53
+    lda     oamBuffer - 2,y         ; $9E53
     sta     oamBuffer+2,y           ; $9E56
     lda     #$DC                    ; $9E59
     sta     oamBuffer+1,y           ; $9E5B
@@ -2314,7 +2314,7 @@ loc_2_9EA0:
     sec                             ; $9EAE
     sbc     #$10                    ; $9EAF
     sta     oamBuffer,y             ; $9EB1
-    lda     ram_01FE,y              ; $9EB4
+    lda     oamBuffer - 2,y         ; $9EB4
     sta     oamBuffer+2,y           ; $9EB7
     lda     temp1                   ; $9EBA
     clc                             ; $9EBC
