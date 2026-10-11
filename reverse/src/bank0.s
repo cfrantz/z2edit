@@ -3727,7 +3727,7 @@ loc_0_972E:
     lda     experience              ; $9748
     sta     temp0                   ; $974B
     lda     experience+1            ; $974D
-    jsr     sub_0_A5A4              ; $9750
+    jsr     Math_Digit1000          ; $9750
     pha                             ; $9753
     tya                             ; $9754
     ldy     ppuBuffer0Len           ; $9755
@@ -3741,7 +3741,7 @@ loc_0_972E:
     lda     experienceNext          ; $9769
     sta     temp0                   ; $976C
     lda     experienceNext+1        ; $976E
-    jsr     sub_0_A5A4              ; $9771
+    jsr     Math_Digit1000          ; $9771
     tya                             ; $9774
     ldy     ppuBuffer0Len           ; $9775
     sta     ppuBuffer0+22,y         ; $9778
@@ -5112,7 +5112,7 @@ loc_0_A0FE:
     ldy     ram_074E                ; $A10B
     lda     dat_0_A688,y            ; $A10E
     sta     ram_0525                ; $A111
-    jsr     sub_0_A647              ; $A114
+    jsr     Menu_RestoreUnderBottom ; $A114
     lda     menuRepeatTimer         ; $A117
     and     #$0F                    ; $A11A
     cmp     #$08                    ; $A11C
@@ -5156,15 +5156,15 @@ loc_0_A148:
     lda     keyCount                ; $A150
     clc                             ; $A153
     adc     #$D0                    ; $A154
-    sta     sram_7881               ; $A156
+    sta     sramMenuUnder+129       ; $A156
     lda     crystalsRemaining       ; $A159
     clc                             ; $A15C
     adc     #$D0                    ; $A15D
-    sta     sram_788F               ; $A15F
+    sta     sramMenuUnder+143       ; $A15F
     lda     lives                   ; $A162
     clc                             ; $A165
     adc     #$CF                    ; $A166
-    sta     sram_7803               ; $A168
+    sta     sramMenuUnder+3         ; $A168
     lda     statLevel+STAT_MAGIC    ; $A16B
     clc                             ; $A16E
     adc     #$37                    ; $A16F
@@ -5178,12 +5178,12 @@ loc_0_A174:
     sta     temp0                   ; $A178
     lda     SpellCosts,y            ; $A17A
     lsr     a                       ; $A17D
-    jsr     sub_0_A5A4              ; $A17E
-    sta     sram_781A,x             ; $A181
+    jsr     Math_Digit1000          ; $A17E
+    sta     sramMenuUnder+26,x      ; $A181
     tya                             ; $A184
-    sta     sram_7819,x             ; $A185
+    sta     sramMenuUnder+25,x      ; $A185
     lda     temp0                   ; $A188
-    sta     sram_7818,x             ; $A18A
+    sta     sramMenuUnder+24,x      ; $A18A
     pla                             ; $A18D
     sec                             ; $A18E
     sbc     #$08                    ; $A18F
@@ -5351,7 +5351,7 @@ loc_0_A28C:
     sta     temp2                   ; $A28E
 
 loc_0_A290:
-    jsr     sub_0_A2D4              ; $A290
+    jsr     Menu_SaveUnder          ; $A290
     tya                             ; $A293
     clc                             ; $A294
     adc     #$10                    ; $A295
@@ -5402,7 +5402,15 @@ loc_0_A2BF:
     bne     loc_0_A288              ; $A2CF
     jmp     loc_0_A267              ; $A2D1
 
-sub_0_A2D4:
+; ---------------------------------------------------------------------------
+; Menu_SaveUnder
+;
+; Save the tiles that the pause menu will cover into sramMenuUnder.
+; Menu_RestoreUnderTop and Menu_RestoreUnderBottom put them back.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_SaveUnder:
     tya                             ; $A2D4
     asl     a                       ; $A2D5
     asl     a                       ; $A2D6
@@ -5434,11 +5442,11 @@ loc_0_A2F4:
     rts                             ; $A2F7
 
 loc_0_A2F8:
-    jsr     sub_0_A647              ; $A2F8
+    jsr     Menu_RestoreUnderBottom ; $A2F8
     jmp     loc_0_A301              ; $A2FB
 
 loc_0_A2FE:
-    jsr     sub_0_A5E3              ; $A2FE
+    jsr     Menu_RestoreUnderTop    ; $A2FE
 
 loc_0_A301:
     jsr     sub_0_A35F              ; $A301
@@ -5487,13 +5495,13 @@ loc_0_A347:
 
 loc_0_A349:
     lda     dat_0_9C1A,y            ; $A349
-    sta     sram_7800,y             ; $A34C
+    sta     sramMenuUnder,y         ; $A34C
     iny                             ; $A34F
     bne     loc_0_A349              ; $A350
 
 loc_0_A352:
     lda     dat_0_9D1A,y            ; $A352
-    sta     sram_7900,y             ; $A355
+    sta     sramMenuUnder+256,y     ; $A355
     iny                             ; $A358
     cpy     #$18                    ; $A359
     beq     loc_0_A31C              ; $A35B
@@ -5876,7 +5884,15 @@ sub_0_A589:
     cmp     #$04                    ; $A5A1
     rts                             ; $A5A3
 
-sub_0_A5A4:
+; ---------------------------------------------------------------------------
+; Math_Digit1000
+;
+; Count the thousands in the 16-bit number temp0:a, as a digit tile
+; ($D0 = '0'), for showing numbers on the screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Math_Digit1000:
     ldy     #$D0                    ; $A5A4
 
 loc_0_A5A6:
@@ -5925,7 +5941,7 @@ loc_0_A5D9:
     dey                             ; $A5E1
     rts                             ; $A5E2
 
-sub_0_A5E3:
+Menu_RestoreUnderTop:
     lda     ram_0525                ; $A5E3
     asl     a                       ; $A5E6
     tay                             ; $A5E7
@@ -5986,7 +6002,7 @@ dat_0_A643:
 ; (unreferenced: $A646-$A646, 1 bytes)
     .byte   $01                                                             ; $A646
 
-sub_0_A647:
+Menu_RestoreUnderBottom:
     lda     ram_0525                ; $A647
     asl     a                       ; $A64A
     tay                             ; $A64B
@@ -6037,7 +6053,7 @@ loc_0_A68B:
     pha                             ; $A695
     lda     dat_0_A688,y            ; $A696
     sta     ram_0525                ; $A699
-    jsr     sub_0_A647              ; $A69C
+    jsr     Menu_RestoreUnderBottom ; $A69C
     jsr     sub_0_A35F              ; $A69F
     pla                             ; $A6A2
     sta     ram_0525                ; $A6A3
@@ -6365,7 +6381,15 @@ dat_0_A97F:
     .byte   $12, $16, $2A, $16, $0F, $0F, $30, $01, $31, $01, $18, $01, $12, $21, $30, $21; $A9F0
     .byte   $36, $21, $30, $01, $31, $01, $2A, $11                          ; $AA00
 
-sub_0_AA08:
+; ---------------------------------------------------------------------------
+; Game_StartAtNorthCastle
+;
+; Put Link at the start of the game, in North Castle (world 0, region 0,
+; area 0), with full meters.  Called when a game begins or continues.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Game_StartAtNorthCastle:
     sta     gameStep                ; $AA08
     sta     currentRegion           ; $AA0B
     sta     currentWorld            ; $AA0E

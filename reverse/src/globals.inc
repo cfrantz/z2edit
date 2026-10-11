@@ -27,7 +27,7 @@ GLOBALS_INC = 1
 .global loc_0_9D91
 .global BreakingBlocks_Update
 .global loc_0_A7AB
-.global sub_0_AA08
+.global Game_StartAtNorthCastle
 .global dat_3_8817
 .global dat_3_9624
 .global dat_3_9625

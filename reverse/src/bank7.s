@@ -629,7 +629,7 @@ loc_C33C:
 GameState_Begin:
     jsr     Mmc1_SetPrgBank0        ; $C34F
     jsr     Ram_ClearExceptSaved    ; $C352
-    jsr     sub_0_AA08              ; $C355
+    jsr     Game_StartAtNorthCastle ; $C355
 
 ; ---------------------------------------------------------------------------
 ; Game_ResetLives

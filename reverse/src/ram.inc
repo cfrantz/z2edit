@@ -476,14 +476,7 @@ sramSaveStats           = $7402     ; [3][SAVE_STATS_SIZE] save file stats
 sramSaveStatus1         = $7498     ; save file 1 status
 sramSaveWorld           = $749A     ; [3][SAVE_WORLD_SIZE] save file world state
 sramSaveStatus2         = $773A     ; save file 2 status
-sram_7800               = $7800
-sram_7803               = $7803
-sram_7818               = $7818
-sram_7819               = $7819
-sram_781A               = $781A
-sram_7881               = $7881
-sram_788F               = $788F
-sram_7900               = $7900
+sramMenuUnder           = $7800     ; [280] tiles under the pause menu, saved while it is open (provisional)
 sramAreaPalettes        = $7919     ; [224] area palettes, from AreaBank::Palettes
 sramOverworldMap        = $7C00     ; [896] compressed overworld map of the region
 
