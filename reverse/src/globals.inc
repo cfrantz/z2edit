@@ -38,9 +38,9 @@ GLOBALS_INC = 1
 .global dat_4_8470
 .global loc_4_9A46
 .global dat_4_BF00
-.global loc_5_8B50
-.global loc_5_8B69
-.global loc_5_8BBF
+.global Ending_LoadArea
+.global Ending_DrawCurtainTop
+.global Ending_Run
 .global loc_5_9764
 .global Bank5_Nmi
 .global Game_PowerOnInit

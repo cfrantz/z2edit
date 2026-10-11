@@ -1,4 +1,4 @@
-# Title and File Screens
+# Title, File Screens and Ending
 
 The title screen, the story and the file screens are run by bank 5 from
 its own NMI handler, `Bank5_Nmi`, which `Game_PowerOnInit` installs at
@@ -122,3 +122,44 @@ defaults (`SaveDefaultStats`, `SaveDefaultWorld`), which blanks its name.
 START on END goes to the register screen (so steps 3 and 4 of
 `Eliminate_Run` are never used); the eliminations are saved when END is
 chosen there.
+
+## Ending
+
+Defeating Dark Link (`DarkLink_StartEnding`) sets `gameState` 3;
+`GameState_StartEnding` maps bank 5 and `GameState_Ending` runs, by
+`gameMode`: `Ending_LoadArea` (area $3D, the room where Zelda sleeps),
+`Area_Load`, `Mode_DrawArea`, `Ending_DrawCurtainTop`,
+`Mode_StartSideView`, then `Ending_Run` every frame.  The ending uses the
+game NMI; its variables are overlays on the object arrays (`ending*`,
+`triforce*`, `curtain*`, `credits*` in `src/ram.inc`).
+
+`Ending_Run` plays scenes by `sceneStep`.  Most scenes end with
+`Ending_Wait`: 96 frames, then the next scene.  Frames are from the 100%
+movie, where Dark Link falls at frame 253062:
+
+| Scene | Routine | Frame | |
+|-------|---------|-------|-|
+| 0 | `Ending_HoldTriforce` | 253106 | Link holds up the Triforce before the sleeping Zelda |
+| 1 | `Ending_SplitTriforce` | 253202 | it becomes three pieces |
+| 2 | `Ending_Flash` | 253804 | the screen flashes |
+| 3 | `Ending_WakeZelda` | 253996 | Zelda sits up; then area $3E is loaded |
+| 4 | `Ending_ShowCouple` | 254092 | Link and Zelda on the stage |
+| 5 | `Ending_TypeMessage` | 254231 | YOU SAVED HYRULE AND YOU ARE A REAL HERO! |
+| 6 | `Curtain_Run` | 254849 | the curtain comes down part way |
+| 7 | `Ending_Kiss` | 255329 | the kiss |
+| 8 | `Ending_ShowTheEnd` | 255425 | THE END |
+| 9 | `Curtain_Run` | 255521 | the curtain comes down to the floor |
+| 10 | `Curtain_Raise` | 255681 | it rises again; the credits music starts |
+| 11 | `Credits_Run` | 256224 | the credits (`CreditsText`) |
+| 12 | `Ending_WaitForStart` | 260212 | the Triforce; PUSH START TO REPLAY |
+| 13 | `Curtain_Run` | | after START, the curtain closes |
+| 14 | `Ending_SetSecondQuest` | | `secondQuest` = 1; on to `GameState_SaveAfterEnding` |
+
+The movie ends during scene 12, so scenes 13 and 14 have not been run.
+They were missing from the disassembly: the bootstrap ended the scene
+table after scene 12 and left `Ending_SetSecondQuest` as data.
+
+The credits show 9 pages, each a title and names (`CreditsTextPtrs`; the
+three PROGRAMER pages share one title string).  `Credits_FadeInText`
+fades each string in through `CreditsFadePalettes`, and
+`Credits_FadeOutPage` holds the page for 192 frames and fades it out.

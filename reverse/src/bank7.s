@@ -719,15 +719,15 @@ GameState_Ending:
 
 @loc_C376:
     jsr     Mmc1_SetPrgBank5        ; $C376
-    jmp     loc_5_8B50              ; $C379
+    jmp     Ending_LoadArea         ; $C379
 
 @loc_C37C:
     jsr     Mmc1_SetPrgBank5        ; $C37C
-    jmp     loc_5_8B69              ; $C37F
+    jmp     Ending_DrawCurtainTop   ; $C37F
 
 @loc_C382:
     jsr     Mmc1_SetPrgBank5        ; $C382
-    jmp     loc_5_8BBF              ; $C385
+    jmp     Ending_Run              ; $C385
 
 ; ---------------------------------------------------------------------------
 ; Mmc1_SetPrgBank5

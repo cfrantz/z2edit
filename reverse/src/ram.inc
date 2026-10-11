@@ -518,5 +518,17 @@ letterCursorY           = objYHi+12 ; Y of the letter grid cursor ($F8 = hidden,
 fileCursorX             = objX+0    ; X of the fairy cursor
 nameCursorX             = objXSubpixel+0 ; X of the name cursor
 sramFileScreenText      = sramOverworldMap+$300 ; [166] PPU strings of the file select screen, copied from FileScreenText and filled in
+; Ending (Ending_*, Curtain_*, Credits_*; the objects are gone by then)
+endingTimer             = objY+14   ; frames left in the current scene (Ending_Wait; 96 when it starts)
+endingSubStep           = objY+10   ; step within a scene (curtain, credits)
+triforceY               = objY+15   ; [3] Y of the three Triforce pieces
+triforceX               = objXHi+0  ; [3] X of the three Triforce pieces
+messageIndex            = objXHi+3  ; next letter of EndingMessage (Ending_TypeMessage)
+curtainPhase            = objXHi+4  ; 0-3: which pair of curtain rows is drawn next (Curtain_QueueRows)
+curtainAddr             = objYHi+14 ; (16-bit, high byte first: $0027-$0028) nametable address of the curtain's bottom edge
+curtainAttrLo           = objY+5    ; low byte of the attribute address ($23xx) set below the curtain, +8 every 4 edge draws (Curtain_DrawEdge)
+curtainEdgeCount        = objY+9    ; edge draws so far; bits 1-3 pick the attribute value (CurtainEdgeAttr)
+creditsString           = objX+7    ; next string of CreditsText (0-17; 18 = done)
+creditsFadeStep         = objX+8    ; 0-3 fade in, 4 hold, 5-7 fade out (CreditsFadeDelays)
 
 .endif

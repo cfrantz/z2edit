@@ -594,7 +594,16 @@ dat_5_8AA0:
     .byte   $AF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8B30
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8B40
 
-loc_5_8B50:
+; ---------------------------------------------------------------------------
+; Ending_LoadArea
+;
+; GameState_Ending mode 0: select the ending's area in bank 5, area $3D
+; (the room where Zelda sleeps) for scenes 0-3 and area $3E (the stage of
+; the later scenes) after that, and blank the screen for Area_Load.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_LoadArea:
     lda     #$05                    ; $8B50
     sta     areaPrgBank             ; $8B52
     lda     #$05                    ; $8B55
@@ -608,7 +617,16 @@ loc_5_8B50:
     sta     areaId                  ; $8B63
     jmp     Game_BlankAndNextMode   ; $8B66
 
-loc_5_8B69:
+; ---------------------------------------------------------------------------
+; Ending_DrawCurtainTop
+;
+; GameState_Ending mode 3, after the area is drawn: on the first visit,
+; request music 4 and set currentWorld 6; draw the top of the curtain (4
+; rows of tiles $9A/$9B at $2000, attributes $55).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_DrawCurtainTop:
     ldy     sceneStep               ; $8B69
     bne     @loc_8B77               ; $8B6C
     ldx     #$04                    ; $8B6E
@@ -651,20 +669,38 @@ dat_5_8BA0 := * + 2
     sta     PPUDATA                 ; $8BAA
     dey                             ; $8BAD
     bne     @loop                   ; $8BAE
-    jmp     loc_5_9255              ; $8BB0
+    jmp     Ending_NextMode         ; $8BB0
 
-dat_5_8BB3:
+EndingShimmerPalette:
     .byte   $3F, $1C, $04, $0F, $30, $30, $30, $FF                          ; $8BB3
 
-dat_5_8BBB:
+EndingShimmerColors:
     .byte   $17, $27, $37, $37                                              ; $8BBB
 
-loc_5_8BBF:
+; ---------------------------------------------------------------------------
+; Ending_Run
+;
+; GameState_Ending mode 5, every frame: queue the shimmering palette of the
+; Triforce (sprite palette 3, cycling every 4 frames), then run scene
+; sceneStep:
+;   0 Ending_HoldTriforce     7 Ending_Kiss
+;   1 Ending_SplitTriforce    8 Ending_ShowTheEnd
+;   2 Ending_Flash            9 Curtain_Run (lower it the rest of the way)
+;   3 Ending_WakeZelda       10 Curtain_Raise
+;   4 Ending_ShowCouple      11 Credits_Run
+;   5 Ending_TypeMessage     12 Ending_WaitForStart
+;   6 Curtain_Run (lower)    13 Curtain_Run (close it)
+;                            14 Ending_SetSecondQuest
+; Scenes 0-3 play in area $3D; scene 3 reloads area $3E for the rest.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_Run:
     ldx     ppuBuffer0Len           ; $8BBF
     ldy     #$00                    ; $8BC2
 
 @loop:
-    lda     dat_5_8BB3,y            ; $8BC4
+    lda     EndingShimmerPalette,y  ; $8BC4
     sta     ppuBuffer0,x            ; $8BC7
     inx                             ; $8BCA
     iny                             ; $8BCB
@@ -675,40 +711,47 @@ loc_5_8BBF:
     lsr     a                       ; $8BD3
     and     #$03                    ; $8BD4
     tay                             ; $8BD6
-    lda     dat_5_8BBB,y            ; $8BD7
-    sta     oamBuffer+255,x         ; $8BDA
+    lda     EndingShimmerColors,y   ; $8BD7
+    sta     ppuBuffer0-3,x          ; $8BDA  the string's second color
     dex                             ; $8BDD
     stx     ppuBuffer0Len           ; $8BDE
     lda     sceneStep               ; $8BE1
     jsr     JumpTable               ; $8BE4
 ; (inline jump table)
-    .word   loc_5_8C1D              ; $8BE7
-    .word   loc_5_8C5F              ; $8BE9
-    .word   loc_5_8CBB              ; $8BEB
-    .word   loc_5_8D64              ; $8BED
-    .word   loc_5_8DBA              ; $8BEF
-    .word   loc_5_8E0A              ; $8BF1
-    .word   loc_5_8E6F              ; $8BF3
-    .word   loc_5_8F68              ; $8BF5
-    .word   loc_5_8F9E              ; $8BF7
-    .word   loc_5_8E6F              ; $8BF9
-    .word   loc_5_8FB4              ; $8BFB
-    .word   loc_5_9042              ; $8BFD
-    .word   loc_5_9248              ; $8BFF
-    .word   loc_5_8E6F              ; $8C01  (not observed)
+    .word   Ending_HoldTriforce     ; $8BE7
+    .word   Ending_SplitTriforce    ; $8BE9
+    .word   Ending_Flash            ; $8BEB
+    .word   Ending_WakeZelda        ; $8BED
+    .word   Ending_ShowCouple       ; $8BEF
+    .word   Ending_TypeMessage      ; $8BF1
+    .word   Curtain_Run             ; $8BF3
+    .word   Ending_Kiss             ; $8BF5
+    .word   Ending_ShowTheEnd       ; $8BF7
+    .word   Curtain_Run             ; $8BF9
+    .word   Curtain_Raise           ; $8BFB
+    .word   Credits_Run             ; $8BFD
+    .word   Ending_WaitForStart     ; $8BFF
+    .word   Curtain_Run             ; $8C01  (not observed)
     .word   Ending_SetSecondQuest   ; $8C03  (not observed)
 
-dat_5_8C05:
+EndingTriforceSprites:
     .byte   $A0, $D6, $01, $78, $A0, $D6, $41, $80                          ; $8C05
 
-dat_5_8C0D:
+EndingLinkSprites:
     .byte   $B0, $E0, $00, $78, $B0, $E0, $40, $80, $C0, $E2, $00, $78, $C0, $E2, $40, $80; $8C0D
 
-loc_5_8C1D:
+; ---------------------------------------------------------------------------
+; Ending_HoldTriforce
+;
+; Scene 0: Link holds up the Triforce in front of the sleeping Zelda.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_HoldTriforce:
     ldy     #$07                    ; $8C1D
 
 @loop:
-    lda     dat_5_8C05,y            ; $8C1F
+    lda     EndingTriforceSprites,y ; $8C1F
     sta     oamBuffer+48,y          ; $8C22
     dey                             ; $8C25
     bpl     @loop                   ; $8C26
@@ -716,27 +759,42 @@ loc_5_8C1D:
     sta     oamBuffer+50            ; $8C2A
     ora     #$40                    ; $8C2D
     sta     oamBuffer+54            ; $8C2F
-    jsr     sub_5_8C38              ; $8C32
-    jmp     sub_5_8C44              ; $8C35
+    jsr     Ending_DrawLink         ; $8C32
+    jmp     Ending_Wait             ; $8C35
 
-sub_5_8C38:
+; ---------------------------------------------------------------------------
+; Ending_DrawLink
+;
+; Draw Link with his arms raised (EndingLinkSprites).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_DrawLink:
     ldy     #$0F                    ; $8C38
 
 @loop:
-    lda     dat_5_8C0D,y            ; $8C3A
+    lda     EndingLinkSprites,y     ; $8C3A
     sta     oamBuffer+16,y          ; $8C3D
     dey                             ; $8C40
     bpl     @loop                   ; $8C41
     rts                             ; $8C43
 
-sub_5_8C44:
-    lda     objY+14                 ; $8C44
+; ---------------------------------------------------------------------------
+; Ending_Wait
+;
+; Count down endingTimer (starting it at 96 frames); when it runs out, go
+; to the next scene, requesting music 8 (the credits) on reaching scene 10.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_Wait:
+    lda     endingTimer             ; $8C44
     bne     @loc_8C4C               ; $8C46
     lda     #$60                    ; $8C48
-    sta     objY+14                 ; $8C4A
+    sta     endingTimer             ; $8C4A
 
 @loc_8C4C:
-    dec     objY+14                 ; $8C4C
+    dec     endingTimer             ; $8C4C
     bne     @done                   ; $8C4E
     inc     sceneStep               ; $8C50
     lda     sceneStep               ; $8C53
@@ -748,36 +806,51 @@ sub_5_8C44:
 @done:
     rts                             ; $8C5E
 
-loc_5_8C5F:
-    jsr     sub_5_8C38              ; $8C5F
-    lda     objY+15                 ; $8C62
+; ---------------------------------------------------------------------------
+; Ending_SplitTriforce
+;
+; Scene 1: the Triforce becomes three pieces; every 8 frames one rises and
+; the other two move apart, until the first reaches Y $60.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_SplitTriforce:
+    jsr     Ending_DrawLink         ; $8C5F
+    lda     triforceY               ; $8C62
     cmp     #$60                    ; $8C64
     bne     @loc_8C6E               ; $8C66
-    jsr     sub_5_8C8B              ; $8C68
-    jmp     sub_5_8C44              ; $8C6B
+    jsr     Ending_DrawTriforces    ; $8C68
+    jmp     Ending_Wait             ; $8C6B
 
 @loc_8C6E:
-    lda     objY+15                 ; $8C6E
+    lda     triforceY               ; $8C6E
     bne     @loc_8C7F               ; $8C70
     ldx     #$02                    ; $8C72
 
 @loop:
     lda     #$A0                    ; $8C74
-    sta     objY+15,x               ; $8C76
+    sta     triforceY,x             ; $8C76
     lda     #$78                    ; $8C78
-    sta     objXHi,x                ; $8C7A
+    sta     triforceX,x             ; $8C7A
     dex                             ; $8C7C
     bpl     @loop                   ; $8C7D
 
 @loc_8C7F:
     lda     frameCounter            ; $8C7F
     and     #$07                    ; $8C81
-    bne     sub_5_8C8B              ; $8C83
-    dec     objY+15                 ; $8C85
-    inc     objXHi+1                ; $8C87
-    dec     objXHi+2                ; $8C89
+    bne     Ending_DrawTriforces    ; $8C83
+    dec     triforceY               ; $8C85
+    inc     triforceX+1             ; $8C87
+    dec     triforceX+2             ; $8C89
 
-sub_5_8C8B:
+; ---------------------------------------------------------------------------
+; Ending_DrawTriforces
+;
+; Draw the three Triforce pieces at triforceY/triforceX.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_DrawTriforces:
     ldx     #$02                    ; $8C8B
 
 @loop:
@@ -786,7 +859,7 @@ sub_5_8C8B:
     asl     a                       ; $8C8F
     asl     a                       ; $8C90
     tay                             ; $8C91
-    lda     objY+15,x               ; $8C92
+    lda     triforceY,x             ; $8C92
     sta     oamBuffer+48,y          ; $8C94
     sta     oamBuffer+52,y          ; $8C97
     lda     #$D6                    ; $8C9A
@@ -796,7 +869,7 @@ sub_5_8C8B:
     sta     oamBuffer+50,y          ; $8CA4
     ora     #$40                    ; $8CA7
     sta     oamBuffer+54,y          ; $8CA9
-    lda     objXHi,x                ; $8CAC
+    lda     triforceX,x             ; $8CAC
     sta     oamBuffer+51,y          ; $8CAE
     clc                             ; $8CB1
     adc     #$08                    ; $8CB2
@@ -805,16 +878,24 @@ sub_5_8C8B:
     bpl     @loop                   ; $8CB8
     rts                             ; $8CBA
 
-loc_5_8CBB:
-    jsr     sub_5_8C8B              ; $8CBB
-    jsr     sub_5_8C38              ; $8CBE
-    lda     objY+10                 ; $8CC1
+; ---------------------------------------------------------------------------
+; Ending_Flash
+;
+; Scene 2: with a sound effect, flash the screen (spellFlash = $E0, as the
+; spells do) until spellFlash runs out.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Ending_Flash:
+    jsr     Ending_DrawTriforces    ; $8CBB
+    jsr     Ending_DrawLink         ; $8CBE
+    lda     endingSubStep           ; $8CC1
     bne     @loc_8CD0               ; $8CC3
     lda     #$04                    ; $8CC5
     sta     sfxRequest              ; $8CC7
     lda     #$E0                    ; $8CC9
     sta     spellFlash              ; $8CCB
-    inc     objY+10                 ; $8CCE
+    inc     endingSubStep           ; $8CCE
 
 @loc_8CD0:
     lda     ram_0751                ; $8CD0
@@ -823,7 +904,7 @@ loc_5_8CBB:
     asl     a                       ; $8CD9
     bne     @loc_8CE3               ; $8CDA
     sta     spellFlash              ; $8CDC
-    jmp     sub_5_8C44              ; $8CDF
+    jmp     Ending_Wait             ; $8CDF
 ; (code below not executed in the test movies)
 
 @done:
@@ -887,19 +968,28 @@ loc_5_8CBB:
     lda     spellFlash              ; $8D46
     bne     loc_5_8D8C              ; $8D49
 ; (code below not executed in the test movies)
-    jmp     sub_5_8C44              ; $8D4B
+    jmp     Ending_Wait             ; $8D4B
 ; (end of code not executed in the test movies)
 
-dat_5_8D4E:
+EndingWakeText:
     .byte   $22, $0F, $02, $00, $0A, $22, $2F, $02, $01, $0B, $22, $4E, $03, $F4, $0C, $0D; $8D4E
     .byte   $23, $E3, $02, $AA, $AA, $FF                                    ; $8D5E
 
-loc_5_8D64:
+; ---------------------------------------------------------------------------
+; Ending_WakeZelda
+;
+; Scene 3: redraw Zelda sitting up on the altar (EndingWakeText).  When the
+; scene ends, turn rendering off and restart GameState_Ending at mode 0,
+; which loads area $3E.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_WakeZelda:
     ldy     #$00                    ; $8D64
     ldx     ppuBuffer0Len           ; $8D66
 
 @loop:
-    lda     dat_5_8D4E,y            ; $8D69
+    lda     EndingWakeText,y        ; $8D69
     sta     ppuBuffer0,x            ; $8D6C
     inx                             ; $8D6F
     iny                             ; $8D70
@@ -907,10 +997,10 @@ loc_5_8D64:
     bne     @loop                   ; $8D73
     dex                             ; $8D75
     stx     ppuBuffer0Len           ; $8D76
-    jsr     sub_5_8C8B              ; $8D79
-    jsr     sub_5_8C38              ; $8D7C
-    jsr     sub_5_8C44              ; $8D7F
-    lda     objY+14                 ; $8D82
+    jsr     Ending_DrawTriforces    ; $8D79
+    jsr     Ending_DrawLink         ; $8D7C
+    jsr     Ending_Wait             ; $8D7F
+    lda     endingTimer             ; $8D82
     bne     loc_5_8D8C              ; $8D84
     sta     PPUMASK                 ; $8D86
     sta     gameMode                ; $8D89
@@ -918,19 +1008,26 @@ loc_5_8D64:
 loc_5_8D8C:
     rts                             ; $8D8C
 
-dat_5_8D8D:
+EndingCoupleSprites:
     .byte   $B0, $02, $60, $70, $B0, $E4, $20, $78, $B0, $D8, $22, $80, $B0, $DA, $22, $88; $8D8D
     .byte   $C0, $06, $60, $70, $C0, $E6, $20, $78, $C0, $DC, $22, $80, $C0, $DE, $22, $88; $8D9D
 
-dat_5_8DAD:
+EndingCoupleAttr:
     .byte   $23, $D8, $48, $0F, $23, $E0, $50, $00, $23, $F0, $48, $F0, $FF ; $8DAD
 
-loc_5_8DBA:
+; ---------------------------------------------------------------------------
+; Ending_ShowCouple
+;
+; Scene 4: set the attributes of the new stage and show Link and Zelda.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_ShowCouple:
     ldx     ppuBuffer0Len           ; $8DBA
     ldy     #$00                    ; $8DBD
 
 @loop:
-    lda     dat_5_8DAD,y            ; $8DBF
+    lda     EndingCoupleAttr,y      ; $8DBF
     sta     ppuBuffer0,x            ; $8DC2
     inx                             ; $8DC5
     iny                             ; $8DC6
@@ -938,39 +1035,54 @@ loc_5_8DBA:
     bne     @loop                   ; $8DC9
     dex                             ; $8DCB
     stx     ppuBuffer0Len           ; $8DCC
-    jsr     sub_5_8DD5              ; $8DCF
-    jmp     sub_5_8C44              ; $8DD2
+    jsr     Ending_DrawCouple       ; $8DCF
+    jmp     Ending_Wait             ; $8DD2
 
-sub_5_8DD5:
+; ---------------------------------------------------------------------------
+; Ending_DrawCouple
+;
+; Draw Link and Zelda standing apart (EndingCoupleSprites).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_DrawCouple:
     ldy     #$1F                    ; $8DD5
 
 @loop:
-    lda     dat_5_8D8D,y            ; $8DD7
+    lda     EndingCoupleSprites,y   ; $8DD7
     sta     oamBuffer+16,y          ; $8DDA
     dey                             ; $8DDD
     bpl     @loop                   ; $8DDE
     rts                             ; $8DE0
 
-dat_5_8DE1:
+EndingMessage:
     .byte   $F2, $E8, $EE, $00, $EC, $DA, $EF, $DE, $DD, $00, $E1, $F2, $EB, $EE, $E5, $DE; $8DE1
     .byte   $00, $DA, $E7, $DD, $F2, $E8, $EE, $00, $DA, $EB, $DE, $00, $DA, $00, $EB, $DE; $8DF1
     .byte   $DA, $E5, $00, $E1, $DE, $EB, $E8, $07, $FF                     ; $8E01
 
-loc_5_8E0A:
-    jsr     sub_5_8DD5              ; $8E0A
-    ldx     objXHi+3                ; $8E0D
-    lda     dat_5_8DE1,x            ; $8E0F
+; ---------------------------------------------------------------------------
+; Ending_TypeMessage
+;
+; Scene 5: type EndingMessage, one letter every 16 frames with a sound,
+; in lines of 10 starting at $21CB ($00 = a space that takes no time).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_TypeMessage:
+    jsr     Ending_DrawCouple       ; $8E0A
+    ldx     messageIndex            ; $8E0D
+    lda     EndingMessage,x         ; $8E0F
     cmp     #$FF                    ; $8E12
     bne     @loc_8E1D               ; $8E14
     lda     #$00                    ; $8E16
-    sta     objY+10                 ; $8E18
-    jmp     sub_5_8C44              ; $8E1A
+    sta     endingSubStep           ; $8E18
+    jmp     Ending_Wait             ; $8E1A
 
 @loc_8E1D:
     cmp     #$00                    ; $8E1D
     bne     @loc_8E26               ; $8E1F
-    inc     objXHi+3                ; $8E21
-    jmp     loc_5_8E0A              ; $8E23
+    inc     messageIndex            ; $8E21
+    jmp     Ending_TypeMessage      ; $8E23
 
 @loc_8E26:
     lda     frameCounter            ; $8E26
@@ -980,7 +1092,7 @@ loc_5_8E0A:
     sta     temp0                   ; $8E2E
     lda     #$CB                    ; $8E30
     sta     temp1                   ; $8E32
-    lda     objXHi+3                ; $8E34
+    lda     messageIndex            ; $8E34
 
 @loc_8E36:
     cmp     #$0A                    ; $8E36
@@ -1000,7 +1112,7 @@ loc_5_8E0A:
     jmp     @loc_8E36               ; $8E4A
 
 @loc_8E4D:
-    inc     objXHi+3                ; $8E4D
+    inc     messageIndex            ; $8E4D
     clc                             ; $8E4F
     adc     temp1                   ; $8E50
     sta     ppuBuffer0+1            ; $8E52
@@ -1008,7 +1120,7 @@ loc_5_8E0A:
     sta     ppuBuffer0              ; $8E57
     lda     #$01                    ; $8E5A
     sta     ppuBuffer0+2            ; $8E5C
-    lda     dat_5_8DE1,x            ; $8E5F
+    lda     EndingMessage,x         ; $8E5F
     sta     ppuBuffer0+3            ; $8E62
     lda     #$FF                    ; $8E65
     sta     ppuBuffer0+4            ; $8E67
@@ -1018,156 +1130,189 @@ loc_5_8E0A:
 @done:
     rts                             ; $8E6E
 
-loc_5_8E6F:
+; ---------------------------------------------------------------------------
+; Curtain_Run
+;
+; Scenes 6, 9 and 13: lower the curtain over the stage, by endingSubStep:
+; 0 start at $2160, 1 Curtain_DrawEdge, 2 Curtain_Lower.  Scene 6 stops it
+; at $22E0, above Link and Zelda; scenes 9 and 13 lower it to the floor.
+; Scene 6 draws Link and Zelda standing apart, scene 9 in the kiss pose,
+; scene 13 neither.  Scenes 6 and 13 start at endingSubStep 0; scene 9
+; continues from where scene 6 stopped (Ending_ShowTheEnd sets 1).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Curtain_Run:
     lda     sceneStep               ; $8E6F
     cmp     #$0D                    ; $8E72
     beq     @loc_8E83               ; $8E74
     cmp     #$09                    ; $8E76
     beq     @loc_8E80               ; $8E78
-    jsr     sub_5_8DD5              ; $8E7A
+    jsr     Ending_DrawCouple       ; $8E7A
     jmp     @loc_8E83               ; $8E7D
 
 @loc_8E80:
-    jsr     sub_5_8F6B              ; $8E80
+    jsr     Ending_DrawKiss         ; $8E80
 
 @loc_8E83:
-    lda     objY+10                 ; $8E83
+    lda     endingSubStep           ; $8E83
     jsr     JumpTable               ; $8E85
 ; (inline jump table)
     .word   @loc_8E8E               ; $8E88
-    .word   loc_5_8EAE              ; $8E8A
-    .word   loc_5_8F1B              ; $8E8C
+    .word   Curtain_DrawEdge        ; $8E8A
+    .word   Curtain_Lower           ; $8E8C
 
 @loc_8E8E:
     lda     #$21                    ; $8E8E
-    sta     objYHi+14               ; $8E90
+    sta     curtainAddr             ; $8E90
     lda     #$60                    ; $8E92
-    sta     ram_0028                ; $8E94
+    sta     curtainAddr+1           ; $8E94
     lda     #$D8                    ; $8E96
-    sta     objY+5                  ; $8E98
+    sta     curtainAttrLo           ; $8E98
     lda     #$00                    ; $8E9A
-    sta     objXHi+4                ; $8E9C
-    inc     objY+10                 ; $8E9E
+    sta     curtainPhase            ; $8E9C
+    inc     endingSubStep           ; $8E9E
     rts                             ; $8EA0
 
-dat_5_8EA1:
+CurtainEdgeText:
     .byte   $60, $F4, $23, $00, $48, $00, $FF                               ; $8EA1
 
-dat_5_8EA8:
+CurtainEdgeAttr:
     .byte   $0F, $FF, $0F, $FF, $5F, $FF                                    ; $8EA8
 
-loc_5_8EAE:
+; ---------------------------------------------------------------------------
+; Curtain_DrawEdge
+;
+; Every 8 frames, at the start of a curtain step: blank the row below the
+; curtain and set the attributes under it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Curtain_DrawEdge:
     lda     frameCounter            ; $8EAE
     and     #$07                    ; $8EB0
     bne     @done                   ; $8EB2
-    lda     objXHi+4                ; $8EB4
+    lda     curtainPhase            ; $8EB4
     bne     @loc_8EF8               ; $8EB6
-    lda     ram_0028                ; $8EB8
+    lda     curtainAddr+1           ; $8EB8
     clc                             ; $8EBA
     adc     #$20                    ; $8EBB
     sta     ppuBuffer0+1            ; $8EBD
-    lda     objYHi+14               ; $8EC0
+    lda     curtainAddr             ; $8EC0
     adc     #$00                    ; $8EC2
     sta     ppuBuffer0              ; $8EC4
     ldx     #$06                    ; $8EC7
 
 @loop:
-    lda     dat_5_8EA1,x            ; $8EC9
+    lda     CurtainEdgeText,x       ; $8EC9
     sta     ppuBuffer0+2,x          ; $8ECC
     dex                             ; $8ECF
     bpl     @loop                   ; $8ED0
-    lda     objY+9                  ; $8ED2
+    lda     curtainEdgeCount        ; $8ED2
     and     #$0E                    ; $8ED4
     lsr     a                       ; $8ED6
     tax                             ; $8ED7
-    lda     objY+5                  ; $8ED8
+    lda     curtainAttrLo           ; $8ED8
     sta     ppuBuffer0+5            ; $8EDA
     cmp     #$F0                    ; $8EDD
     bne     @loc_8EE3               ; $8EDF
     ldx     #$01                    ; $8EE1
 
 @loc_8EE3:
-    lda     dat_5_8EA8,x            ; $8EE3
+    lda     CurtainEdgeAttr,x       ; $8EE3
     sta     ppuBuffer0+7            ; $8EE6
-    inc     objY+9                  ; $8EE9
-    lda     objY+9                  ; $8EEB
+    inc     curtainEdgeCount        ; $8EE9
+    lda     curtainEdgeCount        ; $8EEB
     and     #$03                    ; $8EED
     bne     @loc_8EF8               ; $8EEF
-    lda     objY+5                  ; $8EF1
+    lda     curtainAttrLo           ; $8EF1
     clc                             ; $8EF3
     adc     #$08                    ; $8EF4
-    sta     objY+5                  ; $8EF6
+    sta     curtainAttrLo           ; $8EF6
 
 @loc_8EF8:
-    inc     objY+10                 ; $8EF8
+    inc     endingSubStep           ; $8EF8
 
 @done:
     rts                             ; $8EFA
 
-dat_5_8EFB:
-    .byte   $70                                                             ; $8EFB
+CurtainTiles:
+    .byte   $70, $71, $72, $73, $70, $71, $74, $75, $70, $71, $76, $77, $84, $86, $85, $87; $8EFB
+    .byte   $70, $71, $76, $77, $70, $71, $74, $75, $70, $71, $72, $73, $84, $86, $F4, $F4; $8F0B
 
-dat_5_8EFC:
-    .byte   $71                                                             ; $8EFC
-
-dat_5_8EFD:
-    .byte   $72                                                             ; $8EFD
-
-dat_5_8EFE:
-    .byte   $73, $70, $71, $74, $75, $70, $71, $76, $77, $84, $86, $85, $87, $70, $71, $76; $8EFE
-    .byte   $77, $70, $71, $74, $75, $70, $71, $72, $73, $84, $86, $F4, $F4 ; $8F0E
-
-loc_5_8F1B:
-    lda     objY+14                 ; $8F1B
+; ---------------------------------------------------------------------------
+; Curtain_Lower
+;
+; Queue two more rows of curtain (Curtain_QueueRows); after four, move the
+; edge down a row pair, and stop at the scene's limit (Ending_Wait).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Curtain_Lower:
+    lda     endingTimer             ; $8F1B
     bne     @loc_8F62               ; $8F1D
     lda     #$00                    ; $8F1F
     sta     temp0                   ; $8F21
-    jsr     sub_5_8FF6              ; $8F23
-    inc     objXHi+4                ; $8F26
-    lda     objXHi+4                ; $8F28
+    jsr     Curtain_QueueRows       ; $8F23
+    inc     curtainPhase            ; $8F26
+    lda     curtainPhase            ; $8F28
     cmp     #$04                    ; $8F2A
     bne     @loc_8F65               ; $8F2C
     lda     #$00                    ; $8F2E
-    sta     objXHi+4                ; $8F30
-    lda     ram_0028                ; $8F32
+    sta     curtainPhase            ; $8F30
+    lda     curtainAddr+1           ; $8F32
     clc                             ; $8F34
     adc     #$20                    ; $8F35
-    sta     ram_0028                ; $8F37
-    lda     objYHi+14               ; $8F39
+    sta     curtainAddr+1           ; $8F37
+    lda     curtainAddr             ; $8F39
     adc     #$00                    ; $8F3B
-    sta     objYHi+14               ; $8F3D
+    sta     curtainAddr             ; $8F3D
     lda     sceneStep               ; $8F3F
     cmp     #$0D                    ; $8F42
     beq     @loc_8F52               ; $8F44
-    lda     objYHi+14               ; $8F46
+    lda     curtainAddr             ; $8F46
     cmp     #$22                    ; $8F48
     bne     @loc_8F52               ; $8F4A
-    lda     ram_0028                ; $8F4C
+    lda     curtainAddr+1           ; $8F4C
     cmp     #$E0                    ; $8F4E
     beq     @loc_8F62               ; $8F50
 
 @loc_8F52:
-    lda     objYHi+14               ; $8F52
+    lda     curtainAddr             ; $8F52
     cmp     #$23                    ; $8F54
     bne     @loc_8F65               ; $8F56
-    lda     ram_0028                ; $8F58
+    lda     curtainAddr+1           ; $8F58
     beq     @loc_8F65               ; $8F5A
     lda     #$00                    ; $8F5C
-    sta     objXHi+4                ; $8F5E
-    sta     ram_0028                ; $8F60
+    sta     curtainPhase            ; $8F5E
+    sta     curtainAddr+1           ; $8F60
 
 @loc_8F62:
-    jmp     sub_5_8C44              ; $8F62
+    jmp     Ending_Wait             ; $8F62
 
 @loc_8F65:
-    dec     objY+10                 ; $8F65
+    dec     endingSubStep           ; $8F65
     rts                             ; $8F67
 
-loc_5_8F68:
-    jsr     sub_5_8C44              ; $8F68
+; ---------------------------------------------------------------------------
+; Ending_Kiss
+;
+; Scene 7: Link and Zelda kiss.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_Kiss:
+    jsr     Ending_Wait             ; $8F68
 
-sub_5_8F6B:
-    jsr     sub_5_8DD5              ; $8F6B
+; ---------------------------------------------------------------------------
+; Ending_DrawKiss
+;
+; Draw Link and Zelda together (the couple's sprites moved closer).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_DrawKiss:
+    jsr     Ending_DrawCouple       ; $8F6B
     lda     #$75                    ; $8F6E
     sta     oamBuffer+19            ; $8F70
     sta     oamBuffer+35            ; $8F73
@@ -1182,79 +1327,104 @@ sub_5_8F6B:
     sta     oamBuffer+47            ; $8F8B
     rts                             ; $8F8E
 
-dat_5_8F8F:
+TheEndText:
     .byte   $23, $18, $07, $ED, $E1, $DE, $F4, $DE, $E7, $DD, $23, $F6, $42, $F0, $FF; $8F8F
 
-loc_5_8F9E:
-    lda     objY+14                 ; $8F9E
+; ---------------------------------------------------------------------------
+; Ending_ShowTheEnd
+;
+; Scene 8: when the scene's time is up, write THE END; until then, the
+; kiss.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_ShowTheEnd:
+    lda     endingTimer             ; $8F9E
     bne     @loc_8FB1               ; $8FA0
     ldy     #$0E                    ; $8FA2
 
 @loop:
-    lda     dat_5_8F8F,y            ; $8FA4
+    lda     TheEndText,y            ; $8FA4
     sta     ppuBuffer0,y            ; $8FA7
     dey                             ; $8FAA
     bpl     @loop                   ; $8FAB
     lda     #$01                    ; $8FAD
-    sta     objY+10                 ; $8FAF
+    sta     endingSubStep           ; $8FAF
 
 @loc_8FB1:
-    jmp     loc_5_8F68              ; $8FB1
+    jmp     Ending_Kiss             ; $8FB1
 
-loc_5_8FB4:
-    lda     objY+14                 ; $8FB4
+; ---------------------------------------------------------------------------
+; Curtain_Raise
+;
+; Scene 10: every 8 frames, draw the curtain rows going back up, until
+; the edge is at $2140, then wait for the scene to end.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Curtain_Raise:
+    lda     endingTimer             ; $8FB4
     bne     @loc_8FF2               ; $8FB6
     lda     frameCounter            ; $8FB8
     and     #$07                    ; $8FBA
     bne     @done                   ; $8FBC
     lda     #$10                    ; $8FBE
     sta     temp0                   ; $8FC0
-    jsr     sub_5_8FF6              ; $8FC2
-    inc     objXHi+4                ; $8FC5
-    lda     objXHi+4                ; $8FC7
+    jsr     Curtain_QueueRows       ; $8FC2
+    inc     curtainPhase            ; $8FC5
+    lda     curtainPhase            ; $8FC7
     cmp     #$04                    ; $8FC9
     bne     @done                   ; $8FCB
     lda     #$00                    ; $8FCD
-    sta     objXHi+4                ; $8FCF
-    lda     ram_0028                ; $8FD1
+    sta     curtainPhase            ; $8FCF
+    lda     curtainAddr+1           ; $8FD1
     sec                             ; $8FD3
     sbc     #$20                    ; $8FD4
-    sta     ram_0028                ; $8FD6
-    lda     objYHi+14               ; $8FD8
+    sta     curtainAddr+1           ; $8FD6
+    lda     curtainAddr             ; $8FD8
     sbc     #$00                    ; $8FDA
-    sta     objYHi+14               ; $8FDC
+    sta     curtainAddr             ; $8FDC
     cmp     #$21                    ; $8FDE
     bne     @done                   ; $8FE0
-    lda     ram_0028                ; $8FE2
+    lda     curtainAddr+1           ; $8FE2
     cmp     #$40                    ; $8FE4
     bne     @done                   ; $8FE6
     lda     #$11                    ; $8FE8
     sta     objY+2                  ; $8FEA
     lda     #$00                    ; $8FEC
     sta     objY+3                  ; $8FEE
-    sta     objY+10                 ; $8FF0
+    sta     endingSubStep           ; $8FF0
 
 @loc_8FF2:
-    jmp     sub_5_8C44              ; $8FF2
+    jmp     Ending_Wait             ; $8FF2
 
 @done:
     rts                             ; $8FF5
 
-sub_5_8FF6:
+; ---------------------------------------------------------------------------
+; Curtain_QueueRows
+;
+; Queue two rows of curtain tiles at curtainAddr, phase curtainPhase of
+; CurtainTiles.
+;
+; In:      temp0 = $00 to lower, $10 to raise (the tiles' second half)
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Curtain_QueueRows:
     ldx     #$00                    ; $8FF6
-    lda     objXHi+4                ; $8FF8
+    lda     curtainPhase            ; $8FF8
     asl     a                       ; $8FFA
     asl     a                       ; $8FFB
     ora     temp0                   ; $8FFC
     tay                             ; $8FFE
-    lda     objYHi+14               ; $8FFF
+    lda     curtainAddr             ; $8FFF
     sta     ppuBuffer0              ; $9001
-    lda     ram_0028                ; $9004
+    lda     curtainAddr+1           ; $9004
     sta     ppuBuffer0+1            ; $9006
     clc                             ; $9009
     adc     #$20                    ; $900A
     sta     ppuBuffer0+36           ; $900C
-    lda     objYHi+14               ; $900F
+    lda     curtainAddr             ; $900F
     adc     #$00                    ; $9011
     sta     ppuBuffer0+35           ; $9013
     lda     #$20                    ; $9016
@@ -1262,13 +1432,13 @@ sub_5_8FF6:
     sta     ppuBuffer0+37           ; $901B
 
 @loop:
-    lda     dat_5_8EFB,y            ; $901E
+    lda     CurtainTiles,y          ; $901E
     sta     ppuBuffer0+3,x          ; $9021
-    lda     dat_5_8EFC,y            ; $9024
+    lda     CurtainTiles+1,y        ; $9024
     sta     ppuBuffer0+4,x          ; $9027
-    lda     dat_5_8EFD,y            ; $902A
+    lda     CurtainTiles+2,y        ; $902A
     sta     ppuBuffer0+38,x         ; $902D
-    lda     dat_5_8EFE,y            ; $9030
+    lda     CurtainTiles+3,y        ; $9030
     sta     ppuBuffer0+39,x         ; $9033
     inx                             ; $9036
     inx                             ; $9037
@@ -1278,33 +1448,49 @@ sub_5_8FF6:
     sta     ppuBuffer0+70           ; $903E
     rts                             ; $9041
 
-loc_5_9042:
+; ---------------------------------------------------------------------------
+; Credits_Run
+;
+; Scene 11: the credits, by endingSubStep: 0 Credits_Init,
+; 1 Credits_DrawText, 2 Credits_FadeInText, 3 Credits_NextPage,
+; 4 Credits_FadeOutPage.  Each page is a title (CreditsText string 2n) and
+; the names (string 2n+1), each faded in through CreditsFadePalettes,
+; held for 192 frames, then faded out together.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Credits_Run:
     lda     #$00                    ; $9042
     sta     ram_0765                ; $9044
-    lda     objY+10                 ; $9047
+    lda     endingSubStep           ; $9047
     jsr     JumpTable               ; $9049
 ; (inline jump table)
-    .word   loc_5_9075              ; $904C
-    .word   loc_5_908D              ; $904E
-    .word   loc_5_90FE              ; $9050
-    .word   loc_5_9173              ; $9052
-    .word   loc_5_91A8              ; $9054
+    .word   Credits_Init            ; $904C
+    .word   Credits_DrawText        ; $904E
+    .word   Credits_FadeInText      ; $9050
+    .word   Credits_NextPage        ; $9052
+    .word   Credits_FadeOutPage     ; $9054
 
-dat_5_9056:
-    .byte   $03                                                             ; $9056
+CreditsNextState:
+    .byte   $03, $01                                                        ; $9056
 
-dat_5_9057:
-    .byte   $01                                                             ; $9057
-
-dat_5_9058:
+CreditsStaffText:
     .byte   $21, $CB, $05, $60, $61, $62, $63, $63, $23, $D8, $48, $55, $23, $E0, $48, $00; $9058
     .byte   $23, $E8, $48, $AA, $3F, $00, $44, $0F, $3F, $08, $44, $0F, $FF ; $9068
 
-loc_5_9075:
+; ---------------------------------------------------------------------------
+; Credits_Init
+;
+; Draw STAFF and the credits' attributes, black the palettes, and start
+; at string 0.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Credits_Init:
     ldy     #$1C                    ; $9075
 
 @loop:
-    lda     dat_5_9058,y            ; $9077
+    lda     CreditsStaffText,y      ; $9077
     sta     ppuBuffer0,y            ; $907A
     dey                             ; $907D
     bpl     @loop                   ; $907E
@@ -1312,19 +1498,26 @@ loc_5_9075:
     sta     objY                    ; $9082
     lda     #$00                    ; $9084
     sta     objY+1                  ; $9086
-    sta     objXHi+4                ; $9088
-    inc     objY+10                 ; $908A
+    sta     curtainPhase            ; $9088
+    inc     endingSubStep           ; $908A
     rts                             ; $908C
 
-loc_5_908D:
+; ---------------------------------------------------------------------------
+; Credits_DrawText
+;
+; Queue CreditsText string creditsString.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Credits_DrawText:
     lda     #$00                    ; $908D
     sta     temp2                   ; $908F
-    lda     objX+7                  ; $9091
+    lda     creditsString           ; $9091
     asl     a                       ; $9093
     tay                             ; $9094
-    lda     dat_5_9259,y            ; $9095
+    lda     CreditsTextPtrs,y       ; $9095
     sta     temp0                   ; $9098
-    lda     dat_5_925A,y            ; $909A
+    lda     CreditsTextPtrs+1,y     ; $909A
     sta     temp1                   ; $909D
     ldy     #$00                    ; $909F
 
@@ -1334,56 +1527,64 @@ loc_5_908D:
     iny                             ; $90A6
     cmp     #$FF                    ; $90A7
     bne     @loop                   ; $90A9
-    inc     objY+10                 ; $90AB
+    inc     endingSubStep           ; $90AB
     rts                             ; $90AD
 
-dat_5_90AE:
+CreditsFadeDelays:
     .byte   $08, $08, $08, $08, $C0, $08, $08, $08                          ; $90AE
 
-dat_5_90B6:
-    .byte   $BA                                                             ; $90B6
+CreditsFadePtrs:
+    .word   CreditsFadePalettes, CreditsFadePalettes+32 ; $90B6
 
-dat_5_90B7:
-    .byte   $90, $DA, $90, $0F, $05, $05, $16, $0F, $15, $05, $16, $0F, $25, $05, $16, $0F; $90B7
-    .byte   $30, $15, $16, $0F, $25, $05, $16, $0F, $15, $05, $16, $0F, $05, $05, $16, $0F; $90C7
-    .byte   $0F, $0F, $0F, $0F, $02, $02, $16, $0F, $12, $02, $16, $0F, $22, $02, $16, $0F; $90D7
-    .byte   $30, $12, $16, $0F, $22, $02, $16, $0F, $12, $02, $16, $0F, $02, $02, $16, $0F; $90E7
-    .byte   $0F, $0F, $0F                                                   ; $90F7
+CreditsFadePalettes:
+    .byte   $0F, $05, $05, $16, $0F, $15, $05, $16, $0F, $25, $05, $16, $0F, $30, $15, $16; $90BA
+    .byte   $0F, $25, $05, $16, $0F, $15, $05, $16, $0F, $05, $05, $16, $0F, $0F, $0F, $0F; $90CA
+    .byte   $0F, $02, $02, $16, $0F, $12, $02, $16, $0F, $22, $02, $16, $0F, $30, $12, $16; $90DA
+    .byte   $0F, $22, $02, $16, $0F, $12, $02, $16, $0F, $02, $02, $16, $0F, $0F, $0F, $0F; $90EA
 
-dat_5_90FA:
+CreditsFadeAddrLo:
     .byte   $00, $08                                                        ; $90FA
 
-dat_5_90FC:
+CreditsFadeStart:
     .byte   $04, $00                                                        ; $90FC
 
-loc_5_90FE:
-    lda     objY+14                 ; $90FE
+; ---------------------------------------------------------------------------
+; Credits_FadeInText
+;
+; Fade in the string just drawn (the title's palette for even strings, the
+; names' for odd ones) through CreditsFadeDelays; then draw the names, or,
+; after the names, hold the page (Credits_NextPage).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Credits_FadeInText:
+    lda     endingTimer             ; $90FE
     bne     @loc_9109               ; $9100
-    ldy     objX+8                  ; $9102
-    lda     dat_5_90AE,y            ; $9104
-    sta     objY+14                 ; $9107
+    ldy     creditsFadeStep         ; $9102
+    lda     CreditsFadeDelays,y     ; $9104
+    sta     endingTimer             ; $9107
 
 @loc_9109:
-    dec     objY+14                 ; $9109
+    dec     endingTimer             ; $9109
     bne     @done                   ; $910B
-    lda     objX+7                  ; $910D
+    lda     creditsString           ; $910D
     and     #$01                    ; $910F
     asl     a                       ; $9111
     tax                             ; $9112
-    lda     dat_5_90B6,x            ; $9113
+    lda     CreditsFadePtrs,x       ; $9113
     sta     temp0                   ; $9116
-    lda     dat_5_90B7,x            ; $9118
+    lda     CreditsFadePtrs+1,x     ; $9118
     sta     temp1                   ; $911B
     lda     #$3F                    ; $911D
     sta     ppuBuffer0              ; $911F
-    lda     objX+7                  ; $9122
+    lda     creditsString           ; $9122
     and     #$01                    ; $9124
     tax                             ; $9126
-    lda     dat_5_90FA,x            ; $9127
+    lda     CreditsFadeAddrLo,x     ; $9127
     sta     ppuBuffer0+1            ; $912A
     lda     #$04                    ; $912D
     sta     ppuBuffer0+2            ; $912F
-    lda     objX+8                  ; $9132
+    lda     creditsFadeStep         ; $9132
     asl     a                       ; $9134
     asl     a                       ; $9135
     tay                             ; $9136
@@ -1398,82 +1599,98 @@ loc_5_90FE:
     bne     @loop                   ; $9142
     lda     #$FF                    ; $9144
     sta     ppuBuffer0+7            ; $9146
-    inc     objX+8                  ; $9149
-    ldy     objX+8                  ; $914B
-    lda     dat_5_90AE,y            ; $914D
-    sta     objY+14                 ; $9150
+    inc     creditsFadeStep         ; $9149
+    ldy     creditsFadeStep         ; $914B
+    lda     CreditsFadeDelays,y     ; $914D
+    sta     endingTimer             ; $9150
     cpy     #$04                    ; $9152
     bne     @done                   ; $9154
-    inc     objX+7                  ; $9156
-    lda     objX+7                  ; $9158
+    inc     creditsString           ; $9156
+    lda     creditsString           ; $9158
     and     #$01                    ; $915A
     tay                             ; $915C
-    lda     dat_5_9056,y            ; $915D
-    sta     objY+10                 ; $9160
-    lda     dat_5_90FC,y            ; $9162
-    sta     objX+8                  ; $9165
+    lda     CreditsNextState,y      ; $915D
+    sta     endingSubStep           ; $9160
+    lda     CreditsFadeStart,y      ; $9162
+    sta     creditsFadeStep         ; $9165
 
 @done:
     rts                             ; $9167
 
-dat_5_9168:
+EndingFinalSpriteY:
     .byte   $64, $74, $74                                                   ; $9168
 
-dat_5_916B:
+EndingFinalSpriteX:
     .byte   $78, $70, $80                                                   ; $916B
 
-dat_5_916E:
+CreditsClearStaffText:
     .byte   $21, $CB, $45, $F4, $FF                                         ; $916E
 
-loc_5_9173:
-    lda     objX+7                  ; $9173
+; ---------------------------------------------------------------------------
+; Credits_NextPage
+;
+; At string 16 (THANKS A MILLION.) erase STAFF.  After the last string,
+; set the Triforce pieces' final positions and go to scene 12.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Credits_NextPage:
+    lda     creditsString           ; $9173
     cmp     #$12                    ; $9175
     bne     @loc_9194               ; $9177
     lda     #$00                    ; $9179
-    sta     objXHi+4                ; $917B
-    sta     objY+9                  ; $917D
-    sta     objY+10                 ; $917F
+    sta     curtainPhase            ; $917B
+    sta     curtainEdgeCount        ; $917D
+    sta     endingSubStep           ; $917F
     ldx     #$02                    ; $9181
 
 @loop:
-    lda     dat_5_9168,x            ; $9183
-    sta     objY+15,x               ; $9186
-    lda     dat_5_916B,x            ; $9188
-    sta     objXHi,x                ; $918B
+    lda     EndingFinalSpriteY,x    ; $9183
+    sta     triforceY,x             ; $9186
+    lda     EndingFinalSpriteX,x    ; $9188
+    sta     triforceX,x             ; $918B
     dex                             ; $918D
     bpl     @loop                   ; $918E
     inc     sceneStep               ; $9190
     rts                             ; $9193
 
 @loc_9194:
-    lda     objX+7                  ; $9194
+    lda     creditsString           ; $9194
     cmp     #$10                    ; $9196
     bne     @loc_91A5               ; $9198
     ldy     #$04                    ; $919A
 
 @loop2:
-    lda     dat_5_916E,y            ; $919C
+    lda     CreditsClearStaffText,y ; $919C
     sta     ppuBuffer0,y            ; $919F
     dey                             ; $91A2
     bpl     @loop2                  ; $91A3
 
 @loc_91A5:
-    inc     objY+10                 ; $91A5
+    inc     endingSubStep           ; $91A5
     rts                             ; $91A7
 
-loc_5_91A8:
-    lda     objY+14                 ; $91A8
+; ---------------------------------------------------------------------------
+; Credits_FadeOutPage
+;
+; Hold the page, then fade out the title and the names together, and go on
+; to the next page.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Credits_FadeOutPage:
+    lda     endingTimer             ; $91A8
     bne     @loc_91B3               ; $91AA
-    ldy     objX+8                  ; $91AC
-    lda     dat_5_90AE,y            ; $91AE
-    sta     objY+14                 ; $91B1
+    ldy     creditsFadeStep         ; $91AC
+    lda     CreditsFadeDelays,y     ; $91AE
+    sta     endingTimer             ; $91B1
 
 @loc_91B3:
-    dec     objY+14                 ; $91B3
+    dec     endingTimer             ; $91B3
     bne     @done                   ; $91B5
-    lda     dat_5_90B6              ; $91B7
+    lda     CreditsFadePtrs         ; $91B7
     sta     temp0                   ; $91BA
-    lda     dat_5_90B7              ; $91BC
+    lda     CreditsFadePtrs+1       ; $91BC
     sta     temp1                   ; $91BF
     lda     #$3F                    ; $91C1
     sta     ppuBuffer0              ; $91C3
@@ -1481,7 +1698,7 @@ loc_5_91A8:
     sta     ppuBuffer0+1            ; $91C8
     lda     #$04                    ; $91CB
     sta     ppuBuffer0+2            ; $91CD
-    lda     objX+8                  ; $91D0
+    lda     creditsFadeStep         ; $91D0
     asl     a                       ; $91D2
     asl     a                       ; $91D3
     tay                             ; $91D4
@@ -1501,7 +1718,7 @@ loc_5_91A8:
     lda     #$04                    ; $91EC
     sta     ppuBuffer0+9            ; $91EE
     ldx     #$00                    ; $91F1
-    lda     objX+8                  ; $91F3
+    lda     creditsFadeStep         ; $91F3
     asl     a                       ; $91F5
     asl     a                       ; $91F6
     ora     #$20                    ; $91F7
@@ -1516,14 +1733,14 @@ loc_5_91A8:
     bne     @loop2                  ; $9203
     lda     #$FF                    ; $9205
     sta     ppuBuffer0+10,x         ; $9207
-    inc     objX+8                  ; $920A
-    lda     objX+8                  ; $920C
+    inc     creditsFadeStep         ; $920A
+    lda     creditsFadeStep         ; $920C
     cmp     #$08                    ; $920E
     bne     @done                   ; $9210
     lda     #$00                    ; $9212
-    sta     objX+8                  ; $9214
-    lda     dat_5_9057              ; $9216
-    sta     objY+10                 ; $9219
+    sta     creditsFadeStep         ; $9214
+    lda     CreditsNextState+1      ; $9216
+    sta     endingSubStep           ; $9219
 
 @done:
     rts                             ; $921B
@@ -1570,8 +1787,15 @@ Ending_SetSecondQuest:
 ; (end of disassembled code)
 
 
-loc_5_9248:
-    jsr     sub_5_8C8B              ; $9248
+; ---------------------------------------------------------------------------
+; Ending_WaitForStart
+;
+; Scene 12: show the Triforce and wait for START (PUSH START TO REPLAY).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_WaitForStart:
+    jsr     Ending_DrawTriforces    ; $9248
     lda     joypadHeld              ; $924B
     and     #$10                    ; $924D
     beq     @done                   ; $924F
@@ -1582,37 +1806,47 @@ loc_5_9248:
 @done:
     rts                             ; $9254
 
-loc_5_9255:
+; ---------------------------------------------------------------------------
+; Ending_NextMode
+;
+; Advance gameMode.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ending_NextMode:
     inc     gameMode                ; $9255
     rts                             ; $9258
 
-dat_5_9259:
-    .byte   $7D                                                             ; $9259
+CreditsTextPtrs:
+    .word   CreditsText, CreditsText+22, CreditsText+36, CreditsText+58 ; $9259
+    .word   CreditsText+72, CreditsText+84, CreditsText+105, CreditsText+117 ; $9261
+    .word   CreditsText+138, CreditsText+156, CreditsText+168, CreditsText+186 ; $9269
+    .word   CreditsText+168, CreditsText+257, CreditsText+168, CreditsText+281 ; $9271
+    .word   CreditsText+210, CreditsText+231 ; $9279
 
-dat_5_925A:
-    .byte   $92, $93, $92, $A1, $92, $B7, $92, $C5, $92, $D1, $92, $E6, $92, $F2, $92, $07; $925A
-    .byte   $93, $19, $93, $25, $93, $37, $93, $25, $93, $7E, $93, $25, $93, $96, $93, $4F; $926A
-    .byte   $93, $64, $93, $22, $47, $12, $DE, $F1, $DE, $DC, $EE, $ED, $E2, $EF, $DE, $F4; $927A
-    .byte   $E9, $EB, $E8, $DD, $EE, $DC, $DE, $EB, $FF, $22, $8B, $0A, $E1, $CF, $F2, $DA; $928A
-    .byte   $E6, $DA, $EE, $DC, $E1, $E2, $FF, $22, $47, $12, $E9, $EB, $E8, $DD, $EE, $DC; $929A
-    .byte   $DE, $EB, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FF, $22, $8B, $0A; $92AA
-    .byte   $E6, $E2, $F2, $DA, $E1, $E8, $E7, $F4, $F4, $F4, $FF, $22, $47, $08, $DD, $E2; $92BA
-    .byte   $EB, $DE, $DC, $ED, $E8, $EB, $FF, $22, $8B, $07, $EC, $EE, $E0, $E2, $F2, $DA; $92CA
-    .byte   $E7, $22, $CB, $07, $F2, $DA, $E6, $DA, $E1, $DE, $E7, $FF, $22, $47, $08, $DD; $92DA
-    .byte   $DE, $EC, $E2, $E0, $E7, $DE, $EB, $FF, $22, $8B, $07, $E2, $EC, $EC, $E1, $E2; $92EA
-    .byte   $E7, $F4, $22, $CB, $07, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FF, $22, $47, $0E; $92FA
-    .byte   $EC, $E8, $EE, $E7, $DD, $F4, $DC, $E8, $E6, $E9, $E8, $EC, $DE, $EB, $FF, $22; $930A
-    .byte   $8B, $08, $ED, $EC, $EE, $E4, $DA, $EC, $DA, $E7, $FF, $22, $47, $0E, $E9, $EB; $931A
-    .byte   $E8, $E0, $EB, $DA, $E6, $DE, $EB, $F4, $F4, $F4, $F4, $F4, $FF, $22, $8B, $09; $932A
-    .byte   $E6, $E8, $EB, $E2, $E4, $DA, $F3, $EE, $F4, $22, $CB, $08, $E6, $DA, $EB, $EE; $933A
-    .byte   $E6, $DA, $EB, $EE, $FF, $22, $47, $11, $ED, $E1, $DA, $E7, $E4, $EC, $F4, $DA; $934A
-    .byte   $F4, $E6, $E2, $E5, $E5, $E2, $E8, $E7, $CF, $FF, $22, $8B, $0A, $E9, $EE, $EC; $935A
-    .byte   $E1, $F4, $EC, $ED, $DA, $EB, $ED, $22, $CB, $09, $ED, $E8, $F4, $EB, $DE, $E9; $936A
-    .byte   $E5, $DA, $F2, $FF, $22, $8B, $09, $EC, $E1, $E2, $E0, $DE, $DC, $E1, $DA, $E7; $937A
-    .byte   $22, $CB, $08, $E7, $E2, $EC, $E1, $E2, $F2, $DA, $E7, $FF, $22, $8B, $09, $E7; $938A
-    .byte   $DA, $E4, $DA, $F3, $E8, $E8, $F4, $F4, $22, $CB, $08, $F4, $F4, $F4, $F4, $F4; $939A
-    .byte   $F4, $F4, $F4, $FF                                              ; $93AA
-; (unreferenced: $93AE-$93FF, 82 bytes)
+CreditsText:
+    .byte   $22, $47, $12, $DE, $F1, $DE, $DC, $EE, $ED, $E2, $EF, $DE, $F4, $E9, $EB, $E8; $927D
+    .byte   $DD, $EE, $DC, $DE, $EB, $FF, $22, $8B, $0A, $E1, $CF, $F2, $DA, $E6, $DA, $EE; $928D
+    .byte   $DC, $E1, $E2, $FF, $22, $47, $12, $E9, $EB, $E8, $DD, $EE, $DC, $DE, $EB, $F4; $929D
+    .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FF, $22, $8B, $0A, $E6, $E2, $F2; $92AD
+    .byte   $DA, $E1, $E8, $E7, $F4, $F4, $F4, $FF, $22, $47, $08, $DD, $E2, $EB, $DE, $DC; $92BD
+    .byte   $ED, $E8, $EB, $FF, $22, $8B, $07, $EC, $EE, $E0, $E2, $F2, $DA, $E7, $22, $CB; $92CD
+    .byte   $07, $F2, $DA, $E6, $DA, $E1, $DE, $E7, $FF, $22, $47, $08, $DD, $DE, $EC, $E2; $92DD
+    .byte   $E0, $E7, $DE, $EB, $FF, $22, $8B, $07, $E2, $EC, $EC, $E1, $E2, $E7, $F4, $22; $92ED
+    .byte   $CB, $07, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FF, $22, $47, $0E, $EC, $E8, $EE; $92FD
+    .byte   $E7, $DD, $F4, $DC, $E8, $E6, $E9, $E8, $EC, $DE, $EB, $FF, $22, $8B, $08, $ED; $930D
+    .byte   $EC, $EE, $E4, $DA, $EC, $DA, $E7, $FF, $22, $47, $0E, $E9, $EB, $E8, $E0, $EB; $931D
+    .byte   $DA, $E6, $DE, $EB, $F4, $F4, $F4, $F4, $F4, $FF, $22, $8B, $09, $E6, $E8, $EB; $932D
+    .byte   $E2, $E4, $DA, $F3, $EE, $F4, $22, $CB, $08, $E6, $DA, $EB, $EE, $E6, $DA, $EB; $933D
+    .byte   $EE, $FF, $22, $47, $11, $ED, $E1, $DA, $E7, $E4, $EC, $F4, $DA, $F4, $E6, $E2; $934D
+    .byte   $E5, $E5, $E2, $E8, $E7, $CF, $FF, $22, $8B, $0A, $E9, $EE, $EC, $E1, $F4, $EC; $935D
+    .byte   $ED, $DA, $EB, $ED, $22, $CB, $09, $ED, $E8, $F4, $EB, $DE, $E9, $E5, $DA, $F2; $936D
+    .byte   $FF, $22, $8B, $09, $EC, $E1, $E2, $E0, $DE, $DC, $E1, $DA, $E7, $22, $CB, $08; $937D
+    .byte   $E7, $E2, $EC, $E1, $E2, $F2, $DA, $E7, $FF, $22, $8B, $09, $E7, $DA, $E4, $DA; $938D
+    .byte   $F3, $E8, $E8, $F4, $F4, $22, $CB, $08, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $939D
+    .byte   $FF                                                             ; $93AD
+
+dat_5_93AE:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93AE
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93BE
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93CE
@@ -4386,7 +4620,7 @@ DarkLink_FlashPalette:
     and     #$03                    ; $A4D9
     tay                             ; $A4DB
     lda     dat_5_A4C0,y            ; $A4DC
-    sta     oamBuffer+255,x         ; $A4DF
+    sta     ppuBuffer0-3,x          ; $A4DF  the string's second color
     dex                             ; $A4E2
     stx     ppuBuffer0Len           ; $A4E3
     ldx     currentObject           ; $A4E6
