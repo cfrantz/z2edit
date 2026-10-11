@@ -2405,7 +2405,7 @@ loc_3_B0CB:
     jmp     loc_3_B621              ; $B0CF
 
 loc_3_B0D2:
-    lda     ram_0525                ; $B0D2
+    lda     menuRow                 ; $B0D2
     asl     a                       ; $B0D5
     tay                             ; $B0D6
     lda     dat_3_B3F3,y            ; $B0D7
@@ -2420,14 +2420,14 @@ loc_3_B0D2:
 
 loc_3_B0ED:
     lda     (temp2),y               ; $B0ED
-    sta     ram_053E,y              ; $B0EF
+    sta     menuRowTiles,y          ; $B0EF
     lda     (temp4),y               ; $B0F2
-    sta     ram_054C,y              ; $B0F4
+    sta     menuRowTiles2,y         ; $B0F4
     dey                             ; $B0F7
     bpl     loc_3_B0ED              ; $B0F8
     jsr     sub_3_B10B              ; $B0FA
-    inc     ram_0525                ; $B0FD
-    lda     ram_0525                ; $B100
+    inc     menuRow                 ; $B0FD
+    lda     menuRow                 ; $B100
     cmp     #$05                    ; $B103
     bcc     loc_3_B10A              ; $B105
 
@@ -2477,8 +2477,8 @@ loc_3_B13D:
     lda     temp6                   ; $B144
 
 loc_3_B146:
-    and     ram_0526,x              ; $B146
-    sta     ram_0526,x              ; $B149
+    and     menuAttrs,x             ; $B146
+    sta     menuAttrs,x             ; $B149
     jsr     sub_3_B335              ; $B14C
     bcc     loc_3_B10E              ; $B14F
 
@@ -2509,14 +2509,14 @@ sub_3_B15F:
     asl     a                       ; $B174
     adc     #$23                    ; $B175
     sta     ppuBuffer1,y            ; $B177
-    lda     ram_0525                ; $B17A
+    lda     menuRow                 ; $B17A
     clc                             ; $B17D
     adc     #$01                    ; $B17E
     sta     temp2                   ; $B180
     rts                             ; $B182
 
 loc_3_B183:
-    dec     ram_0525                ; $B183
+    dec     menuRow                 ; $B183
     bpl     loc_3_B18B              ; $B186
     jmp     loc_3_B107              ; $B188
 
@@ -2534,7 +2534,7 @@ loc_3_B18B:
     lsr     a                       ; $B19D
     lsr     a                       ; $B19E
     tay                             ; $B19F
-    lda     ram_0525                ; $B1A0
+    lda     menuRow                 ; $B1A0
     asl     a                       ; $B1A3
     asl     a                       ; $B1A4
     asl     a                       ; $B1A5
@@ -2545,7 +2545,7 @@ loc_3_B18B:
 
 loc_3_B1AE:
     lda     (temp14),y              ; $B1AE
-    sta     ram_055A,x              ; $B1B0
+    sta     menuUnderRow,x          ; $B1B0
     iny                             ; $B1B3
     tya                             ; $B1B4
     and     #$0F                    ; $B1B5
@@ -2568,7 +2568,7 @@ loc_3_B1C4:
 
 loc_3_B1CF:
     ldx     temp0                   ; $B1CF
-    lda     ram_055A,x              ; $B1D1
+    lda     menuUnderRow,x          ; $B1D1
     and     #$C0                    ; $B1D4
     asl     a                       ; $B1D6
     rol     a                       ; $B1D7
@@ -2576,7 +2576,7 @@ loc_3_B1CF:
     asl     a                       ; $B1D9
     tay                             ; $B1DA
     jsr     Area_GetMetatilePtr     ; $B1DB
-    lda     ram_055A,x              ; $B1DE
+    lda     menuUnderRow,x          ; $B1DE
     asl     a                       ; $B1E1
     asl     a                       ; $B1E2
     tay                             ; $B1E3
@@ -2637,7 +2637,7 @@ loc_3_B23B:
     lda     #$FF                    ; $B23B
 
 loc_3_B23D:
-    and     ram_0526,x              ; $B23D
+    and     menuAttrs,x             ; $B23D
     jsr     sub_3_B335              ; $B240
     bcs     loc_3_B248              ; $B243
     jmp     loc_3_B1F8              ; $B245
@@ -2683,7 +2683,7 @@ loc_3_B27C:
     sta     temp3                   ; $B280
 
 loc_3_B282:
-    lda     ram_0525                ; $B282
+    lda     menuRow                 ; $B282
     asl     a                       ; $B285
     asl     a                       ; $B286
     asl     a                       ; $B287
@@ -2720,10 +2720,10 @@ loc_3_B282:
     iny                             ; $B2BB
 
 loc_3_B2BC:
-    lda     ram_053E,x              ; $B2BC
+    lda     menuRowTiles,x          ; $B2BC
     sta     ppuBuffer1,y            ; $B2BF
     inx                             ; $B2C2
-    lda     ram_053E,x              ; $B2C3
+    lda     menuRowTiles,x          ; $B2C3
     sta     ppuBuffer1+1,y          ; $B2C6
     inx                             ; $B2C9
     lda     temp1                   ; $B2CA
@@ -2918,10 +2918,10 @@ loc_3_B3D0:
     lsr     a                       ; $B3D5
 
 loc_3_B3D6:
-    ora     ram_0526,x              ; $B3D6
+    ora     menuAttrs,x             ; $B3D6
 
 loc_3_B3D9:
-    sta     ram_0526,x              ; $B3D9
+    sta     menuAttrs,x             ; $B3D9
     rts                             ; $B3DC
 
 dat_3_B3DD:
@@ -3430,7 +3430,7 @@ loc_3_B776:
     lda     #$00                    ; $B78A
     sta     pauseState              ; $B78C
     sta     dialogType              ; $B78F
-    sta     ram_0525                ; $B792
+    sta     menuRow                 ; $B792
     sta     ram_00DE                ; $B795
     sta     ram_048D                ; $B797
     ldy     #$05                    ; $B79A
@@ -3498,7 +3498,7 @@ loc_3_B7F0:
     sta     sfxRequest+2            ; $B7F2
     lda     #$00                    ; $B7F4
     sta     dialogType              ; $B7F6
-    sta     ram_0525                ; $B7F9
+    sta     menuRow                 ; $B7F9
     sta     pauseState              ; $B7FC
     sta     fluteTimer              ; $B7FF
     rts                             ; $B802

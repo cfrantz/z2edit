@@ -258,7 +258,7 @@ Nmi:
     jsr     Joypad_Update           ; $C137
     lda     ram_00DE                ; $C13A
     beq     @checkPerFrame          ; $C13C
-    lda     ram_0763                ; $C13E
+    lda     bigDoorCounter          ; $C13E
     ora     ram_0764                ; $C141
     bne     @checkPaused            ; $C144
 
@@ -460,17 +460,17 @@ Menu_CopyPtrFromArea:
 ; ---------------------------------------------------------------------------
 ; Menu_CopyPtr
 ;
-; Copy the word at (temp14),y to ram_053E,x / ram_054C,x and advance x.
+; Copy the word at (temp14),y to menuRowTiles,x / menuRowTiles2,x and advance x.
 ; Menu_CopyPtrFromArea does it with the area bank mapped.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Menu_CopyPtr:
     lda     (temp14),y              ; $C258
-    sta     ram_053E,x              ; $C25A
+    sta     menuRowTiles,x          ; $C25A
     iny                             ; $C25D
     lda     (temp14),y              ; $C25E
-    sta     ram_054C,x              ; $C260
+    sta     menuRowTiles2,x         ; $C260
     inx                             ; $C263
     rts                             ; $C264
 
@@ -878,7 +878,7 @@ Area_Load:
     sta     columnIndex             ; $C4EF
     sta     columnPage+1            ; $C4F2
     sta     columnIndex+1           ; $C4F5
-    sta     ram_0763                ; $C4F8
+    sta     bigDoorCounter          ; $C4F8
     sta     ram_0764                ; $C4FB
     ldy     currentWorld            ; $C4FE
     bne     loc_C50C                ; $C501
@@ -1806,7 +1806,7 @@ loc_CA26:
     lda     #$00                    ; $CA2C
     sta     dialogType              ; $CA2E
     sta     pauseState              ; $CA31
-    sta     ram_0525                ; $CA34
+    sta     menuRow                 ; $CA34
     sta     ram_00DE                ; $CA37
     sta     ram_048D                ; $CA39
     ldy     #$05                    ; $CA3C

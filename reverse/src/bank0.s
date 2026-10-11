@@ -2219,7 +2219,7 @@ Spell_SpellEffect:
     bne     loc_0_8E95              ; $8E81
     lda     #$01                    ; $8E83
     sta     ram_00DE                ; $8E85
-    jmp     loc_0_8ED8              ; $8E87
+    jmp     BigDoor_Update          ; $8E87
 ; (code below not executed in the test movies)
 
 loc_0_8E8A:
@@ -2251,8 +2251,8 @@ dat_0_8ED2:
 dat_0_8ED3:
     .byte   $8E, $A6, $8E, $B0, $8E                                         ; $8ED3
 
-loc_0_8ED8:
-    lda     ram_0763                ; $8ED8
+BigDoor_Update:
+    lda     bigDoorCounter          ; $8ED8
     cmp     #$10                    ; $8EDB
     bne     loc_0_8EE4              ; $8EDD
     lda     #$00                    ; $8EDF
@@ -2262,7 +2262,7 @@ loc_0_8ED8:
 loc_0_8EE4:
     cmp     #$0F                    ; $8EE4
     bne     loc_0_8EEB              ; $8EE6
-    jsr     sub_0_8F84              ; $8EE8
+    jsr     BigDoor_DrawOpen        ; $8EE8
 
 loc_0_8EEB:
     lda     ram_049F                ; $8EEB
@@ -2282,7 +2282,7 @@ loc_0_8EF7:
     lda     #$36                    ; $8F06
     sta     temp1                   ; $8F08
     ldx     #$00                    ; $8F0A
-    lda     ram_0763                ; $8F0C
+    lda     bigDoorCounter          ; $8F0C
 
 loc_0_8F0F:
     pha                             ; $8F0F
@@ -2323,12 +2323,12 @@ loc_0_8F3E:
     cpx     #$18                    ; $8F45
     bne     loc_0_8F3E              ; $8F47
     inc     ram_0764                ; $8F49
-    dec     ram_0763                ; $8F4C
+    dec     bigDoorCounter          ; $8F4C
 
 loc_0_8F4F:
     lda     #$FF                    ; $8F4F
     sta     ppuBuffer1,x            ; $8F51
-    inc     ram_0763                ; $8F54
+    inc     bigDoorCounter          ; $8F54
 
 loc_0_8F57:
     rts                             ; $8F57
@@ -2367,7 +2367,16 @@ dat_0_8F7A:
 dat_0_8F7F:
     .byte   $E2, $E2, $D6, $E2, $E2                                         ; $8F7F
 
-sub_0_8F84:
+; ---------------------------------------------------------------------------
+; BigDoor_DrawOpen
+;
+; Draw the opened big door into the area tile map: five columns of tiles
+; from dat_0_8F7A/dat_0_8F7F, down to tile row $B0.  Called by
+; BigDoor_Update when bigDoorCounter reaches $0F.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+BigDoor_DrawOpen:
     lda     #$00                    ; $8F84
     sta     temp14                  ; $8F86
     lda     #$60                    ; $8F88
@@ -4537,7 +4546,7 @@ loc_0_9D69:
     .word   loc_0_A68B              ; $9D87
     .word   loc_0_A0F1              ; $9D89
     .word   loc_0_A26B              ; $9D8B
-    .word   loc_0_A3D7              ; $9D8D
+    .word   Menu_CloseRow           ; $9D8D
     .word   loc_0_A338              ; $9D8F
 
 loc_0_9D91:
@@ -4606,7 +4615,7 @@ loc_0_9DDE:
     .word   loc_0_A2FE              ; $9DEC
     .word   loc_0_A1DD              ; $9DEE
     .word   loc_0_A26B              ; $9DF0
-    .word   loc_0_A3D7              ; $9DF2
+    .word   Menu_CloseRow           ; $9DF2
     .word   loc_0_A338              ; $9DF4
 
 ; ---------------------------------------------------------------------------
@@ -5105,13 +5114,13 @@ loc_0_A0F1:
 loc_0_A0FE:
     lda     ppuBuffer0Len           ; $A0FE
     bne     loc_0_A0F0              ; $A101
-    lda     ram_0525                ; $A103
+    lda     menuRow                 ; $A103
     cmp     #$03                    ; $A106
     beq     loc_0_A140              ; $A108
     pha                             ; $A10A
     ldy     ram_074E                ; $A10B
     lda     dat_0_A688,y            ; $A10E
-    sta     ram_0525                ; $A111
+    sta     menuRow                 ; $A111
     jsr     Menu_RestoreUnderBottom ; $A114
     lda     menuRepeatTimer         ; $A117
     and     #$0F                    ; $A11A
@@ -5129,9 +5138,9 @@ loc_0_A12A:
     bpl     loc_0_A12A              ; $A12E
 
 loc_0_A130:
-    jsr     sub_0_A35F              ; $A130
+    jsr     Menu_DrawRowAttrs       ; $A130
     pla                             ; $A133
-    sta     ram_0525                ; $A134
+    sta     menuRow                 ; $A134
 
 loc_0_A137:
     rts                             ; $A137
@@ -5220,7 +5229,7 @@ Game_ShowContinueScreen:
     lda     #$00                    ; $A1B8
     sta     dialogType              ; $A1BA
     sta     pauseState              ; $A1BD
-    sta     ram_0525                ; $A1C0
+    sta     menuRow                 ; $A1C0
     sta     menuCursor              ; $A1C3
     sta     ram_0759                ; $A1C6
     sta     experience              ; $A1C9
@@ -5435,10 +5444,10 @@ loc_0_A2EB:
     lsr     a                       ; $A2F0
 
 loc_0_A2F1:
-    ora     ram_0526,x              ; $A2F1
+    ora     menuAttrs,x             ; $A2F1
 
 loc_0_A2F4:
-    sta     ram_0526,x              ; $A2F4
+    sta     menuAttrs,x             ; $A2F4
     rts                             ; $A2F7
 
 loc_0_A2F8:
@@ -5449,9 +5458,9 @@ loc_0_A2FE:
     jsr     Menu_RestoreUnderTop    ; $A2FE
 
 loc_0_A301:
-    jsr     sub_0_A35F              ; $A301
-    inc     ram_0525                ; $A304
-    lda     ram_0525                ; $A307
+    jsr     Menu_DrawRowAttrs       ; $A301
+    inc     menuRow                 ; $A304
+    lda     menuRow                 ; $A307
     cmp     #$0A                    ; $A30A
     bcs     loc_0_A325              ; $A30C
     rts                             ; $A30E
@@ -5485,7 +5494,7 @@ loc_0_A329:
 loc_0_A338:
     lda     #$00                    ; $A338
     sta     dialogType              ; $A33A
-    sta     ram_0525                ; $A33D
+    sta     menuRow                 ; $A33D
     sta     pauseState              ; $A340
     sta     fluteTimer              ; $A343
     rts                             ; $A346
@@ -5507,19 +5516,30 @@ loc_0_A352:
     beq     loc_0_A31C              ; $A35B
     bne     loc_0_A352              ; $A35D
 
-sub_0_A35F:
-    jsr     sub_0_A546              ; $A35F
+; ---------------------------------------------------------------------------
+; Menu_DrawRowAttrs
+;
+; Draw a row of the pause menu window: its tiles (Menu_BeginRow) and then
+; its attribute bytes, masked so that only the window's quadrants change
+; (menuAttrs), and send ppuBuffer1 with the next NMI.
+; Menu_GetAttrAddress, Menu_QueueAttrHeader, Menu_CheckAttrAlignment and
+; Menu_NextAttr build the attribute strings.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_DrawRowAttrs:
+    jsr     Menu_BeginRow           ; $A35F
 
 loc_0_A362:
-    jsr     sub_0_A3B3              ; $A362
+    jsr     Menu_GetAttrAddress     ; $A362
     and     #$FE                    ; $A365
     asl     a                       ; $A367
     asl     a                       ; $A368
     adc     #$C8                    ; $A369
-    jsr     sub_0_A558              ; $A36B
+    jsr     Menu_QueueAttrHeader    ; $A36B
     lda     #$0F                    ; $A36E
     sta     temp5                   ; $A370
-    jsr     sub_0_A56B              ; $A372
+    jsr     Menu_CheckAttrAlignment ; $A372
     beq     loc_0_A383              ; $A375
     lda     temp4                   ; $A377
     bne     loc_0_A391              ; $A379
@@ -5547,9 +5567,9 @@ loc_0_A391:
     lda     temp6                   ; $A398
 
 loc_0_A39A:
-    and     ram_0526,x              ; $A39A
-    sta     ram_0526,x              ; $A39D
-    jsr     sub_0_A589              ; $A3A0
+    and     menuAttrs,x             ; $A39A
+    sta     menuAttrs,x             ; $A39D
+    jsr     Menu_NextAttr           ; $A3A0
     bcc     loc_0_A362              ; $A3A3
 
 loc_0_A3A5:
@@ -5560,7 +5580,7 @@ loc_0_A3A5:
     sta     ppuStringSelect         ; $A3AF
     rts                             ; $A3B2
 
-sub_0_A3B3:
+Menu_GetAttrAddress:
     lda     temp1                   ; $A3B3
     clc                             ; $A3B5
     adc     #$78                    ; $A3B6
@@ -5579,14 +5599,23 @@ sub_0_A3B3:
     asl     a                       ; $A3C8
     adc     #$23                    ; $A3C9
     sta     ppuBuffer1,y            ; $A3CB
-    lda     ram_0525                ; $A3CE
+    lda     menuRow                 ; $A3CE
     clc                             ; $A3D1
     adc     #$01                    ; $A3D2
     sta     temp2                   ; $A3D4
     rts                             ; $A3D6
 
-loc_0_A3D7:
-    dec     ram_0525                ; $A3D7
+; ---------------------------------------------------------------------------
+; Menu_CloseRow
+;
+; Close the pause menu window one row at a time: rebuild row menuRow from
+; the area tiles under it (menuUnderRow, through the area's metatiles) and
+; draw it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_CloseRow:
+    dec     menuRow                 ; $A3D7
     bpl     loc_0_A3DF              ; $A3DA
     jmp     loc_0_A267              ; $A3DC
 
@@ -5604,7 +5633,7 @@ loc_0_A3DF:
     lsr     a                       ; $A3F1
     lsr     a                       ; $A3F2
     tay                             ; $A3F3
-    lda     ram_0525                ; $A3F4
+    lda     menuRow                 ; $A3F4
     asl     a                       ; $A3F7
     asl     a                       ; $A3F8
     asl     a                       ; $A3F9
@@ -5615,7 +5644,7 @@ loc_0_A3DF:
 
 loc_0_A402:
     lda     (temp14),y              ; $A402
-    sta     ram_055A,x              ; $A404
+    sta     menuUnderRow,x          ; $A404
     iny                             ; $A407
     tya                             ; $A408
     and     #$0F                    ; $A409
@@ -5638,7 +5667,7 @@ loc_0_A418:
 
 loc_0_A423:
     ldx     temp0                   ; $A423
-    lda     ram_055A,x              ; $A425
+    lda     menuUnderRow,x          ; $A425
     and     #$C0                    ; $A428
     asl     a                       ; $A42A
     rol     a                       ; $A42B
@@ -5646,7 +5675,7 @@ loc_0_A423:
     asl     a                       ; $A42D
     tay                             ; $A42E
     jsr     Area_GetMetatilePtrInBank ; $A42F
-    lda     ram_055A,x              ; $A432
+    lda     menuUnderRow,x          ; $A432
     asl     a                       ; $A435
     asl     a                       ; $A436
     tay                             ; $A437
@@ -5658,10 +5687,10 @@ loc_0_A423:
     inc     temp0                   ; $A443
     cpx     #$0E                    ; $A445
     bcc     loc_0_A423              ; $A447
-    jsr     sub_0_A546              ; $A449
+    jsr     Menu_BeginRow           ; $A449
 
 loc_0_A44C:
-    jsr     sub_0_A3B3              ; $A44C
+    jsr     Menu_GetAttrAddress     ; $A44C
     lsr     a                       ; $A44F
     clc                             ; $A450
     adc     #$01                    ; $A451
@@ -5669,8 +5698,8 @@ loc_0_A44C:
     asl     a                       ; $A454
     asl     a                       ; $A455
     adc     #$C0                    ; $A456
-    jsr     sub_0_A558              ; $A458
-    jsr     sub_0_A56B              ; $A45B
+    jsr     Menu_QueueAttrHeader    ; $A458
+    jsr     Menu_CheckAttrAlignment ; $A45B
     lda     #$F0                    ; $A45E
     sta     temp6                   ; $A460
     lda     scrollX                 ; $A462
@@ -5707,15 +5736,25 @@ loc_0_A48F:
     lda     #$FF                    ; $A48F
 
 loc_0_A491:
-    and     ram_0526,x              ; $A491
-    jsr     sub_0_A589              ; $A494
+    and     menuAttrs,x             ; $A491
+    jsr     Menu_NextAttr           ; $A494
     bcs     loc_0_A49C              ; $A497
     jmp     loc_0_A44C              ; $A499
 
 loc_0_A49C:
     jmp     loc_0_A3A5              ; $A49C
 
-sub_0_A49F:
+; ---------------------------------------------------------------------------
+; Menu_QueueRowTiles
+;
+; Queue the two tile rows of the pause menu window for row menuRow
+; (menuRowTiles, menuRowTiles2) in ppuBuffer1, as PPU strings split where
+; the window crosses from one nametable to the other.  Menu_BeginRow does
+; this and sets temp0:temp1 to the scroll position for the attribute bytes.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_QueueRowTiles:
     ldy     ppuBuffer1Len           ; $A49F
     lda     #$C0                    ; $A4A2
     sta     temp7                   ; $A4A4
@@ -5753,7 +5792,7 @@ loc_0_A4D0:
     sta     temp3                   ; $A4D4
 
 loc_0_A4D6:
-    lda     ram_0525                ; $A4D6
+    lda     menuRow                 ; $A4D6
     asl     a                       ; $A4D9
     asl     a                       ; $A4DA
     asl     a                       ; $A4DB
@@ -5790,10 +5829,10 @@ loc_0_A4D6:
     iny                             ; $A50F
 
 loc_0_A510:
-    lda     ram_053E,x              ; $A510
+    lda     menuRowTiles,x          ; $A510
     sta     ppuBuffer1,y            ; $A513
     inx                             ; $A516
-    lda     ram_053E,x              ; $A517
+    lda     menuRowTiles,x          ; $A517
     sta     ppuBuffer1+1,y          ; $A51A
     inx                             ; $A51D
     lda     temp1                   ; $A51E
@@ -5824,8 +5863,8 @@ loc_0_A53A:
 loc_0_A545:
     rts                             ; $A545
 
-sub_0_A546:
-    jsr     sub_0_A49F              ; $A546
+Menu_BeginRow:
+    jsr     Menu_QueueRowTiles      ; $A546
     lda     scrollXHi               ; $A549
     sta     temp0                   ; $A54C
     lda     scrollX                 ; $A54E
@@ -5834,7 +5873,7 @@ sub_0_A546:
     sta     temp4                   ; $A555
     rts                             ; $A557
 
-sub_0_A558:
+Menu_QueueAttrHeader:
     adc     temp3                   ; $A558
     sta     ppuBuffer1+1,y          ; $A55A
     lda     #$01                    ; $A55D
@@ -5846,7 +5885,7 @@ sub_0_A558:
     tax                             ; $A569
     rts                             ; $A56A
 
-sub_0_A56B:
+Menu_CheckAttrAlignment:
     lda     #$F0                    ; $A56B
     sta     temp6                   ; $A56D
     lda     scrollX                 ; $A56F
@@ -5866,7 +5905,7 @@ Math_AddToTemp14:
     sta     temp15                  ; $A586
     rts                             ; $A588
 
-sub_0_A589:
+Menu_NextAttr:
     sta     ppuBuffer1+3,y          ; $A589
     iny                             ; $A58C
     iny                             ; $A58D
@@ -5942,7 +5981,7 @@ loc_0_A5D9:
     rts                             ; $A5E2
 
 Menu_RestoreUnderTop:
-    lda     ram_0525                ; $A5E3
+    lda     menuRow                 ; $A5E3
     asl     a                       ; $A5E6
     tay                             ; $A5E7
     lda     dat_0_9B5A,y            ; $A5E8
@@ -5957,9 +5996,9 @@ Menu_RestoreUnderTop:
 
 loc_0_A5FE:
     lda     (temp2),y               ; $A5FE
-    sta     ram_053E,y              ; $A600
+    sta     menuRowTiles,y          ; $A600
     lda     (temp4),y               ; $A603
-    ldx     ram_0525                ; $A605
+    ldx     menuRow                 ; $A605
     cpx     #$08                    ; $A608
     bcs     loc_0_A619              ; $A60A
     pha                             ; $A60C
@@ -5971,7 +6010,7 @@ loc_0_A5FE:
     lda     dat_0_9BC6,y            ; $A616
 
 loc_0_A619:
-    sta     ram_054C,y              ; $A619
+    sta     menuRowTiles2,y         ; $A619
     dey                             ; $A61C
     bpl     loc_0_A5FE              ; $A61D
     ldx     spellCursor             ; $A61F
@@ -5987,7 +6026,7 @@ loc_0_A624:
     bcs     loc_0_A642              ; $A631
 
 loc_0_A633:
-    cpx     ram_0525                ; $A633
+    cpx     menuRow                 ; $A633
     bne     loc_0_A642              ; $A636
     lda     spellOwned,x            ; $A638
     beq     loc_0_A642              ; $A63B
@@ -6003,7 +6042,7 @@ dat_0_A643:
     .byte   $01                                                             ; $A646
 
 Menu_RestoreUnderBottom:
-    lda     ram_0525                ; $A647
+    lda     menuRow                 ; $A647
     asl     a                       ; $A64A
     tay                             ; $A64B
     lda     dat_0_9B82,y            ; $A64C
@@ -6018,14 +6057,14 @@ Menu_RestoreUnderBottom:
 
 loc_0_A662:
     lda     (temp2),y               ; $A662
-    sta     ram_053E,y              ; $A664
+    sta     menuRowTiles,y          ; $A664
     lda     (temp4),y               ; $A667
-    sta     ram_054C,y              ; $A669
+    sta     menuRowTiles2,y         ; $A669
     dey                             ; $A66C
     bpl     loc_0_A662              ; $A66D
     ldx     ram_074E                ; $A66F
     lda     dat_0_A643,x            ; $A672
-    cmp     ram_0525                ; $A675
+    cmp     menuRow                 ; $A675
     bne     loc_0_A683              ; $A678
     txa                             ; $A67A
     ldx     #$FB                    ; $A67B
@@ -6049,14 +6088,14 @@ loc_0_A68B:
     ldy     ram_074E                ; $A68B
     cpy     #$03                    ; $A68E
     beq     loc_0_A6B6              ; $A690
-    lda     ram_0525                ; $A692
+    lda     menuRow                 ; $A692
     pha                             ; $A695
     lda     dat_0_A688,y            ; $A696
-    sta     ram_0525                ; $A699
+    sta     menuRow                 ; $A699
     jsr     Menu_RestoreUnderBottom ; $A69C
-    jsr     sub_0_A35F              ; $A69F
+    jsr     Menu_DrawRowAttrs       ; $A69F
     pla                             ; $A6A2
-    sta     ram_0525                ; $A6A3
+    sta     menuRow                 ; $A6A3
     lda     #$60                    ; $A6A6
 
 loc_0_A6A8:
