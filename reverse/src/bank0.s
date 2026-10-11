@@ -2314,7 +2314,14 @@ dat_0_8FB3:
 dat_0_8FB4:
     .byte   $0C, $2C, $1C                                                   ; $8FB4
 
-Mode_0F:
+; ---------------------------------------------------------------------------
+; Mode_FallAnimate
+;
+; gameMode $0F: show Link falling down the blank screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_FallAnimate:
     inc     objY                    ; $8FB7
     inc     objY                    ; $8FB9
     lda     objY                    ; $8FBB
@@ -6060,7 +6067,16 @@ loc_0_A809:
 loc_0_A829:
     rts                             ; $A829
 
-Mode_0D:
+; ---------------------------------------------------------------------------
+; Mode_FallBlankScreen
+;
+; gameMode $0D: falling into an area through a hole (a location with the
+; fall flag, sramLocDest bit 7).  Clear the screen and set a dark palette
+; (dat_0_A836), one step per frame.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_FallBlankScreen:
     lda     gameSubStep             ; $A82A
     jsr     JumpTable               ; $A82D
 ; (inline jump table)

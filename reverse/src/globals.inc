@@ -151,13 +151,13 @@ GLOBALS_INC = 1
 .global Mode_RaftStart
 .global Mode_Raft
 .global Mode_IndexOverworldMap
-.global Mode_0F
+.global Mode_FallAnimate
 .global loc_0_A199
 .global loc_0_A256
 .global loc_0_A315
 .global loc_0_A329
 .global loc_0_A338
-.global Mode_0D
+.global Mode_FallBlankScreen
 .global loc_3_8647
 .global loc_3_9B86
 .global loc_3_9BCB

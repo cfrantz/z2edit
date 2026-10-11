@@ -548,9 +548,9 @@ GameState_Play:
     .word   loc_C62F                ; $C300  mode $0A
     .word   Mode_SideView           ; $C302  mode $0B
     .word   loc_C68A                ; $C304  mode $0C
-    .word   Mode_0D                 ; $C306  mode $0D
-    .word   loc_C6EF                ; $C308  mode $0E
-    .word   Mode_0F                 ; $C30A  mode $0F
+    .word   Mode_FallBlankScreen    ; $C306  mode $0D
+    .word   Mode_FallStart          ; $C308  mode $0E
+    .word   Mode_FallAnimate        ; $C30A  mode $0F
     .word   Mode_LeaveArea          ; $C30C  mode $10
     .word   loc_C397                ; $C30E  mode $11
     .word   loc_C63E                ; $C310  mode $12
@@ -1118,7 +1118,15 @@ sub_C690:
 Game_Wait:
     rts                             ; $C6EE
 
-loc_C6EF:
+; ---------------------------------------------------------------------------
+; Mode_FallStart
+;
+; gameMode $0E: start the fall into an area: Link appears at the top of the
+; screen (Y = $10), with the area's music.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_FallStart:
     inc     ram_0704                ; $C6EF
     lda     #$01                    ; $C6F2
     sta     objYHi                  ; $C6F4
