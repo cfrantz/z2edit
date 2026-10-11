@@ -2533,7 +2533,7 @@ loc_0_90FA:
     lsr     a                       ; $9102
     sta     temp13                  ; $9103
     tax                             ; $9105
-    jsr     sub_C2A6                ; $9106
+    jsr     Area_TestFlag           ; $9106
     beq     loc_0_912E              ; $9109
     lda     temp13                  ; $910B
     sta     objXHi+2                ; $910D

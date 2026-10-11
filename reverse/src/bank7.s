@@ -445,62 +445,69 @@ sub_C258:
     inx                             ; $C263
     rts                             ; $C264
 
-dat_C265:
-    .byte   $00                                                             ; $C265
+; Per-area flags in saveWorld, by World_GetIndex: 4 bits per area, two
+; areas per byte (even areas in the high nibble).  A set bit means the
+; thing it stands for (an item, a key, a locked door) is still there.
+AreaFlagsPtrs:
+    .word   saveWorld, saveWorld+$60, saveWorld+$60, saveWorld+$80          ; $C265
+    .word   saveWorld+$A0, saveWorld+$20, saveWorld+$60, saveWorld+$60      ; $C26D
+    .word   saveWorld+$80, saveWorld+$A0, saveWorld+$40, saveWorld+$60      ; $C275
+    .word   saveWorld+$60, saveWorld+$80, saveWorld+$A0, saveWorld+$C0      ; $C27D
 
-dat_C266:
-    .byte   $06                                                             ; $C266
-; (unreferenced: $C267-$C26A, 4 bytes)
-    .byte   $60, $06, $60, $06                                              ; $C267
-    .byte   $80, $06, $A0, $06, $20, $06                                    ; $C26B
-; (unreferenced: $C271-$C276, 6 bytes)
-    .byte   $60, $06, $60, $06, $80, $06                                    ; $C271
-    .byte   $A0, $06, $40, $06                                              ; $C277
-; (unreferenced: $C27B-$C27C, 2 bytes)
-    .byte   $60, $06                                                        ; $C27B
-    .byte   $60, $06, $80, $06, $A0, $06, $C0, $06                          ; $C27D
-
-dat_C285:
+; Masks for flags 0-3: clearing an odd area's (low nibble) or an even
+; area's (high nibble), and testing them.
+AreaFlagClearOdd:
     .byte   $F7, $FB, $FD, $FE                                              ; $C285
 
-dat_C289:
+AreaFlagClearEven:
     .byte   $7F, $BF, $DF, $EF                                              ; $C289
 
-dat_C28D:
+AreaFlagOdd:
     .byte   $08, $04, $02, $01                                              ; $C28D
 
-dat_C291:
+AreaFlagEven:
     .byte   $80, $40, $20, $10                                              ; $C291
 
-sub_C295:
-    jsr     sub_C2B3                ; $C295
+; ---------------------------------------------------------------------------
+; Area_ClearFlag
+;
+; Clear flag x (0-3) of the current area in saveWorld (e.g. an item has
+; been taken).  Area_TestFlag tests it instead: a is nonzero if the flag is
+; set.  Both use Area_GetFlagByte, which returns the area's flag byte in a
+; (and its address in temp0 + y), with carry set for an odd areaId.
+;
+; In:      x = flag
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_ClearFlag:
+    jsr     Area_GetFlagByte        ; $C295
     bcc     loc_C2A0                ; $C298
-    and     dat_C285,x              ; $C29A
+    and     AreaFlagClearOdd,x              ; $C29A
     sta     (temp0),y               ; $C29D
     rts                             ; $C29F
 
 loc_C2A0:
-    and     dat_C289,x              ; $C2A0
+    and     AreaFlagClearEven,x              ; $C2A0
     sta     (temp0),y               ; $C2A3
     rts                             ; $C2A5
 
-sub_C2A6:
-    jsr     sub_C2B3                ; $C2A6
+Area_TestFlag:
+    jsr     Area_GetFlagByte        ; $C2A6
     bcc     loc_C2AF                ; $C2A9
-    and     dat_C28D,x              ; $C2AB
+    and     AreaFlagOdd,x              ; $C2AB
     rts                             ; $C2AE
 
 loc_C2AF:
-    and     dat_C291,x              ; $C2AF
+    and     AreaFlagEven,x              ; $C2AF
     rts                             ; $C2B2
 
-sub_C2B3:
+Area_GetFlagByte:
     jsr     World_GetIndex          ; $C2B3
     asl     a                       ; $C2B6
     tay                             ; $C2B7
-    lda     dat_C265,y              ; $C2B8
+    lda     AreaFlagsPtrs,y              ; $C2B8
     sta     temp0                   ; $C2BB
-    lda     dat_C266,y              ; $C2BD
+    lda     AreaFlagsPtrs+1,y              ; $C2BD
     sta     temp1                   ; $C2C0
     lda     areaId                  ; $C2C2
     lsr     a                       ; $C2C5
@@ -1591,7 +1598,7 @@ loc_C9AF:
     lda     areaBuildPage           ; $C9B1
     sta     objXHi+1,x              ; $C9B4
     tax                             ; $C9B6
-    jsr     sub_C2A6                ; $C9B7
+    jsr     Area_TestFlag           ; $C9B7
     ldx     currentObject           ; $C9BA
     cmp     #$00                    ; $C9BC
     beq     loc_C9E9                ; $C9BE
@@ -4323,7 +4330,7 @@ loc_D9D0:
 loc_D9E7:
     lda     objXHi+1,x              ; $D9E7
     tax                             ; $D9E9
-    jsr     sub_C295                ; $D9EA
+    jsr     Area_ClearFlag          ; $D9EA
     ldx     currentObject           ; $D9ED
     lda     #$80                    ; $D9EF
     sta     sfxRequest              ; $D9F1
@@ -6620,7 +6627,7 @@ sub_E771:
     bmi     loc_E77D                ; $E773
     lda     objXHi+1,x              ; $E775
     tax                             ; $E777
-    jsr     sub_C295                ; $E778
+    jsr     Area_ClearFlag          ; $E778
     ldx     currentObject           ; $E77B
 
 loc_E77D:

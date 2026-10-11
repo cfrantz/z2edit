@@ -3653,7 +3653,7 @@ loc_5_A2FB:
 
 loc_5_A33B:
     ldx     #$01                    ; $A33B
-    jsr     sub_C2A6                ; $A33D
+    jsr     Area_TestFlag           ; $A33D
     ldx     currentObject           ; $A340
     cmp     #$00                    ; $A342
     bne     loc_5_A349              ; $A344

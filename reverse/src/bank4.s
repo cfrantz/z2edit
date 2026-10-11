@@ -1444,7 +1444,7 @@ loc_4_9A72:
 
 loc_4_9A73:
     ldx     #$03                    ; $9A73
-    jsr     sub_C2A6                ; $9A75
+    jsr     Area_TestFlag           ; $9A75
     ldx     currentObject           ; $9A78
     cmp     #$00                    ; $9A7A
     bne     loc_4_9A82              ; $9A7C
@@ -1584,7 +1584,7 @@ loc_4_9B56:
     ldx     #$02                    ; $9B7E
     stx     musicRequest            ; $9B80
     inx                             ; $9B82
-    jsr     sub_C295                ; $9B83
+    jsr     Area_ClearFlag          ; $9B83
     ldx     currentObject           ; $9B86
 
 loc_4_9B88:
@@ -3024,7 +3024,7 @@ loc_4_AF90:
 
 loc_4_AF91:
     ldx     #$01                    ; $AF91
-    jsr     sub_C2A6                ; $AF93
+    jsr     Area_TestFlag           ; $AF93
     ldx     currentObject           ; $AF96
     cmp     #$00                    ; $AF98
     bne     loc_4_AF9F              ; $AF9A
@@ -3261,7 +3261,7 @@ loc_4_B0FE:
 
 loc_4_B107:
     ldx     #$01                    ; $B107
-    jsr     sub_C2A6                ; $B109
+    jsr     Area_TestFlag           ; $B109
     ldx     currentObject           ; $B10C
     cmp     #$00                    ; $B10E
     bne     loc_4_B114              ; $B110
@@ -5058,7 +5058,7 @@ loc_4_BC89:
 
 sub_4_BCA1:
     ldx     #$01                    ; $BCA1
-    jsr     sub_C2A6                ; $BCA3
+    jsr     Area_TestFlag           ; $BCA3
     ldx     currentObject           ; $BCA6
     cmp     #$00                    ; $BCA8
     bne     loc_4_BCAF              ; $BCAA

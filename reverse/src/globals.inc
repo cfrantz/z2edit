@@ -48,8 +48,8 @@ GLOBALS_INC = 1
 .global sub_C1B6
 .global sub_C24F
 .global sub_C258
-.global sub_C295
-.global sub_C2A6
+.global Area_ClearFlag
+.global Area_TestFlag
 .global Game_BlankAndNextMode
 .global Game_UnblankAndNextMode
 .global AreaMap_GetPagePtr
