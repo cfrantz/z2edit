@@ -2145,7 +2145,7 @@ loc_0_8E8A:
 Spell_ShieldEffect:
     lda     #$16                    ; $8E8D
     sta     sram_69DE               ; $8E8F
-    sta     ram_070F                ; $8E92
+    sta     shieldSpellActive       ; $8E92
 
 loc_0_8E95:
     rts                             ; $8E95
@@ -2452,7 +2452,7 @@ loc_0_9079:
 loc_0_9081:
     sta     objXHi                  ; $9081
     inx                             ; $9083
-    stx     timerFast+2             ; $9084
+    stx     timerFast+TIMER_LINK_ENTER ; $9084
     ldy     areaEntrySide           ; $9087
     iny                             ; $908A
     sty     objFacing               ; $908B
@@ -2483,11 +2483,11 @@ loc_0_90AB:
     sta     linkAttackFrame         ; $90BB
     sta     objXVelocity            ; $90BE
     sta     ram_0710                ; $90C0
-    sta     ram_070F                ; $90C3
+    sta     shieldSpellActive       ; $90C3
     ldy     ram_070E                ; $90C6
     beq     loc_0_90D7              ; $90C9
     sta     objY                    ; $90CB
-    sta     timerFast+2             ; $90CD
+    sta     timerFast+TIMER_LINK_ENTER ; $90CD
     sta     ram_070E                ; $90D0
     lda     #$50                    ; $90D3
     sta     objX                    ; $90D5
@@ -2674,7 +2674,7 @@ loc_0_91B9:
     bne     loc_0_91E2              ; $91D2
     sta     objXVelocity+1,x        ; $91D4
     sta     objYVelocity+1,x        ; $91D6
-    sta     timerFast+3,x           ; $91D9
+    sta     timerFast+TIMER_ENEMY,x ; $91D9
     sta     enemyHp,x               ; $91DC
     lda     #$04                    ; $91DE
     sta     enemyType,x             ; $91E0
@@ -2933,14 +2933,14 @@ loc_0_9364:
     rts                             ; $936A
 
 loc_0_936B:
-    lda     timerFast+11            ; $936B
+    lda     timerFast+TIMER_LINK_HURT ; $936B
     beq     loc_0_9379              ; $936E
     jsr     Link_UpdateJump         ; $9370
     jsr     sub_0_93A3              ; $9373
     jmp     loc_0_938A              ; $9376
 
 loc_0_9379:
-    lda     timerFast+2             ; $9379
+    lda     timerFast+TIMER_LINK_ENTER ; $9379
     bne     loc_0_9381              ; $937C
     jsr     Link_ReadInput          ; $937E
 
@@ -3002,7 +3002,7 @@ LinkWalkFrameTimes:
 ;
 ; Update Link's horizontal velocity (4.4 fixed point, so $18 = 1.5 pixels
 ; per frame):
-; - while entering an area (timerFast+2), walk inward at LinkEntrySpeed * 2;
+; - while entering an area (timerFast+TIMER_LINK_ENTER), walk inward at LinkEntrySpeed * 2;
 ; - while standing with a direction held (linkDirHeld), accelerate by 1 per
 ;   frame (2 when reversing) up to LinkWalkMaxSpeed;
 ; - otherwise, on the ground, slow down by 1 per frame.
@@ -3011,7 +3011,7 @@ LinkWalkFrameTimes:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Link_UpdateXVelocity:
-    lda     timerFast+2             ; $93BC
+    lda     timerFast+TIMER_LINK_ENTER ; $93BC
     beq     loc_0_93CD              ; $93BF
     ldy     areaEntrySide           ; $93C1
     lda     LinkEntrySpeed,y        ; $93C4
@@ -3168,7 +3168,7 @@ Link_UpdateAttack:
     beq     loc_0_94C2              ; $9486
     dey                             ; $9488
     ldx     linkAttackStanding      ; $9489
-    lda     timerFast+9             ; $948C
+    lda     timerFast+TIMER_LINK_ATTACK ; $948C
     beq     loc_0_949E              ; $948F
     dex                             ; $9491
     bpl     loc_0_9498              ; $9492
@@ -3189,7 +3189,7 @@ loc_0_949E:
     cmp     dat_0_9481,x            ; $949F
     beq     loc_0_94B6              ; $94A2
     lda     dat_0_9478,y            ; $94A4
-    sta     timerFast+9             ; $94A7
+    sta     timerFast+TIMER_LINK_ATTACK ; $94A7
     inc     linkAttackFrame         ; $94AA
     iny                             ; $94AD
     cpy     linkAttackStanding      ; $94AE
@@ -3424,7 +3424,7 @@ loc_0_95ED:
 loc_0_95FC:
     sty     linkAttackFrame         ; $95FC
     lda     #$06                    ; $95FF
-    sta     timerFast+9             ; $9601
+    sta     timerFast+TIMER_LINK_ATTACK ; $9601
     lda     linkStanding            ; $9604
     sta     linkAttackStanding      ; $9606
     bne     loc_0_960F              ; $9609
@@ -3720,7 +3720,7 @@ loc_0_97FC:
     dey                             ; $97FF
     cpy     linkAttackStanding      ; $9800
     bne     loc_0_9813              ; $9803
-    lda     timerFast+9             ; $9805
+    lda     timerFast+TIMER_LINK_ATTACK ; $9805
     cmp     #$05                    ; $9808
     bne     loc_0_9813              ; $980A
 

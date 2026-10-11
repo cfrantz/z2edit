@@ -3442,7 +3442,7 @@ dat_D3CA:
 Mode_SideView:
     lda     linkDeathPending        ; $D3CC
     beq     loc_D3E9                ; $D3CF
-    ldx     timerFast+11            ; $D3D1
+    ldx     timerFast+TIMER_LINK_HURT ; $D3D1
     bne     loc_D3E9                ; $D3D4
     stx     linkDeathPending        ; $D3D6
     inx                             ; $D3D9
@@ -3619,7 +3619,7 @@ loc_D4F3:
     sta     objState                ; $D51D
 
 loc_D51F:
-    lda     timerSlow+10            ; $D51F
+    lda     timerSlow+TIMER_INVULNERABLE ; $D51F
     beq     loc_D52D                ; $D522
     cmp     #$03                    ; $D524
     bcs     loc_D52D                ; $D526
@@ -3629,7 +3629,7 @@ loc_D51F:
 
 loc_D52D:
     jsr     Link_Draw               ; $D52D
-    lda     timerFast+2             ; $D530
+    lda     timerFast+TIMER_LINK_ENTER ; $D530
     bne     loc_D538                ; $D533
     jsr     Sword_CheckBlocks       ; $D535
 
@@ -4046,14 +4046,14 @@ loc_D812:
     jsr     Enemy_MoveY             ; $D815
 
 loc_D818:
-    lda     timerFast+3,x           ; $D818
+    lda     timerFast+TIMER_ENEMY,x ; $D818
     bne     loc_D832                ; $D81B
     lda     objY+1,x                ; $D81D
     sbc     objY                    ; $D81F
     cmp     #$11                    ; $D821
     bcs     loc_D832                ; $D823
     lda     #$70                    ; $D825
-    sta     timerFast+3,x           ; $D827
+    sta     timerFast+TIMER_ENEMY,x ; $D827
     lda     rng+1,x                 ; $D82A
     bmi     loc_D832                ; $D82D
     jsr     sub_D86C                ; $D82F
@@ -4136,12 +4136,12 @@ loc_D897:
     sta     objXVelocity+1,x        ; $D8A7
 
 loc_D8A9:
-    lda     timerFast+3,x           ; $D8A9
+    lda     timerFast+TIMER_ENEMY,x ; $D8A9
     bne     loc_D8BE                ; $D8AC
     lda     rng+1,x                 ; $D8AE
     and     #$7F                    ; $D8B1
     ora     #$80                    ; $D8B3
-    sta     timerFast+3,x           ; $D8B5
+    sta     timerFast+TIMER_ENEMY,x ; $D8B5
     lda     objCollision+1,x        ; $D8B8
     and     #$04                    ; $D8BA
     bne     sub_D86C                ; $D8BC
@@ -4447,7 +4447,7 @@ loc_DA93:
     jsr     Enemy_MoveX             ; $DAA1
 
 loc_DAA4:
-    lda     timerFast+3,x           ; $DAA4
+    lda     timerFast+TIMER_ENEMY,x ; $DAA4
     bne     loc_DAC0                ; $DAA7
     lda     ram_00AF,x              ; $DAA9
     eor     #$01                    ; $DAAB
@@ -4456,7 +4456,7 @@ loc_DAA4:
     lda     rng+1,x                 ; $DAB0
     and     #$3F                    ; $DAB3
     ora     dat_DA00,y              ; $DAB5
-    sta     timerFast+3,x           ; $DAB8
+    sta     timerFast+TIMER_ENEMY,x ; $DAB8
     and     #$01                    ; $DABB
     sta     ram_0401,x              ; $DABD
 
@@ -4518,7 +4518,7 @@ loc_DB00:
     sty     objFacing+1,x           ; $DB00
     lda     ram_00AF,x              ; $DB02
     bne     loc_DB2D                ; $DB04
-    lda     timerFast+3,x           ; $DB06
+    lda     timerFast+TIMER_ENEMY,x ; $DB06
     bne     loc_DB2C                ; $DB09
     inc     ram_00AF,x              ; $DB0B
     lda     rng+1,x                 ; $DB0D
@@ -4563,7 +4563,7 @@ loc_DB3F:
 loc_DB47:
     dec     ram_00AF,x              ; $DB47
     lda     #$20                    ; $DB49
-    sta     timerFast+3,x           ; $DB4B
+    sta     timerFast+TIMER_ENEMY,x ; $DB4B
 
 loc_DB4E:
     rts                             ; $DB4E
@@ -4784,7 +4784,7 @@ loc_DCAA:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Enemy_Die:
-    lda     timerFast+3,x           ; $DCAE
+    lda     timerFast+TIMER_ENEMY,x ; $DCAE
     bne     loc_DCC2                ; $DCB1
     lda     #$20                    ; $DCB3
     ldy     ram_0414,x              ; $DCB5
@@ -4792,14 +4792,14 @@ Enemy_Die:
     lda     #$00                    ; $DCBA
 
 loc_DCBC:
-    sta     timerFast+3,x           ; $DCBC
+    sta     timerFast+TIMER_ENEMY,x ; $DCBC
     inc     enemyActive,x           ; $DCBF
     rts                             ; $DCC1
 
 loc_DCC2:
     ldy     enemyType,x             ; $DCC2
     lda     sramEnemyHitbox,y       ; $DCC4
-    ldy     timerFast+3,x           ; $DCC7
+    ldy     timerFast+TIMER_ENEMY,x ; $DCC7
     cmp     #$FF                    ; $DCCA
     beq     loc_DCDB                ; $DCCC
     jmp     loc_EEB2                ; $DCCE
@@ -4903,7 +4903,7 @@ dat_DD5C:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Enemy_Explode:
-    lda     timerFast+3,x           ; $DD6C
+    lda     timerFast+TIMER_ENEMY,x ; $DD6C
     beq     loc_DDEC                ; $DD6F
     ldy     objOamOffset+1,x        ; $DD71
     lda     ram_0414,x              ; $DD73
@@ -5458,7 +5458,7 @@ sub_E079:
     lda     #$01                    ; $E0A4
     sta     ram_00E9                ; $E0A6
     lda     #$10                    ; $E0A8
-    sta     timerFast+11            ; $E0AA
+    sta     timerFast+TIMER_LINK_HURT ; $E0AA
     inc     linkMode                ; $E0AD
     rts                             ; $E0AF
 
@@ -5551,7 +5551,7 @@ loc_E12B:
     lda     linkMode                ; $E14A
     cmp     #$01                    ; $E14C
     bne     loc_E19D                ; $E14E
-    lda     timerFast+2             ; $E150
+    lda     timerFast+TIMER_LINK_ENTER ; $E150
     bne     loc_E19E                ; $E153
     lda     drawOffscreen           ; $E155
     ldy     scrollFrozen            ; $E157
@@ -5782,8 +5782,11 @@ loc_E29E:
     lda     temp15                  ; $E2A9
     sta     breakingBlockMapPtrHi,x ; $E2AB
 
-dat_E2AE:
     rts                             ; $E2AE
+
+; Damage to Link (subtracted from his life) by damage class (sramEnemyDamage)
+; and life level 1-8, 8 bytes per class.
+LinkDamage:
     .byte   $10                                                             ; $E2AF
 ; (unreferenced: $E2B0-$E2B6, 7 bytes)
     .byte   $0C, $0C, $0C, $08, $04, $04, $04                               ; $E2B0
@@ -5802,7 +5805,7 @@ dat_E2AE:
 ; ---------------------------------------------------------------------------
 ; Link_HurtByEnemy
 ;
-; Enemy x has touched Link.  Unless he is invulnerable (timerSlow+10),
+; Enemy x has touched Link.  Unless he is invulnerable (timerSlow+TIMER_INVULNERABLE),
 ; enemies with sramEnemyAttr bit 4 start draining his experience
 ; (experienceDrain), and he takes the damage of the enemy's type
 ; (sramEnemyDamage bits 3-0) through Link_TakeDamage.
@@ -5812,7 +5815,7 @@ dat_E2AE:
 ; ---------------------------------------------------------------------------
 Link_HurtByEnemy:
     ldy     enemyType,x             ; $E2EF
-    lda     timerSlow+10            ; $E2F1
+    lda     timerSlow+TIMER_INVULNERABLE ; $E2F1
     bne     loc_E308                ; $E2F4
     lda     sramEnemyAttr,y         ; $E2F6
     and     #$10                    ; $E2F9
@@ -5834,15 +5837,18 @@ loc_E308:
 ; ---------------------------------------------------------------------------
 ; Link_TakeDamage
 ;
-; Damage Link (damage class in a), knock him back and make him
-; invulnerable for a while; does nothing while he is invulnerable.
+; Damage Link: subtract LinkDamage (by damage class and life level; halved
+; by the shield spell) from his life, and set linkDeathPending if it runs
+; out.  Knock him back (TIMER_LINK_HURT, upward velocity -2), cancel his
+; attack, and make him invulnerable for 80 frames (TIMER_INVULNERABLE = 4,
+; counted every 20 frames).  Does nothing while he is invulnerable.
 ;
 ; In:      a = damage class
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Link_TakeDamage:
     sta     temp12                  ; $E30D
-    lda     timerSlow+10            ; $E30F
+    lda     timerSlow+TIMER_INVULNERABLE ; $E30F
     bne     loc_E368                ; $E312
     lda     #$01                    ; $E314
     sta     ram_00E9                ; $E316
@@ -5854,8 +5860,9 @@ Link_TakeDamage:
     asl     a                       ; $E321
     adc     statLevel+STAT_LIFE     ; $E322
     tay                             ; $E325
-    lda     dat_E2AE,y              ; $E326
-    ldy     ram_070F                ; $E329
+    lda     LinkDamage - 1,y        ; $E326  y = class * 8 + life level
+    ; The shield spell halves the damage.
+    ldy     shieldSpellActive       ; $E329
     beq     loc_E32F                ; $E32C
 ; (code below not executed in the test movies)
     lsr     a                       ; $E32E
@@ -5877,9 +5884,9 @@ loc_E32F:
 
 loc_E34C:
     lda     #$20                    ; $E34C
-    sta     timerFast+11            ; $E34E
+    sta     timerFast+TIMER_LINK_HURT ; $E34E
     lda     #$04                    ; $E351
-    sta     timerSlow+10            ; $E353
+    sta     timerSlow+TIMER_INVULNERABLE ; $E353
     lda     #$00                    ; $E356
     sta     linkAttackFrame         ; $E358
     lda     objCollision            ; $E35B
@@ -6059,7 +6066,7 @@ loc_E442:
     sta     objState+7,x            ; $E455
 
 loc_E457:
-    lda     timerSlow+10            ; $E457
+    lda     timerSlow+TIMER_INVULNERABLE ; $E457
     bne     loc_E441                ; $E45A
     lda     sramProjectilePtrs+23,y ; $E45C
     and     #$07                    ; $E45F
@@ -6686,7 +6693,7 @@ loc_E7F4:
     lda     #$08                    ; $E802
     sta     sfxRequest+3            ; $E804
     lda     #$00                    ; $E806
-    sta     timerFast+3,x           ; $E808
+    sta     timerFast+TIMER_ENEMY,x ; $E808
     rts                             ; $E80B
 
 loc_E80C:
@@ -6792,7 +6799,7 @@ loc_E8B8:
 loc_E8BF:
     ldx     currentObject           ; $E8BF
     lda     #$25                    ; $E8C1
-    sta     timerFast+3,x           ; $E8C3
+    sta     timerFast+TIMER_ENEMY,x ; $E8C3
     lda     #$00                    ; $E8C6
     sta     ram_043E,x              ; $E8C8
     lda     #$02                    ; $E8CB
@@ -7256,7 +7263,7 @@ loc_EBB8:
     adc     #$68                    ; $EBDC
     sta     oamBuffer+9             ; $EBDE
     ldy     #$01                    ; $EBE1
-    lda     timerFast+11            ; $EBE3
+    lda     timerFast+TIMER_LINK_HURT ; $EBE3
     beq     loc_EBEC                ; $EBE6
     lsr     a                       ; $EBE8
     and     #$03                    ; $EBE9
@@ -7695,7 +7702,7 @@ loc_EEC7:
     ora     #$01                    ; $EEE7
     sta     temp3                   ; $EEE9
     ldy     objOamOffset+1,x        ; $EEEB
-    lda     timerFast+3,x           ; $EEED
+    lda     timerFast+TIMER_ENEMY,x ; $EEED
     lsr     a                       ; $EEF0
     lsr     a                       ; $EEF1
     lsr     a                       ; $EEF2

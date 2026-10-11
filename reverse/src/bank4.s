@@ -793,7 +793,7 @@ loc_4_966B:
     jsr     sub_E617                ; $9675
     lda     objState+1,x            ; $9678
     beq     loc_4_9695              ; $967A
-    ldy     timerFast+3,x           ; $967C
+    ldy     timerFast+TIMER_ENEMY,x ; $967C
     bne     loc_4_9695              ; $967F
     cmp     #$02                    ; $9681
     bne     loc_4_968C              ; $9683
@@ -875,7 +875,7 @@ loc_4_9701:
 
 loc_4_9704:
     lda     objYVelocity+1,x        ; $9704
-    ora     timerFast+3,x           ; $9707
+    ora     timerFast+TIMER_ENEMY,x ; $9707
     ora     objState+1,x            ; $970A
     bne     loc_4_9700              ; $970C
     lda     rng+1,x                 ; $970E
@@ -1033,7 +1033,7 @@ loc_4_97E1:
 loc_4_97F1:
     jsr     Sprite_DrawEnemyPair    ; $97F1
     jsr     Sprite_DrawEnemyPairKeepX ; $97F4
-    lda     timerFast+3,x           ; $97F7
+    lda     timerFast+TIMER_ENEMY,x ; $97F7
     beq     loc_4_9814              ; $97FA
     lda     drawOffscreen+1         ; $97FC
     bne     loc_4_9814              ; $97FE
@@ -1794,7 +1794,7 @@ loc_4_9CC3:
     jsr     sub_E563                ; $9CC3
 
 loc_4_9CC6:
-    lda     timerFast+3,x           ; $9CC6
+    lda     timerFast+TIMER_ENEMY,x ; $9CC6
     bne     loc_4_9CDC              ; $9CC9
     inc     objState+1,x            ; $9CCB
     lda     objState+1,x            ; $9CCD
@@ -1803,7 +1803,7 @@ loc_4_9CC6:
     cmp     #$05                    ; $9CD3
     bcs     loc_4_9CDF              ; $9CD5
     lda     #$10                    ; $9CD7
-    sta     timerFast+3,x           ; $9CD9
+    sta     timerFast+TIMER_ENEMY,x ; $9CD9
 
 loc_4_9CDC:
     jmp     loc_4_9CE3              ; $9CDC
@@ -1974,7 +1974,7 @@ loc_4_9DE0:
 loc_4_9DE6:
     sty     objState+1,x            ; $9DE6
     lda     #$18                    ; $9DE8
-    sta     timerFast+3,x           ; $9DEA
+    sta     timerFast+TIMER_ENEMY,x ; $9DEA
 
 loc_4_9DED:
     rts                             ; $9DED
@@ -1983,7 +1983,7 @@ loc_4_9DEE:
     lda     ram_00AF,x              ; $9DEE
     lsr     a                       ; $9DF0
     bcs     loc_4_9E03              ; $9DF1
-    lda     timerFast+3,x           ; $9DF3
+    lda     timerFast+TIMER_ENEMY,x ; $9DF3
     bne     loc_4_9DFB              ; $9DF6
     jsr     sub_4_9E0F              ; $9DF8
 
@@ -1996,13 +1996,13 @@ loc_4_9DFB:
 loc_4_9E03:
     lda     #$00                    ; $9E03
     sta     objXVelocity+1,x        ; $9E05
-    lda     timerFast+3,x           ; $9E07
+    lda     timerFast+TIMER_ENEMY,x ; $9E07
     bne     loc_4_9E16              ; $9E0A
     jsr     sub_E8EB                ; $9E0C
 
 sub_4_9E0F:
     lda     #$50                    ; $9E0F
-    sta     timerFast+3,x           ; $9E11
+    sta     timerFast+TIMER_ENEMY,x ; $9E11
     inc     ram_00AF,x              ; $9E14
 
 loc_4_9E16:
@@ -2091,7 +2091,7 @@ loc_4_9E91:
     lda     dat_4_9E38,x            ; $9E91
     ldx     currentObject           ; $9E94
     sty     temp7                   ; $9E96
-    ldy     timerFast+3,x           ; $9E98
+    ldy     timerFast+TIMER_ENEMY,x ; $9E98
     cpy     #$03                    ; $9E9B
     bcc     loc_4_9EA4              ; $9E9D
     cpy     #$0D                    ; $9E9F
@@ -2679,7 +2679,7 @@ loc_4_AD4A:
     sta     enemyActive,x           ; $AD7F
     lda     #$FF                    ; $AD81
     sta     sramEnemyHitbox+34      ; $AD83
-    sta     timerFast+3,x           ; $AD86
+    sta     timerFast+TIMER_ENEMY,x ; $AD86
     lsr     a                       ; $AD89
     sta     enemyStunTimer,x        ; $AD8A
 
@@ -2967,7 +2967,7 @@ loc_4_AF26:
 
 loc_4_AF36:
     jsr     sub_4_B477              ; $AF36
-    lda     timerFast+3,x           ; $AF39
+    lda     timerFast+TIMER_ENEMY,x ; $AF39
     beq     loc_4_AF11              ; $AF3C
     lda     drawOffscreen+1         ; $AF3E
     bne     loc_4_AF11              ; $AF40
@@ -3036,7 +3036,7 @@ loc_4_AF9F:
     sta     objY+1,x                ; $AFA1
     lda     objState                ; $AFA3
     sta     sramEnemyHitbox+10      ; $AFA5
-    sta     timerFast+3,x           ; $AFA8
+    sta     timerFast+TIMER_ENEMY,x ; $AFA8
     lda     #$02                    ; $AFAB
     sta     objXHi+1,x              ; $AFAD
     lda     #$20                    ; $AFAF
@@ -3170,7 +3170,7 @@ loc_4_B05A:
     sta     ram_00AF,x              ; $B078
 
 loc_4_B07A:
-    lda     timerFast+3,x           ; $B07A
+    lda     timerFast+TIMER_ENEMY,x ; $B07A
     beq     loc_4_B08D              ; $B07D
 ; (code below not executed in the test movies)
     lda     frameCounter            ; $B07F
@@ -3198,7 +3198,7 @@ loc_4_B08D:
     bne     loc_4_B0A9              ; $B0A2
 ; (code below not executed in the test movies)
     lda     #$53                    ; $B0A4
-    sta     timerFast+3,x           ; $B0A6
+    sta     timerFast+TIMER_ENEMY,x ; $B0A6
 ; (end of code not executed in the test movies)
 
 loc_4_B0A9:
@@ -3218,10 +3218,10 @@ loc_4_B0B6:
     and     #$7F                    ; $B0B8
     bne     loc_4_B0C1              ; $B0BA
     lda     #$10                    ; $B0BC
-    sta     timerFast+3,x           ; $B0BE
+    sta     timerFast+TIMER_ENEMY,x ; $B0BE
 
 loc_4_B0C1:
-    lda     timerFast+3,x           ; $B0C1
+    lda     timerFast+TIMER_ENEMY,x ; $B0C1
     cmp     #$01                    ; $B0C4
     bne     loc_4_B0D7              ; $B0C6
     jsr     Enemy_FireProjectile    ; $B0C8
@@ -3297,7 +3297,7 @@ loc_4_B11F:
     .word   loc_4_B1C8              ; $B13E  (not observed)
 
 loc_4_B140:
-    lda     timerFast+3,x           ; $B140
+    lda     timerFast+TIMER_ENEMY,x ; $B140
     bne     loc_4_B153              ; $B143
     lda     rng+1,x                 ; $B145
     and     #$07                    ; $B148
@@ -3320,29 +3320,29 @@ loc_4_B154:
 
 loc_4_B161:
     lda     #$A0                    ; $B161
-    sta     timerFast+3,x           ; $B163
+    sta     timerFast+TIMER_ENEMY,x ; $B163
     inc     ram_0499                ; $B166
     rts                             ; $B169
 
 loc_4_B16A:
-    lda     timerFast+3,x           ; $B16A
+    lda     timerFast+TIMER_ENEMY,x ; $B16A
     beq     loc_4_B1BF              ; $B16D
     and     #$01                    ; $B16F
     bne     loc_4_B180              ; $B171
     inc     objY+1,x                ; $B173
-    lda     timerFast+3,x           ; $B175
+    lda     timerFast+TIMER_ENEMY,x ; $B175
     and     #$20                    ; $B178
     bne     loc_4_B180              ; $B17A
     dec     objY+1,x                ; $B17C
     dec     objY+1,x                ; $B17E
 
 loc_4_B180:
-    lda     timerFast+3,x           ; $B180
+    lda     timerFast+TIMER_ENEMY,x ; $B180
     sbc     #$30                    ; $B183
     cmp     #$30                    ; $B185
     bcs     loc_4_B1BE              ; $B187
 ; (code below not executed in the test movies)
-    lda     timerFast+3,x           ; $B189
+    lda     timerFast+TIMER_ENEMY,x ; $B189
     and     #$30                    ; $B18C
     bne     loc_4_B1BE              ; $B18E
     lda     frameCounter            ; $B190
@@ -3375,7 +3375,7 @@ loc_4_B1BE:
 
 loc_4_B1BF:
     lda     #$80                    ; $B1BF
-    sta     timerFast+3,x           ; $B1C1
+    sta     timerFast+TIMER_ENEMY,x ; $B1C1
     inc     ram_0499                ; $B1C4
     rts                             ; $B1C7
 
@@ -3391,7 +3391,7 @@ loc_4_B1D3:
     lda     #$00                    ; $B1D3
     sta     ram_0499                ; $B1D5
     lda     #$60                    ; $B1D8
-    sta     timerFast+3,x           ; $B1DA
+    sta     timerFast+TIMER_ENEMY,x ; $B1DA
     rts                             ; $B1DD
 ; (end of code not executed in the test movies)
 
@@ -3420,7 +3420,7 @@ loc_4_B1F6:
     lda     #$FF                    ; $B1FE
     ldy     enemyType,x             ; $B200
     sta     sramEnemyHitbox,y       ; $B202
-    sta     timerFast+3,x           ; $B205
+    sta     timerFast+TIMER_ENEMY,x ; $B205
     lsr     a                       ; $B208
     sta     enemyStunTimer,x        ; $B209
 
@@ -3514,7 +3514,7 @@ loc_4_B290:
     lsr     a                       ; $B29E
     and     #$07                    ; $B29F
     sta     ram_00D9                ; $B2A1
-    lda     timerFast+3,x           ; $B2A3
+    lda     timerFast+TIMER_ENEMY,x ; $B2A3
     sta     temp6                   ; $B2A6
     ldx     #$64                    ; $B2A8
     ldy     ram_0499                ; $B2AA
@@ -3580,7 +3580,7 @@ loc_4_B2FB:
 
 loc_4_B304:
     ldx     currentObject           ; $B304
-    lda     timerFast+3,x           ; $B306
+    lda     timerFast+TIMER_ENEMY,x ; $B306
     sta     temp7                   ; $B309
     lda     temp13                  ; $B30B
     sta     temp0                   ; $B30D
@@ -3925,7 +3925,7 @@ loc_4_B511:
     lda     rng+1,x                 ; $B511
     and     #$07                    ; $B514
     ora     objState+1,x            ; $B516
-    ora     timerFast+3,x           ; $B518
+    ora     timerFast+TIMER_ENEMY,x ; $B518
     bne     loc_4_B522              ; $B51B
     lda     #$2F                    ; $B51D
     jsr     sub_4_B557              ; $B51F
@@ -3949,7 +3949,7 @@ loc_4_B53A:
 sub_4_B53B:
     lda     objState+1,x            ; $B53B
     beq     loc_4_B55C              ; $B53D
-    ldy     timerFast+3,x           ; $B53F
+    ldy     timerFast+TIMER_ENEMY,x ; $B53F
     bne     loc_4_B55C              ; $B542
     lda     objState+1,x            ; $B544
     cmp     #$02                    ; $B546
@@ -3967,7 +3967,7 @@ loc_4_B551:
 ; (end of code not executed in the test movies)
 
 sub_4_B557:
-    sta     timerFast+3,x           ; $B557
+    sta     timerFast+TIMER_ENEMY,x ; $B557
     inc     objState+1,x            ; $B55A
 
 loc_4_B55C:
@@ -4063,7 +4063,7 @@ loc_4_B600:
     beq     loc_4_B656              ; $B618
     cmp     #$01                    ; $B61A
     bne     loc_4_B653              ; $B61C
-    lda     timerFast+3,x           ; $B61E
+    lda     timerFast+TIMER_ENEMY,x ; $B61E
     lsr     a                       ; $B621
     and     #$07                    ; $B622
     ldy     temp2                   ; $B624
@@ -4543,7 +4543,7 @@ dat_4_B939:
     .byte   $00, $E0, $20                                                   ; $B939
 
 loc_4_B93C:
-    lda     timerFast+3,x           ; $B93C
+    lda     timerFast+TIMER_ENEMY,x ; $B93C
     bne     loc_4_B96C              ; $B93F
     ldy     objFacing               ; $B941
     lda     scrollX                 ; $B943
@@ -4564,17 +4564,17 @@ loc_4_B93C:
     lda     #$50                    ; $B965
 
 loc_4_B967:
-    sta     timerFast+3,x           ; $B967
+    sta     timerFast+TIMER_ENEMY,x ; $B967
     inc     ram_00AF,x              ; $B96A
 
 loc_4_B96C:
     rts                             ; $B96C
 
 loc_4_B96D:
-    lda     timerFast+3,x           ; $B96D
+    lda     timerFast+TIMER_ENEMY,x ; $B96D
     bne     loc_4_B979              ; $B970
     lda     #$40                    ; $B972
-    sta     timerFast+3,x           ; $B974
+    sta     timerFast+TIMER_ENEMY,x ; $B974
     inc     ram_00AF,x              ; $B977
 
 loc_4_B979:
@@ -4582,7 +4582,7 @@ loc_4_B979:
     .byte   $01, $FF                                                        ; $B97A
 
 loc_4_B97C:
-    lda     timerFast+3,x           ; $B97C
+    lda     timerFast+TIMER_ENEMY,x ; $B97C
     beq     loc_4_B98E              ; $B97F
     dec     objY+1,x                ; $B981
     ldy     objState+1,x            ; $B983
@@ -4600,7 +4600,7 @@ loc_4_B991:
     lda     drawOffscreen+1         ; $B991
     beq     loc_4_B99C              ; $B993
     lda     #$BF                    ; $B995
-    sta     timerFast+3,x           ; $B997
+    sta     timerFast+TIMER_ENEMY,x ; $B997
     inc     ram_00AF,x              ; $B99A
 
 loc_4_B99C:
@@ -4726,7 +4726,7 @@ loc_4_BA60:
     jsr     sub_4_BC23              ; $BA6A
 
 loc_4_BA6D:
-    lda     timerFast+3,x           ; $BA6D
+    lda     timerFast+TIMER_ENEMY,x ; $BA6D
     cmp     #$01                    ; $BA70
     bne     loc_4_BA90              ; $BA72
     sta     objState+1,x            ; $BA74
@@ -4984,7 +4984,7 @@ loc_4_BC10:
 sub_4_BC11:
     lda     objState+1,x            ; $BC11
     beq     loc_4_BC2A              ; $BC13
-    ldy     timerFast+3,x           ; $BC15
+    ldy     timerFast+TIMER_ENEMY,x ; $BC15
     bne     loc_4_BC2A              ; $BC18
     lda     objState+1,x            ; $BC1A
     cmp     #$02                    ; $BC1C
@@ -4995,7 +4995,7 @@ sub_4_BC11:
 sub_4_BC23:
     inc     objState+1,x            ; $BC23
     lda     #$0F                    ; $BC25
-    sta     timerFast+3,x           ; $BC27
+    sta     timerFast+TIMER_ENEMY,x ; $BC27
 
 loc_4_BC2A:
     rts                             ; $BC2A
@@ -5017,7 +5017,7 @@ sub_4_BC4E:
     lda     #$FF                    ; $BC65
     ldy     enemyType,x             ; $BC67
     sta     sramEnemyHitbox,y       ; $BC69
-    sta     timerFast+3,x           ; $BC6C
+    sta     timerFast+TIMER_ENEMY,x ; $BC6C
     lsr     a                       ; $BC6F
     sta     enemyStunTimer,x        ; $BC70
     pla                             ; $BC73
@@ -5122,7 +5122,7 @@ loc_4_BCEF:
     cmp     #$C4                    ; $BD03
     bcc     loc_4_BD21              ; $BD05
     lda     #$30                    ; $BD07
-    sta     timerFast+3,x           ; $BD09
+    sta     timerFast+TIMER_ENEMY,x ; $BD09
     inc     ram_00AF,x              ; $BD0C
     lda     dat_4_BCEC,y            ; $BD0E
     sta     objYVelocity+1,x        ; $BD11
@@ -5145,7 +5145,7 @@ loc_4_BD24:
     lda     #$00                    ; $BD2D
     sta     objXVelocity+1,x        ; $BD2F
     sta     objYVelocity+1,x        ; $BD31
-    ldy     timerFast+3,x           ; $BD34
+    ldy     timerFast+TIMER_ENEMY,x ; $BD34
     bne     loc_4_BD3D              ; $BD37
     dec     objY+1,x                ; $BD39
     dec     objY+1,x                ; $BD3B

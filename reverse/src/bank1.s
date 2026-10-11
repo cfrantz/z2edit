@@ -1432,10 +1432,10 @@ loc_1_98E0:
     adc     #$10                    ; $98E9
     cmp     objY+1,x                ; $98EB
     bne     loc_1_9901              ; $98ED
-    lda     timerFast+3,x           ; $98EF
+    lda     timerFast+TIMER_ENEMY,x ; $98EF
     bne     loc_1_9901              ; $98F2
     lda     #$A0                    ; $98F4
-    sta     timerFast+3,x           ; $98F6
+    sta     timerFast+TIMER_ENEMY,x ; $98F6
     jsr     Enemy_FaceLink          ; $98F9
     lda     dat_1_98C1,y            ; $98FC
     sta     objXVelocity+1,x        ; $98FF
@@ -1486,7 +1486,7 @@ loc_1_9972:
     jsr     sub_E558                ; $997D
 
 loc_1_9980:
-    lda     timerFast+3,x           ; $9980
+    lda     timerFast+TIMER_ENEMY,x ; $9980
     bne     loc_1_99EB              ; $9983
     lda     enemyType,x             ; $9985
     cmp     #$19                    ; $9987
@@ -1542,7 +1542,7 @@ loc_1_99C9:
 
 loc_1_99E6:
     lda     #$10                    ; $99E6
-    sta     timerFast+3,x           ; $99E8
+    sta     timerFast+TIMER_ENEMY,x ; $99E8
 
 loc_1_99EB:
     jmp     loc_1_99F2              ; $99EB
@@ -1664,7 +1664,7 @@ loc_1_9AA2:
 loc_1_9AA4:
     sty     objState+1,x            ; $9AA4
     lda     #$18                    ; $9AA6
-    sta     timerFast+3,x           ; $9AA8
+    sta     timerFast+TIMER_ENEMY,x ; $9AA8
 
 loc_1_9AAB:
     lda     #$00                    ; $9AAB
@@ -1701,7 +1701,7 @@ loc_1_9ACE:
 sub_1_9AD1:
     lda     objState+1,x            ; $9AD1
     beq     loc_1_9B04              ; $9AD3
-    lda     timerFast+3,x           ; $9AD5
+    lda     timerFast+TIMER_ENEMY,x ; $9AD5
     bne     loc_1_9B04              ; $9AD8
     inc     objState+1,x            ; $9ADA
     ldy     enemyType,x             ; $9ADC
@@ -1722,7 +1722,7 @@ sub_1_9AD1:
 
 loc_1_9AFF:
     lda     #$05                    ; $9AFF
-    sta     timerFast+3,x           ; $9B01
+    sta     timerFast+TIMER_ENEMY,x ; $9B01
 
 loc_1_9B04:
     rts                             ; $9B04
@@ -1823,7 +1823,7 @@ loc_1_9CA4:
     lda     objState+1,x            ; $9CA8
     cmp     #$02                    ; $9CAA
     bne     loc_1_9CB8              ; $9CAC
-    lda     timerFast+3,x           ; $9CAE
+    lda     timerFast+TIMER_ENEMY,x ; $9CAE
     cmp     #$08                    ; $9CB1
     lda     objState+1,x            ; $9CB3
     bcs     loc_1_9CB8              ; $9CB5
@@ -1893,7 +1893,7 @@ loc_1_9D19:
     pha                             ; $9D1A
     lda     dat_1_9C9B,x            ; $9D1B
     ldx     currentObject           ; $9D1E
-    ldy     timerFast+3,x           ; $9D20
+    ldy     timerFast+TIMER_ENEMY,x ; $9D20
     cpy     #$03                    ; $9D23
     bcc     loc_1_9D2C              ; $9D25
     cpy     #$0D                    ; $9D27

@@ -2785,7 +2785,7 @@ loc_5_9D57:
     jsr     sub_E563                ; $9D57
 
 loc_5_9D5A:
-    lda     timerFast+3,x           ; $9D5A
+    lda     timerFast+TIMER_ENEMY,x ; $9D5A
     bne     loc_5_9D70              ; $9D5D
     inc     objState+1,x            ; $9D5F
     lda     objState+1,x            ; $9D61
@@ -2794,7 +2794,7 @@ loc_5_9D5A:
     cmp     #$05                    ; $9D67
     bcs     loc_5_9D73              ; $9D69
     lda     #$10                    ; $9D6B
-    sta     timerFast+3,x           ; $9D6D
+    sta     timerFast+TIMER_ENEMY,x ; $9D6D
 
 loc_5_9D70:
     jmp     loc_5_9D77              ; $9D70
@@ -2921,7 +2921,7 @@ loc_5_9E1E:
     iny                             ; $9E2F
     sty     objState+1,x            ; $9E30
     lda     #$18                    ; $9E32
-    sta     timerFast+3,x           ; $9E34
+    sta     timerFast+TIMER_ENEMY,x ; $9E34
 
 loc_5_9E37:
     rts                             ; $9E37
@@ -3213,7 +3213,7 @@ loc_5_A02B:
     lda     dat_5_9FC7,x            ; $A02B
     ldx     currentObject           ; $A02E
     sty     temp7                   ; $A030
-    ldy     timerFast+3,x           ; $A032
+    ldy     timerFast+TIMER_ENEMY,x ; $A032
     cpy     #$03                    ; $A035
     bcc     loc_5_A03E              ; $A037
     cpy     #$0D                    ; $A039
@@ -3533,7 +3533,7 @@ loc_5_A25F:
     lda     drawOffscreen+1         ; $A25F
     ora     linkDeathPending        ; $A261
     bne     loc_5_A27C              ; $A264
-    sta     timerSlow+10            ; $A266
+    sta     timerSlow+TIMER_INVULNERABLE ; $A266
     jsr     Enemy_CheckLinkContact  ; $A269
     jsr     Enemy_HurtLinkOnContact ; $A26C
     lda     objCollision+1,x        ; $A26F
@@ -3686,7 +3686,7 @@ loc_5_A359:
     beq     loc_5_A3BD              ; $A361
     inc     scrollFrozen            ; $A363
     lda     #$90                    ; $A366
-    sta     timerFast+3,x           ; $A368
+    sta     timerFast+TIMER_ENEMY,x ; $A368
 
 loc_5_A36B:
     lda     sramEnemyHitbox+34      ; $A36B
@@ -3767,12 +3767,12 @@ loc_5_A3DB:
     sta     enemyActive,x           ; $A3E1
     lda     #$FF                    ; $A3E3
     sta     sramEnemyHitbox+34      ; $A3E5
-    sta     timerFast+3,x           ; $A3E8
+    sta     timerFast+TIMER_ENEMY,x ; $A3E8
     lsr     a                       ; $A3EB
     sta     enemyStunTimer,x        ; $A3EC
 
 loc_5_A3EF:
-    lda     timerFast+3,x           ; $A3EF
+    lda     timerFast+TIMER_ENEMY,x ; $A3EF
     beq     loc_5_A3F5              ; $A3F2
     rts                             ; $A3F4
 
