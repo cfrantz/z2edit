@@ -194,8 +194,8 @@ Each is a self-contained work area; order is flexible after Phase 3.
   and read (banks 1-5 and bank 7), with headers; never-run enemy code
   was disassembled (tools/trace_code.py).  Pages: docs/entities/
   (README, common, West Hyrule, East Hyrule, palaces, Great Palace,
-  towns).  Five East Hyrule types are not yet matched to on-screen
-  enemies (the movies avoid them).
+  towns).  East Hyrule's types $14-$19, which the movies avoid, were
+  matched on screen with play.py --at.
 - Overworld (banks 1-2): map format, movement, random encounters, special
   tiles, raft/bridges/hidden areas.
 - Sideview areas: room loading, scrolling, area transitions.

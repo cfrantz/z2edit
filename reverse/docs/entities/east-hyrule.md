@@ -5,9 +5,17 @@ Hyrule, Death Mountain and Maze Island.  Types $00-$13 are the
 [common enemies](common.md), with tougher stats than in West Hyrule.
 
 The names in the table are z2edit's.  The test movies fight few of these
-enemies, so the identification of types $14, $15 and $17-$19 with
-on-screen enemies has not been checked; their behavior below is read
-from the code.
+enemies; types $14, $15 and $17-$19 were matched to the screen by
+starting a game in an area that holds them (`tools/play.py --at`, with
+the candle for the caves) and logging `enemyType`:
+
+| Type | Area (location) | On screen |
+|------|-----------------|-----------|
+| $14 | cave $09 ($0D) | a cyan, long-legged hopping creature that spits small shots |
+| $15 | location $00's area | a round red flying eye |
+| $17 | $33 ($15) | a flying insect dropping rocks |
+| $18 | cave $08 ($0C, page 3) | a cyan crested lizard |
+| $19 | lava cave $3D ($16) | a cyan scorpion, half sunk in the rock |
 
 | Type | Enemy | HP | Exp | Damage | Drop | Notes | AI |
 |------|-------|----|-----|--------|------|-------|----|
@@ -44,11 +52,11 @@ from the code.
 
 ## Enemies
 
-**$14** (z2edit: Tektite; `Tektite_Ai`): walks toward Link, turning at
+**Tektite** ($14, `Tektite_Ai`): walks toward Link, turning at
 walls, and leaps now and then; every 64 frames, half the time, it fires
 projectile type 6.  Its hitbox changes while it is in the air.
 
-**$15** (z2edit: Eye; `Eye_Ai`): flies across, bobbing up and down,
+**Eye** ($15, `Eye_Ai`): flies across, bobbing up and down,
 turning toward Link every 64 frames and pausing at random; only one part
 of it can be hit.
 
@@ -56,14 +64,14 @@ of it can be hit.
 at a random place near the screen, facing Link, moves along for a while
 and sinks back, again and again.
 
-**$17** (z2edit: Boon; `Boon_Ai`): flies about high on the screen,
+**Boon** ($17, `Boon_Ai`): flies about high on the screen,
 changing direction at random every 8-23 frames, and drops rocks
-(projectile type 8) every 32 frames.  (Not fought in the test movies.)
+(projectile type 8) every 32 frames.
 
-**$18** (z2edit: Basilisk; `Basilisk_Ai`): paces back and forth and,
+**Basilisk** ($18, `Basilisk_Ai`): paces back and forth and,
 every 64 frames half the time, breathes a fireball (projectile type 6).
 
-**$19** (z2edit: Scorpion; `Scorpion_Ai`): paces back and forth, hides
+**Scorpion** ($19, `Scorpion_Ai`): paces back and forth, hides
 for 32 frames at random, and fires projectile type 4 now and then; only
 one part of it can be hit.
 
