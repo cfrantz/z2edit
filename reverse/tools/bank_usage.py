@@ -11,6 +11,7 @@ reported separately, as "idle", and excluded from the bank percentages.
 import argparse
 import collections
 import sys
+import time
 
 import headless
 
@@ -19,10 +20,42 @@ import headless
 IDLE = set(range(0x0010, 0x0027)) | {0x002F}
 
 
+class Progress:
+    """Reports frames done, elapsed time and an estimate of the rest on stderr.
+
+    On a terminal the line is updated in place; otherwise a line is printed
+    once a minute.
+    """
+
+    def __init__(self, total):
+        self.total = total
+        self.start = time.monotonic()
+        self.last = self.start
+        self.tty = sys.stderr.isatty()
+
+    def update(self, frame):
+        now = time.monotonic()
+        done = frame >= self.total
+        if not (self.tty or done or now - self.last >= 60):
+            return
+        self.last = now
+        elapsed = now - self.start
+        eta = elapsed * (self.total - frame) / frame if frame else 0
+        line = (
+            f"frame {frame}/{self.total} ({100 * frame / self.total:5.1f}%)  "
+            f"elapsed {elapsed / 60:4.1f}m  remaining {eta / 60:4.1f}m"
+        )
+        if self.tty:
+            print(f"\r{line}", end="\n" if done else "", file=sys.stderr, flush=True)
+        else:
+            print(line, file=sys.stderr, flush=True)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--rom", required=True)
     p.add_argument("--every", type=int, default=15, help="Sample every N frames")
+    p.add_argument("--quiet", action="store_true", help="No progress on stderr")
     p.add_argument("movie")
     args = p.parse_args()
 
@@ -32,7 +65,10 @@ def main():
     idle = collections.Counter()
     total = len(m.frames) + 60
     emu.trace = True
-    for _ in range(0, total, args.every):
+    progress = None if args.quiet else Progress(total)
+    for frame in range(0, total, args.every):
+        if progress:
+            progress.update(frame)
         emu.tracebuf = {}
         emu.run_frames(args.every, lambda _f: m.run_pre_frame())
         state, world = emu.read(0x736), emu.read(0x707)
@@ -45,6 +81,8 @@ def main():
                 idle[(state, world)] += cycles
             else:
                 counts[(state, world, bank)] += cycles
+    if progress:
+        progress.update(total)
     by_key = collections.defaultdict(dict)
     for (state, world, bank), c in counts.items():
         by_key[(state, world)][bank] = c

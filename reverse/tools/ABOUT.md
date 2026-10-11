@@ -24,4 +24,5 @@ Tools that drive the emulator need the Python extension built with
   lines or using `name := * + k` as needed.
 - `bank_usage.py`: Plays a movie and reports which PRG bank executes in
   each game state and world, with the main thread's idle loop counted
-  separately.  Slow: about 35 minutes for the 100AK movie.
+  separately.  Slow: about 35 minutes for the 100AK movie; shows progress
+  on stderr (`--quiet` to suppress).
