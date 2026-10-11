@@ -96,7 +96,9 @@ lower levels, then return the current value for an inline jump table.
 | 2 | `GameState_Death`: Link's death animation (`Death_Animate`); then lose a life (`Death_LoseLife`, go to state 6), or show the continue screen (`Death_ContinueMenu`) when no lives remain.  Holding Up+A on controller 2 enters the continue screen directly (`Game_ShowContinueScreen`). |
 | 6 | `GameState_Respawn`: respawn after losing a life, then back to state 1 (provisional) |
 
-States 3, 4 and 5 have not been identified.  On the title screens bank 5
+States 3 (`GameState_StartEnding`) and 4 (`GameState_Ending`) appear to
+run bank 5's ending sequence; neither movie reaches them.  State 5 has not
+been identified.  On the title screens bank 5
 uses `gameState` for its own states.
 
 Common `gameMode` sequences in state 1, from `tools/watch.py` over the
