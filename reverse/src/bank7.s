@@ -4583,6 +4583,19 @@ DeelerXSpeeds:
     .byte   $08, $F8                                                        ; $D6DD
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Deeler_Ai
+;
+; Deeler (spider): hangs from a tree, moving sideways toward Link
+; (DeelerXSpeeds).  When Link is within $40 pixels, it may drop (1 frame
+; in 32, at random) on its thread down to ram_05DC ($60 below where it
+; spawned, Deeler_Init_BankN), then climbs back up to ram_05DD.  The blue
+; Deeler ($0E), once low enough (Y >= $8E), lets go: it then jumps about
+; at random intervals (64-127 frames), toward Link, at four times the
+; speed.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Deeler_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $D6DF
     jsr     Enemy_HurtLinkOnContact ; $D6E2
@@ -4691,6 +4704,16 @@ BagoBagoSpawnSpeeds:
     .byte   $20, $E0                                                        ; $D78D
 
 
+; ---------------------------------------------------------------------------
+; BagoBagoGenerator_Ai
+;
+; Bago Bago generator: every 128 frames, if an enemy slot is free, spawn a
+; Bago Bago (type $10, 3 hit points regardless of the table) below the
+; screen at its left or right side (BagoBagoSpawnX), jumping up (Y
+; velocity -$40) and moving inward (BagoBagoSpawnSpeeds).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 BagoBagoGenerator_Ai:
     lda     frameCounter            ; $D78F
     and     #$7F                    ; $D791
@@ -4743,6 +4766,16 @@ BagoBagoSpeeds:
     .byte   $10, $F0                                                        ; $D7DF
 
 
+; ---------------------------------------------------------------------------
+; BagoBago_Ai
+;
+; Bago Bago (fish): leaps out of the water, falling with gravity; on
+; landing it moves toward Link (BagoBagoSpeeds).  Every $70 frames, when
+; within $10 pixels of Link's height, it may spit a rock at him (half the
+; time, if facing him).  Removed once below the screen.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 BagoBago_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $D7E1
     lda     drawOffscreen+1         ; $D7E4
@@ -4800,6 +4833,14 @@ BagoBago_Ai:
     bpl     @loc_D818               ; $D840
 
 
+; ---------------------------------------------------------------------------
+; OctorokHopping_Ai
+;
+; Hopping Octorok: faces Link and hops in place (Enemy_Hop), spitting a
+; rock at the top of each hop if facing him.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 OctorokHopping_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $D842
     jsr     Enemy_FaceLink          ; $D845
@@ -4807,9 +4848,10 @@ OctorokHopping_Ai:
 ; ---------------------------------------------------------------------------
 ; Enemy_Hop
 ;
-; Enemy AI helper: hop every 128 frames (Y velocity -$20), fall, and land.
+; Enemy AI helper: count enemyAiState, and every 128 frames jump (Y
+; velocity -$20); fall with gravity and land; at the top of the jump
+; (Y velocity 0) fire a rock if facing Link (Enemy_ShootIfFacingLink).
 ;
-; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Enemy_Hop:
@@ -4870,6 +4912,15 @@ OctorokSpeeds:
     .byte   $08, $F8                                                        ; $D886
 
 
+; ---------------------------------------------------------------------------
+; OctorokWalking_Ai
+;
+; Walking Octorok: hops (Enemy_Hop) and walks, turning at walls; every 64
+; frames it turns toward Link (OctorokSpeeds); it also spits a rock from
+; the ground, at random intervals of 128-255 frames.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 OctorokWalking_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $D888
     jsr     Enemy_Hop               ; $D88B
@@ -4906,6 +4957,16 @@ ElevatorSpeeds:
     .byte   $00, $18, $E8                                                   ; $D8BF
 
 
+; ---------------------------------------------------------------------------
+; Elevator_Ai
+;
+; Elevator (enemy type $13): while Link stands on it, Up and Down move it
+; (ElevatorSpeeds) and Link with it, with a sound.  When it reaches the
+; bottom of the screen (Y >= $D8), Link goes to the room below (gameMode
+; $13, Mode_FindConnectedRoom).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Elevator_Ai:
     lda     objCollision+1,x        ; $D8C2
     and     #$10                    ; $D8C4
@@ -4956,6 +5017,16 @@ Elevator_Ai:
     jmp     Enemy_UpdateCommon      ; $D91B
 
 
+; ---------------------------------------------------------------------------
+; Fairy_Ai
+;
+; Fairy (an item that refills life): plays its sound when it appears; when
+; Link touches it, refill his life (statMeterPending+1 = $FF) and freeze
+; the game (ram_00DE) while the meter fills and the screen flashes, then
+; remove it.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Fairy_Ai:
     lda     drawOffscreen+1         ; $D91E
     and     #$08                    ; $D920
@@ -4998,11 +5069,11 @@ Fairy_Ai:
 ; ---------------------------------------------------------------------------
 ; Item_Fall
 ;
-; Enemy AI helper: update enemy x's background collision and, on landing,
-; snap it to the tile and set its next jump.
+; Items (and the red jar): fall with gravity and land on the ground,
+; snapping to the tile.  An item landing fast bounces up (by $F7, or $F0
+; from a long fall); experience bags (kinds $0A-$0D) hardly bounce.
 ;
-; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_Fall:
     jsr     Enemy_UpdateWithBg      ; $D959
@@ -5039,6 +5110,16 @@ Item_Fall:
     jmp     Enemy_MoveY             ; $D98E
 
 
+; ---------------------------------------------------------------------------
+; LockedDoor_Ai
+;
+; Locked door: blocks Link (Enemy_KnockBack pushes him back).  With the
+; magic key, or a key (which is used up), it opens: its area flag is
+; cleared so it stays open, the game freezes (ram_00DE) while it rises for
+; 17 frames, then a spark is left where it was and it is removed.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 LockedDoor_Ai:
     jsr     Enemy_UpdateCommon      ; $D991
     ldy     enemyAiState,x          ; $D994
@@ -5132,6 +5213,15 @@ Enemy_SkipAiIfStunned:
     jmp     Enemy_UpdateCommon      ; $DA09
 
 
+; ---------------------------------------------------------------------------
+; Bot_Ai
+;
+; Bot (blob): like a Myu (Myu_Move), and now and then (1 frame in 128 on
+; the ground, at random) it jumps toward Link (BotJumpSpeeds, Y velocity
+; -$1B).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Bot_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DA0C
     lda     objCollision+1,x        ; $DA0F
@@ -5150,6 +5240,14 @@ Bot_Ai:
     jmp     Myu_Ai                  ; $DA28
 
 
+; ---------------------------------------------------------------------------
+; Bit_Ai
+;
+; Bit (small blob): like a Myu, but for a quarter of each 256-frame period
+; (staggered by enemy slot) it moves twice as fast.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Bit_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DA2B
     txa                             ; $DA2E
@@ -5168,6 +5266,16 @@ Bit_Ai:
     jmp     Myu_Move                ; $DA44
 
 
+; ---------------------------------------------------------------------------
+; Myu_Ai
+;
+; Myu: crawls along the ground in short steps (every 16 frames), pausing
+; for random times (MyuPauseTimes: 64-127 or 192-255 frames) and choosing
+; a random direction after each pause; turns at walls.  Myu_Move is the
+; movement, also used by Bot_Ai and Bit_Ai with other speeds.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Myu_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DA47
     lda     #$20                    ; $DA4A
@@ -5262,6 +5370,17 @@ MoaSpeeds:
     .byte   $08, $F8                                                        ; $DACD
 
 
+; ---------------------------------------------------------------------------
+; Moa_Ai
+;
+; Moa (floating eye): floats toward Link, its speed swinging back and
+; forth (MoaSpeeds) so that it weaves; it drifts up or down for a while at
+; random, turning back at Y $40 and $C0.  In East Hyrule (region 2) it is
+; invisible without the cross.  It drains experience on contact
+; (sramEnemyAttr bit 4).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Moa_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DACF
     jsr     Enemy_CheckCollisions   ; $DAD2
@@ -5352,6 +5471,16 @@ dat_DB50:
     .byte   $08, $20, $E0                                                   ; $DB50
 
 
+; ---------------------------------------------------------------------------
+; Ache_Ai
+;
+; Ache (bat) and Acheman: perch on the ceiling until Link is within $20
+; pixels horizontally (or always, on area pages 1-2), then swoop down and
+; across at him in an arc and back up to Y $30.  The Acheman (type $0A),
+; after a swoop, turns into a man for $30 frames and throws a fireball.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Ache_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DB53
     lda     enemyType,x             ; $DB56
@@ -5492,6 +5621,15 @@ Projectile_FindFreeFrom:
     rts                             ; $DC14
 
 
+; ---------------------------------------------------------------------------
+; BubbleGenerator_Ai
+;
+; Bubble (lava fireball) generator: every 32 frames, if a projectile slot
+; is free, launch a fireball (projectile type 2) from the bottom of the
+; screen at a random X, rising (Y velocity -$1C).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 BubbleGenerator_Ai:
     inc     enemyAiState,x          ; $DC15
     lda     enemyAiState,x          ; $DC17
@@ -5524,6 +5662,16 @@ RockSpawnY:
     .byte   $03, $13, $F3, $E3, $D3, $C3, $03, $13                          ; $DC47
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; RockGenerator_Ai
+;
+; Rock generator: every 32 frames, if a projectile slot is free, throw a
+; rock (projectile type 1) from the left or right edge of the screen
+; (RockSpawnX) at about Link's height (RockSpawnY), moving inward.  Not
+; executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 RockGenerator_Ai:
     lda     frameCounter            ; $DC4F
     and     #$1F                    ; $DC51
@@ -9165,6 +9313,13 @@ Enemy_Draw:
     jmp     (temp14)                ; $EF44
 
 
+; ---------------------------------------------------------------------------
+; Elevator_Draw
+;
+; Draw the elevator: two pairs of platform sprites and its cable.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Elevator_Draw:
     ldx     #$06                    ; $EF47
     jsr     Sprite_DrawPairFromTable ; $EF49
@@ -9208,6 +9363,13 @@ Elevator_Draw:
     rts                             ; $EF90
 
 
+; ---------------------------------------------------------------------------
+; Bot_Draw
+;
+; Draw a Bot or Bit (squashing while it moves).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Bot_Draw:
     lda     #$02                    ; $EF91
     sta     temp2                   ; $EF93
@@ -9239,6 +9401,13 @@ Bot_Draw:
     rts                             ; $EFC1
 
 
+; ---------------------------------------------------------------------------
+; Myu_Draw
+;
+; Draw a Myu.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Myu_Draw:
     lda     #$02                    ; $EFC2
     sta     temp2                   ; $EFC4
@@ -9253,6 +9422,13 @@ Myu_Draw:
     jmp     Sprite_DrawPairFlipped  ; $EFCF
 
 
+; ---------------------------------------------------------------------------
+; Enemy08_Draw
+;
+; Draw enemy types 8 and 9 (unused in the overworld groups).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Enemy08_Draw:
     lda     #$02                    ; $EFD2
     sta     temp2                   ; $EFD4
@@ -9272,6 +9448,14 @@ MoaWobble:
     .byte   $03, $03, $02, $02, $01, $01, $00, $00, $00                     ; $EFE9
 
 
+; ---------------------------------------------------------------------------
+; Moa_Draw
+;
+; Draw a Moa, leaning with its speed (MoaWobble) and flickering its
+; palette.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Moa_Draw:
     lda     #$01                    ; $EFF2
     sta     temp2                   ; $EFF4
@@ -9308,6 +9492,14 @@ Moa_Draw:
     rts                             ; $F026
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Deeler_Draw
+;
+; Draw a Deeler and, while it hangs, its thread (tile $BE) up to ram_05DD.
+; Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
 Deeler_Draw:
     lda     temp3                   ; $F027
     ldy     enemyAiState,x          ; $F029
@@ -9385,6 +9577,13 @@ loc_F0A7:
 ; (end of disassembled code)
 
 
+; ---------------------------------------------------------------------------
+; Octorok_Draw
+;
+; Draw an Octorok.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Octorok_Draw:
     lda     temp0                   ; $F0A8
     cmp     #$B5                    ; $F0AA
@@ -9398,6 +9597,13 @@ Octorok_Draw:
     bne     Sprite_DrawAnimatedPairFromTable ; $F0B7
 
 
+; ---------------------------------------------------------------------------
+; BagoBago_Draw
+;
+; Draw a Bago Bago (animated).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 BagoBago_Draw:
     lda     #$0C                    ; $F0B9
 
@@ -9439,6 +9645,13 @@ Sprite_DrawEnemyPairKeepX:
     rts                             ; $F0DC
 
 
+; ---------------------------------------------------------------------------
+; Fairy_Draw
+;
+; Draw the fairy, bobbing up and down, flapping.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Fairy_Draw:
     lda     drawOffscreen+1         ; $F0DD
     and     #$08                    ; $F0DF
@@ -9478,6 +9691,14 @@ Sprite_Return:
     .byte   $03, $02, $00, $01, $01, $01                                    ; $F10C
 
 
+; ---------------------------------------------------------------------------
+; Item_Draw
+;
+; Draw an item (tiles by item kind; kinds $10 and up with their own
+; palette, from the table at $F10C).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Item_Draw:
     lda     #$02                    ; $F112
     sta     temp2                   ; $F114
@@ -9505,6 +9726,14 @@ Item_Draw:
     jmp     Sprite_FlipPrevious     ; $F137
 
 
+; ---------------------------------------------------------------------------
+; LockedDoor_Draw
+;
+; Draw the locked door (three sprites), raised by enemyAiState while it
+; opens.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 LockedDoor_Draw:
     lda     drawOffscreen+1         ; $F13A
     and     #$08                    ; $F13C
@@ -9540,6 +9769,13 @@ LockedDoor_Draw:
     rts                             ; $F17D
 
 
+; ---------------------------------------------------------------------------
+; Ache_Draw
+;
+; Draw an Ache (perched or flying), or the Acheman as a man.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Ache_Draw:
     lda     enemyType,x             ; $F17E
     cmp     #$0A                    ; $F180

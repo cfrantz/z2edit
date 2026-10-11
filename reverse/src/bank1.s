@@ -983,8 +983,8 @@ sub_1_93AC:
     .byte   $FF, $FF, $FF, $FF                                              ; $93FC
 
 ProjectilePtrs_Bank1:
-    .word   loc_1_9639, loc_1_9647, loc_1_965A, loc_1_9634 ; $9400
-    .word   $963E, loc_1_9664, loc_1_9639, $0000 ; $9408
+    .word   Projectile_Straight_Bank1, Projectile_Bubble_Bank1, Projectile_Rock_Bank1, Projectile_Fireball_Bank1 ; $9400
+    .word   $963E, Projectile_Boomerang_Bank1, Projectile_Straight_Bank1, $0000 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
 ProjectileUnused_Bank1:
@@ -999,15 +999,15 @@ EnemyHp_Bank1:
     .byte   $18, $0C, $0E, $12, $04, $03, $03, $04, $08, $00, $02, $00      ; $9439
 
 EnemyInitPtrs_Bank1:
-    .word   loc_1_95AD, loc_1_9620, loc_1_95AD, loc_1_95AD ; $9445
-    .word   loc_1_95AD, loc_1_95AD, loc_1_95AD, loc_1_95AD ; $944D
-    .word   loc_1_95AD, loc_1_95AD, loc_1_95AD, loc_1_984E ; $9455
-    .word   loc_1_984E, $9625, $9625, loc_1_984E ; $945D
-    .word   loc_1_95AD, loc_1_95AD, loc_1_95AD, loc_1_95AD ; $9465
-    .word   loc_1_9631, loc_1_9631, loc_1_9631, loc_1_9631 ; $946D
-    .word   loc_1_9631, loc_1_9631, loc_1_9631, loc_1_9631 ; $9475
-    .word   loc_1_95AD, loc_1_984E, loc_1_95AD, loc_1_95AD ; $947D
-    .word   $986C, loc_1_984E, loc_1_95AD, $0000 ; $9485
+    .word   Enemy_InitNone_Bank1, RedJar_Init_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $9445
+    .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $944D
+    .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Generator_Init_Bank1 ; $9455
+    .word   Generator_Init_Bank1, $9625, $9625, Generator_Init_Bank1 ; $945D
+    .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $9465
+    .word   Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1 ; $946D
+    .word   Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1 ; $9475
+    .word   Enemy_InitNone_Bank1, Generator_Init_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $947D
+    .word   $986C, Generator_Init_Bank1, Enemy_InitNone_Bank1, $0000 ; $9485
 
 EnemyAiPtrs_Bank1:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
@@ -1015,9 +1015,9 @@ EnemyAiPtrs_Bank1:
     .word   $AB98, $ABE9, Ache_Ai, BubbleGenerator_Ai ; $949D
     .word   RockGenerator_Ai, Deeler_Ai, Deeler_Ai, BagoBagoGenerator_Ai ; $94A5
     .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
-    .word   loc_1_9972, loc_1_9972, loc_1_9972, loc_1_9A15 ; $94B5
-    .word   loc_1_9A15, loc_1_9972, loc_1_9972, loc_1_9972 ; $94BD
-    .word   loc_1_98C3, $9B31, $9B94, loc_1_987E ; $94C5
+    .word   MoblinGoriya_Ai, MoblinGoriya_Ai, MoblinGoriya_Ai, Daira_Ai ; $94B5
+    .word   Daira_Ai, MoblinGoriya_Ai, MoblinGoriya_Ai, MoblinGoriya_Ai ; $94BD
+    .word   Lowder_Ai, $9B31, $9B94, Megmet_Ai ; $94C5
     .word   $9BB5, $992F, $994F, $0000 ; $94CD
 
 EnemyAttr_Bank1:
@@ -1044,14 +1044,21 @@ EnemyDrawPtrs_Bank1:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
     .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
     .word   Enemy08_Draw, Enemy08_Draw, Ache_Draw, $0000 ; $9575
-    .word   $0000, Deeler_Draw, Deeler_Draw, loc_1_95AD ; $957D
+    .word   $0000, Deeler_Draw, Deeler_Draw, Enemy_InitNone_Bank1 ; $957D
     .word   BagoBago_Draw, Octorok_Draw, Octorok_Draw, Elevator_Draw ; $9585
-    .word   loc_1_9CA4, loc_1_9CA4, loc_1_9CA4, loc_1_9D65 ; $958D
-    .word   loc_1_9D69, loc_1_9C6F, loc_1_9C6F, loc_1_9C6F ; $9595
-    .word   loc_1_9DF1, loc_1_95AD, $9DF6, loc_1_9DFB ; $959D
-    .word   $9E0C, loc_1_95AD, $9C43, $0000 ; $95A5
+    .word   Moblin_Draw, Moblin_Draw, Moblin_Draw, OrangeDaira_Draw ; $958D
+    .word   RedDaira_Draw, Goriya_Draw, Goriya_Draw, Goriya_Draw ; $9595
+    .word   Lowder_Draw, Enemy_InitNone_Bank1, $9DF6, Megmet_Draw ; $959D
+    .word   $9E0C, Enemy_InitNone_Bank1, $9C43, $0000 ; $95A5
 
-loc_1_95AD:
+; ---------------------------------------------------------------------------
+; Enemy_InitNone_Bank1
+;
+; Spawn routine that does nothing (rts), for most enemy types.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_InitNone_Bank1:
     rts                             ; $95AD
     .byte   $AE, $AA, $AE, $84, $00, $0D, $F6, $00, $00, $02, $01, $02, $01, $03, $01, $01; $95AE
     .byte   $00, $00, $00, $00, $59, $97, $7B, $97, $6D, $97, $6D, $97, $89, $97, $A9, $97; $95BE
@@ -1062,28 +1069,97 @@ loc_1_95AD:
     .byte   $F5, $F5, $DE, $E0, $E2, $E0, $D6, $D8, $DA, $DC, $D0, $D2, $D0, $D4, $25, $27; $960E
     .byte   $FC, $FE                                                        ; $961E
 
-loc_1_9620:
+; ---------------------------------------------------------------------------
+; RedJar_Init_Bank1
+;
+; Spawn routine of the red jar: make it item kind $11 (a magic jar that
+; fills the meter).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+RedJar_Init_Bank1:
     lda     #$11                    ; $9620
     sta     enemyAiState,x          ; $9622
     rts                             ; $9624
-    .byte   $B5, $2A, $8D, $DD, $05, $18, $69, $60, $8D, $DC, $05, $60      ; $9625
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_1_9631:
+; ---------------------------------------------------------------------------
+; Deeler_Init_Bank1
+;
+; Spawn routine of Deelers: the thread's top is where it spawns
+; (ram_05DD); it drops to $60 below (ram_05DC).  Not executed in the test
+; movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Deeler_Init_Bank1:
+    lda     objY+1,x                ; $9625
+    sta     ram_05DD                ; $9627
+    clc                             ; $962A
+    adc     #$60                    ; $962B
+    sta     ram_05DC                ; $962D
+    rts                             ; $9630
+; (end of disassembled code)
+
+
+; ---------------------------------------------------------------------------
+; Fighter_Init_Bank1
+;
+; Spawn routine of Moblins, Goriyas and Dairas: enemyAiState = $FF.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Fighter_Init_Bank1:
     dec     enemyAiState,x          ; $9631
     rts                             ; $9633
 
-loc_1_9634:
-    jsr     sub_1_9EB2              ; $9634
-    bne     loc_1_9639              ; $9637
+; ---------------------------------------------------------------------------
+; Projectile_Fireball_Bank1
+;
+; Projectile type 4 (the Acheman's fireball): with a sound, flies straight
+; (Projectile_Straight_Bank1).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Fireball_Bank1:
+    jsr     Projectile_PlaySound_Bank1 ; $9634
+    bne     Projectile_Straight_Bank1 ; $9637
 
-loc_1_9639:
+; ---------------------------------------------------------------------------
+; Projectile_Straight_Bank1
+;
+; Projectile types 1 (rock) and 7 (Daira's axe): fly straight across.
+; Projectile_Falling_Bank1 (type 5, Moblin's spear) falls with gravity
+; instead.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Straight_Bank1:
     lda     #$FE                    ; $9639
     sta     objYVelocity+7,x        ; $963B
+
+; ---------------------------------------------------------------------------
+; Projectile_Falling_Bank1
+;
+; Projectile type 5 (a thrown spear): flies in an arc, falling with
+; gravity.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Falling_Bank1:
     inc     objYVelocity+7,x        ; $963E
     inc     objYVelocity+7,x        ; $9641
-    jmp     sub_1_96FF              ; $9644
+    jmp     Projectile_MoveAndCheck_Bank1 ; $9644
 
-loc_1_9647:
+; ---------------------------------------------------------------------------
+; Projectile_Bubble_Bank1
+;
+; Projectile type 2 (lava fireball): rises, swaying left and right every
+; 16 frames.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Bubble_Bank1:
     ldy     #$04                    ; $9647
     inc     ram_044C,x              ; $9649
     lda     ram_044C,x              ; $964C
@@ -1093,19 +1169,37 @@ loc_1_9647:
 
 loc_1_9655:
     sty     objXVelocity+7,x        ; $9655
-    jmp     sub_1_96FF              ; $9657
+    jmp     Projectile_MoveAndCheck_Bank1 ; $9657
 
-loc_1_965A:
-    jsr     sub_1_96EB              ; $965A
+; ---------------------------------------------------------------------------
+; Projectile_Rock_Bank1
+;
+; Projectile type 3 (an Octorok's or Bago Bago's rock): flies straight,
+; and falls once deflected (Projectile_FallIfDeflected_Bank1).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Rock_Bank1:
+    jsr     Projectile_FallIfDeflected_Bank1 ; $965A
 dat_1_965F := * + 2
-    jmp     loc_1_9639              ; $965D
+    jmp     Projectile_Straight_Bank1 ; $965D
     .byte   $FF, $01                                                        ; $9660
 
-dat_1_9662:
+BoomerangYSpeeds_Bank1:
     .byte   $FC, $04                                                        ; $9662
 
-loc_1_9664:
-    jsr     sub_1_96EB              ; $9664
+; ---------------------------------------------------------------------------
+; Projectile_Boomerang_Bank1
+;
+; Projectile type 6 (Goriya's boomerang): flies out and back, its speed
+; changing by BoomerangYSpeeds_Bank1 and dat_1_965F, with a sound on
+; alternate frames; it disappears when it returns to its thrower
+; (ram_045E).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Boomerang_Bank1:
+    jsr     Projectile_FallIfDeflected_Bank1 ; $9664
     lda     frameCounter            ; $9667
     lsr     a                       ; $9669
     bcc     loc_1_9680              ; $966A
@@ -1125,7 +1219,7 @@ loc_1_9680:
     bmi     loc_1_96B4              ; $9683
     bne     loc_1_96B1              ; $9685
     ldy     ram_0458,x              ; $9687
-    lda     dat_1_9662,y            ; $968A
+    lda     BoomerangYSpeeds_Bank1,y ; $968A
     sta     objYVelocity+7,x        ; $968D
     ldy     ram_0452,x              ; $9690
     lda     objXVelocity+7,x        ; $9693
@@ -1150,7 +1244,7 @@ loc_1_96B1:
     dec     ram_044C,x              ; $96B1
 
 loc_1_96B4:
-    jsr     sub_1_96FF              ; $96B4
+    jsr     Projectile_MoveAndCheck_Bank1 ; $96B4
     ldy     ram_044C,x              ; $96B7
     dey                             ; $96BA
     bpl     loc_1_96EA              ; $96BB
@@ -1180,7 +1274,15 @@ loc_1_96D3:
 loc_1_96EA:
     rts                             ; $96EA
 
-sub_1_96EB:
+; ---------------------------------------------------------------------------
+; Projectile_FallIfDeflected_Bank1
+;
+; If projectile x moves against its facing (it was deflected), let it fall
+; with gravity and skip the rest of its routine.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_FallIfDeflected_Bank1:
     ldy     #$02                    ; $96EB
     lda     objXVelocity+7,x        ; $96ED
     bmi     loc_1_96F2              ; $96EF
@@ -1195,7 +1297,16 @@ loc_1_96F2:
     inc     objYVelocity+7,x        ; $96F9
     inc     objYVelocity+7,x        ; $96FC
 
-sub_1_96FF:
+; ---------------------------------------------------------------------------
+; Projectile_MoveAndCheck_Bank1
+;
+; Move projectile x, remove it if off screen, draw it
+; (Projectile_Draw_Bank1) and test it against Link
+; (Projectile_CheckLinkAlternate).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_MoveAndCheck_Bank1:
     jsr     Projectile_Move         ; $96FF
     lda     drawOffscreen+2         ; $9702
     and     #$FC                    ; $9704
@@ -1205,13 +1316,21 @@ sub_1_96FF:
     rts                             ; $970C
 
 loc_1_970D:
-    jsr     sub_1_9718              ; $970D
+    jsr     Projectile_Draw_Bank1   ; $970D
     jsr     DoNothing               ; $9710
 dat_1_9715 := * + 2
     jmp     Projectile_CheckLinkAlternate ; $9713
     .byte   $40, $00                                                        ; $9716
 
-sub_1_9718:
+; ---------------------------------------------------------------------------
+; Projectile_Draw_Bank1
+;
+; Draw projectile x: tile and attributes by its type (sram_6EAD,
+; sram_6EB6), then its type's draw routine from sram_6EC0.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Draw_Bank1:
     lda     objState+7,x            ; $9718
     pha                             ; $971A
     asl     a                       ; $971B
@@ -1242,8 +1361,25 @@ sub_1_9718:
     sta     oamBuffer+1,y           ; $974F
     jmp     (temp14)                ; $9752
 ; (unreferenced: $9755-$976C, 24 bytes)
-    .byte   $00, $02, $00, $FE, $A5, $12, $29, $30, $4A, $4A, $4A, $4A, $AA, $B9, $00, $02; $9755
-    .byte   $7D, $55, $97, $99, $00, $02, $A6, $10                          ; $9765
+
+dat_1_9755:
+    .byte   $00, $02, $00, $FE                                              ; $9755
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+dat_1_9759:
+    lda     frameCounter            ; $9759
+    and     #$30                    ; $975B
+    lsr     a                       ; $975D
+    lsr     a                       ; $975E
+    lsr     a                       ; $975F
+    lsr     a                       ; $9760
+    tax                             ; $9761
+    lda     oamBuffer,y             ; $9762
+    adc     dat_1_9755,x            ; $9765
+    sta     oamBuffer,y             ; $9768
+    ldx     currentObject           ; $976B
+; (end of disassembled code)
+
 
 loc_1_976D:
     lda     frameCounter            ; $976D
@@ -1269,9 +1405,26 @@ loc_1_977B:
 loc_1_9785:
     sta     oamBuffer+2,y           ; $9785
     rts                             ; $9788
-; (unreferenced: $9789-$97A4, 28 bytes)
-    .byte   $BD, $0E, $04, $48, $BD, $5E, $04, $F0, $02, $85, $03, $A9, $00, $85, $C9, $9D; $9789
-    .byte   $0E, $04, $A2, $48, $20, $D7, $F0, $68, $9D, $0E, $04, $60      ; $9799
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+dat_1_9789:
+    lda     enemyStunTimer,x        ; $9789
+    pha                             ; $978C
+    lda     overworldBuffer+94,x    ; $978D
+    beq     loc_1_9794              ; $9790
+    sta     temp3                   ; $9792
+
+loc_1_9794:
+    lda     #$00                    ; $9794
+    sta     drawOffscreen+1         ; $9796
+    sta     enemyStunTimer,x        ; $9798
+    ldx     #$48                    ; $979B
+    jsr     Sprite_DrawEnemyPairKeepX ; $979D
+    pla                             ; $97A0
+    sta     enemyStunTimer,x        ; $97A1
+    rts                             ; $97A4
+; (end of disassembled code)
+
 
 dat_1_97A5:
     .byte   $02, $82, $C2, $42                                              ; $97A5
@@ -1330,7 +1483,15 @@ dat_1_97EF:
     .byte   $D8, $00, $00                                                   ; $97EF
 ; (code below not executed in the test movies)
 
-sub_1_97F2:
+; ---------------------------------------------------------------------------
+; Moblin_ThrowSpear
+;
+; Throw a spear (projectile type 5) from Moblin x, in an arc in front of
+; it.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Moblin_ThrowSpear:
     ldy     #$05                    ; $97F2
 
 loc_1_97F4:
@@ -1380,7 +1541,15 @@ loc_1_984D:
     rts                             ; $984D
 ; (end of code not executed in the test movies)
 
-loc_1_984E:
+; ---------------------------------------------------------------------------
+; Generator_Init_Bank1
+;
+; Spawn routine of generators: despawn any other enemy of the same type,
+; so that there is only one.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Generator_Init_Bank1:
     ldy     #$05                    ; $984E
 
 loc_1_9850:
@@ -1403,16 +1572,44 @@ loc_1_9864:
     jsr     Enemy_Despawn           ; $9866
     ldx     currentObject           ; $9869
     rts                             ; $986B
-; (unreferenced: $986C-$9879, 14 bytes)
-    .byte   $A9, $01, $95, $AF, $4A, $95, $60, $B5, $2A, $69, $3F, $95, $81, $60; $986C
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_1_987A:
+; ---------------------------------------------------------------------------
+; Geldarm_Init
+;
+; Spawn routine of the Geldarm: it rises from its spawn point up to $3F
+; pixels (its bottom in objState).  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Geldarm_Init:
+    lda     #$01                    ; $986C
+    sta     enemyAiState,x          ; $986E
+    lsr     a                       ; $9870
+    sta     objFacing+1,x           ; $9871
+    lda     objY+1,x                ; $9873
+    adc     #$3F                    ; $9875
+    sta     objState+1,x            ; $9877
+    rts                             ; $9879
+; (end of disassembled code)
+
+
+MegmetXSpeeds:
     .byte   $08, $F8                                                        ; $987A
 
-dat_1_987C:
+MegmetYSpeeds:
     .byte   $FB, $FC                                                        ; $987C
 
-loc_1_987E:
+; ---------------------------------------------------------------------------
+; Megmet_Ai
+;
+; Megmet: hops toward Link: on the ground it jumps (MegmetYSpeeds, a small
+; random hop) toward him (MegmetXSpeeds), falling with its own gravity;
+; turns at walls and stops at ceilings.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Megmet_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $987E
     lda     objCollision+1,x        ; $9881
     and     #$08                    ; $9883
@@ -1434,10 +1631,10 @@ loc_1_9895:
     lda     rng+1,x                 ; $989E
     and     #$01                    ; $98A1
     tay                             ; $98A3
-    lda     dat_1_987C,y            ; $98A4
+    lda     MegmetYSpeeds,y         ; $98A4
     sta     objYVelocity+1,x        ; $98A7
     jsr     Enemy_FaceLink          ; $98AA
-    lda     dat_1_987A,y            ; $98AD
+    lda     MegmetXSpeeds,y         ; $98AD
     sta     objXVelocity+1,x        ; $98B0
 
 loc_1_98B2:
@@ -1448,10 +1645,19 @@ loc_1_98B2:
     jsr     Enemy_UpdateWithBg      ; $98BB
     jmp     Enemy_HurtLinkOnContact ; $98BE
 
-dat_1_98C1:
+LowderSpeeds:
     .byte   $08, $F8                                                        ; $98C1
 
-loc_1_98C3:
+; ---------------------------------------------------------------------------
+; Lowder_Ai
+;
+; Lowder (beetle): walks back and forth, turning at walls, twice as fast
+; when heading toward Link; every 160 frames, if on Link's level, it turns
+; toward him (LowderSpeeds).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Lowder_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $98C3
     jsr     Enemy_HurtLinkOnContact ; $98C6
     jsr     Enemy_UpdateWithBg      ; $98C9
@@ -1482,7 +1688,7 @@ loc_1_98E0:
     lda     #$A0                    ; $98F4
     sta     timerFast+TIMER_ENEMY,x ; $98F6
     jsr     Enemy_FaceLink          ; $98F9
-    lda     dat_1_98C1,y            ; $98FC
+    lda     LowderSpeeds,y          ; $98FC
     sta     objXVelocity+1,x        ; $98FF
 
 loc_1_9901:
@@ -1511,18 +1717,84 @@ loc_1_991F:
 
 loc_1_992A:
     sta     objState+1,x            ; $992A
+
+dat_1_992C:
     rts                             ; $992C
 ; (unreferenced: $992D-$996F, 67 bytes)
-    .byte   $10, $F0, $AD, $C9, $05, $D0, $1A, $20, $31, $9B, $B0, $15, $A6, $00, $D6, $C2; $992D
-    .byte   $A9, $22, $95, $A1, $B4, $60, $B9, $2C, $99, $95, $71, $A9, $A0, $95, $2A, $A6; $993D
-    .byte   $10, $60, $A9, $08, $9D, $04, $05, $20, $02, $DA, $20, $3D, $DE, $20, $63, $E5; $994D
-    .byte   $20, $C1, $D6, $20, $22, $9B, $20, $BE, $DE, $B5, $A8, $29, $04, $F0, $03, $4C; $995D
-    .byte   $C1, $DA, $60                                                   ; $996D
+    .byte   $10, $F0                                                        ; $992D
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+; ---------------------------------------------------------------------------
+; DumbMoblinGenerator_Ai
+;
+; Generator of Moblins that walk straight across (type $22): spawns one
+; every 128 frames (MobyGenerator_Ai's spawn) at Y $A0, walking at $10
+; pixels/16 frames in its facing.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+DumbMoblinGenerator_Ai:
+    lda     ram_05C9                ; $992F
+    bne     loc_1_994E              ; $9932
+    jsr     MobyGenerator_Ai        ; $9934
+    bcs     loc_1_994E              ; $9937
+    ldx     temp0                   ; $9939
+    dec     enemyHp,x               ; $993B
+    lda     #$22                    ; $993D
+    sta     enemyType,x             ; $993F
+    ldy     objFacing+1,x           ; $9941
+    lda     dat_1_992C,y            ; $9943
+    sta     objXVelocity+1,x        ; $9946
+    lda     #$A0                    ; $9948
+    sta     objY+1,x                ; $994A
+    ldx     currentObject           ; $994C
+
+loc_1_994E:
+    rts                             ; $994E
+
+; ---------------------------------------------------------------------------
+; DumbMoblin_Ai
+;
+; A Moblin that walks straight in its facing, falling off ledges and
+; stopping at walls.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+DumbMoblin_Ai:
+    lda     #$08                    ; $994F
+    sta     timerFast+3,x           ; $9951
+    jsr     Enemy_SkipAiIfStunned   ; $9954
+    jsr     Enemy_UpdateWithBg      ; $9957
+    jsr     Projectile_CheckLink    ; $995A
+    jsr     Enemy_HurtLinkOnContact ; $995D
+    jsr     Enemy_MoveXUnlessWall_Bank1 ; $9960
+    jsr     Enemy_MoveYAndFall      ; $9963
+    lda     objCollision+1,x        ; $9966
+    and     #$04                    ; $9968
+    beq     loc_1_996F              ; $996A
+    jmp     Enemy_Land              ; $996C
+
+loc_1_996F:
+    rts                             ; $996F
+; (end of disassembled code)
+
 
 dat_1_9970:
     .byte   $10, $00                                                        ; $9970
 
-loc_1_9972:
+; ---------------------------------------------------------------------------
+; MoblinGoriya_Ai
+;
+; Moblins ($14-$16) and Goriyas ($19-$1B): stand off from Link
+; (Fighter_Move) and attack: Moblins thrust their spear (Orange and Blue
+; Moblins also throw it, Moblin_ThrowSpear); Goriyas throw a boomerang
+; (projectile type 6) that returns.  The attack's height (high or low)
+; follows Link's crouch.  Their shield blocks Link's projectiles
+; (Projectile_CheckLinkReflect).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+MoblinGoriya_Ai:
     lda     objState+1,x            ; $9972
     beq     loc_1_99EB              ; $9974
     and     #$01                    ; $9976
@@ -1580,7 +1852,7 @@ loc_1_99C9:
     cmp     #$15                    ; $99DB
     beq     loc_1_99E6              ; $99DD
 ; (code below not executed in the test movies)
-    jsr     sub_1_97F2              ; $99DF
+    jsr     Moblin_ThrowSpear       ; $99DF
     lda     #$05                    ; $99E2
     sta     objState+1,x            ; $99E4
 ; (end of code not executed in the test movies)
@@ -1610,7 +1882,7 @@ loc_1_99FE:
     lda     #$60                    ; $99FE
 
 loc_1_9A00:
-    jmp     loc_1_9A22              ; $9A00
+    jmp     Fighter_Move            ; $9A00
 ; (unreferenced: $9A03-$9A03, 1 bytes)
     .byte   $03                                                             ; $9A03
     .byte   $01, $01, $03, $07, $0F, $07, $03                               ; $9A04
@@ -1621,15 +1893,34 @@ loc_1_9A00:
 dat_1_9A13:
     .byte   $08, $F8                                                        ; $9A13
 
-loc_1_9A15:
-    jsr     sub_1_9AD1              ; $9A15
+; ---------------------------------------------------------------------------
+; Daira_Ai
+;
+; Daira (lizard with an axe): stands off from Link (Fighter_Move) and
+; swings its axe (Daira_Attack); the red Daira throws it (projectile
+; type 7).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Daira_Ai:
+    jsr     Daira_Attack            ; $9A15
     lda     #$1E                    ; $9A18
     ldy     enemyType,x             ; $9A1A
     cpy     #$18                    ; $9A1C
-    bne     loc_1_9A22              ; $9A1E
+    bne     Fighter_Move            ; $9A1E
     lda     #$37                    ; $9A20
 
-loc_1_9A22:
+; ---------------------------------------------------------------------------
+; Fighter_Move
+;
+; Movement shared by Moblins, Goriyas and Dairas: when Link is more than
+; ram_05E5 pixels away (by type: $16, $1E, $37 or $60) walk toward him; up
+; close, attack at random (masks by type) and otherwise sway, matching
+; Link's movement or moving 4 back and forth every 64 frames.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Fighter_Move:
     sta     ram_05E5                ; $9A22
     asl     a                       ; $9A25
     sta     ram_05E6                ; $9A26
@@ -1642,7 +1933,7 @@ loc_1_9A22:
     jsr     Enemy_Land              ; $9A38
 
 loc_1_9A3B:
-    jsr     sub_1_9B0A              ; $9A3B
+    jsr     Fighter_KnockBack       ; $9A3B
     jsr     Enemy_FaceLink          ; $9A3E
     lda     temp15                  ; $9A41
     clc                             ; $9A43
@@ -1658,7 +1949,7 @@ loc_1_9A3B:
     bcs     loc_1_9A61              ; $9A58
     lda     objState+1,x            ; $9A5A
     bne     loc_1_9A61              ; $9A5C
-    jsr     sub_1_9A82              ; $9A5E
+    jsr     Fighter_StartAttack     ; $9A5E
 
 loc_1_9A61:
     jsr     Enemy_FaceLink          ; $9A61
@@ -1677,11 +1968,19 @@ loc_1_9A6B:
     bne     loc_1_9AAB              ; $9A74
     lda     rng+1,x                 ; $9A76
     and     dat_1_99EF,y            ; $9A79
-    bne     sub_1_9A82              ; $9A7C
+    bne     Fighter_StartAttack     ; $9A7C
     lda     #$E0                    ; $9A7E
     sta     enemyAiState,x          ; $9A80
 
-sub_1_9A82:
+; ---------------------------------------------------------------------------
+; Fighter_StartAttack
+;
+; Start an attack: objState = 1-4 by type and at random (high or low,
+; following Link's crouch, linkStanding), for 24 frames.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Fighter_StartAttack:
     ldy     #$01                    ; $9A82
     lda     enemyType,x             ; $9A84
     cmp     #$14                    ; $9A86
@@ -1743,7 +2042,15 @@ loc_1_9ACE:
     rts                             ; $9ACE
     .byte   $04, $03                                                        ; $9ACF
 
-sub_1_9AD1:
+; ---------------------------------------------------------------------------
+; Daira_Attack
+;
+; Advance a Daira's axe swing (objState), testing its axe against Link's
+; shield; the red Daira throws its axe at the second frame.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Daira_Attack:
     lda     objState+1,x            ; $9AD1
     beq     loc_1_9B04              ; $9AD3
     lda     timerFast+TIMER_ENEMY,x ; $9AD5
@@ -1777,7 +2084,15 @@ loc_1_9B05:
     sta     objState+1,x            ; $9B07
     rts                             ; $9B09
 
-sub_1_9B0A:
+; ---------------------------------------------------------------------------
+; Fighter_KnockBack
+;
+; While knocked back (ram_043E), move by the knockback speed instead of
+; the AI.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Fighter_KnockBack:
     lda     ram_043E,x              ; $9B0A
     beq     loc_1_9B1E              ; $9B0D
     dec     ram_043E,x              ; $9B0F
@@ -1791,40 +2106,269 @@ loc_1_9B1A:
     pla                             ; $9B1D
 
 loc_1_9B1E:
-    jmp     loc_1_9B22              ; $9B1E
+    jmp     Enemy_MoveXUnlessWall_Bank1 ; $9B1E
 
 loc_1_9B21:
     rts                             ; $9B21
 
-loc_1_9B22:
+; ---------------------------------------------------------------------------
+; Enemy_MoveXUnlessWall_Bank1
+;
+; Move enemy x horizontally unless it is against a wall.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_MoveXUnlessWall_Bank1:
     lda     objCollision+1,x        ; $9B22
     and     #$03                    ; $9B24
     bne     loc_1_9B21              ; $9B26
+dat_1_9B2A := * + 2
     jmp     Enemy_MoveX             ; $9B28
 ; (unreferenced: $9B2B-$9C6E, 324 bytes)
-    .byte   $20, $E0, $30, $D0, $00, $F8, $A5, $12, $29, $7F, $D0, $0D, $B5, $A1, $85, $0D; $9B2B
-    .byte   $A2, $05, $B5, $B6, $F0, $07, $CA, $10, $F9, $A6, $10, $38, $60, $F6, $B6, $A9; $9B3B
-    .byte   $FF, $9D, $BC, $00, $A9, $03, $9D, $C2, $00, $A9, $1E, $95, $A1, $BD, $1B, $05; $9B4B
-    .byte   $29, $01, $A8, $A5, $0D, $C9, $21, $D0, $02, $C8, $C8, $AD, $2C, $07, $79, $2D; $9B5B
-    .byte   $9B, $95, $4E, $AD, $2A, $07, $69, $00, $95, $3C, $A9, $20, $95, $2A, $9D, $7E; $9B6B
-    .byte   $05, $20, $91, $DC, $A9, $01, $95, $1A, $4A, $9D, $0E, $04, $95, $AF, $95, $71; $9B7B
-    .byte   $9D, $44, $04, $86, $00, $A6, $10, $18, $60, $20, $02, $DA, $B5, $2A, $C5, $29; $9B8B
-    .byte   $90, $0A, $B4, $60, $B9, $2A, $9B, $95, $71, $20, $C7, $DA, $20, $C8, $DE, $20; $9B9B
-    .byte   $B8, $DE, $20, $40, $DE, $4C, $C1, $D6, $FF, $01, $B5, $AF, $D0, $35, $B4, $60; $9BAB
-    .byte   $D0, $0D, $B5, $2A, $18, $79, $B3, $9B, $95, $2A, $BD, $04, $05, $D0, $6B, $B5; $9BBB
-    .byte   $2A, $18, $79, $B3, $9B, $95, $2A, $A9, $05, $9D, $04, $05, $B5, $81, $38, $F5; $9BCB
-    .byte   $2A, $D0, $08, $A9, $80, $9D, $04, $05, $4C, $2C, $9C, $C9, $40, $D0, $53, $A9; $9BDB
-    .byte   $01, $95, $AF, $A5, $C9, $D0, $4B, $B5, $2A, $69, $08, $85, $05, $B5, $81, $38; $9BEB
-    .byte   $F5, $2A, $85, $07, $A5, $CD, $85, $04, $A9, $08, $85, $06, $20, $A2, $E9, $20; $9BFB
-    .byte   $F9, $E9, $90, $0F, $A9, $00, $95, $AF, $A9, $01, $9D, $04, $05, $A9, $10, $85; $9C0B
-    .byte   $ED, $D0, $0E, $20, $75, $E9, $20, $F9, $E9, $90, $03, $20, $EF, $E2, $4C, $3D; $9C1B
-    .byte   $9C, $B5, $60, $49, $01, $95, $60, $4C, $3D, $9C, $B5, $2A, $38, $F9, $B3, $9B; $9C2B
-    .byte   $95, $2A, $20, $40, $DE, $4C, $C1, $D6, $A5, $12, $29, $10, $4A, $4A, $4A, $4A; $9C3B
-    .byte   $69, $03, $95, $81, $20, $A4, $9C, $B5, $91, $18, $69, $08, $A8, $B5, $2A, $69; $9C4B
-    .byte   $10, $85, $00, $A5, $CD, $85, $01, $A2, $38, $A5, $12, $29, $08, $D0, $02, $A2; $9C5B
-    .byte   $4A, $4C, $D7, $F0                                              ; $9C6B
+    .byte   $20, $E0                                                        ; $9B2B
 
-loc_1_9C6F:
+dat_1_9B2D:
+    .byte   $30, $D0, $00, $F8                                              ; $9B2D
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+; ---------------------------------------------------------------------------
+; MobyGenerator_Ai
+;
+; Moby generator: every 128 frames, if a slot is free, spawn a Moby (type
+; $1E, 3 hit points) high near the screen's left or right side, diving
+; (Y velocity $20) toward Link.  Out: carry clear if spawned (temp0 =
+; slot).  Also used by DumbMoblinGenerator_Ai.  Not executed in the test
+; movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+MobyGenerator_Ai:
+    lda     frameCounter            ; $9B31
+    and     #$7F                    ; $9B33
+    bne     loc_1_9B44              ; $9B35
+    lda     enemyType,x             ; $9B37
+    sta     temp13                  ; $9B39
+    ldx     #$05                    ; $9B3B
+
+loc_1_9B3D:
+    lda     enemyActive,x           ; $9B3D
+    beq     loc_1_9B48              ; $9B3F
+    dex                             ; $9B41
+    bpl     loc_1_9B3D              ; $9B42
+
+loc_1_9B44:
+    ldx     currentObject           ; $9B44
+    sec                             ; $9B46
+    rts                             ; $9B47
+
+loc_1_9B48:
+    inc     enemyActive,x           ; $9B48
+    lda     #$FF                    ; $9B4A
+    sta     a:enemySramIndex,x      ; $9B4C
+    lda     #$03                    ; $9B4F
+    sta     a:enemyHp,x             ; $9B51
+    lda     #$1E                    ; $9B54
+    sta     enemyType,x             ; $9B56
+    lda     rng+1,x                 ; $9B58
+    and     #$01                    ; $9B5B
+    tay                             ; $9B5D
+    lda     temp13                  ; $9B5E
+    cmp     #$21                    ; $9B60
+    bne     loc_1_9B66              ; $9B62
+    iny                             ; $9B64
+    iny                             ; $9B65
+
+loc_1_9B66:
+    lda     scrollX                 ; $9B66
+    adc     dat_1_9B2D,y            ; $9B69
+    sta     objX+1,x                ; $9B6C
+    lda     scrollXHi               ; $9B6E
+    adc     #$00                    ; $9B71
+    sta     objXHi+1,x              ; $9B73
+    lda     #$20                    ; $9B75
+    sta     objY+1,x                ; $9B77
+    sta     objYVelocity+1,x        ; $9B79
+    jsr     Enemy_FaceLink          ; $9B7C
+    lda     #$01                    ; $9B7F
+    sta     objYHi+1,x              ; $9B81
+    lsr     a                       ; $9B83
+    sta     enemyStunTimer,x        ; $9B84
+    sta     enemyAiState,x          ; $9B87
+    sta     objXVelocity+1,x        ; $9B89
+    sta     enemyVulnerability,x    ; $9B8B
+    stx     temp0                   ; $9B8E
+    ldx     currentObject           ; $9B90
+    clc                             ; $9B92
+    rts                             ; $9B93
+
+; ---------------------------------------------------------------------------
+; Moby_Ai
+;
+; Moby (bird): dives until it reaches Link's height, then flies straight
+; across at $20.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Moby_Ai:
+    jsr     Enemy_SkipAiIfStunned   ; $9B94
+    lda     objY+1,x                ; $9B97
+    cmp     objY                    ; $9B99
+    bcc     loc_1_9BA7              ; $9B9B
+    ldy     objFacing+1,x           ; $9B9D
+    lda     dat_1_9B2A,y            ; $9B9F
+    sta     objXVelocity+1,x        ; $9BA2
+    jsr     Enemy_StopY             ; $9BA4
+
+loc_1_9BA7:
+    jsr     Enemy_MoveY             ; $9BA7
+    jsr     Enemy_MoveX             ; $9BAA
+    jsr     Enemy_UpdateCommon      ; $9BAD
+    jmp     Enemy_HurtLinkOnContact ; $9BB0
+; (end of disassembled code)
+
+
+dat_1_9BB3:
+    .byte   $FF, $01                                                        ; $9BB3
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+; ---------------------------------------------------------------------------
+; Geldarm_Ai
+;
+; Geldarm (sand worm): stretches its neck up and down, a pixel every 5
+; frames, pausing at the top; a sword hit on its head makes it pull back
+; down with a sound.  Touching it hurts Link.  Not executed in the test
+; movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Geldarm_Ai:
+    lda     enemyAiState,x          ; $9BB5
+    bne     loc_1_9BEE              ; $9BB7
+    ldy     objFacing+1,x           ; $9BB9
+    bne     loc_1_9BCA              ; $9BBB
+    lda     objY+1,x                ; $9BBD
+    clc                             ; $9BBF
+    adc     dat_1_9BB3,y            ; $9BC0
+    sta     objY+1,x                ; $9BC3
+    lda     timerFast+3,x           ; $9BC5
+    bne     loc_1_9C35              ; $9BC8
+
+loc_1_9BCA:
+    lda     objY+1,x                ; $9BCA
+    clc                             ; $9BCC
+    adc     dat_1_9BB3,y            ; $9BCD
+    sta     objY+1,x                ; $9BD0
+    lda     #$05                    ; $9BD2
+    sta     timerFast+3,x           ; $9BD4
+    lda     objState+1,x            ; $9BD7
+    sec                             ; $9BD9
+    sbc     objY+1,x                ; $9BDA
+    bne     loc_1_9BE6              ; $9BDC
+    lda     #$80                    ; $9BDE
+    sta     timerFast+3,x           ; $9BE0
+    jmp     loc_1_9C2C              ; $9BE3
+
+loc_1_9BE6:
+    cmp     #$40                    ; $9BE6
+    bne     loc_1_9C3D              ; $9BE8
+    lda     #$01                    ; $9BEA
+    sta     enemyAiState,x          ; $9BEC
+
+loc_1_9BEE:
+    lda     drawOffscreen+1         ; $9BEE
+    bne     loc_1_9C3D              ; $9BF0
+    lda     objY+1,x                ; $9BF2
+    adc     #$08                    ; $9BF4
+    sta     temp5                   ; $9BF6
+    lda     objState+1,x            ; $9BF8
+    sec                             ; $9BFA
+    sbc     objY+1,x                ; $9BFB
+    sta     temp7                   ; $9BFD
+    lda     drawScreenX+1           ; $9BFF
+    sta     temp4                   ; $9C01
+    lda     #$08                    ; $9C03
+    sta     temp6                   ; $9C05
+    jsr     Sword_GetHitbox         ; $9C07
+    jsr     Hitbox_Overlap          ; $9C0A
+    bcc     loc_1_9C1E              ; $9C0D
+    lda     #$00                    ; $9C0F
+    sta     enemyAiState,x          ; $9C11
+    lda     #$01                    ; $9C13
+    sta     timerFast+3,x           ; $9C15
+    lda     #$10                    ; $9C18
+    sta     sfxRequest+1            ; $9C1A
+    bne     loc_1_9C2C              ; $9C1C
+
+loc_1_9C1E:
+    jsr     Link_GetHitbox          ; $9C1E
+    jsr     Hitbox_Overlap          ; $9C21
+    bcc     loc_1_9C29              ; $9C24
+    jsr     Link_HurtByEnemy        ; $9C26
+
+loc_1_9C29:
+    jmp     loc_1_9C3D              ; $9C29
+
+loc_1_9C2C:
+    lda     objFacing+1,x           ; $9C2C
+    eor     #$01                    ; $9C2E
+    sta     objFacing+1,x           ; $9C30
+    jmp     loc_1_9C3D              ; $9C32
+
+loc_1_9C35:
+    lda     objY+1,x                ; $9C35
+    sec                             ; $9C37
+    sbc     dat_1_9BB3,y            ; $9C38
+    sta     objY+1,x                ; $9C3B
+
+loc_1_9C3D:
+    jsr     Enemy_UpdateCommon      ; $9C3D
+    jmp     Enemy_HurtLinkOnContact ; $9C40
+
+; ---------------------------------------------------------------------------
+; DumbMoblin_Draw
+;
+; Draw the walking Moblin.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+DumbMoblin_Draw:
+    lda     frameCounter            ; $9C43
+    and     #$10                    ; $9C45
+    lsr     a                       ; $9C47
+    lsr     a                       ; $9C48
+    lsr     a                       ; $9C49
+    lsr     a                       ; $9C4A
+    adc     #$03                    ; $9C4B
+    sta     objState+1,x            ; $9C4D
+    jsr     Moblin_Draw             ; $9C4F
+    lda     objOamOffset+1,x        ; $9C52
+    clc                             ; $9C54
+    adc     #$08                    ; $9C55
+    tay                             ; $9C57
+    lda     objY+1,x                ; $9C58
+    adc     #$10                    ; $9C5A
+    sta     temp0                   ; $9C5C
+    lda     drawScreenX+1           ; $9C5E
+    sta     temp1                   ; $9C60
+    ldx     #$38                    ; $9C62
+    lda     frameCounter            ; $9C64
+    and     #$08                    ; $9C66
+    bne     loc_1_9C6C              ; $9C68
+    ldx     #$4A                    ; $9C6A
+
+loc_1_9C6C:
+    jmp     Sprite_DrawEnemyPairKeepX ; $9C6C
+; (end of disassembled code)
+
+
+; ---------------------------------------------------------------------------
+; Goriya_Draw
+;
+; Draw a Goriya.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Goriya_Draw:
     ldy     #$0C                    ; $9C6F
     lda     objState+1,x            ; $9C71
     beq     loc_1_9C7D              ; $9C73
@@ -1862,7 +2406,14 @@ dat_1_9C9F:
 ; (unreferenced: $9CA3-$9CA3, 1 bytes)
     .byte   $01                                                             ; $9CA3
 
-loc_1_9CA4:
+; ---------------------------------------------------------------------------
+; Moblin_Draw
+;
+; Draw a Moblin and its spear by pose.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Moblin_Draw:
     lda     temp2                   ; $9CA4
     sta     ram_00D9                ; $9CA6
     lda     objState+1,x            ; $9CA8
@@ -1987,11 +2538,25 @@ dat_1_9D5C:
 dat_1_9D5F:
     .byte   $0D, $F0, $FB, $F3, $10, $05                                    ; $9D5F
 
-loc_1_9D65:
+; ---------------------------------------------------------------------------
+; OrangeDaira_Draw
+;
+; Draw the orange Daira.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+OrangeDaira_Draw:
     lda     #$F6                    ; $9D65
     bne     loc_1_9D6B              ; $9D67
 
-loc_1_9D69:
+; ---------------------------------------------------------------------------
+; RedDaira_Draw
+;
+; Draw the red Daira.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+RedDaira_Draw:
     lda     #$F5                    ; $9D69
 
 loc_1_9D6B:
@@ -2082,13 +2647,39 @@ loc_1_9DEE:
     ldx     currentObject           ; $9DEE
     rts                             ; $9DF0
 
-loc_1_9DF1:
+; ---------------------------------------------------------------------------
+; Lowder_Draw
+;
+; Draw a Lowder.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Lowder_Draw:
     lda     #$3C                    ; $9DF1
     jmp     Sprite_DrawAnimatedEnemyPair ; $9DF3
-; (unreferenced: $9DF6-$9DFA, 5 bytes)
-    .byte   $A9, $44, $4C, $CC, $F0                                         ; $9DF6
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_1_9DFB:
+; ---------------------------------------------------------------------------
+; Moby_Draw
+;
+; Draw a Moby.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Moby_Draw:
+    lda     #$44                    ; $9DF6
+    jmp     Sprite_DrawAnimatedEnemyPair ; $9DF8
+; (end of disassembled code)
+
+
+; ---------------------------------------------------------------------------
+; Megmet_Draw
+;
+; Draw a Megmet.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Megmet_Draw:
     lda     objYVelocity+1,x        ; $9DFB
     ldx     #$40                    ; $9DFE
     cmp     #$02                    ; $9E00
@@ -2098,20 +2689,136 @@ loc_1_9DFB:
 
 loc_1_9E06:
     jmp     Sprite_DrawEnemyPairKeepX ; $9E06
-; (unreferenced: $9E09-$9EB1, 169 bytes)
-    .byte   $60, $FF, $01, $BD, $0E, $04, $F0, $04, $29, $03, $85, $03, $A5, $C9, $29, $08; $9E09
-    .byte   $D0, $EE, $A9, $00, $85, $00, $B5, $81, $38, $F5, $2A, $85, $02, $C9, $05, $90; $9E19
-    .byte   $08, $E6, $00, $38, $E9, $05, $4C, $26, $9E, $85, $01, $B4, $91, $98, $18, $69; $9E29
-    .byte   $14, $85, $0F, $B5, $2A, $99, $00, $02, $A9, $62, $99, $01, $02, $A5, $02, $D0; $9E39
-    .byte   $09, $98, $18, $69, $04, $85, $0F, $4C, $70, $9E, $B9, $00, $02, $18, $65, $00; $9E49
-    .byte   $99, $04, $02, $A5, $01, $F0, $0B, $C6, $01, $B9, $04, $02, $18, $69, $01, $99; $9E59
-    .byte   $04, $02, $A9, $64, $99, $05, $02, $A5, $12, $29, $10, $0A, $0A, $05, $03, $99; $9E69
-    .byte   $02, $02, $99, $06, $02, $A5, $CD, $99, $03, $02, $99, $07, $02, $C8, $C8, $C8; $9E79
-    .byte   $C8, $C4, $0F, $D0, $C5, $B4, $91, $B5, $AF, $F0, $1B, $A5, $12, $29, $20, $4A; $9E89
-    .byte   $4A, $4A, $4A, $4A, $AA, $B9, $03, $02, $18, $7D, $0A, $9E, $99, $07, $02, $18; $9E99
-    .byte   $7D, $0A, $9E, $99, $03, $02, $A6, $10, $60                     ; $9EA9
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-sub_1_9EB2:
+dat_1_9E09:
+    rts                             ; $9E09
+; (end of disassembled code)
+
+
+dat_1_9E0A:
+    .byte   $FF, $01                                                        ; $9E0A
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+; ---------------------------------------------------------------------------
+; Geldarm_Draw
+;
+; Draw a Geldarm: its head and a column of neck sprites down to its base.
+; Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Geldarm_Draw:
+    lda     enemyStunTimer,x        ; $9E0C
+    beq     loc_1_9E15              ; $9E0F
+    and     #$03                    ; $9E11
+    sta     temp3                   ; $9E13
+
+loc_1_9E15:
+    lda     drawOffscreen+1         ; $9E15
+    and     #$08                    ; $9E17
+    bne     dat_1_9E09              ; $9E19
+    lda     #$00                    ; $9E1B
+    sta     temp0                   ; $9E1D
+    lda     objState+1,x            ; $9E1F
+    sec                             ; $9E21
+    sbc     objY+1,x                ; $9E22
+    sta     temp2                   ; $9E24
+
+loc_1_9E26:
+    cmp     #$05                    ; $9E26
+    bcc     loc_1_9E32              ; $9E28
+    inc     temp0                   ; $9E2A
+    sec                             ; $9E2C
+    sbc     #$05                    ; $9E2D
+    jmp     loc_1_9E26              ; $9E2F
+
+loc_1_9E32:
+    sta     temp1                   ; $9E32
+    ldy     objOamOffset+1,x        ; $9E34
+    tya                             ; $9E36
+    clc                             ; $9E37
+    adc     #$14                    ; $9E38
+    sta     temp15                  ; $9E3A
+    lda     objY+1,x                ; $9E3C
+    sta     oamBuffer,y             ; $9E3E
+    lda     #$62                    ; $9E41
+    sta     oamBuffer+1,y           ; $9E43
+    lda     temp2                   ; $9E46
+    bne     loc_1_9E53              ; $9E48
+    tya                             ; $9E4A
+    clc                             ; $9E4B
+    adc     #$04                    ; $9E4C
+    sta     temp15                  ; $9E4E
+    jmp     loc_1_9E70              ; $9E50
+
+loc_1_9E53:
+    lda     oamBuffer,y             ; $9E53
+    clc                             ; $9E56
+    adc     temp0                   ; $9E57
+    sta     oamBuffer+4,y           ; $9E59
+    lda     temp1                   ; $9E5C
+    beq     loc_1_9E6B              ; $9E5E
+    dec     temp1                   ; $9E60
+    lda     oamBuffer+4,y           ; $9E62
+    clc                             ; $9E65
+    adc     #$01                    ; $9E66
+    sta     oamBuffer+4,y           ; $9E68
+
+loc_1_9E6B:
+    lda     #$64                    ; $9E6B
+    sta     oamBuffer+5,y           ; $9E6D
+
+loc_1_9E70:
+    lda     frameCounter            ; $9E70
+    and     #$10                    ; $9E72
+    asl     a                       ; $9E74
+    asl     a                       ; $9E75
+    ora     temp3                   ; $9E76
+    sta     oamBuffer+2,y           ; $9E78
+    sta     oamBuffer+6,y           ; $9E7B
+    lda     drawScreenX+1           ; $9E7E
+    sta     oamBuffer+3,y           ; $9E80
+    sta     oamBuffer+7,y           ; $9E83
+    iny                             ; $9E86
+    iny                             ; $9E87
+    iny                             ; $9E88
+    iny                             ; $9E89
+    cpy     temp15                  ; $9E8A
+    bne     loc_1_9E53              ; $9E8C
+    ldy     objOamOffset+1,x        ; $9E8E
+    lda     enemyAiState,x          ; $9E90
+    beq     loc_1_9EAF              ; $9E92
+    lda     frameCounter            ; $9E94
+    and     #$20                    ; $9E96
+    lsr     a                       ; $9E98
+    lsr     a                       ; $9E99
+    lsr     a                       ; $9E9A
+    lsr     a                       ; $9E9B
+    lsr     a                       ; $9E9C
+    tax                             ; $9E9D
+    lda     oamBuffer+3,y           ; $9E9E
+    clc                             ; $9EA1
+    adc     dat_1_9E0A,x            ; $9EA2
+    sta     oamBuffer+7,y           ; $9EA5
+    clc                             ; $9EA8
+    adc     dat_1_9E0A,x            ; $9EA9
+    sta     oamBuffer+3,y           ; $9EAC
+
+loc_1_9EAF:
+    ldx     currentObject           ; $9EAF
+    rts                             ; $9EB1
+; (end of disassembled code)
+
+
+; ---------------------------------------------------------------------------
+; Projectile_PlaySound_Bank1
+;
+; Play sound effect $40 on channel 1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_PlaySound_Bank1:
     lda     sfxRequest+1            ; $9EB2
     ora     #$40                    ; $9EB4
     sta     sfxRequest+1            ; $9EB6
