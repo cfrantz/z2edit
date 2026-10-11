@@ -33,6 +33,8 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
   encounters, entering locations.
 - [Menus and dialogs](engine/menus.md): the pause menu, level up window,
   flute and continue screen.
+- [Palaces](engine/palaces.md): palace codes, CHR and palettes, area
+  objects, bosses and the crystal.
 - [Towns](engine/towns.md): town codes, buildings, conversations and
   the dialog text.
 - [Sound](engine/audio.md): the two sound engines in bank 6, sound

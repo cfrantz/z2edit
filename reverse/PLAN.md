@@ -206,6 +206,10 @@ Each is a self-contained work area; order is flexible after Phase 3.
   ($983C-$9B45) and the area bank tables shared with banks 1-5.
 - Palaces and Great Palace (banks 4-5): palace mechanics, bosses,
   palace completion and crystal placement.
+  Status (2026-10-11): banks 4 and 5's area objects, bank 4's remaining
+  tables and boss helpers are named, with docs/engine/palaces.md; the
+  bosses and the crystal were done with the enemies.  Left: the area bank
+  tables shared by banks 1-5 (side view areas).
 - Title, file select, name entry, ending (bank 5).
   Status (2026-10-11): the title, story scroll and file screens are named
   and read, with headers and docs/engine/title-and-files.md; the ending's
