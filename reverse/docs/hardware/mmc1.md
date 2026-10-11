@@ -8,7 +8,7 @@ Zelda II uses the Nintendo MMC1 mapper with 128K PRG ROM (8 x 16K banks),
 | Register | Value | Set by | Meaning |
 |----------|-------|--------|---------|
 | Control  | `$0F` | `Reset` | horizontal mirroring, PRG mode 3, 8K CHR mode |
-| Control  | `$0E` | `sub_C4CB` (area load) | vertical mirroring, PRG mode 3, 8K CHR mode |
+| Control  | `$0E` | `Area_Load` (area load) | vertical mirroring, PRG mode 3, 8K CHR mode |
 | CHR      | varies | `Mmc1_SetChrBank` | 8K CHR bank (the low bit of the 4K bank number is ignored) |
 | PRG      | 0-7   | `Mmc1_SetPrgBank` and friends | 16K bank at $8000-$BFFF |
 

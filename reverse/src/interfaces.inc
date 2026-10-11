@@ -9,9 +9,9 @@ INTERFACES_INC = 1
 ; Area banks (1-5): hold the sideview areas of a world and their
 ; data.  Bank 7 selects one by world/region (see areaPrgBank).
 .scope AreaBank
-    dat_8000        = $8000     ; word table, indexed by x (all zero in bank 5)
+    BackgroundAreas = $8000     ; background layer areas (words; all zero in bank 5)
     Palettes        = $800E     ; area palettes, copied to sramAreaPalettes
-    dat_8500        = $8500     ; word table, indexed by y
+    MetatilePtrs    = $8500     ; side view metatile tables (words)
     OverworldMapPtrs = $8508    ; compressed overworld map of each region (words)
     sub_850C        = $850C     ; routine; identical code in banks 1-5
     dat_851A        = $851A     ; 9 bytes compared individually ($851A-$8522)
@@ -25,7 +25,7 @@ INTERFACES_INC = 1
 .scope OverworldBank
     sub_83A1        = $83A1     ; routine
     GetTerrain      = $83CF     ; terrain at overworld tile (temp0, temp1) -> temp2
-    dat_8409        = $8409     ; indexed by y
+    Encounters      = $8409     ; overworld encounter table, by terrain
     sub_879B        = $879B     ; routine
     sub_81A3        = $81A3     ; routine
 .endscope

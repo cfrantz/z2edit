@@ -9,7 +9,7 @@
 
 
 dat_1_8000:
-    .assert dat_1_8000 = AreaBank::dat_8000, error, "interface address moved"
+    .assert dat_1_8000 = AreaBank::BackgroundAreas, error, "interface address moved"
     .byte   $3C, $8C                                                        ; $8000
 ; (unreferenced: $8002-$8007, 6 bytes)
     .byte   $54, $8C, $68, $8C, $7C, $8C                                    ; $8002
@@ -246,7 +246,7 @@ sub_1_8247:
     asl     a                       ; $8248
     tax                             ; $8249
     ldy     #$01                    ; $824A
-    lda     (ram_00D4),y            ; $824C
+    lda     (areaDataPtr),y         ; $824C
     asl     a                       ; $824E
     lda     dat_1_81D5,x            ; $824F
     bcs     loc_1_8257              ; $8252
@@ -518,7 +518,7 @@ loc_1_8408:
 ; (unreferenced: $8409-$8412, 10 bytes)
 
 dat_1_8409:
-    .assert dat_1_8409 = OverworldBank::dat_8409, error, "interface address moved"
+    .assert dat_1_8409 = OverworldBank::Encounters, error, "interface address moved"
     .byte   $5D, $5E, $62, $63, $67, $68, $6F, $70, $74, $75                ; $8409
     .byte   $79, $7A                                                        ; $8413
 ; (unreferenced: $8415-$8416, 2 bytes)
@@ -557,7 +557,7 @@ dat_1_8409:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $84F3
 
 dat_1_8500:
-    .assert dat_1_8500 = AreaBank::dat_8500, error, "interface address moved"
+    .assert dat_1_8500 = AreaBank::MetatilePtrs, error, "interface address moved"
     .byte   $17, $84                                                        ; $8500
     .byte   $17, $84, $9F, $84, $7D, $93                                    ; $8502
 

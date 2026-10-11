@@ -9,7 +9,7 @@
 
 
 dat_3_8000:
-    .assert dat_3_8000 = AreaBank::dat_8000, error, "interface address moved"
+    .assert dat_3_8000 = AreaBank::BackgroundAreas, error, "interface address moved"
     .byte   $5C, $9B, $48, $9B                                              ; $8000
 ; (unreferenced: $8004-$800D, 10 bytes)
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00                ; $8004
@@ -489,7 +489,7 @@ loc_3_83BE:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF                                    ; $84FA
 
 dat_3_8500:
-    .assert dat_3_8500 = AreaBank::dat_8500, error, "interface address moved"
+    .assert dat_3_8500 = AreaBank::MetatilePtrs, error, "interface address moved"
     .byte   $A2, $86                                                        ; $8500
     .byte   $A2, $86, $CA, $83, $2E, $84                                    ; $8502
 

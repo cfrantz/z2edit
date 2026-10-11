@@ -21,7 +21,7 @@ loop:
     wait until gameState is GAME_STATE_PLAY and
                gameMode is GAME_MODE_LOAD_AREA or GAME_MODE_LOAD_ROOM
     nmiMode = NMI_MODE_SOUND_ONLY
-    load the area (sub_C4CB)
+    load the area (Area_Load)
     nmiMode = NMI_MODE_GAME
 ```
 

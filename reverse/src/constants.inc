@@ -40,6 +40,9 @@ PPU_STRING_BUFFER0      = 0
 PPU_STRING_BUFFER1      = 1
 PPU_STRING_BUFFER2      = 2
 
+; The area tile map (sramAreaTiles) is 4 pages of 13 rows of 16 tiles.
+AREA_PAGE_SIZE          = $D0
+
 ; Object slots: indexes into the obj* arrays in ram.inc.
 OBJ_SLOT_LINK           = 0
 OBJ_SLOT_ENEMY          = 1     ; 1-6: enemies

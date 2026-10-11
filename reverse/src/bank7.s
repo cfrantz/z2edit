@@ -56,7 +56,7 @@ Main_Loop:
     bne     Main_Loop               ; $C020
     lda     #NMI_MODE_SOUND_ONLY    ; $C022
     sta     nmiMode                 ; $C024
-    jsr     sub_C4CB                ; $C027
+    jsr     Area_Load               ; $C027
     lda     #NMI_MODE_GAME          ; $C02A
     sta     nmiMode                 ; $C02C
     jmp     Main_Loop               ; $C02F
@@ -609,7 +609,7 @@ loc_C364:
     jsr     JumpTable               ; $C367
 ; (inline jump table)
     .word   loc_C376                ; $C36A
-    .word   sub_C4CB                ; $C36C
+    .word   Area_Load               ; $C36C
     .word   Mode_DrawArea           ; $C36E
     .word   loc_C37C                ; $C370
     .word   loc_C62F                ; $C372
@@ -794,19 +794,30 @@ WorldPrgBanks:
 WorldLocationTable:
     .byte   $00, $00, $00, $00, $02, $00                                    ; $C4BD
 
-dat_C4C3:
+; Area bank addresses of the area pointer tables and enemy list pointer
+; tables, indexed by WorldLocationTable.
+AreaDataPtrTables:
     .byte   $23                                                             ; $C4C3
-
-dat_C4C4:
     .byte   $85, $00, $A0                                                   ; $C4C4
 
-dat_C4C7:
+AreaEnemyListTables:
     .byte   $A1                                                             ; $C4C7
-
-dat_C4C8:
     .byte   $85, $7E, $A0                                                   ; $C4C8
 
-sub_C4CB:
+; ---------------------------------------------------------------------------
+; Area_Load
+;
+; Load a side view area: called by Main_Loop (outside the NMI) in
+; GAME_MODE_LOAD_AREA and GAME_MODE_LOAD_ROOM.  Set vertical mirroring, map
+; the area bank, clear work RAM and the scroll, find the area's data
+; (areaDataPtr, from AreaDataPtrTables) and enemy list (enemyListPtr, in
+; SRAM), fill the tile map with the background tile, decode the background
+; layer (AreaBank::BackgroundAreas, if the area has one) and then the area
+; itself into sramAreaTiles, set the scroll limits, and advance gameMode.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_Load:
     lda     #$30                    ; $C4CB
     sta     PPUCTRL                 ; $C4CD
     lda     #MMC1_MIRROR_VERTICAL | MMC1_PRG_FIX_LAST | MMC1_CHR_8K ; $C4D0
@@ -835,26 +846,26 @@ sub_C4CB:
 loc_C50C:
     lda     WorldLocationTable,y    ; $C50C
     tay                             ; $C50F
-    lda     dat_C4C3,y              ; $C510
+    lda     AreaDataPtrTables,y     ; $C510
     sta     temp0                   ; $C513
-    lda     dat_C4C4,y              ; $C515
+    lda     AreaDataPtrTables+1,y   ; $C515
     sta     temp1                   ; $C518
-    lda     dat_C4C7,y              ; $C51A
+    lda     AreaEnemyListTables,y   ; $C51A
     sta     temp2                   ; $C51D
-    lda     dat_C4C8,y              ; $C51F
+    lda     AreaEnemyListTables+1,y ; $C51F
     sta     temp3                   ; $C522
     lda     areaId                  ; $C524
     asl     a                       ; $C527
     tay                             ; $C528
     lda     (temp0),y               ; $C529
-    sta     ram_00D4                ; $C52B
+    sta     areaDataPtr             ; $C52B
     lda     (temp2),y               ; $C52D
     sta     enemyListPtr            ; $C52F
     iny                             ; $C531
     lda     (temp0),y               ; $C532
-    sta     ram_00D5                ; $C534
+    sta     areaDataPtr+1           ; $C534
     lda     (temp2),y               ; $C536
-    sta     ram_00D7                ; $C538
+    sta     enemyListPtr+1          ; $C538
     lda     ram_075A                ; $C53A
     pha                             ; $C53D
     cmp     #$02                    ; $C53E
@@ -864,9 +875,9 @@ loc_C50C:
     clc                             ; $C546
     adc     (enemyListPtr),y        ; $C547
     sta     enemyListPtr            ; $C549
-    lda     ram_00D7                ; $C54B
+    lda     enemyListPtr+1          ; $C54B
     adc     #$00                    ; $C54D
-    sta     ram_00D7                ; $C54F
+    sta     enemyListPtr+1          ; $C54F
 
 loc_C551:
     pla                             ; $C551
@@ -889,57 +900,57 @@ loc_C556:
 loc_C568:
     ldx     #$40                    ; $C568
     ldy     #$02                    ; $C56A
-    lda     (ram_00D4),y            ; $C56C
+    lda     (areaDataPtr),y         ; $C56C
     and     #$70                    ; $C56E
     bne     loc_C574                ; $C570
     ldx     #$42                    ; $C572
 
 loc_C574:
-    ldy     #$D0                    ; $C574
+    ldy     #AREA_PAGE_SIZE         ; $C574
     sty     temp0                   ; $C576
     txa                             ; $C578
 
 loc_C579:
     ldy     temp0                   ; $C579
-    sta     $5FFF,y                 ; $C57B
-    sta     sram_60CF,y             ; $C57E
-    sta     sram_619F,y             ; $C581
-    sta     sram_626F,y             ; $C584
+    sta     sramAreaTiles - 1,y     ; $C57B
+    sta     sramAreaTiles + 1 * AREA_PAGE_SIZE - 1,y ; $C57E
+    sta     sramAreaTiles + 2 * AREA_PAGE_SIZE - 1,y ; $C581
+    sta     sramAreaTiles + 3 * AREA_PAGE_SIZE - 1,y ; $C584
     dec     temp0                   ; $C587
     bne     loc_C579                ; $C589
     ldy     #$03                    ; $C58B
-    lda     (ram_00D4),y            ; $C58D
+    lda     (areaDataPtr),y         ; $C58D
     sta     ram_07AF                ; $C58F
     lda     #$00                    ; $C592
-    sta     ram_072F                ; $C594
+    sta     areaDataOffset          ; $C594
     sta     ram_010A                ; $C597
     ldy     #$03                    ; $C59A
-    lda     (ram_00D4),y            ; $C59C
+    lda     (areaDataPtr),y         ; $C59C
     and     #$07                    ; $C59E
     beq     loc_C5C2                ; $C5A0
     asl     a                       ; $C5A2
     tax                             ; $C5A3
     dex                             ; $C5A4
     dex                             ; $C5A5
-    lda     ram_00D4                ; $C5A6
+    lda     areaDataPtr             ; $C5A6
     pha                             ; $C5A8
-    lda     ram_00D5                ; $C5A9
+    lda     areaDataPtr+1           ; $C5A9
     pha                             ; $C5AB
-    lda     AreaBank::dat_8000,x    ; $C5AC
-    sta     ram_00D4                ; $C5AF
-    lda     AreaBank::dat_8000+1,x  ; $C5B1
-    sta     ram_00D5                ; $C5B4
-    jsr     sub_C755                ; $C5B6
+    lda     AreaBank::BackgroundAreas,x ; $C5AC
+    sta     areaDataPtr             ; $C5AF
+    lda     AreaBank::BackgroundAreas+1,x ; $C5B1
+    sta     areaDataPtr+1           ; $C5B4
+    jsr     Area_DecodeObjects      ; $C5B6
     jsr     sub_C89D                ; $C5B9
     pla                             ; $C5BC
-    sta     ram_00D5                ; $C5BD
+    sta     areaDataPtr+1           ; $C5BD
     pla                             ; $C5BF
-    sta     ram_00D4                ; $C5C0
+    sta     areaDataPtr             ; $C5C0
 
 loc_C5C2:
-    jsr     sub_C755                ; $C5C2
+    jsr     Area_DecodeObjects      ; $C5C2
     ldy     #$01                    ; $C5C5
-    lda     (ram_00D4),y            ; $C5C7
+    lda     (areaDataPtr),y         ; $C5C7
     and     #$1C                    ; $C5C9
     lsr     a                       ; $C5CB
     lsr     a                       ; $C5CC
@@ -956,6 +967,7 @@ loc_C5DA:
     ldy     ram_010A                ; $C5DD
 
 loc_C5E0:
+    ; QUIRK: the loads of temp0 here and below are overwritten unused.
     lda     temp0                   ; $C5E0
     lda     dat_C4A7,x              ; $C5E2
     sta     (temp14),y              ; $C5E5
@@ -1185,19 +1197,28 @@ dat_C735:
     .byte   $C1, $83, $C1, $87, $C1, $8F, $C1, $9F, $C1, $BF, $C1, $7F, $C3, $FF, $C7, $FF; $C735
     .byte   $E0, $03, $F0, $03, $F8, $03, $FC, $03, $FE, $83, $FF, $C3, $FF, $E3, $FF, $FF; $C745
 
-sub_C755:
+; ---------------------------------------------------------------------------
+; Area_DecodeObjects
+;
+; Decode the area at areaDataPtr into the tile map: the header (byte 0 =
+; length, byte 2 = floor pattern, areaNoCeiling and background) and then
+; the objects from offset 4.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DecodeObjects:
     lda     #$00                    ; $C755
     sta     ram_010A                ; $C757
     sta     ram_010B                ; $C75A
     sta     areaBuildPage           ; $C75D
     ldy     #$02                    ; $C760
-    lda     (ram_00D4),y            ; $C762
+    lda     (areaDataPtr),y         ; $C762
     and     #$0F                    ; $C764
     sta     ram_0731                ; $C766
-    lda     (ram_00D4),y            ; $C769
+    lda     (areaDataPtr),y         ; $C769
     and     #$80                    ; $C76B
-    sta     ram_0486                ; $C76D
-    lda     (ram_00D4),y            ; $C770
+    sta     areaNoCeiling           ; $C76D
+    lda     (areaDataPtr),y         ; $C770
     and     #$70                    ; $C772
     lsr     a                       ; $C774
     lsr     a                       ; $C775
@@ -1205,17 +1226,17 @@ sub_C755:
     lsr     a                       ; $C777
     sta     ram_010C                ; $C778
     lda     #$04                    ; $C77B
-    sta     ram_072F                ; $C77D
+    sta     areaDataOffset          ; $C77D
     jsr     sub_C819                ; $C780
     ldy     #$00                    ; $C783
-    lda     (ram_00D4),y            ; $C785
-    sta     ram_072E                ; $C787
+    lda     (areaDataPtr),y         ; $C785
+    sta     areaDataLength          ; $C787
 
 loc_C78A:
-    ldy     ram_072F                ; $C78A
+    ldy     areaDataOffset          ; $C78A
 
 loc_C78D:
-    lda     (ram_00D4),y            ; $C78D
+    lda     (areaDataPtr),y         ; $C78D
     sta     areaBuildPos            ; $C78F
     jsr     sub_C95C                ; $C792
 
@@ -1232,17 +1253,17 @@ loc_C795:
     beq     loc_C7C6                ; $C7A8
     bpl     loc_C7F0                ; $C7AA
     iny                             ; $C7AC
-    lda     (ram_00D4),y            ; $C7AD
+    lda     (areaDataPtr),y         ; $C7AD
     cmp     #$0F                    ; $C7AF
     bne     loc_C7B4                ; $C7B1
     iny                             ; $C7B3
 
 loc_C7B4:
     iny                             ; $C7B4
-    cpy     ram_072E                ; $C7B5
+    cpy     areaDataLength          ; $C7B5
     bcc     loc_C78D                ; $C7B8
     dey                             ; $C7BA
-    lda     (ram_00D4),y            ; $C7BB
+    lda     (areaDataPtr),y         ; $C7BB
     cmp     #$0F                    ; $C7BD
     bne     loc_C7C2                ; $C7BF
     dey                             ; $C7C1
@@ -1257,21 +1278,21 @@ loc_C7C6:
     cmp     #$D0                    ; $C7CB
     bne     loc_C7E2                ; $C7CD
     iny                             ; $C7CF
-    lda     (ram_00D4),y            ; $C7D0
+    lda     (areaDataPtr),y         ; $C7D0
     pha                             ; $C7D2
     and     #$0F                    ; $C7D3
     sta     ram_0731                ; $C7D5
     pla                             ; $C7D8
     and     #$80                    ; $C7D9
-    sta     ram_0486                ; $C7DB
+    sta     areaNoCeiling           ; $C7DB
     iny                             ; $C7DE
     jmp     loc_C7F0                ; $C7DF
 
 loc_C7E2:
-    cpy     ram_072E                ; $C7E2
+    cpy     areaDataLength          ; $C7E2
     bcs     loc_C7F0                ; $C7E5
     iny                             ; $C7E7
-    lda     (ram_00D4),y            ; $C7E8
+    lda     (areaDataPtr),y         ; $C7E8
     cmp     #$0F                    ; $C7EA
     bne     loc_C7EF                ; $C7EC
     iny                             ; $C7EE
@@ -1280,7 +1301,7 @@ loc_C7EF:
     iny                             ; $C7EF
 
 loc_C7F0:
-    sty     ram_072F                ; $C7F0
+    sty     areaDataOffset          ; $C7F0
     lda     ram_010B                ; $C7F3
     and     #$0F                    ; $C7F6
     sta     temp10                  ; $C7F8
@@ -1295,7 +1316,7 @@ loc_C7F0:
     jmp     loc_C78A                ; $C80F
 
 loc_C812:
-    ldy     ram_072F                ; $C812
+    ldy     areaDataOffset          ; $C812
     jmp     loc_C795                ; $C815
 
 loc_C818:
@@ -1317,7 +1338,7 @@ sub_C82B:
     asl     a                       ; $C82E
     tay                             ; $C82F
     ldx     #$05                    ; $C830
-    lda     ram_0486                ; $C832
+    lda     areaNoCeiling           ; $C832
     beq     loc_C844                ; $C835
     lda     temp10                  ; $C837
     ora     #$20                    ; $C839
@@ -1392,10 +1413,10 @@ sub_C89D:
     sta     elevatorPos             ; $C8A5
     sta     lockedDoorPos           ; $C8A8
     tay                             ; $C8AB
-    lda     (ram_00D4),y            ; $C8AC
-    sta     ram_072E                ; $C8AE
+    lda     (areaDataPtr),y         ; $C8AC
+    sta     areaDataLength          ; $C8AE
     iny                             ; $C8B1
-    lda     (ram_00D4),y            ; $C8B2
+    lda     (areaDataPtr),y         ; $C8B2
     and     #$60                    ; $C8B4
     lsr     a                       ; $C8B6
     lsr     a                       ; $C8B7
@@ -1404,24 +1425,24 @@ sub_C89D:
     lsr     a                       ; $C8BA
     sta     areaLastPage            ; $C8BB
     lda     #$04                    ; $C8BD
-    sta     ram_072F                ; $C8BF
-    ldy     ram_072F                ; $C8C2
+    sta     areaDataOffset          ; $C8BF
+    ldy     areaDataOffset          ; $C8C2
 
 loc_C8C5:
-    lda     (ram_00D4),y            ; $C8C5
+    lda     (areaDataPtr),y         ; $C8C5
     sta     areaBuildPos            ; $C8C7
     jsr     sub_C988                ; $C8CA
     iny                             ; $C8CD
-    lda     (ram_00D4),y            ; $C8CE
+    lda     (areaDataPtr),y         ; $C8CE
     sta     ram_0731                ; $C8D0
     iny                             ; $C8D3
-    sty     ram_072F                ; $C8D4
+    sty     areaDataOffset          ; $C8D4
     jsr     sub_C95F                ; $C8D7
     lda     areaBuildPos            ; $C8DA
     and     #$F0                    ; $C8DD
     cmp     #$D0                    ; $C8DF
     bne     loc_C8E9                ; $C8E1
-    cpy     ram_072E                ; $C8E3
+    cpy     areaDataLength          ; $C8E3
     bne     loc_C8C5                ; $C8E6
     rts                             ; $C8E8
 
@@ -1437,15 +1458,15 @@ loc_C8F6:
     cmp     #$0F                    ; $C8F9
     bne     loc_C906                ; $C8FB
     jsr     sub_C9A5                ; $C8FD
-    inc     ram_072F                ; $C900
+    inc     areaDataOffset          ; $C900
     jmp     loc_C909                ; $C903
 
 loc_C906:
     jsr     sub_C927                ; $C906
 
 loc_C909:
-    ldy     ram_072F                ; $C909
-    cpy     ram_072E                ; $C90C
+    ldy     areaDataOffset          ; $C909
+    cpy     areaDataLength          ; $C90C
     bne     loc_C8C5                ; $C90F
     rts                             ; $C911
 
@@ -1473,11 +1494,12 @@ sub_C927:
     .word   AreaBank::sub_812F      ; $C938
     .word   AreaBank::sub_812F      ; $C93A
 
+; Start of each page of the area tile map.
 AreaMapPagesLo:
-    .byte   $00, $D0, $A0, $70                                              ; $C93C
+    .lobytes sramAreaTiles, sramAreaTiles + AREA_PAGE_SIZE, sramAreaTiles + 2 * AREA_PAGE_SIZE, sramAreaTiles + 3 * AREA_PAGE_SIZE ; $C93C
 
 AreaMapPagesHi:
-    .byte   $60, $60, $61, $62                                              ; $C940
+    .hibytes sramAreaTiles, sramAreaTiles + AREA_PAGE_SIZE, sramAreaTiles + 2 * AREA_PAGE_SIZE, sramAreaTiles + 3 * AREA_PAGE_SIZE ; $C940
 
 ; ---------------------------------------------------------------------------
 ; AreaMap_GetPagePtr
@@ -1546,7 +1568,7 @@ sub_C988:
     sta     ram_010A                ; $C99A
     iny                             ; $C99D
     iny                             ; $C99E
-    lda     (ram_00D4),y            ; $C99F
+    lda     (areaDataPtr),y         ; $C99F
     sta     areaBuildPos            ; $C9A1
 
 loc_C9A4:
@@ -1593,8 +1615,8 @@ loc_C9AF:
     sta     enemyActive,x           ; $C9DB
     sta     enemyType,x             ; $C9DD
     sta     objYVelocity+1,x        ; $C9DF
-    ldy     ram_072F                ; $C9E2
-    lda     (ram_00D4),y            ; $C9E5
+    ldy     areaDataOffset          ; $C9E2
+    lda     (areaDataPtr),y         ; $C9E5
     sta     ram_00AF,x              ; $C9E7
 
 loc_C9E9:
@@ -1982,7 +2004,7 @@ loc_CC0F:
     asl     a                       ; $CC22
     adc     temp0                   ; $CC23
     tay                             ; $CC25
-    lda     OverworldBank::dat_8409,y ; $CC26
+    lda     OverworldBank::Encounters,y ; $CC26
     ldy     #$3E                    ; $CC29
     sta     sramLocArea,y           ; $CC2B
     lda     overworldY              ; $CC2E
@@ -2694,12 +2716,12 @@ loc_D04D:
 
 loc_D05B:
     ldy     #$03                    ; $D05B
-    lda     (ram_00D4),y            ; $D05D
+    lda     (areaDataPtr),y         ; $D05D
     lsr     a                       ; $D05F
     lsr     a                       ; $D060
     and     #$30                    ; $D061
     sta     temp0                   ; $D063
-    lda     (ram_00D4),y            ; $D065
+    lda     (areaDataPtr),y         ; $D065
     asl     a                       ; $D067
     and     #$70                    ; $D068
     cmp     #$10                    ; $D06A
@@ -5312,9 +5334,9 @@ sub_DFDB:
     jmp     Mmc1_SetPrgBank0        ; $DFE1
 
 sub_DFE4:
-    lda     AreaBank::dat_8500,y    ; $DFE4
+    lda     AreaBank::MetatilePtrs,y ; $DFE4
     sta     temp14                  ; $DFE7
-    lda     AreaBank::dat_8500+1,y  ; $DFE9
+    lda     AreaBank::MetatilePtrs+1,y ; $DFE9
     sta     temp15                  ; $DFEC
     rts                             ; $DFEE
 
@@ -8537,9 +8559,9 @@ loc_FED3:
     rol     a                       ; $FEDE
     asl     a                       ; $FEDF
     tay                             ; $FEE0
-    lda     AreaBank::dat_8500,y    ; $FEE1
+    lda     AreaBank::MetatilePtrs,y ; $FEE1
     sta     temp14                  ; $FEE4
-    lda     AreaBank::dat_8500+1,y  ; $FEE6
+    lda     AreaBank::MetatilePtrs+1,y ; $FEE6
     sta     temp15                  ; $FEE9
     lda     ram_0464,x              ; $FEEB
     and     #$3F                    ; $FEEE
