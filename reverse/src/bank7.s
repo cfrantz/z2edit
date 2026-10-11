@@ -631,7 +631,15 @@ GameState_Begin:
     jsr     Ram_ClearExceptSaved    ; $C352
     jsr     sub_0_AA08              ; $C355
 
-sub_C358:
+; ---------------------------------------------------------------------------
+; Game_ResetLives
+;
+; Set lives to 3 and advance gameState (part of GameState_Begin; also used
+; when continuing in the Great Palace).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_ResetLives:
     lda     #$03                    ; $C358
     sta     lives                   ; $C35A
     inc     ram_0760                ; $C35D
@@ -1097,7 +1105,7 @@ loc_C679:
 loc_C67C:
     ldx     #$04                    ; $C67C
     stx     areaStartPage           ; $C67E
-    jsr     sub_C690                ; $C681
+    jsr     Scroll_SavePageState    ; $C681
     inc     ram_0705                ; $C684
     jmp     Game_BlankAndNextMode   ; $C687
 
@@ -1105,7 +1113,14 @@ loc_C68A:
     jsr     Mmc1_SetPrgBank0        ; $C68A
     jmp     loc_C67C                ; $C68D
 
-sub_C690:
+; ---------------------------------------------------------------------------
+; Scroll_SavePageState
+;
+; Save the scroll state for page x in the SRAM tables at sram_6982 and up.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Scroll_SavePageState:
     lda     ppuScrollX              ; $C690
     and     #$F0                    ; $C692
     sta     sram_69B3,x             ; $C694
@@ -1900,7 +1915,7 @@ loc_CAC4:
 ; (code below not executed in the test movies)
 
 loc_CADE:
-    jsr     sub_C358                ; $CADE
+    jsr     Game_ResetLives         ; $CADE
     lda     #$00                    ; $CAE1
     sta     areaId                  ; $CAE3
     sta     areaEntrySide           ; $CAE6
@@ -1998,16 +2013,25 @@ loc_CB42:
     lda     currentRegion           ; $CB42
     bne     loc_CB4B                ; $CB45
     cpy     #$00                    ; $CB47
-    beq     sub_CB59                ; $CB49
+    beq     Location_Enter          ; $CB49
 
 loc_CB4B:
     lda     ram_07AC                ; $CB4B
     ora     ram_07AA                ; $CB4E
     ora     ram_07AD                ; $CB51
-    bne     sub_CB59                ; $CB54
+    bne     Location_Enter          ; $CB54
     jsr     Music_Request80         ; $CB56
 
-sub_CB59:
+; ---------------------------------------------------------------------------
+; Location_Enter
+;
+; Enter overworld location y: work out areaLocation, and for locations
+; leading into a side view area, its area and start page (Location_GetArea).
+;
+; In:      y = location
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Location_Enter:
     lda     sramLocX,y              ; $CB59
     and     #$C0                    ; $CB5C
     asl     a                       ; $CB5E
@@ -2023,7 +2047,7 @@ sub_CB59:
     bcc     loc_CBB8                ; $CB6E
     lda     #$00                    ; $CB70
     sta     ram_07DB                ; $CB72
-    jsr     sub_CC97                ; $CB75
+    jsr     Location_GetArea        ; $CB75
     lda     areaLocation            ; $CB78
     sec                             ; $CB7B
     sbc     #$2C                    ; $CB7C
@@ -2070,7 +2094,7 @@ loc_CBB8:
     sta     areaMusic               ; $CBCA
 
 loc_CBCD:
-    jsr     sub_CC97                ; $CBCD
+    jsr     Location_GetArea        ; $CBCD
     lda     sramLocDest,y           ; $CBD0
     and     #$60                    ; $CBD3
     beq     loc_CBF2                ; $CBD5
@@ -2103,7 +2127,7 @@ loc_CBF8:
     cmp     #$01                    ; $CC00
     bne     loc_CBF2                ; $CC02
     sta     areaStartPage           ; $CC04
-    jsr     sub_CC50                ; $CC07
+    jsr     Location_SetupEntry     ; $CC07
     lda     #$11                    ; $CC0A
     jmp     loc_CC85                ; $CC0C
 
@@ -2127,7 +2151,7 @@ loc_CC0F:
     sta     sramLocY,y              ; $CC30
     lda     overworldX              ; $CC33
     sta     sramLocX,y              ; $CC35
-    jsr     sub_CB59                ; $CC38
+    jsr     Location_Enter          ; $CC38
     lda     #$00                    ; $CC3B
     sta     areaMusic               ; $CC3D
 
@@ -2140,7 +2164,17 @@ loc_CC40:
     cmp     #$03                    ; $CC4C
     beq     loc_CC89                ; $CC4E
 
-sub_CC50:
+; ---------------------------------------------------------------------------
+; Location_SetupEntry
+;
+; Set up Link and the scroll for entering an area from the overworld: Link
+; at X = $70 on the start page, entering from areaEntrySide; then go to
+; gameMode $12, or $0C to fall in if the location has the fall flag
+; (sramLocDest bit 7).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Location_SetupEntry:
     and     #$01                    ; $CC50
     sta     areaEntrySide           ; $CC52
     lda     #$70                    ; $CC55
@@ -2178,9 +2212,19 @@ loc_CC89:
     bcc     loc_CC88                ; $CC8D
     lda     #$01                    ; $CC8F
     sta     areaStartPage           ; $CC91
-    jmp     sub_CC50                ; $CC94
+    jmp     Location_SetupEntry     ; $CC94
 
-sub_CC97:
+; ---------------------------------------------------------------------------
+; Location_GetArea
+;
+; Set areaId, areaStartPage and areaEntrySide from overworld location y's
+; sramLocArea entry (bits 5-0 = area, bits 7-6 = start page; the entry side
+; is the start page's bit 0).
+;
+; In:      y = location
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Location_GetArea:
     lda     sramLocArea,y           ; $CC97
     pha                             ; $CC9A
     and     #$3F                    ; $CC9B
@@ -2798,7 +2842,7 @@ Mode_EnterDoor:
     clc                             ; $D021
     adc     #$04                    ; $D022
     tax                             ; $D024
-    jsr     sub_C690                ; $D025
+    jsr     Scroll_SavePageState    ; $D025
     jsr     Game_EnterNextArea      ; $D028
     ldx     ram_075B                ; $D02B
     dex                             ; $D02E
