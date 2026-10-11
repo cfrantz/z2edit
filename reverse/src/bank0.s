@@ -93,7 +93,7 @@ Mode_OverworldSetup:
     jsr     Mmc1_SetControl_Bank0   ; $814B
     lda     #$10                    ; $814E
     jsr     Mmc1_SetChrBank_Bank0   ; $8150
-    jsr     sub_E01B                ; $8153
+    jsr     Overworld_UpdatePalaceStones ; $8153
     lda     #$FC                    ; $8156
     sta     objState+1              ; $8158
     lda     #$04                    ; $815A
@@ -663,17 +663,17 @@ Overworld_HandleInput:
     adc     OverworldDirDX,y        ; $84CF
     sta     overworldTargetX        ; $84D2
     jsr     Overworld_GetTerrainAtX ; $84D4
-    lda     ram_0568                ; $84D7
+    lda     flutePlayed             ; $84D7
     beq     loc_0_84F2              ; $84DA
-    lda     ram_0567                ; $84DC
+    lda     fluteTimer              ; $84DC
     bne     loc_0_84F1              ; $84DF
     lda     overworldX              ; $84E1
     sta     temp0                   ; $84E3
     lda     overworldY              ; $84E5
     sta     temp1                   ; $84E7
-    jsr     sub_DFF8                ; $84E9
+    jsr     Overworld_UseFlute      ; $84E9
     lda     #$00                    ; $84EC
-    sta     ram_0568                ; $84EE
+    sta     flutePlayed             ; $84EE
 
 loc_0_84F1:
     rts                             ; $84F1
@@ -704,8 +704,8 @@ loc_0_8512:
     beq     loc_0_8527              ; $851B
     lda     #$08                    ; $851D
     sta     sfxRequest              ; $851F
-    sta     ram_0567                ; $8521
-    sta     ram_0568                ; $8524
+    sta     fluteTimer              ; $8521
+    sta     flutePlayed             ; $8524
 
 loc_0_8527:
     rts                             ; $8527
@@ -1305,7 +1305,7 @@ loc_0_8920:
     sta     temp3                   ; $892B
 
 loc_0_892D:
-    jsr     sub_E001                ; $892D
+    jsr     Overworld_ReadMapRun    ; $892D
     iny                             ; $8930
     cmp     overworldTargetX        ; $8931
     bcc     loc_0_892D              ; $8933
@@ -1798,7 +1798,7 @@ loc_0_8C13:
     jsr     sub_0_8C48              ; $8C2D
 
 sub_0_8C30:
-    jsr     sub_E001                ; $8C30
+    jsr     Overworld_ReadMapRun    ; $8C30
     cmp     #$41                    ; $8C33
     bpl     loc_0_8C45              ; $8C35
     lda     temp2                   ; $8C37
@@ -5275,7 +5275,7 @@ loc_0_A338:
     sta     dialogType              ; $A33A
     sta     ram_0525                ; $A33D
     sta     pauseState              ; $A340
-    sta     ram_0567                ; $A343
+    sta     fluteTimer              ; $A343
     rts                             ; $A346
 
 loc_0_A347:
@@ -5433,7 +5433,7 @@ loc_0_A423:
     rol     a                       ; $A42C
     asl     a                       ; $A42D
     tay                             ; $A42E
-    jsr     sub_DFDB                ; $A42F
+    jsr     Area_GetMetatilePtrInBank ; $A42F
     lda     ram_055A,x              ; $A432
     asl     a                       ; $A435
     asl     a                       ; $A436

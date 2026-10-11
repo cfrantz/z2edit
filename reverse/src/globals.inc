@@ -28,7 +28,6 @@ GLOBALS_INC = 1
 .global BreakingBlocks_Update
 .global loc_0_A7AB
 .global sub_0_AA08
-.global sub_2_8368
 .global dat_3_8817
 .global dat_3_9624
 .global dat_3_9625
@@ -97,12 +96,12 @@ GLOBALS_INC = 1
 .global sub_DF79
 .global loc_DFD1
 .global loc_DFD2
-.global sub_DFDB
-.global sub_DFE4
+.global Area_GetMetatilePtrInBank
+.global Area_GetMetatilePtr
 .global Overworld_GetTerrain
-.global sub_DFF8
-.global sub_E001
-.global sub_E01B
+.global Overworld_UseFlute
+.global Overworld_ReadMapRun
+.global Overworld_UpdatePalaceStones
 .global sub_E024
 .global sub_E030
 .global sub_E070
@@ -136,8 +135,8 @@ GLOBALS_INC = 1
 .global loc_EF03
 .global Sprite_FlipPrevious
 .global Enemy_Draw
-.global sub_F0C6
-.global sub_F0CC
+.global Sprite_DrawPairFromTableKeepX
+.global Sprite_DrawAnimatedEnemyPair
 .global Sprite_DrawEnemyPairKeepX
 .global Sprite_DrawEnemyPair
 .global Obj_ComputeScreenPos

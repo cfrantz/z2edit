@@ -425,7 +425,7 @@ loc_C218:
 
 loc_C220:
     lda     pauseState              ; $C220
-    ldy     ram_0567                ; $C223
+    ldy     fluteTimer              ; $C223
     bne     loc_C23A                ; $C226
     jsr     JumpTable               ; $C228
 ; (inline jump table)
@@ -5437,12 +5437,20 @@ loc_DFD2:
     jsr     sub_DF79                ; $DFD5
     jmp     Mmc1_SetPrgBank0        ; $DFD8
 
-sub_DFDB:
+Area_GetMetatilePtrInBank:
     jsr     Mmc1_SetPrgBankArea     ; $DFDB
-    jsr     sub_DFE4                ; $DFDE
+    jsr     Area_GetMetatilePtr     ; $DFDE
     jmp     Mmc1_SetPrgBank0        ; $DFE1
 
-sub_DFE4:
+; ---------------------------------------------------------------------------
+; Area_GetMetatilePtr
+;
+; Point temp14 at side view metatile table y / 2 (AreaBank::MetatilePtrs).
+; Area_GetMetatilePtrInBank maps the area bank first.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Area_GetMetatilePtr:
     lda     AreaBank::MetatilePtrs,y ; $DFE4
     sta     temp14                  ; $DFE7
     lda     AreaBank::MetatilePtrs+1,y ; $DFE9
@@ -5464,12 +5472,30 @@ Overworld_GetTerrain:
     jsr     OverworldBank::GetTerrain ; $DFF2
     jmp     Mmc1_SetPrgBank0        ; $DFF5
 
-sub_DFF8:
+; ---------------------------------------------------------------------------
+; Overworld_UseFlute
+;
+; After the flute has played, apply its effect at Link's position
+; (OverworldBank::UseFlute in the area bank); e.g. at one place in East
+; Hyrule it changes the map.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_UseFlute:
     jsr     Mmc1_SetPrgBankArea     ; $DFF8
-    jsr     sub_2_8368              ; $DFFB
+    jsr     OverworldBank::UseFlute ; $DFFB
     jmp     Mmc1_SetPrgBank0        ; $DFFE
 
-sub_E001:
+; ---------------------------------------------------------------------------
+; Overworld_ReadMapRun
+;
+; Read one run of the compressed overworld map at (temp14),y (with the area
+; bank mapped): bits 3-0 are the terrain, bits 7-4 the length - 1.
+;
+; Out:     temp2 = terrain; temp3 += length; a = temp3
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Overworld_ReadMapRun:
     jsr     Mmc1_SetPrgBankArea     ; $E001
     lda     (temp14),y              ; $E004
     and     #$0F                    ; $E006
@@ -5487,9 +5513,17 @@ sub_E001:
     pla                             ; $E019
     rts                             ; $E01A
 
-sub_E01B:
+; ---------------------------------------------------------------------------
+; Overworld_UpdatePalaceStones
+;
+; Show the region's palaces as stone once their crystals have been placed
+; (OverworldBank::UpdatePalaceStones).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_UpdatePalaceStones:
     jsr     Mmc1_SetPrgBankArea     ; $E01B
-    jsr     OverworldBank::sub_879B ; $E01E
+    jsr     OverworldBank::UpdatePalaceStones ; $E01E
     jmp     Mmc1_SetPrgBank0        ; $E021
 
 sub_E024:
@@ -8024,7 +8058,7 @@ loc_EFD2:
     ldx     #$24                    ; $EFE4
 
 loc_EFE6:
-    jmp     sub_F0C6                ; $EFE6
+    jmp     Sprite_DrawPairFromTableKeepX ; $EFE6
 
 dat_EFE9:
     .byte   $03, $03, $02, $02, $01, $01, $00, $00, $00                     ; $EFE9
@@ -8084,12 +8118,21 @@ loc_F0A8:
 
 loc_F0B5:
     lda     #$12                    ; $F0B5
-    bne     sub_F0BB                ; $F0B7
+    bne     Sprite_DrawAnimatedPairFromTable ; $F0B7
 
 loc_F0B9:
     lda     #$0C                    ; $F0B9
 
-sub_F0BB:
+; ---------------------------------------------------------------------------
+; Sprite_DrawAnimatedPairFromTable
+;
+; Sprite_DrawPairFromTable with tiles a or a + 2, alternating every 8
+; frames; Sprite_DrawAnimatedEnemyPair likewise for Sprite_DrawEnemyPair.
+; Sprite_DrawPairFromTableKeepX reloads x from currentObject afterwards.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sprite_DrawAnimatedPairFromTable:
     sta     temp5                   ; $F0BB
     lda     frameCounter            ; $F0BD
     and     #$08                    ; $F0BF
@@ -8098,12 +8141,12 @@ sub_F0BB:
     adc     temp5                   ; $F0C3
     tax                             ; $F0C5
 
-sub_F0C6:
+Sprite_DrawPairFromTableKeepX:
     jsr     Sprite_DrawPairFromTable ; $F0C6
     ldx     currentObject           ; $F0C9
     rts                             ; $F0CB
 
-sub_F0CC:
+Sprite_DrawAnimatedEnemyPair:
     sta     temp5                   ; $F0CC
     lda     frameCounter            ; $F0CE
     and     #$08                    ; $F0D0
@@ -8165,7 +8208,7 @@ loc_F125:
     asl     a                       ; $F126
     adc     #$2E                    ; $F127
     tax                             ; $F129
-    jsr     sub_F0C6                ; $F12A
+    jsr     Sprite_DrawPairFromTableKeepX ; $F12A
     lda     oamBuffer - 3,y         ; $F12D
     cmp     #$F5                    ; $F130
     bne     loc_F137                ; $F132
@@ -8229,17 +8272,17 @@ loc_F188:
     and     #$0F                    ; $F19B
     sta     temp3                   ; $F19D
     lda     #$16                    ; $F19F
-    jsr     sub_F0BB                ; $F1A1
+    jsr     Sprite_DrawAnimatedPairFromTable ; $F1A1
     jmp     Sprite_FlipPrevious     ; $F1A4
 
 loc_F1A7:
-    jsr     sub_F0C6                ; $F1A7
+    jsr     Sprite_DrawPairFromTableKeepX ; $F1A7
     jmp     Sprite_FlipPrevious     ; $F1AA
 
 loc_F1AD:
     ldx     #$1A                    ; $F1AD
     jsr     Sprite_DrawPairFromTable ; $F1AF
-    jmp     sub_F0C6                ; $F1B2
+    jmp     Sprite_DrawPairFromTableKeepX ; $F1B2
 
 ; ---------------------------------------------------------------------------
 ; Sprite_SetPairAttr

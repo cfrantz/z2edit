@@ -2575,7 +2575,7 @@ loc_3_B1CF:
     rol     a                       ; $B1D8
     asl     a                       ; $B1D9
     tay                             ; $B1DA
-    jsr     sub_DFE4                ; $B1DB
+    jsr     Area_GetMetatilePtr     ; $B1DB
     lda     ram_055A,x              ; $B1DE
     asl     a                       ; $B1E1
     asl     a                       ; $B1E2
@@ -3500,7 +3500,7 @@ loc_3_B7F0:
     sta     dialogType              ; $B7F6
     sta     ram_0525                ; $B7F9
     sta     pauseState              ; $B7FC
-    sta     ram_0567                ; $B7FF
+    sta     fluteTimer              ; $B7FF
     rts                             ; $B802
 ; (unreferenced: $B803-$BFFF, 2045 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $B803

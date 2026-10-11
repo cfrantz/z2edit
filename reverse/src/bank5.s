@@ -1699,7 +1699,7 @@ loc_5_9695:
 
 loc_5_96A0:
     lda     #$46                    ; $96A0
-    jmp     sub_F0CC                ; $96A2
+    jmp     Sprite_DrawAnimatedEnemyPair ; $96A2
 
 loc_5_96A5:
     ldy     #$50                    ; $96A5
@@ -2653,7 +2653,7 @@ loc_5_9C69:
     ldx     #$02                    ; $9C8C
 
 loc_5_9C8E:
-    jsr     sub_F0C6                ; $9C8E
+    jsr     Sprite_DrawPairFromTableKeepX ; $9C8E
     lda     #$41                    ; $9C91
     sta     oamBuffer - 2,y         ; $9C93
 
@@ -4167,11 +4167,11 @@ loc_5_A70F:
     jsr     Ram_ClearWork           ; $A70F
     lda     #$0F                    ; $A712
     jsr     Mmc1_SetControl_Bank5   ; $A714
-    lda     ram_0568                ; $A717
+    lda     flutePlayed             ; $A717
     bne     loc_5_A723              ; $A71A
     lda     #$01                    ; $A71C
     sta     ram_00EA                ; $A71E
-    inc     ram_0568                ; $A720
+    inc     flutePlayed             ; $A720
 
 loc_5_A723:
     jsr     sub_5_ADE0              ; $A723
@@ -4259,7 +4259,7 @@ sub_5_A795:
     sta     ram_00EA                ; $A7AD
     lda     #$00                    ; $A7AF
     sta     ppuNametable            ; $A7B1
-    sta     ram_0568                ; $A7B4
+    sta     flutePlayed             ; $A7B4
     sta     ram_073E                ; $A7B7
     inc     renderingOff            ; $A7BA
     inc     gameState               ; $A7BD

@@ -442,6 +442,9 @@ loc_1_835A:
     sta     (temp14),y              ; $8365
     rts                             ; $8367
 ; (unreferenced: $8368-$8394, 45 bytes)
+
+Overworld_UseFlute_Bank1:
+    .assert Overworld_UseFlute_Bank1 = OverworldBank::UseFlute, error, "interface address moved"
     .byte   $AD, $06, $07, $C9, $02, $D0, $1F, $A5, $73, $C9, $64, $D0, $12, $A5, $74, $C9; $8368
     .byte   $2D, $D0, $0C, $A9, $0B, $8D, $25, $07, $E6, $01, $E6, $01, $4C, $79, $DF, $AD; $8378
     .byte   $63, $05, $C9, $0F, $F0, $01, $60, $20, $A1, $83, $4C, $79, $DF ; $8388
@@ -676,8 +679,8 @@ dat_1_8790:
 dat_1_8797:
     .byte   $00, $01, $02, $03                                              ; $8797
 
-sub_1_879B:
-    .assert sub_1_879B = OverworldBank::sub_879B, error, "interface address moved"
+Overworld_UpdatePalaceStones_Bank1:
+    .assert Overworld_UpdatePalaceStones_Bank1 = OverworldBank::UpdatePalaceStones, error, "interface address moved"
     ldx     #$02                    ; $879B
 
 loc_1_879D:
@@ -2039,7 +2042,7 @@ loc_1_9DEE:
 
 loc_1_9DF1:
     lda     #$3C                    ; $9DF1
-    jmp     sub_F0CC                ; $9DF3
+    jmp     Sprite_DrawAnimatedEnemyPair ; $9DF3
 ; (unreferenced: $9DF6-$9DFA, 5 bytes)
     .byte   $A9, $44, $4C, $CC, $F0                                         ; $9DF6
 

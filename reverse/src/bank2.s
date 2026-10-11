@@ -446,7 +446,8 @@ loc_2_835A:
     sta     (temp14),y              ; $8365
     rts                             ; $8367
 
-sub_2_8368:
+Overworld_UseFlute_Bank2:
+    .assert Overworld_UseFlute_Bank2 = OverworldBank::UseFlute, error, "interface address moved"
     lda     currentRegion           ; $8368
     cmp     #$02                    ; $836B
     bne     loc_2_838E              ; $836D
@@ -715,8 +716,8 @@ dat_2_8790:
 dat_2_8797:
     .byte   $04, $05, $FF, $03                                              ; $8797
 
-sub_2_879B:
-    .assert sub_2_879B = OverworldBank::sub_879B, error, "interface address moved"
+Overworld_UpdatePalaceStones_Bank2:
+    .assert Overworld_UpdatePalaceStones_Bank2 = OverworldBank::UpdatePalaceStones, error, "interface address moved"
     ldx     #$03                    ; $879B
     lda     currentRegion           ; $879D
     cmp     #$02                    ; $87A0
@@ -2204,7 +2205,7 @@ loc_2_9DEB:
     lda     #$23                    ; $9DEF
     sta     temp3                   ; $9DF1
     lda     #$0C                    ; $9DF3
-    jsr     sub_F0CC                ; $9DF5
+    jsr     Sprite_DrawAnimatedEnemyPair ; $9DF5
     lda     oamBuffer - 2,y         ; $9DF8
     ora     #$40                    ; $9DFB
     sta     oamBuffer - 2,y         ; $9DFD

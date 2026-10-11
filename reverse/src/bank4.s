@@ -958,7 +958,7 @@ loc_4_976E:
     ldx     #$02                    ; $978D
 
 loc_4_978F:
-    jsr     sub_F0C6                ; $978F
+    jsr     Sprite_DrawPairFromTableKeepX ; $978F
     lda     #$41                    ; $9792
     sta     oamBuffer - 2,y         ; $9794
     rts                             ; $9797
@@ -2775,7 +2775,7 @@ loc_4_ADE7:
     ldx     #$02                    ; $AE06
 
 loc_4_AE08:
-    jsr     sub_F0C6                ; $AE08
+    jsr     Sprite_DrawPairFromTableKeepX ; $AE08
     lda     #$41                    ; $AE0B
     sta     oamBuffer - 2,y         ; $AE0D
 

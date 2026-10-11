@@ -26,8 +26,9 @@ INTERFACES_INC = 1
     sub_83A1        = $83A1     ; routine
     GetTerrain      = $83CF     ; terrain at overworld tile (temp0, temp1) -> temp2
     Encounters      = $8409     ; overworld encounter table, by terrain
-    sub_879B        = $879B     ; routine
+    UpdatePalaceStones = $879B  ; show palaces as stone once their crystals are placed
     SetFloorTiles   = $81A3     ; set up the floor tiles for side view areas
+    UseFlute        = $8368     ; effects of playing the flute at Link's position
 .endscope
 
 ; Palace banks (4: palaces, 5: Great Palace).  Also area banks.
