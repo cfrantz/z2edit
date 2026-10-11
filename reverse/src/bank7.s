@@ -873,11 +873,11 @@ Area_Load:
     sta     a:ppuScrollX            ; $C4E0
     sta     ppuNametable            ; $C4E3
     sta     scrollXHi               ; $C4E6
-    sta     ram_072B                ; $C4E9
-    sta     ram_0732                ; $C4EC
-    sta     ram_0734                ; $C4EF
-    sta     ram_0733                ; $C4F2
-    sta     ram_0735                ; $C4F5
+    sta     scrollRightXHi          ; $C4E9
+    sta     columnPage              ; $C4EC
+    sta     columnIndex             ; $C4EF
+    sta     columnPage+1            ; $C4F2
+    sta     columnIndex+1           ; $C4F5
     sta     ram_0763                ; $C4F8
     sta     ram_0764                ; $C4FB
     ldy     currentWorld            ; $C4FE
@@ -1036,16 +1036,16 @@ loc_C5F9:
     lsr     a                       ; $C608
     sta     ram_071C                ; $C609
     sta     ram_0721                ; $C60C
-    sta     ram_0740                ; $C60F
+    sta     columnDrawStep          ; $C60F
     ldy     areaStartPage           ; $C612
     lda     #$0F                    ; $C615
     sta     ram_0722                ; $C617
     lda     sram_697B,y             ; $C61A
-    sta     ram_0732                ; $C61D
-    sta     ram_0733                ; $C620
+    sta     columnPage              ; $C61D
+    sta     columnPage+1            ; $C620
     lda     sram_6982,y             ; $C623
-    sta     ram_0734                ; $C626
-    sta     ram_0735                ; $C629
+    sta     columnIndex             ; $C626
+    sta     columnIndex+1           ; $C629
     jmp     Game_BlankAndNextMode   ; $C62C
 
 loc_C62F:
@@ -1092,7 +1092,7 @@ loc_C657:
     sta     scrollXHi               ; $C667
     clc                             ; $C66A
     adc     #$01                    ; $C66B
-    sta     ram_0733                ; $C66D
+    sta     columnPage+1            ; $C66D
     sec                             ; $C670
     sbc     #$02                    ; $C671
     cmp     #$FF                    ; $C673
@@ -1100,7 +1100,7 @@ loc_C657:
     lda     #$03                    ; $C677
 
 loc_C679:
-    sta     ram_0732                ; $C679
+    sta     columnPage              ; $C679
 
 loc_C67C:
     ldx     #$04                    ; $C67C
@@ -2187,9 +2187,9 @@ Location_SetupEntry:
     lda     #$70                    ; $CC55
     sta     objX                    ; $CC57
     ldx     #$0B                    ; $CC59
-    stx     ram_0734                ; $CC5B
+    stx     columnIndex             ; $CC5B
     ldx     #$06                    ; $CC5E
-    stx     ram_0735                ; $CC60
+    stx     columnIndex+1           ; $CC60
     ldx     #$00                    ; $CC63
     stx     ppuScrollX              ; $CC65
     stx     scrollX                 ; $CC67
@@ -2197,10 +2197,10 @@ Location_SetupEntry:
     stx     objXHi                  ; $CC6D
     stx     scrollXHi               ; $CC6F
     dex                             ; $CC72
-    stx     ram_0732                ; $CC73
+    stx     columnPage              ; $CC73
     inx                             ; $CC76
     inx                             ; $CC77
-    stx     ram_0733                ; $CC78
+    stx     columnPage+1            ; $CC78
     lda     sramLocDest,y           ; $CC7B
     asl     a                       ; $CC7E
     lda     #$12                    ; $CC7F
@@ -2983,7 +2983,7 @@ loc_D11A:
 
 loc_D120:
     jsr     Mmc1_SetPrgBank0        ; $D120
-    jsr     sub_0_9A04              ; $D123
+    jsr     Scroll_DrawColumnStep   ; $D123
     jsr     Mmc1_SetPrgBankArea     ; $D126
     ldx     #$05                    ; $D129
 
@@ -2997,7 +2997,7 @@ loc_D12B:
 loc_D135:
     dex                             ; $D135
     bpl     loc_D12B                ; $D136
-    lda     ram_0740                ; $D138
+    lda     columnDrawStep          ; $D138
     beq     loc_D143                ; $D13B
     cmp     #$05                    ; $D13D
     beq     loc_D14B                ; $D13F
@@ -3823,7 +3823,7 @@ loc_D538:
     inc     menusPending            ; $D542
 
 loc_D545:
-    jmp     loc_0_99E6              ; $D545
+    jmp     Scroll_DrawColumns      ; $D545
 
 loc_D548:
     ldy     objOamOffset+7,x        ; $D548
@@ -3987,8 +3987,8 @@ Enemy_TrySpawn:
     lsr     a                       ; $D60B
     eor     #$01                    ; $D60C
     tax                             ; $D60E
-    lda     ram_0732                ; $D60F
-    cmp     ram_0733                ; $D612
+    lda     columnPage              ; $D60F
+    cmp     columnPage+1            ; $D612
     bcc     Enemy_Spawn             ; $D615
     cmp     #$02                    ; $D617
     beq     loc_D620                ; $D619
@@ -4004,9 +4004,9 @@ loc_D624:
     rts                             ; $D624
 
 Enemy_Spawn:
-    lda     ram_0732,x              ; $D625
+    lda     columnPage,x            ; $D625
     sta     temp0                   ; $D628
-    lda     ram_0734,x              ; $D62A
+    lda     columnIndex,x           ; $D62A
     sta     temp1                   ; $D62D
     ldx     currentObject           ; $D62F
     ldy     #$01                    ; $D631
@@ -4395,9 +4395,9 @@ loc_D8FB:
     lda     #$70                    ; $D901
     sta     objX                    ; $D903
     lda     #$06                    ; $D905
-    sta     ram_0735                ; $D907
+    sta     columnIndex+1           ; $D907
     lda     #$0B                    ; $D90A
-    sta     ram_0734                ; $D90C
+    sta     columnIndex             ; $D90C
     lda     #$00                    ; $D90F
     sta     ppuScrollX              ; $D911
     sta     scrollX                 ; $D913
@@ -5317,11 +5317,11 @@ Enemy_DespawnIfFar:
     sbc     temp15                  ; $DE85
     sta     temp0                   ; $DE87
     inc     temp0                   ; $DE89
-    lda     ram_072D                ; $DE8B
+    lda     scrollRightX            ; $DE8B
     clc                             ; $DE8E
     adc     #$60                    ; $DE8F
     sta     temp3                   ; $DE91
-    lda     ram_072B                ; $DE93
+    lda     scrollRightXHi          ; $DE93
     adc     temp15                  ; $DE96
     sta     temp2                   ; $DE98
     inc     temp2                   ; $DE9A
@@ -9174,7 +9174,7 @@ loc_FED3:
     asl     a                       ; $FEF0
     asl     a                       ; $FEF1
     sta     temp2                   ; $FEF2
-    lda     ram_0740                ; $FEF4
+    lda     columnDrawStep          ; $FEF4
     and     #$01                    ; $FEF7
     eor     #$01                    ; $FEF9
     asl     a                       ; $FEFB

@@ -2021,13 +2021,13 @@ loc_0_8CF7:
     tya                             ; $8D13
     pha                             ; $8D14
     lda     sram_6989,y             ; $8D15
-    sta     ram_0732                ; $8D18
+    sta     columnPage              ; $8D18
     lda     sram_6990,y             ; $8D1B
-    sta     ram_0733                ; $8D1E
+    sta     columnPage+1            ; $8D1E
     lda     sram_6997,y             ; $8D21
-    sta     ram_0734                ; $8D24
+    sta     columnIndex             ; $8D24
     lda     sram_699E,y             ; $8D27
-    sta     ram_0735                ; $8D2A
+    sta     columnIndex+1           ; $8D2A
     lda     sram_69BA,y             ; $8D2D
     sta     ram_071F                ; $8D30
     sta     ram_0720                ; $8D33
@@ -2042,8 +2042,8 @@ loc_0_8CF7:
     and     #$10                    ; $8D4D
     sta     ram_0721                ; $8D4F
     lda     #$00                    ; $8D52
-    sta     ram_0740                ; $8D54
-    jsr     sub_0_99D4              ; $8D57
+    sta     columnDrawStep          ; $8D54
+    jsr     Scroll_SetRightEdge     ; $8D57
     pla                             ; $8D5A
     tay                             ; $8D5B
     lda     #$A5                    ; $8D5C
@@ -4090,7 +4090,7 @@ loc_0_9955:
 
 loc_0_9971:
     inc     ram_05C9                ; $9971
-    jmp     sub_0_99D4              ; $9974
+    jmp     Scroll_SetRightEdge     ; $9974
 
 loc_0_9977:
     ldy     temp0                   ; $9977
@@ -4120,19 +4120,19 @@ loc_0_9991:
 
 loc_0_99A4:
     sty     ram_0720                ; $99A4
-    lda     ram_0740                ; $99A7
+    lda     columnDrawStep          ; $99A7
     cmp     #$06                    ; $99AA
     bcs     loc_0_99B8              ; $99AC
     cmp     #$02                    ; $99AE
     bcs     loc_0_99B5              ; $99B0
-    jsr     sub_0_9A30              ; $99B2
+    jsr     Scroll_AdvanceColumn    ; $99B2
 
 loc_0_99B5:
-    jsr     sub_0_9A30              ; $99B5
+    jsr     Scroll_AdvanceColumn    ; $99B5
 
 loc_0_99B8:
     lda     #$00                    ; $99B8
-    sta     ram_0740                ; $99BA
+    sta     columnDrawStep          ; $99BA
 
 loc_0_99BD:
     pla                             ; $99BD
@@ -4146,21 +4146,39 @@ loc_0_99BD:
     and     #$01                    ; $99CF
     sta     playfieldNametable      ; $99D1
 
-sub_0_99D4:
+; ---------------------------------------------------------------------------
+; Scroll_SetRightEdge
+;
+; Set scrollRightX/Hi to the X position of the screen's right edge
+; (scrollX + 255).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Scroll_SetRightEdge:
     lda     scrollX                 ; $99D4
     clc                             ; $99D7
     adc     #$FF                    ; $99D8
-    sta     ram_072D                ; $99DA
+    sta     scrollRightX            ; $99DA
     lda     scrollXHi               ; $99DD
     adc     #$00                    ; $99E0
-    sta     ram_072B                ; $99E2
+    sta     scrollRightXHi          ; $99E2
 
 loc_0_99E5:
     rts                             ; $99E5
 
-loc_0_99E6:
-    lda     ram_0740                ; $99E6
-    bne     sub_0_9A04              ; $99E9
+; ---------------------------------------------------------------------------
+; Scroll_DrawColumns
+;
+; Side view, end of each frame: draw the columns of the area that scroll
+; into view, a little at a time (Scroll_DrawColumnStep, 8 steps per column,
+; columnDrawStep), tracking the left and right edges in columnPage and
+; columnIndex.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Scroll_DrawColumns:
+    lda     columnDrawStep          ; $99E6
+    bne     Scroll_DrawColumnStep   ; $99E9
     lda     ram_0721                ; $99EB
     bmi     loc_0_99F9              ; $99EE
     cmp     #$20                    ; $99F0
@@ -4177,11 +4195,11 @@ loc_0_99FC:
     lda     #$00                    ; $99FF
     sta     ppuBuffer2Len           ; $9A01
 
-sub_0_9A04:
-    dec     ram_0740                ; $9A04
+Scroll_DrawColumnStep:
+    dec     columnDrawStep          ; $9A04
     bpl     loc_0_9A18              ; $9A07
     lda     #$08                    ; $9A09
-    sta     ram_0740                ; $9A0B
+    sta     columnDrawStep          ; $9A0B
     lda     #$00                    ; $9A0E
     ldx     #$07                    ; $9A10
 
@@ -4191,39 +4209,47 @@ loc_0_9A12:
     bne     loc_0_9A12              ; $9A16
 
 loc_0_9A18:
-    lda     ram_0740                ; $9A18
+    lda     columnDrawStep          ; $9A18
     jsr     JumpTable               ; $9A1B
 ; (inline jump table)
     .word   loc_0_9B13              ; $9A1E
-    .word   sub_0_9A30              ; $9A20
+    .word   Scroll_AdvanceColumn    ; $9A20
     .word   loc_0_9AB8              ; $9A22
     .word   loc_0_9AB8              ; $9A24
     .word   loc_0_9A77              ; $9A26
-    .word   sub_0_9A30              ; $9A28
+    .word   Scroll_AdvanceColumn    ; $9A28
     .word   loc_0_9AB8              ; $9A2A
     .word   loc_0_9AB8              ; $9A2C
     .word   loc_0_9A77              ; $9A2E
 
-sub_0_9A30:
+; ---------------------------------------------------------------------------
+; Scroll_AdvanceColumn
+;
+; Advance columnIndex (and columnPage at the end of a page, wrapping after
+; the area's last page) at the edge being drawn.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Scroll_AdvanceColumn:
     lda     ram_0720                ; $9A30
     ldx     #$01                    ; $9A33
     lsr     a                       ; $9A35
     bcc     loc_0_9A5A              ; $9A36
 
 loc_0_9A38:
-    ldy     ram_0734,x              ; $9A38
+    ldy     columnIndex,x           ; $9A38
     iny                             ; $9A3B
     tya                             ; $9A3C
     and     #$0F                    ; $9A3D
-    sta     ram_0734,x              ; $9A3F
+    sta     columnIndex,x           ; $9A3F
     bne     loc_0_9A56              ; $9A42
-    inc     ram_0732,x              ; $9A44
-    lda     ram_0732,x              ; $9A47
+    inc     columnPage,x            ; $9A44
+    lda     columnPage,x            ; $9A47
     cmp     ram_071B                ; $9A4A
     bcc     loc_0_9A56              ; $9A4D
     beq     loc_0_9A56              ; $9A4F
     lda     #$00                    ; $9A51
-    sta     ram_0732,x              ; $9A53
+    sta     columnPage,x            ; $9A53
 
 loc_0_9A56:
     dex                             ; $9A56
@@ -4231,17 +4257,17 @@ loc_0_9A56:
     rts                             ; $9A59
 
 loc_0_9A5A:
-    ldy     ram_0734,x              ; $9A5A
+    ldy     columnIndex,x           ; $9A5A
     dey                             ; $9A5D
     tya                             ; $9A5E
     and     #$0F                    ; $9A5F
-    sta     ram_0734,x              ; $9A61
+    sta     columnIndex,x           ; $9A61
     cmp     #$0F                    ; $9A64
     bne     loc_0_9A73              ; $9A66
-    dec     ram_0732,x              ; $9A68
+    dec     columnPage,x            ; $9A68
     bpl     loc_0_9A73              ; $9A6B
     lda     ram_071B                ; $9A6D
-    sta     ram_0732,x              ; $9A70
+    sta     columnPage,x            ; $9A70
 
 loc_0_9A73:
     dex                             ; $9A73
@@ -4251,14 +4277,14 @@ loc_0_9A73:
 loc_0_9A77:
     lda     ram_0720                ; $9A77
     lsr     a                       ; $9A7A
-    ldx     ram_0734                ; $9A7B
-    lda     ram_0732                ; $9A7E
+    ldx     columnIndex             ; $9A7B
+    lda     columnPage              ; $9A7E
     bcc     loc_0_9A89              ; $9A81
-    ldx     ram_0735                ; $9A83
-    lda     ram_0733                ; $9A86
+    ldx     columnIndex+1           ; $9A83
+    lda     columnPage+1            ; $9A86
 
 loc_0_9A89:
-    jsr     sub_0_9AA8              ; $9A89
+    jsr     AreaMap_GetPagePtrBank0 ; $9A89
     txa                             ; $9A8C
     tay                             ; $9A8D
     ldx     #$00                    ; $9A8E
@@ -4281,7 +4307,15 @@ dat_0_9AA0:
 dat_0_9AA4:
     .byte   $60, $60, $61, $62                                              ; $9AA4
 
-sub_0_9AA8:
+; ---------------------------------------------------------------------------
+; AreaMap_GetPagePtrBank0
+;
+; Bank 0's copy of AreaMap_GetPagePtr: point temp14 at page a & 3 of the
+; area tile map.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+AreaMap_GetPagePtrBank0:
     and     #$03                    ; $9AA8
     tay                             ; $9AAA
     lda     dat_0_9AA0,y            ; $9AAB
@@ -4297,19 +4331,19 @@ loc_0_9AB8:
     lda     ram_0720                ; $9AB8
     and     #$01                    ; $9ABB
     tay                             ; $9ABD
-    lda     ram_0734,y              ; $9ABE
+    lda     columnIndex,y           ; $9ABE
     and     #$01                    ; $9AC1
     sta     temp5                   ; $9AC3
-    lda     ram_0732,y              ; $9AC5
+    lda     columnPage,y            ; $9AC5
     and     #$01                    ; $9AC8
     tax                             ; $9ACA
     lda     dat_0_9AB6,x            ; $9ACB
     sta     ram_071D                ; $9ACE
-    lda     ram_0740                ; $9AD1
+    lda     columnDrawStep          ; $9AD1
     and     #$01                    ; $9AD4
     eor     #$01                    ; $9AD6
     lsr     a                       ; $9AD8
-    lda     ram_0734,y              ; $9AD9
+    lda     columnIndex,y           ; $9AD9
     rol     a                       ; $9ADC
     adc     #$80                    ; $9ADD
     sta     ram_071E                ; $9ADF
@@ -4341,7 +4375,14 @@ loc_0_9B13:
     sta     attrColumnPending       ; $9B15
     rts                             ; $9B18
 
-sub_0_9B19:
+; ---------------------------------------------------------------------------
+; Menu_DrawItems
+;
+; Draw the items Link owns (itemOwned) in the pause menu.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_DrawItems:
     lda     scrollX                 ; $9B19
     and     #$0F                    ; $9B1C
     sta     temp1                   ; $9B1E
@@ -4539,7 +4580,7 @@ loc_0_9DCD:
     bcc     loc_0_9DDE              ; $9DD5
     cmp     #$07                    ; $9DD7
     bcs     loc_0_9DDE              ; $9DD9
-    jsr     sub_0_9B19              ; $9DDB
+    jsr     Menu_DrawItems          ; $9DDB
 
 loc_0_9DDE:
     lda     pauseState              ; $9DDE
@@ -5251,7 +5292,7 @@ loc_0_A26B:
     tax                             ; $A271
     lda     scrollXHi               ; $A272
     adc     #$00                    ; $A275
-    jsr     sub_0_9AA8              ; $A277
+    jsr     AreaMap_GetPagePtrBank0 ; $A277
     txa                             ; $A27A
     and     #$E0                    ; $A27B
     lsr     a                       ; $A27D
@@ -5510,7 +5551,7 @@ loc_0_A3DF:
     tax                             ; $A3E5
     lda     scrollXHi               ; $A3E6
     adc     #$00                    ; $A3E9
-    jsr     sub_0_9AA8              ; $A3EB
+    jsr     AreaMap_GetPagePtrBank0 ; $A3EB
     txa                             ; $A3EE
     lsr     a                       ; $A3EF
     lsr     a                       ; $A3F0

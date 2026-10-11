@@ -21,8 +21,8 @@ GLOBALS_INC = 1
 .global Hud_Draw
 .global LinkProjectile_Update
 .global Scroll_Update
-.global loc_0_99E6
-.global sub_0_9A04
+.global Scroll_DrawColumns
+.global Scroll_DrawColumnStep
 .global loc_0_9D54
 .global loc_0_9D91
 .global BreakingBlocks_Update
