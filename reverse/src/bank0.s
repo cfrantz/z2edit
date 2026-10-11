@@ -729,7 +729,7 @@ Overworld_HandleInput:
     jsr     Overworld_GetTerrainAtX ; $84D4
     lda     flutePlayed             ; $84D7
     beq     @loc_84F2               ; $84DA
-    lda     fluteTimer              ; $84DC
+    lda     fluteActive             ; $84DC
     bne     @done                   ; $84DF
     lda     overworldX              ; $84E1
     sta     temp0                   ; $84E3
@@ -768,7 +768,7 @@ Overworld_HandleInput:
     beq     @done2                  ; $851B
     lda     #$08                    ; $851D
     sta     sfxRequest              ; $851F
-    sta     fluteTimer              ; $8521
+    sta     fluteActive             ; $8521
     sta     flutePlayed             ; $8524
 
 @done2:
@@ -6113,7 +6113,7 @@ Pause_OverworldUnmute:
 ; Menu_Close
 ;
 ; Clear the dialog, menu and flute state (dialogType, menuRow, pauseState,
-; fluteTimer).
+; fluteActive).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -6122,7 +6122,7 @@ Menu_Close:
     sta     dialogType              ; $A33A
     sta     menuRow                 ; $A33D
     sta     pauseState              ; $A340
-    sta     fluteTimer              ; $A343
+    sta     fluteActive             ; $A343
     rts                             ; $A346
 
 ; ---------------------------------------------------------------------------
@@ -6935,7 +6935,7 @@ BridgeTileString:
 ; BridgeTileString), with a sound; after 16 steps write the bridge into
 ; the area tile map and clear techniques bit 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Saria_BuildBridge:
     ldy     #$F0                    ; $A7AB

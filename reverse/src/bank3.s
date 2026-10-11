@@ -3500,7 +3500,7 @@ loc_3_B7F0:
     sta     dialogType              ; $B7F6
     sta     menuRow                 ; $B7F9
     sta     pauseState              ; $B7FC
-    sta     fluteTimer              ; $B7FF
+    sta     fluteActive             ; $B7FF
     rts                             ; $B802
 ; (unreferenced: $B803-$BFFF, 2045 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $B803

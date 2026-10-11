@@ -435,7 +435,7 @@ Game_UpdateSideViewMenus:
 ; Menu_UpdateOther
 ;
 ; Menus outside side view (and dialogs with dialogType >= 5): run the
-; flute (Flute_Update) if fluteTimer is set, otherwise the overworld pause
+; flute (Flute_Update) if fluteActive is set, otherwise the overworld pause
 ; (Pause_CheckStart, Pause_OverworldMute, Pause_OverworldWait,
 ; Pause_OverworldUnmute).
 ;
@@ -443,7 +443,7 @@ Game_UpdateSideViewMenus:
 ; ---------------------------------------------------------------------------
 Menu_UpdateOther:
     lda     pauseState              ; $C220
-    ldy     fluteTimer              ; $C223
+    ldy     fluteActive             ; $C223
     bne     Flute_Update            ; $C226
     jsr     JumpTable               ; $C228
 ; (inline jump table)
