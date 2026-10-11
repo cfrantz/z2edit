@@ -200,6 +200,10 @@ Each is a self-contained work area; order is flexible after Phase 3.
   tiles, raft/bridges/hidden areas.
 - Sideview areas: room loading, scrolling, area transitions.
 - Towns (bank 3): NPC behavior, dialog system, spell/skill teachers.
+  Status (2026-10-11): the conversation engine, its handlers and text
+  tables, the town objects and the per-town person sprites are named,
+  with docs/engine/towns.md.  Left: a few townsperson AI internals
+  ($983C-$9B45) and the area bank tables shared with banks 1-5.
 - Palaces and Great Palace (banks 4-5): palace mechanics, bosses,
   palace completion and crystal placement.
 - Title, file select, name entry, ending (bank 5).

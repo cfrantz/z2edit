@@ -1086,11 +1086,16 @@ Enemy_InitNone_Bank3:
     .byte   $BC, $BE, $11, $13, $15, $17, $19, $1B, $1D, $1F, $01, $03, $05, $07, $09, $0B; $960E
     .byte   $0D, $0F, $62, $64, $CC, $CE                                    ; $961E
 
-dat_3_9624:
-    .byte   $30                                                             ; $9624
+; First sprite tile of person types $0D-$20 in towns 1-6 (Ruto ... New
+; Kasuto), copied to sramEnemyAttr+13 when the town loads (bank 7, $CEE2);
+; Rauru and Old Kasuto keep EnemyAttr_Bank3's.  20 bytes each; the last
+; runs on into the bytes after it.
+TownPersonTilePtrs:
+    .word   TownPersonTiles, TownPersonTiles+20, TownPersonTiles+40 ; $9624
+    .word   TownPersonTiles+60, TownPersonTiles+80, TownPersonTiles+100 ; $962A
 
-dat_3_9625:
-    .byte   $96, $44, $96, $58, $96, $6C, $96, $80, $96, $94, $96, $28, $10, $20, $10, $08; $9625
+TownPersonTiles:
+    .byte   $28, $10, $20, $10, $08                                         ; $9630
     .byte   $3C, $10, $08, $18, $00, $00, $18, $10, $08, $18, $00, $2C, $08, $18, $00, $44; $9635
     .byte   $10, $20, $2C, $2C, $2C, $2C, $08, $2C, $2C, $00, $18, $10, $08, $18, $00, $2C; $9645
     .byte   $2C, $18, $3C, $44, $2C, $20, $10, $3C, $3C, $3C, $3C, $18, $3C, $00, $18, $10; $9655
@@ -1099,7 +1104,9 @@ dat_3_9625:
     .byte   $34, $34, $34, $18, $34, $00, $18, $10, $08, $18, $00, $10, $08, $18, $3C, $28; $9685
     .byte   $10, $20, $10, $08, $18                                         ; $9695
 
-dat_3_969A:
+; Base for the walking speeds of Townsperson_InitWalking, indexed by
+; type * 2 + facing (1 or 2), so the speeds themselves are further on.
+TownspersonSpeedBase:
     .byte   $10, $08, $18, $00, $00, $18, $10, $08, $18, $00, $10, $3C, $18, $00; $969A
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -1154,13 +1161,13 @@ Generator_Init_Bank3:
 TownspersonGeneratorTypes:
     .byte   $19, $1A, $1B                                                   ; $96D0
 
-dat_3_96D3:
+GeneratorSpeeds:
     .byte   $1C, $10, $F0, $0C, $F4, $08, $F8, $0C, $F4                     ; $96D3
 
-dat_3_96DC:
+GeneratorSpawnXLo:
     .byte   $E0, $08                                                        ; $96DC
 
-dat_3_96DE:
+GeneratorSpawnXHi:
     .byte   $FF, $01                                                        ; $96DE
 
 ; ---------------------------------------------------------------------------
@@ -1217,22 +1224,24 @@ TownspersonGenerator_Ai:
     tay                             ; $971D
     lda     scrollX                 ; $971E
     clc                             ; $9721
-    adc     dat_3_96DC,y            ; $9722
+    adc     GeneratorSpawnXLo,y     ; $9722
     sta     objX+1,x                ; $9725
     lda     scrollXHi               ; $9727
-    adc     dat_3_96DE,y            ; $972A
+    adc     GeneratorSpawnXHi,y     ; $972A
     sta     objXHi+1,x              ; $972D
     iny                             ; $972F
     sty     objFacing+1,x           ; $9730
     tya                             ; $9732
     adc     temp0                   ; $9733
     tay                             ; $9735
-    lda     dat_3_96D3,y            ; $9736
+    lda     GeneratorSpeeds,y       ; $9736
     sta     objXVelocity+1,x        ; $9739
     jsr     Townsperson_Init        ; $973B
     ldx     currentObject           ; $973E
 
-dat_3_9740:
+; The rts byte doubles as the base of a table indexed by facing (1, 2):
+; how far from the door a person starts or stops (-14, +14).
+TownspersonDoorOffsets:
     rts                             ; $9740
     .byte   $F2, $0E                                                        ; $9741
 
@@ -1251,7 +1260,7 @@ Townsperson_InitWalking:
     asl     a                       ; $974A
     adc     temp0                   ; $974B
     tay                             ; $974D
-    lda     dat_3_969A,y            ; $974E
+    lda     TownspersonSpeedBase,y  ; $974E
     sta     objXVelocity+1,x        ; $9751
     jmp     Townsperson_Init        ; $9753
 
@@ -1282,7 +1291,7 @@ Townsperson_InitAtDoor:
     ldy     objFacing+1,x           ; $9761
     lda     objX+1,x                ; $9763
     clc                             ; $9765
-    adc     dat_3_9740,y            ; $9766
+    adc     TownspersonDoorOffsets,y ; $9766
     sta     objX+1,x                ; $9769
 
 ; ---------------------------------------------------------------------------
@@ -1302,7 +1311,9 @@ Townsperson_Init:
     lda     #$90                    ; $977B
     sta     ram_05BD,x              ; $977D
 
-dat_3_9780:
+; The rts byte doubles as the base of a table indexed by facing (1, 2):
+; where the door is relative to the person (+16, +0).
+TownspersonDoorXOffsets:
     rts                             ; $9780
     .byte   $10, $00                                                        ; $9781
 
@@ -1406,7 +1417,7 @@ HouseLady_Ai:
     ldy     objFacing+1,x           ; $97FB
     lda     objX+1,x                ; $97FD
     sec                             ; $97FF
-    sbc     dat_3_9740,y            ; $9800
+    sbc     TownspersonDoorOffsets,y ; $9800
     sta     objX+1,x                ; $9803
     jmp     Door_QueueOpen          ; $9805
 
@@ -1529,7 +1540,7 @@ Townsperson_StartDoor:
     ldy     objFacing+1,x           ; $98AB
     lda     objX+1,x                ; $98AD
     clc                             ; $98AF
-    adc     dat_3_9780,y            ; $98B0
+    adc     TownspersonDoorXOffsets,y ; $98B0
     sta     ram_0599,x              ; $98B3
     lda     objXHi+1,x              ; $98B6
     sta     ram_059F,x              ; $98B8

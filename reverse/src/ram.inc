@@ -169,10 +169,10 @@ oamRotation             = $0485     ; rotates the enemies' sprite slots each fra
 areaNoCeiling           = $0486     ; bit 7 set: the area has no ceiling
 menuRepeatTimer         = $0487     ; frames until a held Up/Down moves a menu cursor again
 menuCursor              = $0488     ; selected menu item: on the continue screen, 0 = Continue, 1 = Save
-dialogColumn            = $0489
-dialogLineOffset        = $048A
-dialogPerson            = $048B
-dialogAlreadyDone       = $048C
+dialogColumn            = $0489     ; column of the next character in the dialog window
+dialogLineOffset        = $048A     ; nametable offset of the current text line ($40 per line)
+dialogPerson            = $048B     ; enemy slot of the person being talked to
+dialogAlreadyDone       = $048C     ; nonzero if the person's gift was already given (their "already done" text)
 ram_048D                = $048D
 enemyDropItem           = $048E     ; [6] item the enemy drops when killed, 0 = none
 linkDeathPending        = $0494     ; nonzero to start the death sequence
@@ -209,7 +209,7 @@ statMeterDisplay        = $0564     ; [2] magic and life as shown on the meters
 menuTimer               = $0566
 fluteActive             = $0567     ; set (to 8) when the flute is played; while set, Flute_Update plays the tune (menuTimer) and Link cannot move
 flutePlayed             = $0568     ; nonzero after the flute is played on the overworld, until its effect is applied
-dialogTextPtr           = $0569
+dialogTextPtr           = $0569     ; (16-bit) next character of the conversation's text
 townCode                = $056B     ; town being visited (provisional)
 palaceCode              = $056C     ; palace being visited (provisional)
 ram_056D                = $056D
@@ -357,8 +357,8 @@ itemOwned               = $0785     ; [8] nonzero if the item is owned; see ITEM
 crystalPlaced           = $078D     ; [6] nonzero once the palace's crystal is placed (provisional)
 keyCount                = $0793     ; number of keys held
 crystalsRemaining       = $0794     ; palaces still to be sealed with a crystal (starts at 6)
-techniques              = $0796     ; sword techniques learned; see TECH_*
-townFlags               = $0797
+techniques              = $0796     ; sword techniques learned (see TECH_*), and quest flags: bit 0 the river man of Saria will help, bit 1 told to ask Error of Ruto
+townFlags               = $0797     ; [8] per town (townCode): bit 0 the mirror found, bits 3-1 people talked to (Dialog_SetTalked); checked by Dialog_CheckTownFlag
 continueCount           = $079F     ; times the continue screen has been shown, saved with the game
 secondQuest             = $07A0     ; nonzero for a second quest file (provisional)
 playerName              = $07A1     ; [8] player name, as tile numbers ($F4 = blank)

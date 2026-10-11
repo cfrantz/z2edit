@@ -2861,9 +2861,9 @@ Mode_LoadWorld:
     tya                             ; $CEDF
     asl     a                       ; $CEE0
     tay                             ; $CEE1
-    lda     dat_3_9624,y            ; $CEE2
+    lda     TownPersonTilePtrs,y    ; $CEE2
     sta     temp0                   ; $CEE5
-    lda     dat_3_9625,y            ; $CEE7
+    lda     TownPersonTilePtrs+1,y  ; $CEE7
     sta     temp1                   ; $CEEA
     ldy     #$13                    ; $CEEC
 

@@ -32,8 +32,7 @@ GLOBALS_INC = 1
 .global Saria_BuildBridge
 .global Game_StartAtNorthCastle
 .global dat_3_8817
-.global dat_3_9624
-.global dat_3_9625
+.global TownPersonTilePtrs
 .global Dialog_Update
 .global dat_4_8470
 .global loc_4_9A46
