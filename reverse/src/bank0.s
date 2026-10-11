@@ -45,7 +45,7 @@ NorthCastle_DrawSprites:
     lda     dat_0_80D5,x            ; $80F2
     sta     oamBuffer+80,x          ; $80F5
     dex                             ; $80F8
-    bpl     @loop                 ; $80F9
+    bpl     @loop                   ; $80F9
     lda     frameCounter            ; $80FB
     and     #$04                    ; $80FD
     bne     @loc_8109               ; $80FF
@@ -321,7 +321,7 @@ Overworld_CheckEncounter:
     cmp     dat_0_8231,y            ; $82A7
     beq     @loc_82B0               ; $82AA
     dey                             ; $82AC
-    bne     @loop                 ; $82AD
+    bne     @loop                   ; $82AD
 
 @done:
     rts                             ; $82AF
@@ -357,7 +357,7 @@ Overworld_CheckEncounter:
     cmp     dat_0_824D,y            ; $82DC
     bcs     @loc_82E4               ; $82DF
     dey                             ; $82E1
-    bne     @loop2                ; $82E2
+    bne     @loop2                  ; $82E2
 
 @loc_82E4:
     tya                             ; $82E4
@@ -372,7 +372,7 @@ Overworld_CheckEncounter:
     beq     @loc_82F7               ; $82EF
     dec     objState                ; $82F1
     dex                             ; $82F3
-    bpl     @loop3                ; $82F4
+    bpl     @loop3                  ; $82F4
     rts                             ; $82F6
 
 @loc_82F7:
@@ -407,7 +407,7 @@ Overworld_CheckEncounter:
     bmi     @done2                  ; $832A
     dex                             ; $832C
     stx     objState                ; $832D
-    bpl     @loop3                ; $832F
+    bpl     @loop3                  ; $832F
 
 @done2:
     rts                             ; $8331
@@ -544,7 +544,7 @@ loc_0_8332:
     dex                             ; $8412
     stx     objState                ; $8413
     bmi     @done                   ; $8415
-    jmp     @loc_8336             ; $8417
+    jmp     @loc_8336               ; $8417
 
 @done:
     rts                             ; $841A
@@ -571,7 +571,7 @@ Overworld_UpdateEncounters:
 
 @loc_842F:
     dex                             ; $842F
-    bpl     @loop                 ; $8430
+    bpl     @loop                   ; $8430
 
 @loc_8432:
     jmp     loc_0_8332              ; $8432
@@ -602,7 +602,7 @@ Overworld_UpdateEncounters:
 @loc_845D:
     tya                             ; $845D
     sta     ram_0575,x              ; $845E
-    jmp     @loc_842F             ; $8461
+    jmp     @loc_842F               ; $8461
 
 @loc_8464:
     lda     oamBuffer+3             ; $8464
@@ -625,7 +625,7 @@ Overworld_UpdateEncounters:
 @loc_8481:
     tya                             ; $8481
     sta     ram_056D,x              ; $8482
-    jmp     @loc_842F             ; $8485
+    jmp     @loc_842F               ; $8485
 
 @loc_8488:
     ldy     #$01                    ; $8488
@@ -641,7 +641,7 @@ Overworld_UpdateEncounters:
     clc                             ; $8499
     adc     objY+1,x                ; $849A
     sta     objY+1,x                ; $849C
-    jmp     @loc_842F             ; $849E
+    jmp     @loc_842F               ; $849E
 
 @loc_84A1:
     tya                             ; $84A1
@@ -649,7 +649,7 @@ Overworld_UpdateEncounters:
     clc                             ; $84A5
     adc     objX+1,x                ; $84A6
     sta     objX+1,x                ; $84A8
-    jmp     @loc_842F             ; $84AA
+    jmp     @loc_842F               ; $84AA
 ; (unreferenced: $84AD-$84AD, 1 bytes)
 
 OverworldDirDX:
@@ -802,7 +802,7 @@ Mode_Overworld:
 
 @loc_8594:
     dex                             ; $8594
-    bpl     @loop                 ; $8595
+    bpl     @loop                   ; $8595
     bmi     loc_0_8601              ; $8597
 
 @loc_8599:
@@ -839,7 +839,7 @@ Mode_Overworld:
 
 @loc_85D2:
     dex                             ; $85D2
-    bpl     @loop2                ; $85D3
+    bpl     @loop2                  ; $85D3
 
 loc_0_85D5:
     ldy     currentRegion           ; $85D5
@@ -1148,7 +1148,7 @@ Overworld_DrawLinkAtX:
     iny                             ; $879D
     iny                             ; $879E
     dex                             ; $879F
-    bpl     @loop                 ; $87A0
+    bpl     @loop                   ; $87A0
     rts                             ; $87A2
 
 dat_0_87A3:
@@ -1192,7 +1192,7 @@ Mode_IndexOverworldMap:
     txa                             ; $8822
     lsr     a                       ; $8823
     cmp     #$4B                    ; $8824
-    bne     @loop                 ; $8826
+    bne     @loop                   ; $8826
     lda     #$00                    ; $8828
     sta     overworldDrawStep       ; $882A
 
@@ -1213,7 +1213,7 @@ Mode_IndexOverworldMap:
     sta     ppuBuffer0              ; $8849
     lda     overworldDrawStep       ; $884C
     cmp     #$06                    ; $884E
-    bne     @loop2                ; $8850
+    bne     @loop2                  ; $8850
     inc     overworldTargetY        ; $8852
     lda     overworldTargetY        ; $8854
     jsr     Math_DivMod15           ; $8856
@@ -1229,13 +1229,13 @@ Mode_IndexOverworldMap:
     ldx     #$00                    ; $8867
     stx     overworldDrawStep       ; $8869
     dec     objXVelocity+1          ; $886B
-    bne     @loop2                ; $886D
+    bne     @loop2                  ; $886D
     ldy     #$07                    ; $886F
 
 @loop3:
     stx     objState+2,y            ; $8871
     dey                             ; $8873
-    bpl     @loop3                ; $8874
+    bpl     @loop3                  ; $8874
     inx                             ; $8876
     stx     objYHi+13               ; $8877
     lda     #$08                    ; $8879
@@ -1252,7 +1252,7 @@ Mode_IndexOverworldMap:
 
 @loc_8895:
     ldx     #$00                    ; $8895
-    stx     ram_00EA                ; $8897
+    stx     soundMute               ; $8897
     lda     ram_05E9                ; $8899
     sta     sfxRequest+2            ; $889C
 
@@ -1355,7 +1355,7 @@ Overworld_SetupDrawRow:
     jsr     Overworld_ReadMapRun    ; $892D
     iny                             ; $8930
     cmp     overworldTargetX        ; $8931
-    bcc     @loop2                ; $8933
+    bcc     @loop2                  ; $8933
     lda     temp2                   ; $8935
     sta     overworldBuffer+$D0,x   ; $8937
 
@@ -1363,7 +1363,7 @@ Overworld_SetupDrawRow:
     inc     temp10                  ; $893A
     inx                             ; $893C
     cpx     #$18                    ; $893D
-    bne     @loop                 ; $893F
+    bne     @loop                   ; $893F
 
 @loc_8941:
     inc     overworldDrawStep       ; $8941
@@ -1469,7 +1469,7 @@ loc_0_8948:
     bcs     @loc_89E6               ; $89E1
 
 @loc_89E3:
-    jmp     @loc_895E             ; $89E3
+    jmp     @loc_895E               ; $89E3
 
 @loc_89E6:
     lda     temp6                   ; $89E6
@@ -1531,7 +1531,7 @@ loc_0_8A1A:
 @loc_8A31:
     lda     ram_0077                ; $8A31
     lsr     a                       ; $8A33
-    bcs     @loc_8A2C             ; $8A34
+    bcs     @loc_8A2C               ; $8A34
 
 @loc_8A36:
     jsr     Overworld_ShiftRowBuffer ; $8A36
@@ -1552,7 +1552,7 @@ Overworld_ShiftRowBuffer:
     lda     overworldBuffer+$70,y   ; $8A4D
     sta     overworldBuffer+$10,y   ; $8A50
     dey                             ; $8A53
-    bpl     @loop                 ; $8A54
+    bpl     @loop                   ; $8A54
     rts                             ; $8A56
 
 Overworld_ScrollRowBuffer:
@@ -1573,7 +1573,7 @@ Overworld_ScrollRowBuffer:
     sta     overworldBuffer+$70,y   ; $8A6F
     iny                             ; $8A72
     dex                             ; $8A73
-    bne     @loop                 ; $8A74
+    bne     @loop                   ; $8A74
 
 @loc_8A76:
     inc     overworldDrawStep       ; $8A76
@@ -1643,7 +1643,7 @@ loc_0_8A79:
     inc     temp14                  ; $8AF2
     lda     temp14                  ; $8AF4
     cmp     #$08                    ; $8AF6
-    bcc     @loop                 ; $8AF8
+    bcc     @loop                   ; $8AF8
     lda     #$FF                    ; $8AFA
     sta     ppuBuffer0+11           ; $8AFC
     inc     overworldDrawStep       ; $8AFF
@@ -1673,7 +1673,7 @@ loc_0_8B1A:
     lda     overworldBuffer+$D0,x   ; $8B1C
     sta     overworldBuffer+$E8,x   ; $8B1F
     dex                             ; $8B22
-    bpl     @loop                 ; $8B23
+    bpl     @loop                   ; $8B23
     jsr     Overworld_SetupDrawRow  ; $8B25
     pla                             ; $8B28
     sta     overworldTargetX        ; $8B29
@@ -1839,7 +1839,7 @@ loc_0_8BFE:
 @loop:
     sta     overworldBuffer+$8B,x   ; $8C02
     dex                             ; $8C05
-    bpl     @loop                 ; $8C06
+    bpl     @loop                   ; $8C06
     ldx     #$14                    ; $8C08
     ldy     currentRegion           ; $8C0A
     cpy     #$02                    ; $8C0D
@@ -1881,7 +1881,7 @@ Overworld_DecodeRow:
     sta     overworldBuffer+$80,x   ; $8C39
     inx                             ; $8C3C
     cpx     temp3                   ; $8C3D
-    bne     @loop                 ; $8C3F
+    bne     @loop                   ; $8C3F
     iny                             ; $8C41
     jmp     Overworld_DecodeRow     ; $8C42
 
@@ -1961,7 +1961,7 @@ loc_0_8C57:
     inc     temp0                   ; $8CA6
     lda     temp0                   ; $8CA8
     and     #$0F                    ; $8CAA
-    bne     @loc_8C78             ; $8CAC
+    bne     @loc_8C78               ; $8CAC
     lda     #$FF                    ; $8CAE
     sta     ppuBuffer0+35           ; $8CB0
     lda     ram_007A                ; $8CB3
@@ -1989,17 +1989,27 @@ loc_0_8C57:
 @done:
     rts                             ; $8CDC
 
-dat_0_8CDD:
+Sprite0Init:
     .byte   $0E, $C5, $21, $6A                                              ; $8CDD
 
-loc_0_8CE1:
+; ---------------------------------------------------------------------------
+; SideView_Start
+;
+; Start side view play: place sprite 0 for the status bar split
+; (Sprite0Init), clear the spell, object and PPU buffers, restore the
+; scroll for areaStartPage from the SRAM page tables, reseed rng, start
+; the area's music and turn rendering on.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+SideView_Start:
     ldy     #$03                    ; $8CE1
 
 @loop:
-    lda     dat_0_8CDD,y            ; $8CE3
+    lda     Sprite0Init,y           ; $8CE3
     sta     oamBuffer,y             ; $8CE6
     dey                             ; $8CE9
-    bpl     @loop                 ; $8CEA
+    bpl     @loop                   ; $8CEA
     lda     #$06                    ; $8CEC
     sta     ram_0768                ; $8CEE
     ldy     #$00                    ; $8CF1
@@ -2010,7 +2020,7 @@ loc_0_8CE1:
     sta     ram_0300,y              ; $8CF7
     sta     overworldBuffer+$00,y   ; $8CFA
     dey                             ; $8CFD
-    bne     @loop2                ; $8CFE
+    bne     @loop2                  ; $8CFE
     sta     scrollFrozen            ; $8D00
     sta     spellFlash              ; $8D03
     dey                             ; $8D06
@@ -2158,14 +2168,14 @@ Spell_Update:
     pla                             ; $8E35
     tay                             ; $8E36
     dey                             ; $8E37
-    bpl     @loop                 ; $8E38
+    bpl     @loop                   ; $8E38
     rts                             ; $8E3A
 
 @loc_8E3B:
     cmp     #$FF                    ; $8E3B
     bne     @loc_8E1F               ; $8E3D
     lda     #$00                    ; $8E3F
-    jmp     @loc_8DF5             ; $8E41
+    jmp     @loc_8DF5               ; $8E41
 
 ; ---------------------------------------------------------------------------
 ; Spell_RunEffect
@@ -2311,7 +2321,7 @@ BigDoor_Update:
     pla                             ; $8F31
     sec                             ; $8F32
     sbc     #$01                    ; $8F33
-    bpl     @loop                 ; $8F35
+    bpl     @loop                   ; $8F35
     lda     ram_0764                ; $8F37
     bne     @loc_8F4F               ; $8F3A
     ldx     #$00                    ; $8F3C
@@ -2321,7 +2331,7 @@ BigDoor_Update:
     sta     ppuBuffer1,x            ; $8F41
     inx                             ; $8F44
     cpx     #$18                    ; $8F45
-    bne     @loop2                ; $8F47
+    bne     @loop2                  ; $8F47
     inc     ram_0764                ; $8F49
     dec     bigDoorCounter          ; $8F4C
 
@@ -2358,7 +2368,7 @@ Ppu_QueueString10:
     inx                             ; $8F73
     iny                             ; $8F74
     cpy     #$0A                    ; $8F75
-    bne     @loop                 ; $8F77
+    bne     @loop                   ; $8F77
     rts                             ; $8F79
 
 dat_0_8F7A:
@@ -2394,12 +2404,12 @@ BigDoor_DrawOpen:
     cmp     #$B0                    ; $8F9A
     bcs     @loc_8FA4               ; $8F9C
     lda     dat_0_8F7F,x            ; $8F9E
-    jmp     @loc_8F97             ; $8FA1
+    jmp     @loc_8F97               ; $8FA1
 
 @loc_8FA4:
     inc     temp2                   ; $8FA4
     dex                             ; $8FA6
-    bpl     @loc_8F92             ; $8FA7
+    bpl     @loc_8F92               ; $8FA7
     rts                             ; $8FA9
 
 dat_0_8FAA:
@@ -2459,7 +2469,7 @@ Mode_FallAnimate:
     lda     dat_0_8FAA,x            ; $8FFA
     sta     ppuBuffer0,x            ; $8FFD
     dex                             ; $9000
-    bpl     @loop                 ; $9001
+    bpl     @loop                   ; $9001
     inc     ram_0484                ; $9003
     ldy     ram_0484                ; $9006
     cpy     #$03                    ; $9009
@@ -2531,7 +2541,7 @@ Link_EnterArea:
 @loop:
     sta     objState+7,x            ; $9059
     dex                             ; $905B
-    bpl     @loop                 ; $905C
+    bpl     @loop                   ; $905C
     ldy     areaStartPage           ; $905E
     cpy     #$04                    ; $9061
     bcs     @loc_9079               ; $9063
@@ -2677,7 +2687,7 @@ Area_PlaceElevatorAndDoor:
     sta     enemyActive+4           ; $9146
     sta     enemyActive+5           ; $9148
     sta     areaLastPage            ; $914A
-    bpl     @loc_911E             ; $914C
+    bpl     @loc_911E               ; $914C
 
 dat_0_914E:
     .byte   $10, $C0                                                        ; $914E
@@ -2789,7 +2799,7 @@ loc_0_91AF:
 
 @loc_91E2:
     dex                             ; $91E2
-    bpl     @loop                 ; $91E3
+    bpl     @loop                   ; $91E3
     rts                             ; $91E5
 ; (end of code not executed in the test movies)
 
@@ -2839,7 +2849,7 @@ Spell_ThunderEffect:
 
 @loc_922D:
     dex                             ; $922D
-    bpl     @loop                 ; $922E
+    bpl     @loop                   ; $922E
     pla                             ; $9230
     sta     currentObject           ; $9231
     tax                             ; $9233
@@ -3019,7 +3029,7 @@ Link_Control:
     lda     ram_049C                ; $9341
     beq     @loc_936B               ; $9344
     dec     ram_049C                ; $9346
-    lda     ram_07FB                ; $9349
+    lda     musicPlaying            ; $9349
     beq     @loc_936B               ; $934C
     lda     objY                    ; $934E
     clc                             ; $9350
@@ -3678,7 +3688,7 @@ loc_0_96B7:
     sta     ppuBuffer0+10,y         ; $96EC
     dey                             ; $96EF
     dex                             ; $96F0
-    bne     @loop                 ; $96F1
+    bne     @loop                   ; $96F1
     iny                             ; $96F3
     lda     statMeter               ; $96F4
     sta     statMeterDisplay        ; $96F7
@@ -3695,7 +3705,7 @@ loc_0_96B7:
     lda     #$C6                    ; $9705
     sta     ppuBuffer0+10,y         ; $9707
     iny                             ; $970A
-    jmp     @loc_9701             ; $970B
+    jmp     @loc_9701               ; $970B
 
 loc_0_970E:
     lda     ram_0750                ; $970E
@@ -3725,7 +3735,7 @@ loc_0_9723:
     iny                             ; $9734
     inx                             ; $9735
     cpx     #$18                    ; $9736
-    bcc     @loop                 ; $9738
+    bcc     @loop                   ; $9738
     tya                             ; $973A
     pha                             ; $973B
     ldy     ppuBuffer0Len           ; $973C
@@ -3771,7 +3781,7 @@ loc_0_9723:
     sta     ppuBuffer0+7,y          ; $9794
     dey                             ; $9797
     dex                             ; $9798
-    bne     @loop2                ; $9799
+    bne     @loop2                  ; $9799
     iny                             ; $979B
     lda     statMeter+STAT_METER_LIFE ; $979C
     sta     statMeterDisplay+1      ; $979F
@@ -3788,7 +3798,7 @@ loc_0_9723:
     lda     #$C7                    ; $97AD
     sta     ppuBuffer0+7,y          ; $97AF
     iny                             ; $97B2
-    jmp     @loc_97A9             ; $97B3
+    jmp     @loc_97A9               ; $97B3
 
 @loc_97B6:
     jmp     loc_0_970E              ; $97B6
@@ -3833,7 +3843,7 @@ loc_0_97BB:
     pla                             ; $97EB
     tax                             ; $97EC
     dex                             ; $97ED
-    bpl     @loop                 ; $97EE
+    bpl     @loop                   ; $97EE
     rts                             ; $97F0
 
 Spell_FireEffect:
@@ -3858,7 +3868,7 @@ loc_0_97FC:
     lda     objState+13,x           ; $980C
     beq     loc_0_981B              ; $980E
     dex                             ; $9810
-    bpl     @loop                 ; $9811
+    bpl     @loop                   ; $9811
 
 @loc_9813:
     clc                             ; $9813
@@ -4220,7 +4230,7 @@ Scroll_DrawColumnStep:
 @loop:
     sta     attrColumn,x            ; $9A12
     dex                             ; $9A15
-    bne     @loop                 ; $9A16
+    bne     @loop                   ; $9A16
 
 @loc_9A18:
     lda     columnDrawStep          ; $9A18
@@ -4267,7 +4277,7 @@ Scroll_AdvanceColumn:
 
 @loc_9A56:
     dex                             ; $9A56
-    bpl     @loop                 ; $9A57
+    bpl     @loop                   ; $9A57
     rts                             ; $9A59
 
 @loc_9A5A:
@@ -4312,7 +4322,7 @@ loc_0_9A77:
     tay                             ; $9A99
     inx                             ; $9A9A
     cpx     #$0D                    ; $9A9B
-    bne     @loop                 ; $9A9D
+    bne     @loop                   ; $9A9D
     rts                             ; $9A9F
 
 dat_0_9AA0:
@@ -4438,7 +4448,7 @@ Menu_DrawItems:
 
 @loc_9B56:
     dey                             ; $9B56
-    bpl     @loop                 ; $9B57
+    bpl     @loop                   ; $9B57
     rts                             ; $9B59
 
 PauseMenuRowPtrs:
@@ -4497,22 +4507,31 @@ LevelUpPromptRows:
     .byte   $CC, $F4, $F4, $F4, $D0, $F4, $F4, $F0, $E2, $E5, $E5, $F4, $F4, $CC; $9D32
     .byte   $CC, $F4, $F4, $F4, $F4, $F4, $F4, $E0, $E8, $F4, $EE, $E9, $F4, $CC; $9D40
 
-dat_0_9D4E:
-    .byte   $9F                                                             ; $9D4E
+LevelUpBarPtrs:
+    .word   sramMenuText+159, sramMenuText+173, sramMenuText+187 ; $9D4E
 
-dat_0_9D4F:
-    .byte   $78, $AD, $78, $BB, $78                                         ; $9D4F
-
-loc_0_9D54:
+; ---------------------------------------------------------------------------
+; LevelUp_Update
+;
+; The level up window (dialogType = DIALOG_LEVEL_UP), from the game NMI:
+; split the screen under the status bar, then run the step for pauseState:
+; copy and fill in the window's text (LevelUp_FillText), open the window a
+; row at a time, let the player choose a stat (LevelUp_ChooseStat), blink
+; the choice while the fanfare plays, then close the window (Menu_CloseRow)
+; and clear the dialog (Menu_Close).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+LevelUp_Update:
     ldy     #$50                    ; $9D54
 
 @loop:
     dey                             ; $9D56
-    bne     @loop                 ; $9D57
+    bne     @loop                   ; $9D57
 
 @loop2:
     bit     PPUSTATUS               ; $9D59
-    bvc     @loop2                ; $9D5C
+    bvc     @loop2                  ; $9D5C
     lda     ppuCtrlShadow           ; $9D5E
     ora     playfieldNametable      ; $9D60
     sta     ppuCtrlShadow           ; $9D63
@@ -4521,43 +4540,52 @@ loc_0_9D54:
 
 @loop3:
     dey                             ; $9D69
-    bne     @loop3                ; $9D6A
+    bne     @loop3                  ; $9D6A
     sta     PPUCTRL                 ; $9D6C
     stx     PPUSCROLL               ; $9D6F
     sty     PPUSCROLL               ; $9D72
     lda     pauseState              ; $9D75
     jsr     JumpTable               ; $9D78
 ; (inline jump table)
-    .word   loc_0_A199              ; $9D7B
-    .word   loc_0_A347              ; $9D7D
-    .word   loc_0_9FCE              ; $9D7F
-    .word   loc_0_A26B              ; $9D81
-    .word   loc_0_A2F8              ; $9D83
-    .word   loc_0_9E7A              ; $9D85
-    .word   loc_0_A68B              ; $9D87
-    .word   loc_0_A0F1              ; $9D89
-    .word   loc_0_A26B              ; $9D8B
+    .word   Menu_Skip               ; $9D7B
+    .word   Menu_CopyTextTemplate   ; $9D7D
+    .word   LevelUp_FillText        ; $9D7F
+    .word   Menu_ComputeAttrs       ; $9D81
+    .word   LevelUp_OpenRow         ; $9D83
+    .word   LevelUp_ChooseStat      ; $9D85
+    .word   LevelUp_ApplyChoice     ; $9D87
+    .word   LevelUp_BlinkChoice     ; $9D89
+    .word   Menu_ComputeAttrs       ; $9D8B
     .word   Menu_CloseRow           ; $9D8D
-    .word   loc_0_A338              ; $9D8F
+    .word   Menu_Close              ; $9D8F
 
-loc_0_9D91:
+; ---------------------------------------------------------------------------
+; Pause_Update
+;
+; The side view pause menu, from the game NMI.  While not paused, Start
+; pauses (pauseState 1).  While paused, split the screen and run the step
+; for pauseState (Pause_RunState).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_Update:
     lda     pauseState              ; $9D91
-    bne     loc_0_9DCD              ; $9D94
+    bne     Pause_RunState          ; $9D94
     lda     joypadHeldPrev          ; $9D96
     and     #$10                    ; $9D99
     sta     temp0                   ; $9D9B
     lda     joypadHeld              ; $9D9D
     and     #$10                    ; $9D9F
-    beq     loc_0_9DCC              ; $9DA1
+    beq     Pause_DoNothing         ; $9DA1
     cmp     temp0                   ; $9DA3
-    beq     loc_0_9DCC              ; $9DA5
+    beq     Pause_DoNothing         ; $9DA5
     inc     pauseState              ; $9DA7
     ldy     #$00                    ; $9DAA
 
 @loop:
     nop                             ; $9DAC
     dey                             ; $9DAD
-    bne     @loop                 ; $9DAE
+    bne     @loop                   ; $9DAE
 
 ; ---------------------------------------------------------------------------
 ; Hud_SplitScreen
@@ -4578,15 +4606,33 @@ Hud_SplitScreen:
 
 @loop:
     dey                             ; $9DC0
-    bne     @loop                 ; $9DC1
+    bne     @loop                   ; $9DC1
     sta     PPUCTRL                 ; $9DC3
     stx     PPUSCROLL               ; $9DC6
     sty     PPUSCROLL               ; $9DC9
 
-loc_0_9DCC:
+; ---------------------------------------------------------------------------
+; Pause_DoNothing
+;
+; A pause menu step that does nothing (pauseState 0 in Pause_RunState).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_DoNothing:
     rts                             ; $9DCC
 
-loc_0_9DCD:
+; ---------------------------------------------------------------------------
+; Pause_RunState
+;
+; Run the pause menu step for pauseState: copy the menu text template
+; (1), fill in the counts and spell costs (2), compute the window's
+; attributes (3), open the window a row at a time (4), wait in the open
+; menu (5, Pause_MenuOpen), recompute the attributes (6), close the window
+; (7) and clear the menu (8).  The item list is redrawn in states 5-6.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_RunState:
     jsr     Hud_SplitScreen         ; $9DCD
     lda     pauseState              ; $9DD0
     cmp     #$05                    ; $9DD3
@@ -4599,15 +4645,15 @@ loc_0_9DCD:
     lda     pauseState              ; $9DDE
     jsr     JumpTable               ; $9DE1
 ; (inline jump table)
-    .word   loc_0_9DCC              ; $9DE4
-    .word   loc_0_A347              ; $9DE6
-    .word   loc_0_A148              ; $9DE8
-    .word   loc_0_A26B              ; $9DEA
-    .word   loc_0_A2FE              ; $9DEC
-    .word   loc_0_A1DD              ; $9DEE
-    .word   loc_0_A26B              ; $9DF0
+    .word   Pause_DoNothing         ; $9DE4
+    .word   Menu_CopyTextTemplate   ; $9DE6
+    .word   Pause_FillText          ; $9DE8
+    .word   Menu_ComputeAttrs       ; $9DEA
+    .word   Pause_OpenRow           ; $9DEC
+    .word   Pause_MenuOpen          ; $9DEE
+    .word   Menu_ComputeAttrs       ; $9DF0
     .word   Menu_CloseRow           ; $9DF2
-    .word   loc_0_A338              ; $9DF4
+    .word   Menu_Close              ; $9DF4
 
 ; ---------------------------------------------------------------------------
 ; Menu_MoveCursor
@@ -4648,52 +4694,49 @@ Menu_MoveCursor:
     clc                             ; $9E1D
     rts                             ; $9E1E
 
-dat_0_9E1F:
+LevelUpCursorString:
     .byte   $00, $00, $01, $F4                                              ; $9E1F
 
-dat_0_9E23:
+LevelUpBarTiles:
     .byte   $C9, $FA, $F8                                                   ; $9E23
 
-dat_0_9E26:
-    .byte   $C4                                                             ; $9E26
+LevelUpPromptPtrs:
+    .word   sramMenuText+196, sramMenuText+210, sramMenuText+224 ; $9E26
 
-dat_0_9E27:
-    .byte   $78, $D2, $78, $E0, $78                                         ; $9E27
+LevelUpPromptPtrs2:
+    .word   sramMenuText+238, sramMenuText+252, sramMenuText+266 ; $9E2C
 
-dat_0_9E2C:
-    .byte   $EE                                                             ; $9E2C
+LevelUpCostTens:
+    .byte   $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0; $9E32
+    .byte   $D5, $D5, $D0, $D0, $D0, $D0, $D0, $D0                          ; $9E42
 
-dat_0_9E2D:
-    .byte   $78, $FC, $78, $0A                                              ; $9E2D
-
-dat_0_9E31:
-    .byte   $79, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0, $D0; $9E31
-    .byte   $D0, $D5                                                        ; $9E41
-; (unreferenced: $9E43-$9E49, 7 bytes)
-    .byte   $D5, $D0, $D0, $D0, $D0, $D0                                    ; $9E43
-
-dat_0_9E49:
-    .byte   $D0                                                             ; $9E49
+LevelUpCostHundreds:
     .byte   $D2, $D5, $D0, $D0, $D0, $D0, $D0, $D0, $D1, $D3, $D7, $D2, $D2, $D5, $D0, $D0; $9E4A
-    .byte   $F4                                                             ; $9E5A
-; (unreferenced: $9E5B-$9E61, 7 bytes)
-    .byte   $D1, $D4, $D8, $D5, $D5, $D0                                    ; $9E5B
+    .byte   $F4, $D1, $D4, $D8, $D5, $D5, $D0, $D0                          ; $9E5A
 
-dat_0_9E61:
-    .byte   $D0                                                             ; $9E61
+LevelUpCostThousands:
     .byte   $F4, $F4, $D1, $D2, $D3, $D5, $D8, $D9, $F4, $F4, $F4, $D1, $D2, $D3, $D6, $D9; $9E62
-    .byte   $F4                                                             ; $9E72
-; (unreferenced: $9E73-$9E79, 7 bytes)
-    .byte   $F4, $F4, $F4, $D1, $D2, $D4, $D9                               ; $9E73
+    .byte   $F4, $F4, $F4, $F4, $D1, $D2, $D4, $D9                          ; $9E72
 
-loc_0_9E7A:
+; ---------------------------------------------------------------------------
+; LevelUp_ChooseStat
+;
+; Level up window step 5: move levelUpCursor among the stats that
+; experience can raise (attack, magic, life) and Cancel with Up and Down,
+; drawing the cursor.  On Start, raise the chosen stat (or, at level 8,
+; add a life), take its cost from experience, recompute experienceNext
+; and redraw the level bars; or on Cancel just recompute experienceNext.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+LevelUp_ChooseStat:
     jsr     Menu_MoveCursor         ; $9E7A
     bcs     @loc_9E82               ; $9E7D
     jmp     @loc_9F3D               ; $9E7F
 
 @loc_9E82:
     and     #$08                    ; $9E82
-    ldy     ram_074E                ; $9E84
+    ldy     levelUpCursor           ; $9E84
     iny                             ; $9E87
     bit     temp0                   ; $9E88
     beq     @loc_9E92               ; $9E8A
@@ -4710,7 +4753,7 @@ loc_0_9E7A:
 ; (end of code not executed in the test movies)
 
 @loc_9E98:
-    sty     ram_074E                ; $9E98
+    sty     levelUpCursor           ; $9E98
     cpy     #$03                    ; $9E9B
     beq     @loc_9EBA               ; $9E9D
     tya                             ; $9E9F
@@ -4746,7 +4789,7 @@ loc_0_9E7A:
     ldx     #$00                    ; $9ED0
 
 @loop:
-    lda     dat_0_9E1F,x            ; $9ED2
+    lda     LevelUpCursorString,x   ; $9ED2
     sta     ppuBuffer0,y            ; $9ED5
     inx                             ; $9ED8
     txa                             ; $9ED9
@@ -4754,7 +4797,7 @@ loc_0_9E7A:
     tax                             ; $9EDC
     iny                             ; $9EDD
     cpy     #$10                    ; $9EDE
-    bcc     @loop                 ; $9EE0
+    bcc     @loop                   ; $9EE0
     lda     scrollX                 ; $9EE2
     clc                             ; $9EE5
     adc     #$A8                    ; $9EE6
@@ -4789,7 +4832,7 @@ loc_0_9E7A:
     inc     ppuBuffer0+12           ; $9F22
     lda     #$FF                    ; $9F25
     sta     ppuBuffer0+16           ; $9F27
-    ldy     ram_074E                ; $9F2A
+    ldy     levelUpCursor           ; $9F2A
     iny                             ; $9F2D
     cpy     #$04                    ; $9F2E
     bne     @loc_9F34               ; $9F30
@@ -4810,7 +4853,7 @@ loc_0_9E7A:
     bne     @done                   ; $9F44
     and     #$10                    ; $9F46
     beq     @done                   ; $9F48
-    ldx     ram_074E                ; $9F4A
+    ldx     levelUpCursor           ; $9F4A
     cpx     #$03                    ; $9F4D
     beq     @loc_9FBD               ; $9F4F
     lda     #$10                    ; $9F51
@@ -4834,11 +4877,11 @@ loc_0_9E7A:
     lda     experience              ; $9F6E
     sbc     LevelUpCostHi,y         ; $9F71
     sta     experience              ; $9F74
-    ldx     ram_074E                ; $9F77
+    ldx     levelUpCursor           ; $9F77
     lda     statLevel,x             ; $9F7A
     cmp     #$08                    ; $9F7D
     bcs     @loc_9FC3               ; $9F7F
-    ldx     ram_074E                ; $9F81
+    ldx     levelUpCursor           ; $9F81
     inc     statLevel,x             ; $9F84
 
 @loc_9F87:
@@ -4853,9 +4896,9 @@ loc_0_9E7A:
     txa                             ; $9F94
     asl     a                       ; $9F95
     tay                             ; $9F96
-    lda     dat_0_9D4E,y            ; $9F97
+    lda     LevelUpBarPtrs,y        ; $9F97
     sta     temp0                   ; $9F9A
-    lda     dat_0_9D4F,y            ; $9F9C
+    lda     LevelUpBarPtrs+1,y      ; $9F9C
     sta     temp1                   ; $9F9F
     lda     statLevel,x             ; $9FA1
     sta     temp2                   ; $9FA4
@@ -4865,14 +4908,14 @@ loc_0_9E7A:
     lda     #$F4                    ; $9FA8
     cpy     temp2                   ; $9FAA
     bcs     @loc_9FB1               ; $9FAC
-    lda     dat_0_9E23,x            ; $9FAE
+    lda     LevelUpBarTiles,x       ; $9FAE
 
 @loc_9FB1:
     sta     (temp0),y               ; $9FB1
     dey                             ; $9FB3
-    bpl     @loop3                ; $9FB4
+    bpl     @loop3                  ; $9FB4
     dex                             ; $9FB6
-    bpl     @loop2                ; $9FB7
+    bpl     @loop2                  ; $9FB7
 
 @loc_9FB9:
     inc     pauseState              ; $9FB9
@@ -4882,30 +4925,41 @@ loc_0_9E7A:
 
 @loc_9FBD:
     jsr     Exp_UpdateAfterLevelUp  ; $9FBD
-    jmp     @loc_9FB9             ; $9FC0
+    jmp     @loc_9FB9               ; $9FC0
 ; (code below not executed in the test movies)
 
 @loc_9FC3:
     inc     lives                   ; $9FC3
-    bpl     @loc_9F87             ; $9FC6
+    bpl     @loc_9F87               ; $9FC6
     dec     lives                   ; $9FC8
-    jmp     @loc_9F87             ; $9FCB
+    jmp     @loc_9F87               ; $9FCB
 ; (end of code not executed in the test movies)
 
-loc_0_9FCE:
+; ---------------------------------------------------------------------------
+; LevelUp_FillText
+;
+; Level up window step 2: for each stat, write its next level cost (three
+; digits from LevelUpCostThousands/Hundreds/Tens) into sramMenuText, and
+; the prompt rows (LevelUpPromptRows) where experience is enough; the
+; cursor starts on the last stat that can be raised.  Then draw each
+; stat's level bar (LevelUpBarTiles).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+LevelUp_FillText:
     ldx     #$02                    ; $9FCE
 
 @loop:
     txa                             ; $9FD0
     asl     a                       ; $9FD1
     tay                             ; $9FD2
-    lda     dat_0_9E26,y            ; $9FD3
+    lda     LevelUpPromptPtrs,y     ; $9FD3
     sta     temp0                   ; $9FD6
-    lda     dat_0_9E27,y            ; $9FD8
+    lda     LevelUpPromptPtrs+1,y   ; $9FD8
     sta     temp1                   ; $9FDB
-    lda     dat_0_9E2C,y            ; $9FDD
+    lda     LevelUpPromptPtrs2,y    ; $9FDD
     sta     temp2                   ; $9FE0
-    lda     dat_0_9E2D,y            ; $9FE2
+    lda     LevelUpPromptPtrs2+1,y  ; $9FE2
     sta     temp3                   ; $9FE5
     txa                             ; $9FE7
     pha                             ; $9FE8
@@ -4921,7 +4975,7 @@ loc_0_9FCE:
     lda     experience              ; $9FF8
     sbc     LevelUpCostHi,y         ; $9FFB
     bcc     @loc_A012               ; $9FFE
-    stx     ram_074E                ; $A000
+    stx     levelUpCursor           ; $A000
     ldy     #$0D                    ; $A003
 
 @loop2:
@@ -4930,33 +4984,33 @@ loc_0_9FCE:
     lda     LevelUpPromptRows+14,y  ; $A00A
     sta     (temp2),y               ; $A00D
     dey                             ; $A00F
-    bpl     @loop2                ; $A010
+    bpl     @loop2                  ; $A010
 
 @loc_A012:
     pla                             ; $A012
     tax                             ; $A013
     ldy     #$01                    ; $A014
-    lda     dat_0_9E61,x            ; $A016
+    lda     LevelUpCostThousands - 1,x ; $A016
     sta     (temp0),y               ; $A019
     iny                             ; $A01B
-    lda     dat_0_9E49,x            ; $A01C
+    lda     LevelUpCostHundreds - 1,x ; $A01C
     sta     (temp0),y               ; $A01F
     iny                             ; $A021
-    lda     dat_0_9E31,x            ; $A022
+    lda     LevelUpCostTens - 1,x   ; $A022
     sta     (temp0),y               ; $A025
     pla                             ; $A027
     tax                             ; $A028
     dex                             ; $A029
-    bpl     @loop                 ; $A02A
+    bpl     @loop                   ; $A02A
     ldx     #$02                    ; $A02C
 
 @loop3:
     txa                             ; $A02E
     asl     a                       ; $A02F
     tay                             ; $A030
-    lda     dat_0_9D4E,y            ; $A031
+    lda     LevelUpBarPtrs,y        ; $A031
     sta     temp0                   ; $A034
-    lda     dat_0_9D4F,y            ; $A036
+    lda     LevelUpBarPtrs+1,y      ; $A036
     sta     temp1                   ; $A039
     lda     statLevel,x             ; $A03B
     sta     temp2                   ; $A03E
@@ -4966,14 +5020,14 @@ loc_0_9FCE:
     lda     #$F4                    ; $A042
     cpy     temp2                   ; $A044
     bcs     @loc_A04B               ; $A046
-    lda     dat_0_9E23,x            ; $A048
+    lda     LevelUpBarTiles,x       ; $A048
 
 @loc_A04B:
     sta     (temp0),y               ; $A04B
     dey                             ; $A04D
-    bpl     @loop4                ; $A04E
+    bpl     @loop4                  ; $A04E
     dex                             ; $A050
-    bpl     @loop3                ; $A051
+    bpl     @loop3                  ; $A051
     inc     pauseState              ; $A053
     rts                             ; $A056
 
@@ -5011,7 +5065,7 @@ Exp_ComputeNext:
 
 @loc_A084:
     dex                             ; $A084
-    bpl     @loop                 ; $A085
+    bpl     @loop                   ; $A085
     rts                             ; $A087
 
 Exp_UpdateAfterLevelUp:
@@ -5056,7 +5110,7 @@ Exp_ComputeNextOfLevelUps:
 
 @loc_A0CA:
     dex                             ; $A0CA
-    bpl     @loop                 ; $A0CB
+    bpl     @loop                   ; $A0CB
     rts                             ; $A0CD
 
 ; ---------------------------------------------------------------------------
@@ -5090,35 +5144,51 @@ Exp_FindLevelUps:
 
 @loc_A0ED:
     dex                             ; $A0ED
-    bpl     @loop                 ; $A0EE
+    bpl     @loop                   ; $A0EE
 
-loc_0_A0F0:
+; ---------------------------------------------------------------------------
+; Exp_FindLevelUpsDone
+;
+; Return (shared tail of Exp_FindLevelUps).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Exp_FindLevelUpsDone:
     rts                             ; $A0F0
 
-loc_0_A0F1:
+; ---------------------------------------------------------------------------
+; LevelUp_BlinkChoice
+;
+; Level up window step 7: while the level up fanfare plays
+; (musicPlaying = $10), blink the chosen stat's prompt row.  Then go to
+; the next step.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+LevelUp_BlinkChoice:
     dec     menuRepeatTimer         ; $A0F1
-    lda     ram_07FB                ; $A0F4
+    lda     musicPlaying            ; $A0F4
     cmp     #$10                    ; $A0F7
     beq     @loc_A0FE               ; $A0F9
-    jmp     loc_0_A325              ; $A0FB
+    jmp     Menu_NextState          ; $A0FB
 
 @loc_A0FE:
     lda     ppuBuffer0Len           ; $A0FE
-    bne     loc_0_A0F0              ; $A101
+    bne     Exp_FindLevelUpsDone    ; $A101
     lda     menuRow                 ; $A103
     cmp     #$03                    ; $A106
     beq     @loc_A140               ; $A108
     pha                             ; $A10A
-    ldy     ram_074E                ; $A10B
-    lda     dat_0_A688,y            ; $A10E
+    ldy     levelUpCursor           ; $A10B
+    lda     LevelUpStatRows,y       ; $A10E
     sta     menuRow                 ; $A111
-    jsr     Menu_RestoreUnderBottom ; $A114
+    jsr     LevelUp_LoadRow         ; $A114
     lda     menuRepeatTimer         ; $A117
     and     #$0F                    ; $A11A
     cmp     #$08                    ; $A11C
     bcc     @loc_A130               ; $A11E
     ldy     #$07                    ; $A120
-    lda     ram_074E                ; $A122
+    lda     levelUpCursor           ; $A122
     lsr     a                       ; $A125
     lda     #$F4                    ; $A126
     bcs     @loc_A138               ; $A128
@@ -5126,7 +5196,7 @@ loc_0_A0F1:
 @loop:
     sta     ram_0543,y              ; $A12A
     dey                             ; $A12D
-    bpl     @loop                 ; $A12E
+    bpl     @loop                   ; $A12E
 
 @loc_A130:
     jsr     Menu_DrawRowAttrs       ; $A130
@@ -5146,10 +5216,19 @@ loc_0_A0F1:
 @loc_A140:
     lda     menuRepeatTimer         ; $A140
     bne     @done                   ; $A143
-    jmp     loc_0_A325              ; $A145
+    jmp     Menu_NextState          ; $A145
 ; (end of code not executed in the test movies)
 
-loc_0_A148:
+; ---------------------------------------------------------------------------
+; Pause_FillText
+;
+; Pause menu step 2: write the key count, crystals remaining, lives and
+; the cost of each spell at the current magic level into sramMenuText,
+; and clear spellLastCast.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_FillText:
     lda     #$00                    ; $A148
     sta     spellLastCast           ; $A14A
     sta     ppuBuffer1Len           ; $A14D
@@ -5192,14 +5271,31 @@ loc_0_A148:
     sec                             ; $A193
     sbc     #$0E                    ; $A194
     tax                             ; $A196
-    bpl     @loop                 ; $A197
+    bpl     @loop                   ; $A197
 
-loc_0_A199:
-    jmp     loc_0_A267              ; $A199
-; (unreferenced: $A19C-$A1A4, 9 bytes)
-; Unused code, a copy of the Up+A check at loc_0_A1DD:
-;   jsr $A256 / lda joypadHeld+1 / cmp #$88 / bne $A1DD
-    .byte   $20, $56, $A2, $A5, $F8, $C9, $88, $D0, $37                     ; $A19C
+; ---------------------------------------------------------------------------
+; Menu_Skip
+;
+; A pause, level up or flute step that just advances pauseState.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Menu_Skip:
+    jmp     Pause_NextState         ; $A199
+
+; ---------------------------------------------------------------------------
+; Pause_OverworldWait
+;
+; Overworld pause, pauseState 2: wait for Start (Pause_CheckStart).  Up+A
+; on controller 2 goes to the continue screen (Game_ShowContinueScreen).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_OverworldWait:
+    jsr     Pause_CheckStart        ; $A19C
+    lda     joypadHeld+1            ; $A19F
+    cmp     #JOY_UP | JOY_A         ; $A1A1  Up+A on controller 2
+    bne     Game_ShowContinueScreenDone ; $A1A3
 
 ; ---------------------------------------------------------------------------
 ; Game_ShowContinueScreen
@@ -5232,10 +5328,28 @@ Game_ShowContinueScreen:
 @loop:
     jsr     Stat_FillMeter          ; $A1D6
     dex                             ; $A1D9
-    bpl     @loop                 ; $A1DA
+    bpl     @loop                   ; $A1DA
+
+; ---------------------------------------------------------------------------
+; Game_ShowContinueScreenDone
+;
+; Return (shared tail of Game_ShowContinueScreen).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_ShowContinueScreenDone:
     rts                             ; $A1DC
 
-loc_0_A1DD:
+; ---------------------------------------------------------------------------
+; Pause_MenuOpen
+;
+; Pause menu step 5, the open menu: Up+A on controller 2 goes to the
+; continue screen (Game_ShowContinueScreen); Up and Down move spellCursor
+; among the owned spells (redrawing the cursor); Start closes the menu.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_MenuOpen:
     lda     joypadHeld+1            ; $A1DD
     cmp     #JOY_UP | JOY_A         ; $A1DF  Up+A on controller 2
     beq     Game_ShowContinueScreen ; $A1E1
@@ -5245,11 +5359,11 @@ loc_0_A1DD:
 @loop:
     ora     spellOwned,y            ; $A1E7
     dey                             ; $A1EA
-    bpl     @loop                 ; $A1EB
+    bpl     @loop                   ; $A1EB
     cmp     #$00                    ; $A1ED
-    beq     loc_0_A256              ; $A1EF
+    beq     Pause_CheckStart        ; $A1EF
     jsr     Menu_MoveCursor         ; $A1F1
-    bcc     loc_0_A256              ; $A1F4
+    bcc     Pause_CheckStart        ; $A1F4
     and     #$08                    ; $A1F6
     ldy     spellCursor             ; $A1F8
 
@@ -5269,7 +5383,7 @@ loc_0_A1DD:
 
 @loc_A20C:
     ldx     spellOwned,y            ; $A20C
-    beq     @loop2                ; $A20F
+    beq     @loop2                  ; $A20F
     sty     spellCursor             ; $A211
     lda     #$10                    ; $A214
     sta     sfxRequest+3            ; $A216
@@ -5299,7 +5413,7 @@ loc_0_A1DD:
 @loop3:
     sta     ppuBuffer0+3,y          ; $A243
     dey                             ; $A246
-    bpl     @loop3                ; $A247
+    bpl     @loop3                  ; $A247
     sty     ppuBuffer0+18           ; $A249
     lda     spellCursor             ; $A24C
     asl     a                       ; $A24F
@@ -5307,23 +5421,54 @@ loc_0_A1DD:
     lda     #$FA                    ; $A251
     sta     ppuBuffer0+3,y          ; $A253
 
-loc_0_A256:
+; ---------------------------------------------------------------------------
+; Pause_CheckStart
+;
+; Advance pauseState if Start has just been pressed.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_CheckStart:
     lda     joypadHeldPrev          ; $A256
     and     #$10                    ; $A259
     sta     temp0                   ; $A25B
     lda     joypadHeld              ; $A25D
     and     #$10                    ; $A25F
-    beq     loc_0_A26A              ; $A261
+    beq     Pause_CheckStartDone    ; $A261
     cmp     temp0                   ; $A263
-    beq     loc_0_A26A              ; $A265
+    beq     Pause_CheckStartDone    ; $A265
 
-loc_0_A267:
+; ---------------------------------------------------------------------------
+; Pause_NextState
+;
+; Advance pauseState.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_NextState:
     inc     pauseState              ; $A267
 
-loc_0_A26A:
+; ---------------------------------------------------------------------------
+; Pause_CheckStartDone
+;
+; Return (shared tail of Pause_CheckStart).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_CheckStartDone:
     rts                             ; $A26A
 
-loc_0_A26B:
+; ---------------------------------------------------------------------------
+; Menu_ComputeAttrs
+;
+; Pause and level up step: compute the attribute bytes under the menu
+; window (menuAttrs) from the palette bits of the area tiles under it
+; (Menu_AddTileAttr), so the window's rows can be drawn and erased with
+; the right colors.  Then advance pauseState.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_ComputeAttrs:
     lda     scrollX                 ; $A26B
     clc                             ; $A26E
     adc     #$78                    ; $A26F
@@ -5351,7 +5496,7 @@ loc_0_A26B:
     sta     temp2                   ; $A28E
 
 @loop3:
-    jsr     Menu_SaveUnder          ; $A290
+    jsr     Menu_AddTileAttr        ; $A290
     tya                             ; $A293
     clc                             ; $A294
     adc     #$10                    ; $A295
@@ -5368,7 +5513,7 @@ loc_0_A26B:
 
 @loc_A2A2:
     dec     temp2                   ; $A2A2
-    bne     @loop3                ; $A2A4
+    bne     @loop3                  ; $A2A4
     tya                             ; $A2A6
     sec                             ; $A2A7
     sbc     #$BF                    ; $A2A8
@@ -5396,21 +5541,22 @@ loc_0_A26B:
     lda     temp1                   ; $A2C4
     eor     #$80                    ; $A2C6
     sta     temp1                   ; $A2C8
-    bne     @loop2                ; $A2CA
+    bne     @loop2                  ; $A2CA
     inx                             ; $A2CC
     dec     temp0                   ; $A2CD
-    bne     @loop                 ; $A2CF
-    jmp     loc_0_A267              ; $A2D1
+    bne     @loop                   ; $A2CF
+    jmp     Pause_NextState         ; $A2D1
 
 ; ---------------------------------------------------------------------------
-; Menu_SaveUnder
+; Menu_AddTileAttr
 ;
-; Save the tiles that the pause menu will cover into sramMenuText.
-; Menu_RestoreUnderTop and Menu_RestoreUnderBottom put them back.
+; Add the palette bits (bits 7-6) of area tile (temp14),y to attribute
+; byte menuAttrs,x, in the quadrant given by bit 4 of y (left or right)
+; and bit 7 of temp1 (top or bottom).
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
-Menu_SaveUnder:
+Menu_AddTileAttr:
     tya                             ; $A2D4
     asl     a                       ; $A2D5
     asl     a                       ; $A2D6
@@ -5441,48 +5587,129 @@ Menu_SaveUnder:
     sta     menuAttrs,x             ; $A2F4
     rts                             ; $A2F7
 
-loc_0_A2F8:
-    jsr     Menu_RestoreUnderBottom ; $A2F8
-    jmp     loc_0_A301              ; $A2FB
+; ---------------------------------------------------------------------------
+; LevelUp_OpenRow
+;
+; Level up window step 4: load the next row of the window
+; (LevelUp_LoadRow) and draw it (Menu_DrawOpenRow).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+LevelUp_OpenRow:
+    jsr     LevelUp_LoadRow         ; $A2F8
+    jmp     Menu_DrawOpenRow        ; $A2FB
 
-loc_0_A2FE:
-    jsr     Menu_RestoreUnderTop    ; $A2FE
+; ---------------------------------------------------------------------------
+; Pause_OpenRow
+;
+; Pause menu step 4: load the next row of the menu window (Pause_LoadRow)
+; and draw it (Menu_DrawOpenRow).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_OpenRow:
+    jsr     Pause_LoadRow           ; $A2FE
 
-loc_0_A301:
+; ---------------------------------------------------------------------------
+; Menu_DrawOpenRow
+;
+; Draw the loaded menu window row (Menu_DrawRowAttrs) and move to the
+; next; after the 10th row, advance pauseState.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Menu_DrawOpenRow:
     jsr     Menu_DrawRowAttrs       ; $A301
     inc     menuRow                 ; $A304
     lda     menuRow                 ; $A307
     cmp     #$0A                    ; $A30A
-    bcs     loc_0_A325              ; $A30C
+    bcs     Menu_NextState          ; $A30C
     rts                             ; $A30E
-; (unreferenced: $A30F-$A314, 6 bytes)
-    .byte   $A9, $01, $85, $EA, $D0, $10                                    ; $A30F
 
-loc_0_A315:
+; ---------------------------------------------------------------------------
+; Pause_OverworldMute
+;
+; Overworld pause, pauseState 1: mute the sound (soundMute) and advance.
+; Not reached in the test movies; seen by pressing Start on the overworld.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_OverworldMute:
+    lda     #$01                    ; $A30F
+    sta     soundMute               ; $A311
+    bne     Menu_NextState          ; $A313
+
+; ---------------------------------------------------------------------------
+; Flute_Start
+;
+; Flute step 1: start the flute's countdown (menuTimer = $88 frames).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Flute_Start:
     lda     #$88                    ; $A315
-    sta     ram_0566                ; $A317
-    bne     loc_0_A325              ; $A31A
+    sta     menuTimer               ; $A317
+    bne     Menu_NextState          ; $A31A
 
-loc_0_A31C:
+; ---------------------------------------------------------------------------
+; Menu_TextReady
+;
+; Redraw the status bar, play sound effect 8, and advance pauseState.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_TextReady:
     lda     #$C0                    ; $A31C
     sta     hudRedraw               ; $A31E
     lda     #$08                    ; $A321
     sta     sfxRequest+2            ; $A323
 
-loc_0_A325:
+; ---------------------------------------------------------------------------
+; Menu_NextState
+;
+; Advance pauseState.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Menu_NextState:
     inc     pauseState              ; $A325
     rts                             ; $A328
 
-loc_0_A329:
-    dec     ram_0566                ; $A329
-    lda     ram_0566                ; $A32C
+; ---------------------------------------------------------------------------
+; Flute_Wait
+;
+; Flute step 2: count down menuTimer, then advance pauseState.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Flute_Wait:
+    dec     menuTimer               ; $A329
+    lda     menuTimer               ; $A32C
     cmp     #$FF                    ; $A32F
-    beq     loc_0_A325              ; $A331
+    beq     Menu_NextState          ; $A331
     rts                             ; $A333
-; (unreferenced: $A334-$A337, 4 bytes)
-    .byte   $A9, $00, $85, $EA                                              ; $A334
 
-loc_0_A338:
+; ---------------------------------------------------------------------------
+; Pause_OverworldUnmute
+;
+; Overworld pause, pauseState 3: unmute the sound and clear the pause
+; (falling into Menu_Close).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_OverworldUnmute:
+    lda     #$00                    ; $A334
+    sta     soundMute               ; $A336
+
+; ---------------------------------------------------------------------------
+; Menu_Close
+;
+; Clear the dialog, menu and flute state (dialogType, menuRow, pauseState,
+; fluteTimer).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Menu_Close:
     lda     #$00                    ; $A338
     sta     dialogType              ; $A33A
     sta     menuRow                 ; $A33D
@@ -5490,22 +5717,30 @@ loc_0_A338:
     sta     fluteTimer              ; $A343
     rts                             ; $A346
 
-loc_0_A347:
+; ---------------------------------------------------------------------------
+; Menu_CopyTextTemplate
+;
+; Pause and level up step 1: copy MenuTextTemplate (280 bytes) to
+; sramMenuText, then Menu_TextReady.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Menu_CopyTextTemplate:
     ldy     #$00                    ; $A347
 
 @loop:
     lda     MenuTextTemplate,y      ; $A349
     sta     sramMenuText,y          ; $A34C
     iny                             ; $A34F
-    bne     @loop                 ; $A350
+    bne     @loop                   ; $A350
 
 @loop2:
     lda     MenuTextTemplate+256,y  ; $A352
     sta     sramMenuText+256,y      ; $A355
     iny                             ; $A358
     cpy     #$18                    ; $A359
-    beq     loc_0_A31C              ; $A35B
-    bne     @loop2                ; $A35D
+    beq     Menu_TextReady          ; $A35B
+    bne     @loop2                  ; $A35D
 
 ; ---------------------------------------------------------------------------
 ; Menu_DrawRowAttrs
@@ -5561,9 +5796,16 @@ Menu_DrawRowAttrs:
     and     menuAttrs,x             ; $A39A
     sta     menuAttrs,x             ; $A39D
     jsr     Menu_NextAttr           ; $A3A0
-    bcc     @loop                 ; $A3A3
+    bcc     @loop                   ; $A3A3
 
-loc_0_A3A5:
+; ---------------------------------------------------------------------------
+; Menu_EndRowString
+;
+; End ppuBuffer1's string at y and send it with the next NMI.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_EndRowString:
     lda     #$FF                    ; $A3A5
     sta     ppuBuffer1,y            ; $A3A7
     sty     ppuBuffer1Len           ; $A3AA
@@ -5608,7 +5850,7 @@ Menu_GetAttrAddress:
 Menu_CloseRow:
     dec     menuRow                 ; $A3D7
     bpl     @loc_A3DF               ; $A3DA
-    jmp     loc_0_A267              ; $A3DC
+    jmp     Pause_NextState         ; $A3DC
 
 @loc_A3DF:
     lda     scrollX                 ; $A3DF
@@ -5651,7 +5893,7 @@ Menu_CloseRow:
 @loc_A418:
     inx                             ; $A418
     cpx     #$07                    ; $A419
-    bcc     @loop                 ; $A41B
+    bcc     @loop                   ; $A41B
     lda     #$00                    ; $A41D
     sta     temp0                   ; $A41F
     sta     temp1                   ; $A421
@@ -5677,7 +5919,7 @@ Menu_CloseRow:
     stx     temp1                   ; $A441
     inc     temp0                   ; $A443
     cpx     #$0E                    ; $A445
-    bcc     @loop2                ; $A447
+    bcc     @loop2                  ; $A447
     jsr     Menu_BeginRow           ; $A449
 
 @loc_A44C:
@@ -5730,10 +5972,10 @@ Menu_CloseRow:
     and     menuAttrs,x             ; $A491
     jsr     Menu_NextAttr           ; $A494
     bcs     @loc_A49C               ; $A497
-    jmp     @loc_A44C             ; $A499
+    jmp     @loc_A44C               ; $A499
 
 @loc_A49C:
-    jmp     loc_0_A3A5              ; $A49C
+    jmp     Menu_EndRowString       ; $A49C
 
 ; ---------------------------------------------------------------------------
 ; Menu_QueueRowTiles
@@ -5839,17 +6081,17 @@ Menu_QueueRowTiles:
     dec     temp3                   ; $A52B
     beq     @loc_A53A               ; $A52D
     dec     temp6                   ; $A52F
-    bne     @loop                 ; $A531
+    bne     @loop                   ; $A531
     lda     temp3                   ; $A533
     sta     temp6                   ; $A535
-    jmp     @loc_A4D6             ; $A537
+    jmp     @loc_A4D6               ; $A537
 
 @loc_A53A:
     lda     #$E0                    ; $A53A
     sta     temp7                   ; $A53C
     dec     temp8                   ; $A53E
     beq     @done                   ; $A540
-    jmp     @loc_A4AC             ; $A542
+    jmp     @loc_A4AC               ; $A542
 
 @done:
     rts                             ; $A545
@@ -5936,7 +6178,7 @@ Math_Digit1000:
     dec     temp0                   ; $A5AE
     dec     temp0                   ; $A5B0
     dec     temp0                   ; $A5B2
-    bpl     @loop                 ; $A5B4
+    bpl     @loop                   ; $A5B4
     clc                             ; $A5B6
     adc     #$E8                    ; $A5B7
     bcc     @loc_A5BD               ; $A5B9
@@ -5954,9 +6196,9 @@ Math_Digit1000:
     iny                             ; $A5C8
     sec                             ; $A5C9
     sbc     #$64                    ; $A5CA
-    bcs     @loop2                ; $A5CC
+    bcs     @loop2                  ; $A5CC
     dec     temp0                   ; $A5CE
-    bpl     @loop2                ; $A5D0
+    bpl     @loop2                  ; $A5D0
     adc     #$64                    ; $A5D2
     dey                             ; $A5D4
     sty     temp0                   ; $A5D5
@@ -5966,12 +6208,21 @@ Math_Digit1000:
     iny                             ; $A5D9
     sec                             ; $A5DA
     sbc     #$0A                    ; $A5DB
-    bcs     @loop3                ; $A5DD
+    bcs     @loop3                  ; $A5DD
     adc     #$DA                    ; $A5DF
     dey                             ; $A5E1
     rts                             ; $A5E2
 
-Menu_RestoreUnderTop:
+; ---------------------------------------------------------------------------
+; Pause_LoadRow
+;
+; Load menu window row menuRow of the pause menu (PauseMenuRowPtrs,
+; PauseMenuRowPtrs2) into menuRowTiles and menuRowTiles2, blanking the
+; names of spells not owned, and put the cursor ($FA) beside spellCursor.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Pause_LoadRow:
     lda     menuRow                 ; $A5E3
     asl     a                       ; $A5E6
     tay                             ; $A5E7
@@ -6003,7 +6254,7 @@ Menu_RestoreUnderTop:
 @loc_A619:
     sta     menuRowTiles2,y         ; $A619
     dey                             ; $A61C
-    bpl     @loop                 ; $A61D
+    bpl     @loop                   ; $A61D
     ldx     spellCursor             ; $A61F
     bne     @loc_A633               ; $A622
 
@@ -6013,7 +6264,7 @@ Menu_RestoreUnderTop:
     bne     @loc_A633               ; $A62A
     inx                             ; $A62C
     cpx     #$08                    ; $A62D
-    bcc     @loop2                ; $A62F
+    bcc     @loop2                  ; $A62F
     bcs     @done                   ; $A631
 
 @loc_A633:
@@ -6027,12 +6278,21 @@ Menu_RestoreUnderTop:
 @done:
     rts                             ; $A642
 
-dat_0_A643:
+LevelUpCursorRows:
     .byte   $02, $05, $07                                                   ; $A643
 ; (unreferenced: $A646-$A646, 1 bytes)
     .byte   $01                                                             ; $A646
 
-Menu_RestoreUnderBottom:
+; ---------------------------------------------------------------------------
+; LevelUp_LoadRow
+;
+; Load row menuRow of the level up window (LevelUpRowPtrs,
+; LevelUpRowPtrs2) into menuRowTiles and menuRowTiles2, with the cursor
+; ($FB) beside the stat at levelUpCursor (LevelUpCursorRows).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+LevelUp_LoadRow:
     lda     menuRow                 ; $A647
     asl     a                       ; $A64A
     tay                             ; $A64B
@@ -6052,9 +6312,9 @@ Menu_RestoreUnderBottom:
     lda     (temp4),y               ; $A667
     sta     menuRowTiles2,y         ; $A669
     dey                             ; $A66C
-    bpl     @loop                 ; $A66D
-    ldx     ram_074E                ; $A66F
-    lda     dat_0_A643,x            ; $A672
+    bpl     @loop                   ; $A66D
+    ldx     levelUpCursor           ; $A66F
+    lda     LevelUpCursorRows,x     ; $A672
     cmp     menuRow                 ; $A675
     bne     @done                   ; $A678
     txa                             ; $A67A
@@ -6070,20 +6330,29 @@ Menu_RestoreUnderBottom:
     stx     ram_0544                ; $A684
     rts                             ; $A687
 
-dat_0_A688:
+LevelUpStatRows:
     .byte   $04, $06                                                        ; $A688
 ; (unreferenced: $A68A-$A68A, 1 bytes)
     .byte   $09                                                             ; $A68A
 
-loc_0_A68B:
-    ldy     ram_074E                ; $A68B
+; ---------------------------------------------------------------------------
+; LevelUp_ApplyChoice
+;
+; Level up window step 6: redraw the chosen stat's row (or nothing for
+; Cancel), set the blink time (menuRepeatTimer), redraw the status bar and
+; advance pauseState.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+LevelUp_ApplyChoice:
+    ldy     levelUpCursor           ; $A68B
     cpy     #$03                    ; $A68E
     beq     @loc_A6B6               ; $A690
     lda     menuRow                 ; $A692
     pha                             ; $A695
-    lda     dat_0_A688,y            ; $A696
+    lda     LevelUpStatRows,y       ; $A696
     sta     menuRow                 ; $A699
-    jsr     Menu_RestoreUnderBottom ; $A69C
+    jsr     LevelUp_LoadRow         ; $A69C
     jsr     Menu_DrawRowAttrs       ; $A69F
     pla                             ; $A6A2
     sta     menuRow                 ; $A6A3
@@ -6094,11 +6363,11 @@ loc_0_A68B:
     lda     hudRedraw               ; $A6AB
     ora     #$C0                    ; $A6AE
     sta     hudRedraw               ; $A6B0
-    jmp     loc_0_A325              ; $A6B3
+    jmp     Menu_NextState          ; $A6B3
 
 @loc_A6B6:
     lda     #$20                    ; $A6B6
-    bne     @loc_A6A8             ; $A6B8
+    bne     @loc_A6A8               ; $A6B8
 
 dat_0_A6BA:
     .byte   $94                                                             ; $A6BA
@@ -6128,7 +6397,7 @@ BreakingBlocks_Update:
     stx     currentObject           ; $A6D4
     jsr     BreakingBlock_Update    ; $A6D6
     dex                             ; $A6D9
-    bpl     @loop                 ; $A6DA
+    bpl     @loop                   ; $A6DA
 
 loc_0_A6DC:
     rts                             ; $A6DC
@@ -6169,9 +6438,9 @@ BreakingBlock_Update:
 @loc_A711:
     and     #$7F                    ; $A711
     cmp     #$20                    ; $A713
-    beq     @loc_A6F1             ; $A715
+    beq     @loc_A6F1               ; $A715
     cmp     #$30                    ; $A717
-    bcs     @loc_A6EC             ; $A719
+    bcs     @loc_A6EC               ; $A719
     and     #$0F                    ; $A71B
     cmp     #$07                    ; $A71D
     bne     loc_0_A6DC              ; $A71F
@@ -6248,11 +6517,11 @@ loc_0_A7AB:
 @loop:
     nop                             ; $A7AD
     dey                             ; $A7AE
-    bne     @loop                 ; $A7AF
+    bne     @loop                   ; $A7AF
 
 @loop2:
     bit     PPUSTATUS               ; $A7B1
-    bvc     @loop2                ; $A7B4
+    bvc     @loop2                  ; $A7B4
     lda     ppuCtrlShadow           ; $A7B6
     ora     playfieldNametable      ; $A7B8
     sta     ppuCtrlShadow           ; $A7BB
@@ -6261,7 +6530,7 @@ loc_0_A7AB:
 
 @loop3:
     dey                             ; $A7C1
-    bne     @loop3                ; $A7C2
+    bne     @loop3                  ; $A7C2
     sta     PPUCTRL                 ; $A7C4
     stx     PPUSCROLL               ; $A7C7
     sty     PPUSCROLL               ; $A7CA
@@ -6275,7 +6544,7 @@ loc_0_A7AB:
     lda     dat_0_A7A1,y            ; $A7D9
     sta     ppuBuffer0,y            ; $A7DC
     dey                             ; $A7DF
-    bpl     @loop4                ; $A7E0
+    bpl     @loop4                  ; $A7E0
     lda     ppuBuffer0+1            ; $A7E2
     sec                             ; $A7E5
     sbc     ram_0762                ; $A7E6
@@ -6300,14 +6569,14 @@ loc_0_A7AB:
     txa                             ; $A809
     sta     (temp0),y               ; $A80A
     dey                             ; $A80C
-    bpl     @loop6                ; $A80D
+    bpl     @loop6                  ; $A80D
     ldx     #$56                    ; $A80F
     lda     temp0                   ; $A811
     clc                             ; $A813
     adc     #$10                    ; $A814
     sta     temp0                   ; $A816
     cmp     #$30                    ; $A818
-    bne     @loop5                ; $A81A
+    bne     @loop5                  ; $A81A
     lda     #$00                    ; $A81C
     sta     pauseState              ; $A81E
     lda     techniques              ; $A821
@@ -6375,11 +6644,11 @@ loc_0_A869:
 @loop3:
     sta     PPUDATA                 ; $A88D
     dey                             ; $A890
-    bpl     @loop3                ; $A891
+    bpl     @loop3                  ; $A891
     dex                             ; $A893
-    bpl     @loop2                ; $A894
+    bpl     @loop2                  ; $A894
     dec     temp0                   ; $A896
-    bpl     @loop                 ; $A898
+    bpl     @loop                   ; $A898
     inc     gameMode                ; $A89A
     rts                             ; $A89D
 ; (unreferenced: $A89E-$A97F, 226 bytes)
@@ -6435,7 +6704,7 @@ Game_StartAtNorthCastle:
 @loop:
     jsr     Stat_FillMeter          ; $AA28
     dex                             ; $AA2B
-    bpl     @loop                 ; $AA2C
+    bpl     @loop                   ; $AA2C
     stx     ram_0708                ; $AA2E
     jsr     Exp_ComputeNext         ; $AA31
     ldy     #$88                    ; $AA34
@@ -6444,7 +6713,7 @@ Game_StartAtNorthCastle:
     lda     dat_0_A97F,y            ; $AA36
     sta     sram_6957,y             ; $AA39
     dey                             ; $AA3C
-    bne     @loop2                ; $AA3D
+    bne     @loop2                  ; $AA3D
     rts                             ; $AA3F
 ; (unreferenced: $AA40-$BF9C, 5469 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $AA40

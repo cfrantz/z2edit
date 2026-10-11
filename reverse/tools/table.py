@@ -99,6 +99,8 @@ def main():
             renames += [(n, f"{args.name}+{addr - start}") for n in pending]
             pending = []
         elif ADDR.search(line) and not line.lstrip().startswith(";"):
+            if int(ADDR.search(line).group(1), 16) >= end:
+                break
             sys.exit(f"non-.byte line inside the table: {line.strip()}")
     rename(renames)
 

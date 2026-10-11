@@ -1983,7 +1983,7 @@ loc_5_9887:
     jmp     sub_5_9A77              ; $988B
 
 loc_5_988E:
-    lda     ram_07FB                ; $988E
+    lda     musicPlaying            ; $988E
     bne     loc_5_9897              ; $9891
 ; (code below not executed in the test movies)
     lda     #$40                    ; $9893
@@ -4170,7 +4170,7 @@ loc_5_A70F:
     lda     flutePlayed             ; $A717
     bne     loc_5_A723              ; $A71A
     lda     #$01                    ; $A71C
-    sta     ram_00EA                ; $A71E
+    sta     soundMute               ; $A71E
     inc     flutePlayed             ; $A720
 
 loc_5_A723:
@@ -4256,7 +4256,7 @@ sub_5_A795:
     sta     ram_0761                ; $A7A5
     jsr     Oam_HideAllButSprite0   ; $A7A8
     lda     #$80                    ; $A7AB
-    sta     ram_00EA                ; $A7AD
+    sta     soundMute               ; $A7AD
     lda     #$00                    ; $A7AF
     sta     ppuNametable            ; $A7B1
     sta     flutePlayed             ; $A7B4

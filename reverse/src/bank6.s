@@ -17,7 +17,7 @@ Sound_TitleEngine:
     jsr     sub_6_826A              ; $800D
     lda     #$00                    ; $8010
     sta     musicRequest            ; $8012
-    sta     ram_00EA                ; $8014
+    sta     soundMute               ; $8014
     rts                             ; $8016
 ; (unreferenced: $8017-$8046, 48 bytes)
 
@@ -181,7 +181,7 @@ sub_6_818C:
     sty     ram_00E9                ; $818C
     sta     ram_00E6                ; $818E
     lda     #$00                    ; $8190
-    sta     ram_07FB                ; $8192
+    sta     musicPlaying            ; $8192
     sta     ram_07FA                ; $8195
     sta     ram_07F9                ; $8198
     rts                             ; $819B
@@ -313,10 +313,10 @@ loc_6_8249:
 ; (end of code not executed in the test movies)
 
 sub_6_826A:
-    lda     ram_00EA                ; $826A
+    lda     soundMute               ; $826A
     and     #$01                    ; $826C
     bne     loc_6_8277              ; $826E
-    lda     ram_00EA                ; $8270
+    lda     soundMute               ; $8270
     beq     loc_6_8282              ; $8272
     jmp     loc_6_82CF              ; $8274
 
@@ -340,7 +340,7 @@ loc_6_8289:
 
 sub_6_8293:
     ldx     #$00                    ; $8293
-    stx     ram_07FB                ; $8295
+    stx     musicPlaying            ; $8295
     stx     ram_07FA                ; $8298
     stx     ram_07F9                ; $829B
     stx     TRI_LINEAR              ; $829E
@@ -523,7 +523,7 @@ loc_6_83C5:
 ; (end of code not executed in the test movies)
 
 loc_6_83C7:
-    sta     ram_07FB                ; $83C7
+    sta     musicPlaying            ; $83C7
 
 loc_6_83CA:
     lda     ram_07FF                ; $83CA
@@ -540,11 +540,11 @@ loc_6_83CF:
 ; (end of code not executed in the test movies)
 
 loc_6_83DC:
-    lda     ram_07FB                ; $83DC
+    lda     musicPlaying            ; $83DC
     beq     loc_6_83E6              ; $83DF
     lsr     a                       ; $83E1
     lsr     a                       ; $83E2
-    dec     ram_07FB                ; $83E3
+    dec     musicPlaying            ; $83E3
 
 loc_6_83E6:
     clc                             ; $83E6
@@ -921,7 +921,7 @@ dat_6_84E1:
     .byte   $FF, $FF, $FF, $FF, $FF                                         ; $8FFB
 
 Sound_Engine:
-    lda     ram_00EA                ; $9000
+    lda     soundMute               ; $9000
     beq     loc_6_900B              ; $9002
 ; (code below not executed in the test movies)
     lda     #$00                    ; $9004
@@ -1456,7 +1456,7 @@ sub_6_93C3:
     sta     ram_07E1                ; $93CE
     sta     ram_07E0                ; $93D1
     sta     ram_07DF                ; $93D4
-    sta     ram_07FB                ; $93D7
+    sta     musicPlaying            ; $93D7
     lda     #$10                    ; $93DA
     sta     NOISE_VOL               ; $93DC
     lda     #$00                    ; $93DF
@@ -2443,7 +2443,7 @@ loc_6_9AF5:
 sub_6_9B18:
     lda     musicRequest            ; $9B18
     bne     loc_6_9B61              ; $9B1A
-    lda     ram_07FB                ; $9B1C
+    lda     musicPlaying            ; $9B1C
     beq     loc_6_9B4E              ; $9B1F
     jmp     loc_6_9C87              ; $9B21
 
@@ -2451,19 +2451,19 @@ loc_6_9B24:
     lda     currentWorld            ; $9B24
     cmp     #$05                    ; $9B27
     bne     loc_6_9B34              ; $9B29
-    lda     ram_07FB                ; $9B2B
+    lda     musicPlaying            ; $9B2B
     and     #$5F                    ; $9B2E
     bne     loc_6_9B4F              ; $9B30
     beq     sub_6_9B3B              ; $9B32
 
 loc_6_9B34:
-    lda     ram_07FB                ; $9B34
+    lda     musicPlaying            ; $9B34
     and     #$1F                    ; $9B37
     bne     loc_6_9B4F              ; $9B39
 
 sub_6_9B3B:
     lda     #$00                    ; $9B3B
-    sta     ram_07FB                ; $9B3D
+    sta     musicPlaying            ; $9B3D
     sta     TRI_LINEAR              ; $9B40
 
 sub_6_9B43:
@@ -2482,7 +2482,7 @@ loc_6_9B4F:
     bne     loc_6_9B61              ; $9B55
 
 loc_6_9B57:
-    lda     ram_07FB                ; $9B57
+    lda     musicPlaying            ; $9B57
     and     #$4E                    ; $9B5A
     bne     loc_6_9B61              ; $9B5C
     lda     ram_07DB                ; $9B5E
@@ -2491,7 +2491,7 @@ loc_6_9B61:
     tax                             ; $9B61
     and     #$10                    ; $9B62
     beq     loc_6_9B70              ; $9B64
-    lda     ram_07FB                ; $9B66
+    lda     musicPlaying            ; $9B66
     and     #$0F                    ; $9B69
     beq     loc_6_9B70              ; $9B6B
     sta     ram_07DB                ; $9B6D
@@ -2499,7 +2499,7 @@ loc_6_9B61:
 loc_6_9B70:
     txa                             ; $9B70
     beq     sub_6_9B3B              ; $9B71
-    sta     ram_07FB                ; $9B73
+    sta     musicPlaying            ; $9B73
     ldy     #$00                    ; $9B76
     sty     ram_00E3                ; $9B78
 
@@ -2658,7 +2658,7 @@ loc_6_9C91:
     and     #$3E                    ; $9CAC
     jsr     sub_6_9067              ; $9CAE
     beq     loc_6_9CC3              ; $9CB1
-    lda     ram_07FB                ; $9CB3
+    lda     musicPlaying            ; $9CB3
     and     #$04                    ; $9CB6
     beq     loc_6_9CBE              ; $9CB8
     lda     #$18                    ; $9CBA
@@ -2708,7 +2708,7 @@ loc_6_9CEB:
     and     #$3E                    ; $9D07
     jsr     sub_6_9042              ; $9D09
     beq     loc_6_9D1E              ; $9D0C
-    lda     ram_07FB                ; $9D0E
+    lda     musicPlaying            ; $9D0E
     and     #$04                    ; $9D11
     beq     loc_6_9D19              ; $9D13
     lda     #$18                    ; $9D15
@@ -2748,7 +2748,7 @@ loc_6_9D3C:
     lda     ram_07FD                ; $9D4F
     and     #$0A                    ; $9D52
     bne     loc_6_9D6C              ; $9D54
-    lda     ram_07FB                ; $9D56
+    lda     musicPlaying            ; $9D56
     and     #$10                    ; $9D59
     bne     loc_6_9D61              ; $9D5B
     ldy     #$1F                    ; $9D5D

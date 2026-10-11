@@ -14,7 +14,7 @@ GLOBALS_INC = 1
 .global Nmi
 
 .global NorthCastle_DrawSprites
-.global loc_0_8CE1
+.global SideView_Start
 .global Spell_Update
 .global Link_Run
 .global Hud_Update
@@ -23,8 +23,8 @@ GLOBALS_INC = 1
 .global Scroll_Update
 .global Scroll_DrawColumns
 .global Scroll_DrawColumnStep
-.global loc_0_9D54
-.global loc_0_9D91
+.global LevelUp_Update
+.global Pause_Update
 .global BreakingBlocks_Update
 .global loc_0_A7AB
 .global Game_StartAtNorthCastle
@@ -151,11 +151,14 @@ GLOBALS_INC = 1
 .global Mode_Raft
 .global Mode_IndexOverworldMap
 .global Mode_FallAnimate
-.global loc_0_A199
-.global loc_0_A256
-.global loc_0_A315
-.global loc_0_A329
-.global loc_0_A338
+.global Menu_Skip
+.global Pause_CheckStart
+.global Flute_Start
+.global Flute_Wait
+.global Menu_Close
+.global Pause_OverworldMute
+.global Pause_OverworldWait
+.global Pause_OverworldUnmute
 .global Mode_FallBlankScreen
 .global loc_3_8647
 .global loc_3_9B86

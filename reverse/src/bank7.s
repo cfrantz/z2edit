@@ -79,11 +79,11 @@ Sound_UpdateTitle:
 ; Entries 0-2 are the RAM buffers (PPU_STRING_BUFFER*); $696C is in SRAM,
 ; and $80C9 and $A836 are in whichever bank is mapped at the time.
 PpuStringPtrs:
-    .word   ppuBuffer0, ppuBuffer1, ppuBuffer2, dat_D0BD ; $C03D
-    .word   $696C, $80C9, $A836, dat_D0D1, dat_FDCB ; $C045
+    .word   ppuBuffer0, ppuBuffer1, ppuBuffer2, ContinueScreenPalette ; $C03D
+    .word   $696C, $80C9, $A836, HudTemplate, ContinueScreenText ; $C045
 ; (unreferenced: $C04F-$C050, 2 bytes)
     .word   $8000                   ; $C04F
-    .word   dat_C458, dat_DF6A, dat_C449, dat_C47C, dat_C490, dat_DCD3 ; $C051
+    .word   dat_C458, dat_DF6A, LivesScreenPalette, dat_C47C, dat_C490, dat_DCD3 ; $C051
 
 ; Offset of each RAM buffer's length byte from ppuBuffer0Len.
 PpuBufferLenOffsets:
@@ -350,7 +350,7 @@ Sound_UpdateSometimes:
     clc                             ; $C1B9
     adc     #$D8                    ; $C1BA
     sta     soundPacer              ; $C1BC
-    bcc     loc_C1CC                ; $C1BF
+    bcc     Sound_UpdateDone        ; $C1BF
 
 ; ---------------------------------------------------------------------------
 ; Sound_Update
@@ -366,7 +366,14 @@ Sound_Update:
     jsr     Sound_Engine            ; $C1C6
     jmp     Mmc1_SetPrgBank0        ; $C1C9
 
-loc_C1CC:
+; ---------------------------------------------------------------------------
+; Sound_UpdateDone
+;
+; Return (shared tail of Sound_UpdateSometimes).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sound_UpdateDone:
     rts                             ; $C1CC
 
 ; ---------------------------------------------------------------------------
@@ -385,7 +392,7 @@ Game_UpdateMenus:
     jsr     Mmc1_SetPrgBank0        ; $C1CD
     lda     gameMode                ; $C1D0
     cmp     #$0B                    ; $C1D3
-    bne     loc_C220                ; $C1D5
+    bne     Menu_UpdateOther        ; $C1D5
     jsr     Game_UpdateSideViewMenus ; $C1D7
     jmp     Mmc1_SetPrgBankArea     ; $C1DA
 
@@ -420,35 +427,70 @@ Game_UpdateSideViewMenus:
 
 @loc_C218:
     lda     dialogType              ; $C218
-    bne     loc_C233                ; $C21B
-    jmp     loc_0_9D91              ; $C21D
+    bne     Menu_UpdateDialog       ; $C21B
+    jmp     Pause_Update            ; $C21D
 
-loc_C220:
+; ---------------------------------------------------------------------------
+; Menu_UpdateOther
+;
+; Menus outside side view (and dialogs with dialogType >= 5): run the
+; flute (Flute_Update) if fluteTimer is set, otherwise the overworld pause
+; (Pause_CheckStart, Pause_OverworldMute, Pause_OverworldWait,
+; Pause_OverworldUnmute).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_UpdateOther:
     lda     pauseState              ; $C220
     ldy     fluteTimer              ; $C223
-    bne     loc_C23A                ; $C226
+    bne     Flute_Update            ; $C226
     jsr     JumpTable               ; $C228
 ; (inline jump table)
-    .word   loc_0_A256              ; $C22B
-; (unreferenced: $C22D-$C232, 6 bytes)
-    .byte   $0F, $A3, $9C, $A1, $34, $A3                                    ; $C22D
+    .word   Pause_CheckStart        ; $C22B
+    .word   Pause_OverworldMute     ; $C22D  (not observed)
+    .word   Pause_OverworldWait     ; $C22F  (not observed)
+    .word   Pause_OverworldUnmute   ; $C231  (not observed)
 
-loc_C233:
+; ---------------------------------------------------------------------------
+; Menu_UpdateDialog
+;
+; Side view dialogs: the level up window (LevelUp_Update) for
+; dialogType 1; town conversations (Menu_UpdateTownDialog) for 2-4.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_UpdateDialog:
     cmp     #$02                    ; $C233
-    bcs     loc_C245                ; $C235
-    jmp     loc_0_9D54              ; $C237
+    bcs     Menu_UpdateTownDialog   ; $C235
+    jmp     LevelUp_Update          ; $C237
 
-loc_C23A:
+; ---------------------------------------------------------------------------
+; Flute_Update
+;
+; The flute, by pauseState: Menu_Skip, Flute_Start, Flute_Wait,
+; Menu_Close.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Flute_Update:
     jsr     JumpTable               ; $C23A
 ; (inline jump table)
-    .word   loc_0_A199              ; $C23D
-    .word   loc_0_A315              ; $C23F
-    .word   loc_0_A329              ; $C241
-    .word   loc_0_A338              ; $C243
+    .word   Menu_Skip               ; $C23D
+    .word   Flute_Start             ; $C23F
+    .word   Flute_Wait              ; $C241
+    .word   Menu_Close              ; $C243
 
-loc_C245:
+; ---------------------------------------------------------------------------
+; Menu_UpdateTownDialog
+;
+; Town conversations (dialogType 2-4), run by the town bank; dialogType
+; 5 and up goes to Menu_UpdateOther.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_UpdateTownDialog:
     cmp     #$05                    ; $C245
-    bcs     loc_C220                ; $C247
+    bcs     Menu_UpdateOther        ; $C247
     jsr     Mmc1_SetPrgBankArea     ; $C249
     jmp     loc_3_B082              ; $C24C
 
@@ -564,7 +606,7 @@ Game_RunState:
     .word   GameState_Death         ; $C2DC
     .word   GameState_StartEnding   ; $C2DE
     .word   GameState_Ending        ; $C2E0
-    .word   loc_C38D                ; $C2E2  (not observed)
+    .word   GameState_SaveAfterEnding ; $C2E2  (not observed)
     .word   GameState_Respawn       ; $C2E4
 
 GameState_Play:
@@ -572,7 +614,7 @@ GameState_Play:
     jsr     JumpTable               ; $C2E9
 ; (inline jump table)
     .word   Mode_LoadWorld          ; $C2EC  mode $00
-    .word   loc_CCB3                ; $C2EE  mode $01
+    .word   Mode_ReturnToOverworld  ; $C2EE  mode $01
     .word   Mode_OverworldSetup     ; $C2F0  mode $02
     .word   Mode_IndexOverworldMap  ; $C2F2  mode $03
     .word   Game_UnblankAndNextMode ; $C2F4  mode $04
@@ -581,18 +623,18 @@ GameState_Play:
     .word   Mode_PrepareLoad        ; $C2FA  mode $07
     .word   Game_Wait               ; $C2FC  mode $08
     .word   Mode_DrawArea           ; $C2FE  mode $09
-    .word   loc_C62F                ; $C300  mode $0A
+    .word   Mode_StartSideView      ; $C300  mode $0A
     .word   Mode_SideView           ; $C302  mode $0B
-    .word   loc_C68A                ; $C304  mode $0C
+    .word   Mode_FallSaveScroll     ; $C304  mode $0C
     .word   Mode_FallBlankScreen    ; $C306  mode $0D
     .word   Mode_FallStart          ; $C308  mode $0E
     .word   Mode_FallAnimate        ; $C30A  mode $0F
     .word   Mode_LeaveArea          ; $C30C  mode $10
-    .word   loc_C397                ; $C30E  mode $11
-    .word   loc_C63E                ; $C310  mode $12
+    .word   Mode_ShowLives          ; $C30E  mode $11
+    .word   Mode_EnterArea          ; $C310  mode $12
     .word   Mode_FindConnectedRoom  ; $C312  mode $13
     .word   Game_Wait               ; $C314  mode $14
-    .word   loc_C70C                ; $C316  mode $15
+    .word   Mode_PlaceLink          ; $C316  mode $15
     .word   Mode_EnterDoor          ; $C318  mode $16
     .word   Mode_RaftStart          ; $C31A  mode $17
     .word   Mode_Raft               ; $C31C  mode $18
@@ -603,19 +645,27 @@ GameState_Death:
 ; (inline jump table)
     .word   Game_BlankAndNextMode   ; $C324
     .word   Death_ClearScreen       ; $C326
-    .word   loc_C71A                ; $C328
+    .word   Death_StartAnimation    ; $C328
     .word   Death_Animate           ; $C32A
     .word   Death_LoseLife          ; $C32C
     .word   Game_BlankAndNextMode   ; $C32E
-    .word   loc_D04D                ; $C330
+    .word   Death_DrawContinueScreen ; $C330
     .word   Game_UnblankAndNextMode ; $C332
     .word   Game_NextMode           ; $C334
     .word   Death_ContinueMenu      ; $C336
-    .word   loc_FE76                ; $C338  (not observed)
-    .word   loc_C33C                ; $C33A  (not observed)
+    .word   Death_SaveAndQuit       ; $C338  (not observed)
+    .word   Game_ReturnToTitle      ; $C33A  (not observed)
 ; (code below not executed in the test movies)
 
-loc_C33C:
+; ---------------------------------------------------------------------------
+; Game_ReturnToTitle
+;
+; Map bank 5 and go back to the title screen (gameState 0 in bank 5's NMI
+; mode).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Game_ReturnToTitle:
     lda     #$05                    ; $C33C
     jsr     Mmc1_SetPrgBank         ; $C33E
     jsr     Mmc1_SetChrBank         ; $C341
@@ -644,7 +694,14 @@ Game_ResetLives:
     sta     lives                   ; $C35A
     inc     ram_0760                ; $C35D
 
-loc_C360:
+; ---------------------------------------------------------------------------
+; Game_NextState
+;
+; Advance gameState.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_NextState:
     inc     gameState               ; $C360
     rts                             ; $C363
 
@@ -656,7 +713,7 @@ GameState_Ending:
     .word   Area_Load               ; $C36C
     .word   Mode_DrawArea           ; $C36E
     .word   @loc_C37C               ; $C370
-    .word   loc_C62F                ; $C372
+    .word   Mode_StartSideView      ; $C372
     .word   @loc_C382               ; $C374
 
 @loc_C376:
@@ -683,48 +740,82 @@ Mmc1_SetPrgBank5:
     jmp     Mmc1_SetPrgBank         ; $C38A
 ; (code below not executed in the test movies)
 
-loc_C38D:
+; ---------------------------------------------------------------------------
+; GameState_SaveAfterEnding
+;
+; gameState 5 (GAME_STATE_SAVE_AFTER_ENDING), entered when the ending
+; finishes: save the game (Mode_SaveAfterEnding) and return to the title
+; screen (Game_ReturnToTitle).  Not reached in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+GameState_SaveAfterEnding:
     jsr     Game_CheckModeChange    ; $C38D
     jsr     JumpTable               ; $C390
 ; (inline jump table)
-    .word   loc_CD19                ; $C393  (not observed)
-    .word   loc_C33C                ; $C395  (not observed)
+    .word   Mode_SaveAfterEnding    ; $C393  (not observed)
+    .word   Game_ReturnToTitle      ; $C395  (not observed)
 
-loc_C397:
+; ---------------------------------------------------------------------------
+; Mode_ShowLives
+;
+; gameMode $11: the screen showing the player's name and lives, before
+; entering a palace.  Steps (by gameStep): blank the screen, draw the
+; text, unblank, then wait (timerFast) with Link drawn beside it.  Also
+; used by GameState_Respawn.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Mode_ShowLives:
     jsr     Game_CheckStepChange    ; $C397
     jsr     JumpTable               ; $C39A
 ; (inline jump table)
-    .word   loc_C3A5                ; $C39D
-    .word   loc_C3B5                ; $C39F
-    .word   loc_C3E6                ; $C3A1
-    .word   loc_C3ED                ; $C3A3
+    .word   Lives_Blank             ; $C39D
+    .word   Lives_Draw              ; $C39F
+    .word   Lives_Unblank           ; $C3A1
+    .word   Lives_Wait              ; $C3A3
 
-loc_C3A5:
+; ---------------------------------------------------------------------------
+; Lives_Blank
+;
+; Blank the screen and load its palette (LivesScreenPalette).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Lives_Blank:
     lda     #$0C                    ; $C3A5
     sta     ppuStringSelect         ; $C3A7
     lda     #$00                    ; $C3AA
     sta     ram_0760                ; $C3AC
     inc     renderingOff            ; $C3AF
-    jmp     loc_C3E2                ; $C3B2
+    jmp     Game_NextStep           ; $C3B2
 
-loc_C3B5:
+; ---------------------------------------------------------------------------
+; Lives_Draw
+;
+; Clear the nametables and queue the lives screen text from sramLivesText
+; with the player's name and the number of lives; wait $70 frames.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Lives_Draw:
     lda     areaChrBank             ; $C3B5
     jsr     Mmc1_SetChrBank         ; $C3B8
     jsr     Ppu_ClearNametables     ; $C3BB
     ldy     #$13                    ; $C3BE
 
 @loop:
-    lda     sram_6958,y             ; $C3C0
+    lda     sramLivesText,y         ; $C3C0
     sta     ppuBuffer0,y            ; $C3C3
     dey                             ; $C3C6
-    bpl     @loop                 ; $C3C7
+    bpl     @loop                   ; $C3C7
     ldy     #$07                    ; $C3C9
 
 @loop2:
     lda     playerName,y            ; $C3CB
     sta     ppuBuffer0+3,y          ; $C3CE
     dey                             ; $C3D1
-    bpl     @loop2                ; $C3D2
+    bpl     @loop2                  ; $C3D2
     lda     lives                   ; $C3D4
     clc                             ; $C3D7
     adc     #$D0                    ; $C3D8
@@ -732,21 +823,50 @@ loc_C3B5:
     lda     #$70                    ; $C3DD
     sta     timerFast               ; $C3DF
 
-loc_C3E2:
+; ---------------------------------------------------------------------------
+; Game_NextStep
+;
+; Advance gameStep.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_NextStep:
     inc     gameStep                ; $C3E2
     rts                             ; $C3E5
 
-loc_C3E6:
+; ---------------------------------------------------------------------------
+; Lives_Unblank
+;
+; Turn rendering back on and advance gameStep.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Lives_Unblank:
     lda     #$00                    ; $C3E6
     sta     renderingOff            ; $C3E8
-    beq     loc_C3E2                ; $C3EB
+    beq     Game_NextStep           ; $C3EB
 
-loc_C3ED:
+; ---------------------------------------------------------------------------
+; Lives_Wait
+;
+; Wait for timerFast, then advance gameMode; meanwhile draw Link standing
+; beside the text (Lives_DrawLink).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Lives_Wait:
     lda     timerFast               ; $C3ED
-    bne     loc_C3F5                ; $C3F0
+    bne     Lives_DrawLink          ; $C3F0
     inc     gameMode                ; $C3F2
 
-loc_C3F5:
+; ---------------------------------------------------------------------------
+; Lives_DrawLink
+;
+; Draw Link standing at (X $78, Y $50) on the lives screen.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Lives_DrawLink:
     lda     #$50                    ; $C3F5
     sta     objY                    ; $C3F7
     lda     #$78                    ; $C3F9
@@ -766,9 +886,9 @@ GameState_Respawn:
     jsr     Game_CheckStepChange    ; $C410
     jsr     JumpTable               ; $C413
 ; (inline jump table)
-    .word   loc_C3A5                ; $C416
-    .word   loc_C3B5                ; $C418
-    .word   loc_C3E6                ; $C41A
+    .word   Lives_Blank             ; $C416
+    .word   Lives_Draw              ; $C418
+    .word   Lives_Unblank           ; $C41A
     .word   @loc_C41E               ; $C41C
 
 @loc_C41E:
@@ -797,9 +917,9 @@ GameState_Respawn:
     sta     gameMode                ; $C443
 
 @loc_C446:
-    jmp     loc_C3F5                ; $C446
+    jmp     Lives_DrawLink          ; $C446
 
-dat_C449:
+LivesScreenPalette:
     .byte   $3F, $00, $04, $0F, $30, $12, $16, $3F, $10, $04, $0F, $18, $36, $2A, $FF; $C449
 
 dat_C458:
@@ -939,7 +1059,7 @@ Area_Load:
     sta     (enemyListPtr),y        ; $C562
     iny                             ; $C564
     iny                             ; $C565
-    bne     @loop                 ; $C566
+    bne     @loop                   ; $C566
 
 @loc_C568:
     ldx     #$40                    ; $C568
@@ -961,7 +1081,7 @@ Area_Load:
     sta     sramAreaTiles + 2 * AREA_PAGE_SIZE - 1,y ; $C581
     sta     sramAreaTiles + 3 * AREA_PAGE_SIZE - 1,y ; $C584
     dec     temp0                   ; $C587
-    bne     @loop2                ; $C589
+    bne     @loop2                  ; $C589
     ldy     #$03                    ; $C58B
     lda     (areaDataPtr),y         ; $C58D
     sta     ram_07AF                ; $C58F
@@ -1019,11 +1139,11 @@ Area_Load:
     iny                             ; $C5E9
     tya                             ; $C5EA
     and     #$0F                    ; $C5EB
-    bne     @loop4                ; $C5ED
+    bne     @loop4                  ; $C5ED
     inc     areaBuildPage           ; $C5EF
     lda     areaBuildPage           ; $C5F2
     cmp     #$04                    ; $C5F5
-    bne     @loop3                ; $C5F7
+    bne     @loop3                  ; $C5F7
 ; (end of code not executed in the test movies)
 
 @loc_C5F9:
@@ -1048,17 +1168,34 @@ Area_Load:
     sta     columnIndex+1           ; $C629
     jmp     Game_BlankAndNextMode   ; $C62C
 
-loc_C62F:
+; ---------------------------------------------------------------------------
+; Mode_StartSideView
+;
+; gameMode $0A: map the area's CHR bank and start side view play
+; (SideView_Start).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Mode_StartSideView:
     lda     areaChrBank             ; $C62F
     jsr     Mmc1_SetChrBank         ; $C632
     jsr     Mmc1_SetPrgBank0        ; $C635
-    jmp     loc_0_8CE1              ; $C638
+    jmp     SideView_Start          ; $C638
 ; (unreferenced: $C63B-$C63D, 3 bytes)
     .byte   $4C, $C9, $FF                                                   ; $C63B
 
-loc_C63E:
+; ---------------------------------------------------------------------------
+; Mode_EnterArea
+;
+; gameMode $12: enter the area set up by Location_SetupEntry: save the
+; entry scroll (Area_SaveEntryScroll) and load the area (gameMode $14,
+; GAME_MODE_LOAD_ROOM).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_EnterArea:
     inc     gameMode                ; $C63E
-    jmp     loc_C68A                ; $C641
+    jmp     Mode_FallSaveScroll     ; $C641
 
 ; ---------------------------------------------------------------------------
 ; Mode_FindConnectedRoom
@@ -1102,16 +1239,33 @@ Mode_FindConnectedRoom:
 @loc_C679:
     sta     columnPage              ; $C679
 
-loc_C67C:
+; ---------------------------------------------------------------------------
+; Area_SaveEntryScroll
+;
+; Save the scroll state as entry 4 of the SRAM page tables
+; (Scroll_SavePageState), set areaStartPage to 4 to start from it, and
+; blank the screen for the next mode.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_SaveEntryScroll:
     ldx     #$04                    ; $C67C
     stx     areaStartPage           ; $C67E
     jsr     Scroll_SavePageState    ; $C681
     inc     ram_0705                ; $C684
     jmp     Game_BlankAndNextMode   ; $C687
 
-loc_C68A:
+; ---------------------------------------------------------------------------
+; Mode_FallSaveScroll
+;
+; gameMode $0C: save the entry scroll before falling into an area
+; (Area_SaveEntryScroll); the fall follows in gameModes $0D-$0F.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_FallSaveScroll:
     jsr     Mmc1_SetPrgBank0        ; $C68A
-    jmp     loc_C67C                ; $C68D
+    jmp     Area_SaveEntryScroll    ; $C68D
 
 ; ---------------------------------------------------------------------------
 ; Scroll_SavePageState
@@ -1206,14 +1360,29 @@ Mode_FallStart:
     sta     sfxRequest+2            ; $C707
     jmp     Game_UnblankAndNextMode ; $C709
 
-loc_C70C:
+; ---------------------------------------------------------------------------
+; Mode_PlaceLink
+;
+; gameMode $15: after loading a room, put Link on the ground
+; (Link_PlaceOnGround) and draw the area (gameMode $09).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_PlaceLink:
     lda     ram_071F                ; $C70C
     sta     ram_0720                ; $C70F
     lda     #$09                    ; $C712
     sta     gameMode                ; $C714
     jmp     Link_PlaceOnGround      ; $C717
 
-loc_C71A:
+; ---------------------------------------------------------------------------
+; Death_StartAnimation
+;
+; Death gameMode 2: set the death animation timer and turn rendering on.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Death_StartAnimation:
     lda     #$07                    ; $C71A
     sta     timerSlow               ; $C71C
     jmp     Game_UnblankAndNextMode ; $C71F
@@ -1314,7 +1483,7 @@ Area_DrawFloors:
 @loc_C7B4:
     iny                             ; $C7B4
     cpy     areaDataLength          ; $C7B5
-    bcc     @loop                 ; $C7B8
+    bcc     @loop                   ; $C7B8
     dey                             ; $C7BA
     lda     (areaDataPtr),y         ; $C7BB
     cmp     #$0F                    ; $C7BD
@@ -1366,11 +1535,11 @@ Area_DrawFloors:
     lda     areaBuildColumn         ; $C807
     cmp     ram_010B                ; $C80A
     bpl     @loc_C812               ; $C80D
-    jmp     @loc_C78A             ; $C80F
+    jmp     @loc_C78A               ; $C80F
 
 @loc_C812:
     ldy     areaDataOffset          ; $C812
-    jmp     @loc_C795             ; $C815
+    jmp     @loc_C795               ; $C815
 
 @done:
     rts                             ; $C818
@@ -1436,7 +1605,7 @@ Area_DrawFloorColumn:
 @loop2:
     lsr     a                       ; $C85B
     dex                             ; $C85C
-    bne     @loop2                ; $C85D
+    bne     @loop2                  ; $C85D
 
 @loc_C85F:
     tay                             ; $C85F
@@ -1463,7 +1632,7 @@ Area_DrawFloorColumn:
     ldy     temp8                   ; $C87E
     lsr     ram_010E                ; $C880
     dec     ram_010F                ; $C883
-    bpl     @loop                 ; $C886
+    bpl     @loop                   ; $C886
     ldx     #$05                    ; $C888
     iny                             ; $C88A
     tya                             ; $C88B
@@ -1528,7 +1697,7 @@ Area_DecodeObjects:
     cmp     #$D0                    ; $C8DF
     bne     @loc_C8E9               ; $C8E1
     cpy     areaDataLength          ; $C8E3
-    bne     @loop                 ; $C8E6
+    bne     @loop                   ; $C8E6
     rts                             ; $C8E8
 
 @loc_C8E9:
@@ -1552,7 +1721,7 @@ Area_DecodeObjects:
 @loc_C909:
     ldy     areaDataOffset          ; $C909
     cpy     areaDataLength          ; $C90C
-    bne     @loop                 ; $C90F
+    bne     @loop                   ; $C90F
     rts                             ; $C911
 
 ; ---------------------------------------------------------------------------
@@ -1695,7 +1864,7 @@ Area_PlaceItem:
     lda     enemyActive,x           ; $C9A7
     beq     @loc_C9AF               ; $C9A9
     dex                             ; $C9AB
-    bpl     @loop                 ; $C9AC
+    bpl     @loop                   ; $C9AC
 ; (code below not executed in the test movies)
     inx                             ; $C9AE
 ; (end of code not executed in the test movies)
@@ -1802,7 +1971,7 @@ Death_LoseLife:
 @loop:
     jsr     Stat_FillMeter          ; $CA26
     dex                             ; $CA29
-    bpl     @loop                 ; $CA2A
+    bpl     @loop                   ; $CA2A
     lda     #$00                    ; $CA2C
     sta     dialogType              ; $CA2E
     sta     pauseState              ; $CA31
@@ -1814,7 +1983,7 @@ Death_LoseLife:
 @loop2:
     sta     ram_05C3,y              ; $CA3E
     dey                             ; $CA41
-    bpl     @loop2                ; $CA42
+    bpl     @loop2                  ; $CA42
     dec     lives                   ; $CA44
     bne     @loc_CA6C               ; $CA47
 ; (code below not executed in the test movies)
@@ -1893,18 +2062,18 @@ Death_ContinueMenu:
 @loop:
     sta     ram_00E0,x              ; $CAAA
     dex                             ; $CAAC
-    bpl     @loop                 ; $CAAD
+    bpl     @loop                   ; $CAAD
     ldy     #$C0                    ; $CAAF
 
 @loop2:
     sta     lives,y                 ; $CAB1
     iny                             ; $CAB4
-    bne     @loop2                ; $CAB5
+    bne     @loop2                  ; $CAB5
     lda     menuCursor              ; $CAB7
     beq     @loc_CAC4               ; $CABA
 ; (code below not executed in the test movies)
     lda     #$40                    ; $CABC
-    sta     ram_07B0                ; $CABE
+    sta     saveBlinkTimer          ; $CABE
     jmp     Game_NextMode           ; $CAC1
 ; (end of code not executed in the test movies)
 
@@ -1949,7 +2118,7 @@ Death_ContinueMenu:
     lda     sram_6974,y             ; $CAFF
     sta     ppuBuffer0,y            ; $CB02
     dey                             ; $CB05
-    bpl     @loop3                ; $CB06
+    bpl     @loop3                  ; $CB06
     lda     menuCursor              ; $CB08
     eor     #$01                    ; $CB0B
     sta     menuCursor              ; $CB0D
@@ -1993,7 +2162,7 @@ GameState_StartEnding:
     lda     #$0E                    ; $CB27
     sta     areaChrBank             ; $CB29
     jsr     Mmc1_SetPrgBank5        ; $CB2C
-    jmp     loc_C360                ; $CB2F
+    jmp     Game_NextState          ; $CB2F
 
 dat_CB32:
     .byte   $3C                                                             ; $CB32
@@ -2014,7 +2183,7 @@ Mode_EnterLocation:
     ldy     areaLocation            ; $CB38
     cpy     #$FF                    ; $CB3B
     bne     @loc_CB42               ; $CB3D
-    jmp     loc_CC0F                ; $CB3F
+    jmp     Location_EnterEncounter ; $CB3F
 
 @loc_CB42:
     lda     currentRegion           ; $CB42
@@ -2125,7 +2294,7 @@ Location_Enter:
 
 @loc_CBF2:
     inc     gameMode                ; $CBF2
-    jmp     loc_CC40                ; $CBF5
+    jmp     Location_ChooseEntry    ; $CBF5
 
 @loc_CBF8:
     lda     #$01                    ; $CBF8
@@ -2136,9 +2305,19 @@ Location_Enter:
     sta     areaStartPage           ; $CC04
     jsr     Location_SetupEntry     ; $CC07
     lda     #$11                    ; $CC0A
-    jmp     loc_CC85                ; $CC0C
+    jmp     Location_SetMode        ; $CC0C
 
-loc_CC0F:
+; ---------------------------------------------------------------------------
+; Location_EnterEncounter
+;
+; Enter a random encounter: there is no location under Link
+; (areaLocation = $FF), so make one in location slot $3E from the
+; encounter area for the terrain (OverworldBank::Encounters, by region
+; half) at Link's position, and enter it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Location_EnterEncounter:
     ldy     currentRegion           ; $CC0F
     lda     overworldY              ; $CC12
     cmp     dat_CB32,y              ; $CC14
@@ -2162,14 +2341,23 @@ loc_CC0F:
     lda     #$00                    ; $CC3B
     sta     areaMusic               ; $CC3D
 
-loc_CC40:
+; ---------------------------------------------------------------------------
+; Location_ChooseEntry
+;
+; Set up the entry into location y: from Location_SetupEntry, unless the
+; location has bit 5 of sramLocDest set or starts on page 0 or 3, which
+; go to Location_CheckFallEntry.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Location_ChooseEntry:
     lda     sramLocDest,y           ; $CC40
     and     #$20                    ; $CC43
-    bne     loc_CC89                ; $CC45
+    bne     Location_CheckFallEntry ; $CC45
     lda     areaStartPage           ; $CC47
-    beq     loc_CC89                ; $CC4A
+    beq     Location_CheckFallEntry ; $CC4A
     cmp     #$03                    ; $CC4C
-    beq     loc_CC89                ; $CC4E
+    beq     Location_CheckFallEntry ; $CC4E
 
 ; ---------------------------------------------------------------------------
 ; Location_SetupEntry
@@ -2204,19 +2392,41 @@ Location_SetupEntry:
     lda     sramLocDest,y           ; $CC7B
     asl     a                       ; $CC7E
     lda     #$12                    ; $CC7F
-    bcc     loc_CC85                ; $CC81
+    bcc     Location_SetMode        ; $CC81
     lda     #$0C                    ; $CC83
 
-loc_CC85:
+; ---------------------------------------------------------------------------
+; Location_SetMode
+;
+; Set gameMode to a.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Location_SetMode:
     sta     gameMode                ; $CC85
 
-loc_CC88:
+; ---------------------------------------------------------------------------
+; Location_SetupEntryDone
+;
+; Return (shared tail of Location_SetupEntry).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Location_SetupEntryDone:
     rts                             ; $CC88
 
-loc_CC89:
+; ---------------------------------------------------------------------------
+; Location_CheckFallEntry
+;
+; If location y is entered by falling (sramLocDest bit 7), set it up from
+; page 1 (Location_SetupEntry).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Location_CheckFallEntry:
     lda     sramLocDest,y           ; $CC89
     asl     a                       ; $CC8C
-    bcc     loc_CC88                ; $CC8D
+    bcc     Location_SetupEntryDone ; $CC8D
     lda     #$01                    ; $CC8F
     sta     areaStartPage           ; $CC91
     jmp     Location_SetupEntry     ; $CC94
@@ -2246,23 +2456,49 @@ Location_GetArea:
     sta     areaEntrySide           ; $CCAB
     rts                             ; $CCAE
 
-loc_CCAF:
+; ---------------------------------------------------------------------------
+; ReturnToOverworld_SetY66
+;
+; Mode_ReturnToOverworld for a location with Y = 0 and X other than $3D:
+; put Link at Y $66.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+ReturnToOverworld_SetY66:
     lda     #$66                    ; $CCAF
-    bne     loc_CCCC                ; $CCB1
+    bne     ReturnToOverworld_SetPosition ; $CCB1
 
-loc_CCB3:
+; ---------------------------------------------------------------------------
+; Mode_ReturnToOverworld
+;
+; gameMode $01: return to the overworld at the location Link left
+; (areaLocation): set overworldY and overworldX from it (moving Link
+; beside it for locations with sramLocDest bit 6), then go on to set up
+; the overworld.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_ReturnToOverworld:
     lda     #$00                    ; $CCB3
     sta     ram_0709                ; $CCB5
     sta     ram_075B                ; $CCB8
     ldy     areaLocation            ; $CCBB
     lda     sramLocY,y              ; $CCBE
-    bne     loc_CCCC                ; $CCC1
+    bne     ReturnToOverworld_SetPosition ; $CCC1
     lda     #$3D                    ; $CCC3
     cmp     sramLocX,y              ; $CCC5
-    bne     loc_CCAF                ; $CCC8
+    bne     ReturnToOverworld_SetY66 ; $CCC8
     lda     #$51                    ; $CCCA
 
-loc_CCCC:
+; ---------------------------------------------------------------------------
+; ReturnToOverworld_SetPosition
+;
+; Set overworldY to a and overworldX from location y (part of
+; Mode_ReturnToOverworld).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+ReturnToOverworld_SetPosition:
     and     #$7F                    ; $CCCC
     sta     overworldY              ; $CCCE
     lda     sramLocX,y              ; $CCD0
@@ -2312,7 +2548,14 @@ loc_CCCC:
     dec     overworldY              ; $CD14
     jmp     @loc_CCF9               ; $CD16
 
-loc_CD19:
+; ---------------------------------------------------------------------------
+; Mode_SaveAfterEnding
+;
+; Save the game (Death_SaveGame), then advance gameMode.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_SaveAfterEnding:
     jsr     Game_CheckStepChange    ; $CD19
     jsr     JumpTable               ; $CD1C
 ; (inline jump table)
@@ -2413,25 +2656,25 @@ Mode_LoadWorld:
     lda     AreaBank::EnemyLists,y  ; $CD9A
     sta     sramEnemyLists,y        ; $CD9D
     iny                             ; $CDA0
-    bne     @loop                 ; $CDA1
+    bne     @loop                   ; $CDA1
 
 @loop2:
     lda     AreaBank::EnemyLists+256,y ; $CDA3
     sta     sramEnemyLists+256,y    ; $CDA6
     iny                             ; $CDA9
-    bne     @loop2                ; $CDAA
+    bne     @loop2                  ; $CDAA
 
 @loop3:
     lda     AreaBank::EnemyLists+512,y ; $CDAC
     sta     sramEnemyLists+512,y    ; $CDAF
     iny                             ; $CDB2
-    bne     @loop3                ; $CDB3
+    bne     @loop3                  ; $CDB3
 
 @loop4:
     lda     AreaBank::EnemyLists+768,y ; $CDB5
     sta     sramEnemyLists+768,y    ; $CDB8
     iny                             ; $CDBB
-    bne     @loop4                ; $CDBC
+    bne     @loop4                  ; $CDBC
     ldx     currentRegion           ; $CDBE
     lda     RegionOverworldMapOffsets,x ; $CDC1
     tax                             ; $CDC4
@@ -2444,42 +2687,42 @@ Mode_LoadWorld:
     lda     (temp2),y               ; $CDCF
     sta     sramOverworldMap,y      ; $CDD1
     iny                             ; $CDD4
-    bne     @loop5                ; $CDD5
+    bne     @loop5                  ; $CDD5
     inc     temp3                   ; $CDD7
 
 @loop6:
     lda     (temp2),y               ; $CDD9
     sta     sramOverworldMap+256,y  ; $CDDB
     iny                             ; $CDDE
-    bne     @loop6                ; $CDDF
+    bne     @loop6                  ; $CDDF
     inc     temp3                   ; $CDE1
 
 @loop7:
     lda     (temp2),y               ; $CDE3
     sta     sramOverworldMap+512,y  ; $CDE5
     iny                             ; $CDE8
-    bne     @loop7                ; $CDE9
+    bne     @loop7                  ; $CDE9
     inc     temp3                   ; $CDEB
 
 @loop8:
     lda     (temp2),y               ; $CDED
     sta     sramOverworldMap+768,y  ; $CDEF
     iny                             ; $CDF2
-    bpl     @loop8                ; $CDF3
+    bpl     @loop8                  ; $CDF3
     ldy     #$00                    ; $CDF5
 
 @loop9:
     lda     (temp0),y               ; $CDF7
     sta     sramLocY,y              ; $CDF9
     iny                             ; $CDFC
-    bne     @loop9                ; $CDFD
+    bne     @loop9                  ; $CDFD
     inc     temp1                   ; $CDFF
 
 @loop10:
     lda     (temp0),y               ; $CE01
     sta     sramRoomConnections+4,y ; $CE03
     iny                             ; $CE06
-    bne     @loop10               ; $CE07
+    bne     @loop10                 ; $CE07
     inc     temp1                   ; $CE09
 
 @loop11:
@@ -2487,7 +2730,7 @@ Mode_LoadWorld:
     sta     sramDoors+8,y           ; $CE0D
     iny                             ; $CE10
     cpy     #$58                    ; $CE11
-    bne     @loop11               ; $CE13
+    bne     @loop11                 ; $CE13
     ldy     #$00                    ; $CE15
 
 @loop12:
@@ -2495,7 +2738,7 @@ Mode_LoadWorld:
     sta     sramAreaPalettes,y      ; $CE1A
     iny                             ; $CE1D
     cpy     #$E0                    ; $CE1E
-    bcc     @loop12               ; $CE20
+    bcc     @loop12                 ; $CE20
     lda     currentWorld            ; $CE22
     cmp     #$03                    ; $CE25
     bcc     @loc_CE77               ; $CE27
@@ -2518,7 +2761,7 @@ Mode_LoadWorld:
     iny                             ; $CE44
     inx                             ; $CE45
     cpx     #$10                    ; $CE46
-    bcc     @loop13               ; $CE48
+    bcc     @loop13                 ; $CE48
     pla                             ; $CE4A
     tay                             ; $CE4B
 
@@ -2529,13 +2772,13 @@ Mode_LoadWorld:
     inx                             ; $CE53
     tya                             ; $CE54
     and     #$0F                    ; $CE55
-    bne     @loop14               ; $CE57
+    bne     @loop14                 ; $CE57
     tya                             ; $CE59
     sec                             ; $CE5A
     sbc     #$10                    ; $CE5B
     tay                             ; $CE5D
     cpx     #$80                    ; $CE5E
-    bcc     @loop14               ; $CE60
+    bcc     @loop14                 ; $CE60
     pla                             ; $CE62
 
 @loc_CE63:
@@ -2551,7 +2794,7 @@ Mode_LoadWorld:
     iny                             ; $CE71
     inx                             ; $CE72
     cpx     #$04                    ; $CE73
-    bcc     @loop15               ; $CE75
+    bcc     @loop15                 ; $CE75
 
 @loc_CE77:
     lda     #$00                    ; $CE77
@@ -2602,7 +2845,7 @@ Mode_LoadWorld:
     sbc     #$00                    ; $CEC7
     sta     temp5                   ; $CEC9
     ora     temp4                   ; $CECB
-    bne     @loop16               ; $CECD
+    bne     @loop16                 ; $CECD
     ldy     currentWorld            ; $CECF
     dey                             ; $CED2
     cpy     #$02                    ; $CED3
@@ -2624,15 +2867,15 @@ Mode_LoadWorld:
     lda     (temp0),y               ; $CEEE
     sta     sramEnemyAttr+13,y      ; $CEF0
     dey                             ; $CEF3
-    bpl     @loop17               ; $CEF4
+    bpl     @loop17                 ; $CEF4
 
 @loc_CEF6:
     ldy     currentWorld            ; $CEF6
-    bne     loc_CF09                ; $CEF9
+    bne     LoadWorld_EnterArea     ; $CEF9
     lda     ram_0709                ; $CEFB
     bne     Game_NextMode           ; $CEFE
     lda     #$06                    ; $CF00
-    jmp     loc_CF0B                ; $CF02
+    jmp     LoadWorld_SetMode       ; $CF02
 
 ; ---------------------------------------------------------------------------
 ; Game_NextMode
@@ -2645,10 +2888,26 @@ Game_NextMode:
     inc     gameMode                ; $CF05
     rts                             ; $CF08
 
-loc_CF09:
+; ---------------------------------------------------------------------------
+; LoadWorld_EnterArea
+;
+; Mode_LoadWorld in a side view world: go to gameMode $07 to enter the
+; area.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+LoadWorld_EnterArea:
     lda     #$07                    ; $CF09
 
-loc_CF0B:
+; ---------------------------------------------------------------------------
+; LoadWorld_SetMode
+;
+; Set gameMode to a and start the area music ($01, or $08 in the Great
+; Palace).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+LoadWorld_SetMode:
     sta     gameMode                ; $CF0B
     lda     #$01                    ; $CF0E
     cpy     #$02                    ; $CF10
@@ -2699,11 +2958,11 @@ Mode_DrawArea:
     jsr     Mmc1_SetPrgBankArea     ; $CF3C
     jsr     JumpTableBySubStep      ; $CF3F
 ; (inline jump table)
-    .word   loc_D25E                ; $CF42
-    .word   loc_D269                ; $CF44
-    .word   loc_D05B                ; $CF46
-    .word   loc_D0FC                ; $CF48
-    .word   loc_D120                ; $CF4A
+    .word   DrawArea_ClearNametable2400 ; $CF42
+    .word   Ppu_ClearNametable2000  ; $CF44
+    .word   DrawArea_QueuePalettes  ; $CF46
+    .word   DrawArea_DrawHud        ; $CF48
+    .word   DrawArea_DrawColumns    ; $CF4A
 
 ; ---------------------------------------------------------------------------
 ; Mode_LeaveArea
@@ -2755,17 +3014,17 @@ Mode_LeaveArea:
     lda     #$00                    ; $CF98
 
 @loc_CF9A:
-    jmp     loc_CFF8                ; $CF9A
+    jmp     Game_SetMode            ; $CF9A
 
 @loc_CF9D:
     ldy     #$04                    ; $CF9D
     sty     ram_05E9                ; $CF9F
     ldy     currentRegion           ; $CFA2
-    bne     @loc_CF9A             ; $CFA5
+    bne     @loc_CF9A               ; $CFA5
     ldy     areaId                  ; $CFA7
-    bne     @loc_CF9A             ; $CFAA
+    bne     @loc_CF9A               ; $CFAA
     sty     ram_05E9                ; $CFAC
-    jmp     loc_CFF8                ; $CFAF
+    jmp     Game_SetMode            ; $CFAF
 
 @loc_CFB2:
     lsr     a                       ; $CFB2
@@ -2795,7 +3054,7 @@ Mode_LeaveArea:
     beq     Game_EnterNextArea      ; $CFE3
     jsr     Music_Request80         ; $CFE5
     lda     #$02                    ; $CFE8
-    bne     loc_CFF3                ; $CFEA
+    bne     Game_EnterNextAreaWithMusic ; $CFEA
 
 ; ---------------------------------------------------------------------------
 ; Game_EnterNextArea
@@ -2807,16 +3066,37 @@ Mode_LeaveArea:
 ; ---------------------------------------------------------------------------
 Game_EnterNextArea:
     ldx     ram_0704                ; $CFEC
-    bne     loc_CFF6                ; $CFEF
+    bne     Game_EnterNextAreaKeepMusic ; $CFEF
     lda     #$00                    ; $CFF1
 
-loc_CFF3:
+; ---------------------------------------------------------------------------
+; Game_EnterNextAreaWithMusic
+;
+; Set areaMusic to a and go to gameMode $07.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Game_EnterNextAreaWithMusic:
     sta     areaMusic               ; $CFF3
 
-loc_CFF6:
+; ---------------------------------------------------------------------------
+; Game_EnterNextAreaKeepMusic
+;
+; Go to gameMode $07 to enter the next area.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Game_EnterNextAreaKeepMusic:
     lda     #$07                    ; $CFF6
 
-loc_CFF8:
+; ---------------------------------------------------------------------------
+; Game_SetMode
+;
+; Set gameMode to a.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_SetMode:
     sta     gameMode                ; $CFF8
     rts                             ; $CFFB
 
@@ -2853,10 +3133,10 @@ Mode_EnterDoor:
     jsr     Game_EnterNextArea      ; $D028
     ldx     ram_075B                ; $D02B
     dex                             ; $D02E
-    bne     loc_D041                ; $D02F
+    bne     Music_Request80Done     ; $D02F
     lda     townCode                ; $D031
     cmp     #$07                    ; $D034
-    beq     loc_D041                ; $D036
+    beq     Music_Request80Done     ; $D036
     lda     #$08                    ; $D038
     sta     areaMusic               ; $D03A
 
@@ -2871,7 +3151,14 @@ Music_Request80:
     lda     #$80                    ; $D03D
     sta     musicRequest            ; $D03F
 
-loc_D041:
+; ---------------------------------------------------------------------------
+; Music_Request80Done
+;
+; Return (shared tail of Music_Request80).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_Request80Done:
     rts                             ; $D041
 
 ; ---------------------------------------------------------------------------
@@ -2887,16 +3174,32 @@ Death_ClearScreen:
     jsr     Ppu_ClearNametables     ; $D047
     jmp     Game_NextMode           ; $D04A
 
-loc_D04D:
+; ---------------------------------------------------------------------------
+; Death_DrawContinueScreen
+;
+; Death gameMode 6: draw the continue screen with CHR bank 6: clear the
+; nametables, load ContinueScreenPalette, then queue ContinueScreenText.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Death_DrawContinueScreen:
     lda     #$06                    ; $D04D
     jsr     Mmc1_SetChrBank         ; $D04F
     jsr     JumpTableBySubStep      ; $D052
 ; (inline jump table)
     .word   Ppu_ClearNametables     ; $D055
-    .word   loc_D0B8                ; $D057
-    .word   loc_D150                ; $D059
+    .word   Death_LoadPalette       ; $D057
+    .word   Death_ShowContinueText  ; $D059
 
-loc_D05B:
+; ---------------------------------------------------------------------------
+; DrawArea_QueuePalettes
+;
+; Mode_DrawArea step 2: queue the area's background palette and sprite
+; palette (by header byte 3) from sramAreaPalettes.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+DrawArea_QueuePalettes:
     ldy     #$03                    ; $D05B
     lda     (areaDataPtr),y         ; $D05D
     lsr     a                       ; $D05F
@@ -2929,7 +3232,7 @@ loc_D05B:
     inx                             ; $D08E
     iny                             ; $D08F
     cpy     #$10                    ; $D090
-    bcc     @loop                 ; $D092
+    bcc     @loop                   ; $D092
     ldx     temp0                   ; $D094
 
 @loop2:
@@ -2944,27 +3247,42 @@ loc_D05B:
     inx                             ; $D0A6
     iny                             ; $D0A7
     cpy     #$20                    ; $D0A8
-    bcc     @loop2                ; $D0AA
+    bcc     @loop2                  ; $D0AA
     sty     ppuBuffer0+2            ; $D0AC
     lda     #$FF                    ; $D0AF
     sta     ppuBuffer0+3,y          ; $D0B1
     inc     gameSubStep             ; $D0B4
     rts                             ; $D0B7
 
-loc_D0B8:
+; ---------------------------------------------------------------------------
+; Death_LoadPalette
+;
+; Queue PPU string 3 (ContinueScreenPalette) and advance gameSubStep.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Death_LoadPalette:
     lda     #$03                    ; $D0B8
-    jmp     loc_D11A                ; $D0BA
+    jmp     Game_NextSubStepString  ; $D0BA
 
-dat_D0BD:
+ContinueScreenPalette:
     .byte   $3F, $00, $10, $0F, $30, $12, $16, $0F, $30, $30, $30, $0F, $30, $30, $30, $0F; $D0BD
     .byte   $26, $0F, $0F, $FF                                              ; $D0CD
 
-dat_D0D1:
+HudTemplate:
     .byte   $20, $44, $06, $E6, $DA, $E0, $E2, $DC, $F6, $20, $4D, $05      ; $D0D1
     .byte   $E5, $E2, $DF, $DE, $F6, $20, $5A, $04, $E7, $DE, $F1, $ED, $20, $61, $01, $C9; $D0DD
     .byte   $20, $6D, $01, $F7, $20, $7A, $05, $CE, $D0, $D0, $D0, $D0, $4C, $02, $03; $D0ED
 
-loc_D0FC:
+; ---------------------------------------------------------------------------
+; DrawArea_DrawHud
+;
+; Mode_DrawArea step 3: draw the status bar (Hud_Draw) and queue its
+; template (HudTemplate, PPU string 7).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+DrawArea_DrawHud:
     jsr     Mmc1_SetPrgBank0        ; $D0FC
     lda     #$80                    ; $D0FF
     sta     hudRedraw               ; $D101
@@ -2977,11 +3295,26 @@ loc_D0FC:
     jsr     Hud_Draw                ; $D115
     lda     #$07                    ; $D118
 
-loc_D11A:
+; ---------------------------------------------------------------------------
+; Game_NextSubStepString
+;
+; Advance gameSubStep and queue PPU string a.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_NextSubStepString:
     inc     gameSubStep             ; $D11A
-    jmp     loc_D158                ; $D11D
+    jmp     Ppu_SelectString2       ; $D11D
 
-loc_D120:
+; ---------------------------------------------------------------------------
+; DrawArea_DrawColumns
+;
+; Mode_DrawArea step 4: draw the area's columns (Scroll_DrawColumnStep)
+; and spawn enemies into the empty slots, then advance gameMode.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+DrawArea_DrawColumns:
     jsr     Mmc1_SetPrgBank0        ; $D120
     jsr     Scroll_DrawColumnStep   ; $D123
     jsr     Mmc1_SetPrgBankArea     ; $D126
@@ -2996,12 +3329,12 @@ loc_D120:
 
 @loc_D135:
     dex                             ; $D135
-    bpl     @loop                 ; $D136
+    bpl     @loop                   ; $D136
     lda     columnDrawStep          ; $D138
     beq     @loc_D143               ; $D13B
     cmp     #$05                    ; $D13D
     beq     @loc_D14B               ; $D13F
-    bne     loc_D120                ; $D141
+    bne     DrawArea_DrawColumns    ; $D141
 
 @loc_D143:
     dec     ram_0722                ; $D143
@@ -3010,14 +3343,28 @@ loc_D120:
 
 @loc_D14B:
     lda     #$02                    ; $D14B
-    jmp     loc_D158                ; $D14D
+    jmp     Ppu_SelectString2       ; $D14D
 
-loc_D150:
+; ---------------------------------------------------------------------------
+; Death_ShowContinueText
+;
+; Queue PPU string 8 (ContinueScreenText) and advance gameMode.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Death_ShowContinueText:
     inc     gameMode                ; $D150
     lda     #$08                    ; $D153
-    jmp     loc_D158                ; $D155
+    jmp     Ppu_SelectString2       ; $D155
 
-loc_D158:
+; ---------------------------------------------------------------------------
+; Ppu_SelectString2
+;
+; Queue PPU string a (a copy of Ppu_SelectString).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ppu_SelectString2:
     sta     ppuStringSelect         ; $D158
     rts                             ; $D15B
 
@@ -3034,7 +3381,7 @@ Game_CheckStepChange:
     lda     gameStep                ; $D15C
     cmp     gameStepPrev            ; $D15F
     sta     gameStepPrev            ; $D162
-    bne     loc_D195                ; $D165
+    bne     Game_ResetSubStep       ; $D165
     rts                             ; $D167
 
 ; ---------------------------------------------------------------------------
@@ -3051,7 +3398,7 @@ Game_CheckModeChange:
     lda     gameMode                ; $D168
     cmp     gameModePrev            ; $D16B
     sta     gameModePrev            ; $D16E
-    bne     loc_D18D                ; $D171
+    bne     Game_ResetStep          ; $D171
     rts                             ; $D173
 
 ; ---------------------------------------------------------------------------
@@ -3068,23 +3415,44 @@ Game_CheckStateChange:
     lda     gameState               ; $D174
     cmp     gameStatePrev           ; $D177
     sta     gameStatePrev           ; $D17A
-    beq     loc_D19A                ; $D17D
+    beq     Game_CheckStateChangeDone ; $D17D
     jsr     Oam_HideAll             ; $D17F
     lda     gameState               ; $D182
     ldy     #$00                    ; $D185
     sty     ram_073C                ; $D187
     sty     gameMode                ; $D18A
 
-loc_D18D:
+; ---------------------------------------------------------------------------
+; Game_ResetStep
+;
+; Reset gameStep and gameSubStep (and ram_073B).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_ResetStep:
     ldy     #$00                    ; $D18D
     sty     ram_073B                ; $D18F
     sty     gameStep                ; $D192
 
-loc_D195:
+; ---------------------------------------------------------------------------
+; Game_ResetSubStep
+;
+; Reset gameSubStep.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_ResetSubStep:
     ldy     #$00                    ; $D195
     sty     gameSubStep             ; $D197
 
-loc_D19A:
+; ---------------------------------------------------------------------------
+; Game_CheckStateChangeDone
+;
+; Return (shared tail of Game_CheckStateChange).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_CheckStateChangeDone:
     rts                             ; $D19A
 
 ; ---------------------------------------------------------------------------
@@ -3251,12 +3619,19 @@ loc_D247:
 ; ---------------------------------------------------------------------------
 Oam_HideAll:
     ldy     #$00                    ; $D24C
-    beq     loc_D252                ; $D24E
+    beq     Oam_HideFrom            ; $D24E
 
 Oam_HideAllButSprite0:
     ldy     #$04                    ; $D250
 
-loc_D252:
+; ---------------------------------------------------------------------------
+; Oam_HideFrom
+;
+; Move sprites y/4 to 63 off the screen.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Oam_HideFrom:
     lda     #$F8                    ; $D252
 
 @loop:
@@ -3265,10 +3640,18 @@ loc_D252:
     iny                             ; $D258
     iny                             ; $D259
     iny                             ; $D25A
-    bne     @loop                 ; $D25B
+    bne     @loop                   ; $D25B
     rts                             ; $D25D
 
-loc_D25E:
+; ---------------------------------------------------------------------------
+; DrawArea_ClearNametable2400
+;
+; Mode_DrawArea step 0: advance gameSubStep and clear the nametable at
+; $2400.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+DrawArea_ClearNametable2400:
     jsr     Game_NextSubStep        ; $D25E
 
 ; ---------------------------------------------------------------------------
@@ -3294,7 +3677,14 @@ Ppu_ClearNametable:
 Ppu_ClearNametables:
     jsr     Ppu_ClearNametable2400  ; $D266
 
-loc_D269:
+; ---------------------------------------------------------------------------
+; Ppu_ClearNametable2000
+;
+; Clear the nametable at $2000, reset the scroll, and advance gameSubStep.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ppu_ClearNametable2000:
     lda     #$20                    ; $D269
     jsr     Ppu_ClearNametable      ; $D26B
     lda     #$00                    ; $D26E
@@ -3336,14 +3726,14 @@ Ram_ClearAll:
 @loop:
     sta     lives,x                 ; $D284
     dex                             ; $D287
-    bne     @loop                 ; $D288
+    bne     @loop                   ; $D288
     ldx     #$00                    ; $D28A
     txa                             ; $D28C
 
 @loop2:
     sta     saveWorld,x             ; $D28D
     dex                             ; $D290
-    bne     @loop2                ; $D291
+    bne     @loop2                  ; $D291
 
 Ram_ClearExceptSaved:
     ldx     #$00                    ; $D293
@@ -3352,7 +3742,7 @@ Ram_ClearExceptSaved:
 @loop:
     sta     timerDivider,x          ; $D296
     dex                             ; $D299
-    bne     @loop                 ; $D29A
+    bne     @loop                   ; $D29A
 
 Ram_ClearWork:
     ldx     #$00                    ; $D29C
@@ -3361,21 +3751,21 @@ Ram_ClearWork:
 @loop:
     sta     linkAttackFrame,x       ; $D29F
     dex                             ; $D2A2
-    bne     @loop                 ; $D2A3
+    bne     @loop                   ; $D2A3
     ldx     #$00                    ; $D2A5
     txa                             ; $D2A7
 
 @loop2:
     sta     ram_0300,x              ; $D2A8
     dex                             ; $D2AB
-    bne     @loop2                ; $D2AC
+    bne     @loop2                  ; $D2AC
     ldx     #$DF                    ; $D2AE
 
 @loop3:
     sta     temp0,x                 ; $D2B0
     dex                             ; $D2B2
     cpx     #$FF                    ; $D2B3
-    bne     @loop3                ; $D2B5
+    bne     @loop3                  ; $D2B5
     stx     ppuBuffer0              ; $D2B7
     stx     ppuBuffer1              ; $D2BA
     rts                             ; $D2BD
@@ -3405,21 +3795,21 @@ Ppu_FillNametable:
 @loop:
     sta     PPUDATA                 ; $D2D2
     iny                             ; $D2D5
-    bne     @loop                 ; $D2D6
+    bne     @loop                   ; $D2D6
     dex                             ; $D2D8
-    bne     @loop                 ; $D2D9
+    bne     @loop                   ; $D2D9
 
 @loop2:
     sta     PPUDATA                 ; $D2DB
     iny                             ; $D2DE
     cpy     #$C0                    ; $D2DF
-    bne     @loop2                ; $D2E1
+    bne     @loop2                  ; $D2E1
     lda     #$00                    ; $D2E3
 
 @loop3:
     sta     PPUDATA                 ; $D2E5
     iny                             ; $D2E8
-    bne     @loop3                ; $D2E9
+    bne     @loop3                  ; $D2E9
 
 loc_D2EB:
     rts                             ; $D2EB
@@ -3471,8 +3861,6 @@ Ppu_WriteStrings:
 
 @loc_D320:
     sta     PPUCTRL                 ; $D320
-
-loc_D323:
     pla                             ; $D323
     asl     a                       ; $D324
     bcc     @loc_D32A               ; $D325
@@ -3492,7 +3880,7 @@ loc_D323:
     lda     (temp0),y               ; $D330
     sta     PPUDATA                 ; $D332
     dex                             ; $D335
-    bne     @loop                 ; $D336
+    bne     @loop                   ; $D336
     iny                             ; $D338
     tya                             ; $D339
     clc                             ; $D33A
@@ -3670,7 +4058,7 @@ Mode_SideView:
     lda     hudRedraw               ; $D41F
     ora     dat_D3CA,x              ; $D422
     sta     hudRedraw               ; $D425
-    lda     ram_07FB                ; $D428
+    lda     musicPlaying            ; $D428
     cmp     #$10                    ; $D42B
     beq     @loc_D433               ; $D42D
     lda     #$10                    ; $D42F
@@ -3704,7 +4092,7 @@ Mode_SideView:
     lda     experience              ; $D461
     adc     #$00                    ; $D464
     sta     experience              ; $D466
-    lda     ram_07FB                ; $D469
+    lda     musicPlaying            ; $D469
     cmp     #$10                    ; $D46C
     beq     @loc_D474               ; $D46E
     lda     #$10                    ; $D470
@@ -3728,7 +4116,7 @@ Mode_SideView:
     lda     experience              ; $D490
     sbc     #$00                    ; $D493
     sta     experience              ; $D495
-    lda     ram_07FB                ; $D498
+    lda     musicPlaying            ; $D498
     cmp     #$10                    ; $D49B
     beq     @loc_D4A3               ; $D49D
     lda     #$10                    ; $D49F
@@ -3758,7 +4146,7 @@ Mode_SideView:
 
 @loop:
     dey                             ; $D4C2
-    bne     @loop                 ; $D4C3
+    bne     @loop                   ; $D4C3
     sta     PPUCTRL                 ; $D4C5
     stx     PPUSCROLL               ; $D4C8
     sty     PPUSCROLL               ; $D4CB
@@ -3769,7 +4157,7 @@ Mode_SideView:
     lda     statMeterDisplay+1      ; $D4D1
     cmp     #$20                    ; $D4D4
     bcs     @loc_D4F3               ; $D4D6
-    lda     ram_07FB                ; $D4D8
+    lda     musicPlaying            ; $D4D8
     cmp     #$10                    ; $D4DB
     bcs     @loc_D4F3               ; $D4DD
     lda     ram_07FC                ; $D4DF
@@ -3935,7 +4323,7 @@ Enemies_Update:
     jsr     Projectile_Update       ; $D5D1
     ldx     currentObject           ; $D5D4
     dex                             ; $D5D6
-    bpl     @loop                 ; $D5D7
+    bpl     @loop                   ; $D5D7
 
 @done:
     rts                             ; $D5D9
@@ -4028,7 +4416,7 @@ Enemy_Spawn:
 
 @loc_D647:
     iny                             ; $D647
-    jmp     @loc_D633             ; $D648
+    jmp     @loc_D633               ; $D648
 
 @loc_D64B:
     dey                             ; $D64B
@@ -4037,7 +4425,7 @@ Enemy_Spawn:
     cmp     temp1                   ; $D650
     beq     @loc_D658               ; $D652
     iny                             ; $D654
-    jmp     @loc_D647             ; $D655
+    jmp     @loc_D647               ; $D655
 
 @loc_D658:
     lda     (enemyListPtr),y        ; $D658
@@ -4164,7 +4552,7 @@ dat_D78D:
     lda     enemyActive,x           ; $D797
     beq     @loc_D7A1               ; $D799
     dex                             ; $D79B
-    bpl     @loop                 ; $D79C
+    bpl     @loop                   ; $D79C
 
 @loc_D79E:
     ldx     currentObject           ; $D79E
@@ -4259,7 +4647,7 @@ dat_D7DF:
     sta     ram_00AF,x              ; $D83E
 
 @loc_D840:
-    bpl     @loc_D818             ; $D840
+    bpl     @loc_D818               ; $D840
 
 @loc_D842:
     jsr     Enemy_SkipAiIfStunned   ; $D842
@@ -5499,7 +5887,7 @@ Math_DivMod15:
     iny                             ; $DF41
     sec                             ; $DF42
     sbc     #$0F                    ; $DF43
-    bcs     @loop                 ; $DF45
+    bcs     @loop                   ; $DF45
     adc     #$0F                    ; $DF47
     rts                             ; $DF49
 
@@ -5563,7 +5951,7 @@ Overworld_CheckSpecialTerrain:
     cmp     dat_DF5E,x              ; $DF7E
     beq     @loc_DF8B               ; $DF81
     dex                             ; $DF83
-    bpl     @loop                 ; $DF84
+    bpl     @loop                   ; $DF84
     inx                             ; $DF86
     stx     ppuStringSelect         ; $DF87
     rts                             ; $DF8A
@@ -5741,7 +6129,7 @@ Link_PlaceOnGround:
     sec                             ; $E044
     sbc     #$10                    ; $E045
     cmp     #$10                    ; $E047
-    bcs     @loop                 ; $E049
+    bcs     @loop                   ; $E049
 
 @loc_E04B:
     inc     objY                    ; $E04B
@@ -5941,7 +6329,7 @@ loc_E18A:
 
 @loc_E198:
     dex                             ; $E198
-    bpl     @loop                 ; $E199
+    bpl     @loop                   ; $E199
     ldx     currentObject           ; $E19B
 
 loc_E19D:
@@ -6135,7 +6523,7 @@ BreakingBlock_Start:
     lda     breakingBlockTimer,x    ; $E294
     beq     @loc_E29E               ; $E297
     dex                             ; $E299
-    bpl     @loop                 ; $E29A
+    bpl     @loop                   ; $E29A
     ldx     #$00                    ; $E29C
 
 @loc_E29E:
@@ -6532,7 +6920,7 @@ Enemy_CheckProjectileHits:
 
 @loc_E4B8:
     dey                             ; $E4B8
-    bpl     @loc_E498             ; $E4B9
+    bpl     @loc_E498               ; $E4B9
 
 @done:
     rts                             ; $E4BB
@@ -6831,7 +7219,7 @@ Enemy_CheckProjectileHitsSpecial:
 
 @loc_E649:
     dey                             ; $E649
-    bpl     @loop                 ; $E64A
+    bpl     @loop                   ; $E64A
     jsr     Sword_GetHitbox         ; $E64C
     jsr     Hitbox_Overlap          ; $E64F
     bcc     loc_E616                ; $E652
@@ -7101,14 +7489,14 @@ Item_Collect:
     beq     @loc_E7B5               ; $E7A5
     lda     #$00                    ; $E7A7
     sta     scrollFrozen            ; $E7A9
-    lda     ram_07FB                ; $E7AC
+    lda     musicPlaying            ; $E7AC
     bne     @loc_E7B5               ; $E7AF
     lda     #$02                    ; $E7B1
     sta     musicRequest            ; $E7B3
 
 @loc_E7B5:
     inc     keyCount                ; $E7B5
-    jmp     @loc_E797             ; $E7B8
+    jmp     @loc_E797               ; $E7B8
 
 @loc_E7BB:
     cpy     #$0E                    ; $E7BB
@@ -7515,7 +7903,7 @@ Hitbox_Overlap:
     cmp     temp15                  ; $EA0A
     bcc     @loc_EA11               ; $EA0C
     dex                             ; $EA0E
-    bpl     @loop                 ; $EA0F
+    bpl     @loop                   ; $EA0F
 
 @loc_EA11:
     ldx     currentObject           ; $EA11
@@ -7867,7 +8255,7 @@ Link_DrawBody:
     dey                             ; $EC7A
     dey                             ; $EC7B
     dey                             ; $EC7C
-    bpl     @loop                 ; $EC7D
+    bpl     @loop                   ; $EC7D
     ldx     ram_0011                ; $EC7F
     ldy     objOamOffset,x          ; $EC81
     lda     oamBuffer+3,y           ; $EC83
@@ -7930,7 +8318,7 @@ Link_DrawBody:
     clc                             ; $ECDD
     adc     #$10                    ; $ECDE
     sta     oamBuffer+24,y          ; $ECE0
-    jmp     @loc_ECAC             ; $ECE3
+    jmp     @loc_ECAC               ; $ECE3
 
 @loc_ECE6:
     cmp     #$08                    ; $ECE6
@@ -8132,7 +8520,7 @@ Link_DrawSprites:
     iny                             ; $EE2D
     lsr     temp10                  ; $EE2E
     dex                             ; $EE30
-    bne     @loop                 ; $EE31
+    bne     @loop                   ; $EE31
     ldy     temp8                   ; $EE33
     ldx     temp9                   ; $EE35
     lda     temp2                   ; $EE37
@@ -8666,7 +9054,7 @@ Sprite_HideOffscreen:
     iny                             ; $F1E9
     lsr     temp10                  ; $F1EA
     dex                             ; $F1EC
-    bne     @loop                 ; $F1ED
+    bne     @loop                   ; $F1ED
     ldx     temp8                   ; $F1EF
     ldy     temp9                   ; $F1F1
     rts                             ; $F1F3
@@ -8804,7 +9192,7 @@ Obj_ComputeScreenPos:
 
 @loc_F2AF:
     dey                             ; $F2AF
-    bpl     @loop                 ; $F2B0
+    bpl     @loop                   ; $F2B0
     ldy     temp0                   ; $F2B2
     lda     objY,x                  ; $F2B4
     clc                             ; $F2B6
@@ -8856,7 +9244,7 @@ Obj_ComputeWideOffscreen:
 
 @loc_F2FA:
     dey                             ; $F2FA
-    bpl     @loop                 ; $F2FB
+    bpl     @loop                   ; $F2FB
     lda     temp2                   ; $F2FD
     rts                             ; $F2FF
 ; (unreferenced: $F300-$FD7F, 2688 bytes)
@@ -9080,13 +9468,13 @@ Ppu_WriteAttrColumn:
     sta     attrColumn,x            ; $FDBD
     inx                             ; $FDC0
     cpx     #$07                    ; $FDC1
-    bcc     @loop                 ; $FDC3
+    bcc     @loop                   ; $FDC3
     ; QUIRK: a is loaded with $FF but y is stored.
     lda     #$FF                    ; $FDC5
     sty     ppuBuffer2Len           ; $FDC7
     rts                             ; $FDCA
 
-dat_FDCB:
+ContinueScreenText:
     .byte   $23, $D8, $7F, $FF, $23, $F7, $01, $FF, $20, $CA, $0A, $FA, $F4, $DC, $E8, $E7; $FDCB
     .byte   $ED, $E2, $E7, $EE, $DE, $21, $0C, $04, $EC, $DA, $EF, $DE, $21, $83, $5A, $CB; $FDDB
     .byte   $23, $03, $5A, $CB, $21, $A3, $CB, $CC, $21, $BC, $CB, $CC, $21, $83, $01, $CA; $FDEB
@@ -9100,32 +9488,47 @@ dat_FDCB:
     .byte   $DF, $DF, $CF, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FF           ; $FE6B
 ; (code below not executed in the test movies)
 
-loc_FE76:
+; ---------------------------------------------------------------------------
+; Death_SaveAndQuit
+;
+; Death gameMode $0A: the continue screen's Save choice.  Blink the choice
+; (Death_BlinkSaveChoice), save the game, then go back to the title screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Death_SaveAndQuit:
     jsr     Game_CheckStepChange    ; $FE76
     jsr     JumpTable               ; $FE79
 ; (inline jump table)
-    .word   loc_FE87                ; $FE7C  (not observed)
+    .word   Death_BlinkSaveChoice   ; $FE7C  (not observed)
     .word   Death_SaveGame          ; $FE7E  (not observed)
     .word   Game_NextMode           ; $FE80
 
-dat_FE82:
-    .word   loc_D323                ; $FE82
-; (unreferenced: $FE84-$FE86, 3 bytes)
-    .byte   $01, $00, $FF                                                   ; $FE84
+; PPU string for Death_BlinkSaveChoice: one attribute byte at $23D3.
+SaveBlinkString:
+    .byte   $23, $D3, $01, $00, $FF                                         ; $FE82
 ; (code below not executed in the test movies)
 
-loc_FE87:
-    lda     ram_07B0                ; $FE87
+; ---------------------------------------------------------------------------
+; Death_BlinkSaveChoice
+;
+; Blink the Save choice on the continue screen for saveBlinkTimer frames,
+; by rewriting one attribute byte ($23D3) through SaveBlinkString.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Death_BlinkSaveChoice:
+    lda     saveBlinkTimer          ; $FE87
     beq     @loc_FEA6               ; $FE8A
-    dec     ram_07B0                ; $FE8C
+    dec     saveBlinkTimer          ; $FE8C
     pha                             ; $FE8F
     ldx     #$04                    ; $FE90
 
 @loop:
-    lda     dat_FE82,x              ; $FE92
+    lda     SaveBlinkString,x       ; $FE92
     sta     ppuBuffer0,x            ; $FE95
     dex                             ; $FE98
-    bpl     @loop                 ; $FE99
+    bpl     @loop                   ; $FE99
     pla                             ; $FE9B
     and     #$04                    ; $FE9C
     beq     @done                   ; $FE9E
@@ -9223,7 +9626,7 @@ Area_DrawMetatileColumn:
     ldx     temp1                   ; $FF42
     inx                             ; $FF44
     cpx     #$0D                    ; $FF45
-    bcc     @loc_FED3             ; $FF47
+    bcc     @loc_FED3               ; $FF47
     jmp     Mmc1_SetPrgBank0        ; $FF49
 ; (unreferenced: $FF4C-$FF6F, 36 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $FF4C

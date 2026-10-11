@@ -3213,7 +3213,7 @@ loc_3_B5F8:
     lda     (temp0),y               ; $B60F
     sta     ram_056A                ; $B611
     lda     #$2A                    ; $B614
-    sta     ram_0566                ; $B616
+    sta     menuTimer               ; $B616
     lda     #$00                    ; $B619
     sta     ram_0489                ; $B61B
     sta     ram_048A                ; $B61E
@@ -3252,7 +3252,7 @@ loc_3_B656:
 ; (end of code not executed in the test movies)
 
 loc_3_B65E:
-    sty     ram_0566                ; $B65E
+    sty     menuTimer               ; $B65E
     lda     #$00                    ; $B661
     sta     ram_0489                ; $B663
     lda     ram_048A                ; $B666
@@ -3284,7 +3284,7 @@ loc_3_B690:
     jmp     loc_3_B621              ; $B69B
 
 loc_3_B69E:
-    dec     ram_0566                ; $B69E
+    dec     menuTimer               ; $B69E
     rts                             ; $B6A1
 
 loc_3_B6A2:
@@ -3301,7 +3301,7 @@ loc_3_B6A2:
     bne     loc_3_B672              ; $B6B8
 
 loc_3_B6BA:
-    lda     ram_0566                ; $B6BA
+    lda     menuTimer               ; $B6BA
     bne     loc_3_B69E              ; $B6BD
     inc     ram_0766                ; $B6BF
     ldx     #$F4                    ; $B6C2
@@ -3388,7 +3388,7 @@ loc_3_B6F6:
     sta     sfxRequest              ; $B748
     inc     ram_0489                ; $B74A
     lda     #$05                    ; $B74D
-    sta     ram_0566                ; $B74F
+    sta     menuTimer               ; $B74F
 
 loc_3_B752:
     inc     ram_0569                ; $B752

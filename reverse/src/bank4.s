@@ -1553,7 +1553,7 @@ loc_4_9B46:
     rts                             ; $9B46
 
 loc_4_9B47:
-    ldy     ram_07FB                ; $9B47
+    ldy     musicPlaying            ; $9B47
     bne     loc_4_9B55              ; $9B4A
     dey                             ; $9B4C
     sty     statMeterPending        ; $9B4D
