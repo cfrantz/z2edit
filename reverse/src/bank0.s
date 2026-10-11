@@ -1243,7 +1243,9 @@ Overworld_DrawLinkAtX:
     bpl     @loop                   ; $87A0
     rts                             ; $87A2
 
-dat_0_87A3:
+; Tiles of each overworld terrain (16), 4 per terrain: top left, bottom left,
+; top right, bottom right.
+OverworldTileMetatiles:
     .byte   $5C, $5D, $5E, $5F, $F4, $F4, $F4, $F4, $60, $61, $62, $63, $5A, $5A, $5B, $5B; $87A3
     .byte   $6C, $6C, $6C, $6C, $6D, $6D, $6D, $6D, $68, $69, $6A, $6B, $6F, $6F, $6F, $6F; $87B3
     .byte   $70, $71, $FE, $FE, $FE, $FE, $FE, $FE, $6E, $6E, $6E, $6E, $64, $65, $66, $67; $87C3
@@ -1544,7 +1546,7 @@ Overworld_QueueColumnTiles:
 
 @loc_897E:
     ldy     temp6                   ; $897E
-    lda     dat_0_87A3,x            ; $8980
+    lda     OverworldTileMetatiles,x ; $8980
     sta     ppuBuffer0+3,y          ; $8983
     inc     temp6                   ; $8986
     inx                             ; $8988
@@ -2173,7 +2175,7 @@ Overworld_QueueRowTiles:
     inx                             ; $8C96
 
 @loc_8C97:
-    lda     dat_0_87A3,x            ; $8C97
+    lda     OverworldTileMetatiles,x ; $8C97
     sta     ppuBuffer0+3,y          ; $8C9A
     iny                             ; $8C9D
     inx                             ; $8C9E

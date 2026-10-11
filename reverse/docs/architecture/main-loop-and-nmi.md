@@ -43,8 +43,9 @@ While idle, the loop uses only `a` and the flags.
 - The game NMI saves only `a` (the main thread is idle).  It updates the
   PPU (sprite DMA, VRAM updates, scroll), reads the controllers
   (`Joypad_Update`), updates sound (bank 6), runs the game for one frame
-  (mostly bank 0 code), and returns with bank 0 mapped.  Its details are
-  analyzed in Phase 3.
+  (`Game_RunState`, mostly bank 0 code), runs the menus when the mode
+  asked for them (`menusPending`, `Game_UpdateMenus`; see
+  [menus](../engine/menus.md)), and returns with bank 0 mapped.
 
 ## PPU Shadow Registers
 
@@ -91,28 +92,66 @@ lower levels, then return the current value for an inline jump table.
 
 | Value | State |
 |-------|-------|
-| 0 | `GameState_Begin`: set `lives` to 3, go to state 1 |
-| 1 | `GameState_Play`: dispatch on `gameMode` |
-| 2 | `GameState_Death`: Link's death animation (`Death_Animate`); then lose a life (`Death_LoseLife`, go to state 6), or show the continue screen (`Death_ContinueMenu`) when no lives remain.  Holding Up+A on controller 2 enters the continue screen directly (`Game_ShowContinueScreen`). |
-| 6 | `GameState_Respawn`: respawn after losing a life, then back to state 1 (provisional) |
+| 0 | `GameState_Begin`: start or continue a game at North Castle (`Game_StartAtNorthCastle`), `lives` = 3, go to state 1.  (On the title screens, bank 5 uses `gameState` for its own states.) |
+| 1 | `GameState_Play`: dispatch on `gameMode` (below) |
+| 2 | `GameState_Death`: Link's death, and the continue screen |
+| 3 | `GameState_StartEnding`: map bank 5 and go to state 4 |
+| 4 | `GameState_Ending`: bank 5's ending sequence, which ends by going to state 5 |
+| 5 | `GameState_SaveAfterEnding`: save the game (`Mode_SaveAfterEnding`) and return to the title screen (`Game_ReturnToTitle`) |
+| 6 | `GameState_Respawn`: after losing a life, show the lives screen (`Mode_ShowLives`' steps) and go back to state 1 in gameMode $07 |
 
-States 3 (`GameState_StartEnding`) and 4 (`GameState_Ending`) appear to
-run bank 5's ending sequence; neither movie reaches them.  State 5 has not
-been identified.  On the title screens bank 5
-uses `gameState` for its own states.
+`gameMode` values in state 1 (`GameState_Play`):
 
-Common `gameMode` sequences in state 1, from `tools/watch.py` over the
-no-glitch movie:
+| Mode | Handler | |
+|------|---------|---|
+| $00 | `Mode_LoadWorld` | copy the world's tables from its area bank into SRAM |
+| $01 | `Mode_ReturnToOverworld` | put Link back on the overworld at the location he left |
+| $02 | `Mode_OverworldSetup` | |
+| $03 | `Mode_IndexOverworldMap` | index the compressed overworld map (runs for many frames) |
+| $04 | `Game_UnblankAndNextMode` | |
+| $05 | `Mode_Overworld` | `GAME_MODE_OVERWORLD`: see [the overworld](../engine/overworld.md) |
+| $06 | `Mode_EnterLocation` | enter the location (or encounter) under Link |
+| $07 | `Mode_PrepareLoad` | blank the screen |
+| $08 | `Game_Wait` | `GAME_MODE_LOAD_AREA`: `Main_Loop` loads the area |
+| $09 | `Mode_DrawArea` | draw the area, a step per frame |
+| $0A | `Mode_StartSideView` | sprite 0, scroll, music; turn rendering on |
+| $0B | `Mode_SideView` | `GAME_MODE_SIDE_VIEW`: see [the side view frame](../engine/side-view.md) |
+| $0C | `Mode_FallSaveScroll` | falling into an area (a hole on the overworld, or a pit) ... |
+| $0D | `Mode_FallBlankScreen` | ... blank screen ... |
+| $0E | `Mode_FallStart` | ... Link appears at the top ... |
+| $0F | `Mode_FallAnimate` | ... and falls, then $08 or $10 |
+| $10 | `Mode_LeaveArea` | Link left the area by an edge: the next area ($07) or the overworld ($01) |
+| $11 | `Mode_ShowLives` | the lives screen (name and lives), before entering a palace |
+| $12 | `Mode_EnterArea` | enter the area set up from the overworld |
+| $13 | `Mode_FindConnectedRoom` | find the room connected by an elevator |
+| $14 | `Game_Wait` | `GAME_MODE_LOAD_ROOM`: `Main_Loop` loads the room |
+| $15 | `Mode_PlaceLink` | put Link on the ground, then $09 |
+| $16 | `Mode_EnterDoor` | Link went through a town door |
+| $17 | `Mode_RaftStart` | the raft ride |
+| $18 | `Mode_Raft` | |
 
-- loading a world: $00 (`Mode_LoadWorld`), which copies the world's tables
-  from its area bank into SRAM;
-- entering a side-view area: $07 -> $08 (`GAME_MODE_LOAD_AREA`, loaded by
-  `Main_Loop` while the NMI waits in `Game_Wait`) -> $09 -> $0A -> $0B (`GAME_MODE_SIDE_VIEW`, `Mode_SideView`), then $10 when
-  Link leaves the area, followed by $07 for the next area or $01 for the
-  overworld;
-- moving to a connected room (e.g. by elevator): $12 -> $13
-  (`Mode_FindConnectedRoom`) -> $14
-  (`GAME_MODE_LOAD_ROOM`) -> $15 -> $09;
-- the overworld: $00/$01 -> ... -> $05 (`GAME_MODE_OVERWORLD`) -> $06 ->
-  $07 when Link enters an area.
+Common sequences, from `tools/watch.py` over the no-glitch movie:
 
+- entering a side view area from the overworld: $05 -> $06 -> $12 ($11
+  first for a palace) -> $14 -> $15 -> $09 -> $0A -> $0B;
+- walking off an edge: $0B -> $10 -> $07 -> $08 -> $09 -> $0A -> $0B, or
+  $10 -> $01 -> $02 -> ... -> $05 back to the overworld;
+- an elevator to another room: $0B -> $13 -> $14 -> $15 -> $09;
+- falling down a pit: $0B -> $0C -> $0D -> $0E -> $0F -> $10.
+
+`gameMode` values in state 2 (`GameState_Death`):
+
+| Mode | Handler |
+|------|---------|
+| $00 | `Game_BlankAndNextMode` |
+| $01 | `Death_ClearScreen` |
+| $02 | `Death_StartAnimation` |
+| $03 | `Death_Animate`: the death pose, flashing |
+| $04 | `Death_LoseLife`: red background (`Death_QueueRedPalette`), then a life is lost: state 6, or the continue screen with no lives left |
+| $05 | `Game_BlankAndNextMode` (Up+A on controller 2 in the pause menu enters here, `Game_ShowContinueScreen`) |
+| $06 | `Death_DrawContinueScreen` |
+| $07 | `Game_UnblankAndNextMode` |
+| $08 | `Game_NextMode` |
+| $09 | `Death_ContinueMenu`: Select moves the cursor; Start continues, or ... |
+| $0A | `Death_SaveAndQuit`: ... with Save, blinks the choice, saves (`Death_SaveGame`) ... |
+| $0B | `Game_ReturnToTitle`: ... and returns to the title screen |

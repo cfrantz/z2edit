@@ -24,3 +24,7 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
 - [Enemies](engine/enemies.md)
 - [Side view areas](engine/areas.md): the area format and how areas are
   built.
+- [The overworld](engine/overworld.md): moving, drawing the map,
+  encounters, entering locations.
+- [Menus and dialogs](engine/menus.md): the pause menu, level up window,
+  flute and continue screen.
