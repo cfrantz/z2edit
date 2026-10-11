@@ -1184,7 +1184,7 @@ loc_4_98D7:
     dec     objXVelocity+7,x        ; $98D7
 
 loc_4_98D9:
-    jsr     sub_EA14                ; $98D9
+    jsr     Projectile_HitsBgLow    ; $98D9
     bcc     loc_4_98E9              ; $98DC
     lda     objY+7,x                ; $98DE
     and     #$F0                    ; $98E0
@@ -1204,7 +1204,7 @@ loc_4_98EC:
     jmp     Sprite_DrawEnemyPairKeepX ; $98F5
 
 loc_4_98F8:
-    jsr     sub_EA1C                ; $98F8
+    jsr     Projectile_HitsBg       ; $98F8
     ldy     #$02                    ; $98FB
     lda     ram_044C,x              ; $98FD
     bne     loc_4_9903              ; $9900
@@ -2692,7 +2692,7 @@ loc_4_AD90:
     bpl     loc_4_ADB4              ; $AD92
 ; (code below not executed in the test movies)
     jsr     sub_4_BEF6              ; $AD94
-    jsr     sub_EA1C                ; $AD97
+    jsr     Projectile_HitsBg       ; $AD97
     bcs     sub_4_ADA4              ; $AD9A
     bcc     loc_4_ADBF              ; $AD9C
 ; (end of code not executed in the test movies)

@@ -1775,7 +1775,7 @@ loc_5_96A5:
     sta     objXHi+1,x              ; $9737
     inx                             ; $9739
     ldy     #$01                    ; $973A
-    jsr     sub_F2D3                ; $973C
+    jsr     Obj_ComputeWideOffscreen ; $973C
     ldx     currentObject           ; $973F
     and     #$84                    ; $9741
     beq     loc_5_975A              ; $9743
@@ -2327,7 +2327,7 @@ sub_5_9A77:
     sty     ram_0011                ; $9A79
     lda     #$50                    ; $9A7B
     sta     objOamOffset+1          ; $9A7D
-    jsr     sub_EC02                ; $9A7F
+    jsr     Link_DrawBody           ; $9A7F
     ldx     currentObject           ; $9A82
 
 dat_5_9A84:
@@ -2529,7 +2529,7 @@ loc_5_9BBA:
     rts                             ; $9BC7
 
 loc_5_9BC8:
-    jsr     sub_EA1C                ; $9BC8
+    jsr     Projectile_HitsBg       ; $9BC8
     bcc     loc_5_9C45              ; $9BCB
     lda     #$F4                    ; $9BCD
     sta     objState+7,x            ; $9BCF
@@ -2548,7 +2548,7 @@ loc_5_9BD9:
     jmp     loc_5_9C3D              ; $9BDE
 
 loc_5_9BE1:
-    jsr     sub_EA18                ; $9BE1
+    jsr     Projectile_HitsBgAnyHeight ; $9BE1
     bcc     loc_5_9C45              ; $9BE4
     lda     sfxRequest+1            ; $9BE6
     ora     #$40                    ; $9BE8
@@ -3113,7 +3113,7 @@ loc_5_9ED7:
     sta     objXHi+1,x              ; $9F91
     inx                             ; $9F93
     ldy     #$01                    ; $9F94
-    jsr     sub_F2D3                ; $9F96
+    jsr     Obj_ComputeWideOffscreen ; $9F96
     ldx     currentObject           ; $9F99
     and     #$84                    ; $9F9B
     beq     loc_5_9FBA              ; $9F9D

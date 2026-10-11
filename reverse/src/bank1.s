@@ -454,7 +454,7 @@ dat_1_8395:
 
 Overworld_QueueMapStrip_Bank1:
     .assert Overworld_QueueMapStrip_Bank1 = OverworldBank::QueueMapStrip, error, "interface address moved"
-    jsr     sub_DF01                ; $83A1
+    jsr     Overworld_SetMapPosition ; $83A1
     lda     #$00                    ; $83A4
     sta     ram_007D                ; $83A6
     ldy     #$0B                    ; $83A8

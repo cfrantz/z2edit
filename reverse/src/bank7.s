@@ -760,7 +760,7 @@ loc_C3F5:
     sta     linkFairy               ; $C407
     sta     ram_0011                ; $C409
     sta     objOamOffset            ; $C40B
-    jmp     sub_EC02                ; $C40D
+    jmp     Link_DrawBody           ; $C40D
 
 GameState_Respawn:
     jsr     Game_CheckStepChange    ; $C410
@@ -1769,7 +1769,14 @@ Death_Animate:
 loc_CA15:
     lda     #$04                    ; $CA15
 
-sub_CA17:
+; ---------------------------------------------------------------------------
+; Ppu_SelectString
+;
+; Select PPU update string a for the next NMI (ppuStringSelect).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ppu_SelectString:
     sta     ppuStringSelect         ; $CA17
     rts                             ; $CA1A
 
@@ -1818,7 +1825,7 @@ loc_CA3E:
     inc     renderingOff            ; $CA52
     inc     gameSubStep             ; $CA55
     lda     #$09                    ; $CA58
-    jsr     sub_CA17                ; $CA5A
+    jsr     Ppu_SelectString        ; $CA5A
     lda     #$00                    ; $CA5D
     sta     experience              ; $CA5F
     sta     experience+1            ; $CA62
@@ -3832,7 +3839,15 @@ loc_D55A:
     inc     objState+7,x            ; $D55A
     lda     objState+7,x            ; $D55C
 
-sub_D55E:
+; ---------------------------------------------------------------------------
+; Projectile_SetSparkTile
+;
+; Set the projectile sprite at oamBuffer,y to tile $78 or $7A (by bit 3 of
+; a), palette 1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_SetSparkTile:
     and     #$08                    ; $D55E
     lsr     a                       ; $D560
     lsr     a                       ; $D561
@@ -5046,7 +5061,7 @@ loc_DCF5:
     stx     ram_0011                ; $DD15
     inx                             ; $DD17
     stx     ram_0753                ; $DD18
-    jsr     sub_EC02                ; $DD1B
+    jsr     Link_DrawBody           ; $DD1B
     ldx     currentObject           ; $DD1E
     lda     objX+1,x                ; $DD20
     sbc     scrollX                 ; $DD22
@@ -5420,7 +5435,16 @@ loc_DEFA:
 loc_DF00:
     rts                             ; $DF00
 
-sub_DF01:
+; ---------------------------------------------------------------------------
+; Overworld_SetMapPosition
+;
+; Convert overworldTargetY into a screen and row of the overworld map (15
+; rows per screen) and set up the overworld drawing variables
+; ($0077-$007E).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_SetMapPosition:
     lda     overworldTargetY        ; $DF01
     jsr     Math_DivMod15           ; $DF03
     sta     temp0                   ; $DF06
@@ -5523,7 +5547,15 @@ dat_DF6A:
     .byte   $23, $1A, $02, $60, $62, $23, $3A, $02, $61, $63, $23, $F6, $01, $FB; $DF6A
     .byte   $FF                                                             ; $DF78
 
-sub_DF79:
+; ---------------------------------------------------------------------------
+; Overworld_CheckSpecialTerrain
+;
+; Look up the overworld tile at the target position and compare it with a
+; list of special tiles (dat_DF5E).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_CheckSpecialTerrain:
     jsr     OverworldBank::GetTerrain ; $DF79
 
 loc_DF7C:
@@ -5579,7 +5611,7 @@ loc_DFD1:
 
 loc_DFD2:
     jsr     Mmc1_SetPrgBankArea     ; $DFD2
-    jsr     sub_DF79                ; $DFD5
+    jsr     Overworld_CheckSpecialTerrain ; $DFD5
     jmp     Mmc1_SetPrgBank0        ; $DFD8
 
 Area_GetMetatilePtrInBank:
@@ -7489,15 +7521,26 @@ loc_EA11:
     ldx     currentObject           ; $EA11
     rts                             ; $EA13
 
-sub_EA14:
+Projectile_HitsBgLow:
     ldy     #$1E                    ; $EA14
     bne     loc_EA1E                ; $EA16
 
-sub_EA18:
+Projectile_HitsBgAnyHeight:
     ldy     #$1E                    ; $EA18
     bne     loc_EA24                ; $EA1A
 
-sub_EA1C:
+; ---------------------------------------------------------------------------
+; Projectile_HitsBg
+;
+; Test enemy projectile x's probe point $1F against the background (only
+; when it is low enough, Y >= $90).  Projectile_HitsBgLow tests probe $1E
+; likewise; Projectile_HitsBgAnyHeight tests probe $1E at any height.
+;
+; In:      x = projectile index
+; Out:     carry set if the tile is solid
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_HitsBg:
     ldy     #$1F                    ; $EA1C
 
 loc_EA1E:
@@ -7738,7 +7781,14 @@ Link_Draw:
     ldy     #$00                    ; $EBFD
     jsr     Obj_ComputeScreenPos    ; $EBFF
 
-sub_EC02:
+; ---------------------------------------------------------------------------
+; Link_DrawBody
+;
+; Draw Link's body sprites (part of Link_Draw).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_DrawBody:
     ldx     ram_0011                ; $EC02
     lda     objY,x                  ; $EC04
     cpx     #$00                    ; $EC06
@@ -7792,7 +7842,7 @@ loc_EC40:
     sta     ram_0752                ; $EC58
 
 loc_EC5B:
-    jsr     sub_ED7A                ; $EC5B
+    jsr     Link_DrawSprites        ; $EC5B
     pla                             ; $EC5E
     sta     ram_0752                ; $EC5F
 
@@ -7800,7 +7850,7 @@ loc_EC62:
     lda     drawOffscreen           ; $EC62
     and     #$30                    ; $EC64
     bne     loc_EC6B                ; $EC66
-    jsr     sub_ED7A                ; $EC68
+    jsr     Link_DrawSprites        ; $EC68
 
 loc_EC6B:
     ldy     #$14                    ; $EC6B
@@ -7886,7 +7936,15 @@ loc_ECE6:
     cmp     #$08                    ; $ECE6
     bne     loc_ED02                ; $ECE8
 
-sub_ECEA:
+; ---------------------------------------------------------------------------
+; Sword_UpdatePosition
+;
+; Place Link's sword (swordX, swordY) in front of him, for his walking
+; direction.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sword_UpdatePosition:
     ldx     ram_0011                ; $ECEA
     lda     ram_0015,x              ; $ECEC
     ldy     linkWalkDir,x           ; $ECEE
@@ -7905,7 +7963,7 @@ loc_ED02:
     lda     objState,x              ; $ED04
     cmp     #$09                    ; $ED06
     bne     loc_ED1B                ; $ED08
-    jsr     sub_ECEA                ; $ED0A
+    jsr     Sword_UpdatePosition    ; $ED0A
     clc                             ; $ED0D
     adc     #$25                    ; $ED0E
     sta     swordY,x                ; $ED10
@@ -7961,7 +8019,14 @@ dat_ED77 := * + 2
     jmp     loc_ED02                ; $ED75
     .byte   $F8, $08                                                        ; $ED78
 
-sub_ED7A:
+; ---------------------------------------------------------------------------
+; Link_DrawSprites
+;
+; Write a column of Link's sprites with tiles from dat_EB25.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_DrawSprites:
     sty     temp8                   ; $ED7A
     stx     temp9                   ; $ED7C
     lda     dat_EB25,x              ; $ED7E
@@ -7989,7 +8054,7 @@ sub_ED7A:
     stx     ram_00D9                ; $EDAC
     ldx     #$00                    ; $EDAE
     ldy     #$00                    ; $EDB0
-    jsr     sub_F2D3                ; $EDB2
+    jsr     Obj_ComputeWideOffscreen ; $EDB2
     lsr     a                       ; $EDB5
     lsr     a                       ; $EDB6
     lsr     a                       ; $EDB7
@@ -8759,7 +8824,15 @@ loc_F2C9:
     sta     a:drawScreenX,y         ; $F2CF
     rts                             ; $F2D2
 
-sub_F2D3:
+; ---------------------------------------------------------------------------
+; Obj_ComputeWideOffscreen
+;
+; Like Obj_ComputeScreenPos, but test 8 horizontal probe points, for wide
+; objects.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Obj_ComputeWideOffscreen:
     lda     #$00                    ; $F2D3
     sta     temp2                   ; $F2D5
     ldy     #$07                    ; $F2D7
@@ -9071,7 +9144,15 @@ loc_FEA6:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $FEBA
     .byte   $FF, $FF, $FF, $FF, $FF, $FF                                    ; $FECA
 
-sub_FED0:
+; ---------------------------------------------------------------------------
+; Area_DrawMetatileColumn
+;
+; Expand area tiles into metatiles (AreaBank::MetatilePtrs), with the area
+; bank mapped, for drawing.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_DrawMetatileColumn:
     jsr     Mmc1_SetPrgBankArea     ; $FED0
 
 loc_FED3:

@@ -68,7 +68,7 @@ GLOBALS_INC = 1
 .global Ppu_WriteStrings
 .global Joypad_Update
 .global JumpTable
-.global sub_D55E
+.global Projectile_SetSparkTile
 .global Enemy_HurtLinkOnContact
 .global Enemy_UpdateLanding
 .global Enemy_SkipAiIfStunned
@@ -87,13 +87,13 @@ GLOBALS_INC = 1
 .global Enemy_MoveYWithGravity
 .global Projectile_Move
 .global AreaMap_PutTileRight
-.global sub_DF01
+.global Overworld_SetMapPosition
 .global Math_DivMod15
 .global AreaMap_PutTileNextBuildRow
 .global AreaMap_NextBuildRow
 .global AreaMap_PutTileDown
 .global AreaMap_NextRow
-.global sub_DF79
+.global Overworld_CheckSpecialTerrain
 .global loc_DFD1
 .global loc_DFD2
 .global Area_GetMetatilePtrInBank
@@ -126,12 +126,12 @@ GLOBALS_INC = 1
 .global Sword_GetHitbox
 .global Link_GetShieldHitbox
 .global Hitbox_Overlap
-.global sub_EA14
-.global sub_EA18
-.global sub_EA1C
+.global Projectile_HitsBgLow
+.global Projectile_HitsBgAnyHeight
+.global Projectile_HitsBg
 .global Enemy_UpdateBgCollision
 .global Link_Draw
-.global sub_EC02
+.global Link_DrawBody
 .global loc_EF03
 .global Sprite_FlipPrevious
 .global Enemy_Draw
@@ -140,9 +140,9 @@ GLOBALS_INC = 1
 .global Sprite_DrawEnemyPairKeepX
 .global Sprite_DrawEnemyPair
 .global Obj_ComputeScreenPos
-.global sub_F2D3
+.global Obj_ComputeWideOffscreen
 .global loc_FCA5
-.global sub_FED0
+.global Area_DrawMetatileColumn
 
 .global Mode_Overworld
 .global loc_0_8140

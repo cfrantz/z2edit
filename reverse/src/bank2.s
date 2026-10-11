@@ -461,7 +461,7 @@ Overworld_UseFlute_Bank2:
     sta     ppuStringSelect         ; $837D
     inc     temp1                   ; $8380
     inc     temp1                   ; $8382
-    jmp     sub_DF79                ; $8384
+    jmp     Overworld_CheckSpecialTerrain ; $8384
 
 loc_2_8387:
     lda     overworldTerrain        ; $8387
@@ -475,14 +475,14 @@ loc_2_838E:
 
 loc_2_838F:
     jsr     Overworld_QueueMapStrip_Bank2 ; $838F
-    jmp     sub_DF79                ; $8392
+    jmp     Overworld_CheckSpecialTerrain ; $8392
 
 dat_2_8395:
     .byte   $0A, $00, $00, $82, $6C, $6C, $00, $00, $82, $6C, $6C, $FF      ; $8395
 
 Overworld_QueueMapStrip_Bank2:
     .assert Overworld_QueueMapStrip_Bank2 = OverworldBank::QueueMapStrip, error, "interface address moved"
-    jsr     sub_DF01                ; $83A1
+    jsr     Overworld_SetMapPosition ; $83A1
     lda     #$00                    ; $83A4
     sta     ram_007D                ; $83A6
     ldy     #$0B                    ; $83A8
@@ -1087,7 +1087,7 @@ loc_2_9651:
     bne     loc_2_9662              ; $9659
 
 loc_2_965B:
-    jsr     sub_EA1C                ; $965B
+    jsr     Projectile_HitsBg       ; $965B
     lda     #$F3                    ; $965E
     bcs     loc_2_9670              ; $9660
 

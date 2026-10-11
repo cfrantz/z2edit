@@ -106,7 +106,7 @@ Mode_OverworldSetup:
     sec                             ; $8168
     sbc     #$0B                    ; $8169
     sta     overworldTargetY        ; $816B
-    jsr     sub_DF01                ; $816D
+    jsr     Overworld_SetMapPosition ; $816D
     lda     overworldY              ; $8170
     sec                             ; $8172
     sbc     #$07                    ; $8173
@@ -860,13 +860,13 @@ loc_0_861B:
     sec                             ; $8623
     sbc     #$0B                    ; $8624
     sta     overworldTargetY        ; $8626
-    jsr     sub_DF01                ; $8628
+    jsr     Overworld_SetMapPosition ; $8628
     lda     ram_0077                ; $862B
     lsr     a                       ; $862D
     bcc     loc_0_8637              ; $862E
     dec     overworldTargetY        ; $8630
     lda     overworldTargetY        ; $8632
-    jsr     sub_DF01                ; $8634
+    jsr     Overworld_SetMapPosition ; $8634
 
 loc_0_8637:
     jmp     loc_0_86AF              ; $8637
@@ -890,13 +890,13 @@ loc_0_864C:
     sec                             ; $8654
     sbc     #$0B                    ; $8655
     sta     overworldTargetY        ; $8657
-    jsr     sub_DF01                ; $8659
+    jsr     Overworld_SetMapPosition ; $8659
     lda     ram_0077                ; $865C
     lsr     a                       ; $865E
     bcc     loc_0_8668              ; $865F
     dec     overworldTargetY        ; $8661
     lda     overworldTargetY        ; $8663
-    jsr     sub_DF01                ; $8665
+    jsr     Overworld_SetMapPosition ; $8665
 
 loc_0_8668:
     jmp     loc_0_86AF              ; $8668
@@ -920,7 +920,7 @@ loc_0_867D:
     clc                             ; $8685
     adc     #$0B                    ; $8686
     sta     overworldTargetY        ; $8688
-    jsr     sub_DF01                ; $868A
+    jsr     Overworld_SetMapPosition ; $868A
     jmp     loc_0_86AF              ; $868D
 
 loc_0_8690:
@@ -942,7 +942,7 @@ loc_0_869F:
     sec                             ; $86A7
     sbc     #$0B                    ; $86A8
     sta     overworldTargetY        ; $86AA
-    jsr     sub_DF01                ; $86AC
+    jsr     Overworld_SetMapPosition ; $86AC
 
 loc_0_86AF:
     lda     overworldTerrain        ; $86AF
@@ -2344,12 +2344,12 @@ Mode_FallAnimate:
     inx                             ; $8FDD
     stx     ram_0011                ; $8FDE
     stx     ram_0753                ; $8FE0
-    jsr     sub_EC02                ; $8FE3
+    jsr     Link_DrawBody           ; $8FE3
     lda     #$08                    ; $8FE6
     sta     objOamOffset            ; $8FE8
     ldx     #$00                    ; $8FEA
     stx     ram_0011                ; $8FEC
-    jsr     sub_EC02                ; $8FEE
+    jsr     Link_DrawBody           ; $8FEE
     lda     a:frameCounter          ; $8FF1
     and     #$01                    ; $8FF4
     bne     loc_0_9039              ; $8FF6
@@ -3899,7 +3899,7 @@ loc_0_9908:
     jsr     sub_0_98A6              ; $9908
     ldy     objOamOffset+13,x       ; $990B
     lda     objState+13,x           ; $990D
-    jsr     sub_D55E                ; $990F
+    jsr     Projectile_SetSparkTile ; $990F
     lda     objY+13,x               ; $9912
     sta     oamBuffer,y             ; $9914
     lda     objX+13,x               ; $9917
@@ -4199,7 +4199,7 @@ loc_0_9AB8:
     lda     #$00                    ; $9AF8
     sta     temp4                   ; $9AFA
     tax                             ; $9AFC
-    jsr     sub_FED0                ; $9AFD
+    jsr     Area_DrawMetatileColumn ; $9AFD
     ldy     temp0                   ; $9B00
     iny                             ; $9B02
     iny                             ; $9B03
