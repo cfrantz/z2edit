@@ -1789,8 +1789,8 @@ dat_1_9970:
 ; (Fighter_Move) and attack: Moblins thrust their spear (Orange and Blue
 ; Moblins also throw it, Moblin_ThrowSpear); Goriyas throw a boomerang
 ; (projectile type 6) that returns.  The attack's height (high or low)
-; follows Link's crouch.  Their shield blocks Link's projectiles
-; (Projectile_CheckLinkReflect).
+; follows Link's crouch.  A thrust is tested against Link's shield and
+; body like a projectile (Projectile_CheckLinkReflect).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -2045,8 +2045,9 @@ loc_1_9ACE:
 ; ---------------------------------------------------------------------------
 ; Daira_Attack
 ;
-; Advance a Daira's axe swing (objState), testing its axe against Link's
-; shield; the red Daira throws its axe at the second frame.
+; Advance a Daira's axe swing (objState), testing the axe against Link's
+; shield and body like a projectile (Projectile_CheckLinkReflect); the red
+; Daira throws its axe at the second frame.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------

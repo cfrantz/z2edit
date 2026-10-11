@@ -5,7 +5,8 @@
 
 Looks for `code spans` and mechanical names (sub_, loc_, dat_, ram_,
 sram_) in docs/**/*.md and reports those that are not labels or equates
-in build/zelda2.sym.json.  Run after renaming symbols.
+in build/zelda2.sym.json.  NAME_BankN stands for per-bank copies
+(NAME_Bank1 ...).  Run after renaming symbols.
 """
 import glob
 import json
@@ -38,6 +39,9 @@ def main():
                 if IDENT.match(word) and "::" not in word and re.search(r"[a-z][A-Z]|_|^[A-Z][a-z]+[A-Z]", word):
                     found.add(word)
             for word in sorted(found):
+                # NAME_BankN stands for the per-bank copies NAME_Bank1, ...
+                if word.endswith("_BankN") and any(re.fullmatch(re.escape(word[:-1]) + r"\dB?", x) for x in names):
+                    continue
                 if word not in names:
                     print(f"{os.path.relpath(path, ROOT)}:{n}: {word}")
                     bad += 1

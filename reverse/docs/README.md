@@ -17,6 +17,11 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
   collision.
 - [Save files](memory/save-files.md): what is saved and how.
 
+## Enemies
+
+- [Enemies and objects](entities/README.md): the definition tables,
+  damage, experience, drops; a page per enemy group.
+
 ## Engine
 
 - [The side view frame](engine/side-view.md)

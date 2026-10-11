@@ -90,12 +90,37 @@ def main():
         b = 7 if addr >= 0xC000 else bank
         return labels.get((b, addr), f"${addr:04X}")
 
-    which = sys.argv[1:] or list(GROUPS)
+    doc = "--doc" in sys.argv
+    which = [a for a in sys.argv[1:] if a != "--doc"] or list(GROUPS)
     for g in which:
         bank, base, fname, title = GROUPS[g]
         block = cpu(bank, base, 0x220)
         names = config_names(fname, title)
         word = lambda o: block[o] | block[o + 1] << 8
+        if doc:
+            print("| Type | Enemy | HP | Exp | Damage | Drop | Notes | AI |")
+            print("|------|-------|----|-----|--------|------|-------|----|")
+            for t in range(COUNT):
+                ai = word(AI_PTRS + 2 * t)
+                if ai == 0 and t not in names:
+                    continue
+                attr, dmg, fl = block[ATTR + t], block[DAMAGE + t], block[FLAGS + t]
+                cls = attr & 0x0F
+                exp = cpu(7, EXP_LO + cls)[0] | cpu(7, EXP_HI + cls)[0] << 8
+                notes = []
+                if attr & 0x10: notes.append("touch drains 20 exp" if t == 6 else "touch drains 10 exp")
+                if attr & 0x20: notes.append("sword clinks, beam blocked")
+                if dmg & 0x20: notes.append("blocks Link's projectiles")
+                if dmg & 0x10: notes.append("immune to SPELL")
+                if fl & 0x80: notes.append("immune to Thunder")
+                elif fl & 0x20: notes.append("Thunder weak")
+                if fl & 0x10: notes.append("sword passes through")
+                if fl & 0x40: notes.append("comes back")
+                drop = dmg >> 6
+                print(f"| ${t:02X} | {names.get(t, '?')} | {block[HP + t]} | {exp} | {dmg & 0x0F} |"
+                      f" {drop or '-'} | {', '.join(notes)} | `{name(bank, ai)}` |")
+            print()
+            continue
         print(f"## {title} (bank {bank}, ${base:04X})\n")
         print("| Type | Name | HP | Exp | Attr | Damage | Flags | Box | Init | AI | Draw |")
         print("|------|------|----|-----|------|--------|-------|-----|------|----|------|")

@@ -5475,9 +5475,11 @@ dat_DB50:
 ; Ache_Ai
 ;
 ; Ache (bat) and Acheman: perch on the ceiling until Link is within $20
-; pixels horizontally (or always, on area pages 1-2), then swoop down and
-; across at him in an arc and back up to Y $30.  The Acheman (type $0A),
-; after a swoop, turns into a man for $30 frames and throws a fireball.
+; pixels horizontally, then swoop down and across at him in an arc (X
+; speed 8, Y speed from $40 down) and back up to Y $30.  On an area's first
+; and last pages (objXHi 0 or 3) they swoop at once, toward the middle.
+; The Acheman (type $0A), after a swoop, turns into a man for $30 frames
+; and throws a fireball.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -7747,7 +7749,10 @@ Enemy_SwordClink:
 ; Hit points a sword hit takes from an enemy, by attack level 1-8.
 SwordDamage:
     .byte   $02, $03, $04, $06, $09, $0C, $12, $18                          ; $E66D
-; (unreferenced: $E675-$E675, 1 bytes)
+
+; Damage of the Thunder spell: read as SwordDamage - 1,y with y = 9
+; (Spell_ThunderEffect).
+ThunderDamage:
     .byte   $32                                                             ; $E675
     .byte   $E0                                                             ; $E676
 
