@@ -10,6 +10,7 @@ ran, as tools/bootstrap.py did.  Run it after merging new runs into the
 CDL (tools/cdl_movie.py --merge).
 """
 import argparse
+import json
 import os
 import re
 
@@ -20,6 +21,8 @@ BEGIN = "; (code below not executed in the test movies)"
 END = "; (end of code not executed in the test movies)"
 INSN = re.compile(r"^    (?:[a-z]{3}\b|\.byte .*\(overlapping instruction\)).*; \$([0-9A-F]{4})")
 DATA = re.compile(r"^    \.(?:byte|word|res)\b")
+ADDR = re.compile(r"; \$([0-9A-F]{4})")
+ENTRY = re.compile(r"^    \.word   ([A-Za-z_@][A-Za-z0-9_]*) +; \$[0-9A-F]{4}(  \(not observed\))")
 LABEL = re.compile(r"^(?:[A-Za-z_@][A-Za-z0-9_]*:|[A-Za-z_][A-Za-z0-9_]* := \* \+ \d+)$")
 
 
@@ -42,9 +45,33 @@ def insert_at(out):
     return i
 
 
-def refresh(path, bank, cdl):
+def label_addresses(lines):
+    """The address of each label: that of the next line with one."""
+    addrs, pending = {}, []
+    for line in lines:
+        if line.endswith(":") and LABEL.match(line):
+            pending.append(line[:-1])
+            continue
+        m = ADDR.search(line)
+        if m and pending and not line.startswith(";"):
+            for name in pending:
+                addrs[name] = int(m.group(1), 16)
+            pending = []
+    return addrs
+
+
+def observe_entries(lines, bank, targets):
+    addrs = label_addresses(lines)
+    for i, line in enumerate(lines):
+        m = ENTRY.match(line)
+        if m and m.group(1) in addrs and prg_offset(bank, addrs[m.group(1)]) in targets:
+            lines[i] = line[: m.start(2)] + line[m.end(2):]
+
+
+def refresh(path, bank, cdl, targets):
     with open(path) as f:
         lines = [l.rstrip("\n") for l in f]
+    observe_entries(lines, bank, targets)
     out = []
     unexecuted = False
     last = 0  # where the line after the last instruction goes
@@ -82,12 +109,15 @@ def refresh(path, bank, cdl):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--cdl", default=os.path.join(HERE, "../build/zelda2.cdl"))
+    p.add_argument("--jumps", default=os.path.join(HERE, "../build/zelda2.jumps.json"))
     p.add_argument("banks", nargs="+", type=int)
     args = p.parse_args()
     with open(args.cdl, "rb") as f:
         cdl = f.read()
+    with open(args.jumps) as f:
+        targets = {j["target"] for j in json.load(f)}
     for bank in args.banks:
-        refresh(os.path.join(HERE, f"../src/bank{bank}.s"), bank, cdl)
+        refresh(os.path.join(HERE, f"../src/bank{bank}.s"), bank, cdl, targets)
 
 
 if __name__ == "__main__":

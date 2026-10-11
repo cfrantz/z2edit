@@ -4606,7 +4606,7 @@ loc_5_A6FF:
     .word   loc_5_AF1F              ; $A707
     .word   loc_5_A72E              ; $A709
     .word   loc_5_A737              ; $A70B
-    .word   loc_5_AB6D              ; $A70D  (not observed)
+    .word   loc_5_AB6D              ; $A70D
 
 loc_5_A70F:
     jsr     Ram_ClearWork           ; $A70F
@@ -4851,7 +4851,13 @@ dat_5_AB23:
 
 dat_5_AB41:
     .byte   $B0, $B0, $B0, $B0, $B0, $B0, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1; $AB41
-    .byte   $B0, $B0, $B0, $B0, $B0, $B0, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $69, $AF; $AB51
+    .byte   $B0, $B0, $B0, $B0, $B0, $B0, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1; $AB51
+
+dat_5_AB5F:
+    .byte   $69                                                             ; $AB5F
+
+dat_5_AB60:
+    .byte   $AF                                                             ; $AB60
     .byte   $84, $AF, $AA, $AF, $C6, $AF, $DB, $AF, $EF, $AF, $14, $B0      ; $AB61
 
 loc_5_AB6D:
@@ -4927,12 +4933,12 @@ loc_5_ABE5:
     lda     ram_0761                ; $ABE5
     jsr     JumpTable               ; $ABE8
 ; (inline jump table)
-    .word   loc_5_AC31              ; $ABEB  (not observed)
-    .word   loc_5_AC73              ; $ABED  (not observed)
-    .word   loc_5_ACA8              ; $ABEF  (not observed)
-    .word   sub_5_ACFA              ; $ABF1  (not observed)
-    .word   sub_5_AD7C              ; $ABF3  (not observed)
-    .word   loc_5_AE15              ; $ABF5  (not observed)
+    .word   loc_5_AC31              ; $ABEB
+    .word   loc_5_AC73              ; $ABED
+    .word   loc_5_ACA8              ; $ABEF
+    .word   sub_5_ACFA              ; $ABF1
+    .word   sub_5_AD7C              ; $ABF3
+    .word   loc_5_AE15              ; $ABF5
 
 loc_5_ABF7:
     jsr     sub_5_AC07              ; $ABF7
@@ -5216,6 +5222,8 @@ sub_5_ADE0:
     sta     objY+7                  ; $AE0E
     lda     #$02                    ; $AE10
     sta     objY+13                 ; $AE12
+
+loc_5_AE14:
     rts                             ; $AE14
 
 loc_5_AE15:
@@ -5254,20 +5262,69 @@ loc_5_AE4A:
     lda     objY+12                 ; $AE4A
     jsr     JumpTable               ; $AE4C
 ; (inline jump table)
-    .word   loc_5_AE55              ; $AE4F  (not observed)
-    .word   loc_5_AF02              ; $AE51  (not observed)
-    .word   loc_5_AF19              ; $AE53  (not observed)
+    .word   loc_5_AE55              ; $AE4F
+    .word   loc_5_AF02              ; $AE51
+    .word   loc_5_AF19              ; $AE53
 
-; (not observed; code the bootstrap missed, still to be disassembled)
 loc_5_AE55:
-    .byte   $A5, $FC                                                        ; $AE55
-    .byte   $29, $07, $D0, $B9, $A5, $FC, $C9, $F0, $D0, $11, $A9, $00, $85, $FC, $AD, $47; $AE57
-    .byte   $07, $49, $02, $8D, $47, $07, $A9, $90, $8D, $04, $05, $A5, $34, $0A, $AA, $BD; $AE67
-    .byte   $5F, $AB, $85, $00, $BD, $60, $AB, $85, $01, $A5, $2B, $8D, $02, $03, $A5, $2C; $AE77
-    .byte   $8D, $03, $03, $A9, $20, $8D, $04, $03, $A9, $FF, $A0, $1F, $99, $06, $03, $B9; $AE87
-    .byte   $11, $AC, $99, $05, $03, $88, $10, $F7, $A5, $34, $C9, $07, $F0, $16, $A0, $00; $AE97
-    .byte   $B1, $00, $C5, $2B, $D0, $0E, $C8, $B1, $00, $29, $F0, $C5, $2C, $D0, $05, $20; $AEA7
-    .byte   $EE, $AE, $E6, $34, $20, $C1, $AE, $E6, $35, $60                ; $AEB7
+    lda     ppuScrollY              ; $AE55
+    and     #$07                    ; $AE57
+    bne     loc_5_AE14              ; $AE59
+    lda     ppuScrollY              ; $AE5B
+    cmp     #$F0                    ; $AE5D
+    bne     loc_5_AE72              ; $AE5F
+; (code below not executed in the test movies)
+    lda     #$00                    ; $AE61
+    sta     ppuScrollY              ; $AE63
+    lda     ppuNametable            ; $AE65
+    eor     #$02                    ; $AE68
+    sta     ppuNametable            ; $AE6A
+    lda     #$90                    ; $AE6D
+    sta     timerFast+3             ; $AE6F
+; (end of code not executed in the test movies)
+
+loc_5_AE72:
+    lda     objY+11                 ; $AE72
+    asl     a                       ; $AE74
+    tax                             ; $AE75
+    lda     dat_5_AB5F,x            ; $AE76
+    sta     temp0                   ; $AE79
+    lda     dat_5_AB60,x            ; $AE7B
+    sta     temp1                   ; $AE7E
+    lda     objY+2                  ; $AE80
+    sta     ppuBuffer0              ; $AE82
+    lda     objY+3                  ; $AE85
+    sta     ppuBuffer0+1            ; $AE87
+    lda     #$20                    ; $AE8A
+    sta     ppuBuffer0+2            ; $AE8C
+    lda     #$FF                    ; $AE8F
+    ldy     #$1F                    ; $AE91
+    sta     ppuBuffer0+4,y          ; $AE93
+
+loc_5_AE96:
+    lda     dat_5_AC11,y            ; $AE96
+    sta     ppuBuffer0+3,y          ; $AE99
+    dey                             ; $AE9C
+    bpl     loc_5_AE96              ; $AE9D
+    lda     objY+11                 ; $AE9F
+    cmp     #$07                    ; $AEA1
+    beq     loc_5_AEBB              ; $AEA3
+    ldy     #$00                    ; $AEA5
+    lda     (temp0),y               ; $AEA7
+    cmp     objY+2                  ; $AEA9
+    bne     loc_5_AEBB              ; $AEAB
+    iny                             ; $AEAD
+    lda     (temp0),y               ; $AEAE
+    and     #$F0                    ; $AEB0
+    cmp     objY+3                  ; $AEB2
+    bne     loc_5_AEBB              ; $AEB4
+    jsr     loc_5_AEEE              ; $AEB6
+    inc     objY+11                 ; $AEB9
+
+loc_5_AEBB:
+    jsr     sub_5_AEC1              ; $AEBB
+    inc     objY+12                 ; $AEBE
+    rts                             ; $AEC0
 
 sub_5_AEC1:
     lda     objY+3                  ; $AEC1
@@ -5292,9 +5349,23 @@ sub_5_AEC1:
 
 loc_5_AEE6:
     rts                             ; $AEE6
-; (unreferenced: $AEE7-$AF01, 27 bytes)
-    .byte   $1B, $26, $1C, $15, $14, $25, $1A, $A6, $34, $BC, $E7, $AE, $A9, $FF, $99, $25; $AEE7
-    .byte   $03, $88, $B1, $00, $99, $25, $03, $88, $10, $F8, $60           ; $AEF7
+
+dat_5_AEE7:
+    .byte   $1B, $26, $1C, $15, $14, $25, $1A                               ; $AEE7
+
+loc_5_AEEE:
+    ldx     objY+11                 ; $AEEE
+    ldy     dat_5_AEE7,x            ; $AEF0
+    lda     #$FF                    ; $AEF3
+    sta     ppuBuffer0+35,y         ; $AEF5
+    dey                             ; $AEF8
+
+loc_5_AEF9:
+    lda     (temp0),y               ; $AEF9
+    sta     ppuBuffer0+35,y         ; $AEFB
+    dey                             ; $AEFE
+    bpl     loc_5_AEF9              ; $AEFF
+    rts                             ; $AF01
 
 loc_5_AF02:
     jsr     sub_5_ACFA              ; $AF02
@@ -5390,7 +5461,7 @@ loc_5_B22D:
 ; (inline jump table)
     .word   loc_5_B242              ; $B236
     .word   loc_5_B3CF              ; $B238
-    .word   loc_5_B3FA              ; $B23A  (not observed)
+    .word   loc_5_B3FA              ; $B23A
 
 dat_5_B23C:
     .byte   $2C                                                             ; $B23C
@@ -5678,7 +5749,7 @@ loc_5_B3FA:
 ; (inline jump table)
     .word   loc_5_B412              ; $B400
     .word   loc_5_B24E              ; $B402
-    .word   loc_5_B425              ; $B404  (not observed)
+    .word   loc_5_B425              ; $B404
     .word   loc_5_B3DF              ; $B406
     .word   loc_5_B3F4              ; $B408
 

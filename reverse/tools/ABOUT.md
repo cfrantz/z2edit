@@ -70,6 +70,7 @@ Tools that drive the emulator need the Python extension built with
   (title screen left alone, file select menus) that were merged into
   `build/zelda2.cdl` with the two test movies.
 - `mark_unexecuted.py`: Rewrites the "not executed in the test movies"
-  markers of bank files from the CDL, after new runs are merged.
+  markers of bank files from the CDL, and drops "(not observed)" from jump
+  table entries the jump log has seen, after new runs are merged.
 - `check_docs.py`: Reports symbol names in `docs/` that no longer exist in
   the source.  Run by `make verify`.
