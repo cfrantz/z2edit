@@ -185,8 +185,11 @@ Each is a self-contained work area; order is flexible after Phase 3.
 
 - Player: movement, physics, sword, shield, downstab/upstab, damage,
   knockback, experience and leveling, magic spells.
-- Enemies and objects: shared AI helpers, then one routine family at a time
-  (per-world enemy code in banks 1-5).
+- Enemies and objects (first): shared AI helpers, then one routine family
+  at a time (per-world enemy code in banks 1-5).  Deliverable: a page per
+  enemy (or family) under `docs/entities/` describing its behavior: hit
+  points, damage, experience, drops, movement and attacks, projectiles,
+  and quirks, with the routines that implement it.
 - Overworld (banks 1-2): map format, movement, random encounters, special
   tiles, raft/bridges/hidden areas.
 - Sideview areas: room loading, scrolling, area transitions.
@@ -195,6 +198,8 @@ Each is a self-contained work area; order is flexible after Phase 3.
   palace completion and crystal placement.
 - Title, file select, name entry, ending (bank 5).
 - Audio (bank 6): both music engines, sound effects, data formats.
+  Prior work to consult (and verify against the code):
+  https://wiki.bindingforce.net/index.php/Music_Engine_Description
 - Graphics: CHR bank usage and switching, palettes, sprite/metatile formats.
 
 ### Phase 5: Documentation hierarchy
