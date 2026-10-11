@@ -1053,9 +1053,9 @@ EnemyAiPtrs_Bank2:
     .word   $AB98, $ABE9, Ache_Ai, BubbleGenerator_Ai ; $949D
     .word   RockGenerator_Ai, Deeler_Ai, Deeler_Ai, BagoBagoGenerator_Ai ; $94A5
     .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
-    .word   loc_2_9805, loc_2_98BC, loc_2_9910, dat_2_9989 ; $94B5
-    .word   loc_2_9A2A, loc_2_9AAE, loc_2_9B90, loc_2_9B56 ; $94BD
-    .word   loc_2_9B90, loc_2_9730, $0000, $0000 ; $94C5
+    .word   Tektite_Ai, Eye_Ai, Leever_Ai, Boon_Ai ; $94B5
+    .word   Basilisk_Ai, Scorpion_Ai, Lizalfos_Ai, OrangeLizalfos_Ai ; $94BD
+    .word   Lizalfos_Ai, RockThrower_Ai, $0000, $0000 ; $94C5
     .word   $0000, $0000, $0000, $0000 ; $94CD
 
 ; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
@@ -1089,9 +1089,9 @@ EnemyDrawPtrs_Bank2:
     .word   Enemy08_Draw, Enemy08_Draw, Ache_Draw, $0000 ; $9575
     .word   $0000, Deeler_Draw, Deeler_Draw, Enemy_InitNone_Bank2 ; $957D
     .word   BagoBago_Draw, Octorok_Draw, Octorok_Draw, Elevator_Draw ; $9585
-    .word   loc_2_9DAC, loc_2_9DDE, loc_2_9DEB, dat_2_9E01 ; $958D
-    .word   loc_2_9E13, loc_2_9E84, loc_2_9EE1, loc_2_9EE1 ; $9595
-    .word   loc_2_9EE1, loc_2_9D32, $0000, $0000 ; $959D
+    .word   Tektite_Draw, Eye_Draw, Leever_Draw, Boon_Draw ; $958D
+    .word   Basilisk_Draw, Scorpion_Draw, Lizalfos_Draw, Lizalfos_Draw ; $9595
+    .word   Lizalfos_Draw, RockThrower_Draw, $0000, $0000 ; $959D
     .word   $0000, $0000, $0000, $0000 ; $95A5
 
 ; ---------------------------------------------------------------------------
@@ -1400,7 +1400,17 @@ dat_2_9728:
 ; (unreferenced: $972E-$972F, 2 bytes)
     .byte   $00, $00                                                        ; $972E
 
-loc_2_9730:
+; ---------------------------------------------------------------------------
+; RockThrower_Ai
+;
+; Enemy $1D of East Hyrule (z2edit: Fence Lizalfos; 1 hit point): appears
+; at a place ahead of where Link is going, rises to Y $4C, throws a rock
+; (projectile type 8) in an arc aimed by Link's distance and height, then
+; sinks back, and again.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+RockThrower_Ai:
     jsr     Enemy_FaceLink          ; $9730
     lda     objState+1,x            ; $9733
     beq     loc_2_977C              ; $9735
@@ -1554,7 +1564,18 @@ Leever_Init:
 dat_2_9803:
     .byte   $10, $F0                                                        ; $9803
 
-loc_2_9805:
+; ---------------------------------------------------------------------------
+; Tektite_Ai
+;
+; Enemy $14 of East Hyrule (z2edit: Tektite): walks toward Link, turning
+; at walls, and now and then (on the ground, at random) leaps (Y speed
+; -$3B); its hitbox changes while it is in the air.  Every 64 frames, half
+; the time, it fires projectile type 6 from its top.  Identification not
+; checked on screen.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Tektite_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $9805
     jsr     Enemy_Draw              ; $9808
     lda     objYVelocity+1,x        ; $980B
@@ -1662,7 +1683,16 @@ dat_2_98B9 := * + 2
 dat_2_98BA:
     .byte   $08, $F8                                                        ; $98BA
 
-loc_2_98BC:
+; ---------------------------------------------------------------------------
+; Eye_Ai
+;
+; Enemy $15 of East Hyrule (z2edit: Eye): flies across at speed 8, bobbing
+; up and down in phases, turning toward Link every 64 frames and pausing at
+; random; only one part of it (vulnerable part 5) can be hit.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Eye_Ai:
     jsr     Enemy_HurtLinkOnContact ; $98BC
     lda     timerFast+TIMER_ENEMY,x ; $98BF
     beq     loc_2_98C7              ; $98C2
@@ -1711,7 +1741,16 @@ loc_2_990D:
 dat_2_990E:
     .byte   $10, $F0                                                        ; $990E
 
-loc_2_9910:
+; ---------------------------------------------------------------------------
+; Leever_Ai
+;
+; Leever ($16): by enemyAiState: appear at a random place near the screen,
+; facing Link, rise out of the sand, move along it for 48-111 frames, then
+; sink back for 32 frames, and again.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Leever_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $9910
     jsr     Enemy_UpdateCommon      ; $9913
     jsr     Enemy_HurtLinkOnContact ; $9916
@@ -1792,7 +1831,17 @@ dat_2_9987:
     .byte   $20, $E0                                                        ; $9987
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_2_9989:
+; ---------------------------------------------------------------------------
+; Boon_Ai
+;
+; Enemy $17 of East Hyrule (z2edit: Boon): flies high, picking a random
+; direction (up, down, left, right) every 8-23 frames, and drops a rock
+; (projectile type 8) every 32 frames while above Y $70; reappears at the
+; top of the screen when it leaves it.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Boon_Ai:
     lda     objY+1,x                ; $9989
     cmp     #$70                    ; $998B
     bcs     loc_2_9998              ; $998D
@@ -1899,7 +1948,17 @@ dat_2_9A25:
 dat_2_9A27:
     .byte   $F8, $00, $FF                                                   ; $9A27
 
-loc_2_9A2A:
+; ---------------------------------------------------------------------------
+; Basilisk_Ai
+;
+; Enemy $18 of East Hyrule (z2edit: Basilisk): paces back and forth,
+; facing Link every 64 frames; every 64 frames, half the time, it breathes
+; a fireball (projectile type 6) from its mouth ten frames later.  Its
+; hitbox entry changes while it breathes.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Basilisk_Ai:
     lda     frameCounter            ; $9A2A
     and     #$3F                    ; $9A2C
     bne     loc_2_9A3A              ; $9A2E
@@ -1971,7 +2030,17 @@ loc_2_9A99:
 loc_2_9AAD:
     rts                             ; $9AAD
 
-loc_2_9AAE:
+; ---------------------------------------------------------------------------
+; Scorpion_Ai
+;
+; Enemy $19 of East Hyrule (z2edit: Scorpion): paces back and forth,
+; facing Link every 64 frames; at random it hides (is not drawn or hit)
+; for 32 frames; now and then it fires projectile type 4.  Only one part
+; of it (vulnerable part 3) can be hit.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Scorpion_Ai:
     jsr     Enemy_Fall_Bank2        ; $9AAE
     lda     objState+1,x            ; $9AB1
     bne     loc_2_9AC3              ; $9AB3
@@ -2101,7 +2170,15 @@ Enemy_Fall_Bank2:
 loc_2_9B53:
     jmp     Enemy_MoveYAndFall      ; $9B53
 
-loc_2_9B56:
+; ---------------------------------------------------------------------------
+; OrangeLizalfos_Ai
+;
+; Orange Lizalfos ($1B): like Lizalfos_Ai, with a double thrust (its
+; weapon is tested at the second and fifth frames of the attack).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+OrangeLizalfos_Ai:
     jsr     Enemy_Draw              ; $9B56
     lda     objState+1,x            ; $9B59
     beq     loc_2_9B7E              ; $9B5B
@@ -2142,7 +2219,16 @@ loc_2_9B85:
 dat_2_9B8B:
     .byte   $08, $F8, $18, $18, $40                                         ; $9B8B
 
-loc_2_9B90:
+; ---------------------------------------------------------------------------
+; Lizalfos_Ai
+;
+; Lizalfos ($1A red, $1C blue): stand off from Link like Moblins and
+; guard at the height he attacks (on B, 3 times in 4) or jumps; attack
+; (Lizalfos_Attack), the blue one throwing its weapon (projectile type 7).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Lizalfos_Ai:
     jsr     Enemy_Draw              ; $9B90
     jsr     Lizalfos_Attack         ; $9B93
 
@@ -2392,7 +2478,14 @@ dat_2_9D2D:
 dat_2_9D2F:
     .byte   $F3, $FA, $06                                                   ; $9D2F
 
-loc_2_9D32:
+; ---------------------------------------------------------------------------
+; RockThrower_Draw
+;
+; Draw enemy $1D of East Hyrule.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+RockThrower_Draw:
     lda     temp3                   ; $9D32
     ora     #$20                    ; $9D34
     sta     temp3                   ; $9D36
@@ -2463,7 +2556,14 @@ loc_2_9DA9:
     ldx     currentObject           ; $9DA9
     rts                             ; $9DAB
 
-loc_2_9DAC:
+; ---------------------------------------------------------------------------
+; Tektite_Draw
+;
+; Draw enemy $14 of East Hyrule.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Tektite_Draw:
     ldx     #$00                    ; $9DAC
     lda     sramEnemyHitbox+20      ; $9DAE
     cmp     #$89                    ; $9DB1
@@ -2495,7 +2595,14 @@ loc_2_9DD1:
 loc_2_9DDD:
     rts                             ; $9DDD
 
-loc_2_9DDE:
+; ---------------------------------------------------------------------------
+; Eye_Draw
+;
+; Draw enemy $15 of East Hyrule.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Eye_Draw:
     lda     timerFast+TIMER_ENEMY,x ; $9DDE
     ldx     #$0A                    ; $9DE1
     asl     a                       ; $9DE3
@@ -2505,7 +2612,14 @@ loc_2_9DDE:
 loc_2_9DE8:
     jmp     Sprite_DrawEnemyPairKeepX ; $9DE8
 
-loc_2_9DEB:
+; ---------------------------------------------------------------------------
+; Leever_Draw
+;
+; Draw a Leever.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Leever_Draw:
     ldx     #$02                    ; $9DEB
     stx     temp2                   ; $9DED
     lda     #$23                    ; $9DEF
@@ -2518,7 +2632,14 @@ loc_2_9DEB:
     rts                             ; $9E00
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_2_9E01:
+; ---------------------------------------------------------------------------
+; Boon_Draw
+;
+; Draw enemy $17 of East Hyrule.  Not executed in the test movies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Boon_Draw:
     ldx     #$10                    ; $9E01
     lda     frameCounter            ; $9E03
     lsr     a                       ; $9E05
@@ -2541,7 +2662,14 @@ dat_2_9E0E:
 dat_2_9E10:
     .byte   $01, $02, $08                                                   ; $9E10
 
-loc_2_9E13:
+; ---------------------------------------------------------------------------
+; Basilisk_Draw
+;
+; Draw enemy $18 of East Hyrule.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Basilisk_Draw:
     lda     temp3                   ; $9E13
     ora     ram_0753                ; $9E15
     sta     temp3                   ; $9E18
@@ -2605,7 +2733,14 @@ loc_2_9E7C:
     jsr     Sprite_DrawEnemyPair    ; $9E7E
     jmp     Sprite_DrawEnemyPairKeepX ; $9E81
 
-loc_2_9E84:
+; ---------------------------------------------------------------------------
+; Scorpion_Draw
+;
+; Draw enemy $19 of East Hyrule.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Scorpion_Draw:
     lda     timerFast+TIMER_ENEMY,x ; $9E84
     ldx     #$20                    ; $9E87
     asl     a                       ; $9E89
@@ -2660,7 +2795,14 @@ dat_2_9ED4:
 dat_2_9EDA:
     .byte   $02, $34, $34, $36, $38, $3A, $3A                               ; $9EDA
 
-loc_2_9EE1:
+; ---------------------------------------------------------------------------
+; Lizalfos_Draw
+;
+; Draw a Lizalfos and its weapon.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Lizalfos_Draw:
     lda     objCollision+1,x        ; $9EE1
     sta     ram_00D9                ; $9EE3
     lda     objXVelocity+1,x        ; $9EE5

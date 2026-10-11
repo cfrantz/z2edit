@@ -193,8 +193,9 @@ Each is a self-contained work area; order is flexible after Phase 3.
   Status (2026-10-11): every enemy group's tables and routines are named
   and read (banks 1-5 and bank 7), with headers; never-run enemy code
   was disassembled (tools/trace_code.py).  Pages: docs/entities/
-  (README, common, West Hyrule, palaces, Great Palace, towns); East
-  Hyrule pending identification of its enemies on screen.
+  (README, common, West Hyrule, East Hyrule, palaces, Great Palace,
+  towns).  Five East Hyrule types are not yet matched to on-screen
+  enemies (the movies avoid them).
 - Overworld (banks 1-2): map format, movement, random encounters, special
   tiles, raft/bridges/hidden areas.
 - Sideview areas: room loading, scrolling, area transitions.
