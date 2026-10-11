@@ -1229,13 +1229,13 @@ loc_2_9730:
     jsr     Enemy_FaceLink          ; $9730
     lda     objState+1,x            ; $9733
     beq     loc_2_977C              ; $9735
-    ldy     ram_0444,x              ; $9737
+    ldy     enemyVulnerability,x    ; $9737
     bne     loc_2_9773              ; $973A
     inc     a:objState+1,x          ; $973C
     cmp     #$02                    ; $973F
     beq     loc_2_9778              ; $9741
     lda     #$10                    ; $9743
-    sta     ram_0444,x              ; $9745
+    sta     enemyVulnerability,x    ; $9745
     jsr     sub_2_9A11              ; $9748
     bcs     loc_2_977C              ; $974B
     lda     temp15                  ; $974D
@@ -1266,7 +1266,7 @@ loc_2_975C:
     bpl     loc_2_977C              ; $9771
 
 loc_2_9773:
-    dec     ram_0444,x              ; $9773
+    dec     enemyVulnerability,x    ; $9773
     bpl     loc_2_977C              ; $9776
 
 loc_2_9778:
@@ -1349,7 +1349,7 @@ loc_2_97DA:
     bne     loc_2_97EF              ; $97E5
     inc     a:objState+1,x          ; $97E7
     lda     #$10                    ; $97EA
-    sta     ram_0444,x              ; $97EC
+    sta     enemyVulnerability,x    ; $97EC
 
 loc_2_97EF:
     rts                             ; $97EF
@@ -1513,8 +1513,8 @@ loc_2_98E9:
     jsr     Enemy_MoveX             ; $98F0
     jsr     Enemy_Draw              ; $98F3
     lda     #$05                    ; $98F6
-    sta     ram_0444,x              ; $98F8
-    jsr     sub_E617                ; $98FB
+    sta     enemyVulnerability,x    ; $98F8
+    jsr     Enemy_CheckProjectileHitsSpecial ; $98FB
     jsr     Enemy_UpdateCommon      ; $98FE
     lda     rng+1,x                 ; $9901
     and     #$1F                    ; $9904
@@ -1710,8 +1710,8 @@ loc_2_9AAE:
     bne     loc_2_9AC3              ; $9AB3
     jsr     Enemy_Draw              ; $9AB5
     lda     #$03                    ; $9AB8
-    sta     ram_0444,x              ; $9ABA
-    jsr     sub_E617                ; $9ABD
+    sta     enemyVulnerability,x    ; $9ABA
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9ABD
     jmp     loc_2_9AC5              ; $9AC0
 
 loc_2_9AC3:
@@ -1868,10 +1868,10 @@ loc_2_9B96:
     and     #$03                    ; $9BAB
     beq     loc_2_9BB4              ; $9BAD
     lda     linkStanding            ; $9BAF
-    sta     ram_0444,x              ; $9BB1
+    sta     enemyVulnerability,x    ; $9BB1
 
 loc_2_9BB4:
-    jsr     sub_E617                ; $9BB4
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9BB4
     jsr     Enemy_UpdateBgCollision ; $9BB7
     ldy     #$01                    ; $9BBA
     inx                             ; $9BBC
@@ -1943,7 +1943,7 @@ sub_2_9C1C:
 
 loc_2_9C30:
     tya                             ; $9C30
-    sta     ram_0444,x              ; $9C31
+    sta     enemyVulnerability,x    ; $9C31
 
 loc_2_9C34:
     inc     ram_00AF,x              ; $9C34
@@ -2030,7 +2030,7 @@ sub_2_9CBE:
     cmp     #$02                    ; $9CCF
     bne     loc_2_9D02              ; $9CD1
     jsr     Enemy_Draw              ; $9CD3
-    jsr     sub_E558                ; $9CD6
+    jsr     Projectile_CheckLinkReflect ; $9CD6
     lda     enemyType,x             ; $9CD9
     cmp     #$1C                    ; $9CDB
     bne     loc_2_9D02              ; $9CDD
@@ -2127,7 +2127,7 @@ loc_2_9D69:
 
 loc_2_9D78:
     ldx     currentObject           ; $9D78
-    ldy     ram_0444,x              ; $9D7A
+    ldy     enemyVulnerability,x    ; $9D7A
     cpy     #$07                    ; $9D7D
     bcs     loc_2_9D82              ; $9D7F
 
@@ -2347,7 +2347,7 @@ loc_2_9EE1:
     sta     ram_00D9                ; $9EE3
     lda     objXVelocity+1,x        ; $9EE5
     pha                             ; $9EE7
-    lda     ram_0444,x              ; $9EE8
+    lda     enemyVulnerability,x    ; $9EE8
     ldx     #$24                    ; $9EEB
     asl     a                       ; $9EED
     bne     loc_2_9EF2              ; $9EEE

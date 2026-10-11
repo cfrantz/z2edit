@@ -1486,7 +1486,7 @@ loc_1_9972:
     and     #$01                    ; $9976
     bne     loc_1_9980              ; $9978
     jsr     Enemy_Draw              ; $997A
-    jsr     sub_E558                ; $997D
+    jsr     Projectile_CheckLinkReflect ; $997D
 
 loc_1_9980:
     lda     timerFast+TIMER_ENEMY,x ; $9980
@@ -1714,7 +1714,7 @@ sub_1_9AD1:
     cmp     #$02                    ; $9AE5
     bne     loc_1_9AFF              ; $9AE7
     jsr     Enemy_Draw              ; $9AE9
-    jsr     sub_E558                ; $9AEC
+    jsr     Projectile_CheckLinkReflect ; $9AEC
     lda     enemyType,x             ; $9AEF
     cmp     #$18                    ; $9AF1
     bne     loc_1_9AFF              ; $9AF3

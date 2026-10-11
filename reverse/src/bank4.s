@@ -787,10 +787,10 @@ loc_4_965A:
 
 loc_4_966B:
     lda     #$01                    ; $966B
-    sta     ram_0444,x              ; $966D
+    sta     enemyVulnerability,x    ; $966D
     sta     ram_00AF,x              ; $9670
     jsr     Enemy_Draw              ; $9672
-    jsr     sub_E617                ; $9675
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9675
     lda     objState+1,x            ; $9678
     beq     loc_4_9695              ; $967A
     ldy     timerFast+TIMER_ENEMY,x ; $967C
@@ -1813,7 +1813,7 @@ loc_4_9CDF:
     sta     objState+1,x            ; $9CE1
 
 loc_4_9CE3:
-    jsr     sub_E617                ; $9CE3
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9CE3
     jsr     Enemy_UpdateBgCollision ; $9CE6
     ldy     #$01                    ; $9CE9
     inx                             ; $9CEB
@@ -1885,7 +1885,7 @@ loc_4_9D52:
     and     dat_4_9C65,y            ; $9D5D
     beq     loc_4_9D67              ; $9D60
     lda     linkStanding            ; $9D62
-    sta     ram_0444,x              ; $9D64
+    sta     enemyVulnerability,x    ; $9D64
 
 loc_4_9D67:
     lda     objY                    ; $9D67
@@ -1900,7 +1900,7 @@ loc_4_9D67:
 
 loc_4_9D77:
     tya                             ; $9D77
-    sta     ram_0444,x              ; $9D78
+    sta     enemyVulnerability,x    ; $9D78
 
 loc_4_9D7B:
     jsr     Enemy_FaceLink          ; $9D7B
@@ -2035,7 +2035,7 @@ dat_4_9E40:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9E40
 
 loc_4_9E45:
-    lda     ram_0444,x              ; $9E45
+    lda     enemyVulnerability,x    ; $9E45
     ldy     #$00                    ; $9E48
     asl     a                       ; $9E4A
     bne     loc_4_9E4F              ; $9E4B
@@ -3072,8 +3072,8 @@ loc_4_AFC6:
     bne     loc_4_AFB3              ; $AFC9
     jsr     Enemy_Draw              ; $AFCB
     lda     #$04                    ; $AFCE
-    sta     ram_0444,x              ; $AFD0
-    jsr     sub_E617                ; $AFD3
+    sta     enemyVulnerability,x    ; $AFD0
+    jsr     Enemy_CheckProjectileHitsSpecial ; $AFD3
     lda     frameCounter            ; $AFD6
     and     #$03                    ; $AFD8
     bne     loc_4_AFEC              ; $AFDA
@@ -3121,7 +3121,7 @@ loc_4_B003:
     sta     enemyType+3             ; $B027
     lda     #$01                    ; $B029
     sta     enemyActive+3           ; $B02B
-    sta     ram_0447                ; $B02D
+    sta     enemyVulnerability+3    ; $B02D
     lda     #$30                    ; $B030
     sta     enemyHp+3               ; $B032
     lda     #$FF                    ; $B034
@@ -3471,7 +3471,7 @@ loc_4_B23F:
 
 loc_4_B250:
     jsr     Enemy_Draw              ; $B250
-    jsr     sub_E617                ; $B253
+    jsr     Enemy_CheckProjectileHitsSpecial ; $B253
     lda     frameCounter            ; $B256
     and     #$40                    ; $B258
     sta     ram_0401,x              ; $B25A
@@ -3856,7 +3856,7 @@ loc_4_B4AC:
 
 loc_4_B4AD:
     lda     #$06                    ; $B4AD
-    sta     ram_0444,x              ; $B4AF
+    sta     enemyVulnerability,x    ; $B4AF
     jsr     sub_4_BE8B              ; $B4B2
     jsr     sub_4_BC4E              ; $B4B5
     jsr     Projectile_CheckLinkBody ; $B4B8
@@ -4832,7 +4832,7 @@ loc_4_BAFA:
     lda     #$22                    ; $BB2D
     sta     a:enemyType,y           ; $BB2F
     lda     #$00                    ; $BB32
-    sta     ram_0444,y              ; $BB34
+    sta     enemyVulnerability,y    ; $BB34
     sta     a:ram_00AF,y            ; $BB37
     lda     #$D0                    ; $BB3A
     sta     objYVelocity+1,y        ; $BB3C
@@ -5007,7 +5007,7 @@ loc_4_BC2A:
 sub_4_BC4E:
     jsr     Enemy_Draw              ; $BC4E
     jsr     sub_4_9E17              ; $BC51
-    jsr     sub_E617                ; $BC54
+    jsr     Enemy_CheckProjectileHitsSpecial ; $BC54
     jsr     Enemy_UpdateWithBg      ; $BC57
     jsr     Enemy_HurtLinkOnContact ; $BC5A
     lda     #$01                    ; $BC5D
@@ -5069,7 +5069,7 @@ sub_4_BCA1:
 
 loc_4_BCAF:
     lda     #$02                    ; $BCAF
-    sta     ram_0444,x              ; $BCB1
+    sta     enemyVulnerability,x    ; $BCB1
     lda     #$07                    ; $BCB4
     ldy     enemyType,x             ; $BCB6
     sta     sramEnemyHitbox,y       ; $BCB8
@@ -5138,7 +5138,7 @@ loc_4_BD21:
     jmp     Enemy_MoveYAndFall      ; $BD21
 
 loc_4_BD24:
-    ldy     ram_0444,x              ; $BD24
+    ldy     enemyVulnerability,x    ; $BD24
     bne     loc_4_BD3E              ; $BD27
     cmp     #$70                    ; $BD29
     bcc     loc_4_BD3E              ; $BD2B
@@ -5155,7 +5155,7 @@ loc_4_BD3D:
 ; (code below not executed in the test movies)
 
 loc_4_BD3E:
-    sta     ram_0444,x              ; $BD3E
+    sta     enemyVulnerability,x    ; $BD3E
     jsr     Enemy_MoveY             ; $BD41
     lda     ram_00AF,x              ; $BD44
     and     #$01                    ; $BD46

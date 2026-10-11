@@ -2806,7 +2806,7 @@ loc_5_9D73:
 ; (end of code not executed in the test movies)
 
 loc_5_9D77:
-    jsr     sub_E617                ; $9D77
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9D77
     jsr     Enemy_UpdateBgCollision ; $9D7A
     ldy     #$01                    ; $9D7D
     inx                             ; $9D7F
@@ -2855,7 +2855,7 @@ loc_5_9DC3:
     and     #$40                    ; $9DC9
     beq     loc_5_9DD2              ; $9DCB
     lda     linkStanding            ; $9DCD
-    sta     ram_0444,x              ; $9DCF
+    sta     enemyVulnerability,x    ; $9DCF
 
 loc_5_9DD2:
     lda     linkJumpState           ; $9DD2
@@ -2869,7 +2869,7 @@ loc_5_9DD2:
 
 loc_5_9DE2:
     tya                             ; $9DE2
-    sta     ram_0444,x              ; $9DE3
+    sta     enemyVulnerability,x    ; $9DE3
 
 loc_5_9DE6:
     jsr     Enemy_FaceLink          ; $9DE6
@@ -3150,7 +3150,7 @@ dat_5_9FCF:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9FCF
 
 loc_5_9FD4:
-    lda     ram_0444,x              ; $9FD4
+    lda     enemyVulnerability,x    ; $9FD4
     ldy     #$00                    ; $9FD7
     cmp     #$00                    ; $9FD9
     bne     loc_5_9FDF              ; $9FDB

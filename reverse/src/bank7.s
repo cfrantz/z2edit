@@ -4069,7 +4069,7 @@ loc_D658:
     sta     objState+1,x            ; $D69D
     sta     ram_043E,x              ; $D69F
     sta     objYVelocity+1,x        ; $D6A2
-    sta     ram_0444,x              ; $D6A5
+    sta     enemyVulnerability,x    ; $D6A5
     sta     ram_04A0,x              ; $D6A8
     ldy     enemyType,x             ; $D6AB
     lda     sramEnemyHp,y           ; $D6AD
@@ -4625,11 +4625,11 @@ loc_DA72:
     bne     loc_DAA4                ; $DA7B
 
 loc_DA7D:
-    lda     ram_0444,x              ; $DA7D
+    lda     enemyVulnerability,x    ; $DA7D
     pha                             ; $DA80
     and     #$0C                    ; $DA81
     sta     objState+1,x            ; $DA83
-    inc     ram_0444,x              ; $DA85
+    inc     enemyVulnerability,x    ; $DA85
     pla                             ; $DA88
     and     #$0F                    ; $DA89
     cmp     #$0F                    ; $DA8B
@@ -6596,7 +6596,7 @@ loc_E4F7:
     beq     loc_E555                ; $E536
 
 loc_E538:
-    jsr     sub_E771                ; $E538
+    jsr     Item_Collect            ; $E538
     lda     #$70                    ; $E53B
     sta     ram_049C                ; $E53D
     lda     #$00                    ; $E540
@@ -6619,7 +6619,17 @@ loc_E555:
 dat_E556:
     .byte   $18, $E8                                                        ; $E556
 
-sub_E558:
+; ---------------------------------------------------------------------------
+; Projectile_CheckLinkReflect
+;
+; Test enemy projectile x against Link: with the reflect spell, or for
+; enemy types below $17, his shield is tested first (Projectile_CheckLink);
+; otherwise only his body (Projectile_CheckLinkBody).
+;
+; In:      x = projectile index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_CheckLinkReflect:
     lda     reflectSpellActive      ; $E558
     bne     Projectile_CheckLink    ; $E55B
     lda     enemyType,x             ; $E55D
@@ -6637,7 +6647,7 @@ sub_E558:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_CheckLink:
-    jsr     sub_E5F3                ; $E563
+    jsr     Shield_GetHitbox        ; $E563
     jsr     Link_GetShieldHitbox    ; $E566
     jsr     Hitbox_Overlap          ; $E569
     bcc     Projectile_CheckLinkBody ; $E56C
@@ -6650,14 +6660,14 @@ Projectile_CheckLink:
 ; (end of code not executed in the test movies)
 
 Projectile_CheckLinkBody:
-    jsr     sub_E5F3                ; $E579
+    jsr     Shield_GetHitbox        ; $E579
     jsr     Link_GetHitbox          ; $E57C
     jsr     Hitbox_Overlap          ; $E57F
     bcc     loc_E5F2                ; $E582
 ; (code below not executed in the test movies)
     jsr     Link_HurtByEnemy        ; $E584
     bcc     loc_E59B                ; $E587
-    lda     ram_0444,x              ; $E589
+    lda     enemyVulnerability,x    ; $E589
     cmp     #$02                    ; $E58C
     bcc     loc_E59B                ; $E58E
     asl     objYVelocity            ; $E590
@@ -6687,9 +6697,19 @@ dat_E5B7:
     .byte   $F0                                                             ; $E5B8
     .byte   $00                                                             ; $E5B9
 
-sub_E5BA:
+; ---------------------------------------------------------------------------
+; Enemy_GetSpecialHitbox
+;
+; Set box B (temp4-temp7, see Hitbox_Overlap) to enemy x's vulnerable part,
+; by enemyVulnerability, mirrored by its facing.
+; Enemy_CheckProjectileHitsSpecial tests it against Link's projectiles.
+;
+; In:      x = enemy index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_GetSpecialHitbox:
     lda     objY+1,x                ; $E5BA
-    ldy     ram_0444,x              ; $E5BC
+    ldy     enemyVulnerability,x    ; $E5BC
     clc                             ; $E5BF
     adc     dat_E59C,y              ; $E5C0
     sta     temp5                   ; $E5C3
@@ -6720,7 +6740,15 @@ loc_E5E5:
 loc_E5F2:
     rts                             ; $E5F2
 
-sub_E5F3:
+; ---------------------------------------------------------------------------
+; Shield_GetHitbox
+;
+; Set box B (temp4-temp7, see Hitbox_Overlap) to Link's shield, from the
+; position of its sprite (sprite 4 of Link's sprites).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Shield_GetHitbox:
     ldy     objOamOffset+1,x        ; $E5F3
     lda     oamBuffer+16,y          ; $E5F5
     clc                             ; $E5F8
@@ -6742,7 +6770,7 @@ sub_E5F3:
 loc_E616:
     rts                             ; $E616
 
-sub_E617:
+Enemy_CheckProjectileHitsSpecial:
     lda     drawOffscreen           ; $E617
     asl     a                       ; $E619
     and     #$0C                    ; $E61A
@@ -6753,7 +6781,7 @@ sub_E617:
     adc     #$10                    ; $E624
     cmp     #$30                    ; $E626
     bcc     loc_E616                ; $E628
-    jsr     sub_E5BA                ; $E62A
+    jsr     Enemy_GetSpecialHitbox  ; $E62A
     ldy     #$01                    ; $E62D
 
 loc_E62F:
@@ -6767,7 +6795,7 @@ loc_E62F:
     bcc     loc_E649                ; $E640
     lda     #$02                    ; $E642
     sta     sfxRequest              ; $E644
-    jsr     sub_E6E8                ; $E646
+    jsr     LinkProjectile_Disintegrate ; $E646
 
 loc_E649:
     dey                             ; $E649
@@ -6892,7 +6920,15 @@ loc_E6DD:
 loc_E6E6:
     ldy     ram_0011                ; $E6E6
 
-sub_E6E8:
+; ---------------------------------------------------------------------------
+; LinkProjectile_Disintegrate
+;
+; Stop Link's projectile y and start its disintegration (objState+13 = $F2).
+;
+; In:      y = Link projectile index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+LinkProjectile_Disintegrate:
     lda     #$00                    ; $E6E8
     sta     a:objXVelocity+13,y     ; $E6EA
     lda     #$F2                    ; $E6ED
@@ -6975,11 +7011,11 @@ loc_E755:
     cmp     #$08                    ; $E759
     bcc     loc_E769                ; $E75B
     cmp     #$0E                    ; $E75D
-    bcc     sub_E771                ; $E75F
+    bcc     Item_Collect            ; $E75F
     cmp     #$10                    ; $E761
-    beq     sub_E771                ; $E763
+    beq     Item_Collect            ; $E763
     cmp     #$11                    ; $E765
-    beq     sub_E771                ; $E767
+    beq     Item_Collect            ; $E767
 ; (code below not executed in the test movies)
 
 loc_E769:
@@ -6989,7 +7025,17 @@ loc_E769:
     rts                             ; $E770
 ; (end of code not executed in the test movies)
 
-sub_E771:
+; ---------------------------------------------------------------------------
+; Item_Collect
+;
+; Link picks up item object x: mark it taken in the area's flags, and for
+; the eight inventory items (kinds 0-7) set itemOwned and play the item
+; fanfare.
+;
+; In:      x = object (enemy index)
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Item_Collect:
     lda     ram_00AF,x              ; $E771
     bmi     loc_E77D                ; $E773
     lda     objXHi+1,x              ; $E775
