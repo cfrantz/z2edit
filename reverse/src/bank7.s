@@ -3532,9 +3532,9 @@ loc_D474:
     jmp     loc_D4A3                ; $D474
 
 loc_D477:
-    lda     ram_05E8                ; $D477
+    lda     experienceDrain         ; $D477
     beq     loc_D4AB                ; $D47A
-    dec     ram_05E8                ; $D47C
+    dec     experienceDrain         ; $D47C
     lda     experience+1            ; $D47F
     ora     experience              ; $D482
     beq     loc_D4AB                ; $D485
@@ -3910,11 +3910,20 @@ loc_D658:
 loc_D6C0:
     rts                             ; $D6C0
 
-sub_D6C1:
+; ---------------------------------------------------------------------------
+; Enemy_HurtLinkOnContact
+;
+; If enemy x is touching Link (objCollision bit 4, from
+; Enemy_CheckLinkContact), hurt him (Link_HurtByEnemy).
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_HurtLinkOnContact:
     lda     objCollision+1,x        ; $D6C1
     and     #$10                    ; $D6C3
     beq     loc_D6C0                ; $D6C5
-    jmp     sub_E2EF                ; $D6C7
+    jmp     Link_HurtByEnemy        ; $D6C7
 
 ; ---------------------------------------------------------------------------
 ; Enemy_RunAi
@@ -4017,7 +4026,7 @@ loc_D7E1:
     rts                             ; $D7F0
 
 loc_D7F1:
-    jsr     sub_D6C1                ; $D7F1
+    jsr     Enemy_HurtLinkOnContact ; $D7F1
     lda     ram_00AF,x              ; $D7F4
     bne     loc_D838                ; $D7F6
     lda     objCollision+1,x        ; $D7F8
@@ -4077,7 +4086,7 @@ sub_D848:
 loc_D855:
     jsr     Enemy_MoveYAndFall      ; $D855
     jsr     sub_DE3D                ; $D858
-    jsr     sub_D6C1                ; $D85B
+    jsr     Enemy_HurtLinkOnContact ; $D85B
     lda     objCollision+1,x        ; $D85E
     and     #$04                    ; $D860
     beq     loc_D867                ; $D862
@@ -4394,7 +4403,7 @@ loc_DA47:
 loc_DA54:
     jsr     Enemy_MoveYAndFall      ; $DA54
     jsr     sub_DE3D                ; $DA57
-    jsr     sub_D6C1                ; $DA5A
+    jsr     Enemy_HurtLinkOnContact ; $DA5A
     lda     objY+1,x                ; $DA5D
     cmp     #$60                    ; $DA5F
     bcc     loc_DA69                ; $DA61
@@ -4490,7 +4499,7 @@ loc_DAE1:
     jsr     Enemy_Draw              ; $DAE1
 
 loc_DAE4:
-    jsr     sub_D6C1                ; $DAE4
+    jsr     Enemy_HurtLinkOnContact ; $DAE4
     jsr     Enemy_FaceLink          ; $DAE7
     lda     objXVelocity+1,x        ; $DAEA
     pha                             ; $DAEC
@@ -4634,7 +4643,7 @@ loc_DBB4:
 
 loc_DBC8:
     jsr     Enemy_UpdateCommon      ; $DBC8
-    jmp     sub_D6C1                ; $DBCB
+    jmp     Enemy_HurtLinkOnContact ; $DBCB
 
 ; ---------------------------------------------------------------------------
 ; Enemy_FireProjectile
@@ -5790,7 +5799,18 @@ dat_E2AE:
     .byte   $A0, $80, $70, $60, $50, $40, $30, $E0, $C0, $A0, $90, $80, $70, $60, $50, $FF; $E2D8
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF                               ; $E2E8
 
-sub_E2EF:
+; ---------------------------------------------------------------------------
+; Link_HurtByEnemy
+;
+; Enemy x has touched Link.  Unless he is invulnerable (timerSlow+10),
+; enemies with sramEnemyAttr bit 4 start draining his experience
+; (experienceDrain), and he takes the damage of the enemy's type
+; (sramEnemyDamage bits 3-0) through Link_TakeDamage.
+;
+; In:      x = enemy index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_HurtByEnemy:
     ldy     enemyType,x             ; $E2EF
     lda     timerSlow+10            ; $E2F1
     bne     loc_E308                ; $E2F4
@@ -5805,13 +5825,22 @@ sub_E2EF:
 ; (end of code not executed in the test movies)
 
 loc_E305:
-    sta     ram_05E8                ; $E305
+    sta     experienceDrain         ; $E305
 
 loc_E308:
-    lda     sram_6DF9,y             ; $E308
+    lda     sramEnemyDamage,y       ; $E308
     and     #$0F                    ; $E30B
 
-sub_E30D:
+; ---------------------------------------------------------------------------
+; Link_TakeDamage
+;
+; Damage Link (damage class in a), knock him back and make him
+; invulnerable for a while; does nothing while he is invulnerable.
+;
+; In:      a = damage class
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_TakeDamage:
     sta     temp12                  ; $E30D
     lda     timerSlow+10            ; $E30F
     bne     loc_E368                ; $E312
@@ -6034,7 +6063,7 @@ loc_E457:
     bne     loc_E441                ; $E45A
     lda     sramProjectilePtrs+23,y ; $E45C
     and     #$07                    ; $E45F
-    jsr     sub_E30D                ; $E461
+    jsr     Link_TakeDamage         ; $E461
     ldy     objFacing+7,x           ; $E464
     jmp     loc_E3B1                ; $E466
 
@@ -6244,7 +6273,7 @@ sub_E579:
     jsr     Hitbox_Overlap          ; $E57F
     bcc     loc_E5F2                ; $E582
 ; (code below not executed in the test movies)
-    jsr     sub_E2EF                ; $E584
+    jsr     Link_HurtByEnemy        ; $E584
     bcc     loc_E59B                ; $E587
     lda     ram_0444,x              ; $E589
     cmp     #$02                    ; $E58C
@@ -6472,7 +6501,7 @@ loc_E6CB:
 
 loc_E6DD:
     ldy     enemyType,x             ; $E6DD
-    lda     sram_6DF9,y             ; $E6DF
+    lda     sramEnemyDamage,y       ; $E6DF
     and     #$20                    ; $E6E2
     beq     loc_E6F3                ; $E6E4
 
@@ -6730,7 +6759,7 @@ sub_E880:
     lda     sramEnemyAttr,y         ; $E882
     and     #$0F                    ; $E885
     sta     ram_0414,x              ; $E887
-    lda     sram_6DF9,y             ; $E88A
+    lda     sramEnemyDamage,y       ; $E88A
     and     #$C0                    ; $E88D
     beq     loc_E8BF                ; $E88F
     lsr     a                       ; $E891
@@ -7673,7 +7702,7 @@ loc_EEC7:
     tax                             ; $EEF3
     lda     dat_EEAD,x              ; $EEF4
     tax                             ; $EEF7
-    jsr     sub_F216                ; $EEF8
+    jsr     Sprite_DrawPairFromTable ; $EEF8
     jsr     sub_EF08                ; $EEFB
     pla                             ; $EEFE
     bpl     loc_EF06                ; $EEFF
@@ -7681,7 +7710,7 @@ loc_EEC7:
     dex                             ; $EF02
 
 loc_EF03:
-    jsr     sub_F216                ; $EF03
+    jsr     Sprite_DrawPairFromTable ; $EF03
 
 loc_EF06:
     ldx     currentObject           ; $EF06
@@ -7735,7 +7764,7 @@ loc_EF19:
 
 loc_EF47:
     ldx     #$06                    ; $EF47
-    jsr     sub_F216                ; $EF49
+    jsr     Sprite_DrawPairFromTable ; $EF49
     dex                             ; $EF4C
     dex                             ; $EF4D
     iny                             ; $EF4E
@@ -7746,7 +7775,7 @@ loc_EF47:
     clc                             ; $EF54
     adc     #$18                    ; $EF55
     sta     temp0                   ; $EF57
-    jsr     sub_F216                ; $EF59
+    jsr     Sprite_DrawPairFromTable ; $EF59
     lda     temp0                   ; $EF5C
     sec                             ; $EF5E
     sbc     #$10                    ; $EF5F
@@ -7786,7 +7815,7 @@ loc_EF91:
     inx                             ; $EF9E
 
 loc_EF9F:
-    jsr     sub_F216                ; $EF9F
+    jsr     Sprite_DrawPairFromTable ; $EF9F
     tya                             ; $EFA2
     tax                             ; $EFA3
     ldy     currentObject           ; $EFA4
@@ -7853,7 +7882,7 @@ loc_EFFC:
     sta     temp3                   ; $F008
 
 loc_F00A:
-    jsr     sub_F216                ; $F00A
+    jsr     Sprite_DrawPairFromTable ; $F00A
     ldx     currentObject           ; $F00D
     ldy     objOamOffset+1,x        ; $F00F
     lda     objXVelocity+1,x        ; $F011
@@ -7906,7 +7935,7 @@ sub_F0BB:
     tax                             ; $F0C5
 
 sub_F0C6:
-    jsr     sub_F216                ; $F0C6
+    jsr     Sprite_DrawPairFromTable ; $F0C6
     ldx     currentObject           ; $F0C9
     rts                             ; $F0CB
 
@@ -7919,8 +7948,8 @@ sub_F0CC:
     adc     temp5                   ; $F0D4
     tax                             ; $F0D6
 
-sub_F0D7:
-    jsr     sub_F1F4                ; $F0D7
+Sprite_DrawEnemyPairKeepX:
+    jsr     Sprite_DrawEnemyPair    ; $F0D7
     ldx     currentObject           ; $F0DA
     rts                             ; $F0DC
 
@@ -8045,10 +8074,18 @@ loc_F1A7:
 
 loc_F1AD:
     ldx     #$1A                    ; $F1AD
-    jsr     sub_F216                ; $F1AF
+    jsr     Sprite_DrawPairFromTable ; $F1AF
     jmp     sub_F0C6                ; $F1B2
 
-sub_F1B5:
+; ---------------------------------------------------------------------------
+; Sprite_SetPairAttr
+;
+; Set the attributes of the sprite pair at oamBuffer,y to a | temp3 (the
+; palette); while the enemy is stunned, its palette cycles.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sprite_SetPairAttr:
     ora     temp3                   ; $F1B5
     sty     temp9                   ; $F1B7
     stx     temp8                   ; $F1B9
@@ -8069,7 +8106,15 @@ loc_F1CC:
     ldx     temp8                   ; $F1D4
     rts                             ; $F1D6
 
-sub_F1D7:
+; ---------------------------------------------------------------------------
+; Sprite_HideOffscreen
+;
+; Hide those of the enemy's sprite columns that are off screen
+; (drawOffscreen+1), starting at oamBuffer,y.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sprite_HideOffscreen:
     lda     #$08                    ; $F1D7
     sta     temp10                  ; $F1D9
 
@@ -8092,7 +8137,18 @@ loc_F1E6:
     ldy     temp9                   ; $F1F1
     rts                             ; $F1F3
 
-sub_F1F4:
+; ---------------------------------------------------------------------------
+; Sprite_DrawEnemyPair
+;
+; Draw two sprites side by side at oamBuffer,y with tiles from
+; sramEnemyTiles,x (mirrored when temp2 bit 0, the facing, is set), and set
+; their attributes (Sprite_SetPairAttr).  Sprite_DrawPairFromTable takes
+; the tiles from a ROM table instead; Sprite_DrawEnemyPairKeepX reloads x
+; from currentObject afterwards.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sprite_DrawEnemyPair:
     lda     temp2                   ; $F1F4
     lsr     a                       ; $F1F6
     lda     sramEnemyTiles,x        ; $F1F7
@@ -8112,7 +8168,7 @@ loc_F209:
 loc_F214:
     bpl     loc_F236                ; $F214
 
-sub_F216:
+Sprite_DrawPairFromTable:
     lda     temp2                   ; $F216
     lsr     a                       ; $F218
     lda     dat_EE51,x              ; $F219
@@ -8134,7 +8190,7 @@ loc_F236:
     lda     #$01                    ; $F237
     sta     temp15                  ; $F239
     pla                             ; $F23B
-    jsr     sub_F1B5                ; $F23C
+    jsr     Sprite_SetPairAttr      ; $F23C
     lda     drawOffscreen+1         ; $F23F
     and     #$F0                    ; $F241
     bne     loc_F25D                ; $F243
@@ -8142,7 +8198,7 @@ loc_F236:
     sta     oamBuffer,y             ; $F247
     sta     oamBuffer+4,y           ; $F24A
     ldx     #$02                    ; $F24D
-    jsr     sub_F1D7                ; $F24F
+    jsr     Sprite_HideOffscreen    ; $F24F
     lda     temp1                   ; $F252
     sta     oamBuffer+3,y           ; $F254
     clc                             ; $F257

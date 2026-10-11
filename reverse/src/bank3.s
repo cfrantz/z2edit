@@ -1623,7 +1623,7 @@ loc_3_9AE8:
     lda     ram_05C3,x              ; $9AEF
     sta     temp5                   ; $9AF2
     ldy     enemyType,x             ; $9AF4
-    lda     sram_6DF9,y             ; $9AF6
+    lda     sramEnemyDamage,y       ; $9AF6
     sta     temp3                   ; $9AF9
     lda     sramEnemyAttr,y         ; $9AFB
     ldy     objOamOffset+1,x        ; $9AFE
@@ -1681,8 +1681,8 @@ loc_3_9B3B:
     ldy     temp15                  ; $9B3D
 
 loc_3_9B3F:
-    jsr     sub_F1F4                ; $9B3F
-    jmp     sub_F0D7                ; $9B42
+    jsr     Sprite_DrawEnemyPair    ; $9B3F
+    jmp     Sprite_DrawEnemyPairKeepX ; $9B42
 
 loc_3_9B45:
     ldx     currentObject           ; $9B45

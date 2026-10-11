@@ -70,7 +70,7 @@ GLOBALS_INC = 1
 .global Joypad_Update
 .global JumpTable
 .global sub_D55E
-.global sub_D6C1
+.global Enemy_HurtLinkOnContact
 .global sub_D959
 .global Enemy_SkipAiIfStunned
 .global Enemy_Land
@@ -107,7 +107,7 @@ GLOBALS_INC = 1
 .global sub_E030
 .global sub_E070
 .global loc_E187
-.global sub_E2EF
+.global Link_HurtByEnemy
 .global sub_E371
 .global loc_E3B9
 .global sub_E469
@@ -138,8 +138,8 @@ GLOBALS_INC = 1
 .global Enemy_Draw
 .global sub_F0C6
 .global sub_F0CC
-.global sub_F0D7
-.global sub_F1F4
+.global Sprite_DrawEnemyPairKeepX
+.global Sprite_DrawEnemyPair
 .global Obj_ComputeScreenPos
 .global sub_F2D3
 .global loc_FCA5

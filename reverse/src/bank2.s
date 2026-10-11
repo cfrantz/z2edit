@@ -1473,13 +1473,13 @@ loc_2_98AE:
     jsr     Enemy_CheckSwordHit     ; $98B1
     jsr     Enemy_CheckLinkContact  ; $98B4
 dat_2_98B9 := * + 2
-    jmp     sub_D6C1                ; $98B7
+    jmp     Enemy_HurtLinkOnContact ; $98B7
 
 dat_2_98BA:
     .byte   $08, $F8                                                        ; $98BA
 
 loc_2_98BC:
-    jsr     sub_D6C1                ; $98BC
+    jsr     Enemy_HurtLinkOnContact ; $98BC
     lda     timerFast+3,x           ; $98BF
     beq     loc_2_98C7              ; $98C2
     jmp     Enemy_UpdateCommon      ; $98C4
@@ -1530,7 +1530,7 @@ dat_2_990E:
 loc_2_9910:
     jsr     Enemy_SkipAiIfStunned   ; $9910
     jsr     Enemy_UpdateCommon      ; $9913
-    jsr     sub_D6C1                ; $9916
+    jsr     Enemy_HurtLinkOnContact ; $9916
     lda     ram_00AF,x              ; $9919
     and     #$03                    ; $991B
     jsr     JumpTable               ; $991D
@@ -1651,7 +1651,7 @@ loc_2_9A3A:
 loc_2_9A46:
     sta     sramEnemyHitbox+24      ; $9A46
     jsr     Enemy_UpdateCommon      ; $9A49
-    jsr     sub_D6C1                ; $9A4C
+    jsr     Enemy_HurtLinkOnContact ; $9A4C
     jsr     sub_2_9B24              ; $9A4F
     lda     frameCounter            ; $9A52
     and     #$3F                    ; $9A54
@@ -1718,7 +1718,7 @@ loc_2_9AC3:
 
 loc_2_9AC5:
     jsr     Enemy_UpdateCommon      ; $9AC5
-    jsr     sub_D6C1                ; $9AC8
+    jsr     Enemy_HurtLinkOnContact ; $9AC8
     jsr     sub_2_9B24              ; $9ACB
     lda     frameCounter            ; $9ACE
     and     #$3F                    ; $9AD0
@@ -1899,7 +1899,7 @@ loc_2_9BDD:
     jsr     Enemy_CheckLinkContact  ; $9BE3
 
 loc_2_9BE6:
-    jsr     sub_D6C1                ; $9BE6
+    jsr     Enemy_HurtLinkOnContact ; $9BE6
     jsr     Enemy_MoveYAndFall      ; $9BE9
     lda     objCollision+1,x        ; $9BEC
     and     #$04                    ; $9BEE
@@ -2090,7 +2090,7 @@ loc_2_9D32:
     ora     #$20                    ; $9D34
     sta     temp3                   ; $9D36
     ldx     #$2C                    ; $9D38
-    jsr     sub_F0D7                ; $9D3A
+    jsr     Sprite_DrawEnemyPairKeepX ; $9D3A
     lda     drawOffscreen+1         ; $9D3D
     bne     loc_2_9DA9              ; $9D3F
     lda     objState+1,x            ; $9D41
@@ -2164,8 +2164,8 @@ loc_2_9DAC:
     ldx     #$04                    ; $9DB5
 
 loc_2_9DB7:
-    jsr     sub_F1F4                ; $9DB7
-    jsr     sub_F0D7                ; $9DBA
+    jsr     Sprite_DrawEnemyPair    ; $9DB7
+    jsr     Sprite_DrawEnemyPairKeepX ; $9DBA
     lda     ram_00AF,x              ; $9DBD
     bpl     loc_2_9DC3              ; $9DBF
     eor     #$FF                    ; $9DC1
@@ -2196,7 +2196,7 @@ loc_2_9DDE:
     ldx     #$08                    ; $9DE6
 
 loc_2_9DE8:
-    jmp     sub_F0D7                ; $9DE8
+    jmp     Sprite_DrawEnemyPairKeepX ; $9DE8
 
 loc_2_9DEB:
     ldx     #$02                    ; $9DEB
@@ -2251,7 +2251,7 @@ loc_2_9E39:
     ldx     #$16                    ; $9E3D
 
 loc_2_9E3F:
-    jsr     sub_F0D7                ; $9E3F
+    jsr     Sprite_DrawEnemyPairKeepX ; $9E3F
     ldx     temp2                   ; $9E42
     lda     drawOffscreen+1         ; $9E44
     and     dat_2_9E10,x            ; $9E46
@@ -2283,8 +2283,8 @@ loc_2_9E79:
 
 loc_2_9E7C:
     ldx     #$18                    ; $9E7C
-    jsr     sub_F1F4                ; $9E7E
-    jmp     sub_F0D7                ; $9E81
+    jsr     Sprite_DrawEnemyPair    ; $9E7E
+    jmp     Sprite_DrawEnemyPairKeepX ; $9E81
 
 loc_2_9E84:
     lda     timerFast+3,x           ; $9E84
@@ -2294,7 +2294,7 @@ loc_2_9E84:
     ldx     #$22                    ; $9E8C
 
 loc_2_9E8E:
-    jsr     sub_F0D7                ; $9E8E
+    jsr     Sprite_DrawEnemyPairKeepX ; $9E8E
     lda     objXVelocity+1,x        ; $9E91
     ldx     #$1C                    ; $9E93
     asl     a                       ; $9E95
@@ -2305,7 +2305,7 @@ loc_2_9E8E:
     ldx     #$1E                    ; $9E9E
 
 loc_2_9EA0:
-    jsr     sub_F0D7                ; $9EA0
+    jsr     Sprite_DrawEnemyPairKeepX ; $9EA0
     ldx     temp2                   ; $9EA3
     lda     drawOffscreen+1         ; $9EA5
     and     dat_2_9E10,x            ; $9EA7
@@ -2367,8 +2367,8 @@ loc_2_9EF2:
     inx                             ; $9F04
 
 loc_2_9F05:
-    jsr     sub_F1F4                ; $9F05
-    jsr     sub_F0D7                ; $9F08
+    jsr     Sprite_DrawEnemyPair    ; $9F05
+    jsr     Sprite_DrawEnemyPairKeepX ; $9F08
     lda     drawOffscreen+1         ; $9F0B
     and     #$FC                    ; $9F0D
     bne     loc_2_9F84              ; $9F0F
@@ -2447,7 +2447,7 @@ loc_2_9F7A:
 loc_2_9F7D:
     lda     dat_2_9EDA,x            ; $9F7D
     tax                             ; $9F80
-    jmp     sub_F0D7                ; $9F81
+    jmp     Sprite_DrawEnemyPairKeepX ; $9F81
 
 loc_2_9F84:
     rts                             ; $9F84

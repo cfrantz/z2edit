@@ -252,7 +252,7 @@ ram_05E4                = $05E4
 ram_05E5                = $05E5
 ram_05E6                = $05E6
 ram_05E7                = $05E7
-ram_05E8                = $05E8
+experienceDrain         = $05E8     ; frames left to drain experience, one point per frame (provisional)
 ram_05E9                = $05E9
 ; ---------------------------------------------------------------------------
 ; Saved game state
@@ -471,8 +471,8 @@ sramProjectilePtrs      = $6D00     ; [16] (16-bit) routine for each projectile 
 sramEnemyHp             = $6D21     ; [36] hit points of each enemy type
 sram_6D45               = $6D45     ; [36] (16-bit) per enemy type
 sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy type every frame
-sramEnemyAttr           = $6DD5     ; [36] bits 7-6 = sprite palette; experience (provisional)
-sram_6DF9               = $6DF9     ; [36] per enemy type
+sramEnemyAttr           = $6DD5     ; [36] bits 7-6 = sprite palette, bit 4 = drains experience; experience (provisional)
+sramEnemyDamage         = $6DF9     ; [36] bits 3-0: damage class of each enemy type
 sramEnemyHitbox         = $6E1D     ; [36] hitbox of each enemy type: offset into EnemyHitboxes / 4
 sram_6E41               = $6E41     ; [36] per enemy type
 sramEnemyDrawPtrs       = $6E65     ; [36] (16-bit) routine that draws each enemy type

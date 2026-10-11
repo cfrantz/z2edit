@@ -839,7 +839,7 @@ loc_4_96C0:
     jsr     Enemy_CheckLinkContact  ; $96C6
     jsr     Enemy_MoveYAndFall      ; $96C9
     jsr     sub_EA32                ; $96CC
-    jsr     sub_D6C1                ; $96CF
+    jsr     Enemy_HurtLinkOnContact ; $96CF
     jsr     Enemy_FaceLink          ; $96D2
     lda     objCollision+1,x        ; $96D5
     and     #$08                    ; $96D7
@@ -1013,9 +1013,9 @@ loc_4_97CC:
     ldx     #$7E                    ; $97D5
 
 loc_4_97D7:
-    jsr     sub_F1F4                ; $97D7
+    jsr     Sprite_DrawEnemyPair    ; $97D7
 dat_4_97DC := * + 2
-    jmp     sub_F0D7                ; $97DA
+    jmp     Sprite_DrawEnemyPairKeepX ; $97DA
     .byte   $F4, $0C                                                        ; $97DD
 ; (unreferenced: $97DF-$97E0, 2 bytes)
     .byte   $40, $00                                                        ; $97DF
@@ -1031,8 +1031,8 @@ loc_4_97E1:
     ldx     #$26                    ; $97EF
 
 loc_4_97F1:
-    jsr     sub_F1F4                ; $97F1
-    jsr     sub_F0D7                ; $97F4
+    jsr     Sprite_DrawEnemyPair    ; $97F1
+    jsr     Sprite_DrawEnemyPairKeepX ; $97F4
     lda     timerFast+3,x           ; $97F7
     beq     loc_4_9814              ; $97FA
     lda     drawOffscreen+1         ; $97FC
@@ -1046,7 +1046,7 @@ loc_4_97F1:
     adc     dat_4_97DC,x            ; $980A
     sta     temp1                   ; $980D
     ldx     #$2A                    ; $980F
-    jsr     sub_F0D7                ; $9811
+    jsr     Sprite_DrawEnemyPairKeepX ; $9811
 
 loc_4_9814:
     rts                             ; $9814
@@ -1077,9 +1077,9 @@ loc_4_981D:
     ldx     #$5E                    ; $9830
 
 loc_4_9832:
-    jsr     sub_F1F4                ; $9832
-    jsr     sub_F1F4                ; $9835
-    jsr     sub_F0D7                ; $9838
+    jsr     Sprite_DrawEnemyPair    ; $9832
+    jsr     Sprite_DrawEnemyPair    ; $9835
+    jsr     Sprite_DrawEnemyPairKeepX ; $9838
     lda     drawOffscreen+1         ; $983B
     bne     loc_4_9870              ; $983D
     ldy     objState+1,x            ; $983F
@@ -1091,7 +1091,7 @@ loc_4_9832:
     pha                             ; $984A
     ldx     loc_4_9814,y            ; $984B
     ldy     #$58                    ; $984E
-    jsr     sub_F1F4                ; $9850
+    jsr     Sprite_DrawEnemyPair    ; $9850
     stx     ram_00D9                ; $9853
     ldx     currentObject           ; $9855
     lda     objFacing+1,x           ; $9857
@@ -1107,7 +1107,7 @@ loc_4_9832:
     sta     temp1                   ; $9867
     ldx     ram_00D9                ; $9869
     ldy     #$68                    ; $986B
-    jsr     sub_F0D7                ; $986D
+    jsr     Sprite_DrawEnemyPairKeepX ; $986D
 
 loc_4_9870:
     lda     #$58                    ; $9870
@@ -1201,7 +1201,7 @@ loc_4_98EC:
     adc     #$0E                    ; $98EF
     sta     temp0                   ; $98F1
     ldx     #$18                    ; $98F3
-    jmp     sub_F0D7                ; $98F5
+    jmp     Sprite_DrawEnemyPairKeepX ; $98F5
 
 loc_4_98F8:
     jsr     sub_EA1C                ; $98F8
@@ -1363,7 +1363,7 @@ loc_4_99F0:
     lda     hudRedraw               ; $99F0
     ora     #$80                    ; $99F3
     sta     hudRedraw               ; $99F5
-    jsr     sub_D6C1                ; $99F8
+    jsr     Enemy_HurtLinkOnContact ; $99F8
     lda     drawOffscreen+1         ; $99FB
     and     #$0C                    ; $99FD
     bne     loc_4_9A07              ; $99FF
@@ -1840,7 +1840,7 @@ loc_4_9D0C:
     jsr     Enemy_CheckLinkContact  ; $9D12
 
 loc_4_9D15:
-    jsr     sub_D6C1                ; $9D15
+    jsr     Enemy_HurtLinkOnContact ; $9D15
     jsr     Enemy_MoveYAndFall      ; $9D18
     lda     objCollision+1,x        ; $9D1B
     and     #$04                    ; $9D1D
@@ -2068,8 +2068,8 @@ loc_4_9E6C:
     tya                             ; $9E6C
     ldy     objOamOffset+1,x        ; $9E6D
     tax                             ; $9E6F
-    jsr     sub_F1F4                ; $9E70
-    jsr     sub_F0D7                ; $9E73
+    jsr     Sprite_DrawEnemyPair    ; $9E70
+    jsr     Sprite_DrawEnemyPairKeepX ; $9E73
     lda     drawOffscreen+1         ; $9E76
     bne     loc_4_9E16              ; $9E78
     lda     objState+1,x            ; $9E7A
@@ -2115,7 +2115,7 @@ loc_4_9EB6:
 
 loc_4_9EBA:
 dat_4_9EBC := * + 2
-    jmp     sub_F0D7                ; $9EBA
+    jmp     Sprite_DrawEnemyPairKeepX ; $9EBA
     .byte   $0C, $F4, $14, $EC                                              ; $9EBD
 
 loc_4_9EC1:
@@ -2478,7 +2478,7 @@ loc_4_AC00:
     and     #$10                    ; $AC12
     beq     loc_4_AC19              ; $AC14
 ; (code below not executed in the test movies)
-    jsr     sub_E2EF                ; $AC16
+    jsr     Link_HurtByEnemy        ; $AC16
 ; (end of code not executed in the test movies)
 
 loc_4_AC19:
@@ -2556,7 +2556,7 @@ loc_4_ACA2:
     lda     temp2                   ; $ACA4
     eor     #$03                    ; $ACA6
     sta     temp2                   ; $ACA8
-    jmp     sub_F0D7                ; $ACAA
+    jmp     Sprite_DrawEnemyPairKeepX ; $ACAA
 
 sub_4_ACAD:
     lda     objY                    ; $ACAD
@@ -2614,7 +2614,7 @@ loc_4_AD01:
     jsr     Enemy_MoveY             ; $AD01
     jsr     Enemy_MoveX             ; $AD04
     jsr     Enemy_UpdateCommon      ; $AD07
-    jmp     sub_D6C1                ; $AD0A
+    jmp     Enemy_HurtLinkOnContact ; $AD0A
 
 loc_4_AD0D:
     lda     ram_044C,x              ; $AD0D
@@ -2889,7 +2889,7 @@ loc_4_AEA4:
 loc_4_AEB2:
     inc     objState+1,x            ; $AEB2
     jsr     Enemy_CheckLinkContact  ; $AEB4
-    jsr     sub_D6C1                ; $AEB7
+    jsr     Enemy_HurtLinkOnContact ; $AEB7
 
 loc_4_AEBA:
     jmp     Enemy_Draw              ; $AEBA
@@ -2979,7 +2979,7 @@ loc_4_AF36:
     adc     dat_4_AF21,x            ; $AF4B
     sta     temp1                   ; $AF4E
     ldx     #$2A                    ; $AF50
-    jmp     sub_F0D7                ; $AF52
+    jmp     Sprite_DrawEnemyPairKeepX ; $AF52
 
 loc_4_AF55:
     lda     #$F0                    ; $AF55
@@ -3243,7 +3243,7 @@ loc_4_B0D7:
     jsr     Enemy_MoveYAndFall      ; $B0E4
     jsr     sub_4_9E17              ; $B0E7
     jsr     sub_DE3D                ; $B0EA
-    jsr     sub_D6C1                ; $B0ED
+    jsr     Enemy_HurtLinkOnContact ; $B0ED
     lda     objCollision+1,x        ; $B0F0
     and     #$04                    ; $B0F2
     beq     loc_4_B0FB              ; $B0F4
@@ -3402,7 +3402,7 @@ sub_4_B1DE:
 
 sub_4_B1E3:
     jsr     Enemy_Draw              ; $B1E3
-    jsr     sub_D6C1                ; $B1E6
+    jsr     Enemy_HurtLinkOnContact ; $B1E6
 
 sub_4_B1E9:
     lda     enemyType,x             ; $B1E9
@@ -3573,7 +3573,7 @@ loc_4_B2EB:
     sta     ram_049A                ; $B2F8
 
 loc_4_B2FB:
-    jsr     sub_F1F4                ; $B2FB
+    jsr     Sprite_DrawEnemyPair    ; $B2FB
     inc     temp14                  ; $B2FE
     dec     ram_00D9                ; $B300
     bpl     loc_4_B2C9              ; $B302
@@ -3611,7 +3611,7 @@ loc_4_B304:
 ; (end of code not executed in the test movies)
 
 loc_4_B339:
-    jmp     sub_F0D7                ; $B339
+    jmp     Sprite_DrawEnemyPairKeepX ; $B339
 
 loc_4_B33C:
     asl     objXVelocity+1,x        ; $B33C
@@ -3641,7 +3641,7 @@ loc_4_B361:
 
 loc_4_B362:
     jsr     sub_DE3D                ; $B362
-    jsr     sub_D6C1                ; $B365
+    jsr     Enemy_HurtLinkOnContact ; $B365
     lda     objCollision+1,x        ; $B368
     and     #$04                    ; $B36A
     beq     loc_4_B37B              ; $B36C
@@ -3801,9 +3801,9 @@ loc_4_B44F:
     ldx     #$AC                    ; $B457
 
 loc_4_B459:
-    jsr     sub_F1F4                ; $B459
-    jsr     sub_F1F4                ; $B45C
-    jsr     sub_F0D7                ; $B45F
+    jsr     Sprite_DrawEnemyPair    ; $B459
+    jsr     Sprite_DrawEnemyPair    ; $B45C
+    jsr     Sprite_DrawEnemyPairKeepX ; $B45F
     lda     ram_00D9                ; $B462
     sta     temp1                   ; $B464
     lda     objY+1,x                ; $B466
@@ -3815,11 +3815,11 @@ loc_4_B459:
     ldx     #$B2                    ; $B472
 
 loc_4_B474:
-    jsr     sub_F1F4                ; $B474
+    jsr     Sprite_DrawEnemyPair    ; $B474
 
 sub_4_B477:
-    jsr     sub_F1F4                ; $B477
-    jmp     sub_F0D7                ; $B47A
+    jsr     Sprite_DrawEnemyPair    ; $B477
+    jmp     Sprite_DrawEnemyPairKeepX ; $B47A
 
 loc_4_B47D:
     lda     objX+1,x                ; $B47D
@@ -3830,7 +3830,7 @@ loc_4_B47D:
 
 loc_4_B485:
     jsr     sub_D959                ; $B485
-    jmp     sub_D6C1                ; $B488
+    jmp     Enemy_HurtLinkOnContact ; $B488
 
 loc_4_B48B:
     lda     drawOffscreen+1         ; $B48B
@@ -4353,7 +4353,7 @@ loc_4_B814:
 
 loc_4_B815:
     jsr     Enemy_UpdateCommon      ; $B815
-    jmp     sub_D6C1                ; $B818
+    jmp     Enemy_HurtLinkOnContact ; $B818
 
 loc_4_B81B:
     jmp     Enemy_Draw              ; $B81B
@@ -4374,7 +4374,7 @@ loc_4_B833:
     lda     temp2                   ; $B835
     eor     #$03                    ; $B837
     sta     temp2                   ; $B839
-    jmp     sub_F0D7                ; $B83B
+    jmp     Sprite_DrawEnemyPairKeepX ; $B83B
 
 loc_4_B83E:
     lda     drawOffscreen+1         ; $B83E
@@ -4459,7 +4459,7 @@ loc_4_B896:
 
 loc_4_B8BB:
     jsr     Enemy_UpdateCommon      ; $B8BB
-    jsr     sub_D6C1                ; $B8BE
+    jsr     Enemy_HurtLinkOnContact ; $B8BE
     inc     ram_00AF,x              ; $B8C1
     lda     ram_00AF,x              ; $B8C3
     lsr     a                       ; $B8C5
@@ -4525,7 +4525,7 @@ loc_4_B919:
     jsr     Enemy_MoveY             ; $B91D
     jsr     Enemy_MoveX             ; $B920
     jsr     sub_DE3D                ; $B923
-    jsr     sub_D6C1                ; $B926
+    jsr     Enemy_HurtLinkOnContact ; $B926
 
 loc_4_B929:
     lda     ram_00AF,x              ; $B929
@@ -4703,7 +4703,7 @@ loc_4_BA47:
     jsr     Enemy_MoveY             ; $BA47
     jsr     Enemy_MoveX             ; $BA4A
     jsr     Enemy_UpdateCommon      ; $BA4D
-    jmp     sub_D6C1                ; $BA50
+    jmp     Enemy_HurtLinkOnContact ; $BA50
 
 loc_4_BA53:
     rts                             ; $BA53
@@ -4762,7 +4762,7 @@ loc_4_BA90:
 loc_4_BAAE:
     jsr     sub_4_9E17              ; $BAAE
     jsr     sub_DE3D                ; $BAB1
-    jsr     sub_D6C1                ; $BAB4
+    jsr     Enemy_HurtLinkOnContact ; $BAB4
     lda     frameCounter            ; $BAB7
     and     #$0F                    ; $BAB9
     bne     loc_4_BAC0              ; $BABB
@@ -5009,7 +5009,7 @@ sub_4_BC4E:
     jsr     sub_4_9E17              ; $BC51
     jsr     sub_E617                ; $BC54
     jsr     sub_DE3D                ; $BC57
-    jsr     sub_D6C1                ; $BC5A
+    jsr     Enemy_HurtLinkOnContact ; $BC5A
     lda     #$01                    ; $BC5D
     cmp     enemyActive,x           ; $BC5F
     beq     loc_4_BC75              ; $BC61
@@ -5051,7 +5051,7 @@ loc_4_BC89:
     lda     dat_4_BC78,y            ; $BC8E
     sta     sramEnemyAttr+33        ; $BC91
     lda     dat_4_BC7A,y            ; $BC94
-    sta     sram_6DF9+33            ; $BC97
+    sta     sramEnemyDamage+33      ; $BC97
     lda     dat_4_BC7C,y            ; $BC9A
     sta     sramEnemyHitbox+33      ; $BC9D
     rts                             ; $BCA0
@@ -5078,7 +5078,7 @@ loc_4_BCAF:
 loc_4_BCBC:
     jsr     Enemy_SkipAiIfStunned   ; $BCBC
     jsr     sub_DE3D                ; $BCBF
-    jsr     sub_D6C1                ; $BCC2
+    jsr     Enemy_HurtLinkOnContact ; $BCC2
     lda     objCollision+1,x        ; $BCC5
     and     #$04                    ; $BCC7
     beq     loc_4_BCD5              ; $BCC9
@@ -5113,7 +5113,7 @@ dat_4_BCEC:
 loc_4_BCEF:
     jsr     Enemy_Draw              ; $BCEF
     jsr     Enemy_CheckLinkContact  ; $BCF2
-    jsr     sub_D6C1                ; $BCF5
+    jsr     Enemy_HurtLinkOnContact ; $BCF5
     jsr     Enemy_MoveX             ; $BCF8
     lda     objY+1,x                ; $BCFB
     ldy     ram_00AF,x              ; $BCFD
@@ -5208,8 +5208,8 @@ loc_4_BD7D:
     ldx     #$70                    ; $BD90
 
 loc_4_BD92:
-    jsr     sub_F1F4                ; $BD92
-    jsr     sub_F0D7                ; $BD95
+    jsr     Sprite_DrawEnemyPair    ; $BD92
+    jsr     Sprite_DrawEnemyPairKeepX ; $BD95
     lda     drawOffscreen+1         ; $BD98
     and     #$0C                    ; $BD9A
     bne     loc_4_BD72              ; $BD9C
@@ -5261,7 +5261,7 @@ sub_4_BDD6:
     adc     #$74                    ; $BDE5
     tax                             ; $BDE7
 dat_4_BDEA := * + 2
-    jmp     sub_F0D7                ; $BDE8
+    jmp     Sprite_DrawEnemyPairKeepX ; $BDE8
     .byte   $10, $F0                                                        ; $BDEB
 
 loc_4_BDED:
@@ -5315,8 +5315,8 @@ loc_4_BE31:
     clc                             ; $BE34
     adc     temp13                  ; $BE35
     tax                             ; $BE37
-    jsr     sub_F1F4                ; $BE38
-    jsr     sub_F0D7                ; $BE3B
+    jsr     Sprite_DrawEnemyPair    ; $BE38
+    jsr     Sprite_DrawEnemyPairKeepX ; $BE3B
     lda     ram_00D9                ; $BE3E
     cmp     #$38                    ; $BE40
     bne     loc_4_BE57              ; $BE42
@@ -5346,7 +5346,7 @@ loc_4_BE57:
     pla                             ; $BE73
     tay                             ; $BE74
     ldx     #$40                    ; $BE75
-    jmp     sub_F0D7                ; $BE77
+    jmp     Sprite_DrawEnemyPairKeepX ; $BE77
 
 loc_4_BE7A:
     rts                             ; $BE7A
@@ -5359,8 +5359,8 @@ loc_4_BE7B:
     ldx     #$1E                    ; $BE83
 
 loc_4_BE85:
-    jsr     sub_F1F4                ; $BE85
-    jmp     sub_F0D7                ; $BE88
+    jsr     Sprite_DrawEnemyPair    ; $BE85
+    jmp     Sprite_DrawEnemyPairKeepX ; $BE88
 
 sub_4_BE8B:
     lda     scrollFrozen            ; $BE8B

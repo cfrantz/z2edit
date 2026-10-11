@@ -2663,7 +2663,7 @@ loc_0_91B9:
     lda     enemyActive,x           ; $91BB
     beq     loc_0_91E2              ; $91BD
     ldy     enemyType,x             ; $91BF
-    lda     sram_6DF9,y             ; $91C1
+    lda     sramEnemyDamage,y       ; $91C1
     and     #$10                    ; $91C4
     bne     loc_0_91E2              ; $91C6
     inx                             ; $91C8
