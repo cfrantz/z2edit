@@ -285,7 +285,15 @@ dat_0_8276:
 dat_0_8281:
     .byte   $02, $02, $03                                                   ; $8281
 
-sub_0_8284:
+; ---------------------------------------------------------------------------
+; Overworld_CheckEncounter
+;
+; Check whether an encounter starts on the overworld, from the terrain under
+; Link and the encounter timer (timerSlow+8); safe in parts of region 0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_CheckEncounter:
     lda     currentRegion           ; $8284
     bne     loc_0_828F              ; $8287
     lda     overworldY              ; $8289
@@ -765,7 +773,7 @@ Mode_Overworld:
     sta     ram_07AC                ; $855A
     sta     ram_07AD                ; $855D
     inc     menusPending            ; $8560
-    jsr     sub_0_8284              ; $8563
+    jsr     Overworld_CheckEncounter ; $8563
     jsr     Overworld_UpdateEncounters ; $8566
     jsr     Overworld_DrawLink      ; $8569
     lda     ram_007D                ; $856C
@@ -1149,7 +1157,7 @@ dat_0_87A3:
     .byte   $70, $71, $FE, $FE, $FE, $FE, $FE, $FE, $6E, $6E, $6E, $6E, $64, $65, $66, $67; $87C3
     .byte   $6E, $6E, $6E, $6E, $6E, $6E, $6E, $6E, $56, $57, $58, $59, $40, $41, $42, $43; $87D3
 
-dat_0_87E3:
+OverworldTerrainPalettes:
     .byte   $02, $01, $02, $01, $03, $00, $00, $00, $01, $01, $01, $01, $03, $03, $01, $01; $87E3
 
 Mode_IndexOverworldMap:
@@ -1165,7 +1173,7 @@ loc_0_8801:
     ldx     #$00                    ; $8801
     stx     temp3                   ; $8803
     ldy     #$00                    ; $8805
-    jsr     sub_0_8C30              ; $8807
+    jsr     Overworld_DecodeRow     ; $8807
 
 loc_0_880A:
     ldx     temp0                   ; $880A
@@ -1278,7 +1286,7 @@ Overworld_DrawStep:
     .word   loc_0_8C57              ; $88BB
     .word   loc_0_8C57              ; $88BD
     .word   loc_0_8A1A              ; $88BF
-    .word   sub_0_8A57              ; $88C1
+    .word   Overworld_ScrollRowBuffer ; $88C1
     .word   loc_0_8A79              ; $88C3
     .word   loc_DFD1                ; $88C5
 
@@ -1339,7 +1347,7 @@ loc_0_8920:
     lda     temp10                  ; $8920
     cmp     #$4B                    ; $8922
     bcs     loc_0_893A              ; $8924
-    jsr     sub_0_8C48              ; $8926
+    jsr     Overworld_GetRowPtr     ; $8926
     lda     #$FF                    ; $8929
     sta     temp3                   ; $892B
 
@@ -1526,7 +1534,7 @@ loc_0_8A31:
     bcs     loc_0_8A2C              ; $8A34
 
 loc_0_8A36:
-    jsr     sub_0_8A4B              ; $8A36
+    jsr     Overworld_ShiftRowBuffer ; $8A36
     lda     overworldDirection      ; $8A39
     and     #$04                    ; $8A3C
     lsr     a                       ; $8A3E
@@ -1537,7 +1545,7 @@ loc_0_8A36:
     sta     temp1                   ; $8A46
     jmp     loc_0_8BFE              ; $8A48
 
-sub_0_8A4B:
+Overworld_ShiftRowBuffer:
     ldy     #$5F                    ; $8A4B
 
 loc_0_8A4D:
@@ -1547,7 +1555,7 @@ loc_0_8A4D:
     bpl     loc_0_8A4D              ; $8A54
     rts                             ; $8A56
 
-sub_0_8A57:
+Overworld_ScrollRowBuffer:
     lda     overworldTargetX        ; $8A57
     and     #$0F                    ; $8A59
     beq     loc_0_8A76              ; $8A5B
@@ -1597,17 +1605,17 @@ loc_0_8A9E:
     lda     #$00                    ; $8AA0
     sta     ppuBuffer0+3,x          ; $8AA2
     ldx     overworldBuffer+$10,y   ; $8AA5
-    lda     dat_0_87E3,x            ; $8AA8
-    jsr     sub_0_8BF5              ; $8AAB
+    lda     OverworldTerrainPalettes,x ; $8AA8
+    jsr     Attr_SetBottomRight     ; $8AAB
     ldx     overworldBuffer+$11,y   ; $8AAE
-    lda     dat_0_87E3,x            ; $8AB1
-    jsr     sub_0_8BF3              ; $8AB4
+    lda     OverworldTerrainPalettes,x ; $8AB1
+    jsr     Attr_SetBottomLeft      ; $8AB4
     ldx     overworldBuffer+$70,y   ; $8AB7
-    lda     dat_0_87E3,x            ; $8ABA
-    jsr     sub_0_8BF1              ; $8ABD
+    lda     OverworldTerrainPalettes,x ; $8ABA
+    jsr     Attr_SetTopRight        ; $8ABD
     ldx     overworldBuffer+$71,y   ; $8AC0
-    lda     dat_0_87E3,x            ; $8AC3
-    jsr     sub_0_8BEF              ; $8AC6
+    lda     OverworldTerrainPalettes,x ; $8AC3
+    jsr     Attr_SetTopLeft         ; $8AC6
     lda     overworldDirection      ; $8AC9
     and     #$04                    ; $8ACC
     beq     loc_0_8AF0              ; $8ACE
@@ -1689,7 +1697,7 @@ loc_0_8B3A:
     stx     objXVelocity+2          ; $8B40
 
 loc_0_8B42:
-    jsr     sub_0_8B76              ; $8B42
+    jsr     Overworld_QueueAttrAddress ; $8B42
     lda     ram_0077                ; $8B45
     and     #$0F                    ; $8B47
     cmp     #$0E                    ; $8B49
@@ -1722,7 +1730,7 @@ loc_0_8B6E:
     ldx     #$00                    ; $8B72
     beq     loc_0_8B42              ; $8B74
 
-sub_0_8B76:
+Overworld_QueueAttrAddress:
     stx     temp14                  ; $8B76
     lda     ram_0077                ; $8B78
     and     #$10                    ; $8B7A
@@ -1742,7 +1750,7 @@ sub_0_8B76:
     sta     ppuBuffer0+1,x          ; $8B93
     lda     #$01                    ; $8B96
     sta     ppuBuffer0+2,x          ; $8B98
-    jsr     sub_0_8BA8              ; $8B9B
+    jsr     Overworld_QueueAttrByte ; $8B9B
     lda     #$FF                    ; $8B9E
     sta     ppuBuffer0+4,x          ; $8BA0
     inx                             ; $8BA3
@@ -1751,23 +1759,32 @@ sub_0_8B76:
     inx                             ; $8BA6
     rts                             ; $8BA7
 
-sub_0_8BA8:
+; ---------------------------------------------------------------------------
+; Overworld_QueueAttrByte
+;
+; Build an attribute byte from the palettes (OverworldTerrainPalettes) of
+; the four terrains it covers, and put it in ppuBuffer0.  Attr_SetTopLeft
+; .. Attr_SetBottomRight shift a 2-bit palette into place and OR it in.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_QueueAttrByte:
     lda     #$00                    ; $8BA8
     sta     ppuBuffer0+3,x          ; $8BAA
     ldy     a:objXVelocity+2        ; $8BAD
     ldx     overworldBuffer+$D0,y   ; $8BB0
-    lda     dat_0_87E3,x            ; $8BB3
-    jsr     sub_0_8BF5              ; $8BB6
+    lda     OverworldTerrainPalettes,x ; $8BB3
+    jsr     Attr_SetBottomRight     ; $8BB6
     ldx     overworldBuffer+$E8,y   ; $8BB9
-    lda     dat_0_87E3,x            ; $8BBC
-    jsr     sub_0_8BF3              ; $8BBF
+    lda     OverworldTerrainPalettes,x ; $8BBC
+    jsr     Attr_SetBottomLeft      ; $8BBF
     iny                             ; $8BC2
     ldx     overworldBuffer+$D0,y   ; $8BC3
-    lda     dat_0_87E3,x            ; $8BC6
-    jsr     sub_0_8BF1              ; $8BC9
+    lda     OverworldTerrainPalettes,x ; $8BC6
+    jsr     Attr_SetTopRight        ; $8BC9
     ldx     overworldBuffer+$E8,y   ; $8BCC
-    lda     dat_0_87E3,x            ; $8BCF
-    jsr     sub_0_8BEF              ; $8BD2
+    lda     OverworldTerrainPalettes,x ; $8BCF
+    jsr     Attr_SetTopLeft         ; $8BD2
     lda     overworldTargetX        ; $8BD5
     lsr     a                       ; $8BD7
     bcs     loc_0_8BEE              ; $8BD8
@@ -1787,19 +1804,29 @@ sub_0_8BA8:
 loc_0_8BEE:
     rts                             ; $8BEE
 
-sub_0_8BEF:
+; ---------------------------------------------------------------------------
+; Attr_SetTopLeft
+;
+; OR palette a into the attribute byte at ppuBuffer0+3,temp14, in the
+; quadrant given by the entry point: Attr_SetTopLeft shifts it left by 6,
+; Attr_SetTopRight by 4, Attr_SetBottomLeft by 2, Attr_SetBottomRight not
+; at all.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Attr_SetTopLeft:
     asl     a                       ; $8BEF
     asl     a                       ; $8BF0
 
-sub_0_8BF1:
+Attr_SetTopRight:
     asl     a                       ; $8BF1
     asl     a                       ; $8BF2
 
-sub_0_8BF3:
+Attr_SetBottomLeft:
     asl     a                       ; $8BF3
     asl     a                       ; $8BF4
 
-sub_0_8BF5:
+Attr_SetBottomRight:
     ldx     temp14                  ; $8BF5
     ora     ppuBuffer0+3,x          ; $8BF7
     sta     ppuBuffer0+3,x          ; $8BFA
@@ -1834,9 +1861,17 @@ loc_0_8C13:
     sbc     #$1E                    ; $8C27
     cmp     #$4B                    ; $8C29
     bcs     loc_0_8C45              ; $8C2B
-    jsr     sub_0_8C48              ; $8C2D
+    jsr     Overworld_GetRowPtr     ; $8C2D
 
-sub_0_8C30:
+; ---------------------------------------------------------------------------
+; Overworld_DecodeRow
+;
+; Decode one row of the compressed overworld map (Overworld_ReadMapRun)
+; into overworldBuffer.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Overworld_DecodeRow:
     jsr     Overworld_ReadMapRun    ; $8C30
     cmp     #$41                    ; $8C33
     bpl     loc_0_8C45              ; $8C35
@@ -1848,13 +1883,22 @@ loc_0_8C39:
     cpx     temp3                   ; $8C3D
     bne     loc_0_8C39              ; $8C3F
     iny                             ; $8C41
-    jmp     sub_0_8C30              ; $8C42
+    jmp     Overworld_DecodeRow     ; $8C42
 
 loc_0_8C45:
     inc     overworldDrawStep       ; $8C45
     rts                             ; $8C47
 
-sub_0_8C48:
+; ---------------------------------------------------------------------------
+; Overworld_GetRowPtr
+;
+; Point temp14 at row a of the compressed overworld map, from the row
+; index built in sramAreaTiles by Mode_IndexOverworldMap.
+;
+; Out:     temp14-temp15 = row pointer, y = 0
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Overworld_GetRowPtr:
     asl     a                       ; $8C48
     tay                             ; $8C49
     lda     sramAreaTiles,y         ; $8C4A
@@ -1879,7 +1923,7 @@ loc_0_8C57:
     adc     #$10                    ; $8C6F
     and     #$F0                    ; $8C71
     sta     temp0                   ; $8C73
-    jsr     sub_0_8A57              ; $8C75
+    jsr     Overworld_ScrollRowBuffer ; $8C75
 
 loc_0_8C78:
     ldy     temp0                   ; $8C78
