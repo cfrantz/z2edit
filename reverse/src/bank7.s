@@ -3392,7 +3392,7 @@ Game_CheckStepChange:
 ; Game_CheckModeChange
 ;
 ; If gameMode has changed since the last call, reset gameStep and
-; gameSubStep (and ram_073B).
+; gameSubStep (and fileStep).
 ;
 ; Out:     a = gameMode
 ; Clobbers: y
@@ -3409,7 +3409,7 @@ Game_CheckModeChange:
 ; Game_CheckStateChange
 ;
 ; If gameState has changed since the last call, call Oam_HideAll and reset
-; gameMode, gameStep and gameSubStep (and ram_073B, ram_073C).
+; gameMode, gameStep and gameSubStep (and fileStep, ram_073C).
 ;
 ; Out:     a = gameState
 ; Clobbers: y
@@ -3429,13 +3429,13 @@ Game_CheckStateChange:
 ; ---------------------------------------------------------------------------
 ; Game_ResetStep
 ;
-; Reset gameStep and gameSubStep (and ram_073B).
+; Reset gameStep and gameSubStep (and fileStep).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_ResetStep:
     ldy     #$00                    ; $D18D
-    sty     ram_073B                ; $D18F
+    sty     fileStep                ; $D18F
     sty     gameStep                ; $D192
 
 ; ---------------------------------------------------------------------------

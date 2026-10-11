@@ -600,7 +600,7 @@ loc_5_8B50:
     lda     #$05                    ; $8B55
     sta     currentWorld            ; $8B57
     lda     #$3E                    ; $8B5A
-    ldy     ram_0761                ; $8B5C
+    ldy     sceneStep               ; $8B5C
     bne     loc_5_8B63              ; $8B5F
     lda     #$3D                    ; $8B61
 
@@ -609,7 +609,7 @@ loc_5_8B63:
     jmp     Game_BlankAndNextMode   ; $8B66
 
 loc_5_8B69:
-    ldy     ram_0761                ; $8B69
+    ldy     sceneStep               ; $8B69
     bne     loc_5_8B77              ; $8B6C
     ldx     #$04                    ; $8B6E
     stx     musicRequest            ; $8B70
@@ -679,7 +679,7 @@ loc_5_8BC4:
     sta     oamBuffer+255,x         ; $8BDA
     dex                             ; $8BDD
     stx     ppuBuffer0Len           ; $8BDE
-    lda     ram_0761                ; $8BE1
+    lda     sceneStep               ; $8BE1
     jsr     JumpTable               ; $8BE4
 ; (inline jump table)
     .word   loc_5_8C1D              ; $8BE7
@@ -737,8 +737,8 @@ sub_5_8C44:
 loc_5_8C4C:
     dec     objY+14                 ; $8C4C
     bne     loc_5_8C5E              ; $8C4E
-    inc     ram_0761                ; $8C50
-    lda     ram_0761                ; $8C53
+    inc     sceneStep               ; $8C50
+    lda     sceneStep               ; $8C53
     cmp     #$0A                    ; $8C56
     bne     loc_5_8C5E              ; $8C58
     lda     #$08                    ; $8C5A
@@ -1018,7 +1018,7 @@ loc_5_8E6E:
     rts                             ; $8E6E
 
 loc_5_8E6F:
-    lda     ram_0761                ; $8E6F
+    lda     sceneStep               ; $8E6F
     cmp     #$0D                    ; $8E72
     beq     loc_5_8E83              ; $8E74
     cmp     #$09                    ; $8E76
@@ -1135,7 +1135,7 @@ loc_5_8F1B:
     lda     objYHi+14               ; $8F39
     adc     #$00                    ; $8F3B
     sta     objYHi+14               ; $8F3D
-    lda     ram_0761                ; $8F3F
+    lda     sceneStep               ; $8F3F
     cmp     #$0D                    ; $8F42
     beq     loc_5_8F52              ; $8F44
     lda     objYHi+14               ; $8F46
@@ -1441,7 +1441,7 @@ loc_5_9183:
     sta     objXHi,x                ; $918B
     dex                             ; $918D
     bpl     loc_5_9183              ; $918E
-    inc     ram_0761                ; $9190
+    inc     sceneStep               ; $9190
     rts                             ; $9193
 
 loc_5_9194:
@@ -1537,7 +1537,7 @@ loc_5_9248:
     and     #$10                    ; $924D
     beq     loc_5_9254              ; $924F
 ; (code below not executed in the test movies)
-    inc     ram_0761                ; $9251
+    inc     sceneStep               ; $9251
 ; (end of code not executed in the test movies)
 
 loc_5_9254:
@@ -4652,11 +4652,11 @@ loc_5_A749:
     bne     loc_5_A749              ; $A74A
     lda     ppuCtrlShadow           ; $A74C
     and     #$FC                    ; $A74E
-    ora     objY+13                 ; $A750
+    ora     titleSplitNametable     ; $A750
     sta     ppuCtrlShadow           ; $A752
     sta     PPUCTRL                 ; $A754
-    lda     objYHi+14               ; $A757
-    ldy     ram_0028                ; $A759
+    lda     titleSplitAddr          ; $A757
+    ldy     titleSplitAddr+1        ; $A759
     sta     PPUADDR                 ; $A75B
     sty     PPUADDR                 ; $A75E
     lda     PPUDATA                 ; $A761
@@ -4666,7 +4666,7 @@ loc_5_A749:
     cmp     #$60                    ; $A76C
     bne     loc_5_A787              ; $A76E
     lda     #$80                    ; $A770
-    sta     timerFast+3             ; $A772
+    sta     titleDelay              ; $A772
     jsr     sub_5_A795              ; $A775
     lda     ram_00E8                ; $A778
     cmp     #$08                    ; $A77A
@@ -4694,14 +4694,14 @@ sub_5_A795:
     beq     loc_5_A7C0              ; $A79E
     lda     #$00                    ; $A7A0
     sta     ram_0727                ; $A7A2
-    sta     ram_0761                ; $A7A5
+    sta     sceneStep               ; $A7A5
     jsr     Oam_HideAllButSprite0   ; $A7A8
     lda     #$80                    ; $A7AB
     sta     soundMute               ; $A7AD
     lda     #$00                    ; $A7AF
     sta     ppuNametable            ; $A7B1
     sta     flutePlayed             ; $A7B4
-    sta     ram_073E                ; $A7B7
+    sta     fileSubStep             ; $A7B7
     inc     renderingOff            ; $A7BA
     inc     gameState               ; $A7BD
 
@@ -4757,19 +4757,19 @@ loc_5_A8D7:
 loc_5_A8E8:
     lda     frameCounter            ; $A8E8
     bne     loc_5_A8EE              ; $A8EA
-    inc     objYHi+13               ; $A8EC
+    inc     titleShootingStar       ; $A8EC
 
 loc_5_A8EE:
     lda     oamBuffer+108           ; $A8EE
     cmp     #$37                    ; $A8F1
     bcc     loc_5_A8FE              ; $A8F3
     lda     #$00                    ; $A8F5
-    sta     objYHi+13               ; $A8F7
+    sta     titleShootingStar       ; $A8F7
     lda     #$F8                    ; $A8F9
     sta     oamBuffer+108           ; $A8FB
 
 loc_5_A8FE:
-    lda     objYHi+13               ; $A8FE
+    lda     titleShootingStar       ; $A8FE
     beq     loc_5_A917              ; $A900
     lda     frameCounter            ; $A902
     and     #$03                    ; $A904
@@ -4883,11 +4883,11 @@ loc_5_AB7F:
     bne     loc_5_AB7F              ; $AB80
     lda     ppuCtrlShadow           ; $AB82
     and     #$FC                    ; $AB84
-    ora     objY+13                 ; $AB86
+    ora     titleSplitNametable     ; $AB86
     sta     ppuCtrlShadow           ; $AB88
     sta     PPUCTRL                 ; $AB8A
-    lda     objYHi+14               ; $AB8D
-    ldy     ram_0028                ; $AB8F
+    lda     titleSplitAddr          ; $AB8D
+    ldy     titleSplitAddr+1        ; $AB8F
     sta     PPUADDR                 ; $AB91
     sty     PPUADDR                 ; $AB94
     lda     PPUDATA                 ; $AB97
@@ -4896,9 +4896,9 @@ loc_5_AB7F:
     jsr     sub_5_A795              ; $ABA0
     lda     renderingOff            ; $ABA3
     bne     loc_5_AC06              ; $ABA6
-    lda     timerFast+3             ; $ABA8
+    lda     titleDelay              ; $ABA8
     bne     loc_5_ABF7              ; $ABAB
-    lda     objXHi+4                ; $ABAD
+    lda     titleScrollHeld         ; $ABAD
     bne     loc_5_ABE5              ; $ABAF
     lda     frameCounter            ; $ABB1
     and     #$03                    ; $ABB3
@@ -4914,15 +4914,15 @@ loc_5_AB7F:
     sta     ppuNametable            ; $ABC8
 
 loc_5_ABCB:
-    lda     ram_0761                ; $ABCB
+    lda     sceneStep               ; $ABCB
     bne     loc_5_ABE5              ; $ABCE
-    lda     objY+8                  ; $ABD0
+    lda     titleBgRow              ; $ABD0
     bne     loc_5_ABDF              ; $ABD2
     lda     ppuScrollY              ; $ABD4
     cmp     #$60                    ; $ABD6
     bne     loc_5_ABDF              ; $ABD8
     lda     #$05                    ; $ABDA
-    sta     ram_0761                ; $ABDC
+    sta     sceneStep               ; $ABDC
 
 loc_5_ABDF:
     lda     ppuScrollY              ; $ABDF
@@ -4930,7 +4930,7 @@ loc_5_ABDF:
     bne     loc_5_AC06              ; $ABE3
 
 loc_5_ABE5:
-    lda     ram_0761                ; $ABE5
+    lda     sceneStep               ; $ABE5
     jsr     JumpTable               ; $ABE8
 ; (inline jump table)
     .word   loc_5_AC31              ; $ABEB
@@ -4942,9 +4942,9 @@ loc_5_ABE5:
 
 loc_5_ABF7:
     jsr     sub_5_AC07              ; $ABF7
-    lda     objY+10                 ; $ABFA
+    lda     titleTextLine           ; $ABFA
     beq     loc_5_ABE5              ; $ABFC
-    lda     ram_0761                ; $ABFE
+    lda     sceneStep               ; $ABFE
     beq     loc_5_AC06              ; $AC01
     jmp     loc_5_ABE5              ; $AC03
 
@@ -4955,7 +4955,7 @@ sub_5_AC07:
     lda     frameCounter            ; $AC07
     and     #$03                    ; $AC09
     bne     loc_5_AC10              ; $AC0B
-    dec     timerFast+3             ; $AC0D
+    dec     titleDelay              ; $AC0D
 
 loc_5_AC10:
     rts                             ; $AC10
@@ -4970,18 +4970,18 @@ loc_5_AC31:
     and     #$0F                    ; $AC33
     beq     loc_5_AC3D              ; $AC35
     lda     #$03                    ; $AC37
-    sta     ram_0761                ; $AC39
+    sta     sceneStep               ; $AC39
     rts                             ; $AC3C
 
 loc_5_AC3D:
-    lda     objY+2                  ; $AC3D
+    lda     titleTextAddr           ; $AC3D
     sta     ppuBuffer0              ; $AC3F
-    lda     objY+3                  ; $AC42
+    lda     titleTextAddr+1         ; $AC42
     sta     ppuBuffer0+1            ; $AC44
     jsr     sub_5_AEC1              ; $AC47
-    lda     objY+2                  ; $AC4A
+    lda     titleTextAddr           ; $AC4A
     sta     ppuBuffer0+35           ; $AC4C
-    lda     objY+3                  ; $AC4F
+    lda     titleTextAddr+1         ; $AC4F
     sta     ppuBuffer0+36           ; $AC51
     lda     #$20                    ; $AC54
     sta     ppuBuffer0+2            ; $AC56
@@ -4996,19 +4996,19 @@ loc_5_AC5E:
     bpl     loc_5_AC5E              ; $AC68
     lda     #$FF                    ; $AC6A
     sta     ppuBuffer0+70           ; $AC6C
-    inc     ram_0761                ; $AC6F
+    inc     sceneStep               ; $AC6F
     rts                             ; $AC72
 
 loc_5_AC73:
-    ldx     objY+10                 ; $AC73
+    ldx     titleTextLine           ; $AC73
     lda     dat_5_AAE5,x            ; $AC75
     sta     temp0                   ; $AC78
     lda     dat_5_AAF4,x            ; $AC7A
     sta     temp1                   ; $AC7D
     ldy     #$1D                    ; $AC7F
-    lda     objY+2                  ; $AC81
+    lda     titleTextAddr           ; $AC81
     sta     ppuBuffer0              ; $AC83
-    lda     objY+3                  ; $AC86
+    lda     titleTextAddr+1         ; $AC86
     clc                             ; $AC88
     adc     #$03                    ; $AC89
     sta     ppuBuffer0+1            ; $AC8B
@@ -5023,30 +5023,30 @@ loc_5_AC97:
     dey                             ; $AC9C
     bpl     loc_5_AC97              ; $AC9D
     jsr     sub_5_AEC1              ; $AC9F
-    inc     objY+10                 ; $ACA2
-    inc     ram_0761                ; $ACA4
+    inc     titleTextLine           ; $ACA2
+    inc     sceneStep               ; $ACA4
     rts                             ; $ACA7
 
 loc_5_ACA8:
-    lda     objY+10                 ; $ACA8
+    lda     titleTextLine           ; $ACA8
     and     #$01                    ; $ACAA
     beq     loc_5_ACF6              ; $ACAC
-    lda     objY+10                 ; $ACAE
+    lda     titleTextLine           ; $ACAE
     cmp     #$0F                    ; $ACB0
     bne     loc_5_ACB8              ; $ACB2
     lda     #$00                    ; $ACB4
-    sta     objY+10                 ; $ACB6
+    sta     titleTextLine           ; $ACB6
 
 loc_5_ACB8:
-    ldx     objY+9                  ; $ACB8
+    ldx     titleAttrRow            ; $ACB8
     lda     dat_5_AB13,x            ; $ACBA
     sta     temp2                   ; $ACBD
     lda     dat_5_AB1B,x            ; $ACBF
     sta     temp3                   ; $ACC2
     ldy     #$08                    ; $ACC4
-    lda     objY+4                  ; $ACC6
+    lda     titleAttrAddr           ; $ACC6
     sta     ppuBuffer0              ; $ACC8
-    lda     objY+5                  ; $ACCB
+    lda     titleAttrAddr+1         ; $ACCB
     sta     ppuBuffer0+1            ; $ACCD
     sty     ppuBuffer0+2            ; $ACD0
     lda     #$FF                    ; $ACD3
@@ -5058,34 +5058,34 @@ loc_5_ACD9:
     sta     ppuBuffer0+3,y          ; $ACDB
     dey                             ; $ACDE
     bpl     loc_5_ACD9              ; $ACDF
-    lda     objY+5                  ; $ACE1
+    lda     titleAttrAddr+1         ; $ACE1
     clc                             ; $ACE3
     adc     #$08                    ; $ACE4
-    sta     objY+5                  ; $ACE6
+    sta     titleAttrAddr+1         ; $ACE6
     bne     loc_5_ACEE              ; $ACE8
     lda     #$C0                    ; $ACEA
-    sta     objY+5                  ; $ACEC
+    sta     titleAttrAddr+1         ; $ACEC
 
 loc_5_ACEE:
-    inc     objY+9                  ; $ACEE
-    lda     objY+9                  ; $ACF0
+    inc     titleAttrRow            ; $ACEE
+    lda     titleAttrRow            ; $ACF0
     and     #$07                    ; $ACF2
-    sta     objY+9                  ; $ACF4
+    sta     titleAttrRow            ; $ACF4
 
 loc_5_ACF6:
-    inc     ram_0761                ; $ACF6
+    inc     sceneStep               ; $ACF6
     rts                             ; $ACF9
 
 sub_5_ACFA:
-    ldx     objY+8                  ; $ACFA
+    ldx     titleBgRow              ; $ACFA
     lda     dat_5_AB23,x            ; $ACFC
     sta     temp0                   ; $ACFF
     lda     dat_5_AB41,x            ; $AD01
     sta     temp1                   ; $AD04
     ldy     #$20                    ; $AD06
-    lda     objY                    ; $AD08
+    lda     titleBgAddr             ; $AD08
     sta     ppuBuffer0              ; $AD0A
-    lda     objY+1                  ; $AD0D
+    lda     titleBgAddr+1           ; $AD0D
     sta     ppuBuffer0+1            ; $AD0F
     sty     ppuBuffer0+2            ; $AD12
     lda     #$FF                    ; $AD15
@@ -5097,44 +5097,44 @@ loc_5_AD1B:
     sta     ppuBuffer0+3,y          ; $AD1D
     dey                             ; $AD20
     bpl     loc_5_AD1B              ; $AD21
-    lda     objY+1                  ; $AD23
+    lda     titleBgAddr+1           ; $AD23
     clc                             ; $AD25
     adc     #$20                    ; $AD26
-    sta     objY+1                  ; $AD28
-    lda     objY                    ; $AD2A
+    sta     titleBgAddr+1           ; $AD28
+    lda     titleBgAddr             ; $AD2A
     adc     #$00                    ; $AD2C
-    sta     objY                    ; $AD2E
-    inc     objY+8                  ; $AD30
-    lda     objY+8                  ; $AD32
+    sta     titleBgAddr             ; $AD2E
+    inc     titleBgRow              ; $AD30
+    lda     titleBgRow              ; $AD32
     cmp     #$10                    ; $AD34
     beq     loc_5_AD40              ; $AD36
     cmp     #$1E                    ; $AD38
     bne     loc_5_AD5E              ; $AD3A
     lda     #$00                    ; $AD3C
-    sta     objY+8                  ; $AD3E
+    sta     titleBgRow              ; $AD3E
 
 loc_5_AD40:
-    lda     objY+1                  ; $AD40
+    lda     titleBgAddr+1           ; $AD40
     cmp     #$C0                    ; $AD42
     bne     loc_5_AD5A              ; $AD44
-    lda     objY                    ; $AD46
+    lda     titleBgAddr             ; $AD46
     and     #$23                    ; $AD48
     cmp     #$23                    ; $AD4A
     bne     loc_5_AD5A              ; $AD4C
     lda     #$00                    ; $AD4E
-    sta     objY+1                  ; $AD50
-    lda     objY                    ; $AD52
+    sta     titleBgAddr+1           ; $AD50
+    lda     titleBgAddr             ; $AD52
     and     #$28                    ; $AD54
     eor     #$08                    ; $AD56
-    sta     objY                    ; $AD58
+    sta     titleBgAddr             ; $AD58
 
 loc_5_AD5A:
-    inc     ram_0761                ; $AD5A
+    inc     sceneStep               ; $AD5A
     rts                             ; $AD5D
 
 loc_5_AD5E:
     lda     #$00                    ; $AD5E
-    sta     ram_0761                ; $AD60
+    sta     sceneStep               ; $AD60
     rts                             ; $AD63
 ; (unreferenced: $AD64-$AD7B, 24 bytes)
 
@@ -5148,10 +5148,10 @@ sub_5_AD7C:
     lda     #$B2                    ; $AD80
     sta     temp3                   ; $AD82
     ldy     #$18                    ; $AD84
-    lda     objY+6                  ; $AD86
+    lda     titleBgAttrAddr         ; $AD86
     sta     ppuBuffer0              ; $AD88
     sta     ppuBuffer0+27           ; $AD8B
-    lda     objY+7                  ; $AD8E
+    lda     titleBgAttrAddr+1       ; $AD8E
     sta     ppuBuffer0+1            ; $AD90
     eor     #$20                    ; $AD93
     sta     ppuBuffer0+28           ; $AD95
@@ -5168,60 +5168,60 @@ loc_5_ADA4:
     sta     ppuBuffer0+30,y         ; $ADAC
     dey                             ; $ADAF
     bpl     loc_5_ADA4              ; $ADB0
-    lda     objY+7                  ; $ADB2
+    lda     titleBgAttrAddr+1       ; $ADB2
     clc                             ; $ADB4
     adc     #$20                    ; $ADB5
-    sta     objY+7                  ; $ADB7
+    sta     titleBgAttrAddr+1       ; $ADB7
     bne     loc_5_ADC5              ; $ADB9
-    lda     objY+6                  ; $ADBB
+    lda     titleBgAttrAddr         ; $ADBB
     eor     #$08                    ; $ADBD
-    sta     objY+6                  ; $ADBF
+    sta     titleBgAttrAddr         ; $ADBF
     lda     #$C0                    ; $ADC1
-    sta     objY+7                  ; $ADC3
+    sta     titleBgAttrAddr+1       ; $ADC3
 
 loc_5_ADC5:
-    inc     objYHi+14               ; $ADC5
-    inc     objYHi+14               ; $ADC7
-    lda     objYHi+14               ; $ADC9
+    inc     titleSplitAddr          ; $ADC5
+    inc     titleSplitAddr          ; $ADC7
+    lda     titleSplitAddr          ; $ADC9
     and     #$04                    ; $ADCB
     beq     loc_5_ADDD              ; $ADCD
-    lda     objY+13                 ; $ADCF
+    lda     titleSplitNametable     ; $ADCF
     eor     #$02                    ; $ADD1
-    sta     objY+13                 ; $ADD3
-    lda     objYHi+14               ; $ADD5
+    sta     titleSplitNametable     ; $ADD3
+    lda     titleSplitAddr          ; $ADD5
     and     #$28                    ; $ADD7
     eor     #$08                    ; $ADD9
-    sta     objYHi+14               ; $ADDB
+    sta     titleSplitAddr          ; $ADDB
 
 loc_5_ADDD:
     jmp     loc_5_AD5E              ; $ADDD
 
 sub_5_ADE0:
     lda     #$2A                    ; $ADE0
-    sta     objYHi+14               ; $ADE2
+    sta     titleSplitAddr          ; $ADE2
     lda     #$20                    ; $ADE4
-    sta     objY                    ; $ADE6
+    sta     titleBgAddr             ; $ADE6
     lda     #$28                    ; $ADE8
-    sta     objY+2                  ; $ADEA
+    sta     titleTextAddr           ; $ADEA
     lda     #$2B                    ; $ADEC
-    sta     objY+4                  ; $ADEE
+    sta     titleAttrAddr           ; $ADEE
     lda     #$23                    ; $ADF0
-    sta     objY+6                  ; $ADF2
+    sta     titleBgAttrAddr         ; $ADF2
     lda     #$00                    ; $ADF4
-    sta     ram_0028                ; $ADF6
-    sta     objY+1                  ; $ADF8
-    sta     objY+3                  ; $ADFA
-    sta     objY+8                  ; $ADFC
-    sta     objY+9                  ; $ADFE
-    sta     objY+10                 ; $AE00
-    sta     ram_0761                ; $AE02
+    sta     titleSplitAddr+1        ; $ADF6
+    sta     titleBgAddr+1           ; $ADF8
+    sta     titleTextAddr+1         ; $ADFA
+    sta     titleBgRow              ; $ADFC
+    sta     titleAttrRow            ; $ADFE
+    sta     titleTextLine           ; $AE00
+    sta     sceneStep               ; $AE02
     sta     ppuNametable            ; $AE05
     sta     ppuScrollY              ; $AE08
     lda     #$C0                    ; $AE0A
-    sta     objY+5                  ; $AE0C
-    sta     objY+7                  ; $AE0E
+    sta     titleAttrAddr+1         ; $AE0C
+    sta     titleBgAttrAddr+1       ; $AE0E
     lda     #$02                    ; $AE10
-    sta     objY+13                 ; $AE12
+    sta     titleSplitNametable     ; $AE12
 
 loc_5_AE14:
     rts                             ; $AE14
@@ -5229,28 +5229,28 @@ loc_5_AE14:
 loc_5_AE15:
     lda     ppuNametable            ; $AE15
     bne     loc_5_AE4A              ; $AE18
-    lda     timerFast+3             ; $AE1A
+    lda     titleDelay              ; $AE1A
     beq     loc_5_AE30              ; $AE1D
 ; (code below not executed in the test movies)
     jsr     sub_5_AC07              ; $AE1F
     lda     #$01                    ; $AE22
-    sta     objXHi+4                ; $AE24
+    sta     titleScrollHeld         ; $AE24
     lda     ram_00E8                ; $AE26
     cmp     #$02                    ; $AE28
     bne     loc_5_AE49              ; $AE2A
     lda     #$00                    ; $AE2C
-    sta     objXHi+4                ; $AE2E
+    sta     titleScrollHeld         ; $AE2E
 ; (end of code not executed in the test movies)
 
 loc_5_AE30:
-    lda     objY+8                  ; $AE30
+    lda     titleBgRow              ; $AE30
     bne     loc_5_AE4A              ; $AE32
-    lda     objY+12                 ; $AE34
+    lda     titleEndStep            ; $AE34
     bne     loc_5_AE4A              ; $AE36
     lda     #$00                    ; $AE38
-    sta     ram_0761                ; $AE3A
-    sta     objY+12                 ; $AE3D
-    sta     objY+11                 ; $AE3F
+    sta     sceneStep               ; $AE3A
+    sta     titleEndStep            ; $AE3D
+    sta     titleLogoString         ; $AE3F
     jsr     sub_5_A8C1              ; $AE41
     lda     #$03                    ; $AE44
     sta     gameMode                ; $AE46
@@ -5259,7 +5259,7 @@ loc_5_AE49:
     rts                             ; $AE49
 
 loc_5_AE4A:
-    lda     objY+12                 ; $AE4A
+    lda     titleEndStep            ; $AE4A
     jsr     JumpTable               ; $AE4C
 ; (inline jump table)
     .word   loc_5_AE55              ; $AE4F
@@ -5280,20 +5280,20 @@ loc_5_AE55:
     eor     #$02                    ; $AE68
     sta     ppuNametable            ; $AE6A
     lda     #$90                    ; $AE6D
-    sta     timerFast+3             ; $AE6F
+    sta     titleDelay              ; $AE6F
 ; (end of code not executed in the test movies)
 
 loc_5_AE72:
-    lda     objY+11                 ; $AE72
+    lda     titleLogoString         ; $AE72
     asl     a                       ; $AE74
     tax                             ; $AE75
     lda     dat_5_AB5F,x            ; $AE76
     sta     temp0                   ; $AE79
     lda     dat_5_AB60,x            ; $AE7B
     sta     temp1                   ; $AE7E
-    lda     objY+2                  ; $AE80
+    lda     titleTextAddr           ; $AE80
     sta     ppuBuffer0              ; $AE82
-    lda     objY+3                  ; $AE85
+    lda     titleTextAddr+1         ; $AE85
     sta     ppuBuffer0+1            ; $AE87
     lda     #$20                    ; $AE8A
     sta     ppuBuffer0+2            ; $AE8C
@@ -5306,46 +5306,46 @@ loc_5_AE96:
     sta     ppuBuffer0+3,y          ; $AE99
     dey                             ; $AE9C
     bpl     loc_5_AE96              ; $AE9D
-    lda     objY+11                 ; $AE9F
+    lda     titleLogoString         ; $AE9F
     cmp     #$07                    ; $AEA1
     beq     loc_5_AEBB              ; $AEA3
     ldy     #$00                    ; $AEA5
     lda     (temp0),y               ; $AEA7
-    cmp     objY+2                  ; $AEA9
+    cmp     titleTextAddr           ; $AEA9
     bne     loc_5_AEBB              ; $AEAB
     iny                             ; $AEAD
     lda     (temp0),y               ; $AEAE
     and     #$F0                    ; $AEB0
-    cmp     objY+3                  ; $AEB2
+    cmp     titleTextAddr+1         ; $AEB2
     bne     loc_5_AEBB              ; $AEB4
     jsr     loc_5_AEEE              ; $AEB6
-    inc     objY+11                 ; $AEB9
+    inc     titleLogoString         ; $AEB9
 
 loc_5_AEBB:
     jsr     sub_5_AEC1              ; $AEBB
-    inc     objY+12                 ; $AEBE
+    inc     titleEndStep            ; $AEBE
     rts                             ; $AEC0
 
 sub_5_AEC1:
-    lda     objY+3                  ; $AEC1
+    lda     titleTextAddr+1         ; $AEC1
     clc                             ; $AEC3
     adc     #$20                    ; $AEC4
-    sta     objY+3                  ; $AEC6
-    lda     objY+2                  ; $AEC8
+    sta     titleTextAddr+1         ; $AEC6
+    lda     titleTextAddr           ; $AEC8
     adc     #$00                    ; $AECA
-    sta     objY+2                  ; $AECC
+    sta     titleTextAddr           ; $AECC
     and     #$03                    ; $AECE
     cmp     #$03                    ; $AED0
     bne     loc_5_AEE6              ; $AED2
-    lda     objY+3                  ; $AED4
+    lda     titleTextAddr+1         ; $AED4
     cmp     #$C0                    ; $AED6
     bne     loc_5_AEE6              ; $AED8
     lda     #$00                    ; $AEDA
-    sta     objY+3                  ; $AEDC
-    lda     objY+2                  ; $AEDE
+    sta     titleTextAddr+1         ; $AEDC
+    lda     titleTextAddr           ; $AEDE
     and     #$28                    ; $AEE0
     eor     #$08                    ; $AEE2
-    sta     objY+2                  ; $AEE4
+    sta     titleTextAddr           ; $AEE4
 
 loc_5_AEE6:
     rts                             ; $AEE6
@@ -5354,7 +5354,7 @@ dat_5_AEE7:
     .byte   $1B, $26, $1C, $15, $14, $25, $1A                               ; $AEE7
 
 loc_5_AEEE:
-    ldx     objY+11                 ; $AEEE
+    ldx     titleLogoString         ; $AEEE
     ldy     dat_5_AEE7,x            ; $AEF0
     lda     #$FF                    ; $AEF3
     sta     ppuBuffer0+35,y         ; $AEF5
@@ -5369,18 +5369,18 @@ loc_5_AEF9:
 
 loc_5_AF02:
     jsr     sub_5_ACFA              ; $AF02
-    lda     ram_0761                ; $AF05
+    lda     sceneStep               ; $AF05
     beq     loc_5_AF0F              ; $AF08
-    inc     objY+12                 ; $AF0A
+    inc     titleEndStep            ; $AF0A
     jmp     loc_5_AF13              ; $AF0C
 
 loc_5_AF0F:
     lda     #$00                    ; $AF0F
-    sta     objY+12                 ; $AF11
+    sta     titleEndStep            ; $AF11
 
 loc_5_AF13:
     lda     #$05                    ; $AF13
-    sta     ram_0761                ; $AF15
+    sta     sceneStep               ; $AF15
     rts                             ; $AF18
 
 loc_5_AF19:
@@ -5470,7 +5470,7 @@ dat_5_B23D:
     .byte   $60, $5E, $60, $90, $60                                         ; $B23D
 
 loc_5_B242:
-    lda     ram_073B                ; $B242
+    lda     fileStep                ; $B242
     jsr     JumpTable               ; $B245
 ; (inline jump table)
     .word   loc_5_B40A              ; $B248
@@ -5494,21 +5494,21 @@ loc_5_B261:
     jsr     sub_5_B603              ; $B264
     jsr     sub_5_B63C              ; $B267
     jsr     sub_5_B5B5              ; $B26A
-    ldy     ram_073E                ; $B26D
+    ldy     fileSubStep             ; $B26D
     bne     loc_5_B27B              ; $B270
     lda     #$02                    ; $B272
     sta     ppuStringSelect         ; $B274
-    inc     ram_073E                ; $B277
+    inc     fileSubStep             ; $B277
     rts                             ; $B27A
 
 loc_5_B27B:
     dey                             ; $B27B
     bne     loc_5_B28B              ; $B27C
-    inc     ram_073E                ; $B27E
+    inc     fileSubStep             ; $B27E
     lda     #$05                    ; $B281
     sta     ppuStringSelect         ; $B283
     lda     #$00                    ; $B286
-    sta     objYHi                  ; $B288
+    sta     fileCursor              ; $B288
     rts                             ; $B28A
 
 loc_5_B28B:
@@ -5518,9 +5518,9 @@ loc_5_B28B:
     and     #$10                    ; $B292
     beq     loc_5_B303              ; $B294
     lda     #$00                    ; $B296
-    sta     ram_073E                ; $B298
-    sta     ram_073B                ; $B29B
-    lda     objYHi                  ; $B29E
+    sta     fileSubStep             ; $B298
+    sta     fileStep                ; $B29B
+    lda     fileCursor              ; $B29E
     cmp     #$03                    ; $B2A0
     bne     loc_5_B2AA              ; $B2A2
     lda     #$01                    ; $B2A4
@@ -5535,7 +5535,7 @@ loc_5_B2AA:
     rts                             ; $B2B3
 
 loc_5_B2B4:
-    lda     objYHi                  ; $B2B4
+    lda     fileCursor              ; $B2B4
     sta     saveSlot                ; $B2B6
     jsr     Save_Load               ; $B2B9
     lda     secondQuest             ; $B2BC
@@ -5590,88 +5590,88 @@ loc_5_B303:
     beq     loc_5_B319              ; $B307
     lda     #$04                    ; $B309
     sta     musicRequest            ; $B30B
-    inc     objYHi                  ; $B30D
-    lda     objYHi                  ; $B30F
+    inc     fileCursor              ; $B30D
+    lda     fileCursor              ; $B30F
     cmp     #$05                    ; $B311
     bne     loc_5_B319              ; $B313
     lda     #$00                    ; $B315
-    sta     objYHi                  ; $B317
+    sta     fileCursor              ; $B317
 
 loc_5_B319:
-    lda     objYHi                  ; $B319
+    lda     fileCursor              ; $B319
     bne     loc_5_B32F              ; $B31B
-    lda     objYHi+1                ; $B31D
+    lda     fileEmptyMask           ; $B31D
     and     #$01                    ; $B31F
     beq     loc_5_B328              ; $B321
-    inc     objYHi                  ; $B323
+    inc     fileCursor              ; $B323
     jmp     loc_5_B32F              ; $B325
 
 loc_5_B328:
     lda     #$40                    ; $B328
-    sta     objYHi+2                ; $B32A
+    sta     fileCursorY             ; $B32A
     jmp     loc_5_B384              ; $B32C
 
 loc_5_B32F:
-    lda     objYHi                  ; $B32F
+    lda     fileCursor              ; $B32F
     cmp     #$01                    ; $B331
     bne     loc_5_B347              ; $B333
-    lda     objYHi+1                ; $B335
+    lda     fileEmptyMask           ; $B335
     and     #$02                    ; $B337
     beq     loc_5_B340              ; $B339
-    inc     objYHi                  ; $B33B
+    inc     fileCursor              ; $B33B
     jmp     loc_5_B347              ; $B33D
 
 loc_5_B340:
     lda     #$58                    ; $B340
-    sta     objYHi+2                ; $B342
+    sta     fileCursorY             ; $B342
     jmp     loc_5_B384              ; $B344
 
 loc_5_B347:
-    lda     objYHi                  ; $B347
+    lda     fileCursor              ; $B347
     cmp     #$02                    ; $B349
     bne     loc_5_B35F              ; $B34B
-    lda     objYHi+1                ; $B34D
+    lda     fileEmptyMask           ; $B34D
     and     #$04                    ; $B34F
     beq     loc_5_B358              ; $B351
-    inc     objYHi                  ; $B353
+    inc     fileCursor              ; $B353
     jmp     loc_5_B35F              ; $B355
 
 loc_5_B358:
     lda     #$70                    ; $B358
-    sta     objYHi+2                ; $B35A
+    sta     fileCursorY             ; $B35A
     jmp     loc_5_B384              ; $B35C
 
 loc_5_B35F:
-    lda     objYHi                  ; $B35F
+    lda     fileCursor              ; $B35F
     cmp     #$03                    ; $B361
     bne     loc_5_B375              ; $B363
-    lda     objYHi+1                ; $B365
+    lda     fileEmptyMask           ; $B365
     bne     loc_5_B36E              ; $B367
-    inc     objYHi                  ; $B369
+    inc     fileCursor              ; $B369
     jmp     loc_5_B375              ; $B36B
 
 loc_5_B36E:
     lda     #$90                    ; $B36E
-    sta     objYHi+2                ; $B370
+    sta     fileCursorY             ; $B370
     jmp     loc_5_B384              ; $B372
 
 loc_5_B375:
-    lda     objYHi+1                ; $B375
+    lda     fileEmptyMask           ; $B375
     cmp     #$07                    ; $B377
     bne     loc_5_B380              ; $B379
 ; (code below not executed in the test movies)
-    dec     objYHi                  ; $B37B
+    dec     fileCursor              ; $B37B
     jmp     loc_5_B35F              ; $B37D
 ; (end of code not executed in the test movies)
 
 loc_5_B380:
     lda     #$A8                    ; $B380
-    sta     objYHi+2                ; $B382
+    sta     fileCursorY             ; $B382
 
 loc_5_B384:
     lda     #$1C                    ; $B384
-    sta     a:objX                  ; $B386
-    ldy     objYHi+2                ; $B389
+    sta     a:fileCursorX           ; $B386
+    ldy     fileCursorY             ; $B389
     jsr     sub_5_B574              ; $B38B
     lda     #$40                    ; $B38E
     ldy     #$28                    ; $B390
@@ -5713,7 +5713,7 @@ loc_5_B3B6:
     rts                             ; $B3CE
 
 loc_5_B3CF:
-    lda     ram_073B                ; $B3CF
+    lda     fileStep                ; $B3CF
     jsr     JumpTable               ; $B3D2
 ; (inline jump table)
     .word   loc_5_B412              ; $B3D5
@@ -5735,7 +5735,7 @@ loc_5_B3E1:
     bpl     loc_5_B3E1              ; $B3E9
     lda     #$00                    ; $B3EB
     sta     SND_CHN                 ; $B3ED
-    inc     ram_073B                ; $B3F0
+    inc     fileStep                ; $B3F0
     rts                             ; $B3F3
 
 loc_5_B3F4:
@@ -5744,7 +5744,7 @@ loc_5_B3F4:
     rts                             ; $B3F9
 
 loc_5_B3FA:
-    lda     ram_073B                ; $B3FA
+    lda     fileStep                ; $B3FA
     jsr     JumpTable               ; $B3FD
 ; (inline jump table)
     .word   loc_5_B412              ; $B400
@@ -5768,18 +5768,18 @@ loc_5_B412:
     .byte   $A9, $00, $8D, $26, $07                                         ; $B418
 
 loc_5_B41D:
-    inc     ram_073B                ; $B41D
+    inc     fileStep                ; $B41D
     rts                             ; $B420
 
 dat_5_B421:
     .byte   $30, $48, $60, $78                                              ; $B421
 
 loc_5_B425:
-    ldy     ram_073E                ; $B425
+    ldy     fileSubStep             ; $B425
     bne     loc_5_B433              ; $B428
     lda     #$06                    ; $B42A
     sta     ppuStringSelect         ; $B42C
-    inc     ram_073E                ; $B42F
+    inc     fileSubStep             ; $B42F
     rts                             ; $B432
 
 loc_5_B433:
@@ -5787,9 +5787,9 @@ loc_5_B433:
     bne     loc_5_B443              ; $B434
     lda     #$07                    ; $B436
     sta     ppuStringSelect         ; $B438
-    inc     ram_073E                ; $B43B
+    inc     fileSubStep             ; $B43B
     lda     #$00                    ; $B43E
-    sta     objYHi                  ; $B440
+    sta     fileCursor              ; $B440
     rts                             ; $B442
 
 loc_5_B443:
@@ -5798,18 +5798,18 @@ loc_5_B443:
     lda     joypadPressed           ; $B448
     and     #$10                    ; $B44A
     beq     loc_5_B4A6              ; $B44C
-    lda     objYHi                  ; $B44E
+    lda     fileCursor              ; $B44E
     cmp     #$03                    ; $B450
     bne     loc_5_B462              ; $B452
     lda     #$00                    ; $B454
-    sta     ram_073E                ; $B456
-    sta     ram_073B                ; $B459
+    sta     fileSubStep             ; $B456
+    sta     fileStep                ; $B459
     lda     #$01                    ; $B45C
     sta     gameMode                ; $B45E
     rts                             ; $B461
 
 loc_5_B462:
-    lda     objYHi                  ; $B462
+    lda     fileCursor              ; $B462
     asl     a                       ; $B464
     tax                             ; $B465
     lda     SaveBackupStatsPtrs,x   ; $B466
@@ -5852,16 +5852,16 @@ loc_5_B4A6:
     beq     loc_5_B4BC              ; $B4AA
     lda     #$04                    ; $B4AC
     sta     musicRequest            ; $B4AE
-    inc     objYHi                  ; $B4B0
-    lda     objYHi                  ; $B4B2
+    inc     fileCursor              ; $B4B0
+    lda     fileCursor              ; $B4B2
     cmp     #$04                    ; $B4B4
     bne     loc_5_B4BC              ; $B4B6
     lda     #$00                    ; $B4B8
-    sta     objYHi                  ; $B4BA
+    sta     fileCursor              ; $B4BA
 
 loc_5_B4BC:
     jsr     sub_5_B502              ; $B4BC
-    lda     objYHi                  ; $B4BF
+    lda     fileCursor              ; $B4BF
     cmp     #$03                    ; $B4C1
     beq     loc_5_B4D5              ; $B4C3
     asl     a                       ; $B4C5
@@ -5870,19 +5870,19 @@ loc_5_B4BC:
     adc     #$01                    ; $B4C9
 
 loc_5_B4CB:
-    and     objYHi+1                ; $B4CB
+    and     fileEmptyMask           ; $B4CB
     beq     loc_5_B4D5              ; $B4CD
-    inc     objYHi                  ; $B4CF
+    inc     fileCursor              ; $B4CF
     asl     a                       ; $B4D1
     jmp     loc_5_B4CB              ; $B4D2
 
 loc_5_B4D5:
-    ldx     objYHi                  ; $B4D5
+    ldx     fileCursor              ; $B4D5
     lda     dat_5_B421,x            ; $B4D7
-    sta     objYHi+2                ; $B4DA
+    sta     fileCursorY             ; $B4DA
     lda     #$4C                    ; $B4DC
-    sta     a:objX                  ; $B4DE
-    ldy     objYHi+2                ; $B4E1
+    sta     a:fileCursorX           ; $B4DE
+    ldy     fileCursorY             ; $B4E1
     dey                             ; $B4E3
     dey                             ; $B4E4
     dey                             ; $B4E5
@@ -5909,7 +5909,7 @@ dat_5_B4FD:
 
 sub_5_B502:
     lda     #$00                    ; $B502
-    sta     objYHi+1                ; $B504
+    sta     fileEmptyMask           ; $B504
     ldx     #$04                    ; $B506
 
 loc_5_B508:
@@ -5926,8 +5926,8 @@ loc_5_B514:
     dey                             ; $B51A
     bpl     loc_5_B514              ; $B51B
     lda     dat_5_B4FD,x            ; $B51D
-    ora     objYHi+1                ; $B520
-    sta     objYHi+1                ; $B522
+    ora     fileEmptyMask           ; $B520
+    sta     fileEmptyMask           ; $B522
 
 loc_5_B524:
     dex                             ; $B524
@@ -5982,22 +5982,22 @@ loc_5_B54B:
     rts                             ; $B573
 
 sub_5_B574:
-    inc     objYHi+4                ; $B574
+    inc     fileBlinkTimer          ; $B574
     ldx     #$68                    ; $B576
-    lda     objYHi+4                ; $B578
+    lda     fileBlinkTimer          ; $B578
     and     #$04                    ; $B57A
     beq     loc_5_B580              ; $B57C
     inx                             ; $B57E
     inx                             ; $B57F
 
 loc_5_B580:
-    stx     objYHi+3                ; $B580
+    stx     fileCursorTile          ; $B580
     sty     oamBuffer               ; $B582
     lda     #$01                    ; $B585
     sta     oamBuffer+2             ; $B587
-    lda     a:objX                  ; $B58A
+    lda     a:fileCursorX           ; $B58A
     sta     oamBuffer+3             ; $B58D
-    lda     objYHi+3                ; $B590
+    lda     fileCursorTile          ; $B590
     sta     oamBuffer+1             ; $B592
     rts                             ; $B595
 
@@ -6105,7 +6105,7 @@ sub_5_B623:
 
 sub_5_B63C:
     jsr     sub_5_B502              ; $B63C
-    lda     objYHi+1                ; $B63F
+    lda     fileEmptyMask           ; $B63F
     and     #$01                    ; $B641
     beq     loc_5_B64C              ; $B643
     ldx     #$00                    ; $B645
@@ -6113,7 +6113,7 @@ sub_5_B63C:
     jsr     sub_5_B663              ; $B649
 
 loc_5_B64C:
-    lda     objYHi+1                ; $B64C
+    lda     fileEmptyMask           ; $B64C
     and     #$02                    ; $B64E
     beq     loc_5_B659              ; $B650
     ldx     #$0E                    ; $B652
@@ -6121,7 +6121,7 @@ loc_5_B64C:
     jsr     sub_5_B663              ; $B656
 
 loc_5_B659:
-    lda     objYHi+1                ; $B659
+    lda     fileEmptyMask           ; $B659
     and     #$04                    ; $B65B
     beq     loc_5_B677              ; $B65D
     ldx     #$1C                    ; $B65F
@@ -6140,16 +6140,16 @@ loc_5_B677:
     rts                             ; $B677
 
 loc_5_B678:
-    ldy     ram_073E                ; $B678
+    ldy     fileSubStep             ; $B678
     bne     loc_5_B692              ; $B67B
     lda     #$06                    ; $B67D
     sta     ppuStringSelect         ; $B67F
-    inc     ram_073E                ; $B682
+    inc     fileSubStep             ; $B682
     lda     #$00                    ; $B685
-    sta     objYHi                  ; $B687
-    sta     objYHi+5                ; $B689
-    sta     objYHi+6                ; $B68B
-    sta     objYHi+7                ; $B68D
+    sta     fileCursor              ; $B687
+    sta     nameCursor              ; $B689
+    sta     letterColumn            ; $B68B
+    sta     letterRow               ; $B68D
     jmp     sub_5_B502              ; $B68F
 
 loc_5_B692:
@@ -6158,12 +6158,12 @@ loc_5_B692:
     lda     joypadPressed           ; $B697
     and     #$10                    ; $B699
     beq     loc_5_B6AC              ; $B69B
-    lda     objYHi                  ; $B69D
+    lda     fileCursor              ; $B69D
     cmp     #$03                    ; $B69F
     bne     loc_5_B6AC              ; $B6A1
     lda     #$00                    ; $B6A3
-    sta     ram_073E                ; $B6A5
-    inc     ram_073B                ; $B6A8
+    sta     fileSubStep             ; $B6A5
+    inc     fileStep                ; $B6A8
     rts                             ; $B6AB
 
 loc_5_B6AC:
@@ -6172,24 +6172,24 @@ loc_5_B6AC:
     beq     loc_5_B6C6              ; $B6B0
     lda     #$04                    ; $B6B2
     sta     musicRequest            ; $B6B4
-    inc     objYHi                  ; $B6B6
-    lda     objYHi                  ; $B6B8
+    inc     fileCursor              ; $B6B6
+    lda     fileCursor              ; $B6B8
     cmp     #$04                    ; $B6BA
     bne     loc_5_B6C2              ; $B6BC
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B6BE
-    sta     objYHi                  ; $B6C0
+    sta     fileCursor              ; $B6C0
 ; (end of code not executed in the test movies)
 
 loc_5_B6C2:
     lda     #$00                    ; $B6C2
-    sta     objYHi+5                ; $B6C4
+    sta     nameCursor              ; $B6C4
 
 loc_5_B6C6:
-    lda     objYHi+1                ; $B6C6
+    lda     fileEmptyMask           ; $B6C6
     ora     #$08                    ; $B6C8
-    sta     objYHi+1                ; $B6CA
-    lda     objYHi                  ; $B6CC
+    sta     fileEmptyMask           ; $B6CA
+    lda     fileCursor              ; $B6CC
     cmp     #$03                    ; $B6CE
     beq     loc_5_B6E4              ; $B6D0
     asl     a                       ; $B6D2
@@ -6199,20 +6199,20 @@ loc_5_B6C6:
 
 loc_5_B6D8:
     tay                             ; $B6D8
-    and     objYHi+1                ; $B6D9
+    and     fileEmptyMask           ; $B6D9
     bne     loc_5_B6E4              ; $B6DB
-    inc     objYHi                  ; $B6DD
+    inc     fileCursor              ; $B6DD
     tya                             ; $B6DF
     asl     a                       ; $B6E0
     jmp     loc_5_B6D8              ; $B6E1
 
 loc_5_B6E4:
-    ldx     objYHi                  ; $B6E4
+    ldx     fileCursor              ; $B6E4
     lda     dat_5_B421,x            ; $B6E6
-    sta     objYHi+2                ; $B6E9
+    sta     fileCursorY             ; $B6E9
     lda     #$4C                    ; $B6EB
-    sta     a:objX                  ; $B6ED
-    ldy     objYHi+2                ; $B6F0
+    sta     a:fileCursorX           ; $B6ED
+    ldy     fileCursorY             ; $B6F0
     dey                             ; $B6F2
     dey                             ; $B6F3
     dey                             ; $B6F4
@@ -6221,7 +6221,7 @@ loc_5_B6E4:
     lda     #$2C                    ; $B6F9
     ldy     #$58                    ; $B6FB
     jsr     sub_5_B596              ; $B6FD
-    lda     objYHi+2                ; $B700
+    lda     fileCursorY             ; $B700
     cmp     #$78                    ; $B702
     bne     loc_5_B711              ; $B704
     lda     #$F8                    ; $B706
@@ -6235,18 +6235,18 @@ loc_5_B711:
     beq     loc_5_B727              ; $B715
     lda     #$01                    ; $B717
     sta     musicRequest            ; $B719
-    inc     objYHi+5                ; $B71B
-    lda     objYHi+5                ; $B71D
+    inc     nameCursor              ; $B71B
+    lda     nameCursor              ; $B71D
     cmp     #$08                    ; $B71F
     bne     loc_5_B727              ; $B721
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B723
-    sta     objYHi+5                ; $B725
+    sta     nameCursor              ; $B725
 ; (end of code not executed in the test movies)
 
 loc_5_B727:
     lda     #$68                    ; $B727
-    ldx     objYHi+5                ; $B729
+    ldx     nameCursor              ; $B729
 
 loc_5_B72B:
     beq     loc_5_B734              ; $B72B
@@ -6256,8 +6256,8 @@ loc_5_B72B:
     jmp     loc_5_B72B              ; $B731
 
 loc_5_B734:
-    sta     objXSubpixel            ; $B734
-    lda     objYHi+2                ; $B737
+    sta     nameCursorX             ; $B734
+    lda     fileCursorY             ; $B737
     cmp     #$78                    ; $B739
     bne     loc_5_B73F              ; $B73B
 ; (code below not executed in the test movies)
@@ -6265,18 +6265,18 @@ loc_5_B734:
 ; (end of code not executed in the test movies)
 
 loc_5_B73F:
-    sta     objYHi+11               ; $B73F
-    lda     objYHi+4                ; $B741
+    sta     nameCursorY             ; $B73F
+    lda     fileBlinkTimer          ; $B741
     and     #$08                    ; $B743
     beq     loc_5_B74B              ; $B745
     lda     #$F8                    ; $B747
-    sta     objYHi+11               ; $B749
+    sta     nameCursorY             ; $B749
 
 loc_5_B74B:
-    lda     objYHi+11               ; $B74B
+    lda     nameCursorY             ; $B74B
     sta     oamBuffer+4             ; $B74D
     dec     oamBuffer+4             ; $B750
-    lda     objXSubpixel            ; $B753
+    lda     nameCursorX             ; $B753
     sta     oamBuffer+7             ; $B756
     lda     #$FF                    ; $B759
     sta     oamBuffer+5             ; $B75B
@@ -6286,21 +6286,21 @@ loc_5_B74B:
     and     #$0F                    ; $B765
     bne     loc_5_B772              ; $B767
     lda     #$00                    ; $B769
-    sta     objYHi+8                ; $B76B
-    sta     objYHi+9                ; $B76D
+    sta     letterHeld              ; $B76B
+    sta     letterRepeatTimer       ; $B76D
     jmp     loc_5_B831              ; $B76F
 
 loc_5_B772:
-    lda     objYHi+8                ; $B772
+    lda     letterHeld              ; $B772
     beq     loc_5_B78E              ; $B774
-    inc     objYHi+9                ; $B776
-    lda     objYHi+9                ; $B778
+    inc     letterRepeatTimer       ; $B776
+    lda     letterRepeatTimer       ; $B778
     cmp     #$1F                    ; $B77A
     bmi     loc_5_B78B              ; $B77C
     and     #$07                    ; $B77E
     bne     loc_5_B78B              ; $B780
     lda     #$20                    ; $B782
-    sta     objYHi+9                ; $B784
+    sta     letterRepeatTimer       ; $B784
     jmp     loc_5_B78E              ; $B786
 ; (unreferenced: $B789-$B78A, 2 bytes)
     .byte   $F0, $03                                                        ; $B789
@@ -6310,7 +6310,7 @@ loc_5_B78B:
 
 loc_5_B78E:
     lda     #$01                    ; $B78E
-    sta     objYHi+8                ; $B790
+    sta     letterHeld              ; $B790
     lda     #$02                    ; $B792
     sta     musicRequest            ; $B794
     lda     joypadHeld              ; $B796
@@ -6318,60 +6318,60 @@ loc_5_B78E:
     beq     loc_5_B7F2              ; $B79A
     cmp     #$01                    ; $B79C
     bne     loc_5_B7CF              ; $B79E
-    inc     objYHi+6                ; $B7A0
-    lda     objYHi+6                ; $B7A2
+    inc     letterColumn            ; $B7A0
+    lda     letterColumn            ; $B7A2
     cmp     #$0B                    ; $B7A4
     bne     loc_5_B7AE              ; $B7A6
-    inc     objYHi+7                ; $B7A8
+    inc     letterRow               ; $B7A8
     lda     #$00                    ; $B7AA
-    sta     objYHi+6                ; $B7AC
+    sta     letterColumn            ; $B7AC
 
 loc_5_B7AE:
-    lda     objYHi+7                ; $B7AE
+    lda     letterRow               ; $B7AE
     cmp     #$04                    ; $B7B0
     bne     loc_5_B7BA              ; $B7B2
     lda     #$00                    ; $B7B4
-    sta     objYHi+6                ; $B7B6
-    sta     objYHi+7                ; $B7B8
+    sta     letterColumn            ; $B7B6
+    sta     letterRow               ; $B7B8
 
 loc_5_B7BA:
-    lda     objYHi+7                ; $B7BA
+    lda     letterRow               ; $B7BA
     cmp     #$02                    ; $B7BC
     bne     loc_5_B7CC              ; $B7BE
-    lda     objYHi+6                ; $B7C0
+    lda     letterColumn            ; $B7C0
     cmp     #$06                    ; $B7C2
     bne     loc_5_B7CC              ; $B7C4
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B7C6
-    sta     objYHi+6                ; $B7C8
-    inc     objYHi+7                ; $B7CA
+    sta     letterColumn            ; $B7C8
+    inc     letterRow               ; $B7CA
 ; (end of code not executed in the test movies)
 
 loc_5_B7CC:
     jmp     loc_5_B831              ; $B7CC
 
 loc_5_B7CF:
-    dec     objYHi+6                ; $B7CF
+    dec     letterColumn            ; $B7CF
     bpl     loc_5_B7E3              ; $B7D1
-    dec     objYHi+7                ; $B7D3
+    dec     letterRow               ; $B7D3
     lda     #$0A                    ; $B7D5
-    sta     objYHi+6                ; $B7D7
-    lda     objYHi+7                ; $B7D9
+    sta     letterColumn            ; $B7D7
+    lda     letterRow               ; $B7D9
     cmp     #$02                    ; $B7DB
     bne     loc_5_B7E3              ; $B7DD
 ; (code below not executed in the test movies)
     lda     #$05                    ; $B7DF
-    sta     objYHi+6                ; $B7E1
+    sta     letterColumn            ; $B7E1
 ; (end of code not executed in the test movies)
 
 loc_5_B7E3:
-    lda     objYHi+7                ; $B7E3
+    lda     letterRow               ; $B7E3
     bpl     loc_5_B7EF              ; $B7E5
 ; (code below not executed in the test movies)
     lda     #$03                    ; $B7E7
-    sta     objYHi+7                ; $B7E9
+    sta     letterRow               ; $B7E9
     lda     #$0A                    ; $B7EB
-    sta     objYHi+6                ; $B7ED
+    sta     letterColumn            ; $B7ED
 ; (end of code not executed in the test movies)
 
 loc_5_B7EF:
@@ -6381,49 +6381,49 @@ loc_5_B7F2:
     lda     joypadHeld              ; $B7F2
     and     #$08                    ; $B7F4
     beq     loc_5_B814              ; $B7F6
-    dec     objYHi+7                ; $B7F8
+    dec     letterRow               ; $B7F8
     bpl     loc_5_B803              ; $B7FA
     lda     #$03                    ; $B7FC
-    sta     objYHi+7                ; $B7FE
+    sta     letterRow               ; $B7FE
     jmp     loc_5_B811              ; $B800
 
 loc_5_B803:
-    lda     objYHi+6                ; $B803
+    lda     letterColumn            ; $B803
     cmp     #$06                    ; $B805
     bmi     loc_5_B811              ; $B807
-    lda     objYHi+7                ; $B809
+    lda     letterRow               ; $B809
     cmp     #$02                    ; $B80B
     bne     loc_5_B811              ; $B80D
-    dec     objYHi+7                ; $B80F
+    dec     letterRow               ; $B80F
 
 loc_5_B811:
     jmp     loc_5_B831              ; $B811
 
 loc_5_B814:
-    inc     objYHi+7                ; $B814
-    lda     objYHi+7                ; $B816
+    inc     letterRow               ; $B814
+    lda     letterRow               ; $B816
     cmp     #$04                    ; $B818
     bne     loc_5_B823              ; $B81A
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B81C
-    sta     objYHi+7                ; $B81E
+    sta     letterRow               ; $B81E
     jmp     loc_5_B831              ; $B820
 ; (end of code not executed in the test movies)
 
 loc_5_B823:
-    lda     objYHi+6                ; $B823
+    lda     letterColumn            ; $B823
     cmp     #$06                    ; $B825
     bmi     loc_5_B831              ; $B827
-    lda     objYHi+7                ; $B829
+    lda     letterRow               ; $B829
     cmp     #$02                    ; $B82B
     bne     loc_5_B831              ; $B82D
 ; (code below not executed in the test movies)
-    inc     objYHi+7                ; $B82F
+    inc     letterRow               ; $B82F
 ; (end of code not executed in the test movies)
 
 loc_5_B831:
     lda     #$30                    ; $B831
-    ldx     objYHi+6                ; $B833
+    ldx     letterColumn            ; $B833
 
 loc_5_B835:
     beq     loc_5_B83E              ; $B835
@@ -6433,9 +6433,9 @@ loc_5_B835:
     jmp     loc_5_B835              ; $B83B
 
 loc_5_B83E:
-    sta     objYHi+10               ; $B83E
+    sta     letterCursorX           ; $B83E
     lda     #$90                    ; $B840
-    ldx     objYHi+7                ; $B842
+    ldx     letterRow               ; $B842
 
 loc_5_B844:
     beq     loc_5_B84D              ; $B844
@@ -6445,21 +6445,21 @@ loc_5_B844:
     jmp     loc_5_B844              ; $B84A
 
 loc_5_B84D:
-    sta     objYHi+12               ; $B84D
-    lda     objYHi+9                ; $B84F
+    sta     letterCursorY           ; $B84D
+    lda     letterRepeatTimer       ; $B84F
     cmp     #$1F                    ; $B851
     bpl     loc_5_B85F              ; $B853
-    lda     objYHi+4                ; $B855
+    lda     fileBlinkTimer          ; $B855
     and     #$08                    ; $B857
     beq     loc_5_B85F              ; $B859
     lda     #$F8                    ; $B85B
-    sta     objYHi+12               ; $B85D
+    sta     letterCursorY           ; $B85D
 
 loc_5_B85F:
-    lda     objYHi+12               ; $B85F
+    lda     letterCursorY           ; $B85F
     sta     oamBuffer+68            ; $B861
     dec     oamBuffer+68            ; $B864
-    lda     objYHi+10               ; $B867
+    lda     letterCursorX           ; $B867
     sta     oamBuffer+71            ; $B869
     lda     #$FF                    ; $B86C
     sta     oamBuffer+69            ; $B86E
@@ -6484,8 +6484,8 @@ loc_5_B878:
     lda     joypadPressed           ; $B892
     and     #$80                    ; $B894
     beq     loc_5_B8C4              ; $B896
-    ldx     objYHi+7                ; $B898
-    lda     objYHi+6                ; $B89A
+    ldx     letterRow               ; $B898
+    lda     letterColumn            ; $B89A
 
 loc_5_B89C:
     cpx     #$00                    ; $B89C
@@ -6497,7 +6497,7 @@ loc_5_B89C:
 
 loc_5_B8A7:
     pha                             ; $B8A7
-    ldy     objYHi+5                ; $B8A8
+    ldy     nameCursor              ; $B8A8
     bne     loc_5_B8AE              ; $B8AA
 ; (code below not executed in the test movies)
     ldy     #$08                    ; $B8AC
@@ -6505,7 +6505,7 @@ loc_5_B8A7:
 
 loc_5_B8AE:
     dey                             ; $B8AE
-    lda     objYHi                  ; $B8AF
+    lda     fileCursor              ; $B8AF
     asl     a                       ; $B8B1
     tax                             ; $B8B2
     lda     dat_5_B23C,x            ; $B8B3

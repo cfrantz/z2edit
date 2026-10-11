@@ -297,10 +297,10 @@ gameMode                = $0736     ; mode within gameState; see GAME_MODE_*
 gameModePrev            = $0737     ; gameMode when last checked, to detect changes
 gameStep                = $0738     ; step within gameMode
 gameStepPrev            = $0739     ; gameStep when last checked, to detect changes
-ram_073B                = $073B
+fileStep                = $073B     ; step of the file screen mode (reset with gameStep by Game_ResetStep)
 ram_073C                = $073C
 gameSubStep             = $073D     ; step within gameStep; reset when any higher level changes
-ram_073E                = $073E
+fileSubStep             = $073E     ; 0-1: draw the screen, 2: take input
 ram_073F                = $073F
 columnDrawStep          = $0740     ; step of drawing the column that is scrolling into view
 linkButtonsPressed      = $0741     ; A and B pressed this frame (JOY_A, JOY_B)
@@ -331,7 +331,7 @@ areaStartPage           = $075C     ; map page at which Link enters the area
 ram_075D                = $075D
 areaMusic               = $075F     ; music for the area being entered, sent to musicRequest when Link appears
 ram_0760                = $0760
-ram_0761                = $0761
+sceneStep               = $0761     ; step of the title's story scroll (Story_RunStep) and of the ending
 bridgeStep              = $0762
 bigDoorCounter          = $0763     ; counts while the big door opens (provisional)
 ram_0764                = $0764
@@ -481,5 +481,42 @@ sramSaveStatus2         = $773A     ; save file 2 status
 sramMenuText            = $7800     ; [280] text of the pause menu and level up window, copied from MenuTextTemplate and filled in
 sramAreaPalettes        = $7919     ; [224] area palettes, from AreaBank::Palettes
 sramOverworldMap        = $7C00     ; [896] compressed overworld map of the region
+
+; ---------------------------------------------------------------------------
+; Overlays: the title and file screens (bank 5) run before any game object
+; exists, and keep their variables in the object slot arrays.
+; ---------------------------------------------------------------------------
+; Title screen and story scroll (Title_*, Story_*)
+titleBgAddr             = objY+0    ; (16-bit, high byte first) nametable address of the next background row (Title_DrawBgRow)
+titleTextAddr           = objY+2    ; (16-bit, high byte first) nametable address of the next story text row
+titleAttrAddr           = objY+4    ; (16-bit, high byte first) attribute address of the next story text attributes
+titleBgAttrAddr         = objY+6    ; (16-bit, high byte first) attribute address of the next background attributes (Title_DrawBgAttr)
+titleBgRow              = objY+8    ; next background row to draw (0-29, TitleBgRowPtrsLo)
+titleAttrRow            = objY+9    ; next story attribute row (0-7, StoryAttrPtrsLo)
+titleTextLine           = objY+10   ; next story text line (0-14, StoryTextPtrsLo)
+titleLogoString         = objY+11   ; next logo string to redraw at the end of the story (0-7, TitleLogoPtrs)
+titleEndStep            = objY+12   ; step of Story_End
+titleSplitNametable     = objY+13   ; nametable bits (PPUCTRL) below the sprite 0 split
+titleShootingStar       = objYHi+13 ; nonzero while the shooting star falls
+titleSplitAddr          = objYHi+14 ; (16-bit, high byte first; the low byte is ram_0028) PPU address written below the sprite 0 split, which sets the scroll there
+titleScrollHeld         = objXHi+4  ; nonzero while the story scroll waits for the music
+titleDelay              = timerFast+3 ; delay before the story scrolls, counted down every 4 frames (Story_TickDelay)
+; File screens (FileSelect_*, Register_*, Eliminate_*)
+fileCursor              = objYHi+0  ; cursor: file 0-2, 3 = REGISTER YOUR NAME or END, 4 = ELIMINATION MODE
+fileEmptyMask           = objYHi+1  ; bit n set if file n is empty (FileSelect_FindEmpty); bit 3 set on the name screens
+fileCursorY             = objYHi+2  ; Y of the fairy cursor
+fileCursorTile          = objYHi+3  ; tile of the fairy cursor (it flaps every 4 frames)
+fileBlinkTimer          = objYHi+4  ; counts frames, for flapping and blinking
+nameCursor              = objYHi+5  ; position in the name being entered (0-7)
+letterColumn            = objYHi+6  ; letter grid column (0-10)
+letterRow               = objYHi+7  ; letter grid row (0-3)
+letterHeld              = objYHi+8  ; nonzero while the direction pad is held
+letterRepeatTimer       = objYHi+9  ; frames the direction pad has been held (auto-repeat)
+letterCursorX           = objYHi+10 ; X of the letter grid cursor
+nameCursorY             = objYHi+11 ; Y of the name cursor ($F8 = hidden, blinking)
+letterCursorY           = objYHi+12 ; Y of the letter grid cursor ($F8 = hidden, blinking)
+fileCursorX             = objX+0    ; X of the fairy cursor
+nameCursorX             = objXSubpixel+0 ; X of the name cursor
+sramFileScreenText      = sramOverworldMap+$300 ; [166] PPU strings of the file select screen, copied from FileScreenText and filled in
 
 .endif
