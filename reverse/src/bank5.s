@@ -2423,7 +2423,7 @@ DarkLink_Fight:
     and     #$0F                    ; $98A5
     bne     @loc_98AD               ; $98A7
     lda     #$01                    ; $98A9
-    sta     ram_00E9                ; $98AB
+    sta     dmcRequest              ; $98AB
 
 @loc_98AD:
     lda     #$0A                    ; $98AD
@@ -2868,7 +2868,7 @@ DarkLink_CheckSword:
     lda     #$FD                    ; $9AE9
     sta     objYVelocity+1          ; $9AEB
     lda     #$01                    ; $9AEE
-    sta     ram_00E9                ; $9AF0
+    sta     dmcRequest              ; $9AF0
     sta     objFacing+3             ; $9AF2
 
 @done:

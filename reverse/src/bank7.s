@@ -1992,7 +1992,7 @@ Death_LoseLife:
     bne     @loc_CA6C               ; $CA47
 ; (code below not executed in the test movies)
     lda     #$02                    ; $CA49
-    sta     ram_00E9                ; $CA4B
+    sta     dmcRequest              ; $CA4B
     lda     #$F0                    ; $CA4D
     sta     timerFast               ; $CA4F
     inc     renderingOff            ; $CA52
@@ -3004,7 +3004,7 @@ Mode_LeaveArea:
     adc     areaLocation            ; $CF73
     sta     areaLocation            ; $CF76
     ldy     #$00                    ; $CF79
-    sty     ram_07FF                ; $CF7B
+    sty     sq1Sfx                  ; $CF7B
     sty     ram_05E9                ; $CF7E
     ldy     #$90                    ; $CF81
     sty     SQ1_VOL                 ; $CF83
@@ -4182,7 +4182,7 @@ Mode_SideView:
     lda     ram_07FC                ; $D4DF
     cmp     #$40                    ; $D4E2
     beq     @loc_D4F3               ; $D4E4
-    lda     ram_07FE                ; $D4E6
+    lda     sq2Sfx                  ; $D4E6
     cmp     #$02                    ; $D4E9
     beq     @loc_D4F3               ; $D4EB
     lda     sfxRequest+3            ; $D4ED
@@ -5036,7 +5036,7 @@ Fairy_Ai:
     and     #$08                    ; $D920
     bne     @loc_D931               ; $D922
     lda     objState+1,x            ; $D924
-    ora     ram_07FE                ; $D926
+    ora     sq2Sfx                  ; $D926
     bne     @loc_D931               ; $D929
     lda     #$C0                    ; $D92B
     sta     sfxRequest              ; $D92D
@@ -6584,7 +6584,7 @@ Link_CheckBgInBank:
     cmp     AreaBank::SpecialTiles+6 ; $E09F  lava
     bne     @loc_E0B0               ; $E0A2
     lda     #$01                    ; $E0A4
-    sta     ram_00E9                ; $E0A6
+    sta     dmcRequest              ; $E0A6
     lda     #$10                    ; $E0A8
     sta     timerFast+TIMER_LINK_HURT ; $E0AA
     inc     linkMode                ; $E0AD
@@ -7035,7 +7035,7 @@ Link_TakeDamage:
     lda     timerSlow+TIMER_INVULNERABLE ; $E30F
     bne     @loc_E368               ; $E312
     lda     #$01                    ; $E314
-    sta     ram_00E9                ; $E316
+    sta     dmcRequest              ; $E316
     sta     temp0                   ; $E318
     jsr     Link_KnockBack          ; $E31A
     lda     temp12                  ; $E31D
