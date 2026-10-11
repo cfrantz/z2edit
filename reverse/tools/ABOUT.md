@@ -9,7 +9,8 @@ Tools that drive the emulator need the Python extension built with
   ROMs, FM2 movies and symbol tables).
 - `cdl_movie.py`: Plays FM2 movies headlessly with the emulator's Code/Data
   Logger enabled and writes `build/<name>.cdl`, `.jumps.json`, `.refs.json`
-  and `.progress.tsv`.  `--merge` combines logs from several runs.
+  `.ram.json` (RAM accesses by instruction) and `.progress.tsv`.  `--merge`
+  combines logs from several runs.
 - `bootstrap.py`: Generates the initial ca65 disassembly in `src/` from the
   ROM and a CDL.  Run once; it refuses to overwrite existing bank files.
 - `symbols.py`: Converts the ld65 debug file into `build/zelda2.sym.json`
@@ -20,9 +21,17 @@ Tools that drive the emulator need the Python extension built with
   `make status`.
 - `rename.py`: Renames symbols across `src/` (whole words), keeping the
   address comment column aligned.  Refuses unknown or already-used names.
+  `--array NAME BASE COUNT` names an array and turns the mechanical names
+  of its elements into `NAME+k`.
 - `label.py`: Finds or creates a label at a bank/address, splitting `.byte`
   lines or using `name := * + k` as needed.
 - `bank_usage.py`: Plays a movie and reports which PRG bank executes in
   each game state and world, with the main thread's idle loop counted
   separately.  Slow: about 35 minutes for the 100AK movie; shows progress
   on stderr (`--quiet` to suppress).
+- `ram_usage.py`: Reports, for each RAM/SRAM address, the routines that
+  read, write or use it as a pointer, directly or through an index, from
+  the RAM access log (`build/zelda2.ram.json`, written by `cdl_movie.py`).
+  `--arrays` lists indexed base addresses with their observed extents.
+- `callers.py`: Plays a movie with breakpoints on routines and tallies the
+  JSR sites that call them, with a register's value on entry.

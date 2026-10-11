@@ -14,12 +14,13 @@ import os
 import re
 import sys
 
+from rename import realign
+
 SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src")
 ADDR = re.compile(r"; \$([0-9A-F]{4})\b")
 LABEL = re.compile(r"^([A-Za-z_]\w*):\s*$")
 INNER = re.compile(r"^([A-Za-z_]\w*) := \* \+ (\d+)\s*$")
 BYTES = re.compile(r"^(\s+\.byte\s+)(.*?)\s*(; \$([0-9A-F]{4})\b.*)$")
-COMMENT_COLUMN = 36
 
 
 def mechanical(bank, addr, prefix="dat"):
@@ -80,10 +81,10 @@ def ensure_label(bank, addr, name=None):
                 first = f"{bm.group(1)}{', '.join(vals[:k])}"
                 second = f"{bm.group(1)}{', '.join(vals[k:])}"
                 lines[i : i + 1] = [
-                    f"{first:<{COMMENT_COLUMN - 1}} ; ${start:04X}",
+                    realign(f"{first} ; ${start:04X}"),
                     "",
                     f"{name}:",
-                    f"{second:<{COMMENT_COLUMN - 1}} ; ${addr:04X}",
+                    realign(f"{second} ; ${addr:04X}"),
                 ]
             else:
                 lines[i:i] = [f"{name} := * + {addr - start}"]

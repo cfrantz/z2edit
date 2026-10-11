@@ -9,6 +9,8 @@ written to:
     <out>.jumps.json   Indirect control transfers observed.
     <out>.refs.json    For each instruction (by PRG offset), the PRG banks it
                        read from or transferred control to.
+    <out>.ram.json     RAM and SRAM accesses: [instruction PRG offset, CPU
+                       address, flags] rows (RAM_* flags in cdl.rs).
     <out>.progress.tsv Game state sampled every 30s of game time, to check
                        that each movie stayed in sync with the emulator.
 
@@ -60,7 +62,7 @@ def play(rom, movie_file, max_frames, progress):
     if done != frames:
         logging.error("%s: CPU halted after %d of %d frames", movie_file, done, frames)
     cdl = emu.cdl_stop()
-    return cdl.prg, cdl.jumps, cdl.refs
+    return cdl.prg, cdl.jumps, cdl.refs, cdl.ram
 
 
 def summarize(prg):
@@ -87,6 +89,7 @@ def main():
     merged = None
     jumps = set()
     refs = set()
+    ram = {}
     progress = None if args.merge else open(f"{args.out}.progress.tsv", "w")
     if progress:
         progress.write("\t".join(["movie", "frame"] + list(PROGRESS)) + "\n")
@@ -99,9 +102,13 @@ def main():
                 j = [(kinds[r["kind"]], r["src"], r["target_cpu"], r["target"]) for r in json.load(f)]
             with open(f"{m}.refs.json") as f:
                 r = [(int(src), bank) for src, banks in json.load(f).items() for bank in banks]
+            with open(f"{m}.ram.json") as f:
+                a = json.load(f)
         else:
-            prg, j, r = play(args.rom, m, args.max_frames, progress)
+            prg, j, r, a = play(args.rom, m, args.max_frames, progress)
         refs.update(r)
+        for src, addr, flags in a:
+            ram[(src, addr)] = ram.get((src, addr), 0) | flags
         merged = bytearray(prg) if merged is None else bytearray(a | b for a, b in zip(merged, prg))
         jumps.update((int(k), NO_SRC if s is None else s, t, o) for k, s, t, o in j)
 
@@ -118,6 +125,8 @@ def main():
         for src, bank in sorted(refs):
             by_src.setdefault(src, []).append(bank)
         json.dump(by_src, f)
+    with open(f"{args.out}.ram.json", "w") as f:
+        json.dump([[s, a, fl] for (s, a), fl in sorted(ram.items())], f)
     summarize(merged)
     print(f"{len(jumps)} indirect control transfers")
     return 0
