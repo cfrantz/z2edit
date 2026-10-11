@@ -167,12 +167,17 @@ count.
 - Shared services: RNG, math helpers, object/entity slot management,
   collision, physics, HUD.
 
-Status (2026-10-11): every subroutine entry point in banks 0 and 7 is
-named, with headers; many names are provisional.  Documented in
-`docs/architecture/` and `docs/engine/` (Link, enemies, the side view
-frame, areas).  Remaining: confirm provisional names, turn internal
-`loc_` labels into local labels as routines are documented in full, and
-check documented behavior against traces.
+Status (2026-10-11): done.  Every label in banks 0 and 7 is named (no
+`sub_`/`loc_` labels; routine-internal labels are cheap locals), every
+routine has a header, and the headers were checked against the movie
+traces (`tools/routine_report.py`); all but a few are confirmed.  Code
+the movies never reach was exercised with `tools/play.py` (the overworld
+pause, the continue screen's Save).  Documented in `docs/architecture/`
+and `docs/engine/` (Link, enemies, the side view frame, areas, the
+overworld, menus).  Left for Phase 4, with the subsystems they belong to:
+the generic enemy AI helpers in bank 7 (`Enemy_Hop`,
+`Enemy_UpdateLanding` and the unnamed routines after them),
+`Overworld_CheckSpecialTerrain`, and 13 provisional RAM variables.
 
 ### Phase 4: Subsystems
 
