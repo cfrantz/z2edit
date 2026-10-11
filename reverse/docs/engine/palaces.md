@@ -31,8 +31,8 @@ one for palaces 3, 4 and 6 (`*_Bank4B`).
 ## Area Objects
 
 Palace areas use the [side view area](areas.md) format; their objects
-are drawn by `Area_DrawLargeObject_Bank4` / `_Bank5` and
-`Area_DrawSmallObject_Bank4` / `_Bank5`.  Most large objects are shapes
+are drawn by `Area_DrawLargeObject_Bank4` / `Area_DrawLargeObject_Bank5`
+and `Area_DrawSmallObject_Bank4` / `Area_DrawSmallObject_Bank5`.  Most large objects are shapes
 filled with tiles from a per-object table (`PalaceObjectTiles_Bank4`,
 `Palace_GetObjectTiles_Bank4`): a row (`Palace_DrawObjectRow_*`), two
 rows, a column, or a pillar.  The others are lava, pits, the elevator and
