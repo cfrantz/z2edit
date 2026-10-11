@@ -1966,7 +1966,7 @@ loc_0_8CF7:
     lda     #$A5                    ; $8D5C
     sta     rng                     ; $8D5E
     inc     ram_0727                ; $8D61
-    lda     ram_075F                ; $8D64
+    lda     areaMusic               ; $8D64
     ; Ten nops: probably code removed late in development.
     nop                             ; $8D67
     nop                             ; $8D68
@@ -1980,7 +1980,7 @@ loc_0_8CF7:
     nop                             ; $8D70
     sta     musicRequest            ; $8D71
     lda     #$00                    ; $8D73
-    sta     ram_075F                ; $8D75
+    sta     areaMusic               ; $8D75
     jmp     Game_UnblankAndNextMode ; $8D78
 
 ; Magic cost of each spell (SPELL_*) at each magic level 1-8, 8 bytes per
@@ -2496,7 +2496,7 @@ loc_0_90D7:
     inc     linkMode                ; $90D7
     lda     #$2A                    ; $90D9
     sta     sram_69DE               ; $90DB
-    lda     ram_075F                ; $90DE
+    lda     areaMusic               ; $90DE
     cmp     #$04                    ; $90E1
     bne     loc_0_90EA              ; $90E3
 ; (code below not executed in the test movies)
@@ -4630,7 +4630,7 @@ loc_0_9F3D:
     sta     musicRequest            ; $9F53
     dex                             ; $9F55
     bmi     loc_0_9F5B              ; $9F56
-    jsr     sub_CB18                ; $9F58
+    jsr     Stat_FillMeter          ; $9F58
 
 loc_0_9F5B:
     inx                             ; $9F5B
@@ -5007,7 +5007,7 @@ loc_0_A199:
 ; ---------------------------------------------------------------------------
 Game_ShowContinueScreen:
     jsr     Oam_HideAll             ; $A1A5
-    jsr     sub_D03D                ; $A1A8
+    jsr     Music_Request80         ; $A1A8
     lda     #$02                    ; $A1AB
     sta     gameState               ; $A1AD
     sta     gameStatePrev           ; $A1B0
@@ -5026,7 +5026,7 @@ Game_ShowContinueScreen:
     ldx     #$01                    ; $A1D4
 
 loc_0_A1D6:
-    jsr     sub_CB18                ; $A1D6
+    jsr     Stat_FillMeter          ; $A1D6
     dex                             ; $A1D9
     bpl     loc_0_A1D6              ; $A1DA
     rts                             ; $A1DC
@@ -6172,10 +6172,10 @@ sub_0_AA08:
     sta     areaEntrySide           ; $AA1D
     ldx     #$01                    ; $AA20
     stx     ram_075D                ; $AA22
-    stx     ram_075F                ; $AA25
+    stx     areaMusic               ; $AA25
 
 loc_0_AA28:
-    jsr     sub_CB18                ; $AA28
+    jsr     Stat_FillMeter          ; $AA28
     dex                             ; $AA2B
     bpl     loc_0_AA28              ; $AA2C
     stx     ram_0708                ; $AA2E

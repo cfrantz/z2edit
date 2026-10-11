@@ -562,8 +562,8 @@ Game_RunState:
     .word   GameState_Begin         ; $C2D8
     .word   GameState_Play          ; $C2DA
     .word   GameState_Death         ; $C2DC
-    .word   loc_CB27                ; $C2DE
-    .word   loc_C364                ; $C2E0
+    .word   GameState_StartEnding   ; $C2DE
+    .word   GameState_Ending        ; $C2E0
     .word   loc_C38D                ; $C2E2  (not observed)
     .word   GameState_Respawn       ; $C2E4
 
@@ -640,7 +640,7 @@ loc_C360:
     inc     gameState               ; $C360
     rts                             ; $C363
 
-loc_C364:
+GameState_Ending:
     jsr     Game_CheckModeChange    ; $C364
     jsr     JumpTable               ; $C367
 ; (inline jump table)
@@ -781,7 +781,7 @@ loc_C435:
     asl     a                       ; $C435
 
 loc_C436:
-    sta     ram_075F                ; $C436
+    sta     areaMusic               ; $C436
     lda     #$01                    ; $C439
     sta     gameState               ; $C43B
     sta     gameStatePrev           ; $C43E
@@ -1186,7 +1186,7 @@ Mode_FallStart:
     asl     a                       ; $C701
 
 loc_C702:
-    sta     ram_075F                ; $C702
+    sta     areaMusic               ; $C702
     lda     #$01                    ; $C705
     sta     sfxRequest+2            ; $C707
     jmp     Game_UnblankAndNextMode ; $C709
@@ -1778,7 +1778,7 @@ loc_CA24:
     ldx     #$01                    ; $CA24
 
 loc_CA26:
-    jsr     sub_CB18                ; $CA26
+    jsr     Stat_FillMeter          ; $CA26
     dex                             ; $CA29
     bpl     loc_CA26                ; $CA2A
     lda     #$00                    ; $CA2C
@@ -1911,7 +1911,7 @@ loc_CADE:
 
 loc_CAF0:
     sta     gameState               ; $CAF0
-    sty     ram_075F                ; $CAF3
+    sty     areaMusic               ; $CAF3
 
 loc_CAF6:
     rts                             ; $CAF6
@@ -1938,7 +1938,15 @@ loc_CAFF:
     rts                             ; $CB17
 ; (end of code not executed in the test movies)
 
-sub_CB18:
+; ---------------------------------------------------------------------------
+; Stat_FillMeter
+;
+; Fill meter x (STAT_METER_*) to its maximum, statContainers * 32 - 1.
+;
+; In:      x = meter
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Stat_FillMeter:
     lda     statContainers,x        ; $CB18
     asl     a                       ; $CB1B
     asl     a                       ; $CB1C
@@ -1950,7 +1958,16 @@ sub_CB18:
     sta     statMeter,x             ; $CB23
     rts                             ; $CB26
 
-loc_CB27:
+; ---------------------------------------------------------------------------
+; GameState_StartEnding
+;
+; gameState 3: map bank 5 and its CHR bank and go on to GameState_Ending,
+; which runs bank 5's ending sequence (provisional: not reached in the test
+; movies).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+GameState_StartEnding:
     lda     #$0E                    ; $CB27
     sta     areaChrBank             ; $CB29
     jsr     Mmc1_SetPrgBank5        ; $CB2C
@@ -1988,7 +2005,7 @@ loc_CB4B:
     ora     ram_07AA                ; $CB4E
     ora     ram_07AD                ; $CB51
     bne     sub_CB59                ; $CB54
-    jsr     sub_D03D                ; $CB56
+    jsr     Music_Request80         ; $CB56
 
 sub_CB59:
     lda     sramLocX,y              ; $CB59
@@ -2050,7 +2067,7 @@ loc_CBB8:
     lda     ram_07AC                ; $CBC3
     bne     loc_CBCD                ; $CBC6
     lda     #$04                    ; $CBC8
-    sta     ram_075F                ; $CBCA
+    sta     areaMusic               ; $CBCA
 
 loc_CBCD:
     jsr     sub_CC97                ; $CBCD
@@ -2082,7 +2099,7 @@ loc_CBF2:
 loc_CBF8:
     lda     #$01                    ; $CBF8
     sta     areaEntrySide           ; $CBFA
-    lda     ram_075F                ; $CBFD
+    lda     areaMusic               ; $CBFD
     cmp     #$01                    ; $CC00
     bne     loc_CBF2                ; $CC02
     sta     areaStartPage           ; $CC04
@@ -2112,7 +2129,7 @@ loc_CC0F:
     sta     sramLocX,y              ; $CC35
     jsr     sub_CB59                ; $CC38
     lda     #$00                    ; $CC3B
-    sta     ram_075F                ; $CC3D
+    sta     areaMusic               ; $CC3D
 
 loc_CC40:
     lda     sramLocDest,y           ; $CC40
@@ -2591,7 +2608,7 @@ loc_CF0B:
     lda     #$08                    ; $CF1B
 
 loc_CF1D:
-    sta     ram_075F                ; $CF1D
+    sta     areaMusic               ; $CF1D
     rts                             ; $CF20
 ; (code below not executed in the test movies)
 
@@ -2680,7 +2697,7 @@ loc_CF60:
     lda     #$01                    ; $CF86
     ldy     currentWorld            ; $CF88
     beq     loc_CF9D                ; $CF8B
-    jsr     sub_D03D                ; $CF8D
+    jsr     Music_Request80         ; $CF8D
     ldy     #$00                    ; $CF90
     sty     currentWorld            ; $CF92
     inc     ram_0709                ; $CF95
@@ -2714,28 +2731,36 @@ loc_CFC2:
     sta     areaEntrySide           ; $CFC4
     lda     areaId                  ; $CFC7
     cmp     #$24                    ; $CFCA
-    bcs     sub_CFEC                ; $CFCC
+    bcs     Game_EnterNextArea      ; $CFCC
     lda     ram_075B                ; $CFCE
-    beq     sub_CFEC                ; $CFD1
+    beq     Game_EnterNextArea      ; $CFD1
     clc                             ; $CFD3
     adc     #$04                    ; $CFD4
     sta     areaStartPage           ; $CFD6
     dec     ram_075B                ; $CFD9
-    bne     sub_CFEC                ; $CFDC
+    bne     Game_EnterNextArea      ; $CFDC
     lda     townCode                ; $CFDE
     cmp     #$07                    ; $CFE1
-    beq     sub_CFEC                ; $CFE3
-    jsr     sub_D03D                ; $CFE5
+    beq     Game_EnterNextArea      ; $CFE3
+    jsr     Music_Request80         ; $CFE5
     lda     #$02                    ; $CFE8
     bne     loc_CFF3                ; $CFEA
 
-sub_CFEC:
+; ---------------------------------------------------------------------------
+; Game_EnterNextArea
+;
+; Go to gameMode $07 to enter the next area, stopping the area music unless
+; Link is arriving by elevator (ram_0704).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Game_EnterNextArea:
     ldx     ram_0704                ; $CFEC
     bne     loc_CFF6                ; $CFEF
     lda     #$00                    ; $CFF1
 
 loc_CFF3:
-    sta     ram_075F                ; $CFF3
+    sta     areaMusic               ; $CFF3
 
 loc_CFF6:
     lda     #$07                    ; $CFF6
@@ -2774,7 +2799,7 @@ Mode_EnterDoor:
     adc     #$04                    ; $D022
     tax                             ; $D024
     jsr     sub_C690                ; $D025
-    jsr     sub_CFEC                ; $D028
+    jsr     Game_EnterNextArea      ; $D028
     ldx     ram_075B                ; $D02B
     dex                             ; $D02E
     bne     loc_D041                ; $D02F
@@ -2782,9 +2807,16 @@ Mode_EnterDoor:
     cmp     #$07                    ; $D034
     beq     loc_D041                ; $D036
     lda     #$08                    ; $D038
-    sta     ram_075F                ; $D03A
+    sta     areaMusic               ; $D03A
 
-sub_D03D:
+; ---------------------------------------------------------------------------
+; Music_Request80
+;
+; Request music $80.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Music_Request80:
     lda     #$80                    ; $D03D
     sta     musicRequest            ; $D03F
 
