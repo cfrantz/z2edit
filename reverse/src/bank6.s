@@ -129,7 +129,7 @@ sub_6_814F:
     rts                             ; $8159
 
 sub_6_815A:
-    lda     ram_00E6                ; $815A
+    lda     sq1TimerLo              ; $815A
     bne     loc_6_8160              ; $815C
 
 sub_6_815E:
@@ -141,7 +141,7 @@ loc_6_8160:
     bne     loc_6_8172              ; $8165
 
 sub_6_8167:
-    lda     ram_00E6                ; $8167
+    lda     sq1TimerLo              ; $8167
     bne     loc_6_816D              ; $8169
 
 sub_6_816B:
@@ -173,7 +173,7 @@ loc_6_8188:
 
 sub_6_818C:
     sty     ram_00E9                ; $818C
-    sta     ram_00E6                ; $818E
+    sta     sq1TimerLo              ; $818E
     lda     #$00                    ; $8190
     sta     musicPlaying            ; $8192
     sta     ram_07FA                ; $8195
@@ -191,7 +191,7 @@ loc_6_819C:
     bne     loc_6_81BF              ; $81AD
 
 loc_6_81AF:
-    lda     ram_00E6                ; $81AF
+    lda     sq1TimerLo              ; $81AF
     cmp     #$08                    ; $81B1
     bne     loc_6_81B9              ; $81B3
     lda     #$5E                    ; $81B5
@@ -243,7 +243,7 @@ loc_6_81FE:
     jsr     sub_6_8167              ; $8201
 
 loc_6_8204:
-    dec     ram_00E6                ; $8204
+    dec     sq1TimerLo              ; $8204
     bne     loc_6_8214              ; $8206
     lda     #$00                    ; $8208
     sta     ram_00E9                ; $820A
@@ -289,7 +289,7 @@ loc_6_823C:
     sta     SQ2_SWEEP               ; $8246
 
 loc_6_8249:
-    lda     ram_00E6                ; $8249
+    lda     sq1TimerLo              ; $8249
     lsr     a                       ; $824B
     tay                             ; $824C
     lda     dat_6_8074,y            ; $824D
@@ -314,8 +314,8 @@ sub_6_826A:
 
 loc_6_8277:
     ldx     #$20                    ; $8277
-    stx     ram_07EA                ; $8279
-    stx     ram_07E9                ; $827C
+    stx     harmonyOffset           ; $8279
+    stx     bassOffset              ; $827C
     jmp     loc_6_82CF              ; $827F
 
 loc_6_8282:
@@ -408,22 +408,22 @@ loc_6_82EF:
     lda     dat_6_84DA,y            ; $8303
     sta     ram_07F5                ; $8306
     lda     dat_6_84DB,y            ; $8309
-    sta     ram_00E0                ; $830C
+    sta     musicNotesPtr           ; $830C
     lda     dat_6_84DC,y            ; $830E
-    sta     ram_00E1                ; $8311
+    sta     musicNotesPtr+1         ; $8311
     lda     dat_6_84DD,y            ; $8313
-    sta     ram_00E4                ; $8316
+    sta     drumLoopOffset          ; $8316
     lda     dat_6_84DE,y            ; $8318
-    sta     ram_00E3                ; $831B
+    sta     musicPhrase             ; $831B
     lda     dat_6_84DF,y            ; $831D
-    sta     ram_00E5                ; $8320
+    sta     musicTempo              ; $8320
     sta     ram_07F6                ; $8322
     lda     dat_6_84E0,y            ; $8325
     sta     ram_07F1                ; $8328
     lda     dat_6_84E1,y            ; $832B
     sta     ram_07F0                ; $832E
     lda     #$00                    ; $8331
-    sta     ram_00E2                ; $8333
+    sta     musicSong               ; $8333
     sta     ram_07FA                ; $8335
     lda     #$01                    ; $8338
     sta     sfxRequest              ; $833A
@@ -450,12 +450,12 @@ loc_6_8347:
     lda     titleMusicPart          ; $8362
     and     #$01                    ; $8364
     beq     loc_6_837A              ; $8366
-    lda     ram_07EA                ; $8368
+    lda     harmonyOffset           ; $8368
     cmp     #$5F                    ; $836B
     bcs     loc_6_837A              ; $836D
-    inc     ram_07E9                ; $836F
-    inc     ram_07E9                ; $8372
-    lda     ram_07E9                ; $8375
+    inc     bassOffset              ; $836F
+    inc     bassOffset              ; $8372
+    lda     bassOffset              ; $8375
     bne     loc_6_837C              ; $8378
 
 loc_6_837A:
@@ -476,9 +476,9 @@ loc_6_838A:
     sta     ram_07FF                ; $838D
 
 loc_6_8390:
-    ldy     ram_00E2                ; $8390
-    inc     ram_00E2                ; $8392
-    lda     (ram_00E0),y            ; $8394
+    ldy     musicSong               ; $8390
+    inc     musicSong               ; $8392
+    lda     (musicNotesPtr),y       ; $8394
     beq     loc_6_8344              ; $8396
     bmi     loc_6_838A              ; $8398
     cmp     #$02                    ; $839A
@@ -495,12 +495,12 @@ loc_6_83A1:
     lda     titleMusicPart          ; $83AD
     and     #$01                    ; $83AF
     beq     loc_6_83C5              ; $83B1
-    lda     ram_07EA                ; $83B3
+    lda     harmonyOffset           ; $83B3
     cmp     #$5F                    ; $83B6
     bcs     loc_6_83C5              ; $83B8
-    inc     ram_07EA                ; $83BA
-    inc     ram_07EA                ; $83BD
-    lda     ram_07EA                ; $83C0
+    inc     harmonyOffset           ; $83BA
+    inc     harmonyOffset           ; $83BD
+    lda     harmonyOffset           ; $83C0
     bne     loc_6_83C7              ; $83C3
 
 loc_6_83C5:
@@ -550,7 +550,7 @@ loc_6_8407:
     jmp     loc_6_844D              ; $8407
 
 loc_6_840A:
-    lda     ram_00E3                ; $840A
+    lda     musicPhrase             ; $840A
     beq     loc_6_845B              ; $840C
     dec     sfxRequest+1            ; $840E
     bne     loc_6_843C              ; $8410
@@ -561,9 +561,9 @@ loc_6_8414:
     sta     ram_07FE                ; $8417
 
 loc_6_841A:
-    ldy     ram_00E3                ; $841A
-    inc     ram_00E3                ; $841C
-    lda     (ram_00E0),y            ; $841E
+    ldy     musicPhrase             ; $841A
+    inc     musicPhrase             ; $841C
+    lda     (musicNotesPtr),y       ; $841E
     bmi     loc_6_8414              ; $8420
     cmp     #$02                    ; $8422
     beq     loc_6_8429              ; $8424
@@ -602,7 +602,7 @@ loc_6_844D:
     jsr     sub_6_810F              ; $8458
 
 loc_6_845B:
-    ldy     ram_00E4                ; $845B
+    ldy     drumLoopOffset          ; $845B
     beq     loc_6_8496              ; $845D
     dec     sfxRequest+2            ; $845F
     beq     loc_6_846B              ; $8461
@@ -613,9 +613,9 @@ loc_6_8465:
     sta     ram_07FD                ; $8468
 
 loc_6_846B:
-    ldy     ram_00E4                ; $846B
-    inc     ram_00E4                ; $846D
-    lda     (ram_00E0),y            ; $846F
+    ldy     drumLoopOffset          ; $846B
+    inc     drumLoopOffset          ; $846D
+    lda     (musicNotesPtr),y       ; $846F
     bmi     loc_6_8465              ; $8471
     cmp     #$02                    ; $8473
     beq     loc_6_847A              ; $8475
@@ -647,7 +647,7 @@ loc_6_8496:
     sta     TRI_LINEAR              ; $8498
 
 loc_6_849B:
-    lda     ram_00E5                ; $849B
+    lda     musicTempo              ; $849B
     beq     dat_6_84D9              ; $849D
     dec     sfxRequest+3            ; $849F
     beq     loc_6_84AB              ; $84A1
@@ -658,17 +658,17 @@ loc_6_84A5:
     sta     ram_07FC                ; $84A8
 
 loc_6_84AB:
-    ldy     ram_00E5                ; $84AB
-    inc     ram_00E5                ; $84AD
-    lda     (ram_00E0),y            ; $84AF
+    ldy     musicTempo              ; $84AB
+    inc     musicTempo              ; $84AD
+    lda     (musicNotesPtr),y       ; $84AF
     bmi     loc_6_84A5              ; $84B1
     bne     loc_6_84BC              ; $84B3
     lda     ram_07F6                ; $84B5
-    sta     ram_00E5                ; $84B8
+    sta     musicTempo              ; $84B8
     bne     loc_6_84AB              ; $84BA
 
 loc_6_84BC:
-    ldy     ram_07EB                ; $84BC
+    ldy     melodyOffset            ; $84BC
     bne     loc_6_84D4              ; $84BF
     tay                             ; $84C1
     lda     dat_6_805D,y            ; $84C2
@@ -911,7 +911,7 @@ loc_6_900B:
     jsr     sub_6_92F4              ; $9016
     jsr     sub_6_9408              ; $9019
     jsr     sub_6_95A7              ; $901C
-    jsr     sub_6_9B18              ; $901F
+    jsr     Music_Update            ; $901F
     lda     #$00                    ; $9022
     sta     sfxRequest+3            ; $9024
     sta     sfxRequest+2            ; $9026
@@ -923,57 +923,127 @@ loc_6_900B:
 loc_6_9030:
     rts                             ; $9030
 
-sub_6_9031:
+; ---------------------------------------------------------------------------
+; Sq1_SetEnvelope
+;
+; Write x to SQ1_VOL and y to SQ1_SWEEP.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq1_SetEnvelope:
     stx     SQ1_VOL                 ; $9031
     sty     SQ1_SWEEP               ; $9034
     rts                             ; $9037
 
-sub_6_9038:
+; ---------------------------------------------------------------------------
+; Sq2_SetEnvelope
+;
+; Write x to SQ2_VOL and y to SQ2_SWEEP.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq2_SetEnvelope:
     stx     SQ2_VOL                 ; $9038
     sty     SQ2_SWEEP               ; $903B
     rts                             ; $903E
 
-sub_6_903F:
-    jsr     sub_6_9031              ; $903F
+; ---------------------------------------------------------------------------
+; Sq1_PlayNoteEnvelope
+;
+; Sq1_SetEnvelope, then Sq1_PlayNote.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq1_PlayNoteEnvelope:
+    jsr     Sq1_SetEnvelope         ; $903F
 
-sub_6_9042:
+; ---------------------------------------------------------------------------
+; Sq1_PlayNote
+;
+; Play pitch a (an even NotePeriods index) on pulse 1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq1_PlayNote:
     ldx     #$00                    ; $9042
 
-loc_6_9044:
+; ---------------------------------------------------------------------------
+; Sound_PlayNote
+;
+; Play pitch a (an even NotePeriods index; 0 = rest, nothing written) on
+; the channel at x (0 = pulse 1, 4 = pulse 2, 8 = triangle), keeping a
+; pulse's timer low byte for its vibrato.
+;
+; In:      a = pitch, x = channel register offset
+; Out:     z set for a rest
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sound_PlayNote:
     tay                             ; $9044
-    lda     dat_6_9190,y            ; $9045
+    lda     NotePeriods+1,y         ; $9045
     beq     loc_6_9063              ; $9048
     sta     SQ1_LO,x                ; $904A
     cpx     #$00                    ; $904D
     bne     loc_6_9055              ; $904F
-    sta     ram_00E6                ; $9051
+    sta     sq1TimerLo              ; $9051
     bne     loc_6_905B              ; $9053
 
 loc_6_9055:
     cpx     #$04                    ; $9055
     bne     loc_6_905B              ; $9057
-    sta     ram_00E7                ; $9059
+    sta     sq2TimerLo              ; $9059
 
 loc_6_905B:
-    lda     dat_6_918F,y            ; $905B
+    lda     NotePeriods,y           ; $905B
     ora     #$08                    ; $905E
     sta     SQ1_HI,x                ; $9060
 
 loc_6_9063:
     rts                             ; $9063
 
-sub_6_9064:
-    jsr     sub_6_9038              ; $9064
+; ---------------------------------------------------------------------------
+; Sq2_PlayNoteEnvelope
+;
+; Sq2_SetEnvelope, then Sq2_PlayNote.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq2_PlayNoteEnvelope:
+    jsr     Sq2_SetEnvelope         ; $9064
 
-sub_6_9067:
+; ---------------------------------------------------------------------------
+; Sq2_PlayNote
+;
+; Play pitch a on pulse 2.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq2_PlayNote:
     ldx     #$04                    ; $9067
-    bne     loc_6_9044              ; $9069
+    bne     Sound_PlayNote          ; $9069
 
-sub_6_906B:
+; ---------------------------------------------------------------------------
+; Tri_PlayNote
+;
+; Play pitch a on the triangle.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Tri_PlayNote:
     ldx     #$08                    ; $906B
-    bne     loc_6_9044              ; $906D
+    bne     Sound_PlayNote          ; $906D
 
-sub_6_906F:
+; ---------------------------------------------------------------------------
+; Music_NoteDuration
+;
+; Decode a note byte: bit 0, bit 7 and bit 6 (from high to low) are the
+; duration index, looked up in the musicTempo row of NoteDurations.
+;
+; In:      a = note byte
+; Out:     a = frames, x = the note byte (bits 5-1 = pitch index)
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_NoteDuration:
     tax                             ; $906F
     ror     a                       ; $9070
     txa                             ; $9071
@@ -982,12 +1052,20 @@ sub_6_906F:
     rol     a                       ; $9074
     and     #$07                    ; $9075
     clc                             ; $9077
-    adc     ram_00E5                ; $9078
+    adc     musicTempo              ; $9078
     tay                             ; $907A
-    lda     dat_6_914D,y            ; $907B
+    lda     NoteDurations,y         ; $907B
     rts                             ; $907E
 
-sub_6_907F:
+; ---------------------------------------------------------------------------
+; Sq1_VibratoSfx
+;
+; Vibrato on pulse 1 for a sound effect, from its frames left ($07F3, or
+; $07F9).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sq1_VibratoSfx:
     lda     ram_07F3                ; $907F
     bne     loc_6_908C              ; $9082
 ; (code below not executed in the test movies)
@@ -995,26 +1073,50 @@ sub_6_907F:
     bne     loc_6_908C              ; $9087
 ; (end of code not executed in the test movies)
 
-sub_6_9089:
-    lda     ram_07E6                ; $9089
+; ---------------------------------------------------------------------------
+; Sq1_Vibrato
+;
+; Vibrato on pulse 1, from the harmony note's frames left.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq1_Vibrato:
+    lda     harmonyTimer            ; $9089
 
 loc_6_908C:
     ldx     #$00                    ; $908C
-    ldy     ram_00E6                ; $908E
-    bne     loc_6_909E              ; $9090
+    ldy     sq1TimerLo              ; $908E
+    bne     Sound_Vibrato           ; $9090
 ; (code below not executed in the test movies)
     lda     ram_07F7                ; $9092
     bne     loc_6_909A              ; $9095
 ; (end of code not executed in the test movies)
 
-sub_6_9097:
-    lda     ram_07E7                ; $9097
+; ---------------------------------------------------------------------------
+; Sq2_Vibrato
+;
+; Vibrato on pulse 2, from the melody note's frames left.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sq2_Vibrato:
+    lda     melodyTimer             ; $9097
 
 loc_6_909A:
     ldx     #$04                    ; $909A
-    ldy     ram_00E7                ; $909C
+    ldy     sq2TimerLo              ; $909C
 
-loc_6_909E:
+; ---------------------------------------------------------------------------
+; Sound_Vibrato
+;
+; Set the channel's timer low byte to its base +2 or -2, by bit 2 of the
+; frames left (alternating every 4 frames).  The high byte is not written, which
+; would restart the waveform and click.
+;
+; In:      a = frames left, x = channel register offset, y = base timer low
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sound_Vibrato:
     sty     titleMusicPart          ; $909E
     lsr     a                       ; $90A0
     lsr     a                       ; $90A1
@@ -1041,7 +1143,7 @@ sub_6_90B5:
     sta     ram_07E1                ; $90BD
     sta     ram_07E0                ; $90C0
     sta     ram_07DF                ; $90C3
-    jsr     sub_6_9B3B              ; $90C6
+    jsr     Music_Stop              ; $90C6
     rts                             ; $90C9
 ; (unreferenced: $90CA-$90CA, 1 bytes)
     .byte   $4A                                                             ; $90CA
@@ -1094,26 +1196,17 @@ dat_6_9123:
 dat_6_912C:
     .byte   $05, $3E, $7A, $5C, $9A, $BD, $EE, $FF, $BB                     ; $912C
 
-dat_6_9135:
+PulseEnvelope:
     .byte   $90, $91, $91, $91, $92, $92, $92, $93, $93, $93, $94, $94, $94, $95, $95, $95; $9135
     .byte   $96, $96, $96, $97, $97, $97, $98, $98                          ; $9145
-; (unreferenced: $914D-$9156, 10 bytes)
 
-dat_6_914D:
-    .byte   $04, $0C, $08, $10, $18, $20, $05, $06, $04, $0F                ; $914D
-    .byte   $09, $12, $1B, $24                                              ; $9157
-; (unreferenced: $915B-$915E, 4 bytes)
-    .byte   $06, $06, $05, $0F                                              ; $915B
-    .byte   $0A, $14, $1E, $28                                              ; $915F
-; (unreferenced: $9163-$9164, 2 bytes)
-    .byte   $07, $06                                                        ; $9163
+NoteDurations:
+    .byte   $04, $0C, $08, $10, $18, $20, $05, $06                          ; $914D
+    .byte   $04, $0F, $09, $12, $1B, $24, $06, $06                          ; $9155
+    .byte   $05, $0F, $0A, $14, $1E, $28, $07, $06                          ; $915D
     .byte   $06, $12, $0C, $18, $24, $30, $08, $10                          ; $9165
-; (unreferenced: $916D-$916E, 2 bytes)
-    .byte   $07, $15                                                        ; $916D
-    .byte   $0E, $1C, $2A, $38, $13, $12, $07, $15, $0E, $1C                ; $916F
-; (unreferenced: $9179-$9179, 1 bytes)
-    .byte   $2A                                                             ; $9179
-    .byte   $38                                                             ; $917A
+    .byte   $07, $15, $0E, $1C, $2A, $38, $13, $12                          ; $916D
+    .byte   $07, $15, $0E, $1C, $2A, $38                                    ; $9175
 
 dat_6_917B:
     .byte   $09                                                             ; $917B
@@ -1123,35 +1216,15 @@ dat_6_917C:
 ; (unreferenced: $917F-$9191, 19 bytes)
     .byte   $CF, $1C, $D6, $18, $DC, $14, $E1, $18, $E7, $0F, $EA, $0F, $EE, $0F, $F2, $0F; $917F
 
-dat_6_918F:
-    .byte   $03                                                             ; $918F
-
-dat_6_9190:
-    .byte   $57, $00                                                        ; $9190
-    .byte   $00, $02, $A6, $02, $3A, $02, $1A, $01, $FC, $01, $DF, $01, $C4, $01, $AB, $01; $9192
-    .byte   $93, $01, $7C, $01, $67, $01, $52, $01, $3F, $01, $2D, $01, $1C, $01, $0C, $00; $91A2
-    .byte   $FD, $00, $EE, $00, $E1, $00, $D4, $00, $C8, $00, $BD, $00, $B2, $00, $A8, $00; $91B2
-    .byte   $9F, $00, $96, $00, $8D, $00, $7E, $00, $76, $00, $70           ; $91C2
-; (unreferenced: $91CD-$91D6, 10 bytes)
-    .byte   $03, $27, $02, $F9, $02, $CF, $02, $80, $02, $5C                ; $91CD
-    .byte   $00, $85                                                        ; $91D7
-; (unreferenced: $91D9-$91DC, 4 bytes)
-    .byte   $00, $6A, $00, $64                                              ; $91D9
-    .byte   $00, $5F, $00, $59, $00, $54, $00, $50                          ; $91DD
-; (unreferenced: $91E5-$91E6, 2 bytes)
-    .byte   $00, $4B                                                        ; $91E5
-    .byte   $00, $47                                                        ; $91E7
-; (unreferenced: $91E9-$91F0, 8 bytes)
-    .byte   $00, $43, $00, $3F, $00, $3B, $00, $38                          ; $91E9
-    .byte   $00, $35                                                        ; $91F1
-; (unreferenced: $91F3-$91F4, 2 bytes)
-    .byte   $00, $32                                                        ; $91F3
-    .byte   $00, $2F                                                        ; $91F5
-; (unreferenced: $91F7-$9202, 12 bytes)
-    .byte   $00, $2C, $00, $2A, $00, $28, $00, $25, $00, $23, $00, $21      ; $91F7
-    .byte   $00, $1F                                                        ; $9203
-; (unreferenced: $9205-$920A, 6 bytes)
-    .byte   $00, $1D, $00, $1C, $00, $1A                                    ; $9205
+NotePeriods:
+    .byte   $03, $57, $00, $00, $02, $A6, $02, $3A, $02, $1A, $01, $FC, $01, $DF, $01, $C4; $918F
+    .byte   $01, $AB, $01, $93, $01, $7C, $01, $67, $01, $52, $01, $3F, $01, $2D, $01, $1C; $919F
+    .byte   $01, $0C, $00, $FD, $00, $EE, $00, $E1, $00, $D4, $00, $C8, $00, $BD, $00, $B2; $91AF
+    .byte   $00, $A8, $00, $9F, $00, $96, $00, $8D, $00, $7E, $00, $76, $00, $70, $03, $27; $91BF
+    .byte   $02, $F9, $02, $CF, $02, $80, $02, $5C, $00, $85, $00, $6A, $00, $64, $00, $5F; $91CF
+    .byte   $00, $59, $00, $54, $00, $50, $00, $4B, $00, $47, $00, $43, $00, $3F, $00, $3B; $91DF
+    .byte   $00, $38, $00, $35, $00, $32, $00, $2F, $00, $2C, $00, $2A, $00, $28, $00, $25; $91EF
+    .byte   $00, $23, $00, $21, $00, $1F, $00, $1D, $00, $1C, $00, $1A      ; $91FF
 
 sub_6_920B:
     ldy     ram_00E9                ; $920B
@@ -1264,14 +1337,14 @@ loc_6_92BE:
     ldx     #$95                    ; $92C6
     ldy     #$E3                    ; $92C8
     lda     #$52                    ; $92CA
-    jsr     sub_6_903F              ; $92CC
+    jsr     Sq1_PlayNoteEnvelope    ; $92CC
 
 loc_6_92CF:
     lda     ram_07F9                ; $92CF
     cmp     #$0C                    ; $92D2
     bne     loc_6_92DB              ; $92D4
     lda     #$4E                    ; $92D6
-    jsr     sub_6_9042              ; $92D8
+    jsr     Sq1_PlayNote            ; $92D8
 
 loc_6_92DB:
     jmp     loc_6_939E              ; $92DB
@@ -1284,7 +1357,7 @@ loc_6_92DE:
 loc_6_92E6:
     ldx     #$9C                    ; $92E6
     ldy     #$82                    ; $92E8
-    jsr     sub_6_9031              ; $92EA
+    jsr     Sq1_SetEnvelope         ; $92EA
     ldx     #$90                    ; $92ED
     lda     #$08                    ; $92EF
     jmp     loc_6_9398              ; $92F1
@@ -1372,7 +1445,7 @@ loc_6_9372:
     lda     #$62                    ; $9372
 
 loc_6_9374:
-    jsr     sub_6_9042              ; $9374
+    jsr     Sq1_PlayNote            ; $9374
     jmp     loc_6_939E              ; $9377
 
 loc_6_937A:
@@ -1381,7 +1454,7 @@ loc_6_937A:
     sty     ram_07FF                ; $937F
     ldx     #$1A                    ; $9382
     ldy     #$7F                    ; $9384
-    jsr     sub_6_9031              ; $9386
+    jsr     Sq1_SetEnvelope         ; $9386
 
 loc_6_9389:
     lda     ram_07F9                ; $9389
@@ -1417,7 +1490,7 @@ loc_6_93AE:
     sta     ram_07F9                ; $93B3
     ldx     #$96                    ; $93B6
     ldy     #$7F                    ; $93B8
-    jsr     sub_6_9031              ; $93BA
+    jsr     Sq1_SetEnvelope         ; $93BA
     ldx     #$60                    ; $93BD
     lda     #$70                    ; $93BF
     bne     loc_6_9398              ; $93C1
@@ -1445,14 +1518,14 @@ loc_6_93E5:
     ldx     #$9F                    ; $93F0
     ldy     #$C5                    ; $93F2
     lda     #$58                    ; $93F4
-    jsr     sub_6_9064              ; $93F6
+    jsr     Sq2_PlayNoteEnvelope    ; $93F6
 
 loc_6_93F9:
     lda     ram_07F7                ; $93F9
     cmp     #$01                    ; $93FC
     bne     loc_6_9405              ; $93FE
     lda     #$22                    ; $9400
-    jsr     sub_6_9067              ; $9402
+    jsr     Sq2_PlayNote            ; $9402
 
 loc_6_9405:
     jmp     loc_6_9512              ; $9405
@@ -1488,8 +1561,8 @@ loc_6_942B:
     stx     ram_07F6                ; $9435
     ldx     #$5E                    ; $9438
     ldy     #$81                    ; $943A
-    jsr     sub_6_9031              ; $943C
-    jsr     sub_6_9038              ; $943F
+    jsr     Sq1_SetEnvelope         ; $943C
+    jsr     Sq2_SetEnvelope         ; $943F
     lda     #$00                    ; $9442
     sta     ram_07DC                ; $9444
 
@@ -1523,7 +1596,7 @@ loc_6_9453:
     lda     ram_07F7                ; $947F
     cmp     #$01                    ; $9482
     bne     loc_6_948D              ; $9484
-    jsr     sub_6_9B43              ; $9486
+    jsr     Sound_SilencePulseNoise ; $9486
     lda     #$04                    ; $9489
     sta     musicRequest            ; $948B
 
@@ -1540,7 +1613,7 @@ loc_6_9490:
     stx     ram_07F6                ; $949F
     ldx     #$9E                    ; $94A2
     ldy     #$82                    ; $94A4
-    jsr     sub_6_9038              ; $94A6
+    jsr     Sq2_SetEnvelope         ; $94A6
     lda     #$00                    ; $94A9
     sta     ram_07DC                ; $94AB
 
@@ -1587,7 +1660,7 @@ loc_6_94ED:
     ldx     #$9F                    ; $94F5
     ldy     #$7F                    ; $94F7
     lda     #$22                    ; $94F9
-    jsr     sub_6_9064              ; $94FB
+    jsr     Sq2_PlayNoteEnvelope    ; $94FB
 
 loc_6_94FE:
     lda     ram_07F7                ; $94FE
@@ -1602,7 +1675,7 @@ loc_6_9509:
     lda     #$32                    ; $950D
 
 loc_6_950F:
-    jsr     sub_6_9067              ; $950F
+    jsr     Sq2_PlayNote            ; $950F
 
 loc_6_9512:
     jmp     loc_6_953C              ; $9512
@@ -1629,7 +1702,7 @@ loc_6_952B:
     ldx     #$82                    ; $9533
     ldy     #$CF                    ; $9535
     lda     #$3C                    ; $9537
-    jsr     sub_6_9064              ; $9539
+    jsr     Sq2_PlayNoteEnvelope    ; $9539
 
 loc_6_953C:
     dec     ram_07F7                ; $953C
@@ -1661,7 +1734,7 @@ loc_6_9561:
 loc_6_9563:
     ldx     #$1C                    ; $9563
     ldy     #$83                    ; $9565
-    jsr     sub_6_9064              ; $9567
+    jsr     Sq2_PlayNoteEnvelope    ; $9567
     bne     loc_6_953C              ; $956A
 
 loc_6_956C:
@@ -1671,11 +1744,11 @@ loc_6_956C:
     sta     ram_07F5                ; $9573
     stx     TRI_LINEAR              ; $9576
     lda     #$0A                    ; $9579
-    jsr     sub_6_906B              ; $957B
+    jsr     Tri_PlayNote            ; $957B
     ldx     #$0C                    ; $957E
     lda     #$1A                    ; $9580
     ldy     #$08                    ; $9582
-    jsr     sub_6_959D              ; $9584
+    jsr     Noise_Play              ; $9584
 
 loc_6_9587:
     dec     ram_07F5                ; $9587
@@ -1693,7 +1766,14 @@ loc_6_9597:
     ldx     #$0F                    ; $9599
     ldy     #$28                    ; $959B
 
-sub_6_959D:
+; ---------------------------------------------------------------------------
+; Noise_Play
+;
+; Write y to NOISE_HI, x to NOISE_LO and a to NOISE_VOL.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Noise_Play:
     sty     NOISE_HI                ; $959D
     stx     NOISE_LO                ; $95A0
     sta     NOISE_VOL               ; $95A3
@@ -1938,7 +2018,7 @@ loc_6_97EC:
     cmp     dat_6_963A,y            ; $97F2
     bne     loc_6_9805              ; $97F5
     lda     dat_6_963F,y            ; $97F7
-    jsr     sub_6_9042              ; $97FA
+    jsr     Sq1_PlayNote            ; $97FA
     lda     ram_07F2                ; $97FD
     beq     loc_6_9805              ; $9800
     dec     ram_07F2                ; $9802
@@ -1950,7 +2030,7 @@ loc_6_9805:
     tay                             ; $980A
     lda     dat_6_9670,y            ; $980B
     sta     SQ1_VOL                 ; $980E
-    jsr     sub_6_907F              ; $9811
+    jsr     Sq1_VibratoSfx          ; $9811
     jmp     loc_6_98E9              ; $9814
 
 loc_6_9817:
@@ -1985,7 +2065,7 @@ loc_6_9834:
     sta     ram_07FA                ; $9855
     lda     #$0F                    ; $9858
     sta     SND_CHN                 ; $985A
-    jsr     sub_6_9B3B              ; $985D
+    jsr     Music_Stop              ; $985D
 
 loc_6_9860:
     ldy     ram_07F1                ; $9860
@@ -2064,7 +2144,7 @@ loc_6_98D4:
     lda     ram_07F3                ; $98DF
     tay                             ; $98E2
     lda     dat_6_96B6,y            ; $98E3
-    jsr     sub_6_9042              ; $98E6
+    jsr     Sq1_PlayNote            ; $98E6
 
 loc_6_98E9:
     dec     ram_07F3                ; $98E9
@@ -2291,7 +2371,7 @@ loc_6_9A2C:
     cmp     dat_6_9644,y            ; $9A32
     bne     loc_6_9A45              ; $9A35
     lda     dat_6_964B,y            ; $9A37
-    jsr     sub_6_9042              ; $9A3A
+    jsr     Sq1_PlayNote            ; $9A3A
     lda     ram_07F2                ; $9A3D
     beq     loc_6_9A45              ; $9A40
     dec     ram_07F2                ; $9A42
@@ -2312,7 +2392,7 @@ loc_6_9A54:
     cmp     dat_6_9652,y            ; $9A5A
     bne     loc_6_9A6D              ; $9A5D
     lda     dat_6_9658,y            ; $9A5F
-    jsr     sub_6_9042              ; $9A62
+    jsr     Sq1_PlayNote            ; $9A62
     lda     ram_07F2                ; $9A65
     beq     loc_6_9A6D              ; $9A68
     dec     ram_07F2                ; $9A6A
@@ -2334,7 +2414,7 @@ loc_6_9A7C:
     cmp     dat_6_965E,y            ; $9A82
     bne     loc_6_9A95              ; $9A85
     lda     dat_6_9667,y            ; $9A87
-    jsr     sub_6_9042              ; $9A8A
+    jsr     Sq1_PlayNote            ; $9A8A
     lda     ram_07F2                ; $9A8D
     beq     loc_6_9A95              ; $9A90
     dec     ram_07F2                ; $9A92
@@ -2351,7 +2431,7 @@ loc_6_9A98:
     sta     ram_07DC                ; $9AA1
     ldx     #$5D                    ; $9AA4
     ldy     #$81                    ; $9AA6
-    jsr     sub_6_9031              ; $9AA8
+    jsr     Sq1_SetEnvelope         ; $9AA8
 
 loc_6_9AAB:
     lda     ram_07F2                ; $9AAB
@@ -2414,33 +2494,67 @@ loc_6_9AF5:
     dec     ram_07F2                ; $9B12
     jmp     loc_6_98E9              ; $9B15
 
-sub_6_9B18:
+; ---------------------------------------------------------------------------
+; Music_Update
+;
+; Gameplay music, every frame (from Sound_Engine): start the song in
+; musicRequest if there is one (Music_Start), else play the current one
+; (Music_PlayNotes).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_Update:
     lda     musicRequest            ; $9B18
-    bne     loc_6_9B61              ; $9B1A
+    bne     Music_Start             ; $9B1A
     lda     musicPlaying            ; $9B1C
     beq     loc_6_9B4E              ; $9B1F
-    jmp     loc_6_9C87              ; $9B21
+    jmp     Music_PlayNotes         ; $9B21
 
-loc_6_9B24:
+; ---------------------------------------------------------------------------
+; Music_NextSong
+;
+; The song's phrase list has ended.  Song $01 (an intro) goes on to song
+; $02; songs $02, $04 and $08 (and $40 in the Great Palace, currentWorld
+; 5) start again; the fanfare ($10) returns to the song it interrupted
+; (musicResume); the others stop (Music_Stop).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_NextSong:
     lda     currentWorld            ; $9B24
     cmp     #$05                    ; $9B27
     bne     loc_6_9B34              ; $9B29
     lda     musicPlaying            ; $9B2B
     and     #$5F                    ; $9B2E
     bne     loc_6_9B4F              ; $9B30
-    beq     sub_6_9B3B              ; $9B32
+    beq     Music_Stop              ; $9B32
 
 loc_6_9B34:
     lda     musicPlaying            ; $9B34
     and     #$1F                    ; $9B37
     bne     loc_6_9B4F              ; $9B39
 
-sub_6_9B3B:
+; ---------------------------------------------------------------------------
+; Music_Stop
+;
+; Stop the music: musicPlaying = 0, triangle off, then silence both pulse
+; channels and the noise channel (Sound_SilencePulseNoise).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_Stop:
     lda     #$00                    ; $9B3B
     sta     musicPlaying            ; $9B3D
     sta     TRI_LINEAR              ; $9B40
 
-sub_6_9B43:
+; ---------------------------------------------------------------------------
+; Sound_SilencePulseNoise
+;
+; Set the volume of both pulse channels and the noise channel to 0.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sound_SilencePulseNoise:
     lda     #$10                    ; $9B43
     sta     SQ1_VOL                 ; $9B45
     sta     SQ2_VOL                 ; $9B48
@@ -2453,62 +2567,82 @@ loc_6_9B4F:
     and     #$01                    ; $9B4F
     beq     loc_6_9B57              ; $9B51
     lda     #$02                    ; $9B53
-    bne     loc_6_9B61              ; $9B55
+    bne     Music_Start             ; $9B55
 
 loc_6_9B57:
     lda     musicPlaying            ; $9B57
     and     #$4E                    ; $9B5A
-    bne     loc_6_9B61              ; $9B5C
-    lda     ram_07DB                ; $9B5E
+    bne     Music_Start             ; $9B5C
+    lda     musicResume             ; $9B5E
 
-loc_6_9B61:
+; ---------------------------------------------------------------------------
+; Music_Start
+;
+; Start song a (one bit; 0 stops the music).  Before the fanfare ($10)
+; interrupts a song $01-$08, remember it in musicResume.  Sets musicSong to
+; the bit number + 1 and starts at the song's first phrase.
+;
+; In:      a = song bit
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_Start:
     tax                             ; $9B61
     and     #$10                    ; $9B62
     beq     loc_6_9B70              ; $9B64
     lda     musicPlaying            ; $9B66
     and     #$0F                    ; $9B69
     beq     loc_6_9B70              ; $9B6B
-    sta     ram_07DB                ; $9B6D
+    sta     musicResume             ; $9B6D
 
 loc_6_9B70:
     txa                             ; $9B70
-    beq     sub_6_9B3B              ; $9B71
+    beq     Music_Stop              ; $9B71
     sta     musicPlaying            ; $9B73
     ldy     #$00                    ; $9B76
-    sty     ram_00E3                ; $9B78
+    sty     musicPhrase             ; $9B78
 
 loc_6_9B7A:
     iny                             ; $9B7A
     lsr     a                       ; $9B7B
     bcc     loc_6_9B7A              ; $9B7C
-    sty     ram_00E2                ; $9B7E
+    sty     musicSong               ; $9B7E
 
-loc_6_9B80:
+; ---------------------------------------------------------------------------
+; Music_LoadPhrase
+;
+; Load the next phrase of the song from the current world's music table
+; (OverworldMusic, TownMusic, PalaceMusic or GreatPalaceMusic): its tempo,
+; note pointer and the bass, harmony and drum offsets.  A phrase list entry
+; of 0 ends the song (Music_NextSong).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_LoadPhrase:
     lda     currentWorld            ; $9B80
     bne     loc_6_9BBC              ; $9B83
-    ldy     ram_00E2                ; $9B85
-    lda     dat_6_9FFF,y            ; $9B87
+    ldy     musicSong               ; $9B85
+    lda     OverworldMusic-1,y      ; $9B87
     clc                             ; $9B8A
-    adc     ram_00E3                ; $9B8B
-    inc     ram_00E3                ; $9B8D
+    adc     musicPhrase             ; $9B8B
+    inc     musicPhrase             ; $9B8D
     tay                             ; $9B8F
-    lda     dat_6_A000,y            ; $9B90
+    lda     OverworldMusic,y        ; $9B90
     tay                             ; $9B93
-    beq     loc_6_9B24              ; $9B94
-    lda     dat_6_A000,y            ; $9B96
-    sta     ram_00E5                ; $9B99
-    lda     dat_6_A001,y            ; $9B9B
-    sta     ram_00E0                ; $9B9E
-    lda     dat_6_A002,y            ; $9BA0
-    sta     ram_00E1                ; $9BA3
-    lda     dat_6_A003,y            ; $9BA5
-    sta     ram_07E9                ; $9BA8
-    lda     dat_6_A004,y            ; $9BAB
-    sta     ram_07EA                ; $9BAE
-    lda     dat_6_A005,y            ; $9BB1
-    sta     ram_07E8                ; $9BB4
-    sta     ram_00E4                ; $9BB7
-    jmp     loc_6_9C74              ; $9BB9
+    beq     Music_NextSong          ; $9B94
+    lda     OverworldMusic,y        ; $9B96
+    sta     musicTempo              ; $9B99
+    lda     OverworldMusic+1,y      ; $9B9B
+    sta     musicNotesPtr           ; $9B9E
+    lda     OverworldMusic+2,y      ; $9BA0
+    sta     musicNotesPtr+1         ; $9BA3
+    lda     OverworldMusic+3,y      ; $9BA5
+    sta     bassOffset              ; $9BA8
+    lda     OverworldMusic+4,y      ; $9BAB
+    sta     harmonyOffset           ; $9BAE
+    lda     OverworldMusic+5,y      ; $9BB1
+    sta     drumOffset              ; $9BB4
+    sta     drumLoopOffset          ; $9BB7
+    jmp     Music_StartPhrase       ; $9BB9
 
 loc_6_9BBC:
     cmp     #$01                    ; $9BBC
@@ -2517,29 +2651,29 @@ loc_6_9BBC:
     bne     loc_6_9BFB              ; $9BC2
 
 loc_6_9BC4:
-    ldy     ram_00E2                ; $9BC4
-    lda     dat_6_A3C9,y            ; $9BC6
+    ldy     musicSong               ; $9BC4
+    lda     TownMusic-1,y           ; $9BC6
     clc                             ; $9BC9
-    adc     ram_00E3                ; $9BCA
-    inc     ram_00E3                ; $9BCC
+    adc     musicPhrase             ; $9BCA
+    inc     musicPhrase             ; $9BCC
     tay                             ; $9BCE
-    lda     dat_6_A3CA,y            ; $9BCF
+    lda     TownMusic,y             ; $9BCF
     tay                             ; $9BD2
     beq     loc_6_9C3A              ; $9BD3
-    lda     dat_6_A3CA,y            ; $9BD5
-    sta     ram_00E5                ; $9BD8
-    lda     dat_6_A3CB,y            ; $9BDA
-    sta     ram_00E0                ; $9BDD
-    lda     dat_6_A3CC,y            ; $9BDF
-    sta     ram_00E1                ; $9BE2
-    lda     dat_6_A3CD,y            ; $9BE4
-    sta     ram_07E9                ; $9BE7
-    lda     dat_6_A3CE,y            ; $9BEA
-    sta     ram_07EA                ; $9BED
-    lda     dat_6_A3CF,y            ; $9BF0
-    sta     ram_07E8                ; $9BF3
-    sta     ram_00E4                ; $9BF6
-    jmp     loc_6_9C74              ; $9BF8
+    lda     TownMusic,y             ; $9BD5
+    sta     musicTempo              ; $9BD8
+    lda     TownMusic+1,y           ; $9BDA
+    sta     musicNotesPtr           ; $9BDD
+    lda     TownMusic+2,y           ; $9BDF
+    sta     musicNotesPtr+1         ; $9BE2
+    lda     TownMusic+3,y           ; $9BE4
+    sta     bassOffset              ; $9BE7
+    lda     TownMusic+4,y           ; $9BEA
+    sta     harmonyOffset           ; $9BED
+    lda     TownMusic+5,y           ; $9BF0
+    sta     drumOffset              ; $9BF3
+    sta     drumLoopOffset          ; $9BF6
+    jmp     Music_StartPhrase       ; $9BF8
 
 loc_6_9BFB:
     cmp     #$03                    ; $9BFB
@@ -2548,89 +2682,115 @@ loc_6_9BFB:
     bne     loc_6_9C40              ; $9C01
 
 loc_6_9C03:
-    ldy     ram_00E2                ; $9C03
-    lda     dat_6_A62E,y            ; $9C05
+    ldy     musicSong               ; $9C03
+    lda     TownMusic+612,y         ; $9C05
     clc                             ; $9C08
-    adc     ram_00E3                ; $9C09
-    inc     ram_00E3                ; $9C0B
+    adc     musicPhrase             ; $9C09
+    inc     musicPhrase             ; $9C0B
     tay                             ; $9C0D
-    lda     dat_6_A62F,y            ; $9C0E
+    lda     PalaceMusic,y           ; $9C0E
     tay                             ; $9C11
     beq     loc_6_9C3A              ; $9C12
-    lda     dat_6_A62F,y            ; $9C14
-    sta     ram_00E5                ; $9C17
-    lda     dat_6_A630,y            ; $9C19
-    sta     ram_00E0                ; $9C1C
-    lda     dat_6_A631,y            ; $9C1E
-    sta     ram_00E1                ; $9C21
-    lda     dat_6_A632,y            ; $9C23
-    sta     ram_07E9                ; $9C26
-    lda     dat_6_A633,y            ; $9C29
-    sta     ram_07EA                ; $9C2C
-    lda     dat_6_A634,y            ; $9C2F
-    sta     ram_07E8                ; $9C32
-    sta     ram_00E4                ; $9C35
-    jmp     loc_6_9C74              ; $9C37
+    lda     PalaceMusic,y           ; $9C14
+    sta     musicTempo              ; $9C17
+    lda     PalaceMusic+1,y         ; $9C19
+    sta     musicNotesPtr           ; $9C1C
+    lda     PalaceMusic+2,y         ; $9C1E
+    sta     musicNotesPtr+1         ; $9C21
+    lda     PalaceMusic+3,y         ; $9C23
+    sta     bassOffset              ; $9C26
+    lda     PalaceMusic+4,y         ; $9C29
+    sta     harmonyOffset           ; $9C2C
+    lda     PalaceMusic+5,y         ; $9C2F
+    sta     drumOffset              ; $9C32
+    sta     drumLoopOffset          ; $9C35
+    jmp     Music_StartPhrase       ; $9C37
 
 loc_6_9C3A:
-    jmp     loc_6_9B24              ; $9C3A
+    jmp     Music_NextSong          ; $9C3A
 
 loc_6_9C3D:
-    jmp     loc_6_9B80              ; $9C3D
+    jmp     Music_LoadPhrase        ; $9C3D
 
 loc_6_9C40:
-    ldy     ram_00E2                ; $9C40
-    lda     dat_6_A935,y            ; $9C42
+    ldy     musicSong               ; $9C40
+    lda     PalaceMusic+774,y       ; $9C42
     clc                             ; $9C45
-    adc     ram_00E3                ; $9C46
-    inc     ram_00E3                ; $9C48
+    adc     musicPhrase             ; $9C46
+    inc     musicPhrase             ; $9C48
     tay                             ; $9C4A
-    lda     dat_6_A936,y            ; $9C4B
+    lda     GreatPalaceMusic,y      ; $9C4B
     tay                             ; $9C4E
     beq     loc_6_9C3A              ; $9C4F
-    lda     dat_6_A936,y            ; $9C51
-    sta     ram_00E5                ; $9C54
-    lda     dat_6_A937,y            ; $9C56
-    sta     ram_00E0                ; $9C59
-    lda     dat_6_A938,y            ; $9C5B
-    sta     ram_00E1                ; $9C5E
-    lda     dat_6_A939,y            ; $9C60
-    sta     ram_07E9                ; $9C63
-    lda     dat_6_A93A,y            ; $9C66
-    sta     ram_07EA                ; $9C69
-    lda     dat_6_A93B,y            ; $9C6C
-    sta     ram_07E8                ; $9C6F
-    sta     ram_00E4                ; $9C72
+    lda     GreatPalaceMusic,y      ; $9C51
+    sta     musicTempo              ; $9C54
+    lda     GreatPalaceMusic+1,y    ; $9C56
+    sta     musicNotesPtr           ; $9C59
+    lda     GreatPalaceMusic+2,y    ; $9C5B
+    sta     musicNotesPtr+1         ; $9C5E
+    lda     GreatPalaceMusic+3,y    ; $9C60
+    sta     bassOffset              ; $9C63
+    lda     GreatPalaceMusic+4,y    ; $9C66
+    sta     harmonyOffset           ; $9C69
+    lda     GreatPalaceMusic+5,y    ; $9C6C
+    sta     drumOffset              ; $9C6F
+    sta     drumLoopOffset          ; $9C72
 
-loc_6_9C74:
+; ---------------------------------------------------------------------------
+; Music_StartPhrase
+;
+; Start the melody at offset 0 and let every channel's note end now.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_StartPhrase:
     lda     #$00                    ; $9C74
-    sta     ram_07EB                ; $9C76
+    sta     melodyOffset            ; $9C76
     lda     #$01                    ; $9C79
-    sta     ram_07E7                ; $9C7B
-    sta     ram_07E6                ; $9C7E
-    sta     ram_07E5                ; $9C81
-    sta     ram_07E4                ; $9C84
+    sta     melodyTimer             ; $9C7B
+    sta     harmonyTimer            ; $9C7E
+    sta     bassTimer               ; $9C81
+    sta     drumTimer               ; $9C84
 
-loc_6_9C87:
+; ---------------------------------------------------------------------------
+; Music_PlayNotes
+;
+; Play one frame of the four channels.  Each counts its note down and, at
+; 0, reads the next note (Music_NoteDuration) and plays it, unless a sound
+; effect has the channel:
+; - melody, pulse 2 (melodyOffset): note 0 ends the phrase
+;   (Music_LoadPhrase); restarts the volume envelope at $2F, or $18 for
+;   song $04;
+; - harmony, pulse 1 (harmonyOffset): same envelope;
+; - bass, triangle (bassOffset): length $1F, or $60 in the fanfare;
+; - drums, noise (drumOffset, only if the phrase has drums): 0 loops to
+;   drumLoopOffset; any nonzero pitch plays a fixed noise burst, a rest
+;   silences it.
+; The pulse channels' volume follows PulseEnvelope and their pitch wavers
+; (Sq1_Vibrato, Sq2_Vibrato).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Music_PlayNotes:
     lda     ram_07FE                ; $9C87
     beq     loc_6_9C91              ; $9C8A
     lda     #$00                    ; $9C8C
-    sta     ram_07E3                ; $9C8E
+    sta     sq2EnvelopeStep         ; $9C8E
 
 loc_6_9C91:
-    dec     ram_07E7                ; $9C91
+    dec     melodyTimer             ; $9C91
     bne     loc_6_9CC3              ; $9C94
-    ldy     ram_07EB                ; $9C96
-    inc     ram_07EB                ; $9C99
-    lda     (ram_00E0),y            ; $9C9C
+    ldy     melodyOffset            ; $9C96
+    inc     melodyOffset            ; $9C99
+    lda     (musicNotesPtr),y       ; $9C9C
     beq     loc_6_9C3D              ; $9C9E
-    jsr     sub_6_906F              ; $9CA0
-    sta     ram_07E7                ; $9CA3
+    jsr     Music_NoteDuration      ; $9CA0
+    sta     melodyTimer             ; $9CA3
     lda     ram_07FE                ; $9CA6
     bne     loc_6_9CDE              ; $9CA9
     txa                             ; $9CAB
     and     #$3E                    ; $9CAC
-    jsr     sub_6_9067              ; $9CAE
+    jsr     Sq2_PlayNote            ; $9CAE
     beq     loc_6_9CC3              ; $9CB1
     lda     musicPlaying            ; $9CB3
     and     #$04                    ; $9CB6
@@ -2642,45 +2802,45 @@ loc_6_9CBE:
     lda     #$2F                    ; $9CBE
 
 loc_6_9CC0:
-    sta     ram_07E3                ; $9CC0
+    sta     sq2EnvelopeStep         ; $9CC0
 
 loc_6_9CC3:
     lda     ram_07FE                ; $9CC3
     bne     loc_6_9CDE              ; $9CC6
-    jsr     sub_6_9097              ; $9CC8
-    lda     ram_07E3                ; $9CCB
+    jsr     Sq2_Vibrato             ; $9CC8
+    lda     sq2EnvelopeStep         ; $9CCB
     beq     loc_6_9CD4              ; $9CCE
     lsr     a                       ; $9CD0
-    dec     ram_07E3                ; $9CD1
+    dec     sq2EnvelopeStep         ; $9CD1
 
 loc_6_9CD4:
     tay                             ; $9CD4
-    lda     dat_6_9135,y            ; $9CD5
+    lda     PulseEnvelope,y         ; $9CD5
     tax                             ; $9CD8
     ldy     #$7F                    ; $9CD9
-    jsr     sub_6_9038              ; $9CDB
+    jsr     Sq2_SetEnvelope         ; $9CDB
 
 loc_6_9CDE:
     lda     ram_07FF                ; $9CDE
     ora     ram_07DF                ; $9CE1
     beq     loc_6_9CEB              ; $9CE4
     lda     #$00                    ; $9CE6
-    sta     ram_07E2                ; $9CE8
+    sta     sq1EnvelopeStep         ; $9CE8
 
 loc_6_9CEB:
-    dec     ram_07E6                ; $9CEB
+    dec     harmonyTimer            ; $9CEB
     bne     loc_6_9D1E              ; $9CEE
-    ldy     ram_07EA                ; $9CF0
-    inc     ram_07EA                ; $9CF3
-    lda     (ram_00E0),y            ; $9CF6
-    jsr     sub_6_906F              ; $9CF8
-    sta     ram_07E6                ; $9CFB
+    ldy     harmonyOffset           ; $9CF0
+    inc     harmonyOffset           ; $9CF3
+    lda     (musicNotesPtr),y       ; $9CF6
+    jsr     Music_NoteDuration      ; $9CF8
+    sta     harmonyTimer            ; $9CFB
     lda     ram_07FF                ; $9CFE
     ora     ram_07DF                ; $9D01
     bne     loc_6_9D3C              ; $9D04
     txa                             ; $9D06
     and     #$3E                    ; $9D07
-    jsr     sub_6_9042              ; $9D09
+    jsr     Sq1_PlayNote            ; $9D09
     beq     loc_6_9D1E              ; $9D0C
     lda     musicPlaying            ; $9D0E
     and     #$04                    ; $9D11
@@ -2692,33 +2852,33 @@ loc_6_9D19:
     lda     #$2F                    ; $9D19
 
 loc_6_9D1B:
-    sta     ram_07E2                ; $9D1B
+    sta     sq1EnvelopeStep         ; $9D1B
 
 loc_6_9D1E:
     lda     ram_07FF                ; $9D1E
     ora     ram_07DF                ; $9D21
     bne     loc_6_9D3C              ; $9D24
-    jsr     sub_6_9089              ; $9D26
-    lda     ram_07E2                ; $9D29
+    jsr     Sq1_Vibrato             ; $9D26
+    lda     sq1EnvelopeStep         ; $9D29
     beq     loc_6_9D32              ; $9D2C
     lsr     a                       ; $9D2E
-    dec     ram_07E2                ; $9D2F
+    dec     sq1EnvelopeStep         ; $9D2F
 
 loc_6_9D32:
     tay                             ; $9D32
-    lda     dat_6_9135,y            ; $9D33
+    lda     PulseEnvelope,y         ; $9D33
     tax                             ; $9D36
     ldy     #$7F                    ; $9D37
-    jsr     sub_6_9031              ; $9D39
+    jsr     Sq1_SetEnvelope         ; $9D39
 
 loc_6_9D3C:
-    dec     ram_07E5                ; $9D3C
+    dec     bassTimer               ; $9D3C
     bne     loc_6_9D6C              ; $9D3F
-    ldy     ram_07E9                ; $9D41
-    inc     ram_07E9                ; $9D44
-    lda     (ram_00E0),y            ; $9D47
-    jsr     sub_6_906F              ; $9D49
-    sta     ram_07E5                ; $9D4C
+    ldy     bassOffset              ; $9D41
+    inc     bassOffset              ; $9D44
+    lda     (musicNotesPtr),y       ; $9D47
+    jsr     Music_NoteDuration      ; $9D49
+    sta     bassTimer               ; $9D4C
     lda     ram_07FD                ; $9D4F
     and     #$0A                    ; $9D52
     bne     loc_6_9D6C              ; $9D54
@@ -2735,26 +2895,26 @@ loc_6_9D63:
     sty     TRI_LINEAR              ; $9D63
     txa                             ; $9D66
     and     #$3E                    ; $9D67
-    jsr     sub_6_906B              ; $9D69
+    jsr     Tri_PlayNote            ; $9D69
 
 loc_6_9D6C:
-    lda     ram_07E8                ; $9D6C
+    lda     drumOffset              ; $9D6C
     beq     loc_6_9DA7              ; $9D6F
-    dec     ram_07E4                ; $9D71
+    dec     drumTimer               ; $9D71
     bne     loc_6_9DA7              ; $9D74
 
 loc_6_9D76:
-    ldy     ram_07E8                ; $9D76
-    inc     ram_07E8                ; $9D79
-    lda     (ram_00E0),y            ; $9D7C
+    ldy     drumOffset              ; $9D76
+    inc     drumOffset              ; $9D79
+    lda     (musicNotesPtr),y       ; $9D7C
     bne     loc_6_9D87              ; $9D7E
-    lda     ram_00E4                ; $9D80
-    sta     ram_07E8                ; $9D82
+    lda     drumLoopOffset          ; $9D80
+    sta     drumOffset              ; $9D82
     bne     loc_6_9D76              ; $9D85
 
 loc_6_9D87:
-    jsr     sub_6_906F              ; $9D87
-    sta     ram_07E4                ; $9D8A
+    jsr     Music_NoteDuration      ; $9D87
+    sta     drumTimer               ; $9D8A
     lda     ram_07FD                ; $9D8D
     ora     ram_07E0                ; $9D90
     bne     loc_6_9DA7              ; $9D93
@@ -2770,7 +2930,7 @@ loc_6_9D9E:
     lda     #$17                    ; $9DA2
 
 loc_6_9DA4:
-    jsr     sub_6_959D              ; $9DA4
+    jsr     Noise_Play              ; $9DA4
 
 loc_6_9DA7:
     rts                             ; $9DA7
@@ -2814,334 +2974,214 @@ loc_6_9DA7:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $9FE8
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF                               ; $9FF8
 
-dat_6_9FFF:
     .byte   $FF                                                             ; $9FFF
 
-dat_6_A000:
-    .byte   $08                                                             ; $A000
+OverworldMusic:
+    .byte   $08, $0A, $17, $17, $1C, $1E, $1E, $1E, $1F, $00, $25, $25, $2B, $31, $2B, $37; $A000
+    .byte   $3D, $3D, $43, $49, $43, $4F, $00, $55, $5B, $61, $67, $00, $6D, $00, $00, $18; $A010
+    .byte   $73, $A0, $4B, $27, $68, $18, $EB, $A0, $3C, $1D, $56, $18, $48, $A1, $16, $0A; $A020
+    .byte   $24, $18, $73, $A1, $1D, $0D, $28, $18, $A2, $A1, $25, $13, $31, $18, $DA, $A1; $A030
+    .byte   $0F, $08, $1B, $18, $FC, $A1, $19, $0D, $1D, $18, $1D, $A2, $1D, $0D, $21, $18; $A040
+    .byte   $42, $A2, $0D, $09, $15, $08, $5F, $A2, $17, $0C, $2F, $08, $95, $A2, $1A, $0D; $A050
+    .byte   $32, $08, $CE, $A2, $31, $19, $51, $08, $26, $A3, $3F, $20, $60, $18, $B1, $A3; $A060
+    .byte   $11, $09, $00, $5B, $83, $83, $9B, $9B, $9B, $9B, $9B, $83, $97, $DA, $83, $83; $A070
+    .byte   $9B, $9B, $9B, $9B, $9B, $83, $97, $DA, $83, $83, $9B, $9B, $9B, $9B, $9A, $10; $A080
+    .byte   $10, $90, $10, $10, $90, $10, $10, $90, $90, $00, $4B, $83, $83, $8B, $8B, $8B; $A090
+    .byte   $8B, $87, $83, $87, $C6, $C2, $87, $87, $87, $89, $83, $89, $C8, $83, $83, $89; $A0A0
+    .byte   $89, $89, $89, $88, $04, $04, $84, $04, $04, $84, $04, $04, $84, $84, $DA, $9B; $A0B0
+    .byte   $9B, $9B, $DA, $9B, $9B, $9B, $D6, $97, $97, $97, $D6, $97, $97, $97, $D2, $93; $A0C0
+    .byte   $93, $93, $D2, $93, $93, $93, $D0, $D0, $D0, $94, $98, $C8, $C8, $C8, $C8, $C8; $A0D0
+    .byte   $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $63, $42, $22, $A3, $A5; $A0E0
+    .byte   $A9, $6E, $1A, $6C, $1A, $68, $1A, $64, $1A, $62, $1E, $63, $B3, $B3, $B3, $E8; $A0F0
+    .byte   $B3, $B3, $B3, $E8, $B3, $B3, $B3, $00, $D0, $95, $91, $8F, $50, $10, $91, $95; $A100
+    .byte   $A3, $5A, $14, $5A, $14, $5A, $14, $5A, $14, $50, $10, $51, $A9, $A9, $A9, $E2; $A110
+    .byte   $A9, $A9, $A9, $E2, $A9, $A9, $A9, $DA, $9B, $9B, $9B, $E2, $DA, $E4, $E4, $E4; $A120
+    .byte   $E4, $DA, $9B, $9B, $9B, $DA, $B9, $B9, $B9, $F2, $B9, $B9, $B9, $F2, $B9, $B9; $A130
+    .byte   $B9, $C8, $89, $89, $89, $C8, $C8, $00, $5F, $42, $22, $64, $2C, $FA, $F8, $F6; $A140
+    .byte   $F2, $00, $CC, $91, $8D, $8B, $4C, $10, $54, $24, $EC, $E8, $EC, $E2, $DE, $9F; $A150
+    .byte   $9F, $9F, $DE, $DE, $9F, $9D, $9F, $E2, $A5, $A3, $A5, $EC, $C8, $89, $89, $89; $A160
+    .byte   $C8, $C8, $00, $6E, $2E, $EC, $42, $24, $A5, $A9, $AD, $6C, $2C, $69, $C2, $00; $A170
+    .byte   $5E, $1E, $DA, $42, $1A, $95, $9B, $A5, $62, $22, $22, $20, $22, $24, $E2, $DA; $A180
+    .byte   $E4, $A5, $9B, $A5, $EC, $E4, $5A, $1A, $E2, $E8, $DA, $C8, $89, $89, $89, $C8; $A190
+    .byte   $C8, $00, $B1, $AD, $B1, $E8, $42, $1E, $9F, $9F, $9F, $99, $95, $99, $D0, $42; $A1A0
+    .byte   $10, $91, $91, $91, $00, $9F, $9F, $9F, $DE, $42, $18, $99, $99, $99, $87, $87; $A1B0
+    .byte   $87, $C6, $42, $06, $87, $87, $87, $D0, $99, $97, $99, $DE, $E4, $E8, $A5, $A3; $A1C0
+    .byte   $A5, $D8, $D0, $C8, $89, $89, $89, $C8, $C8, $00, $5B, $C2, $E4, $64, $24, $63; $A1D0
+    .byte   $C2, $00, $4B, $C2, $D4, $54, $14, $51, $C2, $DA, $9B, $9B, $9B, $DA, $DA, $DA; $A1E0
+    .byte   $9B, $9B, $9B, $DA, $DA, $C8, $89, $89, $89, $C8, $C8, $00, $9F, $A5, $AD, $B3; $A1F0
+    .byte   $AD, $A5, $9F, $A5, $AD, $B3, $AD, $A5, $00, $95, $9F, $A5, $AD, $A5, $9F, $95; $A200
+    .byte   $9F, $A5, $AD, $A5, $9F, $5F, $C2, $24, $6C, $49, $C0, $08, $48, $B7, $B9, $B7; $A210
+    .byte   $B3, $B7, $B3, $B1, $B3, $B1, $AD, $B1, $AD, $00, $24, $2C, $24, $2C, $24, $2C; $A220
+    .byte   $24, $2C, $1E, $24, $1E, $24, $1E, $24, $1E, $24, $5F, $C2, $24, $6C, $49, $C0; $A230
+    .byte   $08, $48, $70, $32, $6C, $30, $68, $2C, $64, $28, $00, $E8, $E4, $DE, $D8, $50; $A240
+    .byte   $18, $58, $1E, $5E, $18, $64, $10, $48, $08, $48, $08, $48, $08, $48, $08, $1F; $A250
+    .byte   $2D, $29, $25, $E2, $DA, $1F, $33, $31, $29, $6D, $00, $15, $1F, $1F, $1F, $D4; $A260
+    .byte   $D4, $15, $1F, $1F, $1F, $5F, $DE, $AC, $DE, $AC, $9E, $AC, $DE, $AC, $DE, $AC; $A270
+    .byte   $9E, $AC, $DE, $AC, $DE, $AC, $9E, $AC, $DE, $AC, $DE, $AC, $9E, $AC, $C8, $88; $A280
+    .byte   $C8, $88, $88, $88, $00, $1B, $29, $25, $63, $82, $DE, $1B, $2F, $EC, $29, $25; $A290
+    .byte   $E2, $00, $11, $1B, $1B, $5B, $82, $82, $D0, $11, $23, $E2, $23, $1B, $9A, $DA; $A2A0
+    .byte   $A8, $DA, $A8, $9A, $A8, $DA, $A8, $DA, $A8, $9A, $A8, $DA, $A8, $DA, $A8, $9A; $A2B0
+    .byte   $A8, $DA, $A8, $DA, $A8, $9A, $A8, $C8, $88, $C8, $88, $88, $88, $00, $57, $C2; $A2C0
+    .byte   $DA, $1F, $23, $E4, $61, $C2, $E4, $29, $2D, $EE, $2D, $63, $82, $C2, $29, $2F; $A2D0
+    .byte   $2D, $63, $82, $C2, $33, $33, $00, $4D, $C2, $D6, $17, $17, $DE, $57, $C2, $D6; $A2E0
+    .byte   $21, $21, $E8, $23, $5D, $82, $C2, $23, $29, $23, $5D, $82, $C2, $31, $31, $D6; $A2F0
+    .byte   $9E, $25, $EE, $D6, $9E, $25, $EE, $E0, $90, $17, $E0, $E0, $90, $17, $E0, $D4; $A300
+    .byte   $9C, $23, $E8, $D4, $9C, $23, $E8, $D4, $9C, $23, $E8, $D4, $9C, $23, $E8, $C8; $A310
+    .byte   $88, $C8, $88, $88, $88, $00, $57, $C2, $DA, $1F, $23, $E4, $63, $C2, $E4, $29; $A320
+    .byte   $2D, $EE, $EC, $A8, $EC, $A8, $AC, $A8, $EC, $A8, $EC, $A8, $AC, $A8, $B2, $F2; $A330
+    .byte   $F2, $F2, $B2, $6D, $43, $00, $4D, $C2, $D6, $17, $17, $DE, $5B, $C2, $DE, $23; $A340
+    .byte   $25, $E8, $DC, $9C, $DC, $9C, $9C, $9C, $DC, $9C, $DC, $9C, $9C, $9C, $A8, $E8; $A350
+    .byte   $E8, $E8, $A8, $5D, $43, $D6, $9E, $25, $EE, $D6, $9E, $25, $EE, $DA, $A2, $29; $A360
+    .byte   $F2, $DA, $A2, $29, $F2, $D4, $9C, $23, $E8, $D4, $9C, $23, $E8, $94, $D4, $D4; $A370
+    .byte   $D4, $94, $D4, $D4, $9C, $23, $C8, $88, $C8, $88, $88, $88, $C8, $88, $C8, $88; $A380
+    .byte   $88, $88, $C8, $88, $C8, $88, $88, $88, $C8, $88, $C8, $88, $88, $88, $C8, $88; $A390
+    .byte   $C8, $88, $88, $88, $C8, $88, $C8, $88, $88, $88, $88, $C8, $C8, $C8, $88, $49; $A3A0
+    .byte   $41, $AC, $A4, $9A, $AE, $A4, $9E, $33, $43, $00, $A4, $9A, $94, $A4, $9E, $96; $A3B0
+    .byte   $2D, $43, $B2, $AC, $A4, $B6, $AE, $A4, $3B                     ; $A3C0
 
-dat_6_A001:
-    .byte   $0A                                                             ; $A001
-
-dat_6_A002:
-    .byte   $17                                                             ; $A002
-; (unreferenced: $A003-$A003, 1 bytes)
-
-dat_6_A003:
-    .byte   $17                                                             ; $A003
-
-dat_6_A004:
-    .byte   $1C                                                             ; $A004
-; (unreferenced: $A005-$A006, 2 bytes)
-
-dat_6_A005:
-    .byte   $1E, $1E                                                        ; $A005
-    .byte   $1E, $1F, $00, $25, $25, $2B, $31, $2B, $37, $3D, $3D, $43, $49, $43, $4F; $A007
-; (unreferenced: $A016-$A016, 1 bytes)
-    .byte   $00                                                             ; $A016
-    .byte   $55, $5B, $61, $67, $00, $6D, $00, $00, $18, $73, $A0, $4B, $27, $68, $18, $EB; $A017
-    .byte   $A0, $3C, $1D, $56, $18, $48, $A1, $16, $0A, $24, $18, $73, $A1, $1D, $0D, $28; $A027
-    .byte   $18, $A2, $A1, $25, $13, $31, $18, $DA, $A1, $0F, $08, $1B, $18, $FC, $A1, $19; $A037
-    .byte   $0D, $1D, $18, $1D, $A2, $1D, $0D, $21, $18, $42, $A2, $0D, $09, $15, $08, $5F; $A047
-    .byte   $A2, $17, $0C, $2F, $08, $95, $A2, $1A, $0D, $32, $08, $CE, $A2, $31, $19, $51; $A057
-    .byte   $08, $26, $A3, $3F, $20, $60, $18, $B1, $A3, $11, $09, $00, $5B, $83, $83, $9B; $A067
-    .byte   $9B, $9B, $9B, $9B, $83, $97, $DA, $83, $83, $9B, $9B, $9B, $9B, $9B, $83, $97; $A077
-    .byte   $DA, $83, $83, $9B, $9B, $9B, $9B, $9A, $10, $10, $90, $10, $10, $90, $10, $10; $A087
-    .byte   $90, $90, $00, $4B, $83, $83, $8B, $8B, $8B, $8B, $87, $83, $87, $C6, $C2, $87; $A097
-    .byte   $87, $87, $89, $83, $89, $C8, $83, $83, $89, $89, $89, $89, $88, $04, $04, $84; $A0A7
-    .byte   $04, $04, $84, $04, $04, $84, $84, $DA, $9B, $9B, $9B, $DA, $9B, $9B, $9B, $D6; $A0B7
-    .byte   $97, $97, $97, $D6, $97, $97, $97, $D2, $93, $93, $93, $D2, $93, $93, $93, $D0; $A0C7
-    .byte   $D0, $D0, $94, $98, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8, $C8; $A0D7
-    .byte   $C8, $C8, $C8, $C8, $63, $42, $22, $A3, $A5, $A9, $6E, $1A, $6C, $1A, $68, $1A; $A0E7
-    .byte   $64, $1A, $62, $1E, $63, $B3, $B3, $B3, $E8, $B3, $B3, $B3, $E8, $B3, $B3, $B3; $A0F7
-    .byte   $00, $D0, $95, $91, $8F, $50, $10, $91, $95, $A3, $5A, $14, $5A, $14, $5A, $14; $A107
-    .byte   $5A, $14, $50, $10, $51, $A9, $A9, $A9, $E2, $A9, $A9, $A9, $E2, $A9, $A9, $A9; $A117
-    .byte   $DA, $9B, $9B, $9B, $E2, $DA, $E4, $E4, $E4, $E4, $DA, $9B, $9B, $9B, $DA, $B9; $A127
-    .byte   $B9, $B9, $F2, $B9, $B9, $B9, $F2, $B9, $B9, $B9, $C8, $89, $89, $89, $C8, $C8; $A137
-    .byte   $00, $5F, $42, $22, $64, $2C, $FA, $F8, $F6, $F2, $00, $CC, $91, $8D, $8B, $4C; $A147
-    .byte   $10, $54, $24, $EC, $E8, $EC, $E2, $DE, $9F, $9F, $9F, $DE, $DE, $9F, $9D, $9F; $A157
-    .byte   $E2, $A5, $A3, $A5, $EC, $C8, $89, $89, $89, $C8, $C8, $00, $6E, $2E, $EC, $42; $A167
-    .byte   $24, $A5, $A9, $AD, $6C, $2C, $69, $C2, $00, $5E, $1E, $DA, $42, $1A, $95, $9B; $A177
-    .byte   $A5, $62, $22, $22, $20, $22, $24, $E2, $DA, $E4, $A5, $9B, $A5, $EC, $E4, $5A; $A187
-    .byte   $1A, $E2, $E8, $DA, $C8, $89, $89, $89, $C8, $C8, $00, $B1, $AD, $B1, $E8, $42; $A197
-    .byte   $1E, $9F, $9F, $9F, $99, $95, $99, $D0, $42, $10, $91, $91, $91, $00, $9F, $9F; $A1A7
-    .byte   $9F, $DE, $42, $18, $99, $99, $99, $87, $87, $87, $C6, $42, $06, $87, $87, $87; $A1B7
-    .byte   $D0, $99, $97, $99, $DE, $E4, $E8, $A5, $A3, $A5, $D8, $D0, $C8, $89, $89, $89; $A1C7
-    .byte   $C8, $C8, $00, $5B, $C2, $E4, $64, $24, $63, $C2, $00, $4B, $C2, $D4, $54, $14; $A1D7
-    .byte   $51, $C2, $DA, $9B, $9B, $9B, $DA, $DA, $DA, $9B, $9B, $9B, $DA, $DA, $C8, $89; $A1E7
-    .byte   $89, $89, $C8, $C8, $00, $9F, $A5, $AD, $B3, $AD, $A5, $9F, $A5, $AD, $B3, $AD; $A1F7
-    .byte   $A5, $00, $95, $9F, $A5, $AD, $A5, $9F, $95, $9F, $A5, $AD, $A5, $9F, $5F, $C2; $A207
-    .byte   $24, $6C, $49, $C0, $08, $48, $B7, $B9, $B7, $B3, $B7, $B3, $B1, $B3, $B1, $AD; $A217
-    .byte   $B1, $AD, $00, $24, $2C, $24, $2C, $24, $2C, $24, $2C, $1E, $24, $1E, $24, $1E; $A227
-    .byte   $24, $1E, $24, $5F, $C2, $24, $6C, $49, $C0, $08, $48, $70, $32, $6C, $30; $A237
-; (unreferenced: $A246-$A24A, 5 bytes)
-    .byte   $68, $2C, $64, $28, $00                                         ; $A246
-    .byte   $E8, $E4                                                        ; $A24B
-; (unreferenced: $A24D-$A24E, 2 bytes)
-    .byte   $DE, $D8                                                        ; $A24D
-    .byte   $50, $18, $58, $1E                                              ; $A24F
-; (unreferenced: $A253-$A256, 4 bytes)
-    .byte   $5E, $18, $64, $10                                              ; $A253
-    .byte   $48, $08, $48, $08                                              ; $A257
-; (unreferenced: $A25B-$A25E, 4 bytes)
-    .byte   $48, $08, $48, $08                                              ; $A25B
-    .byte   $1F, $2D, $29, $25, $E2, $DA, $1F, $33, $31, $29, $6D, $00, $15, $1F, $1F, $1F; $A25F
-    .byte   $D4, $D4, $15, $1F, $1F, $1F, $5F, $DE, $AC, $DE, $AC, $9E, $AC, $DE, $AC, $DE; $A26F
-    .byte   $AC, $9E, $AC, $DE, $AC, $DE, $AC, $9E, $AC, $DE, $AC, $DE, $AC, $9E, $AC, $C8; $A27F
-    .byte   $88, $C8, $88, $88, $88, $00, $1B, $29, $25, $63, $82, $DE, $1B, $2F, $EC, $29; $A28F
-    .byte   $25, $E2, $00, $11, $1B, $1B, $5B, $82, $82, $D0, $11, $23, $E2, $23, $1B, $9A; $A29F
-    .byte   $DA, $A8, $DA, $A8, $9A, $A8, $DA, $A8, $DA, $A8, $9A, $A8, $DA, $A8, $DA, $A8; $A2AF
-    .byte   $9A, $A8, $DA, $A8, $DA, $A8, $9A, $A8, $C8, $88, $C8, $88, $88, $88, $00, $57; $A2BF
-    .byte   $C2, $DA, $1F, $23, $E4, $61, $C2, $E4, $29, $2D, $EE, $2D, $63, $82, $C2, $29; $A2CF
-    .byte   $2F, $2D, $63, $82, $C2, $33, $33, $00, $4D, $C2, $D6, $17, $17, $DE, $57, $C2; $A2DF
-    .byte   $D6, $21, $21, $E8, $23, $5D, $82, $C2, $23, $29, $23, $5D, $82, $C2, $31, $31; $A2EF
-    .byte   $D6, $9E, $25, $EE, $D6, $9E, $25, $EE, $E0, $90, $17, $E0, $E0, $90, $17, $E0; $A2FF
-    .byte   $D4, $9C, $23, $E8, $D4, $9C, $23, $E8, $D4, $9C, $23, $E8, $D4, $9C, $23, $E8; $A30F
-    .byte   $C8, $88, $C8, $88, $88, $88, $00, $57, $C2, $DA, $1F, $23, $E4, $63, $C2, $E4; $A31F
-    .byte   $29, $2D, $EE, $EC, $A8, $EC, $A8, $AC, $A8, $EC, $A8, $EC, $A8, $AC, $A8, $B2; $A32F
-    .byte   $F2, $F2, $F2, $B2, $6D, $43, $00, $4D, $C2, $D6, $17, $17, $DE, $5B, $C2, $DE; $A33F
-    .byte   $23, $25, $E8, $DC, $9C, $DC, $9C, $9C, $9C, $DC, $9C, $DC, $9C, $9C, $9C, $A8; $A34F
-    .byte   $E8, $E8, $E8, $A8, $5D, $43, $D6, $9E, $25, $EE, $D6, $9E, $25, $EE, $DA, $A2; $A35F
-    .byte   $29, $F2, $DA, $A2, $29, $F2, $D4, $9C, $23, $E8, $D4, $9C, $23, $E8, $94, $D4; $A36F
-    .byte   $D4, $D4, $94, $D4, $D4, $9C, $23, $C8, $88, $C8, $88, $88, $88, $C8, $88, $C8; $A37F
-    .byte   $88, $88, $88, $C8, $88, $C8, $88, $88, $88, $C8, $88, $C8, $88, $88, $88, $C8; $A38F
-    .byte   $88, $C8, $88, $88, $88, $C8, $88, $C8, $88, $88, $88, $88, $C8, $C8, $C8, $88; $A39F
-    .byte   $49, $41, $AC, $A4, $9A, $AE, $A4, $9E, $33, $43, $00, $A4, $9A, $94, $A4, $9E; $A3AF
-    .byte   $96, $2D, $43, $B2, $AC, $A4, $B6, $AE, $A4, $3B                ; $A3BF
-
-dat_6_A3C9:
     .byte   $43                                                             ; $A3C9
 
-dat_6_A3CA:
-    .byte   $08                                                             ; $A3CA
+TownMusic:
+    .byte   $08, $0A, $15, $15, $17, $19, $19, $19, $1A, $00, $20, $26, $20, $2C, $32, $32; $A3CA
+    .byte   $38, $3E, $3E, $44, $00, $4A, $00, $50, $00, $00, $20, $20, $A4, $11, $09, $00; $A3DA
+    .byte   $20, $3D, $A4, $22, $11, $3A, $20, $7B, $A4, $25, $13, $3D, $20, $BC, $A4, $1D; $A3EA
+    .byte   $0F, $35, $20, $F5, $A4, $2C, $0F, $40, $20, $3B, $A5, $29, $15, $3D, $20, $7C; $A3FA
+    .byte   $A5, $1D, $0D, $00, $20, $9F, $A5, $11, $09, $1F, $20, $CE, $A5, $33, $13, $00; $A40A
+    .byte   $18, $0D, $A6, $17, $0C, $00, $59, $AC, $29, $9A, $9E, $A2, $5F, $82, $00, $51; $A41A
+    .byte   $9E, $1F, $94, $94, $94, $5B, $82, $90, $94, $96, $98, $AC, $29, $94, $9A, $A2; $A42A
+    .byte   $DE, $A6, $EC, $C2, $B2, $B0, $AC, $E8, $DE, $E2, $E6, $29, $71, $82, $B2, $B0; $A43A
+    .byte   $63, $43, $82, $00, $C2, $A2, $9E, $9A, $D8, $D8, $D8, $D8, $19, $5B, $82, $A2; $A44A
+    .byte   $A2, $5B, $43, $82, $00, $D0, $9E, $D8, $A8, $9E, $98, $D0, $9E, $D8, $A8, $9E; $A45A
+    .byte   $98, $D4, $A2, $DA, $AC, $A2, $9A, $D4, $A2, $DA, $AC, $A2, $9A, $09, $01, $C8; $A46A
+    .byte   $00, $C2, $E8, $AC, $31, $F6, $F2, $F0, $EC, $71, $82, $B2, $B0, $EC, $B2, $B8; $A47A
+    .byte   $FC, $B8, $F6, $00, $C2, $E2, $A2, $23, $E6, $E6, $E6, $E6, $1F, $EA, $A2, $A2; $A48A
+    .byte   $E2, $AC, $B2, $F6, $B2, $EC, $DA, $A8, $E2, $B2, $A8, $A2, $DE, $AC, $E6, $B6; $A49A
+    .byte   $AC, $A6, $D8, $A6, $E2, $AA, $B0, $A2, $D4, $A2, $DE, $A6, $AC, $A6, $09, $01; $A4AA
+    .byte   $C8, $00, $C2, $E8, $A0, $29, $E6, $F6, $EC, $F2, $F0, $9E, $69, $82, $43, $43; $A4BA
+    .byte   $00, $C2, $E0, $9A, $21, $DE, $D4, $E6, $EC, $DE, $98, $5F, $82, $43, $43, $DA; $A4CA
+    .byte   $A8, $E0, $A8, $B2, $A8, $DE, $AC, $E6, $AC, $B2, $AC, $D0, $9E, $D8, $9E, $A8; $A4DA
+    .byte   $9E, $D0, $9E, $D8, $A4, $98, $A4, $09, $01, $C8, $00, $C2, $E8, $A6, $29, $67; $A4EA
+    .byte   $A2, $E6, $A2, $5F, $82, $D8, $9E, $63, $43, $00, $82, $94, $9A, $F8, $94, $9A; $A4FA
+    .byte   $B8, $82, $94, $9A, $FC, $94, $9A, $BC, $82, $8E, $98, $F6, $8E, $98, $B6, $82; $A50A
+    .byte   $B6, $B4, $B2, $B0, $AE, $AC, $A8, $55, $82, $A2, $A2, $A2, $5F, $82, $AC, $AC; $A51A
+    .byte   $AC, $59, $82, $A6, $A6, $A6, $63, $82, $B0, $B0, $B0, $49, $80, $88, $88, $88; $A52A
+    .byte   $00, $B2, $B0, $AC, $73, $82, $9E, $9A, $98, $5F, $82, $B8, $B6, $B2, $79, $82; $A53A
+    .byte   $A0, $9E, $9A, $69, $82, $00, $94, $9A, $A2, $55, $82, $98, $8E, $86, $59, $82; $A54A
+    .byte   $94, $9A, $A2, $55, $82, $9A, $90, $88, $69, $82, $94, $94, $94, $55, $82, $98; $A55A
+    .byte   $98, $98, $59, $82, $94, $94, $94, $55, $82, $9A, $9A, $9A, $5B, $82, $09, $49; $A56A
+    .byte   $80, $00, $A4, $E8, $AE, $EC, $A8, $AC, $A0, $E4, $AC, $E8, $A4, $A8, $00, $8C; $A57A
+    .byte   $94, $9A, $8C, $94, $9A, $8C, $94, $88, $90, $94, $88, $90, $94, $88, $90, $25; $A58A
+    .byte   $2D, $F2, $21, $29, $EC, $E4, $A0, $E4, $21, $9F, $A7, $ED, $77, $00, $D4, $94; $A59A
+    .byte   $D4, $15, $95, $9F, $E7, $6D, $DA, $9A, $DA, $1B, $1E, $AC, $1E, $94, $1E, $AC; $A5AA
+    .byte   $1E, $94, $9E, $AC, $C8, $88, $C8, $88, $88, $88, $08, $88, $08, $88, $08, $88; $A5BA
+    .byte   $08, $88, $88, $88, $67, $82, $E8, $AC, $73, $B1, $B3, $F1, $6D, $82, $E6, $9E; $A5CA
+    .byte   $A3, $A7, $E9, $B1, $AD, $E9, $00, $86, $8E, $94, $86, $8E, $94, $86, $8E, $8A; $A5DA
+    .byte   $90, $9A, $8A, $90, $9A, $8A, $90, $86, $8E, $94, $86, $8E, $94, $86, $8E, $8A; $A5EA
+    .byte   $90, $9A, $8A, $90, $9A, $8A, $90, $1F, $15, $DE, $1B, $11, $DA, $1F, $15, $DE; $A5FA
+    .byte   $1B, $11, $DA, $A2, $A4, $A6, $29, $02, $02, $02, $02, $02, $02, $02, $00, $90; $A60A
+    .byte   $92, $94, $17, $02, $02, $02, $02, $02, $02, $02, $9A, $9C, $9E, $21, $02, $02; $A61A
+    .byte   $02, $02, $02, $02, $02                                         ; $A62A
 
-dat_6_A3CB:
-    .byte   $0A                                                             ; $A3CB
-; (unreferenced: $A3CC-$A3CC, 1 bytes)
+PalaceMusic:
+    .byte   $08, $0A, $0A, $23, $28, $2E, $2A, $2E, $2F, $00, $35, $35, $3B, $41, $3B, $47; $A62F
+    .byte   $35, $35, $4D, $53, $4D, $59, $5F, $65, $6B, $65, $5F, $65, $6B, $65, $3B, $41; $A63F
+    .byte   $3B, $47, $00, $71, $71, $77, $77, $00, $7D, $00, $83, $83, $89, $00, $00, $18; $A64F
+    .byte   $BE, $A6, $0F, $08, $00, $18, $D9, $A6, $30, $10, $48, $18, $28, $A7, $0F, $08; $A65F
+    .byte   $17, $18, $47, $A7, $0F, $08, $17, $18, $65, $A7, $11, $09, $19, $18, $86, $A7; $A66F
+    .byte   $1D, $0D, $29, $18, $B6, $A7, $1D, $0D, $29, $18, $E6, $A7, $13, $0A, $1E, $18; $A67F
+    .byte   $08, $A8, $2B, $0B, $3B, $18, $45, $A8, $2B, $0B, $3B, $18, $82, $A8, $2B, $0B; $A68F
+    .byte   $3B, $10, $04, $A9, $0D, $07, $00, $10, $1D, $A9, $0D, $07, $00, $18, $BF, $A8; $A69F
+    .byte   $11, $09, $00, $18, $D8, $A8, $0D, $07, $00, $18, $EE, $A8, $0F, $08, $00, $9E; $A6AF
+    .byte   $DE, $DE, $1F, $25, $23, $E0, $00, $94, $D4, $D4, $15, $1B, $19, $D6, $9E, $DE; $A6BF
+    .byte   $DE, $1F, $A4, $A4, $A4, $A2, $A2, $A2, $A0, $A0, $5F, $82, $A2, $A4, $AC, $2F; $A6CF
+    .byte   $25, $EE, $31, $25, $F0, $EE, $B6, $F2, $2F, $00, $94, $8C, $86, $94, $8C, $86; $A6DF
+    .byte   $94, $8C, $96, $8C, $86, $96, $8C, $86, $96, $8C, $98, $8C, $86, $98, $8C, $86; $A6EF
+    .byte   $98, $8C, $96, $8C, $86, $96, $8C, $86, $96, $8C, $DE, $94, $DE, $94, $A4, $94; $A6FF
+    .byte   $DE, $96, $DE, $96, $A4, $96, $DE, $98, $DE, $98, $A4, $98, $DE, $96, $DE, $96; $A70F
+    .byte   $A4, $96, $C8, $88, $C8, $88, $88, $88, $00, $AC, $EC, $EC, $AC, $E8, $43, $43; $A71F
+    .byte   $00, $9C, $DC, $DC, $9C, $DC, $43, $43, $94, $D4, $D4, $94, $55, $D4, $DC, $E2; $A72F
+    .byte   $88, $C8, $C8, $88, $C8, $41, $41, $00, $AC, $EC, $EC, $AC, $EE, $43, $43, $00; $A73F
+    .byte   $9C, $DC, $DC, $9C, $DC, $43, $43, $94, $D4, $D4, $94, $55, $D4, $DC, $E2, $88; $A74F
+    .byte   $C8, $C8, $88, $C8, $41, $41, $AC, $EC, $EC, $AC, $73, $82, $2F, $EC, $00, $9C; $A75F
+    .byte   $DC, $DC, $9C, $5D, $82, $1D, $DC, $94, $D4, $D4, $94, $55, $82, $1D, $E2, $88; $A76F
+    .byte   $C8, $C8, $88, $49, $80, $09, $C8, $A8, $A2, $A4, $E8, $A4, $E2, $A2, $9C, $9E; $A77F
+    .byte   $E2, $9E, $DC, $00, $9C, $90, $8A, $9C, $90, $8A, $9C, $90, $9C, $90, $8A, $9C; $A78F
+    .byte   $90, $8A, $9C, $90, $94, $A2, $9C, $D4, $A8, $E2, $94, $A2, $9C, $D4, $A8, $E2; $A79F
+    .byte   $88, $88, $88, $C8, $88, $C8, $00, $B2, $A8, $AC, $EE, $AC, $E8, $A8, $A0, $A4; $A7AF
+    .byte   $E8, $AC, $EE, $00, $88, $90, $9A, $88, $90, $9A, $88, $90, $88, $90, $9A, $88; $A7BF
+    .byte   $90, $9A, $88, $90, $9A, $A8, $A0, $DA, $A8, $E0, $9A, $A8, $A0, $DA, $A8, $E0; $A7CF
+    .byte   $88, $88, $88, $C8, $88, $C8, $00, $94, $D4, $57, $82, $94, $D4, $DC, $E2, $A8; $A7DF
+    .byte   $00, $8A, $CA, $4B, $82, $8A, $CA, $CA, $D4, $9C, $9C, $DC, $DC, $9C, $9C, $9C; $A7EF
+    .byte   $9C, $DC, $D4, $DC, $94, $49, $41, $49, $41, $6D, $82, $E8, $A4, $E3, $E5, $E9; $A7FF
+    .byte   $ED, $EF, $F3, $00, $06, $0C, $14, $1E, $24, $1E, $14, $0C, $06, $0C, $14, $1E; $A80F
+    .byte   $24, $1E, $14, $0C, $06, $0C, $14, $1E, $24, $1E, $14, $0C, $06, $0C, $14, $1E; $A81F
+    .byte   $24, $1E, $14, $0C, $9E, $94, $9E, $A4, $9E, $94, $9E, $A4, $9E, $94, $9E, $A4; $A82F
+    .byte   $9E, $94, $9E, $A4, $88, $00, $73, $82, $EE, $AC, $EF, $ED, $E9, $ED, $EF, $F3; $A83F
+    .byte   $00, $08, $10, $1A, $20, $28, $20, $1A, $10, $08, $10, $1A, $20, $28, $20, $1A; $A84F
+    .byte   $10, $08, $10, $1A, $20, $28, $20, $1A, $10, $08, $10, $1A, $20, $28, $20, $1A; $A85F
+    .byte   $10, $9A, $90, $9A, $A0, $9A, $90, $9A, $A0, $9A, $90, $9A, $A0, $9A, $90, $9A; $A86F
+    .byte   $A0, $88, $00, $77, $82, $DE, $A2, $E7, $E9, $ED, $F1, $F3, $F7, $00, $06, $0E; $A87F
+    .byte   $18, $1E, $26, $1E, $18, $0E, $06, $0E, $18, $1E, $26, $1E, $18, $0E, $06, $0E; $A88F
+    .byte   $18, $1E, $26, $1E, $18, $0E, $06, $0E, $18, $1E, $26, $1E, $18, $0E, $98, $A6; $A89F
+    .byte   $98, $9E, $98, $A6, $98, $9E, $98, $A6, $98, $9E, $98, $A6, $98, $9E, $88, $00; $A8AF
+    .byte   $AC, $A4, $9A, $AE, $A4, $9E, $33, $43, $00, $A4, $9A, $94, $A4, $9E, $96, $2D; $A8BF
+    .byte   $43, $B2, $AC, $A4, $B6, $AE, $A4, $3B, $43, $29, $24, $28, $E4, $6C, $2C, $00; $A8CF
+    .byte   $19, $14, $18, $D4, $5A, $1A, $90, $9E, $98, $1A, $1E, $9A, $94, $64, $24, $E8; $A8DF
+    .byte   $10, $10, $10, $10, $51, $C2, $00, $DE, $06, $06, $06, $06, $47, $C2, $E8, $10; $A8EF
+    .byte   $10, $10, $10, $51, $C2, $1B, $21, $DE, $25, $21, $DE, $00, $11, $17, $D4, $1B; $A8FF
+    .byte   $17, $D4, $DA, $A8, $DA, $A8, $9A, $A8, $DA, $A8, $DA, $A8, $9A, $A8, $17, $1D; $A90F
+    .byte   $DA, $21, $1D, $DA, $00, $0D, $13, $D0, $17, $13, $D0, $D6, $A4, $D6, $A4, $96; $A91F
+    .byte   $A4, $D6, $A4, $D6, $A4, $96, $A4                               ; $A92F
 
-dat_6_A3CC:
-    .byte   $15                                                             ; $A3CC
+GreatPalaceMusic:
+    .byte   $08, $0A, $13, $15, $1E, $20, $24, $29, $2A, $00, $30, $30, $36, $36, $3C, $42; $A936
+    .byte   $3C, $48, $00, $4E, $00, $54, $54, $5A, $5A, $60, $66, $60, $66, $00, $6C, $00; $A946
+    .byte   $72, $72, $78, $00, $7E, $7E, $84, $84, $00, $00, $18, $C0, $A9, $17, $0C, $00; $A956
+    .byte   $18, $E2, $A9, $30, $10, $44, $18, $2A, $AA, $34, $14, $48, $18, $76, $AA, $0D; $A966
+    .byte   $05, $17, $18, $91, $AA, $0D, $05, $17, $18, $AC, $AA, $09, $05, $00, $10, $4A; $A976
+    .byte   $AB, $1D, $0D, $00, $28, $71, $AB, $11, $09, $1D, $28, $95, $AB, $0F, $08, $1B; $A986
+    .byte   $28, $B7, $AB, $11, $09, $21, $28, $DB, $AB, $1B, $0E, $2B, $18, $ED, $AA, $11; $A996
+    .byte   $09, $00, $18, $B9, $AA, $15, $0B, $00, $18, $DA, $AA, $0D, $07, $00, $10, $06; $A9A6
+    .byte   $AB, $15, $0B, $00, $10, $33, $AB, $0B, $06, $00, $E2, $9E, $E2, $D8, $9E, $9A; $A9B6
+    .byte   $9E, $A2, $E6, $A2, $DE, $00, $D8, $94, $D8, $CE, $94, $90, $90, $90, $D4, $94; $A9C6
+    .byte   $D4, $E2, $9E, $E2, $D8, $9E, $9A, $9A, $9A, $DE, $9E, $DE, $C2, $E2, $A6, $A8; $A9D6
+    .byte   $AC, $B0, $3D, $39, $F0, $37, $35, $EC, $33, $31, $E8, $00, $8A, $90, $98, $A2; $A9E6
+    .byte   $8A, $90, $98, $A0, $8A, $90, $98, $9E, $8A, $90, $98, $9C, $8A, $90, $98, $A2; $A9F6
+    .byte   $8A, $90, $98, $A0, $8A, $90, $98, $9E, $8A, $90, $98, $9C, $E2, $98, $E2, $E8; $AA06
+    .byte   $98, $E2, $98, $E2, $E8, $98, $E2, $98, $E2, $E8, $98, $E2, $98, $E2, $E8, $98; $AA16
+    .byte   $09, $09, $C8, $00, $C2, $E0, $A8, $EC, $73, $EE, $33, $B6, $B2, $AE, $F2, $AE; $AA26
+    .byte   $EC, $AE, $AC, $A8, $EC, $A8, $E4, $00, $88, $90, $94, $9A, $88, $90, $94, $9A; $AA36
+    .byte   $88, $90, $94, $9A, $88, $90, $94, $9A, $88, $90, $94, $9A, $88, $90, $94, $9A; $AA46
+    .byte   $88, $90, $94, $9A, $88, $90, $94, $9A, $DA, $90, $DA, $E0, $90, $DA, $90, $DA; $AA56
+    .byte   $E0, $90, $DA, $90, $DA, $E0, $90, $DA, $90, $DA, $E0, $90, $09, $09, $C8, $00; $AA66
+    .byte   $A8, $E2, $71, $82, $00, $8A, $90, $98, $A2, $8A, $90, $98, $A0, $E2, $98, $E2; $AA76
+    .byte   $E8, $98, $E2, $98, $E2, $E8, $98, $09, $09, $C8, $00, $A8, $E2, $F6, $35, $00; $AA86
+    .byte   $8A, $90, $98, $9E, $8A, $90, $98, $9C, $E2, $98, $E2, $E8, $98, $E2, $98, $E2; $AA96
+    .byte   $E8, $98, $09, $09, $C8, $00, $98, $DA, $E0, $27, $00, $8E, $D0, $D4, $19, $98; $AAA6
+    .byte   $DA, $E0, $27, $E8, $82, $28, $28, $AF, $AD, $A9, $AD, $A9, $A5, $00, $D8, $82; $AAB6
+    .byte   $18, $18, $A9, $A5, $A1, $A5, $9B, $9B, $99, $9F, $91, $9F, $A9, $99, $A1, $AF; $AAC6
+    .byte   $A9, $9B, $AD, $A5, $E8, $10, $10, $10, $10, $D0, $00, $DE, $06, $06, $06, $06; $AAD6
+    .byte   $C6, $E8, $10, $10, $10, $10, $D0, $AC, $A4, $9A, $AE, $A4, $9E, $33, $43, $00; $AAE6
+    .byte   $A4, $9A, $94, $A4, $9E, $96, $2D, $43, $B2, $AC, $A4, $B6, $AE, $A4, $3B, $43; $AAF6
+    .byte   $1B, $21, $1F, $1D, $5B, $21, $27, $25, $23, $61, $00, $11, $17, $15, $13, $51; $AB06
+    .byte   $17, $1D, $1B, $19, $57, $DA, $A8, $DA, $A8, $9A, $A8, $DA, $A8, $DA, $A8, $9A; $AB16
+    .byte   $A8, $E0, $AE, $E0, $AE, $A0, $AE, $E0, $AE, $E0, $AE, $A0, $AE, $1F, $2B, $2B; $AB26
+    .byte   $2B, $6B, $00, $15, $1F, $1F, $1F, $5F, $DE, $AA, $DE, $AA, $9E, $AA, $DE, $AA; $AB36
+    .byte   $DE, $AA, $9E, $AA, $EC, $F0, $F6, $F2, $71, $43, $EC, $F0, $F6, $F2, $71, $43; $AB46
+    .byte   $00, $DA, $E2, $E8, $DA, $E2, $E8, $DA, $E2, $D8, $DE, $E6, $D8, $DE, $E6, $D8; $AB56
+    .byte   $DE, $5B, $C2, $5B, $C2, $5B, $59, $C2, $59, $C2, $59, $63, $C2, $E2, $64, $24; $AB66
+    .byte   $65, $A8, $A4, $00, $51, $C2, $D0, $52, $12, $53, $92, $92, $DA, $9B, $9B, $DB; $AB76
+    .byte   $DA, $DA, $DA, $9B, $9B, $DB, $DA, $DA, $C8, $89, $89, $C9, $C8, $C8, $00, $5F; $AB86
+    .byte   $E0, $E4, $E0, $DE, $DA, $D6, $00, $4D, $CC, $CC, $CE, $CE, $CE, $CE, $D6, $97; $AB96
+    .byte   $97, $D7, $D6, $D6, $D6, $97, $97, $D7, $D6, $D6, $C8, $89, $89, $C9, $C8, $C8; $ABA6
+    .byte   $00, $5B, $D8, $DA, $58, $1E, $69, $A4, $A8, $00, $49, $C8, $C8, $46, $18, $5F; $ABB6
+    .byte   $9A, $9E, $92, $A0, $92, $A0, $92, $A0, $92, $A0, $90, $9E, $90, $9E, $90, $9E; $ABC6
+    .byte   $90, $9E, $80, $88, $00, $EA, $E8, $E4, $E0, $9E, $10, $10, $90, $90, $90, $90; $ABD6
+    .byte   $90, $90, $00, $DA, $DA, $DA, $DA, $90, $06, $06, $86, $86, $86, $86, $86, $86; $ABE6
+    .byte   $92, $A0, $92, $A0, $92, $A0, $92, $A0, $90, $9E, $90, $9E, $90, $9E, $90, $9E; $ABF6
+    .byte   $80, $88, $00                                                   ; $AC06
 
-dat_6_A3CD:
-    .byte   $15                                                             ; $A3CD
-
-dat_6_A3CE:
-    .byte   $17                                                             ; $A3CE
-; (unreferenced: $A3CF-$A3D0, 2 bytes)
-
-dat_6_A3CF:
-    .byte   $19, $19                                                        ; $A3CF
-    .byte   $19, $1A, $00, $20, $26, $20, $2C                               ; $A3D1
-; (unreferenced: $A3D8-$A3DE, 7 bytes)
-    .byte   $32, $32, $38, $3E, $3E, $44, $00                               ; $A3D8
-    .byte   $4A, $00, $50, $00, $00, $20, $20, $A4, $11, $09, $00, $20, $3D, $A4, $22, $11; $A3DF
-    .byte   $3A, $20, $7B, $A4, $25, $13, $3D, $20, $BC, $A4, $1D, $0F, $35 ; $A3EF
-; (unreferenced: $A3FC-$A413, 24 bytes)
-    .byte   $20, $F5, $A4, $2C, $0F, $40, $20, $3B, $A5, $29, $15, $3D, $20, $7C, $A5, $1D; $A3FC
-    .byte   $0D, $00, $20, $9F, $A5, $11, $09, $1F                          ; $A40C
-    .byte   $20, $CE, $A5, $33, $13, $00, $18, $0D, $A6, $17, $0C, $00, $59, $AC, $29, $9A; $A414
-    .byte   $9E, $A2, $5F, $82, $00, $51, $9E, $1F, $94, $94, $94, $5B, $82, $90, $94, $96; $A424
-    .byte   $98, $AC, $29, $94, $9A, $A2, $DE, $A6, $EC, $C2, $B2, $B0, $AC, $E8, $DE, $E2; $A434
-    .byte   $E6, $29, $71, $82, $B2, $B0, $63, $43, $82, $00, $C2, $A2, $9E, $9A, $D8, $D8; $A444
-    .byte   $D8, $D8, $19, $5B, $82, $A2, $A2, $5B, $43, $82                ; $A454
-; (unreferenced: $A45E-$A45E, 1 bytes)
-    .byte   $00                                                             ; $A45E
-    .byte   $D0, $9E, $D8, $A8, $9E, $98, $D0, $9E, $D8, $A8, $9E, $98, $D4, $A2, $DA, $AC; $A45F
-    .byte   $A2, $9A, $D4, $A2, $DA, $AC, $A2, $9A, $09, $01, $C8, $00, $C2, $E8, $AC, $31; $A46F
-    .byte   $F6, $F2, $F0, $EC, $71, $82, $B2, $B0, $EC, $B2, $B8, $FC, $B8, $F6, $00, $C2; $A47F
-    .byte   $E2, $A2, $23, $E6, $E6, $E6, $E6, $1F, $EA, $A2, $A2, $E2, $AC, $B2, $F6, $B2; $A48F
-    .byte   $EC, $DA, $A8, $E2, $B2, $A8, $A2, $DE, $AC, $E6, $B6, $AC, $A6, $D8, $A6, $E2; $A49F
-    .byte   $AA, $B0, $A2, $D4, $A2, $DE, $A6, $AC, $A6, $09, $01, $C8, $00, $C2, $E8, $A0; $A4AF
-    .byte   $29, $E6, $F6, $EC, $F2                                         ; $A4BF
-; (unreferenced: $A4C4-$A4CA, 7 bytes)
-    .byte   $F0, $9E, $69, $82, $43, $43, $00                               ; $A4C4
-    .byte   $C2, $E0, $9A, $21, $DE, $D4, $E6, $EC                          ; $A4CB
-; (unreferenced: $A4D3-$A4D8, 6 bytes)
-    .byte   $DE, $98, $5F, $82, $43, $43                                    ; $A4D3
-    .byte   $DA, $A8, $E0, $A8, $B2, $A8, $DE, $AC, $E6, $AC, $B2, $AC      ; $A4D9
-; (unreferenced: $A4E5-$A4F0, 12 bytes)
-    .byte   $D0, $9E, $D8, $9E, $A8, $9E, $D0, $9E, $D8, $A4, $98, $A4      ; $A4E5
-    .byte   $09, $01, $C8, $00                                              ; $A4F1
-; (unreferenced: $A4F5-$A5CD, 217 bytes)
-    .byte   $C2, $E8, $A6, $29, $67, $A2, $E6, $A2, $5F, $82, $D8, $9E, $63, $43, $00, $82; $A4F5
-    .byte   $94, $9A, $F8, $94, $9A, $B8, $82, $94, $9A, $FC, $94, $9A, $BC, $82, $8E, $98; $A505
-    .byte   $F6, $8E, $98, $B6, $82, $B6, $B4, $B2, $B0, $AE, $AC, $A8, $55, $82, $A2, $A2; $A515
-    .byte   $A2, $5F, $82, $AC, $AC, $AC, $59, $82, $A6, $A6, $A6, $63, $82, $B0, $B0, $B0; $A525
-    .byte   $49, $80, $88, $88, $88, $00, $B2, $B0, $AC, $73, $82, $9E, $9A, $98, $5F, $82; $A535
-    .byte   $B8, $B6, $B2, $79, $82, $A0, $9E, $9A, $69, $82, $00, $94, $9A, $A2, $55, $82; $A545
-    .byte   $98, $8E, $86, $59, $82, $94, $9A, $A2, $55, $82, $9A, $90, $88, $69, $82, $94; $A555
-    .byte   $94, $94, $55, $82, $98, $98, $98, $59, $82, $94, $94, $94, $55, $82, $9A, $9A; $A565
-    .byte   $9A, $5B, $82, $09, $49, $80, $00, $A4, $E8, $AE, $EC, $A8, $AC, $A0, $E4, $AC; $A575
-    .byte   $E8, $A4, $A8, $00, $8C, $94, $9A, $8C, $94, $9A, $8C, $94, $88, $90, $94, $88; $A585
-    .byte   $90, $94, $88, $90, $25, $2D, $F2, $21, $29, $EC, $E4, $A0, $E4, $21, $9F, $A7; $A595
-    .byte   $ED, $77, $00, $D4, $94, $D4, $15, $95, $9F, $E7, $6D, $DA, $9A, $DA, $1B, $1E; $A5A5
-    .byte   $AC, $1E, $94, $1E, $AC, $1E, $94, $9E, $AC, $C8, $88, $C8, $88, $88, $88, $08; $A5B5
-    .byte   $88, $08, $88, $08, $88, $08, $88, $88, $88                     ; $A5C5
-    .byte   $67, $82, $E8, $AC, $73, $B1, $B3, $F1, $6D, $82, $E6, $9E, $A3, $A7, $E9, $B1; $A5CE
-    .byte   $AD, $E9, $00, $86, $8E, $94, $86, $8E, $94, $86, $8E, $8A, $90, $9A, $8A, $90; $A5DE
-    .byte   $9A, $8A, $90, $86, $8E, $94, $86, $8E, $94, $86, $8E, $8A, $90, $9A, $8A, $90; $A5EE
-    .byte   $9A, $8A, $90, $1F, $15, $DE, $1B, $11, $DA, $1F, $15, $DE, $1B, $11, $DA, $A2; $A5FE
-    .byte   $A4, $A6, $29, $02, $02, $02, $02, $02, $02, $02, $00, $90, $92, $94, $17, $02; $A60E
-    .byte   $02, $02, $02, $02, $02, $02, $9A, $9C, $9E, $21, $02, $02, $02, $02, $02, $02; $A61E
-
-dat_6_A62E:
-    .byte   $02                                                             ; $A62E
-
-dat_6_A62F:
-    .byte   $08                                                             ; $A62F
-
-dat_6_A630:
-    .byte   $0A                                                             ; $A630
-; (unreferenced: $A631-$A631, 1 bytes)
-
-dat_6_A631:
-    .byte   $0A                                                             ; $A631
-
-dat_6_A632:
-    .byte   $23                                                             ; $A632
-
-dat_6_A633:
-    .byte   $28                                                             ; $A633
-; (unreferenced: $A634-$A634, 1 bytes)
-
-dat_6_A634:
-    .byte   $2E                                                             ; $A634
-    .byte   $2A, $2E, $2F, $00, $35, $35, $3B, $41, $3B, $47, $35, $35, $4D, $53, $4D, $59; $A635
-    .byte   $5F, $65, $6B, $65, $5F, $65, $6B, $65, $3B, $41, $3B, $47, $00, $71, $71, $77; $A645
-    .byte   $77                                                             ; $A655
-; (unreferenced: $A656-$A656, 1 bytes)
-    .byte   $00                                                             ; $A656
-    .byte   $7D, $00, $83, $83, $89, $00, $00, $18, $BE, $A6, $0F, $08, $00, $18, $D9, $A6; $A657
-    .byte   $30, $10, $48, $18, $28, $A7, $0F, $08, $17, $18, $47, $A7, $0F, $08, $17, $18; $A667
-    .byte   $65, $A7, $11, $09, $19, $18, $86, $A7, $1D, $0D, $29, $18, $B6, $A7, $1D, $0D; $A677
-    .byte   $29, $18, $E6, $A7, $13, $0A, $1E, $18, $08, $A8, $2B, $0B, $3B, $18, $45, $A8; $A687
-    .byte   $2B, $0B, $3B, $18, $82, $A8, $2B, $0B, $3B, $10, $04, $A9, $0D, $07, $00, $10; $A697
-    .byte   $1D, $A9, $0D, $07, $00, $18, $BF, $A8, $11, $09, $00, $18, $D8, $A8, $0D, $07; $A6A7
-    .byte   $00, $18, $EE, $A8, $0F, $08, $00, $9E, $DE, $DE, $1F, $25, $23, $E0, $00, $94; $A6B7
-    .byte   $D4, $D4, $15, $1B, $19, $D6, $9E, $DE, $DE, $1F, $A4, $A4, $A4, $A2, $A2, $A2; $A6C7
-    .byte   $A0, $A0, $5F, $82, $A2, $A4, $AC, $2F, $25, $EE, $31, $25, $F0, $EE, $B6, $F2; $A6D7
-    .byte   $2F, $00, $94, $8C, $86, $94, $8C, $86, $94, $8C, $96, $8C, $86, $96, $8C, $86; $A6E7
-    .byte   $96, $8C, $98, $8C, $86, $98, $8C, $86, $98, $8C, $96, $8C, $86, $96, $8C, $86; $A6F7
-    .byte   $96, $8C, $DE, $94, $DE, $94, $A4, $94, $DE, $96, $DE, $96, $A4, $96, $DE, $98; $A707
-    .byte   $DE, $98, $A4, $98, $DE, $96, $DE, $96, $A4, $96, $C8, $88, $C8, $88, $88, $88; $A717
-    .byte   $00, $AC, $EC, $EC, $AC, $E8, $43, $43, $00, $9C, $DC, $DC, $9C, $DC, $43, $43; $A727
-    .byte   $94, $D4, $D4, $94, $55, $D4, $DC, $E2, $88, $C8, $C8, $88, $C8, $41, $41; $A737
-; (unreferenced: $A746-$A746, 1 bytes)
-    .byte   $00                                                             ; $A746
-    .byte   $AC, $EC, $EC, $AC, $EE, $43, $43, $00, $9C, $DC, $DC, $9C, $DC, $43, $43, $94; $A747
-    .byte   $D4, $D4, $94, $55, $D4, $DC, $E2, $88, $C8, $C8, $88, $C8, $41, $41, $AC, $EC; $A757
-    .byte   $EC, $AC, $73, $82, $2F, $EC, $00, $9C, $DC, $DC, $9C, $5D, $82, $1D, $DC, $94; $A767
-    .byte   $D4, $D4, $94, $55, $82, $1D, $E2, $88, $C8, $C8, $88, $49, $80, $09, $C8, $A8; $A777
-    .byte   $A2, $A4, $E8, $A4, $E2, $A2, $9C, $9E, $E2, $9E, $DC, $00, $9C, $90, $8A, $9C; $A787
-    .byte   $90, $8A, $9C, $90, $9C, $90, $8A, $9C, $90, $8A, $9C, $90, $94, $A2, $9C, $D4; $A797
-    .byte   $A8, $E2, $94, $A2, $9C, $D4, $A8, $E2, $88, $88, $88, $C8, $88, $C8, $00, $B2; $A7A7
-    .byte   $A8, $AC, $EE, $AC, $E8, $A8, $A0, $A4, $E8, $AC, $EE, $00, $88, $90, $9A, $88; $A7B7
-    .byte   $90, $9A, $88, $90, $88, $90, $9A, $88, $90, $9A, $88, $90, $9A, $A8, $A0, $DA; $A7C7
-    .byte   $A8, $E0, $9A, $A8, $A0, $DA, $A8, $E0, $88, $88, $88, $C8, $88, $C8, $00, $94; $A7D7
-    .byte   $D4, $57, $82, $94, $D4, $DC, $E2, $A8, $00, $8A, $CA, $4B, $82, $8A, $CA, $CA; $A7E7
-    .byte   $D4, $9C, $9C, $DC, $DC, $9C, $9C, $9C, $9C, $DC, $D4, $DC, $94, $49, $41, $49; $A7F7
-    .byte   $41, $6D, $82, $E8, $A4, $E3, $E5, $E9, $ED, $EF, $F3, $00, $06, $0C, $14, $1E; $A807
-    .byte   $24, $1E, $14, $0C, $06, $0C, $14, $1E, $24, $1E, $14, $0C, $06, $0C, $14, $1E; $A817
-    .byte   $24, $1E, $14, $0C, $06, $0C, $14, $1E, $24, $1E, $14, $0C, $9E, $94, $9E, $A4; $A827
-    .byte   $9E, $94, $9E, $A4, $9E, $94, $9E, $A4, $9E, $94, $9E, $A4, $88, $00, $73, $82; $A837
-    .byte   $EE, $AC, $EF, $ED, $E9, $ED, $EF, $F3, $00, $08, $10, $1A, $20, $28, $20, $1A; $A847
-    .byte   $10, $08, $10, $1A, $20, $28, $20, $1A, $10, $08, $10, $1A, $20, $28, $20, $1A; $A857
-    .byte   $10, $08, $10, $1A, $20, $28, $20, $1A, $10, $9A, $90, $9A, $A0, $9A, $90, $9A; $A867
-    .byte   $A0, $9A, $90, $9A, $A0, $9A, $90, $9A, $A0, $88, $00, $77, $82, $DE, $A2, $E7; $A877
-    .byte   $E9, $ED, $F1, $F3, $F7, $00, $06, $0E, $18, $1E, $26, $1E, $18, $0E, $06, $0E; $A887
-    .byte   $18, $1E, $26, $1E, $18, $0E, $06, $0E, $18, $1E, $26, $1E, $18, $0E, $06, $0E; $A897
-    .byte   $18, $1E, $26, $1E, $18, $0E, $98, $A6, $98, $9E, $98, $A6, $98, $9E, $98, $A6; $A8A7
-    .byte   $98, $9E, $98, $A6, $98, $9E, $88, $00, $AC, $A4, $9A, $AE, $A4, $9E, $33, $43; $A8B7
-    .byte   $00, $A4, $9A, $94, $A4, $9E, $96, $2D, $43, $B2, $AC, $A4, $B6, $AE, $A4, $3B; $A8C7
-    .byte   $43, $29, $24, $28, $E4, $6C, $2C, $00, $19, $14, $18, $D4, $5A, $1A, $90, $9E; $A8D7
-    .byte   $98, $1A, $1E, $9A, $94, $64, $24, $E8, $10, $10, $10, $10, $51, $C2, $00, $DE; $A8E7
-    .byte   $06, $06, $06, $06, $47, $C2, $E8, $10, $10, $10, $10, $51, $C2, $1B, $21, $DE; $A8F7
-    .byte   $25, $21, $DE, $00, $11, $17, $D4, $1B, $17, $D4, $DA, $A8, $DA, $A8, $9A, $A8; $A907
-    .byte   $DA, $A8, $DA, $A8, $9A, $A8, $17, $1D, $DA, $21, $1D, $DA, $00, $0D, $13, $D0; $A917
-    .byte   $17, $13, $D0, $D6, $A4, $D6, $A4, $96, $A4, $D6, $A4, $D6, $A4, $96; $A927
-
-dat_6_A935:
-    .byte   $A4                                                             ; $A935
-
-dat_6_A936:
-    .byte   $08                                                             ; $A936
-
-dat_6_A937:
-    .byte   $0A                                                             ; $A937
-
-dat_6_A938:
-    .byte   $13                                                             ; $A938
-
-dat_6_A939:
-    .byte   $15                                                             ; $A939
-
-dat_6_A93A:
-    .byte   $1E                                                             ; $A93A
-
-dat_6_A93B:
-    .byte   $20, $24, $29, $2A, $00, $30, $30, $36, $36, $3C, $42, $3C, $48, $00, $4E, $00; $A93B
-    .byte   $54, $54, $5A, $5A, $60, $66, $60, $66, $00, $6C, $00, $72, $72, $78, $00, $7E; $A94B
-    .byte   $7E                                                             ; $A95B
-; (unreferenced: $A95C-$A95E, 3 bytes)
-    .byte   $84, $84, $00                                                   ; $A95C
-    .byte   $00, $18, $C0, $A9, $17, $0C, $00, $18, $E2, $A9, $30, $10, $44, $18, $2A, $AA; $A95F
-    .byte   $34, $14, $48, $18, $76, $AA, $0D, $05, $17, $18, $91, $AA, $0D, $05, $17, $18; $A96F
-    .byte   $AC, $AA, $09, $05, $00, $10, $4A, $AB, $1D, $0D, $00, $28, $71, $AB, $11, $09; $A97F
-    .byte   $1D, $28, $95, $AB, $0F, $08, $1B, $28, $B7, $AB, $11, $09, $21, $28, $DB, $AB; $A98F
-    .byte   $1B, $0E, $2B, $18, $ED, $AA, $11, $09, $00, $18, $B9, $AA, $15, $0B, $00, $18; $A99F
-    .byte   $DA, $AA, $0D, $07, $00, $10, $06, $AB, $15, $0B, $00           ; $A9AF
-; (unreferenced: $A9BA-$A9BF, 6 bytes)
-    .byte   $10, $33, $AB, $0B, $06, $00                                    ; $A9BA
-    .byte   $E2, $9E, $E2, $D8, $9E, $9A, $9E, $A2, $E6, $A2, $DE, $00, $D8, $94, $D8, $CE; $A9C0
-    .byte   $94, $90, $90, $90, $D4, $94, $D4, $E2, $9E, $E2, $D8, $9E, $9A, $9A, $9A, $DE; $A9D0
-    .byte   $9E, $DE, $C2, $E2, $A6, $A8, $AC, $B0, $3D, $39, $F0, $37, $35, $EC, $33, $31; $A9E0
-    .byte   $E8, $00, $8A, $90, $98, $A2, $8A, $90, $98, $A0, $8A, $90, $98, $9E, $8A, $90; $A9F0
-    .byte   $98, $9C, $8A, $90, $98, $A2, $8A, $90, $98, $A0, $8A, $90, $98, $9E, $8A, $90; $AA00
-    .byte   $98, $9C, $E2, $98, $E2, $E8, $98, $E2, $98, $E2, $E8, $98, $E2, $98, $E2, $E8; $AA10
-    .byte   $98, $E2, $98, $E2, $E8, $98, $09, $09, $C8, $00, $C2, $E0, $A8, $EC, $73, $EE; $AA20
-    .byte   $33, $B6, $B2, $AE, $F2, $AE, $EC, $AE, $AC, $A8, $EC, $A8, $E4, $00, $88, $90; $AA30
-    .byte   $94, $9A, $88, $90, $94, $9A, $88, $90, $94, $9A, $88, $90, $94, $9A, $88, $90; $AA40
-    .byte   $94, $9A, $88, $90, $94, $9A, $88, $90, $94, $9A, $88, $90, $94, $9A, $DA, $90; $AA50
-    .byte   $DA, $E0, $90, $DA, $90, $DA, $E0, $90, $DA, $90, $DA, $E0, $90, $DA, $90, $DA; $AA60
-    .byte   $E0, $90, $09, $09, $C8, $00, $A8, $E2, $71, $82, $00, $8A, $90, $98, $A2, $8A; $AA70
-    .byte   $90, $98, $A0, $E2, $98, $E2, $E8, $98                          ; $AA80
-; (unreferenced: $AA88-$AA8C, 5 bytes)
-    .byte   $E2, $98, $E2, $E8, $98                                         ; $AA88
-    .byte   $09, $09, $C8                                                   ; $AA8D
-; (unreferenced: $AA90-$AA90, 1 bytes)
-    .byte   $00                                                             ; $AA90
-    .byte   $A8, $E2, $F6, $35, $00, $8A, $90, $98, $9E, $8A, $90, $98, $9C, $E2, $98, $E2; $AA91
-    .byte   $E8, $98                                                        ; $AAA1
-; (unreferenced: $AAA3-$AAA7, 5 bytes)
-    .byte   $E2, $98, $E2, $E8, $98                                         ; $AAA3
-    .byte   $09, $09, $C8                                                   ; $AAA8
-; (unreferenced: $AAAB-$AAAB, 1 bytes)
-    .byte   $00                                                             ; $AAAB
-    .byte   $98, $DA, $E0, $27, $00, $8E, $D0, $D4, $19, $98, $DA, $E0, $27, $E8, $82, $28; $AAAC
-    .byte   $28, $AF, $AD, $A9, $AD, $A9, $A5, $00, $D8, $82, $18, $18, $A9, $A5, $A1, $A5; $AABC
-    .byte   $9B, $9B, $99, $9F, $91, $9F, $A9, $99, $A1, $AF, $A9, $9B, $AD, $A5, $E8, $10; $AACC
-    .byte   $10, $10, $10, $D0, $00, $DE, $06, $06, $06, $06, $C6, $E8, $10, $10, $10, $10; $AADC
-    .byte   $D0, $AC, $A4, $9A, $AE, $A4, $9E, $33, $43, $00, $A4, $9A, $94, $A4, $9E, $96; $AAEC
-    .byte   $2D, $43, $B2, $AC, $A4, $B6, $AE, $A4, $3B, $43, $1B, $21, $1F, $1D, $5B, $21; $AAFC
-    .byte   $27, $25, $23, $61, $00, $11, $17, $15, $13, $51, $17, $1D, $1B, $19, $57, $DA; $AB0C
-    .byte   $A8, $DA, $A8, $9A, $A8, $DA, $A8, $DA, $A8, $9A, $A8, $E0, $AE, $E0, $AE, $A0; $AB1C
-    .byte   $AE, $E0, $AE, $E0, $AE, $A0, $AE                               ; $AB2C
-; (unreferenced: $AB33-$AB49, 23 bytes)
-    .byte   $1F, $2B, $2B, $2B, $6B, $00, $15, $1F, $1F, $1F, $5F, $DE, $AA, $DE, $AA, $9E; $AB33
-    .byte   $AA, $DE, $AA, $DE, $AA, $9E, $AA                               ; $AB43
-    .byte   $EC, $F0, $F6, $F2, $71, $43, $EC, $F0, $F6, $F2, $71, $43, $00, $DA, $E2, $E8; $AB4A
-    .byte   $DA, $E2, $E8, $DA, $E2, $D8, $DE, $E6, $D8, $DE, $E6, $D8, $DE, $5B, $C2, $5B; $AB5A
-    .byte   $C2, $5B, $59, $C2, $59, $C2, $59, $63, $C2, $E2, $64, $24, $65, $A8, $A4, $00; $AB6A
-    .byte   $51, $C2, $D0, $52, $12, $53, $92, $92, $DA, $9B, $9B, $DB, $DA, $DA, $DA, $9B; $AB7A
-    .byte   $9B, $DB, $DA, $DA, $C8, $89, $89, $C9, $C8, $C8, $00, $5F, $E0, $E4, $E0, $DE; $AB8A
-    .byte   $DA, $D6, $00, $4D, $CC, $CC, $CE, $CE, $CE, $CE, $D6, $97, $97, $D7, $D6, $D6; $AB9A
-    .byte   $D6, $97, $97, $D7, $D6, $D6, $C8, $89, $89, $C9, $C8, $C8, $00, $5B, $D8, $DA; $ABAA
-    .byte   $58, $1E, $69, $A4, $A8, $00, $49, $C8, $C8, $46, $18, $5F, $9A, $9E, $92, $A0; $ABBA
-    .byte   $92, $A0, $92, $A0, $92, $A0, $90, $9E, $90, $9E, $90, $9E, $90, $9E, $80, $88; $ABCA
-    .byte   $00, $EA, $E8, $E4, $E0, $9E, $10, $10, $90, $90, $90, $90, $90, $90, $00, $DA; $ABDA
-    .byte   $DA, $DA, $DA, $90, $06, $06, $86, $86, $86, $86, $86, $86, $92, $A0, $92, $A0; $ABEA
-    .byte   $92, $A0, $92, $A0, $90, $9E, $90, $9E, $90, $9E, $90, $9E, $80, $88, $00; $ABFA
-; (unreferenced: $AC09-$BFFF, 5111 bytes)
+dat_6_AC09:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $AC09
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $AC19
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $AC29

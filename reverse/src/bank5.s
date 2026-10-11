@@ -1778,7 +1778,7 @@ Ending_SetSecondQuest:
     ldy     #$0F                    ; $9239
 
 @loop3:
-    sta     a:ram_00E0,y            ; $923B
+    sta     a:musicNotesPtr,y       ; $923B
     dey                             ; $923E
     bpl     @loop3                  ; $923F
     jsr     Ram_ClearExceptSaved    ; $9241
@@ -4815,7 +4815,7 @@ Game_PowerOnInit:
     ldy     #$1F                    ; $A6A6
 
 @loop:
-    sta     a:ram_00E0,y            ; $A6A8
+    sta     a:musicNotesPtr,y       ; $A6A8
     dey                             ; $A6AB
     bpl     @loop                   ; $A6AC
     sta     DMC_RAW                 ; $A6AE
@@ -6146,7 +6146,7 @@ FileSelect_Menu:
     lda     #$00                    ; $B2F0
 
 @loop3:
-    sta     ram_00E0,x              ; $B2F2
+    sta     musicNotesPtr,x         ; $B2F2
     dex                             ; $B2F4
     bpl     @loop3                  ; $B2F5
     ldy     #$DA                    ; $B2F7

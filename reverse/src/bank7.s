@@ -2064,7 +2064,7 @@ Death_ContinueMenu:
     lda     #$00                    ; $CAA8
 
 @loop:
-    sta     ram_00E0,x              ; $CAAA
+    sta     musicNotesPtr,x         ; $CAAA
     dex                             ; $CAAC
     bpl     @loop                   ; $CAAD
     ldy     #$C0                    ; $CAAF
@@ -2225,7 +2225,7 @@ Location_Enter:
     asl     a                       ; $CB6D
     bcc     @loc_CBB8               ; $CB6E
     lda     #$00                    ; $CB70
-    sta     ram_07DB                ; $CB72
+    sta     musicResume             ; $CB72
     jsr     Location_GetArea        ; $CB75
     lda     areaLocation            ; $CB78
     sec                             ; $CB7B
