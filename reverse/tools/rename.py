@@ -81,6 +81,8 @@ def main():
     files = sorted(glob.glob(os.path.join(SRC, "*.s")) + glob.glob(os.path.join(SRC, "*.inc")))
     text = {f: open(f).read() for f in files}
     everything = "\n".join(text.values())
+    # Code only, for collision checks: a word in a comment is not a symbol.
+    code = "\n".join(line.split(";", 1)[0] for t in text.values() for line in t.split("\n"))
     errors = []
     if args.array:
         # Elements of the array that have no mechanical name are fine.
@@ -92,9 +94,9 @@ def main():
             errors.append(f"{old}: not found")
         if "+" in new:
             name = new.split("+")[0]
-            if name not in plain and not re.search(rf"\b{re.escape(name)}\b", everything):
+            if name not in plain and not re.search(rf"\b{re.escape(name)}\b", code):
                 errors.append(f"{new}: {name} does not exist")
-        elif new not in olds and re.search(rf"\b{re.escape(new)}\b", everything):
+        elif new not in olds and re.search(rf"\b{re.escape(new)}\b", code):
             errors.append(f"{new}: already exists")
     if len({new for _, new in pairs}) != len(pairs):
         errors.append("duplicate new names")
