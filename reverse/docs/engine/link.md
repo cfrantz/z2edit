@@ -69,6 +69,24 @@ blinking at the end.  Some enemies (`sramEnemyAttr` bit 4) also drain
 experience, one point per frame for 10 frames (`experienceDrain`).  If
 his life runs out, `linkDeathPending` starts the death sequence.
 
+## Experience and Levels
+
+Killing an enemy adds its experience to `experiencePending`, which
+`Mode_SideView` counts into `experience` at 10 points per frame.
+`experienceNext` is the cheapest next level of the three stats
+(`Exp_ComputeNext`, from `LevelUpCostHi`/`LevelUpCostLo`):
+
+| Stat | 1->2 | 2->3 | 3->4 | 4->5 | 5->6 | 6->7 | 7->8 |
+|------|-----:|-----:|-----:|-----:|-----:|-----:|-----:|
+| attack | 200 | 500 | 1000 | 2000 | 3000 | 5000 | 8000 |
+| magic | 100 | 300 | 700 | 1200 | 2200 | 3500 | 6000 |
+| life | 50 | 150 | 400 | 800 | 1500 | 2500 | 4000 |
+
+(Each table has an eighth entry, 9000.)  When `experience` reaches
+`experienceNext`, `Hud_Update` opens the level up dialog
+(`DIALOG_LEVEL_UP`).  Continuing after a game over resets the experience
+to 0.
+
 ## Fairy
 
 As a fairy (`linkFairy` = 8, from the fairy spell), Link flies in the
