@@ -1,4 +1,4 @@
-use indexmap::IndexSet;
+use indexmap::{IndexMap, IndexSet};
 use pyo3::prelude::*;
 
 /// A Code/Data Logger.
@@ -19,6 +19,9 @@ pub struct Cdl {
     /// referenced 16K bank).  Used to resolve which bank an address in a
     /// switchable window refers to.
     pub refs: IndexSet<(usize, usize)>,
+    /// RAM and SRAM accesses: (instruction PRG offset, CPU address) ->
+    /// RAM_* flags.  Internal RAM mirrors are folded to $0000-$07FF.
+    pub ram: IndexMap<(usize, u16), u8>,
     /// PRG offset of the instruction currently executing.
     pub(crate) current: Option<usize>,
 }
@@ -53,11 +56,32 @@ impl Cdl {
     /// Byte was accessed while mapped into the $C000-$FFFF window.
     pub const WINDOW_C000: u8 = 0x80;
 
+    /// RAM byte was read as data.
+    pub const RAM_READ: u8 = 0x01;
+    /// RAM byte was written.
+    pub const RAM_WRITE: u8 = 0x02;
+    /// RAM byte was read as part of a pointer by an indirect addressing mode.
+    pub const RAM_POINTER: u8 = 0x04;
+
+    /// Record a RAM or SRAM access by the current instruction.  Other
+    /// addresses (registers, ROM) are ignored.
+    pub fn mark_ram(&mut self, cpu: u16, flags: u8) {
+        let cpu = match cpu {
+            0x0000..=0x1FFF => cpu & 0x07FF,
+            0x6000..=0x7FFF => cpu,
+            _ => return,
+        };
+        if let Some(src) = self.current {
+            *self.ram.entry((src, cpu)).or_insert(0) |= flags;
+        }
+    }
+
     pub fn new(prg_size: usize) -> Self {
         Cdl {
             prg: vec![0; prg_size],
             jumps: IndexSet::new(),
             refs: IndexSet::new(),
+            ram: IndexMap::new(),
             current: None,
         }
     }
@@ -97,5 +121,12 @@ impl Cdl {
     #[getter]
     pub fn get_refs(&self) -> Vec<(usize, usize)> {
         self.refs.iter().cloned().collect()
+    }
+
+    /// Return the RAM and SRAM accesses as a list of
+    /// `(instruction_prg_offset, cpu_address, flags)`.
+    #[getter]
+    pub fn get_ram(&self) -> Vec<(usize, u16, u8)> {
+        self.ram.iter().map(|(&(o, a), &f)| (o, a, f)).collect()
     }
 }

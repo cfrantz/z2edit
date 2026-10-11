@@ -280,6 +280,13 @@ impl Nes {
         }
     }
 
+    /// Record a RAM access by the current instruction in the CDL.
+    pub(crate) fn cdl_ram(&self, cpu: u16, flags: u8) {
+        if let Some(cdl) = self.cdl.lock().unwrap().as_mut() {
+            cdl.mark_ram(cpu, flags);
+        }
+    }
+
     /// Note that an interrupt is being taken, so that subsequent CDL
     /// accesses aren't attributed to the previous instruction.
     pub(crate) fn cdl_interrupt(&self) {

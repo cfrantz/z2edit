@@ -113,7 +113,18 @@ impl Cpu6502 {
                 _ => nes.cdl_mark(address, 1, Cdl::DATA),
             }
         }
+        if nes.cdl_active() {
+            nes.cdl_ram(address, Cdl::RAM_READ);
+        }
         self.read(nes, address)
+    }
+
+    /// Write an instruction's data operand, recording RAM writes in the CDL.
+    fn write_data(&self, nes: &Nes, address: u16, value: u8) {
+        if nes.cdl_active() {
+            nes.cdl_ram(address, Cdl::RAM_WRITE);
+        }
+        self.write(nes, address, value)
     }
 
     fn read16(&self, nes: &Nes, address: u16) -> u16 {
@@ -399,14 +410,30 @@ impl Cpu6502 {
             }
             AddressingMode::IndexedIndirect => {
                 let operand = self.read(nes, pc1);
-                self.read16(nes, operand.wrapping_add(self.x) as u16)
+                let ptr = operand.wrapping_add(self.x) as u16;
+                if cdl {
+                    nes.cdl_ram(ptr, Cdl::RAM_POINTER);
+                    nes.cdl_ram(ptr + 1, Cdl::RAM_POINTER);
+                }
+                self.read16(nes, ptr)
             }
             AddressingMode::Indirect => {
                 let operand = self.read16(nes, pc1);
+                if cdl {
+                    nes.cdl_ram(operand, Cdl::RAM_POINTER);
+                    nes.cdl_ram(
+                        (operand & 0xFF00) | (operand.wrapping_add(1) & 0x00FF),
+                        Cdl::RAM_POINTER,
+                    );
+                }
                 self.read16bug(nes, operand)
             }
             AddressingMode::IndirectIndexed => {
                 let operand = self.read(nes, pc1);
+                if cdl {
+                    nes.cdl_ram(operand as u16, Cdl::RAM_POINTER);
+                    nes.cdl_ram(operand as u16 + 1, Cdl::RAM_POINTER);
+                }
                 let addr = self.read16(nes, operand as u16);
                 let newaddr = addr.wrapping_add(self.y as u16);
                 self.cycles += Cpu6502::pages_differ(addr, newaddr, info.page, 0);
@@ -447,7 +474,7 @@ impl Cpu6502 {
                 let val = self.read_data(nes, opaddr, info.mode);
                 self.set_c(val & 0x80 != 0);
                 self.set_zn(val << 1);
-                self.write(nes, opaddr, val << 1);
+                self.write_data(nes, opaddr, val << 1);
             }
 
             // ASL A
@@ -494,7 +521,7 @@ impl Cpu6502 {
                 let r = (r << 1) | carry;
                 self.set_c(r >= 0x100);
                 self.set_zn(r as u8);
-                self.write(nes, opaddr, r as u8);
+                self.write_data(nes, opaddr, r as u8);
             }
             // PLP
             0x28 => self.p = (self.pull(nes) & !Self::FLAG_B) | Self::FLAG_U,
@@ -531,7 +558,7 @@ impl Cpu6502 {
                 let val = self.read_data(nes, opaddr, info.mode);
                 self.set_c(val & 0x01 != 0);
                 self.set_zn(val >> 1);
-                self.write(nes, opaddr, val >> 1);
+                self.write_data(nes, opaddr, val >> 1);
             }
 
             // PHA
@@ -600,7 +627,7 @@ impl Cpu6502 {
                 let a = (val >> 1) | (carry << 7);
                 self.set_c(val & 0x01 != 0);
                 self.set_zn(a);
-                self.write(nes, opaddr, a);
+                self.write_data(nes, opaddr, a);
             }
             // PLA
             0x68 => {
@@ -626,13 +653,13 @@ impl Cpu6502 {
 
             // STA <mem> opcodes
             0x81 | 0x85 | 0x8d | 0x91 | 0x95 | 0x99 | 0x9d => {
-                self.write(nes, opaddr, self.a);
+                self.write_data(nes, opaddr, self.a);
             }
 
             // STY <mem> opcodes
-            0x84 | 0x8c | 0x94 => self.write(nes, opaddr, self.y),
+            0x84 | 0x8c | 0x94 => self.write_data(nes, opaddr, self.y),
             // STX <mem> opcodes
-            0x86 | 0x8e | 0x96 => self.write(nes, opaddr, self.x),
+            0x86 | 0x8e | 0x96 => self.write_data(nes, opaddr, self.x),
 
             // DEY
             0x88 => {
@@ -702,7 +729,7 @@ impl Cpu6502 {
             // DEC <mem> opcodes
             0xc6 | 0xce | 0xd6 | 0xde => {
                 let val = self.read_data(nes, opaddr, info.mode).wrapping_sub(1);
-                self.write(nes, opaddr, val);
+                self.write_data(nes, opaddr, val);
                 self.set_zn(val);
             }
             // INY
@@ -742,7 +769,7 @@ impl Cpu6502 {
             // INC <mem> opcodes
             0xe6 | 0xee | 0xf6 | 0xfe => {
                 let val = self.read_data(nes, opaddr, info.mode).wrapping_add(1);
-                self.write(nes, opaddr, val);
+                self.write_data(nes, opaddr, val);
                 self.set_zn(val);
             }
 
