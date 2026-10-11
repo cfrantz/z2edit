@@ -103,8 +103,8 @@ GLOBALS_INC = 1
 .global Overworld_ReadMapRun
 .global Overworld_UpdatePalaceStones
 .global sub_E024
-.global sub_E030
-.global sub_E070
+.global Link_PlaceOnGround
+.global Link_CheckBg
 .global loc_E187
 .global Link_HurtByEnemy
 .global Enemy_KnockBack

@@ -2459,7 +2459,7 @@ loc_0_9081:
     sty     linkWalkDir             ; $908D
     lda     ram_0704                ; $908F
     bne     loc_0_9097              ; $9092
-    jsr     sub_E030                ; $9094
+    jsr     Link_PlaceOnGround      ; $9094
 
 loc_0_9097:
     jsr     Area_PlaceElevatorAndDoor ; $9097
@@ -2484,11 +2484,11 @@ loc_0_90AB:
     sta     objXVelocity            ; $90BE
     sta     ram_0710                ; $90C0
     sta     shieldSpellActive       ; $90C3
-    ldy     ram_070E                ; $90C6
+    ldy     chimneyTimer            ; $90C6
     beq     loc_0_90D7              ; $90C9
     sta     objY                    ; $90CB
     sta     timerFast+TIMER_LINK_ENTER ; $90CD
-    sta     ram_070E                ; $90D0
+    sta     chimneyTimer            ; $90D0
     lda     #$50                    ; $90D3
     sta     objX                    ; $90D5
 
@@ -2833,7 +2833,7 @@ dat_0_92B4:
 ; Link_Control
 ;
 ; LINK_MODE_CONTROL: Link under the player's control.  Handles sinking into
-; a chimney (ram_070E), the fairy's flight in eight directions, and
+; a chimney (chimneyTimer), the fairy's flight in eight directions, and
 ; otherwise walking, jumping and attacking.
 ;
 ; Status:  provisional
@@ -2841,10 +2841,10 @@ dat_0_92B4:
 Link_Control:
     ldx     #$00                    ; $92BF
     stx     a:ram_0014              ; $92C1
-    lda     ram_070E                ; $92C4
+    lda     chimneyTimer            ; $92C4
     beq     loc_0_92E9              ; $92C7
-    inc     ram_070E                ; $92C9
-    lda     ram_070E                ; $92CC
+    inc     chimneyTimer            ; $92C9
+    lda     chimneyTimer            ; $92CC
     cmp     #$38                    ; $92CF
     bcs     loc_0_92E1              ; $92D1
     inc     objY                    ; $92D3
@@ -2891,7 +2891,7 @@ loc_0_931E:
     sta     objXVelocity            ; $9321
     lda     dat_0_92B4,y            ; $9323
     sta     objYVelocity            ; $9326
-    jsr     sub_E070                ; $9329
+    jsr     Link_CheckBg            ; $9329
     lda     objCollision            ; $932C
     ldy     objY                    ; $932E
     cpy     #$18                    ; $9330
@@ -2960,7 +2960,7 @@ loc_0_9393:
     sty     objFacing               ; $9393
 
 loc_0_9395:
-    jsr     sub_E070                ; $9395
+    jsr     Link_CheckBg            ; $9395
     lda     objCollision            ; $9398
     and     #$03                    ; $939A
     beq     loc_0_93A2              ; $939C

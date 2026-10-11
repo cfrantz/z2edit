@@ -1211,7 +1211,7 @@ loc_C70C:
     sta     ram_0720                ; $C70F
     lda     #$09                    ; $C712
     sta     gameMode                ; $C714
-    jmp     sub_E030                ; $C717
+    jmp     Link_PlaceOnGround      ; $C717
 
 loc_C71A:
     lda     #$07                    ; $C71A
@@ -5653,7 +5653,15 @@ sub_E024:
 ; (unreferenced: $E02D-$E02F, 3 bytes)
     .byte   $FF, $FF, $FF                                                   ; $E02D
 
-sub_E030:
+; ---------------------------------------------------------------------------
+; Link_PlaceOnGround
+;
+; Place Link on the ground: starting from Y = $AF, move him up 16 pixels at
+; a time while he is inside something solid.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_PlaceOnGround:
     lda     #$AF                    ; $E030
 
 loc_E032:
@@ -5661,7 +5669,7 @@ loc_E032:
     ldy     #$00                    ; $E034
     ldx     #$00                    ; $E036
     jsr     Obj_ComputeScreenPos    ; $E038
-    jsr     sub_E070                ; $E03B
+    jsr     Link_CheckBg            ; $E03B
     lda     objCollision            ; $E03E
     beq     loc_E04B                ; $E040
     lda     objY                    ; $E042
@@ -5682,12 +5690,24 @@ ProbeCollisionBits:
 ; (unreferenced: $E06A-$E06F, 6 bytes)
     .byte   $01, $02, $01, $02, $04, $08                                    ; $E06A
 
-sub_E070:
+; ---------------------------------------------------------------------------
+; Link_CheckBg
+;
+; Check Link against the background (with the area bank mapped): set
+; objCollision from his probe points (the fairy's when linkFairy = 8), and
+; act on the special tile under him (AreaBank::SpecialTiles): lava makes
+; him sink (LINK_MODE_SINK), a crumbling floor starts breaking, Up on a
+; door enters it (gameMode $16), and crouching on a chimney sinks him into
+; it (chimneyTimer).  Then probe for walls in the direction he faces.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_CheckBg:
     jsr     Mmc1_SetPrgBankArea     ; $E070
-    jsr     sub_E079                ; $E073
+    jsr     Link_CheckBgInBank      ; $E073
     jmp     Mmc1_SetPrgBank0        ; $E076
 
-sub_E079:
+Link_CheckBgInBank:
     ldx     #$00                    ; $E079
     stx     objCollision            ; $E07B
     lda     #$07                    ; $E07D
@@ -5707,7 +5727,7 @@ sub_E079:
     lda     #$00                    ; $E098
     sta     ram_0752                ; $E09A
     lda     temp3                   ; $E09D
-    cmp     AreaBank::SpecialTiles+6 ; $E09F
+    cmp     AreaBank::SpecialTiles+6 ; $E09F  lava
     bne     loc_E0B0                ; $E0A2
     lda     #$01                    ; $E0A4
     sta     ram_00E9                ; $E0A6
@@ -5717,7 +5737,7 @@ sub_E079:
     rts                             ; $E0AF
 
 loc_E0B0:
-    cmp     AreaBank::SpecialTiles+7 ; $E0B0
+    cmp     AreaBank::SpecialTiles+7 ; $E0B0  (+7, +8: see below)
     beq     loc_E0BA                ; $E0B3
     cmp     AreaBank::SpecialTiles+8 ; $E0B5
     bne     loc_E0C5                ; $E0B8
@@ -5730,19 +5750,19 @@ loc_E0BA:
     sty     ram_0752                ; $E0C2
 
 loc_E0C5:
-    cmp     AreaBank::SpecialTiles+5 ; $E0C5
+    cmp     AreaBank::SpecialTiles+5 ; $E0C5  crumbling floor
     beq     loc_E0FC                ; $E0C8
-    cmp     AreaBank::SpecialTiles  ; $E0CA
+    cmp     AreaBank::SpecialTiles  ; $E0CA  door
     beq     loc_E0E6                ; $E0CD
-    cmp     AreaBank::SpecialTiles+2 ; $E0CF
+    cmp     AreaBank::SpecialTiles+2 ; $E0CF  door
     beq     loc_E0E6                ; $E0D2
-    cmp     AreaBank::SpecialTiles+1 ; $E0D4
+    cmp     AreaBank::SpecialTiles+1 ; $E0D4  door
     beq     loc_E0E6                ; $E0D7
-    cmp     AreaBank::SpecialTiles+3 ; $E0D9
+    cmp     AreaBank::SpecialTiles+3 ; $E0D9  chimney
     bne     loc_E0F9                ; $E0DC
     lda     linkStanding            ; $E0DE
     bne     loc_E0F9                ; $E0E0
-    inc     ram_070E                ; $E0E2
+    inc     chimneyTimer            ; $E0E2
 
 loc_E0E5:
     rts                             ; $E0E5
@@ -7645,7 +7665,7 @@ loc_EC40:
     bne     loc_EC62                ; $EC4D
     lda     ram_0752                ; $EC4F
     pha                             ; $EC52
-    lda     ram_070E                ; $EC53
+    lda     chimneyTimer            ; $EC53
     bne     loc_EC5B                ; $EC56
     sta     ram_0752                ; $EC58
 

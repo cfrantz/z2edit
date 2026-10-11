@@ -14,7 +14,8 @@ INTERFACES_INC = 1
     MetatilePtrs    = $8500     ; side view metatile tables (words)
     OverworldMapPtrs = $8508    ; compressed overworld map of each region (words)
     IsSolidTile     = $850C     ; carry set if tile a is solid (identical in banks 1-5)
-    SpecialTiles    = $851A     ; tile numbers with special behavior ($851A-$8522); +4 = breakable block
+    SpecialTiles    = $851A     ; tiles with special behavior ($851A-$8522): +0-+2 doors, +3 chimney,
+                                ; +4 breakable block, +5 crumbling floor, +6 lava (provisional)
     EnemyLists      = $88A0     ; enemies of each area (1024 bytes), copied to sramEnemyLists
     DrawLargeObject = $80EE     ; draw large area object areaObjectType (banks 1-5)
     DrawSmallObject = $812F     ; draw small area object (banks 1, 2, 4, 5)
