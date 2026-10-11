@@ -102,7 +102,7 @@ loc_0_8149:
     lda     objXVelocity+3          ; $8170
     sec                             ; $8172
     sbc     #$07                    ; $8173
-    jsr     sub_DF3F                ; $8175
+    jsr     Math_DivMod15           ; $8175
     asl     a                       ; $8178
     asl     a                       ; $8179
     asl     a                       ; $817A
@@ -1135,7 +1135,7 @@ loc_0_882C:
     bne     loc_0_882C              ; $8850
     inc     objXVelocity+5          ; $8852
     lda     objXVelocity+5          ; $8854
-    jsr     sub_DF3F                ; $8856
+    jsr     Math_DivMod15           ; $8856
     sta     temp0                   ; $8859
     tya                             ; $885B
     asl     a                       ; $885C
@@ -1454,7 +1454,7 @@ sub_0_8A4B:
 
 loc_0_8A4D:
     lda     ram_0470,y              ; $8A4D
-    sta     ram_0410,y              ; $8A50
+    sta     enemyStunTimer+2,y      ; $8A50
     dey                             ; $8A53
     bpl     loc_0_8A4D              ; $8A54
     rts                             ; $8A56
@@ -1472,8 +1472,8 @@ sub_0_8A57:
 
 loc_0_8A66:
     lda     ram_0420,y              ; $8A66
-    sta     ram_0410,y              ; $8A69
-    lda     ram_0480,y              ; $8A6C
+    sta     enemyStunTimer+2,y      ; $8A69
+    lda     swordY,y                ; $8A6C
     sta     ram_0470,y              ; $8A6F
     iny                             ; $8A72
     dex                             ; $8A73
@@ -1508,10 +1508,10 @@ loc_0_8A9E:
     ldx     temp14                  ; $8A9E
     lda     #$00                    ; $8AA0
     sta     ppuBuffer0+3,x          ; $8AA2
-    ldx     ram_0410,y              ; $8AA5
+    ldx     enemyStunTimer+2,y      ; $8AA5
     lda     dat_0_87E3,x            ; $8AA8
     jsr     sub_0_8BF5              ; $8AAB
-    ldx     ram_0411,y              ; $8AAE
+    ldx     enemyStunTimer+3,y      ; $8AAE
     lda     dat_0_87E3,x            ; $8AB1
     jsr     sub_0_8BF3              ; $8AB4
     ldx     ram_0470,y              ; $8AB7
@@ -1613,7 +1613,7 @@ loc_0_8B51:
     inc     objXVelocity+5          ; $8B51
     inc     objXVelocity+2          ; $8B53
     lda     objXVelocity+5          ; $8B55
-    jsr     sub_DF3F                ; $8B57
+    jsr     Math_DivMod15           ; $8B57
     sta     temp0                   ; $8B5A
     tya                             ; $8B5C
     asl     a                       ; $8B5D
@@ -1755,7 +1755,7 @@ sub_0_8C30:
     lda     temp2                   ; $8C37
 
 loc_0_8C39:
-    sta     ram_0480,x              ; $8C39
+    sta     swordY,x                ; $8C39
     inx                             ; $8C3C
     cpx     temp3                   ; $8C3D
     bne     loc_0_8C39              ; $8C3F
@@ -2215,7 +2215,7 @@ loc_0_8F92:
     lda     dat_0_8F7A,x            ; $8F94
 
 loc_0_8F97:
-    jsr     sub_DF56                ; $8F97
+    jsr     AreaMap_PutTileDown     ; $8F97
     cmp     #$B0                    ; $8F9A
     bcs     loc_0_8FA4              ; $8F9C
     lda     dat_0_8F7F,x            ; $8F9E
@@ -2246,9 +2246,9 @@ loc_0_8FB7:
     sbc     #$08                    ; $8FBD
     sta     objY+1                  ; $8FBF
     lda     #$78                    ; $8FC1
-    sta     linkScreenX             ; $8FC3
+    sta     drawScreenX             ; $8FC3
     lda     #$80                    ; $8FC5
-    sta     ram_00CD                ; $8FC7
+    sta     drawScreenX+1           ; $8FC7
     lda     #$0A                    ; $8FC9
     sta     objState                ; $8FCB
     sta     objState+1              ; $8FCD
@@ -2257,8 +2257,8 @@ loc_0_8FB7:
     lda     #$30                    ; $8FD3
     sta     ram_0091                ; $8FD5
     ldx     #$00                    ; $8FD7
-    stx     ram_00C8                ; $8FD9
-    stx     ram_00C9                ; $8FDB
+    stx     drawOffscreen           ; $8FD9
+    stx     drawOffscreen+1         ; $8FDB
     inx                             ; $8FDD
     stx     ram_0011                ; $8FDE
     stx     ram_0753                ; $8FE0
@@ -2378,7 +2378,7 @@ loc_0_90AB:
     lda     #$00                    ; $90AB
     sta     ram_0704                ; $90AD
     sta     ram_0705                ; $90B0
-    sta     ram_00C8                ; $90B3
+    sta     drawOffscreen           ; $90B3
     sta     ram_0741                ; $90B5
     sta     ram_0742                ; $90B8
     sta     ram_0400                ; $90BB
@@ -2548,14 +2548,14 @@ loc_0_91B9:
     lda     enemyActive,x           ; $91BB
     beq     loc_0_91E2              ; $91BD
     ldy     enemyType,x             ; $91BF
-    lda     sramEnemyData+249,y     ; $91C1
+    lda     sram_6DF9,y             ; $91C1
     and     #$10                    ; $91C4
     bne     loc_0_91E2              ; $91C6
     inx                             ; $91C8
     ldy     #$01                    ; $91C9
-    jsr     sub_F27D                ; $91CB
+    jsr     Obj_ComputeScreenPos    ; $91CB
     ldx     currentObject           ; $91CE
-    lda     ram_00C9                ; $91D0
+    lda     drawOffscreen+1         ; $91D0
     bne     loc_0_91E2              ; $91D2
     sta     objXVelocity+1,x        ; $91D4
     sta     objYVelocity+1,x        ; $91D6
@@ -2596,15 +2596,15 @@ loc_0_91FB:
     bne     loc_0_922D              ; $9207
     inx                             ; $9209
     ldy     #$01                    ; $920A
-    jsr     sub_F27D                ; $920C
+    jsr     Obj_ComputeScreenPos    ; $920C
     ldx     currentObject           ; $920F
     ldy     ram_00D9                ; $9211
     bne     loc_0_922A              ; $9213
-    lda     ram_00C9                ; $9215
+    lda     drawOffscreen+1         ; $9215
     and     #$88                    ; $9217
     bne     loc_0_922D              ; $9219
     ldy     enemyType,x             ; $921B
-    lda     sramEnemyData+321,y     ; $921D
+    lda     sram_6E41,y             ; $921D
     ldy     #$09                    ; $9220
     and     #$A0                    ; $9222
     bmi     loc_0_922D              ; $9224
@@ -3623,9 +3623,9 @@ sub_0_98A6:
     tax                             ; $98AA
     jsr     Obj_MoveX               ; $98AB
     ldy     #$03                    ; $98AE
-    jsr     sub_F27D                ; $98B0
+    jsr     Obj_ComputeScreenPos    ; $98B0
     ldx     currentObject           ; $98B3
-    lda     ram_00CB                ; $98B5
+    lda     drawOffscreen+3         ; $98B5
     and     #$FC                    ; $98B7
     beq     loc_0_98C0              ; $98B9
     lda     #$00                    ; $98BB
@@ -3669,7 +3669,7 @@ loc_0_98C0:
     sta     oamBuffer+2,y           ; $98F8
 
 loc_0_98FB:
-    lda     ram_00CF                ; $98FB
+    lda     drawScreenX+3           ; $98FB
     sta     oamBuffer+3,y           ; $98FD
     rts                             ; $9900
 
@@ -3716,7 +3716,7 @@ sub_0_9925:
 loc_0_9949:
     dex                             ; $9949
     bne     loc_0_9971              ; $994A
-    lda     linkScreenX             ; $994C
+    lda     drawScreenX             ; $994C
     clc                             ; $994E
     adc     #$20                    ; $994F
     cmp     #$90                    ; $9951
@@ -3732,7 +3732,7 @@ loc_0_9955:
     bne     loc_0_9977              ; $9963
     dex                             ; $9965
     beq     loc_0_9971              ; $9966
-    lda     linkScreenX             ; $9968
+    lda     drawScreenX             ; $9968
     sec                             ; $996A
     sbc     #$20                    ; $996B
     cmp     #$51                    ; $996D

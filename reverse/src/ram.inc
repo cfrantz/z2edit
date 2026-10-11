@@ -46,9 +46,13 @@ ram_0028                = $0028
 objY                    = $0029     ; [17] Y position (side view)
 objXHi                  = $003B     ; [17] high byte of X position (map page)
 objX                    = $004D     ; [17] low byte of X position
-objFacing               = $005F     ; [13] facing direction (provisional)
+objFacing               = $005F     ; [13] facing direction: 1 = right, 2 = left
 ram_006D                = $006D
 objXVelocity            = $0070     ; [15] X velocity
+; On the overworld, $0073-$007E (objXVelocity+3 and up) hold overworld
+; state instead.
+overworldY              = $0073     ; Link's Y position on the overworld map
+overworldX              = $0074     ; Link's X position on the overworld map
 ram_007F                = $007F
 objState                = $0080     ; [15] per-object state: Link's animation, an enemy's behavior state, a projectile's type (provisional)
 ram_0090                = $0090
@@ -66,19 +70,13 @@ ram_00B5                = $00B5
 enemyActive             = $00B6     ; [6] 0 = empty, 1 = active, 2 = dying (provisional)
 enemySramIndex          = $00BC     ; [6] index of the enemy in the area's SRAM enemy list (provisional)
 enemyHp                 = $00C2     ; [6] hit points
-ram_00C8                = $00C8
-ram_00C9                = $00C9
-ram_00CA                = $00CA
-ram_00CB                = $00CB
-linkScreenX             = $00CC     ; Link's X position on the screen
-ram_00CD                = $00CD
-ram_00CE                = $00CE
-ram_00CF                = $00CF
+drawOffscreen           = $00C8     ; [4] off-screen flags of the object being drawn, by draw category (0 = Link, 1 = enemy, 2 = projectile, 3 = Link's projectile): bits 3-0 = probe points off screen horizontally, $F0 = off screen vertically
+drawScreenX             = $00CC     ; [4] screen X of the object being drawn, by draw category (see drawOffscreen)
 ram_00D0                = $00D0
 areaLastPage            = $00D1     ; last map page of the current area, 0-3 (provisional)
 ram_00D4                = $00D4
 ram_00D5                = $00D5
-ram_00D6                = $00D6
+enemyListPtr            = $00D6     ; (16-bit) the current area's entry in sramEnemyLists (provisional)
 ram_00D7                = $00D7
 ram_00D9                = $00D9
 ram_00DA                = $00DA
@@ -149,9 +147,7 @@ objXSubpixel            = $03D6     ; [15] fractional part of the X position (Ob
 objYFrac                = $03E6     ; [13] fraction: of the Y position (Obj_MoveY) or of objYVelocity (Obj_MoveYWithGravity)
 ram_0400                = $0400
 ram_0401                = $0401
-ram_040E                = $040E
-ram_0410                = $0410
-ram_0411                = $0411
+enemyStunTimer          = $040E     ; [6] while nonzero the enemy is stunned and flashes; counts down each time it is drawn
 ram_0414                = $0414
 ram_041A                = $041A
 ram_041F                = $041F
@@ -174,9 +170,9 @@ ram_0464                = $0464
 ram_0470                = $0470
 attrColumn              = $0471     ; [7] attribute bytes for the column being scrolled in (provisional)
 ram_0479                = $0479
-ram_047E                = $047E
+swordX                  = $047E     ; screen X of Link's sword
 ram_047F                = $047F
-ram_0480                = $0480
+swordY                  = $0480     ; Y of Link's sword; $F8 = no sword
 ram_0481                = $0481
 ram_0484                = $0484
 ram_0485                = $0485
@@ -280,7 +276,7 @@ statMeterPending        = $070C     ; [2] magic and life still to be added to st
 ram_070E                = $070E
 ram_070F                = $070F
 ram_0710                = $0710
-ram_0717                = $0717
+areaBuildPage           = $0717     ; map page (0-3) while building an area's tile map (provisional)
 ram_071B                = $071B
 ram_071C                = $071C
 ram_071D                = $071D
@@ -300,7 +296,7 @@ scrollX                 = $072C     ; low byte of the side view horizontal scrol
 ram_072D                = $072D
 ram_072E                = $072E
 ram_072F                = $072F
-ram_0730                = $0730
+areaBuildPos            = $0730     ; tile position (row * 16 + column) while building an area's tile map (provisional)
 ram_0731                = $0731
 ram_0732                = $0732
 ram_0733                = $0733
@@ -472,7 +468,22 @@ sramLocArea             = $6A7E     ; [63] bits 7-6 = start page, bits 5-0 = are
 sramLocDest             = $6ABD     ; [63] bit 7 = fall, bit 6 = pass through, bit 5 = enter from the right, bits 4-2 = world, bits 1-0 = overworld
 sramRoomConnections     = $6AFC     ; [252] side view area connections, 4 per area
 sramDoors               = $6BF8     ; [96] side view doors (provisional)
-sramEnemyData           = $6D00     ; [673] enemy definitions for the world, from the area bank at $9400 ($A900 in world 4): hit points at +$21, attributes at +$D5 (provisional)
+; Enemy definitions: tables with one entry per enemy type (36 in the
+; overworld banks).
+sramEnemyData           = $6D00     ; [33] start of the enemy definitions, from the area bank at $9400 ($A900 in world 4) (provisional)
+sramEnemyHp             = $6D21     ; [36] hit points of each enemy type
+sram_6D45               = $6D45     ; [36] (16-bit) per enemy type
+sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy type every frame
+sramEnemyAttr           = $6DD5     ; [36] bits 7-6 = sprite palette; experience (provisional)
+sram_6DF9               = $6DF9     ; [36] per enemy type
+sramEnemyHitbox         = $6E1D     ; [36] hitbox of each enemy type: offset into EnemyHitboxes / 4
+sram_6E41               = $6E41     ; [36] per enemy type
+sramEnemyDrawPtrs       = $6E65     ; [36] (16-bit) routine that draws each enemy type
+sram_6EAD               = $6EAD     ; [9]
+sram_6EB6               = $6EB6     ; [8]
+sram_6EBE               = $6EBE
+sram_6EC0               = $6EC0     ; (16-bit)
+sramEnemyTiles          = $6ED4     ; sprite tile numbers for drawing enemies
 sramEnemyLists          = $7000     ; [1024] enemies of each area, from AreaBank::dat_88A0
 ; Save files (battery-backed).  The status bytes are SAVE_STATUS_*.
 ; ---------------------------------------------------------------------------

@@ -39,7 +39,7 @@ loc_2_80EE:
     lsr     a                       ; $80F2
     tax                             ; $80F3
     dex                             ; $80F4
-    lda     ram_0730                ; $80F5
+    lda     areaBuildPos            ; $80F5
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
     bne     loc_2_8103              ; $80FC
@@ -202,11 +202,11 @@ loc_2_8204:
     lda     ram_0731                ; $8204
     and     #$0F                    ; $8207
     tax                             ; $8209
-    jsr     sub_C944                ; $820A
+    jsr     AreaMap_GetPagePtr      ; $820A
 
 loc_2_820D:
     lda     ram_0112                ; $820D
-    jsr     sub_DEE7                ; $8210
+    jsr     AreaMap_PutTileRight    ; $8210
     dex                             ; $8213
     bpl     loc_2_820D              ; $8214
     rts                             ; $8216
@@ -219,10 +219,10 @@ loc_2_8217:
 
 sub_2_821D:
     jsr     sub_2_8247              ; $821D
-    jsr     sub_C944                ; $8220
+    jsr     AreaMap_GetPagePtr      ; $8220
     lda     ram_0112                ; $8223
-    jsr     sub_DF56                ; $8226
-    sta     ram_0730                ; $8229
+    jsr     AreaMap_PutTileDown     ; $8226
+    sta     areaBuildPos            ; $8229
     dec     ram_0731                ; $822C
     lda     temp0                   ; $822F
     sta     ram_0112                ; $8231
@@ -231,11 +231,11 @@ loc_2_8234:
     lda     ram_0731                ; $8234
     and     #$0F                    ; $8237
     tax                             ; $8239
-    jsr     sub_C944                ; $823A
+    jsr     AreaMap_GetPagePtr      ; $823A
 
 loc_2_823D:
     lda     ram_0112                ; $823D
-    jsr     sub_DF56                ; $8240
+    jsr     AreaMap_PutTileDown     ; $8240
     dex                             ; $8243
     bpl     loc_2_823D              ; $8244
     rts                             ; $8246
@@ -262,11 +262,11 @@ loc_2_8262:
     rts                             ; $8264
 
 loc_2_8265:
-    jsr     sub_C947                ; $8265
-    lda     ram_0730                ; $8268
+    jsr     AreaMap_GetPagePtrY     ; $8265
+    lda     areaBuildPos            ; $8268
     and     #$0F                    ; $826B
     ora     #$90                    ; $826D
-    sta     ram_0730                ; $826F
+    sta     areaBuildPos            ; $826F
     tay                             ; $8272
     lda     ram_0731                ; $8273
     and     #$0F                    ; $8276
@@ -286,10 +286,10 @@ loc_2_8279:
     rts                             ; $8289
 
 loc_2_828A:
-    lda     ram_0730                ; $828A
+    lda     areaBuildPos            ; $828A
     and     #$0F                    ; $828D
     ora     #$A0                    ; $828F
-    sta     ram_0730                ; $8291
+    sta     areaBuildPos            ; $8291
     lda     #$80                    ; $8294
     sta     ram_0112                ; $8296
 
@@ -297,11 +297,11 @@ loc_2_8299:
     lda     ram_0731                ; $8299
     and     #$0F                    ; $829C
     tax                             ; $829E
-    jsr     sub_C944                ; $829F
+    jsr     AreaMap_GetPagePtr      ; $829F
 
 loc_2_82A2:
     lda     ram_0112                ; $82A2
-    jsr     sub_DEE7                ; $82A5
+    jsr     AreaMap_PutTileRight    ; $82A5
     dex                             ; $82A8
     bpl     loc_2_82A2              ; $82A9
     lda     #$89                    ; $82AB
@@ -324,17 +324,17 @@ loc_2_82C1:
     rts                             ; $82C7
 
 loc_2_82C8:
-    jsr     sub_C944                ; $82C8
+    jsr     AreaMap_GetPagePtr      ; $82C8
     lda     #$5B                    ; $82CB
-    jsr     sub_DF56                ; $82CD
+    jsr     AreaMap_PutTileDown     ; $82CD
     lda     #$5C                    ; $82D0
     sta     (temp14),y              ; $82D2
     rts                             ; $82D4
 ; (end of code not executed in the test movies)
 
 loc_2_82D5:
-    jsr     sub_C947                ; $82D5
-    lda     ram_0730                ; $82D8
+    jsr     AreaMap_GetPagePtrY     ; $82D5
+    lda     areaBuildPos            ; $82D8
     and     #$0F                    ; $82DB
     ora     #$90                    ; $82DD
     tay                             ; $82DF
@@ -361,7 +361,7 @@ dat_2_82F6:
 
 loc_2_82F9:
     ldx     #$02                    ; $82F9
-    jsr     sub_C944                ; $82FB
+    jsr     AreaMap_GetPagePtr      ; $82FB
     lda     dat_2_82F6,x            ; $82FE
     sta     (temp14),y              ; $8301
 
@@ -378,13 +378,13 @@ loc_2_8313:
     ldx     #$00                    ; $8313
 
 loc_2_8315:
-    jsr     sub_C944                ; $8315
+    jsr     AreaMap_GetPagePtr      ; $8315
 
 loc_2_8318:
     lda     dat_2_8304,x            ; $8318
     cmp     #$FF                    ; $831B
     beq     loc_2_8326              ; $831D
-    jsr     sub_DEE7                ; $831F
+    jsr     AreaMap_PutTileRight    ; $831F
     inx                             ; $8322
     jmp     loc_2_8318              ; $8323
 
@@ -396,18 +396,18 @@ loc_2_8326:
     jmp     loc_2_8315              ; $832E
 
 loc_2_8331:
-    jsr     sub_C944                ; $8331
+    jsr     AreaMap_GetPagePtr      ; $8331
 
 loc_2_8334:
     lda     #$40                    ; $8334
-    jsr     sub_DF56                ; $8336
+    jsr     AreaMap_PutTileDown     ; $8336
     and     #$F0                    ; $8339
     cmp     #$D0                    ; $833B
     bcc     loc_2_8334              ; $833D
     rts                             ; $833F
 
 loc_2_8340:
-    jsr     sub_C944                ; $8340
+    jsr     AreaMap_GetPagePtr      ; $8340
     ldx     #$01                    ; $8343
     lda     #$4E                    ; $8345
     bne     loc_2_834B              ; $8347
@@ -434,7 +434,7 @@ loc_2_8358:
     ldx     #$01                    ; $8358
 
 loc_2_835A:
-    jsr     sub_C944                ; $835A
+    jsr     AreaMap_GetPagePtr      ; $835A
     lda     #$C2                    ; $835D
     sta     (temp14),y              ; $835F
     iny                             ; $8361
@@ -974,7 +974,7 @@ dat_2_938C:
 loc_2_938F:
     lda     #$03                    ; $938F
     sta     temp5                   ; $9391
-    lda     ram_0730                ; $9393
+    lda     areaBuildPos            ; $9393
     sta     temp4                   ; $9396
 
 loc_2_9398:
@@ -983,13 +983,13 @@ loc_2_9398:
     inc     ram_0731                ; $939D
     inc     temp4                   ; $93A0
     lda     temp4                   ; $93A2
-    sta     ram_0730                ; $93A4
+    sta     areaBuildPos            ; $93A4
     and     #$0F                    ; $93A7
     bne     loc_2_9398              ; $93A9
     lda     #$30                    ; $93AB
     sta     temp4                   ; $93AD
-    sta     ram_0730                ; $93AF
-    inc     ram_0717                ; $93B2
+    sta     areaBuildPos            ; $93AF
+    inc     areaBuildPage           ; $93B2
     dec     temp5                   ; $93B5
     bpl     loc_2_9398              ; $93B7
     rts                             ; $93B9
@@ -1090,8 +1090,8 @@ loc_2_9662:
     inc     objYVelocity+7,x        ; $9662
 
 loc_2_9665:
-    jsr     sub_DED4                ; $9665
-    lda     ram_00CA                ; $9668
+    jsr     Projectile_Move         ; $9665
+    lda     drawOffscreen+2         ; $9668
     and     #$FC                    ; $966A
     beq     loc_2_9673              ; $966C
     lda     #$00                    ; $966E
@@ -1112,20 +1112,20 @@ sub_2_967E:
     pha                             ; $9680
     asl     a                       ; $9681
     tay                             ; $9682
-    lda     sramEnemyData+448,y     ; $9683
+    lda     sram_6EC0,y             ; $9683
     sta     temp14                  ; $9686
-    lda     sramEnemyData+449,y     ; $9688
+    lda     sram_6EC0+1,y           ; $9688
     sta     temp15                  ; $968B
     ldy     ram_0097,x              ; $968D
     lda     objY+7,x                ; $968F
     sta     oamBuffer,y             ; $9691
-    lda     ram_00CE                ; $9694
+    lda     drawScreenX+2           ; $9694
     sta     oamBuffer+3,y           ; $9696
     pla                             ; $9699
     tay                             ; $969A
-    lda     sramEnemyData+429,y     ; $969B
+    lda     sram_6EAD,y             ; $969B
     pha                             ; $969E
-    lda     sramEnemyData+438,y     ; $969F
+    lda     sram_6EB6,y             ; $969F
     ldy     objFacing+7,x           ; $96A2
     ora     dat_2_967B,y            ; $96A4
     ldy     ram_0097,x              ; $96A7
@@ -1208,7 +1208,7 @@ loc_2_971C:
 loc_2_9720:
     tya                             ; $9720
     tax                             ; $9721
-    jsr     sub_DD3D                ; $9722
+    jsr     Enemy_Despawn           ; $9722
     ldx     currentObject           ; $9725
     rts                             ; $9727
 
@@ -1221,7 +1221,7 @@ dat_2_9728:
     .byte   $00, $00                                                        ; $972E
 
 loc_2_9730:
-    jsr     sub_DC91                ; $9730
+    jsr     Enemy_FaceLink          ; $9730
     lda     objState+1,x            ; $9733
     beq     loc_2_977C              ; $9735
     ldy     ram_0444,x              ; $9737
@@ -1269,7 +1269,7 @@ loc_2_9778:
     sta     objState+1,x            ; $977A
 
 loc_2_977C:
-    jsr     sub_EF11                ; $977C
+    jsr     Enemy_Draw              ; $977C
     lda     ram_00AF,x              ; $977F
     and     #$03                    ; $9781
     jsr     JumpTable               ; $9783
@@ -1367,8 +1367,8 @@ dat_2_9803:
     .byte   $10, $F0                                                        ; $9803
 
 loc_2_9805:
-    jsr     sub_DA02                ; $9805
-    jsr     sub_EF11                ; $9808
+    jsr     Enemy_SkipAiIfStunned   ; $9805
+    jsr     Enemy_Draw              ; $9808
     lda     objYVelocity+1,x        ; $980B
     beq     loc_2_9814              ; $980E
     and     #$02                    ; $9810
@@ -1407,7 +1407,7 @@ loc_2_9843:
     dey                             ; $9845
     lda     objYVelocity+1,x        ; $9846
     bne     loc_2_9854              ; $9849
-    jsr     sub_DC91                ; $984B
+    jsr     Enemy_FaceLink          ; $984B
     lda     objCollision+1,x        ; $984E
     and     #$04                    ; $9850
     bne     loc_2_985C              ; $9852
@@ -1415,7 +1415,7 @@ loc_2_9843:
 loc_2_9854:
     lda     dat_2_9803,y            ; $9854
     sta     objXVelocity+1,x        ; $9857
-    jsr     sub_DEB8                ; $9859
+    jsr     Enemy_MoveX             ; $9859
 
 loc_2_985C:
     lda     frameCounter            ; $985C
@@ -1424,7 +1424,7 @@ loc_2_985C:
     lda     rng+1,x                 ; $9862
     and     #$01                    ; $9865
     bne     loc_2_987F              ; $9867
-    jsr     sub_DBCE                ; $9869
+    jsr     Enemy_FireProjectile    ; $9869
     bcs     loc_2_987F              ; $986C
     lda     #$06                    ; $986E
     sta     a:objState+7,y          ; $9870
@@ -1443,31 +1443,31 @@ loc_2_987F:
     ldy     #$89                    ; $9889
 
 loc_2_988B:
-    sty     sramEnemyData+305       ; $988B
+    sty     sramEnemyHitbox+20      ; $988B
     ldy     #$01                    ; $988E
     inx                             ; $9890
-    jsr     sub_F27D                ; $9891
+    jsr     Obj_ComputeScreenPos    ; $9891
     ldx     currentObject           ; $9894
     lda     objYHi+1,x              ; $9896
     cmp     #$02                    ; $9898
     bcc     loc_2_989F              ; $989A
 ; (code below not executed in the test movies)
-    jmp     sub_DD3D                ; $989C
+    jmp     Enemy_Despawn           ; $989C
 ; (end of code not executed in the test movies)
 
 loc_2_989F:
-    lda     ram_00C9                ; $989F
+    lda     drawOffscreen+1         ; $989F
     and     #$FC                    ; $98A1
     beq     loc_2_98AE              ; $98A3
     lda     objCollision+1,x        ; $98A5
     and     #$0F                    ; $98A7
     sta     objCollision+1,x        ; $98A9
-    jmp     sub_DE6C                ; $98AB
+    jmp     Enemy_DespawnIfFar      ; $98AB
 
 loc_2_98AE:
-    jsr     sub_E48B                ; $98AE
-    jsr     sub_E677                ; $98B1
-    jsr     sub_E4D9                ; $98B4
+    jsr     Enemy_CheckProjectileHits ; $98AE
+    jsr     Enemy_CheckSwordHit     ; $98B1
+    jsr     Enemy_CheckLinkContact  ; $98B4
 dat_2_98B9 := * + 2
     jmp     sub_D6C1                ; $98B7
 
@@ -1478,7 +1478,7 @@ loc_2_98BC:
     jsr     sub_D6C1                ; $98BC
     lda     timerFast+3,x           ; $98BF
     beq     loc_2_98C7              ; $98C2
-    jmp     sub_DE40                ; $98C4
+    jmp     Enemy_UpdateCommon      ; $98C4
 
 loc_2_98C7:
     lda     ram_00AF,x              ; $98C7
@@ -1492,25 +1492,25 @@ loc_2_98C7:
     tay                             ; $98D4
     lda     dat_2_98BA,y            ; $98D5
     sta     objYVelocity+1,x        ; $98D8
-    jsr     sub_DEC8                ; $98DB
+    jsr     Enemy_MoveY             ; $98DB
 
 loc_2_98DE:
     inc     ram_00AF,x              ; $98DE
     lda     ram_00AF,x              ; $98E0
     and     #$3F                    ; $98E2
     bne     loc_2_98E9              ; $98E4
-    jsr     sub_DC91                ; $98E6
+    jsr     Enemy_FaceLink          ; $98E6
 
 loc_2_98E9:
     ldy     objFacing+1,x           ; $98E9
     lda     dat_2_98B9,y            ; $98EB
     sta     objXVelocity+1,x        ; $98EE
-    jsr     sub_DEB8                ; $98F0
-    jsr     sub_EF11                ; $98F3
+    jsr     Enemy_MoveX             ; $98F0
+    jsr     Enemy_Draw              ; $98F3
     lda     #$05                    ; $98F6
     sta     ram_0444,x              ; $98F8
     jsr     sub_E617                ; $98FB
-    jsr     sub_DE40                ; $98FE
+    jsr     Enemy_UpdateCommon      ; $98FE
     lda     rng+1,x                 ; $9901
     and     #$1F                    ; $9904
     bne     loc_2_990D              ; $9906
@@ -1524,8 +1524,8 @@ dat_2_990E:
     .byte   $10, $F0                                                        ; $990E
 
 loc_2_9910:
-    jsr     sub_DA02                ; $9910
-    jsr     sub_DE40                ; $9913
+    jsr     Enemy_SkipAiIfStunned   ; $9910
+    jsr     Enemy_UpdateCommon      ; $9913
     jsr     sub_D6C1                ; $9916
     lda     ram_00AF,x              ; $9919
     and     #$03                    ; $991B
@@ -1547,7 +1547,7 @@ loc_2_9928:
     lda     scrollXHi               ; $993A
     adc     #$00                    ; $993D
     sta     objXHi+1,x              ; $993F
-    jsr     sub_DC91                ; $9941
+    jsr     Enemy_FaceLink          ; $9941
     lda     dat_2_990E,y            ; $9944
     sta     objXVelocity+1,x        ; $9947
     lda     objState+1,x            ; $9949
@@ -1578,7 +1578,7 @@ loc_2_9960:
     rts                             ; $996B
 
 loc_2_996C:
-    jsr     sub_DEB8                ; $996C
+    jsr     Enemy_MoveX             ; $996C
     lda     timerFast+3,x           ; $996F
     bne     loc_2_997B              ; $9972
     inc     ram_00AF,x              ; $9974
@@ -1609,7 +1609,7 @@ loc_2_9986:
     .byte   $B4, $81, $B9, $85, $99, $95, $71, $4C, $B8, $DE                ; $9A07
 
 sub_2_9A11:
-    jsr     sub_DBCE                ; $9A11
+    jsr     Enemy_FireProjectile    ; $9A11
     bcs     loc_2_9A23              ; $9A14
     lda     #$08                    ; $9A16
     sta     a:objState+7,y          ; $9A18
@@ -1645,14 +1645,14 @@ loc_2_9A3A:
     lda     #$89                    ; $9A44
 
 loc_2_9A46:
-    sta     sramEnemyData+309       ; $9A46
-    jsr     sub_DE40                ; $9A49
+    sta     sramEnemyHitbox+24      ; $9A46
+    jsr     Enemy_UpdateCommon      ; $9A49
     jsr     sub_D6C1                ; $9A4C
     jsr     sub_2_9B24              ; $9A4F
     lda     frameCounter            ; $9A52
     and     #$3F                    ; $9A54
     bne     loc_2_9A5B              ; $9A56
-    jsr     sub_DC91                ; $9A58
+    jsr     Enemy_FaceLink          ; $9A58
 
 loc_2_9A5B:
     lda     #$00                    ; $9A5B
@@ -1672,7 +1672,7 @@ loc_2_9A70:
     beq     loc_2_9AAD              ; $9A72
     dec     objState+1,x            ; $9A74
     bne     loc_2_9AAD              ; $9A76
-    jsr     sub_DBCE                ; $9A78
+    jsr     Enemy_FireProjectile    ; $9A78
     bcs     loc_2_9AAD              ; $9A7B
     lda     #$06                    ; $9A7D
     sta     a:objState+7,y          ; $9A7F
@@ -1703,7 +1703,7 @@ loc_2_9AAE:
     jsr     sub_2_9B42              ; $9AAE
     lda     objState+1,x            ; $9AB1
     bne     loc_2_9AC3              ; $9AB3
-    jsr     sub_EF11                ; $9AB5
+    jsr     Enemy_Draw              ; $9AB5
     lda     #$03                    ; $9AB8
     sta     ram_0444,x              ; $9ABA
     jsr     sub_E617                ; $9ABD
@@ -1713,13 +1713,13 @@ loc_2_9AC3:
     dec     objState+1,x            ; $9AC3
 
 loc_2_9AC5:
-    jsr     sub_DE40                ; $9AC5
+    jsr     Enemy_UpdateCommon      ; $9AC5
     jsr     sub_D6C1                ; $9AC8
     jsr     sub_2_9B24              ; $9ACB
     lda     frameCounter            ; $9ACE
     and     #$3F                    ; $9AD0
     bne     loc_2_9AD7              ; $9AD2
-    jsr     sub_DC91                ; $9AD4
+    jsr     Enemy_FaceLink          ; $9AD4
 
 loc_2_9AD7:
     lda     rng+1,x                 ; $9AD7
@@ -1743,7 +1743,7 @@ loc_2_9AF0:
     lda     timerFast+3,x           ; $9AF7
     cmp     #$08                    ; $9AFA
     bne     loc_2_9B08              ; $9AFC
-    jsr     sub_DBCE                ; $9AFE
+    jsr     Enemy_FireProjectile    ; $9AFE
     bcs     loc_2_9B08              ; $9B01
     lda     #$04                    ; $9B03
     sta     a:objState+7,y          ; $9B05
@@ -1791,7 +1791,7 @@ loc_2_9B39:
     lda     objCollision+1,x        ; $9B39
     and     #$03                    ; $9B3B
     bne     loc_2_9B23              ; $9B3D
-    jmp     sub_DEB8                ; $9B3F
+    jmp     Enemy_MoveX             ; $9B3F
 
 sub_2_9B42:
     jsr     sub_EA32                ; $9B42
@@ -1800,13 +1800,13 @@ sub_2_9B42:
     lda     objCollision+1,x        ; $9B4A
     and     #$04                    ; $9B4C
     beq     loc_2_9B53              ; $9B4E
-    jmp     sub_DAC1                ; $9B50
+    jmp     Enemy_Land              ; $9B50
 
 loc_2_9B53:
-    jmp     sub_DEBE                ; $9B53
+    jmp     Enemy_MoveYAndFall      ; $9B53
 
 loc_2_9B56:
-    jsr     sub_EF11                ; $9B56
+    jsr     Enemy_Draw              ; $9B56
     lda     objState+1,x            ; $9B59
     beq     loc_2_9B7E              ; $9B5B
     cmp     #$02                    ; $9B5D
@@ -1847,7 +1847,7 @@ dat_2_9B8B:
     .byte   $08, $F8, $18, $18, $40                                         ; $9B8B
 
 loc_2_9B90:
-    jsr     sub_EF11                ; $9B90
+    jsr     Enemy_Draw              ; $9B90
     jsr     sub_2_9CBE              ; $9B93
 
 loc_2_9B96:
@@ -1870,41 +1870,41 @@ loc_2_9BB4:
     jsr     sub_EA32                ; $9BB7
     ldy     #$01                    ; $9BBA
     inx                             ; $9BBC
-    jsr     sub_F27D                ; $9BBD
+    jsr     Obj_ComputeScreenPos    ; $9BBD
     ldx     currentObject           ; $9BC0
     lda     objYHi+1,x              ; $9BC2
     cmp     #$02                    ; $9BC4
     bcc     loc_2_9BCB              ; $9BC6
 ; (code below not executed in the test movies)
-    jmp     sub_DD3D                ; $9BC8
+    jmp     Enemy_Despawn           ; $9BC8
 ; (end of code not executed in the test movies)
 
 loc_2_9BCB:
-    lda     ram_00C9                ; $9BCB
+    lda     drawOffscreen+1         ; $9BCB
     and     #$FC                    ; $9BCD
     beq     loc_2_9BDD              ; $9BCF
     lda     objCollision+1,x        ; $9BD1
     and     #$0F                    ; $9BD3
     sta     objCollision+1,x        ; $9BD5
-    jsr     sub_DE6C                ; $9BD7
+    jsr     Enemy_DespawnIfFar      ; $9BD7
     jmp     loc_2_9BE6              ; $9BDA
 
 loc_2_9BDD:
-    jsr     sub_E48B                ; $9BDD
-    jsr     sub_E677                ; $9BE0
-    jsr     sub_E4D9                ; $9BE3
+    jsr     Enemy_CheckProjectileHits ; $9BDD
+    jsr     Enemy_CheckSwordHit     ; $9BE0
+    jsr     Enemy_CheckLinkContact  ; $9BE3
 
 loc_2_9BE6:
     jsr     sub_D6C1                ; $9BE6
-    jsr     sub_DEBE                ; $9BE9
+    jsr     Enemy_MoveYAndFall      ; $9BE9
     lda     objCollision+1,x        ; $9BEC
     and     #$04                    ; $9BEE
     beq     loc_2_9BF5              ; $9BF0
-    jsr     sub_DAC1                ; $9BF2
+    jsr     Enemy_Land              ; $9BF2
 
 loc_2_9BF5:
     jsr     sub_2_9D13              ; $9BF5
-    jsr     sub_DC91                ; $9BF8
+    jsr     Enemy_FaceLink          ; $9BF8
     lda     temp15                  ; $9BFB
     clc                             ; $9BFD
     adc     ram_05E4                ; $9BFE
@@ -1916,7 +1916,7 @@ loc_2_9BF5:
     cmp     #$A0                    ; $9C0B
     bcs     loc_2_9C15              ; $9C0D
     jsr     sub_2_9C1C              ; $9C0F
-    jsr     sub_DC91                ; $9C12
+    jsr     Enemy_FaceLink          ; $9C12
 
 loc_2_9C15:
     lda     dat_2_9B8B,y            ; $9C15
@@ -2024,12 +2024,12 @@ sub_2_9CBE:
     beq     loc_2_9D08              ; $9CCD
     cmp     #$02                    ; $9CCF
     bne     loc_2_9D02              ; $9CD1
-    jsr     sub_EF11                ; $9CD3
+    jsr     Enemy_Draw              ; $9CD3
     jsr     sub_E558                ; $9CD6
     lda     enemyType,x             ; $9CD9
     cmp     #$1C                    ; $9CDB
     bne     loc_2_9D02              ; $9CDD
-    jsr     sub_DBCE                ; $9CDF
+    jsr     Enemy_FireProjectile    ; $9CDF
     bcs     loc_2_9D02              ; $9CE2
     ldx     objFacing+7,y           ; $9CE4
     lda     a:objX+7,y              ; $9CE6
@@ -2087,7 +2087,7 @@ loc_2_9D32:
     sta     temp3                   ; $9D36
     ldx     #$2C                    ; $9D38
     jsr     sub_F0D7                ; $9D3A
-    lda     ram_00C9                ; $9D3D
+    lda     drawOffscreen+1         ; $9D3D
     bne     loc_2_9DA9              ; $9D3F
     lda     objState+1,x            ; $9D41
     beq     loc_2_9DA9              ; $9D43
@@ -2154,7 +2154,7 @@ loc_2_9DA9:
 
 loc_2_9DAC:
     ldx     #$00                    ; $9DAC
-    lda     sramEnemyData+305       ; $9DAE
+    lda     sramEnemyHitbox+20      ; $9DAE
     cmp     #$89                    ; $9DB1
     bne     loc_2_9DB7              ; $9DB3
     ldx     #$04                    ; $9DB5
@@ -2249,7 +2249,7 @@ loc_2_9E39:
 loc_2_9E3F:
     jsr     sub_F0D7                ; $9E3F
     ldx     temp2                   ; $9E42
-    lda     ram_00C9                ; $9E44
+    lda     drawOffscreen+1         ; $9E44
     and     dat_2_9E10,x            ; $9E46
     bne     loc_2_9E79              ; $9E49
     lda     temp0                   ; $9E4B
@@ -2303,7 +2303,7 @@ loc_2_9E8E:
 loc_2_9EA0:
     jsr     sub_F0D7                ; $9EA0
     ldx     temp2                   ; $9EA3
-    lda     ram_00C9                ; $9EA5
+    lda     drawOffscreen+1         ; $9EA5
     and     dat_2_9E10,x            ; $9EA7
     bne     loc_2_9ED2              ; $9EAA
     lda     temp0                   ; $9EAC
@@ -2365,7 +2365,7 @@ loc_2_9EF2:
 loc_2_9F05:
     jsr     sub_F1F4                ; $9F05
     jsr     sub_F0D7                ; $9F08
-    lda     ram_00C9                ; $9F0B
+    lda     drawOffscreen+1         ; $9F0B
     and     #$FC                    ; $9F0D
     bne     loc_2_9F84              ; $9F0F
     lda     enemyType,x             ; $9F11

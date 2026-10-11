@@ -66,11 +66,11 @@ loc_3_8116:
     lda     ram_0731                ; $8116
     and     #$0F                    ; $8119
     tax                             ; $811B
-    jsr     sub_C944                ; $811C
+    jsr     AreaMap_GetPagePtr      ; $811C
 
 loc_3_811F:
     lda     ram_0112                ; $811F
-    jsr     sub_DEE7                ; $8122
+    jsr     AreaMap_PutTileRight    ; $8122
     dex                             ; $8125
     bpl     loc_3_811F              ; $8126
     jsr     sub_DF4C                ; $8128
@@ -122,11 +122,11 @@ loc_3_8161:
     lda     ram_0731                ; $8161
     and     #$0F                    ; $8164
     tax                             ; $8166
-    jsr     sub_C944                ; $8167
+    jsr     AreaMap_GetPagePtr      ; $8167
 
 loc_3_816A:
     lda     temp0                   ; $816A
-    jsr     sub_DEE7                ; $816C
+    jsr     AreaMap_PutTileRight    ; $816C
     dex                             ; $816F
     bne     loc_3_816A              ; $8170
     lda     temp1                   ; $8172
@@ -154,11 +154,11 @@ loc_3_818C:
     ldx     #$02                    ; $818C
 
 loc_3_818E:
-    jsr     sub_C944                ; $818E
+    jsr     AreaMap_GetPagePtr      ; $818E
 
 loc_3_8191:
     lda     dat_3_8186,x            ; $8191
-    jsr     sub_DF56                ; $8194
+    jsr     AreaMap_PutTileDown     ; $8194
     lda     dat_3_8189,x            ; $8197
     sta     (temp14),y              ; $819A
     tya                             ; $819C
@@ -173,24 +173,24 @@ loc_3_8191:
 loc_3_81A8:
     lda     #$02                    ; $81A8
     sta     temp4                   ; $81AA
-    lda     ram_0730                ; $81AC
+    lda     areaBuildPos            ; $81AC
     and     #$0F                    ; $81AF
     ora     #$20                    ; $81B1
-    sta     ram_0730                ; $81B3
+    sta     areaBuildPos            ; $81B3
 
 loc_3_81B6:
     lda     ram_0731                ; $81B6
     and     #$0F                    ; $81B9
     tax                             ; $81BB
-    jsr     sub_C944                ; $81BC
+    jsr     AreaMap_GetPagePtr      ; $81BC
 
 loc_3_81BF:
     lda     #$44                    ; $81BF
-    jsr     sub_DEE7                ; $81C1
+    jsr     AreaMap_PutTileRight    ; $81C1
     dex                             ; $81C4
     bpl     loc_3_81BF              ; $81C5
     jsr     sub_DF4C                ; $81C7
-    inc     ram_0730                ; $81CA
+    inc     areaBuildPos            ; $81CA
     dec     temp4                   ; $81CD
     bpl     loc_3_81B6              ; $81CF
     rts                             ; $81D1
@@ -198,20 +198,20 @@ loc_3_81BF:
 loc_3_81D2:
     lda     #$02                    ; $81D2
     sta     temp4                   ; $81D4
-    lda     ram_0730                ; $81D6
+    lda     areaBuildPos            ; $81D6
     and     #$0F                    ; $81D9
     ora     #$20                    ; $81DB
-    sta     ram_0730                ; $81DD
+    sta     areaBuildPos            ; $81DD
 
 loc_3_81E0:
     lda     ram_0731                ; $81E0
     and     #$0F                    ; $81E3
     tax                             ; $81E5
-    jsr     sub_C944                ; $81E6
+    jsr     AreaMap_GetPagePtr      ; $81E6
 
 loc_3_81E9:
     lda     #$44                    ; $81E9
-    jsr     sub_DEE7                ; $81EB
+    jsr     AreaMap_PutTileRight    ; $81EB
     dex                             ; $81EE
     bpl     loc_3_81E9              ; $81EF
     jsr     sub_DF4C                ; $81F1
@@ -251,11 +251,11 @@ loc_3_827A:
     ldx     dat_3_8268,y            ; $827A
     lda     #$1A                    ; $827D
     sta     temp0                   ; $827F
-    lda     ram_0730                ; $8281
+    lda     areaBuildPos            ; $8281
     and     #$0F                    ; $8284
     ora     #$20                    ; $8286
-    sta     ram_0730                ; $8288
-    jsr     sub_C944                ; $828B
+    sta     areaBuildPos            ; $8288
+    jsr     AreaMap_GetPagePtr      ; $828B
 
 loc_3_828E:
     lda     dat_3_81FC,x            ; $828E
@@ -266,11 +266,11 @@ loc_3_828E:
 loc_3_8297:
     dec     temp0                   ; $8297
     dex                             ; $8299
-    jsr     sub_DF58                ; $829A
+    jsr     AreaMap_NextRow         ; $829A
     cmp     #$B0                    ; $829D
     bcc     loc_3_828E              ; $829F
-    inc     ram_0730                ; $82A1
-    ldy     ram_0730                ; $82A4
+    inc     areaBuildPos            ; $82A1
+    ldy     areaBuildPos            ; $82A4
     lda     temp0                   ; $82A7
     cmp     #$FF                    ; $82A9
     bne     loc_3_828E              ; $82AB
@@ -281,7 +281,7 @@ dat_3_82AE:
 
 loc_3_82B2:
     ldx     #$03                    ; $82B2
-    jsr     sub_C944                ; $82B4
+    jsr     AreaMap_GetPagePtr      ; $82B4
 
 loc_3_82B7:
     lda     dat_3_82AE,x            ; $82B7
@@ -300,30 +300,30 @@ dat_3_82C9:
 
 loc_3_82CF:
     ldx     #$05                    ; $82CF
-    lda     ram_0730                ; $82D1
+    lda     areaBuildPos            ; $82D1
     and     #$0F                    ; $82D4
     ora     #$90                    ; $82D6
-    sta     ram_0730                ; $82D8
+    sta     areaBuildPos            ; $82D8
 
 loc_3_82DB:
-    jsr     sub_C944                ; $82DB
+    jsr     AreaMap_GetPagePtr      ; $82DB
 
 loc_3_82DE:
     lda     dat_3_82C9,x            ; $82DE
     sta     (temp14),y              ; $82E1
     dex                             ; $82E3
-    jsr     sub_DF58                ; $82E4
+    jsr     AreaMap_NextRow         ; $82E4
     and     #$F0                    ; $82E7
     cmp     #$C0                    ; $82E9
     bcc     loc_3_82DE              ; $82EB
-    inc     ram_0730                ; $82ED
+    inc     areaBuildPos            ; $82ED
     cpx     #$FF                    ; $82F0
     bne     loc_3_82DB              ; $82F2
     rts                             ; $82F4
 ; (code below not executed in the test movies)
 
 loc_3_82F5:
-    jsr     sub_C944                ; $82F5
+    jsr     AreaMap_GetPagePtr      ; $82F5
 
 loc_3_82F8:
     lda     #$49                    ; $82F8
@@ -339,10 +339,10 @@ loc_3_82F8:
 ; (end of code not executed in the test movies)
 
 loc_3_830A:
-    lda     ram_0730                ; $830A
+    lda     areaBuildPos            ; $830A
     and     #$0F                    ; $830D
     ora     #$B0                    ; $830F
-    sta     ram_0730                ; $8311
+    sta     areaBuildPos            ; $8311
     lda     #$40                    ; $8314
     sta     temp0                   ; $8316
 
@@ -350,11 +350,11 @@ loc_3_8318:
     lda     ram_0731                ; $8318
     and     #$0F                    ; $831B
     tax                             ; $831D
-    jsr     sub_C944                ; $831E
+    jsr     AreaMap_GetPagePtr      ; $831E
 
 loc_3_8321:
     lda     temp0                   ; $8321
-    jsr     sub_DEE7                ; $8323
+    jsr     AreaMap_PutTileRight    ; $8323
     dex                             ; $8326
     bpl     loc_3_8321              ; $8327
     lda     #$92                    ; $8329
@@ -372,14 +372,14 @@ loc_3_833A:
     lda     ram_0731                ; $833A
     and     #$0F                    ; $833D
     sta     ram_0731                ; $833F
-    lda     ram_0730                ; $8342
+    lda     areaBuildPos            ; $8342
     and     #$0F                    ; $8345
     ora     #$40                    ; $8347
-    sta     ram_0730                ; $8349
+    sta     areaBuildPos            ; $8349
 
 loc_3_834C:
     ldx     #$02                    ; $834C
-    jsr     sub_C944                ; $834E
+    jsr     AreaMap_GetPagePtr      ; $834E
 
 loc_3_8351:
     lda     dat_3_8337,x            ; $8351
@@ -398,10 +398,10 @@ dat_3_8363:
 loc_3_8366:
     lda     #$02                    ; $8366
     sta     temp0                   ; $8368
-    lda     ram_0730                ; $836A
+    lda     areaBuildPos            ; $836A
     and     #$0F                    ; $836D
     ora     #$A0                    ; $836F
-    sta     ram_0730                ; $8371
+    sta     areaBuildPos            ; $8371
 
 loc_3_8374:
     ldx     temp0                   ; $8374
@@ -410,11 +410,11 @@ loc_3_8374:
     lda     ram_0731                ; $837B
     and     #$0F                    ; $837E
     tax                             ; $8380
-    jsr     sub_C944                ; $8381
+    jsr     AreaMap_GetPagePtr      ; $8381
 
 loc_3_8384:
     lda     temp1                   ; $8384
-    jsr     sub_DEE7                ; $8386
+    jsr     AreaMap_PutTileRight    ; $8386
     dex                             ; $8389
     bpl     loc_3_8384              ; $838A
     jsr     sub_DF4C                ; $838C
@@ -452,11 +452,11 @@ loc_3_83B2:
     tax                             ; $83B6
     lda     #$03                    ; $83B7
     sta     temp0                   ; $83B9
-    jsr     sub_C944                ; $83BB
+    jsr     AreaMap_GetPagePtr      ; $83BB
 
 loc_3_83BE:
     lda     dat_3_8394,x            ; $83BE
-    jsr     sub_DF56                ; $83C1
+    jsr     AreaMap_PutTileDown     ; $83C1
     dex                             ; $83C4
     dec     temp0                   ; $83C5
     bpl     loc_3_83BE              ; $83C7
@@ -605,7 +605,7 @@ loc_3_8668:
     ldx     #$01                    ; $8668
 
 loc_3_866A:
-    jsr     sub_C944                ; $866A
+    jsr     AreaMap_GetPagePtr      ; $866A
     lda     #$C4                    ; $866D
     sta     (temp14),y              ; $866F
     iny                             ; $8671
@@ -628,7 +628,7 @@ loc_3_8683:
     ldx     #$01                    ; $8683
 
 loc_3_8685:
-    jsr     sub_C944                ; $8685
+    jsr     AreaMap_GetPagePtr      ; $8685
     lda     dat_3_8680,x            ; $8688
     sta     (temp14),y              ; $868B
     rts                             ; $868D
@@ -638,7 +638,7 @@ dat_3_868E:
 
 loc_3_8693:
     ldx     #$04                    ; $8693
-    jsr     sub_C944                ; $8695
+    jsr     AreaMap_GetPagePtr      ; $8695
 
 loc_3_8698:
     lda     dat_3_868E,x            ; $8698
@@ -750,18 +750,18 @@ loc_3_8B95:
     lda     ram_0731                ; $8B95
     and     #$0F                    ; $8B98
     tax                             ; $8B9A
-    lda     ram_0730                ; $8B9B
+    lda     areaBuildPos            ; $8B9B
     and     #$0F                    ; $8B9E
 
 dat_3_8BA0:
     .assert dat_3_8BA0 = AreaBank::dat_8BA0, error, "interface address moved"
     ora     #$A0                    ; $8BA0
-    sta     ram_0730                ; $8BA2
-    jsr     sub_C944                ; $8BA5
+    sta     areaBuildPos            ; $8BA2
+    jsr     AreaMap_GetPagePtr      ; $8BA5
 
 loc_3_8BA8:
     lda     #$45                    ; $8BA8
-    jsr     sub_DEE7                ; $8BAA
+    jsr     AreaMap_PutTileRight    ; $8BAA
     dex                             ; $8BAD
     bpl     loc_3_8BA8              ; $8BAE
     rts                             ; $8BB0
@@ -978,7 +978,7 @@ loc_3_96C4:
 loc_3_96C8:
     tya                             ; $96C8
     tax                             ; $96C9
-    jsr     sub_DD3D                ; $96CA
+    jsr     Enemy_Despawn           ; $96CA
     ldx     currentObject           ; $96CD
     rts                             ; $96CF
 
@@ -1060,7 +1060,7 @@ dat_3_9740:
     .byte   $F2, $0E                                                        ; $9741
 
 loc_3_9743:
-    jsr     sub_DC91                ; $9743
+    jsr     Enemy_FaceLink          ; $9743
     sty     temp0                   ; $9746
     lda     enemyType,x             ; $9748
     asl     a                       ; $974A
@@ -1117,7 +1117,7 @@ loc_3_9793:
     lda     frameCounter            ; $9799
     and     #$3F                    ; $979B
     bne     loc_3_97A2              ; $979D
-    jsr     sub_DC91                ; $979F
+    jsr     Enemy_FaceLink          ; $979F
 
 loc_3_97A2:
     lda     #$00                    ; $97A2
@@ -1127,9 +1127,9 @@ loc_3_97A2:
 loc_3_97A9:
     jsr     sub_3_9A9B              ; $97A9
     jsr     sub_3_9A8D              ; $97AC
-    lda     ram_00C9                ; $97AF
+    lda     drawOffscreen+1         ; $97AF
     bne     loc_3_97D3              ; $97B1
-    jsr     sub_DC91                ; $97B3
+    jsr     Enemy_FaceLink          ; $97B3
     lda     ram_05A5,x              ; $97B6
     bne     loc_3_97D3              ; $97B9
     lda     temp15                  ; $97BB
@@ -1155,11 +1155,11 @@ loc_3_97D4:
     cmp     #$80                    ; $97DD
     bne     loc_3_9808              ; $97DF
     jsr     sub_3_9A90              ; $97E1
-    lda     ram_00C9                ; $97E4
+    lda     drawOffscreen+1         ; $97E4
     ora     ram_05BD,x              ; $97E6
     bne     loc_3_983B              ; $97E9
-    lda     linkScreenX             ; $97EB
-    sbc     ram_00CD                ; $97ED
+    lda     drawScreenX             ; $97EB
+    sbc     drawScreenX+1           ; $97ED
     adc     #$60                    ; $97EF
     cmp     #$C0                    ; $97F1
     bcs     loc_3_983B              ; $97F3
@@ -1321,7 +1321,7 @@ loc_3_98DF:
 ; (code below not executed in the test movies)
 
 loc_3_98F6:
-    jsr     sub_DD3D                ; $98F6
+    jsr     Enemy_Despawn           ; $98F6
 ; (end of code not executed in the test movies)
 
 sub_3_98F9:
@@ -1372,7 +1372,7 @@ sub_3_994E:
     ldx     #$0C                    ; $994E
 
 loc_3_9950:
-    lda     ram_00C9                ; $9950
+    lda     drawOffscreen+1         ; $9950
     and     #$0C                    ; $9952
     cmp     #$0C                    ; $9954
     bne     loc_3_995A              ; $9956
@@ -1431,7 +1431,7 @@ loc_3_99B0:
     jsr     sub_3_9A68              ; $99B6
 
 sub_3_99B9:
-    lda     ram_00C9                ; $99B9
+    lda     drawOffscreen+1         ; $99B9
     ora     ram_074C                ; $99BB
     bne     loc_3_9A1C              ; $99BE
     lda     enemyType,x             ; $99C0
@@ -1441,7 +1441,7 @@ sub_3_99B9:
     bne     loc_3_9A1C              ; $99C9
 
 loc_3_99CB:
-    jsr     sub_E4D9                ; $99CB
+    jsr     Enemy_CheckLinkContact  ; $99CB
     lda     objCollision+1,x        ; $99CE
     and     #$10                    ; $99D0
     beq     loc_3_9A1C              ; $99D2
@@ -1473,9 +1473,9 @@ loc_3_9A09:
     beq     loc_3_9A17              ; $9A0B
     ldy     enemySramIndex,x        ; $9A0D
     bmi     loc_3_9A17              ; $9A0F
-    lda     (ram_00D6),y            ; $9A11
+    lda     (enemyListPtr),y        ; $9A11
     ora     #$80                    ; $9A13
-    sta     (ram_00D6),y            ; $9A15
+    sta     (enemyListPtr),y        ; $9A15
 
 loc_3_9A17:
     dex                             ; $9A17
@@ -1534,7 +1534,7 @@ loc_3_9A67:
     rts                             ; $9A67
 
 sub_3_9A68:
-    jsr     sub_DEB8                ; $9A68
+    jsr     Enemy_MoveX             ; $9A68
     inc     ram_05B1,x              ; $9A6B
     lda     ram_05B1,x              ; $9A6E
     and     #$0F                    ; $9A71
@@ -1555,10 +1555,10 @@ loc_3_9A89:
     rts                             ; $9A89
 
 sub_3_9A8A:
-    jsr     sub_DE6C                ; $9A8A
+    jsr     Enemy_DespawnIfFar      ; $9A8A
 
 sub_3_9A8D:
-    jsr     sub_EF11                ; $9A8D
+    jsr     Enemy_Draw              ; $9A8D
 
 sub_3_9A90:
     lda     ram_05BD,x              ; $9A90
@@ -1576,7 +1576,7 @@ sub_3_9A9B:
     beq     loc_3_9A98              ; $9A9E
     lda     objFacing+1,x           ; $9AA0
     pha                             ; $9AA2
-    jsr     sub_DC91                ; $9AA3
+    jsr     Enemy_FaceLink          ; $9AA3
     lda     dat_3_9A99,y            ; $9AA6
     sta     linkWalkDir             ; $9AA9
     pla                             ; $9AAB
@@ -1590,13 +1590,13 @@ sub_3_9A9B:
 loc_3_9AB8:
     pla                             ; $9AB8
     pla                             ; $9AB9
-    jmp     sub_EF11                ; $9ABA
+    jmp     Enemy_Draw              ; $9ABA
 
 loc_3_9ABD:
     lda     #$00                    ; $9ABD
     sta     ram_05BD,x              ; $9ABF
     jsr     sub_3_99B9              ; $9AC2
-    jmp     sub_DE6C                ; $9AC5
+    jmp     Enemy_DespawnIfFar      ; $9AC5
 
 loc_3_9AC8:
     lda     ram_049E                ; $9AC8
@@ -1622,9 +1622,9 @@ loc_3_9AE8:
     lda     ram_05C3,x              ; $9AEF
     sta     temp5                   ; $9AF2
     ldy     enemyType,x             ; $9AF4
-    lda     sramEnemyData+249,y     ; $9AF6
+    lda     sram_6DF9,y             ; $9AF6
     sta     temp3                   ; $9AF9
-    lda     sramEnemyData+213,y     ; $9AFB
+    lda     sramEnemyAttr,y         ; $9AFB
     ldy     ram_0091,x              ; $9AFE
     sty     temp15                  ; $9B00
     tax                             ; $9B02
@@ -1707,7 +1707,7 @@ loc_3_9B86:
     lsr     a                       ; $9B8A
     tax                             ; $9B8B
     dex                             ; $9B8C
-    lda     ram_0730                ; $9B8D
+    lda     areaBuildPos            ; $9B8D
     and     #$F0                    ; $9B90
     cmp     #$F0                    ; $9B92
     bne     loc_3_9B9B              ; $9B94
@@ -1744,7 +1744,7 @@ loc_3_9B9B:
     .byte   $66, $83, $0A, $83                                              ; $9BC7
 
 loc_3_9BCB:
-    lda     ram_0730                ; $9BCB
+    lda     areaBuildPos            ; $9BCB
     and     #$F0                    ; $9BCE
     cmp     #$F0                    ; $9BD0
     bne     loc_3_9BD9              ; $9BD2
@@ -1777,13 +1777,13 @@ loc_3_9BD9:
     .byte   $A5, $9C, $AC, $9C                                              ; $9C0D
 
 loc_3_9C11:
-    lda     ram_0730                ; $9C11
+    lda     areaBuildPos            ; $9C11
     and     #$0F                    ; $9C14
     ora     #$90                    ; $9C16
-    sta     ram_0730                ; $9C18
-    jsr     sub_C944                ; $9C1B
+    sta     areaBuildPos            ; $9C18
+    jsr     AreaMap_GetPagePtr      ; $9C1B
     lda     #$E3                    ; $9C1E
-    jsr     sub_DF56                ; $9C20
+    jsr     AreaMap_PutTileDown     ; $9C20
     lda     #$E4                    ; $9C23
     sta     (temp14),y              ; $9C25
     rts                             ; $9C27
@@ -1793,15 +1793,15 @@ dat_3_9C28:
 
 loc_3_9C32:
     ldx     #$09                    ; $9C32
-    lda     ram_0730                ; $9C34
+    lda     areaBuildPos            ; $9C34
     and     #$0F                    ; $9C37
     ora     #$90                    ; $9C39
-    sta     ram_0730                ; $9C3B
-    jsr     sub_C944                ; $9C3E
+    sta     areaBuildPos            ; $9C3B
+    jsr     AreaMap_GetPagePtr      ; $9C3E
 
 loc_3_9C41:
     lda     dat_3_9C28,x            ; $9C41
-    jsr     sub_DEE7                ; $9C44
+    jsr     AreaMap_PutTileRight    ; $9C44
     dex                             ; $9C47
     bmi     loc_3_9C55              ; $9C48
     cpx     #$04                    ; $9C4A
@@ -1824,9 +1824,9 @@ loc_3_9C5C:
     ldx     #$01                    ; $9C5C
 
 loc_3_9C5E:
-    jsr     sub_C944                ; $9C5E
+    jsr     AreaMap_GetPagePtr      ; $9C5E
     lda     dat_3_9C5A,x            ; $9C61
-    jsr     sub_DEE7                ; $9C64
+    jsr     AreaMap_PutTileRight    ; $9C64
     lda     dat_3_9C5A,x            ; $9C67
     sta     (temp14),y              ; $9C6A
     rts                             ; $9C6C
@@ -1835,8 +1835,8 @@ loc_3_9C6D:
     lda     ram_0731                ; $9C6D
     and     #$0F                    ; $9C70
     tax                             ; $9C72
-    ldy     ram_0730                ; $9C73
-    jsr     sub_C944                ; $9C76
+    ldy     areaBuildPos            ; $9C73
+    jsr     AreaMap_GetPagePtr      ; $9C76
     lda     #$94                    ; $9C79
     sta     (temp14),y              ; $9C7B
     bne     loc_3_9C83              ; $9C7D
@@ -1858,12 +1858,12 @@ loc_3_9C8C:
     lda     ram_0731                ; $9C8C
     and     #$0F                    ; $9C8F
     tax                             ; $9C91
-    ldy     ram_0730                ; $9C92
-    jsr     sub_C944                ; $9C95
+    ldy     areaBuildPos            ; $9C92
+    jsr     AreaMap_GetPagePtr      ; $9C95
 
 loc_3_9C98:
     lda     #$98                    ; $9C98
-    jsr     sub_DEE7                ; $9C9A
+    jsr     AreaMap_PutTileRight    ; $9C9A
     dex                             ; $9C9D
     bpl     loc_3_9C98              ; $9C9E
     rts                             ; $9CA0
@@ -1883,12 +1883,12 @@ loc_3_9CAC:
     ldx     #$02                    ; $9CAC
 
 loc_3_9CAE:
-    lda     ram_0730                ; $9CAE
+    lda     areaBuildPos            ; $9CAE
     and     #$0F                    ; $9CB1
     ora     #$90                    ; $9CB3
-    sta     ram_0730                ; $9CB5
+    sta     areaBuildPos            ; $9CB5
     tay                             ; $9CB8
-    jsr     sub_C944                ; $9CB9
+    jsr     AreaMap_GetPagePtr      ; $9CB9
     lda     dat_3_9CA9,x            ; $9CBC
     sta     (temp14),y              ; $9CBF
     rts                             ; $9CC1
