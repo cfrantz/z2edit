@@ -192,9 +192,13 @@ def main():
         out_insns.append((a, mnem, text))
 
     out = ["; (disassembled with tools/disasm.py; not executed in the test movies)"]
+    sizes = {i[0]: i[3] for i in insns}
     for a, mnem, text in out_insns:
         if a in labels:
             out += ["", f"{labels[a]}:"]
+        for k in range(1, sizes[a]):
+            if a + k in labels:
+                out.append(f"{labels[a + k]} := * + {k}")
         out.append(realign(f"    {mnem:<8}{text}".rstrip() + f" ; ${a:04X}"))
     out.append("; (end of disassembled code)")
     out.append("")

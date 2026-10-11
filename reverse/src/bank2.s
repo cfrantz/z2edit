@@ -1015,8 +1015,8 @@ sub_2_93BA:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF                               ; $93F9
 
 ProjectilePtrs_Bank2:
-    .word   loc_2_962F, $9637, loc_2_964A, loc_2_9627 ; $9400
-    .word   loc_2_962F, loc_2_962F, loc_2_962F, loc_2_965B ; $9408
+    .word   Projectile_Straight_Bank2, Projectile_Bubble_Bank2, Projectile_Rock_Bank2, Projectile_Fireball_Bank2 ; $9400
+    .word   Projectile_Straight_Bank2, Projectile_Straight_Bank2, Projectile_Straight_Bank2, Projectile_FallingRock_Bank2 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
 ProjectileUnused_Bank2:
@@ -1031,14 +1031,14 @@ EnemyHp_Bank2:
     .byte   $30, $20, $30, $20, $38, $01, $00, $00, $00, $00, $00, $00      ; $9439
 
 EnemyInitPtrs_Bank2:
-    .word   loc_2_95AD, loc_2_9610, loc_2_95AD, loc_2_95AD ; $9445
-    .word   loc_2_95AD, loc_2_95AD, loc_2_95AD, loc_2_95AD ; $944D
-    .word   loc_2_95AD, loc_2_95AD, loc_2_95AD, loc_2_970A ; $9455
-    .word   loc_2_970A, $961B, $961B, loc_2_970A ; $945D
-    .word   loc_2_95AD, loc_2_95AD, loc_2_95AD, loc_2_95AD ; $9465
-    .word   loc_2_95AD, loc_2_95AD, loc_2_97F3, loc_2_95AD ; $946D
-    .word   loc_2_95AD, loc_2_95AD, loc_2_95AD, loc_2_95AD ; $9475
-    .word   loc_2_95AD, loc_2_95AD, loc_2_95AD, loc_2_95AD ; $947D
+    .word   Enemy_InitNone_Bank2, RedJar_Init_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $9445
+    .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $944D
+    .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Generator_Init_Bank2 ; $9455
+    .word   Generator_Init_Bank2, Deeler_Init_Bank2, Deeler_Init_Bank2, Generator_Init_Bank2 ; $945D
+    .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $9465
+    .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Leever_Init, Enemy_InitNone_Bank2 ; $946D
+    .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $9475
+    .word   Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2, Enemy_InitNone_Bank2 ; $947D
     .word   $0000, $0000, $0000, $0000 ; $9485
 
 EnemyAiPtrs_Bank2:
@@ -1047,7 +1047,7 @@ EnemyAiPtrs_Bank2:
     .word   $AB98, $ABE9, Ache_Ai, BubbleGenerator_Ai ; $949D
     .word   RockGenerator_Ai, Deeler_Ai, Deeler_Ai, BagoBagoGenerator_Ai ; $94A5
     .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
-    .word   loc_2_9805, loc_2_98BC, loc_2_9910, $9989 ; $94B5
+    .word   loc_2_9805, loc_2_98BC, loc_2_9910, dat_2_9989 ; $94B5
     .word   loc_2_9A2A, loc_2_9AAE, loc_2_9B90, loc_2_9B56 ; $94BD
     .word   loc_2_9B90, loc_2_9730, $0000, $0000 ; $94C5
     .word   $0000, $0000, $0000, $0000 ; $94CD
@@ -1076,14 +1076,14 @@ EnemyDrawPtrs_Bank2:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
     .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
     .word   Enemy08_Draw, Enemy08_Draw, Ache_Draw, $0000 ; $9575
-    .word   $0000, Deeler_Draw, Deeler_Draw, loc_2_95AD ; $957D
+    .word   $0000, Deeler_Draw, Deeler_Draw, Enemy_InitNone_Bank2 ; $957D
     .word   BagoBago_Draw, Octorok_Draw, Octorok_Draw, Elevator_Draw ; $9585
-    .word   loc_2_9DAC, loc_2_9DDE, loc_2_9DEB, $9E01 ; $958D
+    .word   loc_2_9DAC, loc_2_9DDE, loc_2_9DEB, dat_2_9E01 ; $958D
     .word   loc_2_9E13, loc_2_9E84, loc_2_9EE1, loc_2_9EE1 ; $9595
     .word   loc_2_9EE1, loc_2_9D32, $0000, $0000 ; $959D
     .word   $0000, $0000, $0000, $0000 ; $95A5
 
-loc_2_95AD:
+Enemy_InitNone_Bank2:
     rts                             ; $95AD
     .byte   $A8, $AA, $AE, $84, $CE, $CE, $27, $AE, $00, $01, $01, $02, $01, $03, $03, $03; $95AE
     .byte   $02, $00, $00, $00, $BF, $96, $E1, $96, $D3, $96, $D3, $96, $BA, $96, $B3, $96; $95BE
@@ -1093,29 +1093,52 @@ loc_2_95AD:
     .byte   $19, $1B, $1D, $13, $1F, $17, $1D, $13, $21, $1B, $23, $25, $F5, $27, $2B, $F5; $95FE
     .byte   $29, $2B                                                        ; $960E
 
-loc_2_9610:
+RedJar_Init_Bank2:
     lda     #$11                    ; $9610
     sta     enemyAiState,x          ; $9612
     lda     objX+1,x                ; $9614
     adc     #$03                    ; $9616
     sta     objX+1,x                ; $9618
     rts                             ; $961A
-    .byte   $B5, $2A, $8D, $DD, $05, $18, $69, $60, $8D, $DC, $05, $60      ; $961B
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_2_9627:
+Deeler_Init_Bank2:
+    lda     objY+1,x                ; $961B
+    sta     ram_05DD                ; $961D
+    clc                             ; $9620
+    adc     #$60                    ; $9621
+    sta     ram_05DC                ; $9623
+    rts                             ; $9626
+; (end of disassembled code)
+
+
+Projectile_Fireball_Bank2:
     lda     sfxRequest+1            ; $9627
     ora     #$40                    ; $9629
     sta     sfxRequest+1            ; $962B
-    bne     loc_2_962F              ; $962D
+    bne     Projectile_Straight_Bank2 ; $962D
 
-loc_2_962F:
+Projectile_Straight_Bank2:
     lda     #$00                    ; $962F
     sta     objYVelocity+7,x        ; $9631
-    jmp     loc_2_9665              ; $9634
-    .byte   $A0, $04, $FE, $4C, $04, $BD, $4C, $04, $29, $10, $F0, $02, $A0, $FC, $94, $77; $9637
-    .byte   $4C, $65, $96                                                   ; $9647
+    jmp     Projectile_MoveAndCheck_Bank2 ; $9634
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_2_964A:
+Projectile_Bubble_Bank2:
+    ldy     #$04                    ; $9637
+    inc     overworldBuffer+76,x    ; $9639
+    lda     overworldBuffer+76,x    ; $963C
+    and     #$10                    ; $963F
+    beq     loc_2_9645              ; $9641
+    ldy     #$FC                    ; $9643
+
+loc_2_9645:
+    sty     objXVelocity+7,x        ; $9645
+    jmp     Projectile_MoveAndCheck_Bank2 ; $9647
+; (end of disassembled code)
+
+
+Projectile_Rock_Bank2:
     ldy     #$02                    ; $964A
     lda     objXVelocity+7,x        ; $964C
     bmi     loc_2_9651              ; $964E
@@ -1124,11 +1147,11 @@ loc_2_964A:
 loc_2_9651:
     tya                             ; $9651
     cmp     objFacing+7,x           ; $9652
-    beq     loc_2_962F              ; $9654
+    beq     Projectile_Straight_Bank2 ; $9654
     inc     objYVelocity+7,x        ; $9656
     bne     loc_2_9662              ; $9659
 
-loc_2_965B:
+Projectile_FallingRock_Bank2:
     jsr     Projectile_HitsBg       ; $965B
     lda     #$F3                    ; $965E
     bcs     loc_2_9670              ; $9660
@@ -1136,7 +1159,7 @@ loc_2_965B:
 loc_2_9662:
     inc     objYVelocity+7,x        ; $9662
 
-loc_2_9665:
+Projectile_MoveAndCheck_Bank2:
     jsr     Projectile_Move         ; $9665
     lda     drawOffscreen+2         ; $9668
     and     #$FC                    ; $966A
@@ -1148,13 +1171,13 @@ loc_2_9670:
     rts                             ; $9672
 
 loc_2_9673:
-    jsr     sub_2_967E              ; $9673
+    jsr     Projectile_Draw_Bank2   ; $9673
     jsr     DoNothing               ; $9676
 dat_2_967B := * + 2
     jmp     Projectile_CheckLinkAlternate ; $9679
     .byte   $40, $00                                                        ; $967C
 
-sub_2_967E:
+Projectile_Draw_Bank2:
     lda     objState+7,x            ; $967E
     pha                             ; $9680
     asl     a                       ; $9681
@@ -1187,8 +1210,25 @@ loc_2_96B3:
     sta     oamBuffer+2,y           ; $96B7
     rts                             ; $96BA
 ; (unreferenced: $96BB-$96D2, 24 bytes)
-    .byte   $00, $02, $00, $FE, $A5, $12, $29, $30, $4A, $4A, $4A, $4A, $AA, $B9, $00, $02; $96BB
-    .byte   $7D, $BB, $96, $99, $00, $02, $A6, $10                          ; $96CB
+
+dat_2_96BB:
+    .byte   $00, $02, $00, $FE                                              ; $96BB
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+dat_2_96BF:
+    lda     frameCounter            ; $96BF
+    and     #$30                    ; $96C1
+    lsr     a                       ; $96C3
+    lsr     a                       ; $96C4
+    lsr     a                       ; $96C5
+    lsr     a                       ; $96C6
+    tax                             ; $96C7
+    lda     oamBuffer,y             ; $96C8
+    adc     dat_2_96BB,x            ; $96CB
+    sta     oamBuffer,y             ; $96CE
+    ldx     currentObject           ; $96D1
+; (end of disassembled code)
+
 
 loc_2_96D3:
     lda     frameCounter            ; $96D3
@@ -1235,7 +1275,7 @@ loc_2_9700:
     sta     oamBuffer+2,y           ; $9706
     rts                             ; $9709
 
-loc_2_970A:
+Generator_Init_Bank2:
     ldy     #$05                    ; $970A
 
 loc_2_970C:
@@ -1278,7 +1318,7 @@ loc_2_9730:
     beq     loc_2_9778              ; $9741
     lda     #$10                    ; $9743
     sta     enemyVulnerability,x    ; $9745
-    jsr     sub_2_9A11              ; $9748
+    jsr     Enemy_DropRock_Bank2    ; $9748
     bcs     loc_2_977C              ; $974B
     lda     temp15                  ; $974D
     bpl     loc_2_9753              ; $974F
@@ -1400,7 +1440,7 @@ loc_2_97F0:
     inc     objY+1,x                ; $97F0
     rts                             ; $97F2
 
-loc_2_97F3:
+Leever_Init:
     lda     rng+1,x                 ; $97F3
     sta     timerFast+TIMER_ENEMY,x ; $97F6
     lda     objY+1,x                ; $97F9
@@ -1443,7 +1483,7 @@ loc_2_9820:
     dec     objY+1,x                ; $9835
 
 loc_2_9837:
-    jsr     sub_2_9B42              ; $9837
+    jsr     Enemy_Fall_Bank2        ; $9837
     lda     objCollision+1,x        ; $983A
     and     #$03                    ; $983C
     beq     loc_2_9843              ; $983E
@@ -1640,22 +1680,99 @@ loc_2_997C:
     beq     loc_2_9960              ; $997F
     lsr     a                       ; $9981
     bcc     loc_2_9986              ; $9982
+dat_2_9985 := * + 1
     inc     objY+1,x                ; $9984
 
 loc_2_9986:
     rts                             ; $9986
 ; (unreferenced: $9987-$9A10, 138 bytes)
-    .byte   $20, $E0, $B5, $2A, $C9, $70, $B0, $09, $A5, $12, $29, $1F, $D0, $03, $20, $11; $9987
-    .byte   $9A, $A0, $01, $B5, $71, $10, $01, $C8, $94, $60, $20, $02, $DA, $20, $40, $DE; $9997
-    .byte   $20, $C1, $D6, $20, $91, $DC, $B5, $AF, $D0, $21, $95, $81, $A9, $30, $95, $2A; $99A7
-    .byte   $A9, $01, $95, $1A, $BD, $1B, $05, $6D, $2C, $07, $95, $4E, $AD, $2A, $07, $69; $99B7
-    .byte   $00, $95, $3C, $A9, $20, $9D, $04, $05, $F6, $AF, $60, $A5, $C9, $29, $CC, $F0; $99C7
-    .byte   $02, $D6, $AF, $BD, $04, $05, $D0, $10, $BD, $1B, $05, $48, $29, $0F, $09, $08; $99D7
-    .byte   $9D, $04, $05, $68, $29, $03, $95, $81, $B5, $81, $20, $85, $D3, $FC, $99, $FC; $99E7
-    .byte   $99, $07, $9A, $07, $9A, $B4, $81, $B9, $87, $99, $9D, $7E, $05, $4C, $C8, $DE; $99F7
-    .byte   $B4, $81, $B9, $85, $99, $95, $71, $4C, $B8, $DE                ; $9A07
 
-sub_2_9A11:
+dat_2_9987:
+    .byte   $20, $E0                                                        ; $9987
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+dat_2_9989:
+    lda     objY+1,x                ; $9989
+    cmp     #$70                    ; $998B
+    bcs     loc_2_9998              ; $998D
+    lda     frameCounter            ; $998F
+    and     #$1F                    ; $9991
+    bne     loc_2_9998              ; $9993
+    jsr     Enemy_DropRock_Bank2    ; $9995
+
+loc_2_9998:
+    ldy     #$01                    ; $9998
+    lda     objXVelocity+1,x        ; $999A
+    bpl     loc_2_999F              ; $999C
+    iny                             ; $999E
+
+loc_2_999F:
+    sty     objFacing+1,x           ; $999F
+    jsr     Enemy_SkipAiIfStunned   ; $99A1
+    jsr     Enemy_UpdateCommon      ; $99A4
+    jsr     Enemy_HurtLinkOnContact ; $99A7
+    jsr     Enemy_FaceLink          ; $99AA
+    lda     enemyAiState,x          ; $99AD
+    bne     loc_2_99D2              ; $99AF
+    sta     objState+1,x            ; $99B1
+    lda     #$30                    ; $99B3
+    sta     objY+1,x                ; $99B5
+    lda     #$01                    ; $99B7
+    sta     objYHi+1,x              ; $99B9
+    lda     rng+1,x                 ; $99BB
+    adc     scrollX                 ; $99BE
+    sta     objX+1,x                ; $99C1
+    lda     scrollXHi               ; $99C3
+    adc     #$00                    ; $99C6
+    sta     objXHi+1,x              ; $99C8
+    lda     #$20                    ; $99CA
+    sta     timerFast+3,x           ; $99CC
+    inc     enemyAiState,x          ; $99CF
+    rts                             ; $99D1
+
+loc_2_99D2:
+    lda     drawOffscreen+1         ; $99D2
+    and     #$CC                    ; $99D4
+    beq     loc_2_99DA              ; $99D6
+    dec     enemyAiState,x          ; $99D8
+
+loc_2_99DA:
+    lda     timerFast+3,x           ; $99DA
+    bne     loc_2_99EF              ; $99DD
+    lda     rng+1,x                 ; $99DF
+    pha                             ; $99E2
+    and     #$0F                    ; $99E3
+    ora     #$08                    ; $99E5
+    sta     timerFast+3,x           ; $99E7
+    pla                             ; $99EA
+    and     #$03                    ; $99EB
+    sta     objState+1,x            ; $99ED
+
+loc_2_99EF:
+    lda     objState+1,x            ; $99EF
+    jsr     JumpTable               ; $99F1
+; (end of disassembled code)
+
+
+dat_2_99F4:
+    .word   dat_2_99FC, dat_2_99FC, loc_2_9A07, loc_2_9A07 ; $99F4
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+dat_2_99FC:
+    ldy     objState+1,x            ; $99FC
+    lda     dat_2_9987,y            ; $99FE
+    sta     objYVelocity+1,x        ; $9A01
+    jmp     Enemy_MoveY             ; $9A04
+
+loc_2_9A07:
+    ldy     objState+1,x            ; $9A07
+    lda     dat_2_9985,y            ; $9A09
+    sta     objXVelocity+1,x        ; $9A0C
+    jmp     Enemy_MoveX             ; $9A0E
+; (end of disassembled code)
+
+
+Enemy_DropRock_Bank2:
     jsr     Enemy_FireProjectile    ; $9A11
     bcs     loc_2_9A23              ; $9A14
     lda     #$08                    ; $9A16
@@ -1685,7 +1802,7 @@ loc_2_9A2A:
     sta     objState+1,x            ; $9A38
 
 loc_2_9A3A:
-    jsr     sub_2_9B42              ; $9A3A
+    jsr     Enemy_Fall_Bank2        ; $9A3A
     lda     #$80                    ; $9A3D
     ldy     timerFast+TIMER_ENEMY,x ; $9A3F
     bne     loc_2_9A46              ; $9A42
@@ -1695,7 +1812,7 @@ loc_2_9A46:
     sta     sramEnemyHitbox+24      ; $9A46
     jsr     Enemy_UpdateCommon      ; $9A49
     jsr     Enemy_HurtLinkOnContact ; $9A4C
-    jsr     sub_2_9B24              ; $9A4F
+    jsr     Enemy_KnockBackOrWalk_Bank2 ; $9A4F
     lda     frameCounter            ; $9A52
     and     #$3F                    ; $9A54
     bne     loc_2_9A5B              ; $9A56
@@ -1712,7 +1829,7 @@ loc_2_9A5B:
     sta     timerFast+TIMER_ENEMY,x ; $9A6A
 
 loc_2_9A6D:
-    jsr     sub_2_9B09              ; $9A6D
+    jsr     Enemy_Pace_Bank2        ; $9A6D
 
 loc_2_9A70:
     lda     objState+1,x            ; $9A70
@@ -1747,7 +1864,7 @@ loc_2_9AAD:
     rts                             ; $9AAD
 
 loc_2_9AAE:
-    jsr     sub_2_9B42              ; $9AAE
+    jsr     Enemy_Fall_Bank2        ; $9AAE
     lda     objState+1,x            ; $9AB1
     bne     loc_2_9AC3              ; $9AB3
     jsr     Enemy_Draw              ; $9AB5
@@ -1762,7 +1879,7 @@ loc_2_9AC3:
 loc_2_9AC5:
     jsr     Enemy_UpdateCommon      ; $9AC5
     jsr     Enemy_HurtLinkOnContact ; $9AC8
-    jsr     sub_2_9B24              ; $9ACB
+    jsr     Enemy_KnockBackOrWalk_Bank2 ; $9ACB
     lda     frameCounter            ; $9ACE
     and     #$3F                    ; $9AD0
     bne     loc_2_9AD7              ; $9AD2
@@ -1786,7 +1903,7 @@ loc_2_9AE4:
 loc_2_9AF0:
     lda     #$00                    ; $9AF0
     sta     objXVelocity+1,x        ; $9AF2
-    jsr     sub_2_9B09              ; $9AF4
+    jsr     Enemy_Pace_Bank2        ; $9AF4
     lda     timerFast+TIMER_ENEMY,x ; $9AF7
     cmp     #$08                    ; $9AFA
     bne     loc_2_9B08              ; $9AFC
@@ -1798,7 +1915,7 @@ loc_2_9AF0:
 loc_2_9B08:
     rts                             ; $9B08
 
-sub_2_9B09:
+Enemy_Pace_Bank2:
     inc     enemyAiState,x          ; $9B09
     ldy     objFacing+1,x           ; $9B0B
     lda     enemyAiState,x          ; $9B0D
@@ -1820,7 +1937,7 @@ loc_2_9B21:
 loc_2_9B23:
     rts                             ; $9B23
 
-sub_2_9B24:
+Enemy_KnockBackOrWalk_Bank2:
     lda     ram_043E,x              ; $9B24
     beq     loc_2_9B39              ; $9B27
 ; (code below not executed in the test movies)
@@ -1840,7 +1957,7 @@ loc_2_9B39:
     bne     loc_2_9B23              ; $9B3D
     jmp     Enemy_MoveX             ; $9B3F
 
-sub_2_9B42:
+Enemy_Fall_Bank2:
     jsr     Enemy_UpdateBgCollision ; $9B42
     lda     objYVelocity+1,x        ; $9B45
     bmi     loc_2_9B53              ; $9B48
@@ -1895,7 +2012,7 @@ dat_2_9B8B:
 
 loc_2_9B90:
     jsr     Enemy_Draw              ; $9B90
-    jsr     sub_2_9CBE              ; $9B93
+    jsr     Lizalfos_Attack         ; $9B93
 
 loc_2_9B96:
     ldy     enemyType,x             ; $9B96
@@ -1950,7 +2067,7 @@ loc_2_9BE6:
     jsr     Enemy_Land              ; $9BF2
 
 loc_2_9BF5:
-    jsr     sub_2_9D13              ; $9BF5
+    jsr     Lizalfos_KnockBack      ; $9BF5
     jsr     Enemy_FaceLink          ; $9BF8
     lda     temp15                  ; $9BFB
     clc                             ; $9BFD
@@ -2060,7 +2177,7 @@ dat_2_9CB9:
 dat_2_9CBB:
     .byte   $F8, $00, $FF                                                   ; $9CBB
 
-sub_2_9CBE:
+Lizalfos_Attack:
     lda     objState+1,x            ; $9CBE
     beq     loc_2_9D07              ; $9CC0
     lda     timerFast+TIMER_ENEMY,x ; $9CC2
@@ -2104,7 +2221,7 @@ loc_2_9D08:
 ; (unreferenced: $9D0D-$9D12, 6 bytes)
     .byte   $00, $00, $00, $00, $00, $00                                    ; $9D0D
 
-sub_2_9D13:
+Lizalfos_KnockBack:
     lda     ram_043E,x              ; $9D13
     beq     loc_2_9D27              ; $9D16
     dec     ram_043E,x              ; $9D18
@@ -2252,11 +2369,23 @@ loc_2_9DEB:
     ora     #$40                    ; $9DFB
     sta     oamBuffer - 2,y         ; $9DFD
     rts                             ; $9E00
-; (unreferenced: $9E01-$9E0C, 12 bytes)
-    .byte   $A2, $10, $A5, $12, $4A, $90, $02, $E8, $E8, $4C, $D7           ; $9E01
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_2_9E0C:
-    .byte   $F0                                                             ; $9E0C
+dat_2_9E01:
+    ldx     #$10                    ; $9E01
+    lda     frameCounter            ; $9E03
+    lsr     a                       ; $9E05
+    bcc     loc_2_9E0A              ; $9E06
+    inx                             ; $9E08
+    inx                             ; $9E09
+
+loc_2_9E0A:
+dat_2_9E0C := * + 2
+    jmp     Sprite_DrawEnemyPairKeepX ; $9E0A
+; (end of disassembled code)
+
+
+dat_2_9E0D:
     .byte   $10                                                             ; $9E0D
 
 dat_2_9E0E:

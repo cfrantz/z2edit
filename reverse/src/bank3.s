@@ -904,9 +904,9 @@ loc_3_8BA8:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF           ; $93F5
 
 ProjectilePtrs_Bank3:
-    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9400
-    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9408
-    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9410
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9400
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9408
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9410
 
 ProjectileUnused_Bank3:
     .byte   $AD                                                             ; $9416
@@ -920,26 +920,26 @@ EnemyHp_Bank3:
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00      ; $9439
 
 EnemyInitPtrs_Bank3:
-    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $9445
-    .word   loc_3_95AD, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $944D
-    .word   sub_3_976B, sub_3_976B, sub_3_976B, sub_3_976B ; $9455
-    .word   sub_3_976B, sub_3_976B, sub_3_976B, sub_3_976B ; $945D
-    .word   sub_3_976B, sub_3_976B, sub_3_976B, loc_3_9756 ; $9465
-    .word   loc_3_9756, loc_3_9756, loc_3_9756, sub_3_976B ; $946D
-    .word   sub_3_976B, sub_3_976B, sub_3_976B, sub_3_976B ; $9475
-    .word   sub_3_976B, loc_3_9743, loc_3_9743, loc_3_9743 ; $947D
-    .word   loc_3_9743, sub_3_976B, sub_3_976B, loc_3_96B2 ; $9485
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $9445
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $944D
+    .word   Townsperson_Init, Townsperson_Init, Townsperson_Init, Townsperson_Init ; $9455
+    .word   Townsperson_Init, Townsperson_Init, Townsperson_Init, Townsperson_Init ; $945D
+    .word   Townsperson_Init, Townsperson_Init, Townsperson_Init, Townsperson_InitIdle ; $9465
+    .word   Townsperson_InitIdle, Townsperson_InitIdle, Townsperson_InitIdle, Townsperson_Init ; $946D
+    .word   Townsperson_Init, Townsperson_Init, Townsperson_Init, Townsperson_Init ; $9475
+    .word   Townsperson_Init, Townsperson_InitWalking, Townsperson_InitWalking, Townsperson_InitWalking ; $947D
+    .word   Townsperson_InitWalking, Townsperson_Init, Townsperson_Init, Generator_Init_Bank3 ; $9485
 
 EnemyAiPtrs_Bank3:
-    .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, $96A8 ; $948D
+    .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, TownBat_Ai ; $948D
     .word   Bot_Ai, Bit_Ai, Moa_Ai, Ache_Ai ; $9495
-    .word   loc_3_9878, loc_3_9878, loc_3_9793, loc_3_9783 ; $949D
-    .word   loc_3_9ABD, loc_3_9793, loc_3_9793, loc_3_97A9 ; $94A5
-    .word   loc_3_9793, loc_3_9793, loc_3_9793, loc_3_97D4 ; $94AD
-    .word   loc_3_97D4, loc_3_97D4, loc_3_97D4, loc_3_97D4 ; $94B5
-    .word   loc_3_97D4, loc_3_9878, loc_3_9878, loc_3_9878 ; $94BD
-    .word   loc_3_9878, loc_3_9878, loc_3_9878, loc_3_9878 ; $94C5
-    .word   loc_3_9878, loc_3_9ABD, loc_3_9ABD, loc_3_96E0 ; $94CD
+    .word   Townsperson_WalkAi, Townsperson_WalkAi, Townsperson_StandAi, TalkingBit_Ai ; $949D
+    .word   Sign_Ai, Townsperson_StandAi, Townsperson_StandAi, Wizard_Ai ; $94A5
+    .word   Townsperson_StandAi, Townsperson_StandAi, Townsperson_StandAi, HouseLady_Ai ; $94AD
+    .word   HouseLady_Ai, HouseLady_Ai, HouseLady_Ai, HouseLady_Ai ; $94B5
+    .word   HouseLady_Ai, Townsperson_WalkAi, Townsperson_WalkAi, Townsperson_WalkAi ; $94BD
+    .word   Townsperson_WalkAi, Townsperson_WalkAi, Townsperson_WalkAi, Townsperson_WalkAi ; $94C5
+    .word   Townsperson_WalkAi, Sign_Ai, Sign_Ai, TownspersonGenerator_Ai ; $94CD
 
 EnemyAttr_Bank3:
     .byte   $40, $40, $40, $C2, $C0, $80, $C6, $C3, $00, $00, $80, $C0      ; $94D5
@@ -964,15 +964,15 @@ EnemyFlags_Bank3:
 EnemyDrawPtrs_Bank3:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Ache_Draw ; $9565
     .word   Bot_Draw, Bot_Draw, Moa_Draw, Ache_Draw ; $956D
-    .word   loc_3_9AE8, loc_3_9AE8, Ache_Draw, Bot_Draw ; $9575
-    .word   loc_3_95AD, loc_3_9AE8, loc_3_9AE8, loc_3_9AC8 ; $957D
-    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $9585
-    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $958D
-    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $9595
-    .word   loc_3_9AE8, loc_3_9AE8, loc_3_9AE8, loc_3_9AE8 ; $959D
-    .word   loc_3_9AE8, loc_3_95AD, loc_3_95AD, loc_3_95AD ; $95A5
+    .word   Townsperson_Draw, Townsperson_Draw, Ache_Draw, Bot_Draw ; $9575
+    .word   Enemy_InitNone_Bank3, Townsperson_Draw, Townsperson_Draw, Wizard_Draw ; $957D
+    .word   Townsperson_Draw, Townsperson_Draw, Townsperson_Draw, Townsperson_Draw ; $9585
+    .word   Townsperson_Draw, Townsperson_Draw, Townsperson_Draw, Townsperson_Draw ; $958D
+    .word   Townsperson_Draw, Townsperson_Draw, Townsperson_Draw, Townsperson_Draw ; $9595
+    .word   Townsperson_Draw, Townsperson_Draw, Townsperson_Draw, Townsperson_Draw ; $959D
+    .word   Townsperson_Draw, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $95A5
 
-loc_3_95AD:
+Enemy_InitNone_Bank3:
     rts                             ; $95AD
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00; $95AE
     .byte   $00, $00, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95; $95BE
@@ -998,10 +998,19 @@ dat_3_9625:
 
 dat_3_969A:
     .byte   $10, $08, $18, $00, $00, $18, $10, $08, $18, $00, $10, $3C, $18, $00; $969A
-; (unreferenced: $96A8-$96B1, 10 bytes)
-    .byte   $A5, $C9, $F0, $03, $4C, $3D, $DD, $4C, $53, $DB                ; $96A8
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_3_96B2:
+TownBat_Ai:
+    lda     drawOffscreen+1         ; $96A8
+    beq     loc_3_96AF              ; $96AA
+    jmp     Enemy_Despawn           ; $96AC
+
+loc_3_96AF:
+    jmp     Ache_Ai                 ; $96AF
+; (end of disassembled code)
+
+
+Generator_Init_Bank3:
     ldy     #$05                    ; $96B2
 
 loc_3_96B4:
@@ -1025,7 +1034,7 @@ loc_3_96C8:
     ldx     currentObject           ; $96CD
     rts                             ; $96CF
 
-dat_3_96D0:
+TownspersonGeneratorTypes:
     .byte   $19, $1A, $1B                                                   ; $96D0
 
 dat_3_96D3:
@@ -1037,7 +1046,7 @@ dat_3_96DC:
 dat_3_96DE:
     .byte   $FF, $01                                                        ; $96DE
 
-loc_3_96E0:
+TownspersonGenerator_Ai:
     inc     enemyAiState,x          ; $96E0
     bne     loc_3_96EF              ; $96E2
     ldx     #$05                    ; $96E4
@@ -1061,7 +1070,7 @@ loc_3_96F0:
     tay                             ; $96F7
     asl     a                       ; $96F8
     sta     temp0                   ; $96F9
-    lda     dat_3_96D0,y            ; $96FB
+    lda     TownspersonGeneratorTypes,y ; $96FB
     sta     enemyType,x             ; $96FE
     lda     #$01                    ; $9700
     sta     enemyActive,x           ; $9702
@@ -1095,14 +1104,14 @@ loc_3_971B:
     tay                             ; $9735
     lda     dat_3_96D3,y            ; $9736
     sta     objXVelocity+1,x        ; $9739
-    jsr     sub_3_976B              ; $973B
+    jsr     Townsperson_Init        ; $973B
     ldx     currentObject           ; $973E
 
 dat_3_9740:
     rts                             ; $9740
     .byte   $F2, $0E                                                        ; $9741
 
-loc_3_9743:
+Townsperson_InitWalking:
     jsr     Enemy_FaceLink          ; $9743
     sty     temp0                   ; $9746
     lda     enemyType,x             ; $9748
@@ -1111,15 +1120,15 @@ loc_3_9743:
     tay                             ; $974D
     lda     dat_3_969A,y            ; $974E
     sta     objXVelocity+1,x        ; $9751
-    jmp     sub_3_976B              ; $9753
+    jmp     Townsperson_Init        ; $9753
 
-loc_3_9756:
+Townsperson_InitIdle:
     lda     objY+1,x                ; $9756
     sec                             ; $9758
     sbc     #$08                    ; $9759
     sta     objY+1,x                ; $975B
 
-sub_3_975D:
+Townsperson_InitAtDoor:
     lda     #$80                    ; $975D
     sta     enemyAiState,x          ; $975F
     ldy     objFacing+1,x           ; $9761
@@ -1128,7 +1137,7 @@ sub_3_975D:
     adc     dat_3_9740,y            ; $9766
     sta     objX+1,x                ; $9769
 
-sub_3_976B:
+Townsperson_Init:
     lda     #$00                    ; $976B
     sta     ram_05A5,x              ; $976D
     sta     ram_05B7,x              ; $9770
@@ -1142,7 +1151,7 @@ dat_3_9780:
     rts                             ; $9780
     .byte   $10, $00                                                        ; $9781
 
-loc_3_9783:
+TalkingBit_Ai:
     lda     frameCounter            ; $9783
     and     #$80                    ; $9785
     bne     loc_3_9791              ; $9787
@@ -1154,8 +1163,8 @@ loc_3_9783:
 loc_3_9791:
     sta     enemyAiState,x          ; $9791
 
-loc_3_9793:
-    jsr     sub_3_9A9B              ; $9793
+Townsperson_StandAi:
+    jsr     Townsperson_FaceLinkWhileTalking ; $9793
     jsr     sub_3_9A8D              ; $9796
     lda     frameCounter            ; $9799
     and     #$3F                    ; $979B
@@ -1165,10 +1174,10 @@ loc_3_9793:
 loc_3_97A2:
     lda     #$00                    ; $97A2
     sta     enemyAiState,x          ; $97A4
-    jmp     sub_3_99B9              ; $97A6
+    jmp     Townsperson_CheckTalk   ; $97A6
 
-loc_3_97A9:
-    jsr     sub_3_9A9B              ; $97A9
+Wizard_Ai:
+    jsr     Townsperson_FaceLinkWhileTalking ; $97A9
     jsr     sub_3_9A8D              ; $97AC
     lda     drawOffscreen+1         ; $97AF
     bne     loc_3_97D3              ; $97B1
@@ -1183,15 +1192,15 @@ loc_3_97A9:
     lda     linkJumpState           ; $97C5
     bne     loc_3_97D3              ; $97C8
     stx     ram_048B                ; $97CA
-    jmp     loc_3_9A33              ; $97CD
+    jmp     Townsperson_StartTalk   ; $97CD
 ; (unreferenced: $97D0-$97D2, 3 bytes)
     .byte   $FE, $C3, $05                                                   ; $97D0
 
 loc_3_97D3:
     rts                             ; $97D3
 
-loc_3_97D4:
-    jsr     sub_3_9A9B              ; $97D4
+HouseLady_Ai:
+    jsr     Townsperson_FaceLinkWhileTalking ; $97D4
     lda     enemyAiState,x          ; $97D7
     beq     loc_3_983F              ; $97D9
     bpl     loc_3_983C              ; $97DB
@@ -1207,13 +1216,13 @@ loc_3_97D4:
     cmp     #$C0                    ; $97F1
     bcs     loc_3_983B              ; $97F3
     jsr     Enemy_UpdateBgCollision ; $97F5
-    jsr     sub_3_989F              ; $97F8
+    jsr     Townsperson_StartDoor   ; $97F8
     ldy     objFacing+1,x           ; $97FB
     lda     objX+1,x                ; $97FD
     sec                             ; $97FF
     sbc     dat_3_9740,y            ; $9800
     sta     objX+1,x                ; $9803
-    jmp     loc_3_9946              ; $9805
+    jmp     Door_QueueOpen          ; $9805
 
 loc_3_9808:
     inc     enemyAiState,x          ; $9808
@@ -1223,7 +1232,7 @@ loc_3_9808:
     pha                             ; $9810
     lda     #$01                    ; $9811
     sta     enemyAiState,x          ; $9813
-    jsr     sub_3_9A8A              ; $9815
+    jsr     Townsperson_DrawOrDespawn ; $9815
     pla                             ; $9818
     sta     enemyAiState,x          ; $9819
 
@@ -1231,12 +1240,12 @@ loc_3_981B:
     lda     enemyAiState,x          ; $981B
     cmp     #$90                    ; $981D
     bne     loc_3_9824              ; $981F
-    jmp     loc_3_994A              ; $9821
+    jmp     Door_QueueHalf          ; $9821
 
 loc_3_9824:
     cmp     #$A0                    ; $9824
     bne     loc_3_982B              ; $9826
-    jmp     loc_3_9946              ; $9828
+    jmp     Door_QueueOpen          ; $9828
 
 loc_3_982B:
     cmp     #$B0                    ; $982B
@@ -1245,13 +1254,13 @@ loc_3_982B:
     sta     enemyAiState,x          ; $9831
     lda     #$90                    ; $9833
     sta     ram_05BD,x              ; $9835
-    jmp     sub_3_994E              ; $9838
+    jmp     Door_QueueClosed        ; $9838
 
 loc_3_983B:
     rts                             ; $983B
 
 loc_3_983C:
-    jmp     loc_3_9878              ; $983C
+    jmp     Townsperson_WalkAi      ; $983C
 
 loc_3_983F:
     lda     objY+1,x                ; $983F
@@ -1286,15 +1295,15 @@ loc_3_9868:
 sub_3_9870:
     lda     ram_05B7,x              ; $9870
     bne     loc_3_983C              ; $9873
-    jmp     loc_3_99B0              ; $9875
+    jmp     Townsperson_WalkAndTalk ; $9875
 
-loc_3_9878:
-    jsr     sub_3_9A9B              ; $9878
-    jsr     sub_3_99B9              ; $987B
-    jsr     sub_3_9A8A              ; $987E
+Townsperson_WalkAi:
+    jsr     Townsperson_FaceLinkWhileTalking ; $9878
+    jsr     Townsperson_CheckTalk   ; $987B
+    jsr     Townsperson_DrawOrDespawn ; $987E
     lda     enemyAiState,x          ; $9881
     bne     loc_3_98BC              ; $9883
-    jsr     sub_3_9A68              ; $9885
+    jsr     Townsperson_Walk        ; $9885
     lda     enemyType,x             ; $9888
     cmp     #$0A                    ; $988A
     bcc     loc_3_98BB              ; $988C
@@ -1309,7 +1318,7 @@ loc_3_9896:
     cmp     #$8B                    ; $989B
     bne     loc_3_98BB              ; $989D
 
-sub_3_989F:
+Townsperson_StartDoor:
     inc     enemyAiState,x          ; $989F
     lda     ram_00DC                ; $98A1
     sta     ram_058D,x              ; $98A3
@@ -1330,17 +1339,17 @@ loc_3_98BC:
     inc     enemyAiState,x          ; $98BC
     cmp     #$10                    ; $98BE
     bne     loc_3_98C5              ; $98C0
-    jmp     loc_3_9946              ; $98C2
+    jmp     Door_QueueOpen          ; $98C2
 
 loc_3_98C5:
     cmp     #$20                    ; $98C5
     bne     loc_3_98CC              ; $98C7
-    jmp     loc_3_994A              ; $98C9
+    jmp     Door_QueueHalf          ; $98C9
 
 loc_3_98CC:
     cmp     #$40                    ; $98CC
     bne     loc_3_98D8              ; $98CE
-    jsr     sub_3_98F9              ; $98D0
+    jsr     Door_SetClosedTile      ; $98D0
     lda     #$54                    ; $98D3
     sta     (temp0),y               ; $98D5
     rts                             ; $98D7
@@ -1348,26 +1357,26 @@ loc_3_98CC:
 loc_3_98D8:
     cmp     #$70                    ; $98D8
     bne     loc_3_98DF              ; $98DA
-    jmp     loc_3_9946              ; $98DC
+    jmp     Door_QueueOpen          ; $98DC
 
 loc_3_98DF:
     cmp     #$7E                    ; $98DF
     bne     loc_3_990A              ; $98E1
-    jsr     sub_3_994E              ; $98E3
+    jsr     Door_QueueClosed        ; $98E3
     lda     enemyType,x             ; $98E6
     cmp     #$17                    ; $98E8
     bcc     loc_3_98F6              ; $98EA
-    jsr     sub_3_975D              ; $98EC
+    jsr     Townsperson_InitAtDoor  ; $98EC
     lda     #$FF                    ; $98EF
     sta     ram_05BD,x              ; $98F1
-    bne     sub_3_98F9              ; $98F4
+    bne     Door_SetClosedTile      ; $98F4
 ; (code below not executed in the test movies)
 
 loc_3_98F6:
     jsr     Enemy_Despawn           ; $98F6
 ; (end of code not executed in the test movies)
 
-sub_3_98F9:
+Door_SetClosedTile:
     lda     ram_058D,x              ; $98F9
     sta     temp0                   ; $98FC
     lda     ram_0593,x              ; $98FE
@@ -1390,28 +1399,28 @@ loc_3_990A:
     sta     objY+1,x                ; $991C
 
 loc_3_991E:
-    jmp     sub_3_9A68              ; $991E
+    jmp     Townsperson_Walk        ; $991E
 
 loc_3_9921:
     rts                             ; $9921
 
-dat_3_9922:
+DoorTilesTop:
     .byte   $49, $FF, $FF, $FF, $FF, $47, $49, $FF, $FF, $FF, $FF, $47, $49, $40, $40, $41; $9922
     .byte   $40, $47                                                        ; $9932
 
-dat_3_9934:
+DoorTilesBottom:
     .byte   $4A, $40, $40, $41, $40, $48, $4A, $FF, $FF, $FF, $FF, $48, $4A, $40, $40, $40; $9934
     .byte   $40, $48                                                        ; $9944
 
-loc_3_9946:
+Door_QueueOpen:
     ldx     #$00                    ; $9946
     beq     loc_3_9950              ; $9948
 
-loc_3_994A:
+Door_QueueHalf:
     ldx     #$06                    ; $994A
     bne     loc_3_9950              ; $994C
 
-sub_3_994E:
+Door_QueueClosed:
     ldx     #$0C                    ; $994E
 
 loc_3_9950:
@@ -1429,9 +1438,9 @@ loc_3_995A:
     ldy     ppuBuffer0Len           ; $995E
 
 loc_3_9961:
-    lda     dat_3_9922,x            ; $9961
+    lda     DoorTilesTop,x          ; $9961
     sta     ppuBuffer0+3,y          ; $9964
-    lda     dat_3_9934,x            ; $9967
+    lda     DoorTilesBottom,x       ; $9967
     sta     ppuBuffer0+12,y         ; $996A
     inx                             ; $996D
     iny                             ; $996E
@@ -1468,12 +1477,12 @@ loc_3_9961:
     ldx     currentObject           ; $99AD
     rts                             ; $99AF
 
-loc_3_99B0:
-    jsr     sub_3_9A9B              ; $99B0
-    jsr     sub_3_9A8A              ; $99B3
-    jsr     sub_3_9A68              ; $99B6
+Townsperson_WalkAndTalk:
+    jsr     Townsperson_FaceLinkWhileTalking ; $99B0
+    jsr     Townsperson_DrawOrDespawn ; $99B3
+    jsr     Townsperson_Walk        ; $99B6
 
-sub_3_99B9:
+Townsperson_CheckTalk:
     lda     drawOffscreen+1         ; $99B9
     ora     dialogType              ; $99BB
     bne     loc_3_9A1C              ; $99BE
@@ -1498,7 +1507,7 @@ loc_3_99CB:
     lda     enemyType,x             ; $99E4
     cmp     #$17                    ; $99E6
     bcc     loc_3_9A1C              ; $99E8
-    jsr     sub_3_98F9              ; $99EA
+    jsr     Door_SetClosedTile      ; $99EA
     ldy     #$04                    ; $99ED
     sty     dialogType              ; $99EF
     sty     ram_00DE                ; $99F2
@@ -1542,7 +1551,7 @@ loc_3_9A28:
     and     #$40                    ; $9A2F
     beq     loc_3_9A4F              ; $9A31
 
-loc_3_9A33:
+Townsperson_StartTalk:
     lda     #$02                    ; $9A33
     sta     dialogType              ; $9A35
     sta     ram_00DE                ; $9A38
@@ -1559,7 +1568,7 @@ loc_3_9A33:
 loc_3_9A4F:
     rts                             ; $9A4F
 
-sub_3_9A50:
+Townsperson_TurnToDoor:
     lda     #$FF                    ; $9A50
     sta     ram_05BD,x              ; $9A52
     lda     #$02                    ; $9A55
@@ -1576,7 +1585,7 @@ loc_3_9A60:
 loc_3_9A67:
     rts                             ; $9A67
 
-sub_3_9A68:
+Townsperson_Walk:
     jsr     Enemy_MoveX             ; $9A68
     inc     ram_05B1,x              ; $9A6B
     lda     ram_05B1,x              ; $9A6E
@@ -1597,7 +1606,7 @@ loc_3_9A84:
 loc_3_9A89:
     rts                             ; $9A89
 
-sub_3_9A8A:
+Townsperson_DrawOrDespawn:
     jsr     Enemy_DespawnIfFar      ; $9A8A
 
 sub_3_9A8D:
@@ -1614,7 +1623,7 @@ loc_3_9A98:
 dat_3_9A99:
     .byte   $02, $01                                                        ; $9A99
 
-sub_3_9A9B:
+Townsperson_FaceLinkWhileTalking:
     lda     ram_05C3,x              ; $9A9B
     beq     loc_3_9A98              ; $9A9E
     lda     objFacing+1,x           ; $9AA0
@@ -1635,15 +1644,15 @@ loc_3_9AB8:
     pla                             ; $9AB9
     jmp     Enemy_Draw              ; $9ABA
 
-loc_3_9ABD:
+Sign_Ai:
     lda     #$00                    ; $9ABD
     sta     ram_05BD,x              ; $9ABF
-    jsr     sub_3_99B9              ; $9AC2
+    jsr     Townsperson_CheckTalk   ; $9AC2
     jmp     Enemy_DespawnIfFar      ; $9AC5
 
-loc_3_9AC8:
+Wizard_Draw:
     lda     ram_049E                ; $9AC8
-    beq     loc_3_9AE8              ; $9ACB
+    beq     Townsperson_Draw        ; $9ACB
     dec     ram_049E                ; $9ACD
     lda     #$00                    ; $9AD0
     sta     ram_05C3,x              ; $9AD2
@@ -1657,7 +1666,7 @@ loc_3_9AC8:
     ldx     #$4C                    ; $9AE3
     jmp     loc_3_9B3F              ; $9AE5
 
-loc_3_9AE8:
+Townsperson_Draw:
     lda     objXVelocity+1,x        ; $9AE8
     sta     temp9                   ; $9AEA
     lda     enemyAiState,x          ; $9AEC
@@ -3194,7 +3203,7 @@ loc_3_B57D:
 
 loc_3_B589:
     ldx     ram_048B                ; $B589
-    jsr     sub_3_9A50              ; $B58C
+    jsr     Townsperson_TurnToDoor  ; $B58C
     jmp     loc_3_B5C7              ; $B58F
 ; (unreferenced: $B592-$B5AD, 28 bytes)
     .byte   $A5, $00, $38, $E9, $13, $AA, $B9, $97, $07, $1D, $27, $B4, $99, $97, $07, $4C; $B592

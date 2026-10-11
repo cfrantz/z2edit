@@ -984,7 +984,7 @@ sub_1_93AC:
 
 ProjectilePtrs_Bank1:
     .word   Projectile_Straight_Bank1, Projectile_Bubble_Bank1, Projectile_Rock_Bank1, Projectile_Fireball_Bank1 ; $9400
-    .word   $963E, Projectile_Boomerang_Bank1, Projectile_Straight_Bank1, $0000 ; $9408
+    .word   Projectile_Falling_Bank1, Projectile_Boomerang_Bank1, Projectile_Straight_Bank1, $0000 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
 ProjectileUnused_Bank1:
@@ -1002,12 +1002,12 @@ EnemyInitPtrs_Bank1:
     .word   Enemy_InitNone_Bank1, RedJar_Init_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $9445
     .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $944D
     .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Generator_Init_Bank1 ; $9455
-    .word   Generator_Init_Bank1, $9625, $9625, Generator_Init_Bank1 ; $945D
+    .word   Generator_Init_Bank1, Deeler_Init_Bank1, Deeler_Init_Bank1, Generator_Init_Bank1 ; $945D
     .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $9465
     .word   Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1 ; $946D
     .word   Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1, Fighter_Init_Bank1 ; $9475
     .word   Enemy_InitNone_Bank1, Generator_Init_Bank1, Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $947D
-    .word   $986C, Generator_Init_Bank1, Enemy_InitNone_Bank1, $0000 ; $9485
+    .word   Geldarm_Init, Generator_Init_Bank1, Enemy_InitNone_Bank1, $0000 ; $9485
 
 EnemyAiPtrs_Bank1:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
@@ -1017,8 +1017,8 @@ EnemyAiPtrs_Bank1:
     .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
     .word   MoblinGoriya_Ai, MoblinGoriya_Ai, MoblinGoriya_Ai, Daira_Ai ; $94B5
     .word   Daira_Ai, MoblinGoriya_Ai, MoblinGoriya_Ai, MoblinGoriya_Ai ; $94BD
-    .word   Lowder_Ai, $9B31, $9B94, Megmet_Ai ; $94C5
-    .word   $9BB5, $992F, $994F, $0000 ; $94CD
+    .word   Lowder_Ai, MobyGenerator_Ai, Moby_Ai, Megmet_Ai ; $94C5
+    .word   Geldarm_Ai, DumbMoblinGenerator_Ai, DumbMoblin_Ai, $0000 ; $94CD
 
 EnemyAttr_Bank1:
     .byte   $40, $40, $40, $C2, $C1, $81, $94, $C2, $80, $90, $84, $10      ; $94D5
@@ -1048,8 +1048,8 @@ EnemyDrawPtrs_Bank1:
     .word   BagoBago_Draw, Octorok_Draw, Octorok_Draw, Elevator_Draw ; $9585
     .word   Moblin_Draw, Moblin_Draw, Moblin_Draw, OrangeDaira_Draw ; $958D
     .word   RedDaira_Draw, Goriya_Draw, Goriya_Draw, Goriya_Draw ; $9595
-    .word   Lowder_Draw, Enemy_InitNone_Bank1, $9DF6, Megmet_Draw ; $959D
-    .word   $9E0C, Enemy_InitNone_Bank1, $9C43, $0000 ; $95A5
+    .word   Lowder_Draw, Enemy_InitNone_Bank1, Moby_Draw, Megmet_Draw ; $959D
+    .word   Geldarm_Draw, Enemy_InitNone_Bank1, DumbMoblin_Draw, $0000 ; $95A5
 
 ; ---------------------------------------------------------------------------
 ; Enemy_InitNone_Bank1
