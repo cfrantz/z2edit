@@ -49,7 +49,8 @@ objX                    = $004D     ; [17] low byte of X position
 objFacing               = $005F     ; [13] facing direction: 1 = right, 2 = left
 ram_006D                = $006D
 objXVelocity            = $0070     ; [15] X velocity
-; On the overworld, $0073-$007E (objXVelocity+3 and up) hold overworld
+; On the overworld, $0400-$04FF is a buffer for decoding and drawing the
+; map (overworldBuffer below), and $0073-$007E (objXVelocity+3 and up) hold overworld
 ; state instead.
 overworldY              = $0073     ; Link's Y position on the overworld map
 overworldX              = $0074     ; Link's X position on the overworld map
@@ -136,6 +137,7 @@ ppuBuffer2              = $03A4     ; [50]
 ; ---------------------------------------------------------------------------
 objXSubpixel            = $03D6     ; [15] fractional part of the X position (Obj_MoveX)
 objYFrac                = $03E6     ; [13] fraction: of the Y position (Obj_MoveY) or of objYVelocity (Obj_MoveYWithGravity)
+overworldBuffer         = $0400     ; [256] on the overworld only: map decoding and drawing buffers; the side view uses this RAM for other things
 linkAttackFrame         = $0400     ; sword attack animation frame, 0 = not attacking (provisional)
 ram_0401                = $0401
 enemyStunTimer          = $040E     ; [6] while nonzero the enemy is stunned and flashes; counts down each time it is drawn

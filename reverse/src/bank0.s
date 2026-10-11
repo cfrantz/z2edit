@@ -1319,7 +1319,7 @@ loc_0_88F0:
     lda     #$0B                    ; $8901
 
 loc_0_8903:
-    sta     ram_04D0,x              ; $8903
+    sta     overworldBuffer+$D0,x   ; $8903
     dex                             ; $8906
     bpl     loc_0_8903              ; $8907
     lda     ram_0079                ; $8909
@@ -1349,7 +1349,7 @@ loc_0_892D:
     cmp     overworldTargetX        ; $8931
     bcc     loc_0_892D              ; $8933
     lda     temp2                   ; $8935
-    sta     ram_04D0,x              ; $8937
+    sta     overworldBuffer+$D0,x   ; $8937
 
 loc_0_893A:
     inc     temp10                  ; $893A
@@ -1377,7 +1377,7 @@ loc_0_8948:
 
 loc_0_895E:
     ldx     temp7                   ; $895E
-    lda     ram_04D0,x              ; $8960
+    lda     overworldBuffer+$D0,x   ; $8960
     asl     a                       ; $8963
     asl     a                       ; $8964
     tax                             ; $8965
@@ -1541,8 +1541,8 @@ sub_0_8A4B:
     ldy     #$5F                    ; $8A4B
 
 loc_0_8A4D:
-    lda     ram_0470,y              ; $8A4D
-    sta     enemyStunTimer+2,y      ; $8A50
+    lda     overworldBuffer+$70,y   ; $8A4D
+    sta     overworldBuffer+$10,y   ; $8A50
     dey                             ; $8A53
     bpl     loc_0_8A4D              ; $8A54
     rts                             ; $8A56
@@ -1559,10 +1559,10 @@ sub_0_8A57:
     tay                             ; $8A65
 
 loc_0_8A66:
-    lda     breakingBlockXHi+1,y    ; $8A66
-    sta     enemyStunTimer+2,y      ; $8A69
-    lda     swordY,y                ; $8A6C
-    sta     ram_0470,y              ; $8A6F
+    lda     overworldBuffer+$20,y   ; $8A66
+    sta     overworldBuffer+$10,y   ; $8A69
+    lda     overworldBuffer+$80,y   ; $8A6C
+    sta     overworldBuffer+$70,y   ; $8A6F
     iny                             ; $8A72
     dex                             ; $8A73
     bne     loc_0_8A66              ; $8A74
@@ -1596,16 +1596,16 @@ loc_0_8A9E:
     ldx     temp14                  ; $8A9E
     lda     #$00                    ; $8AA0
     sta     ppuBuffer0+3,x          ; $8AA2
-    ldx     enemyStunTimer+2,y      ; $8AA5
+    ldx     overworldBuffer+$10,y   ; $8AA5
     lda     dat_0_87E3,x            ; $8AA8
     jsr     sub_0_8BF5              ; $8AAB
-    ldx     enemyStunTimer+3,y      ; $8AAE
+    ldx     overworldBuffer+$11,y   ; $8AAE
     lda     dat_0_87E3,x            ; $8AB1
     jsr     sub_0_8BF3              ; $8AB4
-    ldx     ram_0470,y              ; $8AB7
+    ldx     overworldBuffer+$70,y   ; $8AB7
     lda     dat_0_87E3,x            ; $8ABA
     jsr     sub_0_8BF1              ; $8ABD
-    ldx     attrColumn,y            ; $8AC0
+    ldx     overworldBuffer+$71,y   ; $8AC0
     lda     dat_0_87E3,x            ; $8AC3
     jsr     sub_0_8BEF              ; $8AC6
     lda     overworldDirection      ; $8AC9
@@ -1662,8 +1662,8 @@ loc_0_8B1A:
     ldx     #$17                    ; $8B1A
 
 loc_0_8B1C:
-    lda     ram_04D0,x              ; $8B1C
-    sta     ram_04E8,x              ; $8B1F
+    lda     overworldBuffer+$D0,x   ; $8B1C
+    sta     overworldBuffer+$E8,x   ; $8B1F
     dex                             ; $8B22
     bpl     loc_0_8B1C              ; $8B23
     jsr     Overworld_SetupDrawRow  ; $8B25
@@ -1755,17 +1755,17 @@ sub_0_8BA8:
     lda     #$00                    ; $8BA8
     sta     ppuBuffer0+3,x          ; $8BAA
     ldy     a:objXVelocity+2        ; $8BAD
-    ldx     ram_04D0,y              ; $8BB0
+    ldx     overworldBuffer+$D0,y   ; $8BB0
     lda     dat_0_87E3,x            ; $8BB3
     jsr     sub_0_8BF5              ; $8BB6
-    ldx     ram_04E8,y              ; $8BB9
+    ldx     overworldBuffer+$E8,y   ; $8BB9
     lda     dat_0_87E3,x            ; $8BBC
     jsr     sub_0_8BF3              ; $8BBF
     iny                             ; $8BC2
-    ldx     ram_04D0,y              ; $8BC3
+    ldx     overworldBuffer+$D0,y   ; $8BC3
     lda     dat_0_87E3,x            ; $8BC6
     jsr     sub_0_8BF1              ; $8BC9
-    ldx     ram_04E8,y              ; $8BCC
+    ldx     overworldBuffer+$E8,y   ; $8BCC
     lda     dat_0_87E3,x            ; $8BCF
     jsr     sub_0_8BEF              ; $8BD2
     lda     overworldTargetX        ; $8BD5
@@ -1810,7 +1810,7 @@ loc_0_8BFE:
     lda     #$0C                    ; $8C00
 
 loc_0_8C02:
-    sta     ram_048B,x              ; $8C02
+    sta     overworldBuffer+$8B,x   ; $8C02
     dex                             ; $8C05
     bpl     loc_0_8C02              ; $8C06
     ldx     #$14                    ; $8C08
@@ -1820,7 +1820,7 @@ loc_0_8C02:
     lda     #$0B                    ; $8C11
 
 loc_0_8C13:
-    sta     attrColumn+6,x          ; $8C13
+    sta     overworldBuffer+$77,x   ; $8C13
     dex                             ; $8C16
     bpl     loc_0_8C13              ; $8C17
     ldx     #$00                    ; $8C19
@@ -1843,7 +1843,7 @@ sub_0_8C30:
     lda     temp2                   ; $8C37
 
 loc_0_8C39:
-    sta     swordY,x                ; $8C39
+    sta     overworldBuffer+$80,x   ; $8C39
     inx                             ; $8C3C
     cpx     temp3                   ; $8C3D
     bne     loc_0_8C39              ; $8C3F
@@ -1891,7 +1891,7 @@ loc_0_8C78:
 ; (end of code not executed in the test movies)
 
 loc_0_8C83:
-    lda     ram_0470,y              ; $8C83
+    lda     overworldBuffer+$70,y   ; $8C83
 
 loc_0_8C86:
     asl     a                       ; $8C86
@@ -1964,7 +1964,7 @@ loc_0_8CE3:
 
 loc_0_8CF7:
     sta     ram_0300,y              ; $8CF7
-    sta     linkAttackFrame,y       ; $8CFA
+    sta     overworldBuffer+$00,y   ; $8CFA
     dey                             ; $8CFD
     bne     loc_0_8CF7              ; $8CFE
     sta     scrollFrozen            ; $8D00
