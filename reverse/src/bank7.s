@@ -79,11 +79,11 @@ Sound_UpdateTitle:
 ; Entries 0-2 are the RAM buffers (PPU_STRING_BUFFER*); $696C is in SRAM,
 ; and $80C9 and $A836 are in whichever bank is mapped at the time.
 PpuStringPtrs:
-    .word   ppuBuffer0, ppuBuffer1, ppuBuffer2, dat_D0BD                    ; $C03D
-    .word   $696C, $80C9, $A836, dat_D0D1, dat_FDCB                         ; $C045
+    .word   ppuBuffer0, ppuBuffer1, ppuBuffer2, dat_D0BD ; $C03D
+    .word   $696C, $80C9, $A836, dat_D0D1, dat_FDCB ; $C045
 ; (unreferenced: $C04F-$C050, 2 bytes)
-    .word   $8000                                                           ; $C04F
-    .word   dat_C458, dat_DF6A, dat_C449, dat_C47C, dat_C490, dat_DCD3      ; $C051
+    .word   $8000                   ; $C04F
+    .word   dat_C458, dat_DF6A, dat_C449, dat_C47C, dat_C490, dat_DCD3 ; $C051
 
 ; Offset of each RAM buffer's length byte from ppuBuffer0Len.
 PpuBufferLenOffsets:
@@ -449,10 +449,10 @@ sub_C258:
 ; areas per byte (even areas in the high nibble).  A set bit means the
 ; thing it stands for (an item, a key, a locked door) is still there.
 AreaFlagsPtrs:
-    .word   saveWorld, saveWorld+$60, saveWorld+$60, saveWorld+$80          ; $C265
-    .word   saveWorld+$A0, saveWorld+$20, saveWorld+$60, saveWorld+$60      ; $C26D
-    .word   saveWorld+$80, saveWorld+$A0, saveWorld+$40, saveWorld+$60      ; $C275
-    .word   saveWorld+$60, saveWorld+$80, saveWorld+$A0, saveWorld+$C0      ; $C27D
+    .word   saveWorld, saveWorld+$60, saveWorld+$60, saveWorld+$80 ; $C265
+    .word   saveWorld+$A0, saveWorld+$20, saveWorld+$60, saveWorld+$60 ; $C26D
+    .word   saveWorld+$80, saveWorld+$A0, saveWorld+$40, saveWorld+$60 ; $C275
+    .word   saveWorld+$60, saveWorld+$80, saveWorld+$A0, saveWorld+$C0 ; $C27D
 
 ; Masks for flags 0-3: clearing an odd area's (low nibble) or an even
 ; area's (high nibble), and testing them.
@@ -482,32 +482,32 @@ AreaFlagEven:
 Area_ClearFlag:
     jsr     Area_GetFlagByte        ; $C295
     bcc     loc_C2A0                ; $C298
-    and     AreaFlagClearOdd,x              ; $C29A
+    and     AreaFlagClearOdd,x      ; $C29A
     sta     (temp0),y               ; $C29D
     rts                             ; $C29F
 
 loc_C2A0:
-    and     AreaFlagClearEven,x              ; $C2A0
+    and     AreaFlagClearEven,x     ; $C2A0
     sta     (temp0),y               ; $C2A3
     rts                             ; $C2A5
 
 Area_TestFlag:
     jsr     Area_GetFlagByte        ; $C2A6
     bcc     loc_C2AF                ; $C2A9
-    and     AreaFlagOdd,x              ; $C2AB
+    and     AreaFlagOdd,x           ; $C2AB
     rts                             ; $C2AE
 
 loc_C2AF:
-    and     AreaFlagEven,x              ; $C2AF
+    and     AreaFlagEven,x          ; $C2AF
     rts                             ; $C2B2
 
 Area_GetFlagByte:
     jsr     World_GetIndex          ; $C2B3
     asl     a                       ; $C2B6
     tay                             ; $C2B7
-    lda     AreaFlagsPtrs,y              ; $C2B8
+    lda     AreaFlagsPtrs,y         ; $C2B8
     sta     temp0                   ; $C2BB
-    lda     AreaFlagsPtrs+1,y              ; $C2BD
+    lda     AreaFlagsPtrs+1,y       ; $C2BD
     sta     temp1                   ; $C2C0
     lda     areaId                  ; $C2C2
     lsr     a                       ; $C2C5
@@ -2162,7 +2162,7 @@ loc_CD19:
 ; Area bank addresses of the overworld location tables (copied to sramLocY
 ; and following), indexed by WorldLocationTable.
 LocationTablePtrs:
-    .word   $861F, $A0FC                                                    ; $CD23
+    .word   $861F, $A0FC            ; $CD23
 
 ; Offset into AreaBank::OverworldMapPtrs (the compressed overworld map pointers) for
 ; each overworld region.
@@ -2243,9 +2243,9 @@ loc_CD78:
 loc_CD8A:
     lda     WorldLocationTable,y    ; $CD8A
     tay                             ; $CD8D
-    lda     LocationTablePtrs,y              ; $CD8E
+    lda     LocationTablePtrs,y     ; $CD8E
     sta     temp0                   ; $CD91
-    lda     LocationTablePtrs+1,y              ; $CD93
+    lda     LocationTablePtrs+1,y   ; $CD93
     sta     temp1                   ; $CD96
     ldy     #$00                    ; $CD98
 
@@ -3166,7 +3166,7 @@ loc_D284:
     txa                             ; $D28C
 
 loc_D28D:
-    sta     saveWorld,x              ; $D28D
+    sta     saveWorld,x             ; $D28D
     dex                             ; $D290
     bne     loc_D28D                ; $D291
 
@@ -3774,9 +3774,9 @@ Enemy_Update:
     lda     enemyActive,x           ; $D5E2
     asl     a                       ; $D5E4
     tay                             ; $D5E5
-    lda     EnemyStateHandlers,y              ; $D5E6
+    lda     EnemyStateHandlers,y    ; $D5E6
     sta     temp14                  ; $D5E9
-    lda     EnemyStateHandlers+1,y              ; $D5EB
+    lda     EnemyStateHandlers+1,y  ; $D5EB
     jmp     loc_D6D6                ; $D5EE
 
 ; Enemy state handlers, by enemyActive (ENEMY_STATE_*).

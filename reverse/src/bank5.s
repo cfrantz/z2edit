@@ -5066,8 +5066,8 @@ loc_5_B2CC:
     ldy     #$DF                    ; $B2D7
 
 loc_5_B2D9:
-    lda     SaveDefaultWorld,y            ; $B2D9
-    sta     saveWorld,y              ; $B2DC
+    lda     SaveDefaultWorld,y      ; $B2D9
+    sta     saveWorld,y             ; $B2DC
     dey                             ; $B2DF
     cpy     #$FF                    ; $B2E0
     bne     loc_5_B2D9              ; $B2E2
@@ -5573,7 +5573,7 @@ sub_5_B5D8:
     ldy     #$1C                    ; $B5E8
 
 sub_5_B5EA:
-    lda     sramBackupStats,x             ; $B5EA
+    lda     sramBackupStats,x       ; $B5EA
     ora     #$D0                    ; $B5ED
     sta     sramOverworldMap+826,y  ; $B5EF
     lda     sramBackupStats+1,x     ; $B5F2
@@ -5606,7 +5606,7 @@ sub_5_B603:
 sub_5_B623:
     lda     #$00                    ; $B623
     sta     temp0                   ; $B625
-    lda     sramBackupStats,x             ; $B627
+    lda     sramBackupStats,x       ; $B627
     jsr     sub_5_B8D2              ; $B62A
     ldx     temp2                   ; $B62D
     sta     sramOverworldMap+889,x  ; $B62F
