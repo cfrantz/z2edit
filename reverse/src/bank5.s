@@ -2323,7 +2323,7 @@ sub_5_9A77:
     ldy     #$01                    ; $9A77
     sty     ram_0011                ; $9A79
     lda     #$50                    ; $9A7B
-    sta     ram_0091                ; $9A7D
+    sta     objOamOffset+1          ; $9A7D
     jsr     sub_EC02                ; $9A7F
     ldx     currentObject           ; $9A82
 
@@ -2631,7 +2631,7 @@ loc_5_9C60:
 loc_5_9C69:
     dec     objXVelocity+7,x        ; $9C69
     beq     loc_5_9C5B              ; $9C6B
-    ldy     ram_0097,x              ; $9C6D
+    ldy     objOamOffset+7,x        ; $9C6D
     lda     objY+7,x                ; $9C6F
     sta     temp0                   ; $9C71
     lda     #$02                    ; $9C73
@@ -2667,7 +2667,7 @@ sub_5_9C99:
     sta     temp14                  ; $9CA1
     lda     sram_6EC0+1,y           ; $9CA3
     sta     temp15                  ; $9CA6
-    ldy     ram_0097,x              ; $9CA8
+    ldy     objOamOffset+7,x        ; $9CA8
     lda     objY+7,x                ; $9CAA
     sta     oamBuffer,y             ; $9CAC
     lda     drawScreenX+2           ; $9CAF
@@ -2679,7 +2679,7 @@ sub_5_9C99:
     lda     sram_6EB6,y             ; $9CBA
     ldy     objFacing+7,x           ; $9CBD
     ora     dat_5_9C96,y            ; $9CBF
-    ldy     ram_0097,x              ; $9CC2
+    ldy     objOamOffset+7,x        ; $9CC2
     sta     oamBuffer+2,y           ; $9CC4
     pla                             ; $9CC7
     sta     oamBuffer+1,y           ; $9CC8
@@ -2695,13 +2695,13 @@ loc_5_9CCE:
     lda     frameCounter            ; $9CDD
     and     #$02                    ; $9CDF
     beq     loc_5_9CEB              ; $9CE1
-    ldy     ram_0097,x              ; $9CE3
+    ldy     objOamOffset+7,x        ; $9CE3
     lda     #$F8                    ; $9CE5
     sta     oamBuffer,y             ; $9CE7
     rts                             ; $9CEA
 
 loc_5_9CEB:
-    ldy     ram_0097,x              ; $9CEB
+    ldy     objOamOffset+7,x        ; $9CEB
     lda     oamBuffer+2,y           ; $9CED
     and     #$43                    ; $9CF0
     sta     oamBuffer+2,y           ; $9CF2
@@ -3186,7 +3186,7 @@ loc_5_A000:
 
 loc_5_A008:
     tya                             ; $A008
-    ldy     ram_0091,x              ; $A009
+    ldy     objOamOffset+1,x        ; $A009
     tax                             ; $A00B
     jsr     sub_F1F4                ; $A00C
     jsr     sub_F0D7                ; $A00F

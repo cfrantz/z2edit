@@ -44,6 +44,12 @@ OBJ_SLOT_SWORD_PROBE    = 16    ; sword tip, for breaking blocks
 NUM_ENEMIES             = 6
 NUM_PROJECTILES         = 6
 
+; enemyActive values.
+ENEMY_STATE_EMPTY       = 0
+ENEMY_STATE_ACTIVE      = 1
+ENEMY_STATE_DYING       = 2
+ENEMY_STATE_EXPLODING   = 3     ; (provisional)
+
 ; Indexes into statLevel.
 STAT_ATTACK             = 0
 STAT_MAGIC              = 1

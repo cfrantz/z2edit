@@ -1610,7 +1610,7 @@ loc_3_9AC8:
     dec     temp0                   ; $9ADB
     lda     #$01                    ; $9ADD
     sta     temp3                   ; $9ADF
-    ldy     ram_0091,x              ; $9AE1
+    ldy     objOamOffset+1,x        ; $9AE1
     ldx     #$4C                    ; $9AE3
     jmp     loc_3_9B3F              ; $9AE5
 
@@ -1625,7 +1625,7 @@ loc_3_9AE8:
     lda     sram_6DF9,y             ; $9AF6
     sta     temp3                   ; $9AF9
     lda     sramEnemyAttr,y         ; $9AFB
-    ldy     ram_0091,x              ; $9AFE
+    ldy     objOamOffset+1,x        ; $9AFE
     sty     temp15                  ; $9B00
     tax                             ; $9B02
     pla                             ; $9B03

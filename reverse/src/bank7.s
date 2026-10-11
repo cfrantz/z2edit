@@ -715,7 +715,7 @@ loc_C3F5:
     sta     drawOffscreen           ; $C405
     sta     linkFairy               ; $C407
     sta     ram_0011                ; $C409
-    sta     ram_0090                ; $C40B
+    sta     objOamOffset            ; $C40B
     jmp     sub_EC02                ; $C40D
 
 GameState_Respawn:
@@ -2746,7 +2746,7 @@ loc_D12B:
     lda     enemyActive,x           ; $D12D
     bne     loc_D135                ; $D12F
     tax                             ; $D131
-    jsr     sub_D625                ; $D132
+    jsr     Enemy_Spawn             ; $D132
 
 loc_D135:
     dex                             ; $D135
@@ -3543,7 +3543,7 @@ loc_D4F3:
     sta     ram_05E7                ; $D4FB
     jsr     sub_0_9925              ; $D4FE
     jsr     Mmc1_SetPrgBankArea     ; $D501
-    jsr     sub_D5A7                ; $D504
+    jsr     Enemies_Update          ; $D504
     jsr     Mmc1_SetPrgBank0        ; $D507
     jsr     sub_0_80E5              ; $D50A
     jsr     sub_0_9847              ; $D50D
@@ -3580,7 +3580,7 @@ loc_D545:
     jmp     loc_0_99E6              ; $D545
 
 loc_D548:
-    ldy     ram_0097,x              ; $D548
+    ldy     objOamOffset+7,x        ; $D548
     lda     drawOffscreen+2         ; $D54A
     and     #$08                    ; $D54C
     bne     loc_D55A                ; $D54E
@@ -3605,7 +3605,16 @@ sub_D55E:
 loc_D56C:
     rts                             ; $D56C
 
-sub_D56D:
+; ---------------------------------------------------------------------------
+; Projectile_Update
+;
+; Compute enemy projectile x's screen position and, if it is active, run the
+; routine for its type (objState+7) from sramProjectilePtrs.
+;
+; In:      x = projectile index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_Update:
     txa                             ; $D56D
     clc                             ; $D56E
     adc     #$07                    ; $D56F
@@ -3620,46 +3629,56 @@ sub_D56D:
     sbc     #$01                    ; $D580
     asl     a                       ; $D582
     tay                             ; $D583
-    lda     sramEnemyData,y         ; $D584
+    lda     sramProjectilePtrs,y    ; $D584
     sta     temp14                  ; $D587
-    lda     sramEnemyData+1,y       ; $D589
+    lda     sramProjectilePtrs+1,y  ; $D589
     jmp     loc_D6D6                ; $D58C
 
-dat_D58F:
+EnemyOamOffsets:
     .byte   $50, $68, $80, $98, $B0, $C8, $50, $68, $80, $98, $B0           ; $D58F
 ; (unreferenced: $D59A-$D59A, 1 bytes)
     .byte   $C8                                                             ; $D59A
 
-dat_D59B:
+ProjectileOamOffsets:
     .byte   $20, $28, $30, $E0, $E8, $F0, $20, $28, $30, $E0, $E8           ; $D59B
 ; (unreferenced: $D5A6-$D5A6, 1 bytes)
     .byte   $F0                                                             ; $D5A6
 
-sub_D5A7:
+; ---------------------------------------------------------------------------
+; Enemies_Update
+;
+; Side view: update the six enemies and their projectiles, once per frame
+; (not while Link is entering the area).  Each frame the sprite slots
+; (objOamOffset) are handed out in a different rotation (oamRotation), so
+; that when there are too many sprites on a line, different ones flicker.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemies_Update:
     lda     linkMode                ; $D5A7
     beq     loc_D5D9                ; $D5A9
-    inc     ram_0485                ; $D5AB
+    inc     oamRotation             ; $D5AB
     ldx     #$05                    ; $D5AE
 
 loc_D5B0:
     stx     currentObject           ; $D5B0
-    lda     ram_0485                ; $D5B2
+    lda     oamRotation             ; $D5B2
     cmp     #$06                    ; $D5B5
     bcc     loc_D5BE                ; $D5B7
     lda     #$00                    ; $D5B9
-    sta     ram_0485                ; $D5BB
+    sta     oamRotation             ; $D5BB
 
 loc_D5BE:
     clc                             ; $D5BE
     adc     currentObject           ; $D5BF
     tay                             ; $D5C1
-    lda     dat_D58F,y              ; $D5C2
-    sta     ram_0091,x              ; $D5C5
-    lda     dat_D59B,y              ; $D5C7
-    sta     ram_0097,x              ; $D5CA
-    jsr     sub_D5DA                ; $D5CC
+    lda     EnemyOamOffsets,y       ; $D5C2
+    sta     objOamOffset+1,x        ; $D5C5
+    lda     ProjectileOamOffsets,y  ; $D5C7
+    sta     objOamOffset+7,x        ; $D5CA
+    jsr     Enemy_Update            ; $D5CC
     ldx     currentObject           ; $D5CF
-    jsr     sub_D56D                ; $D5D1
+    jsr     Projectile_Update       ; $D5D1
     ldx     currentObject           ; $D5D4
     dex                             ; $D5D6
     bpl     loc_D5B0                ; $D5D7
@@ -3667,7 +3686,16 @@ loc_D5BE:
 loc_D5D9:
     rts                             ; $D5D9
 
-sub_D5DA:
+; ---------------------------------------------------------------------------
+; Enemy_Update
+;
+; Compute enemy x's screen position and run the handler for its state
+; (enemyActive, ENEMY_STATE_*) from EnemyStateHandlers.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_Update:
     ldy     #$01                    ; $D5DA
     inx                             ; $D5DC
     jsr     Obj_ComputeScreenPos    ; $D5DD
@@ -3675,16 +3703,14 @@ sub_D5DA:
     lda     enemyActive,x           ; $D5E2
     asl     a                       ; $D5E4
     tay                             ; $D5E5
-    lda     dat_D5F1,y              ; $D5E6
+    lda     EnemyStateHandlers,y              ; $D5E6
     sta     temp14                  ; $D5E9
-    lda     dat_D5F2,y              ; $D5EB
+    lda     EnemyStateHandlers+1,y              ; $D5EB
     jmp     loc_D6D6                ; $D5EE
 
-dat_D5F1:
-    .byte   $03                                                             ; $D5F1
-
-dat_D5F2:
-    .byte   $D6, $CA, $D6, $AE, $DC, $6C, $DD                               ; $D5F2
+; Enemy state handlers, by enemyActive (ENEMY_STATE_*).
+EnemyStateHandlers:
+    .word   Enemy_TrySpawn, Enemy_RunAi, Enemy_Die, Enemy_Explode ; $D5F1
 
 dat_D5F9:
     .byte   $08, $F8                                                        ; $D5F9
@@ -3692,7 +3718,15 @@ dat_D5F9:
 dat_D5FB:
     .byte   $30, $50, $60, $70, $80, $90, $A0, $B0                          ; $D5FB
 
-loc_D603:
+; ---------------------------------------------------------------------------
+; Enemy_TrySpawn
+;
+; ENEMY_STATE_EMPTY: spawn the area's next enemy into this slot when the
+; screen scrolls far enough (Enemy_Spawn).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_TrySpawn:
     lda     ram_0759                ; $D603
     bne     loc_D624                ; $D606
     lda     ram_071F                ; $D608
@@ -3701,21 +3735,21 @@ loc_D603:
     tax                             ; $D60E
     lda     ram_0732                ; $D60F
     cmp     ram_0733                ; $D612
-    bcc     sub_D625                ; $D615
+    bcc     Enemy_Spawn             ; $D615
     cmp     #$02                    ; $D617
     beq     loc_D620                ; $D619
     cpx     #$01                    ; $D61B
-    beq     sub_D625                ; $D61D
+    beq     Enemy_Spawn             ; $D61D
     rts                             ; $D61F
 
 loc_D620:
     cpx     #$00                    ; $D620
-    beq     sub_D625                ; $D622
+    beq     Enemy_Spawn             ; $D622
 
 loc_D624:
     rts                             ; $D624
 
-sub_D625:
+Enemy_Spawn:
     lda     ram_0732,x              ; $D625
     sta     temp0                   ; $D628
     lda     ram_0734,x              ; $D62A
@@ -4668,7 +4702,15 @@ loc_DCAA:
     dey                             ; $DCAC
     rts                             ; $DCAD
 
-loc_DCAE:
+; ---------------------------------------------------------------------------
+; Enemy_Die
+;
+; ENEMY_STATE_DYING: wait out the enemy's death timer, then go on to
+; ENEMY_STATE_EXPLODING.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_Die:
     lda     timerFast+3,x           ; $DCAE
     bne     loc_DCC2                ; $DCB1
     lda     #$20                    ; $DCB3
@@ -4724,7 +4766,7 @@ loc_DCF5:
     lda     linkWalkDir             ; $DD07
     sta     ram_00A0                ; $DD09
     lda     #$50                    ; $DD0B
-    sta     ram_0091                ; $DD0D
+    sta     objOamOffset+1          ; $DD0D
     lda     #$00                    ; $DD0F
     sta     drawOffscreen+1         ; $DD11
     ldx     #$01                    ; $DD13
@@ -4780,10 +4822,17 @@ dat_DD4C:
 dat_DD5C:
     .byte   $F5, $A4, $60, $A2, $A0, $9C, $9C, $9C, $9C, $9C, $9C, $9E, $9E, $9E, $9E, $9E; $DD5C
 
-loc_DD6C:
+; ---------------------------------------------------------------------------
+; Enemy_Explode
+;
+; ENEMY_STATE_EXPLODING: draw the enemy's explosion while its timer runs.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_Explode:
     lda     timerFast+3,x           ; $DD6C
     beq     loc_DDEC                ; $DD6F
-    ldy     ram_0091,x              ; $DD71
+    ldy     objOamOffset+1,x        ; $DD71
     lda     ram_0414,x              ; $DD73
     and     #$0F                    ; $DD76
     tax                             ; $DD78
@@ -5818,7 +5867,7 @@ loc_E3C7:
     bcs     loc_E3B8                ; $E3C7
     jsr     sub_E469                ; $E3C9
     ldy     objState+7,x            ; $E3CC
-    lda     sramEnemyData+23,y      ; $E3CE
+    lda     sramProjectilePtrs+23,y ; $E3CE
     and     #$C0                    ; $E3D1
     cmp     #$80                    ; $E3D3
     bne     loc_E3DD                ; $E3D5
@@ -5862,7 +5911,7 @@ loc_E3ED:
 
 loc_E413:
     ldy     objState+7,x            ; $E413
-    lda     sramEnemyData+23,y      ; $E415
+    lda     sramProjectilePtrs+23,y ; $E415
     ldy     #$10                    ; $E418
     and     #$10                    ; $E41A
     beq     loc_E424                ; $E41C
@@ -5900,7 +5949,7 @@ loc_E442:
     jsr     Hitbox_Overlap          ; $E445
     bcc     loc_E441                ; $E448
     ldy     objState+7,x            ; $E44A
-    lda     sramEnemyData+23,y      ; $E44C
+    lda     sramProjectilePtrs+23,y ; $E44C
     and     #$20                    ; $E44F
     bne     loc_E457                ; $E451
     lda     #$00                    ; $E453
@@ -5909,7 +5958,7 @@ loc_E442:
 loc_E457:
     lda     timerSlow+10            ; $E457
     bne     loc_E441                ; $E45A
-    lda     sramEnemyData+23,y      ; $E45C
+    lda     sramProjectilePtrs+23,y ; $E45C
     and     #$07                    ; $E45F
     jsr     sub_E30D                ; $E461
     ldy     objFacing+7,x           ; $E464
@@ -5917,7 +5966,7 @@ loc_E457:
 
 sub_E469:
     ldy     objState+7,x            ; $E469
-    lda     sramEnemyData+23,y      ; $E46B
+    lda     sramProjectilePtrs+23,y ; $E46B
     ldy     #$03                    ; $E46E
     and     #$08                    ; $E470
     beq     loc_E476                ; $E472
@@ -6187,7 +6236,7 @@ loc_E5F2:
     rts                             ; $E5F2
 
 sub_E5F3:
-    ldy     ram_0091,x              ; $E5F3
+    ldy     objOamOffset+1,x        ; $E5F3
     lda     oamBuffer+16,y          ; $E5F5
     clc                             ; $E5F8
     adc     #$09                    ; $E5F9
@@ -7122,7 +7171,7 @@ sub_EBF0:
     ldx     #$00                    ; $EBF5
     stx     ram_0011                ; $EBF7
     lda     #$08                    ; $EBF9
-    sta     ram_0090                ; $EBFB
+    sta     objOamOffset            ; $EBFB
     ldy     #$00                    ; $EBFD
     jsr     Obj_ComputeScreenPos    ; $EBFF
 
@@ -7165,7 +7214,7 @@ loc_EC17:
 ; (end of code not executed in the test movies)
 
 loc_EC40:
-    ldy     ram_0090,x              ; $EC40
+    ldy     objOamOffset,x          ; $EC40
     lda     objState,x              ; $EC42
     tax                             ; $EC44
     lda     dat_EB97,x              ; $EC45
@@ -7207,7 +7256,7 @@ loc_EC79:
     dey                             ; $EC7C
     bpl     loc_EC6D                ; $EC7D
     ldx     ram_0011                ; $EC7F
-    ldy     ram_0090,x              ; $EC81
+    ldy     objOamOffset,x          ; $EC81
     lda     oamBuffer+3,y           ; $EC83
     sta     ram_0015,x              ; $EC86
     lda     objState,x              ; $EC88
@@ -7281,7 +7330,7 @@ sub_ECEA:
     clc                             ; $ECF0
     adc     dat_EBAD,y              ; $ECF1
     sta     swordX,x                ; $ECF4
-    ldy     ram_0090,x              ; $ECF7
+    ldy     objOamOffset,x          ; $ECF7
     lda     objY,x                  ; $ECF9
     sec                             ; $ECFB
     sbc     #$04                    ; $ECFC
@@ -7513,13 +7562,13 @@ loc_EEB2:
     bcc     loc_EEC7                ; $EEB4
     tya                             ; $EEB6
     sta     enemyStunTimer,x        ; $EEB7
-    lda     ram_0091,x              ; $EEBA
+    lda     objOamOffset+1,x        ; $EEBA
     pha                             ; $EEBC
     adc     #$0F                    ; $EEBD
-    sta     ram_0091,x              ; $EEBF
+    sta     objOamOffset+1,x        ; $EEBF
     jsr     Enemy_Draw              ; $EEC1
     pla                             ; $EEC4
-    sta     ram_0091,x              ; $EEC5
+    sta     objOamOffset+1,x        ; $EEC5
 
 loc_EEC7:
     lda     #$00                    ; $EEC7
@@ -7542,7 +7591,7 @@ loc_EEC7:
     and     #$80                    ; $EEE5
     ora     #$01                    ; $EEE7
     sta     temp3                   ; $EEE9
-    ldy     ram_0091,x              ; $EEEB
+    ldy     objOamOffset+1,x        ; $EEEB
     lda     timerFast+3,x           ; $EEED
     lsr     a                       ; $EEF0
     lsr     a                       ; $EEF1
@@ -7607,7 +7656,7 @@ loc_EF19:
     sta     temp14                  ; $EF3B
     lda     sramEnemyDrawPtrs+1,y   ; $EF3D
     sta     temp15                  ; $EF40
-    ldy     ram_0091,x              ; $EF42
+    ldy     objOamOffset+1,x        ; $EF42
     jmp     (temp14)                ; $EF44
 
 loc_EF47:
@@ -7732,7 +7781,7 @@ loc_EFFC:
 loc_F00A:
     jsr     sub_F216                ; $F00A
     ldx     currentObject           ; $F00D
-    ldy     ram_0091,x              ; $F00F
+    ldy     objOamOffset+1,x        ; $F00F
     lda     objXVelocity+1,x        ; $F011
     bpl     loc_F017                ; $F013
     eor     #$FF                    ; $F015

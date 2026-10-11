@@ -1171,7 +1171,7 @@ sub_1_9718:
     sta     temp14                  ; $9720
     lda     sram_6EC0+1,y           ; $9722
     sta     temp15                  ; $9725
-    ldy     ram_0097,x              ; $9727
+    ldy     objOamOffset+7,x        ; $9727
     lda     objY+7,x                ; $9729
     sta     oamBuffer,y             ; $972B
     sta     temp0                   ; $972E
@@ -1187,7 +1187,7 @@ sub_1_9718:
     ldy     objFacing+7,x           ; $9742
     sty     temp2                   ; $9744
     ora     dat_1_9715,y            ; $9746
-    ldy     ram_0097,x              ; $9749
+    ldy     objOamOffset+7,x        ; $9749
     sta     oamBuffer+2,y           ; $974B
     pla                             ; $974E
     sta     oamBuffer+1,y           ; $974F
@@ -1240,7 +1240,7 @@ loc_1_97A9:
 loc_1_97B6:
     tay                             ; $97B6
     lda     dat_1_97A5,y            ; $97B7
-    ldy     ram_0097,x              ; $97BA
+    ldy     objOamOffset+7,x        ; $97BA
     sta     oamBuffer+2,y           ; $97BC
     rts                             ; $97BF
 
@@ -1795,7 +1795,7 @@ loc_1_9C7D:
 
 loc_1_9C8B:
     tya                             ; $9C8B
-    ldy     ram_0091,x              ; $9C8C
+    ldy     objOamOffset+1,x        ; $9C8C
     tax                             ; $9C8E
     jsr     sub_F1F4                ; $9C8F
     jmp     sub_F0D7                ; $9C92
@@ -1845,7 +1845,7 @@ loc_1_9CD3:
 
 loc_1_9CD4:
     ldx     currentObject           ; $9CD4
-    ldy     ram_0091,x              ; $9CD6
+    ldy     objOamOffset+1,x        ; $9CD6
     tax                             ; $9CD8
     jsr     sub_F1F4                ; $9CD9
     jsr     sub_F1F4                ; $9CDC
@@ -1979,7 +1979,7 @@ loc_1_9D91:
     ldy     objState+1,x            ; $9D91
     dey                             ; $9D93
     sty     temp14                  ; $9D94
-    ldy     ram_0091,x              ; $9D96
+    ldy     objOamOffset+1,x        ; $9D96
     ldx     #$16                    ; $9D98
     lda     temp13                  ; $9D9A
     bne     loc_1_9DA0              ; $9D9C

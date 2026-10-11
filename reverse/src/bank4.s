@@ -936,7 +936,7 @@ loc_4_9767:
     jmp     loc_4_995A              ; $976B
 
 loc_4_976E:
-    ldy     ram_0097,x              ; $976E
+    ldy     objOamOffset+7,x        ; $976E
     lda     objY+7,x                ; $9770
     sta     temp0                   ; $9772
     lda     #$02                    ; $9774
@@ -997,7 +997,7 @@ loc_4_97B5:
 loc_4_97C2:
     tay                             ; $97C2
     lda     dat_4_97B1,y            ; $97C3
-    ldy     ram_0097,x              ; $97C6
+    ldy     objOamOffset+7,x        ; $97C6
     sta     oamBuffer+2,y           ; $97C8
     rts                             ; $97CB
 
@@ -1108,7 +1108,7 @@ loc_4_9832:
 
 loc_4_9870:
     lda     #$58                    ; $9870
-    sta     ram_0091,x              ; $9872
+    sta     objOamOffset+1,x        ; $9872
     lda     sramEnemyHitbox+32      ; $9874
     bmi     loc_4_98A9              ; $9877
     lda     objFacing+1,x           ; $9879
@@ -1279,7 +1279,7 @@ sub_4_996A:
     sta     temp14                  ; $9972
     lda     sram_6EC0+1,y           ; $9974
     sta     temp15                  ; $9977
-    ldy     ram_0097,x              ; $9979
+    ldy     objOamOffset+7,x        ; $9979
     lda     objY+7,x                ; $997B
     sta     oamBuffer,y             ; $997D
     lda     drawScreenX+2           ; $9980
@@ -1291,7 +1291,7 @@ sub_4_996A:
     lda     sram_6EB6,y             ; $998B
     ldy     objFacing+7,x           ; $998E
     ora     dat_4_9967,y            ; $9990
-    ldy     ram_0097,x              ; $9993
+    ldy     objOamOffset+7,x        ; $9993
     sta     oamBuffer+2,y           ; $9995
     pla                             ; $9998
     sta     oamBuffer+1,y           ; $9999
@@ -1315,14 +1315,14 @@ loc_4_99AD:
 loc_4_99B2:
     and     frameCounter            ; $99B2
     beq     loc_4_99BE              ; $99B4
-    ldy     ram_0097,x              ; $99B6
+    ldy     objOamOffset+7,x        ; $99B6
     lda     #$F8                    ; $99B8
     sta     oamBuffer,y             ; $99BA
     rts                             ; $99BD
 ; (end of code not executed in the test movies)
 
 loc_4_99BE:
-    ldy     ram_0097,x              ; $99BE
+    ldy     objOamOffset+7,x        ; $99BE
     ldx     #$01                    ; $99C0
     lda     frameCounter            ; $99C2
     and     #$04                    ; $99C4
@@ -1461,7 +1461,7 @@ sub_4_9A8B:
     lda     drawOffscreen+1         ; $9A8B
     and     #$08                    ; $9A8D
     bne     loc_4_9AA9              ; $9A8F
-    ldy     ram_0091,x              ; $9A91
+    ldy     objOamOffset+1,x        ; $9A91
     lda     objY+1,x                ; $9A93
     sta     oamBuffer,y             ; $9A95
     lda     #$3D                    ; $9A98
@@ -2063,7 +2063,7 @@ loc_4_9E64:
 
 loc_4_9E6C:
     tya                             ; $9E6C
-    ldy     ram_0091,x              ; $9E6D
+    ldy     objOamOffset+1,x        ; $9E6D
     tax                             ; $9E6F
     jsr     sub_F1F4                ; $9E70
     jsr     sub_F0D7                ; $9E73
@@ -2753,7 +2753,7 @@ loc_4_ADE0:
     jmp     loc_4_ADD2              ; $ADE4
 
 loc_4_ADE7:
-    ldy     ram_0097,x              ; $ADE7
+    ldy     objOamOffset+7,x        ; $ADE7
     lda     objY+7,x                ; $ADE9
     sta     temp0                   ; $ADEB
     lda     #$02                    ; $ADED
@@ -2787,7 +2787,7 @@ loc_4_AE11:
     ora     #$40                    ; $AE19
 
 loc_4_AE1B:
-    ldy     a:ram_0097,x            ; $AE1B
+    ldy     a:objOamOffset+7,x      ; $AE1B
     bne     loc_4_AE43              ; $AE1E
 ; (unreferenced: $AE20-$AE2B, 12 bytes)
     .byte   $A5, $12, $0A, $0A, $0A, $38, $2A, $0A, $29, $83, $D0, $17      ; $AE20
@@ -2808,7 +2808,7 @@ loc_4_AE30:
 loc_4_AE3D:
     tay                             ; $AE3D
     lda     dat_4_AE2C,y            ; $AE3E
-    ldy     ram_0097,x              ; $AE41
+    ldy     objOamOffset+7,x        ; $AE41
 
 loc_4_AE43:
     sta     oamBuffer+2,y           ; $AE43
@@ -2939,7 +2939,7 @@ loc_4_AF11:
 
 loc_4_AF12:
     ldy     #$80                    ; $AF12
-    sty     ram_0091,x              ; $AF14
+    sty     objOamOffset+1,x        ; $AF14
     lda     sramEnemyHitbox+10      ; $AF16
     bpl     loc_4_AF1F              ; $AF19
     lda     #$00                    ; $AF1B
@@ -3763,7 +3763,7 @@ loc_4_B424:
     pla                             ; $B424
     sta     drawOffscreen+1         ; $B425
     lda     #$48                    ; $B427
-    sta     ram_0091,x              ; $B429
+    sta     objOamOffset+1,x        ; $B429
     rts                             ; $B42B
 
 loc_4_B42C:
@@ -4216,7 +4216,7 @@ loc_4_B709:
 
 loc_4_B728:
     lda     #$30                    ; $B728
-    sta     ram_0091,x              ; $B72A
+    sta     objOamOffset+1,x        ; $B72A
     rts                             ; $B72C
 
 sub_4_B72D:

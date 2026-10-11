@@ -8,8 +8,8 @@ variables in `src/ram.inc`.
 | Slot | Object | Iterated by |
 |------|--------|-------------|
 | 0 | Link | bank 0 player code, `sub_E079` |
-| 1-6 | enemies | `sub_D5DA`, `Enemy_UpdateCommon`, `Enemy_MoveX`, `Enemy_MoveY` |
-| 7-12 | enemy projectiles | `sub_D56D`, `Projectile_Move` |
+| 1-6 | enemies | `Enemy_Update`, `Enemy_UpdateCommon`, `Enemy_MoveX`, `Enemy_MoveY` |
+| 7-12 | enemy projectiles | `Projectile_Update`, `Projectile_Move` |
 | 13-14 | Link's projectiles | `sub_0_97FA`, `sub_0_98A6` |
 | 15 | unused | |
 | 16 | sword tip probe, for breaking blocks | `sub_E1E6` |
@@ -25,6 +25,7 @@ Each array is only as long as the last slot that uses it:
 | `objFacing` | $005F | 0-12 |
 | `objXVelocity` | $0070 | 0-14 |
 | `objState` | $0080 | 0-14 |
+| `objOamOffset` | $0090 | 0-14 |
 | `objCollision` | $00A7 | 0-6 |
 | `objXSubpixel` | $03D6 | 0-14 |
 | `objYFrac` | $03E6 | 0-12 |

@@ -2281,7 +2281,7 @@ loc_0_8FB7:
     lda     linkWalkDir             ; $8FCF
     sta     ram_00A0                ; $8FD1
     lda     #$30                    ; $8FD3
-    sta     ram_0091                ; $8FD5
+    sta     objOamOffset+1          ; $8FD5
     ldx     #$00                    ; $8FD7
     stx     drawOffscreen           ; $8FD9
     stx     drawOffscreen+1         ; $8FDB
@@ -2290,7 +2290,7 @@ loc_0_8FB7:
     stx     ram_0753                ; $8FE0
     jsr     sub_EC02                ; $8FE3
     lda     #$08                    ; $8FE6
-    sta     ram_0090                ; $8FE8
+    sta     objOamOffset            ; $8FE8
     ldx     #$00                    ; $8FEA
     stx     ram_0011                ; $8FEC
     jsr     sub_EC02                ; $8FEE
@@ -3744,7 +3744,7 @@ loc_0_9882:
 sub_0_9888:
     stx     currentObject           ; $9888
     lda     dat_0_9845,x            ; $988A
-    sta     ram_009D,x              ; $988D
+    sta     objOamOffset+13,x       ; $988D
     lda     objState+13,x           ; $988F
     beq     loc_0_98BF              ; $9891
     bmi     loc_0_9908              ; $9893
@@ -3779,7 +3779,7 @@ loc_0_98BF:
     rts                             ; $98BF
 
 loc_0_98C0:
-    ldy     ram_009D,x              ; $98C0
+    ldy     objOamOffset+13,x       ; $98C0
     lda     objY+13,x               ; $98C2
     sta     oamBuffer,y             ; $98C4
     lda     ram_006D,x              ; $98C7
@@ -3823,7 +3823,7 @@ sub_0_9901:
 
 loc_0_9908:
     jsr     sub_0_98A6              ; $9908
-    ldy     ram_009D,x              ; $990B
+    ldy     objOamOffset+13,x       ; $990B
     lda     objState+13,x           ; $990D
     jsr     sub_D55E                ; $990F
     lda     objY+13,x               ; $9912

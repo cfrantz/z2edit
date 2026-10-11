@@ -55,10 +55,7 @@ overworldY              = $0073     ; Link's Y position on the overworld map
 overworldX              = $0074     ; Link's X position on the overworld map
 ram_007F                = $007F
 objState                = $0080     ; [15] per-object state: Link's animation, an enemy's behavior state, a projectile's type (provisional)
-ram_0090                = $0090
-ram_0091                = $0091
-ram_0097                = $0097
-ram_009D                = $009D
+objOamOffset            = $0090     ; [15] offset in oamBuffer of the object's sprites; rotated every frame (oamRotation) to spread sprite flicker
 linkWalkDir             = $009F     ; last horizontal direction held: 1 = right, 2 = left
 ram_00A0                = $00A0
 enemyType               = $00A1     ; [6] enemy type, by enemy index
@@ -67,7 +64,7 @@ linkWalkFrame           = $00AE     ; walking animation frame, 0-2
 ram_00AF                = $00AF
 ram_00B0                = $00B0
 linkMode                = $00B5     ; Link's mode in the side view; see LINK_MODE_*
-enemyActive             = $00B6     ; [6] 0 = empty, 1 = active, 2 = dying (provisional)
+enemyActive             = $00B6     ; [6] enemy state; see ENEMY_STATE_*
 enemySramIndex          = $00BC     ; [6] index of the enemy in the area's SRAM enemy list (provisional)
 enemyHp                 = $00C2     ; [6] hit points
 drawOffscreen           = $00C8     ; [4] off-screen flags of the object being drawn, by draw category (0 = Link, 1 = enemy, 2 = projectile, 3 = Link's projectile): bits 3-0 = probe points off screen horizontally, $F0 = off screen vertically
@@ -175,7 +172,7 @@ ram_047F                = $047F
 swordY                  = $0480     ; Y of Link's sword; $F8 = no sword
 ram_0481                = $0481
 ram_0484                = $0484
-ram_0485                = $0485
+oamRotation             = $0485     ; rotates the enemies' sprite slots each frame, 0-5
 ram_0486                = $0486
 ram_0487                = $0487
 menuCursor              = $0488     ; selected menu item, e.g. on the continue screen (provisional)
@@ -467,7 +464,7 @@ sramRoomConnections     = $6AFC     ; [252] side view area connections, 4 per ar
 sramDoors               = $6BF8     ; [96] side view doors (provisional)
 ; Enemy definitions: tables with one entry per enemy type (36 in the
 ; overworld banks).
-sramEnemyData           = $6D00     ; [33] start of the enemy definitions, from the area bank at $9400 ($A900 in world 4) (provisional)
+sramProjectilePtrs      = $6D00     ; [16] (16-bit) routine for each projectile type (objState+7 - 1); first of the enemy definition tables, from the area bank at $9400 ($A900 in world 4)
 sramEnemyHp             = $6D21     ; [36] hit points of each enemy type
 sram_6D45               = $6D45     ; [36] (16-bit) per enemy type
 sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy type every frame

@@ -27,7 +27,7 @@ one-line descriptions, in `src/ram.inc`.
 | $6000-$633F | `sramAreaTiles`: the current side view area's tile map |
 | $6002-$6337 | save file backups, used while saving and on the file screens (overlapping the tile map) |
 | $6A00-$6C57 | overworld locations, area connections and doors (from the area bank) |
-| $6D00-$6FA0 | `sramEnemyData`: enemy definitions (from the area bank) |
+| $6D00-$6FA0 | enemy and projectile definitions, starting with `sramProjectilePtrs` (from the area bank) |
 | $7000-$73FF | `sramEnemyLists`: the enemies of each area (from the area bank) |
 | $7400-$773A | save files; see [save files](save-files.md) |
 | $7919-$79F8 | `sramAreaPalettes` (from the area bank) |

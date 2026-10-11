@@ -1116,7 +1116,7 @@ sub_2_967E:
     sta     temp14                  ; $9686
     lda     sram_6EC0+1,y           ; $9688
     sta     temp15                  ; $968B
-    ldy     ram_0097,x              ; $968D
+    ldy     objOamOffset+7,x        ; $968D
     lda     objY+7,x                ; $968F
     sta     oamBuffer,y             ; $9691
     lda     drawScreenX+2           ; $9694
@@ -1128,7 +1128,7 @@ sub_2_967E:
     lda     sram_6EB6,y             ; $969F
     ldy     objFacing+7,x           ; $96A2
     ora     dat_2_967B,y            ; $96A4
-    ldy     ram_0097,x              ; $96A7
+    ldy     objOamOffset+7,x        ; $96A7
     sta     oamBuffer+2,y           ; $96A9
     pla                             ; $96AC
     sta     oamBuffer+1,y           ; $96AD
@@ -1184,7 +1184,7 @@ loc_2_96F3:
 loc_2_9700:
     tay                             ; $9700
     lda     dat_2_96EF,y            ; $9701
-    ldy     ram_0097,x              ; $9704
+    ldy     objOamOffset+7,x        ; $9704
     sta     oamBuffer+2,y           ; $9706
     rts                             ; $9709
 
@@ -1429,7 +1429,7 @@ loc_2_985C:
     lda     #$06                    ; $986E
     sta     a:objState+7,y          ; $9870
     sty     temp0                   ; $9873
-    ldy     ram_0091,x              ; $9875
+    ldy     objOamOffset+1,x        ; $9875
     lda     oamBuffer,y             ; $9877
     ldy     temp0                   ; $987A
     sta     a:objY+7,y              ; $987C
