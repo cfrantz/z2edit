@@ -12,6 +12,7 @@ into SRAM when the world is loaded (`Mode_LoadWorld`).  The engine in bank
 | Table | Contents |
 |-------|----------|
 | `sramProjectilePtrs` | routine for each projectile type |
+| `sramProjectileFlags` | projectile flags: reflectable, survives hitting Link, large hitbox |
 | `sramEnemyHp` | hit points |
 | `sramEnemyAiPtrs` | routine run every frame (the enemy's AI) |
 | `sramEnemyAttr` | bits 7-6 sprite palette, bit 4 drains experience, bits 3-0 experience class |

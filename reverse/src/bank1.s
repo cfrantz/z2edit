@@ -1129,7 +1129,7 @@ loc_1_96D3:
     dey                             ; $96D9
     bpl     loc_1_96D3              ; $96DA
     ldx     currentObject           ; $96DC
-    jsr     sub_E469                ; $96DE
+    jsr     Projectile_GetHitbox    ; $96DE
     jsr     Hitbox_Overlap          ; $96E1
     bcc     loc_1_96EA              ; $96E4
     lda     #$00                    ; $96E6

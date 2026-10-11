@@ -109,7 +109,7 @@ GLOBALS_INC = 1
 .global Link_HurtByEnemy
 .global Enemy_KnockBack
 .global loc_E3B9
-.global sub_E469
+.global Projectile_GetHitbox
 .global DoNothing
 .global Enemy_CheckProjectileHits
 .global Enemy_CheckLinkContact

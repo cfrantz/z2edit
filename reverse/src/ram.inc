@@ -265,7 +265,7 @@ palaceChrBank           = $070B     ; CHR bank of the current palace, halved; fr
 statMeterPending        = $070C     ; [2] magic and life still to be added to statMeter (provisional)
 chimneyTimer            = $070E     ; nonzero while Link sinks down a chimney; counts up to $38
 shieldSpellActive       = $070F     ; nonzero while the shield spell is active: halves damage, changes Link's colors (provisional)
-ram_0710                = $0710
+reflectSpellActive      = $0710     ; nonzero while the reflect spell is active (provisional)
 areaBuildPage           = $0717     ; map page (0-3) while building an area's tile map (provisional)
 ram_071B                = $071B
 ram_071C                = $071C
@@ -454,7 +454,8 @@ sramRoomConnections     = $6AFC     ; [252] side view area connections, 4 per ar
 sramDoors               = $6BF8     ; [96] side view doors (provisional)
 ; Enemy definitions: tables with one entry per enemy type (36 in the
 ; overworld banks).
-sramProjectilePtrs      = $6D00     ; [16] (16-bit) routine for each projectile type (objState+7 - 1); first of the enemy definition tables, from the area bank at $9400 ($A900 in world 4)
+sramProjectilePtrs      = $6D00     ; [11] (16-bit) routine for each projectile type (objState+7 - 1); first of the enemy definition tables, from the area bank at $9400 ($A900 in world 4)
+sramProjectileFlags     = $6D17     ; [10] per projectile type: bits 7-6 = $80 reflectable, bit 5 = survives hitting Link, bit 3 = large hitbox (provisional)
 sramEnemyHp             = $6D21     ; [36] hit points of each enemy type
 sram_6D45               = $6D45     ; [36] (16-bit) per enemy type
 sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy type every frame

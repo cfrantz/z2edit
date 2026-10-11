@@ -2656,7 +2656,7 @@ loc_4_AD4A:
     dey                             ; $AD50
     bpl     loc_4_AD4A              ; $AD51
     ldx     currentObject           ; $AD53
-    jsr     sub_E469                ; $AD55
+    jsr     Projectile_GetHitbox    ; $AD55
     jsr     Hitbox_Overlap          ; $AD58
     bcc     loc_4_AD90              ; $AD5B
     jsr     sub_4_ADA4              ; $AD5D

@@ -5714,14 +5714,14 @@ Link_CheckBgInBank:
     clc                             ; $E07F
     adc     linkFairy               ; $E080
     tay                             ; $E082
-    jsr     sub_E1B8                ; $E083
+    jsr     Obj_ProbeBgPair         ; $E083
     lda     temp3                   ; $E086
     sta     temp13                  ; $E088
     lda     #$05                    ; $E08A
     clc                             ; $E08C
     adc     linkFairy               ; $E08D
     tay                             ; $E08F
-    jsr     sub_E1B8                ; $E090
+    jsr     Obj_ProbeBgPair         ; $E090
     ldy     #$1D                    ; $E093
     jsr     Obj_GetBgTile           ; $E095
     lda     #$00                    ; $E098
@@ -5784,7 +5784,7 @@ loc_E0FC:
     lda     #$8F                    ; $E0FC
     ldy     temp2                   ; $E0FE
     sta     (temp14),y              ; $E100
-    jsr     sub_E292                ; $E102
+    jsr     BreakingBlock_Start     ; $E102
     lda     #$81                    ; $E105
     sta     breakingBlockTimer,x    ; $E107
     lda     #$02                    ; $E10A
@@ -5900,7 +5900,14 @@ loc_E1AE:
     inc     gameMode                ; $E1B2
     jmp     loc_E18A                ; $E1B5
 
-sub_E1B8:
+; ---------------------------------------------------------------------------
+; Obj_ProbeBgPair
+;
+; Obj_ProbeBg for the two probe points y and y - 1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Obj_ProbeBgPair:
     sty     temp0                   ; $E1B8
     lda     #$01                    ; $E1BA
     sta     temp1                   ; $E1BC
@@ -5997,7 +6004,7 @@ loc_E235:
     lda     #$42                    ; $E23A
     ldy     temp2                   ; $E23C
     sta     (temp14),y              ; $E23E
-    jsr     sub_E292                ; $E240
+    jsr     BreakingBlock_Start     ; $E240
     lda     #$01                    ; $E243
     sta     breakingBlockTimer,x    ; $E245
     lda     #$04                    ; $E248
@@ -6047,7 +6054,16 @@ loc_E28C:
     sta     objYVelocity            ; $E28E
     rts                             ; $E291
 
-sub_E292:
+; ---------------------------------------------------------------------------
+; BreakingBlock_Start
+;
+; Take a free breakingBlock slot (or slot 0) for the block at (temp14),temp2
+; in the tile map, and record its position.
+;
+; Out:     x = slot
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+BreakingBlock_Start:
     ldx     #$04                    ; $E292
 
 loc_E294:
@@ -6259,13 +6275,13 @@ loc_E3B9:
 
 loc_E3C7:
     bcs     loc_E3B8                ; $E3C7
-    jsr     sub_E469                ; $E3C9
+    jsr     Projectile_GetHitbox    ; $E3C9
     ldy     objState+7,x            ; $E3CC
-    lda     sramProjectilePtrs+23,y ; $E3CE
+    lda     sramProjectileFlags,y   ; $E3CE
     and     #$C0                    ; $E3D1
     cmp     #$80                    ; $E3D3
     bne     loc_E3DD                ; $E3D5
-    ldy     ram_0710                ; $E3D7
+    ldy     reflectSpellActive      ; $E3D7
     beq     loc_E442                ; $E3DA
 ; (code below not executed in the test movies)
     asl     a                       ; $E3DC
@@ -6293,19 +6309,19 @@ loc_E3ED:
     lda     ram_00D9                ; $E3F9
     beq     loc_E413                ; $E3FB
     cmp     #$40                    ; $E3FD
-    beq     sub_E431                ; $E3FF
-    lda     ram_0710                ; $E401
+    beq     Projectile_Deflect      ; $E3FF
+    lda     reflectSpellActive      ; $E401
     beq     loc_E413                ; $E404
     lda     #$00                    ; $E406
     sta     ram_044C,x              ; $E408
-    jsr     sub_E431                ; $E40B
+    jsr     Projectile_Deflect      ; $E40B
     asl     objXVelocity+7,x        ; $E40E
     asl     objXVelocity+7,x        ; $E410
     rts                             ; $E412
 
 loc_E413:
     ldy     objState+7,x            ; $E413
-    lda     sramProjectilePtrs+23,y ; $E415
+    lda     sramProjectileFlags,y   ; $E415
     ldy     #$10                    ; $E418
     and     #$10                    ; $E41A
     beq     loc_E424                ; $E41C
@@ -6326,7 +6342,16 @@ dat_E42E:
     rts                             ; $E42E
     .byte   $F8, $08                                                        ; $E42F
 
-sub_E431:
+; ---------------------------------------------------------------------------
+; Projectile_Deflect
+;
+; Deflect enemy projectile x (e.g. off Link's shield): play a sound and send
+; it back up and away.
+;
+; In:      x = projectile index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_Deflect:
     lda     #$10                    ; $E431
     sta     sfxRequest+2            ; $E433
     ldy     objFacing+7,x           ; $E435
@@ -6343,7 +6368,7 @@ loc_E442:
     jsr     Hitbox_Overlap          ; $E445
     bcc     loc_E441                ; $E448
     ldy     objState+7,x            ; $E44A
-    lda     sramProjectilePtrs+23,y ; $E44C
+    lda     sramProjectileFlags,y   ; $E44C
     and     #$20                    ; $E44F
     bne     loc_E457                ; $E451
     lda     #$00                    ; $E453
@@ -6352,15 +6377,24 @@ loc_E442:
 loc_E457:
     lda     timerSlow+TIMER_INVULNERABLE ; $E457
     bne     loc_E441                ; $E45A
-    lda     sramProjectilePtrs+23,y ; $E45C
+    lda     sramProjectileFlags,y   ; $E45C
     and     #$07                    ; $E45F
     jsr     Link_TakeDamage         ; $E461
     ldy     objFacing+7,x           ; $E464
     jmp     loc_E3B1                ; $E466
 
-sub_E469:
+; ---------------------------------------------------------------------------
+; Projectile_GetHitbox
+;
+; Set box B (temp4-temp7, see Hitbox_Overlap) to enemy projectile x; types
+; with sramProjectileFlags bit 3 have a taller box.
+;
+; In:      x = projectile index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_GetHitbox:
     ldy     objState+7,x            ; $E469
-    lda     sramProjectilePtrs+23,y ; $E46B
+    lda     sramProjectileFlags,y   ; $E46B
     ldy     #$03                    ; $E46E
     and     #$08                    ; $E470
     beq     loc_E476                ; $E472
@@ -6544,7 +6578,7 @@ dat_E556:
     .byte   $18, $E8                                                        ; $E556
 
 sub_E558:
-    lda     ram_0710                ; $E558
+    lda     reflectSpellActive      ; $E558
     bne     Projectile_CheckLink    ; $E55B
     lda     enemyType,x             ; $E55D
     cmp     #$17                    ; $E55F

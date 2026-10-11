@@ -2153,7 +2153,7 @@ loc_0_8E95:
 
 Spell_ReflectEffect:
     lda     #$01                    ; $8E96
-    sta     ram_0710                ; $8E98
+    sta     reflectSpellActive      ; $8E98
     rts                             ; $8E9B
     .byte   $F4, $F4, $30, $31, $30, $31, $30, $31, $F4, $F4, $F4, $30, $31, $30, $49, $4A; $8E9C
     .byte   $31, $30, $31, $F4, $30, $31, $30, $31, $FF, $FF, $30, $31, $30, $31; $8EAC
@@ -2482,7 +2482,7 @@ loc_0_90AB:
     sta     linkDirHeld             ; $90B8
     sta     linkAttackFrame         ; $90BB
     sta     objXVelocity            ; $90BE
-    sta     ram_0710                ; $90C0
+    sta     reflectSpellActive      ; $90C0
     sta     shieldSpellActive       ; $90C3
     ldy     chimneyTimer            ; $90C6
     beq     loc_0_90D7              ; $90C9
