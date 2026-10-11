@@ -42,6 +42,8 @@ def main():
                 banks[fields["id"]] = int(fields["name"][4:])
             elif kind == "sym":
                 value = int(fields["val"], 16) if "val" in fields else None
+                if fields["name"].startswith("@"):
+                    continue  # cheap local labels are not unique by design
                 if fields["type"] == "lab" and fields.get("seg") in banks:
                     sym = {"name": fields["name"], "bank": banks[fields["seg"]], "addr": value}
                     if labels.get(sym["name"], sym) != sym:

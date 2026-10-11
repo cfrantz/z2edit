@@ -18,3 +18,10 @@ Tools that drive the emulator need the Python extension built with
   movie, annotated with symbol names.
 - `status.py`: Updates the generated section of `STATUS.md`.  Run by
   `make status`.
+- `rename.py`: Renames symbols across `src/` (whole words), keeping the
+  address comment column aligned.  Refuses unknown or already-used names.
+- `label.py`: Finds or creates a label at a bank/address, splitting `.byte`
+  lines or using `name := * + k` as needed.
+- `bank_usage.py`: Plays a movie and reports which PRG bank executes in
+  each game state and world, with the main thread's idle loop counted
+  separately.  Slow: about 35 minutes for the 100AK movie.
