@@ -34,8 +34,8 @@ areas in the high nibble), in seven blocks of 32 bytes (64 areas):
 | Offset | Areas of |
 |--------|----------|
 | $00 | West Hyrule |
-| $20 | Death Mountain |
-| $40 | East Hyrule (and Maze Island) |
+| $20 | Death Mountain and Maze Island (region 1) |
+| $40 | East Hyrule |
 | $60 | towns |
 | $80 | palaces (world 3) |
 | $A0 | palaces (world 4) |
