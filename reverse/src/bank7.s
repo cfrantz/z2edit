@@ -3774,7 +3774,7 @@ Enemy_Update:
 
 ; Enemy state handlers, by enemyActive (ENEMY_STATE_*).
 EnemyStateHandlers:
-    .word   Enemy_TrySpawn, Enemy_RunAi, Enemy_Die, Enemy_Explode ; $D5F1
+    .word   Enemy_TrySpawn, Enemy_RunAi, Enemy_Die, Enemy_ShowExperience ; $D5F1
 
 dat_D5F9:
     .byte   $08, $F8                                                        ; $D5F9
@@ -4123,7 +4123,7 @@ loc_D888:
     lda     objCollision+1,x        ; $D88E
     and     #$03                    ; $D890
     beq     loc_D897                ; $D892
-    jsr     sub_E8EB                ; $D894
+    jsr     Enemy_TurnAround        ; $D894
 
 loc_D897:
     jsr     Enemy_MoveX             ; $D897
@@ -4779,7 +4779,7 @@ loc_DCAA:
 ; Enemy_Die
 ;
 ; ENEMY_STATE_DYING: wait out the enemy's death timer, then go on to
-; ENEMY_STATE_EXPLODING.
+; ENEMY_STATE_SHOW_EXP.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -4787,7 +4787,7 @@ Enemy_Die:
     lda     timerFast+TIMER_ENEMY,x ; $DCAE
     bne     loc_DCC2                ; $DCB1
     lda     #$20                    ; $DCB3
-    ldy     ram_0414,x              ; $DCB5
+    ldy     enemyExpClass,x         ; $DCB5
     bpl     loc_DCBC                ; $DCB8
     lda     #$00                    ; $DCBA
 
@@ -4889,29 +4889,30 @@ Enemy_Remove:
     sta     enemyActive,x           ; $DD49
     rts                             ; $DD4B
 
-dat_DD4C:
+ExperienceTilesLeft:
     .byte   $F5, $F5, $F5, $F5, $F5, $A4, $60, $A2, $A6, $A0, $6C, $A4, $60, $A2, $A6, $A0; $DD4C
 
-dat_DD5C:
+ExperienceTilesRight:
     .byte   $F5, $A4, $60, $A2, $A0, $9C, $9C, $9C, $9C, $9C, $9C, $9E, $9E, $9E, $9E, $9E; $DD5C
 
 ; ---------------------------------------------------------------------------
-; Enemy_Explode
+; Enemy_ShowExperience
 ;
-; ENEMY_STATE_EXPLODING: draw the enemy's explosion while its timer runs.
+; ENEMY_STATE_SHOW_EXP: draw the experience the enemy was worth
+; (ExperienceTilesLeft/Right by enemyExpClass) while its timer runs.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
-Enemy_Explode:
+Enemy_ShowExperience:
     lda     timerFast+TIMER_ENEMY,x ; $DD6C
     beq     loc_DDEC                ; $DD6F
     ldy     objOamOffset+1,x        ; $DD71
-    lda     ram_0414,x              ; $DD73
+    lda     enemyExpClass,x         ; $DD73
     and     #$0F                    ; $DD76
     tax                             ; $DD78
-    lda     dat_DD4C,x              ; $DD79
+    lda     ExperienceTilesLeft,x   ; $DD79
     sta     oamBuffer+1,y           ; $DD7C
-    lda     dat_DD5C,x              ; $DD7F
+    lda     ExperienceTilesRight,x  ; $DD7F
     ldx     currentObject           ; $DD82
     sta     oamBuffer+5,y           ; $DD84
     lda     #$01                    ; $DD87
@@ -4957,7 +4958,7 @@ dat_DDDC:
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $02, $03; $DDDC
 
 loc_DDEC:
-    lda     ram_0414,x              ; $DDEC
+    lda     enemyExpClass,x         ; $DDEC
     bmi     sub_DE20                ; $DDEF
     tay                             ; $DDF1
     lda     dat_DDC0,y              ; $DDF2
@@ -6416,8 +6417,10 @@ loc_E654:
     rts                             ; $E669
 
 loc_E66A:
-dat_E66C := * + 2
     jmp     sub_E371                ; $E66A
+
+; Hit points a sword hit takes from an enemy, by attack level 1-8.
+SwordDamage:
     .byte   $02, $03, $04, $06, $09, $0C, $12, $18                          ; $E66D
 ; (unreferenced: $E675-$E675, 1 bytes)
     .byte   $32                                                             ; $E675
@@ -6552,14 +6555,25 @@ loc_E708:
 loc_E723:
     ldy     statLevel               ; $E723
 
-sub_E726:
+; ---------------------------------------------------------------------------
+; Enemy_TakeDamage
+;
+; Damage enemy x: subtract SwordDamage for level y from its hit points,
+; stun it for 48 frames (enemyStunTimer) and play the hit sound.  If its
+; hit points run out, kill it (Enemy_Kill); otherwise knock it back.
+;
+; In:      x = enemy index, y = attack level (1-8)
+; Out:     carry set
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_TakeDamage:
     lda     #$30                    ; $E726
     sta     enemyStunTimer,x        ; $E728
     lda     #$10                    ; $E72B
     sta     sfxRequest+1            ; $E72D
     lda     enemyHp,x               ; $E72F
     sec                             ; $E731
-    sbc     dat_E66C,y              ; $E732
+    sbc     SwordDamage - 1,y       ; $E732  y = attack level (1-8)
     sta     enemyHp,x               ; $E735
     beq     loc_E74C                ; $E737
     bcc     loc_E74C                ; $E739
@@ -6579,7 +6593,7 @@ loc_E74C:
     ldy     enemyType,x             ; $E74C
     cpy     #$01                    ; $E74E
     beq     loc_E755                ; $E750
-    jmp     sub_E880                ; $E752
+    jmp     Enemy_Kill              ; $E752
 
 loc_E755:
     lda     ram_00AF,x              ; $E755
@@ -6684,12 +6698,12 @@ dat_E7E6:
     .byte   $0D                                                             ; $E7F3
 
 loc_E7F4:
-    jsr     sub_E880                ; $E7F4
+    jsr     Enemy_Kill              ; $E7F4
     lda     ram_00AF,x              ; $E7F7
     and     #$7F                    ; $E7F9
     tay                             ; $E7FB
     lda     dat_E7E6,y              ; $E7FC
-    sta     ram_0414,x              ; $E7FF
+    sta     enemyExpClass,x         ; $E7FF
     lda     #$08                    ; $E802
     sta     sfxRequest+3            ; $E804
     lda     #$00                    ; $E806
@@ -6761,11 +6775,22 @@ dat_E870:
     .byte   $8C                                                             ; $E87E
     .byte   $91                                                             ; $E87F
 
-sub_E880:
+; ---------------------------------------------------------------------------
+; Enemy_Kill
+;
+; Enemy x has been killed: note its experience class (sramEnemyAttr bits
+; 3-0, in enemyExpClass, shown as it dies), and count the kill in its item
+; drop group (sramEnemyDamage bits 7-6); every 6th kill in a group drops an
+; item.
+;
+; In:      x = enemy index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_Kill:
     ldy     enemyType,x             ; $E880
     lda     sramEnemyAttr,y         ; $E882
     and     #$0F                    ; $E885
-    sta     ram_0414,x              ; $E887
+    sta     enemyExpClass,x         ; $E887
     lda     sramEnemyDamage,y       ; $E88A
     and     #$C0                    ; $E88D
     beq     loc_E8BF                ; $E88F
@@ -6784,7 +6809,7 @@ sub_E880:
     lda     #$00                    ; $E8A3
     sta     ram_05DE,x              ; $E8A5
     ldx     currentObject           ; $E8A8
-    ror     ram_0414,x              ; $E8AA
+    ror     enemyExpClass,x         ; $E8AA
     lda     rng+1,x                 ; $E8AD
     and     #$07                    ; $E8B0
     cpy     #$02                    ; $E8B2
@@ -6812,7 +6837,15 @@ loc_E8BF:
     .byte   $B5, $2A, $85, $05, $A9, $08, $85, $07, $A5, $CD, $85, $04, $A9, $08, $85, $06; $E8D5
     .byte   $20, $A2, $E9, $4C, $A1, $E6                                    ; $E8E5
 
-sub_E8EB:
+; ---------------------------------------------------------------------------
+; Enemy_TurnAround
+;
+; Reverse enemy x's facing and horizontal velocity.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_TurnAround:
     lda     objFacing+1,x           ; $E8EB
     eor     #$03                    ; $E8ED
     sta     objFacing+1,x           ; $E8EF

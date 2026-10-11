@@ -1379,7 +1379,7 @@ loc_1_988C:
     lda     objCollision+1,x        ; $988C
     and     #$03                    ; $988E
     beq     loc_1_9895              ; $9890
-    jsr     sub_E8EB                ; $9892
+    jsr     Enemy_TurnAround        ; $9892
 
 loc_1_9895:
     jsr     Enemy_MoveX             ; $9895
@@ -1460,7 +1460,7 @@ loc_1_9910:
 
 loc_1_991F:
     inc     objState+1,x            ; $991F
-    jsr     sub_E8EB                ; $9921
+    jsr     Enemy_TurnAround        ; $9921
     jsr     Enemy_MoveX             ; $9924
     jmp     Enemy_MoveX             ; $9927
 

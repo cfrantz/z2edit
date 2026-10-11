@@ -152,7 +152,7 @@ objYFrac                = $03E6     ; [13] fraction: of the Y position (Obj_Move
 linkAttackFrame         = $0400     ; sword attack animation frame, 0 = not attacking (provisional)
 ram_0401                = $0401
 enemyStunTimer          = $040E     ; [6] while nonzero the enemy is stunned and flashes; counts down each time it is drawn
-ram_0414                = $0414
+enemyExpClass           = $0414     ; [6] experience class of a killed enemy, for ExperienceTilesLeft/Right
 breakingBlockTimer      = $041A     ; [5] blocks being broken: animation timer, 0 = none (provisional)
 breakingBlockXHi        = $041F     ; [5] map page
 breakingBlockX          = $0424     ; [5] X
@@ -472,7 +472,7 @@ sramEnemyHp             = $6D21     ; [36] hit points of each enemy type
 sram_6D45               = $6D45     ; [36] (16-bit) per enemy type
 sramEnemyAiPtrs         = $6D8D     ; [36] (16-bit) routine that runs each enemy type every frame
 sramEnemyAttr           = $6DD5     ; [36] bits 7-6 = sprite palette, bit 4 = drains experience; experience (provisional)
-sramEnemyDamage         = $6DF9     ; [36] bits 3-0: damage class of each enemy type
+sramEnemyDamage         = $6DF9     ; [36] bits 7-6 = item drop group, bits 3-0 = damage class of each enemy type
 sramEnemyHitbox         = $6E1D     ; [36] hitbox of each enemy type: offset into EnemyHitboxes / 4
 sram_6E41               = $6E41     ; [36] per enemy type
 sramEnemyDrawPtrs       = $6E65     ; [36] (16-bit) routine that draws each enemy type

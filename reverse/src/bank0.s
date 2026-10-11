@@ -2727,7 +2727,7 @@ loc_0_91FB:
     ldy     #$01                    ; $9228
 
 loc_0_922A:
-    jsr     sub_E726                ; $922A
+    jsr     Enemy_TakeDamage        ; $922A
 
 loc_0_922D:
     dex                             ; $922D

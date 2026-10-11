@@ -1372,7 +1372,7 @@ loc_4_99F0:
     beq     loc_4_9A0D              ; $9A05
 
 loc_4_9A07:
-    jsr     sub_E8EB                ; $9A07
+    jsr     Enemy_TurnAround        ; $9A07
     jsr     Enemy_MoveX             ; $9A0A
 
 loc_4_9A0D:
@@ -1998,7 +1998,7 @@ loc_4_9E03:
     sta     objXVelocity+1,x        ; $9E05
     lda     timerFast+TIMER_ENEMY,x ; $9E07
     bne     loc_4_9E16              ; $9E0A
-    jsr     sub_E8EB                ; $9E0C
+    jsr     Enemy_TurnAround        ; $9E0C
 
 sub_4_9E0F:
     lda     #$50                    ; $9E0F
@@ -2627,7 +2627,7 @@ loc_4_AD17:
     clc                             ; $AD18
     adc     #$06                    ; $AD19
     tax                             ; $AD1B
-    jsr     sub_E8EB                ; $AD1C
+    jsr     Enemy_TurnAround        ; $AD1C
     ldx     currentObject           ; $AD1F
     lda     #$80                    ; $AD21
     sta     ram_044C,x              ; $AD23
@@ -2666,7 +2666,7 @@ loc_4_AD4A:
     stx     currentObject           ; $AD65
     ldy     #$01                    ; $AD67
     sty     temp11                  ; $AD69
-    jsr     sub_E726                ; $AD6B
+    jsr     Enemy_TakeDamage        ; $AD6B
     pla                             ; $AD6E
     sta     currentObject           ; $AD6F
     ldx     ram_0011                ; $AD71
@@ -3657,7 +3657,7 @@ loc_4_B37B:
     lda     objCollision+1,x        ; $B37E
     and     #$03                    ; $B380
     beq     loc_4_B387              ; $B382
-    jsr     sub_E8EB                ; $B384
+    jsr     Enemy_TurnAround        ; $B384
 
 loc_4_B387:
     jmp     Enemy_MoveX             ; $B387
@@ -5092,7 +5092,7 @@ loc_4_BCD5:
     lda     objCollision+1,x        ; $BCD8
     and     #$03                    ; $BCDA
     beq     loc_4_BCE1              ; $BCDC
-    jsr     sub_E8EB                ; $BCDE
+    jsr     Enemy_TurnAround        ; $BCDE
 
 loc_4_BCE1:
     jmp     Enemy_MoveX             ; $BCE1
@@ -5412,7 +5412,7 @@ loc_4_BEB3:
 ; (end of code not executed in the test movies)
 
 loc_4_BEE2:
-    jsr     sub_E726                ; $BEE2
+    jsr     Enemy_TakeDamage        ; $BEE2
 
 loc_4_BEE5:
     dex                             ; $BEE5

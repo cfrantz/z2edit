@@ -1237,7 +1237,7 @@ loc_3_9851:
     rts                             ; $9867
 
 loc_3_9868:
-    jsr     sub_E8EB                ; $9868
+    jsr     Enemy_TurnAround        ; $9868
     lda     #$E0                    ; $986B
     sta     ram_05BD,x              ; $986D
 
@@ -1529,7 +1529,7 @@ sub_3_9A50:
 loc_3_9A60:
     cmp     objFacing+1,x           ; $9A60
     beq     loc_3_9A67              ; $9A62
-    jsr     sub_E8EB                ; $9A64
+    jsr     Enemy_TurnAround        ; $9A64
 
 loc_3_9A67:
     rts                             ; $9A67

@@ -1404,7 +1404,7 @@ loc_2_9837:
     lda     objCollision+1,x        ; $983A
     and     #$03                    ; $983C
     beq     loc_2_9843              ; $983E
-    jsr     sub_E8EB                ; $9840
+    jsr     Enemy_TurnAround        ; $9840
 
 loc_2_9843:
     ldy     objFacing+1,x           ; $9843

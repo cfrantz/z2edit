@@ -3342,7 +3342,7 @@ loc_5_A0FB:
     beq     loc_5_A10D              ; $A105
 
 loc_5_A107:
-    jsr     sub_E8EB                ; $A107
+    jsr     Enemy_TurnAround        ; $A107
     jsr     Enemy_MoveX             ; $A10A
 
 loc_5_A10D:
@@ -3727,7 +3727,7 @@ loc_5_A380:
     ldy     #$01                    ; $A3AD
 
 loc_5_A3AF:
-    jsr     sub_E726                ; $A3AF
+    jsr     Enemy_TakeDamage        ; $A3AF
 ; (end of code not executed in the test movies)
 
 loc_5_A3B2:

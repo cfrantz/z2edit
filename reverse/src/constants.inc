@@ -63,7 +63,7 @@ NUM_PROJECTILES         = 6
 ENEMY_STATE_EMPTY       = 0
 ENEMY_STATE_ACTIVE      = 1
 ENEMY_STATE_DYING       = 2
-ENEMY_STATE_EXPLODING   = 3     ; (provisional)
+ENEMY_STATE_SHOW_EXP    = 3     ; showing the experience it was worth
 
 ; Indexes into statLevel.
 STAT_ATTACK             = 0

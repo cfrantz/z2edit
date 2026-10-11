@@ -119,8 +119,8 @@ GLOBALS_INC = 1
 .global sub_E579
 .global sub_E617
 .global Enemy_CheckSwordHit
-.global sub_E726
-.global sub_E8EB
+.global Enemy_TakeDamage
+.global Enemy_TurnAround
 .global Enemy_GetHitbox
 .global Hitbox_SetB
 .global Link_GetHitbox
