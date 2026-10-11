@@ -125,14 +125,22 @@ Nmi_Bank5:
 ; Nmi
 ;
 ; NMI entry point.  Dispatches on nmiMode:
-;   bit 7 clear:          Nmi_SoundOnly  (main thread is loading an area)
-;   bit 7 set, bit 6 clear: Nmi_Bank5    (title / bank 5 screens)
-;   bits 7 and 6 set:     the game NMI below, which runs the game.
+;   bit 7 clear:            Nmi_SoundOnly  (main thread is loading an area)
+;   bit 7 set, bit 6 clear: Nmi_Bank5      (title / bank 5 screens)
+;   bits 7 and 6 set:       the game NMI below, which runs the game.
 ;
-; The game NMI saves only a (and the flags); see Main_Loop.  It maps bank 6
-; to update sound and then bank 0, and returns with bank 0 still mapped.
+; The game NMI saves only a (and the flags); see Main_Loop.  Each frame it:
+;   1. writes PPUMASK with rendering off, and does sprite DMA;
+;   2. writes the PPU update strings selected by ppuStringSelect, and
+;      clears the RAM buffer it came from;
+;   3. sets the scroll and turns rendering back on;
+;   4. updates sound (bank 6) and reads the controllers;
+;   5. unless paused or in a dialog, decrements the timers, advances
+;      frameCounter and the RNG, and runs the game (Game_RunState).
+; It returns with bank 0 mapped.
 ;
-; Status:  confirmed (dispatch); the game NMI body is not yet analyzed.
+; Status:  confirmed (the meaning of ram_0726, ram_0768, ram_074C and
+;          ram_00DE is provisional)
 ; ---------------------------------------------------------------------------
 Nmi:
     php                             ; $C07B
@@ -140,26 +148,31 @@ Nmi:
     bpl     Nmi_SoundOnly           ; $C07F
     bvc     Nmi_Bank5               ; $C081
     plp                             ; $C083
-    pha                             ; $C084
+    pha                             ; $C084  keep the main thread's a
+    ; Base nametable from ppuNametable; NMI disabled until the end.
     lda     ppuCtrlShadow           ; $C085
     and     #$7C                    ; $C087
-    ora     ram_0747                ; $C089
+    ora     ppuNametable            ; $C089
     sta     ppuCtrlShadow           ; $C08C
     sta     PPUCTRL                 ; $C08E
+    ; QUIRK: both outcomes of this branch go to the next instruction.
     lda     ram_0727                ; $C091
-    beq     loc_C096                ; $C094
+    beq     @setMask                ; $C094
 
-loc_C096:
+@setMask:
+    ; Rendering off while VRAM is updated.  ppuMaskShadow keeps rendering off
+    ; while ram_0726 is set, and otherwise turns on the background and
+    ; sprites, plus the bits in ram_0768.
     ldy     #$00                    ; $C096
     lda     ppuMaskShadow           ; $C098
     and     #$E0                    ; $C09A
     ldy     ram_0726                ; $C09C
-    bne     loc_C0A8                ; $C09F
+    bne     @writeMask              ; $C09F
     lda     ppuMaskShadow           ; $C0A1
     ora     #$18                    ; $C0A3
     ora     ram_0768                ; $C0A5
 
-loc_C0A8:
+@writeMask:
     sta     ppuMaskShadow           ; $C0A8
     and     #$E1                    ; $C0AA
     sta     PPUMASK                 ; $C0AC
@@ -168,13 +181,13 @@ loc_C0A8:
     sta     PPUSCROLL               ; $C0B4
     sta     PPUSCROLL               ; $C0B7
     sta     OAMADDR                 ; $C0BA
-    lda     #$02                    ; $C0BD
+    lda     #>oamBuffer             ; $C0BD  sprite DMA from oamBuffer
     sta     OAMDMA                  ; $C0BF
-    lda     ram_07AE                ; $C0C2
-    beq     loc_C0CA                ; $C0C5
-    jsr     sub_FD82                ; $C0C7
+    lda     attrColumnPending       ; $C0C2
+    beq     @writeStrings           ; $C0C5
+    jsr     Ppu_WriteAttrColumn     ; $C0C7
 
-loc_C0CA:
+@writeStrings:
     lda     ppuStringSelect         ; $C0CA
     asl     a                       ; $C0CD
     tax                             ; $C0CE
@@ -183,14 +196,17 @@ loc_C0CA:
     lda     PpuStringPtrs+1,x       ; $C0D4
     sta     temp1                   ; $C0D7
     jsr     Ppu_WriteStrings        ; $C0D9
+    ; Point the PPU address at the palette and then at $0000, so that the
+    ; address left in the PPU does not disturb rendering.
     lda     #$3F                    ; $C0DC
     sta     PPUADDR                 ; $C0DE
     ldy     #$00                    ; $C0E1
     sty     PPUADDR                 ; $C0E3
     sty     PPUADDR                 ; $C0E6
     sty     PPUADDR                 ; $C0E9
+    ; Skip setting the scroll while ram_0768 is set.
     lda     ram_0768                ; $C0EC
-    bne     loc_C103                ; $C0EF
+    bne     @enableRendering        ; $C0EF
     lda     ppuCtrlShadow           ; $C0F1
     sta     PPUCTRL                 ; $C0F3
     ldx     PPUSTATUS               ; $C0F6
@@ -199,23 +215,26 @@ loc_C0CA:
     lda     ppuScrollY              ; $C0FE
     sta     PPUSCROLL               ; $C100
 
-loc_C103:
+@enableRendering:
     lda     ppuMaskShadow           ; $C103
     sta     PPUMASK                 ; $C105
+    ; Clear the RAM buffer that was sent.  Buffer 2 is followed by buffer 1
+    ; next frame; buffer 1 by buffer 0.  ROM strings (select 3 and up) are
+    ; sent once.
     ldx     ppuStringSelect         ; $C108
-    beq     loc_C11C                ; $C10B
+    beq     @clearBuffer            ; $C10B
     iny                             ; $C10D
     cpx     #$01                    ; $C10E
-    beq     loc_C119                ; $C110
+    beq     @nextBuffer             ; $C110
     iny                             ; $C112
     lda     #$00                    ; $C113
     cpx     #$02                    ; $C115
-    bne     loc_C12C                ; $C117
+    bne     @setSelect              ; $C117
 
-loc_C119:
+@nextBuffer:
     dec     ppuStringSelect         ; $C119
 
-loc_C11C:
+@clearBuffer:
     ldx     PpuBufferLenOffsets,y   ; $C11C
     lda     #$00                    ; $C11F
     sta     ppuBuffer0Len,x         ; $C121
@@ -223,56 +242,62 @@ loc_C11C:
     sta     ppuBuffer0,x            ; $C126
     lda     ppuStringSelect         ; $C129
 
-loc_C12C:
+@setSelect:
     sta     ppuStringSelect         ; $C12C
-    jsr     sub_C1C1                ; $C12F
-    lda     joypadHeld              ; $C132
-    sta     ram_0744                ; $C134
+    jsr     Sound_Update            ; $C12F  update sound (bank 6)
+    lda     joypadHeld              ; $C132  previous frame's buttons
+    sta     joypadHeldPrev          ; $C134
     jsr     Joypad_Update           ; $C137
     lda     ram_00DE                ; $C13A
-    beq     loc_C146                ; $C13C
+    beq     @checkPerFrame          ; $C13C
     lda     ram_0763                ; $C13E
     ora     ram_0764                ; $C141
-    bne     loc_C14E                ; $C144
+    bne     @checkPaused            ; $C144
 
-loc_C146:
+@checkPerFrame:
     lda     ram_0729                ; $C146
-    beq     loc_C14E                ; $C149
+    beq     @checkPaused            ; $C149
     jsr     sub_C1CD                ; $C14B
 
-loc_C14E:
+@checkPaused:
+    ; Skip the game while paused or in a dialog (ram_074C), except in
+    ; pauseState 3-6 of a dialog.
     lda     ram_074C                ; $C14E
-    beq     loc_C164                ; $C151
+    beq     @notInDialog            ; $C151
     cmp     #$02                    ; $C153
-    bcc     loc_C1A8                ; $C155
+    bcc     @done                   ; $C155
     lda     pauseState              ; $C157
     cmp     #$03                    ; $C15A
-    bcc     loc_C169                ; $C15C
+    bcc     @updateTimers           ; $C15C
     cmp     #$07                    ; $C15E
-    bcs     loc_C169                ; $C160
-    bcc     loc_C1A8                ; $C162
+    bcs     @updateTimers           ; $C160
+    bcc     @done                   ; $C162
 
-loc_C164:
+@notInDialog:
     lda     pauseState              ; $C164
-    bne     loc_C1A8                ; $C167
+    bne     @done                   ; $C167
 
-loc_C169:
-    ldx     #$0C                    ; $C169
+@updateTimers:
+    ; Decrement the timers: timerFast every frame, timerSlow (x = 24..13)
+    ; every 20 frames.
+    ldx     #13 - 1                 ; $C169
     dec     timerDivider            ; $C16B
-    bpl     loc_C177                ; $C16E
-    lda     #$14                    ; $C170
+    bpl     @decTimer               ; $C16E
+    lda     #20                     ; $C170
     sta     timerDivider            ; $C172
-    ldx     #$18                    ; $C175
+    ldx     #13 + 12 - 1            ; $C175
 
-loc_C177:
+@decTimer:
     lda     timerFast,x             ; $C177
-    beq     loc_C17F                ; $C17A
+    beq     @nextTimer              ; $C17A
     dec     timerFast,x             ; $C17C
 
-loc_C17F:
+@nextTimer:
     dex                             ; $C17F
-    bpl     loc_C177                ; $C180
+    bpl     @decTimer               ; $C180
     inc     a:frameCounter          ; $C182
+    ; Advance the RNG: shift the 9 bytes right, shifting in bit 1 of the
+    ; first byte XOR bit 1 of the second.
     ldx     #$00                    ; $C185
     ldy     #$09                    ; $C187
     lda     rng                     ; $C189
@@ -282,19 +307,20 @@ loc_C17F:
     and     #$02                    ; $C193
     eor     temp0                   ; $C195
     clc                             ; $C197
-    beq     loc_C19B                ; $C198
+    beq     @shiftRng               ; $C198
     sec                             ; $C19A
 
-loc_C19B:
+@shiftRng:
     ror     rng,x                   ; $C19B
     inx                             ; $C19E
     dey                             ; $C19F
-    bne     loc_C19B                ; $C1A0
-    jsr     sub_D250                ; $C1A2
+    bne     @shiftRng               ; $C1A0
+    jsr     Oam_HideAllButSprite0   ; $C1A2
     jsr     Game_RunState           ; $C1A5
 
-loc_C1A8:
+@done:
     lda     PPUSTATUS               ; $C1A8
+    ; Re-enable NMI.
     lda     ppuCtrlShadow           ; $C1AB
     ora     #$80                    ; $C1AD
     sta     ppuCtrlShadow           ; $C1AF
@@ -309,7 +335,7 @@ sub_C1B6:
     sta     ram_07AB                ; $C1BC
     bcc     loc_C1CC                ; $C1BF
 
-sub_C1C1:
+Sound_Update:
     lda     #$06                    ; $C1C1
     jsr     Mmc1_SetPrgBank         ; $C1C3
     jsr     sub_6_9000              ; $C1C6
@@ -352,7 +378,7 @@ loc_C206:
     lda     ram_074C                ; $C20B
     cmp     #$02                    ; $C20E
     bcs     loc_C218                ; $C210
-    jsr     sub_D250                ; $C212
+    jsr     Oam_HideAllButSprite0   ; $C212
     jsr     sub_0_968D              ; $C215
 
 loc_C218:
@@ -767,7 +793,7 @@ sub_C4CB:
     sta     PPUCTRL                 ; $C4DA
     jsr     sub_D29C                ; $C4DD
     sta     a:ppuScrollX            ; $C4E0
-    sta     ram_0747                ; $C4E3
+    sta     ppuNametable            ; $C4E3
     sta     scrollXHi               ; $C4E6
     sta     ram_072B                ; $C4E9
     sta     ram_0732                ; $C4EC
@@ -1599,7 +1625,7 @@ loc_CA85:
     asl     a                       ; $CA89
     asl     a                       ; $CA8A
     sta     temp0                   ; $CA8B
-    lda     ram_0744                ; $CA8D
+    lda     joypadHeldPrev          ; $CA8D
     and     #$30                    ; $CA90
     asl     a                       ; $CA92
     asl     a                       ; $CA93
@@ -2345,7 +2371,7 @@ loc_CF3C:
     .word   loc_D120                ; $CF4A
 
 loc_CF4C:
-    jsr     sub_D24C                ; $CF4C
+    jsr     Oam_HideAll             ; $CF4C
     jsr     Mmc1_SetPrgBankArea     ; $CF4F
     lda     areaId                  ; $CF52
     ldy     currentWorld            ; $CF55
@@ -2656,7 +2682,7 @@ Game_CheckModeChange:
 ; ---------------------------------------------------------------------------
 ; Game_CheckStateChange
 ;
-; If gameState has changed since the last call, call sub_D24C and reset
+; If gameState has changed since the last call, call Oam_HideAll and reset
 ; gameMode, gameStep and gameSubStep (and ram_073B, ram_073C).
 ;
 ; Out:     a = gameState
@@ -2668,7 +2694,7 @@ Game_CheckStateChange:
     cmp     gameStatePrev           ; $D177
     sta     gameStatePrev           ; $D17A
     beq     loc_D19A                ; $D17D
-    jsr     sub_D24C                ; $D17F
+    jsr     Oam_HideAll             ; $D17F
     lda     gameState               ; $D182
     ldy     #$00                    ; $D185
     sty     ram_073C                ; $D187
@@ -2686,7 +2712,20 @@ loc_D195:
 loc_D19A:
     rts                             ; $D19A
 
-sub_D19B:
+; ---------------------------------------------------------------------------
+; Obj_MoveYWithGravity
+;
+; Move object x vertically by objYVelocity whole pixels, then accelerate:
+; add the gravity in temp0 to objYFrac, carrying into objYVelocity.  When
+; objYVelocity reaches temp2 (terminal velocity) it stops there.  Here
+; objYFrac is the fractional part of the velocity.
+;
+; In:      x = object slot, temp0 = gravity (1/256 pixel per frame per
+;          frame), temp2 = terminal velocity
+; Clobbers: a, y, temp7
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Obj_MoveYWithGravity:
     ldy     #$00                    ; $D19B
     lda     objYVelocity,x          ; $D19D
     bpl     loc_D1A3                ; $D1A0
@@ -2700,10 +2739,10 @@ loc_D1A3:
     lda     objYHi,x                ; $D1AA
     adc     temp7                   ; $D1AC
     sta     objYHi,x                ; $D1AE
-    lda     objYVelocityFrac,x      ; $D1B0
+    lda     objYFrac,x              ; $D1B0
     clc                             ; $D1B3
     adc     temp0                   ; $D1B4
-    sta     objYVelocityFrac,x      ; $D1B6
+    sta     objYFrac,x              ; $D1B6
     lda     objYVelocity,x          ; $D1B9
     adc     #$00                    ; $D1BC
     sta     objYVelocity,x          ; $D1BE
@@ -2711,12 +2750,23 @@ loc_D1A3:
     bne     loc_D1CD                ; $D1C3
     sta     objYVelocity,x          ; $D1C5
     lda     #$00                    ; $D1C8
-    sta     objYVelocityFrac,x      ; $D1CA
+    sta     objYFrac,x              ; $D1CA
 
 loc_D1CD:
     rts                             ; $D1CD
 
-sub_D1CE:
+; ---------------------------------------------------------------------------
+; Obj_MoveX
+;
+; Add objXVelocity (signed, 4.4 fixed point pixels per frame) to object x's
+; X position objXHi:objX:objXSubpixel.
+;
+; In:      x = object slot
+; Out:     a = whole pixels moved this frame (signed)
+; Clobbers: y, temp0-temp2
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Obj_MoveX:
     lda     objXVelocity,x          ; $D1CE
     asl     a                       ; $D1D0
     asl     a                       ; $D1D1
@@ -2757,7 +2807,19 @@ loc_D1EB:
     sta     objXHi,x                ; $D205
     jmp     loc_D247                ; $D207
 
-sub_D20A:
+; ---------------------------------------------------------------------------
+; Obj_MoveY
+;
+; Add objYVelocity (signed, 4.4 fixed point pixels per frame) to object x's
+; Y position objYHi:objY:objYFrac.  Here objYFrac is the fractional part of
+; the position (compare Obj_MoveYWithGravity).
+;
+; In:      x = object slot
+; Out:     a = whole pixels moved this frame (signed)
+; Clobbers: y, temp0-temp2
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Obj_MoveY:
     lda     objYVelocity,x          ; $D20A
     asl     a                       ; $D20D
     asl     a                       ; $D20E
@@ -2782,10 +2844,10 @@ loc_D220:
 
 loc_D229:
     sty     temp2                   ; $D229
-    lda     objYVelocityFrac,x      ; $D22B
+    lda     objYFrac,x              ; $D22B
     clc                             ; $D22E
     adc     temp1                   ; $D22F
-    sta     objYVelocityFrac,x      ; $D231
+    sta     objYFrac,x              ; $D231
     lda     #$00                    ; $D234
     rol     a                       ; $D236
     pha                             ; $D237
@@ -2803,11 +2865,20 @@ loc_D247:
     adc     temp0                   ; $D249
     rts                             ; $D24B
 
-sub_D24C:
+; ---------------------------------------------------------------------------
+; Oam_HideAll
+;
+; Move all 64 sprites in oamBuffer off the bottom of the screen (Y = $F8).
+; Oam_HideAllButSprite0 does the same for sprites 1-63, leaving sprite 0.
+;
+; Clobbers: a, y
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Oam_HideAll:
     ldy     #$00                    ; $D24C
     beq     loc_D252                ; $D24E
 
-sub_D250:
+Oam_HideAllButSprite0:
     ldy     #$04                    ; $D250
 
 loc_D252:
@@ -4600,7 +4671,7 @@ loc_DEB7:
 
 sub_DEB8:
     inx                             ; $DEB8
-    jsr     sub_D1CE                ; $DEB9
+    jsr     Obj_MoveX               ; $DEB9
     dex                             ; $DEBC
     rts                             ; $DEBD
 
@@ -4612,13 +4683,13 @@ sub_DEBE:
 
 sub_DEC8:
     inx                             ; $DEC8
-    jsr     sub_D20A                ; $DEC9
+    jsr     Obj_MoveY               ; $DEC9
     dex                             ; $DECC
     rts                             ; $DECD
 
 sub_DECE:
     inx                             ; $DECE
-    jsr     sub_D19B                ; $DECF
+    jsr     Obj_MoveYWithGravity    ; $DECF
     dex                             ; $DED2
     rts                             ; $DED3
 
@@ -4627,8 +4698,8 @@ sub_DED4:
     clc                             ; $DED5
     adc     #$07                    ; $DED6
     tax                             ; $DED8
-    jsr     sub_D1CE                ; $DED9
-    jsr     sub_D20A                ; $DEDC
+    jsr     Obj_MoveX               ; $DED9
+    jsr     Obj_MoveY               ; $DEDC
     ldy     #$02                    ; $DEDF
     jsr     sub_F27D                ; $DEE1
     ldx     currentObject           ; $DEE4
@@ -4903,7 +4974,7 @@ sub_E079:
     tay                             ; $E08F
     jsr     sub_E1B8                ; $E090
     ldy     #$1D                    ; $E093
-    jsr     sub_EAE8                ; $E095
+    jsr     Obj_GetBgTile           ; $E095
     lda     #$00                    ; $E098
     sta     ram_0752                ; $E09A
     lda     temp3                   ; $E09D
@@ -5087,7 +5158,7 @@ sub_E1B8:
 
 sub_E1BE:
     ldy     temp0                   ; $E1BE
-    jsr     sub_EAE8                ; $E1C0
+    jsr     Obj_GetBgTile           ; $E1C0
     jsr     AreaBank::sub_850C      ; $E1C3
     bcc     loc_E1D2                ; $E1C6
     ldy     temp0                   ; $E1C8
@@ -5152,7 +5223,7 @@ loc_E214:
     sta     objXHi+16               ; $E221
     ldx     #OBJ_SLOT_SWORD_PROBE   ; $E223
     ldy     #$1C                    ; $E225
-    jsr     sub_EAE8                ; $E227
+    jsr     Obj_GetBgTile           ; $E227
     cmp     AreaBank::dat_851A+4    ; $E22A
     beq     loc_E235                ; $E22D
     jsr     AreaBank::sub_850C      ; $E22F
@@ -6394,7 +6465,7 @@ loc_EA24:
     clc                             ; $EA25
     adc     #$07                    ; $EA26
     tax                             ; $EA28
-    jsr     sub_EAE8                ; $EA29
+    jsr     Obj_GetBgTile           ; $EA29
     jsr     AreaBank::sub_850C      ; $EA2C
     ldx     currentObject           ; $EA2F
 
@@ -6463,14 +6534,14 @@ loc_EA75:
     sta     ram_00D9                ; $EA9D
     rts                             ; $EA9F
 
-dat_EAA0:
+ProbeOffsetX:
     .byte   $17, $09, $17, $09, $14, $0C, $14, $0C, $15, $0B                ; $EAA0
 ; (unreferenced: $EAAA-$EAAB, 2 bytes)
     .byte   $15, $0B                                                        ; $EAAA
     .byte   $12, $0E, $12, $0E, $0E, $02, $0E, $02, $08, $08, $0E, $02, $0E, $02, $08, $08; $EAAC
     .byte   $00, $0F, $04, $04                                              ; $EABC
 
-dat_EAC0:
+ProbeOffsetY:
     .byte   $E6, $E6, $FA, $FA, $00, $00, $E0, $E0, $EC, $EC                ; $EAC0
 ; (unreferenced: $EACA-$EACB, 2 bytes)
     .byte   $F0, $F0                                                        ; $EACA
@@ -6483,11 +6554,25 @@ dat_EAE0:
 dat_EAE4:
     .byte   $60, $60, $61, $62                                              ; $EAE4
 
-sub_EAE8:
+; ---------------------------------------------------------------------------
+; Obj_GetBgTile
+;
+; Read the background tile at a probe point of object x: the object's
+; position plus (ProbeOffsetX,y, ProbeOffsetY,y).  The tile comes from the
+; area's tile map in SRAM; points beyond the map or below the playfield
+; read as tile $40.
+;
+; In:      x = object slot, y = probe index
+; Out:     a = temp3 = tile; temp14-temp15 = tile map pointer and
+;          temp2 = row offset, so that the caller can change the tile
+; Clobbers: y, temp12
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Obj_GetBgTile:
     sty     temp12                  ; $EAE8
     lda     objX,x                  ; $EAEA
     clc                             ; $EAEC
-    adc     dat_EAA0,y              ; $EAED
+    adc     ProbeOffsetX,y          ; $EAED
     sta     temp14                  ; $EAF0
     lda     objXHi,x                ; $EAF2
     adc     #$00                    ; $EAF4
@@ -6507,7 +6592,7 @@ sub_EAE8:
     ldy     temp12                  ; $EB0C
     lda     objY,x                  ; $EB0E
     clc                             ; $EB10
-    adc     dat_EAC0,y              ; $EB11
+    adc     ProbeOffsetY,y          ; $EB11
     and     #$F0                    ; $EB14
     sta     temp2                   ; $EB16
     tay                             ; $EB18
@@ -7773,7 +7858,18 @@ loc_FCA5:
 dat_FD80:
     .byte   $03, $01                                                        ; $FD80
 
-sub_FD82:
+; ---------------------------------------------------------------------------
+; Ppu_WriteAttrColumn
+;
+; Write attrColumn (7 bytes) to a column of the attribute table, for
+; scrolling, and clear attrColumn and attrColumnPending.  The column is
+; computed from ram_071D, ram_071E and ram_0720.  Called by the game NMI
+; when attrColumnPending is set.
+;
+; Clobbers: a, x, temp0, temp1
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Ppu_WriteAttrColumn:
     lda     ram_0720                ; $FD82
     lsr     a                       ; $FD85
     tax                             ; $FD86
@@ -7790,7 +7886,7 @@ sub_FD82:
     ora     #$03                    ; $FD9A
     sta     temp0                   ; $FD9C
     ldx     #$00                    ; $FD9E
-    stx     ram_07AE                ; $FDA0
+    stx     attrColumnPending       ; $FDA0
 
 loc_FDA3:
     lda     PPUSTATUS               ; $FDA3
@@ -7801,13 +7897,14 @@ loc_FDA3:
     adc     #$08                    ; $FDAE
     sta     PPUADDR                 ; $FDB0
     sta     temp1                   ; $FDB3
-    lda     ram_0471,x              ; $FDB5
+    lda     attrColumn,x            ; $FDB5
     sta     PPUDATA                 ; $FDB8
     lda     #$00                    ; $FDBB
-    sta     ram_0471,x              ; $FDBD
+    sta     attrColumn,x            ; $FDBD
     inx                             ; $FDC0
     cpx     #$07                    ; $FDC1
     bcc     loc_FDA3                ; $FDC3
+    ; QUIRK: a is loaded with $FF but y is stored.
     lda     #$FF                    ; $FDC5
     sty     ppuBuffer2Len           ; $FDC7
     rts                             ; $FDCA
@@ -7934,9 +8031,9 @@ loc_FF34:
     inc     temp4                   ; $FF34
 
 loc_FF36:
-    lda     ram_0471,y              ; $FF36
+    lda     attrColumn,y            ; $FF36
     ora     temp3                   ; $FF39
-    sta     ram_0471,y              ; $FF3B
+    sta     attrColumn,y            ; $FF3B
     inc     temp0                   ; $FF3E
     inc     temp0                   ; $FF40
     ldx     temp1                   ; $FF42

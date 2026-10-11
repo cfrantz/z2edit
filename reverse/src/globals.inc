@@ -58,11 +58,11 @@ GLOBALS_INC = 1
 .global sub_D03D
 .global Game_CheckModeChange
 .global Game_CheckStateChange
-.global sub_D19B
-.global sub_D1CE
-.global sub_D20A
-.global sub_D24C
-.global sub_D250
+.global Obj_MoveYWithGravity
+.global Obj_MoveX
+.global Obj_MoveY
+.global Oam_HideAll
+.global Oam_HideAllButSprite0
 .global sub_D266
 .global sub_D281
 .global sub_D29C

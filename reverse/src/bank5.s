@@ -2072,7 +2072,7 @@ loc_5_9911:
     and     #$07                    ; $9922
     bne     loc_5_994F              ; $9924
 ; (code below not executed in the test movies)
-    sta     objYVelocityFrac+1      ; $9926
+    sta     objYFrac+1              ; $9926
     sta     ram_0401                ; $9929
 ; (end of code not executed in the test movies)
 
@@ -4015,7 +4015,7 @@ dat_5_A601:
 Bank5_Nmi:
     lda     ppuCtrlShadow           ; $A610
     and     #$7C                    ; $A612
-    ora     ram_0747                ; $A614
+    ora     ppuNametable            ; $A614
     sta     ppuCtrlShadow           ; $A617
     sta     PPUCTRL                 ; $A619
     lda     ppuMaskShadow           ; $A61C
@@ -4063,7 +4063,7 @@ loc_5_A62C:
     sty     ppuBuffer0              ; $A67F
     jsr     sub_C032                ; $A682
     lda     joypadHeld              ; $A685
-    sta     ram_0744                ; $A687
+    sta     joypadHeldPrev          ; $A687
     jsr     Joypad_Update           ; $A68A
     inc     a:frameCounter          ; $A68D
     jsr     sub_5_A6D9              ; $A690
@@ -4089,7 +4089,7 @@ loc_5_A6A8:
     sta     ram_076B                ; $A6B6
     lda     #$00                    ; $A6B9
     sta     PPUMASK                 ; $A6BB
-    jsr     sub_D24C                ; $A6BE
+    jsr     Oam_HideAll             ; $A6BE
     jsr     sub_D266                ; $A6C1
     inc     ram_0726                ; $A6C4
     lda     #$06                    ; $A6C7
@@ -4218,18 +4218,18 @@ loc_5_A787:
 
 sub_5_A795:
     lda     joypadHeld              ; $A795
-    cmp     ram_0744                ; $A797
+    cmp     joypadHeldPrev          ; $A797
     beq     loc_5_A7C0              ; $A79A
     and     #$10                    ; $A79C
     beq     loc_5_A7C0              ; $A79E
     lda     #$00                    ; $A7A0
     sta     ram_0727                ; $A7A2
     sta     ram_0761                ; $A7A5
-    jsr     sub_D250                ; $A7A8
+    jsr     Oam_HideAllButSprite0   ; $A7A8
     lda     #$80                    ; $A7AB
     sta     ram_00EA                ; $A7AD
     lda     #$00                    ; $A7AF
-    sta     ram_0747                ; $A7B1
+    sta     ppuNametable            ; $A7B1
     sta     ram_0568                ; $A7B4
     sta     ram_073E                ; $A7B7
     inc     ram_0726                ; $A7BA
@@ -4444,9 +4444,9 @@ loc_5_AB7F:
     bne     loc_5_ABCB              ; $ABBD
     lda     #$00                    ; $ABBF
     sta     ppuScrollY              ; $ABC1
-    lda     ram_0747                ; $ABC3
+    lda     ppuNametable            ; $ABC3
     eor     #$02                    ; $ABC6
-    sta     ram_0747                ; $ABC8
+    sta     ppuNametable            ; $ABC8
 
 loc_5_ABCB:
     lda     ram_0761                ; $ABCB
@@ -4756,7 +4756,7 @@ sub_5_ADE0:
     sta     objY+9                  ; $ADFE
     sta     objY+10                 ; $AE00
     sta     ram_0761                ; $AE02
-    sta     ram_0747                ; $AE05
+    sta     ppuNametable            ; $AE05
     sta     ppuScrollY              ; $AE08
     lda     #$C0                    ; $AE0A
     sta     objY+5                  ; $AE0C
@@ -4767,7 +4767,7 @@ sub_5_ADE0:
 ; (code below not executed in the test movies)
 
 loc_5_AE15:
-    lda     ram_0747                ; $AE15
+    lda     ppuNametable            ; $AE15
     bne     loc_5_AE4A              ; $AE18
     lda     timerFast+3             ; $AE1A
     beq     loc_5_AE30              ; $AE1D
@@ -4934,7 +4934,7 @@ loc_5_AF34:
     .byte   $FA, $FE, $77, $55, $55, $55, $55, $55, $DF, $FF, $FF, $75, $55, $55, $55, $FF; $B21D
 
 loc_5_B22D:
-    jsr     sub_D24C                ; $B22D
+    jsr     Oam_HideAll             ; $B22D
     jsr     Game_CheckModeChange    ; $B230
     jsr     sub_D385                ; $B233
 ; (inline jump table)

@@ -117,7 +117,7 @@ loc_0_8149:
     tya                             ; $8186
     asl     a                       ; $8187
     and     #$02                    ; $8188
-    sta     ram_0747                ; $818A
+    sta     ppuNametable            ; $818A
     lda     #$00                    ; $818D
     sta     objXVelocity+13         ; $818F
     sta     objXVelocity+14         ; $8191
@@ -960,9 +960,9 @@ loc_0_86EE:
     sta     ppuScrollY              ; $86FA
 
 loc_0_86FC:
-    lda     ram_0747                ; $86FC
+    lda     ppuNametable            ; $86FC
     eor     #$02                    ; $86FF
-    sta     ram_0747                ; $8701
+    sta     ppuNametable            ; $8701
 
 loc_0_8704:
     lda     objXVelocity+6          ; $8704
@@ -1517,7 +1517,7 @@ loc_0_8A9E:
     ldx     ram_0470,y              ; $8AB7
     lda     dat_0_87E3,x            ; $8ABA
     jsr     sub_0_8BF1              ; $8ABD
-    ldx     ram_0471,y              ; $8AC0
+    ldx     attrColumn,y            ; $8AC0
     lda     dat_0_87E3,x            ; $8AC3
     jsr     sub_0_8BEF              ; $8AC6
     lda     overworldDirection      ; $8AC9
@@ -1732,7 +1732,7 @@ loc_0_8C02:
     lda     #$0B                    ; $8C11
 
 loc_0_8C13:
-    sta     ram_0477,x              ; $8C13
+    sta     attrColumn+6,x          ; $8C13
     dex                             ; $8C16
     bpl     loc_0_8C13              ; $8C17
     ldx     #$00                    ; $8C19
@@ -2768,7 +2768,7 @@ loc_0_9336:
     and     joypadHeld              ; $9336
     bne     loc_0_9340              ; $9338
     jsr     sub_0_9610              ; $933A
-    jmp     sub_D20A                ; $933D
+    jmp     Obj_MoveY               ; $933D
 
 loc_0_9340:
     rts                             ; $9340
@@ -3094,7 +3094,7 @@ loc_0_951C:
     lda     dat_0_9470,y            ; $951C
     sta     objYVelocity            ; $951F
     lda     dat_0_9474,y            ; $9522
-    sta     objYVelocityFrac        ; $9525
+    sta     objYFrac                ; $9525
     lda     #$02                    ; $9528
     sta     ram_0479                ; $952A
 
@@ -3123,18 +3123,18 @@ loc_0_953C:
     ldy     #$FF                    ; $9555
     sty     objYVelocity            ; $9557
     iny                             ; $955A
-    sty     objYVelocityFrac        ; $955B
+    sty     objYFrac                ; $955B
 
 loc_0_955E:
     lda     objY                    ; $955E
     pha                             ; $9560
-    jsr     sub_D19B                ; $9561
+    jsr     Obj_MoveYWithGravity    ; $9561
     pla                             ; $9564
     sta     objY                    ; $9565
     bne     loc_0_956C              ; $9567
 
 loc_0_9569:
-    jsr     sub_D19B                ; $9569
+    jsr     Obj_MoveYWithGravity    ; $9569
 
 loc_0_956C:
     ldy     ram_0479                ; $956C
@@ -3253,7 +3253,7 @@ sub_0_9610:
 
 loc_0_9626:
     ldx     #$00                    ; $9626
-    jsr     sub_D1CE                ; $9628
+    jsr     Obj_MoveX               ; $9628
     sta     ram_0014                ; $962B
 
 loc_0_962D:
@@ -3621,7 +3621,7 @@ sub_0_98A6:
     clc                             ; $98A7
     adc     #$0D                    ; $98A8
     tax                             ; $98AA
-    jsr     sub_D1CE                ; $98AB
+    jsr     Obj_MoveX               ; $98AB
     ldy     #$03                    ; $98AE
     jsr     sub_F27D                ; $98B0
     ldx     currentObject           ; $98B3
@@ -3836,7 +3836,7 @@ sub_0_9A04:
     ldx     #$07                    ; $9A10
 
 loc_0_9A12:
-    sta     ram_0471,x              ; $9A12
+    sta     attrColumn,x            ; $9A12
     dex                             ; $9A15
     bne     loc_0_9A12              ; $9A16
 
@@ -3988,7 +3988,7 @@ loc_0_9AB8:
 
 loc_0_9B13:
     lda     #$01                    ; $9B13
-    sta     ram_07AE                ; $9B15
+    sta     attrColumnPending       ; $9B15
     rts                             ; $9B18
 
 sub_0_9B19:
@@ -4147,7 +4147,7 @@ loc_0_9D69:
 loc_0_9D91:
     lda     pauseState              ; $9D91
     bne     loc_0_9DCD              ; $9D94
-    lda     ram_0744                ; $9D96
+    lda     joypadHeldPrev          ; $9D96
     and     #$10                    ; $9D99
     sta     temp0                   ; $9D9B
     lda     joypadHeld              ; $9D9D
@@ -4206,7 +4206,7 @@ loc_0_9DDE:
     .word   loc_0_A338              ; $9DF4
 
 sub_0_9DF6:
-    lda     ram_0744                ; $9DF6
+    lda     joypadHeldPrev          ; $9DF6
     and     #$0C                    ; $9DF9
     sta     temp1                   ; $9DFB
     lda     #$0C                    ; $9DFD
@@ -4394,7 +4394,7 @@ loc_0_9F34:
 loc_0_9F3D:
     lda     joypadHeld              ; $9F3D
     and     #$10                    ; $9F3F
-    bit     ram_0744                ; $9F41
+    bit     joypadHeldPrev          ; $9F41
     bne     loc_0_9FBC              ; $9F44
     and     #$10                    ; $9F46
     beq     loc_0_9FBC              ; $9F48
@@ -4781,7 +4781,7 @@ loc_0_A199:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Game_ShowContinueScreen:
-    jsr     sub_D24C                ; $A1A5
+    jsr     Oam_HideAll             ; $A1A5
     jsr     sub_D03D                ; $A1A8
     lda     #$02                    ; $A1AB
     sta     gameState               ; $A1AD
@@ -4879,7 +4879,7 @@ loc_0_A243:
     sta     ppuBuffer0+3,y          ; $A253
 
 loc_0_A256:
-    lda     ram_0744                ; $A256
+    lda     joypadHeldPrev          ; $A256
     and     #$10                    ; $A259
     sta     temp0                   ; $A25B
     lda     joypadHeld              ; $A25D
@@ -5861,7 +5861,7 @@ loc_0_A82A:
     .word   loc_FF0F                ; $A858
 
 loc_0_A85A:
-    jsr     sub_D24C                ; $A85A
+    jsr     Oam_HideAll             ; $A85A
     lda     #$06                    ; $A85D
     sta     ppuStringSelect         ; $A85F
     inc     gameSubStep             ; $A862

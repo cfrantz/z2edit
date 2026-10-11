@@ -18,21 +18,30 @@ Each array is only as long as the last slot that uses it:
 
 | Array | Address | Slots |
 |-------|---------|-------|
-| `objState` | $0019 | 0-14 |
+| `objYHi` | $0019 | 0-14 |
 | `objY` | $0029 | 0-16 |
 | `objXHi` | $003B | 0-16 |
 | `objX` | $004D | 0-16 |
 | `objFacing` | $005F | 0-12 |
 | `objXVelocity` | $0070 | 0-14 |
+| `objState` | $0080 | 0-14 |
 | `objCollision` | $00A7 | 0-6 |
 | `objXSubpixel` | $03D6 | 0-14 |
-| `objYVelocityFrac` | $03E6 | 0-12 |
+| `objYFrac` | $03E6 | 0-12 |
 | `objYVelocity` | $057D | 0-12 |
 | `enemyType`, `enemyActive`, `enemySramIndex`, `enemyHp` | $00A1, $00B6, $00BC, $00C2 | 1-6 |
 
+## Movement
+
+Velocities are signed 4.4 fixed point (pixels per frame).  `Obj_MoveX`
+adds `objXVelocity` to the 24-bit X position `objXHi:objX:objXSubpixel`,
+and `Obj_MoveY` likewise for Y (`objYHi:objY:objYFrac`).  Link and some
+enemies instead use `Obj_MoveYWithGravity`, which moves by whole pixels
+and uses `objYFrac` to accumulate gravity into `objYVelocity`.
+
 ## Indexing
 
-Routines shared by all objects take the slot in `x` (e.g. `sub_EAE8`,
+Routines shared by all objects take the slot in `x` (e.g. `Obj_GetBgTile`,
 which reads the background tile at an object's position, and `sub_F27D`).
 Enemy and projectile code instead indexes by its own number, 0-5, from the
 group's first slot: enemy code reads `objY+1,x`, projectile code
