@@ -1465,7 +1465,7 @@ loc_3_99CB:
     dec     ram_075B                ; $99FC
     inc     ram_048D                ; $99FF
     lda     #$00                    ; $9A02
-    sta     ram_0726                ; $9A04
+    sta     renderingOff            ; $9A04
     ldx     #$05                    ; $9A07
 
 loc_3_9A09:
@@ -1718,7 +1718,7 @@ loc_3_9B86:
 
 loc_3_9B9B:
     txa                             ; $9B9B
-    jsr     sub_D385                ; $9B9C
+    jsr     JumpTable               ; $9B9C
 ; (inline jump table)
     .word   loc_3_80EE              ; $9B9F
     .word   loc_3_80EE              ; $9BA1
@@ -1755,7 +1755,7 @@ loc_3_9BCB:
 
 loc_3_9BD9:
     txa                             ; $9BD9
-    jsr     sub_D385                ; $9BDA
+    jsr     JumpTable               ; $9BDA
 ; (inline jump table)
     .word   loc_3_83A4              ; $9BDD
     .word   loc_3_83A8              ; $9BDF
@@ -2382,7 +2382,7 @@ loc_3_B09F:
     lda     pauseState              ; $B0AB
 
 loc_3_B0AE:
-    jsr     sub_D385                ; $B0AE
+    jsr     JumpTable               ; $B0AE
 ; (inline jump table)
     .word   loc_3_B107              ; $B0B1
     .word   loc_3_B0CB              ; $B0B3

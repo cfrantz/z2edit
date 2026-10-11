@@ -33,7 +33,7 @@ one-line descriptions, in `src/ram.inc`.
 | $7919-$79F8 | `sramAreaPalettes` (from the area bank) |
 | $7C00-$7F7F | `sramOverworldMap`: the region's compressed overworld map (from the area bank) |
 
-When a world is loaded (`gameMode` 0, `loc_CD40`), the world's tables are
+When a world is loaded (`gameMode` 0, `Mode_LoadWorld`), the world's tables are
 copied from its area bank into SRAM, so that area loading and the game
 can read them whichever bank is mapped.  The game state therefore depends
 on SRAM contents beyond the save files.

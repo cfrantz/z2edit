@@ -23,7 +23,7 @@ Main:
     sta     PPUCTRL                 ; $C005
     lda     #$05                    ; $C008
     jsr     Mmc1_SetPrgBank         ; $C00A
-    jsr     sub_5_A6A0              ; $C00D
+    jsr     Game_PowerOnInit        ; $C00D
 
 ; ---------------------------------------------------------------------------
 ; Main_Loop
@@ -61,11 +61,19 @@ Main_Loop:
     sta     nmiMode                 ; $C02C
     jmp     Main_Loop               ; $C02F
 
-sub_C032:
+; ---------------------------------------------------------------------------
+; Sound_UpdateTitle
+;
+; Run the title screen sound engine in bank 6 for one frame, then map bank
+; 5 again.  Called by Bank5_Nmi; Sound_Update is the gameplay counterpart.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sound_UpdateTitle:
     lda     #$06                    ; $C032
     jsr     Mmc1_SetPrgBank         ; $C034
-    jsr     sub_6_8000              ; $C037
-    jmp     sub_C388                ; $C03A
+    jsr     Sound_TitleEngine       ; $C037
+    jmp     Mmc1_SetPrgBank5        ; $C03A
 
 ; PPU update strings sent by the game NMI, indexed by ppuStringSelect * 2.
 ; Entries 0-2 are the RAM buffers (PPU_STRING_BUFFER*); $696C is in SRAM,
@@ -98,7 +106,7 @@ Nmi_SoundOnly:
     pha                             ; $C064
     lda     #$06                    ; $C065
     jsr     Mmc1_SetPrgBank         ; $C067
-    jsr     sub_6_9000              ; $C06A
+    jsr     Sound_Engine            ; $C06A
     jsr     Mmc1_SetPrgBankArea     ; $C06D
     pla                             ; $C070
     tay                             ; $C071
@@ -139,7 +147,7 @@ Nmi_Bank5:
 ;      frameCounter and the RNG, and runs the game (Game_RunState).
 ; It returns with bank 0 mapped.
 ;
-; Status:  confirmed (the meaning of ram_0726, ram_0768, ram_074C and
+; Status:  confirmed (the meaning of renderingOff, ram_0768, ram_074C and
 ;          ram_00DE is provisional)
 ; ---------------------------------------------------------------------------
 Nmi:
@@ -161,12 +169,12 @@ Nmi:
 
 @setMask:
     ; Rendering off while VRAM is updated.  ppuMaskShadow keeps rendering off
-    ; while ram_0726 is set, and otherwise turns on the background and
+    ; while renderingOff is set, and otherwise turns on the background and
     ; sprites, plus the bits in ram_0768.
     ldy     #$00                    ; $C096
     lda     ppuMaskShadow           ; $C098
     and     #$E0                    ; $C09A
-    ldy     ram_0726                ; $C09C
+    ldy     renderingOff            ; $C09C
     bne     @writeMask              ; $C09F
     lda     ppuMaskShadow           ; $C0A1
     ora     #$18                    ; $C0A3
@@ -335,10 +343,18 @@ sub_C1B6:
     sta     ram_07AB                ; $C1BC
     bcc     loc_C1CC                ; $C1BF
 
+; ---------------------------------------------------------------------------
+; Sound_Update
+;
+; Run the gameplay sound engine in bank 6 for one frame, then map bank 0.
+; Called by the game NMI.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Sound_Update:
     lda     #$06                    ; $C1C1
     jsr     Mmc1_SetPrgBank         ; $C1C3
-    jsr     sub_6_9000              ; $C1C6
+    jsr     Sound_Engine            ; $C1C6
     jmp     Mmc1_SetPrgBank0        ; $C1C9
 
 loc_C1CC:
@@ -353,7 +369,7 @@ sub_C1CD:
     jmp     Mmc1_SetPrgBankArea     ; $C1DA
 
 sub_C1DD:
-    jsr     sub_CF30                ; $C1DD
+    jsr     World_GetIndex          ; $C1DD
     cmp     #$01                    ; $C1E0
     bne     loc_C206                ; $C1E2
     lda     townCode                ; $C1E4
@@ -390,7 +406,7 @@ loc_C220:
     lda     pauseState              ; $C220
     ldy     ram_0567                ; $C223
     bne     loc_C23A                ; $C226
-    jsr     sub_D385                ; $C228
+    jsr     JumpTable               ; $C228
 ; (inline jump table)
     .word   $A256                   ; $C22B
 ; (unreferenced: $C22D-$C232, 6 bytes)
@@ -402,7 +418,7 @@ loc_C233:
     jmp     loc_0_9D54              ; $C237
 
 loc_C23A:
-    jsr     sub_D385                ; $C23A
+    jsr     JumpTable               ; $C23A
 ; (inline jump table)
     .word   $A199                   ; $C23D
     .word   $A315                   ; $C23F
@@ -479,7 +495,7 @@ loc_C2AF:
     rts                             ; $C2B2
 
 sub_C2B3:
-    jsr     sub_CF30                ; $C2B3
+    jsr     World_GetIndex          ; $C2B3
     asl     a                       ; $C2B6
     tay                             ; $C2B7
     lda     dat_C265,y              ; $C2B8
@@ -505,32 +521,32 @@ Game_RunState:
     sty     ram_0727                ; $C2CC
     sty     ram_0729                ; $C2CF
     jsr     Game_CheckStateChange   ; $C2D2
-    jsr     sub_D385                ; $C2D5
+    jsr     JumpTable               ; $C2D5
 ; (inline jump table)
-    .word   loc_C34F                ; $C2D8
-    .word   loc_C2E6                ; $C2DA
-    .word   loc_C31E                ; $C2DC
+    .word   GameState_Begin         ; $C2D8
+    .word   GameState_Play          ; $C2DA
+    .word   GameState_Death         ; $C2DC
     .word   loc_CB27                ; $C2DE
     .word   loc_C364                ; $C2E0
     .word   loc_C38D                ; $C2E2  (not observed)
-    .word   loc_C410                ; $C2E4
+    .word   GameState_Respawn       ; $C2E4
 
-loc_C2E6:
+GameState_Play:
     jsr     Game_CheckModeChange    ; $C2E6
-    jsr     sub_D385                ; $C2E9
+    jsr     JumpTable               ; $C2E9
 ; (inline jump table)
-    .word   loc_CD40                ; $C2EC
+    .word   Mode_LoadWorld          ; $C2EC
     .word   loc_CCB3                ; $C2EE
     .word   $8149                   ; $C2F0
     .word   $87F3                   ; $C2F2
-    .word   loc_C72D                ; $C2F4
+    .word   Game_UnblankAndNextMode ; $C2F4
     .word   $8558                   ; $C2F6
     .word   loc_CB35                ; $C2F8
     .word   loc_C4A4                ; $C2FA
-    .word   loc_C6EE                ; $C2FC
+    .word   Game_Wait               ; $C2FC
     .word   loc_CF3C                ; $C2FE
     .word   loc_C62F                ; $C300
-    .word   loc_D3CC                ; $C302
+    .word   Mode_SideView           ; $C302
     .word   loc_C68A                ; $C304
     .word   $A82A                   ; $C306
     .word   loc_C6EF                ; $C308
@@ -538,27 +554,27 @@ loc_C2E6:
     .word   loc_CF4C                ; $C30C
     .word   loc_C397                ; $C30E
     .word   loc_C63E                ; $C310
-    .word   loc_C644                ; $C312
-    .word   loc_C6EE                ; $C314
+    .word   Mode_FindConnectedRoom  ; $C312
+    .word   Game_Wait               ; $C314
     .word   loc_C70C                ; $C316
     .word   loc_CFFC                ; $C318
     .word   $81B1                   ; $C31A
     .word   $8207                   ; $C31C
 
-loc_C31E:
+GameState_Death:
     jsr     Game_CheckModeChange    ; $C31E
-    jsr     sub_D385                ; $C321
+    jsr     JumpTable               ; $C321
 ; (inline jump table)
-    .word   loc_C722                ; $C324
-    .word   loc_D042                ; $C326
+    .word   Game_BlankAndNextMode   ; $C324
+    .word   Death_ClearScreen       ; $C326
     .word   loc_C71A                ; $C328
-    .word   loc_C9EE                ; $C32A
-    .word   loc_CA1B                ; $C32C
-    .word   loc_C722                ; $C32E
+    .word   Death_Animate           ; $C32A
+    .word   Death_LoseLife          ; $C32C
+    .word   Game_BlankAndNextMode   ; $C32E
     .word   loc_D04D                ; $C330
-    .word   loc_C72D                ; $C332
-    .word   loc_CF05                ; $C334
-    .word   loc_CA85                ; $C336
+    .word   Game_UnblankAndNextMode ; $C332
+    .word   Game_NextMode           ; $C334
+    .word   Death_ContinueMenu      ; $C336
     .word   loc_FE76                ; $C338  (not observed)
     .word   loc_C33C                ; $C33A  (not observed)
 ; (code below not executed in the test movies)
@@ -574,9 +590,9 @@ loc_C33C:
     rts                             ; $C34E
 ; (end of code not executed in the test movies)
 
-loc_C34F:
+GameState_Begin:
     jsr     Mmc1_SetPrgBank0        ; $C34F
-    jsr     sub_D293                ; $C352
+    jsr     Ram_ClearExceptSaved    ; $C352
     jsr     sub_0_AA08              ; $C355
 
 sub_C358:
@@ -590,7 +606,7 @@ loc_C360:
 
 loc_C364:
     jsr     Game_CheckModeChange    ; $C364
-    jsr     sub_D385                ; $C367
+    jsr     JumpTable               ; $C367
 ; (inline jump table)
     .word   loc_C376                ; $C36A
     .word   sub_C4CB                ; $C36C
@@ -600,32 +616,39 @@ loc_C364:
     .word   loc_C382                ; $C374
 
 loc_C376:
-    jsr     sub_C388                ; $C376
+    jsr     Mmc1_SetPrgBank5        ; $C376
     jmp     loc_5_8B50              ; $C379
 
 loc_C37C:
-    jsr     sub_C388                ; $C37C
+    jsr     Mmc1_SetPrgBank5        ; $C37C
     jmp     loc_5_8B69              ; $C37F
 
 loc_C382:
-    jsr     sub_C388                ; $C382
+    jsr     Mmc1_SetPrgBank5        ; $C382
     jmp     loc_5_8BBF              ; $C385
 
-sub_C388:
+; ---------------------------------------------------------------------------
+; Mmc1_SetPrgBank5
+;
+; Map PRG bank 5 at $8000.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Mmc1_SetPrgBank5:
     lda     #$05                    ; $C388
     jmp     Mmc1_SetPrgBank         ; $C38A
 ; (code below not executed in the test movies)
 
 loc_C38D:
     jsr     Game_CheckModeChange    ; $C38D
-    jsr     sub_D385                ; $C390
+    jsr     JumpTable               ; $C390
 ; (inline jump table)
     .word   loc_CD19                ; $C393  (not observed)
     .word   loc_C33C                ; $C395  (not observed)
 
 loc_C397:
     jsr     Game_CheckStepChange    ; $C397
-    jsr     sub_D385                ; $C39A
+    jsr     JumpTable               ; $C39A
 ; (inline jump table)
     .word   loc_C3A5                ; $C39D
     .word   loc_C3B5                ; $C39F
@@ -637,13 +660,13 @@ loc_C3A5:
     sta     ppuStringSelect         ; $C3A7
     lda     #$00                    ; $C3AA
     sta     ram_0760                ; $C3AC
-    inc     ram_0726                ; $C3AF
+    inc     renderingOff            ; $C3AF
     jmp     loc_C3E2                ; $C3B2
 
 loc_C3B5:
     lda     areaChrBank             ; $C3B5
     jsr     Mmc1_SetChrBank         ; $C3B8
-    jsr     sub_D266                ; $C3BB
+    jsr     Ppu_ClearNametables     ; $C3BB
     ldy     #$13                    ; $C3BE
 
 loc_C3C0:
@@ -671,7 +694,7 @@ loc_C3E2:
 
 loc_C3E6:
     lda     #$00                    ; $C3E6
-    sta     ram_0726                ; $C3E8
+    sta     renderingOff            ; $C3E8
     beq     loc_C3E2                ; $C3EB
 
 loc_C3ED:
@@ -695,9 +718,9 @@ loc_C3F5:
     sta     ram_0090                ; $C40B
     jmp     sub_EC02                ; $C40D
 
-loc_C410:
+GameState_Respawn:
     jsr     Game_CheckStepChange    ; $C410
-    jsr     sub_D385                ; $C413
+    jsr     JumpTable               ; $C413
 ; (inline jump table)
     .word   loc_C3A5                ; $C416
     .word   loc_C3B5                ; $C418
@@ -750,7 +773,7 @@ dat_C490:
     .byte   $27, $37, $0F, $07, $16, $30, $0F, $3C, $1C, $0C, $FF           ; $C499
 
 loc_C4A4:
-    jmp     loc_C722                ; $C4A4
+    jmp     Game_BlankAndNextMode   ; $C4A4
 ; (unreferenced: $C4A7-$C4AE, 8 bytes)
 
 dat_C4A7:
@@ -762,7 +785,7 @@ dat_C4AF:
     .byte   $90, $A0, $20, $00, $00, $00, $00                               ; $C4B0
 
 ; PRG bank of each world's areas (regions 1 and 2 of the overworld use bank 2;
-; see loc_CD40).
+; see Mode_LoadWorld).
 WorldPrgBanks:
     .byte   $01, $03, $03, $04, $04, $05                                    ; $C4B7
 
@@ -791,7 +814,7 @@ sub_C4CB:
     jsr     Mmc1_SetPrgBankArea     ; $C4D5
     lda     ppuCtrlShadow           ; $C4D8
     sta     PPUCTRL                 ; $C4DA
-    jsr     sub_D29C                ; $C4DD
+    jsr     Ram_ClearWork           ; $C4DD
     sta     a:ppuScrollX            ; $C4E0
     sta     ppuNametable            ; $C4E3
     sta     scrollXHi               ; $C4E6
@@ -967,7 +990,7 @@ loc_C5F9:
     lda     sram_6982,y             ; $C623
     sta     ram_0734                ; $C626
     sta     ram_0735                ; $C629
-    jmp     loc_C722                ; $C62C
+    jmp     Game_BlankAndNextMode   ; $C62C
 
 loc_C62F:
     lda     areaChrBank             ; $C62F
@@ -981,7 +1004,16 @@ loc_C63E:
     inc     gameMode                ; $C63E
     jmp     loc_C68A                ; $C641
 
-loc_C644:
+; ---------------------------------------------------------------------------
+; Mode_FindConnectedRoom
+;
+; gameMode $13: find the area connected to the current one in the
+; direction ram_0743 (e.g. by elevator) from sramRoomConnections, and set
+; areaId and the scroll position for it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_FindConnectedRoom:
     jsr     Mmc1_SetPrgBankArea     ; $C644
     lda     areaId                  ; $C647
     asl     a                       ; $C64A
@@ -1019,7 +1051,7 @@ loc_C67C:
     stx     areaStartPage           ; $C67E
     jsr     sub_C690                ; $C681
     inc     ram_0705                ; $C684
-    jmp     loc_C722                ; $C687
+    jmp     Game_BlankAndNextMode   ; $C687
 
 loc_C68A:
     jsr     Mmc1_SetPrgBank0        ; $C68A
@@ -1074,7 +1106,16 @@ sub_C690:
     and     #$F0                    ; $C6E9
     sta     ram_05D3,x              ; $C6EB
 
-loc_C6EE:
+; ---------------------------------------------------------------------------
+; Game_Wait
+;
+; Mode handler that does nothing: used while Main_Loop loads an area
+; (GAME_MODE_LOAD_AREA, GAME_MODE_LOAD_ROOM).  The loader advances gameMode
+; when it is done.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_Wait:
     rts                             ; $C6EE
 
 loc_C6EF:
@@ -1092,7 +1133,7 @@ loc_C702:
     sta     ram_075F                ; $C702
     lda     #$01                    ; $C705
     sta     sfxRequest+2            ; $C707
-    jmp     loc_C72D                ; $C709
+    jmp     Game_UnblankAndNextMode ; $C709
 
 loc_C70C:
     lda     ram_071F                ; $C70C
@@ -1104,18 +1145,33 @@ loc_C70C:
 loc_C71A:
     lda     #$07                    ; $C71A
     sta     timerSlow               ; $C71C
-    jmp     loc_C72D                ; $C71F
+    jmp     Game_UnblankAndNextMode ; $C71F
 
-loc_C722:
+; ---------------------------------------------------------------------------
+; Game_BlankAndNextMode
+;
+; Keep rendering off (renderingOff), reset gameSubStep, and advance
+; gameMode.  Game_UnblankAndNextMode turns rendering back on instead.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_BlankAndNextMode:
     lda     #$00                    ; $C722
     sta     gameSubStep             ; $C724
-    inc     ram_0726                ; $C727
-    jmp     loc_CF05                ; $C72A
+    inc     renderingOff            ; $C727
+    jmp     Game_NextMode           ; $C72A
 
-loc_C72D:
+; ---------------------------------------------------------------------------
+; Game_UnblankAndNextMode
+;
+; Let rendering back on (clear renderingOff), and advance gameMode.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_UnblankAndNextMode:
     lda     #$00                    ; $C72D
-    sta     ram_0726                ; $C72F
-    jmp     loc_CF05                ; $C732
+    sta     renderingOff            ; $C72F
+    jmp     Game_NextMode           ; $C732
 
 dat_C735:
     .byte   $C1, $83, $C1, $87, $C1, $8F, $C1, $9F, $C1, $BF, $C1, $7F, $C3, $FF, $C7, $FF; $C735
@@ -1239,7 +1295,7 @@ loc_C818:
 
 sub_C819:
     lda     currentWorld            ; $C819
-    jsr     sub_D385                ; $C81C
+    jsr     JumpTable               ; $C81C
 ; (inline jump table)
     .word   $81A3                   ; $C81F
     .word   $8647                   ; $C821
@@ -1388,7 +1444,7 @@ loc_C909:
 sub_C912:
     ldx     ram_0731                ; $C912
     lda     currentWorld            ; $C915
-    jsr     sub_D385                ; $C918
+    jsr     JumpTable               ; $C918
 ; (inline jump table)
     .word   $80EE                   ; $C91B
     .word   $9B86                   ; $C91D
@@ -1400,7 +1456,7 @@ sub_C912:
 sub_C927:
     ldx     ram_0731                ; $C927
     lda     currentWorld            ; $C92A
-    jsr     sub_D385                ; $C92D
+    jsr     JumpTable               ; $C92D
 ; (inline jump table)
     .word   $812F                   ; $C930
     .word   $9BCB                   ; $C932
@@ -1528,7 +1584,16 @@ loc_C9E9:
 dat_C9EA:
     .byte   $12, $16, $2A, $16                                              ; $C9EA
 
-loc_C9EE:
+; ---------------------------------------------------------------------------
+; Death_Animate
+;
+; Death sequence step: show Link's death pose (objState = $0A) with a
+; flashing palette until timerSlow runs out, then switch to CHR bank $10
+; and advance.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Death_Animate:
     jsr     Mmc1_SetPrgBank0        ; $C9EE
     lda     #$0A                    ; $C9F1
     sta     objState                ; $C9F3
@@ -1553,8 +1618,17 @@ sub_CA17:
     sta     ppuStringSelect         ; $CA17
     rts                             ; $CA1A
 
-loc_CA1B:
-    jsr     sub_D382                ; $CA1B
+; ---------------------------------------------------------------------------
+; Death_LoseLife
+;
+; Death sequence step, by gameSubStep: run bank 0's step ($8140), then
+; lose a life.  With lives left, go to GAME_STATE_RESPAWN; with none left,
+; set up the game over screen (not reached in the test movies).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Death_LoseLife:
+    jsr     JumpTableBySubStep      ; $CA1B
 ; (inline jump table)
     .word   $8140                   ; $CA1E
     .word   loc_CA24                ; $CA20
@@ -1586,7 +1660,7 @@ loc_CA3E:
     sta     ram_00E9                ; $CA4B
     lda     #$F0                    ; $CA4D
     sta     timerFast               ; $CA4F
-    inc     ram_0726                ; $CA52
+    inc     renderingOff            ; $CA52
     inc     gameSubStep             ; $CA55
     lda     #$09                    ; $CA58
     jsr     sub_CA17                ; $CA5A
@@ -1608,7 +1682,7 @@ loc_CA71:
 
 loc_CA72:
     lda     #$00                    ; $CA72
-    sta     ram_0726                ; $CA74
+    sta     renderingOff            ; $CA74
     lda     joypadHeld              ; $CA77
     and     #$10                    ; $CA79
     bne     loc_CA82                ; $CA7B
@@ -1616,10 +1690,22 @@ loc_CA72:
     bne     loc_CA71                ; $CA80
 
 loc_CA82:
-    jmp     loc_CF05                ; $CA82
+    jmp     Game_NextMode           ; $CA82
 ; (end of code not executed in the test movies)
 
-loc_CA85:
+; ---------------------------------------------------------------------------
+; Death_ContinueMenu
+;
+; The continue screen: wait for Start.  On Start, count the continue
+; (continueCount, which stops at 255), reset the experience to 0, and
+; restart the game: from the Great Palace if Link is there
+; (World_GetIndex = $0F), otherwise from the beginning (GAME_STATE_BEGIN).
+; If menuCursor selects saving, go on to the next mode (Death_SaveGame)
+; instead.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Death_ContinueMenu:
     lda     joypadHeld              ; $CA85
     and     #$30                    ; $CA87
     asl     a                       ; $CA89
@@ -1652,12 +1738,12 @@ loc_CAB1:
     sta     lives,y                 ; $CAB1
     iny                             ; $CAB4
     bne     loc_CAB1                ; $CAB5
-    lda     ram_0488                ; $CAB7
+    lda     menuCursor              ; $CAB7
     beq     loc_CAC4                ; $CABA
 ; (code below not executed in the test movies)
     lda     #$40                    ; $CABC
     sta     ram_07B0                ; $CABE
-    jmp     loc_CF05                ; $CAC1
+    jmp     Game_NextMode           ; $CAC1
 ; (end of code not executed in the test movies)
 
 loc_CAC4:
@@ -1665,7 +1751,7 @@ loc_CAC4:
     sta     ram_0776                ; $CAC7
     sta     ram_0756                ; $CACA
     sta     experiencePending       ; $CACD
-    jsr     sub_CF30                ; $CAD0
+    jsr     World_GetIndex          ; $CAD0
     cmp     #$0F                    ; $CAD3
     beq     loc_CADE                ; $CAD5
     lda     #$00                    ; $CAD7
@@ -1702,9 +1788,9 @@ loc_CAFF:
     sta     ppuBuffer0,y            ; $CB02
     dey                             ; $CB05
     bpl     loc_CAFF                ; $CB06
-    lda     ram_0488                ; $CB08
+    lda     menuCursor              ; $CB08
     eor     #$01                    ; $CB0B
-    sta     ram_0488                ; $CB0D
+    sta     menuCursor              ; $CB0D
     asl     a                       ; $CB10
     tay                             ; $CB11
     lda     #$FA                    ; $CB12
@@ -1727,7 +1813,7 @@ sub_CB18:
 loc_CB27:
     lda     #$0E                    ; $CB27
     sta     areaChrBank             ; $CB29
-    jsr     sub_C388                ; $CB2C
+    jsr     Mmc1_SetPrgBank5        ; $CB2C
     jmp     loc_C360                ; $CB2F
 
 dat_CB32:
@@ -1987,7 +2073,7 @@ loc_CCF2:
 
 loc_CCF9:
     jsr     Mmc1_SetPrgBank0        ; $CCF9
-    jmp     loc_CF05                ; $CCFC
+    jmp     Game_NextMode           ; $CCFC
 
 loc_CCFF:
     inc     objXVelocity+3          ; $CCFF
@@ -2012,10 +2098,10 @@ loc_CD0F:
 
 loc_CD19:
     jsr     Game_CheckStepChange    ; $CD19
-    jsr     sub_D385                ; $CD1C
+    jsr     JumpTable               ; $CD1C
 ; (inline jump table)
-    .word   loc_CF21                ; $CD1F  (not observed)
-    .word   loc_CF05                ; $CD21
+    .word   Death_SaveGame          ; $CD1F  (not observed)
+    .word   Game_NextMode           ; $CD21
 
 ; Area bank addresses of the overworld location tables (copied to sramLocY
 ; and following), indexed by WorldLocationTable.
@@ -2047,7 +2133,18 @@ PalacePaletteOffsets:
     .byte   $30, $30, $30                                                   ; $CD3A
     .byte   $40, $50, $60                                                   ; $CD3D
 
-loc_CD40:
+; ---------------------------------------------------------------------------
+; Mode_LoadWorld
+;
+; gameMode 0: select and map the world's PRG bank (areaPrgBank, see
+; WorldPrgBanks) and CHR bank (areaChrBank), and copy the world's tables
+; from the area bank to SRAM: enemy lists, overworld map, locations,
+; connections, palettes and enemy definitions.  See
+; docs/memory/memory-map.md.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Mode_LoadWorld:
     ldy     currentWorld            ; $CD40
     lda     WorldPrgBanks,y         ; $CD43
     cmp     #$01                    ; $CD46
@@ -2317,11 +2414,18 @@ loc_CEF6:
     ldy     currentWorld            ; $CEF6
     bne     loc_CF09                ; $CEF9
     lda     ram_0709                ; $CEFB
-    bne     loc_CF05                ; $CEFE
+    bne     Game_NextMode           ; $CEFE
     lda     #$06                    ; $CF00
     jmp     loc_CF0B                ; $CF02
 
-loc_CF05:
+; ---------------------------------------------------------------------------
+; Game_NextMode
+;
+; Advance gameMode.  Mode handlers jump here when they are done.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_NextMode:
     inc     gameMode                ; $CF05
     rts                             ; $CF08
 
@@ -2343,7 +2447,7 @@ loc_CF1D:
     rts                             ; $CF20
 ; (code below not executed in the test movies)
 
-loc_CF21:
+Death_SaveGame:
     lda     #$05                    ; $CF21
     jsr     Mmc1_SetPrgBank         ; $CF23
     jsr     Save_Write              ; $CF26
@@ -2352,7 +2456,14 @@ loc_CF21:
     rts                             ; $CF2F
 ; (end of code not executed in the test movies)
 
-sub_CF30:
+; ---------------------------------------------------------------------------
+; World_GetIndex
+;
+; Out:     a = currentRegion * 5 + currentWorld, an index into per-world
+;          tables
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+World_GetIndex:
     lda     currentRegion           ; $CF30
     asl     a                       ; $CF33
     asl     a                       ; $CF34
@@ -2362,7 +2473,7 @@ sub_CF30:
 
 loc_CF3C:
     jsr     Mmc1_SetPrgBankArea     ; $CF3C
-    jsr     sub_D382                ; $CF3F
+    jsr     JumpTableBySubStep      ; $CF3F
 ; (inline jump table)
     .word   loc_D25E                ; $CF42
     .word   loc_D269                ; $CF44
@@ -2506,18 +2617,25 @@ sub_D03D:
 loc_D041:
     rts                             ; $D041
 
-loc_D042:
+; ---------------------------------------------------------------------------
+; Death_ClearScreen
+;
+; Death sequence step: map CHR bank 2, clear the nametables, and advance.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Death_ClearScreen:
     lda     #$02                    ; $D042
     jsr     Mmc1_SetChrBank         ; $D044
-    jsr     sub_D266                ; $D047
-    jmp     loc_CF05                ; $D04A
+    jsr     Ppu_ClearNametables     ; $D047
+    jmp     Game_NextMode           ; $D04A
 
 loc_D04D:
     lda     #$06                    ; $D04D
     jsr     Mmc1_SetChrBank         ; $D04F
-    jsr     sub_D382                ; $D052
+    jsr     JumpTableBySubStep      ; $D052
 ; (inline jump table)
-    .word   sub_D266                ; $D055
+    .word   Ppu_ClearNametables     ; $D055
     .word   loc_D0B8                ; $D057
     .word   loc_D150                ; $D059
 
@@ -2894,20 +3012,34 @@ loc_D254:
     rts                             ; $D25D
 
 loc_D25E:
-    jsr     sub_D27D                ; $D25E
+    jsr     Game_NextSubStep        ; $D25E
 
-sub_D261:
+; ---------------------------------------------------------------------------
+; Ppu_ClearNametable2400
+;
+; Clear the nametable at $2400; see Ppu_FillNametable.
+; ---------------------------------------------------------------------------
+Ppu_ClearNametable2400:
     lda     #$24                    ; $D261
 
-sub_D263:
-    jmp     loc_D2BE                ; $D263
+Ppu_ClearNametable:
+    jmp     Ppu_FillNametable       ; $D263
 
-sub_D266:
-    jsr     sub_D261                ; $D266
+; ---------------------------------------------------------------------------
+; Ppu_ClearNametables
+;
+; Clear the nametables at $2400 and $2000, reset the scroll, and advance
+; gameSubStep (by falling into Game_NextSubStep).
+;
+; Clobbers: a, x, y
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ppu_ClearNametables:
+    jsr     Ppu_ClearNametable2400  ; $D266
 
 loc_D269:
     lda     #$20                    ; $D269
-    jsr     sub_D263                ; $D26B
+    jsr     Ppu_ClearNametable      ; $D26B
     lda     #$00                    ; $D26E
     sta     ppuScrollY              ; $D270
     sta     ppuScrollX              ; $D272
@@ -2915,11 +3047,32 @@ loc_D269:
     sta     PPUSCROLL               ; $D277
     sta     PPUSCROLL               ; $D27A
 
-sub_D27D:
+; ---------------------------------------------------------------------------
+; Game_NextSubStep
+;
+; Advance gameSubStep.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_NextSubStep:
     inc     gameSubStep             ; $D27D
     rts                             ; $D280
 
-sub_D281:
+; ---------------------------------------------------------------------------
+; Ram_ClearAll
+;
+; Clear RAM, in three nested entry points that clear less and less:
+;   Ram_ClearAll:         $0000-$00DF and $0300-$07FF
+;   Ram_ClearExceptSaved: $0000-$00DF and $0300-$05FF (keeps saveWorld and
+;                         the stats from $0600 up)
+;   Ram_ClearWork:        $0000-$00DF and $0300-$04FF
+; $00E0-$00FF (sound, controllers, PPU shadows), the stack and oamBuffer
+; are kept.  All of them leave ppuBuffer0 and ppuBuffer1 empty.
+;
+; Out:     a = 0, x = $FF
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ram_ClearAll:
     ldx     #$00                    ; $D281
     txa                             ; $D283
 
@@ -2935,7 +3088,7 @@ loc_D28D:
     dex                             ; $D290
     bne     loc_D28D                ; $D291
 
-sub_D293:
+Ram_ClearExceptSaved:
     ldx     #$00                    ; $D293
     txa                             ; $D295
 
@@ -2944,7 +3097,7 @@ loc_D296:
     dex                             ; $D299
     bne     loc_D296                ; $D29A
 
-sub_D29C:
+Ram_ClearWork:
     ldx     #$00                    ; $D29C
     txa                             ; $D29E
 
@@ -2970,7 +3123,19 @@ loc_D2B0:
     stx     ppuBuffer1              ; $D2BA
     rts                             ; $D2BD
 
-loc_D2BE:
+; ---------------------------------------------------------------------------
+; Ppu_FillNametable
+;
+; Fill a nametable with the blank tile ($F4) and its attribute table with
+; 0.  Called with rendering off; leaves NMI disabled (PPUCTRL = $30).
+; Ppu_ClearNametable is the same; Ppu_ClearNametable2400 clears the
+; nametable at $2400.
+;
+; In:      a = high byte of the nametable address ($20, $24, ...)
+; Clobbers: a, x, y
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ppu_FillNametable:
     ldy     PPUSTATUS               ; $D2BE
     ldy     #$30                    ; $D2C1
     sty     PPUCTRL                 ; $D2C3
@@ -3143,10 +3308,32 @@ Joypad_Read:
     bne     @readBit                ; $D37F
     rts                             ; $D381
 
-sub_D382:
+; ---------------------------------------------------------------------------
+; JumpTableBySubStep
+;
+; JumpTable indexed by gameSubStep.
+; ---------------------------------------------------------------------------
+JumpTableBySubStep:
     lda     gameSubStep             ; $D382
 
-sub_D385:
+; ---------------------------------------------------------------------------
+; JumpTable
+;
+; Jump through the table of .word addresses that follows the jsr to this
+; routine, indexed by a:
+;
+;     lda     index
+;     jsr     JumpTable
+;     .word   handler0, handler1, ...
+;
+; The return address is discarded, so a handler's rts returns to the
+; caller's caller.  There is no bounds check.
+;
+; In:      a = index
+; Clobbers: a, y, temp12-temp15
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+JumpTable:
     asl     a                       ; $D385
     tay                             ; $D386
     pla                             ; $D387
@@ -3168,7 +3355,16 @@ sub_D385:
 dat_D3CA:
     .byte   $80, $40                                                        ; $D3CA
 
-loc_D3CC:
+; ---------------------------------------------------------------------------
+; Mode_SideView
+;
+; GAME_MODE_SIDE_VIEW: one frame of side view play.  Starts the death
+; sequence (GAME_STATE_DEATH) when ram_0494 is set, otherwise runs bank 0's
+; side view code (sub_0_8DC3) and refills the meters from statMeterPending.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_SideView:
     lda     ram_0494                ; $D3CC
     beq     loc_D3E9                ; $D3CF
     ldx     timerFast+11            ; $D3D1
@@ -4465,7 +4661,7 @@ loc_DCF5:
     sta     ram_00CD                ; $DD25
 
 loc_DD27:
-    jsr     sub_CF30                ; $DD27
+    jsr     World_GetIndex          ; $DD27
     cmp     #$0F                    ; $DD2A
     bne     loc_DD31                ; $DD2C
     jmp     loc_5_9764              ; $DD2E
@@ -5116,7 +5312,7 @@ loc_E187:
     sta     gameMode                ; $E187
 
 loc_E18A:
-    inc     ram_0726                ; $E18A
+    inc     renderingOff            ; $E18A
     ldx     #$05                    ; $E18D
 
 loc_E18F:
@@ -7925,11 +8121,11 @@ dat_FDCB:
 
 loc_FE76:
     jsr     Game_CheckStepChange    ; $FE76
-    jsr     sub_D385                ; $FE79
+    jsr     JumpTable               ; $FE79
 ; (inline jump table)
     .word   loc_FE87                ; $FE7C  (not observed)
-    .word   loc_CF21                ; $FE7E  (not observed)
-    .word   loc_CF05                ; $FE80
+    .word   Death_SaveGame          ; $FE7E  (not observed)
+    .word   Game_NextMode           ; $FE80
 
 dat_FE82:
     .word   loc_D323                ; $FE82

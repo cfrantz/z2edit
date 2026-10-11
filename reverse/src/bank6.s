@@ -8,7 +8,7 @@
 .segment "BANK6"
 
 
-sub_6_8000:
+Sound_TitleEngine:
     lda     #$FF                    ; $8000
     sta     APU_FRAME               ; $8002
     lda     #$0F                    ; $8005
@@ -920,7 +920,7 @@ dat_6_84E1:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8FEB
     .byte   $FF, $FF, $FF, $FF, $FF                                         ; $8FFB
 
-sub_6_9000:
+Sound_Engine:
     lda     ram_00EA                ; $9000
     beq     loc_6_900B              ; $9002
 ; (code below not executed in the test movies)

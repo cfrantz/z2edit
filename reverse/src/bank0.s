@@ -129,7 +129,7 @@ loc_0_8149:
     sta     objXVelocity+1          ; $819F
     lda     #$0A                    ; $81A1
     sta     ppuStringSelect         ; $81A3
-    inc     ram_0726                ; $81A6
+    inc     renderingOff            ; $81A6
     inc     gameMode                ; $81A9
 
 dat_0_81AC:
@@ -171,7 +171,7 @@ loc_0_81E4:
     rts                             ; $81E4
 
 loc_0_81E5:
-    inc     ram_0726                ; $81E5
+    inc     renderingOff            ; $81E5
     lda     #$06                    ; $81E8
     sta     ram_0768                ; $81EA
     lda     #$06                    ; $81ED
@@ -791,7 +791,7 @@ loc_0_85D5:
 loc_0_85EB:
     lda     #$00                    ; $85EB
     sta     ram_0729                ; $85ED
-    inc     ram_0726                ; $85F0
+    inc     renderingOff            ; $85F0
     inc     gameMode                ; $85F3
     lda     #$06                    ; $85F6
     sta     ram_0768                ; $85F8
@@ -1181,7 +1181,7 @@ loc_0_889E:
     beq     loc_0_88AF              ; $88A3
     ldx     #$00                    ; $88A5
     stx     ram_07AA                ; $88A7
-    stx     ram_0726                ; $88AA
+    stx     renderingOff            ; $88AA
     lda     #$18                    ; $88AD
 
 loc_0_88AF:
@@ -1192,7 +1192,7 @@ loc_0_88B2:
 
 sub_0_88B3:
     lda     a:objXVelocity+14       ; $88B3
-    jsr     sub_D385                ; $88B6
+    jsr     JumpTable               ; $88B6
 ; (inline jump table)
     .word   loc_0_8BFE              ; $88B9
     .word   loc_0_8C57              ; $88BB
@@ -1207,7 +1207,7 @@ loc_0_88C7:
     cmp     #$0E                    ; $88C9
     bcs     loc_0_88B2              ; $88CB
     lda     objXVelocity+14         ; $88CD
-    jsr     sub_D385                ; $88CF
+    jsr     JumpTable               ; $88CF
 ; (inline jump table)
     .word   sub_0_88E8              ; $88D2
     .word   loc_0_8948              ; $88D4
@@ -1932,7 +1932,7 @@ loc_0_8CF7:
     lda     #$00                    ; $8D73
     sta     ram_075F                ; $8D75
 dat_0_8D7A := * + 2
-    jmp     loc_C72D                ; $8D78
+    jmp     Game_UnblankAndNextMode ; $8D78
 
 dat_0_8D7B:
     .byte   $40, $30, $30, $20, $20, $20, $20, $20, $60, $50, $40, $40, $28, $20, $18, $10; $8D7B
@@ -2019,7 +2019,7 @@ loc_0_8E3B:
 
 sub_0_8E44:
     tya                             ; $8E44
-    jsr     sub_D385                ; $8E45
+    jsr     JumpTable               ; $8E45
 ; (inline jump table)
     .word   loc_0_8E8D              ; $8E48  (not observed)
     .word   loc_0_8E58              ; $8E4A
@@ -2295,7 +2295,7 @@ loc_0_9012:
     lda     objY                    ; $9024
     cmp     #$E8                    ; $9026
     bcc     loc_0_9039              ; $9028
-    inc     ram_0726                ; $902A
+    inc     renderingOff            ; $902A
     lda     #$08                    ; $902D
     ldy     currentWorld            ; $902F
     beq     loc_0_9036              ; $9032
@@ -2309,7 +2309,7 @@ loc_0_9039:
 
 sub_0_903A:
     lda     ram_00B5                ; $903A
-    jsr     sub_D385                ; $903C
+    jsr     JumpTable               ; $903C
 ; (inline jump table)
     .word   loc_0_9047              ; $903F
     .word   loc_0_92BF              ; $9041
@@ -3842,7 +3842,7 @@ loc_0_9A12:
 
 loc_0_9A18:
     lda     ram_0740                ; $9A18
-    jsr     sub_D385                ; $9A1B
+    jsr     JumpTable               ; $9A1B
 ; (inline jump table)
     .word   loc_0_9B13              ; $9A1E
     .word   sub_0_9A30              ; $9A20
@@ -4130,7 +4130,7 @@ loc_0_9D69:
     stx     PPUSCROLL               ; $9D6F
     sty     PPUSCROLL               ; $9D72
     lda     pauseState              ; $9D75
-    jsr     sub_D385                ; $9D78
+    jsr     JumpTable               ; $9D78
 ; (inline jump table)
     .word   loc_0_A199              ; $9D7B
     .word   loc_0_A347              ; $9D7D
@@ -4193,7 +4193,7 @@ loc_0_9DCD:
 
 loc_0_9DDE:
     lda     pauseState              ; $9DDE
-    jsr     sub_D385                ; $9DE1
+    jsr     JumpTable               ; $9DE1
 ; (inline jump table)
     .word   loc_0_9DCC              ; $9DE4
     .word   loc_0_A347              ; $9DE6
@@ -4792,7 +4792,7 @@ Game_ShowContinueScreen:
     sta     ram_074C                ; $A1BA
     sta     pauseState              ; $A1BD
     sta     ram_0525                ; $A1C0
-    sta     ram_0488                ; $A1C3
+    sta     menuCursor              ; $A1C3
     sta     ram_0759                ; $A1C6
     sta     experience              ; $A1C9
     sta     ram_0776                ; $A1CC
@@ -5836,9 +5836,9 @@ loc_0_A829:
 
 loc_0_A82A:
     lda     gameSubStep             ; $A82A
-    jsr     sub_D385                ; $A82D
+    jsr     JumpTable               ; $A82D
 ; (inline jump table)
-    .word   sub_D266                ; $A830
+    .word   Ppu_ClearNametables     ; $A830
     .word   loc_0_A85A              ; $A832
     .word   loc_0_A869              ; $A834
     .word   $003F                   ; $A836

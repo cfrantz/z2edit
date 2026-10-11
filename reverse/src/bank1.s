@@ -53,7 +53,7 @@ loc_1_80EE:
 
 loc_1_8103:
     txa                             ; $8103
-    jsr     sub_D385                ; $8104
+    jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   $0000                   ; $8107  (not observed)
     .word   loc_1_81F3              ; $8109
@@ -78,7 +78,7 @@ loc_1_8103:
 
 loc_1_812F:
     txa                             ; $812F
-    jsr     sub_D385                ; $8130
+    jsr     JumpTable               ; $8130
 ; (inline jump table)
     .word   loc_1_82F9              ; $8133  (not observed)
     .word   loc_1_82EE              ; $8135  (not observed)

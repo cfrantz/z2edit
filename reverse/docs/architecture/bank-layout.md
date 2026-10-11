@@ -25,8 +25,8 @@ region; see [The Area Bank](../hardware/mmc1.md#the-area-bank).
 
 | Entry | Called from | Used for |
 |-------|-------------|----------|
-| `sub_6_8000` | `sub_C032`, from `Bank5_Nmi` | title and other bank 5 screens |
-| `sub_6_9000` | `Nmi` and `Nmi_SoundOnly` | gameplay, and area loading |
+| `Sound_TitleEngine` | `Sound_UpdateTitle`, from `Bank5_Nmi` | title and other bank 5 screens |
+| `Sound_Engine` | `Nmi` and `Nmi_SoundOnly` | gameplay, and area loading |
 
 ## Evidence
 

@@ -182,7 +182,7 @@ ram_0484                = $0484
 ram_0485                = $0485
 ram_0486                = $0486
 ram_0487                = $0487
-ram_0488                = $0488
+menuCursor              = $0488     ; selected menu item, e.g. on the continue screen (provisional)
 ram_0489                = $0489
 ram_048A                = $048A
 ram_048B                = $048B
@@ -290,7 +290,7 @@ ram_0720                = $0720
 ram_0721                = $0721
 ram_0722                = $0722
 ppuStringSelect         = $0725     ; PPU update string sent by the next NMI; see PpuStringPtrs
-ram_0726                = $0726
+renderingOff            = $0726     ; nonzero to keep rendering off (the NMI leaves PPUMASK rendering bits clear)
 ram_0727                = $0727
 ram_0728                = $0728
 ram_0729                = $0729
@@ -463,7 +463,7 @@ sram_69D4               = $69D4
 sram_69DA               = $69DA
 sram_69DE               = $69DE
 ; ---------------------------------------------------------------------------
-; World data, copied from the area bank when a world is loaded (loc_CD40).
+; World data, copied from the area bank when a world is loaded (Mode_LoadWorld).
 ; The overworld location tables are z2edit's "connector" tables.
 ; ---------------------------------------------------------------------------
 sramLocY                = $6A00     ; [63] overworld locations: bit 7 = external, bits 6-0 = Y

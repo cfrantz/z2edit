@@ -10,7 +10,7 @@ longer than one frame.
    configure the MMC1 (see [MMC1](../hardware/mmc1.md)), map bank 7 at
    $8000, and jump to `Main`.
 2. `Main` ($C000): disable rendering, map bank 5 and call its
-   initialization (`sub_5_A6A0`), which sets `nmiMode` to `NMI_MODE_BANK5`
+   initialization (`Game_PowerOnInit`), which sets `nmiMode` to `NMI_MODE_BANK5`
    and enables NMI.
 3. Fall into `Main_Loop`.
 
@@ -38,7 +38,7 @@ While idle, the loop uses only `a` and the flags.
 | bits 7, 6 set (`NMI_MODE_GAME`, $C0) | game NMI (rest of `Nmi`) | gameplay |
 
 - `Nmi_SoundOnly` saves all registers (the main thread is running real
-  code), maps bank 6, calls the sound update (`sub_6_9000`), and restores
+  code), maps bank 6, calls the sound update (`Sound_Engine`), and restores
   the area bank with `Mmc1_SetPrgBankArea`.
 - The game NMI saves only `a` (the main thread is idle).  It updates the
   PPU (sprite DMA, VRAM updates, scroll), reads the controllers
@@ -77,6 +77,11 @@ The game NMI runs `Game_RunState`, a hierarchy of state machines:
 | step | `gameStep` ($0738) | `gameSubStep` restarts at 0 |
 | sub-step | `gameSubStep` ($073D) | |
 
+Handlers are reached through inline jump tables (`JumpTable`); when done
+they usually jump to `Game_NextMode`, or to `Game_BlankAndNextMode` /
+`Game_UnblankAndNextMode` to switch rendering off or on (`renderingOff`)
+on the way.
+
 Each level keeps the value it had when last checked (`gameStatePrev`,
 `gameModePrev`, `gameStepPrev`); `Game_CheckStateChange`,
 `Game_CheckModeChange` and `Game_CheckStepChange` compare and reset the
@@ -86,10 +91,10 @@ lower levels, then return the current value for an inline jump table.
 
 | Value | State |
 |-------|-------|
-| 0 | begin: set `lives` to 3, go to state 1 |
-| 1 | play: dispatch on `gameMode` |
-| 2 | death: Link's death animation; then lose a life (go to state 6), or show the continue screen when no lives remain.  Pressing Up+A on controller 2 enters the continue screen directly. |
-| 6 | respawn after losing a life, then back to state 1 (provisional) |
+| 0 | `GameState_Begin`: set `lives` to 3, go to state 1 |
+| 1 | `GameState_Play`: dispatch on `gameMode` |
+| 2 | `GameState_Death`: Link's death animation (`Death_Animate`); then lose a life (`Death_LoseLife`, go to state 6), or show the continue screen (`Death_ContinueMenu`) when no lives remain.  Holding Up+A on controller 2 enters the continue screen directly (`Game_ShowContinueScreen`). |
+| 6 | `GameState_Respawn`: respawn after losing a life, then back to state 1 (provisional) |
 
 States 3, 4 and 5 have not been identified.  On the title screens bank 5
 uses `gameState` for its own states.
@@ -97,11 +102,14 @@ uses `gameState` for its own states.
 Common `gameMode` sequences in state 1, from `tools/watch.py` over the
 no-glitch movie:
 
+- loading a world: $00 (`Mode_LoadWorld`), which copies the world's tables
+  from its area bank into SRAM;
 - entering a side-view area: $07 -> $08 (`GAME_MODE_LOAD_AREA`, loaded by
-  `Main_Loop`) -> $09 -> $0A -> $0B (`GAME_MODE_SIDE_VIEW`), then $10 when
+  `Main_Loop` while the NMI waits in `Game_Wait`) -> $09 -> $0A -> $0B (`GAME_MODE_SIDE_VIEW`, `Mode_SideView`), then $10 when
   Link leaves the area, followed by $07 for the next area or $01 for the
   overworld;
-- moving to a connected room (e.g. by elevator): $12 -> $13 -> $14
+- moving to a connected room (e.g. by elevator): $12 -> $13
+  (`Mode_FindConnectedRoom`) -> $14
   (`GAME_MODE_LOAD_ROOM`) -> $15 -> $09;
 - the overworld: $00/$01 -> ... -> $05 (`GAME_MODE_OVERWORLD`) -> $06 ->
   $07 when Link enters an area.

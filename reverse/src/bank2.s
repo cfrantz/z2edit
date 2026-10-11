@@ -50,7 +50,7 @@ loc_2_80EE:
 
 loc_2_8103:
     txa                             ; $8103
-    jsr     sub_D385                ; $8104
+    jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   loc_2_938F              ; $8107
     .word   loc_2_81F3              ; $8109
@@ -75,7 +75,7 @@ loc_2_8103:
 
 loc_2_812F:
     txa                             ; $812F
-    jsr     sub_D385                ; $8130
+    jsr     JumpTable               ; $8130
 ; (inline jump table)
     .word   loc_2_82F9              ; $8133  (not observed)
     .word   loc_2_82EE              ; $8135  (not observed)
@@ -1272,7 +1272,7 @@ loc_2_977C:
     jsr     sub_EF11                ; $977C
     lda     ram_00AF,x              ; $977F
     and     #$03                    ; $9781
-    jsr     sub_D385                ; $9783
+    jsr     JumpTable               ; $9783
 ; (inline jump table)
     .word   loc_2_978E              ; $9786
     .word   loc_2_97B7              ; $9788
@@ -1529,7 +1529,7 @@ loc_2_9910:
     jsr     sub_D6C1                ; $9916
     lda     ram_00AF,x              ; $9919
     and     #$03                    ; $991B
-    jsr     sub_D385                ; $991D
+    jsr     JumpTable               ; $991D
 ; (inline jump table)
     .word   loc_2_9928              ; $9920
     .word   loc_2_9950              ; $9922

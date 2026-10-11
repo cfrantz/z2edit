@@ -49,7 +49,7 @@ loc_5_80EE:
 
 loc_5_8103:
     txa                             ; $8103
-    jsr     sub_D385                ; $8104
+    jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   sub_5_81AD              ; $8107
     .word   sub_5_81AD              ; $8109
@@ -74,7 +74,7 @@ loc_5_8103:
 
 loc_5_812F:
     txa                             ; $812F
-    jsr     sub_D385                ; $8130
+    jsr     JumpTable               ; $8130
 ; (inline jump table)
     .word   loc_5_826A              ; $8133
     .word   loc_5_826E              ; $8135
@@ -603,7 +603,7 @@ loc_5_8B50:
 
 loc_5_8B63:
     sta     areaId                  ; $8B63
-    jmp     loc_C722                ; $8B66
+    jmp     Game_BlankAndNextMode   ; $8B66
 
 loc_5_8B69:
     ldy     ram_0761                ; $8B69
@@ -677,7 +677,7 @@ loc_5_8BC4:
     dex                             ; $8BDD
     stx     ppuBuffer0Len           ; $8BDE
     lda     ram_0761                ; $8BE1
-    jsr     sub_D385                ; $8BE4
+    jsr     JumpTable               ; $8BE4
 ; (inline jump table)
     .word   loc_5_8C1D              ; $8BE7
     .word   loc_5_8C5F              ; $8BE9
@@ -1028,7 +1028,7 @@ loc_5_8E80:
 
 loc_5_8E83:
     lda     objY+10                 ; $8E83
-    jsr     sub_D385                ; $8E85
+    jsr     JumpTable               ; $8E85
 ; (inline jump table)
     .word   loc_5_8E8E              ; $8E88
     .word   loc_5_8EAE              ; $8E8A
@@ -1278,7 +1278,7 @@ loc_5_9042:
     lda     #$00                    ; $9042
     sta     ram_0765                ; $9044
     lda     objY+10                 ; $9047
-    jsr     sub_D385                ; $9049
+    jsr     JumpTable               ; $9049
 ; (inline jump table)
     .word   loc_5_9075              ; $904C
     .word   loc_5_908D              ; $904E
@@ -1856,7 +1856,7 @@ loc_5_9796:
 loc_5_97C6:
     jsr     sub_5_A4C4              ; $97C6
     lda     objFacing+4             ; $97C9
-    jsr     sub_D385                ; $97CB
+    jsr     JumpTable               ; $97CB
 ; (inline jump table)
     .word   loc_5_97DE              ; $97CE
     .word   loc_5_980D              ; $97D0
@@ -2044,7 +2044,7 @@ loc_5_98F3:
     lsr     a                       ; $98F8
     cmp     #$06                    ; $98F9
     bcs     loc_5_990C              ; $98FB
-    jsr     sub_D385                ; $98FD
+    jsr     JumpTable               ; $98FD
 ; (inline jump table)
     .word   loc_5_9911              ; $9900
     .word   loc_5_9911              ; $9902
@@ -2522,7 +2522,7 @@ loc_5_9BBA:
     sta     gameState               ; $9BBC
     lda     #$00                    ; $9BBF
     sta     PPUMASK                 ; $9BC1
-    inc     ram_0726                ; $9BC4
+    inc     renderingOff            ; $9BC4
     rts                             ; $9BC7
 
 loc_5_9BC8:
@@ -4012,6 +4012,21 @@ dat_5_A601:
 ; (unreferenced: $A60E-$A60F, 2 bytes)
     .byte   $55, $BD                                                        ; $A60E
 
+; ---------------------------------------------------------------------------
+; Bank5_Nmi
+;
+; NMI handler for the title and other bank 5 screens (nmiMode =
+; NMI_MODE_BANK5), reached from Nmi_Bank5.  Like the game NMI it does sprite
+; DMA, writes the PPU strings (from its own table, dat_5_A600), sets the
+; scroll, plays sound (Sound_UpdateTitle, the title music player) and reads the
+; controllers; then it runs the bank 5 state machine (sub_5_A6D9).
+;
+; QUIRK: unlike the game NMI it does not save a.  This is harmless: it
+; returns with a >= $80, which Main_Loop never mistakes for a load request,
+; and RTI restores the flags.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Bank5_Nmi:
     lda     ppuCtrlShadow           ; $A610
     and     #$7C                    ; $A612
@@ -4021,7 +4036,7 @@ Bank5_Nmi:
     lda     ppuMaskShadow           ; $A61C
     and     #$E0                    ; $A61E
     sta     PPUMASK                 ; $A620
-    ldy     ram_0726                ; $A623
+    ldy     renderingOff            ; $A623
     bne     loc_5_A62C              ; $A626
     lda     ppuMaskShadow           ; $A628
     ora     #$1E                    ; $A62A
@@ -4061,7 +4076,7 @@ loc_5_A62C:
     sty     ppuStringSelect         ; $A67B
     dey                             ; $A67E
     sty     ppuBuffer0              ; $A67F
-    jsr     sub_C032                ; $A682
+    jsr     Sound_UpdateTitle       ; $A682
     lda     joypadHeld              ; $A685
     sta     joypadHeldPrev          ; $A687
     jsr     Joypad_Update           ; $A68A
@@ -4074,9 +4089,20 @@ loc_5_A62C:
     sta     PPUCTRL                 ; $A69C
     rti                             ; $A69F
 
-sub_5_A6A0:
+; ---------------------------------------------------------------------------
+; Game_PowerOnInit
+;
+; Power-on initialization, called by Main: repair the save files, clear
+; RAM, silence and enable the sound channels, turn rendering off, hide the
+; sprites, clear the nametables, and switch the NMI to Bank5_Nmi for the
+; title screen.
+;
+; Clobbers: a, x, y
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Game_PowerOnInit:
     jsr     Save_CheckFiles         ; $A6A0
-    jsr     sub_D281                ; $A6A3
+    jsr     Ram_ClearAll            ; $A6A3
     ldy     #$1F                    ; $A6A6
 
 loc_5_A6A8:
@@ -4090,8 +4116,8 @@ loc_5_A6A8:
     lda     #$00                    ; $A6B9
     sta     PPUMASK                 ; $A6BB
     jsr     Oam_HideAll             ; $A6BE
-    jsr     sub_D266                ; $A6C1
-    inc     ram_0726                ; $A6C4
+    jsr     Ppu_ClearNametables     ; $A6C1
+    inc     renderingOff            ; $A6C4
     lda     #$06                    ; $A6C7
     sta     ram_0768                ; $A6C9
     lda     #NMI_MODE_BANK5         ; $A6CC
@@ -4103,7 +4129,7 @@ loc_5_A6A8:
 
 sub_5_A6D9:
     jsr     Game_CheckStateChange   ; $A6D9
-    jsr     sub_D385                ; $A6DC
+    jsr     JumpTable               ; $A6DC
 ; (inline jump table)
     .word   loc_5_A6F0              ; $A6DF
     .word   loc_5_B22D              ; $A6E1
@@ -4126,7 +4152,7 @@ loc_5_A6F0:
 
 loc_5_A6FF:
     jsr     Game_CheckModeChange    ; $A6FF
-    jsr     sub_D385                ; $A702
+    jsr     JumpTable               ; $A702
 ; (inline jump table)
     .word   loc_5_A70F              ; $A705
     .word   loc_5_AF1F              ; $A707
@@ -4135,7 +4161,7 @@ loc_5_A6FF:
     .word   loc_5_AB6D              ; $A70D  (not observed)
 
 loc_5_A70F:
-    jsr     sub_D29C                ; $A70F
+    jsr     Ram_ClearWork           ; $A70F
     lda     #$0F                    ; $A712
     jsr     Mmc1_SetControl_Bank5   ; $A714
     lda     ram_0568                ; $A717
@@ -4148,12 +4174,12 @@ loc_5_A723:
     jsr     sub_5_ADE0              ; $A723
     lda     #$00                    ; $A726
     jsr     Mmc1_SetChrBank_Bank5   ; $A728
-    jmp     loc_C722                ; $A72B
+    jmp     Game_BlankAndNextMode   ; $A72B
 
 loc_5_A72E:
     jsr     sub_5_A8C1              ; $A72E
     inc     ram_0727                ; $A731
-    jmp     loc_C72D                ; $A734
+    jmp     Game_UnblankAndNextMode ; $A734
 
 loc_5_A737:
     ldy     #$00                    ; $A737
@@ -4232,7 +4258,7 @@ sub_5_A795:
     sta     ppuNametable            ; $A7B1
     sta     ram_0568                ; $A7B4
     sta     ram_073E                ; $A7B7
-    inc     ram_0726                ; $A7BA
+    inc     renderingOff            ; $A7BA
     inc     gameState               ; $A7BD
 
 loc_5_A7C0:
@@ -4429,7 +4455,7 @@ loc_5_AB7F:
     lda     PPUDATA                 ; $AB9A
     lda     PPUSTATUS               ; $AB9D
     jsr     sub_5_A795              ; $ABA0
-    lda     ram_0726                ; $ABA3
+    lda     renderingOff            ; $ABA3
     bne     loc_5_AC06              ; $ABA6
     lda     timerFast+3             ; $ABA8
     bne     loc_5_ABF7              ; $ABAB
@@ -4466,7 +4492,7 @@ loc_5_ABDF:
 
 loc_5_ABE5:
     lda     ram_0761                ; $ABE5
-    jsr     sub_D385                ; $ABE8
+    jsr     JumpTable               ; $ABE8
 ; (inline jump table)
     .word   loc_5_AC31              ; $ABEB  (not observed)
     .word   loc_5_AC73              ; $ABED  (not observed)
@@ -4798,7 +4824,7 @@ loc_5_AE49:
 
 loc_5_AE4A:
     lda     objY+12                 ; $AE4A
-    jsr     sub_D385                ; $AE4C
+    jsr     JumpTable               ; $AE4C
 ; (inline jump table)
     .word   loc_5_AE55              ; $AE4F  (not observed)
     .word   loc_5_AF02              ; $AE51  (not observed)
@@ -4868,9 +4894,9 @@ loc_5_AF19:
 
 loc_5_AF1F:
     lda     gameSubStep             ; $AF1F
-    jsr     sub_D385                ; $AF22
+    jsr     JumpTable               ; $AF22
 ; (inline jump table)
-    .word   sub_D266                ; $AF25
+    .word   Ppu_ClearNametables     ; $AF25
     .word   loc_5_AF2B              ; $AF27
     .word   loc_5_AF34              ; $AF29
 
@@ -4936,7 +4962,7 @@ loc_5_AF34:
 loc_5_B22D:
     jsr     Oam_HideAll             ; $B22D
     jsr     Game_CheckModeChange    ; $B230
-    jsr     sub_D385                ; $B233
+    jsr     JumpTable               ; $B233
 ; (inline jump table)
     .word   loc_5_B242              ; $B236
     .word   loc_5_B3CF              ; $B238
@@ -4950,7 +4976,7 @@ dat_5_B23D:
 
 loc_5_B242:
     lda     ram_073B                ; $B242
-    jsr     sub_D385                ; $B245
+    jsr     JumpTable               ; $B245
 ; (inline jump table)
     .word   loc_5_B40A              ; $B248
     .word   loc_5_B24E              ; $B24A
@@ -4965,7 +4991,7 @@ loc_5_B250:
     iny                             ; $B256
     cpy     #$A6                    ; $B257
     bcc     loc_5_B250              ; $B259
-    jsr     sub_D266                ; $B25B
+    jsr     Ppu_ClearNametables     ; $B25B
     jmp     loc_5_B41D              ; $B25E
 
 loc_5_B261:
@@ -4992,7 +5018,7 @@ loc_5_B27B:
 
 loc_5_B28B:
     lda     #$00                    ; $B28B
-    sta     ram_0726                ; $B28D
+    sta     renderingOff            ; $B28D
     lda     joypadPressed           ; $B290
     and     #$10                    ; $B292
     beq     loc_5_B303              ; $B294
@@ -5195,7 +5221,7 @@ loc_5_B3B6:
 
 loc_5_B3CF:
     lda     ram_073B                ; $B3CF
-    jsr     sub_D385                ; $B3D2
+    jsr     JumpTable               ; $B3D2
 ; (inline jump table)
     .word   loc_5_B412              ; $B3D5
     .word   loc_5_B24E              ; $B3D7
@@ -5227,7 +5253,7 @@ loc_5_B3F4:
 
 loc_5_B3FA:
     lda     ram_073B                ; $B3FA
-    jsr     sub_D385                ; $B3FD
+    jsr     JumpTable               ; $B3FD
 ; (inline jump table)
     .word   loc_5_B412              ; $B400
     .word   loc_5_B24E              ; $B402
@@ -5244,7 +5270,7 @@ loc_5_B40C:
     bpl     loc_5_B40C              ; $B410
 
 loc_5_B412:
-    inc     ram_0726                ; $B412
+    inc     renderingOff            ; $B412
     jmp     loc_5_B41D              ; $B415
 ; (unreferenced: $B418-$B41C, 5 bytes)
     .byte   $A9, $00, $8D, $26, $07                                         ; $B418
@@ -5277,7 +5303,7 @@ loc_5_B433:
 
 loc_5_B443:
     lda     #$00                    ; $B443
-    sta     ram_0726                ; $B445
+    sta     renderingOff            ; $B445
     lda     joypadPressed           ; $B448
     and     #$10                    ; $B44A
     beq     loc_5_B4A6              ; $B44C
@@ -5638,7 +5664,7 @@ loc_5_B678:
 
 loc_5_B692:
     lda     #$00                    ; $B692
-    sta     ram_0726                ; $B694
+    sta     renderingOff            ; $B694
     lda     joypadPressed           ; $B697
     and     #$10                    ; $B699
     beq     loc_5_B6AC              ; $B69B

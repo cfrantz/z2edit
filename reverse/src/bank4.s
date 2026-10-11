@@ -50,7 +50,7 @@ loc_4_80EE:
 
 loc_4_8103:
     txa                             ; $8103
-    jsr     sub_D385                ; $8104
+    jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   loc_4_8199              ; $8107
     .word   loc_4_8199              ; $8109
@@ -75,7 +75,7 @@ loc_4_8103:
 
 loc_4_812F:
     txa                             ; $812F
-    jsr     sub_D385                ; $8130
+    jsr     JumpTable               ; $8130
 ; (inline jump table)
     .word   loc_4_8259              ; $8133
     .word   loc_4_8261              ; $8135
@@ -1487,7 +1487,7 @@ loc_4_9AD4:
 
 loc_4_9ADE:
     lda     ram_00AF,x              ; $9ADE
-    jsr     sub_D385                ; $9AE0
+    jsr     JumpTable               ; $9AE0
 ; (inline jump table)
     .word   loc_4_9AEB              ; $9AE3
     .word   loc_4_9B2B              ; $9AE5
@@ -3286,7 +3286,7 @@ loc_4_B11F:
     lda     timerFast+12            ; $B12D
     bne     loc_4_B153              ; $B130
     lda     ram_0499                ; $B132
-    jsr     sub_D385                ; $B135
+    jsr     JumpTable               ; $B135
 ; (inline jump table)
     .word   loc_4_B140              ; $B138
     .word   loc_4_B154              ; $B13A
@@ -4527,7 +4527,7 @@ loc_4_B919:
 loc_4_B929:
     lda     ram_00AF,x              ; $B929
     and     #$03                    ; $B92B
-    jsr     sub_D385                ; $B92D
+    jsr     JumpTable               ; $B92D
 ; (inline jump table)
     .word   loc_4_B93C              ; $B930
     .word   loc_4_B96D              ; $B932

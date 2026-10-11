@@ -75,7 +75,7 @@ The file screens use the backup copies as a scratch area:
 
 ## Copy Loops
 
-The copy loops do not count bytes.  `Save_SetPointers` sets `ram_0006` to
+The copy loops do not count bytes.  `Save_SetPointers` sets `temp6` to
 `SaveDefaultWorld`, and every loop advances it with the other pointers,
 stopping when it reaches `SaveDefaultWorldEnd`.  The world block is
 therefore exactly as long as `SaveDefaultWorld` (224 bytes).
