@@ -166,7 +166,7 @@ Mode_RaftStart:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Raft_Draw:
-    jsr     sub_0_8728              ; $81BD
+    jsr     Overworld_DrawLinkAtX   ; $81BD
     lda     #$45                    ; $81C0
     sta     oamBuffer+1             ; $81C2
     lda     #$47                    ; $81C5
@@ -1075,7 +1075,7 @@ loc_0_8721:
 Overworld_DrawLink:
     lda     #$84                    ; $8726
 
-sub_0_8728:
+Overworld_DrawLinkAtX:
     sta     oamBuffer+3             ; $8728
     clc                             ; $872B
     adc     #$08                    ; $872C
@@ -5610,7 +5610,7 @@ loc_0_A3DF:
     asl     a                       ; $A3F9
     asl     a                       ; $A3FA
     adc     #$10                    ; $A3FB
-    jsr     sub_0_A57E              ; $A3FD
+    jsr     Math_AddToTemp14        ; $A3FD
     ldx     #$00                    ; $A400
 
 loc_0_A402:
@@ -5622,7 +5622,7 @@ loc_0_A402:
     bne     loc_0_A418              ; $A40B
     lda     #$D0                    ; $A40D
     clc                             ; $A40F
-    jsr     sub_0_A57E              ; $A410
+    jsr     Math_AddToTemp14        ; $A410
     tya                             ; $A413
     sec                             ; $A414
     sbc     #$10                    ; $A415
@@ -5858,7 +5858,7 @@ sub_0_A56B:
     cmp     temp7                   ; $A57B
     rts                             ; $A57D
 
-sub_0_A57E:
+Math_AddToTemp14:
     adc     temp14                  ; $A57E
     sta     temp14                  ; $A580
     lda     temp15                  ; $A582
