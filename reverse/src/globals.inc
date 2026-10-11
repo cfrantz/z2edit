@@ -162,9 +162,9 @@ GLOBALS_INC = 1
 .global Pause_OverworldWait
 .global Pause_OverworldUnmute
 .global Mode_FallBlankScreen
-.global loc_3_8647
-.global loc_3_9B86
-.global loc_3_9BCB
+.global Town_SetFloorTiles
+.global Town_DrawLargeObject
+.global Town_DrawSmallObject
 .global loc_4_8167
 .global loc_5_817B
 

@@ -31,117 +31,146 @@ dat_3_800E:
     .byte   $FF, $18, $36, $2A, $FF, $16, $27, $30, $FF, $0F, $2A, $30, $FF, $0F, $16, $26; $80CE
     .byte   $FF, $18, $36, $2A, $FF, $16, $27, $30, $FF, $11, $21, $30, $FF, $07, $16, $30; $80DE
 
-Area_DrawLargeObject_Bank3:
-    .assert Area_DrawLargeObject_Bank3 = AreaBank::DrawLargeObject, error, "interface address moved"
+; ---------------------------------------------------------------------------
+; Town_DrawCrossHatchedRoof
+;
+; Large town objects $10 and $20, the cross-hatched roof: fill the
+; object's width with roof tiles over two rows (Town_FillRect, pattern 0).
+; At the address of AreaBank::DrawLargeObject, but in bank 3 it is only
+; reached through Town_DrawLargeObject.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Town_DrawCrossHatchedRoof:
     ldx     #$00                    ; $80EE
-    beq     loc_3_8104              ; $80F0
+    beq     Town_FillRect           ; $80F0
 
-loc_3_80F2:
+Town_DrawGrayRoof:
     ldx     #$01                    ; $80F2
-    bne     loc_3_8104              ; $80F4
+    bne     Town_FillRect           ; $80F4
 
-loc_3_80F6:
+Town_DrawGreenRoof:
     ldx     #$02                    ; $80F6
-    bne     loc_3_8104              ; $80F8
+    bne     Town_FillRect           ; $80F8
 
-dat_3_80FA:
+TownFillTopTiles:
     .byte   $84, $CF, $57, $55                                              ; $80FA
 
-dat_3_80FE:
+TownFillTiles:
     .byte   $85, $D0, $52, $55                                              ; $80FE
 
-loc_3_8102:
+Town_DrawUndergroundBricks:
     ldx     #$03                    ; $8102
 
-loc_3_8104:
-    lda     dat_3_80FA,x            ; $8104
+; ---------------------------------------------------------------------------
+; Town_FillRect
+;
+; Fill two rows of the object's width (areaObjectType & $0F, plus one)
+; with tile TownFillTopTiles[x], then TownFillTiles[x]: the roofs (x 0-2)
+; and underground bricks (3).
+;
+; In:      x = pattern
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Town_FillRect:
+    lda     TownFillTopTiles,x      ; $8104
     sta     temp0                   ; $8107
-    lda     dat_3_80FE,x            ; $8109
+    lda     TownFillTiles,x         ; $8109
     sta     temp1                   ; $810C
     lda     #$01                    ; $810E
     pha                             ; $8110
     lda     temp0                   ; $8111
     sta     ram_0112                ; $8113
 
-loc_3_8116:
+@loc_8116:
     lda     areaObjectType          ; $8116
     and     #$0F                    ; $8119
     tax                             ; $811B
     jsr     AreaMap_GetPagePtr      ; $811C
 
-loc_3_811F:
+@loop:
     lda     ram_0112                ; $811F
     jsr     AreaMap_PutTileRight    ; $8122
     dex                             ; $8125
-    bpl     loc_3_811F              ; $8126
+    bpl     @loop                   ; $8126
     jsr     AreaMap_NextBuildRow    ; $8128
     pla                             ; $812B
     tax                             ; $812C
     dex                             ; $812D
-    bmi     loc_3_813A              ; $812E
+    bmi     @done                   ; $812E
     txa                             ; $8130
     pha                             ; $8131
     lda     temp1                   ; $8132
     sta     ram_0112                ; $8134
-    jmp     loc_3_8116              ; $8137
+    jmp     @loc_8116               ; $8137
 
-loc_3_813A:
+@done:
     rts                             ; $813A
 
-loc_3_813B:
+Town_DrawBrickBuilding:
     ldx     #$00                    ; $813B
-    beq     loc_3_8157              ; $813D
+    beq     Town_DrawWall           ; $813D
 
-loc_3_813F:
+Town_DrawWhiteBrickBuilding:
     ldx     #$01                    ; $813F
-    bne     loc_3_8157              ; $8141
+    bne     Town_DrawWall           ; $8141
 
-loc_3_8143:
+Town_DrawGrassBuilding:
     ldx     #$02                    ; $8143
-    bne     loc_3_8157              ; $8145
+    bne     Town_DrawWall           ; $8145
 
-loc_3_8147:
+Town_DrawWhiteWall:
     ldx     #$03                    ; $8147
-    bne     loc_3_8157              ; $8149
+    bne     Town_DrawWall           ; $8149
 
-dat_3_814B:
+TownWallTiles:
     .byte   $80, $CD, $4E, $CB, $82                                         ; $814B
 
-dat_3_8150:
+TownWallBaseTiles:
     .byte   $81, $CE, $4F, $CB, $83                                         ; $8150
 
-loc_3_8155:
+Town_DrawLogBuilding:
     ldx     #$04                    ; $8155
 
-loc_3_8157:
-    lda     dat_3_814B,x            ; $8157
+; ---------------------------------------------------------------------------
+; Town_DrawWall
+;
+; Fill the object's width, row after row down to row $B, with
+; TownWallTiles[x], ending each row with TownWallBaseTiles[x]: the walls
+; of the buildings (x 0-4).
+;
+; In:      x = pattern
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Town_DrawWall:
+    lda     TownWallTiles,x         ; $8157
     sta     temp0                   ; $815A
-    lda     dat_3_8150,x            ; $815C
+    lda     TownWallBaseTiles,x     ; $815C
     sta     temp1                   ; $815F
 
-loc_3_8161:
+@loop:
     lda     areaObjectType          ; $8161
     and     #$0F                    ; $8164
     tax                             ; $8166
     jsr     AreaMap_GetPagePtr      ; $8167
 
-loc_3_816A:
+@loop2:
     lda     temp0                   ; $816A
     jsr     AreaMap_PutTileRight    ; $816C
     dex                             ; $816F
-    bne     loc_3_816A              ; $8170
+    bne     @loop2                  ; $8170
     lda     temp1                   ; $8172
     jsr     AreaMap_PutTileNextBuildRow ; $8174
     and     #$F0                    ; $8177
     cmp     #$B0                    ; $8179
-    bne     loc_3_8161              ; $817B
+    bne     @loop                   ; $817B
     rts                             ; $817D
 
-loc_3_817E:
+Town_DrawSquareWindows:
     ldx     #$00                    ; $817E
     beq     loc_3_818E              ; $8180
 
-loc_3_8182:
+Town_DrawGrayWindows:
     ldx     #$01                    ; $8182
     bne     loc_3_818E              ; $8184
 
@@ -151,13 +180,13 @@ dat_3_8186:
 dat_3_8189:
     .byte   $86, $D2, $88                                                   ; $8189
 
-loc_3_818C:
+Town_DrawBrownWindows:
     ldx     #$02                    ; $818C
 
 loc_3_818E:
     jsr     AreaMap_GetPagePtr      ; $818E
 
-loc_3_8191:
+@loop:
     lda     dat_3_8186,x            ; $8191
     jsr     AreaMap_PutTileDown     ; $8194
     lda     dat_3_8189,x            ; $8197
@@ -168,10 +197,18 @@ loc_3_8191:
     tay                             ; $81A0
     and     #$F0                    ; $81A1
     cmp     #$A0                    ; $81A3
-    bcc     loc_3_8191              ; $81A5
+    bcc     @loop                   ; $81A5
     rts                             ; $81A7
 
-loc_3_81A8:
+; ---------------------------------------------------------------------------
+; Town_DrawSlantRight
+;
+; Large extra $30: three rows of house background tile $44 from row 2,
+; each starting one column further right.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Town_DrawSlantRight:
     lda     #$02                    ; $81A8
     sta     temp4                   ; $81AA
     lda     areaBuildPos            ; $81AC
@@ -179,24 +216,32 @@ loc_3_81A8:
     ora     #$20                    ; $81B1
     sta     areaBuildPos            ; $81B3
 
-loc_3_81B6:
+@loop:
     lda     areaObjectType          ; $81B6
     and     #$0F                    ; $81B9
     tax                             ; $81BB
     jsr     AreaMap_GetPagePtr      ; $81BC
 
-loc_3_81BF:
+@loop2:
     lda     #$44                    ; $81BF
     jsr     AreaMap_PutTileRight    ; $81C1
     dex                             ; $81C4
-    bpl     loc_3_81BF              ; $81C5
+    bpl     @loop2                  ; $81C5
     jsr     AreaMap_NextBuildRow    ; $81C7
     inc     areaBuildPos            ; $81CA
     dec     temp4                   ; $81CD
-    bpl     loc_3_81B6              ; $81CF
+    bpl     @loop                   ; $81CF
     rts                             ; $81D1
 
-loc_3_81D2:
+; ---------------------------------------------------------------------------
+; Town_DrawSlantLeft
+;
+; Large extra $40: three rows of tile $44 from row 2, each one column
+; narrower.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Town_DrawSlantLeft:
     lda     #$02                    ; $81D2
     sta     temp4                   ; $81D4
     lda     areaBuildPos            ; $81D6
@@ -204,21 +249,21 @@ loc_3_81D2:
     ora     #$20                    ; $81DB
     sta     areaBuildPos            ; $81DD
 
-loc_3_81E0:
+@loop:
     lda     areaObjectType          ; $81E0
     and     #$0F                    ; $81E3
     tax                             ; $81E5
     jsr     AreaMap_GetPagePtr      ; $81E6
 
-loc_3_81E9:
+@loop2:
     lda     #$44                    ; $81E9
     jsr     AreaMap_PutTileRight    ; $81EB
     dex                             ; $81EE
-    bpl     loc_3_81E9              ; $81EF
+    bpl     @loop2                  ; $81EF
     jsr     AreaMap_NextBuildRow    ; $81F1
     dec     areaObjectType          ; $81F4
     dec     temp4                   ; $81F7
-    bpl     loc_3_81E0              ; $81F9
+    bpl     @loop                   ; $81F9
     rts                             ; $81FB
 
 dat_3_81FC:
@@ -233,19 +278,19 @@ dat_3_81FC:
 dat_3_8268:
     .byte   $1A, $35, $50, $6B                                              ; $8268
 
-loc_3_826C:
+Town_DrawDoorLeft:
     ldy     #$00                    ; $826C
-    beq     loc_3_827A              ; $826E
+    beq     loc_3_827A               ; $826E
 
-loc_3_8270:
+Town_DrawDoorRight:
     ldy     #$01                    ; $8270
-    bne     loc_3_827A              ; $8272
+    bne     loc_3_827A               ; $8272
 
-loc_3_8274:
+Town_DrawWallLeft:
     ldy     #$02                    ; $8274
-    bne     loc_3_827A              ; $8276
+    bne     loc_3_827A               ; $8276
 
-loc_3_8278:
+Town_DrawWallRight:
     ldy     #$03                    ; $8278
 
 loc_3_827A:
@@ -258,33 +303,33 @@ loc_3_827A:
     sta     areaBuildPos            ; $8288
     jsr     AreaMap_GetPagePtr      ; $828B
 
-loc_3_828E:
+@loop:
     lda     dat_3_81FC,x            ; $828E
     cmp     #$44                    ; $8291
-    beq     loc_3_8297              ; $8293
+    beq     @loc_8297               ; $8293
     sta     (temp14),y              ; $8295
 
-loc_3_8297:
+@loc_8297:
     dec     temp0                   ; $8297
     dex                             ; $8299
     jsr     AreaMap_NextRow         ; $829A
     cmp     #$B0                    ; $829D
-    bcc     loc_3_828E              ; $829F
+    bcc     @loop                   ; $829F
     inc     areaBuildPos            ; $82A1
     ldy     areaBuildPos            ; $82A4
     lda     temp0                   ; $82A7
     cmp     #$FF                    ; $82A9
-    bne     loc_3_828E              ; $82AB
+    bne     @loop                   ; $82AB
     rts                             ; $82AD
 
 dat_3_82AE:
     .byte   $4D, $4C, $4B, $4B                                              ; $82AE
 
-loc_3_82B2:
+Town_DrawTable:
     ldx     #$03                    ; $82B2
     jsr     AreaMap_GetPagePtr      ; $82B4
 
-loc_3_82B7:
+@loop:
     lda     dat_3_82AE,x            ; $82B7
     sta     (temp14),y              ; $82BA
     iny                             ; $82BC
@@ -293,40 +338,40 @@ loc_3_82B7:
     jsr     AreaMap_PutTileNextBuildRow ; $82C1
     tay                             ; $82C4
     dex                             ; $82C5
-    bpl     loc_3_82B7              ; $82C6
+    bpl     @loop                   ; $82C6
     rts                             ; $82C8
 
 dat_3_82C9:
     .byte   $EA, $90, $8F, $EA, $8E, $8D                                    ; $82C9
 
-loc_3_82CF:
+Town_DrawFireplace:
     ldx     #$05                    ; $82CF
     lda     areaBuildPos            ; $82D1
     and     #$0F                    ; $82D4
     ora     #$90                    ; $82D6
     sta     areaBuildPos            ; $82D8
 
-loc_3_82DB:
+@loop:
     jsr     AreaMap_GetPagePtr      ; $82DB
 
-loc_3_82DE:
+@loop2:
     lda     dat_3_82C9,x            ; $82DE
     sta     (temp14),y              ; $82E1
     dex                             ; $82E3
     jsr     AreaMap_NextRow         ; $82E4
     and     #$F0                    ; $82E7
     cmp     #$C0                    ; $82E9
-    bcc     loc_3_82DE              ; $82EB
+    bcc     @loop2                  ; $82EB
     inc     areaBuildPos            ; $82ED
     cpx     #$FF                    ; $82F0
-    bne     loc_3_82DB              ; $82F2
+    bne     @loop                   ; $82F2
     rts                             ; $82F4
 ; (code below not executed in the test movies)
 
-loc_3_82F5:
+Town_DrawStonehenge:
     jsr     AreaMap_GetPagePtr      ; $82F5
 
-loc_3_82F8:
+@loop:
     lda     #$49                    ; $82F8
     sta     (temp14),y              ; $82FA
     iny                             ; $82FC
@@ -335,11 +380,11 @@ loc_3_82F8:
     tay                             ; $8302
     and     #$F0                    ; $8303
     cmp     #$B0                    ; $8305
-    bcc     loc_3_82F8              ; $8307
+    bcc     @loop                   ; $8307
     rts                             ; $8309
 ; (end of code not executed in the test movies)
 
-loc_3_830A:
+Town_DrawWater:
     lda     areaBuildPos            ; $830A
     and     #$0F                    ; $830D
     ora     #$B0                    ; $830F
@@ -347,29 +392,29 @@ loc_3_830A:
     lda     #$40                    ; $8314
     sta     temp0                   ; $8316
 
-loc_3_8318:
+@loop2:
     lda     areaObjectType          ; $8318
     and     #$0F                    ; $831B
     tax                             ; $831D
     jsr     AreaMap_GetPagePtr      ; $831E
 
-loc_3_8321:
+@loop3:
     lda     temp0                   ; $8321
     jsr     AreaMap_PutTileRight    ; $8323
     dex                             ; $8326
-    bpl     loc_3_8321              ; $8327
+    bpl     @loop3                  ; $8327
     lda     #$92                    ; $8329
     sta     temp0                   ; $832B
     jsr     AreaMap_NextBuildRow    ; $832D
     and     #$F0                    ; $8330
     cmp     #$D0                    ; $8332
-    bcc     loc_3_8318              ; $8334
+    bcc     @loop2                  ; $8334
     rts                             ; $8336
 
 dat_3_8337:
     .byte   $D3, $CC, $CC                                                   ; $8337
 
-loc_3_833A:
+Town_DrawBackgroundWall:
     lda     areaObjectType          ; $833A
     and     #$0F                    ; $833D
     sta     areaObjectType          ; $833F
@@ -378,25 +423,25 @@ loc_3_833A:
     ora     #$40                    ; $8347
     sta     areaBuildPos            ; $8349
 
-loc_3_834C:
+@loop:
     ldx     #$02                    ; $834C
     jsr     AreaMap_GetPagePtr      ; $834E
 
-loc_3_8351:
+@loop2:
     lda     dat_3_8337,x            ; $8351
     sta     (temp14),y              ; $8354
     iny                             ; $8356
     dex                             ; $8357
-    bpl     loc_3_8351              ; $8358
+    bpl     @loop2                  ; $8358
     jsr     AreaMap_NextBuildRow    ; $835A
     dec     areaObjectType          ; $835D
-    bpl     loc_3_834C              ; $8360
+    bpl     @loop                   ; $8360
     rts                             ; $8362
 
 dat_3_8363:
     .byte   $92, $56, $51                                                   ; $8363
 
-loc_3_8366:
+Town_DrawBridge:
     lda     #$02                    ; $8366
     sta     temp0                   ; $8368
     lda     areaBuildPos            ; $836A
@@ -404,7 +449,7 @@ loc_3_8366:
     ora     #$A0                    ; $836F
     sta     areaBuildPos            ; $8371
 
-loc_3_8374:
+@loop:
     ldx     temp0                   ; $8374
     lda     dat_3_8363,x            ; $8376
     sta     temp1                   ; $8379
@@ -413,14 +458,14 @@ loc_3_8374:
     tax                             ; $8380
     jsr     AreaMap_GetPagePtr      ; $8381
 
-loc_3_8384:
+@loop2:
     lda     temp1                   ; $8384
     jsr     AreaMap_PutTileRight    ; $8386
     dex                             ; $8389
-    bpl     loc_3_8384              ; $838A
+    bpl     @loop2                  ; $838A
     jsr     AreaMap_NextBuildRow    ; $838C
     dec     temp0                   ; $838F
-    bpl     loc_3_8374              ; $8391
+    bpl     @loop                   ; $8391
     rts                             ; $8393
 
 dat_3_8394:
@@ -429,21 +474,21 @@ dat_3_8394:
     .byte   $EA, $91, $91, $8C                                              ; $839C
     .byte   $58, $91, $91, $8C                                              ; $83A0
 
-loc_3_83A4:
+Town_DrawClosedDoor:
     lda     #$00                    ; $83A4
     beq     loc_3_83B2              ; $83A6
 
-loc_3_83A8:
+Town_DrawOpenDoor:
     lda     #$01                    ; $83A8
     bne     loc_3_83B2              ; $83AA
 ; (code below not executed in the test movies)
 
-loc_3_83AC:
+Town_DrawOpenDoor2:
     lda     #$02                    ; $83AC
     bne     loc_3_83B2              ; $83AE
 ; (end of code not executed in the test movies)
 
-loc_3_83B0:
+Town_DrawOpenDoor3:
     lda     #$03                    ; $83B0
 
 loc_3_83B2:
@@ -455,12 +500,12 @@ loc_3_83B2:
     sta     temp0                   ; $83B9
     jsr     AreaMap_GetPagePtr      ; $83BB
 
-loc_3_83BE:
+@loop:
     lda     dat_3_8394,x            ; $83BE
     jsr     AreaMap_PutTileDown     ; $83C1
     dex                             ; $83C4
     dec     temp0                   ; $83C5
-    bpl     loc_3_83BE              ; $83C7
+    bpl     @loop                   ; $83C7
     rts                             ; $83C9
     .byte   $42, $42, $42, $42, $42, $42, $FF, $FF, $37, $37, $37, $37, $37, $37, $FF, $FF; $83CA
     .byte   $45, $45, $45, $45, $45, $FF, $45, $FF, $5F, $5F, $5F, $5F, $3C, $3D, $3E, $3F; $83DA
@@ -580,12 +625,22 @@ SpecialTiles_Bank3:
     .byte   $CB, $E9, $40, $40, $40, $53, $40, $40, $53, $53, $53, $40, $40, $40, $53, $40; $862F
     .byte   $40, $53, $53, $53                                              ; $863F
 
-dat_3_8643:
+TownFloorRecordsLo:
     .byte   $1F, $28, $31, $3A                                              ; $8643
 
-loc_3_8647:
+; ---------------------------------------------------------------------------
+; Town_SetFloorTiles
+;
+; Set up the town's floor tile (ram_010D) from its background type
+; (ram_010C): byte 8 of the type's record (TownFloorRecordsLo, records at
+; $861F).  Bank 3's version of OverworldBank::SetFloorTiles, called by
+; Area_SetFloorTiles for towns.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Town_SetFloorTiles:
     ldx     ram_010C                ; $8647
-    lda     dat_3_8643,x            ; $864A
+    lda     TownFloorRecordsLo,x    ; $864A
     sta     temp12                  ; $864D
     lda     #$86                    ; $864F
     sta     temp13                  ; $8651
@@ -593,16 +648,31 @@ loc_3_8647:
     lda     (temp12),y              ; $8655
     sta     ram_010D                ; $8657
     rts                             ; $865A
-    .byte   $AD, $0A, $01, $8D, $57, $07, $60                               ; $865B
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_3_8662:
+; ---------------------------------------------------------------------------
+; Area_PlaceElevator_Bank3
+;
+; Large extra $50: the area's elevator is at this column (elevatorPos).
+; Same as in the other area banks.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_PlaceElevator_Bank3:
+    lda     areaBuildColumn         ; $865B
+    sta     elevatorPos             ; $865E
+    rts                             ; $8661
+; (end of disassembled code)
+
+
+Town_DrawLargeCloud:
     ldx     #$00                    ; $8662
     beq     loc_3_866A              ; $8664
 
 dat_3_8666:
     .byte   $C5, $C6                                                        ; $8666
 
-loc_3_8668:
+Town_DrawSmallCloud:
     ldx     #$01                    ; $8668
 
 loc_3_866A:
@@ -614,18 +684,18 @@ loc_3_866A:
     sta     (temp14),y              ; $8675
     rts                             ; $8677
 
-loc_3_8678:
+Town_DrawChurchCross:
     ldx     #$02                    ; $8678
     bne     loc_3_8685              ; $867A
 
-loc_3_867C:
+Town_DrawCross:
     ldx     #$00                    ; $867C
     beq     loc_3_8685              ; $867E
 
 dat_3_8680:
     .byte   $DC, $4A, $DD                                                   ; $8680
 
-loc_3_8683:
+Town_DrawChair:
     ldx     #$01                    ; $8683
 
 loc_3_8685:
@@ -637,16 +707,16 @@ loc_3_8685:
 dat_3_868E:
     .byte   $48, $48, $47, $46, $46                                         ; $868E
 
-loc_3_8693:
+Town_DrawBench:
     ldx     #$04                    ; $8693
     jsr     AreaMap_GetPagePtr      ; $8695
 
-loc_3_8698:
+@loop:
     lda     dat_3_868E,x            ; $8698
     sta     (temp14),y              ; $869B
     iny                             ; $869D
     dex                             ; $869E
-    bpl     loc_3_8698              ; $869F
+    bpl     @loop                   ; $869F
     rts                             ; $86A1
     .byte   $F4, $F4, $F4, $F4, $F0, $F0, $F1, $F1, $52, $53, $53, $52, $53, $53, $54, $54; $86A2
     .byte   $F4, $F4, $F4, $F4, $4C, $4D, $4E, $4F, $62, $63, $62, $F4, $62, $F4, $62, $F4; $86B2
@@ -744,10 +814,25 @@ dat_3_8AA0:
     .byte   $81, $A0, $82, $A0, $82, $01, $84, $A0, $82, $A0, $35, $36, $50, $66, $51, $A1; $8B50
     .byte   $52, $A0, $80, $00, $52, $A1, $62, $32, $80, $62, $81, $00, $32, $36, $50, $66; $8B60
     .byte   $51, $A1, $52, $A0, $80, $00, $52, $A1, $67, $76, $81, $A0, $82, $A0, $82, $00; $8B70
-    .byte   $F8, $06, $0C, $00, $A0, $09, $F0, $1F, $64, $27, $80, $97, $83, $01, $AD, $0A; $8B80
-    .byte   $01, $8D, $58, $07, $60                                         ; $8B90
+    .byte   $F8, $06, $0C, $00, $A0, $09, $F0, $1F, $64, $27, $80, $97, $83, $01; $8B80
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_3_8B95:
+; ---------------------------------------------------------------------------
+; Area_PlaceLockedDoor_Bank3
+;
+; Small objects $0E and $0F: the area's locked door is at this column
+; (lockedDoorPos).  Same as in the other area banks.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_PlaceLockedDoor_Bank3:
+    lda     areaBuildColumn         ; $8B8E
+    sta     lockedDoorPos           ; $8B91
+    rts                             ; $8B94
+; (end of disassembled code)
+
+
+Town_DrawBush:
     lda     areaObjectType          ; $8B95
     and     #$0F                    ; $8B98
     tax                             ; $8B9A
@@ -760,11 +845,11 @@ dat_3_8BA0:
     sta     areaBuildPos            ; $8BA2
     jsr     AreaMap_GetPagePtr      ; $8BA5
 
-loc_3_8BA8:
+@loop:
     lda     #$45                    ; $8BA8
     jsr     AreaMap_PutTileRight    ; $8BAA
     dex                             ; $8BAD
-    bpl     loc_3_8BA8              ; $8BAE
+    bpl     @loop                   ; $8BAE
     rts                             ; $8BB0
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8BB1
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8BC1
@@ -1027,10 +1112,10 @@ dat_3_969A:
 ; ---------------------------------------------------------------------------
 TownBat_Ai:
     lda     drawOffscreen+1         ; $96A8
-    beq     loc_3_96AF              ; $96AA
+    beq     @loc_96AF               ; $96AA
     jmp     Enemy_Despawn           ; $96AC
 
-loc_3_96AF:
+@loc_96AF:
     jmp     Ache_Ai                 ; $96AF
 ; (end of disassembled code)
 
@@ -1045,21 +1130,21 @@ loc_3_96AF:
 Generator_Init_Bank3:
     ldy     #$05                    ; $96B2
 
-loc_3_96B4:
+@loop:
     cpy     currentObject           ; $96B4
-    beq     loc_3_96C4              ; $96B6
+    beq     @loc_96C4               ; $96B6
     lda     a:enemyActive,y         ; $96B8
-    beq     loc_3_96C4              ; $96BB
+    beq     @loc_96C4               ; $96BB
     lda     a:enemyType,y           ; $96BD
     cmp     enemyType,x             ; $96C0
-    beq     loc_3_96C8              ; $96C2
+    beq     @loc_96C8               ; $96C2
 
-loc_3_96C4:
+@loc_96C4:
     dey                             ; $96C4
-    bpl     loc_3_96B4              ; $96C5
+    bpl     @loop                   ; $96C5
     rts                             ; $96C7
 
-loc_3_96C8:
+@loc_96C8:
     tya                             ; $96C8
     tax                             ; $96C9
     jsr     Enemy_Despawn           ; $96CA
@@ -1088,22 +1173,22 @@ dat_3_96DE:
 ; ---------------------------------------------------------------------------
 TownspersonGenerator_Ai:
     inc     enemyAiState,x          ; $96E0
-    bne     loc_3_96EF              ; $96E2
+    bne     @done                   ; $96E2
     ldx     #$05                    ; $96E4
 
-loc_3_96E6:
+@loop:
     lda     enemyActive,x           ; $96E6
-    beq     loc_3_96F0              ; $96E8
+    beq     @loc_96F0               ; $96E8
     dex                             ; $96EA
-    bpl     loc_3_96E6              ; $96EB
+    bpl     @loop                   ; $96EB
 ; (code below not executed in the test movies)
     ldx     currentObject           ; $96ED
 ; (end of code not executed in the test movies)
 
-loc_3_96EF:
+@done:
     rts                             ; $96EF
 
-loc_3_96F0:
+@loc_96F0:
     lda     rng+1,x                 ; $96F0
     sta     temp2                   ; $96F3
     and     #$03                    ; $96F5
@@ -1124,10 +1209,10 @@ loc_3_96F0:
     sta     objY+1,x                ; $9711
     lda     joypadHeld              ; $9713
     and     #$03                    ; $9715
-    bne     loc_3_971B              ; $9717
+    bne     @loc_971B               ; $9717
     lda     temp2                   ; $9719
 
-loc_3_971B:
+@loc_971B:
     and     #$01                    ; $971B
     tay                             ; $971D
     lda     scrollX                 ; $971E
@@ -1231,13 +1316,13 @@ dat_3_9780:
 TalkingBit_Ai:
     lda     frameCounter            ; $9783
     and     #$80                    ; $9785
-    bne     loc_3_9791              ; $9787
+    bne     @loc_9791               ; $9787
     lda     frameCounter            ; $9789
     and     #$18                    ; $978B
     sta     objState+1,x            ; $978D
     lda     #$00                    ; $978F
 
-loc_3_9791:
+@loc_9791:
     sta     enemyAiState,x          ; $9791
 
 ; ---------------------------------------------------------------------------
@@ -1253,10 +1338,10 @@ Townsperson_StandAi:
     jsr     sub_3_9A8D              ; $9796
     lda     frameCounter            ; $9799
     and     #$3F                    ; $979B
-    bne     loc_3_97A2              ; $979D
+    bne     @loc_97A2               ; $979D
     jsr     Enemy_FaceLink          ; $979F
 
-loc_3_97A2:
+@loc_97A2:
     lda     #$00                    ; $97A2
     sta     enemyAiState,x          ; $97A4
     jmp     Townsperson_CheckTalk   ; $97A6
@@ -1273,23 +1358,23 @@ Wizard_Ai:
     jsr     Townsperson_FaceLinkWhileTalking ; $97A9
     jsr     sub_3_9A8D              ; $97AC
     lda     drawOffscreen+1         ; $97AF
-    bne     loc_3_97D3              ; $97B1
+    bne     @done                   ; $97B1
     jsr     Enemy_FaceLink          ; $97B3
     lda     ram_05A5,x              ; $97B6
-    bne     loc_3_97D3              ; $97B9
+    bne     @done                   ; $97B9
     lda     temp15                  ; $97BB
     adc     #$20                    ; $97BD
     cmp     #$40                    ; $97BF
-    bcs     loc_3_97D3              ; $97C1
+    bcs     @done                   ; $97C1
     lda     objCollision            ; $97C3
     lda     linkJumpState           ; $97C5
-    bne     loc_3_97D3              ; $97C8
+    bne     @done                   ; $97C8
     stx     dialogPerson            ; $97CA
     jmp     Townsperson_StartTalk   ; $97CD
 ; (unreferenced: $97D0-$97D2, 3 bytes)
     .byte   $FE, $C3, $05                                                   ; $97D0
 
-loc_3_97D3:
+@done:
     rts                             ; $97D3
 
 ; ---------------------------------------------------------------------------
@@ -1306,16 +1391,16 @@ HouseLady_Ai:
     beq     loc_3_983F              ; $97D9
     bpl     loc_3_983C              ; $97DB
     cmp     #$80                    ; $97DD
-    bne     loc_3_9808              ; $97DF
+    bne     @loc_9808               ; $97DF
     jsr     sub_3_9A90              ; $97E1
     lda     drawOffscreen+1         ; $97E4
     ora     ram_05BD,x              ; $97E6
-    bne     loc_3_983B              ; $97E9
+    bne     @done                   ; $97E9
     lda     drawScreenX             ; $97EB
     sbc     drawScreenX+1           ; $97ED
     adc     #$60                    ; $97EF
     cmp     #$C0                    ; $97F1
-    bcs     loc_3_983B              ; $97F3
+    bcs     @done                   ; $97F3
     jsr     Enemy_UpdateBgCollision ; $97F5
     jsr     Townsperson_StartDoor   ; $97F8
     ldy     objFacing+1,x           ; $97FB
@@ -1325,10 +1410,10 @@ HouseLady_Ai:
     sta     objX+1,x                ; $9803
     jmp     Door_QueueOpen          ; $9805
 
-loc_3_9808:
+@loc_9808:
     inc     enemyAiState,x          ; $9808
     cmp     #$90                    ; $980A
-    bcc     loc_3_981B              ; $980C
+    bcc     @loc_981B               ; $980C
     lda     enemyAiState,x          ; $980E
     pha                             ; $9810
     lda     #$01                    ; $9811
@@ -1337,27 +1422,27 @@ loc_3_9808:
     pla                             ; $9818
     sta     enemyAiState,x          ; $9819
 
-loc_3_981B:
+@loc_981B:
     lda     enemyAiState,x          ; $981B
     cmp     #$90                    ; $981D
-    bne     loc_3_9824              ; $981F
+    bne     @loc_9824               ; $981F
     jmp     Door_QueueHalf          ; $9821
 
-loc_3_9824:
+@loc_9824:
     cmp     #$A0                    ; $9824
-    bne     loc_3_982B              ; $9826
+    bne     @loc_982B               ; $9826
     jmp     Door_QueueOpen          ; $9828
 
-loc_3_982B:
+@loc_982B:
     cmp     #$B0                    ; $982B
-    bne     loc_3_983B              ; $982D
+    bne     @done                   ; $982D
     lda     #$00                    ; $982F
     sta     enemyAiState,x          ; $9831
     lda     #$90                    ; $9833
     sta     ram_05BD,x              ; $9835
     jmp     Door_QueueClosed        ; $9838
 
-loc_3_983B:
+@done:
     rts                             ; $983B
 
 loc_3_983C:
@@ -1366,17 +1451,17 @@ loc_3_983C:
 loc_3_983F:
     lda     objY+1,x                ; $983F
     cmp     #$B0                    ; $9841
-    bcs     loc_3_9851              ; $9843
+    bcs     @loc_9851               ; $9843
     lda     frameCounter            ; $9845
     and     #$0F                    ; $9847
-    bne     loc_3_9851              ; $9849
+    bne     @loc_9851               ; $9849
     lda     objY+1,x                ; $984B
     adc     #$04                    ; $984D
     sta     objY+1,x                ; $984F
 
-loc_3_9851:
+@loc_9851:
     lda     ram_05BD,x              ; $9851
-    beq     loc_3_9868              ; $9854
+    beq     @loc_9868               ; $9854
     cmp     #$40                    ; $9856
     bcs     sub_3_9870              ; $9858
     lda     objXVelocity+1,x        ; $985A
@@ -1388,7 +1473,7 @@ loc_3_9851:
     sta     objXVelocity+1,x        ; $9865
     rts                             ; $9867
 
-loc_3_9868:
+@loc_9868:
     jsr     Enemy_TurnAround        ; $9868
     lda     #$E0                    ; $986B
     sta     ram_05BD,x              ; $986D
@@ -1417,11 +1502,11 @@ Townsperson_WalkAi:
     cmp     #$0A                    ; $988A
     bcc     loc_3_98BB              ; $988C
     cmp     #$19                    ; $988E
-    bcc     loc_3_9896              ; $9890
+    bcc     @loc_9896               ; $9890
     cmp     #$21                    ; $9892
     bcc     loc_3_98BB              ; $9894
 
-loc_3_9896:
+@loc_9896:
     jsr     Enemy_UpdateBgCollision ; $9896
     lda     ram_00D9                ; $9899
     cmp     #$8B                    ; $989B
@@ -1455,41 +1540,41 @@ loc_3_98BB:
 loc_3_98BC:
     inc     enemyAiState,x          ; $98BC
     cmp     #$10                    ; $98BE
-    bne     loc_3_98C5              ; $98C0
+    bne     @loc_98C5               ; $98C0
     jmp     Door_QueueOpen          ; $98C2
 
-loc_3_98C5:
+@loc_98C5:
     cmp     #$20                    ; $98C5
-    bne     loc_3_98CC              ; $98C7
+    bne     @loc_98CC               ; $98C7
     jmp     Door_QueueHalf          ; $98C9
 
-loc_3_98CC:
+@loc_98CC:
     cmp     #$40                    ; $98CC
-    bne     loc_3_98D8              ; $98CE
+    bne     @loc_98D8               ; $98CE
     jsr     Door_SetClosedTile      ; $98D0
     lda     #$54                    ; $98D3
     sta     (temp0),y               ; $98D5
     rts                             ; $98D7
 
-loc_3_98D8:
+@loc_98D8:
     cmp     #$70                    ; $98D8
-    bne     loc_3_98DF              ; $98DA
+    bne     @loc_98DF               ; $98DA
     jmp     Door_QueueOpen          ; $98DC
 
-loc_3_98DF:
+@loc_98DF:
     cmp     #$7E                    ; $98DF
     bne     loc_3_990A              ; $98E1
     jsr     Door_QueueClosed        ; $98E3
     lda     enemyType,x             ; $98E6
     cmp     #$17                    ; $98E8
-    bcc     loc_3_98F6              ; $98EA
+    bcc     @loc_98F6               ; $98EA
     jsr     Townsperson_InitAtDoor  ; $98EC
     lda     #$FF                    ; $98EF
     sta     ram_05BD,x              ; $98F1
     bne     Door_SetClosedTile      ; $98F4
 ; (code below not executed in the test movies)
 
-loc_3_98F6:
+@loc_98F6:
     jsr     Enemy_Despawn           ; $98F6
 ; (end of code not executed in the test movies)
 
@@ -1512,20 +1597,20 @@ Door_SetClosedTile:
 
 loc_3_990A:
     cmp     #$20                    ; $990A
-    bcc     loc_3_9921              ; $990C
+    bcc     @done                   ; $990C
     cmp     #$40                    ; $990E
-    bcs     loc_3_9921              ; $9910
+    bcs     @done                   ; $9910
     and     #$0F                    ; $9912
     cmp     #$07                    ; $9914
-    bne     loc_3_991E              ; $9916
+    bne     @loc_991E               ; $9916
     lda     objY+1,x                ; $9918
     sbc     #$04                    ; $991A
     sta     objY+1,x                ; $991C
 
-loc_3_991E:
+@loc_991E:
     jmp     Townsperson_Walk        ; $991E
 
-loc_3_9921:
+@done:
     rts                             ; $9921
 
 DoorTilesTop:
@@ -1572,17 +1657,17 @@ loc_3_9950:
     lda     drawOffscreen+1         ; $9950
     and     #$0C                    ; $9952
     cmp     #$0C                    ; $9954
-    bne     loc_3_995A              ; $9956
+    bne     @loc_995A               ; $9956
 ; (code below not executed in the test movies)
     ldx     #$0C                    ; $9958
 ; (end of code not executed in the test movies)
 
-loc_3_995A:
+@loc_995A:
     lda     #$05                    ; $995A
     sta     temp0                   ; $995C
     ldy     ppuBuffer0Len           ; $995E
 
-loc_3_9961:
+@loop:
     lda     DoorTilesTop,x          ; $9961
     sta     ppuBuffer0+3,y          ; $9964
     lda     DoorTilesBottom,x       ; $9967
@@ -1590,7 +1675,7 @@ loc_3_9961:
     inx                             ; $996D
     iny                             ; $996E
     dec     temp0                   ; $996F
-    bpl     loc_3_9961              ; $9971
+    bpl     @loop                   ; $9971
     ldx     currentObject           ; $9973
     ldy     ppuBuffer0Len           ; $9975
     lda     ram_0599,x              ; $9978
@@ -1645,28 +1730,28 @@ Townsperson_WalkAndTalk:
 Townsperson_CheckTalk:
     lda     drawOffscreen+1         ; $99B9
     ora     dialogType              ; $99BB
-    bne     loc_3_9A1C              ; $99BE
+    bne     @done                   ; $99BE
     lda     enemyType,x             ; $99C0
     cmp     #$0A                    ; $99C2
-    beq     loc_3_99CB              ; $99C4
+    beq     @loc_99CB               ; $99C4
     lda     linkJumpState           ; $99C6
-    bne     loc_3_9A1C              ; $99C9
+    bne     @done                   ; $99C9
 
-loc_3_99CB:
+@loc_99CB:
     jsr     Enemy_CheckLinkContact  ; $99CB
     lda     objCollision+1,x        ; $99CE
     and     #$10                    ; $99D0
-    beq     loc_3_9A1C              ; $99D2
+    beq     @done                   ; $99D2
     stx     dialogPerson            ; $99D4
     lda     gameMode                ; $99D7
     cmp     #$16                    ; $99DA
-    bne     loc_3_9A1D              ; $99DC
+    bne     @loc_9A1D               ; $99DC
     lda     enemyAiState,x          ; $99DE
     cmp     #$40                    ; $99E0
-    bcc     loc_3_9A1C              ; $99E2
+    bcc     @done                   ; $99E2
     lda     enemyType,x             ; $99E4
     cmp     #$17                    ; $99E6
-    bcc     loc_3_9A1C              ; $99E8
+    bcc     @done                   ; $99E8
     jsr     Door_SetClosedTile      ; $99EA
     ldy     #$04                    ; $99ED
     sty     dialogType              ; $99EF
@@ -1680,31 +1765,31 @@ loc_3_99CB:
     sta     renderingOff            ; $9A04
     ldx     #$05                    ; $9A07
 
-loc_3_9A09:
+@loop:
     lda     enemyActive,x           ; $9A09
-    beq     loc_3_9A17              ; $9A0B
+    beq     @loc_9A17               ; $9A0B
     ldy     enemySramIndex,x        ; $9A0D
-    bmi     loc_3_9A17              ; $9A0F
+    bmi     @loc_9A17               ; $9A0F
     lda     (enemyListPtr),y        ; $9A11
     ora     #$80                    ; $9A13
     sta     (enemyListPtr),y        ; $9A15
 
-loc_3_9A17:
+@loc_9A17:
     dex                             ; $9A17
-    bpl     loc_3_9A09              ; $9A18
+    bpl     @loop                   ; $9A18
     ldx     currentObject           ; $9A1A
 
-loc_3_9A1C:
+@done:
     rts                             ; $9A1C
 
-loc_3_9A1D:
+@loc_9A1D:
     lda     ram_05BD,x              ; $9A1D
     cmp     #$65                    ; $9A20
-    bcc     loc_3_9A28              ; $9A22
+    bcc     @loc_9A28               ; $9A22
     cmp     #$AC                    ; $9A24
     bcc     loc_3_9A4F              ; $9A26
 
-loc_3_9A28:
+@loc_9A28:
     lda     enemyAiState,x          ; $9A28
     bne     loc_3_9A4F              ; $9A2A
     lda     a:joypadPressed         ; $9A2C
@@ -1749,15 +1834,15 @@ Townsperson_TurnToDoor:
     lda     #$02                    ; $9A55
     sta     ram_05B7,x              ; $9A57
     ldy     ram_05AB,x              ; $9A5A
-    bpl     loc_3_9A60              ; $9A5D
+    bpl     @loc_9A60               ; $9A5D
     lsr     a                       ; $9A5F
 
-loc_3_9A60:
+@loc_9A60:
     cmp     objFacing+1,x           ; $9A60
-    beq     loc_3_9A67              ; $9A62
+    beq     @done                   ; $9A62
     jsr     Enemy_TurnAround        ; $9A64
 
-loc_3_9A67:
+@done:
     rts                             ; $9A67
 
 ; ---------------------------------------------------------------------------
@@ -1772,20 +1857,20 @@ Townsperson_Walk:
     inc     ram_05B1,x              ; $9A6B
     lda     ram_05B1,x              ; $9A6E
     and     #$0F                    ; $9A71
-    bne     loc_3_9A89              ; $9A73
+    bne     @done                   ; $9A73
     lda     #$01                    ; $9A75
     ldy     objXVelocity+1,x        ; $9A77
-    beq     loc_3_9A89              ; $9A79
-    bpl     loc_3_9A84              ; $9A7B
+    beq     @done                   ; $9A79
+    bpl     @loc_9A84               ; $9A7B
     asl     a                       ; $9A7D
     dec     ram_05AB,x              ; $9A7E
     dec     ram_05AB,x              ; $9A81
 
-loc_3_9A84:
+@loc_9A84:
     inc     ram_05AB,x              ; $9A84
     sta     objFacing+1,x           ; $9A87
 
-loc_3_9A89:
+@done:
     rts                             ; $9A89
 
 ; ---------------------------------------------------------------------------
@@ -1831,12 +1916,12 @@ Townsperson_FaceLinkWhileTalking:
     pla                             ; $9AAB
     ldy     enemyType,x             ; $9AAC
     cpy     #$13                    ; $9AAE
-    bcc     loc_3_9AB8              ; $9AB0
+    bcc     @loc_9AB8               ; $9AB0
     cpy     #$19                    ; $9AB2
-    bcs     loc_3_9AB8              ; $9AB4
+    bcs     @loc_9AB8               ; $9AB4
     sta     objFacing+1,x           ; $9AB6
 
-loc_3_9AB8:
+@loc_9AB8:
     pla                             ; $9AB8
     pla                             ; $9AB9
     jmp     Enemy_Draw              ; $9ABA
@@ -1901,52 +1986,52 @@ Townsperson_Draw:
     tax                             ; $9B02
     pla                             ; $9B03
     asl     temp3                   ; $9B04
-    bcc     loc_3_9B0A              ; $9B06
-    bcs     loc_3_9B3B              ; $9B08
+    bcc     @loc_9B0A               ; $9B06
+    bcs     @loc_9B3B               ; $9B08
 
-loc_3_9B0A:
+@loc_9B0A:
     cmp     #$40                    ; $9B0A
     bcs     loc_3_9B45              ; $9B0C
     asl     temp5                   ; $9B0E
-    bne     loc_3_9B3B              ; $9B10
+    bne     @loc_9B3B               ; $9B10
     cmp     #$00                    ; $9B12
-    beq     loc_3_9B20              ; $9B14
+    beq     @loc_9B20               ; $9B14
     cmp     #$40                    ; $9B16
-    bcc     loc_3_9B1C              ; $9B18
+    bcc     @loc_9B1C               ; $9B18
 ; (code below not executed in the test movies)
     bcs     loc_3_9B45              ; $9B1A
 ; (end of code not executed in the test movies)
 
-loc_3_9B1C:
+@loc_9B1C:
     cmp     #$20                    ; $9B1C
-    bcc     loc_3_9B37              ; $9B1E
+    bcc     @loc_9B37               ; $9B1E
 
-loc_3_9B20:
+@loc_9B20:
     lda     temp9                   ; $9B20
-    beq     loc_3_9B3B              ; $9B22
-    bpl     loc_3_9B2B              ; $9B24
+    beq     @loc_9B3B               ; $9B22
+    bpl     @loc_9B2B               ; $9B24
     eor     #$FF                    ; $9B26
     clc                             ; $9B28
     adc     #$01                    ; $9B29
 
-loc_3_9B2B:
+@loc_9B2B:
     tay                             ; $9B2B
     lda     #$08                    ; $9B2C
     cpy     #$10                    ; $9B2E
-    bcs     loc_3_9B33              ; $9B30
+    bcs     @loc_9B33               ; $9B30
     asl     a                       ; $9B32
 
-loc_3_9B33:
+@loc_9B33:
     and     frameCounter            ; $9B33
-    bne     loc_3_9B3B              ; $9B35
+    bne     @loc_9B3B               ; $9B35
 
-loc_3_9B37:
+@loc_9B37:
     inx                             ; $9B37
     inx                             ; $9B38
     inx                             ; $9B39
     inx                             ; $9B3A
 
-loc_3_9B3B:
+@loc_9B3B:
     lsr     temp3                   ; $9B3B
     ldy     temp15                  ; $9B3D
 
@@ -1970,7 +2055,19 @@ loc_3_9B45:
     .byte   $00                                                             ; $9B82
     .byte   $AB, $0F, $07                                                   ; $9B83
 
-loc_3_9B86:
+; ---------------------------------------------------------------------------
+; Town_DrawLargeObject
+;
+; Draw large town object x (areaObjectType), for Area_DrawLargeObject in
+; towns: by its type's high nybble, or, on row $F, one of the extras
+; (+15).  The objects are named as in z2edit's town render config:
+; roofs, buildings, walls, windows, underground bricks, pillar and castle
+; bricks; on row $F, bush, background wall, slants, elevator, bridge and
+; water.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Town_DrawLargeObject:
     txa                             ; $9B86
     lsr     a                       ; $9B87
     lsr     a                       ; $9B88
@@ -1981,73 +2078,91 @@ loc_3_9B86:
     lda     areaBuildPos            ; $9B8D
     and     #$F0                    ; $9B90
     cmp     #$F0                    ; $9B92
-    bne     loc_3_9B9B              ; $9B94
+    bne     @loc_9B9B               ; $9B94
     txa                             ; $9B96
     clc                             ; $9B97
     adc     #$0F                    ; $9B98
     tax                             ; $9B9A
 
-loc_3_9B9B:
+@loc_9B9B:
     txa                             ; $9B9B
     jsr     JumpTable               ; $9B9C
 ; (inline jump table)
-    .word   Area_DrawLargeObject_Bank3 ; $9B9F
-    .word   Area_DrawLargeObject_Bank3 ; $9BA1
-    .word   loc_3_80F2              ; $9BA3
-    .word   loc_3_80F6              ; $9BA5
-    .word   loc_3_813B              ; $9BA7
-    .word   loc_3_813F              ; $9BA9
-    .word   loc_3_8143              ; $9BAB
-    .word   loc_3_8147              ; $9BAD
-    .word   loc_3_8155              ; $9BAF
-    .word   loc_3_817E              ; $9BB1
-    .word   loc_3_8182              ; $9BB3
-    .word   loc_3_818C              ; $9BB5
-    .word   loc_3_8102              ; $9BB7
-    .word   loc_3_9C6D              ; $9BB9
-    .word   loc_3_9C8C              ; $9BBB
-    .word   loc_3_8B95              ; $9BBD
-    .word   loc_3_833A              ; $9BBF
-    .word   loc_3_81A8              ; $9BC1
-    .word   loc_3_81D2              ; $9BC3
-; (unreferenced: $9BC5-$9BC6, 2 bytes)
-    .byte   $5B, $86                                                        ; $9BC5
-    .byte   $66, $83, $0A, $83                                              ; $9BC7
+    .word   Town_DrawCrossHatchedRoof ; $9B9F
+    .word   Town_DrawCrossHatchedRoof ; $9BA1
+    .word   Town_DrawGrayRoof       ; $9BA3
+    .word   Town_DrawGreenRoof      ; $9BA5
+    .word   Town_DrawBrickBuilding  ; $9BA7
+    .word   Town_DrawWhiteBrickBuilding ; $9BA9
+    .word   Town_DrawGrassBuilding  ; $9BAB
+    .word   Town_DrawWhiteWall      ; $9BAD
+    .word   Town_DrawLogBuilding    ; $9BAF
+    .word   Town_DrawSquareWindows  ; $9BB1
+    .word   Town_DrawGrayWindows    ; $9BB3
+    .word   Town_DrawBrownWindows   ; $9BB5
+    .word   Town_DrawUndergroundBricks ; $9BB7
+    .word   Town_DrawPillar         ; $9BB9
+    .word   Town_DrawCastleBricks   ; $9BBB
+    .word   Town_DrawBush           ; $9BBD
+    .word   Town_DrawBackgroundWall ; $9BBF
+    .word   Town_DrawSlantRight     ; $9BC1
+    .word   Town_DrawSlantLeft      ; $9BC3
+    .word   Area_PlaceElevator_Bank3 ; $9BC5  (not observed)
+    .word   Town_DrawBridge         ; $9BC7
+    .word   Town_DrawWater          ; $9BC9
 
-loc_3_9BCB:
+; ---------------------------------------------------------------------------
+; Town_DrawSmallObject
+;
+; Draw small town object x, for Area_DrawSmallObject in towns: doors,
+; stonehenge, chair, clouds, table, bench, crosses, chimney and the locked
+; door ($0E, $0F); on row $F (+$10), door and wall edges, fireplace,
+; fountain, sign, headstone and tomb decorations.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Town_DrawSmallObject:
     lda     areaBuildPos            ; $9BCB
     and     #$F0                    ; $9BCE
     cmp     #$F0                    ; $9BD0
-    bne     loc_3_9BD9              ; $9BD2
+    bne     @loc_9BD9               ; $9BD2
     txa                             ; $9BD4
     clc                             ; $9BD5
     adc     #$10                    ; $9BD6
     tax                             ; $9BD8
 
-loc_3_9BD9:
+@loc_9BD9:
     txa                             ; $9BD9
     jsr     JumpTable               ; $9BDA
 ; (inline jump table)
-    .word   loc_3_83A4              ; $9BDD
-    .word   loc_3_83A8              ; $9BDF
-    .word   loc_3_83AC              ; $9BE1  (not observed)
-    .word   loc_3_83B0              ; $9BE3
-    .word   loc_3_82F5              ; $9BE5  (not observed)
-    .word   loc_3_8683              ; $9BE7
-    .word   loc_3_8662              ; $9BE9
-    .word   loc_3_8668              ; $9BEB
-    .word   loc_3_82B2              ; $9BED
-    .word   loc_3_8693              ; $9BEF
-    .word   loc_3_867C              ; $9BF1
-    .word   loc_3_9C56              ; $9BF3
-    .word   loc_3_9C5C              ; $9BF5
-    .word   loc_3_8678              ; $9BF7
-; (unreferenced: $9BF9-$9BFC, 4 bytes)
-    .byte   $8E, $8B, $8E, $8B                                              ; $9BF9
-    .byte   $6C, $82, $70, $82, $74, $82, $78, $82, $CF, $82, $32, $9C, $11, $9C, $A1, $9C; $9BFD
-    .byte   $A5, $9C, $AC, $9C                                              ; $9C0D
+    .word   Town_DrawClosedDoor     ; $9BDD
+    .word   Town_DrawOpenDoor       ; $9BDF
+    .word   Town_DrawOpenDoor2      ; $9BE1  (not observed)
+    .word   Town_DrawOpenDoor3      ; $9BE3
+    .word   Town_DrawStonehenge     ; $9BE5  (not observed)
+    .word   Town_DrawChair          ; $9BE7
+    .word   Town_DrawLargeCloud     ; $9BE9
+    .word   Town_DrawSmallCloud     ; $9BEB
+    .word   Town_DrawTable          ; $9BED
+    .word   Town_DrawBench          ; $9BEF
+    .word   Town_DrawCross          ; $9BF1
+    .word   Town_DrawChimneyEntrance ; $9BF3
+    .word   Town_DrawChimney        ; $9BF5
+    .word   Town_DrawChurchCross    ; $9BF7
+    .word   Area_PlaceLockedDoor_Bank3 ; $9BF9
+    .word   Area_PlaceLockedDoor_Bank3 ; $9BFB
+    .word   Town_DrawDoorLeft       ; $9BFD
+    .word   Town_DrawDoorRight      ; $9BFF
+    .word   Town_DrawWallLeft       ; $9C01
+    .word   Town_DrawWallRight      ; $9C03
+    .word   Town_DrawFireplace      ; $9C05
+    .word   Town_DrawFountain       ; $9C07
+    .word   Town_DrawSign           ; $9C09
+    .word   Town_DrawHeadstone      ; $9C0B
+    .word   Town_DrawTombLeft       ; $9C0D
+    .word   Town_DrawTombRight      ; $9C0F
 
-loc_3_9C11:
+Town_DrawSign:
     lda     areaBuildPos            ; $9C11
     and     #$0F                    ; $9C14
     ora     #$90                    ; $9C16
@@ -2062,7 +2177,7 @@ loc_3_9C11:
 dat_3_9C28:
     .byte   $DB, $D8, $DA, $D8, $D7, $40, $40, $D9, $40, $40                ; $9C28
 
-loc_3_9C32:
+Town_DrawFountain:
     ldx     #$09                    ; $9C32
     lda     areaBuildPos            ; $9C34
     and     #$0F                    ; $9C37
@@ -2070,28 +2185,28 @@ loc_3_9C32:
     sta     areaBuildPos            ; $9C3B
     jsr     AreaMap_GetPagePtr      ; $9C3E
 
-loc_3_9C41:
+@loop:
     lda     dat_3_9C28,x            ; $9C41
     jsr     AreaMap_PutTileRight    ; $9C44
     dex                             ; $9C47
-    bmi     loc_3_9C55              ; $9C48
+    bmi     @done                   ; $9C48
     cpx     #$04                    ; $9C4A
-    bne     loc_3_9C41              ; $9C4C
+    bne     @loop                   ; $9C4C
     jsr     AreaMap_NextBuildRow    ; $9C4E
     tay                             ; $9C51
-    jmp     loc_3_9C41              ; $9C52
+    jmp     @loop                   ; $9C52
 
-loc_3_9C55:
+@done:
     rts                             ; $9C55
 
-loc_3_9C56:
+Town_DrawChimneyEntrance:
     ldx     #$00                    ; $9C56
     beq     loc_3_9C5E              ; $9C58
 
 dat_3_9C5A:
     .byte   $59, $5A                                                        ; $9C5A
 
-loc_3_9C5C:
+Town_DrawChimney:
     ldx     #$01                    ; $9C5C
 
 loc_3_9C5E:
@@ -2102,7 +2217,7 @@ loc_3_9C5E:
     sta     (temp14),y              ; $9C6A
     rts                             ; $9C6C
 
-loc_3_9C6D:
+Town_DrawPillar:
     lda     areaObjectType          ; $9C6D
     and     #$0F                    ; $9C70
     tax                             ; $9C72
@@ -2110,47 +2225,47 @@ loc_3_9C6D:
     jsr     AreaMap_GetPagePtr      ; $9C76
     lda     #$94                    ; $9C79
     sta     (temp14),y              ; $9C7B
-    bne     loc_3_9C83              ; $9C7D
+    bne     @loc_9C83               ; $9C7D
 
-loc_3_9C7F:
+@loop:
     lda     #$93                    ; $9C7F
     sta     (temp14),y              ; $9C81
 
-loc_3_9C83:
+@loc_9C83:
     tya                             ; $9C83
     clc                             ; $9C84
     adc     #$10                    ; $9C85
     tay                             ; $9C87
     dex                             ; $9C88
-    bpl     loc_3_9C7F              ; $9C89
+    bpl     @loop                   ; $9C89
     rts                             ; $9C8B
 
-loc_3_9C8C:
+Town_DrawCastleBricks:
     lda     areaObjectType          ; $9C8C
     and     #$0F                    ; $9C8F
     tax                             ; $9C91
     ldy     areaBuildPos            ; $9C92
     jsr     AreaMap_GetPagePtr      ; $9C95
 
-loc_3_9C98:
+@loop:
     lda     #$98                    ; $9C98
     jsr     AreaMap_PutTileRight    ; $9C9A
     dex                             ; $9C9D
-    bpl     loc_3_9C98              ; $9C9E
+    bpl     @loop                   ; $9C9E
     rts                             ; $9CA0
 
-loc_3_9CA1:
+Town_DrawHeadstone:
     ldx     #$00                    ; $9CA1
     beq     loc_3_9CAE              ; $9CA3
 
-loc_3_9CA5:
+Town_DrawTombLeft:
     ldx     #$01                    ; $9CA5
     bne     loc_3_9CAE              ; $9CA7
 
 dat_3_9CA9:
     .byte   $95, $96, $97                                                   ; $9CA9
 
-loc_3_9CAC:
+Town_DrawTombRight:
     ldx     #$02                    ; $9CAC
 
 loc_3_9CAE:
@@ -2610,32 +2725,32 @@ EastTextPtrs:
 Dialog_Update:
     lda     pauseState              ; $B082
     cmp     #$0C                    ; $B085
-    beq     loc_3_B0AE              ; $B087
+    beq     @loc_B0AE               ; $B087
     ldy     #$F0                    ; $B089
 
-loc_3_B08B:
+@loop:
     nop                             ; $B08B
     dey                             ; $B08C
-    bne     loc_3_B08B              ; $B08D
+    bne     @loop                   ; $B08D
 
-loc_3_B08F:
+@loop2:
     bit     PPUSTATUS               ; $B08F
-    bvc     loc_3_B08F              ; $B092
+    bvc     @loop2                  ; $B092
     lda     ppuCtrlShadow           ; $B094
     ora     playfieldNametable      ; $B096
     sta     ppuCtrlShadow           ; $B099
     ldx     ppuScrollX              ; $B09B
     ldy     #$10                    ; $B09D
 
-loc_3_B09F:
+@loop3:
     dey                             ; $B09F
-    bne     loc_3_B09F              ; $B0A0
+    bne     @loop3                  ; $B0A0
     sta     PPUCTRL                 ; $B0A2
     stx     PPUSCROLL               ; $B0A5
     sty     PPUSCROLL               ; $B0A8
     lda     pauseState              ; $B0AB
 
-loc_3_B0AE:
+@loc_B0AE:
     jsr     JumpTable               ; $B0AE
 ; (inline jump table)
     .word   Menu_NextState_Bank3    ; $B0B1
@@ -2686,13 +2801,13 @@ Dialog_OpenRow:
     sta     temp5                   ; $B0E9
     ldy     #$0D                    ; $B0EB
 
-loc_3_B0ED:
+@loop:
     lda     (temp2),y               ; $B0ED
     sta     menuRowTiles,y          ; $B0EF
     lda     (temp4),y               ; $B0F2
     sta     menuRowTiles2,y         ; $B0F4
     dey                             ; $B0F7
-    bpl     loc_3_B0ED              ; $B0F8
+    bpl     @loop                   ; $B0F8
     jsr     Menu_DrawRowAttrs_Bank3 ; $B0FA
     inc     menuRow                 ; $B0FD
     lda     menuRow                 ; $B100
@@ -2708,7 +2823,7 @@ loc_3_B10A:
 Menu_DrawRowAttrs_Bank3:
     jsr     Menu_BeginRow_Bank3     ; $B10B
 
-loc_3_B10E:
+@loop:
     jsr     Menu_GetAttrAddress_Bank3 ; $B10E
     and     #$FE                    ; $B111
     asl     a                       ; $B113
@@ -2718,37 +2833,37 @@ loc_3_B10E:
     lda     #$0F                    ; $B11A
     sta     temp5                   ; $B11C
     jsr     Menu_CheckAttrAlignment_Bank3 ; $B11E
-    beq     loc_3_B12F              ; $B121
+    beq     @loc_B12F               ; $B121
     lda     temp4                   ; $B123
-    bne     loc_3_B13D              ; $B125
+    bne     @loc_B13D               ; $B125
     lda     #$3F                    ; $B127
     sta     temp5                   ; $B129
     lda     #$F3                    ; $B12B
-    bne     loc_3_B13B              ; $B12D
+    bne     @loc_B13B               ; $B12D
 
-loc_3_B12F:
+@loc_B12F:
     lda     temp4                   ; $B12F
     cmp     #$03                    ; $B131
-    bne     loc_3_B13D              ; $B133
+    bne     @loc_B13D               ; $B133
     lda     #$CF                    ; $B135
     sta     temp5                   ; $B137
     lda     #$FC                    ; $B139
 
-loc_3_B13B:
+@loc_B13B:
     sta     temp6                   ; $B13B
 
-loc_3_B13D:
+@loc_B13D:
     lda     temp2                   ; $B13D
     lsr     a                       ; $B13F
     lda     temp5                   ; $B140
-    bcs     loc_3_B146              ; $B142
+    bcs     @loc_B146               ; $B142
     lda     temp6                   ; $B144
 
-loc_3_B146:
+@loc_B146:
     and     menuAttrs,x             ; $B146
     sta     menuAttrs,x             ; $B149
     jsr     Menu_NextAttr_Bank3     ; $B14C
-    bcc     loc_3_B10E              ; $B14F
+    bcc     @loop                   ; $B14F
 
 Menu_EndRowString_Bank3:
     lda     #$FF                    ; $B151
@@ -2785,10 +2900,10 @@ Menu_GetAttrAddress_Bank3:
 
 Menu_CloseRow_Bank3:
     dec     menuRow                 ; $B183
-    bpl     loc_3_B18B              ; $B186
+    bpl     @loc_B18B               ; $B186
     jmp     Menu_NextState_Bank3    ; $B188
 
-loc_3_B18B:
+@loc_B18B:
     lda     scrollX                 ; $B18B
     clc                             ; $B18E
     adc     #$78                    ; $B18F
@@ -2811,13 +2926,13 @@ loc_3_B18B:
     jsr     sub_3_B32A              ; $B1A9
     ldx     #$00                    ; $B1AC
 
-loc_3_B1AE:
+@loop:
     lda     (temp14),y              ; $B1AE
     sta     menuUnderRow,x          ; $B1B0
     iny                             ; $B1B3
     tya                             ; $B1B4
     and     #$0F                    ; $B1B5
-    bne     loc_3_B1C4              ; $B1B7
+    bne     @loc_B1C4               ; $B1B7
     lda     #$D0                    ; $B1B9
     clc                             ; $B1BB
     jsr     sub_3_B32A              ; $B1BC
@@ -2826,15 +2941,15 @@ loc_3_B1AE:
     sbc     #$10                    ; $B1C1
     tay                             ; $B1C3
 
-loc_3_B1C4:
+@loc_B1C4:
     inx                             ; $B1C4
     cpx     #$07                    ; $B1C5
-    bcc     loc_3_B1AE              ; $B1C7
+    bcc     @loop                   ; $B1C7
     lda     #$00                    ; $B1C9
     sta     temp0                   ; $B1CB
     sta     temp1                   ; $B1CD
 
-loc_3_B1CF:
+@loop2:
     ldx     temp0                   ; $B1CF
     lda     menuUnderRow,x          ; $B1D1
     and     #$C0                    ; $B1D4
@@ -2855,10 +2970,10 @@ loc_3_B1CF:
     stx     temp1                   ; $B1ED
     inc     temp0                   ; $B1EF
     cpx     #$0E                    ; $B1F1
-    bcc     loc_3_B1CF              ; $B1F3
+    bcc     @loop2                  ; $B1F3
     jsr     Menu_BeginRow_Bank3     ; $B1F5
 
-loc_3_B1F8:
+@loc_B1F8:
     jsr     Menu_GetAttrAddress_Bank3 ; $B1F8
     lsr     a                       ; $B1FB
     clc                             ; $B1FC
@@ -2878,39 +2993,39 @@ loc_3_B1F8:
     sta     temp7                   ; $B216
     and     #$E0                    ; $B218
     cmp     temp7                   ; $B21A
-    beq     loc_3_B226              ; $B21C
+    beq     @loc_B226               ; $B21C
     lda     temp4                   ; $B21E
-    bne     loc_3_B230              ; $B220
+    bne     @loc_B230               ; $B220
     lda     #$F3                    ; $B222
-    bne     loc_3_B22E              ; $B224
+    bne     @loc_B22E               ; $B224
 
-loc_3_B226:
+@loc_B226:
     lda     temp4                   ; $B226
     cmp     #$03                    ; $B228
-    bne     loc_3_B230              ; $B22A
+    bne     @loc_B230               ; $B22A
     lda     #$FC                    ; $B22C
 
-loc_3_B22E:
+@loc_B22E:
     sta     temp6                   ; $B22E
 
-loc_3_B230:
+@loc_B230:
     cpx     #$04                    ; $B230
-    bcc     loc_3_B23B              ; $B232
+    bcc     @loc_B23B               ; $B232
     lda     temp2                   ; $B234
     lsr     a                       ; $B236
     lda     temp6                   ; $B237
-    bcs     loc_3_B23D              ; $B239
+    bcs     @loc_B23D               ; $B239
 
-loc_3_B23B:
+@loc_B23B:
     lda     #$FF                    ; $B23B
 
-loc_3_B23D:
+@loc_B23D:
     and     menuAttrs,x             ; $B23D
     jsr     Menu_NextAttr_Bank3     ; $B240
-    bcs     loc_3_B248              ; $B243
-    jmp     loc_3_B1F8              ; $B245
+    bcs     @loc_B248               ; $B243
+    jmp     @loc_B1F8               ; $B245
 
-loc_3_B248:
+@loc_B248:
     jmp     Menu_EndRowString_Bank3 ; $B248
 
 Menu_QueueRowTiles_Bank3:
@@ -2921,7 +3036,7 @@ Menu_QueueRowTiles_Bank3:
     sta     temp8                   ; $B254
     ldx     #$00                    ; $B256
 
-loc_3_B258:
+@loc_B258:
     lda     scrollX                 ; $B258
     clc                             ; $B25B
     adc     #$78                    ; $B25C
@@ -2938,19 +3053,19 @@ loc_3_B258:
     lsr     a                       ; $B271
     lsr     a                       ; $B272
     lsr     a                       ; $B273
-    beq     loc_3_B27A              ; $B274
+    beq     @loc_B27A               ; $B274
     cmp     #$07                    ; $B276
-    bcc     loc_3_B27C              ; $B278
+    bcc     @loc_B27C               ; $B278
 
-loc_3_B27A:
+@loc_B27A:
     lda     #$07                    ; $B27A
 
-loc_3_B27C:
+@loc_B27C:
     sta     temp6                   ; $B27C
     lda     #$07                    ; $B27E
     sta     temp3                   ; $B280
 
-loc_3_B282:
+@loc_B282:
     lda     menuRow                 ; $B282
     asl     a                       ; $B285
     asl     a                       ; $B286
@@ -2987,7 +3102,7 @@ loc_3_B282:
     iny                             ; $B2BA
     iny                             ; $B2BB
 
-loc_3_B2BC:
+@loop:
     lda     menuRowTiles,x          ; $B2BC
     sta     ppuBuffer1,y            ; $B2BF
     inx                             ; $B2C2
@@ -2998,28 +3113,28 @@ loc_3_B2BC:
     clc                             ; $B2CC
     adc     #$10                    ; $B2CD
     sta     temp1                   ; $B2CF
-    bcc     loc_3_B2D5              ; $B2D1
+    bcc     @loc_B2D5               ; $B2D1
     inc     temp0                   ; $B2D3
 
-loc_3_B2D5:
+@loc_B2D5:
     iny                             ; $B2D5
     iny                             ; $B2D6
     dec     temp3                   ; $B2D7
-    beq     loc_3_B2E6              ; $B2D9
+    beq     @loc_B2E6               ; $B2D9
     dec     temp6                   ; $B2DB
-    bne     loc_3_B2BC              ; $B2DD
+    bne     @loop                   ; $B2DD
     lda     temp3                   ; $B2DF
     sta     temp6                   ; $B2E1
-    jmp     loc_3_B282              ; $B2E3
+    jmp     @loc_B282               ; $B2E3
 
-loc_3_B2E6:
+@loc_B2E6:
     lda     #$E0                    ; $B2E6
     sta     temp7                   ; $B2E8
     dec     temp8                   ; $B2EA
-    beq     loc_3_B2F1              ; $B2EC
-    jmp     loc_3_B258              ; $B2EE
+    beq     @done                   ; $B2EC
+    jmp     @loc_B258               ; $B2EE
 
-loc_3_B2F1:
+@done:
     rts                             ; $B2F1
 
 Menu_BeginRow_Bank3:
@@ -3101,15 +3216,15 @@ Menu_ComputeAttrs_Bank3:
     lda     #$04                    ; $B369
     sta     temp0                   ; $B36B
 
-loc_3_B36D:
+@loop:
     lda     #$00                    ; $B36D
     sta     temp1                   ; $B36F
 
-loc_3_B371:
+@loop2:
     lda     #$0C                    ; $B371
     sta     temp2                   ; $B373
 
-loc_3_B375:
+@loop3:
     jsr     Menu_AddTileAttr_Bank3  ; $B375
     tya                             ; $B378
     clc                             ; $B379
@@ -3119,35 +3234,35 @@ loc_3_B375:
     asl     a                       ; $B37E
     asl     a                       ; $B37F
     asl     a                       ; $B380
-    bcs     loc_3_B387              ; $B381
+    bcs     @loc_B387               ; $B381
     inx                             ; $B383
     inx                             ; $B384
     inx                             ; $B385
     inx                             ; $B386
 
-loc_3_B387:
+@loc_B387:
     dec     temp2                   ; $B387
-    bne     loc_3_B375              ; $B389
+    bne     @loop3                  ; $B389
     tya                             ; $B38B
     sec                             ; $B38C
     sbc     #$BF                    ; $B38D
     tay                             ; $B38F
     and     #$0F                    ; $B390
-    bne     loc_3_B3A4              ; $B392
+    bne     @loc_B3A4               ; $B392
     lda     temp14                  ; $B394
     clc                             ; $B396
     adc     #$D0                    ; $B397
     sta     temp14                  ; $B399
-    bcc     loc_3_B39F              ; $B39B
+    bcc     @loc_B39F               ; $B39B
     inc     temp15                  ; $B39D
 
-loc_3_B39F:
+@loc_B39F:
     tya                             ; $B39F
     sec                             ; $B3A0
     sbc     #$10                    ; $B3A1
     tay                             ; $B3A3
 
-loc_3_B3A4:
+@loc_B3A4:
     txa                             ; $B3A4
     sec                             ; $B3A5
     sbc     #$18                    ; $B3A6
@@ -3155,10 +3270,10 @@ loc_3_B3A4:
     lda     temp1                   ; $B3A9
     eor     #$80                    ; $B3AB
     sta     temp1                   ; $B3AD
-    bne     loc_3_B371              ; $B3AF
+    bne     @loop2                  ; $B3AF
     inx                             ; $B3B1
     dec     temp0                   ; $B3B2
-    bne     loc_3_B36D              ; $B3B4
+    bne     @loop                   ; $B3B4
     jmp     Menu_NextState_Bank3    ; $B3B6
 
 Menu_AddTileAttr_Bank3:
@@ -3169,26 +3284,26 @@ Menu_AddTileAttr_Bank3:
     asl     a                       ; $B3BD
     lda     (temp14),y              ; $B3BE
     and     #$C0                    ; $B3C0
-    bcs     loc_3_B3D0              ; $B3C2
+    bcs     @loc_B3D0               ; $B3C2
     asl     a                       ; $B3C4
     rol     a                       ; $B3C5
     rol     a                       ; $B3C6
     bit     temp1                   ; $B3C7
-    bpl     loc_3_B3D9              ; $B3C9
+    bpl     @loc_B3D9               ; $B3C9
     asl     a                       ; $B3CB
     asl     a                       ; $B3CC
-    jmp     loc_3_B3D6              ; $B3CD
+    jmp     @loc_B3D6               ; $B3CD
 
-loc_3_B3D0:
+@loc_B3D0:
     bit     temp1                   ; $B3D0
-    bmi     loc_3_B3D6              ; $B3D2
+    bmi     @loc_B3D6               ; $B3D2
     lsr     a                       ; $B3D4
     lsr     a                       ; $B3D5
 
-loc_3_B3D6:
+@loc_B3D6:
     ora     menuAttrs,x             ; $B3D6
 
-loc_3_B3D9:
+@loc_B3D9:
     sta     menuAttrs,x             ; $B3D9
     rts                             ; $B3DC
 
@@ -3308,53 +3423,53 @@ Dialog_ChooseText:
 ; ---------------------------------------------------------------------------
 Dialog_TechniqueMan:
     cpy     #$02                    ; $B4A3
-    bne     loc_3_B4BB              ; $B4A5
+    bne     @loc_B4BB               ; $B4A5
     lda     townFlags+3             ; $B4A7
     and     #$08                    ; $B4AA
-    beq     loc_3_B4B8              ; $B4AC
+    beq     @loc_B4B8               ; $B4AC
     lda     techniques              ; $B4AE
     ora     #$01                    ; $B4B1
     sta     techniques              ; $B4B3
     inc     temp5                   ; $B4B6
 
-loc_3_B4B8:
+@loc_B4B8:
     jmp     Dialog_SelectText       ; $B4B8
 
-loc_3_B4BB:
+@loc_B4BB:
     cpy     #$03                    ; $B4BB
-    bne     loc_3_B4D3              ; $B4BD
+    bne     @loc_B4D3               ; $B4BD
     lda     techniques              ; $B4BF
     and     #$10                    ; $B4C2
-    beq     loc_3_B4CB              ; $B4C4
+    beq     @loc_B4CB               ; $B4C4
 ; (code below not executed in the test movies)
     inc     temp5                   ; $B4C6
     inc     dialogAlreadyDone       ; $B4C8
 ; (end of code not executed in the test movies)
 
-loc_3_B4CB:
+@loc_B4CB:
     lda     techniques              ; $B4CB
     ora     #$10                    ; $B4CE
-    jmp     loc_3_B4E8              ; $B4D0
+    jmp     @loc_B4E8               ; $B4D0
 
-loc_3_B4D3:
+@loc_B4D3:
     cpy     #$00                    ; $B4D3
-    beq     loc_3_B4EB              ; $B4D5
+    beq     @loc_B4EB               ; $B4D5
     lda     techniques              ; $B4D7
     and     #$04                    ; $B4DA
-    beq     loc_3_B4E3              ; $B4DC
+    beq     @loc_B4E3               ; $B4DC
 ; (code below not executed in the test movies)
     inc     temp5                   ; $B4DE
     inc     dialogAlreadyDone       ; $B4E0
 ; (end of code not executed in the test movies)
 
-loc_3_B4E3:
+@loc_B4E3:
     lda     techniques              ; $B4E3
     ora     #$04                    ; $B4E6
 
-loc_3_B4E8:
+@loc_B4E8:
     sta     techniques              ; $B4E8
 
-loc_3_B4EB:
+@loc_B4EB:
     jmp     Dialog_SelectText       ; $B4EB
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -3370,31 +3485,31 @@ loc_3_B4EB:
 ; ---------------------------------------------------------------------------
 Dialog_Type0E:
     cpy     #$03                    ; $B4EE
-    bne     loc_3_B4FD              ; $B4F0
+    bne     @loc_B4FD               ; $B4F0
     lda     techniques              ; $B4F2
     ora     #$02                    ; $B4F5
     sta     techniques              ; $B4F7
     jmp     Dialog_SelectText       ; $B4FA
 
-loc_3_B4FD:
+@loc_B4FD:
     cpy     #$01                    ; $B4FD
-    bne     loc_3_B50D              ; $B4FF
+    bne     @loc_B50D               ; $B4FF
     lda     techniques              ; $B501
     and     #$02                    ; $B504
-    beq     loc_3_B50A              ; $B506
+    beq     @loc_B50A               ; $B506
 
-loc_3_B508:
+@loc_B508:
     inc     temp5                   ; $B508
 
-loc_3_B50A:
+@loc_B50A:
     jmp     Dialog_SelectText       ; $B50A
 
-loc_3_B50D:
+@loc_B50D:
     cpy     #$00                    ; $B50D
-    beq     loc_3_B50A              ; $B50F
+    beq     @loc_B50A               ; $B50F
     lda     itemOwned+5             ; $B511
-    bne     loc_3_B508              ; $B514
-    beq     loc_3_B50A              ; $B516
+    bne     @loc_B508               ; $B514
+    beq     @loc_B50A               ; $B516
 ; (end of disassembled code)
 
 
@@ -3411,18 +3526,18 @@ Dialog_Wizard:
     sty     temp1                   ; $B518
     inc     temp1                   ; $B51A
     lda     spellOwned,y            ; $B51C
-    beq     loc_3_B526              ; $B51F
+    beq     @loc_B526               ; $B51F
 ; (code below not executed in the test movies)
     inc     dialogAlreadyDone       ; $B521
-    bne     loc_3_B52D              ; $B524
+    bne     @loc_B52D               ; $B524
 ; (end of code not executed in the test movies)
 
-loc_3_B526:
+@loc_B526:
     lda     statContainers          ; $B526
     cmp     temp1                   ; $B529
-    bcc     loc_3_B54B              ; $B52B
+    bcc     @loc_B54B               ; $B52B
 
-loc_3_B52D:
+@loc_B52D:
     inc     temp5                   ; $B52D
     lda     #$01                    ; $B52F
     sta     spellOwned,y            ; $B531
@@ -3430,19 +3545,19 @@ loc_3_B52D:
     ldx     #$07                    ; $B536
     lda     #$00                    ; $B538
 
-loc_3_B53A:
+@loop:
     cpx     temp1                   ; $B53A
-    beq     loc_3_B541              ; $B53C
+    beq     @loc_B541               ; $B53C
     ora     spellOwned,x            ; $B53E
 
-loc_3_B541:
+@loc_B541:
     dex                             ; $B541
-    bpl     loc_3_B53A              ; $B542
+    bpl     @loop                   ; $B542
     cmp     #$00                    ; $B544
-    bne     loc_3_B54B              ; $B546
+    bne     @loc_B54B               ; $B546
     sty     spellCursor             ; $B548
 
-loc_3_B54B:
+@loc_B54B:
     jmp     Dialog_SelectText       ; $B54B
 
 ; ---------------------------------------------------------------------------
@@ -3474,7 +3589,7 @@ Dialog_SetTalked:
 ; ---------------------------------------------------------------------------
 Dialog_CheckTownFlag:
     cpy     #$00                    ; $B560
-    beq     loc_3_B579              ; $B562
+    beq     @loc_B579               ; $B562
     sty     temp1                   ; $B564
     lda     temp0                   ; $B566
     sec                             ; $B568
@@ -3488,7 +3603,7 @@ Dialog_CheckTownFlag:
     and     TownFlagChecks,x        ; $B574
     beq     Dialog_SelectText       ; $B577
 
-loc_3_B579:
+@loc_B579:
     inc     temp5                   ; $B579
     bne     loc_3_B589              ; $B57B
 
@@ -3587,12 +3702,12 @@ Dialog_SleepyCreature:
 Dialog_SelectText:
     lda     temp0                   ; $B5C7
     ldx     dialogAlreadyDone       ; $B5C9
-    beq     loc_3_B5D0              ; $B5CC
+    beq     @loc_B5D0               ; $B5CC
 ; (code below not executed in the test movies)
     lda     #$0F                    ; $B5CE
 ; (end of code not executed in the test movies)
 
-loc_3_B5D0:
+@loc_B5D0:
     asl     a                       ; $B5D0
     asl     a                       ; $B5D1
     sta     temp0                   ; $B5D2
@@ -3603,19 +3718,19 @@ loc_3_B5D0:
     tay                             ; $B5DC
     lda     WestTextIds,y           ; $B5DD
     ldx     temp5                   ; $B5E0
-    beq     loc_3_B5E7              ; $B5E2
+    beq     @loc_B5E7               ; $B5E2
     lda     WestTextIdsMet,y        ; $B5E4
 
-loc_3_B5E7:
+@loc_B5E7:
     ldx     currentWorld            ; $B5E7
     cpx     #$02                    ; $B5EA
-    bne     loc_3_B5F8              ; $B5EC
+    bne     @loc_B5F8               ; $B5EC
     lda     EastTextIds,y           ; $B5EE
     ldx     temp5                   ; $B5F1
-    beq     loc_3_B5F8              ; $B5F3
+    beq     @loc_B5F8               ; $B5F3
     lda     EastTextIdsMet,y        ; $B5F5
 
-loc_3_B5F8:
+@loc_B5F8:
     asl     a                       ; $B5F8
     tay                             ; $B5F9
     lda     currentWorld            ; $B5FA
@@ -3679,12 +3794,12 @@ loc_3_B64A:
 Dialog_NewLine:
     ldy     #$0B                    ; $B656
     cmp     #$FD                    ; $B658
-    beq     loc_3_B65E              ; $B65A
+    beq     @loc_B65E               ; $B65A
 ; (code below not executed in the test movies)
     ldy     #$2D                    ; $B65C
 ; (end of code not executed in the test movies)
 
-loc_3_B65E:
+@loc_B65E:
     sty     menuTimer               ; $B65E
     lda     #$00                    ; $B661
     sta     dialogColumn            ; $B663
@@ -3762,14 +3877,14 @@ Dialog_PrintText:
     ldx     dialogPerson            ; $B6A7
     lda     enemyType,x             ; $B6AA
     cmp     #$0D                    ; $B6AC
-    beq     loc_3_B6BA              ; $B6AE
+    beq     @loc_B6BA               ; $B6AE
     cmp     #$0F                    ; $B6B0
-    beq     loc_3_B6BA              ; $B6B2
+    beq     @loc_B6BA               ; $B6B2
     lda     joypadPressed           ; $B6B4
     and     #$40                    ; $B6B6
     bne     Dialog_TextDone         ; $B6B8
 
-loc_3_B6BA:
+@loc_B6BA:
     lda     menuTimer               ; $B6BA
     bne     Dialog_Wait             ; $B6BD
     inc     ram_0766                ; $B6BF
@@ -3783,36 +3898,36 @@ loc_3_B6BA:
     cmp     #$FF                    ; $B6D2
     beq     Dialog_TextDone         ; $B6D4
     cmp     #$FD                    ; $B6D6
-    bcc     loc_3_B6DD              ; $B6D8
+    bcc     @loc_B6DD               ; $B6D8
     jmp     Dialog_NewLine          ; $B6DA
 
-loc_3_B6DD:
+@loc_B6DD:
     asl     a                       ; $B6DD
-    bcc     loc_3_B6ED              ; $B6DE
+    bcc     @loc_B6ED               ; $B6DE
     asl     a                       ; $B6E0
-    bcs     loc_3_B6E7              ; $B6E1
+    bcs     @loc_B6E7               ; $B6E1
 ; (code below not executed in the test movies)
     ldx     #$33                    ; $B6E3
-    bcc     loc_3_B6F2              ; $B6E5
+    bcc     @loc_B6F2               ; $B6E5
 ; (end of code not executed in the test movies)
 
-loc_3_B6E7:
+@loc_B6E7:
     lda     (temp0),y               ; $B6E7
     ora     #$C0                    ; $B6E9
-    bne     loc_3_B6F6              ; $B6EB
+    bne     @loc_B6F6               ; $B6EB
 
-loc_3_B6ED:
+@loc_B6ED:
     asl     a                       ; $B6ED
-    bcc     loc_3_B6F2              ; $B6EE
+    bcc     @loc_B6F2               ; $B6EE
 ; (code below not executed in the test movies)
     ldx     #$32                    ; $B6F0
 ; (end of code not executed in the test movies)
 
-loc_3_B6F2:
+@loc_B6F2:
     lda     (temp0),y               ; $B6F2
     and     #$3F                    ; $B6F4
 
-loc_3_B6F6:
+@loc_B6F6:
     sta     ppuBuffer0+4            ; $B6F6
     lda     dialogColumn            ; $B6F9
     asl     a                       ; $B6FC
@@ -3861,12 +3976,12 @@ loc_3_B6F6:
 
 loc_3_B752:
     inc     dialogTextPtr           ; $B752
-    bne     loc_3_B75A              ; $B755
+    bne     @done                   ; $B755
 ; (code below not executed in the test movies)
     inc     dialogTextPtr+1         ; $B757
 ; (end of code not executed in the test movies)
 
-loc_3_B75A:
+@done:
     rts                             ; $B75A
 
 ; ---------------------------------------------------------------------------
@@ -3883,19 +3998,19 @@ Dialog_Reward:
     lda     enemyType,x             ; $B75E
     ldx     #$00                    ; $B760
     cmp     #$0F                    ; $B762
-    beq     loc_3_B776              ; $B764
+    beq     @loc_B776               ; $B764
     cmp     #$0D                    ; $B766
-    beq     loc_3_B776              ; $B768
+    beq     @loc_B776               ; $B768
     cmp     #$18                    ; $B76A
-    bcs     loc_3_B76F              ; $B76C
+    bcs     @loc_B76F               ; $B76C
     inx                             ; $B76E
 
-loc_3_B76F:
+@loc_B76F:
     lda     #$FF                    ; $B76F
     sta     statMeterPending,x      ; $B771
     bne     loc_3_B7A2              ; $B774
 
-loc_3_B776:
+@loc_B776:
     lda     ram_07FC                ; $B776
     cmp     #$04                    ; $B779
     beq     loc_3_B7A5              ; $B77B
@@ -3913,10 +4028,10 @@ loc_3_B776:
     sta     ram_048D                ; $B797
     ldy     #$05                    ; $B79A
 
-loc_3_B79C:
+@loop:
     sta     ram_05C3,y              ; $B79C
     dey                             ; $B79F
-    bpl     loc_3_B79C              ; $B7A0
+    bpl     @loop                   ; $B7A0
 
 loc_3_B7A2:
     inc     pauseState              ; $B7A2
@@ -3955,10 +4070,10 @@ Dialog_Finish:
     ldy     #$05                    ; $B7B2
     lda     #$00                    ; $B7B4
 
-loc_3_B7B6:
+@loop:
     sta     ram_05C3,y              ; $B7B6
     dey                             ; $B7B9
-    bpl     loc_3_B7B6              ; $B7BA
+    bpl     @loop                   ; $B7BA
     sta     ram_00DE                ; $B7BC
     sta     ram_048D                ; $B7BE
     lda     townCode                ; $B7C1

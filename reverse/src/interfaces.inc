@@ -17,7 +17,7 @@ INTERFACES_INC = 1
     SpecialTiles    = $851A     ; tiles with special behavior ($851A-$8522): +0-+2 doors, +3 chimney,
                                 ; +4 breakable block, +5 crumbling floor, +6 lava (provisional)
     EnemyLists      = $88A0     ; enemies of each area (1024 bytes), copied to sramEnemyLists
-    DrawLargeObject = $80EE     ; draw large area object areaObjectType (banks 1-5)
+    DrawLargeObject = $80EE     ; draw large area object areaObjectType (banks 1, 2, 4, 5; towns use Town_DrawLargeObject)
     DrawSmallObject = $812F     ; draw small area object (banks 1, 2, 4, 5)
 .endscope
 

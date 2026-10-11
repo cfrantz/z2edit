@@ -1562,8 +1562,8 @@ Area_SetFloorTiles:
     jsr     JumpTable               ; $C81C
 ; (inline jump table)
     .word   OverworldBank::SetFloorTiles ; $C81F
-    .word   loc_3_8647              ; $C821
-    .word   loc_3_8647              ; $C823
+    .word   Town_SetFloorTiles      ; $C821
+    .word   Town_SetFloorTiles      ; $C823
     .word   loc_4_8167              ; $C825
     .word   loc_4_8167              ; $C827
     .word   loc_5_817B              ; $C829
@@ -1744,8 +1744,8 @@ Area_DrawLargeObject:
     jsr     JumpTable               ; $C918
 ; (inline jump table)
     .word   AreaBank::DrawLargeObject ; $C91B
-    .word   loc_3_9B86              ; $C91D
-    .word   loc_3_9B86              ; $C91F
+    .word   Town_DrawLargeObject    ; $C91D
+    .word   Town_DrawLargeObject    ; $C91F
     .word   AreaBank::DrawLargeObject ; $C921
     .word   AreaBank::DrawLargeObject ; $C923
     .word   AreaBank::DrawLargeObject ; $C925
@@ -1756,8 +1756,8 @@ Area_DrawSmallObject:
     jsr     JumpTable               ; $C92D
 ; (inline jump table)
     .word   AreaBank::DrawSmallObject ; $C930
-    .word   loc_3_9BCB              ; $C932
-    .word   loc_3_9BCB              ; $C934
+    .word   Town_DrawSmallObject    ; $C932
+    .word   Town_DrawSmallObject    ; $C934
     .word   AreaBank::DrawSmallObject ; $C936
     .word   AreaBank::DrawSmallObject ; $C938
     .word   AreaBank::DrawSmallObject ; $C93A
