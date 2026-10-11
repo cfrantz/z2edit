@@ -1608,7 +1608,7 @@ Death_Animate:
     jsr     Mmc1_SetPrgBank0        ; $C9EE
     lda     #$0A                    ; $C9F1
     sta     objState                ; $C9F3
-    jsr     sub_EBF0                ; $C9F5
+    jsr     Link_Draw               ; $C9F5
     lda     frameCounter            ; $C9F8
     and     #$03                    ; $C9FA
     tax                             ; $C9FC
@@ -3564,10 +3564,10 @@ loc_D51F:
     bcs     loc_D538                ; $D52B
 
 loc_D52D:
-    jsr     sub_EBF0                ; $D52D
+    jsr     Link_Draw               ; $D52D
     lda     timerFast+2             ; $D530
     bne     loc_D538                ; $D533
-    jsr     sub_E1DD                ; $D535
+    jsr     Sword_CheckBlocks       ; $D535
 
 loc_D538:
     lda     gameMode                ; $D538
@@ -5571,12 +5571,12 @@ dat_E1D9:
 dat_E1DB:
     .byte   $04, $FC                                                        ; $E1DB
 
-sub_E1DD:
+Sword_CheckBlocks:
     jsr     Mmc1_SetPrgBankArea     ; $E1DD
-    jsr     sub_E1E6                ; $E1E0
+    jsr     Sword_CheckBlocksInBank ; $E1E0
     jmp     Mmc1_SetPrgBank0        ; $E1E3
 
-sub_E1E6:
+Sword_CheckBlocksInBank:
     lda     swordY                  ; $E1E6
     cmp     #$F8                    ; $E1E9
     bcs     loc_E234                ; $E1EB
@@ -7165,7 +7165,7 @@ loc_EBEC:
 loc_EBEF:
     rts                             ; $EBEF
 
-sub_EBF0:
+Link_Draw:
     lda     ram_048D                ; $EBF0
     bne     loc_EBEF                ; $EBF3
     ldx     #$00                    ; $EBF5

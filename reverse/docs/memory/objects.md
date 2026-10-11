@@ -12,7 +12,7 @@ variables in `src/ram.inc`.
 | 7-12 | enemy projectiles | `Projectile_Update`, `Projectile_Move` |
 | 13-14 | Link's projectiles | `LinkProjectile_Spawn`, `sub_0_98A6` |
 | 15 | unused | |
-| 16 | sword tip probe, for breaking blocks | `sub_E1E6` |
+| 16 | sword tip probe, for breaking blocks | `Sword_CheckBlocksInBank` |
 
 Each array is only as long as the last slot that uses it:
 

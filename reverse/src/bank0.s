@@ -2591,7 +2591,7 @@ Link_Sink:
 loc_0_919C:
     inc     objY                    ; $919C
     jsr     sub_0_93AC              ; $919E
-    jmp     sub_EBF0                ; $91A1
+    jmp     Link_Draw               ; $91A1
 
 Spell_FairyEffect:
     lda     objY                    ; $91A4
@@ -2804,7 +2804,7 @@ Link_Control:
     sta     ram_0752                ; $92D7
     lda     #$06                    ; $92DA
     sta     objState                ; $92DC
-    jmp     sub_EBF0                ; $92DE
+    jmp     Link_Draw               ; $92DE
 
 loc_0_92E1:
     inc     ram_075B                ; $92E1

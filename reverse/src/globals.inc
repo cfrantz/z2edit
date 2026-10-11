@@ -131,7 +131,7 @@ GLOBALS_INC = 1
 .global sub_EA18
 .global sub_EA1C
 .global sub_EA32
-.global sub_EBF0
+.global Link_Draw
 .global sub_EC02
 .global loc_EF03
 .global sub_EF08
