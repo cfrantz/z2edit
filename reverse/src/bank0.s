@@ -3581,13 +3581,18 @@ dat_0_9641:
     .byte   $20, $52, $01, $D1, $20, $6E, $10, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $D0; $9641
     .byte   $D0, $D0, $D0, $CE, $D0, $D0, $D0                               ; $9651
 
-dat_0_9658:
+; Experience needed to raise each stat (STAT_*) from each level 1-8,
+; indexed by stat * 8 + level: attack 200, 500, 1000, 2000, 3000, 5000,
+; 8000, 9000; magic 100, 300, 700, 1200, 2200, 3500, 6000, 9000; life 50,
+; 150, 400, 800, 1500, 2500, 4000, 9000.  The tables overlap: the last high
+; byte (life, level 8) is also LevelUpCostLo's unused entry 0.
+LevelUpCostHi:
     .byte   $FF, $00, $01, $03, $07, $0B, $13, $1F, $23, $00, $01, $02, $04, $08, $0D, $17; $9658
     .byte   $23, $00                                                        ; $9668
 ; (unreferenced: $966A-$9670, 7 bytes)
     .byte   $00, $01, $03, $05, $09, $0F                                    ; $966A
 
-dat_0_9670:
+LevelUpCostLo:
     .byte   $23                                                             ; $9670
     .byte   $C8, $F4, $E8, $D0, $B8, $88, $40, $28, $64, $2C, $BC, $B0, $98, $AC, $70, $28; $9671
     .byte   $32                                                             ; $9681
@@ -4554,9 +4559,17 @@ loc_0_9DAC:
     dey                             ; $9DAD
     bne     loc_0_9DAC              ; $9DAE
 
-sub_0_9DB0:
+; ---------------------------------------------------------------------------
+; Hud_SplitScreen
+;
+; Bank 0's copy of the status bar split: wait for the sprite 0 hit, then
+; switch to the playfield's nametable and scroll.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Hud_SplitScreen:
     bit     PPUSTATUS               ; $9DB0
-    bvc     sub_0_9DB0              ; $9DB3
+    bvc     Hud_SplitScreen         ; $9DB3
     lda     ppuCtrlShadow           ; $9DB5
     ora     playfieldNametable      ; $9DB7
     sta     ppuCtrlShadow           ; $9DBA
@@ -4574,7 +4587,7 @@ loc_0_9DCC:
     rts                             ; $9DCC
 
 loc_0_9DCD:
-    jsr     sub_0_9DB0              ; $9DCD
+    jsr     Hud_SplitScreen         ; $9DCD
     lda     pauseState              ; $9DD0
     cmp     #$05                    ; $9DD3
     bcc     loc_0_9DDE              ; $9DD5
@@ -4596,7 +4609,15 @@ loc_0_9DDE:
     .word   loc_0_A3D7              ; $9DF2
     .word   loc_0_A338              ; $9DF4
 
-sub_0_9DF6:
+; ---------------------------------------------------------------------------
+; Menu_MoveCursor
+;
+; Move a menu cursor with Up and Down, repeating while held
+; (menuRepeatTimer).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Menu_MoveCursor:
     lda     joypadHeldPrev          ; $9DF6
     and     #$0C                    ; $9DF9
     sta     temp1                   ; $9DFB
@@ -4608,7 +4629,7 @@ sub_0_9DF6:
     beq     loc_0_9E1D              ; $9E07
     cmp     temp1                   ; $9E09
     bne     loc_0_9E16              ; $9E0B
-    dec     ram_0487                ; $9E0D
+    dec     menuRepeatTimer         ; $9E0D
     bne     loc_0_9E1D              ; $9E10
 ; (code below not executed in the test movies)
     ldy     #$07                    ; $9E12
@@ -4619,7 +4640,7 @@ loc_0_9E16:
     ldy     #$10                    ; $9E16
 
 loc_0_9E18:
-    sty     ram_0487                ; $9E18
+    sty     menuRepeatTimer         ; $9E18
     sec                             ; $9E1B
     rts                             ; $9E1C
 
@@ -4666,7 +4687,7 @@ dat_0_9E61:
     .byte   $F4, $F4, $F4, $D1, $D2, $D4, $D9                               ; $9E73
 
 loc_0_9E7A:
-    jsr     sub_0_9DF6              ; $9E7A
+    jsr     Menu_MoveCursor         ; $9E7A
     bcs     loc_0_9E82              ; $9E7D
     jmp     loc_0_9F3D              ; $9E7F
 
@@ -4700,15 +4721,15 @@ loc_0_9E98:
     tax                             ; $9EA6
     lda     experience+1            ; $9EA7
     sec                             ; $9EAA
-    sbc     dat_0_9670,x            ; $9EAB
+    sbc     LevelUpCostLo,x         ; $9EAB
     lda     experience              ; $9EAE
-    sbc     dat_0_9658,x            ; $9EB1
+    sbc     LevelUpCostHi,x         ; $9EB1
     lda     joypadHeld              ; $9EB4
     bcc     loc_0_9E82              ; $9EB6
     bcs     loc_0_9ECA              ; $9EB8
 
 loc_0_9EBA:
-    jsr     sub_0_A0CE              ; $9EBA
+    jsr     Exp_FindLevelUps        ; $9EBA
     lda     temp2                   ; $9EBD
     ora     temp3                   ; $9EBF
     ora     temp4                   ; $9EC1
@@ -4808,10 +4829,10 @@ loc_0_9F5B:
     tay                             ; $9F63
     lda     experience+1            ; $9F64
     sec                             ; $9F67
-    sbc     dat_0_9670,y            ; $9F68
+    sbc     LevelUpCostLo,y         ; $9F68
     sta     experience+1            ; $9F6B
     lda     experience              ; $9F6E
-    sbc     dat_0_9658,y            ; $9F71
+    sbc     LevelUpCostHi,y         ; $9F71
     sta     experience              ; $9F74
     ldx     ram_074E                ; $9F77
     lda     statLevel,x             ; $9F7A
@@ -4825,7 +4846,7 @@ loc_0_9F87:
     sta     temp2                   ; $9F89
     sta     temp3                   ; $9F8B
     sta     temp4                   ; $9F8D
-    jsr     sub_0_A08B              ; $9F8F
+    jsr     Exp_ComputeNextOfLevelUps ; $9F8F
     ldx     #$02                    ; $9F92
 
 loc_0_9F94:
@@ -4860,7 +4881,7 @@ loc_0_9FBC:
     rts                             ; $9FBC
 
 loc_0_9FBD:
-    jsr     sub_0_A088              ; $9FBD
+    jsr     Exp_UpdateAfterLevelUp  ; $9FBD
     jmp     loc_0_9FB9              ; $9FC0
 ; (code below not executed in the test movies)
 
@@ -4896,9 +4917,9 @@ loc_0_9FD0:
     tay                             ; $9FF0
     lda     experience+1            ; $9FF1
     sec                             ; $9FF4
-    sbc     dat_0_9670,y            ; $9FF5
+    sbc     LevelUpCostLo,y         ; $9FF5
     lda     experience              ; $9FF8
-    sbc     dat_0_9658,y            ; $9FFB
+    sbc     LevelUpCostHi,y         ; $9FFB
     bcc     loc_0_A012              ; $9FFE
     stx     ram_074E                ; $A000
     ldy     #$0D                    ; $A003
@@ -4956,7 +4977,15 @@ loc_0_A04B:
     inc     pauseState              ; $A053
     rts                             ; $A056
 
-sub_0_A057:
+; ---------------------------------------------------------------------------
+; Exp_ComputeNext
+;
+; Set experienceNext to the cheapest next level of the three stats
+; (LevelUpCostHi/Lo).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Exp_ComputeNext:
     lda     #$FF                    ; $A057
     sta     experienceNext          ; $A059
     sta     experienceNext+1        ; $A05C
@@ -4969,15 +4998,15 @@ loc_0_A061:
     asl     a                       ; $A064
     adc     statLevel,x             ; $A065
     tay                             ; $A068
-    lda     dat_0_9670,y            ; $A069
+    lda     LevelUpCostLo,y         ; $A069
     sec                             ; $A06C
     sbc     experienceNext+1        ; $A06D
-    lda     dat_0_9658,y            ; $A070
+    lda     LevelUpCostHi,y         ; $A070
     sbc     experienceNext          ; $A073
     bcs     loc_0_A084              ; $A076
-    lda     dat_0_9658,y            ; $A078
+    lda     LevelUpCostHi,y         ; $A078
     sta     experienceNext          ; $A07B
-    lda     dat_0_9670,y            ; $A07E
+    lda     LevelUpCostLo,y         ; $A07E
     sta     experienceNext+1        ; $A081
 
 loc_0_A084:
@@ -4985,10 +5014,10 @@ loc_0_A084:
     bpl     loc_0_A061              ; $A085
     rts                             ; $A087
 
-sub_0_A088:
-    jsr     sub_0_A0CE              ; $A088
+Exp_UpdateAfterLevelUp:
+    jsr     Exp_FindLevelUps        ; $A088
 
-sub_0_A08B:
+Exp_ComputeNextOfLevelUps:
     lda     temp2                   ; $A08B
     ora     temp3                   ; $A08D
     ora     temp4                   ; $A08F
@@ -5014,15 +5043,15 @@ loc_0_A0A3:
     asl     a                       ; $A0AA
     adc     statLevel,x             ; $A0AB
     tay                             ; $A0AE
-    lda     dat_0_9670,y            ; $A0AF
+    lda     LevelUpCostLo,y         ; $A0AF
     sec                             ; $A0B2
     sbc     experienceNext+1        ; $A0B3
-    lda     dat_0_9658,y            ; $A0B6
+    lda     LevelUpCostHi,y         ; $A0B6
     sbc     experienceNext          ; $A0B9
     bcs     loc_0_A0CA              ; $A0BC
-    lda     dat_0_9658,y            ; $A0BE
+    lda     LevelUpCostHi,y         ; $A0BE
     sta     experienceNext          ; $A0C1
-    lda     dat_0_9670,y            ; $A0C4
+    lda     LevelUpCostLo,y         ; $A0C4
     sta     experienceNext+1        ; $A0C7
 
 loc_0_A0CA:
@@ -5030,7 +5059,16 @@ loc_0_A0CA:
     bpl     loc_0_A0A3              ; $A0CB
     rts                             ; $A0CD
 
-sub_0_A0CE:
+; ---------------------------------------------------------------------------
+; Exp_FindLevelUps
+;
+; For each stat, set temp2 + stat to 1 if experience is enough to raise
+; it.  Exp_UpdateAfterLevelUp then sets experienceNext to the cheapest of
+; those (Exp_ComputeNextOfLevelUps).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Exp_FindLevelUps:
     ldx     #$02                    ; $A0CE
 
 loc_0_A0D0:
@@ -5044,9 +5082,9 @@ loc_0_A0D0:
     tay                             ; $A0DB
     lda     experienceNext+1        ; $A0DC
     sec                             ; $A0DF
-    sbc     dat_0_9670,y            ; $A0E0
+    sbc     LevelUpCostLo,y         ; $A0E0
     lda     experienceNext          ; $A0E3
-    sbc     dat_0_9658,y            ; $A0E6
+    sbc     LevelUpCostHi,y         ; $A0E6
     bcs     loc_0_A0ED              ; $A0E9
     inc     temp2,x                 ; $A0EB
 
@@ -5058,7 +5096,7 @@ loc_0_A0F0:
     rts                             ; $A0F0
 
 loc_0_A0F1:
-    dec     ram_0487                ; $A0F1
+    dec     menuRepeatTimer         ; $A0F1
     lda     ram_07FB                ; $A0F4
     cmp     #$10                    ; $A0F7
     beq     loc_0_A0FE              ; $A0F9
@@ -5075,7 +5113,7 @@ loc_0_A0FE:
     lda     dat_0_A688,y            ; $A10E
     sta     ram_0525                ; $A111
     jsr     sub_0_A647              ; $A114
-    lda     ram_0487                ; $A117
+    lda     menuRepeatTimer         ; $A117
     and     #$0F                    ; $A11A
     cmp     #$08                    ; $A11C
     bcc     loc_0_A130              ; $A11E
@@ -5106,7 +5144,7 @@ loc_0_A138:
 ; (code below not executed in the test movies)
 
 loc_0_A140:
-    lda     ram_0487                ; $A140
+    lda     menuRepeatTimer         ; $A140
     bne     loc_0_A137              ; $A143
     jmp     loc_0_A325              ; $A145
 ; (end of code not executed in the test movies)
@@ -5210,7 +5248,7 @@ loc_0_A1E7:
     bpl     loc_0_A1E7              ; $A1EB
     cmp     #$00                    ; $A1ED
     beq     loc_0_A256              ; $A1EF
-    jsr     sub_0_9DF6              ; $A1F1
+    jsr     Menu_MoveCursor         ; $A1F1
     bcc     loc_0_A256              ; $A1F4
     and     #$08                    ; $A1F6
     ldy     spellCursor             ; $A1F8
@@ -6006,7 +6044,7 @@ loc_0_A68B:
     lda     #$60                    ; $A6A6
 
 loc_0_A6A8:
-    sta     ram_0487                ; $A6A8
+    sta     menuRepeatTimer         ; $A6A8
     lda     hudRedraw               ; $A6AB
     ora     #$C0                    ; $A6AE
     sta     hudRedraw               ; $A6B0
@@ -6345,7 +6383,7 @@ loc_0_AA28:
     dex                             ; $AA2B
     bpl     loc_0_AA28              ; $AA2C
     stx     ram_0708                ; $AA2E
-    jsr     sub_0_A057              ; $AA31
+    jsr     Exp_ComputeNext         ; $AA31
     ldy     #$88                    ; $AA34
 
 loc_0_AA36:
