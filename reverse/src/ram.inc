@@ -530,4 +530,41 @@ curtainEdgeCount        = objY+9    ; edge draws so far; bits 1-3 pick the attri
 creditsString           = objX+7    ; next string of CreditsText (0-17; 18 = done)
 creditsFadeStep         = objX+8    ; 0-3 fade in, 4 hold, 5-7 fade out (CreditsFadeDelays)
 
+; Title sound engine (Sound_TitleEngine, bank 6): the same RAM as the gameplay
+; engine, used differently.
+titleSongRequest        = soundMute ; title song (part bit) to start: $01 starts the song from its intro; $80 (Title_CheckStart) is no part and stops it
+titleSfxRequest         = musicRequest ; title sound effects to start: bit 0 ... bit 3 (the file screens' cursor and letter sounds)
+titleSfx                = dmcRequest ; title sound effect playing; the pulse channels' music is silent meanwhile
+titleSfxTimer           = sq1TimerLo ; frames left of the title sound effect
+titleNotesPtr           = musicNotesPtr ; (16-bit) note data of the title song's phrase
+titleSq2Offset          = musicSong ; offset of the next pulse 2 (melody) note
+titleSq1Offset          = musicPhrase ; offset of the next pulse 1 note (0 = none in this phrase)
+titleTriOffset          = drumLoopOffset ; offset of the next triangle note (0 = none)
+titleNoiseOffset        = musicTempo ; offset of the next noise note (0 = none)
+titleNoiseLoop          = $07F6     ; titleNoiseOffset to return to when the noise part ends
+titleDurationBase       = noiseSfxTimer ; offset of the phrase's row of note lengths in TitleNoteLengths
+titleSq2EnvBase         = $07F1     ; offset of pulse 2's volume envelope in TitleEnvelopes
+titleSq1EnvBase         = $07F0     ; offset of pulse 1's volume envelope in TitleEnvelopes
+titlePhrase             = sq2SfxTimer ; next entry of the title song part's phrase list
+titleSongPart           = $07F8     ; title song part number (titleMusicPart bit number + 1)
+titleSq2Timer           = sfxRequest ; frames left of the pulse 2 note
+titleSq1Timer           = sfxRequest+1 ; frames left of the pulse 1 note
+titleTriTimer           = sfxRequest+2 ; frames left of the triangle note
+titleNoiseTimer         = sfxRequest+3 ; frames left of the noise note
+titleSq2Length          = sq1Sfx    ; length of pulse 2's notes
+titleSq1Length          = sq2Sfx    ; length of pulse 1's notes
+titleTriLength          = noiseSfx  ; length of the triangle's notes
+titleNoiseLength        = $07FC     ; length of the noise notes
+titleSq2Pitch           = laughSampleTimer ; pitch of the pulse 2 note, echoed on pulse 1 in the intro
+titleSq2EnvStep         = musicPlaying ; pulse 2 envelope step, counting down
+titleSq1EnvStep         = sq1SfxTimer ; pulse 1 envelope step, counting down
+titleEcho               = dmcTimer  ; nonzero in the intro (part 1), where pulse 1 echoes the melody
+titleEchoDelay          = dmcEnableTimer ; frames since the melody note, up to the echo at 8
+titleEchoEnvStep        = dmcSfx    ; pulse 1 envelope step of the echo
+titleSq2Swell           = harmonyOffset ; envelope start of pulse 2's notes in the intro, rising by 2 a note from $20 to $5F
+titleEchoSwell          = bassOffset ; envelope start of the echo, rising like titleSq2Swell
+titleSq1TimerLo         = $07F4     ; timer low byte of pulse 1's note, the base for its vibrato
+titleSq2TimerLo         = $07F3     ; timer low byte of pulse 2's note, the base for its vibrato
+titleVibratoBase        = $07F2     ; vibrato base being used (Title_Vibrato)
+
 .endif

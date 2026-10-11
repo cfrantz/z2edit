@@ -8,291 +8,376 @@
 .segment "BANK6"
 
 
+; ---------------------------------------------------------------------------
+; Sound_TitleEngine
+;
+; The title screen's sound engine, run every frame by Sound_UpdateTitle:
+; sound effects (TitleSfx_Update) and music (TitleMusic_Update), then clear
+; the requests.  It uses the gameplay engine's RAM under other names
+; (the title* overlays in ram.inc).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Sound_TitleEngine:
     lda     #$FF                    ; $8000
     sta     APU_FRAME               ; $8002
     lda     #$0F                    ; $8005
     sta     SND_CHN                 ; $8007
-    jsr     sub_6_821B              ; $800A
-    jsr     sub_6_826A              ; $800D
+    jsr     TitleSfx_Update         ; $800A
+    jsr     TitleMusic_Update       ; $800D
     lda     #$00                    ; $8010
-    sta     musicRequest            ; $8012
-    sta     soundMute               ; $8014
+    sta     titleSfxRequest         ; $8012
+    sta     titleSongRequest        ; $8014
     rts                             ; $8016
 ; (unreferenced: $8017-$8046, 48 bytes)
 
-dat_6_8017:
+TitleEnvelopes:
     .byte   $90, $90, $91, $91, $92, $92, $93, $93, $94, $94, $95, $95, $96, $96, $97, $97; $8017
     .byte   $98, $98, $99, $99, $9A, $9A, $9B, $9C, $50, $50, $51, $51, $52, $52, $53, $53; $8027
     .byte   $54, $54, $55, $55, $56, $56, $57, $57, $58, $58, $59, $59, $5A, $5A, $5B, $5C; $8037
-    .byte   $90                                                             ; $8047
-; (unreferenced: $8048-$804D, 6 bytes)
-    .byte   $90, $90, $90, $90, $90, $90                                    ; $8048
-    .byte   $90, $91                                                        ; $804E
-; (unreferenced: $8050-$8085, 54 bytes)
-    .byte   $92, $93, $94, $95, $96, $97, $98, $99, $9A, $9B, $9C, $9D, $9E ; $8050
+    .byte   $90, $90, $90, $90, $90, $90, $90, $90, $91, $92, $93, $94, $95, $96, $97, $98; $8047
+    .byte   $99, $9A, $9B, $9C, $9D, $9E                                    ; $8057
 
-dat_6_805D:
-    .byte   $9F                                                             ; $805D
+TitleDrums:
+    .byte   $9F, $9F, $1B, $03, $48, $00, $17, $06, $38, $00, $18, $08, $38, $00, $17, $0A; $805D
+    .byte   $38, $00, $15, $07, $98, $00, $10                               ; $806D
 
-dat_6_805E:
-    .byte   $9F                                                             ; $805E
-
-dat_6_805F:
-    .byte   $1B, $03, $48, $00, $17, $06, $38, $00, $18, $08, $38, $00, $17, $0A, $38, $00; $805F
-    .byte   $15, $07, $98, $00, $10                                         ; $806F
-
-dat_6_8074:
+TitleSfxVolumes:
     .byte   $D0, $51, $D2, $53, $D4, $55, $D6, $57, $D8, $59, $DA, $5B, $DC, $5D, $DE, $5F; $8074
 
-dat_6_8084:
-    .byte   $08, $18                                                        ; $8084
-    .byte   $10                                                             ; $8086
-; (unreferenced: $8087-$80E4, 94 bytes)
-    .byte   $20, $30, $40, $60, $80, $0B, $0A, $50                          ; $8087
+TitleNoteLengths:
+    .byte   $08, $18, $10, $20, $30, $40, $60, $80, $0B, $0A, $50           ; $8084
 
-dat_6_808F:
-    .byte   $00                                                             ; $808F
+TitlePeriods:
+    .byte   $00, $00, $00, $00, $06, $AE, $06, $4E, $05, $F3, $05, $9E, $05, $4D, $05, $02; $808F
+    .byte   $04, $B9, $04, $75, $04, $35, $03, $F8, $03, $BF, $03, $89, $03, $57, $03, $27; $809F
+    .byte   $02, $F9, $02, $CF, $02, $A6, $02, $80, $02, $5C, $02, $3A, $02, $1A, $01, $FC; $80AF
+    .byte   $01, $DF, $01, $C4, $01, $AB, $01, $93, $01, $7C, $01, $67, $01, $52, $01, $3F; $80BF
+    .byte   $01, $2D, $01, $1C, $01, $0C, $00, $FD, $00, $EE, $00, $E1, $00, $D4, $00, $C8; $80CF
+    .byte   $00, $BD, $00, $B2, $00, $A8, $00, $9F, $00, $96, $00, $8D, $00, $85, $00, $7E; $80DF
+    .byte   $00, $76, $00, $70, $00, $6A, $00, $64, $00, $5F, $00, $59, $00, $54, $00, $50; $80EF
+    .byte   $00, $4B, $00, $47, $00, $43, $00, $3F, $00, $3B, $00, $38, $00, $35, $00, $32; $80FF
 
-dat_6_8090:
-    .byte   $00, $00, $00, $06, $AE, $06, $4E, $05, $F3, $05, $9E, $05, $4D, $05, $02, $04; $8090
-    .byte   $B9, $04, $75, $04, $35, $03, $F8, $03, $BF, $03, $89, $03, $57, $03, $27, $02; $80A0
-    .byte   $F9, $02, $CF, $02, $A6, $02, $80, $02, $5C, $02, $3A, $02, $1A, $01, $FC, $01; $80B0
-    .byte   $DF, $01, $C4, $01, $AB, $01, $93, $01, $7C, $01, $67, $01, $52, $01, $3F, $01; $80C0
-    .byte   $2D, $01, $1C, $01, $0C, $00, $FD, $00, $EE, $00, $E1, $00, $D4, $00, $C8, $00; $80D0
-    .byte   $BD, $00, $B2, $00, $A8                                         ; $80E0
-    .byte   $00, $9F                                                        ; $80E5
-; (unreferenced: $80E7-$80EC, 6 bytes)
-    .byte   $00, $96, $00, $8D, $00, $85                                    ; $80E7
-    .byte   $00, $7E                                                        ; $80ED
-; (unreferenced: $80EF-$80F2, 4 bytes)
-    .byte   $00, $76, $00, $70                                              ; $80EF
-    .byte   $00, $6A                                                        ; $80F3
-; (unreferenced: $80F5-$810E, 26 bytes)
-    .byte   $00, $64, $00, $5F, $00, $59, $00, $54, $00, $50, $00, $4B, $00, $47, $00, $43; $80F5
-    .byte   $00, $3F, $00, $3B, $00, $38, $00, $35, $00, $32                ; $8105
-
-sub_6_810F:
+; ---------------------------------------------------------------------------
+; TitleSq1_SetEnvelope
+;
+; Write x to SQ1_VOL and y to SQ1_SWEEP.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSq1_SetEnvelope:
     stx     SQ1_VOL                 ; $810F
     sty     SQ1_SWEEP               ; $8112
     rts                             ; $8115
 
-sub_6_8116:
+; ---------------------------------------------------------------------------
+; TitleSq2_SetEnvelope
+;
+; Write x to SQ2_VOL and y to SQ2_SWEEP.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSq2_SetEnvelope:
     stx     SQ2_VOL                 ; $8116
     sty     SQ2_SWEEP               ; $8119
     rts                             ; $811C
 ; (unreferenced: $811D-$811F, 3 bytes)
     .byte   $20, $0F, $81                                                   ; $811D
 
-sub_6_8120:
+; ---------------------------------------------------------------------------
+; TitleSq1_PlayNote
+;
+; Play pitch a (an even TitlePeriods index) on pulse 1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSq1_PlayNote:
     ldx     #$00                    ; $8120
 
-loc_6_8122:
+; ---------------------------------------------------------------------------
+; TitleSound_PlayNote
+;
+; Play pitch a (0 = rest) on the channel at x (0 pulse 1, 4 pulse 2, 8
+; triangle), keeping a pulse's timer low byte for its vibrato.  The title
+; engine's copy of Sound_PlayNote.
+;
+; In:      a = pitch, x = channel register offset
+; Out:     z set for a rest
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSound_PlayNote:
     tay                             ; $8122
-    lda     dat_6_8090,y            ; $8123
-    beq     loc_6_8143              ; $8126
+    lda     TitlePeriods+1,y        ; $8123
+    beq     @done                   ; $8126
     sta     SQ1_LO,x                ; $8128
     cpx     #$00                    ; $812B
-    bne     loc_6_8134              ; $812D
-    sta     ram_07F4                ; $812F
-    bne     loc_6_813B              ; $8132
+    bne     @loc_8134               ; $812D
+    sta     titleSq1TimerLo         ; $812F
+    bne     @loc_813B               ; $8132
 
-loc_6_8134:
+@loc_8134:
     cpx     #$04                    ; $8134
-    bne     loc_6_813B              ; $8136
-    sta     ram_07F3                ; $8138
+    bne     @loc_813B               ; $8136
+    sta     titleSq2TimerLo         ; $8138
 
-loc_6_813B:
-    lda     dat_6_808F,y            ; $813B
+@loc_813B:
+    lda     TitlePeriods,y          ; $813B
     ora     #$08                    ; $813E
     sta     SQ1_HI,x                ; $8140
 
-loc_6_8143:
+@done:
     rts                             ; $8143
 ; (unreferenced: $8144-$8146, 3 bytes)
     .byte   $20, $16, $81                                                   ; $8144
 
-sub_6_8147:
+; ---------------------------------------------------------------------------
+; TitleSq2_PlayNote
+;
+; Play pitch a on pulse 2.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSq2_PlayNote:
     ldx     #$04                    ; $8147
-    bne     loc_6_8122              ; $8149
+    bne     TitleSound_PlayNote     ; $8149
 
-sub_6_814B:
+; ---------------------------------------------------------------------------
+; TitleTri_PlayNote
+;
+; Play pitch a on the triangle.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleTri_PlayNote:
     ldx     #$08                    ; $814B
-    bne     loc_6_8122              ; $814D
+    bne     TitleSound_PlayNote     ; $814D
 
-sub_6_814F:
+; ---------------------------------------------------------------------------
+; TitleMusic_NoteLength
+;
+; Note length for a length byte: TitleNoteLengths[titleDurationBase + low
+; nybble].
+;
+; In:      a = length byte
+; Out:     a = frames
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleMusic_NoteLength:
     and     #$0F                    ; $814F
     clc                             ; $8151
-    adc     noiseSfxTimer           ; $8152
+    adc     titleDurationBase       ; $8152
     tay                             ; $8155
-    lda     dat_6_8084,y            ; $8156
+    lda     TitleNoteLengths,y      ; $8156
     rts                             ; $8159
 
-sub_6_815A:
-    lda     sq1TimerLo              ; $815A
+; ---------------------------------------------------------------------------
+; TitleSq1_VibratoSfx
+;
+; Vibrato on pulse 1 from the sound effect's frames left, or (from
+; TitleSq1_Vibrato) from pulse 1's note.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+TitleSq1_VibratoSfx:
+    lda     titleSfxTimer           ; $815A
     bne     loc_6_8160              ; $815C
 
-sub_6_815E:
-    lda     sfxRequest+1            ; $815E
+TitleSq1_Vibrato:
+    lda     titleSq1Timer           ; $815E
 
 loc_6_8160:
     ldx     #$00                    ; $8160
-    ldy     ram_07F4                ; $8162
-    bne     loc_6_8172              ; $8165
+    ldy     titleSq1TimerLo         ; $8162
+    bne     TitleSound_Vibrato      ; $8165
 
-sub_6_8167:
-    lda     sq1TimerLo              ; $8167
+; ---------------------------------------------------------------------------
+; TitleSq2_VibratoSfx
+;
+; Vibrato on pulse 2 from the sound effect's frames left, or (from
+; TitleSq2_Vibrato) from pulse 2's note.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+TitleSq2_VibratoSfx:
+    lda     titleSfxTimer           ; $8167
     bne     loc_6_816D              ; $8169
 
-sub_6_816B:
-    lda     sfxRequest              ; $816B
+TitleSq2_Vibrato:
+    lda     titleSq2Timer           ; $816B
 
 loc_6_816D:
     ldx     #$04                    ; $816D
-    ldy     ram_07F3                ; $816F
+    ldy     titleSq2TimerLo         ; $816F
 
-loc_6_8172:
-    sty     ram_07F2                ; $8172
+; ---------------------------------------------------------------------------
+; TitleSound_Vibrato
+;
+; The title engine's copy of Sound_Vibrato.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSound_Vibrato:
+    sty     titleVibratoBase        ; $8172
     lsr     a                       ; $8175
     lsr     a                       ; $8176
     lsr     a                       ; $8177
-    bcs     loc_6_8182              ; $8178
+    bcs     @loc_8182               ; $8178
     lda     #$FE                    ; $817A
     clc                             ; $817C
-    adc     ram_07F2                ; $817D
-    bne     loc_6_8188              ; $8180
+    adc     titleVibratoBase        ; $817D
+    bne     @loc_8188               ; $8180
 
-loc_6_8182:
+@loc_8182:
     lda     #$02                    ; $8182
     clc                             ; $8184
-    adc     ram_07F2                ; $8185
+    adc     titleVibratoBase        ; $8185
 
-loc_6_8188:
+@loc_8188:
     sta     SQ1_LO,x                ; $8188
     rts                             ; $818B
 
-sub_6_818C:
-    sty     dmcRequest              ; $818C
-    sta     sq1TimerLo              ; $818E
+; ---------------------------------------------------------------------------
+; TitleSfx_Start
+;
+; Make y the playing effect (titleSfx) for a frames, and zero the music's
+; pulse and echo envelope steps.
+;
+; In:      a = frames, y = effect
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSfx_Start:
+    sty     titleSfx                ; $818C
+    sta     titleSfxTimer           ; $818E
     lda     #$00                    ; $8190
-    sta     musicPlaying            ; $8192
-    sta     dmcSfx                  ; $8195
-    sta     sq1SfxTimer             ; $8198
+    sta     titleSq2EnvStep         ; $8192
+    sta     titleEchoEnvStep        ; $8195
+    sta     titleSq1EnvStep         ; $8198
     rts                             ; $819B
 
-loc_6_819C:
+TitleSfx_NameCursor:
     lda     #$0C                    ; $819C
-    jsr     sub_6_818C              ; $819E
+    jsr     TitleSfx_Start          ; $819E
     ldx     #$88                    ; $81A1
     ldy     #$7F                    ; $81A3
-    jsr     sub_6_810F              ; $81A5
-    jsr     sub_6_8116              ; $81A8
+    jsr     TitleSq1_SetEnvelope    ; $81A5
+    jsr     TitleSq2_SetEnvelope    ; $81A8
     lda     #$56                    ; $81AB
     bne     loc_6_81BF              ; $81AD
 
-loc_6_81AF:
-    lda     sq1TimerLo              ; $81AF
+TitleSfx_NameCursorStep:
+    lda     titleSfxTimer           ; $81AF
     cmp     #$08                    ; $81B1
-    bne     loc_6_81B9              ; $81B3
+    bne     @loc_81B9               ; $81B3
     lda     #$5E                    ; $81B5
     bne     loc_6_81BF              ; $81B7
 
-loc_6_81B9:
+@loc_81B9:
     cmp     #$04                    ; $81B9
     bne     loc_6_81C6              ; $81BB
     lda     #$64                    ; $81BD
 
 loc_6_81BF:
-    jsr     sub_6_8120              ; $81BF
+    jsr     TitleSq1_PlayNote       ; $81BF
     tya                             ; $81C2
-    jsr     sub_6_8147              ; $81C3
+    jsr     TitleSq2_PlayNote       ; $81C3
 
 loc_6_81C6:
-    jmp     loc_6_81FE              ; $81C6
+    jmp     TitleSfx_Vibrato        ; $81C6
 
-loc_6_81C9:
+TitleSfx_LetterCursor:
     lda     #$06                    ; $81C9
-    jsr     sub_6_818C              ; $81CB
+    jsr     TitleSfx_Start          ; $81CB
     ldx     #$9F                    ; $81CE
     ldy     #$7F                    ; $81D0
     lda     #$71                    ; $81D2
     bne     loc_6_81E1              ; $81D4
 
-loc_6_81D6:
+TitleSfx_Select:
     lda     #$06                    ; $81D6
-    jsr     sub_6_818C              ; $81D8
+    jsr     TitleSfx_Start          ; $81D8
     ldx     #$9F                    ; $81DB
     ldy     #$7F                    ; $81DD
     lda     #$A9                    ; $81DF
 
 loc_6_81E1:
-    jsr     sub_6_810F              ; $81E1
-    jsr     sub_6_8116              ; $81E4
+    jsr     TitleSq1_SetEnvelope    ; $81E1
+    jsr     TitleSq2_SetEnvelope    ; $81E4
     sta     SQ1_LO                  ; $81E7
-    sta     ram_07F4                ; $81EA
+    sta     titleSq1TimerLo         ; $81EA
     sec                             ; $81ED
     sbc     #$02                    ; $81EE
     sta     SQ2_LO                  ; $81F0
-    sta     ram_07F3                ; $81F3
+    sta     titleSq2TimerLo         ; $81F3
     lda     #$08                    ; $81F6
     sta     SQ1_HI                  ; $81F8
     sta     SQ2_HI                  ; $81FB
 
-loc_6_81FE:
-    jsr     sub_6_815A              ; $81FE
-    jsr     sub_6_8167              ; $8201
+TitleSfx_Vibrato:
+    jsr     TitleSq1_VibratoSfx     ; $81FE
+    jsr     TitleSq2_VibratoSfx     ; $8201
 
-loc_6_8204:
-    dec     sq1TimerLo              ; $8204
-    bne     loc_6_8214              ; $8206
+TitleSfx_Tick:
+    dec     titleSfxTimer           ; $8204
+    bne     @done                   ; $8206
     lda     #$00                    ; $8208
-    sta     dmcRequest              ; $820A
+    sta     titleSfx                ; $820A
     lda     #$10                    ; $820C
     sta     SQ1_VOL                 ; $820E
     sta     SQ2_VOL                 ; $8211
 
-loc_6_8214:
+@done:
     rts                             ; $8214
 
 loc_6_8215:
-    jmp     loc_6_819C              ; $8215
+    jmp     TitleSfx_NameCursor     ; $8215
 
 loc_6_8218:
-    jmp     loc_6_81AF              ; $8218
+    jmp     TitleSfx_NameCursorStep ; $8218
 
-sub_6_821B:
-    ldy     musicRequest            ; $821B
-    lda     dmcRequest              ; $821D
-    lsr     musicRequest            ; $821F
+; ---------------------------------------------------------------------------
+; TitleSfx_Update
+;
+; Start or continue a title sound effect (titleSfxRequest; titleSfx while
+; one plays), on both pulse channels: bit 0 TitleSfx_NameCursor (A or B on
+; the name screen), bit 1 TitleSfx_LetterCursor (moving over the letters),
+; bit 2 TitleSfx_Select (SELECT), bit 3 TitleSfx_Eliminate (a file
+; eliminated).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSfx_Update:
+    ldy     titleSfxRequest         ; $821B
+    lda     titleSfx                ; $821D
+    lsr     titleSfxRequest         ; $821F
     bcs     loc_6_8215              ; $8221
     lsr     a                       ; $8223
     bcs     loc_6_8218              ; $8224
-    lsr     musicRequest            ; $8226
-    bcs     loc_6_81C9              ; $8228
+    lsr     titleSfxRequest         ; $8226
+    bcs     TitleSfx_LetterCursor   ; $8228
     lsr     a                       ; $822A
-    bcs     loc_6_81FE              ; $822B
-    lsr     musicRequest            ; $822D
-    bcs     loc_6_81D6              ; $822F
+    bcs     TitleSfx_Vibrato        ; $822B
+    lsr     titleSfxRequest         ; $822D
+    bcs     TitleSfx_Select         ; $822F
     lsr     a                       ; $8231
-    bcs     loc_6_81FE              ; $8232
-    lsr     musicRequest            ; $8234
-    bcs     loc_6_823C              ; $8236
+    bcs     TitleSfx_Vibrato        ; $8232
+    lsr     titleSfxRequest         ; $8234
+    bcs     TitleSfx_Eliminate      ; $8236
     lsr     a                       ; $8238
-    bcs     loc_6_8249              ; $8239
+    bcs     TitleSfx_EliminateStep  ; $8239
     rts                             ; $823B
 
-loc_6_823C:
+TitleSfx_Eliminate:
     lda     #$1F                    ; $823C
-    jsr     sub_6_818C              ; $823E
+    jsr     TitleSfx_Start          ; $823E
     lda     #$8A                    ; $8241
     sta     SQ1_SWEEP               ; $8243
     sta     SQ2_SWEEP               ; $8246
 
-loc_6_8249:
-    lda     sq1TimerLo              ; $8249
+TitleSfx_EliminateStep:
+    lda     titleSfxTimer           ; $8249
     lsr     a                       ; $824B
     tay                             ; $824C
-    lda     dat_6_8074,y            ; $824D
+    lda     TitleSfxVolumes,y       ; $824D
     sta     SQ1_VOL                 ; $8250
     sta     SQ2_VOL                 ; $8253
     sta     SQ1_LO                  ; $8256
@@ -302,39 +387,65 @@ loc_6_8249:
     lda     #$08                    ; $825F
     sta     SQ1_HI                  ; $8261
     sta     SQ2_HI                  ; $8264
-    jmp     loc_6_8204              ; $8267
+    jmp     TitleSfx_Tick           ; $8267
 
-sub_6_826A:
-    lda     soundMute               ; $826A
+; ---------------------------------------------------------------------------
+; TitleMusic_Update
+;
+; The title music: start the song part in titleSongRequest ($01 also
+; resets the intro's swell), else play the current part
+; (TitleMusic_PlayNotes).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleMusic_Update:
+    lda     titleSongRequest        ; $826A
     and     #$01                    ; $826C
-    bne     loc_6_8277              ; $826E
-    lda     soundMute               ; $8270
-    beq     loc_6_8282              ; $8272
-    jmp     loc_6_82CF              ; $8274
+    bne     @loc_8277               ; $826E
+    lda     titleSongRequest        ; $8270
+    beq     @loc_8282               ; $8272
+    jmp     TitleMusic_StartPart    ; $8274
 
-loc_6_8277:
+@loc_8277:
     ldx     #$20                    ; $8277
-    stx     harmonyOffset           ; $8279
-    stx     bassOffset              ; $827C
-    jmp     loc_6_82CF              ; $827F
+    stx     titleSq2Swell           ; $8279
+    stx     titleEchoSwell          ; $827C
+    jmp     TitleMusic_StartPart    ; $827F
 
-loc_6_8282:
+@loc_8282:
     lda     titleMusicPart          ; $8282
     beq     loc_6_82AC              ; $8284
-    jmp     loc_6_8347              ; $8286
+    jmp     TitleMusic_PlayNotes    ; $8286
 
-loc_6_8289:
+; ---------------------------------------------------------------------------
+; TitleMusic_NextPart
+;
+; The part's phrase list has ended: part $01 goes on to $02, $02 to $04,
+; $04 to $08, $08 to $10 and $10 back to $02; anything else (the $80 of
+; Title_CheckStart, whose list is empty) stops the music.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleMusic_NextPart:
     lda     titleMusicPart          ; $8289
     and     #$1F                    ; $828B
     bne     loc_6_82AD              ; $828D
     ldx     #$00                    ; $828F
     stx     titleMusicPart          ; $8291
 
-sub_6_8293:
+; ---------------------------------------------------------------------------
+; TitleMusic_Silence
+;
+; Stop the title music: zero the pulses' and the echo's envelope steps and
+; silence the pulse, triangle and noise channels.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleMusic_Silence:
     ldx     #$00                    ; $8293
-    stx     musicPlaying            ; $8295
-    stx     dmcSfx                  ; $8298
-    stx     sq1SfxTimer             ; $829B
+    stx     titleSq2EnvStep         ; $8295
+    stx     titleEchoEnvStep        ; $8298
+    stx     titleSq1EnvStep         ; $829B
     stx     TRI_LINEAR              ; $829E
     ldx     #$10                    ; $82A1
     stx     NOISE_VOL               ; $82A3
@@ -346,418 +457,434 @@ loc_6_82AC:
 
 loc_6_82AD:
     cmp     #$01                    ; $82AD
-    bne     loc_6_82B5              ; $82AF
+    bne     @loc_82B5               ; $82AF
     lda     #$02                    ; $82B1
-    bne     loc_6_82CF              ; $82B3
+    bne     TitleMusic_StartPart    ; $82B3
 
-loc_6_82B5:
+@loc_82B5:
     cmp     #$02                    ; $82B5
-    bne     loc_6_82BD              ; $82B7
+    bne     @loc_82BD               ; $82B7
     lda     #$04                    ; $82B9
-    bne     loc_6_82CF              ; $82BB
+    bne     TitleMusic_StartPart    ; $82BB
 
-loc_6_82BD:
+@loc_82BD:
     cmp     #$04                    ; $82BD
-    bne     loc_6_82C5              ; $82BF
+    bne     @loc_82C5               ; $82BF
     lda     #$08                    ; $82C1
-    bne     loc_6_82CF              ; $82C3
+    bne     TitleMusic_StartPart    ; $82C3
 
-loc_6_82C5:
+@loc_82C5:
     cmp     #$08                    ; $82C5
-    bne     loc_6_82CD              ; $82C7
+    bne     @loc_82CD               ; $82C7
     lda     #$10                    ; $82C9
-    bne     loc_6_82CF              ; $82CB
+    bne     TitleMusic_StartPart    ; $82CB
 
-loc_6_82CD:
+@loc_82CD:
     lda     #$02                    ; $82CD
 
-loc_6_82CF:
+; ---------------------------------------------------------------------------
+; TitleMusic_StartPart
+;
+; Start title song part a (one bit, titleMusicPart): set titleEcho for
+; the intro (part 1) and load its first phrase.
+;
+; In:      a = part bit
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleMusic_StartPart:
     sta     titleMusicPart          ; $82CF
-    jsr     sub_6_8293              ; $82D1
+    jsr     TitleMusic_Silence      ; $82D1
     tax                             ; $82D4
     and     #$01                    ; $82D5
-    beq     loc_6_82DD              ; $82D7
+    beq     @loc_82DD               ; $82D7
     ldy     #$01                    ; $82D9
-    bne     loc_6_82DF              ; $82DB
+    bne     @loc_82DF               ; $82DB
 
-loc_6_82DD:
+@loc_82DD:
     ldy     #$00                    ; $82DD
 
-loc_6_82DF:
-    sty     dmcTimer                ; $82DF
+@loc_82DF:
+    sty     titleEcho               ; $82DF
     ldy     #$00                    ; $82E2
-    sty     sq2SfxTimer             ; $82E4
+    sty     titlePhrase             ; $82E4
     txa                             ; $82E7
 
-loc_6_82E8:
+@loop:
     iny                             ; $82E8
     lsr     a                       ; $82E9
-    bcc     loc_6_82E8              ; $82EA
-    sty     ram_07F8                ; $82EC
+    bcc     @loop                   ; $82EA
+    sty     titleSongPart           ; $82EC
 
-loc_6_82EF:
-    ldy     ram_07F8                ; $82EF
-    lda     dat_6_84D9,y            ; $82F2
+; ---------------------------------------------------------------------------
+; TitleMusic_LoadPhrase
+;
+; Load the part's next phrase from TitleMusic: an 8-byte record of the
+; note-length row, the note pointer, the triangle, pulse 1 and noise
+; offsets, and the two pulses' envelope offsets; pulse 2 starts at offset
+; 0.  An entry of 0 ends the part (TitleMusic_NextPart).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleMusic_LoadPhrase:
+    ldy     titleSongPart           ; $82EF
+    lda     TitleMusic-1,y            ; $82F2
     clc                             ; $82F5
-    adc     sq2SfxTimer             ; $82F6
-    inc     sq2SfxTimer             ; $82F9
+    adc     titlePhrase             ; $82F6
+    inc     titlePhrase             ; $82F9
     tay                             ; $82FC
-    lda     dat_6_84DA,y            ; $82FD
+    lda     TitleMusic,y            ; $82FD
     tay                             ; $8300
-    beq     loc_6_8289              ; $8301
-    lda     dat_6_84DA,y            ; $8303
-    sta     noiseSfxTimer           ; $8306
-    lda     dat_6_84DB,y            ; $8309
-    sta     musicNotesPtr           ; $830C
-    lda     dat_6_84DC,y            ; $830E
+    beq     TitleMusic_NextPart     ; $8301
+    lda     TitleMusic,y            ; $8303
+    sta     titleDurationBase       ; $8306
+    lda     TitleMusic+1,y          ; $8309
+    sta     titleNotesPtr           ; $830C
+    lda     TitleMusic+2,y          ; $830E
     sta     musicNotesPtr+1         ; $8311
-    lda     dat_6_84DD,y            ; $8313
-    sta     drumLoopOffset          ; $8316
-    lda     dat_6_84DE,y            ; $8318
-    sta     musicPhrase             ; $831B
-    lda     dat_6_84DF,y            ; $831D
-    sta     musicTempo              ; $8320
-    sta     ram_07F6                ; $8322
-    lda     dat_6_84E0,y            ; $8325
-    sta     ram_07F1                ; $8328
-    lda     dat_6_84E1,y            ; $832B
-    sta     ram_07F0                ; $832E
+    lda     TitleMusic+3,y          ; $8313
+    sta     titleTriOffset          ; $8316
+    lda     TitleMusic+4,y          ; $8318
+    sta     titleSq1Offset          ; $831B
+    lda     TitleMusic+5,y          ; $831D
+    sta     titleNoiseOffset        ; $8320
+    sta     titleNoiseLoop          ; $8322
+    lda     TitleMusic+6,y          ; $8325
+    sta     titleSq2EnvBase         ; $8328
+    lda     TitleMusic+7,y          ; $832B
+    sta     titleSq1EnvBase         ; $832E
     lda     #$00                    ; $8331
-    sta     musicSong               ; $8333
-    sta     dmcSfx                  ; $8335
+    sta     titleSq2Offset          ; $8333
+    sta     titleEchoEnvStep        ; $8335
     lda     #$01                    ; $8338
-    sta     sfxRequest              ; $833A
-    sta     sfxRequest+1            ; $833C
-    sta     sfxRequest+2            ; $833E
-    sta     sfxRequest+3            ; $8340
-    bne     loc_6_8347              ; $8342
+    sta     titleSq2Timer           ; $833A
+    sta     titleSq1Timer           ; $833C
+    sta     titleTriTimer           ; $833E
+    sta     titleNoiseTimer         ; $8340
+    bne     TitleMusic_PlayNotes    ; $8342
 
 loc_6_8344:
-    jmp     loc_6_82EF              ; $8344
+    jmp     TitleMusic_LoadPhrase   ; $8344
 
-loc_6_8347:
-    lda     dmcTimer                ; $8347
-    beq     loc_6_837F              ; $834A
-    lda     dmcRequest              ; $834C
-    bne     loc_6_837F              ; $834E
-    inc     dmcEnableTimer          ; $8350
-    lda     dmcEnableTimer          ; $8353
+; ---------------------------------------------------------------------------
+; TitleMusic_PlayNotes
+;
+; Play one frame of the title song's four channels.  Each counts its note
+; down and then reads on: a byte >= $80 sets the channel's note length
+; (TitleMusic_NoteLength) and the next byte is read; a byte of 0 ends the
+; phrase (pulse 2) or loops the part (noise, to titleNoiseLoop); others are
+; pitches (TitlePeriods; $02 is a rest).  The pulses follow
+; TitleEnvelopes and waver (vibrato); in the intro, pulse 1 repeats pulse
+; 2's note 8 frames later (titleEcho), and both swell.  The noise plays
+; TitleDrums.  The pulses give way to a title sound effect (titleSfx).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+TitleMusic_PlayNotes:
+    lda     titleEcho               ; $8347
+    beq     @loc_837F               ; $834A
+    lda     titleSfx                ; $834C
+    bne     @loc_837F               ; $834E
+    inc     titleEchoDelay          ; $8350
+    lda     titleEchoDelay          ; $8353
     cmp     #$08                    ; $8356
-    bne     loc_6_837F              ; $8358
-    lda     laughSampleTimer        ; $835A
-    jsr     sub_6_8120              ; $835D
-    beq     loc_6_837F              ; $8360
+    bne     @loc_837F               ; $8358
+    lda     titleSq2Pitch           ; $835A
+    jsr     TitleSq1_PlayNote       ; $835D
+    beq     @loc_837F               ; $8360
     lda     titleMusicPart          ; $8362
     and     #$01                    ; $8364
-    beq     loc_6_837A              ; $8366
-    lda     harmonyOffset           ; $8368
+    beq     @loc_837A               ; $8366
+    lda     titleSq2Swell           ; $8368
     cmp     #$5F                    ; $836B
-    bcs     loc_6_837A              ; $836D
-    inc     bassOffset              ; $836F
-    inc     bassOffset              ; $8372
-    lda     bassOffset              ; $8375
-    bne     loc_6_837C              ; $8378
+    bcs     @loc_837A               ; $836D
+    inc     titleEchoSwell          ; $836F
+    inc     titleEchoSwell          ; $8372
+    lda     titleEchoSwell          ; $8375
+    bne     @loc_837C               ; $8378
 
-loc_6_837A:
+@loc_837A:
     lda     #$5F                    ; $837A
 
-loc_6_837C:
-    sta     dmcSfx                  ; $837C
+@loc_837C:
+    sta     titleEchoEnvStep        ; $837C
 
-loc_6_837F:
-    dec     sfxRequest              ; $837F
-    bne     loc_6_83CF              ; $8381
+@loc_837F:
+    dec     titleSq2Timer           ; $837F
+    bne     @loc_83CF               ; $8381
     lda     #$00                    ; $8383
-    sta     dmcEnableTimer          ; $8385
-    beq     loc_6_8390              ; $8388
+    sta     titleEchoDelay          ; $8385
+    beq     @loc_8390               ; $8388
 
-loc_6_838A:
-    jsr     sub_6_814F              ; $838A
-    sta     sq1Sfx                  ; $838D
+@loop:
+    jsr     TitleMusic_NoteLength   ; $838A
+    sta     titleSq2Length          ; $838D
 
-loc_6_8390:
-    ldy     musicSong               ; $8390
-    inc     musicSong               ; $8392
-    lda     (musicNotesPtr),y       ; $8394
+@loc_8390:
+    ldy     titleSq2Offset          ; $8390
+    inc     titleSq2Offset          ; $8392
+    lda     (titleNotesPtr),y       ; $8394
     beq     loc_6_8344              ; $8396
-    bmi     loc_6_838A              ; $8398
+    bmi     @loop                   ; $8398
     cmp     #$02                    ; $839A
-    beq     loc_6_83A1              ; $839C
+    beq     @loc_83A1               ; $839C
     clc                             ; $839E
     adc     #$04                    ; $839F
 
-loc_6_83A1:
-    sta     laughSampleTimer        ; $83A1
-    ldy     dmcRequest              ; $83A4
-    bne     loc_6_83CA              ; $83A6
-    jsr     sub_6_8147              ; $83A8
-    beq     loc_6_83CA              ; $83AB
+@loc_83A1:
+    sta     titleSq2Pitch           ; $83A1
+    ldy     titleSfx                ; $83A4
+    bne     @loc_83CA               ; $83A6
+    jsr     TitleSq2_PlayNote       ; $83A8
+    beq     @loc_83CA               ; $83AB
     lda     titleMusicPart          ; $83AD
     and     #$01                    ; $83AF
-    beq     loc_6_83C5              ; $83B1
-    lda     harmonyOffset           ; $83B3
+    beq     @loc_83C5               ; $83B1
+    lda     titleSq2Swell           ; $83B3
     cmp     #$5F                    ; $83B6
-    bcs     loc_6_83C5              ; $83B8
-    inc     harmonyOffset           ; $83BA
-    inc     harmonyOffset           ; $83BD
-    lda     harmonyOffset           ; $83C0
-    bne     loc_6_83C7              ; $83C3
+    bcs     @loc_83C5               ; $83B8
+    inc     titleSq2Swell           ; $83BA
+    inc     titleSq2Swell           ; $83BD
+    lda     titleSq2Swell           ; $83C0
+    bne     @loc_83C7               ; $83C3
 
-loc_6_83C5:
+@loc_83C5:
     lda     #$5F                    ; $83C5
 
-loc_6_83C7:
-    sta     musicPlaying            ; $83C7
+@loc_83C7:
+    sta     titleSq2EnvStep         ; $83C7
 
-loc_6_83CA:
-    lda     sq1Sfx                  ; $83CA
-    sta     sfxRequest              ; $83CD
+@loc_83CA:
+    lda     titleSq2Length          ; $83CA
+    sta     titleSq2Timer           ; $83CD
 
-loc_6_83CF:
-    lda     dmcRequest              ; $83CF
-    bne     loc_6_840A              ; $83D1
+@loc_83CF:
+    lda     titleSfx                ; $83CF
+    bne     @loc_840A               ; $83D1
     lda     titleMusicPart          ; $83D3
     and     #$01                    ; $83D5
-    bne     loc_6_83DC              ; $83D7
-    jsr     sub_6_816B              ; $83D9
+    bne     @loc_83DC               ; $83D7
+    jsr     TitleSq2_Vibrato        ; $83D9
 
-loc_6_83DC:
-    lda     musicPlaying            ; $83DC
-    beq     loc_6_83E6              ; $83DF
+@loc_83DC:
+    lda     titleSq2EnvStep         ; $83DC
+    beq     @loc_83E6               ; $83DF
     lsr     a                       ; $83E1
     lsr     a                       ; $83E2
-    dec     musicPlaying            ; $83E3
+    dec     titleSq2EnvStep         ; $83E3
 
-loc_6_83E6:
+@loc_83E6:
     clc                             ; $83E6
-    adc     ram_07F1                ; $83E7
+    adc     titleSq2EnvBase         ; $83E7
     tay                             ; $83EA
-    lda     dat_6_8017,y            ; $83EB
+    lda     TitleEnvelopes,y        ; $83EB
     tax                             ; $83EE
     ldy     #$7F                    ; $83EF
-    jsr     sub_6_8116              ; $83F1
-    lda     dmcTimer                ; $83F4
-    beq     loc_6_840A              ; $83F7
-    lda     dmcRequest              ; $83F9
-    bne     loc_6_840A              ; $83FB
-    lda     dmcSfx                  ; $83FD
-    beq     loc_6_8407              ; $8400
+    jsr     TitleSq2_SetEnvelope    ; $83F1
+    lda     titleEcho               ; $83F4
+    beq     @loc_840A               ; $83F7
+    lda     titleSfx                ; $83F9
+    bne     @loc_840A               ; $83FB
+    lda     titleEchoEnvStep        ; $83FD
+    beq     @loc_8407               ; $8400
     lsr     a                       ; $8402
     lsr     a                       ; $8403
-    dec     dmcSfx                  ; $8404
+    dec     titleEchoEnvStep        ; $8404
 
-loc_6_8407:
-    jmp     loc_6_844D              ; $8407
+@loc_8407:
+    jmp     @loc_844D               ; $8407
 
-loc_6_840A:
-    lda     musicPhrase             ; $840A
-    beq     loc_6_845B              ; $840C
-    dec     sfxRequest+1            ; $840E
-    bne     loc_6_843C              ; $8410
-    beq     loc_6_841A              ; $8412
+@loc_840A:
+    lda     titleSq1Offset          ; $840A
+    beq     @loc_845B               ; $840C
+    dec     titleSq1Timer           ; $840E
+    bne     @loc_843C               ; $8410
+    beq     @loc_841A               ; $8412
 
-loc_6_8414:
-    jsr     sub_6_814F              ; $8414
-    sta     sq2Sfx                  ; $8417
+@loop2:
+    jsr     TitleMusic_NoteLength   ; $8414
+    sta     titleSq1Length          ; $8417
 
-loc_6_841A:
-    ldy     musicPhrase             ; $841A
-    inc     musicPhrase             ; $841C
-    lda     (musicNotesPtr),y       ; $841E
-    bmi     loc_6_8414              ; $8420
+@loc_841A:
+    ldy     titleSq1Offset          ; $841A
+    inc     titleSq1Offset          ; $841C
+    lda     (titleNotesPtr),y       ; $841E
+    bmi     @loop2                  ; $8420
     cmp     #$02                    ; $8422
-    beq     loc_6_8429              ; $8424
+    beq     @loc_8429               ; $8424
     clc                             ; $8426
     adc     #$04                    ; $8427
 
-loc_6_8429:
-    ldy     dmcRequest              ; $8429
-    bne     loc_6_8437              ; $842B
-    jsr     sub_6_8120              ; $842D
-    beq     loc_6_8437              ; $8430
+@loc_8429:
+    ldy     titleSfx                ; $8429
+    bne     @loc_8437               ; $842B
+    jsr     TitleSq1_PlayNote       ; $842D
+    beq     @loc_8437               ; $8430
     lda     #$5F                    ; $8432
-    sta     sq1SfxTimer             ; $8434
+    sta     titleSq1EnvStep         ; $8434
 
-loc_6_8437:
-    lda     sq2Sfx                  ; $8437
-    sta     sfxRequest+1            ; $843A
+@loc_8437:
+    lda     titleSq1Length          ; $8437
+    sta     titleSq1Timer           ; $843A
 
-loc_6_843C:
-    lda     dmcRequest              ; $843C
-    bne     loc_6_845B              ; $843E
-    jsr     sub_6_815E              ; $8440
-    lda     sq1SfxTimer             ; $8443
-    beq     loc_6_844D              ; $8446
+@loc_843C:
+    lda     titleSfx                ; $843C
+    bne     @loc_845B               ; $843E
+    jsr     TitleSq1_Vibrato        ; $8440
+    lda     titleSq1EnvStep         ; $8443
+    beq     @loc_844D               ; $8446
     lsr     a                       ; $8448
     lsr     a                       ; $8449
-    dec     sq1SfxTimer             ; $844A
+    dec     titleSq1EnvStep         ; $844A
 
-loc_6_844D:
+@loc_844D:
     clc                             ; $844D
-    adc     ram_07F0                ; $844E
+    adc     titleSq1EnvBase         ; $844E
     tay                             ; $8451
-    lda     dat_6_8017,y            ; $8452
+    lda     TitleEnvelopes,y        ; $8452
     tax                             ; $8455
     ldy     #$7F                    ; $8456
-    jsr     sub_6_810F              ; $8458
+    jsr     TitleSq1_SetEnvelope    ; $8458
 
-loc_6_845B:
-    ldy     drumLoopOffset          ; $845B
-    beq     loc_6_8496              ; $845D
-    dec     sfxRequest+2            ; $845F
-    beq     loc_6_846B              ; $8461
-    bne     loc_6_8490              ; $8463
+@loc_845B:
+    ldy     titleTriOffset          ; $845B
+    beq     @loc_8496               ; $845D
+    dec     titleTriTimer           ; $845F
+    beq     @loc_846B               ; $8461
+    bne     @loc_8490               ; $8463
 
-loc_6_8465:
-    jsr     sub_6_814F              ; $8465
-    sta     noiseSfx                ; $8468
+@loop3:
+    jsr     TitleMusic_NoteLength   ; $8465
+    sta     titleTriLength          ; $8468
 
-loc_6_846B:
-    ldy     drumLoopOffset          ; $846B
-    inc     drumLoopOffset          ; $846D
-    lda     (musicNotesPtr),y       ; $846F
-    bmi     loc_6_8465              ; $8471
+@loc_846B:
+    ldy     titleTriOffset          ; $846B
+    inc     titleTriOffset          ; $846D
+    lda     (titleNotesPtr),y       ; $846F
+    bmi     @loop3                  ; $8471
     cmp     #$02                    ; $8473
-    beq     loc_6_847A              ; $8475
+    beq     @loc_847A               ; $8475
     clc                             ; $8477
     adc     #$04                    ; $8478
 
-loc_6_847A:
-    jsr     sub_6_814B              ; $847A
-    bne     loc_6_8486              ; $847D
+@loc_847A:
+    jsr     TitleTri_PlayNote       ; $847A
+    bne     @loc_8486               ; $847D
     lda     #$00                    ; $847F
     sta     TRI_LINEAR              ; $8481
-    beq     loc_6_848B              ; $8484
+    beq     @loc_848B               ; $8484
 
-loc_6_8486:
+@loc_8486:
     lda     #$81                    ; $8486
     sta     TRI_LINEAR              ; $8488
 
-loc_6_848B:
-    lda     noiseSfx                ; $848B
-    sta     sfxRequest+2            ; $848E
+@loc_848B:
+    lda     titleTriLength          ; $848B
+    sta     titleTriTimer           ; $848E
 
-loc_6_8490:
-    lda     sfxRequest+2            ; $8490
+@loc_8490:
+    lda     titleTriTimer           ; $8490
     cmp     #$04                    ; $8492
-    bne     loc_6_849B              ; $8494
+    bne     @loc_849B               ; $8494
 
-loc_6_8496:
+@loc_8496:
     lda     #$00                    ; $8496
     sta     TRI_LINEAR              ; $8498
 
-loc_6_849B:
-    lda     musicTempo              ; $849B
-    beq     dat_6_84D9              ; $849D
-    dec     sfxRequest+3            ; $849F
-    beq     loc_6_84AB              ; $84A1
-    bne     dat_6_84D9              ; $84A3
+@loc_849B:
+    lda     titleNoiseOffset        ; $849B
+    beq     TitleMusic_Done              ; $849D
+    dec     titleNoiseTimer         ; $849F
+    beq     @loc_84AB               ; $84A1
+    bne     TitleMusic_Done              ; $84A3
 
-loc_6_84A5:
-    jsr     sub_6_814F              ; $84A5
-    sta     ram_07FC                ; $84A8
+@loop4:
+    jsr     TitleMusic_NoteLength   ; $84A5
+    sta     titleNoiseLength        ; $84A8
 
-loc_6_84AB:
-    ldy     musicTempo              ; $84AB
-    inc     musicTempo              ; $84AD
-    lda     (musicNotesPtr),y       ; $84AF
-    bmi     loc_6_84A5              ; $84B1
-    bne     loc_6_84BC              ; $84B3
-    lda     ram_07F6                ; $84B5
-    sta     musicTempo              ; $84B8
-    bne     loc_6_84AB              ; $84BA
+@loc_84AB:
+    ldy     titleNoiseOffset        ; $84AB
+    inc     titleNoiseOffset        ; $84AD
+    lda     (titleNotesPtr),y       ; $84AF
+    bmi     @loop4                  ; $84B1
+    bne     @loc_84BC               ; $84B3
+    lda     titleNoiseLoop          ; $84B5
+    sta     titleNoiseOffset        ; $84B8
+    bne     @loc_84AB               ; $84BA
 
-loc_6_84BC:
+@loc_84BC:
     ldy     melodyOffset            ; $84BC
-    bne     loc_6_84D4              ; $84BF
+    bne     @loc_84D4               ; $84BF
     tay                             ; $84C1
-    lda     dat_6_805D,y            ; $84C2
+    lda     TitleDrums,y            ; $84C2
     sta     NOISE_VOL               ; $84C5
-    lda     dat_6_805E,y            ; $84C8
+    lda     TitleDrums+1,y          ; $84C8
     sta     NOISE_LO                ; $84CB
-    lda     dat_6_805F,y            ; $84CE
+    lda     TitleDrums+2,y          ; $84CE
     sta     NOISE_HI                ; $84D1
 
-loc_6_84D4:
-    lda     ram_07FC                ; $84D4
-    sta     sfxRequest+3            ; $84D7
+@loc_84D4:
+    lda     titleNoiseLength        ; $84D4
+    sta     titleNoiseTimer         ; $84D7
 
-dat_6_84D9:
+TitleMusic_Done:
     rts                             ; $84D9
 
-dat_6_84DA:
-    .byte   $08                                                             ; $84DA
-; (unreferenced: $84DB-$84E0, 6 bytes)
+TitleMusic:
+    .byte   $08, $11, $14, $16, $19, $1E, $1E, $1E                          ; $84DA
+    .byte   $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F                          ; $84E2
+    .byte   $00, $27, $2F, $00, $37, $00, $3F, $3F                          ; $84EA
+    .byte   $00, $47, $4F, $47, $57, $00, $00, $00                          ; $84F2
+    .byte   $39, $85, $00, $00, $00, $30, $30, $00                          ; $84FA
+    .byte   $3F, $85, $2B, $15, $00, $00, $00, $00                          ; $8502
+    .byte   $7E, $85, $30, $17, $00, $00, $00, $00                          ; $850A
+    .byte   $C2, $85, $31, $19, $56, $00, $00, $00                          ; $8512
+    .byte   $3D, $86, $3A, $1A, $5F, $00, $00, $00                          ; $851A
+    .byte   $C4, $86, $31, $10, $42, $00, $00, $00                          ; $8522
+    .byte   $09, $87, $30, $0F, $41, $00, $00, $00                          ; $852A
+    .byte   $4D, $87, $2B, $0A, $3C, $00, $00                               ; $8532
 
-dat_6_84DB:
-    .byte   $11                                                             ; $84DB
+TitleNotes:
+    .byte   $82, $60, $5E, $56, $4C, $00, $85, $4C, $82, $02, $46, $02, $4C, $85, $48, $02; $8539
+    .byte   $85, $44, $82, $02, $3E, $02, $44, $85, $42, $02, $00, $85, $46, $82, $02, $83; $8549
+    .byte   $3E, $82, $46, $85, $42, $02, $85, $3E, $82, $02, $83, $36, $82, $3E, $85, $3C; $8559
+    .byte   $02, $8A, $3E, $83, $34, $82, $3E, $86, $3A, $83, $34, $84, $36, $3E, $83, $44; $8569
+    .byte   $84, $42, $3C, $83, $34, $85, $4C, $82, $02, $56, $02, $52, $85, $52, $02, $85; $8579
+    .byte   $4E, $82, $02, $44, $02, $4E, $84, $4C, $42, $83, $3C, $00, $85, $46, $82, $02; $8589
+    .byte   $83, $46, $82, $46, $85, $42, $02, $85, $3E, $82, $02, $83, $3E, $82, $3E, $84; $8599
+    .byte   $3C, $84, $3C, $83, $34, $8A, $3E, $83, $34, $82, $3E, $86, $3A, $83, $34, $84; $85A9
+    .byte   $36, $3E, $83, $44, $84, $42, $3C, $83, $34, $84, $64, $83, $64, $84, $64, $84; $85B9
+    .byte   $66, $83, $66, $84, $66, $84, $68, $83, $68, $84, $68, $84, $6A, $85, $6C, $82; $85C9
+    .byte   $02, $00, $84, $56, $83, $56, $84, $56, $84, $58, $83, $58, $84, $58, $84, $5A; $85D9
+    .byte   $83, $5A, $84, $5A, $84, $5C, $85, $60, $82, $02, $82, $3E, $83, $02, $83, $3E; $85E9
+    .byte   $3E, $82, $3E, $82, $3E, $83, $02, $83, $3E, $3E, $82, $3E, $82, $3E, $83, $02; $85F9
+    .byte   $83, $3E, $3E, $82, $3E, $82, $3E, $83, $02, $83, $34, $82, $34, $3C, $42, $83; $8609
+    .byte   $0A, $82, $0A, $83, $0A, $0A, $82, $0A, $83, $0A, $82, $0A, $83, $0A, $0A, $82; $8619
+    .byte   $0A, $83, $0A, $82, $0A, $83, $0A, $0A, $82, $0A, $83, $0A, $82, $0A, $83, $0A; $8629
+    .byte   $82, $02, $02, $02, $83, $02, $48, $82, $46, $83, $3E, $34, $84, $2E, $83, $30; $8639
+    .byte   $34, $3A, $38, $34, $30, $82, $34, $83, $30, $85, $2E, $82, $02, $00, $83, $02; $8649
+    .byte   $83, $38, $82, $34, $83, $2E, $83, $2E, $84, $26, $83, $2A, $83, $2E, $83, $2A; $8659
+    .byte   $83, $2A, $83, $2A, $83, $22, $82, $2E, $83, $2A, $85, $26, $82, $02, $83, $3E; $8669
+    .byte   $82, $3E, $83, $3E, $34, $82, $3E, $83, $3E, $82, $34, $83, $3A, $38, $82, $34; $8679
+    .byte   $83, $3A, $82, $3A, $83, $3A, $42, $82, $48, $83, $3E, $82, $34, $83, $3E, $82; $8689
+    .byte   $34, $3E, $34, $83, $0A, $82, $0A, $83, $0A, $82, $0A, $0A, $0A, $83, $0A, $82; $8699
+    .byte   $0A, $83, $0A, $82, $0A, $0A, $0A, $83, $0A, $82, $0A, $83, $0A, $82, $0A, $0A; $86A9
+    .byte   $0A, $83, $0A, $82, $0A, $83, $0A, $82, $0A, $0A, $0A, $83, $02, $82, $36, $3A; $86B9
+    .byte   $3E, $83, $44, $42, $3C, $4C, $82, $3C, $83, $42, $00, $80, $2C, $26, $36, $26; $86C9
+    .byte   $2C, $26, $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2A, $24, $34, $24; $86D9
+    .byte   $2A, $24, $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $82, $36, $36, $36; $86E9
+    .byte   $36, $3E, $3E, $44, $44, $34, $34, $3C, $3C, $42, $42, $3C, $3C, $82, $02, $00; $86F9
+    .byte   $83, $02, $82, $36, $3A, $3E, $83, $44, $48, $44, $85, $42, $82, $02, $00, $80; $8709
+    .byte   $2C, $26, $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26; $8719
+    .byte   $2A, $24, $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24; $8729
+    .byte   $82, $36, $36, $36, $36, $3E, $3E, $44, $44, $34, $34, $3C, $3C, $42, $42, $3C; $8739
+    .byte   $3C, $82, $02, $00, $84, $48, $83, $44, $84, $48, $85, $4C, $02, $00, $80, $2C; $8749
+    .byte   $26, $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2A; $8759
+    .byte   $24, $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $82; $8769
+    .byte   $36, $36, $36, $36, $3E, $3E, $44, $44, $34, $34, $3C, $3C, $42, $42, $3C, $3C; $8779
+    .byte   $82, $02, $00                                                   ; $8789
 
-dat_6_84DC:
-    .byte   $14                                                             ; $84DC
-
-dat_6_84DD:
-    .byte   $16                                                             ; $84DD
-
-dat_6_84DE:
-    .byte   $19                                                             ; $84DE
-
-dat_6_84DF:
-    .byte   $1E                                                             ; $84DF
-
-dat_6_84E0:
-    .byte   $1E                                                             ; $84E0
-
-dat_6_84E1:
-    .byte   $1E, $1F                                                        ; $84E1
-; (unreferenced: $84E3-$84F7, 21 bytes)
-    .byte   $1F, $1F, $1F, $1F, $1F, $1F, $1F, $00, $27, $2F, $00, $37, $00, $3F, $3F, $00; $84E3
-    .byte   $47, $4F, $47, $57, $00                                         ; $84F3
-    .byte   $00, $00, $39, $85, $00, $00, $00, $30, $30                     ; $84F8
-; (unreferenced: $8501-$8538, 56 bytes)
-    .byte   $00, $3F, $85, $2B, $15, $00, $00, $00, $00, $7E, $85, $30, $17, $00, $00, $00; $8501
-    .byte   $00, $C2, $85, $31, $19, $56, $00, $00, $00, $3D, $86, $3A, $1A, $5F, $00, $00; $8511
-    .byte   $00, $C4, $86, $31, $10, $42, $00, $00, $00, $09, $87, $30, $0F, $41, $00, $00; $8521
-    .byte   $00, $4D, $87, $2B, $0A, $3C, $00, $00                          ; $8531
-    .byte   $82, $60                                                        ; $8539
-; (unreferenced: $853B-$8FFF, 2757 bytes)
-    .byte   $5E, $56, $4C, $00, $85, $4C, $82, $02, $46, $02, $4C, $85, $48, $02, $85, $44; $853B
-    .byte   $82, $02, $3E, $02, $44, $85, $42, $02, $00, $85, $46, $82, $02, $83, $3E, $82; $854B
-    .byte   $46, $85, $42, $02, $85, $3E, $82, $02, $83, $36, $82, $3E, $85, $3C, $02, $8A; $855B
-    .byte   $3E, $83, $34, $82, $3E, $86, $3A, $83, $34, $84, $36, $3E, $83, $44, $84, $42; $856B
-    .byte   $3C, $83, $34, $85, $4C, $82, $02, $56, $02, $52, $85, $52, $02, $85, $4E, $82; $857B
-    .byte   $02, $44, $02, $4E, $84, $4C, $42, $83, $3C, $00, $85, $46, $82, $02, $83, $46; $858B
-    .byte   $82, $46, $85, $42, $02, $85, $3E, $82, $02, $83, $3E, $82, $3E, $84, $3C, $84; $859B
-    .byte   $3C, $83, $34, $8A, $3E, $83, $34, $82, $3E, $86, $3A, $83, $34, $84, $36, $3E; $85AB
-    .byte   $83, $44, $84, $42, $3C, $83, $34, $84, $64, $83, $64, $84, $64, $84, $66, $83; $85BB
-    .byte   $66, $84, $66, $84, $68, $83, $68, $84, $68, $84, $6A, $85, $6C, $82, $02, $00; $85CB
-    .byte   $84, $56, $83, $56, $84, $56, $84, $58, $83, $58, $84, $58, $84, $5A, $83, $5A; $85DB
-    .byte   $84, $5A, $84, $5C, $85, $60, $82, $02, $82, $3E, $83, $02, $83, $3E, $3E, $82; $85EB
-    .byte   $3E, $82, $3E, $83, $02, $83, $3E, $3E, $82, $3E, $82, $3E, $83, $02, $83, $3E; $85FB
-    .byte   $3E, $82, $3E, $82, $3E, $83, $02, $83, $34, $82, $34, $3C, $42, $83, $0A, $82; $860B
-    .byte   $0A, $83, $0A, $0A, $82, $0A, $83, $0A, $82, $0A, $83, $0A, $0A, $82, $0A, $83; $861B
-    .byte   $0A, $82, $0A, $83, $0A, $0A, $82, $0A, $83, $0A, $82, $0A, $83, $0A, $82, $02; $862B
-    .byte   $02, $02, $83, $02, $48, $82, $46, $83, $3E, $34, $84, $2E, $83, $30, $34, $3A; $863B
-    .byte   $38, $34, $30, $82, $34, $83, $30, $85, $2E, $82, $02, $00, $83, $02, $83, $38; $864B
-    .byte   $82, $34, $83, $2E, $83, $2E, $84, $26, $83, $2A, $83, $2E, $83, $2A, $83, $2A; $865B
-    .byte   $83, $2A, $83, $22, $82, $2E, $83, $2A, $85, $26, $82, $02, $83, $3E, $82, $3E; $866B
-    .byte   $83, $3E, $34, $82, $3E, $83, $3E, $82, $34, $83, $3A, $38, $82, $34, $83, $3A; $867B
-    .byte   $82, $3A, $83, $3A, $42, $82, $48, $83, $3E, $82, $34, $83, $3E, $82, $34, $3E; $868B
-    .byte   $34, $83, $0A, $82, $0A, $83, $0A, $82, $0A, $0A, $0A, $83, $0A, $82, $0A, $83; $869B
-    .byte   $0A, $82, $0A, $0A, $0A, $83, $0A, $82, $0A, $83, $0A, $82, $0A, $0A, $0A, $83; $86AB
-    .byte   $0A, $82, $0A, $83, $0A, $82, $0A, $0A, $0A, $83, $02, $82, $36, $3A, $3E, $83; $86BB
-    .byte   $44, $42, $3C, $4C, $82, $3C, $83, $42, $00, $80, $2C, $26, $36, $26, $2C, $26; $86CB
-    .byte   $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2A, $24, $34, $24, $2A, $24; $86DB
-    .byte   $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $82, $36, $36, $36, $36, $3E; $86EB
-    .byte   $3E, $44, $44, $34, $34, $3C, $3C, $42, $42, $3C, $3C, $82, $02, $00, $83, $02; $86FB
-    .byte   $82, $36, $3A, $3E, $83, $44, $48, $44, $85, $42, $82, $02, $00, $80, $2C, $26; $870B
-    .byte   $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2A, $24; $871B
-    .byte   $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $82, $36; $872B
-    .byte   $36, $36, $36, $3E, $3E, $44, $44, $34, $34, $3C, $3C, $42, $42, $3C, $3C, $82; $873B
-    .byte   $02, $00, $84, $48, $83, $44, $84, $48, $85, $4C, $02, $00, $80, $2C, $26, $36; $874B
-    .byte   $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2C, $26, $36, $26, $2A, $24, $34; $875B
-    .byte   $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $2A, $24, $34, $24, $82, $36, $36; $876B
-    .byte   $36, $36, $3E, $3E, $44, $44, $34, $34, $3C, $3C, $42, $42, $3C, $3C, $82, $02; $877B
-    .byte   $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $878B
+dat_6_878C:
+    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $878C
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $879B
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $87AB
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $87BB
@@ -896,14 +1023,14 @@ dat_6_84E1:
 
 Sound_Engine:
     lda     soundMute               ; $9000
-    beq     loc_6_900B              ; $9002
+    beq     @loc_900B               ; $9002
 ; (code below not executed in the test movies)
     lda     #$00                    ; $9004
     sta     SND_CHN                 ; $9006
-    beq     loc_6_9030              ; $9009
+    beq     @done                   ; $9009
 ; (end of code not executed in the test movies)
 
-loc_6_900B:
+@loc_900B:
     lda     #$FF                    ; $900B
     sta     APU_FRAME               ; $900D
     jsr     Sfx_UpdateDmc           ; $9010
@@ -920,7 +1047,7 @@ loc_6_900B:
     sta     musicRequest            ; $902C
     sta     dmcRequest              ; $902E
 
-loc_6_9030:
+@done:
     rts                             ; $9030
 
 ; ---------------------------------------------------------------------------
@@ -981,24 +1108,24 @@ Sq1_PlayNote:
 Sound_PlayNote:
     tay                             ; $9044
     lda     NotePeriods+1,y         ; $9045
-    beq     loc_6_9063              ; $9048
+    beq     @done                   ; $9048
     sta     SQ1_LO,x                ; $904A
     cpx     #$00                    ; $904D
-    bne     loc_6_9055              ; $904F
+    bne     @loc_9055               ; $904F
     sta     sq1TimerLo              ; $9051
-    bne     loc_6_905B              ; $9053
+    bne     @loc_905B               ; $9053
 
-loc_6_9055:
+@loc_9055:
     cpx     #$04                    ; $9055
-    bne     loc_6_905B              ; $9057
+    bne     @loc_905B               ; $9057
     sta     sq2TimerLo              ; $9059
 
-loc_6_905B:
+@loc_905B:
     lda     NotePeriods,y           ; $905B
     ora     #$08                    ; $905E
     sta     SQ1_HI,x                ; $9060
 
-loc_6_9063:
+@done:
     rts                             ; $9063
 
 ; ---------------------------------------------------------------------------
@@ -1121,18 +1248,18 @@ Sound_Vibrato:
     lsr     a                       ; $90A0
     lsr     a                       ; $90A1
     lsr     a                       ; $90A2
-    bcs     loc_6_90AC              ; $90A3
+    bcs     @loc_90AC               ; $90A3
     lda     #$FE                    ; $90A5
     clc                             ; $90A7
     adc     titleMusicPart          ; $90A8
-    bne     loc_6_90B1              ; $90AA
+    bne     @loc_90B1               ; $90AA
 
-loc_6_90AC:
+@loc_90AC:
     lda     #$02                    ; $90AC
     clc                             ; $90AE
     adc     titleMusicPart          ; $90AF
 
-loc_6_90B1:
+@loc_90B1:
     sta     SQ1_LO,x                ; $90B1
     rts                             ; $90B4
 
@@ -1166,18 +1293,18 @@ sub_6_90CD:
     lsr     a                       ; $90CE
     lsr     a                       ; $90CF
     sta     ram_07DE                ; $90D0
-    bne     loc_6_90D8              ; $90D3
+    bne     @loc_90D8               ; $90D3
     inc     ram_07DE                ; $90D5
 
-loc_6_90D8:
+@loc_90D8:
     lda     ram_07DC                ; $90D8
-    beq     loc_6_90E3              ; $90DB
+    beq     @loc_90E3               ; $90DB
     tya                             ; $90DD
     clc                             ; $90DE
     adc     ram_07DE                ; $90DF
     rts                             ; $90E2
 
-loc_6_90E3:
+@loc_90E3:
     tya                             ; $90E3
     sec                             ; $90E4
     sbc     ram_07DE                ; $90E5
@@ -1253,43 +1380,43 @@ Sfx_UpdateDmc:
     ldy     dmcRequest              ; $920B
     lda     dmcSfx                  ; $920D
     lsr     dmcRequest              ; $9210
-    bcs     loc_6_9221              ; $9212
+    bcs     @loc_9221               ; $9212
     lsr     dmcRequest              ; $9214
-    bcs     loc_6_9230              ; $9216
+    bcs     @loc_9230               ; $9216
     lsr     a                       ; $9218
-    bcs     loc_6_9264              ; $9219
+    bcs     @loc_9264               ; $9219
     lsr     a                       ; $921B
-    bcs     loc_6_9264              ; $921C
-    jmp     loc_6_9290              ; $921E
+    bcs     @loc_9264               ; $921C
+    jmp     @loc_9290               ; $921E
 
-loc_6_9221:
+@loc_9221:
     ldx     #$C0                    ; $9221
     lda     #$04                    ; $9223
     sty     dmcSfx                  ; $9225
     stx     dmcTimer                ; $9228
     sta     dmcEnableTimer          ; $922B
-    bne     loc_6_924B              ; $922E
+    bne     @loc_924B               ; $922E
 ; (code below not executed in the test movies)
 
-loc_6_9230:
+@loc_9230:
     sty     dmcSfx                  ; $9230
     ldx     #$C0                    ; $9233
     stx     dmcTimer                ; $9235
     ldx     #$03                    ; $9238
     stx     laughSample             ; $923A
     lda     #$08                    ; $923D
-    bne     loc_6_9243              ; $923F
+    bne     @loc_9243               ; $923F
 
-loc_6_9241:
+@loop:
     lda     #$05                    ; $9241
 
-loc_6_9243:
+@loc_9243:
     sta     dmcEnableTimer          ; $9243
     lda     #$18                    ; $9246
     sta     laughSampleTimer        ; $9248
 ; (end of code not executed in the test movies)
 
-loc_6_924B:
+@loc_924B:
     tya                             ; $924B
     asl     a                       ; $924C
     tay                             ; $924D
@@ -1302,38 +1429,38 @@ loc_6_924B:
     lda     #$0F                    ; $925F
     sta     SND_CHN                 ; $9261
 
-loc_6_9264:
+@loc_9264:
     dec     dmcTimer                ; $9264
-    beq     loc_6_928B              ; $9267
+    beq     @loc_928B               ; $9267
     lda     dmcSfx                  ; $9269
     cmp     #$01                    ; $926C
-    beq     loc_6_927F              ; $926E
+    beq     @loc_927F               ; $926E
 ; (code below not executed in the test movies)
     dec     laughSampleTimer        ; $9270
-    bne     loc_6_927F              ; $9273
+    bne     @loc_927F               ; $9273
     inc     laughSample             ; $9275
     ldy     laughSample             ; $9278
     cpy     #$08                    ; $927B
-    bcc     loc_6_9241              ; $927D
+    bcc     @loop                   ; $927D
 ; (end of code not executed in the test movies)
 
-loc_6_927F:
+@loc_927F:
     lda     dmcEnableTimer          ; $927F
-    beq     loc_6_9290              ; $9282
+    beq     @loc_9290               ; $9282
     dec     dmcEnableTimer          ; $9284
-    beq     loc_6_9290              ; $9287
-    bne     loc_6_9296              ; $9289
+    beq     @loc_9290               ; $9287
+    bne     @loc_9296               ; $9289
 
-loc_6_928B:
+@loc_928B:
     lda     #$00                    ; $928B
     sta     dmcSfx                  ; $928D
 
-loc_6_9290:
+@loc_9290:
     lda     #$0F                    ; $9290
     sta     SND_CHN                 ; $9292
     rts                             ; $9295
 
-loc_6_9296:
+@loc_9296:
     lda     #$1F                    ; $9296
     sta     SND_CHN                 ; $9298
     rts                             ; $929B
@@ -1373,11 +1500,11 @@ loc_6_92BE:
 loc_6_92CF:
     lda     sq1SfxTimer             ; $92CF
     cmp     #$0C                    ; $92D2
-    bne     loc_6_92DB              ; $92D4
+    bne     @loc_92DB               ; $92D4
     lda     #$4E                    ; $92D6
     jsr     Sq1_PlayNote            ; $92D8
 
-loc_6_92DB:
+@loc_92DB:
     jmp     loc_6_939E              ; $92DB
 
 loc_6_92DE:
@@ -1414,85 +1541,85 @@ Sfx_UpdateSq1:
 
 loc_6_92FD:
     ldx     sharedSfxOnSq1          ; $92FD
-    beq     loc_6_9308              ; $9300
+    beq     @loc_9308               ; $9300
     ldx     #$00                    ; $9302
     stx     sq1Sfx                  ; $9304
     rts                             ; $9307
 
-loc_6_9308:
+@loc_9308:
     lsr     a                       ; $9308
     lsr     a                       ; $9309
     bcs     loc_6_92CF              ; $930A
     lsr     sfxRequest+3            ; $930C
     bcs     loc_6_92BE              ; $930E
     lsr     sfxRequest+3            ; $9310
-    bcs     loc_6_9334              ; $9312
+    bcs     @loc_9334               ; $9312
     lsr     a                       ; $9314
-    bcs     loc_6_934C              ; $9315
+    bcs     @loc_934C               ; $9315
     lsr     sfxRequest+3            ; $9317
-    bcs     loc_6_9334              ; $9319
+    bcs     @loc_9334               ; $9319
     lsr     a                       ; $931B
-    bcs     loc_6_934C              ; $931C
+    bcs     @loc_934C               ; $931C
     lsr     a                       ; $931E
     bcs     loc_6_92E6              ; $931F
     lsr     sfxRequest+3            ; $9321
     bcs     loc_6_92DE              ; $9323
     lsr     a                       ; $9325
-    bcs     loc_6_9389              ; $9326
+    bcs     @loc_9389               ; $9326
     lsr     sfxRequest+3            ; $9328
-    bcs     loc_6_937A              ; $932A
+    bcs     @loc_937A               ; $932A
     lsr     a                       ; $932C
     bcs     loc_6_939E              ; $932D
     lsr     sfxRequest+3            ; $932F
     bcs     loc_6_93AE              ; $9331
     rts                             ; $9333
 
-loc_6_9334:
+@loc_9334:
     sty     sq1Sfx                  ; $9334
     lda     sq1Sfx                  ; $9337
     and     #$08                    ; $933A
-    bne     loc_6_9342              ; $933C
+    bne     @loc_9342               ; $933C
     lda     #$14                    ; $933E
-    bne     loc_6_9344              ; $9340
+    bne     @loc_9344               ; $9340
 
-loc_6_9342:
+@loc_9342:
     lda     #$3B                    ; $9342
 
-loc_6_9344:
+@loc_9344:
     sta     sq1SfxTimer             ; $9344
     lda     #$8A                    ; $9347
     sta     SQ1_SWEEP               ; $9349
 
-loc_6_934C:
+@loc_934C:
     lda     sq1SfxTimer             ; $934C
     lsr     a                       ; $934F
     lsr     a                       ; $9350
     tay                             ; $9351
     lda     sq1Sfx                  ; $9352
     and     #$08                    ; $9355
-    bne     loc_6_9364              ; $9357
+    bne     @loc_9364               ; $9357
     lda     dat_6_90F8,y            ; $9359
     sta     SQ1_VOL                 ; $935C
     lda     dat_6_90FE,y            ; $935F
-    bne     loc_6_9374              ; $9362
+    bne     @loc_9374               ; $9362
 
-loc_6_9364:
+@loc_9364:
     lda     dat_6_9104,y            ; $9364
     sta     SQ1_VOL                 ; $9367
     tya                             ; $936A
     lsr     a                       ; $936B
-    bcc     loc_6_9372              ; $936C
+    bcc     @loc_9372               ; $936C
     lda     #$54                    ; $936E
-    bne     loc_6_9374              ; $9370
+    bne     @loc_9374               ; $9370
 
-loc_6_9372:
+@loc_9372:
     lda     #$62                    ; $9372
 
-loc_6_9374:
+@loc_9374:
     jsr     Sq1_PlayNote            ; $9374
     jmp     loc_6_939E              ; $9377
 
-loc_6_937A:
+@loc_937A:
     lda     #$0C                    ; $937A
     sta     sq1SfxTimer             ; $937C
     sty     sq1Sfx                  ; $937F
@@ -1500,17 +1627,17 @@ loc_6_937A:
     ldy     #$7F                    ; $9384
     jsr     Sq1_SetEnvelope         ; $9386
 
-loc_6_9389:
+@loc_9389:
     lda     sq1SfxTimer             ; $9389
     cmp     #$06                    ; $938C
-    bcc     loc_6_9394              ; $938E
+    bcc     @loc_9394               ; $938E
     ldx     #$FF                    ; $9390
-    bne     loc_6_9396              ; $9392
+    bne     @loc_9396               ; $9392
 
-loc_6_9394:
+@loc_9394:
     ldx     #$00                    ; $9394
 
-loc_6_9396:
+@loc_9396:
     lda     #$0D                    ; $9396
 
 loc_6_9398:
@@ -1519,13 +1646,13 @@ loc_6_9398:
 
 loc_6_939E:
     dec     sq1SfxTimer             ; $939E
-    bne     loc_6_93AD              ; $93A1
+    bne     @done                   ; $93A1
     lda     #$00                    ; $93A3
     sta     sq1Sfx                  ; $93A5
     lda     #$90                    ; $93A8
     sta     SQ1_VOL                 ; $93AA
 
-loc_6_93AD:
+@done:
     rts                             ; $93AD
 
 loc_6_93AE:
@@ -1576,11 +1703,11 @@ loc_6_93E5:
 loc_6_93F9:
     lda     sq2SfxTimer             ; $93F9
     cmp     #$01                    ; $93FC
-    bne     loc_6_9405              ; $93FE
+    bne     @loc_9405               ; $93FE
     lda     #$22                    ; $9400
     jsr     Sq2_PlayNote            ; $9402
 
-loc_6_9405:
+@loc_9405:
     jmp     loc_6_9512              ; $9405
 
 ; ---------------------------------------------------------------------------
@@ -1603,22 +1730,22 @@ Sfx_UpdateSq2:
     lsr     a                       ; $9411
     bcs     loc_6_93F9              ; $9412
     lsr     sfxRequest+2            ; $9414
-    bcs     loc_6_942B              ; $9416
+    bcs     @loc_942B               ; $9416
     lsr     a                       ; $9418
-    bcs     loc_6_9447              ; $9419
+    bcs     @loc_9447               ; $9419
     lsr     sfxRequest+2            ; $941B
-    bcs     loc_6_9425              ; $941D
+    bcs     @loc_9425               ; $941D
     lsr     a                       ; $941F
-    bcs     loc_6_9428              ; $9420
+    bcs     @loc_9428               ; $9420
     jmp     loc_6_9515              ; $9422
 
-loc_6_9425:
-    jmp     loc_6_9490              ; $9425
+@loc_9425:
+    jmp     @loc_9490               ; $9425
 
-loc_6_9428:
-    jmp     loc_6_94AE              ; $9428
+@loc_9428:
+    jmp     @loc_94AE               ; $9428
 
-loc_6_942B:
+@loc_942B:
     jsr     Sfx_TakeOverMusic       ; $942B
     lda     #$50                    ; $942E
     ldx     #$8F                    ; $9430
@@ -1631,14 +1758,14 @@ loc_6_942B:
     lda     #$00                    ; $9442
     sta     ram_07DC                ; $9444
 
-loc_6_9447:
+@loc_9447:
     lda     sq2SfxTimer             ; $9447
     cmp     #$28                    ; $944A
-    bne     loc_6_9453              ; $944C
+    bne     @loc_9453               ; $944C
     lda     #$01                    ; $944E
     sta     ram_07DC                ; $9450
 
-loc_6_9453:
+@loc_9453:
     lda     ram_07F6                ; $9453
     tay                             ; $9456
     jsr     sub_6_90CC              ; $9457
@@ -1654,21 +1781,21 @@ loc_6_9453:
     sta     SQ2_HI                  ; $946D
     lda     sq2SfxTimer             ; $9470
     cmp     #$0F                    ; $9473
-    bcs     loc_6_948D              ; $9475
+    bcs     @loc_948D               ; $9475
     ora     #$90                    ; $9477
     sta     SQ1_VOL                 ; $9479
     sta     SQ2_VOL                 ; $947C
     lda     sq2SfxTimer             ; $947F
     cmp     #$01                    ; $9482
-    bne     loc_6_948D              ; $9484
+    bne     @loc_948D               ; $9484
     jsr     Sound_SilencePulseNoise ; $9486
     lda     #$04                    ; $9489
     sta     musicRequest            ; $948B
 
-loc_6_948D:
+@loc_948D:
     jmp     loc_6_953C              ; $948D
 
-loc_6_9490:
+@loc_9490:
     jsr     Sfx_TakeOverMusic       ; $9490
     lda     #$10                    ; $9493
     sta     SQ1_VOL                 ; $9495
@@ -1682,14 +1809,14 @@ loc_6_9490:
     lda     #$00                    ; $94A9
     sta     ram_07DC                ; $94AB
 
-loc_6_94AE:
+@loc_94AE:
     lda     sq2SfxTimer             ; $94AE
     cmp     #$10                    ; $94B1
-    bne     loc_6_94BA              ; $94B3
+    bne     @loc_94BA               ; $94B3
     lda     #$00                    ; $94B5
     sta     ram_07DC                ; $94B7
 
-loc_6_94BA:
+@loc_94BA:
     lda     ram_07F6                ; $94BA
     tay                             ; $94BD
     jsr     sub_6_90CD              ; $94BE
@@ -1703,19 +1830,19 @@ loc_6_94BA:
     sta     SQ2_HI                  ; $94CE
     lda     sq2SfxTimer             ; $94D1
     cmp     #$0F                    ; $94D4
-    bcs     loc_6_94DD              ; $94D6
+    bcs     @loc_94DD               ; $94D6
     ora     #$10                    ; $94D8
     sta     SQ2_VOL                 ; $94DA
 
-loc_6_94DD:
+@loc_94DD:
     dec     sq2SfxTimer             ; $94DD
-    bne     loc_6_94EC              ; $94E0
+    bne     @done                   ; $94E0
     lda     #$00                    ; $94E2
     sta     sq2Sfx                  ; $94E4
     lda     #$10                    ; $94E7
     sta     SQ2_VOL                 ; $94E9
 
-loc_6_94EC:
+@done:
     rts                             ; $94EC
 
 loc_6_94ED:
@@ -1730,16 +1857,16 @@ loc_6_94ED:
 loc_6_94FE:
     lda     sq2SfxTimer             ; $94FE
     cmp     #$08                    ; $9501
-    bne     loc_6_9509              ; $9503
+    bne     @loc_9509               ; $9503
     lda     #$28                    ; $9505
-    bne     loc_6_950F              ; $9507
+    bne     @loc_950F               ; $9507
 
-loc_6_9509:
+@loc_9509:
     cmp     #$04                    ; $9509
     bne     loc_6_9512              ; $950B
     lda     #$32                    ; $950D
 
-loc_6_950F:
+@loc_950F:
     jsr     Sq2_PlayNote            ; $950F
 
 loc_6_9512:
@@ -1751,7 +1878,7 @@ loc_6_9515:
     lsr     a                       ; $9519
     bcs     loc_6_94FE              ; $951A
     lsr     sfxRequest+2            ; $951C
-    bcs     loc_6_952B              ; $951E
+    bcs     @loc_952B               ; $951E
     lsr     a                       ; $9520
     bcs     loc_6_953C              ; $9521
     lsr     sfxRequest+2            ; $9523
@@ -1760,7 +1887,7 @@ loc_6_9515:
     bcs     loc_6_953C              ; $9528
     rts                             ; $952A
 
-loc_6_952B:
+@loc_952B:
     sty     sq2Sfx                  ; $952B
     lda     #$10                    ; $952E
     sta     sq2SfxTimer             ; $9530
@@ -1771,13 +1898,13 @@ loc_6_952B:
 
 loc_6_953C:
     dec     sq2SfxTimer             ; $953C
-    bne     loc_6_954B              ; $953F
+    bne     @done                   ; $953F
     lda     #$00                    ; $9541
     sta     sq2Sfx                  ; $9543
     lda     #$90                    ; $9546
     sta     SQ2_VOL                 ; $9548
 
-loc_6_954B:
+@done:
     rts                             ; $954B
 
 loc_6_954C:
@@ -1787,16 +1914,16 @@ loc_6_954C:
     inc     ram_07F6                ; $9554
     lda     ram_07F6                ; $9557
     lsr     a                       ; $955A
-    bcs     loc_6_9561              ; $955B
+    bcs     @loc_9561               ; $955B
 ; (code below not executed in the test movies)
     lda     #$04                    ; $955D
-    bne     loc_6_9563              ; $955F
+    bne     @loc_9563               ; $955F
 ; (end of code not executed in the test movies)
 
-loc_6_9561:
+@loc_9561:
     lda     #$10                    ; $9561
 
-loc_6_9563:
+@loc_9563:
     ldx     #$1C                    ; $9563
     ldy     #$83                    ; $9565
     jsr     Sq2_PlayNoteEnvelope    ; $9567
@@ -1817,13 +1944,13 @@ loc_6_956C:
 
 loc_6_9587:
     dec     noiseSfxTimer           ; $9587
-    bne     loc_6_9596              ; $958A
+    bne     @done                   ; $958A
     lda     #$00                    ; $958C
     sta     noiseSfx                ; $958E
     lda     #$10                    ; $9591
     sta     NOISE_VOL               ; $9593
 
-loc_6_9596:
+@done:
     rts                             ; $9596
 
 loc_6_9597:
@@ -1857,12 +1984,12 @@ Noise_Play:
 ; ---------------------------------------------------------------------------
 Sfx_UpdateNoise:
     lda     sharedSfxOnNoise        ; $95A7
-    beq     loc_6_95B2              ; $95AA
+    beq     @loc_95B2               ; $95AA
     lda     #$00                    ; $95AC
     sta     noiseSfx                ; $95AE
     rts                             ; $95B1
 
-loc_6_95B2:
+@loc_95B2:
     ldy     sfxRequest+1            ; $95B2
     lda     noiseSfx                ; $95B4
     lsr     sfxRequest+1            ; $95B7
@@ -1872,72 +1999,72 @@ loc_6_95B2:
     lsr     a                       ; $95BE
     bcs     loc_6_9587              ; $95BF
     lsr     sfxRequest+1            ; $95C1
-    bcs     loc_6_95E6              ; $95C3
+    bcs     @loc_95E6               ; $95C3
     lsr     a                       ; $95C5
-    bcs     loc_6_95EE              ; $95C6
+    bcs     @loc_95EE               ; $95C6
     lsr     sfxRequest+1            ; $95C8
     lsr     a                       ; $95CA
     lsr     sfxRequest+1            ; $95CB
-    bcs     loc_6_95E6              ; $95CD
+    bcs     @loc_95E6               ; $95CD
     lsr     a                       ; $95CF
-    bcs     loc_6_95EE              ; $95D0
+    bcs     @loc_95EE               ; $95D0
     lsr     sfxRequest+1            ; $95D2
-    bcs     loc_6_9604              ; $95D4
+    bcs     @loc_9604               ; $95D4
     lsr     a                       ; $95D6
-    bcs     loc_6_960C              ; $95D7
+    bcs     @loc_960C               ; $95D7
     lsr     sfxRequest+1            ; $95D9
     bcs     loc_6_9597              ; $95DB
     lsr     a                       ; $95DD
     lsr     a                       ; $95DE
-    bcs     loc_6_960C              ; $95DF
+    bcs     @loc_960C               ; $95DF
     lsr     sfxRequest+1            ; $95E1
-    bcs     loc_6_9604              ; $95E3
+    bcs     @loc_9604               ; $95E3
     rts                             ; $95E5
 
-loc_6_95E6:
+@loc_95E6:
     lda     #$10                    ; $95E6
     sta     noiseSfxTimer           ; $95E8
     sty     noiseSfx                ; $95EB
 
-loc_6_95EE:
+@loc_95EE:
     lda     noiseSfxTimer           ; $95EE
     lsr     a                       ; $95F1
     tay                             ; $95F2
     lda     noiseSfx                ; $95F3
     and     #$10                    ; $95F6
-    bne     loc_6_95FF              ; $95F8
+    bne     @loc_95FF               ; $95F8
     lda     dat_6_912C,y            ; $95FA
-    bne     loc_6_9612              ; $95FD
+    bne     @loc_9612               ; $95FD
 
-loc_6_95FF:
+@loc_95FF:
     lda     dat_6_9123,y            ; $95FF
-    bne     loc_6_9612              ; $9602
+    bne     @loc_9612               ; $9602
 
-loc_6_9604:
+@loc_9604:
     sty     noiseSfx                ; $9604
     lda     #$0F                    ; $9607
     sta     noiseSfxTimer           ; $9609
 
-loc_6_960C:
+@loc_960C:
     ldy     noiseSfxTimer           ; $960C
     lda     dat_6_90E8,y            ; $960F
 
-loc_6_9612:
+@loc_9612:
     tax                             ; $9612
     lda     noiseSfx                ; $9613
     and     #$20                    ; $9616
-    beq     loc_6_9622              ; $9618
+    beq     @loc_9622               ; $9618
     txa                             ; $961A
     and     #$0F                    ; $961B
     sec                             ; $961D
     sbc     #$02                    ; $961E
-    bne     loc_6_9625              ; $9620
+    bne     @loc_9625               ; $9620
 
-loc_6_9622:
+@loc_9622:
     txa                             ; $9622
     and     #$0F                    ; $9623
 
-loc_6_9625:
+@loc_9625:
     sta     NOISE_LO                ; $9625
     txa                             ; $9628
     lsr     a                       ; $9629
@@ -2060,11 +2187,11 @@ Sfx_StartSharedOnNoise:
     lda     #$C0                    ; $97A0
     sta     ram_07DD                ; $97A2
     lda     sharedSfxOnSq1          ; $97A5
-    beq     loc_6_97AF              ; $97A8
+    beq     @loc_97AF               ; $97A8
     lda     #$10                    ; $97AA
     sta     SQ1_VOL                 ; $97AC
 
-loc_6_97AF:
+@loc_97AF:
     lda     #$01                    ; $97AF
     sta     sharedSfxOnNoise        ; $97B1
     lda     #$00                    ; $97B4
@@ -2088,11 +2215,11 @@ Sfx_StartSharedOnSq1:
     lda     #$C0                    ; $97C6
     sta     ram_07DD                ; $97C8
     lda     sharedSfxOnNoise        ; $97CB
-    beq     loc_6_97D5              ; $97CE
+    beq     @loc_97D5               ; $97CE
     lda     #$10                    ; $97D0
     sta     NOISE_VOL               ; $97D2
 
-loc_6_97D5:
+@loc_97D5:
     lda     #$01                    ; $97D5
     sta     sharedSfxOnSq1          ; $97D7
     lda     #$00                    ; $97DA
@@ -2164,19 +2291,19 @@ loc_6_9834:
 loc_6_9860:
     ldy     ram_07F1                ; $9860
     lda     ram_07F0                ; $9863
-    beq     loc_6_986D              ; $9866
+    beq     @loc_986D               ; $9866
     lda     dat_6_9726,y            ; $9868
-    bne     loc_6_9870              ; $986B
+    bne     @loc_9870               ; $986B
 
-loc_6_986D:
+@loc_986D:
     lda     dat_6_9736,y            ; $986D
 
-loc_6_9870:
+@loc_9870:
     sta     SQ1_VOL                 ; $9870
     lda     ram_07F3                ; $9873
     ldy     ram_07F2                ; $9876
     cmp     dat_6_96DD,y            ; $9879
-    bne     loc_6_98BD              ; $987C
+    bne     @loc_98BD               ; $987C
     iny                             ; $987E
     tya                             ; $987F
     lsr     a                       ; $9880
@@ -2185,41 +2312,41 @@ loc_6_9870:
     sta     ram_07F1                ; $9885
     lda     ram_07F2                ; $9888
     lsr     a                       ; $988B
-    bcs     loc_6_9894              ; $988C
+    bcs     @loc_9894               ; $988C
     lda     #$CA                    ; $988E
     ldx     #$00                    ; $9890
-    beq     loc_6_9898              ; $9892
+    beq     @loc_9898               ; $9892
 
-loc_6_9894:
+@loc_9894:
     lda     #$CA                    ; $9894
     ldx     #$01                    ; $9896
 
-loc_6_9898:
+@loc_9898:
     stx     ram_07F0                ; $9898
     sta     SQ1_SWEEP               ; $989B
     lda     ram_07F2                ; $989E
-    beq     loc_6_98A6              ; $98A1
+    beq     @loc_98A6               ; $98A1
     dec     ram_07F2                ; $98A3
 
-loc_6_98A6:
+@loc_98A6:
     ldy     ram_07EF                ; $98A6
     lda     dat_6_96D5,y            ; $98A9
     sta     SQ1_LO                  ; $98AC
     lda     dat_6_96D9,y            ; $98AF
     sta     SQ1_HI                  ; $98B2
     dey                             ; $98B5
-    bne     loc_6_98BA              ; $98B6
+    bne     @loc_98BA               ; $98B6
     ldy     #$04                    ; $98B8
 
-loc_6_98BA:
+@loc_98BA:
     sty     ram_07EF                ; $98BA
 
-loc_6_98BD:
+@loc_98BD:
     lda     ram_07F1                ; $98BD
-    beq     loc_6_98C5              ; $98C0
+    beq     @loc_98C5               ; $98C0
     dec     ram_07F1                ; $98C2
 
-loc_6_98C5:
+@loc_98C5:
     jmp     loc_6_98E9              ; $98C5
 
 loc_6_98C8:
@@ -2242,24 +2369,24 @@ loc_6_98D4:
 
 loc_6_98E9:
     dec     ram_07F3                ; $98E9
-    bne     loc_6_990A              ; $98EC
+    bne     @done                   ; $98EC
     lda     sharedSfxOnSq1          ; $98EE
-    beq     loc_6_98FA              ; $98F1
+    beq     @loc_98FA               ; $98F1
     lda     #$10                    ; $98F3
     sta     SQ1_VOL                 ; $98F5
-    bne     loc_6_98FF              ; $98F8
+    bne     @loc_98FF               ; $98F8
 
-loc_6_98FA:
+@loc_98FA:
     lda     #$10                    ; $98FA
     sta     NOISE_VOL               ; $98FC
 
-loc_6_98FF:
+@loc_98FF:
     lda     #$00                    ; $98FF
     sta     sharedSfx               ; $9901
     sta     sharedSfxOnSq1          ; $9904
     sta     sharedSfxOnNoise        ; $9907
 
-loc_6_990A:
+@done:
     rts                             ; $990A
 
 ; ---------------------------------------------------------------------------
@@ -2275,123 +2402,123 @@ loc_6_990A:
 ; ---------------------------------------------------------------------------
 Sfx_UpdateShared:
     lda     ram_07DD                ; $990B
-    bne     loc_6_9915              ; $990E
+    bne     @loc_9915               ; $990E
     sta     ram_07FC                ; $9910
-    beq     loc_6_9918              ; $9913
+    beq     @loc_9918               ; $9913
 
-loc_6_9915:
+@loc_9915:
     dec     ram_07DD                ; $9915
 
-loc_6_9918:
+@loc_9918:
     ldy     sfxRequest              ; $9918
     lda     sharedSfx               ; $991A
     cpy     #$C0                    ; $991D
-    beq     loc_6_997E              ; $991F
+    beq     @loc_997E               ; $991F
     cpy     #$60                    ; $9921
-    beq     loc_6_9981              ; $9923
+    beq     @loc_9981               ; $9923
     lsr     sfxRequest              ; $9925
-    bcs     loc_6_9966              ; $9927
+    bcs     @loc_9966               ; $9927
     lsr     sfxRequest              ; $9929
-    bcs     loc_6_9969              ; $992B
+    bcs     @loc_9969               ; $992B
     lsr     sfxRequest              ; $992D
-    bcs     loc_6_996C              ; $992F
+    bcs     @loc_996C               ; $992F
     lsr     sfxRequest              ; $9931
-    bcs     loc_6_996F              ; $9933
+    bcs     @loc_996F               ; $9933
     lsr     sfxRequest              ; $9935
-    bcs     loc_6_9972              ; $9937
+    bcs     @loc_9972               ; $9937
     lsr     sfxRequest              ; $9939
-    bcs     loc_6_9975              ; $993B
+    bcs     @loc_9975               ; $993B
     lsr     sfxRequest              ; $993D
-    bcs     loc_6_9978              ; $993F
+    bcs     @loc_9978               ; $993F
     lsr     sfxRequest              ; $9941
-    bcs     loc_6_997B              ; $9943
+    bcs     @loc_997B               ; $9943
     cmp     #$C0                    ; $9945
-    beq     loc_6_999C              ; $9947
+    beq     @loc_999C               ; $9947
     cmp     #$60                    ; $9949
-    beq     loc_6_999F              ; $994B
+    beq     @loc_999F               ; $994B
     lsr     a                       ; $994D
-    bcs     loc_6_9984              ; $994E
+    bcs     @loc_9984               ; $994E
     lsr     a                       ; $9950
-    bcs     loc_6_9987              ; $9951
+    bcs     @loc_9987               ; $9951
     lsr     a                       ; $9953
-    bcs     loc_6_998A              ; $9954
+    bcs     @loc_998A               ; $9954
     lsr     a                       ; $9956
-    bcs     loc_6_998D              ; $9957
+    bcs     @loc_998D               ; $9957
     lsr     a                       ; $9959
-    bcs     loc_6_9990              ; $995A
+    bcs     @loc_9990               ; $995A
     lsr     a                       ; $995C
-    bcs     loc_6_9993              ; $995D
+    bcs     @loc_9993               ; $995D
     lsr     a                       ; $995F
-    bcs     loc_6_9996              ; $9960
+    bcs     @loc_9996               ; $9960
     lsr     a                       ; $9962
-    bcs     loc_6_9999              ; $9963
+    bcs     @loc_9999               ; $9963
     rts                             ; $9965
 
-loc_6_9966:
+@loc_9966:
     jmp     loc_6_9834              ; $9966
 
-loc_6_9969:
+@loc_9969:
     jmp     loc_6_98C8              ; $9969
 
-loc_6_996C:
-    jmp     loc_6_99A2              ; $996C
+@loc_996C:
+    jmp     @loc_99A2               ; $996C
 
-loc_6_996F:
-    jmp     loc_6_9A20              ; $996F
+@loc_996F:
+    jmp     @loc_9A20               ; $996F
 
-loc_6_9972:
-    jmp     loc_6_9A48              ; $9972
+@loc_9972:
+    jmp     @loc_9A48               ; $9972
 ; (code below not executed in the test movies)
 
-loc_6_9975:
-    jmp     loc_6_9A70              ; $9975
+@loc_9975:
+    jmp     @loc_9A70               ; $9975
 ; (end of code not executed in the test movies)
 
-loc_6_9978:
-    jmp     loc_6_9A98              ; $9978
+@loc_9978:
+    jmp     @loc_9A98               ; $9978
 
-loc_6_997B:
-    jmp     loc_6_9AD1              ; $997B
+@loc_997B:
+    jmp     @loc_9AD1               ; $997B
 
-loc_6_997E:
+@loc_997E:
     jmp     loc_6_97E0              ; $997E
 
-loc_6_9981:
+@loc_9981:
     jmp     loc_6_9817              ; $9981
 
-loc_6_9984:
+@loc_9984:
     jmp     loc_6_9860              ; $9984
 
-loc_6_9987:
+@loc_9987:
     jmp     loc_6_98D4              ; $9987
 
-loc_6_998A:
-    jmp     loc_6_99B8              ; $998A
+@loc_998A:
+    jmp     @loc_99B8               ; $998A
 
-loc_6_998D:
-    jmp     loc_6_9A2C              ; $998D
+@loc_998D:
+    jmp     @loc_9A2C               ; $998D
 
-loc_6_9990:
-    jmp     loc_6_9A54              ; $9990
+@loc_9990:
+    jmp     @loc_9A54               ; $9990
 ; (code below not executed in the test movies)
 
-loc_6_9993:
-    jmp     loc_6_9A7C              ; $9993
+@loc_9993:
+    jmp     @loc_9A7C               ; $9993
 ; (end of code not executed in the test movies)
 
-loc_6_9996:
-    jmp     loc_6_9AAB              ; $9996
+@loc_9996:
+    jmp     @loc_9AAB               ; $9996
 
-loc_6_9999:
-    jmp     loc_6_9ADD              ; $9999
+@loc_9999:
+    jmp     @loc_9ADD               ; $9999
 
-loc_6_999C:
+@loc_999C:
     jmp     loc_6_97EC              ; $999C
 
-loc_6_999F:
+@loc_999F:
     jmp     loc_6_9828              ; $999F
 
-loc_6_99A2:
+@loc_99A2:
     lda     #$60                    ; $99A2
     ldx     #$0C                    ; $99A4
     jsr     Sfx_StartSharedOnSq1    ; $99A6
@@ -2402,22 +2529,22 @@ loc_6_99A2:
     lda     #$04                    ; $99B3
     sta     ram_07EF                ; $99B5
 
-loc_6_99B8:
+@loc_99B8:
     ldy     ram_07F1                ; $99B8
     lda     ram_07F0                ; $99BB
-    beq     loc_6_99C5              ; $99BE
+    beq     @loc_99C5               ; $99BE
     lda     dat_6_976C,y            ; $99C0
-    bne     loc_6_99C8              ; $99C3
+    bne     @loc_99C8               ; $99C3
 
-loc_6_99C5:
+@loc_99C5:
     lda     dat_6_975C,y            ; $99C5
 
-loc_6_99C8:
+@loc_99C8:
     sta     SQ1_VOL                 ; $99C8
     lda     ram_07F3                ; $99CB
     ldy     ram_07F2                ; $99CE
     cmp     dat_6_9749,y            ; $99D1
-    bne     loc_6_9A15              ; $99D4
+    bne     @loc_9A15               ; $99D4
     iny                             ; $99D6
     tya                             ; $99D7
     lsr     a                       ; $99D8
@@ -2426,109 +2553,109 @@ loc_6_99C8:
     sta     ram_07F1                ; $99DD
     lda     ram_07F2                ; $99E0
     lsr     a                       ; $99E3
-    bcs     loc_6_99EC              ; $99E4
+    bcs     @loc_99EC               ; $99E4
     lda     #$CA                    ; $99E6
     ldx     #$00                    ; $99E8
-    beq     loc_6_99F0              ; $99EA
+    beq     @loc_99F0               ; $99EA
 
-loc_6_99EC:
+@loc_99EC:
     lda     #$BB                    ; $99EC
     ldx     #$01                    ; $99EE
 
-loc_6_99F0:
+@loc_99F0:
     stx     ram_07F0                ; $99F0
     sta     SQ1_SWEEP               ; $99F3
     lda     ram_07F2                ; $99F6
-    beq     loc_6_99FE              ; $99F9
+    beq     @loc_99FE               ; $99F9
     dec     ram_07F2                ; $99FB
 
-loc_6_99FE:
+@loc_99FE:
     ldy     ram_07EF                ; $99FE
     lda     dat_6_9745,y            ; $9A01
     sta     SQ1_LO                  ; $9A04
     lda     dat_6_977B,y            ; $9A07
     sta     SQ1_HI                  ; $9A0A
     dey                             ; $9A0D
-    bne     loc_6_9A12              ; $9A0E
+    bne     @loc_9A12               ; $9A0E
     ldy     #$04                    ; $9A10
 
-loc_6_9A12:
+@loc_9A12:
     sty     ram_07EF                ; $9A12
 
-loc_6_9A15:
+@loc_9A15:
     lda     ram_07F1                ; $9A15
-    beq     loc_6_9A1D              ; $9A18
+    beq     @loc_9A1D               ; $9A18
     dec     ram_07F1                ; $9A1A
 
-loc_6_9A1D:
+@loc_9A1D:
     jmp     loc_6_98E9              ; $9A1D
 
-loc_6_9A20:
+@loc_9A20:
     lda     #$7F                    ; $9A20
     ldx     #$06                    ; $9A22
     jsr     Sfx_StartSharedOnSq1    ; $9A24
     lda     #$7F                    ; $9A27
     sta     SQ1_SWEEP               ; $9A29
 
-loc_6_9A2C:
+@loc_9A2C:
     lda     ram_07F3                ; $9A2C
     ldy     ram_07F2                ; $9A2F
     cmp     dat_6_9644,y            ; $9A32
-    bne     loc_6_9A45              ; $9A35
+    bne     @loc_9A45               ; $9A35
     lda     dat_6_964B,y            ; $9A37
     jsr     Sq1_PlayNote            ; $9A3A
     lda     ram_07F2                ; $9A3D
-    beq     loc_6_9A45              ; $9A40
+    beq     @loc_9A45               ; $9A40
     dec     ram_07F2                ; $9A42
 
-loc_6_9A45:
+@loc_9A45:
     jmp     loc_6_9805              ; $9A45
 
-loc_6_9A48:
+@loc_9A48:
     lda     #$7F                    ; $9A48
     ldx     #$05                    ; $9A4A
     jsr     Sfx_StartSharedOnSq1    ; $9A4C
     lda     #$7F                    ; $9A4F
     sta     SQ1_SWEEP               ; $9A51
 
-loc_6_9A54:
+@loc_9A54:
     lda     ram_07F3                ; $9A54
     ldy     ram_07F2                ; $9A57
     cmp     dat_6_9652,y            ; $9A5A
-    bne     loc_6_9A6D              ; $9A5D
+    bne     @loc_9A6D               ; $9A5D
     lda     dat_6_9658,y            ; $9A5F
     jsr     Sq1_PlayNote            ; $9A62
     lda     ram_07F2                ; $9A65
-    beq     loc_6_9A6D              ; $9A68
+    beq     @loc_9A6D               ; $9A68
     dec     ram_07F2                ; $9A6A
 
-loc_6_9A6D:
+@loc_9A6D:
     jmp     loc_6_9805              ; $9A6D
 ; (code below not executed in the test movies)
 
-loc_6_9A70:
+@loc_9A70:
     lda     #$9F                    ; $9A70
     ldx     #$08                    ; $9A72
     jsr     Sfx_StartSharedOnSq1    ; $9A74
     lda     #$7F                    ; $9A77
     sta     SQ1_SWEEP               ; $9A79
 
-loc_6_9A7C:
+@loc_9A7C:
     lda     ram_07F3                ; $9A7C
     ldy     ram_07F2                ; $9A7F
     cmp     dat_6_965E,y            ; $9A82
-    bne     loc_6_9A95              ; $9A85
+    bne     @loc_9A95               ; $9A85
     lda     dat_6_9667,y            ; $9A87
     jsr     Sq1_PlayNote            ; $9A8A
     lda     ram_07F2                ; $9A8D
-    beq     loc_6_9A95              ; $9A90
+    beq     @loc_9A95               ; $9A90
     dec     ram_07F2                ; $9A92
 
-loc_6_9A95:
+@loc_9A95:
     jmp     loc_6_9805              ; $9A95
 ; (end of code not executed in the test movies)
 
-loc_6_9A98:
+@loc_9A98:
     lda     #$60                    ; $9A98
     ldx     #$8F                    ; $9A9A
     jsr     Sfx_StartSharedOnSq1    ; $9A9C
@@ -2538,7 +2665,7 @@ loc_6_9A98:
     ldy     #$81                    ; $9AA6
     jsr     Sq1_SetEnvelope         ; $9AA8
 
-loc_6_9AAB:
+@loc_9AAB:
     lda     ram_07F2                ; $9AAB
     tay                             ; $9AAE
     jsr     sub_6_90CB              ; $9AAF
@@ -2552,34 +2679,34 @@ loc_6_9AAB:
     sta     SQ1_HI                  ; $9ABF
     lda     ram_07F3                ; $9AC2
     cmp     #$0D                    ; $9AC5
-    bcs     loc_6_9ACE              ; $9AC7
+    bcs     @loc_9ACE               ; $9AC7
     ora     #$90                    ; $9AC9
     sta     SQ1_VOL                 ; $9ACB
 
-loc_6_9ACE:
+@loc_9ACE:
     jmp     loc_6_98E9              ; $9ACE
 
-loc_6_9AD1:
+@loc_9AD1:
     lda     #$6B                    ; $9AD1
     ldx     #$1B                    ; $9AD3
     jsr     Sfx_StartSharedOnNoise  ; $9AD5
     lda     #$05                    ; $9AD8
     sta     ram_07F1                ; $9ADA
 
-loc_6_9ADD:
+@loc_9ADD:
     lda     ram_07F3                ; $9ADD
     ldy     ram_07F1                ; $9AE0
     cmp     dat_6_978E,y            ; $9AE3
-    bne     loc_6_9AF5              ; $9AE6
+    bne     @loc_9AF5               ; $9AE6
     lda     ram_07F1                ; $9AE8
-    beq     loc_6_9AF0              ; $9AEB
+    beq     @loc_9AF0               ; $9AEB
     dec     ram_07F1                ; $9AED
 
-loc_6_9AF0:
+@loc_9AF0:
     lda     #$1B                    ; $9AF0
     sta     ram_07F2                ; $9AF2
 
-loc_6_9AF5:
+@loc_9AF5:
     lda     ram_07F2                ; $9AF5
     lsr     a                       ; $9AF8
     tay                             ; $9AF9
@@ -2628,13 +2755,13 @@ Music_Update:
 Music_NextSong:
     lda     currentWorld            ; $9B24
     cmp     #$05                    ; $9B27
-    bne     loc_6_9B34              ; $9B29
+    bne     @loc_9B34               ; $9B29
     lda     musicPlaying            ; $9B2B
     and     #$5F                    ; $9B2E
     bne     loc_6_9B4F              ; $9B30
     beq     Music_Stop              ; $9B32
 
-loc_6_9B34:
+@loc_9B34:
     lda     musicPlaying            ; $9B34
     and     #$1F                    ; $9B37
     bne     loc_6_9B4F              ; $9B39
@@ -2670,11 +2797,11 @@ loc_6_9B4E:
 
 loc_6_9B4F:
     and     #$01                    ; $9B4F
-    beq     loc_6_9B57              ; $9B51
+    beq     @loc_9B57               ; $9B51
     lda     #$02                    ; $9B53
     bne     Music_Start             ; $9B55
 
-loc_6_9B57:
+@loc_9B57:
     lda     musicPlaying            ; $9B57
     and     #$4E                    ; $9B5A
     bne     Music_Start             ; $9B5C
@@ -2693,23 +2820,23 @@ loc_6_9B57:
 Music_Start:
     tax                             ; $9B61
     and     #$10                    ; $9B62
-    beq     loc_6_9B70              ; $9B64
+    beq     @loc_9B70               ; $9B64
     lda     musicPlaying            ; $9B66
     and     #$0F                    ; $9B69
-    beq     loc_6_9B70              ; $9B6B
+    beq     @loc_9B70               ; $9B6B
     sta     musicResume             ; $9B6D
 
-loc_6_9B70:
+@loc_9B70:
     txa                             ; $9B70
     beq     Music_Stop              ; $9B71
     sta     musicPlaying            ; $9B73
     ldy     #$00                    ; $9B76
     sty     musicPhrase             ; $9B78
 
-loc_6_9B7A:
+@loop:
     iny                             ; $9B7A
     lsr     a                       ; $9B7B
-    bcc     loc_6_9B7A              ; $9B7C
+    bcc     @loop                   ; $9B7C
     sty     musicSong               ; $9B7E
 
 ; ---------------------------------------------------------------------------
@@ -2724,7 +2851,7 @@ loc_6_9B7A:
 ; ---------------------------------------------------------------------------
 Music_LoadPhrase:
     lda     currentWorld            ; $9B80
-    bne     loc_6_9BBC              ; $9B83
+    bne     @loc_9BBC               ; $9B83
     ldy     musicSong               ; $9B85
     lda     OverworldMusic-1,y      ; $9B87
     clc                             ; $9B8A
@@ -2749,13 +2876,13 @@ Music_LoadPhrase:
     sta     drumLoopOffset          ; $9BB7
     jmp     Music_StartPhrase       ; $9BB9
 
-loc_6_9BBC:
+@loc_9BBC:
     cmp     #$01                    ; $9BBC
-    beq     loc_6_9BC4              ; $9BBE
+    beq     @loc_9BC4               ; $9BBE
     cmp     #$02                    ; $9BC0
-    bne     loc_6_9BFB              ; $9BC2
+    bne     @loc_9BFB               ; $9BC2
 
-loc_6_9BC4:
+@loc_9BC4:
     ldy     musicSong               ; $9BC4
     lda     TownMusic-1,y           ; $9BC6
     clc                             ; $9BC9
@@ -2780,13 +2907,13 @@ loc_6_9BC4:
     sta     drumLoopOffset          ; $9BF6
     jmp     Music_StartPhrase       ; $9BF8
 
-loc_6_9BFB:
+@loc_9BFB:
     cmp     #$03                    ; $9BFB
-    beq     loc_6_9C03              ; $9BFD
+    beq     @loc_9C03               ; $9BFD
     cmp     #$04                    ; $9BFF
     bne     loc_6_9C40              ; $9C01
 
-loc_6_9C03:
+@loc_9C03:
     ldy     musicSong               ; $9C03
     lda     TownMusic+612,y         ; $9C05
     clc                             ; $9C08
@@ -2878,13 +3005,13 @@ Music_StartPhrase:
 ; ---------------------------------------------------------------------------
 Music_PlayNotes:
     lda     sq2Sfx                  ; $9C87
-    beq     loc_6_9C91              ; $9C8A
+    beq     @loc_9C91               ; $9C8A
     lda     #$00                    ; $9C8C
     sta     sq2EnvelopeStep         ; $9C8E
 
-loc_6_9C91:
+@loc_9C91:
     dec     melodyTimer             ; $9C91
-    bne     loc_6_9CC3              ; $9C94
+    bne     @loc_9CC3               ; $9C94
     ldy     melodyOffset            ; $9C96
     inc     melodyOffset            ; $9C99
     lda     (musicNotesPtr),y       ; $9C9C
@@ -2892,49 +3019,49 @@ loc_6_9C91:
     jsr     Music_NoteDuration      ; $9CA0
     sta     melodyTimer             ; $9CA3
     lda     sq2Sfx                  ; $9CA6
-    bne     loc_6_9CDE              ; $9CA9
+    bne     @loc_9CDE               ; $9CA9
     txa                             ; $9CAB
     and     #$3E                    ; $9CAC
     jsr     Sq2_PlayNote            ; $9CAE
-    beq     loc_6_9CC3              ; $9CB1
+    beq     @loc_9CC3               ; $9CB1
     lda     musicPlaying            ; $9CB3
     and     #$04                    ; $9CB6
-    beq     loc_6_9CBE              ; $9CB8
+    beq     @loc_9CBE               ; $9CB8
     lda     #$18                    ; $9CBA
-    bne     loc_6_9CC0              ; $9CBC
+    bne     @loc_9CC0               ; $9CBC
 
-loc_6_9CBE:
+@loc_9CBE:
     lda     #$2F                    ; $9CBE
 
-loc_6_9CC0:
+@loc_9CC0:
     sta     sq2EnvelopeStep         ; $9CC0
 
-loc_6_9CC3:
+@loc_9CC3:
     lda     sq2Sfx                  ; $9CC3
-    bne     loc_6_9CDE              ; $9CC6
+    bne     @loc_9CDE               ; $9CC6
     jsr     Sq2_Vibrato             ; $9CC8
     lda     sq2EnvelopeStep         ; $9CCB
-    beq     loc_6_9CD4              ; $9CCE
+    beq     @loc_9CD4               ; $9CCE
     lsr     a                       ; $9CD0
     dec     sq2EnvelopeStep         ; $9CD1
 
-loc_6_9CD4:
+@loc_9CD4:
     tay                             ; $9CD4
     lda     PulseEnvelope,y         ; $9CD5
     tax                             ; $9CD8
     ldy     #$7F                    ; $9CD9
     jsr     Sq2_SetEnvelope         ; $9CDB
 
-loc_6_9CDE:
+@loc_9CDE:
     lda     sq1Sfx                  ; $9CDE
     ora     sharedSfxOnSq1          ; $9CE1
-    beq     loc_6_9CEB              ; $9CE4
+    beq     @loc_9CEB               ; $9CE4
     lda     #$00                    ; $9CE6
     sta     sq1EnvelopeStep         ; $9CE8
 
-loc_6_9CEB:
+@loc_9CEB:
     dec     harmonyTimer            ; $9CEB
-    bne     loc_6_9D1E              ; $9CEE
+    bne     @loc_9D1E               ; $9CEE
     ldy     harmonyOffset           ; $9CF0
     inc     harmonyOffset           ; $9CF3
     lda     (musicNotesPtr),y       ; $9CF6
@@ -2942,43 +3069,43 @@ loc_6_9CEB:
     sta     harmonyTimer            ; $9CFB
     lda     sq1Sfx                  ; $9CFE
     ora     sharedSfxOnSq1          ; $9D01
-    bne     loc_6_9D3C              ; $9D04
+    bne     @loc_9D3C               ; $9D04
     txa                             ; $9D06
     and     #$3E                    ; $9D07
     jsr     Sq1_PlayNote            ; $9D09
-    beq     loc_6_9D1E              ; $9D0C
+    beq     @loc_9D1E               ; $9D0C
     lda     musicPlaying            ; $9D0E
     and     #$04                    ; $9D11
-    beq     loc_6_9D19              ; $9D13
+    beq     @loc_9D19               ; $9D13
     lda     #$18                    ; $9D15
-    bne     loc_6_9D1B              ; $9D17
+    bne     @loc_9D1B               ; $9D17
 
-loc_6_9D19:
+@loc_9D19:
     lda     #$2F                    ; $9D19
 
-loc_6_9D1B:
+@loc_9D1B:
     sta     sq1EnvelopeStep         ; $9D1B
 
-loc_6_9D1E:
+@loc_9D1E:
     lda     sq1Sfx                  ; $9D1E
     ora     sharedSfxOnSq1          ; $9D21
-    bne     loc_6_9D3C              ; $9D24
+    bne     @loc_9D3C               ; $9D24
     jsr     Sq1_Vibrato             ; $9D26
     lda     sq1EnvelopeStep         ; $9D29
-    beq     loc_6_9D32              ; $9D2C
+    beq     @loc_9D32               ; $9D2C
     lsr     a                       ; $9D2E
     dec     sq1EnvelopeStep         ; $9D2F
 
-loc_6_9D32:
+@loc_9D32:
     tay                             ; $9D32
     lda     PulseEnvelope,y         ; $9D33
     tax                             ; $9D36
     ldy     #$7F                    ; $9D37
     jsr     Sq1_SetEnvelope         ; $9D39
 
-loc_6_9D3C:
+@loc_9D3C:
     dec     bassTimer               ; $9D3C
-    bne     loc_6_9D6C              ; $9D3F
+    bne     @loc_9D6C               ; $9D3F
     ldy     bassOffset              ; $9D41
     inc     bassOffset              ; $9D44
     lda     (musicNotesPtr),y       ; $9D47
@@ -2986,58 +3113,58 @@ loc_6_9D3C:
     sta     bassTimer               ; $9D4C
     lda     noiseSfx                ; $9D4F
     and     #$0A                    ; $9D52
-    bne     loc_6_9D6C              ; $9D54
+    bne     @loc_9D6C               ; $9D54
     lda     musicPlaying            ; $9D56
     and     #$10                    ; $9D59
-    bne     loc_6_9D61              ; $9D5B
+    bne     @loc_9D61               ; $9D5B
     ldy     #$1F                    ; $9D5D
-    bne     loc_6_9D63              ; $9D5F
+    bne     @loc_9D63               ; $9D5F
 
-loc_6_9D61:
+@loc_9D61:
     ldy     #$60                    ; $9D61
 
-loc_6_9D63:
+@loc_9D63:
     sty     TRI_LINEAR              ; $9D63
     txa                             ; $9D66
     and     #$3E                    ; $9D67
     jsr     Tri_PlayNote            ; $9D69
 
-loc_6_9D6C:
+@loc_9D6C:
     lda     drumOffset              ; $9D6C
-    beq     loc_6_9DA7              ; $9D6F
+    beq     @done                   ; $9D6F
     dec     drumTimer               ; $9D71
-    bne     loc_6_9DA7              ; $9D74
+    bne     @done                   ; $9D74
 
-loc_6_9D76:
+@loop:
     ldy     drumOffset              ; $9D76
     inc     drumOffset              ; $9D79
     lda     (musicNotesPtr),y       ; $9D7C
-    bne     loc_6_9D87              ; $9D7E
+    bne     @loc_9D87               ; $9D7E
     lda     drumLoopOffset          ; $9D80
     sta     drumOffset              ; $9D82
-    bne     loc_6_9D76              ; $9D85
+    bne     @loop                   ; $9D85
 
-loc_6_9D87:
+@loc_9D87:
     jsr     Music_NoteDuration      ; $9D87
     sta     drumTimer               ; $9D8A
     lda     noiseSfx                ; $9D8D
     ora     sharedSfxOnNoise        ; $9D90
-    bne     loc_6_9DA7              ; $9D93
+    bne     @done                   ; $9D93
     txa                             ; $9D95
     and     #$3E                    ; $9D96
-    bne     loc_6_9D9E              ; $9D98
+    bne     @loc_9D9E               ; $9D98
     lda     #$10                    ; $9D9A
-    bne     loc_6_9DA4              ; $9D9C
+    bne     @loc_9DA4               ; $9D9C
 
-loc_6_9D9E:
+@loc_9D9E:
     ldx     #$0A                    ; $9D9E
     ldy     #$38                    ; $9DA0
     lda     #$17                    ; $9DA2
 
-loc_6_9DA4:
+@loc_9DA4:
     jsr     Noise_Play              ; $9DA4
 
-loc_6_9DA7:
+@done:
     rts                             ; $9DA7
 ; (unreferenced: $9DA8-$9FFF, 600 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $9DA8
