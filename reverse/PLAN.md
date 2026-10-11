@@ -150,6 +150,13 @@ can display our symbols; `STATUS.md` reports a baseline.
   confidence is tracked the same way as routines.
 - Document the save-file layout in SRAM.
 
+Status (2026-10-10): closed.  The major structures are named and
+documented in `docs/memory/` (object slots, game state, PPU buffers,
+timers and RNG, stats and inventory, save files, SRAM world data).
+Variables used by only one or two routines keep their mechanical names
+until Phase 3/4 reads the code that uses them; `make status` tracks the
+count.
+
 ### Phase 3: Core engine (bank 7 and bank 0)
 
 - Boot sequence and initialization.

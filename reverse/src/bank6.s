@@ -16,7 +16,7 @@ sub_6_8000:
     jsr     sub_6_821B              ; $800A
     jsr     sub_6_826A              ; $800D
     lda     #$00                    ; $8010
-    sta     ram_00EB                ; $8012
+    sta     musicRequest            ; $8012
     sta     ram_00EA                ; $8014
     rts                             ; $8016
 ; (unreferenced: $8017-$8046, 48 bytes)
@@ -136,7 +136,7 @@ sub_6_815A:
 ; (code below not executed in the test movies)
 
 sub_6_815E:
-    lda     ram_00ED                ; $815E
+    lda     sfxRequest+1            ; $815E
 ; (end of code not executed in the test movies)
 
 loc_6_8160:
@@ -150,7 +150,7 @@ sub_6_8167:
 ; (code below not executed in the test movies)
 
 sub_6_816B:
-    lda     ram_00EC                ; $816B
+    lda     sfxRequest              ; $816B
 ; (end of code not executed in the test movies)
 
 loc_6_816D:
@@ -267,21 +267,21 @@ loc_6_8218:
     jmp     loc_6_81AF              ; $8218
 
 sub_6_821B:
-    ldy     ram_00EB                ; $821B
+    ldy     musicRequest            ; $821B
     lda     ram_00E9                ; $821D
-    lsr     ram_00EB                ; $821F
+    lsr     musicRequest            ; $821F
     bcs     loc_6_8215              ; $8221
     lsr     a                       ; $8223
     bcs     loc_6_8218              ; $8224
-    lsr     ram_00EB                ; $8226
+    lsr     musicRequest            ; $8226
     bcs     loc_6_81C9              ; $8228
     lsr     a                       ; $822A
     bcs     loc_6_81FE              ; $822B
-    lsr     ram_00EB                ; $822D
+    lsr     musicRequest            ; $822D
     bcs     loc_6_81D6              ; $822F
     lsr     a                       ; $8231
     bcs     loc_6_81FE              ; $8232
-    lsr     ram_00EB                ; $8234
+    lsr     musicRequest            ; $8234
     bcs     loc_6_823C              ; $8236
     lsr     a                       ; $8238
     bcs     loc_6_8249              ; $8239
@@ -436,10 +436,10 @@ loc_6_82EF:
     sta     ram_00E2                ; $8333
     sta     ram_07FA                ; $8335
     lda     #$01                    ; $8338
-    sta     ram_00EC                ; $833A
-    sta     ram_00ED                ; $833C
-    sta     ram_00EE                ; $833E
-    sta     ram_00EF                ; $8340
+    sta     sfxRequest              ; $833A
+    sta     sfxRequest+1            ; $833C
+    sta     sfxRequest+2            ; $833E
+    sta     sfxRequest+3            ; $8340
     bne     loc_6_8347              ; $8342
 ; (code below not executed in the test movies)
 
@@ -479,7 +479,7 @@ loc_6_837C:
 ; (end of code not executed in the test movies)
 
 loc_6_837F:
-    dec     ram_00EC                ; $837F
+    dec     sfxRequest              ; $837F
     bne     loc_6_83CF              ; $8381
     lda     #$00                    ; $8383
     sta     ram_07ED                ; $8385
@@ -527,7 +527,7 @@ loc_6_83C7:
 
 loc_6_83CA:
     lda     ram_07FF                ; $83CA
-    sta     ram_00EC                ; $83CD
+    sta     sfxRequest              ; $83CD
 
 loc_6_83CF:
     lda     ram_00E9                ; $83CF
@@ -573,7 +573,7 @@ loc_6_8407:
 loc_6_840A:
     lda     ram_00E3                ; $840A
     beq     loc_6_845B              ; $840C
-    dec     ram_00ED                ; $840E
+    dec     sfxRequest+1            ; $840E
     bne     loc_6_843C              ; $8410
     beq     loc_6_841A              ; $8412
 
@@ -601,7 +601,7 @@ loc_6_8429:
 
 loc_6_8437:
     lda     ram_07FE                ; $8437
-    sta     ram_00ED                ; $843A
+    sta     sfxRequest+1            ; $843A
 
 loc_6_843C:
     lda     ram_00E9                ; $843C
@@ -627,7 +627,7 @@ loc_6_845B:
     ldy     ram_00E4                ; $845B
     beq     loc_6_8496              ; $845D
 ; (code below not executed in the test movies)
-    dec     ram_00EE                ; $845F
+    dec     sfxRequest+2            ; $845F
     beq     loc_6_846B              ; $8461
     bne     loc_6_8490              ; $8463
 
@@ -658,10 +658,10 @@ loc_6_8486:
 
 loc_6_848B:
     lda     ram_07FD                ; $848B
-    sta     ram_00EE                ; $848E
+    sta     sfxRequest+2            ; $848E
 
 loc_6_8490:
-    lda     ram_00EE                ; $8490
+    lda     sfxRequest+2            ; $8490
     cmp     #$04                    ; $8492
     bne     loc_6_849B              ; $8494
 ; (end of code not executed in the test movies)
@@ -674,7 +674,7 @@ loc_6_849B:
     lda     ram_00E5                ; $849B
     beq     dat_6_84D9              ; $849D
 ; (code below not executed in the test movies)
-    dec     ram_00EF                ; $849F
+    dec     sfxRequest+3            ; $849F
     beq     loc_6_84AB              ; $84A1
     bne     dat_6_84D9              ; $84A3
 
@@ -705,7 +705,7 @@ loc_6_84BC:
 
 loc_6_84D4:
     lda     ram_07FC                ; $84D4
-    sta     ram_00EF                ; $84D7
+    sta     sfxRequest+3            ; $84D7
 ; (end of code not executed in the test movies)
 
 dat_6_84D9:
@@ -939,11 +939,11 @@ loc_6_900B:
     jsr     sub_6_95A7              ; $901C
     jsr     sub_6_9B18              ; $901F
     lda     #$00                    ; $9022
-    sta     ram_00EF                ; $9024
-    sta     ram_00EE                ; $9026
-    sta     ram_00ED                ; $9028
-    sta     ram_00EC                ; $902A
-    sta     ram_00EB                ; $902C
+    sta     sfxRequest+3            ; $9024
+    sta     sfxRequest+2            ; $9026
+    sta     sfxRequest+1            ; $9028
+    sta     sfxRequest              ; $902A
+    sta     musicRequest            ; $902C
     sta     ram_00E9                ; $902E
 
 loc_6_9030:
@@ -1270,7 +1270,7 @@ loc_6_9296:
 
 loc_6_929C:
     ldx     #$00                    ; $929C
-    stx     ram_00EC                ; $929E
+    stx     sfxRequest              ; $929E
     stx     ram_07FC                ; $92A0
     stx     ram_07E1                ; $92A3
     stx     ram_07FA                ; $92A6
@@ -1316,9 +1316,9 @@ loc_6_92E6:
     jmp     loc_6_9398              ; $92F1
 
 sub_6_92F4:
-    ldy     ram_00EF                ; $92F4
+    ldy     sfxRequest+3            ; $92F4
     lda     ram_07FF                ; $92F6
-    lsr     ram_00EF                ; $92F9
+    lsr     sfxRequest+3            ; $92F9
     bcs     loc_6_929C              ; $92FB
 
 loc_6_92FD:
@@ -1332,27 +1332,27 @@ loc_6_9308:
     lsr     a                       ; $9308
     lsr     a                       ; $9309
     bcs     loc_6_92CF              ; $930A
-    lsr     ram_00EF                ; $930C
+    lsr     sfxRequest+3            ; $930C
     bcs     loc_6_92BE              ; $930E
-    lsr     ram_00EF                ; $9310
+    lsr     sfxRequest+3            ; $9310
     bcs     loc_6_9334              ; $9312
     lsr     a                       ; $9314
     bcs     loc_6_934C              ; $9315
-    lsr     ram_00EF                ; $9317
+    lsr     sfxRequest+3            ; $9317
     bcs     loc_6_9334              ; $9319
     lsr     a                       ; $931B
     bcs     loc_6_934C              ; $931C
     lsr     a                       ; $931E
     bcs     loc_6_92E6              ; $931F
-    lsr     ram_00EF                ; $9321
+    lsr     sfxRequest+3            ; $9321
     bcs     loc_6_92DE              ; $9323
     lsr     a                       ; $9325
     bcs     loc_6_9389              ; $9326
-    lsr     ram_00EF                ; $9328
+    lsr     sfxRequest+3            ; $9328
     bcs     loc_6_937A              ; $932A
     lsr     a                       ; $932C
     bcs     loc_6_939E              ; $932D
-    lsr     ram_00EF                ; $932F
+    lsr     sfxRequest+3            ; $932F
     bcs     loc_6_93AE              ; $9331
     rts                             ; $9333
 
@@ -1484,17 +1484,17 @@ loc_6_9405:
     jmp     loc_6_9512              ; $9405
 
 sub_6_9408:
-    ldy     ram_00EE                ; $9408
+    ldy     sfxRequest+2            ; $9408
     lda     ram_07FE                ; $940A
-    lsr     ram_00EE                ; $940D
+    lsr     sfxRequest+2            ; $940D
     bcs     loc_6_93E5              ; $940F
     lsr     a                       ; $9411
     bcs     loc_6_93F9              ; $9412
-    lsr     ram_00EE                ; $9414
+    lsr     sfxRequest+2            ; $9414
     bcs     loc_6_942B              ; $9416
     lsr     a                       ; $9418
     bcs     loc_6_9447              ; $9419
-    lsr     ram_00EE                ; $941B
+    lsr     sfxRequest+2            ; $941B
     bcs     loc_6_9425              ; $941D
     lsr     a                       ; $941F
     bcs     loc_6_9428              ; $9420
@@ -1551,7 +1551,7 @@ loc_6_9453:
     bne     loc_6_948D              ; $9484
     jsr     sub_6_9B43              ; $9486
     lda     #$04                    ; $9489
-    sta     ram_00EB                ; $948B
+    sta     musicRequest            ; $948B
 
 loc_6_948D:
     jmp     loc_6_953C              ; $948D
@@ -1634,15 +1634,15 @@ loc_6_9512:
     jmp     loc_6_953C              ; $9512
 
 loc_6_9515:
-    lsr     ram_00EE                ; $9515
+    lsr     sfxRequest+2            ; $9515
     bcs     loc_6_94ED              ; $9517
     lsr     a                       ; $9519
     bcs     loc_6_94FE              ; $951A
-    lsr     ram_00EE                ; $951C
+    lsr     sfxRequest+2            ; $951C
     bcs     loc_6_952B              ; $951E
     lsr     a                       ; $9520
     bcs     loc_6_953C              ; $9521
-    lsr     ram_00EE                ; $9523
+    lsr     sfxRequest+2            ; $9523
     bcs     loc_6_954C              ; $9525
     lsr     a                       ; $9527
     bcs     loc_6_953C              ; $9528
@@ -1733,34 +1733,34 @@ sub_6_95A7:
     rts                             ; $95B1
 
 loc_6_95B2:
-    ldy     ram_00ED                ; $95B2
+    ldy     sfxRequest+1            ; $95B2
     lda     ram_07FD                ; $95B4
-    lsr     ram_00ED                ; $95B7
+    lsr     sfxRequest+1            ; $95B7
     lsr     a                       ; $95B9
-    lsr     ram_00ED                ; $95BA
+    lsr     sfxRequest+1            ; $95BA
     bcs     loc_6_956C              ; $95BC
     lsr     a                       ; $95BE
     bcs     loc_6_9587              ; $95BF
-    lsr     ram_00ED                ; $95C1
+    lsr     sfxRequest+1            ; $95C1
     bcs     loc_6_95E6              ; $95C3
     lsr     a                       ; $95C5
     bcs     loc_6_95EE              ; $95C6
-    lsr     ram_00ED                ; $95C8
+    lsr     sfxRequest+1            ; $95C8
     lsr     a                       ; $95CA
-    lsr     ram_00ED                ; $95CB
+    lsr     sfxRequest+1            ; $95CB
     bcs     loc_6_95E6              ; $95CD
     lsr     a                       ; $95CF
     bcs     loc_6_95EE              ; $95D0
-    lsr     ram_00ED                ; $95D2
+    lsr     sfxRequest+1            ; $95D2
     bcs     loc_6_9604              ; $95D4
     lsr     a                       ; $95D6
     bcs     loc_6_960C              ; $95D7
-    lsr     ram_00ED                ; $95D9
+    lsr     sfxRequest+1            ; $95D9
     bcs     loc_6_9597              ; $95DB
     lsr     a                       ; $95DD
     lsr     a                       ; $95DE
     bcs     loc_6_960C              ; $95DF
-    lsr     ram_00ED                ; $95E1
+    lsr     sfxRequest+1            ; $95E1
     bcs     loc_6_9604              ; $95E3
     rts                             ; $95E5
 
@@ -2124,27 +2124,27 @@ loc_6_9915:
     dec     ram_07DD                ; $9915
 
 loc_6_9918:
-    ldy     ram_00EC                ; $9918
+    ldy     sfxRequest              ; $9918
     lda     ram_07E1                ; $991A
     cpy     #$C0                    ; $991D
     beq     loc_6_997E              ; $991F
     cpy     #$60                    ; $9921
     beq     loc_6_9981              ; $9923
-    lsr     ram_00EC                ; $9925
+    lsr     sfxRequest              ; $9925
     bcs     loc_6_9966              ; $9927
-    lsr     ram_00EC                ; $9929
+    lsr     sfxRequest              ; $9929
     bcs     loc_6_9969              ; $992B
-    lsr     ram_00EC                ; $992D
+    lsr     sfxRequest              ; $992D
     bcs     loc_6_996C              ; $992F
-    lsr     ram_00EC                ; $9931
+    lsr     sfxRequest              ; $9931
     bcs     loc_6_996F              ; $9933
-    lsr     ram_00EC                ; $9935
+    lsr     sfxRequest              ; $9935
     bcs     loc_6_9972              ; $9937
-    lsr     ram_00EC                ; $9939
+    lsr     sfxRequest              ; $9939
     bcs     loc_6_9975              ; $993B
-    lsr     ram_00EC                ; $993D
+    lsr     sfxRequest              ; $993D
     bcs     loc_6_9978              ; $993F
-    lsr     ram_00EC                ; $9941
+    lsr     sfxRequest              ; $9941
     bcs     loc_6_997B              ; $9943
     cmp     #$C0                    ; $9945
     beq     loc_6_999C              ; $9947
@@ -2441,7 +2441,7 @@ loc_6_9AF5:
     jmp     loc_6_98E9              ; $9B15
 
 sub_6_9B18:
-    lda     ram_00EB                ; $9B18
+    lda     musicRequest            ; $9B18
     bne     loc_6_9B61              ; $9B1A
     lda     ram_07FB                ; $9B1C
     beq     loc_6_9B4E              ; $9B1F
