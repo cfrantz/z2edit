@@ -26,6 +26,8 @@ Tools that drive the emulator need the Python extension built with
   address comment column aligned.  Refuses unknown or already-used names.
   `--array NAME BASE COUNT` names an array and turns the mechanical names
   of its elements into `NAME+k`.
+- `localize.py`: Turns `loc_` labels referenced only within their own
+  routine into cheap local labels (`@done`, `@loop`, or `@loc_XXXX`).
 - `label.py`: Finds or creates a label at a bank/address, splitting `.byte`
   lines or using `name := * + k` as needed.
 - `bank_usage.py`: Plays a movie and reports which PRG bank executes in

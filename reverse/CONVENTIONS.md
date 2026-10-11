@@ -90,6 +90,7 @@ address:
 |------------------------------|----------------|
 | Subroutine (JSR target)      | `sub_C123` (bank 7), `sub_3_A123` (bank 3) |
 | Other code location          | `loc_C123`, `loc_3_A123` |
+| Code location inside one routine | `@loc_C123` (cheap local) |
 | Data                         | `dat_C123`, `dat_3_A123` |
 | RAM / zero page              | `ram_0736`, `ram_0012`   |
 | SRAM                         | `sram_6A00`              |
