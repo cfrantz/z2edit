@@ -11,7 +11,7 @@ A save file is a copy of two blocks of RAM:
 | Block | RAM | Size | Contents |
 |-------|-----|------|----------|
 | stats | `statLevel`-`playerName` ($0777-$07A8) | `SAVE_STATS_SIZE` = 50 | levels, spells, containers, items, keys, crystals remaining, name, ... |
-| world | `saveWorld` ($0600-$06DF) | `SAVE_WORLD_SIZE` = 224 | world state (collected items, etc.) |
+| world | `saveWorld` ($0600-$06DF) | `SAVE_WORLD_SIZE` = 224 | per-area flags (see below) |
 
 Everything else (current area, position, life and magic meters) is not
 saved.  The stats block starts with these fields:
@@ -27,6 +27,23 @@ saved.  The stats block starts with these fields:
 | 42-49 | `playerName` | $F4 (blank) x 8 |
 
 The defaults are `SaveDefaultStats` and `SaveDefaultWorld` in bank 5.
+
+The world block holds 4 flags for each area, two areas per byte (even
+areas in the high nibble), in seven blocks of 32 bytes (64 areas):
+
+| Offset | Areas of |
+|--------|----------|
+| $00 | West Hyrule |
+| $20 | Death Mountain |
+| $40 | East Hyrule (and Maze Island) |
+| $60 | towns |
+| $80 | palaces (world 3) |
+| $A0 | palaces (world 4) |
+| $C0 | Great Palace |
+
+A set flag means the thing it stands for (an item, a key, a locked door)
+is still there; `Area_ClearFlag` clears it when it is taken, and
+`Area_TestFlag` tests it.  A new game starts with all flags set.
 
 ## SRAM Layout
 

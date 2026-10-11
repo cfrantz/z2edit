@@ -247,7 +247,7 @@ ram_05E9                = $05E9
 ; A save file holds saveWorld and the SAVE_STATS_SIZE bytes from statLevel
 ; (statLevel through playerName).  See docs/memory/save-files.md.
 ; ---------------------------------------------------------------------------
-saveWorld               = $0600     ; [SAVE_WORLD_SIZE] world state saved with the game
+saveWorld               = $0600     ; [SAVE_WORLD_SIZE] per-area flags, saved with the game; see AreaFlagsPtrs
 ram_06FE                = $06FE
 lives                   = $0700     ; lives remaining
 areaEntrySide           = $0701     ; side Link enters the area from: 0 = left, 1 = right
