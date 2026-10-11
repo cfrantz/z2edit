@@ -119,6 +119,32 @@ Every named routine has a header comment:
 `Status` is `confirmed` (behavior verified by reading and in the emulator)
 or `provisional` (best guess).
 
+## RAM Declarations
+
+`ram.inc` declares variables in address order, grouped under section
+comments.  Each named variable has one line:
+
+```
+; ---------------------------------------------------------------------------
+; Object slots: arrays indexed by object slot (0 = Link, 1-6 = enemies, ...)
+; ---------------------------------------------------------------------------
+objY                    = $0029     ; [17] Y position in side view
+objXPage                = $003B     ; [17] high byte of X position
+gameMode                = $0736     ; current mode; see GAME_MODE_* (provisional)
+```
+
+- `[n]` gives the number of elements of an array; it is omitted for a
+  single byte.  A 16-bit value names its low byte and says `(16-bit)`.
+- `(provisional)` marks a best-guess name or meaning; unmarked entries are
+  confirmed (by reading the code and observing the value in the emulator).
+- Enumerated values get `UPPER_SNAKE` constants in `constants.inc`.
+- An array has a single name; code refers to its elements as `objY+3`, not
+  by separate names.  Mechanical `ram_XXXX` names inside a named array are
+  removed.
+- Temporaries reused by many routines (e.g. `$0000-$000F`) are named
+  `temp0`, `temp1`, ... unless a routine-local alias in the source is
+  clearer: `@count := temp2`.
+
 ## Comments
 
 - Explain intent and game meaning, not the opcode:

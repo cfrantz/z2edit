@@ -5,7 +5,7 @@
 .ifndef GLOBALS_INC
 GLOBALS_INC = 1
 
-.global sub_5_B9CA
+.global Save_Write
 
 .global RomHeaderChecksums
 

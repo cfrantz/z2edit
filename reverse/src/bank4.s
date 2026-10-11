@@ -397,11 +397,11 @@ dat_4_84D8:
 dat_4_8500:
     .assert dat_4_8500 = AreaBank::dat_8500, error, "interface address moved"
     .byte   $3D, $83                                                        ; $8500
-    .byte   $3D, $83, $79, $83, $91, $83 ; $8502
+    .byte   $3D, $83, $79, $83, $91, $83                                    ; $8502
 
 dat_4_8508:
     .assert dat_4_8508 = AreaBank::dat_8508, error, "interface address moved"
-    .byte   $FF, $FF, $FF, $FF      ; $8508
+    .byte   $FF, $FF, $FF, $FF                                              ; $8508
 
 sub_4_850C:
     .assert sub_4_850C = AreaBank::sub_850C, error, "interface address moved"
@@ -777,9 +777,9 @@ loc_4_965A:
     lda     ram_00C9                ; $965E
     beq     loc_4_966B              ; $9660
     lda     #$40                    ; $9662
-    sta     ram_002A,x              ; $9664
+    sta     objY+1,x                ; $9664
     lda     #$00                    ; $9666
-    sta     ram_0071,x              ; $9668
+    sta     objXVelocity+1,x        ; $9668
     rts                             ; $966A
 
 loc_4_966B:
@@ -814,7 +814,7 @@ loc_4_96A0:
     inx                             ; $96A2
     jsr     sub_F27D                ; $96A3
     ldx     ram_0010                ; $96A6
-    lda     ram_001A,x              ; $96A8
+    lda     objState+1,x            ; $96A8
     cmp     #$02                    ; $96AA
     bcc     loc_4_96B1              ; $96AC
 ; (code below not executed in the test movies)
@@ -825,9 +825,9 @@ loc_4_96B1:
     lda     ram_00C9                ; $96B1
     and     #$FC                    ; $96B3
     beq     loc_4_96C0              ; $96B5
-    lda     ram_00A8,x              ; $96B7
+    lda     objCollision+1,x        ; $96B7
     and     #$0F                    ; $96B9
-    sta     ram_00A8,x              ; $96BB
+    sta     objCollision+1,x        ; $96BB
     jmp     sub_DE6C                ; $96BD
 
 loc_4_96C0:
@@ -838,31 +838,31 @@ loc_4_96C0:
     jsr     sub_EA32                ; $96CC
     jsr     sub_D6C1                ; $96CF
     jsr     sub_DC91                ; $96D2
-    lda     ram_00A8,x              ; $96D5
+    lda     objCollision+1,x        ; $96D5
     and     #$08                    ; $96D7
     beq     loc_4_96E0              ; $96D9
 ; (code below not executed in the test movies)
     lda     #$02                    ; $96DB
-    sta     ram_057E,x              ; $96DD
+    sta     objYVelocity+1,x        ; $96DD
 ; (end of code not executed in the test movies)
 
 loc_4_96E0:
-    lda     ram_00A8,x              ; $96E0
+    lda     objCollision+1,x        ; $96E0
     and     #$04                    ; $96E2
     beq     loc_4_9701              ; $96E4
     sta     ram_04A0,x              ; $96E6
     jsr     sub_4_9E17              ; $96E9
     jsr     sub_DAC1                ; $96EC
-    sta     ram_0071,x              ; $96EF
+    sta     objXVelocity+1,x        ; $96EF
     lda     ram_000F                ; $96F1
     adc     #$1E                    ; $96F3
     cmp     #$3C                    ; $96F5
     bcc     loc_4_9704              ; $96F7
 
 loc_4_96F9:
-    ldy     ram_0060,x              ; $96F9
+    ldy     objFacing+1,x           ; $96F9
     lda     dat_4_9657,y            ; $96FB
-    sta     ram_0071,x              ; $96FE
+    sta     objXVelocity+1,x        ; $96FE
 
 loc_4_9700:
     rts                             ; $9700
@@ -871,18 +871,18 @@ loc_4_9701:
     jmp     loc_4_9E2C              ; $9701
 
 loc_4_9704:
-    lda     ram_057E,x              ; $9704
+    lda     objYVelocity+1,x        ; $9704
     ora     ram_0504,x              ; $9707
     ora     ram_0081,x              ; $970A
     bne     loc_4_9700              ; $970C
     lda     ram_051B,x              ; $970E
     and     #$03                    ; $9711
     bne     loc_4_9723              ; $9713
-    ldy     ram_00A1,x              ; $9715
+    ldy     enemyType,x             ; $9715
     cpy     #$23                    ; $9717
     bne     loc_4_9723              ; $9719
     lda     #$CD                    ; $971B
-    sta     ram_057E,x              ; $971D
+    sta     objYVelocity+1,x        ; $971D
     jmp     loc_4_96F9              ; $9720
 
 loc_4_9723:
@@ -898,13 +898,13 @@ loc_4_972B:
 
 loc_4_973D:
     ldy     #$02                    ; $973D
-    lda     ram_0077,x              ; $973F
+    lda     objXVelocity+7,x        ; $973F
     bmi     loc_4_9744              ; $9741
     dey                             ; $9743
 
 loc_4_9744:
     tya                             ; $9744
-    cmp     ram_0066,x              ; $9745
+    cmp     objFacing+7,x           ; $9745
     bne     loc_4_9761              ; $9747
     beq     loc_4_975C              ; $9749
 ; (code below not executed in the test movies)
@@ -912,7 +912,7 @@ loc_4_9744:
 ; (end of code not executed in the test movies)
 
 loc_4_974E:
-    lda     ram_0030,x              ; $974E
+    lda     objY+7,x                ; $974E
     cmp     #$C5                    ; $9750
     bcc     loc_4_9759              ; $9752
     lda     #$F4                    ; $9754
@@ -924,20 +924,20 @@ loc_4_9759:
 
 loc_4_975C:
     lda     #$FE                    ; $975C
-    sta     ram_0584,x              ; $975E
+    sta     objYVelocity+7,x        ; $975E
 
 loc_4_9761:
-    inc     ram_0584,x              ; $9761
+    inc     objYVelocity+7,x        ; $9761
     jmp     loc_4_9940              ; $9764
 
 loc_4_9767:
-    dec     ram_0077,x              ; $9767
+    dec     objXVelocity+7,x        ; $9767
     bne     loc_4_976E              ; $9769
     jmp     loc_4_995A              ; $976B
 
 loc_4_976E:
     ldy     ram_0097,x              ; $976E
-    lda     ram_0030,x              ; $9770
+    lda     objY+7,x                ; $9770
     sta     ram_0000                ; $9772
     lda     #$02                    ; $9774
     sta     ram_0002                ; $9776
@@ -945,10 +945,10 @@ loc_4_976E:
     sta     ram_0003                ; $9779
     lsr     a                       ; $977B
     sta     ram_00C9                ; $977C
-    lda     ram_0054,x              ; $977E
+    lda     objX+7,x                ; $977E
     sbc     ram_072C                ; $9780
     sta     ram_0001                ; $9783
-    lda     ram_0077,x              ; $9785
+    lda     objXVelocity+7,x        ; $9785
     ldx     #$00                    ; $9787
     cmp     #$08                    ; $9789
     bcs     loc_4_978F              ; $978B
@@ -961,7 +961,7 @@ loc_4_978F:
     rts                             ; $9797
 
 loc_4_9798:
-    lda     ram_0012                ; $9798
+    lda     frameCounter            ; $9798
     and     #$03                    ; $979A
     ora     ram_0202,y              ; $979C
     sta     ram_0202,y              ; $979F
@@ -970,7 +970,7 @@ loc_4_97A2:
     rts                             ; $97A2
 
 loc_4_97A3:
-    lda     ram_0012                ; $97A3
+    lda     frameCounter            ; $97A3
     asl     a                       ; $97A5
     asl     a                       ; $97A6
     asl     a                       ; $97A7
@@ -985,11 +985,11 @@ dat_4_97B1:
     .byte   $02, $82, $C2, $42                                              ; $97B1
 
 loc_4_97B5:
-    lda     ram_0012                ; $97B5
+    lda     frameCounter            ; $97B5
     lsr     a                       ; $97B7
     lsr     a                       ; $97B8
     and     #$03                    ; $97B9
-    ldy     ram_0066,x              ; $97BB
+    ldy     objFacing+7,x           ; $97BB
     dey                             ; $97BD
     bne     loc_4_97C2              ; $97BE
     eor     #$03                    ; $97C0
@@ -1018,11 +1018,11 @@ dat_4_97DC := * + 2
     .byte   $40, $00                                                        ; $97DF
 
 loc_4_97E1:
-    lda     ram_00A8,x              ; $97E1
+    lda     objCollision+1,x        ; $97E1
     ldx     #$22                    ; $97E3
     and     #$04                    ; $97E5
     beq     loc_4_97F1              ; $97E7
-    lda     ram_0012                ; $97E9
+    lda     frameCounter            ; $97E9
     and     #$10                    ; $97EB
     beq     loc_4_97F1              ; $97ED
     ldx     #$26                    ; $97EF
@@ -1034,9 +1034,9 @@ loc_4_97F1:
     beq     loc_4_9814              ; $97FA
     lda     ram_00C9                ; $97FC
     bne     loc_4_9814              ; $97FE
-    lda     ram_002A,x              ; $9800
+    lda     objY+1,x                ; $9800
     sta     ram_0000                ; $9802
-    lda     ram_0060,x              ; $9804
+    lda     objFacing+1,x           ; $9804
     tax                             ; $9806
     lda     ram_00CD                ; $9807
     clc                             ; $9809
@@ -1081,7 +1081,7 @@ loc_4_9832:
     bne     loc_4_9870              ; $983D
     ldy     ram_0081,x              ; $983F
     beq     loc_4_9870              ; $9841
-    lda     ram_002A,x              ; $9843
+    lda     objY+1,x                ; $9843
     clc                             ; $9845
     adc     #$10                    ; $9846
     sta     ram_0000                ; $9848
@@ -1091,7 +1091,7 @@ loc_4_9832:
     jsr     sub_F1F4                ; $9850
     stx     ram_00D9                ; $9853
     ldx     ram_0010                ; $9855
-    lda     ram_0060,x              ; $9857
+    lda     objFacing+1,x           ; $9857
     lsr     a                       ; $9859
     asl     a                       ; $985A
     adc     ram_0081,x              ; $985B
@@ -1111,14 +1111,14 @@ loc_4_9870:
     sta     ram_0091,x              ; $9872
     lda     sram_6E3D               ; $9874
     bmi     loc_4_98A9              ; $9877
-    lda     ram_0060,x              ; $9879
+    lda     objFacing+1,x           ; $9879
     pha                             ; $987B
     jsr     sub_DC91                ; $987C
     pla                             ; $987F
-    sta     ram_0060,x              ; $9880
+    sta     objFacing+1,x           ; $9880
     iny                             ; $9882
     tya                             ; $9883
-    cmp     ram_0060,x              ; $9884
+    cmp     objFacing+1,x           ; $9884
     beq     loc_4_98A9              ; $9886
 ; (code below not executed in the test movies)
     lda     ram_0253                ; $9888
@@ -1148,12 +1148,12 @@ loc_4_98AE:
     lda     #$E0                    ; $98AE
 
 loc_4_98B0:
-    sta     ram_0071,x              ; $98B0
-    sta     ram_057E,x              ; $98B2
+    sta     objXVelocity+1,x        ; $98B0
+    sta     objYVelocity+1,x        ; $98B2
     rts                             ; $98B5
 
 loc_4_98B6:
-    asl     ram_0071,x              ; $98B6
+    asl     objXVelocity+1,x        ; $98B6
     rts                             ; $98B8
 
 loc_4_98B9:
@@ -1171,23 +1171,23 @@ loc_4_98C6:
 loc_4_98C9:
     and     #$07                    ; $98C9
     bne     loc_4_98D9              ; $98CB
-    lda     ram_0077,x              ; $98CD
+    lda     objXVelocity+7,x        ; $98CD
     beq     loc_4_98D9              ; $98CF
     bpl     loc_4_98D7              ; $98D1
-    inc     ram_0077,x              ; $98D3
-    inc     ram_0077,x              ; $98D5
+    inc     objXVelocity+7,x        ; $98D3
+    inc     objXVelocity+7,x        ; $98D5
 
 loc_4_98D7:
-    dec     ram_0077,x              ; $98D7
+    dec     objXVelocity+7,x        ; $98D7
 
 loc_4_98D9:
     jsr     sub_EA14                ; $98D9
     bcc     loc_4_98E9              ; $98DC
-    lda     ram_0030,x              ; $98DE
+    lda     objY+7,x                ; $98DE
     and     #$F0                    ; $98E0
-    sta     ram_0030,x              ; $98E2
+    sta     objY+7,x                ; $98E2
     lda     #$FF                    ; $98E4
-    sta     ram_0584,x              ; $98E6
+    sta     objYVelocity+7,x        ; $98E6
 
 loc_4_98E9:
     jmp     loc_4_9940              ; $98E9
@@ -1216,21 +1216,21 @@ loc_4_9903:
     bcs     loc_4_993C              ; $990E
     ldx     ram_0000                ; $9910
     ldy     ram_0010                ; $9912
-    asl     ram_00C2,x              ; $9914
+    asl     enemyHp,x               ; $9914
     lda     #$04                    ; $9916
-    sta     ram_00A1,x              ; $9918
-    lda     a:ram_0030,y            ; $991A
+    sta     enemyType,x             ; $9918
+    lda     a:objY+7,y              ; $991A
     and     #$F0                    ; $991D
-    sta     ram_002A,x              ; $991F
+    sta     objY+1,x                ; $991F
     lda     #$E0                    ; $9921
-    sta     ram_057E,x              ; $9923
-    lda     a:ram_0054,y            ; $9926
-    sta     ram_004E,x              ; $9929
-    lda     a:ram_0042,y            ; $992B
-    sta     ram_003C,x              ; $992E
+    sta     objYVelocity+1,x        ; $9923
+    lda     a:objX+7,y              ; $9926
+    sta     objX+1,x                ; $9929
+    lda     a:objXHi+7,y            ; $992B
+    sta     objXHi+1,x              ; $992E
     jsr     sub_DC91                ; $9930
     lda     dat_4_9C80,y            ; $9933
-    sta     ram_0071,x              ; $9936
+    sta     objXVelocity+1,x        ; $9936
     ldx     ram_0010                ; $9938
     bpl     loc_4_995A              ; $993A
 
@@ -1239,7 +1239,7 @@ loc_4_993C:
     bne     loc_4_995C              ; $993E
 
 loc_4_9940:
-    inc     ram_0584,x              ; $9940
+    inc     objYVelocity+7,x        ; $9940
 
 loc_4_9943:
     jsr     sub_DED4                ; $9943
@@ -1280,7 +1280,7 @@ sub_4_996A:
     lda     sram_6EC1,y             ; $9974
     sta     ram_000F                ; $9977
     ldy     ram_0097,x              ; $9979
-    lda     ram_0030,x              ; $997B
+    lda     objY+7,x                ; $997B
     sta     ram_0200,y              ; $997D
     lda     ram_00CE                ; $9980
     sta     ram_0203,y              ; $9982
@@ -1289,7 +1289,7 @@ sub_4_996A:
     lda     sram_6EAD,y             ; $9987
     pha                             ; $998A
     lda     sram_6EB6,y             ; $998B
-    ldy     ram_0066,x              ; $998E
+    ldy     objFacing+7,x           ; $998E
     ora     dat_4_9967,y            ; $9990
     ldy     ram_0097,x              ; $9993
     sta     ram_0202,y              ; $9995
@@ -1313,7 +1313,7 @@ loc_4_99AD:
     asl     a                       ; $99B1
 
 loc_4_99B2:
-    and     ram_0012                ; $99B2
+    and     frameCounter            ; $99B2
     beq     loc_4_99BE              ; $99B4
     ldy     ram_0097,x              ; $99B6
     lda     #$F8                    ; $99B8
@@ -1324,7 +1324,7 @@ loc_4_99B2:
 loc_4_99BE:
     ldy     ram_0097,x              ; $99BE
     ldx     #$01                    ; $99C0
-    lda     ram_0012                ; $99C2
+    lda     frameCounter            ; $99C2
     and     #$04                    ; $99C4
     bne     loc_4_99CA              ; $99C6
     ldx     #$41                    ; $99C8
@@ -1342,10 +1342,10 @@ loc_4_99D1:
     jsr     sub_DEB8                ; $99D4
     jsr     sub_DEC8                ; $99D7
     jsr     sub_DE3D                ; $99DA
-    lda     ram_00A8,x              ; $99DD
+    lda     objCollision+1,x        ; $99DD
     and     #$10                    ; $99DF
     beq     loc_4_99F0              ; $99E1
-    lda     ram_0773                ; $99E3
+    lda     statMeter               ; $99E3
     sec                             ; $99E6
     sbc     #$01                    ; $99E7
     bcs     loc_4_99ED              ; $99E9
@@ -1354,7 +1354,7 @@ loc_4_99D1:
 ; (end of code not executed in the test movies)
 
 loc_4_99ED:
-    sta     ram_0773                ; $99ED
+    sta     statMeter               ; $99ED
 
 loc_4_99F0:
     lda     ram_074F                ; $99F0
@@ -1364,7 +1364,7 @@ loc_4_99F0:
     lda     ram_00C9                ; $99FB
     and     #$0C                    ; $99FD
     bne     loc_4_9A07              ; $99FF
-    lda     ram_00A8,x              ; $9A01
+    lda     objCollision+1,x        ; $9A01
     and     #$03                    ; $9A03
     beq     loc_4_9A0D              ; $9A05
 
@@ -1376,16 +1376,16 @@ loc_4_9A0D:
     lda     ram_00C9                ; $9A0D
     and     #$F0                    ; $9A0F
     bne     loc_4_9A19              ; $9A11
-    lda     ram_00A8,x              ; $9A13
+    lda     objCollision+1,x        ; $9A13
     and     #$0C                    ; $9A15
     beq     loc_4_9A27              ; $9A17
 
 loc_4_9A19:
-    lda     ram_057E,x              ; $9A19
+    lda     objYVelocity+1,x        ; $9A19
     eor     #$FF                    ; $9A1C
     clc                             ; $9A1E
     adc     #$01                    ; $9A1F
-    sta     ram_057E,x              ; $9A21
+    sta     objYVelocity+1,x        ; $9A21
     jsr     sub_DEC8                ; $9A24
 
 loc_4_9A27:
@@ -1397,10 +1397,10 @@ loc_4_9A28:
 loc_4_9A2A:
     cpy     ram_0010                ; $9A2A
     beq     loc_4_9A3A              ; $9A2C
-    lda     a:ram_00B6,y            ; $9A2E
+    lda     a:enemyActive,y         ; $9A2E
     beq     loc_4_9A3A              ; $9A31
-    lda     a:ram_00A1,y            ; $9A33
-    cmp     ram_00A1,x              ; $9A36
+    lda     a:enemyType,y           ; $9A33
+    cmp     enemyType,x             ; $9A36
     beq     loc_4_9A3E              ; $9A38
 
 loc_4_9A3A:
@@ -1416,7 +1416,7 @@ loc_4_9A3E:
     rts                             ; $9A45
 
 loc_4_9A46:
-    lda     ram_0012                ; $9A46
+    lda     frameCounter            ; $9A46
     lsr     a                       ; $9A48
     bcs     loc_4_9A72              ; $9A49
     jsr     sub_DBCE                ; $9A4B
@@ -1425,16 +1425,16 @@ loc_4_9A46:
     sta     a:ram_0087,y            ; $9A52
     lda     ram_051B,x              ; $9A55
     and     #$1F                    ; $9A58
-    adc     ram_002A,x              ; $9A5A
+    adc     objY+1,x                ; $9A5A
     sbc     #$06                    ; $9A5C
-    sta     a:ram_0030,y            ; $9A5E
+    sta     a:objY+7,y              ; $9A5E
     lda     ram_051C,x              ; $9A61
     and     #$0F                    ; $9A64
     sbc     #$08                    ; $9A66
-    adc     ram_004E,x              ; $9A68
-    sta     a:ram_0054,y            ; $9A6A
+    adc     objX+1,x                ; $9A68
+    sta     a:objX+7,y              ; $9A6A
     lda     #$10                    ; $9A6D
-    sta     a:ram_0077,y            ; $9A6F
+    sta     a:objXVelocity+7,y      ; $9A6F
 
 loc_4_9A72:
     rts                             ; $9A72
@@ -1447,14 +1447,14 @@ loc_4_9A73:
     bne     loc_4_9A82              ; $9A7C
 ; (code below not executed in the test movies)
     lda     #$15                    ; $9A7E
-    sta     ram_00A1,x              ; $9A80
+    sta     enemyType,x             ; $9A80
 ; (end of code not executed in the test movies)
 
 loc_4_9A82:
     lda     #$62                    ; $9A82
-    sta     ram_002A,x              ; $9A84
+    sta     objY+1,x                ; $9A84
     lda     #$7C                    ; $9A86
-    sta     ram_004E,x              ; $9A88
+    sta     objX+1,x                ; $9A88
     rts                             ; $9A8A
 
 sub_4_9A8B:
@@ -1462,11 +1462,11 @@ sub_4_9A8B:
     and     #$08                    ; $9A8D
     bne     loc_4_9AA9              ; $9A8F
     ldy     ram_0091,x              ; $9A91
-    lda     ram_002A,x              ; $9A93
+    lda     objY+1,x                ; $9A93
     sta     ram_0200,y              ; $9A95
     lda     #$3D                    ; $9A98
     sta     ram_0201,y              ; $9A9A
-    lda     ram_0012                ; $9A9D
+    lda     frameCounter            ; $9A9D
     and     #$03                    ; $9A9F
     sta     ram_0202,y              ; $9AA1
     lda     ram_00CD                ; $9AA4
@@ -1497,13 +1497,13 @@ loc_4_9ADE:
 loc_4_9AEB:
     lda     ram_00C9                ; $9AEB
     bne     loc_4_9B2A              ; $9AED
-    lda     ram_0794                ; $9AEF
+    lda     crystalsRemaining       ; $9AEF
     beq     loc_4_9B2A              ; $9AF2
     jsr     sub_E4D9                ; $9AF4
-    lda     ram_00A8,x              ; $9AF7
+    lda     objCollision+1,x        ; $9AF7
     and     #$10                    ; $9AF9
     beq     loc_4_9B2A              ; $9AFB
-    lda     ram_00A7                ; $9AFD
+    lda     objCollision            ; $9AFD
     and     #$04                    ; $9AFF
     beq     loc_4_9B2A              ; $9B01
     inc     ram_00AF,x              ; $9B03
@@ -1511,13 +1511,13 @@ loc_4_9AEB:
     lda     #$03                    ; $9B07
     sta     ram_0080                ; $9B09
     lda     #$A0                    ; $9B0B
-    sta     ram_002A,x              ; $9B0D
-    dec     ram_0794                ; $9B0F
+    sta     objY+1,x                ; $9B0D
+    dec     crystalsRemaining       ; $9B0F
     lda     #$08                    ; $9B12
     sta     ram_00EF                ; $9B14
     lda     #$80                    ; $9B16
     sta     ram_00EB                ; $9B18
-    lda     ram_0706                ; $9B1A
+    lda     currentRegion           ; $9B1A
     beq     loc_4_9B22              ; $9B1D
     clc                             ; $9B1F
     adc     #$02                    ; $9B20
@@ -1526,14 +1526,14 @@ loc_4_9B22:
     sec                             ; $9B22
     adc     ram_056C                ; $9B23
     tay                             ; $9B26
-    sta     ram_078C,y              ; $9B27
+    sta     itemOwned+7,y           ; $9B27
 
 loc_4_9B2A:
     rts                             ; $9B2A
 
 loc_4_9B2B:
-    dec     ram_002A,x              ; $9B2B
-    lda     ram_002A,x              ; $9B2D
+    dec     objY+1,x                ; $9B2B
+    lda     objY+1,x                ; $9B2D
     sta     ram_0081,x              ; $9B2F
     cmp     #$62                    ; $9B31
     bne     loc_4_9B46              ; $9B33
@@ -1544,7 +1544,7 @@ loc_4_9B2B:
     lda     #$02                    ; $9B3E
     sta     ram_00EC                ; $9B40
     lda     #$00                    ; $9B42
-    sta     ram_0070                ; $9B44
+    sta     objXVelocity            ; $9B44
 
 loc_4_9B46:
     rts                             ; $9B46
@@ -1570,14 +1570,14 @@ loc_4_9B56:
     sbc     ram_0776                ; $9B64
     sta     ram_0756                ; $9B67
     lda     ram_0770                ; $9B6A
-    sbc     ram_0775                ; $9B6D
+    sbc     experience              ; $9B6D
     sta     ram_0755                ; $9B70
-    ldy     ram_00BC,x              ; $9B73
+    ldy     enemySramIndex,x        ; $9B73
     iny                             ; $9B75
     lda     #$D5                    ; $9B76
     sta     (ram_00D6),y            ; $9B78
     lda     #$15                    ; $9B7A
-    sta     ram_00A1,x              ; $9B7C
+    sta     enemyType,x             ; $9B7C
     ldx     #$02                    ; $9B7E
     stx     ram_00EB                ; $9B80
     inx                             ; $9B82
@@ -1637,7 +1637,7 @@ dat_4_9BD5:
     .byte   $0D, $0B                                                        ; $9BDB
 
 loc_4_9BDD:
-    lda     ram_0012                ; $9BDD
+    lda     frameCounter            ; $9BDD
     and     #$1F                    ; $9BDF
     ora     ram_00C9                ; $9BE1
     bne     loc_4_9C3E              ; $9BE3
@@ -1646,17 +1646,17 @@ sub_4_9BE5:
     jsr     sub_DBCE                ; $9BE5
     bcs     loc_4_9C3E              ; $9BE8
     sty     ram_0005                ; $9BEA
-    lda     ram_0060,x              ; $9BEC
+    lda     objFacing+1,x           ; $9BEC
     pha                             ; $9BEE
     jsr     sub_DC91                ; $9BEF
     pla                             ; $9BF2
-    sta     ram_0060,x              ; $9BF3
+    sta     objFacing+1,x           ; $9BF3
     iny                             ; $9BF5
     tya                             ; $9BF6
     ldy     ram_0005                ; $9BF7
-    cmp     ram_0060,x              ; $9BF9
+    cmp     objFacing+1,x           ; $9BF9
     bne     loc_4_9C3F              ; $9BFB
-    sta     a:ram_0066,y            ; $9BFD
+    sta     a:objFacing+7,y         ; $9BFD
     lda     ram_000F                ; $9C00
     bpl     loc_4_9C06              ; $9C02
     eor     #$FF                    ; $9C04
@@ -1671,24 +1671,24 @@ loc_4_9C06:
     bcs     loc_4_9C3F              ; $9C0E
     tax                             ; $9C10
     lda     dat_4_9BD5,x            ; $9C11
-    sta     ram_0584,y              ; $9C14
+    sta     objYVelocity+7,y        ; $9C14
     lda     dat_4_9BCD,x            ; $9C17
-    ldx     ram_0066,y              ; $9C1A
+    ldx     objFacing+7,y           ; $9C1A
     dex                             ; $9C1C
     beq     loc_4_9C21              ; $9C1D
     eor     #$FF                    ; $9C1F
 
 loc_4_9C21:
-    sta     a:ram_0077,y            ; $9C21
+    sta     a:objXVelocity+7,y      ; $9C21
     ldx     ram_0010                ; $9C24
-    lda     ram_002A,x              ; $9C26
+    lda     objY+1,x                ; $9C26
     adc     #$05                    ; $9C28
-    sta     a:ram_0030,y            ; $9C2A
-    lda     ram_004E,x              ; $9C2D
+    sta     a:objY+7,y              ; $9C2A
+    lda     objX+1,x                ; $9C2D
     adc     #$04                    ; $9C2F
-    sta     a:ram_0054,y            ; $9C31
-    lda     ram_003C,x              ; $9C34
-    sta     a:ram_0042,y            ; $9C36
+    sta     a:objX+7,y              ; $9C31
+    lda     objXHi+1,x              ; $9C34
+    sta     a:objXHi+7,y            ; $9C36
     lda     #$01                    ; $9C39
     sta     a:ram_0087,y            ; $9C3B
 
@@ -1703,7 +1703,7 @@ loc_4_9C3F:
 sub_4_9C45:
     sta     ram_0000                ; $9C45
     ldy     #$00                    ; $9C47
-    lda     ram_00C2,x              ; $9C49
+    lda     enemyHp,x               ; $9C49
     clc                             ; $9C4B
 
 loc_4_9C4C:
@@ -1759,7 +1759,7 @@ dat_4_9C82:
 
 sub_4_9C8C:
     jsr     sub_EF11                ; $9C8C
-    lda     ram_00A1,x              ; $9C8F
+    lda     enemyType,x             ; $9C8F
     cmp     #$18                    ; $9C91
     bcs     loc_4_9C97              ; $9C93
     lda     #$1A                    ; $9C95
@@ -1783,8 +1783,8 @@ loc_4_9C97:
     tax                             ; $9CB6
     lda     dat_4_9C82,x            ; $9CB7
     ldx     ram_0010                ; $9CBA
-    adc     ram_002A,x              ; $9CBC
-    sta     a:ram_0030,y            ; $9CBE
+    adc     objY+1,x                ; $9CBC
+    sta     a:objY+7,y              ; $9CBE
     bne     loc_4_9CDF              ; $9CC1
 
 loc_4_9CC3:
@@ -1816,7 +1816,7 @@ loc_4_9CE3:
     inx                             ; $9CEB
     jsr     sub_F27D                ; $9CEC
     ldx     ram_0010                ; $9CEF
-    lda     ram_001A,x              ; $9CF1
+    lda     objState+1,x            ; $9CF1
     cmp     #$02                    ; $9CF3
     bcc     loc_4_9CFA              ; $9CF5
     jmp     sub_DD3D                ; $9CF7
@@ -1825,9 +1825,9 @@ loc_4_9CFA:
     lda     ram_00C9                ; $9CFA
     and     #$FC                    ; $9CFC
     beq     loc_4_9D0C              ; $9CFE
-    lda     ram_00A8,x              ; $9D00
+    lda     objCollision+1,x        ; $9D00
     and     #$0F                    ; $9D02
-    sta     ram_00A8,x              ; $9D04
+    sta     objCollision+1,x        ; $9D04
     jsr     sub_DE6C                ; $9D06
     jmp     loc_4_9D15              ; $9D09
 
@@ -1839,7 +1839,7 @@ loc_4_9D0C:
 loc_4_9D15:
     jsr     sub_D6C1                ; $9D15
     jsr     sub_DEBE                ; $9D18
-    lda     ram_00A8,x              ; $9D1B
+    lda     objCollision+1,x        ; $9D1B
     and     #$04                    ; $9D1D
     beq     loc_4_9D24              ; $9D1F
     jsr     sub_DAC1                ; $9D21
@@ -1855,7 +1855,7 @@ loc_4_9D24:
     sta     ram_0401,x              ; $9D35
 
 loc_4_9D38:
-    lda     ram_00A1,x              ; $9D38
+    lda     enemyType,x             ; $9D38
     cmp     #$18                    ; $9D3A
     bcc     loc_4_9D44              ; $9D3C
     lda     ram_00C9                ; $9D3E
@@ -1863,9 +1863,9 @@ loc_4_9D38:
     bne     loc_4_9D4F              ; $9D42
 
 loc_4_9D44:
-    lda     ram_002A,x              ; $9D44
+    lda     objY+1,x                ; $9D44
     sec                             ; $9D46
-    sbc     ram_0029                ; $9D47
+    sbc     objY                    ; $9D47
     bcc     loc_4_9D4F              ; $9D49
     cmp     #$2A                    ; $9D4B
     bcc     loc_4_9D52              ; $9D4D
@@ -1885,13 +1885,13 @@ loc_4_9D52:
     sta     ram_0444,x              ; $9D64
 
 loc_4_9D67:
-    lda     ram_0029                ; $9D67
-    cmp     ram_002A,x              ; $9D69
+    lda     objY                    ; $9D67
+    cmp     objY+1,x                ; $9D69
     beq     loc_4_9D7B              ; $9D6B
     ldy     #$01                    ; $9D6D
     clc                             ; $9D6F
     adc     #$0A                    ; $9D70
-    cmp     ram_002A,x              ; $9D72
+    cmp     objY+1,x                ; $9D72
     bcc     loc_4_9D77              ; $9D74
     dey                             ; $9D76
 
@@ -1903,7 +1903,7 @@ loc_4_9D7B:
     jsr     sub_DC91                ; $9D7B
     lda     dat_4_9C80,y            ; $9D7E
     asl     a                       ; $9D81
-    sta     ram_0071,x              ; $9D82
+    sta     objXVelocity+1,x        ; $9D82
     ldy     ram_00DF                ; $9D84
     lda     ram_000F                ; $9D86
     adc     dat_4_9C6C,y            ; $9D88
@@ -1912,16 +1912,16 @@ loc_4_9D7B:
     rts                             ; $9D90
 
 loc_4_9D91:
-    ldy     ram_0070                ; $9D91
+    ldy     objXVelocity            ; $9D91
     bne     loc_4_9D9F              ; $9D93
     ldy     #$08                    ; $9D95
-    lda     ram_0012                ; $9D97
+    lda     frameCounter            ; $9D97
     and     #$40                    ; $9D99
     bne     loc_4_9D9F              ; $9D9B
     ldy     #$F8                    ; $9D9D
 
 loc_4_9D9F:
-    sty     ram_0071,x              ; $9D9F
+    sty     objXVelocity+1,x        ; $9D9F
     tya                             ; $9DA1
     ldy     ram_00DF                ; $9DA2
     cpy     #$1A                    ; $9DA4
@@ -1931,7 +1931,7 @@ loc_4_9D9F:
 
 loc_4_9DAD:
     asl     a                       ; $9DAD
-    ror     ram_0071,x              ; $9DAE
+    ror     objXVelocity+1,x        ; $9DAE
 
 loc_4_9DB0:
     lda     ram_0081,x              ; $9DB0
@@ -1985,14 +1985,14 @@ loc_4_9DEE:
     jsr     sub_4_9E0F              ; $9DF8
 
 loc_4_9DFB:
-    ldy     ram_0060,x              ; $9DFB
+    ldy     objFacing+1,x           ; $9DFB
     lda     dat_4_9C7F,y            ; $9DFD
-    sta     ram_0071,x              ; $9E00
+    sta     objXVelocity+1,x        ; $9E00
     rts                             ; $9E02
 
 loc_4_9E03:
     lda     #$00                    ; $9E03
-    sta     ram_0071,x              ; $9E05
+    sta     objXVelocity+1,x        ; $9E05
     lda     ram_0504,x              ; $9E07
     bne     loc_4_9E16              ; $9E0A
     jsr     sub_E8EB                ; $9E0C
@@ -2014,11 +2014,11 @@ sub_4_9E17:
     inc     ram_043E,x              ; $9E24
 
 loc_4_9E27:
-    sta     ram_0071,x              ; $9E27
+    sta     objXVelocity+1,x        ; $9E27
     jsr     sub_EA32                ; $9E29
 
 loc_4_9E2C:
-    lda     ram_00A8,x              ; $9E2C
+    lda     objCollision+1,x        ; $9E2C
     and     #$03                    ; $9E2E
     bne     loc_4_9E16              ; $9E30
 dat_4_9E34 := * + 2
@@ -2039,10 +2039,10 @@ loc_4_9E45:
     ldy     #$08                    ; $9E4D
 
 loc_4_9E4F:
-    lda     ram_00A8,x              ; $9E4F
+    lda     objCollision+1,x        ; $9E4F
     and     #$04                    ; $9E51
     beq     loc_4_9E6C              ; $9E53
-    lda     ram_0071,x              ; $9E55
+    lda     objXVelocity+1,x        ; $9E55
     beq     loc_4_9E6C              ; $9E57
     bpl     loc_4_9E5D              ; $9E59
     eor     #$FF                    ; $9E5B
@@ -2054,7 +2054,7 @@ loc_4_9E5D:
     lsr     a                       ; $9E63
 
 loc_4_9E64:
-    and     ram_0012                ; $9E64
+    and     frameCounter            ; $9E64
     bne     loc_4_9E6C              ; $9E66
     iny                             ; $9E68
     iny                             ; $9E69
@@ -2120,15 +2120,15 @@ loc_4_9EC1:
     bcs     loc_4_9EDF              ; $9EC4
     ldx     ram_0000                ; $9EC6
     lda     #$B0                    ; $9EC8
-    sta     ram_002A,x              ; $9ECA
+    sta     objY+1,x                ; $9ECA
     lda     #$0C                    ; $9ECC
-    sta     ram_00A1,x              ; $9ECE
+    sta     enemyType,x             ; $9ECE
     lda     ram_051B,x              ; $9ED0
     and     #$02                    ; $9ED3
-    adc     ram_0060,x              ; $9ED5
+    adc     objFacing+1,x           ; $9ED5
     tay                             ; $9ED7
     lda     dat_4_9EBC,y            ; $9ED8
-    sta     ram_0071,x              ; $9EDB
+    sta     objXVelocity+1,x        ; $9EDB
     ldx     ram_0010                ; $9EDD
 
 loc_4_9EDF:
@@ -2400,13 +2400,13 @@ loc_4_AB98:
     bne     loc_4_ABE8              ; $AB9A
     lda     ram_0010                ; $AB9C
     pha                             ; $AB9E
-    lda     ram_0012                ; $AB9F
+    lda     frameCounter            ; $AB9F
     and     #$0F                    ; $ABA1
     bne     loc_4_ABE4              ; $ABA3
     ldx     #$05                    ; $ABA5
 
 loc_4_ABA7:
-    lda     ram_00B6,x              ; $ABA7
+    lda     enemyActive,x           ; $ABA7
     beq     loc_4_ABB0              ; $ABA9
 
 loc_4_ABAB:
@@ -2419,23 +2419,23 @@ loc_4_ABB0:
     and     #$F0                    ; $ABB3
     cmp     #$60                    ; $ABB5
     bcc     loc_4_ABAB              ; $ABB7
-    sta     ram_004E,x              ; $ABB9
-    inc     ram_00B6,x              ; $ABBB
+    sta     objX+1,x                ; $ABB9
+    inc     enemyActive,x           ; $ABBB
     lda     #$09                    ; $ABBD
-    sta     ram_00A1,x              ; $ABBF
+    sta     enemyType,x             ; $ABBF
     lda     #$FF                    ; $ABC1
-    sta     ram_00BC,x              ; $ABC3
-    sta     ram_00C2,x              ; $ABC5
+    sta     enemySramIndex,x        ; $ABC3
+    sta     enemyHp,x               ; $ABC5
     lda     #$1F                    ; $ABC7
-    sta     ram_002A,x              ; $ABC9
+    sta     objY+1,x                ; $ABC9
     lda     #$01                    ; $ABCB
-    sta     ram_001A,x              ; $ABCD
-    sta     ram_003C,x              ; $ABCF
+    sta     objState+1,x            ; $ABCD
+    sta     objXHi+1,x              ; $ABCF
     jsr     sub_DAC7                ; $ABD1
     sta     ram_00AF,x              ; $ABD4
     stx     ram_0010                ; $ABD6
     jsr     sub_EA32                ; $ABD8
-    lda     ram_00A8,x              ; $ABDB
+    lda     objCollision+1,x        ; $ABDB
     and     #$04                    ; $ABDD
     beq     loc_4_ABE4              ; $ABDF
 ; (code below not executed in the test movies)
@@ -2455,7 +2455,7 @@ loc_4_ABE9:
     sta     ram_040E,x              ; $ABEB
     lda     ram_00AF,x              ; $ABEE
     beq     loc_4_AC00              ; $ABF0
-    inc     ram_002A,x              ; $ABF2
+    inc     objY+1,x                ; $ABF2
     inc     ram_00AF,x              ; $ABF4
     cmp     #$10                    ; $ABF6
     bne     loc_4_ABFD              ; $ABF8
@@ -2469,7 +2469,7 @@ loc_4_AC00:
     jsr     sub_EA32                ; $AC03
     jsr     sub_E677                ; $AC06
     jsr     sub_E4D9                ; $AC09
-    lda     ram_00A8,x              ; $AC0C
+    lda     objCollision+1,x        ; $AC0C
     and     #$30                    ; $AC0E
     beq     loc_4_AC1F              ; $AC10
     and     #$10                    ; $AC12
@@ -2484,7 +2484,7 @@ loc_4_AC19:
     sta     ram_00ED                ; $AC1D
 
 loc_4_AC1F:
-    lda     ram_00A8,x              ; $AC1F
+    lda     objCollision+1,x        ; $AC1F
     and     #$04                    ; $AC21
     beq     loc_4_ABFD              ; $AC23
     lda     #$02                    ; $AC25
@@ -2493,10 +2493,10 @@ loc_4_AC1F:
     ldy     ram_044B                ; $AC2C
     lda     dat_4_851E              ; $AC2F
     sta     (ram_00DA),y            ; $AC32
-    lda     ram_002A,x              ; $AC34
+    lda     objY+1,x                ; $AC34
     and     #$F8                    ; $AC36
     sta     ram_0002                ; $AC38
-    lda     ram_004E,x              ; $AC3A
+    lda     objX+1,x                ; $AC3A
     sta     ram_0003                ; $AC3C
     lda     #$08                    ; $AC3E
     sta     ram_0000                ; $AC40
@@ -2514,7 +2514,7 @@ loc_4_AC1F:
     ora     ram_0001                ; $AC53
     sta     ram_0001                ; $AC55
     ldx     ram_0010                ; $AC57
-    lda     ram_003C,x              ; $AC59
+    lda     objXHi+1,x              ; $AC59
     and     #$01                    ; $AC5B
     asl     a                       ; $AC5D
     asl     a                       ; $AC5E
@@ -2556,18 +2556,18 @@ loc_4_ACA2:
     jmp     sub_F0D7                ; $ACAA
 
 sub_4_ACAD:
-    lda     ram_0029                ; $ACAD
+    lda     objY                    ; $ACAD
     sbc     #$24                    ; $ACAF
-    sta     ram_002A,x              ; $ACB1
-    ldy     ram_005F                ; $ACB3
+    sta     objY+1,x                ; $ACB1
+    ldy     objFacing               ; $ACB3
     lda     ram_072C                ; $ACB5
     adc     dat_4_ACD0,y            ; $ACB8
-    sta     ram_004E,x              ; $ACBB
+    sta     objX+1,x                ; $ACBB
     lda     ram_072A                ; $ACBD
     adc     #$00                    ; $ACC0
-    sta     ram_003C,x              ; $ACC2
+    sta     objXHi+1,x              ; $ACC2
     lda     dat_4_ACD2,y            ; $ACC4
-    sta     ram_0071,x              ; $ACC7
+    sta     objXVelocity+1,x        ; $ACC7
     jsr     sub_DAC7                ; $ACC9
     sta     ram_00AF,x              ; $ACCC
 dat_4_ACD0 := * + 2
@@ -2599,10 +2599,10 @@ loc_4_ACE8:
     lda     ram_00AF,x              ; $ACEB
     and     #$01                    ; $ACED
     tay                             ; $ACEF
-    lda     ram_057E,x              ; $ACF0
+    lda     objYVelocity+1,x        ; $ACF0
     clc                             ; $ACF3
     adc     dat_4_ACD5,y            ; $ACF4
-    sta     ram_057E,x              ; $ACF7
+    sta     objYVelocity+1,x        ; $ACF7
     cmp     dat_4_ACD7,y            ; $ACFA
     bne     loc_4_AD01              ; $ACFD
     inc     ram_00AF,x              ; $ACFF
@@ -2638,10 +2638,10 @@ loc_4_AD29:
     stx     ram_0011                ; $AD32
     lda     ram_0081,x              ; $AD34
     beq     loc_4_AD90              ; $AD36
-    lda     ram_00B6,x              ; $AD38
+    lda     enemyActive,x           ; $AD38
     cmp     #$01                    ; $AD3A
     bne     loc_4_AD90              ; $AD3C
-    lda     ram_004E,x              ; $AD3E
+    lda     objX+1,x                ; $AD3E
     sbc     ram_072C                ; $AD40
     sta     ram_00CD                ; $AD43
     jsr     sub_E942                ; $AD45
@@ -2667,13 +2667,13 @@ loc_4_AD4A:
     pla                             ; $AD6E
     sta     ram_0010                ; $AD6F
     ldx     ram_0011                ; $AD71
-    lda     ram_00A1,x              ; $AD73
+    lda     enemyType,x             ; $AD73
     cmp     #$22                    ; $AD75
     bne     loc_4_AD8D              ; $AD77
     lda     #$01                    ; $AD79
-    cmp     ram_00B6,x              ; $AD7B
+    cmp     enemyActive,x           ; $AD7B
     beq     loc_4_AD8D              ; $AD7D
-    sta     ram_00B6,x              ; $AD7F
+    sta     enemyActive,x           ; $AD7F
     lda     #$FF                    ; $AD81
     sta     sram_6E3F               ; $AD83
     sta     ram_0504,x              ; $AD86
@@ -2695,7 +2695,7 @@ loc_4_AD90:
 ; (end of code not executed in the test movies)
 
 loc_4_AD9E:
-    lda     ram_0030,x              ; $AD9E
+    lda     objY+7,x                ; $AD9E
     cmp     #$C5                    ; $ADA0
     bcc     loc_4_ADBF              ; $ADA2
 
@@ -2705,22 +2705,22 @@ sub_4_ADA4:
 
 loc_4_ADA8:
     ldy     #$02                    ; $ADA8
-    lda     ram_0077,x              ; $ADAA
+    lda     objXVelocity+7,x        ; $ADAA
     bmi     loc_4_ADAF              ; $ADAC
     dey                             ; $ADAE
 
 loc_4_ADAF:
     tya                             ; $ADAF
-    cmp     ram_0066,x              ; $ADB0
+    cmp     objFacing+7,x           ; $ADB0
     bne     loc_4_ADB9              ; $ADB2
 
 loc_4_ADB4:
     lda     #$FE                    ; $ADB4
-    sta     ram_0584,x              ; $ADB6
+    sta     objYVelocity+7,x        ; $ADB6
 
 loc_4_ADB9:
-    inc     ram_0584,x              ; $ADB9
-    inc     ram_0584,x              ; $ADBC
+    inc     objYVelocity+7,x        ; $ADB9
+    inc     objYVelocity+7,x        ; $ADBC
 
 loc_4_ADBF:
     jsr     sub_DED4                ; $ADBF
@@ -2748,13 +2748,13 @@ loc_4_ADD7:
     jmp     loc_E3B9                ; $ADDD
 
 loc_4_ADE0:
-    dec     ram_0077,x              ; $ADE0
+    dec     objXVelocity+7,x        ; $ADE0
     bne     loc_4_ADE7              ; $ADE2
     jmp     loc_4_ADD2              ; $ADE4
 
 loc_4_ADE7:
     ldy     ram_0097,x              ; $ADE7
-    lda     ram_0030,x              ; $ADE9
+    lda     objY+7,x                ; $ADE9
     sta     ram_0000                ; $ADEB
     lda     #$02                    ; $ADED
     sta     ram_0002                ; $ADEF
@@ -2762,10 +2762,10 @@ loc_4_ADE7:
     sta     ram_0003                ; $ADF2
     lsr     a                       ; $ADF4
     sta     ram_00C9                ; $ADF5
-    lda     ram_0054,x              ; $ADF7
+    lda     objX+7,x                ; $ADF7
     sbc     ram_072C                ; $ADF9
     sta     ram_0001                ; $ADFC
-    lda     ram_0077,x              ; $ADFE
+    lda     objXVelocity+7,x        ; $ADFE
     ldx     #$00                    ; $AE00
     cmp     #$08                    ; $AE02
     bcs     loc_4_AE08              ; $AE04
@@ -2780,9 +2780,9 @@ loc_4_AE10:
     rts                             ; $AE10
 
 loc_4_AE11:
-    lda     ram_0012                ; $AE11
+    lda     frameCounter            ; $AE11
     and     #$03                    ; $AE13
-    ldy     ram_0077,x              ; $AE15
+    ldy     objXVelocity+7,x        ; $AE15
     bmi     loc_4_AE1B              ; $AE17
     ora     #$40                    ; $AE19
 
@@ -2796,11 +2796,11 @@ dat_4_AE2C:
     .byte   $03, $83, $C3, $43                                              ; $AE2C
 
 loc_4_AE30:
-    lda     ram_0012                ; $AE30
+    lda     frameCounter            ; $AE30
     lsr     a                       ; $AE32
     lsr     a                       ; $AE33
     and     #$03                    ; $AE34
-    ldy     ram_0066,x              ; $AE36
+    ldy     objFacing+7,x           ; $AE36
     dey                             ; $AE38
     bne     loc_4_AE3D              ; $AE39
     eor     #$03                    ; $AE3B
@@ -2901,9 +2901,9 @@ loc_4_AEBD:
     lsr     a                       ; $AECB
 
 loc_4_AECC:
-    sta     ram_004E,x              ; $AECC
+    sta     objX+1,x                ; $AECC
     lda     #$01                    ; $AECE
-    sta     ram_003C,x              ; $AED0
+    sta     objXHi+1,x              ; $AED0
     rts                             ; $AED2
 
 sub_4_AED3:
@@ -2913,23 +2913,23 @@ sub_4_AED3:
     jsr     sub_DBCE                ; $AED9
     lda     ram_0000                ; $AEDC
     bcs     loc_4_AF11              ; $AEDE
-    adc     a:ram_0066,y            ; $AEE0
+    adc     a:objFacing+7,y         ; $AEE0
     tax                             ; $AEE3
     sta     ram_044C,y              ; $AEE4
     lda     loc_4_AE46,x            ; $AEE7
     ldx     ram_0010                ; $AEEA
-    adc     ram_004E,x              ; $AEEC
-    sta     a:ram_0054,y            ; $AEEE
-    lda     ram_003C,x              ; $AEF1
-    ldx     ram_0066,y              ; $AEF3
+    adc     objX+1,x                ; $AEEC
+    sta     a:objX+7,y              ; $AEEE
+    lda     objXHi+1,x              ; $AEF1
+    ldx     objFacing+7,y           ; $AEF3
     adc     dat_4_AE4A,x            ; $AEF5
-    sta     a:ram_0042,y            ; $AEF8
+    sta     a:objXHi+7,y            ; $AEF8
     lda     dat_4_AE4C,x            ; $AEFB
-    sta     a:ram_0077,y            ; $AEFE
+    sta     a:objXVelocity+7,y      ; $AEFE
     lda     #$09                    ; $AF01
     sta     a:ram_0087,y            ; $AF03
     lda     #$C0                    ; $AF06
-    sta     a:ram_0030,y            ; $AF08
+    sta     a:objY+7,y              ; $AF08
     ldx     ram_0010                ; $AF0B
     txa                             ; $AF0D
     sta     ram_045E,y              ; $AF0E
@@ -2943,7 +2943,7 @@ loc_4_AF12:
     lda     sram_6E27               ; $AF16
     bpl     loc_4_AF1F              ; $AF19
     lda     #$00                    ; $AF1B
-    sta     ram_0071,x              ; $AF1D
+    sta     objXVelocity+1,x        ; $AF1D
 
 loc_4_AF1F:
 dat_4_AF21 := * + 2
@@ -2953,11 +2953,11 @@ dat_4_AF21 := * + 2
     .byte   $40, $00                                                        ; $AF24
 
 loc_4_AF26:
-    lda     ram_00A8,x              ; $AF26
+    lda     objCollision+1,x        ; $AF26
     ldx     #$22                    ; $AF28
     and     #$04                    ; $AF2A
     beq     loc_4_AF36              ; $AF2C
-    lda     ram_0012                ; $AF2E
+    lda     frameCounter            ; $AF2E
     and     #$10                    ; $AF30
     beq     loc_4_AF36              ; $AF32
     ldx     #$26                    ; $AF34
@@ -2968,9 +2968,9 @@ loc_4_AF36:
     beq     loc_4_AF11              ; $AF3C
     lda     ram_00C9                ; $AF3E
     bne     loc_4_AF11              ; $AF40
-    lda     ram_002A,x              ; $AF42
+    lda     objY+1,x                ; $AF42
     sta     ram_0000                ; $AF44
-    lda     ram_0060,x              ; $AF46
+    lda     objFacing+1,x           ; $AF46
     tax                             ; $AF48
     lda     ram_00CD                ; $AF49
     adc     dat_4_AF21,x            ; $AF4B
@@ -2986,35 +2986,35 @@ loc_4_AF59:
     lda     #$E0                    ; $AF59
 
 loc_4_AF5B:
-    sta     ram_0071,x              ; $AF5B
-    sta     ram_057E,x              ; $AF5D
+    sta     objXVelocity+1,x        ; $AF5B
+    sta     objYVelocity+1,x        ; $AF5D
     rts                             ; $AF60
 
 loc_4_AF61:
     lda     ram_00C9                ; $AF61
     bne     loc_4_AF90              ; $AF63
     jsr     sub_E677                ; $AF65
-    lda     ram_00A8,x              ; $AF68
+    lda     objCollision+1,x        ; $AF68
     and     #$20                    ; $AF6A
     beq     loc_4_AF90              ; $AF6C
     lda     #$11                    ; $AF6E
     sta     ram_00AF,x              ; $AF70
     lda     #$00                    ; $AF72
-    sta     ram_00C2,x              ; $AF74
+    sta     enemyHp,x               ; $AF74
     ldy     #$01                    ; $AF76
     lda     ram_051B,x              ; $AF78
     bpl     loc_4_AF83              ; $AF7B
     lda     #$18                    ; $AF7D
-    sta     ram_00C2,x              ; $AF7F
+    sta     enemyHp,x               ; $AF7F
     ldy     #$19                    ; $AF81
 
 loc_4_AF83:
-    sty     ram_00A1,x              ; $AF83
+    sty     enemyType,x             ; $AF83
     lda     #$08                    ; $AF85
     sta     ram_040E,x              ; $AF87
-    lda     ram_004E,x              ; $AF8A
+    lda     objX+1,x                ; $AF8A
     adc     #$03                    ; $AF8C
-    sta     ram_004E,x              ; $AF8E
+    sta     objX+1,x                ; $AF8E
 
 loc_4_AF90:
     rts                             ; $AF90
@@ -3025,19 +3025,19 @@ loc_4_AF91:
     ldx     ram_0010                ; $AF96
     cmp     #$00                    ; $AF98
     bne     loc_4_AF9F              ; $AF9A
-    sta     ram_00B6,x              ; $AF9C
+    sta     enemyActive,x           ; $AF9C
     rts                             ; $AF9E
 
 loc_4_AF9F:
     lda     #$AC                    ; $AF9F
-    sta     ram_002A,x              ; $AFA1
+    sta     objY+1,x                ; $AFA1
     lda     ram_0080                ; $AFA3
     sta     sram_6E27               ; $AFA5
     sta     ram_0504,x              ; $AFA8
     lda     #$02                    ; $AFAB
-    sta     ram_003C,x              ; $AFAD
+    sta     objXHi+1,x              ; $AFAD
     lda     #$20                    ; $AFAF
-    sta     ram_004E,x              ; $AFB1
+    sta     objX+1,x                ; $AFB1
 
 loc_4_AFB3:
     rts                             ; $AFB3
@@ -3071,19 +3071,19 @@ loc_4_AFC6:
     lda     #$04                    ; $AFCE
     sta     ram_0444,x              ; $AFD0
     jsr     sub_E617                ; $AFD3
-    lda     ram_0012                ; $AFD6
+    lda     frameCounter            ; $AFD6
     and     #$03                    ; $AFD8
     bne     loc_4_AFEC              ; $AFDA
-    lda     ram_0012                ; $AFDC
+    lda     frameCounter            ; $AFDC
     and     #$10                    ; $AFDE
     lsr     a                       ; $AFE0
     lsr     a                       ; $AFE1
     lsr     a                       ; $AFE2
     lsr     a                       ; $AFE3
     tay                             ; $AFE4
-    lda     ram_002A,x              ; $AFE5
+    lda     objY+1,x                ; $AFE5
     adc     dat_4_AFB8,y            ; $AFE7
-    sta     ram_002A,x              ; $AFEA
+    sta     objY+1,x                ; $AFEA
 
 loc_4_AFEC:
     jsr     sub_4_B20D              ; $AFEC
@@ -3091,7 +3091,7 @@ loc_4_AFEC:
     lda     ram_0081,x              ; $AFF2
     beq     loc_4_B003              ; $AFF4
     lda     #$01                    ; $AFF6
-    sta     ram_00B6,x              ; $AFF8
+    sta     enemyActive,x           ; $AFF8
     lda     ram_00C9                ; $AFFA
     cmp     #$0F                    ; $AFFC
     bne     loc_4_B04C              ; $AFFE
@@ -3100,38 +3100,38 @@ loc_4_AFEC:
 loc_4_B003:
     jsr     sub_4_B1E3              ; $B003
     jsr     sub_E579                ; $B006
-    lda     ram_00C2,x              ; $B009
+    lda     enemyHp,x               ; $B009
     cmp     #$24                    ; $B00B
     bcs     loc_4_B04D              ; $B00D
     inc     ram_0081,x              ; $B00F
-    lda     ram_004E,x              ; $B011
+    lda     objX+1,x                ; $B011
     adc     #$18                    ; $B013
-    sta     ram_0051                ; $B015
-    lda     ram_003C,x              ; $B017
+    sta     objX+4                  ; $B015
+    lda     objXHi+1,x              ; $B017
     adc     #$00                    ; $B019
-    sta     ram_003F                ; $B01B
-    lda     ram_002A,x              ; $B01D
-    sta     ram_002D                ; $B01F
-    lda     ram_001A,x              ; $B021
-    sta     ram_001D                ; $B023
+    sta     objXHi+4                ; $B01B
+    lda     objY+1,x                ; $B01D
+    sta     objY+4                  ; $B01F
+    lda     objState+1,x            ; $B021
+    sta     objState+4              ; $B023
     lda     #$0A                    ; $B025
-    sta     ram_00A4                ; $B027
+    sta     enemyType+3             ; $B027
     lda     #$01                    ; $B029
-    sta     ram_00B9                ; $B02B
+    sta     enemyActive+3           ; $B02B
     sta     ram_0447                ; $B02D
     lda     #$30                    ; $B030
-    sta     ram_00C5                ; $B032
+    sta     enemyHp+3               ; $B032
     lda     #$FF                    ; $B034
-    sta     ram_00BF                ; $B036
+    sta     enemySramIndex+3        ; $B036
     lda     #$EA                    ; $B038
-    sta     ram_0581                ; $B03A
-    ldy     ram_0060,x              ; $B03D
+    sta     objYVelocity+4          ; $B03A
+    ldy     objFacing+1,x           ; $B03D
     lda     loc_4_AFB3,y            ; $B03F
-    sta     ram_0071,x              ; $B042
+    sta     objXVelocity+1,x        ; $B042
     eor     #$FF                    ; $B044
     asl     a                       ; $B046
-    sta     ram_0074                ; $B047
-    asl     ram_057D                ; $B049
+    sta     objXVelocity+4          ; $B047
+    asl     objYVelocity            ; $B049
 
 loc_4_B04C:
     rts                             ; $B04C
@@ -3147,16 +3147,16 @@ loc_4_B04D:
 ; (end of code not executed in the test movies)
 
 loc_4_B05A:
-    lda     ram_0060,x              ; $B05A
+    lda     objFacing+1,x           ; $B05A
     pha                             ; $B05C
     jsr     sub_DC91                ; $B05D
     pla                             ; $B060
-    sta     ram_0060,x              ; $B061
+    sta     objFacing+1,x           ; $B061
     iny                             ; $B063
     tya                             ; $B064
-    cmp     ram_0060,x              ; $B065
+    cmp     objFacing+1,x           ; $B065
     beq     loc_4_B07A              ; $B067
-    lda     ram_0071,x              ; $B069
+    lda     objXVelocity+1,x        ; $B069
     clc                             ; $B06B
     adc     #$08                    ; $B06C
     cmp     #$11                    ; $B06E
@@ -3170,28 +3170,28 @@ loc_4_B07A:
     lda     ram_0504,x              ; $B07A
     beq     loc_4_B08D              ; $B07D
 ; (code below not executed in the test movies)
-    lda     ram_0012                ; $B07F
+    lda     frameCounter            ; $B07F
     asl     a                       ; $B081
     asl     a                       ; $B082
     lda     #$00                    ; $B083
     rol     a                       ; $B085
     tay                             ; $B086
     lda     dat_4_AFB6,y            ; $B087
-    sta     ram_0071,x              ; $B08A
+    sta     objXVelocity+1,x        ; $B08A
     rts                             ; $B08C
 ; (end of code not executed in the test movies)
 
 loc_4_B08D:
-    lda     ram_0012                ; $B08D
+    lda     frameCounter            ; $B08D
     and     #$01                    ; $B08F
     bne     loc_4_B0A9              ; $B091
-    lda     ram_0071,x              ; $B093
+    lda     objXVelocity+1,x        ; $B093
     cmp     dat_4_AFB9,y            ; $B095
     beq     loc_4_B0A9              ; $B098
-    lda     ram_0071,x              ; $B09A
+    lda     objXVelocity+1,x        ; $B09A
     clc                             ; $B09C
     adc     dat_4_AFB7,y            ; $B09D
-    sta     ram_0071,x              ; $B0A0
+    sta     objXVelocity+1,x        ; $B0A0
     bne     loc_4_B0A9              ; $B0A2
 ; (code below not executed in the test movies)
     lda     #$53                    ; $B0A4
@@ -3205,10 +3205,10 @@ dat_4_B0AA:
     .byte   $08, $F8, $08                                                   ; $B0AA
 
 loc_4_B0AD:
-    lda     ram_0012                ; $B0AD
+    lda     frameCounter            ; $B0AD
     bne     loc_4_B0B6              ; $B0AF
     lda     #$D0                    ; $B0B1
-    sta     ram_057E,x              ; $B0B3
+    sta     objYVelocity+1,x        ; $B0B3
 
 loc_4_B0B6:
     lda     ram_00AF,x              ; $B0B6
@@ -3236,12 +3236,12 @@ loc_4_B0D7:
     rol     a                       ; $B0DD
     tay                             ; $B0DE
     lda     dat_4_B0AA,y            ; $B0DF
-    sta     ram_0071,x              ; $B0E2
+    sta     objXVelocity+1,x        ; $B0E2
     jsr     sub_DEBE                ; $B0E4
     jsr     sub_4_9E17              ; $B0E7
     jsr     sub_DE3D                ; $B0EA
     jsr     sub_D6C1                ; $B0ED
-    lda     ram_00A8,x              ; $B0F0
+    lda     objCollision+1,x        ; $B0F0
     and     #$04                    ; $B0F2
     beq     loc_4_B0FB              ; $B0F4
     jsr     sub_DAC1                ; $B0F6
@@ -3254,7 +3254,7 @@ loc_4_B0FE:
     lda     #$00                    ; $B0FE
     sta     ram_0499                ; $B100
     lda     #$F0                    ; $B103
-    sta     ram_002A,x              ; $B105
+    sta     objY+1,x                ; $B105
 
 loc_4_B107:
     ldx     #$01                    ; $B107
@@ -3263,7 +3263,7 @@ loc_4_B107:
     cmp     #$00                    ; $B10E
     bne     loc_4_B114              ; $B110
 ; (code below not executed in the test movies)
-    sta     ram_00B6,x              ; $B112
+    sta     enemyActive,x           ; $B112
 ; (end of code not executed in the test movies)
 
 loc_4_B114:
@@ -3300,19 +3300,19 @@ loc_4_B140:
     and     #$07                    ; $B148
     tay                             ; $B14A
     lda     dat_4_B117,y            ; $B14B
-    sta     ram_004E,x              ; $B14E
+    sta     objX+1,x                ; $B14E
     inc     ram_0499                ; $B150
 
 loc_4_B153:
     rts                             ; $B153
 
 loc_4_B154:
-    lda     ram_002A,x              ; $B154
+    lda     objY+1,x                ; $B154
     cmp     #$80                    ; $B156
     bcc     loc_4_B161              ; $B158
-    dec     ram_002A,x              ; $B15A
-    dec     ram_002A,x              ; $B15C
-    dec     ram_002A,x              ; $B15E
+    dec     objY+1,x                ; $B15A
+    dec     objY+1,x                ; $B15C
+    dec     objY+1,x                ; $B15E
     rts                             ; $B160
 
 loc_4_B161:
@@ -3326,12 +3326,12 @@ loc_4_B16A:
     beq     loc_4_B1BF              ; $B16D
     and     #$01                    ; $B16F
     bne     loc_4_B180              ; $B171
-    inc     ram_002A,x              ; $B173
+    inc     objY+1,x                ; $B173
     lda     ram_0504,x              ; $B175
     and     #$20                    ; $B178
     bne     loc_4_B180              ; $B17A
-    dec     ram_002A,x              ; $B17C
-    dec     ram_002A,x              ; $B17E
+    dec     objY+1,x                ; $B17C
+    dec     objY+1,x                ; $B17E
 
 loc_4_B180:
     lda     ram_0504,x              ; $B180
@@ -3342,7 +3342,7 @@ loc_4_B180:
     lda     ram_0504,x              ; $B189
     and     #$30                    ; $B18C
     bne     loc_4_B1BE              ; $B18E
-    lda     ram_0012                ; $B190
+    lda     frameCounter            ; $B190
     lsr     a                       ; $B192
     bcc     loc_4_B1BE              ; $B193
     jsr     sub_4_9BE5              ; $B195
@@ -3351,18 +3351,18 @@ loc_4_B180:
     sta     a:ram_0087,y            ; $B19C
     tya                             ; $B19F
     tax                             ; $B1A0
-    asl     ram_0077,x              ; $B1A1
-    asl     ram_0077,x              ; $B1A3
-    asl     ram_0584,x              ; $B1A5
-    asl     ram_0584,x              ; $B1A8
-    dec     ram_0030,x              ; $B1AB
-    dec     ram_0030,x              ; $B1AD
-    dec     ram_0030,x              ; $B1AF
-    ldy     ram_0066,x              ; $B1B1
+    asl     objXVelocity+7,x        ; $B1A1
+    asl     objXVelocity+7,x        ; $B1A3
+    asl     objYVelocity+7,x        ; $B1A5
+    asl     objYVelocity+7,x        ; $B1A8
+    dec     objY+7,x                ; $B1AB
+    dec     objY+7,x                ; $B1AD
+    dec     objY+7,x                ; $B1AF
+    ldy     objFacing+7,x           ; $B1B1
     lda     ram_049A                ; $B1B3
     clc                             ; $B1B6
     adc     loc_4_B114,y            ; $B1B7
-    sta     ram_0054,x              ; $B1BA
+    sta     objX+7,x                ; $B1BA
     ldx     ram_0010                ; $B1BC
 ; (end of code not executed in the test movies)
 
@@ -3377,11 +3377,11 @@ loc_4_B1BF:
     rts                             ; $B1C7
 
 loc_4_B1C8:
-    lda     ram_002A,x              ; $B1C8
+    lda     objY+1,x                ; $B1C8
     cmp     #$F0                    ; $B1CA
     bcs     loc_4_B1D3              ; $B1CC
-    inc     ram_002A,x              ; $B1CE
-    inc     ram_002A,x              ; $B1D0
+    inc     objY+1,x                ; $B1CE
+    inc     objY+1,x                ; $B1D0
     rts                             ; $B1D2
 
 loc_4_B1D3:
@@ -3393,7 +3393,7 @@ loc_4_B1D3:
 ; (end of code not executed in the test movies)
 
 sub_4_B1DE:
-    lda     ram_0012                ; $B1DE
+    lda     frameCounter            ; $B1DE
     asl     a                       ; $B1E0
     bne     sub_4_B1E3              ; $B1E1
 
@@ -3402,7 +3402,7 @@ sub_4_B1E3:
     jsr     sub_D6C1                ; $B1E6
 
 sub_4_B1E9:
-    lda     ram_00A1,x              ; $B1E9
+    lda     enemyType,x             ; $B1E9
     cmp     #$22                    ; $B1EB
     beq     loc_4_B1F6              ; $B1ED
     lda     ram_00C9                ; $B1EF
@@ -3411,11 +3411,11 @@ sub_4_B1E9:
 
 loc_4_B1F6:
     lda     #$01                    ; $B1F6
-    cmp     ram_00B6,x              ; $B1F8
+    cmp     enemyActive,x           ; $B1F8
     beq     loc_4_B20C              ; $B1FA
-    sta     ram_00B6,x              ; $B1FC
+    sta     enemyActive,x           ; $B1FC
     lda     #$FF                    ; $B1FE
-    ldy     ram_00A1,x              ; $B200
+    ldy     enemyType,x             ; $B200
     sta     sram_6E1D,y             ; $B202
     sta     ram_0504,x              ; $B205
     lsr     a                       ; $B208
@@ -3437,13 +3437,13 @@ sub_4_B20D:
     bne     loc_4_B23C              ; $B223
 
 loc_4_B225:
-    ldy     ram_00A1,x              ; $B225
+    ldy     enemyType,x             ; $B225
     lda     sram_6E1D,y             ; $B227
     bpl     loc_4_B23E              ; $B22A
     ldy     ram_040E,x              ; $B22C
     bne     loc_4_B239              ; $B22F
     lda     #$80                    ; $B231
-    inc     ram_00B6,x              ; $B233
+    inc     enemyActive,x           ; $B233
     lda     #$80                    ; $B235
     sta     ram_00EB                ; $B237
 
@@ -3458,7 +3458,7 @@ loc_4_B23E:
     rts                             ; $B23E
 
 loc_4_B23F:
-    ldy     ram_00A1,x              ; $B23F
+    ldy     enemyType,x             ; $B23F
     lda     sram_6E1D,y             ; $B241
     bmi     loc_4_B260              ; $B244
     lda     ram_0728                ; $B246
@@ -3469,7 +3469,7 @@ loc_4_B23F:
 loc_4_B250:
     jsr     sub_EF11                ; $B250
     jsr     sub_E617                ; $B253
-    lda     ram_0012                ; $B256
+    lda     frameCounter            ; $B256
     and     #$40                    ; $B258
     sta     ram_0401,x              ; $B25A
     jsr     sub_4_9C8C              ; $B25D
@@ -3544,7 +3544,7 @@ loc_4_B2C9:
     clc                             ; $B2CF
     adc     dat_4_B266,y            ; $B2D0
     sta     ram_0000                ; $B2D3
-    lda     ram_0012                ; $B2D5
+    lda     frameCounter            ; $B2D5
     lsr     a                       ; $B2D7
     lsr     a                       ; $B2D8
     lsr     a                       ; $B2D9
@@ -3611,7 +3611,7 @@ loc_4_B339:
     jmp     sub_F0D7                ; $B339
 
 loc_4_B33C:
-    asl     ram_0071,x              ; $B33C
+    asl     objXVelocity+1,x        ; $B33C
 
 dat_4_B33E:
     rts                             ; $B33E
@@ -3622,15 +3622,15 @@ loc_4_B343:
     bcs     loc_4_B361              ; $B346
     ldx     ram_0000                ; $B348
     lda     #$B0                    ; $B34A
-    sta     ram_002A,x              ; $B34C
+    sta     objY+1,x                ; $B34C
     lda     #$0C                    ; $B34E
-    sta     ram_00A1,x              ; $B350
+    sta     enemyType,x             ; $B350
     lda     ram_051B,x              ; $B352
     and     #$02                    ; $B355
-    adc     ram_0060,x              ; $B357
+    adc     objFacing+1,x           ; $B357
     tay                             ; $B359
     lda     dat_4_B33E,y            ; $B35A
-    sta     ram_0071,x              ; $B35D
+    sta     objXVelocity+1,x        ; $B35D
     ldx     ram_0010                ; $B35F
 
 loc_4_B361:
@@ -3639,19 +3639,19 @@ loc_4_B361:
 loc_4_B362:
     jsr     sub_DE3D                ; $B362
     jsr     sub_D6C1                ; $B365
-    lda     ram_00A8,x              ; $B368
+    lda     objCollision+1,x        ; $B368
     and     #$04                    ; $B36A
     beq     loc_4_B37B              ; $B36C
-    lda     ram_002A,x              ; $B36E
+    lda     objY+1,x                ; $B36E
     and     #$F8                    ; $B370
-    sta     ram_002A,x              ; $B372
+    sta     objY+1,x                ; $B372
     lda     #$F0                    ; $B374
-    sta     ram_057E,x              ; $B376
+    sta     objYVelocity+1,x        ; $B376
     inc     ram_00AF,x              ; $B379
 
 loc_4_B37B:
     jsr     sub_DEBE                ; $B37B
-    lda     ram_00A8,x              ; $B37E
+    lda     objCollision+1,x        ; $B37E
     and     #$03                    ; $B380
     beq     loc_4_B387              ; $B382
     jsr     sub_E8EB                ; $B384
@@ -3715,7 +3715,7 @@ loc_4_B3C6:
     ldy     #$50                    ; $B3D5
     ldx     #$58                    ; $B3D7
     jsr     sub_4_B477              ; $B3D9
-    lda     ram_002A,x              ; $B3DC
+    lda     objY+1,x                ; $B3DC
     sta     ram_0000                ; $B3DE
     ldy     ram_0002                ; $B3E0
     pla                             ; $B3E2
@@ -3753,7 +3753,7 @@ loc_4_B402:
     sta     ram_0001                ; $B411
     ldy     #$60                    ; $B413
     jsr     sub_4_B477              ; $B415
-    lda     ram_0012                ; $B418
+    lda     frameCounter            ; $B418
     and     #$10                    ; $B41A
     beq     loc_4_B424              ; $B41C
     inc     ram_0260                ; $B41E
@@ -3803,7 +3803,7 @@ loc_4_B459:
     jsr     sub_F0D7                ; $B45F
     lda     ram_00D9                ; $B462
     sta     ram_0001                ; $B464
-    lda     ram_002A,x              ; $B466
+    lda     objY+1,x                ; $B466
     sta     ram_0000                ; $B468
     lda     ram_00AF,x              ; $B46A
     ldx     #$A6                    ; $B46C
@@ -3819,10 +3819,10 @@ sub_4_B477:
     jmp     sub_F0D7                ; $B47A
 
 loc_4_B47D:
-    lda     ram_004E,x              ; $B47D
+    lda     objX+1,x                ; $B47D
     clc                             ; $B47F
     adc     #$04                    ; $B480
-    sta     ram_004E,x              ; $B482
+    sta     objX+1,x                ; $B482
     rts                             ; $B484
 
 loc_4_B485:
@@ -3839,7 +3839,7 @@ loc_4_B48B:
     sta     ram_0203,y              ; $B498
     lda     #$52                    ; $B49B
     sta     ram_0201,y              ; $B49D
-    lda     ram_0012                ; $B4A0
+    lda     frameCounter            ; $B4A0
     and     #$04                    ; $B4A2
     asl     a                       ; $B4A4
     asl     a                       ; $B4A5
@@ -3860,29 +3860,29 @@ loc_4_B4AD:
     jsr     sub_4_B53B              ; $B4BB
     lda     #$12                    ; $B4BE
     jsr     sub_4_9C45              ; $B4C0
-    lda     ram_0060,x              ; $B4C3
+    lda     objFacing+1,x           ; $B4C3
     pha                             ; $B4C5
     jsr     sub_DC91                ; $B4C6
     pla                             ; $B4C9
     sta     ram_0000                ; $B4CA
-    lda     ram_0012                ; $B4CC
+    lda     frameCounter            ; $B4CC
     and     #$1F                    ; $B4CE
     beq     loc_4_B4D6              ; $B4D0
     lda     ram_0000                ; $B4D2
-    sta     ram_0060,x              ; $B4D4
+    sta     objFacing+1,x           ; $B4D4
 
 loc_4_B4D6:
     lda     ram_00AF,x              ; $B4D6
     asl     a                       ; $B4D8
-    sta     ram_0071,x              ; $B4D9
+    sta     objXVelocity+1,x        ; $B4D9
     beq     loc_4_B4EC              ; $B4DB
     bcc     loc_4_B4E0              ; $B4DD
     iny                             ; $B4DF
 
 loc_4_B4E0:
     lda     dat_4_B0AA,y            ; $B4E0
-    sta     ram_0071,x              ; $B4E3
-    lda     ram_0012                ; $B4E5
+    sta     objXVelocity+1,x        ; $B4E3
+    lda     frameCounter            ; $B4E5
     lsr     a                       ; $B4E7
     bcc     loc_4_B4EC              ; $B4E8
     dec     ram_00AF,x              ; $B4EA
@@ -3906,7 +3906,7 @@ sub_4_B4F6:
 loc_4_B4FF:
     cmp     #$40                    ; $B4FF
     bcc     loc_4_B511              ; $B501
-    lda     ram_0012                ; $B503
+    lda     frameCounter            ; $B503
     and     #$3F                    ; $B505
     bne     loc_4_B510              ; $B507
 ; (code below not executed in the test movies)
@@ -4000,11 +4000,11 @@ dat_4_B5A6:
     .byte   $04, $FC, $F8, $FC, $04, $0C, $10, $0C                          ; $B5A6
 
 loc_4_B5AE:
-    lda     ram_002A,x              ; $B5AE
+    lda     objY+1,x                ; $B5AE
     sta     ram_0000                ; $B5B0
     lda     a:ram_00CD              ; $B5B2
     sta     ram_0001                ; $B5B5
-    lda     ram_0060,x              ; $B5B7
+    lda     objFacing+1,x           ; $B5B7
     sta     ram_0002                ; $B5B9
     lda     #$02                    ; $B5BB
     ldy     ram_040E,x              ; $B5BD
@@ -4015,7 +4015,7 @@ loc_4_B5AE:
 loc_4_B5C5:
     sta     ram_0006                ; $B5C5
     ldy     #$00                    ; $B5C7
-    lda     ram_0071,x              ; $B5C9
+    lda     objXVelocity+1,x        ; $B5C9
     ora     ram_0081,x              ; $B5CB
     beq     loc_4_B600              ; $B5CD
     lda     ram_0728                ; $B5CF
@@ -4040,7 +4040,7 @@ loc_4_B5E7:
     cmp     #$02                    ; $B5F2
     beq     loc_4_B600              ; $B5F4
     ldy     #$1B                    ; $B5F6
-    lda     ram_0012                ; $B5F8
+    lda     frameCounter            ; $B5F8
     and     #$08                    ; $B5FA
     bne     loc_4_B600              ; $B5FC
     ldy     #$00                    ; $B5FE
@@ -4074,7 +4074,7 @@ loc_4_B62C:
     tay                             ; $B62C
     lda     ram_00C9                ; $B62D
     bne     loc_4_B653              ; $B62F
-    lda     ram_002A,x              ; $B631
+    lda     objY+1,x                ; $B631
     clc                             ; $B633
     adc     dat_4_B59E,y            ; $B634
     sta     ram_0240                ; $B637
@@ -4095,7 +4095,7 @@ loc_4_B653:
 
 loc_4_B656:
     sty     ram_0005                ; $B656
-    ldy     ram_0060,x              ; $B658
+    ldy     objFacing+1,x           ; $B658
     lda     a:ram_00CD              ; $B65A
     clc                             ; $B65D
     adc     dat_4_B589,y            ; $B65E
@@ -4126,7 +4126,7 @@ loc_4_B671:
     lda     ram_01FE,y              ; $B67D
     sta     ram_0202,y              ; $B680
     sta     ram_0206,y              ; $B683
-    lda     ram_002A,x              ; $B686
+    lda     objY+1,x                ; $B686
     sta     ram_0200,y              ; $B688
     clc                             ; $B68B
     adc     #$10                    ; $B68C
@@ -4135,11 +4135,11 @@ loc_4_B671:
     sta     ram_0201,y              ; $B693
     lda     #$2F                    ; $B696
     sta     ram_0205,y              ; $B698
-    lda     ram_0012                ; $B69B
+    lda     frameCounter            ; $B69B
     lsr     a                       ; $B69D
     and     #$07                    ; $B69E
     tay                             ; $B6A0
-    lda     ram_0060,x              ; $B6A1
+    lda     objFacing+1,x           ; $B6A1
     cmp     #$02                    ; $B6A3
     bne     loc_4_B6AC              ; $B6A5
     tya                             ; $B6A7
@@ -4151,7 +4151,7 @@ loc_4_B6AC:
     lda     a:ram_00CD              ; $B6AC
     clc                             ; $B6AF
     adc     dat_4_B58C,y            ; $B6B0
-    ldy     ram_0060,x              ; $B6B3
+    ldy     objFacing+1,x           ; $B6B3
     dey                             ; $B6B5
     beq     loc_4_B6C0              ; $B6B6
     pha                             ; $B6B8
@@ -4173,8 +4173,8 @@ loc_4_B6C5:
     clc                             ; $B6C8
     adc     #$08                    ; $B6C9
     sta     ram_0247                ; $B6CB
-    ldy     ram_0060,x              ; $B6CE
-    lda     ram_0012                ; $B6D0
+    ldy     objFacing+1,x           ; $B6CE
+    lda     frameCounter            ; $B6D0
     and     #$01                    ; $B6D2
     asl     a                       ; $B6D4
     asl     a                       ; $B6D5
@@ -4192,7 +4192,7 @@ loc_4_B6C5:
     lda     ram_0242                ; $B6EF
     sta     ram_0292                ; $B6F2
     sta     ram_0296                ; $B6F5
-    lda     ram_002A,x              ; $B6F8
+    lda     objY+1,x                ; $B6F8
     clc                             ; $B6FA
     adc     #$12                    ; $B6FB
     sta     ram_0240                ; $B6FD
@@ -4291,7 +4291,7 @@ loc_4_B787:
 loc_4_B7B0:
     lda     #$02                    ; $B7B0
     sta     ram_0002                ; $B7B2
-    lda     ram_0012                ; $B7B4
+    lda     frameCounter            ; $B7B4
     and     #$03                    ; $B7B6
     sta     ram_0003                ; $B7B8
     ldx     #$5A                    ; $B7BA
@@ -4321,18 +4321,18 @@ loc_4_B7D6:
     jsr     sub_4_B9A4              ; $B7DA
     bcs     loc_4_B807              ; $B7DD
     lda     #$C0                    ; $B7DF
-    sta     a:ram_0030,y            ; $B7E1
-    lda     ram_0060,x              ; $B7E4
-    sta     a:ram_0066,y            ; $B7E6
+    sta     a:objY+7,y              ; $B7E1
+    lda     objFacing+1,x           ; $B7E4
+    sta     a:objFacing+7,y         ; $B7E6
     tax                             ; $B7E9
-    lda     a:ram_0054,y            ; $B7EA
+    lda     a:objX+7,y              ; $B7EA
     adc     dat_4_B7BE,x            ; $B7ED
-    sta     a:ram_0054,y            ; $B7F0
-    lda     a:ram_0042,y            ; $B7F3
+    sta     a:objX+7,y              ; $B7F0
+    lda     a:objXHi+7,y            ; $B7F3
     adc     dat_4_B7C0,x            ; $B7F6
-    sta     a:ram_0042,y            ; $B7F9
+    sta     a:objXHi+7,y            ; $B7F9
     lda     dat_4_B7C2,x            ; $B7FC
-    sta     a:ram_0077,y            ; $B7FF
+    sta     a:objXVelocity+7,y      ; $B7FF
     sta     ram_045E,y              ; $B802
     ldx     ram_0010                ; $B805
 
@@ -4358,10 +4358,10 @@ loc_4_B81B:
 loc_4_B81E:
     lda     ram_072C                ; $B81E
     adc     ram_051B,x              ; $B821
-    sta     ram_004E,x              ; $B824
+    sta     objX+1,x                ; $B824
     lda     ram_072A                ; $B826
     adc     #$00                    ; $B829
-    sta     ram_003C,x              ; $B82B
+    sta     objXHi+1,x              ; $B82B
     lda     #$00                    ; $B82D
     sta     ram_040E,x              ; $B82F
     rts                             ; $B832
@@ -4377,18 +4377,18 @@ loc_4_B83E:
     lda     ram_00C9                ; $B83E
     bne     loc_4_B85E              ; $B840
     jsr     sub_E677                ; $B842
-    lda     ram_00A8,x              ; $B845
+    lda     objCollision+1,x        ; $B845
     and     #$20                    ; $B847
     beq     loc_4_B85E              ; $B849
     lda     #$11                    ; $B84B
     sta     ram_00AF,x              ; $B84D
     lda     #$01                    ; $B84F
-    sta     ram_00A1,x              ; $B851
-    sta     ram_00C2,x              ; $B853
+    sta     enemyType,x             ; $B851
+    sta     enemyHp,x               ; $B853
     lsr     ram_040E,x              ; $B855
-    lda     ram_004E,x              ; $B858
+    lda     objX+1,x                ; $B858
     adc     #$03                    ; $B85A
-    sta     ram_004E,x              ; $B85C
+    sta     objX+1,x                ; $B85C
 
 loc_4_B85E:
     rts                             ; $B85E
@@ -4397,7 +4397,7 @@ dat_4_B85F:
     .byte   $08, $F8                                                        ; $B85F
 
 sub_4_B861:
-    lda     ram_0012                ; $B861
+    lda     frameCounter            ; $B861
     asl     a                       ; $B863
     ora     ram_05C9                ; $B864
     bne     loc_4_B872              ; $B867
@@ -4406,7 +4406,7 @@ sub_4_B869:
     ldx     #$05                    ; $B869
 
 loc_4_B86B:
-    lda     ram_00B6,x              ; $B86B
+    lda     enemyActive,x           ; $B86B
     beq     loc_4_B876              ; $B86D
     dex                             ; $B86F
     bpl     loc_4_B86B              ; $B870
@@ -4418,17 +4418,17 @@ loc_4_B872:
 
 loc_4_B876:
     lda     #$02                    ; $B876
-    sta     ram_00C2,x              ; $B878
+    sta     enemyHp,x               ; $B878
     lsr     a                       ; $B87A
-    sta     ram_00B6,x              ; $B87B
-    sta     ram_001A,x              ; $B87D
+    sta     enemyActive,x           ; $B87B
+    sta     objState+1,x            ; $B87D
     lsr     a                       ; $B87F
     sta     ram_040E,x              ; $B880
-    lda     ram_0029                ; $B883
+    lda     objY                    ; $B883
     sbc     #$02                    ; $B885
-    sta     ram_002A,x              ; $B887
+    sta     objY+1,x                ; $B887
     lda     #$1C                    ; $B889
-    sta     ram_00A1,x              ; $B88B
+    sta     enemyType,x             ; $B88B
     lda     joypadHeld              ; $B88D
     and     #$03                    ; $B88F
     bne     loc_4_B896              ; $B891
@@ -4439,17 +4439,17 @@ loc_4_B896:
     tay                             ; $B898
     lda     ram_072C                ; $B899
     adc     dat_4_B85F,y            ; $B89C
-    sta     ram_004E,x              ; $B89F
+    sta     objX+1,x                ; $B89F
     lda     ram_072A                ; $B8A1
     adc     #$00                    ; $B8A4
-    sta     ram_003C,x              ; $B8A6
+    sta     objXHi+1,x              ; $B8A6
     lda     dat_4_B85F,y            ; $B8A8
-    sta     ram_0071,x              ; $B8AB
+    sta     objXVelocity+1,x        ; $B8AB
     lda     #$FF                    ; $B8AD
-    sta     ram_00BC,x              ; $B8AF
+    sta     enemySramIndex,x        ; $B8AF
     sta     ram_00AF,x              ; $B8B1
     iny                             ; $B8B3
-    sty     ram_0060,x              ; $B8B4
+    sty     objFacing+1,x           ; $B8B4
     stx     ram_0000                ; $B8B6
     ldx     ram_0010                ; $B8B8
     rts                             ; $B8BA
@@ -4469,7 +4469,7 @@ loc_4_B8BB:
     lda     ram_00AF,x              ; $B8CD
     and     #$3F                    ; $B8CF
     bne     loc_4_B8ED              ; $B8D1
-    lda     ram_0060,x              ; $B8D3
+    lda     objFacing+1,x           ; $B8D3
     sta     ram_0005                ; $B8D5
     pha                             ; $B8D7
     jsr     sub_DC91                ; $B8D8
@@ -4483,7 +4483,7 @@ loc_4_B8BB:
 
 loc_4_B8EA:
     pla                             ; $B8EA
-    sta     ram_0060,x              ; $B8EB
+    sta     objFacing+1,x           ; $B8EB
 
 loc_4_B8ED:
     jmp     sub_DEB8                ; $B8ED
@@ -4492,14 +4492,14 @@ loc_4_B8F0:
     and     #$01                    ; $B8F0
     tay                             ; $B8F2
     lda     dat_4_B85F,y            ; $B8F3
-    sta     ram_057E,x              ; $B8F6
+    sta     objYVelocity+1,x        ; $B8F6
     jmp     sub_DEC8                ; $B8F9
 
 loc_4_B8FC:
-    lda     ram_00A1,x              ; $B8FC
+    lda     enemyType,x             ; $B8FC
     sec                             ; $B8FE
     sbc     #$15                    ; $B8FF
-    sta     ram_0060,x              ; $B901
+    sta     objFacing+1,x           ; $B901
     rts                             ; $B903
 
 loc_4_B904:
@@ -4511,14 +4511,14 @@ loc_4_B909:
     and     #$03                    ; $B90B
     beq     loc_4_B929              ; $B90D
     ldy     #$04                    ; $B90F
-    lda     ram_0012                ; $B911
+    lda     frameCounter            ; $B911
     and     #$10                    ; $B913
     bne     loc_4_B919              ; $B915
     ldy     #$FC                    ; $B917
 
 loc_4_B919:
     tya                             ; $B919
-    sta     ram_057E,x              ; $B91A
+    sta     objYVelocity+1,x        ; $B91A
     jsr     sub_DEC8                ; $B91D
     jsr     sub_DEB8                ; $B920
     jsr     sub_DE3D                ; $B923
@@ -4542,21 +4542,21 @@ dat_4_B939:
 loc_4_B93C:
     lda     ram_0504,x              ; $B93C
     bne     loc_4_B96C              ; $B93F
-    ldy     ram_005F                ; $B941
+    ldy     objFacing               ; $B941
     lda     ram_072C                ; $B943
     adc     dat_4_B937,y            ; $B946
-    sta     ram_004E,x              ; $B949
+    sta     objX+1,x                ; $B949
     lda     ram_072A                ; $B94B
     adc     #$00                    ; $B94E
-    sta     ram_003C,x              ; $B950
+    sta     objXHi+1,x              ; $B950
     lda     dat_4_B939,y            ; $B952
-    sta     ram_0071,x              ; $B955
+    sta     objXVelocity+1,x        ; $B955
     lda     #$7D                    ; $B957
-    sta     ram_002A,x              ; $B959
+    sta     objY+1,x                ; $B959
     sty     ram_0081,x              ; $B95B
-    sty     ram_0060,x              ; $B95D
+    sty     objFacing+1,x           ; $B95D
     lda     #$10                    ; $B95F
-    ldy     ram_0070                ; $B961
+    ldy     objXVelocity            ; $B961
     bne     loc_4_B967              ; $B963
     lda     #$50                    ; $B965
 
@@ -4581,12 +4581,12 @@ loc_4_B979:
 loc_4_B97C:
     lda     ram_0504,x              ; $B97C
     beq     loc_4_B98E              ; $B97F
-    dec     ram_002A,x              ; $B981
+    dec     objY+1,x                ; $B981
     ldy     ram_0081,x              ; $B983
-    lda     ram_0071,x              ; $B985
+    lda     objXVelocity+1,x        ; $B985
     clc                             ; $B987
     adc     loc_4_B979,y            ; $B988
-    sta     ram_0071,x              ; $B98B
+    sta     objXVelocity+1,x        ; $B98B
     rts                             ; $B98D
 
 loc_4_B98E:
@@ -4601,9 +4601,9 @@ loc_4_B991:
     inc     ram_00AF,x              ; $B99A
 
 loc_4_B99C:
-    lda     ram_0012                ; $B99C
+    lda     frameCounter            ; $B99C
     and     #$2F                    ; $B99E
-    ora     ram_00A8,x              ; $B9A0
+    ora     objCollision+1,x        ; $B9A0
     bne     loc_4_B9BE              ; $B9A2
 
 sub_4_B9A4:
@@ -4615,8 +4615,8 @@ sub_4_B9A4:
     sta     ram_044C,y              ; $B9B0
     lda     #$00                    ; $B9B3
     sta     ram_045E,y              ; $B9B5
-    sta     a:ram_0077,y            ; $B9B8
-    sta     ram_0584,y              ; $B9BB
+    sta     a:objXVelocity+7,y      ; $B9B8
+    sta     objYVelocity+7,y        ; $B9BB
 
 loc_4_B9BE:
     rts                             ; $B9BE
@@ -4631,15 +4631,15 @@ loc_4_B9BF:
     bcs     loc_4_B9F3              ; $B9CD
     lda     #$08                    ; $B9CF
     sta     a:ram_0087,y            ; $B9D1
-    lda     ram_004E,x              ; $B9D4
+    lda     objX+1,x                ; $B9D4
     adc     #$04                    ; $B9D6
-    sta     a:ram_0054,y            ; $B9D8
-    lda     a:ram_0030,y            ; $B9DB
+    sta     a:objX+7,y              ; $B9D8
+    lda     a:objY+7,y              ; $B9DB
     adc     #$12                    ; $B9DE
-    sta     a:ram_0030,y            ; $B9E0
+    sta     a:objY+7,y              ; $B9E0
     lda     #$00                    ; $B9E3
-    sta     a:ram_0077,y            ; $B9E5
-    sta     ram_0584,y              ; $B9E8
+    sta     a:objXVelocity+7,y      ; $B9E5
+    sta     objYVelocity+7,y        ; $B9E8
     lda     ram_051B,x              ; $B9EB
     and     #$07                    ; $B9EE
     sta     ram_044C,y              ; $B9F0
@@ -4648,18 +4648,18 @@ loc_4_B9F3:
     rts                             ; $B9F3
 
 sub_4_B9F4:
-    lda     ram_0029                ; $B9F4
+    lda     objY                    ; $B9F4
     sbc     #$20                    ; $B9F6
-    sta     ram_002A,x              ; $B9F8
-    ldy     ram_005F                ; $B9FA
+    sta     objY+1,x                ; $B9F8
+    ldy     objFacing               ; $B9FA
     lda     ram_072C                ; $B9FC
     adc     dat_4_BA17,y            ; $B9FF
-    sta     ram_004E,x              ; $BA02
+    sta     objX+1,x                ; $BA02
     lda     ram_072A                ; $BA04
     adc     #$00                    ; $BA07
-    sta     ram_003C,x              ; $BA09
+    sta     objXHi+1,x              ; $BA09
     lda     dat_4_BA19,y            ; $BA0B
-    sta     ram_0071,x              ; $BA0E
+    sta     objXVelocity+1,x        ; $BA0E
     jsr     sub_DAC7                ; $BA10
     sta     ram_00AF,x              ; $BA13
 dat_4_BA17 := * + 2
@@ -4688,10 +4688,10 @@ loc_4_BA2E:
     lda     ram_00AF,x              ; $BA31
     and     #$01                    ; $BA33
     tay                             ; $BA35
-    lda     ram_057E,x              ; $BA36
+    lda     objYVelocity+1,x        ; $BA36
     clc                             ; $BA39
     adc     dat_4_BA1C,y            ; $BA3A
-    sta     ram_057E,x              ; $BA3D
+    sta     objYVelocity+1,x        ; $BA3D
     cmp     dat_4_BA1E,y            ; $BA40
     bne     loc_4_BA47              ; $BA43
     inc     ram_00AF,x              ; $BA45
@@ -4709,10 +4709,10 @@ dat_4_BA54:
     .byte   $08, $F8, $08                                                   ; $BA54
 
 loc_4_BA57:
-    lda     ram_0012                ; $BA57
+    lda     frameCounter            ; $BA57
     bne     loc_4_BA60              ; $BA59
     lda     #$D0                    ; $BA5B
-    sta     ram_057E,x              ; $BA5D
+    sta     objYVelocity+1,x        ; $BA5D
 
 loc_4_BA60:
     lda     ram_00AF,x              ; $BA60
@@ -4732,12 +4732,12 @@ loc_4_BA6D:
     lda     #$06                    ; $BA7B
     sta     a:ram_0087,y            ; $BA7D
     lda     #$D5                    ; $BA80
-    sta     ram_0584,y              ; $BA82
-    lda     a:ram_0077,y            ; $BA85
+    sta     objYVelocity+7,y        ; $BA82
+    lda     a:objXVelocity+7,y      ; $BA85
     asl     a                       ; $BA88
-    lda     a:ram_0077,y            ; $BA89
+    lda     a:objXVelocity+7,y      ; $BA89
     ror     a                       ; $BA8C
-    sta     a:ram_0077,y            ; $BA8D
+    sta     a:objXVelocity+7,y      ; $BA8D
 
 loc_4_BA90:
     lda     ram_00AF,x              ; $BA90
@@ -4747,11 +4747,11 @@ loc_4_BA90:
     rol     a                       ; $BA96
     tay                             ; $BA97
     lda     dat_4_BA54,y            ; $BA98
-    sta     ram_0071,x              ; $BA9B
+    sta     objXVelocity+1,x        ; $BA9B
     jsr     sub_DEBE                ; $BA9D
     inc     ram_00AF,x              ; $BAA0
     jsr     sub_EA32                ; $BAA2
-    lda     ram_00A8,x              ; $BAA5
+    lda     objCollision+1,x        ; $BAA5
     and     #$04                    ; $BAA7
     beq     loc_4_BAAE              ; $BAA9
     jsr     sub_DAC1                ; $BAAB
@@ -4760,7 +4760,7 @@ loc_4_BAAE:
     jsr     sub_4_9E17              ; $BAAE
     jsr     sub_DE3D                ; $BAB1
     jsr     sub_D6C1                ; $BAB4
-    lda     ram_0012                ; $BAB7
+    lda     frameCounter            ; $BAB7
     and     #$0F                    ; $BAB9
     bne     loc_4_BAC0              ; $BABB
     jmp     sub_DC91                ; $BABD
@@ -4772,7 +4772,7 @@ loc_4_BAC0:
     .byte   $10                                                             ; $BAC2
 
 loc_4_BAC3:
-    lda     ram_0706                ; $BAC3
+    lda     currentRegion           ; $BAC3
     beq     loc_4_BACB              ; $BAC6
     jmp     loc_4_B4AD              ; $BAC8
 
@@ -4780,7 +4780,7 @@ loc_4_BACB:
     jsr     sub_4_BE8B              ; $BACB
     jsr     sub_4_BC4E              ; $BACE
     lda     #$06                    ; $BAD1
-    ldy     ram_0706                ; $BAD3
+    ldy     currentRegion           ; $BAD3
     beq     loc_4_BADA              ; $BAD6
 ; (code below not executed in the test movies)
     lda     #$12                    ; $BAD8
@@ -4788,7 +4788,7 @@ loc_4_BACB:
 
 loc_4_BADA:
     jsr     sub_4_BB71              ; $BADA
-    lda     ram_0012                ; $BADD
+    lda     frameCounter            ; $BADD
     and     #$7F                    ; $BADF
     bne     loc_4_BAFA              ; $BAE1
 ; (code below not executed in the test movies)
@@ -4796,17 +4796,17 @@ loc_4_BADA:
     bcs     loc_4_BAFA              ; $BAE6
     lda     #$02                    ; $BAE8
     sta     a:ram_0087,y            ; $BAEA
-    lda     a:ram_0030,y            ; $BAED
+    lda     a:objY+7,y              ; $BAED
     sbc     #$08                    ; $BAF0
-    sta     a:ram_0030,y            ; $BAF2
+    sta     a:objY+7,y              ; $BAF2
     lda     #$02                    ; $BAF5
-    sta     ram_0584,y              ; $BAF7
+    sta     objYVelocity+7,y        ; $BAF7
 ; (end of code not executed in the test movies)
 
 loc_4_BAFA:
     lda     ram_05DE                ; $BAFA
     bne     loc_4_BB55              ; $BAFD
-    lda     ram_00A8,x              ; $BAFF
+    lda     objCollision+1,x        ; $BAFF
     and     #$20                    ; $BB01
     beq     loc_4_BB54              ; $BB03
     lda     ram_0081,x              ; $BB05
@@ -4817,27 +4817,27 @@ loc_4_BAFA:
     jsr     sub_4_B869              ; $BB10
     bcs     loc_4_BB54              ; $BB13
     ldy     ram_0000                ; $BB15
-    lda     ram_002A,x              ; $BB17
+    lda     objY+1,x                ; $BB17
     sbc     #$0C                    ; $BB19
-    sta     a:ram_002A,y            ; $BB1B
-    lda     ram_004E,x              ; $BB1E
-    sta     a:ram_004E,y            ; $BB20
-    lda     ram_003C,x              ; $BB23
-    sta     a:ram_003C,y            ; $BB25
-    lda     ram_0060,x              ; $BB28
-    sta     a:ram_0060,y            ; $BB2A
+    sta     a:objY+1,y              ; $BB1B
+    lda     objX+1,x                ; $BB1E
+    sta     a:objX+1,y              ; $BB20
+    lda     objXHi+1,x              ; $BB23
+    sta     a:objXHi+1,y            ; $BB25
+    lda     objFacing+1,x           ; $BB28
+    sta     a:objFacing+1,y         ; $BB2A
     lda     #$22                    ; $BB2D
-    sta     a:ram_00A1,y            ; $BB2F
+    sta     a:enemyType,y           ; $BB2F
     lda     #$00                    ; $BB32
     sta     ram_0444,y              ; $BB34
     sta     a:ram_00AF,y            ; $BB37
     lda     #$D0                    ; $BB3A
-    sta     ram_057E,y              ; $BB3C
-    sta     a:ram_00C2,y            ; $BB3F
-    lda     ram_0060,x              ; $BB42
+    sta     objYVelocity+1,y        ; $BB3C
+    sta     a:enemyHp,y             ; $BB3F
+    lda     objFacing+1,x           ; $BB42
     tax                             ; $BB44
     lda     loc_4_BAC0,x            ; $BB45
-    sta     a:ram_0071,y            ; $BB48
+    sta     a:objXVelocity+1,y      ; $BB48
     ldx     ram_0010                ; $BB4B
     lda     ram_0081,x              ; $BB4D
     sta     a:ram_0081,y            ; $BB4F
@@ -4847,7 +4847,7 @@ loc_4_BB54:
     rts                             ; $BB54
 
 loc_4_BB55:
-    lda     ram_0012                ; $BB55
+    lda     frameCounter            ; $BB55
     and     #$03                    ; $BB57
     bne     loc_4_BB5E              ; $BB59
     dec     ram_05DE                ; $BB5B
@@ -4860,7 +4860,7 @@ loc_4_BB5F:
     jsr     sub_4_BC4E              ; $BB62
     jsr     sub_E579                ; $BB65
     jsr     sub_4_BC11              ; $BB68
-    lda     ram_0012                ; $BB6B
+    lda     frameCounter            ; $BB6B
     bne     loc_4_BB6F              ; $BB6D
 
 loc_4_BB6F:
@@ -4868,31 +4868,31 @@ loc_4_BB6F:
 
 sub_4_BB71:
     jsr     sub_4_9C45              ; $BB71
-    lda     ram_0060,x              ; $BB74
+    lda     objFacing+1,x           ; $BB74
     pha                             ; $BB76
     jsr     sub_DC91                ; $BB77
     iny                             ; $BB7A
     sty     ram_0001                ; $BB7B
     pla                             ; $BB7D
     sta     ram_0000                ; $BB7E
-    lda     ram_00A1,x              ; $BB80
+    lda     enemyType,x             ; $BB80
     cmp     #$20                    ; $BB82
     bne     loc_4_BB8A              ; $BB84
     lda     ram_0081,x              ; $BB86
     bne     loc_4_BB90              ; $BB88
 
 loc_4_BB8A:
-    lda     ram_0012                ; $BB8A
+    lda     frameCounter            ; $BB8A
     and     #$1F                    ; $BB8C
     beq     loc_4_BB94              ; $BB8E
 
 loc_4_BB90:
     lda     ram_0000                ; $BB90
-    sta     ram_0060,x              ; $BB92
+    sta     objFacing+1,x           ; $BB92
 
 loc_4_BB94:
     lda     #$00                    ; $BB94
-    sta     ram_0071,x              ; $BB96
+    sta     objXVelocity+1,x        ; $BB96
     lda     ram_00AF,x              ; $BB98
     asl     a                       ; $BB9A
     beq     loc_4_BBB2              ; $BB9B
@@ -4901,11 +4901,11 @@ loc_4_BB94:
 
 loc_4_BBA0:
     lda     ram_0001                ; $BBA0
-    cmp     ram_0060,x              ; $BBA2
+    cmp     objFacing+1,x           ; $BBA2
     bne     loc_4_BBC4              ; $BBA4
     lda     loc_4_BA53,y            ; $BBA6
-    sta     ram_0071,x              ; $BBA9
-    lda     ram_0012                ; $BBAB
+    sta     objXVelocity+1,x        ; $BBA9
+    lda     frameCounter            ; $BBAB
     lsr     a                       ; $BBAD
     bcc     loc_4_BBB2              ; $BBAE
     dec     ram_00AF,x              ; $BBB0
@@ -4931,7 +4931,7 @@ loc_4_BBC4:
 loc_4_BBC5:
     cmp     #$20                    ; $BBC5
     bcc     loc_4_BBD7              ; $BBC7
-    lda     ram_0012                ; $BBC9
+    lda     frameCounter            ; $BBC9
     and     #$3F                    ; $BBCB
     bne     loc_4_BBD6              ; $BBCD
 ; (code below not executed in the test movies)
@@ -4944,21 +4944,21 @@ loc_4_BBD6:
     rts                             ; $BBD6
 
 loc_4_BBD7:
-    lda     ram_00A1,x              ; $BBD7
+    lda     enemyType,x             ; $BBD7
     cmp     #$20                    ; $BBD9
     bne     loc_4_BBF8              ; $BBDB
     lda     ram_051B,x              ; $BBDD
     and     #$07                    ; $BBE0
     ora     ram_0081,x              ; $BBE2
     bne     loc_4_BBF8              ; $BBE4
-    lda     ram_0060,x              ; $BBE6
+    lda     objFacing+1,x           ; $BBE6
     pha                             ; $BBE8
     jsr     sub_DC91                ; $BBE9
     pla                             ; $BBEC
-    sta     ram_0060,x              ; $BBED
+    sta     objFacing+1,x           ; $BBED
     iny                             ; $BBEF
     tya                             ; $BBF0
-    cmp     ram_0060,x              ; $BBF1
+    cmp     objFacing+1,x           ; $BBF1
     bne     loc_4_BBF8              ; $BBF3
     jsr     sub_4_BC23              ; $BBF5
 
@@ -5008,11 +5008,11 @@ sub_4_BC4E:
     jsr     sub_DE3D                ; $BC57
     jsr     sub_D6C1                ; $BC5A
     lda     #$01                    ; $BC5D
-    cmp     ram_00B6,x              ; $BC5F
+    cmp     enemyActive,x           ; $BC5F
     beq     loc_4_BC75              ; $BC61
-    sta     ram_00B6,x              ; $BC63
+    sta     enemyActive,x           ; $BC63
     lda     #$FF                    ; $BC65
-    ldy     ram_00A1,x              ; $BC67
+    ldy     enemyType,x             ; $BC67
     sta     sram_6E1D,y             ; $BC69
     sta     ram_0504,x              ; $BC6C
     lsr     a                       ; $BC6F
@@ -5038,13 +5038,13 @@ dat_4_BC7C:
 loc_4_BC7E:
     jsr     sub_4_BCA1              ; $BC7E
     ldy     #$00                    ; $BC81
-    lda     ram_0706                ; $BC83
+    lda     currentRegion           ; $BC83
     beq     loc_4_BC89              ; $BC86
     iny                             ; $BC88
 
 loc_4_BC89:
     lda     dat_4_BC76,y            ; $BC89
-    sta     ram_00C2,x              ; $BC8C
+    sta     enemyHp,x               ; $BC8C
     lda     dat_4_BC78,y            ; $BC8E
     sta     sram_6DF6               ; $BC91
     lda     dat_4_BC7A,y            ; $BC94
@@ -5060,7 +5060,7 @@ sub_4_BCA1:
     cmp     #$00                    ; $BCA8
     bne     loc_4_BCAF              ; $BCAA
 ; (code below not executed in the test movies)
-    sta     ram_00B6,x              ; $BCAC
+    sta     enemyActive,x           ; $BCAC
     rts                             ; $BCAE
 ; (end of code not executed in the test movies)
 
@@ -5068,7 +5068,7 @@ loc_4_BCAF:
     lda     #$02                    ; $BCAF
     sta     ram_0444,x              ; $BCB1
     lda     #$07                    ; $BCB4
-    ldy     ram_00A1,x              ; $BCB6
+    ldy     enemyType,x             ; $BCB6
     sta     sram_6E1D,y             ; $BCB8
     rts                             ; $BCBB
 
@@ -5076,17 +5076,17 @@ loc_4_BCBC:
     jsr     sub_DA02                ; $BCBC
     jsr     sub_DE3D                ; $BCBF
     jsr     sub_D6C1                ; $BCC2
-    lda     ram_00A8,x              ; $BCC5
+    lda     objCollision+1,x        ; $BCC5
     and     #$04                    ; $BCC7
     beq     loc_4_BCD5              ; $BCC9
     jsr     sub_DAC1                ; $BCCB
     lda     #$F0                    ; $BCCE
-    sta     ram_057E,x              ; $BCD0
+    sta     objYVelocity+1,x        ; $BCD0
     inc     ram_00AF,x              ; $BCD3
 
 loc_4_BCD5:
     jsr     sub_DEBE                ; $BCD5
-    lda     ram_00A8,x              ; $BCD8
+    lda     objCollision+1,x        ; $BCD8
     and     #$03                    ; $BCDA
     beq     loc_4_BCE1              ; $BCDC
     jsr     sub_E8EB                ; $BCDE
@@ -5112,7 +5112,7 @@ loc_4_BCEF:
     jsr     sub_E4D9                ; $BCF2
     jsr     sub_D6C1                ; $BCF5
     jsr     sub_DEB8                ; $BCF8
-    lda     ram_002A,x              ; $BCFB
+    lda     objY+1,x                ; $BCFB
     ldy     ram_00AF,x              ; $BCFD
     cpy     #$03                    ; $BCFF
     bcs     loc_4_BD24              ; $BD01
@@ -5122,14 +5122,14 @@ loc_4_BCEF:
     sta     ram_0504,x              ; $BD09
     inc     ram_00AF,x              ; $BD0C
     lda     dat_4_BCEC,y            ; $BD0E
-    sta     ram_057E,x              ; $BD11
+    sta     objYVelocity+1,x        ; $BD11
     lda     #$10                    ; $BD14
     sta     ram_00EE                ; $BD16
     lda     #$C3                    ; $BD18
-    sta     ram_002A,x              ; $BD1A
-    lda     ram_0071,x              ; $BD1C
+    sta     objY+1,x                ; $BD1A
+    lda     objXVelocity+1,x        ; $BD1C
     asl     a                       ; $BD1E
-    ror     ram_0071,x              ; $BD1F
+    ror     objXVelocity+1,x        ; $BD1F
 
 loc_4_BD21:
     jmp     sub_DEBE                ; $BD21
@@ -5140,12 +5140,12 @@ loc_4_BD24:
     cmp     #$70                    ; $BD29
     bcc     loc_4_BD3E              ; $BD2B
     lda     #$00                    ; $BD2D
-    sta     ram_0071,x              ; $BD2F
-    sta     ram_057E,x              ; $BD31
+    sta     objXVelocity+1,x        ; $BD2F
+    sta     objYVelocity+1,x        ; $BD31
     ldy     ram_0504,x              ; $BD34
     bne     loc_4_BD3D              ; $BD37
-    dec     ram_002A,x              ; $BD39
-    dec     ram_002A,x              ; $BD3B
+    dec     objY+1,x                ; $BD39
+    dec     objY+1,x                ; $BD3B
 
 loc_4_BD3D:
     rts                             ; $BD3D
@@ -5157,20 +5157,20 @@ loc_4_BD3E:
     lda     ram_00AF,x              ; $BD44
     and     #$01                    ; $BD46
     tay                             ; $BD48
-    lda     ram_057E,x              ; $BD49
+    lda     objYVelocity+1,x        ; $BD49
     clc                             ; $BD4C
     adc     dat_4_BCE6,y            ; $BD4D
-    sta     ram_057E,x              ; $BD50
+    sta     objYVelocity+1,x        ; $BD50
     cmp     dat_4_BCE4,y            ; $BD53
     bne     loc_4_BD5A              ; $BD56
     inc     ram_00AF,x              ; $BD58
 
 loc_4_BD5A:
-    lda     ram_0012                ; $BD5A
+    lda     frameCounter            ; $BD5A
     bne     loc_4_BD66              ; $BD5C
     jsr     sub_DC91                ; $BD5E
     lda     dat_4_BCE8,y            ; $BD61
-    sta     ram_0071,x              ; $BD64
+    sta     objXVelocity+1,x        ; $BD64
 
 loc_4_BD66:
     inc     ram_0401,x              ; $BD66
@@ -5187,7 +5187,7 @@ loc_4_BD72:
     .byte   $04                                                             ; $BD74
 
 loc_4_BD75:
-    lda     ram_0706                ; $BD75
+    lda     currentRegion           ; $BD75
     beq     loc_4_BD7D              ; $BD78
     jmp     loc_4_B5AE              ; $BD7A
 
@@ -5219,14 +5219,14 @@ loc_4_BD92:
     jsr     sub_4_BDD6              ; $BDAB
     lda     sram_6E3E               ; $BDAE
     bmi     loc_4_BDCD              ; $BDB1
-    lda     ram_0060,x              ; $BDB3
+    lda     objFacing+1,x           ; $BDB3
     pha                             ; $BDB5
     jsr     sub_DC91                ; $BDB6
     pla                             ; $BDB9
-    sta     ram_0060,x              ; $BDBA
+    sta     objFacing+1,x           ; $BDBA
     iny                             ; $BDBC
     tya                             ; $BDBD
-    cmp     ram_0060,x              ; $BDBE
+    cmp     objFacing+1,x           ; $BDBE
     beq     loc_4_BDCD              ; $BDC0
 ; (code below not executed in the test movies)
     lda     ram_0262                ; $BDC2
@@ -5271,7 +5271,7 @@ loc_4_BDED:
     sta     ram_000E                ; $BDF7
     lda     #$00                    ; $BDF9
     sta     ram_000D                ; $BDFB
-    lda     ram_057E,x              ; $BDFD
+    lda     objYVelocity+1,x        ; $BDFD
     beq     loc_4_BE18              ; $BE00
     ldx     #$34                    ; $BE02
     asl     a                       ; $BE04
@@ -5299,7 +5299,7 @@ loc_4_BE18:
 
 loc_4_BE27:
     ldx     #$2C                    ; $BE27
-    lda     ram_0012                ; $BE29
+    lda     frameCounter            ; $BE29
     and     #$08                    ; $BE2B
     beq     loc_4_BE31              ; $BE2D
 
@@ -5330,15 +5330,15 @@ loc_4_BE57:
     cmp     #$02                    ; $BE59
     bne     loc_4_BE7A              ; $BE5B
     lda     ram_00C9                ; $BE5D
-    ora     ram_057E,x              ; $BE5F
+    ora     objYVelocity+1,x        ; $BE5F
     bne     loc_4_BE7A              ; $BE62
     tya                             ; $BE64
     pha                             ; $BE65
-    ldy     ram_0060,x              ; $BE66
+    ldy     objFacing+1,x           ; $BE66
     lda     ram_0001                ; $BE68
     adc     dat_4_BDEA,y            ; $BE6A
     sta     ram_0001                ; $BE6D
-    lda     ram_002A,x              ; $BE6F
+    lda     objY+1,x                ; $BE6F
     sta     ram_0000                ; $BE71
     pla                             ; $BE73
     tay                             ; $BE74
@@ -5369,12 +5369,12 @@ sub_4_BE8B:
     inc     ram_0728                ; $BE99
 
 loc_4_BE9C:
-    ldy     ram_00A1,x              ; $BE9C
+    ldy     enemyType,x             ; $BE9C
     lda     sram_6E1D,y             ; $BE9E
     bpl     loc_4_BEF5              ; $BEA1
     ldy     ram_040E,x              ; $BEA3
     bne     loc_4_BEF0              ; $BEA6
-    inc     ram_00B6,x              ; $BEA8
+    inc     enemyActive,x           ; $BEA8
     lda     #$0A                    ; $BEAA
     sta     ram_00D9                ; $BEAC
     lda     ram_0010                ; $BEAE
@@ -5385,7 +5385,7 @@ loc_4_BEB3:
     stx     ram_0010                ; $BEB3
     lda     #$00                    ; $BEB5
     sta     ram_0087,x              ; $BEB7
-    lda     ram_00B6,x              ; $BEB9
+    lda     enemyActive,x           ; $BEB9
     beq     loc_4_BEE5              ; $BEBB
     cmp     #$01                    ; $BEBD
     bne     loc_4_BEE5              ; $BEBF
@@ -5399,7 +5399,7 @@ loc_4_BEB3:
     lda     ram_00C9                ; $BECD
     and     #$88                    ; $BECF
     bne     loc_4_BEE5              ; $BED1
-    ldy     ram_00A1,x              ; $BED3
+    ldy     enemyType,x             ; $BED3
     lda     sram_6E41,y             ; $BED5
     ldy     #$09                    ; $BED8
     and     #$A0                    ; $BEDA

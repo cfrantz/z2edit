@@ -2448,7 +2448,7 @@ sub_6_9B18:
     jmp     loc_6_9C87              ; $9B21
 
 loc_6_9B24:
-    lda     ram_0707                ; $9B24
+    lda     currentWorld            ; $9B24
     cmp     #$05                    ; $9B27
     bne     loc_6_9B34              ; $9B29
     lda     ram_07FB                ; $9B2B
@@ -2510,7 +2510,7 @@ loc_6_9B7A:
     sty     ram_00E2                ; $9B7E
 
 loc_6_9B80:
-    lda     ram_0707                ; $9B80
+    lda     currentWorld            ; $9B80
     bne     loc_6_9BBC              ; $9B83
     ldy     ram_00E2                ; $9B85
     lda     dat_6_9FFF,y            ; $9B87

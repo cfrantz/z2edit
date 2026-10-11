@@ -8,4 +8,52 @@ NMI_MODE_SOUND_ONLY     = $40   ; bit 7 clear: Nmi_SoundOnly
 NMI_MODE_BANK5          = $80   ; bit 7 set, bit 6 clear: Nmi_Bank5
 NMI_MODE_GAME           = $C0   ; bits 7 and 6 set: game NMI
 
+; Object slots: indexes into the obj* arrays in ram.inc.
+OBJ_SLOT_LINK           = 0
+OBJ_SLOT_ENEMY          = 1     ; 1-6: enemies
+OBJ_SLOT_PROJECTILE     = 7     ; 7-12: enemy projectiles
+OBJ_SLOT_LINK_PROJECTILE = 13   ; 13-14: Link's projectiles
+OBJ_SLOT_SWORD_PROBE    = 16    ; sword tip, for breaking blocks
+NUM_ENEMIES             = 6
+NUM_PROJECTILES         = 6
+
+; Indexes into statLevel.
+STAT_ATTACK             = 0
+STAT_MAGIC              = 1
+STAT_LIFE               = 2
+
+; Indexes into statMeter and statContainers.
+STAT_METER_MAGIC        = 0
+STAT_METER_LIFE         = 1
+
+; Indexes into spellOwned.
+SPELL_SHIELD            = 0
+SPELL_JUMP              = 1
+SPELL_LIFE              = 2
+SPELL_FAIRY             = 3
+SPELL_FIRE              = 4
+SPELL_REFLECT           = 5
+SPELL_SPELL             = 6
+SPELL_THUNDER           = 7
+
+; Indexes into itemOwned.
+ITEM_CANDLE             = 0
+ITEM_GLOVE              = 1
+ITEM_RAFT               = 2
+ITEM_BOOTS              = 3
+ITEM_FLUTE              = 4
+ITEM_CROSS              = 5
+ITEM_HAMMER             = 6
+ITEM_MAGIC_KEY          = 7
+
+; Save files.  A file holds SAVE_WORLD_SIZE bytes from saveWorld and
+; SAVE_STATS_SIZE bytes from statLevel.
+SAVE_STATS_SIZE         = 50
+SAVE_WORLD_SIZE         = 224
+; Save file status.  Saving writes the backup copy, then the file, so an
+; interrupted save can be completed or discarded at power-on.
+SAVE_STATUS_WRITING_BACKUP = $5A  ; file intact; backup being written
+SAVE_STATUS_WRITING_FILE = $69    ; backup complete; file being written
+SAVE_STATUS_VALID       = $A5
+
 .endif
