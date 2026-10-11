@@ -19,7 +19,7 @@ Tools that drive the emulator need the Python extension built with
   movie, annotated with symbol names.
 - `status.py`: Updates the generated section of `STATUS.md`.  Run by
   `make status`.
-- `rename.py`: Renames symbols across `src/` (whole words), keeping the
+- `rename.py`: Renames symbols across `src/` and `docs/` (whole words), keeping the
   address comment column aligned.  Refuses unknown or already-used names.
   `--array NAME BASE COUNT` names an array and turns the mechanical names
   of its elements into `NAME+k`.
@@ -37,3 +37,5 @@ Tools that drive the emulator need the Python extension built with
   JSR sites that call them, with a register's value on entry.
 - `watch.py`: Plays a movie and logs writes to RAM variables (by symbol
   or address), with the frame number and the writing routine.
+- `check_docs.py`: Reports symbol names in `docs/` that no longer exist in
+  the source.  Run by `make verify`.

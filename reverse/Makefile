@@ -53,6 +53,7 @@ verify: $(OUT) $(SYMS)
 		cmp -l $(OUT) $(ROM) | awk '{ printf "  file offset $$%05X: built %02X, expected %02X\n", $$1-1, strtonum("0"$$2), strtonum("0"$$3) }' | head -20; \
 		exit 1; \
 	fi
+	@python3 tools/check_docs.py || (echo "FAIL: docs/ refers to symbols that no longer exist"; exit 1)
 
 status: $(SYMS)
 	python3 tools/status.py --cdl $(BUILD)/zelda2.cdl --symbols $(SYMS) --src $(SRC) --status STATUS.md

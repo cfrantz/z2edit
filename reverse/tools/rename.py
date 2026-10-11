@@ -5,7 +5,7 @@
     rename.py --file renames.txt      (one "OLD NEW" pair per line, # comments)
     rename.py --array NAME BASE COUNT [--size N]
 
-Replaces whole-word occurrences in src/*.s and src/*.inc.  Refuses to
+Replaces whole-word occurrences in src/*.s, src/*.inc and docs/**/*.md.  Refuses to
 rename to a name that already exists, or to rename a symbol that doesn't.
 Run `make verify` afterwards.
 
@@ -24,6 +24,7 @@ import re
 import sys
 
 SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src")
+DOCS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../docs")
 # An instruction or data line with a trailing address comment.
 ADDR_LINE = re.compile(r"^(\s+\S.*?)\s+(; \$[0-9A-F]{4}\b.*)$")
 COMMENT_COLUMN = 36
@@ -81,6 +82,9 @@ def main():
     files = sorted(glob.glob(os.path.join(SRC, "*.s")) + glob.glob(os.path.join(SRC, "*.inc")))
     text = {f: open(f).read() for f in files}
     everything = "\n".join(text.values())
+    # Documentation follows renames too (but is not searched for collisions).
+    docs = sorted(glob.glob(os.path.join(DOCS, "**", "*.md"), recursive=True))
+    doc_text = {f: open(f).read() for f in docs}
     # Code only, for collision checks: a word in a comment is not a symbol.
     code = "\n".join(line.split(";", 1)[0] for t in text.values() for line in t.split("\n"))
     errors = []
@@ -131,6 +135,11 @@ def main():
             new_line = pattern.sub(replace, line)
             lines.append(realign(new_line) if new_line != line else line)
         new = "\n".join(lines)
+        if new != t:
+            with open(f, "w") as out:
+                out.write(new)
+    for f, t in doc_text.items():
+        new = pattern.sub(replace, t)
         if new != t:
             with open(f, "w") as out:
                 out.write(new)
