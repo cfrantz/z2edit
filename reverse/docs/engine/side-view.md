@@ -23,6 +23,8 @@ runs `Mode_SideView` (bank 7) once per frame, which does, in order:
    fire) and `BreakingBlocks_Update`.
 10. `Link_Draw`, skipped on alternate frames while Link blinks after being
     hit; `Sword_CheckBlocks`.
+11. `Scroll_DrawColumns`: draw the part of the area scrolling into view, a
+    column at a time over several frames.
 
 Enemies are updated through per-type routine tables copied into SRAM from
 the area bank (`sramEnemyAiPtrs`, `sramEnemyDrawPtrs`,
