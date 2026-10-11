@@ -944,10 +944,10 @@ Mode_PrepareLoad:
     jmp     Game_BlankAndNextMode   ; $C4A4
 ; (unreferenced: $C4A7-$C4AE, 8 bytes)
 
-AreaFillTiles:
+AreaRowFillTiles:
     .byte   $40, $83, $84, $4C, $40, $40, $40, $40                          ; $C4A7
 
-AreaFillRows:
+AreaRowFillRows:
     .byte   $00                                                             ; $C4AF
 ; (unreferenced: $C4B0-$C4B6, 7 bytes)
     .byte   $90, $A0, $20, $00, $00, $00, $00                               ; $C4B0
@@ -1125,7 +1125,7 @@ Area_Load:
     tax                             ; $C5CD
     dey                             ; $C5CE
     sty     areaBuildPage           ; $C5CF
-    lda     AreaFillRows,x          ; $C5D2
+    lda     AreaRowFillRows,x       ; $C5D2
     sta     areaBuildColumn         ; $C5D5
     beq     @loc_C5F9               ; $C5D8
 ; (code below not executed in the test movies)
@@ -1137,7 +1137,7 @@ Area_Load:
 @loop4:
     ; QUIRK: the loads of temp0 here and below are overwritten unused.
     lda     temp0                   ; $C5E0
-    lda     AreaFillTiles,x         ; $C5E2
+    lda     AreaRowFillTiles,x      ; $C5E2
     sta     (temp14),y              ; $C5E5
     lda     temp0                   ; $C5E7
     iny                             ; $C5E9
