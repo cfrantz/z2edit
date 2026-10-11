@@ -381,7 +381,7 @@ sub_C1DD:
     lda     objXHi                  ; $C1F2
     cmp     #$02                    ; $C1F4
     bcc     loc_C206                ; $C1F6
-    lda     ram_0796                ; $C1F8
+    lda     techniques              ; $C1F8
     lsr     a                       ; $C1FB
     bcc     loc_C206                ; $C1FC
     lda     #$01                    ; $C1FE
@@ -1381,8 +1381,8 @@ sub_C89D:
     lda     #$00                    ; $C89D
     sta     areaBuildPage           ; $C89F
     sta     ram_010A                ; $C8A2
-    sta     ram_0757                ; $C8A5
-    sta     ram_0758                ; $C8A8
+    sta     elevatorPos             ; $C8A5
+    sta     lockedDoorPos           ; $C8A8
     tay                             ; $C8AB
     lda     (ram_00D4),y            ; $C8AC
     sta     ram_072E                ; $C8AE
@@ -1774,7 +1774,7 @@ loc_CADE:
     jsr     sub_C358                ; $CADE
     lda     #$00                    ; $CAE1
     sta     areaId                  ; $CAE3
-    sta     ram_0701                ; $CAE6
+    sta     areaEntrySide           ; $CAE6
     sta     areaStartPage           ; $CAE9
     lda     #$01                    ; $CAEC
     ldy     #$02                    ; $CAEE
@@ -1931,7 +1931,7 @@ loc_CBCD:
 loc_CBE4:
     and     #$01                    ; $CBE4
     eor     #$01                    ; $CBE6
-    sta     ram_0701                ; $CBE8
+    sta     areaEntrySide           ; $CBE8
     beq     loc_CBEF                ; $CBEB
     lda     #$03                    ; $CBED
 
@@ -1944,7 +1944,7 @@ loc_CBF2:
 
 loc_CBF8:
     lda     #$01                    ; $CBF8
-    sta     ram_0701                ; $CBFA
+    sta     areaEntrySide           ; $CBFA
     lda     ram_075F                ; $CBFD
     cmp     #$01                    ; $CC00
     bne     loc_CBF2                ; $CC02
@@ -1988,7 +1988,7 @@ loc_CC40:
 
 sub_CC50:
     and     #$01                    ; $CC50
-    sta     ram_0701                ; $CC52
+    sta     areaEntrySide           ; $CC52
     lda     #$70                    ; $CC55
     sta     objX                    ; $CC57
     ldx     #$0B                    ; $CC59
@@ -2038,7 +2038,7 @@ sub_CC97:
     and     #$03                    ; $CCA4
     sta     areaStartPage           ; $CCA6
     and     #$01                    ; $CCA9
-    sta     ram_0701                ; $CCAB
+    sta     areaEntrySide           ; $CCAB
     rts                             ; $CCAE
 
 loc_CCAF:
@@ -2556,7 +2556,7 @@ loc_CFB2:
 
 loc_CFC2:
     and     #$01                    ; $CFC2
-    sta     ram_0701                ; $CFC4
+    sta     areaEntrySide           ; $CFC4
     lda     areaId                  ; $CFC7
     cmp     #$24                    ; $CFCA
     bcs     sub_CFEC                ; $CFCC
@@ -2605,7 +2605,7 @@ loc_CFFC:
     and     #$03                    ; $D014
     sta     areaStartPage           ; $D016
     and     #$01                    ; $D019
-    sta     ram_0701                ; $D01B
+    sta     areaEntrySide           ; $D01B
     lda     ram_075B                ; $D01E
     clc                             ; $D021
     adc     #$04                    ; $D022
@@ -3113,7 +3113,7 @@ Ram_ClearWork:
     txa                             ; $D29E
 
 loc_D29F:
-    sta     ram_0400,x              ; $D29F
+    sta     linkAttackFrame,x       ; $D29F
     dex                             ; $D2A2
     bne     loc_D29F                ; $D2A3
     ldx     #$00                    ; $D2A5
@@ -3370,17 +3370,17 @@ dat_D3CA:
 ; Mode_SideView
 ;
 ; GAME_MODE_SIDE_VIEW: one frame of side view play.  Starts the death
-; sequence (GAME_STATE_DEATH) when ram_0494 is set, otherwise runs bank 0's
+; sequence (GAME_STATE_DEATH) when linkDeathPending is set, otherwise runs bank 0's
 ; side view code (Spell_Update) and refills the meters from statMeterPending.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Mode_SideView:
-    lda     ram_0494                ; $D3CC
+    lda     linkDeathPending        ; $D3CC
     beq     loc_D3E9                ; $D3CF
     ldx     timerFast+11            ; $D3D1
     bne     loc_D3E9                ; $D3D4
-    stx     ram_0494                ; $D3D6
+    stx     linkDeathPending        ; $D3D6
     inx                             ; $D3D9
     stx     sfxRequest              ; $D3DA
     lda     #$02                    ; $D3DC
@@ -3537,7 +3537,7 @@ loc_D4CE:
     sta     sfxRequest+3            ; $D4F1
 
 loc_D4F3:
-    jsr     sub_0_903A              ; $D4F3
+    jsr     Link_Run                ; $D4F3
     lda     #$00                    ; $D4F6
     sta     ram_0754                ; $D4F8
     sta     ram_05E7                ; $D4FB
@@ -3548,9 +3548,9 @@ loc_D4F3:
     jsr     sub_0_80E5              ; $D50A
     jsr     sub_0_9847              ; $D50D
     jsr     sub_0_A6D2              ; $D510
-    lda     ram_0497                ; $D513
+    lda     linkLandingTimer        ; $D513
     beq     loc_D51F                ; $D516
-    dec     ram_0497                ; $D518
+    dec     linkLandingTimer        ; $D518
     lda     #$06                    ; $D51B
     sta     objState                ; $D51D
 
@@ -3636,7 +3636,7 @@ dat_D59B:
     .byte   $F0                                                             ; $D5A6
 
 sub_D5A7:
-    lda     ram_00B5                ; $D5A7
+    lda     linkMode                ; $D5A7
     beq     loc_D5D9                ; $D5A9
     inc     ram_0485                ; $D5AB
     ldx     #$05                    ; $D5AE
@@ -4051,7 +4051,7 @@ loc_D8C2:
     beq     loc_D91B                ; $D8C6
     sta     ram_0754                ; $D8C8
     lda     #$00                    ; $D8CB
-    sta     ram_0479                ; $D8CD
+    sta     linkJumpState           ; $D8CD
     sta     objYVelocity            ; $D8D0
     lda     ram_0743                ; $D8D3
     lsr     a                       ; $D8D6
@@ -5327,7 +5327,7 @@ sub_E079:
     sta     ram_00E9                ; $E0A6
     lda     #$10                    ; $E0A8
     sta     timerFast+11            ; $E0AA
-    inc     ram_00B5                ; $E0AD
+    inc     linkMode                ; $E0AD
     rts                             ; $E0AF
 
 loc_E0B0:
@@ -5354,7 +5354,7 @@ loc_E0C5:
     beq     loc_E0E6                ; $E0D7
     cmp     AreaBank::dat_851A+3    ; $E0D9
     bne     loc_E0F9                ; $E0DC
-    lda     ram_0017                ; $E0DE
+    lda     linkStanding            ; $E0DE
     bne     loc_E0F9                ; $E0E0
     inc     ram_070E                ; $E0E2
 
@@ -5365,7 +5365,7 @@ loc_E0E6:
     lda     joypadHeld              ; $E0E6
     and     #$08                    ; $E0E8
     beq     loc_E0F9                ; $E0EA
-    lda     ram_0479                ; $E0EC
+    lda     linkJumpState           ; $E0EC
     bne     loc_E0E5                ; $E0EF
     inc     ram_075B                ; $E0F1
     lda     #$16                    ; $E0F4
@@ -5416,7 +5416,7 @@ loc_E12B:
     lda     #$00                    ; $E143
     sta     temp1                   ; $E145
     jsr     sub_E1BE                ; $E147
-    lda     ram_00B5                ; $E14A
+    lda     linkMode                ; $E14A
     cmp     #$01                    ; $E14C
     bne     loc_E19D                ; $E14E
     lda     timerFast+2             ; $E150
@@ -5721,7 +5721,7 @@ loc_E32F:
     bcs     loc_E34C                ; $E342
     lda     #$00                    ; $E344
     sta     statMeter+STAT_METER_LIFE ; $E346
-    inc     ram_0494                ; $E349
+    inc     linkDeathPending        ; $E349
 
 loc_E34C:
     lda     #$20                    ; $E34C
@@ -5729,7 +5729,7 @@ loc_E34C:
     lda     #$04                    ; $E351
     sta     timerSlow+10            ; $E353
     lda     #$00                    ; $E356
-    sta     ram_0400                ; $E358
+    sta     linkAttackFrame         ; $E358
     lda     objCollision            ; $E35B
     and     #$FB                    ; $E35D
     sta     objCollision            ; $E35F
@@ -6729,7 +6729,7 @@ dat_E973:
 ; Link_GetHitbox
 ;
 ; Set box A (temp0-temp3, see Hitbox_Overlap) to Link's body.  Its height
-; depends on ram_0017.
+; depends on linkStanding.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -6740,7 +6740,7 @@ Link_GetHitbox:
     sta     temp0                   ; $E97A
     lda     #$0D                    ; $E97C
     sta     temp2                   ; $E97E
-    ldy     ram_0017                ; $E980
+    ldy     linkStanding            ; $E980
     lda     objY                    ; $E982
     clc                             ; $E984
     adc     dat_E971,y              ; $E985
@@ -6820,7 +6820,7 @@ dat_E9D6:
 ;
 ; Set box A (temp0-temp3, see Hitbox_Overlap) to a small box in front of
 ; Link, in the direction he is walking (linkWalkDir), at a height that
-; depends on ram_0017: probably his shield.
+; depends on linkStanding: probably his shield.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -6835,7 +6835,7 @@ Link_GetShieldHitbox:
     sta     temp0                   ; $E9E4
     lda     #$05                    ; $E9E6
     sta     temp2                   ; $E9E8
-    ldy     ram_0017                ; $E9EA
+    ldy     linkStanding            ; $E9EA
     lda     objY                    ; $E9EC
     clc                             ; $E9EE
     adc     dat_E9D6,y              ; $E9EF
@@ -7131,7 +7131,7 @@ sub_EC02:
     lda     objY,x                  ; $EC04
     cpx     #$00                    ; $EC06
     bne     loc_EC17                ; $EC08
-    ldy     ram_0479                ; $EC0A
+    ldy     linkJumpState           ; $EC0A
     beq     loc_EC17                ; $EC0D
     ldy     objState,x              ; $EC0F
     cpy     #$06                    ; $EC11
@@ -7420,7 +7420,7 @@ loc_EDE7:
 loc_EDF1:
     ora     temp1                   ; $EDF1
     ora     ram_0752,x              ; $EDF3
-    ldx     ram_00B5                ; $EDF6
+    ldx     linkMode                ; $EDF6
     dex                             ; $EDF8
     beq     loc_EDFD                ; $EDF9
     ora     #$20                    ; $EDFB

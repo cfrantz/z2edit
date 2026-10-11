@@ -1137,7 +1137,7 @@ loc_3_97A9:
     cmp     #$40                    ; $97BF
     bcs     loc_3_97D3              ; $97C1
     lda     objCollision            ; $97C3
-    lda     ram_0479                ; $97C5
+    lda     linkJumpState           ; $97C5
     bne     loc_3_97D3              ; $97C8
     stx     ram_048B                ; $97CA
     jmp     loc_3_9A33              ; $97CD
@@ -1437,7 +1437,7 @@ sub_3_99B9:
     lda     enemyType,x             ; $99C0
     cmp     #$0A                    ; $99C2
     beq     loc_3_99CB              ; $99C4
-    lda     ram_0479                ; $99C6
+    lda     linkJumpState           ; $99C6
     bne     loc_3_9A1C              ; $99C9
 
 loc_3_99CB:
@@ -1505,7 +1505,7 @@ loc_3_9A33:
     sta     ram_00DE                ; $9A38
     inc     ram_05C3,x              ; $9A3A
     lda     #$00                    ; $9A3D
-    sta     ram_0400                ; $9A3F
+    sta     linkAttackFrame         ; $9A3F
     lda     #$03                    ; $9A42
     sta     objState                ; $9A44
     lda     objY                    ; $9A46
@@ -3025,9 +3025,9 @@ loc_3_B4A3:
     lda     ram_079A                ; $B4A7
     and     #$08                    ; $B4AA
     beq     loc_3_B4B8              ; $B4AC
-    lda     ram_0796                ; $B4AE
+    lda     techniques              ; $B4AE
     ora     #$01                    ; $B4B1
-    sta     ram_0796                ; $B4B3
+    sta     techniques              ; $B4B3
     inc     temp5                   ; $B4B6
 
 loc_3_B4B8:
@@ -3036,7 +3036,7 @@ loc_3_B4B8:
 loc_3_B4BB:
     cpy     #$03                    ; $B4BB
     bne     loc_3_B4D3              ; $B4BD
-    lda     ram_0796                ; $B4BF
+    lda     techniques              ; $B4BF
     and     #$10                    ; $B4C2
     beq     loc_3_B4CB              ; $B4C4
 ; (code below not executed in the test movies)
@@ -3045,14 +3045,14 @@ loc_3_B4BB:
 ; (end of code not executed in the test movies)
 
 loc_3_B4CB:
-    lda     ram_0796                ; $B4CB
+    lda     techniques              ; $B4CB
     ora     #$10                    ; $B4CE
     jmp     loc_3_B4E8              ; $B4D0
 
 loc_3_B4D3:
     cpy     #$00                    ; $B4D3
     beq     loc_3_B4EB              ; $B4D5
-    lda     ram_0796                ; $B4D7
+    lda     techniques              ; $B4D7
     and     #$04                    ; $B4DA
     beq     loc_3_B4E3              ; $B4DC
 ; (code below not executed in the test movies)
@@ -3061,11 +3061,11 @@ loc_3_B4D3:
 ; (end of code not executed in the test movies)
 
 loc_3_B4E3:
-    lda     ram_0796                ; $B4E3
+    lda     techniques              ; $B4E3
     ora     #$04                    ; $B4E6
 
 loc_3_B4E8:
-    sta     ram_0796                ; $B4E8
+    sta     techniques              ; $B4E8
 
 loc_3_B4EB:
     jmp     loc_3_B5C7              ; $B4EB

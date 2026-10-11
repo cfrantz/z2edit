@@ -16,7 +16,7 @@ GLOBALS_INC = 1
 .global sub_0_80E5
 .global loc_0_8CE1
 .global Spell_Update
-.global sub_0_903A
+.global Link_Run
 .global sub_0_968D
 .global sub_0_96A8
 .global sub_0_9847

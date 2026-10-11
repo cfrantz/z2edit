@@ -315,12 +315,12 @@ loc_2_82A2:
 
 loc_2_82BA:
     lda     ram_010A                ; $82BA
-    sta     ram_0757                ; $82BD
+    sta     elevatorPos             ; $82BD
     rts                             ; $82C0
 
 loc_2_82C1:
     lda     ram_010A                ; $82C1
-    sta     ram_0758                ; $82C4
+    sta     lockedDoorPos           ; $82C4
     rts                             ; $82C7
 
 loc_2_82C8:
@@ -1862,7 +1862,7 @@ loc_2_9B96:
     lda     rng+1,x                 ; $9BA8
     and     #$03                    ; $9BAB
     beq     loc_2_9BB4              ; $9BAD
-    lda     ram_0017                ; $9BAF
+    lda     linkStanding            ; $9BAF
     sta     ram_0444,x              ; $9BB1
 
 loc_2_9BB4:
@@ -1927,7 +1927,7 @@ loc_2_9C15:
 sub_2_9C1C:
     lda     objState+1,x            ; $9C1C
     bne     loc_2_9C66              ; $9C1E
-    lda     ram_0479                ; $9C20
+    lda     linkJumpState           ; $9C20
     beq     loc_2_9C34              ; $9C23
     ldy     #$01                    ; $9C25
     lda     objY                    ; $9C27
@@ -1960,7 +1960,7 @@ loc_2_9C4A:
     lda     rng+1,x                 ; $9C52
     lsr     a                       ; $9C55
     bcs     loc_2_9C5C              ; $9C56
-    lda     ram_0017                ; $9C58
+    lda     linkStanding            ; $9C58
     bne     loc_2_9C5F              ; $9C5A
 
 loc_2_9C5C:
@@ -1979,7 +1979,7 @@ loc_2_9C66:
     lda     objCollision            ; $9C6A
     and     #$03                    ; $9C6C
     bne     loc_2_9C89              ; $9C6E
-    lda     ram_0742                ; $9C70
+    lda     linkDirHeld             ; $9C70
     beq     loc_2_9C79              ; $9C73
     lda     objXVelocity            ; $9C75
     bne     loc_2_9C84              ; $9C77

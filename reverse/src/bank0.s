@@ -1280,7 +1280,7 @@ loc_0_893A:
 loc_0_8941:
     inc     objXVelocity+14         ; $8941
     lda     #$00                    ; $8943
-    sta     ram_0017                ; $8945
+    sta     linkStanding            ; $8945
     rts                             ; $8947
 
 loc_0_8948:
@@ -1292,7 +1292,7 @@ loc_0_8948:
     sta     temp15                  ; $8954
     lda     #$00                    ; $8956
     sta     temp6                   ; $8958
-    lda     ram_0017                ; $895A
+    lda     linkStanding            ; $895A
     sta     temp7                   ; $895C
 
 loc_0_895E:
@@ -1339,7 +1339,7 @@ loc_0_897E:
     lda     objXVelocity+14         ; $89A2
     and     #$04                    ; $89A4
     bne     loc_0_89AE              ; $89A6
-    sta     ram_0017                ; $89A8
+    sta     linkStanding            ; $89A8
     lda     #$04                    ; $89AA
     bne     loc_0_89B0              ; $89AC
 
@@ -1397,7 +1397,7 @@ loc_0_89E6:
     and     #$F8                    ; $89FC
     sta     objXVelocity+9          ; $89FE
     lda     temp7                   ; $8A00
-    sta     ram_0017                ; $8A02
+    sta     linkStanding            ; $8A02
     inc     objXVelocity+14         ; $8A04
     rts                             ; $8A06
 
@@ -1876,7 +1876,7 @@ loc_0_8CE3:
 
 loc_0_8CF7:
     sta     ram_0300,y              ; $8CF7
-    sta     ram_0400,y              ; $8CFA
+    sta     linkAttackFrame,y       ; $8CFA
     dey                             ; $8CFD
     bne     loc_0_8CF7              ; $8CFE
     sta     ram_0728                ; $8D00
@@ -2333,23 +2333,40 @@ loc_0_9036:
 loc_0_9039:
     rts                             ; $9039
 
-sub_0_903A:
-    lda     ram_00B5                ; $903A
+; ---------------------------------------------------------------------------
+; Link_Run
+;
+; Run Link for one frame in the side view, by linkMode (LINK_MODE_*).
+;
+; Status:  confirmed (dispatch)
+; ---------------------------------------------------------------------------
+Link_Run:
+    lda     linkMode                ; $903A
     jsr     JumpTable               ; $903C
 ; (inline jump table)
-    .word   loc_0_9047              ; $903F
-    .word   loc_0_92BF              ; $9041
-    .word   loc_0_918E              ; $9043
+    .word   Link_EnterArea          ; $903F
+    .word   Link_Control            ; $9041
+    .word   Link_Sink               ; $9043
 
 dat_0_9045:
     .byte   $08, $D8                                                        ; $9045
 
-loc_0_9047:
+; ---------------------------------------------------------------------------
+; Link_EnterArea
+;
+; LINK_MODE_ENTER: place Link in a newly entered area, at the left or right
+; edge (areaEntrySide) facing inward, or where the elevator or a door puts
+; him; place the elevator and locked door; start the area's music; go to
+; LINK_MODE_CONTROL.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_EnterArea:
     lda     #$03                    ; $9047
     sta     objState                ; $9049
     lsr     a                       ; $904B
     sta     objYHi                  ; $904C
-    sta     ram_0017                ; $904E
+    sta     linkStanding            ; $904E
     lsr     a                       ; $9050
     sta     ram_0753                ; $9051
     sta     objYVelocity            ; $9054
@@ -2362,7 +2379,7 @@ loc_0_9059:
     ldy     areaStartPage           ; $905E
     cpy     #$04                    ; $9061
     bcs     loc_0_9079              ; $9063
-    ldy     ram_0701                ; $9065
+    ldy     areaEntrySide           ; $9065
     lda     scrollX                 ; $9068
     adc     dat_0_9045,y            ; $906B
     sta     objX                    ; $906E
@@ -2380,7 +2397,7 @@ loc_0_9081:
     sta     objXHi                  ; $9081
     inx                             ; $9083
     stx     timerFast+2             ; $9084
-    ldy     ram_0701                ; $9087
+    ldy     areaEntrySide           ; $9087
     iny                             ; $908A
     sty     objFacing               ; $908B
     sty     linkWalkDir             ; $908D
@@ -2389,7 +2406,7 @@ loc_0_9081:
     jsr     sub_E030                ; $9094
 
 loc_0_9097:
-    jsr     sub_0_90ED              ; $9097
+    jsr     Area_PlaceElevatorAndDoor ; $9097
     ldy     areaLastPage            ; $909A
     dey                             ; $909C
     bne     loc_0_90AB              ; $909D
@@ -2405,9 +2422,9 @@ loc_0_90AB:
     sta     ram_0704                ; $90AD
     sta     ram_0705                ; $90B0
     sta     drawOffscreen           ; $90B3
-    sta     ram_0741                ; $90B5
-    sta     ram_0742                ; $90B8
-    sta     ram_0400                ; $90BB
+    sta     linkButtonsPressed      ; $90B5
+    sta     linkDirHeld             ; $90B8
+    sta     linkAttackFrame         ; $90BB
     sta     objXVelocity            ; $90BE
     sta     ram_0710                ; $90C0
     sta     ram_070F                ; $90C3
@@ -2420,7 +2437,7 @@ loc_0_90AB:
     sta     objX                    ; $90D5
 
 loc_0_90D7:
-    inc     ram_00B5                ; $90D7
+    inc     linkMode                ; $90D7
     lda     #$2A                    ; $90D9
     sta     sram_69DE               ; $90DB
     lda     ram_075F                ; $90DE
@@ -2436,15 +2453,23 @@ loc_0_90EA:
     sta     musicRequest            ; $90EA
     rts                             ; $90EC
 
-sub_0_90ED:
+; ---------------------------------------------------------------------------
+; Area_PlaceElevatorAndDoor
+;
+; Place the area's elevator (elevatorPos) and locked door (lockedDoorPos),
+; if any, as objects.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_PlaceElevatorAndDoor:
     lda     ram_0759                ; $90ED
     bne     loc_0_912F              ; $90F0
-    lda     ram_0757                ; $90F2
+    lda     elevatorPos             ; $90F2
     beq     loc_0_90FA              ; $90F5
     jsr     sub_0_9150              ; $90F7
 
 loc_0_90FA:
-    lda     ram_0758                ; $90FA
+    lda     lockedDoorPos           ; $90FA
     beq     loc_0_912E              ; $90FD
     lsr     a                       ; $90FF
     lsr     a                       ; $9100
@@ -2456,7 +2481,7 @@ loc_0_90FA:
     beq     loc_0_912E              ; $9109
     lda     temp13                  ; $910B
     sta     objXHi+2                ; $910D
-    lda     ram_0758                ; $910F
+    lda     lockedDoorPos           ; $910F
     asl     a                       ; $9112
     asl     a                       ; $9113
     asl     a                       ; $9114
@@ -2539,13 +2564,21 @@ loc_0_9188:
     sta     ram_0743                ; $918A
     rts                             ; $918D
 
-loc_0_918E:
+; ---------------------------------------------------------------------------
+; Link_Sink
+;
+; LINK_MODE_SINK: Link sinks one pixel per frame (e.g. into lava); once
+; below Y = $D0 he dies (linkDeathPending).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Link_Sink:
     lda     #$00                    ; $918E
     sta     a:ram_0014              ; $9190
     lda     objY                    ; $9193
     cmp     #$D0                    ; $9195
     bcc     loc_0_919C              ; $9197
-    inc     ram_0494                ; $9199
+    inc     linkDeathPending        ; $9199
 
 loc_0_919C:
     inc     objY                    ; $919C
@@ -2740,7 +2773,16 @@ dat_0_92B4:
     .byte   $FF                                                             ; $92BB
     .byte   $E8, $E8, $E8                                                   ; $92BC
 
-loc_0_92BF:
+; ---------------------------------------------------------------------------
+; Link_Control
+;
+; LINK_MODE_CONTROL: Link under the player's control.  Handles sinking into
+; a chimney (ram_070E), the fairy's flight in eight directions, and
+; otherwise walking, jumping and attacking.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_Control:
     ldx     #$00                    ; $92BF
     stx     a:ram_0014              ; $92C1
     lda     ram_070E                ; $92C4
@@ -2767,6 +2809,7 @@ loc_0_92E9:
     lda     ram_0752                ; $92ED
     ora     ram_0753                ; $92F0
     sta     ram_0753                ; $92F3
+    ; The fairy flies in the direction held on the D-pad.
     lda     a:linkFairy             ; $92F6
     beq     loc_0_9341              ; $92F9
     lda     #$00                    ; $92FB
@@ -2836,7 +2879,7 @@ loc_0_9364:
 loc_0_936B:
     lda     timerFast+11            ; $936B
     beq     loc_0_9379              ; $936E
-    jsr     sub_0_94C5              ; $9370
+    jsr     Link_UpdateJump         ; $9370
     jsr     sub_0_93A3              ; $9373
     jmp     loc_0_938A              ; $9376
 
@@ -2846,9 +2889,9 @@ loc_0_9379:
     jsr     sub_0_959C              ; $937E
 
 loc_0_9381:
-    jsr     sub_0_93BC              ; $9381
-    jsr     sub_0_94C5              ; $9384
-    jsr     sub_0_9483              ; $9387
+    jsr     Link_UpdateXVelocity    ; $9381
+    jsr     Link_UpdateJump         ; $9384
+    jsr     Link_UpdateAttack       ; $9387
 
 loc_0_938A:
     ldy     #$02                    ; $938A
@@ -2875,7 +2918,7 @@ sub_0_93A3:
     lda     objCollision            ; $93A3
     and     #$03                    ; $93A5
     bne     sub_0_93AC              ; $93A7
-    jsr     sub_0_943A              ; $93A9
+    jsr     Link_AnimateWalk        ; $93A9
 
 sub_0_93AC:
     lda     #$0A                    ; $93AC
@@ -2884,53 +2927,66 @@ sub_0_93AC:
 loc_0_93B0:
     rts                             ; $93B0
 
-dat_0_93B1:
+LinkWalkAccel:
     .byte   $01, $FF                                                        ; $93B1
 
-dat_0_93B3:
+LinkWalkMaxSpeed:
     .byte   $18, $E8                                                        ; $93B3
 
-dat_0_93B5:
+LinkEntrySpeed:
     .byte   $08, $F8                                                        ; $93B5
 
-dat_0_93B7:
+LinkWalkFrameTimes:
     .byte   $08, $07, $05, $04                                              ; $93B7
 ; (unreferenced: $93BB-$93BB, 1 bytes)
     .byte   $03                                                             ; $93BB
 
-sub_0_93BC:
+; ---------------------------------------------------------------------------
+; Link_UpdateXVelocity
+;
+; Update Link's horizontal velocity (4.4 fixed point, so $18 = 1.5 pixels
+; per frame):
+; - while entering an area (timerFast+2), walk inward at LinkEntrySpeed * 2;
+; - while standing with a direction held (linkDirHeld), accelerate by 1 per
+;   frame (2 when reversing) up to LinkWalkMaxSpeed;
+; - otherwise, on the ground, slow down by 1 per frame.
+; Then animate the walk.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_UpdateXVelocity:
     lda     timerFast+2             ; $93BC
     beq     loc_0_93CD              ; $93BF
-    ldy     ram_0701                ; $93C1
-    lda     dat_0_93B5,y            ; $93C4
+    ldy     areaEntrySide           ; $93C1
+    lda     LinkEntrySpeed,y        ; $93C4
     asl     a                       ; $93C7
     sta     objXVelocity            ; $93C8
-    jmp     sub_0_943A              ; $93CA
+    jmp     Link_AnimateWalk        ; $93CA
 
 loc_0_93CD:
     lda     timerFast+1             ; $93CD
     bne     loc_0_93DC              ; $93D0
-    lda     ram_0400                ; $93D2
+    lda     linkAttackFrame         ; $93D2
     beq     loc_0_93DC              ; $93D5
-    lda     ram_0479                ; $93D7
+    lda     linkJumpState           ; $93D7
     beq     loc_0_93B0              ; $93DA
 
 loc_0_93DC:
-    lda     ram_0017                ; $93DC
+    lda     linkStanding            ; $93DC
     beq     loc_0_93E6              ; $93DE
-    ldy     ram_0742                ; $93E0
+    ldy     linkDirHeld             ; $93E0
     dey                             ; $93E3
     bpl     loc_0_93FD              ; $93E4
 
 loc_0_93E6:
-    lda     ram_0479                ; $93E6
-    bne     sub_0_942B              ; $93E9
+    lda     linkJumpState           ; $93E6
+    bne     Link_AnimateWalkIfFree  ; $93E9
     ldy     objFacing               ; $93EB
     dey                             ; $93ED
     lda     objXVelocity            ; $93EE
     beq     loc_0_93FA              ; $93F0
     sec                             ; $93F2
-    sbc     dat_0_93B1,y            ; $93F3
+    sbc     LinkWalkAccel,y         ; $93F3
     sta     objXVelocity            ; $93F6
     bne     loc_0_93FA              ; $93F8
 
@@ -2939,26 +2995,26 @@ loc_0_93FA:
 
 loc_0_93FD:
     lda     objXVelocity            ; $93FD
-    cmp     dat_0_93B3,y            ; $93FF
+    cmp     LinkWalkMaxSpeed,y      ; $93FF
     beq     loc_0_9419              ; $9402
     clc                             ; $9404
-    adc     dat_0_93B1,y            ; $9405
+    adc     LinkWalkAccel,y         ; $9405
     iny                             ; $9408
     cpy     objFacing               ; $9409
     beq     loc_0_9417              ; $940B
     dey                             ; $940D
-    cmp     dat_0_93B3,y            ; $940E
+    cmp     LinkWalkMaxSpeed,y      ; $940E
     beq     loc_0_9417              ; $9411
     clc                             ; $9413
-    adc     dat_0_93B1,y            ; $9414
+    adc     LinkWalkAccel,y         ; $9414
 
 loc_0_9417:
     sta     objXVelocity            ; $9417
 
 loc_0_9419:
-    lda     ram_0017                ; $9419
-    bne     sub_0_942B              ; $941B
-    jsr     sub_0_942B              ; $941D
+    lda     linkStanding            ; $9419
+    bne     Link_AnimateWalkIfFree  ; $941B
+    jsr     Link_AnimateWalkIfFree  ; $941D
     lda     objCollision            ; $9420
     and     #$04                    ; $9422
     beq     loc_0_942A              ; $9424
@@ -2968,23 +3024,33 @@ loc_0_9419:
 loc_0_942A:
     rts                             ; $942A
 
-sub_0_942B:
+Link_AnimateWalkIfFree:
     lda     objCollision            ; $942B
     and     #$03                    ; $942D
-    beq     sub_0_943A              ; $942F
-    lda     ram_0742                ; $9431
+    beq     Link_AnimateWalk        ; $942F
+    lda     linkDirHeld             ; $9431
     beq     loc_0_9438              ; $9434
     lda     #$05                    ; $9436
 
 loc_0_9438:
     bpl     loc_0_943F              ; $9438
 
-sub_0_943A:
+; ---------------------------------------------------------------------------
+; Link_AnimateWalk
+;
+; Advance Link's walking animation (linkWalkFrame, 0-2), faster at higher
+; speeds (LinkWalkFrameTimes).  In the air the frame is held; standing
+; still shows pose 3.
+; Link_AnimateWalkIfFree first checks for a wall (objCollision bits 1-0).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_AnimateWalk:
     jsr     sub_0_9610              ; $943A
     lda     objXVelocity            ; $943D
 
 loc_0_943F:
-    ldy     ram_0479                ; $943F
+    ldy     linkJumpState           ; $943F
     bne     loc_0_9468              ; $9442
     cmp     #$00                    ; $9444
     beq     loc_0_946C              ; $9446
@@ -3000,26 +3066,28 @@ loc_0_944F:
     tay                             ; $9452
     ldx     timerFast               ; $9453
     bne     loc_0_9468              ; $9456
-    lda     dat_0_93B7,y            ; $9458
+    lda     LinkWalkFrameTimes,y    ; $9458
     sta     timerFast               ; $945B
-    inc     ram_00AE                ; $945E
-    lda     ram_00AE                ; $9460
+    inc     linkWalkFrame           ; $945E
+    lda     linkWalkFrame           ; $9460
     cmp     #$03                    ; $9462
     bcc     loc_0_9468              ; $9464
-    stx     ram_00AE                ; $9466
+    stx     linkWalkFrame           ; $9466
 
 loc_0_9468:
-    lda     ram_00AE                ; $9468
+    lda     linkWalkFrame           ; $9468
     bpl     loc_0_949B              ; $946A
 
 loc_0_946C:
     lda     #$03                    ; $946C
     bne     loc_0_949B              ; $946E
 
-dat_0_9470:
+; Link's initial jump velocity: jump spell standing, running; normal
+; standing, running.  LinkJumpVelocityFrac is the fraction (1/256).
+LinkJumpVelocity:
     .byte   $FB, $FB, $FC, $FC                                              ; $9470
 
-dat_0_9474:
+LinkJumpVelocityFrac:
     .byte   $80, $00, $F0, $80                                              ; $9474
 
 dat_0_9478:
@@ -3031,8 +3099,16 @@ dat_0_947B:
 dat_0_9481:
     .byte   $01, $03                                                        ; $9481
 
-sub_0_9483:
-    ldy     ram_0400                ; $9483
+; ---------------------------------------------------------------------------
+; Link_UpdateAttack
+;
+; Advance Link's sword attack animation (linkAttackFrame), standing or
+; crouching (ram_0495), and stop him when it ends on the ground.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_UpdateAttack:
+    ldy     linkAttackFrame         ; $9483
     beq     loc_0_94C2              ; $9486
     dey                             ; $9488
     ldx     ram_0495                ; $9489
@@ -3058,7 +3134,7 @@ loc_0_949E:
     beq     loc_0_94B6              ; $94A2
     lda     dat_0_9478,y            ; $94A4
     sta     timerFast+9             ; $94A7
-    inc     ram_0400                ; $94AA
+    inc     linkAttackFrame         ; $94AA
     iny                             ; $94AD
     cpy     ram_0495                ; $94AE
     bne     loc_0_94C2              ; $94B1
@@ -3066,8 +3142,8 @@ loc_0_949E:
 
 loc_0_94B6:
     lda     #$00                    ; $94B6
-    sta     ram_0400                ; $94B8
-    lda     ram_0479                ; $94BB
+    sta     linkAttackFrame         ; $94B8
+    lda     linkJumpState           ; $94BB
     bne     loc_0_94C2              ; $94BE
     sta     objXVelocity            ; $94C0
 
@@ -3076,43 +3152,61 @@ loc_0_94C2:
 ; (unreferenced: $94C3-$94C4, 2 bytes)
     .byte   $00, $0E                                                        ; $94C3
 
-sub_0_94C5:
+; ---------------------------------------------------------------------------
+; Link_UpdateJump
+;
+; Link's vertical movement.  On the ground (objCollision bit 2), snap Y to
+; the tile and jump when A is pressed (linkButtonsPressed bit 7); the
+; initial velocity (LinkJumpVelocity, LinkJumpVelocityFrac) is, in pixels
+; per frame:
+;     jump spell, standing: -4.5     jump spell, running: -5.0
+;     normal, standing:     -3.06    normal, running:     -3.5
+; where running means |objXVelocity| >= $13.  Then fall with gravity $48
+; (1/256 pixel per frame per frame), or $30 while A is held on the way up,
+; to a terminal velocity of 5.  Hitting a ceiling (objCollision bit 3) on
+; the way up stops the rise.  Landing from full speed crouches Link for a
+; moment (linkLandingTimer).  With the downward thrust (techniques bit 2),
+; holding Down while falling uses the thrust pose.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_UpdateJump:
     lda     ram_0754                ; $94C5
     bne     loc_0_94C2              ; $94C8
     lda     objCollision            ; $94CA
     and     #$04                    ; $94CC
     bne     loc_0_94DA              ; $94CE
-    lda     ram_0479                ; $94D0
+    lda     linkJumpState           ; $94D0
     bne     loc_0_952D              ; $94D3
-    inc     ram_0479                ; $94D5
+    inc     linkJumpState           ; $94D5
     bne     loc_0_952D              ; $94D8
 
 loc_0_94DA:
-    lda     ram_0479                ; $94DA
+    lda     linkJumpState           ; $94DA
     beq     loc_0_94F8              ; $94DD
     ldy     objYVelocity            ; $94DF
     bmi     loc_0_952D              ; $94E2
     cpy     #$05                    ; $94E4
     bcc     loc_0_94ED              ; $94E6
     lda     #$08                    ; $94E8
-    sta     ram_0497                ; $94EA
+    sta     linkLandingTimer        ; $94EA
 
 loc_0_94ED:
     lda     #$00                    ; $94ED
-    sta     ram_0479                ; $94EF
+    sta     linkJumpState           ; $94EF
     sta     objYVelocity            ; $94F2
-    sta     ram_0400                ; $94F5
+    sta     linkAttackFrame         ; $94F5
 
 loc_0_94F8:
     lda     objY                    ; $94F8
     and     #$F0                    ; $94FA
     sta     objY                    ; $94FC
-    lda     ram_0741                ; $94FE
+    lda     linkButtonsPressed      ; $94FE
     and     #$80                    ; $9501
     beq     loc_0_94C2              ; $9503
     ldy     #$00                    ; $9505
-    sty     ram_0400                ; $9507
-    sty     ram_0497                ; $950A
+    sty     linkAttackFrame         ; $9507
+    sty     linkLandingTimer        ; $950A
     lda     objXVelocity            ; $950D
     adc     #$13                    ; $950F
     cmp     #$26                    ; $9511
@@ -3126,12 +3220,12 @@ loc_0_9516:
     iny                             ; $951B
 
 loc_0_951C:
-    lda     dat_0_9470,y            ; $951C
+    lda     LinkJumpVelocity,y      ; $951C
     sta     objYVelocity            ; $951F
-    lda     dat_0_9474,y            ; $9522
+    lda     LinkJumpVelocityFrac,y  ; $9522
     sta     objYFrac                ; $9525
     lda     #$02                    ; $9528
-    sta     ram_0479                ; $952A
+    sta     linkJumpState           ; $952A
 
 loc_0_952D:
     ldy     #$48                    ; $952D
@@ -3172,11 +3266,11 @@ loc_0_9569:
     jsr     Obj_MoveYWithGravity    ; $9569
 
 loc_0_956C:
-    ldy     ram_0479                ; $956C
+    ldy     linkJumpState           ; $956C
     dey                             ; $956F
     beq     loc_0_958C              ; $9570
     ldy     #$06                    ; $9572
-    lda     ram_0796                ; $9574
+    lda     techniques              ; $9574
     and     #$04                    ; $9577
     beq     loc_0_9582              ; $9579
     lda     joypadHeld              ; $957B
@@ -3194,10 +3288,10 @@ loc_0_958A:
     sta     objState                ; $958A
 
 loc_0_958C:
-    lda     ram_0796                ; $958C
+    lda     techniques              ; $958C
     and     #$10                    ; $958F
     beq     loc_0_959B              ; $9591
-    lda     ram_0017                ; $9593
+    lda     linkStanding            ; $9593
     bne     loc_0_959B              ; $9595
     lda     #$09                    ; $9597
     sta     objState                ; $9599
@@ -3209,12 +3303,12 @@ sub_0_959C:
     lda     joypadHeld              ; $959C
     and     #$87                    ; $959E
     beq     loc_0_95B5              ; $95A0
-    ldy     ram_0400                ; $95A2
+    ldy     linkAttackFrame         ; $95A2
     cpy     #$04                    ; $95A5
     bne     loc_0_95B5              ; $95A7
     ldy     #$00                    ; $95A9
-    sty     ram_0400                ; $95AB
-    lda     ram_0479                ; $95AE
+    sty     linkAttackFrame         ; $95AB
+    lda     linkJumpState           ; $95AE
     bne     loc_0_95B5              ; $95B1
     sta     objXVelocity            ; $95B3
 
@@ -3228,22 +3322,22 @@ loc_0_95B5:
     iny                             ; $95C2
 
 loc_0_95C3:
-    sty     a:ram_0017              ; $95C3
+    sty     a:linkStanding          ; $95C3
     lda     joypadHeld              ; $95C6
     and     #$03                    ; $95C8
-    sta     ram_0742                ; $95CA
+    sta     linkDirHeld             ; $95CA
     beq     loc_0_95D1              ; $95CD
     sta     linkWalkDir             ; $95CF
 
 loc_0_95D1:
     lda     joypadPressed           ; $95D1
     and     #$C0                    ; $95D3
-    sta     ram_0741                ; $95D5
+    sta     linkButtonsPressed      ; $95D5
     and     #$40                    ; $95D8
     beq     loc_0_960F              ; $95DA
     lda     linkWalkDir             ; $95DC
     sta     ram_044A                ; $95DE
-    lda     ram_0479                ; $95E1
+    lda     linkJumpState           ; $95E1
     bne     loc_0_95ED              ; $95E4
     lda     timerFast+1             ; $95E6
     bne     loc_0_95ED              ; $95E9
@@ -3251,7 +3345,7 @@ loc_0_95D1:
 
 loc_0_95ED:
     ldy     #$01                    ; $95ED
-    lda     ram_0400                ; $95EF
+    lda     linkAttackFrame         ; $95EF
     beq     loc_0_95FC              ; $95F2
     cmp     #$04                    ; $95F4
     bne     loc_0_960F              ; $95F6
@@ -3259,10 +3353,10 @@ loc_0_95ED:
     iny                             ; $95FB
 
 loc_0_95FC:
-    sty     ram_0400                ; $95FC
+    sty     linkAttackFrame         ; $95FC
     lda     #$06                    ; $95FF
     sta     timerFast+9             ; $9601
-    lda     ram_0017                ; $9604
+    lda     linkStanding            ; $9604
     sta     ram_0495                ; $9606
     bne     loc_0_960F              ; $9609
 
@@ -3544,7 +3638,7 @@ sub_0_97FA:
     ldx     #$00                    ; $97FA
 
 loc_0_97FC:
-    ldy     ram_0400                ; $97FC
+    ldy     linkAttackFrame         ; $97FC
     dey                             ; $97FF
     cpy     ram_0495                ; $9800
     bne     loc_0_9813              ; $9803
@@ -3580,7 +3674,7 @@ loc_0_981B:
     adc     #$00                    ; $9825
     sta     objXHi+13,x             ; $9827
     lda     objY                    ; $9829
-    ldy     a:ram_0017              ; $982B
+    ldy     a:linkStanding          ; $982B
     adc     dat_0_9815,y            ; $982E
     sta     objY+13,x               ; $9831
     lda     #$01                    ; $9833
@@ -5862,9 +5956,9 @@ loc_0_A809:
     bne     loc_0_A807              ; $A81A
     lda     #$00                    ; $A81C
     sta     pauseState              ; $A81E
-    lda     ram_0796                ; $A821
+    lda     techniques              ; $A821
     and     #$FE                    ; $A824
-    sta     ram_0796                ; $A826
+    sta     techniques              ; $A826
 
 loc_0_A829:
     rts                             ; $A829
@@ -5973,7 +6067,7 @@ sub_0_AA08:
     sta     areaLocation            ; $AA14
     sta     ram_073F                ; $AA17
     sta     areaStartPage           ; $AA1A
-    sta     ram_0701                ; $AA1D
+    sta     areaEntrySide           ; $AA1D
     ldx     #$01                    ; $AA20
     stx     ram_075D                ; $AA22
     stx     ram_075F                ; $AA25

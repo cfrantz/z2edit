@@ -233,12 +233,12 @@ loc_4_8226:
 
 loc_4_823E:
     lda     ram_010A                ; $823E
-    sta     ram_0757                ; $8241
+    sta     elevatorPos             ; $8241
     rts                             ; $8244
 
 loc_4_8245:
     lda     ram_010A                ; $8245
-    sta     ram_0758                ; $8248
+    sta     lockedDoorPos           ; $8248
     rts                             ; $824B
 ; (unreferenced: $824C-$8258, 13 bytes)
     .byte   $20, $44, $C9, $A9, $40, $20, $56, $DF, $A9, $40, $91, $0E, $60 ; $824C
@@ -1881,7 +1881,7 @@ loc_4_9D52:
     lda     rng+1,x                 ; $9D5A
     and     dat_4_9C65,y            ; $9D5D
     beq     loc_4_9D67              ; $9D60
-    lda     ram_0017                ; $9D62
+    lda     linkStanding            ; $9D62
     sta     ram_0444,x              ; $9D64
 
 loc_4_9D67:
@@ -1926,7 +1926,7 @@ loc_4_9D9F:
     ldy     ram_00DF                ; $9DA2
     cpy     #$1A                    ; $9DA4
     beq     loc_4_9DAD              ; $9DA6
-    ldy     ram_0479                ; $9DA8
+    ldy     linkJumpState           ; $9DA8
     bne     loc_4_9DB0              ; $9DAB
 
 loc_4_9DAD:
@@ -1963,7 +1963,7 @@ loc_4_9DD2:
     bne     loc_4_9DE6              ; $9DDE
 
 loc_4_9DE0:
-    lda     ram_0017                ; $9DE0
+    lda     linkStanding            ; $9DE0
     bne     loc_4_9DE6              ; $9DE2
     iny                             ; $9DE4
     iny                             ; $9DE5

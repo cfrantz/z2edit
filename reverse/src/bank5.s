@@ -240,13 +240,13 @@ loc_5_8237:
 
 loc_5_824F:
     lda     ram_010A                ; $824F
-    sta     ram_0757                ; $8252
+    sta     elevatorPos             ; $8252
     rts                             ; $8255
 ; (code below not executed in the test movies)
 
 loc_5_8256:
     lda     ram_010A                ; $8256
-    sta     ram_0758                ; $8259
+    sta     lockedDoorPos           ; $8259
     rts                             ; $825C
 ; (end of code not executed in the test movies)
 ; (unreferenced: $825D-$8269, 13 bytes)
@@ -2066,7 +2066,7 @@ loc_5_9911:
     lda     joypadPressed           ; $9915
     and     #$40                    ; $9917
     beq     loc_5_994F              ; $9919
-    lda     ram_0017                ; $991B
+    lda     linkStanding            ; $991B
     sta     ram_0018                ; $991D
     lda     rng+1                   ; $991F
     and     #$07                    ; $9922
@@ -2126,7 +2126,7 @@ loc_5_9964:
     lda     objY+1                  ; $996C
     cmp     objY                    ; $996E
     bcc     loc_5_9988              ; $9970
-    lda     ram_0017                ; $9972
+    lda     linkStanding            ; $9972
     eor     #$01                    ; $9974
     sta     ram_0018                ; $9976
     lda     #$01                    ; $9978
@@ -2191,7 +2191,7 @@ sub_5_99B8:
     bne     loc_5_99E2              ; $99CA
 
 loc_5_99CC:
-    lda     ram_0017                ; $99CC
+    lda     linkStanding            ; $99CC
     sta     ram_0018                ; $99CE
     lda     #$06                    ; $99D0
     ldy     objYVelocity+1          ; $99D2
@@ -2344,7 +2344,7 @@ dat_5_9A8B:
 
 sub_5_9A8D:
     lda     objFacing+3             ; $9A8D
-    ora     ram_0479                ; $9A8F
+    ora     linkJumpState           ; $9A8F
     ora     timerFast+8             ; $9A92
     bne     loc_5_9AF4              ; $9A95
     jsr     Sword_GetHitbox         ; $9A97
@@ -2444,7 +2444,7 @@ loc_5_9B3A:
     sta     ppuStringSelect         ; $9B43
 
 loc_5_9B46:
-    lda     ram_0479                ; $9B46
+    lda     linkJumpState           ; $9B46
     ora     timerFast+3             ; $9B49
     bne     loc_5_9B73              ; $9B4C
     lda     #$80                    ; $9B4E
@@ -2851,11 +2851,11 @@ loc_5_9DC3:
     lda     a:joypadPressed         ; $9DC6
     and     #$40                    ; $9DC9
     beq     loc_5_9DD2              ; $9DCB
-    lda     ram_0017                ; $9DCD
+    lda     linkStanding            ; $9DCD
     sta     ram_0444,x              ; $9DCF
 
 loc_5_9DD2:
-    lda     ram_0479                ; $9DD2
+    lda     linkJumpState           ; $9DD2
     beq     loc_5_9DE6              ; $9DD5
     ldy     #$01                    ; $9DD7
     lda     objY                    ; $9DD9
@@ -3528,7 +3528,7 @@ loc_5_A234:
 
 loc_5_A25F:
     lda     drawOffscreen+1         ; $A25F
-    ora     ram_0494                ; $A261
+    ora     linkDeathPending        ; $A261
     bne     loc_5_A27C              ; $A264
     sta     timerSlow+10            ; $A266
     jsr     Enemy_CheckLinkContact  ; $A269
@@ -3539,7 +3539,7 @@ loc_5_A25F:
 ; (code below not executed in the test movies)
     lda     linkFairy               ; $A275
     beq     loc_5_A27C              ; $A277
-    inc     ram_0494                ; $A279
+    inc     linkDeathPending        ; $A279
 ; (end of code not executed in the test movies)
 
 loc_5_A27C:
@@ -3742,7 +3742,7 @@ loc_5_A3BD:
     jmp     Enemy_Draw              ; $A3BF
 
 loc_5_A3C2:
-    lda     ram_0400                ; $A3C2
+    lda     linkAttackFrame         ; $A3C2
     bne     loc_5_A3CC              ; $A3C5
     lda     #$F8                    ; $A3C7
     sta     swordY                  ; $A3C9
@@ -5049,7 +5049,7 @@ loc_5_B2B4:
     cmp     #$01                    ; $B2BF
     bne     loc_5_B2EE              ; $B2C1
 ; (code below not executed in the test movies)
-    lda     ram_0796                ; $B2C3
+    lda     techniques              ; $B2C3
     and     #$14                    ; $B2C6
     sta     temp0                   ; $B2C8
     ldy     #$29                    ; $B2CA
@@ -5069,7 +5069,7 @@ loc_5_B2D9:
     cpy     #$FF                    ; $B2E0
     bne     loc_5_B2D9              ; $B2E2
     lda     temp0                   ; $B2E4
-    sta     ram_0796                ; $B2E6
+    sta     techniques              ; $B2E6
     lda     #$02                    ; $B2E9
     sta     secondQuest             ; $B2EB
 ; (end of code not executed in the test movies)

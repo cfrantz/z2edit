@@ -21,6 +21,11 @@ GAME_MODE_LOAD_AREA     = $08   ; Main_Loop loads the area being entered
 GAME_MODE_SIDE_VIEW     = $0B
 GAME_MODE_LOAD_ROOM     = $14   ; Main_Loop loads a connected room (provisional)
 
+; linkMode values.
+LINK_MODE_ENTER         = 0     ; being placed in a new area
+LINK_MODE_CONTROL       = 1     ; under the player's control
+LINK_MODE_SINK          = 2     ; sinking to his death (e.g. in lava)
+
 ; ppuStringSelect values that select the RAM buffers.
 PPU_STRING_BUFFER0      = 0
 PPU_STRING_BUFFER1      = 1

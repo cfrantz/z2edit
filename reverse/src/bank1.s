@@ -313,13 +313,13 @@ loc_1_82A2:
 
 loc_1_82BA:
     lda     ram_010A                ; $82BA
-    sta     ram_0757                ; $82BD
+    sta     elevatorPos             ; $82BD
     rts                             ; $82C0
 ; (code below not executed in the test movies)
 
 loc_1_82C1:
     lda     ram_010A                ; $82C1
-    sta     ram_0758                ; $82C4
+    sta     lockedDoorPos           ; $82C4
     rts                             ; $82C7
 
 loc_1_82C8:
@@ -1650,7 +1650,7 @@ sub_1_9A82:
     bne     loc_1_9AA4              ; $9A9C
 
 loc_1_9A9E:
-    lda     ram_0017                ; $9A9E
+    lda     linkStanding            ; $9A9E
     bne     loc_1_9AA4              ; $9AA0
 
 loc_1_9AA2:
@@ -1668,7 +1668,7 @@ loc_1_9AAB:
     lda     objCollision            ; $9AAF
     and     #$03                    ; $9AB1
     bne     loc_1_9ACE              ; $9AB3
-    lda     ram_0742                ; $9AB5
+    lda     linkDirHeld             ; $9AB5
 
 dat_1_9AB8:
     beq     loc_1_9ABE              ; $9AB8

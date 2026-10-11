@@ -30,7 +30,7 @@ frameCounter            = $0012     ; incremented by the game NMI every frame
 linkFairy               = $0013     ; 0 = Link, 8 = fairy; also an offset into the collision probe tables
 ram_0014                = $0014
 ram_0015                = $0015
-ram_0017                = $0017
+linkStanding            = $0017     ; 1 = standing, 0 = crouching (lower hitbox and shield)
 ram_0018                = $0018
 ; ---------------------------------------------------------------------------
 ; Object slots
@@ -63,10 +63,10 @@ linkWalkDir             = $009F     ; direction pressed: 1 = right, 2 = left (pr
 ram_00A0                = $00A0
 enemyType               = $00A1     ; [6] enemy type, by enemy index
 objCollision            = $00A7     ; [7] background collision bits %0000ABLR: above, below, left, right (provisional)
-ram_00AE                = $00AE
+linkWalkFrame           = $00AE     ; walking animation frame, 0-2
 ram_00AF                = $00AF
 ram_00B0                = $00B0
-ram_00B5                = $00B5
+linkMode                = $00B5     ; Link's mode in the side view; see LINK_MODE_*
 enemyActive             = $00B6     ; [6] 0 = empty, 1 = active, 2 = dying (provisional)
 enemySramIndex          = $00BC     ; [6] index of the enemy in the area's SRAM enemy list (provisional)
 enemyHp                 = $00C2     ; [6] hit points
@@ -145,7 +145,7 @@ ppuBuffer2              = $03A4     ; [50]
 ; ---------------------------------------------------------------------------
 objXSubpixel            = $03D6     ; [15] fractional part of the X position (Obj_MoveX)
 objYFrac                = $03E6     ; [13] fraction: of the Y position (Obj_MoveY) or of objYVelocity (Obj_MoveYWithGravity)
-ram_0400                = $0400
+linkAttackFrame         = $0400     ; sword attack animation frame, 0 = not attacking (provisional)
 ram_0401                = $0401
 enemyStunTimer          = $040E     ; [6] while nonzero the enemy is stunned and flashes; counts down each time it is drawn
 ram_0414                = $0414
@@ -169,7 +169,7 @@ ram_045E                = $045E
 ram_0464                = $0464
 ram_0470                = $0470
 attrColumn              = $0471     ; [7] attribute bytes for the column being scrolled in (provisional)
-ram_0479                = $0479
+linkJumpState           = $0479     ; 2 = going up, 1 = coming down, 0 = on the ground (provisional)
 swordX                  = $047E     ; screen X of Link's sword
 ram_047F                = $047F
 swordY                  = $0480     ; Y of Link's sword; $F8 = no sword
@@ -185,9 +185,9 @@ ram_048B                = $048B
 ram_048C                = $048C
 ram_048D                = $048D
 ram_048E                = $048E
-ram_0494                = $0494
+linkDeathPending        = $0494     ; nonzero to start the death sequence
 ram_0495                = $0495
-ram_0497                = $0497
+linkLandingTimer        = $0497     ; frames Link stays crouched after a hard landing
 ram_0499                = $0499
 ram_049A                = $049A
 ram_049C                = $049C
@@ -260,7 +260,7 @@ ram_05E9                = $05E9
 saveWorld               = $0600     ; [SAVE_WORLD_SIZE] world state saved with the game
 ram_06FE                = $06FE
 lives                   = $0700     ; lives remaining
-ram_0701                = $0701
+areaEntrySide           = $0701     ; side Link enters the area from: 0 = left, 1 = right
 ram_0704                = $0704
 ram_0705                = $0705
 ; ---------------------------------------------------------------------------
@@ -312,8 +312,8 @@ gameSubStep             = $073D     ; step within gameStep; reset when any highe
 ram_073E                = $073E
 ram_073F                = $073F
 ram_0740                = $0740
-ram_0741                = $0741
-ram_0742                = $0742
+linkButtonsPressed      = $0741     ; buttons pressed this frame, as used by Link (provisional)
+linkDirHeld             = $0742     ; direction held on the D-pad, as used by Link (provisional)
 ram_0743                = $0743
 joypadHeldPrev          = $0744
 playfieldNametable      = $0746     ; PPUCTRL nametable bits for the playfield, below the status bar split
@@ -331,8 +331,8 @@ ram_0752                = $0752
 ram_0753                = $0753
 ram_0754                = $0754
 experiencePending       = $0755     ; (16-bit, big-endian) experience still to be added to experience
-ram_0757                = $0757
-ram_0758                = $0758
+elevatorPos             = $0757     ; position of the area's elevator, 0 = none (provisional)
+lockedDoorPos           = $0758     ; position of the area's locked door, 0 = none (provisional)
 ram_0759                = $0759
 ram_075A                = $075A
 ram_075B                = $075B
@@ -368,7 +368,7 @@ itemOwned               = $0785     ; [8] nonzero if the item is owned; see ITEM
 crystalPlaced           = $078D     ; [6] nonzero once the palace's crystal is placed (provisional)
 keyCount                = $0793     ; number of keys held
 crystalsRemaining       = $0794     ; palaces still to be sealed with a crystal (starts at 6)
-ram_0796                = $0796
+techniques              = $0796     ; sword techniques learned: bit 2 = downward thrust (provisional)
 ram_0797                = $0797
 ram_0798                = $0798
 ram_079A                = $079A
