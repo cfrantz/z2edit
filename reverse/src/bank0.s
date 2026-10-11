@@ -5722,7 +5722,7 @@ Pause_OverworldWait:
 ; ---------------------------------------------------------------------------
 Game_ShowContinueScreen:
     jsr     Oam_HideAll             ; $A1A5
-    jsr     Music_Request80         ; $A1A8
+    jsr     Music_RequestSilence    ; $A1A8
     lda     #$02                    ; $A1AB
     sta     gameState               ; $A1AD
     sta     gameStatePrev           ; $A1B0

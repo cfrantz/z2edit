@@ -99,8 +99,8 @@ sq1TimerLo              = $00E6     ; timer low byte of the note on pulse 1, the
 sq2TimerLo              = $00E7     ; timer low byte of the note on pulse 2, the base for its vibrato
 titleMusicPart          = $00E8     ; part of the title song playing: 1 (intro), then 2, 4, 8, $10 and back to 2; the story scroll starts with part 8.  Also a temporary of the game music player ($909E)
 dmcRequest              = $00E9     ; DMC sound effects to start: bit 0 Link hurt, bit 1 Ganon's laugh.  Title engine: its current sound effect
-soundMute               = $00EA
-musicRequest            = $00EB     ; song to start, one bit per song (gameplay engine); title engine: menu sound effect bits
+soundMute               = $00EA     ; nonzero: the gameplay engine stops and turns every channel off (the overworld pause).  Title engine: titleSongRequest
+musicRequest            = $00EB     ; song to start, one bit: $01 main theme from its intro, $02 main theme, $04 / $08 second themes (battle; boss or credits), $10 item fanfare, $20 Triforce (Great Palace), $40 crystal fanfare, $80 silence; see docs/engine/audio.md.  Title engine: titleSfxRequest
 sfxRequest              = $00EC     ; [4] sound effects to start, one bit each: +0 shared (pulse 1 or noise), +1 noise, +2 pulse 2, +3 pulse 1
 ; Hardware shadows
 ; ---------------------------------------------------------------------------

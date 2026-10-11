@@ -2199,7 +2199,7 @@ Mode_EnterLocation:
     ora     ram_07AA                ; $CB4E
     ora     ram_07AD                ; $CB51
     bne     Location_Enter          ; $CB54
-    jsr     Music_Request80         ; $CB56
+    jsr     Music_RequestSilence    ; $CB56
 
 ; ---------------------------------------------------------------------------
 ; Location_Enter
@@ -3011,7 +3011,7 @@ Mode_LeaveArea:
     lda     #$01                    ; $CF86
     ldy     currentWorld            ; $CF88
     beq     @loc_CF9D               ; $CF8B
-    jsr     Music_Request80         ; $CF8D
+    jsr     Music_RequestSilence    ; $CF8D
     ldy     #$00                    ; $CF90
     sty     currentWorld            ; $CF92
     inc     ram_0709                ; $CF95
@@ -3056,7 +3056,7 @@ Mode_LeaveArea:
     lda     townCode                ; $CFDE
     cmp     #$07                    ; $CFE1
     beq     Game_EnterNextArea      ; $CFE3
-    jsr     Music_Request80         ; $CFE5
+    jsr     Music_RequestSilence    ; $CFE5
     lda     #$02                    ; $CFE8
     bne     Game_EnterNextAreaWithMusic ; $CFEA
 
@@ -3145,20 +3145,21 @@ Mode_EnterDoor:
     sta     areaMusic               ; $D03A
 
 ; ---------------------------------------------------------------------------
-; Music_Request80
+; Music_RequestSilence
 ;
-; Request music $80.
+; Request music $80, whose phrase list is empty in every world: the music
+; stops.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Music_Request80:
+Music_RequestSilence:
     lda     #$80                    ; $D03D
     sta     musicRequest            ; $D03F
 
 ; ---------------------------------------------------------------------------
 ; Music_Request80Done
 ;
-; Return (shared tail of Music_Request80).
+; Return (shared tail of Music_RequestSilence).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------

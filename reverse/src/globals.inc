@@ -57,7 +57,7 @@ GLOBALS_INC = 1
 .global AreaMap_GetPagePtr
 .global AreaMap_GetPagePtrY
 .global Stat_FillMeter
-.global Music_Request80
+.global Music_RequestSilence
 .global Game_CheckModeChange
 .global Game_CheckStateChange
 .global Obj_MoveYWithGravity

@@ -212,9 +212,8 @@ Each is a self-contained work area; order is flexible after Phase 3.
   Prior work to consult (and verify against the code):
   https://wiki.bindingforce.net/index.php/Music_Engine_Description
   Status (2026-10-11): both engines' players, request handlers, tables
-  and RAM are named, with docs/engine/audio.md.  Left: the individual
-  sound effect routines (still loc_6_*), and checking the effects by ear
-  or trace.
+  and RAM are named, with docs/engine/audio.md; the sound effects and
+  songs were confirmed by ear (the user's list) and named.
 - Graphics: CHR bank usage and switching, palettes, sprite/metatile formats.
 
 ### Phase 5: Documentation hierarchy

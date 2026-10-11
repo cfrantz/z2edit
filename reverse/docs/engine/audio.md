@@ -23,16 +23,48 @@ bytes after each frame.
 | Byte | Gameplay engine | Title engine |
 |------|-----------------|--------------|
 | `musicRequest` ($EB) | song to start (one bit) | sound effect (`titleSfxRequest`) |
-| `soundMute` ($EA) | nonzero: all channels off | song part to start (`titleSongRequest`) |
+| `soundMute` ($EA) | nonzero: the engine stops and all channels are off | song part to start (`titleSongRequest`) |
 | `dmcRequest` ($E9) | DMC sample: 1 Link hurt, 2 Ganon's laugh | effect playing (`titleSfx`) |
 | `sfxRequest` ($EC) | shared effect (pulse 1 or noise) | (note timers) |
 | `sfxRequest+1` ($ED) | noise effect | |
 | `sfxRequest+2` ($EE) | pulse 2 effect | |
 | `sfxRequest+3` ($EF) | pulse 1 effect | |
 
-The callers of each effect bit are listed in the headers of
-`Sfx_UpdateDmc`, `Sfx_UpdateSq1`, `Sfx_UpdateSq2`, `Sfx_UpdateNoise` and
-`Sfx_UpdateShared`.  While an effect plays it holds its channel
+The effects, confirmed by ear (each bit set alone during play) and by
+the code; the callers of each are in the handlers' headers:
+
+| Bit | `dmcRequest` ($E9) | `sfxRequest` ($EC), shared | +1 ($ED), noise | +2 ($EE), pulse 2 | +3 ($EF), pulse 1 |
+|-----|-------------|-----------------|-------------|-------------|-------------|
+| $01 | Link's grunt | Link dying | - | falling into a pit | - (ends the shared and DMC effects) |
+| $02 | Ganon's laugh | sword denied | bridge crumbling | pulled into battle | item dropped |
+| $04 | - | spell cast | block crumbling | leaving battle | enemy killed |
+| $08 | - | flute | - | spell menu | sword chime (beam, item pickup) |
+| $10 | - | flute (2) | enemy damaged | tink (shot deflected) | menu cursor |
+| $20 | - | flute (3) | sword strike | walking in a swamp | elevator |
+| $40 | - | Great Palace barrier | short crumble | - | low life beep |
+| $80 | - | boss dying | sword strike | - | - |
+
+`sfxRequest` also takes two values of its own, checked first: $C0, a
+fairy appearing (and boarding the raft), and $60, a town event in bank 3
+that draws tiles one at a time.
+
+The songs (`musicRequest` bits) are per world (the ending uses the Great
+Palace's table, with `currentWorld` 6); a song with an empty phrase list
+stops the music:
+
+| Bit | Overworld | Towns | Palaces | Great Palace |
+|-----|-----------|-------|---------|--------------|
+| $01 | main theme, from its intro | same | same | same |
+| $02 | main theme | town theme | palace theme | Great Palace theme |
+| $04 | battle | (1 phrase) | (24 phrases) | the ending (`Ending_DrawCurtainTop`) |
+| $08 | battle, other key | (1 phrase) | boss (`Boss_UpdateIntro`) | the credits (`Ending_Wait`) |
+| $10 | item fanfare | same | same | same |
+| $20 | silence | silence | silence | Triforce |
+| $40 | silence | silence | crystal fanfare | Dark Link battle (`DarkLink_Fight`) |
+| $80 | silence | silence | silence | silence |
+
+Bank 7's `Music_RequestSilence` requests $80; bosses and the crystal
+spot request it to stop the music before their own.  While an effect plays it holds its channel
 (`sq1Sfx`, `sq2Sfx`, `noiseSfx`, `sharedSfxOnSq1`, `sharedSfxOnNoise`)
 and the music on that channel is not played.
 

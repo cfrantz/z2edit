@@ -527,7 +527,7 @@ TitleMusic_StartPart:
 ; ---------------------------------------------------------------------------
 TitleMusic_LoadPhrase:
     ldy     titleSongPart           ; $82EF
-    lda     TitleMusic-1,y            ; $82F2
+    lda     TitleMusic-1,y          ; $82F2
     clc                             ; $82F5
     adc     titlePhrase             ; $82F6
     inc     titlePhrase             ; $82F9
@@ -792,10 +792,10 @@ TitleMusic_PlayNotes:
 
 @loc_849B:
     lda     titleNoiseOffset        ; $849B
-    beq     TitleMusic_Done              ; $849D
+    beq     TitleMusic_Done         ; $849D
     dec     titleNoiseTimer         ; $849F
     beq     @loc_84AB               ; $84A1
-    bne     TitleMusic_Done              ; $84A3
+    bne     TitleMusic_Done         ; $84A3
 
 @loop4:
     jsr     TitleMusic_NoteLength   ; $84A5
@@ -1309,7 +1309,7 @@ sub_6_90CD:
     sec                             ; $90E4
     sbc     ram_07DE                ; $90E5
 
-dat_6_90E8:
+SwordNoise:
     rts                             ; $90E8
     .byte   $0B, $09, $0D, $0E, $0F, $0B, $09, $0D, $0E, $0F, $FB, $F9, $9D, $6E, $3F; $90E9
 
@@ -1324,10 +1324,10 @@ dat_6_9104:
 ; (unreferenced: $9113-$9122, 16 bytes)
     .byte   $1E, $28, $32, $3C, $1E, $28, $30, $32, $18, $22, $28, $28, $28, $32, $36, $38; $9113
 
-dat_6_9123:
+HurtNoise:
     .byte   $03, $34, $75, $56, $98, $BA, $EC, $FD, $BA                     ; $9123
 
-dat_6_912C:
+CrumbleNoise:
     .byte   $05, $3E, $7A, $5C, $9A, $BD, $EE, $FF, $BB                     ; $912C
 
 PulseEnvelope:
@@ -1369,12 +1369,12 @@ NotePeriods:
 ; Sfx_UpdateDmc
 ;
 ; Sound effects on the DMC channel, requested in dmcRequest: bit 0 Link's
-; cry when hurt (Link_TakeDamage, Link_CheckBgInBank, Dark Link's sword),
-; bit 1 Ganon's laugh when Link loses a life (Death_LoseLife), played as
-; samples 2-7 in turn, 24 frames each (laughSample).  The samples are in
-; bank 7 (DmcSamples).
+; grunt when hurt (Link_TakeDamage, Link_CheckBgInBank, Dark Link's
+; sword), bit 1 Ganon's laugh when Link loses a life (Death_LoseLife),
+; played as samples 2-7 in turn, 24 frames each (laughSample).  Other bits
+; do nothing.  The samples are in bank 7 (DmcSamples).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateDmc:
     ldy     dmcRequest              ; $920B
@@ -1488,7 +1488,7 @@ Sfx_StopSq1AndShared:
     stx     SND_CHN                 ; $92B9
     bne     loc_6_92FD              ; $92BC
 
-loc_6_92BE:
+Sfx_ItemDrop:
     lda     #$18                    ; $92BE
     sta     sq1SfxTimer             ; $92C0
     sty     sq1Sfx                  ; $92C3
@@ -1497,7 +1497,7 @@ loc_6_92BE:
     lda     #$52                    ; $92CA
     jsr     Sq1_PlayNoteEnvelope    ; $92CC
 
-loc_6_92CF:
+Sfx_ItemDropStep:
     lda     sq1SfxTimer             ; $92CF
     cmp     #$0C                    ; $92D2
     bne     @loc_92DB               ; $92D4
@@ -1505,14 +1505,14 @@ loc_6_92CF:
     jsr     Sq1_PlayNote            ; $92D8
 
 @loc_92DB:
-    jmp     loc_6_939E              ; $92DB
+    jmp     Sfx_Sq1Step             ; $92DB
 
-loc_6_92DE:
+Sfx_MenuCursor:
     sty     sq1Sfx                  ; $92DE
     lda     #$02                    ; $92E1
     sta     sq1SfxTimer             ; $92E3
 
-loc_6_92E6:
+Sfx_MenuCursorStep:
     ldx     #$9C                    ; $92E6
     ldy     #$82                    ; $92E8
     jsr     Sq1_SetEnvelope         ; $92EA
@@ -1524,14 +1524,21 @@ loc_6_92E6:
 ; Sfx_UpdateSq1
 ;
 ; Sound effects on pulse 1, requested in sfxRequest+3 (one bit each; the
-; higher bits win while one plays, in sq1Sfx).  Requested by: $01
-; LockedDoor_Ai (also stops pulse 1 and shared effects,
-; Sfx_StopSq1AndShared), $02 Enemy_DropItem, Link_Control, the ending's
-; typing, $04 Enemy_Kill, $08 item pickups (Item_Collect...), $10 the
-; pause, level up and continue menus, $20 Elevator_Ai.  Gives way while a
-; shared effect has pulse 1.
+; one playing is in sq1Sfx):
+;   $01 Sfx_StopSq1AndShared: no sound of its own; ends the shared and
+;       DMC effects (LockedDoor_Ai)
+;   $02 Sfx_ItemDrop: an item dropped by a killed enemy (Enemy_DropItem;
+;       also Link_Control and the ending's typing)
+;   $04 Sfx_KillOrChime: an enemy killed (Enemy_Kill)
+;   $08 Sfx_KillOrChime: the sword chime, for the sword beam or picking up
+;       an item (Item_Collect...)
+;   $10 Sfx_MenuCursor: a menu cursor moving (pause, level up, continue)
+;   $20 Sfx_Elevator: an elevator moving (Elevator_Ai)
+;   $40 Sfx_LowHealth: the low life beep (Mode_SideView)
+;   $80 nothing.
+; Gives way while a shared effect has pulse 1.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateSq1:
     ldy     sfxRequest+3            ; $92F4
@@ -1549,32 +1556,32 @@ loc_6_92FD:
 @loc_9308:
     lsr     a                       ; $9308
     lsr     a                       ; $9309
-    bcs     loc_6_92CF              ; $930A
+    bcs     Sfx_ItemDropStep        ; $930A
     lsr     sfxRequest+3            ; $930C
-    bcs     loc_6_92BE              ; $930E
+    bcs     Sfx_ItemDrop            ; $930E
     lsr     sfxRequest+3            ; $9310
-    bcs     @loc_9334               ; $9312
+    bcs     Sfx_KillOrChime         ; $9312
     lsr     a                       ; $9314
-    bcs     @loc_934C               ; $9315
+    bcs     Sfx_KillOrChimeStep     ; $9315
     lsr     sfxRequest+3            ; $9317
-    bcs     @loc_9334               ; $9319
+    bcs     Sfx_KillOrChime         ; $9319
     lsr     a                       ; $931B
-    bcs     @loc_934C               ; $931C
+    bcs     Sfx_KillOrChimeStep     ; $931C
     lsr     a                       ; $931E
-    bcs     loc_6_92E6              ; $931F
+    bcs     Sfx_MenuCursorStep      ; $931F
     lsr     sfxRequest+3            ; $9321
-    bcs     loc_6_92DE              ; $9323
+    bcs     Sfx_MenuCursor          ; $9323
     lsr     a                       ; $9325
-    bcs     @loc_9389               ; $9326
+    bcs     Sfx_ElevatorStep        ; $9326
     lsr     sfxRequest+3            ; $9328
-    bcs     @loc_937A               ; $932A
+    bcs     Sfx_Elevator            ; $932A
     lsr     a                       ; $932C
-    bcs     loc_6_939E              ; $932D
+    bcs     Sfx_Sq1Step             ; $932D
     lsr     sfxRequest+3            ; $932F
-    bcs     loc_6_93AE              ; $9331
+    bcs     Sfx_LowHealth           ; $9331
     rts                             ; $9333
 
-@loc_9334:
+Sfx_KillOrChime:
     sty     sq1Sfx                  ; $9334
     lda     sq1Sfx                  ; $9337
     and     #$08                    ; $933A
@@ -1590,7 +1597,7 @@ loc_6_92FD:
     lda     #$8A                    ; $9347
     sta     SQ1_SWEEP               ; $9349
 
-@loc_934C:
+Sfx_KillOrChimeStep:
     lda     sq1SfxTimer             ; $934C
     lsr     a                       ; $934F
     lsr     a                       ; $9350
@@ -1617,9 +1624,9 @@ loc_6_92FD:
 
 @loc_9374:
     jsr     Sq1_PlayNote            ; $9374
-    jmp     loc_6_939E              ; $9377
+    jmp     Sfx_Sq1Step             ; $9377
 
-@loc_937A:
+Sfx_Elevator:
     lda     #$0C                    ; $937A
     sta     sq1SfxTimer             ; $937C
     sty     sq1Sfx                  ; $937F
@@ -1627,7 +1634,7 @@ loc_6_92FD:
     ldy     #$7F                    ; $9384
     jsr     Sq1_SetEnvelope         ; $9386
 
-@loc_9389:
+Sfx_ElevatorStep:
     lda     sq1SfxTimer             ; $9389
     cmp     #$06                    ; $938C
     bcc     @loc_9394               ; $938E
@@ -1644,7 +1651,7 @@ loc_6_9398:
     stx     SQ1_LO                  ; $9398
     sta     SQ1_HI                  ; $939B
 
-loc_6_939E:
+Sfx_Sq1Step:
     dec     sq1SfxTimer             ; $939E
     bne     @done                   ; $93A1
     lda     #$00                    ; $93A3
@@ -1655,7 +1662,7 @@ loc_6_939E:
 @done:
     rts                             ; $93AD
 
-loc_6_93AE:
+Sfx_LowHealth:
     sty     sq1Sfx                  ; $93AE
     lda     #$30                    ; $93B1
     sta     sq1SfxTimer             ; $93B3
@@ -1690,7 +1697,7 @@ Sfx_TakeOverMusic:
     sta     TRI_LINEAR              ; $93E1
     rts                             ; $93E4
 
-loc_6_93E5:
+Sfx_FallInPit:
     sty     sq2Sfx                  ; $93E5
     jsr     Sound_StopAll           ; $93E8
     lda     #$79                    ; $93EB
@@ -1700,7 +1707,7 @@ loc_6_93E5:
     lda     #$58                    ; $93F4
     jsr     Sq2_PlayNoteEnvelope    ; $93F6
 
-loc_6_93F9:
+Sfx_FallInPitStep:
     lda     sq2SfxTimer             ; $93F9
     cmp     #$01                    ; $93FC
     bne     @loc_9405               ; $93FE
@@ -1713,39 +1720,46 @@ loc_6_93F9:
 ; ---------------------------------------------------------------------------
 ; Sfx_UpdateSq2
 ;
-; Sound effects on pulse 2, requested in sfxRequest+2 (current one in
-; sq2Sfx).  Bit 0 first stops every other sound (Sound_StopAll); bit 1
-; takes over both pulses and stops the music (Sfx_TakeOverMusic).  Requested by: $01 Mode_FallStart, $02
-; Overworld_DrawEncounters and Link_EnterArea, $08 dialogs (Menu_TextReady,
-; Townsperson_Draw), $10 Projectile_Deflect and HelmetheadHead_Ai, $20
-; Link_MoveX.
+; Sound effects on pulse 2, requested in sfxRequest+2 (one bit each; the
+; one playing is in sq2Sfx):
+;   $01 Sfx_FallInPit: Link falling into a pit (Mode_FallStart); stops
+;       every other sound first (Sound_StopAll)
+;   $02 Sfx_Encounter: an encounter pulling Link into battle; uses both
+;       pulses, stops the music (Sfx_TakeOverMusic) and ends by starting
+;       the battle music ($04)
+;   $04 Sfx_LeaveBattle: leaving a battle scene
+;   $08 Sfx_SpellMenu: the spell menu or a dialog opening (Menu_TextReady,
+;       Townsperson_Draw)
+;   $10 Sfx_Tink: a deflected shot (Projectile_Deflect, HelmetheadHead_Ai)
+;   $20 Sfx_Swamp: walking in a swamp (Link_MoveX)
+;   $40, $80 nothing.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateSq2:
     ldy     sfxRequest+2            ; $9408
     lda     sq2Sfx                  ; $940A
     lsr     sfxRequest+2            ; $940D
-    bcs     loc_6_93E5              ; $940F
+    bcs     Sfx_FallInPit           ; $940F
     lsr     a                       ; $9411
-    bcs     loc_6_93F9              ; $9412
+    bcs     Sfx_FallInPitStep       ; $9412
     lsr     sfxRequest+2            ; $9414
-    bcs     @loc_942B               ; $9416
+    bcs     Sfx_Encounter           ; $9416
     lsr     a                       ; $9418
-    bcs     @loc_9447               ; $9419
+    bcs     Sfx_EncounterStep       ; $9419
     lsr     sfxRequest+2            ; $941B
     bcs     @loc_9425               ; $941D
     lsr     a                       ; $941F
     bcs     @loc_9428               ; $9420
-    jmp     loc_6_9515              ; $9422
+    jmp     Sfx_UpdateSq2High       ; $9422
 
 @loc_9425:
-    jmp     @loc_9490               ; $9425
+    jmp     Sfx_LeaveBattle         ; $9425
 
 @loc_9428:
-    jmp     @loc_94AE               ; $9428
+    jmp     Sfx_LeaveBattleStep     ; $9428
 
-@loc_942B:
+Sfx_Encounter:
     jsr     Sfx_TakeOverMusic       ; $942B
     lda     #$50                    ; $942E
     ldx     #$8F                    ; $9430
@@ -1758,7 +1772,7 @@ Sfx_UpdateSq2:
     lda     #$00                    ; $9442
     sta     ram_07DC                ; $9444
 
-@loc_9447:
+Sfx_EncounterStep:
     lda     sq2SfxTimer             ; $9447
     cmp     #$28                    ; $944A
     bne     @loc_9453               ; $944C
@@ -1793,9 +1807,9 @@ Sfx_UpdateSq2:
     sta     musicRequest            ; $948B
 
 @loc_948D:
-    jmp     loc_6_953C              ; $948D
+    jmp     Sfx_Sq2Step             ; $948D
 
-@loc_9490:
+Sfx_LeaveBattle:
     jsr     Sfx_TakeOverMusic       ; $9490
     lda     #$10                    ; $9493
     sta     SQ1_VOL                 ; $9495
@@ -1809,7 +1823,7 @@ Sfx_UpdateSq2:
     lda     #$00                    ; $94A9
     sta     ram_07DC                ; $94AB
 
-@loc_94AE:
+Sfx_LeaveBattleStep:
     lda     sq2SfxTimer             ; $94AE
     cmp     #$10                    ; $94B1
     bne     @loc_94BA               ; $94B3
@@ -1845,7 +1859,7 @@ Sfx_UpdateSq2:
 @done:
     rts                             ; $94EC
 
-loc_6_94ED:
+Sfx_SpellMenu:
     sty     sq2Sfx                  ; $94ED
     lda     #$0C                    ; $94F0
     sta     sq2SfxTimer             ; $94F2
@@ -1854,7 +1868,7 @@ loc_6_94ED:
     lda     #$22                    ; $94F9
     jsr     Sq2_PlayNoteEnvelope    ; $94FB
 
-loc_6_94FE:
+Sfx_SpellMenuStep:
     lda     sq2SfxTimer             ; $94FE
     cmp     #$08                    ; $9501
     bne     @loc_9509               ; $9503
@@ -1870,24 +1884,24 @@ loc_6_94FE:
     jsr     Sq2_PlayNote            ; $950F
 
 loc_6_9512:
-    jmp     loc_6_953C              ; $9512
+    jmp     Sfx_Sq2Step             ; $9512
 
-loc_6_9515:
+Sfx_UpdateSq2High:
     lsr     sfxRequest+2            ; $9515
-    bcs     loc_6_94ED              ; $9517
+    bcs     Sfx_SpellMenu           ; $9517
     lsr     a                       ; $9519
-    bcs     loc_6_94FE              ; $951A
+    bcs     Sfx_SpellMenuStep       ; $951A
     lsr     sfxRequest+2            ; $951C
-    bcs     @loc_952B               ; $951E
+    bcs     Sfx_Tink                ; $951E
     lsr     a                       ; $9520
-    bcs     loc_6_953C              ; $9521
+    bcs     Sfx_Sq2Step             ; $9521
     lsr     sfxRequest+2            ; $9523
-    bcs     loc_6_954C              ; $9525
+    bcs     Sfx_Swamp               ; $9525
     lsr     a                       ; $9527
-    bcs     loc_6_953C              ; $9528
+    bcs     Sfx_Sq2Step             ; $9528
     rts                             ; $952A
 
-@loc_952B:
+Sfx_Tink:
     sty     sq2Sfx                  ; $952B
     lda     #$10                    ; $952E
     sta     sq2SfxTimer             ; $9530
@@ -1896,7 +1910,7 @@ loc_6_9515:
     lda     #$3C                    ; $9537
     jsr     Sq2_PlayNoteEnvelope    ; $9539
 
-loc_6_953C:
+Sfx_Sq2Step:
     dec     sq2SfxTimer             ; $953C
     bne     @done                   ; $953F
     lda     #$00                    ; $9541
@@ -1907,7 +1921,7 @@ loc_6_953C:
 @done:
     rts                             ; $954B
 
-loc_6_954C:
+Sfx_Swamp:
     lda     #$03                    ; $954C
     sty     sq2Sfx                  ; $954E
     sta     sq2SfxTimer             ; $9551
@@ -1927,9 +1941,9 @@ loc_6_954C:
     ldx     #$1C                    ; $9563
     ldy     #$83                    ; $9565
     jsr     Sq2_PlayNoteEnvelope    ; $9567
-    bne     loc_6_953C              ; $956A
+    bne     Sfx_Sq2Step             ; $956A
 
-loc_6_956C:
+Sfx_CrumbleBridge:
     lda     #$06                    ; $956C
     ldx     #$18                    ; $956E
     sty     noiseSfx                ; $9570
@@ -1942,7 +1956,7 @@ loc_6_956C:
     ldy     #$08                    ; $9582
     jsr     Noise_Play              ; $9584
 
-loc_6_9587:
+Sfx_NoiseStep:
     dec     noiseSfxTimer           ; $9587
     bne     @done                   ; $958A
     lda     #$00                    ; $958C
@@ -1953,7 +1967,7 @@ loc_6_9587:
 @done:
     rts                             ; $9596
 
-loc_6_9597:
+Sfx_Crumble40:
     lda     #$1D                    ; $9597
     ldx     #$0F                    ; $9599
     ldy     #$28                    ; $959B
@@ -1974,13 +1988,18 @@ Noise_Play:
 ; ---------------------------------------------------------------------------
 ; Sfx_UpdateNoise
 ;
-; Sound effects on the noise channel, requested in sfxRequest+1 (current
-; one in noiseSfx); none start while a shared effect has the noise
-; channel.  $02 a block crumbling or the bridge being built (noise and
-; triangle), $04 a block broken, $10 an enemy hurt, $20 the sword, $80 the
-; boomerang; $40 a short burst.
+; Sound effects on the noise channel, requested in sfxRequest+1 (the one
+; playing is in noiseSfx); none start while a shared effect has the noise
+; channel:
+;   $02 Sfx_CrumbleBridge: a bridge crumbling (noise and triangle)
+;   $04 Sfx_CrumbleOrHurt: a block crumbling (CrumbleNoise)
+;   $10 Sfx_CrumbleOrHurt: an enemy damaged (HurtNoise)
+;   $20, $80 Sfx_SwordStrike: the sword striking (SwordNoise); $80 for the
+;       boomerang's projectile sound
+;   $40 Sfx_Crumble40: a short crumbling burst
+;   $01, $08 nothing.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateNoise:
     lda     sharedSfxOnNoise        ; $95A7
@@ -1995,61 +2014,61 @@ Sfx_UpdateNoise:
     lsr     sfxRequest+1            ; $95B7
     lsr     a                       ; $95B9
     lsr     sfxRequest+1            ; $95BA
-    bcs     loc_6_956C              ; $95BC
+    bcs     Sfx_CrumbleBridge       ; $95BC
     lsr     a                       ; $95BE
-    bcs     loc_6_9587              ; $95BF
+    bcs     Sfx_NoiseStep           ; $95BF
     lsr     sfxRequest+1            ; $95C1
-    bcs     @loc_95E6               ; $95C3
+    bcs     Sfx_CrumbleOrHurt       ; $95C3
     lsr     a                       ; $95C5
-    bcs     @loc_95EE               ; $95C6
+    bcs     Sfx_CrumbleOrHurtStep   ; $95C6
     lsr     sfxRequest+1            ; $95C8
     lsr     a                       ; $95CA
     lsr     sfxRequest+1            ; $95CB
-    bcs     @loc_95E6               ; $95CD
+    bcs     Sfx_CrumbleOrHurt       ; $95CD
     lsr     a                       ; $95CF
-    bcs     @loc_95EE               ; $95D0
+    bcs     Sfx_CrumbleOrHurtStep   ; $95D0
     lsr     sfxRequest+1            ; $95D2
-    bcs     @loc_9604               ; $95D4
+    bcs     Sfx_SwordStrike         ; $95D4
     lsr     a                       ; $95D6
-    bcs     @loc_960C               ; $95D7
+    bcs     Sfx_SwordStrikeStep     ; $95D7
     lsr     sfxRequest+1            ; $95D9
-    bcs     loc_6_9597              ; $95DB
+    bcs     Sfx_Crumble40           ; $95DB
     lsr     a                       ; $95DD
     lsr     a                       ; $95DE
-    bcs     @loc_960C               ; $95DF
+    bcs     Sfx_SwordStrikeStep     ; $95DF
     lsr     sfxRequest+1            ; $95E1
-    bcs     @loc_9604               ; $95E3
+    bcs     Sfx_SwordStrike         ; $95E3
     rts                             ; $95E5
 
-@loc_95E6:
+Sfx_CrumbleOrHurt:
     lda     #$10                    ; $95E6
     sta     noiseSfxTimer           ; $95E8
     sty     noiseSfx                ; $95EB
 
-@loc_95EE:
+Sfx_CrumbleOrHurtStep:
     lda     noiseSfxTimer           ; $95EE
     lsr     a                       ; $95F1
     tay                             ; $95F2
     lda     noiseSfx                ; $95F3
     and     #$10                    ; $95F6
     bne     @loc_95FF               ; $95F8
-    lda     dat_6_912C,y            ; $95FA
-    bne     @loc_9612               ; $95FD
+    lda     CrumbleNoise,y          ; $95FA
+    bne     Noise_PlaySample        ; $95FD
 
 @loc_95FF:
-    lda     dat_6_9123,y            ; $95FF
-    bne     @loc_9612               ; $9602
+    lda     HurtNoise,y             ; $95FF
+    bne     Noise_PlaySample        ; $9602
 
-@loc_9604:
+Sfx_SwordStrike:
     sty     noiseSfx                ; $9604
     lda     #$0F                    ; $9607
     sta     noiseSfxTimer           ; $9609
 
-@loc_960C:
+Sfx_SwordStrikeStep:
     ldy     noiseSfxTimer           ; $960C
-    lda     dat_6_90E8,y            ; $960F
+    lda     SwordNoise,y            ; $960F
 
-@loc_9612:
+Noise_PlaySample:
     tax                             ; $9612
     lda     noiseSfx                ; $9613
     and     #$20                    ; $9616
@@ -2075,7 +2094,7 @@ Sfx_UpdateNoise:
     sta     NOISE_VOL               ; $962F
     lda     #$08                    ; $9632
     sta     NOISE_HI                ; $9634
-    jmp     loc_6_9587              ; $9637
+    jmp     Sfx_NoiseStep           ; $9637
 
 dat_6_963A:
     .byte   $40, $50, $60, $70, $7F                                         ; $963A
@@ -2226,14 +2245,14 @@ Sfx_StartSharedOnSq1:
     sta     sharedSfxOnNoise        ; $97DC
     rts                             ; $97DF
 
-loc_6_97E0:
+Sfx_Fairy:
     lda     #$7F                    ; $97E0
     ldx     #$04                    ; $97E2
     jsr     Sfx_StartSharedOnSq1    ; $97E4
     lda     #$7F                    ; $97E7
     sta     SQ1_SWEEP               ; $97E9
 
-loc_6_97EC:
+Sfx_FairyStep:
     lda     ram_07F3                ; $97EC
     ldy     ram_07F2                ; $97EF
     cmp     dat_6_963A,y            ; $97F2
@@ -2254,7 +2273,7 @@ loc_6_9805:
     jsr     Sq1_VibratoSfx          ; $9811
     jmp     loc_6_98E9              ; $9814
 
-loc_6_9817:
+Sfx_Shared60:
     lda     #$06                    ; $9817
     ldx     #$00                    ; $9819
     jsr     Sfx_StartSharedOnNoise  ; $981B
@@ -2263,13 +2282,13 @@ loc_6_9817:
     lda     #$08                    ; $9823
     sta     NOISE_HI                ; $9825
 
-loc_6_9828:
+Sfx_Shared60Step:
     ldy     ram_07F3                ; $9828
     lda     dat_6_969F,y            ; $982B
     sta     NOISE_VOL               ; $982E
     jmp     loc_6_98E9              ; $9831
 
-loc_6_9834:
+Sfx_Death:
     lda     #$C0                    ; $9834
     ldx     #$30                    ; $9836
     jsr     Sfx_StartSharedOnSq1    ; $9838
@@ -2288,7 +2307,7 @@ loc_6_9834:
     sta     SND_CHN                 ; $985A
     jsr     Music_Stop              ; $985D
 
-loc_6_9860:
+Sfx_DeathStep:
     ldy     ram_07F1                ; $9860
     lda     ram_07F0                ; $9863
     beq     @loc_986D               ; $9866
@@ -2349,14 +2368,14 @@ loc_6_9860:
 @loc_98C5:
     jmp     loc_6_98E9              ; $98C5
 
-loc_6_98C8:
+Sfx_SwordDenied:
     lda     #$1F                    ; $98C8
     ldx     #$00                    ; $98CA
     jsr     Sfx_StartSharedOnSq1    ; $98CC
     lda     #$8A                    ; $98CF
     sta     SQ1_SWEEP               ; $98D1
 
-loc_6_98D4:
+Sfx_SwordDeniedStep:
     lda     ram_07F3                ; $98D4
     lsr     a                       ; $98D7
     tay                             ; $98D8
@@ -2394,11 +2413,23 @@ loc_6_98E9:
 ;
 ; Sound effects requested in sfxRequest that play on pulse 1 or on the
 ; noise channel, whichever each needs (Sfx_StartSharedOnSq1,
-; Sfx_StartSharedOnNoise), taking it from the music and the other effects;
-; $C0 and $60 are effects of their own, the other values one bit each.
-; Current one in sharedSfx.
+; Sfx_StartSharedOnNoise), taking it from the music and the other
+; effects; the one playing is in sharedSfx:
+;   $01 Sfx_Death: Link dying
+;   $02 Sfx_SwordDenied: the sword blocked (Enemy_SwordClink...)
+;   $04 Sfx_Spell: casting a spell (Spell_Update)
+;   $08 Sfx_Flute: the flute
+;   $10 Sfx_Flute2, $20 Sfx_Flute3: other flute tunes ($10 is requested
+;       by BigDoor_Update; nothing requests $20)
+;   $40 Sfx_Barrier: the Great Palace barrier going up (Barrier_Ai)
+;   $80 Sfx_BossDeath: a boss dying (Enemy_DieStep); also a locked door
+;       opening (LockedDoor_Ai)
+;   $C0 Sfx_Fairy: a fairy appearing (Fairy_Ai), or boarding the raft
+;   $60 Sfx_Shared60: a town event that draws tiles one at a time (bank 3
+;       $B748)
+; $C0 and $60 are checked before the single bits.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateShared:
     lda     ram_07DD                ; $990B
@@ -2455,70 +2486,70 @@ Sfx_UpdateShared:
     rts                             ; $9965
 
 @loc_9966:
-    jmp     loc_6_9834              ; $9966
+    jmp     Sfx_Death               ; $9966
 
 @loc_9969:
-    jmp     loc_6_98C8              ; $9969
+    jmp     Sfx_SwordDenied         ; $9969
 
 @loc_996C:
-    jmp     @loc_99A2               ; $996C
+    jmp     Sfx_Spell               ; $996C
 
 @loc_996F:
-    jmp     @loc_9A20               ; $996F
+    jmp     Sfx_Flute               ; $996F
 
 @loc_9972:
-    jmp     @loc_9A48               ; $9972
+    jmp     Sfx_Flute2              ; $9972
 ; (code below not executed in the test movies)
 
 @loc_9975:
-    jmp     @loc_9A70               ; $9975
+    jmp     Sfx_Flute3              ; $9975
 ; (end of code not executed in the test movies)
 
 @loc_9978:
-    jmp     @loc_9A98               ; $9978
+    jmp     Sfx_Barrier             ; $9978
 
 @loc_997B:
-    jmp     @loc_9AD1               ; $997B
+    jmp     Sfx_BossDeath           ; $997B
 
 @loc_997E:
-    jmp     loc_6_97E0              ; $997E
+    jmp     Sfx_Fairy               ; $997E
 
 @loc_9981:
-    jmp     loc_6_9817              ; $9981
+    jmp     Sfx_Shared60            ; $9981
 
 @loc_9984:
-    jmp     loc_6_9860              ; $9984
+    jmp     Sfx_DeathStep           ; $9984
 
 @loc_9987:
-    jmp     loc_6_98D4              ; $9987
+    jmp     Sfx_SwordDeniedStep     ; $9987
 
 @loc_998A:
-    jmp     @loc_99B8               ; $998A
+    jmp     Sfx_SpellStep           ; $998A
 
 @loc_998D:
-    jmp     @loc_9A2C               ; $998D
+    jmp     Sfx_FluteStep           ; $998D
 
 @loc_9990:
-    jmp     @loc_9A54               ; $9990
+    jmp     Sfx_Flute2Step          ; $9990
 ; (code below not executed in the test movies)
 
 @loc_9993:
-    jmp     @loc_9A7C               ; $9993
+    jmp     Sfx_Flute3Step          ; $9993
 ; (end of code not executed in the test movies)
 
 @loc_9996:
-    jmp     @loc_9AAB               ; $9996
+    jmp     Sfx_BarrierStep         ; $9996
 
 @loc_9999:
-    jmp     @loc_9ADD               ; $9999
+    jmp     Sfx_BossDeathStep       ; $9999
 
 @loc_999C:
-    jmp     loc_6_97EC              ; $999C
+    jmp     Sfx_FairyStep           ; $999C
 
 @loc_999F:
-    jmp     loc_6_9828              ; $999F
+    jmp     Sfx_Shared60Step        ; $999F
 
-@loc_99A2:
+Sfx_Spell:
     lda     #$60                    ; $99A2
     ldx     #$0C                    ; $99A4
     jsr     Sfx_StartSharedOnSq1    ; $99A6
@@ -2529,7 +2560,7 @@ Sfx_UpdateShared:
     lda     #$04                    ; $99B3
     sta     ram_07EF                ; $99B5
 
-@loc_99B8:
+Sfx_SpellStep:
     ldy     ram_07F1                ; $99B8
     lda     ram_07F0                ; $99BB
     beq     @loc_99C5               ; $99BE
@@ -2590,14 +2621,14 @@ Sfx_UpdateShared:
 @loc_9A1D:
     jmp     loc_6_98E9              ; $9A1D
 
-@loc_9A20:
+Sfx_Flute:
     lda     #$7F                    ; $9A20
     ldx     #$06                    ; $9A22
     jsr     Sfx_StartSharedOnSq1    ; $9A24
     lda     #$7F                    ; $9A27
     sta     SQ1_SWEEP               ; $9A29
 
-@loc_9A2C:
+Sfx_FluteStep:
     lda     ram_07F3                ; $9A2C
     ldy     ram_07F2                ; $9A2F
     cmp     dat_6_9644,y            ; $9A32
@@ -2611,14 +2642,14 @@ Sfx_UpdateShared:
 @loc_9A45:
     jmp     loc_6_9805              ; $9A45
 
-@loc_9A48:
+Sfx_Flute2:
     lda     #$7F                    ; $9A48
     ldx     #$05                    ; $9A4A
     jsr     Sfx_StartSharedOnSq1    ; $9A4C
     lda     #$7F                    ; $9A4F
     sta     SQ1_SWEEP               ; $9A51
 
-@loc_9A54:
+Sfx_Flute2Step:
     lda     ram_07F3                ; $9A54
     ldy     ram_07F2                ; $9A57
     cmp     dat_6_9652,y            ; $9A5A
@@ -2633,14 +2664,14 @@ Sfx_UpdateShared:
     jmp     loc_6_9805              ; $9A6D
 ; (code below not executed in the test movies)
 
-@loc_9A70:
+Sfx_Flute3:
     lda     #$9F                    ; $9A70
     ldx     #$08                    ; $9A72
     jsr     Sfx_StartSharedOnSq1    ; $9A74
     lda     #$7F                    ; $9A77
     sta     SQ1_SWEEP               ; $9A79
 
-@loc_9A7C:
+Sfx_Flute3Step:
     lda     ram_07F3                ; $9A7C
     ldy     ram_07F2                ; $9A7F
     cmp     dat_6_965E,y            ; $9A82
@@ -2655,7 +2686,7 @@ Sfx_UpdateShared:
     jmp     loc_6_9805              ; $9A95
 ; (end of code not executed in the test movies)
 
-@loc_9A98:
+Sfx_Barrier:
     lda     #$60                    ; $9A98
     ldx     #$8F                    ; $9A9A
     jsr     Sfx_StartSharedOnSq1    ; $9A9C
@@ -2665,7 +2696,7 @@ Sfx_UpdateShared:
     ldy     #$81                    ; $9AA6
     jsr     Sq1_SetEnvelope         ; $9AA8
 
-@loc_9AAB:
+Sfx_BarrierStep:
     lda     ram_07F2                ; $9AAB
     tay                             ; $9AAE
     jsr     sub_6_90CB              ; $9AAF
@@ -2686,14 +2717,14 @@ Sfx_UpdateShared:
 @loc_9ACE:
     jmp     loc_6_98E9              ; $9ACE
 
-@loc_9AD1:
+Sfx_BossDeath:
     lda     #$6B                    ; $9AD1
     ldx     #$1B                    ; $9AD3
     jsr     Sfx_StartSharedOnNoise  ; $9AD5
     lda     #$05                    ; $9AD8
     sta     ram_07F1                ; $9ADA
 
-@loc_9ADD:
+Sfx_BossDeathStep:
     lda     ram_07F3                ; $9ADD
     ldy     ram_07F1                ; $9AE0
     cmp     dat_6_978E,y            ; $9AE3
