@@ -5303,7 +5303,7 @@ loc_DE63:
 ; ---------------------------------------------------------------------------
 Enemy_DespawnIfFar:
     lda     enemyType,x             ; $DE6C
-    cmp     #$13                    ; $DE6E
+    cmp     #ENEMY_TYPE_ELEVATOR    ; $DE6E
     beq     loc_DEB7                ; $DE70
     cmp     #$03                    ; $DE72
     bcc     loc_DEB7                ; $DE74
@@ -6574,7 +6574,7 @@ LinkProjectile_GetHitbox:
 ; ---------------------------------------------------------------------------
 Enemy_CheckLinkContact:
     lda     enemyType,x             ; $E4D9
-    cmp     #$13                    ; $E4DB
+    cmp     #ENEMY_TYPE_ELEVATOR    ; $E4DB
     beq     loc_E4F7                ; $E4DD
     ldy     currentWorld            ; $E4DF
     dey                             ; $E4E2
@@ -6614,7 +6614,7 @@ loc_E4F7:
     ora     #$10                    ; $E51A
     sta     objCollision+1,x        ; $E51C
     lda     enemyType,x             ; $E51E
-    cmp     #$01                    ; $E520
+    cmp     #ENEMY_TYPE_ITEM        ; $E520
     bne     loc_E555                ; $E522
     lda     ram_00AF,x              ; $E524
     and     #$7F                    ; $E526
@@ -6897,7 +6897,7 @@ Enemy_CheckSwordHit:
 ; ---------------------------------------------------------------------------
 Enemy_CheckHit:
     ldy     enemyType,x             ; $E694
-    cpy     #$13                    ; $E696
+    cpy     #ENEMY_TYPE_ELEVATOR    ; $E696
     beq     loc_E6AC                ; $E698
     cpy     #$02                    ; $E69A
     beq     loc_E6AC                ; $E69C
@@ -7020,7 +7020,7 @@ Enemy_TakeDamage:
     beq     loc_E74C                ; $E737
     bcc     loc_E74C                ; $E739
     lda     enemyType,x             ; $E73B
-    cmp     #$01                    ; $E73D
+    cmp     #ENEMY_TYPE_ITEM        ; $E73D
     beq     loc_E755                ; $E73F
     lda     objState                ; $E741
     cmp     #$09                    ; $E743
@@ -7033,7 +7033,7 @@ loc_E74A:
 
 loc_E74C:
     ldy     enemyType,x             ; $E74C
-    cpy     #$01                    ; $E74E
+    cpy     #ENEMY_TYPE_ITEM        ; $E74E
     beq     loc_E755                ; $E750
     jmp     Enemy_Kill              ; $E752
 

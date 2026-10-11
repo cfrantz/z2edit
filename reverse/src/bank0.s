@@ -2692,7 +2692,7 @@ Elevator_Place:
     rol     objXHi+1                ; $915A
     adc     #$04                    ; $915C
     sta     objX+1                  ; $915E
-    lda     #$13                    ; $9160
+    lda     #ENEMY_TYPE_ELEVATOR    ; $9160
     sta     enemyType               ; $9162
     iny                             ; $9164
     sty     objYHi+1                ; $9165

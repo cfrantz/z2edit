@@ -61,6 +61,10 @@ OBJ_SLOT_SWORD_PROBE    = 16    ; sword tip, for breaking blocks
 NUM_ENEMIES             = 6
 NUM_PROJECTILES         = 6
 
+; Special enemyType values (other types are defined per world).
+ENEMY_TYPE_ITEM         = $01   ; an item lying in the area
+ENEMY_TYPE_ELEVATOR     = $13
+
 ; enemyActive values.
 ENEMY_STATE_EMPTY       = 0
 ENEMY_STATE_ACTIVE      = 1
