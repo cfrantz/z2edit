@@ -65,15 +65,14 @@ class Symbols:
                         self.ram[v] = m.group(1)
 
     def routine(self, offset):
-        """The routine containing the instruction at PRG offset."""
+        """The code label (routine or branch target) preceding the
+        instruction at PRG offset."""
         bank, addr = cpu_addr(offset)
         best = None
         for a, name in self.by_bank[bank]:
             if a > addr:
                 break
-            # Branch targets (loc_) are only used if nothing better precedes.
-            if not name.startswith("loc_") or best is None or best[1].startswith("loc_"):
-                best = (a, name)
+            best = (a, name)
         if best is None:
             return f"${addr:04X}"
         return best[1]

@@ -11,7 +11,7 @@ Run `make verify` afterwards.
 
 NEW may be an expression NAME+k, for a symbol that is an element of an
 array: references become NAME+k (folding OLD+n into NAME+(k+n)), and the
-declaration of OLD is deleted.  NAME must already exist or be the NEW of
+declaration (or label) of OLD is deleted.  NAME must already exist or be the NEW of
 another pair.
 
 --array NAME BASE COUNT renames ram_BASE (or sram_BASE) to NAME and each
@@ -120,6 +120,12 @@ def main():
             d = declaration.match(line)
             if d and d.group(1) in exprs:
                 continue  # array element: declared by the array's base
+            lbl = re.match(r"^([A-Za-z_]\w*):\s*$", line)
+            if lbl and lbl.group(1) in exprs:
+                # A label inside a table: refer to it relative to the table.
+                if lines and lines[-1] == "":
+                    lines.pop()
+                continue
             new_line = pattern.sub(replace, line)
             lines.append(realign(new_line) if new_line != line else line)
         new = "\n".join(lines)

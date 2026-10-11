@@ -43,7 +43,7 @@ $(OUT): $(OBJS) $(SRC)/zelda2.cfg
 $(SYMS): $(OUT) tools/symbols.py
 	python3 tools/symbols.py $(BUILD)/zelda2.dbg $@
 
-verify: $(OUT)
+verify: $(OUT) $(SYMS)
 	@echo "$(ROM_SHA256)  $(ROM)" | sha256sum --quiet -c - \
 		|| (echo "Reference ROM $(ROM) is not the expected Zelda II (U) ROM"; exit 1)
 	@if cmp -s $(OUT) $(ROM); then \

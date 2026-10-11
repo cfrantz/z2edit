@@ -35,3 +35,5 @@ Tools that drive the emulator need the Python extension built with
   `--arrays` lists indexed base addresses with their observed extents.
 - `callers.py`: Plays a movie with breakpoints on routines and tallies the
   JSR sites that call them, with a register's value on entry.
+- `watch.py`: Plays a movie and logs writes to RAM variables (by symbol
+  or address), with the frame number and the writing routine.
