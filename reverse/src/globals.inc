@@ -111,12 +111,12 @@ GLOBALS_INC = 1
 .global Enemy_KnockBack
 .global loc_E3B9
 .global sub_E469
-.global sub_E48A
+.global DoNothing
 .global Enemy_CheckProjectileHits
 .global Enemy_CheckLinkContact
 .global sub_E558
-.global sub_E563
-.global sub_E579
+.global Projectile_CheckLink
+.global Projectile_CheckLinkBody
 .global sub_E617
 .global Enemy_CheckSwordHit
 .global Enemy_TakeDamage

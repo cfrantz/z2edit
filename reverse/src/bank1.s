@@ -565,8 +565,8 @@ dat_1_8508:
     .assert dat_1_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $5C, $90, $4C, $A6                                              ; $8508
 
-sub_1_850C:
-    .assert sub_1_850C = AreaBank::sub_850C, error, "interface address moved"
+Area_IsSolidTile_Bank1:
+    .assert Area_IsSolidTile_Bank1 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
     and     #$C0                    ; $850D
     clc                             ; $850F
@@ -579,8 +579,8 @@ sub_1_850C:
     cmp     dat_1_93A9,y            ; $8516
     rts                             ; $8519
 
-dat_1_851A:
-    .assert dat_1_851A = AreaBank::dat_851A, error, "interface address moved"
+SpecialTiles_Bank1:
+    .assert SpecialTiles_Bank1 = AreaBank::SpecialTiles, error, "interface address moved"
     .byte   $00, $00, $00, $00, $61, $60, $80, $87, $91, $B5, $8C, $99, $8D ; $851A
 ; (unreferenced: $8527-$852A, 4 bytes)
     .byte   $99, $8D, $B5, $8C                                              ; $8527
@@ -1161,7 +1161,7 @@ sub_1_96FF:
 
 loc_1_970D:
     jsr     sub_1_9718              ; $970D
-    jsr     sub_E48A                ; $9710
+    jsr     DoNothing               ; $9710
 dat_1_9715 := * + 2
     jmp     loc_E3B9                ; $9713
     .byte   $40, $00                                                        ; $9716

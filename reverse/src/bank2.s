@@ -602,8 +602,8 @@ dat_2_8508:
     .assert dat_2_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $46, $90, $4C, $A6                                              ; $8508
 
-sub_2_850C:
-    .assert sub_2_850C = AreaBank::sub_850C, error, "interface address moved"
+Area_IsSolidTile_Bank2:
+    .assert Area_IsSolidTile_Bank2 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
     and     #$C0                    ; $850D
     clc                             ; $850F
@@ -616,8 +616,8 @@ sub_2_850C:
     cmp     dat_2_938C,y            ; $8516
     rts                             ; $8519
 
-dat_2_851A:
-    .assert dat_2_851A = AreaBank::dat_851A, error, "interface address moved"
+SpecialTiles_Bank2:
+    .assert SpecialTiles_Bank2 = AreaBank::SpecialTiles, error, "interface address moved"
     .byte   $00, $00, $00, $00, $61, $60, $80, $87, $91, $80, $8D, $80, $8D ; $851A
 ; (unreferenced: $8527-$8528, 2 bytes)
     .byte   $84, $8F                                                        ; $8527
@@ -1106,7 +1106,7 @@ loc_2_9670:
 
 loc_2_9673:
     jsr     sub_2_967E              ; $9673
-    jsr     sub_E48A                ; $9676
+    jsr     DoNothing               ; $9676
 dat_2_967B := * + 2
     jmp     loc_E3B9                ; $9679
     .byte   $40, $00                                                        ; $967C
@@ -1819,7 +1819,7 @@ loc_2_9B56:
     bne     loc_2_9B68              ; $9B63
 
 loc_2_9B65:
-    jsr     sub_E563                ; $9B65
+    jsr     Projectile_CheckLink    ; $9B65
 
 loc_2_9B68:
     lda     timerFast+TIMER_ENEMY,x ; $9B68

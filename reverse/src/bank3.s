@@ -499,8 +499,8 @@ dat_3_8508:
 ; (unreferenced: $850A-$850B, 2 bytes)
     .byte   $FF, $FF                                                        ; $850A
 
-sub_3_850C:
-    .assert sub_3_850C = AreaBank::sub_850C, error, "interface address moved"
+Area_IsSolidTile_Bank3:
+    .assert Area_IsSolidTile_Bank3 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
     and     #$C0                    ; $850D
     clc                             ; $850F
@@ -513,8 +513,8 @@ sub_3_850C:
     cmp     dat_3_870E,y            ; $8516
     rts                             ; $8519
 
-dat_3_851A:
-    .assert dat_3_851A = AreaBank::dat_851A, error, "interface address moved"
+SpecialTiles_Bank3:
+    .assert SpecialTiles_Bank3 = AreaBank::SpecialTiles, error, "interface address moved"
     .byte   $54, $EA, $58, $59, $00, $00, $92, $00, $00                     ; $851A
 ; (unreferenced: $8523-$8524, 2 bytes)
     .byte   $C0, $89                                                        ; $8523

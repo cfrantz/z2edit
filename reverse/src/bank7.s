@@ -5428,7 +5428,7 @@ loc_E04B:
     inc     objY                    ; $E04B
     rts                             ; $E04D
 
-dat_E04E:
+ProbeCollisionBits:
     .byte   $01, $02, $01, $02, $04, $04, $08, $08, $01, $02                ; $E04E
 ; (unreferenced: $E058-$E059, 2 bytes)
     .byte   $01, $02                                                        ; $E058
@@ -5461,7 +5461,7 @@ sub_E079:
     lda     #$00                    ; $E098
     sta     ram_0752                ; $E09A
     lda     temp3                   ; $E09D
-    cmp     AreaBank::dat_851A+6    ; $E09F
+    cmp     AreaBank::SpecialTiles+6 ; $E09F
     bne     loc_E0B0                ; $E0A2
     lda     #$01                    ; $E0A4
     sta     ram_00E9                ; $E0A6
@@ -5471,9 +5471,9 @@ sub_E079:
     rts                             ; $E0AF
 
 loc_E0B0:
-    cmp     AreaBank::dat_851A+7    ; $E0B0
+    cmp     AreaBank::SpecialTiles+7 ; $E0B0
     beq     loc_E0BA                ; $E0B3
-    cmp     AreaBank::dat_851A+8    ; $E0B5
+    cmp     AreaBank::SpecialTiles+8 ; $E0B5
     bne     loc_E0C5                ; $E0B8
 
 loc_E0BA:
@@ -5484,15 +5484,15 @@ loc_E0BA:
     sty     ram_0752                ; $E0C2
 
 loc_E0C5:
-    cmp     AreaBank::dat_851A+5    ; $E0C5
+    cmp     AreaBank::SpecialTiles+5 ; $E0C5
     beq     loc_E0FC                ; $E0C8
-    cmp     AreaBank::dat_851A      ; $E0CA
+    cmp     AreaBank::SpecialTiles  ; $E0CA
     beq     loc_E0E6                ; $E0CD
-    cmp     AreaBank::dat_851A+2    ; $E0CF
+    cmp     AreaBank::SpecialTiles+2 ; $E0CF
     beq     loc_E0E6                ; $E0D2
-    cmp     AreaBank::dat_851A+1    ; $E0D4
+    cmp     AreaBank::SpecialTiles+1 ; $E0D4
     beq     loc_E0E6                ; $E0D7
-    cmp     AreaBank::dat_851A+3    ; $E0D9
+    cmp     AreaBank::SpecialTiles+3 ; $E0D9
     bne     loc_E0F9                ; $E0DC
     lda     linkStanding            ; $E0DE
     bne     loc_E0F9                ; $E0E0
@@ -5547,7 +5547,7 @@ loc_E12B:
     pha                             ; $E133
     lda     #$00                    ; $E134
     sta     temp1                   ; $E136
-    jsr     sub_E1BE                ; $E138
+    jsr     Obj_ProbeBg             ; $E138
     pla                             ; $E13B
     clc                             ; $E13C
     adc     #$02                    ; $E13D
@@ -5555,7 +5555,7 @@ loc_E12B:
     sta     temp0                   ; $E141
     lda     #$00                    ; $E143
     sta     temp1                   ; $E145
-    jsr     sub_E1BE                ; $E147
+    jsr     Obj_ProbeBg             ; $E147
     lda     linkMode                ; $E14A
     cmp     #$01                    ; $E14C
     bne     loc_E19D                ; $E14E
@@ -5639,21 +5639,31 @@ sub_E1B8:
     lda     #$01                    ; $E1BA
     sta     temp1                   ; $E1BC
 
-sub_E1BE:
+; ---------------------------------------------------------------------------
+; Obj_ProbeBg
+;
+; Test probe points temp0, temp0 - 1, ... (temp1 + 1 of them) of object x
+; against the background, and set the collision bit (ProbeCollisionBits)
+; of the first one that hits a solid tile (AreaBank::IsSolidTile).
+;
+; In:      x = object slot, temp0 = first probe, temp1 = count - 1
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Obj_ProbeBg:
     ldy     temp0                   ; $E1BE
     jsr     Obj_GetBgTile           ; $E1C0
-    jsr     AreaBank::sub_850C      ; $E1C3
+    jsr     AreaBank::IsSolidTile   ; $E1C3
     bcc     loc_E1D2                ; $E1C6
     ldy     temp0                   ; $E1C8
     lda     objCollision,x          ; $E1CA
-    ora     dat_E04E,y              ; $E1CC
+    ora     ProbeCollisionBits,y    ; $E1CC
     sta     objCollision,x          ; $E1CF
     rts                             ; $E1D1
 
 loc_E1D2:
     dec     temp0                   ; $E1D2
     dec     temp1                   ; $E1D4
-    bpl     sub_E1BE                ; $E1D6
+    bpl     Obj_ProbeBg             ; $E1D6
     rts                             ; $E1D8
 
 dat_E1D9:
@@ -5707,9 +5717,9 @@ loc_E214:
     ldx     #OBJ_SLOT_SWORD_PROBE   ; $E223
     ldy     #$1C                    ; $E225
     jsr     Obj_GetBgTile           ; $E227
-    cmp     AreaBank::dat_851A+4    ; $E22A
+    cmp     AreaBank::SpecialTiles+4 ; $E22A
     beq     loc_E235                ; $E22D
-    jsr     AreaBank::sub_850C      ; $E22F
+    jsr     AreaBank::IsSolidTile   ; $E22F
     bcs     loc_E26A                ; $E232
 
 loc_E234:
@@ -6105,7 +6115,12 @@ loc_E476:
     adc     #$03                    ; $E486
     sta     temp4                   ; $E488
 
-sub_E48A:
+; ---------------------------------------------------------------------------
+; DoNothing
+;
+; An rts, used where a handler that does nothing is needed.
+; ---------------------------------------------------------------------------
+DoNothing:
     rts                             ; $E48A
 
 ; ---------------------------------------------------------------------------
@@ -6264,16 +6279,26 @@ dat_E556:
 
 sub_E558:
     lda     ram_0710                ; $E558
-    bne     sub_E563                ; $E55B
+    bne     Projectile_CheckLink    ; $E55B
     lda     enemyType,x             ; $E55D
     cmp     #$17                    ; $E55F
-    bcs     sub_E579                ; $E561
+    bcs     Projectile_CheckLinkBody ; $E561
 
-sub_E563:
+; ---------------------------------------------------------------------------
+; Projectile_CheckLink
+;
+; Test enemy projectile x against Link's shield (blocked: a sound and the
+; projectile is knocked back) and then, in Projectile_CheckLinkBody,
+; against Link (hurt him).
+;
+; In:      x = projectile index
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_CheckLink:
     jsr     sub_E5F3                ; $E563
     jsr     Link_GetShieldHitbox    ; $E566
     jsr     Hitbox_Overlap          ; $E569
-    bcc     sub_E579                ; $E56C
+    bcc     Projectile_CheckLinkBody ; $E56C
 ; (code below not executed in the test movies)
     lda     #$02                    ; $E56E
     sta     sfxRequest              ; $E570
@@ -6282,7 +6307,7 @@ sub_E563:
     jmp     Enemy_KnockBack         ; $E576
 ; (end of code not executed in the test movies)
 
-sub_E579:
+Projectile_CheckLinkBody:
     jsr     sub_E5F3                ; $E579
     jsr     Link_GetHitbox          ; $E57C
     jsr     Hitbox_Overlap          ; $E57F
@@ -7098,7 +7123,7 @@ loc_EA24:
     adc     #$07                    ; $EA26
     tax                             ; $EA28
     jsr     Obj_GetBgTile           ; $EA29
-    jsr     AreaBank::sub_850C      ; $EA2C
+    jsr     AreaBank::IsSolidTile   ; $EA2C
     ldx     currentObject           ; $EA2F
 
 loc_EA31:
@@ -7119,14 +7144,14 @@ Enemy_UpdateBgCollision:
     sta     temp0                   ; $EA47
     lda     #$00                    ; $EA49
     sta     temp1                   ; $EA4B
-    jsr     sub_E1BE                ; $EA4D
+    jsr     Obj_ProbeBg             ; $EA4D
     lda     #$14                    ; $EA50
     clc                             ; $EA52
     adc     temp9                   ; $EA53
     sta     temp0                   ; $EA55
     lda     #$00                    ; $EA57
     sta     temp1                   ; $EA59
-    jsr     sub_E1BE                ; $EA5B
+    jsr     Obj_ProbeBg             ; $EA5B
     lda     temp2                   ; $EA5E
     sec                             ; $EA60
     sbc     #$10                    ; $EA61
@@ -7149,14 +7174,14 @@ loc_EA75:
     pha                             ; $EA7D
     lda     #$00                    ; $EA7E
     sta     temp1                   ; $EA80
-    jsr     sub_E1BE                ; $EA82
+    jsr     Obj_ProbeBg             ; $EA82
     pla                             ; $EA85
     clc                             ; $EA86
     adc     #$02                    ; $EA87
     sta     temp0                   ; $EA89
     lda     #$00                    ; $EA8B
     sta     temp1                   ; $EA8D
-    jsr     sub_E1BE                ; $EA8F
+    jsr     Obj_ProbeBg             ; $EA8F
     dex                             ; $EA92
     lda     temp14                  ; $EA93
     sta     ram_00DC                ; $EA95

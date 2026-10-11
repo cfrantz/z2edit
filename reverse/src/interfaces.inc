@@ -13,8 +13,8 @@ INTERFACES_INC = 1
     Palettes        = $800E     ; area palettes, copied to sramAreaPalettes
     MetatilePtrs    = $8500     ; side view metatile tables (words)
     OverworldMapPtrs = $8508    ; compressed overworld map of each region (words)
-    sub_850C        = $850C     ; routine; identical code in banks 1-5
-    dat_851A        = $851A     ; 9 bytes compared individually ($851A-$8522)
+    IsSolidTile     = $850C     ; carry set if tile a is solid (identical in banks 1-5)
+    SpecialTiles    = $851A     ; tile numbers with special behavior ($851A-$8522); +4 = breakable block
     EnemyLists      = $88A0     ; enemies of each area (1024 bytes), copied to sramEnemyLists
     sub_80EE        = $80EE     ; routine (banks 1-5)
     sub_812F        = $812F     ; routine (banks 1, 2, 4, 5; not bank 3)

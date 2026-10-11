@@ -406,8 +406,8 @@ dat_4_8508:
     .assert dat_4_8508 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $FF, $FF, $FF, $FF                                              ; $8508
 
-sub_4_850C:
-    .assert sub_4_850C = AreaBank::sub_850C, error, "interface address moved"
+Area_IsSolidTile_Bank4:
+    .assert Area_IsSolidTile_Bank4 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
     and     #$C0                    ; $850D
     clc                             ; $850F
@@ -420,8 +420,8 @@ sub_4_850C:
     cmp     dat_4_83D9,y            ; $8516
     rts                             ; $8519
 
-dat_4_851A:
-    .assert dat_4_851A = AreaBank::dat_851A, error, "interface address moved"
+SpecialTiles_Bank4:
+    .assert SpecialTiles_Bank4 = AreaBank::SpecialTiles, error, "interface address moved"
     .byte   $00, $00, $00, $00                                              ; $851A
 
 dat_4_851E:
@@ -804,7 +804,7 @@ loc_4_966B:
 loc_4_968C:
     jsr     sub_4_BC23              ; $968C
     jsr     Enemy_Draw              ; $968F
-    jsr     sub_E563                ; $9692
+    jsr     Projectile_CheckLink    ; $9692
 
 loc_4_9695:
     lda     objState                ; $9695
@@ -1268,7 +1268,7 @@ loc_4_995E:
 
 loc_4_995F:
     jsr     sub_4_996A              ; $995F
-    jsr     sub_E48A                ; $9962
+    jsr     DoNothing               ; $9962
 dat_4_9967 := * + 2
     jmp     loc_E3B9                ; $9965
     .byte   $40, $00                                                        ; $9968
@@ -1791,7 +1791,7 @@ loc_4_9C97:
     bne     loc_4_9CDF              ; $9CC1
 
 loc_4_9CC3:
-    jsr     sub_E563                ; $9CC3
+    jsr     Projectile_CheckLink    ; $9CC3
 
 loc_4_9CC6:
     lda     timerFast+TIMER_ENEMY,x ; $9CC6
@@ -2747,7 +2747,7 @@ loc_4_ADD6:
 
 loc_4_ADD7:
     jsr     sub_4_996A              ; $ADD7
-    jsr     sub_E48A                ; $ADDA
+    jsr     DoNothing               ; $ADDA
     jmp     loc_E3B9                ; $ADDD
 
 loc_4_ADE0:
@@ -3102,7 +3102,7 @@ loc_4_AFEC:
 
 loc_4_B003:
     jsr     sub_4_B1E3              ; $B003
-    jsr     sub_E579                ; $B006
+    jsr     Projectile_CheckLinkBody ; $B006
     lda     enemyHp,x               ; $B009
     cmp     #$24                    ; $B00B
     bcs     loc_4_B04D              ; $B00D
@@ -3859,7 +3859,7 @@ loc_4_B4AD:
     sta     ram_0444,x              ; $B4AF
     jsr     sub_4_BE8B              ; $B4B2
     jsr     sub_4_BC4E              ; $B4B5
-    jsr     sub_E579                ; $B4B8
+    jsr     Projectile_CheckLinkBody ; $B4B8
     jsr     sub_4_B53B              ; $B4BB
     lda     #$12                    ; $B4BE
     jsr     sub_4_9C45              ; $B4C0
@@ -4861,7 +4861,7 @@ loc_4_BB5E:
 loc_4_BB5F:
     jsr     sub_4_BE8B              ; $BB5F
     jsr     sub_4_BC4E              ; $BB62
-    jsr     sub_E579                ; $BB65
+    jsr     Projectile_CheckLinkBody ; $BB65
     jsr     sub_4_BC11              ; $BB68
     lda     frameCounter            ; $BB6B
     bne     loc_4_BB6F              ; $BB6D
