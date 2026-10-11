@@ -1606,16 +1606,16 @@ loc_0_8A9E:
     sta     ppuBuffer0+3,x          ; $8AA2
     ldx     overworldBuffer+$10,y   ; $8AA5
     lda     OverworldTerrainPalettes,x ; $8AA8
-    jsr     Attr_SetBottomRight     ; $8AAB
+    jsr     Attr_SetTopLeft         ; $8AAB
     ldx     overworldBuffer+$11,y   ; $8AAE
     lda     OverworldTerrainPalettes,x ; $8AB1
-    jsr     Attr_SetBottomLeft      ; $8AB4
+    jsr     Attr_SetTopRight        ; $8AB4
     ldx     overworldBuffer+$70,y   ; $8AB7
     lda     OverworldTerrainPalettes,x ; $8ABA
-    jsr     Attr_SetTopRight        ; $8ABD
+    jsr     Attr_SetBottomLeft      ; $8ABD
     ldx     overworldBuffer+$71,y   ; $8AC0
     lda     OverworldTerrainPalettes,x ; $8AC3
-    jsr     Attr_SetTopLeft         ; $8AC6
+    jsr     Attr_SetBottomRight     ; $8AC6
     lda     overworldDirection      ; $8AC9
     and     #$04                    ; $8ACC
     beq     loc_0_8AF0              ; $8ACE
@@ -1763,8 +1763,8 @@ Overworld_QueueAttrAddress:
 ; Overworld_QueueAttrByte
 ;
 ; Build an attribute byte from the palettes (OverworldTerrainPalettes) of
-; the four terrains it covers, and put it in ppuBuffer0.  Attr_SetTopLeft
-; .. Attr_SetBottomRight shift a 2-bit palette into place and OR it in.
+; the four terrains it covers, and put it in ppuBuffer0.  Attr_SetBottomRight
+; .. Attr_SetTopLeft shift a 2-bit palette into place and OR it in.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -1774,17 +1774,17 @@ Overworld_QueueAttrByte:
     ldy     a:objXVelocity+2        ; $8BAD
     ldx     overworldBuffer+$D0,y   ; $8BB0
     lda     OverworldTerrainPalettes,x ; $8BB3
-    jsr     Attr_SetBottomRight     ; $8BB6
+    jsr     Attr_SetTopLeft         ; $8BB6
     ldx     overworldBuffer+$E8,y   ; $8BB9
     lda     OverworldTerrainPalettes,x ; $8BBC
-    jsr     Attr_SetBottomLeft      ; $8BBF
+    jsr     Attr_SetTopRight        ; $8BBF
     iny                             ; $8BC2
     ldx     overworldBuffer+$D0,y   ; $8BC3
     lda     OverworldTerrainPalettes,x ; $8BC6
-    jsr     Attr_SetTopRight        ; $8BC9
+    jsr     Attr_SetBottomLeft      ; $8BC9
     ldx     overworldBuffer+$E8,y   ; $8BCC
     lda     OverworldTerrainPalettes,x ; $8BCF
-    jsr     Attr_SetTopLeft         ; $8BD2
+    jsr     Attr_SetBottomRight     ; $8BD2
     lda     overworldTargetX        ; $8BD5
     lsr     a                       ; $8BD7
     bcs     loc_0_8BEE              ; $8BD8
@@ -1805,28 +1805,28 @@ loc_0_8BEE:
     rts                             ; $8BEE
 
 ; ---------------------------------------------------------------------------
-; Attr_SetTopLeft
+; Attr_SetBottomRight
 ;
 ; OR palette a into the attribute byte at ppuBuffer0+3,temp14, in the
-; quadrant given by the entry point: Attr_SetTopLeft shifts it left by 6,
-; Attr_SetTopRight by 4, Attr_SetBottomLeft by 2, Attr_SetBottomRight not
-; at all.
+; quadrant given by the entry point: Attr_SetBottomRight shifts it left by
+; 6 (bits 7-6), Attr_SetBottomLeft by 4, Attr_SetTopRight by 2, and
+; Attr_SetTopLeft not at all (bits 1-0).
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
-Attr_SetTopLeft:
+Attr_SetBottomRight:
     asl     a                       ; $8BEF
     asl     a                       ; $8BF0
 
-Attr_SetTopRight:
+Attr_SetBottomLeft:
     asl     a                       ; $8BF1
     asl     a                       ; $8BF2
 
-Attr_SetBottomLeft:
+Attr_SetTopRight:
     asl     a                       ; $8BF3
     asl     a                       ; $8BF4
 
-Attr_SetBottomRight:
+Attr_SetTopLeft:
     ldx     temp14                  ; $8BF5
     ora     ppuBuffer0+3,x          ; $8BF7
     sta     ppuBuffer0+3,x          ; $8BFA
