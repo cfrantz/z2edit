@@ -199,6 +199,10 @@ Each is a self-contained work area; order is flexible after Phase 3.
 - Overworld (banks 1-2): map format, movement, random encounters, special
   tiles, raft/bridges/hidden areas.
 - Sideview areas: room loading, scrolling, area transitions.
+  Status (2026-10-11): the area banks' shared tables and object drawers
+  (banks 1-5), the solid tile test, and the remaining data tables of banks
+  0 and 7 are named; docs/engine/areas.md covers the format, objects,
+  scrolling and moving between areas.
 - Towns (bank 3): NPC behavior, dialog system, spell/skill teachers.
   Status (2026-10-11): the conversation engine, its handlers and text
   tables, the town objects and the per-town person sprites are named,

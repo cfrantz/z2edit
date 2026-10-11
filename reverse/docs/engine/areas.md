@@ -82,3 +82,32 @@ is solid if it is at or above its palette group's threshold
 (`SolidTileThresholds_Bank1` ...; the group is bits 7-6 of the tile).
 For group 0 the lookup wraps around and reads an unrelated byte, which
 makes every group 0 tile solid in bank 2 and none in the other banks.
+
+## Scrolling
+
+While Link moves, `Scroll_Update` scrolls the screen to follow him,
+between the area's page limits (`sramScrollMinPage`, `sramScrollMaxPage`,
+by `areaLastPage`); single-screen areas and boss rooms (`scrollFrozen`)
+do not scroll.  At the end of each frame `Scroll_DrawColumns` draws the
+columns coming into view from the tile map, a little at a time (8 steps
+a column), with their attributes.
+
+## Moving Between Areas
+
+Each area has four connections, one per page edge, in
+`sramRoomConnections` (index `areaId` * 4 + page):
+
+- Walking off the left or right edge (`Mode_LeaveArea`, gameMode $10)
+  takes the connection of that edge: $FC-$FF return to the overworld
+  (gameMode $01); anything else enters the connected area (gameMode $07),
+  at the other side (`areaEntrySide`).
+- An elevator leaving the screen (`Elevator_Ai`: Y >= $D8, which going up
+  is reached by wrapping past 0) goes to the area above or below, by the
+  direction held (`Mode_FindConnectedRoom`, gameMode $13).
+- Entering from the overworld, `Location_SetupEntry` and `Mode_EnterArea`
+  (gameMode $12) set up the area and its start page.
+
+Leaving blanks the screen and removes the enemies (`Area_Exit`); the new
+area is loaded (`Area_Load`), drawn a step per frame (`Mode_DrawArea`), and
+`Link_EnterArea` places Link at the edge he came from, or where the
+elevator or a door puts him, and starts the area's music.
