@@ -1635,7 +1635,7 @@ loc_5_962C:
     and     #$03                    ; $9632
     sta     temp3                   ; $9634
     ldx     #$5A                    ; $9636
-    jmp     loc_EF03                ; $9638
+    jmp     Sprite_DrawPairFlipped  ; $9638
 
 sub_5_963B:
     lda     objY                    ; $963B
@@ -2629,7 +2629,7 @@ loc_5_9C5F:
 loc_5_9C60:
     jsr     sub_5_9C99              ; $9C60
     jsr     DoNothing               ; $9C63
-    jmp     loc_E3B9                ; $9C66
+    jmp     Projectile_CheckLinkAlternate ; $9C66
 
 loc_5_9C69:
     dec     objXVelocity+7,x        ; $9C69
@@ -4833,9 +4833,9 @@ loc_5_AE4A:
     .word   loc_5_AF02              ; $AE51  (not observed)
     .word   loc_5_AF19              ; $AE53  (not observed)
 
+; (not observed; code the bootstrap missed, still to be disassembled)
 loc_5_AE55:
-    .word   loc_FCA5                ; $AE55  (not observed)
-; (unreferenced: $AE57-$AEC0, 106 bytes)
+    .byte   $A5, $FC                                                        ; $AE55
     .byte   $29, $07, $D0, $B9, $A5, $FC, $C9, $F0, $D0, $11, $A9, $00, $85, $FC, $AD, $47; $AE57
     .byte   $07, $49, $02, $8D, $47, $07, $A9, $90, $8D, $04, $05, $A5, $34, $0A, $AA, $BD; $AE67
     .byte   $5F, $AB, $85, $00, $BD, $60, $AB, $85, $01, $A5, $2B, $8D, $02, $03, $A5, $2C; $AE77

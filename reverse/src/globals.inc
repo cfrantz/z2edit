@@ -26,7 +26,7 @@ GLOBALS_INC = 1
 .global LevelUp_Update
 .global Pause_Update
 .global BreakingBlocks_Update
-.global loc_0_A7AB
+.global Saria_BuildBridge
 .global Game_StartAtNorthCastle
 .global dat_3_8817
 .global dat_3_9624
@@ -94,8 +94,8 @@ GLOBALS_INC = 1
 .global AreaMap_PutTileDown
 .global AreaMap_NextRow
 .global Overworld_CheckSpecialTerrain
-.global loc_DFD1
-.global loc_DFD2
+.global Overworld_Idle
+.global Overworld_CheckSpecialTerrainInBank
 .global Area_GetMetatilePtrInBank
 .global Area_GetMetatilePtr
 .global Overworld_GetTerrain
@@ -105,10 +105,10 @@ GLOBALS_INC = 1
 .global Overworld_QueueMapStrip
 .global Link_PlaceOnGround
 .global Link_CheckBg
-.global loc_E187
+.global Area_ExitToMode
 .global Link_HurtByEnemy
 .global Enemy_KnockBack
-.global loc_E3B9
+.global Projectile_CheckLinkAlternate
 .global Projectile_GetHitbox
 .global DoNothing
 .global Enemy_CheckProjectileHits
@@ -132,7 +132,7 @@ GLOBALS_INC = 1
 .global Enemy_UpdateBgCollision
 .global Link_Draw
 .global Link_DrawBody
-.global loc_EF03
+.global Sprite_DrawPairFlipped
 .global Sprite_FlipPrevious
 .global Enemy_Draw
 .global Sprite_DrawPairFromTableKeepX
@@ -141,11 +141,10 @@ GLOBALS_INC = 1
 .global Sprite_DrawEnemyPair
 .global Obj_ComputeScreenPos
 .global Obj_ComputeWideOffscreen
-.global loc_FCA5
 .global Area_DrawMetatileColumn
 
 .global Mode_Overworld
-.global loc_0_8140
+.global Death_QueueBank0String
 .global Mode_OverworldSetup
 .global Mode_RaftStart
 .global Mode_Raft

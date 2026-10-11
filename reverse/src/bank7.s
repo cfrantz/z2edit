@@ -414,7 +414,7 @@ Game_UpdateSideViewMenus:
     bcc     @loc_C206               ; $C1FC
     lda     #$01                    ; $C1FE
     sta     pauseState              ; $C200
-    jmp     loc_0_A7AB              ; $C203
+    jmp     Saria_BuildBridge       ; $C203
 
 @loc_C206:
     lda     pauseState              ; $C206
@@ -1961,7 +1961,7 @@ Ppu_SelectString:
 Death_LoseLife:
     jsr     JumpTableBySubStep      ; $CA1B
 ; (inline jump table)
-    .word   loc_0_8140              ; $CA1E
+    .word   Death_QueueBank0String  ; $CA1E
     .word   @loc_CA24               ; $CA20
     .word   @loc_CA72               ; $CA22  (not observed)
 
@@ -3286,7 +3286,7 @@ DrawArea_DrawHud:
     jsr     Mmc1_SetPrgBank0        ; $D0FC
     lda     #$80                    ; $D0FF
     sta     hudRedraw               ; $D101
-    sta     ram_0750                ; $D104
+    sta     hudHalf                 ; $D104
     ldy     ppuBuffer0Len           ; $D107
     jsr     Hud_Draw                ; $D10A
     lda     #$40                    ; $D10D
@@ -3548,7 +3548,7 @@ Obj_MoveX:
     lda     objXHi,x                ; $D201
     adc     temp2                   ; $D203
     sta     objXHi,x                ; $D205
-    jmp     loc_D247                ; $D207
+    jmp     Obj_MoveFinish          ; $D207
 
 ; ---------------------------------------------------------------------------
 ; Obj_MoveY
@@ -3602,7 +3602,15 @@ Obj_MoveY:
     adc     temp2                   ; $D243
     sta     objYHi,x                ; $D245
 
-loc_D247:
+; ---------------------------------------------------------------------------
+; Obj_MoveFinish
+;
+; Shared tail of Obj_MoveX and Obj_MoveY: return a = the pushed value
+; plus temp0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Obj_MoveFinish:
     pla                             ; $D247
     clc                             ; $D248
     adc     temp0                   ; $D249
@@ -3811,7 +3819,14 @@ Ppu_FillNametable:
     iny                             ; $D2E8
     bne     @loop3                  ; $D2E9
 
-loc_D2EB:
+; ---------------------------------------------------------------------------
+; Ppu_WriteStringsDone
+;
+; Return (shared tail of Ppu_WriteStrings).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Ppu_WriteStringsDone:
     rts                             ; $D2EB
 
 ; ---------------------------------------------------------------------------
@@ -3831,7 +3846,7 @@ Ppu_WriteStrings:
     ldy     #$00                    ; $D2EC
     lda     (temp0),y               ; $D2EE
     cmp     #$FF                    ; $D2F0
-    beq     loc_D2EB                ; $D2F2
+    beq     Ppu_WriteStringsDone    ; $D2F2
     cmp     #$4C                    ; $D2F4
     bne     @loc_D307               ; $D2F6
     iny                             ; $D2F8
@@ -4021,7 +4036,7 @@ Mode_SideView:
     sta     gameState               ; $D3DE
     lda     #$00                    ; $D3E1
     sta     PPUMASK                 ; $D3E3
-    jmp     loc_E18A                ; $D3E6
+    jmp     Area_Exit               ; $D3E6
 
 @loc_D3E9:
     jsr     Mmc1_SetPrgBank0        ; $D3E9
@@ -4213,7 +4228,15 @@ Mode_SideView:
 @loc_D545:
     jmp     Scroll_DrawColumns      ; $D545
 
-loc_D548:
+; ---------------------------------------------------------------------------
+; Projectile_Spark
+;
+; Enemy projectile x hit something (state negative): draw it as a spark
+; (Projectile_SetSparkTile) while its state counts up to 0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_Spark:
     ldy     objOamOffset+7,x        ; $D548
     lda     drawOffscreen+2         ; $D54A
     and     #$08                    ; $D54C
@@ -4244,7 +4267,14 @@ Projectile_SetSparkTile:
     lda     #$01                    ; $D567
     sta     oamBuffer+2,y           ; $D569
 
-loc_D56C:
+; ---------------------------------------------------------------------------
+; Projectile_UpdateDone
+;
+; Return (shared tail of Projectile_Update).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_UpdateDone:
     rts                             ; $D56C
 
 ; ---------------------------------------------------------------------------
@@ -4265,8 +4295,8 @@ Projectile_Update:
     jsr     Obj_ComputeScreenPos    ; $D574
     ldx     currentObject           ; $D577
     lda     objState+7,x            ; $D579
-    beq     loc_D56C                ; $D57B
-    bmi     loc_D548                ; $D57D
+    beq     Projectile_UpdateDone   ; $D57B
+    bmi     Projectile_Spark        ; $D57D
     sec                             ; $D57F
     sbc     #$01                    ; $D580
     asl     a                       ; $D582
@@ -4274,7 +4304,7 @@ Projectile_Update:
     lda     sramProjectilePtrs,y    ; $D584
     sta     temp14                  ; $D587
     lda     sramProjectilePtrs+1,y  ; $D589
-    jmp     loc_D6D6                ; $D58C
+    jmp     JumpToTemp14            ; $D58C
 
 EnemyOamOffsets:
     .byte   $50, $68, $80, $98, $B0, $C8, $50, $68, $80, $98, $B0           ; $D58F
@@ -4348,7 +4378,7 @@ Enemy_Update:
     lda     EnemyStateHandlers,y    ; $D5E6
     sta     temp14                  ; $D5E9
     lda     EnemyStateHandlers+1,y  ; $D5EB
-    jmp     loc_D6D6                ; $D5EE
+    jmp     JumpToTemp14            ; $D5EE
 
 ; Enemy state handlers, by enemyActive (ENEMY_STATE_*).
 EnemyStateHandlers:
@@ -4370,7 +4400,7 @@ dat_D5FB:
 ; ---------------------------------------------------------------------------
 Enemy_TrySpawn:
     lda     ram_0759                ; $D603
-    bne     loc_D624                ; $D606
+    bne     Enemy_TrySpawnDone      ; $D606
     lda     ram_071F                ; $D608
     lsr     a                       ; $D60B
     eor     #$01                    ; $D60C
@@ -4388,7 +4418,14 @@ Enemy_TrySpawn:
     cpx     #$00                    ; $D620
     beq     Enemy_Spawn             ; $D622
 
-loc_D624:
+; ---------------------------------------------------------------------------
+; Enemy_TrySpawnDone
+;
+; Return (shared tail of Enemy_TrySpawn).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_TrySpawnDone:
     rts                             ; $D624
 
 Enemy_Spawn:
@@ -4403,7 +4440,7 @@ Enemy_Spawn:
     tya                             ; $D633
     ldy     #$00                    ; $D634
     cmp     (enemyListPtr),y        ; $D636
-    bcs     loc_D624                ; $D638
+    bcs     Enemy_TrySpawnDone      ; $D638
     tay                             ; $D63A
     iny                             ; $D63B
     lda     (enemyListPtr),y        ; $D63C
@@ -4430,7 +4467,7 @@ Enemy_Spawn:
 @loc_D658:
     lda     (enemyListPtr),y        ; $D658
     asl     a                       ; $D65A
-    bcs     loc_D6C0                ; $D65B
+    bcs     Enemy_SpawnDone         ; $D65B
     inc     enemyActive,x           ; $D65D
     pha                             ; $D65F
     sec                             ; $D660
@@ -4483,9 +4520,16 @@ Enemy_Spawn:
     lda     sram_6D45,y             ; $D6B5
     sta     temp14                  ; $D6B8
     lda     sram_6D45+1,y           ; $D6BA
-    jmp     loc_D6D6                ; $D6BD
+    jmp     JumpToTemp14            ; $D6BD
 
-loc_D6C0:
+; ---------------------------------------------------------------------------
+; Enemy_SpawnDone
+;
+; Return (shared tail of Enemy_Spawn).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_SpawnDone:
     rts                             ; $D6C0
 
 ; ---------------------------------------------------------------------------
@@ -4500,7 +4544,7 @@ loc_D6C0:
 Enemy_HurtLinkOnContact:
     lda     objCollision+1,x        ; $D6C1
     and     #$10                    ; $D6C3
-    beq     loc_D6C0                ; $D6C5
+    beq     Enemy_SpawnDone         ; $D6C5
     jmp     Link_HurtByEnemy        ; $D6C7
 
 ; ---------------------------------------------------------------------------
@@ -4519,7 +4563,14 @@ Enemy_RunAi:
     sta     temp14                  ; $D6D1
     lda     sramEnemyAiPtrs+1,y     ; $D6D3
 
-loc_D6D6:
+; ---------------------------------------------------------------------------
+; JumpToTemp14
+;
+; Jump to the address in temp14 (low byte) and a (high byte).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+JumpToTemp14:
     sta     temp15                  ; $D6D6
     jmp     (temp14)                ; $D6D8
 ; (unreferenced: $D6DB-$D78A, 176 bytes)
@@ -4680,7 +4731,7 @@ Enemy_Hop:
 
 @loc_D867:
     lda     objYVelocity+1,x        ; $D867
-    bne     loc_D885                ; $D86A
+    bne     Enemy_ShootIfFacingLinkDone ; $D86A
 
 ; ---------------------------------------------------------------------------
 ; Enemy_ShootIfFacingLink
@@ -4699,13 +4750,20 @@ Enemy_ShootIfFacingLink:
     iny                             ; $D875
     tya                             ; $D876
     cmp     objFacing+1,x           ; $D877
-    bne     loc_D885                ; $D879
+    bne     Enemy_ShootIfFacingLinkDone ; $D879
     jsr     Enemy_FireProjectile    ; $D87B
-    bcs     loc_D885                ; $D87E
+    bcs     Enemy_ShootIfFacingLinkDone ; $D87E
     lda     #$03                    ; $D880
     sta     a:objState+7,y          ; $D882
 
-loc_D885:
+; ---------------------------------------------------------------------------
+; Enemy_ShootIfFacingLinkDone
+;
+; Return (shared tail of Enemy_ShootIfFacingLink).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_ShootIfFacingLinkDone:
     rts                             ; $D885
 
 dat_D886:
@@ -4790,7 +4848,7 @@ dat_D8BF:
     sta     ppuScrollX              ; $D911
     sta     scrollX                 ; $D913
     lda     #$13                    ; $D916
-    jmp     loc_E187                ; $D918
+    jmp     Area_ExitToMode         ; $D918
 
 @loc_D91B:
     jmp     Enemy_UpdateCommon      ; $D91B
@@ -4883,7 +4941,7 @@ Enemy_UpdateLanding:
     beq     @loc_D9BA               ; $D996
     inc     ram_00AF,x              ; $D998
     cpy     #$11                    ; $D99A
-    bne     loc_D9FD                ; $D99C
+    bne     Enemy_UpdateLandingDone ; $D99C
     lda     #$F0                    ; $D99E
     sta     objState+7              ; $D9A0
     lda     objX+1,x                ; $D9A2
@@ -4903,7 +4961,7 @@ Enemy_UpdateLanding:
     lda     objCollision+1,x        ; $D9BA
     and     #$10                    ; $D9BC
     sta     ram_05E7                ; $D9BE
-    beq     loc_D9FD                ; $D9C1
+    beq     Enemy_UpdateLandingDone ; $D9C1
     lda     linkFairy               ; $D9C3
     bne     @loc_D9D0               ; $D9C5
     lda     #$00                    ; $D9C7
@@ -4920,7 +4978,7 @@ Enemy_UpdateLanding:
     lda     itemOwned+ITEM_MAGIC_KEY ; $D9DA
     bne     @loc_D9E7               ; $D9DD
     lda     keyCount                ; $D9DF
-    beq     loc_D9FD                ; $D9E2
+    beq     Enemy_UpdateLandingDone ; $D9E2
     dec     keyCount                ; $D9E4
 
 @loc_D9E7:
@@ -4936,7 +4994,14 @@ Enemy_UpdateLanding:
     sta     objYVelocity            ; $D9F8
     inc     ram_00AF,x              ; $D9FB
 
-loc_D9FD:
+; ---------------------------------------------------------------------------
+; Enemy_UpdateLandingDone
+;
+; Return (shared tail of Enemy_UpdateLanding).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_UpdateLandingDone:
     rts                             ; $D9FD
 
 dat_D9FE:
@@ -4957,7 +5022,7 @@ dat_DA00:
 ; ---------------------------------------------------------------------------
 Enemy_SkipAiIfStunned:
     lda     enemyStunTimer,x        ; $DA02
-    beq     loc_D9FD                ; $DA05
+    beq     Enemy_UpdateLandingDone ; $DA05
     pla                             ; $DA07
     pla                             ; $DA08
     jmp     Enemy_UpdateCommon      ; $DA09
@@ -5404,8 +5469,8 @@ Enemy_Die:
     lda     sramEnemyHitbox,y       ; $DCC4
     ldy     timerFast+TIMER_ENEMY,x ; $DCC7
     cmp     #$FF                    ; $DCCA
-    beq     loc_DCDB                ; $DCCC
-    jmp     loc_EEB2                ; $DCCE
+    beq     Enemy_DieStep           ; $DCCC
+    jmp     Enemy_DrawDying         ; $DCCE
 ; (unreferenced: $DCD1-$DCD1, 1 bytes)
 
 dat_DCD1:
@@ -5415,7 +5480,15 @@ dat_DCD1:
 dat_DCD3:
     .byte   $3F, $18, $04, $0F, $0F, $0F, $0F, $FF                          ; $DCD3
 
-loc_DCDB:
+; ---------------------------------------------------------------------------
+; Enemy_DieStep
+;
+; A step of an enemy's death (Enemy_Die): flash the screen for some
+; enemies (y = $68).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_DieStep:
     cpy     #$68                    ; $DCDB
     bne     @loc_DCED               ; $DCDD
     lda     #$E8                    ; $DCDF
@@ -5518,7 +5591,7 @@ ExperienceTilesRight:
 ; ---------------------------------------------------------------------------
 Enemy_ShowExperience:
     lda     timerFast+TIMER_ENEMY,x ; $DD6C
-    beq     loc_DDEC                ; $DD6F
+    beq     Enemy_AwardExperience   ; $DD6F
     ldy     objOamOffset+1,x        ; $DD71
     lda     enemyExpClass,x         ; $DD73
     and     #$0F                    ; $DD76
@@ -5570,7 +5643,15 @@ dat_DDC0:
 dat_DDDC:
     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $02, $03; $DDDC
 
-loc_DDEC:
+; ---------------------------------------------------------------------------
+; Enemy_AwardExperience
+;
+; Add the experience for enemy x's experience class to experiencePending
+; (or drop an item, Enemy_DropItem, for a negative class).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_AwardExperience:
     lda     enemyExpClass,x         ; $DDEC
     bmi     Enemy_DropItem          ; $DDEF
     tay                             ; $DDF1
@@ -5847,7 +5928,7 @@ Overworld_SetMapPosition:
     lda     #$08                    ; $DF13
     sta     temp0                   ; $DF15
     asl     a                       ; $DF17
-    sta     ram_007D                ; $DF18
+    sta     overworldMoveFrames     ; $DF18
     lda     temp10                  ; $DF1A
     asl     a                       ; $DF1C
     asl     a                       ; $DF1D
@@ -5862,12 +5943,12 @@ Overworld_SetMapPosition:
     and     #$0F                    ; $DF2A
     asl     a                       ; $DF2C
     adc     temp1                   ; $DF2D
-    sta     ram_007A                ; $DF2F
+    sta     overworldDrawAddrLo     ; $DF2F
     lda     temp10                  ; $DF31
     and     #$10                    ; $DF33
     lsr     a                       ; $DF35
     ora     temp0                   ; $DF36
-    sta     ram_0079                ; $DF38
+    sta     overworldDrawAddrHi     ; $DF38
     lda     #$00                    ; $DF3A
     sta     overworldDrawStep       ; $DF3C
     rts                             ; $DF3E
@@ -5961,15 +6042,15 @@ Overworld_CheckSpecialTerrain:
     beq     @loc_DFBD               ; $DF8C
     lda     currentRegion           ; $DF8E
     cmp     #$02                    ; $DF91
-    bne     loc_DFD1                ; $DF93
+    bne     Overworld_Idle          ; $DF93
     cpx     #$03                    ; $DF95
     bne     @loc_DFB9               ; $DF97
     lda     temp4                   ; $DF99
     cmp     #$33                    ; $DF9B
-    bne     loc_DFD1                ; $DF9D
+    bne     Overworld_Idle          ; $DF9D
     lda     temp0                   ; $DF9F
     cmp     #$3E                    ; $DFA1
-    bne     loc_DFD1                ; $DFA3
+    bne     Overworld_Idle          ; $DFA3
     lda     #$5C                    ; $DFA5
     sta     ppuBuffer0+3            ; $DFA7
     lda     #$5D                    ; $DFAA
@@ -5987,17 +6068,33 @@ Overworld_CheckSpecialTerrain:
     lda     dat_DF62,x              ; $DFBD
     sta     (temp14),y              ; $DFC0
     cpx     #$02                    ; $DFC2
-    bcc     loc_DFD1                ; $DFC4
+    bcc     Overworld_Idle          ; $DFC4
     dex                             ; $DFC6
     dex                             ; $DFC7
     ldy     dat_DF66,x              ; $DFC8
     lda     dat_DF68,x              ; $DFCB
     sta     sramLocY,y              ; $DFCE
 
-loc_DFD1:
+; ---------------------------------------------------------------------------
+; Overworld_Idle
+;
+; Return: the last step of the overworld drawing step tables (and a shared
+; tail of Overworld_CheckSpecialTerrain).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Overworld_Idle:
     rts                             ; $DFD1
 
-loc_DFD2:
+; ---------------------------------------------------------------------------
+; Overworld_CheckSpecialTerrainInBank
+;
+; Map the area bank, run Overworld_CheckSpecialTerrain, and map bank 0
+; back.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Overworld_CheckSpecialTerrainInBank:
     jsr     Mmc1_SetPrgBankArea     ; $DFD2
     jsr     Overworld_CheckSpecialTerrain ; $DFD5
     jmp     Mmc1_SetPrgBank0        ; $DFD8
@@ -6228,7 +6325,7 @@ Link_CheckBgInBank:
     bne     @done                   ; $E0EF
     inc     ram_075B                ; $E0F1
     lda     #$16                    ; $E0F4
-    jmp     loc_E187                ; $E0F6
+    jmp     Area_ExitToMode         ; $E0F6
 
 @loc_E0F9:
     jmp     @loc_E12B               ; $E0F9
@@ -6277,9 +6374,9 @@ Link_CheckBgInBank:
     jsr     Obj_ProbeBg             ; $E147
     lda     linkMode                ; $E14A
     cmp     #$01                    ; $E14C
-    bne     loc_E19D                ; $E14E
+    bne     Link_CheckBgInBankDone  ; $E14E
     lda     timerFast+TIMER_LINK_ENTER ; $E150
-    bne     loc_E19E                ; $E153
+    bne     Link_CheckFellOut       ; $E153
     lda     drawOffscreen           ; $E155
     ldy     scrollFrozen            ; $E157
     beq     @loc_E16F               ; $E15A
@@ -6301,7 +6398,7 @@ Link_CheckBgInBank:
 
 @loc_E16F:
     and     #$06                    ; $E16F
-    beq     loc_E19E                ; $E171
+    beq     Link_CheckFellOut       ; $E171
     and     #$04                    ; $E173
     beq     @loc_E179               ; $E175
     inc     objXHi                  ; $E177
@@ -6314,10 +6411,24 @@ Link_CheckBgInBank:
     sta     objXVelocity            ; $E183
     lda     #$10                    ; $E185
 
-loc_E187:
+; ---------------------------------------------------------------------------
+; Area_ExitToMode
+;
+; Set gameMode to a and leave the area (Area_Exit).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_ExitToMode:
     sta     gameMode                ; $E187
 
-loc_E18A:
+; ---------------------------------------------------------------------------
+; Area_Exit
+;
+; Leave the side view area: blank the screen and despawn the enemies.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Area_Exit:
     inc     renderingOff            ; $E18A
     ldx     #$05                    ; $E18D
 
@@ -6332,10 +6443,26 @@ loc_E18A:
     bpl     @loop                   ; $E199
     ldx     currentObject           ; $E19B
 
-loc_E19D:
+; ---------------------------------------------------------------------------
+; Link_CheckBgInBankDone
+;
+; Return (shared tail of Link_CheckBgInBank).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Link_CheckBgInBankDone:
     rts                             ; $E19D
 
-loc_E19E:
+; ---------------------------------------------------------------------------
+; Link_CheckFellOut
+;
+; If Link (or the fairy, at Y >= $E4) has fallen off the bottom of the
+; screen, advance gameMode (to $0C, falling into the area below) and leave
+; the area.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_CheckFellOut:
     lda     linkFairy               ; $E19E
     beq     @loc_E1A8               ; $E1A0
     lda     objY                    ; $E1A2
@@ -6345,13 +6472,13 @@ loc_E19E:
 @loc_E1A8:
     lda     objYHi                  ; $E1A8
     cmp     #$02                    ; $E1AA
-    bcc     loc_E19D                ; $E1AC
+    bcc     Link_CheckBgInBankDone  ; $E1AC
 
 @loc_E1AE:
     lda     #$00                    ; $E1AE
     sta     linkFairy               ; $E1B0
     inc     gameMode                ; $E1B2
-    jmp     loc_E18A                ; $E1B5
+    jmp     Area_Exit               ; $E1B5
 
 ; ---------------------------------------------------------------------------
 ; Obj_ProbeBgPair
@@ -6678,7 +6805,15 @@ Enemy_KnockBack:
     iny                             ; $E38A
     iny                             ; $E38B
 
-loc_E38C:
+; ---------------------------------------------------------------------------
+; Enemy_SetKnockBack
+;
+; Set enemy x's knockback speed (ram_043E) from dat_E369,y, doubled while
+; it is stunned.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_SetKnockBack:
     lda     dat_E369,y              ; $E38C
     ldy     enemyStunTimer,x        ; $E38F
     beq     @loc_E395               ; $E392
@@ -6708,22 +6843,53 @@ Link_KnockBack:
     sta     objFacing+1,x           ; $E3A6
     iny                             ; $E3A8
     cpy     temp13                  ; $E3A9
-    beq     loc_E3B8                ; $E3AB
+    beq     Link_KnockBackDone      ; $E3AB
     lda     temp0                   ; $E3AD
-    beq     loc_E3B3                ; $E3AF
+    beq     Link_SetKnockBackVelocity ; $E3AF
 
-loc_E3B1:
+; ---------------------------------------------------------------------------
+; Link_KnockBackOtherWay
+;
+; Link_SetKnockBackVelocity for the other direction.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_KnockBackOtherWay:
     iny                             ; $E3B1
     iny                             ; $E3B2
 
-loc_E3B3:
+; ---------------------------------------------------------------------------
+; Link_SetKnockBackVelocity
+;
+; Set Link's X velocity from dat_E36C,y.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_SetKnockBackVelocity:
     lda     dat_E36C,y              ; $E3B3
     sta     objXVelocity            ; $E3B6
 
-loc_E3B8:
+; ---------------------------------------------------------------------------
+; Link_KnockBackDone
+;
+; Return (shared tail of Link_KnockBack).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Link_KnockBackDone:
     rts                             ; $E3B8
 
-loc_E3B9:
+; ---------------------------------------------------------------------------
+; Projectile_CheckLinkAlternate
+;
+; Projectile_CheckLink on alternate frames (by projectile slot): test
+; enemy projectile x against Link's shield, with the reflect spell, and
+; then against Link (Projectile_HitLinkBody).  Used by the enemy
+; projectile routines in the area banks.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_CheckLinkAlternate:
     lda     frameCounter            ; $E3B9
     lsr     a                       ; $E3BB
     txa                             ; $E3BC
@@ -6736,7 +6902,7 @@ loc_E3B9:
     plp                             ; $E3C6
 
 @loc_E3C7:
-    bcs     loc_E3B8                ; $E3C7
+    bcs     Link_KnockBackDone      ; $E3C7
     jsr     Projectile_GetHitbox    ; $E3C9
     ldy     objState+7,x            ; $E3CC
     lda     sramProjectileFlags,y   ; $E3CE
@@ -6744,7 +6910,7 @@ loc_E3B9:
     cmp     #$80                    ; $E3D3
     bne     @loc_E3DD               ; $E3D5
     ldy     reflectSpellActive      ; $E3D7
-    beq     loc_E442                ; $E3DA
+    beq     Projectile_HitLinkBody  ; $E3DA
 ; (code below not executed in the test movies)
     asl     a                       ; $E3DC
 ; (end of code not executed in the test movies)
@@ -6760,14 +6926,14 @@ loc_E3B9:
 @loc_E3E8:
     tya                             ; $E3E8
     cmp     objFacing+7,x           ; $E3E9
-    bne     loc_E441                ; $E3EB
+    bne     Projectile_CheckLinkAlternateDone ; $E3EB
 
 @loc_E3ED:
     lda     linkFairy               ; $E3ED
-    bne     loc_E442                ; $E3EF
+    bne     Projectile_HitLinkBody  ; $E3EF
     jsr     Link_GetShieldHitbox    ; $E3F1
     jsr     Hitbox_Overlap          ; $E3F4
-    bcc     loc_E442                ; $E3F7
+    bcc     Projectile_HitLinkBody  ; $E3F7
     lda     ram_00D9                ; $E3F9
     beq     @loc_E413               ; $E3FB
     cmp     #$40                    ; $E3FD
@@ -6800,8 +6966,10 @@ loc_E3B9:
     lda     #$F2                    ; $E42A
     sta     objState+7,x            ; $E42C
 
-dat_E42E:
     rts                             ; $E42E
+
+; X speed of a deflected projectile, by its direction (objFacing 1 or 2).
+ProjectileDeflectSpeeds:
     .byte   $F8, $08                                                        ; $E42F
 
 ; ---------------------------------------------------------------------------
@@ -6817,18 +6985,33 @@ Projectile_Deflect:
     lda     #$10                    ; $E431
     sta     sfxRequest+2            ; $E433
     ldy     objFacing+7,x           ; $E435
-    lda     dat_E42E,y              ; $E437
+    lda     ProjectileDeflectSpeeds - 1,y ; $E437
     sta     objXVelocity+7,x        ; $E43A
     lda     #$F8                    ; $E43C
     sta     objYVelocity+7,x        ; $E43E
 
-loc_E441:
+; ---------------------------------------------------------------------------
+; Projectile_CheckLinkAlternateDone
+;
+; Return (shared tail of Projectile_CheckLinkAlternate).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_CheckLinkAlternateDone:
     rts                             ; $E441
 
-loc_E442:
+; ---------------------------------------------------------------------------
+; Projectile_HitLinkBody
+;
+; If enemy projectile x touches Link, remove it (unless it survives
+; hitting him) and hurt him unless he is invulnerable.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_HitLinkBody:
     jsr     Link_GetHitbox          ; $E442
     jsr     Hitbox_Overlap          ; $E445
-    bcc     loc_E441                ; $E448
+    bcc     Projectile_CheckLinkAlternateDone ; $E448
     ldy     objState+7,x            ; $E44A
     lda     sramProjectileFlags,y   ; $E44C
     and     #$20                    ; $E44F
@@ -6838,12 +7021,12 @@ loc_E442:
 
 @loc_E457:
     lda     timerSlow+TIMER_INVULNERABLE ; $E457
-    bne     loc_E441                ; $E45A
+    bne     Projectile_CheckLinkAlternateDone ; $E45A
     lda     sramProjectileFlags,y   ; $E45C
     and     #$07                    ; $E45F
     jsr     Link_TakeDamage         ; $E461
     ldy     objFacing+7,x           ; $E464
-    jmp     loc_E3B1                ; $E466
+    jmp     Link_KnockBackOtherWay  ; $E466
 
 ; ---------------------------------------------------------------------------
 ; Projectile_GetHitbox
@@ -6914,7 +7097,7 @@ Enemy_CheckProjectileHits:
     bcc     @loc_E4B8               ; $E4AD
     lda     a:ram_006D,y            ; $E4AF
     tay                             ; $E4B2
-    jmp     loc_E38C                ; $E4B3
+    jmp     Enemy_SetKnockBack      ; $E4B3
 ; (unreferenced: $E4B6-$E4B7, 2 bytes)
     .byte   $A4, $11                                                        ; $E4B6
 
@@ -7083,7 +7266,7 @@ Projectile_CheckLinkBody:
     jsr     Shield_GetHitbox        ; $E579
     jsr     Link_GetHitbox          ; $E57C
     jsr     Hitbox_Overlap          ; $E57F
-    bcc     loc_E5F2                ; $E582
+    bcc     Enemy_GetSpecialHitboxDone ; $E582
 ; (code below not executed in the test movies)
     jsr     Link_HurtByEnemy        ; $E584
     bcc     @done                   ; $E587
@@ -7151,13 +7334,20 @@ Enemy_GetSpecialHitbox:
 
 @loc_E5E5:
     cpy     #$04                    ; $E5E5
-    bne     loc_E5F2                ; $E5E7
+    bne     Enemy_GetSpecialHitboxDone ; $E5E7
     ldy     objFacing+1,x           ; $E5E9
     lda     temp4                   ; $E5EB
     adc     dat_E5B7,y              ; $E5ED
     sta     temp4                   ; $E5F0
 
-loc_E5F2:
+; ---------------------------------------------------------------------------
+; Enemy_GetSpecialHitboxDone
+;
+; Return (shared tail of Enemy_GetSpecialHitbox).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_GetSpecialHitboxDone:
     rts                             ; $E5F2
 
 ; ---------------------------------------------------------------------------
@@ -7182,12 +7372,19 @@ Shield_GetHitbox:
     sta     temp6                   ; $E608
     lda     temp4                   ; $E60A
     adc     temp6                   ; $E60C
-    bcc     loc_E616                ; $E60E
+    bcc     Shield_GetHitboxDone    ; $E60E
     lda     temp4                   ; $E610
     eor     #$FF                    ; $E612
     sta     temp6                   ; $E614
 
-loc_E616:
+; ---------------------------------------------------------------------------
+; Shield_GetHitboxDone
+;
+; Return (shared tail of Shield_GetHitbox).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Shield_GetHitboxDone:
     rts                             ; $E616
 
 Enemy_CheckProjectileHitsSpecial:
@@ -7196,11 +7393,11 @@ Enemy_CheckProjectileHitsSpecial:
     and     #$0C                    ; $E61A
     ora     drawOffscreen+1         ; $E61C
     and     #$FC                    ; $E61E
-    bne     loc_E616                ; $E620
+    bne     Shield_GetHitboxDone    ; $E620
     lda     objY+1,x                ; $E622
     adc     #$10                    ; $E624
     cmp     #$30                    ; $E626
-    bcc     loc_E616                ; $E628
+    bcc     Shield_GetHitboxDone    ; $E628
     jsr     Enemy_GetSpecialHitbox  ; $E62A
     ldy     #$01                    ; $E62D
 
@@ -7222,9 +7419,17 @@ Enemy_CheckProjectileHitsSpecial:
     bpl     @loop                   ; $E64A
     jsr     Sword_GetHitbox         ; $E64C
     jsr     Hitbox_Overlap          ; $E64F
-    bcc     loc_E616                ; $E652
+    bcc     Shield_GetHitboxDone    ; $E652
 
-loc_E654:
+; ---------------------------------------------------------------------------
+; Enemy_SwordClink
+;
+; The sword hit an enemy that it cannot hurt: play the clink sound, and
+; bounce Link up off a downward thrust.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_SwordClink:
     lda     #$02                    ; $E654
     sta     sfxRequest              ; $E656
     lda     #$00                    ; $E658
@@ -7260,14 +7465,14 @@ SwordDamage:
 Enemy_CheckSwordHit:
     lda     swordY                  ; $E677
     cmp     #$F8                    ; $E67A
-    beq     loc_E6A6                ; $E67C
+    beq     Enemy_ClearHitFlag      ; $E67C
     ldy     enemyType,x             ; $E67E
     lda     sramEnemyFlags,y        ; $E680
     and     #$10                    ; $E683
-    bne     loc_E6A6                ; $E685
+    bne     Enemy_ClearHitFlag      ; $E685
     lda     enemyActive,x           ; $E687
     cmp     #$01                    ; $E689
-    bne     loc_E6A6                ; $E68B
+    bne     Enemy_ClearHitFlag      ; $E68B
     jsr     Sword_GetHitbox         ; $E68D
     lda     #$00                    ; $E690
     sta     temp11                  ; $E692
@@ -7286,32 +7491,61 @@ Enemy_CheckSwordHit:
 Enemy_CheckHit:
     ldy     enemyType,x             ; $E694
     cpy     #ENEMY_TYPE_ELEVATOR    ; $E696
-    beq     loc_E6AC                ; $E698
+    beq     Enemy_CheckHitMiss      ; $E698
     cpy     #$02                    ; $E69A
-    beq     loc_E6AC                ; $E69C
+    beq     Enemy_CheckHitMiss      ; $E69C
     jsr     Enemy_GetHitbox         ; $E69E
     jsr     Hitbox_Overlap          ; $E6A1
-    bcs     loc_E6AE                ; $E6A4
+    bcs     Enemy_HitBySword        ; $E6A4
 
-loc_E6A6:
+; ---------------------------------------------------------------------------
+; Enemy_ClearHitFlag
+;
+; Clear enemy x's hit flag (objCollision bit 5) and return carry clear.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_ClearHitFlag:
     lda     objCollision+1,x        ; $E6A6
     and     #$DF                    ; $E6A8
     sta     objCollision+1,x        ; $E6AA
 
-loc_E6AC:
+; ---------------------------------------------------------------------------
+; Enemy_CheckHitMiss
+;
+; Return carry clear.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_CheckHitMiss:
     clc                             ; $E6AC
 
-loc_E6AD:
+; ---------------------------------------------------------------------------
+; Enemy_CheckHitDone
+;
+; Return (shared tail of Enemy_CheckHit).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Enemy_CheckHitDone:
     rts                             ; $E6AD
 
-loc_E6AE:
+; ---------------------------------------------------------------------------
+; Enemy_HitBySword
+;
+; The sword (or a Link projectile, temp11) hit enemy x: clink off enemies
+; it cannot hurt, otherwise damage it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_HitBySword:
     ldy     enemyType,x             ; $E6AE
     lda     temp11                  ; $E6B0
     bne     @loc_E6BE               ; $E6B2
     lda     sramEnemyAttr,y         ; $E6B4
     and     #$20                    ; $E6B7
     beq     @loc_E6BE               ; $E6B9
-    jmp     loc_E654                ; $E6BB
+    jmp     Enemy_SwordClink        ; $E6BB
 
 @loc_E6BE:
     lda     temp11                  ; $E6BE
@@ -7319,11 +7553,11 @@ loc_E6AE:
     cpy     #$01                    ; $E6C2
     bne     @loc_E6CB               ; $E6C4
     lda     enemyStunTimer,x        ; $E6C6
-    bne     loc_E6AC                ; $E6C9
+    bne     Enemy_CheckHitMiss      ; $E6C9
 
 @loc_E6CB:
     lda     temp11                  ; $E6CB
-    beq     loc_E6F3                ; $E6CD
+    beq     Enemy_CheckDownThrust   ; $E6CD
     lda     sramEnemyAttr,y         ; $E6CF
     and     #$20                    ; $E6D2
     beq     @loc_E6DD               ; $E6D4
@@ -7335,7 +7569,7 @@ loc_E6AE:
     ldy     enemyType,x             ; $E6DD
     lda     sramEnemyDamage,y       ; $E6DF
     and     #$20                    ; $E6E2
-    beq     loc_E6F3                ; $E6E4
+    beq     Enemy_CheckDownThrust   ; $E6E4
 
 @loc_E6E6:
     ldy     ram_0011                ; $E6E6
@@ -7355,7 +7589,14 @@ LinkProjectile_Disintegrate:
     sta     a:objState+13,y         ; $E6EF
     rts                             ; $E6F2
 
-loc_E6F3:
+; ---------------------------------------------------------------------------
+; Enemy_CheckDownThrust
+;
+; Check Link's downward thrust (pose 8) against enemy x: only from above.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_CheckDownThrust:
     lda     objState                ; $E6F3
     cmp     #$08                    ; $E6F5
     bne     @loc_E708               ; $E6F7
@@ -7363,14 +7604,14 @@ loc_E6F3:
     bne     @loc_E708               ; $E6FB
     lda     objY                    ; $E6FD
     cmp     objY+1,x                ; $E6FF
-    bcc     loc_E6A6                ; $E701
+    bcc     Enemy_ClearHitFlag      ; $E701
     lda     #$00                    ; $E703
     sta     objYVelocity            ; $E705
 
 @loc_E708:
     lda     objCollision+1,x        ; $E708
     and     #$20                    ; $E70A
-    bne     loc_E6AD                ; $E70C
+    bne     Enemy_CheckHitDone      ; $E70C
     lda     objCollision+1,x        ; $E70E
     ora     #$20                    ; $E710
     sta     objCollision+1,x        ; $E712
@@ -7500,9 +7741,9 @@ Item_Collect:
 
 @loc_E7BB:
     cpy     #$0E                    ; $E7BB
-    bcc     loc_E7F4                ; $E7BD
+    bcc     Item_CollectExpBag      ; $E7BD
     cpy     #$10                    ; $E7BF
-    bcs     loc_E80C                ; $E7C1
+    bcs     Item_CollectSpecial     ; $E7C1
     lda     #$10                    ; $E7C3
     sta     musicRequest            ; $E7C5
     lda     #$00                    ; $E7C7
@@ -7537,7 +7778,15 @@ dat_E7E6:
 ; (unreferenced: $E7F3-$E7F3, 1 bytes)
     .byte   $0D                                                             ; $E7F3
 
-loc_E7F4:
+; ---------------------------------------------------------------------------
+; Item_CollectExpBag
+;
+; Collect an experience bag (item kinds 9-13): award its experience
+; (Enemy_Kill with the class from dat_E7E6) with a sound.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Item_CollectExpBag:
     jsr     Enemy_Kill              ; $E7F4
     lda     ram_00AF,x              ; $E7F7
     and     #$7F                    ; $E7F9
@@ -7550,7 +7799,15 @@ loc_E7F4:
     sta     timerFast+TIMER_ENEMY,x ; $E808
     rts                             ; $E80B
 
-loc_E80C:
+; ---------------------------------------------------------------------------
+; Item_CollectSpecial
+;
+; Collect a special item (kind $10 and up): the fanfare, then a 1-up
+; doll ($12), ...
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Item_CollectSpecial:
     lda     #$10                    ; $E80C
     sta     musicRequest            ; $E80E
     lda     #$00                    ; $E810
@@ -7911,11 +8168,11 @@ Hitbox_Overlap:
 
 Projectile_HitsBgLow:
     ldy     #$1E                    ; $EA14
-    bne     loc_EA1E                ; $EA16
+    bne     Projectile_HitsBgCheckLow ; $EA16
 
 Projectile_HitsBgAnyHeight:
     ldy     #$1E                    ; $EA18
-    bne     loc_EA24                ; $EA1A
+    bne     Projectile_HitsBgProbe  ; $EA1A
 
 ; ---------------------------------------------------------------------------
 ; Projectile_HitsBg
@@ -7931,12 +8188,28 @@ Projectile_HitsBgAnyHeight:
 Projectile_HitsBg:
     ldy     #$1F                    ; $EA1C
 
-loc_EA1E:
+; ---------------------------------------------------------------------------
+; Projectile_HitsBgCheckLow
+;
+; Test enemy projectile x against the background at probe y if it is low
+; enough (Y >= $90).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_HitsBgCheckLow:
     lda     objY+7,x                ; $EA1E
     cmp     #$90                    ; $EA20
-    bcc     loc_EA31                ; $EA22
+    bcc     Projectile_HitsBgDone   ; $EA22
 
-loc_EA24:
+; ---------------------------------------------------------------------------
+; Projectile_HitsBgProbe
+;
+; Test enemy projectile x against the background at probe y; carry set if
+; it hits a solid tile.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_HitsBgProbe:
     txa                             ; $EA24
     clc                             ; $EA25
     adc     #$07                    ; $EA26
@@ -7945,7 +8218,14 @@ loc_EA24:
     jsr     AreaBank::IsSolidTile   ; $EA2C
     ldx     currentObject           ; $EA2F
 
-loc_EA31:
+; ---------------------------------------------------------------------------
+; Projectile_HitsBgDone
+;
+; Return (shared tail of Projectile_HitsBg).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_HitsBgDone:
     rts                             ; $EA31
 
 Enemy_UpdateBgCollision:
@@ -8124,10 +8404,17 @@ dat_EBAD:
 dat_EBB0:
     .byte   $01, $02, $03, $04, $03, $02, $01, $00                          ; $EBB0
 
-loc_EBB8:
+; ---------------------------------------------------------------------------
+; Link_DrawFairy
+;
+; Draw the fairy (Link under the fairy spell), bobbing up and down.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_DrawFairy:
     lda     drawOffscreen           ; $EBB8
     and     #$06                    ; $EBBA
-    bne     loc_EBEF                ; $EBBC
+    bne     Link_DrawDone           ; $EBBC
     lda     frameCounter            ; $EBBE
     and     #$38                    ; $EBC0
     lsr     a                       ; $EBC2
@@ -8156,12 +8443,19 @@ loc_EBB8:
 @loc_EBEC:
     sty     oamBuffer+10            ; $EBEC
 
-loc_EBEF:
+; ---------------------------------------------------------------------------
+; Link_DrawDone
+;
+; Return (shared tail of Link_Draw).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Link_DrawDone:
     rts                             ; $EBEF
 
 Link_Draw:
     lda     ram_048D                ; $EBF0
-    bne     loc_EBEF                ; $EBF3
+    bne     Link_DrawDone           ; $EBF3
     ldx     #$00                    ; $EBF5
     stx     ram_0011                ; $EBF7
     lda     #$08                    ; $EBF9
@@ -8193,7 +8487,7 @@ Link_DrawBody:
     lda     #$F8                    ; $EC19
     sta     swordY,x                ; $EC1B
     lda     linkFairy               ; $EC1E
-    bne     loc_EBB8                ; $EC20
+    bne     Link_DrawFairy          ; $EC20
     lda     linkSlowed              ; $EC22
     beq     @loc_EC40               ; $EC25
     lda     objY                    ; $EC27
@@ -8306,7 +8600,7 @@ Link_DrawBody:
     sta     oamBuffer+24,y          ; $ECCA
 
 @loc_ECCD:
-    jmp     loc_ED67                ; $ECCD
+    jmp     Sword_SetPositionFromSprite ; $ECCD
 
 @loc_ECD0:
     cmp     #$07                    ; $ECD0
@@ -8322,7 +8616,7 @@ Link_DrawBody:
 
 @loc_ECE6:
     cmp     #$08                    ; $ECE6
-    bne     loc_ED02                ; $ECE8
+    bne     Sword_UpdateHitPosition ; $ECE8
 
 ; ---------------------------------------------------------------------------
 ; Sword_UpdatePosition
@@ -8346,7 +8640,15 @@ Sword_UpdatePosition:
     sta     swordY,x                ; $ECFE
     rts                             ; $ED01
 
-loc_ED02:
+; ---------------------------------------------------------------------------
+; Sword_UpdateHitPosition
+;
+; Set the sword's hit position (swordY, swordX) for object ram_0011 from
+; its pose.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sword_UpdateHitPosition:
     ldx     ram_0011                ; $ED02
     lda     objState,x              ; $ED04
     cmp     #$09                    ; $ED06
@@ -8397,14 +8699,22 @@ loc_ED02:
 @done:
     rts                             ; $ED66
 
-loc_ED67:
+; ---------------------------------------------------------------------------
+; Sword_SetPositionFromSprite
+;
+; Set the sword's position from its sprite and continue with
+; Sword_UpdateHitPosition.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sword_SetPositionFromSprite:
     ldx     ram_0011                ; $ED67
     lda     oamBuffer+24,y          ; $ED69
     sta     swordY,x                ; $ED6C
     lda     oamBuffer+27,y          ; $ED6F
     sta     swordX,x                ; $ED72
 dat_ED77 := * + 2
-    jmp     loc_ED02                ; $ED75
+    jmp     Sword_UpdateHitPosition ; $ED75
     .byte   $F8, $08                                                        ; $ED78
 
 ; ---------------------------------------------------------------------------
@@ -8573,7 +8883,14 @@ dat_EE80:
 dat_EEAD:
     .byte   $00, $02, $02, $00, $00                                         ; $EEAD
 
-loc_EEB2:
+; ---------------------------------------------------------------------------
+; Enemy_DrawDying
+;
+; Draw a dying enemy (from Enemy_Die).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Enemy_DrawDying:
     cpy     #$18                    ; $EEB2
     bcc     @loc_EEC7               ; $EEB4
     tya                             ; $EEB6
@@ -8618,14 +8935,29 @@ loc_EEB2:
     jsr     Sprite_DrawPairFromTable ; $EEF8
     jsr     Sprite_FlipPrevious     ; $EEFB
     pla                             ; $EEFE
-    bpl     loc_EF06                ; $EEFF
+    bpl     Sprite_FlipPreviousForObject ; $EEFF
     dex                             ; $EF01
     dex                             ; $EF02
 
-loc_EF03:
+; ---------------------------------------------------------------------------
+; Sprite_DrawPairFlipped
+;
+; Draw a sprite pair from the table (Sprite_DrawPairFromTable) and flip
+; the last sprite horizontally (Sprite_FlipPrevious).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sprite_DrawPairFlipped:
     jsr     Sprite_DrawPairFromTable ; $EF03
 
-loc_EF06:
+; ---------------------------------------------------------------------------
+; Sprite_FlipPreviousForObject
+;
+; Restore x from currentObject and flip the previous sprite.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sprite_FlipPreviousForObject:
     ldx     currentObject           ; $EF06
 
 Sprite_FlipPrevious:
@@ -8758,7 +9090,7 @@ Enemy_Draw:
     inx                             ; $EFCE
 
 @loc_EFCF:
-    jmp     loc_EF03                ; $EFCF
+    jmp     Sprite_DrawPairFlipped  ; $EFCF
 
 @loc_EFD2:
     lda     #$02                    ; $EFD2
@@ -8878,7 +9210,7 @@ Sprite_DrawEnemyPairKeepX:
 @loc_F0DD:
     lda     drawOffscreen+1         ; $F0DD
     and     #$08                    ; $F0DF
-    bne     loc_F10B                ; $F0E1
+    bne     Sprite_Return           ; $F0E1
     lda     frameCounter            ; $F0E3
     and     #$38                    ; $F0E5
     lsr     a                       ; $F0E7
@@ -8902,7 +9234,14 @@ dat_F0FC:
     adc     #$68                    ; $F106
     sta     oamBuffer+1,y           ; $F108
 
-loc_F10B:
+; ---------------------------------------------------------------------------
+; Sprite_Return
+;
+; Return (shared tail).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Sprite_Return:
     rts                             ; $F10B
     .byte   $03, $02, $00, $01, $01, $01                                    ; $F10C
 
@@ -9088,7 +9427,7 @@ Sprite_DrawEnemyPair:
     lda     #$00                    ; $F212
 
 @loc_F214:
-    bpl     loc_F236                ; $F214
+    bpl     Sprite_DrawPairWithAttr ; $F214
 
 Sprite_DrawPairFromTable:
     lda     temp2                   ; $F216
@@ -9099,7 +9438,7 @@ Sprite_DrawPairFromTable:
     lda     dat_EE52,x              ; $F221
     sta     oamBuffer+1,y           ; $F224
     lda     #$40                    ; $F227
-    bne     loc_F236                ; $F229
+    bne     Sprite_DrawPairWithAttr ; $F229
 
 @loc_F22B:
     sta     oamBuffer+1,y           ; $F22B
@@ -9107,7 +9446,14 @@ Sprite_DrawPairFromTable:
     sta     oamBuffer+5,y           ; $F231
     lda     #$00                    ; $F234
 
-loc_F236:
+; ---------------------------------------------------------------------------
+; Sprite_DrawPairWithAttr
+;
+; Draw a sprite pair with attributes a (Sprite_SetPairAttr).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sprite_DrawPairWithAttr:
     pha                             ; $F236
     lda     #$01                    ; $F237
     sta     temp15                  ; $F239
@@ -9404,7 +9750,6 @@ Obj_ComputeWideOffscreen:
     .byte   $D7, $56, $A5, $48, $6A, $AD, $55, $55, $4A, $55, $A5, $DA, $FF, $95, $80, $80; $FC90
     .byte   $E8, $FF, $2D, $92, $20                                         ; $FCA0
 
-loc_FCA5:
     .byte   $F0, $FD, $AD, $16, $22, $68, $F7, $AD, $8A, $08, $55, $AB, $6A, $55, $D2, $FE; $FCA5
     .byte   $FF, $00, $00, $40, $FF, $FF, $70, $80, $80, $FF, $37, $BD, $08, $C0, $FD, $4A; $FCB5
     .byte   $AD, $02, $62, $4B, $A9, $FF, $FF, $2F, $00, $00, $F0, $FF, $2F, $0A, $00, $F0; $FCC5
@@ -9560,7 +9905,7 @@ Area_DrawMetatileColumn:
 
 @loc_FED3:
     stx     temp1                   ; $FED3
-    lda     ram_0464,x              ; $FED5
+    lda     columnTiles,x           ; $FED5
     and     #$C0                    ; $FED8
     sta     temp3                   ; $FEDA
     asl     a                       ; $FEDC
@@ -9572,7 +9917,7 @@ Area_DrawMetatileColumn:
     sta     temp14                  ; $FEE4
     lda     AreaBank::MetatilePtrs+1,y ; $FEE6
     sta     temp15                  ; $FEE9
-    lda     ram_0464,x              ; $FEEB
+    lda     columnTiles,x           ; $FEEB
     and     #$3F                    ; $FEEE
     asl     a                       ; $FEF0
     asl     a                       ; $FEF1

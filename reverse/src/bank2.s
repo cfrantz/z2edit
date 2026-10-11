@@ -484,7 +484,7 @@ Overworld_QueueMapStrip_Bank2:
     .assert Overworld_QueueMapStrip_Bank2 = OverworldBank::QueueMapStrip, error, "interface address moved"
     jsr     Overworld_SetMapPosition ; $83A1
     lda     #$00                    ; $83A4
-    sta     ram_007D                ; $83A6
+    sta     overworldMoveFrames     ; $83A6
     ldy     #$0B                    ; $83A8
 
 loc_2_83AA:
@@ -492,10 +492,10 @@ loc_2_83AA:
     sta     ppuBuffer0Len,y         ; $83AD
     dey                             ; $83B0
     bpl     loc_2_83AA              ; $83B1
-    lda     ram_0079                ; $83B3
+    lda     overworldDrawAddrHi     ; $83B3
     sta     ppuBuffer0              ; $83B5
     sta     ppuBuffer0+5            ; $83B8
-    lda     ram_007A                ; $83BB
+    lda     overworldDrawAddrLo     ; $83BB
     sta     ppuBuffer0+1            ; $83BD
     clc                             ; $83C0
     adc     #$01                    ; $83C1
@@ -1109,7 +1109,7 @@ loc_2_9673:
     jsr     sub_2_967E              ; $9673
     jsr     DoNothing               ; $9676
 dat_2_967B := * + 2
-    jmp     loc_E3B9                ; $9679
+    jmp     Projectile_CheckLinkAlternate ; $9679
     .byte   $40, $00                                                        ; $967C
 
 sub_2_967E:

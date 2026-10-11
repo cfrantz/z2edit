@@ -1270,7 +1270,7 @@ loc_4_995F:
     jsr     sub_4_996A              ; $995F
     jsr     DoNothing               ; $9962
 dat_4_9967 := * + 2
-    jmp     loc_E3B9                ; $9965
+    jmp     Projectile_CheckLinkAlternate ; $9965
     .byte   $40, $00                                                        ; $9968
 
 sub_4_996A:
@@ -2748,7 +2748,7 @@ loc_4_ADD6:
 loc_4_ADD7:
     jsr     sub_4_996A              ; $ADD7
     jsr     DoNothing               ; $ADDA
-    jmp     loc_E3B9                ; $ADDD
+    jmp     Projectile_CheckLinkAlternate ; $ADDD
 
 loc_4_ADE0:
     dec     objXVelocity+7,x        ; $ADE0
@@ -4299,7 +4299,7 @@ loc_4_B7B0:
     sta     temp3                   ; $B7B8
     ldx     #$5A                    ; $B7BA
 dat_4_B7BE := * + 2
-    jmp     loc_EF03                ; $B7BC
+    jmp     Sprite_DrawPairFlipped  ; $B7BC
     .byte   $08                                                             ; $B7BF
 
 dat_4_B7C0:
