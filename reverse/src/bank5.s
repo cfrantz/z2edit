@@ -42,13 +42,13 @@ Area_DrawLargeObject_Bank5:
     lda     areaBuildPos            ; $80F5
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
-    bne     loc_5_8103              ; $80FC
+    bne     @loc_8103               ; $80FC
     txa                             ; $80FE
     clc                             ; $80FF
     adc     #$0F                    ; $8100
     tax                             ; $8102
 
-loc_5_8103:
+@loc_8103:
     txa                             ; $8103
     jsr     JumpTable               ; $8104
 ; (inline jump table)
@@ -159,11 +159,11 @@ loc_5_81BE:
     tax                             ; $81C3
     jsr     AreaMap_GetPagePtr      ; $81C4
 
-loc_5_81C7:
+@loop:
     lda     ram_0112                ; $81C7
     jsr     AreaMap_PutTileRight    ; $81CA
     dex                             ; $81CD
-    bpl     loc_5_81C7              ; $81CE
+    bpl     @loop                   ; $81CE
     rts                             ; $81D0
 
 loc_5_81D1:
@@ -186,11 +186,11 @@ loc_5_81EE:
     tax                             ; $81F3
     jsr     AreaMap_GetPagePtr      ; $81F4
 
-loc_5_81F7:
+@loop:
     lda     ram_0112                ; $81F7
     jsr     AreaMap_PutTileDown     ; $81FA
     dex                             ; $81FD
-    bpl     loc_5_81F7              ; $81FE
+    bpl     @loop                   ; $81FE
     rts                             ; $8200
 
 sub_5_8201:
@@ -201,16 +201,16 @@ sub_5_8201:
     lda     (areaDataPtr),y         ; $8206
     asl     a                       ; $8208
     lda     sub_5_81AD,x            ; $8209
-    bcs     loc_5_8211              ; $820C
+    bcs     @loc_8211               ; $820C
     lda     dat_5_818F,x            ; $820E
 
-loc_5_8211:
+@loc_8211:
     sta     ram_0112                ; $8211
     lda     dat_5_81AE,x            ; $8214
-    bcs     loc_5_821C              ; $8217
+    bcs     @loc_821C               ; $8217
     lda     dat_5_8190,x            ; $8219
 
-loc_5_821C:
+@loc_821C:
     sta     temp0                   ; $821C
     rts                             ; $821E
 
@@ -222,23 +222,23 @@ loc_5_821F:
     lda     #$83                    ; $8229
     sta     ram_0112                ; $822B
 
-loc_5_822E:
+@loop:
     lda     areaObjectType          ; $822E
     and     #$0F                    ; $8231
     tax                             ; $8233
     jsr     AreaMap_GetPagePtr      ; $8234
 
-loc_5_8237:
+@loop2:
     lda     ram_0112                ; $8237
     jsr     AreaMap_PutTileRight    ; $823A
     dex                             ; $823D
-    bpl     loc_5_8237              ; $823E
+    bpl     @loop2                  ; $823E
     lda     #$84                    ; $8240
     sta     ram_0112                ; $8242
     jsr     AreaMap_NextBuildRow    ; $8245
     and     #$F0                    ; $8248
     cmp     #$D0                    ; $824A
-    bcc     loc_5_822E              ; $824C
+    bcc     @loop                   ; $824C
     rts                             ; $824E
 
 loc_5_824F:
@@ -287,28 +287,28 @@ loc_5_8280:
 loc_5_828F:
     jsr     AreaMap_GetPagePtr      ; $828F
 
-loc_5_8292:
+@loop:
     lda     #$40                    ; $8292
     jsr     AreaMap_PutTileDown     ; $8294
     and     #$F0                    ; $8297
     cmp     #$D0                    ; $8299
-    bcc     loc_5_8292              ; $829B
+    bcc     @loop                   ; $829B
     rts                             ; $829D
 
 loc_5_829E:
     jsr     AreaMap_GetPagePtr      ; $829E
     ldx     #$01                    ; $82A1
     lda     #$86                    ; $82A3
-    jmp     loc_5_82AA              ; $82A5
+    jmp     @loc_82AA               ; $82A5
 
-loc_5_82A8:
+@loop:
     lda     #$87                    ; $82A8
 
-loc_5_82AA:
+@loc_82AA:
     sta     (temp14),y              ; $82AA
     iny                             ; $82AC
     dex                             ; $82AD
-    bpl     loc_5_82A8              ; $82AE
+    bpl     @loop                   ; $82AE
     rts                             ; $82B0
 
 loc_5_82B1:
@@ -601,22 +601,22 @@ loc_5_8B50:
     sta     currentWorld            ; $8B57
     lda     #$3E                    ; $8B5A
     ldy     sceneStep               ; $8B5C
-    bne     loc_5_8B63              ; $8B5F
+    bne     @loc_8B63               ; $8B5F
     lda     #$3D                    ; $8B61
 
-loc_5_8B63:
+@loc_8B63:
     sta     areaId                  ; $8B63
     jmp     Game_BlankAndNextMode   ; $8B66
 
 loc_5_8B69:
     ldy     sceneStep               ; $8B69
-    bne     loc_5_8B77              ; $8B6C
+    bne     @loc_8B77               ; $8B6C
     ldx     #$04                    ; $8B6E
     stx     musicRequest            ; $8B70
     lda     #$06                    ; $8B72
     sta     currentWorld            ; $8B74
 
-loc_5_8B77:
+@loc_8B77:
     lda     PPUSTATUS               ; $8B77
     lda     ppuCtrlShadow           ; $8B7A
     and     #$FB                    ; $8B7C
@@ -628,16 +628,16 @@ loc_5_8B77:
     ldy     #$03                    ; $8B8B
     lda     #$9A                    ; $8B8D
 
-loc_5_8B8F:
+@loop:
     ldx     #$20                    ; $8B8F
 
-loc_5_8B91:
+@loop2:
     sta     PPUDATA                 ; $8B91
     dex                             ; $8B94
-    bne     loc_5_8B91              ; $8B95
+    bne     @loop2                  ; $8B95
     eor     #$01                    ; $8B97
     dey                             ; $8B99
-    bpl     loc_5_8B8F              ; $8B9A
+    bpl     @loop                   ; $8B9A
     lda     #$23                    ; $8B9C
 dat_5_8BA0 := * + 2
     .assert dat_5_8BA0 = AreaBank::EnemyLists+768, error, "interface address moved"
@@ -646,11 +646,11 @@ dat_5_8BA0 := * + 2
     sta     PPUADDR                 ; $8BA3
     ldy     #$08                    ; $8BA6
 
-loc_5_8BA8:
+@loop:
     lda     #$55                    ; $8BA8
     sta     PPUDATA                 ; $8BAA
     dey                             ; $8BAD
-    bne     loc_5_8BA8              ; $8BAE
+    bne     @loop                   ; $8BAE
     jmp     loc_5_9255              ; $8BB0
 
 dat_5_8BB3:
@@ -663,13 +663,13 @@ loc_5_8BBF:
     ldx     ppuBuffer0Len           ; $8BBF
     ldy     #$00                    ; $8BC2
 
-loc_5_8BC4:
+@loop:
     lda     dat_5_8BB3,y            ; $8BC4
     sta     ppuBuffer0,x            ; $8BC7
     inx                             ; $8BCA
     iny                             ; $8BCB
     cpy     #$08                    ; $8BCC
-    bne     loc_5_8BC4              ; $8BCE
+    bne     @loop                   ; $8BCE
     lda     frameCounter            ; $8BD0
     lsr     a                       ; $8BD2
     lsr     a                       ; $8BD3
@@ -695,7 +695,8 @@ loc_5_8BC4:
     .word   loc_5_8FB4              ; $8BFB
     .word   loc_5_9042              ; $8BFD
     .word   loc_5_9248              ; $8BFF
-    .byte   $6F, $8E, $1C, $92                                              ; $8C01
+    .word   loc_5_8E6F              ; $8C01  (not observed)
+    .word   Ending_SetSecondQuest   ; $8C03  (not observed)
 
 dat_5_8C05:
     .byte   $A0, $D6, $01, $78, $A0, $D6, $41, $80                          ; $8C05
@@ -706,11 +707,11 @@ dat_5_8C0D:
 loc_5_8C1D:
     ldy     #$07                    ; $8C1D
 
-loc_5_8C1F:
+@loop:
     lda     dat_5_8C05,y            ; $8C1F
     sta     oamBuffer+48,y          ; $8C22
     dey                             ; $8C25
-    bpl     loc_5_8C1F              ; $8C26
+    bpl     @loop                   ; $8C26
     lda     #$03                    ; $8C28
     sta     oamBuffer+50            ; $8C2A
     ora     #$40                    ; $8C2D
@@ -721,54 +722,54 @@ loc_5_8C1F:
 sub_5_8C38:
     ldy     #$0F                    ; $8C38
 
-loc_5_8C3A:
+@loop:
     lda     dat_5_8C0D,y            ; $8C3A
     sta     oamBuffer+16,y          ; $8C3D
     dey                             ; $8C40
-    bpl     loc_5_8C3A              ; $8C41
+    bpl     @loop                   ; $8C41
     rts                             ; $8C43
 
 sub_5_8C44:
     lda     objY+14                 ; $8C44
-    bne     loc_5_8C4C              ; $8C46
+    bne     @loc_8C4C               ; $8C46
     lda     #$60                    ; $8C48
     sta     objY+14                 ; $8C4A
 
-loc_5_8C4C:
+@loc_8C4C:
     dec     objY+14                 ; $8C4C
-    bne     loc_5_8C5E              ; $8C4E
+    bne     @done                   ; $8C4E
     inc     sceneStep               ; $8C50
     lda     sceneStep               ; $8C53
     cmp     #$0A                    ; $8C56
-    bne     loc_5_8C5E              ; $8C58
+    bne     @done                   ; $8C58
     lda     #$08                    ; $8C5A
     sta     musicRequest            ; $8C5C
 
-loc_5_8C5E:
+@done:
     rts                             ; $8C5E
 
 loc_5_8C5F:
     jsr     sub_5_8C38              ; $8C5F
     lda     objY+15                 ; $8C62
     cmp     #$60                    ; $8C64
-    bne     loc_5_8C6E              ; $8C66
+    bne     @loc_8C6E               ; $8C66
     jsr     sub_5_8C8B              ; $8C68
     jmp     sub_5_8C44              ; $8C6B
 
-loc_5_8C6E:
+@loc_8C6E:
     lda     objY+15                 ; $8C6E
-    bne     loc_5_8C7F              ; $8C70
+    bne     @loc_8C7F               ; $8C70
     ldx     #$02                    ; $8C72
 
-loc_5_8C74:
+@loop:
     lda     #$A0                    ; $8C74
     sta     objY+15,x               ; $8C76
     lda     #$78                    ; $8C78
     sta     objXHi,x                ; $8C7A
     dex                             ; $8C7C
-    bpl     loc_5_8C74              ; $8C7D
+    bpl     @loop                   ; $8C7D
 
-loc_5_8C7F:
+@loc_8C7F:
     lda     frameCounter            ; $8C7F
     and     #$07                    ; $8C81
     bne     sub_5_8C8B              ; $8C83
@@ -779,7 +780,7 @@ loc_5_8C7F:
 sub_5_8C8B:
     ldx     #$02                    ; $8C8B
 
-loc_5_8C8D:
+@loop:
     txa                             ; $8C8D
     asl     a                       ; $8C8E
     asl     a                       ; $8C8F
@@ -801,38 +802,38 @@ loc_5_8C8D:
     adc     #$08                    ; $8CB2
     sta     oamBuffer+55,y          ; $8CB4
     dex                             ; $8CB7
-    bpl     loc_5_8C8D              ; $8CB8
+    bpl     @loop                   ; $8CB8
     rts                             ; $8CBA
 
 loc_5_8CBB:
     jsr     sub_5_8C8B              ; $8CBB
     jsr     sub_5_8C38              ; $8CBE
     lda     objY+10                 ; $8CC1
-    bne     loc_5_8CD0              ; $8CC3
+    bne     @loc_8CD0               ; $8CC3
     lda     #$04                    ; $8CC5
     sta     sfxRequest              ; $8CC7
     lda     #$E0                    ; $8CC9
     sta     spellFlash              ; $8CCB
     inc     objY+10                 ; $8CCE
 
-loc_5_8CD0:
+@loc_8CD0:
     lda     ram_0751                ; $8CD0
     sta     sram_69CC               ; $8CD3
     lda     spellFlash              ; $8CD6
     asl     a                       ; $8CD9
-    bne     loc_5_8CE3              ; $8CDA
+    bne     @loc_8CE3               ; $8CDA
     sta     spellFlash              ; $8CDC
     jmp     sub_5_8C44              ; $8CDF
 ; (code below not executed in the test movies)
 
-loc_5_8CE2:
+@done:
     rts                             ; $8CE2
 ; (end of code not executed in the test movies)
 
-loc_5_8CE3:
+@loc_8CE3:
     ldx     ppuBuffer0Len           ; $8CE3
     cpx     #$19                    ; $8CE6
-    bcs     loc_5_8CE2              ; $8CE8
+    bcs     @done                   ; $8CE8
     dec     spellFlash              ; $8CEA
     lda     #$3F                    ; $8CED
     sta     ppuBuffer0,x            ; $8CEF
@@ -845,22 +846,22 @@ loc_5_8CE3:
     iny                             ; $8D00
     and     #$38                    ; $8D01
     cmp     #$08                    ; $8D03
-    bne     loc_5_8D10              ; $8D05
+    bne     @loc_8D10               ; $8D05
 ; (code below not executed in the test movies)
     lda     currentWorld            ; $8D07
     ora     itemOwned               ; $8D0A
-    bne     loc_5_8D10              ; $8D0D
+    bne     @loc_8D10               ; $8D0D
     iny                             ; $8D0F
 ; (end of code not executed in the test movies)
 
-loc_5_8D10:
+@loc_8D10:
     lda     spellFlash              ; $8D10
     and     #$7F                    ; $8D13
-    beq     loc_5_8D1A              ; $8D15
+    beq     @loc_8D1A               ; $8D15
     and     #$03                    ; $8D17
     tay                             ; $8D19
 
-loc_5_8D1A:
+@loc_8D1A:
     lda     sram_69CE,y             ; $8D1A
     sta     ppuBuffer0+4,x          ; $8D1D
     lda     sram_69D4,y             ; $8D20
@@ -869,12 +870,12 @@ loc_5_8D1A:
     sta     ppuBuffer0+6,x          ; $8D29
     lda     spellFlash              ; $8D2C
     asl     a                       ; $8D2F
-    bcs     loc_5_8D34              ; $8D30
+    bcs     @loc_8D34               ; $8D30
 ; (code below not executed in the test movies)
     ldy     #$04                    ; $8D32
 ; (end of code not executed in the test movies)
 
-loc_5_8D34:
+@loc_8D34:
     lda     sram_69C8,y             ; $8D34
     sta     ppuBuffer0+3,x          ; $8D37
     lda     #$FF                    ; $8D3A
@@ -897,13 +898,13 @@ loc_5_8D64:
     ldy     #$00                    ; $8D64
     ldx     ppuBuffer0Len           ; $8D66
 
-loc_5_8D69:
+@loop:
     lda     dat_5_8D4E,y            ; $8D69
     sta     ppuBuffer0,x            ; $8D6C
     inx                             ; $8D6F
     iny                             ; $8D70
     cpy     #$16                    ; $8D71
-    bne     loc_5_8D69              ; $8D73
+    bne     @loop                   ; $8D73
     dex                             ; $8D75
     stx     ppuBuffer0Len           ; $8D76
     jsr     sub_5_8C8B              ; $8D79
@@ -928,13 +929,13 @@ loc_5_8DBA:
     ldx     ppuBuffer0Len           ; $8DBA
     ldy     #$00                    ; $8DBD
 
-loc_5_8DBF:
+@loop:
     lda     dat_5_8DAD,y            ; $8DBF
     sta     ppuBuffer0,x            ; $8DC2
     inx                             ; $8DC5
     iny                             ; $8DC6
     cpy     #$0D                    ; $8DC7
-    bne     loc_5_8DBF              ; $8DC9
+    bne     @loop                   ; $8DC9
     dex                             ; $8DCB
     stx     ppuBuffer0Len           ; $8DCC
     jsr     sub_5_8DD5              ; $8DCF
@@ -943,11 +944,11 @@ loc_5_8DBF:
 sub_5_8DD5:
     ldy     #$1F                    ; $8DD5
 
-loc_5_8DD7:
+@loop:
     lda     dat_5_8D8D,y            ; $8DD7
     sta     oamBuffer+16,y          ; $8DDA
     dey                             ; $8DDD
-    bpl     loc_5_8DD7              ; $8DDE
+    bpl     @loop                   ; $8DDE
     rts                             ; $8DE0
 
 dat_5_8DE1:
@@ -960,30 +961,30 @@ loc_5_8E0A:
     ldx     objXHi+3                ; $8E0D
     lda     dat_5_8DE1,x            ; $8E0F
     cmp     #$FF                    ; $8E12
-    bne     loc_5_8E1D              ; $8E14
+    bne     @loc_8E1D               ; $8E14
     lda     #$00                    ; $8E16
     sta     objY+10                 ; $8E18
     jmp     sub_5_8C44              ; $8E1A
 
-loc_5_8E1D:
+@loc_8E1D:
     cmp     #$00                    ; $8E1D
-    bne     loc_5_8E26              ; $8E1F
+    bne     @loc_8E26               ; $8E1F
     inc     objXHi+3                ; $8E21
     jmp     loc_5_8E0A              ; $8E23
 
-loc_5_8E26:
+@loc_8E26:
     lda     frameCounter            ; $8E26
     and     #$0F                    ; $8E28
-    bne     loc_5_8E6E              ; $8E2A
+    bne     @done                   ; $8E2A
     lda     #$21                    ; $8E2C
     sta     temp0                   ; $8E2E
     lda     #$CB                    ; $8E30
     sta     temp1                   ; $8E32
     lda     objXHi+3                ; $8E34
 
-loc_5_8E36:
+@loc_8E36:
     cmp     #$0A                    ; $8E36
-    bmi     loc_5_8E4D              ; $8E38
+    bmi     @loc_8E4D               ; $8E38
     sec                             ; $8E3A
     sbc     #$0A                    ; $8E3B
     pha                             ; $8E3D
@@ -991,14 +992,14 @@ loc_5_8E36:
     clc                             ; $8E40
     adc     #$40                    ; $8E41
     sta     temp1                   ; $8E43
-    bcc     loc_5_8E49              ; $8E45
+    bcc     @loc_8E49               ; $8E45
     inc     temp0                   ; $8E47
 
-loc_5_8E49:
+@loc_8E49:
     pla                             ; $8E49
-    jmp     loc_5_8E36              ; $8E4A
+    jmp     @loc_8E36               ; $8E4A
 
-loc_5_8E4D:
+@loc_8E4D:
     inc     objXHi+3                ; $8E4D
     clc                             ; $8E4F
     adc     temp1                   ; $8E50
@@ -1014,30 +1015,30 @@ loc_5_8E4D:
     lda     #$02                    ; $8E6A
     sta     sfxRequest+3            ; $8E6C
 
-loc_5_8E6E:
+@done:
     rts                             ; $8E6E
 
 loc_5_8E6F:
     lda     sceneStep               ; $8E6F
     cmp     #$0D                    ; $8E72
-    beq     loc_5_8E83              ; $8E74
+    beq     @loc_8E83               ; $8E74
     cmp     #$09                    ; $8E76
-    beq     loc_5_8E80              ; $8E78
+    beq     @loc_8E80               ; $8E78
     jsr     sub_5_8DD5              ; $8E7A
-    jmp     loc_5_8E83              ; $8E7D
+    jmp     @loc_8E83               ; $8E7D
 
-loc_5_8E80:
+@loc_8E80:
     jsr     sub_5_8F6B              ; $8E80
 
-loc_5_8E83:
+@loc_8E83:
     lda     objY+10                 ; $8E83
     jsr     JumpTable               ; $8E85
 ; (inline jump table)
-    .word   loc_5_8E8E              ; $8E88
+    .word   @loc_8E8E               ; $8E88
     .word   loc_5_8EAE              ; $8E8A
     .word   loc_5_8F1B              ; $8E8C
 
-loc_5_8E8E:
+@loc_8E8E:
     lda     #$21                    ; $8E8E
     sta     objYHi+14               ; $8E90
     lda     #$60                    ; $8E92
@@ -1058,9 +1059,9 @@ dat_5_8EA8:
 loc_5_8EAE:
     lda     frameCounter            ; $8EAE
     and     #$07                    ; $8EB0
-    bne     loc_5_8EFA              ; $8EB2
+    bne     @done                   ; $8EB2
     lda     objXHi+4                ; $8EB4
-    bne     loc_5_8EF8              ; $8EB6
+    bne     @loc_8EF8               ; $8EB6
     lda     ram_0028                ; $8EB8
     clc                             ; $8EBA
     adc     #$20                    ; $8EBB
@@ -1070,11 +1071,11 @@ loc_5_8EAE:
     sta     ppuBuffer0              ; $8EC4
     ldx     #$06                    ; $8EC7
 
-loc_5_8EC9:
+@loop:
     lda     dat_5_8EA1,x            ; $8EC9
     sta     ppuBuffer0+2,x          ; $8ECC
     dex                             ; $8ECF
-    bpl     loc_5_8EC9              ; $8ED0
+    bpl     @loop                   ; $8ED0
     lda     objY+9                  ; $8ED2
     and     #$0E                    ; $8ED4
     lsr     a                       ; $8ED6
@@ -1082,25 +1083,25 @@ loc_5_8EC9:
     lda     objY+5                  ; $8ED8
     sta     ppuBuffer0+5            ; $8EDA
     cmp     #$F0                    ; $8EDD
-    bne     loc_5_8EE3              ; $8EDF
+    bne     @loc_8EE3               ; $8EDF
     ldx     #$01                    ; $8EE1
 
-loc_5_8EE3:
+@loc_8EE3:
     lda     dat_5_8EA8,x            ; $8EE3
     sta     ppuBuffer0+7            ; $8EE6
     inc     objY+9                  ; $8EE9
     lda     objY+9                  ; $8EEB
     and     #$03                    ; $8EED
-    bne     loc_5_8EF8              ; $8EEF
+    bne     @loc_8EF8               ; $8EEF
     lda     objY+5                  ; $8EF1
     clc                             ; $8EF3
     adc     #$08                    ; $8EF4
     sta     objY+5                  ; $8EF6
 
-loc_5_8EF8:
+@loc_8EF8:
     inc     objY+10                 ; $8EF8
 
-loc_5_8EFA:
+@done:
     rts                             ; $8EFA
 
 dat_5_8EFB:
@@ -1118,14 +1119,14 @@ dat_5_8EFE:
 
 loc_5_8F1B:
     lda     objY+14                 ; $8F1B
-    bne     loc_5_8F62              ; $8F1D
+    bne     @loc_8F62               ; $8F1D
     lda     #$00                    ; $8F1F
     sta     temp0                   ; $8F21
     jsr     sub_5_8FF6              ; $8F23
     inc     objXHi+4                ; $8F26
     lda     objXHi+4                ; $8F28
     cmp     #$04                    ; $8F2A
-    bne     loc_5_8F65              ; $8F2C
+    bne     @loc_8F65               ; $8F2C
     lda     #$00                    ; $8F2E
     sta     objXHi+4                ; $8F30
     lda     ram_0028                ; $8F32
@@ -1137,28 +1138,28 @@ loc_5_8F1B:
     sta     objYHi+14               ; $8F3D
     lda     sceneStep               ; $8F3F
     cmp     #$0D                    ; $8F42
-    beq     loc_5_8F52              ; $8F44
+    beq     @loc_8F52               ; $8F44
     lda     objYHi+14               ; $8F46
     cmp     #$22                    ; $8F48
-    bne     loc_5_8F52              ; $8F4A
+    bne     @loc_8F52               ; $8F4A
     lda     ram_0028                ; $8F4C
     cmp     #$E0                    ; $8F4E
-    beq     loc_5_8F62              ; $8F50
+    beq     @loc_8F62               ; $8F50
 
-loc_5_8F52:
+@loc_8F52:
     lda     objYHi+14               ; $8F52
     cmp     #$23                    ; $8F54
-    bne     loc_5_8F65              ; $8F56
+    bne     @loc_8F65               ; $8F56
     lda     ram_0028                ; $8F58
-    beq     loc_5_8F65              ; $8F5A
+    beq     @loc_8F65               ; $8F5A
     lda     #$00                    ; $8F5C
     sta     objXHi+4                ; $8F5E
     sta     ram_0028                ; $8F60
 
-loc_5_8F62:
+@loc_8F62:
     jmp     sub_5_8C44              ; $8F62
 
-loc_5_8F65:
+@loc_8F65:
     dec     objY+10                 ; $8F65
     rts                             ; $8F67
 
@@ -1186,33 +1187,33 @@ dat_5_8F8F:
 
 loc_5_8F9E:
     lda     objY+14                 ; $8F9E
-    bne     loc_5_8FB1              ; $8FA0
+    bne     @loc_8FB1               ; $8FA0
     ldy     #$0E                    ; $8FA2
 
-loc_5_8FA4:
+@loop:
     lda     dat_5_8F8F,y            ; $8FA4
     sta     ppuBuffer0,y            ; $8FA7
     dey                             ; $8FAA
-    bpl     loc_5_8FA4              ; $8FAB
+    bpl     @loop                   ; $8FAB
     lda     #$01                    ; $8FAD
     sta     objY+10                 ; $8FAF
 
-loc_5_8FB1:
+@loc_8FB1:
     jmp     loc_5_8F68              ; $8FB1
 
 loc_5_8FB4:
     lda     objY+14                 ; $8FB4
-    bne     loc_5_8FF2              ; $8FB6
+    bne     @loc_8FF2               ; $8FB6
     lda     frameCounter            ; $8FB8
     and     #$07                    ; $8FBA
-    bne     loc_5_8FF5              ; $8FBC
+    bne     @done                   ; $8FBC
     lda     #$10                    ; $8FBE
     sta     temp0                   ; $8FC0
     jsr     sub_5_8FF6              ; $8FC2
     inc     objXHi+4                ; $8FC5
     lda     objXHi+4                ; $8FC7
     cmp     #$04                    ; $8FC9
-    bne     loc_5_8FF5              ; $8FCB
+    bne     @done                   ; $8FCB
     lda     #$00                    ; $8FCD
     sta     objXHi+4                ; $8FCF
     lda     ram_0028                ; $8FD1
@@ -1223,20 +1224,20 @@ loc_5_8FB4:
     sbc     #$00                    ; $8FDA
     sta     objYHi+14               ; $8FDC
     cmp     #$21                    ; $8FDE
-    bne     loc_5_8FF5              ; $8FE0
+    bne     @done                   ; $8FE0
     lda     ram_0028                ; $8FE2
     cmp     #$40                    ; $8FE4
-    bne     loc_5_8FF5              ; $8FE6
+    bne     @done                   ; $8FE6
     lda     #$11                    ; $8FE8
     sta     objY+2                  ; $8FEA
     lda     #$00                    ; $8FEC
     sta     objY+3                  ; $8FEE
     sta     objY+10                 ; $8FF0
 
-loc_5_8FF2:
+@loc_8FF2:
     jmp     sub_5_8C44              ; $8FF2
 
-loc_5_8FF5:
+@done:
     rts                             ; $8FF5
 
 sub_5_8FF6:
@@ -1260,7 +1261,7 @@ sub_5_8FF6:
     sta     ppuBuffer0+2            ; $9018
     sta     ppuBuffer0+37           ; $901B
 
-loc_5_901E:
+@loop:
     lda     dat_5_8EFB,y            ; $901E
     sta     ppuBuffer0+3,x          ; $9021
     lda     dat_5_8EFC,y            ; $9024
@@ -1272,7 +1273,7 @@ loc_5_901E:
     inx                             ; $9036
     inx                             ; $9037
     cpx     #$20                    ; $9038
-    bne     loc_5_901E              ; $903A
+    bne     @loop                   ; $903A
     lda     #$FF                    ; $903C
     sta     ppuBuffer0+70           ; $903E
     rts                             ; $9041
@@ -1302,11 +1303,11 @@ dat_5_9058:
 loc_5_9075:
     ldy     #$1C                    ; $9075
 
-loc_5_9077:
+@loop:
     lda     dat_5_9058,y            ; $9077
     sta     ppuBuffer0,y            ; $907A
     dey                             ; $907D
-    bpl     loc_5_9077              ; $907E
+    bpl     @loop                   ; $907E
     lda     #$11                    ; $9080
     sta     objY                    ; $9082
     lda     #$00                    ; $9084
@@ -1327,12 +1328,12 @@ loc_5_908D:
     sta     temp1                   ; $909D
     ldy     #$00                    ; $909F
 
-loc_5_90A1:
+@loop:
     lda     (temp0),y               ; $90A1
     sta     ppuBuffer0,y            ; $90A3
     iny                             ; $90A6
     cmp     #$FF                    ; $90A7
-    bne     loc_5_90A1              ; $90A9
+    bne     @loop                   ; $90A9
     inc     objY+10                 ; $90AB
     rts                             ; $90AD
 
@@ -1357,14 +1358,14 @@ dat_5_90FC:
 
 loc_5_90FE:
     lda     objY+14                 ; $90FE
-    bne     loc_5_9109              ; $9100
+    bne     @loc_9109               ; $9100
     ldy     objX+8                  ; $9102
     lda     dat_5_90AE,y            ; $9104
     sta     objY+14                 ; $9107
 
-loc_5_9109:
+@loc_9109:
     dec     objY+14                 ; $9109
-    bne     loc_5_9167              ; $910B
+    bne     @done                   ; $910B
     lda     objX+7                  ; $910D
     and     #$01                    ; $910F
     asl     a                       ; $9111
@@ -1388,13 +1389,13 @@ loc_5_9109:
     tay                             ; $9136
     ldx     #$00                    ; $9137
 
-loc_5_9139:
+@loop:
     lda     (temp0),y               ; $9139
     sta     ppuBuffer0+3,x          ; $913B
     iny                             ; $913E
     inx                             ; $913F
     cpx     #$04                    ; $9140
-    bne     loc_5_9139              ; $9142
+    bne     @loop                   ; $9142
     lda     #$FF                    ; $9144
     sta     ppuBuffer0+7            ; $9146
     inc     objX+8                  ; $9149
@@ -1402,7 +1403,7 @@ loc_5_9139:
     lda     dat_5_90AE,y            ; $914D
     sta     objY+14                 ; $9150
     cpy     #$04                    ; $9152
-    bne     loc_5_9167              ; $9154
+    bne     @done                   ; $9154
     inc     objX+7                  ; $9156
     lda     objX+7                  ; $9158
     and     #$01                    ; $915A
@@ -1412,7 +1413,7 @@ loc_5_9139:
     lda     dat_5_90FC,y            ; $9162
     sta     objX+8                  ; $9165
 
-loc_5_9167:
+@done:
     rts                             ; $9167
 
 dat_5_9168:
@@ -1427,49 +1428,49 @@ dat_5_916E:
 loc_5_9173:
     lda     objX+7                  ; $9173
     cmp     #$12                    ; $9175
-    bne     loc_5_9194              ; $9177
+    bne     @loc_9194               ; $9177
     lda     #$00                    ; $9179
     sta     objXHi+4                ; $917B
     sta     objY+9                  ; $917D
     sta     objY+10                 ; $917F
     ldx     #$02                    ; $9181
 
-loc_5_9183:
+@loop:
     lda     dat_5_9168,x            ; $9183
     sta     objY+15,x               ; $9186
     lda     dat_5_916B,x            ; $9188
     sta     objXHi,x                ; $918B
     dex                             ; $918D
-    bpl     loc_5_9183              ; $918E
+    bpl     @loop                   ; $918E
     inc     sceneStep               ; $9190
     rts                             ; $9193
 
-loc_5_9194:
+@loc_9194:
     lda     objX+7                  ; $9194
     cmp     #$10                    ; $9196
-    bne     loc_5_91A5              ; $9198
+    bne     @loc_91A5               ; $9198
     ldy     #$04                    ; $919A
 
-loc_5_919C:
+@loop2:
     lda     dat_5_916E,y            ; $919C
     sta     ppuBuffer0,y            ; $919F
     dey                             ; $91A2
-    bpl     loc_5_919C              ; $91A3
+    bpl     @loop2                  ; $91A3
 
-loc_5_91A5:
+@loc_91A5:
     inc     objY+10                 ; $91A5
     rts                             ; $91A7
 
 loc_5_91A8:
     lda     objY+14                 ; $91A8
-    bne     loc_5_91B3              ; $91AA
+    bne     @loc_91B3               ; $91AA
     ldy     objX+8                  ; $91AC
     lda     dat_5_90AE,y            ; $91AE
     sta     objY+14                 ; $91B1
 
-loc_5_91B3:
+@loc_91B3:
     dec     objY+14                 ; $91B3
-    bne     loc_5_921B              ; $91B5
+    bne     @done                   ; $91B5
     lda     dat_5_90B6              ; $91B7
     sta     temp0                   ; $91BA
     lda     dat_5_90B7              ; $91BC
@@ -1486,13 +1487,13 @@ loc_5_91B3:
     tay                             ; $91D4
     ldx     #$00                    ; $91D5
 
-loc_5_91D7:
+@loop:
     lda     (temp0),y               ; $91D7
     sta     ppuBuffer0+3,x          ; $91D9
     iny                             ; $91DC
     inx                             ; $91DD
     cpx     #$04                    ; $91DE
-    bne     loc_5_91D7              ; $91E0
+    bne     @loop                   ; $91E0
     lda     #$3F                    ; $91E2
     sta     ppuBuffer0+7            ; $91E4
     lda     #$08                    ; $91E7
@@ -1506,41 +1507,79 @@ loc_5_91D7:
     ora     #$20                    ; $91F7
     tay                             ; $91F9
 
-loc_5_91FA:
+@loop2:
     lda     (temp0),y               ; $91FA
     sta     ppuBuffer0+10,x         ; $91FC
     iny                             ; $91FF
     inx                             ; $9200
     cpx     #$04                    ; $9201
-    bne     loc_5_91FA              ; $9203
+    bne     @loop2                  ; $9203
     lda     #$FF                    ; $9205
     sta     ppuBuffer0+10,x         ; $9207
     inc     objX+8                  ; $920A
     lda     objX+8                  ; $920C
     cmp     #$08                    ; $920E
-    bne     loc_5_921B              ; $9210
+    bne     @done                   ; $9210
     lda     #$00                    ; $9212
     sta     objX+8                  ; $9214
     lda     dat_5_9057              ; $9216
     sta     objY+10                 ; $9219
 
-loc_5_921B:
+@done:
     rts                             ; $921B
-; (unreferenced: $921C-$9247, 44 bytes)
-    .byte   $A9, $01, $8D, $A0, $07, $A9, $00, $8D, $75, $07, $8D, $76, $07, $A0, $69, $99; $921C
-    .byte   $00, $07, $88, $D0, $FA, $A0, $C0, $99, $00, $07, $C8, $D0, $FA, $A0, $0F, $99; $922C
-    .byte   $E0, $00, $88, $10, $FA, $20, $93, $D2, $EE, $6C, $07, $60      ; $923C
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+; ---------------------------------------------------------------------------
+; Ending_SetSecondQuest
+;
+; Ending scene step 14, after START is pressed at the end of the credits:
+; mark the file for the second quest (secondQuest = 1; FileSelect_Menu
+; starts it when the file is next loaded), zero the experience, clear the
+; rest of the RAM that is not saved, and go to the next gameState
+; (GameState_SaveAfterEnding).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Ending_SetSecondQuest:
+    lda     #$01                    ; $921C
+    sta     secondQuest             ; $921E
+    lda     #$00                    ; $9221
+    sta     experience              ; $9223
+    sta     experience+1            ; $9226
+    ldy     #$69                    ; $9229
+
+@loop:
+    sta     lives,y                 ; $922B  clear $0701-$0769
+    dey                             ; $922E
+    bne     @loop                   ; $922F
+    ldy     #$C0                    ; $9231
+
+@loop2:
+    sta     lives,y                 ; $9233  clear $07C0-$07FF
+    iny                             ; $9236
+    bne     @loop2                  ; $9237
+    ldy     #$0F                    ; $9239
+
+@loop3:
+    sta     a:ram_00E0,y            ; $923B
+    dey                             ; $923E
+    bpl     @loop3                  ; $923F
+    jsr     Ram_ClearExceptSaved    ; $9241
+    inc     gameState               ; $9244
+    rts                             ; $9247
+; (end of disassembled code)
+
 
 loc_5_9248:
     jsr     sub_5_8C8B              ; $9248
     lda     joypadHeld              ; $924B
     and     #$10                    ; $924D
-    beq     loc_5_9254              ; $924F
+    beq     @done                   ; $924F
 ; (code below not executed in the test movies)
     inc     sceneStep               ; $9251
 ; (end of code not executed in the test movies)
 
-loc_5_9254:
+@done:
     rts                             ; $9254
 
 loc_5_9255:
@@ -1749,10 +1788,10 @@ dat_5_9665:
 GpSkullHead_Ai:
     lda     drawOffscreen+1         ; $9667
     and     #$0C                    ; $9669
-    beq     loc_5_9670              ; $966B
+    beq     @loc_9670               ; $966B
     jsr     GpSkullHead_Init        ; $966D
 
-loc_5_9670:
+@loc_9670:
     jsr     Enemy_SkipAiIfStunned   ; $9670
     lda     enemyAiState,x          ; $9673
     and     #$01                    ; $9675
@@ -1762,10 +1801,10 @@ loc_5_9670:
     adc     dat_5_9663,y            ; $967C
     sta     objYVelocity+1,x        ; $967F
     cmp     dat_5_9665,y            ; $9682
-    bne     loc_5_9689              ; $9685
+    bne     @loc_9689               ; $9685
     inc     enemyAiState,x          ; $9687
 
-loc_5_9689:
+@loc_9689:
     jsr     Enemy_MoveY             ; $9689
     jsr     Enemy_MoveX             ; $968C
     jsr     Enemy_UpdateCommon      ; $968F
@@ -1880,22 +1919,22 @@ KingBot_Draw:
     jsr     Obj_ComputeWideOffscreen ; $973C
     ldx     currentObject           ; $973F
     and     #$84                    ; $9741
-    beq     loc_5_975A              ; $9743
+    beq     @loc_975A               ; $9743
 ; (code below not executed in the test movies)
-    bpl     loc_5_974F              ; $9745
+    bpl     @loc_974F               ; $9745
     ldy     #$F8                    ; $9747
     sty     oamBuffer+112           ; $9749
     sty     oamBuffer+116           ; $974C
 
-loc_5_974F:
+@loc_974F:
     asl     a                       ; $974F
-    beq     loc_5_975A              ; $9750
+    beq     @loc_975A               ; $9750
     ldy     #$F8                    ; $9752
     sty     oamBuffer+120           ; $9754
     sty     oamBuffer+124           ; $9757
 ; (end of code not executed in the test movies)
 
-loc_5_975A:
+@loc_975A:
     pla                             ; $975A
     sta     objXHi+1,x              ; $975B
     pla                             ; $975D
@@ -1907,9 +1946,9 @@ loc_5_975A:
 loc_5_9764:
     lda     frameCounter            ; $9764
     lsr     a                       ; $9766
-    bcs     loc_5_9795              ; $9767
+    bcs     @done                   ; $9767
     jsr     Enemy_FireProjectile    ; $9769
-    bcs     loc_5_9795              ; $976C
+    bcs     @done                   ; $976C
     lda     #$0C                    ; $976E
     sta     a:objState+7,y          ; $9770
     lda     rng+1,x                 ; $9773
@@ -1927,7 +1966,7 @@ loc_5_9764:
     lda     #$10                    ; $9790
     sta     a:objXVelocity+7,y      ; $9792
 
-loc_5_9795:
+@done:
     rts                             ; $9795
 
 ; ---------------------------------------------------------------------------
@@ -2039,7 +2078,7 @@ loc_5_980C:
 ; ---------------------------------------------------------------------------
 DarkLink_Appear:
     lda     timerFast+3             ; $980D
-    bne     loc_5_982C              ; $9810
+    bne     @loc_982C               ; $9810
     lda     #$C0                    ; $9812
     sta     spellFlash              ; $9814
     lda     #$04                    ; $9817
@@ -2053,19 +2092,19 @@ DarkLink_Appear:
     lda     #$FF                    ; $9828
     bne     sub_5_9807              ; $982A
 
-loc_5_982C:
+@loc_982C:
     cmp     #$50                    ; $982C
     bcc     loc_5_980C              ; $982E
     cmp     #$C0                    ; $9830
-    bcs     loc_5_9839              ; $9832
+    bcs     @loc_9839               ; $9832
     lsr     a                       ; $9834
     bcc     loc_5_980C              ; $9835
-    bcs     loc_5_983B              ; $9837
+    bcs     @loc_983B               ; $9837
 
-loc_5_9839:
+@loc_9839:
     inc     enemyAiState,x          ; $9839
 
-loc_5_983B:
+@loc_983B:
     jmp     Enemy_Draw              ; $983B
 
 ; ---------------------------------------------------------------------------
@@ -2078,7 +2117,7 @@ loc_5_983B:
 DarkLink_Separate:
     lda     spellFlash              ; $983E
     cmp     #$81                    ; $9841
-    bne     loc_5_9852              ; $9843
+    bne     @loc_9852               ; $9843
     lda     #$0D                    ; $9845
     sta     ppuStringSelect         ; $9847
     lda     #$80                    ; $984A
@@ -2086,26 +2125,26 @@ DarkLink_Separate:
     lda     #$04                    ; $984E
     sta     sfxRequest              ; $9850
 
-loc_5_9852:
+@loc_9852:
     lda     timerFast+3             ; $9852
     cmp     #$80                    ; $9855
-    bcc     loc_5_9864              ; $9857
+    bcc     @loc_9864               ; $9857
     bne     loc_5_980C              ; $9859
     lda     #$FC                    ; $985B
     sta     objYVelocity+1          ; $985D
     lda     #$13                    ; $9860
     sta     objXVelocity+1          ; $9862
 
-loc_5_9864:
+@loc_9864:
     jsr     DarkLink_Move           ; $9864
     lda     objY+1                  ; $9867
     cmp     #$A0                    ; $9869
-    bcc     loc_5_9874              ; $986B
+    bcc     @loc_9874               ; $986B
     inc     objFacing+4             ; $986D
     lda     #$70                    ; $986F
     sta     timerFast+4             ; $9871
 
-loc_5_9874:
+@loc_9874:
     lda     #$0A                    ; $9874
     sta     objState+1              ; $9876
     jmp     DarkLink_Draw           ; $9878
@@ -2121,44 +2160,44 @@ loc_5_9874:
 ; ---------------------------------------------------------------------------
 DarkLink_Fight:
     ldy     timerFast+4             ; $987B
-    beq     loc_5_988E              ; $987E
+    beq     @loc_988E               ; $987E
     dey                             ; $9880
-    bne     loc_5_9887              ; $9881
+    bne     @loc_9887               ; $9881
     lda     #$40                    ; $9883
     sta     musicRequest            ; $9885
 
-loc_5_9887:
+@loc_9887:
     lda     #$06                    ; $9887
     sta     objState+1              ; $9889
     jmp     DarkLink_Draw           ; $988B
 
-loc_5_988E:
+@loc_988E:
     lda     musicPlaying            ; $988E
-    bne     loc_5_9897              ; $9891
+    bne     @loc_9897               ; $9891
 ; (code below not executed in the test movies)
     lda     #$40                    ; $9893
     sta     musicRequest            ; $9895
 ; (end of code not executed in the test movies)
 
-loc_5_9897:
+@loc_9897:
     sty     ram_00DE                ; $9897
     lda     #$01                    ; $9899
     jsr     Boss_DrawHpBar_Bank5    ; $989B
     lda     timerFast+12            ; $989E
-    beq     loc_5_98D3              ; $98A1
-    bpl     loc_5_98AD              ; $98A3
+    beq     @loc_98D3               ; $98A1
+    bpl     @loc_98AD               ; $98A3
     and     #$0F                    ; $98A5
-    bne     loc_5_98AD              ; $98A7
+    bne     @loc_98AD               ; $98A7
     lda     #$01                    ; $98A9
     sta     ram_00E9                ; $98AB
 
-loc_5_98AD:
+@loc_98AD:
     lda     #$0A                    ; $98AD
     sta     objState+1              ; $98AF
     jsr     DarkLink_Move           ; $98B1
     lda     objY+1                  ; $98B4
     cmp     #$F0                    ; $98B6
-    bcc     loc_5_98D0              ; $98B8
+    bcc     @loc_98D0               ; $98B8
     lda     #$B0                    ; $98BA
     sta     spellFlash              ; $98BC
     lda     #$04                    ; $98BF
@@ -2170,10 +2209,10 @@ loc_5_98AD:
     lsr     a                       ; $98CC
     jsr     sub_5_9807              ; $98CD
 
-loc_5_98D0:
+@loc_98D0:
     jmp     DarkLink_Draw           ; $98D0
 
-loc_5_98D3:
+@loc_98D3:
     jsr     DarkLink_ReactToLink    ; $98D3
     jsr     DarkLink_UpdateXVelocity ; $98D6
     jsr     DarkLink_UpdateJump     ; $98D9
@@ -2195,34 +2234,34 @@ loc_5_98D3:
 DarkLink_ReactToLink:
     lda     objX+1                  ; $98EB
     sbc     objX                    ; $98ED
-    bpl     loc_5_98F3              ; $98EF
+    bpl     @loc_98F3               ; $98EF
     eor     #$FF                    ; $98F1
 
-loc_5_98F3:
+@loc_98F3:
     adc     #$03                    ; $98F3
     lsr     a                       ; $98F5
     lsr     a                       ; $98F6
     lsr     a                       ; $98F7
     lsr     a                       ; $98F8
     cmp     #$06                    ; $98F9
-    bcs     loc_5_990C              ; $98FB
+    bcs     @loc_990C               ; $98FB
     jsr     JumpTable               ; $98FD
 ; (inline jump table)
-    .word   loc_5_9911              ; $9900
-    .word   loc_5_9911              ; $9902
+    .word   @loc_9911               ; $9900
+    .word   @loc_9911               ; $9902
     .word   loc_5_9989              ; $9904
     .word   loc_5_9989              ; $9906
     .word   loc_5_9989              ; $9908
     .word   loc_5_9989              ; $990A
 ; (code below not executed in the test movies)
 
-loc_5_990C:
+@loc_990C:
     lda     #$01                    ; $990C
     sta     ram_0018                ; $990E
     rts                             ; $9910
 ; (end of code not executed in the test movies)
 
-loc_5_9911:
+@loc_9911:
     lda     objFacing+3             ; $9911
     bne     loc_5_994E              ; $9913
     lda     joypadPressed           ; $9915
@@ -2242,21 +2281,21 @@ sub_5_992C:
     ldy     #$00                    ; $992C
     lda     drawScreenX+1           ; $992E
     adc     #$0C                    ; $9930
-    bpl     loc_5_9935              ; $9932
+    bpl     @loc_9935               ; $9932
 ; (code below not executed in the test movies)
     iny                             ; $9934
 ; (end of code not executed in the test movies)
 
-loc_5_9935:
+@loc_9935:
     lda     rng+2                   ; $9935
     and     #$03                    ; $9938
-    bne     loc_5_993E              ; $993A
+    bne     @loc_993E               ; $993A
 ; (code below not executed in the test movies)
     iny                             ; $993C
     iny                             ; $993D
 ; (end of code not executed in the test movies)
 
-loc_5_993E:
+@loc_993E:
     lda     dat_5_999E,y            ; $993E
     sta     objXVelocity+1          ; $9941
     lda     #$FC                    ; $9943
@@ -2271,7 +2310,7 @@ loc_5_994E:
 loc_5_994F:
     lda     rng+3                   ; $994F
     and     #$03                    ; $9952
-    bne     loc_5_9964              ; $9954
+    bne     @loc_9964               ; $9954
     jsr     Enemy_FaceLink          ; $9956
     tya                             ; $9959
     eor     #$01                    ; $995A
@@ -2280,14 +2319,14 @@ loc_5_994F:
     sta     timerFast+5             ; $9960
     rts                             ; $9963
 
-loc_5_9964:
+@loc_9964:
     ldy     enemyAiDir              ; $9964
     dey                             ; $9967
     cpy     #$02                    ; $9968
-    bcc     loc_5_9988              ; $996A
+    bcc     @done                   ; $996A
     lda     objY+1                  ; $996C
     cmp     objY                    ; $996E
-    bcc     loc_5_9988              ; $9970
+    bcc     @done                   ; $9970
     lda     linkStanding            ; $9972
     eor     #$01                    ; $9974
     sta     ram_0018                ; $9976
@@ -2300,21 +2339,21 @@ loc_5_9964:
     lsr     a                       ; $9984
     sta     timerFast+3             ; $9985
 
-loc_5_9988:
+@done:
     rts                             ; $9988
 
 loc_5_9989:
     lda     objFacing+3             ; $9989
-    bne     loc_5_999D              ; $998B
+    bne     @done                   ; $998B
     lda     frameCounter            ; $998D
     and     #$C0                    ; $998F
-    beq     loc_5_999D              ; $9991
+    beq     @done                   ; $9991
     jsr     Enemy_FaceLink          ; $9993
     sty     objFacing+2             ; $9996
     lda     #$02                    ; $9998
     sta     timerFast+5             ; $999A
 
-loc_5_999D:
+@done:
     rts                             ; $999D
 
 dat_5_999E:
@@ -2334,18 +2373,18 @@ dat_5_99A2:
 ; ---------------------------------------------------------------------------
 DarkLink_UpdateXVelocity:
     lda     timerFast+5             ; $99A4
-    beq     loc_5_99B1              ; $99A7
+    beq     @loc_99B1               ; $99A7
     ldy     objFacing+2             ; $99A9
     lda     dat_5_99A2,y            ; $99AB
     sta     objXVelocity+1          ; $99AE
     rts                             ; $99B0
 
-loc_5_99B1:
+@loc_99B1:
     lda     objFacing+3             ; $99B1
-    bne     loc_5_99B7              ; $99B3
+    bne     @done                   ; $99B3
     sta     objXVelocity+1          ; $99B5
 
-loc_5_99B7:
+@done:
     rts                             ; $99B7
 
 ; ---------------------------------------------------------------------------
@@ -2360,22 +2399,22 @@ DarkLink_UpdateJump:
     jsr     DarkLink_Move           ; $99B8
     lda     objY+1                  ; $99BB
     cmp     #$A0                    ; $99BD
-    bcc     loc_5_99CC              ; $99BF
+    bcc     @loc_99CC               ; $99BF
     jsr     Enemy_Land              ; $99C1
     sta     objFacing+3             ; $99C4
     lda     #$A0                    ; $99C6
     sta     objY+1                  ; $99C8
     bne     loc_5_99E2              ; $99CA
 
-loc_5_99CC:
+@loc_99CC:
     lda     linkStanding            ; $99CC
     sta     ram_0018                ; $99CE
     lda     #$06                    ; $99D0
     ldy     objYVelocity+1          ; $99D2
-    bmi     loc_5_99D9              ; $99D5
+    bmi     @loc_99D9               ; $99D5
     lda     #$02                    ; $99D7
 
-loc_5_99D9:
+@loc_99D9:
     sta     objState+1              ; $99D9
     rts                             ; $99DB
 
@@ -2384,36 +2423,36 @@ dat_5_99DC:
 
 loc_5_99E2:
     lda     objXVelocity+1          ; $99E2
-    beq     loc_5_9A05              ; $99E4
+    beq     @loc_9A05               ; $99E4
     ldy     objFacing+5             ; $99E6
     lda     frameCounter            ; $99E8
     and     #$03                    ; $99EA
-    bne     loc_5_99F6              ; $99EC
+    bne     @loc_99F6               ; $99EC
     inc     objFacing+5             ; $99EE
     cpy     #$02                    ; $99F0
-    bne     loc_5_99F6              ; $99F2
+    bne     @loc_99F6               ; $99F2
     sta     objFacing+5             ; $99F4
 
-loc_5_99F6:
+@loc_99F6:
     lda     objFacing+1             ; $99F6
     cmp     ram_00A0                ; $99F8
-    beq     loc_5_99FF              ; $99FA
+    beq     @loc_99FF               ; $99FA
     iny                             ; $99FC
     iny                             ; $99FD
     iny                             ; $99FE
 
-loc_5_99FF:
+@loc_99FF:
     lda     dat_5_99DC,y            ; $99FF
     sta     objState+1              ; $9A02
     rts                             ; $9A04
 
-loc_5_9A05:
+@loc_9A05:
     lda     #$03                    ; $9A05
     ldy     ram_0018                ; $9A07
-    bne     loc_5_9A0C              ; $9A09
+    bne     @loc_9A0C               ; $9A09
     asl     a                       ; $9A0B
 
-loc_5_9A0C:
+@loc_9A0C:
     sta     objState+1              ; $9A0C
     rts                             ; $9A0E
 
@@ -2430,35 +2469,35 @@ DarkLink_Move:
     sta     ram_00A0                ; $9A14
     ldy     #$01                    ; $9A16
     lda     objXVelocity+1          ; $9A18
-    bpl     loc_5_9A1D              ; $9A1A
+    bpl     @loc_9A1D               ; $9A1A
     iny                             ; $9A1C
 
-loc_5_9A1D:
+@loc_9A1D:
     sty     objFacing+1             ; $9A1D
     lda     drawOffscreen+1         ; $9A1F
     and     #$09                    ; $9A21
-    beq     loc_5_9A3C              ; $9A23
+    beq     @loc_9A3C               ; $9A23
     ldy     objFacing+3             ; $9A25
-    bne     loc_5_9A33              ; $9A27
+    bne     @loc_9A33               ; $9A27
     pha                             ; $9A29
     lda     #$03                    ; $9A2A
     sta     rng+2                   ; $9A2C
     jsr     sub_5_992C              ; $9A2F
     pla                             ; $9A32
 
-loc_5_9A33:
+@loc_9A33:
     lsr     a                       ; $9A33
     lsr     a                       ; $9A34
     lsr     a                       ; $9A35
     tay                             ; $9A36
     iny                             ; $9A37
     cpy     objFacing+1             ; $9A38
-    beq     loc_5_9A3F              ; $9A3A
+    beq     @loc_9A3F               ; $9A3A
 
-loc_5_9A3C:
+@loc_9A3C:
     jsr     Enemy_MoveX             ; $9A3C
 
-loc_5_9A3F:
+@loc_9A3F:
     lda     #$3C                    ; $9A3F
     sta     temp0                   ; $9A41
     lda     #$04                    ; $9A43
@@ -2481,33 +2520,33 @@ dat_5_9A49 := * + 2
 ; ---------------------------------------------------------------------------
 DarkLink_UpdateAttack:
     ldy     enemyAiDir              ; $9A50
-    beq     loc_5_9A76              ; $9A53
+    beq     @done                   ; $9A53
     lda     timerFast+3             ; $9A55
-    bne     loc_5_9A6A              ; $9A58
+    bne     @loc_9A6A               ; $9A58
     inc     enemyAiDir              ; $9A5A
     cpy     #$03                    ; $9A5D
-    bne     loc_5_9A65              ; $9A5F
+    bne     @loc_9A65               ; $9A5F
 ; (code below not executed in the test movies)
     sta     enemyAiDir              ; $9A61
     rts                             ; $9A64
 ; (end of code not executed in the test movies)
 
-loc_5_9A65:
+@loc_9A65:
     lda     #$08                    ; $9A65
     sta     timerFast+3             ; $9A67
 
-loc_5_9A6A:
+@loc_9A6A:
     lda     ram_0018                ; $9A6A
-    bne     loc_5_9A71              ; $9A6C
+    bne     @loc_9A71               ; $9A6C
     iny                             ; $9A6E
     iny                             ; $9A6F
     iny                             ; $9A70
 
-loc_5_9A71:
+@loc_9A71:
     lda     dat_5_9A49,y            ; $9A71
     sta     objState+1              ; $9A74
 
-loc_5_9A76:
+@done:
     rts                             ; $9A76
 
 ; ---------------------------------------------------------------------------
@@ -2553,7 +2592,7 @@ DarkLink_CheckSword:
     lda     objFacing+3             ; $9A8D
     ora     linkJumpState           ; $9A8F
     ora     timerFast+8             ; $9A92
-    bne     loc_5_9AF4              ; $9A95
+    bne     @done                   ; $9A95
     jsr     Sword_GetHitbox         ; $9A97
     ldy     ram_00A0                ; $9A9A
     lda     drawScreenX+1           ; $9A9C
@@ -2569,7 +2608,7 @@ DarkLink_CheckSword:
     lda     #$09                    ; $9AB2
     sta     temp7                   ; $9AB4
     jsr     Hitbox_Overlap          ; $9AB6
-    bcs     loc_5_9AF5              ; $9AB9
+    bcs     @loc_9AF5               ; $9AB9
     jsr     Enemy_GetHitbox         ; $9ABB
     ldy     ram_0018                ; $9ABE
     lda     objY+1                  ; $9AC0
@@ -2577,17 +2616,17 @@ DarkLink_CheckSword:
     lda     #$1D                    ; $9AC4
     sta     temp7                   ; $9AC6
     jsr     Hitbox_Overlap          ; $9AC8
-    bcc     loc_5_9B07              ; $9ACB
+    bcc     @loc_9B07               ; $9ACB
     ldy     #$00                    ; $9ACD
     sty     enemyAiDir              ; $9ACF
     dey                             ; $9AD2
     dec     enemyHp                 ; $9AD3
-    beq     loc_5_9ADE              ; $9AD5
+    beq     @loc_9ADE               ; $9AD5
     lda     #$38                    ; $9AD7
     sta     timerFast+8             ; $9AD9
     ldy     #$18                    ; $9ADC
 
-loc_5_9ADE:
+@loc_9ADE:
     sty     timerFast+12            ; $9ADE
     jsr     Enemy_FaceLink          ; $9AE1
     lda     dat_5_9A8B,y            ; $9AE4
@@ -2598,10 +2637,10 @@ loc_5_9ADE:
     sta     ram_00E9                ; $9AF0
     sta     objFacing+3             ; $9AF2
 
-loc_5_9AF4:
+@done:
     rts                             ; $9AF4
 
-loc_5_9AF5:
+@loc_9AF5:
     lda     #$00                    ; $9AF5
     sta     temp11                  ; $9AF7
     jsr     Enemy_KnockBack         ; $9AF9
@@ -2611,19 +2650,19 @@ loc_5_9AF5:
     lda     #$02                    ; $9B02
     sta     sfxRequest              ; $9B04
 
-loc_5_9B06:
+@done2:
     rts                             ; $9B06
 
-loc_5_9B07:
+@loc_9B07:
     jsr     Link_GetShieldHitbox    ; $9B07
     ldy     #$00                    ; $9B0A
     lda     ram_047F                ; $9B0C
     pha                             ; $9B0F
     cmp     drawScreenX+1           ; $9B10
-    bcs     loc_5_9B15              ; $9B12
+    bcs     @loc_9B15               ; $9B12
     iny                             ; $9B14
 
-loc_5_9B15:
+@loc_9B15:
     pla                             ; $9B15
     adc     dat_5_9A89,y            ; $9B16
     sta     temp4                   ; $9B19
@@ -2635,10 +2674,10 @@ loc_5_9B15:
     lda     #$02                    ; $9B26
     sta     temp7                   ; $9B28
     jsr     Hitbox_Overlap          ; $9B2A
-    bcs     loc_5_9AF5              ; $9B2D
+    bcs     @loc_9AF5               ; $9B2D
     jsr     Link_GetHitbox          ; $9B2F
     jsr     Hitbox_Overlap          ; $9B32
-    bcc     loc_5_9B06              ; $9B35
+    bcc     @done2                  ; $9B35
 ; (code below not executed in the test movies)
     jmp     Link_HurtByEnemy        ; $9B37
 ; (end of code not executed in the test movies)
@@ -2653,11 +2692,11 @@ loc_5_9B15:
 DarkLink_Defeated:
     lda     spellFlash              ; $9B3A
     cmp     #$81                    ; $9B3D
-    bne     loc_5_9B46              ; $9B3F
+    bne     @loc_9B46               ; $9B3F
     lda     #$0E                    ; $9B41
     sta     ppuStringSelect         ; $9B43
 
-loc_5_9B46:
+@loc_9B46:
     lda     linkJumpState           ; $9B46
     ora     timerFast+3             ; $9B49
     bne     loc_5_9B73              ; $9B4C
@@ -2727,12 +2766,12 @@ DarkLink_ShowTriforce:
     cmp     #$09                    ; $9B98
     bcs     loc_5_9B73              ; $9B9A
     cmp     #$06                    ; $9B9C
-    bcc     loc_5_9BA5              ; $9B9E
+    bcc     @loc_9BA5               ; $9B9E
     lda     frameCounter            ; $9BA0
     lsr     a                       ; $9BA2
     bcc     loc_5_9B73              ; $9BA3
 
-loc_5_9BA5:
+@loc_9BA5:
     jmp     Enemy_Draw              ; $9BA5
 
 ; ---------------------------------------------------------------------------
@@ -2746,13 +2785,13 @@ DarkLink_StartEnding:
     lda     #$02                    ; $9BA8
     sta     linkWalkDir             ; $9BAA
     ldy     timerSlow+4             ; $9BAC
-    beq     loc_5_9BBA              ; $9BAF
+    beq     @loc_9BBA               ; $9BAF
     lda     #$0B                    ; $9BB1
     sta     objState                ; $9BB3
     inc     enemyAiState            ; $9BB5
     jmp     Enemy_Draw              ; $9BB7
 
-loc_5_9BBA:
+@loc_9BBA:
     lda     #$03                    ; $9BBA
     sta     gameState               ; $9BBC
     lda     #$00                    ; $9BBF
@@ -2784,10 +2823,10 @@ Projectile_Fireball_Bank5:
 Projectile_Rock_Bank5:
     ldy     #$02                    ; $9BD2
     lda     objXVelocity+7,x        ; $9BD4
-    bmi     loc_5_9BD9              ; $9BD6
+    bmi     @loc_9BD9               ; $9BD6
     dey                             ; $9BD8
 
-loc_5_9BD9:
+@loc_9BD9:
     tya                             ; $9BD9
     cmp     objFacing+7,x           ; $9BDA
     bne     loc_5_9C42              ; $9BDC
@@ -2811,26 +2850,26 @@ Projectile_RollingFlame_Bank5:
     and     #$F0                    ; $9BEE
     sta     objY+7,x                ; $9BF0
     lda     ram_045E,x              ; $9BF2
-    bne     loc_5_9C23              ; $9BF5
+    bne     @loc_9C23               ; $9BF5
     sta     objXVelocity+7,x        ; $9BF7
     ldy     #$30                    ; $9BF9
     lda     rng+1,x                 ; $9BFB
     and     #$03                    ; $9BFE
-    bne     loc_5_9C15              ; $9C00
+    bne     @loc_9C15               ; $9C00
     ldy     #$F0                    ; $9C02
     lda     drawScreenX+2           ; $9C04
     cmp     drawScreenX             ; $9C06
     lda     #$02                    ; $9C08
-    bcs     loc_5_9C0F              ; $9C0A
+    bcs     @loc_9C0F               ; $9C0A
     lsr     a                       ; $9C0C
     ldy     #$10                    ; $9C0D
 
-loc_5_9C0F:
+@loc_9C0F:
     sta     objFacing+7,x           ; $9C0F
     sty     objXVelocity+7,x        ; $9C11
     ldy     #$FF                    ; $9C13
 
-loc_5_9C15:
+@loc_9C15:
     tya                             ; $9C15
     sta     ram_044C,x              ; $9C16
     inc     ram_045E,x              ; $9C19
@@ -2838,7 +2877,7 @@ loc_5_9C15:
     sta     objYVelocity+7,x        ; $9C1E
     bne     loc_5_9C45              ; $9C21
 
-loc_5_9C23:
+@loc_9C23:
     lda     ram_044C,x              ; $9C23
     beq     loc_5_9C5B              ; $9C26
     dec     ram_044C,x              ; $9C28
@@ -2847,11 +2886,11 @@ loc_5_9C23:
     bne     Projectile_Arc_Bank5    ; $9C2F
     lda     objXVelocity+7,x        ; $9C31
     beq     Projectile_Arc_Bank5    ; $9C33
-    bpl     loc_5_9C3B              ; $9C35
+    bpl     @loc_9C3B               ; $9C35
     inc     objXVelocity+7,x        ; $9C37
     inc     objXVelocity+7,x        ; $9C39
 
-loc_5_9C3B:
+@loc_9C3B:
     dec     objXVelocity+7,x        ; $9C3B
 
 ; ---------------------------------------------------------------------------
@@ -2901,7 +2940,7 @@ loc_5_9C60:
     jsr     DoNothing               ; $9C63
     jmp     Projectile_CheckLinkAlternate ; $9C66
 
-loc_5_9C69:
+@loc_9C69:
     dec     objXVelocity+7,x        ; $9C69
     beq     loc_5_9C5B              ; $9C6B
     ldy     objOamOffset+7,x        ; $9C6D
@@ -2919,10 +2958,10 @@ loc_5_9C69:
     lda     objXVelocity+7,x        ; $9C84
     ldx     #$00                    ; $9C86
     cmp     #$08                    ; $9C88
-    bcs     loc_5_9C8E              ; $9C8A
+    bcs     @loc_9C8E               ; $9C8A
     ldx     #$02                    ; $9C8C
 
-loc_5_9C8E:
+@loc_9C8E:
     jsr     Sprite_DrawPairFromTableKeepX ; $9C8E
     lda     #$41                    ; $9C91
     sta     oamBuffer - 2,y         ; $9C93
@@ -2965,22 +3004,22 @@ Projectile_Draw_Bank5:
     sta     oamBuffer+1,y           ; $9CC8
     jmp     (temp14)                ; $9CCB
 
-loc_5_9CCE:
+@loc_9CCE:
     jsr     sub_5_9D18              ; $9CCE
     lda     ram_045E,x              ; $9CD1
-    beq     loc_5_9CFA              ; $9CD4
+    beq     @done                   ; $9CD4
     ldy     ram_044C,x              ; $9CD6
     cpy     #$20                    ; $9CD9
-    bcs     loc_5_9CEB              ; $9CDB
+    bcs     @loc_9CEB               ; $9CDB
     lda     frameCounter            ; $9CDD
     and     #$02                    ; $9CDF
-    beq     loc_5_9CEB              ; $9CE1
+    beq     @loc_9CEB               ; $9CE1
     ldy     objOamOffset+7,x        ; $9CE3
     lda     #$F8                    ; $9CE5
     sta     oamBuffer,y             ; $9CE7
     rts                             ; $9CEA
 
-loc_5_9CEB:
+@loc_9CEB:
     ldy     objOamOffset+7,x        ; $9CEB
     lda     oamBuffer+2,y           ; $9CED
     and     #$43                    ; $9CF0
@@ -2988,17 +3027,17 @@ loc_5_9CEB:
     lda     #$52                    ; $9CF5
     sta     oamBuffer+1,y           ; $9CF7
 
-loc_5_9CFA:
+@done:
     rts                             ; $9CFA
 
-loc_5_9CFB:
+@loc_9CFB:
     lda     frameCounter            ; $9CFB
     and     #$03                    ; $9CFD
     ora     oamBuffer+2,y           ; $9CFF
     sta     oamBuffer+2,y           ; $9D02
     rts                             ; $9D05
 
-loc_5_9D06:
+@loc_9D06:
     lda     objFacing+7,x           ; $9D06
     lsr     a                       ; $9D08
     lda     #$00                    ; $9D09
@@ -3046,12 +3085,12 @@ dat_5_9D28:
 Fokka_Ai:
     jsr     Enemy_Draw              ; $9D2C
     lda     objState+1,x            ; $9D2F
-    beq     loc_5_9D77              ; $9D31
+    beq     @loc_9D77               ; $9D31
     and     #$01                    ; $9D33
-    bne     loc_5_9D5A              ; $9D35
+    bne     @loc_9D5A               ; $9D35
     jsr     Enemy_FireProjectile    ; $9D37
     tya                             ; $9D3A
-    bmi     loc_5_9D57              ; $9D3B
+    bmi     @loc_9D57               ; $9D3B
     lda     #$05                    ; $9D3D
     sta     a:objState+7,y          ; $9D3F
     lda     objState+1,x            ; $9D42
@@ -3066,31 +3105,31 @@ Fokka_Ai:
     lda     #$00                    ; $9D53
     sta     objState+1,x            ; $9D55
 
-loc_5_9D57:
+@loc_9D57:
     jsr     Projectile_CheckLink    ; $9D57
 
-loc_5_9D5A:
+@loc_9D5A:
     lda     timerFast+TIMER_ENEMY,x ; $9D5A
-    bne     loc_5_9D70              ; $9D5D
+    bne     @loc_9D70               ; $9D5D
     inc     objState+1,x            ; $9D5F
     lda     objState+1,x            ; $9D61
     cmp     #$03                    ; $9D63
-    beq     loc_5_9D73              ; $9D65
+    beq     @loc_9D73               ; $9D65
     cmp     #$05                    ; $9D67
-    bcs     loc_5_9D73              ; $9D69
+    bcs     @loc_9D73               ; $9D69
     lda     #$10                    ; $9D6B
     sta     timerFast+TIMER_ENEMY,x ; $9D6D
 
-loc_5_9D70:
-    jmp     loc_5_9D77              ; $9D70
+@loc_9D70:
+    jmp     @loc_9D77               ; $9D70
 ; (code below not executed in the test movies)
 
-loc_5_9D73:
+@loc_9D73:
     lda     #$00                    ; $9D73
     sta     objState+1,x            ; $9D75
 ; (end of code not executed in the test movies)
 
-loc_5_9D77:
+@loc_9D77:
     jsr     Enemy_CheckProjectileHitsSpecial ; $9D77
     jsr     Enemy_UpdateBgCollision ; $9D7A
     ldy     #$01                    ; $9D7D
@@ -3099,74 +3138,74 @@ loc_5_9D77:
     ldx     currentObject           ; $9D83
     lda     objYHi+1,x              ; $9D85
     cmp     #$02                    ; $9D87
-    bcc     loc_5_9D8E              ; $9D89
+    bcc     @loc_9D8E               ; $9D89
 ; (code below not executed in the test movies)
     jmp     Enemy_Despawn           ; $9D8B
 ; (end of code not executed in the test movies)
 
-loc_5_9D8E:
+@loc_9D8E:
     lda     drawOffscreen+1         ; $9D8E
     and     #$FC                    ; $9D90
-    beq     loc_5_9DA0              ; $9D92
+    beq     @loc_9DA0               ; $9D92
     lda     objCollision+1,x        ; $9D94
     and     #$0F                    ; $9D96
     sta     objCollision+1,x        ; $9D98
     jsr     Enemy_DespawnIfFar      ; $9D9A
-    jmp     loc_5_9DA9              ; $9D9D
+    jmp     @loc_9DA9               ; $9D9D
 
-loc_5_9DA0:
+@loc_9DA0:
     jsr     Enemy_CheckProjectileHits ; $9DA0
     jsr     Enemy_CheckSwordHit     ; $9DA3
     jsr     Enemy_CheckLinkContact  ; $9DA6
 
-loc_5_9DA9:
+@loc_9DA9:
     jsr     Enemy_HurtLinkOnContact ; $9DA9
     jsr     Enemy_MoveYAndFall      ; $9DAC
     lda     objCollision+1,x        ; $9DAF
     and     #$08                    ; $9DB1
-    beq     loc_5_9DBA              ; $9DB3
+    beq     @loc_9DBA               ; $9DB3
     lda     #$10                    ; $9DB5
     sta     objYVelocity+1,x        ; $9DB7
 
-loc_5_9DBA:
+@loc_9DBA:
     lda     objCollision+1,x        ; $9DBA
     and     #$04                    ; $9DBC
-    beq     loc_5_9DC3              ; $9DBE
+    beq     @loc_9DC3               ; $9DBE
     jsr     Enemy_Land              ; $9DC0
 
-loc_5_9DC3:
+@loc_9DC3:
     jsr     Enemy_KnockBackOrWalk_Bank5 ; $9DC3
     lda     a:joypadPressed         ; $9DC6
     and     #$40                    ; $9DC9
-    beq     loc_5_9DD2              ; $9DCB
+    beq     @loc_9DD2               ; $9DCB
     lda     linkStanding            ; $9DCD
     sta     enemyVulnerability,x    ; $9DCF
 
-loc_5_9DD2:
+@loc_9DD2:
     lda     linkJumpState           ; $9DD2
-    beq     loc_5_9DE6              ; $9DD5
+    beq     @loc_9DE6               ; $9DD5
     ldy     #$01                    ; $9DD7
     lda     objY                    ; $9DD9
     adc     #$05                    ; $9DDB
     cmp     objY+1,x                ; $9DDD
-    bcc     loc_5_9DE2              ; $9DDF
+    bcc     @loc_9DE2               ; $9DDF
     dey                             ; $9DE1
 
-loc_5_9DE2:
+@loc_9DE2:
     tya                             ; $9DE2
     sta     enemyVulnerability,x    ; $9DE3
 
-loc_5_9DE6:
+@loc_9DE6:
     jsr     Enemy_FaceLink          ; $9DE6
     lda     objCollision+1,x        ; $9DE9
     and     #$04                    ; $9DEB
-    bne     loc_5_9DF1              ; $9DED
-    beq     loc_5_9E1E              ; $9DEF
+    bne     @loc_9DF1               ; $9DED
+    beq     @loc_9E1E               ; $9DEF
 
-loc_5_9DF1:
+@loc_9DF1:
     lda     rng+1,x                 ; $9DF1
     and     #$1F                    ; $9DF4
-    bne     loc_5_9E06              ; $9DF6
+    bne     @loc_9E06               ; $9DF6
     lda     #$C8                    ; $9DF8
     sta     objYVelocity+1,x        ; $9DFA
     dec     objY+1,x                ; $9DFD
@@ -3175,31 +3214,31 @@ loc_5_9DF1:
     sta     objXVelocity+1,x        ; $9E03
     rts                             ; $9E05
 
-loc_5_9E06:
+@loc_9E06:
     lda     objXVelocity            ; $9E06
-    bne     loc_5_9E15              ; $9E08
+    bne     @loc_9E15               ; $9E08
     ldy     #$08                    ; $9E0A
     lda     frameCounter            ; $9E0C
     and     #$40                    ; $9E0E
-    bne     loc_5_9E14              ; $9E10
+    bne     @loc_9E14               ; $9E10
     ldy     #$F8                    ; $9E12
 
-loc_5_9E14:
+@loc_9E14:
     tya                             ; $9E14
 
-loc_5_9E15:
+@loc_9E15:
     sta     objXVelocity+1,x        ; $9E15
     asl     a                       ; $9E17
     ror     objXVelocity+1,x        ; $9E18
     lda     objState+1,x            ; $9E1A
-    bne     loc_5_9E37              ; $9E1C
+    bne     @done                   ; $9E1C
 
-loc_5_9E1E:
+@loc_9E1E:
     ldy     enemyType,x             ; $9E1E
     lda     dat_5_9D11,y            ; $9E20
     inc     enemyAiState,x          ; $9E23
     and     enemyAiState,x          ; $9E25
-    bne     loc_5_9E37              ; $9E27
+    bne     @done                   ; $9E27
     lda     rng+1,x                 ; $9E29
     and     #$02                    ; $9E2C
     tay                             ; $9E2E
@@ -3208,16 +3247,16 @@ loc_5_9E1E:
     lda     #$18                    ; $9E32
     sta     timerFast+TIMER_ENEMY,x ; $9E34
 
-loc_5_9E37:
+@done:
     rts                             ; $9E37
 
 loc_5_9E38:
     lda     objCollision+1,x        ; $9E38
     and     #$03                    ; $9E3A
-    bne     loc_5_9E41              ; $9E3C
+    bne     @done                   ; $9E3C
     jmp     Enemy_MoveX             ; $9E3E
 
-loc_5_9E41:
+@done:
     rts                             ; $9E41
 
 ; ---------------------------------------------------------------------------
@@ -3230,25 +3269,25 @@ loc_5_9E41:
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank5:
     ldy     ram_043E,x              ; $9E42
-    beq     loc_5_9E63              ; $9E45
+    beq     @loc_9E63               ; $9E45
     lda     enemyType,x             ; $9E47
     cmp     #$1D                    ; $9E49
-    beq     loc_5_9E53              ; $9E4B
+    beq     @loc_9E53               ; $9E4B
     lda     objCollision+1,x        ; $9E4D
     and     #$04                    ; $9E4F
-    beq     loc_5_9E5E              ; $9E51
+    beq     @loc_9E5E               ; $9E51
 
-loc_5_9E53:
+@loc_9E53:
     dec     ram_043E,x              ; $9E53
-    bpl     loc_5_9E5E              ; $9E56
+    bpl     @loc_9E5E               ; $9E56
     inc     ram_043E,x              ; $9E58
     inc     ram_043E,x              ; $9E5B
 
-loc_5_9E5E:
+@loc_9E5E:
     sty     objXVelocity+1,x        ; $9E5E
     jsr     Enemy_UpdateBgCollision ; $9E60
 
-loc_5_9E63:
+@loc_9E63:
     jmp     loc_5_9E38              ; $9E63
 ; (unreferenced: $9E66-$9E66, 1 bytes)
     .byte   $60                                                             ; $9E66
@@ -3273,9 +3312,9 @@ Fokkeru_Ai:
     inc     enemyAiState,x          ; $9E71
     lda     enemyAiState,x          ; $9E73
     and     #$3F                    ; $9E75
-    bne     loc_5_9E98              ; $9E77
+    bne     @loc_9E98               ; $9E77
     jsr     Enemy_FireProjectile    ; $9E79
-    bcs     loc_5_9E98              ; $9E7C
+    bcs     @loc_9E98               ; $9E7C
     lda     #$07                    ; $9E7E
     sta     a:objState+7,y          ; $9E80
     lda     #$E0                    ; $9E83
@@ -3288,13 +3327,13 @@ Fokkeru_Ai:
     sta     ram_045E,y              ; $9E93
     ldx     currentObject           ; $9E96
 
-loc_5_9E98:
+@loc_9E98:
     jsr     Enemy_MoveYAndFall      ; $9E98
     jsr     Enemy_UpdateWithBg      ; $9E9B
     jsr     Enemy_HurtLinkOnContact ; $9E9E
     lda     objCollision+1,x        ; $9EA1
     and     #$04                    ; $9EA3
-    beq     loc_5_9EBE              ; $9EA5
+    beq     @done                   ; $9EA5
     jsr     Enemy_Land              ; $9EA7
     lda     rng+1,x                 ; $9EAA
     lsr     a                       ; $9EAD
@@ -3303,13 +3342,13 @@ loc_5_9E98:
     lda     dat_5_9E67,y            ; $9EB1
     sta     objXVelocity+1,x        ; $9EB4
     lda     #$F0                    ; $9EB6
-    bcc     loc_5_9EBB              ; $9EB8
+    bcc     @loc_9EBB               ; $9EB8
     asl     a                       ; $9EBA
 
-loc_5_9EBB:
+@loc_9EBB:
     sta     objYVelocity+1,x        ; $9EBB
 
-loc_5_9EBE:
+@done:
     rts                             ; $9EBE
 
 ; ---------------------------------------------------------------------------
@@ -3324,20 +3363,20 @@ Thunderbird_Draw:
     ldx     #$29                    ; $9EC1
     ldy     #$02                    ; $9EC3
     cmp     #$C0                    ; $9EC5
-    beq     loc_5_9ED7              ; $9EC7
-    bcs     loc_5_9ED3              ; $9EC9
+    beq     @loc_9ED7               ; $9EC7
+    bcs     @loc_9ED3               ; $9EC9
     ldx     #$2B                    ; $9ECB
     lda     frameCounter            ; $9ECD
     and     #$18                    ; $9ECF
-    beq     loc_5_9ED5              ; $9ED1
+    beq     @loc_9ED5               ; $9ED1
 
-loc_5_9ED3:
+@loc_9ED3:
     ldx     #$19                    ; $9ED3
 
-loc_5_9ED5:
+@loc_9ED5:
     ldy     #$03                    ; $9ED5
 
-loc_5_9ED7:
+@loc_9ED7:
     sty     temp3                   ; $9ED7
     stx     sramEnemyTiles+47       ; $9ED9
     ldy     #$50                    ; $9EDC
@@ -3424,22 +3463,22 @@ loc_5_9ED7:
     jsr     Obj_ComputeWideOffscreen ; $9F96
     ldx     currentObject           ; $9F99
     and     #$84                    ; $9F9B
-    beq     loc_5_9FBA              ; $9F9D
-    bpl     loc_5_9FAC              ; $9F9F
+    beq     @loc_9FBA               ; $9F9D
+    bpl     @loc_9FAC               ; $9F9F
     ldy     #$F8                    ; $9FA1
     sty     oamBuffer+160           ; $9FA3
     sty     oamBuffer+164           ; $9FA6
     sty     oamBuffer+168           ; $9FA9
 
-loc_5_9FAC:
+@loc_9FAC:
     asl     a                       ; $9FAC
-    beq     loc_5_9FBA              ; $9FAD
+    beq     @loc_9FBA               ; $9FAD
     ldy     #$F8                    ; $9FAF
     sty     oamBuffer+172           ; $9FB1
     sty     oamBuffer+176           ; $9FB4
     sty     oamBuffer+180           ; $9FB7
 
-loc_5_9FBA:
+@loc_9FBA:
     pla                             ; $9FBA
     sta     objXHi+1,x              ; $9FBB
     pla                             ; $9FBD
@@ -3468,48 +3507,48 @@ Fokka_Draw:
     lda     enemyVulnerability,x    ; $9FD4
     ldy     #$00                    ; $9FD7
     cmp     #$00                    ; $9FD9
-    bne     loc_5_9FDF              ; $9FDB
+    bne     @loc_9FDF               ; $9FDB
     ldy     #$08                    ; $9FDD
 
-loc_5_9FDF:
+@loc_9FDF:
     lda     objCollision+1,x        ; $9FDF
     and     #$04                    ; $9FE1
-    bne     loc_5_9FEE              ; $9FE3
+    bne     @loc_9FEE               ; $9FE3
     lda     objYVelocity+1,x        ; $9FE5
-    bpl     loc_5_A008              ; $9FE8
+    bpl     @loc_A008               ; $9FE8
     ldy     #$10                    ; $9FEA
-    bne     loc_5_A008              ; $9FEC
+    bne     @loc_A008               ; $9FEC
 
-loc_5_9FEE:
+@loc_9FEE:
     lda     objXVelocity+1,x        ; $9FEE
-    beq     loc_5_A008              ; $9FF0
-    bpl     loc_5_9FF9              ; $9FF2
+    beq     @loc_A008               ; $9FF0
+    bpl     @loc_9FF9               ; $9FF2
     eor     #$FF                    ; $9FF4
     clc                             ; $9FF6
     adc     #$01                    ; $9FF7
 
-loc_5_9FF9:
+@loc_9FF9:
     cmp     #$10                    ; $9FF9
     lda     #$08                    ; $9FFB
-    bcc     loc_5_A000              ; $9FFD
+    bcc     @loc_A000               ; $9FFD
     lsr     a                       ; $9FFF
 
-loc_5_A000:
+@loc_A000:
     and     frameCounter            ; $A000
-    bne     loc_5_A008              ; $A002
+    bne     @loc_A008               ; $A002
     iny                             ; $A004
     iny                             ; $A005
     iny                             ; $A006
     iny                             ; $A007
 
-loc_5_A008:
+@loc_A008:
     tya                             ; $A008
     ldy     objOamOffset+1,x        ; $A009
     tax                             ; $A00B
     jsr     Sprite_DrawEnemyPair    ; $A00C
     jsr     Sprite_DrawEnemyPairKeepX ; $A00F
     lda     objState+1,x            ; $A012
-    beq     loc_5_A058              ; $A014
+    beq     @loc_A058               ; $A014
     sta     temp6                   ; $A016
     tax                             ; $A018
     lda     temp0                   ; $A019
@@ -3518,41 +3557,41 @@ loc_5_A008:
     sta     temp0                   ; $A01F
     lda     temp2                   ; $A021
     cmp     #$01                    ; $A023
-    bne     loc_5_A02B              ; $A025
+    bne     @loc_A02B               ; $A025
     inx                             ; $A027
     inx                             ; $A028
     inx                             ; $A029
     inx                             ; $A02A
 
-loc_5_A02B:
+@loc_A02B:
     lda     dat_5_9FC7,x            ; $A02B
     ldx     currentObject           ; $A02E
     sty     temp7                   ; $A030
     ldy     timerFast+TIMER_ENEMY,x ; $A032
     cpy     #$03                    ; $A035
-    bcc     loc_5_A03E              ; $A037
+    bcc     @loc_A03E               ; $A037
     cpy     #$0D                    ; $A039
-    bcs     loc_5_A03E              ; $A03B
+    bcs     @loc_A03E               ; $A03B
     asl     a                       ; $A03D
 
-loc_5_A03E:
+@loc_A03E:
     clc                             ; $A03E
     adc     temp1                   ; $A03F
     sta     temp1                   ; $A041
     ldy     temp7                   ; $A043
     ldx     temp6                   ; $A045
     cpx     #$04                    ; $A047
-    bne     loc_5_A051              ; $A049
+    bne     @loc_A051               ; $A049
     lda     temp3                   ; $A04B
     ora     #$80                    ; $A04D
     sta     temp3                   ; $A04F
 
-loc_5_A051:
+@loc_A051:
     lda     dat_5_9FC3,x            ; $A051
     tax                             ; $A054
     jmp     Sprite_DrawEnemyPairKeepX ; $A055
 
-loc_5_A058:
+@loc_A058:
     ldx     currentObject           ; $A058
     rts                             ; $A05A
 
@@ -3568,19 +3607,19 @@ Fokkeru_Draw:
     pha                             ; $A05D
     ldx     #$1C                    ; $A05E
     and     #$10                    ; $A060
-    beq     loc_5_A066              ; $A062
+    beq     @loc_A066               ; $A062
     ldx     #$24                    ; $A064
 
-loc_5_A066:
+@loc_A066:
     pla                             ; $A066
     and     #$08                    ; $A067
-    bne     loc_5_A06F              ; $A069
+    bne     @loc_A06F               ; $A069
     inx                             ; $A06B
     inx                             ; $A06C
     inx                             ; $A06D
     inx                             ; $A06E
 
-loc_5_A06F:
+@loc_A06F:
     jsr     Sprite_DrawEnemyPair    ; $A06F
     jmp     Sprite_DrawEnemyPairKeepX ; $A072
 
@@ -3599,29 +3638,29 @@ GpBubble_Ai:
     jsr     Enemy_UpdateWithBg      ; $A07E
     lda     objCollision+1,x        ; $A081
     and     #$10                    ; $A083
-    beq     loc_5_A094              ; $A085
+    beq     @loc_A094               ; $A085
 ; (code below not executed in the test movies)
     lda     statMeter               ; $A087
     sec                             ; $A08A
     sbc     #$01                    ; $A08B
-    bcs     loc_5_A091              ; $A08D
+    bcs     @loc_A091               ; $A08D
     lda     #$00                    ; $A08F
 
-loc_5_A091:
+@loc_A091:
     sta     statMeter               ; $A091
 ; (end of code not executed in the test movies)
 
-loc_5_A094:
+@loc_A094:
     lda     hudRedraw               ; $A094
     ora     #$80                    ; $A097
     sta     hudRedraw               ; $A099
     jsr     Enemy_HurtLinkOnContact ; $A09C
     lda     enemyType,x             ; $A09F
     cmp     #$17                    ; $A0A1
-    bne     loc_5_A0FB              ; $A0A3
+    bne     @loc_A0FB               ; $A0A3
     lda     enemyHp,x               ; $A0A5
     cmp     #$C0                    ; $A0A7
-    bcs     loc_5_A0FB              ; $A0A9
+    bcs     @loc_A0FB               ; $A0A9
 ; (code below not executed in the test movies)
     asl     objXVelocity+1,x        ; $A0AB
     asl     objYVelocity+1,x        ; $A0AD
@@ -3629,14 +3668,14 @@ loc_5_A094:
     sta     enemyType,x             ; $A0B2
     ldy     #$05                    ; $A0B4
 
-loc_5_A0B6:
+@loop:
     lda     a:enemyActive,y         ; $A0B6
-    beq     loc_5_A0C0              ; $A0B9
+    beq     @loc_A0C0               ; $A0B9
     dey                             ; $A0BB
-    bpl     loc_5_A0B6              ; $A0BC
-    bmi     loc_5_A0FB              ; $A0BE
+    bpl     @loop                   ; $A0BC
+    bmi     @loc_A0FB               ; $A0BE
 
-loc_5_A0C0:
+@loc_A0C0:
     lda     #$01                    ; $A0C0
     sta     a:enemyActive,y         ; $A0C2
     sta     a:objYHi+1,y            ; $A0C5
@@ -3663,27 +3702,27 @@ loc_5_A0C0:
     sta     enemyHp,x               ; $A0F9
 ; (end of code not executed in the test movies)
 
-loc_5_A0FB:
+@loc_A0FB:
     lda     drawOffscreen+1         ; $A0FB
     and     #$0F                    ; $A0FD
-    bne     loc_5_A107              ; $A0FF
+    bne     @loc_A107               ; $A0FF
     lda     objCollision+1,x        ; $A101
     and     #$03                    ; $A103
-    beq     loc_5_A10D              ; $A105
+    beq     @loc_A10D               ; $A105
 
-loc_5_A107:
+@loc_A107:
     jsr     Enemy_TurnAround        ; $A107
     jsr     Enemy_MoveX             ; $A10A
 
-loc_5_A10D:
+@loc_A10D:
     lda     drawOffscreen+1         ; $A10D
     and     #$F0                    ; $A10F
-    bne     loc_5_A119              ; $A111
+    bne     @loc_A119               ; $A111
     lda     objCollision+1,x        ; $A113
     and     #$0C                    ; $A115
     beq     loc_5_A132              ; $A117
 
-loc_5_A119:
+@loc_A119:
     lda     objYVelocity+1,x        ; $A119
     eor     #$FF                    ; $A11C
     clc                             ; $A11E
@@ -3746,7 +3785,7 @@ LargeBubble_Draw:
     jsr     Sprite_FlipPrevious     ; $A154
     pla                             ; $A157
     and     #$09                    ; $A158
-    bne     loc_5_A178              ; $A15A
+    bne     @loc_A178               ; $A15A
     lda     temp0                   ; $A15C
     sec                             ; $A15E
     sbc     #$18                    ; $A15F
@@ -3761,7 +3800,7 @@ LargeBubble_Draw:
     adc     #$10                    ; $A173
     sta     oamBuffer - 1,y         ; $A175
 
-loc_5_A178:
+@loc_A178:
     ldx     currentObject           ; $A178
 
 dat_5_A17A:
@@ -3779,10 +3818,10 @@ dat_5_A17A:
 KingBot_Ai:
     lda     enemyHp,x               ; $A180
     cmp     #$30                    ; $A182
-    bcs     loc_5_A1CA              ; $A184
+    bcs     @loc_A1CA               ; $A184
     ldy     #$05                    ; $A186
 
-loc_5_A188:
+@loop:
     lda     #$04                    ; $A188
     sta     a:enemyType,y           ; $A18A
     lda     #$01                    ; $A18D
@@ -3808,55 +3847,55 @@ loc_5_A188:
     adc     #$F0                    ; $A1C1
     sta     a:objXVelocity+1,y      ; $A1C3
     dey                             ; $A1C6
-    bne     loc_5_A188              ; $A1C7
+    bne     @loop                   ; $A1C7
 
-loc_5_A1C9:
+@done:
     rts                             ; $A1C9
 
-loc_5_A1CA:
+@loc_A1CA:
     lda     objState+1,x            ; $A1CA
-    bne     loc_5_A1DF              ; $A1CC
+    bne     @loc_A1DF               ; $A1CC
     lda     drawOffscreen+1         ; $A1CE
-    bne     loc_5_A1C9              ; $A1D0
+    bne     @done                   ; $A1D0
     jsr     Enemy_FaceLink          ; $A1D2
     lda     temp15                  ; $A1D5
     adc     #$30                    ; $A1D7
     cmp     #$60                    ; $A1D9
-    bcs     loc_5_A1C9              ; $A1DB
+    bcs     @done                   ; $A1DB
     inc     objState+1,x            ; $A1DD
 
-loc_5_A1DF:
+@loc_A1DF:
     lda     objCollision+1,x        ; $A1DF
     and     #$04                    ; $A1E1
-    beq     loc_5_A1EB              ; $A1E3
+    beq     @loc_A1EB               ; $A1E3
 ; (code below not executed in the test movies)
     jsr     Enemy_Land              ; $A1E5
 
-loc_5_A1E8:
+@loop2:
     sta     objYVelocity+1,x        ; $A1E8
 ; (end of code not executed in the test movies)
 
-loc_5_A1EB:
+@loc_A1EB:
     jsr     Enemy_MoveYAndFall      ; $A1EB
     jsr     Enemy_UpdateWithBg      ; $A1EE
     lda     objCollision+1,x        ; $A1F1
     and     #$04                    ; $A1F3
-    beq     loc_5_A20A              ; $A1F5
+    beq     @loc_A20A               ; $A1F5
 ; (code below not executed in the test movies)
     lda     rng+1,x                 ; $A1F7
     and     #$07                    ; $A1FA
-    bne     loc_5_A20D              ; $A1FC
+    bne     @loc_A20D               ; $A1FC
     jsr     Enemy_FaceLink          ; $A1FE
     lda     dat_5_962A,y            ; $A201
     sta     objXVelocity+1,x        ; $A204
     lda     #$E8                    ; $A206
-    bne     loc_5_A1E8              ; $A208
+    bne     @loop2                  ; $A208
 ; (end of code not executed in the test movies)
 
-loc_5_A20A:
+@loc_A20A:
     jsr     Enemy_MoveX             ; $A20A
 
-loc_5_A20D:
+@loc_A20D:
     jmp     Enemy_HurtLinkOnContact ; $A20D
 
 dat_5_A210:
@@ -3876,15 +3915,15 @@ dat_5_A210:
 ; ---------------------------------------------------------------------------
 Barrier_Ai:
     lda     enemyAiState,x          ; $A234
-    bne     loc_5_A2A7              ; $A236
+    bne     @loc_A2A7               ; $A236
     lda     crystalsRemaining       ; $A238
     ora     drawOffscreen+1         ; $A23B
-    bne     loc_5_A25F              ; $A23D
+    bne     @loc_A25F               ; $A23D
     lda     objXHi                  ; $A23F
-    bne     loc_5_A25F              ; $A241
+    bne     @loc_A25F               ; $A241
     lda     objX                    ; $A243
     cmp     #$C0                    ; $A245
-    bcc     loc_5_A25F              ; $A247
+    bcc     @loc_A25F               ; $A247
     rol     ram_00DE                ; $A249
     lda     #$00                    ; $A24B
     sta     objXVelocity+1,x        ; $A24D
@@ -3897,55 +3936,55 @@ Barrier_Ai:
     sta     enemyAiState,x          ; $A25B
     sta     objState                ; $A25D
 
-loc_5_A25F:
+@loc_A25F:
     lda     drawOffscreen+1         ; $A25F
     ora     linkDeathPending        ; $A261
-    bne     loc_5_A27C              ; $A264
+    bne     @loc_A27C               ; $A264
     sta     timerSlow+TIMER_INVULNERABLE ; $A266
     jsr     Enemy_CheckLinkContact  ; $A269
     jsr     Enemy_HurtLinkOnContact ; $A26C
     lda     objCollision+1,x        ; $A26F
     and     #$10                    ; $A271
-    beq     loc_5_A27C              ; $A273
+    beq     @loc_A27C               ; $A273
 ; (code below not executed in the test movies)
     lda     linkFairy               ; $A275
-    beq     loc_5_A27C              ; $A277
+    beq     @loc_A27C               ; $A277
     inc     linkDeathPending        ; $A279
 ; (end of code not executed in the test movies)
 
-loc_5_A27C:
+@loc_A27C:
     lda     #$00                    ; $A27C
     ldy     enemyAiState,x          ; $A27E
-    bne     loc_5_A28D              ; $A280
+    bne     @loc_A28D               ; $A280
     lda     frameCounter            ; $A282
     and     #$03                    ; $A284
-    bne     loc_5_A2A6              ; $A286
+    bne     @done                   ; $A286
     lda     frameCounter            ; $A288
     and     #$0C                    ; $A28A
     asl     a                       ; $A28C
 
-loc_5_A28D:
+@loc_A28D:
     tax                             ; $A28D
     ldy     #$00                    ; $A28E
 
-loc_5_A290:
+@loop:
     lda     dat_5_A210,x            ; $A290
     sta     ppuBuffer1,y            ; $A293
     inx                             ; $A296
     iny                             ; $A297
     cpy     #$08                    ; $A298
-    bne     loc_5_A290              ; $A29A
+    bne     @loop                   ; $A29A
     lda     #$07                    ; $A29C
     sta     ppuBuffer1Len           ; $A29E
     lda     #$01                    ; $A2A1
     sta     ppuStringSelect         ; $A2A3
 
-loc_5_A2A6:
+@done:
     rts                             ; $A2A6
 
-loc_5_A2A7:
+@loc_A2A7:
     lda     objXHi+4                ; $A2A7
-    bne     loc_5_A2B7              ; $A2A9
+    bne     @loc_A2B7               ; $A2A9
     lda     #$81                    ; $A2AB
     sta     objState+4              ; $A2AD
     lda     #$A2                    ; $A2AF
@@ -3953,40 +3992,40 @@ loc_5_A2A7:
     lda     #$26                    ; $A2B3
     sta     objXHi+4                ; $A2B5
 
-loc_5_A2B7:
+@loc_A2B7:
     cmp     #$24                    ; $A2B7
-    bne     loc_5_A2C4              ; $A2B9
+    bne     @loc_A2C4               ; $A2B9
     lda     objX+4                  ; $A2BB
     cmp     #$E2                    ; $A2BD
-    bne     loc_5_A2C4              ; $A2BF
+    bne     @loc_A2C4               ; $A2BF
     lsr     ram_00DE                ; $A2C1
 
-loc_5_A2C3:
+@done2:
     rts                             ; $A2C3
 
-loc_5_A2C4:
+@loc_A2C4:
     inc     objXVelocity+1,x        ; $A2C4
     lda     objXVelocity+1,x        ; $A2C6
     and     #$03                    ; $A2C8
-    bne     loc_5_A2C3              ; $A2CA
+    bne     @done2                  ; $A2CA
     lda     objXVelocity+1,x        ; $A2CC
     and     #$04                    ; $A2CE
-    beq     loc_5_A2E6              ; $A2D0
+    beq     @loc_A2E6               ; $A2D0
     ldy     objState+4              ; $A2D2
     ldx     #$06                    ; $A2D4
     lda     #$40                    ; $A2D6
 
-loc_5_A2D8:
+@loop2:
     sta     sram_60D0,y             ; $A2D8
     iny                             ; $A2DB
     dex                             ; $A2DC
-    bpl     loc_5_A2D8              ; $A2DD
+    bpl     @loop2                  ; $A2DD
     lda     objState+4              ; $A2DF
     sec                             ; $A2E1
     sbc     #$10                    ; $A2E2
     sta     objState+4              ; $A2E4
 
-loc_5_A2E6:
+@loc_A2E6:
     lda     objXHi+4                ; $A2E6
     sta     ppuBuffer1              ; $A2E8
     lda     objX+4                  ; $A2EB
@@ -3997,11 +4036,11 @@ loc_5_A2E6:
     sta     ppuBuffer1+15           ; $A2F7
     dex                             ; $A2FA
 
-loc_5_A2FB:
+@loop3:
     lda     #$F4                    ; $A2FB
     sta     ppuBuffer1+3,x          ; $A2FD
     dex                             ; $A300
-    bpl     loc_5_A2FB              ; $A301
+    bpl     @loop3                  ; $A301
     lda     objX+4                  ; $A303
     sec                             ; $A305
     sbc     #$20                    ; $A306
@@ -4027,21 +4066,21 @@ loc_5_A2FB:
 Generator_Init_Bank5:
     ldy     #$05                    ; $A31D
 
-loc_5_A31F:
+@loop:
     cpy     currentObject           ; $A31F
-    beq     loc_5_A32F              ; $A321
+    beq     @loc_A32F               ; $A321
     lda     a:enemyActive,y         ; $A323
-    beq     loc_5_A32F              ; $A326
+    beq     @loc_A32F               ; $A326
     lda     a:enemyType,y           ; $A328
     cmp     enemyType,x             ; $A32B
-    beq     loc_5_A333              ; $A32D
+    beq     @loc_A333               ; $A32D
 
-loc_5_A32F:
+@loc_A32F:
     dey                             ; $A32F
-    bpl     loc_5_A31F              ; $A330
+    bpl     @loop                   ; $A330
     rts                             ; $A332
 
-loc_5_A333:
+@loc_A333:
     tya                             ; $A333
     tax                             ; $A334
     jsr     Enemy_Despawn           ; $A335
@@ -4062,13 +4101,13 @@ Thunderbird_Init:
     jsr     Area_TestFlag           ; $A33D
     ldx     currentObject           ; $A340
     cmp     #$00                    ; $A342
-    bne     loc_5_A349              ; $A344
+    bne     @loc_A349               ; $A344
 ; (code below not executed in the test movies)
     sta     enemyActive,x           ; $A346
     rts                             ; $A348
 ; (end of code not executed in the test movies)
 
-loc_5_A349:
+@loc_A349:
     lda     #$08                    ; $A349
     sta     objYVelocity+1,x        ; $A34B
     rts                             ; $A34E
@@ -4097,18 +4136,18 @@ dat_5_A351:
 ; ---------------------------------------------------------------------------
 Thunderbird_Ai:
     lda     scrollFrozen            ; $A359
-    bne     loc_5_A36B              ; $A35C
+    bne     @loc_A36B               ; $A35C
     lda     scrollXHi               ; $A35E
-    beq     loc_5_A3BD              ; $A361
+    beq     @loc_A3BD               ; $A361
     inc     scrollFrozen            ; $A363
     lda     #$90                    ; $A366
     sta     timerFast+TIMER_ENEMY,x ; $A368
 
-loc_5_A36B:
+@loc_A36B:
     lda     sramEnemyHitbox+34      ; $A36B
-    bpl     loc_5_A3C2              ; $A36E
+    bpl     @loc_A3C2               ; $A36E
     ldy     enemyStunTimer,x        ; $A370
-    bne     loc_5_A3BD              ; $A373
+    bne     @loc_A3BD               ; $A373
     inc     enemyActive,x           ; $A375
     lda     #$0A                    ; $A377
     sta     ram_00D9                ; $A379
@@ -4116,70 +4155,70 @@ loc_5_A36B:
     pha                             ; $A37D
     ldx     #$05                    ; $A37E
 
-loc_5_A380:
+@loop:
     stx     currentObject           ; $A380
     lda     #$00                    ; $A382
     sta     objState+7,x            ; $A384
     lda     enemyActive,x           ; $A386
-    beq     loc_5_A3B2              ; $A388
+    beq     @loc_A3B2               ; $A388
     cmp     #$01                    ; $A38A
-    bne     loc_5_A3B2              ; $A38C
+    bne     @loc_A3B2               ; $A38C
 ; (code below not executed in the test movies)
     inx                             ; $A38E
     ldy     #$01                    ; $A38F
     jsr     Obj_ComputeScreenPos    ; $A391
     ldx     currentObject           ; $A394
     ldy     ram_00D9                ; $A396
-    bne     loc_5_A3AF              ; $A398
+    bne     @loc_A3AF               ; $A398
     lda     drawOffscreen+1         ; $A39A
     and     #$88                    ; $A39C
-    bne     loc_5_A3B2              ; $A39E
+    bne     @loc_A3B2               ; $A39E
     ldy     enemyType,x             ; $A3A0
     lda     sramEnemyFlags,y        ; $A3A2
     ldy     #$09                    ; $A3A5
     and     #$A0                    ; $A3A7
-    bmi     loc_5_A3B2              ; $A3A9
-    beq     loc_5_A3AF              ; $A3AB
+    bmi     @loc_A3B2               ; $A3A9
+    beq     @loc_A3AF               ; $A3AB
     ldy     #$01                    ; $A3AD
 
-loc_5_A3AF:
+@loc_A3AF:
     jsr     Enemy_TakeDamage        ; $A3AF
 ; (end of code not executed in the test movies)
 
-loc_5_A3B2:
+@loc_A3B2:
     dex                             ; $A3B2
-    bpl     loc_5_A380              ; $A3B3
+    bpl     @loop                   ; $A3B3
     pla                             ; $A3B5
     sta     currentObject           ; $A3B6
     tax                             ; $A3B8
     lda     #$80                    ; $A3B9
     sta     musicRequest            ; $A3BB
 
-loc_5_A3BD:
+@loc_A3BD:
     pla                             ; $A3BD
     pla                             ; $A3BE
     jmp     Enemy_Draw              ; $A3BF
 
-loc_5_A3C2:
+@loc_A3C2:
     lda     linkAttackFrame         ; $A3C2
-    bne     loc_5_A3CC              ; $A3C5
+    bne     @loc_A3CC               ; $A3C5
     lda     #$F8                    ; $A3C7
     sta     swordY                  ; $A3C9
 
-loc_5_A3CC:
+@loc_A3CC:
     lda     enemyHp,x               ; $A3CC
     cmp     #$C0                    ; $A3CE
-    bcc     loc_5_A3D8              ; $A3D0
+    bcc     @loc_A3D8               ; $A3D0
     jsr     Enemy_Draw              ; $A3D2
-    jmp     loc_5_A3DB              ; $A3D5
+    jmp     @loc_A3DB               ; $A3D5
 
-loc_5_A3D8:
+@loc_A3D8:
     jsr     Enemy_UpdateCommon      ; $A3D8
 
-loc_5_A3DB:
+@loc_A3DB:
     lda     #$01                    ; $A3DB
     cmp     enemyActive,x           ; $A3DD
-    beq     loc_5_A3EF              ; $A3DF
+    beq     @loc_A3EF               ; $A3DF
     sta     enemyActive,x           ; $A3E1
     lda     #$FF                    ; $A3E3
     sta     sramEnemyHitbox+34      ; $A3E5
@@ -4187,29 +4226,29 @@ loc_5_A3DB:
     lsr     a                       ; $A3EB
     sta     enemyStunTimer,x        ; $A3EC
 
-loc_5_A3EF:
+@loc_A3EF:
     lda     timerFast+TIMER_ENEMY,x ; $A3EF
-    beq     loc_5_A3F5              ; $A3F2
+    beq     @loc_A3F5               ; $A3F2
     rts                             ; $A3F4
 
-loc_5_A3F5:
+@loc_A3F5:
     lda     #$18                    ; $A3F5
     jsr     Boss_DrawHpBar_Bank5    ; $A3F7
     lda     frameCounter            ; $A3FA
-    bne     loc_5_A3FE              ; $A3FC
+    bne     @loc_A3FE               ; $A3FC
 
-loc_5_A3FE:
+@loc_A3FE:
     lda     #$1F                    ; $A3FE
     ldy     enemyHp,x               ; $A400
     cpy     #$60                    ; $A402
-    bcs     loc_5_A407              ; $A404
+    bcs     @loc_A407               ; $A404
     lsr     a                       ; $A406
 
-loc_5_A407:
+@loc_A407:
     and     frameCounter            ; $A407
-    bne     loc_5_A436              ; $A409
+    bne     @loc_A436               ; $A409
     jsr     Enemy_FireProjectile    ; $A40B
-    bcs     loc_5_A436              ; $A40E
+    bcs     @loc_A436               ; $A40E
     lda     #$08                    ; $A410
     sta     a:objState+7,y          ; $A412
     lda     objX+1,x                ; $A415
@@ -4227,38 +4266,38 @@ loc_5_A407:
     sta     objYVelocity+7,y        ; $A431
     ldx     currentObject           ; $A434
 
-loc_5_A436:
+@loc_A436:
     jsr     Enemy_MoveX             ; $A436
     jsr     Enemy_MoveY             ; $A439
     lda     frameCounter            ; $A43C
     and     #$03                    ; $A43E
-    bne     loc_5_A45D              ; $A440
+    bne     @loc_A45D               ; $A440
     lda     objYVelocity+1,x        ; $A442
     cmp     #$10                    ; $A445
-    beq     loc_5_A44D              ; $A447
+    beq     @loc_A44D               ; $A447
     cmp     #$F0                    ; $A449
-    bne     loc_5_A44F              ; $A44B
+    bne     @loc_A44F               ; $A44B
 
-loc_5_A44D:
+@loc_A44D:
     inc     enemyAiState,x          ; $A44D
 
-loc_5_A44F:
+@loc_A44F:
     lda     enemyAiState,x          ; $A44F
     lsr     a                       ; $A451
     inc     objYVelocity+1,x        ; $A452
-    bcs     loc_5_A45D              ; $A455
+    bcs     @loc_A45D               ; $A455
     dec     objYVelocity+1,x        ; $A457
     dec     objYVelocity+1,x        ; $A45A
 
-loc_5_A45D:
+@loc_A45D:
     lda     frameCounter            ; $A45D
     and     #$1F                    ; $A45F
-    bne     loc_5_A46B              ; $A461
+    bne     @done                   ; $A461
     jsr     Enemy_FaceLink          ; $A463
     lda     dat_5_A34F,y            ; $A466
     sta     objXVelocity+1,x        ; $A469
 
-loc_5_A46B:
+@done:
     rts                             ; $A46B
 
 dat_5_A46C:
@@ -4280,22 +4319,22 @@ DarkLink_DrawTrigger:
     ldx     #$36                    ; $A476
     lda     enemyAiState            ; $A478
     and     #$18                    ; $A47A
-    bne     loc_5_A480              ; $A47C
+    bne     @loc_A480               ; $A47C
     inx                             ; $A47E
     inx                             ; $A47F
 
-loc_5_A480:
+@loc_A480:
     jsr     Sprite_DrawEnemyPairKeepX ; $A480
     ldx     #$00                    ; $A483
     lda     objFacing+4             ; $A485
     cmp     #$06                    ; $A487
-    bcc     loc_5_A491              ; $A489
+    bcc     @loc_A491               ; $A489
     inx                             ; $A48B
     cmp     #$07                    ; $A48C
-    bne     loc_5_A491              ; $A48E
+    bne     @loc_A491               ; $A48E
     inx                             ; $A490
 
-loc_5_A491:
+@loc_A491:
     lda     objY+1                  ; $A491
     clc                             ; $A493
     adc     dat_5_A46F,x            ; $A494
@@ -4334,13 +4373,13 @@ DarkLink_FlashPalette:
     ldx     ppuBuffer0Len           ; $A4C4
     ldy     #$00                    ; $A4C7
 
-loc_5_A4C9:
+@loop:
     lda     dat_5_A4B8,y            ; $A4C9
     sta     ppuBuffer0,x            ; $A4CC
     inx                             ; $A4CF
     iny                             ; $A4D0
     cpy     #$08                    ; $A4D1
-    bcc     loc_5_A4C9              ; $A4D3
+    bcc     @loop                   ; $A4D3
     lda     frameCounter            ; $A4D5
     lsr     a                       ; $A4D7
     lsr     a                       ; $A4D8
@@ -4366,21 +4405,21 @@ Boss_DrawHpBar_Bank5:
     lda     enemyHp,x               ; $A4ED
     clc                             ; $A4EF
 
-loc_5_A4F0:
+@loop:
     sbc     temp0                   ; $A4F0
     iny                             ; $A4F2
-    bcs     loc_5_A4F0              ; $A4F3
+    bcs     @loop                   ; $A4F3
     ldx     #$1C                    ; $A4F5
     lda     #$70                    ; $A4F7
     sta     temp0                   ; $A4F9
 
-loc_5_A4FB:
+@loop2:
     lda     #$70                    ; $A4FB
     dey                             ; $A4FD
-    bmi     loc_5_A502              ; $A4FE
+    bmi     @loc_A502               ; $A4FE
     lda     #$6E                    ; $A500
 
-loc_5_A502:
+@loc_A502:
     sta     oamBuffer+193,x         ; $A502
     lda     #$01                    ; $A505
     sta     oamBuffer+194,x         ; $A507
@@ -4394,7 +4433,7 @@ loc_5_A502:
     dex                             ; $A519
     dex                             ; $A51A
     dex                             ; $A51B
-    bpl     loc_5_A4FB              ; $A51C
+    bpl     @loop2                  ; $A51C
     ldx     currentObject           ; $A51E
     rts                             ; $A520
 
@@ -4408,24 +4447,24 @@ loc_5_A502:
 ; ---------------------------------------------------------------------------
 HiddenJar_Ai_Bank5:
     lda     drawOffscreen+1         ; $A521
-    bne     loc_5_A54E              ; $A523
+    bne     @done                   ; $A523
     jsr     Enemy_CheckSwordHit     ; $A525
     lda     objCollision+1,x        ; $A528
     and     #$20                    ; $A52A
-    beq     loc_5_A54E              ; $A52C
+    beq     @done                   ; $A52C
     lda     #$11                    ; $A52E
     sta     enemyAiState,x          ; $A530
     ldy     #$01                    ; $A532
     sty     enemyHp,x               ; $A534
     lda     rng+1,x                 ; $A536
-    bpl     loc_5_A541              ; $A539
+    bpl     @loc_A541               ; $A539
 ; (code below not executed in the test movies)
     lda     #$30                    ; $A53B
     sta     enemyHp,x               ; $A53D
     ldy     #$19                    ; $A53F
 ; (end of code not executed in the test movies)
 
-loc_5_A541:
+@loc_A541:
     sty     enemyType,x             ; $A541
     lda     #$08                    ; $A543
     sta     enemyStunTimer,x        ; $A545
@@ -4433,7 +4472,7 @@ loc_5_A541:
     adc     #$03                    ; $A54A
     sta     objX+1,x                ; $A54C
 
-loc_5_A54E:
+@done:
     rts                             ; $A54E
 ; (unreferenced: $A54F-$A5FF, 177 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $A54F
@@ -4449,32 +4488,20 @@ loc_5_A54E:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $A5EF
     .byte   $FF                                                             ; $A5FF
 
-dat_5_A600:
-    .byte   $02                                                             ; $A600
-
-dat_5_A601:
-    .byte   $03, $3D, $AF, $F5, $BB                                         ; $A601
-; (unreferenced: $A606-$A607, 2 bytes)
-    .byte   $BD, $D0                                                        ; $A606
-    .byte   $61, $AF, $00, $7F, $BF, $BC                                    ; $A608
-; (unreferenced: $A60E-$A60F, 2 bytes)
-    .byte   $55, $BD                                                        ; $A60E
-
 ; ---------------------------------------------------------------------------
-; Bank5_Nmi
-;
-; NMI handler for the title and other bank 5 screens (nmiMode =
-; NMI_MODE_BANK5), reached from Nmi_Bank5.  Like the game NMI it does sprite
-; DMA, writes the PPU strings (from its own table, dat_5_A600), sets the
-; scroll, plays sound (Sound_UpdateTitle, the title music player) and reads the
-; controllers; then it runs the bank 5 state machine (sub_5_A6D9).
-;
-; QUIRK: unlike the game NMI it does not save a.  This is harmless: it
-; returns with a >= $80, which Main_Loop never mistakes for a load request,
-; and RTI restores the flags.
-;
-; Status:  confirmed
+; Bank5PpuStrings: the PPU string lists Bank5_Nmi can write, indexed by
+; ppuStringSelect (the bank 5 counterpart of bank 7's table).
 ; ---------------------------------------------------------------------------
+Bank5PpuStrings:
+    .word   ppuBuffer0              ; $A600  0: the strings queued this frame
+    .word   TitlePalette            ; $A602  1
+    .word   FilePalette             ; $A604  2
+    .word   ContinueScreenPalette   ; $A606  3: unused here
+    .word   TitleScreenText         ; $A608  4
+    .word   sramFileScreenText      ; $A60A  5
+    .word   RegisterScreenText      ; $A60C  6
+    .word   EliminateScreenText     ; $A60E  7
+
 Bank5_Nmi:
     lda     ppuCtrlShadow           ; $A610
     and     #$7C                    ; $A612
@@ -4485,11 +4512,11 @@ Bank5_Nmi:
     and     #$E0                    ; $A61E
     sta     PPUMASK                 ; $A620
     ldy     renderingOff            ; $A623
-    bne     loc_5_A62C              ; $A626
+    bne     @loc_A62C               ; $A626
     lda     ppuMaskShadow           ; $A628
     ora     #$1E                    ; $A62A
 
-loc_5_A62C:
+@loc_A62C:
     sta     ppuMaskShadow           ; $A62C
     ldx     PPUSTATUS               ; $A62E
     lda     #$00                    ; $A631
@@ -4501,9 +4528,9 @@ loc_5_A62C:
     lda     ppuStringSelect         ; $A641
     asl     a                       ; $A644
     tax                             ; $A645
-    lda     dat_5_A600,x            ; $A646
+    lda     Bank5PpuStrings,x       ; $A646
     sta     temp0                   ; $A649
-    lda     dat_5_A601,x            ; $A64B
+    lda     Bank5PpuStrings+1,x     ; $A64B
     sta     temp1                   ; $A64E
     jsr     Ppu_WriteStrings        ; $A650
     lda     #$3F                    ; $A653
@@ -4529,7 +4556,7 @@ loc_5_A62C:
     sta     joypadHeldPrev          ; $A687
     jsr     Joypad_Update           ; $A68A
     inc     a:frameCounter          ; $A68D
-    jsr     sub_5_A6D9              ; $A690
+    jsr     Bank5_RunState          ; $A690
     lda     PPUSTATUS               ; $A693
     lda     ppuCtrlShadow           ; $A696
     ora     #$80                    ; $A698
@@ -4553,10 +4580,10 @@ Game_PowerOnInit:
     jsr     Ram_ClearAll            ; $A6A3
     ldy     #$1F                    ; $A6A6
 
-loc_5_A6A8:
+@loop:
     sta     a:ram_00E0,y            ; $A6A8
     dey                             ; $A6AB
-    bpl     loc_5_A6A8              ; $A6AC
+    bpl     @loop                   ; $A6AC
     sta     DMC_RAW                 ; $A6AE
     lda     #$0F                    ; $A6B1
     sta     SND_CHN                 ; $A6B3
@@ -4575,81 +4602,137 @@ loc_5_A6A8:
     sta     PPUCTRL                 ; $A6D5
     rts                             ; $A6D8
 
-sub_5_A6D9:
+; ---------------------------------------------------------------------------
+; Bank5_RunState
+;
+; The bank 5 state machine, run by Bank5_Nmi every frame.  It uses gameState
+; for its own states: 0 = title screen and story (Title_Run), 1 = file
+; screens (FileScreen_Run), 2 = leave for the game (Bank5_StartGame).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Bank5_RunState:
     jsr     Game_CheckStateChange   ; $A6D9
     jsr     JumpTable               ; $A6DC
 ; (inline jump table)
-    .word   loc_5_A6F0              ; $A6DF
-    .word   loc_5_B22D              ; $A6E1
-    .word   loc_5_A6E5              ; $A6E3
+    .word   Title_Run               ; $A6DF
+    .word   FileScreen_Run          ; $A6E1
+    .word   Bank5_StartGame         ; $A6E3
 
-loc_5_A6E5:
+; ---------------------------------------------------------------------------
+; Bank5_StartGame
+;
+; gameState 2: switch the NMI back to the game NMI and set gameState 0, so
+; that the next frame starts the game (GameState_Begin).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Bank5_StartGame:
     lda     #NMI_MODE_GAME          ; $A6E5
     sta     nmiMode                 ; $A6E7
     lda     #$00                    ; $A6EA
     sta     gameState               ; $A6EC
     rts                             ; $A6EF
 
-loc_5_A6F0:
+; ---------------------------------------------------------------------------
+; Title_Run
+;
+; gameState 0: the title screen.  In modes 3 and 4 it animates the stars
+; first.  Modes: 0 Title_Init, 1 Title_DrawScreen, 2 Title_Show,
+; 3 Title_Idle, 4 Story_Run.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Title_Run:
     lda     gameMode                ; $A6F0
     cmp     #$03                    ; $A6F3
-    bcc     loc_5_A6FF              ; $A6F5
-    jsr     sub_5_A8CF              ; $A6F7
-    jsr     sub_5_A918              ; $A6FA
+    bcc     @loc_A6FF               ; $A6F5
+    jsr     Title_AnimateStars      ; $A6F7
+    jsr     Title_AnimateSparkles   ; $A6FA
     lda     #$00                    ; $A6FD
 
-loc_5_A6FF:
+@loc_A6FF:
     jsr     Game_CheckModeChange    ; $A6FF
     jsr     JumpTable               ; $A702
 ; (inline jump table)
-    .word   loc_5_A70F              ; $A705
-    .word   loc_5_AF1F              ; $A707
-    .word   loc_5_A72E              ; $A709
-    .word   loc_5_A737              ; $A70B
-    .word   loc_5_AB6D              ; $A70D
+    .word   Title_Init              ; $A705
+    .word   Title_DrawScreen        ; $A707
+    .word   Title_Show              ; $A709
+    .word   Title_Idle              ; $A70B
+    .word   Story_Run               ; $A70D
 
-loc_5_A70F:
+; ---------------------------------------------------------------------------
+; Title_Init
+;
+; Title mode 0: clear the work RAM, set the MMC1 control register
+; (horizontal mirroring, 8K CHR), start the title song (soundMute = 1) unless
+; flutePlayed says it was already started, set up the scroll variables
+; (Title_InitScroll), map CHR bank 0, and blank the screen for mode 1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Title_Init:
     jsr     Ram_ClearWork           ; $A70F
     lda     #$0F                    ; $A712
     jsr     Mmc1_SetControl_Bank5   ; $A714
     lda     flutePlayed             ; $A717
-    bne     loc_5_A723              ; $A71A
+    bne     @loc_A723               ; $A71A
     lda     #$01                    ; $A71C
     sta     soundMute               ; $A71E
     inc     flutePlayed             ; $A720
 
-loc_5_A723:
-    jsr     sub_5_ADE0              ; $A723
+@loc_A723:
+    jsr     Title_InitScroll        ; $A723
     lda     #$00                    ; $A726
     jsr     Mmc1_SetChrBank_Bank5   ; $A728
     jmp     Game_BlankAndNextMode   ; $A72B
 
-loc_5_A72E:
-    jsr     sub_5_A8C1              ; $A72E
+; ---------------------------------------------------------------------------
+; Title_Show
+;
+; Title mode 2: load the title sprites, set ram_0727, and turn rendering on
+; for mode 3.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Title_Show:
+    jsr     Title_LoadSprites       ; $A72E
     inc     ram_0727                ; $A731
     jmp     Game_UnblankAndNextMode ; $A734
 
-loc_5_A737:
+; ---------------------------------------------------------------------------
+; Title_Idle
+;
+; Title mode 3: the title screen.  Waits for sprite 0 (the split below the
+; logo) and sets the scroll below it from titleSplitAddr, then checks START
+; (Title_CheckStart).  The screen first scrolls up, one line every 4 frames
+; during part 2 of the title song, until ppuScrollY is $60; then it waits
+; there (Story_Delay, drawing the story's first rows) until part 8 of the
+; song starts, and goes to mode 4, the story.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Title_Idle:
     ldy     #$00                    ; $A737
 
-loc_5_A739:
+@loop:
     nop                             ; $A739
     dey                             ; $A73A
-    bne     loc_5_A739              ; $A73B
+    bne     @loop                   ; $A73B
 
-loc_5_A73D:
+@loop2:
     bit     PPUSTATUS               ; $A73D
-    bvc     loc_5_A73D              ; $A740
+    bvc     @loop2                  ; $A740
     ldy     #$00                    ; $A742
 
-loc_5_A744:
+@loop3:
     dey                             ; $A744
-    bne     loc_5_A744              ; $A745
+    bne     @loop3                  ; $A745
     ldy     #$4A                    ; $A747
 
-loc_5_A749:
+@loop4:
     dey                             ; $A749
-    bne     loc_5_A749              ; $A74A
+    bne     @loop4                  ; $A74A
     lda     ppuCtrlShadow           ; $A74C
     and     #$FC                    ; $A74E
     ora     titleSplitNametable     ; $A750
@@ -4664,34 +4747,44 @@ loc_5_A749:
     lda     PPUSTATUS               ; $A767
     lda     ppuScrollY              ; $A76A
     cmp     #$60                    ; $A76C
-    bne     loc_5_A787              ; $A76E
+    bne     @loc_A787               ; $A76E
     lda     #$80                    ; $A770
     sta     titleDelay              ; $A772
-    jsr     sub_5_A795              ; $A775
-    lda     ram_00E8                ; $A778
+    jsr     Title_CheckStart        ; $A775
+    lda     titleMusicPart          ; $A778
     cmp     #$08                    ; $A77A
-    beq     loc_5_A781              ; $A77C
-    jmp     loc_5_ABF7              ; $A77E
+    beq     @loc_A781               ; $A77C
+    jmp     Story_Delay             ; $A77E
 
-loc_5_A781:
+@loc_A781:
     inc     gameMode                ; $A781
-    jmp     sub_5_A795              ; $A784
+    jmp     Title_CheckStart        ; $A784
 
-loc_5_A787:
-    lda     ram_00E8                ; $A787
+@loc_A787:
+    lda     titleMusicPart          ; $A787
     cmp     #$02                    ; $A789
-    bne     sub_5_A795              ; $A78B
+    bne     Title_CheckStart        ; $A78B
     lda     frameCounter            ; $A78D
     and     #$03                    ; $A78F
-    bne     sub_5_A795              ; $A791
+    bne     Title_CheckStart        ; $A791
     inc     ppuScrollY              ; $A793
 
-sub_5_A795:
+; ---------------------------------------------------------------------------
+; Title_CheckStart
+;
+; If START was just pressed, leave the title for the file select screen:
+; switch the title music player to part $80 (soundMute = $80; the player
+; copies it to titleMusicPart), hide the sprites but sprite 0, turn
+; rendering off and go to gameState 1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Title_CheckStart:
     lda     joypadHeld              ; $A795
     cmp     joypadHeldPrev          ; $A797
-    beq     loc_5_A7C0              ; $A79A
+    beq     @done                   ; $A79A
     and     #$10                    ; $A79C
-    beq     loc_5_A7C0              ; $A79E
+    beq     @done                   ; $A79E
     lda     #$00                    ; $A7A0
     sta     ram_0727                ; $A7A2
     sta     sceneStep               ; $A7A5
@@ -4705,10 +4798,18 @@ sub_5_A795:
     inc     renderingOff            ; $A7BA
     inc     gameState               ; $A7BD
 
-loc_5_A7C0:
+@done:
     rts                             ; $A7C0
 
-dat_5_A7C1:
+; ---------------------------------------------------------------------------
+; TitleSprites
+;
+; The 64 sprites of the title screen (Y, tile, attributes, X): sprite 0
+; (the split below the logo), the sword in the logo, and the stars.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleSprites:
     .byte   $7F, $F0, $01, $F8, $3F, $EE, $01, $F8, $4F, $F6, $01, $F0, $4F, $F4, $01, $F8; $A7C1
     .byte   $5F, $EE, $01, $E8, $5F, $F0, $01, $F0, $5F, $F0, $01, $F8, $6F, $F8, $02, $78; $A7D1
     .byte   $6F, $FA, $02, $80, $6F, $EE, $01, $D0, $6F, $F0, $01, $D8, $6F, $F4, $01, $E0; $A7E1
@@ -4726,24 +4827,41 @@ dat_5_A7C1:
     .byte   $AD, $E8, $00, $48, $92, $E8, $01, $70, $95, $E8, $02, $88, $8F, $E8, $03, $90; $A8A1
     .byte   $95, $E8, $00, $B0, $98, $E8, $01, $8A, $78, $E8, $02, $95, $93, $E8, $03, $8E; $A8B1
 
-sub_5_A8C1:
+; ---------------------------------------------------------------------------
+; Title_LoadSprites
+;
+; Copy TitleSprites (sprite 0, the logo's sword and the stars) into
+; oamBuffer.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Title_LoadSprites:
     ldy     #$FF                    ; $A8C1
 
-loc_5_A8C3:
-    lda     dat_5_A7C1,y            ; $A8C3
+@loop:
+    lda     TitleSprites,y          ; $A8C3
     sta     oamBuffer,y             ; $A8C6
     dey                             ; $A8C9
     cpy     #$FF                    ; $A8CA
-    bne     loc_5_A8C3              ; $A8CC
+    bne     @loop                   ; $A8CC
     rts                             ; $A8CE
 
-sub_5_A8CF:
+; ---------------------------------------------------------------------------
+; Title_AnimateStars
+;
+; Every 16 frames, cycle the palette of the stars (sprites 26-52).  Every
+; 256 frames, start the shooting star (sprite 27), which falls 2 lines and
+; 3 pixels right every 4 frames until Y $37.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Title_AnimateStars:
     ldx     #$6B                    ; $A8CF
     lda     frameCounter            ; $A8D1
     and     #$0F                    ; $A8D3
-    bne     loc_5_A8E8              ; $A8D5
+    bne     @loc_A8E8               ; $A8D5
 
-loc_5_A8D7:
+@loop:
     inc     oamBuffer+103,x         ; $A8D7
     lda     oamBuffer+103,x         ; $A8DA
     and     #$23                    ; $A8DD
@@ -4752,44 +4870,52 @@ loc_5_A8D7:
     dex                             ; $A8E3
     dex                             ; $A8E4
     dex                             ; $A8E5
-    bpl     loc_5_A8D7              ; $A8E6
+    bpl     @loop                   ; $A8E6
 
-loc_5_A8E8:
+@loc_A8E8:
     lda     frameCounter            ; $A8E8
-    bne     loc_5_A8EE              ; $A8EA
+    bne     @loc_A8EE               ; $A8EA
     inc     titleShootingStar       ; $A8EC
 
-loc_5_A8EE:
+@loc_A8EE:
     lda     oamBuffer+108           ; $A8EE
     cmp     #$37                    ; $A8F1
-    bcc     loc_5_A8FE              ; $A8F3
+    bcc     @loc_A8FE               ; $A8F3
     lda     #$00                    ; $A8F5
     sta     titleShootingStar       ; $A8F7
     lda     #$F8                    ; $A8F9
     sta     oamBuffer+108           ; $A8FB
 
-loc_5_A8FE:
+@loc_A8FE:
     lda     titleShootingStar       ; $A8FE
-    beq     loc_5_A917              ; $A900
+    beq     @done                   ; $A900
     lda     frameCounter            ; $A902
     and     #$03                    ; $A904
-    bne     loc_5_A917              ; $A906
+    bne     @done                   ; $A906
     inc     oamBuffer+108           ; $A908
     inc     oamBuffer+108           ; $A90B
     inc     oamBuffer+111           ; $A90E
     inc     oamBuffer+111           ; $A911
     inc     oamBuffer+111           ; $A914
 
-loc_5_A917:
+@done:
     rts                             ; $A917
 
-sub_5_A918:
+; ---------------------------------------------------------------------------
+; Title_AnimateSparkles
+;
+; Every 8 frames, cycle the palette of sprites 53-63 (sparkles below the
+; logo).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Title_AnimateSparkles:
     ldx     #$2B                    ; $A918
     lda     frameCounter            ; $A91A
     and     #$07                    ; $A91C
-    bne     loc_5_A931              ; $A91E
+    bne     @done                   ; $A91E
 
-loc_5_A920:
+@loop:
     inc     oamBuffer+211,x         ; $A920
     lda     oamBuffer+211,x         ; $A923
     and     #$03                    ; $A926
@@ -4798,11 +4924,20 @@ loc_5_A920:
     dex                             ; $A92C
     dex                             ; $A92D
     dex                             ; $A92E
-    bpl     loc_5_A920              ; $A92F
+    bpl     @loop                   ; $A92F
 
-loc_5_A931:
+@done:
     rts                             ; $A931
-; (unreferenced: $A932-$AB6C, 571 bytes)
+
+; ---------------------------------------------------------------------------
+; StoryText
+;
+; The story shown after the title, 15 lines of 29 tiles (each ending $FD),
+; indexed through StoryTextPtrsLo/Hi.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+StoryText:
     .byte   $DA, $DF, $ED, $DE, $EB, $F4, $E0, $DA, $E7, $E8, $E7, $F4, $F0, $DA, $EC, $F4; $A932
     .byte   $DD, $DE, $EC, $ED, $EB, $E8, $F2, $DE, $DD, $9C, $F4, $F4, $FD, $E2, $E6, $E9; $A942
     .byte   $DA, $F4, $ED, $E8, $E5, $DD, $F4, $E5, $E2, $E7, $E4, $F4, $DA, $F4, $EC, $E5; $A952
@@ -4832,55 +4967,68 @@ loc_5_A931:
     .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $AAD2
     .byte   $F4, $F4, $FD                                                   ; $AAE2
 
-dat_5_AAE5:
+StoryTextPtrsLo:
     .byte   $32, $4F, $6C, $89, $A6, $C3, $E0, $FD, $1A, $37, $54, $71, $8E, $AB, $C8; $AAE5
 
-dat_5_AAF4:
-    .byte   $A9, $A9, $A9, $A9, $A9, $A9, $A9, $A9, $AA, $AA, $AA, $AA, $AA, $AA, $AA, $00; $AAF4
-    .byte   $00, $00, $00, $00, $00, $00, $CC, $05, $05, $05, $05, $05, $05, $05, $CC; $AB04
+StoryTextPtrsHi:
+    .byte   $A9, $A9, $A9, $A9, $A9, $A9, $A9, $A9, $AA, $AA, $AA, $AA, $AA, $AA, $AA; $AAF4
 
-dat_5_AB13:
+StoryAttrRows:
+    .byte   $00, $00, $00, $00, $00, $00, $00, $CC                          ; $AB03
+    .byte   $05, $05, $05, $05, $05, $05, $05, $CC                          ; $AB0B
+
+StoryAttrPtrsLo:
     .byte   $03, $03, $03, $03, $03, $03, $0B, $03                          ; $AB13
 
-dat_5_AB1B:
+StoryAttrPtrsHi:
     .byte   $AB, $AB, $AB, $AB, $AB, $AB, $AB, $AB                          ; $AB1B
 
-dat_5_AB23:
+TitleBgRowPtrsLo:
     .byte   $4D, $70, $93, $B6, $D9, $FC, $1F, $42, $65, $88, $AB, $CE, $F1, $F1, $F1, $F1; $AB23
     .byte   $4D, $70, $93, $B6, $D9, $FC, $1F, $42, $65, $88, $AB, $CE, $F1, $F1; $AB33
 
-dat_5_AB41:
+TitleBgRowPtrsHi:
     .byte   $B0, $B0, $B0, $B0, $B0, $B0, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1; $AB41
     .byte   $B0, $B0, $B0, $B0, $B0, $B0, $B1, $B1, $B1, $B1, $B1, $B1, $B1, $B1; $AB51
 
-dat_5_AB5F:
-    .byte   $69                                                             ; $AB5F
+TitleLogoPtrs:
+    .word   $AF69, $AF84, $AFAA, $AFC6 ; $AB5F
+    .word   $AFDB, $AFEF, $B014     ; $AB67
 
-dat_5_AB60:
-    .byte   $AF                                                             ; $AB60
-    .byte   $84, $AF, $AA, $AF, $C6, $AF, $DB, $AF, $EF, $AF, $14, $B0      ; $AB61
-
-loc_5_AB6D:
+; ---------------------------------------------------------------------------
+; Story_Run
+;
+; Title mode 4: the story scroll.  Sets the scroll below the sprite 0 split
+; like Title_Idle and checks START.  After titleDelay, it scrolls the screen
+; up one line every 4 frames, switching nametables every 240 lines, and every
+; 8 lines runs one step of the scene (Story_RunStep), which draws the rows
+; coming into view: 0 Story_ClearTextRows, 1 Story_DrawTextLine,
+; 2 Story_DrawTextAttr, 3 Title_DrawBgRow, 4 Title_DrawBgAttr, 5 Story_End.
+; titleScrollHeld runs the steps without scrolling.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_Run:
     ldy     #$00                    ; $AB6D
 
-loc_5_AB6F:
+@loop:
     nop                             ; $AB6F
     dey                             ; $AB70
-    bne     loc_5_AB6F              ; $AB71
+    bne     @loop                   ; $AB71
 
-loc_5_AB73:
+@loop2:
     bit     PPUSTATUS               ; $AB73
-    bvc     loc_5_AB73              ; $AB76
+    bvc     @loop2                  ; $AB76
     ldy     #$00                    ; $AB78
 
-loc_5_AB7A:
+@loop3:
     dey                             ; $AB7A
-    bne     loc_5_AB7A              ; $AB7B
+    bne     @loop3                  ; $AB7B
     ldy     #$4A                    ; $AB7D
 
-loc_5_AB7F:
+@loop4:
     dey                             ; $AB7F
-    bne     loc_5_AB7F              ; $AB80
+    bne     @loop4                  ; $AB80
     lda     ppuCtrlShadow           ; $AB82
     and     #$FC                    ; $AB84
     ora     titleSplitNametable     ; $AB86
@@ -4893,92 +5041,115 @@ loc_5_AB7F:
     lda     PPUDATA                 ; $AB97
     lda     PPUDATA                 ; $AB9A
     lda     PPUSTATUS               ; $AB9D
-    jsr     sub_5_A795              ; $ABA0
+    jsr     Title_CheckStart        ; $ABA0
     lda     renderingOff            ; $ABA3
     bne     loc_5_AC06              ; $ABA6
     lda     titleDelay              ; $ABA8
-    bne     loc_5_ABF7              ; $ABAB
+    bne     Story_Delay             ; $ABAB
     lda     titleScrollHeld         ; $ABAD
-    bne     loc_5_ABE5              ; $ABAF
+    bne     Story_RunStep           ; $ABAF
     lda     frameCounter            ; $ABB1
     and     #$03                    ; $ABB3
     bne     loc_5_AC06              ; $ABB5
     inc     ppuScrollY              ; $ABB7
     lda     ppuScrollY              ; $ABB9
     cmp     #$F0                    ; $ABBB
-    bne     loc_5_ABCB              ; $ABBD
+    bne     @loc_ABCB               ; $ABBD
     lda     #$00                    ; $ABBF
     sta     ppuScrollY              ; $ABC1
     lda     ppuNametable            ; $ABC3
     eor     #$02                    ; $ABC6
     sta     ppuNametable            ; $ABC8
 
-loc_5_ABCB:
+@loc_ABCB:
     lda     sceneStep               ; $ABCB
-    bne     loc_5_ABE5              ; $ABCE
+    bne     Story_RunStep           ; $ABCE
     lda     titleBgRow              ; $ABD0
-    bne     loc_5_ABDF              ; $ABD2
+    bne     @loc_ABDF               ; $ABD2
     lda     ppuScrollY              ; $ABD4
     cmp     #$60                    ; $ABD6
-    bne     loc_5_ABDF              ; $ABD8
+    bne     @loc_ABDF               ; $ABD8
     lda     #$05                    ; $ABDA
     sta     sceneStep               ; $ABDC
 
-loc_5_ABDF:
+@loc_ABDF:
     lda     ppuScrollY              ; $ABDF
     and     #$07                    ; $ABE1
     bne     loc_5_AC06              ; $ABE3
 
-loc_5_ABE5:
+Story_RunStep:
     lda     sceneStep               ; $ABE5
     jsr     JumpTable               ; $ABE8
 ; (inline jump table)
-    .word   loc_5_AC31              ; $ABEB
-    .word   loc_5_AC73              ; $ABED
-    .word   loc_5_ACA8              ; $ABEF
-    .word   sub_5_ACFA              ; $ABF1
-    .word   sub_5_AD7C              ; $ABF3
-    .word   loc_5_AE15              ; $ABF5
+    .word   Story_ClearTextRows     ; $ABEB
+    .word   Story_DrawTextLine      ; $ABED
+    .word   Story_DrawTextAttr      ; $ABEF
+    .word   Title_DrawBgRow         ; $ABF1
+    .word   Title_DrawBgAttr        ; $ABF3
+    .word   Story_End               ; $ABF5
 
-loc_5_ABF7:
-    jsr     sub_5_AC07              ; $ABF7
+; ---------------------------------------------------------------------------
+; Story_Delay
+;
+; While titleDelay runs: count it down (Story_TickDelay) and keep running
+; the scene steps that are still pending.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_Delay:
+    jsr     Story_TickDelay         ; $ABF7
     lda     titleTextLine           ; $ABFA
-    beq     loc_5_ABE5              ; $ABFC
+    beq     Story_RunStep           ; $ABFC
     lda     sceneStep               ; $ABFE
     beq     loc_5_AC06              ; $AC01
-    jmp     loc_5_ABE5              ; $AC03
+    jmp     Story_RunStep           ; $AC03
 
 loc_5_AC06:
     rts                             ; $AC06
 
-sub_5_AC07:
+; ---------------------------------------------------------------------------
+; Story_TickDelay
+;
+; Count titleDelay down every 4 frames.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Story_TickDelay:
     lda     frameCounter            ; $AC07
     and     #$03                    ; $AC09
-    bne     loc_5_AC10              ; $AC0B
+    bne     @done                   ; $AC0B
     dec     titleDelay              ; $AC0D
 
-loc_5_AC10:
+@done:
     rts                             ; $AC10
-; (unreferenced: $AC11-$AC30, 32 bytes)
 
-dat_5_AC11:
+StoryBlankRow:
     .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $AC11
     .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FD; $AC21
 
-loc_5_AC31:
+; ---------------------------------------------------------------------------
+; Story_ClearTextRows
+;
+; Scene step 0: on a 16-line boundary, queue two blank rows at titleTextAddr
+; (the two text rows coming into view) and go to step 1; otherwise go to
+; step 3, the background.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_ClearTextRows:
     lda     ppuScrollY              ; $AC31
     and     #$0F                    ; $AC33
-    beq     loc_5_AC3D              ; $AC35
+    beq     @loc_AC3D               ; $AC35
     lda     #$03                    ; $AC37
     sta     sceneStep               ; $AC39
     rts                             ; $AC3C
 
-loc_5_AC3D:
+@loc_AC3D:
     lda     titleTextAddr           ; $AC3D
     sta     ppuBuffer0              ; $AC3F
     lda     titleTextAddr+1         ; $AC42
     sta     ppuBuffer0+1            ; $AC44
-    jsr     sub_5_AEC1              ; $AC47
+    jsr     Story_NextTextRow       ; $AC47
     lda     titleTextAddr           ; $AC4A
     sta     ppuBuffer0+35           ; $AC4C
     lda     titleTextAddr+1         ; $AC4F
@@ -4988,22 +5159,30 @@ loc_5_AC3D:
     sta     ppuBuffer0+37           ; $AC59
     ldy     #$1F                    ; $AC5C
 
-loc_5_AC5E:
-    lda     dat_5_AC11,y            ; $AC5E
+@loop:
+    lda     StoryBlankRow,y         ; $AC5E
     sta     ppuBuffer0+3,y          ; $AC61
     sta     ppuBuffer0+38,y         ; $AC64
     dey                             ; $AC67
-    bpl     loc_5_AC5E              ; $AC68
+    bpl     @loop                   ; $AC68
     lda     #$FF                    ; $AC6A
     sta     ppuBuffer0+70           ; $AC6C
     inc     sceneStep               ; $AC6F
     rts                             ; $AC72
 
-loc_5_AC73:
+; ---------------------------------------------------------------------------
+; Story_DrawTextLine
+;
+; Scene step 1: queue story line titleTextLine (29 tiles from StoryText) at
+; column 3 of the text row, and advance to the next line and step.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Story_DrawTextLine:
     ldx     titleTextLine           ; $AC73
-    lda     dat_5_AAE5,x            ; $AC75
+    lda     StoryTextPtrsLo,x       ; $AC75
     sta     temp0                   ; $AC78
-    lda     dat_5_AAF4,x            ; $AC7A
+    lda     StoryTextPtrsHi,x       ; $AC7A
     sta     temp1                   ; $AC7D
     ldy     #$1D                    ; $AC7F
     lda     titleTextAddr           ; $AC81
@@ -5017,31 +5196,40 @@ loc_5_AC73:
     sta     ppuBuffer0+3,y          ; $AC93
     dey                             ; $AC96
 
-loc_5_AC97:
+@loop:
     lda     (temp0),y               ; $AC97
     sta     ppuBuffer0+3,y          ; $AC99
     dey                             ; $AC9C
-    bpl     loc_5_AC97              ; $AC9D
-    jsr     sub_5_AEC1              ; $AC9F
+    bpl     @loop                   ; $AC9D
+    jsr     Story_NextTextRow       ; $AC9F
     inc     titleTextLine           ; $ACA2
     inc     sceneStep               ; $ACA4
     rts                             ; $ACA7
 
-loc_5_ACA8:
+; ---------------------------------------------------------------------------
+; Story_DrawTextAttr
+;
+; Scene step 2: after every second line, queue a row of story attributes
+; (StoryAttrRows; titleAttrRow 6 gets the second palette), advancing
+; titleAttrAddr; after the last line, start again at line 0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_DrawTextAttr:
     lda     titleTextLine           ; $ACA8
     and     #$01                    ; $ACAA
-    beq     loc_5_ACF6              ; $ACAC
+    beq     @loc_ACF6               ; $ACAC
     lda     titleTextLine           ; $ACAE
     cmp     #$0F                    ; $ACB0
-    bne     loc_5_ACB8              ; $ACB2
+    bne     @loc_ACB8               ; $ACB2
     lda     #$00                    ; $ACB4
     sta     titleTextLine           ; $ACB6
 
-loc_5_ACB8:
+@loc_ACB8:
     ldx     titleAttrRow            ; $ACB8
-    lda     dat_5_AB13,x            ; $ACBA
+    lda     StoryAttrPtrsLo,x       ; $ACBA
     sta     temp2                   ; $ACBD
-    lda     dat_5_AB1B,x            ; $ACBF
+    lda     StoryAttrPtrsHi,x       ; $ACBF
     sta     temp3                   ; $ACC2
     ldy     #$08                    ; $ACC4
     lda     titleAttrAddr           ; $ACC6
@@ -5053,34 +5241,44 @@ loc_5_ACB8:
     sta     ppuBuffer0+3,y          ; $ACD5
     dey                             ; $ACD8
 
-loc_5_ACD9:
+@loop:
     lda     (temp2),y               ; $ACD9
     sta     ppuBuffer0+3,y          ; $ACDB
     dey                             ; $ACDE
-    bpl     loc_5_ACD9              ; $ACDF
+    bpl     @loop                   ; $ACDF
     lda     titleAttrAddr+1         ; $ACE1
     clc                             ; $ACE3
     adc     #$08                    ; $ACE4
     sta     titleAttrAddr+1         ; $ACE6
-    bne     loc_5_ACEE              ; $ACE8
+    bne     @loc_ACEE               ; $ACE8
     lda     #$C0                    ; $ACEA
     sta     titleAttrAddr+1         ; $ACEC
 
-loc_5_ACEE:
+@loc_ACEE:
     inc     titleAttrRow            ; $ACEE
     lda     titleAttrRow            ; $ACF0
     and     #$07                    ; $ACF2
     sta     titleAttrRow            ; $ACF4
 
-loc_5_ACF6:
+@loc_ACF6:
     inc     sceneStep               ; $ACF6
     rts                             ; $ACF9
 
-sub_5_ACFA:
+; ---------------------------------------------------------------------------
+; Title_DrawBgRow
+;
+; Scene step 3: queue background row titleBgRow (32 tiles taken from
+; TitleScreenText) at titleBgAddr and advance it, wrapping to the other
+; nametable at its end.  After rows 16 and 30 go to step 4 (attributes);
+; otherwise restart at step 0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Title_DrawBgRow:
     ldx     titleBgRow              ; $ACFA
-    lda     dat_5_AB23,x            ; $ACFC
+    lda     TitleBgRowPtrsLo,x      ; $ACFC
     sta     temp0                   ; $ACFF
-    lda     dat_5_AB41,x            ; $AD01
+    lda     TitleBgRowPtrsHi,x      ; $AD01
     sta     temp1                   ; $AD04
     ldy     #$20                    ; $AD06
     lda     titleBgAddr             ; $AD08
@@ -5092,11 +5290,11 @@ sub_5_ACFA:
     sta     ppuBuffer0+3,y          ; $AD17
     dey                             ; $AD1A
 
-loc_5_AD1B:
+@loop:
     lda     (temp0),y               ; $AD1B
     sta     ppuBuffer0+3,y          ; $AD1D
     dey                             ; $AD20
-    bpl     loc_5_AD1B              ; $AD21
+    bpl     @loop                   ; $AD21
     lda     titleBgAddr+1           ; $AD23
     clc                             ; $AD25
     adc     #$20                    ; $AD26
@@ -5107,20 +5305,20 @@ loc_5_AD1B:
     inc     titleBgRow              ; $AD30
     lda     titleBgRow              ; $AD32
     cmp     #$10                    ; $AD34
-    beq     loc_5_AD40              ; $AD36
+    beq     @loc_AD40               ; $AD36
     cmp     #$1E                    ; $AD38
-    bne     loc_5_AD5E              ; $AD3A
+    bne     Story_RestartSteps      ; $AD3A
     lda     #$00                    ; $AD3C
     sta     titleBgRow              ; $AD3E
 
-loc_5_AD40:
+@loc_AD40:
     lda     titleBgAddr+1           ; $AD40
     cmp     #$C0                    ; $AD42
-    bne     loc_5_AD5A              ; $AD44
+    bne     @loc_AD5A               ; $AD44
     lda     titleBgAddr             ; $AD46
     and     #$23                    ; $AD48
     cmp     #$23                    ; $AD4A
-    bne     loc_5_AD5A              ; $AD4C
+    bne     @loc_AD5A               ; $AD4C
     lda     #$00                    ; $AD4E
     sta     titleBgAddr+1           ; $AD50
     lda     titleBgAddr             ; $AD52
@@ -5128,21 +5326,38 @@ loc_5_AD40:
     eor     #$08                    ; $AD56
     sta     titleBgAddr             ; $AD58
 
-loc_5_AD5A:
+@loc_AD5A:
     inc     sceneStep               ; $AD5A
     rts                             ; $AD5D
 
-loc_5_AD5E:
+; ---------------------------------------------------------------------------
+; Story_RestartSteps
+;
+; Set sceneStep 0.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Story_RestartSteps:
     lda     #$00                    ; $AD5E
     sta     sceneStep               ; $AD60
     rts                             ; $AD63
-; (unreferenced: $AD64-$AD7B, 24 bytes)
 
-dat_5_AD64:
-    .byte   $00, $00, $00, $00, $00, $00, $00, $CC, $00, $00, $00, $00, $00, $00, $00, $CC; $AD64
+TitleBgAttrBlank:
+    .byte   $00, $00, $00, $00, $00, $00, $00, $CC                          ; $AD64
+    .byte   $00, $00, $00, $00, $00, $00, $00, $CC                          ; $AD6C
     .byte   $00, $00, $00, $00, $00, $00, $00, $CC                          ; $AD74
 
-sub_5_AD7C:
+; ---------------------------------------------------------------------------
+; Title_DrawBgAttr
+;
+; Scene step 4: queue 24 bytes of background attributes (from the title's
+; attribute string) at titleBgAttrAddr and blank ones in the other half,
+; advance titleBgAttrAddr, and move the sprite 0 split address down by 16
+; rows (switching nametables when it wraps).  Then restart at step 0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Title_DrawBgAttr:
     lda     #$14                    ; $AD7C
     sta     temp2                   ; $AD7E
     lda     #$B2                    ; $AD80
@@ -5161,30 +5376,30 @@ sub_5_AD7C:
     sta     ppuBuffer0+30,y         ; $ADA0
     dey                             ; $ADA3
 
-loc_5_ADA4:
+@loop:
     lda     (temp2),y               ; $ADA4
     sta     ppuBuffer0+3,y          ; $ADA6
-    lda     dat_5_AD64,y            ; $ADA9
+    lda     TitleBgAttrBlank,y      ; $ADA9
     sta     ppuBuffer0+30,y         ; $ADAC
     dey                             ; $ADAF
-    bpl     loc_5_ADA4              ; $ADB0
+    bpl     @loop                   ; $ADB0
     lda     titleBgAttrAddr+1       ; $ADB2
     clc                             ; $ADB4
     adc     #$20                    ; $ADB5
     sta     titleBgAttrAddr+1       ; $ADB7
-    bne     loc_5_ADC5              ; $ADB9
+    bne     @loc_ADC5               ; $ADB9
     lda     titleBgAttrAddr         ; $ADBB
     eor     #$08                    ; $ADBD
     sta     titleBgAttrAddr         ; $ADBF
     lda     #$C0                    ; $ADC1
     sta     titleBgAttrAddr+1       ; $ADC3
 
-loc_5_ADC5:
+@loc_ADC5:
     inc     titleSplitAddr          ; $ADC5
     inc     titleSplitAddr          ; $ADC7
     lda     titleSplitAddr          ; $ADC9
     and     #$04                    ; $ADCB
-    beq     loc_5_ADDD              ; $ADCD
+    beq     @loc_ADDD               ; $ADCD
     lda     titleSplitNametable     ; $ADCF
     eor     #$02                    ; $ADD1
     sta     titleSplitNametable     ; $ADD3
@@ -5193,10 +5408,20 @@ loc_5_ADC5:
     eor     #$08                    ; $ADD9
     sta     titleSplitAddr          ; $ADDB
 
-loc_5_ADDD:
-    jmp     loc_5_AD5E              ; $ADDD
+@loc_ADDD:
+    jmp     Story_RestartSteps      ; $ADDD
 
-sub_5_ADE0:
+; ---------------------------------------------------------------------------
+; Title_InitScroll
+;
+; Set up the title scroll: the nametable addresses of the next background
+; row ($2000), story text row ($2800), story attributes ($2BC0) and
+; background attributes ($23C0); the split address ($2A00, nametable 2);
+; and zero the row counters, sceneStep and the scroll.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Title_InitScroll:
     lda     #$2A                    ; $ADE0
     sta     titleSplitAddr          ; $ADE2
     lda     #$20                    ; $ADE4
@@ -5226,53 +5451,72 @@ sub_5_ADE0:
 loc_5_AE14:
     rts                             ; $AE14
 
-loc_5_AE15:
+; ---------------------------------------------------------------------------
+; Story_End
+;
+; Scene step 5: after the story text, scroll the title screen back into
+; view, redrawing its rows (titleEndStep: 0 Story_RedrawLogoRow,
+; 1 Story_EndDrawBgRow, 2 Story_EndDrawBgAttr).  When the background is
+; complete, reload the sprites and return to Title_Idle (mode 3).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_End:
     lda     ppuNametable            ; $AE15
-    bne     loc_5_AE4A              ; $AE18
+    bne     @loc_AE4A               ; $AE18
     lda     titleDelay              ; $AE1A
-    beq     loc_5_AE30              ; $AE1D
+    beq     @loc_AE30               ; $AE1D
 ; (code below not executed in the test movies)
-    jsr     sub_5_AC07              ; $AE1F
+    jsr     Story_TickDelay         ; $AE1F
     lda     #$01                    ; $AE22
     sta     titleScrollHeld         ; $AE24
-    lda     ram_00E8                ; $AE26
+    lda     titleMusicPart          ; $AE26
     cmp     #$02                    ; $AE28
-    bne     loc_5_AE49              ; $AE2A
+    bne     @done                   ; $AE2A
     lda     #$00                    ; $AE2C
     sta     titleScrollHeld         ; $AE2E
 ; (end of code not executed in the test movies)
 
-loc_5_AE30:
+@loc_AE30:
     lda     titleBgRow              ; $AE30
-    bne     loc_5_AE4A              ; $AE32
+    bne     @loc_AE4A               ; $AE32
     lda     titleEndStep            ; $AE34
-    bne     loc_5_AE4A              ; $AE36
+    bne     @loc_AE4A               ; $AE36
     lda     #$00                    ; $AE38
     sta     sceneStep               ; $AE3A
     sta     titleEndStep            ; $AE3D
     sta     titleLogoString         ; $AE3F
-    jsr     sub_5_A8C1              ; $AE41
+    jsr     Title_LoadSprites       ; $AE41
     lda     #$03                    ; $AE44
     sta     gameMode                ; $AE46
 
-loc_5_AE49:
+@done:
     rts                             ; $AE49
 
-loc_5_AE4A:
+@loc_AE4A:
     lda     titleEndStep            ; $AE4A
     jsr     JumpTable               ; $AE4C
 ; (inline jump table)
-    .word   loc_5_AE55              ; $AE4F
-    .word   loc_5_AF02              ; $AE51
-    .word   loc_5_AF19              ; $AE53
+    .word   Story_RedrawLogoRow     ; $AE4F
+    .word   Story_EndDrawBgRow      ; $AE51
+    .word   Story_EndDrawBgAttr     ; $AE53
 
-loc_5_AE55:
+; ---------------------------------------------------------------------------
+; Story_RedrawLogoRow
+;
+; Blank the text row coming into view and, when the next logo string
+; (titleLogoString) starts on that row, queue it as well
+; (Story_CopyLogoString).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_RedrawLogoRow:
     lda     ppuScrollY              ; $AE55
     and     #$07                    ; $AE57
     bne     loc_5_AE14              ; $AE59
     lda     ppuScrollY              ; $AE5B
     cmp     #$F0                    ; $AE5D
-    bne     loc_5_AE72              ; $AE5F
+    bne     @loc_AE72               ; $AE5F
 ; (code below not executed in the test movies)
     lda     #$00                    ; $AE61
     sta     ppuScrollY              ; $AE63
@@ -5283,13 +5527,13 @@ loc_5_AE55:
     sta     titleDelay              ; $AE6F
 ; (end of code not executed in the test movies)
 
-loc_5_AE72:
+@loc_AE72:
     lda     titleLogoString         ; $AE72
     asl     a                       ; $AE74
     tax                             ; $AE75
-    lda     dat_5_AB5F,x            ; $AE76
+    lda     TitleLogoPtrs,x         ; $AE76
     sta     temp0                   ; $AE79
-    lda     dat_5_AB60,x            ; $AE7B
+    lda     TitleLogoPtrs+1,x       ; $AE7B
     sta     temp1                   ; $AE7E
     lda     titleTextAddr           ; $AE80
     sta     ppuBuffer0              ; $AE82
@@ -5301,32 +5545,40 @@ loc_5_AE72:
     ldy     #$1F                    ; $AE91
     sta     ppuBuffer0+4,y          ; $AE93
 
-loc_5_AE96:
-    lda     dat_5_AC11,y            ; $AE96
+@loop:
+    lda     StoryBlankRow,y         ; $AE96
     sta     ppuBuffer0+3,y          ; $AE99
     dey                             ; $AE9C
-    bpl     loc_5_AE96              ; $AE9D
+    bpl     @loop                   ; $AE9D
     lda     titleLogoString         ; $AE9F
     cmp     #$07                    ; $AEA1
-    beq     loc_5_AEBB              ; $AEA3
+    beq     @loc_AEBB               ; $AEA3
     ldy     #$00                    ; $AEA5
     lda     (temp0),y               ; $AEA7
     cmp     titleTextAddr           ; $AEA9
-    bne     loc_5_AEBB              ; $AEAB
+    bne     @loc_AEBB               ; $AEAB
     iny                             ; $AEAD
     lda     (temp0),y               ; $AEAE
     and     #$F0                    ; $AEB0
     cmp     titleTextAddr+1         ; $AEB2
-    bne     loc_5_AEBB              ; $AEB4
-    jsr     loc_5_AEEE              ; $AEB6
+    bne     @loc_AEBB               ; $AEB4
+    jsr     Story_CopyLogoString    ; $AEB6
     inc     titleLogoString         ; $AEB9
 
-loc_5_AEBB:
-    jsr     sub_5_AEC1              ; $AEBB
+@loc_AEBB:
+    jsr     Story_NextTextRow       ; $AEBB
     inc     titleEndStep            ; $AEBE
     rts                             ; $AEC0
 
-sub_5_AEC1:
+; ---------------------------------------------------------------------------
+; Story_NextTextRow
+;
+; Advance titleTextAddr by one row (32 bytes), wrapping from the end of a
+; nametable to the top of the other one.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Story_NextTextRow:
     lda     titleTextAddr+1         ; $AEC1
     clc                             ; $AEC3
     adc     #$20                    ; $AEC4
@@ -5336,10 +5588,10 @@ sub_5_AEC1:
     sta     titleTextAddr           ; $AECC
     and     #$03                    ; $AECE
     cmp     #$03                    ; $AED0
-    bne     loc_5_AEE6              ; $AED2
+    bne     @done                   ; $AED2
     lda     titleTextAddr+1         ; $AED4
     cmp     #$C0                    ; $AED6
-    bne     loc_5_AEE6              ; $AED8
+    bne     @done                   ; $AED8
     lda     #$00                    ; $AEDA
     sta     titleTextAddr+1         ; $AEDC
     lda     titleTextAddr           ; $AEDE
@@ -5347,34 +5599,52 @@ sub_5_AEC1:
     eor     #$08                    ; $AEE2
     sta     titleTextAddr           ; $AEE4
 
-loc_5_AEE6:
+@done:
     rts                             ; $AEE6
 
-dat_5_AEE7:
+TitleLogoLengths:
     .byte   $1B, $26, $1C, $15, $14, $25, $1A                               ; $AEE7
 
-loc_5_AEEE:
+; ---------------------------------------------------------------------------
+; Story_CopyLogoString
+;
+; Copy logo string titleLogoString (TitleLogoLengths bytes, its PPU string
+; header included, from TitleLogoPtrs) into the second buffer string.
+;
+; In:      temp0-temp1 = the string
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Story_CopyLogoString:
     ldx     titleLogoString         ; $AEEE
-    ldy     dat_5_AEE7,x            ; $AEF0
+    ldy     TitleLogoLengths,x      ; $AEF0
     lda     #$FF                    ; $AEF3
     sta     ppuBuffer0+35,y         ; $AEF5
     dey                             ; $AEF8
 
-loc_5_AEF9:
+@loop:
     lda     (temp0),y               ; $AEF9
     sta     ppuBuffer0+35,y         ; $AEFB
     dey                             ; $AEFE
-    bpl     loc_5_AEF9              ; $AEFF
+    bpl     @loop                   ; $AEFF
     rts                             ; $AF01
 
-loc_5_AF02:
-    jsr     sub_5_ACFA              ; $AF02
+; ---------------------------------------------------------------------------
+; Story_EndDrawBgRow
+;
+; Draw the next background row (Title_DrawBgRow); go on to the attributes
+; if it asked for them, else back to Story_RedrawLogoRow.  Leaves sceneStep
+; at 5 (Story_End).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_EndDrawBgRow:
+    jsr     Title_DrawBgRow         ; $AF02
     lda     sceneStep               ; $AF05
-    beq     loc_5_AF0F              ; $AF08
+    beq     Story_EndRestart        ; $AF08
     inc     titleEndStep            ; $AF0A
     jmp     loc_5_AF13              ; $AF0C
 
-loc_5_AF0F:
+Story_EndRestart:
     lda     #$00                    ; $AF0F
     sta     titleEndStep            ; $AF11
 
@@ -5383,127 +5653,197 @@ loc_5_AF13:
     sta     sceneStep               ; $AF15
     rts                             ; $AF18
 
-loc_5_AF19:
-    jsr     sub_5_AD7C              ; $AF19
-    jmp     loc_5_AF0F              ; $AF1C
+; ---------------------------------------------------------------------------
+; Story_EndDrawBgAttr
+;
+; Draw the background attributes (Title_DrawBgAttr), then back to
+; Story_RedrawLogoRow.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Story_EndDrawBgAttr:
+    jsr     Title_DrawBgAttr        ; $AF19
+    jmp     Story_EndRestart        ; $AF1C
 
-loc_5_AF1F:
+; ---------------------------------------------------------------------------
+; Title_DrawScreen
+;
+; Title mode 1, in three frames: clear the nametables, queue TitlePalette
+; (string list 1), then TitleScreenText (list 4) and go to mode 2.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Title_DrawScreen:
     lda     gameSubStep             ; $AF1F
     jsr     JumpTable               ; $AF22
 ; (inline jump table)
     .word   Ppu_ClearNametables     ; $AF25
-    .word   loc_5_AF2B              ; $AF27
-    .word   loc_5_AF34              ; $AF29
+    .word   @loc_AF2B               ; $AF27
+    .word   @loc_AF34               ; $AF29
 
-loc_5_AF2B:
+@loc_AF2B:
     lda     #$01                    ; $AF2B
     sta     ppuStringSelect         ; $AF2D
     inc     gameSubStep             ; $AF30
     rts                             ; $AF33
 
-loc_5_AF34:
+@loc_AF34:
     lda     #$04                    ; $AF34
     sta     ppuStringSelect         ; $AF36
     inc     gameMode                ; $AF39
     rts                             ; $AF3C
+
+TitlePalette:
     .byte   $3F, $00, $20, $0F, $30, $1C, $15, $0F, $2B, $0F, $00, $0F, $01, $12, $21, $0F; $AF3D
     .byte   $0F, $0A, $12, $0F, $30, $12, $02, $0F, $2B, $0F, $00, $0F, $16, $26, $30, $0F; $AF4D
-    .byte   $0F, $19, $21, $FF, $20, $1F, $DE, $FD, $28, $1F, $DE, $FD, $22, $6B, $09, $0F; $AF5D
-    .byte   $10, $11, $12, $13, $14, $15, $16, $17, $22, $7F, $01, $FD, $23, $E0, $08, $00; $AF6D
-    .byte   $00, $00, $00, $00, $00, $00, $CC, $22, $88, $18, $1C, $1E, $20, $22, $24, $26; $AF7D
-    .byte   $28, $2A, $2C, $2E, $30, $32, $34, $36, $38, $3A, $3C, $F4, $F4, $F4, $F4, $F4; $AF8D
-    .byte   $F4, $FD, $23, $E8, $08, $00, $00, $00, $00, $00, $00, $00, $CC, $22, $A7, $19; $AF9D
-    .byte   $1B, $1D, $1F, $21, $23, $25, $27, $29, $2B, $2D, $2F, $31, $33, $35, $37, $39; $AFAD
-    .byte   $3B, $3D, $F4, $F4, $F4, $F4, $F4, $F4, $FD, $22, $CA, $0E, $3E, $40, $42, $F4; $AFBD
-    .byte   $4B, $4D, $51, $53, $58, $5A, $5F, $61, $08, $18, $22, $DF, $01, $FD, $22, $EA; $AFCD
-    .byte   $0D, $3F, $41, $43, $F4, $4C, $4E, $52, $54, $59, $5B, $60, $62, $09, $22, $FF; $AFDD
-    .byte   $01, $FD, $23, $09, $17, $44, $46, $48, $4A, $1A, $FD, $4F, $55, $56, $FD, $5C; $AFED
-    .byte   $63, $65, $0A, $0C, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FD, $23, $F0, $08, $00; $AFFD
-    .byte   $00, $00, $00, $00, $00, $00, $CC, $23, $29, $17, $45, $47, $49, $49, $67, $47; $B00D
-    .byte   $50, $47, $57, $5D, $5E, $64, $66, $0B, $0D, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $B01D
-    .byte   $FD, $23, $C7, $01, $CC, $23, $CF, $01, $CC, $23, $D7, $01, $CC, $23, $DF, $01; $B02D
-    .byte   $CC, $23, $E7, $01, $CC, $23, $EF, $01, $CC, $23, $FF, $01, $CC, $2A, $00, $20; $B03D
-    .byte   $68, $68, $68, $68, $68, $68, $68, $68, $68, $68, $68, $68, $69, $69, $69, $69; $B04D
-    .byte   $69, $69, $69, $69, $68, $68, $68, $68, $68, $68, $71, $7A, $78, $75, $7A, $F4; $B05D
-    .byte   $2A, $20, $20, $68, $68, $6A, $6A, $68, $68, $68, $68, $68, $68, $68, $6A, $6A; $B06D
-    .byte   $6A, $6A, $6A, $6A, $6A, $6A, $68, $68, $68, $68, $68, $68, $6A, $77, $76, $79; $B07D
-    .byte   $78, $F4, $F4, $2A, $40, $20, $73, $73, $76, $7B, $6A, $68, $68, $68, $68, $68; $B08D
-    .byte   $6A, $6A, $70, $6F, $6D, $6D, $6D, $6D, $6D, $6D, $6D, $6E, $70, $6F, $6D, $6D; $B09D
-    .byte   $78, $79, $7A, $F4, $F4, $F4, $2A, $60, $20, $73, $7A, $75, $76, $68, $68, $68; $B0AD
-    .byte   $68, $6A, $6A, $6A, $6A, $6D, $6B, $6B, $6B, $6B, $6B, $6B, $6B, $6B, $6B, $6D; $B0BD
-    .byte   $6B, $6C, $6C, $79, $7A, $F4, $F4, $F4, $F4, $2A, $80, $20, $73, $7A, $77, $78; $B0CD
-    .byte   $68, $6A, $6A, $6A, $6A, $6A, $70, $6D, $6D, $6B, $71, $73, $73, $73, $75, $73; $B0DD
-    .byte   $75, $73, $73, $73, $76, $71, $72, $72, $73, $73, $73, $75, $2A, $A0, $20, $73; $B0ED
-    .byte   $77, $76, $77, $6A, $6A, $6A, $6A, $6A, $6A, $6F, $6D, $6C, $6B, $71, $74, $77; $B0FD
-    .byte   $74, $73, $71, $75, $74, $75, $76, $72, $75, $71, $75, $75, $72, $72, $75, $2A; $B10D
-    .byte   $C0, $20, $71, $78, $7A, $78, $70, $70, $6F, $6D, $6D, $6D, $6B, $6B, $6B, $6B; $B11D
-    .byte   $78, $7A, $79, $79, $F4, $79, $74, $79, $79, $79, $78, $77, $72, $73, $F4, $79; $B12D
-    .byte   $73, $75, $2A, $E0, $20, $73, $77, $7A, $77, $6D, $6D, $6C, $6B, $6B, $6B, $6B; $B13D
-    .byte   $6B, $6B, $6B, $79, $76, $73, $75, $77, $75, $77, $75, $76, $79, $7A, $78, $77; $B14D
-    .byte   $75, $78, $78, $75, $78, $2B, $00, $20, $73, $78, $77, $78, $6C, $6B, $6B, $6C; $B15D
-    .byte   $6B, $6B, $6B, $6B, $6B, $6B, $6B, $6C, $74, $77, $72, $77, $76, $F4, $7A, $78; $B16D
-    .byte   $F4, $79, $7A, $7A, $72, $75, $78, $73, $2B, $20, $20, $71, $78, $7A, $77, $6C; $B17D
-    .byte   $6C, $6C, $6C, $6C, $6C, $6B, $6B, $6B, $6B, $6B, $6B, $79, $79, $73, $79, $79; $B18D
-    .byte   $79, $F4, $77, $76, $F4, $77, $78, $74, $78, $72, $75, $2B, $40, $20, $73, $77; $B19D
-    .byte   $7A, $79, $7A, $77, $6C, $6C, $6C, $6C, $6C, $6C, $6C, $6B, $6B, $6B, $6B, $6C; $B1AD
-    .byte   $79, $78, $72, $76, $F4, $79, $F4, $77, $F4, $7A, $F4, $7A, $72, $75, $2B, $60; $B1BD
-    .byte   $20, $71, $78, $7A, $74, $73, $76, $6C, $6C, $6C, $6C, $6C, $6C, $6C, $6C, $6C; $B1CD
-    .byte   $6B, $6B, $6C, $7A, $78, $79, $77, $F4, $79, $7A, $7A, $F4, $79, $F4, $73, $73; $B1DD
-    .byte   $75, $2B, $80, $20, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $B1ED
-    .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $B1FD
-    .byte   $F4, $F4, $F4, $F4, $2B, $E0, $18, $5A, $AA, $AA, $FA, $FA, $FA, $76, $15, $55; $B20D
-    .byte   $FA, $FE, $77, $55, $55, $55, $55, $55, $DF, $FF, $FF, $75, $55, $55, $55, $FF; $B21D
+    .byte   $0F, $19, $21, $FF                                              ; $AF5D
 
-loc_5_B22D:
+; ---------------------------------------------------------------------------
+; TitleScreenText
+;
+; PPU strings of the title screen: the logo, then 30 background rows (each
+; "addr, $20, 32 tiles") and the background attributes.  The story scroll
+; redraws the background from these strings (TitleBgRowPtrsLo/Hi point at
+; the rows' tiles) and the logo from TitleLogoPtrs.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+TitleScreenText:
+    .byte   $20, $1F, $DE, $FD, $28, $1F, $DE, $FD, $22, $6B, $09, $0F, $10, $11, $12, $13; $AF61
+    .byte   $14, $15, $16, $17, $22, $7F, $01, $FD, $23, $E0, $08, $00, $00, $00, $00, $00; $AF71
+    .byte   $00, $00, $CC, $22, $88, $18, $1C, $1E, $20, $22, $24, $26, $28, $2A, $2C, $2E; $AF81
+    .byte   $30, $32, $34, $36, $38, $3A, $3C, $F4, $F4, $F4, $F4, $F4, $F4, $FD, $23, $E8; $AF91
+    .byte   $08, $00, $00, $00, $00, $00, $00, $00, $CC, $22, $A7, $19, $1B, $1D, $1F, $21; $AFA1
+    .byte   $23, $25, $27, $29, $2B, $2D, $2F, $31, $33, $35, $37, $39, $3B, $3D, $F4, $F4; $AFB1
+    .byte   $F4, $F4, $F4, $F4, $FD, $22, $CA, $0E, $3E, $40, $42, $F4, $4B, $4D, $51, $53; $AFC1
+    .byte   $58, $5A, $5F, $61, $08, $18, $22, $DF, $01, $FD, $22, $EA, $0D, $3F, $41, $43; $AFD1
+    .byte   $F4, $4C, $4E, $52, $54, $59, $5B, $60, $62, $09, $22, $FF, $01, $FD, $23, $09; $AFE1
+    .byte   $17, $44, $46, $48, $4A, $1A, $FD, $4F, $55, $56, $FD, $5C, $63, $65, $0A, $0C; $AFF1
+    .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FD, $23, $F0, $08, $00, $00, $00, $00, $00; $B001
+    .byte   $00, $00, $CC, $23, $29, $17, $45, $47, $49, $49, $67, $47, $50, $47, $57, $5D; $B011
+    .byte   $5E, $64, $66, $0B, $0D, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $FD, $23, $C7, $01; $B021
+    .byte   $CC, $23, $CF, $01, $CC, $23, $D7, $01, $CC, $23, $DF, $01, $CC, $23, $E7, $01; $B031
+    .byte   $CC, $23, $EF, $01, $CC, $23, $FF, $01, $CC, $2A, $00, $20, $68, $68, $68, $68; $B041
+    .byte   $68, $68, $68, $68, $68, $68, $68, $68, $69, $69, $69, $69, $69, $69, $69, $69; $B051
+    .byte   $68, $68, $68, $68, $68, $68, $71, $7A, $78, $75, $7A, $F4, $2A, $20, $20, $68; $B061
+    .byte   $68, $6A, $6A, $68, $68, $68, $68, $68, $68, $68, $6A, $6A, $6A, $6A, $6A, $6A; $B071
+    .byte   $6A, $6A, $68, $68, $68, $68, $68, $68, $6A, $77, $76, $79, $78, $F4, $F4, $2A; $B081
+    .byte   $40, $20, $73, $73, $76, $7B, $6A, $68, $68, $68, $68, $68, $6A, $6A, $70, $6F; $B091
+    .byte   $6D, $6D, $6D, $6D, $6D, $6D, $6D, $6E, $70, $6F, $6D, $6D, $78, $79, $7A, $F4; $B0A1
+    .byte   $F4, $F4, $2A, $60, $20, $73, $7A, $75, $76, $68, $68, $68, $68, $6A, $6A, $6A; $B0B1
+    .byte   $6A, $6D, $6B, $6B, $6B, $6B, $6B, $6B, $6B, $6B, $6B, $6D, $6B, $6C, $6C, $79; $B0C1
+    .byte   $7A, $F4, $F4, $F4, $F4, $2A, $80, $20, $73, $7A, $77, $78, $68, $6A, $6A, $6A; $B0D1
+    .byte   $6A, $6A, $70, $6D, $6D, $6B, $71, $73, $73, $73, $75, $73, $75, $73, $73, $73; $B0E1
+    .byte   $76, $71, $72, $72, $73, $73, $73, $75, $2A, $A0, $20, $73, $77, $76, $77, $6A; $B0F1
+    .byte   $6A, $6A, $6A, $6A, $6A, $6F, $6D, $6C, $6B, $71, $74, $77, $74, $73, $71, $75; $B101
+    .byte   $74, $75, $76, $72, $75, $71, $75, $75, $72, $72, $75, $2A, $C0, $20, $71, $78; $B111
+    .byte   $7A, $78, $70, $70, $6F, $6D, $6D, $6D, $6B, $6B, $6B, $6B, $78, $7A, $79, $79; $B121
+    .byte   $F4, $79, $74, $79, $79, $79, $78, $77, $72, $73, $F4, $79, $73, $75, $2A, $E0; $B131
+    .byte   $20, $73, $77, $7A, $77, $6D, $6D, $6C, $6B, $6B, $6B, $6B, $6B, $6B, $6B, $79; $B141
+    .byte   $76, $73, $75, $77, $75, $77, $75, $76, $79, $7A, $78, $77, $75, $78, $78, $75; $B151
+    .byte   $78, $2B, $00, $20, $73, $78, $77, $78, $6C, $6B, $6B, $6C, $6B, $6B, $6B, $6B; $B161
+    .byte   $6B, $6B, $6B, $6C, $74, $77, $72, $77, $76, $F4, $7A, $78, $F4, $79, $7A, $7A; $B171
+    .byte   $72, $75, $78, $73, $2B, $20, $20, $71, $78, $7A, $77, $6C, $6C, $6C, $6C, $6C; $B181
+    .byte   $6C, $6B, $6B, $6B, $6B, $6B, $6B, $79, $79, $73, $79, $79, $79, $F4, $77, $76; $B191
+    .byte   $F4, $77, $78, $74, $78, $72, $75, $2B, $40, $20, $73, $77, $7A, $79, $7A, $77; $B1A1
+    .byte   $6C, $6C, $6C, $6C, $6C, $6C, $6C, $6B, $6B, $6B, $6B, $6C, $79, $78, $72, $76; $B1B1
+    .byte   $F4, $79, $F4, $77, $F4, $7A, $F4, $7A, $72, $75, $2B, $60, $20, $71, $78, $7A; $B1C1
+    .byte   $74, $73, $76, $6C, $6C, $6C, $6C, $6C, $6C, $6C, $6C, $6C, $6B, $6B, $6C, $7A; $B1D1
+    .byte   $78, $79, $77, $F4, $79, $7A, $7A, $F4, $79, $F4, $73, $73, $75, $2B, $80, $20; $B1E1
+    .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $B1F1
+    .byte   $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $B201
+    .byte   $2B, $E0, $18, $5A, $AA, $AA, $FA, $FA, $FA, $76, $15, $55, $FA, $FE, $77, $55; $B211
+    .byte   $55, $55, $55, $55, $DF, $FF, $FF, $75, $55, $55, $55, $FF      ; $B221
+
+; ---------------------------------------------------------------------------
+; FileScreen_Run
+;
+; gameState 1: the file screens.  Hides the sprites, then runs mode 0
+; FileSelect_Run, 1 Register_Run or 2 Eliminate_Run.  Each screen works on
+; the backup copies of the save files (sramBackupStats), and the register
+; and elimination screens write them back to the files when done.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreen_Run:
     jsr     Oam_HideAll             ; $B22D
     jsr     Game_CheckModeChange    ; $B230
     jsr     JumpTable               ; $B233
 ; (inline jump table)
-    .word   loc_5_B242              ; $B236
-    .word   loc_5_B3CF              ; $B238
-    .word   loc_5_B3FA              ; $B23A
+    .word   FileSelect_Run          ; $B236
+    .word   Register_Run            ; $B238
+    .word   Eliminate_Run           ; $B23A
 
-dat_5_B23C:
-    .byte   $2C                                                             ; $B23C
+FileNamePtrs:
+    .word   $602C, $605E, $6090     ; $B23C
 
-dat_5_B23D:
-    .byte   $60, $5E, $60, $90, $60                                         ; $B23D
-
-loc_5_B242:
+; ---------------------------------------------------------------------------
+; FileSelect_Run
+;
+; File select (mode 0), by fileStep: 0 FileSelect_LoadFiles,
+; 1 FileScreen_CopyText, 2 FileSelect_Menu.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_Run:
     lda     fileStep                ; $B242
     jsr     JumpTable               ; $B245
 ; (inline jump table)
-    .word   loc_5_B40A              ; $B248
-    .word   loc_5_B24E              ; $B24A
-    .word   loc_5_B261              ; $B24C
+    .word   FileSelect_LoadFiles    ; $B248
+    .word   FileScreen_CopyText     ; $B24A
+    .word   FileSelect_Menu         ; $B24C
 
-loc_5_B24E:
+; ---------------------------------------------------------------------------
+; FileScreen_CopyText
+;
+; Copy FileScreenText into SRAM (sramFileScreenText), where the file
+; select screen fills in the files' levels and continue counts, clear the
+; nametables and go to the next step.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreen_CopyText:
     ldy     #$00                    ; $B24E
 
-loc_5_B250:
-    lda     dat_5_BC19,y            ; $B250
-    sta     sramOverworldMap+768,y  ; $B253
+@loop:
+    lda     FileScreenText,y        ; $B250
+    sta     sramFileScreenText,y    ; $B253
     iny                             ; $B256
     cpy     #$A6                    ; $B257
-    bcc     loc_5_B250              ; $B259
+    bcc     @loop                   ; $B259
     jsr     Ppu_ClearNametables     ; $B25B
-    jmp     loc_5_B41D              ; $B25E
+    jmp     FileScreen_NextStep     ; $B25E
 
-loc_5_B261:
-    jsr     sub_5_B5D8              ; $B261
-    jsr     sub_5_B603              ; $B264
-    jsr     sub_5_B63C              ; $B267
-    jsr     sub_5_B5B5              ; $B26A
+; ---------------------------------------------------------------------------
+; FileSelect_Menu
+;
+; The file select screen.  Fills in the files' levels and continue counts,
+; then queues the palette and the screen text over two frames.  Then each
+; frame: SELECT moves the fairy to the next choice that applies (an
+; existing file, REGISTER YOUR NAME if a file is empty, ELIMINATION MODE if
+; one is not), and START either goes to the register or elimination screen
+; or loads the file and starts the game.  A file whose secondQuest is 1
+; (saved after the ending) is turned into a second quest file first: its
+; stats from the containers on and its world state are reset to the
+; defaults, keeping the levels, spells and the techniques bits $14.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_Menu:
+    jsr     FileSelect_DrawLevels   ; $B261
+    jsr     FileSelect_DrawContinues ; $B264
+    jsr     FileSelect_BlankEmptyFiles ; $B267
+    jsr     FileSelect_FindSecondQuest ; $B26A
     ldy     fileSubStep             ; $B26D
-    bne     loc_5_B27B              ; $B270
+    bne     @loc_B27B               ; $B270
     lda     #$02                    ; $B272
     sta     ppuStringSelect         ; $B274
     inc     fileSubStep             ; $B277
     rts                             ; $B27A
 
-loc_5_B27B:
+@loc_B27B:
     dey                             ; $B27B
-    bne     loc_5_B28B              ; $B27C
+    bne     @loc_B28B               ; $B27C
     inc     fileSubStep             ; $B27E
     lda     #$05                    ; $B281
     sta     ppuStringSelect         ; $B283
@@ -5511,179 +5851,179 @@ loc_5_B27B:
     sta     fileCursor              ; $B288
     rts                             ; $B28A
 
-loc_5_B28B:
+@loc_B28B:
     lda     #$00                    ; $B28B
     sta     renderingOff            ; $B28D
     lda     joypadPressed           ; $B290
     and     #$10                    ; $B292
-    beq     loc_5_B303              ; $B294
+    beq     @loc_B303               ; $B294
     lda     #$00                    ; $B296
     sta     fileSubStep             ; $B298
     sta     fileStep                ; $B29B
     lda     fileCursor              ; $B29E
     cmp     #$03                    ; $B2A0
-    bne     loc_5_B2AA              ; $B2A2
+    bne     @loc_B2AA               ; $B2A2
     lda     #$01                    ; $B2A4
     sta     gameMode                ; $B2A6
     rts                             ; $B2A9
 
-loc_5_B2AA:
+@loc_B2AA:
     cmp     #$04                    ; $B2AA
-    bne     loc_5_B2B4              ; $B2AC
+    bne     @loc_B2B4               ; $B2AC
     lda     #$02                    ; $B2AE
     sta     gameMode                ; $B2B0
     rts                             ; $B2B3
 
-loc_5_B2B4:
+@loc_B2B4:
     lda     fileCursor              ; $B2B4
     sta     saveSlot                ; $B2B6
     jsr     Save_Load               ; $B2B9
     lda     secondQuest             ; $B2BC
     cmp     #$01                    ; $B2BF
-    bne     loc_5_B2EE              ; $B2C1
+    bne     @loc_B2EE               ; $B2C1
 ; (code below not executed in the test movies)
     lda     techniques              ; $B2C3
     and     #$14                    ; $B2C6
     sta     temp0                   ; $B2C8
     ldy     #$29                    ; $B2CA
 
-loc_5_B2CC:
+@loop:
     lda     SaveDefaultStats,y      ; $B2CC
     sta     statLevel,y             ; $B2CF
     dey                             ; $B2D2
     cpy     #$0C                    ; $B2D3
-    bcs     loc_5_B2CC              ; $B2D5
+    bcs     @loop                   ; $B2D5
     ldy     #$DF                    ; $B2D7
 
-loc_5_B2D9:
+@loop2:
     lda     SaveDefaultWorld,y      ; $B2D9
     sta     saveWorld,y             ; $B2DC
     dey                             ; $B2DF
     cpy     #$FF                    ; $B2E0
-    bne     loc_5_B2D9              ; $B2E2
+    bne     @loop2                  ; $B2E2
     lda     temp0                   ; $B2E4
     sta     techniques              ; $B2E6
     lda     #$02                    ; $B2E9
     sta     secondQuest             ; $B2EB
 ; (end of code not executed in the test movies)
 
-loc_5_B2EE:
+@loc_B2EE:
     ldx     #$0F                    ; $B2EE
     lda     #$00                    ; $B2F0
 
-loc_5_B2F2:
+@loop3:
     sta     ram_00E0,x              ; $B2F2
     dex                             ; $B2F4
-    bpl     loc_5_B2F2              ; $B2F5
+    bpl     @loop3                  ; $B2F5
     ldy     #$DA                    ; $B2F7
 
-loc_5_B2F9:
+@loop4:
     sta     lives,y                 ; $B2F9
     iny                             ; $B2FC
-    bne     loc_5_B2F9              ; $B2FD
+    bne     @loop4                  ; $B2FD
     inc     gameState               ; $B2FF
     rts                             ; $B302
 
-loc_5_B303:
+@loc_B303:
     lda     joypadPressed           ; $B303
     and     #$20                    ; $B305
-    beq     loc_5_B319              ; $B307
+    beq     @loc_B319               ; $B307
     lda     #$04                    ; $B309
     sta     musicRequest            ; $B30B
     inc     fileCursor              ; $B30D
     lda     fileCursor              ; $B30F
     cmp     #$05                    ; $B311
-    bne     loc_5_B319              ; $B313
+    bne     @loc_B319               ; $B313
     lda     #$00                    ; $B315
     sta     fileCursor              ; $B317
 
-loc_5_B319:
+@loc_B319:
     lda     fileCursor              ; $B319
-    bne     loc_5_B32F              ; $B31B
+    bne     @loc_B32F               ; $B31B
     lda     fileEmptyMask           ; $B31D
     and     #$01                    ; $B31F
-    beq     loc_5_B328              ; $B321
+    beq     @loc_B328               ; $B321
     inc     fileCursor              ; $B323
-    jmp     loc_5_B32F              ; $B325
+    jmp     @loc_B32F               ; $B325
 
-loc_5_B328:
+@loc_B328:
     lda     #$40                    ; $B328
     sta     fileCursorY             ; $B32A
-    jmp     loc_5_B384              ; $B32C
+    jmp     @loc_B384               ; $B32C
 
-loc_5_B32F:
+@loc_B32F:
     lda     fileCursor              ; $B32F
     cmp     #$01                    ; $B331
-    bne     loc_5_B347              ; $B333
+    bne     @loc_B347               ; $B333
     lda     fileEmptyMask           ; $B335
     and     #$02                    ; $B337
-    beq     loc_5_B340              ; $B339
+    beq     @loc_B340               ; $B339
     inc     fileCursor              ; $B33B
-    jmp     loc_5_B347              ; $B33D
+    jmp     @loc_B347               ; $B33D
 
-loc_5_B340:
+@loc_B340:
     lda     #$58                    ; $B340
     sta     fileCursorY             ; $B342
-    jmp     loc_5_B384              ; $B344
+    jmp     @loc_B384               ; $B344
 
-loc_5_B347:
+@loc_B347:
     lda     fileCursor              ; $B347
     cmp     #$02                    ; $B349
-    bne     loc_5_B35F              ; $B34B
+    bne     @loc_B35F               ; $B34B
     lda     fileEmptyMask           ; $B34D
     and     #$04                    ; $B34F
-    beq     loc_5_B358              ; $B351
+    beq     @loc_B358               ; $B351
     inc     fileCursor              ; $B353
-    jmp     loc_5_B35F              ; $B355
+    jmp     @loc_B35F               ; $B355
 
-loc_5_B358:
+@loc_B358:
     lda     #$70                    ; $B358
     sta     fileCursorY             ; $B35A
-    jmp     loc_5_B384              ; $B35C
+    jmp     @loc_B384               ; $B35C
 
-loc_5_B35F:
+@loc_B35F:
     lda     fileCursor              ; $B35F
     cmp     #$03                    ; $B361
-    bne     loc_5_B375              ; $B363
+    bne     @loc_B375               ; $B363
     lda     fileEmptyMask           ; $B365
-    bne     loc_5_B36E              ; $B367
+    bne     @loc_B36E               ; $B367
     inc     fileCursor              ; $B369
-    jmp     loc_5_B375              ; $B36B
+    jmp     @loc_B375               ; $B36B
 
-loc_5_B36E:
+@loc_B36E:
     lda     #$90                    ; $B36E
     sta     fileCursorY             ; $B370
-    jmp     loc_5_B384              ; $B372
+    jmp     @loc_B384               ; $B372
 
-loc_5_B375:
+@loc_B375:
     lda     fileEmptyMask           ; $B375
     cmp     #$07                    ; $B377
-    bne     loc_5_B380              ; $B379
+    bne     @loc_B380               ; $B379
 ; (code below not executed in the test movies)
     dec     fileCursor              ; $B37B
-    jmp     loc_5_B35F              ; $B37D
+    jmp     @loc_B35F               ; $B37D
 ; (end of code not executed in the test movies)
 
-loc_5_B380:
+@loc_B380:
     lda     #$A8                    ; $B380
     sta     fileCursorY             ; $B382
 
-loc_5_B384:
+@loc_B384:
     lda     #$1C                    ; $B384
     sta     a:fileCursorX           ; $B386
     ldy     fileCursorY             ; $B389
-    jsr     sub_5_B574              ; $B38B
+    jsr     FileScreen_DrawFairy    ; $B38B
     lda     #$40                    ; $B38E
     ldy     #$28                    ; $B390
-    jsr     sub_5_B596              ; $B392
-    jsr     sub_5_B5B5              ; $B395
+    jsr     FileScreen_DrawLinkIcons ; $B392
+    jsr     FileSelect_FindSecondQuest ; $B395
     ldx     #$08                    ; $B398
     lda     #$43                    ; $B39A
     sta     temp0                   ; $B39C
 
-loc_5_B39E:
+@loop5:
     lsr     temp2                   ; $B39E
-    bcc     loc_5_B3B6              ; $B3A0
+    bcc     @loc_B3B6               ; $B3A0
 ; (code below not executed in the test movies)
     lda     temp0                   ; $B3A2
     sta     oamBuffer+24,x          ; $B3A4
@@ -5695,7 +6035,7 @@ loc_5_B39E:
     sta     oamBuffer+27,x          ; $B3B3
 ; (end of code not executed in the test movies)
 
-loc_5_B3B6:
+@loc_B3B6:
     lda     temp0                   ; $B3B6
     clc                             ; $B3B8
     adc     #$18                    ; $B3B9
@@ -5704,87 +6044,146 @@ loc_5_B3B6:
     dex                             ; $B3BE
     dex                             ; $B3BF
     dex                             ; $B3C0
-    bpl     loc_5_B39E              ; $B3C1
+    bpl     @loop5                  ; $B3C1
     lda     #$21                    ; $B3C3
     sta     temp0                   ; $B3C5
     lda     #$07                    ; $B3C7
     sta     temp1                   ; $B3C9
-    jsr     sub_5_B529              ; $B3CB
+    jsr     FileScreen_QueueNames   ; $B3CB
     rts                             ; $B3CE
 
-loc_5_B3CF:
+; ---------------------------------------------------------------------------
+; Register_Run
+;
+; REGISTER YOUR NAME (mode 1), by fileStep: 0 FileScreen_Blank,
+; 1 FileScreen_CopyText, 2 Register_Menu, 3 FileScreen_SaveFiles,
+; 4 FileScreen_ReturnToSelect.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Register_Run:
     lda     fileStep                ; $B3CF
     jsr     JumpTable               ; $B3D2
 ; (inline jump table)
-    .word   loc_5_B412              ; $B3D5
-    .word   loc_5_B24E              ; $B3D7
-    .word   loc_5_B678              ; $B3D9
-    .word   loc_5_B3DF              ; $B3DB
-    .word   loc_5_B3F4              ; $B3DD
+    .word   FileScreen_Blank        ; $B3D5
+    .word   FileScreen_CopyText     ; $B3D7
+    .word   Register_Menu           ; $B3D9
+    .word   FileScreen_SaveFiles    ; $B3DB
+    .word   FileScreen_ReturnToSelect ; $B3DD
 
-loc_5_B3DF:
+; ---------------------------------------------------------------------------
+; FileScreen_SaveFiles
+;
+; Write the three backup copies back to the save files, silence the sound
+; channels and go to the next step.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreen_SaveFiles:
     ldx     #$02                    ; $B3DF
 
-loc_5_B3E1:
+@loop:
     txa                             ; $B3E1
     pha                             ; $B3E2
     jsr     Save_RestoreFromBackup  ; $B3E3
     pla                             ; $B3E6
     tax                             ; $B3E7
     dex                             ; $B3E8
-    bpl     loc_5_B3E1              ; $B3E9
+    bpl     @loop                   ; $B3E9
     lda     #$00                    ; $B3EB
     sta     SND_CHN                 ; $B3ED
     inc     fileStep                ; $B3F0
     rts                             ; $B3F3
 
-loc_5_B3F4:
+; ---------------------------------------------------------------------------
+; FileScreen_ReturnToSelect
+;
+; Go back to the file select screen (mode 0).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreen_ReturnToSelect:
     lda     #$00                    ; $B3F4
     sta     gameMode                ; $B3F6
     rts                             ; $B3F9
 
-loc_5_B3FA:
+; ---------------------------------------------------------------------------
+; Eliminate_Run
+;
+; ELIMINATION MODE (mode 2), by fileStep: 0 FileScreen_Blank,
+; 1 FileScreen_CopyText, 2 Eliminate_Menu, 3 FileScreen_SaveFiles,
+; 4 FileScreen_ReturnToSelect.  Steps 3 and 4 are not used: END leaves
+; for the register screen.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Eliminate_Run:
     lda     fileStep                ; $B3FA
     jsr     JumpTable               ; $B3FD
 ; (inline jump table)
-    .word   loc_5_B412              ; $B400
-    .word   loc_5_B24E              ; $B402
-    .word   loc_5_B425              ; $B404
-    .word   loc_5_B3DF              ; $B406
-    .word   loc_5_B3F4              ; $B408
+    .word   FileScreen_Blank        ; $B400
+    .word   FileScreen_CopyText     ; $B402
+    .word   Eliminate_Menu          ; $B404
+    .word   FileScreen_SaveFiles    ; $B406
+    .word   FileScreen_ReturnToSelect ; $B408
 
-loc_5_B40A:
+; ---------------------------------------------------------------------------
+; FileSelect_LoadFiles
+;
+; Copy the three save files into their backup copies, turn rendering off,
+; and go to the next step.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_LoadFiles:
     ldx     #$02                    ; $B40A
 
-loc_5_B40C:
+@loop:
     jsr     Save_CopyToBackup       ; $B40C
     dex                             ; $B40F
-    bpl     loc_5_B40C              ; $B410
+    bpl     @loop                   ; $B410
 
-loc_5_B412:
+; ---------------------------------------------------------------------------
+; FileScreen_Blank
+;
+; Turn rendering off and go to the next step.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreen_Blank:
     inc     renderingOff            ; $B412
-    jmp     loc_5_B41D              ; $B415
-; (unreferenced: $B418-$B41C, 5 bytes)
+    jmp     FileScreen_NextStep     ; $B415
+; (unreferenced: $B418-$B41C, 5 bytes: dead code, lda #$00 / sta $0726)
     .byte   $A9, $00, $8D, $26, $07                                         ; $B418
 
-loc_5_B41D:
+FileScreen_NextStep:
     inc     fileStep                ; $B41D
     rts                             ; $B420
 
-dat_5_B421:
+FileCursorYs:
     .byte   $30, $48, $60, $78                                              ; $B421
 
-loc_5_B425:
+; ---------------------------------------------------------------------------
+; Eliminate_Menu
+;
+; ELIMINATION MODE: SELECT moves the fairy over the existing files and END;
+; START on a file resets its stats and world state to the defaults (which
+; blanks its name, making it empty); START on END goes to the register
+; screen, whose END saves the files.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Eliminate_Menu:
     ldy     fileSubStep             ; $B425
-    bne     loc_5_B433              ; $B428
+    bne     @loc_B433               ; $B428
     lda     #$06                    ; $B42A
     sta     ppuStringSelect         ; $B42C
     inc     fileSubStep             ; $B42F
     rts                             ; $B432
 
-loc_5_B433:
+@loc_B433:
     dey                             ; $B433
-    bne     loc_5_B443              ; $B434
+    bne     @loc_B443               ; $B434
     lda     #$07                    ; $B436
     sta     ppuStringSelect         ; $B438
     inc     fileSubStep             ; $B43B
@@ -5792,15 +6191,15 @@ loc_5_B433:
     sta     fileCursor              ; $B440
     rts                             ; $B442
 
-loc_5_B443:
+@loc_B443:
     lda     #$00                    ; $B443
     sta     renderingOff            ; $B445
     lda     joypadPressed           ; $B448
     and     #$10                    ; $B44A
-    beq     loc_5_B4A6              ; $B44C
+    beq     @loc_B4A6               ; $B44C
     lda     fileCursor              ; $B44E
     cmp     #$03                    ; $B450
-    bne     loc_5_B462              ; $B452
+    bne     @loc_B462               ; $B452
     lda     #$00                    ; $B454
     sta     fileSubStep             ; $B456
     sta     fileStep                ; $B459
@@ -5808,7 +6207,7 @@ loc_5_B443:
     sta     gameMode                ; $B45E
     rts                             ; $B461
 
-loc_5_B462:
+@loc_B462:
     lda     fileCursor              ; $B462
     asl     a                       ; $B464
     tax                             ; $B465
@@ -5818,11 +6217,11 @@ loc_5_B462:
     sta     temp1                   ; $B46E
     ldy     #SAVE_STATS_SIZE - 1    ; $B470
 
-loc_5_B472:
+@loop:
     lda     SaveDefaultStats,y      ; $B472
     sta     (temp0),y               ; $B475
     dey                             ; $B477
-    bpl     loc_5_B472              ; $B478
+    bpl     @loop                   ; $B478
     lda     #$08                    ; $B47A
     sta     musicRequest            ; $B47C
     iny                             ; $B47E
@@ -5835,50 +6234,50 @@ loc_5_B472:
     lda     SaveBackupWorldPtrs+1,x ; $B48E
     sta     temp3                   ; $B491
 
-loc_5_B493:
+@loop2:
     lda     (temp0),y               ; $B493
     sta     (temp2),y               ; $B495
     jsr     Save_AdvancePointers    ; $B497
     lda     temp0                   ; $B49A
-    cmp     #<SaveDefaultWorldEnd   ; $B49C
-    bne     loc_5_B493              ; $B49E
+    cmp     #<SaveDefaultWorldEnd           ; $B49C
+    bne     @loop2                  ; $B49E
     lda     temp1                   ; $B4A0
-    cmp     #>SaveDefaultWorldEnd   ; $B4A2
-    bne     loc_5_B493              ; $B4A4
+    cmp     #>SaveDefaultWorldEnd           ; $B4A2
+    bne     @loop2                  ; $B4A4
 
-loc_5_B4A6:
+@loc_B4A6:
     lda     joypadPressed           ; $B4A6
     and     #$20                    ; $B4A8
-    beq     loc_5_B4BC              ; $B4AA
+    beq     @loc_B4BC               ; $B4AA
     lda     #$04                    ; $B4AC
     sta     musicRequest            ; $B4AE
     inc     fileCursor              ; $B4B0
     lda     fileCursor              ; $B4B2
     cmp     #$04                    ; $B4B4
-    bne     loc_5_B4BC              ; $B4B6
+    bne     @loc_B4BC               ; $B4B6
     lda     #$00                    ; $B4B8
     sta     fileCursor              ; $B4BA
 
-loc_5_B4BC:
-    jsr     sub_5_B502              ; $B4BC
+@loc_B4BC:
+    jsr     FileSelect_FindEmpty    ; $B4BC
     lda     fileCursor              ; $B4BF
     cmp     #$03                    ; $B4C1
-    beq     loc_5_B4D5              ; $B4C3
+    beq     @loc_B4D5               ; $B4C3
     asl     a                       ; $B4C5
-    bne     loc_5_B4CB              ; $B4C6
+    bne     @loc_B4CB               ; $B4C6
     clc                             ; $B4C8
     adc     #$01                    ; $B4C9
 
-loc_5_B4CB:
+@loc_B4CB:
     and     fileEmptyMask           ; $B4CB
-    beq     loc_5_B4D5              ; $B4CD
+    beq     @loc_B4D5               ; $B4CD
     inc     fileCursor              ; $B4CF
     asl     a                       ; $B4D1
-    jmp     loc_5_B4CB              ; $B4D2
+    jmp     @loc_B4CB               ; $B4D2
 
-loc_5_B4D5:
+@loc_B4D5:
     ldx     fileCursor              ; $B4D5
-    lda     dat_5_B421,x            ; $B4D7
+    lda     FileCursorYs,x          ; $B4D7
     sta     fileCursorY             ; $B4DA
     lda     #$4C                    ; $B4DC
     sta     a:fileCursorX           ; $B4DE
@@ -5887,65 +6286,78 @@ loc_5_B4D5:
     dey                             ; $B4E4
     dey                             ; $B4E5
     dey                             ; $B4E6
-    jsr     sub_5_B574              ; $B4E7
+    jsr     FileScreen_DrawFairy    ; $B4E7
     lda     #$2C                    ; $B4EA
     ldy     #$58                    ; $B4EC
-    jsr     sub_5_B596              ; $B4EE
+    jsr     FileScreen_DrawLinkIcons ; $B4EE
     lda     #$20                    ; $B4F1
     sta     temp0                   ; $B4F3
     lda     #$CD                    ; $B4F5
     sta     temp1                   ; $B4F7
-    jsr     sub_5_B529              ; $B4F9
+    jsr     FileScreen_QueueNames   ; $B4F9
     rts                             ; $B4FC
 
-dat_5_B4FD:
-    .byte   $01                                                             ; $B4FD
-; (unreferenced: $B4FE-$B4FE, 1 bytes)
-    .byte   $01                                                             ; $B4FE
-    .byte   $02                                                             ; $B4FF
-; (unreferenced: $B500-$B500, 1 bytes)
-    .byte   $02                                                             ; $B500
-    .byte   $04                                                             ; $B501
+FileEmptyBits:
+    .byte   $01, $01, $02, $02, $04                                         ; $B4FD
 
-sub_5_B502:
+; ---------------------------------------------------------------------------
+; FileSelect_FindEmpty
+;
+; Set fileEmptyMask bit n for each file whose name is all blank.
+;
+; Out:     fileEmptyMask
+; Clobbers: a, x, y, temp0-temp1
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_FindEmpty:
     lda     #$00                    ; $B502
     sta     fileEmptyMask           ; $B504
     ldx     #$04                    ; $B506
 
-loc_5_B508:
-    lda     dat_5_B23C,x            ; $B508
+@loop:
+    lda     FileNamePtrs,x          ; $B508
     sta     temp0                   ; $B50B
-    lda     dat_5_B23D,x            ; $B50D
+    lda     FileNamePtrs+1,x        ; $B50D
     sta     temp1                   ; $B510
     ldy     #$07                    ; $B512
 
-loc_5_B514:
+@loop2:
     lda     (temp0),y               ; $B514
     cmp     #$F4                    ; $B516
-    bne     loc_5_B524              ; $B518
+    bne     @loc_B524               ; $B518
     dey                             ; $B51A
-    bpl     loc_5_B514              ; $B51B
-    lda     dat_5_B4FD,x            ; $B51D
+    bpl     @loop2                  ; $B51B
+    lda     FileEmptyBits,x         ; $B51D
     ora     fileEmptyMask           ; $B520
     sta     fileEmptyMask           ; $B522
 
-loc_5_B524:
+@loc_B524:
     dex                             ; $B524
     dex                             ; $B525
-    bpl     loc_5_B508              ; $B526
+    bpl     @loop                   ; $B526
     rts                             ; $B528
 
-sub_5_B529:
+; ---------------------------------------------------------------------------
+; FileScreen_QueueNames
+;
+; Queue the three file names (8 tiles each, from FileNamePtrs), 3 rows
+; apart.
+;
+; In:      temp0-temp1 = PPU address of the first name (high byte first)
+; Clobbers: a, x, y, temp2-temp3
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreen_QueueNames:
     lda     #$00                    ; $B529
     ldx     #$00                    ; $B52B
 
-loc_5_B52D:
+@loop:
     pha                             ; $B52D
     asl     a                       ; $B52E
     tay                             ; $B52F
-    lda     dat_5_B23C,y            ; $B530
+    lda     FileNamePtrs,y          ; $B530
     sta     temp2                   ; $B533
-    lda     dat_5_B23D,y            ; $B535
+    lda     FileNamePtrs+1,y        ; $B535
     sta     temp3                   ; $B538
     lda     temp0                   ; $B53A
     sta     ppuBuffer0,x            ; $B53C
@@ -5955,13 +6367,13 @@ loc_5_B52D:
     sta     ppuBuffer0+2,x          ; $B546
     ldy     #$00                    ; $B549
 
-loc_5_B54B:
+@loop2:
     lda     (temp2),y               ; $B54B
     sta     ppuBuffer0+3,x          ; $B54D
     inx                             ; $B550
     iny                             ; $B551
     cpy     #$08                    ; $B552
-    bne     loc_5_B54B              ; $B554
+    bne     @loop2                  ; $B554
     lda     temp1                   ; $B556
     clc                             ; $B558
     adc     #$60                    ; $B559
@@ -5976,21 +6388,30 @@ loc_5_B54B:
     inx                             ; $B568
     inx                             ; $B569
     cpx     #$21                    ; $B56A
-    bne     loc_5_B52D              ; $B56C
+    bne     @loop                   ; $B56C
     lda     #$FF                    ; $B56E
     sta     ppuBuffer0,x            ; $B570
     rts                             ; $B573
 
-sub_5_B574:
+; ---------------------------------------------------------------------------
+; FileScreen_DrawFairy
+;
+; Draw the fairy cursor (sprite 0, at fileCursorX), flapping every 4
+; frames.
+;
+; In:      y = Y position
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreen_DrawFairy:
     inc     fileBlinkTimer          ; $B574
     ldx     #$68                    ; $B576
     lda     fileBlinkTimer          ; $B578
     and     #$04                    ; $B57A
-    beq     loc_5_B580              ; $B57C
+    beq     @loc_B580               ; $B57C
     inx                             ; $B57E
     inx                             ; $B57F
 
-loc_5_B580:
+@loc_B580:
     stx     fileCursorTile          ; $B580
     sty     oamBuffer               ; $B582
     lda     #$01                    ; $B585
@@ -6001,10 +6422,19 @@ loc_5_B580:
     sta     oamBuffer+1             ; $B592
     rts                             ; $B595
 
-sub_5_B596:
+; ---------------------------------------------------------------------------
+; FileScreen_DrawLinkIcons
+;
+; Draw a Link sprite (tile $D0) beside each of the three files, 24 lines
+; apart.
+;
+; In:      a = Y of the first, y = X
+; Status:  provisional
+; ---------------------------------------------------------------------------
+FileScreen_DrawLinkIcons:
     ldx     #$08                    ; $B596
 
-loc_5_B598:
+@loop:
     pha                             ; $B598
     sta     oamBuffer+12,x          ; $B599
     tya                             ; $B59C
@@ -6020,69 +6450,102 @@ loc_5_B598:
     dex                             ; $B5AF
     dex                             ; $B5B0
     dex                             ; $B5B1
-    bpl     loc_5_B598              ; $B5B2
+    bpl     @loop                   ; $B5B2
     rts                             ; $B5B4
 
-sub_5_B5B5:
+; ---------------------------------------------------------------------------
+; FileSelect_FindSecondQuest
+;
+; Set bit n of temp2 for each file n whose secondQuest is nonzero; the file
+; select screen marks those files with a sprite (tile $D2).
+;
+; Out:     temp2
+; Status:  provisional
+; ---------------------------------------------------------------------------
+FileSelect_FindSecondQuest:
     lda     #$00                    ; $B5B5
     sta     temp2                   ; $B5B7
     ldy     #$29                    ; $B5B9
     ldx     #$04                    ; $B5BB
 
-loc_5_B5BD:
+@loop:
     lda     SaveStatsPtrs,x         ; $B5BD
     sta     temp0                   ; $B5C0
     lda     SaveStatsPtrs+1,x       ; $B5C2
     sta     temp1                   ; $B5C5
     asl     temp2                   ; $B5C7
     lda     (temp0),y               ; $B5C9
-    beq     loc_5_B5D3              ; $B5CB
+    beq     @loc_B5D3               ; $B5CB
 ; (code below not executed in the test movies)
     lda     temp2                   ; $B5CD
     ora     #$01                    ; $B5CF
     sta     temp2                   ; $B5D1
 ; (end of code not executed in the test movies)
 
-loc_5_B5D3:
+@loc_B5D3:
     dex                             ; $B5D3
     dex                             ; $B5D4
-    bpl     loc_5_B5BD              ; $B5D5
+    bpl     @loop                   ; $B5D5
     rts                             ; $B5D7
 
-sub_5_B5D8:
+; ---------------------------------------------------------------------------
+; FileSelect_DrawLevels
+;
+; Write each file's attack, magic and life levels as digits into
+; sramFileScreenText (FileSelect_DrawFileLevels).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_DrawLevels:
     ldx     #$00                    ; $B5D8
     ldy     #$00                    ; $B5DA
-    jsr     sub_5_B5EA              ; $B5DC
+    jsr     FileSelect_DrawFileLevels ; $B5DC
     ldx     #$32                    ; $B5DF
     ldy     #$0E                    ; $B5E1
-    jsr     sub_5_B5EA              ; $B5E3
+    jsr     FileSelect_DrawFileLevels ; $B5E3
     ldx     #$64                    ; $B5E6
     ldy     #$1C                    ; $B5E8
 
-sub_5_B5EA:
+; ---------------------------------------------------------------------------
+; FileSelect_DrawFileLevels
+;
+; Write one file's three levels into sramFileScreenText.
+;
+; In:      x = offset of the file's stats, y = offset in the text
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_DrawFileLevels:
     lda     sramBackupStats,x       ; $B5EA
     ora     #$D0                    ; $B5ED
-    sta     sramOverworldMap+826,y  ; $B5EF
+    sta     sramFileScreenText+58,y ; $B5EF
     lda     sramBackupStats+1,x     ; $B5F2
     ora     #$D0                    ; $B5F5
-    sta     sramOverworldMap+830,y  ; $B5F7
+    sta     sramFileScreenText+62,y ; $B5F7
     lda     sramBackupStats+2,x     ; $B5FA
     ora     #$D0                    ; $B5FD
-    sta     sramOverworldMap+834,y  ; $B5FF
+    sta     sramFileScreenText+66,y ; $B5FF
     rts                             ; $B602
 
-sub_5_B603:
+; ---------------------------------------------------------------------------
+; FileSelect_DrawContinues
+;
+; Write each file's continueCount as three digits into sramFileScreenText
+; (FileSelect_DrawFileContinues).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_DrawContinues:
     ldx     #$28                    ; $B603
     lda     #$00                    ; $B605
     sta     temp2                   ; $B607
-    jsr     sub_5_B623              ; $B609
+    jsr     FileSelect_DrawFileContinues ; $B609
     lda     #$28                    ; $B60C
     clc                             ; $B60E
     adc     #$32                    ; $B60F
     tax                             ; $B611
     lda     #$06                    ; $B612
     sta     temp2                   ; $B614
-    jsr     sub_5_B623              ; $B616
+    jsr     FileSelect_DrawFileContinues ; $B616
     lda     #$28                    ; $B619
     clc                             ; $B61B
     adc     #$64                    ; $B61C
@@ -6090,58 +6553,93 @@ sub_5_B603:
     lda     #$0C                    ; $B61F
     sta     temp2                   ; $B621
 
-sub_5_B623:
+; ---------------------------------------------------------------------------
+; FileSelect_DrawFileContinues
+;
+; Write one file's continueCount as three digits.
+;
+; In:      x = offset of its continueCount, temp2 = offset in the text
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_DrawFileContinues:
     lda     #$00                    ; $B623
     sta     temp0                   ; $B625
     lda     sramBackupStats,x       ; $B627
-    jsr     sub_5_B8D2              ; $B62A
+    jsr     Text_NumberToDigits     ; $B62A
     ldx     temp2                   ; $B62D
-    sta     sramOverworldMap+889,x  ; $B62F
+    sta     sramFileScreenText+121,x ; $B62F
     tya                             ; $B632
-    sta     sramOverworldMap+888,x  ; $B633
+    sta     sramFileScreenText+120,x ; $B633
     lda     temp0                   ; $B636
-    sta     sramOverworldMap+887,x  ; $B638
+    sta     sramFileScreenText+119,x ; $B638
     rts                             ; $B63B
 
-sub_5_B63C:
-    jsr     sub_5_B502              ; $B63C
+; ---------------------------------------------------------------------------
+; FileSelect_BlankEmptyFiles
+;
+; Blank the levels and continue count of each empty file
+; (FileSelect_BlankFile).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_BlankEmptyFiles:
+    jsr     FileSelect_FindEmpty    ; $B63C
     lda     fileEmptyMask           ; $B63F
     and     #$01                    ; $B641
-    beq     loc_5_B64C              ; $B643
+    beq     @loc_B64C               ; $B643
     ldx     #$00                    ; $B645
     ldy     #$00                    ; $B647
-    jsr     sub_5_B663              ; $B649
+    jsr     FileSelect_BlankFile    ; $B649
 
-loc_5_B64C:
+@loc_B64C:
     lda     fileEmptyMask           ; $B64C
     and     #$02                    ; $B64E
-    beq     loc_5_B659              ; $B650
+    beq     @loc_B659               ; $B650
     ldx     #$0E                    ; $B652
     ldy     #$06                    ; $B654
-    jsr     sub_5_B663              ; $B656
+    jsr     FileSelect_BlankFile    ; $B656
 
-loc_5_B659:
+@loc_B659:
     lda     fileEmptyMask           ; $B659
     and     #$04                    ; $B65B
     beq     loc_5_B677              ; $B65D
     ldx     #$1C                    ; $B65F
     ldy     #$0C                    ; $B661
 
-sub_5_B663:
+; ---------------------------------------------------------------------------
+; FileSelect_BlankFile
+;
+; Blank one file's levels and continue count in sramFileScreenText.
+;
+; In:      x, y = offsets of its levels and its count in the text
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileSelect_BlankFile:
     lda     #$F4                    ; $B663
-    sta     sramOverworldMap+826,x  ; $B665
-    sta     sramOverworldMap+830,x  ; $B668
-    sta     sramOverworldMap+834,x  ; $B66B
-    sta     sramOverworldMap+887,y  ; $B66E
-    sta     sramOverworldMap+888,y  ; $B671
-    sta     sramOverworldMap+889,y  ; $B674
+    sta     sramFileScreenText+58,x ; $B665
+    sta     sramFileScreenText+62,x ; $B668
+    sta     sramFileScreenText+66,x ; $B66B
+    sta     sramFileScreenText+119,y ; $B66E
+    sta     sramFileScreenText+120,y ; $B671
+    sta     sramFileScreenText+121,y ; $B674
 
 loc_5_B677:
     rts                             ; $B677
 
-loc_5_B678:
+; ---------------------------------------------------------------------------
+; Register_Menu
+;
+; REGISTER YOUR NAME: the fairy picks an empty file (SELECT) or END; the
+; direction pad moves the letter cursor over the 11 x 4 NameLetters grid
+; (with auto-repeat after 31 frames, skipping the gap in row 2), A or B
+; moves the name cursor, and A writes the letter into the file's name.
+; START on END goes to FileScreen_SaveFiles.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Register_Menu:
     ldy     fileSubStep             ; $B678
-    bne     loc_5_B692              ; $B67B
+    bne     @loc_B692               ; $B67B
     lda     #$06                    ; $B67D
     sta     ppuStringSelect         ; $B67F
     inc     fileSubStep             ; $B682
@@ -6150,65 +6648,65 @@ loc_5_B678:
     sta     nameCursor              ; $B689
     sta     letterColumn            ; $B68B
     sta     letterRow               ; $B68D
-    jmp     sub_5_B502              ; $B68F
+    jmp     FileSelect_FindEmpty    ; $B68F
 
-loc_5_B692:
+@loc_B692:
     lda     #$00                    ; $B692
     sta     renderingOff            ; $B694
     lda     joypadPressed           ; $B697
     and     #$10                    ; $B699
-    beq     loc_5_B6AC              ; $B69B
+    beq     @loc_B6AC               ; $B69B
     lda     fileCursor              ; $B69D
     cmp     #$03                    ; $B69F
-    bne     loc_5_B6AC              ; $B6A1
+    bne     @loc_B6AC               ; $B6A1
     lda     #$00                    ; $B6A3
     sta     fileSubStep             ; $B6A5
     inc     fileStep                ; $B6A8
     rts                             ; $B6AB
 
-loc_5_B6AC:
+@loc_B6AC:
     lda     joypadPressed           ; $B6AC
     and     #$20                    ; $B6AE
-    beq     loc_5_B6C6              ; $B6B0
+    beq     @loc_B6C6               ; $B6B0
     lda     #$04                    ; $B6B2
     sta     musicRequest            ; $B6B4
     inc     fileCursor              ; $B6B6
     lda     fileCursor              ; $B6B8
     cmp     #$04                    ; $B6BA
-    bne     loc_5_B6C2              ; $B6BC
+    bne     @loc_B6C2               ; $B6BC
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B6BE
     sta     fileCursor              ; $B6C0
 ; (end of code not executed in the test movies)
 
-loc_5_B6C2:
+@loc_B6C2:
     lda     #$00                    ; $B6C2
     sta     nameCursor              ; $B6C4
 
-loc_5_B6C6:
+@loc_B6C6:
     lda     fileEmptyMask           ; $B6C6
     ora     #$08                    ; $B6C8
     sta     fileEmptyMask           ; $B6CA
     lda     fileCursor              ; $B6CC
     cmp     #$03                    ; $B6CE
-    beq     loc_5_B6E4              ; $B6D0
+    beq     @loc_B6E4               ; $B6D0
     asl     a                       ; $B6D2
-    bne     loc_5_B6D8              ; $B6D3
+    bne     @loc_B6D8               ; $B6D3
     clc                             ; $B6D5
     adc     #$01                    ; $B6D6
 
-loc_5_B6D8:
+@loc_B6D8:
     tay                             ; $B6D8
     and     fileEmptyMask           ; $B6D9
-    bne     loc_5_B6E4              ; $B6DB
+    bne     @loc_B6E4               ; $B6DB
     inc     fileCursor              ; $B6DD
     tya                             ; $B6DF
     asl     a                       ; $B6E0
-    jmp     loc_5_B6D8              ; $B6E1
+    jmp     @loc_B6D8               ; $B6E1
 
-loc_5_B6E4:
+@loc_B6E4:
     ldx     fileCursor              ; $B6E4
-    lda     dat_5_B421,x            ; $B6E6
+    lda     FileCursorYs,x          ; $B6E6
     sta     fileCursorY             ; $B6E9
     lda     #$4C                    ; $B6EB
     sta     a:fileCursorX           ; $B6ED
@@ -6217,62 +6715,62 @@ loc_5_B6E4:
     dey                             ; $B6F3
     dey                             ; $B6F4
     dey                             ; $B6F5
-    jsr     sub_5_B574              ; $B6F6
+    jsr     FileScreen_DrawFairy    ; $B6F6
     lda     #$2C                    ; $B6F9
     ldy     #$58                    ; $B6FB
-    jsr     sub_5_B596              ; $B6FD
+    jsr     FileScreen_DrawLinkIcons ; $B6FD
     lda     fileCursorY             ; $B700
     cmp     #$78                    ; $B702
-    bne     loc_5_B711              ; $B704
+    bne     @loc_B711               ; $B704
     lda     #$F8                    ; $B706
     sta     oamBuffer+4             ; $B708
     sta     oamBuffer+8             ; $B70B
-    jmp     loc_5_B8C4              ; $B70E
+    jmp     @loc_B8C4               ; $B70E
 
-loc_5_B711:
+@loc_B711:
     lda     joypadPressed           ; $B711
     and     #$C0                    ; $B713
-    beq     loc_5_B727              ; $B715
+    beq     @loc_B727               ; $B715
     lda     #$01                    ; $B717
     sta     musicRequest            ; $B719
     inc     nameCursor              ; $B71B
     lda     nameCursor              ; $B71D
     cmp     #$08                    ; $B71F
-    bne     loc_5_B727              ; $B721
+    bne     @loc_B727               ; $B721
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B723
     sta     nameCursor              ; $B725
 ; (end of code not executed in the test movies)
 
-loc_5_B727:
+@loc_B727:
     lda     #$68                    ; $B727
     ldx     nameCursor              ; $B729
 
-loc_5_B72B:
-    beq     loc_5_B734              ; $B72B
+@loc_B72B:
+    beq     @loc_B734               ; $B72B
     clc                             ; $B72D
     adc     #$08                    ; $B72E
     dex                             ; $B730
-    jmp     loc_5_B72B              ; $B731
+    jmp     @loc_B72B               ; $B731
 
-loc_5_B734:
+@loc_B734:
     sta     nameCursorX             ; $B734
     lda     fileCursorY             ; $B737
     cmp     #$78                    ; $B739
-    bne     loc_5_B73F              ; $B73B
+    bne     @loc_B73F               ; $B73B
 ; (code below not executed in the test movies)
     lda     #$F8                    ; $B73D
 ; (end of code not executed in the test movies)
 
-loc_5_B73F:
+@loc_B73F:
     sta     nameCursorY             ; $B73F
     lda     fileBlinkTimer          ; $B741
     and     #$08                    ; $B743
-    beq     loc_5_B74B              ; $B745
+    beq     @loc_B74B               ; $B745
     lda     #$F8                    ; $B747
     sta     nameCursorY             ; $B749
 
-loc_5_B74B:
+@loc_B74B:
     lda     nameCursorY             ; $B74B
     sta     oamBuffer+4             ; $B74D
     dec     oamBuffer+4             ; $B750
@@ -6284,89 +6782,89 @@ loc_5_B74B:
     sta     oamBuffer+6             ; $B760
     lda     joypadHeld              ; $B763
     and     #$0F                    ; $B765
-    bne     loc_5_B772              ; $B767
+    bne     @loc_B772               ; $B767
     lda     #$00                    ; $B769
     sta     letterHeld              ; $B76B
     sta     letterRepeatTimer       ; $B76D
-    jmp     loc_5_B831              ; $B76F
+    jmp     @loc_B831               ; $B76F
 
-loc_5_B772:
+@loc_B772:
     lda     letterHeld              ; $B772
-    beq     loc_5_B78E              ; $B774
+    beq     @loc_B78E               ; $B774
     inc     letterRepeatTimer       ; $B776
     lda     letterRepeatTimer       ; $B778
     cmp     #$1F                    ; $B77A
-    bmi     loc_5_B78B              ; $B77C
+    bmi     @loc_B78B               ; $B77C
     and     #$07                    ; $B77E
-    bne     loc_5_B78B              ; $B780
+    bne     @loc_B78B               ; $B780
     lda     #$20                    ; $B782
     sta     letterRepeatTimer       ; $B784
-    jmp     loc_5_B78E              ; $B786
-; (unreferenced: $B789-$B78A, 2 bytes)
+    jmp     @loc_B78E               ; $B786
+; (unreferenced: $B789-$B78A, 2 bytes: dead code, beq +3)
     .byte   $F0, $03                                                        ; $B789
 
-loc_5_B78B:
-    jmp     loc_5_B831              ; $B78B
+@loc_B78B:
+    jmp     @loc_B831               ; $B78B
 
-loc_5_B78E:
+@loc_B78E:
     lda     #$01                    ; $B78E
     sta     letterHeld              ; $B790
     lda     #$02                    ; $B792
     sta     musicRequest            ; $B794
     lda     joypadHeld              ; $B796
     and     #$03                    ; $B798
-    beq     loc_5_B7F2              ; $B79A
+    beq     @loc_B7F2               ; $B79A
     cmp     #$01                    ; $B79C
-    bne     loc_5_B7CF              ; $B79E
+    bne     @loc_B7CF               ; $B79E
     inc     letterColumn            ; $B7A0
     lda     letterColumn            ; $B7A2
     cmp     #$0B                    ; $B7A4
-    bne     loc_5_B7AE              ; $B7A6
+    bne     @loc_B7AE               ; $B7A6
     inc     letterRow               ; $B7A8
     lda     #$00                    ; $B7AA
     sta     letterColumn            ; $B7AC
 
-loc_5_B7AE:
+@loc_B7AE:
     lda     letterRow               ; $B7AE
     cmp     #$04                    ; $B7B0
-    bne     loc_5_B7BA              ; $B7B2
+    bne     @loc_B7BA               ; $B7B2
     lda     #$00                    ; $B7B4
     sta     letterColumn            ; $B7B6
     sta     letterRow               ; $B7B8
 
-loc_5_B7BA:
+@loc_B7BA:
     lda     letterRow               ; $B7BA
     cmp     #$02                    ; $B7BC
-    bne     loc_5_B7CC              ; $B7BE
+    bne     @loc_B7CC               ; $B7BE
     lda     letterColumn            ; $B7C0
     cmp     #$06                    ; $B7C2
-    bne     loc_5_B7CC              ; $B7C4
+    bne     @loc_B7CC               ; $B7C4
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B7C6
     sta     letterColumn            ; $B7C8
     inc     letterRow               ; $B7CA
 ; (end of code not executed in the test movies)
 
-loc_5_B7CC:
-    jmp     loc_5_B831              ; $B7CC
+@loc_B7CC:
+    jmp     @loc_B831               ; $B7CC
 
-loc_5_B7CF:
+@loc_B7CF:
     dec     letterColumn            ; $B7CF
-    bpl     loc_5_B7E3              ; $B7D1
+    bpl     @loc_B7E3               ; $B7D1
     dec     letterRow               ; $B7D3
     lda     #$0A                    ; $B7D5
     sta     letterColumn            ; $B7D7
     lda     letterRow               ; $B7D9
     cmp     #$02                    ; $B7DB
-    bne     loc_5_B7E3              ; $B7DD
+    bne     @loc_B7E3               ; $B7DD
 ; (code below not executed in the test movies)
     lda     #$05                    ; $B7DF
     sta     letterColumn            ; $B7E1
 ; (end of code not executed in the test movies)
 
-loc_5_B7E3:
+@loc_B7E3:
     lda     letterRow               ; $B7E3
-    bpl     loc_5_B7EF              ; $B7E5
+    bpl     @loc_B7EF               ; $B7E5
 ; (code below not executed in the test movies)
     lda     #$03                    ; $B7E7
     sta     letterRow               ; $B7E9
@@ -6374,88 +6872,88 @@ loc_5_B7E3:
     sta     letterColumn            ; $B7ED
 ; (end of code not executed in the test movies)
 
-loc_5_B7EF:
-    jmp     loc_5_B831              ; $B7EF
+@loc_B7EF:
+    jmp     @loc_B831               ; $B7EF
 
-loc_5_B7F2:
+@loc_B7F2:
     lda     joypadHeld              ; $B7F2
     and     #$08                    ; $B7F4
-    beq     loc_5_B814              ; $B7F6
+    beq     @loc_B814               ; $B7F6
     dec     letterRow               ; $B7F8
-    bpl     loc_5_B803              ; $B7FA
+    bpl     @loc_B803               ; $B7FA
     lda     #$03                    ; $B7FC
     sta     letterRow               ; $B7FE
-    jmp     loc_5_B811              ; $B800
+    jmp     @loc_B811               ; $B800
 
-loc_5_B803:
+@loc_B803:
     lda     letterColumn            ; $B803
     cmp     #$06                    ; $B805
-    bmi     loc_5_B811              ; $B807
+    bmi     @loc_B811               ; $B807
     lda     letterRow               ; $B809
     cmp     #$02                    ; $B80B
-    bne     loc_5_B811              ; $B80D
+    bne     @loc_B811               ; $B80D
     dec     letterRow               ; $B80F
 
-loc_5_B811:
-    jmp     loc_5_B831              ; $B811
+@loc_B811:
+    jmp     @loc_B831               ; $B811
 
-loc_5_B814:
+@loc_B814:
     inc     letterRow               ; $B814
     lda     letterRow               ; $B816
     cmp     #$04                    ; $B818
-    bne     loc_5_B823              ; $B81A
+    bne     @loc_B823               ; $B81A
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B81C
     sta     letterRow               ; $B81E
-    jmp     loc_5_B831              ; $B820
+    jmp     @loc_B831               ; $B820
 ; (end of code not executed in the test movies)
 
-loc_5_B823:
+@loc_B823:
     lda     letterColumn            ; $B823
     cmp     #$06                    ; $B825
-    bmi     loc_5_B831              ; $B827
+    bmi     @loc_B831               ; $B827
     lda     letterRow               ; $B829
     cmp     #$02                    ; $B82B
-    bne     loc_5_B831              ; $B82D
+    bne     @loc_B831               ; $B82D
 ; (code below not executed in the test movies)
     inc     letterRow               ; $B82F
 ; (end of code not executed in the test movies)
 
-loc_5_B831:
+@loc_B831:
     lda     #$30                    ; $B831
     ldx     letterColumn            ; $B833
 
-loc_5_B835:
-    beq     loc_5_B83E              ; $B835
+@loc_B835:
+    beq     @loc_B83E               ; $B835
     clc                             ; $B837
     adc     #$10                    ; $B838
     dex                             ; $B83A
-    jmp     loc_5_B835              ; $B83B
+    jmp     @loc_B835               ; $B83B
 
-loc_5_B83E:
+@loc_B83E:
     sta     letterCursorX           ; $B83E
     lda     #$90                    ; $B840
     ldx     letterRow               ; $B842
 
-loc_5_B844:
-    beq     loc_5_B84D              ; $B844
+@loc_B844:
+    beq     @loc_B84D               ; $B844
     clc                             ; $B846
     adc     #$10                    ; $B847
     dex                             ; $B849
-    jmp     loc_5_B844              ; $B84A
+    jmp     @loc_B844               ; $B84A
 
-loc_5_B84D:
+@loc_B84D:
     sta     letterCursorY           ; $B84D
     lda     letterRepeatTimer       ; $B84F
     cmp     #$1F                    ; $B851
-    bpl     loc_5_B85F              ; $B853
+    bpl     @loc_B85F               ; $B853
     lda     fileBlinkTimer          ; $B855
     and     #$08                    ; $B857
-    beq     loc_5_B85F              ; $B859
+    beq     @loc_B85F               ; $B859
     lda     #$F8                    ; $B85B
     sta     letterCursorY           ; $B85D
 
-loc_5_B85F:
+@loc_B85F:
     lda     letterCursorY           ; $B85F
     sta     oamBuffer+68            ; $B861
     dec     oamBuffer+68            ; $B864
@@ -6467,7 +6965,7 @@ loc_5_B85F:
     sta     oamBuffer+70            ; $B873
     ldx     #$1C                    ; $B876
 
-loc_5_B878:
+@loop:
     lda     #$C7                    ; $B878
     sta     oamBuffer+36,x          ; $B87A
     lda     #$F5                    ; $B87D
@@ -6480,73 +6978,82 @@ loc_5_B878:
     dex                             ; $B88D
     dex                             ; $B88E
     dex                             ; $B88F
-    bpl     loc_5_B878              ; $B890
+    bpl     @loop                   ; $B890
     lda     joypadPressed           ; $B892
     and     #$80                    ; $B894
-    beq     loc_5_B8C4              ; $B896
+    beq     @loc_B8C4               ; $B896
     ldx     letterRow               ; $B898
     lda     letterColumn            ; $B89A
 
-loc_5_B89C:
+@loc_B89C:
     cpx     #$00                    ; $B89C
-    beq     loc_5_B8A7              ; $B89E
+    beq     @loc_B8A7               ; $B89E
     clc                             ; $B8A0
     adc     #$0B                    ; $B8A1
     dex                             ; $B8A3
-    jmp     loc_5_B89C              ; $B8A4
+    jmp     @loc_B89C               ; $B8A4
 
-loc_5_B8A7:
+@loc_B8A7:
     pha                             ; $B8A7
     ldy     nameCursor              ; $B8A8
-    bne     loc_5_B8AE              ; $B8AA
+    bne     @loc_B8AE               ; $B8AA
 ; (code below not executed in the test movies)
     ldy     #$08                    ; $B8AC
 ; (end of code not executed in the test movies)
 
-loc_5_B8AE:
+@loc_B8AE:
     dey                             ; $B8AE
     lda     fileCursor              ; $B8AF
     asl     a                       ; $B8B1
     tax                             ; $B8B2
-    lda     dat_5_B23C,x            ; $B8B3
+    lda     FileNamePtrs,x          ; $B8B3
     sta     temp0                   ; $B8B6
-    lda     dat_5_B23D,x            ; $B8B8
+    lda     FileNamePtrs+1,x        ; $B8B8
     sta     temp1                   ; $B8BB
     pla                             ; $B8BD
     tax                             ; $B8BE
-    lda     dat_5_BD75,x            ; $B8BF
+    lda     NameLetters,x           ; $B8BF
     sta     (temp0),y               ; $B8C2
 
-loc_5_B8C4:
+@loc_B8C4:
     lda     #$20                    ; $B8C4
     sta     temp0                   ; $B8C6
     lda     #$CD                    ; $B8C8
     sta     temp1                   ; $B8CA
-    jmp     sub_5_B529              ; $B8CC
-; (unreferenced: $B8CF-$B8D1, 3 bytes)
+    jmp     FileScreen_QueueNames   ; $B8CC
+; (unreferenced: $B8CF-$B8D1, 3 bytes: dead code, jmp $CF05)
     .byte   $4C, $05, $CF                                                   ; $B8CF
 
-sub_5_B8D2:
+; ---------------------------------------------------------------------------
+; Text_NumberToDigits
+;
+; Convert the 16-bit number temp0:a (high:low) into decimal digit tiles
+; ($D0 = 0).
+;
+; Out:     temp1 = thousands, temp0 = hundreds, y = tens, a = ones
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Text_NumberToDigits:
     ldy     #$D0                    ; $B8D2
 
-loc_5_B8D4:
+@loop:
     iny                             ; $B8D4
     sec                             ; $B8D5
     sbc     #$E8                    ; $B8D6
-    bcs     loc_5_B8DC              ; $B8D8
+    bcs     @loc_B8DC               ; $B8D8
     dec     temp0                   ; $B8DA
 
-loc_5_B8DC:
+@loc_B8DC:
     dec     temp0                   ; $B8DC
     dec     temp0                   ; $B8DE
     dec     temp0                   ; $B8E0
-    bpl     loc_5_B8D4              ; $B8E2
+    bpl     @loop                   ; $B8E2
     clc                             ; $B8E4
     adc     #$E8                    ; $B8E5
-    bcc     loc_5_B8EB              ; $B8E7
+    bcc     @loc_B8EB               ; $B8E7
     inc     temp0                   ; $B8E9
 
-loc_5_B8EB:
+@loc_B8EB:
     inc     temp0                   ; $B8EB
     inc     temp0                   ; $B8ED
     inc     temp0                   ; $B8EF
@@ -6554,23 +7061,23 @@ loc_5_B8EB:
     sty     temp1                   ; $B8F2
     ldy     #$D0                    ; $B8F4
 
-loc_5_B8F6:
+@loop2:
     iny                             ; $B8F6
     sec                             ; $B8F7
     sbc     #$64                    ; $B8F8
-    bcs     loc_5_B8F6              ; $B8FA
+    bcs     @loop2                  ; $B8FA
     dec     temp0                   ; $B8FC
-    bpl     loc_5_B8F6              ; $B8FE
+    bpl     @loop2                  ; $B8FE
     adc     #$64                    ; $B900
     dey                             ; $B902
     sty     temp0                   ; $B903
     ldy     #$D0                    ; $B905
 
-loc_5_B907:
+@loop3:
     iny                             ; $B907
     sec                             ; $B908
     sbc     #$0A                    ; $B909
-    bcs     loc_5_B907              ; $B90B
+    bcs     @loop3                  ; $B90B
     adc     #$DA                    ; $B90D
     dey                             ; $B90F
     rts                             ; $B910
@@ -6587,23 +7094,23 @@ loc_5_B907:
 Save_Load:
     jsr     Save_SetPointersCurrent ; $B911
 
-loc_5_B914:
+@loop:
     lda     (temp0),y               ; $B914
     sta     statLevel,y             ; $B916
     dey                             ; $B919
-    bpl     loc_5_B914              ; $B91A
+    bpl     @loop                   ; $B91A
     iny                             ; $B91C
 
-loc_5_B91D:
+@loop2:
     lda     (temp2),y               ; $B91D
     sta     (temp4),y               ; $B91F
     jsr     Save_AdvancePointers    ; $B921
     lda     temp6                   ; $B924
-    cmp     #<SaveDefaultWorldEnd   ; $B926
-    bne     loc_5_B91D              ; $B928
+    cmp     #<SaveDefaultWorldEnd           ; $B926
+    bne     @loop2                  ; $B928
     lda     temp7                   ; $B92A
-    cmp     #>SaveDefaultWorldEnd   ; $B92C
-    bne     loc_5_B91D              ; $B92E
+    cmp     #>SaveDefaultWorldEnd           ; $B92C
+    bne     @loop2                  ; $B92E
     rts                             ; $B930
 ; (unreferenced: $B931-$B95D, 45 bytes)
     .byte   $20, $6C, $BA, $A0, $00, $A9, $5A, $91, $0C, $A0, $31, $B1, $00, $91, $08, $88; $B931
@@ -6632,70 +7139,70 @@ SaveDefaultWorldPtr:
 Save_CheckFiles:
     ldx     #$02                    ; $B960
 
-loc_5_B962:
+@loop:
     txa                             ; $B962
     jsr     Save_SetPointers        ; $B963
     ldy     #$00                    ; $B966
     lda     (temp12),y              ; $B968
     cmp     #SAVE_STATUS_VALID      ; $B96A
-    beq     loc_5_B9A3              ; $B96C
+    beq     @loc_B9A3               ; $B96C
     cmp     #SAVE_STATUS_WRITING_BACKUP ; $B96E
-    beq     loc_5_B99D              ; $B970
+    beq     @loc_B99D               ; $B970
     cmp     #SAVE_STATUS_WRITING_FILE ; $B972
-    beq     loc_5_B9A7              ; $B974
+    beq     @loc_B9A7               ; $B974
     ldy     #SAVE_STATS_SIZE - 1    ; $B976
 
-loc_5_B978:
+@loop2:
     lda     SaveDefaultStats,y      ; $B978
     sta     (temp0),y               ; $B97B
     dey                             ; $B97D
-    bpl     loc_5_B978              ; $B97E
+    bpl     @loop2                  ; $B97E
     iny                             ; $B980
 
-loc_5_B981:
+@loop3:
     lda     (temp6),y               ; $B981
     sta     (temp2),y               ; $B983
     inc     temp6                   ; $B985
-    bne     loc_5_B98B              ; $B987
+    bne     @loc_B98B               ; $B987
 ; (code below not executed in the test movies)
     inc     temp7                   ; $B989
 ; (end of code not executed in the test movies)
 
-loc_5_B98B:
+@loc_B98B:
     inc     temp2                   ; $B98B
-    bne     loc_5_B991              ; $B98D
+    bne     @loc_B991               ; $B98D
     inc     temp3                   ; $B98F
 
-loc_5_B991:
+@loc_B991:
     lda     temp6                   ; $B991
-    cmp     #<SaveDefaultWorldEnd   ; $B993
-    bne     loc_5_B981              ; $B995
+    cmp     #<SaveDefaultWorldEnd           ; $B993
+    bne     @loop3                  ; $B995
     lda     temp7                   ; $B997
-    cmp     #>SaveDefaultWorldEnd   ; $B999
-    bne     loc_5_B981              ; $B99B
+    cmp     #>SaveDefaultWorldEnd           ; $B999
+    bne     @loop3                  ; $B99B
 
-loc_5_B99D:
+@loc_B99D:
     ldy     #$00                    ; $B99D
     lda     #SAVE_STATUS_VALID      ; $B99F
     sta     (temp12),y              ; $B9A1
 
-loc_5_B9A3:
+@loc_B9A3:
     dex                             ; $B9A3
-    bpl     loc_5_B962              ; $B9A4
+    bpl     @loop                   ; $B9A4
     rts                             ; $B9A6
 ; (code below not executed in the test movies)
 
-loc_5_B9A7:
+@loc_B9A7:
     ldy     #SAVE_STATS_SIZE - 1    ; $B9A7
 
-loc_5_B9A9:
+@loop4:
     lda     (temp8),y               ; $B9A9
     sta     (temp0),y               ; $B9AB
     dey                             ; $B9AD
-    bpl     loc_5_B9A9              ; $B9AE
+    bpl     @loop4                  ; $B9AE
     iny                             ; $B9B0
 
-loc_5_B9B1:
+@loop5:
     lda     (temp10),y              ; $B9B1
     sta     (temp2),y               ; $B9B3
     txa                             ; $B9B5
@@ -6704,12 +7211,12 @@ loc_5_B9B1:
     pla                             ; $B9BA
     tax                             ; $B9BB
     lda     temp6                   ; $B9BC
-    cmp     #<SaveDefaultWorldEnd   ; $B9BE
-    bne     loc_5_B9B1              ; $B9C0
+    cmp     #<SaveDefaultWorldEnd           ; $B9BE
+    bne     @loop5                  ; $B9C0
     lda     temp7                   ; $B9C2
-    cmp     #>SaveDefaultWorldEnd   ; $B9C4
-    beq     loc_5_B99D              ; $B9C6
-    bne     loc_5_B9B1              ; $B9C8
+    cmp     #>SaveDefaultWorldEnd           ; $B9C4
+    beq     @loc_B99D               ; $B9C6
+    bne     @loop5                  ; $B9C8
 
 ; ---------------------------------------------------------------------------
 ; Save_Write
@@ -6728,44 +7235,44 @@ Save_Write:
     sta     (temp12),y              ; $B9D1
     ldy     #SAVE_STATS_SIZE - 1    ; $B9D3
 
-loc_5_B9D5:
+@loop:
     lda     statLevel,y             ; $B9D5
     sta     (temp8),y               ; $B9D8
     dey                             ; $B9DA
-    bpl     loc_5_B9D5              ; $B9DB
+    bpl     @loop                   ; $B9DB
     iny                             ; $B9DD
 
-loc_5_B9DE:
+@loop2:
     lda     (temp4),y               ; $B9DE
     sta     (temp10),y              ; $B9E0
     jsr     Save_AdvancePointers    ; $B9E2
     lda     temp6                   ; $B9E5
-    cmp     #<SaveDefaultWorldEnd   ; $B9E7
-    bne     loc_5_B9DE              ; $B9E9
+    cmp     #<SaveDefaultWorldEnd           ; $B9E7
+    bne     @loop2                  ; $B9E9
     lda     temp7                   ; $B9EB
-    cmp     #>SaveDefaultWorldEnd   ; $B9ED
-    bne     loc_5_B9DE              ; $B9EF
+    cmp     #>SaveDefaultWorldEnd           ; $B9ED
+    bne     @loop2                  ; $B9EF
     lda     #SAVE_STATUS_WRITING_FILE ; $B9F1
     sta     (temp12),y              ; $B9F3
     jsr     Save_SetPointersCurrent ; $B9F5
 
-loc_5_B9F8:
+@loop3:
     lda     (temp8),y               ; $B9F8
     sta     (temp0),y               ; $B9FA
     dey                             ; $B9FC
-    bpl     loc_5_B9F8              ; $B9FD
+    bpl     @loop3                  ; $B9FD
     iny                             ; $B9FF
 
-loc_5_BA00:
+@loop4:
     lda     (temp10),y              ; $BA00
     sta     (temp2),y               ; $BA02
     jsr     Save_AdvancePointers    ; $BA04
     lda     temp6                   ; $BA07
-    cmp     #<SaveDefaultWorldEnd   ; $BA09
-    bne     loc_5_BA00              ; $BA0B
+    cmp     #<SaveDefaultWorldEnd           ; $BA09
+    bne     @loop4                  ; $BA0B
     lda     temp7                   ; $BA0D
-    cmp     #>SaveDefaultWorldEnd   ; $BA0F
-    bne     loc_5_BA00              ; $BA11
+    cmp     #>SaveDefaultWorldEnd           ; $BA0F
+    bne     @loop4                  ; $BA11
 ; (end of code not executed in the test movies)
 
 loc_5_BA13:
@@ -6790,25 +7297,25 @@ Save_RestoreFromBackup:
     sta     (temp12),y              ; $BA1F
     ldy     #SAVE_STATS_SIZE - 1    ; $BA21
 
-loc_5_BA23:
+@loop:
     lda     (temp8),y               ; $BA23
     sta     (temp0),y               ; $BA25
     dey                             ; $BA27
-    bpl     loc_5_BA23              ; $BA28
+    bpl     @loop                   ; $BA28
     iny                             ; $BA2A
 
-loc_5_BA2B:
+@loop2:
     lda     (temp10),y              ; $BA2B
     sta     (temp2),y               ; $BA2D
     jsr     Save_AdvancePointers    ; $BA2F
     lda     temp6                   ; $BA32
-    cmp     #<SaveDefaultWorldEnd   ; $BA34
-    bne     loc_5_BA2B              ; $BA36
+    cmp     #<SaveDefaultWorldEnd           ; $BA34
+    bne     @loop2                  ; $BA36
     lda     temp7                   ; $BA38
-    cmp     #>SaveDefaultWorldEnd   ; $BA3A
+    cmp     #>SaveDefaultWorldEnd           ; $BA3A
     beq     loc_5_BA13              ; $BA3C
 ; (code below not executed in the test movies)
-    bne     loc_5_BA2B              ; $BA3E
+    bne     @loop2                  ; $BA3E
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
@@ -6829,14 +7336,14 @@ Save_CopyToBackup:
     sta     (temp12),y              ; $BA48
     ldy     #SAVE_STATS_SIZE - 1    ; $BA4A
 
-loc_5_BA4C:
+@loop:
     lda     (temp0),y               ; $BA4C
     sta     (temp8),y               ; $BA4E
     dey                             ; $BA50
-    bpl     loc_5_BA4C              ; $BA51
+    bpl     @loop                   ; $BA51
     iny                             ; $BA53
 
-loc_5_BA54:
+@loop2:
     lda     (temp2),y               ; $BA54
     sta     (temp10),y              ; $BA56
     txa                             ; $BA58
@@ -6845,11 +7352,11 @@ loc_5_BA54:
     pla                             ; $BA5D
     tax                             ; $BA5E
     lda     temp6                   ; $BA5F
-    cmp     #<SaveDefaultWorldEnd   ; $BA61
-    bne     loc_5_BA54              ; $BA63
+    cmp     #<SaveDefaultWorldEnd           ; $BA61
+    bne     @loop2                  ; $BA63
     lda     temp7                   ; $BA65
-    cmp     #>SaveDefaultWorldEnd   ; $BA67
-    bne     loc_5_BA54              ; $BA69
+    cmp     #>SaveDefaultWorldEnd           ; $BA67
+    bne     @loop2                  ; $BA69
     rts                             ; $BA6B
 
 ; ---------------------------------------------------------------------------
@@ -6923,15 +7430,15 @@ Save_SetPointers:
 Save_AdvancePointers:
     ldx     #$0A                    ; $BAB8
 
-loc_5_BABA:
+@loop:
     inc     temp0,x                 ; $BABA
-    bne     loc_5_BAC0              ; $BABC
+    bne     @loc_BAC0               ; $BABC
     inc     temp1,x                 ; $BABE
 
-loc_5_BAC0:
+@loc_BAC0:
     dex                             ; $BAC0
     dex                             ; $BAC1
-    bpl     loc_5_BABA              ; $BAC2
+    bpl     @loop                   ; $BAC2
     rts                             ; $BAC4
 
 ; Pointers to each save file's parts, indexed by save slot * 2.
@@ -6974,12 +7481,24 @@ SaveDefaultWorld:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BBD5
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BBE5
 
-SaveDefaultWorldEnd:
-    .byte   $3F, $00, $20, $0F, $30, $12, $16, $0F, $30, $30, $30, $0F, $30, $30, $30, $0F; $BBF5
+SaveDefaultWorldEnd:                    ; end of SaveDefaultWorld
+FilePalette:
+    .byte   $3F, $00, $20, $0F                                              ; $BBF5
+
+dat_5_BBF9:
+    .byte   $30, $12, $16, $0F, $30, $30, $30, $0F, $30, $30, $30, $0F      ; $BBF9
     .byte   $30, $30, $30, $0F, $18, $36, $2A, $0F, $16, $27, $30, $0F, $30, $30, $30, $0F; $BC05
     .byte   $27, $27, $0F, $FF                                              ; $BC15
 
-dat_5_BC19:
+; ---------------------------------------------------------------------------
+; FileScreenText
+;
+; PPU strings of the file select screen, copied to sramFileScreenText where
+; the levels and continue counts of the files are filled in.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+FileScreenText:
     .byte   $20, $6A, $0B, $EC, $F4, $DE, $F4, $E5, $F4, $DE, $F4, $DC, $F4, $ED, $20, $82; $BC19
     .byte   $01, $CA, $20, $83, $5A, $CB, $20, $9D, $01, $CA, $20, $A2, $D2, $CC, $20, $BD; $BC29
     .byte   $D2, $CC, $20, $C7, $06, $F6, $E7, $DA, $E6, $DE, $F6, $20, $D2, $07, $F6, $E5; $BC39
@@ -6990,31 +7509,40 @@ dat_5_BC19:
     .byte   $E7, $DA, $E6, $DE, $21, $29, $03, $00, $00, $00, $21, $89, $03, $00, $00, $00; $BC89
     .byte   $21, $E9, $03, $00, $00, $00, $22, $A6, $10, $DE, $E5, $E2, $E6, $E2, $E7, $DA; $BC99
     .byte   $ED, $E2, $E8, $E7, $F4, $E6, $E8, $DD, $DE, $22, $E2, $01, $CA, $22, $E3, $5A; $BCA9
-    .byte   $CB, $22, $FD, $01, $CA, $FF, $20, $64, $58, $CB, $20, $66, $14, $F4, $EB, $DE; $BCB9
-    .byte   $E0, $E2, $EC, $ED, $DE, $EB, $F4, $F2, $E8, $EE, $EB, $F4, $E7, $DA, $E6, $DE; $BCC9
-    .byte   $F4, $21, $ED, $03, $DE, $E7, $DD, $22, $24, $01, $CA, $22, $25, $57, $CB, $22; $BCD9
-    .byte   $3C, $01, $CA, $22, $44, $C7, $CC, $22, $5C, $C7, $CC, $23, $24, $01, $CA, $23; $BCE9
-    .byte   $25, $57, $CB, $23, $3C, $01, $CA, $22, $46, $15, $DA, $F4, $DB, $F4, $DC, $F4; $BCF9
-    .byte   $DD, $F4, $DE, $F4, $DF, $F4, $E0, $F4, $E1, $F4, $E2, $F4, $E3, $F4, $E4, $22; $BD09
-    .byte   $86, $15, $E5, $F4, $E6, $F4, $E7, $F4, $E8, $F4, $E9, $F4, $EA, $F4, $EB, $F4; $BD19
-    .byte   $EC, $F4, $ED, $F4, $EE, $F4, $EF, $22, $C6, $0B, $F0, $F4, $F1, $F4, $F2, $F4; $BD29
-    .byte   $F3, $F4, $F6, $F4, $CF, $23, $06, $13, $D0, $F4, $D1, $F4, $D2, $F4, $D3, $F4; $BD39
-    .byte   $D4, $F4, $D5, $F4, $D6, $F4, $D7, $F4, $D8, $F4, $D9, $FF      ; $BD49
-; (unreferenced: $BD55-$BD74, 32 bytes)
+    .byte   $CB, $22, $FD, $01, $CA, $FF                                    ; $BCB9
+
+RegisterScreenText:
+    .byte   $20, $64, $58, $CB, $20, $66, $14, $F4, $EB, $DE, $E0, $E2, $EC, $ED, $DE, $EB; $BCBF
+    .byte   $F4, $F2, $E8, $EE, $EB, $F4, $E7, $DA, $E6, $DE, $F4, $21, $ED, $03, $DE, $E7; $BCCF
+    .byte   $DD, $22, $24, $01, $CA, $22, $25, $57, $CB, $22, $3C, $01, $CA, $22, $44, $C7; $BCDF
+    .byte   $CC, $22, $5C, $C7, $CC, $23, $24, $01, $CA, $23, $25, $57, $CB, $23, $3C, $01; $BCEF
+    .byte   $CA, $22, $46, $15, $DA, $F4, $DB, $F4, $DC, $F4, $DD, $F4, $DE, $F4, $DF, $F4; $BCFF
+    .byte   $E0, $F4, $E1, $F4, $E2, $F4, $E3, $F4, $E4, $22, $86, $15, $E5, $F4, $E6, $F4; $BD0F
+    .byte   $E7, $F4, $E8, $F4, $E9, $F4, $EA, $F4, $EB, $F4, $EC, $F4, $ED, $F4, $EE, $F4; $BD1F
+    .byte   $EF, $22, $C6, $0B, $F0, $F4, $F1, $F4, $F2, $F4, $F3, $F4, $F6, $F4, $CF, $23; $BD2F
+    .byte   $06, $13, $D0, $F4, $D1, $F4, $D2, $F4, $D3, $F4, $D4, $F4, $D5, $F4, $D6, $F4; $BD3F
+    .byte   $D7, $F4, $D8, $F4, $D9, $FF                                    ; $BD4F
+
+EliminateScreenText:
     .byte   $20, $64, $58, $CB, $20, $67, $12, $F4, $DE, $E5, $E2, $E6, $E2, $E7, $DA, $ED; $BD55
     .byte   $E2, $E8, $E7, $F4, $E6, $E8, $DD, $DE, $F4, $21, $ED, $03, $DE, $E7, $DD, $FF; $BD65
 
-dat_5_BD75:
-    .byte   $DA                                                             ; $BD75
-; (unreferenced: $BD76-$BD77, 2 bytes)
-    .byte   $DB, $DC                                                        ; $BD76
-    .byte   $DD                                                             ; $BD78
-; (unreferenced: $BD79-$BD86, 14 bytes)
-    .byte   $DE, $DF, $E0, $E1, $E2, $E3, $E4, $E5, $E6, $E7, $E8, $E9, $EA, $EB; $BD79
-    .byte   $EC, $ED                                                        ; $BD87
-; (unreferenced: $BD89-$BF9C, 532 bytes)
-    .byte   $EE, $EF, $F0, $F1, $F2, $F3, $F6, $CF, $00, $00, $00, $00, $00, $D0, $D1, $D2; $BD89
-    .byte   $D3, $D4, $D5, $D6, $D7, $D8, $D9, $F4, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BD99
+; ---------------------------------------------------------------------------
+; NameLetters
+;
+; The tiles of the REGISTER YOUR NAME letter grid, 11 columns by 4 rows:
+; A-Z, punctuation and 0-9 ($00 in the five empty places of row 2).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+NameLetters:
+    .byte   $DA, $DB, $DC, $DD, $DE, $DF, $E0, $E1, $E2, $E3, $E4           ; $BD75
+    .byte   $E5, $E6, $E7, $E8, $E9, $EA, $EB, $EC, $ED, $EE, $EF           ; $BD80
+    .byte   $F0, $F1, $F2, $F3, $F6, $CF, $00, $00, $00, $00, $00           ; $BD8B
+    .byte   $D0, $D1, $D2, $D3, $D4, $D5, $D6, $D7, $D8, $D9, $F4           ; $BD96
+
+dat_5_BDA1:
+    .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                          ; $BDA1
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BDA9
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BDB9
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BDC9

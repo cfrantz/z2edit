@@ -319,16 +319,16 @@ loc_6_8277:
     jmp     loc_6_82CF              ; $827F
 
 loc_6_8282:
-    lda     ram_00E8                ; $8282
+    lda     titleMusicPart          ; $8282
     beq     loc_6_82AC              ; $8284
     jmp     loc_6_8347              ; $8286
 
 loc_6_8289:
-    lda     ram_00E8                ; $8289
+    lda     titleMusicPart          ; $8289
     and     #$1F                    ; $828B
     bne     loc_6_82AD              ; $828D
     ldx     #$00                    ; $828F
-    stx     ram_00E8                ; $8291
+    stx     titleMusicPart          ; $8291
 
 sub_6_8293:
     ldx     #$00                    ; $8293
@@ -372,7 +372,7 @@ loc_6_82CD:
     lda     #$02                    ; $82CD
 
 loc_6_82CF:
-    sta     ram_00E8                ; $82CF
+    sta     titleMusicPart          ; $82CF
     jsr     sub_6_8293              ; $82D1
     tax                             ; $82D4
     and     #$01                    ; $82D5
@@ -447,7 +447,7 @@ loc_6_8347:
     lda     ram_07EC                ; $835A
     jsr     sub_6_8120              ; $835D
     beq     loc_6_837F              ; $8360
-    lda     ram_00E8                ; $8362
+    lda     titleMusicPart          ; $8362
     and     #$01                    ; $8364
     beq     loc_6_837A              ; $8366
     lda     ram_07EA                ; $8368
@@ -492,7 +492,7 @@ loc_6_83A1:
     bne     loc_6_83CA              ; $83A6
     jsr     sub_6_8147              ; $83A8
     beq     loc_6_83CA              ; $83AB
-    lda     ram_00E8                ; $83AD
+    lda     titleMusicPart          ; $83AD
     and     #$01                    ; $83AF
     beq     loc_6_83C5              ; $83B1
     lda     ram_07EA                ; $83B3
@@ -516,7 +516,7 @@ loc_6_83CA:
 loc_6_83CF:
     lda     ram_00E9                ; $83CF
     bne     loc_6_840A              ; $83D1
-    lda     ram_00E8                ; $83D3
+    lda     titleMusicPart          ; $83D3
     and     #$01                    ; $83D5
     bne     loc_6_83DC              ; $83D7
     jsr     sub_6_816B              ; $83D9
@@ -1015,20 +1015,20 @@ loc_6_909A:
     ldy     ram_00E7                ; $909C
 
 loc_6_909E:
-    sty     ram_00E8                ; $909E
+    sty     titleMusicPart          ; $909E
     lsr     a                       ; $90A0
     lsr     a                       ; $90A1
     lsr     a                       ; $90A2
     bcs     loc_6_90AC              ; $90A3
     lda     #$FE                    ; $90A5
     clc                             ; $90A7
-    adc     ram_00E8                ; $90A8
+    adc     titleMusicPart          ; $90A8
     bne     loc_6_90B1              ; $90AA
 
 loc_6_90AC:
     lda     #$02                    ; $90AC
     clc                             ; $90AE
-    adc     ram_00E8                ; $90AF
+    adc     titleMusicPart          ; $90AF
 
 loc_6_90B1:
     sta     SQ1_LO,x                ; $90B1

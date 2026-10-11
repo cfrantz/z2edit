@@ -13,6 +13,9 @@ GLOBALS_INC = 1
 
 .global Nmi
 
+.global ContinueScreenPalette
+.global Ram_ClearExceptSaved
+
 .global NorthCastle_DrawSprites
 .global SideView_Start
 .global Spell_Update

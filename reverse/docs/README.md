@@ -33,3 +33,6 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
   encounters, entering locations.
 - [Menus and dialogs](engine/menus.md): the pause menu, level up window,
   flute and continue screen.
+- [Title and file screens](engine/title-and-files.md): the title, the
+  story scroll, file select, name registration and elimination, and the
+  second quest.

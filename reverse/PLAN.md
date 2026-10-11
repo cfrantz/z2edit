@@ -203,6 +203,10 @@ Each is a self-contained work area; order is flexible after Phase 3.
 - Palaces and Great Palace (banks 4-5): palace mechanics, bosses,
   palace completion and crystal placement.
 - Title, file select, name entry, ending (bank 5).
+  Status (2026-10-11): the title, story scroll and file screens are named
+  and read, with headers and docs/engine/title-and-files.md; the ending's
+  last step (Ending_SetSecondQuest) was recovered from a truncated jump
+  table.  The ending's scenes ($8B50-$9247) remain to be named.
 - Audio (bank 6): both music engines, sound effects, data formats.
   Prior work to consult (and verify against the code):
   https://wiki.bindingforce.net/index.php/Music_Engine_Description

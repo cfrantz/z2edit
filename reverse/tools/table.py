@@ -6,7 +6,8 @@
 Gathers the SIZE bytes at BANK:ADDR (which may span several .byte lines
 and labels), names the table NAME, and rewrites it as .byte lines, or with
 --word as .word lines.  Labels inside the table become NAME+k in every
-reference; an existing label at ADDR is renamed to NAME.  With --word,
+reference; an existing mechanical label at ADDR is renamed to NAME (it
+refuses to rename a label that already has a real name).  With --word,
 values that are the address of a label in the same bank (or of a RAM/SRAM
 variable from ram.inc, within its declared size) are written by name.
 Run `make verify` afterwards.
@@ -24,6 +25,9 @@ from rename import realign
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "../src")
 RAM_DECL = re.compile(r"^([A-Za-z_]\w*)\s*=\s*\$([0-9A-F]{4})\s*(?:;\s*\[(\d+)\])?")
+
+
+MECHANICAL = re.compile(r"(dat|loc|sub)_([0-7]_)?[0-9A-F]{4}$")
 
 
 def rename(pairs):
@@ -83,6 +87,8 @@ def main():
         ensure_label(bank, end)
     except ValueError:
         pass
+    if first != args.name and not MECHANICAL.match(first):
+        sys.exit(f"{first} is already named; rename it, or add {args.name} beside it")
     renames = [] if first == args.name else [(first, args.name)]
 
     # Find the labels inside the table.
@@ -100,6 +106,9 @@ def main():
             addr = int(m.group(4), 16)
             if addr >= end:
                 break
+            named = [n for n in pending if not MECHANICAL.match(n)]
+            if named:
+                sys.exit(f"named label(s) inside the table: {', '.join(named)}")
             renames += [(n, f"{args.name}+{addr - start}") for n in pending]
             pending = []
         elif ADDR.search(line) and not line.lstrip().startswith(";"):
