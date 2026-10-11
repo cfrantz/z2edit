@@ -459,7 +459,7 @@ Palace_DrawCloud_Bank5:
     .byte   $84, $84, $86, $86, $84, $85, $86, $87, $B3, $B4, $B5, $B6, $B5, $B6, $B7, $B8; $832F
     .byte   $B7, $B8, $F4, $F4, $7E, $7E, $7E, $7E, $5C, $5D, $5E, $5F      ; $833F
 
-dat_5_834B:
+SolidTileThresholds_Bank5:
     .byte   $4C, $88, $C5, $40, $60, $0E, $08, $D6, $08, $50, $01, $55, $02, $D1, $0E, $D2; $834B
     .byte   $08, $50, $01, $55, $02, $D1, $0E, $D2, $08, $50, $01, $55, $02, $D1, $0E, $D2; $835B
     .byte   $08, $50, $01, $55, $02, $D1, $0E, $A1, $25, $82, $06, $F0, $50, $81, $06, $D6; $836B
@@ -527,6 +527,18 @@ OverworldMapPtrs_Bank5:
 ; (unreferenced: $850A-$850B, 2 bytes)
     .byte   $FF, $FF                                                        ; $850A
 
+; ---------------------------------------------------------------------------
+; Area_IsSolidTile_Bank5
+;
+; Carry set if tile a is solid: tiles of palette group 1-3 (bits 7-6) at
+; or above SolidTileThresholds_Bank5[group - 1].
+; QUIRK: for group 0 the index wraps to $FF and the tile is compared with
+; the byte 255 bytes past the table ($D2 here), so no group 0 tile is solid.
+;
+; In:      a = tile
+; Out:     carry set if solid
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Area_IsSolidTile_Bank5:
     .assert Area_IsSolidTile_Bank5 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
@@ -538,7 +550,7 @@ Area_IsSolidTile_Bank5:
     tay                             ; $8513
     dey                             ; $8514
     pla                             ; $8515
-    cmp     dat_5_834B,y            ; $8516
+    cmp     SolidTileThresholds_Bank5,y ; $8516
     rts                             ; $8519
 
 SpecialTiles_Bank5:

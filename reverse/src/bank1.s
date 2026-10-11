@@ -728,6 +728,18 @@ OverworldMapPtrs_Bank1:
     .assert OverworldMapPtrs_Bank1 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $5C, $90, $4C, $A6                                              ; $8508
 
+; ---------------------------------------------------------------------------
+; Area_IsSolidTile_Bank1
+;
+; Carry set if tile a is solid: tiles of palette group 1-3 (bits 7-6) at
+; or above SolidTileThresholds_Bank1[group - 1].
+; QUIRK: for group 0 the index wraps to $FF and the tile is compared with
+; the byte 255 bytes past the table ($D6 here), so no group 0 tile is solid.
+;
+; In:      a = tile
+; Out:     carry set if solid
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Area_IsSolidTile_Bank1:
     .assert Area_IsSolidTile_Bank1 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
@@ -739,7 +751,7 @@ Area_IsSolidTile_Bank1:
     tay                             ; $8513
     dey                             ; $8514
     pla                             ; $8515
-    cmp     dat_1_93A9,y            ; $8516
+    cmp     SolidTileThresholds_Bank1,y ; $8516
     rts                             ; $8519
 
 SpecialTiles_Bank1:
@@ -1116,7 +1128,7 @@ EnemyLists_Bank1:
     .byte   $F4, $F4, $AF, $B0, $B1, $B2, $AD, $AE, $F4, $F4, $AB, $AC, $F4, $F4, $FE, $FE; $938F
     .byte   $FE, $FE, $7E, $7E, $7E, $7E, $BA, $BB, $BC, $BD                ; $939F
 
-dat_1_93A9:
+SolidTileThresholds_Bank1:
     .byte   $52, $8F, $C9                                                   ; $93A9
 
 sub_1_93AC:

@@ -483,7 +483,7 @@ Palace_DrawCloud_Bank4:
     .byte   $79, $7B, $AA, $AA, $77, $77, $AA, $AA, $84, $84, $86, $86, $84, $85, $86, $87; $83C5
     .byte   $5C, $5D, $5E, $5F                                              ; $83D5
 
-dat_4_83D9:
+SolidTileThresholds_Bank4:
     .byte   $4B, $85, $D1                                                   ; $83D9
 ; (unreferenced: $83DC-$846F, 148 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $83DC
@@ -523,6 +523,18 @@ OverworldMapPtrs_Bank4:
     .assert OverworldMapPtrs_Bank4 = AreaBank::OverworldMapPtrs, error, "interface address moved"
     .byte   $FF, $FF, $FF, $FF                                              ; $8508
 
+; ---------------------------------------------------------------------------
+; Area_IsSolidTile_Bank4
+;
+; Carry set if tile a is solid: tiles of palette group 1-3 (bits 7-6) at
+; or above SolidTileThresholds_Bank4[group - 1].
+; QUIRK: for group 0 the index wraps to $FF and the tile is compared with
+; the byte 255 bytes past the table ($FF here), so no group 0 tile is solid.
+;
+; In:      a = tile
+; Out:     carry set if solid
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Area_IsSolidTile_Bank4:
     .assert Area_IsSolidTile_Bank4 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
@@ -534,7 +546,7 @@ Area_IsSolidTile_Bank4:
     tay                             ; $8513
     dey                             ; $8514
     pla                             ; $8515
-    cmp     dat_4_83D9,y            ; $8516
+    cmp     SolidTileThresholds_Bank4,y ; $8516
     rts                             ; $8519
 
 SpecialTiles_Bank4:
