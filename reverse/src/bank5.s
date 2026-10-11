@@ -1582,8 +1582,8 @@ dat_5_925A:
     .byte   $FF, $FF                                                        ; $93FE
 
 ProjectilePtrs_Bank5:
-    .word   $9C48, $9C48, loc_5_9C3D, loc_5_9BC8 ; $9400
-    .word   loc_5_9BD2, $0000, loc_5_9BE1, loc_5_9BC8 ; $9408
+    .word   Projectile_Straight_Bank5, Projectile_Straight_Bank5, Projectile_Arc_Bank5, Projectile_Fireball_Bank5 ; $9400
+    .word   Projectile_Rock_Bank5, $0000, Projectile_RollingFlame_Bank5, Projectile_Fireball_Bank5 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
 ProjectileUnused_Bank5:
@@ -1598,26 +1598,26 @@ EnemyHp_Bank5:
     .byte   $00, $30, $60, $00, $02, $90, $38, $00, $00, $00, $C0, $F8      ; $9439
 
 EnemyInitPtrs_Bank5:
-    .word   loc_5_95AD, loc_5_95AD, loc_5_95AD, loc_5_95AD ; $9445
-    .word   loc_5_95AD, loc_5_95AD, loc_5_95AD, loc_5_95AD ; $944D
-    .word   loc_5_95AD, loc_5_95AD, loc_5_95AD, loc_5_95AD ; $9455
-    .word   loc_5_95AD, loc_5_95AD, loc_5_95AD, $A31D ; $945D
-    .word   loc_5_95AD, loc_5_95AD, loc_5_95AD, loc_5_95AD ; $9465
-    .word   loc_5_A127, loc_5_A12B, sub_5_963B, loc_5_A127 ; $946D
-    .word   loc_5_95AD, loc_5_95AD, loc_5_95AD, loc_5_95AD ; $9475
-    .word   loc_5_95AD, loc_5_95AD, loc_5_95AD, loc_5_95AD ; $947D
-    .word   loc_5_95AD, loc_5_95AD, loc_5_A33B, loc_5_9796 ; $9485
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $9445
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $944D
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $9455
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Generator_Init_Bank5 ; $945D
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $9465
+    .word   GpSlowBubble_Init, GpFastBubble_Init, GpSkullHead_Init, GpSlowBubble_Init ; $946D
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $9475
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Enemy_InitNone_Bank5 ; $947D
+    .word   Enemy_InitNone_Bank5, Enemy_InitNone_Bank5, Thunderbird_Init, DarkLink_Init ; $9485
 
 EnemyAiPtrs_Bank5:
     .word   Fairy_Ai, Item_Fall, LockedDoor_Ai, Myu_Ai ; $948D
-    .word   Bot_Ai, loc_5_A521, Moa_Ai, Ache_Ai ; $9495
+    .word   Bot_Ai, HiddenJar_Ai_Bank5, Moa_Ai, Ache_Ai ; $9495
     .word   $AB98, $ABE9, Ache_Ai, BubbleGenerator_Ai ; $949D
     .word   RockGenerator_Ai, Deeler_Ai, Deeler_Ai, BagoBagoGenerator_Ai ; $94A5
     .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
-    .word   loc_5_A075, loc_5_A075, loc_5_9667, loc_5_A075 ; $94B5
-    .word   loc_5_9D2C, loc_5_9D2C, loc_5_9D2C, $9E66 ; $94BD
-    .word   dat_5_9E67, loc_5_9E6B, loc_5_A180, $0000 ; $94C5
-    .word   loc_5_A234, $0000, loc_5_A359, loc_5_97C6 ; $94CD
+    .word   GpBubble_Ai, GpBubble_Ai, GpSkullHead_Ai, GpBubble_Ai ; $94B5
+    .word   Fokka_Ai, Fokka_Ai, Fokka_Ai, $9E66 ; $94BD
+    .word   dat_5_9E67, Fokkeru_Ai, KingBot_Ai, $0000 ; $94C5
+    .word   Barrier_Ai, $0000, Thunderbird_Ai, DarkLink_Ai ; $94CD
 
 EnemyAttr_Bank5:
     .byte   $40, $40, $40, $C4, $C4, $84, $D3, $C2, $C0, $D0, $80, $00      ; $94D5
@@ -1641,16 +1641,16 @@ EnemyFlags_Bank5:
 
 EnemyDrawPtrs_Bank5:
     .word   Fairy_Draw, Item_Draw, LockedDoor_Draw, Myu_Draw ; $9565
-    .word   Bot_Draw, loc_5_95AD, Moa_Draw, Ache_Draw ; $956D
+    .word   Bot_Draw, Enemy_InitNone_Bank5, Moa_Draw, Ache_Draw ; $956D
     .word   Enemy08_Draw, Enemy08_Draw, Ache_Draw, $0000 ; $9575
-    .word   $0000, Deeler_Draw, Deeler_Draw, loc_5_95AD ; $957D
-    .word   BagoBago_Draw, loc_5_96A0, loc_5_96A0, Elevator_Draw ; $9585
-    .word   loc_5_962C, loc_5_962C, loc_5_9695, loc_5_A133 ; $958D
-    .word   loc_5_9FD4, loc_5_9FD4, loc_5_9FD4, $0000 ; $9595
-    .word   loc_5_95AD, loc_5_A05B, loc_5_96A5, $0000 ; $959D
-    .word   $0000, $0000, loc_5_9EBF, loc_5_A472 ; $95A5
+    .word   $0000, Deeler_Draw, Deeler_Draw, Enemy_InitNone_Bank5 ; $957D
+    .word   BagoBago_Draw, FireOctorok_Draw, FireOctorok_Draw, Elevator_Draw ; $9585
+    .word   GpBubble_Draw, GpBubble_Draw, GpSkullHead_Draw, LargeBubble_Draw ; $958D
+    .word   Fokka_Draw, Fokka_Draw, Fokka_Draw, $0000 ; $9595
+    .word   Enemy_InitNone_Bank5, Fokkeru_Draw, KingBot_Draw, $0000 ; $959D
+    .word   $0000, $0000, Thunderbird_Draw, DarkLink_DrawTrigger ; $95A5
 
-loc_5_95AD:
+Enemy_InitNone_Bank5:
     rts                             ; $95AD
     .byte   $CE, $CE, $84, $3F, $53, $52, $3F, $3F, $00, $03, $00, $01, $01, $00, $01, $01; $95AE
     .byte   $01, $00, $00, $00, $18, $9D, $FB, $9C, $06, $9D, $18, $9D, $FB, $9C, $FB, $9C; $95BE
@@ -1670,7 +1670,7 @@ dat_5_9624:
 dat_5_962A:
     .byte   $10, $F0                                                        ; $962A
 
-loc_5_962C:
+GpBubble_Draw:
     lda     #$02                    ; $962C
     sta     temp2                   ; $962E
     lda     frameCounter            ; $9630
@@ -1679,7 +1679,7 @@ loc_5_962C:
     ldx     #$5A                    ; $9636
     jmp     Sprite_DrawPairFlipped  ; $9638
 
-sub_5_963B:
+GpSkullHead_Init:
     lda     objY                    ; $963B
     sbc     #$30                    ; $963D
     sta     objY+1,x                ; $963F
@@ -1707,11 +1707,11 @@ dat_5_9663:
 dat_5_9665:
     .byte   $38, $C8                                                        ; $9665
 
-loc_5_9667:
+GpSkullHead_Ai:
     lda     drawOffscreen+1         ; $9667
     and     #$0C                    ; $9669
     beq     loc_5_9670              ; $966B
-    jsr     sub_5_963B              ; $966D
+    jsr     GpSkullHead_Init        ; $966D
 
 loc_5_9670:
     jsr     Enemy_SkipAiIfStunned   ; $9670
@@ -1732,18 +1732,18 @@ loc_5_9689:
     jsr     Enemy_UpdateCommon      ; $968F
     jmp     Enemy_HurtLinkOnContact ; $9692
 
-loc_5_9695:
+GpSkullHead_Draw:
     ldx     #$4A                    ; $9695
     lda     temp2                   ; $9697
     eor     #$03                    ; $9699
     sta     temp2                   ; $969B
     jmp     Sprite_DrawEnemyPairKeepX ; $969D
 
-loc_5_96A0:
+FireOctorok_Draw:
     lda     #$46                    ; $96A0
     jmp     Sprite_DrawAnimatedEnemyPair ; $96A2
 
-loc_5_96A5:
+KingBot_Draw:
     ldy     #$50                    ; $96A5
     lda     #$02                    ; $96A7
     sta     temp2                   ; $96A9
@@ -1870,7 +1870,7 @@ loc_5_9764:
 loc_5_9795:
     rts                             ; $9795
 
-loc_5_9796:
+DarkLink_Init:
     lda     #$23                    ; $9796
     sta     enemyType               ; $9798
     lda     #$08                    ; $979A
@@ -1898,21 +1898,21 @@ loc_5_9796:
 ; (unreferenced: $97C4-$97C5, 2 bytes)
     .byte   $03, $FD                                                        ; $97C4
 
-loc_5_97C6:
-    jsr     sub_5_A4C4              ; $97C6
+DarkLink_Ai:
+    jsr     DarkLink_FlashPalette   ; $97C6
     lda     objFacing+4             ; $97C9
     jsr     JumpTable               ; $97CB
 ; (inline jump table)
-    .word   loc_5_97DE              ; $97CE
-    .word   loc_5_980D              ; $97D0
-    .word   loc_5_983E              ; $97D2
-    .word   loc_5_987B              ; $97D4
-    .word   loc_5_9B3A              ; $97D6
-    .word   loc_5_9B53              ; $97D8
-    .word   loc_5_9B91              ; $97DA
-    .word   loc_5_9BA8              ; $97DC
+    .word   DarkLink_WaitForLink    ; $97CE
+    .word   DarkLink_Appear         ; $97D0
+    .word   DarkLink_Separate       ; $97D2
+    .word   DarkLink_Fight          ; $97D4
+    .word   DarkLink_Defeated       ; $97D6
+    .word   DarkLink_WalkLinkToCenter ; $97D8
+    .word   DarkLink_ShowTriforce   ; $97DA
+    .word   DarkLink_StartEnding    ; $97DC
 
-loc_5_97DE:
+DarkLink_WaitForLink:
     inc     enemyAiState            ; $97DE
     jsr     Enemy_Draw              ; $97E0
     lda     scrollXHi               ; $97E3
@@ -1945,7 +1945,7 @@ loc_5_980A:
 loc_5_980C:
     rts                             ; $980C
 
-loc_5_980D:
+DarkLink_Appear:
     lda     timerFast+3             ; $980D
     bne     loc_5_982C              ; $9810
     lda     #$C0                    ; $9812
@@ -1976,7 +1976,7 @@ loc_5_9839:
 loc_5_983B:
     jmp     Enemy_Draw              ; $983B
 
-loc_5_983E:
+DarkLink_Separate:
     lda     spellFlash              ; $983E
     cmp     #$81                    ; $9841
     bne     loc_5_9852              ; $9843
@@ -1998,7 +1998,7 @@ loc_5_9852:
     sta     objXVelocity+1          ; $9862
 
 loc_5_9864:
-    jsr     sub_5_9A0F              ; $9864
+    jsr     DarkLink_Move           ; $9864
     lda     objY+1                  ; $9867
     cmp     #$A0                    ; $9869
     bcc     loc_5_9874              ; $986B
@@ -2009,9 +2009,9 @@ loc_5_9864:
 loc_5_9874:
     lda     #$0A                    ; $9874
     sta     objState+1              ; $9876
-    jmp     sub_5_9A77              ; $9878
+    jmp     DarkLink_Draw           ; $9878
 
-loc_5_987B:
+DarkLink_Fight:
     ldy     timerFast+4             ; $987B
     beq     loc_5_988E              ; $987E
     dey                             ; $9880
@@ -2022,7 +2022,7 @@ loc_5_987B:
 loc_5_9887:
     lda     #$06                    ; $9887
     sta     objState+1              ; $9889
-    jmp     sub_5_9A77              ; $988B
+    jmp     DarkLink_Draw           ; $988B
 
 loc_5_988E:
     lda     musicPlaying            ; $988E
@@ -2035,7 +2035,7 @@ loc_5_988E:
 loc_5_9897:
     sty     ram_00DE                ; $9897
     lda     #$01                    ; $9899
-    jsr     sub_5_A4E9              ; $989B
+    jsr     Boss_DrawHpBar_Bank5    ; $989B
     lda     timerFast+12            ; $989E
     beq     loc_5_98D3              ; $98A1
     bpl     loc_5_98AD              ; $98A3
@@ -2047,7 +2047,7 @@ loc_5_9897:
 loc_5_98AD:
     lda     #$0A                    ; $98AD
     sta     objState+1              ; $98AF
-    jsr     sub_5_9A0F              ; $98B1
+    jsr     DarkLink_Move           ; $98B1
     lda     objY+1                  ; $98B4
     cmp     #$F0                    ; $98B6
     bcc     loc_5_98D0              ; $98B8
@@ -2063,19 +2063,19 @@ loc_5_98AD:
     jsr     sub_5_9807              ; $98CD
 
 loc_5_98D0:
-    jmp     sub_5_9A77              ; $98D0
+    jmp     DarkLink_Draw           ; $98D0
 
 loc_5_98D3:
-    jsr     sub_5_98EB              ; $98D3
-    jsr     sub_5_99A4              ; $98D6
-    jsr     sub_5_99B8              ; $98D9
-    jsr     sub_5_9A50              ; $98DC
-    jsr     sub_5_9A77              ; $98DF
-    jsr     sub_5_9A8D              ; $98E2
+    jsr     DarkLink_ReactToLink    ; $98D3
+    jsr     DarkLink_UpdateXVelocity ; $98D6
+    jsr     DarkLink_UpdateJump     ; $98D9
+    jsr     DarkLink_UpdateAttack   ; $98DC
+    jsr     DarkLink_Draw           ; $98DF
+    jsr     DarkLink_CheckSword     ; $98E2
     jsr     Enemy_CheckLinkContact  ; $98E5
     jmp     Enemy_HurtLinkOnContact ; $98E8
 
-sub_5_98EB:
+DarkLink_ReactToLink:
     lda     objX+1                  ; $98EB
     sbc     objX                    ; $98ED
     bpl     loc_5_98F3              ; $98EF
@@ -2208,7 +2208,7 @@ dat_5_999E:
 dat_5_99A2:
     .byte   $14, $EC                                                        ; $99A2
 
-sub_5_99A4:
+DarkLink_UpdateXVelocity:
     lda     timerFast+5             ; $99A4
     beq     loc_5_99B1              ; $99A7
     ldy     objFacing+2             ; $99A9
@@ -2224,8 +2224,8 @@ loc_5_99B1:
 loc_5_99B7:
     rts                             ; $99B7
 
-sub_5_99B8:
-    jsr     sub_5_9A0F              ; $99B8
+DarkLink_UpdateJump:
+    jsr     DarkLink_Move           ; $99B8
     lda     objY+1                  ; $99BB
     cmp     #$A0                    ; $99BD
     bcc     loc_5_99CC              ; $99BF
@@ -2285,7 +2285,7 @@ loc_5_9A0C:
     sta     objState+1              ; $9A0C
     rts                             ; $9A0E
 
-sub_5_9A0F:
+DarkLink_Move:
     jsr     Enemy_FaceLink          ; $9A0F
     lda     objFacing+1             ; $9A12
     sta     ram_00A0                ; $9A14
@@ -2333,7 +2333,7 @@ dat_5_9A49 := * + 2
 ; (unreferenced: $9A4F-$9A4F, 1 bytes)
     .byte   $06                                                             ; $9A4F
 
-sub_5_9A50:
+DarkLink_UpdateAttack:
     ldy     enemyAiDir              ; $9A50
     beq     loc_5_9A76              ; $9A53
     lda     timerFast+3             ; $9A55
@@ -2364,7 +2364,7 @@ loc_5_9A71:
 loc_5_9A76:
     rts                             ; $9A76
 
-sub_5_9A77:
+DarkLink_Draw:
     ldy     #$01                    ; $9A77
     sty     ram_0011                ; $9A79
     lda     #$50                    ; $9A7B
@@ -2387,7 +2387,7 @@ dat_5_9A89:
 dat_5_9A8B:
     .byte   $F6, $0A                                                        ; $9A8B
 
-sub_5_9A8D:
+DarkLink_CheckSword:
     lda     objFacing+3             ; $9A8D
     ora     linkJumpState           ; $9A8F
     ora     timerFast+8             ; $9A92
@@ -2481,7 +2481,7 @@ loc_5_9B15:
     jmp     Link_HurtByEnemy        ; $9B37
 ; (end of code not executed in the test movies)
 
-loc_5_9B3A:
+DarkLink_Defeated:
     lda     spellFlash              ; $9B3A
     cmp     #$81                    ; $9B3D
     bne     loc_5_9B46              ; $9B3F
@@ -2495,7 +2495,7 @@ loc_5_9B46:
     lda     #$80                    ; $9B4E
     jmp     loc_5_9805              ; $9B50
 
-loc_5_9B53:
+DarkLink_WalkLinkToCenter:
     lda     #$03                    ; $9B53
     sta     objState                ; $9B55
     ldy     timerFast+3             ; $9B57
@@ -2537,7 +2537,7 @@ loc_5_9B83:
     sta     objY+1                  ; $9B8C
     jmp     loc_5_980A              ; $9B8E
 
-loc_5_9B91:
+DarkLink_ShowTriforce:
     lda     timerSlow+4             ; $9B91
     cmp     #$02                    ; $9B94
     beq     loc_5_9B74              ; $9B96
@@ -2552,7 +2552,7 @@ loc_5_9B91:
 loc_5_9BA5:
     jmp     Enemy_Draw              ; $9BA5
 
-loc_5_9BA8:
+DarkLink_StartEnding:
     lda     #$02                    ; $9BA8
     sta     linkWalkDir             ; $9BAA
     ldy     timerSlow+4             ; $9BAC
@@ -2570,14 +2570,14 @@ loc_5_9BBA:
     inc     renderingOff            ; $9BC4
     rts                             ; $9BC7
 
-loc_5_9BC8:
+Projectile_Fireball_Bank5:
     jsr     Projectile_HitsBg       ; $9BC8
     bcc     loc_5_9C45              ; $9BCB
     lda     #$F4                    ; $9BCD
     sta     objState+7,x            ; $9BCF
     rts                             ; $9BD1
 
-loc_5_9BD2:
+Projectile_Rock_Bank5:
     ldy     #$02                    ; $9BD2
     lda     objXVelocity+7,x        ; $9BD4
     bmi     loc_5_9BD9              ; $9BD6
@@ -2587,9 +2587,9 @@ loc_5_9BD9:
     tya                             ; $9BD9
     cmp     objFacing+7,x           ; $9BDA
     bne     loc_5_9C42              ; $9BDC
-    jmp     loc_5_9C3D              ; $9BDE
+    jmp     Projectile_Arc_Bank5    ; $9BDE
 
-loc_5_9BE1:
+Projectile_RollingFlame_Bank5:
     jsr     Projectile_HitsBgAnyHeight ; $9BE1
     bcc     loc_5_9C45              ; $9BE4
     lda     sfxRequest+1            ; $9BE6
@@ -2632,9 +2632,9 @@ loc_5_9C23:
     dec     ram_044C,x              ; $9C28
     beq     loc_5_9C5B              ; $9C2B
     and     #$07                    ; $9C2D
-    bne     loc_5_9C3D              ; $9C2F
+    bne     Projectile_Arc_Bank5    ; $9C2F
     lda     objXVelocity+7,x        ; $9C31
-    beq     loc_5_9C3D              ; $9C33
+    beq     Projectile_Arc_Bank5    ; $9C33
     bpl     loc_5_9C3B              ; $9C35
     inc     objXVelocity+7,x        ; $9C37
     inc     objXVelocity+7,x        ; $9C39
@@ -2642,7 +2642,7 @@ loc_5_9C23:
 loc_5_9C3B:
     dec     objXVelocity+7,x        ; $9C3B
 
-loc_5_9C3D:
+Projectile_Arc_Bank5:
     lda     #$FE                    ; $9C3D
     sta     objYVelocity+7,x        ; $9C3F
 
@@ -2651,6 +2651,8 @@ loc_5_9C42:
 
 loc_5_9C45:
     inc     objYVelocity+7,x        ; $9C45
+
+Projectile_Straight_Bank5:
     jsr     Projectile_Move         ; $9C48
     lda     drawOffscreen+2         ; $9C4B
     and     #$FC                    ; $9C4D
@@ -2669,7 +2671,7 @@ loc_5_9C5F:
     rts                             ; $9C5F
 
 loc_5_9C60:
-    jsr     sub_5_9C99              ; $9C60
+    jsr     Projectile_Draw_Bank5   ; $9C60
     jsr     DoNothing               ; $9C63
     jmp     Projectile_CheckLinkAlternate ; $9C66
 
@@ -2703,7 +2705,7 @@ dat_5_9C96:
     rts                             ; $9C96
     .byte   $40, $00                                                        ; $9C97
 
-sub_5_9C99:
+Projectile_Draw_Bank5:
     lda     objState+7,x            ; $9C99
     pha                             ; $9C9B
     asl     a                       ; $9C9C
@@ -2800,7 +2802,7 @@ dat_5_9D26:
 dat_5_9D28:
     .byte   $0A, $00, $3F, $1F                                              ; $9D28
 
-loc_5_9D2C:
+Fokka_Ai:
     jsr     Enemy_Draw              ; $9D2C
     lda     objState+1,x            ; $9D2F
     beq     loc_5_9D77              ; $9D31
@@ -2892,7 +2894,7 @@ loc_5_9DBA:
     jsr     Enemy_Land              ; $9DC0
 
 loc_5_9DC3:
-    jsr     sub_5_9E42              ; $9DC3
+    jsr     Enemy_KnockBackOrWalk_Bank5 ; $9DC3
     lda     a:joypadPressed         ; $9DC6
     and     #$40                    ; $9DC9
     beq     loc_5_9DD2              ; $9DCB
@@ -2977,7 +2979,7 @@ loc_5_9E38:
 loc_5_9E41:
     rts                             ; $9E41
 
-sub_5_9E42:
+Enemy_KnockBackOrWalk_Bank5:
     ldy     ram_043E,x              ; $9E42
     beq     loc_5_9E63              ; $9E45
     lda     enemyType,x             ; $9E47
@@ -3008,8 +3010,8 @@ dat_5_9E67:
 dat_5_9E68:
     .byte   $FC, $08, $F8                                                   ; $9E68
 
-loc_5_9E6B:
-    jsr     sub_5_9E42              ; $9E6B
+Fokkeru_Ai:
+    jsr     Enemy_KnockBackOrWalk_Bank5 ; $9E6B
     jsr     Enemy_FaceLink          ; $9E6E
     inc     enemyAiState,x          ; $9E71
     lda     enemyAiState,x          ; $9E73
@@ -3053,7 +3055,7 @@ loc_5_9EBB:
 loc_5_9EBE:
     rts                             ; $9EBE
 
-loc_5_9EBF:
+Thunderbird_Draw:
     lda     enemyHp,x               ; $9EBF
     ldx     #$29                    ; $9EC1
     ldy     #$02                    ; $9EC3
@@ -3191,7 +3193,7 @@ dat_5_9FC7:
 dat_5_9FCF:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9FCF
 
-loc_5_9FD4:
+Fokka_Draw:
     lda     enemyVulnerability,x    ; $9FD4
     ldy     #$00                    ; $9FD7
     cmp     #$00                    ; $9FD9
@@ -3283,7 +3285,7 @@ loc_5_A058:
     ldx     currentObject           ; $A058
     rts                             ; $A05A
 
-loc_5_A05B:
+Fokkeru_Draw:
     lda     enemyAiState,x          ; $A05B
     pha                             ; $A05D
     ldx     #$1C                    ; $A05E
@@ -3304,7 +3306,7 @@ loc_5_A06F:
     jsr     Sprite_DrawEnemyPair    ; $A06F
     jmp     Sprite_DrawEnemyPairKeepX ; $A072
 
-loc_5_A075:
+GpBubble_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $A075
     jsr     Enemy_MoveX             ; $A078
     jsr     Enemy_MoveY             ; $A07B
@@ -3403,11 +3405,11 @@ loc_5_A119:
     sta     objYVelocity+1,x        ; $A121
     jmp     Enemy_MoveY             ; $A124
 
-loc_5_A127:
+GpSlowBubble_Init:
     lda     #$F0                    ; $A127
     bne     loc_5_A12D              ; $A129
 
-loc_5_A12B:
+GpFastBubble_Init:
     lda     #$E0                    ; $A12B
 
 loc_5_A12D:
@@ -3417,7 +3419,7 @@ loc_5_A12D:
 loc_5_A132:
     rts                             ; $A132
 
-loc_5_A133:
+LargeBubble_Draw:
     lda     #$02                    ; $A133
     sta     temp2                   ; $A135
     lda     frameCounter            ; $A137
@@ -3459,7 +3461,7 @@ dat_5_A17A:
     rts                             ; $A17A
     .byte   $04, $08, $00, $08, $04                                         ; $A17B
 
-loc_5_A180:
+KingBot_Ai:
     lda     enemyHp,x               ; $A180
     cmp     #$30                    ; $A182
     bcs     loc_5_A1CA              ; $A184
@@ -3548,7 +3550,7 @@ dat_5_A210:
 ; (unreferenced: $A230-$A233, 4 bytes)
     .byte   $04, $05, $06, $04                                              ; $A230
 
-loc_5_A234:
+Barrier_Ai:
     lda     enemyAiState,x          ; $A234
     bne     loc_5_A2A7              ; $A236
     lda     crystalsRemaining       ; $A238
@@ -3689,11 +3691,35 @@ loc_5_A2FB:
     sta     ppuStringSelect         ; $A317
     ldx     currentObject           ; $A31A
     rts                             ; $A31C
-; (unreferenced: $A31D-$A33A, 30 bytes)
-    .byte   $A0, $05, $C4, $10, $F0, $0C, $B9, $B6, $00, $F0, $07, $B9, $A1, $00, $D5, $A1; $A31D
-    .byte   $F0, $04, $88, $10, $ED, $60, $98, $AA, $20, $3D, $DD, $A6, $10, $60; $A32D
+; (disassembled with tools/disasm.py; not executed in the test movies)
 
-loc_5_A33B:
+Generator_Init_Bank5:
+    ldy     #$05                    ; $A31D
+
+loc_5_A31F:
+    cpy     currentObject           ; $A31F
+    beq     loc_5_A32F              ; $A321
+    lda     a:enemyActive,y         ; $A323
+    beq     loc_5_A32F              ; $A326
+    lda     a:enemyType,y           ; $A328
+    cmp     enemyType,x             ; $A32B
+    beq     loc_5_A333              ; $A32D
+
+loc_5_A32F:
+    dey                             ; $A32F
+    bpl     loc_5_A31F              ; $A330
+    rts                             ; $A332
+
+loc_5_A333:
+    tya                             ; $A333
+    tax                             ; $A334
+    jsr     Enemy_Despawn           ; $A335
+    ldx     currentObject           ; $A338
+    rts                             ; $A33A
+; (end of disassembled code)
+
+
+Thunderbird_Init:
     ldx     #$01                    ; $A33B
     jsr     Area_TestFlag           ; $A33D
     ldx     currentObject           ; $A340
@@ -3721,7 +3747,7 @@ dat_5_A351:
     .byte   $10, $FE                                                        ; $A354
     .byte   $FC, $F8, $F0                                                   ; $A356
 
-loc_5_A359:
+Thunderbird_Ai:
     lda     scrollFrozen            ; $A359
     bne     loc_5_A36B              ; $A35C
     lda     scrollXHi               ; $A35E
@@ -3820,7 +3846,7 @@ loc_5_A3EF:
 
 loc_5_A3F5:
     lda     #$18                    ; $A3F5
-    jsr     sub_5_A4E9              ; $A3F7
+    jsr     Boss_DrawHpBar_Bank5    ; $A3F7
     lda     frameCounter            ; $A3FA
     bne     loc_5_A3FE              ; $A3FC
 
@@ -3893,7 +3919,7 @@ dat_5_A46C:
 dat_5_A46F:
     .byte   $00, $F0, $E0                                                   ; $A46F
 
-loc_5_A472:
+DarkLink_DrawTrigger:
     lda     #$02                    ; $A472
     sta     temp2                   ; $A474
     ldx     #$36                    ; $A476
@@ -3942,7 +3968,7 @@ dat_5_A4B8:
 dat_5_A4C0:
     .byte   $17, $27, $37, $37                                              ; $A4C0
 
-sub_5_A4C4:
+DarkLink_FlashPalette:
     ldx     ppuBuffer0Len           ; $A4C4
     ldy     #$00                    ; $A4C7
 
@@ -3965,7 +3991,7 @@ loc_5_A4C9:
     ldx     currentObject           ; $A4E6
     rts                             ; $A4E8
 
-sub_5_A4E9:
+Boss_DrawHpBar_Bank5:
     sta     temp0                   ; $A4E9
     ldy     #$00                    ; $A4EB
     lda     enemyHp,x               ; $A4ED
@@ -4003,7 +4029,7 @@ loc_5_A502:
     ldx     currentObject           ; $A51E
     rts                             ; $A520
 
-loc_5_A521:
+HiddenJar_Ai_Bank5:
     lda     drawOffscreen+1         ; $A521
     bne     loc_5_A54E              ; $A523
     jsr     Enemy_CheckSwordHit     ; $A525
