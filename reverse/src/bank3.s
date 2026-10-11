@@ -2368,7 +2368,7 @@ loc_3_B08F:
     bit     PPUSTATUS               ; $B08F
     bvc     loc_3_B08F              ; $B092
     lda     ppuCtrlShadow           ; $B094
-    ora     ram_0746                ; $B096
+    ora     playfieldNametable      ; $B096
     sta     ppuCtrlShadow           ; $B099
     ldx     ppuScrollX              ; $B09B
     ldy     #$10                    ; $B09D
@@ -3265,7 +3265,7 @@ loc_3_B672:
     cmp     #$04                    ; $B675
     beq     loc_3_B621              ; $B677
     lda     #$C0                    ; $B679
-    sta     ram_074B                ; $B67B
+    sta     spellFlash              ; $B67B
     lda     #$40                    ; $B67E
     sta     ram_049E                ; $B680
     ldx     ram_048B                ; $B683
@@ -3277,7 +3277,7 @@ loc_3_B672:
 
 loc_3_B690:
     lda     #$00                    ; $B690
-    sta     ram_074B                ; $B692
+    sta     spellFlash              ; $B692
     sta     ram_049E                ; $B695
     inc     pauseState              ; $B698
     jmp     loc_3_B621              ; $B69B

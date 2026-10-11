@@ -1872,7 +1872,7 @@ loc_0_8CE3:
     sta     ram_0768                ; $8CEE
     ldy     #$00                    ; $8CF1
     tya                             ; $8CF3
-    sta     ram_076F                ; $8CF4
+    sta     spellActive             ; $8CF4
 
 loc_0_8CF7:
     sta     ram_0300,y              ; $8CF7
@@ -1880,7 +1880,7 @@ loc_0_8CF7:
     dey                             ; $8CFD
     bne     loc_0_8CF7              ; $8CFE
     sta     ram_0728                ; $8D00
-    sta     ram_074B                ; $8D03
+    sta     spellFlash              ; $8D03
     dey                             ; $8D06
     sty     ppuBuffer1              ; $8D07
     sty     ppuBuffer2              ; $8D0A
@@ -1902,7 +1902,7 @@ loc_0_8CF7:
     lda     sram_69A5,y             ; $8D36
     sta     scrollXHi               ; $8D39
     and     #$01                    ; $8D3C
-    sta     ram_0746                ; $8D3E
+    sta     playfieldNametable      ; $8D3E
     lda     sram_69B3,y             ; $8D41
     sta     a:ppuScrollX            ; $8D44
     lda     sram_69AC,y             ; $8D47
@@ -1918,6 +1918,7 @@ loc_0_8CF7:
     sta     rng                     ; $8D5E
     inc     ram_0727                ; $8D61
     lda     ram_075F                ; $8D64
+    ; Ten nops: probably code removed late in development.
     nop                             ; $8D67
     nop                             ; $8D68
     nop                             ; $8D69
@@ -1931,26 +1932,43 @@ loc_0_8CF7:
     sta     musicRequest            ; $8D71
     lda     #$00                    ; $8D73
     sta     ram_075F                ; $8D75
-dat_0_8D7A := * + 2
     jmp     Game_UnblankAndNextMode ; $8D78
 
-dat_0_8D7B:
+; Magic cost of each spell (SPELL_*) at each magic level 1-8, 8 bytes per
+; spell.
+SpellCosts:
     .byte   $40, $30, $30, $20, $20, $20, $20, $20, $60, $50, $40, $40, $28, $20, $18, $10; $8D7B
     .byte   $8C, $8C, $78, $78, $64, $64, $64, $64, $A0, $A0, $78, $78, $50, $50, $50, $50; $8D8B
     .byte   $F0, $A0, $78, $3C, $20, $20, $20, $20, $F0, $F0, $A0, $60, $50, $40, $30, $20; $8D9B
     .byte   $F0, $E0, $C0, $A0, $60, $40, $30, $20, $F0, $F0, $F0, $F0, $F0, $F0, $C8, $80; $8DAB
 
-dat_0_8DBB:
+SpellFlags:
     .byte   $01, $02, $04, $08, $10, $20, $40, $80                          ; $8DBB
 
-sub_0_8DC3:
+; ---------------------------------------------------------------------------
+; Spell_Update
+;
+; Side view: spells, once per frame (called from Mode_SideView).
+; Unless a dialog is open or the game is paused, Select casts the spell at
+; spellCursor, if it is owned, not already the last spell cast, and Link
+; has enough magic (SpellCosts, by magic level): the cost is taken from
+; statMeter, the spell's bit is set in spellActive, and the screen flashes
+; (spellFlash).  Then update Link's palette and run the effect of each
+; active spell (Spell_RunEffect).
+;
+; QUIRK: a spell that costs one more than the magic left is still cast, and
+; leaves the magic at 0.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Spell_Update:
     lda     ram_074C                ; $8DC3
     ora     pauseState              ; $8DC6
     ora     ram_00DE                ; $8DC9
     bne     loc_0_8E1F              ; $8DCB
     ldy     spellCursor             ; $8DCD
     iny                             ; $8DD0
-    cpy     ram_074A                ; $8DD1
+    cpy     spellLastCast           ; $8DD1
     beq     loc_0_8E1F              ; $8DD4
     lda     joypadPressed           ; $8DD6
     and     #$20                    ; $8DD8
@@ -1966,17 +1984,17 @@ sub_0_8DC3:
     tay                             ; $8DEB
     lda     statMeter               ; $8DEC
     sec                             ; $8DEF
-    sbc     dat_0_8D7A,y            ; $8DF0
+    sbc     SpellCosts - 1,y        ; $8DF0  y = spell * 8 + magic level (1-8)
     bcc     loc_0_8E3B              ; $8DF3
 
 loc_0_8DF5:
     sta     statMeter               ; $8DF5
     ldy     spellCursor             ; $8DF8
-    lda     dat_0_8DBB,y            ; $8DFB
-    ora     ram_076F                ; $8DFE
-    sta     ram_076F                ; $8E01
+    lda     SpellFlags,y            ; $8DFB
+    ora     spellActive             ; $8DFE
+    sta     spellActive             ; $8E01
     iny                             ; $8E04
-    sty     ram_074A                ; $8E05
+    sty     spellLastCast           ; $8E05
     lda     ram_074F                ; $8E08
     ora     #$80                    ; $8E0B
     sta     ram_074F                ; $8E0D
@@ -1986,23 +2004,23 @@ loc_0_8DF5:
     ora     #$80                    ; $8E16
 
 loc_0_8E18:
-    sta     ram_074B                ; $8E18
+    sta     spellFlash              ; $8E18
     lda     #$04                    ; $8E1B
     sta     sfxRequest              ; $8E1D
 
 loc_0_8E1F:
     lda     #$00                    ; $8E1F
-    sta     ram_00D0                ; $8E21
-    jsr     sub_0_9235              ; $8E23
+    sta     jumpSpellActive         ; $8E21
+    jsr     Link_UpdatePalette      ; $8E23
     ldy     #$07                    ; $8E26
 
 loc_0_8E28:
     tya                             ; $8E28
     pha                             ; $8E29
-    lda     dat_0_8DBB,y            ; $8E2A
-    bit     ram_076F                ; $8E2D
+    lda     SpellFlags,y            ; $8E2A
+    bit     spellActive             ; $8E2D
     beq     loc_0_8E35              ; $8E30
-    jsr     sub_0_8E44              ; $8E32
+    jsr     Spell_RunEffect         ; $8E32
 
 loc_0_8E35:
     pla                             ; $8E35
@@ -2017,29 +2035,37 @@ loc_0_8E3B:
     lda     #$00                    ; $8E3F
     jmp     loc_0_8DF5              ; $8E41
 
-sub_0_8E44:
+; ---------------------------------------------------------------------------
+; Spell_RunEffect
+;
+; Run the per-frame effect of active spell y (SPELL_*).
+;
+; In:      y = spell
+; Status:  confirmed (dispatch)
+; ---------------------------------------------------------------------------
+Spell_RunEffect:
     tya                             ; $8E44
     jsr     JumpTable               ; $8E45
 ; (inline jump table)
-    .word   loc_0_8E8D              ; $8E48  (not observed)
-    .word   loc_0_8E58              ; $8E4A
-    .word   loc_0_8E5D              ; $8E4C  (not observed)
-    .word   loc_0_91A4              ; $8E4E
-    .word   loc_0_97F1              ; $8E50
-    .word   loc_0_8E96              ; $8E52
-    .word   loc_0_8E73              ; $8E54
-    .word   loc_0_91E6              ; $8E56
+    .word   Spell_ShieldEffect      ; $8E48  (not observed)
+    .word   Spell_JumpEffect        ; $8E4A
+    .word   Spell_LifeEffect        ; $8E4C  (not observed)
+    .word   Spell_FairyEffect       ; $8E4E
+    .word   Spell_FireEffect        ; $8E50
+    .word   Spell_ReflectEffect     ; $8E52
+    .word   Spell_SpellEffect       ; $8E54
+    .word   Spell_ThunderEffect     ; $8E56
 
-loc_0_8E58:
+Spell_JumpEffect:
     lda     #$01                    ; $8E58
-    sta     ram_00D0                ; $8E5A
+    sta     jumpSpellActive         ; $8E5A
     rts                             ; $8E5C
 ; (code below not executed in the test movies)
 
-loc_0_8E5D:
-    lda     ram_076F                ; $8E5D
+Spell_LifeEffect:
+    lda     spellActive             ; $8E5D
     and     #$FB                    ; $8E60
-    sta     ram_076F                ; $8E62
+    sta     spellActive             ; $8E62
     lda     statMeterPending+1      ; $8E65
     clc                             ; $8E68
     adc     #$30                    ; $8E69
@@ -2051,7 +2077,7 @@ loc_0_8E6F:
     rts                             ; $8E72
 ; (end of code not executed in the test movies)
 
-loc_0_8E73:
+Spell_SpellEffect:
     lda     currentWorld            ; $8E73
     beq     loc_0_8E8A              ; $8E76
     cmp     #$03                    ; $8E78
@@ -2067,7 +2093,7 @@ loc_0_8E73:
 loc_0_8E8A:
     jmp     loc_0_91AF              ; $8E8A
 
-loc_0_8E8D:
+Spell_ShieldEffect:
     lda     #$16                    ; $8E8D
     sta     sram_69DE               ; $8E8F
     sta     ram_070F                ; $8E92
@@ -2076,7 +2102,7 @@ loc_0_8E95:
     rts                             ; $8E95
 ; (end of code not executed in the test movies)
 
-loc_0_8E96:
+Spell_ReflectEffect:
     lda     #$01                    ; $8E96
     sta     ram_0710                ; $8E98
     rts                             ; $8E9B
@@ -2526,7 +2552,7 @@ loc_0_919C:
     jsr     sub_0_93AC              ; $919E
     jmp     sub_EBF0                ; $91A1
 
-loc_0_91A4:
+Spell_FairyEffect:
     lda     objY                    ; $91A4
     cmp     #$20                    ; $91A6
     bcc     loc_0_91AE              ; $91A8
@@ -2538,9 +2564,9 @@ loc_0_91AE:
 ; (code below not executed in the test movies)
 
 loc_0_91AF:
-    lda     ram_076F                ; $91AF
+    lda     spellActive             ; $91AF
     and     #$BF                    ; $91B2
-    sta     ram_076F                ; $91B4
+    sta     spellActive             ; $91B4
     ldx     #$05                    ; $91B7
 
 loc_0_91B9:
@@ -2570,10 +2596,10 @@ loc_0_91E2:
     rts                             ; $91E5
 ; (end of code not executed in the test movies)
 
-loc_0_91E6:
-    lda     ram_076F                ; $91E6
+Spell_ThunderEffect:
+    lda     spellActive             ; $91E6
     and     #$7F                    ; $91E9
-    sta     ram_076F                ; $91EB
+    sta     spellActive             ; $91EB
     lda     #$00                    ; $91EE
     beq     loc_0_91F4              ; $91F0
 ; (code below not executed in the test movies)
@@ -2622,13 +2648,22 @@ loc_0_922D:
     tax                             ; $9233
     rts                             ; $9234
 
-sub_0_9235:
+; ---------------------------------------------------------------------------
+; Link_UpdatePalette
+;
+; While spellFlash is counting, queue Link's sprite palette ($3F10) in
+; ppuBuffer0, flashing through colors from the palette tables in SRAM
+; (sram_69C8 and following).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Link_UpdatePalette:
     lda     ram_0751                ; $9235
     sta     sram_69CC               ; $9238
-    lda     ram_074B                ; $923B
+    lda     spellFlash              ; $923B
     asl     a                       ; $923E
     bne     loc_0_9245              ; $923F
-    sta     ram_074B                ; $9241
+    sta     spellFlash              ; $9241
 
 loc_0_9244:
     rts                             ; $9244
@@ -2637,7 +2672,7 @@ loc_0_9245:
     ldx     ppuBuffer0Len           ; $9245
     cpx     #$19                    ; $9248
     bcs     loc_0_9244              ; $924A
-    dec     ram_074B                ; $924C
+    dec     spellFlash              ; $924C
     lda     #$3F                    ; $924F
     sta     ppuBuffer0,x            ; $9251
     lda     #$10                    ; $9254
@@ -2655,7 +2690,7 @@ loc_0_9245:
     iny                             ; $9271
 
 loc_0_9272:
-    lda     ram_074B                ; $9272
+    lda     spellFlash              ; $9272
     and     #$7F                    ; $9275
     beq     loc_0_927C              ; $9277
     and     #$03                    ; $9279
@@ -2668,7 +2703,7 @@ loc_0_927C:
     sta     ppuBuffer0+5,x          ; $9285
     lda     sram_69DA,y             ; $9288
     sta     ppuBuffer0+6,x          ; $928B
-    lda     ram_074B                ; $928E
+    lda     spellFlash              ; $928E
     asl     a                       ; $9291
     bcs     loc_0_9296              ; $9292
     ldy     #$04                    ; $9294
@@ -3085,7 +3120,7 @@ loc_0_94F8:
     iny                             ; $9515
 
 loc_0_9516:
-    lda     ram_00D0                ; $9516
+    lda     jumpSpellActive         ; $9516
     bne     loc_0_951C              ; $9518
     iny                             ; $951A
     iny                             ; $951B
@@ -3287,9 +3322,9 @@ dat_0_968B:
     .byte   $20, $68                                                        ; $968B
 
 sub_0_968D:
-    lda     ram_0776                ; $968D
+    lda     experience+1            ; $968D
     sec                             ; $9690
-    sbc     ram_0771                ; $9691
+    sbc     experienceNext+1        ; $9691
     lda     experience              ; $9694
     sbc     experienceNext          ; $9697
     bcc     loc_0_96A1              ; $969A
@@ -3398,7 +3433,7 @@ loc_0_972E:
     sta     ppuBuffer0+3,y          ; $9745
     lda     experience              ; $9748
     sta     temp0                   ; $974B
-    lda     ram_0776                ; $974D
+    lda     experience+1            ; $974D
     jsr     sub_0_A5A4              ; $9750
     pha                             ; $9753
     tya                             ; $9754
@@ -3412,7 +3447,7 @@ loc_0_972E:
     sta     ppuBuffer0+18,y         ; $9766
     lda     experienceNext          ; $9769
     sta     temp0                   ; $976C
-    lda     ram_0771                ; $976E
+    lda     experienceNext+1        ; $976E
     jsr     sub_0_A5A4              ; $9771
     tya                             ; $9774
     ldy     ppuBuffer0Len           ; $9775
@@ -3499,7 +3534,7 @@ loc_0_97C7:
     bpl     loc_0_97C7              ; $97EE
     rts                             ; $97F0
 
-loc_0_97F1:
+Spell_FireEffect:
     ldx     #$01                    ; $97F1
     lda     statLevel               ; $97F3
     cmp     #$04                    ; $97F6
@@ -3562,7 +3597,7 @@ dat_0_9845:
     .byte   $38, $40                                                        ; $9845
 
 sub_0_9847:
-    lda     ram_076F                ; $9847
+    lda     spellActive             ; $9847
     and     #$10                    ; $984A
     bne     loc_0_9878              ; $984C
     lda     statContainers+STAT_METER_LIFE ; $984E
@@ -3794,7 +3829,7 @@ loc_0_99BD:
     adc     temp0                   ; $99CA
     sta     scrollXHi               ; $99CC
     and     #$01                    ; $99CF
-    sta     ram_0746                ; $99D1
+    sta     playfieldNametable      ; $99D1
 
 sub_0_99D4:
     lda     scrollX                 ; $99D4
@@ -4118,7 +4153,7 @@ loc_0_9D59:
     bit     PPUSTATUS               ; $9D59
     bvc     loc_0_9D59              ; $9D5C
     lda     ppuCtrlShadow           ; $9D5E
-    ora     ram_0746                ; $9D60
+    ora     playfieldNametable      ; $9D60
     sta     ppuCtrlShadow           ; $9D63
     ldx     ppuScrollX              ; $9D65
     ldy     #$10                    ; $9D67
@@ -4167,7 +4202,7 @@ sub_0_9DB0:
     bit     PPUSTATUS               ; $9DB0
     bvc     sub_0_9DB0              ; $9DB3
     lda     ppuCtrlShadow           ; $9DB5
-    ora     ram_0746                ; $9DB7
+    ora     playfieldNametable      ; $9DB7
     sta     ppuCtrlShadow           ; $9DBA
     ldx     ppuScrollX              ; $9DBC
     ldy     #$10                    ; $9DBE
@@ -4307,7 +4342,7 @@ loc_0_9E98:
     asl     a                       ; $9EA2
     adc     statLevel,y             ; $9EA3
     tax                             ; $9EA6
-    lda     ram_0776                ; $9EA7
+    lda     experience+1            ; $9EA7
     sec                             ; $9EAA
     sbc     dat_0_9670,x            ; $9EAB
     lda     experience              ; $9EAE
@@ -4415,10 +4450,10 @@ loc_0_9F5B:
     asl     a                       ; $9F5F
     adc     statLevel,x             ; $9F60
     tay                             ; $9F63
-    lda     ram_0776                ; $9F64
+    lda     experience+1            ; $9F64
     sec                             ; $9F67
     sbc     dat_0_9670,y            ; $9F68
-    sta     ram_0776                ; $9F6B
+    sta     experience+1            ; $9F6B
     lda     experience              ; $9F6E
     sbc     dat_0_9658,y            ; $9F71
     sta     experience              ; $9F74
@@ -4503,7 +4538,7 @@ loc_0_9FD0:
     adc     statLevel,x             ; $9FEC
     pha                             ; $9FEF
     tay                             ; $9FF0
-    lda     ram_0776                ; $9FF1
+    lda     experience+1            ; $9FF1
     sec                             ; $9FF4
     sbc     dat_0_9670,y            ; $9FF5
     lda     experience              ; $9FF8
@@ -4568,7 +4603,7 @@ loc_0_A04B:
 sub_0_A057:
     lda     #$FF                    ; $A057
     sta     experienceNext          ; $A059
-    sta     ram_0771                ; $A05C
+    sta     experienceNext+1        ; $A05C
     ldx     #$02                    ; $A05F
 
 loc_0_A061:
@@ -4580,14 +4615,14 @@ loc_0_A061:
     tay                             ; $A068
     lda     dat_0_9670,y            ; $A069
     sec                             ; $A06C
-    sbc     ram_0771                ; $A06D
+    sbc     experienceNext+1        ; $A06D
     lda     dat_0_9658,y            ; $A070
     sbc     experienceNext          ; $A073
     bcs     loc_0_A084              ; $A076
     lda     dat_0_9658,y            ; $A078
     sta     experienceNext          ; $A07B
     lda     dat_0_9670,y            ; $A07E
-    sta     ram_0771                ; $A081
+    sta     experienceNext+1        ; $A081
 
 loc_0_A084:
     dex                             ; $A084
@@ -4611,7 +4646,7 @@ sub_0_A08B:
 loc_0_A099:
     lda     #$FF                    ; $A099
     sta     experienceNext          ; $A09B
-    sta     ram_0771                ; $A09E
+    sta     experienceNext+1        ; $A09E
     ldx     #$02                    ; $A0A1
 
 loc_0_A0A3:
@@ -4625,14 +4660,14 @@ loc_0_A0A3:
     tay                             ; $A0AE
     lda     dat_0_9670,y            ; $A0AF
     sec                             ; $A0B2
-    sbc     ram_0771                ; $A0B3
+    sbc     experienceNext+1        ; $A0B3
     lda     dat_0_9658,y            ; $A0B6
     sbc     experienceNext          ; $A0B9
     bcs     loc_0_A0CA              ; $A0BC
     lda     dat_0_9658,y            ; $A0BE
     sta     experienceNext          ; $A0C1
     lda     dat_0_9670,y            ; $A0C4
-    sta     ram_0771                ; $A0C7
+    sta     experienceNext+1        ; $A0C7
 
 loc_0_A0CA:
     dex                             ; $A0CA
@@ -4651,7 +4686,7 @@ loc_0_A0D0:
     asl     a                       ; $A0D7
     adc     statLevel,x             ; $A0D8
     tay                             ; $A0DB
-    lda     ram_0771                ; $A0DC
+    lda     experienceNext+1        ; $A0DC
     sec                             ; $A0DF
     sbc     dat_0_9670,y            ; $A0E0
     lda     experienceNext          ; $A0E3
@@ -4722,7 +4757,7 @@ loc_0_A140:
 
 loc_0_A148:
     lda     #$00                    ; $A148
-    sta     ram_074A                ; $A14A
+    sta     spellLastCast           ; $A14A
     sta     ppuBuffer1Len           ; $A14D
     lda     keyCount                ; $A150
     clc                             ; $A153
@@ -4747,7 +4782,7 @@ loc_0_A174:
     pha                             ; $A175
     lda     #$00                    ; $A176
     sta     temp0                   ; $A178
-    lda     dat_0_8D7B,y            ; $A17A
+    lda     SpellCosts,y            ; $A17A
     lsr     a                       ; $A17D
     jsr     sub_0_A5A4              ; $A17E
     sta     sram_781A,x             ; $A181
@@ -4795,7 +4830,7 @@ Game_ShowContinueScreen:
     sta     menuCursor              ; $A1C3
     sta     ram_0759                ; $A1C6
     sta     experience              ; $A1C9
-    sta     ram_0776                ; $A1CC
+    sta     experience+1            ; $A1CC
     lda     #$06                    ; $A1CF
     sta     ram_0768                ; $A1D1
     ldx     #$01                    ; $A1D4
@@ -5771,7 +5806,7 @@ loc_0_A7B1:
     bit     PPUSTATUS               ; $A7B1
     bvc     loc_0_A7B1              ; $A7B4
     lda     ppuCtrlShadow           ; $A7B6
-    ora     ram_0746                ; $A7B8
+    ora     playfieldNametable      ; $A7B8
     sta     ppuCtrlShadow           ; $A7BB
     ldx     ppuScrollX              ; $A7BD
     ldy     #$10                    ; $A7BF

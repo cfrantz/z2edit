@@ -1677,8 +1677,8 @@ loc_CA3E:
     jsr     sub_CA17                ; $CA5A
     lda     #$00                    ; $CA5D
     sta     experience              ; $CA5F
-    sta     ram_0776                ; $CA62
-    sta     ram_0756                ; $CA65
+    sta     experience+1            ; $CA62
+    sta     experiencePending+1     ; $CA65
     sta     experiencePending       ; $CA68
     rts                             ; $CA6B
 ; (end of code not executed in the test movies)
@@ -1759,8 +1759,8 @@ loc_CAB1:
 
 loc_CAC4:
     sta     experience              ; $CAC4
-    sta     ram_0776                ; $CAC7
-    sta     ram_0756                ; $CACA
+    sta     experience+1            ; $CAC7
+    sta     experiencePending+1     ; $CACA
     sta     experiencePending       ; $CACD
     jsr     World_GetIndex          ; $CAD0
     cmp     #$0F                    ; $CAD3
@@ -3054,7 +3054,7 @@ loc_D269:
     lda     #$00                    ; $D26E
     sta     ppuScrollY              ; $D270
     sta     ppuScrollX              ; $D272
-    sta     ram_0746                ; $D274
+    sta     playfieldNametable      ; $D274
     sta     PPUSCROLL               ; $D277
     sta     PPUSCROLL               ; $D27A
 
@@ -3371,7 +3371,7 @@ dat_D3CA:
 ;
 ; GAME_MODE_SIDE_VIEW: one frame of side view play.  Starts the death
 ; sequence (GAME_STATE_DEATH) when ram_0494 is set, otherwise runs bank 0's
-; side view code (sub_0_8DC3) and refills the meters from statMeterPending.
+; side view code (Spell_Update) and refills the meters from statMeterPending.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -3391,7 +3391,7 @@ Mode_SideView:
 
 loc_D3E9:
     jsr     Mmc1_SetPrgBank0        ; $D3E9
-    jsr     sub_0_8DC3              ; $D3EC
+    jsr     Spell_Update            ; $D3EC
     lda     frameCounter            ; $D3EF
     and     #$01                    ; $D3F1
     tax                             ; $D3F3
@@ -3431,11 +3431,11 @@ loc_D41C:
     sta     sfxRequest+3            ; $D431
 
 loc_D433:
-    lda     ram_0756                ; $D433
+    lda     experiencePending+1     ; $D433
     ora     experiencePending       ; $D436
     beq     loc_D477                ; $D439
     ldy     #$0A                    ; $D43B
-    lda     ram_0756                ; $D43D
+    lda     experiencePending+1     ; $D43D
     ldx     experiencePending       ; $D440
     bne     loc_D44B                ; $D443
     cmp     #$0A                    ; $D445
@@ -3446,15 +3446,15 @@ loc_D44B:
     sty     temp0                   ; $D44B
     sec                             ; $D44D
     sbc     temp0                   ; $D44E
-    sta     ram_0756                ; $D450
+    sta     experiencePending+1     ; $D450
     bcs     loc_D458                ; $D453
     dec     experiencePending       ; $D455
 
 loc_D458:
-    lda     ram_0776                ; $D458
+    lda     experience+1            ; $D458
     clc                             ; $D45B
     adc     temp0                   ; $D45C
-    sta     ram_0776                ; $D45E
+    sta     experience+1            ; $D45E
     lda     experience              ; $D461
     adc     #$00                    ; $D464
     sta     experience              ; $D466
@@ -3471,14 +3471,14 @@ loc_D477:
     lda     ram_05E8                ; $D477
     beq     loc_D4AB                ; $D47A
     dec     ram_05E8                ; $D47C
-    lda     ram_0776                ; $D47F
+    lda     experience+1            ; $D47F
     ora     experience              ; $D482
     beq     loc_D4AB                ; $D485
 ; (code below not executed in the test movies)
-    lda     ram_0776                ; $D487
+    lda     experience+1            ; $D487
     sec                             ; $D48A
     sbc     #$01                    ; $D48B
-    sta     ram_0776                ; $D48D
+    sta     experience+1            ; $D48D
     lda     experience              ; $D490
     sbc     #$00                    ; $D493
     sta     experience              ; $D495
@@ -3499,11 +3499,13 @@ loc_D4AB:
     cmp     #$02                    ; $D4AE
     bcs     loc_D4CE                ; $D4B0
 
-loc_D4B2:
+    ; Split the screen below the status bar: wait for the sprite 0 hit, then
+    ; switch to the playfield's nametable and scroll.
+@waitSprite0Hit:
     bit     PPUSTATUS               ; $D4B2
-    bvc     loc_D4B2                ; $D4B5
+    bvc     @waitSprite0Hit         ; $D4B5
     lda     ppuCtrlShadow           ; $D4B7
-    ora     ram_0746                ; $D4B9
+    ora     playfieldNametable      ; $D4B9
     sta     ppuCtrlShadow           ; $D4BC
     ldx     ppuScrollX              ; $D4BE
     ldy     #$10                    ; $D4C0
@@ -3517,6 +3519,7 @@ loc_D4C2:
 
 loc_D4CE:
     jsr     sub_0_968D              ; $D4CE
+    ; Beep while Link's life is low.
     lda     statMeterDisplay+1      ; $D4D1
     cmp     #$20                    ; $D4D4
     bcs     loc_D4F3                ; $D4D6
@@ -4121,9 +4124,9 @@ loc_D946:
 ; (code below not executed in the test movies)
 
 loc_D947:
-    lda     ram_074B                ; $D947
+    lda     spellFlash              ; $D947
     ora     #$10                    ; $D94A
-    sta     ram_074B                ; $D94C
+    sta     spellFlash              ; $D94C
     lda     statMeterPending+1      ; $D94F
     bne     loc_D946                ; $D952
     sta     ram_00DE                ; $D954
@@ -4698,7 +4701,7 @@ loc_DCDB:
     cpy     #$68                    ; $DCDB
     bne     loc_DCED                ; $DCDD
     lda     #$E8                    ; $DCDF
-    sta     ram_074B                ; $DCE1
+    sta     spellFlash              ; $DCE1
     lda     #$0F                    ; $DCE4
     sta     ppuStringSelect         ; $DCE6
     lda     #$80                    ; $DCE9
@@ -4837,8 +4840,8 @@ loc_DDEC:
     tay                             ; $DDF1
     lda     dat_DDC0,y              ; $DDF2
     clc                             ; $DDF5
-    adc     ram_0756                ; $DDF6
-    sta     ram_0756                ; $DDF9
+    adc     experiencePending+1     ; $DDF6
+    sta     experiencePending+1     ; $DDF9
     lda     dat_DDDC,y              ; $DDFC
     adc     experiencePending       ; $DDFF
     sta     experiencePending       ; $DE02
@@ -6454,7 +6457,7 @@ loc_E77D:
     cpy     #$08                    ; $E782
     bcs     loc_E79A                ; $E784
     lda     #$A0                    ; $E786
-    sta     ram_074B                ; $E788
+    sta     spellFlash              ; $E788
     lda     #$10                    ; $E78B
     sta     musicRequest            ; $E78D
     lda     itemOwned,y             ; $E78F

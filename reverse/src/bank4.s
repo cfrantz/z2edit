@@ -1565,10 +1565,10 @@ loc_4_9B56:
     ora     statMeterPending+1      ; $9B59
     bne     loc_4_9B88              ; $9B5C
     sta     ram_00DE                ; $9B5E
-    lda     ram_0771                ; $9B60
+    lda     experienceNext+1        ; $9B60
     sec                             ; $9B63
-    sbc     ram_0776                ; $9B64
-    sta     ram_0756                ; $9B67
+    sbc     experience+1            ; $9B64
+    sta     experiencePending+1     ; $9B67
     lda     experienceNext          ; $9B6A
     sbc     experience              ; $9B6D
     sta     experiencePending       ; $9B70

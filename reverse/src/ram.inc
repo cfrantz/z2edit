@@ -72,7 +72,7 @@ enemySramIndex          = $00BC     ; [6] index of the enemy in the area's SRAM 
 enemyHp                 = $00C2     ; [6] hit points
 drawOffscreen           = $00C8     ; [4] off-screen flags of the object being drawn, by draw category (0 = Link, 1 = enemy, 2 = projectile, 3 = Link's projectile): bits 3-0 = probe points off screen horizontally, $F0 = off screen vertically
 drawScreenX             = $00CC     ; [4] screen X of the object being drawn, by draw category (see drawOffscreen)
-ram_00D0                = $00D0
+jumpSpellActive         = $00D0     ; 1 while the jump spell is active
 areaLastPage            = $00D1     ; last map page of the current area, 0-3 (provisional)
 ram_00D4                = $00D4
 ram_00D5                = $00D5
@@ -316,12 +316,12 @@ ram_0741                = $0741
 ram_0742                = $0742
 ram_0743                = $0743
 joypadHeldPrev          = $0744
-ram_0746                = $0746
+playfieldNametable      = $0746     ; PPUCTRL nametable bits for the playfield, below the status bar split
 ppuNametable            = $0747
 areaLocation            = $0748     ; overworld location of the current area (provisional)
 spellCursor             = $0749     ; spell selected in the pause menu (provisional)
-ram_074A                = $074A
-ram_074B                = $074B
+spellLastCast           = $074A     ; last spell cast + 1, so that it is not cast again
+spellFlash              = $074B     ; counts down while the screen flashes after a spell is cast; bit 7 also flashes the background (provisional)
 ram_074C                = $074C
 ram_074E                = $074E
 ram_074F                = $074F
@@ -331,7 +331,6 @@ ram_0752                = $0752
 ram_0753                = $0753
 ram_0754                = $0754
 experiencePending       = $0755     ; (16-bit, big-endian) experience still to be added to experience
-ram_0756                = $0756
 ram_0757                = $0757
 ram_0758                = $0758
 ram_0759                = $0759
@@ -354,16 +353,14 @@ ram_076B                = $076B
 gameState               = $076C     ; top-level state; see GAME_STATE_* (bank 5 uses it for the title screens)
 gameStatePrev           = $076D     ; gameState when last checked, to detect changes
 areaChrBank             = $076E     ; CHR bank for the current world: twice its PRG bank, or twice palaceChrBank in palaces
-ram_076F                = $076F
+spellActive             = $076F     ; active spells, one bit each (SpellFlags): bit 3 = fairy
 experienceNext          = $0770     ; (16-bit, big-endian) experience needed for the next level
-ram_0771                = $0771
 saveSlot                = $0772     ; current save file, 0-2
 ; ---------------------------------------------------------------------------
 ; Link's stats and inventory
 ; ---------------------------------------------------------------------------
 statMeter               = $0773     ; [2] current magic and life; see STAT_METER_*
 experience              = $0775     ; (16-bit, big-endian: high byte first) experience points
-ram_0776                = $0776
 statLevel               = $0777     ; [3] attack, magic and life levels; see STAT_*
 spellOwned              = $077B     ; [8] nonzero if the spell has been learned; see SPELL_*
 statContainers          = $0783     ; [2] magic and heart containers; see STAT_METER_*

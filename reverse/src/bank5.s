@@ -809,16 +809,16 @@ loc_5_8CBB:
     lda     #$04                    ; $8CC5
     sta     sfxRequest              ; $8CC7
     lda     #$E0                    ; $8CC9
-    sta     ram_074B                ; $8CCB
+    sta     spellFlash              ; $8CCB
     inc     objY+10                 ; $8CCE
 
 loc_5_8CD0:
     lda     ram_0751                ; $8CD0
     sta     sram_69CC               ; $8CD3
-    lda     ram_074B                ; $8CD6
+    lda     spellFlash              ; $8CD6
     asl     a                       ; $8CD9
     bne     loc_5_8CE3              ; $8CDA
-    sta     ram_074B                ; $8CDC
+    sta     spellFlash              ; $8CDC
     jmp     sub_5_8C44              ; $8CDF
 ; (code below not executed in the test movies)
 
@@ -830,7 +830,7 @@ loc_5_8CE3:
     ldx     ppuBuffer0Len           ; $8CE3
     cpx     #$19                    ; $8CE6
     bcs     loc_5_8CE2              ; $8CE8
-    dec     ram_074B                ; $8CEA
+    dec     spellFlash              ; $8CEA
     lda     #$3F                    ; $8CED
     sta     ppuBuffer0,x            ; $8CEF
     lda     #$10                    ; $8CF2
@@ -851,7 +851,7 @@ loc_5_8CE3:
 ; (end of code not executed in the test movies)
 
 loc_5_8D10:
-    lda     ram_074B                ; $8D10
+    lda     spellFlash              ; $8D10
     and     #$7F                    ; $8D13
     beq     loc_5_8D1A              ; $8D15
     and     #$03                    ; $8D17
@@ -864,7 +864,7 @@ loc_5_8D1A:
     sta     ppuBuffer0+5,x          ; $8D23
     lda     sram_69DA,y             ; $8D26
     sta     ppuBuffer0+6,x          ; $8D29
-    lda     ram_074B                ; $8D2C
+    lda     spellFlash              ; $8D2C
     asl     a                       ; $8D2F
     bcs     loc_5_8D34              ; $8D30
 ; (code below not executed in the test movies)
@@ -880,7 +880,7 @@ loc_5_8D34:
     clc                             ; $8D40
     adc     #$07                    ; $8D41
     sta     ppuBuffer0Len           ; $8D43
-    lda     ram_074B                ; $8D46
+    lda     spellFlash              ; $8D46
     bne     loc_5_8D8C              ; $8D49
 ; (code below not executed in the test movies)
     jmp     sub_5_8C44              ; $8D4B
@@ -1904,7 +1904,7 @@ loc_5_980D:
     lda     timerFast+3             ; $980D
     bne     loc_5_982C              ; $9810
     lda     #$C0                    ; $9812
-    sta     ram_074B                ; $9814
+    sta     spellFlash              ; $9814
     lda     #$04                    ; $9817
     sta     sfxRequest              ; $9819
     lda     #$14                    ; $981B
@@ -1932,7 +1932,7 @@ loc_5_983B:
     jmp     Enemy_Draw              ; $983B
 
 loc_5_983E:
-    lda     ram_074B                ; $983E
+    lda     spellFlash              ; $983E
     cmp     #$81                    ; $9841
     bne     loc_5_9852              ; $9843
     lda     #$0D                    ; $9845
@@ -2007,7 +2007,7 @@ loc_5_98AD:
     cmp     #$F0                    ; $98B6
     bcc     loc_5_98D0              ; $98B8
     lda     #$B0                    ; $98BA
-    sta     ram_074B                ; $98BC
+    sta     spellFlash              ; $98BC
     lda     #$04                    ; $98BF
     sta     sfxRequest              ; $98C1
     lda     #$0F                    ; $98C3
@@ -2437,7 +2437,7 @@ loc_5_9B15:
 ; (end of code not executed in the test movies)
 
 loc_5_9B3A:
-    lda     ram_074B                ; $9B3A
+    lda     spellFlash              ; $9B3A
     cmp     #$81                    ; $9B3D
     bne     loc_5_9B46              ; $9B3F
     lda     #$0E                    ; $9B41
@@ -2475,7 +2475,7 @@ loc_5_9B73:
 
 loc_5_9B74:
     lda     #$C0                    ; $9B74
-    sta     ram_074B                ; $9B76
+    sta     spellFlash              ; $9B76
     lda     #$20                    ; $9B79
     sta     musicRequest            ; $9B7B
     lda     #$15                    ; $9B7D
