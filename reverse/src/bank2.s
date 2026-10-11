@@ -1421,7 +1421,7 @@ dat_2_967B := * + 2
 ; ---------------------------------------------------------------------------
 ; Projectile_Draw_Bank2
 ;
-; Draw projectile x by its type (sram_6EAD, sram_6EB6, sram_6EC0).
+; Draw projectile x by its type (sramProjectileTiles, sramProjectileAttrs, sramProjectileDrawPtrs).
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -1430,9 +1430,9 @@ Projectile_Draw_Bank2:
     pha                             ; $9680
     asl     a                       ; $9681
     tay                             ; $9682
-    lda     sram_6EC0,y             ; $9683
+    lda     sramProjectileDrawPtrs,y ; $9683
     sta     temp14                  ; $9686
-    lda     sram_6EC0+1,y           ; $9688
+    lda     sramProjectileDrawPtrs+1,y ; $9688
     sta     temp15                  ; $968B
     ldy     objOamOffset+7,x        ; $968D
     lda     objY+7,x                ; $968F
@@ -1441,9 +1441,9 @@ Projectile_Draw_Bank2:
     sta     oamBuffer+3,y           ; $9696
     pla                             ; $9699
     tay                             ; $969A
-    lda     sram_6EAD,y             ; $969B
+    lda     sramProjectileTiles,y   ; $969B
     pha                             ; $969E
-    lda     sram_6EB6,y             ; $969F
+    lda     sramProjectileAttrs,y   ; $969F
     ldy     objFacing+7,x           ; $96A2
     ora     dat_2_967B,y            ; $96A4
     ldy     objOamOffset+7,x        ; $96A7

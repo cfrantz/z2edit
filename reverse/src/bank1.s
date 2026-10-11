@@ -1500,8 +1500,8 @@ dat_1_9715 := * + 2
 ; ---------------------------------------------------------------------------
 ; Projectile_Draw_Bank1
 ;
-; Draw projectile x: tile and attributes by its type (sram_6EAD,
-; sram_6EB6), then its type's draw routine from sram_6EC0.
+; Draw projectile x: tile and attributes by its type (sramProjectileTiles,
+; sramProjectileAttrs), then its type's draw routine from sramProjectileDrawPtrs.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -1510,9 +1510,9 @@ Projectile_Draw_Bank1:
     pha                             ; $971A
     asl     a                       ; $971B
     tay                             ; $971C
-    lda     sram_6EC0,y             ; $971D
+    lda     sramProjectileDrawPtrs,y ; $971D
     sta     temp14                  ; $9720
-    lda     sram_6EC0+1,y           ; $9722
+    lda     sramProjectileDrawPtrs+1,y ; $9722
     sta     temp15                  ; $9725
     ldy     objOamOffset+7,x        ; $9727
     lda     objY+7,x                ; $9729
@@ -1523,9 +1523,9 @@ Projectile_Draw_Bank1:
     sta     oamBuffer+3,y           ; $9734
     pla                             ; $9737
     tay                             ; $9738
-    lda     sram_6EAD,y             ; $9739
+    lda     sramProjectileTiles,y   ; $9739
     pha                             ; $973C
-    lda     sram_6EB6,y             ; $973D
+    lda     sramProjectileAttrs,y   ; $973D
     sta     temp3                   ; $9740
     ldy     objFacing+7,x           ; $9742
     sty     temp2                   ; $9744

@@ -3349,9 +3349,9 @@ Projectile_Draw_Bank5:
     pha                             ; $9C9B
     asl     a                       ; $9C9C
     tay                             ; $9C9D
-    lda     sram_6EC0,y             ; $9C9E
+    lda     sramProjectileDrawPtrs,y ; $9C9E
     sta     temp14                  ; $9CA1
-    lda     sram_6EC0+1,y           ; $9CA3
+    lda     sramProjectileDrawPtrs+1,y ; $9CA3
     sta     temp15                  ; $9CA6
     ldy     objOamOffset+7,x        ; $9CA8
     lda     objY+7,x                ; $9CAA
@@ -3360,9 +3360,9 @@ Projectile_Draw_Bank5:
     sta     oamBuffer+3,y           ; $9CB1
     pla                             ; $9CB4
     tay                             ; $9CB5
-    lda     sram_6EAD,y             ; $9CB6
+    lda     sramProjectileTiles,y   ; $9CB6
     pha                             ; $9CB9
-    lda     sram_6EB6,y             ; $9CBA
+    lda     sramProjectileAttrs,y   ; $9CBA
     ldy     objFacing+7,x           ; $9CBD
     ora     dat_5_9C96,y            ; $9CBF
     ldy     objOamOffset+7,x        ; $9CC2

@@ -459,10 +459,10 @@ sramEnemyDamage         = $6DF9     ; [36] bits 7-6 = item drop group, bits 3-0 
 sramEnemyHitbox         = $6E1D     ; [36] hitbox of each enemy type: offset into EnemyHitboxes / 4
 sramEnemyFlags          = $6E41     ; [36] bit 6 = comes back after dying, bit 4 = not hurt by the sword, bits 3-0 = background collision probe set
 sramEnemyDrawPtrs       = $6E65     ; [36] (16-bit) routine that draws each enemy type
-sram_6EAD               = $6EAD     ; [9]
-sram_6EB6               = $6EB6     ; [8]
+sramProjectileTiles     = $6EAD     ; [9] sprite tile of each projectile type (entry 0 is the area bank's rts at $95AD)
+sramProjectileAttrs     = $6EB6     ; [8] sprite attributes of each projectile type
 sram_6EBE               = $6EBE
-sram_6EC0               = $6EC0     ; (16-bit)
+sramProjectileDrawPtrs  = $6EC0     ; [10] (16-bit) draw routine of each projectile type, jumped to by Projectile_Draw_*
 sramEnemyTiles          = $6ED4     ; sprite tile numbers for drawing enemies
 sramEnemyLists          = $7000     ; [1024] enemies of each area, from AreaBank::EnemyLists
 ; Save files (battery-backed).  The status bytes are SAVE_STATUS_*.

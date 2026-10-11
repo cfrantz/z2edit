@@ -1630,7 +1630,7 @@ ProjectileFlipAttrs_Bank4 := * + 2
 ; ---------------------------------------------------------------------------
 ; Projectile_Draw_Bank4
 ;
-; Draw projectile x by its type (sram_6EAD, sram_6EB6, sram_6EC0).
+; Draw projectile x by its type (sramProjectileTiles, sramProjectileAttrs, sramProjectileDrawPtrs).
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -1639,9 +1639,9 @@ Projectile_Draw_Bank4:
     pha                             ; $996C
     asl     a                       ; $996D
     tay                             ; $996E
-    lda     sram_6EC0,y             ; $996F
+    lda     sramProjectileDrawPtrs,y ; $996F
     sta     temp14                  ; $9972
-    lda     sram_6EC0+1,y           ; $9974
+    lda     sramProjectileDrawPtrs+1,y ; $9974
     sta     temp15                  ; $9977
     ldy     objOamOffset+7,x        ; $9979
     lda     objY+7,x                ; $997B
@@ -1650,9 +1650,9 @@ Projectile_Draw_Bank4:
     sta     oamBuffer+3,y           ; $9982
     pla                             ; $9985
     tay                             ; $9986
-    lda     sram_6EAD,y             ; $9987
+    lda     sramProjectileTiles,y   ; $9987
     pha                             ; $998A
-    lda     sram_6EB6,y             ; $998B
+    lda     sramProjectileAttrs,y   ; $998B
     ldy     objFacing+7,x           ; $998E
     ora     ProjectileFlipAttrs_Bank4,y ; $9990
     ldy     objOamOffset+7,x        ; $9993

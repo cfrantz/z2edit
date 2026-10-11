@@ -31,6 +31,6 @@
 
 ### RAM variables
 
-500 defined, 148 auto-named, 352 named (70.4%).
+500 defined, 145 auto-named, 355 named (71.0%).
 
 <!-- END GENERATED -->
