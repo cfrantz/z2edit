@@ -57,6 +57,18 @@ speed makes Link crouch for a few frames (`linkLandingTimer`).  Once the
 techniques are learned (`techniques`, `TECH_*`), holding Up on the way up
 gives the upward thrust, and holding Down in the air the downward thrust.
 
+## Taking Damage
+
+When an enemy touches Link (`Enemy_CheckLinkContact`, then
+`Link_HurtByEnemy`), he loses `LinkDamage[class][life level]` from his
+life, where the class is the low nibble of the enemy type's
+`sramEnemyDamage` entry.  Higher life levels take less damage; the shield
+spell halves it.  He is knocked back (`TIMER_LINK_HURT`), bounced upward
+(Y velocity -2) and stays invulnerable for 80 frames (`TIMER_INVULNERABLE`),
+blinking at the end.  Some enemies (`sramEnemyAttr` bit 4) also drain
+experience, one point per frame for 10 frames (`experienceDrain`).  If
+his life runs out, `linkDeathPending` starts the death sequence.
+
 ## Fairy
 
 As a fairy (`linkFairy` = 8, from the fairy spell), Link flies in the
