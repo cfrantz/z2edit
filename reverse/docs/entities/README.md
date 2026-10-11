@@ -36,8 +36,8 @@ Each group's block (copied to `sramProjectilePtrs` and following, $6D00):
 | `EnemyFlags_BankN` | `sramEnemyFlags` | enemy type | bit 7: immune to Thunder; bit 6: comes back after dying; bit 5: Thunder does only level 1 damage; bit 4: the sword passes through it; bits 3-0: background collision probe set |
 | `EnemyDrawPtrs_BankN` | `sramEnemyDrawPtrs` | enemy type | routine that draws it |
 
-After them come projectile tiles and draw routines (`sram_6EAD`,
-`sram_6EB6`, `sram_6EC0`) and the enemies' sprite tiles
+After them come projectile tiles and draw routines (`sramProjectileTiles`,
+`sramProjectileAttrs`, `sramProjectileDrawPtrs`) and the enemies' sprite tiles
 (`sramEnemyTiles`).
 
 The tables in each page below are generated from the ROM by
