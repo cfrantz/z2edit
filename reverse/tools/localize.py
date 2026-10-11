@@ -10,7 +10,8 @@ scopes or files stay normal (they are entry points that still need a name).
 Each label that becomes local is named by its shape:
 
 - `@done`: its first instruction is rts;
-- `@loop`: it is reached only from below (a backward branch or jump);
+- `@loop`: it is reached only from below, by a conditional branch with
+  no rts, rti or jmp between the label and the branch;
 - `@loc_XXXX` otherwise (mechanical, keeping its address).
 
 A second `@done` or `@loop` in the same scope gets a number (`@loop2`).
@@ -33,6 +34,65 @@ INSTRUCTION = re.compile(r"^\s+([a-z]{3})\b")
 
 def code_part(line):
     return line.split(";", 1)[0]
+
+
+def is_loop(lines, i, refs):
+    """Whether label line i heads a loop closed by one of refs."""
+    for r in refs:
+        op = INSTRUCTION.match(lines[r])
+        if not op or op.group(1) in ("jmp", "jsr") or not op.group(1).startswith("b") or op.group(1) == "bit":
+            continue
+        between = [INSTRUCTION.match(t) for t in lines[i + 1:r]]
+        if not any(m and m.group(1) in ("rts", "rti", "jmp") for m in between):
+            return True
+    return False
+
+
+def relabel_loops(path, dry_run):
+    """Re-check @loop labels named by an earlier version of this tool."""
+    with open(path) as f:
+        lines = f.read().split("\n")
+    scope_start = [0] * len(lines)
+    s = 0
+    for i, line in enumerate(lines):
+        if NORMAL_LABEL.match(line):
+            s = i
+        scope_start[i] = s
+    scopes = {}
+    for i, line in enumerate(lines):
+        m = re.match(r"^(@loop\d*):", line)
+        if m:
+            scopes.setdefault(scope_start[i], []).append((i, m.group(1)))
+    renames = []
+    for start, labels in scopes.items():
+        end = next((j for j in range(start + 1, len(lines)) if NORMAL_LABEL.match(lines[j])), len(lines))
+        n = 0
+        for i, old in labels:
+            refs = [j for j in range(start, end) if re.search(rf"(?<![\w@]){old}\b", code_part(lines[j])) and j != i]
+            if is_loop(lines, i, refs):
+                n += 1
+                new = "@loop" if n == 1 else f"@loop{n}"
+            else:
+                addr = next(re.search(r"; \$([0-9A-F]{4})", t).group(1) for t in lines[i + 1:] if re.search(r"; \$[0-9A-F]{4}", t))
+                new = f"@loc_{addr}"
+            renames.append((start, end, i, old, new))
+    # Apply per scope, via temporary names to allow swaps.
+    for start, end, i, old, new in renames:
+        tmp = "@__" + new[1:]
+        for j in range(start, end):
+            if j == i:
+                lines[j] = tmp + lines[j][len(old):]
+            else:
+                code, sep, com = lines[j].partition(";")
+                new_code = re.sub(rf"(?<![\w@]){old}\b", tmp, code)
+                if new_code != code:
+                    lines[j] = realign(new_code + sep + com)
+    text = "\n".join(lines).replace("@__", "@")
+    changed = sum(1 for r in renames if r[3] != r[4])
+    print(f"{os.path.basename(path)}: {changed} loop labels renamed")
+    if not dry_run:
+        with open(path, "w") as f:
+            f.write(text)
 
 
 def localize(path, others, dry_run):
@@ -96,7 +156,7 @@ def localize(path, others, dry_run):
         first = next((INSTRUCTION.match(t) for t in lines[i + 1:] if INSTRUCTION.match(t)), None)
         if first and first.group(1) == "rts":
             base = "@done"
-        elif refs[name] and all(r > i for r in refs[name]):
+        elif refs[name] and all(r > i for r in refs[name]) and is_loop(lines, i, refs[name]):
             base = "@loop"
         else:
             base = "@loc_" + name[-4:]
@@ -129,8 +189,13 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--list-kept", action="store_true", help="List labels that stay normal")
+    p.add_argument("--relabel-loops", action="store_true", help="Re-check existing @loop labels")
     p.add_argument("files", nargs="+")
     args = p.parse_args()
+    if args.relabel_loops:
+        for path in args.files:
+            relabel_loops(path, args.dry_run)
+        return 0
     all_files = sorted(glob.glob(os.path.join(SRC, "*.s")) + glob.glob(os.path.join(SRC, "*.inc")))
     for path in args.files:
         others = []

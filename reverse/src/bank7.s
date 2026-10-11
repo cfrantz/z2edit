@@ -717,14 +717,14 @@ loc_C3B5:
     lda     sram_6958,y             ; $C3C0
     sta     ppuBuffer0,y            ; $C3C3
     dey                             ; $C3C6
-    bpl     @loop                   ; $C3C7
+    bpl     @loop                 ; $C3C7
     ldy     #$07                    ; $C3C9
 
 @loop2:
     lda     playerName,y            ; $C3CB
     sta     ppuBuffer0+3,y          ; $C3CE
     dey                             ; $C3D1
-    bpl     @loop2                  ; $C3D2
+    bpl     @loop2                ; $C3D2
     lda     lives                   ; $C3D4
     clc                             ; $C3D7
     adc     #$D0                    ; $C3D8
@@ -939,7 +939,7 @@ Area_Load:
     sta     (enemyListPtr),y        ; $C562
     iny                             ; $C564
     iny                             ; $C565
-    bne     @loop                   ; $C566
+    bne     @loop                 ; $C566
 
 @loc_C568:
     ldx     #$40                    ; $C568
@@ -961,7 +961,7 @@ Area_Load:
     sta     sramAreaTiles + 2 * AREA_PAGE_SIZE - 1,y ; $C581
     sta     sramAreaTiles + 3 * AREA_PAGE_SIZE - 1,y ; $C584
     dec     temp0                   ; $C587
-    bne     @loop2                  ; $C589
+    bne     @loop2                ; $C589
     ldy     #$03                    ; $C58B
     lda     (areaDataPtr),y         ; $C58D
     sta     ram_07AF                ; $C58F
@@ -1019,11 +1019,11 @@ Area_Load:
     iny                             ; $C5E9
     tya                             ; $C5EA
     and     #$0F                    ; $C5EB
-    bne     @loop4                  ; $C5ED
+    bne     @loop4                ; $C5ED
     inc     areaBuildPage           ; $C5EF
     lda     areaBuildPage           ; $C5F2
     cmp     #$04                    ; $C5F5
-    bne     @loop3                  ; $C5F7
+    bne     @loop3                ; $C5F7
 ; (end of code not executed in the test movies)
 
 @loc_C5F9:
@@ -1285,15 +1285,15 @@ Area_DrawFloors:
     lda     (areaDataPtr),y         ; $C785
     sta     areaDataLength          ; $C787
 
-@loop:
+@loc_C78A:
     ldy     areaDataOffset          ; $C78A
 
-@loop2:
+@loop:
     lda     (areaDataPtr),y         ; $C78D
     sta     areaBuildPos            ; $C78F
     jsr     Area_NextObjectPos      ; $C792
 
-@loop3:
+@loc_C795:
     lda     ram_010B                ; $C795
     lsr     a                       ; $C798
     lsr     a                       ; $C799
@@ -1314,7 +1314,7 @@ Area_DrawFloors:
 @loc_C7B4:
     iny                             ; $C7B4
     cpy     areaDataLength          ; $C7B5
-    bcc     @loop2                  ; $C7B8
+    bcc     @loop                 ; $C7B8
     dey                             ; $C7BA
     lda     (areaDataPtr),y         ; $C7BB
     cmp     #$0F                    ; $C7BD
@@ -1366,11 +1366,11 @@ Area_DrawFloors:
     lda     areaBuildColumn         ; $C807
     cmp     ram_010B                ; $C80A
     bpl     @loc_C812               ; $C80D
-    jmp     @loop                   ; $C80F
+    jmp     @loc_C78A             ; $C80F
 
 @loc_C812:
     ldy     areaDataOffset          ; $C812
-    jmp     @loop3                  ; $C815
+    jmp     @loc_C795             ; $C815
 
 @done:
     rts                             ; $C818
@@ -1436,7 +1436,7 @@ Area_DrawFloorColumn:
 @loop2:
     lsr     a                       ; $C85B
     dex                             ; $C85C
-    bne     @loop2                  ; $C85D
+    bne     @loop2                ; $C85D
 
 @loc_C85F:
     tay                             ; $C85F
@@ -1463,7 +1463,7 @@ Area_DrawFloorColumn:
     ldy     temp8                   ; $C87E
     lsr     ram_010E                ; $C880
     dec     ram_010F                ; $C883
-    bpl     @loop                   ; $C886
+    bpl     @loop                 ; $C886
     ldx     #$05                    ; $C888
     iny                             ; $C88A
     tya                             ; $C88B
@@ -1528,7 +1528,7 @@ Area_DecodeObjects:
     cmp     #$D0                    ; $C8DF
     bne     @loc_C8E9               ; $C8E1
     cpy     areaDataLength          ; $C8E3
-    bne     @loop                   ; $C8E6
+    bne     @loop                 ; $C8E6
     rts                             ; $C8E8
 
 @loc_C8E9:
@@ -1552,7 +1552,7 @@ Area_DecodeObjects:
 @loc_C909:
     ldy     areaDataOffset          ; $C909
     cpy     areaDataLength          ; $C90C
-    bne     @loop                   ; $C90F
+    bne     @loop                 ; $C90F
     rts                             ; $C911
 
 ; ---------------------------------------------------------------------------
@@ -1695,7 +1695,7 @@ Area_PlaceItem:
     lda     enemyActive,x           ; $C9A7
     beq     @loc_C9AF               ; $C9A9
     dex                             ; $C9AB
-    bpl     @loop                   ; $C9AC
+    bpl     @loop                 ; $C9AC
 ; (code below not executed in the test movies)
     inx                             ; $C9AE
 ; (end of code not executed in the test movies)
@@ -1802,7 +1802,7 @@ Death_LoseLife:
 @loop:
     jsr     Stat_FillMeter          ; $CA26
     dex                             ; $CA29
-    bpl     @loop                   ; $CA2A
+    bpl     @loop                 ; $CA2A
     lda     #$00                    ; $CA2C
     sta     dialogType              ; $CA2E
     sta     pauseState              ; $CA31
@@ -1814,7 +1814,7 @@ Death_LoseLife:
 @loop2:
     sta     ram_05C3,y              ; $CA3E
     dey                             ; $CA41
-    bpl     @loop2                  ; $CA42
+    bpl     @loop2                ; $CA42
     dec     lives                   ; $CA44
     bne     @loc_CA6C               ; $CA47
 ; (code below not executed in the test movies)
@@ -1893,13 +1893,13 @@ Death_ContinueMenu:
 @loop:
     sta     ram_00E0,x              ; $CAAA
     dex                             ; $CAAC
-    bpl     @loop                   ; $CAAD
+    bpl     @loop                 ; $CAAD
     ldy     #$C0                    ; $CAAF
 
 @loop2:
     sta     lives,y                 ; $CAB1
     iny                             ; $CAB4
-    bne     @loop2                  ; $CAB5
+    bne     @loop2                ; $CAB5
     lda     menuCursor              ; $CAB7
     beq     @loc_CAC4               ; $CABA
 ; (code below not executed in the test movies)
@@ -1949,7 +1949,7 @@ Death_ContinueMenu:
     lda     sram_6974,y             ; $CAFF
     sta     ppuBuffer0,y            ; $CB02
     dey                             ; $CB05
-    bpl     @loop3                  ; $CB06
+    bpl     @loop3                ; $CB06
     lda     menuCursor              ; $CB08
     eor     #$01                    ; $CB0B
     sta     menuCursor              ; $CB0D
@@ -2413,25 +2413,25 @@ Mode_LoadWorld:
     lda     AreaBank::EnemyLists,y  ; $CD9A
     sta     sramEnemyLists,y        ; $CD9D
     iny                             ; $CDA0
-    bne     @loop                   ; $CDA1
+    bne     @loop                 ; $CDA1
 
 @loop2:
     lda     AreaBank::EnemyLists+256,y ; $CDA3
     sta     sramEnemyLists+256,y    ; $CDA6
     iny                             ; $CDA9
-    bne     @loop2                  ; $CDAA
+    bne     @loop2                ; $CDAA
 
 @loop3:
     lda     AreaBank::EnemyLists+512,y ; $CDAC
     sta     sramEnemyLists+512,y    ; $CDAF
     iny                             ; $CDB2
-    bne     @loop3                  ; $CDB3
+    bne     @loop3                ; $CDB3
 
 @loop4:
     lda     AreaBank::EnemyLists+768,y ; $CDB5
     sta     sramEnemyLists+768,y    ; $CDB8
     iny                             ; $CDBB
-    bne     @loop4                  ; $CDBC
+    bne     @loop4                ; $CDBC
     ldx     currentRegion           ; $CDBE
     lda     RegionOverworldMapOffsets,x ; $CDC1
     tax                             ; $CDC4
@@ -2444,42 +2444,42 @@ Mode_LoadWorld:
     lda     (temp2),y               ; $CDCF
     sta     sramOverworldMap,y      ; $CDD1
     iny                             ; $CDD4
-    bne     @loop5                  ; $CDD5
+    bne     @loop5                ; $CDD5
     inc     temp3                   ; $CDD7
 
 @loop6:
     lda     (temp2),y               ; $CDD9
     sta     sramOverworldMap+256,y  ; $CDDB
     iny                             ; $CDDE
-    bne     @loop6                  ; $CDDF
+    bne     @loop6                ; $CDDF
     inc     temp3                   ; $CDE1
 
 @loop7:
     lda     (temp2),y               ; $CDE3
     sta     sramOverworldMap+512,y  ; $CDE5
     iny                             ; $CDE8
-    bne     @loop7                  ; $CDE9
+    bne     @loop7                ; $CDE9
     inc     temp3                   ; $CDEB
 
 @loop8:
     lda     (temp2),y               ; $CDED
     sta     sramOverworldMap+768,y  ; $CDEF
     iny                             ; $CDF2
-    bpl     @loop8                  ; $CDF3
+    bpl     @loop8                ; $CDF3
     ldy     #$00                    ; $CDF5
 
 @loop9:
     lda     (temp0),y               ; $CDF7
     sta     sramLocY,y              ; $CDF9
     iny                             ; $CDFC
-    bne     @loop9                  ; $CDFD
+    bne     @loop9                ; $CDFD
     inc     temp1                   ; $CDFF
 
 @loop10:
     lda     (temp0),y               ; $CE01
     sta     sramRoomConnections+4,y ; $CE03
     iny                             ; $CE06
-    bne     @loop10                 ; $CE07
+    bne     @loop10               ; $CE07
     inc     temp1                   ; $CE09
 
 @loop11:
@@ -2487,7 +2487,7 @@ Mode_LoadWorld:
     sta     sramDoors+8,y           ; $CE0D
     iny                             ; $CE10
     cpy     #$58                    ; $CE11
-    bne     @loop11                 ; $CE13
+    bne     @loop11               ; $CE13
     ldy     #$00                    ; $CE15
 
 @loop12:
@@ -2495,7 +2495,7 @@ Mode_LoadWorld:
     sta     sramAreaPalettes,y      ; $CE1A
     iny                             ; $CE1D
     cpy     #$E0                    ; $CE1E
-    bcc     @loop12                 ; $CE20
+    bcc     @loop12               ; $CE20
     lda     currentWorld            ; $CE22
     cmp     #$03                    ; $CE25
     bcc     @loc_CE77               ; $CE27
@@ -2518,7 +2518,7 @@ Mode_LoadWorld:
     iny                             ; $CE44
     inx                             ; $CE45
     cpx     #$10                    ; $CE46
-    bcc     @loop13                 ; $CE48
+    bcc     @loop13               ; $CE48
     pla                             ; $CE4A
     tay                             ; $CE4B
 
@@ -2529,13 +2529,13 @@ Mode_LoadWorld:
     inx                             ; $CE53
     tya                             ; $CE54
     and     #$0F                    ; $CE55
-    bne     @loop14                 ; $CE57
+    bne     @loop14               ; $CE57
     tya                             ; $CE59
     sec                             ; $CE5A
     sbc     #$10                    ; $CE5B
     tay                             ; $CE5D
     cpx     #$80                    ; $CE5E
-    bcc     @loop14                 ; $CE60
+    bcc     @loop14               ; $CE60
     pla                             ; $CE62
 
 @loc_CE63:
@@ -2551,7 +2551,7 @@ Mode_LoadWorld:
     iny                             ; $CE71
     inx                             ; $CE72
     cpx     #$04                    ; $CE73
-    bcc     @loop15                 ; $CE75
+    bcc     @loop15               ; $CE75
 
 @loc_CE77:
     lda     #$00                    ; $CE77
@@ -2602,7 +2602,7 @@ Mode_LoadWorld:
     sbc     #$00                    ; $CEC7
     sta     temp5                   ; $CEC9
     ora     temp4                   ; $CECB
-    bne     @loop16                 ; $CECD
+    bne     @loop16               ; $CECD
     ldy     currentWorld            ; $CECF
     dey                             ; $CED2
     cpy     #$02                    ; $CED3
@@ -2624,7 +2624,7 @@ Mode_LoadWorld:
     lda     (temp0),y               ; $CEEE
     sta     sramEnemyAttr+13,y      ; $CEF0
     dey                             ; $CEF3
-    bpl     @loop17                 ; $CEF4
+    bpl     @loop17               ; $CEF4
 
 @loc_CEF6:
     ldy     currentWorld            ; $CEF6
@@ -2754,16 +2754,16 @@ Mode_LeaveArea:
     inc     ram_0709                ; $CF95
     lda     #$00                    ; $CF98
 
-@loop:
+@loc_CF9A:
     jmp     loc_CFF8                ; $CF9A
 
 @loc_CF9D:
     ldy     #$04                    ; $CF9D
     sty     ram_05E9                ; $CF9F
     ldy     currentRegion           ; $CFA2
-    bne     @loop                   ; $CFA5
+    bne     @loc_CF9A             ; $CFA5
     ldy     areaId                  ; $CFA7
-    bne     @loop                   ; $CFAA
+    bne     @loc_CF9A             ; $CFAA
     sty     ram_05E9                ; $CFAC
     jmp     loc_CFF8                ; $CFAF
 
@@ -2929,7 +2929,7 @@ loc_D05B:
     inx                             ; $D08E
     iny                             ; $D08F
     cpy     #$10                    ; $D090
-    bcc     @loop                   ; $D092
+    bcc     @loop                 ; $D092
     ldx     temp0                   ; $D094
 
 @loop2:
@@ -2944,7 +2944,7 @@ loc_D05B:
     inx                             ; $D0A6
     iny                             ; $D0A7
     cpy     #$20                    ; $D0A8
-    bcc     @loop2                  ; $D0AA
+    bcc     @loop2                ; $D0AA
     sty     ppuBuffer0+2            ; $D0AC
     lda     #$FF                    ; $D0AF
     sta     ppuBuffer0+3,y          ; $D0B1
@@ -2996,7 +2996,7 @@ loc_D120:
 
 @loc_D135:
     dex                             ; $D135
-    bpl     @loop                   ; $D136
+    bpl     @loop                 ; $D136
     lda     columnDrawStep          ; $D138
     beq     @loc_D143               ; $D13B
     cmp     #$05                    ; $D13D
@@ -3265,7 +3265,7 @@ loc_D252:
     iny                             ; $D258
     iny                             ; $D259
     iny                             ; $D25A
-    bne     @loop                   ; $D25B
+    bne     @loop                 ; $D25B
     rts                             ; $D25D
 
 loc_D25E:
@@ -3336,14 +3336,14 @@ Ram_ClearAll:
 @loop:
     sta     lives,x                 ; $D284
     dex                             ; $D287
-    bne     @loop                   ; $D288
+    bne     @loop                 ; $D288
     ldx     #$00                    ; $D28A
     txa                             ; $D28C
 
 @loop2:
     sta     saveWorld,x             ; $D28D
     dex                             ; $D290
-    bne     @loop2                  ; $D291
+    bne     @loop2                ; $D291
 
 Ram_ClearExceptSaved:
     ldx     #$00                    ; $D293
@@ -3352,7 +3352,7 @@ Ram_ClearExceptSaved:
 @loop:
     sta     timerDivider,x          ; $D296
     dex                             ; $D299
-    bne     @loop                   ; $D29A
+    bne     @loop                 ; $D29A
 
 Ram_ClearWork:
     ldx     #$00                    ; $D29C
@@ -3361,21 +3361,21 @@ Ram_ClearWork:
 @loop:
     sta     linkAttackFrame,x       ; $D29F
     dex                             ; $D2A2
-    bne     @loop                   ; $D2A3
+    bne     @loop                 ; $D2A3
     ldx     #$00                    ; $D2A5
     txa                             ; $D2A7
 
 @loop2:
     sta     ram_0300,x              ; $D2A8
     dex                             ; $D2AB
-    bne     @loop2                  ; $D2AC
+    bne     @loop2                ; $D2AC
     ldx     #$DF                    ; $D2AE
 
 @loop3:
     sta     temp0,x                 ; $D2B0
     dex                             ; $D2B2
     cpx     #$FF                    ; $D2B3
-    bne     @loop3                  ; $D2B5
+    bne     @loop3                ; $D2B5
     stx     ppuBuffer0              ; $D2B7
     stx     ppuBuffer1              ; $D2BA
     rts                             ; $D2BD
@@ -3405,21 +3405,21 @@ Ppu_FillNametable:
 @loop:
     sta     PPUDATA                 ; $D2D2
     iny                             ; $D2D5
-    bne     @loop                   ; $D2D6
+    bne     @loop                 ; $D2D6
     dex                             ; $D2D8
-    bne     @loop                   ; $D2D9
+    bne     @loop                 ; $D2D9
 
 @loop2:
     sta     PPUDATA                 ; $D2DB
     iny                             ; $D2DE
     cpy     #$C0                    ; $D2DF
-    bne     @loop2                  ; $D2E1
+    bne     @loop2                ; $D2E1
     lda     #$00                    ; $D2E3
 
 @loop3:
     sta     PPUDATA                 ; $D2E5
     iny                             ; $D2E8
-    bne     @loop3                  ; $D2E9
+    bne     @loop3                ; $D2E9
 
 loc_D2EB:
     rts                             ; $D2EB
@@ -3492,7 +3492,7 @@ loc_D323:
     lda     (temp0),y               ; $D330
     sta     PPUDATA                 ; $D332
     dex                             ; $D335
-    bne     @loop                   ; $D336
+    bne     @loop                 ; $D336
     iny                             ; $D338
     tya                             ; $D339
     clc                             ; $D33A
@@ -3758,7 +3758,7 @@ Mode_SideView:
 
 @loop:
     dey                             ; $D4C2
-    bne     @loop                   ; $D4C3
+    bne     @loop                 ; $D4C3
     sta     PPUCTRL                 ; $D4C5
     stx     PPUSCROLL               ; $D4C8
     sty     PPUSCROLL               ; $D4CB
@@ -3935,7 +3935,7 @@ Enemies_Update:
     jsr     Projectile_Update       ; $D5D1
     ldx     currentObject           ; $D5D4
     dex                             ; $D5D6
-    bpl     @loop                   ; $D5D7
+    bpl     @loop                 ; $D5D7
 
 @done:
     rts                             ; $D5D9
@@ -4011,7 +4011,7 @@ Enemy_Spawn:
     ldx     currentObject           ; $D62F
     ldy     #$01                    ; $D631
 
-@loop:
+@loc_D633:
     tya                             ; $D633
     ldy     #$00                    ; $D634
     cmp     (enemyListPtr),y        ; $D636
@@ -4026,9 +4026,9 @@ Enemy_Spawn:
     cmp     temp0                   ; $D643
     beq     @loc_D64B               ; $D645
 
-@loop2:
+@loc_D647:
     iny                             ; $D647
-    jmp     @loop                   ; $D648
+    jmp     @loc_D633             ; $D648
 
 @loc_D64B:
     dey                             ; $D64B
@@ -4037,7 +4037,7 @@ Enemy_Spawn:
     cmp     temp1                   ; $D650
     beq     @loc_D658               ; $D652
     iny                             ; $D654
-    jmp     @loop2                  ; $D655
+    jmp     @loc_D647             ; $D655
 
 @loc_D658:
     lda     (enemyListPtr),y        ; $D658
@@ -4164,7 +4164,7 @@ dat_D78D:
     lda     enemyActive,x           ; $D797
     beq     @loc_D7A1               ; $D799
     dex                             ; $D79B
-    bpl     @loop                   ; $D79C
+    bpl     @loop                 ; $D79C
 
 @loc_D79E:
     ldx     currentObject           ; $D79E
@@ -4235,7 +4235,7 @@ dat_D7DF:
     inc     objYVelocity+1,x        ; $D812
     jsr     Enemy_MoveY             ; $D815
 
-@loop:
+@loc_D818:
     lda     timerFast+TIMER_ENEMY,x ; $D818
     bne     @loc_D832               ; $D81B
     lda     objY+1,x                ; $D81D
@@ -4259,7 +4259,7 @@ dat_D7DF:
     sta     ram_00AF,x              ; $D83E
 
 @loc_D840:
-    bpl     @loop                   ; $D840
+    bpl     @loc_D818             ; $D840
 
 @loc_D842:
     jsr     Enemy_SkipAiIfStunned   ; $D842
@@ -5499,7 +5499,7 @@ Math_DivMod15:
     iny                             ; $DF41
     sec                             ; $DF42
     sbc     #$0F                    ; $DF43
-    bcs     @loop                   ; $DF45
+    bcs     @loop                 ; $DF45
     adc     #$0F                    ; $DF47
     rts                             ; $DF49
 
@@ -5563,7 +5563,7 @@ Overworld_CheckSpecialTerrain:
     cmp     dat_DF5E,x              ; $DF7E
     beq     @loc_DF8B               ; $DF81
     dex                             ; $DF83
-    bpl     @loop                   ; $DF84
+    bpl     @loop                 ; $DF84
     inx                             ; $DF86
     stx     ppuStringSelect         ; $DF87
     rts                             ; $DF8A
@@ -5741,7 +5741,7 @@ Link_PlaceOnGround:
     sec                             ; $E044
     sbc     #$10                    ; $E045
     cmp     #$10                    ; $E047
-    bcs     @loop                   ; $E049
+    bcs     @loop                 ; $E049
 
 @loc_E04B:
     inc     objY                    ; $E04B
@@ -5941,7 +5941,7 @@ loc_E18A:
 
 @loc_E198:
     dex                             ; $E198
-    bpl     @loop                   ; $E199
+    bpl     @loop                 ; $E199
     ldx     currentObject           ; $E19B
 
 loc_E19D:
@@ -6135,7 +6135,7 @@ BreakingBlock_Start:
     lda     breakingBlockTimer,x    ; $E294
     beq     @loc_E29E               ; $E297
     dex                             ; $E299
-    bpl     @loop                   ; $E29A
+    bpl     @loop                 ; $E29A
     ldx     #$00                    ; $E29C
 
 @loc_E29E:
@@ -6513,7 +6513,7 @@ Enemy_CheckProjectileHits:
     bne     @done                   ; $E494
     ldy     #$01                    ; $E496
 
-@loop:
+@loc_E498:
     sty     ram_0011                ; $E498
     lda     a:objState+13,y         ; $E49A
     beq     @loc_E4B8               ; $E49D
@@ -6532,7 +6532,7 @@ Enemy_CheckProjectileHits:
 
 @loc_E4B8:
     dey                             ; $E4B8
-    bpl     @loop                   ; $E4B9
+    bpl     @loc_E498             ; $E4B9
 
 @done:
     rts                             ; $E4BB
@@ -6831,7 +6831,7 @@ Enemy_CheckProjectileHitsSpecial:
 
 @loc_E649:
     dey                             ; $E649
-    bpl     @loop                   ; $E64A
+    bpl     @loop                 ; $E64A
     jsr     Sword_GetHitbox         ; $E64C
     jsr     Hitbox_Overlap          ; $E64F
     bcc     loc_E616                ; $E652
@@ -7089,7 +7089,7 @@ Item_Collect:
     ora     #$01                    ; $E792
     sta     itemOwned,y             ; $E794
 
-@loop:
+@loc_E797:
     jmp     Enemy_Remove            ; $E797
 
 @loc_E79A:
@@ -7108,7 +7108,7 @@ Item_Collect:
 
 @loc_E7B5:
     inc     keyCount                ; $E7B5
-    jmp     @loop                   ; $E7B8
+    jmp     @loc_E797             ; $E7B8
 
 @loc_E7BB:
     cpy     #$0E                    ; $E7BB
@@ -7515,7 +7515,7 @@ Hitbox_Overlap:
     cmp     temp15                  ; $EA0A
     bcc     @loc_EA11               ; $EA0C
     dex                             ; $EA0E
-    bpl     @loop                   ; $EA0F
+    bpl     @loop                 ; $EA0F
 
 @loc_EA11:
     ldx     currentObject           ; $EA11
@@ -7867,7 +7867,7 @@ Link_DrawBody:
     dey                             ; $EC7A
     dey                             ; $EC7B
     dey                             ; $EC7C
-    bpl     @loop                   ; $EC7D
+    bpl     @loop                 ; $EC7D
     ldx     ram_0011                ; $EC7F
     ldy     objOamOffset,x          ; $EC81
     lda     oamBuffer+3,y           ; $EC83
@@ -7893,7 +7893,7 @@ Link_DrawBody:
     lda     objY,x                  ; $ECA7
     sta     oamBuffer+24,y          ; $ECA9
 
-@loop2:
+@loc_ECAC:
     lda     drawScreenX,x           ; $ECAC
     pha                             ; $ECAE
     lda     linkWalkDir,x           ; $ECAF
@@ -7930,7 +7930,7 @@ Link_DrawBody:
     clc                             ; $ECDD
     adc     #$10                    ; $ECDE
     sta     oamBuffer+24,y          ; $ECE0
-    jmp     @loop2                  ; $ECE3
+    jmp     @loc_ECAC             ; $ECE3
 
 @loc_ECE6:
     cmp     #$08                    ; $ECE6
@@ -8132,7 +8132,7 @@ Link_DrawSprites:
     iny                             ; $EE2D
     lsr     temp10                  ; $EE2E
     dex                             ; $EE30
-    bne     @loop                   ; $EE31
+    bne     @loop                 ; $EE31
     ldy     temp8                   ; $EE33
     ldx     temp9                   ; $EE35
     lda     temp2                   ; $EE37
@@ -8666,7 +8666,7 @@ Sprite_HideOffscreen:
     iny                             ; $F1E9
     lsr     temp10                  ; $F1EA
     dex                             ; $F1EC
-    bne     @loop                   ; $F1ED
+    bne     @loop                 ; $F1ED
     ldx     temp8                   ; $F1EF
     ldy     temp9                   ; $F1F1
     rts                             ; $F1F3
@@ -8804,7 +8804,7 @@ Obj_ComputeScreenPos:
 
 @loc_F2AF:
     dey                             ; $F2AF
-    bpl     @loop                   ; $F2B0
+    bpl     @loop                 ; $F2B0
     ldy     temp0                   ; $F2B2
     lda     objY,x                  ; $F2B4
     clc                             ; $F2B6
@@ -8856,7 +8856,7 @@ Obj_ComputeWideOffscreen:
 
 @loc_F2FA:
     dey                             ; $F2FA
-    bpl     @loop                   ; $F2FB
+    bpl     @loop                 ; $F2FB
     lda     temp2                   ; $F2FD
     rts                             ; $F2FF
 ; (unreferenced: $F300-$FD7F, 2688 bytes)
@@ -9080,7 +9080,7 @@ Ppu_WriteAttrColumn:
     sta     attrColumn,x            ; $FDBD
     inx                             ; $FDC0
     cpx     #$07                    ; $FDC1
-    bcc     @loop                   ; $FDC3
+    bcc     @loop                 ; $FDC3
     ; QUIRK: a is loaded with $FF but y is stored.
     lda     #$FF                    ; $FDC5
     sty     ppuBuffer2Len           ; $FDC7
@@ -9125,7 +9125,7 @@ loc_FE87:
     lda     dat_FE82,x              ; $FE92
     sta     ppuBuffer0,x            ; $FE95
     dex                             ; $FE98
-    bpl     @loop                   ; $FE99
+    bpl     @loop                 ; $FE99
     pla                             ; $FE9B
     and     #$04                    ; $FE9C
     beq     @done                   ; $FE9E
@@ -9155,7 +9155,7 @@ loc_FE87:
 Area_DrawMetatileColumn:
     jsr     Mmc1_SetPrgBankArea     ; $FED0
 
-@loop:
+@loc_FED3:
     stx     temp1                   ; $FED3
     lda     ram_0464,x              ; $FED5
     and     #$C0                    ; $FED8
@@ -9223,7 +9223,7 @@ Area_DrawMetatileColumn:
     ldx     temp1                   ; $FF42
     inx                             ; $FF44
     cpx     #$0D                    ; $FF45
-    bcc     @loop                   ; $FF47
+    bcc     @loc_FED3             ; $FF47
     jmp     Mmc1_SetPrgBank0        ; $FF49
 ; (unreferenced: $FF4C-$FF6F, 36 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $FF4C

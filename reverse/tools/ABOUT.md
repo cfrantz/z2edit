@@ -27,7 +27,13 @@ Tools that drive the emulator need the Python extension built with
   `--array NAME BASE COUNT` names an array and turns the mechanical names
   of its elements into `NAME+k`.
 - `localize.py`: Turns `loc_` labels referenced only within their own
-  routine into cheap local labels (`@done`, `@loop`, or `@loc_XXXX`).
+  routine into cheap local labels (`@done`, `@loop`, or `@loc_XXXX`); `--relabel-loops`
+  re-checks existing `@loop` labels.
+- `table.py`: Turns a run of `.byte` data into a named `.byte` or `.word`
+  table (`--word` writes known addresses by name), turning labels inside
+  it into `NAME+k`.
+- `header.py`: Adds or replaces routine header comments from a file of
+  `=== Name` blocks.
 - `label.py`: Finds or creates a label at a bank/address, splitting `.byte`
   lines or using `name := * + k` as needed.
 - `bank_usage.py`: Plays a movie and reports which PRG bank executes in
@@ -42,5 +48,7 @@ Tools that drive the emulator need the Python extension built with
   JSR sites that call them, with a register's value on entry.
 - `watch.py`: Plays a movie and logs writes to RAM variables (by symbol
   or address), with the frame number and the writing routine.
+- `snap.py`: Saves screenshots (and prints memory) at chosen frames of a
+  movie, or where variables take given values (`--when gameMode=0x11`).
 - `check_docs.py`: Reports symbol names in `docs/` that no longer exist in
   the source.  Run by `make verify`.

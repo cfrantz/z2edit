@@ -30,7 +30,7 @@ one-line descriptions, in `src/ram.inc`.
 | $6D00-$6FA0 | enemy and projectile definitions, starting with `sramProjectilePtrs` (from the area bank) |
 | $7000-$73FF | `sramEnemyLists`: the enemies of each area (from the area bank) |
 | $7400-$773A | save files; see [save files](save-files.md) |
-| $7800-$7917 | `sramMenuUnder`: tiles under the pause menu |
+| $7800-$7917 | `sramMenuText`: tiles under the pause menu |
 | $7919-$79F8 | `sramAreaPalettes` (from the area bank) |
 | $7C00-$7F7F | `sramOverworldMap`: the region's compressed overworld map (from the area bank) |
 

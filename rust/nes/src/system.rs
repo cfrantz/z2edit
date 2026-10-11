@@ -464,6 +464,11 @@ impl Nes {
         self.frame.load(Ordering::Relaxed)
     }
 
+    /// Save the current screen image as a BMP file.
+    pub fn screenshot(&self, path: &str) -> Result<()> {
+        self.image.lock().expect("Failed to lock image").save_bmp(path)
+    }
+
     #[setter]
     pub fn set_frame_step(&self, frame_step: bool) {
         self.frame_step.store(frame_step, Ordering::Relaxed);
