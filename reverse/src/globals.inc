@@ -146,4 +146,23 @@ GLOBALS_INC = 1
 .global sub_FED0
 .global loc_FF0F
 
+.global Mode_Overworld
+.global loc_0_8140
+.global loc_0_8149
+.global loc_0_81B1
+.global loc_0_8207
+.global loc_0_87F3
+.global loc_0_8FB7
+.global loc_0_A199
+.global loc_0_A256
+.global loc_0_A315
+.global loc_0_A329
+.global loc_0_A338
+.global loc_0_A82A
+.global loc_3_8647
+.global loc_3_9B86
+.global loc_3_9BCB
+.global loc_4_8167
+.global loc_5_817B
+
 .endif

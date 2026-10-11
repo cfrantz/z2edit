@@ -408,7 +408,7 @@ loc_C220:
     bne     loc_C23A                ; $C226
     jsr     JumpTable               ; $C228
 ; (inline jump table)
-    .word   $A256                   ; $C22B
+    .word   loc_0_A256              ; $C22B
 ; (unreferenced: $C22D-$C232, 6 bytes)
     .byte   $0F, $A3, $9C, $A1, $34, $A3                                    ; $C22D
 
@@ -420,10 +420,10 @@ loc_C233:
 loc_C23A:
     jsr     JumpTable               ; $C23A
 ; (inline jump table)
-    .word   $A199                   ; $C23D
-    .word   $A315                   ; $C23F
-    .word   $A329                   ; $C241
-    .word   $A338                   ; $C243
+    .word   loc_0_A199              ; $C23D
+    .word   loc_0_A315              ; $C23F
+    .word   loc_0_A329              ; $C241
+    .word   loc_0_A338              ; $C243
 
 loc_C245:
     cmp     #$05                    ; $C245
@@ -535,31 +535,31 @@ GameState_Play:
     jsr     Game_CheckModeChange    ; $C2E6
     jsr     JumpTable               ; $C2E9
 ; (inline jump table)
-    .word   Mode_LoadWorld          ; $C2EC
-    .word   loc_CCB3                ; $C2EE
-    .word   $8149                   ; $C2F0
-    .word   $87F3                   ; $C2F2
-    .word   Game_UnblankAndNextMode ; $C2F4
-    .word   $8558                   ; $C2F6
-    .word   loc_CB35                ; $C2F8
-    .word   loc_C4A4                ; $C2FA
-    .word   Game_Wait               ; $C2FC
-    .word   loc_CF3C                ; $C2FE
-    .word   loc_C62F                ; $C300
-    .word   Mode_SideView           ; $C302
-    .word   loc_C68A                ; $C304
-    .word   $A82A                   ; $C306
-    .word   loc_C6EF                ; $C308
-    .word   $8FB7                   ; $C30A
-    .word   loc_CF4C                ; $C30C
-    .word   loc_C397                ; $C30E
-    .word   loc_C63E                ; $C310
-    .word   Mode_FindConnectedRoom  ; $C312
-    .word   Game_Wait               ; $C314
-    .word   loc_C70C                ; $C316
-    .word   loc_CFFC                ; $C318
-    .word   $81B1                   ; $C31A
-    .word   $8207                   ; $C31C
+    .word   Mode_LoadWorld          ; $C2EC  mode $00
+    .word   loc_CCB3                ; $C2EE  mode $01
+    .word   loc_0_8149              ; $C2F0  mode $02
+    .word   loc_0_87F3              ; $C2F2  mode $03
+    .word   Game_UnblankAndNextMode ; $C2F4  mode $04
+    .word   Mode_Overworld          ; $C2F6  mode $05
+    .word   Mode_EnterLocation      ; $C2F8  mode $06
+    .word   loc_C4A4                ; $C2FA  mode $07
+    .word   Game_Wait               ; $C2FC  mode $08
+    .word   Mode_DrawArea           ; $C2FE  mode $09
+    .word   loc_C62F                ; $C300  mode $0A
+    .word   Mode_SideView           ; $C302  mode $0B
+    .word   loc_C68A                ; $C304  mode $0C
+    .word   loc_0_A82A              ; $C306  mode $0D
+    .word   loc_C6EF                ; $C308  mode $0E
+    .word   loc_0_8FB7              ; $C30A  mode $0F
+    .word   Mode_LeaveArea          ; $C30C  mode $10
+    .word   loc_C397                ; $C30E  mode $11
+    .word   loc_C63E                ; $C310  mode $12
+    .word   Mode_FindConnectedRoom  ; $C312  mode $13
+    .word   Game_Wait               ; $C314  mode $14
+    .word   loc_C70C                ; $C316  mode $15
+    .word   Mode_EnterDoor          ; $C318  mode $16
+    .word   loc_0_81B1              ; $C31A  mode $17
+    .word   loc_0_8207              ; $C31C  mode $18
 
 GameState_Death:
     jsr     Game_CheckModeChange    ; $C31E
@@ -610,7 +610,7 @@ loc_C364:
 ; (inline jump table)
     .word   loc_C376                ; $C36A
     .word   sub_C4CB                ; $C36C
-    .word   loc_CF3C                ; $C36E
+    .word   Mode_DrawArea           ; $C36E
     .word   loc_C37C                ; $C370
     .word   loc_C62F                ; $C372
     .word   loc_C382                ; $C374
@@ -1297,12 +1297,12 @@ sub_C819:
     lda     currentWorld            ; $C819
     jsr     JumpTable               ; $C81C
 ; (inline jump table)
-    .word   $81A3                   ; $C81F
-    .word   $8647                   ; $C821
-    .word   $8647                   ; $C823
-    .word   $8167                   ; $C825
-    .word   $8167                   ; $C827
-    .word   $817B                   ; $C829
+    .word   OverworldBank::sub_81A3 ; $C81F
+    .word   loc_3_8647              ; $C821
+    .word   loc_3_8647              ; $C823
+    .word   loc_4_8167              ; $C825
+    .word   loc_4_8167              ; $C827
+    .word   loc_5_817B              ; $C829
 
 sub_C82B:
     lda     ram_0731                ; $C82B
@@ -1446,24 +1446,24 @@ sub_C912:
     lda     currentWorld            ; $C915
     jsr     JumpTable               ; $C918
 ; (inline jump table)
-    .word   $80EE                   ; $C91B
-    .word   $9B86                   ; $C91D
-    .word   $9B86                   ; $C91F
-    .word   $80EE                   ; $C921
-    .word   $80EE                   ; $C923
-    .word   $80EE                   ; $C925
+    .word   AreaBank::sub_80EE      ; $C91B
+    .word   loc_3_9B86              ; $C91D
+    .word   loc_3_9B86              ; $C91F
+    .word   AreaBank::sub_80EE      ; $C921
+    .word   AreaBank::sub_80EE      ; $C923
+    .word   AreaBank::sub_80EE      ; $C925
 
 sub_C927:
     ldx     ram_0731                ; $C927
     lda     currentWorld            ; $C92A
     jsr     JumpTable               ; $C92D
 ; (inline jump table)
-    .word   $812F                   ; $C930
-    .word   $9BCB                   ; $C932
-    .word   $9BCB                   ; $C934
-    .word   $812F                   ; $C936
-    .word   $812F                   ; $C938
-    .word   $812F                   ; $C93A
+    .word   AreaBank::sub_812F      ; $C930
+    .word   loc_3_9BCB              ; $C932
+    .word   loc_3_9BCB              ; $C934
+    .word   AreaBank::sub_812F      ; $C936
+    .word   AreaBank::sub_812F      ; $C938
+    .word   AreaBank::sub_812F      ; $C93A
 
 AreaMapPagesLo:
     .byte   $00, $D0, $A0, $70                                              ; $C93C
@@ -1641,7 +1641,7 @@ sub_CA17:
 Death_LoseLife:
     jsr     JumpTableBySubStep      ; $CA1B
 ; (inline jump table)
-    .word   $8140                   ; $CA1E
+    .word   loc_0_8140              ; $CA1E
     .word   loc_CA24                ; $CA20
     .word   loc_CA72                ; $CA22  (not observed)
 
@@ -1833,7 +1833,15 @@ dat_CB32:
     .byte   $4B                                                             ; $CB33
     .byte   $4C                                                             ; $CB34
 
-loc_CB35:
+; ---------------------------------------------------------------------------
+; Mode_EnterLocation
+;
+; gameMode $06: enter the overworld location Link is standing on
+; (areaLocation), or return to the overworld map if there is none.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_EnterLocation:
     jsr     Mmc1_SetPrgBankArea     ; $CB35
     ldy     areaLocation            ; $CB38
     cpy     #$FF                    ; $CB3B
@@ -2482,7 +2490,15 @@ World_GetIndex:
     adc     currentWorld            ; $CF38
     rts                             ; $CF3B
 
-loc_CF3C:
+; ---------------------------------------------------------------------------
+; Mode_DrawArea
+;
+; gameMode $09: draw a newly loaded area, one step per frame
+; (gameSubStep).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_DrawArea:
     jsr     Mmc1_SetPrgBankArea     ; $CF3C
     jsr     JumpTableBySubStep      ; $CF3F
 ; (inline jump table)
@@ -2492,7 +2508,17 @@ loc_CF3C:
     .word   loc_D0FC                ; $CF48
     .word   loc_D120                ; $CF4A
 
-loc_CF4C:
+; ---------------------------------------------------------------------------
+; Mode_LeaveArea
+;
+; gameMode $10: Link has walked off the edge of a side view area.  Look up
+; the connection for that edge (sramRoomConnections, by areaId * 4 + page):
+; $FC-$FF leaves to the overworld (gameMode $01); otherwise enter the
+; connected area (gameMode $07).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_LeaveArea:
     jsr     Oam_HideAll             ; $CF4C
     jsr     Mmc1_SetPrgBankArea     ; $CF4F
     lda     areaId                  ; $CF52
@@ -2589,7 +2615,15 @@ loc_CFF8:
     sta     gameMode                ; $CFF8
     rts                             ; $CFFB
 
-loc_CFFC:
+; ---------------------------------------------------------------------------
+; Mode_EnterDoor
+;
+; gameMode $16: Link has gone through a door (in a town).  Find the area
+; behind it from the town bank's door table at $8817, then enter it.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Mode_EnterDoor:
     jsr     Mmc1_SetPrgBankArea     ; $CFFC
     lda     areaId                  ; $CFFF
     asl     a                       ; $D002

@@ -32,6 +32,7 @@ dat_4_800E:
     .byte   $FF, $01, $21, $11, $FF, $16, $27, $30, $FF, $0F, $0F, $0F, $FF, $0F, $0F, $0F; $80DE
 
 loc_4_80EE:
+    .assert loc_4_80EE = AreaBank::sub_80EE, error, "interface address moved"
     txa                             ; $80EE
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
@@ -74,6 +75,7 @@ loc_4_8103:
     .word   loc_4_823E              ; $812D
 
 loc_4_812F:
+    .assert loc_4_812F = AreaBank::sub_812F, error, "interface address moved"
     txa                             ; $812F
     jsr     JumpTable               ; $8130
 ; (inline jump table)

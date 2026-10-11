@@ -32,6 +32,7 @@ dat_3_800E:
     .byte   $FF, $18, $36, $2A, $FF, $16, $27, $30, $FF, $11, $21, $30, $FF, $07, $16, $30; $80DE
 
 loc_3_80EE:
+    .assert loc_3_80EE = AreaBank::sub_80EE, error, "interface address moved"
     ldx     #$00                    ; $80EE
     beq     loc_3_8104              ; $80F0
 

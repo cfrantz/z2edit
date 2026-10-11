@@ -35,6 +35,7 @@ dat_1_800E:
     .byte   $FF, $01, $21, $11, $FF, $16, $27, $30, $FF, $0F, $0F, $0F, $FF, $0F, $0F, $0F; $80DE
 
 loc_1_80EE:
+    .assert loc_1_80EE = AreaBank::sub_80EE, error, "interface address moved"
     txa                             ; $80EE
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
@@ -77,6 +78,7 @@ loc_1_8103:
     .word   loc_1_82BA              ; $812D
 
 loc_1_812F:
+    .assert loc_1_812F = AreaBank::sub_812F, error, "interface address moved"
     txa                             ; $812F
     jsr     JumpTable               ; $8130
 ; (inline jump table)
@@ -147,6 +149,7 @@ dat_1_819B:
     .byte   $89, $92                                                        ; $81A1
 
 loc_1_81A3:
+    .assert loc_1_81A3 = OverworldBank::sub_81A3, error, "interface address moved"
     ldx     ram_010C                ; $81A3
     lda     dat_1_819B,x            ; $81A6
     sta     temp12                  ; $81A9

@@ -16,6 +16,8 @@ INTERFACES_INC = 1
     sub_850C        = $850C     ; routine; identical code in banks 1-5
     dat_851A        = $851A     ; 9 bytes compared individually ($851A-$8522)
     EnemyLists      = $88A0     ; enemies of each area (1024 bytes), copied to sramEnemyLists
+    sub_80EE        = $80EE     ; routine (banks 1-5)
+    sub_812F        = $812F     ; routine (banks 1, 2, 4, 5; not bank 3)
 .endscope
 
 ; Overworld banks (1: West Hyrule / Death Mountain, 2: East Hyrule /
@@ -25,6 +27,7 @@ INTERFACES_INC = 1
     GetTerrain      = $83CF     ; terrain at overworld tile (temp0, temp1) -> temp2
     dat_8409        = $8409     ; indexed by y
     sub_879B        = $879B     ; routine
+    sub_81A3        = $81A3     ; routine
 .endscope
 
 ; Palace banks (4: palaces, 5: Great Palace).  Also area banks.
