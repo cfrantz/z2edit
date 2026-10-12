@@ -1077,7 +1077,7 @@ Stalfos_Ai:
     rts                             ; $9700
 
 @loc_9701:
-    jmp     loc_4_9E2C              ; $9701
+    jmp     Enemy_Walk_Bank4        ; $9701
 
 @loc_9704:
     lda     objYVelocity+1,x        ; $9704
@@ -1121,8 +1121,8 @@ Projectile_Rock_Bank4:
 @loc_9744:
     tya                             ; $9744
     cmp     objFacing+7,x           ; $9745
-    bne     loc_4_9761              ; $9747
-    beq     loc_4_975C              ; $9749
+    bne     Projectile_RockGravity_Bank4 ; $9747
+    beq     Projectile_RockBounce_Bank4 ; $9749
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank4
@@ -1155,11 +1155,11 @@ Projectile_Straight_Bank4:
 @loc_9759:
     jmp     Projectile_MoveAndCheck_Bank4 ; $9759
 
-loc_4_975C:
+Projectile_RockBounce_Bank4:
     lda     #$FE                    ; $975C
     sta     objYVelocity+7,x        ; $975E
 
-loc_4_9761:
+Projectile_RockGravity_Bank4:
     inc     objYVelocity+7,x        ; $9761
     jmp     Projectile_Fall_Bank4   ; $9764
 
@@ -1433,7 +1433,7 @@ HorseHead_Draw:
 ; ---------------------------------------------------------------------------
 SlowBubble_Init:
     lda     #$F0                    ; $98AA
-    bne     loc_4_98B0              ; $98AC
+    bne     Bubble_SetSpeed_Bank4   ; $98AC
 
 ; ---------------------------------------------------------------------------
 ; FastBubble_Init
@@ -1445,7 +1445,7 @@ SlowBubble_Init:
 FastBubble_Init:
     lda     #$E0                    ; $98AE
 
-loc_4_98B0:
+Bubble_SetSpeed_Bank4:
     sta     objXVelocity+1,x        ; $98B0
     sta     objYVelocity+1,x        ; $98B2
     rts                             ; $98B5
@@ -2544,7 +2544,7 @@ Ironknuckle_PauseThenNext_Done:
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank4:
     lda     ram_043E,x              ; $9E17
-    beq     loc_4_9E2C              ; $9E1A
+    beq     Enemy_Walk_Bank4        ; $9E1A
     dec     ram_043E,x              ; $9E1C
     bpl     @loc_9E27               ; $9E1F
     inc     ram_043E,x              ; $9E21
@@ -2554,7 +2554,7 @@ Enemy_KnockBackOrWalk_Bank4:
     sta     objXVelocity+1,x        ; $9E27
     jsr     Enemy_UpdateBgCollision ; $9E29
 
-loc_4_9E2C:
+Enemy_Walk_Bank4:
     lda     objCollision+1,x        ; $9E2C
     and     #$03                    ; $9E2E
     bne     Ironknuckle_PauseThenNext_Done ; $9E30
@@ -3372,7 +3372,7 @@ Projectile_CarockBeam:
 
 loc_4_AD90:
     ldx     currentObject           ; $AD90
-    bpl     loc_4_ADB4              ; $AD92
+    bpl     Projectile_RockBounce_Bank4B ; $AD92
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank4B
@@ -3430,13 +3430,13 @@ Projectile_Rock_Bank4B:
 @loc_ADAF:
     tya                             ; $ADAF
     cmp     objFacing+7,x           ; $ADB0
-    bne     loc_4_ADB9              ; $ADB2
+    bne     Projectile_RockGravity_Bank4B ; $ADB2
 
-loc_4_ADB4:
+Projectile_RockBounce_Bank4B:
     lda     #$FE                    ; $ADB4
     sta     objYVelocity+7,x        ; $ADB6
 
-loc_4_ADB9:
+Projectile_RockGravity_Bank4B:
     inc     objYVelocity+7,x        ; $ADB9
     inc     objYVelocity+7,x        ; $ADBC
 
@@ -3531,7 +3531,7 @@ Projectile_DrawFlicker_Bank4B:
 
 @loc_AE1B:
     ldy     a:objOamOffset+7,x      ; $AE1B
-    bne     loc_4_AE43              ; $AE1E
+    bne     Projectile_SetAttr_Bank4B ; $AE1E
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
@@ -3550,7 +3550,7 @@ Projectile_DrawFlash_Bank4B:
     rol     a                       ; $AE26
     asl     a                       ; $AE27
     and     #$83                    ; $AE28
-    bne     loc_4_AE43              ; $AE2A
+    bne     Projectile_SetAttr_Bank4B ; $AE2A
 ; (end of disassembled code)
 
 
@@ -3579,7 +3579,7 @@ Projectile_DrawSpin_Bank4B:
     lda     ProjectileFlipAttrs_Bank4B,y ; $AE3E
     ldy     objOamOffset+7,x        ; $AE41
 
-loc_4_AE43:
+Projectile_SetAttr_Bank4B:
     sta     oamBuffer+2,y           ; $AE43
 
 Projectile_DrawSpin_Done_Bank4B:
@@ -3624,11 +3624,11 @@ Wizrobe_Ai:
 @loc_AE6D:
     lda     enemyAiState,x          ; $AE6D
     cmp     #$40                    ; $AE6F
-    bcc     loc_4_AEBD              ; $AE71
+    bcc     Wizrobe_Restart         ; $AE71
     cmp     #$80                    ; $AE73
-    bcs     loc_4_AEB2              ; $AE75
+    bcs     Wizrobe_Animate         ; $AE75
     lsr     a                       ; $AE77
-    bcc     loc_4_AEBA              ; $AE78
+    bcc     Wizrobe_DrawOnly        ; $AE78
     rts                             ; $AE7A
 
 ; ---------------------------------------------------------------------------
@@ -3664,22 +3664,22 @@ Carock_Ai:
 @loc_AEA4:
     lda     enemyAiState,x          ; $AEA4
     cmp     #$D0                    ; $AEA6
-    bcc     loc_4_AEBD              ; $AEA8
+    bcc     Wizrobe_Restart         ; $AEA8
     cmp     #$E0                    ; $AEAA
-    bcs     loc_4_AEB2              ; $AEAC
+    bcs     Wizrobe_Animate         ; $AEAC
     lsr     a                       ; $AEAE
-    bcc     loc_4_AEBA              ; $AEAF
+    bcc     Wizrobe_DrawOnly        ; $AEAF
     rts                             ; $AEB1
 
-loc_4_AEB2:
+Wizrobe_Animate:
     inc     objState+1,x            ; $AEB2
     jsr     Enemy_CheckLinkContact  ; $AEB4
     jsr     Enemy_HurtLinkOnContact ; $AEB7
 
-loc_4_AEBA:
+Wizrobe_DrawOnly:
     jmp     Enemy_Draw              ; $AEBA
 
-loc_4_AEBD:
+Wizrobe_Restart:
     lda     #$00                    ; $AEBD
     sta     enemyStunTimer,x        ; $AEBF
     sta     enemyAiState,x          ; $AEC2
@@ -3796,7 +3796,7 @@ DoomKnocker_Draw:
 ; ---------------------------------------------------------------------------
 SlowBubble_Init_Bank4B:
     lda     #$F0                    ; $AF55
-    bne     loc_4_AF5B              ; $AF57
+    bne     Bubble_SetSpeed_Bank4B  ; $AF57
 
 ; ---------------------------------------------------------------------------
 ; FastBubble_Init_Bank4B
@@ -3808,7 +3808,7 @@ SlowBubble_Init_Bank4B:
 FastBubble_Init_Bank4B:
     lda     #$E0                    ; $AF59
 
-loc_4_AF5B:
+Bubble_SetSpeed_Bank4B:
     sta     objXVelocity+1,x        ; $AF5B
     sta     objYVelocity+1,x        ; $AF5D
     rts                             ; $AF60

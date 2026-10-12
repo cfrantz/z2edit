@@ -666,7 +666,7 @@ Overworld_GetTerrain_Bank2:
     sta     temp4                   ; $83DA
     cmp     #$4B                    ; $83DC
     bcs     @loc_8404               ; $83DE
-    jsr     sub_2_93BA              ; $83E0
+    jsr     Overworld_GetRowPtr_Bank2 ; $83E0
     inc     temp0                   ; $83E3
     lda     #$00                    ; $83E5
     sta     temp3                   ; $83E7
@@ -1161,7 +1161,7 @@ Area_DrawPillarSlope_Bank2:
     bpl     @loop                   ; $93B7
     rts                             ; $93B9
 
-sub_2_93BA:
+Overworld_GetRowPtr_Bank2:
     asl     a                       ; $93BA
     tay                             ; $93BB
     lda     sramAreaTiles,y         ; $93BC
@@ -1388,7 +1388,7 @@ Projectile_Rock_Bank2:
     cmp     objFacing+7,x           ; $9652
     beq     Projectile_Straight_Bank2 ; $9654
     inc     objYVelocity+7,x        ; $9656
-    bne     loc_2_9662              ; $9659
+    bne     Projectile_RockGravity_Bank2 ; $9659
 
 ; ---------------------------------------------------------------------------
 ; Projectile_FallingRock_Bank2
@@ -1401,9 +1401,9 @@ Projectile_Rock_Bank2:
 Projectile_FallingRock_Bank2:
     jsr     Projectile_HitsBg       ; $965B
     lda     #$F3                    ; $965E
-    bcs     loc_2_9670              ; $9660
+    bcs     Projectile_Kill_Bank2   ; $9660
 
-loc_2_9662:
+Projectile_RockGravity_Bank2:
     inc     objYVelocity+7,x        ; $9662
 
 ; ---------------------------------------------------------------------------
@@ -1418,14 +1418,14 @@ Projectile_MoveAndCheck_Bank2:
     jsr     Projectile_Move         ; $9665
     lda     drawOffscreen+2         ; $9668
     and     #$FC                    ; $966A
-    beq     loc_2_9673              ; $966C
+    beq     Projectile_DrawAndCheck_Bank2 ; $966C
     lda     #$00                    ; $966E
 
-loc_2_9670:
+Projectile_Kill_Bank2:
     sta     objState+7,x            ; $9670
     rts                             ; $9672
 
-loc_2_9673:
+Projectile_DrawAndCheck_Bank2:
     jsr     Projectile_Draw_Bank2   ; $9673
     jsr     DoNothing               ; $9676
 ProjectileFlipAttrs_Bank2 := * + 2
@@ -1531,7 +1531,7 @@ Projectile_DrawFlip_Bank2:
     asl     a                       ; $96D9
     and     #$80                    ; $96DA
     ora     oamBuffer+2,y           ; $96DC
-    bne     loc_2_96EB               ; $96DF
+    bne     Projectile_SetAttr_Bank2 ; $96DF
 ; (code below not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
@@ -1552,7 +1552,7 @@ Projectile_DrawFlash_Bank2:
     and     #$43                    ; $96E9
 ; (end of code not executed in the test movies)
 
-loc_2_96EB:
+Projectile_SetAttr_Bank2:
     sta     oamBuffer+2,y           ; $96EB
     rts                             ; $96EE
 
@@ -2355,7 +2355,7 @@ Enemy_Pace_Done_Bank2:
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank2:
     lda     ram_043E,x              ; $9B24
-    beq     loc_2_9B39              ; $9B27
+    beq     Enemy_Walk_Bank2        ; $9B27
 ; (code below not executed in the test movies)
     dec     ram_043E,x              ; $9B29
     bpl     @loc_9B34               ; $9B2C
@@ -2367,7 +2367,7 @@ Enemy_KnockBackOrWalk_Bank2:
     jsr     Enemy_UpdateBgCollision ; $9B36
 ; (end of code not executed in the test movies)
 
-loc_2_9B39:
+Enemy_Walk_Bank2:
     lda     objCollision+1,x        ; $9B39
     and     #$03                    ; $9B3B
     bne     Enemy_Pace_Done_Bank2   ; $9B3D
@@ -2514,13 +2514,13 @@ loc_2_9B96:
     clc                             ; $9BFD
     adc     ram_05E4                ; $9BFE
     cmp     ram_05E5                ; $9C01
-    bcc     sub_2_9C1C              ; $9C04
+    bcc     Lizalfos_ChooseGuard    ; $9C04
     lda     temp15                  ; $9C06
     clc                             ; $9C08
     adc     #$50                    ; $9C09
     cmp     #$A0                    ; $9C0B
     bcs     @loc_9C15               ; $9C0D
-    jsr     sub_2_9C1C              ; $9C0F
+    jsr     Lizalfos_ChooseGuard    ; $9C0F
     jsr     Enemy_FaceLink          ; $9C12
 
 @loc_9C15:
@@ -2529,7 +2529,7 @@ loc_2_9B96:
     sta     objXVelocity+1,x        ; $9C19
     rts                             ; $9C1B
 
-sub_2_9C1C:
+Lizalfos_ChooseGuard:
     lda     objState+1,x            ; $9C1C
     bne     @loc_9C66               ; $9C1E
     lda     linkJumpState           ; $9C20
@@ -2692,7 +2692,7 @@ Lizalfos_KnockBack:
 
 @loc_9D27:
 RockThrowerDrawTiles := * + 2
-    jmp     loc_2_9B39              ; $9D27
+    jmp     Enemy_Walk_Bank2        ; $9D27
     .byte   $08, $FC, $FC                                                   ; $9D2A
 
 RockThrowerRockYOffsets:

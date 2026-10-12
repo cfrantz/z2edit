@@ -649,7 +649,7 @@ Overworld_GetTerrain_Bank1:
     sta     temp4                   ; $83DA
     cmp     #$4B                    ; $83DC
     bcs     @loc_8404               ; $83DE
-    jsr     sub_1_93AC              ; $83E0
+    jsr     Overworld_GetRowPtr_Bank1 ; $83E0
     inc     temp0                   ; $83E3
     lda     #$00                    ; $83E5
     sta     temp3                   ; $83E7
@@ -1129,7 +1129,7 @@ EnemyLists_Bank1:
 SolidTileThresholds_Bank1:
     .byte   $52, $8F, $C9                                                   ; $93A9
 
-sub_1_93AC:
+Overworld_GetRowPtr_Bank1:
     asl     a                       ; $93AC
     tay                             ; $93AD
     lda     sramAreaTiles,y         ; $93AE
@@ -1594,7 +1594,7 @@ Projectile_DrawFlip_Bank1:
     asl     a                       ; $9773
     and     #$80                    ; $9774
     ora     oamBuffer+2,y           ; $9776
-    bne     loc_1_9785               ; $9779
+    bne     Projectile_SetAttr_Bank1 ; $9779
 
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlash_Bank1
@@ -1613,7 +1613,7 @@ Projectile_DrawFlash_Bank1:
     asl     a                       ; $9782
     and     #$43                    ; $9783
 
-loc_1_9785:
+Projectile_SetAttr_Bank1:
     sta     oamBuffer+2,y           ; $9785
     rts                             ; $9788
 ; (disassembled with tools/disasm.py; not executed in the test movies)
