@@ -1961,7 +1961,7 @@ CrystalSpot_Wait:
     and     #$04                    ; $9AFF
     beq     @done                   ; $9B01
     inc     enemyAiState,x          ; $9B03
-    inc     ram_00DE                ; $9B05
+    inc     gameFrozen              ; $9B05
     lda     #$03                    ; $9B07
     sta     objState                ; $9B09
     lda     #$A0                    ; $9B0B
@@ -2042,7 +2042,7 @@ CrystalSpot_Finish:
     lda     statMeterPending        ; $9B56
     ora     statMeterPending+1      ; $9B59
     bne     @done                   ; $9B5C
-    sta     ram_00DE                ; $9B5E
+    sta     gameFrozen              ; $9B5E
     lda     experienceNext+1        ; $9B60
     sec                             ; $9B63
     sbc     experience+1            ; $9B64
@@ -3321,7 +3321,7 @@ Projectile_CarockBeam:
     bne     loc_4_AD90              ; $AD2C
     lda     ram_045E,x              ; $AD2E
     tax                             ; $AD31
-    stx     ram_0011                ; $AD32
+    stx     swordOwner              ; $AD32
     lda     objState+1,x            ; $AD34
     beq     loc_4_AD90              ; $AD36
     lda     enemyActive,x           ; $AD38
@@ -3345,14 +3345,14 @@ Projectile_CarockBeam:
     jsr     Projectile_Spark_Bank4B ; $AD5D
     lda     currentObject           ; $AD60
     pha                             ; $AD62
-    ldx     ram_0011                ; $AD63
+    ldx     swordOwner              ; $AD63
     stx     currentObject           ; $AD65
     ldy     #$01                    ; $AD67
     sty     temp11                  ; $AD69
     jsr     Enemy_TakeDamage        ; $AD6B
     pla                             ; $AD6E
     sta     currentObject           ; $AD6F
-    ldx     ram_0011                ; $AD71
+    ldx     swordOwner              ; $AD71
     lda     enemyType,x             ; $AD73
     cmp     #$22                    ; $AD75
     bne     @loc_AD8D               ; $AD77

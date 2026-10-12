@@ -2370,7 +2370,7 @@ DarkLink_Init:
     lda     objXHi+1,x              ; $97A6
     sta     objXHi+1                ; $97A8
     lda     #$02                    ; $97AA
-    sta     ram_0753                ; $97AC
+    sta     extraSpriteAttrs        ; $97AC
     lsr     a                       ; $97AF
     sta     objYHi+1                ; $97B0
     sta     enemyActive             ; $97B2
@@ -2439,7 +2439,7 @@ DarkLink_WaitForLink:
     lda     #$FF                    ; $9803
 
 loc_5_9805:
-    inc     ram_00DE                ; $9805
+    inc     gameFrozen              ; $9805
 
 sub_5_9807:
     sta     timerFast+3             ; $9807
@@ -2561,7 +2561,7 @@ DarkLink_Fight:
 ; (end of code not executed in the test movies)
 
 @loc_9897:
-    sty     ram_00DE                ; $9897
+    sty     gameFrozen              ; $9897
     lda     #$01                    ; $9899
     jsr     Boss_DrawHpBar_Bank5    ; $989B
     lda     timerFast+12            ; $989E
@@ -2939,7 +2939,7 @@ DarkLink_UpdateAttack:
 ; ---------------------------------------------------------------------------
 DarkLink_Draw:
     ldy     #$01                    ; $9A77
-    sty     ram_0011                ; $9A79
+    sty     swordOwner              ; $9A79
     lda     #$50                    ; $9A7B
     sta     objOamOffset+1          ; $9A7D
     jsr     Link_DrawBody           ; $9A7F
@@ -4334,7 +4334,7 @@ Barrier_Ai:
     lda     objX                    ; $A243
     cmp     #$C0                    ; $A245
     bcc     @loc_A25F               ; $A247
-    rol     ram_00DE                ; $A249
+    rol     gameFrozen              ; $A249
     lda     #$00                    ; $A24B
     sta     objXVelocity+1,x        ; $A24D
     sta     objXHi+4                ; $A24F
@@ -4408,7 +4408,7 @@ Barrier_Ai:
     lda     objX+4                  ; $A2BB
     cmp     #$E2                    ; $A2BD
     bne     @loc_A2C4               ; $A2BF
-    lsr     ram_00DE                ; $A2C1
+    lsr     gameFrozen              ; $A2C1
 
 @done2:
     rts                             ; $A2C3

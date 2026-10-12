@@ -1786,11 +1786,11 @@ Townsperson_CheckTalk:
     jsr     Door_SetClosedTile      ; $99EA
     ldy     #$04                    ; $99ED
     sty     dialogType              ; $99EF
-    sty     ram_00DE                ; $99F2
+    sty     gameFrozen              ; $99F2
     inc     ram_05C3,x              ; $99F4
     lda     #$0B                    ; $99F7
     sta     gameMode                ; $99F9
-    dec     ram_075B                ; $99FC
+    dec     pitFallCount            ; $99FC
     inc     ram_048D                ; $99FF
     lda     #$00                    ; $9A02
     sta     renderingOff            ; $9A04
@@ -1838,7 +1838,7 @@ Townsperson_CheckTalk:
 Townsperson_StartTalk:
     lda     #$02                    ; $9A33
     sta     dialogType              ; $9A35
-    sta     ram_00DE                ; $9A38
+    sta     gameFrozen              ; $9A38
     inc     ram_05C3,x              ; $9A3A
     lda     #$00                    ; $9A3D
     sta     linkAttackFrame         ; $9A3F
@@ -4055,7 +4055,7 @@ Dialog_Reward:
     sta     pauseState              ; $B78C
     sta     dialogType              ; $B78F
     sta     menuRow                 ; $B792
-    sta     ram_00DE                ; $B795
+    sta     gameFrozen              ; $B795
     sta     ram_048D                ; $B797
     ldy     #$05                    ; $B79A
 
@@ -4105,7 +4105,7 @@ Dialog_Finish:
     sta     ram_05C3,y              ; $B7B6
     dey                             ; $B7B9
     bpl     @loop                   ; $B7BA
-    sta     ram_00DE                ; $B7BC
+    sta     gameFrozen              ; $B7BC
     sta     ram_048D                ; $B7BE
     lda     townCode                ; $B7C1
     cmp     #$02                    ; $B7C4

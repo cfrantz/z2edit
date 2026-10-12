@@ -185,6 +185,10 @@ Each is a self-contained work area; order is flexible after Phase 3.
 
 - Player: movement, physics, sword, shield, downstab/upstab, damage,
   knockback, experience and leveling, magic spells.
+  Status (2026-10-11): bank 0's code was already named; Link's remaining
+  RAM (held items, elevator, falls, blocked directions, frozen game) is
+  named, and docs/engine/link.md covers the sword, thrusts, beam, spells
+  (with their costs) and holding up items.
 - Enemies and objects (first): shared AI helpers, then one routine family
   at a time (per-world enemy code in banks 1-5).  Deliverable: a page per
   enemy (or family) under `docs/entities/` describing its behavior: hit

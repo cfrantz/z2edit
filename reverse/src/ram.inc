@@ -25,7 +25,7 @@ temp13                  = $000D
 temp14                  = $000E
 temp15                  = $000F
 currentObject           = $0010     ; object slot or index being updated, saved so routines can reload x
-ram_0011                = $0011
+swordOwner              = $0011     ; object whose sword is being drawn or tested: 0 = Link, 1 = Dark Link
 frameCounter            = $0012     ; incremented by the game NMI every frame
 linkFairy               = $0013     ; 0 = Link, 8 = fairy; also an offset into the collision probe tables
 linkDeltaX              = $0014     ; pixels Link moved horizontally this frame
@@ -88,7 +88,7 @@ ram_00DA                = $00DA
 ram_00DB                = $00DB
 ram_00DC                = $00DC
 ram_00DD                = $00DD
-ram_00DE                = $00DE
+gameFrozen              = $00DE     ; nonzero during scripted events (fairy, crystal, dialogs, doors, Dark Link appearing): enemies and Link wait (provisional)
 ram_00DF                = $00DF
 musicNotesPtr           = $00E0     ; (16-bit) note data of the current phrase; the four channels read it at their offsets (melodyOffset...)
 musicSong               = $00E2     ; current song number in the world's song table: the musicPlaying bit number + 1
@@ -180,8 +180,8 @@ linkAttackStanding      = $0495     ; 1 if the current attack was started standi
 linkLandingTimer        = $0497     ; frames Link stays crouched after a hard landing
 ram_0499                = $0499
 ram_049A                = $049A
-ram_049C                = $049C
-ram_049D                = $049D
+itemHoldTimer           = $049C     ; frames left of Link holding up a collected item (set to $70 by Item_Collect for special items)
+heldItem                = $049D     ; item Link is holding up (drawn above him with HeldItemTiles)
 ram_049E                = $049E
 ram_049F                = $049F
 ram_04A0                = $04A0
@@ -195,12 +195,8 @@ pauseState              = $0524     ; step of the pause menu, level up window or
 menuRow                 = $0525     ; row of the pause menu window being drawn or erased
 menuAttrs               = $0526     ; attribute bytes under the pause menu window
 menuRowTiles            = $053E     ; [14] tiles of the menu window row being drawn (first tile row)
-ram_0543                = $0543
-ram_0544                = $0544
 menuRowTiles2           = $054C     ; [14] tiles of the menu window row being drawn (second tile row)
 ram_054D                = $054D
-ram_0551                = $0551
-ram_0552                = $0552
 menuUnderRow            = $055A     ; [7] area tiles under the menu window row being erased
 areaId                  = $0561     ; area within the world
 overworldDirection      = $0562     ; direction of Link's move on the overworld: 1 = right, 2 = left, 4 = down, 8 = up
@@ -239,7 +235,7 @@ ram_05E3                = $05E3
 ram_05E4                = $05E4
 ram_05E5                = $05E5
 ram_05E6                = $05E6
-ram_05E7                = $05E7
+blockedDirections       = $05E7     ; joypad direction bits Link cannot move in this frame (cleared each frame by Mode_SideView)
 experienceDrain         = $05E8     ; frames left to drain experience, one point per frame (provisional)
 ram_05E9                = $05E9
 ; ---------------------------------------------------------------------------
@@ -252,9 +248,8 @@ saveWorld               = $0600     ; [SAVE_WORLD_SIZE] per-area flags, saved wi
 ram_06FE                = $06FE
 lives                   = $0700     ; lives remaining
 areaEntrySide           = $0701     ; side Link enters the area from: 0 = left, 1 = right
-ram_0704                = $0704
-ram_0705                = $0705
-; ---------------------------------------------------------------------------
+linkFallingIn           = $0704     ; nonzero when Link enters the area falling from above (Mode_FallStart); he is not put on the ground
+enteredFromOverworld    = $0705     ; nonzero when the area was entered from the overworld (Area_SaveEntryScroll) (provisional)
 ; World and area
 ; ---------------------------------------------------------------------------
 currentRegion           = $0706     ; overworld region: 0 = west Hyrule, 1 = Death Mountain or Maze Island, 2 = east Hyrule
@@ -317,14 +312,14 @@ hudRedraw               = $074F     ; parts of the status bar to redraw: bit 7 =
 hudHalf                 = $0750
 ram_0751                = $0751
 linkSlowed              = $0752     ; nonzero while Link wades through special tiles low in the area: he moves at half speed (provisional)
-ram_0753                = $0753
-ram_0754                = $0754
+extraSpriteAttrs        = $0753     ; sprite attribute bits ORed into Link's sprites (and some others), e.g. $20 to draw them behind the background (provisional)
+linkOnElevator          = $0754     ; nonzero while Link rides an elevator (no jumping or falling); cleared each frame
 experiencePending       = $0755     ; (16-bit, big-endian) experience still to be added to experience
 elevatorPos             = $0757     ; position of the area's elevator, 0 = none
 lockedDoorPos           = $0758     ; position of the area's locked door, 0 = none
 ram_0759                = $0759
 ram_075A                = $075A
-ram_075B                = $075B
+pitFallCount            = $075B     ; pits fallen through in a row; chooses the start page of the area below (provisional)
 areaStartPage           = $075C     ; map page at which Link enters the area
 ram_075D                = $075D
 areaMusic               = $075F     ; music for the area being entered, sent to musicRequest when Link appears
@@ -368,7 +363,7 @@ soundPacer              = $07AB     ; accumulator for Sound_UpdateSometimes
 ram_07AC                = $07AC
 ram_07AD                = $07AD
 attrColumnPending       = $07AE     ; nonzero when attrColumn should be written by the next NMI
-ram_07AF                = $07AF
+areaPaletteHeader       = $07AF     ; byte 3 of the area header: bits 7-6 sprite palette, bits 5-3 background palette, bits 2-0 background map
 saveBlinkTimer          = $07B0
 laughSample             = $07DA     ; sample of Ganon's laugh playing (2-7)
 musicResume             = $07DB     ; song to resume after the fanfare (song $10)

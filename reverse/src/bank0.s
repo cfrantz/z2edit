@@ -2333,7 +2333,7 @@ SpellFlags:
 Spell_Update:
     lda     dialogType              ; $8DC3
     ora     pauseState              ; $8DC6
-    ora     ram_00DE                ; $8DC9
+    ora     gameFrozen              ; $8DC9
     bne     @loc_8E1F               ; $8DCB
     ldy     spellCursor             ; $8DCD
     iny                             ; $8DD0
@@ -2455,7 +2455,7 @@ Spell_SpellEffect:
     cmp     #$14                    ; $8E7F
     bne     Spell_ShieldEffectDone  ; $8E81
     lda     #$01                    ; $8E83
-    sta     ram_00DE                ; $8E85
+    sta     gameFrozen              ; $8E85
     jmp     BigDoor_Update          ; $8E87
 ; (code below not executed in the test movies)
 
@@ -2498,7 +2498,7 @@ BigDoor_Update:
     cmp     #$10                    ; $8EDB
     bne     @loc_8EE4               ; $8EDD
     lda     #$00                    ; $8EDF
-    sta     ram_00DE                ; $8EE1
+    sta     gameFrozen              ; $8EE1
     rts                             ; $8EE3
 
 @loc_8EE4:
@@ -2680,13 +2680,13 @@ Mode_FallAnimate:
     stx     drawOffscreen           ; $8FD9
     stx     drawOffscreen+1         ; $8FDB
     inx                             ; $8FDD
-    stx     ram_0011                ; $8FDE
-    stx     ram_0753                ; $8FE0
+    stx     swordOwner              ; $8FDE
+    stx     extraSpriteAttrs        ; $8FE0
     jsr     Link_DrawBody           ; $8FE3
     lda     #$08                    ; $8FE6
     sta     objOamOffset            ; $8FE8
     ldx     #$00                    ; $8FEA
-    stx     ram_0011                ; $8FEC
+    stx     swordOwner              ; $8FEC
     jsr     Link_DrawBody           ; $8FEE
     lda     a:frameCounter          ; $8FF1
     and     #$01                    ; $8FF4
@@ -2762,7 +2762,7 @@ Link_EnterArea:
     sta     objYHi                  ; $904C
     sta     linkStanding            ; $904E
     lsr     a                       ; $9050
-    sta     ram_0753                ; $9051
+    sta     extraSpriteAttrs        ; $9051
     sta     objYVelocity            ; $9054
     ldx     #$07                    ; $9057
 
@@ -2795,7 +2795,7 @@ Link_EnterArea:
     iny                             ; $908A
     sty     objFacing               ; $908B
     sty     linkWalkDir             ; $908D
-    lda     ram_0704                ; $908F
+    lda     linkFallingIn           ; $908F
     bne     @loc_9097               ; $9092
     jsr     Link_PlaceOnGround      ; $9094
 
@@ -2813,8 +2813,8 @@ Link_EnterArea:
 
 @loc_90AB:
     lda     #$00                    ; $90AB
-    sta     ram_0704                ; $90AD
-    sta     ram_0705                ; $90B0
+    sta     linkFallingIn           ; $90AD
+    sta     enteredFromOverworld    ; $90B0
     sta     drawOffscreen           ; $90B3
     sta     linkButtonsPressed      ; $90B5
     sta     linkDirHeld             ; $90B8
@@ -2947,7 +2947,7 @@ Elevator_Place:
     lda     #$98                    ; $9169
     sta     objY+1                  ; $916B
     sta     enemySramIndex          ; $916D
-    ldy     ram_0705                ; $916F
+    ldy     enteredFromOverworld    ; $916F
     beq     @loc_9188               ; $9172
     lda     #$70                    ; $9174
     sta     objX                    ; $9176
@@ -3127,7 +3127,7 @@ Link_UpdatePalette:
     lda     #$04                    ; $9259
     sta     ppuBuffer0+2,x          ; $925B
     ldy     #$04                    ; $925E
-    lda     ram_07AF                ; $9260
+    lda     areaPaletteHeader       ; $9260
     and     #$38                    ; $9263
     cmp     #$08                    ; $9265
     bne     @loc_9272               ; $9267
@@ -3213,16 +3213,16 @@ Link_Control:
     jmp     Link_Draw               ; $92DE
 
 @loc_92E1:
-    inc     ram_075B                ; $92E1
+    inc     pitFallCount            ; $92E1
     lda     #$16                    ; $92E4
     jmp     Area_ExitToMode         ; $92E6
 
 @loc_92E9:
-    lda     ram_00DE                ; $92E9
+    lda     gameFrozen              ; $92E9
     bne     @done                   ; $92EB
     lda     linkSlowed              ; $92ED
-    ora     ram_0753                ; $92F0
-    sta     ram_0753                ; $92F3
+    ora     extraSpriteAttrs        ; $92F0
+    sta     extraSpriteAttrs        ; $92F3
     ; The fairy flies in the direction held on the D-pad.
     lda     a:linkFairy             ; $92F6
     beq     @loc_9341               ; $92F9
@@ -3237,7 +3237,7 @@ Link_Control:
     and     #$0F                    ; $930C
     beq     @done                   ; $930E
     tay                             ; $9310
-    and     ram_05E7                ; $9311
+    and     blockedDirections       ; $9311
     bne     @done                   ; $9314
     lda     joypadHeld              ; $9316
     and     #$03                    ; $9318
@@ -3266,9 +3266,9 @@ Link_Control:
     rts                             ; $9340
 
 @loc_9341:
-    lda     ram_049C                ; $9341
+    lda     itemHoldTimer           ; $9341
     beq     @loc_936B               ; $9344
-    dec     ram_049C                ; $9346
+    dec     itemHoldTimer           ; $9346
     lda     musicPlaying            ; $9349
     beq     @loc_936B               ; $934C
     lda     objY                    ; $934E
@@ -3631,7 +3631,7 @@ Link_UpdateAttackDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdateJump:
-    lda     ram_0754                ; $94C5
+    lda     linkOnElevator          ; $94C5
     bne     Link_UpdateAttackDone   ; $94C8
     lda     objCollision            ; $94CA
     and     #$04                    ; $94CC
@@ -5599,7 +5599,7 @@ LevelUp_BlinkChoice:
     bcs     @loc_A138               ; $A128
 
 @loop:
-    sta     ram_0543,y              ; $A12A
+    sta     menuRowTiles+5,y        ; $A12A
     dey                             ; $A12D
     bpl     @loop                   ; $A12E
 
@@ -5612,7 +5612,7 @@ LevelUp_BlinkChoice:
     rts                             ; $A137
 
 @loc_A138:
-    sta     ram_0551,y              ; $A138
+    sta     menuRowTiles2+5,y       ; $A138
     dey                             ; $A13B
     bpl     @loc_A138               ; $A13C
     bmi     @loc_A130               ; $A13E
@@ -6732,13 +6732,13 @@ LevelUp_LoadRow:
     ldx     #$FB                    ; $A67B
     lsr     a                       ; $A67D
     bcs     @loc_A684               ; $A67E
-    stx     ram_0552                ; $A680
+    stx     menuRowTiles2+6         ; $A680
 
 @done:
     rts                             ; $A683
 
 @loc_A684:
-    stx     ram_0544                ; $A684
+    stx     menuRowTiles+6          ; $A684
     rts                             ; $A687
 
 LevelUpStatRows:

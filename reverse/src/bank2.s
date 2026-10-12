@@ -2893,7 +2893,7 @@ SegmentHideMasks_Bank2:
 ; ---------------------------------------------------------------------------
 Basilisk_Draw:
     lda     temp3                   ; $9E13
-    ora     ram_0753                ; $9E15
+    ora     extraSpriteAttrs        ; $9E15
     sta     temp3                   ; $9E18
     lda     timerFast+TIMER_ENEMY,x ; $9E1A
     bne     @loc_9E7C               ; $9E1D

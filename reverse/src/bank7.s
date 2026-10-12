@@ -148,7 +148,7 @@ Nmi_Bank5:
 ; It returns with bank 0 mapped.
 ;
 ; Status:  confirmed (the meaning of renderingOff, ram_0768, dialogType and
-;          ram_00DE is provisional)
+;          gameFrozen is provisional)
 ; ---------------------------------------------------------------------------
 Nmi:
     php                             ; $C07B
@@ -256,7 +256,7 @@ Nmi:
     lda     joypadHeld              ; $C132  previous frame's buttons
     sta     joypadHeldPrev          ; $C134
     jsr     Joypad_Update           ; $C137
-    lda     ram_00DE                ; $C13A
+    lda     gameFrozen              ; $C13A
     beq     @checkPerFrame          ; $C13C
     lda     bigDoorCounter          ; $C13E
     ora     ram_0764                ; $C141
@@ -882,7 +882,7 @@ Lives_DrawLink:
     lsr     a                       ; $C404
     sta     drawOffscreen           ; $C405
     sta     linkFairy               ; $C407
-    sta     ram_0011                ; $C409
+    sta     swordOwner              ; $C409
     sta     objOamOffset            ; $C40B
     jmp     Link_DrawBody           ; $C40D
 
@@ -1088,7 +1088,7 @@ Area_Load:
     bne     @loop2                  ; $C589
     ldy     #$03                    ; $C58B
     lda     (areaDataPtr),y         ; $C58D
-    sta     ram_07AF                ; $C58F
+    sta     areaPaletteHeader       ; $C58F
     lda     #$00                    ; $C592
     sta     areaDataOffset          ; $C594
     sta     areaBuildColumn         ; $C597
@@ -1256,7 +1256,7 @@ Area_SaveEntryScroll:
     ldx     #$04                    ; $C67C
     stx     areaStartPage           ; $C67E
     jsr     Scroll_SavePageState    ; $C681
-    inc     ram_0705                ; $C684
+    inc     enteredFromOverworld    ; $C684
     jmp     Game_BlankAndNextMode   ; $C687
 
 ; ---------------------------------------------------------------------------
@@ -1348,7 +1348,7 @@ Game_Wait:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FallStart:
-    inc     ram_0704                ; $C6EF
+    inc     linkFallingIn           ; $C6EF
     lda     #$01                    ; $C6F2
     sta     objYHi                  ; $C6F4
     lda     #$10                    ; $C6F6
@@ -1980,7 +1980,7 @@ Death_LoseLife:
     sta     dialogType              ; $CA2E
     sta     pauseState              ; $CA31
     sta     menuRow                 ; $CA34
-    sta     ram_00DE                ; $CA37
+    sta     gameFrozen              ; $CA37
     sta     ram_048D                ; $CA39
     ldy     #$05                    ; $CA3C
 
@@ -2484,7 +2484,7 @@ ReturnToOverworld_SetY66:
 Mode_ReturnToOverworld:
     lda     #$00                    ; $CCB3
     sta     ram_0709                ; $CCB5
-    sta     ram_075B                ; $CCB8
+    sta     pitFallCount            ; $CCB8
     ldy     areaLocation            ; $CCBB
     lda     sramLocY,y              ; $CCBE
     bne     ReturnToOverworld_SetPosition ; $CCC1
@@ -3035,7 +3035,7 @@ Mode_LeaveArea:
     lsr     a                       ; $CFB3
     sta     areaId                  ; $CFB4
     pla                             ; $CFB7
-    ldx     ram_0704                ; $CFB8
+    ldx     linkFallingIn           ; $CFB8
     bne     @loc_CFC2               ; $CFBB
     and     #$03                    ; $CFBD
     sta     areaStartPage           ; $CFBF
@@ -3046,12 +3046,12 @@ Mode_LeaveArea:
     lda     areaId                  ; $CFC7
     cmp     #$24                    ; $CFCA
     bcs     Game_EnterNextArea      ; $CFCC
-    lda     ram_075B                ; $CFCE
+    lda     pitFallCount            ; $CFCE
     beq     Game_EnterNextArea      ; $CFD1
     clc                             ; $CFD3
     adc     #$04                    ; $CFD4
     sta     areaStartPage           ; $CFD6
-    dec     ram_075B                ; $CFD9
+    dec     pitFallCount            ; $CFD9
     bne     Game_EnterNextArea      ; $CFDC
     lda     townCode                ; $CFDE
     cmp     #$07                    ; $CFE1
@@ -3064,12 +3064,12 @@ Mode_LeaveArea:
 ; Game_EnterNextArea
 ;
 ; Go to gameMode $07 to enter the next area, stopping the area music unless
-; Link is arriving by elevator (ram_0704).
+; Link is arriving by elevator (linkFallingIn).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_EnterNextArea:
-    ldx     ram_0704                ; $CFEC
+    ldx     linkFallingIn           ; $CFEC
     bne     Game_EnterNextAreaKeepMusic ; $CFEF
     lda     #$00                    ; $CFF1
 
@@ -3129,13 +3129,13 @@ Mode_EnterDoor:
     sta     areaStartPage           ; $D016
     and     #$01                    ; $D019
     sta     areaEntrySide           ; $D01B
-    lda     ram_075B                ; $D01E
+    lda     pitFallCount            ; $D01E
     clc                             ; $D021
     adc     #$04                    ; $D022
     tax                             ; $D024
     jsr     Scroll_SavePageState    ; $D025
     jsr     Game_EnterNextArea      ; $D028
-    ldx     ram_075B                ; $D02B
+    ldx     pitFallCount            ; $D02B
     dex                             ; $D02E
     bne     Music_Request80Done     ; $D02F
     lda     townCode                ; $D031
@@ -4193,8 +4193,8 @@ Mode_SideView:
 @loc_D4F3:
     jsr     Link_Run                ; $D4F3
     lda     #$00                    ; $D4F6
-    sta     ram_0754                ; $D4F8
-    sta     ram_05E7                ; $D4FB
+    sta     linkOnElevator          ; $D4F8
+    sta     blockedDirections       ; $D4FB
     jsr     Scroll_Update           ; $D4FE
     jsr     Mmc1_SetPrgBankArea     ; $D501
     jsr     Enemies_Update          ; $D504
@@ -4976,7 +4976,7 @@ Elevator_Ai:
     lda     objCollision+1,x        ; $D8C2
     and     #$10                    ; $D8C4
     beq     @loc_D91B               ; $D8C6
-    sta     ram_0754                ; $D8C8
+    sta     linkOnElevator          ; $D8C8
     lda     #$00                    ; $D8CB
     sta     linkJumpState           ; $D8CD
     sta     objYVelocity            ; $D8D0
@@ -5027,7 +5027,7 @@ Elevator_Ai:
 ;
 ; Fairy (an item that refills life): plays its sound when it appears; when
 ; Link touches it, refill his life (statMeterPending+1 = $FF) and freeze
-; the game (ram_00DE) while the meter fills and the screen flashes, then
+; the game (gameFrozen) while the meter fills and the screen flashes, then
 ; remove it.
 ;
 ; Status:  confirmed
@@ -5052,7 +5052,7 @@ Fairy_Ai:
     beq     @done                   ; $D93C
 ; (code below not executed in the test movies)
     inc     enemyAiState,x          ; $D93E
-    inc     ram_00DE                ; $D940
+    inc     gameFrozen              ; $D940
     dey                             ; $D942
     sty     statMeterPending+1      ; $D943
 ; (end of code not executed in the test movies)
@@ -5067,7 +5067,7 @@ Fairy_Ai:
     sta     spellFlash              ; $D94C
     lda     statMeterPending+1      ; $D94F
     bne     @done                   ; $D952
-    sta     ram_00DE                ; $D954
+    sta     gameFrozen              ; $D954
     jmp     Enemy_Remove            ; $D956
 ; (end of code not executed in the test movies)
 
@@ -5120,7 +5120,7 @@ Item_Fall:
 ;
 ; Locked door: blocks Link (Enemy_KnockBack pushes him back).  With the
 ; magic key, or a key (which is used up), it opens: its area flag is
-; cleared so it stays open, the game freezes (ram_00DE) while it rises for
+; cleared so it stays open, the game freezes (gameFrozen) while it rises for
 ; 17 frames, then a spark is left where it was and it is removed.
 ;
 ; Status:  confirmed
@@ -5144,13 +5144,13 @@ LockedDoor_Ai:
     sta     objYHi+7                ; $D9B0
     sta     sfxRequest+3            ; $D9B2
     lsr     a                       ; $D9B4
-    sta     ram_00DE                ; $D9B5
+    sta     gameFrozen              ; $D9B5
     jmp     Enemy_Remove            ; $D9B7
 
 @loc_D9BA:
     lda     objCollision+1,x        ; $D9BA
     and     #$10                    ; $D9BC
-    sta     ram_05E7                ; $D9BE
+    sta     blockedDirections       ; $D9BE
     beq     Item_FallDone           ; $D9C1
     lda     linkFairy               ; $D9C3
     bne     @loc_D9D0               ; $D9C5
@@ -5164,7 +5164,7 @@ LockedDoor_Ai:
     iny                             ; $D9D3
     tya                             ; $D9D4
     eor     #$03                    ; $D9D5
-    sta     ram_05E7                ; $D9D7
+    sta     blockedDirections       ; $D9D7
     lda     itemOwned+ITEM_MAGIC_KEY ; $D9DA
     bne     @loc_D9E7               ; $D9DD
     lda     keyCount                ; $D9DF
@@ -5178,7 +5178,7 @@ LockedDoor_Ai:
     ldx     currentObject           ; $D9ED
     lda     #$80                    ; $D9EF
     sta     sfxRequest              ; $D9F1
-    sta     ram_00DE                ; $D9F3
+    sta     gameFrozen              ; $D9F3
     asl     a                       ; $D9F5
     sta     objXVelocity            ; $D9F6
     sta     objYVelocity            ; $D9F8
@@ -5824,9 +5824,9 @@ Enemy_DieStep:
     lda     #$00                    ; $DD0F
     sta     drawOffscreen+1         ; $DD11
     ldx     #$01                    ; $DD13
-    stx     ram_0011                ; $DD15
+    stx     swordOwner              ; $DD15
     inx                             ; $DD17
-    stx     ram_0753                ; $DD18
+    stx     extraSpriteAttrs        ; $DD18
     jsr     Link_DrawBody           ; $DD1B
     ldx     currentObject           ; $DD1E
     lda     objX+1,x                ; $DD20
@@ -6628,7 +6628,7 @@ Link_CheckBgInBank:
     beq     @loc_E0F9               ; $E0EA
     lda     linkJumpState           ; $E0EC
     bne     @done                   ; $E0EF
-    inc     ram_075B                ; $E0F1
+    inc     pitFallCount            ; $E0F1
     lda     #$16                    ; $E0F4
     jmp     Area_ExitToMode         ; $E0F6
 
@@ -7390,7 +7390,7 @@ Enemy_CheckProjectileHits:
     ldy     #$01                    ; $E496
 
 @loc_E498:
-    sty     ram_0011                ; $E498
+    sty     swordOwner              ; $E498
     lda     a:objState+13,y         ; $E49A
     beq     @loc_E4B8               ; $E49D
     bmi     @loc_E4B8               ; $E49F
@@ -7398,7 +7398,7 @@ Enemy_CheckProjectileHits:
     lda     #$01                    ; $E4A4
     sta     temp11                  ; $E4A6
     jsr     Enemy_CheckHit          ; $E4A8
-    ldy     ram_0011                ; $E4AB
+    ldy     swordOwner              ; $E4AB
     bcc     @loc_E4B8               ; $E4AD
     lda     a:ram_006D,y            ; $E4AF
     tay                             ; $E4B2
@@ -7506,13 +7506,13 @@ Enemy_CheckLinkContact:
 @loc_E538:
     jsr     Item_Collect            ; $E538
     lda     #$70                    ; $E53B
-    sta     ram_049C                ; $E53D
+    sta     itemHoldTimer           ; $E53D
     lda     #$00                    ; $E540
     sta     objYVelocity            ; $E542
     sta     objXVelocity            ; $E545
     lda     enemyAiState,x          ; $E547
     and     #$7F                    ; $E549
-    sta     ram_049D                ; $E54B
+    sta     heldItem                ; $E54B
     rts                             ; $E54E
 
 @loc_E54F:
@@ -7707,13 +7707,13 @@ Enemy_CheckProjectileHitsSpecial:
     ldy     #$01                    ; $E62D
 
 @loop:
-    sty     ram_0011                ; $E62F
+    sty     swordOwner              ; $E62F
     lda     a:objState+13,y         ; $E631
     beq     @loc_E649               ; $E634
     bmi     @loc_E649               ; $E636
     jsr     LinkProjectile_GetHitbox ; $E638
     jsr     Hitbox_Overlap          ; $E63B
-    ldy     ram_0011                ; $E63E
+    ldy     swordOwner              ; $E63E
     bcc     @loc_E649               ; $E640
     lda     #$02                    ; $E642
     sta     sfxRequest              ; $E644
@@ -7869,7 +7869,7 @@ Enemy_HitBySword:
     lda     sramEnemyAttr,y         ; $E6CF
     and     #$20                    ; $E6D2
     beq     @loc_E6DD               ; $E6D4
-    ldy     ram_0011                ; $E6D6
+    ldy     swordOwner              ; $E6D6
     lda     linkProjectileTimer,y   ; $E6D8
     bne     @loc_E6E6               ; $E6DB
 
@@ -7880,7 +7880,7 @@ Enemy_HitBySword:
     beq     Enemy_CheckUpThrust     ; $E6E4
 
 @loc_E6E6:
-    ldy     ram_0011                ; $E6E6
+    ldy     swordOwner              ; $E6E6
 
 ; ---------------------------------------------------------------------------
 ; LinkProjectile_Disintegrate
@@ -8768,7 +8768,7 @@ Link_Draw:
     lda     ram_048D                ; $EBF0
     bne     Link_DrawDone           ; $EBF3
     ldx     #$00                    ; $EBF5
-    stx     ram_0011                ; $EBF7
+    stx     swordOwner              ; $EBF7
     lda     #$08                    ; $EBF9
     sta     objOamOffset            ; $EBFB
     ldy     #$00                    ; $EBFD
@@ -8782,7 +8782,7 @@ Link_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_DrawBody:
-    ldx     ram_0011                ; $EC02
+    ldx     swordOwner              ; $EC02
     lda     objY,x                  ; $EC04
     cpx     #$00                    ; $EC06
     bne     @loc_EC17               ; $EC08
@@ -8861,7 +8861,7 @@ Link_DrawBody:
     dey                             ; $EC7B
     dey                             ; $EC7C
     bpl     @loop                   ; $EC7D
-    ldx     ram_0011                ; $EC7F
+    ldx     swordOwner              ; $EC7F
     ldy     objOamOffset,x          ; $EC81
     lda     oamBuffer+3,y           ; $EC83
     sta     ram_0015,x              ; $EC86
@@ -8882,7 +8882,7 @@ Link_DrawBody:
     bne     @loc_ECD0               ; $EC9E
     lda     #$32                    ; $ECA0
     sta     oamBuffer+25,y          ; $ECA2
-    ldx     ram_0011                ; $ECA5
+    ldx     swordOwner              ; $ECA5
     lda     objY,x                  ; $ECA7
     sta     oamBuffer+24,y          ; $ECA9
 
@@ -8918,7 +8918,7 @@ Link_DrawBody:
     bne     @loc_ECE6               ; $ECD2
     lda     #$54                    ; $ECD4
     sta     oamBuffer+25,y          ; $ECD6
-    ldx     ram_0011                ; $ECD9
+    ldx     swordOwner              ; $ECD9
     lda     objY,x                  ; $ECDB
     clc                             ; $ECDD
     adc     #$10                    ; $ECDE
@@ -8938,7 +8938,7 @@ Link_DrawBody:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sword_UpdatePosition:
-    ldx     ram_0011                ; $ECEA
+    ldx     swordOwner              ; $ECEA
     lda     ram_0015,x              ; $ECEC
     ldy     linkWalkDir,x           ; $ECEE
     clc                             ; $ECF0
@@ -8954,13 +8954,14 @@ Sword_UpdatePosition:
 ; ---------------------------------------------------------------------------
 ; Sword_UpdateHitPosition
 ;
-; Set the sword's hit position (swordY, swordX) for object ram_0011 from
-; its pose.
+; Set the sword's hit position (swordY, swordX) for object swordOwner from
+; its pose; and while Link holds up an item (pose $0C and up), draw it
+; above his head (heldItem, HeldItemTiles).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sword_UpdateHitPosition:
-    ldx     ram_0011                ; $ED02
+    ldx     swordOwner              ; $ED02
     lda     objState,x              ; $ED04
     cmp     #$09                    ; $ED06
     bne     @loc_ED1B               ; $ED08
@@ -8977,12 +8978,12 @@ Sword_UpdateHitPosition:
     lda     objState                ; $ED1B
     cmp     #$0C                    ; $ED1D
     bcc     @done                   ; $ED1F
-    lda     ram_049D                ; $ED21
+    lda     heldItem                ; $ED21
     asl     a                       ; $ED24
     tay                             ; $ED25
-    lda     SwordHitTiles,y         ; $ED26
+    lda     HeldItemTiles,y         ; $ED26
     sta     oamBuffer+33            ; $ED29
-    lda     SwordHitTiles+1,y       ; $ED2C
+    lda     HeldItemTiles+1,y       ; $ED2C
     sta     oamBuffer+37            ; $ED2F
     lda     objY                    ; $ED32
     sec                             ; $ED34
@@ -8999,7 +9000,7 @@ Sword_UpdateHitPosition:
     sta     oamBuffer+34            ; $ED4C
     lda     #$41                    ; $ED4F
     sta     oamBuffer+38            ; $ED51
-    ldy     ram_049D                ; $ED54
+    ldy     heldItem                ; $ED54
     cpy     #$10                    ; $ED57
     bcc     @done                   ; $ED59
     lda     ItemSpriteAttrs,y       ; $ED5B
@@ -9019,7 +9020,7 @@ Sword_UpdateHitPosition:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sword_SetPositionFromSprite:
-    ldx     ram_0011                ; $ED67
+    ldx     swordOwner              ; $ED67
     lda     oamBuffer+24,y          ; $ED69
     sta     swordY,x                ; $ED6C
     lda     oamBuffer+27,y          ; $ED6F
@@ -9046,7 +9047,7 @@ Link_DrawSprites:
     sta     oamBuffer+9,y           ; $ED8D
     lda     #$00                    ; $ED90
     sta     temp1                   ; $ED92
-    ldx     ram_0011                ; $ED94
+    ldx     swordOwner              ; $ED94
     lda     drawOffscreen,x         ; $ED96
     sta     temp11                  ; $ED98
     lda     drawScreenX,x           ; $ED9A
@@ -9078,7 +9079,7 @@ Link_DrawSprites:
 
 @loc_EDC1:
     sta     temp2                   ; $EDC1
-    ldx     ram_0011                ; $EDC3
+    ldx     swordOwner              ; $EDC3
     lda     linkWalkDir,x           ; $EDC5
     ldx     temp9                   ; $EDC7
     ldy     temp8                   ; $EDC9
@@ -9097,7 +9098,7 @@ Link_DrawSprites:
     sta     temp1                   ; $EDE5
 
 @loc_EDE7:
-    ldx     ram_0011                ; $EDE7
+    ldx     swordOwner              ; $EDE7
     lda     timerFast+11,x          ; $EDE9
     beq     @loc_EDF1               ; $EDEC
     lsr     a                       ; $EDEE
@@ -9175,7 +9176,7 @@ SpritePairTiles:
     .byte   $C6, $C8, $CA, $CC, $50, $50, $4E, $4E, $7C, $7E, $80, $82, $B6, $B8, $BB, $BD; $EE63
     .byte   $BF, $C1, $C3, $C3, $B2, $B2, $B4, $B4, $24, $24, $B0, $B0      ; $EE73
 
-SwordHitTiles:
+HeldItemTiles:
     .byte   $8C                                                             ; $EE7F
     .byte   $F5, $8E, $F5, $90, $F5, $92, $F5, $94, $F5, $96, $F5, $98, $F5, $9A, $F5, $66; $EE80
     .byte   $F5                                                             ; $EE90
@@ -9591,7 +9592,7 @@ Octorok_Draw:
     cmp     #$B5                    ; $F0AA
     bcc     @loc_F0B5               ; $F0AC
     lda     temp3                   ; $F0AE
-    ora     ram_0753                ; $F0B0
+    ora     extraSpriteAttrs        ; $F0B0
     sta     temp3                   ; $F0B3
 
 @loc_F0B5:

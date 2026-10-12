@@ -87,7 +87,52 @@ Killing an enemy adds its experience to `experiencePending`, which
 (`DIALOG_LEVEL_UP`).  Continuing after a game over resets the experience
 to 0.
 
-## Fairy
+## The Sword
+
+Link's attack (`Link_UpdateAttack`) runs through `linkAttackFrame`,
+standing or crouching; the sword's position (`swordX`, `swordY`,
+`Sword_UpdatePosition`) and hitbox (`Sword_GetHitbox`) follow his pose.
+In the air, holding Up on the way up gives the upward thrust (objState
+8) and holding Down the downward thrust (objState 9), once learned
+(`techniques` bits `TECH_UPWARD_THRUST`, `TECH_DOWNWARD_THRUST`, taught
+in Darunia and Mido); the thrusts use their own hitbox offset.
+
+At full life the sword also fires a beam (`LinkProjectile_Update`,
+object slot 13; slot 14 too from attack level 4), unless the fire spell
+is active, which fires its flame instead.  A beam that hits something
+turns into a spark (`LinkProjectile_Spark`).
+
+`techniques` also holds two quest flags (bits 0 and 1; see
+[Towns](towns.md)): bit 0 makes the bridge in Saria build itself when
+Link reaches it (`Saria_BuildBridge`), and is then cleared.
+
+## Spells
+
+`Spell_Update` (each frame in side view) casts the spell at
+`spellCursor` when Select is pressed, if Link owns it, it is not the spell
+last cast, and he has the magic: the cost (`SpellCosts`, by spell
+and magic level) is taken from the magic meter (32 units per container),
+the spell's bit is set in `spellActive`, and the screen flashes.  A spell
+costing one more than the magic left is still cast (QUIRK).  The effects
+run each frame from `Spell_RunEffect`.
+
+| Spell | Level 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|-------|--:|--:|--:|--:|--:|--:|--:|--:|
+| Shield | 64 | 48 | 48 | 32 | 32 | 32 | 32 | 32 |
+| Jump | 96 | 80 | 64 | 64 | 40 | 32 | 24 | 16 |
+| Life | 140 | 140 | 120 | 120 | 100 | 100 | 100 | 100 |
+| Fairy | 160 | 160 | 120 | 120 | 80 | 80 | 80 | 80 |
+| Fire | 240 | 160 | 120 | 60 | 32 | 32 | 32 | 32 |
+| Reflect | 240 | 240 | 160 | 96 | 80 | 64 | 48 | 32 |
+| Spell | 240 | 224 | 192 | 160 | 96 | 64 | 48 | 32 |
+| Thunder | 240 | 240 | 240 | 240 | 240 | 240 | 200 | 128 |
+
+## Holding Up an Item
+
+Collecting a special item (`Item_Collect`) makes Link hold it over his
+head for 112 frames (`itemHoldTimer`, the item in `heldItem`, drawn by
+`Sword_UpdateHitPosition` from `HeldItemTiles`), with the item fanfare.
+
 
 As a fairy (`linkFairy` = 8, from the fairy spell), Link flies in the
 direction held on the D-pad.  He does not move in a direction that is
