@@ -198,6 +198,10 @@ Each is a self-contained work area; order is flexible after Phase 3.
   matched on screen with play.py --at.
 - Overworld (banks 1-2): map format, movement, random encounters, special
   tiles, raft/bridges/hidden areas.
+  Status (2026-10-11): the encounter, raft, palace stone and map strip
+  tables are named and documented in docs/engine/overworld.md; banks 1
+  and 2's remaining enemy tables and each enemy group's projectile
+  drawing tables are named too.
 - Sideview areas: room loading, scrolling, area transitions.
   Status (2026-10-11): the area banks' shared tables and object drawers
   (banks 1-5), the solid tile test, and the remaining data tables of banks
