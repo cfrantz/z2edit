@@ -3,6 +3,9 @@
 Notes on how the game works, written alongside the disassembly in `src/`.
 Symbol names refer to `src/`; `make verify` checks that they still exist.
 
+- [Glossary](glossary.md): the game's and the project's terms.
+- [Quirks](quirks.md): bugs and odd behaviors.
+
 ## Architecture
 
 - [Bank layout](architecture/bank-layout.md): what each PRG bank holds.
