@@ -6283,7 +6283,7 @@ Menu_CloseRow_Bank0:
     asl     a                       ; $A3F9
     asl     a                       ; $A3FA
     adc     #$10                    ; $A3FB
-    jsr     Math_AddToTemp14        ; $A3FD
+    jsr     Math_AddToTemp14_Bank0  ; $A3FD
     ldx     #$00                    ; $A400
 
 @loop:
@@ -6295,7 +6295,7 @@ Menu_CloseRow_Bank0:
     bne     @loc_A418               ; $A40B
     lda     #$D0                    ; $A40D
     clc                             ; $A40F
-    jsr     Math_AddToTemp14        ; $A410
+    jsr     Math_AddToTemp14_Bank0  ; $A410
     tya                             ; $A413
     sec                             ; $A414
     sbc     #$10                    ; $A415
@@ -6541,7 +6541,7 @@ Menu_CheckAttrAlignment_Bank0:
     cmp     temp7                   ; $A57B
     rts                             ; $A57D
 
-Math_AddToTemp14:
+Math_AddToTemp14_Bank0:
     adc     temp14                  ; $A57E
     sta     temp14                  ; $A580
     lda     temp15                  ; $A582
