@@ -782,6 +782,8 @@ Ending_DrawCurtainTop:
     dey                             ; $8B99
     bpl     @loop                   ; $8B9A
     lda     #$23                    ; $8B9C
+EnemyLists4_Bank5 := * + 2
+    .assert EnemyLists4_Bank5 = AreaBank::EnemyLists+768, error, "interface address moved"
     sta     PPUADDR                 ; $8B9E
     lda     #$C0                    ; $8BA1
     sta     PPUADDR                 ; $8BA3
