@@ -80,7 +80,7 @@ Town_FillRect:
     lda     #$01                    ; $810E
     pha                             ; $8110
     lda     temp0                   ; $8111
-    sta     ram_0112                ; $8113
+    sta     objectTile              ; $8113
 
 @loc_8116:
     lda     areaObjectType          ; $8116
@@ -89,7 +89,7 @@ Town_FillRect:
     jsr     AreaMap_GetPagePtr      ; $811C
 
 @loop:
-    lda     ram_0112                ; $811F
+    lda     objectTile              ; $811F
     jsr     AreaMap_PutTileRight    ; $8122
     dex                             ; $8125
     bpl     @loop                   ; $8126
@@ -101,7 +101,7 @@ Town_FillRect:
     txa                             ; $8130
     pha                             ; $8131
     lda     temp1                   ; $8132
-    sta     ram_0112                ; $8134
+    sta     objectTile              ; $8134
     jmp     @loc_8116               ; $8137
 
 @done:
@@ -643,22 +643,22 @@ TownFloorRecordsLo:
 ; ---------------------------------------------------------------------------
 ; Town_SetFloorTiles
 ;
-; Set up the town's floor tile (ram_010D) from its background type
-; (ram_010C): byte 8 of the type's record (TownFloorRecordsLo, records at
+; Set up the town's floor tile (floorTile) from its background type
+; (areaTileSet): byte 8 of the type's record (TownFloorRecordsLo, records at
 ; $861F).  Bank 3's version of OverworldBank::SetFloorTiles, called by
 ; Area_SetFloorTiles for towns.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Town_SetFloorTiles:
-    ldx     ram_010C                ; $8647
+    ldx     areaTileSet             ; $8647
     lda     TownFloorRecordsLo,x    ; $864A
     sta     temp12                  ; $864D
     lda     #$86                    ; $864F
     sta     temp13                  ; $8651
     ldy     #$08                    ; $8653
     lda     (temp12),y              ; $8655
-    sta     ram_010D                ; $8657
+    sta     floorTile               ; $8657
     rts                             ; $865A
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -1541,7 +1541,7 @@ Townsperson_WalkAi:
 
 @loc_9896:
     jsr     Enemy_UpdateBgCollision ; $9896
-    lda     ram_00D9                ; $9899
+    lda     drawScratch             ; $9899
     cmp     #$8B                    ; $989B
     bne     Townsperson_StartDoor_Done ; $989D
 
@@ -1555,9 +1555,9 @@ Townsperson_WalkAi:
 ; ---------------------------------------------------------------------------
 Townsperson_StartDoor:
     inc     enemyAiState,x          ; $989F
-    lda     ram_00DC                ; $98A1
+    lda     enemyWallTilePtr        ; $98A1
     sta     ram_058D,x              ; $98A3
-    lda     ram_00DD                ; $98A6
+    lda     enemyWallTilePtr+1      ; $98A6
     sta     ram_0593,x              ; $98A8
     ldy     objFacing+1,x           ; $98AB
     lda     objX+1,x                ; $98AD
@@ -1793,7 +1793,7 @@ Townsperson_CheckTalk:
     lda     #$0B                    ; $99F7
     sta     gameMode                ; $99F9
     dec     doorDepth               ; $99FC
-    inc     ram_048D                ; $99FF
+    inc     linkTalking             ; $99FF
     lda     #$00                    ; $9A02
     sta     renderingOff            ; $9A04
     ldx     #$05                    ; $9A07
@@ -4058,7 +4058,7 @@ Dialog_Reward:
     sta     dialogType              ; $B78F
     sta     menuRow                 ; $B792
     sta     gameFrozen              ; $B795
-    sta     ram_048D                ; $B797
+    sta     linkTalking             ; $B797
     ldy     #$05                    ; $B79A
 
 @loop:
@@ -4108,7 +4108,7 @@ Dialog_Finish:
     dey                             ; $B7B9
     bpl     @loop                   ; $B7BA
     sta     gameFrozen              ; $B7BC
-    sta     ram_048D                ; $B7BE
+    sta     linkTalking             ; $B7BE
     lda     townCode                ; $B7C1
     cmp     #$02                    ; $B7C4
     beq     Dialog_MaybeTurnToBat   ; $B7C6

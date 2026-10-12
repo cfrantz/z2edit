@@ -151,14 +151,14 @@ AreaFloorRecordsLo_Bank1:
 
 Overworld_SetFloorTiles_Bank1:
     .assert Overworld_SetFloorTiles_Bank1 = OverworldBank::SetFloorTiles, error, "interface address moved"
-    ldx     ram_010C                ; $81A3
+    ldx     areaTileSet             ; $81A3
     lda     AreaFloorRecordsLo_Bank1,x ; $81A6
     sta     temp12                  ; $81A9
     lda     #$81                    ; $81AB
     sta     temp13                  ; $81AD
     ldy     #$08                    ; $81AF
     lda     (temp12),y              ; $81B1
-    sta     ram_010D                ; $81B3
+    sta     floorTile               ; $81B3
     rts                             ; $81B6
 ; (unreferenced: $81B7-$81BC, 6 bytes)
 
@@ -195,7 +195,7 @@ AreaObjectTiles2_Bank1:
 Area_DrawObjectTwoRows_Bank1:
     jsr     Area_DrawObjectRow_Bank1 ; $81F3
     lda     temp0                   ; $81F6
-    sta     ram_0112                ; $81F8
+    sta     objectTile              ; $81F8
     jsr     AreaMap_NextBuildRow    ; $81FB
     jmp     Area_FillObjectRow_Bank1 ; $81FE
 
@@ -213,7 +213,7 @@ Area_DrawObjectRow_Bank1:
 ; ---------------------------------------------------------------------------
 ; Area_FillObjectRow_Bank1
 ;
-; Fill a row of the object's width with tile ram_0112.
+; Fill a row of the object's width with tile objectTile.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -224,7 +224,7 @@ Area_FillObjectRow_Bank1:
     jsr     AreaMap_GetPagePtr      ; $820A
 
 @loop:
-    lda     ram_0112                ; $820D
+    lda     objectTile              ; $820D
     jsr     AreaMap_PutTileRight    ; $8210
     dex                             ; $8213
     bpl     @loop                   ; $8214
@@ -253,17 +253,17 @@ Area_DrawObjectColumn_Bank1:
 Area_DrawObjectPillar_Bank1:
     jsr     Area_GetObjectTiles_Bank1 ; $821D
     jsr     AreaMap_GetPagePtr      ; $8220
-    lda     ram_0112                ; $8223
+    lda     objectTile              ; $8223
     jsr     AreaMap_PutTileDown     ; $8226
     sta     areaBuildPos            ; $8229
     dec     areaObjectType          ; $822C
     lda     temp0                   ; $822F
-    sta     ram_0112                ; $8231
+    sta     objectTile              ; $8231
 
 ; ---------------------------------------------------------------------------
 ; Area_FillObjectColumn_Bank1
 ;
-; Fill a column of the object's size with tile ram_0112.
+; Fill a column of the object's size with tile objectTile.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -274,7 +274,7 @@ Area_FillObjectColumn_Bank1:
     jsr     AreaMap_GetPagePtr      ; $823A
 
 @loop:
-    lda     ram_0112                ; $823D
+    lda     objectTile              ; $823D
     jsr     AreaMap_PutTileDown     ; $8240
     dex                             ; $8243
     bpl     @loop                   ; $8244
@@ -285,7 +285,7 @@ Area_FillObjectColumn_Bank1:
 ;
 ; Load the tiles of large object x (its dispatch index): from
 ; AreaObjectTiles2 if bit 7 of the area header's second byte is set (z2edit's
-; object set 1), else AreaObjectTiles (set 0); ram_0112 the main tile,
+; object set 1), else AreaObjectTiles (set 0); objectTile the main tile,
 ; temp0 the second.
 ;
 ; In:      x = object index
@@ -303,7 +303,7 @@ Area_GetObjectTiles_Bank1:
     lda     AreaObjectTiles_Bank1,x ; $8254
 
 @loc_8257:
-    sta     ram_0112                ; $8257
+    sta     objectTile              ; $8257
     lda     AreaObjectTiles2_Bank1+1,x ; $825A
     bcs     @loc_8262               ; $825D
     lda     AreaObjectTiles_Bank1+1,x ; $825F
@@ -360,7 +360,7 @@ Area_DrawLava_Bank1:
     ora     #$A0                    ; $828F
     sta     areaBuildPos            ; $8291
     lda     #$80                    ; $8294
-    sta     ram_0112                ; $8296
+    sta     objectTile              ; $8296
 
 @loop:
     lda     areaObjectType          ; $8299
@@ -369,12 +369,12 @@ Area_DrawLava_Bank1:
     jsr     AreaMap_GetPagePtr      ; $829F
 
 @loop2:
-    lda     ram_0112                ; $82A2
+    lda     objectTile              ; $82A2
     jsr     AreaMap_PutTileRight    ; $82A5
     dex                             ; $82A8
     bpl     @loop2                  ; $82A9
     lda     #$89                    ; $82AB
-    sta     ram_0112                ; $82AD
+    sta     objectTile              ; $82AD
     jsr     AreaMap_NextBuildRow    ; $82B0
     and     #$F0                    ; $82B3
     cmp     #$D0                    ; $82B5
@@ -1350,8 +1350,8 @@ Projectile_Falling_Bank1:
 ; ---------------------------------------------------------------------------
 Projectile_Bubble_Bank1:
     ldy     #$04                    ; $9647
-    inc     ram_044C,x              ; $9649
-    lda     ram_044C,x              ; $964C
+    inc     projectileTimer,x       ; $9649
+    lda     projectileTimer,x       ; $964C
     and     #$10                    ; $964F
     beq     @loc_9655               ; $9651
     ldy     #$FC                    ; $9653
@@ -1383,7 +1383,7 @@ BoomerangYSpeeds_Bank1:
 ; Projectile type 6 (Goriya's boomerang): flies out and back, its speed
 ; changing by BoomerangYSpeeds_Bank1 and BoomerangXAccel_Bank1, with a sound on
 ; alternate frames; it disappears when it returns to its thrower
-; (ram_045E).
+; (projectileSpeed).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -1404,7 +1404,7 @@ Projectile_Boomerang_Bank1:
     inc     objYVelocity+7,x        ; $967D
 
 @loc_9680:
-    lda     ram_044C,x              ; $9680
+    lda     projectileTimer,x       ; $9680
     bmi     @loc_96B4               ; $9683
     bne     @loc_96B1               ; $9685
     ldy     ram_0458,x              ; $9687
@@ -1426,18 +1426,18 @@ Projectile_Boomerang_Bank1:
     cmp     #$20                    ; $96A6
     bne     @loc_96B4               ; $96A8
     lda     #$FF                    ; $96AA
-    sta     ram_044C,x              ; $96AC
+    sta     projectileTimer,x       ; $96AC
     bne     @loc_96B4               ; $96AF
 
 @loc_96B1:
-    dec     ram_044C,x              ; $96B1
+    dec     projectileTimer,x       ; $96B1
 
 @loc_96B4:
     jsr     Projectile_MoveAndCheck_Bank1 ; $96B4
-    ldy     ram_044C,x              ; $96B7
+    ldy     projectileTimer,x       ; $96B7
     dey                             ; $96BA
     bpl     Projectile_Boomerang_Done_Bank1 ; $96BB
-    lda     ram_045E,x              ; $96BD
+    lda     projectileSpeed,x       ; $96BD
     tax                             ; $96C0
     lda     enemyActive,x           ; $96C1
     cmp     #$01                    ; $96C3
@@ -1735,7 +1735,7 @@ Moblin_ThrowSpear:
     rts                             ; $97FC
 
 @loc_97FD:
-    sta     ram_045E,y              ; $97FD
+    sta     projectileSpeed,y       ; $97FD
     lda     #$05                    ; $9800
     sta     a:objState+7,y          ; $9802
     lda     objX+1,x                ; $9805
@@ -1768,7 +1768,7 @@ Moblin_ThrowSpear:
     cmp     #$14                    ; $9844
     bne     @done                   ; $9846
     lda     #$01                    ; $9848
-    sta     ram_045E,y              ; $984A
+    sta     projectileSpeed,y       ; $984A
 
 @done:
     rts                             ; $984D
@@ -2044,7 +2044,7 @@ MoblinGoriya_Ai:
     jsr     Enemy_FireProjectile    ; $998B
     bcs     @loc_99C6               ; $998E
     txa                             ; $9990
-    sta     ram_045E,y              ; $9991
+    sta     projectileSpeed,y       ; $9991
     lda     a:objFacing+7,y         ; $9994
     sta     ram_0452,y              ; $9997
     lda     objState+1,x            ; $999A
@@ -2065,7 +2065,7 @@ MoblinGoriya_Ai:
     sta     objYVelocity+7,y        ; $99B7
     ldx     currentObject           ; $99BA
     lda     #$20                    ; $99BC
-    sta     ram_044C,y              ; $99BE
+    sta     projectileTimer,y       ; $99BE
     lda     #$06                    ; $99C1
     sta     a:objState+7,y          ; $99C3
 
@@ -2321,18 +2321,18 @@ Daira_Attack:
 ; ---------------------------------------------------------------------------
 ; Fighter_KnockBack
 ;
-; While knocked back (ram_043E), move by the knockback speed instead of
+; While knocked back (enemyKnockBack), move by the knockback speed instead of
 ; the AI.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fighter_KnockBack:
-    lda     ram_043E,x              ; $9B0A
+    lda     enemyKnockBack,x        ; $9B0A
     beq     @loc_9B1E               ; $9B0D
-    dec     ram_043E,x              ; $9B0F
+    dec     enemyKnockBack,x        ; $9B0F
     bpl     @loc_9B1A               ; $9B12
-    inc     ram_043E,x              ; $9B14
-    inc     ram_043E,x              ; $9B17
+    inc     enemyKnockBack,x        ; $9B14
+    inc     enemyKnockBack,x        ; $9B17
 
 @loc_9B1A:
     sta     objXVelocity+1,x        ; $9B1A
@@ -2649,7 +2649,7 @@ MoblinFrames:
 ; ---------------------------------------------------------------------------
 Moblin_Draw:
     lda     temp2                   ; $9CA4
-    sta     ram_00D9                ; $9CA6
+    sta     drawScratch             ; $9CA6
     lda     objState+1,x            ; $9CA8
     cmp     #$02                    ; $9CAA
     bne     @loc_9CB8               ; $9CAC
@@ -2712,7 +2712,7 @@ Moblin_Draw:
     dex                             ; $9D0C
     lda     MoblinFrames,x          ; $9D0D
     tax                             ; $9D10
-    lda     ram_00D9                ; $9D11
+    lda     drawScratch             ; $9D11
     cmp     #$01                    ; $9D13
     bne     @loc_9D19               ; $9D15
     inx                             ; $9D17
@@ -2744,7 +2744,7 @@ Moblin_Draw:
     and     #$03                    ; $9D3E
     bne     @loc_9D56               ; $9D40
     lda     #$F3                    ; $9D42
-    ldx     ram_00D9                ; $9D44
+    ldx     drawScratch             ; $9D44
     cpx     #$02                    ; $9D46
     beq     @loc_9D50               ; $9D48
 ; (code below not executed in the test movies)
@@ -2804,7 +2804,7 @@ Daira_DrawWeapon:
     lda     #$00                    ; $9D6E
     sta     temp13                  ; $9D70
     lda     temp2                   ; $9D72
-    sta     ram_00D9                ; $9D74
+    sta     drawScratch             ; $9D74
     lda     objCollision+1,x        ; $9D76
     and     #$04                    ; $9D78
     beq     @loc_9D91               ; $9D7A
@@ -2858,7 +2858,7 @@ Daira_DrawWeapon:
     adc     RedDairaAxeYOffsets,x   ; $9DC8
     sta     oamBuffer - 8,y         ; $9DCB
     sta     oamBuffer - 4,y         ; $9DCE
-    lda     ram_00D9                ; $9DD1
+    lda     drawScratch             ; $9DD1
     lsr     a                       ; $9DD3
     bcc     @loc_9DDB               ; $9DD4
     txa                             ; $9DD6

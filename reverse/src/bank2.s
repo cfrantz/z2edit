@@ -148,14 +148,14 @@ AreaFloorRecordsLo_Bank2:
 
 Overworld_SetFloorTiles_Bank2:
     .assert Overworld_SetFloorTiles_Bank2 = OverworldBank::SetFloorTiles, error, "interface address moved"
-    ldx     ram_010C                ; $81A3
+    ldx     areaTileSet             ; $81A3
     lda     AreaFloorRecordsLo_Bank2,x ; $81A6
     sta     temp12                  ; $81A9
     lda     #$81                    ; $81AB
     sta     temp13                  ; $81AD
     ldy     #$08                    ; $81AF
     lda     (temp12),y              ; $81B1
-    sta     ram_010D                ; $81B3
+    sta     floorTile               ; $81B3
     rts                             ; $81B6
 ; (unreferenced: $81B7-$81C6, 16 bytes)
 
@@ -198,7 +198,7 @@ AreaObjectTiles2_Bank2:
 Area_DrawObjectTwoRows_Bank2:
     jsr     Area_DrawObjectRow_Bank2 ; $81F3
     lda     temp0                   ; $81F6
-    sta     ram_0112                ; $81F8
+    sta     objectTile              ; $81F8
     jsr     AreaMap_NextBuildRow    ; $81FB
     jmp     Area_FillObjectRow_Bank2 ; $81FE
 
@@ -226,7 +226,7 @@ Area_FillObjectRow_Bank2:
     jsr     AreaMap_GetPagePtr      ; $820A
 
 @loop:
-    lda     ram_0112                ; $820D
+    lda     objectTile              ; $820D
     jsr     AreaMap_PutTileRight    ; $8210
     dex                             ; $8213
     bpl     @loop                   ; $8214
@@ -255,12 +255,12 @@ Area_DrawObjectColumn_Bank2:
 Area_DrawObjectPillar_Bank2:
     jsr     Area_GetObjectTiles_Bank2 ; $821D
     jsr     AreaMap_GetPagePtr      ; $8220
-    lda     ram_0112                ; $8223
+    lda     objectTile              ; $8223
     jsr     AreaMap_PutTileDown     ; $8226
     sta     areaBuildPos            ; $8229
     dec     areaObjectType          ; $822C
     lda     temp0                   ; $822F
-    sta     ram_0112                ; $8231
+    sta     objectTile              ; $8231
 
 ; ---------------------------------------------------------------------------
 ; Area_FillObjectColumn_Bank2
@@ -276,7 +276,7 @@ Area_FillObjectColumn_Bank2:
     jsr     AreaMap_GetPagePtr      ; $823A
 
 @loop:
-    lda     ram_0112                ; $823D
+    lda     objectTile              ; $823D
     jsr     AreaMap_PutTileDown     ; $8240
     dex                             ; $8243
     bpl     @loop                   ; $8244
@@ -301,7 +301,7 @@ Area_GetObjectTiles_Bank2:
     lda     AreaObjectTiles_Bank2,x ; $8254
 
 @loc_8257:
-    sta     ram_0112                ; $8257
+    sta     objectTile              ; $8257
     lda     AreaObjectTiles2_Bank2+1,x ; $825A
     bcs     @loc_8262               ; $825D
     lda     AreaObjectTiles_Bank2+1,x ; $825F
@@ -354,7 +354,7 @@ Area_DrawLava_Bank2:
     ora     #$A0                    ; $828F
     sta     areaBuildPos            ; $8291
     lda     #$80                    ; $8294
-    sta     ram_0112                ; $8296
+    sta     objectTile              ; $8296
 
 @loop:
     lda     areaObjectType          ; $8299
@@ -363,12 +363,12 @@ Area_DrawLava_Bank2:
     jsr     AreaMap_GetPagePtr      ; $829F
 
 @loop2:
-    lda     ram_0112                ; $82A2
+    lda     objectTile              ; $82A2
     jsr     AreaMap_PutTileRight    ; $82A5
     dex                             ; $82A8
     bpl     @loop2                  ; $82A9
     lda     #$89                    ; $82AB
-    sta     ram_0112                ; $82AD
+    sta     objectTile              ; $82AD
     jsr     AreaMap_NextBuildRow    ; $82B0
     and     #$F0                    ; $82B3
     cmp     #$D0                    ; $82B5
@@ -2348,19 +2348,19 @@ Enemy_Pace_Done_Bank2:
 ; ---------------------------------------------------------------------------
 ; Enemy_KnockBackOrWalk_Bank2
 ;
-; While knocked back (ram_043E), move by the knockback; otherwise walk
+; While knocked back (enemyKnockBack), move by the knockback; otherwise walk
 ; unless against a wall.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank2:
-    lda     ram_043E,x              ; $9B24
+    lda     enemyKnockBack,x        ; $9B24
     beq     Enemy_Walk_Bank2        ; $9B27
 ; (code below not executed in the test movies)
-    dec     ram_043E,x              ; $9B29
+    dec     enemyKnockBack,x        ; $9B29
     bpl     @loc_9B34               ; $9B2C
-    inc     ram_043E,x              ; $9B2E
-    inc     ram_043E,x              ; $9B31
+    inc     enemyKnockBack,x        ; $9B2E
+    inc     enemyKnockBack,x        ; $9B31
 
 @loc_9B34:
     sta     objXVelocity+1,x        ; $9B34
@@ -2673,17 +2673,17 @@ Lizalfos_Attack:
 ; ---------------------------------------------------------------------------
 ; Lizalfos_KnockBack
 ;
-; While knocked back (ram_043E), move by the knockback instead of the AI.
+; While knocked back (enemyKnockBack), move by the knockback instead of the AI.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Lizalfos_KnockBack:
-    lda     ram_043E,x              ; $9D13
+    lda     enemyKnockBack,x        ; $9D13
     beq     @loc_9D27               ; $9D16
-    dec     ram_043E,x              ; $9D18
+    dec     enemyKnockBack,x        ; $9D18
     bpl     @loc_9D23               ; $9D1B
-    inc     ram_043E,x              ; $9D1D
-    inc     ram_043E,x              ; $9D20
+    inc     enemyKnockBack,x        ; $9D1D
+    inc     enemyKnockBack,x        ; $9D20
 
 @loc_9D23:
     sta     objXVelocity+1,x        ; $9D23
@@ -3026,7 +3026,7 @@ LizalfosFrames:
 ; ---------------------------------------------------------------------------
 Lizalfos_Draw:
     lda     objCollision+1,x        ; $9EE1
-    sta     ram_00D9                ; $9EE3
+    sta     drawScratch             ; $9EE3
     lda     objXVelocity+1,x        ; $9EE5
     pha                             ; $9EE7
     lda     enemyVulnerability,x    ; $9EE8
@@ -3038,7 +3038,7 @@ Lizalfos_Draw:
 @loc_9EF2:
     pla                             ; $9EF2
     beq     @loc_9F05               ; $9EF3
-    lda     ram_00D9                ; $9EF5
+    lda     drawScratch             ; $9EF5
     and     #$04                    ; $9EF7
     beq     @loc_9F05               ; $9EF9
     lda     frameCounter            ; $9EFB
@@ -3056,7 +3056,7 @@ Lizalfos_Draw:
     and     #$FC                    ; $9F0D
     bne     @done                   ; $9F0F
     lda     enemyType,x             ; $9F11
-    sta     ram_00D9                ; $9F13
+    sta     drawScratch             ; $9F13
     lda     objY+1,x                ; $9F15
     sta     temp0                   ; $9F17
     lda     objState+1,x            ; $9F19
@@ -3102,7 +3102,7 @@ Lizalfos_Draw:
     sta     temp1                   ; $9F51
     ldy     temp7                   ; $9F53
     ldx     temp15                  ; $9F55
-    lda     ram_00D9                ; $9F57
+    lda     drawScratch             ; $9F57
     cmp     #$1B                    ; $9F59
     beq     @loc_9F7A               ; $9F5B
     cpx     #$03                    ; $9F5D

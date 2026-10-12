@@ -113,20 +113,20 @@ PalaceFloorRecordsLo_Bank4:
 ; ---------------------------------------------------------------------------
 ; Palace_SetFloorTiles_Bank4
 ;
-; Set up the floor tile (ram_010D) from the background type (ram_010C):
+; Set up the floor tile (floorTile) from the background type (areaTileSet):
 ; byte 8 of its record.  Bank 4 (palaces 1, 2 and 5), called by Area_SetFloorTiles.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Palace_SetFloorTiles_Bank4:
-    ldx     ram_010C                ; $8167
+    ldx     areaTileSet             ; $8167
     lda     PalaceFloorRecordsLo_Bank4,x ; $816A
     sta     temp12                  ; $816D
     lda     #$81                    ; $816F
     sta     temp13                  ; $8171
     ldy     #$08                    ; $8173
     lda     (temp12),y              ; $8175
-    sta     ram_010D                ; $8177
+    sta     floorTile               ; $8177
     rts                             ; $817A
 ; (unreferenced: $817B-$817C, 2 bytes)
 
@@ -163,13 +163,13 @@ Palace_DrawObjectTwoRows_Bank4:
     jsr     Palace_GetObjectTiles_Bank4 ; $819F
     jsr     Palace_FillObjectRow_Bank4 ; $81A2
     lda     temp0                   ; $81A5
-    sta     ram_0112                ; $81A7
+    sta     objectTile              ; $81A7
     jsr     AreaMap_NextBuildRow    ; $81AA
 
 ; ---------------------------------------------------------------------------
 ; Palace_FillObjectRow_Bank4
 ;
-; Fill a row of the object's width with tile ram_0112.
+; Fill a row of the object's width with tile objectTile.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -180,7 +180,7 @@ Palace_FillObjectRow_Bank4:
     jsr     AreaMap_GetPagePtr      ; $81B3
 
 @loop:
-    lda     ram_0112                ; $81B6
+    lda     objectTile              ; $81B6
     jsr     AreaMap_PutTileRight    ; $81B9
     dex                             ; $81BC
     bpl     @loop                   ; $81BD
@@ -207,17 +207,17 @@ Palace_DrawObjectColumn_Bank4:
 Palace_DrawObjectPillar_Bank4:
     jsr     Palace_GetObjectTiles_Bank4 ; $81C6
     jsr     AreaMap_GetPagePtr      ; $81C9
-    lda     ram_0112                ; $81CC
+    lda     objectTile              ; $81CC
     jsr     AreaMap_PutTileDown     ; $81CF
     sta     areaBuildPos            ; $81D2
     dec     areaObjectType          ; $81D5
     lda     temp0                   ; $81D8
-    sta     ram_0112                ; $81DA
+    sta     objectTile              ; $81DA
 
 ; ---------------------------------------------------------------------------
 ; Palace_FillObjectColumn_Bank4
 ;
-; Fill a column of the object's size with tile ram_0112.
+; Fill a column of the object's size with tile objectTile.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -228,7 +228,7 @@ Palace_FillObjectColumn_Bank4:
     jsr     AreaMap_GetPagePtr      ; $81E3
 
 @loop:
-    lda     ram_0112                ; $81E6
+    lda     objectTile              ; $81E6
     jsr     AreaMap_PutTileDown     ; $81E9
     dex                             ; $81EC
     bpl     @loop                   ; $81ED
@@ -238,7 +238,7 @@ Palace_FillObjectColumn_Bank4:
 ; Palace_GetObjectTiles_Bank4
 ;
 ; Load the tiles of large object x (its dispatch index) from
-; PalaceObjectTiles_Bank4: ram_0112 the main tile, temp0 the second.
+; PalaceObjectTiles_Bank4: objectTile the main tile, temp0 the second.
 ; QUIRK: if bit 7 of the area header's second byte were set, it would read
 ; them from Palace_DrawObjectRow_Bank4 instead, which is code; no palace
 ; area sets it.
@@ -258,7 +258,7 @@ Palace_GetObjectTiles_Bank4:
     lda     PalaceObjectTiles_Bank4,x ; $81FD
 
 @loc_8200:
-    sta     ram_0112                ; $8200
+    sta     objectTile              ; $8200
     lda     Palace_DrawObjectRow_Bank4+1,x ; $8203
     bcs     @loc_820B               ; $8206
     lda     PalaceObjectTiles_Bank4+1,x ; $8208
@@ -281,7 +281,7 @@ Palace_DrawLava_Bank4:
     ora     #$B0                    ; $8213
     sta     areaBuildPos            ; $8215
     lda     #$83                    ; $8218
-    sta     ram_0112                ; $821A
+    sta     objectTile              ; $821A
 
 @loop:
     lda     areaObjectType          ; $821D
@@ -290,12 +290,12 @@ Palace_DrawLava_Bank4:
     jsr     AreaMap_GetPagePtr      ; $8223
 
 @loop2:
-    lda     ram_0112                ; $8226
+    lda     objectTile              ; $8226
     jsr     AreaMap_PutTileRight    ; $8229
     dex                             ; $822C
     bpl     @loop2                  ; $822D
     lda     #$84                    ; $822F
-    sta     ram_0112                ; $8231
+    sta     objectTile              ; $8231
     jsr     AreaMap_NextBuildRow    ; $8234
     and     #$F0                    ; $8237
     cmp     #$D0                    ; $8239
@@ -1373,7 +1373,7 @@ HorseHead_Draw:
     ldx     HorseHeadFrames,y       ; $984B
     ldy     #$58                    ; $984E
     jsr     Sprite_DrawEnemyPair    ; $9850
-    stx     ram_00D9                ; $9853
+    stx     drawScratch             ; $9853
     ldx     currentObject           ; $9855
     lda     objFacing+1,x           ; $9857
     lsr     a                       ; $9859
@@ -1386,7 +1386,7 @@ HorseHead_Draw:
     clc                             ; $9863
     adc     HorseHeadDrawOffsets,y  ; $9864
     sta     temp1                   ; $9867
-    ldx     ram_00D9                ; $9869
+    ldx     drawScratch             ; $9869
     ldy     #$68                    ; $986B
     jsr     Sprite_DrawEnemyPairKeepX ; $986D
 
@@ -1465,15 +1465,15 @@ Tinsuit_Init:
 ; Projectile_Flame_Bank4
 ;
 ; Projectile type 7 (flame): with a sound, slows down, falls to the floor
-; and burns there for ram_044C frames.
+; and burns there for projectileTimer frames.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_Flame_Bank4:
     jsr     Projectile_PlaySound_Bank4 ; $98B9
-    lda     ram_044C,x              ; $98BC
+    lda     projectileTimer,x       ; $98BC
     beq     @loc_98C6               ; $98BF
-    dec     ram_044C,x              ; $98C1
+    dec     projectileTimer,x       ; $98C1
     bne     @loc_98C9               ; $98C4
 ; (code below not executed in the test movies)
 
@@ -1531,7 +1531,7 @@ AcidDripper_Draw:
 Projectile_AcidDrop_Bank4:
     jsr     Projectile_HitsBg       ; $98F8
     ldy     #$02                    ; $98FB
-    lda     ram_044C,x              ; $98FD
+    lda     projectileTimer,x       ; $98FD
     bne     @loc_9903               ; $9900
     iny                             ; $9902
 
@@ -1684,7 +1684,7 @@ Projectile_Draw_Bank4:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlame_Bank4:
-    ldy     ram_044C,x              ; $999F
+    ldy     projectileTimer,x       ; $999F
     cpy     #$50                    ; $99A2
     bcs     @loc_99BE               ; $99A4
 ; (code below not executed in the test movies)
@@ -2537,18 +2537,18 @@ Ironknuckle_PauseThenNext_Done:
 ; ---------------------------------------------------------------------------
 ; Enemy_KnockBackOrWalk_Bank4
 ;
-; While knocked back (ram_043E), move by the knockback; otherwise move
+; While knocked back (enemyKnockBack), move by the knockback; otherwise move
 ; unless against a wall.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank4:
-    lda     ram_043E,x              ; $9E17
+    lda     enemyKnockBack,x        ; $9E17
     beq     Enemy_Walk_Bank4        ; $9E1A
-    dec     ram_043E,x              ; $9E1C
+    dec     enemyKnockBack,x        ; $9E1C
     bpl     @loc_9E27               ; $9E1F
-    inc     ram_043E,x              ; $9E21
-    inc     ram_043E,x              ; $9E24
+    inc     enemyKnockBack,x        ; $9E21
+    inc     enemyKnockBack,x        ; $9E24
 
 @loc_9E27:
     sta     objXVelocity+1,x        ; $9E27
@@ -3136,9 +3136,9 @@ FallingBlock_Ai:
     lda     #$02                    ; $AC25
     sta     sfxRequest+1            ; $AC27
     jsr     Enemy_Remove            ; $AC29
-    ldy     ram_044B                ; $AC2C
+    ldy     enemyFloorTileIndex     ; $AC2C
     lda     SpecialTiles_Bank4+4    ; $AC2F
-    sta     (ram_00DA),y            ; $AC32
+    sta     (enemyFloorTilePtr),y   ; $AC32
     lda     objY+1,x                ; $AC34
     and     #$F8                    ; $AC36
     sta     temp2                   ; $AC38
@@ -3291,9 +3291,9 @@ SkullHead_Ai_Bank4B:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_Mace_Bank4B:
-    lda     ram_044C,x              ; $AD0D
+    lda     projectileTimer,x       ; $AD0D
     beq     @loc_AD17               ; $AD10
-    dec     ram_044C,x              ; $AD12
+    dec     projectileTimer,x       ; $AD12
     bpl     Projectile_RestoreX_Bank4B ; $AD15
 
 @loc_AD17:
@@ -3304,7 +3304,7 @@ Projectile_Mace_Bank4B:
     jsr     Enemy_TurnAround        ; $AD1C
     ldx     currentObject           ; $AD1F
     lda     #$80                    ; $AD21
-    sta     ram_044C,x              ; $AD23
+    sta     projectileTimer,x       ; $AD23
     jmp     Projectile_RestoreX_Bank4B ; $AD26
 
 ; ---------------------------------------------------------------------------
@@ -3317,9 +3317,9 @@ Projectile_Mace_Bank4B:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_CarockBeam:
-    lda     ram_044C,x              ; $AD29
+    lda     projectileTimer,x       ; $AD29
     bne     Projectile_RestoreX_Bank4B ; $AD2C
-    lda     ram_045E,x              ; $AD2E
+    lda     projectileSpeed,x       ; $AD2E
     tax                             ; $AD31
     stx     swordOwner              ; $AD32
     lda     objState+1,x            ; $AD34
@@ -3710,7 +3710,7 @@ Wizrobe_FireBeam:
     bcs     Wizrobe_FireBeam_Done   ; $AEDE
     adc     a:objFacing+7,y         ; $AEE0
     tax                             ; $AEE3
-    sta     ram_044C,y              ; $AEE4
+    sta     projectileTimer,y       ; $AEE4
     lda     WizrobeBeamXOffsets,x   ; $AEE7
     ldx     currentObject           ; $AEEA
     adc     objX+1,x                ; $AEEC
@@ -3727,7 +3727,7 @@ Wizrobe_FireBeam:
     sta     a:objY+7,y              ; $AF08
     ldx     currentObject           ; $AF0B
     txa                             ; $AF0D
-    sta     ram_045E,y              ; $AF0E
+    sta     projectileSpeed,y       ; $AF0E
 
 Wizrobe_FireBeam_Done:
     rts                             ; $AF11
@@ -4084,7 +4084,7 @@ DoomKnocker_Ai:
     lda     #$06                    ; $B0CD
     sta     a:objState+7,y          ; $B0CF
     lda     #$40                    ; $B0D2
-    sta     ram_044C,y              ; $B0D4
+    sta     projectileTimer,y       ; $B0D4
 
 @loc_B0D7:
     lda     enemyAiState,x          ; $B0D7
@@ -4118,7 +4118,7 @@ DoomKnocker_Ai:
 ; ---------------------------------------------------------------------------
 Barba_Init:
     lda     #$00                    ; $B0FE
-    sta     ram_0499                ; $B100
+    sta     barbaStep               ; $B100
     lda     #$F0                    ; $B103
     sta     objY+1,x                ; $B105
 
@@ -4156,7 +4156,7 @@ BarbaXPositions:
 ; ---------------------------------------------------------------------------
 ; Barba_Ai
 ;
-; Barba (palace 6 boss), by ram_0499: Barba_Wait, Barba_Rise, Barba_Breathe,
+; Barba (palace 6 boss), by barbaStep: Barba_Wait, Barba_Rise, Barba_Breathe,
 ; Barba_Sink.
 ;
 ; Status:  provisional
@@ -4169,7 +4169,7 @@ Barba_Ai:
     jsr     Enemy_FaceLink          ; $B12A
     lda     timerFast+12            ; $B12D
     bne     Barba_Wait_Done         ; $B130
-    lda     ram_0499                ; $B132
+    lda     barbaStep               ; $B132
     jsr     JumpTable               ; $B135
 ; (inline jump table)
     .word   Barba_Wait              ; $B138
@@ -4192,7 +4192,7 @@ Barba_Wait:
     tay                             ; $B14A
     lda     BarbaXPositions,y       ; $B14B
     sta     objX+1,x                ; $B14E
-    inc     ram_0499                ; $B150
+    inc     barbaStep               ; $B150
 
 Barba_Wait_Done:
     rts                             ; $B153
@@ -4216,7 +4216,7 @@ Barba_Rise:
 @loc_B161:
     lda     #$A0                    ; $B161
     sta     timerFast+TIMER_ENEMY,x ; $B163
-    inc     ram_0499                ; $B166
+    inc     barbaStep               ; $B166
     rts                             ; $B169
 
 ; ---------------------------------------------------------------------------
@@ -4279,7 +4279,7 @@ Barba_Breathe:
 @loc_B1BF:
     lda     #$80                    ; $B1BF
     sta     timerFast+TIMER_ENEMY,x ; $B1C1
-    inc     ram_0499                ; $B1C4
+    inc     barbaStep               ; $B1C4
     rts                             ; $B1C7
 
 ; ---------------------------------------------------------------------------
@@ -4299,7 +4299,7 @@ Barba_Sink:
 
 @loc_B1D3:
     lda     #$00                    ; $B1D3
-    sta     ram_0499                ; $B1D5
+    sta     barbaStep               ; $B1D5
     lda     #$60                    ; $B1D8
     sta     timerFast+TIMER_ENEMY,x ; $B1DA
     rts                             ; $B1DD
@@ -4468,11 +4468,11 @@ Barba_Draw:
     lsr     a                       ; $B29D
     lsr     a                       ; $B29E
     and     #$07                    ; $B29F
-    sta     ram_00D9                ; $B2A1
+    sta     drawScratch             ; $B2A1
     lda     timerFast+TIMER_ENEMY,x ; $B2A3
     sta     temp6                   ; $B2A6
     ldx     #$64                    ; $B2A8
-    ldy     ram_0499                ; $B2AA
+    ldy     barbaStep               ; $B2AA
     cpy     #$02                    ; $B2AD
     bne     @loc_B2C3               ; $B2AF
     sbc     #$30                    ; $B2B1
@@ -4511,7 +4511,7 @@ Barba_Draw:
     adc     temp14                  ; $B2DD
     tay                             ; $B2DF
     lda     BarbaDrawTiles,y        ; $B2E0
-    ldy     ram_0499                ; $B2E3
+    ldy     barbaStep               ; $B2E3
     cpy     #$02                    ; $B2E6
     bne     @loc_B2EB               ; $B2E8
     asl     a                       ; $B2EA
@@ -4530,7 +4530,7 @@ Barba_Draw:
 @loc_B2FB:
     jsr     Sprite_DrawEnemyPair    ; $B2FB
     inc     temp14                  ; $B2FE
-    dec     ram_00D9                ; $B300
+    dec     drawScratch             ; $B300
     bpl     @loop                   ; $B302
 
 @loc_B304:
@@ -4545,7 +4545,7 @@ Barba_Draw:
     adc     BarbaHeadYOffsets,x     ; $B315
     sta     temp1                   ; $B318
     ldx     #$9A                    ; $B31A
-    lda     ram_0499                ; $B31C
+    lda     barbaStep               ; $B31C
     cmp     #$02                    ; $B31F
     bne     @loc_B339               ; $B321
     lda     temp7                   ; $B323
@@ -4676,7 +4676,7 @@ Rebonack_Draw:
     lda     enemyAiState,x          ; $B3A8
     lsr     a                       ; $B3AA
     lsr     a                       ; $B3AB
-    sta     ram_00D9                ; $B3AC
+    sta     drawScratch             ; $B3AC
     ldy     temp2                   ; $B3AE
     lda     drawOffscreen+1         ; $B3B0
     pha                             ; $B3B2
@@ -4700,7 +4700,7 @@ Rebonack_Draw:
     asl     a                       ; $B3C8
     asl     a                       ; $B3C9
     asl     a                       ; $B3CA
-    adc     ram_00D9                ; $B3CB
+    adc     drawScratch             ; $B3CB
     tay                             ; $B3CD
     lda     temp1                   ; $B3CE
     adc     RebonackDrawOffsets,y   ; $B3D0
@@ -4739,7 +4739,7 @@ Rebonack_Draw:
     asl     a                       ; $B406
     asl     a                       ; $B407
     asl     a                       ; $B408
-    adc     ram_00D9                ; $B409
+    adc     drawScratch             ; $B409
     tay                             ; $B40B
     lda     temp1                   ; $B40C
     adc     RebonackDrawOffsets,y   ; $B40E
@@ -4787,12 +4787,12 @@ Carock_Draw:
     lda     temp1                   ; $B439
     clc                             ; $B43B
     adc     #$10                    ; $B43C
-    sta     ram_00D9                ; $B43E
+    sta     drawScratch             ; $B43E
     lda     temp2                   ; $B440
     cmp     #$01                    ; $B442
     bne     @loc_B44F               ; $B444
     lda     drawScreenX+1           ; $B446
-    sta     ram_00D9                ; $B448
+    sta     drawScratch             ; $B448
     clc                             ; $B44A
     adc     #$10                    ; $B44B
     sta     temp1                   ; $B44D
@@ -4808,7 +4808,7 @@ Carock_Draw:
     jsr     Sprite_DrawEnemyPair    ; $B459
     jsr     Sprite_DrawEnemyPair    ; $B45C
     jsr     Sprite_DrawEnemyPairKeepX ; $B45F
-    lda     ram_00D9                ; $B462
+    lda     drawScratch             ; $B462
     sta     temp1                   ; $B464
     lda     objY+1,x                ; $B466
     sta     temp0                   ; $B468
@@ -5423,7 +5423,7 @@ Mago_Ai:
     sta     a:objXHi+7,y            ; $B7F9
     lda     MagoShotSpeeds,x        ; $B7FC
     sta     a:objXVelocity+7,y      ; $B7FF
-    sta     ram_045E,y              ; $B802
+    sta     projectileSpeed,y       ; $B802
     ldx     currentObject           ; $B805
 
 @loc_B807:
@@ -5801,9 +5801,9 @@ Enemy_DropFlame_Bank4:
     lda     #$07                    ; $B9A9
     sta     a:objState+7,y          ; $B9AB
     lda     #$FF                    ; $B9AE
-    sta     ram_044C,y              ; $B9B0
+    sta     projectileTimer,y       ; $B9B0
     lda     #$00                    ; $B9B3
-    sta     ram_045E,y              ; $B9B5
+    sta     projectileSpeed,y       ; $B9B5
     sta     a:objXVelocity+7,y      ; $B9B8
     sta     objYVelocity+7,y        ; $B9BB
 
@@ -5838,7 +5838,7 @@ AcidDripper_Ai:
     sta     objYVelocity+7,y        ; $B9E8
     lda     rng+1,x                 ; $B9EB
     and     #$07                    ; $B9EE
-    sta     ram_044C,y              ; $B9F0
+    sta     projectileTimer,y       ; $B9F0
 
 @done:
     rts                             ; $B9F3
@@ -6644,14 +6644,14 @@ Stalfos_Draw:
     ldx     #$30                    ; $BE2F
 
 @loc_BE31:
-    stx     ram_00D9                ; $BE31
+    stx     drawScratch             ; $BE31
     txa                             ; $BE33
     clc                             ; $BE34
     adc     temp13                  ; $BE35
     tax                             ; $BE37
     jsr     Sprite_DrawEnemyPair    ; $BE38
     jsr     Sprite_DrawEnemyPairKeepX ; $BE3B
-    lda     ram_00D9                ; $BE3E
+    lda     drawScratch             ; $BE3E
     cmp     #$38                    ; $BE40
     bne     @loc_BE57               ; $BE42
     lda     oamBuffer - 14,y        ; $BE44
@@ -6729,7 +6729,7 @@ Boss_UpdateIntro:
     bne     @loc_BEF0               ; $BEA6
     inc     enemyActive,x           ; $BEA8
     lda     #$0A                    ; $BEAA
-    sta     ram_00D9                ; $BEAC
+    sta     drawScratch             ; $BEAC
     lda     currentObject           ; $BEAE
     pha                             ; $BEB0
     ldx     #$05                    ; $BEB1
@@ -6746,7 +6746,7 @@ Boss_UpdateIntro:
     ldy     #$01                    ; $BEC2
     jsr     Obj_ComputeScreenPos    ; $BEC4
     ldx     currentObject           ; $BEC7
-    ldy     ram_00D9                ; $BEC9
+    ldy     drawScratch             ; $BEC9
     bne     @loc_BEE2               ; $BECB
 ; (code below not executed in the test movies)
     lda     drawOffscreen+1         ; $BECD

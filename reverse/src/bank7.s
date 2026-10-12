@@ -1435,7 +1435,7 @@ FloorPatterns:
 Area_DrawFloors:
     lda     #$00                    ; $C755
     sta     areaBuildColumn         ; $C757
-    sta     ram_010B                ; $C75A
+    sta     floorColumn             ; $C75A
     sta     areaBuildPage           ; $C75D
     ldy     #$02                    ; $C760
     lda     (areaDataPtr),y         ; $C762
@@ -1450,7 +1450,7 @@ Area_DrawFloors:
     lsr     a                       ; $C775
     lsr     a                       ; $C776
     lsr     a                       ; $C777
-    sta     ram_010C                ; $C778
+    sta     areaTileSet             ; $C778
     lda     #$04                    ; $C77B
     sta     areaDataOffset          ; $C77D
     jsr     Area_SetFloorTiles      ; $C780
@@ -1467,7 +1467,7 @@ Area_DrawFloors:
     jsr     Area_NextObjectPos      ; $C792
 
 @loc_C795:
-    lda     ram_010B                ; $C795
+    lda     floorColumn             ; $C795
     lsr     a                       ; $C798
     lsr     a                       ; $C799
     lsr     a                       ; $C79A
@@ -1475,7 +1475,7 @@ Area_DrawFloors:
     sta     areaBuildPage           ; $C79C
     jsr     AreaMap_GetPagePtrY     ; $C79F
     lda     areaBuildColumn         ; $C7A2
-    cmp     ram_010B                ; $C7A5
+    cmp     floorColumn             ; $C7A5
     beq     @loc_C7C6               ; $C7A8
     bpl     @loc_C7F0               ; $C7AA
     iny                             ; $C7AC
@@ -1528,16 +1528,16 @@ Area_DrawFloors:
 
 @loc_C7F0:
     sty     areaDataOffset          ; $C7F0
-    lda     ram_010B                ; $C7F3
+    lda     floorColumn             ; $C7F3
     and     #$0F                    ; $C7F6
     sta     temp10                  ; $C7F8
     jsr     Area_DrawFloorColumn    ; $C7FA
-    inc     ram_010B                ; $C7FD
-    lda     ram_010B                ; $C800
+    inc     floorColumn             ; $C7FD
+    lda     floorColumn             ; $C800
     cmp     #$40                    ; $C803
     beq     @done                   ; $C805
     lda     areaBuildColumn         ; $C807
-    cmp     ram_010B                ; $C80A
+    cmp     floorColumn             ; $C80A
     bpl     @loc_C812               ; $C80D
     jmp     @loc_C78A               ; $C80F
 
@@ -1595,14 +1595,14 @@ Area_DrawFloorColumn:
     lda     #$E0                    ; $C844
 
 @loc_C846:
-    sta     ram_010E                ; $C846
-    stx     ram_010F                ; $C849
+    sta     floorPatternBits        ; $C846
+    stx     floorRowCount           ; $C849
 
 @loop:
     sty     temp8                   ; $C84C
-    ldx     ram_010F                ; $C84E
+    ldx     floorRowCount           ; $C84E
     lda     FloorPatterns,y         ; $C851
-    and     ram_010E                ; $C854
+    and     floorPatternBits        ; $C854
     cpx     #$00                    ; $C857
     beq     @loc_C85F               ; $C859
 
@@ -1634,8 +1634,8 @@ Area_DrawFloorColumn:
     adc     #$10                    ; $C87A
     sta     temp10                  ; $C87C
     ldy     temp8                   ; $C87E
-    lsr     ram_010E                ; $C880
-    dec     ram_010F                ; $C883
+    lsr     floorPatternBits        ; $C880
+    dec     floorRowCount           ; $C883
     bpl     @loop                   ; $C886
     ldx     #$05                    ; $C888
     iny                             ; $C88A
@@ -1643,7 +1643,7 @@ Area_DrawFloorColumn:
     and     #$01                    ; $C88C
     bne     @loc_C844               ; $C88E
     ldy     temp10                  ; $C890
-    lda     ram_010D                ; $C892
+    lda     floorTile               ; $C892
     sta     (temp14),y              ; $C895
     tya                             ; $C897
     and     #$0F                    ; $C898
@@ -1981,7 +1981,7 @@ Death_LoseLife:
     sta     pauseState              ; $CA31
     sta     menuRow                 ; $CA34
     sta     gameFrozen              ; $CA37
-    sta     ram_048D                ; $CA39
+    sta     linkTalking             ; $CA39
     ldy     #$05                    ; $CA3C
 
 @loop2:
@@ -4512,7 +4512,7 @@ Enemy_Spawn:
     sta     enemyStunTimer,x        ; $D698
     sta     enemyAiState,x          ; $D69B
     sta     objState+1,x            ; $D69D
-    sta     ram_043E,x              ; $D69F
+    sta     enemyKnockBack,x        ; $D69F
     sta     objYVelocity+1,x        ; $D6A2
     sta     enemyVulnerability,x    ; $D6A5
     sta     ram_04A0,x              ; $D6A8
@@ -5693,7 +5693,7 @@ RockGenerator_Ai:
     sta     a:objY+7,y              ; $DC65
     txa                             ; $DC68
     and     #$01                    ; $DC69
-    sta     ram_044C,y              ; $DC6B
+    sta     projectileTimer,y       ; $DC6B
     tax                             ; $DC6E
     lda     scrollX                 ; $DC6F
     adc     RockSpawnX,x            ; $DC72
@@ -7113,7 +7113,7 @@ Enemy_KnockBack:
 ; ---------------------------------------------------------------------------
 ; Enemy_SetKnockBack
 ;
-; Set enemy x's knockback speed (ram_043E) from EnemyKnockBackSpeeds,y, doubled while
+; Set enemy x's knockback speed (enemyKnockBack) from EnemyKnockBackSpeeds,y, doubled while
 ; it is stunned.
 ;
 ; Status:  confirmed
@@ -7125,7 +7125,7 @@ Enemy_SetKnockBack:
     asl     a                       ; $E394
 
 @loc_E395:
-    sta     ram_043E,x              ; $E395
+    sta     enemyKnockBack,x        ; $E395
     rts                             ; $E398
 
 ; ---------------------------------------------------------------------------
@@ -7221,7 +7221,7 @@ Projectile_CheckLinkAlternate:
 ; (end of code not executed in the test movies)
 
 @loc_E3DD:
-    sta     ram_00D9                ; $E3DD
+    sta     drawScratch             ; $E3DD
     ldy     #$02                    ; $E3DF
     lda     objXVelocity+7,x        ; $E3E1
     beq     @loc_E3ED               ; $E3E3
@@ -7239,14 +7239,14 @@ Projectile_CheckLinkAlternate:
     jsr     Link_GetShieldHitbox    ; $E3F1
     jsr     Hitbox_Overlap          ; $E3F4
     bcc     Projectile_HitLinkBody  ; $E3F7
-    lda     ram_00D9                ; $E3F9
+    lda     drawScratch             ; $E3F9
     beq     @loc_E413               ; $E3FB
     cmp     #$40                    ; $E3FD
     beq     Projectile_Deflect      ; $E3FF
     lda     reflectSpellActive      ; $E401
     beq     @loc_E413               ; $E404
     lda     #$00                    ; $E406
-    sta     ram_044C,x              ; $E408
+    sta     projectileTimer,x       ; $E408
     jsr     Projectile_Deflect      ; $E40B
     asl     objXVelocity+7,x        ; $E40E
     asl     objXVelocity+7,x        ; $E410
@@ -8236,7 +8236,7 @@ Enemy_Kill:
     lda     #$25                    ; $E8C1
     sta     timerFast+TIMER_ENEMY,x ; $E8C3
     lda     #$00                    ; $E8C6
-    sta     ram_043E,x              ; $E8C8
+    sta     enemyKnockBack,x        ; $E8C8
     lda     #$02                    ; $E8CB
     sta     enemyActive,x           ; $E8CD
     lda     #$04                    ; $E8CF
@@ -8569,11 +8569,11 @@ Enemy_UpdateBgCollision:
     lda     temp2                   ; $EA5E
     sec                             ; $EA60
     sbc     #$10                    ; $EA61
-    sta     ram_044B                ; $EA63
+    sta     enemyFloorTileIndex     ; $EA63
     lda     temp14                  ; $EA66
-    sta     ram_00DA                ; $EA68
+    sta     enemyFloorTilePtr       ; $EA68
     lda     temp15                  ; $EA6A
-    sta     ram_00DB                ; $EA6C
+    sta     enemyFloorTilePtr+1     ; $EA6C
     lda     #$01                    ; $EA6E
     ldy     objXVelocity,x          ; $EA70
     bmi     @loc_EA75               ; $EA72
@@ -8598,11 +8598,11 @@ Enemy_UpdateBgCollision:
     jsr     Obj_ProbeBg             ; $EA8F
     dex                             ; $EA92
     lda     temp14                  ; $EA93
-    sta     ram_00DC                ; $EA95
+    sta     enemyWallTilePtr        ; $EA95
     lda     temp15                  ; $EA97
-    sta     ram_00DD                ; $EA99
+    sta     enemyWallTilePtr+1      ; $EA99
     lda     temp3                   ; $EA9B
-    sta     ram_00D9                ; $EA9D
+    sta     drawScratch             ; $EA9D
     rts                             ; $EA9F
 
 ProbeOffsetX:
@@ -8765,7 +8765,7 @@ Link_DrawDone:
     rts                             ; $EBEF
 
 Link_Draw:
-    lda     ram_048D                ; $EBF0
+    lda     linkTalking             ; $EBF0
     bne     Link_DrawDone           ; $EBF3
     ldx     #$00                    ; $EBF5
     stx     swordOwner              ; $EBF7
@@ -9061,14 +9061,14 @@ Link_DrawSprites:
     clc                             ; $EDA7
     adc     LinkFrameOffsets,x      ; $EDA8
     pha                             ; $EDAB
-    stx     ram_00D9                ; $EDAC
+    stx     drawScratch             ; $EDAC
     ldx     #$00                    ; $EDAE
     ldy     #$00                    ; $EDB0
     jsr     Obj_ComputeWideOffscreen ; $EDB2
     lsr     a                       ; $EDB5
     lsr     a                       ; $EDB6
     lsr     a                       ; $EDB7
-    dec     ram_00D9                ; $EDB8
+    dec     drawScratch             ; $EDB8
     bne     @loc_EDBE               ; $EDBA
     lsr     a                       ; $EDBC
     lsr     a                       ; $EDBD

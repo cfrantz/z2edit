@@ -124,20 +124,20 @@ PalaceFloorRecordsLo_Bank5:
 ; ---------------------------------------------------------------------------
 ; Palace_SetFloorTiles_Bank5
 ;
-; Set up the floor tile (ram_010D) from the background type (ram_010C):
+; Set up the floor tile (floorTile) from the background type (areaTileSet):
 ; byte 8 of its record.  Bank 5 (the Great Palace), called by Area_SetFloorTiles.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Palace_SetFloorTiles_Bank5:
-    ldx     ram_010C                ; $817B
+    ldx     areaTileSet             ; $817B
     lda     PalaceFloorRecordsLo_Bank5,x ; $817E
     sta     temp12                  ; $8181
     lda     #$81                    ; $8183
     sta     temp13                  ; $8185
     ldy     #$08                    ; $8187
     lda     (temp12),y              ; $8189
-    sta     ram_010D                ; $818B
+    sta     floorTile               ; $818B
     rts                             ; $818E
 
 PalaceObjectTiles_Bank5:
@@ -170,13 +170,13 @@ Palace_DrawObjectRow_Bank5:
 Palace_DrawObjectTwoRows_Bank5:
     jsr     Palace_DrawObjectRow_Bank5 ; $81B3
     lda     temp0                   ; $81B6
-    sta     ram_0112                ; $81B8
+    sta     objectTile              ; $81B8
     jsr     AreaMap_NextBuildRow    ; $81BB
 
 ; ---------------------------------------------------------------------------
 ; Palace_FillObjectRow_Bank5
 ;
-; Fill a row of the object's width with tile ram_0112.
+; Fill a row of the object's width with tile objectTile.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -187,7 +187,7 @@ Palace_FillObjectRow_Bank5:
     jsr     AreaMap_GetPagePtr      ; $81C4
 
 @loop:
-    lda     ram_0112                ; $81C7
+    lda     objectTile              ; $81C7
     jsr     AreaMap_PutTileRight    ; $81CA
     dex                             ; $81CD
     bpl     @loop                   ; $81CE
@@ -214,17 +214,17 @@ Palace_DrawObjectColumn_Bank5:
 Palace_DrawObjectPillar_Bank5:
     jsr     Palace_GetObjectTiles_Bank5 ; $81D7
     jsr     AreaMap_GetPagePtr      ; $81DA
-    lda     ram_0112                ; $81DD
+    lda     objectTile              ; $81DD
     jsr     AreaMap_PutTileDown     ; $81E0
     sta     areaBuildPos            ; $81E3
     dec     areaObjectType          ; $81E6
     lda     temp0                   ; $81E9
-    sta     ram_0112                ; $81EB
+    sta     objectTile              ; $81EB
 
 ; ---------------------------------------------------------------------------
 ; Palace_FillObjectColumn_Bank5
 ;
-; Fill a column of the object's size with tile ram_0112.
+; Fill a column of the object's size with tile objectTile.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -235,7 +235,7 @@ Palace_FillObjectColumn_Bank5:
     jsr     AreaMap_GetPagePtr      ; $81F4
 
 @loop:
-    lda     ram_0112                ; $81F7
+    lda     objectTile              ; $81F7
     jsr     AreaMap_PutTileDown     ; $81FA
     dex                             ; $81FD
     bpl     @loop                   ; $81FE
@@ -245,7 +245,7 @@ Palace_FillObjectColumn_Bank5:
 ; Palace_GetObjectTiles_Bank5
 ;
 ; Load the tiles of large object x (its dispatch index) from
-; PalaceObjectTiles_Bank5: ram_0112 the main tile, temp0 the second.
+; PalaceObjectTiles_Bank5: objectTile the main tile, temp0 the second.
 ; QUIRK: if bit 7 of the area header's second byte were set, it would read
 ; them from Palace_DrawObjectRow_Bank5 instead, which is code; no palace
 ; area sets it.
@@ -265,7 +265,7 @@ Palace_GetObjectTiles_Bank5:
     lda     PalaceObjectTiles_Bank5,x ; $820E
 
 @loc_8211:
-    sta     ram_0112                ; $8211
+    sta     objectTile              ; $8211
     lda     Palace_DrawObjectRow_Bank5+1,x ; $8214
     bcs     @loc_821C               ; $8217
     lda     PalaceObjectTiles_Bank5+1,x ; $8219
@@ -288,7 +288,7 @@ Palace_DrawLava_Bank5:
     ora     #$A0                    ; $8224
     sta     areaBuildPos            ; $8226
     lda     #$83                    ; $8229
-    sta     ram_0112                ; $822B
+    sta     objectTile              ; $822B
 
 @loop:
     lda     areaObjectType          ; $822E
@@ -297,12 +297,12 @@ Palace_DrawLava_Bank5:
     jsr     AreaMap_GetPagePtr      ; $8234
 
 @loop2:
-    lda     ram_0112                ; $8237
+    lda     objectTile              ; $8237
     jsr     AreaMap_PutTileRight    ; $823A
     dex                             ; $823D
     bpl     @loop2                  ; $823E
     lda     #$84                    ; $8240
-    sta     ram_0112                ; $8242
+    sta     objectTile              ; $8242
     jsr     AreaMap_NextBuildRow    ; $8245
     and     #$F0                    ; $8248
     cmp     #$D0                    ; $824A
@@ -2238,7 +2238,7 @@ KingBot_Draw:
     jsr     Sprite_DrawEnemyPair    ; $96CB
     lda     temp0                   ; $96CE
     sec                             ; $96D0
-    sbc     ram_00D9                ; $96D1
+    sbc     drawScratch             ; $96D1
     jsr     Sprite_DrawEnemyPairKeepX ; $96D3
     lda     objY+1,x                ; $96D6
     sta     oamBuffer+112           ; $96D8
@@ -3037,7 +3037,7 @@ DarkLink_CheckSword:
 @loc_9B07:
     jsr     Link_GetShieldHitbox    ; $9B07
     ldy     #$00                    ; $9B0A
-    lda     ram_047F                ; $9B0C
+    lda     swordX+1                ; $9B0C
     pha                             ; $9B0F
     cmp     drawScreenX+1           ; $9B10
     bcs     @loc_9B15               ; $9B12
@@ -3049,7 +3049,7 @@ DarkLink_CheckSword:
     sta     temp4                   ; $9B19
     lda     #$0E                    ; $9B1B
     sta     temp6                   ; $9B1D
-    lda     ram_0481                ; $9B1F
+    lda     swordY+1                ; $9B1F
     adc     #$03                    ; $9B22
     sta     temp5                   ; $9B24
     lda     #$02                    ; $9B26
@@ -3230,7 +3230,7 @@ Projectile_RollingFlame_Bank5:
     lda     objY+7,x                ; $9BEC
     and     #$F0                    ; $9BEE
     sta     objY+7,x                ; $9BF0
-    lda     ram_045E,x              ; $9BF2
+    lda     projectileSpeed,x       ; $9BF2
     bne     @loc_9C23               ; $9BF5
     sta     objXVelocity+7,x        ; $9BF7
     ldy     #$30                    ; $9BF9
@@ -3252,16 +3252,16 @@ Projectile_RollingFlame_Bank5:
 
 @loc_9C15:
     tya                             ; $9C15
-    sta     ram_044C,x              ; $9C16
-    inc     ram_045E,x              ; $9C19
+    sta     projectileTimer,x       ; $9C16
+    inc     projectileSpeed,x       ; $9C19
     lda     #$F0                    ; $9C1C
     sta     objYVelocity+7,x        ; $9C1E
     bne     Projectile_Fall_Bank5   ; $9C21
 
 @loc_9C23:
-    lda     ram_044C,x              ; $9C23
+    lda     projectileTimer,x       ; $9C23
     beq     Projectile_Kill_Bank5   ; $9C26
-    dec     ram_044C,x              ; $9C28
+    dec     projectileTimer,x       ; $9C28
     beq     Projectile_Kill_Bank5   ; $9C2B
     and     #$07                    ; $9C2D
     bne     Projectile_Arc_Bank5    ; $9C2F
@@ -3397,9 +3397,9 @@ Projectile_Draw_Bank5:
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlame_Bank5:
     jsr     Projectile_DrawFlash_Bank5 ; $9CCE
-    lda     ram_045E,x              ; $9CD1
+    lda     projectileSpeed,x       ; $9CD1
     beq     @done                   ; $9CD4
-    ldy     ram_044C,x              ; $9CD6
+    ldy     projectileTimer,x       ; $9CD6
     cpy     #$20                    ; $9CD9
     bcs     @loc_9CEB               ; $9CDB
     lda     frameCounter            ; $9CDD
@@ -3674,13 +3674,13 @@ Enemy_Walk_Bank5:
 ; ---------------------------------------------------------------------------
 ; Enemy_KnockBackOrWalk_Bank5
 ;
-; While knocked back (ram_043E), move by the knockback (on the ground,
+; While knocked back (enemyKnockBack), move by the knockback (on the ground,
 ; except Fokkeru); otherwise move unless against a wall.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank5:
-    ldy     ram_043E,x              ; $9E42
+    ldy     enemyKnockBack,x        ; $9E42
     beq     @loc_9E63               ; $9E45
     lda     enemyType,x             ; $9E47
     cmp     #$1D                    ; $9E49
@@ -3690,10 +3690,10 @@ Enemy_KnockBackOrWalk_Bank5:
     beq     @loc_9E5E               ; $9E51
 
 @loc_9E53:
-    dec     ram_043E,x              ; $9E53
+    dec     enemyKnockBack,x        ; $9E53
     bpl     @loc_9E5E               ; $9E56
-    inc     ram_043E,x              ; $9E58
-    inc     ram_043E,x              ; $9E5B
+    inc     enemyKnockBack,x        ; $9E58
+    inc     enemyKnockBack,x        ; $9E5B
 
 @loc_9E5E:
     sty     objXVelocity+1,x        ; $9E5E
@@ -3736,7 +3736,7 @@ Fokkeru_Ai:
     asl     a                       ; $9E8D
     sta     a:objXVelocity+7,y      ; $9E8E
     lda     #$00                    ; $9E91
-    sta     ram_045E,y              ; $9E93
+    sta     projectileSpeed,y       ; $9E93
     ldx     currentObject           ; $9E96
 
 @loc_9E98:
@@ -4564,7 +4564,7 @@ Thunderbird_Ai:
     bne     @loc_A3BD               ; $A373
     inc     enemyActive,x           ; $A375
     lda     #$0A                    ; $A377
-    sta     ram_00D9                ; $A379
+    sta     drawScratch             ; $A379
     lda     currentObject           ; $A37B
     pha                             ; $A37D
     ldx     #$05                    ; $A37E
@@ -4582,7 +4582,7 @@ Thunderbird_Ai:
     ldy     #$01                    ; $A38F
     jsr     Obj_ComputeScreenPos    ; $A391
     ldx     currentObject           ; $A394
-    ldy     ram_00D9                ; $A396
+    ldy     drawScratch             ; $A396
     bne     @loc_A3AF               ; $A398
     lda     drawOffscreen+1         ; $A39A
     and     #$88                    ; $A39C

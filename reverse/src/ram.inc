@@ -42,7 +42,6 @@ ram_0018                = $0018
 ; have only the enemy slots and are always indexed by enemy index.
 ; ---------------------------------------------------------------------------
 objYHi                  = $0019     ; [15] high byte of Y position: 0 = above the screen, 1 = on screen, 2+ = below (falling into a pit)
-ram_0028                = $0028
 objY                    = $0029     ; [17] Y position (side view)
 objXHi                  = $003B     ; [17] high byte of X position (map page)
 objX                    = $004D     ; [17] low byte of X position
@@ -63,7 +62,7 @@ overworldNextAddrHi     = $007B
 overworldNextAddrLo     = $007C
 overworldMoveFrames     = $007D
 overworldDrawStep       = $007E     ; step of drawing the overworld map
-ram_007F                = $007F
+overworldScrollY        = $007F     ; vertical scroll of the overworld map, in pixels within the square (Overworld_ContinueMove) (provisional)
 objState                = $0080     ; [15] per-object state: Link's animation, an enemy's behavior state, a projectile's type
 objOamOffset            = $0090     ; [15] offset in oamBuffer of the object's sprites; rotated every frame (oamRotation) to spread sprite flicker
 linkWalkDir             = $009F     ; last horizontal direction held: 1 = right, 2 = left
@@ -83,11 +82,9 @@ jumpSpellActive         = $00D0     ; 1 while the jump spell is active
 areaLastPage            = $00D1     ; last map page of the current area, 0-3
 areaDataPtr             = $00D4     ; (16-bit) data of the area being loaded
 enemyListPtr            = $00D6     ; (16-bit) the current area's enemy list in sramEnemyLists
-ram_00D9                = $00D9
-ram_00DA                = $00DA
-ram_00DB                = $00DB
-ram_00DC                = $00DC
-ram_00DD                = $00DD
+drawScratch             = $00D9     ; scratch byte of the enemy draw routines and Enemy_UpdateBgCollision (various uses)
+enemyFloorTilePtr       = $00DA     ; (16-bit) tile map row under the enemy, from Enemy_UpdateBgCollision's floor probes
+enemyWallTilePtr        = $00DC     ; (16-bit) tile map row beside the enemy, from its wall probes (a townsperson's door)
 gameFrozen              = $00DE     ; nonzero during scripted events (fairy, crystal, dialogs, doors, Dark Link appearing): enemies and Link wait (provisional)
 ram_00DF                = $00DF
 musicNotesPtr           = $00E0     ; (16-bit) note data of the current phrase; the four channels read it at their offsets (melodyOffset...)
@@ -112,13 +109,12 @@ ppuMaskShadow           = $00FE     ; last value written to PPUMASK
 ppuCtrlShadow           = $00FF     ; last value written to PPUCTRL
 nmiMode                 = $0100     ; NMI handler selection; see NMI_MODE_*
 areaBuildColumn         = $010A     ; absolute column (page * 16 + column) while building an area's tile map
-ram_010B                = $010B
-ram_010C                = $010C
-ram_010D                = $010D
-ram_010E                = $010E
-ram_010F                = $010F
-ram_0112                = $0112
-; ---------------------------------------------------------------------------
+floorColumn             = $010B     ; column being drawn by Area_DrawFloors
+areaTileSet             = $010C     ; tile set of the area (header byte 2 bits 6-4): selects the floor tile record (Area_SetFloorTiles)
+floorTile               = $010D     ; floor tile of the area's tile set (Area_SetFloorTiles)
+floorPatternBits        = $010E     ; bits of the floor pattern still to draw in this column (Area_DrawFloorColumn)
+floorRowCount           = $010F     ; rows left to draw in this column (Area_DrawFloorColumn)
+objectTile              = $0112     ; main tile of the area object being drawn (Area_GetObjectTiles_* and friends)
 ; Sprites and PPU updates
 ; ---------------------------------------------------------------------------
 oamBuffer               = $0200     ; [256] sprite attributes, copied to the PPU by OAM DMA every NMI
@@ -148,23 +144,20 @@ breakingBlockY          = $0429     ; [5] Y
 breakingBlockMapOffset  = $042E     ; [5] offset of the block in its tile map page
 breakingBlockMapPtrLo   = $0433     ; [5] tile map page pointer, low byte
 breakingBlockMapPtrHi   = $0438     ; [5] tile map page pointer, high byte
-ram_043E                = $043E
+enemyKnockBack          = $043E     ; [6] knockback frames of each enemy (Fighter_KnockBack, Enemy_KnockBackOrWalk_*)
 enemyVulnerability      = $0444     ; [6] which part of the enemy can be hit (provisional)
 linkAttackDir           = $044A     ; direction of the current attack (as linkWalkDir)
-ram_044B                = $044B
-ram_044C                = $044C
+enemyFloorTileIndex     = $044B     ; offset in enemyFloorTilePtr of the floor tile under the enemy
+projectileTimer         = $044C     ; [6] per-projectile counter (bubble rise, boomerang flight)
 ram_0452                = $0452
 ram_0458                = $0458
-ram_045E                = $045E
+projectileSpeed         = $045E     ; [6] speed a projectile was thrown at (boomerang return, beams)
 columnTiles             = $0464
-ram_0470                = $0470
 attrColumn              = $0471     ; [7] attribute bytes for the column being scrolled in
 linkJumpState           = $0479     ; 2 = going up, 1 = coming down, 0 = on the ground (provisional)
 swordX                  = $047E     ; screen X of Link's sword
-ram_047F                = $047F
 swordY                  = $0480     ; Y of Link's sword; $F8 = no sword
-ram_0481                = $0481
-ram_0484                = $0484
+fallStep                = $0484     ; step of the fall into an area (Mode_FallAnimate)
 oamRotation             = $0485     ; rotates the enemies' sprite slots each frame, 0-5
 areaNoCeiling           = $0486     ; bit 7 set: the area has no ceiling
 menuRepeatTimer         = $0487     ; frames until a held Up/Down moves a menu cursor again
@@ -173,12 +166,12 @@ dialogColumn            = $0489     ; column of the next character in the dialog
 dialogLineOffset        = $048A     ; nametable offset of the current text line ($40 per line)
 dialogPerson            = $048B     ; enemy slot of the person being talked to
 dialogAlreadyDone       = $048C     ; nonzero if the person's gift was already given (their "already done" text)
-ram_048D                = $048D
+linkTalking             = $048D     ; nonzero while Link talks to a townsperson; Link_Draw shows him facing them (provisional)
 enemyDropItem           = $048E     ; [6] item the enemy drops when killed, 0 = none
 linkDeathPending        = $0494     ; nonzero to start the death sequence
 linkAttackStanding      = $0495     ; 1 if the current attack was started standing, 0 crouching
 linkLandingTimer        = $0497     ; frames Link stays crouched after a hard landing
-ram_0499                = $0499
+barbaStep               = $0499     ; Barba's phase: wait, rise, breathe, sink
 ram_049A                = $049A
 itemHoldTimer           = $049C     ; frames left of Link holding up a collected item (set to $70 by Item_Collect for special items)
 heldItem                = $049D     ; item Link is holding up (drawn above him with HeldItemTiles)
@@ -484,7 +477,7 @@ titleLogoString         = objY+11   ; next logo string to redraw at the end of t
 titleEndStep            = objY+12   ; step of Story_End
 titleSplitNametable     = objY+13   ; nametable bits (PPUCTRL) below the sprite 0 split
 titleShootingStar       = objYHi+13 ; nonzero while the shooting star falls
-titleSplitAddr          = objYHi+14 ; (16-bit, high byte first; the low byte is ram_0028) PPU address written below the sprite 0 split, which sets the scroll there
+titleSplitAddr          = objYHi+14 ; (16-bit, high byte first; the low byte is $0028) PPU address written below the sprite 0 split, which sets the scroll there
 titleScrollHeld         = objXHi+4  ; nonzero while the story scroll waits for the music
 titleDelay              = timerFast+3 ; delay before the story scrolls, counted down every 4 frames (Story_TickDelay)
 ; File screens (FileSelect_*, Register_*, Eliminate_*)

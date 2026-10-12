@@ -408,7 +408,7 @@ Overworld_CheckEncounter:
     lda     EncounterPositions,y    ; $82FF
     and     #$F0                    ; $8302
     clc                             ; $8304
-    adc     ram_007F                ; $8305
+    adc     overworldScrollY        ; $8305
     sta     objY+1,x                ; $8307
     lda     EncounterPositions,y    ; $8309
     asl     a                       ; $830C
@@ -473,7 +473,7 @@ Overworld_DrawEncounters:
     adc     ram_056D,x              ; $834B
     sta     objY+1,x                ; $834E
     sec                             ; $8350
-    sbc     ram_007F                ; $8351
+    sbc     overworldScrollY        ; $8351
     sta     oamBuffer+128,y         ; $8353
     sta     oamBuffer+132,y         ; $8356
     lda     objX+1,x                ; $8359
@@ -622,7 +622,7 @@ Overworld_UpdateEncounters:
     lda     #$70                    ; $8441
     sbc     objY+1,x                ; $8443
     clc                             ; $8445
-    adc     ram_007F                ; $8446
+    adc     overworldScrollY        ; $8446
     clc                             ; $8448
     adc     #$10                    ; $8449
     cmp     #$20                    ; $844B
@@ -653,7 +653,7 @@ Overworld_UpdateEncounters:
     ldy     #$01                    ; $8474
     lda     objY+1,x                ; $8476
     sec                             ; $8478
-    sbc     ram_007F                ; $8479
+    sbc     overworldScrollY        ; $8479
     cmp     #$70                    ; $847B
     bcc     @loc_8481               ; $847D
     ldy     #$FF                    ; $847F
@@ -1100,7 +1100,7 @@ Overworld_ContinueMove:
     lsr     a                       ; $86DB
     bcc     @loc_86EE               ; $86DC
     inc     ppuScrollY              ; $86DE
-    inc     ram_007F                ; $86E0
+    inc     overworldScrollY        ; $86E0
     lda     ppuScrollY              ; $86E2
     cmp     #$F0                    ; $86E4
     bne     @loc_8704               ; $86E6
@@ -1110,7 +1110,7 @@ Overworld_ContinueMove:
 
 @loc_86EE:
     dec     ppuScrollY              ; $86EE
-    dec     ram_007F                ; $86F0
+    dec     overworldScrollY        ; $86F0
     lda     ppuScrollY              ; $86F2
     cmp     #$FF                    ; $86F4
     bne     @loc_8704               ; $86F6
@@ -2698,12 +2698,12 @@ Mode_FallAnimate:
     sta     ppuBuffer0,x            ; $8FFD
     dex                             ; $9000
     bpl     @loop                   ; $9001
-    inc     ram_0484                ; $9003
-    ldy     ram_0484                ; $9006
+    inc     fallStep                ; $9003
+    ldy     fallStep                ; $9006
     cpy     #$03                    ; $9009
     bcc     @loc_9012               ; $900B
     ldy     #$00                    ; $900D
-    sty     ram_0484                ; $900F
+    sty     fallStep                ; $900F
 
 @loc_9012:
     lda     FallPaletteColors,y     ; $9012
@@ -3054,7 +3054,7 @@ Spell_ThunderEffect:
 ; (end of code not executed in the test movies)
 
 @loc_91F4:
-    sta     ram_00D9                ; $91F4
+    sta     drawScratch             ; $91F4
     lda     currentObject           ; $91F6
     pha                             ; $91F8
     ldx     #$05                    ; $91F9
@@ -3071,7 +3071,7 @@ Spell_ThunderEffect:
     ldy     #$01                    ; $920A
     jsr     Obj_ComputeScreenPos    ; $920C
     ldx     currentObject           ; $920F
-    ldy     ram_00D9                ; $9211
+    ldy     drawScratch             ; $9211
     bne     @loc_922A               ; $9213
     lda     drawOffscreen+1         ; $9215
     and     #$88                    ; $9217
