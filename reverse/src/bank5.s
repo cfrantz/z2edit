@@ -4916,6 +4916,21 @@ Bank5PpuStrings:
     .word   RegisterScreenText      ; $A60C  6
     .word   EliminateScreenText     ; $A60E  7
 
+; ---------------------------------------------------------------------------
+; Bank5_Nmi
+;
+; NMI handler for the title and other bank 5 screens (nmiMode =
+; NMI_MODE_BANK5), reached from Nmi_Bank5.  Like the game NMI it does sprite
+; DMA, writes the PPU strings (from its own table, Bank5PpuStrings), sets the
+; scroll, plays sound (Sound_UpdateTitle, the title sound engine) and reads
+; the controllers; then it runs the bank 5 state machine (Bank5_RunState).
+;
+; QUIRK: unlike the game NMI it does not save a.  This is harmless: it
+; returns with a >= $80, which Main_Loop never mistakes for a load request,
+; and RTI restores the flags.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Bank5_Nmi:
     lda     ppuCtrlShadow           ; $A610
     and     #$7C                    ; $A612
