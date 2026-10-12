@@ -2257,24 +2257,24 @@ SideView_Start:
     ldy     areaStartPage           ; $8D10
     tya                             ; $8D13
     pha                             ; $8D14
-    lda     sram_6989,y             ; $8D15
+    lda     sramEntryLeftPage,y     ; $8D15
     sta     columnPage              ; $8D18
-    lda     sram_6990,y             ; $8D1B
+    lda     sramEntryRightPage,y    ; $8D1B
     sta     columnPage+1            ; $8D1E
-    lda     sram_6997,y             ; $8D21
+    lda     sramEntryLeftColumn,y   ; $8D21
     sta     columnIndex             ; $8D24
-    lda     sram_699E,y             ; $8D27
+    lda     sramEntryRightColumn,y  ; $8D27
     sta     columnIndex+1           ; $8D2A
-    lda     sram_69BA,y             ; $8D2D
+    lda     sramEntryScrollPage,y   ; $8D2D
     sta     scrollPage              ; $8D30
     sta     drawPage                ; $8D33
-    lda     sram_69A5,y             ; $8D36
+    lda     sramEntryScrollXHi,y    ; $8D36
     sta     scrollXHi               ; $8D39
     and     #$01                    ; $8D3C
     sta     playfieldNametable      ; $8D3E
-    lda     sram_69B3,y             ; $8D41
+    lda     sramEntryPpuScrollX,y   ; $8D41
     sta     a:ppuScrollX            ; $8D44
-    lda     sram_69AC,y             ; $8D47
+    lda     sramEntryScrollX,y      ; $8D47
     sta     scrollX                 ; $8D4A
     and     #$10                    ; $8D4D
     sta     ram_0721                ; $8D4F
@@ -2783,9 +2783,9 @@ Link_EnterArea:
     bne     @loc_9081               ; $9077
 
 @loc_9079:
-    lda     ram_05D3,y              ; $9079
+    lda     entryLinkX,y            ; $9079
     sta     objX                    ; $907C
-    lda     ram_05CC,y              ; $907E
+    lda     entryLinkXHi,y          ; $907E
 
 @loc_9081:
     sta     objXHi                  ; $9081

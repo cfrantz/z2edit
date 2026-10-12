@@ -1164,10 +1164,10 @@ Area_Load:
     ldy     areaStartPage           ; $C612
     lda     #$0F                    ; $C615
     sta     ram_0722                ; $C617
-    lda     sram_697B,y             ; $C61A
+    lda     sramEntryLoadPage,y     ; $C61A
     sta     columnPage              ; $C61D
     sta     columnPage+1            ; $C620
-    lda     sram_6982,y             ; $C623
+    lda     sramEntryLeftAttrColumn,y ; $C623
     sta     columnIndex             ; $C626
     sta     columnIndex+1           ; $C629
     jmp     Game_BlankAndNextMode   ; $C62C
@@ -1274,19 +1274,19 @@ Mode_FallSaveScroll:
 ; ---------------------------------------------------------------------------
 ; Scroll_SavePageState
 ;
-; Save the scroll state for page x in the SRAM tables at sram_6982 and up.
+; Save the scroll state for page x in the SRAM tables at sramEntryLeftAttrColumn and up.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_SavePageState:
     lda     ppuScrollX              ; $C690
     and     #$F0                    ; $C692
-    sta     sram_69B3,x             ; $C694
+    sta     sramEntryPpuScrollX,x   ; $C694
     lda     scrollPage              ; $C697
-    sta     sram_69BA,x             ; $C69A
+    sta     sramEntryScrollPage,x   ; $C69A
     lda     scrollX                 ; $C69D
     and     #$F0                    ; $C6A0
-    sta     sram_69AC,x             ; $C6A2
+    sta     sramEntryScrollX,x      ; $C6A2
     pha                             ; $C6A5
     sec                             ; $C6A6
     sbc     #$60                    ; $C6A7
@@ -1296,16 +1296,16 @@ Scroll_SavePageState:
     lsr     a                       ; $C6AD
     lsr     a                       ; $C6AE
     lsr     a                       ; $C6AF
-    sta     sram_6997,x             ; $C6B0
+    sta     sramEntryLeftColumn,x   ; $C6B0
     and     #$0E                    ; $C6B3
-    sta     sram_6982,x             ; $C6B5
+    sta     sramEntryLeftAttrColumn,x ; $C6B5
     lda     scrollXHi               ; $C6B8
-    sta     sram_69A5,x             ; $C6BB
+    sta     sramEntryScrollXHi,x    ; $C6BB
     plp                             ; $C6BE
     sbc     #$00                    ; $C6BF
     and     #$03                    ; $C6C1
-    sta     sram_6989,x             ; $C6C3
-    sta     sram_697B,x             ; $C6C6
+    sta     sramEntryLeftPage,x     ; $C6C3
+    sta     sramEntryLoadPage,x     ; $C6C6
     pla                             ; $C6C9
     clc                             ; $C6CA
     adc     #$60                    ; $C6CB
@@ -1315,17 +1315,17 @@ Scroll_SavePageState:
     lsr     a                       ; $C6D1
     lsr     a                       ; $C6D2
     lsr     a                       ; $C6D3
-    sta     sram_699E,x             ; $C6D4
+    sta     sramEntryRightColumn,x  ; $C6D4
     lda     scrollXHi               ; $C6D7
     plp                             ; $C6DA
     adc     #$01                    ; $C6DB
     and     #$03                    ; $C6DD
-    sta     sram_6990,x             ; $C6DF
+    sta     sramEntryRightPage,x    ; $C6DF
     lda     objXHi                  ; $C6E2
-    sta     ram_05CC,x              ; $C6E4
+    sta     entryLinkXHi,x          ; $C6E4
     lda     objX                    ; $C6E7
     and     #$F0                    ; $C6E9
-    sta     ram_05D3,x              ; $C6EB
+    sta     entryLinkX,x            ; $C6EB
 
 ; ---------------------------------------------------------------------------
 ; Game_Wait
