@@ -965,12 +965,10 @@ WorldLocationTable:
 ; Area bank addresses of the area pointer tables and enemy list pointer
 ; tables, indexed by WorldLocationTable.
 AreaDataPtrTables:
-    .byte   $23                                                             ; $C4C3
-    .byte   $85, $00, $A0                                                   ; $C4C4
+    .word   AreaBank::AreaPtrs, AreaBank::AreaPtrs2 ; $C4C3
 
 AreaEnemyListTables:
-    .byte   $A1                                                             ; $C4C7
-    .byte   $85, $7E, $A0                                                   ; $C4C8
+    .word   AreaBank::EnemyListPtrs, AreaBank::EnemyListPtrs2 ; $C4C7
 
 ; ---------------------------------------------------------------------------
 ; Area_Load
@@ -2569,7 +2567,7 @@ Mode_SaveAfterEnding:
 ; Area bank addresses of the overworld location tables (copied to sramLocY
 ; and following), indexed by WorldLocationTable.
 LocationTablePtrs:
-    .word   $861F, $A0FC            ; $CD23
+    .word   OverworldBank::Locations, OverworldBank::Locations2 ; $CD23
 
 ; Offset into AreaBank::OverworldMapPtrs (the compressed overworld map pointers) for
 ; each overworld region.

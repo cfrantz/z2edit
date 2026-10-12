@@ -574,65 +574,46 @@ SpecialTiles_Bank3:
     .assert SpecialTiles_Bank3 = AreaBank::SpecialTiles, error, "interface address moved"
     .byte   $54, $EA, $58, $59, $00, $00, $92, $00, $00                     ; $851A
 ; (unreferenced: $8523-$8524, 2 bytes)
-    .byte   $C0, $89                                                        ; $8523
-    .byte   $C0, $89, $F6, $89                                              ; $8525
-; (unreferenced: $8529-$852A, 2 bytes)
-    .byte   $28, $8A                                                        ; $8529
-    .byte   $28, $8A, $48, $8A, $76, $8A, $90, $8A, $C4, $8A, $E8, $8A, $10, $8B, $48, $8B; $852B
-; (unreferenced: $853B-$853C, 2 bytes)
-    .byte   $00, $A0                                                        ; $853B
-    .byte   $2C, $A0, $5A, $A0, $8C, $A0, $C4, $A0, $00, $A1, $44, $A1, $80, $A1, $BC, $A1; $853D
-; (unreferenced: $854D-$8550, 4 bytes)
-    .byte   $C6, $A1, $EA, $A1                                              ; $854D
-    .byte   $14, $A2, $82, $8B                                              ; $8551
-; (unreferenced: $8555-$8556, 2 bytes)
-    .byte   $C2, $9C                                                        ; $8555
-    .byte   $F0, $90                                                        ; $8557
-; (unreferenced: $8559-$855E, 6 bytes)
-    .byte   $F0, $90, $C2, $9C, $C2, $9C                                    ; $8559
-    .byte   $C2, $9C, $C2, $9C                                              ; $855F
-; (unreferenced: $8563-$856A, 8 bytes)
-    .byte   $C2, $9C, $C2, $9C, $C2, $9C, $C2, $9C                          ; $8563
-    .byte   $48, $9B, $48, $9B, $48, $9B, $48, $9B, $48, $9B, $48, $9B, $48, $9B, $48, $9B; $856B
-    .byte   $48, $9B, $48, $9B, $74, $9B, $7D, $9B, $F0, $90, $F0, $90, $F0, $90, $F0, $90; $857B
-    .byte   $F0, $90, $F0, $90                                              ; $858B
-; (unreferenced: $858F-$8590, 2 bytes)
-    .byte   $F0, $90                                                        ; $858F
-    .byte   $F0, $90, $F0, $90, $F0, $90, $F0, $90                          ; $8591
-; (unreferenced: $8599-$859A, 2 bytes)
-    .byte   $F0, $90                                                        ; $8599
-    .byte   $66, $8A                                                        ; $859B
-; (unreferenced: $859D-$85A2, 6 bytes)
-    .byte   $C2, $9C, $C2, $9C, $00, $70                                    ; $859D
-    .byte   $00, $70, $0D, $70                                              ; $85A3
-; (unreferenced: $85A7-$85A8, 2 bytes)
-    .byte   $18, $70                                                        ; $85A7
-    .byte   $18, $70, $25, $70, $33, $70, $36, $70, $41, $70, $4C, $70, $57, $70, $62, $70; $85A9
-; (unreferenced: $85B9-$85BA, 2 bytes)
-    .byte   $91, $70                                                        ; $85B9
-    .byte   $9C, $70, $A9, $70, $B2, $70, $BF, $70, $C8, $70, $D5, $70, $E4, $70, $EF, $70; $85BB
-; (unreferenced: $85CB-$85CE, 4 bytes)
-    .byte   $F0, $70, $F0, $70                                              ; $85CB
-    .byte   $0F, $71, $32, $70                                              ; $85CF
-; (unreferenced: $85D3-$85D4, 2 bytes)
-    .byte   $32, $70                                                        ; $85D3
-    .byte   $0C, $71                                                        ; $85D5
-; (unreferenced: $85D7-$85DC, 6 bytes)
-    .byte   $EF, $70, $7B, $70, $80, $70                                    ; $85D7
-    .byte   $85, $70, $70, $70                                              ; $85DD
-; (unreferenced: $85E1-$85E8, 8 bytes)
-    .byte   $01, $71, $06, $71, $09, $71, $1D, $71                          ; $85E1
-    .byte   $75, $70, $75, $70, $75, $70, $75, $70, $75, $70, $75, $70, $75, $70, $75, $70; $85E9
-    .byte   $78, $70, $78, $70, $EF, $70, $EF, $70, $6D, $70, $32, $70, $32, $70, $32, $70; $85F9
-    .byte   $EF, $70, $EF, $70                                              ; $8609
-; (unreferenced: $860D-$860E, 2 bytes)
-    .byte   $EF, $70                                                        ; $860D
-    .byte   $EF, $70, $32, $70, $EF, $70, $1A, $71                          ; $860F
-; (unreferenced: $8617-$8618, 2 bytes)
-    .byte   $EF, $70                                                        ; $8617
-    .byte   $8E, $70                                                        ; $8619
-; (unreferenced: $861B-$861E, 4 bytes)
-    .byte   $00, $70, $00, $70                                              ; $861B
+
+AreaPtrs_Bank3:
+    .assert AreaPtrs_Bank3 = AreaBank::AreaPtrs, error, "interface address moved"
+    .word   $89C0, $89C0, $89F6, $8A28 ; $8523
+    .word   $8A28, $8A48, $8A76, $8A90 ; $852B
+    .word   $8AC4, $8AE8, $8B10, $8B48 ; $8533
+    .word   $A000, $A02C, $A05A, $A08C ; $853B
+    .word   $A0C4, $A100, $A144, $A180 ; $8543
+    .word   $A1BC, $A1C6, $A1EA, $A214 ; $854B
+    .word   $8B82, $9CC2, $90F0, $90F0 ; $8553
+    .word   $9CC2, $9CC2, $9CC2, $9CC2 ; $855B
+    .word   $9CC2, $9CC2, $9CC2, $9CC2 ; $8563
+    .word   $9B48, $9B48, $9B48, $9B48 ; $856B
+    .word   $9B48, $9B48, $9B48, $9B48 ; $8573
+    .word   $9B48, $9B48, $9B74, $9B7D ; $857B
+    .word   $90F0, $90F0, $90F0, $90F0 ; $8583
+    .word   $90F0, $90F0, $90F0, $90F0 ; $858B
+    .word   $90F0, $90F0, $90F0, $90F0 ; $8593
+    .word   $8A66, $9CC2, $9CC2     ; $859B
+
+EnemyListPtrs_Bank3:
+    .assert EnemyListPtrs_Bank3 = AreaBank::EnemyListPtrs, error, "interface address moved"
+    .word   sramEnemyLists, sramEnemyLists, sramEnemyLists+13, sramEnemyLists+24 ; $85A1
+    .word   sramEnemyLists+24, sramEnemyLists+37, sramEnemyLists+51, sramEnemyLists+54 ; $85A9
+    .word   sramEnemyLists+65, sramEnemyLists+76, sramEnemyLists+87, sramEnemyLists+98 ; $85B1
+    .word   sramEnemyLists+145, sramEnemyLists+156, sramEnemyLists+169, sramEnemyLists+178 ; $85B9
+    .word   sramEnemyLists+191, sramEnemyLists+200, sramEnemyLists+213, sramEnemyLists+228 ; $85C1
+    .word   sramEnemyLists+239, sramEnemyLists+240, sramEnemyLists+240, sramEnemyLists+271 ; $85C9
+    .word   sramEnemyLists+50, sramEnemyLists+50, sramEnemyLists+268, sramEnemyLists+239 ; $85D1
+    .word   sramEnemyLists+123, sramEnemyLists+128, sramEnemyLists+133, sramEnemyLists+112 ; $85D9
+    .word   sramEnemyLists+257, sramEnemyLists+262, sramEnemyLists+265, sramEnemyLists+285 ; $85E1
+    .word   sramEnemyLists+117, sramEnemyLists+117, sramEnemyLists+117, sramEnemyLists+117 ; $85E9
+    .word   sramEnemyLists+117, sramEnemyLists+117, sramEnemyLists+117, sramEnemyLists+117 ; $85F1
+    .word   sramEnemyLists+120, sramEnemyLists+120, sramEnemyLists+239, sramEnemyLists+239 ; $85F9
+    .word   sramEnemyLists+109, sramEnemyLists+50, sramEnemyLists+50, sramEnemyLists+50 ; $8601
+    .word   sramEnemyLists+239, sramEnemyLists+239, sramEnemyLists+239, sramEnemyLists+239 ; $8609
+    .word   sramEnemyLists+50, sramEnemyLists+239, sramEnemyLists+282, sramEnemyLists+239 ; $8611
+    .word   sramEnemyLists+142, sramEnemyLists, sramEnemyLists ; $8619
+
+dat_3_861F:
     .byte   $42, $42, $42, $55, $42, $42, $55, $55, $55, $40, $40, $40, $E9, $40, $40, $CB; $861F
     .byte   $CB, $E9, $40, $40, $40, $53, $40, $40, $53, $53, $53, $40, $40, $40, $53, $40; $862F
     .byte   $40, $53, $53, $53                                              ; $863F
@@ -739,27 +720,28 @@ Town_DrawBench:
     .byte   $46, $46, $46, $46, $42, $42, $42, $42, $42, $42, $42, $42      ; $8702
 
 SolidTileThresholds_Bank3:
-    .byte   $53, $FF, $E5, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FD, $FC, $FC; $870E
-    .byte   $FC, $FD, $00, $00, $08, $07, $00, $00, $FD, $FD, $FC, $FC, $FC, $FD, $00, $00; $871E
-    .byte   $14, $13, $00, $00, $FD, $FC, $00, $00, $1C, $1B, $00, $00, $20, $1F, $00, $00; $872E
-    .byte   $FD, $FD, $00, $00, $28, $27, $00, $00, $2C, $2B, $00, $00, $FD, $FD, $00, $00; $873E
-    .byte   $34, $33, $00, $00, $38, $37, $00, $00, $FD, $FD, $00, $00, $40, $3F, $00, $00; $874E
-    .byte   $44, $43, $00, $00, $FD, $FC, $00, $00, $4C, $4B, $00, $00, $50, $4F, $00, $00; $875E
-    .byte   $FD, $FD, $00, $00, $58, $57, $00, $00, $5C, $5B, $00, $00, $FD, $FC, $00, $00; $876E
-    .byte   $FC, $00, $00, $00, $00, $00, $00, $4D, $4D, $00, $00, $00, $00, $00, $05, $00; $877E
-    .byte   $09, $00, $12, $14, $00, $1F, $1B, $1D, $1A, $00, $60, $2C, $00, $00, $39, $32; $878E
-    .byte   $00, $00, $56, $46, $00, $57, $58, $50, $4A, $5D, $5A, $59, $58, $C1, $00, $00; $879E
-    .byte   $00, $C5, $00, $00, $00, $C9, $00, $00, $00, $CD, $00, $00, $00, $D1, $00, $00; $87AE
-    .byte   $00, $D5, $00, $00, $00, $6A, $00, $00, $00, $DD, $00, $00, $00, $E1, $00, $00; $87BE
-    .byte   $00, $E5, $00, $00, $00, $E9, $00, $00, $00, $50, $00, $00, $00, $07, $90, $00; $87CE
-    .byte   $00, $13, $94, $00, $00, $21, $98, $00, $00, $27, $9C, $00, $00, $37, $A0, $00; $87DE
-    .byte   $00, $3F, $A4, $00, $00, $00, $00, $00, $00, $5E, $AC, $00, $00, $29, $B0, $00; $87EE
-    .byte   $00, $43, $B4, $00, $00, $49, $B8, $00, $00, $00, $00, $00, $00, $FC, $FC, $FC; $87FE
-    .byte   $FC, $00, $00, $00, $00, $00, $00, $00, $00                     ; $880E
+    .byte   $53, $FF, $E5, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $870E
 
-; The area behind each door of the towns, by areaId * 4 + page: bits 7-2
-; the area, bits 1-0 its start page (Mode_EnterDoor in bank 7).
+AreaConnections_Bank3:
+    .assert AreaConnections_Bank3 = AreaBank::Connections, error, "interface address moved"
+    .byte   $FD, $FC, $FC, $FC, $FD, $00, $00, $08, $07, $00, $00, $FD, $FD, $FC, $FC, $FC; $871B
+    .byte   $FD, $00, $00, $14, $13, $00, $00, $FD, $FC, $00, $00, $1C, $1B, $00, $00, $20; $872B
+    .byte   $1F, $00, $00, $FD, $FD, $00, $00, $28, $27, $00, $00, $2C, $2B, $00, $00, $FD; $873B
+    .byte   $FD, $00, $00, $34, $33, $00, $00, $38, $37, $00, $00, $FD, $FD, $00, $00, $40; $874B
+    .byte   $3F, $00, $00, $44, $43, $00, $00, $FD, $FC, $00, $00, $4C, $4B, $00, $00, $50; $875B
+    .byte   $4F, $00, $00, $FD, $FD, $00, $00, $58, $57, $00, $00, $5C, $5B, $00, $00, $FD; $876B
+    .byte   $FC, $00, $00, $FC, $00, $00, $00, $00, $00, $00, $4D, $4D, $00, $00, $00, $00; $877B
+    .byte   $00, $05, $00, $09, $00, $12, $14, $00, $1F, $1B, $1D, $1A, $00, $60, $2C, $00; $878B
+    .byte   $00, $39, $32, $00, $00, $56, $46, $00, $57, $58, $50, $4A, $5D, $5A, $59, $58; $879B
+    .byte   $C1, $00, $00, $00, $C5, $00, $00, $00, $C9, $00, $00, $00, $CD, $00, $00, $00; $87AB
+    .byte   $D1, $00, $00, $00, $D5, $00, $00, $00, $6A, $00, $00, $00, $DD, $00, $00, $00; $87BB
+    .byte   $E1, $00, $00, $00, $E5, $00, $00, $00, $E9, $00, $00, $00, $50, $00, $00, $00; $87CB
+    .byte   $07, $90, $00, $00, $13, $94, $00, $00, $21, $98, $00, $00, $27, $9C, $00, $00; $87DB
+    .byte   $37, $A0, $00, $00, $3F, $A4, $00, $00, $00, $00, $00, $00, $5E, $AC, $00, $00; $87EB
+    .byte   $29, $B0, $00, $00, $43, $B4, $00, $00, $49, $B8, $00, $00, $00, $00, $00, $00; $87FB
+    .byte   $FC, $FC, $FC, $FC, $00, $00, $00, $00, $00, $00, $00, $00      ; $880B
 TownDoors:
+    .assert TownDoors = AreaBank::Doors, error, "interface address moved"
     .byte   $00, $00, $00, $00, $00, $71, $C0, $00, $00, $73, $00, $00, $00, $00, $00, $00; $8817
     .byte   $00, $00, $75, $C4, $76, $00, $00, $00, $00, $00, $7B, $79, $00, $7A, $00, $78; $8827
     .byte   $00, $C8, $00, $00, $00, $00, $00, $CC, $00, $E0, $00, $00, $7E, $00, $00, $00; $8837
