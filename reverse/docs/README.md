@@ -26,6 +26,11 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
 - [Enemies and objects](entities/README.md): the definition tables,
   damage, experience, drops; a page per enemy group.
 
+## Data
+
+- [Data formats](data-formats/README.md): where each data structure is
+  described, and how it matches z2edit's config.
+
 ## World
 
 - [The overworld](world/overworld.md): moving, drawing the map,

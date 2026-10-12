@@ -78,3 +78,5 @@ Tools that drive the emulator need the Python extension built with
   table entries the jump log has seen, after new runs are merged.
 - `check_docs.py`: Reports symbol names in `docs/` that no longer exist in
   the source.  Run by `make verify`.
+- `config_xref.py`: Writes `docs/data-formats/config-xref.md`, every ROM
+  address in z2edit's `config/vanilla` with the disassembly symbol there.
