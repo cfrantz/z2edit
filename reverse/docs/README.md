@@ -13,6 +13,8 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
   the game state machine.
 - [MMC1](hardware/mmc1.md): bank switching and the bank interfaces.
 - [PPU](hardware/ppu.md): CHR banks, palettes, metatiles and sprites.
+- [Timing and frame budget](hardware/timing.md): the NMI's order, the
+  status bar split, measured cycles per frame.
 
 ## Memory
 

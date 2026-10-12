@@ -340,9 +340,9 @@ Nmi:
 ; Sound_UpdateSometimes
 ;
 ; Run Sound_Update on 216 of every 256 calls (soundPacer accumulates $D8).
-; Called once per row by the long overworld map indexing loop
-; (Mode_IndexOverworldMap), which runs outside the NMI, so that the music
-; keeps playing at about its normal speed.
+; Called once per drawn row by Mode_IndexOverworldMap, which runs for
+; about 18 frames inside a single game NMI (with further NMIs disabled), so
+; that the music keeps playing at about its normal speed.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------

@@ -1256,6 +1256,21 @@ OverworldTileMetatiles:
 OverworldTerrainPalettes:
     .byte   $02, $01, $02, $01, $03, $00, $00, $00, $01, $01, $01, $01, $03, $03, $01, $01; $87E3
 
+; ---------------------------------------------------------------------------
+; Mode_IndexOverworldMap
+;
+; gameMode 3: decode the overworld map's 75 rows (Overworld_DecodeRow),
+; keeping a pointer to each in sramAreaTiles, then draw the screen around
+; Link row by row, writing each row to the PPU at once (rendering is off).
+; Then set up the overworld objects and terrain, start the music and the
+; entry sound, and go on to gameMode 4 (or $18).
+;
+; All of this runs inside one game NMI with further NMIs disabled: about
+; 530,000 cycles, some 18 frames (measured on the 100% movie).  The music
+; keeps going because each drawn row calls Sound_UpdateSometimes.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Mode_IndexOverworldMap:
     lda     #$00                    ; $87F3
     sta     temp14                  ; $87F5
