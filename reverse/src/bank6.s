@@ -883,7 +883,6 @@ TitleNotes:
     .byte   $36, $36, $36, $36, $3E, $3E, $44, $44, $34, $34, $3C, $3C, $42, $42, $3C, $3C; $8779
     .byte   $82, $02, $00                                                   ; $8789
 
-dat_6_878C:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $878C
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $879B
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $87AB
@@ -1363,7 +1362,9 @@ DmcSamples:
     .byte   $E7, $0F                                                        ; $9187
     .byte   $EA, $0F                                                        ; $9189
 
-dat_6_918B:
+; Two more sample entries ($FB80 and $FC80, 241 bytes each) that no sound
+; effect uses.
+DmcSamplesUnused:
     .byte   $EE, $0F, $F2, $0F                                              ; $918B
 
 NotePeriods:
@@ -3455,7 +3456,6 @@ GreatPalaceMusic:
     .byte   $92, $A0, $92, $A0, $92, $A0, $92, $A0, $90, $9E, $90, $9E, $90, $9E, $90, $9E; $ABF6
     .byte   $80, $88, $00                                                   ; $AC06
 
-dat_6_AC09:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $AC09
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $AC19
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $AC29

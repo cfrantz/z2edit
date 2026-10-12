@@ -34,7 +34,7 @@ INTERFACES_INC = 1
 
 ; Palace banks (4: palaces, 5: Great Palace).  Also area banks.
 .scope PalaceBank
-    dat_84D8        = $84D8     ; indexed by y
+    PaletteRows     = $84D8     ; 4 colors per palace (the first $FF, keeping the backdrop), copied by bank 7 into sramAreaPalettes+172 and +188
 .endscope
 
 .endif

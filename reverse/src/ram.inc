@@ -319,7 +319,7 @@ elevatorPos             = $0757     ; position of the area's elevator, 0 = none
 lockedDoorPos           = $0758     ; position of the area's locked door, 0 = none
 ram_0759                = $0759
 ram_075A                = $075A
-pitFallCount            = $075B     ; pits fallen through in a row; chooses the start page of the area below (provisional)
+doorDepth               = $075B     ; doors gone through into buildings (Mode_EnterDoor); counts down on the way out, choosing the start page back outside (provisional)
 areaStartPage           = $075C     ; map page at which Link enters the area
 ram_075D                = $075D
 areaMusic               = $075F     ; music for the area being entered, sent to musicRequest when Link appears

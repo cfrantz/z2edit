@@ -757,7 +757,9 @@ SolidTileThresholds_Bank3:
     .byte   $00, $43, $B4, $00, $00, $49, $B8, $00, $00, $00, $00, $00, $00, $FC, $FC, $FC; $87FE
     .byte   $FC, $00, $00, $00, $00, $00, $00, $00, $00                     ; $880E
 
-dat_3_8817:
+; The area behind each door of the towns, by areaId * 4 + page: bits 7-2
+; the area, bits 1-0 its start page (Mode_EnterDoor in bank 7).
+TownDoors:
     .byte   $00, $00, $00, $00, $00, $71, $C0, $00, $00, $73, $00, $00, $00, $00, $00, $00; $8817
     .byte   $00, $00, $75, $C4, $76, $00, $00, $00, $00, $00, $7B, $79, $00, $7A, $00, $78; $8827
     .byte   $00, $C8, $00, $00, $00, $00, $00, $CC, $00, $E0, $00, $00, $7E, $00, $00, $00; $8837
@@ -1594,7 +1596,7 @@ Townsperson_NextState:
 
 @loc_98DF:
     cmp     #$7E                    ; $98DF
-    bne     loc_3_990A              ; $98E1
+    bne     Door_CheckTile          ; $98E1
     jsr     Door_QueueClosed        ; $98E3
     lda     enemyType,x             ; $98E6
     cmp     #$17                    ; $98E8
@@ -1626,7 +1628,7 @@ Door_SetClosedTile:
     sta     (temp0),y               ; $9907
     rts                             ; $9909
 
-loc_3_990A:
+Door_CheckTile:
     cmp     #$20                    ; $990A
     bcc     @done                   ; $990C
     cmp     #$40                    ; $990E
@@ -1661,7 +1663,7 @@ DoorTilesBottom:
 ; ---------------------------------------------------------------------------
 Door_QueueOpen:
     ldx     #$00                    ; $9946
-    beq     loc_3_9950              ; $9948
+    beq     Door_QueueTiles         ; $9948
 
 ; ---------------------------------------------------------------------------
 ; Door_QueueHalf
@@ -1672,7 +1674,7 @@ Door_QueueOpen:
 ; ---------------------------------------------------------------------------
 Door_QueueHalf:
     ldx     #$06                    ; $994A
-    bne     loc_3_9950              ; $994C
+    bne     Door_QueueTiles         ; $994C
 
 ; ---------------------------------------------------------------------------
 ; Door_QueueClosed
@@ -1684,7 +1686,7 @@ Door_QueueHalf:
 Door_QueueClosed:
     ldx     #$0C                    ; $994E
 
-loc_3_9950:
+Door_QueueTiles:
     lda     drawOffscreen+1         ; $9950
     and     #$0C                    ; $9952
     cmp     #$0C                    ; $9954
@@ -1790,7 +1792,7 @@ Townsperson_CheckTalk:
     inc     ram_05C3,x              ; $99F4
     lda     #$0B                    ; $99F7
     sta     gameMode                ; $99F9
-    dec     pitFallCount            ; $99FC
+    dec     doorDepth               ; $99FC
     inc     ram_048D                ; $99FF
     lda     #$00                    ; $9A02
     sta     renderingOff            ; $9A04

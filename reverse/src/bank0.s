@@ -148,10 +148,10 @@ Mode_OverworldSetup:
     inc     renderingOff            ; $81A6
     inc     gameMode                ; $81A9
 
-dat_0_81AC:
+Mode_OverworldSetup_Done:
     rts                             ; $81AC
 ; The rts byte is also the base of RaftSteps: raft steps by raftDirection (+1, -1).
-RaftSteps := dat_0_81AC
+RaftSteps := Mode_OverworldSetup_Done
     .byte   $01                                                             ; $81AD
 ; (unreferenced: $81AE-$81AE, 1 bytes)
 
@@ -227,10 +227,10 @@ Raft_Move:
     adc     RaftSteps,y             ; $81FF
     sta     objState+1              ; $8202
 
-dat_0_8204:
+Raft_Move_Done:
     rts                             ; $8204
 ; The rts byte is also the base of RaftStopX: where the raft stops, by raftDirection.
-RaftStopX := dat_0_8204
+RaftStopX := Raft_Move_Done
     .byte   $80                                                             ; $8205
 ; (unreferenced: $8206-$8206, 1 bytes)
     .byte   $78                                                             ; $8206
@@ -3213,7 +3213,7 @@ Link_Control:
     jmp     Link_Draw               ; $92DE
 
 @loc_92E1:
-    inc     pitFallCount            ; $92E1
+    inc     doorDepth               ; $92E1
     lda     #$16                    ; $92E4
     jmp     Area_ExitToMode         ; $92E6
 

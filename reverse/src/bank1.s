@@ -2095,14 +2095,14 @@ MoblinGoriya_Ai:
     sta     timerFast+TIMER_ENEMY,x ; $99E8
 
 @loc_99EB:
-    jmp     loc_1_99F2              ; $99EB
+    jmp     MoblinGoriya_Fire       ; $99EB
 
 @loc_99EE:
 FighterAttackMasks := * + 1
     lda     #$00                    ; $99EE
     sta     objState+1,x            ; $99F0
 
-loc_1_99F2:
+MoblinGoriya_Fire:
     lda     #$16                    ; $99F2
     ldy     enemyType,x             ; $99F4
 FighterTurnMasks := * + 1
@@ -2198,7 +2198,7 @@ Fighter_Move:
     lda     FighterTurnMasks,y      ; $9A6D
     inc     enemyAiState,x          ; $9A70
     and     enemyAiState,x          ; $9A72
-    bne     loc_1_9AAB              ; $9A74
+    bne     Fighter_Stop            ; $9A74
     lda     rng+1,x                 ; $9A76
     and     FighterAttackMasks,y    ; $9A79
     bne     Fighter_StartAttack     ; $9A7C
@@ -2243,7 +2243,7 @@ Fighter_StartAttack:
     lda     #$18                    ; $9AA6
     sta     timerFast+TIMER_ENEMY,x ; $9AA8
 
-loc_1_9AAB:
+Fighter_Stop:
     lda     #$00                    ; $9AAB
     sta     objXVelocity+1,x        ; $9AAD
     lda     objCollision            ; $9AAF
@@ -2781,7 +2781,7 @@ RedDairaAxeXOffsets:
 ; ---------------------------------------------------------------------------
 OrangeDaira_Draw:
     lda     #$F6                    ; $9D65
-    bne     loc_1_9D6B              ; $9D67
+    bne     Daira_DrawWeapon        ; $9D67
 
 ; ---------------------------------------------------------------------------
 ; RedDaira_Draw
@@ -2793,7 +2793,7 @@ OrangeDaira_Draw:
 RedDaira_Draw:
     lda     #$F5                    ; $9D69
 
-loc_1_9D6B:
+Daira_DrawWeapon:
     ; BUG: writes to ROM at $95E6, i.e. to the MMC1 control register.
     ; Probably intended ram_05E6 (used nearby).  Harmless: a is $F5 or $F6,
     ; and a write with bit 7 set only resets the MMC1 shift register and

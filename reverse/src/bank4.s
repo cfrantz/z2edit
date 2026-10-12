@@ -507,8 +507,8 @@ PalaceOutdoorPalettes:
 ; (unreferenced: $84D0-$84D7, 8 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                          ; $84D0
 
-dat_4_84D8:
-    .assert dat_4_84D8 = PalaceBank::dat_84D8, error, "interface address moved"
+PaletteRows_Bank4:
+    .assert PaletteRows_Bank4 = PalaceBank::PaletteRows, error, "interface address moved"
     .byte   $FF, $00, $10, $30, $FF, $0C, $1C, $3C, $FF, $0F, $06, $26, $FF, $00, $10, $30; $84D8
     .byte   $FF, $0F, $0A, $2A, $FF, $00, $10, $30                          ; $84E8
 ; (unreferenced: $84F0-$8501, 18 bytes)
@@ -2158,7 +2158,7 @@ Enemy_FireAimedBall:
     tya                             ; $9BF6
     ldy     temp5                   ; $9BF7
     cmp     objFacing+1,x           ; $9BF9
-    bne     loc_4_9C3F              ; $9BFB
+    bne     Enemy_CancelAimedBall   ; $9BFB
     sta     a:objFacing+7,y         ; $9BFD
     lda     temp15                  ; $9C00
     bpl     @loc_9C06               ; $9C02
@@ -2171,7 +2171,7 @@ Enemy_FireAimedBall:
     lsr     a                       ; $9C0A
     lsr     a                       ; $9C0B
     cmp     #$08                    ; $9C0C
-    bcs     loc_4_9C3F              ; $9C0E
+    bcs     Enemy_CancelAimedBall   ; $9C0E
     tax                             ; $9C10
     lda     AimedBallYSpeeds,x      ; $9C11
     sta     objYVelocity+7,y        ; $9C14
@@ -2198,7 +2198,7 @@ Enemy_FireAimedBall:
 Enemy_FireAimedBall_Done:
     rts                             ; $9C3E
 
-loc_4_9C3F:
+Enemy_CancelAimedBall:
     lda     #$00                    ; $9C3F
     sta     a:objState+7,y          ; $9C41
     rts                             ; $9C44
@@ -2225,7 +2225,7 @@ Boss_DrawHpBar:
     lda     #$70                    ; $9C53
     sta     temp0                   ; $9C55
 
-loc_4_9C57:
+Boss_DrawHpBarTile:
     lda     #$70                    ; $9C57
     dey                             ; $9C59
     bmi     @loc_9C5E               ; $9C5A
@@ -2249,7 +2249,7 @@ IronknuckleRanges:
     dex                             ; $9C75
     dex                             ; $9C76
     dex                             ; $9C77
-    bpl     loc_4_9C57              ; $9C78
+    bpl     Boss_DrawHpBarTile      ; $9C78
     ldx     currentObject           ; $9C7A
     rts                             ; $9C7C
     .byte   $01, $03                                                        ; $9C7D
@@ -2655,7 +2655,7 @@ Ironknuckle_Draw:
     lda     IronknuckleDrawTiles,x  ; $9EB6
     tax                             ; $9EB9
 
-loc_4_9EBA:
+Ironknuckle_DrawPair:
 TinsuitSpeeds := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $9EBA
     .byte   $0C, $F4, $14, $EC                                              ; $9EBD
@@ -3294,7 +3294,7 @@ Projectile_Mace_Bank4B:
     lda     ram_044C,x              ; $AD0D
     beq     @loc_AD17               ; $AD10
     dec     ram_044C,x              ; $AD12
-    bpl     loc_4_AD90              ; $AD15
+    bpl     Projectile_RestoreX_Bank4B ; $AD15
 
 @loc_AD17:
     txa                             ; $AD17
@@ -3305,7 +3305,7 @@ Projectile_Mace_Bank4B:
     ldx     currentObject           ; $AD1F
     lda     #$80                    ; $AD21
     sta     ram_044C,x              ; $AD23
-    jmp     loc_4_AD90              ; $AD26
+    jmp     Projectile_RestoreX_Bank4B ; $AD26
 
 ; ---------------------------------------------------------------------------
 ; Projectile_CarockBeam
@@ -3318,15 +3318,15 @@ Projectile_Mace_Bank4B:
 ; ---------------------------------------------------------------------------
 Projectile_CarockBeam:
     lda     ram_044C,x              ; $AD29
-    bne     loc_4_AD90              ; $AD2C
+    bne     Projectile_RestoreX_Bank4B ; $AD2C
     lda     ram_045E,x              ; $AD2E
     tax                             ; $AD31
     stx     swordOwner              ; $AD32
     lda     objState+1,x            ; $AD34
-    beq     loc_4_AD90              ; $AD36
+    beq     Projectile_RestoreX_Bank4B ; $AD36
     lda     enemyActive,x           ; $AD38
     cmp     #$01                    ; $AD3A
-    bne     loc_4_AD90              ; $AD3C
+    bne     Projectile_RestoreX_Bank4B ; $AD3C
     lda     objX+1,x                ; $AD3E
     sbc     scrollX                 ; $AD40
     sta     drawScreenX+1           ; $AD43
@@ -3341,7 +3341,7 @@ Projectile_CarockBeam:
     ldx     currentObject           ; $AD53
     jsr     Projectile_GetHitbox    ; $AD55
     jsr     Hitbox_Overlap          ; $AD58
-    bcc     loc_4_AD90              ; $AD5B
+    bcc     Projectile_RestoreX_Bank4B ; $AD5B
     jsr     Projectile_Spark_Bank4B ; $AD5D
     lda     currentObject           ; $AD60
     pha                             ; $AD62
@@ -3370,7 +3370,7 @@ Projectile_CarockBeam:
     ldx     currentObject           ; $AD8D
     rts                             ; $AD8F
 
-loc_4_AD90:
+Projectile_RestoreX_Bank4B:
     ldx     currentObject           ; $AD90
     bpl     Projectile_RockBounce_Bank4B ; $AD92
 
@@ -4937,7 +4937,7 @@ Gooma_Ai:
 
 @loc_B4F2:
     cmp     #$60                    ; $B4F2
-    bcc     loc_4_B4FF              ; $B4F4
+    bcc     Gooma_ChooseAttack      ; $B4F4
 
 ; ---------------------------------------------------------------------------
 ; Gooma_ResetState
@@ -4953,7 +4953,7 @@ Gooma_ResetState:
     sta     enemyAiState,x          ; $B4FC
     rts                             ; $B4FE
 
-loc_4_B4FF:
+Gooma_ChooseAttack:
     cmp     #$40                    ; $B4FF
     bcc     @loc_B511               ; $B501
     lda     frameCounter            ; $B503
@@ -5511,7 +5511,7 @@ WolfHeadGenerator_Ai:
     lda     frameCounter            ; $B861
     asl     a                       ; $B863
     ora     ram_05C9                ; $B864
-    bne     loc_4_B872              ; $B867
+    bne     Enemy_SpawnFlyerFail_Bank4 ; $B867
 
 ; ---------------------------------------------------------------------------
 ; Enemy_SpawnFlyer_Bank4
@@ -5526,16 +5526,16 @@ Enemy_SpawnFlyer_Bank4:
 
 @loop:
     lda     enemyActive,x           ; $B86B
-    beq     loc_4_B876              ; $B86D
+    beq     Enemy_InitFlyer_Bank4   ; $B86D
     dex                             ; $B86F
     bpl     @loop                   ; $B870
 
-loc_4_B872:
+Enemy_SpawnFlyerFail_Bank4:
     ldx     currentObject           ; $B872
     sec                             ; $B874
     rts                             ; $B875
 
-loc_4_B876:
+Enemy_InitFlyer_Bank4:
     lda     #$02                    ; $B876
     sta     enemyHp,x               ; $B878
     lsr     a                       ; $B87A
@@ -5646,7 +5646,7 @@ EnergyBallShooter_Init:
 ; ---------------------------------------------------------------------------
 WolfHead_Draw:
     ldx     #$16                    ; $B904
-    jmp     loc_4_9EBA              ; $B906
+    jmp     Ironknuckle_DrawPair    ; $B906
 
 ; ---------------------------------------------------------------------------
 ; OrangeMoa_Ai
@@ -6164,7 +6164,7 @@ Boss_Pace:
 
 @loc_BBB8:
     cmp     #$60                    ; $BBB8
-    bcc     loc_4_BBC5              ; $BBBA
+    bcc     Boss_ChooseAttack       ; $BBBA
 
 ; ---------------------------------------------------------------------------
 ; Boss_ResetState
@@ -6182,7 +6182,7 @@ Boss_ResetState:
 Boss_ResetState_Done:
     rts                             ; $BBC4
 
-loc_4_BBC5:
+Boss_ChooseAttack:
     cmp     #$20                    ; $BBC5
     bcc     @loc_BBD7               ; $BBC7
     lda     frameCounter            ; $BBC9

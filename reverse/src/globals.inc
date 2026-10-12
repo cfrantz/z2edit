@@ -31,7 +31,7 @@ GLOBALS_INC = 1
 .global BreakingBlocks_Update
 .global Saria_BuildBridge
 .global Game_StartAtNorthCastle
-.global dat_3_8817
+.global TownDoors
 .global TownPersonTilePtrs
 .global Dialog_Update
 .global PalaceOutdoorPalettes

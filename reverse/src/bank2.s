@@ -2404,7 +2404,7 @@ Enemy_Fall_Bank2:
 OrangeLizalfos_Ai:
     jsr     Enemy_Draw              ; $9B56
     lda     objState+1,x            ; $9B59
-    beq     loc_2_9B7E              ; $9B5B
+    beq     Lizalfos_GuardFar       ; $9B5B
     cmp     #$02                    ; $9B5D
     beq     @loc_9B65               ; $9B5F
     cmp     #$05                    ; $9B61
@@ -2415,28 +2415,28 @@ OrangeLizalfos_Ai:
 
 @loc_9B68:
     lda     timerFast+TIMER_ENEMY,x ; $9B68
-    bne     loc_2_9B7E              ; $9B6B
+    bne     Lizalfos_GuardFar       ; $9B6B
 LizalfosAttackMasks := * + 1
     inc     objState+1,x            ; $9B6D
     lda     objState+1,x            ; $9B6F
     cmp     #$04                    ; $9B71
 
 LizalfosGuardHeights:
-    beq     loc_2_9B81              ; $9B73
+    beq     Lizalfos_ResetPose      ; $9B73
     cmp     #$07                    ; $9B75
-    bcs     loc_2_9B81              ; $9B77
+    bcs     Lizalfos_ResetPose      ; $9B77
     lda     #$0C                    ; $9B79
     sta     timerFast+TIMER_ENEMY,x ; $9B7B
 
-loc_2_9B7E:
-    jmp     loc_2_9B85              ; $9B7E
+Lizalfos_GuardFar:
+    jmp     Lizalfos_GuardFar2      ; $9B7E
 
-loc_2_9B81:
+Lizalfos_ResetPose:
     lda     #$00                    ; $9B81
     sta     objState+1,x            ; $9B83
 
-loc_2_9B85:
-    jmp     loc_2_9B96              ; $9B85
+Lizalfos_GuardFar2:
+    jmp     Lizalfos_Guard          ; $9B85
     .byte   $3F, $1F, $3F                                                   ; $9B88
 
 LizalfosSpeeds:
@@ -2455,7 +2455,7 @@ Lizalfos_Ai:
     jsr     Enemy_Draw              ; $9B90
     jsr     Lizalfos_Attack         ; $9B93
 
-loc_2_9B96:
+Lizalfos_Guard:
     ldy     enemyType,x             ; $9B96
     lda     LizalfosGuardHeights,y  ; $9B98
     sta     ram_05E4                ; $9B9B

@@ -508,8 +508,8 @@ SolidTileThresholds_Bank5:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $02, $30, $12; $84C3
     .byte   $16, $02, $0F, $28, $38                                         ; $84D3
 
-dat_5_84D8:
-    .assert dat_5_84D8 = PalaceBank::dat_84D8, error, "interface address moved"
+PaletteRows_Bank5:
+    .assert PaletteRows_Bank5 = PalaceBank::PaletteRows, error, "interface address moved"
     .byte   $02, $27, $17, $0F, $02, $30, $10, $00, $FF, $FF, $FF           ; $84D8
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; $84E3
     .byte   $FF, $00, $10, $30                                              ; $84F0
@@ -1972,7 +1972,6 @@ CreditsText:
     .byte   $F3, $E8, $E8, $F4, $F4, $22, $CB, $08, $F4, $F4, $F4, $F4, $F4, $F4, $F4, $F4; $939D
     .byte   $FF                                                             ; $93AD
 
-dat_5_93AE:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93AE
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93BE
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $93CE
@@ -2444,7 +2443,7 @@ DarkLink_Freeze:
 DarkLink_SetTimer:
     sta     timerFast+3             ; $9807
 
-loc_5_980A:
+DarkLink_NextPhase:
     inc     objFacing+4             ; $980A
 
 DarkLink_WaitForLink_Done:
@@ -2630,10 +2629,10 @@ DarkLink_ReactToLink:
 ; (inline jump table)
     .word   @loc_9911               ; $9900
     .word   @loc_9911               ; $9902
-    .word   loc_5_9989              ; $9904
-    .word   loc_5_9989              ; $9906
-    .word   loc_5_9989              ; $9908
-    .word   loc_5_9989              ; $990A
+    .word   DarkLink_TurnSometimes  ; $9904
+    .word   DarkLink_TurnSometimes  ; $9906
+    .word   DarkLink_TurnSometimes  ; $9908
+    .word   DarkLink_TurnSometimes  ; $990A
 ; (code below not executed in the test movies)
 
 @loc_990C:
@@ -2647,18 +2646,18 @@ DarkLink_ReactToLink:
     bne     DarkLink_ReactToLink_Done ; $9913
     lda     joypadPressed           ; $9915
     and     #$40                    ; $9917
-    beq     loc_5_994F              ; $9919
+    beq     DarkLink_MaybeTurn      ; $9919
     lda     linkStanding            ; $991B
     sta     ram_0018                ; $991D
     lda     rng+1                   ; $991F
     and     #$07                    ; $9922
-    bne     loc_5_994F              ; $9924
+    bne     DarkLink_MaybeTurn      ; $9924
 ; (code below not executed in the test movies)
     sta     objYFrac+1              ; $9926
     sta     enemyAiDir              ; $9929
 ; (end of code not executed in the test movies)
 
-sub_5_992C:
+DarkLink_GetSide:
     ldy     #$00                    ; $992C
     lda     drawScreenX+1           ; $992E
     adc     #$0C                    ; $9930
@@ -2688,7 +2687,7 @@ sub_5_992C:
 DarkLink_ReactToLink_Done:
     rts                             ; $994E
 
-loc_5_994F:
+DarkLink_MaybeTurn:
     lda     rng+3                   ; $994F
     and     #$03                    ; $9952
     bne     @loc_9964               ; $9954
@@ -2723,7 +2722,7 @@ loc_5_994F:
 @done:
     rts                             ; $9988
 
-loc_5_9989:
+DarkLink_TurnSometimes:
     lda     objFacing+3             ; $9989
     bne     @done                   ; $998B
     lda     frameCounter            ; $998D
@@ -2785,7 +2784,7 @@ DarkLink_UpdateJump:
     sta     objFacing+3             ; $99C4
     lda     #$A0                    ; $99C6
     sta     objY+1                  ; $99C8
-    bne     loc_5_99E2              ; $99CA
+    bne     DarkLink_Animate        ; $99CA
 
 @loc_99CC:
     lda     linkStanding            ; $99CC
@@ -2802,7 +2801,7 @@ DarkLink_UpdateJump:
 DarkLinkJumpPoses:
     .byte   $00, $01, $02, $02, $01, $00                                    ; $99DC
 
-loc_5_99E2:
+DarkLink_Animate:
     lda     objXVelocity+1          ; $99E2
     beq     @loc_9A05               ; $99E4
     ldy     objFacing+5             ; $99E6
@@ -2863,7 +2862,7 @@ DarkLink_Move:
     pha                             ; $9A29
     lda     #$03                    ; $9A2A
     sta     rng+2                   ; $9A2C
-    jsr     sub_5_992C              ; $9A2F
+    jsr     DarkLink_GetSide        ; $9A2F
     pla                             ; $9A32
 
 @loc_9A33:
@@ -2945,10 +2944,10 @@ DarkLink_Draw:
     jsr     Link_DrawBody           ; $9A7F
     ldx     currentObject           ; $9A82
 
-dat_5_9A84:
+DarkLink_Draw_Done:
     rts                             ; $9A84
 ; The rts byte is also the base of the table DarkLinkSwordXOffsets (entry 0 is the rts).
-DarkLinkSwordXOffsets := dat_5_9A84
+DarkLinkSwordXOffsets := DarkLink_Draw_Done
     .byte   $10, $FF                                                        ; $9A85
 
 DarkLinkSwordYOffsets:
@@ -3105,7 +3104,7 @@ DarkLink_WalkLinkToCenter:
     lda     objX                    ; $9B63
     adc     #$0B                    ; $9B65
     cmp     #$6C                    ; $9B67
-    beq     loc_5_9B81              ; $9B69
+    beq     DarkLink_StartWalk      ; $9B69
     dec     objX                    ; $9B6B
     bcs     DarkLink_WalkLinkToCenter_Done ; $9B6D
 ; (code below not executed in the test movies)
@@ -3116,24 +3115,24 @@ DarkLink_WalkLinkToCenter:
 DarkLink_WalkLinkToCenter_Done:
     rts                             ; $9B73
 
-loc_5_9B74:
+DarkLink_StartTriforce:
     lda     #$C0                    ; $9B74
     sta     spellFlash              ; $9B76
     lda     #$20                    ; $9B79
     sta     musicRequest            ; $9B7B
     lda     #$15                    ; $9B7D
-    bne     loc_5_9B83              ; $9B7F
+    bne     DarkLink_PlaceAtCenter  ; $9B7F
 
-loc_5_9B81:
+DarkLink_StartWalk:
     lda     #$0D                    ; $9B81
 
-loc_5_9B83:
+DarkLink_PlaceAtCenter:
     sta     timerSlow+4             ; $9B83
     lda     #$7C                    ; $9B86
     sta     objX+1                  ; $9B88
     lda     #$B0                    ; $9B8A
     sta     objY+1                  ; $9B8C
-    jmp     loc_5_980A              ; $9B8E
+    jmp     DarkLink_NextPhase      ; $9B8E
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_ShowTriforce
@@ -3145,7 +3144,7 @@ loc_5_9B83:
 DarkLink_ShowTriforce:
     lda     timerSlow+4             ; $9B91
     cmp     #$02                    ; $9B94
-    beq     loc_5_9B74              ; $9B96
+    beq     DarkLink_StartTriforce  ; $9B96
     cmp     #$09                    ; $9B98
     bcs     DarkLink_WalkLinkToCenter_Done ; $9B9A
     cmp     #$06                    ; $9B9C
@@ -3349,10 +3348,10 @@ Projectile_DrawAndCheck_Bank5:
     lda     #$41                    ; $9C91
     sta     oamBuffer - 2,y         ; $9C93
 
-dat_5_9C96:
+Projectile_DrawAndCheck_Done_Bank5:
     rts                             ; $9C96
 ; The rts byte is also the base of the table ProjectileFlipAttrs_Bank5 (entry 0 is the rts).
-ProjectileFlipAttrs_Bank5 := dat_5_9C96
+ProjectileFlipAttrs_Bank5 := Projectile_DrawAndCheck_Done_Bank5
     .byte   $40, $00                                                        ; $9C97
 
 ; ---------------------------------------------------------------------------
@@ -4217,10 +4216,10 @@ LargeBubble_Draw:
 @loc_A178:
     ldx     currentObject           ; $A178
 
-dat_5_A17A:
+LargeBubble_Draw_Done:
     rts                             ; $A17A
 ; The rts byte is also the base of the table KingBotPartYOffsets (entry 0 is the rts).
-KingBotPartYOffsets := dat_5_A17A
+KingBotPartYOffsets := LargeBubble_Draw_Done
     .byte   $04, $08, $00, $08, $04                                         ; $A17B
 
 ; ---------------------------------------------------------------------------
@@ -7901,7 +7900,6 @@ SaveDefaultWorldEnd:                    ; end of SaveDefaultWorld
 FilePalette:
     .byte   $3F, $00, $20, $0F                                              ; $BBF5
 
-dat_5_BBF9:
     .byte   $30, $12, $16, $0F, $30, $30, $30, $0F, $30, $30, $30, $0F      ; $BBF9
     .byte   $30, $30, $30, $0F, $18, $36, $2A, $0F, $16, $27, $30, $0F, $30, $30, $30, $0F; $BC05
     .byte   $27, $27, $0F, $FF                                              ; $BC15
@@ -7957,7 +7955,6 @@ NameLetters:
     .byte   $F0, $F1, $F2, $F3, $F6, $CF, $00, $00, $00, $00, $00           ; $BD8B
     .byte   $D0, $D1, $D2, $D3, $D4, $D5, $D6, $D7, $D8, $D9, $F4           ; $BD96
 
-dat_5_BDA1:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF                          ; $BDA1
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BDA9
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $BDB9

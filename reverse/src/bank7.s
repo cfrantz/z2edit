@@ -2484,7 +2484,7 @@ ReturnToOverworld_SetY66:
 Mode_ReturnToOverworld:
     lda     #$00                    ; $CCB3
     sta     ram_0709                ; $CCB5
-    sta     pitFallCount            ; $CCB8
+    sta     doorDepth               ; $CCB8
     ldy     areaLocation            ; $CCBB
     lda     sramLocY,y              ; $CCBE
     bne     ReturnToOverworld_SetPosition ; $CCC1
@@ -2792,7 +2792,7 @@ Mode_LoadWorld:
     ldx     #$00                    ; $CE66
 
 @loop15:
-    lda     PalaceBank::dat_84D8,y  ; $CE68
+    lda     PalaceBank::PaletteRows,y  ; $CE68
     sta     sramAreaPalettes+172,x  ; $CE6B
     sta     sramAreaPalettes+188,x  ; $CE6E
     iny                             ; $CE71
@@ -3046,12 +3046,12 @@ Mode_LeaveArea:
     lda     areaId                  ; $CFC7
     cmp     #$24                    ; $CFCA
     bcs     Game_EnterNextArea      ; $CFCC
-    lda     pitFallCount            ; $CFCE
+    lda     doorDepth               ; $CFCE
     beq     Game_EnterNextArea      ; $CFD1
     clc                             ; $CFD3
     adc     #$04                    ; $CFD4
     sta     areaStartPage           ; $CFD6
-    dec     pitFallCount            ; $CFD9
+    dec     doorDepth               ; $CFD9
     bne     Game_EnterNextArea      ; $CFDC
     lda     townCode                ; $CFDE
     cmp     #$07                    ; $CFE1
@@ -3119,23 +3119,23 @@ Mode_EnterDoor:
     asl     a                       ; $D003
     adc     objXHi                  ; $D004
     tay                             ; $D006
-    lda     dat_3_8817,y            ; $D007
+    lda     TownDoors,y             ; $D007
     and     #$FC                    ; $D00A
     lsr     a                       ; $D00C
     lsr     a                       ; $D00D
     sta     areaId                  ; $D00E
-    lda     dat_3_8817,y            ; $D011
+    lda     TownDoors,y             ; $D011
     and     #$03                    ; $D014
     sta     areaStartPage           ; $D016
     and     #$01                    ; $D019
     sta     areaEntrySide           ; $D01B
-    lda     pitFallCount            ; $D01E
+    lda     doorDepth               ; $D01E
     clc                             ; $D021
     adc     #$04                    ; $D022
     tax                             ; $D024
     jsr     Scroll_SavePageState    ; $D025
     jsr     Game_EnterNextArea      ; $D028
-    ldx     pitFallCount            ; $D02B
+    ldx     doorDepth               ; $D02B
     dex                             ; $D02E
     bne     Music_Request80Done     ; $D02F
     lda     townCode                ; $D031
@@ -6628,7 +6628,7 @@ Link_CheckBgInBank:
     beq     @loc_E0F9               ; $E0EA
     lda     linkJumpState           ; $E0EC
     bne     @done                   ; $E0EF
-    inc     pitFallCount            ; $E0F1
+    inc     doorDepth               ; $E0F1
     lda     #$16                    ; $E0F4
     jmp     Area_ExitToMode         ; $E0F6
 
