@@ -1370,7 +1370,7 @@ Projectile_Bubble_Bank1:
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank1:
     jsr     Projectile_FallIfDeflected_Bank1 ; $965A
-dat_1_965F := * + 2
+BoomerangXAccel_Bank1 := * + 2
     jmp     Projectile_Straight_Bank1 ; $965D
     .byte   $FF, $01                                                        ; $9660
 
@@ -1381,7 +1381,7 @@ BoomerangYSpeeds_Bank1:
 ; Projectile_Boomerang_Bank1
 ;
 ; Projectile type 6 (Goriya's boomerang): flies out and back, its speed
-; changing by BoomerangYSpeeds_Bank1 and dat_1_965F, with a sound on
+; changing by BoomerangYSpeeds_Bank1 and BoomerangXAccel_Bank1, with a sound on
 ; alternate frames; it disappears when it returns to its thrower
 ; (ram_045E).
 ;
@@ -1413,7 +1413,7 @@ Projectile_Boomerang_Bank1:
     ldy     ram_0452,x              ; $9690
     lda     objXVelocity+7,x        ; $9693
     clc                             ; $9695
-    adc     dat_1_965F,y            ; $9696
+    adc     BoomerangXAccel_Bank1,y ; $9696
     sta     objXVelocity+7,x        ; $9699
     ldy     #$02                    ; $969B
     cmp     #$00                    ; $969D
@@ -1507,7 +1507,7 @@ Projectile_MoveAndCheck_Bank1:
 @loc_970D:
     jsr     Projectile_Draw_Bank1   ; $970D
     jsr     DoNothing               ; $9710
-dat_1_9715 := * + 2
+ProjectileFlipAttrs_Bank1 := * + 2
     jmp     Projectile_CheckLinkAlternate ; $9713
     .byte   $40, $00                                                        ; $9716
 
@@ -1543,7 +1543,7 @@ Projectile_Draw_Bank1:
     sta     temp3                   ; $9740
     ldy     objFacing+7,x           ; $9742
     sty     temp2                   ; $9744
-    ora     dat_1_9715,y            ; $9746
+    ora     ProjectileFlipAttrs_Bank1,y ; $9746
     ldy     objOamOffset+7,x        ; $9749
     sta     oamBuffer+2,y           ; $974B
     pla                             ; $974E
@@ -1551,7 +1551,7 @@ Projectile_Draw_Bank1:
     jmp     (temp14)                ; $9752
 ; (unreferenced: $9755-$976C, 24 bytes)
 
-dat_1_9755:
+ProjectileBobOffsets_Bank1:
     .byte   $00, $02, $00, $FE                                              ; $9755
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -1572,7 +1572,7 @@ Projectile_DrawBob_Bank1:
     lsr     a                       ; $9760
     tax                             ; $9761
     lda     oamBuffer,y             ; $9762
-    adc     dat_1_9755,x            ; $9765
+    adc     ProjectileBobOffsets_Bank1,x ; $9765
     sta     oamBuffer,y             ; $9768
     ldx     currentObject           ; $976B
 ; (end of disassembled code)
@@ -1644,7 +1644,7 @@ Projectile_DrawLarge_Bank1:
 ; (end of disassembled code)
 
 
-dat_1_97A5:
+SpinProjectileAttrs_Bank1:
     .byte   $02, $82, $C2, $42                                              ; $97A5
 
 ; ---------------------------------------------------------------------------
@@ -1666,7 +1666,7 @@ Projectile_DrawSpin_Bank1:
 
 @loc_97B6:
     tay                             ; $97B6
-    lda     dat_1_97A5,y            ; $97B7
+    lda     SpinProjectileAttrs_Bank1,y ; $97B7
     ldy     objOamOffset+7,x        ; $97BA
     sta     oamBuffer+2,y           ; $97BC
     rts                             ; $97BF
@@ -1707,12 +1707,12 @@ Projectile_DrawFire_Bank1:
     lda     temp0                   ; $97E8
     sta     oamBuffer+2,y           ; $97EA
 
-dat_1_97ED:
+MoblinSpearSpeeds:
     rts                             ; $97ED
 ; (unreferenced: $97EE-$97F1, 4 bytes)
     .byte   $28                                                             ; $97EE
 
-dat_1_97EF:
+MoblinSpearXOffsets:
     .byte   $D8, $00, $00                                                   ; $97EF
 
 ; ---------------------------------------------------------------------------
@@ -1741,12 +1741,12 @@ Moblin_ThrowSpear:
     lda     objX+1,x                ; $9805
     sty     temp0                   ; $9807
     ldy     objFacing+1,x           ; $9809
-    adc     dat_1_97EF,y            ; $980B
+    adc     MoblinSpearXOffsets,y   ; $980B
     ldy     temp0                   ; $980E
     sta     a:objX+7,y              ; $9810
     ldy     objFacing+1,x           ; $9813
     lda     objXHi+1,x              ; $9815
-    adc     dat_1_97EF,y            ; $9817
+    adc     MoblinSpearXOffsets,y   ; $9817
     ldy     temp0                   ; $981A
     sta     a:objXHi+7,y            ; $981C
     lda     objY+1,x                ; $981F
@@ -1759,7 +1759,7 @@ Moblin_ThrowSpear:
     lda     objFacing+1,x           ; $982F
     sta     a:objFacing+7,y         ; $9831
     tay                             ; $9834
-    lda     dat_1_97ED,y            ; $9835
+    lda     MoblinSpearSpeeds,y     ; $9835
     ldy     temp0                   ; $9838
     sta     a:objXVelocity+7,y      ; $983A
     lda     #$E8                    ; $983D
@@ -1951,7 +1951,7 @@ Lowder_Ai:
 @loc_992A:
     sta     objState+1,x            ; $992A
 
-dat_1_992C:
+DumbMoblinSpeeds:
     rts                             ; $992C
 ; (unreferenced: $992D-$996F, 67 bytes)
     .byte   $10, $F0                                                        ; $992D
@@ -1976,7 +1976,7 @@ DumbMoblinGenerator_Ai:
     lda     #$22                    ; $993D
     sta     enemyType,x             ; $993F
     ldy     objFacing+1,x           ; $9941
-    lda     dat_1_992C,y            ; $9943
+    lda     DumbMoblinSpeeds,y      ; $9943
     sta     objXVelocity+1,x        ; $9946
     lda     #$A0                    ; $9948
     sta     objY+1,x                ; $994A
@@ -2012,7 +2012,7 @@ DumbMoblin_Ai:
 ; (end of disassembled code)
 
 
-dat_1_9970:
+MoblinThrowYOffsets:
     .byte   $10, $00                                                        ; $9970
 
 ; ---------------------------------------------------------------------------
@@ -2051,7 +2051,7 @@ MoblinGoriya_Ai:
     lsr     a                       ; $999C
     sta     ram_0458,y              ; $999D
     tax                             ; $99A0
-    lda     dat_1_9970,x            ; $99A1
+    lda     MoblinThrowYOffsets,x   ; $99A1
     ldx     currentObject           ; $99A4
     adc     objY+1,x                ; $99A6
     sta     a:objY+7,y              ; $99A8
@@ -2098,14 +2098,14 @@ MoblinGoriya_Ai:
     jmp     loc_1_99F2              ; $99EB
 
 @loc_99EE:
-dat_1_99EF := * + 1
+FighterAttackMasks := * + 1
     lda     #$00                    ; $99EE
     sta     objState+1,x            ; $99F0
 
 loc_1_99F2:
     lda     #$16                    ; $99F2
     ldy     enemyType,x             ; $99F4
-dat_1_99F7 := * + 1
+FighterTurnMasks := * + 1
     cpy     #$14                    ; $99F6
     beq     @loc_99FE               ; $99F8
     cpy     #$19                    ; $99FA
@@ -2123,7 +2123,7 @@ dat_1_99F7 := * + 1
     .byte   $3F                                                             ; $9A0B
     .byte   $3F, $1F, $3F, $3F, $7F, $3F, $3F                               ; $9A0C
 
-dat_1_9A13:
+FighterSpeeds:
     .byte   $08, $F8                                                        ; $9A13
 
 ; ---------------------------------------------------------------------------
@@ -2188,19 +2188,19 @@ Fighter_Move:
     jsr     Enemy_FaceLink          ; $9A61
 
 @loc_9A64:
-    lda     dat_1_9A13,y            ; $9A64
+    lda     FighterSpeeds,y         ; $9A64
     asl     a                       ; $9A67
     sta     objXVelocity+1,x        ; $9A68
     rts                             ; $9A6A
 
 @loc_9A6B:
     ldy     enemyType,x             ; $9A6B
-    lda     dat_1_99F7,y            ; $9A6D
+    lda     FighterTurnMasks,y      ; $9A6D
     inc     enemyAiState,x          ; $9A70
     and     enemyAiState,x          ; $9A72
     bne     loc_1_9AAB              ; $9A74
     lda     rng+1,x                 ; $9A76
-    and     dat_1_99EF,y            ; $9A79
+    and     FighterAttackMasks,y    ; $9A79
     bne     Fighter_StartAttack     ; $9A7C
     lda     #$E0                    ; $9A7E
     sta     enemyAiState,x          ; $9A80
@@ -2251,7 +2251,7 @@ loc_1_9AAB:
     bne     loc_1_9ACE              ; $9AB3
     lda     linkDirHeld             ; $9AB5
 
-dat_1_9AB8:
+DairaAttackFrames:
     beq     @loc_9ABE               ; $9AB8
     lda     objXVelocity            ; $9ABA
     bne     @loc_9AC9               ; $9ABC
@@ -2292,7 +2292,7 @@ Daira_Attack:
     inc     objState+1,x            ; $9ADA
     ldy     enemyType,x             ; $9ADC
     lda     objState+1,x            ; $9ADE
-    cmp     dat_1_9AB8,y            ; $9AE0
+    cmp     DairaAttackFrames,y     ; $9AE0
     beq     @loc_9B05               ; $9AE3
     cmp     #$02                    ; $9AE5
     bne     @loc_9AFF               ; $9AE7
@@ -2356,12 +2356,12 @@ Enemy_MoveXUnlessWall_Bank1:
     lda     objCollision+1,x        ; $9B22
     and     #$03                    ; $9B24
     bne     loc_1_9B21              ; $9B26
-dat_1_9B2A := * + 2
+MobySpeeds := * + 2
     jmp     Enemy_MoveX             ; $9B28
 ; (unreferenced: $9B2B-$9C6E, 324 bytes)
     .byte   $20, $E0                                                        ; $9B2B
 
-dat_1_9B2D:
+MobySpawnX:
     .byte   $30, $D0, $00, $F8                                              ; $9B2D
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -2414,7 +2414,7 @@ MobyGenerator_Ai:
 
 @loc_9B66:
     lda     scrollX                 ; $9B66
-    adc     dat_1_9B2D,y            ; $9B69
+    adc     MobySpawnX,y            ; $9B69
     sta     objX+1,x                ; $9B6C
     lda     scrollXHi               ; $9B6E
     adc     #$00                    ; $9B71
@@ -2449,7 +2449,7 @@ Moby_Ai:
     cmp     objY                    ; $9B99
     bcc     @loc_9BA7               ; $9B9B
     ldy     objFacing+1,x           ; $9B9D
-    lda     dat_1_9B2A,y            ; $9B9F
+    lda     MobySpeeds,y            ; $9B9F
     sta     objXVelocity+1,x        ; $9BA2
     jsr     Enemy_StopY             ; $9BA4
 
@@ -2461,7 +2461,7 @@ Moby_Ai:
 ; (end of disassembled code)
 
 
-dat_1_9BB3:
+GeldarmYOffsets:
     .byte   $FF, $01                                                        ; $9BB3
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -2482,7 +2482,7 @@ Geldarm_Ai:
     bne     @loc_9BCA               ; $9BBB
     lda     objY+1,x                ; $9BBD
     clc                             ; $9BBF
-    adc     dat_1_9BB3,y            ; $9BC0
+    adc     GeldarmYOffsets,y       ; $9BC0
     sta     objY+1,x                ; $9BC3
     lda     timerFast+3,x           ; $9BC5
     bne     @loc_9C35               ; $9BC8
@@ -2490,7 +2490,7 @@ Geldarm_Ai:
 @loc_9BCA:
     lda     objY+1,x                ; $9BCA
     clc                             ; $9BCC
-    adc     dat_1_9BB3,y            ; $9BCD
+    adc     GeldarmYOffsets,y       ; $9BCD
     sta     objY+1,x                ; $9BD0
     lda     #$05                    ; $9BD2
     sta     timerFast+3,x           ; $9BD4
@@ -2551,7 +2551,7 @@ Geldarm_Ai:
 @loc_9C35:
     lda     objY+1,x                ; $9C35
     sec                             ; $9C37
-    sbc     dat_1_9BB3,y            ; $9C38
+    sbc     GeldarmYOffsets,y       ; $9C38
     sta     objY+1,x                ; $9C3B
 
 @loc_9C3D:
@@ -2627,15 +2627,15 @@ Goriya_Draw:
     jsr     Sprite_DrawEnemyPair    ; $9C8F
     jmp     Sprite_DrawEnemyPairKeepX ; $9C92
 
-dat_1_9C95:
+MoblinDrawTiles:
     .byte   $24, $1E, $24, $2A, $30                                         ; $9C95
 ; (unreferenced: $9C9A-$9C9A, 1 bytes)
     .byte   $36                                                             ; $9C9A
 
-dat_1_9C9B:
+MoblinSpearTiles:
     .byte   $04, $F8, $FC, $08                                              ; $9C9B
 
-dat_1_9C9F:
+MoblinFrames:
     .byte   $00, $01, $00, $01                                              ; $9C9F
 ; (unreferenced: $9CA3-$9CA3, 1 bytes)
     .byte   $01                                                             ; $9CA3
@@ -2662,7 +2662,7 @@ Moblin_Draw:
 @loc_9CB8:
     sta     ram_05E4                ; $9CB8
     tax                             ; $9CBB
-    lda     dat_1_9C95,x            ; $9CBC
+    lda     MoblinDrawTiles,x       ; $9CBC
     cpx     #$00                    ; $9CBF
     bne     @loc_9CD4               ; $9CC1
     ldx     currentObject           ; $9CC3
@@ -2710,7 +2710,7 @@ Moblin_Draw:
     lda     ram_05E4                ; $9D08
     tax                             ; $9D0B
     dex                             ; $9D0C
-    lda     dat_1_9C9F,x            ; $9D0D
+    lda     MoblinFrames,x          ; $9D0D
     tax                             ; $9D10
     lda     ram_00D9                ; $9D11
     cmp     #$01                    ; $9D13
@@ -2721,7 +2721,7 @@ Moblin_Draw:
 @loc_9D19:
     tya                             ; $9D19
     pha                             ; $9D1A
-    lda     dat_1_9C9B,x            ; $9D1B
+    lda     MoblinSpearTiles,x      ; $9D1B
     ldx     currentObject           ; $9D1E
     ldy     timerFast+TIMER_ENEMY,x ; $9D20
     cpy     #$03                    ; $9D23
@@ -2763,13 +2763,13 @@ Moblin_Draw:
     ldx     currentObject           ; $9D56
     rts                             ; $9D58
 
-dat_1_9D59:
+RedDairaFrames:
     .byte   $10, $12, $14                                                   ; $9D59
 
-dat_1_9D5C:
+RedDairaAxeYOffsets:
     .byte   $00, $02, $11                                                   ; $9D5C
 
-dat_1_9D5F:
+RedDairaAxeXOffsets:
     .byte   $0D, $F0, $FB, $F3, $10, $05                                    ; $9D5F
 
 ; ---------------------------------------------------------------------------
@@ -2849,13 +2849,13 @@ loc_1_9D6B:
     sta     temp3                   ; $9DBA
 
 @loc_9DBC:
-    lda     dat_1_9D59,x            ; $9DBC
+    lda     RedDairaFrames,x        ; $9DBC
     tax                             ; $9DBF
     jsr     Sprite_DrawEnemyPairKeepX ; $9DC0
     lda     objY+1,x                ; $9DC3
     ldx     temp14                  ; $9DC5
     clc                             ; $9DC7
-    adc     dat_1_9D5C,x            ; $9DC8
+    adc     RedDairaAxeYOffsets,x   ; $9DC8
     sta     oamBuffer - 8,y         ; $9DCB
     sta     oamBuffer - 4,y         ; $9DCE
     lda     ram_00D9                ; $9DD1
@@ -2867,7 +2867,7 @@ loc_1_9D6B:
     tax                             ; $9DDA
 
 @loc_9DDB:
-    lda     dat_1_9D5F,x            ; $9DDB
+    lda     RedDairaAxeXOffsets,x   ; $9DDB
     pha                             ; $9DDE
     clc                             ; $9DDF
     adc     oamBuffer - 5,y         ; $9DE0
@@ -2925,12 +2925,12 @@ Megmet_Draw:
     jmp     Sprite_DrawEnemyPairKeepX ; $9E06
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_1_9E09:
+Geldarm_DrawDone:
     rts                             ; $9E09
 ; (end of disassembled code)
 
 
-dat_1_9E0A:
+GeldarmSegmentXOffsets:
     .byte   $FF, $01                                                        ; $9E0A
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -2951,7 +2951,7 @@ Geldarm_Draw:
 @loc_9E15:
     lda     drawOffscreen+1         ; $9E15
     and     #$08                    ; $9E17
-    bne     dat_1_9E09              ; $9E19
+    bne     Geldarm_DrawDone        ; $9E19
     lda     #$00                    ; $9E1B
     sta     temp0                   ; $9E1D
     lda     objState+1,x            ; $9E1F
@@ -3033,10 +3033,10 @@ Geldarm_Draw:
     tax                             ; $9E9D
     lda     oamBuffer+3,y           ; $9E9E
     clc                             ; $9EA1
-    adc     dat_1_9E0A,x            ; $9EA2
+    adc     GeldarmSegmentXOffsets,x ; $9EA2
     sta     oamBuffer+7,y           ; $9EA5
     clc                             ; $9EA8
-    adc     dat_1_9E0A,x            ; $9EA9
+    adc     GeldarmSegmentXOffsets,x ; $9EA9
     sta     oamBuffer+3,y           ; $9EAC
 
 @loc_9EAF:

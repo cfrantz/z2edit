@@ -1428,7 +1428,7 @@ loc_2_9670:
 loc_2_9673:
     jsr     Projectile_Draw_Bank2   ; $9673
     jsr     DoNothing               ; $9676
-dat_2_967B := * + 2
+ProjectileFlipAttrs_Bank2 := * + 2
     jmp     Projectile_CheckLinkAlternate ; $9679
     .byte   $40, $00                                                        ; $967C
 
@@ -1459,7 +1459,7 @@ Projectile_Draw_Bank2:
     pha                             ; $969E
     lda     sramProjectileAttrs,y   ; $969F
     ldy     objFacing+7,x           ; $96A2
-    ora     dat_2_967B,y            ; $96A4
+    ora     ProjectileFlipAttrs_Bank2,y ; $96A4
     ldy     objOamOffset+7,x        ; $96A7
     sta     oamBuffer+2,y           ; $96A9
     pla                             ; $96AC
@@ -1489,7 +1489,7 @@ Projectile_DrawNothing_Bank2:
     rts                             ; $96BA
 ; (unreferenced: $96BB-$96D2, 24 bytes)
 
-dat_2_96BB:
+ProjectileBobOffsets_Bank2:
     .byte   $00, $02, $00, $FE                                              ; $96BB
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -1509,7 +1509,7 @@ Projectile_DrawBob_Bank2:
     lsr     a                       ; $96C6
     tax                             ; $96C7
     lda     oamBuffer,y             ; $96C8
-    adc     dat_2_96BB,x            ; $96CB
+    adc     ProjectileBobOffsets_Bank2,x ; $96CB
     sta     oamBuffer,y             ; $96CE
     ldx     currentObject           ; $96D1
 ; (end of disassembled code)
@@ -1556,7 +1556,7 @@ loc_2_96EB:
     sta     oamBuffer+2,y           ; $96EB
     rts                             ; $96EE
 
-dat_2_96EF:
+SpinProjectileAttrs_Bank2:
     .byte   $03, $43, $C3, $83                                              ; $96EF
 
 ; ---------------------------------------------------------------------------
@@ -1578,7 +1578,7 @@ Projectile_DrawSpin_Bank2:
 
 @loc_9700:
     tay                             ; $9700
-    lda     dat_2_96EF,y            ; $9701
+    lda     SpinProjectileAttrs_Bank2,y ; $9701
     ldy     objOamOffset+7,x        ; $9704
     sta     oamBuffer+2,y           ; $9706
     rts                             ; $9709
@@ -1614,7 +1614,7 @@ Generator_Init_Bank2:
     ldx     currentObject           ; $9725
     rts                             ; $9727
 
-dat_2_9728:
+RockThrowYSpeeds:
     .byte   $DC, $E4, $EC                                                   ; $9728
 ; (unreferenced: $972B-$972B, 1 bytes)
     .byte   $F4                                                             ; $972B
@@ -1667,7 +1667,7 @@ RockThrower_Ai:
     lsr     a                       ; $9766
     lsr     a                       ; $9767
     tax                             ; $9768
-    lda     dat_2_9728,x            ; $9769
+    lda     RockThrowYSpeeds,x      ; $9769
     sta     objYVelocity+7,y        ; $976C
     ldx     currentObject           ; $976F
     bpl     @loc_977C               ; $9771
@@ -1783,7 +1783,7 @@ Leever_Init:
     sta     objY+1,x                ; $9800
     rts                             ; $9802
 
-dat_2_9803:
+TektiteSpeeds:
     .byte   $10, $F0                                                        ; $9803
 
 ; ---------------------------------------------------------------------------
@@ -1844,7 +1844,7 @@ Tektite_Ai:
     bne     @loc_985C               ; $9852
 
 @loc_9854:
-    lda     dat_2_9803,y            ; $9854
+    lda     TektiteSpeeds,y         ; $9854
     sta     objXVelocity+1,x        ; $9857
     jsr     Enemy_MoveX             ; $9859
 
@@ -1899,10 +1899,10 @@ Tektite_Ai:
     jsr     Enemy_CheckProjectileHits ; $98AE
     jsr     Enemy_CheckSwordHit     ; $98B1
     jsr     Enemy_CheckLinkContact  ; $98B4
-dat_2_98B9 := * + 2
+EyeXSpeeds := * + 2
     jmp     Enemy_HurtLinkOnContact ; $98B7
 
-dat_2_98BA:
+EyeYSpeeds:
     .byte   $08, $F8                                                        ; $98BA
 
 ; ---------------------------------------------------------------------------
@@ -1930,7 +1930,7 @@ Eye_Ai:
     lda     #$00                    ; $98D1
     rol     a                       ; $98D3
     tay                             ; $98D4
-    lda     dat_2_98BA,y            ; $98D5
+    lda     EyeYSpeeds,y            ; $98D5
     sta     objYVelocity+1,x        ; $98D8
     jsr     Enemy_MoveY             ; $98DB
 
@@ -1943,7 +1943,7 @@ Eye_Ai:
 
 @loc_98E9:
     ldy     objFacing+1,x           ; $98E9
-    lda     dat_2_98B9,y            ; $98EB
+    lda     EyeXSpeeds,y            ; $98EB
     sta     objXVelocity+1,x        ; $98EE
     jsr     Enemy_MoveX             ; $98F0
     jsr     Enemy_Draw              ; $98F3
@@ -1960,7 +1960,7 @@ Eye_Ai:
 @done:
     rts                             ; $990D
 
-dat_2_990E:
+LeeverSpeeds:
     .byte   $10, $F0                                                        ; $990E
 
 ; ---------------------------------------------------------------------------
@@ -1997,7 +1997,7 @@ Leever_Ai:
     adc     #$00                    ; $993D
     sta     objXHi+1,x              ; $993F
     jsr     Enemy_FaceLink          ; $9941
-    lda     dat_2_990E,y            ; $9944
+    lda     LeeverSpeeds,y          ; $9944
     sta     objXVelocity+1,x        ; $9947
     lda     objState+1,x            ; $9949
     sta     objY+1,x                ; $994B
@@ -2042,14 +2042,14 @@ Leever_Ai:
     beq     @loc_9960               ; $997F
     lsr     a                       ; $9981
     bcc     loc_2_9986              ; $9982
-dat_2_9985 := * + 1
+BoonXSpeeds := * + 1
     inc     objY+1,x                ; $9984
 
 loc_2_9986:
     rts                             ; $9986
 ; (unreferenced: $9987-$9A10, 138 bytes)
 
-dat_2_9987:
+BoonYSpeeds:
     .byte   $20, $E0                                                        ; $9987
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -2126,19 +2126,20 @@ Boon_Ai:
 ; (end of disassembled code)
 
 
-dat_2_99F4:
-    .word   dat_2_99FC, dat_2_99FC, loc_2_9A07, loc_2_9A07 ; $99F4
+; Boon_Ai's jump table, by objState (its direction of travel).
+BoonMoves:
+    .word   Boon_MoveY, Boon_MoveY, Boon_MoveX, Boon_MoveX ; $99F4
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_2_99FC:
+Boon_MoveY:
     ldy     objState+1,x            ; $99FC
-    lda     dat_2_9987,y            ; $99FE
+    lda     BoonYSpeeds,y           ; $99FE
     sta     objYVelocity+1,x        ; $9A01
     jmp     Enemy_MoveY             ; $9A04
 
-loc_2_9A07:
+Boon_MoveX:
     ldy     objState+1,x            ; $9A07
-    lda     dat_2_9985,y            ; $9A09
+    lda     BoonXSpeeds,y           ; $9A09
     sta     objXVelocity+1,x        ; $9A0C
     jmp     Enemy_MoveX             ; $9A0E
 ; (end of disassembled code)
@@ -2164,10 +2165,10 @@ loc_2_9A23:
     rts                             ; $9A23
     .byte   $F8                                                             ; $9A24
 
-dat_2_9A25:
+BasiliskFireXOffsets:
     .byte   $08, $0E                                                        ; $9A25
 
-dat_2_9A27:
+BasiliskFireXHiOffsets:
     .byte   $F8, $00, $FF                                                   ; $9A27
 
 ; ---------------------------------------------------------------------------
@@ -2243,10 +2244,10 @@ Basilisk_Ai:
 @loc_9A99:
     ldx     objFacing+7,y           ; $9A99
     lda     a:objX+7,y              ; $9A9B
-    adc     dat_2_9A25,x            ; $9A9E
+    adc     BasiliskFireXOffsets,x  ; $9A9E
     sta     a:objX+7,y              ; $9AA1
     lda     a:objXHi+7,y            ; $9AA4
-    adc     dat_2_9A27,x            ; $9AA7
+    adc     BasiliskFireXHiOffsets,x ; $9AA7
     sta     a:objXHi+7,y            ; $9AAA
 
 @done:
@@ -2415,12 +2416,12 @@ OrangeLizalfos_Ai:
 @loc_9B68:
     lda     timerFast+TIMER_ENEMY,x ; $9B68
     bne     loc_2_9B7E              ; $9B6B
-dat_2_9B6E := * + 1
+LizalfosAttackMasks := * + 1
     inc     objState+1,x            ; $9B6D
     lda     objState+1,x            ; $9B6F
     cmp     #$04                    ; $9B71
 
-dat_2_9B73:
+LizalfosGuardHeights:
     beq     loc_2_9B81              ; $9B73
     cmp     #$07                    ; $9B75
     bcs     loc_2_9B81              ; $9B77
@@ -2438,7 +2439,7 @@ loc_2_9B85:
     jmp     loc_2_9B96              ; $9B85
     .byte   $3F, $1F, $3F                                                   ; $9B88
 
-dat_2_9B8B:
+LizalfosSpeeds:
     .byte   $08, $F8, $18, $18, $40                                         ; $9B8B
 
 ; ---------------------------------------------------------------------------
@@ -2456,7 +2457,7 @@ Lizalfos_Ai:
 
 loc_2_9B96:
     ldy     enemyType,x             ; $9B96
-    lda     dat_2_9B73,y            ; $9B98
+    lda     LizalfosGuardHeights,y  ; $9B98
     sta     ram_05E4                ; $9B9B
     asl     a                       ; $9B9E
     sta     ram_05E5                ; $9B9F
@@ -2523,7 +2524,7 @@ loc_2_9B96:
     jsr     Enemy_FaceLink          ; $9C12
 
 @loc_9C15:
-    lda     dat_2_9B8B,y            ; $9C15
+    lda     LizalfosSpeeds,y        ; $9C15
     asl     a                       ; $9C18
     sta     objXVelocity+1,x        ; $9C19
     rts                             ; $9C1B
@@ -2547,7 +2548,7 @@ sub_2_9C1C:
 @loc_9C34:
     inc     enemyAiState,x          ; $9C34
     ldy     enemyType,x             ; $9C36
-    lda     dat_2_9B6E,y            ; $9C38
+    lda     LizalfosAttackMasks,y   ; $9C38
     and     enemyAiState,x          ; $9C3B
     bne     @loc_9C66               ; $9C3D
     lda     rng+1,x                 ; $9C3F
@@ -2610,11 +2611,11 @@ sub_2_9C1C:
     .byte   $05, $B4, $60, $B9, $8A, $9B, $95, $71, $60, $A9, $00, $95, $71, $BD, $04, $05; $9C9A
     .byte   $D0, $0D, $F6, $AF, $A9, $80, $9D, $04, $05, $B5, $60, $49, $03, $95, $60; $9CAA
 
-dat_2_9CB9:
+LizalfosShotXOffsets:
     .byte   $60                                                             ; $9CB9
     .byte   $10                                                             ; $9CBA
 
-dat_2_9CBB:
+LizalfosShotXHiOffsets:
     .byte   $F8, $00, $FF                                                   ; $9CBB
 
 ; ---------------------------------------------------------------------------
@@ -2645,10 +2646,10 @@ Lizalfos_Attack:
     bcs     @loc_9D02               ; $9CE2
     ldx     objFacing+7,y           ; $9CE4
     lda     a:objX+7,y              ; $9CE6
-    adc     dat_2_9CB9,x            ; $9CE9
+    adc     LizalfosShotXOffsets,x  ; $9CE9
     sta     a:objX+7,y              ; $9CEC
     lda     a:objXHi+7,y            ; $9CEF
-    adc     dat_2_9CBB,x            ; $9CF2
+    adc     LizalfosShotXHiOffsets,x ; $9CF2
     sta     a:objXHi+7,y            ; $9CF5
     lda     #$07                    ; $9CF8
     sta     a:objState+7,y          ; $9CFA
@@ -2690,14 +2691,14 @@ Lizalfos_KnockBack:
     pla                             ; $9D26
 
 @loc_9D27:
-dat_2_9D29 := * + 2
+RockThrowerDrawTiles := * + 2
     jmp     loc_2_9B39              ; $9D27
     .byte   $08, $FC, $FC                                                   ; $9D2A
 
-dat_2_9D2D:
+RockThrowerRockYOffsets:
     .byte   $08, $F0                                                        ; $9D2D
 
-dat_2_9D2F:
+RockThrowerRockXOffsets:
     .byte   $F3, $FA, $06                                                   ; $9D2F
 
 ; ---------------------------------------------------------------------------
@@ -2721,7 +2722,7 @@ RockThrower_Draw:
     lda     #$23                    ; $9D46
     sta     oamBuffer+1,y           ; $9D48
     lda     temp0                   ; $9D4B
-    adc     dat_2_9D2D,x            ; $9D4D
+    adc     RockThrowerRockYOffsets,x ; $9D4D
     sta     oamBuffer,y             ; $9D50
     lda     oamBuffer - 6,y         ; $9D53
     cpx     #$02                    ; $9D56
@@ -2740,7 +2741,7 @@ RockThrower_Draw:
 @loc_9D69:
     stx     temp14                  ; $9D69
     sty     temp15                  ; $9D6B
-    lda     dat_2_9D29,x            ; $9D6D
+    lda     RockThrowerDrawTiles,x  ; $9D6D
     cpx     #$01                    ; $9D70
     beq     @loc_9D78               ; $9D72
     cpx     #$03                    ; $9D74
@@ -2766,7 +2767,7 @@ RockThrower_Draw:
     ldx     temp2                   ; $9D90
     lda     oamBuffer+3,y           ; $9D92
     clc                             ; $9D95
-    adc     dat_2_9D2F,x            ; $9D96
+    adc     RockThrowerRockXOffsets,x ; $9D96
     sta     oamBuffer+7,y           ; $9D99
     lda     #$AE                    ; $9D9C
     sta     oamBuffer+5,y           ; $9D9E
@@ -2870,18 +2871,17 @@ Boon_Draw:
     inx                             ; $9E09
 
 @loc_9E0A:
-dat_2_9E0C := * + 2
+SegmentXOffsets_Bank2 := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $9E0A
 ; (end of disassembled code)
 
 
-dat_2_9E0D:
     .byte   $10                                                             ; $9E0D
 
-dat_2_9E0E:
+SegmentXOffsets2_Bank2:
     .byte   $F8, $FF                                                        ; $9E0E
 
-dat_2_9E10:
+SegmentHideMasks_Bank2:
     .byte   $01, $02, $08                                                   ; $9E10
 
 ; ---------------------------------------------------------------------------
@@ -2923,7 +2923,7 @@ Basilisk_Draw:
     jsr     Sprite_DrawEnemyPairKeepX ; $9E3F
     ldx     temp2                   ; $9E42
     lda     drawOffscreen+1         ; $9E44
-    and     dat_2_9E10,x            ; $9E46
+    and     SegmentHideMasks_Bank2,x ; $9E46
     bne     @loc_9E79               ; $9E49
     lda     temp0                   ; $9E4B
     sec                             ; $9E4D
@@ -2935,7 +2935,7 @@ Basilisk_Draw:
     sta     oamBuffer+1,y           ; $9E5B
     lda     temp1                   ; $9E5E
     clc                             ; $9E60
-    adc     dat_2_9E0C,x            ; $9E61
+    adc     SegmentXOffsets_Bank2,x ; $9E61
     sta     oamBuffer+3,y           ; $9E64
     ldx     currentObject           ; $9E67
     lda     objState+1,x            ; $9E69
@@ -2943,7 +2943,7 @@ Basilisk_Draw:
     ldx     temp2                   ; $9E6D
     lda     oamBuffer+3,y           ; $9E6F
     clc                             ; $9E72
-    adc     dat_2_9E0E,x            ; $9E73
+    adc     SegmentXOffsets2_Bank2,x ; $9E73
     sta     oamBuffer+3,y           ; $9E76
 
 @loc_9E79:
@@ -2984,7 +2984,7 @@ Scorpion_Draw:
     jsr     Sprite_DrawEnemyPairKeepX ; $9EA0
     ldx     temp2                   ; $9EA3
     lda     drawOffscreen+1         ; $9EA5
-    and     dat_2_9E10,x            ; $9EA7
+    and     SegmentHideMasks_Bank2,x ; $9EA7
     bne     @loc_9ED2               ; $9EAA
     lda     temp0                   ; $9EAC
     sec                             ; $9EAE
@@ -2994,7 +2994,7 @@ Scorpion_Draw:
     sta     oamBuffer+2,y           ; $9EB7
     lda     temp1                   ; $9EBA
     clc                             ; $9EBC
-    adc     dat_2_9E0C,x            ; $9EBD
+    adc     SegmentXOffsets_Bank2,x ; $9EBD
     sta     oamBuffer+3,y           ; $9EC0
     ldx     currentObject           ; $9EC3
     lda     objState+1,x            ; $9EC5
@@ -3010,11 +3010,11 @@ Scorpion_Draw:
 @loc_9ED2:
     ldx     currentObject           ; $9ED2
 
-dat_2_9ED4:
+LizalfosDrawTiles:
     rts                             ; $9ED4
     .byte   $08, $FA, $FE, $F8, $06                                         ; $9ED5
 
-dat_2_9EDA:
+LizalfosFrames:
     .byte   $02, $34, $34, $36, $38, $3A, $3A                               ; $9EDA
 
 ; ---------------------------------------------------------------------------
@@ -3081,7 +3081,7 @@ Lizalfos_Draw:
     inx                             ; $9F34
 
 @loc_9F35:
-    lda     dat_2_9ED4,x            ; $9F35
+    lda     LizalfosDrawTiles,x     ; $9F35
     sty     temp7                   ; $9F38
     ldx     currentObject           ; $9F3A
     ldy     enemyType,x             ; $9F3C
@@ -3128,7 +3128,7 @@ Lizalfos_Draw:
     inx                             ; $9F7C
 
 @loc_9F7D:
-    lda     dat_2_9EDA,x            ; $9F7D
+    lda     LizalfosFrames,x        ; $9F7D
     tax                             ; $9F80
     jmp     Sprite_DrawEnemyPairKeepX ; $9F81
 
