@@ -35,7 +35,7 @@ own colors (`FireOctorok_Draw`).
 | $19 | Red Fokka | 48 | 70 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
 | $1A | Blue Fokka | 96 | 100 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
 | $1B | (unused) | 0 | 0 | 0 | - | touch drains 10 exp | `$9E66` |
-| $1C | (unused) | 2 | 0 | 0 | - | touch drains 10 exp | `dat_5_9E67` |
+| $1C | (unused) | 2 | 0 | 0 | - | touch drains 10 exp | none (its AI pointer, $9E67, is a byte of `FokkeruSpeeds`) |
 | $1D | Fokkeru | 144 | 200 | 4 | - | blocks Link's projectiles, immune to SPELL | `Fokkeru_Ai` |
 | $1E | King Bot | 56 | 0 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `KingBot_Ai` |
 | $1F | (unused) | 0 | 3 | 1 | - |  | `$0000` |

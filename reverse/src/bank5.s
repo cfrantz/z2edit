@@ -2021,7 +2021,7 @@ EnemyAiPtrs_Bank5:
     .word   BagoBago_Ai, OctorokHopping_Ai, OctorokWalking_Ai, Elevator_Ai ; $94AD
     .word   GpBubble_Ai, GpBubble_Ai, GpSkullHead_Ai, GpBubble_Ai ; $94B5
     .word   Fokka_Ai, Fokka_Ai, Fokka_Ai, $9E66 ; $94BD
-    .word   dat_5_9E67, Fokkeru_Ai, KingBot_Ai, $0000 ; $94C5
+    .word   FokkeruSpeeds, Fokkeru_Ai, KingBot_Ai, $0000 ; $94C5
     .word   Barrier_Ai, $0000, Thunderbird_Ai, DarkLink_Ai ; $94CD
 
 ; Palette, flags and experience class of each enemy type (sramEnemyAttr; see docs/entities).
@@ -2092,13 +2092,13 @@ EnemyTiles_Bank5:
     .byte   $1D, $1F, $21, $23, $25, $27, $71, $73, $75, $77, $3D, $3D, $F2, $F4, $F8, $FA; $9604
     .byte   $07, $07, $09, $09, $05, $05, $0B, $0D, $61, $33, $35           ; $9614
 
-dat_5_961F:
+KingBotPartXOffsets:
     .byte   $37, $E8, $E8, $F8, $F8                                         ; $961F
 
-dat_5_9624:
+KingBotPartXHiOffsets:
     .byte   $08, $FF, $FF, $FF, $FF, $00                                    ; $9624
 
-dat_5_962A:
+KingBotSpeeds:
     .byte   $10, $F0                                                        ; $962A
 
 ; ---------------------------------------------------------------------------
@@ -2130,26 +2130,26 @@ GpSkullHead_Init:
     sta     objY+1,x                ; $963F
     ldy     objFacing               ; $9641
     lda     scrollX                 ; $9643
-    adc     dat_5_965E,y            ; $9646
+    adc     GpSkullHeadSpawnX,y     ; $9646
     sta     objX+1,x                ; $9649
     lda     scrollXHi               ; $964B
     adc     #$00                    ; $964E
     sta     objXHi+1,x              ; $9650
-    lda     dat_5_9660,y            ; $9652
+    lda     GpSkullHeadSpeeds,y     ; $9652
     sta     objXVelocity+1,x        ; $9655
     jsr     Enemy_StopY             ; $9657
     sta     enemyAiState,x          ; $965A
-dat_5_965E := * + 2
+GpSkullHeadSpawnX := * + 2
     jmp     Enemy_FaceLink          ; $965C
     .byte   $EF                                                             ; $965F
 
-dat_5_9660:
+GpSkullHeadSpeeds:
     .byte   $00, $E8, $18                                                   ; $9660
 
-dat_5_9663:
+GpSkullHeadYAccel:
     .byte   $02, $FE                                                        ; $9663
 
-dat_5_9665:
+GpSkullHeadMaxYSpeeds:
     .byte   $38, $C8                                                        ; $9665
 
 ; ---------------------------------------------------------------------------
@@ -2172,9 +2172,9 @@ GpSkullHead_Ai:
     tay                             ; $9677
     lda     objYVelocity+1,x        ; $9678
     clc                             ; $967B
-    adc     dat_5_9663,y            ; $967C
+    adc     GpSkullHeadYAccel,y     ; $967C
     sta     objYVelocity+1,x        ; $967F
-    cmp     dat_5_9665,y            ; $9682
+    cmp     GpSkullHeadMaxYSpeeds,y ; $9682
     bne     @loc_9689               ; $9685
     inc     enemyAiState,x          ; $9687
 
@@ -2438,10 +2438,10 @@ DarkLink_WaitForLink:
     sta     ram_00A0                ; $9801
     lda     #$FF                    ; $9803
 
-loc_5_9805:
+DarkLink_Freeze:
     inc     gameFrozen              ; $9805
 
-sub_5_9807:
+DarkLink_SetTimer:
     sta     timerFast+3             ; $9807
 
 loc_5_980A:
@@ -2471,7 +2471,7 @@ DarkLink_Appear:
     lda     objY                    ; $9824
     sta     objY+1                  ; $9826
     lda     #$FF                    ; $9828
-    bne     sub_5_9807              ; $982A
+    bne     DarkLink_SetTimer       ; $982A
 
 @loc_982C:
     cmp     #$50                    ; $982C
@@ -2588,7 +2588,7 @@ DarkLink_Fight:
     lda     #$80                    ; $98C8
     sta     musicRequest            ; $98CA
     lsr     a                       ; $98CC
-    jsr     sub_5_9807              ; $98CD
+    jsr     DarkLink_SetTimer       ; $98CD
 
 @loc_98D0:
     jmp     DarkLink_Draw           ; $98D0
@@ -2677,7 +2677,7 @@ sub_5_992C:
 ; (end of code not executed in the test movies)
 
 @loc_993E:
-    lda     dat_5_999E,y            ; $993E
+    lda     DarkLinkReactSpeeds,y   ; $993E
     sta     objXVelocity+1          ; $9941
     lda     #$FC                    ; $9943
     sta     objYVelocity+1          ; $9945
@@ -2737,12 +2737,12 @@ loc_5_9989:
 @done:
     rts                             ; $999D
 
-dat_5_999E:
+DarkLinkReactSpeeds:
     .byte   $18                                                             ; $999E
 ; (unreferenced: $999F-$99A1, 3 bytes)
     .byte   $E8, $00, $00                                                   ; $999F
 
-dat_5_99A2:
+DarkLinkSpeeds:
     .byte   $14, $EC                                                        ; $99A2
 
 ; ---------------------------------------------------------------------------
@@ -2756,7 +2756,7 @@ DarkLink_UpdateXVelocity:
     lda     timerFast+5             ; $99A4
     beq     @loc_99B1               ; $99A7
     ldy     objFacing+2             ; $99A9
-    lda     dat_5_99A2,y            ; $99AB
+    lda     DarkLinkSpeeds,y        ; $99AB
     sta     objXVelocity+1          ; $99AE
     rts                             ; $99B0
 
@@ -2799,7 +2799,7 @@ DarkLink_UpdateJump:
     sta     objState+1              ; $99D9
     rts                             ; $99DB
 
-dat_5_99DC:
+DarkLinkJumpPoses:
     .byte   $00, $01, $02, $02, $01, $00                                    ; $99DC
 
 loc_5_99E2:
@@ -2823,7 +2823,7 @@ loc_5_99E2:
     iny                             ; $99FE
 
 @loc_99FF:
-    lda     dat_5_99DC,y            ; $99FF
+    lda     DarkLinkJumpPoses,y     ; $99FF
     sta     objState+1              ; $9A02
     rts                             ; $9A04
 
@@ -2883,7 +2883,7 @@ DarkLink_Move:
     sta     temp0                   ; $9A41
     lda     #$04                    ; $9A43
     sta     temp2                   ; $9A45
-dat_5_9A49 := * + 2
+DarkLinkAttackPoses := * + 2
     jmp     Enemy_MoveYWithGravity  ; $9A47
     .byte   $04, $05                                                        ; $9A4A
 ; (unreferenced: $9A4C-$9A4C, 1 bytes)
@@ -2924,7 +2924,7 @@ DarkLink_UpdateAttack:
     iny                             ; $9A70
 
 @loc_9A71:
-    lda     dat_5_9A49,y            ; $9A71
+    lda     DarkLinkAttackPoses,y   ; $9A71
     sta     objState+1              ; $9A74
 
 @done:
@@ -2947,17 +2947,19 @@ DarkLink_Draw:
 
 dat_5_9A84:
     rts                             ; $9A84
+; The rts byte is also the base of the table DarkLinkSwordXOffsets (entry 0 is the rts).
+DarkLinkSwordXOffsets := dat_5_9A84
     .byte   $10, $FF                                                        ; $9A85
 
-dat_5_9A87:
+DarkLinkSwordYOffsets:
     .byte   $11, $04                                                        ; $9A87
 ; (unreferenced: $9A89-$9A89, 1 bytes)
 
-dat_5_9A89:
+DarkLinkSwordXOffsets2:
     .byte   $F8                                                             ; $9A89
     .byte   $02                                                             ; $9A8A
 
-dat_5_9A8B:
+DarkLinkKnockBackSpeeds:
     .byte   $F6, $0A                                                        ; $9A8B
 
 ; ---------------------------------------------------------------------------
@@ -2978,13 +2980,13 @@ DarkLink_CheckSword:
     ldy     ram_00A0                ; $9A9A
     lda     drawScreenX+1           ; $9A9C
     adc     #$08                    ; $9A9E
-    adc     dat_5_9A84,y            ; $9AA0
+    adc     DarkLinkSwordXOffsets,y ; $9AA0
     sta     temp4                   ; $9AA3
     lda     #$06                    ; $9AA5
     sta     temp6                   ; $9AA7
     ldy     ram_0018                ; $9AA9
     lda     objY+1                  ; $9AAB
-    adc     dat_5_9A87,y            ; $9AAD
+    adc     DarkLinkSwordYOffsets,y ; $9AAD
     sta     temp5                   ; $9AB0
     lda     #$09                    ; $9AB2
     sta     temp7                   ; $9AB4
@@ -3010,7 +3012,7 @@ DarkLink_CheckSword:
 @loc_9ADE:
     sty     timerFast+12            ; $9ADE
     jsr     Enemy_FaceLink          ; $9AE1
-    lda     dat_5_9A8B,y            ; $9AE4
+    lda     DarkLinkKnockBackSpeeds,y ; $9AE4
     sta     objXVelocity+1          ; $9AE7
     lda     #$FD                    ; $9AE9
     sta     objYVelocity+1          ; $9AEB
@@ -3045,7 +3047,7 @@ DarkLink_CheckSword:
 
 @loc_9B15:
     pla                             ; $9B15
-    adc     dat_5_9A89,y            ; $9B16
+    adc     DarkLinkSwordXOffsets2,y ; $9B16
     sta     temp4                   ; $9B19
     lda     #$0E                    ; $9B1B
     sta     temp6                   ; $9B1D
@@ -3082,7 +3084,7 @@ DarkLink_Defeated:
     ora     timerFast+3             ; $9B49
     bne     DarkLink_WalkLinkToCenter_Done ; $9B4C
     lda     #$80                    ; $9B4E
-    jmp     loc_5_9805              ; $9B50
+    jmp     DarkLink_Freeze         ; $9B50
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_WalkLinkToCenter
@@ -3189,7 +3191,7 @@ DarkLink_StartEnding:
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank5:
     jsr     Projectile_HitsBg       ; $9BC8
-    bcc     loc_5_9C45              ; $9BCB
+    bcc     Projectile_Fall_Bank5   ; $9BCB
     lda     #$F4                    ; $9BCD
     sta     objState+7,x            ; $9BCF
     rts                             ; $9BD1
@@ -3210,7 +3212,7 @@ Projectile_Rock_Bank5:
 @loc_9BD9:
     tya                             ; $9BD9
     cmp     objFacing+7,x           ; $9BDA
-    bne     loc_5_9C42              ; $9BDC
+    bne     Projectile_FallFast_Bank5 ; $9BDC
     jmp     Projectile_Arc_Bank5    ; $9BDE
 
 ; ---------------------------------------------------------------------------
@@ -3223,7 +3225,7 @@ Projectile_Rock_Bank5:
 ; ---------------------------------------------------------------------------
 Projectile_RollingFlame_Bank5:
     jsr     Projectile_HitsBgAnyHeight ; $9BE1
-    bcc     loc_5_9C45              ; $9BE4
+    bcc     Projectile_Fall_Bank5   ; $9BE4
     lda     sfxRequest+1            ; $9BE6
     ora     #$40                    ; $9BE8
     sta     sfxRequest+1            ; $9BEA
@@ -3256,13 +3258,13 @@ Projectile_RollingFlame_Bank5:
     inc     ram_045E,x              ; $9C19
     lda     #$F0                    ; $9C1C
     sta     objYVelocity+7,x        ; $9C1E
-    bne     loc_5_9C45              ; $9C21
+    bne     Projectile_Fall_Bank5   ; $9C21
 
 @loc_9C23:
     lda     ram_044C,x              ; $9C23
-    beq     loc_5_9C5B              ; $9C26
+    beq     Projectile_Kill_Bank5   ; $9C26
     dec     ram_044C,x              ; $9C28
-    beq     loc_5_9C5B              ; $9C2B
+    beq     Projectile_Kill_Bank5   ; $9C2B
     and     #$07                    ; $9C2D
     bne     Projectile_Arc_Bank5    ; $9C2F
     lda     objXVelocity+7,x        ; $9C31
@@ -3285,10 +3287,10 @@ Projectile_Arc_Bank5:
     lda     #$FE                    ; $9C3D
     sta     objYVelocity+7,x        ; $9C3F
 
-loc_5_9C42:
+Projectile_FallFast_Bank5:
     inc     objYVelocity+7,x        ; $9C42
 
-loc_5_9C45:
+Projectile_Fall_Bank5:
     inc     objYVelocity+7,x        ; $9C45
 
 ; ---------------------------------------------------------------------------
@@ -3302,28 +3304,28 @@ Projectile_Straight_Bank5:
     jsr     Projectile_Move         ; $9C48
     lda     drawOffscreen+2         ; $9C4B
     and     #$FC                    ; $9C4D
-    beq     loc_5_9C60              ; $9C4F
+    beq     Projectile_DrawAndCheck_Bank5 ; $9C4F
     and     #$F0                    ; $9C51
-    bne     loc_5_9C5B              ; $9C53
+    bne     Projectile_Kill_Bank5   ; $9C53
     lda     objState+7,x            ; $9C55
     cmp     #$07                    ; $9C57
     beq     Projectile_Straight_Done_Bank5 ; $9C59
 
-loc_5_9C5B:
+Projectile_Kill_Bank5:
     lda     #$00                    ; $9C5B
     sta     objState+7,x            ; $9C5D
 
 Projectile_Straight_Done_Bank5:
     rts                             ; $9C5F
 
-loc_5_9C60:
+Projectile_DrawAndCheck_Bank5:
     jsr     Projectile_Draw_Bank5   ; $9C60
     jsr     DoNothing               ; $9C63
     jmp     Projectile_CheckLinkAlternate ; $9C66
 
 @loc_9C69:
     dec     objXVelocity+7,x        ; $9C69
-    beq     loc_5_9C5B              ; $9C6B
+    beq     Projectile_Kill_Bank5   ; $9C6B
     ldy     objOamOffset+7,x        ; $9C6D
     lda     objY+7,x                ; $9C6F
     sta     temp0                   ; $9C71
@@ -3349,6 +3351,8 @@ loc_5_9C60:
 
 dat_5_9C96:
     rts                             ; $9C96
+; The rts byte is also the base of the table ProjectileFlipAttrs_Bank5 (entry 0 is the rts).
+ProjectileFlipAttrs_Bank5 := dat_5_9C96
     .byte   $40, $00                                                        ; $9C97
 
 ; ---------------------------------------------------------------------------
@@ -3378,7 +3382,7 @@ Projectile_Draw_Bank5:
     pha                             ; $9CB9
     lda     sramProjectileAttrs,y   ; $9CBA
     ldy     objFacing+7,x           ; $9CBD
-    ora     dat_5_9C96,y            ; $9CBF
+    ora     ProjectileFlipAttrs_Bank5,y ; $9CBF
     ldy     objOamOffset+7,x        ; $9CC2
     sta     oamBuffer+2,y           ; $9CC4
     pla                             ; $9CC7
@@ -3394,7 +3398,7 @@ Projectile_Draw_Bank5:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlame_Bank5:
-    jsr     Projectile_DrawFlash_Bank5              ; $9CCE
+    jsr     Projectile_DrawFlash_Bank5 ; $9CCE
     lda     ram_045E,x              ; $9CD1
     beq     @done                   ; $9CD4
     ldy     ram_044C,x              ; $9CD6
@@ -3450,12 +3454,12 @@ Projectile_DrawSpin_Bank5:
     lsr     a                       ; $9D0F
     lsr     a                       ; $9D10
 
-dat_5_9D11:
+FokkaAttackMasks:
     lsr     a                       ; $9D11
     pla                             ; $9D12
     ror     a                       ; $9D13
     ora     #$01                    ; $9D14
-    bne     loc_5_9D22              ; $9D16
+    bne     Projectile_SetAttr_Bank5 ; $9D16
 
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlash_Bank5
@@ -3474,14 +3478,14 @@ Projectile_DrawFlash_Bank5:
     asl     a                       ; $9D1F
     and     #$C3                    ; $9D20
 
-loc_5_9D22:
+Projectile_SetAttr_Bank5:
     sta     oamBuffer+2,y           ; $9D22
     rts                             ; $9D25
 
-dat_5_9D26:
+FokkaSpeeds:
     .byte   $0C, $F4                                                        ; $9D26
 
-dat_5_9D28:
+FokkaThrowYOffsets:
     .byte   $0A, $00, $3F, $1F                                              ; $9D28
 
 ; ---------------------------------------------------------------------------
@@ -3507,7 +3511,7 @@ Fokka_Ai:
     lsr     a                       ; $9D44
     and     #$01                    ; $9D45
     tax                             ; $9D47
-    lda     dat_5_9D28,x            ; $9D48
+    lda     FokkaThrowYOffsets,x    ; $9D48
     ldx     currentObject           ; $9D4B
     clc                             ; $9D4D
     adc     objY+1,x                ; $9D4E
@@ -3619,7 +3623,7 @@ Fokka_Ai:
     lda     #$C8                    ; $9DF8
     sta     objYVelocity+1,x        ; $9DFA
     dec     objY+1,x                ; $9DFD
-    lda     dat_5_9D26,y            ; $9DFF
+    lda     FokkaSpeeds,y           ; $9DFF
     asl     a                       ; $9E02
     sta     objXVelocity+1,x        ; $9E03
     rts                             ; $9E05
@@ -3645,7 +3649,7 @@ Fokka_Ai:
 
 @loc_9E1E:
     ldy     enemyType,x             ; $9E1E
-    lda     dat_5_9D11,y            ; $9E20
+    lda     FokkaAttackMasks,y      ; $9E20
     inc     enemyAiState,x          ; $9E23
     and     enemyAiState,x          ; $9E25
     bne     @done                   ; $9E27
@@ -3660,7 +3664,7 @@ Fokka_Ai:
 @done:
     rts                             ; $9E37
 
-loc_5_9E38:
+Enemy_Walk_Bank5:
     lda     objCollision+1,x        ; $9E38
     and     #$03                    ; $9E3A
     bne     @done                   ; $9E3C
@@ -3698,14 +3702,14 @@ Enemy_KnockBackOrWalk_Bank5:
     jsr     Enemy_UpdateBgCollision ; $9E60
 
 @loc_9E63:
-    jmp     loc_5_9E38              ; $9E63
+    jmp     Enemy_Walk_Bank5        ; $9E63
 ; (unreferenced: $9E66-$9E66, 1 bytes)
     .byte   $60                                                             ; $9E66
 
-dat_5_9E67:
+FokkeruSpeeds:
     .byte   $04                                                             ; $9E67
 
-dat_5_9E68:
+FokkeruShotSpeeds:
     .byte   $FC, $08, $F8                                                   ; $9E68
 
 ; ---------------------------------------------------------------------------
@@ -3730,7 +3734,7 @@ Fokkeru_Ai:
     lda     #$E0                    ; $9E83
     sta     objYVelocity+7,y        ; $9E85
     ldx     objFacing+7,y           ; $9E88
-    lda     dat_5_9E68,x            ; $9E8A
+    lda     FokkeruShotSpeeds,x     ; $9E8A
     asl     a                       ; $9E8D
     sta     a:objXVelocity+7,y      ; $9E8E
     lda     #$00                    ; $9E91
@@ -3749,7 +3753,7 @@ Fokkeru_Ai:
     lsr     a                       ; $9EAD
     and     #$03                    ; $9EAE
     tay                             ; $9EB0
-    lda     dat_5_9E67,y            ; $9EB1
+    lda     FokkeruSpeeds,y         ; $9EB1
     sta     objXVelocity+1,x        ; $9EB4
     lda     #$F0                    ; $9EB6
     bcc     @loc_9EBB               ; $9EB8
@@ -3896,14 +3900,14 @@ Thunderbird_Draw:
     pla                             ; $9FC0
     sta     drawOffscreen+1         ; $9FC1
 
-dat_5_9FC3:
+FokkaFrames:
     rts                             ; $9FC3
     .byte   $14, $16, $18                                                   ; $9FC4
 
-dat_5_9FC7:
+FokkaDrawTiles:
     .byte   $16, $05, $F8, $04, $F8, $FB, $08, $FC                          ; $9FC7
 
-dat_5_9FCF:
+FokkaDrawOffsets:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9FCF
 
 ; ---------------------------------------------------------------------------
@@ -3963,7 +3967,7 @@ Fokka_Draw:
     tax                             ; $A018
     lda     temp0                   ; $A019
     clc                             ; $A01B
-    adc     dat_5_9FCF,x            ; $A01C
+    adc     FokkaDrawOffsets,x      ; $A01C
     sta     temp0                   ; $A01F
     lda     temp2                   ; $A021
     cmp     #$01                    ; $A023
@@ -3974,7 +3978,7 @@ Fokka_Draw:
     inx                             ; $A02A
 
 @loc_A02B:
-    lda     dat_5_9FC7,x            ; $A02B
+    lda     FokkaDrawTiles,x        ; $A02B
     ldx     currentObject           ; $A02E
     sty     temp7                   ; $A030
     ldy     timerFast+TIMER_ENEMY,x ; $A032
@@ -3997,7 +4001,7 @@ Fokka_Draw:
     sta     temp3                   ; $A04F
 
 @loc_A051:
-    lda     dat_5_9FC3,x            ; $A051
+    lda     FokkaFrames,x           ; $A051
     tax                             ; $A054
     jmp     Sprite_DrawEnemyPairKeepX ; $A055
 
@@ -4149,7 +4153,7 @@ GpBubble_Ai:
 ; ---------------------------------------------------------------------------
 GpSlowBubble_Init:
     lda     #$F0                    ; $A127
-    bne     loc_5_A12D              ; $A129
+    bne     GpBubble_SetSpeed       ; $A129
 
 ; ---------------------------------------------------------------------------
 ; GpFastBubble_Init
@@ -4161,7 +4165,7 @@ GpSlowBubble_Init:
 GpFastBubble_Init:
     lda     #$E0                    ; $A12B
 
-loc_5_A12D:
+GpBubble_SetSpeed:
     sta     objXVelocity+1,x        ; $A12D
     sta     objYVelocity+1,x        ; $A12F
 
@@ -4215,6 +4219,8 @@ LargeBubble_Draw:
 
 dat_5_A17A:
     rts                             ; $A17A
+; The rts byte is also the base of the table KingBotPartYOffsets (entry 0 is the rts).
+KingBotPartYOffsets := dat_5_A17A
     .byte   $04, $08, $00, $08, $04                                         ; $A17B
 
 ; ---------------------------------------------------------------------------
@@ -4241,13 +4247,13 @@ KingBot_Ai:
     lsr     a                       ; $A198
     sta     a:objCollision+1,y      ; $A199
     lda     objX+1,x                ; $A19C
-    adc     dat_5_961F,y            ; $A19E
+    adc     KingBotPartXOffsets,y   ; $A19E
     sta     a:objX+1,y              ; $A1A1
     lda     objXHi+1,x              ; $A1A4
-    adc     dat_5_9624,y            ; $A1A6
+    adc     KingBotPartXHiOffsets,y ; $A1A6
     sta     a:objXHi+1,y            ; $A1A9
     lda     objY+1,x                ; $A1AC
-    adc     dat_5_A17A,y            ; $A1AE
+    adc     KingBotPartYOffsets,y   ; $A1AE
     sta     a:objY+1,y              ; $A1B1
     lda     #$D0                    ; $A1B4
     sta     objYVelocity+1,y        ; $A1B6
@@ -4296,7 +4302,7 @@ KingBot_Ai:
     and     #$07                    ; $A1FA
     bne     @loc_A20D               ; $A1FC
     jsr     Enemy_FaceLink          ; $A1FE
-    lda     dat_5_962A,y            ; $A201
+    lda     KingBotSpeeds,y         ; $A201
     sta     objXVelocity+1,x        ; $A204
     lda     #$E8                    ; $A206
     bne     @loop2                  ; $A208
@@ -4308,7 +4314,7 @@ KingBot_Ai:
 @loc_A20D:
     jmp     Enemy_HurtLinkOnContact ; $A20D
 
-dat_5_A210:
+BarrierPaletteStrings:
     .byte   $3F, $08, $04, $0F, $17, $16, $22, $FF, $3F, $08, $04, $0F, $17, $0F, $0F, $FF; $A210
     .byte   $3F, $08, $04, $0F, $17, $22, $16, $FF, $3F, $08, $04, $0F, $17, $0F, $0F, $FF; $A220
 ; (unreferenced: $A230-$A233, 4 bytes)
@@ -4378,7 +4384,7 @@ Barrier_Ai:
     ldy     #$00                    ; $A28E
 
 @loop:
-    lda     dat_5_A210,x            ; $A290
+    lda     BarrierPaletteStrings,x ; $A290
     sta     ppuBuffer1,y            ; $A293
     inx                             ; $A296
     iny                             ; $A297
@@ -4522,10 +4528,10 @@ Thunderbird_Init:
     sta     objYVelocity+1,x        ; $A34B
     rts                             ; $A34E
 
-dat_5_A34F:
+ThunderbirdSpeeds:
     .byte   $10, $F0                                                        ; $A34F
 
-dat_5_A351:
+ThunderbirdShotSpeeds:
     .byte   $02                                                             ; $A351
 ; (unreferenced: $A352-$A352, 1 bytes)
     .byte   $04                                                             ; $A352
@@ -4670,7 +4676,7 @@ Thunderbird_Ai:
     lda     rng+2                   ; $A423
     and     #$07                    ; $A426
     tax                             ; $A428
-    lda     dat_5_A351,x            ; $A429
+    lda     ThunderbirdShotSpeeds,x ; $A429
     sta     a:objXVelocity+7,y      ; $A42C
     lda     #$F0                    ; $A42F
     sta     objYVelocity+7,y        ; $A431
@@ -4704,16 +4710,16 @@ Thunderbird_Ai:
     and     #$1F                    ; $A45F
     bne     @done                   ; $A461
     jsr     Enemy_FaceLink          ; $A463
-    lda     dat_5_A34F,y            ; $A466
+    lda     ThunderbirdSpeeds,y     ; $A466
     sta     objXVelocity+1,x        ; $A469
 
 @done:
     rts                             ; $A46B
 
-dat_5_A46C:
+DarkLinkTriggerYOffsets:
     .byte   $10, $00, $EC                                                   ; $A46C
 
-dat_5_A46F:
+DarkLinkTriggerXOffsets:
     .byte   $00, $F0, $E0                                                   ; $A46F
 
 ; ---------------------------------------------------------------------------
@@ -4747,11 +4753,11 @@ DarkLink_DrawTrigger:
 @loc_A491:
     lda     objY+1                  ; $A491
     clc                             ; $A493
-    adc     dat_5_A46F,x            ; $A494
+    adc     DarkLinkTriggerXOffsets,x ; $A494
     sta     temp0                   ; $A497
     lda     drawScreenX+1           ; $A499
     clc                             ; $A49B
-    adc     dat_5_A46C,x            ; $A49C
+    adc     DarkLinkTriggerYOffsets,x ; $A49C
     sta     temp1                   ; $A49F
     lda     drawOffscreen+1         ; $A4A1
     asl     a                       ; $A4A3
@@ -4766,10 +4772,10 @@ DarkLink_DrawTrigger:
     sta     oamBuffer - 2,y         ; $A4B4
     rts                             ; $A4B7
 
-dat_5_A4B8:
+DarkLinkFlashString:
     .byte   $3F, $1C, $04, $0F, $30, $30, $30, $FF                          ; $A4B8
 
-dat_5_A4C0:
+DarkLinkFlashColors:
     .byte   $17, $27, $37, $37                                              ; $A4C0
 
 ; ---------------------------------------------------------------------------
@@ -4784,7 +4790,7 @@ DarkLink_FlashPalette:
     ldy     #$00                    ; $A4C7
 
 @loop:
-    lda     dat_5_A4B8,y            ; $A4C9
+    lda     DarkLinkFlashString,y   ; $A4C9
     sta     ppuBuffer0,x            ; $A4CC
     inx                             ; $A4CF
     iny                             ; $A4D0
@@ -4795,7 +4801,7 @@ DarkLink_FlashPalette:
     lsr     a                       ; $A4D8
     and     #$03                    ; $A4D9
     tay                             ; $A4DB
-    lda     dat_5_A4C0,y            ; $A4DC
+    lda     DarkLinkFlashColors,y   ; $A4DC
     sta     ppuBuffer0-3,x          ; $A4DF  the string's second color
     dex                             ; $A4E2
     stx     ppuBuffer0Len           ; $A4E3
@@ -6052,13 +6058,13 @@ Story_EndDrawBgRow:
     lda     sceneStep               ; $AF05
     beq     Story_EndRestart        ; $AF08
     inc     titleEndStep            ; $AF0A
-    jmp     loc_5_AF13              ; $AF0C
+    jmp     Story_EndSetStep        ; $AF0C
 
 Story_EndRestart:
     lda     #$00                    ; $AF0F
     sta     titleEndStep            ; $AF11
 
-loc_5_AF13:
+Story_EndSetStep:
     lda     #$05                    ; $AF13
     sta     sceneStep               ; $AF15
     rts                             ; $AF18
@@ -6649,10 +6655,10 @@ Eliminate_Menu:
     sta     (temp2),y               ; $B495
     jsr     Save_AdvancePointers    ; $B497
     lda     temp0                   ; $B49A
-    cmp     #<SaveDefaultWorldEnd           ; $B49C
+    cmp     #<SaveDefaultWorldEnd   ; $B49C
     bne     @loop2                  ; $B49E
     lda     temp1                   ; $B4A0
-    cmp     #>SaveDefaultWorldEnd           ; $B4A2
+    cmp     #>SaveDefaultWorldEnd   ; $B4A2
     bne     @loop2                  ; $B4A4
 
 @loc_B4A6:
@@ -7516,10 +7522,10 @@ Save_Load:
     sta     (temp4),y               ; $B91F
     jsr     Save_AdvancePointers    ; $B921
     lda     temp6                   ; $B924
-    cmp     #<SaveDefaultWorldEnd           ; $B926
+    cmp     #<SaveDefaultWorldEnd   ; $B926
     bne     @loop2                  ; $B928
     lda     temp7                   ; $B92A
-    cmp     #>SaveDefaultWorldEnd           ; $B92C
+    cmp     #>SaveDefaultWorldEnd   ; $B92C
     bne     @loop2                  ; $B92E
     rts                             ; $B930
 ; (unreferenced: $B931-$B95D, 45 bytes)
@@ -7585,10 +7591,10 @@ Save_CheckFiles:
 
 @loc_B991:
     lda     temp6                   ; $B991
-    cmp     #<SaveDefaultWorldEnd           ; $B993
+    cmp     #<SaveDefaultWorldEnd   ; $B993
     bne     @loop3                  ; $B995
     lda     temp7                   ; $B997
-    cmp     #>SaveDefaultWorldEnd           ; $B999
+    cmp     #>SaveDefaultWorldEnd   ; $B999
     bne     @loop3                  ; $B99B
 
 @loc_B99D:
@@ -7621,10 +7627,10 @@ Save_CheckFiles:
     pla                             ; $B9BA
     tax                             ; $B9BB
     lda     temp6                   ; $B9BC
-    cmp     #<SaveDefaultWorldEnd           ; $B9BE
+    cmp     #<SaveDefaultWorldEnd   ; $B9BE
     bne     @loop5                  ; $B9C0
     lda     temp7                   ; $B9C2
-    cmp     #>SaveDefaultWorldEnd           ; $B9C4
+    cmp     #>SaveDefaultWorldEnd   ; $B9C4
     beq     @loc_B99D               ; $B9C6
     bne     @loop5                  ; $B9C8
 
@@ -7657,10 +7663,10 @@ Save_Write:
     sta     (temp10),y              ; $B9E0
     jsr     Save_AdvancePointers    ; $B9E2
     lda     temp6                   ; $B9E5
-    cmp     #<SaveDefaultWorldEnd           ; $B9E7
+    cmp     #<SaveDefaultWorldEnd   ; $B9E7
     bne     @loop2                  ; $B9E9
     lda     temp7                   ; $B9EB
-    cmp     #>SaveDefaultWorldEnd           ; $B9ED
+    cmp     #>SaveDefaultWorldEnd   ; $B9ED
     bne     @loop2                  ; $B9EF
     lda     #SAVE_STATUS_WRITING_FILE ; $B9F1
     sta     (temp12),y              ; $B9F3
@@ -7678,14 +7684,14 @@ Save_Write:
     sta     (temp2),y               ; $BA02
     jsr     Save_AdvancePointers    ; $BA04
     lda     temp6                   ; $BA07
-    cmp     #<SaveDefaultWorldEnd           ; $BA09
+    cmp     #<SaveDefaultWorldEnd   ; $BA09
     bne     @loop4                  ; $BA0B
     lda     temp7                   ; $BA0D
-    cmp     #>SaveDefaultWorldEnd           ; $BA0F
+    cmp     #>SaveDefaultWorldEnd   ; $BA0F
     bne     @loop4                  ; $BA11
 ; (end of code not executed in the test movies)
 
-loc_5_BA13:
+Save_MarkValid:
     lda     #SAVE_STATUS_VALID      ; $BA13
     sta     (temp12),y              ; $BA15
     rts                             ; $BA17
@@ -7719,11 +7725,11 @@ Save_RestoreFromBackup:
     sta     (temp2),y               ; $BA2D
     jsr     Save_AdvancePointers    ; $BA2F
     lda     temp6                   ; $BA32
-    cmp     #<SaveDefaultWorldEnd           ; $BA34
+    cmp     #<SaveDefaultWorldEnd   ; $BA34
     bne     @loop2                  ; $BA36
     lda     temp7                   ; $BA38
-    cmp     #>SaveDefaultWorldEnd           ; $BA3A
-    beq     loc_5_BA13              ; $BA3C
+    cmp     #>SaveDefaultWorldEnd   ; $BA3A
+    beq     Save_MarkValid          ; $BA3C
 ; (code below not executed in the test movies)
     bne     @loop2                  ; $BA3E
 ; (end of code not executed in the test movies)
@@ -7762,10 +7768,10 @@ Save_CopyToBackup:
     pla                             ; $BA5D
     tax                             ; $BA5E
     lda     temp6                   ; $BA5F
-    cmp     #<SaveDefaultWorldEnd           ; $BA61
+    cmp     #<SaveDefaultWorldEnd   ; $BA61
     bne     @loop2                  ; $BA63
     lda     temp7                   ; $BA65
-    cmp     #>SaveDefaultWorldEnd           ; $BA67
+    cmp     #>SaveDefaultWorldEnd   ; $BA67
     bne     @loop2                  ; $BA69
     rts                             ; $BA6B
 
