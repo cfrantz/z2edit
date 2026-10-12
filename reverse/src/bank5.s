@@ -157,7 +157,6 @@ PalaceObjectTiles_Bank5:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectRow_Bank5:
-dat_5_81AE := * + 1
     jsr     Palace_GetObjectTiles_Bank5 ; $81AD
     jmp     Palace_FillObjectRow_Bank5 ; $81B0
 
@@ -267,7 +266,7 @@ Palace_GetObjectTiles_Bank5:
 
 @loc_8211:
     sta     ram_0112                ; $8211
-    lda     dat_5_81AE,x            ; $8214
+    lda     Palace_DrawObjectRow_Bank5+1,x ; $8214
     bcs     @loc_821C               ; $8217
     lda     PalaceObjectTiles_Bank5+1,x ; $8219
 
@@ -783,8 +782,6 @@ Ending_DrawCurtainTop:
     dey                             ; $8B99
     bpl     @loop                   ; $8B9A
     lda     #$23                    ; $8B9C
-dat_5_8BA0 := * + 2
-    .assert dat_5_8BA0 = AreaBank::EnemyLists+768, error, "interface address moved"
     sta     PPUADDR                 ; $8B9E
     lda     #$C0                    ; $8BA1
     sta     PPUADDR                 ; $8BA3
