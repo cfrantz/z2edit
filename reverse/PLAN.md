@@ -235,6 +235,9 @@ Each is a self-contained work area; order is flexible after Phase 3.
   and RAM are named, with docs/engine/audio.md; the sound effects and
   songs were confirmed by ear (the user's list) and named.
 - Graphics: CHR bank usage and switching, palettes, sprite/metatile formats.
+  Status (2026-10-11): docs/engine/graphics.md covers the CHR banks, the
+  palettes (with Link's palette tables, now named), metatiles and the
+  sprite slots.
 
 ### Phase 5: Documentation hierarchy
 

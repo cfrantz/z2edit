@@ -310,7 +310,7 @@ dialogType              = $074C     ; dialog being shown; see DIALOG_*
 levelUpCursor           = $074E
 hudRedraw               = $074F     ; parts of the status bar to redraw: bit 7 = magic, bit 6 = life/experience
 hudHalf                 = $0750
-ram_0751                = $0751
+backdropColor           = $0751     ; backdrop color of the area (first color of its background palette), copied to Link's palette
 linkSlowed              = $0752     ; nonzero while Link wades through special tiles low in the area: he moves at half speed (provisional)
 extraSpriteAttrs        = $0753     ; sprite attribute bits ORed into Link's sprites (and some others), e.g. $20 to draw them behind the background (provisional)
 linkOnElevator          = $0754     ; nonzero while Link rides an elevator (no jumping or falling); cleared each frame
@@ -426,13 +426,10 @@ sramScrollMinPage       = $69C1     ; lowest scroll page, indexed by areaLastPag
 sram_69C2               = $69C2
 sramScrollMaxPage       = $69C4     ; highest scroll page, indexed by areaLastPage
 sram_69C5               = $69C5
-sram_69C8               = $69C8
-sram_69CC               = $69CC
-sram_69CE               = $69CE
-sram_69D4               = $69D4
-sram_69DA               = $69DA
-sram_69DE               = $69DE
-; ---------------------------------------------------------------------------
+sramLinkPalette0        = $69C8     ; [6] Link's sprite palette ($3F10), color 0 (the backdrop): entries 0-3 flash with spellFlash, 4 normal, 5 in a dark cave without the candle (Link_UpdatePalette)
+sramLinkPalette1        = $69CE     ; [6] color 1 of Link's palette, same entries
+sramLinkPalette2        = $69D4     ; [6] color 2 of Link's palette, same entries
+sramLinkPalette3        = $69DA     ; [6] color 3 (the tunic), same entries; entry 4 is $2A (green), or $16 (red) with the shield spell
 ; World data, copied from the area bank when a world is loaded (Mode_LoadWorld).
 ; The overworld location tables are z2edit's "connector" tables.
 ; ---------------------------------------------------------------------------

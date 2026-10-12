@@ -3245,7 +3245,7 @@ DrawArea_QueuePalettes:
     cmp     #$FF                    ; $D099
     bne     @loc_D0A3               ; $D09B
     lda     ppuBuffer0+3            ; $D09D
-    sta     ram_0751                ; $D0A0
+    sta     backdropColor           ; $D0A0
 
 @loc_D0A3:
     sta     ppuBuffer0+3,y          ; $D0A3

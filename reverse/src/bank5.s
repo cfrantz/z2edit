@@ -1024,8 +1024,8 @@ Ending_Flash:
     inc     endingSubStep           ; $8CCE
 
 @loc_8CD0:
-    lda     ram_0751                ; $8CD0
-    sta     sram_69CC               ; $8CD3
+    lda     backdropColor           ; $8CD0
+    sta     sramLinkPalette0+4      ; $8CD3
     lda     spellFlash              ; $8CD6
     asl     a                       ; $8CD9
     bne     @loc_8CE3               ; $8CDA
@@ -1069,11 +1069,11 @@ Ending_Flash:
     tay                             ; $8D19
 
 @loc_8D1A:
-    lda     sram_69CE,y             ; $8D1A
+    lda     sramLinkPalette1,y      ; $8D1A
     sta     ppuBuffer0+4,x          ; $8D1D
-    lda     sram_69D4,y             ; $8D20
+    lda     sramLinkPalette2,y      ; $8D20
     sta     ppuBuffer0+5,x          ; $8D23
-    lda     sram_69DA,y             ; $8D26
+    lda     sramLinkPalette3,y      ; $8D26
     sta     ppuBuffer0+6,x          ; $8D29
     lda     spellFlash              ; $8D2C
     asl     a                       ; $8D2F
@@ -1083,7 +1083,7 @@ Ending_Flash:
 ; (end of code not executed in the test movies)
 
 @loc_8D34:
-    lda     sram_69C8,y             ; $8D34
+    lda     sramLinkPalette0,y      ; $8D34
     sta     ppuBuffer0+3,x          ; $8D37
     lda     #$FF                    ; $8D3A
     sta     ppuBuffer0+7,x          ; $8D3C
@@ -2465,7 +2465,7 @@ DarkLink_Appear:
     lda     #$04                    ; $9817
     sta     sfxRequest              ; $9819
     lda     #$14                    ; $981B
-    sta     ram_0751                ; $981D
+    sta     backdropColor           ; $981D
     lda     objX                    ; $9820
     sta     objX+1                  ; $9822
     lda     objY                    ; $9824
@@ -2584,7 +2584,7 @@ DarkLink_Fight:
     lda     #$04                    ; $98BF
     sta     sfxRequest              ; $98C1
     lda     #$0F                    ; $98C3
-    sta     ram_0751                ; $98C5
+    sta     backdropColor           ; $98C5
     lda     #$80                    ; $98C8
     sta     musicRequest            ; $98CA
     lsr     a                       ; $98CC

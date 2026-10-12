@@ -37,6 +37,8 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
   objects, bosses and the crystal.
 - [Towns](engine/towns.md): town codes, buildings, conversations and
   the dialog text.
+- [Graphics](engine/graphics.md): CHR banks, palettes, metatiles and
+  sprites.
 - [Sound](engine/audio.md): the two sound engines in bank 6, sound
   requests, and the music data formats.
 - [Title, file screens and ending](engine/title-and-files.md): the

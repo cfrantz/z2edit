@@ -2464,7 +2464,7 @@ Spell_SpellEffect:
 
 Spell_ShieldEffect:
     lda     #$16                    ; $8E8D
-    sta     sram_69DE               ; $8E8F
+    sta     sramLinkPalette3+4      ; $8E8F
     sta     shieldSpellActive       ; $8E92
 
 ; ---------------------------------------------------------------------------
@@ -2833,7 +2833,7 @@ Link_EnterArea:
 @loc_90D7:
     inc     linkMode                ; $90D7
     lda     #$2A                    ; $90D9
-    sta     sram_69DE               ; $90DB
+    sta     sramLinkPalette3+4      ; $90DB
     lda     areaMusic               ; $90DE
     cmp     #$04                    ; $90E1
     bne     @loc_90EA               ; $90E3
@@ -3100,13 +3100,13 @@ Spell_ThunderEffect:
 ;
 ; While spellFlash is counting, queue Link's sprite palette ($3F10) in
 ; ppuBuffer0, flashing through colors from the palette tables in SRAM
-; (sram_69C8 and following).
+; (sramLinkPalette0 and following).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdatePalette:
-    lda     ram_0751                ; $9235
-    sta     sram_69CC               ; $9238
+    lda     backdropColor           ; $9235
+    sta     sramLinkPalette0+4      ; $9238
     lda     spellFlash              ; $923B
     asl     a                       ; $923E
     bne     @loc_9245               ; $923F
@@ -3144,11 +3144,11 @@ Link_UpdatePalette:
     tay                             ; $927B
 
 @loc_927C:
-    lda     sram_69CE,y             ; $927C
+    lda     sramLinkPalette1,y      ; $927C
     sta     ppuBuffer0+4,x          ; $927F
-    lda     sram_69D4,y             ; $9282
+    lda     sramLinkPalette2,y      ; $9282
     sta     ppuBuffer0+5,x          ; $9285
-    lda     sram_69DA,y             ; $9288
+    lda     sramLinkPalette3,y      ; $9288
     sta     ppuBuffer0+6,x          ; $928B
     lda     spellFlash              ; $928E
     asl     a                       ; $9291
@@ -3156,7 +3156,7 @@ Link_UpdatePalette:
     ldy     #$04                    ; $9294
 
 @loc_9296:
-    lda     sram_69C8,y             ; $9296
+    lda     sramLinkPalette0,y      ; $9296
     sta     ppuBuffer0+3,x          ; $9299
     lda     #$FF                    ; $929C
     sta     ppuBuffer0+7,x          ; $929E
