@@ -180,12 +180,12 @@ TitleMusic_NoteLength:
 ; ---------------------------------------------------------------------------
 TitleSq1_VibratoSfx:
     lda     titleSfxTimer           ; $815A
-    bne     loc_6_8160              ; $815C
+    bne     TitleSq1_VibratoA       ; $815C
 
 TitleSq1_Vibrato:
     lda     titleSq1Timer           ; $815E
 
-loc_6_8160:
+TitleSq1_VibratoA:
     ldx     #$00                    ; $8160
     ldy     titleSq1TimerLo         ; $8162
     bne     TitleSound_Vibrato      ; $8165
@@ -200,12 +200,12 @@ loc_6_8160:
 ; ---------------------------------------------------------------------------
 TitleSq2_VibratoSfx:
     lda     titleSfxTimer           ; $8167
-    bne     loc_6_816D              ; $8169
+    bne     TitleSq2_VibratoA       ; $8169
 
 TitleSq2_Vibrato:
     lda     titleSq2Timer           ; $816B
 
-loc_6_816D:
+TitleSq2_VibratoA:
     ldx     #$04                    ; $816D
     ldy     titleSq2TimerLo         ; $816F
 
@@ -262,26 +262,26 @@ TitleSfx_NameCursor:
     jsr     TitleSq1_SetEnvelope    ; $81A5
     jsr     TitleSq2_SetEnvelope    ; $81A8
     lda     #$56                    ; $81AB
-    bne     loc_6_81BF              ; $81AD
+    bne     TitleSfx_PlayTone       ; $81AD
 
 TitleSfx_NameCursorStep:
     lda     titleSfxTimer           ; $81AF
     cmp     #$08                    ; $81B1
     bne     @loc_81B9               ; $81B3
     lda     #$5E                    ; $81B5
-    bne     loc_6_81BF              ; $81B7
+    bne     TitleSfx_PlayTone       ; $81B7
 
 @loc_81B9:
     cmp     #$04                    ; $81B9
-    bne     loc_6_81C6              ; $81BB
+    bne     TitleSfx_VibratoFar     ; $81BB
     lda     #$64                    ; $81BD
 
-loc_6_81BF:
+TitleSfx_PlayTone:
     jsr     TitleSq1_PlayNote       ; $81BF
     tya                             ; $81C2
     jsr     TitleSq2_PlayNote       ; $81C3
 
-loc_6_81C6:
+TitleSfx_VibratoFar:
     jmp     TitleSfx_Vibrato        ; $81C6
 
 TitleSfx_LetterCursor:
@@ -290,7 +290,7 @@ TitleSfx_LetterCursor:
     ldx     #$9F                    ; $81CE
     ldy     #$7F                    ; $81D0
     lda     #$71                    ; $81D2
-    bne     loc_6_81E1              ; $81D4
+    bne     TitleSfx_StartTone      ; $81D4
 
 TitleSfx_Select:
     lda     #$06                    ; $81D6
@@ -299,7 +299,7 @@ TitleSfx_Select:
     ldy     #$7F                    ; $81DD
     lda     #$A9                    ; $81DF
 
-loc_6_81E1:
+TitleSfx_StartTone:
     jsr     TitleSq1_SetEnvelope    ; $81E1
     jsr     TitleSq2_SetEnvelope    ; $81E4
     sta     SQ1_LO                  ; $81E7
@@ -328,10 +328,10 @@ TitleSfx_Tick:
 @done:
     rts                             ; $8214
 
-loc_6_8215:
+TitleSfx_NameCursorFar:
     jmp     TitleSfx_NameCursor     ; $8215
 
-loc_6_8218:
+TitleSfx_NameCursorStepFar:
     jmp     TitleSfx_NameCursorStep ; $8218
 
 ; ---------------------------------------------------------------------------
@@ -349,9 +349,9 @@ TitleSfx_Update:
     ldy     titleSfxRequest         ; $821B
     lda     titleSfx                ; $821D
     lsr     titleSfxRequest         ; $821F
-    bcs     loc_6_8215              ; $8221
+    bcs     TitleSfx_NameCursorFar  ; $8221
     lsr     a                       ; $8223
-    bcs     loc_6_8218              ; $8224
+    bcs     TitleSfx_NameCursorStepFar ; $8224
     lsr     titleSfxRequest         ; $8226
     bcs     TitleSfx_LetterCursor   ; $8228
     lsr     a                       ; $822A
@@ -429,7 +429,7 @@ TitleMusic_Update:
 TitleMusic_NextPart:
     lda     titleMusicPart          ; $8289
     and     #$1F                    ; $828B
-    bne     loc_6_82AD              ; $828D
+    bne     TitleMusic_ChooseNextPart ; $828D
     ldx     #$00                    ; $828F
     stx     titleMusicPart          ; $8291
 
@@ -455,7 +455,7 @@ TitleMusic_Silence:
 TitleMusic_Silence_Done:
     rts                             ; $82AC
 
-loc_6_82AD:
+TitleMusic_ChooseNextPart:
     cmp     #$01                    ; $82AD
     bne     @loc_82B5               ; $82AF
     lda     #$02                    ; $82B1
@@ -562,7 +562,7 @@ TitleMusic_LoadPhrase:
     sta     titleNoiseTimer         ; $8340
     bne     TitleMusic_PlayNotes    ; $8342
 
-loc_6_8344:
+TitleMusic_LoadPhraseFar:
     jmp     TitleMusic_LoadPhrase   ; $8344
 
 ; ---------------------------------------------------------------------------
@@ -623,7 +623,7 @@ TitleMusic_PlayNotes:
     ldy     titleSq2Offset          ; $8390
     inc     titleSq2Offset          ; $8392
     lda     (titleNotesPtr),y       ; $8394
-    beq     loc_6_8344              ; $8396
+    beq     TitleMusic_LoadPhraseFar ; $8396
     bmi     @loop                   ; $8398
     cmp     #$02                    ; $839A
     beq     @loc_83A1               ; $839C
@@ -1194,10 +1194,10 @@ Music_NoteDuration:
 ; ---------------------------------------------------------------------------
 Sq1_VibratoSfx:
     lda     ram_07F3                ; $907F
-    bne     loc_6_908C              ; $9082
+    bne     Sq1_VibratoA            ; $9082
 ; (code below not executed in the test movies)
     lda     sq1SfxTimer             ; $9084
-    bne     loc_6_908C              ; $9087
+    bne     Sq1_VibratoA            ; $9087
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
@@ -1210,13 +1210,13 @@ Sq1_VibratoSfx:
 Sq1_Vibrato:
     lda     harmonyTimer            ; $9089
 
-loc_6_908C:
+Sq1_VibratoA:
     ldx     #$00                    ; $908C
     ldy     sq1TimerLo              ; $908E
     bne     Sound_Vibrato           ; $9090
 ; (code below not executed in the test movies)
     lda     sq2SfxTimer             ; $9092
-    bne     loc_6_909A              ; $9095
+    bne     Sq2_VibratoA            ; $9095
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
@@ -1229,7 +1229,7 @@ loc_6_908C:
 Sq2_Vibrato:
     lda     melodyTimer             ; $9097
 
-loc_6_909A:
+Sq2_VibratoA:
     ldx     #$04                    ; $909A
     ldy     sq2TimerLo              ; $909C
 
@@ -1282,44 +1282,55 @@ Sound_StopAll:
 ; (unreferenced: $90CA-$90CA, 1 bytes)
     .byte   $4A                                                             ; $90CA
 
-sub_6_90CB:
+; ---------------------------------------------------------------------------
+; Sfx_SweepStep32
+;
+; Step a sound effect's pitch: return y + a / 32 if sweepUp is set, else
+; y - a / 32 (the step at least 1).  Sfx_SweepStep16 and Sfx_SweepStep8
+; divide by 16 and 8.
+;
+; In:      a = the effect's frames left, y = the current value
+; Out:     a = the new value
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Sfx_SweepStep32:
     lsr     a                       ; $90CB
 
-sub_6_90CC:
+Sfx_SweepStep16:
     lsr     a                       ; $90CC
 
-sub_6_90CD:
+Sfx_SweepStep8:
     lsr     a                       ; $90CD
     lsr     a                       ; $90CE
     lsr     a                       ; $90CF
-    sta     ram_07DE                ; $90D0
+    sta     sweepStep               ; $90D0
     bne     @loc_90D8               ; $90D3
-    inc     ram_07DE                ; $90D5
+    inc     sweepStep               ; $90D5
 
 @loc_90D8:
-    lda     ram_07DC                ; $90D8
+    lda     sweepUp                 ; $90D8
     beq     @loc_90E3               ; $90DB
     tya                             ; $90DD
     clc                             ; $90DE
-    adc     ram_07DE                ; $90DF
+    adc     sweepStep               ; $90DF
     rts                             ; $90E2
 
 @loc_90E3:
     tya                             ; $90E3
     sec                             ; $90E4
-    sbc     ram_07DE                ; $90E5
+    sbc     sweepStep               ; $90E5
 
 SwordNoise:
     rts                             ; $90E8
     .byte   $0B, $09, $0D, $0E, $0F, $0B, $09, $0D, $0E, $0F, $FB, $F9, $9D, $6E, $3F; $90E9
 
-dat_6_90F8:
+KillVolumes:
     .byte   $95, $5A, $9C, $5D, $9E, $5F                                    ; $90F8
 
-dat_6_90FE:
+KillNotes:
     .byte   $38, $48, $08, $06, $08, $06                                    ; $90FE
 
-dat_6_9104:
+ChimeVolumes:
     .byte   $51, $92, $53, $94, $55, $96, $57, $98, $59, $9A, $5B, $9C, $5D, $9E, $5F; $9104
 ; (unreferenced: $9113-$9122, 16 bytes)
     .byte   $1E, $28, $32, $3C, $1E, $28, $30, $32, $18, $22, $28, $28, $28, $32, $36, $38; $9113
@@ -1486,7 +1497,7 @@ Sfx_StopSq1AndShared:
     stx     NOISE_VOL               ; $92B4
     ldx     #$0F                    ; $92B7
     stx     SND_CHN                 ; $92B9
-    bne     loc_6_92FD              ; $92BC
+    bne     Sfx_UpdateSq1Requests   ; $92BC
 
 Sfx_ItemDrop:
     lda     #$18                    ; $92BE
@@ -1518,7 +1529,7 @@ Sfx_MenuCursorStep:
     jsr     Sq1_SetEnvelope         ; $92EA
     ldx     #$90                    ; $92ED
     lda     #$08                    ; $92EF
-    jmp     loc_6_9398              ; $92F1
+    jmp     Sfx_Sq1SetTimer         ; $92F1
 
 ; ---------------------------------------------------------------------------
 ; Sfx_UpdateSq1
@@ -1546,7 +1557,7 @@ Sfx_UpdateSq1:
     lsr     sfxRequest+3            ; $92F9
     bcs     Sfx_StopSq1AndShared    ; $92FB
 
-loc_6_92FD:
+Sfx_UpdateSq1Requests:
     ldx     sharedSfxOnSq1          ; $92FD
     beq     @loc_9308               ; $9300
     ldx     #$00                    ; $9302
@@ -1605,13 +1616,13 @@ Sfx_KillOrChimeStep:
     lda     sq1Sfx                  ; $9352
     and     #$08                    ; $9355
     bne     @loc_9364               ; $9357
-    lda     dat_6_90F8,y            ; $9359
+    lda     KillVolumes,y           ; $9359
     sta     SQ1_VOL                 ; $935C
-    lda     dat_6_90FE,y            ; $935F
+    lda     KillNotes,y             ; $935F
     bne     @loc_9374               ; $9362
 
 @loc_9364:
-    lda     dat_6_9104,y            ; $9364
+    lda     ChimeVolumes,y          ; $9364
     sta     SQ1_VOL                 ; $9367
     tya                             ; $936A
     lsr     a                       ; $936B
@@ -1647,7 +1658,7 @@ Sfx_ElevatorStep:
 @loc_9396:
     lda     #$0D                    ; $9396
 
-loc_6_9398:
+Sfx_Sq1SetTimer:
     stx     SQ1_LO                  ; $9398
     sta     SQ1_HI                  ; $939B
 
@@ -1671,7 +1682,7 @@ Sfx_LowHealth:
     jsr     Sq1_SetEnvelope         ; $93BA
     ldx     #$60                    ; $93BD
     lda     #$70                    ; $93BF
-    bne     loc_6_9398              ; $93C1
+    bne     Sfx_Sq1SetTimer         ; $93C1
 
 ; ---------------------------------------------------------------------------
 ; Sfx_TakeOverMusic
@@ -1715,7 +1726,7 @@ Sfx_FallInPitStep:
     jsr     Sq2_PlayNote            ; $9402
 
 @loc_9405:
-    jmp     loc_6_9512              ; $9405
+    jmp     Sfx_Sq2StepFar          ; $9405
 
 ; ---------------------------------------------------------------------------
 ; Sfx_UpdateSq2
@@ -1770,19 +1781,19 @@ Sfx_Encounter:
     jsr     Sq1_SetEnvelope         ; $943C
     jsr     Sq2_SetEnvelope         ; $943F
     lda     #$00                    ; $9442
-    sta     ram_07DC                ; $9444
+    sta     sweepUp                 ; $9444
 
 Sfx_EncounterStep:
     lda     sq2SfxTimer             ; $9447
     cmp     #$28                    ; $944A
     bne     @loc_9453               ; $944C
     lda     #$01                    ; $944E
-    sta     ram_07DC                ; $9450
+    sta     sweepUp                 ; $9450
 
 @loc_9453:
     lda     ram_07F6                ; $9453
     tay                             ; $9456
-    jsr     sub_6_90CC              ; $9457
+    jsr     Sfx_SweepStep16         ; $9457
     sta     ram_07F6                ; $945A
     rol     a                       ; $945D
     rol     a                       ; $945E
@@ -1821,19 +1832,19 @@ Sfx_LeaveBattle:
     ldy     #$82                    ; $94A4
     jsr     Sq2_SetEnvelope         ; $94A6
     lda     #$00                    ; $94A9
-    sta     ram_07DC                ; $94AB
+    sta     sweepUp                 ; $94AB
 
 Sfx_LeaveBattleStep:
     lda     sq2SfxTimer             ; $94AE
     cmp     #$10                    ; $94B1
     bne     @loc_94BA               ; $94B3
     lda     #$00                    ; $94B5
-    sta     ram_07DC                ; $94B7
+    sta     sweepUp                 ; $94B7
 
 @loc_94BA:
     lda     ram_07F6                ; $94BA
     tay                             ; $94BD
-    jsr     sub_6_90CD              ; $94BE
+    jsr     Sfx_SweepStep8          ; $94BE
     sta     ram_07F6                ; $94C1
     rol     a                       ; $94C4
     rol     a                       ; $94C5
@@ -1877,13 +1888,13 @@ Sfx_SpellMenuStep:
 
 @loc_9509:
     cmp     #$04                    ; $9509
-    bne     loc_6_9512              ; $950B
+    bne     Sfx_Sq2StepFar          ; $950B
     lda     #$32                    ; $950D
 
 @loc_950F:
     jsr     Sq2_PlayNote            ; $950F
 
-loc_6_9512:
+Sfx_Sq2StepFar:
     jmp     Sfx_Sq2Step             ; $9512
 
 Sfx_UpdateSq2High:
@@ -2096,97 +2107,97 @@ Noise_PlaySample:
     sta     NOISE_HI                ; $9634
     jmp     Sfx_NoiseStep           ; $9637
 
-dat_6_963A:
+FairyNoteTimes:
     .byte   $40, $50, $60, $70, $7F                                         ; $963A
 
-dat_6_963F:
+FairyNotes:
     .byte   $54, $58, $4E, $3C, $3A                                         ; $963F
 
-dat_6_9644:
+FluteNoteTimes:
     .byte   $40, $50, $60, $68, $70, $78, $7F                               ; $9644
 
-dat_6_964B:
+FluteNotes:
     .byte   $30, $38, $30, $2C, $2A, $2C, $30                               ; $964B
 
-dat_6_9652:
+Flute2NoteTimes:
     .byte   $40, $48, $58, $68, $70, $7F                                    ; $9652
 
-dat_6_9658:
+Flute2Notes:
     .byte   $50, $36, $3A, $30, $36, $28                                    ; $9658
 ; (unreferenced: $965E-$966F, 18 bytes)
 
-dat_6_965E:
+Flute3NoteTimes:
     .byte   $40, $50, $58, $68, $70, $80, $88, $98, $9F                     ; $965E
 
-dat_6_9667:
+Flute3Notes:
     .byte   $28, $36, $32, $24, $36, $4A, $3A, $2E, $4A                     ; $9667
 
-dat_6_9670:
+FairyVolumes:
     .byte   $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $5A, $5B, $5C, $5C, $5C, $5C; $9670
     .byte   $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C; $9680
 ; (unreferenced: $9690-$969F, 16 bytes)
     .byte   $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C, $5C; $9690
 
-dat_6_969F:
+TextLetterVolumes:
     .byte   $5C                                                             ; $969F
     .byte   $10, $12, $14, $16, $18, $1A                                    ; $96A0
 
-dat_6_96A6:
+SwordDeniedVolumes:
     .byte   $52, $93, $54, $95, $56, $97, $58, $99, $5A, $9B, $5C, $9D, $5D, $9E, $5E, $9F; $96A6
 ; (unreferenced: $96B6-$96B6, 1 bytes)
 
-dat_6_96B6:
+SwordDeniedNotes:
     .byte   $74                                                             ; $96B6
     .byte   $66, $74, $66, $74, $66, $74, $66, $74, $66, $74, $66, $74, $66, $74, $66, $74; $96B7
     .byte   $66, $74, $66, $74, $66, $74, $66, $74, $66, $74, $66, $30, $28, $30; $96C7
 
-dat_6_96D5:
+DeathTimersLo:
     .byte   $28, $DF, $30, $FF                                              ; $96D5
 
-dat_6_96D9:
+DeathTimersHi:
     .byte   $50, $0A, $0B, $0A                                              ; $96D9
 
-dat_6_96DD:
+DeathStepTimes:
     .byte   $0B, $04, $08, $0C, $10, $14, $18, $1C, $20, $24, $28, $2C, $30, $34, $38, $3C; $96DD
     .byte   $40, $44, $48, $4C, $50, $54, $58, $5C, $60, $64, $68, $6C, $70, $74, $78, $7C; $96ED
     .byte   $80, $84, $88, $8C, $90, $94, $98, $9C, $A0, $A4, $A8, $AC, $B0, $B4, $B8, $BC; $96FD
 
-dat_6_970D:
+DeathSweeps:
     .byte   $C0, $02, $03, $04, $05, $06, $07, $08, $09, $0A, $0A, $0B, $0B, $0C, $0C, $0C; $970D
     .byte   $0D, $0D, $0D, $0E, $0E, $0E, $0F, $0F, $0F                     ; $971D
 
-dat_6_9726:
+DeathPitchSteps:
     .byte   $90, $91, $92, $93, $94, $95, $96, $97, $98, $99, $9A, $9B, $9C, $9D, $9E; $9726
 ; (unreferenced: $9735-$9735, 1 bytes)
     .byte   $9F                                                             ; $9735
 
-dat_6_9736:
+DeathVolumes:
     .byte   $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $5A, $5B, $5C, $5D, $5E; $9736
 
-dat_6_9745:
+SpellTimersLo:
     .byte   $5F, $E2, $1D, $FE                                              ; $9745
 
-dat_6_9749:
+SpellStepTimes:
     .byte   $40, $08, $10, $18, $20, $28, $30, $38, $40, $48, $50, $58      ; $9749
 
-dat_6_9755:
+SpellSweeps:
     .byte   $60, $01, $03, $05, $08, $0A, $0F                               ; $9755
 
-dat_6_975C:
+SpellVolumes:
     .byte   $D0, $D1, $D2, $D3, $D4, $D5, $D6, $D7, $D8, $D9, $DA, $DB, $DC, $DD, $DE, $DF; $975C
 
-dat_6_976C:
+SpellPitchSteps:
     .byte   $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $5A, $5B, $5C, $5D, $5E; $976C
 ; (unreferenced: $977B-$977B, 1 bytes)
 
-dat_6_977B:
+SpellTimersHi:
     .byte   $5F                                                             ; $977B
     .byte   $08, $09, $08, $09                                              ; $977C
 
-dat_6_9780:
+BossDeathNoise:
     .byte   $06, $38, $56, $78, $96, $A8, $B7, $C6, $D5, $E4, $DE, $FC, $DE, $FC; $9780
 
-dat_6_978E:
+BossDeathStepTimes:
     .byte   $1B, $2B, $3B, $4B, $5B, $6B                                    ; $978E
 
 ; ---------------------------------------------------------------------------
@@ -2255,23 +2266,23 @@ Sfx_Fairy:
 Sfx_FairyStep:
     lda     ram_07F3                ; $97EC
     ldy     ram_07F2                ; $97EF
-    cmp     dat_6_963A,y            ; $97F2
-    bne     loc_6_9805              ; $97F5
-    lda     dat_6_963F,y            ; $97F7
+    cmp     FairyNoteTimes,y        ; $97F2
+    bne     Sfx_SharedStep          ; $97F5
+    lda     FairyNotes,y            ; $97F7
     jsr     Sq1_PlayNote            ; $97FA
     lda     ram_07F2                ; $97FD
-    beq     loc_6_9805              ; $9800
+    beq     Sfx_SharedStep          ; $9800
     dec     ram_07F2                ; $9802
 
-loc_6_9805:
+Sfx_SharedStep:
     lda     ram_07F3                ; $9805
     lsr     a                       ; $9808
     lsr     a                       ; $9809
     tay                             ; $980A
-    lda     dat_6_9670,y            ; $980B
+    lda     FairyVolumes,y          ; $980B
     sta     SQ1_VOL                 ; $980E
     jsr     Sq1_VibratoSfx          ; $9811
-    jmp     loc_6_98E9              ; $9814
+    jmp     Sfx_SharedTick          ; $9814
 
 Sfx_TextLetter:
     lda     #$06                    ; $9817
@@ -2284,9 +2295,9 @@ Sfx_TextLetter:
 
 Sfx_TextLetterStep:
     ldy     ram_07F3                ; $9828
-    lda     dat_6_969F,y            ; $982B
+    lda     TextLetterVolumes,y     ; $982B
     sta     NOISE_VOL               ; $982E
-    jmp     loc_6_98E9              ; $9831
+    jmp     Sfx_SharedTick          ; $9831
 
 Sfx_Death:
     lda     #$C0                    ; $9834
@@ -2311,23 +2322,23 @@ Sfx_DeathStep:
     ldy     ram_07F1                ; $9860
     lda     ram_07F0                ; $9863
     beq     @loc_986D               ; $9866
-    lda     dat_6_9726,y            ; $9868
+    lda     DeathPitchSteps,y       ; $9868
     bne     @loc_9870               ; $986B
 
 @loc_986D:
-    lda     dat_6_9736,y            ; $986D
+    lda     DeathVolumes,y          ; $986D
 
 @loc_9870:
     sta     SQ1_VOL                 ; $9870
     lda     ram_07F3                ; $9873
     ldy     ram_07F2                ; $9876
-    cmp     dat_6_96DD,y            ; $9879
+    cmp     DeathStepTimes,y        ; $9879
     bne     @loc_98BD               ; $987C
     iny                             ; $987E
     tya                             ; $987F
     lsr     a                       ; $9880
     tay                             ; $9881
-    lda     dat_6_970D,y            ; $9882
+    lda     DeathSweeps,y           ; $9882
     sta     ram_07F1                ; $9885
     lda     ram_07F2                ; $9888
     lsr     a                       ; $988B
@@ -2349,9 +2360,9 @@ Sfx_DeathStep:
 
 @loc_98A6:
     ldy     ram_07EF                ; $98A6
-    lda     dat_6_96D5,y            ; $98A9
+    lda     DeathTimersLo,y         ; $98A9
     sta     SQ1_LO                  ; $98AC
-    lda     dat_6_96D9,y            ; $98AF
+    lda     DeathTimersHi,y         ; $98AF
     sta     SQ1_HI                  ; $98B2
     dey                             ; $98B5
     bne     @loc_98BA               ; $98B6
@@ -2366,7 +2377,7 @@ Sfx_DeathStep:
     dec     ram_07F1                ; $98C2
 
 @loc_98C5:
-    jmp     loc_6_98E9              ; $98C5
+    jmp     Sfx_SharedTick          ; $98C5
 
 Sfx_SwordDenied:
     lda     #$1F                    ; $98C8
@@ -2379,14 +2390,14 @@ Sfx_SwordDeniedStep:
     lda     ram_07F3                ; $98D4
     lsr     a                       ; $98D7
     tay                             ; $98D8
-    lda     dat_6_96A6,y            ; $98D9
+    lda     SwordDeniedVolumes,y    ; $98D9
     sta     SQ1_VOL                 ; $98DC
     lda     ram_07F3                ; $98DF
     tay                             ; $98E2
-    lda     dat_6_96B6,y            ; $98E3
+    lda     SwordDeniedNotes,y      ; $98E3
     jsr     Sq1_PlayNote            ; $98E6
 
-loc_6_98E9:
+Sfx_SharedTick:
     dec     ram_07F3                ; $98E9
     bne     @done                   ; $98EC
     lda     sharedSfxOnSq1          ; $98EE
@@ -2564,23 +2575,23 @@ Sfx_SpellStep:
     ldy     ram_07F1                ; $99B8
     lda     ram_07F0                ; $99BB
     beq     @loc_99C5               ; $99BE
-    lda     dat_6_976C,y            ; $99C0
+    lda     SpellPitchSteps,y       ; $99C0
     bne     @loc_99C8               ; $99C3
 
 @loc_99C5:
-    lda     dat_6_975C,y            ; $99C5
+    lda     SpellVolumes,y          ; $99C5
 
 @loc_99C8:
     sta     SQ1_VOL                 ; $99C8
     lda     ram_07F3                ; $99CB
     ldy     ram_07F2                ; $99CE
-    cmp     dat_6_9749,y            ; $99D1
+    cmp     SpellStepTimes,y        ; $99D1
     bne     @loc_9A15               ; $99D4
     iny                             ; $99D6
     tya                             ; $99D7
     lsr     a                       ; $99D8
     tay                             ; $99D9
-    lda     dat_6_9755,y            ; $99DA
+    lda     SpellSweeps,y           ; $99DA
     sta     ram_07F1                ; $99DD
     lda     ram_07F2                ; $99E0
     lsr     a                       ; $99E3
@@ -2602,9 +2613,9 @@ Sfx_SpellStep:
 
 @loc_99FE:
     ldy     ram_07EF                ; $99FE
-    lda     dat_6_9745,y            ; $9A01
+    lda     SpellTimersLo,y         ; $9A01
     sta     SQ1_LO                  ; $9A04
-    lda     dat_6_977B,y            ; $9A07
+    lda     SpellTimersHi,y         ; $9A07
     sta     SQ1_HI                  ; $9A0A
     dey                             ; $9A0D
     bne     @loc_9A12               ; $9A0E
@@ -2619,7 +2630,7 @@ Sfx_SpellStep:
     dec     ram_07F1                ; $9A1A
 
 @loc_9A1D:
-    jmp     loc_6_98E9              ; $9A1D
+    jmp     Sfx_SharedTick          ; $9A1D
 
 Sfx_Flute:
     lda     #$7F                    ; $9A20
@@ -2631,16 +2642,16 @@ Sfx_Flute:
 Sfx_FluteStep:
     lda     ram_07F3                ; $9A2C
     ldy     ram_07F2                ; $9A2F
-    cmp     dat_6_9644,y            ; $9A32
+    cmp     FluteNoteTimes,y        ; $9A32
     bne     @loc_9A45               ; $9A35
-    lda     dat_6_964B,y            ; $9A37
+    lda     FluteNotes,y            ; $9A37
     jsr     Sq1_PlayNote            ; $9A3A
     lda     ram_07F2                ; $9A3D
     beq     @loc_9A45               ; $9A40
     dec     ram_07F2                ; $9A42
 
 @loc_9A45:
-    jmp     loc_6_9805              ; $9A45
+    jmp     Sfx_SharedStep          ; $9A45
 
 Sfx_Flute2:
     lda     #$7F                    ; $9A48
@@ -2652,16 +2663,16 @@ Sfx_Flute2:
 Sfx_Flute2Step:
     lda     ram_07F3                ; $9A54
     ldy     ram_07F2                ; $9A57
-    cmp     dat_6_9652,y            ; $9A5A
+    cmp     Flute2NoteTimes,y       ; $9A5A
     bne     @loc_9A6D               ; $9A5D
-    lda     dat_6_9658,y            ; $9A5F
+    lda     Flute2Notes,y           ; $9A5F
     jsr     Sq1_PlayNote            ; $9A62
     lda     ram_07F2                ; $9A65
     beq     @loc_9A6D               ; $9A68
     dec     ram_07F2                ; $9A6A
 
 @loc_9A6D:
-    jmp     loc_6_9805              ; $9A6D
+    jmp     Sfx_SharedStep          ; $9A6D
 ; (code below not executed in the test movies)
 
 Sfx_Flute3:
@@ -2674,16 +2685,16 @@ Sfx_Flute3:
 Sfx_Flute3Step:
     lda     ram_07F3                ; $9A7C
     ldy     ram_07F2                ; $9A7F
-    cmp     dat_6_965E,y            ; $9A82
+    cmp     Flute3NoteTimes,y       ; $9A82
     bne     @loc_9A95               ; $9A85
-    lda     dat_6_9667,y            ; $9A87
+    lda     Flute3Notes,y           ; $9A87
     jsr     Sq1_PlayNote            ; $9A8A
     lda     ram_07F2                ; $9A8D
     beq     @loc_9A95               ; $9A90
     dec     ram_07F2                ; $9A92
 
 @loc_9A95:
-    jmp     loc_6_9805              ; $9A95
+    jmp     Sfx_SharedStep          ; $9A95
 ; (end of code not executed in the test movies)
 
 Sfx_Barrier:
@@ -2691,7 +2702,7 @@ Sfx_Barrier:
     ldx     #$8F                    ; $9A9A
     jsr     Sfx_StartSharedOnSq1    ; $9A9C
     lda     #$00                    ; $9A9F
-    sta     ram_07DC                ; $9AA1
+    sta     sweepUp                 ; $9AA1
     ldx     #$5D                    ; $9AA4
     ldy     #$81                    ; $9AA6
     jsr     Sq1_SetEnvelope         ; $9AA8
@@ -2699,7 +2710,7 @@ Sfx_Barrier:
 Sfx_BarrierStep:
     lda     ram_07F2                ; $9AAB
     tay                             ; $9AAE
-    jsr     sub_6_90CB              ; $9AAF
+    jsr     Sfx_SweepStep32         ; $9AAF
     sta     ram_07F2                ; $9AB2
     rol     a                       ; $9AB5
     rol     a                       ; $9AB6
@@ -2715,7 +2726,7 @@ Sfx_BarrierStep:
     sta     SQ1_VOL                 ; $9ACB
 
 @loc_9ACE:
-    jmp     loc_6_98E9              ; $9ACE
+    jmp     Sfx_SharedTick          ; $9ACE
 
 Sfx_BossDeath:
     lda     #$6B                    ; $9AD1
@@ -2727,7 +2738,7 @@ Sfx_BossDeath:
 Sfx_BossDeathStep:
     lda     ram_07F3                ; $9ADD
     ldy     ram_07F1                ; $9AE0
-    cmp     dat_6_978E,y            ; $9AE3
+    cmp     BossDeathStepTimes,y    ; $9AE3
     bne     @loc_9AF5               ; $9AE6
     lda     ram_07F1                ; $9AE8
     beq     @loc_9AF0               ; $9AEB
@@ -2741,7 +2752,7 @@ Sfx_BossDeathStep:
     lda     ram_07F2                ; $9AF5
     lsr     a                       ; $9AF8
     tay                             ; $9AF9
-    lda     dat_6_9780,y            ; $9AFA
+    lda     BossDeathNoise,y        ; $9AFA
     tax                             ; $9AFD
     and     #$0F                    ; $9AFE
     sta     NOISE_LO                ; $9B00
@@ -2755,7 +2766,7 @@ Sfx_BossDeathStep:
     lda     #$08                    ; $9B0D
     sta     NOISE_HI                ; $9B0F
     dec     ram_07F2                ; $9B12
-    jmp     loc_6_98E9              ; $9B15
+    jmp     Sfx_SharedTick          ; $9B15
 
 ; ---------------------------------------------------------------------------
 ; Music_Update
@@ -2789,13 +2800,13 @@ Music_NextSong:
     bne     @loc_9B34               ; $9B29
     lda     musicPlaying            ; $9B2B
     and     #$5F                    ; $9B2E
-    bne     loc_6_9B4F              ; $9B30
+    bne     Music_RepeatOrResume    ; $9B30
     beq     Music_Stop              ; $9B32
 
 @loc_9B34:
     lda     musicPlaying            ; $9B34
     and     #$1F                    ; $9B37
-    bne     loc_6_9B4F              ; $9B39
+    bne     Music_RepeatOrResume    ; $9B39
 
 ; ---------------------------------------------------------------------------
 ; Music_Stop
@@ -2826,7 +2837,7 @@ Sound_SilencePulseNoise:
 Sound_SilencePulseNoise_Done:
     rts                             ; $9B4E
 
-loc_6_9B4F:
+Music_RepeatOrResume:
     and     #$01                    ; $9B4F
     beq     @loc_9B57               ; $9B51
     lda     #$02                    ; $9B53
@@ -2922,7 +2933,7 @@ Music_LoadPhrase:
     tay                             ; $9BCE
     lda     TownMusic,y             ; $9BCF
     tay                             ; $9BD2
-    beq     loc_6_9C3A              ; $9BD3
+    beq     Music_NextSongFar       ; $9BD3
     lda     TownMusic,y             ; $9BD5
     sta     musicTempo              ; $9BD8
     lda     TownMusic+1,y           ; $9BDA
@@ -2942,7 +2953,7 @@ Music_LoadPhrase:
     cmp     #$03                    ; $9BFB
     beq     @loc_9C03               ; $9BFD
     cmp     #$04                    ; $9BFF
-    bne     loc_6_9C40              ; $9C01
+    bne     Music_LoadGreatPalacePhrase ; $9C01
 
 @loc_9C03:
     ldy     musicSong               ; $9C03
@@ -2953,7 +2964,7 @@ Music_LoadPhrase:
     tay                             ; $9C0D
     lda     PalaceMusic,y           ; $9C0E
     tay                             ; $9C11
-    beq     loc_6_9C3A              ; $9C12
+    beq     Music_NextSongFar       ; $9C12
     lda     PalaceMusic,y           ; $9C14
     sta     musicTempo              ; $9C17
     lda     PalaceMusic+1,y         ; $9C19
@@ -2969,13 +2980,13 @@ Music_LoadPhrase:
     sta     drumLoopOffset          ; $9C35
     jmp     Music_StartPhrase       ; $9C37
 
-loc_6_9C3A:
+Music_NextSongFar:
     jmp     Music_NextSong          ; $9C3A
 
-loc_6_9C3D:
+Music_LoadPhraseFar:
     jmp     Music_LoadPhrase        ; $9C3D
 
-loc_6_9C40:
+Music_LoadGreatPalacePhrase:
     ldy     musicSong               ; $9C40
     lda     PalaceMusic+774,y       ; $9C42
     clc                             ; $9C45
@@ -2984,7 +2995,7 @@ loc_6_9C40:
     tay                             ; $9C4A
     lda     GreatPalaceMusic,y      ; $9C4B
     tay                             ; $9C4E
-    beq     loc_6_9C3A              ; $9C4F
+    beq     Music_NextSongFar       ; $9C4F
     lda     GreatPalaceMusic,y      ; $9C51
     sta     musicTempo              ; $9C54
     lda     GreatPalaceMusic+1,y    ; $9C56
@@ -3046,7 +3057,7 @@ Music_PlayNotes:
     ldy     melodyOffset            ; $9C96
     inc     melodyOffset            ; $9C99
     lda     (musicNotesPtr),y       ; $9C9C
-    beq     loc_6_9C3D              ; $9C9E
+    beq     Music_LoadPhraseFar     ; $9C9E
     jsr     Music_NoteDuration      ; $9CA0
     sta     melodyTimer             ; $9CA3
     lda     sq2Sfx                  ; $9CA6
