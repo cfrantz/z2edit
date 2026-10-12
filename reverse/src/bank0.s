@@ -140,7 +140,7 @@ Mode_OverworldSetup:
     sta     dialogType              ; $8193
     sta     objXVelocity            ; $8196
     sta     objState                ; $8198
-    sta     ram_0768                ; $819A
+    sta     ppuMaskExtra            ; $819A
     lda     #$17                    ; $819D
     sta     objXVelocity+1          ; $819F
     lda     #$0A                    ; $81A1
@@ -206,7 +206,7 @@ Raft_Draw:
 Raft_Arrive:
     inc     renderingOff            ; $81E5
     lda     #$06                    ; $81E8
-    sta     ram_0768                ; $81EA
+    sta     ppuMaskExtra            ; $81EA
     lda     #$06                    ; $81ED
     sta     gameMode                ; $81EF
     sta     ram_07AA                ; $81F2
@@ -807,7 +807,7 @@ SpecialSpotX:
 Mode_Overworld:
     lda     #$00                    ; $8558
     sta     ram_07AC                ; $855A
-    sta     ram_07AD                ; $855D
+    sta     atSpecialSpot           ; $855D
     inc     menusPending            ; $8560
     jsr     Overworld_CheckEncounter ; $8563
     jsr     Overworld_UpdateEncounters ; $8566
@@ -881,7 +881,7 @@ Mode_Overworld:
 ; Overworld_EnterLocation
 ;
 ; Enter the location (or encounter) Link is on: blank the screen and go
-; to the next gameMode (Mode_EnterLocation).  Sets ram_07AD on the
+; to the next gameMode (Mode_EnterLocation).  Sets atSpecialSpot on the
 ; special position of regions 1 and 2.
 ;
 ; Status:  confirmed
@@ -895,7 +895,7 @@ Overworld_EnterLocation:
     lda     overworldX              ; $85E1
     cmp     SpecialSpotX,y          ; $85E3
     bne     @loc_85EB               ; $85E6
-    sta     ram_07AD                ; $85E8
+    sta     atSpecialSpot           ; $85E8
 
 @loc_85EB:
     lda     #$00                    ; $85EB
@@ -903,7 +903,7 @@ Overworld_EnterLocation:
     inc     renderingOff            ; $85F0
     inc     gameMode                ; $85F3
     lda     #$06                    ; $85F6
-    sta     ram_0768                ; $85F8
+    sta     ppuMaskExtra            ; $85F8
 
 ; ---------------------------------------------------------------------------
 ; Overworld_ClearDialog
@@ -1338,7 +1338,7 @@ Mode_IndexOverworldMap:
     sta     timerSlow+8             ; $887B
     jsr     Overworld_UpdateTerrain ; $887E
     lda     ram_07AA                ; $8881
-    ora     ram_07AD                ; $8884
+    ora     atSpecialSpot           ; $8884
     bne     @loc_889E               ; $8887
     lda     currentRegion           ; $8889
     ora     areaLocation            ; $888C
@@ -2238,7 +2238,7 @@ SideView_Start:
     dey                             ; $8CE9
     bpl     @loop                   ; $8CEA
     lda     #$06                    ; $8CEC
-    sta     ram_0768                ; $8CEE
+    sta     ppuMaskExtra            ; $8CEE
     ldy     #$00                    ; $8CF1
     tya                             ; $8CF3
     sta     spellActive             ; $8CF4
@@ -2266,8 +2266,8 @@ SideView_Start:
     lda     sram_699E,y             ; $8D27
     sta     columnIndex+1           ; $8D2A
     lda     sram_69BA,y             ; $8D2D
-    sta     ram_071F                ; $8D30
-    sta     ram_0720                ; $8D33
+    sta     scrollPage              ; $8D30
+    sta     drawPage                ; $8D33
     lda     sram_69A5,y             ; $8D36
     sta     scrollXHi               ; $8D39
     and     #$01                    ; $8D3C
@@ -2515,7 +2515,7 @@ BigDoor_Update:
 
 @loc_8EF7:
     lda     #$54                    ; $8EF7
-    sta     sram_60BD               ; $8EF9
+    sta     sramAreaTiles+189       ; $8EF9
     lda     frameCounter            ; $8EFC
     and     #$0F                    ; $8EFE
     bne     @done                   ; $8F00
@@ -2554,7 +2554,7 @@ BigDoor_Update:
     sec                             ; $8F32
     sbc     #$01                    ; $8F33
     bpl     @loop                   ; $8F35
-    lda     ram_0764                ; $8F37
+    lda     bigDoorStep             ; $8F37
     bne     @loc_8F4F               ; $8F3A
     ldx     #$00                    ; $8F3C
 
@@ -2564,7 +2564,7 @@ BigDoor_Update:
     inx                             ; $8F44
     cpx     #$18                    ; $8F45
     bne     @loop2                  ; $8F47
-    inc     ram_0764                ; $8F49
+    inc     bigDoorStep             ; $8F49
     dec     bigDoorCounter          ; $8F4C
 
 @loc_8F4F:
@@ -4500,18 +4500,18 @@ Scroll_Update:
     adc     ram_0721                ; $997D
     sta     ram_0721                ; $9980
     ldx     #$01                    ; $9983
-    stx     ram_071F                ; $9985
+    stx     scrollPage              ; $9985
     dex                             ; $9988
     tya                             ; $9989
     pha                             ; $998A
     bpl     @loc_9991               ; $998B
     dex                             ; $998D
-    inc     ram_071F                ; $998E
+    inc     scrollPage              ; $998E
 
 @loc_9991:
     stx     temp0                   ; $9991
-    ldy     ram_071F                ; $9993
-    cpy     ram_0720                ; $9996
+    ldy     scrollPage              ; $9993
+    cpy     drawPage                ; $9996
     beq     @loc_99BD               ; $9999
     lda     ram_0721                ; $999B
     bmi     @loc_99A4               ; $999E
@@ -4519,7 +4519,7 @@ Scroll_Update:
     bcc     @loc_99BD               ; $99A2
 
 @loc_99A4:
-    sty     ram_0720                ; $99A4
+    sty     drawPage                ; $99A4
     lda     columnDrawStep          ; $99A7
     cmp     #$06                    ; $99AA
     bcs     @loc_99B8               ; $99AC
@@ -4638,7 +4638,7 @@ Scroll_DrawColumnStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_AdvanceColumn:
-    lda     ram_0720                ; $9A30
+    lda     drawPage                ; $9A30
     ldx     #$01                    ; $9A33
     lsr     a                       ; $9A35
     bcc     @loc_9A5A               ; $9A36
@@ -4689,7 +4689,7 @@ Scroll_AdvanceColumn:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_LoadColumnTiles:
-    lda     ram_0720                ; $9A77
+    lda     drawPage                ; $9A77
     lsr     a                       ; $9A7A
     ldx     columnIndex             ; $9A7B
     lda     columnPage              ; $9A7E
@@ -4750,7 +4750,7 @@ NametableHiBytes:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_QueueColumnTiles:
-    lda     ram_0720                ; $9AB8
+    lda     drawPage                ; $9AB8
     and     #$01                    ; $9ABB
     tay                             ; $9ABD
     lda     columnIndex,y           ; $9ABE
@@ -4760,7 +4760,7 @@ Scroll_QueueColumnTiles:
     and     #$01                    ; $9AC8
     tax                             ; $9ACA
     lda     NametableHiBytes,x      ; $9ACB
-    sta     ram_071D                ; $9ACE
+    sta     attrColumnAddr          ; $9ACE
     lda     columnDrawStep          ; $9AD1
     and     #$01                    ; $9AD4
     eor     #$01                    ; $9AD6
@@ -4768,12 +4768,12 @@ Scroll_QueueColumnTiles:
     lda     columnIndex,y           ; $9AD9
     rol     a                       ; $9ADC
     adc     #$80                    ; $9ADD
-    sta     ram_071E                ; $9ADF
+    sta     attrColumnAddr+1        ; $9ADF
     ldy     ppuBuffer2Len           ; $9AE2
     sty     temp0                   ; $9AE5
-    lda     ram_071E                ; $9AE7
+    lda     attrColumnAddr+1        ; $9AE7
     sta     ppuBuffer2+1,y          ; $9AEA
-    lda     ram_071D                ; $9AED
+    lda     attrColumnAddr          ; $9AED
     sta     ppuBuffer2,y            ; $9AF0
     lda     #$9A                    ; $9AF3
     sta     ppuBuffer2+2,y          ; $9AF5
@@ -5729,7 +5729,7 @@ Game_ShowContinueScreen:
     sta     experience              ; $A1C9
     sta     experience+1            ; $A1CC
     lda     #$06                    ; $A1CF
-    sta     ram_0768                ; $A1D1
+    sta     ppuMaskExtra            ; $A1D1
     ldx     #$01                    ; $A1D4
 
 @loop:

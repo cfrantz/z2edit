@@ -147,7 +147,7 @@ Nmi_Bank5:
 ;      frameCounter and the RNG, and runs the game (Game_RunState).
 ; It returns with bank 0 mapped.
 ;
-; Status:  confirmed (the meaning of renderingOff, ram_0768, dialogType and
+; Status:  confirmed (the meaning of renderingOff, ppuMaskExtra, dialogType and
 ;          gameFrozen is provisional)
 ; ---------------------------------------------------------------------------
 Nmi:
@@ -170,7 +170,7 @@ Nmi:
 @setMask:
     ; Rendering off while VRAM is updated.  ppuMaskShadow keeps rendering off
     ; while renderingOff is set, and otherwise turns on the background and
-    ; sprites, plus the bits in ram_0768.
+    ; sprites, plus the bits in ppuMaskExtra.
     ldy     #$00                    ; $C096
     lda     ppuMaskShadow           ; $C098
     and     #$E0                    ; $C09A
@@ -178,7 +178,7 @@ Nmi:
     bne     @writeMask              ; $C09F
     lda     ppuMaskShadow           ; $C0A1
     ora     #$18                    ; $C0A3
-    ora     ram_0768                ; $C0A5
+    ora     ppuMaskExtra            ; $C0A5
 
 @writeMask:
     sta     ppuMaskShadow           ; $C0A8
@@ -212,8 +212,8 @@ Nmi:
     sty     PPUADDR                 ; $C0E3
     sty     PPUADDR                 ; $C0E6
     sty     PPUADDR                 ; $C0E9
-    ; Skip setting the scroll while ram_0768 is set.
-    lda     ram_0768                ; $C0EC
+    ; Skip setting the scroll while ppuMaskExtra is set.
+    lda     ppuMaskExtra            ; $C0EC
     bne     @enableRendering        ; $C0EF
     lda     ppuCtrlShadow           ; $C0F1
     sta     PPUCTRL                 ; $C0F3
@@ -259,7 +259,7 @@ Nmi:
     lda     gameFrozen              ; $C13A
     beq     @checkPerFrame          ; $C13C
     lda     bigDoorCounter          ; $C13E
-    ora     ram_0764                ; $C141
+    ora     bigDoorStep             ; $C141
     bne     @checkPaused            ; $C144
 
 @checkPerFrame:
@@ -1003,7 +1003,7 @@ Area_Load:
     sta     columnPage+1            ; $C4F2
     sta     columnIndex+1           ; $C4F5
     sta     bigDoorCounter          ; $C4F8
-    sta     ram_0764                ; $C4FB
+    sta     bigDoorStep             ; $C4FB
     ldy     currentWorld            ; $C4FE
     bne     @loc_C50C               ; $C501
     lda     currentRegion           ; $C503
@@ -1155,8 +1155,8 @@ Area_Load:
     lda     #$03                    ; $C5FC
     sta     ram_071B                ; $C5FE
     lsr     a                       ; $C601
-    sta     ram_071F                ; $C602
-    sta     ram_0720                ; $C605
+    sta     scrollPage              ; $C602
+    sta     drawPage                ; $C605
     lsr     a                       ; $C608
     sta     ram_071C                ; $C609
     sta     ram_0721                ; $C60C
@@ -1282,7 +1282,7 @@ Scroll_SavePageState:
     lda     ppuScrollX              ; $C690
     and     #$F0                    ; $C692
     sta     sram_69B3,x             ; $C694
-    lda     ram_071F                ; $C697
+    lda     scrollPage              ; $C697
     sta     sram_69BA,x             ; $C69A
     lda     scrollX                 ; $C69D
     and     #$F0                    ; $C6A0
@@ -1373,8 +1373,8 @@ Mode_FallStart:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_PlaceLink:
-    lda     ram_071F                ; $C70C
-    sta     ram_0720                ; $C70F
+    lda     scrollPage              ; $C70C
+    sta     drawPage                ; $C70F
     lda     #$09                    ; $C712
     sta     gameMode                ; $C714
     jmp     Link_PlaceOnGround      ; $C717
@@ -2197,7 +2197,7 @@ Mode_EnterLocation:
 @loc_CB4B:
     lda     ram_07AC                ; $CB4B
     ora     ram_07AA                ; $CB4E
-    ora     ram_07AD                ; $CB51
+    ora     atSpecialSpot           ; $CB51
     bne     Location_Enter          ; $CB54
     jsr     Music_RequestSilence    ; $CB56
 
@@ -4180,7 +4180,7 @@ Mode_SideView:
     lda     musicPlaying            ; $D4D8
     cmp     #$10                    ; $D4DB
     bcs     @loc_D4F3               ; $D4DD
-    lda     ram_07FC                ; $D4DF
+    lda     sharedSfxRecent         ; $D4DF
     cmp     #$40                    ; $D4E2
     beq     @loc_D4F3               ; $D4E4
     lda     sq2Sfx                  ; $D4E6
@@ -4406,7 +4406,7 @@ EnemySpawnYPositions:
 Enemy_TrySpawn:
     lda     ram_0759                ; $D603
     bne     Enemy_TrySpawnDone      ; $D606
-    lda     ram_071F                ; $D608
+    lda     scrollPage              ; $D608
     lsr     a                       ; $D60B
     eor     #$01                    ; $D60C
     tax                             ; $D60E
@@ -10247,17 +10247,17 @@ AttrColumnOffsets:
 ;
 ; Write attrColumn (7 bytes) to a column of the attribute table, for
 ; scrolling, and clear attrColumn and attrColumnPending.  The column is
-; computed from ram_071D, ram_071E and ram_0720.  Called by the game NMI
+; computed from attrColumnAddr, attrColumnAddr+1 and drawPage.  Called by the game NMI
 ; when attrColumnPending is set.
 ;
 ; Clobbers: a, x, temp0, temp1
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_WriteAttrColumn:
-    lda     ram_0720                ; $FD82
+    lda     drawPage                ; $FD82
     lsr     a                       ; $FD85
     tax                             ; $FD86
-    lda     ram_071E                ; $FD87
+    lda     attrColumnAddr+1        ; $FD87
     and     #$1F                    ; $FD8A
     sec                             ; $FD8C
     sbc     AttrColumnOffsets,x     ; $FD8D
@@ -10266,7 +10266,7 @@ Ppu_WriteAttrColumn:
     clc                             ; $FD92
     adc     #$C0                    ; $FD93
     sta     temp1                   ; $FD95
-    lda     ram_071D                ; $FD97
+    lda     attrColumnAddr          ; $FD97
     ora     #$03                    ; $FD9A
     sta     temp0                   ; $FD9C
     ldx     #$00                    ; $FD9E

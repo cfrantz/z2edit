@@ -1192,7 +1192,7 @@ Music_NoteDuration:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Sq1_VibratoSfx:
-    lda     ram_07F3                ; $907F
+    lda     sharedSfxTimer          ; $907F
     bne     Sq1_VibratoA            ; $9082
 ; (code below not executed in the test movies)
     lda     sq1SfxTimer             ; $9084
@@ -1488,7 +1488,7 @@ Sfx_UpdateDmc:
 Sfx_StopSq1AndShared:
     ldx     #$00                    ; $929C
     stx     sfxRequest              ; $929E
-    stx     ram_07FC                ; $92A0
+    stx     sharedSfxRecent         ; $92A0
     stx     sharedSfx               ; $92A3
     stx     dmcSfx                  ; $92A6
     stx     sharedSfxOnNoise        ; $92A9
@@ -1776,7 +1776,7 @@ Sfx_Encounter:
     lda     #$50                    ; $942E
     ldx     #$8F                    ; $9430
     sta     sq2SfxTimer             ; $9432
-    stx     ram_07F6                ; $9435
+    stx     sq2SfxPitch             ; $9435
     ldx     #$5E                    ; $9438
     ldy     #$81                    ; $943A
     jsr     Sq1_SetEnvelope         ; $943C
@@ -1792,10 +1792,10 @@ Sfx_EncounterStep:
     sta     sweepUp                 ; $9450
 
 @loc_9453:
-    lda     ram_07F6                ; $9453
+    lda     sq2SfxPitch             ; $9453
     tay                             ; $9456
     jsr     Sfx_SweepStep16         ; $9457
-    sta     ram_07F6                ; $945A
+    sta     sq2SfxPitch             ; $945A
     rol     a                       ; $945D
     rol     a                       ; $945E
     sta     SQ1_LO                  ; $945F
@@ -1828,7 +1828,7 @@ Sfx_LeaveBattle:
     lda     #$24                    ; $9498
     ldx     #$A0                    ; $949A
     sta     sq2SfxTimer             ; $949C
-    stx     ram_07F6                ; $949F
+    stx     sq2SfxPitch             ; $949F
     ldx     #$9E                    ; $94A2
     ldy     #$82                    ; $94A4
     jsr     Sq2_SetEnvelope         ; $94A6
@@ -1843,10 +1843,10 @@ Sfx_LeaveBattleStep:
     sta     sweepUp                 ; $94B7
 
 @loc_94BA:
-    lda     ram_07F6                ; $94BA
+    lda     sq2SfxPitch             ; $94BA
     tay                             ; $94BD
     jsr     Sfx_SweepStep8          ; $94BE
-    sta     ram_07F6                ; $94C1
+    sta     sq2SfxPitch             ; $94C1
     rol     a                       ; $94C4
     rol     a                       ; $94C5
     sta     SQ2_LO                  ; $94C6
@@ -1937,8 +1937,8 @@ Sfx_Swamp:
     lda     #$03                    ; $954C
     sty     sq2Sfx                  ; $954E
     sta     sq2SfxTimer             ; $9551
-    inc     ram_07F6                ; $9554
-    lda     ram_07F6                ; $9557
+    inc     sq2SfxPitch             ; $9554
+    lda     sq2SfxPitch             ; $9557
     lsr     a                       ; $955A
     bcs     @loc_9561               ; $955B
 ; (code below not executed in the test movies)
@@ -2211,12 +2211,12 @@ BossDeathStepTimes:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Sfx_StartSharedOnNoise:
-    sty     ram_07FC                ; $9794
+    sty     sharedSfxRecent         ; $9794
     sty     sharedSfx               ; $9797
-    sta     ram_07F3                ; $979A
-    stx     ram_07F2                ; $979D
+    sta     sharedSfxTimer          ; $979A
+    stx     sharedSfxStep           ; $979D
     lda     #$C0                    ; $97A0
-    sta     ram_07DD                ; $97A2
+    sta     sharedSfxLockout        ; $97A2
     lda     sharedSfxOnSq1          ; $97A5
     beq     @loc_97AF               ; $97A8
     lda     #$10                    ; $97AA
@@ -2239,12 +2239,12 @@ Sfx_StartSharedOnNoise:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Sfx_StartSharedOnSq1:
-    sty     ram_07FC                ; $97BA
+    sty     sharedSfxRecent         ; $97BA
     sty     sharedSfx               ; $97BD
-    sta     ram_07F3                ; $97C0
-    stx     ram_07F2                ; $97C3
+    sta     sharedSfxTimer          ; $97C0
+    stx     sharedSfxStep           ; $97C3
     lda     #$C0                    ; $97C6
-    sta     ram_07DD                ; $97C8
+    sta     sharedSfxLockout        ; $97C8
     lda     sharedSfxOnNoise        ; $97CB
     beq     @loc_97D5               ; $97CE
     lda     #$10                    ; $97D0
@@ -2265,18 +2265,18 @@ Sfx_Fairy:
     sta     SQ1_SWEEP               ; $97E9
 
 Sfx_FairyStep:
-    lda     ram_07F3                ; $97EC
-    ldy     ram_07F2                ; $97EF
+    lda     sharedSfxTimer          ; $97EC
+    ldy     sharedSfxStep           ; $97EF
     cmp     FairyNoteTimes,y        ; $97F2
     bne     Sfx_SharedStep          ; $97F5
     lda     FairyNotes,y            ; $97F7
     jsr     Sq1_PlayNote            ; $97FA
-    lda     ram_07F2                ; $97FD
+    lda     sharedSfxStep           ; $97FD
     beq     Sfx_SharedStep          ; $9800
-    dec     ram_07F2                ; $9802
+    dec     sharedSfxStep           ; $9802
 
 Sfx_SharedStep:
-    lda     ram_07F3                ; $9805
+    lda     sharedSfxTimer          ; $9805
     lsr     a                       ; $9808
     lsr     a                       ; $9809
     tay                             ; $980A
@@ -2295,7 +2295,7 @@ Sfx_TextLetter:
     sta     NOISE_HI                ; $9825
 
 Sfx_TextLetterStep:
-    ldy     ram_07F3                ; $9828
+    ldy     sharedSfxTimer          ; $9828
     lda     TextLetterVolumes,y     ; $982B
     sta     NOISE_VOL               ; $982E
     jmp     Sfx_SharedTick          ; $9831
@@ -2305,11 +2305,11 @@ Sfx_Death:
     ldx     #$30                    ; $9836
     jsr     Sfx_StartSharedOnSq1    ; $9838
     lda     #$0F                    ; $983B
-    sta     ram_07F1                ; $983D
+    sta     sfxSweepTimer           ; $983D
     lda     #$00                    ; $9840
-    sta     ram_07F0                ; $9842
+    sta     sfxPitchHi              ; $9842
     lda     #$04                    ; $9845
-    sta     ram_07EF                ; $9847
+    sta     sfxPitchLo              ; $9847
     lda     #$00                    ; $984A
     sta     sq1Sfx                  ; $984C
     sta     sq2Sfx                  ; $984F
@@ -2320,8 +2320,8 @@ Sfx_Death:
     jsr     Music_Stop              ; $985D
 
 Sfx_DeathStep:
-    ldy     ram_07F1                ; $9860
-    lda     ram_07F0                ; $9863
+    ldy     sfxSweepTimer           ; $9860
+    lda     sfxPitchHi              ; $9863
     beq     @loc_986D               ; $9866
     lda     DeathPitchSteps,y       ; $9868
     bne     @loc_9870               ; $986B
@@ -2331,8 +2331,8 @@ Sfx_DeathStep:
 
 @loc_9870:
     sta     SQ1_VOL                 ; $9870
-    lda     ram_07F3                ; $9873
-    ldy     ram_07F2                ; $9876
+    lda     sharedSfxTimer          ; $9873
+    ldy     sharedSfxStep           ; $9876
     cmp     DeathStepTimes,y        ; $9879
     bne     @loc_98BD               ; $987C
     iny                             ; $987E
@@ -2340,8 +2340,8 @@ Sfx_DeathStep:
     lsr     a                       ; $9880
     tay                             ; $9881
     lda     DeathSweeps,y           ; $9882
-    sta     ram_07F1                ; $9885
-    lda     ram_07F2                ; $9888
+    sta     sfxSweepTimer           ; $9885
+    lda     sharedSfxStep           ; $9888
     lsr     a                       ; $988B
     bcs     @loc_9894               ; $988C
     lda     #$CA                    ; $988E
@@ -2353,14 +2353,14 @@ Sfx_DeathStep:
     ldx     #$01                    ; $9896
 
 @loc_9898:
-    stx     ram_07F0                ; $9898
+    stx     sfxPitchHi              ; $9898
     sta     SQ1_SWEEP               ; $989B
-    lda     ram_07F2                ; $989E
+    lda     sharedSfxStep           ; $989E
     beq     @loc_98A6               ; $98A1
-    dec     ram_07F2                ; $98A3
+    dec     sharedSfxStep           ; $98A3
 
 @loc_98A6:
-    ldy     ram_07EF                ; $98A6
+    ldy     sfxPitchLo              ; $98A6
     lda     DeathTimersLo,y         ; $98A9
     sta     SQ1_LO                  ; $98AC
     lda     DeathTimersHi,y         ; $98AF
@@ -2370,12 +2370,12 @@ Sfx_DeathStep:
     ldy     #$04                    ; $98B8
 
 @loc_98BA:
-    sty     ram_07EF                ; $98BA
+    sty     sfxPitchLo              ; $98BA
 
 @loc_98BD:
-    lda     ram_07F1                ; $98BD
+    lda     sfxSweepTimer           ; $98BD
     beq     @loc_98C5               ; $98C0
-    dec     ram_07F1                ; $98C2
+    dec     sfxSweepTimer           ; $98C2
 
 @loc_98C5:
     jmp     Sfx_SharedTick          ; $98C5
@@ -2388,18 +2388,18 @@ Sfx_SwordDenied:
     sta     SQ1_SWEEP               ; $98D1
 
 Sfx_SwordDeniedStep:
-    lda     ram_07F3                ; $98D4
+    lda     sharedSfxTimer          ; $98D4
     lsr     a                       ; $98D7
     tay                             ; $98D8
     lda     SwordDeniedVolumes,y    ; $98D9
     sta     SQ1_VOL                 ; $98DC
-    lda     ram_07F3                ; $98DF
+    lda     sharedSfxTimer          ; $98DF
     tay                             ; $98E2
     lda     SwordDeniedNotes,y      ; $98E3
     jsr     Sq1_PlayNote            ; $98E6
 
 Sfx_SharedTick:
-    dec     ram_07F3                ; $98E9
+    dec     sharedSfxTimer          ; $98E9
     bne     @done                   ; $98EC
     lda     sharedSfxOnSq1          ; $98EE
     beq     @loc_98FA               ; $98F1
@@ -2444,13 +2444,13 @@ Sfx_SharedTick:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateShared:
-    lda     ram_07DD                ; $990B
+    lda     sharedSfxLockout        ; $990B
     bne     @loc_9915               ; $990E
-    sta     ram_07FC                ; $9910
+    sta     sharedSfxRecent         ; $9910
     beq     @loc_9918               ; $9913
 
 @loc_9915:
-    dec     ram_07DD                ; $9915
+    dec     sharedSfxLockout        ; $9915
 
 @loc_9918:
     ldy     sfxRequest              ; $9918
@@ -2566,15 +2566,15 @@ Sfx_Spell:
     ldx     #$0C                    ; $99A4
     jsr     Sfx_StartSharedOnSq1    ; $99A6
     lda     #$0F                    ; $99A9
-    sta     ram_07F1                ; $99AB
+    sta     sfxSweepTimer           ; $99AB
     lda     #$00                    ; $99AE
-    sta     ram_07F0                ; $99B0
+    sta     sfxPitchHi              ; $99B0
     lda     #$04                    ; $99B3
-    sta     ram_07EF                ; $99B5
+    sta     sfxPitchLo              ; $99B5
 
 Sfx_SpellStep:
-    ldy     ram_07F1                ; $99B8
-    lda     ram_07F0                ; $99BB
+    ldy     sfxSweepTimer           ; $99B8
+    lda     sfxPitchHi              ; $99BB
     beq     @loc_99C5               ; $99BE
     lda     SpellPitchSteps,y       ; $99C0
     bne     @loc_99C8               ; $99C3
@@ -2584,8 +2584,8 @@ Sfx_SpellStep:
 
 @loc_99C8:
     sta     SQ1_VOL                 ; $99C8
-    lda     ram_07F3                ; $99CB
-    ldy     ram_07F2                ; $99CE
+    lda     sharedSfxTimer          ; $99CB
+    ldy     sharedSfxStep           ; $99CE
     cmp     SpellStepTimes,y        ; $99D1
     bne     @loc_9A15               ; $99D4
     iny                             ; $99D6
@@ -2593,8 +2593,8 @@ Sfx_SpellStep:
     lsr     a                       ; $99D8
     tay                             ; $99D9
     lda     SpellSweeps,y           ; $99DA
-    sta     ram_07F1                ; $99DD
-    lda     ram_07F2                ; $99E0
+    sta     sfxSweepTimer           ; $99DD
+    lda     sharedSfxStep           ; $99E0
     lsr     a                       ; $99E3
     bcs     @loc_99EC               ; $99E4
     lda     #$CA                    ; $99E6
@@ -2606,14 +2606,14 @@ Sfx_SpellStep:
     ldx     #$01                    ; $99EE
 
 @loc_99F0:
-    stx     ram_07F0                ; $99F0
+    stx     sfxPitchHi              ; $99F0
     sta     SQ1_SWEEP               ; $99F3
-    lda     ram_07F2                ; $99F6
+    lda     sharedSfxStep           ; $99F6
     beq     @loc_99FE               ; $99F9
-    dec     ram_07F2                ; $99FB
+    dec     sharedSfxStep           ; $99FB
 
 @loc_99FE:
-    ldy     ram_07EF                ; $99FE
+    ldy     sfxPitchLo              ; $99FE
     lda     SpellTimersLo,y         ; $9A01
     sta     SQ1_LO                  ; $9A04
     lda     SpellTimersHi,y         ; $9A07
@@ -2623,12 +2623,12 @@ Sfx_SpellStep:
     ldy     #$04                    ; $9A10
 
 @loc_9A12:
-    sty     ram_07EF                ; $9A12
+    sty     sfxPitchLo              ; $9A12
 
 @loc_9A15:
-    lda     ram_07F1                ; $9A15
+    lda     sfxSweepTimer           ; $9A15
     beq     @loc_9A1D               ; $9A18
-    dec     ram_07F1                ; $9A1A
+    dec     sfxSweepTimer           ; $9A1A
 
 @loc_9A1D:
     jmp     Sfx_SharedTick          ; $9A1D
@@ -2641,15 +2641,15 @@ Sfx_Flute:
     sta     SQ1_SWEEP               ; $9A29
 
 Sfx_FluteStep:
-    lda     ram_07F3                ; $9A2C
-    ldy     ram_07F2                ; $9A2F
+    lda     sharedSfxTimer          ; $9A2C
+    ldy     sharedSfxStep           ; $9A2F
     cmp     FluteNoteTimes,y        ; $9A32
     bne     @loc_9A45               ; $9A35
     lda     FluteNotes,y            ; $9A37
     jsr     Sq1_PlayNote            ; $9A3A
-    lda     ram_07F2                ; $9A3D
+    lda     sharedSfxStep           ; $9A3D
     beq     @loc_9A45               ; $9A40
-    dec     ram_07F2                ; $9A42
+    dec     sharedSfxStep           ; $9A42
 
 @loc_9A45:
     jmp     Sfx_SharedStep          ; $9A45
@@ -2662,15 +2662,15 @@ Sfx_Flute2:
     sta     SQ1_SWEEP               ; $9A51
 
 Sfx_Flute2Step:
-    lda     ram_07F3                ; $9A54
-    ldy     ram_07F2                ; $9A57
+    lda     sharedSfxTimer          ; $9A54
+    ldy     sharedSfxStep           ; $9A57
     cmp     Flute2NoteTimes,y       ; $9A5A
     bne     @loc_9A6D               ; $9A5D
     lda     Flute2Notes,y           ; $9A5F
     jsr     Sq1_PlayNote            ; $9A62
-    lda     ram_07F2                ; $9A65
+    lda     sharedSfxStep           ; $9A65
     beq     @loc_9A6D               ; $9A68
-    dec     ram_07F2                ; $9A6A
+    dec     sharedSfxStep           ; $9A6A
 
 @loc_9A6D:
     jmp     Sfx_SharedStep          ; $9A6D
@@ -2684,15 +2684,15 @@ Sfx_Flute3:
     sta     SQ1_SWEEP               ; $9A79
 
 Sfx_Flute3Step:
-    lda     ram_07F3                ; $9A7C
-    ldy     ram_07F2                ; $9A7F
+    lda     sharedSfxTimer          ; $9A7C
+    ldy     sharedSfxStep           ; $9A7F
     cmp     Flute3NoteTimes,y       ; $9A82
     bne     @loc_9A95               ; $9A85
     lda     Flute3Notes,y           ; $9A87
     jsr     Sq1_PlayNote            ; $9A8A
-    lda     ram_07F2                ; $9A8D
+    lda     sharedSfxStep           ; $9A8D
     beq     @loc_9A95               ; $9A90
-    dec     ram_07F2                ; $9A92
+    dec     sharedSfxStep           ; $9A92
 
 @loc_9A95:
     jmp     Sfx_SharedStep          ; $9A95
@@ -2709,10 +2709,10 @@ Sfx_Barrier:
     jsr     Sq1_SetEnvelope         ; $9AA8
 
 Sfx_BarrierStep:
-    lda     ram_07F2                ; $9AAB
+    lda     sharedSfxStep           ; $9AAB
     tay                             ; $9AAE
     jsr     Sfx_SweepStep32         ; $9AAF
-    sta     ram_07F2                ; $9AB2
+    sta     sharedSfxStep           ; $9AB2
     rol     a                       ; $9AB5
     rol     a                       ; $9AB6
     sta     SQ1_LO                  ; $9AB7
@@ -2720,7 +2720,7 @@ Sfx_BarrierStep:
     and     #$03                    ; $9ABB
     ora     #$08                    ; $9ABD
     sta     SQ1_HI                  ; $9ABF
-    lda     ram_07F3                ; $9AC2
+    lda     sharedSfxTimer          ; $9AC2
     cmp     #$0D                    ; $9AC5
     bcs     @loc_9ACE               ; $9AC7
     ora     #$90                    ; $9AC9
@@ -2734,23 +2734,23 @@ Sfx_BossDeath:
     ldx     #$1B                    ; $9AD3
     jsr     Sfx_StartSharedOnNoise  ; $9AD5
     lda     #$05                    ; $9AD8
-    sta     ram_07F1                ; $9ADA
+    sta     sfxSweepTimer           ; $9ADA
 
 Sfx_BossDeathStep:
-    lda     ram_07F3                ; $9ADD
-    ldy     ram_07F1                ; $9AE0
+    lda     sharedSfxTimer          ; $9ADD
+    ldy     sfxSweepTimer           ; $9AE0
     cmp     BossDeathStepTimes,y    ; $9AE3
     bne     @loc_9AF5               ; $9AE6
-    lda     ram_07F1                ; $9AE8
+    lda     sfxSweepTimer           ; $9AE8
     beq     @loc_9AF0               ; $9AEB
-    dec     ram_07F1                ; $9AED
+    dec     sfxSweepTimer           ; $9AED
 
 @loc_9AF0:
     lda     #$1B                    ; $9AF0
-    sta     ram_07F2                ; $9AF2
+    sta     sharedSfxStep           ; $9AF2
 
 @loc_9AF5:
-    lda     ram_07F2                ; $9AF5
+    lda     sharedSfxStep           ; $9AF5
     lsr     a                       ; $9AF8
     tay                             ; $9AF9
     lda     BossDeathNoise,y        ; $9AFA
@@ -2766,7 +2766,7 @@ Sfx_BossDeathStep:
     sta     NOISE_VOL               ; $9B0A
     lda     #$08                    ; $9B0D
     sta     NOISE_HI                ; $9B0F
-    dec     ram_07F2                ; $9B12
+    dec     sharedSfxStep           ; $9B12
     jmp     Sfx_SharedTick          ; $9B15
 
 ; ---------------------------------------------------------------------------

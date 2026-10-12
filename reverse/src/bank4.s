@@ -1536,7 +1536,7 @@ Projectile_AcidDrop_Bank4:
     iny                             ; $9902
 
 @loc_9903:
-    sty     sram_6EBE               ; $9903
+    sty     sramProjectileAttrs+8   ; $9903
     bcc     Projectile_Fall_Bank4   ; $9906
     tay                             ; $9908
     bne     @loc_993C               ; $9909
@@ -1999,7 +1999,7 @@ CrystalSpot_Rise:
     sta     objState+1,x            ; $9B2F
     cmp     #$62                    ; $9B31
     bne     @done                   ; $9B33
-    sta     ram_0767                ; $9B35
+    sta     crystalFlashTimer       ; $9B35
     inc     enemyAiState,x          ; $9B38
     lda     #$40                    ; $9B3A
     sta     musicRequest            ; $9B3C
@@ -2074,15 +2074,15 @@ CrystalSpotPaletteString:
 ; ---------------------------------------------------------------------------
 ; CrystalSpot_FlashPalette
 ;
-; While ram_0767 counts, queue a flashing background palette; at the end,
+; While crystalFlashTimer counts, queue a flashing background palette; at the end,
 ; the area's own colors.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 CrystalSpot_FlashPalette:
-    lda     ram_0767                ; $9B95
+    lda     crystalFlashTimer       ; $9B95
     beq     @done                   ; $9B98
-    dec     ram_0767                ; $9B9A
+    dec     crystalFlashTimer       ; $9B9A
     ldy     #$07                    ; $9B9D
 
 @loop:
@@ -2090,7 +2090,7 @@ CrystalSpot_FlashPalette:
     sta     ppuBuffer0,y            ; $9BA2
     dey                             ; $9BA5
     bpl     @loop                   ; $9BA6
-    lda     ram_0767                ; $9BA8
+    lda     crystalFlashTimer       ; $9BA8
     bne     @loc_9BBE               ; $9BAB
     lda     sramAreaPalettes+29     ; $9BAD
     sta     ppuBuffer0+4            ; $9BB0

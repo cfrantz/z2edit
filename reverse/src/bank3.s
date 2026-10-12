@@ -3906,7 +3906,7 @@ Dialog_Wait:
 ; ---------------------------------------------------------------------------
 Dialog_PrintText:
     lda     #$00                    ; $B6A2
-    sta     ram_0766                ; $B6A4
+    sta     dialogPrinted           ; $B6A4
     ldx     dialogPerson            ; $B6A7
     lda     enemyType,x             ; $B6AA
     cmp     #$0D                    ; $B6AC
@@ -3920,7 +3920,7 @@ Dialog_PrintText:
 @loc_B6BA:
     lda     menuTimer               ; $B6BA
     bne     Dialog_Wait             ; $B6BD
-    inc     ram_0766                ; $B6BF
+    inc     dialogPrinted           ; $B6BF
     ldx     #$F4                    ; $B6C2
     lda     dialogTextPtr           ; $B6C4
     sta     temp0                   ; $B6C7
@@ -4044,7 +4044,7 @@ Dialog_Reward:
     bne     Dialog_NextStateB       ; $B774
 
 @loc_B776:
-    lda     ram_07FC                ; $B776
+    lda     sharedSfxRecent         ; $B776
     cmp     #$04                    ; $B779
     beq     Dialog_Reward_Done      ; $B77B
     lda     #$10                    ; $B77D
@@ -4075,12 +4075,12 @@ Dialog_Reward_Done:
 ; ---------------------------------------------------------------------------
 ; Dialog_WaitForB
 ;
-; Wait for B, unless nothing was printed (ram_0766).
+; Wait for B, unless nothing was printed (dialogPrinted).
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Dialog_WaitForB:
-    lda     ram_0766                ; $B7A6
+    lda     dialogPrinted           ; $B7A6
     beq     Dialog_NextStateB       ; $B7A9
     lda     joypadPressed           ; $B7AB
     and     #$40                    ; $B7AD

@@ -4430,7 +4430,7 @@ Barrier_Ai:
     lda     #$40                    ; $A2D6
 
 @loop2:
-    sta     sram_60D0,y             ; $A2D8
+    sta     sramAreaTiles+208,y     ; $A2D8
     iny                             ; $A2DB
     dex                             ; $A2DC
     bpl     @loop2                  ; $A2DD
@@ -5008,7 +5008,7 @@ Game_PowerOnInit:
     jsr     Ppu_ClearNametables     ; $A6C1
     inc     renderingOff            ; $A6C4
     lda     #$06                    ; $A6C7
-    sta     ram_0768                ; $A6C9
+    sta     ppuMaskExtra            ; $A6C9
     lda     #NMI_MODE_BANK5         ; $A6CC
     sta     nmiMode                 ; $A6CE
     lda     #$B0                    ; $A6D1
