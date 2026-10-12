@@ -68,7 +68,7 @@ The handlers (`Dialog_*`, with `y` = `townCode`):
 
 | Type | Handler | |
 |------|---------|-|
-| $0A, $0B | `Dialog_SleepyCreature` | talking Ache and Bit: "ZZZ..." until their `ram_05A5` reaches 4 |
+| $0A, $0B | `Dialog_SleepyCreature` | talking Ache and Bit: "ZZZ..." until Link has talked to them 4 times (`townspersonTalkCount`) |
 | $0D | `Dialog_TechniqueMan` | Saria: the river man, once Bagu's note was read; Mido: downstab; elsewhere (not Rauru): upstab |
 | $0E | `Dialog_Type0E` | Mido's man sends Link to Error of Ruto (`techniques` bit 1); Error then tells of the tunnel |
 | $0F | `Dialog_Wizard` | spell `townCode`, if Link has `townCode` + 1 magic containers |

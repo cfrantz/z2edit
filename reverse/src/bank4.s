@@ -3259,7 +3259,7 @@ SkullHead_Ai_Bank4B:
     lda     drawOffscreen+1         ; $ACDA
     and     #$0C                    ; $ACDC
     beq     @loc_ACE8               ; $ACDE
-    lda     ram_05C9                ; $ACE0
+    lda     scrollCounter           ; $ACE0
     bne     SkullHead_Ai_Done_Bank4B ; $ACE3
     jsr     SkullHead_Init_Bank4B   ; $ACE5
 
@@ -4265,7 +4265,7 @@ Barba_Breathe:
     dec     objY+7,x                ; $B1AD
     dec     objY+7,x                ; $B1AF
     ldy     objFacing+7,x           ; $B1B1
-    lda     ram_049A                ; $B1B3
+    lda     barbaHeadX              ; $B1B3
     clc                             ; $B1B6
     adc     BarbaFlameXOffsets,y    ; $B1B7
     sta     objX+7,x                ; $B1BA
@@ -4525,7 +4525,7 @@ Barba_Draw:
     cpy     #$48                    ; $B2F2
     bne     @loc_B2FB               ; $B2F4
     lda     temp1                   ; $B2F6
-    sta     ram_049A                ; $B2F8
+    sta     barbaHeadX              ; $B2F8
 
 @loc_B2FB:
     jsr     Sprite_DrawEnemyPair    ; $B2FB
@@ -4540,7 +4540,7 @@ Barba_Draw:
     lda     temp13                  ; $B30B
     sta     temp0                   ; $B30D
     ldx     temp2                   ; $B30F
-    lda     ram_049A                ; $B311
+    lda     barbaHeadX              ; $B311
     clc                             ; $B314
     adc     BarbaHeadYOffsets,x     ; $B315
     sta     temp1                   ; $B318
@@ -5510,7 +5510,7 @@ FlyerSpeeds_Bank4:
 WolfHeadGenerator_Ai:
     lda     frameCounter            ; $B861
     asl     a                       ; $B863
-    ora     ram_05C9                ; $B864
+    ora     scrollCounter           ; $B864
     bne     Enemy_SpawnFlyerFail_Bank4 ; $B867
 
 ; ---------------------------------------------------------------------------
@@ -5889,7 +5889,7 @@ SkullHead_Ai:
     lda     drawOffscreen+1         ; $BA20
     and     #$0C                    ; $BA22
     beq     @loc_BA2E               ; $BA24
-    lda     ram_05C9                ; $BA26
+    lda     scrollCounter           ; $BA26
     bne     @done                   ; $BA29
     jsr     SkullHead_Init          ; $BA2B
 

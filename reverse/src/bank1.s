@@ -1967,7 +1967,7 @@ DumbMoblinSpeeds:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 DumbMoblinGenerator_Ai:
-    lda     ram_05C9                ; $992F
+    lda     scrollCounter           ; $992F
     bne     @done                   ; $9932
     jsr     MobyGenerator_Ai        ; $9934
     bcs     @done                   ; $9937

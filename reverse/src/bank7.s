@@ -1985,7 +1985,7 @@ Death_LoseLife:
     ldy     #$05                    ; $CA3C
 
 @loop2:
-    sta     ram_05C3,y              ; $CA3E
+    sta     townspersonTalking,y    ; $CA3E
     dey                             ; $CA41
     bpl     @loop2                  ; $CA42
     dec     lives                   ; $CA44
@@ -2255,7 +2255,7 @@ Location_Enter:
     and     #$07                    ; $CBA8
     sta     currentWorld            ; $CBAA
     bne     @loc_CBB2               ; $CBAD
-    inc     ram_0709                ; $CBAF
+    inc     enteredLocation         ; $CBAF
 
 @loc_CBB2:
     lda     #$00                    ; $CBB2
@@ -2483,7 +2483,7 @@ ReturnToOverworld_SetY66:
 ; ---------------------------------------------------------------------------
 Mode_ReturnToOverworld:
     lda     #$00                    ; $CCB3
-    sta     ram_0709                ; $CCB5
+    sta     enteredLocation         ; $CCB5
     sta     doorDepth               ; $CCB8
     ldy     areaLocation            ; $CCBB
     lda     sramLocY,y              ; $CCBE
@@ -2876,7 +2876,7 @@ Mode_LoadWorld:
 @loc_CEF6:
     ldy     currentWorld            ; $CEF6
     bne     LoadWorld_EnterArea     ; $CEF9
-    lda     ram_0709                ; $CEFB
+    lda     enteredLocation         ; $CEFB
     bne     Game_NextMode           ; $CEFE
     lda     #$06                    ; $CF00
     jmp     LoadWorld_SetMode       ; $CF02
@@ -3005,7 +3005,7 @@ Mode_LeaveArea:
     sta     areaLocation            ; $CF76
     ldy     #$00                    ; $CF79
     sty     sq1Sfx                  ; $CF7B
-    sty     ram_05E9                ; $CF7E
+    sty     overworldEntrySfx       ; $CF7E
     ldy     #$90                    ; $CF81
     sty     SQ1_VOL                 ; $CF83
     lda     #$01                    ; $CF86
@@ -3014,7 +3014,7 @@ Mode_LeaveArea:
     jsr     Music_RequestSilence    ; $CF8D
     ldy     #$00                    ; $CF90
     sty     currentWorld            ; $CF92
-    inc     ram_0709                ; $CF95
+    inc     enteredLocation         ; $CF95
     lda     #$00                    ; $CF98
 
 @loc_CF9A:
@@ -3022,12 +3022,12 @@ Mode_LeaveArea:
 
 @loc_CF9D:
     ldy     #$04                    ; $CF9D
-    sty     ram_05E9                ; $CF9F
+    sty     overworldEntrySfx       ; $CF9F
     ldy     currentRegion           ; $CFA2
     bne     @loc_CF9A               ; $CFA5
     ldy     areaId                  ; $CFA7
     bne     @loc_CF9A               ; $CFAA
-    sty     ram_05E9                ; $CFAC
+    sty     overworldEntrySfx       ; $CFAC
     jmp     Game_SetMode            ; $CFAF
 
 @loc_CFB2:
@@ -5265,7 +5265,7 @@ Bit_Ai:
     cmp     #$C0                    ; $DA36
     bcc     Myu_Ai                  ; $DA38
     lda     #$40                    ; $DA3A
-    sta     ram_05DA                ; $DA3C
+    sta     hopSpeeds               ; $DA3C
     lda     #$C0                    ; $DA3F
     sta     ram_05DB                ; $DA41
     jmp     Myu_Move                ; $DA44
@@ -5284,7 +5284,7 @@ Bit_Ai:
 Myu_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $DA47
     lda     #$20                    ; $DA4A
-    sta     ram_05DA                ; $DA4C
+    sta     hopSpeeds               ; $DA4C
     lda     #$E0                    ; $DA4F
     sta     ram_05DB                ; $DA51
 
@@ -5328,7 +5328,7 @@ Myu_Move:
 
 @loc_DA93:
     ldy     enemyAiDir,x            ; $DA93
-    lda     ram_05DA,y              ; $DA96
+    lda     hopSpeeds,y             ; $DA96
     sta     objXVelocity+1,x        ; $DA99
     lda     objCollision+1,x        ; $DA9B
     and     #$03                    ; $DA9D

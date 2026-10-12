@@ -1319,19 +1319,19 @@ Townsperson_InitAtDoor:
 ; ---------------------------------------------------------------------------
 ; Townsperson_Init
 ;
-; Clear a townsperson's state (ram_05A5 and following).
+; Clear a townsperson's state (townspersonTalkCount and following).
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Townsperson_Init:
     lda     #$00                    ; $976B
-    sta     ram_05A5,x              ; $976D
-    sta     ram_05B7,x              ; $9770
-    sta     ram_05AB,x              ; $9773
+    sta     townspersonTalkCount,x  ; $976D
+    sta     townspersonToDoor,x     ; $9770
+    sta     townspersonWalkCounter,x ; $9773
     lda     #$10                    ; $9776
-    sta     ram_05B1,x              ; $9778
+    sta     townspersonWalkTimer,x  ; $9778
     lda     #$90                    ; $977B
-    sta     ram_05BD,x              ; $977D
+    sta     townspersonTimer,x      ; $977D
 
 ; The rts byte doubles as the base of a table indexed by facing (1, 2):
 ; where the door is relative to the person (+16, +0).
@@ -1393,7 +1393,7 @@ Wizard_Ai:
     lda     drawOffscreen+1         ; $97AF
     bne     @done                   ; $97B1
     jsr     Enemy_FaceLink          ; $97B3
-    lda     ram_05A5,x              ; $97B6
+    lda     townspersonTalkCount,x  ; $97B6
     bne     @done                   ; $97B9
     lda     temp15                  ; $97BB
     adc     #$20                    ; $97BD
@@ -1427,7 +1427,7 @@ HouseLady_Ai:
     bne     @loc_9808               ; $97DF
     jsr     Townsperson_CheckDespawn ; $97E1
     lda     drawOffscreen+1         ; $97E4
-    ora     ram_05BD,x              ; $97E6
+    ora     townspersonTimer,x      ; $97E6
     bne     @done                   ; $97E9
     lda     drawScreenX             ; $97EB
     sbc     drawScreenX+1           ; $97ED
@@ -1472,7 +1472,7 @@ HouseLady_Ai:
     lda     #$00                    ; $982F
     sta     enemyAiState,x          ; $9831
     lda     #$90                    ; $9833
-    sta     ram_05BD,x              ; $9835
+    sta     townspersonTimer,x      ; $9835
     jmp     Door_QueueClosed        ; $9838
 
 @done:
@@ -1493,7 +1493,7 @@ HouseLady_Idle:
     sta     objY+1,x                ; $984F
 
 @loc_9851:
-    lda     ram_05BD,x              ; $9851
+    lda     townspersonTimer,x      ; $9851
     beq     @loc_9868               ; $9854
     cmp     #$40                    ; $9856
     bcs     HouseLady_WalkOrTalk    ; $9858
@@ -1509,10 +1509,10 @@ HouseLady_Idle:
 @loc_9868:
     jsr     Enemy_TurnAround        ; $9868
     lda     #$E0                    ; $986B
-    sta     ram_05BD,x              ; $986D
+    sta     townspersonTimer,x      ; $986D
 
 HouseLady_WalkOrTalk:
-    lda     ram_05B7,x              ; $9870
+    lda     townspersonToDoor,x     ; $9870
     bne     HouseLady_Walk          ; $9873
     jmp     Townsperson_WalkAndTalk ; $9875
 
@@ -1556,16 +1556,16 @@ Townsperson_WalkAi:
 Townsperson_StartDoor:
     inc     enemyAiState,x          ; $989F
     lda     enemyWallTilePtr        ; $98A1
-    sta     ram_058D,x              ; $98A3
+    sta     townspersonDoorPtr,x    ; $98A3
     lda     enemyWallTilePtr+1      ; $98A6
-    sta     ram_0593,x              ; $98A8
+    sta     townspersonDoorPtrHi,x  ; $98A8
     ldy     objFacing+1,x           ; $98AB
     lda     objX+1,x                ; $98AD
     clc                             ; $98AF
     adc     TownspersonDoorXOffsets,y ; $98B0
-    sta     ram_0599,x              ; $98B3
+    sta     townspersonDoorX,x      ; $98B3
     lda     objXHi+1,x              ; $98B6
-    sta     ram_059F,x              ; $98B8
+    sta     townspersonDoorXHi,x    ; $98B8
 
 Townsperson_StartDoor_Done:
     rts                             ; $98BB
@@ -1603,7 +1603,7 @@ Townsperson_NextState:
     bcc     @loc_98F6               ; $98EA
     jsr     Townsperson_InitAtDoor  ; $98EC
     lda     #$FF                    ; $98EF
-    sta     ram_05BD,x              ; $98F1
+    sta     townspersonTimer,x      ; $98F1
     bne     Door_SetClosedTile      ; $98F4
 ; (code below not executed in the test movies)
 
@@ -1619,9 +1619,9 @@ Townsperson_NextState:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Door_SetClosedTile:
-    lda     ram_058D,x              ; $98F9
+    lda     townspersonDoorPtr,x    ; $98F9
     sta     temp0                   ; $98FC
-    lda     ram_0593,x              ; $98FE
+    lda     townspersonDoorPtrHi,x  ; $98FE
     sta     temp1                   ; $9901
     ldy     #$B0                    ; $9903
     lda     #$53                    ; $9905
@@ -1711,7 +1711,7 @@ Door_QueueTiles:
     bpl     @loop                   ; $9971
     ldx     currentObject           ; $9973
     ldy     ppuBuffer0Len           ; $9975
-    lda     ram_0599,x              ; $9978
+    lda     townspersonDoorX,x      ; $9978
     lsr     a                       ; $997B
     lsr     a                       ; $997C
     lsr     a                       ; $997D
@@ -1721,7 +1721,7 @@ Door_QueueTiles:
     sta     ppuBuffer0+1,y          ; $9982
     adc     #$01                    ; $9985
     sta     ppuBuffer0+10,y         ; $9987
-    lda     ram_059F,x              ; $998A
+    lda     townspersonDoorXHi,x    ; $998A
     and     #$01                    ; $998D
     asl     a                       ; $998F
     asl     a                       ; $9990
@@ -1789,7 +1789,7 @@ Townsperson_CheckTalk:
     ldy     #$04                    ; $99ED
     sty     dialogType              ; $99EF
     sty     gameFrozen              ; $99F2
-    inc     ram_05C3,x              ; $99F4
+    inc     townspersonTalking,x    ; $99F4
     lda     #$0B                    ; $99F7
     sta     gameMode                ; $99F9
     dec     doorDepth               ; $99FC
@@ -1816,7 +1816,7 @@ Townsperson_CheckTalk:
     rts                             ; $9A1C
 
 @loc_9A1D:
-    lda     ram_05BD,x              ; $9A1D
+    lda     townspersonTimer,x      ; $9A1D
     cmp     #$65                    ; $9A20
     bcc     @loc_9A28               ; $9A22
     cmp     #$AC                    ; $9A24
@@ -1841,7 +1841,7 @@ Townsperson_StartTalk:
     lda     #$02                    ; $9A33
     sta     dialogType              ; $9A35
     sta     gameFrozen              ; $9A38
-    inc     ram_05C3,x              ; $9A3A
+    inc     townspersonTalking,x    ; $9A3A
     lda     #$00                    ; $9A3D
     sta     linkAttackFrame         ; $9A3F
     lda     #$03                    ; $9A42
@@ -1849,7 +1849,7 @@ Townsperson_StartTalk:
     lda     objY                    ; $9A46
     and     #$F0                    ; $9A48
     sta     objY                    ; $9A4A
-    inc     ram_05A5,x              ; $9A4C
+    inc     townspersonTalkCount,x  ; $9A4C
 
 Townsperson_StartTalk_Done:
     rts                             ; $9A4F
@@ -1863,10 +1863,10 @@ Townsperson_StartTalk_Done:
 ; ---------------------------------------------------------------------------
 Townsperson_TurnToDoor:
     lda     #$FF                    ; $9A50
-    sta     ram_05BD,x              ; $9A52
+    sta     townspersonTimer,x      ; $9A52
     lda     #$02                    ; $9A55
-    sta     ram_05B7,x              ; $9A57
-    ldy     ram_05AB,x              ; $9A5A
+    sta     townspersonToDoor,x     ; $9A57
+    ldy     townspersonWalkCounter,x ; $9A5A
     bpl     @loc_9A60               ; $9A5D
     lsr     a                       ; $9A5F
 
@@ -1887,8 +1887,8 @@ Townsperson_TurnToDoor:
 ; ---------------------------------------------------------------------------
 Townsperson_Walk:
     jsr     Enemy_MoveX             ; $9A68
-    inc     ram_05B1,x              ; $9A6B
-    lda     ram_05B1,x              ; $9A6E
+    inc     townspersonWalkTimer,x  ; $9A6B
+    lda     townspersonWalkTimer,x  ; $9A6E
     and     #$0F                    ; $9A71
     bne     @done                   ; $9A73
     lda     #$01                    ; $9A75
@@ -1896,11 +1896,11 @@ Townsperson_Walk:
     beq     @done                   ; $9A79
     bpl     @loc_9A84               ; $9A7B
     asl     a                       ; $9A7D
-    dec     ram_05AB,x              ; $9A7E
-    dec     ram_05AB,x              ; $9A81
+    dec     townspersonWalkCounter,x ; $9A7E
+    dec     townspersonWalkCounter,x ; $9A81
 
 @loc_9A84:
-    inc     ram_05AB,x              ; $9A84
+    inc     townspersonWalkCounter,x ; $9A84
     sta     objFacing+1,x           ; $9A87
 
 @done:
@@ -1920,9 +1920,9 @@ Townsperson_DrawAndCheck:
     jsr     Enemy_Draw              ; $9A8D
 
 Townsperson_CheckDespawn:
-    lda     ram_05BD,x              ; $9A90
+    lda     townspersonTimer,x      ; $9A90
     beq     Townsperson_DrawOrDespawn_Done ; $9A93
-    dec     ram_05BD,x              ; $9A95
+    dec     townspersonTimer,x      ; $9A95
 
 Townsperson_DrawOrDespawn_Done:
     rts                             ; $9A98
@@ -1939,7 +1939,7 @@ FacingToWalkDir:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Townsperson_FaceLinkWhileTalking:
-    lda     ram_05C3,x              ; $9A9B
+    lda     townspersonTalking,x    ; $9A9B
     beq     Townsperson_DrawOrDespawn_Done ; $9A9E
     lda     objFacing+1,x           ; $9AA0
     pha                             ; $9AA2
@@ -1968,7 +1968,7 @@ Townsperson_FaceLinkWhileTalking:
 ; ---------------------------------------------------------------------------
 Sign_Ai:
     lda     #$00                    ; $9ABD
-    sta     ram_05BD,x              ; $9ABF
+    sta     townspersonTimer,x      ; $9ABF
     jsr     Townsperson_CheckTalk   ; $9AC2
     jmp     Enemy_DespawnIfFar      ; $9AC5
 
@@ -1980,11 +1980,11 @@ Sign_Ai:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Wizard_Draw:
-    lda     ram_049E                ; $9AC8
+    lda     wizardFlashTimer        ; $9AC8
     beq     Townsperson_Draw        ; $9ACB
-    dec     ram_049E                ; $9ACD
+    dec     wizardFlashTimer        ; $9ACD
     lda     #$00                    ; $9AD0
-    sta     ram_05C3,x              ; $9AD2
+    sta     townspersonTalking,x    ; $9AD2
     dec     temp0                   ; $9AD5
     dec     temp0                   ; $9AD7
     dec     temp0                   ; $9AD9
@@ -2008,7 +2008,7 @@ Townsperson_Draw:
     sta     temp9                   ; $9AEA
     lda     enemyAiState,x          ; $9AEC
     pha                             ; $9AEE
-    lda     ram_05C3,x              ; $9AEF
+    lda     townspersonTalking,x    ; $9AEF
     sta     temp5                   ; $9AF2
     ldy     enemyType,x             ; $9AF4
     lda     sramEnemyDamage,y       ; $9AF6
@@ -3705,18 +3705,18 @@ Dialog_Mirror:
 ; ---------------------------------------------------------------------------
 ; Dialog_SleepyCreature
 ;
-; Types $0A and $0B (the talking Ache and Bit): "ZZZ..." until ram_05A5,x
+; Types $0A and $0B (the talking Ache and Bit): "ZZZ..." until townspersonTalkCount,x
 ; reaches 4, then the second text ("LET ME BE! MASTER IS IN WOODS N OF
 ; RIVER").
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Dialog_SleepyCreature:
-    lda     ram_05A5,x              ; $B5B9
+    lda     townspersonTalkCount,x  ; $B5B9
     cmp     #$04                    ; $B5BC
     bcc     Dialog_SelectText       ; $B5BE
     lda     #$04                    ; $B5C0
-    sta     ram_05A5,x              ; $B5C2
+    sta     townspersonTalkCount,x  ; $B5C2
     inc     temp5                   ; $B5C5
 ; (end of disassembled code)
 
@@ -3859,7 +3859,7 @@ Dialog_TextDone:
     lda     #$C0                    ; $B679
     sta     spellFlash              ; $B67B
     lda     #$40                    ; $B67E
-    sta     ram_049E                ; $B680
+    sta     wizardFlashTimer        ; $B680
     ldx     dialogPerson            ; $B683
     lda     enemyType,x             ; $B686
     cmp     #$0F                    ; $B688
@@ -3877,7 +3877,7 @@ Dialog_TextDone:
 Dialog_EndText:
     lda     #$00                    ; $B690
     sta     spellFlash              ; $B692
-    sta     ram_049E                ; $B695
+    sta     wizardFlashTimer        ; $B695
     inc     pauseState              ; $B698
     jmp     Dialog_NextState        ; $B69B
 
@@ -4062,7 +4062,7 @@ Dialog_Reward:
     ldy     #$05                    ; $B79A
 
 @loop:
-    sta     ram_05C3,y              ; $B79C
+    sta     townspersonTalking,y    ; $B79C
     dey                             ; $B79F
     bpl     @loop                   ; $B7A0
 
@@ -4104,7 +4104,7 @@ Dialog_Finish:
     lda     #$00                    ; $B7B4
 
 @loop:
-    sta     ram_05C3,y              ; $B7B6
+    sta     townspersonTalking,y    ; $B7B6
     dey                             ; $B7B9
     bpl     @loop                   ; $B7BA
     sta     gameFrozen              ; $B7BC

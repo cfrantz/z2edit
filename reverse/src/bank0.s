@@ -441,7 +441,7 @@ Overworld_CheckEncounter:
 ; Overworld_DrawEncounters
 ;
 ; Draw the overworld encounter sprites (slots 2-7: objY, objX, moved by
-; ram_056D/ram_0575), and start an encounter when one touches Link on
+; encounterYOffset/encounterXOffset), and start an encounter when one touches Link on
 ; terrain where encounters happen: areaLocation = $FF, the kind in
 ; ram_0759 and ram_075A, then enter it (Overworld_EnterLocation).
 ; Encounters that leave the screen are removed.
@@ -470,7 +470,7 @@ Overworld_DrawEncounters:
     tay                             ; $8347
     lda     objY+1,x                ; $8348
     clc                             ; $834A
-    adc     ram_056D,x              ; $834B
+    adc     encounterYOffset,x      ; $834B
     sta     objY+1,x                ; $834E
     sec                             ; $8350
     sbc     overworldScrollY        ; $8351
@@ -478,7 +478,7 @@ Overworld_DrawEncounters:
     sta     oamBuffer+132,y         ; $8356
     lda     objX+1,x                ; $8359
     clc                             ; $835B
-    adc     ram_0575,x              ; $835C
+    adc     encounterXOffset,x      ; $835C
     sta     objX+1,x                ; $835F
     sec                             ; $8361
     sbc     ppuScrollX              ; $8362
@@ -600,8 +600,8 @@ Overworld_UpdateEncounters:
 
 @loop:
     lda     #$00                    ; $8423
-    sta     ram_056D,x              ; $8425
-    sta     ram_0575,x              ; $8428
+    sta     encounterYOffset,x      ; $8425
+    sta     encounterXOffset,x      ; $8428
     lda     objState+2,x            ; $842B
     bne     @loc_8435               ; $842D
 
@@ -637,7 +637,7 @@ Overworld_UpdateEncounters:
 
 @loc_845D:
     tya                             ; $845D
-    sta     ram_0575,x              ; $845E
+    sta     encounterXOffset,x      ; $845E
     jmp     @loc_842F               ; $8461
 
 @loc_8464:
@@ -660,7 +660,7 @@ Overworld_UpdateEncounters:
 
 @loc_8481:
     tya                             ; $8481
-    sta     ram_056D,x              ; $8482
+    sta     encounterYOffset,x      ; $8482
     jmp     @loc_842F               ; $8485
 
 @loc_8488:
@@ -673,7 +673,7 @@ Overworld_UpdateEncounters:
     and     #$04                    ; $8491
     bne     @loc_84A1               ; $8493
     tya                             ; $8495
-    sta     ram_056D,x              ; $8496
+    sta     encounterYOffset,x      ; $8496
     clc                             ; $8499
     adc     objY+1,x                ; $849A
     sta     objY+1,x                ; $849C
@@ -681,7 +681,7 @@ Overworld_UpdateEncounters:
 
 @loc_84A1:
     tya                             ; $84A1
-    sta     ram_0575,x              ; $84A2
+    sta     encounterXOffset,x      ; $84A2
     clc                             ; $84A5
     adc     objX+1,x                ; $84A6
     sta     objX+1,x                ; $84A8
@@ -1349,7 +1349,7 @@ Mode_IndexOverworldMap:
 @loc_8895:
     ldx     #$00                    ; $8895
     stx     soundMute               ; $8897
-    lda     ram_05E9                ; $8899
+    lda     overworldEntrySfx       ; $8899
     sta     sfxRequest+2            ; $889C
 
 @loc_889E:
@@ -2507,11 +2507,11 @@ BigDoor_Update:
     jsr     BigDoor_DrawOpen        ; $8EE8
 
 @loc_8EEB:
-    lda     ram_049F                ; $8EEB
+    lda     bigDoorState            ; $8EEB
     bne     @loc_8EF7               ; $8EEE
     lda     #$10                    ; $8EF0
     sta     sfxRequest              ; $8EF2
-    sta     ram_049F                ; $8EF4
+    sta     bigDoorState            ; $8EF4
 
 @loc_8EF7:
     lda     #$54                    ; $8EF7
@@ -4451,7 +4451,7 @@ Scroll_Update:
     beq     Scroll_UpdateDone       ; $9927
     lda     scrollFrozen            ; $9929
     bne     Scroll_UpdateDone       ; $992C
-    sta     ram_05C9                ; $992E
+    sta     scrollCounter           ; $992E
     lda     a:linkDeltaX            ; $9931
     sta     temp0                   ; $9934
     ldx     objFacing               ; $9936
@@ -4489,7 +4489,7 @@ Scroll_Update:
     bcc     @loc_9977               ; $996F
 
 @loc_9971:
-    inc     ram_05C9                ; $9971
+    inc     scrollCounter           ; $9971
     jmp     Scroll_SetRightEdge     ; $9974
 
 @loc_9977:
@@ -6684,7 +6684,7 @@ Pause_LoadRow:
     lda     spellOwned,x            ; $A638
     beq     @done                   ; $A63B
     lda     #$FA                    ; $A63D
-    sta     ram_054D                ; $A63F
+    sta     menuRowTiles2+1         ; $A63F
 
 @done:
     rts                             ; $A642
