@@ -1092,7 +1092,7 @@ Ending_Flash:
     adc     #$07                    ; $8D41
     sta     ppuBuffer0Len           ; $8D43
     lda     spellFlash              ; $8D46
-    bne     loc_5_8D8C              ; $8D49
+    bne     Ending_WakeZelda_Done   ; $8D49
 ; (code below not executed in the test movies)
     jmp     Ending_Wait             ; $8D4B
 ; (end of code not executed in the test movies)
@@ -1127,11 +1127,11 @@ Ending_WakeZelda:
     jsr     Ending_DrawLink         ; $8D7C
     jsr     Ending_Wait             ; $8D7F
     lda     endingTimer             ; $8D82
-    bne     loc_5_8D8C              ; $8D84
+    bne     Ending_WakeZelda_Done   ; $8D84
     sta     PPUMASK                 ; $8D86
     sta     gameMode                ; $8D89
 
-loc_5_8D8C:
+Ending_WakeZelda_Done:
     rts                             ; $8D8C
 
 EndingCoupleSprites:
@@ -2421,13 +2421,13 @@ DarkLink_WaitForLink:
     inc     enemyAiState            ; $97DE
     jsr     Enemy_Draw              ; $97E0
     lda     scrollXHi               ; $97E3
-    beq     loc_5_980C              ; $97E6
+    beq     DarkLink_WaitForLink_Done ; $97E6
     inc     scrollFrozen            ; $97E8
     lda     #$00                    ; $97EB
     sta     objXVelocity            ; $97ED
     lda     objCollision            ; $97EF
     and     #$04                    ; $97F1
-    beq     loc_5_980C              ; $97F3
+    beq     DarkLink_WaitForLink_Done ; $97F3
     lda     #$A0                    ; $97F5
     sta     objY                    ; $97F7
     lda     #$03                    ; $97F9
@@ -2447,7 +2447,7 @@ sub_5_9807:
 loc_5_980A:
     inc     objFacing+4             ; $980A
 
-loc_5_980C:
+DarkLink_WaitForLink_Done:
     rts                             ; $980C
 
 ; ---------------------------------------------------------------------------
@@ -2475,11 +2475,11 @@ DarkLink_Appear:
 
 @loc_982C:
     cmp     #$50                    ; $982C
-    bcc     loc_5_980C              ; $982E
+    bcc     DarkLink_WaitForLink_Done ; $982E
     cmp     #$C0                    ; $9830
     bcs     @loc_9839               ; $9832
     lsr     a                       ; $9834
-    bcc     loc_5_980C              ; $9835
+    bcc     DarkLink_WaitForLink_Done ; $9835
     bcs     @loc_983B               ; $9837
 
 @loc_9839:
@@ -2510,7 +2510,7 @@ DarkLink_Separate:
     lda     timerFast+3             ; $9852
     cmp     #$80                    ; $9855
     bcc     @loc_9864               ; $9857
-    bne     loc_5_980C              ; $9859
+    bne     DarkLink_WaitForLink_Done ; $9859
     lda     #$FC                    ; $985B
     sta     objYVelocity+1          ; $985D
     lda     #$13                    ; $9860
@@ -2644,7 +2644,7 @@ DarkLink_ReactToLink:
 
 @loc_9911:
     lda     objFacing+3             ; $9911
-    bne     loc_5_994E              ; $9913
+    bne     DarkLink_ReactToLink_Done ; $9913
     lda     joypadPressed           ; $9915
     and     #$40                    ; $9917
     beq     loc_5_994F              ; $9919
@@ -2685,7 +2685,7 @@ sub_5_992C:
     sta     objFacing+3             ; $994A
     sta     ram_0018                ; $994C
 
-loc_5_994E:
+DarkLink_ReactToLink_Done:
     rts                             ; $994E
 
 loc_5_994F:
@@ -3080,7 +3080,7 @@ DarkLink_Defeated:
 @loc_9B46:
     lda     linkJumpState           ; $9B46
     ora     timerFast+3             ; $9B49
-    bne     loc_5_9B73              ; $9B4C
+    bne     DarkLink_WalkLinkToCenter_Done ; $9B4C
     lda     #$80                    ; $9B4E
     jmp     loc_5_9805              ; $9B50
 
@@ -3095,7 +3095,7 @@ DarkLink_WalkLinkToCenter:
     lda     #$03                    ; $9B53
     sta     objState                ; $9B55
     ldy     timerFast+3             ; $9B57
-    bne     loc_5_9B73              ; $9B5A
+    bne     DarkLink_WalkLinkToCenter_Done ; $9B5A
     lsr     a                       ; $9B5C
     sta     linkWalkDir             ; $9B5D
     sta     objXHi                  ; $9B5F
@@ -3105,13 +3105,13 @@ DarkLink_WalkLinkToCenter:
     cmp     #$6C                    ; $9B67
     beq     loc_5_9B81              ; $9B69
     dec     objX                    ; $9B6B
-    bcs     loc_5_9B73              ; $9B6D
+    bcs     DarkLink_WalkLinkToCenter_Done ; $9B6D
 ; (code below not executed in the test movies)
     inc     objX                    ; $9B6F
     inc     objX                    ; $9B71
 ; (end of code not executed in the test movies)
 
-loc_5_9B73:
+DarkLink_WalkLinkToCenter_Done:
     rts                             ; $9B73
 
 loc_5_9B74:
@@ -3145,12 +3145,12 @@ DarkLink_ShowTriforce:
     cmp     #$02                    ; $9B94
     beq     loc_5_9B74              ; $9B96
     cmp     #$09                    ; $9B98
-    bcs     loc_5_9B73              ; $9B9A
+    bcs     DarkLink_WalkLinkToCenter_Done ; $9B9A
     cmp     #$06                    ; $9B9C
     bcc     @loc_9BA5               ; $9B9E
     lda     frameCounter            ; $9BA0
     lsr     a                       ; $9BA2
-    bcc     loc_5_9B73              ; $9BA3
+    bcc     DarkLink_WalkLinkToCenter_Done ; $9BA3
 
 @loc_9BA5:
     jmp     Enemy_Draw              ; $9BA5
@@ -3307,13 +3307,13 @@ Projectile_Straight_Bank5:
     bne     loc_5_9C5B              ; $9C53
     lda     objState+7,x            ; $9C55
     cmp     #$07                    ; $9C57
-    beq     loc_5_9C5F              ; $9C59
+    beq     Projectile_Straight_Done_Bank5 ; $9C59
 
 loc_5_9C5B:
     lda     #$00                    ; $9C5B
     sta     objState+7,x            ; $9C5D
 
-loc_5_9C5F:
+Projectile_Straight_Done_Bank5:
     rts                             ; $9C5F
 
 loc_5_9C60:
@@ -4130,7 +4130,7 @@ GpBubble_Ai:
     bne     @loc_A119               ; $A111
     lda     objCollision+1,x        ; $A113
     and     #$0C                    ; $A115
-    beq     loc_5_A132              ; $A117
+    beq     GpFastBubble_Init_Done  ; $A117
 
 @loc_A119:
     lda     objYVelocity+1,x        ; $A119
@@ -4165,7 +4165,7 @@ loc_5_A12D:
     sta     objXVelocity+1,x        ; $A12D
     sta     objYVelocity+1,x        ; $A12F
 
-loc_5_A132:
+GpFastBubble_Init_Done:
     rts                             ; $A132
 
 ; ---------------------------------------------------------------------------
@@ -5453,14 +5453,14 @@ Story_Run:
     lda     PPUSTATUS               ; $AB9D
     jsr     Title_CheckStart        ; $ABA0
     lda     renderingOff            ; $ABA3
-    bne     loc_5_AC06              ; $ABA6
+    bne     Story_Delay_Done        ; $ABA6
     lda     titleDelay              ; $ABA8
     bne     Story_Delay             ; $ABAB
     lda     titleScrollHeld         ; $ABAD
     bne     Story_RunStep           ; $ABAF
     lda     frameCounter            ; $ABB1
     and     #$03                    ; $ABB3
-    bne     loc_5_AC06              ; $ABB5
+    bne     Story_Delay_Done        ; $ABB5
     inc     ppuScrollY              ; $ABB7
     lda     ppuScrollY              ; $ABB9
     cmp     #$F0                    ; $ABBB
@@ -5485,7 +5485,7 @@ Story_Run:
 @loc_ABDF:
     lda     ppuScrollY              ; $ABDF
     and     #$07                    ; $ABE1
-    bne     loc_5_AC06              ; $ABE3
+    bne     Story_Delay_Done        ; $ABE3
 
 Story_RunStep:
     lda     sceneStep               ; $ABE5
@@ -5511,10 +5511,10 @@ Story_Delay:
     lda     titleTextLine           ; $ABFA
     beq     Story_RunStep           ; $ABFC
     lda     sceneStep               ; $ABFE
-    beq     loc_5_AC06              ; $AC01
+    beq     Story_Delay_Done        ; $AC01
     jmp     Story_RunStep           ; $AC03
 
-loc_5_AC06:
+Story_Delay_Done:
     rts                             ; $AC06
 
 ; ---------------------------------------------------------------------------
@@ -5858,7 +5858,7 @@ Title_InitScroll:
     lda     #$02                    ; $AE10
     sta     titleSplitNametable     ; $AE12
 
-loc_5_AE14:
+Title_InitScroll_Done:
     rts                             ; $AE14
 
 ; ---------------------------------------------------------------------------
@@ -5923,7 +5923,7 @@ Story_End:
 Story_RedrawLogoRow:
     lda     ppuScrollY              ; $AE55
     and     #$07                    ; $AE57
-    bne     loc_5_AE14              ; $AE59
+    bne     Title_InitScroll_Done   ; $AE59
     lda     ppuScrollY              ; $AE5B
     cmp     #$F0                    ; $AE5D
     bne     @loc_AE72               ; $AE5F
@@ -7012,7 +7012,7 @@ FileSelect_BlankEmptyFiles:
 @loc_B659:
     lda     fileEmptyMask           ; $B659
     and     #$04                    ; $B65B
-    beq     loc_5_B677              ; $B65D
+    beq     FileSelect_BlankFile_Done ; $B65D
     ldx     #$1C                    ; $B65F
     ldy     #$0C                    ; $B661
 
@@ -7033,7 +7033,7 @@ FileSelect_BlankFile:
     sta     sramFileScreenText+120,y ; $B671
     sta     sramFileScreenText+121,y ; $B674
 
-loc_5_B677:
+FileSelect_BlankFile_Done:
     rts                             ; $B677
 
 ; ---------------------------------------------------------------------------

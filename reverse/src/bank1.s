@@ -498,7 +498,7 @@ Area_DrawGraveTile_Bank1:
     sta     (temp14),y              ; $8301
 ; (end of code not executed in the test movies)
 
-loc_1_8303:
+Area_DrawGraveTile_Done_Bank1:
     rts                             ; $8303
 
 StonehengeTiles_Bank1:
@@ -528,7 +528,7 @@ Area_DrawStonehenge_Bank1:
 
 @loc_8326:
     cpx     #$0E                    ; $8326
-    beq     loc_1_8303              ; $8328
+    beq     Area_DrawGraveTile_Done_Bank1 ; $8328
     jsr     AreaMap_NextBuildRow    ; $832A
     inx                             ; $832D
     jmp     @loc_8315               ; $832E
@@ -1436,12 +1436,12 @@ Projectile_Boomerang_Bank1:
     jsr     Projectile_MoveAndCheck_Bank1 ; $96B4
     ldy     ram_044C,x              ; $96B7
     dey                             ; $96BA
-    bpl     loc_1_96EA              ; $96BB
+    bpl     Projectile_Boomerang_Done_Bank1 ; $96BB
     lda     ram_045E,x              ; $96BD
     tax                             ; $96C0
     lda     enemyActive,x           ; $96C1
     cmp     #$01                    ; $96C3
-    bne     loc_1_96EA              ; $96C5
+    bne     Projectile_Boomerang_Done_Bank1 ; $96C5
     lda     objX+1,x                ; $96C7
     sbc     scrollX                 ; $96C9
     ldy     #$00                    ; $96CC
@@ -1456,11 +1456,11 @@ Projectile_Boomerang_Bank1:
     ldx     currentObject           ; $96DC
     jsr     Projectile_GetHitbox    ; $96DE
     jsr     Hitbox_Overlap          ; $96E1
-    bcc     loc_1_96EA              ; $96E4
+    bcc     Projectile_Boomerang_Done_Bank1 ; $96E4
     lda     #$00                    ; $96E6
     sta     objState+7,x            ; $96E8
 
-loc_1_96EA:
+Projectile_Boomerang_Done_Bank1:
     rts                             ; $96EA
 
 ; ---------------------------------------------------------------------------
@@ -1480,7 +1480,7 @@ Projectile_FallIfDeflected_Bank1:
 @loc_96F2:
     tya                             ; $96F2
     cmp     objFacing+7,x           ; $96F3
-    beq     loc_1_96EA              ; $96F5
+    beq     Projectile_Boomerang_Done_Bank1 ; $96F5
     pla                             ; $96F7
     pla                             ; $96F8
     inc     objYVelocity+7,x        ; $96F9
@@ -2248,7 +2248,7 @@ loc_1_9AAB:
     sta     objXVelocity+1,x        ; $9AAD
     lda     objCollision            ; $9AAF
     and     #$03                    ; $9AB1
-    bne     loc_1_9ACE              ; $9AB3
+    bne     Fighter_StartAttack_Done ; $9AB3
     lda     linkDirHeld             ; $9AB5
 
 DairaAttackFrames:
@@ -2271,7 +2271,7 @@ DairaAttackFrames:
     asl     a                       ; $9ACB
     ror     objXVelocity+1,x        ; $9ACC
 
-loc_1_9ACE:
+Fighter_StartAttack_Done:
     rts                             ; $9ACE
     .byte   $04, $03                                                        ; $9ACF
 
@@ -2342,7 +2342,7 @@ Fighter_KnockBack:
 @loc_9B1E:
     jmp     Enemy_MoveXUnlessWall_Bank1 ; $9B1E
 
-loc_1_9B21:
+Fighter_KnockBack_Done:
     rts                             ; $9B21
 
 ; ---------------------------------------------------------------------------
@@ -2355,7 +2355,7 @@ loc_1_9B21:
 Enemy_MoveXUnlessWall_Bank1:
     lda     objCollision+1,x        ; $9B22
     and     #$03                    ; $9B24
-    bne     loc_1_9B21              ; $9B26
+    bne     Fighter_KnockBack_Done  ; $9B26
 MobySpeeds := * + 2
     jmp     Enemy_MoveX             ; $9B28
 ; (unreferenced: $9B2B-$9C6E, 324 bytes)

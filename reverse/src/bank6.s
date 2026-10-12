@@ -414,7 +414,7 @@ TitleMusic_Update:
 
 @loc_8282:
     lda     titleMusicPart          ; $8282
-    beq     loc_6_82AC              ; $8284
+    beq     TitleMusic_Silence_Done ; $8284
     jmp     TitleMusic_PlayNotes    ; $8286
 
 ; ---------------------------------------------------------------------------
@@ -452,7 +452,7 @@ TitleMusic_Silence:
     stx     SQ1_VOL                 ; $82A6
     stx     SQ2_VOL                 ; $82A9
 
-loc_6_82AC:
+TitleMusic_Silence_Done:
     rts                             ; $82AC
 
 loc_6_82AD:
@@ -2770,7 +2770,7 @@ Music_Update:
     lda     musicRequest            ; $9B18
     bne     Music_Start             ; $9B1A
     lda     musicPlaying            ; $9B1C
-    beq     loc_6_9B4E              ; $9B1F
+    beq     Sound_SilencePulseNoise_Done ; $9B1F
     jmp     Music_PlayNotes         ; $9B21
 
 ; ---------------------------------------------------------------------------
@@ -2823,7 +2823,7 @@ Sound_SilencePulseNoise:
     sta     SQ2_VOL                 ; $9B48
     sta     NOISE_VOL               ; $9B4B
 
-loc_6_9B4E:
+Sound_SilencePulseNoise_Done:
     rts                             ; $9B4E
 
 loc_6_9B4F:

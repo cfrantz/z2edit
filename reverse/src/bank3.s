@@ -1531,17 +1531,17 @@ Townsperson_WalkAi:
     jsr     Townsperson_Walk        ; $9885
     lda     enemyType,x             ; $9888
     cmp     #$0A                    ; $988A
-    bcc     loc_3_98BB              ; $988C
+    bcc     Townsperson_StartDoor_Done ; $988C
     cmp     #$19                    ; $988E
     bcc     @loc_9896               ; $9890
     cmp     #$21                    ; $9892
-    bcc     loc_3_98BB              ; $9894
+    bcc     Townsperson_StartDoor_Done ; $9894
 
 @loc_9896:
     jsr     Enemy_UpdateBgCollision ; $9896
     lda     ram_00D9                ; $9899
     cmp     #$8B                    ; $989B
-    bne     loc_3_98BB              ; $989D
+    bne     Townsperson_StartDoor_Done ; $989D
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_StartDoor
@@ -1565,7 +1565,7 @@ Townsperson_StartDoor:
     lda     objXHi+1,x              ; $98B6
     sta     ram_059F,x              ; $98B8
 
-loc_3_98BB:
+Townsperson_StartDoor_Done:
     rts                             ; $98BB
 
 loc_3_98BC:
@@ -1818,14 +1818,14 @@ Townsperson_CheckTalk:
     cmp     #$65                    ; $9A20
     bcc     @loc_9A28               ; $9A22
     cmp     #$AC                    ; $9A24
-    bcc     loc_3_9A4F              ; $9A26
+    bcc     Townsperson_StartTalk_Done ; $9A26
 
 @loc_9A28:
     lda     enemyAiState,x          ; $9A28
-    bne     loc_3_9A4F              ; $9A2A
+    bne     Townsperson_StartTalk_Done ; $9A2A
     lda     a:joypadPressed         ; $9A2C
     and     #$40                    ; $9A2F
-    beq     loc_3_9A4F              ; $9A31
+    beq     Townsperson_StartTalk_Done ; $9A31
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_StartTalk
@@ -1849,7 +1849,7 @@ Townsperson_StartTalk:
     sta     objY                    ; $9A4A
     inc     ram_05A5,x              ; $9A4C
 
-loc_3_9A4F:
+Townsperson_StartTalk_Done:
     rts                             ; $9A4F
 
 ; ---------------------------------------------------------------------------
@@ -1919,10 +1919,10 @@ sub_3_9A8D:
 
 sub_3_9A90:
     lda     ram_05BD,x              ; $9A90
-    beq     loc_3_9A98              ; $9A93
+    beq     Townsperson_DrawOrDespawn_Done ; $9A93
     dec     ram_05BD,x              ; $9A95
 
-loc_3_9A98:
+Townsperson_DrawOrDespawn_Done:
     rts                             ; $9A98
 
 dat_3_9A99:
@@ -1938,7 +1938,7 @@ dat_3_9A99:
 ; ---------------------------------------------------------------------------
 Townsperson_FaceLinkWhileTalking:
     lda     ram_05C3,x              ; $9A9B
-    beq     loc_3_9A98              ; $9A9E
+    beq     Townsperson_DrawOrDespawn_Done ; $9A9E
     lda     objFacing+1,x           ; $9AA0
     pha                             ; $9AA2
     jsr     Enemy_FaceLink          ; $9AA3
@@ -2843,12 +2843,12 @@ Dialog_OpenRow:
     inc     menuRow                 ; $B0FD
     lda     menuRow                 ; $B100
     cmp     #$05                    ; $B103
-    bcc     loc_3_B10A              ; $B105
+    bcc     Menu_NextState_Done_Bank3 ; $B105
 
 Menu_NextState_Bank3:
     inc     pauseState              ; $B107
 
-loc_3_B10A:
+Menu_NextState_Done_Bank3:
     rts                             ; $B10A
 
 Menu_DrawRowAttrs_Bank3:
@@ -4044,7 +4044,7 @@ Dialog_Reward:
 @loc_B776:
     lda     ram_07FC                ; $B776
     cmp     #$04                    ; $B779
-    beq     loc_3_B7A5              ; $B77B
+    beq     Dialog_Reward_Done      ; $B77B
     lda     #$10                    ; $B77D
     sta     musicRequest            ; $B77F
     ldx     dialogPerson            ; $B781
@@ -4067,7 +4067,7 @@ Dialog_Reward:
 loc_3_B7A2:
     inc     pauseState              ; $B7A2
 
-loc_3_B7A5:
+Dialog_Reward_Done:
     rts                             ; $B7A5
 
 ; ---------------------------------------------------------------------------

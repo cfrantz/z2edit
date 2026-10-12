@@ -490,7 +490,7 @@ Area_DrawGraveTile_Bank2:
     lda     GraveTiles_Bank2,x      ; $82FE
     sta     (temp14),y              ; $8301
 
-loc_2_8303:
+Area_DrawGraveTile_Done_Bank2:
     rts                             ; $8303
 ; (end of code not executed in the test movies)
 ; (unreferenced: $8304-$8312, 15 bytes)
@@ -522,7 +522,7 @@ Area_DrawStonehenge_Bank2:
 
 @loc_8326:
     cpx     #$0E                    ; $8326
-    beq     loc_2_8303              ; $8328
+    beq     Area_DrawGraveTile_Done_Bank2 ; $8328
     jsr     AreaMap_NextBuildRow    ; $832A
     inx                             ; $832D
     jmp     @loc_8315               ; $832E
@@ -2041,11 +2041,11 @@ Leever_Ai:
     lda     timerFast+TIMER_ENEMY,x ; $997C
     beq     @loc_9960               ; $997F
     lsr     a                       ; $9981
-    bcc     loc_2_9986              ; $9982
+    bcc     Leever_Ai_Done          ; $9982
 BoonXSpeeds := * + 1
     inc     objY+1,x                ; $9984
 
-loc_2_9986:
+Leever_Ai_Done:
     rts                             ; $9986
 ; (unreferenced: $9987-$9A10, 138 bytes)
 
@@ -2154,14 +2154,14 @@ Boon_MoveX:
 ; ---------------------------------------------------------------------------
 Enemy_DropRock_Bank2:
     jsr     Enemy_FireProjectile    ; $9A11
-    bcs     loc_2_9A23              ; $9A14
+    bcs     Enemy_DropRock_Done_Bank2 ; $9A14
     lda     #$08                    ; $9A16
     sta     a:objState+7,y          ; $9A18
     lda     #$00                    ; $9A1B
     sta     objYVelocity+7,y        ; $9A1D
     sta     a:objXVelocity+7,y      ; $9A20
 
-loc_2_9A23:
+Enemy_DropRock_Done_Bank2:
     rts                             ; $9A23
     .byte   $F8                                                             ; $9A24
 
@@ -2329,20 +2329,20 @@ Enemy_Pace_Bank2:
     lda     enemyAiState,x          ; $9B0D
     and     #$C0                    ; $9B0F
     bne     @loc_9B18               ; $9B11
-    lda     loc_2_9A23,y            ; $9B13
+    lda     Enemy_DropRock_Done_Bank2,y ; $9B13
     bne     @loc_9B21               ; $9B16
 
 @loc_9B18:
     asl     a                       ; $9B18
-    bne     loc_2_9B23              ; $9B19
-    lda     loc_2_9A23,y            ; $9B1B
+    bne     Enemy_Pace_Done_Bank2   ; $9B19
+    lda     Enemy_DropRock_Done_Bank2,y ; $9B1B
     asl     a                       ; $9B1E
     eor     #$FF                    ; $9B1F
 
 @loc_9B21:
     sta     objXVelocity+1,x        ; $9B21
 
-loc_2_9B23:
+Enemy_Pace_Done_Bank2:
     rts                             ; $9B23
 
 ; ---------------------------------------------------------------------------
@@ -2370,7 +2370,7 @@ Enemy_KnockBackOrWalk_Bank2:
 loc_2_9B39:
     lda     objCollision+1,x        ; $9B39
     and     #$03                    ; $9B3B
-    bne     loc_2_9B23              ; $9B3D
+    bne     Enemy_Pace_Done_Bank2   ; $9B3D
     jmp     Enemy_MoveX             ; $9B3F
 
 ; ---------------------------------------------------------------------------
