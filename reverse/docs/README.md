@@ -48,6 +48,9 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
 - [Link](systems/link.md): movement, jumping, damage, experience, the
   sword, spells, holding up items.
 - [Enemies](systems/enemies.md): how enemies spawn, move, are hit and die.
+- [Random numbers](systems/rng.md): the 72-bit shift register.
+- [Items and drops](systems/items.md): item kinds, collecting, enemy drops.
+- [Death and continuing](systems/death.md): losing a life, game over, the continue screen.
 - [Menus and dialogs](systems/menus.md): the pause menu, level up window,
   flute and continue screen.
 - [Title, file screens and ending](systems/title-and-files.md): the

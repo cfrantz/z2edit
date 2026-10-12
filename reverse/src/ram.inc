@@ -220,6 +220,7 @@ ram_05DB                = $05DB
 ram_05DC                = $05DC
 ram_05DD                = $05DD
 ram_05DE                = $05DE
+dropKillCounts          = $05DF     ; [3] kills toward the next item drop, per drop group 1-3 (Enemy_Kill)
 ram_05E2                = $05E2
 ram_05E3                = $05E3
 ram_05E4                = $05E4
@@ -234,7 +235,6 @@ overworldEntrySfx       = $05E9     ; sound to play (sfxRequest+2) on returning 
 ; (statLevel through playerName).  See docs/memory/save-files.md.
 ; ---------------------------------------------------------------------------
 saveWorld               = $0600     ; [SAVE_WORLD_SIZE] per-area flags, saved with the game; see AreaFlagsPtrs
-ram_06FE                = $06FE
 lives                   = $0700     ; lives remaining
 areaEntrySide           = $0701     ; side Link enters the area from: 0 = left, 1 = right
 linkFallingIn           = $0704     ; nonzero when Link enters the area falling from above (Mode_FallStart); he is not put on the ground

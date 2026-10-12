@@ -886,6 +886,16 @@ Lives_DrawLink:
     sta     objOamOffset            ; $C40B
     jmp     Link_DrawBody           ; $C40D
 
+; ---------------------------------------------------------------------------
+; GameState_Respawn
+;
+; GAME_STATE_RESPAWN, after Link loses a life with lives left: show the
+; lives screen (the Lives_* steps of Mode_ShowLives), and when its timer
+; runs out set the area music and reload the area (GAME_STATE_PLAY, gameMode
+; 7, Mode_PrepareLoad).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 GameState_Respawn:
     jsr     Game_CheckStepChange    ; $C410
     jsr     JumpTable               ; $C413
@@ -7996,9 +8006,13 @@ Enemy_TakeDamage:
 ; ---------------------------------------------------------------------------
 ; Item_Collect
 ;
-; Link picks up item object x: mark it taken in the area's flags, and for
-; the eight inventory items (kinds 0-7) set itemOwned and play the item
-; fanfare.
+; Link picks up item object x: mark it taken in the area's flags, then by
+; kind: the eight inventory items (kinds 0-7) set itemOwned and play the
+; item fanfare; a key (8) adds to keyCount (and restarts the music if the
+; scroll was frozen, as in a boss room); experience bags (9-$0D) go to
+; Item_CollectExpBag; a magic or heart container ($0E, $0F) adds to
+; statContainers and fills that meter, and the 7th magic container sets
+; townFlags+6 bit 3; kinds $10 and up go to Item_CollectSpecial.
 ;
 ; In:      x = object (enemy index)
 ; Status:  confirmed
@@ -8057,11 +8071,11 @@ Item_Collect:
     sta     sfxRequest+3            ; $E7C9
     tya                             ; $E7CB
     tax                             ; $E7CC
-    inc     experience,x            ; $E7CD
+    inc     statContainers-$0E,x    ; $E7CD  kinds $0E, $0F: magic, heart container
     cpx     #$0E                    ; $E7D0
     bne     @loc_E7E3               ; $E7D2
-    ldy     experience,x            ; $E7D4
-    cpy     #$07                    ; $E7D7
+    ldy     statContainers-$0E,x    ; $E7D4
+    cpy     #$07                    ; $E7D7  the 7th magic container
     bcc     @loc_E7E3               ; $E7D9
     lda     townFlags+6             ; $E7DB
     ora     #$08                    ; $E7DE
@@ -8075,7 +8089,7 @@ Item_Collect:
 ExpBagClasses:
     asl     a                       ; $E7E6
     asl     a                       ; $E7E7
-    sta     ram_06FE,x              ; $E7E8
+    sta     statMeterPending-$0E,x  ; $E7E8  fill the meter
     ldx     currentObject           ; $E7EB
     jmp     Enemy_Remove            ; $E7ED
     .byte   $07                                                             ; $E7F0
@@ -8188,8 +8202,11 @@ EnemyDropItems:
 ;
 ; Enemy x has been killed: note its experience class (sramEnemyAttr bits
 ; 3-0, in enemyExpClass, shown as it dies), and count the kill in its item
-; drop group (sramEnemyDamage bits 7-6); every 6th kill in a group drops an
-; item.
+; drop group (sramEnemyDamage bits 7-6, counted in dropKillCounts); every
+; 6th kill in a group drops an item, picked by rng+1 bits 2-0 from
+; EnemyDropItems: entries 0-7 for groups 1 and 3, 8-15 (the large items)
+; for group 2.  A dropping enemy gives no experience: the drop sets bit 7
+; of its enemyExpClass, and Enemy_AwardExperience drops the item instead.
 ;
 ; In:      x = enemy index
 ; Status:  confirmed
@@ -8210,12 +8227,12 @@ Enemy_Kill:
     lsr     a                       ; $E896
     tax                             ; $E897
     tay                             ; $E898
-    inc     ram_05DE,x              ; $E899
-    lda     ram_05DE,x              ; $E89C
+    inc     dropKillCounts-1,x      ; $E899
+    lda     dropKillCounts-1,x      ; $E89C
     cmp     #$06                    ; $E89F
     bne     @loc_E8BF               ; $E8A1
     lda     #$00                    ; $E8A3
-    sta     ram_05DE,x              ; $E8A5
+    sta     dropKillCounts-1,x      ; $E8A5
     ldx     currentObject           ; $E8A8
     ror     enemyExpClass,x         ; $E8AA
     lda     rng+1,x                 ; $E8AD

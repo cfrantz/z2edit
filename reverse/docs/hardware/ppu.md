@@ -58,7 +58,8 @@ overworld uses its own 2x2 metatiles (`OverworldTileMetatiles`).
 ## Sprites
 
 The game draws into `oamBuffer`, which the NMI copies to the PPU by OAM
-DMA.  Sprites are 8x16 (PPUCTRL $B0 from power on: 8x16 sprites,
+DMA; each frame, before running the game, the game NMI hides every sprite
+but sprite 0 (`Oam_HideAllButSprite0`).  Sprites are 8x16 (PPUCTRL $B0 from power on: 8x16 sprites,
 background tiles at $1000).  The sprite slots are fixed by role:
 
 | oamBuffer offset | Sprites |
