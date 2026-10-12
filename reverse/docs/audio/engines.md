@@ -119,7 +119,7 @@ Ganon's laugh, played one after another (`laughSample`).
 The title song has five parts, played in turn by `TitleMusic_NextPart`:
 $01 (the intro), $02, $04, $08, $10, then $02 again.  Bank 5 times the
 title screen by `titleMusicPart`; see
-[Title, file screens and ending](title-and-files.md).
+[Title, file screens and ending](../systems/title-and-files.md).
 
 `TitleMusic` starts with 8 offsets of phrase lists (parts 1-5; 6-8 are
 empty), then 8-byte phrase records:

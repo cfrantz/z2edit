@@ -173,7 +173,7 @@ routine has a header, and the headers were checked against the movie
 traces (`tools/routine_report.py`); all but a few are confirmed.  Code
 the movies never reach was exercised with `tools/play.py` (the overworld
 pause, the continue screen's Save).  Documented in `docs/architecture/`
-and `docs/engine/` (Link, enemies, the side view frame, areas, the
+and `docs/world/`, `docs/systems/` (Link, enemies, the side view frame, areas, the
 overworld, menus).  Left for Phase 4, with the subsystems they belong to:
 the generic enemy AI helpers in bank 7 (`Enemy_Hop`,
 `Enemy_UpdateLanding` and the unnamed routines after them),
@@ -187,7 +187,7 @@ Each is a self-contained work area; order is flexible after Phase 3.
   knockback, experience and leveling, magic spells.
   Status (2026-10-11): bank 0's code was already named; Link's remaining
   RAM (held items, elevator, falls, blocked directions, frozen game) is
-  named, and docs/engine/link.md covers the sword, thrusts, beam, spells
+  named, and docs/systems/link.md covers the sword, thrusts, beam, spells
   (with their costs) and holding up items.
 - Enemies and objects (first): shared AI helpers, then one routine family
   at a time (per-world enemy code in banks 1-5).  Deliverable: a page per
@@ -203,28 +203,28 @@ Each is a self-contained work area; order is flexible after Phase 3.
 - Overworld (banks 1-2): map format, movement, random encounters, special
   tiles, raft/bridges/hidden areas.
   Status (2026-10-11): the encounter, raft, palace stone and map strip
-  tables are named and documented in docs/engine/overworld.md; banks 1
+  tables are named and documented in docs/world/overworld.md; banks 1
   and 2's remaining enemy tables and each enemy group's projectile
   drawing tables are named too.
 - Sideview areas: room loading, scrolling, area transitions.
   Status (2026-10-11): the area banks' shared tables and object drawers
   (banks 1-5), the solid tile test, and the remaining data tables of banks
-  0 and 7 are named; docs/engine/areas.md covers the format, objects,
+  0 and 7 are named; docs/world/areas.md covers the format, objects,
   scrolling and moving between areas.
 - Towns (bank 3): NPC behavior, dialog system, spell/skill teachers.
   Status (2026-10-11): the conversation engine, its handlers and text
   tables, the town objects and the per-town person sprites are named,
-  with docs/engine/towns.md.  Left: a few townsperson AI internals
+  with docs/world/towns.md.  Left: a few townsperson AI internals
   ($983C-$9B45) and the area bank tables shared with banks 1-5.
 - Palaces and Great Palace (banks 4-5): palace mechanics, bosses,
   palace completion and crystal placement.
   Status (2026-10-11): banks 4 and 5's area objects, bank 4's remaining
-  tables and boss helpers are named, with docs/engine/palaces.md; the
+  tables and boss helpers are named, with docs/world/palaces.md; the
   bosses and the crystal were done with the enemies.  Left: the area bank
   tables shared by banks 1-5 (side view areas).
 - Title, file select, name entry, ending (bank 5).
   Status (2026-10-11): the title, story scroll and file screens are named
-  and read, with headers and docs/engine/title-and-files.md; the ending's
+  and read, with headers and docs/systems/title-and-files.md; the ending's
   last step (Ending_SetSecondQuest) was recovered from a truncated jump
   table.  The ending's scenes and credits are named and documented too
   (scenes 13-14 are not run by any movie).
@@ -232,10 +232,10 @@ Each is a self-contained work area; order is flexible after Phase 3.
   Prior work to consult (and verify against the code):
   https://wiki.bindingforce.net/index.php/Music_Engine_Description
   Status (2026-10-11): both engines' players, request handlers, tables
-  and RAM are named, with docs/engine/audio.md; the sound effects and
+  and RAM are named, with docs/audio/engines.md; the sound effects and
   songs were confirmed by ear (the user's list) and named.
 - Graphics: CHR bank usage and switching, palettes, sprite/metatile formats.
-  Status (2026-10-11): docs/engine/graphics.md covers the CHR banks, the
+  Status (2026-10-11): docs/hardware/ppu.md covers the CHR banks, the
   palettes (with Link's palette tables, now named), metatiles and the
   sprite slots.
 

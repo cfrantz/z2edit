@@ -9,6 +9,7 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
 - [Main loop and NMI](architecture/main-loop-and-nmi.md): the frame, and
   the game state machine.
 - [MMC1](hardware/mmc1.md): bank switching and the bank interfaces.
+- [PPU](hardware/ppu.md): CHR banks, palettes, metatiles and sprites.
 
 ## Memory
 
@@ -22,25 +23,30 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
 - [Enemies and objects](entities/README.md): the definition tables,
   damage, experience, drops; a page per enemy group.
 
-## Engine
+## World
 
-- [The side view frame](engine/side-view.md)
-- [Link](engine/link.md): movement, jumping, spells, damage, experience.
-- [Enemies](engine/enemies.md)
-- [Side view areas](engine/areas.md): the area format and how areas are
-  built.
-- [The overworld](engine/overworld.md): moving, drawing the map,
-  encounters, entering locations.
-- [Menus and dialogs](engine/menus.md): the pause menu, level up window,
-  flute and continue screen.
-- [Palaces](engine/palaces.md): palace codes, CHR and palettes, area
+- [The overworld](world/overworld.md): moving, drawing the map,
+  encounters, entering locations, palaces as stone, the raft.
+- [Side view areas](world/areas.md): the area format, objects, building
+  the tile map, scrolling and moving between areas.
+- [The side view frame](world/side-view.md): what runs each frame.
+- [Towns](world/towns.md): town codes, buildings, conversations and the
+  dialog text.
+- [Palaces](world/palaces.md): palace codes, CHR and palettes, area
   objects, bosses and the crystal.
-- [Towns](engine/towns.md): town codes, buildings, conversations and
-  the dialog text.
-- [Graphics](engine/graphics.md): CHR banks, palettes, metatiles and
-  sprites.
-- [Sound](engine/audio.md): the two sound engines in bank 6, sound
-  requests, and the music data formats.
-- [Title, file screens and ending](engine/title-and-files.md): the
+
+## Systems
+
+- [Link](systems/link.md): movement, jumping, damage, experience, the
+  sword, spells, holding up items.
+- [Enemies](systems/enemies.md): how enemies spawn, move, are hit and die.
+- [Menus and dialogs](systems/menus.md): the pause menu, level up window,
+  flute and continue screen.
+- [Title, file screens and ending](systems/title-and-files.md): the
   title, the story scroll, file select, name registration and
   elimination, the ending and credits, and the second quest.
+
+## Audio
+
+- [Sound engines](audio/engines.md): the two sound engines in bank 6,
+  sound requests and effects, and the music data formats.

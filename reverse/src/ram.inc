@@ -97,7 +97,7 @@ sq2TimerLo              = $00E7     ; timer low byte of the note on pulse 2, the
 titleMusicPart          = $00E8     ; part of the title song playing: 1 (intro), then 2, 4, 8, $10 and back to 2; the story scroll starts with part 8.  Also a temporary of the game music player ($909E)
 dmcRequest              = $00E9     ; DMC sound effects to start: bit 0 Link hurt, bit 1 Ganon's laugh.  Title engine: its current sound effect
 soundMute               = $00EA     ; nonzero: the gameplay engine stops and turns every channel off (the overworld pause).  Title engine: titleSongRequest
-musicRequest            = $00EB     ; song to start, one bit: $01 main theme from its intro, $02 main theme, $04 / $08 second themes (battle; boss or credits), $10 item fanfare, $20 Triforce (Great Palace), $40 crystal fanfare, $80 silence; see docs/engine/audio.md.  Title engine: titleSfxRequest
+musicRequest            = $00EB     ; song to start, one bit: $01 main theme from its intro, $02 main theme, $04 / $08 second themes (battle; boss or credits), $10 item fanfare, $20 Triforce (Great Palace), $40 crystal fanfare, $80 silence; see docs/audio/engines.md.  Title engine: titleSfxRequest
 sfxRequest              = $00EC     ; [4] sound effects to start, one bit each: +0 shared (pulse 1 or noise), +1 noise, +2 pulse 2, +3 pulse 1
 ; Hardware shadows
 ; ---------------------------------------------------------------------------
@@ -196,7 +196,7 @@ menuTimer               = $0566
 fluteActive             = $0567     ; set (to 8) when the flute is played; while set, Flute_Update plays the tune (menuTimer) and Link cannot move
 flutePlayed             = $0568     ; nonzero after the flute is played on the overworld, until its effect is applied
 dialogTextPtr           = $0569     ; (16-bit) next character of the conversation's text
-townCode                = $056B     ; town being visited, 0-7: (areaLocation - $2C) / 2, plus 4 for East Hyrule (see docs/engine/towns.md)
+townCode                = $056B     ; town being visited, 0-7: (areaLocation - $2C) / 2, plus 4 for East Hyrule (see docs/world/towns.md)
 palaceCode              = $056C     ; palace being visited: areaLocation - $34 (0-2 in each region; with the region, indexes PalaceChrBanks and PalacePaletteOffsets)
 encounterYOffset        = $056D     ; [8] Y offset of each overworld encounter sprite from its square
 encounterXOffset        = $0575     ; [8] X offset of each overworld encounter sprite

@@ -38,7 +38,7 @@ bank 7) as a state machine on `pauseState`:
 
 1. The window opens over the playfield, one row pair a frame
    (`Dialog_OpenRow`), drawn with bank 3's copies of the pause menu's
-   window routines (`Menu_*_Bank3`; see [Menus](menus.md)).
+   window routines (`Menu_*_Bank3`; see [Menus](../systems/menus.md)).
 2. `Dialog_ChooseText` runs the handler for the person's type
    (`DialogHandlers`), which may give Link something and decides whether
    the person's second text applies; `Dialog_SelectText` then finds the

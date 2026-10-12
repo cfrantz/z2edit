@@ -45,7 +45,7 @@ While idle, the loop uses only `a` and the flags.
   (`Joypad_Update`), updates sound (bank 6), runs the game for one frame
   (`Game_RunState`, mostly bank 0 code), runs the menus when the mode
   asked for them (`menusPending`, `Game_UpdateMenus`; see
-  [menus](../engine/menus.md)), and returns with bank 0 mapped.
+  [menus](../systems/menus.md)), and returns with bank 0 mapped.
 
 ## PPU Shadow Registers
 
@@ -109,13 +109,13 @@ lower levels, then return the current value for an inline jump table.
 | $02 | `Mode_OverworldSetup` | |
 | $03 | `Mode_IndexOverworldMap` | index the compressed overworld map (runs for many frames) |
 | $04 | `Game_UnblankAndNextMode` | |
-| $05 | `Mode_Overworld` | `GAME_MODE_OVERWORLD`: see [the overworld](../engine/overworld.md) |
+| $05 | `Mode_Overworld` | `GAME_MODE_OVERWORLD`: see [the overworld](../world/overworld.md) |
 | $06 | `Mode_EnterLocation` | enter the location (or encounter) under Link |
 | $07 | `Mode_PrepareLoad` | blank the screen |
 | $08 | `Game_Wait` | `GAME_MODE_LOAD_AREA`: `Main_Loop` loads the area |
 | $09 | `Mode_DrawArea` | draw the area, a step per frame |
 | $0A | `Mode_StartSideView` | sprite 0, scroll, music; turn rendering on |
-| $0B | `Mode_SideView` | `GAME_MODE_SIDE_VIEW`: see [the side view frame](../engine/side-view.md) |
+| $0B | `Mode_SideView` | `GAME_MODE_SIDE_VIEW`: see [the side view frame](../world/side-view.md) |
 | $0C | `Mode_FallSaveScroll` | falling into an area (a hole on the overworld, or a pit) ... |
 | $0D | `Mode_FallBlankScreen` | ... blank screen ... |
 | $0E | `Mode_FallStart` | ... Link appears at the top ... |

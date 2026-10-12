@@ -6,7 +6,7 @@ runs `Mode_SideView` (bank 7) once per frame, which does, in order:
 1. If `linkDeathPending` is set, start the death sequence
    (`GAME_STATE_DEATH`) and stop.
 2. `Spell_Update` (bank 0): cast spells and run the effects of active
-   ones; see [Link](link.md).
+   ones; see [Link](../systems/link.md).
 3. Refill the magic or life meter from `statMeterPending` (alternating
    frames, 2 per step), and add `experiencePending` to `experience` (10 per
    frame), with sound.
@@ -15,7 +15,7 @@ runs `Mode_SideView` (bank 7) once per frame, which does, in order:
    (`playfieldNametable`).  The status bar above is not scrolled.
 5. `Hud_Update`: check for a level up (`DIALOG_LEVEL_UP`) and redraw the
    status bar.  Beep while life is low.
-6. `Link_Run`: Link's movement; see [Link](link.md).
+6. `Link_Run`: Link's movement; see [Link](../systems/link.md).
 7. `Scroll_Update`: scroll to follow Link.
 8. `Enemies_Update` (with the area bank mapped): the six enemies and their
    projectiles.  Sprite slots are rotated each frame to spread flicker.

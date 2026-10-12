@@ -3,7 +3,7 @@
 ## CHR Banks
 
 The cartridge has 128K of CHR ROM, used in 8K mode: `Mmc1_SetChrBank`
-writes a 4K bank number whose low bit is ignored (see [MMC1](../hardware/mmc1.md)),
+writes a 4K bank number whose low bit is ignored (see [MMC1](mmc1.md)),
 so the values below are even.
 
 | Value | Used for | Set by |
@@ -19,7 +19,7 @@ For side view areas `Mode_LoadWorld` sets `areaChrBank` to twice the
 area's PRG bank (West Hyrule $02, East Hyrule $04, towns $06), and in
 palaces to twice the palace's entry in `PalaceChrBanks` (`palaceChrBank`;
 palaces 1-6 $08, $0A, $12, $14, $16, $18, the Great Palace $0C; see
-[Palaces](palaces.md)).
+[Palaces](../world/palaces.md)).
 
 ## Palettes
 
@@ -52,7 +52,7 @@ its palette and select one of four metatile tables
 (`AreaBank::MetatilePtrs`, `Area_GetMetatilePtr`); the low six bits pick
 a metatile of four CHR tiles in it.  The palette bits are also what the
 attribute bytes are built from (`Menu_ComputeAttrs_Bank0`), and what
-decides solidity (`AreaBank::IsSolidTile`; see [Areas](areas.md)).  The
+decides solidity (`AreaBank::IsSolidTile`; see [Areas](../world/areas.md)).  The
 overworld uses its own 2x2 metatiles (`OverworldTileMetatiles`).
 
 ## Sprites

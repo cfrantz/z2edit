@@ -103,7 +103,7 @@ is active, which fires its flame instead.  A beam that hits something
 turns into a spark (`LinkProjectile_Spark`).
 
 `techniques` also holds two quest flags (bits 0 and 1; see
-[Towns](towns.md)): bit 0 makes the bridge in Saria build itself when
+[Towns](../world/towns.md)): bit 0 makes the bridge in Saria build itself when
 Link reaches it (`Saria_BuildBridge`), and is then cleared.
 
 ## Spells

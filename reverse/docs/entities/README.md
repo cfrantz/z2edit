@@ -2,7 +2,7 @@
 
 Every world has its own set of up to 36 enemy types, defined by tables in
 its area bank and copied to SRAM when the world is loaded
-(`Mode_LoadWorld`); see [enemies](../engine/enemies.md) for how the
+(`Mode_LoadWorld`); see [enemies](../systems/enemies.md) for how the
 engine runs them.  The same type number means different enemies in
 different groups.
 
