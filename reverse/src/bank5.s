@@ -2069,14 +2069,28 @@ EnemyDrawPtrs_Bank5:
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank5:
     rts                             ; $95AD
-    .byte   $CE, $CE, $84, $3F, $53, $52, $3F, $3F, $00, $03, $00, $01, $01, $00, $01, $01; $95AE
-    .byte   $01, $00, $00, $00, $18, $9D, $FB, $9C, $06, $9D, $18, $9D, $FB, $9C, $FB, $9C; $95BE
-    .byte   $CE, $9C, $18, $9D, $AD, $95, $41, $43, $49, $4B, $41, $43, $45, $47, $4D, $43; $95CE
-    .byte   $51, $4B, $4D, $43, $4F, $47, $41, $43, $2D, $2F, $57, $59, $53, $55, $F5, $5B; $95DE
-    .byte   $35, $37, $E0, $E2, $E4, $E6, $E0, $E2, $EC, $EE, $E8, $EA, $E4, $E6, $E8, $EA; $95EE
-    .byte   $EC, $EE, $11, $13, $17, $19, $1D, $1F, $21, $23, $25, $27, $71, $73, $75, $77; $95FE
-    .byte   $3D, $3D, $F2, $F4, $F8, $FA, $07, $07, $09, $09, $05, $05, $0B, $0D, $61, $33; $960E
-    .byte   $35                                                             ; $961E
+; The projectile drawing tables of this enemy group, copied to SRAM with
+; the rest (sramProjectileTiles, sramProjectileAttrs,
+; sramProjectileDrawPtrs), all indexed by projectile type (1-9).  The rts
+; above is entry 0 of ProjectileTiles_Bank5.
+ProjectileTiles_Bank5 := * - 1
+    .byte   $CE, $CE, $84, $3F, $53, $52, $3F, $3F, $00                     ; $95AE
+
+ProjectileAttrs_Bank5 := * - 1
+    .byte   $03, $00, $01, $01, $00, $01, $01, $01, $00                     ; $95B7
+
+ProjectileDrawPtrs_Bank5:
+    .word   $0000, Projectile_DrawFlash_Bank5, Projectile_DrawFlicker_Bank5, Projectile_DrawSpin_Bank5 ; $95C0
+    .word   Projectile_DrawFlash_Bank5, Projectile_DrawFlicker_Bank5, Projectile_DrawFlicker_Bank5, Projectile_DrawFlame_Bank5 ; $95C8
+    .word   Projectile_DrawFlash_Bank5, Enemy_InitNone_Bank5 ; $95D0
+
+; First sprite tile of each enemy type (sramEnemyTiles).
+EnemyTiles_Bank5:
+    .byte   $41, $43, $49, $4B, $41, $43, $45, $47, $4D, $43, $51, $4B, $4D, $43, $4F, $47; $95D4
+    .byte   $41, $43, $2D, $2F, $57, $59, $53, $55, $F5, $5B, $35, $37, $E0, $E2, $E4, $E6; $95E4
+    .byte   $E0, $E2, $EC, $EE, $E8, $EA, $E4, $E6, $E8, $EA, $EC, $EE, $11, $13, $17, $19; $95F4
+    .byte   $1D, $1F, $21, $23, $25, $27, $71, $73, $75, $77, $3D, $3D, $F2, $F4, $F8, $FA; $9604
+    .byte   $07, $07, $09, $09, $05, $05, $0B, $0D, $61, $33, $35           ; $9614
 
 dat_5_961F:
     .byte   $37, $E8, $E8, $F8, $F8                                         ; $961F
@@ -3371,8 +3385,16 @@ Projectile_Draw_Bank5:
     sta     oamBuffer+1,y           ; $9CC8
     jmp     (temp14)                ; $9CCB
 
-@loc_9CCE:
-    jsr     sub_5_9D18              ; $9CCE
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlame_Bank5
+;
+; Projectile draw: flash it (Projectile_DrawFlash_Bank5), then the flame's
+; extra handling as in Projectile_DrawFlame_Bank4.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlame_Bank5:
+    jsr     Projectile_DrawFlash_Bank5              ; $9CCE
     lda     ram_045E,x              ; $9CD1
     beq     @done                   ; $9CD4
     ldy     ram_044C,x              ; $9CD6
@@ -3397,14 +3419,28 @@ Projectile_Draw_Bank5:
 @done:
     rts                             ; $9CFA
 
-@loc_9CFB:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlicker_Bank5
+;
+; Projectile draw: cycle the palette every frame.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlicker_Bank5:
     lda     frameCounter            ; $9CFB
     and     #$03                    ; $9CFD
     ora     oamBuffer+2,y           ; $9CFF
     sta     oamBuffer+2,y           ; $9D02
     rts                             ; $9D05
 
-@loc_9D06:
+; ---------------------------------------------------------------------------
+; Projectile_DrawSpin_Bank5
+;
+; Projectile draw: spin by the facing and the frame.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawSpin_Bank5:
     lda     objFacing+7,x           ; $9D06
     lsr     a                       ; $9D08
     lda     #$00                    ; $9D09
@@ -3421,7 +3457,14 @@ dat_5_9D11:
     ora     #$01                    ; $9D14
     bne     loc_5_9D22              ; $9D16
 
-sub_5_9D18:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlash_Bank5
+;
+; Projectile draw: flash the palette.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlash_Bank5:
     lda     frameCounter            ; $9D18
     asl     a                       ; $9D1A
     asl     a                       ; $9D1B

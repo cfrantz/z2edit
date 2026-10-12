@@ -940,17 +940,32 @@ EnemyDrawPtrs_Bank4:
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank4:
     rts                             ; $95AD
-    .byte   $CE, $CE, $AE, $3F, $53, $EE, $52, $61, $00, $03, $00, $02, $01, $00, $01, $01; $95AE
-    .byte   $03, $00, $00, $00, $A2, $97, $98, $97, $A3, $97, $A3, $97, $98, $97, $B5, $97; $95BE
-    .byte   $9F, $99, $D0, $99, $AD, $95, $41, $43, $49, $4B, $41, $43, $45, $47, $4D, $43; $95CE
-    .byte   $51, $4B, $4D, $43, $4F, $47, $57, $59, $53, $55, $F5, $5B, $39, $3B, $8F, $91; $95DE
-    .byte   $D0, $D2, $D4, $D6, $D8, $DA, $D4, $D6, $E0, $E2, $E4, $E6, $E0, $E2, $E8, $EA; $95EE
-    .byte   $EC, $F5, $F0, $F2, $F4, $F6, $F0, $F2, $F8, $FA, $F0, $F2, $01, $03, $05, $05; $95FE
-    .byte   $07, $07, $FC, $FE, $F4, $F6, $53, $55, $F0, $DE, $F4, $F6, $F0, $DE, $F8, $FA; $960E
-    .byte   $F0, $DE, $01, $03, $05, $05, $07, $07, $FC, $FE, $F4, $F6, $53, $55, $1B, $1D; $961E
-    .byte   $1F, $21, $13, $15, $1B, $1D, $1F, $21, $17, $19, $23, $25, $27, $F5, $2D, $2F; $962E
-    .byte   $29, $2B, $0F, $11, $13, $15, $0F, $11, $17, $19, $09, $F5, $0B, $F5, $0D, $F5; $963E
-    .byte   $31, $33, $45, $47, $31, $33, $49, $4B, $DC                     ; $964E
+; The projectile drawing tables of this enemy group, copied to SRAM with
+; the rest (sramProjectileTiles, sramProjectileAttrs,
+; sramProjectileDrawPtrs), all indexed by projectile type (1-9).  The rts
+; above is entry 0 of ProjectileTiles_Bank4.
+ProjectileTiles_Bank4 := * - 1
+    .byte   $CE, $CE, $AE, $3F, $53, $EE, $52, $61, $00                     ; $95AE
+
+ProjectileAttrs_Bank4 := * - 1
+    .byte   $03, $00, $02, $01, $00, $01, $01, $03, $00                     ; $95B7
+
+ProjectileDrawPtrs_Bank4:
+    .word   $0000, Projectile_DrawNothing_Bank4, Projectile_DrawFlicker_Bank4, Projectile_DrawFlash_Bank4 ; $95C0
+    .word   Projectile_DrawFlash_Bank4, Projectile_DrawFlicker_Bank4, Projectile_DrawSpin_Bank4, Projectile_DrawFlame_Bank4 ; $95C8
+    .word   Projectile_DrawNothing2_Bank4, Enemy_InitNone_Bank4 ; $95D0
+
+; First sprite tile of each enemy type (sramEnemyTiles).
+EnemyTiles_Bank4:
+    .byte   $41, $43, $49, $4B, $41, $43, $45, $47, $4D, $43, $51, $4B, $4D, $43, $4F, $47; $95D4
+    .byte   $57, $59, $53, $55, $F5, $5B, $39, $3B, $8F, $91, $D0, $D2, $D4, $D6, $D8, $DA; $95E4
+    .byte   $D4, $D6, $E0, $E2, $E4, $E6, $E0, $E2, $E8, $EA, $EC, $F5, $F0, $F2, $F4, $F6; $95F4
+    .byte   $F0, $F2, $F8, $FA, $F0, $F2, $01, $03, $05, $05, $07, $07, $FC, $FE, $F4, $F6; $9604
+    .byte   $53, $55, $F0, $DE, $F4, $F6, $F0, $DE, $F8, $FA, $F0, $DE, $01, $03, $05, $05; $9614
+    .byte   $07, $07, $FC, $FE, $F4, $F6, $53, $55, $1B, $1D, $1F, $21, $13, $15, $1B, $1D; $9624
+    .byte   $1F, $21, $17, $19, $23, $25, $27, $F5, $2D, $2F, $29, $2B, $0F, $11, $13, $15; $9634
+    .byte   $0F, $11, $17, $19, $09, $F5, $0B, $F5, $0D, $F5, $31, $33, $45, $47, $31, $33; $9644
+    .byte   $49, $4B, $DC                                                   ; $9654
 
 StalfosSpeeds:
     .byte   $37, $0A, $F2                                                   ; $9657
@@ -1706,6 +1721,16 @@ Projectile_DrawFlame_Bank4:
     ldx     currentObject           ; $99CE
 
 @done:
+
+; ---------------------------------------------------------------------------
+; Projectile_DrawNothing2_Bank4
+;
+; The rts ending the routine before it, used as a projectile draw that
+; does nothing (type 8 in both of bank 4's groups).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_DrawNothing2_Bank4:
     rts                             ; $99D0
 
 ; ---------------------------------------------------------------------------
@@ -2967,21 +2992,36 @@ EnemyDrawPtrs_Bank4B:
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank4B:
     rts                             ; $AAAD
-    .byte   $CE, $CE, $AE, $3F, $53, $EE, $52, $61, $DC, $03, $00, $02, $01, $00, $03, $01; $AAAE
-    .byte   $03, $01, $00, $00, $10, $AE, $11, $AE, $20, $AE, $20, $AE, $11, $AE, $30, $AE; $AABE
-    .byte   $9F, $99, $D0, $99, $11, $AE, $41, $43, $49, $4B, $41, $43, $45, $47, $4D, $43; $AACE
-    .byte   $51, $4B, $4D, $43, $4F, $47, $57, $59, $53, $55, $F5, $5B, $39, $3B, $8F, $91; $AADE
-    .byte   $D0, $D2, $D4, $D6, $D8, $DA, $D4, $D6, $E0, $E2, $E4, $E6, $E0, $E2, $E8, $EA; $AAEE
-    .byte   $EC, $F5, $F0, $F2, $F4, $F6, $F0, $F2, $F8, $FA, $F0, $F2, $01, $03, $05, $05; $AAFE
-    .byte   $07, $07, $FC, $FE, $F4, $F6, $53, $55, $F0, $DE, $F4, $F6, $F0, $DE, $F8, $FA; $AB0E
-    .byte   $F0, $DE, $01, $03, $05, $05, $07, $07, $FC, $FE, $F4, $F6, $53, $55, $09, $0B; $AB1E
-    .byte   $0D, $0F, $4D, $43, $11, $13, $F5, $F5, $1F, $21, $19, $1B, $A1, $A3, $A1, $A3; $AB2E
-    .byte   $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $25, $27, $A1, $A3; $AB3E
-    .byte   $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $2D, $2F; $AB4E
-    .byte   $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3; $AB5E
-    .byte   $15, $17, $1D, $23, $29, $2B, $1F, $21, $27, $29, $F5, $19, $23, $25, $2B, $2D; $AB6E
-    .byte   $2F, $F5, $09, $0B, $0D, $0F, $F5, $19, $11, $13, $15, $17, $1B, $F5, $31, $33; $AB7E
-    .byte   $45, $47, $31, $33, $49, $4B, $35, $37, $52, $F5                ; $AB8E
+; The projectile drawing tables of this enemy group, copied to SRAM with
+; the rest (sramProjectileTiles, sramProjectileAttrs,
+; sramProjectileDrawPtrs), all indexed by projectile type (1-9).  The rts
+; above is entry 0 of ProjectileTiles_Bank4B.
+ProjectileTiles_Bank4B := * - 1
+    .byte   $CE, $CE, $AE, $3F, $53, $EE, $52, $61, $DC                     ; $AAAE
+
+ProjectileAttrs_Bank4B := * - 1
+    .byte   $03, $00, $02, $01, $00, $03, $01, $03, $01                     ; $AAB7
+
+ProjectileDrawPtrs_Bank4B:
+    .word   $0000, Projectile_DrawNothing_Bank4B, Projectile_DrawFlicker_Bank4B, Projectile_DrawFlash_Bank4B ; $AAC0
+    .word   Projectile_DrawFlash_Bank4B, Projectile_DrawFlicker_Bank4B, Projectile_DrawSpin_Bank4B, Projectile_DrawFlame_Bank4 ; $AAC8
+    .word   Projectile_DrawNothing2_Bank4, Projectile_DrawFlicker_Bank4B ; $AAD0
+
+; First sprite tile of each enemy type (sramEnemyTiles).
+EnemyTiles_Bank4B:
+    .byte   $41, $43, $49, $4B, $41, $43, $45, $47, $4D, $43, $51, $4B, $4D, $43, $4F, $47; $AAD4
+    .byte   $57, $59, $53, $55, $F5, $5B, $39, $3B, $8F, $91, $D0, $D2, $D4, $D6, $D8, $DA; $AAE4
+    .byte   $D4, $D6, $E0, $E2, $E4, $E6, $E0, $E2, $E8, $EA, $EC, $F5, $F0, $F2, $F4, $F6; $AAF4
+    .byte   $F0, $F2, $F8, $FA, $F0, $F2, $01, $03, $05, $05, $07, $07, $FC, $FE, $F4, $F6; $AB04
+    .byte   $53, $55, $F0, $DE, $F4, $F6, $F0, $DE, $F8, $FA, $F0, $DE, $01, $03, $05, $05; $AB14
+    .byte   $07, $07, $FC, $FE, $F4, $F6, $53, $55, $09, $0B, $0D, $0F, $4D, $43, $11, $13; $AB24
+    .byte   $F5, $F5, $1F, $21, $19, $1B, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3; $AB34
+    .byte   $A1, $A3, $A1, $A3, $A1, $A3, $25, $27, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3; $AB44
+    .byte   $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $2D, $2F, $A1, $A3, $A1, $A3, $A1, $A3; $AB54
+    .byte   $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $A1, $A3, $15, $17, $1D, $23, $29, $2B; $AB64
+    .byte   $1F, $21, $27, $29, $F5, $19, $23, $25, $2B, $2D, $2F, $F5, $09, $0B, $0D, $0F; $AB74
+    .byte   $F5, $19, $11, $13, $15, $17, $1B, $F5, $31, $33, $45, $47, $31, $33, $49, $4B; $AB84
+    .byte   $35, $37, $52, $F5                                              ; $AB94
 
 ; ---------------------------------------------------------------------------
 ; FallingBlockGenerator_Ai
@@ -3463,9 +3503,26 @@ Projectile_DrawAndCheck_Bank4B:
     sta     oamBuffer - 2,y         ; $AE0D
 
 @done:
+
+; ---------------------------------------------------------------------------
+; Projectile_DrawNothing_Bank4B
+;
+; Projectile draw that does nothing (rts).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_DrawNothing_Bank4B:
     rts                             ; $AE10
 
-@loc_AE11:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlicker_Bank4B
+;
+; Projectile draw: cycle the palette every frame, flipped by the direction
+; of travel.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlicker_Bank4B:
     lda     frameCounter            ; $AE11
     and     #$03                    ; $AE13
     ldy     objXVelocity+7,x        ; $AE15
@@ -3475,13 +3532,39 @@ Projectile_DrawAndCheck_Bank4B:
 @loc_AE1B:
     ldy     a:objOamOffset+7,x      ; $AE1B
     bne     loc_4_AE43              ; $AE1E
-; (unreferenced: $AE20-$AE2B, 12 bytes)
-    .byte   $A5, $12, $0A, $0A, $0A, $38, $2A, $0A, $29, $83, $D0, $17      ; $AE20
+; (disassembled with tools/disasm.py; not executed in the test movies)
+
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlash_Bank4B
+;
+; Projectile draw: flash the palette (not run by the test movies).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlash_Bank4B:
+    lda     frameCounter            ; $AE20
+    asl     a                       ; $AE22
+    asl     a                       ; $AE23
+    asl     a                       ; $AE24
+    sec                             ; $AE25
+    rol     a                       ; $AE26
+    asl     a                       ; $AE27
+    and     #$83                    ; $AE28
+    bne     loc_4_AE43              ; $AE2A
+; (end of disassembled code)
+
 
 ProjectileFlipAttrs_Bank4B:
     .byte   $03, $83, $C3, $43                                              ; $AE2C
 
-@loc_AE30:
+; ---------------------------------------------------------------------------
+; Projectile_DrawSpin_Bank4B
+;
+; Same as Projectile_DrawSpin_Bank4.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawSpin_Bank4B:
     lda     frameCounter            ; $AE30
     lsr     a                       ; $AE32
     lsr     a                       ; $AE33

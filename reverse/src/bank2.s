@@ -1265,13 +1265,27 @@ EnemyDrawPtrs_Bank2:
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank2:
     rts                             ; $95AD
-    .byte   $A8, $AA, $AE, $84, $CE, $CE, $27, $AE, $00, $01, $01, $02, $01, $03, $03, $03; $95AE
-    .byte   $02, $00, $00, $00, $BF, $96, $E1, $96, $D3, $96, $D3, $96, $BA, $96, $B3, $96; $95BE
-    .byte   $F3, $96, $D3, $96, $AD, $95, $D0, $D2, $D4, $D6, $D8, $DA, $D4, $D6, $01, $03; $95CE
-    .byte   $05, $03, $07, $07, $09, $09, $0B, $0D, $0B, $0F, $DE, $E0, $E2, $E4, $E6, $E8; $95DE
-    .byte   $EA, $EC, $F0, $F4, $F6, $F8, $F5, $F2, $FC, $FE, $11, $13, $15, $17, $11, $13; $95EE
-    .byte   $19, $1B, $1D, $13, $1F, $17, $1D, $13, $21, $1B, $23, $25, $F5, $27, $2B, $F5; $95FE
-    .byte   $29, $2B                                                        ; $960E
+; The projectile drawing tables of this enemy group, copied to SRAM with
+; the rest (sramProjectileTiles, sramProjectileAttrs,
+; sramProjectileDrawPtrs), all indexed by projectile type (1-9).  The rts
+; above is entry 0 of ProjectileTiles_Bank2.
+ProjectileTiles_Bank2 := * - 1
+    .byte   $A8, $AA, $AE, $84, $CE, $CE, $27, $AE, $00                     ; $95AE
+
+ProjectileAttrs_Bank2 := * - 1
+    .byte   $01, $01, $02, $01, $03, $03, $03, $02, $00                     ; $95B7
+
+ProjectileDrawPtrs_Bank2:
+    .word   $0000, Projectile_DrawBob_Bank2, Projectile_DrawFlash_Bank2, Projectile_DrawFlip_Bank2 ; $95C0
+    .word   Projectile_DrawFlip_Bank2, Projectile_DrawNothing_Bank2, Projectile_DrawFlicker_Bank2, Projectile_DrawSpin_Bank2 ; $95C8
+    .word   Projectile_DrawFlip_Bank2, Enemy_InitNone_Bank2 ; $95D0
+
+; First sprite tile of each enemy type (sramEnemyTiles).
+EnemyTiles_Bank2:
+    .byte   $D0, $D2, $D4, $D6, $D8, $DA, $D4, $D6, $01, $03, $05, $03, $07, $07, $09, $09; $95D4
+    .byte   $0B, $0D, $0B, $0F, $DE, $E0, $E2, $E4, $E6, $E8, $EA, $EC, $F0, $F4, $F6, $F8; $95E4
+    .byte   $F5, $F2, $FC, $FE, $11, $13, $15, $17, $11, $13, $19, $1B, $1D, $13, $1F, $17; $95F4
+    .byte   $1D, $13, $21, $1B, $23, $25, $F5, $27, $2B, $F5, $29, $2B      ; $9604
 
 ; ---------------------------------------------------------------------------
 ; RedJar_Init_Bank2
@@ -1452,10 +1466,26 @@ Projectile_Draw_Bank2:
     sta     oamBuffer+1,y           ; $96AD
     jmp     (temp14)                ; $96B0
 
-@loc_96B3:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlicker_Bank2
+;
+; Projectile draw: cycle the palette every frame.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlicker_Bank2:
     lda     frameCounter            ; $96B3
     and     #$03                    ; $96B5
     sta     oamBuffer+2,y           ; $96B7
+
+; ---------------------------------------------------------------------------
+; Projectile_DrawNothing_Bank2
+;
+; Projectile draw that does nothing (rts).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_DrawNothing_Bank2:
     rts                             ; $96BA
 ; (unreferenced: $96BB-$96D2, 24 bytes)
 
@@ -1463,7 +1493,14 @@ dat_2_96BB:
     .byte   $00, $02, $00, $FE                                              ; $96BB
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_2_96BF:
+; ---------------------------------------------------------------------------
+; Projectile_DrawBob_Bank2
+;
+; Same as Projectile_DrawBob_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawBob_Bank2:
     lda     frameCounter            ; $96BF
     and     #$30                    ; $96C1
     lsr     a                       ; $96C3
@@ -1478,7 +1515,14 @@ dat_2_96BF:
 ; (end of disassembled code)
 
 
-@loc_96D3:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlip_Bank2
+;
+; Same as Projectile_DrawFlip_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlip_Bank2:
     lda     frameCounter            ; $96D3
     asl     a                       ; $96D5
     asl     a                       ; $96D6
@@ -1487,8 +1531,17 @@ dat_2_96BF:
     asl     a                       ; $96D9
     and     #$80                    ; $96DA
     ora     oamBuffer+2,y           ; $96DC
-    bne     @loc_96EB               ; $96DF
+    bne     loc_2_96EB               ; $96DF
 ; (code below not executed in the test movies)
+
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlash_Bank2
+;
+; Same as Projectile_DrawFlash_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlash_Bank2:
     lda     frameCounter            ; $96E1
     asl     a                       ; $96E3
     asl     a                       ; $96E4
@@ -1499,14 +1552,21 @@ dat_2_96BF:
     and     #$43                    ; $96E9
 ; (end of code not executed in the test movies)
 
-@loc_96EB:
+loc_2_96EB:
     sta     oamBuffer+2,y           ; $96EB
     rts                             ; $96EE
 
 dat_2_96EF:
     .byte   $03, $43, $C3, $83                                              ; $96EF
 
-@loc_96F3:
+; ---------------------------------------------------------------------------
+; Projectile_DrawSpin_Bank2
+;
+; Same as Projectile_DrawSpin_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawSpin_Bank2:
     lda     frameCounter            ; $96F3
     lsr     a                       ; $96F5
     lsr     a                       ; $96F6

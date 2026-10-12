@@ -1083,14 +1083,28 @@ EnemyDrawPtrs_Bank3:
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank3:
     rts                             ; $95AD
-    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00; $95AE
-    .byte   $00, $00, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95, $AD, $95; $95BE
-    .byte   $AD, $95, $AD, $95, $AD, $95, $D8, $DA, $E0, $E2, $D8, $DA, $E4, $E6, $DC, $DE; $95CE
-    .byte   $E0, $E2, $DC, $DE, $E4, $E6, $E8, $EA, $F0, $F2, $E8, $EA, $EC, $EE, $F4, $F6; $95DE
-    .byte   $F8, $FA, $F4, $F6, $FC, $FE, $D0, $D2, $D4, $D6, $74, $76, $D4, $D6, $65, $67; $95EE
-    .byte   $F0, $F2, $C0, $C2, $C4, $C6, $C0, $C2, $C8, $CA, $F5, $F5, $B0, $BA, $F5, $F5; $95FE
-    .byte   $BC, $BE, $11, $13, $15, $17, $19, $1B, $1D, $1F, $01, $03, $05, $07, $09, $0B; $960E
-    .byte   $0D, $0F, $62, $64, $CC, $CE                                    ; $961E
+; The projectile drawing tables of this enemy group, copied to SRAM with
+; the rest (sramProjectileTiles, sramProjectileAttrs,
+; sramProjectileDrawPtrs), all indexed by projectile type (1-9).  The rts
+; above is entry 0 of ProjectileTiles_Bank3.
+ProjectileTiles_Bank3 := * - 1
+    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00                     ; $95AE
+
+ProjectileAttrs_Bank3 := * - 1
+    .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00                     ; $95B7
+
+ProjectileDrawPtrs_Bank3:
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $95C0
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $95C8
+    .word   Enemy_InitNone_Bank3, Enemy_InitNone_Bank3 ; $95D0
+
+; First sprite tile of each enemy type (sramEnemyTiles).
+EnemyTiles_Bank3:
+    .byte   $D8, $DA, $E0, $E2, $D8, $DA, $E4, $E6, $DC, $DE, $E0, $E2, $DC, $DE, $E4, $E6; $95D4
+    .byte   $E8, $EA, $F0, $F2, $E8, $EA, $EC, $EE, $F4, $F6, $F8, $FA, $F4, $F6, $FC, $FE; $95E4
+    .byte   $D0, $D2, $D4, $D6, $74, $76, $D4, $D6, $65, $67, $F0, $F2, $C0, $C2, $C4, $C6; $95F4
+    .byte   $C0, $C2, $C8, $CA, $F5, $F5, $B0, $BA, $F5, $F5, $BC, $BE, $11, $13, $15, $17; $9604
+    .byte   $19, $1B, $1D, $1F, $01, $03, $05, $07, $09, $0B, $0D, $0F, $62, $64, $CC, $CE; $9614
 
 ; First sprite tile of person types $0D-$20 in towns 1-6 (Ruto ... New
 ; Kasuto), copied to sramEnemyAttr+13 when the town loads (bank 7, $CEE2);

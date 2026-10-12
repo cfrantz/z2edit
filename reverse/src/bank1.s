@@ -1235,14 +1235,28 @@ EnemyDrawPtrs_Bank1:
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank1:
     rts                             ; $95AD
-    .byte   $AE, $AA, $AE, $84, $00, $0D, $F6, $00, $00, $02, $01, $02, $01, $03, $01, $01; $95AE
-    .byte   $00, $00, $00, $00, $59, $97, $7B, $97, $6D, $97, $6D, $97, $89, $97, $A9, $97; $95BE
-    .byte   $C0, $97, $AD, $95, $AD, $95, $01, $03, $EA, $EC, $05, $07, $F2, $F4, $01, $03; $95CE
-    .byte   $EA, $0B, $05, $09, $F2, $F4, $F6, $F8, $F6, $F8, $FA, $F5, $E6, $E8, $EA, $EC; $95DE
-    .byte   $EE, $F0, $F2, $F4, $0F, $11, $17, $19, $25, $27, $0F, $11, $13, $15, $25, $27; $95EE
-    .byte   $1B, $1D, $1F, $21, $25, $27, $1B, $23, $1F, $21, $25, $27, $1B, $23, $1F, $21; $95FE
-    .byte   $F5, $F5, $DE, $E0, $E2, $E0, $D6, $D8, $DA, $DC, $D0, $D2, $D0, $D4, $25, $27; $960E
-    .byte   $FC, $FE                                                        ; $961E
+; The projectile drawing tables of this enemy group, copied to SRAM with
+; the rest (sramProjectileTiles, sramProjectileAttrs,
+; sramProjectileDrawPtrs), all indexed by projectile type (1-9).  The rts
+; above is entry 0 of ProjectileTiles_Bank1.
+ProjectileTiles_Bank1 := * - 1
+    .byte   $AE, $AA, $AE, $84, $00, $0D, $F6, $00, $00                     ; $95AE
+
+ProjectileAttrs_Bank1 := * - 1
+    .byte   $02, $01, $02, $01, $03, $01, $01, $00, $00                     ; $95B7
+
+ProjectileDrawPtrs_Bank1:
+    .word   $0000, Projectile_DrawBob_Bank1, Projectile_DrawFlash_Bank1, Projectile_DrawFlip_Bank1 ; $95C0
+    .word   Projectile_DrawFlip_Bank1, Projectile_DrawLarge_Bank1, Projectile_DrawSpin_Bank1, Projectile_DrawFire_Bank1 ; $95C8
+    .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $95D0
+
+; First sprite tile of each enemy type (sramEnemyTiles).
+EnemyTiles_Bank1:
+    .byte   $01, $03, $EA, $EC, $05, $07, $F2, $F4, $01, $03, $EA, $0B, $05, $09, $F2, $F4; $95D4
+    .byte   $F6, $F8, $F6, $F8, $FA, $F5, $E6, $E8, $EA, $EC, $EE, $F0, $F2, $F4, $0F, $11; $95E4
+    .byte   $17, $19, $25, $27, $0F, $11, $13, $15, $25, $27, $1B, $1D, $1F, $21, $25, $27; $95F4
+    .byte   $1B, $23, $1F, $21, $25, $27, $1B, $23, $1F, $21, $F5, $F5, $DE, $E0, $E2, $E0; $9604
+    .byte   $D6, $D8, $DA, $DC, $D0, $D2, $D0, $D4, $25, $27, $FC, $FE      ; $9614
 
 ; ---------------------------------------------------------------------------
 ; RedJar_Init_Bank1
@@ -1541,7 +1555,15 @@ dat_1_9755:
     .byte   $00, $02, $00, $FE                                              ; $9755
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_1_9759:
+; ---------------------------------------------------------------------------
+; Projectile_DrawBob_Bank1
+;
+; Projectile draw: bob the sprite up and down (by frameCounter bits 5-4),
+; then flip it like Projectile_DrawFlip_Bank1.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawBob_Bank1:
     lda     frameCounter            ; $9759
     and     #$30                    ; $975B
     lsr     a                       ; $975D
@@ -1556,7 +1578,14 @@ dat_1_9759:
 ; (end of disassembled code)
 
 
-@loc_976D:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlip_Bank1
+;
+; Projectile draw: flip the sprite vertically every 4 frames.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlip_Bank1:
     lda     frameCounter            ; $976D
     asl     a                       ; $976F
     asl     a                       ; $9770
@@ -1565,9 +1594,16 @@ dat_1_9759:
     asl     a                       ; $9773
     and     #$80                    ; $9774
     ora     oamBuffer+2,y           ; $9776
-    bne     @loc_9785               ; $9779
+    bne     loc_1_9785               ; $9779
 
-@loc_977B:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFlash_Bank1
+;
+; Projectile draw: cycle the palette and the horizontal flip by the frame.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFlash_Bank1:
     lda     frameCounter            ; $977B
     asl     a                       ; $977D
     asl     a                       ; $977E
@@ -1577,12 +1613,19 @@ dat_1_9759:
     asl     a                       ; $9782
     and     #$43                    ; $9783
 
-@loc_9785:
+loc_1_9785:
     sta     oamBuffer+2,y           ; $9785
     rts                             ; $9788
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
-dat_1_9789:
+; ---------------------------------------------------------------------------
+; Projectile_DrawLarge_Bank1
+;
+; Projectile draw: draw it as a pair of sprites (tile $48) like an enemy.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawLarge_Bank1:
     lda     enemyStunTimer,x        ; $9789
     pha                             ; $978C
     lda     overworldBuffer+94,x    ; $978D
@@ -1604,7 +1647,14 @@ dat_1_9789:
 dat_1_97A5:
     .byte   $02, $82, $C2, $42                                              ; $97A5
 
-@loc_97A9:
+; ---------------------------------------------------------------------------
+; Projectile_DrawSpin_Bank1
+;
+; Projectile draw: spin (flip the sprite by its facing and the frame).
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawSpin_Bank1:
     lda     frameCounter            ; $97A9
     lsr     a                       ; $97AB
     lsr     a                       ; $97AC
@@ -1621,7 +1671,15 @@ dat_1_97A5:
     sta     oamBuffer+2,y           ; $97BC
     rts                             ; $97BF
 
-@loc_97C0:
+; ---------------------------------------------------------------------------
+; Projectile_DrawFire_Bank1
+;
+; Projectile draw: alternate tiles $F6/$FA every 4 frames and the
+; attributes every 8, flipped by the facing.
+;
+; Status:  provisional
+; ---------------------------------------------------------------------------
+Projectile_DrawFire_Bank1:
     lda     frameCounter            ; $97C0
     and     #$04                    ; $97C2
     sta     temp0                   ; $97C4
