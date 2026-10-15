@@ -62,6 +62,14 @@ Tools that drive the emulator need the Python extension built with
   the movies ran it, and the variables it was seen to read and write;
   `--provisional` lists only provisional routines, for checking headers
   against the traces.
+- `enemy_scenario.py`: Sets up an enemy experiment: reaches an area
+  (a movie frame, or a new game `--at` an area in about 12 seconds),
+  optionally walks Link right to a point (`--approach`), clears the
+  area's enemies, places enemies of chosen types in chosen slots, adds
+  solid floor (`--fill`), and holds Link still and invincible while
+  logging each enemy's state every frame and hits on event addresses.
+  `--map` prints the area's solid tiles.  The enemy pages under
+  `docs/entities/enemies` give the commands they were verified with.
 - `enemy_table.py`: Decodes each enemy group's definition tables (hit
   points, experience, damage, flags, and init/AI/draw routines by name).
 - `disasm.py`: Disassembles a run of `.byte` data into instructions (code

@@ -13,8 +13,8 @@ Octoroks, are the "Ropes" of the palaces).
 | $00 | Fairy | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
 | $01 | Item | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
 | $02 | Door | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
-| $03 | Myu | 3 | 3 | 1 | 1 | comes back | `Myu_Ai` |
-| $04 | Bot | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
+| $03 | [Myu](enemies/myu.md) | 3 | 3 | 1 | 1 | comes back | `Myu_Ai` |
+| $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
 | $05 | Hidden jar | 255 | 0 | 0 | - | blocks Link's projectiles, immune to Thunder | `HiddenJar_Ai` |
 | $06 | Slow Bubble | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
 | $07 | Orange Moa | 16 | 50 | 3 | 2 | touch drains 10 exp, comes back | `OrangeMoa_Ai` |
@@ -27,8 +27,8 @@ Octoroks, are the "Ropes" of the palaces).
 | $0E | Fast Bubble | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
 | $0F | Bago Bago Generator | 8 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
 | $10 | Bago Bago | 8 | 5 | 2 | 1 | touch drains 10 exp | `BagoBago_Ai` |
-| $11 | Hopping Octorok | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
-| $12 | Walking Octorok | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
+| $11 | [Hopping Octorok](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
+| $12 | [Walking Octorok](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
 | $14 | Crystal Spot | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `CrystalSpot_Ai` |
 | $15 | Crystal | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |
@@ -54,8 +54,8 @@ Octoroks, are the "Ropes" of the palaces).
 | $00 | Fairy | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
 | $01 | Item | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
 | $02 | Door | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
-| $03 | Myu | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
-| $04 | Bot | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
+| $03 | [Myu](enemies/myu.md) | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
+| $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
 | $05 | Hidden jar or Iron Knuckle | 255 | 0 | 0 | - | blocks Link's projectiles, comes back | `HiddenJarOrIronknuckle_Ai` |
 | $06 | Slow Bubble | 250 | 50 | 0 | - |  | `Bubble_Ai` |
 | $07 | Orange Moa | 16 | 50 | 3 | 2 | touch drains 10 exp | `OrangeMoa_Ai` |
@@ -68,8 +68,8 @@ Octoroks, are the "Ropes" of the palaces).
 | $0E | Fast Bubble | 250 | 50 | 0 | - |  | `Bubble_Ai` |
 | $0F | Blue Skull Head | 56 | 20 | 0 | 1 | touch drains 10 exp, comes back | `SkullHead_Ai_Bank4B` |
 | $10 | Flame | 8 | 5 | 2 | - | blocks Link's projectiles, immune to SPELL, sword passes through, comes back | `Flame_Ai` |
-| $11 | Hopping Octorok | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
-| $12 | (unused) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
+| $11 | [Hopping Octorok](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
+| $12 | [(unused)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
 | $14 | Crystal Spot | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `CrystalSpot_Ai` |
 | $15 | Crystal | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |

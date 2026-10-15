@@ -16,8 +16,8 @@ bit 7 and 4).  What each person says is the business of the town code
 | $01 | Red Jar | `Item_Fall` |
 | $02 | Door | `LockedDoor_Ai` |
 | $03 | Purple Keese | `TownBat_Ai` |
-| $04 | Purple Bot | `Bot_Ai` |
-| $05 | Bit | `Bit_Ai` |
+| $04 | [Purple Bot](enemies/bot.md) | `Bot_Ai` |
+| $05 | [Bit](enemies/bit.md) | `Bit_Ai` |
 | $06 | Purple Moa | `Moa_Ai` |
 | $07 | Purple Acheman(?) | `Ache_Ai` |
 | $08 | Gold Girl (crash?) | `Townsperson_WalkAi` |

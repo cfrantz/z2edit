@@ -22,9 +22,9 @@ the candle for the caves) and logging `enemyType`:
 | $00 | Fairy | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
 | $01 | Red Jar | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
 | $02 | Door | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
-| $03 | Myu | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
-| $04 | Bot | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
-| $05 | Bit | 4 | 2 | 0 | 1 | comes back | `Bit_Ai` |
+| $03 | [Myu](enemies/myu.md) | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
+| $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
+| $05 | [Bit](enemies/bit.md) | 4 | 2 | 0 | 1 | comes back | `Bit_Ai` |
 | $06 | Moa | 48 | 50 | 3 | 1 | touch drains 20 exp | `Moa_Ai` |
 | $07 | Ache | 8 | 10 | 2 | 1 | comes back | `Ache_Ai` |
 | $08 | (unused) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `$AB98` |
@@ -36,8 +36,8 @@ the candle for the caves) and logging `enemyType`:
 | $0E | Blue Deeler | 12 | 10 | 2 | 1 |  | `Deeler_Ai` |
 | $0F | Bago Bago Generator | 8 | 0 | 2 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
 | $10 | Bago Bago | 8 | 5 | 2 | 1 | touch drains 10 exp | `BagoBago_Ai` |
-| $11 | Blue Octorok (jumping) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
-| $12 | Blue Octorok (moving) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
+| $11 | [Blue Octorok (jumping)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
+| $12 | [Blue Octorok (moving)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
 | $14 | Tektite | 24 | 50 | 2 | 2 | sword clinks, beam blocked | `Tektite_Ai` |
 | $15 | Eye | 16 | 20 | 4 | 1 |  | `Eye_Ai` |

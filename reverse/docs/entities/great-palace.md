@@ -10,8 +10,8 @@ own colors (`FireOctorok_Draw`).
 | $00 | Fairy | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
 | $01 | Item | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
 | $02 | Door | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
-| $03 | Myu | 24 | 10 | 3 | 1 | comes back | `Myu_Ai` |
-| $04 | Bot | 48 | 10 | 3 | 1 | comes back | `Bot_Ai` |
+| $03 | [Myu](enemies/myu.md) | 24 | 10 | 3 | 1 | comes back | `Myu_Ai` |
+| $04 | [Bot](enemies/bot.md) | 48 | 10 | 3 | 1 | comes back | `Bot_Ai` |
 | $05 | Hidden jar | 255 | 10 | 3 | 1 | blocks Link's projectiles, comes back | `HiddenJar_Ai_Bank5` |
 | $06 | Moa | 6 | 5 | 1 | 1 | touch drains 20 exp | `Moa_Ai` |
 | $07 | Ache | 4 | 3 | 0 | 1 | comes back | `Ache_Ai` |
@@ -24,8 +24,8 @@ own colors (`FireOctorok_Draw`).
 | $0E | Blue Deeler | 6 | 5 | 0 | 1 |  | `Deeler_Ai` |
 | $0F | Fire Bago Bago Generator | 8 | 20 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
 | $10 | Fire Bago Bago | 8 | 20 | 3 | 1 | touch drains 10 exp | `BagoBago_Ai` |
-| $11 | Fire Hopping Octorok | 12 | 20 | 4 | 1 |  | `OctorokHopping_Ai` |
-| $12 | Fire Walking Octorok | 12 | 20 | 4 | 1 |  | `OctorokWalking_Ai` |
+| $11 | [Fire Hopping Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokHopping_Ai` |
+| $12 | [Fire Walking Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
 | $14 | Slow Bubble | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
 | $15 | Fast Bubble | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |

@@ -15,6 +15,25 @@ different groups.
 | Palaces 3, 4 and 6 | 4 | `EnemyHp_Bank4B` ... ($A900) | [Palaces](palaces.md) |
 | Great Palace | 5 | `EnemyHp_Bank5` ... ($9400) | [Great Palace](great-palace.md) |
 
+## Enemy Pages
+
+Enemies described in full, one page each (behavior, drawing, routines,
+and how each was verified):
+
+| Page | Types |
+|------|-------|
+| [Myu](enemies/myu.md) | $03 outdoors and in palaces |
+| [Bot](enemies/bot.md) | $04 outdoors, in towns and in palaces |
+| [Bit](enemies/bit.md) | $05 outdoors and in towns |
+| [Octorok](enemies/octorok.md) | $11, $12 outdoors and in palaces (Ropes, Fire Ropes) |
+| [Lowder](enemies/lowder.md) | $1C in West Hyrule |
+
+The enemy tables of the group pages link to them
+(`tools/enemy_table.py --doc` links an enemy to its page by its AI
+routine).
+
+## Shared Types
+
 Types $00-$13 are mostly shared by the outdoor groups and run routines in
 bank 7: see [common enemies](common.md).  Names follow z2edit's config
 (`config/vanilla/bankN.json5`).

@@ -52,6 +52,19 @@ EXP_LO = 0xDDC0
 EXP_HI = 0xDDDC
 
 
+# Enemy pages (docs/entities/enemies/NAME.md), by AI routine: --doc links
+# the enemy's name to its page.
+ENEMY_PAGES = {
+    "Myu_Ai": "myu", "Bot_Ai": "bot", "Bit_Ai": "bit", "Lowder_Ai": "lowder",
+    "OctorokHopping_Ai": "octorok", "OctorokWalking_Ai": "octorok",
+}
+
+
+def link_name(enemy, ai):
+    page = ENEMY_PAGES.get(ai)
+    return f"[{enemy}](enemies/{page}.md)" if page else enemy
+
+
 def config_names(fname, title):
     t = open(os.path.join(CONFIG, fname)).read()
     if title == "Palaces 3/4/6":
@@ -117,7 +130,7 @@ def main():
                 if fl & 0x10: notes.append("sword passes through")
                 if fl & 0x40: notes.append("comes back")
                 drop = dmg >> 6
-                print(f"| ${t:02X} | {names.get(t, '?')} | {block[HP + t]} | {exp} | {dmg & 0x0F} |"
+                print(f"| ${t:02X} | {link_name(names.get(t, '?'), name(bank, ai))} | {block[HP + t]} | {exp} | {dmg & 0x0F} |"
                       f" {drop or '-'} | {', '.join(notes)} | `{name(bank, ai)}` |")
             print()
             continue
