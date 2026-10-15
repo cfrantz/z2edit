@@ -77,9 +77,55 @@ They block the sword beam and fire.
 
 ## Other Enemies
 
-**Lowder** ($1C, `Lowder_Ai`): a beetle that walks back and forth,
-turning at walls, at double speed while heading toward Link; every 160
-frames, if it is on his level, it turns toward him.
+### Lowder
+
+**Lowder** ($1C, `Lowder_Ai`, `Lowder_Draw`): a beetle that walks back
+and forth, faster toward Link.  It has no spawn routine, so it starts
+with the [spawn defaults](../systems/enemies.md#spawning): facing Link
+and walking his way at 1/2 pixel per frame, `objState` 0.  Only West
+Hyrule has Lowders.
+
+Each frame, after `Enemy_SkipAiIfStunned`:
+
+1. `Enemy_HurtLinkOnContact` (with last frame's contact bit), then
+   `Enemy_UpdateWithBg`: background probes (probe set 6), drawing, hit
+   tests.
+2. **Walk.**  It moves by its X velocity, doubled for this frame if its
+   facing (its direction of travel) is the side Link is on: 1/2 pixel per
+   frame away from Link, 1 pixel per frame toward him.  It walks in the
+   air too.
+3. **Turn toward Link.**  If Link's Y + $10 equals its Y (as it does when
+   Link stands on the same floor) and its timer
+   (`timerFast+TIMER_ENEMY`) has run out, it faces Link, takes the speed
+   1/2 pixel per frame his way (`LowderSpeeds`), and sets the timer to
+   160 frames.  So it turns toward him as soon as he is on its level, and
+   again every 160 frames while he stays there; the timer only restarts
+   then.
+4. **Floor and walls.**  On a floor with no wall ahead, it lands
+   (`Enemy_Land`) and clears `objState`.  If there is a wall ahead, or no
+   floor under it (it has walked past a ledge, or is falling):
+   - if `objState` is 0, this is the first such frame: it sets `objState`
+     to 1, turns around (`Enemy_TurnAround`), and moves twice at its new
+     velocity, backing off 1 pixel.  At a ledge this puts its floor probe
+     (8 pixels in from its left edge) back over the floor, so it turns at
+     ledges as well as walls.
+   - otherwise it falls (`Enemy_MoveYWithGravity` with gravity $20/256
+     pixel per frame per frame, at most 3 pixels per frame), still
+     walking.
+
+A Lowder that spawns in mid-air turns around once as it starts to fall
+([quirks](../quirks.md)).  It never jumps.
+
+**Drawing** (`Lowder_Draw`): two sprites facing its `objFacing`,
+alternating every 8 frames between tiles $DE, $E0 and $E2, $E0
+(`sramEnemyTiles` entries $3C and $3E).
+
+Observed in the no-glitch movie (frames 57500-58010, three Lowders on
+the floor at Y $90 with Link at Y $80): each turned toward Link every
+160 frames; one walked 160 pixels in 160 frames toward Link, and
+another slowed from 1 to 1/2 pixel per frame when Link walked past it.
+None met a wall or a ledge in the traces, so the turning in step 4 is
+described from the code.
 
 **Megmet** ($1F, `Megmet_Ai`): hops toward Link in small random hops,
 under its own light gravity, turning at walls.

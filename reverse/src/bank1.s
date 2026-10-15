@@ -1865,79 +1865,96 @@ Megmet_Ai:
     jsr     Enemy_UpdateWithBg      ; $98BB
     jmp     Enemy_HurtLinkOnContact ; $98BE
 
+; X velocity of a Lowder, by direction to Link (right, left): 1/2 pixel per
+; frame.
 LowderSpeeds:
     .byte   $08, $F8                                                        ; $98C1
 
 ; ---------------------------------------------------------------------------
 ; Lowder_Ai
 ;
-; Lowder (beetle): walks back and forth, turning at walls, twice as fast
-; when heading toward Link; every 160 frames, if on Link's level, it turns
-; toward him (LowderSpeeds).
+; Lowder (beetle): walks back and forth at 1/2 pixel per frame, or 1 pixel
+; per frame while heading toward Link.  It turns around at walls and at
+; ledges.  While Link stands on its level (his objY + $10 = its objY),
+; it turns toward him at once and then every 160 frames.  It falls
+; (gravity $20/256 pixel per frame per frame, at most 3 pixels per frame)
+; when there is no floor under it.
 ;
+; objState+1 is 0 while it walks on the ground; it is set when it meets a
+; wall or a ledge, so that it turns around (and steps back 1 pixel) only on
+; the first frame, and falls while it stays set.
+;
+; QUIRK: when it spawns in the air, it turns around once as it starts to
+; fall.
+;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Lowder_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $98C3
-    jsr     Enemy_HurtLinkOnContact ; $98C6
-    jsr     Enemy_UpdateWithBg      ; $98C9
-    lda     objXVelocity+1,x        ; $98CC
+    jsr     Enemy_SkipAiIfStunned   ; $98C3  no AI while stunned
+    jsr     Enemy_HurtLinkOnContact ; $98C6  (touch bit from last frame)
+    jsr     Enemy_UpdateWithBg      ; $98C9  probe background, draw, test hits
+    ; Walk, at double speed if heading toward Link.
+    lda     objXVelocity+1,x        ; $98CC  keep the normal speed
     pha                             ; $98CE
-    lda     objFacing+1,x           ; $98CF
-    pha                             ; $98D1
-    jsr     Enemy_FaceLink          ; $98D2
+    lda     objFacing+1,x           ; $98CF  keep the facing (its direction
+    pha                             ; $98D1  of travel)
+    jsr     Enemy_FaceLink          ; $98D2  y = (Link's side) - 1
     pla                             ; $98D5
-    sta     objFacing+1,x           ; $98D6
-    iny                             ; $98D8
+    sta     objFacing+1,x           ; $98D6  restore the facing
+    iny                             ; $98D8  y = Link's side (1 right, 2 left)
     tya                             ; $98D9
-    cmp     objFacing+1,x           ; $98DA
-    bne     @loc_98E0               ; $98DC
-    asl     objXVelocity+1,x        ; $98DE
+    cmp     objFacing+1,x           ; $98DA  heading toward Link?
+    bne     @move                   ; $98DC
+    asl     objXVelocity+1,x        ; $98DE  yes: double the speed this frame
 
-@loc_98E0:
+@move:
     jsr     Enemy_MoveX             ; $98E0
     pla                             ; $98E3
-    sta     objXVelocity+1,x        ; $98E4
-    lda     objY                    ; $98E6
+    sta     objXVelocity+1,x        ; $98E4  back to the normal speed
+    ; Turn toward Link when he is on its level, at most every 160 frames.
+    lda     objY                    ; $98E6  Link's Y...
     clc                             ; $98E8
-    adc     #$10                    ; $98E9
-    cmp     objY+1,x                ; $98EB
-    bne     @loc_9901               ; $98ED
+    adc     #$10                    ; $98E9  ...+ 16, as when he stands on
+    cmp     objY+1,x                ; $98EB  its floor: = the Lowder's Y?
+    bne     @checkFloor             ; $98ED  no: not on its level
     lda     timerFast+TIMER_ENEMY,x ; $98EF
-    bne     @loc_9901               ; $98F2
-    lda     #$A0                    ; $98F4
+    bne     @checkFloor             ; $98F2  turned toward him recently
+    lda     #$A0                    ; $98F4  not again for 160 frames
     sta     timerFast+TIMER_ENEMY,x ; $98F6
-    jsr     Enemy_FaceLink          ; $98F9
-    lda     LowderSpeeds,y          ; $98FC
+    jsr     Enemy_FaceLink          ; $98F9  face him...
+    lda     LowderSpeeds,y          ; $98FC  ...and walk his way
     sta     objXVelocity+1,x        ; $98FF
 
-@loc_9901:
+@checkFloor:
     lda     objCollision+1,x        ; $9901
-    and     #$04                    ; $9903
-    beq     @loc_9910               ; $9905
-    jsr     Enemy_Land              ; $9907
+    and     #$04                    ; $9903  on a floor?
+    beq     @wallOrLedge            ; $9905  no: at a ledge, or falling
+    jsr     Enemy_Land              ; $9907  snap to it and stop falling
     lda     objCollision+1,x        ; $990A
-    and     #$03                    ; $990C
-    beq     @loc_992A               ; $990E
+    and     #$03                    ; $990C  wall ahead?
+    beq     @walking                ; $990E  no: just walking (a = 0)
 
-@loc_9910:
-    lda     objState+1,x            ; $9910
-    beq     @loc_991F               ; $9912
-    lda     #$20                    ; $9914
+@wallOrLedge:
+    lda     objState+1,x            ; $9910  first frame at the wall or ledge?
+    beq     @turnAround             ; $9912
+    lda     #$20                    ; $9914  no: fall, gravity $20/256...
     sta     temp0                   ; $9916
-    lda     #$03                    ; $9918
+    lda     #$03                    ; $9918  ...up to 3 px/frame
     sta     temp2                   ; $991A
     jmp     Enemy_MoveYWithGravity  ; $991C
 
-@loc_991F:
-    inc     objState+1,x            ; $991F
-    jsr     Enemy_TurnAround        ; $9921
-    jsr     Enemy_MoveX             ; $9924
-    jmp     Enemy_MoveX             ; $9927
+@turnAround:
+    inc     objState+1,x            ; $991F  only once
+    jsr     Enemy_TurnAround        ; $9921  reverse facing and velocity
+    jsr     Enemy_MoveX             ; $9924  and back off 2 frames' worth
+    jmp     Enemy_MoveX             ; $9927  (1 pixel)
 
-@loc_992A:
-    sta     objState+1,x            ; $992A
+@walking:
+    sta     objState+1,x            ; $992A  a = 0: on the ground, no wall
+    ; (falls through into the rts below)
 
+; DumbMoblin_Ai's speeds, by facing (1 right, 2 left), start at the rts.
 DumbMoblinSpeeds:
     rts                             ; $992C
 ; (unreferenced: $992D-$996F, 67 bytes)
@@ -2871,12 +2888,14 @@ Daira_DrawWeapon:
 ; ---------------------------------------------------------------------------
 ; Lowder_Draw
 ;
-; Draw a Lowder.
+; Draw a Lowder: a pair of sprites facing its objFacing, alternating every
+; 8 frames between sramEnemyTiles entries $3C (tiles $DE, $E0) and $3E
+; (tiles $E2, $E0).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Lowder_Draw:
-    lda     #$3C                    ; $9DF1
+    lda     #$3C                    ; $9DF1  entries $3C and $3E
     jmp     Sprite_DrawAnimatedEnemyPair ; $9DF3
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 

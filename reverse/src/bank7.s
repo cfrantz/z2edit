@@ -4849,66 +4849,82 @@ BagoBago_Ai:
 ; ---------------------------------------------------------------------------
 ; OctorokHopping_Ai
 ;
-; Hopping Octorok: faces Link and hops in place (Enemy_Hop), spitting a
-; rock at the top of each hop if facing him.
+; Hopping Octorok: stays where it is, turned toward Link, and hops every
+; 128 frames, spitting a rock at the top of each hop (Enemy_Hop).
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OctorokHopping_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $D842
-    jsr     Enemy_FaceLink          ; $D845
+    jsr     Enemy_SkipAiIfStunned   ; $D842  no AI while stunned
+    jsr     Enemy_FaceLink          ; $D845  always face Link
+    ; (falls through into Enemy_Hop)
 
 ; ---------------------------------------------------------------------------
 ; Enemy_Hop
 ;
-; Enemy AI helper: count enemyAiState, and every 128 frames jump (Y
-; velocity -$20); fall with gravity and land; at the top of the jump
-; (Y velocity 0) fire a rock if facing Link (Enemy_ShootIfFacingLink).
+; Hop every 128 frames, and spit a rock at the top of each hop if facing
+; Link.  enemyAiState counts frames; when its low 7 bits wrap to 0 the
+; enemy jumps with Y velocity -$20 (2 pixels per frame up).  It falls with
+; Enemy_MoveYAndFall's gravity (2/16 pixel per frame per frame), so a hop
+; rises 17 pixels in 16 frames and lands 32 frames after it started.  On
+; the frame its Y velocity reaches 0 (the top of the hop) it calls
+; Enemy_ShootIfFacingLink.  Also does the enemy's background test,
+; drawing, hit tests and contact damage (Enemy_UpdateWithBg,
+; Enemy_HurtLinkOnContact), and lands it on floors (Enemy_Land).
 ;
-; Status:  provisional
+; The first hop comes 128 frames after the enemy spawns (enemyAiState 0).
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Hop:
-    inc     enemyAiState,x          ; $D848
+    inc     enemyAiState,x          ; $D848  frame counter
     lda     enemyAiState,x          ; $D84A
-    and     #$7F                    ; $D84C
-    bne     @loc_D855               ; $D84E
-    lda     #$E0                    ; $D850
-    sta     objYVelocity+1,x        ; $D852
+    and     #$7F                    ; $D84C  every 128 frames...
+    bne     @fall                   ; $D84E
+    lda     #$E0                    ; $D850  ...hop: Y velocity -$20
+    sta     objYVelocity+1,x        ; $D852  (2 px/frame up)
 
-@loc_D855:
-    jsr     Enemy_MoveYAndFall      ; $D855
-    jsr     Enemy_UpdateWithBg      ; $D858
+@fall:
+    jsr     Enemy_MoveYAndFall      ; $D855  move, then gravity +2/16
+    jsr     Enemy_UpdateWithBg      ; $D858  probe background, draw, test hits
     jsr     Enemy_HurtLinkOnContact ; $D85B
     lda     objCollision+1,x        ; $D85E
-    and     #$04                    ; $D860
-    beq     @loc_D867               ; $D862
-    jmp     Enemy_Land              ; $D864
+    and     #$04                    ; $D860  on a floor?
+    beq     @inAir                  ; $D862
+    jmp     Enemy_Land              ; $D864  yes: snap to it and stop falling
 
-@loc_D867:
-    lda     objYVelocity+1,x        ; $D867
-    bne     Enemy_ShootIfFacingLinkDone ; $D86A
+@inAir:
+    lda     objYVelocity+1,x        ; $D867  Y velocity just reached 0, at
+    bne     Enemy_ShootIfFacingLinkDone ; $D86A  the top of the hop? no: done
+    ; (falls through into Enemy_ShootIfFacingLink)
 
 ; ---------------------------------------------------------------------------
 ; Enemy_ShootIfFacingLink
 ;
-; If enemy x is facing Link, fire a projectile of type 3.
+; If enemy x faces Link (objFacing is the side Link is on, by
+; Enemy_FaceLink), spit a rock at him: projectile type 3, from the enemy's
+; position, flying horizontally at 2 pixels per frame in its facing
+; (Enemy_FireProjectile).  Nothing happens if all six projectile slots are
+; in use.
 ;
 ; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_ShootIfFacingLink:
-    lda     objFacing+1,x           ; $D86C
+    lda     objFacing+1,x           ; $D86C  keep the enemy's facing
     pha                             ; $D86E
-    jsr     Enemy_FaceLink          ; $D86F
+    jsr     Enemy_FaceLink          ; $D86F  y = (Link's side) - 1
     pla                             ; $D872
-    sta     objFacing+1,x           ; $D873
-    iny                             ; $D875
+    sta     objFacing+1,x           ; $D873  restore the facing
+    iny                             ; $D875  y = Link's side (1 right, 2 left)
     tya                             ; $D876
-    cmp     objFacing+1,x           ; $D877
-    bne     Enemy_ShootIfFacingLinkDone ; $D879
-    jsr     Enemy_FireProjectile    ; $D87B
-    bcs     Enemy_ShootIfFacingLinkDone ; $D87E
-    lda     #$03                    ; $D880
+    cmp     objFacing+1,x           ; $D877  facing him?
+    bne     Enemy_ShootIfFacingLinkDone ; $D879  no: don't shoot
+    jsr     Enemy_FireProjectile    ; $D87B  y = new projectile's index
+    bcs     Enemy_ShootIfFacingLinkDone ; $D87E  no free slot
+    lda     #$03                    ; $D880  projectile type 3: rock
     sta     a:objState+7,y          ; $D882
 
 ; ---------------------------------------------------------------------------
@@ -4921,6 +4937,8 @@ Enemy_ShootIfFacingLink:
 Enemy_ShootIfFacingLinkDone:
     rts                             ; $D885
 
+; X velocity of a walking Octorok, by direction to Link (right, left): 1/2
+; pixel per frame.
 OctorokSpeeds:
     .byte   $08, $F8                                                        ; $D886
 
@@ -4928,40 +4946,44 @@ OctorokSpeeds:
 ; ---------------------------------------------------------------------------
 ; OctorokWalking_Ai
 ;
-; Walking Octorok: hops (Enemy_Hop) and walks, turning at walls; every 64
-; frames it turns toward Link (OctorokSpeeds); it also spits a rock from
-; the ground, at random intervals of 128-255 frames.
+; Walking Octorok: walks at 1/2 pixel per frame, in the air as well as on
+; the ground, turning around at walls (but not at ledges, which it walks
+; off).  It hops every 128 frames (Enemy_Hop); 64 frames after each hop
+; it turns toward Link.  It spits a rock at Link when it faces him at the
+; top of a hop (Enemy_Hop), and also each time its spit timer runs out
+; (every 128-255 frames, at random) if it is on the ground then.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OctorokWalking_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $D888
-    jsr     Enemy_Hop               ; $D88B
+    jsr     Enemy_SkipAiIfStunned   ; $D888  no AI while stunned
+    jsr     Enemy_Hop               ; $D88B  hop, fall, land, shoot at the top
     lda     objCollision+1,x        ; $D88E
-    and     #$03                    ; $D890
-    beq     @loc_D897               ; $D892
-    jsr     Enemy_TurnAround        ; $D894
+    and     #$03                    ; $D890  wall ahead (right or left)?
+    beq     @walk                   ; $D892
+    jsr     Enemy_TurnAround        ; $D894  yes: reverse facing and velocity
 
-@loc_D897:
-    jsr     Enemy_MoveX             ; $D897
-    lda     enemyAiState,x          ; $D89A
+@walk:
+    jsr     Enemy_MoveX             ; $D897  walk (also in the air)
+    lda     enemyAiState,x          ; $D89A  hop counter
     asl     a                       ; $D89C
-    cmp     #$80                    ; $D89D
-    bne     @loc_D8A9               ; $D89F
-    jsr     Enemy_FaceLink          ; $D8A1
+    cmp     #$80                    ; $D89D  counter mod 128 = 64?
+    bne     @checkSpitTimer         ; $D89F
+    jsr     Enemy_FaceLink          ; $D8A1  yes: turn toward Link
     lda     OctorokSpeeds,y         ; $D8A4
     sta     objXVelocity+1,x        ; $D8A7
 
-@loc_D8A9:
+@checkSpitTimer:
     lda     timerFast+TIMER_ENEMY,x ; $D8A9
-    bne     @done                   ; $D8AC
-    lda     rng+1,x                 ; $D8AE
+    bne     @done                   ; $D8AC  not yet
+    lda     rng+1,x                 ; $D8AE  reload: 128-255 frames at random
     and     #$7F                    ; $D8B1
     ora     #$80                    ; $D8B3
     sta     timerFast+TIMER_ENEMY,x ; $D8B5
     lda     objCollision+1,x        ; $D8B8
-    and     #$04                    ; $D8BA
-    bne     Enemy_ShootIfFacingLink ; $D8BC
+    and     #$04                    ; $D8BA  on the ground?
+    bne     Enemy_ShootIfFacingLink ; $D8BC  yes: spit if facing Link
 
 @done:
     rts                             ; $D8BE
@@ -5202,10 +5224,14 @@ LockedDoor_Ai:
 Item_FallDone:
     rts                             ; $D9FD
 
+; X velocity of a Bot's leap, by direction to Link (right, left): 1 pixel
+; per frame.
 BotJumpSpeeds:
     .byte   $10, $F0                                                        ; $D9FE
 
-MyuPauseTimes:
+; Minimum length of each phase of a Myu, Bot or Bit, by the phase it enters
+; (enemyAiState 0 = moving, 1 = resting); Myu_Move adds 0-63 at random.
+MyuPhaseTimes:
     .byte   $C0, $40                                                        ; $DA00
 
 ; ---------------------------------------------------------------------------
@@ -5229,133 +5255,175 @@ Enemy_SkipAiIfStunned:
 ; ---------------------------------------------------------------------------
 ; Bot_Ai
 ;
-; Bot (blob): like a Myu (Myu_Move), and now and then (1 frame in 128 on
-; the ground, at random) it jumps toward Link (BotJumpSpeeds, Y velocity
-; -$1B).
+; Bot (blob): moves like a Myu (Myu_Move), and leaps at Link at random:
+; on any frame that it stands on the ground, if the low 7 bits of its
+; random byte are zero (about 1 frame in 128), it jumps with Y velocity
+; -$1B toward Link at 1 pixel per frame (BotJumpSpeeds).
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bot_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $DA0C
+    jsr     Enemy_SkipAiIfStunned   ; $DA0C  no AI while stunned
+    ; Leap only from the ground (bit 2 of last frame's background
+    ; collision), and only when rng+1,x has its low 7 bits clear.
     lda     objCollision+1,x        ; $DA0F
-    and     #$04                    ; $DA11
-    beq     @loc_DA28               ; $DA13
-    lda     rng+1,x                 ; $DA15
-    asl     a                       ; $DA18
-    bne     @loc_DA28               ; $DA19
-    lda     #$E5                    ; $DA1B
+    and     #$04                    ; $DA11  standing on a floor?
+    beq     @moveLikeMyu            ; $DA13  no: can't leap
+    lda     rng+1,x                 ; $DA15  this enemy's random byte
+    asl     a                       ; $DA18  drop bit 7
+    bne     @moveLikeMyu            ; $DA19  bits 6-0 not all 0: no leap
+    lda     #$E5                    ; $DA1B  leap up at -$1B (-1.6875 px/frame)
     sta     objYVelocity+1,x        ; $DA1D
-    jsr     Enemy_FaceLink          ; $DA20
-    lda     BotJumpSpeeds,y         ; $DA23
-    sta     objXVelocity+1,x        ; $DA26
+    jsr     Enemy_FaceLink          ; $DA20  y = 0 if Link is right, 1 if left
+    lda     BotJumpSpeeds,y         ; $DA23  1 px/frame toward him
+    sta     objXVelocity+1,x        ; $DA26  (kept until the next step)
 
-@loc_DA28:
-    jmp     Myu_Ai                  ; $DA28
+@moveLikeMyu:
+    jmp     Myu_Ai                  ; $DA28  move at a Myu's speed
 
 
 ; ---------------------------------------------------------------------------
 ; Bit_Ai
 ;
-; Bit (small blob): like a Myu, but for a quarter of each 256-frame period
-; (staggered by enemy slot) it moves twice as fast.
+; Bit (small blob): moves like a Myu (Myu_Move), but at twice the speed
+; (4 pixels per step) while frameCounter OR (enemy index * 32) is $C0 or
+; more.
 ;
+; QUIRK: the slot is ORed, not added, into the frame counter, so the fast
+; periods are not evenly staggered: Bits in enemy slots 0-1 are fast for
+; frames $C0-$FF of every 256, those in slots 2-3 for $80-$FF, and those
+; in slots 4-5 for $40-$7F and $C0-$FF.
+;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bit_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $DA2B
-    txa                             ; $DA2E
+    jsr     Enemy_SkipAiIfStunned   ; $DA2B  no AI while stunned
+    txa                             ; $DA2E  enemy index 0-5...
     asl     a                       ; $DA2F
     asl     a                       ; $DA30
     asl     a                       ; $DA31
     asl     a                       ; $DA32
-    asl     a                       ; $DA33
-    ora     frameCounter            ; $DA34
-    cmp     #$C0                    ; $DA36
-    bcc     Myu_Ai                  ; $DA38
-    lda     #$40                    ; $DA3A
-    sta     hopSpeeds               ; $DA3C
-    lda     #$C0                    ; $DA3F
-    sta     ram_05DB                ; $DA41
+    asl     a                       ; $DA33  ...* 32: $00, $20, ... $A0
+    ora     frameCounter            ; $DA34  (QUIRK: ora, not adc)
+    cmp     #$C0                    ; $DA36  bits 7 and 6 both set?
+    bcc     Myu_Ai                  ; $DA38  no: a Myu's speed
+    lda     #$40                    ; $DA3A  yes: 4 px per step right...
+    sta     myuStepSpeeds           ; $DA3C
+    lda     #$C0                    ; $DA3F  ...or left
+    sta     myuStepSpeeds+1         ; $DA41
     jmp     Myu_Move                ; $DA44
 
 
 ; ---------------------------------------------------------------------------
 ; Myu_Ai
 ;
-; Myu: crawls along the ground in short steps (every 16 frames), pausing
-; for random times (MyuPauseTimes: 64-127 or 192-255 frames) and choosing
-; a random direction after each pause; turns at walls.  Myu_Move is the
-; movement, also used by Bot_Ai and Bit_Ai with other speeds.
+; Myu (spiked blob): alternates between moving, for 192-255 frames, and
+; resting, for 64-127 frames, in a random direction each time it starts
+; moving.  While moving it takes a 2-pixel step on two frames of every 16.
+; See Myu_Move.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Myu_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $DA47
-    lda     #$20                    ; $DA4A
-    sta     hopSpeeds               ; $DA4C
-    lda     #$E0                    ; $DA4F
-    sta     ram_05DB                ; $DA51
+    jsr     Enemy_SkipAiIfStunned   ; $DA47  no AI while stunned
+    lda     #$20                    ; $DA4A  2 px per step right...
+    sta     myuStepSpeeds           ; $DA4C
+    lda     #$E0                    ; $DA4F  ...or left
+    sta     myuStepSpeeds+1         ; $DA51
+    ; (falls through into Myu_Move)
 
-
+; ---------------------------------------------------------------------------
+; Myu_Move
+;
+; Movement shared by the Myu, Bot and Bit, with the step speeds in
+; myuStepSpeeds (right, left).  Each frame:
+;
+; - Fall: move by objYVelocity and add 2 to it (Enemy_MoveYAndFall); test
+;   the background, draw, test hits (Enemy_UpdateWithBg) and hurt Link on
+;   contact.
+; - In the air (or at Y < $60, where floors are ignored): move by
+;   objXVelocity unless against a wall, and do nothing else.
+; - On the ground: land (Enemy_Land).  While moving (enemyAiState 0),
+;   count frames in enemyVulnerability; on counts 3 and 15 of every 16, take
+;   a step: set objXVelocity from myuStepSpeeds by enemyAiDir and move once,
+;   unless against a wall.  objState (the animation frame) is the count's
+;   bits 3-2 while moving, and 1 while resting (enemyAiState 1).
+; - When the phase timer (timerFast+TIMER_ENEMY) runs out on the ground,
+;   switch phases, reload the timer from MyuPhaseTimes plus 0-63 at
+;   random, and take a new random direction (bit 0 of the timer).
+;
+; It does not turn at walls: it waits against one until its next phase.
+;
+; QUIRK: floors are ignored while its Y is less than $60 (high on the
+; screen), so a Myu, Bot or Bit on a floor that high falls through it.
+;
+; In:      x = enemy index, myuStepSpeeds
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Myu_Move:
-    jsr     Enemy_MoveYAndFall      ; $DA54
-    jsr     Enemy_UpdateWithBg      ; $DA57
+    jsr     Enemy_MoveYAndFall      ; $DA54  fall (gravity 2/16 px/frame/frame)
+    jsr     Enemy_UpdateWithBg      ; $DA57  probe background, draw, test hits
     jsr     Enemy_HurtLinkOnContact ; $DA5A
     lda     objY+1,x                ; $DA5D
-    cmp     #$60                    ; $DA5F
-    bcc     @loc_DA69               ; $DA61
+    cmp     #$60                    ; $DA5F  Y < $60 (high up)...
+    bcc     @inAir                  ; $DA61  ...floors don't count (QUIRK)
     lda     objCollision+1,x        ; $DA63
-    and     #$04                    ; $DA65
-    bne     @loc_DA72               ; $DA67
+    and     #$04                    ; $DA65  on a floor?
+    bne     @onGround               ; $DA67
 
-@loc_DA69:
+@inAir:
+    ; Keep the X velocity it had (a step, a leap or its spawn speed).
     lda     objCollision+1,x        ; $DA69
-    and     #$03                    ; $DA6B
-    bne     @done                   ; $DA6D
+    and     #$03                    ; $DA6B  wall ahead (right or left)?
+    bne     @done                   ; $DA6D  yes: don't move across
     jmp     Enemy_MoveX             ; $DA6F
 
-@loc_DA72:
-    jsr     Enemy_Land              ; $DA72
-    lda     enemyAiState,x          ; $DA75
-    beq     @loc_DA7D               ; $DA77
-    sta     objState+1,x            ; $DA79
-    bne     @loc_DAA4               ; $DA7B
+@onGround:
+    jsr     Enemy_Land              ; $DA72  snap Y to the tile row, stop falling
+    lda     enemyAiState,x          ; $DA75  0 = moving, 1 = resting
+    beq     @moving                 ; $DA77
+    sta     objState+1,x            ; $DA79  resting: animation frame 1
+    bne     @checkPhaseTimer        ; $DA7B  (always taken)
 
-@loc_DA7D:
-    lda     enemyVulnerability,x    ; $DA7D
+@moving:
+    ; enemyVulnerability is this enemy's step counter.
+    lda     enemyVulnerability,x    ; $DA7D  frame count
     pha                             ; $DA80
-    and     #$0C                    ; $DA81
-    sta     objState+1,x            ; $DA83
+    and     #$0C                    ; $DA81  animation frame: bits 3-2 of
+    sta     objState+1,x            ; $DA83  the count (0, 4, 8, 12)
     inc     enemyVulnerability,x    ; $DA85
     pla                             ; $DA88
-    and     #$0F                    ; $DA89
-    cmp     #$0F                    ; $DA8B
-    beq     @loc_DA93               ; $DA8D
-    cmp     #$03                    ; $DA8F
-    bne     @loc_DAA4               ; $DA91
+    and     #$0F                    ; $DA89  count mod 16...
+    cmp     #$0F                    ; $DA8B  ...is 15
+    beq     @step                   ; $DA8D
+    cmp     #$03                    ; $DA8F  ...or 3: take a step
+    bne     @checkPhaseTimer        ; $DA91
 
-@loc_DA93:
-    ldy     enemyAiDir,x            ; $DA93
-    lda     hopSpeeds,y             ; $DA96
+@step:
+    ldy     enemyAiDir,x            ; $DA93  0 = right, 1 = left
+    lda     myuStepSpeeds,y         ; $DA96  step size for this direction
     sta     objXVelocity+1,x        ; $DA99
     lda     objCollision+1,x        ; $DA9B
-    and     #$03                    ; $DA9D
-    bne     @loc_DAA4               ; $DA9F
-    jsr     Enemy_MoveX             ; $DAA1
+    and     #$03                    ; $DA9D  wall ahead?
+    bne     @checkPhaseTimer        ; $DA9F  yes: stay put
+    jsr     Enemy_MoveX             ; $DAA1  move one frame's worth
 
-@loc_DAA4:
+@checkPhaseTimer:
     lda     timerFast+TIMER_ENEMY,x ; $DAA4
-    bne     @done                   ; $DAA7
-    lda     enemyAiState,x          ; $DAA9
-    eor     #$01                    ; $DAAB
+    bne     @done                   ; $DAA7  phase not over yet
+    lda     enemyAiState,x          ; $DAA9  switch phase:
+    eor     #$01                    ; $DAAB  moving <-> resting
     sta     enemyAiState,x          ; $DAAD
     tay                             ; $DAAF
     lda     rng+1,x                 ; $DAB0
-    and     #$3F                    ; $DAB3
-    ora     MyuPauseTimes,y         ; $DAB5
+    and     #$3F                    ; $DAB3  0-63 frames at random...
+    ora     MyuPhaseTimes,y         ; $DAB5  ...+ 192 (moving) or 64 (resting)
     sta     timerFast+TIMER_ENEMY,x ; $DAB8
-    and     #$01                    ; $DABB
-    sta     enemyAiDir,x            ; $DABD
+    and     #$01                    ; $DABB  timer's bit 0 is the random
+    sta     enemyAiDir,x            ; $DABD  direction (0 right, 1 left)
 
 @done:
     rts                             ; $DAC0
@@ -8558,6 +8626,26 @@ Projectile_HitsBgProbe:
 Projectile_HitsBgDone:
     rts                             ; $EA31
 
+; ---------------------------------------------------------------------------
+; Enemy_UpdateBgCollision
+;
+; Test enemy x against the background and set bits 3-0 of its
+; objCollision (bits 7-4 are kept), with the probe points of its type's
+; probe set s (bits 3-0 of sramEnemyFlags; see ProbeOffsetX/Y):
+;
+; - probe $15+s: bit 3, solid above;
+; - probe $14+s: bit 2, standing on a floor; its tile's map pointer is
+;   kept in enemyFloorTilePtr and enemyFloorTileIndex;
+; - probes $10+s and $12+s when moving right (objXVelocity >= 0), or
+;   $11+s and $13+s when moving left: bit 0 (right) or bit 1 (left), a
+;   wall ahead; the last tile's pointer is kept in enemyWallTilePtr, and
+;   the tile in drawScratch.
+;
+; Only the side it is moving toward is tested.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Enemy_UpdateBgCollision:
     ldy     enemyType,x             ; $EA32
     lda     sramEnemyFlags,y        ; $EA34
@@ -9384,37 +9472,42 @@ Elevator_Draw:
 ; ---------------------------------------------------------------------------
 ; Bot_Draw
 ;
-; Draw a Bot or Bit (squashing while it moves).
+; Draw a Bot or Bit: a symmetric pair of sprites (the right one is the left
+; one mirrored), SpritePairTiles entry $26 (tile $B2) for objState 0 and
+; $28 (tile $B4) otherwise.  While it rests (enemyAiState nonzero) it
+; quivers: when frameCounter bit 2 is clear, the two sprites are drawn a
+; pixel closer together.
 ;
+; In:      x = enemy index, y = OAM offset, temp0/temp1 = Y and screen X
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bot_Draw:
-    lda     #$02                    ; $EF91
-    sta     temp2                   ; $EF93
-    lda     objState+1,x            ; $EF95
-    ldx     #$26                    ; $EF97
+    lda     #$02                    ; $EF91  draw unflipped (as facing left);
+    sta     temp2                   ; $EF93  the mirroring is done below
+    lda     objState+1,x            ; $EF95  animation frame
+    ldx     #$26                    ; $EF97  frame 0: entry $26
     cmp     #$00                    ; $EF99
-    beq     @loc_EF9F               ; $EF9B
-    inx                             ; $EF9D
+    beq     @draw                   ; $EF9B
+    inx                             ; $EF9D  other frames: entry $28
     inx                             ; $EF9E
 
-@loc_EF9F:
-    jsr     Sprite_DrawPairFromTable ; $EF9F
+@draw:
+    jsr     Sprite_DrawPairFromTable ; $EF9F  y = OAM offset after the pair
     tya                             ; $EFA2
-    tax                             ; $EFA3
+    tax                             ; $EFA3  x = end of the pair in oamBuffer
     ldy     currentObject           ; $EFA4
-    lda     a:enemyAiState,y        ; $EFA6
-    beq     @loc_EFB7               ; $EFA9
+    lda     a:enemyAiState,y        ; $EFA6  resting?
+    beq     @mirror                 ; $EFA9  no
     lda     frameCounter            ; $EFAB
-    and     #$04                    ; $EFAD
-    bne     @loc_EFB7               ; $EFAF
-    inc     oamBuffer - 5,x         ; $EFB1
-    dec     oamBuffer - 1,x         ; $EFB4
+    and     #$04                    ; $EFAD  4 frames on, 4 off
+    bne     @mirror                 ; $EFAF
+    inc     oamBuffer - 5,x         ; $EFB1  left sprite's X + 1
+    dec     oamBuffer - 1,x         ; $EFB4  right sprite's X - 1
 
-@loc_EFB7:
-    lda     oamBuffer - 6,x         ; $EFB7
-    ora     #$40                    ; $EFBA
-    sta     oamBuffer - 2,x         ; $EFBC
+@mirror:
+    lda     oamBuffer - 6,x         ; $EFB7  left sprite's attributes...
+    ora     #$40                    ; $EFBA  ...flipped horizontally...
+    sta     oamBuffer - 2,x         ; $EFBC  ...for the right sprite
     ldx     currentObject           ; $EFBF
     rts                             ; $EFC1
 
@@ -9422,21 +9515,23 @@ Bot_Draw:
 ; ---------------------------------------------------------------------------
 ; Myu_Draw
 ;
-; Draw a Myu.
+; Draw a Myu: a symmetric pair of sprites, SpritePairTiles entry $2A (tile
+; $24) for objState 0 and $2C (tile $B0) otherwise.
 ;
+; In:      x = enemy index, y = OAM offset, temp0/temp1 = Y and screen X
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Myu_Draw:
-    lda     #$02                    ; $EFC2
-    sta     temp2                   ; $EFC4
-    lda     objState+1,x            ; $EFC6
-    ldx     #$2A                    ; $EFC8
+    lda     #$02                    ; $EFC2  draw unflipped (as facing left),
+    sta     temp2                   ; $EFC4  then mirror the second sprite
+    lda     objState+1,x            ; $EFC6  animation frame
+    ldx     #$2A                    ; $EFC8  frame 0: entry $2A
     asl     a                       ; $EFCA
-    beq     @loc_EFCF               ; $EFCB
-    inx                             ; $EFCD
+    beq     @draw                   ; $EFCB
+    inx                             ; $EFCD  other frames: entry $2C
     inx                             ; $EFCE
 
-@loc_EFCF:
+@draw:
     jmp     Sprite_DrawPairFlipped  ; $EFCF
 
 
@@ -9598,21 +9693,27 @@ Deeler_Draw:
 ; ---------------------------------------------------------------------------
 ; Octorok_Draw
 ;
-; Draw an Octorok.
+; Draw an Octorok: a pair of sprites facing its objFacing, alternating
+; between SpritePairTiles entries $12 (tiles $C6, $C8) and $14 (tiles $CA,
+; $CC) every 8 frames.  Low on the screen (Y >= $B5) it also takes the
+; extra attribute bits of Link's sprites, extraSpriteAttrs (provisional:
+; presumably to be drawn behind the background where Link would be).
 ;
+; In:      x = enemy index, y = OAM offset, temp0 = Y, temp1 = screen X,
+;          temp2 = facing, temp3 = palette
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Octorok_Draw:
-    lda     temp0                   ; $F0A8
-    cmp     #$B5                    ; $F0AA
-    bcc     @loc_F0B5               ; $F0AC
-    lda     temp3                   ; $F0AE
-    ora     extraSpriteAttrs        ; $F0B0
+    lda     temp0                   ; $F0A8  Y
+    cmp     #$B5                    ; $F0AA  low on the screen?
+    bcc     @draw                   ; $F0AC
+    lda     temp3                   ; $F0AE  yes: add Link's extra
+    ora     extraSpriteAttrs        ; $F0B0  attribute bits
     sta     temp3                   ; $F0B3
 
-@loc_F0B5:
-    lda     #$12                    ; $F0B5
-    bne     Sprite_DrawAnimatedPairFromTable ; $F0B7
+@draw:
+    lda     #$12                    ; $F0B5  entries $12 and $14
+    bne     Sprite_DrawAnimatedPairFromTable ; $F0B7  (always taken)
 
 
 ; ---------------------------------------------------------------------------
