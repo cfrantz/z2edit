@@ -2433,7 +2433,7 @@ MobyGenerator_Ai:
     sta     enemyStunTimer,x        ; $9B84
     sta     enemyAiState,x          ; $9B87
     sta     objXVelocity+1,x        ; $9B89
-    sta     enemyVulnerability,x    ; $9B8B
+    sta     enemyAiVar,x            ; $9B8B
     stx     temp0                   ; $9B8E
     ldx     currentObject           ; $9B90
     clc                             ; $9B92

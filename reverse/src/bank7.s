@@ -4522,7 +4522,7 @@ Enemy_Spawn:
     sta     objState+1,x            ; $D69D
     sta     enemyKnockBack,x        ; $D69F
     sta     objYVelocity+1,x        ; $D6A2
-    sta     enemyVulnerability,x    ; $D6A5
+    sta     enemyAiVar,x            ; $D6A5
     sta     ram_04A0,x              ; $D6A8
     ldy     enemyType,x             ; $D6AB
     lda     sramEnemyHp,y           ; $D6AD
@@ -5347,7 +5347,7 @@ Myu_Ai:
 ; - In the air (or at Y < $60, where floors are ignored): move by
 ;   objXVelocity unless against a wall, and do nothing else.
 ; - On the ground: land (Enemy_Land).  While moving (enemyAiState 0),
-;   count frames in enemyVulnerability; on counts 3 and 15 of every 16, take
+;   count frames in enemyAiVar; on counts 3 and 15 of every 16, take
 ;   a step: set objXVelocity from myuStepSpeeds by enemyAiDir and move once,
 ;   unless against a wall.  objState (the animation frame) is the count's
 ;   bits 3-2 while moving, and 1 while resting (enemyAiState 1).
@@ -5389,12 +5389,12 @@ Myu_Move:
     bne     @checkPhaseTimer        ; $DA7B  (always taken)
 
 @moving:
-    ; enemyVulnerability is this enemy's step counter.
-    lda     enemyVulnerability,x    ; $DA7D  frame count
+    ; For the Myu, Bot and Bit, enemyAiVar is the step counter.
+    lda     enemyAiVar,x            ; $DA7D  frame count
     pha                             ; $DA80
     and     #$0C                    ; $DA81  animation frame: bits 3-2 of
     sta     objState+1,x            ; $DA83  the count (0, 4, 8, 12)
-    inc     enemyVulnerability,x    ; $DA85
+    inc     enemyAiVar,x            ; $DA85
     pla                             ; $DA88
     and     #$0F                    ; $DA89  count mod 16...
     cmp     #$0F                    ; $DA8B  ...is 15
@@ -7651,7 +7651,7 @@ Projectile_CheckLinkBody:
 ; (code below not executed in the test movies)
     jsr     Link_HurtByEnemy        ; $E584
     bcc     @done                   ; $E587
-    lda     enemyVulnerability,x    ; $E589
+    lda     enemyAiVar,x            ; $E589
     cmp     #$02                    ; $E58C
     bcc     @done                   ; $E58E
     asl     objYVelocity            ; $E590
@@ -7685,7 +7685,7 @@ SpecialHitboxYOffsets2:
 ; Enemy_GetSpecialHitbox
 ;
 ; Set box B (temp4-temp7, see Hitbox_Overlap) to enemy x's vulnerable part,
-; by enemyVulnerability, mirrored by its facing.
+; by enemyAiVar, mirrored by its facing.
 ; Enemy_CheckProjectileHitsSpecial tests it against Link's projectiles.
 ;
 ; In:      x = enemy index
@@ -7693,7 +7693,7 @@ SpecialHitboxYOffsets2:
 ; ---------------------------------------------------------------------------
 Enemy_GetSpecialHitbox:
     lda     objY+1,x                ; $E5BA
-    ldy     enemyVulnerability,x    ; $E5BC
+    ldy     enemyAiVar,x            ; $E5BC
     clc                             ; $E5BF
     adc     SpecialHitboxXOffsets,y ; $E5C0
     sta     temp5                   ; $E5C3

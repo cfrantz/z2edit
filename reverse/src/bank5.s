@@ -3564,7 +3564,7 @@ Fokka_Ai:
     and     #$40                    ; $9DC9
     beq     @loc_9DD2               ; $9DCB
     lda     linkStanding            ; $9DCD
-    sta     enemyVulnerability,x    ; $9DCF
+    sta     enemyAiVar,x            ; $9DCF
 
 @loc_9DD2:
     lda     linkJumpState           ; $9DD2
@@ -3578,7 +3578,7 @@ Fokka_Ai:
 
 @loc_9DE2:
     tya                             ; $9DE2
-    sta     enemyVulnerability,x    ; $9DE3
+    sta     enemyAiVar,x            ; $9DE3
 
 @loc_9DE6:
     jsr     Enemy_FaceLink          ; $9DE6
@@ -3889,7 +3889,7 @@ FokkaDrawOffsets:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Fokka_Draw:
-    lda     enemyVulnerability,x    ; $9FD4
+    lda     enemyAiVar,x            ; $9FD4
     ldy     #$00                    ; $9FD7
     cmp     #$00                    ; $9FD9
     bne     @loc_9FDF               ; $9FDB

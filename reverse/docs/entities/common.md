@@ -66,7 +66,7 @@ and in all the palaces; Bits outdoors and in towns.
 3. **On the ground** it lands (`Enemy_Land`: Y rounded down to a multiple
    of 16, Y velocity 0).  Then, by its phase (`enemyAiState`):
    - **Moving** (0): it counts its frames on the ground in
-     `enemyVulnerability`.  On counts 3 and 15 of every 16 it takes a
+     `enemyAiVar`.  On counts 3 and 15 of every 16 it takes a
      **step**: its X velocity is set to the step speed for its direction
      (`myuStepSpeeds` by `enemyAiDir`: right or left) and it moves once by
      it, unless there is a wall ahead.  So a Myu moves 2 pixels, then 2

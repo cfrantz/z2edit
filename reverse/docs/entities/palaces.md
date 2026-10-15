@@ -125,7 +125,7 @@ their shield to the height he is attacking (crouching or standing), and
 they follow his height when he jumps; they attack high or low at random,
 and the blue one throws swords (projectile type 5).  Out of Link's reach
 they pace back and forth, turning every 80 frames.  Their shield blocks
-the sword except where it is open (`enemyVulnerability`), and they block
+the sword except where it is open (kept in `enemyAiVar`), and they block
 the beam and fire.
 
 **Stalfos** ($1F red, $23 blue; `Stalfos_Ai`): skeleton knights that

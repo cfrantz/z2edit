@@ -57,7 +57,7 @@ column (a multiple of 16), Y from `EnemySpawnYPositions` ($30, $50, $60,
 of its type.  It turns it toward Link (`Enemy_FaceLink`) and gives it X
 velocity $08 or $F8 (1/2 pixel per frame) that way
 (`EnemySpawnXVelocities`).  It clears `enemyAiState`, `objState`,
-`objYVelocity`, `enemyStunTimer`, `enemyKnockBack`, `enemyVulnerability`
+`objYVelocity`, `enemyStunTimer`, `enemyKnockBack`, `enemyAiVar`
 and `ram_04A0`, then runs the type's spawn routine (most types have none).
 The enemy's timer (`timerFast+TIMER_ENEMY`) is not reset; by then it has
 normally counted down to 0.

@@ -1621,13 +1621,13 @@ RockThrower_Ai:
     jsr     Enemy_FaceLink          ; $9730
     lda     objState+1,x            ; $9733
     beq     @loc_977C               ; $9735
-    ldy     enemyVulnerability,x    ; $9737
+    ldy     enemyAiVar,x            ; $9737
     bne     @loc_9773               ; $973A
     inc     a:objState+1,x          ; $973C
     cmp     #$02                    ; $973F
     beq     @loc_9778               ; $9741
     lda     #$10                    ; $9743
-    sta     enemyVulnerability,x    ; $9745
+    sta     enemyAiVar,x            ; $9745
     jsr     Enemy_DropRock_Bank2    ; $9748
     bcs     @loc_977C               ; $974B
     lda     temp15                  ; $974D
@@ -1658,7 +1658,7 @@ RockThrower_Ai:
     bpl     @loc_977C               ; $9771
 
 @loc_9773:
-    dec     enemyVulnerability,x    ; $9773
+    dec     enemyAiVar,x            ; $9773
     bpl     @loc_977C               ; $9776
 
 @loc_9778:
@@ -1741,7 +1741,7 @@ RockThrower_Ai:
     bne     @done3                  ; $97E5
     inc     a:objState+1,x          ; $97E7
     lda     #$10                    ; $97EA
-    sta     enemyVulnerability,x    ; $97EC
+    sta     enemyAiVar,x            ; $97EC
 
 @done3:
     rts                             ; $97EF
@@ -1933,7 +1933,7 @@ Eye_Ai:
     jsr     Enemy_MoveX             ; $98F0
     jsr     Enemy_Draw              ; $98F3
     lda     #$05                    ; $98F6
-    sta     enemyVulnerability,x    ; $98F8
+    sta     enemyAiVar,x            ; $98F8
     jsr     Enemy_CheckProjectileHitsSpecial ; $98FB
     jsr     Enemy_UpdateCommon      ; $98FE
     lda     rng+1,x                 ; $9901
@@ -2254,7 +2254,7 @@ Scorpion_Ai:
     bne     @loc_9AC3               ; $9AB3
     jsr     Enemy_Draw              ; $9AB5
     lda     #$03                    ; $9AB8
-    sta     enemyVulnerability,x    ; $9ABA
+    sta     enemyAiVar,x            ; $9ABA
     jsr     Enemy_CheckProjectileHitsSpecial ; $9ABD
     jmp     @loc_9AC5               ; $9AC0
 
@@ -2453,7 +2453,7 @@ Lizalfos_Guard:
     and     #$03                    ; $9BAB
     beq     @loc_9BB4               ; $9BAD
     lda     linkStanding            ; $9BAF
-    sta     enemyVulnerability,x    ; $9BB1
+    sta     enemyAiVar,x            ; $9BB1
 
 @loc_9BB4:
     jsr     Enemy_CheckProjectileHitsSpecial ; $9BB4
@@ -2528,7 +2528,7 @@ Lizalfos_ChooseGuard:
 
 @loc_9C30:
     tya                             ; $9C30
-    sta     enemyVulnerability,x    ; $9C31
+    sta     enemyAiVar,x            ; $9C31
 
 @loc_9C34:
     inc     enemyAiState,x          ; $9C34
@@ -2734,7 +2734,7 @@ RockThrower_Draw:
 
 @loc_9D78:
     ldx     currentObject           ; $9D78
-    ldy     enemyVulnerability,x    ; $9D7A
+    ldy     enemyAiVar,x            ; $9D7A
     cpy     #$07                    ; $9D7D
     bcs     @loc_9D82               ; $9D7F
 
@@ -3014,7 +3014,7 @@ Lizalfos_Draw:
     sta     drawScratch             ; $9EE3
     lda     objXVelocity+1,x        ; $9EE5
     pha                             ; $9EE7
-    lda     enemyVulnerability,x    ; $9EE8
+    lda     enemyAiVar,x            ; $9EE8
     ldx     #$24                    ; $9EEB
     asl     a                       ; $9EED
     bne     @loc_9EF2               ; $9EEE

@@ -1010,7 +1010,7 @@ Stalfos_Ai:
 
 @loc_966B:
     lda     #$01                    ; $966B
-    sta     enemyVulnerability,x    ; $966D
+    sta     enemyAiVar,x            ; $966D
     sta     enemyAiState,x          ; $9670
     jsr     Enemy_Draw              ; $9672
     jsr     Enemy_CheckProjectileHitsSpecial ; $9675
@@ -2421,7 +2421,7 @@ Ironknuckle_Ai:
     and     IronknuckleGuardMasks,y ; $9D5D
     beq     @loc_9D67               ; $9D60
     lda     linkStanding            ; $9D62
-    sta     enemyVulnerability,x    ; $9D64
+    sta     enemyAiVar,x            ; $9D64
 
 @loc_9D67:
     lda     objY                    ; $9D67
@@ -2436,7 +2436,7 @@ Ironknuckle_Ai:
 
 @loc_9D77:
     tya                             ; $9D77
-    sta     enemyVulnerability,x    ; $9D78
+    sta     enemyAiVar,x            ; $9D78
 
 @loc_9D7B:
     jsr     Enemy_FaceLink          ; $9D7B
@@ -2594,7 +2594,7 @@ IronknuckleDrawXOffsets:
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Ironknuckle_Draw:
-    lda     enemyVulnerability,x    ; $9E45
+    lda     enemyAiVar,x            ; $9E45
     ldy     #$00                    ; $9E48
     asl     a                       ; $9E4A
     bne     @loc_9E4F               ; $9E4B
@@ -3950,7 +3950,7 @@ Rebonack_Ai:
     bne     Rebonack_Init_Done      ; $AFC9
     jsr     Enemy_Draw              ; $AFCB
     lda     #$04                    ; $AFCE
-    sta     enemyVulnerability,x    ; $AFD0
+    sta     enemyAiVar,x            ; $AFD0
     jsr     Enemy_CheckProjectileHitsSpecial ; $AFD3
     lda     frameCounter            ; $AFD6
     and     #$03                    ; $AFD8
@@ -3999,7 +3999,7 @@ Rebonack_Ai:
     sta     enemyType+3             ; $B027
     lda     #$01                    ; $B029
     sta     enemyActive+3           ; $B02B
-    sta     enemyVulnerability+3    ; $B02D
+    sta     enemyAiVar+3            ; $B02D
     lda     #$30                    ; $B030
     sta     enemyHp+3               ; $B032
     lda     #$FF                    ; $B034
@@ -4927,7 +4927,7 @@ Flame_Draw:
 ; ---------------------------------------------------------------------------
 Gooma_Ai:
     lda     #$06                    ; $B4AD
-    sta     enemyVulnerability,x    ; $B4AF
+    sta     enemyAiVar,x            ; $B4AF
     jsr     Boss_UpdateIntro        ; $B4B2
     jsr     Boss_UpdateCommon       ; $B4B5
     jsr     Projectile_CheckLinkBody ; $B4B8
@@ -6091,7 +6091,7 @@ Helmethead_Ai:
     lda     #$22                    ; $BB2D
     sta     a:enemyType,y           ; $BB2F
     lda     #$00                    ; $BB32
-    sta     enemyVulnerability,y    ; $BB34
+    sta     enemyAiVar,y            ; $BB34
     sta     a:enemyAiState,y        ; $BB37
     lda     #$D0                    ; $BB3A
     sta     objYVelocity+1,y        ; $BB3C
@@ -6389,7 +6389,7 @@ Boss_Init:
 
 @loc_BCAF:
     lda     #$02                    ; $BCAF
-    sta     enemyVulnerability,x    ; $BCB1
+    sta     enemyAiVar,x            ; $BCB1
     lda     #$07                    ; $BCB4
     ldy     enemyType,x             ; $BCB6
     sta     sramEnemyHitbox,y       ; $BCB8
@@ -6473,7 +6473,7 @@ HelmetheadHead_Ai:
     jmp     Enemy_MoveYAndFall      ; $BD21
 
 @loc_BD24:
-    ldy     enemyVulnerability,x    ; $BD24
+    ldy     enemyAiVar,x            ; $BD24
     bne     @loc_BD3E               ; $BD27
     cmp     #$70                    ; $BD29
     bcc     @loc_BD3E               ; $BD2B
@@ -6490,7 +6490,7 @@ HelmetheadHead_Ai:
 ; (code below not executed in the test movies)
 
 @loc_BD3E:
-    sta     enemyVulnerability,x    ; $BD3E
+    sta     enemyAiVar,x            ; $BD3E
     jsr     Enemy_MoveY             ; $BD41
     lda     enemyAiState,x          ; $BD44
     and     #$01                    ; $BD46
