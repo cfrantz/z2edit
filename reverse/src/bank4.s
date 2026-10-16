@@ -984,141 +984,159 @@ EnemyTiles_Bank4:
     .byte   $0F, $11, $17, $19, $09, $F5, $0B, $F5, $0D, $F5, $31, $33, $45, $47, $31, $33; $9644
     .byte   $49, $4B, $DC                                                   ; $9654
 
+; Stalfos: walking X velocity by facing (1: $0A right, 2: $F2 left; not
+; symmetric).
 StalfosSpeeds:
     .byte   $37, $0A, $F2                                                   ; $9657
 
 ; ---------------------------------------------------------------------------
 ; Stalfos_Ai
 ;
-; Stalfos (red $1F, blue $23): while off screen it waits at Y $40; then it
-; falls, faces Link, walks to within $1E pixels and slashes
-; (Enemy_StartSwing); the blue Stalfos also jumps at him (1 in 4).  Only its
-; unshielded part can be hit (Enemy_CheckProjectileHitsSpecial).
+; Stalfos ($1F red, $23 blue; a skeleton knight with a shield).  Until it
+; first comes on screen it waits at Y $40, high above.  Then it drops,
+; facing Link always.  On the ground, while Link is 30 pixels away or
+; more, it walks toward him (StalfosSpeeds: QUIRK: $0A to the right but
+; $F2 to the left, 0.625 and 0.875 pixel per frame).  Within 30, whenever
+; it is idle (on the ground, its timer and pose 0), it picks at random:
+; a quarter of the time the blue Stalfos jumps at him (Y velocity -$33,
+; walking); a quarter of the time it waits 15 frames; otherwise it swings
+; (Enemy_StartSwing): 15 frames of wind-up (pose 1), the slash (pose 2,
+; its sword tested against Link once, as it comes out), 15 frames, then
+; 15 frames of rest.  Its shield (guard 1, enemyAiVar) turns aside
+; strokes and projectiles at its head; it can be hit low.  Its own walk
+; is stopped by walls (Enemy_KnockBackOrWalk_Bank4).
 ;
-; Status:  provisional
+; QUIRK: while Link does the upward thrust (objState 8), it removes his
+; sword for the frame (swordY $F8): the thrust can't hurt a Stalfos, nor
+; any enemy handled after it that frame.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Stalfos_Ai:
-    lda     enemyAiState,x          ; $965A
-    bne     @loc_966B               ; $965C
-    lda     drawOffscreen+1         ; $965E
-    beq     @loc_966B               ; $9660
-    lda     #$40                    ; $9662
+    lda     enemyAiState,x          ; $965A  been on screen yet?
+    bne     @active                 ; $965C
+    lda     drawOffscreen+1         ; $965E  no: still off screen?
+    beq     @active                 ; $9660
+    lda     #$40                    ; $9662  wait at Y $40
     sta     objY+1,x                ; $9664
     lda     #$00                    ; $9666
     sta     objXVelocity+1,x        ; $9668
     rts                             ; $966A
 
-@loc_966B:
-    lda     #$01                    ; $966B
+@active:
+    lda     #$01                    ; $966B  guard 1: its shield, high
     sta     enemyAiVar,x            ; $966D
-    sta     enemyAiState,x          ; $9670
+    sta     enemyAiState,x          ; $9670  (seen)
     jsr     Enemy_Draw              ; $9672
-    jsr     Enemy_CheckProjectileHitsSpecial ; $9675
-    lda     objState+1,x            ; $9678
-    beq     @loc_9695               ; $967A
-    ldy     timerFast+TIMER_ENEMY,x ; $967C
-    bne     @loc_9695               ; $967F
-    cmp     #$02                    ; $9681
-    bne     @loc_968C               ; $9683
-    lda     #$FF                    ; $9685
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9675  (a clink returns from here)
+    lda     objState+1,x            ; $9678  swinging?
+    beq     @noSword                ; $967A
+    ldy     timerFast+TIMER_ENEMY,x ; $967C  pose over?
+    bne     @noSword                ; $967F
+    cmp     #$02                    ; $9681  the slash over:
+    bne     @slash                  ; $9683
+    lda     #$FF                    ; $9685  rest 15 frames (pose $FF -> 0)
     sta     objState+1,x            ; $9687
     jmp     Enemy_StartSwing        ; $9689
 
-@loc_968C:
-    jsr     Enemy_StartSwing        ; $968C
-    jsr     Enemy_Draw              ; $968F
-    jsr     Projectile_CheckLink    ; $9692
+@slash:
+    jsr     Enemy_StartSwing        ; $968C  wind-up over: slash (pose 2)
+    jsr     Enemy_Draw              ; $968F  draw the sword now,
+    jsr     Projectile_CheckLink    ; $9692  and test it
 
-@loc_9695:
-    lda     objState                ; $9695
+@noSword:
+    lda     objState                ; $9695  Link's upward thrust?
     cmp     #$08                    ; $9697
-    bne     @loc_96A0               ; $9699
-    .byte   $A9, $F8, $8D, $80, $04                                         ; $969B
+    bne     @update                 ; $9699
+    lda     #$F8                    ; $969B  no sword this frame
+    sta     swordY                  ; $969D
 
-@loc_96A0:
+@update:
+    ; Enemy_UpdateCommon, without drawing it again.
     ldy     #$01                    ; $96A0
     inx                             ; $96A2
     jsr     Obj_ComputeScreenPos    ; $96A3
     ldx     currentObject           ; $96A6
-    lda     objYHi+1,x              ; $96A8
+    lda     objYHi+1,x              ; $96A8  fallen below the screen?
     cmp     #$02                    ; $96AA
-    bcc     @loc_96B1               ; $96AC
+    bcc     @onScreen               ; $96AC
 ; (code below not executed in the test movies)
     jmp     Enemy_Despawn           ; $96AE
 ; (end of code not executed in the test movies)
 
-@loc_96B1:
-    lda     drawOffscreen+1         ; $96B1
-    and     #$FC                    ; $96B3
-    beq     @loc_96C0               ; $96B5
+@onScreen:
+    lda     drawOffscreen+1         ; $96B1  off screen: no hit tests,
+    and     #$FC                    ; $96B3  despawn if far
+    beq     @hitTests               ; $96B5
     lda     objCollision+1,x        ; $96B7
     and     #$0F                    ; $96B9
     sta     objCollision+1,x        ; $96BB
     jmp     Enemy_DespawnIfFar      ; $96BD
 
-@loc_96C0:
+@hitTests:
     jsr     Enemy_CheckProjectileHits ; $96C0
     jsr     Enemy_CheckSwordHit     ; $96C3
     jsr     Enemy_CheckLinkContact  ; $96C6
-    jsr     Enemy_MoveYAndFall      ; $96C9
+    jsr     Enemy_MoveYAndFall      ; $96C9  fall: +2/16 px/frame per frame
     jsr     Enemy_UpdateBgCollision ; $96CC
     jsr     Enemy_HurtLinkOnContact ; $96CF
-    jsr     Enemy_FaceLink          ; $96D2
-    lda     objCollision+1,x        ; $96D5
+    jsr     Enemy_FaceLink          ; $96D2  always face Link; temp15 = dx
+    lda     objCollision+1,x        ; $96D5  head against a ceiling?
     and     #$08                    ; $96D7
-    beq     @loc_96E0               ; $96D9
+    beq     @checkFloor             ; $96D9
 ; (code below not executed in the test movies)
-    lda     #$02                    ; $96DB
+    lda     #$02                    ; $96DB  start falling
     sta     objYVelocity+1,x        ; $96DD
 ; (end of code not executed in the test movies)
 
-@loc_96E0:
-    lda     objCollision+1,x        ; $96E0
+@checkFloor:
+    lda     objCollision+1,x        ; $96E0  on the ground?
     and     #$04                    ; $96E2
-    beq     @loc_9701               ; $96E4
-    sta     ram_04A0,x              ; $96E6
-    jsr     Enemy_KnockBackOrWalk_Bank4 ; $96E9
+    beq     @inAir                  ; $96E4
+    sta     enemyLanded,x           ; $96E6  landed (for the drawing)
+    jsr     Enemy_KnockBackOrWalk_Bank4 ; $96E9  move by last frame's velocity
     jsr     Enemy_Land              ; $96EC
-    sta     objXVelocity+1,x        ; $96EF
-    lda     temp15                  ; $96F1
+    sta     objXVelocity+1,x        ; $96EF  stop (a = 0)
+    lda     temp15                  ; $96F1  within 30 pixels?
     adc     #$1E                    ; $96F3
     cmp     #$3C                    ; $96F5
-    bcc     @loc_9704               ; $96F7
+    bcc     @near                   ; $96F7
 
-@loc_96F9:
-    ldy     objFacing+1,x           ; $96F9
+@walk:
+    ldy     objFacing+1,x           ; $96F9  walk toward Link
     lda     StalfosSpeeds,y         ; $96FB
     sta     objXVelocity+1,x        ; $96FE
 
 @done:
     rts                             ; $9700
 
-@loc_9701:
-    jmp     Enemy_Walk_Bank4        ; $9701
+@inAir:
+    jmp     Enemy_Walk_Bank4        ; $9701  in the air: keep moving
 
-@loc_9704:
-    lda     objYVelocity+1,x        ; $9704
+@near:
+    lda     objYVelocity+1,x        ; $9704  idle?
     ora     timerFast+TIMER_ENEMY,x ; $9707
     ora     objState+1,x            ; $970A
     bne     @done                   ; $970C
-    lda     rng+1,x                 ; $970E
+    lda     rng+1,x                 ; $970E  0-3 at random:
     and     #$03                    ; $9711
-    bne     @loc_9723               ; $9713
-    ldy     enemyType,x             ; $9715
+    bne     @notJump                ; $9713
+    ldy     enemyType,x             ; $9715  0, blue: jump at him
     cpy     #$23                    ; $9717
-    bne     @loc_9723               ; $9719
-    lda     #$CD                    ; $971B
+    bne     @notJump                ; $9719
+    lda     #$CD                    ; $971B  Y velocity -$33
     sta     objYVelocity+1,x        ; $971D
-    jmp     @loc_96F9               ; $9720
+    jmp     @walk                   ; $9720
 
-@loc_9723:
-    cmp     #$03                    ; $9723
-    bne     @loc_972B               ; $9725
+@notJump:
+    cmp     #$03                    ; $9723  3: wait 15 frames
+    bne     @swing                  ; $9725  (pose $FF -> 0)
     lda     #$FF                    ; $9727
     sta     objState+1,x            ; $9729
 
-@loc_972B:
-    jmp     Enemy_StartSwing        ; $972B
+@swing:
+    jmp     Enemy_StartSwing        ; $972B  else: wind up (pose 1)
 ; (unreferenced: $972E-$973C, 15 bytes)
     .byte   $A0, $04, $A5, $12, $29, $10, $F0, $02, $A0, $FC, $94, $77, $4C, $43, $99; $972E
 
@@ -2294,6 +2312,10 @@ Boss_DrawHpBarTile:
 @loc_9C5E:
     sta     oamBuffer+193,x         ; $9C5E
     lda     #$01                    ; $9C61
+; Iron Knuckle tables indexed by ironknuckleKind ($18-$1A) from addresses
+; inside this code: IronknuckleGuardMasks ($9C65: 1, 3, 3), the chance the
+; shield follows a stroke; IronknuckleRangeOffsets ($9C6C: $1C, $1C, $60)
+; and IronknuckleRanges ($9C70: $38, $38, $C0), its distance from Link.
 IronknuckleGuardMasks := * + 2
     sta     oamBuffer+194,x         ; $9C63
     lda     #$10                    ; $9C66
@@ -2314,12 +2336,16 @@ IronknuckleRanges:
     rts                             ; $9C7C
     .byte   $01, $03                                                        ; $9C7D
 
+; Iron Knuckle pacing X velocity by facing (1, 2), from the next table.
 IronknuckleSpeeds:
     .byte   $03                                                             ; $9C7F
 
+; X velocity toward Link (0 right, 1 left), 1/2 pixel per frame.
 SpeedsByFacing_Bank4:
     .byte   $08, $F8                                                        ; $9C80
 
+; Blue Iron Knuckle: thrown sword Y from its Y, by pose / 2 & 1 (4: +$0A
+; low; 2: 0 high).
 IronknuckleThrowYOffsets:
     .byte   $0A, $00, $1C, $1C, $60                                         ; $9C82
 ; (unreferenced: $9C87-$9C87, 1 bytes)
@@ -2331,253 +2357,277 @@ IronknuckleThrowYOffsets:
 ; ---------------------------------------------------------------------------
 ; Ironknuckle_Ai
 ;
-; Iron Knuckles ($18-$1A, and the unhorsed Rebonack): on Link's level, face
-; him and keep their distance, guarding at the height he attacks (on B) or
-; jumps; attack high or low at random (the blue one throws swords,
-; projectile type 5).  Otherwise pace back and forth, turning every $50
-; frames.
+; Iron Knuckles ($18 orange, $19 red, $1A blue; also the unhorsed
+; Rebonack, as blue).  ironknuckleKind indexes the tables.
 ;
-; Status:  provisional
+; Engaged when it is on screen (both sprite columns) and Link is level with
+; it or up to 41 pixels above it (its Y - his Y = 0-$29): it faces Link and
+; walks toward him at 1 pixel per frame until within IronknuckleRanges -
+; IronknuckleRangeOffsets: 28 pixels (orange, red) or 96 (blue).  There it
+; holds: at Link's X velocity while he walks, else swaying 1/2 pixel per
+; frame (frameCounter bit 6), halved unless Link jumps (always halved for
+; the blue).  It attacks every 64 frames (enemyAiState), 1 time in 16 the
+; next 32 frames sooner, and 4-7 frames after recovering from a hit
+; (enemyAiDir, set when its stun timer reaches 2).  An attack: 24 frames of
+; wind-up, then 16 of thrust (pose 2 high, pose 4 low), its sword tested
+; against Link every frame (Projectile_CheckLink).  The blue Iron Knuckle
+; instead throws its sword at the thrust (projectile type 5) and is done.
+; The height is half the time random, half the time Link's: high if he
+; stands, low if he crouches.  QUIRK: that is where his shield is; the
+; rule is the Moblins' (Fighter_StartAttack), whose poses are the other
+; way round.
+;
+; Its shield (guard, enemyAiVar) follows Link's stroke: when he presses B,
+; 1 time in 2 (orange) or 3 in 4 (red, blue; IronknuckleGuardMasks), it
+; goes to his height (high standing, low crouching); and while he isn't
+; level with it, high if he is more than 10 pixels above, else low.
+;
+; Not engaged, it paces: walks 1/2 pixel per frame for 80 frames, stands
+; 80, turns around, and so on.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ironknuckle_Ai:
     jsr     Enemy_Draw              ; $9C8C
-    lda     enemyType,x             ; $9C8F
+    lda     enemyType,x             ; $9C8F  table index: its type,
     cmp     #$18                    ; $9C91
-    bcs     @loc_9C97               ; $9C93
-    lda     #$1A                    ; $9C95
+    bcs     @setKind                ; $9C93
+    lda     #$1A                    ; $9C95  or blue's (unhorsed Rebonack)
 
-@loc_9C97:
-    sta     ram_00DF                ; $9C97
-    lda     objState+1,x            ; $9C99
-    beq     @loc_9CE3               ; $9C9B
-    and     #$01                    ; $9C9D
-    bne     @loc_9CC6               ; $9C9F
-    lda     ram_00DF                ; $9CA1
-    cmp     #$1A                    ; $9CA3
-    bne     @loc_9CC3               ; $9CA5
-    jsr     Enemy_FireProjectile    ; $9CA7
-    bcs     @loc_9CC3               ; $9CAA
-    lda     #$05                    ; $9CAC
+@setKind:
+    sta     ironknuckleKind         ; $9C97
+    lda     objState+1,x            ; $9C99  attacking?
+    beq     @guard                  ; $9C9B
+    and     #$01                    ; $9C9D  winding up (odd pose):
+    bne     @checkTimer             ; $9C9F  nothing to test
+    lda     ironknuckleKind         ; $9CA1  thrusting: the blue one
+    cmp     #$1A                    ; $9CA3  throws its sword,
+    bne     @testSword              ; $9CA5
+    jsr     Enemy_FireProjectile    ; $9CA7  2 px/frame the way it faces
+    bcs     @testSword              ; $9CAA  (no slot: thrust instead)
+    lda     #$05                    ; $9CAC  projectile type 5
     sta     a:objState+7,y          ; $9CAE
-    lda     objState+1,x            ; $9CB1
-    lsr     a                       ; $9CB3
+    lda     objState+1,x            ; $9CB1  from Y (pose 2, high) or
+    lsr     a                       ; $9CB3  Y + 10 (pose 4, low)
     and     #$01                    ; $9CB4
     tax                             ; $9CB6
     lda     IronknuckleThrowYOffsets,x ; $9CB7
     ldx     currentObject           ; $9CBA
     adc     objY+1,x                ; $9CBC
     sta     a:objY+7,y              ; $9CBE
-    bne     @loc_9CDF               ; $9CC1
+    bne     @endAttack              ; $9CC1  (always) done
 
-@loc_9CC3:
-    jsr     Projectile_CheckLink    ; $9CC3
+@testSword:
+    jsr     Projectile_CheckLink    ; $9CC3  the sword against Link
 
-@loc_9CC6:
-    lda     timerFast+TIMER_ENEMY,x ; $9CC6
-    bne     @loc_9CDC               ; $9CC9
-    inc     objState+1,x            ; $9CCB
+@checkTimer:
+    lda     timerFast+TIMER_ENEMY,x ; $9CC6  pose over?
+    bne     @toGuard                ; $9CC9
+    inc     objState+1,x            ; $9CCB  next pose
     lda     objState+1,x            ; $9CCD
-    cmp     #$03                    ; $9CCF
-    beq     @loc_9CDF               ; $9CD1
+    cmp     #$03                    ; $9CCF  past 2 or 4: done
+    beq     @endAttack              ; $9CD1
     cmp     #$05                    ; $9CD3
-    bcs     @loc_9CDF               ; $9CD5
-    lda     #$10                    ; $9CD7
+    bcs     @endAttack              ; $9CD5
+    lda     #$10                    ; $9CD7  thrust for 16 frames
     sta     timerFast+TIMER_ENEMY,x ; $9CD9
 
-@loc_9CDC:
-    jmp     @loc_9CE3               ; $9CDC
+@toGuard:
+    jmp     @guard                  ; $9CDC
 
-@loc_9CDF:
+@endAttack:
     lda     #$00                    ; $9CDF
     sta     objState+1,x            ; $9CE1
 
-@loc_9CE3:
-    jsr     Enemy_CheckProjectileHitsSpecial ; $9CE3
+@guard:
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9CE3  its shield (a clink returns)
     jsr     Enemy_UpdateBgCollision ; $9CE6
+    ; Enemy_UpdateCommon, without drawing it again.
     ldy     #$01                    ; $9CE9
     inx                             ; $9CEB
     jsr     Obj_ComputeScreenPos    ; $9CEC
     ldx     currentObject           ; $9CEF
-    lda     objYHi+1,x              ; $9CF1
+    lda     objYHi+1,x              ; $9CF1  fallen below the screen?
     cmp     #$02                    ; $9CF3
-    bcc     @loc_9CFA               ; $9CF5
+    bcc     @onScreen               ; $9CF5
     jmp     Enemy_Despawn           ; $9CF7
 
-@loc_9CFA:
-    lda     drawOffscreen+1         ; $9CFA
-    and     #$FC                    ; $9CFC
-    beq     @loc_9D0C               ; $9CFE
+@onScreen:
+    lda     drawOffscreen+1         ; $9CFA  off screen: no hit tests,
+    and     #$FC                    ; $9CFC  despawn if far
+    beq     @hitTests               ; $9CFE
     lda     objCollision+1,x        ; $9D00
     and     #$0F                    ; $9D02
     sta     objCollision+1,x        ; $9D04
     jsr     Enemy_DespawnIfFar      ; $9D06
-    jmp     @loc_9D15               ; $9D09
+    jmp     @move                   ; $9D09
 
-@loc_9D0C:
+@hitTests:
     jsr     Enemy_CheckProjectileHits ; $9D0C
     jsr     Enemy_CheckSwordHit     ; $9D0F
     jsr     Enemy_CheckLinkContact  ; $9D12
 
-@loc_9D15:
+@move:
     jsr     Enemy_HurtLinkOnContact ; $9D15
-    jsr     Enemy_MoveYAndFall      ; $9D18
+    jsr     Enemy_MoveYAndFall      ; $9D18  fall
     lda     objCollision+1,x        ; $9D1B
     and     #$04                    ; $9D1D
-    beq     @loc_9D24               ; $9D1F
+    beq     @walk                   ; $9D1F
     jsr     Enemy_Land              ; $9D21
 
-@loc_9D24:
-    jsr     Enemy_KnockBackOrWalk_Bank4 ; $9D24
-    lda     enemyStunTimer,x        ; $9D27
+@walk:
+    jsr     Enemy_KnockBackOrWalk_Bank4 ; $9D24  move by last frame's velocity
+    lda     enemyStunTimer,x        ; $9D27  just recovering from a hit?
     cmp     #$02                    ; $9D2A
-    bne     @loc_9D38               ; $9D2C
-    lda     rng+1,x                 ; $9D2E
+    bne     @checkEngaged           ; $9D2C
+    lda     rng+1,x                 ; $9D2E  attack in 4-7 frames
     and     #$03                    ; $9D31
     ora     #$04                    ; $9D33
     sta     enemyAiDir,x            ; $9D35
 
-@loc_9D38:
-    lda     enemyType,x             ; $9D38
-    cmp     #$18                    ; $9D3A
-    bcc     @loc_9D44               ; $9D3C
-    lda     drawOffscreen+1         ; $9D3E
+@checkEngaged:
+    lda     enemyType,x             ; $9D38  (the unhorsed Rebonack:
+    cmp     #$18                    ; $9D3A  even off screen)
+    bcc     @checkLevel             ; $9D3C
+    lda     drawOffscreen+1         ; $9D3E  partly off screen: pace
     and     #$0C                    ; $9D40
-    bne     @loc_9D4F               ; $9D42
+    bne     @toPace                 ; $9D42
 
-@loc_9D44:
-    lda     objY+1,x                ; $9D44
-    sec                             ; $9D46
+@checkLevel:
+    lda     objY+1,x                ; $9D44  Link level with it, or up to
+    sec                             ; $9D46  $29 above?
     sbc     objY                    ; $9D47
-    bcc     @loc_9D4F               ; $9D49
+    bcc     @toPace                 ; $9D49
     cmp     #$2A                    ; $9D4B
-    bcc     @loc_9D52               ; $9D4D
+    bcc     @engaged                ; $9D4D
 
-@loc_9D4F:
-    jmp     @loc_9DEE               ; $9D4F
+@toPace:
+    jmp     @pace                   ; $9D4F
 
-@loc_9D52:
-    lda     joypadPressed           ; $9D52
+@engaged:
+    lda     joypadPressed           ; $9D52  B pressed:
     and     #$40                    ; $9D54
-    beq     @loc_9D67               ; $9D56
-    ldy     ram_00DF                ; $9D58
+    beq     @followHeight           ; $9D56
+    ldy     ironknuckleKind         ; $9D58  1 in 2 (orange) or 3 in 4,
     lda     rng+1,x                 ; $9D5A
     and     IronknuckleGuardMasks,y ; $9D5D
-    beq     @loc_9D67               ; $9D60
-    lda     linkStanding            ; $9D62
+    beq     @followHeight           ; $9D60
+    lda     linkStanding            ; $9D62  shield to his stroke's height
     sta     enemyAiVar,x            ; $9D64
 
-@loc_9D67:
-    lda     objY                    ; $9D67
+@followHeight:
+    lda     objY                    ; $9D67  Link not level with it?
     cmp     objY+1,x                ; $9D69
-    beq     @loc_9D7B               ; $9D6B
-    ldy     #$01                    ; $9D6D
-    clc                             ; $9D6F
+    beq     @approach               ; $9D6B
+    ldy     #$01                    ; $9D6D  high if he is more than 10
+    clc                             ; $9D6F  above, else low
     adc     #$0A                    ; $9D70
     cmp     objY+1,x                ; $9D72
-    bcc     @loc_9D77               ; $9D74
+    bcc     @setGuard               ; $9D74
     dey                             ; $9D76
 
-@loc_9D77:
+@setGuard:
     tya                             ; $9D77
     sta     enemyAiVar,x            ; $9D78
 
-@loc_9D7B:
-    jsr     Enemy_FaceLink          ; $9D7B
+@approach:
+    jsr     Enemy_FaceLink          ; $9D7B  face him, 1 px/frame his way
     lda     SpeedsByFacing_Bank4,y  ; $9D7E
     asl     a                       ; $9D81
     sta     objXVelocity+1,x        ; $9D82
-    ldy     ram_00DF                ; $9D84
+    ldy     ironknuckleKind         ; $9D84  within its range?
     lda     temp15                  ; $9D86
     adc     IronknuckleRangeOffsets,y ; $9D88
     cmp     IronknuckleRanges,y     ; $9D8B
-    bcc     @loc_9D91               ; $9D8E
-    rts                             ; $9D90
+    bcc     @hold                   ; $9D8E
+    rts                             ; $9D90  no: keep coming
 
-@loc_9D91:
-    ldy     objXVelocity            ; $9D91
-    bne     @loc_9D9F               ; $9D93
-    ldy     #$08                    ; $9D95
-    lda     frameCounter            ; $9D97
+@hold:
+    ldy     objXVelocity            ; $9D91  Link's velocity while he
+    bne     @setSpeed               ; $9D93  moves,
+    ldy     #$08                    ; $9D95  else sway, 1/2 px/frame,
+    lda     frameCounter            ; $9D97  64 frames each way
     and     #$40                    ; $9D99
-    bne     @loc_9D9F               ; $9D9B
+    bne     @setSpeed               ; $9D9B
     ldy     #$F8                    ; $9D9D
 
-@loc_9D9F:
+@setSpeed:
     sty     objXVelocity+1,x        ; $9D9F
     tya                             ; $9DA1
-    ldy     ram_00DF                ; $9DA2
-    cpy     #$1A                    ; $9DA4
-    beq     @loc_9DAD               ; $9DA6
+    ldy     ironknuckleKind         ; $9DA2  halved (the blue always,
+    cpy     #$1A                    ; $9DA4  the others unless Link jumps)
+    beq     @halve                  ; $9DA6
     ldy     linkJumpState           ; $9DA8
-    bne     @loc_9DB0               ; $9DAB
+    bne     @maybeAttack            ; $9DAB
 
-@loc_9DAD:
-    asl     a                       ; $9DAD
+@halve:
+    asl     a                       ; $9DAD  keeping the sign
     ror     objXVelocity+1,x        ; $9DAE
 
-@loc_9DB0:
-    lda     objState+1,x            ; $9DB0
+@maybeAttack:
+    lda     objState+1,x            ; $9DB0  attacking already?
     bne     @done                   ; $9DB2
-    lda     enemyAiDir,x            ; $9DB4
-    beq     @loc_9DBF               ; $9DB7
+    lda     enemyAiDir,x            ; $9DB4  after a hit: count down,
+    beq     @countFrame             ; $9DB7  then attack
     dec     enemyAiDir,x            ; $9DB9
-    jmp     @loc_9DD2               ; $9DBC
+    jmp     @startAttack            ; $9DBC
 
-@loc_9DBF:
-    lda     #$3F                    ; $9DBF
+@countFrame:
+    lda     #$3F                    ; $9DBF  every 64 frames
     inc     enemyAiState,x          ; $9DC1
     and     enemyAiState,x          ; $9DC3
     bne     @done                   ; $9DC5
-    lda     rng+1,x                 ; $9DC7
+    lda     rng+1,x                 ; $9DC7  1 in 16: the next in 32
     and     #$0F                    ; $9DCA
-    bne     @loc_9DD2               ; $9DCC
+    bne     @startAttack            ; $9DCC
     lda     #$E0                    ; $9DCE
     sta     enemyAiState,x          ; $9DD0
 
-@loc_9DD2:
-    ldy     #$01                    ; $9DD2
+@startAttack:
+    ldy     #$01                    ; $9DD2  pose 1 high,
     lda     rng+1,x                 ; $9DD4
-    lsr     a                       ; $9DD7
-    bcs     @loc_9DE0               ; $9DD8
-    and     #$02                    ; $9DDA
-    tay                             ; $9DDC
+    lsr     a                       ; $9DD7  bit 0 set: by Link's stance
+    bcs     @byStance               ; $9DD8
+    and     #$02                    ; $9DDA  else at random (bit 2):
+    tay                             ; $9DDC  1 or 3
     iny                             ; $9DDD
-    bne     @loc_9DE6               ; $9DDE
+    bne     @setPose                ; $9DDE  (always)
 
-@loc_9DE0:
-    lda     linkStanding            ; $9DE0
-    bne     @loc_9DE6               ; $9DE2
-    iny                             ; $9DE4
+@byStance:
+    lda     linkStanding            ; $9DE0  standing: high
+    bne     @setPose                ; $9DE2
+    iny                             ; $9DE4  crouching: pose 3, low
     iny                             ; $9DE5
 
-@loc_9DE6:
+@setPose:
     sty     objState+1,x            ; $9DE6
-    lda     #$18                    ; $9DE8
+    lda     #$18                    ; $9DE8  wind up for 24 frames
     sta     timerFast+TIMER_ENEMY,x ; $9DEA
 
 @done:
     rts                             ; $9DED
 
-@loc_9DEE:
-    lda     enemyAiState,x          ; $9DEE
-    lsr     a                       ; $9DF0
-    bcs     @loc_9E03               ; $9DF1
-    lda     timerFast+TIMER_ENEMY,x ; $9DF3
-    bne     @loc_9DFB               ; $9DF6
-    jsr     Ironknuckle_PauseThenNext ; $9DF8
+@pace:
+    lda     enemyAiState,x          ; $9DEE  pacing: even state walks,
+    lsr     a                       ; $9DF0  odd stands
+    bcs     @stand                  ; $9DF1
+    lda     timerFast+TIMER_ENEMY,x ; $9DF3  walked 80 frames?
+    bne     @paceSpeed              ; $9DF6
+    jsr     Ironknuckle_PauseThenNext ; $9DF8  then stand
 
-@loc_9DFB:
-    ldy     objFacing+1,x           ; $9DFB
+@paceSpeed:
+    ldy     objFacing+1,x           ; $9DFB  1/2 px/frame the way it faces
     lda     IronknuckleSpeeds,y     ; $9DFD
     sta     objXVelocity+1,x        ; $9E00
     rts                             ; $9E02
 
-@loc_9E03:
-    lda     #$00                    ; $9E03
+@stand:
+    lda     #$00                    ; $9E03  standing still
     sta     objXVelocity+1,x        ; $9E05
-    lda     timerFast+TIMER_ENEMY,x ; $9E07
+    lda     timerFast+TIMER_ENEMY,x ; $9E07  stood 80 frames?
     bne     Ironknuckle_PauseThenNext_Done ; $9E0A
-    jsr     Enemy_TurnAround        ; $9E0C
+    jsr     Enemy_TurnAround        ; $9E0C  turn, and walk again
 
 ; ---------------------------------------------------------------------------
 ; Ironknuckle_PauseThenNext
@@ -2597,10 +2647,12 @@ Ironknuckle_PauseThenNext_Done:
 ; ---------------------------------------------------------------------------
 ; Enemy_KnockBackOrWalk_Bank4
 ;
-; While knocked back (enemyKnockBack), move by the knockback; otherwise move
-; unless against a wall.
+; While knocked back (enemyKnockBack), move by the knockback, which shrinks
+; by 1/16 pixel per frame toward 0 (with a background probe); then, or
+; otherwise (Enemy_Walk_Bank4), move by the X velocity unless at a wall.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank4:
     lda     enemyKnockBack,x        ; $9E17
@@ -2618,100 +2670,110 @@ Enemy_Walk_Bank4:
     lda     objCollision+1,x        ; $9E2C
     and     #$03                    ; $9E2E
     bne     Ironknuckle_PauseThenNext_Done ; $9E30
+; Ironknuckle_Draw: sword entry by pose 1-4, from the jmp's high byte:
+; $10, $12, $14, $12.
 IronknuckleDrawTiles := * + 2
     jmp     Enemy_MoveX             ; $9E32
     .byte   $10, $12, $14                                                   ; $9E35
 
-IronknuckleDrawYOffsets:
+; Ironknuckle_Draw: sword X offset by pose, facing left, then (+4) right.
+IronknuckleDrawXOffsets:
     .byte   $12, $05, $F8, $04, $F8, $FB, $08, $FC                          ; $9E38
 
-IronknuckleDrawXOffsets:
+; Ironknuckle_Draw: sword Y from Y + 32 by pose: -32 high, -16 low.
+IronknuckleDrawYOffsets:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9E40
 
 ; ---------------------------------------------------------------------------
 ; Ironknuckle_Draw
 ;
-; Draw an Iron Knuckle, its shield at the guarded height, and its sword when
-; attacking.
+; Draw an Iron Knuckle: its body, two pairs of sprites from sramEnemyTiles
+; entry $00 (shield high, guard 1) or $08 (shield low), 4 further on
+; alternate periods while it walks on the ground (8 frames, or 4 at 15/16
+; pixel per frame or faster); and in an attack (pose p) its sword, a pair
+; from IronknuckleDrawTiles[p] ($10, $12, $14, $12) at its Y (poses 1, 2,
+; high) or Y + 16 (3, 4, low), shifted by IronknuckleDrawXOffsets[p] (+4
+; facing right), doubled while the timer is 3-12 (the lunge); pose 4 is
+; drawn upside down.  Ironknuckle_DrawPair draws a pair from entry x.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ironknuckle_Draw:
-    lda     enemyAiVar,x            ; $9E45
+    lda     enemyAiVar,x            ; $9E45  shield high: entry $00,
     ldy     #$00                    ; $9E48
     asl     a                       ; $9E4A
-    bne     @loc_9E4F               ; $9E4B
-    ldy     #$08                    ; $9E4D
+    bne     @walkFrame              ; $9E4B
+    ldy     #$08                    ; $9E4D  low: $08
 
-@loc_9E4F:
-    lda     objCollision+1,x        ; $9E4F
+@walkFrame:
+    lda     objCollision+1,x        ; $9E4F  walking on the ground?
     and     #$04                    ; $9E51
-    beq     @loc_9E6C               ; $9E53
+    beq     @drawBody               ; $9E53
     lda     objXVelocity+1,x        ; $9E55
-    beq     @loc_9E6C               ; $9E57
-    bpl     @loc_9E5D               ; $9E59
+    beq     @drawBody               ; $9E57
+    bpl     @speed                  ; $9E59
     eor     #$FF                    ; $9E5B
 
-@loc_9E5D:
-    cmp     #$0F                    ; $9E5D
-    lda     #$08                    ; $9E5F
-    bcc     @loc_9E64               ; $9E61
+@speed:
+    cmp     #$0F                    ; $9E5D  fast: every 4 frames,
+    lda     #$08                    ; $9E5F  else every 8
+    bcc     @mask                   ; $9E61
     lsr     a                       ; $9E63
 
-@loc_9E64:
+@mask:
     and     frameCounter            ; $9E64
-    bne     @loc_9E6C               ; $9E66
-    iny                             ; $9E68
+    bne     @drawBody               ; $9E66
+    iny                             ; $9E68  the other frame (+4)
     iny                             ; $9E69
     iny                             ; $9E6A
     iny                             ; $9E6B
 
-@loc_9E6C:
+@drawBody:
     tya                             ; $9E6C
     ldy     objOamOffset+1,x        ; $9E6D
     tax                             ; $9E6F
-    jsr     Sprite_DrawEnemyPair    ; $9E70
-    jsr     Sprite_DrawEnemyPairKeepX ; $9E73
-    lda     drawOffscreen+1         ; $9E76
+    jsr     Sprite_DrawEnemyPair    ; $9E70  top pair
+    jsr     Sprite_DrawEnemyPairKeepX ; $9E73  bottom pair
+    lda     drawOffscreen+1         ; $9E76  partly off screen: no sword
     bne     Ironknuckle_PauseThenNext_Done ; $9E78
-    lda     objState+1,x            ; $9E7A
+    lda     objState+1,x            ; $9E7A  attacking?
     beq     Ironknuckle_PauseThenNext_Done ; $9E7C
     sta     temp6                   ; $9E7E
     tax                             ; $9E80
-    lda     temp0                   ; $9E81
-    adc     IronknuckleDrawXOffsets,x ; $9E83
+    lda     temp0                   ; $9E81  sword Y: (Y + 32) - 32 or - 16
+    adc     IronknuckleDrawYOffsets,x ; $9E83
     sta     temp0                   ; $9E86
-    lda     temp2                   ; $9E88
-    lsr     a                       ; $9E8A
-    bcc     @loc_9E91               ; $9E8B
+    lda     temp2                   ; $9E88  facing right: the second four
+    lsr     a                       ; $9E8A  X offsets
+    bcc     @swordX                 ; $9E8B
     inx                             ; $9E8D
     inx                             ; $9E8E
     inx                             ; $9E8F
     inx                             ; $9E90
 
-@loc_9E91:
-    lda     IronknuckleDrawYOffsets,x ; $9E91
+@swordX:
+    lda     IronknuckleDrawXOffsets,x ; $9E91
     ldx     currentObject           ; $9E94
     sty     temp7                   ; $9E96
-    ldy     timerFast+TIMER_ENEMY,x ; $9E98
+    ldy     timerFast+TIMER_ENEMY,x ; $9E98  doubled while the timer is 3-12
     cpy     #$03                    ; $9E9B
-    bcc     @loc_9EA4               ; $9E9D
+    bcc     @addX                   ; $9E9D
     cpy     #$0D                    ; $9E9F
-    bcs     @loc_9EA4               ; $9EA1
+    bcs     @addX                   ; $9EA1
     asl     a                       ; $9EA3
 
-@loc_9EA4:
+@addX:
     adc     temp1                   ; $9EA4
     sta     temp1                   ; $9EA6
     ldy     temp7                   ; $9EA8
     ldx     temp6                   ; $9EAA
-    cpx     #$04                    ; $9EAC
-    bne     @loc_9EB6               ; $9EAE
+    cpx     #$04                    ; $9EAC  low thrust: upside down
+    bne     @swordTiles             ; $9EAE
     lda     temp3                   ; $9EB0
     ora     #$80                    ; $9EB2
     sta     temp3                   ; $9EB4
 
-@loc_9EB6:
+@swordTiles:
     lda     IronknuckleDrawTiles,x  ; $9EB6
     tax                             ; $9EB9
 
@@ -6364,9 +6426,11 @@ HorseHead_Attack:
 ; ---------------------------------------------------------------------------
 ; Enemy_StartSwing
 ;
-; Start a sword or mace swing: next objState, 15 frames.
+; Start a sword or mace swing, or its next pose: objState+1 + 1, for 15
+; frames (timerFast+TIMER_ENEMY).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_StartSwing:
     inc     objState+1,x            ; $BC23
@@ -6698,6 +6762,7 @@ HelmetheadHead_DrawPart:
     asl     a                       ; $BDE4
     adc     #$74                    ; $BDE5
     tax                             ; $BDE7
+; Stalfos_Draw: sword X offset by facing, the bytes after the jmp: +16, -16.
 StalfosDrawOffsets := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $BDE8
     .byte   $10, $F0                                                        ; $BDEB
@@ -6705,92 +6770,100 @@ StalfosDrawOffsets := * + 2
 ; ---------------------------------------------------------------------------
 ; Stalfos_Draw
 ;
-; Draw a Stalfos and its sword.
+; Draw a Stalfos (it turns toward Link here as well): two pairs of sprites
+; from sramEnemyTiles entry:
+; - in the air: $34 rising; falling, $38 (front-on, both halves mirrored
+;   to match) until it has first landed (enemyLanded), then $38, or $30
+;   when 48 or more pixels from Link;
+; - on the ground: $2C, alternating with $30 every 8 frames; $42/$46 in the
+;   wind-up (pose 1, + $16); $3C slashing (pose 2), with the sword, a pair
+;   from entry $40 beside it (StalfosDrawOffsets: 16 right or 16 left) at
+;   its Y.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Stalfos_Draw:
     tya                             ; $BDED
     pha                             ; $BDEE
-    jsr     Enemy_FaceLink          ; $BDEF
+    jsr     Enemy_FaceLink          ; $BDEF  face Link (temp15 = dx)
     pla                             ; $BDF2
     tay                             ; $BDF3
-    lda     ram_04A0,x              ; $BDF4
+    lda     enemyLanded,x           ; $BDF4
     sta     temp14                  ; $BDF7
-    lda     #$00                    ; $BDF9
+    lda     #$00                    ; $BDF9  entry offset
     sta     temp13                  ; $BDFB
-    lda     objYVelocity+1,x        ; $BDFD
-    beq     @loc_BE18               ; $BE00
-    ldx     #$34                    ; $BE02
+    lda     objYVelocity+1,x        ; $BDFD  in the air?
+    beq     @onGround               ; $BE00
+    ldx     #$34                    ; $BE02  rising: $34
     asl     a                       ; $BE04
-    bcs     @loc_BE31               ; $BE05
-    lda     temp14                  ; $BE07
-    beq     @loc_BE13               ; $BE09
-    lda     temp15                  ; $BE0B
+    bcs     @draw                   ; $BE05
+    lda     temp14                  ; $BE07  falling, not yet landed:
+    beq     @frontOn                ; $BE09  front-on
+    lda     temp15                  ; $BE0B  near Link (within 48)?
     adc     #$30                    ; $BE0D
     cmp     #$60                    ; $BE0F
-    bcs     @loc_BE2F               ; $BE11
+    bcs     @walk2                  ; $BE11  no: $30
 
-@loc_BE13:
-    ldx     #$38                    ; $BE13
-    jmp     @loc_BE31               ; $BE15
+@frontOn:
+    ldx     #$38                    ; $BE13  $38
+    jmp     @draw                   ; $BE15
 
-@loc_BE18:
-    lda     objState+1,x            ; $BE18
-    ldx     #$3C                    ; $BE1A
+@onGround:
+    lda     objState+1,x            ; $BE18  pose
+    ldx     #$3C                    ; $BE1A  slashing: $3C
     cmp     #$02                    ; $BE1C
-    bcs     @loc_BE31               ; $BE1E
-    lsr     a                       ; $BE20
-    bcc     @loc_BE27               ; $BE21
+    bcs     @draw                   ; $BE1E
+    lsr     a                       ; $BE20  winding up: + $16
+    bcc     @walk                   ; $BE21
     lda     #$16                    ; $BE23
     sta     temp13                  ; $BE25
 
-@loc_BE27:
-    ldx     #$2C                    ; $BE27
+@walk:
+    ldx     #$2C                    ; $BE27  $2C / $30 every 8 frames
     lda     frameCounter            ; $BE29
     and     #$08                    ; $BE2B
-    beq     @loc_BE31               ; $BE2D
+    beq     @draw                   ; $BE2D
 
-@loc_BE2F:
+@walk2:
     ldx     #$30                    ; $BE2F
 
-@loc_BE31:
+@draw:
     stx     drawScratch             ; $BE31
     txa                             ; $BE33
     clc                             ; $BE34
     adc     temp13                  ; $BE35
     tax                             ; $BE37
-    jsr     Sprite_DrawEnemyPair    ; $BE38
-    jsr     Sprite_DrawEnemyPairKeepX ; $BE3B
-    lda     drawScratch             ; $BE3E
+    jsr     Sprite_DrawEnemyPair    ; $BE38  top pair
+    jsr     Sprite_DrawEnemyPairKeepX ; $BE3B  bottom pair
+    lda     drawScratch             ; $BE3E  front-on ($38):
     cmp     #$38                    ; $BE40
-    bne     @loc_BE57               ; $BE42
-    lda     oamBuffer - 14,y        ; $BE44
+    bne     @sword                  ; $BE42
+    lda     oamBuffer - 14,y        ; $BE44  left halves as drawn,
     and     #$3F                    ; $BE47
     sta     oamBuffer - 14,y        ; $BE49
     sta     oamBuffer - 6,y         ; $BE4C
-    ora     #$40                    ; $BE4F
+    ora     #$40                    ; $BE4F  right halves mirrored
     sta     oamBuffer - 10,y        ; $BE51
     sta     oamBuffer - 2,y         ; $BE54
 
-@loc_BE57:
-    lda     objState+1,x            ; $BE57
+@sword:
+    lda     objState+1,x            ; $BE57  slashing,
     cmp     #$02                    ; $BE59
     bne     @done                   ; $BE5B
-    lda     drawOffscreen+1         ; $BE5D
+    lda     drawOffscreen+1         ; $BE5D  on screen, on the ground?
     ora     objYVelocity+1,x        ; $BE5F
     bne     @done                   ; $BE62
     tya                             ; $BE64
     pha                             ; $BE65
-    ldy     objFacing+1,x           ; $BE66
+    ldy     objFacing+1,x           ; $BE66  the sword beside it
     lda     temp1                   ; $BE68
     adc     StalfosDrawOffsets,y    ; $BE6A
     sta     temp1                   ; $BE6D
-    lda     objY+1,x                ; $BE6F
+    lda     objY+1,x                ; $BE6F  at its Y
     sta     temp0                   ; $BE71
     pla                             ; $BE73
     tay                             ; $BE74
-    ldx     #$40                    ; $BE75
+    ldx     #$40                    ; $BE75  entry $40
     jmp     Sprite_DrawEnemyPairKeepX ; $BE77
 
 @done:

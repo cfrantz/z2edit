@@ -4527,7 +4527,7 @@ Enemy_Spawn:
     sta     enemyKnockBack,x        ; $D69F
     sta     objYVelocity+1,x        ; $D6A2
     sta     enemyAiVar,x            ; $D6A5
-    sta     ram_04A0,x              ; $D6A8
+    sta     enemyLanded,x           ; $D6A8
     ldy     enemyType,x             ; $D6AB
     lda     sramEnemyHp,y           ; $D6AD
     sta     enemyHp,x               ; $D6B0

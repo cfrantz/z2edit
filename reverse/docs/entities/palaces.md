@@ -34,18 +34,18 @@ Octoroks, are the "Ropes" of the palaces).
 | $15 | [Crystal](enemies/crystal.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |
 | $16 | [Energy Ball Shooter (down/right)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
 | $17 | [Energy Ball Shooter (down/left)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
-| $18 | Orange Iron Knuckle | 16 | 50 | 2 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
-| $19 | Red Iron Knuckle | 24 | 100 | 3 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
-| $1A | Blue Iron Knuckle | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
+| $18 | [Orange Iron Knuckle](enemies/iron-knuckle.md) | 16 | 50 | 2 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
+| $19 | [Red Iron Knuckle](enemies/iron-knuckle.md) | 24 | 100 | 3 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
+| $1A | [Blue Iron Knuckle](enemies/iron-knuckle.md) | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $1B | [Wolf Head Generator](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL | `WolfHeadGenerator_Ai` |
 | $1C | [Wolf Head](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
 | $1D | Wizzrobe | 32 | 200 | 3 | - | blocks Link's projectiles, immune to SPELL | `Mago_Ai` |
 | $1E | Hammer Thrower | 16 | 50 | 2 | 2 | blocks Link's projectiles | `HammerThrower_Ai` |
-| $1F | Red Stalfos | 8 | 30 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
+| $1F | [Red Stalfos](enemies/stalfos.md) | 8 | 30 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 | $20 | Horse Head | 32 | 50 | 2 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `HorseHead_Ai` |
 | $21 | Helmethead (Gooma in palace 5) | 48 | 150 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Helmethead_Ai` |
 | $22 | Helmethead Head | 80 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `HelmetheadHead_Ai` |
-| $23 | Blue Stalfos | 12 | 50 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
+| $23 | [Blue Stalfos](enemies/stalfos.md) | 12 | 50 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 
 ## Palaces 3, 4 and 6
 
@@ -75,18 +75,18 @@ Octoroks, are the "Ropes" of the palaces).
 | $15 | [Crystal](enemies/crystal.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |
 | $16 | [Energy Ball Shooter (down/right)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
 | $17 | [Energy Ball Shooter (down/left)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
-| $18 | Orange Iron Knuckle | 16 | 50 | 2 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
-| $19 | Red Iron Knuckle | 24 | 100 | 3 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
-| $1A | Blue Iron Knuckle | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
+| $18 | [Orange Iron Knuckle](enemies/iron-knuckle.md) | 16 | 50 | 2 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
+| $19 | [Red Iron Knuckle](enemies/iron-knuckle.md) | 24 | 100 | 3 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
+| $1A | [Blue Iron Knuckle](enemies/iron-knuckle.md) | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $1B | [Wolf Head Generator](enemies/wolf-head.md) | 2 | 5 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder | `WolfHeadGenerator_Ai` |
 | $1C | [Wolf Head](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
 | $1D | Wizzrobe | 1 | 100 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `Wizrobe_Ai` |
 | $1E | Doom Knocker | 32 | 100 | 3 | - | blocks Link's projectiles | `DoomKnocker_Ai` |
-| $1F | Red Stalfos Knight | 24 | 50 | 2 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
+| $1F | [Red Stalfos Knight](enemies/stalfos.md) | 24 | 50 | 2 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 | $20 | Rebonack | 72 | 301 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Rebonack_Ai` |
 | $21 | Barba | 192 | 700 | 5 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Barba_Ai` |
 | $22 | Carock | 16 | 301 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Carock_Ai` |
-| $23 | Blue Stalfos Knight | 32 | 70 | 3 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
+| $23 | [Blue Stalfos Knight](enemies/stalfos.md) | 32 | 70 | 3 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 
 ## Shared Enemies
 
@@ -106,20 +106,15 @@ the palace's crystal, for a fanfare, full meters and a level.  See
 down at Link every 32 frames.  See
 [Energy Ball Shooter](enemies/energy-ball-shooter.md).
 
-**Iron Knuckles** ($18 orange, $19 red, $1A blue; `Ironknuckle_Ai`):
-armored knights.  When Link is on their level they face him and keep
-their distance, mirroring his attacks: when he presses B they may raise
-their shield to the height he is attacking (crouching or standing), and
-they follow his height when he jumps; they attack high or low at random,
-and the blue one throws swords (projectile type 5).  Out of Link's reach
-they pace back and forth, turning every 80 frames.  Their shield blocks
-the sword except where it is open (kept in `enemyAiVar`), and they block
-the beam and fire.
+**Iron Knuckles** ($18 orange, $19 red, $1A blue): armored knights that
+walk up to Link, hold, and trade blows, following his strokes with their
+shield; the blue one throws its sword.  See
+[Iron Knuckle](enemies/iron-knuckle.md).
 
-**Stalfos** ($1F red, $23 blue; `Stalfos_Ai`): skeleton knights that
-drop from the ceiling when they come into view, then face Link and walk
-to within 30 pixels, slashing (`Enemy_StartSwing`); the blue Stalfos
-also jumps at him (1 time in 4).  Only their unshielded part can be hit.
+**Stalfos** ($1F red, $23 blue): skeleton knights that drop from the
+ceiling as they come into view, walk up to Link and slash; the blue one
+also leaps at him.  Their shield guards their head.  See
+[Stalfos](enemies/stalfos.md).
 
 **Wolf heads** ($1C) and their generator ($1B): heads that cross the
 screen in steps, firing straight ahead, one every 128 frames from the

@@ -57,6 +57,8 @@ and how each was verified):
 | [Crystal Spot](enemies/crystal.md) | $14, $15 in the palaces |
 | [Energy Ball Shooter](enemies/energy-ball-shooter.md) | $16, $17 in the palaces |
 | [Wolf Head](enemies/wolf-head.md) | $1B, $1C in the palaces |
+| [Iron Knuckle](enemies/iron-knuckle.md) | $18-$1A in the palaces |
+| [Stalfos](enemies/stalfos.md) | $1F, $23 in the palaces |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI

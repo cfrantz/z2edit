@@ -231,7 +231,7 @@ def main():
             wr(eq["objFacing"] + 1 + slot, facing)
             wr(eq["objXVelocity"] + 1 + slot, 0x08 if facing == 1 else 0xF8)
             wr(eq["enemyHp"] + slot, rd(eq["sramEnemyHp"] + typ))
-            for name in ("enemyStunTimer", "enemyAiState", "enemyKnockBack", "enemyAiVar", "ram_04A0", "enemyAiDir"):
+            for name in ("enemyStunTimer", "enemyAiState", "enemyKnockBack", "enemyAiVar", "enemyLanded", "enemyAiDir"):
                 wr(eq[name] + slot, 0)
             for name in ("objState", "objYVelocity", "objCollision"):
                 wr(eq[name] + 1 + slot, 0)
