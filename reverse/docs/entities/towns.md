@@ -12,9 +12,9 @@ bit 7 and 4).  What each person says is the business of the town code
 
 | Type | Person (z2edit's name) | AI |
 |------|------------------------|----|
-| $00 | Fairy | `Fairy_Ai` |
-| $01 | Red Jar | `Item_Fall` |
-| $02 | Door | `LockedDoor_Ai` |
+| $00 | [Fairy](enemies/fairy.md) | `Fairy_Ai` |
+| $01 | [Red Jar](enemies/item.md) | `Item_Fall` |
+| $02 | [Door](enemies/locked-door.md) | `LockedDoor_Ai` |
 | $03 | Purple Keese | `TownBat_Ai` |
 | $04 | [Purple Bot](enemies/bot.md) | `Bot_Ai` |
 | $05 | [Bit](enemies/bit.md) | `Bit_Ai` |

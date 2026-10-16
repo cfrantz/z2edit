@@ -443,7 +443,7 @@ Overworld_CheckEncounter:
 ; Draw the overworld encounter sprites (slots 2-7: objY, objX, moved by
 ; encounterYOffset/encounterXOffset), and start an encounter when one touches Link on
 ; terrain where encounters happen: areaLocation = $FF, the kind in
-; ram_0759 and ram_075A, then enter it (Overworld_EnterLocation).
+; fairyEncounter and encounterKind, then enter it (Overworld_EnterLocation).
 ; Encounters that leave the screen are removed.
 ;
 ; Status:  confirmed
@@ -546,16 +546,16 @@ Overworld_DrawEncounters:
     ldy     #$FF                    ; $83D9
     sty     areaLocation            ; $83DB
     iny                             ; $83DE
-    sty     ram_075A                ; $83DF
+    sty     encounterKind           ; $83DF
     lda     #$01                    ; $83E2
     ldy     objState+2,x            ; $83E4
     cpy     #$03                    ; $83E6
     beq     @loc_83EE               ; $83E8
-    sty     ram_075A                ; $83EA
+    sty     encounterKind           ; $83EA
     lsr     a                       ; $83ED
 
 @loc_83EE:
-    sta     ram_0759                ; $83EE
+    sta     fairyEncounter          ; $83EE
     pla                             ; $83F1
     pla                             ; $83F2
     lda     #$02                    ; $83F3
@@ -2829,7 +2829,7 @@ Link_EnterArea:
 @loc_90AB:
     lda     #$00                    ; $90AB
     sta     linkFallingIn           ; $90AD
-    sta     enteredFromOverworld    ; $90B0
+    sta     enteredVertically       ; $90B0
     sta     drawOffscreen           ; $90B3
     sta     linkButtonsPressed      ; $90B5
     sta     linkDirHeld             ; $90B8
@@ -2865,30 +2865,36 @@ Link_EnterArea:
 ; ---------------------------------------------------------------------------
 ; Area_PlaceElevatorAndDoor
 ;
-; Place the area's elevator (elevatorPos) and locked door (lockedDoorPos),
-; if any, as objects.
+; Set up the area's fixed objects after it is built.  Normally: the
+; elevator (Elevator_Place, if elevatorPos is set) in enemy slot 0, and
+; the locked door (if lockedDoorPos is set and its page's area flag still
+; shows it shut, Area_TestFlag) in slot 1, at the column's X and Y $A0,
+; type 2, no list entry, 255 hit points.  In a fairy encounter
+; (fairyEncounter): a fairy (type 0) in slot 1 at X $180, 42 or 43 above
+; Link, every other slot emptied, and the area made one screen wide
+; (areaLastPage 0).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_PlaceElevatorAndDoor:
-    lda     ram_0759                ; $90ED
-    bne     @loc_912F               ; $90F0
-    lda     elevatorPos             ; $90F2
-    beq     @loc_90FA               ; $90F5
+    lda     fairyEncounter          ; $90ED  a fairy encounter?
+    bne     @fairy                  ; $90F0
+    lda     elevatorPos             ; $90F2  an elevator?
+    beq     @door                   ; $90F5
     jsr     Elevator_Place          ; $90F7
 
-@loc_90FA:
-    lda     lockedDoorPos           ; $90FA
+@door:
+    lda     lockedDoorPos           ; $90FA  a locked door?
     beq     @done                   ; $90FD
-    lsr     a                       ; $90FF
+    lsr     a                       ; $90FF  its page,
     lsr     a                       ; $9100
     lsr     a                       ; $9101
     lsr     a                       ; $9102
     sta     temp13                  ; $9103
     tax                             ; $9105
-    jsr     Area_TestFlag           ; $9106
-    beq     @done                   ; $9109
-    lda     temp13                  ; $910B
+    jsr     Area_TestFlag           ; $9106  still shut?
+    beq     @done                   ; $9109  opened before: none
+    lda     temp13                  ; $910B  slot 1, at its column
     sta     objXHi+2                ; $910D
     lda     lockedDoorPos           ; $910F
     asl     a                       ; $9112
@@ -2896,55 +2902,61 @@ Area_PlaceElevatorAndDoor:
     asl     a                       ; $9114
     asl     a                       ; $9115
     sta     objX+2                  ; $9116
-    lda     #$A0                    ; $9118
+    lda     #$A0                    ; $9118  Y $A0
     sta     objY+2                  ; $911A
-    lda     #$02                    ; $911C
+    lda     #$02                    ; $911C  type 2, the door
 
-@loc_911E:
-    sta     enemyType+1             ; $911E
-    ldx     #$FF                    ; $9120
+@setSlot1:
+    sta     enemyType+1             ; $911E  slot 1's type
+    ldx     #$FF                    ; $9120  no list entry,
     stx     enemySramIndex+1        ; $9122
-    stx     enemyHp+1               ; $9124
+    stx     enemyHp+1               ; $9124  255 hit points
     inx                             ; $9126
-    stx     ram_00B0                ; $9127
+    stx     enemyAiState+1          ; $9127  not opening
     inx                             ; $9129
     stx     objYHi+2                ; $912A
-    stx     enemyActive+1           ; $912C
+    stx     enemyActive+1           ; $912C  active
 
 @done:
     rts                             ; $912E
 
-@loc_912F:
-    lda     #$80                    ; $912F
+@fairy:
+    lda     #$80                    ; $912F  the fairy: X $180,
     sta     objX+2                  ; $9131
-    lda     objY                    ; $9133
+    lda     objY                    ; $9133  42 or 43 above Link (carry)
     sbc     #$2A                    ; $9135
     sta     objY+2                  ; $9137
     lda     #$01                    ; $9139
     sta     objXHi+2                ; $913B
-    lsr     a                       ; $913D
-    sta     objState+2              ; $913E
-    sta     enemyActive             ; $9140
+    lsr     a                       ; $913D  a = 0:
+    sta     objState+2              ; $913E  its sound not played yet,
+    sta     enemyActive             ; $9140  the other slots empty,
     sta     enemyActive+2           ; $9142
     sta     enemyActive+3           ; $9144
     sta     enemyActive+4           ; $9146
     sta     enemyActive+5           ; $9148
-    sta     areaLastPage            ; $914A
-    bpl     @loc_911E               ; $914C
+    sta     areaLastPage            ; $914A  one screen wide
+    bpl     @setSlot1               ; $914C  type 0, the fairy (always)
 
+; Elevator_Place: Y of an elevator Link arrives on (coming down, coming up).
 ElevatorYPositions:
     .byte   $10, $C0                                                        ; $914E
 
 ; ---------------------------------------------------------------------------
 ; Elevator_Place
 ;
-; Place the area's elevator at column a: it is enemy slot 0, of type $13
-; (which is never despawned and cannot be hit).
+; Place the area's elevator at column a (elevatorPos): enemy slot 0, type
+; $13 (never despawned, can't be hit), at X = column x 16 + 4 and Y $98,
+; with no list entry.  When Link arrives by elevator (enteredVertically),
+; he is put at X $70 and the elevator at the top (Y $10, coming down) or
+; the bottom (Y $C0, coming up) of the screen (ElevatorYPositions, by
+; linkUpDownHeld), with Link on it.  linkUpDownHeld is cleared.
 ;
+; In:      a = column
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Elevator_Place:
-    ldy     #$00                    ; $9150
+    ldy     #$00                    ; $9150  X = column x 16 (page in XHi)
     sty     objXHi+1                ; $9152
     asl     a                       ; $9154
     asl     a                       ; $9155
@@ -2952,31 +2964,31 @@ Elevator_Place:
     rol     objXHi+1                ; $9157
     asl     a                       ; $9159
     rol     objXHi+1                ; $915A
-    adc     #$04                    ; $915C
+    adc     #$04                    ; $915C  + 4
     sta     objX+1                  ; $915E
-    lda     #ENEMY_TYPE_ELEVATOR    ; $9160
+    lda     #ENEMY_TYPE_ELEVATOR    ; $9160  slot 0: the elevator
     sta     enemyType               ; $9162
     iny                             ; $9164
     sty     objYHi+1                ; $9165
     sty     enemyActive             ; $9167
-    lda     #$98                    ; $9169
+    lda     #$98                    ; $9169  Y $98
     sta     objY+1                  ; $916B
-    sta     enemySramIndex          ; $916D
-    ldy     enteredFromOverworld    ; $916F
-    beq     @loc_9188               ; $9172
-    lda     #$70                    ; $9174
+    sta     enemySramIndex          ; $916D  (bit 7: no list entry)
+    ldy     enteredVertically       ; $916F  arrived by elevator?
+    beq     @done                   ; $9172
+    lda     #$70                    ; $9174  Link at X $70,
     sta     objX                    ; $9176
-    lda     linkUpDownHeld          ; $9178
-    lsr     a                       ; $917B
+    lda     linkUpDownHeld          ; $9178  Down (4) / 8 = 0: top,
+    lsr     a                       ; $917B  Up (8) / 8 = 1: bottom
     lsr     a                       ; $917C
     lsr     a                       ; $917D
     tay                             ; $917E
     lda     ElevatorYPositions,y    ; $917F
     sta     objY+1                  ; $9182
-    adc     #$08                    ; $9184
+    adc     #$08                    ; $9184  Link on it
     sta     objY                    ; $9186
 
-@loc_9188:
+@done:
     lda     #$00                    ; $9188
     sta     linkUpDownHeld          ; $918A
     rts                             ; $918D
@@ -5740,7 +5752,7 @@ Game_ShowContinueScreen:
     sta     pauseState              ; $A1BD
     sta     menuRow                 ; $A1C0
     sta     menuCursor              ; $A1C3
-    sta     ram_0759                ; $A1C6
+    sta     fairyEncounter          ; $A1C6
     sta     experience              ; $A1C9
     sta     experience+1            ; $A1CC
     lda     #$06                    ; $A1CF

@@ -204,7 +204,7 @@ def main():
             for x in range(6):
                 wr(eq["enemyActive"] + x, 0)
                 wr(eq["objState"] + 7 + x, 0)
-            wr(eq["ram_0759"], 1)  # Enemy_TrySpawn: no spawning from the list
+            wr(eq["fairyEncounter"], 1)  # Enemy_TrySpawn: no spawning from the list
 
     def take_over():
         clear()

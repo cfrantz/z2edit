@@ -9,29 +9,23 @@ all of them; their hit points, experience and damage differ by group
 
 ## Objects
 
-**Fairy** ($00, `Fairy_Ai`, `Fairy_Draw`).  Bobs in place, flapping, and
-plays its sound when it first appears.  When Link touches it, his life
-meter is refilled (`statMeterPending`) while the game is frozen and the
-screen flashes; then it disappears.  It cannot be hurt.
+**Fairy** ($00): hovers in place; touching it refills Link's life
+while the game stands still and the screen flashes.  Fairy encounters on
+the overworld place one.  See [Fairy](enemies/fairy.md).
 
-**Items** ($01, `Item_Fall`, `Item_Draw`).  An item (its kind in
-`enemyAiState`) falls with gravity, bouncing a little if it lands fast,
-and is collected by touch (`Item_Collect`): inventory items (kinds 0-7),
-keys (8), experience bags ($0A-$0D: 50, 100, 200, 500), magic jars ($10:
-one block, $11: full), a 1-up doll ($12).  The red jar placed in areas is
-this type, made a full magic jar by its spawn routine
-(`RedJar_Init_BankN`).
+**Items** ($01): fall and bounce; inventory items, containers and the
+rest are taken by touch, and Link holds them up; keys, experience bags
+and magic jars only by the sword.  An area's own items stay taken by
+their page's area flag.  See [Item](enemies/item.md) and
+[Items and Drops](../systems/items.md).
 
-**Locked door** ($02, `LockedDoor_Ai`, `LockedDoor_Draw`).  Pushes Link
-back when he walks into it.  If he has the magic key, or a key (which is
-used up), it opens: its area flag is cleared so that it stays open, and
-the game freezes while it slides up for 17 frames.
+**Locked door** ($02): placed by the area; pushes Link back, and opens
+with a key or the magic key, staying open.  See
+[Locked Door](enemies/locked-door.md).
 
-**Elevator** ($13, `Elevator_Ai`, `Elevator_Draw`).  Placed by the area
-(`Elevator_Place`, from `elevatorPos`), not by the enemy list.  While
-Link stands on it, Up and Down move it and him, with a sound; at the
-bottom of the screen it takes him to the room below
-(`Mode_FindConnectedRoom`).
+**Elevator** ($13): placed by the area; carries Link up and down at 1.5
+pixels per frame, and off the screen to the connected room.  See
+[Elevator](enemies/elevator.md).
 
 ## Enemies
 

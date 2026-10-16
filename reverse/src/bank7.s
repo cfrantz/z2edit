@@ -1042,7 +1042,7 @@ Area_Load:
     sta     areaDataPtr+1           ; $C534
     lda     (temp2),y               ; $C536
     sta     enemyListPtr+1          ; $C538
-    lda     ram_075A                ; $C53A
+    lda     encounterKind           ; $C53A
     pha                             ; $C53D
     cmp     #$02                    ; $C53E
     bcc     @loc_C551               ; $C540
@@ -1264,7 +1264,7 @@ Area_SaveEntryScroll:
     ldx     #$04                    ; $C67C
     stx     areaStartPage           ; $C67E
     jsr     Scroll_SavePageState    ; $C681
-    inc     enteredFromOverworld    ; $C684
+    inc     enteredVertically       ; $C684
     jmp     Game_BlankAndNextMode   ; $C687
 
 ; ---------------------------------------------------------------------------
@@ -1864,8 +1864,12 @@ Area_CheckPageSkip:
 ; ---------------------------------------------------------------------------
 ; Area_PlaceItem
 ;
-; Area object $0F: an item, whose kind is in the following byte.  It is
-; placed as an object in a free enemy slot.
+; Area object $0F: an item, whose kind is in the following byte.  Unless
+; its page's area flag shows it taken (Area_TestFlag), it is placed as an
+; item object (type 1) in the highest free enemy slot (slot 0 if none is
+; free), 3 pixels into the object's column and $20 below its row, falling,
+; with no list entry (enemySramIndex bit 7).  So an area has at most one
+; item, or locked door, that stays taken per page.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -4412,7 +4416,7 @@ EnemySpawnYPositions:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_TrySpawn:
-    lda     ram_0759                ; $D603
+    lda     fairyEncounter          ; $D603
     bne     Enemy_TrySpawnDone      ; $D606
     lda     scrollPage              ; $D608
     lsr     a                       ; $D60B
@@ -5029,6 +5033,7 @@ OctorokWalking_Ai:
 @done:
     rts                             ; $D8BE
 
+; Elevator: Y velocity by linkUpDownHeld / 4 (none, Down, Up): 1.5 px/frame.
 ElevatorSpeeds:
     .byte   $00, $18, $E8                                                   ; $D8BF
 
@@ -5036,175 +5041,196 @@ ElevatorSpeeds:
 ; ---------------------------------------------------------------------------
 ; Elevator_Ai
 ;
-; Elevator (enemy type $13): while Link stands on it, Up and Down move it
-; (ElevatorSpeeds) and Link with it, with a sound.  When it reaches the
-; bottom of the screen (Y >= $D8), Link goes to the room below (gameMode
-; $13, Mode_FindConnectedRoom).
+; Elevator (enemy type $13), placed by the area (Elevator_Place).  While
+; Link touches it (objCollision bit 4) he rides it: linkOnElevator is set,
+; his jump and Y velocity are cleared, and Up or Down (linkUpDownHeld)
+; moves it 1.5 pixels per frame (ElevatorSpeeds) with a sound, unless Link
+; is blocked that way (his objCollision bit 3 above, 2 below); Link is
+; kept 8 pixels below its Y.  When it passes Y $D8 (down past the bottom,
+; or up past the top and wrapping), Link goes to the connected room
+; (gameMode $13, Mode_FindConnectedRoom) at X $70, the scroll reset.  It
+; never despawns and can't be hit.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Elevator_Ai:
-    lda     objCollision+1,x        ; $D8C2
+    lda     objCollision+1,x        ; $D8C2  Link on it?
     and     #$10                    ; $D8C4
-    beq     @loc_D91B               ; $D8C6
-    sta     linkOnElevator          ; $D8C8
-    lda     #$00                    ; $D8CB
+    beq     @update                 ; $D8C6  no
+    sta     linkOnElevator          ; $D8C8  riding
+    lda     #$00                    ; $D8CB  no jumping or falling
     sta     linkJumpState           ; $D8CD
     sta     objYVelocity            ; $D8D0
-    lda     linkUpDownHeld          ; $D8D3
-    lsr     a                       ; $D8D6
+    lda     linkUpDownHeld          ; $D8D3  Up (8) or Down (4) / 4:
+    lsr     a                       ; $D8D6  0 none, 1 down, 2 up
     lsr     a                       ; $D8D7
     tay                             ; $D8D8
-    lda     ElevatorSpeeds,y        ; $D8D9
+    lda     ElevatorSpeeds,y        ; $D8D9  1.5 px/frame that way
     sta     objYVelocity+1,x        ; $D8DC
     lda     linkUpDownHeld          ; $D8DF
-    beq     @loc_D8F4               ; $D8E2
-    lda     objCollision            ; $D8E4
-    and     #$0C                    ; $D8E6
-    eor     linkUpDownHeld          ; $D8E8
-    beq     @loc_D8FB               ; $D8EB
-    lda     #$20                    ; $D8ED
+    beq     @carryLink              ; $D8E2  not held: just carry Link
+    lda     objCollision            ; $D8E4  Link blocked that way
+    and     #$0C                    ; $D8E6  (bit 3 above for Up, bit 2
+    eor     linkUpDownHeld          ; $D8E8  below for Down)?
+    beq     @checkExit              ; $D8EB  yes: don't move
+    lda     #$20                    ; $D8ED  the elevator's sound
     sta     sfxRequest+3            ; $D8EF
     jsr     Enemy_MoveY             ; $D8F1
 
-@loc_D8F4:
-    lda     objY+1,x                ; $D8F4
+@carryLink:
+    lda     objY+1,x                ; $D8F4  Link 8 pixels below its Y
     clc                             ; $D8F6
     adc     #$08                    ; $D8F7
     sta     objY                    ; $D8F9
 
-@loc_D8FB:
-    lda     objY+1,x                ; $D8FB
-    cmp     #$D8                    ; $D8FD
-    bcc     @loc_D91B               ; $D8FF
-    lda     #$70                    ; $D901
-    sta     objX                    ; $D903
+@checkExit:
+    lda     objY+1,x                ; $D8FB  off the screen (Y $D8 or more,
+    cmp     #$D8                    ; $D8FD  either way)?
+    bcc     @update                 ; $D8FF
+    lda     #$70                    ; $D901  yes: to the connected room,
+    sta     objX                    ; $D903  Link at X $70,
     lda     #$06                    ; $D905
     sta     columnIndex+1           ; $D907
     lda     #$0B                    ; $D90A
     sta     columnIndex             ; $D90C
-    lda     #$00                    ; $D90F
+    lda     #$00                    ; $D90F  the scroll reset
     sta     ppuScrollX              ; $D911
     sta     scrollX                 ; $D913
-    lda     #$13                    ; $D916
+    lda     #$13                    ; $D916  gameMode $13
     jmp     Area_ExitToMode         ; $D918
 
-@loc_D91B:
-    jmp     Enemy_UpdateCommon      ; $D91B
+@update:
+    jmp     Enemy_UpdateCommon      ; $D91B  draw, contact
 
 
 ; ---------------------------------------------------------------------------
 ; Fairy_Ai
 ;
-; Fairy (an item that refills life): plays its sound when it appears; when
-; Link touches it, refill his life (statMeterPending+1 = $FF) and freeze
-; the game (gameFrozen) while the meter fills and the screen flashes, then
-; remove it.
+; Fairy (enemy type 0).  The first time it is on screen (objState+1 0)
+; and the pulse 2 sound channel is free, it plays its sound ($C0).  When
+; Link touches it (enemyAiState 0 -> 1): the game freezes (gameFrozen),
+; his life meter is to be refilled (statMeterPending+1 = $FF), and the
+; screen flashes (spellFlash bit 4) until the refill is done; then the
+; fairy is removed and the game goes on.  It doesn't move (Fairy_Draw
+; bobs it) and can't be hurt.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fairy_Ai:
-    lda     drawOffscreen+1         ; $D91E
+    lda     drawOffscreen+1         ; $D91E  on screen,
     and     #$08                    ; $D920
-    bne     @loc_D931               ; $D922
-    lda     objState+1,x            ; $D924
-    ora     sq2Sfx                  ; $D926
-    bne     @loc_D931               ; $D929
-    lda     #$C0                    ; $D92B
+    bne     @update                 ; $D922
+    lda     objState+1,x            ; $D924  not yet heard,
+    ora     sq2Sfx                  ; $D926  and the channel free?
+    bne     @update                 ; $D929
+    lda     #$C0                    ; $D92B  play its sound, once
     sta     sfxRequest              ; $D92D
     inc     objState+1,x            ; $D92F
 
-@loc_D931:
-    jsr     Enemy_UpdateCommon      ; $D931
-    ldy     enemyAiState,x          ; $D934
-    bne     @loc_D947               ; $D936
-    lda     objCollision+1,x        ; $D938
+@update:
+    jsr     Enemy_UpdateCommon      ; $D931  draw, contact
+    ldy     enemyAiState,x          ; $D934  already touched?
+    bne     @refilling              ; $D936
+    lda     objCollision+1,x        ; $D938  touching Link?
     and     #$10                    ; $D93A
     beq     @done                   ; $D93C
 ; (code below not executed in the test movies)
-    inc     enemyAiState,x          ; $D93E
-    inc     gameFrozen              ; $D940
-    dey                             ; $D942
-    sty     statMeterPending+1      ; $D943
+    inc     enemyAiState,x          ; $D93E  touched
+    inc     gameFrozen              ; $D940  freeze the game
+    dey                             ; $D942  y = $FF:
+    sty     statMeterPending+1      ; $D943  refill his life
 ; (end of code not executed in the test movies)
 
 @done:
     rts                             ; $D946
 ; (code below not executed in the test movies)
 
-@loc_D947:
-    lda     spellFlash              ; $D947
+@refilling:
+    lda     spellFlash              ; $D947  flash the screen
     ora     #$10                    ; $D94A
     sta     spellFlash              ; $D94C
-    lda     statMeterPending+1      ; $D94F
+    lda     statMeterPending+1      ; $D94F  refill done?
     bne     @done                   ; $D952
-    sta     gameFrozen              ; $D954
-    jmp     Enemy_Remove            ; $D956
+    sta     gameFrozen              ; $D954  yes: unfreeze,
+    jmp     Enemy_Remove            ; $D956  and go
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Item_Fall
 ;
-; Items (and the red jar): fall with gravity and land on the ground,
-; snapping to the tile.  An item landing fast bounces up (by $F7, or $F0
-; from a long fall); experience bags (kinds $0A-$0D) hardly bounce.
+; Item (enemy type 1; its kind in enemyAiState, bit 7 set for an enemy's
+; drop).  It falls under gravity of 1/16 pixel per frame per frame.  On a
+; floor its Y is snapped to the tile row, and then: an experience bag
+; (kinds $0A-$0D) stops dead; anything else landing at 14/16 pixel per
+; frame or more bounces, 9/16 up, or 1 pixel per frame up from 3 or more,
+; and otherwise stops.  Collecting it is up to Enemy_CheckLinkContact
+; (touch) and Enemy_TakeDamage (the sword).
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_Fall:
-    jsr     Enemy_UpdateWithBg      ; $D959
+    jsr     Enemy_UpdateWithBg      ; $D959  probe, draw, hit tests
     lda     objCollision+1,x        ; $D95C
-    and     #$04                    ; $D95E
-    beq     @loc_D98B               ; $D960
-    lda     objY+1,x                ; $D962
+    and     #$04                    ; $D95E  on a floor?
+    beq     @fall                   ; $D960
+    lda     objY+1,x                ; $D962  snap to the tile row
     and     #$F0                    ; $D964
     sta     objY+1,x                ; $D966
-    lda     enemyAiState,x          ; $D968
+    lda     enemyAiState,x          ; $D968  kind
     and     #$7F                    ; $D96A
     tay                             ; $D96C
-    lda     #$FF                    ; $D96D
+    lda     #$FF                    ; $D96D  stop (-1, +1 below = 0)
     cpy     #$0A                    ; $D96F
-    bcc     @loc_D977               ; $D971
-    cpy     #$0E                    ; $D973
-    bcc     @loc_D988               ; $D975
+    bcc     @bounce                 ; $D971
+    cpy     #$0E                    ; $D973  experience bag: always stop
+    bcc     @setSpeed               ; $D975
 
-@loc_D977:
-    ldy     objYVelocity+1,x        ; $D977
+@bounce:
+    ldy     objYVelocity+1,x        ; $D977  landing slowly: stop
     cpy     #$0E                    ; $D97A
-    bcc     @loc_D988               ; $D97C
-    dec     objY+1,x                ; $D97E
-    lda     #$F7                    ; $D980
+    bcc     @setSpeed               ; $D97C
+    dec     objY+1,x                ; $D97E  else bounce, off the floor:
+    lda     #$F7                    ; $D980  9/16 px/frame up,
     cpy     #$30                    ; $D982
-    bcc     @loc_D988               ; $D984
-    lda     #$F0                    ; $D986
+    bcc     @setSpeed               ; $D984
+    lda     #$F0                    ; $D986  or 1 from a fast fall
 
-@loc_D988:
+@setSpeed:
     sta     objYVelocity+1,x        ; $D988
 
-@loc_D98B:
-    inc     objYVelocity+1,x        ; $D98B
+@fall:
+    inc     objYVelocity+1,x        ; $D98B  gravity: +1/16 px/frame
     jmp     Enemy_MoveY             ; $D98E
 
 
 ; ---------------------------------------------------------------------------
 ; LockedDoor_Ai
 ;
-; Locked door: blocks Link (Enemy_KnockBack pushes him back).  With the
-; magic key, or a key (which is used up), it opens: its area flag is
-; cleared so it stays open, the game freezes (gameFrozen) while it rises for
-; 17 frames, then a spark is left where it was and it is removed.
+; Locked door (enemy type 2), placed by the area (Area_PlaceElevatorAndDoor)
+; unless its page's area flag shows it opened.  Touching it, Link is
+; pushed back (Enemy_KnockBack; not as a fairy) and can't move toward it
+; (blockedDirections).  If he has the magic key, or a key (used up), it
+; opens: its page's area flag is cleared so that it stays open, the
+; game freezes (gameFrozen) with a sound, and Link stops; over 17 frames
+; (enemyAiState counting up) its top and bottom close in on the keyhole
+; (LockedDoor_Draw); then it is removed, leaving a spark (projectile slot
+; 0, objState $F0) with a sound, and the game goes on.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LockedDoor_Ai:
-    jsr     Enemy_UpdateCommon      ; $D991
-    ldy     enemyAiState,x          ; $D994
-    beq     @loc_D9BA               ; $D996
-    inc     enemyAiState,x          ; $D998
-    cpy     #$11                    ; $D99A
+    jsr     Enemy_UpdateCommon      ; $D991  draw, contact
+    ldy     enemyAiState,x          ; $D994  opening?
+    beq     @closed                 ; $D996
+    inc     enemyAiState,x          ; $D998  count its frames
+    cpy     #$11                    ; $D99A  17 done?
     bne     Item_FallDone           ; $D99C
-    lda     #$F0                    ; $D99E
-    sta     objState+7              ; $D9A0
+    lda     #$F0                    ; $D99E  a spark in projectile slot 0,
+    sta     objState+7              ; $D9A0  where it was
     lda     objX+1,x                ; $D9A2
     sta     objX+7                  ; $D9A4
     lda     objXHi+1,x              ; $D9A6
@@ -5213,47 +5239,47 @@ LockedDoor_Ai:
     sta     objY+7                  ; $D9AC
     lda     #$01                    ; $D9AE
     sta     objYHi+7                ; $D9B0
-    sta     sfxRequest+3            ; $D9B2
-    lsr     a                       ; $D9B4
+    sta     sfxRequest+3            ; $D9B2  with a sound
+    lsr     a                       ; $D9B4  unfreeze
     sta     gameFrozen              ; $D9B5
-    jmp     Enemy_Remove            ; $D9B7
+    jmp     Enemy_Remove            ; $D9B7  gone
 
-@loc_D9BA:
-    lda     objCollision+1,x        ; $D9BA
+@closed:
+    lda     objCollision+1,x        ; $D9BA  touching Link?
     and     #$10                    ; $D9BC
     sta     blockedDirections       ; $D9BE
-    beq     Item_FallDone           ; $D9C1
-    lda     linkFairy               ; $D9C3
-    bne     @loc_D9D0               ; $D9C5
+    beq     Item_FallDone           ; $D9C1  no
+    lda     linkFairy               ; $D9C3  a fairy isn't pushed back
+    bne     @block                  ; $D9C5
     lda     #$00                    ; $D9C7
     sta     temp5                   ; $D9C9
     sta     temp11                  ; $D9CB
-    jsr     Enemy_KnockBack         ; $D9CD
+    jsr     Enemy_KnockBack         ; $D9CD  push Link back
 
-@loc_D9D0:
-    jsr     Enemy_FaceLink          ; $D9D0
-    iny                             ; $D9D3
-    tya                             ; $D9D4
+@block:
+    jsr     Enemy_FaceLink          ; $D9D0  y = 0 if Link is right, 1 if left
+    iny                             ; $D9D3  block the direction toward it
+    tya                             ; $D9D4  (JOY_LEFT 2 or JOY_RIGHT 1)
     eor     #$03                    ; $D9D5
     sta     blockedDirections       ; $D9D7
-    lda     itemOwned+ITEM_MAGIC_KEY ; $D9DA
-    bne     @loc_D9E7               ; $D9DD
-    lda     keyCount                ; $D9DF
-    beq     Item_FallDone           ; $D9E2
-    dec     keyCount                ; $D9E4
+    lda     itemOwned+ITEM_MAGIC_KEY ; $D9DA  the magic key opens it,
+    bne     @open                   ; $D9DD
+    lda     keyCount                ; $D9DF  or a key
+    beq     Item_FallDone           ; $D9E2  none: stays shut
+    dec     keyCount                ; $D9E4  (used up)
 
-@loc_D9E7:
-    lda     objXHi+1,x              ; $D9E7
+@open:
+    lda     objXHi+1,x              ; $D9E7  its page's flag: opened
     tax                             ; $D9E9
     jsr     Area_ClearFlag          ; $D9EA
     ldx     currentObject           ; $D9ED
-    lda     #$80                    ; $D9EF
+    lda     #$80                    ; $D9EF  a sound,
     sta     sfxRequest              ; $D9F1
-    sta     gameFrozen              ; $D9F3
-    asl     a                       ; $D9F5
+    sta     gameFrozen              ; $D9F3  freeze the game,
+    asl     a                       ; $D9F5  stop Link
     sta     objXVelocity            ; $D9F6
     sta     objYVelocity            ; $D9F8
-    inc     enemyAiState,x          ; $D9FB
+    inc     enemyAiState,x          ; $D9FB  opening
 
 ; ---------------------------------------------------------------------------
 ; Item_FallDone
@@ -6868,8 +6894,8 @@ Link_CheckBgInBank:
 @loc_E179:
     lda     #$00                    ; $E179
     sta     linkFairy               ; $E17B
-    sta     ram_0759                ; $E17D
-    sta     ram_075A                ; $E180
+    sta     fairyEncounter          ; $E17D
+    sta     encounterKind           ; $E180
     sta     objXVelocity            ; $E183
     lda     #$10                    ; $E185
 
@@ -7643,33 +7669,33 @@ Enemy_CheckLinkContact:
     jsr     Link_GetHitbox          ; $E510
     jsr     Hitbox_Overlap          ; $E513
     bcc     @loc_E54F               ; $E516
-    lda     objCollision+1,x        ; $E518
+    lda     objCollision+1,x        ; $E518  touching: set bit 4
     ora     #$10                    ; $E51A
     sta     objCollision+1,x        ; $E51C
-    lda     enemyType,x             ; $E51E
+    lda     enemyType,x             ; $E51E  an item?
     cmp     #ENEMY_TYPE_ITEM        ; $E520
     bne     @done                   ; $E522
-    lda     enemyAiState,x          ; $E524
+    lda     enemyAiState,x          ; $E524  touch takes inventory items (0-7),
     and     #$7F                    ; $E526
-    cmp     #$08                    ; $E528
+    cmp     #$08                    ; $E528  containers ($0E, $0F) and kinds $12 and
     bcc     @loc_E538               ; $E52A
-    cmp     #$0E                    ; $E52C
+    cmp     #$0E                    ; $E52C  up; keys, bags and jars (8-$0D, $10,
     bcc     @done                   ; $E52E
-    cmp     #$10                    ; $E530
+    cmp     #$10                    ; $E530  $11) need the sword (Enemy_TakeDamage)
     beq     @done                   ; $E532
     cmp     #$11                    ; $E534
     beq     @done                   ; $E536
 
 @loc_E538:
-    jsr     Item_Collect            ; $E538
-    lda     #$70                    ; $E53B
+    jsr     Item_Collect            ; $E538  taken:
+    lda     #$70                    ; $E53B  Link holds it up for 112 frames,
     sta     itemHoldTimer           ; $E53D
-    lda     #$00                    ; $E540
+    lda     #$00                    ; $E540  stopped
     sta     objYVelocity            ; $E542
     sta     objXVelocity            ; $E545
     lda     enemyAiState,x          ; $E547
     and     #$7F                    ; $E549
-    sta     heldItem                ; $E54B
+    sta     heldItem                ; $E54B  the item he holds
     rts                             ; $E54E
 
 @loc_E54F:
@@ -8132,7 +8158,7 @@ Enemy_TakeDamage:
     beq     @loc_E74C               ; $E737
     bcc     @loc_E74C               ; $E739
     lda     enemyType,x             ; $E73B
-    cmp     #ENEMY_TYPE_ITEM        ; $E73D
+    cmp     #ENEMY_TYPE_ITEM        ; $E73D  an item: collect it
     beq     @loc_E755               ; $E73F
     lda     objState                ; $E741
     cmp     #$09                    ; $E743
@@ -8145,17 +8171,17 @@ Enemy_TakeDamage:
 
 @loc_E74C:
     ldy     enemyType,x             ; $E74C
-    cpy     #ENEMY_TYPE_ITEM        ; $E74E
+    cpy     #ENEMY_TYPE_ITEM        ; $E74E  an item: collect it
     beq     @loc_E755               ; $E750
     jmp     Enemy_Kill              ; $E752
 
 @loc_E755:
-    lda     enemyAiState,x          ; $E755
+    lda     enemyAiState,x          ; $E755  the sword takes keys, bags (8-$0D)
     and     #$7F                    ; $E757
     cmp     #$08                    ; $E759
     bcc     @loc_E769               ; $E75B
     cmp     #$0E                    ; $E75D
-    bcc     Item_Collect            ; $E75F
+    bcc     Item_Collect            ; $E75F  and jars ($10, $11);
     cmp     #$10                    ; $E761
     beq     Item_Collect            ; $E763
     cmp     #$11                    ; $E765
@@ -8163,16 +8189,19 @@ Enemy_TakeDamage:
 ; (code below not executed in the test movies)
 
 @loc_E769:
-    lda     #$00                    ; $E769
+    lda     #$00                    ; $E769  anything else isn't touched: no stun,
     sta     enemyStunTimer,x        ; $E76B
-    sta     sfxRequest+1            ; $E76E
+    sta     sfxRequest+1            ; $E76E  no hit sound
     rts                             ; $E770
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Item_Collect
 ;
-; Link picks up item object x: mark it taken in the area's flags, then by
+; Link picks up item object x, by touch (Enemy_CheckLinkContact) or, for
+; keys, bags and jars, by the sword (Enemy_TakeDamage).  Unless it is an
+; enemy's drop (bit 7), its page's area flag is cleared, so that it
+; doesn't come back (even a red jar from the enemy list clears it).  Then by
 ; kind: the eight inventory items (kinds 0-7) set itemOwned and play the
 ; item fanfare; a key (8) adds to keyCount (and restarts the music if the
 ; scroll was frozen, as in a boss room); experience bags (9-$0D) go to
@@ -9520,47 +9549,50 @@ Enemy_Draw:
 ; ---------------------------------------------------------------------------
 ; Elevator_Draw
 ;
-; Draw the elevator: two pairs of platform sprites and its cable.
+; Draw the elevator: two platforms, each three sprites wide (SpritePairTiles
+; entry 6, tile $AC, and a third tile $AC 16 pixels right), one at its Y,
+; over Link's head, and one 40 pixels lower, under his feet.  The third
+; tiles become $F5 (blank) when that column is off screen.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Elevator_Draw:
-    ldx     #$06                    ; $EF47
-    jsr     Sprite_DrawPairFromTable ; $EF49
-    dex                             ; $EF4C
+    ldx     #$06                    ; $EF47  entry 6: tiles $AC, $AC
+    jsr     Sprite_DrawPairFromTable ; $EF49  top platform, at its Y
+    dex                             ; $EF4C  the same entry again
     dex                             ; $EF4D
-    iny                             ; $EF4E
-    iny                             ; $EF4F
+    iny                             ; $EF4E  skip a sprite (the top
+    iny                             ; $EF4F  platform's third)
     iny                             ; $EF50
     iny                             ; $EF51
-    lda     temp0                   ; $EF52
-    clc                             ; $EF54
+    lda     temp0                   ; $EF52  bottom platform: (Y + 16)
+    clc                             ; $EF54  + 24 = Y + 40
     adc     #$18                    ; $EF55
     sta     temp0                   ; $EF57
     jsr     Sprite_DrawPairFromTable ; $EF59
-    lda     temp0                   ; $EF5C
+    lda     temp0                   ; $EF5C  its third sprite, Y + 40
     sec                             ; $EF5E
     sbc     #$10                    ; $EF5F
     sta     oamBuffer,y             ; $EF61
-    sec                             ; $EF64
+    sec                             ; $EF64  the top's third, at Y
     sbc     #$28                    ; $EF65
     sta     oamBuffer - 12,y        ; $EF67
-    lda     temp1                   ; $EF6A
+    lda     temp1                   ; $EF6A  both 16 pixels right
     clc                             ; $EF6C
     adc     #$10                    ; $EF6D
     sta     oamBuffer - 9,y         ; $EF6F
     sta     oamBuffer+3,y           ; $EF72
-    ldx     #$AC                    ; $EF75
+    ldx     #$AC                    ; $EF75  tile $AC,
     lda     drawOffscreen+1         ; $EF77
-    and     #$02                    ; $EF79
-    beq     @loc_EF7F               ; $EF7B
+    and     #$02                    ; $EF79  or blank if that column is
+    beq     @setTile                ; $EF7B  off screen
     ldx     #$F5                    ; $EF7D
 
-@loc_EF7F:
+@setTile:
     txa                             ; $EF7F
     sta     oamBuffer - 11,y        ; $EF80
     sta     oamBuffer+1,y           ; $EF83
-    lda     #$01                    ; $EF86
+    lda     #$01                    ; $EF86  palette 1
     sta     oamBuffer - 10,y        ; $EF88
     sta     oamBuffer+2,y           ; $EF8B
     ldx     currentObject           ; $EF8E
@@ -9879,21 +9911,23 @@ Sprite_DrawEnemyPairKeepX:
 ; ---------------------------------------------------------------------------
 ; Fairy_Draw
 ;
-; Draw the fairy, bobbing up and down, flapping.
+; Draw the fairy: one sprite, 8 below its Y, bobbing 0-4 pixels (FairyYOffsets,
+; by frameCounter bits 5-3, a 64-frame cycle), palette 1, flapping between
+; tiles $68 and $6A every 4 frames.  Not drawn when its column is off screen.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fairy_Draw:
-    lda     drawOffscreen+1         ; $F0DD
+    lda     drawOffscreen+1         ; $F0DD  off screen: not drawn
     and     #$08                    ; $F0DF
     bne     Sprite_Return           ; $F0E1
-    lda     frameCounter            ; $F0E3
+    lda     frameCounter            ; $F0E3  bob by bits 5-3
     and     #$38                    ; $F0E5
     lsr     a                       ; $F0E7
     lsr     a                       ; $F0E8
     lsr     a                       ; $F0E9
     tax                             ; $F0EA
-    lda     temp0                   ; $F0EB
+    lda     temp0                   ; $F0EB  Y + 8 + bob
     adc     #$08                    ; $F0ED
     adc     FairyYOffsets,x         ; $F0EF
     sta     oamBuffer,y             ; $F0F2
@@ -9901,10 +9935,12 @@ Fairy_Draw:
     lda     temp1                   ; $F0F7
     sta     oamBuffer+3,y           ; $F0F9
 
+; Item_Draw: palettes of item kinds $10-$15, read from here + kind (the
+; bytes after Sprite_Return): 3, 2, 0, 1, 1, 1.
 ItemSpriteAttrs:
-    lda     #$01                    ; $F0FC
+    lda     #$01                    ; $F0FC  palette 1
     sta     oamBuffer+2,y           ; $F0FE
-    lda     frameCounter            ; $F101
+    lda     frameCounter            ; $F101  tile $68 / $6A every 4 frames
     and     #$04                    ; $F103
     lsr     a                       ; $F105
     adc     #$68                    ; $F106
@@ -9925,73 +9961,78 @@ Sprite_Return:
 ; ---------------------------------------------------------------------------
 ; Item_Draw
 ;
-; Draw an item (tiles by item kind; kinds $10 and up with their own
-; palette, from the table at $F10C).
+; Draw an item: a symmetric pair of sprites (the right one mirrored) from
+; SpritePairTiles entry $2E + 2 x kind; kinds $10 and up in their own
+; palette (ItemSpriteAttrs).  An item of one sprite has $F5 as its second
+; tile; that sprite is then hidden (Y $F5).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_Draw:
-    lda     #$02                    ; $F112
+    lda     #$02                    ; $F112  as if facing left
     sta     temp2                   ; $F114
-    lda     enemyAiState,x          ; $F116
+    lda     enemyAiState,x          ; $F116  kind
     and     #$7F                    ; $F118
     tax                             ; $F11A
     pha                             ; $F11B
-    cpx     #$10                    ; $F11C
-    bcc     @loc_F125               ; $F11E
-    lda     ItemSpriteAttrs,x       ; $F120
+    cpx     #$10                    ; $F11C  jars and the rest:
+    bcc     @tiles                  ; $F11E
+    lda     ItemSpriteAttrs,x       ; $F120  their own palette
     sta     temp3                   ; $F123
 
-@loc_F125:
-    pla                             ; $F125
+@tiles:
+    pla                             ; $F125  entry $2E + 2 x kind
     asl     a                       ; $F126
     adc     #$2E                    ; $F127
     tax                             ; $F129
     jsr     Sprite_DrawPairFromTableKeepX ; $F12A
-    lda     oamBuffer - 3,y         ; $F12D
+    lda     oamBuffer - 3,y         ; $F12D  second tile blank ($F5)?
     cmp     #$F5                    ; $F130
-    bne     @loc_F137               ; $F132
-    sta     oamBuffer - 4,y         ; $F134
+    bne     @mirror                 ; $F132
+    sta     oamBuffer - 4,y         ; $F134  then hide it ($F5 as its Y)
 
-@loc_F137:
-    jmp     Sprite_FlipPrevious     ; $F137
+@mirror:
+    jmp     Sprite_FlipPrevious     ; $F137  mirror the second sprite
 
 
 ; ---------------------------------------------------------------------------
 ; LockedDoor_Draw
 ;
-; Draw the locked door (three sprites), raised by enemyAiState while it
-; opens.
+; Draw the locked door: three sprites in a column at its X, palette 1: the
+; keyhole panel (tile $76) at Y + 15, the bottom (tile $74) at Y + 31 and
+; the top ($74) at Y - 1, the bottom rising and the top dropping by
+; enemyAiState pixels while it opens, closing in on the keyhole.  Not
+; drawn when its column is off screen.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LockedDoor_Draw:
-    lda     drawOffscreen+1         ; $F13A
+    lda     drawOffscreen+1         ; $F13A  off screen: not drawn
     and     #$08                    ; $F13C
     bne     @done                   ; $F13E
-    dec     temp0                   ; $F140
+    dec     temp0                   ; $F140  Y - 1
     lda     temp0                   ; $F142
     clc                             ; $F144
-    adc     #$10                    ; $F145
+    adc     #$10                    ; $F145  keyhole: Y + 15
     sta     oamBuffer,y             ; $F147
-    adc     #$10                    ; $F14A
+    adc     #$10                    ; $F14A  bottom: Y + 31, rising
     sec                             ; $F14C
     sbc     enemyAiState,x          ; $F14D
     sta     oamBuffer+4,y           ; $F14F
-    lda     temp0                   ; $F152
+    lda     temp0                   ; $F152  top: Y - 1, dropping
     clc                             ; $F154
     adc     enemyAiState,x          ; $F155
     sta     oamBuffer+8,y           ; $F157
-    lda     temp1                   ; $F15A
+    lda     temp1                   ; $F15A  all at its X
     sta     oamBuffer+3,y           ; $F15C
     sta     oamBuffer+7,y           ; $F15F
     sta     oamBuffer+11,y          ; $F162
-    lda     #$76                    ; $F165
+    lda     #$76                    ; $F165  keyhole tile
     sta     oamBuffer+1,y           ; $F167
-    lda     #$74                    ; $F16A
+    lda     #$74                    ; $F16A  bar tiles
     sta     oamBuffer+5,y           ; $F16C
     sta     oamBuffer+9,y           ; $F16F
-    lda     #$01                    ; $F172
+    lda     #$01                    ; $F172  palette 1
     sta     oamBuffer+2,y           ; $F174
     sta     oamBuffer+6,y           ; $F177
     sta     oamBuffer+10,y          ; $F17A

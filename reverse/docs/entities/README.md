@@ -22,6 +22,10 @@ and how each was verified):
 
 | Page | Types |
 |------|-------|
+| [Fairy](enemies/fairy.md) | $00 in every group |
+| [Item](enemies/item.md) | $01 in every group |
+| [Locked Door](enemies/locked-door.md) | $02 in every group |
+| [Elevator](enemies/elevator.md) | $13 in every group |
 | [Myu](enemies/myu.md) | $03 outdoors and in palaces |
 | [Bot](enemies/bot.md) | $04 outdoors, in towns and in palaces |
 | [Bit](enemies/bit.md) | $05 outdoors and in towns |

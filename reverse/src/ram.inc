@@ -71,7 +71,6 @@ enemyType               = $00A1     ; [6] enemy type, by enemy index
 objCollision            = $00A7     ; [7] collision bits: 3-0 = background above, below, left, right; for enemies, bit 4 = touching Link, bit 5 = hit
 linkWalkFrame           = $00AE     ; walking animation frame, 0-2
 enemyAiState            = $00AF     ; [6] per-enemy AI state; its meaning depends on the type (items: the item kind, bit 7 = not saved)
-ram_00B0                = $00B0
 linkMode                = $00B5     ; Link's mode in the side view; see LINK_MODE_*
 enemyActive             = $00B6     ; [6] enemy state; see ENEMY_STATE_*
 enemySramIndex          = $00BC     ; [6] index of the enemy in the area's SRAM enemy list
@@ -237,7 +236,7 @@ saveWorld               = $0600     ; [SAVE_WORLD_SIZE] per-area flags, saved wi
 lives                   = $0700     ; lives remaining
 areaEntrySide           = $0701     ; side Link enters the area from: 0 = left, 1 = right
 linkFallingIn           = $0704     ; nonzero when Link enters the area falling from above (Mode_FallStart); he is not put on the ground
-enteredFromOverworld    = $0705     ; nonzero when the area was entered from the overworld (Area_SaveEntryScroll) (provisional)
+enteredVertically       = $0705     ; nonzero when the room was entered by elevator or by falling in from above (Area_SaveEntryScroll); cleared once the area is set up
 ; World and area
 ; ---------------------------------------------------------------------------
 currentRegion           = $0706     ; overworld region: 0 = west Hyrule, 1 = Death Mountain or Maze Island, 2 = east Hyrule
@@ -304,8 +303,8 @@ linkOnElevator          = $0754     ; nonzero while Link rides an elevator (no j
 experiencePending       = $0755     ; (16-bit, big-endian) experience still to be added to experience
 elevatorPos             = $0757     ; position of the area's elevator, 0 = none
 lockedDoorPos           = $0758     ; position of the area's locked door, 0 = none
-ram_0759                = $0759
-ram_075A                = $075A
+fairyEncounter          = $0759     ; 1 in a fairy encounter (overworld encounter sprite kind 3): no enemies from the list, a fairy above Link (Area_PlaceElevatorAndDoor)
+encounterKind           = $075A     ; kind of the overworld encounter being entered (its sprite's objState), 0 for a fairy or none; 2 and up use the area's second enemy list
 doorDepth               = $075B     ; doors gone through into buildings (Mode_EnterDoor); counts down on the way out, choosing the start page back outside (provisional)
 areaStartPage           = $075C     ; map page at which Link enters the area
 ram_075D                = $075D

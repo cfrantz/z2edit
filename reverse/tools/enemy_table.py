@@ -55,6 +55,7 @@ EXP_HI = 0xDDDC
 # Enemy pages (docs/entities/enemies/NAME.md), by AI routine: --doc links
 # the enemy's name to its page.
 ENEMY_PAGES = {
+    "Fairy_Ai": "fairy", "Item_Fall": "item", "LockedDoor_Ai": "locked-door", "Elevator_Ai": "elevator",
     "Myu_Ai": "myu", "Bot_Ai": "bot", "Bit_Ai": "bit", "Lowder_Ai": "lowder",
     "OctorokHopping_Ai": "octorok", "OctorokWalking_Ai": "octorok",
     "Moa_Ai": "moa", "Ache_Ai": "ache", "Deeler_Ai": "deeler",

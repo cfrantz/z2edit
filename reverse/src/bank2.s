@@ -1275,10 +1275,13 @@ EnemyTiles_Bank2:
 ; ---------------------------------------------------------------------------
 ; RedJar_Init_Bank2
 ;
-; Spawn routine of the red jar: item kind $11 (full magic), moved 3 pixels
-; right.
+; Spawn routine of the red jar (enemy type 1 in an enemy list): item kind
+; $11, a magic jar that fills the meter, moved 3 pixels right (4 with the
+; carry), as Area_PlaceItem does for an area's items.  Bit 7 clear, so
+; collecting it clears its page's area flag (Item_Collect).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RedJar_Init_Bank2:
     lda     #$11                    ; $9610

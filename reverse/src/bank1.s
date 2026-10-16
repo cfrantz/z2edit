@@ -1248,8 +1248,9 @@ EnemyTiles_Bank1:
 ; ---------------------------------------------------------------------------
 ; RedJar_Init_Bank1
 ;
-; Spawn routine of the red jar: make it item kind $11 (a magic jar that
-; fills the meter).
+; Spawn routine of the red jar (enemy type 1 in an enemy list): make it
+; item kind $11, a magic jar that fills the meter.  Bit 7 clear, so
+; collecting it clears its page's area flag (Item_Collect).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------

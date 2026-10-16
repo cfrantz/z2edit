@@ -20,9 +20,9 @@ the candle for the caves) and logging `enemyType`:
 
 | Type | Enemy | HP | Exp | Damage | Drop | Notes | AI |
 |------|-------|----|-----|--------|------|-------|----|
-| $00 | Fairy | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
-| $01 | Red Jar | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
-| $02 | Door | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
+| $00 | [Fairy](enemies/fairy.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
+| $01 | [Red Jar](enemies/item.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
+| $02 | [Door](enemies/locked-door.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
 | $03 | [Myu](enemies/myu.md) | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
 | $05 | [Bit](enemies/bit.md) | 4 | 2 | 0 | 1 | comes back | `Bit_Ai` |
@@ -39,7 +39,7 @@ the candle for the caves) and logging `enemyType`:
 | $10 | [Bago Bago](enemies/bago-bago.md) | 8 | 5 | 2 | 1 | touch drains 10 exp | `BagoBago_Ai` |
 | $11 | [Blue Octorok (jumping)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Blue Octorok (moving)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
-| $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
+| $13 | [Elevator](enemies/elevator.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
 | $14 | [Tektite](enemies/tektite.md) | 24 | 50 | 2 | 2 | sword clinks, beam blocked | `Tektite_Ai` |
 | $15 | [Eye](enemies/eye.md) | 16 | 20 | 4 | 1 |  | `Eye_Ai` |
 | $16 | [Leever](enemies/leever.md) | 16 | 10 | 4 | 1 |  | `Leever_Ai` |

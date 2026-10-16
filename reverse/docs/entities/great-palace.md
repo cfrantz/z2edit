@@ -7,9 +7,9 @@ own colors (`FireOctorok_Draw`).
 
 | Type | Enemy | HP | Exp | Damage | Drop | Notes | AI |
 |------|-------|----|-----|--------|------|-------|----|
-| $00 | Fairy | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
-| $01 | Item | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
-| $02 | Door | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
+| $00 | [Fairy](enemies/fairy.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
+| $01 | [Item](enemies/item.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
+| $02 | [Door](enemies/locked-door.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
 | $03 | [Myu](enemies/myu.md) | 24 | 10 | 3 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 48 | 10 | 3 | 1 | comes back | `Bot_Ai` |
 | $05 | Hidden jar | 255 | 10 | 3 | 1 | blocks Link's projectiles, comes back | `HiddenJar_Ai_Bank5` |
@@ -26,7 +26,7 @@ own colors (`FireOctorok_Draw`).
 | $10 | [Fire Bago Bago](enemies/bago-bago.md) | 8 | 20 | 3 | 1 | touch drains 10 exp | `BagoBago_Ai` |
 | $11 | [Fire Hopping Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Fire Walking Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokWalking_Ai` |
-| $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
+| $13 | [Elevator](enemies/elevator.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
 | $14 | Slow Bubble | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
 | $15 | Fast Bubble | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
 | $16 | Orange Skull Head | 96 | 20 | 3 | 1 | touch drains 10 exp, immune to Thunder, comes back | `GpSkullHead_Ai` |

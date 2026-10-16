@@ -7,9 +7,9 @@ The definition tables are `EnemyHp_Bank1` and following ($9400); see
 
 | Type | Enemy | HP | Exp | Damage | Drop | Notes | AI |
 |------|-------|----|-----|--------|------|-------|----|
-| $00 | Fairy | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
-| $01 | Red Jar | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
-| $02 | Door | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
+| $00 | [Fairy](enemies/fairy.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Fairy_Ai` |
+| $01 | [Red Jar](enemies/item.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `Item_Fall` |
+| $02 | [Door](enemies/locked-door.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
 | $03 | [Myu](enemies/myu.md) | 3 | 3 | 1 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 3 | 2 | 0 | 1 | comes back | `Bot_Ai` |
 | $05 | [Bit](enemies/bit.md) | 3 | 2 | 0 | 1 | comes back | `Bit_Ai` |
@@ -26,7 +26,7 @@ The definition tables are `EnemyHp_Bank1` and following ($9400); see
 | $10 | [Bago Bago](enemies/bago-bago.md) | 3 | 3 | 1 | 1 | touch drains 10 exp | `BagoBago_Ai` |
 | $11 | [Red Octorok (jumping)](enemies/octorok.md) | 4 | 10 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Red Octorok (moving)](enemies/octorok.md) | 4 | 10 | 1 | 1 |  | `OctorokWalking_Ai` |
-| $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
+| $13 | [Elevator](enemies/elevator.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
 | $14 | [Orange Moblin](enemies/moblin.md) | 4 | 10 | 1 | 1 |  | `MoblinGoriya_Ai` |
 | $15 | [Red Moblin](enemies/moblin.md) | 12 | 20 | 1 | 1 |  | `MoblinGoriya_Ai` |
 | $16 | [Blue Moblin](enemies/moblin.md) | 18 | 20 | 1 | 1 |  | `MoblinGoriya_Ai` |
