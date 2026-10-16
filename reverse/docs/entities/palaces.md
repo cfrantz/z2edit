@@ -42,9 +42,9 @@ Octoroks, are the "Ropes" of the palaces).
 | $1D | [Wizzrobe](enemies/wizzrobe.md) | 32 | 200 | 3 | - | blocks Link's projectiles, immune to SPELL | `Mago_Ai` |
 | $1E | [Hammer Thrower](enemies/hammer-thrower.md) | 16 | 50 | 2 | 2 | blocks Link's projectiles | `HammerThrower_Ai` |
 | $1F | [Red Stalfos](enemies/stalfos.md) | 8 | 30 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
-| $20 | Horse Head | 32 | 50 | 2 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `HorseHead_Ai` |
-| $21 | Helmethead (Gooma in palace 5) | 48 | 150 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Helmethead_Ai` |
-| $22 | Helmethead Head | 80 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `HelmetheadHead_Ai` |
+| $20 | [Horse Head](enemies/horsehead.md) | 32 | 50 | 2 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `HorseHead_Ai` |
+| $21 | [Helmethead (Gooma in palace 5)](enemies/helmethead.md) | 48 | 150 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Helmethead_Ai` |
+| $22 | [Helmethead Head](enemies/helmethead.md) | 80 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `HelmetheadHead_Ai` |
 | $23 | [Blue Stalfos](enemies/stalfos.md) | 12 | 50 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 
 ## Palaces 3, 4 and 6
@@ -61,7 +61,7 @@ Octoroks, are the "Ropes" of the palaces).
 | $07 | [Orange Moa](enemies/orange-moa.md) | 16 | 50 | 3 | 2 | touch drains 10 exp | `OrangeMoa_Ai` |
 | $08 | [Falling Block Generator](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `FallingBlockGenerator_Ai` |
 | $09 | [Falling Block](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `FallingBlock_Ai` |
-| $0A | Rebonack Un-horsed | 8 | 301 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `RebonackUnhorsed_Ai` |
+| $0A | [Rebonack Un-horsed](enemies/rebonack.md) | 8 | 301 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `RebonackUnhorsed_Ai` |
 | $0B | [Rathead Generator](enemies/rathead.md) | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `RatheadGenerator_Ai` |
 | $0C | [Rathead](enemies/rathead.md) | 2 | 0 | 0 | - | touch drains 10 exp, comes back | `Rathead_Ai` |
 | $0D | [Acid Dripper](enemies/acid-dripper.md) | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `AcidDripper_Ai` |
@@ -83,9 +83,9 @@ Octoroks, are the "Ropes" of the palaces).
 | $1D | [Wizzrobe](enemies/wizzrobe.md) | 1 | 100 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `Wizrobe_Ai` |
 | $1E | [Doom Knocker](enemies/doom-knocker.md) | 32 | 100 | 3 | - | blocks Link's projectiles | `DoomKnocker_Ai` |
 | $1F | [Red Stalfos Knight](enemies/stalfos.md) | 24 | 50 | 2 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
-| $20 | Rebonack | 72 | 301 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Rebonack_Ai` |
-| $21 | Barba | 192 | 700 | 5 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Barba_Ai` |
-| $22 | Carock | 16 | 301 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Carock_Ai` |
+| $20 | [Rebonack](enemies/rebonack.md) | 72 | 301 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Rebonack_Ai` |
+| $21 | [Barba](enemies/barba.md) | 192 | 700 | 5 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Barba_Ai` |
+| $22 | [Carock](enemies/carock.md) | 16 | 301 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Carock_Ai` |
 | $23 | [Blue Stalfos Knight](enemies/stalfos.md) | 32 | 70 | 3 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 
 ## Shared Enemies
@@ -151,23 +151,27 @@ along the floor, and vanishes, every 256 frames.  See
 
 ### Bosses
 
-Bosses (hitbox $FF in their table entry) share `Boss_UpdateIntro`: when
-Link reaches the second page of the boss room, the scroll freezes and the
-boss music starts; when the boss dies, every other enemy on the screen is
-destroyed and the music stops.  Their hit points are shown as a bar
-(`Boss_DrawHpBar`).  A boss only appears while its area flag is set
-(`Boss_Init`), so it stays dead.
+The bosses of palaces 1, 2 and 5 share their fight
+(`Boss_UpdateIntro`, `Boss_UpdateCommon`, `Boss_Init`):
 
-- **Horsehead** ($20, palace 1; `HorseHead_Ai`): paces toward and away
-  from Link (`Boss_Pace`) and swings his mace when facing him
-  (`HorseHead_Attack`); only his head can be hurt.
-- **Helmethead** ($21, palace 2; `Helmethead_Ai`): paces like Horsehead
-  and fires an energy ball every 128 frames.  Each time his head is hit,
-  one of his helmets flies off ($22, `HelmetheadHead_Ai`, up to two):
-  it bounces about and fires energy balls at Link.
-- **Gooma** ($21 in palace 5, `Gooma_Ai`, set up by `Helmethead_Init`
-  with its own stats): paces and swings a ball and chain in long and
-  short swings (`Gooma_Attack`).
+- A boss is spawned only while its room's flag shows it unbeaten, so it
+  stays dead.  `Boss_Init` gives it guard 2 and hitbox entry 7.
+- Until Link's screen reaches page 1 of the room, the boss is only drawn.
+  Then the boss music starts and the scroll freezes.
+- Its hit points show as a column of 8 blocks at the left of the screen
+  (`Boss_DrawHpBar`), each worth a set number of hit points.
+- When the hits kill it, it is kept alive as a dying boss: hitbox $FF,
+  flashing for 127 frames.  Then it bursts into sparks
+  (`Boss_SpawnDeathSpark_Bank4`), every enemy projectile is removed,
+  every other enemy is killed by a 224-point hit, and the music stops.
+
+- **Horsehead** ($20, palace 1): paces and swings his mace; only his head
+  can be hurt.  See [Horsehead](enemies/horsehead.md).
+- **Helmethead** ($21, palace 2): paces and fires energy balls; blows to
+  his head knock off his helmets, which fly about firing at Link.  See
+  [Helmethead](enemies/helmethead.md).
+- **Gooma** ($21 in palace 5): whirls and hurls a ball and chain.  See
+  [Gooma](enemies/gooma.md).
 
 ## Palaces 3, 4 and 6
 
@@ -186,19 +190,22 @@ flies back past it.  See [Doom Knocker](enemies/doom-knocker.md).
 
 ### Bosses
 
-- **Rebonack** ($20, palace 3; `Rebonack_Ai`): rides a flying horse,
-  bobbing, charging back and forth at Link.  When his hit points fall
-  below 36 he is knocked off: an unhorsed Rebonack ($0A, 48 hit points,
-  `RebonackUnhorsed_Ai`) jumps away and fights like an Iron Knuckle,
-  while the horse leaves.
-- **Barba** ($21, palace 6; `Barba_Ai`): a dragon living in lava.  He
-  waits, rises from one of eight places (`Barba_Wait`, `Barba_Rise`),
-  breathes fireballs at Link at four times the normal speed for a while
-  (`Barba_Breathe`), and sinks back (`Barba_Sink`).
-- **Carock** ($22, palace 4; `Carock_Ai`): appears and vanishes like a
-  Wizzrobe, firing beams (projectile type 9).  He cannot be hurt by the
-  sword: only his own beams, sent back by Link's shield with the reflect
-  spell, damage him (`Projectile_CarockBeam`).
+The bosses of palaces 3, 4 and 6 have their own copy of the fight
+(`Boss_UpdateIntro_Bank4B`, `Boss_CheckDeath_Bank4B`).  It differs from
+the first group's in three ways:
+
+- the boss isn't drawn before Link reaches page 1;
+- once the fight starts, Rebonack and Barba wait 255 frames
+  (`TIMER_BOSS`);
+- the boss's death doesn't kill the other enemies.
+
+- **Rebonack** ($20, palace 3): charges back and forth on a flying horse;
+  below 36 hit points he is unhorsed and fights on as a blue Iron
+  Knuckle ($0A).  See [Rebonack](enemies/rebonack.md).
+- **Barba** ($21, palace 6): a dragon rising from the lava at one of three
+  places to breathe fireballs.  See [Barba](enemies/barba.md).
+- **Carock** ($22, palace 4): a fast Wizzrobe whom only his own reflected
+  beams can hurt.  See [Carock](enemies/carock.md).
 
 ## Projectiles
 

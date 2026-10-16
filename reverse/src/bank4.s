@@ -1364,61 +1364,72 @@ HammerThrower_Draw:
 
 @done:
     rts                             ; $9814
-; The rts byte is also the base of the table HorseHeadFrames (entry 0 is the rts).
+; The rts byte is also the base of the table HorseHeadFrames (entry 0 is
+; the rts): Horsehead's mace entry by pose (1: $64, 2: $68).
 HorseHeadFrames := @done
     .byte   $64                                                             ; $9815
 
+; The mace's X offset by (facing / 2) x 2 + pose: facing right, -16 (pose
+; 1, behind) and +16 (pose 2, in front); facing left, +16 and -16.
 HorseHeadDrawOffsets:
     .byte   $68                                                             ; $9816
-; (unreferenced: $9817-$9818, 2 bytes)
     .byte   $F0, $10                                                        ; $9817
     .byte   $10                                                             ; $9819
 
-HorseHeadSpearXOffsets:
+; His head's shift when turned toward Link, by the facing toward him: +2,
+; -2.
+HorseHeadHeadXOffsets:
     .byte   $F0                                                             ; $981A
-; (unreferenced: $981B-$981C, 2 bytes)
     .byte   $02, $FE                                                        ; $981B
 
 ; ---------------------------------------------------------------------------
 ; HorseHead_Draw
 ;
-; Draw Horsehead and his mace.
+; Draw Horsehead: three pairs (48 pixels tall) from sramEnemyTiles entry
+; $58, or $5E in part of each 8-count step while he walks.  In a swing his
+; middle pair (OAM $58) is redrawn from HorseHeadFrames[pose] ($64, $68),
+; his arm, and the next entry, the mace, is drawn at OAM $68, 16 pixels
+; below his top and 16 behind him (pose 1) or in front (pose 2)
+; (HorseHeadDrawOffsets by facing and pose).  objOamOffset is set to $58,
+; so his fifth sprite is the mace (Weapon_CheckLinkBody).  While alive and
+; facing away from Link, his head is turned to look at him (shifted 2
+; pixels and mirrored).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HorseHead_Draw:
     ldy     #$50                    ; $981D
-    lda     enemyAiState,x          ; $981F
+    lda     enemyAiState,x          ; $981F  standing: $58
     ldx     #$58                    ; $9821
     and     #$7F                    ; $9823
-    beq     @loc_9832               ; $9825
-    and     #$07                    ; $9827
-    sec                             ; $9829
+    beq     @body                   ; $9825
+    and     #$07                    ; $9827  walking: $5E on counts
+    sec                             ; $9829  3-5 of each 8
     sbc     #$03                    ; $982A
     cmp     #$03                    ; $982C
-    bcs     @loc_9832               ; $982E
+    bcs     @body                   ; $982E
     ldx     #$5E                    ; $9830
 
-@loc_9832:
+@body:
     jsr     Sprite_DrawEnemyPair    ; $9832
     jsr     Sprite_DrawEnemyPair    ; $9835
     jsr     Sprite_DrawEnemyPairKeepX ; $9838
-    lda     drawOffscreen+1         ; $983B
-    bne     @loc_9870               ; $983D
-    ldy     objState+1,x            ; $983F
-    beq     @loc_9870               ; $9841
-    lda     objY+1,x                ; $9843
+    lda     drawOffscreen+1         ; $983B  on screen,
+    bne     @setOam                 ; $983D
+    ldy     objState+1,x            ; $983F  swinging?
+    beq     @setOam                 ; $9841
+    lda     objY+1,x                ; $9843  the mace, 16 below his top
     clc                             ; $9845
     adc     #$10                    ; $9846
     sta     temp0                   ; $9848
     pha                             ; $984A
-    ldx     HorseHeadFrames,y       ; $984B
+    ldx     HorseHeadFrames,y       ; $984B  his arm, over the middle pair
     ldy     #$58                    ; $984E
     jsr     Sprite_DrawEnemyPair    ; $9850
     stx     drawScratch             ; $9853
     ldx     currentObject           ; $9855
-    lda     objFacing+1,x           ; $9857
-    lsr     a                       ; $9859
+    lda     objFacing+1,x           ; $9857  behind or in front:
+    lsr     a                       ; $9859  (facing / 2) x 2 + pose
     asl     a                       ; $985A
     adc     objState+1,x            ; $985B
     tay                             ; $985D
@@ -1428,16 +1439,16 @@ HorseHead_Draw:
     clc                             ; $9863
     adc     HorseHeadDrawOffsets,y  ; $9864
     sta     temp1                   ; $9867
-    ldx     drawScratch             ; $9869
+    ldx     drawScratch             ; $9869  the mace, at OAM $68
     ldy     #$68                    ; $986B
     jsr     Sprite_DrawEnemyPairKeepX ; $986D
 
-@loc_9870:
-    lda     #$58                    ; $9870
+@setOam:
+    lda     #$58                    ; $9870  fifth sprite: the mace
     sta     objOamOffset+1,x        ; $9872
-    lda     sramEnemyHitbox+32      ; $9874
+    lda     sramEnemyHitbox+32      ; $9874  dying?
     bmi     @done                   ; $9877
-    lda     objFacing+1,x           ; $9879
+    lda     objFacing+1,x           ; $9879  facing Link?
     pha                             ; $987B
     jsr     Enemy_FaceLink          ; $987C
     pla                             ; $987F
@@ -1447,15 +1458,15 @@ HorseHead_Draw:
     cmp     objFacing+1,x           ; $9884
     beq     @done                   ; $9886
 ; (code below not executed in the test movies)
-    lda     oamBuffer+83            ; $9888
-    pha                             ; $988B
-    lda     oamBuffer+87            ; $988C
-    clc                             ; $988F
-    adc     HorseHeadSpearXOffsets,y ; $9890
+    lda     oamBuffer+83            ; $9888  no: turn his head
+    pha                             ; $988B  (swap the halves' X,
+    lda     oamBuffer+87            ; $988C  shifted 2 toward Link,
+    clc                             ; $988F  and mirror them)
+    adc     HorseHeadHeadXOffsets,y ; $9890
     sta     oamBuffer+83            ; $9893
     pla                             ; $9896
     clc                             ; $9897
-    adc     HorseHeadSpearXOffsets,y ; $9898
+    adc     HorseHeadHeadXOffsets,y ; $9898
     sta     oamBuffer+87            ; $989B
     lda     oamBuffer+82            ; $989E
     eor     #$40                    ; $98A1
@@ -1891,31 +1902,33 @@ Generator_Init_Bank4:
 ; ---------------------------------------------------------------------------
 ; Boss_SpawnDeathSpark_Bank4
 ;
-; While a boss dies (from Enemy_DieStep in bank 7), every other frame
-; spawn a spark (projectile type $0C) at a random spot around it.  Bank
-; 5's copy is Boss_SpawnDeathSpark_Bank5.
+; While a boss bursts (from Enemy_DieStep in bank 7), every other frame
+; spawn a spark (projectile type $0C) at a random spot around it: Y - 6 to
+; Y + 25, X - 8 to X + 7, drifting right at 1 pixel per frame.  Bank 5's
+; copy is Boss_SpawnDeathSpark_Bank5.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_SpawnDeathSpark_Bank4:
-    lda     frameCounter            ; $9A46
+    lda     frameCounter            ; $9A46  every other frame
     lsr     a                       ; $9A48
     bcs     @done                   ; $9A49
     jsr     Enemy_FireProjectile    ; $9A4B
-    bcs     @done                   ; $9A4E
-    lda     #$0C                    ; $9A50
+    bcs     @done                   ; $9A4E  (no slot)
+    lda     #$0C                    ; $9A50  a spark
     sta     a:objState+7,y          ; $9A52
-    lda     rng+1,x                 ; $9A55
+    lda     rng+1,x                 ; $9A55  Y - 6 + 0-31
     and     #$1F                    ; $9A58
     adc     objY+1,x                ; $9A5A
     sbc     #$06                    ; $9A5C
     sta     a:objY+7,y              ; $9A5E
-    lda     rng+2,x                 ; $9A61
+    lda     rng+2,x                 ; $9A61  X - 8 + 0-15
     and     #$0F                    ; $9A64
     sbc     #$08                    ; $9A66
     adc     objX+1,x                ; $9A68
     sta     a:objX+7,y              ; $9A6A
-    lda     #$10                    ; $9A6D
+    lda     #$10                    ; $9A6D  drifting right
     sta     a:objXVelocity+7,y      ; $9A6F
 
 @done:
@@ -2300,14 +2313,16 @@ Enemy_CancelAimedBall:
 ; ---------------------------------------------------------------------------
 ; Boss_DrawHpBar
 ;
-; Draw a boss's hit points as a bar of 8 sprites, one per a (hit points per
-; block).
+; Draw a boss's hit points as a column of 8 sprites at X $10 (sprites
+; 48-55, palette 1), from Y $70 up: ceil(hit points / a) full blocks
+; (tile $6E) from the bottom, the rest empty ($70).
 ;
-; Status:  provisional
+; In:      x = enemy index, a = hit points per block
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_DrawHpBar:
     sta     temp0                   ; $9C45
-    ldy     #$00                    ; $9C47
+    ldy     #$00                    ; $9C47  y = ceil(hp / a)
     lda     enemyHp,x               ; $9C49
     clc                             ; $9C4B
 
@@ -2315,33 +2330,33 @@ Boss_DrawHpBar:
     sbc     temp0                   ; $9C4C
     iny                             ; $9C4E
     bcs     @loop                   ; $9C4F
-    ldx     #$1C                    ; $9C51
-    lda     #$70                    ; $9C53
+    ldx     #$1C                    ; $9C51  8 sprites, bottom first,
+    lda     #$70                    ; $9C53  from Y $70
     sta     temp0                   ; $9C55
 
 Boss_DrawHpBarTile:
-    lda     #$70                    ; $9C57
+    lda     #$70                    ; $9C57  empty,
     dey                             ; $9C59
-    bmi     @loc_9C5E               ; $9C5A
-    lda     #$6E                    ; $9C5C
+    bmi     @tile                   ; $9C5A
+    lda     #$6E                    ; $9C5C  or full
 
-@loc_9C5E:
+@tile:
     sta     oamBuffer+193,x         ; $9C5E
-    lda     #$01                    ; $9C61
+    lda     #$01                    ; $9C61  palette 1
 ; Iron Knuckle tables indexed by ironknuckleKind ($18-$1A) from addresses
 ; inside this code: IronknuckleGuardMasks ($9C65: 1, 3, 3), the chance the
 ; shield follows a stroke; IronknuckleRangeOffsets ($9C6C: $1C, $1C, $60)
 ; and IronknuckleRanges ($9C70: $38, $38, $C0), its distance from Link.
 IronknuckleGuardMasks := * + 2
     sta     oamBuffer+194,x         ; $9C63
-    lda     #$10                    ; $9C66
+    lda     #$10                    ; $9C66  X $10
     sta     oamBuffer+195,x         ; $9C68
 IronknuckleRangeOffsets := * + 1
     lda     temp0                   ; $9C6B
     sta     oamBuffer+192,x         ; $9C6D
 
 IronknuckleRanges:
-    adc     #$F8                    ; $9C70
+    adc     #$F8                    ; $9C70  next up: 8 higher, then 7 (carry)
     sta     temp0                   ; $9C72
     dex                             ; $9C74
     dex                             ; $9C75
@@ -3832,41 +3847,49 @@ Wizrobe_Ai:
 ; ---------------------------------------------------------------------------
 ; Carock_Ai
 ;
-; Carock (palace 4 boss): appears and vanishes like a Wizzrobe, firing
-; beams; his hit points are shown (Boss_DrawHpBar).
+; Carock ($22, palace 4 boss): a wizard like the Wizzrobe (Wizrobe_Ai) on a
+; fast 49-frame cycle, enemyAiState counting down: $FF-$F0 blinking in,
+; $EF-$E0 solid (Wizrobe_Animate), with a beam at $E8 (Wizrobe_FireBeam,
+; a = 2: from 26 pixels ahead facing right, 3 facing left), $DF-$D0
+; blinking out, then a new random X on page 1 (Wizrobe_Restart).  2 hit
+; points per bar block.  He isn't tested for hits at all
+; (Boss_CheckDeath_Bank4B skips him): only his own beams, sent back by the
+; reflect spell, hurt him (Projectile_CarockBeam), and only while he is
+; solid.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Carock_Ai:
     jsr     Boss_UpdateIntro_Bank4B ; $AE7B
     jsr     Boss_CheckDeath_Bank4B  ; $AE7E
-    lda     #$02                    ; $AE81
+    lda     #$02                    ; $AE81  2 hit points per block
     jsr     Boss_DrawHpBar          ; $AE83
-    lda     #$00                    ; $AE86
+    lda     #$00                    ; $AE86  not solid
     sta     objState+1,x            ; $AE88
     jsr     Enemy_FaceLink          ; $AE8A
-    dec     enemyAiState,x          ; $AE8D
+    dec     enemyAiState,x          ; $AE8D  count down
     lda     enemyAiState,x          ; $AE8F
-    cmp     #$F0                    ; $AE91
-    bcc     @loc_AE9B               ; $AE93
-    lsr     a                       ; $AE95
+    cmp     #$F0                    ; $AE91  $F0+: blinking in
+    bcc     @beam                   ; $AE93
+    lsr     a                       ; $AE95  drawn on odd counts
     bcc     Projectile_DrawSpin_Done_Bank4B ; $AE96
     jmp     Enemy_Draw              ; $AE98
 
-@loc_AE9B:
-    cmp     #$E8                    ; $AE9B
-    bne     @loc_AEA4               ; $AE9D
-    lda     #$02                    ; $AE9F
+@beam:
+    cmp     #$E8                    ; $AE9B  $E8: a beam
+    bne     @phase                  ; $AE9D
+    lda     #$02                    ; $AE9F  (Carock's offsets)
     jsr     Wizrobe_FireBeam        ; $AEA1
 
-@loc_AEA4:
-    lda     enemyAiState,x          ; $AEA4
+@phase:
+    lda     enemyAiState,x          ; $AEA4  below $D0: start again
     cmp     #$D0                    ; $AEA6
     bcc     Wizrobe_Restart         ; $AEA8
-    cmp     #$E0                    ; $AEAA
+    cmp     #$E0                    ; $AEAA  $E0-$EF: solid
     bcs     Wizrobe_Animate         ; $AEAC
-    lsr     a                       ; $AEAE
-    bcc     Wizrobe_DrawOnly        ; $AEAF
+    lsr     a                       ; $AEAE  $D0-$DF: blinking out,
+    bcc     Wizrobe_DrawOnly        ; $AEAF  drawn on even counts
     rts                             ; $AEB1
 
 ; Wizrobe_Animate: the solid phase of Wizzrobes and Carock: objState+1 = 1
@@ -3943,19 +3966,21 @@ Wizrobe_FireBeam_Done:
 ; ---------------------------------------------------------------------------
 ; RebonackUnhorsed_Draw
 ;
-; Draw the unhorsed Rebonack (as an Iron Knuckle).
+; Draw the unhorsed Rebonack as an Iron Knuckle (Ironknuckle_Draw), at OAM
+; offset $80; once he is dying, stop his X velocity.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RebonackUnhorsed_Draw:
-    ldy     #$80                    ; $AF12
+    ldy     #$80                    ; $AF12  OAM $80
     sty     objOamOffset+1,x        ; $AF14
-    lda     sramEnemyHitbox+10      ; $AF16
-    bpl     @loc_AF1F               ; $AF19
+    lda     sramEnemyHitbox+10      ; $AF16  dying: stand still
+    bpl     @draw                   ; $AF19
     lda     #$00                    ; $AF1B
     sta     objXVelocity+1,x        ; $AF1D
 
-@loc_AF1F:
+@draw:
 DoomKnockerDrawOffsets := * + 2
     jmp     Ironknuckle_Draw        ; $AF1F
     .byte   $F4, $0C                                                        ; $AF22
@@ -4072,40 +4097,47 @@ HiddenJarOrIronknuckle_Ai:
 ; ---------------------------------------------------------------------------
 ; Rebonack_Init
 ;
-; Spawn routine of Rebonack: only while his area flag is set; at ($20 on
-; page 2, Y $AC).
+; Spawn routine of Rebonack ($20, second palace group): only while the
+; area's flag is set (not yet beaten), else removed at once.  He starts at
+; X $20 on page 2, Y $AC; the unhorsed Rebonack's hitbox (type $0A) and
+; his timer are set from Link's objState (0 unless Link is mid-action).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Rebonack_Init:
-    ldx     #$01                    ; $AF91
+    ldx     #$01                    ; $AF91  beaten already?
     jsr     Area_TestFlag           ; $AF93
     ldx     currentObject           ; $AF96
     cmp     #$00                    ; $AF98
-    bne     @loc_AF9F               ; $AF9A
-    sta     enemyActive,x           ; $AF9C
+    bne     @place                  ; $AF9A
+    sta     enemyActive,x           ; $AF9C  yes: gone
     rts                             ; $AF9E
 
-@loc_AF9F:
+@place:
     lda     #$AC                    ; $AF9F
     sta     objY+1,x                ; $AFA1
-    lda     objState                ; $AFA3
+    lda     objState                ; $AFA3  (Link's objState, as 0)
     sta     sramEnemyHitbox+10      ; $AFA5
     sta     timerFast+TIMER_ENEMY,x ; $AFA8
-    lda     #$02                    ; $AFAB
+    lda     #$02                    ; $AFAB  X $220
     sta     objXHi+1,x              ; $AFAD
     lda     #$20                    ; $AFAF
     sta     objX+1,x                ; $AFB1
 
 Rebonack_Init_Done:
     rts                             ; $AFB3
-; The rts byte is also the base of the table RebonackSpeeds (entry 0 is the rts).
+; The rts byte is also the base of the table RebonackSpeeds (entry 0 is the
+; rts): the riderless horse's X velocity by facing ($10, $F0).
 RebonackSpeeds := Rebonack_Init_Done
-; (unreferenced: $AFB4-$AFB4, 1 bytes)
     .byte   $10                                                             ; $AFB4
     .byte   $F0                                                             ; $AFB5
-; (unreferenced: $AFB6-$AFB7, 2 bytes)
 
+; Rebonack's tables, overlapping: the drift during a pause by frameCounter
+; bit 6 (RebonackChargeSpeeds: +4, -4), the charge's acceleration toward
+; Link by the facing toward him (RebonackAccel: +1, -1), the bob
+; (RebonackYOffsets: +1, -1) and the charge's top speed (RebonackMaxSpeeds:
+; +3, -3 pixels per frame).
 RebonackChargeSpeeds:
     .byte   $04                                                             ; $AFB6
 
@@ -4121,28 +4153,42 @@ RebonackMaxSpeeds:
 ; ---------------------------------------------------------------------------
 ; Rebonack_Ai
 ;
-; Rebonack (palace 3 boss) on his horse: bobs and charges back and forth at
-; Link; below 36 hit points he is knocked off (the unhorsed Rebonack, type
-; $0A, appears in slot 4).
+; Rebonack on his flying horse (palace 3 boss): 9 hit points per bar block;
+; guard 4 (his shield); bobbing 1 pixel every 4 frames, 16 frames each
+; way.  After Boss_UpdateIntro_Bank4B and its 255-frame wait (TIMER_BOSS),
+; he charges: his X velocity moves by 1/16 every other frame toward Link,
+; up to 3 pixels per frame, so he flies past Link, slows, and comes back.
+; When it passes through 0 he pauses 83 frames, drifting 1/4 pixel per
+; frame back and forth.  Found facing away from Link while slow (under
+; 9/16), he turns to face him 16 frames later (enemyAiState counts 31
+; frames, the turn drawn by Rebonack_Draw).  His lance is tested against
+; Link's body.
 ;
-; Status:  provisional
+; Below 36 hit points he is unhorsed: the unhorsed Rebonack ($0A, 48 hit
+; points, guard 1) appears in slot 3, 24 pixels ahead, leaping (Y velocity
+; -$16) back at 2 pixels per frame; the horse (objState+1 = 1) flies off
+; the other way at 1 pixel per frame and is removed once fully off screen.
+; Link's Y velocity is doubled at that moment.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Rebonack_Ai:
-    lda     scrollFrozen            ; $AFBC
-    beq     @loc_AFC6               ; $AFBF
+    lda     scrollFrozen            ; $AFBC  fight on: the bar,
+    beq     @wait                   ; $AFBF  9 hit points per block
     lda     #$09                    ; $AFC1
     jsr     Boss_DrawHpBar          ; $AFC3
 
-@loc_AFC6:
-    lda     timerFast+12            ; $AFC6
+@wait:
+    lda     timerFast+TIMER_BOSS    ; $AFC6  the opening wait
     bne     Rebonack_Init_Done      ; $AFC9
     jsr     Enemy_Draw              ; $AFCB
-    lda     #$04                    ; $AFCE
+    lda     #$04                    ; $AFCE  guard 4
     sta     enemyAiVar,x            ; $AFD0
     jsr     Enemy_CheckProjectileHitsSpecial ; $AFD3
-    lda     frameCounter            ; $AFD6
-    and     #$03                    ; $AFD8
-    bne     @loc_AFEC               ; $AFDA
+    lda     frameCounter            ; $AFD6  every 4 frames: bob,
+    and     #$03                    ; $AFD8  down or up by bit 4
+    bne     @intro                  ; $AFDA
     lda     frameCounter            ; $AFDC
     and     #$10                    ; $AFDE
     lsr     a                       ; $AFE0
@@ -4154,27 +4200,27 @@ Rebonack_Ai:
     adc     RebonackYOffsets,y      ; $AFE7
     sta     objY+1,x                ; $AFEA
 
-@loc_AFEC:
+@intro:
     jsr     Boss_UpdateIntro_Bank4B ; $AFEC
     jsr     Enemy_MoveX             ; $AFEF
-    lda     objState+1,x            ; $AFF2
-    beq     @loc_B003               ; $AFF4
-    lda     #$01                    ; $AFF6
+    lda     objState+1,x            ; $AFF2  riderless horse?
+    beq     @mounted                ; $AFF4
+    lda     #$01                    ; $AFF6  stays active,
     sta     enemyActive,x           ; $AFF8
-    lda     drawOffscreen+1         ; $AFFA
+    lda     drawOffscreen+1         ; $AFFA  until fully off screen
     cmp     #$0F                    ; $AFFC
     bne     @done                   ; $AFFE
     jmp     Enemy_Despawn           ; $B000
 
-@loc_B003:
+@mounted:
     jsr     Boss_DrawAndCheck_Bank4B ; $B003
-    jsr     Weapon_CheckLinkBody    ; $B006
-    lda     enemyHp,x               ; $B009
+    jsr     Weapon_CheckLinkBody    ; $B006  the lance
+    lda     enemyHp,x               ; $B009  below 36: unhorsed
     cmp     #$24                    ; $B00B
-    bcs     @loc_B04D               ; $B00D
-    inc     objState+1,x            ; $B00F
-    lda     objX+1,x                ; $B011
-    adc     #$18                    ; $B013
+    bcs     @charge                 ; $B00D
+    inc     objState+1,x            ; $B00F  riderless
+    lda     objX+1,x                ; $B011  the rider, slot 3,
+    adc     #$18                    ; $B013  24 pixels ahead
     sta     objX+4                  ; $B015
     lda     objXHi+1,x              ; $B017
     adc     #$00                    ; $B019
@@ -4183,40 +4229,40 @@ Rebonack_Ai:
     sta     objY+4                  ; $B01F
     lda     objYHi+1,x              ; $B021
     sta     objYHi+4                ; $B023
-    lda     #$0A                    ; $B025
+    lda     #$0A                    ; $B025  type $0A
     sta     enemyType+3             ; $B027
     lda     #$01                    ; $B029
     sta     enemyActive+3           ; $B02B
-    sta     enemyAiVar+3            ; $B02D
-    lda     #$30                    ; $B030
+    sta     enemyAiVar+3            ; $B02D  guard 1
+    lda     #$30                    ; $B030  48 hit points
     sta     enemyHp+3               ; $B032
-    lda     #$FF                    ; $B034
+    lda     #$FF                    ; $B034  no list entry
     sta     enemySramIndex+3        ; $B036
-    lda     #$EA                    ; $B038
+    lda     #$EA                    ; $B038  leaping
     sta     objYVelocity+4          ; $B03A
-    ldy     objFacing+1,x           ; $B03D
+    ldy     objFacing+1,x           ; $B03D  the horse forward 1,
     lda     RebonackSpeeds,y        ; $B03F
     sta     objXVelocity+1,x        ; $B042
-    eor     #$FF                    ; $B044
+    eor     #$FF                    ; $B044  the rider back 2
     asl     a                       ; $B046
     sta     objXVelocity+4          ; $B047
-    asl     objYVelocity            ; $B049
+    asl     objYVelocity            ; $B049  (Link's Y velocity x 2)
 
 @done:
     rts                             ; $B04C
 
-@loc_B04D:
-    lda     enemyAiState,x          ; $B04D
-    beq     @loc_B05A               ; $B04F
+@charge:
+    lda     enemyAiState,x          ; $B04D  turning?
+    beq     @facing                 ; $B04F
     dec     enemyAiState,x          ; $B051
-    cmp     #$10                    ; $B053
-    bne     @loc_B05A               ; $B055
+    cmp     #$10                    ; $B053  halfway: face Link
+    bne     @facing                 ; $B055
 ; (code below not executed in the test movies)
     jsr     Enemy_FaceLink          ; $B057
 ; (end of code not executed in the test movies)
 
-@loc_B05A:
-    lda     objFacing+1,x           ; $B05A
+@facing:
+    lda     objFacing+1,x           ; $B05A  facing away from Link,
     pha                             ; $B05C
     jsr     Enemy_FaceLink          ; $B05D
     pla                             ; $B060
@@ -4224,23 +4270,23 @@ Rebonack_Ai:
     iny                             ; $B063
     tya                             ; $B064
     cmp     objFacing+1,x           ; $B065
-    beq     @loc_B07A               ; $B067
-    lda     objXVelocity+1,x        ; $B069
+    beq     @move                   ; $B067
+    lda     objXVelocity+1,x        ; $B069  slow,
     clc                             ; $B06B
     adc     #$08                    ; $B06C
     cmp     #$11                    ; $B06E
-    bcs     @loc_B07A               ; $B070
-    lda     enemyAiState,x          ; $B072
-    bne     @loc_B07A               ; $B074
-    lda     #$1F                    ; $B076
+    bcs     @move                   ; $B070
+    lda     enemyAiState,x          ; $B072  and not turning:
+    bne     @move                   ; $B074
+    lda     #$1F                    ; $B076  turn (31 frames)
     sta     enemyAiState,x          ; $B078
 
-@loc_B07A:
-    lda     timerFast+TIMER_ENEMY,x ; $B07A
-    beq     @loc_B08D               ; $B07D
+@move:
+    lda     timerFast+TIMER_ENEMY,x ; $B07A  pausing?
+    beq     @accelerate             ; $B07D
 ; (code below not executed in the test movies)
-    lda     frameCounter            ; $B07F
-    asl     a                       ; $B081
+    lda     frameCounter            ; $B07F  drift 1/4 px/frame,
+    asl     a                       ; $B081  by frameCounter bit 6
     asl     a                       ; $B082
     lda     #$00                    ; $B083
     rol     a                       ; $B085
@@ -4250,20 +4296,20 @@ Rebonack_Ai:
     rts                             ; $B08C
 ; (end of code not executed in the test movies)
 
-@loc_B08D:
-    lda     frameCounter            ; $B08D
+@accelerate:
+    lda     frameCounter            ; $B08D  every other frame,
     and     #$01                    ; $B08F
     bne     @done2                  ; $B091
-    lda     objXVelocity+1,x        ; $B093
-    cmp     RebonackMaxSpeeds,y     ; $B095
+    lda     objXVelocity+1,x        ; $B093  up to 3 px/frame
+    cmp     RebonackMaxSpeeds,y     ; $B095  toward Link:
     beq     @done2                  ; $B098
-    lda     objXVelocity+1,x        ; $B09A
+    lda     objXVelocity+1,x        ; $B09A  1/16 more his way
     clc                             ; $B09C
     adc     RebonackAccel,y         ; $B09D
     sta     objXVelocity+1,x        ; $B0A0
     bne     @done2                  ; $B0A2
 ; (code below not executed in the test movies)
-    lda     #$53                    ; $B0A4
+    lda     #$53                    ; $B0A4  stopped: pause 83 frames
     sta     timerFast+TIMER_ENEMY,x ; $B0A6
 ; (end of code not executed in the test movies)
 
@@ -4336,10 +4382,11 @@ DoomKnocker_Ai:
 ; ---------------------------------------------------------------------------
 ; Barba_Init
 ;
-; Spawn routine of Barba: start hidden below the screen (Y $F0); then
-; Carock_Init.
+; Spawn routine of Barba ($21, second palace group): barbaStep 0, hidden
+; below the screen (Y $F0); then Carock_Init.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Init:
     lda     #$00                    ; $B0FE
@@ -4350,49 +4397,52 @@ Barba_Init:
 ; ---------------------------------------------------------------------------
 ; Carock_Init
 ;
-; Spawn routine of bosses in the second palace group: only while their area
-; flag is set.
+; Spawn routine of Carock ($22) and the end of Barba's: only while the
+; area's flag is set (not yet beaten), else removed at once.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Carock_Init:
-    ldx     #$01                    ; $B107
+    ldx     #$01                    ; $B107  beaten already?
     jsr     Area_TestFlag           ; $B109
     ldx     currentObject           ; $B10C
     cmp     #$00                    ; $B10E
     bne     @done                   ; $B110
 ; (code below not executed in the test movies)
-    sta     enemyActive,x           ; $B112
+    sta     enemyActive,x           ; $B112  yes: gone
 ; (end of code not executed in the test movies)
 
 @done:
     rts                             ; $B114
-; The rts byte is also the base of the table BarbaFlameXOffsets (entry 0 is the rts).
+; The rts byte is also the base of the table BarbaFlameXOffsets (entry 0 is
+; the rts): a fireball's X from Barba's head by its facing (+16, -8).
 BarbaFlameXOffsets := @done
-; (unreferenced: $B115-$B11B, 7 bytes)
     .byte   $10, $F8                                                        ; $B115
 
+; Where Barba rises, by rng & 7: X $18, $6B or $B8 (3, 2 and 3 chances in 8).
 BarbaXPositions:
     .byte   $18, $6B, $B8, $18, $6B                                         ; $B117
     .byte   $B8                                                             ; $B11C
-; (unreferenced: $B11D-$B11E, 2 bytes)
     .byte   $18, $B8                                                        ; $B11D
 
 ; ---------------------------------------------------------------------------
 ; Barba_Ai
 ;
-; Barba (palace 6 boss), by barbaStep: Barba_Wait, Barba_Rise, Barba_Breathe,
-; Barba_Sink.
+; Barba (palace 6 boss), a dragon in the lava: 24 hit points per bar block;
+; facing Link; after the opening wait (TIMER_BOSS), by barbaStep:
+; Barba_Wait, Barba_Rise, Barba_Breathe, Barba_Sink.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Ai:
     jsr     Boss_UpdateIntro_Bank4B ; $B11F
     jsr     Barba_DrawAndCheck      ; $B122
-    lda     #$18                    ; $B125
+    lda     #$18                    ; $B125  24 hit points per block
     jsr     Boss_DrawHpBar          ; $B127
     jsr     Enemy_FaceLink          ; $B12A
-    lda     timerFast+12            ; $B12D
+    lda     timerFast+TIMER_BOSS    ; $B12D  the opening wait
     bne     Barba_Wait_Done         ; $B130
     lda     barbaStep               ; $B132
     jsr     JumpTable               ; $B135
@@ -4405,14 +4455,16 @@ Barba_Ai:
 ; ---------------------------------------------------------------------------
 ; Barba_Wait
 ;
-; Wait, then pick one of eight X positions to rise at.
+; Step 0: when the timer runs out (at once the first time, 96 frames after
+; sinking), move to one of the three places (BarbaXPositions) to rise.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Wait:
     lda     timerFast+TIMER_ENEMY,x ; $B140
     bne     Barba_Wait_Done         ; $B143
-    lda     rng+1,x                 ; $B145
+    lda     rng+1,x                 ; $B145  a place at random
     and     #$07                    ; $B148
     tay                             ; $B14A
     lda     BarbaXPositions,y       ; $B14B
@@ -4425,21 +4477,23 @@ Barba_Wait_Done:
 ; ---------------------------------------------------------------------------
 ; Barba_Rise
 ;
-; Rise out of the lava (3 pixels a frame) to Y $80.
+; Step 1: rise out of the lava, 3 pixels per frame, to Y $80; then breathe
+; for 160 frames.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Rise:
-    lda     objY+1,x                ; $B154
+    lda     objY+1,x                ; $B154  up to Y $80
     cmp     #$80                    ; $B156
-    bcc     @loc_B161               ; $B158
+    bcc     @breathe                ; $B158
     dec     objY+1,x                ; $B15A
     dec     objY+1,x                ; $B15C
     dec     objY+1,x                ; $B15E
     rts                             ; $B160
 
-@loc_B161:
-    lda     #$A0                    ; $B161
+@breathe:
+    lda     #$A0                    ; $B161  160 frames
     sta     timerFast+TIMER_ENEMY,x ; $B163
     inc     barbaStep               ; $B166
     rts                             ; $B169
@@ -4447,49 +4501,53 @@ Barba_Rise:
 ; ---------------------------------------------------------------------------
 ; Barba_Breathe
 ;
-; Bob and breathe fireballs (projectile type 4, at four times the speed) at
-; Link for a while.
+; Step 2: sway up and down (1 pixel every other frame, 32 frames each way,
+; by the timer's bit 5), and while the timer is $40-$4F fire a fireball on
+; every other frame (8 in all): projectile type 4, aimed at Link
+; (Enemy_FireAimedBall) at four times the speed, from 3 pixels higher, at
+; Barba's head (barbaHeadX + BarbaFlameXOffsets).  Then sink.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Barba_Breathe:
-    lda     timerFast+TIMER_ENEMY,x ; $B16A
-    beq     @loc_B1BF               ; $B16D
-    and     #$01                    ; $B16F
-    bne     @loc_B180               ; $B171
-    inc     objY+1,x                ; $B173
-    lda     timerFast+TIMER_ENEMY,x ; $B175
+    lda     timerFast+TIMER_ENEMY,x ; $B16A  done?
+    beq     @sink                   ; $B16D
+    and     #$01                    ; $B16F  every other frame:
+    bne     @fire                   ; $B171
+    inc     objY+1,x                ; $B173  down 1,
+    lda     timerFast+TIMER_ENEMY,x ; $B175  or up 1 (bit 5 clear)
     and     #$20                    ; $B178
-    bne     @loc_B180               ; $B17A
+    bne     @fire                   ; $B17A
     dec     objY+1,x                ; $B17C
     dec     objY+1,x                ; $B17E
 
-@loc_B180:
-    lda     timerFast+TIMER_ENEMY,x ; $B180
+@fire:
+    lda     timerFast+TIMER_ENEMY,x ; $B180  timer $30-$5F,
     sbc     #$30                    ; $B183
     cmp     #$30                    ; $B185
     bcs     @done                   ; $B187
 ; (code below not executed in the test movies)
-    lda     timerFast+TIMER_ENEMY,x ; $B189
+    lda     timerFast+TIMER_ENEMY,x ; $B189  and $40-$4F,
     and     #$30                    ; $B18C
     bne     @done                   ; $B18E
-    lda     frameCounter            ; $B190
+    lda     frameCounter            ; $B190  every other frame:
     lsr     a                       ; $B192
     bcc     @done                   ; $B193
-    jsr     Enemy_FireAimedBall     ; $B195
+    jsr     Enemy_FireAimedBall     ; $B195  aimed at Link,
     bcs     @done                   ; $B198
-    lda     #$04                    ; $B19A
+    lda     #$04                    ; $B19A  a fireball
     sta     a:objState+7,y          ; $B19C
     tya                             ; $B19F
     tax                             ; $B1A0
-    asl     objXVelocity+7,x        ; $B1A1
+    asl     objXVelocity+7,x        ; $B1A1  four times as fast
     asl     objXVelocity+7,x        ; $B1A3
     asl     objYVelocity+7,x        ; $B1A5
     asl     objYVelocity+7,x        ; $B1A8
-    dec     objY+7,x                ; $B1AB
+    dec     objY+7,x                ; $B1AB  3 higher,
     dec     objY+7,x                ; $B1AD
     dec     objY+7,x                ; $B1AF
-    ldy     objFacing+7,x           ; $B1B1
+    ldy     objFacing+7,x           ; $B1B1  at his head
     lda     barbaHeadX              ; $B1B3
     clc                             ; $B1B6
     adc     BarbaFlameXOffsets,y    ; $B1B7
@@ -4501,7 +4559,7 @@ Barba_Breathe:
     rts                             ; $B1BE
 ; (code below not executed in the test movies)
 
-@loc_B1BF:
+@sink:
     lda     #$80                    ; $B1BF
     sta     timerFast+TIMER_ENEMY,x ; $B1C1
     inc     barbaStep               ; $B1C4
@@ -4510,20 +4568,22 @@ Barba_Breathe:
 ; ---------------------------------------------------------------------------
 ; Barba_Sink
 ;
-; Sink back into the lava, then wait $60 frames.
+; Step 3: sink back into the lava, 2 pixels per frame, to Y $F0; then wait
+; 96 frames (Barba_Wait).
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Barba_Sink:
-    lda     objY+1,x                ; $B1C8
+    lda     objY+1,x                ; $B1C8  down to Y $F0
     cmp     #$F0                    ; $B1CA
-    bcs     @loc_B1D3               ; $B1CC
+    bcs     @wait                   ; $B1CC
     inc     objY+1,x                ; $B1CE
     inc     objY+1,x                ; $B1D0
     rts                             ; $B1D2
 
-@loc_B1D3:
-    lda     #$00                    ; $B1D3
+@wait:
+    lda     #$00                    ; $B1D3  wait 96 frames
     sta     barbaStep               ; $B1D5
     lda     #$60                    ; $B1D8
     sta     timerFast+TIMER_ENEMY,x ; $B1DA
@@ -4546,9 +4606,10 @@ Barba_DrawAndCheck:
 ; ---------------------------------------------------------------------------
 ; Boss_DrawAndCheck_Bank4B
 ;
-; Draw the boss and test it against Link, then Boss_CheckDeath_Bank4B.
+; Draw the boss, hurt Link on contact, then Boss_CheckDeath_Bank4B.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_DrawAndCheck_Bank4B:
     jsr     Enemy_Draw              ; $B1E3
@@ -4557,29 +4618,32 @@ Boss_DrawAndCheck_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Boss_CheckDeath_Bank4B
 ;
-; When the boss has been killed, mark it dying (its hitbox entry = $FF) and
-; stun it.
+; The second palace group's bosses: hit tests and the rest of
+; Enemy_UpdateCommon while on screen (except Carock, $22, whom only his
+; reflected beam hurts); when the hits have killed it, keep it active as a
+; dying boss (hitbox $FF, timer $FF, stun $7F), for Boss_UpdateIntro_Bank4B.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_CheckDeath_Bank4B:
-    lda     enemyType,x             ; $B1E9
+    lda     enemyType,x             ; $B1E9  Carock: no hit tests
     cmp     #$22                    ; $B1EB
-    beq     @loc_B1F6               ; $B1ED
-    lda     drawOffscreen+1         ; $B1EF
-    bne     @loc_B1F6               ; $B1F1
+    beq     @checkDeath             ; $B1ED
+    lda     drawOffscreen+1         ; $B1EF  on screen: tested
+    bne     @checkDeath             ; $B1F1
     jsr     Enemy_UpdateCommon      ; $B1F3
 
-@loc_B1F6:
-    lda     #$01                    ; $B1F6
+@checkDeath:
+    lda     #$01                    ; $B1F6  still alive?
     cmp     enemyActive,x           ; $B1F8
     beq     @done                   ; $B1FA
-    sta     enemyActive,x           ; $B1FC
-    lda     #$FF                    ; $B1FE
+    sta     enemyActive,x           ; $B1FC  killed: keep it active,
+    lda     #$FF                    ; $B1FE  dying (hitbox $FF)
     ldy     enemyType,x             ; $B200
     sta     sramEnemyHitbox,y       ; $B202
     sta     timerFast+TIMER_ENEMY,x ; $B205
-    lsr     a                       ; $B208
+    lsr     a                       ; $B208  flashing 127 frames
     sta     enemyStunTimer,x        ; $B209
 
 @done:
@@ -4588,39 +4652,45 @@ Boss_CheckDeath_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Boss_UpdateIntro_Bank4B
 ;
-; Freeze the scroll and start the boss music when Link reaches the boss;
-; when the boss has died, finish it off.
+; The second palace group's boss fight, before the boss's own AI:
+; - Until Link's screen reaches page 1, the rest of the AI is skipped (the
+;   boss isn't drawn).  Then the boss music starts, the scroll freezes,
+;   and TIMER_BOSS is set to 255: Rebonack and Barba wait that long.
+; - Dying, it is only drawn while its stun flashes; when the stun runs
+;   out, enemyActive + 1 (the death bursts) and the music stops.  Unlike
+;   Boss_UpdateIntro, the other enemies are left alone.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_UpdateIntro_Bank4B:
-    lda     scrollFrozen            ; $B20D
-    bne     @loc_B225               ; $B210
-    lda     scrollXHi               ; $B212
-    beq     @loc_B23C               ; $B215
-    lda     #$FF                    ; $B217
-    sta     timerFast+12            ; $B219
-    lda     #$08                    ; $B21C
+    lda     scrollFrozen            ; $B20D  fight on already?
+    bne     @fightOn                ; $B210
+    lda     scrollXHi               ; $B212  Link not at page 1: skip
+    beq     @skip                   ; $B215
+    lda     #$FF                    ; $B217  the opening wait,
+    sta     timerFast+TIMER_BOSS    ; $B219
+    lda     #$08                    ; $B21C  boss music,
     sta     musicRequest            ; $B21E
-    inc     scrollFrozen            ; $B220
-    bne     @loc_B23C               ; $B223
+    inc     scrollFrozen            ; $B220  scroll frozen
+    bne     @skip                   ; $B223  (always)
 
-@loc_B225:
-    ldy     enemyType,x             ; $B225
+@fightOn:
+    ldy     enemyType,x             ; $B225  dying (hitbox $FF)?
     lda     sramEnemyHitbox,y       ; $B227
-    bpl     @done                   ; $B22A
-    ldy     enemyStunTimer,x        ; $B22C
-    bne     @loc_B239               ; $B22F
+    bpl     @done                   ; $B22A  no: on with its AI
+    ldy     enemyStunTimer,x        ; $B22C  still flashing: draw it
+    bne     @draw                   ; $B22F
     lda     #$80                    ; $B231
-    inc     enemyActive,x           ; $B233
-    lda     #$80                    ; $B235
+    inc     enemyActive,x           ; $B233  burst,
+    lda     #$80                    ; $B235  music off
     sta     musicRequest            ; $B237
 
-@loc_B239:
+@draw:
     jsr     Enemy_Draw              ; $B239
 
-@loc_B23C:
-    pla                             ; $B23C
+@skip:
+    pla                             ; $B23C  skip the caller's AI
     pla                             ; $B23D
 
 @done:
@@ -4629,56 +4699,71 @@ Boss_UpdateIntro_Bank4B:
 ; ---------------------------------------------------------------------------
 ; RebonackUnhorsed_Ai
 ;
-; The unhorsed Rebonack: fights like an Iron Knuckle (Ironknuckle_Ai).
+; The unhorsed Rebonack ($0A): 6 hit points per bar block; his guard (1,
+; set at the unhorsing) tested; then the Iron Knuckle's AI as a blue one
+; (Ironknuckle_Ai, ironknuckleKind $1A: he throws his sword), always
+; engaged.  enemyAiDir is set to frameCounter & $40 each frame, so for 64
+; frames of every 128 he attacks again as soon as an attack ends.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 RebonackUnhorsed_Ai:
-    ldy     enemyType,x             ; $B23F
+    ldy     enemyType,x             ; $B23F  dying?
     lda     sramEnemyHitbox,y       ; $B241
-    bmi     @loc_B260               ; $B244
-    lda     scrollFrozen            ; $B246
-    beq     @loc_B250               ; $B249
+    bmi     @intro                  ; $B244
+    lda     scrollFrozen            ; $B246  fight on: the bar
+    beq     @fight                  ; $B249
     lda     #$06                    ; $B24B
     jsr     Boss_DrawHpBar          ; $B24D
 
-@loc_B250:
+@fight:
     jsr     Enemy_Draw              ; $B250
-    jsr     Enemy_CheckProjectileHitsSpecial ; $B253
-    lda     frameCounter            ; $B256
+    jsr     Enemy_CheckProjectileHitsSpecial ; $B253  his shield
+    lda     frameCounter            ; $B256  attack streaks
     and     #$40                    ; $B258
     sta     enemyAiDir,x            ; $B25A
     jsr     Ironknuckle_Ai          ; $B25D
 
-@loc_B260:
+@intro:
     jsr     Boss_UpdateIntro_Bank4B ; $B260
     jmp     Boss_CheckDeath_Bank4B  ; $B263
 
+; Barba_Draw: each neck segment's Y below his head.
 BarbaDrawYOffsets:
     .byte   $00, $10, $20, $30, $40, $50, $60, $70                          ; $B266
 ; (unreferenced: $B26E-$B275, 8 bytes)
     .byte   $00, $10, $20, $30, $40, $50, $60, $70                          ; $B26E
 
-BarbaDrawTiles:
+; The neck's sway: segment k's X offset by frameCounter / 8 & 7 + k
+; (doubled while he breathes fire).
+BarbaNeckXOffsets:
     .byte   $00, $01, $02, $01, $00, $FF, $FE, $FF, $00, $01, $02, $01, $00, $FF, $FE; $B276
-; (unreferenced: $B285-$B286, 2 bytes)
 
-BarbaHeadYOffsets:
+; The head's X offset from the top segment, by facing (+16, -16).
+BarbaHeadXOffsets:
     .byte   $FF, $10                                                        ; $B285
     .byte   $F0                                                             ; $B287
-; (unreferenced: $B288-$B28F, 8 bytes)
 
-BarbaSpriteOffsets:
+; While he breathes fire (timer $30-$5F), the head's entry and the neck's
+; first entry by (timer & $30) / 16.
+BarbaHeadFrames:
     .byte   $9E, $9C, $9A, $9C                                              ; $B288
 
-BarbaFrames:
+BarbaNeckFrames:
     .byte   $88, $76, $64, $76                                              ; $B28C
 
 ; ---------------------------------------------------------------------------
 ; Barba_Draw
 ;
-; Draw Barba's head and neck.
+; Draw Barba: his neck, a column of pairs from his Y down to the lava (Y
+; $E8, up to 8 segments, sramEnemyTiles entries from $64), each swaying
+; (BarbaNeckXOffsets); the top one's X is kept in barbaHeadX.  Then his
+; head, a pair 16 pixels to the side he faces, entry $9A.  While he
+; breathes fire the entries cycle (BarbaNeckFrames, BarbaHeadFrames): the
+; mouth opens.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Barba_Draw:
@@ -4711,7 +4796,7 @@ Barba_Draw:
     lsr     a                       ; $B2BD
     lsr     a                       ; $B2BE
     tay                             ; $B2BF
-    ldx     BarbaFrames,y           ; $B2C0
+    ldx     BarbaNeckFrames,y       ; $B2C0
 ; (end of code not executed in the test movies)
 
 @loc_B2C3:
@@ -4735,7 +4820,7 @@ Barba_Draw:
     clc                             ; $B2DC
     adc     temp14                  ; $B2DD
     tay                             ; $B2DF
-    lda     BarbaDrawTiles,y        ; $B2E0
+    lda     BarbaNeckXOffsets,y     ; $B2E0
     ldy     barbaStep               ; $B2E3
     cpy     #$02                    ; $B2E6
     bne     @loc_B2EB               ; $B2E8
@@ -4767,7 +4852,7 @@ Barba_Draw:
     ldx     temp2                   ; $B30F
     lda     barbaHeadX              ; $B311
     clc                             ; $B314
-    adc     BarbaHeadYOffsets,x     ; $B315
+    adc     BarbaHeadXOffsets,x     ; $B315
     sta     temp1                   ; $B318
     ldx     #$9A                    ; $B31A
     lda     barbaStep               ; $B31C
@@ -4786,7 +4871,7 @@ Barba_Draw:
     lsr     a                       ; $B332
     lsr     a                       ; $B333
     tax                             ; $B334
-    lda     BarbaSpriteOffsets,x    ; $B335
+    lda     BarbaHeadFrames,x       ; $B335
     tax                             ; $B338
 ; (end of code not executed in the test movies)
 
@@ -4891,20 +4976,27 @@ Rathead_Draw:
 @draw:
     jmp     Sprite_DrawEnemyPair3_Bank4 ; $B395
 
+; Rebonack_Draw: each column's X shift during a turn, by (facing - 1) x 8
+; + count / 4: 0, -2 ... -8 ... -2, then 0, +2 ... +8 ... +2.
 RebonackDrawOffsets:
     .byte   $00                                                             ; $B398
-; (unreferenced: $B399-$B39B, 3 bytes)
     .byte   $FE, $FC, $FA                                                   ; $B399
     .byte   $F8, $FA, $FC, $FE, $00                                         ; $B39C
-; (unreferenced: $B3A1-$B3A3, 3 bytes)
     .byte   $02, $04, $06                                                   ; $B3A1
     .byte   $08, $06, $04, $02                                              ; $B3A4
 
 ; ---------------------------------------------------------------------------
 ; Rebonack_Draw
 ;
-; Draw Rebonack on his horse.
+; Draw Rebonack on his horse: two columns of two pairs, the horse's head
+; end (sramEnemyTiles entry $58, OAM $50) and the rider's (entry $5C, or
+; $60 for the riderless horse, OAM $60), placed by the facing, the rider's
+; top row 1 pixel lower every other 16 frames.  During a turn (enemyAiState
+; 31-0) the two columns slide toward each other and apart again
+; (RebonackDrawOffsets, by facing and count / 4).  objOamOffset is set to
+; $48, so his fifth sprite (OAM $58) is the lance.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Rebonack_Draw:
@@ -5015,8 +5107,11 @@ Wizrobe_Draw:
 ; ---------------------------------------------------------------------------
 ; Carock_Draw
 ;
-; Draw Carock.
+; Draw Carock, 32 pixels wide: a column of three pairs from sramEnemyTiles
+; entry $A0 (blinking in, count $F0 and up) or $AC, and beside it a pair
+; from $A6 or $B2, on the side away from his facing.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Carock_Draw:
@@ -5130,62 +5225,73 @@ Flame_Draw:
 ; ---------------------------------------------------------------------------
 ; Gooma_Ai
 ;
-; Gooma (palace 5 boss): paces toward and away from Link and swings his ball
-; and chain (Gooma_Attack); his hit points are shown.
+; Gooma (type $21 in palace 5, entered from Helmethead_Ai): his guard is
+; 6; his ball and chain is tested against Link's body only, knocking him
+; up and back (Weapon_CheckLinkBody); 18 hit points per bar block.  He
+; paces like Horsehead (enemyAiState: count, bit 7 away), turning toward
+; Link every 32 frames, but walks whichever way he faces.  At 96 pixels
+; or more he comes toward Link; from 64 to 95, every 64 frames, 3 times
+; in 4; under 64, 1 time in 8 each frame while idle he swings
+; (Gooma_StartAttack: 47 frames whirling the ball, pose 1; then
+; Gooma_Attack: 15 frames thrown out, pose 2; 32 frames of rest), and
+; once the count is out, 1 time in 8 a new count toward or away at random.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Gooma_Ai:
-    lda     #$06                    ; $B4AD
+    lda     #$06                    ; $B4AD  guard 6
     sta     enemyAiVar,x            ; $B4AF
     jsr     Boss_UpdateIntro        ; $B4B2
     jsr     Boss_UpdateCommon       ; $B4B5
-    jsr     Weapon_CheckLinkBody    ; $B4B8
+    jsr     Weapon_CheckLinkBody    ; $B4B8  the ball
     jsr     Gooma_Attack            ; $B4BB
-    lda     #$12                    ; $B4BE
+    lda     #$12                    ; $B4BE  18 hit points per block
     jsr     Boss_DrawHpBar          ; $B4C0
-    lda     objFacing+1,x           ; $B4C3
-    pha                             ; $B4C5
+    lda     objFacing+1,x           ; $B4C3  turn toward Link only
+    pha                             ; $B4C5  every 32 frames
     jsr     Enemy_FaceLink          ; $B4C6
     pla                             ; $B4C9
     sta     temp0                   ; $B4CA
     lda     frameCounter            ; $B4CC
     and     #$1F                    ; $B4CE
-    beq     @loc_B4D6               ; $B4D0
+    beq     @walk                   ; $B4D0
     lda     temp0                   ; $B4D2
     sta     objFacing+1,x           ; $B4D4
 
-@loc_B4D6:
-    lda     enemyAiState,x          ; $B4D6
+@walk:
+    lda     enemyAiState,x          ; $B4D6  standing (count out),
     asl     a                       ; $B4D8
     sta     objXVelocity+1,x        ; $B4D9
-    beq     @loc_B4EC               ; $B4DB
-    bcc     @loc_B4E0               ; $B4DD
+    beq     @distance               ; $B4DB
+    bcc     @toward                 ; $B4DD  or walking: bit 7 away
     iny                             ; $B4DF
 
-@loc_B4E0:
-    lda     WalkSpeeds_Bank4B,y     ; $B4E0
+@toward:
+    lda     WalkSpeeds_Bank4B,y     ; $B4E0  1/2 px/frame
     sta     objXVelocity+1,x        ; $B4E3
-    lda     frameCounter            ; $B4E5
+    lda     frameCounter            ; $B4E5  count every other frame
     lsr     a                       ; $B4E7
-    bcc     @loc_B4EC               ; $B4E8
+    bcc     @distance               ; $B4E8
     dec     enemyAiState,x          ; $B4EA
 
-@loc_B4EC:
-    lda     temp15                  ; $B4EC
-    bpl     @loc_B4F2               ; $B4EE
+@distance:
+    lda     temp15                  ; $B4EC  |dx|
+    bpl     @abs                    ; $B4EE
     eor     #$FF                    ; $B4F0
 
-@loc_B4F2:
-    cmp     #$60                    ; $B4F2
+@abs:
+    cmp     #$60                    ; $B4F2  near (under 96)?
     bcc     Gooma_ChooseAttack      ; $B4F4
 
 ; ---------------------------------------------------------------------------
 ; Gooma_ResetState
 ;
-; Set the AI state's bit 4 and clear bit 7 (the high bits of the state).
+; As Boss_ResetState: restart the pacing count toward Link (bit 7 clear,
+; bit 4 set).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Gooma_ResetState:
     lda     enemyAiState,x          ; $B4F6
@@ -5194,14 +5300,16 @@ Gooma_ResetState:
     sta     enemyAiState,x          ; $B4FC
     rts                             ; $B4FE
 
+; Gooma_ChooseAttack: a = |dx| under 96 (as Boss_ChooseAttack, with 64 for
+; 32, and the swing for every boss of his type).
 Gooma_ChooseAttack:
-    cmp     #$40                    ; $B4FF
-    bcc     @loc_B511               ; $B501
-    lda     frameCounter            ; $B503
+    cmp     #$40                    ; $B4FF  under 64?
+    bcc     @near                   ; $B501
+    lda     frameCounter            ; $B503  every 64 frames,
     and     #$3F                    ; $B505
     bne     @done                   ; $B507
 ; (code below not executed in the test movies)
-    lda     rng+1,x                 ; $B509
+    lda     rng+1,x                 ; $B509  3 in 4: come again
     and     #$03                    ; $B50C
     bne     Gooma_ResetState        ; $B50E
 ; (end of code not executed in the test movies)
@@ -5209,24 +5317,24 @@ Gooma_ChooseAttack:
 @done:
     rts                             ; $B510
 
-@loc_B511:
-    lda     rng+1,x                 ; $B511
+@near:
+    lda     rng+1,x                 ; $B511  1 in 8, idle:
     and     #$07                    ; $B514
     ora     objState+1,x            ; $B516
     ora     timerFast+TIMER_ENEMY,x ; $B518
-    bne     @loc_B522               ; $B51B
-    lda     #$2F                    ; $B51D
+    bne     @newCount               ; $B51B
+    lda     #$2F                    ; $B51D  whirl the ball, 47 frames
     jsr     Gooma_StartAttack       ; $B51F
 
-@loc_B522:
-    lda     enemyAiState,x          ; $B522
+@newCount:
+    lda     enemyAiState,x          ; $B522  count out,
     asl     a                       ; $B524
     bne     @done2                  ; $B525
-    lda     rng+1,x                 ; $B527
+    lda     rng+1,x                 ; $B527  1 in 8:
     and     #$07                    ; $B52A
     bne     @done2                  ; $B52C
-    jsr     Gooma_ResetState        ; $B52E
-    lda     rng+1,x                 ; $B531
+    jsr     Gooma_ResetState        ; $B52E  a new count,
+    lda     rng+1,x                 ; $B531  toward or away
     and     #$80                    ; $B534
     ora     enemyAiState,x          ; $B536
     sta     enemyAiState,x          ; $B538
@@ -5237,25 +5345,27 @@ Gooma_ChooseAttack:
 ; ---------------------------------------------------------------------------
 ; Gooma_Attack
 ;
-; Advance Gooma's swing; at its end, a long swing.
+; Gooma's swing, when the pose's time is up: pose 1 (whirling) -> 2 (the
+; throw) for 15 frames; pose 2 -> rest ($FF -> 0) for 32 frames.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Gooma_Attack:
-    lda     objState+1,x            ; $B53B
+    lda     objState+1,x            ; $B53B  swinging,
     beq     Gooma_StartAttack_Done  ; $B53D
-    ldy     timerFast+TIMER_ENEMY,x ; $B53F
+    ldy     timerFast+TIMER_ENEMY,x ; $B53F  pose over?
     bne     Gooma_StartAttack_Done  ; $B542
     lda     objState+1,x            ; $B544
     cmp     #$02                    ; $B546
-    bne     @loc_B551               ; $B548
-    dey                             ; $B54A
+    bne     @throw                  ; $B548
+    dey                             ; $B54A  pose 2: rest 32 frames
     sty     objState+1,x            ; $B54B
     lda     #$20                    ; $B54D
     bne     Gooma_StartAttack       ; $B54F
 
-@loc_B551:
-    lda     #$0F                    ; $B551
+@throw:
+    lda     #$0F                    ; $B551  pose 1: throw, 15 frames
     bne     Gooma_StartAttack       ; $B553
 ; (code below not executed in the test movies)
     lda     #$0F                    ; $B555
@@ -5264,9 +5374,10 @@ Gooma_Attack:
 ; ---------------------------------------------------------------------------
 ; Gooma_StartAttack
 ;
-; Start a swing of Gooma's ball and chain lasting a frames.
+; Next pose of Gooma's swing (objState+1 + 1), lasting a frames.
 ;
-; Status:  provisional
+; In:      x = enemy index, a = frames
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Gooma_StartAttack:
     sta     timerFast+TIMER_ENEMY,x ; $B557
@@ -5275,6 +5386,7 @@ Gooma_StartAttack:
 Gooma_StartAttack_Done:
     rts                             ; $B55C
 
+; Gooma_Draw: tiles of Gooma's frames, 9 per frame (3 rows of 3).
 GoomaPartTiles:
     .byte   $09                                                             ; $B55D
     .byte   $0B                                                             ; $B55E
@@ -5282,53 +5394,65 @@ GoomaPartTiles:
     .byte   $09, $0B, $0D, $0F, $11, $13, $9F, $A1, $A3, $09, $0B, $0D, $1B, $1D, $1F, $21; $B56F
     .byte   $23, $A3, $29, $2B, $2D, $4E, $50, $62, $7C, $7E                ; $B57F
 
-GoomaDrawOffsets:
+; His thrown arm's X offset by facing (1: +24, 2: -8).
+GoomaArmXOffsets:
     .byte   $80, $18, $F8                                                   ; $B589
 
-GoomaBallYOffsets:
+; The thrown ball's X offset by frameCounter / 2 & 7, facing right, then
+; (+8) facing left: out to 56 pixels and back.
+GoomaBallXOffsets:
     .byte   $24, $28, $2C                                                   ; $B58C
-; (unreferenced: $B58F-$B593, 5 bytes)
     .byte   $30, $34, $38, $2C, $20                                         ; $B58F
     .byte   $E4, $E0, $DC, $D8, $D4, $D0, $DC                               ; $B594
 
-GoomaMaceXOffsets:
+; The chain link's X from the ball, by facing.
+GoomaChainXOffsets:
     .byte   $E8, $E8, $10                                                   ; $B59B
 
-GoomaMaceYOffsets:
+; The whirling ball's Y and X offsets by step.
+GoomaWhirlYOffsets:
     .byte   $08, $0C, $14, $1C, $20, $1C, $14, $0C                          ; $B59E
 
-GoomaChainXOffsets:
+GoomaWhirlXOffsets:
     .byte   $04, $FC, $F8, $FC, $04, $0C, $10, $0C                          ; $B5A6
 
 ; ---------------------------------------------------------------------------
 ; Gooma_Draw
 ;
-; Draw Gooma and his ball and chain.
+; Draw Gooma: three rows of three sprites (Gooma_DrawPart, frames in
+; GoomaPartTiles: 0 standing, 9 and $12 walking, $1B whirling, $24
+; throwing), mirrored facing right, flashing while stunned.  While he
+; whirls (pose 1) the ball (OAM $40) circles his head (GoomaWhirlYOffsets,
+; GoomaWhirlXOffsets by (timer / 2) & 7); when he throws (pose 2) his arm
+; reaches out (GoomaArmXOffsets) and the ball swings out to 56 pixels and
+; back (GoomaBallXOffsets by frameCounter), a chain link between.
+; objOamOffset is set to $30, so his fifth sprite is the ball
+; (Weapon_CheckLinkBody).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Gooma_Draw:
-    lda     objY+1,x                ; $B5AE
+    lda     objY+1,x                ; $B5AE  Y, screen X, facing
     sta     temp0                   ; $B5B0
     lda     a:drawScreenX+1         ; $B5B2
     sta     temp1                   ; $B5B5
     lda     objFacing+1,x           ; $B5B7
     sta     temp2                   ; $B5B9
-    lda     #$02                    ; $B5BB
-    ldy     enemyStunTimer,x        ; $B5BD
+    lda     #$02                    ; $B5BB  palette 2, or flashing
+    ldy     enemyStunTimer,x        ; $B5BD  (stun & 3) while stunned
     beq     @loc_B5C5               ; $B5C0
     tya                             ; $B5C2
     and     #$03                    ; $B5C3
 
 @loc_B5C5:
     sta     temp6                   ; $B5C5
-    ldy     #$00                    ; $B5C7
-    lda     objXVelocity+1,x        ; $B5C9
+    ldy     #$00                    ; $B5C7  frame 0: standing
+    lda     objXVelocity+1,x        ; $B5C9  moving or swinging,
     ora     objState+1,x            ; $B5CB
     beq     @loc_B600               ; $B5CD
-    lda     scrollFrozen            ; $B5CF
+    lda     scrollFrozen            ; $B5CF  in the fight:
     beq     @loc_B600               ; $B5D2
-    lda     enemyAiState,x          ; $B5D4
+    lda     enemyAiState,x          ; $B5D4  walking: frame 9, or 2
     ldy     #$09                    ; $B5D6
     and     #$7F                    ; $B5D8
     beq     @loc_B5E7               ; $B5DA
@@ -5337,59 +5461,59 @@ Gooma_Draw:
     sbc     #$03                    ; $B5DF
     cmp     #$03                    ; $B5E1
     bcs     @loc_B5E7               ; $B5E3
-    ldy     #$12                    ; $B5E5
+    ldy     #$12                    ; $B5E5  on counts 3-5 of each 8
 
 @loc_B5E7:
-    lda     sramEnemyHitbox+33      ; $B5E7
+    lda     sramEnemyHitbox+33      ; $B5E7  alive and swinging:
     bmi     @loc_B600               ; $B5EA
     lda     objState+1,x            ; $B5EC
     beq     @loc_B600               ; $B5EE
-    ldy     #$24                    ; $B5F0
+    ldy     #$24                    ; $B5F0  pose 2: frame $24, throwing
     cmp     #$02                    ; $B5F2
     beq     @loc_B600               ; $B5F4
-    ldy     #$1B                    ; $B5F6
+    ldy     #$1B                    ; $B5F6  pose 1: frame $1B, every
     lda     frameCounter            ; $B5F8
     and     #$08                    ; $B5FA
     bne     @loc_B600               ; $B5FC
-    ldy     #$00                    ; $B5FE
+    ldy     #$00                    ; $B5FE  other 8 frames 0
 
 @loc_B600:
     tya                             ; $B600
     tax                             ; $B601
-    ldy     #$60                    ; $B602
+    ldy     #$60                    ; $B602  three rows of three sprites
     jsr     Gooma_DrawPart          ; $B604
     jsr     Gooma_DrawPart          ; $B607
     jsr     Gooma_DrawPart          ; $B60A
     ldx     currentObject           ; $B60D
-    lda     sramEnemyHitbox+33      ; $B60F
+    lda     sramEnemyHitbox+33      ; $B60F  the ball (dying: none)
     bmi     @loc_B653               ; $B612
-    lda     objState+1,x            ; $B614
+    lda     objState+1,x            ; $B614  pose 2: thrown out
     cmp     #$02                    ; $B616
     beq     @loc_B656               ; $B618
-    cmp     #$01                    ; $B61A
+    cmp     #$01                    ; $B61A  pose 1: whirling
     bne     @loc_B653               ; $B61C
-    lda     timerFast+TIMER_ENEMY,x ; $B61E
+    lda     timerFast+TIMER_ENEMY,x ; $B61E  at step (timer / 2) & 7,
     lsr     a                       ; $B621
     and     #$07                    ; $B622
     ldy     temp2                   ; $B624
     cpy     #$01                    ; $B626
     bne     @loc_B62C               ; $B628
 ; (code below not executed in the test movies)
-    eor     #$07                    ; $B62A
+    eor     #$07                    ; $B62A  (the other way facing right)
 ; (end of code not executed in the test movies)
 
 @loc_B62C:
     tay                             ; $B62C
     lda     drawOffscreen+1         ; $B62D
     bne     @loc_B653               ; $B62F
-    lda     objY+1,x                ; $B631
+    lda     objY+1,x                ; $B631  the ball (OAM $40, $44) round
     clc                             ; $B633
-    adc     GoomaMaceYOffsets,y     ; $B634
+    adc     GoomaWhirlYOffsets,y    ; $B634
     sta     oamBuffer+64            ; $B637
     sta     oamBuffer+68            ; $B63A
     lda     drawScreenX+1           ; $B63D
     clc                             ; $B63F
-    adc     GoomaChainXOffsets,y    ; $B640
+    adc     GoomaWhirlXOffsets,y    ; $B640  his head
     sta     oamBuffer+67            ; $B643
     clc                             ; $B646
     adc     #$08                    ; $B647
@@ -5402,11 +5526,11 @@ Gooma_Draw:
     jmp     @loc_B728               ; $B653
 
 @loc_B656:
-    sty     temp5                   ; $B656
+    sty     temp5                   ; $B656  pose 2: his arm (2 sprites)
     ldy     objFacing+1,x           ; $B658
     lda     a:drawScreenX+1         ; $B65A
     clc                             ; $B65D
-    adc     GoomaDrawOffsets,y      ; $B65E
+    adc     GoomaArmXOffsets,y      ; $B65E  out in front (GoomaArmXOffsets)
     dey                             ; $B661
     beq     @loc_B66C               ; $B662
     pha                             ; $B664
@@ -5439,11 +5563,11 @@ Gooma_Draw:
     clc                             ; $B68B
     adc     #$10                    ; $B68C
     sta     oamBuffer+4,y           ; $B68E
-    lda     #$27                    ; $B691
+    lda     #$27                    ; $B691  tiles $27, $2F
     sta     oamBuffer+1,y           ; $B693
     lda     #$2F                    ; $B696
     sta     oamBuffer+5,y           ; $B698
-    lda     frameCounter            ; $B69B
+    lda     frameCounter            ; $B69B  the ball swinging out and back
     lsr     a                       ; $B69D
     and     #$07                    ; $B69E
     tay                             ; $B6A0
@@ -5452,13 +5576,13 @@ Gooma_Draw:
     bne     @loc_B6AC               ; $B6A5
     tya                             ; $B6A7
     clc                             ; $B6A8
-    adc     #$08                    ; $B6A9
+    adc     #$08                    ; $B6A9  (+8: the left-facing half)
     tay                             ; $B6AB
 
 @loc_B6AC:
     lda     a:drawScreenX+1         ; $B6AC
     clc                             ; $B6AF
-    adc     GoomaBallYOffsets,y     ; $B6B0
+    adc     GoomaBallXOffsets,y     ; $B6B0  (GoomaBallXOffsets)
     ldy     objFacing+1,x           ; $B6B3
     dey                             ; $B6B5
     beq     @loc_B6C0               ; $B6B6
@@ -5477,11 +5601,11 @@ Gooma_Draw:
 ; (end of code not executed in the test movies)
 
 @loc_B6C5:
-    sta     oamBuffer+67            ; $B6C5
+    sta     oamBuffer+67            ; $B6C5  the ball
     clc                             ; $B6C8
     adc     #$08                    ; $B6C9
     sta     oamBuffer+71            ; $B6CB
-    ldy     objFacing+1,x           ; $B6CE
+    ldy     objFacing+1,x           ; $B6CE  a chain link (OAM $90, $94)
     lda     frameCounter            ; $B6D0
     and     #$01                    ; $B6D2
     asl     a                       ; $B6D4
@@ -5489,18 +5613,18 @@ Gooma_Draw:
     asl     a                       ; $B6D6
     adc     oamBuffer+67            ; $B6D7
     clc                             ; $B6DA
-    adc     GoomaMaceXOffsets,y     ; $B6DB
+    adc     GoomaChainXOffsets,y    ; $B6DB  between, jiggling
     sta     oamBuffer+147           ; $B6DE
     clc                             ; $B6E1
     adc     #$10                    ; $B6E2
     sta     oamBuffer+151           ; $B6E4
-    lda     #$BE                    ; $B6E7
+    lda     #$BE                    ; $B6E7  tile $BE
     sta     oamBuffer+145           ; $B6E9
     sta     oamBuffer+149           ; $B6EC
     lda     oamBuffer+66            ; $B6EF
     sta     oamBuffer+146           ; $B6F2
     sta     oamBuffer+150           ; $B6F5
-    lda     objY+1,x                ; $B6F8
+    lda     objY+1,x                ; $B6F8  all at Y + 18
     clc                             ; $B6FA
     adc     #$12                    ; $B6FB
     sta     oamBuffer+64            ; $B6FD
@@ -5509,12 +5633,12 @@ Gooma_Draw:
     sta     oamBuffer+148           ; $B706
 
 @loc_B709:
-    lda     oamBuffer+98            ; $B709
+    lda     oamBuffer+98            ; $B709  the ball's tiles, palette 3
     ora     #$03                    ; $B70C
     sta     oamBuffer+66            ; $B70E
     sta     oamBuffer+70            ; $B711
     cmp     #$40                    ; $B714
-    ldy     #$BA                    ; $B716
+    ldy     #$BA                    ; $B716  $BA $BC, swapped when mirrored
     lda     #$BC                    ; $B718
     sty     oamBuffer+65            ; $B71A
     sta     oamBuffer+69            ; $B71D
@@ -5523,16 +5647,18 @@ Gooma_Draw:
     sty     oamBuffer+69            ; $B725
 
 @loc_B728:
-    lda     #$30                    ; $B728
+    lda     #$30                    ; $B728  fifth sprite: the ball
     sta     objOamOffset+1,x        ; $B72A
     rts                             ; $B72C
 
 ; ---------------------------------------------------------------------------
 ; Gooma_DrawPart
 ;
-; Draw part of Gooma.
+; Draw a row of three of Gooma's sprites from GoomaPartTiles + x (the
+; outer two swapped and mirrored facing right), in palette temp6.
 ;
-; Status:  provisional
+; In:      x = tile index, y = OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Gooma_DrawPart:
     lda     GoomaPartTiles,x        ; $B72D
@@ -6304,68 +6430,76 @@ HammerThrower_Ai:
 
 @done:
     rts                             ; $BAC0
-; The rts byte is also the base of the table HelmetheadShotSpeeds (entry 0 is the rts).
-HelmetheadShotSpeeds := @done
-; (unreferenced: $BAC1-$BAC1, 1 bytes)
+; The rts byte is also the base of the table HelmetheadHeadLaunchSpeeds
+; (entry 0 is the rts): a knocked-off helmet's X velocity by Helmethead's
+; facing, backward: $F0 facing right, $10 facing left.
+HelmetheadHeadLaunchSpeeds := @done
     .byte   $F0                                                             ; $BAC1
     .byte   $10                                                             ; $BAC2
 
 ; ---------------------------------------------------------------------------
 ; Helmethead_Ai
 ;
-; Helmethead (palace 2 boss; Gooma_Ai in palace 5): paces (Boss_Pace), fires
-; an energy ball every 128 frames; each hit on his head knocks off a helmet
-; (HelmetheadHead_Ai), up to two.
+; Helmethead ($21, palace 2 boss; in palace 5, where currentRegion isn't 0,
+; the same type is Gooma, Gooma_Ai).  He paces like Horsehead (Boss_Pace,
+; 6 hit points per bar block), fires an energy ball every 128 frames
+; (projectile type 2, from 8 pixels higher, sinking at 2/16 pixel per
+; frame), and has a guard (guard 2): only strokes at his head get through.
+; Each such hit, while helmetheadHitDelay is 0 and he still has a helmet
+; (objState+1 counts the lost ones, up to 2), knocks a helmet off: a
+; HelmetheadHead ($22) is launched from 12 pixels above him, up at -3 and
+; 1 pixel per frame backward, and the delay is set to 16 (64 frames).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Helmethead_Ai:
-    lda     currentRegion           ; $BAC3
-    beq     @loc_BACB               ; $BAC6
+    lda     currentRegion           ; $BAC3  palace 5: Gooma
+    beq     @helmethead             ; $BAC6
     jmp     Gooma_Ai                ; $BAC8
 
-@loc_BACB:
+@helmethead:
     jsr     Boss_UpdateIntro        ; $BACB
     jsr     Boss_UpdateCommon       ; $BACE
-    lda     #$06                    ; $BAD1
-    ldy     currentRegion           ; $BAD3
-    beq     @loc_BADA               ; $BAD6
+    lda     #$06                    ; $BAD1  6 hit points per block
+    ldy     currentRegion           ; $BAD3  (18 elsewhere: never)
+    beq     @pace                   ; $BAD6
 ; (code below not executed in the test movies)
     lda     #$12                    ; $BAD8
 ; (end of code not executed in the test movies)
 
-@loc_BADA:
+@pace:
     jsr     Boss_Pace               ; $BADA
-    lda     frameCounter            ; $BADD
+    lda     frameCounter            ; $BADD  every 128 frames:
     and     #$7F                    ; $BADF
-    bne     @loc_BAFA               ; $BAE1
+    bne     @helmet                 ; $BAE1
 ; (code below not executed in the test movies)
-    jsr     Enemy_FireProjectile    ; $BAE3
-    bcs     @loc_BAFA               ; $BAE6
+    jsr     Enemy_FireProjectile    ; $BAE3  an energy ball
+    bcs     @helmet                 ; $BAE6
     lda     #$02                    ; $BAE8
     sta     a:objState+7,y          ; $BAEA
-    lda     a:objY+7,y              ; $BAED
+    lda     a:objY+7,y              ; $BAED  8 pixels higher,
     sbc     #$08                    ; $BAF0
     sta     a:objY+7,y              ; $BAF2
-    lda     #$02                    ; $BAF5
+    lda     #$02                    ; $BAF5  sinking slowly
     sta     objYVelocity+7,y        ; $BAF7
 ; (end of code not executed in the test movies)
 
-@loc_BAFA:
-    lda     ram_05DE                ; $BAFA
-    bne     @loc_BB55               ; $BAFD
-    lda     objCollision+1,x        ; $BAFF
+@helmet:
+    lda     helmetheadHitDelay      ; $BAFA  just lost one?
+    bne     @countDown              ; $BAFD
+    lda     objCollision+1,x        ; $BAFF  struck by the sword,
     and     #$20                    ; $BB01
     beq     @done                   ; $BB03
-    lda     objState+1,x            ; $BB05
+    lda     objState+1,x            ; $BB05  with a helmet left?
     cmp     #$02                    ; $BB07
     beq     @done                   ; $BB09
-    lda     #$10                    ; $BB0B
-    sta     ram_05DE                ; $BB0D
-    jsr     Enemy_SpawnFlyer_Bank4  ; $BB10
+    lda     #$10                    ; $BB0B  64 frames before the next
+    sta     helmetheadHitDelay      ; $BB0D
+    jsr     Enemy_SpawnFlyer_Bank4  ; $BB10  a free slot (temp0)?
     bcs     @done                   ; $BB13
     ldy     temp0                   ; $BB15
-    lda     objY+1,x                ; $BB17
+    lda     objY+1,x                ; $BB17  the helmet, 12 above him
     sbc     #$0C                    ; $BB19
     sta     a:objY+1,y              ; $BB1B
     lda     objX+1,x                ; $BB1E
@@ -6374,31 +6508,31 @@ Helmethead_Ai:
     sta     a:objXHi+1,y            ; $BB25
     lda     objFacing+1,x           ; $BB28
     sta     a:objFacing+1,y         ; $BB2A
-    lda     #$22                    ; $BB2D
+    lda     #$22                    ; $BB2D  type $22
     sta     a:enemyType,y           ; $BB2F
     lda     #$00                    ; $BB32
     sta     enemyAiVar,y            ; $BB34
     sta     a:enemyAiState,y        ; $BB37
-    lda     #$D0                    ; $BB3A
+    lda     #$D0                    ; $BB3A  flung up at -3
     sta     objYVelocity+1,y        ; $BB3C
     sta     a:enemyHp,y             ; $BB3F
-    lda     objFacing+1,x           ; $BB42
+    lda     objFacing+1,x           ; $BB42  and backward, 1 px/frame
     tax                             ; $BB44
-    lda     HelmetheadShotSpeeds,x  ; $BB45
+    lda     HelmetheadHeadLaunchSpeeds,x ; $BB45
     sta     a:objXVelocity+1,y      ; $BB48
     ldx     currentObject           ; $BB4B
-    lda     objState+1,x            ; $BB4D
+    lda     objState+1,x            ; $BB4D  which helmet (0, 1)
     sta     a:objState+1,y          ; $BB4F
-    inc     objState+1,x            ; $BB52
+    inc     objState+1,x            ; $BB52  one more lost
 
 @done:
     rts                             ; $BB54
 
-@loc_BB55:
-    lda     frameCounter            ; $BB55
+@countDown:
+    lda     frameCounter            ; $BB55  every 4 frames
     and     #$03                    ; $BB57
     bne     @done2                  ; $BB59
-    dec     ram_05DE                ; $BB5B
+    dec     helmetheadHitDelay      ; $BB5B
 
 @done2:
     rts                             ; $BB5E
@@ -6406,89 +6540,100 @@ Helmethead_Ai:
 ; ---------------------------------------------------------------------------
 ; HorseHead_Ai
 ;
-; Horsehead (palace 1 boss): paces (Boss_Pace) and swings his mace
-; (HorseHead_Attack); his hit points are shown.
+; Horsehead ($20, palace 1 boss): Boss_UpdateIntro, Boss_UpdateCommon (his
+; guard, 2, turns aside strokes below his head), his mace tested against
+; Link's body (Weapon_CheckLinkBody), the swing (HorseHead_Attack), and
+; Boss_Pace with 4 hit points per bar block.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HorseHead_Ai:
     jsr     Boss_UpdateIntro        ; $BB5F
     jsr     Boss_UpdateCommon       ; $BB62
-    jsr     Weapon_CheckLinkBody    ; $BB65
+    jsr     Weapon_CheckLinkBody    ; $BB65  the mace
     jsr     HorseHead_Attack        ; $BB68
-    lda     frameCounter            ; $BB6B
-    bne     @loc_BB6F               ; $BB6D
+    lda     frameCounter            ; $BB6B  (no effect)
+    bne     @hpPerBlock             ; $BB6D
 
-@loc_BB6F:
-    lda     #$04                    ; $BB6F
+@hpPerBlock:
+    lda     #$04                    ; $BB6F  4 hit points per block
 
 ; ---------------------------------------------------------------------------
 ; Boss_Pace
 ;
-; Pace toward and away from Link by enemyAiState, attacking when facing him;
-; draw the hit point bar (a hit points per block).
+; Horsehead's and Helmethead's movement; also draws the hit point bar (a
+; hit points per block).  The boss turns toward Link only every 32 frames
+; (and Horsehead not while swinging).  enemyAiState: bits 6-0 count
+; frames / 2 of walking, bit 7 set to back away from Link, clear to come
+; toward him, at 1/2 pixel per frame (BossPaceSpeeds) -- but only while
+; facing him.  At 96 pixels or more from Link the count restarts toward
+; him (Boss_ResetState).  Nearer, Boss_ChooseAttack.
 ;
-; Status:  provisional
+; In:      x = enemy index, a = hit points per bar block
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_Pace:
     jsr     Boss_DrawHpBar          ; $BB71
     lda     objFacing+1,x           ; $BB74
     pha                             ; $BB76
-    jsr     Enemy_FaceLink          ; $BB77
+    jsr     Enemy_FaceLink          ; $BB77  temp1 = the facing toward Link
     iny                             ; $BB7A
     sty     temp1                   ; $BB7B
     pla                             ; $BB7D
     sta     temp0                   ; $BB7E
-    lda     enemyType,x             ; $BB80
-    cmp     #$20                    ; $BB82
-    bne     @loc_BB8A               ; $BB84
+    lda     enemyType,x             ; $BB80  Horsehead swinging:
+    cmp     #$20                    ; $BB82  keep his facing
+    bne     @turn                   ; $BB84
     lda     objState+1,x            ; $BB86
-    bne     @loc_BB90               ; $BB88
+    bne     @keepFacing             ; $BB88
 
-@loc_BB8A:
-    lda     frameCounter            ; $BB8A
+@turn:
+    lda     frameCounter            ; $BB8A  turn only every 32 frames
     and     #$1F                    ; $BB8C
-    beq     @loc_BB94               ; $BB8E
+    beq     @walk                   ; $BB8E
 
-@loc_BB90:
+@keepFacing:
     lda     temp0                   ; $BB90
     sta     objFacing+1,x           ; $BB92
 
-@loc_BB94:
-    lda     #$00                    ; $BB94
+@walk:
+    lda     #$00                    ; $BB94  standing,
     sta     objXVelocity+1,x        ; $BB96
-    lda     enemyAiState,x          ; $BB98
+    lda     enemyAiState,x          ; $BB98  unless counting
     asl     a                       ; $BB9A
-    beq     @loc_BBB2               ; $BB9B
-    bcc     @loc_BBA0               ; $BB9D
+    beq     @distance               ; $BB9B
+    bcc     @toward                 ; $BB9D  bit 7: away from Link
     iny                             ; $BB9F
 
-@loc_BBA0:
-    lda     temp1                   ; $BBA0
+@toward:
+    lda     temp1                   ; $BBA0  only while facing him
     cmp     objFacing+1,x           ; $BBA2
     bne     Boss_ResetState_Done    ; $BBA4
     lda     BossPaceSpeeds,y        ; $BBA6
     sta     objXVelocity+1,x        ; $BBA9
-    lda     frameCounter            ; $BBAB
+    lda     frameCounter            ; $BBAB  count every other frame
     lsr     a                       ; $BBAD
-    bcc     @loc_BBB2               ; $BBAE
+    bcc     @distance               ; $BBAE
     dec     enemyAiState,x          ; $BBB0
 
-@loc_BBB2:
-    lda     temp15                  ; $BBB2
-    bpl     @loc_BBB8               ; $BBB4
+@distance:
+    lda     temp15                  ; $BBB2  |dx|
+    bpl     @abs                    ; $BBB4
     eor     #$FF                    ; $BBB6
 
-@loc_BBB8:
-    cmp     #$60                    ; $BBB8
+@abs:
+    cmp     #$60                    ; $BBB8  near (under 96)?
     bcc     Boss_ChooseAttack       ; $BBBA
 
 ; ---------------------------------------------------------------------------
 ; Boss_ResetState
 ;
-; Same as Gooma_ResetState, for Boss_Pace.
+; Restart the pacing count toward Link: enemyAiState bit 7 clear, bit 4
+; set (at least 32 frames).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_ResetState:
     lda     enemyAiState,x          ; $BBBC
@@ -6499,14 +6644,18 @@ Boss_ResetState:
 Boss_ResetState_Done:
     rts                             ; $BBC4
 
+; Boss_ChooseAttack: a = |dx| under 96.  At 32 or more: every 64 frames, 3
+; times in 4, come toward Link again.  Under 32: Horsehead, facing Link
+; and not swinging, swings 1 time in 8 each frame; and once the count is
+; out, 1 time in 8 each frame a new count starts, toward or away at random.
 Boss_ChooseAttack:
-    cmp     #$20                    ; $BBC5
-    bcc     @loc_BBD7               ; $BBC7
-    lda     frameCounter            ; $BBC9
+    cmp     #$20                    ; $BBC5  under 32?
+    bcc     @near                   ; $BBC7
+    lda     frameCounter            ; $BBC9  every 64 frames,
     and     #$3F                    ; $BBCB
     bne     @done                   ; $BBCD
 ; (code below not executed in the test movies)
-    lda     rng+1,x                 ; $BBCF
+    lda     rng+1,x                 ; $BBCF  3 in 4: come again
     and     #$03                    ; $BBD2
     bne     Boss_ResetState         ; $BBD4
 ; (end of code not executed in the test movies)
@@ -6514,15 +6663,15 @@ Boss_ChooseAttack:
 @done:
     rts                             ; $BBD6
 
-@loc_BBD7:
-    lda     enemyType,x             ; $BBD7
+@near:
+    lda     enemyType,x             ; $BBD7  Horsehead:
     cmp     #$20                    ; $BBD9
-    bne     @loc_BBF8               ; $BBDB
-    lda     rng+1,x                 ; $BBDD
+    bne     @newCount               ; $BBDB
+    lda     rng+1,x                 ; $BBDD  1 in 8, not swinging,
     and     #$07                    ; $BBE0
     ora     objState+1,x            ; $BBE2
-    bne     @loc_BBF8               ; $BBE4
-    lda     objFacing+1,x           ; $BBE6
+    bne     @newCount               ; $BBE4
+    lda     objFacing+1,x           ; $BBE6  and facing Link:
     pha                             ; $BBE8
     jsr     Enemy_FaceLink          ; $BBE9
     pla                             ; $BBEC
@@ -6530,18 +6679,18 @@ Boss_ChooseAttack:
     iny                             ; $BBEF
     tya                             ; $BBF0
     cmp     objFacing+1,x           ; $BBF1
-    bne     @loc_BBF8               ; $BBF3
-    jsr     Enemy_StartSwing        ; $BBF5
+    bne     @newCount               ; $BBF3
+    jsr     Enemy_StartSwing        ; $BBF5  swing
 
-@loc_BBF8:
-    lda     enemyAiState,x          ; $BBF8
+@newCount:
+    lda     enemyAiState,x          ; $BBF8  count out,
     asl     a                       ; $BBFA
     bne     @done2                  ; $BBFB
-    lda     rng+1,x                 ; $BBFD
+    lda     rng+1,x                 ; $BBFD  1 in 8:
     and     #$07                    ; $BC00
     bne     @done2                  ; $BC02
-    jsr     Boss_ResetState         ; $BC04
-    lda     rng+1,x                 ; $BC07
+    jsr     Boss_ResetState         ; $BC04  a new count ($10),
+    lda     rng+1,x                 ; $BC07  toward or away
     and     #$80                    ; $BC0A
     ora     enemyAiState,x          ; $BC0C
     sta     enemyAiState,x          ; $BC0E
@@ -6552,19 +6701,21 @@ Boss_ChooseAttack:
 ; ---------------------------------------------------------------------------
 ; HorseHead_Attack
 ;
-; Advance Horsehead's mace swing.
+; Horsehead's swing: pose 1 (mace raised behind him) for 15 frames, pose 2
+; (swung in front) for 15, then 15 frames of rest (pose $FF -> 0).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HorseHead_Attack:
-    lda     objState+1,x            ; $BC11
+    lda     objState+1,x            ; $BC11  swinging,
     beq     Enemy_StartSwing_Done   ; $BC13
-    ldy     timerFast+TIMER_ENEMY,x ; $BC15
+    ldy     timerFast+TIMER_ENEMY,x ; $BC15  pose over?
     bne     Enemy_StartSwing_Done   ; $BC18
     lda     objState+1,x            ; $BC1A
-    cmp     #$02                    ; $BC1C
+    cmp     #$02                    ; $BC1C  pose 1: on to 2
     bne     Enemy_StartSwing        ; $BC1E
-    dey                             ; $BC20
+    dey                             ; $BC20  pose 2: rest ($FF -> 0)
     sty     objState+1,x            ; $BC21
 
 ; ---------------------------------------------------------------------------
@@ -6591,10 +6742,16 @@ Enemy_StartSwing_Done:
 ; ---------------------------------------------------------------------------
 ; Boss_UpdateCommon
 ;
-; Draw the boss, apply knockback, test it against Link and his projectiles;
-; when it has been killed, mark it dying and skip the rest of its AI.
+; The first palace group's bosses, each frame: drawn, moved by knockback or
+; velocity, their guard tested (Enemy_CheckProjectileHitsSpecial; a clink
+; returns from here), probes and hit tests (Enemy_UpdateWithBg), contact
+; damage.  When the hits have killed it (enemyActive no longer 1), it is
+; kept active as a dying boss: hitbox $FF (which Boss_UpdateIntro looks
+; for), timer $FF, stun $7F (the flashing); and the rest of the caller's
+; AI is skipped.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_UpdateCommon:
     jsr     Enemy_Draw              ; $BC4E
@@ -6602,83 +6759,90 @@ Boss_UpdateCommon:
     jsr     Enemy_CheckProjectileHitsSpecial ; $BC54
     jsr     Enemy_UpdateWithBg      ; $BC57
     jsr     Enemy_HurtLinkOnContact ; $BC5A
-    lda     #$01                    ; $BC5D
+    lda     #$01                    ; $BC5D  still alive?
     cmp     enemyActive,x           ; $BC5F
     beq     @done                   ; $BC61
-    sta     enemyActive,x           ; $BC63
-    lda     #$FF                    ; $BC65
+    sta     enemyActive,x           ; $BC63  killed: keep it active,
+    lda     #$FF                    ; $BC65  dying (hitbox $FF)
     ldy     enemyType,x             ; $BC67
     sta     sramEnemyHitbox,y       ; $BC69
     sta     timerFast+TIMER_ENEMY,x ; $BC6C
-    lsr     a                       ; $BC6F
+    lsr     a                       ; $BC6F  flashing 127 frames
     sta     enemyStunTimer,x        ; $BC70
-    pla                             ; $BC73
+    pla                             ; $BC73  and skip the caller's rest
     pla                             ; $BC74
 
 @done:
     rts                             ; $BC75
 
+; Helmethead_Init, by region (0: Helmethead, else Gooma): hit points (48,
+; 144), and type $21's attributes, damage and hitbox in SRAM.
 HelmetheadHp:
     .byte   $30, $90                                                        ; $BC76
 
-HelmetheadHeadAttr:
+HelmetheadAttrs:
     .byte   $CB, $CD                                                        ; $BC78
 
-HelmetheadHeadDamage:
+HelmetheadDamages:
     .byte   $32, $35                                                        ; $BC7A
 
-HelmetheadHeadHitbox:
+HelmetheadHitboxes:
     .byte   $07, $11                                                        ; $BC7C
 
 ; ---------------------------------------------------------------------------
 ; Helmethead_Init
 ;
-; Spawn routine of Helmethead/Gooma: Boss_Init, then hit points, attributes,
-; damage and hitbox by region (Helmethead or Gooma).
+; Spawn routine of type $21 in the first palace group: Boss_Init, then by
+; region Helmethead's or Gooma's hit points, and type $21's attributes,
+; damage and hitbox (sramEnemyAttr+33, ...): the same type is Helmethead
+; in palace 2 and Gooma in palace 5.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Helmethead_Init:
     jsr     Boss_Init               ; $BC7E
-    ldy     #$00                    ; $BC81
+    ldy     #$00                    ; $BC81  0 Helmethead,
     lda     currentRegion           ; $BC83
-    beq     @loc_BC89               ; $BC86
-    iny                             ; $BC88
+    beq     @set                    ; $BC86
+    iny                             ; $BC88  1 Gooma
 
-@loc_BC89:
+@set:
     lda     HelmetheadHp,y          ; $BC89
     sta     enemyHp,x               ; $BC8C
-    lda     HelmetheadHeadAttr,y    ; $BC8E
+    lda     HelmetheadAttrs,y       ; $BC8E
     sta     sramEnemyAttr+33        ; $BC91
-    lda     HelmetheadHeadDamage,y  ; $BC94
+    lda     HelmetheadDamages,y     ; $BC94
     sta     sramEnemyDamage+33      ; $BC97
-    lda     HelmetheadHeadHitbox,y  ; $BC9A
+    lda     HelmetheadHitboxes,y    ; $BC9A
     sta     sramEnemyHitbox+33      ; $BC9D
     rts                             ; $BCA0
 
 ; ---------------------------------------------------------------------------
 ; Boss_Init
 ;
-; Spawn routine of bosses: only while their area flag is set; vulnerable
-; part 2, hitbox 7.
+; Spawn routine of the first palace group's bosses: only while the area's
+; flag is set (not yet beaten; Area_TestFlag 1), else removed at once.
+; Guard 2 (enemyAiVar) and hitbox entry 7 for its type.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_Init:
-    ldx     #$01                    ; $BCA1
+    ldx     #$01                    ; $BCA1  beaten already?
     jsr     Area_TestFlag           ; $BCA3
     ldx     currentObject           ; $BCA6
     cmp     #$00                    ; $BCA8
-    bne     @loc_BCAF               ; $BCAA
+    bne     @setUp                  ; $BCAA
 ; (code below not executed in the test movies)
-    sta     enemyActive,x           ; $BCAC
+    sta     enemyActive,x           ; $BCAC  yes: gone
     rts                             ; $BCAE
 ; (end of code not executed in the test movies)
 
-@loc_BCAF:
-    lda     #$02                    ; $BCAF
+@setUp:
+    lda     #$02                    ; $BCAF  guard 2
     sta     enemyAiVar,x            ; $BCB1
-    lda     #$07                    ; $BCB4
+    lda     #$07                    ; $BCB4  hitbox entry 7
     ldy     enemyType,x             ; $BCB6
     sta     sramEnemyHitbox,y       ; $BCB8
     rts                             ; $BCBB
@@ -6715,8 +6879,9 @@ Tinsuit_Ai:
 
 @move:
     jmp     Enemy_MoveX             ; $BCE1
-; (unreferenced: $BCE4-$BCEB, 8 bytes)
 
+; HelmetheadHead_Ai: the wave's top speeds and acceleration (by state
+; bit 0), the drift toward Link (by Enemy_FaceLink's y) and the bounces.
 HelmetheadHeadMaxYSpeeds:
     .byte   $18, $E8                                                        ; $BCE4
 
@@ -6732,10 +6897,18 @@ HelmetheadHeadYSpeeds:
 ; ---------------------------------------------------------------------------
 ; HelmetheadHead_Ai
 ;
-; A helmet knocked off Helmethead: bounces about and fires energy balls at
-; Link every 128 frames.
+; A helmet knocked off Helmethead ($22): drawn and harmful to touch, but
+; never tested for hits.  It falls and bounces on the floor (Y $C4) 3 times
+; (enemyAiState 0-2), each time up at HelmetheadHeadYSpeeds (-2, -1, -1/2)
+; with a sound, its X velocity halved, and a 48-frame timer.  Then it lies
+; there until the timer runs out, rises 2 pixels per frame to Y $70, and
+; flies for good (enemyAiVar nonzero): up and down in a wave (Y velocity
+; between +1.5 and -1.5 by 1/16 per frame), drifting toward Link at 6/16
+; pixel per frame from each frameCounter 0, and firing an aimed ball
+; (Enemy_FireAimedBall) every 128 frames (enemyAiDir counts).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HelmetheadHead_Ai:
     jsr     Enemy_Draw              ; $BCEF
@@ -6743,36 +6916,36 @@ HelmetheadHead_Ai:
     jsr     Enemy_HurtLinkOnContact ; $BCF5
     jsr     Enemy_MoveX             ; $BCF8
     lda     objY+1,x                ; $BCFB
-    ldy     enemyAiState,x          ; $BCFD
+    ldy     enemyAiState,x          ; $BCFD  bounced 3 times?
     cpy     #$03                    ; $BCFF
-    bcs     @loc_BD24               ; $BD01
-    cmp     #$C4                    ; $BD03
-    bcc     @loc_BD21               ; $BD05
-    lda     #$30                    ; $BD07
+    bcs     @rest                   ; $BD01
+    cmp     #$C4                    ; $BD03  on the floor: bounce
+    bcc     @fall                   ; $BD05
+    lda     #$30                    ; $BD07  48 frames
     sta     timerFast+TIMER_ENEMY,x ; $BD09
     inc     enemyAiState,x          ; $BD0C
-    lda     HelmetheadHeadYSpeeds,y ; $BD0E
+    lda     HelmetheadHeadYSpeeds,y ; $BD0E  up, less each time
     sta     objYVelocity+1,x        ; $BD11
-    lda     #$10                    ; $BD14
+    lda     #$10                    ; $BD14  a sound
     sta     sfxRequest+2            ; $BD16
     lda     #$C3                    ; $BD18
     sta     objY+1,x                ; $BD1A
-    lda     objXVelocity+1,x        ; $BD1C
+    lda     objXVelocity+1,x        ; $BD1C  X speed halved
     asl     a                       ; $BD1E
     ror     objXVelocity+1,x        ; $BD1F
 
-@loc_BD21:
+@fall:
     jmp     Enemy_MoveYAndFall      ; $BD21
 
-@loc_BD24:
-    ldy     enemyAiVar,x            ; $BD24
-    bne     @loc_BD3E               ; $BD27
-    cmp     #$70                    ; $BD29
-    bcc     @loc_BD3E               ; $BD2B
-    lda     #$00                    ; $BD2D
+@rest:
+    ldy     enemyAiVar,x            ; $BD24  flying already,
+    bne     @fly                    ; $BD27
+    cmp     #$70                    ; $BD29  or up to Y $70?
+    bcc     @fly                    ; $BD2B
+    lda     #$00                    ; $BD2D  no: lie still,
     sta     objXVelocity+1,x        ; $BD2F
     sta     objYVelocity+1,x        ; $BD31
-    ldy     timerFast+TIMER_ENEMY,x ; $BD34
+    ldy     timerFast+TIMER_ENEMY,x ; $BD34  then rise 2 px/frame
     bne     @done                   ; $BD37
     dec     objY+1,x                ; $BD39
     dec     objY+1,x                ; $BD3B
@@ -6781,84 +6954,89 @@ HelmetheadHead_Ai:
     rts                             ; $BD3D
 ; (code below not executed in the test movies)
 
-@loc_BD3E:
-    sta     enemyAiVar,x            ; $BD3E
+@fly:
+    sta     enemyAiVar,x            ; $BD3E  flying (nonzero)
     jsr     Enemy_MoveY             ; $BD41
-    lda     enemyAiState,x          ; $BD44
-    and     #$01                    ; $BD46
+    lda     enemyAiState,x          ; $BD44  the wave: accelerate down
+    and     #$01                    ; $BD46  (odd) or up (even)
     tay                             ; $BD48
     lda     objYVelocity+1,x        ; $BD49
     clc                             ; $BD4C
     adc     HelmetheadHeadYAccel,y  ; $BD4D
     sta     objYVelocity+1,x        ; $BD50
-    cmp     HelmetheadHeadMaxYSpeeds,y ; $BD53
-    bne     @loc_BD5A               ; $BD56
+    cmp     HelmetheadHeadMaxYSpeeds,y ; $BD53  at the top speed: turn
+    bne     @drift                  ; $BD56
     inc     enemyAiState,x          ; $BD58
 
-@loc_BD5A:
-    lda     frameCounter            ; $BD5A
-    bne     @loc_BD66               ; $BD5C
-    jsr     Enemy_FaceLink          ; $BD5E
+@drift:
+    lda     frameCounter            ; $BD5A  every 256 frames:
+    bne     @fire                   ; $BD5C
+    jsr     Enemy_FaceLink          ; $BD5E  drift toward Link
     lda     HelmetheadHeadXSpeeds,y ; $BD61
     sta     objXVelocity+1,x        ; $BD64
 
-@loc_BD66:
-    inc     enemyAiDir,x            ; $BD66
+@fire:
+    inc     enemyAiDir,x            ; $BD66  every 128 frames:
     lda     enemyAiDir,x            ; $BD69
     asl     a                       ; $BD6C
     bne     HelmetheadHead_Ai_Done  ; $BD6D
-    jsr     Enemy_FireAimedBall     ; $BD6F
+    jsr     Enemy_FireAimedBall     ; $BD6F  an aimed ball
 ; (end of code not executed in the test movies)
 
 HelmetheadHead_Ai_Done:
     rts                             ; $BD72
-; The rts byte is also the base of the table HelmetheadHeadYOffsets (entry 0 is the rts).
-HelmetheadHeadYOffsets := HelmetheadHead_Ai_Done
-; (unreferenced: $BD73-$BD73, 1 bytes)
+; The rts byte is also the base of the table HelmetheadHeadXOffsets (entry 0
+; is the rts): by facing, -4, +4.
+HelmetheadHeadXOffsets := HelmetheadHead_Ai_Done
     .byte   $FC                                                             ; $BD73
     .byte   $04                                                             ; $BD74
 
 ; ---------------------------------------------------------------------------
 ; Helmethead_Draw
 ;
-; Draw Helmethead.
+; Draw Helmethead (or Gooma_Draw in palace 5): his body, two pairs from
+; sramEnemyTiles entry $6C, or $70 in part of each 8-count step while he
+; walks (as Horsehead); then his head, a pair from entry $74 + 2 x helmets
+; lost (HelmetheadHead_DrawPart), 12 pixels above his top sprite, lowered
+; by helmetheadHitDelay.  While alive and facing away from Link, the head
+; is mirrored to look at him.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Helmethead_Draw:
-    lda     currentRegion           ; $BD75
-    beq     @loc_BD7D               ; $BD78
+    lda     currentRegion           ; $BD75  palace 5: Gooma
+    beq     @helmethead             ; $BD78
     jmp     Gooma_Draw              ; $BD7A
 
-@loc_BD7D:
+@helmethead:
     ldy     #$50                    ; $BD7D
-    lda     enemyAiState,x          ; $BD7F
+    lda     enemyAiState,x          ; $BD7F  standing: $6C
     ldx     #$6C                    ; $BD81
     and     #$7F                    ; $BD83
-    beq     @loc_BD92               ; $BD85
-    and     #$07                    ; $BD87
-    sec                             ; $BD89
+    beq     @body                   ; $BD85
+    and     #$07                    ; $BD87  walking: $70 on counts
+    sec                             ; $BD89  3-5 of each 8
     sbc     #$03                    ; $BD8A
     cmp     #$03                    ; $BD8C
-    bcs     @loc_BD92               ; $BD8E
+    bcs     @body                   ; $BD8E
     ldx     #$70                    ; $BD90
 
-@loc_BD92:
+@body:
     jsr     Sprite_DrawEnemyPair    ; $BD92
     jsr     Sprite_DrawEnemyPairKeepX ; $BD95
     lda     drawOffscreen+1         ; $BD98
     and     #$0C                    ; $BD9A
     bne     HelmetheadHead_Ai_Done  ; $BD9C
-    lda     oamBuffer - 16,y        ; $BD9E
+    lda     oamBuffer - 16,y        ; $BD9E  the head: 12 above his top
     sec                             ; $BDA1
     sbc     #$0C                    ; $BDA2
-    adc     ram_05DE                ; $BDA4
+    adc     helmetheadHitDelay      ; $BDA4  (lowered after a hit)
     sta     temp0                   ; $BDA7
     ldy     #$60                    ; $BDA9
     jsr     HelmetheadHead_DrawPart ; $BDAB
-    lda     sramEnemyHitbox+33      ; $BDAE
+    lda     sramEnemyHitbox+33      ; $BDAE  dying?
     bmi     @done                   ; $BDB1
-    lda     objFacing+1,x           ; $BDB3
+    lda     objFacing+1,x           ; $BDB3  facing Link?
     pha                             ; $BDB5
     jsr     Enemy_FaceLink          ; $BDB6
     pla                             ; $BDB9
@@ -6868,7 +7046,7 @@ Helmethead_Draw:
     cmp     objFacing+1,x           ; $BDBE
     beq     @done                   ; $BDC0
 ; (code below not executed in the test movies)
-    lda     oamBuffer+98            ; $BDC2
+    lda     oamBuffer+98            ; $BDC2  no: mirror the head
     eor     #$40                    ; $BDC5
     sta     oamBuffer+98            ; $BDC7
     sta     oamBuffer+102           ; $BDCA
@@ -6877,36 +7055,40 @@ Helmethead_Draw:
 @done:
     rts                             ; $BDCD
 
-HelmetheadHeadFrames:
+; HelmetheadHead_Draw: OAM offset of each flying helmet, by its number.
+HelmetheadHeadOamOffsets:
     .byte   $68, $80                                                        ; $BDCE
 
 ; ---------------------------------------------------------------------------
 ; HelmetheadHead_Draw
 ;
-; Draw a flying helmet.
+; Draw a flying helmet: a pair from entry $74 + 2 x its number (the
+; helmet as it was on his head), at OAM offset $68 or $80.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HelmetheadHead_Draw:
     ldy     objState+1,x            ; $BDD0
-    lda     HelmetheadHeadFrames,y  ; $BDD2
+    lda     HelmetheadHeadOamOffsets,y ; $BDD2
     tay                             ; $BDD5
 
 ; ---------------------------------------------------------------------------
 ; HelmetheadHead_DrawPart
 ;
-; Draw a pair of the head's sprites, adjusted by HelmetheadHeadYOffsets.
+; Draw a pair from sramEnemyTiles entry $74 + 2 x objState+1 at temp0, with
+; X shifted 4 pixels toward the facing (HelmetheadHeadXOffsets).
 ;
-; Status:  provisional
+; In:      x = enemy index, y = OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HelmetheadHead_DrawPart:
-    ldx     temp2                   ; $BDD6
+    ldx     temp2                   ; $BDD6  X: -4 or +4 by facing
     lda     temp1                   ; $BDD8
     clc                             ; $BDDA
-    adc     HelmetheadHeadYOffsets,x ; $BDDB
+    adc     HelmetheadHeadXOffsets,x ; $BDDB
     sta     temp1                   ; $BDDE
     ldx     currentObject           ; $BDE0
-    lda     objState+1,x            ; $BDE2
+    lda     objState+1,x            ; $BDE2  entry $74 + 2n
     asl     a                       ; $BDE4
     adc     #$74                    ; $BDE5
     tax                             ; $BDE7
@@ -7039,75 +7221,87 @@ Mago_Draw:
 ; ---------------------------------------------------------------------------
 ; Boss_UpdateIntro
 ;
-; Freeze the scroll and start the boss music when Link reaches page 1 of the
-; boss room; when the boss has died, destroy the other enemies and stop the
-; music.
+; The first palace group's boss fight, before the boss's own AI:
+; - Until Link's screen reaches page 1 of the room (scrollXHi), the boss
+;   is only drawn.  Then the boss music starts ($08) and the scroll
+;   freezes (scrollFrozen).
+; - Alive (its type's hitbox isn't $FF), its AI runs.
+; - Dying (Boss_UpdateCommon), it is only drawn while its stun flashes.
+;   When the stun runs out: enemyActive + 1 (the death bursts,
+;   Boss_SpawnDeathSpark_Bank4), every enemy projectile is removed, every
+;   other living enemy takes a hit (Enemy_TakeDamage with y = $0A, which
+;   reads 224 points, the byte after ThunderDamage: enough to kill it), and
+;   the music stops ($80).
 ;
-; Status:  provisional
+; The code between the frame test and Enemy_TakeDamage never runs:
+; drawScratch is always $0A there.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_UpdateIntro:
-    lda     scrollFrozen            ; $BE8B
-    bne     @loc_BE9C               ; $BE8E
-    lda     scrollXHi               ; $BE90
-    beq     @loc_BEF0               ; $BE93
-    lda     #$08                    ; $BE95
+    lda     scrollFrozen            ; $BE8B  fight on already?
+    bne     @fightOn                ; $BE8E
+    lda     scrollXHi               ; $BE90  Link not yet at page 1:
+    beq     @drawOnly               ; $BE93  just draw it
+    lda     #$08                    ; $BE95  boss music,
     sta     musicRequest            ; $BE97
-    inc     scrollFrozen            ; $BE99
+    inc     scrollFrozen            ; $BE99  scroll frozen
 
-@loc_BE9C:
-    ldy     enemyType,x             ; $BE9C
+@fightOn:
+    ldy     enemyType,x             ; $BE9C  dying (hitbox $FF)?
     lda     sramEnemyHitbox,y       ; $BE9E
-    bpl     @done                   ; $BEA1
-    ldy     enemyStunTimer,x        ; $BEA3
-    bne     @loc_BEF0               ; $BEA6
-    inc     enemyActive,x           ; $BEA8
+    bpl     @done                   ; $BEA1  no: on with its AI
+    ldy     enemyStunTimer,x        ; $BEA3  still flashing: draw it
+    bne     @drawOnly               ; $BEA6
+    inc     enemyActive,x           ; $BEA8  burst
     lda     #$0A                    ; $BEAA
     sta     drawScratch             ; $BEAC
     lda     currentObject           ; $BEAE
     pha                             ; $BEB0
-    ldx     #$05                    ; $BEB1
+    ldx     #$05                    ; $BEB1  every slot:
 
 @loop:
     stx     currentObject           ; $BEB3
-    lda     #$00                    ; $BEB5
+    lda     #$00                    ; $BEB5  projectile gone
     sta     objState+7,x            ; $BEB7
-    lda     enemyActive,x           ; $BEB9
-    beq     @loc_BEE5               ; $BEBB
+    lda     enemyActive,x           ; $BEB9  a living enemy:
+    beq     @next                   ; $BEBB
     cmp     #$01                    ; $BEBD
-    bne     @loc_BEE5               ; $BEBF
+    bne     @next                   ; $BEBF
     inx                             ; $BEC1
     ldy     #$01                    ; $BEC2
     jsr     Obj_ComputeScreenPos    ; $BEC4
     ldx     currentObject           ; $BEC7
-    ldy     drawScratch             ; $BEC9
-    bne     @loc_BEE2               ; $BECB
+    ldy     drawScratch             ; $BEC9  (always $0A)
+    bne     @hit                    ; $BECB
 ; (code below not executed in the test movies)
     lda     drawOffscreen+1         ; $BECD
     and     #$88                    ; $BECF
-    bne     @loc_BEE5               ; $BED1
+    bne     @next                   ; $BED1
     ldy     enemyType,x             ; $BED3
     lda     sramEnemyFlags,y        ; $BED5
     ldy     #$09                    ; $BED8
     and     #$A0                    ; $BEDA
-    bmi     @loc_BEE5               ; $BEDC
-    beq     @loc_BEE2               ; $BEDE
+    bmi     @next                   ; $BEDC
+    beq     @hit                    ; $BEDE
     ldy     #$01                    ; $BEE0
 ; (end of code not executed in the test movies)
 
-@loc_BEE2:
-    jsr     Enemy_TakeDamage        ; $BEE2
+@hit:
+    jsr     Enemy_TakeDamage        ; $BEE2  takes a hit
 
-@loc_BEE5:
+@next:
     dex                             ; $BEE5
     bpl     @loop                   ; $BEE6
     pla                             ; $BEE8
     sta     currentObject           ; $BEE9
     tax                             ; $BEEB
-    lda     #$80                    ; $BEEC
+    lda     #$80                    ; $BEEC  music off
     sta     musicRequest            ; $BEEE
 
-@loc_BEF0:
-    pla                             ; $BEF0
+@drawOnly:
+    pla                             ; $BEF0  skip the caller's AI
     pla                             ; $BEF1
     jmp     Enemy_Draw              ; $BEF2
 

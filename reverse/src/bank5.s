@@ -2535,7 +2535,7 @@ DarkLink_Fight:
     sty     gameFrozen              ; $9897
     lda     #$01                    ; $9899
     jsr     Boss_DrawHpBar_Bank5    ; $989B
-    lda     timerFast+12            ; $989E
+    lda     timerFast+TIMER_BOSS    ; $989E
     beq     @loc_98D3               ; $98A1
     bpl     @loc_98AD               ; $98A3
     and     #$0F                    ; $98A5
@@ -2981,7 +2981,7 @@ DarkLink_CheckSword:
     ldy     #$18                    ; $9ADC
 
 @loc_9ADE:
-    sty     timerFast+12            ; $9ADE
+    sty     timerFast+TIMER_BOSS    ; $9ADE
     jsr     Enemy_FaceLink          ; $9AE1
     lda     DarkLinkKnockBackSpeeds,y ; $9AE4
     sta     objXVelocity+1          ; $9AE7

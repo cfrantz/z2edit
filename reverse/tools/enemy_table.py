@@ -78,6 +78,8 @@ ENEMY_PAGES = {
     "AcidDripper_Ai": "acid-dripper", "Flame_Ai": "flame",
     "Mago_Ai": "wizzrobe", "Wizrobe_Ai": "wizzrobe",
     "HammerThrower_Ai": "hammer-thrower", "DoomKnocker_Ai": "doom-knocker",
+    "HorseHead_Ai": "horsehead", "Helmethead_Ai": "helmethead", "HelmetheadHead_Ai": "helmethead",
+    "Rebonack_Ai": "rebonack", "RebonackUnhorsed_Ai": "rebonack", "Barba_Ai": "barba", "Carock_Ai": "carock",
 }
 
 

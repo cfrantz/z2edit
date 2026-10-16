@@ -7963,6 +7963,8 @@ SwordDamage:
 ; (Spell_ThunderEffect).
 ThunderDamage:
     .byte   $32                                                             ; $E675
+; Read as the damage of level $0A (224) when a boss of palaces 1, 2 or 5
+; dies and wipes out the other enemies (Boss_UpdateIntro).
     .byte   $E0                                                             ; $E676
 
 ; ---------------------------------------------------------------------------

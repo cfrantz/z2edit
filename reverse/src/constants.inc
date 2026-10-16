@@ -51,6 +51,7 @@ TIMER_LINK_ENTER        = 2     ; timerFast: Link walking into an area
 TIMER_ENEMY             = 3     ; timerFast: 3-8, one per enemy
 TIMER_LINK_ATTACK       = 9     ; timerFast: Link's attack animation frame time
 TIMER_LINK_HURT         = 11    ; timerFast: Link knocked back after being hit
+TIMER_BOSS              = 12    ; timerFast: bosses (the 255-frame wait at the start of a fight in palaces 3, 4 and 6; the Great Palace bosses)
 TIMER_INVULNERABLE      = 10    ; timerSlow: Link invulnerable (and blinking at 1-2)
 
 ; Object slots: indexes into the obj* arrays in ram.inc.

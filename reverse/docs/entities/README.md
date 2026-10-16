@@ -69,6 +69,12 @@ and how each was verified):
 | [Wizzrobe](enemies/wizzrobe.md) | $1D in the palaces |
 | [Hammer Thrower](enemies/hammer-thrower.md) | $1E in palaces 1, 2, 5 |
 | [Doom Knocker](enemies/doom-knocker.md) | $1E in palaces 3, 4, 6 |
+| [Horsehead](enemies/horsehead.md) | $20 in palaces 1, 2, 5 (palace 1's boss) |
+| [Helmethead](enemies/helmethead.md) | $21, $22 in palaces 1, 2, 5 (palace 2's boss) |
+| [Gooma](enemies/gooma.md) | $21 in palace 5 (its boss) |
+| [Rebonack](enemies/rebonack.md) | $20, $0A in palaces 3, 4, 6 (palace 3's boss) |
+| [Carock](enemies/carock.md) | $22 in palaces 3, 4, 6 (palace 4's boss) |
+| [Barba](enemies/barba.md) | $21 in palaces 3, 4, 6 (palace 6's boss) |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI
@@ -136,7 +142,7 @@ Projectiles use their own damage (see each page).
 ## Item Drops
 
 Enemies in drop groups 1-3 count their kills per group (`Enemy_Kill`,
-`ram_05DE`); every 6th kill in a group leaves an item instead of the
+`helmetheadHitDelay`); every 6th kill in a group leaves an item instead of the
 experience: in groups 1 and 3 a blue magic jar (7 times in 8) or a
 50-point experience bag; in group 2 a red magic jar or a 200-point bag
 (about half each).  Items are objects (enemy type $01 with the item kind
