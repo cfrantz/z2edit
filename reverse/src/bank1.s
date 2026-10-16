@@ -1802,72 +1802,83 @@ Generator_Init_Bank1:
 ; ---------------------------------------------------------------------------
 ; Geldarm_Init
 ;
-; Spawn routine of the Geldarm: it rises from its spawn point up to $3F
-; pixels (its bottom in objState).  Not executed in the test movies.
+; Spawn routine of the Geldarm: it starts stretched up (enemyAiState 1),
+; its head at its spawn Y and its base, kept in objState+1, $3F (or $40,
+; with the carry) pixels lower.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Geldarm_Init:
-    lda     #$01                    ; $986C
+    lda     #$01                    ; $986C  stretched up
     sta     enemyAiState,x          ; $986E
     lsr     a                       ; $9870
-    sta     objFacing+1,x           ; $9871
-    lda     objY+1,x                ; $9873
+    sta     objFacing+1,x           ; $9871  0: rising, when it next moves
+    lda     objY+1,x                ; $9873  base = head + $3F (+ carry)
     adc     #$3F                    ; $9875
     sta     objState+1,x            ; $9877
     rts                             ; $9879
 ; (end of disassembled code)
 
 
+; Megmet: X velocity of a hop toward Link (0 right, 1 left), 1/2 px/frame.
 MegmetXSpeeds:
     .byte   $08, $F8                                                        ; $987A
 
+; Megmet: Y velocity of a hop, whole pixels per frame (-5, -4).
 MegmetYSpeeds:
     .byte   $FB, $FC                                                        ; $987C
 
 ; ---------------------------------------------------------------------------
 ; Megmet_Ai
 ;
-; Megmet: hops toward Link: on the ground it jumps (MegmetYSpeeds, a small
-; random hop) toward him (MegmetXSpeeds), falling with its own gravity;
-; turns at walls and stops at ceilings.
+; Megmet: hops toward Link without pause.  On any frame that it stands on
+; a floor it jumps at once, with Y velocity -4 or -5 whole pixels per
+; frame at random (MegmetYSpeeds; Enemy_MoveYWithGravity's units), and
+; 1/2 pixel per frame toward Link (MegmetXSpeeds).  Gravity is $30/256
+; pixel per frame per frame, so a hop rises about 50 or 75 pixels and
+; lasts about 47 or 58 frames.  It turns around at walls (in the air too),
+; and a ceiling stops its rise.  It is never put down on the floor
+; (no Enemy_Land): it hops again from wherever its fall crossed into the
+; floor's row.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Megmet_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $987E
-    lda     objCollision+1,x        ; $9881
-    and     #$08                    ; $9883
-    beq     @loc_988C               ; $9885
-    jsr     Enemy_StopY             ; $9887
-    inc     objY+1,x                ; $988A
+    jsr     Enemy_SkipAiIfStunned   ; $987E  no AI while stunned
+    lda     objCollision+1,x        ; $9881  (last frame's probes)
+    and     #$08                    ; $9883  ceiling?
+    beq     @checkWall              ; $9885
+    jsr     Enemy_StopY             ; $9887  yes: stop rising
+    inc     objY+1,x                ; $988A  and move 1 pixel down
 
-@loc_988C:
+@checkWall:
     lda     objCollision+1,x        ; $988C
-    and     #$03                    ; $988E
-    beq     @loc_9895               ; $9890
-    jsr     Enemy_TurnAround        ; $9892
+    and     #$03                    ; $988E  wall ahead?
+    beq     @move                   ; $9890
+    jsr     Enemy_TurnAround        ; $9892  yes: turn around
 
-@loc_9895:
+@move:
     jsr     Enemy_MoveX             ; $9895
     lda     objCollision+1,x        ; $9898
-    and     #$04                    ; $989A
-    beq     @loc_98B2               ; $989C
-    lda     rng+1,x                 ; $989E
+    and     #$04                    ; $989A  on a floor?
+    beq     @fall                   ; $989C  no
+    lda     rng+1,x                 ; $989E  yes: hop at once,
     and     #$01                    ; $98A1
     tay                             ; $98A3
-    lda     MegmetYSpeeds,y         ; $98A4
+    lda     MegmetYSpeeds,y         ; $98A4  -5 or -4 px/frame at random,
     sta     objYVelocity+1,x        ; $98A7
-    jsr     Enemy_FaceLink          ; $98AA
-    lda     MegmetXSpeeds,y         ; $98AD
+    jsr     Enemy_FaceLink          ; $98AA  y = 0 if Link is right, 1 if left
+    lda     MegmetXSpeeds,y         ; $98AD  1/2 px/frame toward him
     sta     objXVelocity+1,x        ; $98B0
 
-@loc_98B2:
-    lda     #$30                    ; $98B2
+@fall:
+    lda     #$30                    ; $98B2  gravity $30/256 px/frame/frame,
     sta     temp0                   ; $98B4
-    sta     temp2                   ; $98B6
+    sta     temp2                   ; $98B6  terminal velocity $30 (never reached)
     jsr     Enemy_MoveYWithGravity  ; $98B8
-    jsr     Enemy_UpdateWithBg      ; $98BB
+    jsr     Enemy_UpdateWithBg      ; $98BB  probe background, draw, hit tests
     jmp     Enemy_HurtLinkOnContact ; $98BE
 
 ; X velocity of a Lowder, by direction to Link (right, left): 1/2 pixel per
@@ -1959,7 +1970,8 @@ Lowder_Ai:
     sta     objState+1,x            ; $992A  a = 0: on the ground, no wall
     ; (falls through into the rts below)
 
-; DumbMoblin_Ai's speeds, by facing (1 right, 2 left), start at the rts.
+; X velocity of a walking Moblin by facing (1 right, 2 left), indexed from
+; the rts: $10, $F0.
 DumbMoblinSpeeds:
     rts                             ; $992C
 ; (unreferenced: $992D-$996F, 67 bytes)
@@ -1969,25 +1981,30 @@ DumbMoblinSpeeds:
 ; ---------------------------------------------------------------------------
 ; DumbMoblinGenerator_Ai
 ;
-; Generator of Moblins that walk straight across (type $22): spawns one
-; every 128 frames (MobyGenerator_Ai's spawn) at Y $A0, walking at $10
-; pixels/16 frames in its facing.  Not executed in the test movies.
+; Generator of walking Moblins (type $22).  On frames when the screen
+; follows Link (scrollHeld 0), it runs the Moby generator's spawn
+; (MobyGenerator_Ai: every 128 frames, if a slot is free, at the left or
+; right edge of the screen, facing Link) and turns the new enemy into a
+; walking Moblin: 2 hit points, at Y $A0, walking 1 pixel per frame the
+; way it faces (DumbMoblinSpeeds).  It keeps the Moby's Y velocity of 2
+; pixels per frame down until it lands.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DumbMoblinGenerator_Ai:
-    lda     scrollCounter           ; $992F
-    bne     @done                   ; $9932
-    jsr     MobyGenerator_Ai        ; $9934
-    bcs     @done                   ; $9937
-    ldx     temp0                   ; $9939
-    dec     enemyHp,x               ; $993B
-    lda     #$22                    ; $993D
+    lda     scrollHeld              ; $992F  screen held at an area end?
+    bne     @done                   ; $9932  yes: no Moblins
+    jsr     MobyGenerator_Ai        ; $9934  spawn as for a Moby
+    bcs     @done                   ; $9937  not this frame, or no slot
+    ldx     temp0                   ; $9939  the new enemy
+    dec     enemyHp,x               ; $993B  2 hit points
+    lda     #$22                    ; $993D  a walking Moblin
     sta     enemyType,x             ; $993F
-    ldy     objFacing+1,x           ; $9941
-    lda     DumbMoblinSpeeds,y      ; $9943
+    ldy     objFacing+1,x           ; $9941  1 px/frame the way it faces
+    lda     DumbMoblinSpeeds,y      ; $9943  (toward Link)
     sta     objXVelocity+1,x        ; $9946
-    lda     #$A0                    ; $9948
+    lda     #$A0                    ; $9948  at Y $A0
     sta     objY+1,x                ; $994A
     ldx     currentObject           ; $994C
 
@@ -1997,24 +2014,28 @@ DumbMoblinGenerator_Ai:
 ; ---------------------------------------------------------------------------
 ; DumbMoblin_Ai
 ;
-; A Moblin that walks straight in its facing, falling off ledges and
-; stopping at walls.  Not executed in the test movies.
+; Walking Moblin: walks straight on the way it faces at 1 pixel per frame,
+; stopping at walls (Enemy_MoveXUnlessWall_Bank1) and falling off ledges
+; (Enemy_MoveYAndFall), and never turns or attacks.  Its spear is tested
+; against Link's shield and body like a projectile (Projectile_CheckLink).
+; Its timer is kept at 8 (purpose unknown).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DumbMoblin_Ai:
-    lda     #$08                    ; $994F
+    lda     #$08                    ; $994F  timer held at 8
     sta     timerFast+3,x           ; $9951
-    jsr     Enemy_SkipAiIfStunned   ; $9954
-    jsr     Enemy_UpdateWithBg      ; $9957
-    jsr     Projectile_CheckLink    ; $995A
+    jsr     Enemy_SkipAiIfStunned   ; $9954  no AI while stunned
+    jsr     Enemy_UpdateWithBg      ; $9957  probe background, draw, hit tests
+    jsr     Projectile_CheckLink    ; $995A  the spear against Link
     jsr     Enemy_HurtLinkOnContact ; $995D
-    jsr     Enemy_MoveXUnlessWall_Bank1 ; $9960
-    jsr     Enemy_MoveYAndFall      ; $9963
+    jsr     Enemy_MoveXUnlessWall_Bank1 ; $9960  walk on, unless at a wall
+    jsr     Enemy_MoveYAndFall      ; $9963  fall: +2/16 px/frame per frame
     lda     objCollision+1,x        ; $9966
-    and     #$04                    ; $9968
+    and     #$04                    ; $9968  on a floor?
     beq     @done                   ; $996A
-    jmp     Enemy_Land              ; $996C
+    jmp     Enemy_Land              ; $996C  yes: stand on it
 
 @done:
     rts                             ; $996F
@@ -2365,11 +2386,14 @@ Enemy_MoveXUnlessWall_Bank1:
     lda     objCollision+1,x        ; $9B22
     and     #$03                    ; $9B24
     bne     Fighter_KnockBack_Done  ; $9B26
+; Moby: X velocity by facing (1, 2): the two bytes after this jmp ($20, $E0).
 MobySpeeds := * + 2
     jmp     Enemy_MoveX             ; $9B28
 ; (unreferenced: $9B2B-$9C6E, 324 bytes)
     .byte   $20, $E0                                                        ; $9B2B
 
+; Moby and walking Moblin: spawn X from the screen's left edge (Moby: 0-1,
+; walking Moblin: 2-3).
 MobySpawnX:
     .byte   $30, $D0, $00, $F8                                              ; $9B2D
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -2377,99 +2401,106 @@ MobySpawnX:
 ; ---------------------------------------------------------------------------
 ; MobyGenerator_Ai
 ;
-; Moby generator: every 128 frames, if a slot is free, spawn a Moby (type
-; $1E, 3 hit points) high near the screen's left or right side, diving
-; (Y velocity $20) toward Link.  Out: carry clear if spawned (temp0 =
-; slot).  Also used by DumbMoblinGenerator_Ai.  Not executed in the test
-; movies.
+; Moby generator: every 128 frames (frameCounter), if an enemy slot is
+; free, put a Moby (type $1E) in it: 3 hit points, no list entry, at Y $20
+; near the left or right side of the screen at random (scrollX + $30 or
+; + $D0, MobySpawnX), diving at 2 pixels per frame, facing Link.  Called
+; by DumbMoblinGenerator_Ai (type $21) too, which spawns at the very edges
+; (scrollX + $00 or + $F8).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Out:     carry clear if it spawned one, in slot temp0
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 MobyGenerator_Ai:
     lda     frameCounter            ; $9B31
-    and     #$7F                    ; $9B33
-    bne     @loc_9B44               ; $9B35
-    lda     enemyType,x             ; $9B37
+    and     #$7F                    ; $9B33  every 128 frames
+    bne     @fail                   ; $9B35
+    lda     enemyType,x             ; $9B37  remember the generator's type
     sta     temp13                  ; $9B39
-    ldx     #$05                    ; $9B3B
+    ldx     #$05                    ; $9B3B  find a free enemy slot
 
 @loop:
     lda     enemyActive,x           ; $9B3D
-    beq     @loc_9B48               ; $9B3F
+    beq     @spawn                  ; $9B3F
     dex                             ; $9B41
     bpl     @loop                   ; $9B42
 
-@loc_9B44:
+@fail:
     ldx     currentObject           ; $9B44
-    sec                             ; $9B46
+    sec                             ; $9B46  nothing spawned
     rts                             ; $9B47
 
-@loc_9B48:
-    inc     enemyActive,x           ; $9B48
-    lda     #$FF                    ; $9B4A
+@spawn:
+    inc     enemyActive,x           ; $9B48  ENEMY_STATE_ACTIVE
+    lda     #$FF                    ; $9B4A  no list entry
     sta     a:enemySramIndex,x      ; $9B4C
-    lda     #$03                    ; $9B4F
+    lda     #$03                    ; $9B4F  3 hit points
     sta     a:enemyHp,x             ; $9B51
-    lda     #$1E                    ; $9B54
+    lda     #$1E                    ; $9B54  a Moby
     sta     enemyType,x             ; $9B56
-    lda     rng+1,x                 ; $9B58
+    lda     rng+1,x                 ; $9B58  left or right at random
     and     #$01                    ; $9B5B
     tay                             ; $9B5D
     lda     temp13                  ; $9B5E
-    cmp     #$21                    ; $9B60
-    bne     @loc_9B66               ; $9B62
-    iny                             ; $9B64
-    iny                             ; $9B65
+    cmp     #$21                    ; $9B60  for the walking Moblin generator,
+    bne     @setX                   ; $9B62
+    iny                             ; $9B64  the outer pair of positions
+    iny                             ; $9B65  (carry set: 1 more)
 
-@loc_9B66:
-    lda     scrollX                 ; $9B66
-    adc     MobySpawnX,y            ; $9B69
+@setX:
+    lda     scrollX                 ; $9B66  X = screen's left edge
+    adc     MobySpawnX,y            ; $9B69  + $30/$D0 (or $00/$F8)
     sta     objX+1,x                ; $9B6C
     lda     scrollXHi               ; $9B6E
     adc     #$00                    ; $9B71
     sta     objXHi+1,x              ; $9B73
-    lda     #$20                    ; $9B75
+    lda     #$20                    ; $9B75  at Y $20,
     sta     objY+1,x                ; $9B77
-    sta     objYVelocity+1,x        ; $9B79
+    sta     objYVelocity+1,x        ; $9B79  diving at 2 px/frame
     jsr     Enemy_FaceLink          ; $9B7C
     lda     #$01                    ; $9B7F
-    sta     objYHi+1,x              ; $9B81
-    lsr     a                       ; $9B83
-    sta     enemyStunTimer,x        ; $9B84
+    sta     objYHi+1,x              ; $9B81  on screen vertically
+    lsr     a                       ; $9B83  a = 0:
+    sta     enemyStunTimer,x        ; $9B84  not stunned,
     sta     enemyAiState,x          ; $9B87
-    sta     objXVelocity+1,x        ; $9B89
+    sta     objXVelocity+1,x        ; $9B89  straight down
     sta     enemyAiVar,x            ; $9B8B
-    stx     temp0                   ; $9B8E
+    stx     temp0                   ; $9B8E  the new enemy's slot
     ldx     currentObject           ; $9B90
-    clc                             ; $9B92
+    clc                             ; $9B92  spawned
     rts                             ; $9B93
 
 ; ---------------------------------------------------------------------------
 ; Moby_Ai
 ;
-; Moby (bird): dives until it reaches Link's height, then flies straight
-; across at $20.  Not executed in the test movies.
+; Moby (bird): dives straight down at 2 pixels per frame until it is level
+; with Link or below him (Y >= his objY), then flies straight across the
+; way it faces (toward Link when it spawned) at 2 pixels per frame
+; (MobySpeeds), and keeps going.  It ignores the background.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Moby_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $9B94
+    jsr     Enemy_SkipAiIfStunned   ; $9B94  no AI while stunned
     lda     objY+1,x                ; $9B97
-    cmp     objY                    ; $9B99
-    bcc     @loc_9BA7               ; $9B9B
-    ldy     objFacing+1,x           ; $9B9D
-    lda     MobySpeeds,y            ; $9B9F
+    cmp     objY                    ; $9B99  down to Link's Y yet?
+    bcc     @move                   ; $9B9B  no: keep diving
+    ldy     objFacing+1,x           ; $9B9D  yes: fly across,
+    lda     MobySpeeds,y            ; $9B9F  2 px/frame the way it faces
     sta     objXVelocity+1,x        ; $9BA2
-    jsr     Enemy_StopY             ; $9BA4
+    jsr     Enemy_StopY             ; $9BA4  level
 
-@loc_9BA7:
+@move:
     jsr     Enemy_MoveY             ; $9BA7
     jsr     Enemy_MoveX             ; $9BAA
-    jsr     Enemy_UpdateCommon      ; $9BAD
+    jsr     Enemy_UpdateCommon      ; $9BAD  draw, hit tests (no background)
     jmp     Enemy_HurtLinkOnContact ; $9BB0
 ; (end of disassembled code)
 
 
+; Geldarm: Y step by objFacing (0 rising, 1 sinking).
 GeldarmYOffsets:
     .byte   $FF, $01                                                        ; $9BB3
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -2477,105 +2508,124 @@ GeldarmYOffsets:
 ; ---------------------------------------------------------------------------
 ; Geldarm_Ai
 ;
-; Geldarm (sand worm): stretches its neck up and down, a pixel every 5
-; frames, pausing at the top; a sword hit on its head makes it pull back
-; down with a sound.  Touching it hurts Link.  Not executed in the test
-; movies.
+; Geldarm (sand worm): a head (objY) on a neck down to its base (objState+1).
 ;
-; Status:  provisional
+; Stretched up (enemyAiState 1) it stays put.  If Link's sword touches its
+; neck (an 8-pixel-wide box from 8 below the head down to the base,
+; Sword_GetHitbox), it ducks: enemyAiState 0, a sound, and objFacing
+; flips to 1, sinking.  Otherwise, if Link touches the neck, he is hurt.
+;
+; Moving (enemyAiState 0), by objFacing:
+; - 1, sinking: 1 pixel per frame down to the base, where it turns to
+;   rising and waits 128 frames (timerFast+TIMER_ENEMY).
+; - 0, rising: 2 pixels each time its timer runs out, every 5 frames
+;   (0.4 pixel per frame), until it is $40 tall, when it is stretched up
+;   again.
+;
+; So a hit makes it duck for 64 frames, stay down 128 and rise for 160.
+; Its head can be hit like any enemy's (Enemy_UpdateCommon).
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Geldarm_Ai:
     lda     enemyAiState,x          ; $9BB5
-    bne     @loc_9BEE               ; $9BB7
-    ldy     objFacing+1,x           ; $9BB9
-    bne     @loc_9BCA               ; $9BBB
+    bne     @stretched              ; $9BB7  1: stretched up
+    ldy     objFacing+1,x           ; $9BB9  0 rising, 1 sinking
+    bne     @step                   ; $9BBB  sinking: step every frame
+    ; Rising: step only when the timer has run out.  Y moves by the step
+    ; here and again at @step (2 pixels), or is put back at @undo.
     lda     objY+1,x                ; $9BBD
     clc                             ; $9BBF
-    adc     GeldarmYOffsets,y       ; $9BC0
+    adc     GeldarmYOffsets,y       ; $9BC0  1 pixel up
     sta     objY+1,x                ; $9BC3
-    lda     timerFast+3,x           ; $9BC5
-    bne     @loc_9C35               ; $9BC8
+    lda     timerFast+3,x           ; $9BC5  time to step?
+    bne     @undo                   ; $9BC8  no: put it back
 
-@loc_9BCA:
+@step:
     lda     objY+1,x                ; $9BCA
     clc                             ; $9BCC
-    adc     GeldarmYOffsets,y       ; $9BCD
+    adc     GeldarmYOffsets,y       ; $9BCD  1 pixel up or down
     sta     objY+1,x                ; $9BD0
-    lda     #$05                    ; $9BD2
+    lda     #$05                    ; $9BD2  next rising step in 5 frames
     sta     timerFast+3,x           ; $9BD4
-    lda     objState+1,x            ; $9BD7
+    lda     objState+1,x            ; $9BD7  height = base - head
     sec                             ; $9BD9
     sbc     objY+1,x                ; $9BDA
-    bne     @loc_9BE6               ; $9BDC
-    lda     #$80                    ; $9BDE
+    bne     @checkTop               ; $9BDC
+    lda     #$80                    ; $9BDE  at the base: wait 128 frames,
     sta     timerFast+3,x           ; $9BE0
-    jmp     @loc_9C2C               ; $9BE3
+    jmp     @turn                   ; $9BE3  then rise
 
-@loc_9BE6:
-    cmp     #$40                    ; $9BE6
-    bne     @loc_9C3D               ; $9BE8
-    lda     #$01                    ; $9BEA
+@checkTop:
+    cmp     #$40                    ; $9BE6  $40 tall?
+    bne     @update                 ; $9BE8  no
+    lda     #$01                    ; $9BEA  yes: stretched up
     sta     enemyAiState,x          ; $9BEC
 
-@loc_9BEE:
-    lda     drawOffscreen+1         ; $9BEE
-    bne     @loc_9C3D               ; $9BF0
+@stretched:
+    lda     drawOffscreen+1         ; $9BEE  off screen at all?
+    bne     @update                 ; $9BF0  yes: no tests
+    ; Box B: the neck, 8 pixels wide, from 8 below the head to the base.
     lda     objY+1,x                ; $9BF2
-    adc     #$08                    ; $9BF4
-    sta     temp5                   ; $9BF6
+    adc     #$08                    ; $9BF4  (+ 1 if the carry is set)
+    sta     temp5                   ; $9BF6  top
     lda     objState+1,x            ; $9BF8
     sec                             ; $9BFA
     sbc     objY+1,x                ; $9BFB
-    sta     temp7                   ; $9BFD
+    sta     temp7                   ; $9BFD  height
     lda     drawScreenX+1           ; $9BFF
-    sta     temp4                   ; $9C01
+    sta     temp4                   ; $9C01  left
     lda     #$08                    ; $9C03
-    sta     temp6                   ; $9C05
-    jsr     Sword_GetHitbox         ; $9C07
+    sta     temp6                   ; $9C05  width
+    jsr     Sword_GetHitbox         ; $9C07  box A: Link's sword
     jsr     Hitbox_Overlap          ; $9C0A
-    bcc     @loc_9C1E               ; $9C0D
-    lda     #$00                    ; $9C0F
+    bcc     @checkLink              ; $9C0D  no hit
+    lda     #$00                    ; $9C0F  hit: duck
     sta     enemyAiState,x          ; $9C11
-    lda     #$01                    ; $9C13
+    lda     #$01                    ; $9C13  at once
     sta     timerFast+3,x           ; $9C15
-    lda     #$10                    ; $9C18
+    lda     #$10                    ; $9C18  with a sound
     sta     sfxRequest+1            ; $9C1A
-    bne     @loc_9C2C               ; $9C1C
+    bne     @turn                   ; $9C1C  (always): now sinking
 
-@loc_9C1E:
-    jsr     Link_GetHitbox          ; $9C1E
+@checkLink:
+    jsr     Link_GetHitbox          ; $9C1E  box A: Link
     jsr     Hitbox_Overlap          ; $9C21
-    bcc     @loc_9C29               ; $9C24
-    jsr     Link_HurtByEnemy        ; $9C26
+    bcc     @toUpdate               ; $9C24
+    jsr     Link_HurtByEnemy        ; $9C26  touching the neck hurts
 
-@loc_9C29:
-    jmp     @loc_9C3D               ; $9C29
+@toUpdate:
+    jmp     @update                 ; $9C29
 
-@loc_9C2C:
-    lda     objFacing+1,x           ; $9C2C
+@turn:
+    lda     objFacing+1,x           ; $9C2C  rising <-> sinking
     eor     #$01                    ; $9C2E
     sta     objFacing+1,x           ; $9C30
-    jmp     @loc_9C3D               ; $9C32
+    jmp     @update                 ; $9C32
 
-@loc_9C35:
-    lda     objY+1,x                ; $9C35
+@undo:
+    lda     objY+1,x                ; $9C35  put Y back
     sec                             ; $9C37
     sbc     GeldarmYOffsets,y       ; $9C38
     sta     objY+1,x                ; $9C3B
 
-@loc_9C3D:
-    jsr     Enemy_UpdateCommon      ; $9C3D
+@update:
+    jsr     Enemy_UpdateCommon      ; $9C3D  draw, hit tests (no background)
     jmp     Enemy_HurtLinkOnContact ; $9C40
 
 ; ---------------------------------------------------------------------------
 ; DumbMoblin_Draw
 ;
-; Draw the walking Moblin.  Not executed in the test movies.
+; Draw a walking Moblin: Moblin_Draw in pose 3 or 4 (objState+1, set here,
+; alternating every 16 frames: the spear held level), then its lower pair
+; drawn again 16 pixels below its Y with sramEnemyTiles entry $38 or $4A,
+; alternating every 8 frames, walking.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DumbMoblin_Draw:
-    lda     frameCounter            ; $9C43
+    lda     frameCounter            ; $9C43  pose 3 or 4, every 16 frames
     and     #$10                    ; $9C45
     lsr     a                       ; $9C47
     lsr     a                       ; $9C48
@@ -2584,22 +2634,22 @@ DumbMoblin_Draw:
     adc     #$03                    ; $9C4B
     sta     objState+1,x            ; $9C4D
     jsr     Moblin_Draw             ; $9C4F
-    lda     objOamOffset+1,x        ; $9C52
+    lda     objOamOffset+1,x        ; $9C52  redraw the second pair
     clc                             ; $9C54
     adc     #$08                    ; $9C55
     tay                             ; $9C57
-    lda     objY+1,x                ; $9C58
+    lda     objY+1,x                ; $9C58  16 pixels lower
     adc     #$10                    ; $9C5A
     sta     temp0                   ; $9C5C
     lda     drawScreenX+1           ; $9C5E
     sta     temp1                   ; $9C60
-    ldx     #$38                    ; $9C62
-    lda     frameCounter            ; $9C64
+    ldx     #$38                    ; $9C62  legs: entry $38 or $4A,
+    lda     frameCounter            ; $9C64  every 8 frames
     and     #$08                    ; $9C66
-    bne     @loc_9C6C               ; $9C68
+    bne     @draw                   ; $9C68
     ldx     #$4A                    ; $9C6A
 
-@loc_9C6C:
+@draw:
     jmp     Sprite_DrawEnemyPairKeepX ; $9C6C
 ; (end of disassembled code)
 
@@ -2907,12 +2957,13 @@ Lowder_Draw:
 ; ---------------------------------------------------------------------------
 ; Moby_Draw
 ;
-; Draw a Moby.  Not executed in the test movies.
+; Draw a Moby: a pair of sprites facing its objFacing, flapping between
+; sramEnemyTiles entries $44 and $46 every 8 frames.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Moby_Draw:
-    lda     #$44                    ; $9DF6
+    lda     #$44                    ; $9DF6  entries $44/$46
     jmp     Sprite_DrawAnimatedEnemyPair ; $9DF8
 ; (end of disassembled code)
 
@@ -2920,19 +2971,21 @@ Moby_Draw:
 ; ---------------------------------------------------------------------------
 ; Megmet_Draw
 ;
-; Draw a Megmet.
+; Draw a Megmet: a pair of sprites facing its objFacing, sramEnemyTiles
+; entry $40 while rising or falling slowly, $42 once it falls at 2 pixels
+; per frame or more.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Megmet_Draw:
     lda     objYVelocity+1,x        ; $9DFB
-    ldx     #$40                    ; $9DFE
+    ldx     #$40                    ; $9DFE  entry $40,
     cmp     #$02                    ; $9E00
-    bmi     @loc_9E06               ; $9E02
-    inx                             ; $9E04
+    bmi     @draw                   ; $9E02
+    inx                             ; $9E04  or $42 when falling fast
     inx                             ; $9E05
 
-@loc_9E06:
+@draw:
     jmp     Sprite_DrawEnemyPairKeepX ; $9E06
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -2941,6 +2994,7 @@ Geldarm_DrawDone:
 ; (end of disassembled code)
 
 
+; Geldarm_Draw: sway of the head and first neck sprite.
 GeldarmSegmentXOffsets:
     .byte   $FF, $01                                                        ; $9E0A
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -2948,93 +3002,97 @@ GeldarmSegmentXOffsets:
 ; ---------------------------------------------------------------------------
 ; Geldarm_Draw
 ;
-; Draw a Geldarm: its head and a column of neck sprites down to its base.
-; Not executed in the test movies.
+; Draw a Geldarm: its head (tile $62) at its Y and, unless it is fully
+; down, five neck sprites (tile $64) below it, spaced a fifth of its
+; height apart (the remainder shared out a pixel at a time) down to its
+; base, all in one 8-pixel column, mirrored on alternate 16-frame periods.  While stretched
+; up, its head and first neck sprite sway 2 and 1 pixels side to side
+; every 32 frames.  While stunned its palette flashes.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Geldarm_Draw:
     lda     enemyStunTimer,x        ; $9E0C
-    beq     @loc_9E15               ; $9E0F
-    and     #$03                    ; $9E11
+    beq     @visible                ; $9E0F
+    and     #$03                    ; $9E11  stunned: flash the palette
     sta     temp3                   ; $9E13
 
-@loc_9E15:
+@visible:
     lda     drawOffscreen+1         ; $9E15
-    and     #$08                    ; $9E17
-    bne     Geldarm_DrawDone        ; $9E19
+    and     #$08                    ; $9E17  its column off screen?
+    bne     Geldarm_DrawDone        ; $9E19  yes: don't draw
     lda     #$00                    ; $9E1B
-    sta     temp0                   ; $9E1D
-    lda     objState+1,x            ; $9E1F
+    sta     temp0                   ; $9E1D  temp0 = height / 5,
+    lda     objState+1,x            ; $9E1F  temp1 = remainder
     sec                             ; $9E21
-    sbc     objY+1,x                ; $9E22
+    sbc     objY+1,x                ; $9E22  height = base - head
     sta     temp2                   ; $9E24
 
-@loc_9E26:
+@divide:
     cmp     #$05                    ; $9E26
-    bcc     @loc_9E32               ; $9E28
+    bcc     @divided                ; $9E28
     inc     temp0                   ; $9E2A
     sec                             ; $9E2C
     sbc     #$05                    ; $9E2D
-    jmp     @loc_9E26               ; $9E2F
+    jmp     @divide                 ; $9E2F
 
-@loc_9E32:
+@divided:
     sta     temp1                   ; $9E32
     ldy     objOamOffset+1,x        ; $9E34
     tya                             ; $9E36
     clc                             ; $9E37
-    adc     #$14                    ; $9E38
+    adc     #$14                    ; $9E38  neck sprites 1-5
     sta     temp15                  ; $9E3A
-    lda     objY+1,x                ; $9E3C
+    lda     objY+1,x                ; $9E3C  the head
     sta     oamBuffer,y             ; $9E3E
     lda     #$62                    ; $9E41
     sta     oamBuffer+1,y           ; $9E43
     lda     temp2                   ; $9E46
-    bne     @loc_9E53               ; $9E48
-    tya                             ; $9E4A
+    bne     @neck                   ; $9E48
+    tya                             ; $9E4A  fully down: only the head
     clc                             ; $9E4B
     adc     #$04                    ; $9E4C
     sta     temp15                  ; $9E4E
-    jmp     @loc_9E70               ; $9E50
+    jmp     @attrs                  ; $9E50
 
-@loc_9E53:
-    lda     oamBuffer,y             ; $9E53
+@neck:
+    lda     oamBuffer,y             ; $9E53  next sprite: a fifth lower,
     clc                             ; $9E56
     adc     temp0                   ; $9E57
     sta     oamBuffer+4,y           ; $9E59
     lda     temp1                   ; $9E5C
-    beq     @loc_9E6B               ; $9E5E
-    dec     temp1                   ; $9E60
-    lda     oamBuffer+4,y           ; $9E62
+    beq     @neckTile               ; $9E5E
+    dec     temp1                   ; $9E60  and 1 more while the
+    lda     oamBuffer+4,y           ; $9E62  remainder lasts
     clc                             ; $9E65
     adc     #$01                    ; $9E66
     sta     oamBuffer+4,y           ; $9E68
 
-@loc_9E6B:
+@neckTile:
     lda     #$64                    ; $9E6B
     sta     oamBuffer+5,y           ; $9E6D
 
-@loc_9E70:
-    lda     frameCounter            ; $9E70
+@attrs:
+    lda     frameCounter            ; $9E70  mirrored every other 16 frames
     and     #$10                    ; $9E72
     asl     a                       ; $9E74
     asl     a                       ; $9E75
-    ora     temp3                   ; $9E76
+    ora     temp3                   ; $9E76  palette
     sta     oamBuffer+2,y           ; $9E78
     sta     oamBuffer+6,y           ; $9E7B
-    lda     drawScreenX+1           ; $9E7E
+    lda     drawScreenX+1           ; $9E7E  all at its X
     sta     oamBuffer+3,y           ; $9E80
     sta     oamBuffer+7,y           ; $9E83
-    iny                             ; $9E86
+    iny                             ; $9E86  next sprite
     iny                             ; $9E87
     iny                             ; $9E88
     iny                             ; $9E89
     cpy     temp15                  ; $9E8A
-    bne     @loc_9E53               ; $9E8C
+    bne     @neck                   ; $9E8C
     ldy     objOamOffset+1,x        ; $9E8E
-    lda     enemyAiState,x          ; $9E90
-    beq     @loc_9EAF               ; $9E92
-    lda     frameCounter            ; $9E94
+    lda     enemyAiState,x          ; $9E90  stretched up?
+    beq     @done                   ; $9E92
+    lda     frameCounter            ; $9E94  sway every 32 frames:
     and     #$20                    ; $9E96
     lsr     a                       ; $9E98
     lsr     a                       ; $9E99
@@ -3044,13 +3102,13 @@ Geldarm_Draw:
     tax                             ; $9E9D
     lda     oamBuffer+3,y           ; $9E9E
     clc                             ; $9EA1
-    adc     GeldarmSegmentXOffsets,x ; $9EA2
+    adc     GeldarmSegmentXOffsets,x ; $9EA2  first neck sprite 1 pixel,
     sta     oamBuffer+7,y           ; $9EA5
     clc                             ; $9EA8
-    adc     GeldarmSegmentXOffsets,x ; $9EA9
+    adc     GeldarmSegmentXOffsets,x ; $9EA9  head 2 pixels
     sta     oamBuffer+3,y           ; $9EAC
 
-@loc_9EAF:
+@done:
     ldx     currentObject           ; $9EAF
     rts                             ; $9EB1
 ; (end of disassembled code)

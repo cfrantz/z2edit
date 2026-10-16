@@ -33,6 +33,10 @@ and how each was verified):
 | [Rock Generator](enemies/rock-generator.md) | $0C outdoors |
 | [Deeler](enemies/deeler.md) | $0D, $0E outdoors |
 | [Bago Bago](enemies/bago-bago.md) | $0F, $10 outdoors, in palaces 1, 2, 5 and the Great Palace |
+| [Moby](enemies/moby.md) | $1D, $1E in West Hyrule (unused) |
+| [Megmet](enemies/megmet.md) | $1F in West Hyrule |
+| [Geldarm](enemies/geldarm.md) | $20 in West Hyrule |
+| [Walking Moblin](enemies/walking-moblin.md) | $21, $22 in West Hyrule |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI

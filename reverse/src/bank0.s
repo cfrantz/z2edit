@@ -4466,7 +4466,7 @@ Scroll_Update:
     beq     Scroll_UpdateDone       ; $9927
     lda     scrollFrozen            ; $9929
     bne     Scroll_UpdateDone       ; $992C
-    sta     scrollCounter           ; $992E
+    sta     scrollHeld              ; $992E  0: the screen follows Link (a = 0)
     lda     a:linkDeltaX            ; $9931
     sta     temp0                   ; $9934
     ldx     objFacing               ; $9936
@@ -4504,7 +4504,7 @@ Scroll_Update:
     bcc     @loc_9977               ; $996F
 
 @loc_9971:
-    inc     scrollCounter           ; $9971
+    inc     scrollHeld              ; $9971  1: held at the end of the area
     jmp     Scroll_SetRightEdge     ; $9974
 
 @loc_9977:

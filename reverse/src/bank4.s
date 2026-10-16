@@ -3290,7 +3290,7 @@ SkullHead_Ai_Bank4B:
     lda     drawOffscreen+1         ; $ACDA
     and     #$0C                    ; $ACDC
     beq     @loc_ACE8               ; $ACDE
-    lda     scrollCounter           ; $ACE0
+    lda     scrollHeld              ; $ACE0
     bne     SkullHead_Ai_Done_Bank4B ; $ACE3
     jsr     SkullHead_Init_Bank4B   ; $ACE5
 
@@ -5541,7 +5541,7 @@ FlyerSpeeds_Bank4:
 WolfHeadGenerator_Ai:
     lda     frameCounter            ; $B861
     asl     a                       ; $B863
-    ora     scrollCounter           ; $B864
+    ora     scrollHeld              ; $B864
     bne     Enemy_SpawnFlyerFail_Bank4 ; $B867
 
 ; ---------------------------------------------------------------------------
@@ -5920,7 +5920,7 @@ SkullHead_Ai:
     lda     drawOffscreen+1         ; $BA20
     and     #$0C                    ; $BA22
     beq     @loc_BA2E               ; $BA24
-    lda     scrollCounter           ; $BA26
+    lda     scrollHeld              ; $BA26
     bne     @done                   ; $BA29
     jsr     SkullHead_Init          ; $BA2B
 

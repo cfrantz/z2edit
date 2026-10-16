@@ -60,6 +60,8 @@ ENEMY_PAGES = {
     "Moa_Ai": "moa", "Ache_Ai": "ache", "Deeler_Ai": "deeler",
     "BagoBagoGenerator_Ai": "bago-bago", "BagoBago_Ai": "bago-bago",
     "BubbleGenerator_Ai": "bubble-generator", "RockGenerator_Ai": "rock-generator",
+    "Megmet_Ai": "megmet", "MobyGenerator_Ai": "moby", "Moby_Ai": "moby", "Geldarm_Ai": "geldarm",
+    "DumbMoblinGenerator_Ai": "walking-moblin", "DumbMoblin_Ai": "walking-moblin",
 }
 
 

@@ -36,12 +36,12 @@ The definition tables are `EnemyHp_Bank1` and following ($9400); see
 | $1A | Red Goriya | 14 | 20 | 1 | 1 | blocks Link's projectiles | `MoblinGoriya_Ai` |
 | $1B | Blue Goriya | 18 | 30 | 1 | 2 | blocks Link's projectiles | `MoblinGoriya_Ai` |
 | $1C | [Lowder](enemies/lowder.md) | 4 | 3 | 0 | 1 |  | `Lowder_Ai` |
-| $1D | Moby Generator | 3 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `MobyGenerator_Ai` |
-| $1E | Moby | 3 | 2 | 0 | - | touch drains 10 exp | `Moby_Ai` |
-| $1F | Megmet | 4 | 5 | 1 | 1 |  | `Megmet_Ai` |
-| $20 | Geldarm | 8 | 5 | 1 | 1 | immune to SPELL | `Geldarm_Ai` |
-| $21 | Dumb Moblin Generator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL | `DumbMoblinGenerator_Ai` |
-| $22 | Dumb Moblin | 2 | 0 | 0 | 1 | touch drains 10 exp | `DumbMoblin_Ai` |
+| $1D | [Moby Generator](enemies/moby.md) | 3 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `MobyGenerator_Ai` |
+| $1E | [Moby](enemies/moby.md) | 3 | 2 | 0 | - | touch drains 10 exp | `Moby_Ai` |
+| $1F | [Megmet](enemies/megmet.md) | 4 | 5 | 1 | 1 |  | `Megmet_Ai` |
+| $20 | [Geldarm](enemies/geldarm.md) | 8 | 5 | 1 | 1 | immune to SPELL | `Geldarm_Ai` |
+| $21 | [Dumb Moblin Generator](enemies/walking-moblin.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL | `DumbMoblinGenerator_Ai` |
+| $22 | [Dumb Moblin](enemies/walking-moblin.md) | 2 | 0 | 0 | 1 | touch drains 10 exp | `DumbMoblin_Ai` |
 
 ## Moblins and Goriyas
 
@@ -81,28 +81,22 @@ They block the sword beam and fire.
 and ledges, twice as fast toward Link, and turns toward him every 160
 frames while he is on its level.  See [Lowder](enemies/lowder.md).
 
-**Megmet** ($1F, `Megmet_Ai`): hops toward Link in small random hops,
-under its own light gravity, turning at walls.
+**Megmet** ($1F): a cave creature that hops toward Link without a pause,
+50 to 75 pixels high, turning at walls.  See [Megmet](enemies/megmet.md).
 
-**Moby** ($1E, `Moby_Ai`) and its generator ($1D,
-`MobyGenerator_Ai`): every 128 frames the generator sends a Moby (3 hit
-points) diving from high near one side of the screen; it falls until it
-reaches Link's height, then flies straight across.  Touching it drains
-experience.
+**Moby** ($1E) and its generator ($1D): a bird that dives from the top of
+the screen to Link's height and flies straight across at him, one every
+128 frames.  No area places the generator, so Mobys never appear.  See
+[Moby](enemies/moby.md).
 
-**Geldarm** ($20, `Geldarm_Ai`, `Geldarm_Init`): a desert worm that
-stretches its neck up from the sand and back down, a pixel every 5
-frames, over 64 pixels, pausing at the top.  A sword hit on its head
-makes it shrink back down with a sound.  It is immune to the SPELL
-spell.
+**Geldarm** ($20): a desert worm that stands with its neck stretched up;
+a sword stroke on the neck makes it duck into the sand for a few
+seconds.  See [Geldarm](enemies/geldarm.md).
 
-**Walking Moblin** ($22, `DumbMoblin_Ai`) and its generator ($21,
-`DumbMoblinGenerator_Ai`): every 128 frames the generator sends a Moblin
-(2 hit points) from the edge of the screen, walking straight in its
-direction until it falls or meets a wall.  It never attacks.
-
-Neither test movie fights Mobys, Geldarms or walking Moblins; their code
-was disassembled from the tables and read, not traced.
+**Walking Moblin** ($22) and its generator ($21): every 128 frames, while
+the screen follows Link, a Moblin (2 hit points) comes in from the edge
+of the screen and walks straight across, spear held out, never
+attacking.  See [Walking Moblin](enemies/walking-moblin.md).
 
 ## Projectiles
 

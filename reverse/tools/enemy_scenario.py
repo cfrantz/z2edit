@@ -91,7 +91,8 @@ def main():
     p.add_argument("--approach", help="before the takeover, walk Link right (invincible, with --clear applied) until his X >= this")
     p.add_argument("--poke", action="append", default=[])
     p.add_argument("--fill", action="append", default=[],
-                   help="X0:X1:ROW: make map row ROW solid from X0 to X1 (a tile copied from row $C0); not drawn")
+                   help="X0:X1:ROW[:SRC]: copy map row SRC (default $C0, solid) to row ROW from X0 to X1, "
+                        "e.g. a row of air to dig out a floor; not drawn")
     p.add_argument("--press", action="append", default=[])
     p.add_argument("--event", action="append", default=[])
     p.add_argument("--log", help="enemy slots to log, e.g. 0,2")
@@ -232,10 +233,11 @@ def main():
             wr(eq["objXHi"], x >> 8)
             wr(eq["objY"], y)
         for f in a.fill:
-            x0, x1, row = (int(v, 16) for v in f.split(":"))
+            x0, x1, row, *src = (int(v, 16) for v in f.split(":"))
+            src = src[0] if src else 0xC0
             for x in range(x0 & ~0xF, x1 + 1, 0x10):
                 page = 0x6000 + (x >> 8) * 0xD0
-                wr(page + row + ((x >> 4) & 0xF), rd(page + 0xC0 + ((x >> 4) & 0xF)))
+                wr(page + row + ((x >> 4) & 0xF), rd(page + src + ((x >> 4) & 0xF)))
         for s in a.poke:
             var, _, value = s.partition("=")
             wr(resolve(sym, var), int(value, 0))
