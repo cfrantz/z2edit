@@ -76,7 +76,7 @@ over:
 
 During a thrust the spear is drawn at once (an extra `Enemy_Draw`) and
 tested against Link's shield and body like a projectile
-(`Projectile_CheckLinkReflect`, with his shield checked first for these
+(`Weapon_CheckLinkReflect`, with his shield checked first for these
 types).  A blocked thrust knocks the Moblin back.
 
 **The thrown spear** (projectile type 5, `Projectile_Falling_Bank1`)

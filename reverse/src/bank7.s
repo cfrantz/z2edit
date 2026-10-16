@@ -7370,7 +7370,7 @@ Link_KnockBackDone:
 ; ---------------------------------------------------------------------------
 ; Projectile_CheckLinkAlternate
 ;
-; Projectile_CheckLink on alternate frames (by projectile slot): test
+; Weapon_CheckLink on alternate frames (by projectile slot): test
 ; enemy projectile x against Link's shield, with the reflect spell, and
 ; then against Link (Projectile_HitLinkBody).  Used by the enemy
 ; projectile routines in the area banks.
@@ -7711,37 +7711,39 @@ LinkBodyKnockBackSpeeds:
     .byte   $18, $E8                                                        ; $E556
 
 ; ---------------------------------------------------------------------------
-; Projectile_CheckLinkReflect
+; Weapon_CheckLinkReflect
 ;
-; Test enemy projectile x against Link: with the reflect spell, or for
-; enemy types below $17, his shield is tested first (Projectile_CheckLink);
-; otherwise only his body (Projectile_CheckLinkBody).
+; Test enemy x's weapon (Enemy_GetWeaponHitbox) against Link: with the
+; reflect spell, or for enemy types below $17, his shield is tested first
+; (Weapon_CheckLink); otherwise only his body (Weapon_CheckLinkBody).
 ;
-; In:      x = projectile index
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Projectile_CheckLinkReflect:
+Weapon_CheckLinkReflect:
     lda     reflectSpellActive      ; $E558
-    bne     Projectile_CheckLink    ; $E55B
+    bne     Weapon_CheckLink        ; $E55B
     lda     enemyType,x             ; $E55D
     cmp     #$17                    ; $E55F
-    bcs     Projectile_CheckLinkBody ; $E561
+    bcs     Weapon_CheckLinkBody    ; $E561
 
 ; ---------------------------------------------------------------------------
-; Projectile_CheckLink
+; Weapon_CheckLink
 ;
-; Test enemy projectile x against Link's shield (blocked: a sound and the
-; projectile is knocked back) and then, in Projectile_CheckLinkBody,
-; against Link (hurt him).
+; Test enemy x's weapon (Enemy_GetWeaponHitbox: a sword, spear or mace
+; drawn as its fifth sprite) against Link's shield (blocked: a sound, and
+; the enemy is knocked back) and then, in Weapon_CheckLinkBody, against
+; Link (hurt him; an enemy with guard 2 or more, a boss, also knocks him
+; up and back).
 ;
-; In:      x = projectile index
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Projectile_CheckLink:
-    jsr     Shield_GetHitbox        ; $E563
+Weapon_CheckLink:
+    jsr     Enemy_GetWeaponHitbox   ; $E563
     jsr     Link_GetShieldHitbox    ; $E566
     jsr     Hitbox_Overlap          ; $E569
-    bcc     Projectile_CheckLinkBody ; $E56C
+    bcc     Weapon_CheckLinkBody    ; $E56C
 ; (code below not executed in the test movies)
     lda     #$02                    ; $E56E
     sta     sfxRequest              ; $E570
@@ -7750,8 +7752,8 @@ Projectile_CheckLink:
     jmp     Enemy_KnockBack         ; $E576
 ; (end of code not executed in the test movies)
 
-Projectile_CheckLinkBody:
-    jsr     Shield_GetHitbox        ; $E579
+Weapon_CheckLinkBody:
+    jsr     Enemy_GetWeaponHitbox   ; $E579
     jsr     Link_GetHitbox          ; $E57C
     jsr     Hitbox_Overlap          ; $E57F
     bcc     Enemy_GetSpecialHitboxDone ; $E582
@@ -7843,14 +7845,16 @@ Enemy_GetSpecialHitboxDone:
     rts                             ; $E5F2
 
 ; ---------------------------------------------------------------------------
-; Shield_GetHitbox
+; Enemy_GetWeaponHitbox
 ;
-; Set box B (temp4-temp7, see Hitbox_Overlap) to Link's shield, from the
-; position of its sprite (sprite 4 of Link's sprites).
+; Set box B (temp4-temp7, see Hitbox_Overlap) to enemy x's weapon: a line
+; 14 pixels wide (less at the screen's right edge) and 1 high, 9 pixels
+; below the top of its fifth sprite (oamBuffer+16 from its objOamOffset).
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Shield_GetHitbox:
+Enemy_GetWeaponHitbox:
     ldy     objOamOffset+1,x        ; $E5F3
     lda     oamBuffer+16,y          ; $E5F5
     clc                             ; $E5F8
@@ -7864,19 +7868,19 @@ Shield_GetHitbox:
     sta     temp6                   ; $E608
     lda     temp4                   ; $E60A
     adc     temp6                   ; $E60C
-    bcc     Shield_GetHitboxDone    ; $E60E
+    bcc     Enemy_GetWeaponHitboxDone ; $E60E
     lda     temp4                   ; $E610
     eor     #$FF                    ; $E612
     sta     temp6                   ; $E614
 
 ; ---------------------------------------------------------------------------
-; Shield_GetHitboxDone
+; Enemy_GetWeaponHitboxDone
 ;
-; Return (shared tail of Shield_GetHitbox).
+; Return (shared tail of Enemy_GetWeaponHitbox).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Shield_GetHitboxDone:
+Enemy_GetWeaponHitboxDone:
     rts                             ; $E616
 
 ; ---------------------------------------------------------------------------
@@ -7898,11 +7902,11 @@ Enemy_CheckProjectileHitsSpecial:
     and     #$0C                    ; $E61A
     ora     drawOffscreen+1         ; $E61C
     and     #$FC                    ; $E61E
-    bne     Shield_GetHitboxDone    ; $E620
+    bne     Enemy_GetWeaponHitboxDone ; $E620
     lda     objY+1,x                ; $E622
     adc     #$10                    ; $E624
     cmp     #$30                    ; $E626
-    bcc     Shield_GetHitboxDone    ; $E628
+    bcc     Enemy_GetWeaponHitboxDone ; $E628
     jsr     Enemy_GetSpecialHitbox  ; $E62A
     ldy     #$01                    ; $E62D
 
@@ -7924,7 +7928,7 @@ Enemy_CheckProjectileHitsSpecial:
     bpl     @loop                   ; $E64A
     jsr     Sword_GetHitbox         ; $E64C
     jsr     Hitbox_Overlap          ; $E64F
-    bcc     Shield_GetHitboxDone    ; $E652
+    bcc     Enemy_GetWeaponHitboxDone ; $E652
 
 ; ---------------------------------------------------------------------------
 ; Enemy_SwordClink

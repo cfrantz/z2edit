@@ -43,7 +43,7 @@ it or up to 41 pixels above it.  Then:
 
 **Attacks.**  Each has 24 frames of wind-up (pose 1 high, 3 low), then
 16 frames of thrust (pose 2 or 4).  The sword is tested against Link's
-shield and body every frame of the thrust (`Projectile_CheckLink`).  The
+shield and body every frame of the thrust (`Weapon_CheckLink`).  The
 blue Iron Knuckle throws its sword at the thrust instead (projectile type
 5, 2 pixels per frame, from its Y or Y + 10) and is done.  The height:
 

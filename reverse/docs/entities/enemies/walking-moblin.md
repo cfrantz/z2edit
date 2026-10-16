@@ -42,7 +42,7 @@ into a walking Moblin:
    `Enemy_SkipAiIfStunned`.  What reads it is unknown.
 2. `Enemy_UpdateWithBg` (probes, drawing, hit tests).
 3. Its spear is tested against Link's shield and body like a projectile
-   (`Projectile_CheckLink`), then `Enemy_HurtLinkOnContact`.
+   (`Weapon_CheckLink`), then `Enemy_HurtLinkOnContact`.
 4. It walks on (`Enemy_MoveXUnlessWall_Bank1`), stopping while there is a
    wall ahead.  It falls (`Enemy_MoveYAndFall`) and stands on floors
    (`Enemy_Land`).

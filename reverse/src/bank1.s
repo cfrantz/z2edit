@@ -2045,7 +2045,7 @@ DumbMoblinGenerator_Ai:
 ; Walking Moblin: walks straight on the way it faces at 1 pixel per frame,
 ; stopping at walls (Enemy_MoveXUnlessWall_Bank1) and falling off ledges
 ; (Enemy_MoveYAndFall), and never turns or attacks.  Its spear is tested
-; against Link's shield and body like a projectile (Projectile_CheckLink).
+; against Link's shield and body like a projectile (Weapon_CheckLink).
 ; Its timer is kept at 8 (purpose unknown).
 ;
 ; In:      x = enemy index
@@ -2056,7 +2056,7 @@ DumbMoblin_Ai:
     sta     timerFast+3,x           ; $9951
     jsr     Enemy_SkipAiIfStunned   ; $9954  no AI while stunned
     jsr     Enemy_UpdateWithBg      ; $9957  probe background, draw, hit tests
-    jsr     Projectile_CheckLink    ; $995A  the spear against Link
+    jsr     Weapon_CheckLink        ; $995A  the spear against Link
     jsr     Enemy_HurtLinkOnContact ; $995D
     jsr     Enemy_MoveXUnlessWall_Bank1 ; $9960  walk on, unless at a wall
     jsr     Enemy_MoveYAndFall      ; $9963  fall: +2/16 px/frame per frame
@@ -2086,7 +2086,7 @@ MoblinThrowYOffsets:
 ;   type 6) from its feet (low) or its head (high) and is done.
 ; - A Moblin then thrusts (pose 2 or 4) for 16 frames, its spear tested
 ;   against Link's shield and body like a projectile
-;   (Projectile_CheckLinkReflect).  A high thrust (pose 4) of an orange
+;   (Weapon_CheckLinkReflect).  A high thrust (pose 4) of an orange
 ;   or blue Moblin throws the spear instead (Moblin_ThrowSpear, pose 5).
 ;
 ; In:      x = enemy index
@@ -2098,7 +2098,7 @@ MoblinGoriya_Ai:
     and     #$01                    ; $9976
     bne     @checkTimer             ; $9978  winding up: nothing to test
     jsr     Enemy_Draw              ; $997A  thrusting: draw the spear now,
-    jsr     Projectile_CheckLinkReflect ; $997D  and test it against Link
+    jsr     Weapon_CheckLinkReflect ; $997D  and test it against Link
 
 @checkTimer:
     lda     timerFast+TIMER_ENEMY,x ; $9980  pose over?
@@ -2380,7 +2380,7 @@ Fighter_StartAttack_Done:
 ; Play out a Daira's swing.  Fighter_StartAttack sets pose 1 for 24
 ; frames; then every 5 frames the pose advances: pose 2 is the swing, its
 ; axe tested against Link's shield and body like a projectile
-; (Projectile_CheckLinkReflect), and the red Daira throws its axe
+; (Weapon_CheckLinkReflect), and the red Daira throws its axe
 ; (projectile type 7, 2 pixels per frame straight ahead).  The swing ends
 ; at pose DairaAttackFrames: 4 for the orange Daira (poses 2 and 3, 5
 ; frames each), 3 for the red (pose 2 only).
@@ -2401,7 +2401,7 @@ Daira_Attack:
     cmp     #$02                    ; $9AE5  the swing?
     bne     @nextIn5                ; $9AE7
     jsr     Enemy_Draw              ; $9AE9  draw the axe now,
-    jsr     Projectile_CheckLinkReflect ; $9AEC  and test it against Link
+    jsr     Weapon_CheckLinkReflect ; $9AEC  and test it against Link
     lda     enemyType,x             ; $9AEF
     cmp     #$18                    ; $9AF1  the red Daira
     bne     @nextIn5                ; $9AF3

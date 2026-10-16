@@ -3491,7 +3491,7 @@ Fokka_Ai:
     sta     objState+1,x            ; $9D55
 
 @loc_9D57:
-    jsr     Projectile_CheckLink    ; $9D57
+    jsr     Weapon_CheckLink        ; $9D57
 
 @loc_9D5A:
     lda     timerFast+TIMER_ENEMY,x ; $9D5A

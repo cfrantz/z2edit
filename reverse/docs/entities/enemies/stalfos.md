@@ -39,7 +39,7 @@ and have no spawn routine.
    - a quarter of the time it waits 15 frames;
    - otherwise it swings (`Enemy_StartSwing`): 15 frames of wind-up
      (pose 1), then the slash (pose 2) for 15 frames, its sword tested
-     against Link once as it comes out (`Projectile_CheckLink`), then 15
+     against Link once as it comes out (`Weapon_CheckLink`), then 15
      frames of rest.
 7. In the air it keeps moving by its X velocity unless at a wall.
 

@@ -2493,7 +2493,7 @@ Enemy_Fall_Bank2:
 ; Orange Lizalfos ($1B): as Lizalfos_Guard, with its own attack.  After
 ; the 24-frame wind-up (pose 1 low or 4 high, Lizalfos_ChooseGuard) it
 ; thrusts (pose 2 or 5) for 12 frames, its weapon tested against Link's
-; shield and body every frame (Projectile_CheckLink), then holds (3 or
+; shield and body every frame (Weapon_CheckLink), then holds (3 or
 ; 6) for 12 frames.
 ;
 ; In:      x = enemy index
@@ -2509,7 +2509,7 @@ OrangeLizalfos_Ai:
     bne     @checkTimer             ; $9B63
 
 @thrust:
-    jsr     Projectile_CheckLink    ; $9B65  the weapon against Link
+    jsr     Weapon_CheckLink        ; $9B65  the weapon against Link
 
 @checkTimer:
     lda     timerFast+TIMER_ENEMY,x ; $9B68  pose over?
@@ -2743,7 +2743,7 @@ LizalfosShotXHiOffsets:
 ; Play out a red or blue Lizalfos' attack.  After the 24-frame wind-up
 ; (pose 1), every 5 frames the pose advances: pose 2 is the thrust, its
 ; weapon drawn at once and tested against Link like a projectile
-; (Projectile_CheckLinkReflect); the attack ends at pose 4.  The blue
+; (Weapon_CheckLinkReflect); the attack ends at pose 4.  The blue
 ; Lizalfos throws its weapon at pose 2 instead and ends there: projectile
 ; type 7, 2 pixels per frame straight ahead, from 16 pixels right (facing
 ; right) or 8 left of it (LizalfosShotXOffsets).
@@ -2763,7 +2763,7 @@ Lizalfos_Attack:
     cmp     #$02                    ; $9CCF  the thrust?
     bne     @nextIn5                ; $9CD1
     jsr     Enemy_Draw              ; $9CD3  draw the weapon now,
-    jsr     Projectile_CheckLinkReflect ; $9CD6  and test it
+    jsr     Weapon_CheckLinkReflect ; $9CD6  and test it
     lda     enemyType,x             ; $9CD9
     cmp     #$1C                    ; $9CDB  the blue Lizalfos
     bne     @nextIn5                ; $9CDD

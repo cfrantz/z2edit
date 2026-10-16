@@ -31,15 +31,20 @@ set up.  Each frame, for every enemy, `Enemy_UpdateCommon` tests:
 | Link's body against the enemy | `Enemy_CheckLinkContact` (every other frame outside towns) | `Link_HurtByEnemy` ([Link](link.md#taking-damage)) |
 
 Enemy projectiles (slots 7-12) are tested against Link by the area banks'
-projectile routines:
+projectile routines with `Projectile_CheckLinkAlternate`, on alternate
+frames by slot: first the shield (`Link_GetShieldHitbox`, a small box in
+front of Link, high standing or low crouching), which deflects or
+destroys the projectile as its flags say; then his body, which hurts him.
 
-- `Projectile_CheckLink`: first the shield (`Link_GetShieldHitbox`, a
-  small box in front of Link, high standing or low crouching), which
-  knocks the projectile back with a sound; then his body
-  (`Projectile_CheckLinkBody`), which hurts him.
-- `Projectile_CheckLinkReflect`: the shield only counts with the reflect
+Hand-held weapons (swords, spears, maces) are drawn as the enemy's fifth
+sprite, and the enemy's AI tests them itself.  `Enemy_GetWeaponHitbox`
+makes a line 14 pixels wide, 9 pixels below that sprite's top.
+
+- `Weapon_CheckLink`: first Link's shield, which knocks the enemy back
+  with a sound; then his body (`Weapon_CheckLinkBody`), which hurts him.
+  A boss (guard 2 or more) also knocks him up and back.
+- `Weapon_CheckLinkReflect`: the shield only counts with the reflect
   spell, or for enemy types below $17.
-- `Projectile_CheckLinkAlternate`: the same, on alternate frames by slot.
 
 Each area bank's projectile flags (`ProjectileFlags_Bank1` ...) say how the
 shield treats each projectile; see the [enemy pages](../entities/README.md).

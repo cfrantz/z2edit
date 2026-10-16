@@ -64,7 +64,7 @@ wind-up:
   (`Projectile_Straight_Bank2`), from 16 pixels right or 8 left
   (`LizalfosShotXOffsets`); Link's shield destroys it (flags $03).
 - **Orange** (`OrangeLizalfos_Ai`): thrust (pose 2 or 5) for 12 frames,
-  tested every frame (`Projectile_CheckLink`), then 12 frames (pose 3
+  tested every frame (`Weapon_CheckLink`), then 12 frames (pose 3
   or 6).
 
 ## Drawing

@@ -34,7 +34,7 @@ advances the pose:
 
 - **Pose 2**, the swing: the axe is drawn at once and tested against
   Link's shield and body like a projectile
-  (`Projectile_CheckLinkReflect`; types $17 and up have the body tested
+  (`Weapon_CheckLinkReflect`; types $17 and up have the body tested
   only, unless Link has the reflect spell).
 - The red Daira also throws its axe then (projectile type 7,
   `Enemy_FireProjectile`): from its position, 2 pixels per frame straight

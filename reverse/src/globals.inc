@@ -115,9 +115,9 @@ GLOBALS_INC = 1
 .global DoNothing
 .global Enemy_CheckProjectileHits
 .global Enemy_CheckLinkContact
-.global Projectile_CheckLinkReflect
-.global Projectile_CheckLink
-.global Projectile_CheckLinkBody
+.global Weapon_CheckLinkReflect
+.global Weapon_CheckLink
+.global Weapon_CheckLinkBody
 .global Enemy_CheckProjectileHitsSpecial
 .global Enemy_CheckSwordHit
 .global Enemy_TakeDamage

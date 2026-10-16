@@ -1043,7 +1043,7 @@ Stalfos_Ai:
 @slash:
     jsr     Enemy_StartSwing        ; $968C  wind-up over: slash (pose 2)
     jsr     Enemy_Draw              ; $968F  draw the sword now,
-    jsr     Projectile_CheckLink    ; $9692  and test it
+    jsr     Weapon_CheckLink        ; $9692  and test it
 
 @noSword:
     lda     objState                ; $9695  Link's upward thrust?
@@ -2386,7 +2386,7 @@ IronknuckleThrowYOffsets:
 ; next 32 frames sooner, and 4-7 frames after recovering from a hit
 ; (enemyAiDir, set when its stun timer reaches 2).  An attack: 24 frames of
 ; wind-up, then 16 of thrust (pose 2 high, pose 4 low), its sword tested
-; against Link every frame (Projectile_CheckLink).  The blue Iron Knuckle
+; against Link every frame (Weapon_CheckLink).  The blue Iron Knuckle
 ; instead throws its sword at the thrust (projectile type 5) and is done.
 ; The height is half the time random, half the time Link's: high if he
 ; stands, low if he crouches.  QUIRK: that is where his shield is; the
@@ -2435,7 +2435,7 @@ Ironknuckle_Ai:
     bne     @endAttack              ; $9CC1  (always) done
 
 @testSword:
-    jsr     Projectile_CheckLink    ; $9CC3  the sword against Link
+    jsr     Weapon_CheckLink        ; $9CC3  the sword against Link
 
 @checkTimer:
     lda     timerFast+TIMER_ENEMY,x ; $9CC6  pose over?
@@ -4168,7 +4168,7 @@ Rebonack_Ai:
 
 @loc_B003:
     jsr     Boss_DrawAndCheck_Bank4B ; $B003
-    jsr     Projectile_CheckLinkBody ; $B006
+    jsr     Weapon_CheckLinkBody    ; $B006
     lda     enemyHp,x               ; $B009
     cmp     #$24                    ; $B00B
     bcs     @loc_B04D               ; $B00D
@@ -5140,7 +5140,7 @@ Gooma_Ai:
     sta     enemyAiVar,x            ; $B4AF
     jsr     Boss_UpdateIntro        ; $B4B2
     jsr     Boss_UpdateCommon       ; $B4B5
-    jsr     Projectile_CheckLinkBody ; $B4B8
+    jsr     Weapon_CheckLinkBody    ; $B4B8
     jsr     Gooma_Attack            ; $B4BB
     lda     #$12                    ; $B4BE
     jsr     Boss_DrawHpBar          ; $B4C0
@@ -6414,7 +6414,7 @@ Helmethead_Ai:
 HorseHead_Ai:
     jsr     Boss_UpdateIntro        ; $BB5F
     jsr     Boss_UpdateCommon       ; $BB62
-    jsr     Projectile_CheckLinkBody ; $BB65
+    jsr     Weapon_CheckLinkBody    ; $BB65
     jsr     HorseHead_Attack        ; $BB68
     lda     frameCounter            ; $BB6B
     bne     @loc_BB6F               ; $BB6D
