@@ -21,6 +21,7 @@ lists code oddities with no visible effect.
 | `Ironknuckle_Ai` | Half the time an Iron Knuckle picks its attack height by Link's stance with the Moblins' rule, but its poses are the other way round, so it strikes high at a standing Link and low at a crouching one: straight at his shield, where a Moblin aims away from it. |
 | `Stalfos_Ai` | Stalfos walk faster to the left ($F2, 0.875 pixel per frame) than to the right ($0A, 0.625): `StalfosSpeeds` isn't symmetric. |
 | `Stalfos_Ai` | While Link does the upward thrust, each Stalfos sets `swordY` to $F8, taking his sword out of the hit tests of every enemy handled after it in that frame. |
+| `Wizrobe_Ai` | After its first appearance a Wizzrobe of palaces 3, 4 and 6 always reappears on page 1 (`Wizrobe_Restart` sets `objXHi` to 1), so one placed on another page of its room leaves that page for good. |
 | `Area_IsSolidTile_Bank2` | Tiles of palette group 0 ($00-$3F) look up a byte 255 bytes past the threshold table; in bank 2 (East Hyrule's areas) that byte is $00, so every group 0 tile is solid there.  In banks 1, 3, 4 and 5 the byte is $D2 or more, so none are. |
 | `Dialog_Type1D` | Townspeople of types $1D-$20 are meant to set a flag in `townFlags` when talked to, but the index misses `TownFlagBits` and lands on zeros, so nothing is set. |
 | `Dialog_TechniqueMan` | The type $0D handler gives the upward thrust in any town but Rauru, Saria and Mido, including Ruto; it only matters where a type $0D person stands (the knight of Darunia). |

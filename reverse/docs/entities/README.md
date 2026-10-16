@@ -66,6 +66,9 @@ and how each was verified):
 | [Rathead](enemies/rathead.md) | $0B, $0C in palaces 3, 4, 6 |
 | [Acid Dripper](enemies/acid-dripper.md) | $0D in the palaces |
 | [Flame](enemies/flame.md) | $10 in palaces 3, 4, 6 |
+| [Wizzrobe](enemies/wizzrobe.md) | $1D in the palaces |
+| [Hammer Thrower](enemies/hammer-thrower.md) | $1E in palaces 1, 2, 5 |
+| [Doom Knocker](enemies/doom-knocker.md) | $1E in palaces 3, 4, 6 |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI

@@ -76,6 +76,8 @@ ENEMY_PAGES = {
     "TinsuitGenerator_Ai": "tinsuit", "Tinsuit_Ai": "tinsuit",
     "RatheadGenerator_Ai": "rathead", "Rathead_Ai": "rathead",
     "AcidDripper_Ai": "acid-dripper", "Flame_Ai": "flame",
+    "Mago_Ai": "wizzrobe", "Wizrobe_Ai": "wizzrobe",
+    "HammerThrower_Ai": "hammer-thrower", "DoomKnocker_Ai": "doom-knocker",
 }
 
 

@@ -39,8 +39,8 @@ Octoroks, are the "Ropes" of the palaces).
 | $1A | [Blue Iron Knuckle](enemies/iron-knuckle.md) | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $1B | [Wolf Head Generator](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL | `WolfHeadGenerator_Ai` |
 | $1C | [Wolf Head](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
-| $1D | Wizzrobe | 32 | 200 | 3 | - | blocks Link's projectiles, immune to SPELL | `Mago_Ai` |
-| $1E | Hammer Thrower | 16 | 50 | 2 | 2 | blocks Link's projectiles | `HammerThrower_Ai` |
+| $1D | [Wizzrobe](enemies/wizzrobe.md) | 32 | 200 | 3 | - | blocks Link's projectiles, immune to SPELL | `Mago_Ai` |
+| $1E | [Hammer Thrower](enemies/hammer-thrower.md) | 16 | 50 | 2 | 2 | blocks Link's projectiles | `HammerThrower_Ai` |
 | $1F | [Red Stalfos](enemies/stalfos.md) | 8 | 30 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 | $20 | Horse Head | 32 | 50 | 2 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `HorseHead_Ai` |
 | $21 | Helmethead (Gooma in palace 5) | 48 | 150 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Helmethead_Ai` |
@@ -80,8 +80,8 @@ Octoroks, are the "Ropes" of the palaces).
 | $1A | [Blue Iron Knuckle](enemies/iron-knuckle.md) | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $1B | [Wolf Head Generator](enemies/wolf-head.md) | 2 | 5 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder | `WolfHeadGenerator_Ai` |
 | $1C | [Wolf Head](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
-| $1D | Wizzrobe | 1 | 100 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `Wizrobe_Ai` |
-| $1E | Doom Knocker | 32 | 100 | 3 | - | blocks Link's projectiles | `DoomKnocker_Ai` |
+| $1D | [Wizzrobe](enemies/wizzrobe.md) | 1 | 100 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `Wizrobe_Ai` |
+| $1E | [Doom Knocker](enemies/doom-knocker.md) | 32 | 100 | 3 | - | blocks Link's projectiles | `DoomKnocker_Ai` |
 | $1F | [Red Stalfos Knight](enemies/stalfos.md) | 24 | 50 | 2 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
 | $20 | Rebonack | 72 | 301 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Rebonack_Ai` |
 | $21 | Barba | 192 | 700 | 5 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `Barba_Ai` |
@@ -142,14 +142,12 @@ wave.  See [Skull Head](enemies/skull-head.md).
 along the floor, one sent in every 128 frames from the edge Link is
 heading for.  See [Tinsuit](enemies/tinsuit.md).
 
-**Wizzrobe** (Mago, $1D, `Mago_Ai`): appears at a random place on the
-screen, blinks for 32 frames, casts a flame (projectile type 7, at Y $C0)
-that runs along the floor in the direction it faces, stays for a while
-(touching it hurts), then vanishes and reappears elsewhere.
+**Wizzrobe** (Mago, $1D): blinks in at a random place, casts a flame
+along the floor, and vanishes, every 256 frames.  See
+[Wizzrobe](enemies/wizzrobe.md).
 
-**Hammer thrower** ($1E, `HammerThrower_Ai`): paces and jumps (every
-256 frames), swings, and throws hammers in a high arc (projectile type
-6).
+**Hammer Thrower** ($1E): paces and lobs hammers in high arcs.  See
+[Hammer Thrower](enemies/hammer-thrower.md).
 
 ### Bosses
 
@@ -179,12 +177,12 @@ palaces.  See [Rathead](enemies/rathead.md).
 **Flame** ($10): a fire that falls to the floor and burns there for good.
 See [Flame](enemies/flame.md).
 
-**Wizzrobe** ($1D, `Wizrobe_Ai`): like the Mago above, firing a beam
-(projectile type 9) at $B0 of its cycle (`Wizrobe_FireBeam`).
+**Wizzrobe** ($1D): comes and goes like the Mago, firing a beam; only
+its own beam, reflected, can hurt it.  See
+[Wizzrobe](enemies/wizzrobe.md).
 
-**Doomknocker** ($1E, `DoomKnocker_Ai`): jumps every 256 frames and
-throws a mace (projectile type 6) that comes back after a while
-(`Projectile_Mace_Bank4B`).
+**Doom Knocker** ($1E): paces and throws its mace, which turns and
+flies back past it.  See [Doom Knocker](enemies/doom-knocker.md).
 
 ### Bosses
 

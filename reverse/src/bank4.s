@@ -1325,30 +1325,35 @@ HammerThrowerDrawOffsets := * + 2
 ; ---------------------------------------------------------------------------
 ; HammerThrower_Draw
 ;
-; Draw the hammer thrower and its hammer.
+; Draw a Hammer Thrower: two pairs from sramEnemyTiles entry $22, or $26
+; every other 16 frames while on the ground; and while its timer runs (a
+; hammer raised), the hammer, a pair from entry $2A at its Y, 12 pixels
+; behind it (HammerThrowerDrawOffsets: -12 facing right, +12 left), held
+; up over its back.  The same as
+; DoomKnocker_Draw.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HammerThrower_Draw:
-    lda     objCollision+1,x        ; $97E1
-    ldx     #$22                    ; $97E3
+    lda     objCollision+1,x        ; $97E1  on the ground: walking
+    ldx     #$22                    ; $97E3  frames $22 / $26
     and     #$04                    ; $97E5
-    beq     @loc_97F1               ; $97E7
+    beq     @body                   ; $97E7
     lda     frameCounter            ; $97E9
     and     #$10                    ; $97EB
-    beq     @loc_97F1               ; $97ED
+    beq     @body                   ; $97ED
     ldx     #$26                    ; $97EF
 
-@loc_97F1:
+@body:
     jsr     Sprite_DrawEnemyPair    ; $97F1
     jsr     Sprite_DrawEnemyPairKeepX ; $97F4
-    lda     timerFast+TIMER_ENEMY,x ; $97F7
+    lda     timerFast+TIMER_ENEMY,x ; $97F7  hammer raised?
     beq     @done                   ; $97FA
     lda     drawOffscreen+1         ; $97FC
     bne     @done                   ; $97FE
-    lda     objY+1,x                ; $9800
+    lda     objY+1,x                ; $9800  at its Y,
     sta     temp0                   ; $9802
-    lda     objFacing+1,x           ; $9804
+    lda     objFacing+1,x           ; $9804  behind it
     tax                             ; $9806
     lda     drawScreenX+1           ; $9807
     clc                             ; $9809
@@ -3456,49 +3461,58 @@ SkullHead_Ai_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_Mace_Bank4B
 ;
-; Projectile type 6 (Doomknocker's mace): flies out and turns back after a
-; while.
+; Projectile type 6 (the Doom Knocker's mace): flies level; when
+; projectileTimer runs out (64 frames, then every 128) it turns around, so
+; it comes back past its thrower (it isn't caught) and goes on until it
+; leaves the screen or meets Link.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Mace_Bank4B:
-    lda     projectileTimer,x       ; $AD0D
-    beq     @loc_AD17               ; $AD10
+    lda     projectileTimer,x       ; $AD0D  timer out?
+    beq     @turn                   ; $AD10
     dec     projectileTimer,x       ; $AD12
-    bpl     Projectile_RestoreX_Bank4B ; $AD15
+    bpl     Projectile_RestoreX_Bank4B ; $AD15  (from $80: 128 frames)
 
-@loc_AD17:
-    txa                             ; $AD17
-    clc                             ; $AD18
+@turn:
+    txa                             ; $AD17  turn the projectile
+    clc                             ; $AD18  (object x + 6) around
     adc     #$06                    ; $AD19
     tax                             ; $AD1B
     jsr     Enemy_TurnAround        ; $AD1C
     ldx     currentObject           ; $AD1F
-    lda     #$80                    ; $AD21
+    lda     #$80                    ; $AD21  next turn in 128 frames
     sta     projectileTimer,x       ; $AD23
     jmp     Projectile_RestoreX_Bank4B ; $AD26
 
 ; ---------------------------------------------------------------------------
 ; Projectile_CarockBeam
 ;
-; Projectile type 9 (Wizzrobe's and Carock's beam): flies straight; once
-; sent back with the reflect spell, it damages its thrower (Carock can only
-; be hurt this way).
+; Projectile type 9 (Wizzrobe's and Carock's beam, second palace group):
+; flies level (Projectile_RockBounce_Bank4B), tested against Link's shield
+; and body.  Once the reflect spell has sent it back (projectileTimer 0),
+; it is tested instead against its thrower (projectileSpeed), while that
+; is solid (objState+1): a hit makes a spark and takes 1 hit (Enemy_
+; TakeDamage), the only way to hurt a Wizzrobe or Carock.  A Carock it
+; kills is kept active as a dying boss (hitbox $FF, stun $7F) for
+; Boss_UpdateIntro_Bank4B.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_CarockBeam:
-    lda     projectileTimer,x       ; $AD29
+    lda     projectileTimer,x       ; $AD29  not reflected: fly at Link
     bne     Projectile_RestoreX_Bank4B ; $AD2C
-    lda     projectileSpeed,x       ; $AD2E
+    lda     projectileSpeed,x       ; $AD2E  its thrower,
     tax                             ; $AD31
     stx     swordOwner              ; $AD32
-    lda     objState+1,x            ; $AD34
+    lda     objState+1,x            ; $AD34  solid,
     beq     Projectile_RestoreX_Bank4B ; $AD36
-    lda     enemyActive,x           ; $AD38
+    lda     enemyActive,x           ; $AD38  and alive?
     cmp     #$01                    ; $AD3A
     bne     Projectile_RestoreX_Bank4B ; $AD3C
-    lda     objX+1,x                ; $AD3E
+    lda     objX+1,x                ; $AD3E  its hitbox
     sbc     scrollX                 ; $AD40
     sta     drawScreenX+1           ; $AD43
     jsr     Enemy_GetHitbox         ; $AD45
@@ -3509,35 +3523,35 @@ Projectile_CarockBeam:
     sta     a:temp0,y               ; $AD4D
     dey                             ; $AD50
     bpl     @loop                   ; $AD51
-    ldx     currentObject           ; $AD53
+    ldx     currentObject           ; $AD53  against the beam's
     jsr     Projectile_GetHitbox    ; $AD55
     jsr     Hitbox_Overlap          ; $AD58
     bcc     Projectile_RestoreX_Bank4B ; $AD5B
-    jsr     Projectile_Spark_Bank4B ; $AD5D
+    jsr     Projectile_Spark_Bank4B ; $AD5D  hit: a spark,
     lda     currentObject           ; $AD60
     pha                             ; $AD62
-    ldx     swordOwner              ; $AD63
+    ldx     swordOwner              ; $AD63  and damage the thrower
     stx     currentObject           ; $AD65
     ldy     #$01                    ; $AD67
     sty     temp11                  ; $AD69
     jsr     Enemy_TakeDamage        ; $AD6B
     pla                             ; $AD6E
     sta     currentObject           ; $AD6F
-    ldx     swordOwner              ; $AD71
+    ldx     swordOwner              ; $AD71  Carock?
     lda     enemyType,x             ; $AD73
     cmp     #$22                    ; $AD75
-    bne     @loc_AD8D               ; $AD77
-    lda     #$01                    ; $AD79
+    bne     @done                   ; $AD77
+    lda     #$01                    ; $AD79  killed: keep him active
     cmp     enemyActive,x           ; $AD7B
-    beq     @loc_AD8D               ; $AD7D
+    beq     @done                   ; $AD7D
     sta     enemyActive,x           ; $AD7F
-    lda     #$FF                    ; $AD81
+    lda     #$FF                    ; $AD81  as a dying boss
     sta     sramEnemyHitbox+34      ; $AD83
     sta     timerFast+TIMER_ENEMY,x ; $AD86
     lsr     a                       ; $AD89
     sta     enemyStunTimer,x        ; $AD8A
 
-@loc_AD8D:
+@done:
     ldx     currentObject           ; $AD8D
     rts                             ; $AD8F
 
@@ -3769,38 +3783,50 @@ WizrobeBeamSpeeds:
 ; ---------------------------------------------------------------------------
 ; Wizrobe_Ai
 ;
-; Wizzrobe (second palace group): appears at a random place, blinks, fires a
-; beam (Wizrobe_FireBeam) at $B0 of its cycle, stays for a while, then
-; vanishes.
+; Wizzrobe ($1D, second palace group): a wizard that comes and goes on a
+; 193-frame cycle, enemyAiState counting down:
+; - $FF-$C0 (64 frames): blinking in (drawn every other frame);
+; - $BF-$80 (64): solid (objState+1 = 1) and harmful to touch; at $B0 it
+;   fires a beam (Wizrobe_FireBeam) along the floor at Link;
+; - $7F-$40 (64): blinking out;
+; - then (Wizrobe_Restart) it moves to a random X on page 1 and starts
+;   again.
+; It always faces Link.  Neither Link's sword nor his projectiles are
+; tested against it: only its own beam, sent back by the reflect spell,
+; can hurt it (Projectile_CarockBeam), while it is solid.
 ;
-; Status:  provisional
+; BUG: it always reappears on page 1 (objXHi 1), wherever it was placed;
+; one placed on another page leaves that page after its first appearance.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Wizrobe_Ai:
-    lda     #$00                    ; $AE4F
+    lda     #$00                    ; $AE4F  not solid
     sta     objState+1,x            ; $AE51
     jsr     Enemy_FaceLink          ; $AE53
-    dec     enemyAiState,x          ; $AE56
+    dec     enemyAiState,x          ; $AE56  count down
     lda     enemyAiState,x          ; $AE58
-    cmp     #$C0                    ; $AE5A
-    bcc     @loc_AE64               ; $AE5C
-    lsr     a                       ; $AE5E
+    cmp     #$C0                    ; $AE5A  $C0+: blinking in
+    bcc     @beam                   ; $AE5C
+    lsr     a                       ; $AE5E  drawn on odd counts
     bcc     Projectile_DrawSpin_Done_Bank4B ; $AE5F
     jmp     Enemy_Draw              ; $AE61
 
-@loc_AE64:
-    cmp     #$B0                    ; $AE64
-    bne     @loc_AE6D               ; $AE66
-    lda     #$00                    ; $AE68
+@beam:
+    cmp     #$B0                    ; $AE64  $B0: a beam
+    bne     @phase                  ; $AE66
+    lda     #$00                    ; $AE68  (Wizzrobe's offsets)
     jsr     Wizrobe_FireBeam        ; $AE6A
 
-@loc_AE6D:
-    lda     enemyAiState,x          ; $AE6D
+@phase:
+    lda     enemyAiState,x          ; $AE6D  below $40: start again
     cmp     #$40                    ; $AE6F
     bcc     Wizrobe_Restart         ; $AE71
-    cmp     #$80                    ; $AE73
+    cmp     #$80                    ; $AE73  $80-$BF: solid
     bcs     Wizrobe_Animate         ; $AE75
-    lsr     a                       ; $AE77
-    bcc     Wizrobe_DrawOnly        ; $AE78
+    lsr     a                       ; $AE77  $40-$7F: blinking out,
+    bcc     Wizrobe_DrawOnly        ; $AE78  drawn on even counts
     rts                             ; $AE7A
 
 ; ---------------------------------------------------------------------------
@@ -3843,47 +3869,57 @@ Carock_Ai:
     bcc     Wizrobe_DrawOnly        ; $AEAF
     rts                             ; $AEB1
 
+; Wizrobe_Animate: the solid phase of Wizzrobes and Carock: objState+1 = 1
+; (its beam can hit it), tested against Link's body only, and drawn.
 Wizrobe_Animate:
-    inc     objState+1,x            ; $AEB2
+    inc     objState+1,x            ; $AEB2  solid
     jsr     Enemy_CheckLinkContact  ; $AEB4
     jsr     Enemy_HurtLinkOnContact ; $AEB7
 
 Wizrobe_DrawOnly:
     jmp     Enemy_Draw              ; $AEBA
 
+; Wizrobe_Restart: move to a random X on page 1 ($100-$1DF: rng, halved
+; if $E0 or more), clear its stun and restart the cycle (state 0, $FF next
+; frame).
 Wizrobe_Restart:
     lda     #$00                    ; $AEBD
     sta     enemyStunTimer,x        ; $AEBF
     sta     enemyAiState,x          ; $AEC2
-    lda     rng+1,x                 ; $AEC4
+    lda     rng+1,x                 ; $AEC4  random X,
     cmp     #$E0                    ; $AEC7
-    bcc     @loc_AECC               ; $AEC9
+    bcc     @setX                   ; $AEC9
     lsr     a                       ; $AECB
 
-@loc_AECC:
+@setX:
     sta     objX+1,x                ; $AECC
-    lda     #$01                    ; $AECE
+    lda     #$01                    ; $AECE  BUG: always on page 1
     sta     objXHi+1,x              ; $AED0
     rts                             ; $AED2
 
 ; ---------------------------------------------------------------------------
 ; Wizrobe_FireBeam
 ;
-; Fire a beam (projectile type 9) from enemy x in its facing.
+; Fire a beam (projectile type 9) from enemy x, if it is on screen: the
+; way it faces, 2 pixels per frame, at Y $C0, from X +
+; WizrobeBeamXOffsets[a + facing] (Wizzrobe, a = 0: +13 right, -6 left;
+; Carock, a = 2: +26, -3).  projectileTimer = a + facing (nonzero until
+; reflected); projectileSpeed = the thrower's slot.
 ;
-; Status:  provisional
+; In:      x = enemy index, a = 0 (Wizzrobe) or 2 (Carock)
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Wizrobe_FireBeam:
     sta     temp0                   ; $AED3
-    lda     drawOffscreen+1         ; $AED5
+    lda     drawOffscreen+1         ; $AED5  on screen?
     bne     Wizrobe_FireBeam_Done   ; $AED7
     jsr     Enemy_FireProjectile    ; $AED9
     lda     temp0                   ; $AEDC
-    bcs     Wizrobe_FireBeam_Done   ; $AEDE
+    bcs     Wizrobe_FireBeam_Done   ; $AEDE  (no slot)
     adc     a:objFacing+7,y         ; $AEE0
     tax                             ; $AEE3
-    sta     projectileTimer,y       ; $AEE4
-    lda     WizrobeBeamXOffsets,x   ; $AEE7
+    sta     projectileTimer,y       ; $AEE4  (not reflected)
+    lda     WizrobeBeamXOffsets,x   ; $AEE7  in front of it
     ldx     currentObject           ; $AEEA
     adc     objX+1,x                ; $AEEC
     sta     a:objX+7,y              ; $AEEE
@@ -3891,14 +3927,14 @@ Wizrobe_FireBeam:
     ldx     objFacing+7,y           ; $AEF3
     adc     WizrobeBeamXHiOffsets,x ; $AEF5
     sta     a:objXHi+7,y            ; $AEF8
-    lda     WizrobeBeamSpeeds,x     ; $AEFB
+    lda     WizrobeBeamSpeeds,x     ; $AEFB  2 px/frame
     sta     a:objXVelocity+7,y      ; $AEFE
-    lda     #$09                    ; $AF01
+    lda     #$09                    ; $AF01  a beam
     sta     a:objState+7,y          ; $AF03
-    lda     #$C0                    ; $AF06
+    lda     #$C0                    ; $AF06  along the floor
     sta     a:objY+7,y              ; $AF08
     ldx     currentObject           ; $AF0B
-    txa                             ; $AF0D
+    txa                             ; $AF0D  its thrower
     sta     projectileSpeed,y       ; $AF0E
 
 Wizrobe_FireBeam_Done:
@@ -3929,29 +3965,33 @@ DoomKnockerDrawOffsets := * + 2
 ; ---------------------------------------------------------------------------
 ; DoomKnocker_Draw
 ;
-; Draw a Doomknocker and its mace.
+; Draw a Doom Knocker: two pairs from sramEnemyTiles entry $22, or $26
+; every other 16 frames while on the ground; and while its timer runs (the
+; mace raised), the mace, a pair from entry $2A at its Y, 12 pixels behind
+; it (DoomKnockerDrawOffsets: -12 facing right, +12 left), held up over its
+; back.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DoomKnocker_Draw:
-    lda     objCollision+1,x        ; $AF26
-    ldx     #$22                    ; $AF28
+    lda     objCollision+1,x        ; $AF26  on the ground: walking
+    ldx     #$22                    ; $AF28  frames $22 / $26
     and     #$04                    ; $AF2A
-    beq     @loc_AF36               ; $AF2C
+    beq     @body                   ; $AF2C
     lda     frameCounter            ; $AF2E
     and     #$10                    ; $AF30
-    beq     @loc_AF36               ; $AF32
+    beq     @body                   ; $AF32
     ldx     #$26                    ; $AF34
 
-@loc_AF36:
+@body:
     jsr     Sprite_DrawEnemyPair3_Bank4 ; $AF36
-    lda     timerFast+TIMER_ENEMY,x ; $AF39
+    lda     timerFast+TIMER_ENEMY,x ; $AF39  mace raised?
     beq     Wizrobe_FireBeam_Done   ; $AF3C
     lda     drawOffscreen+1         ; $AF3E
     bne     Wizrobe_FireBeam_Done   ; $AF40
-    lda     objY+1,x                ; $AF42
+    lda     objY+1,x                ; $AF42  at its Y,
     sta     temp0                   ; $AF44
-    lda     objFacing+1,x           ; $AF46
+    lda     objFacing+1,x           ; $AF46  behind it
     tax                             ; $AF48
     lda     drawScreenX+1           ; $AF49
     adc     DoomKnockerDrawOffsets,x ; $AF4B
@@ -4230,43 +4270,49 @@ Rebonack_Ai:
 @done2:
     rts                             ; $B0A9
 
+; Doom Knocker pacing X velocity by enemyAiState bit 6: right, left.
 WalkSpeeds_Bank4B:
     .byte   $08, $F8, $08                                                   ; $B0AA
 
 ; ---------------------------------------------------------------------------
 ; DoomKnocker_Ai
 ;
-; Doomknocker: paces, jumps every 256 frames, and throws its mace
-; (projectile type 6), which comes back.
+; Doom Knocker ($1E, second palace group): paces 1/2 pixel per frame, 64
+; frames each way, always facing Link; jumps when frameCounter is 0 (Y
+; velocity -3); every 128 frames on the ground (enemyAiState counts only
+; while it stands) raises its mace for 15 frames, then throws it
+; (projectile type 6, Projectile_Mace_Bank4B): level, 2 pixels per frame
+; at Link, turning back after 64 frames.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DoomKnocker_Ai:
-    lda     frameCounter            ; $B0AD
-    bne     @loc_B0B6               ; $B0AF
-    lda     #$D0                    ; $B0B1
+    lda     frameCounter            ; $B0AD  every 256 frames:
+    bne     @raise                  ; $B0AF
+    lda     #$D0                    ; $B0B1  jump
     sta     objYVelocity+1,x        ; $B0B3
 
-@loc_B0B6:
-    lda     enemyAiState,x          ; $B0B6
+@raise:
+    lda     enemyAiState,x          ; $B0B6  every 128 counts:
     and     #$7F                    ; $B0B8
-    bne     @loc_B0C1               ; $B0BA
-    lda     #$10                    ; $B0BC
+    bne     @throw                  ; $B0BA
+    lda     #$10                    ; $B0BC  raise the mace
     sta     timerFast+TIMER_ENEMY,x ; $B0BE
 
-@loc_B0C1:
-    lda     timerFast+TIMER_ENEMY,x ; $B0C1
+@throw:
+    lda     timerFast+TIMER_ENEMY,x ; $B0C1  raised long enough?
     cmp     #$01                    ; $B0C4
-    bne     @loc_B0D7               ; $B0C6
-    jsr     Enemy_FireProjectile    ; $B0C8
-    bcs     @loc_B0D7               ; $B0CB
-    lda     #$06                    ; $B0CD
+    bne     @pace                   ; $B0C6
+    jsr     Enemy_FireProjectile    ; $B0C8  2 px/frame at Link
+    bcs     @pace                   ; $B0CB  (no slot)
+    lda     #$06                    ; $B0CD  the mace
     sta     a:objState+7,y          ; $B0CF
-    lda     #$40                    ; $B0D2
+    lda     #$40                    ; $B0D2  turns back in 64 frames
     sta     projectileTimer,y       ; $B0D4
 
-@loc_B0D7:
-    lda     enemyAiState,x          ; $B0D7
+@pace:
+    lda     enemyAiState,x          ; $B0D7  bit 6: right or left
     asl     a                       ; $B0D9
     asl     a                       ; $B0DA
     lda     #$00                    ; $B0DB
@@ -4278,13 +4324,13 @@ DoomKnocker_Ai:
     jsr     Enemy_KnockBackOrWalk_Bank4 ; $B0E7
     jsr     Enemy_UpdateWithBg      ; $B0EA
     jsr     Enemy_HurtLinkOnContact ; $B0ED
-    lda     objCollision+1,x        ; $B0F0
+    lda     objCollision+1,x        ; $B0F0  on the floor: land, count
     and     #$04                    ; $B0F2
-    beq     @loc_B0FB               ; $B0F4
+    beq     @face                   ; $B0F4
     jsr     Enemy_Land              ; $B0F6
     inc     enemyAiState,x          ; $B0F9
 
-@loc_B0FB:
+@face:
     jmp     Enemy_FaceLink          ; $B0FB
 
 ; ---------------------------------------------------------------------------
@@ -4951,18 +4997,19 @@ Rebonack_Draw:
 ; ---------------------------------------------------------------------------
 ; Wizrobe_Draw
 ;
-; Draw a Wizzrobe.
+; Draw a Wizzrobe (second palace group): two pairs from sramEnemyTiles
+; entry $1E while blinking in (count $C0 and up), else $1A.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Wizrobe_Draw:
     lda     enemyAiState,x          ; $B42C
-    ldx     #$1E                    ; $B42E
+    ldx     #$1E                    ; $B42E  $1E blinking in,
     cmp     #$C0                    ; $B430
-    bcs     @loc_B436               ; $B432
-    ldx     #$1A                    ; $B434
+    bcs     @draw                   ; $B432
+    ldx     #$1A                    ; $B434  else $1A
 
-@loc_B436:
+@draw:
     jmp     Sprite_DrawEnemyPair3_Bank4 ; $B436
 
 ; ---------------------------------------------------------------------------
@@ -5576,6 +5623,9 @@ MagoShotXOffsets := * + 2
     jmp     Sprite_DrawPairFlipped  ; $B7BC
     .byte   $08                                                             ; $B7BF
 
+; Mago's flame: X offset by facing (MagoShotXOffsets, from the jmp's
+; high byte: +8 right, -8 left), its high byte, and the speed (3/4 pixel
+; per frame).
 MagoShotXHiOffsets:
     .byte   $F8, $00                                                        ; $B7C0
 
@@ -5585,64 +5635,72 @@ MagoShotSpeeds:
 ; ---------------------------------------------------------------------------
 ; Mago_Ai
 ;
-; Wizzrobe (first palace group): appears at a random place, blinks, casts a
-; flame (projectile type 7) along the floor, stays for a while, then
-; vanishes.
+; Wizzrobe ($1D, first palace group; "Mago"): a wizard that comes and goes
+; on a 256-frame cycle, enemyAiState counting down:
+; - $FF-$E0 (32 frames): blinking in (drawn every other frame);
+; - $DF-$C0 (32): solid, hittable and harmful; at $D0 it casts a flame
+;   (projectile type 7) at Y $C0, 8 pixels to the side it faces, running
+;   along the floor at 3/4 pixel per frame, slowing;
+; - $BF-$A0 (32): blinking out;
+; - $9F-$00 (160): gone, its X moved each frame to a random place on the
+;   screen (scrollX + rng); its Y stays.
+; It always faces Link.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mago_Ai:
     jsr     Enemy_FaceLink          ; $B7C5
-    dec     enemyAiState,x          ; $B7C8
+    dec     enemyAiState,x          ; $B7C8  count down
     lda     enemyAiState,x          ; $B7CA
-    cmp     #$E0                    ; $B7CC
-    bcc     @loc_B7D6               ; $B7CE
-    lsr     a                       ; $B7D0
+    cmp     #$E0                    ; $B7CC  $E0+: blinking in
+    bcc     @cast                   ; $B7CE
+    lsr     a                       ; $B7D0  drawn on odd counts
     bcc     @done                   ; $B7D1
     jmp     Enemy_Draw              ; $B7D3
 
-@loc_B7D6:
-    cmp     #$D0                    ; $B7D6
-    bne     @loc_B807               ; $B7D8
+@cast:
+    cmp     #$D0                    ; $B7D6  $D0: cast a flame
+    bne     @phase                  ; $B7D8
     jsr     Enemy_DropFlame_Bank4   ; $B7DA
-    bcs     @loc_B807               ; $B7DD
-    lda     #$C0                    ; $B7DF
+    bcs     @phase                  ; $B7DD  (no slot)
+    lda     #$C0                    ; $B7DF  on the floor
     sta     a:objY+7,y              ; $B7E1
-    lda     objFacing+1,x           ; $B7E4
+    lda     objFacing+1,x           ; $B7E4  the way it faces
     sta     a:objFacing+7,y         ; $B7E6
     tax                             ; $B7E9
-    lda     a:objX+7,y              ; $B7EA
+    lda     a:objX+7,y              ; $B7EA  8 pixels to that side
     adc     MagoShotXOffsets,x      ; $B7ED
     sta     a:objX+7,y              ; $B7F0
     lda     a:objXHi+7,y            ; $B7F3
     adc     MagoShotXHiOffsets,x    ; $B7F6
     sta     a:objXHi+7,y            ; $B7F9
-    lda     MagoShotSpeeds,x        ; $B7FC
+    lda     MagoShotSpeeds,x        ; $B7FC  3/4 px/frame
     sta     a:objXVelocity+7,y      ; $B7FF
     sta     projectileSpeed,y       ; $B802
     ldx     currentObject           ; $B805
 
-@loc_B807:
-    lda     enemyAiState,x          ; $B807
+@phase:
+    lda     enemyAiState,x          ; $B807  below $A0: gone
     cmp     #$A0                    ; $B809
-    bcc     @loc_B81E               ; $B80B
-    cmp     #$C0                    ; $B80D
-    bcs     @loc_B815               ; $B80F
-    lsr     a                       ; $B811
-    bcc     @loc_B81B               ; $B812
+    bcc     @move                   ; $B80B
+    cmp     #$C0                    ; $B80D  $C0-$DF: solid
+    bcs     @solid                  ; $B80F
+    lsr     a                       ; $B811  $A0-$BF: blinking out,
+    bcc     @draw                   ; $B812  drawn on even counts
 
 @done:
     rts                             ; $B814
 
-@loc_B815:
+@solid:
     jsr     Enemy_UpdateCommon      ; $B815
     jmp     Enemy_HurtLinkOnContact ; $B818
 
-@loc_B81B:
+@draw:
     jmp     Enemy_Draw              ; $B81B
 
-@loc_B81E:
-    lda     scrollX                 ; $B81E
+@move:
+    lda     scrollX                 ; $B81E  somewhere on screen
     adc     rng+1,x                 ; $B821
     sta     objX+1,x                ; $B824
     lda     scrollXHi               ; $B826
@@ -6169,50 +6227,57 @@ SkullHead_Ai:
 ; The rts byte is also the base of the table BossPaceSpeeds (entry 0 is the rts).
 BossPaceSpeeds := @done
 
+; Hammer Thrower pacing X velocity by enemyAiState bit 6: right, left.
 HammerThrowerSpeeds:
     .byte   $08, $F8, $08                                                   ; $BA54
 
 ; ---------------------------------------------------------------------------
 ; HammerThrower_Ai
 ;
-; Hammer thrower: paces, jumps every 256 frames, swings, and throws a hammer
-; in a high arc (projectile type 6).
+; Hammer Thrower ($1E, first palace group): paces 1/2 pixel per frame, 64
+; frames right and 64 left (by enemyAiState bit 6), facing Link (turned
+; every 16 frames); jumps when frameCounter is 0 (Y velocity -3); and
+; every 32 frames, but not in the last 40 of each 256 (enemyAiState
+; $D8+), raises a hammer for 15 frames (Enemy_StartSwing, drawn in its
+; hand) and throws it: projectile type 6, 1 pixel per frame the way it
+; faces, up at -$2B, falling under gravity (Projectile_Fall_Bank4).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HammerThrower_Ai:
-    lda     frameCounter            ; $BA57
-    bne     @loc_BA60               ; $BA59
-    lda     #$D0                    ; $BA5B
+    lda     frameCounter            ; $BA57  every 256 frames:
+    bne     @swing                  ; $BA59
+    lda     #$D0                    ; $BA5B  jump
     sta     objYVelocity+1,x        ; $BA5D
 
-@loc_BA60:
-    lda     enemyAiState,x          ; $BA60
-    cmp     #$D8                    ; $BA62
-    bcs     @loc_BA6D               ; $BA64
+@swing:
+    lda     enemyAiState,x          ; $BA60  every 32 frames, but not
+    cmp     #$D8                    ; $BA62  past $D8:
+    bcs     @throw                  ; $BA64
     and     #$1F                    ; $BA66
-    bne     @loc_BA6D               ; $BA68
-    jsr     Enemy_StartSwing        ; $BA6A
+    bne     @throw                  ; $BA68
+    jsr     Enemy_StartSwing        ; $BA6A  raise a hammer (15 frames)
 
-@loc_BA6D:
-    lda     timerFast+TIMER_ENEMY,x ; $BA6D
+@throw:
+    lda     timerFast+TIMER_ENEMY,x ; $BA6D  raised long enough?
     cmp     #$01                    ; $BA70
-    bne     @loc_BA90               ; $BA72
-    sta     objState+1,x            ; $BA74
+    bne     @pace                   ; $BA72
+    sta     objState+1,x            ; $BA74  (pose 1)
     jsr     Enemy_FireProjectile    ; $BA76
-    bcs     @loc_BA90               ; $BA79
-    lda     #$06                    ; $BA7B
+    bcs     @pace                   ; $BA79  (no slot)
+    lda     #$06                    ; $BA7B  a hammer
     sta     a:objState+7,y          ; $BA7D
-    lda     #$D5                    ; $BA80
+    lda     #$D5                    ; $BA80  thrown up
     sta     objYVelocity+7,y        ; $BA82
-    lda     a:objXVelocity+7,y      ; $BA85
-    asl     a                       ; $BA88
+    lda     a:objXVelocity+7,y      ; $BA85  at half speed (keeping the
+    asl     a                       ; $BA88  sign): 1 px/frame
     lda     a:objXVelocity+7,y      ; $BA89
     ror     a                       ; $BA8C
     sta     a:objXVelocity+7,y      ; $BA8D
 
-@loc_BA90:
-    lda     enemyAiState,x          ; $BA90
+@pace:
+    lda     enemyAiState,x          ; $BA90  bit 6: right or left
     asl     a                       ; $BA92
     asl     a                       ; $BA93
     lda     #$00                    ; $BA94
@@ -6223,19 +6288,19 @@ HammerThrower_Ai:
     jsr     Enemy_MoveYAndFall      ; $BA9D
     inc     enemyAiState,x          ; $BAA0
     jsr     Enemy_UpdateBgCollision ; $BAA2
-    lda     objCollision+1,x        ; $BAA5
+    lda     objCollision+1,x        ; $BAA5  on the floor: land
     and     #$04                    ; $BAA7
-    beq     @loc_BAAE               ; $BAA9
+    beq     @walk                   ; $BAA9
     jsr     Enemy_Land              ; $BAAB
 
-@loc_BAAE:
+@walk:
     jsr     Enemy_KnockBackOrWalk_Bank4 ; $BAAE
     jsr     Enemy_UpdateWithBg      ; $BAB1
     jsr     Enemy_HurtLinkOnContact ; $BAB4
-    lda     frameCounter            ; $BAB7
+    lda     frameCounter            ; $BAB7  every 16 frames,
     and     #$0F                    ; $BAB9
     bne     @done                   ; $BABB
-    jmp     Enemy_FaceLink          ; $BABD
+    jmp     Enemy_FaceLink          ; $BABD  face Link
 
 @done:
     rts                             ; $BAC0
@@ -6955,18 +7020,19 @@ Stalfos_Draw:
 ; ---------------------------------------------------------------------------
 ; Mago_Draw
 ;
-; Draw a Wizzrobe (first palace group).
+; Draw a Wizzrobe (first palace group): two pairs from sramEnemyTiles entry
+; $1A, or $1E from count $D2 on (casting, then leaving).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mago_Draw:
     lda     enemyAiState,x          ; $BE7B
-    ldx     #$1A                    ; $BE7D
+    ldx     #$1A                    ; $BE7D  $1A,
     cmp     #$D3                    ; $BE7F
-    bcs     @loc_BE85               ; $BE81
-    ldx     #$1E                    ; $BE83
+    bcs     @draw                   ; $BE81
+    ldx     #$1E                    ; $BE83  or $1E (casting)
 
-@loc_BE85:
+@draw:
     jsr     Sprite_DrawEnemyPair    ; $BE85
     jmp     Sprite_DrawEnemyPairKeepX ; $BE88
 
