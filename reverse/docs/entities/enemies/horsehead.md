@@ -81,3 +81,9 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $PAT,statLevel
     --until currentWorld=3 --after 200 --clear $PFLAT --approach 1A0 --spawn 0:20:1E0:90 \
     --poke enemyAiVar=2 --poke sramEnemyHitbox+32=7 --event Swing=4:BBF5 --frames 900
 ```
+
+In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`, hooks on `Enemy_TakeDamage` and the
+boss routines), Link beats Horsehead on frames 40650-40687: 11 hits of 3,
+all with Link above him (Link's Y $6F-$8F, Horsehead's $A0), either
+jumping or at the top of a jump.  Horsehead died on frame 40687 and burst
+128 frames later (40815).

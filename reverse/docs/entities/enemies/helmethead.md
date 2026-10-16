@@ -81,3 +81,9 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $PAT,statLevel
     --poke objYVelocity+2=0xD0 --poke objXVelocity+2=0x10 --projectiles \
     --event Bounce=4:BD07 --event Aimed=4:BD6F --frames 700
 ```
+
+In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`): the first hit, on frame 55650, knocked a
+helmet off, and the second came off on frame 55712, after the 64-frame
+delay; the hits in between only took hit points (4 each).  Every hit came
+from a jumping Link.  When Helmethead burst (frame 55844), both loose
+helmets took the 224-point hit (`Enemy_TakeDamage` for slots 3 and 4).

@@ -71,3 +71,7 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $PAT,statLevel
     --poke currentRegion=2 --poke enemyHp=0x90 --poke sramEnemyHitbox+33=0x11 \
     --poke sramEnemyAttr+33=0xCD --poke sramEnemyDamage+33=0x35 --event Start=4:B557 --frames 600
 ```
+
+In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`), Gooma ($21 with `currentRegion` 2) took
+hits of 9 from frame 119163 on, from his starting 144 hit points, all
+with Link at or above his head height.

@@ -90,3 +90,7 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $P3,statLevel+
     --poke enemyHp=0x23 --poke sramEnemyHitbox+10=0 --projectiles --event Unhorse=4:B00F \
     --event Attack=4:9DE6 --event Throw=4:9CAC --frames 700
 ```
+
+In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`), Link's strokes at the mounted Rebonack
+(frames 71860-71908) clinked off his shield three times and otherwise hit
+for 4, mostly from jumps.

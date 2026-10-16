@@ -66,3 +66,7 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $P3,statLevel+
     --until currentWorld=4 --after 200 --clear $F3 --approach 1A0 --spawn 0:22:1C0:A0 \
     --poke reflectSpellActive=1 --projectiles --event Beam=4:AEA1 --event Dmg=7:E726 --frames 700
 ```
+
+In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`), every hit on Carock (frames 95477-95820,
+2 hit points each) came from a projectile (`temp11` 1): his reflected
+beams.  He burst on frame 95948.
