@@ -27,14 +27,14 @@ The definition tables are `EnemyHp_Bank1` and following ($9400); see
 | $11 | [Red Octorok (jumping)](enemies/octorok.md) | 4 | 10 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Red Octorok (moving)](enemies/octorok.md) | 4 | 10 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
-| $14 | Orange Moblin | 4 | 10 | 1 | 1 |  | `MoblinGoriya_Ai` |
-| $15 | Red Moblin | 12 | 20 | 1 | 1 |  | `MoblinGoriya_Ai` |
-| $16 | Blue Moblin | 18 | 20 | 1 | 1 |  | `MoblinGoriya_Ai` |
-| $17 | Orange Daira | 18 | 70 | 2 | 2 | blocks Link's projectiles | `Daira_Ai` |
-| $18 | Red Daira | 24 | 100 | 2 | 2 | blocks Link's projectiles | `Daira_Ai` |
-| $19 | Orange Goriya | 12 | 20 | 1 | 1 | blocks Link's projectiles | `MoblinGoriya_Ai` |
-| $1A | Red Goriya | 14 | 20 | 1 | 1 | blocks Link's projectiles | `MoblinGoriya_Ai` |
-| $1B | Blue Goriya | 18 | 30 | 1 | 2 | blocks Link's projectiles | `MoblinGoriya_Ai` |
+| $14 | [Orange Moblin](enemies/moblin.md) | 4 | 10 | 1 | 1 |  | `MoblinGoriya_Ai` |
+| $15 | [Red Moblin](enemies/moblin.md) | 12 | 20 | 1 | 1 |  | `MoblinGoriya_Ai` |
+| $16 | [Blue Moblin](enemies/moblin.md) | 18 | 20 | 1 | 1 |  | `MoblinGoriya_Ai` |
+| $17 | [Orange Daira](enemies/daira.md) | 18 | 70 | 2 | 2 | blocks Link's projectiles | `Daira_Ai` |
+| $18 | [Red Daira](enemies/daira.md) | 24 | 100 | 2 | 2 | blocks Link's projectiles | `Daira_Ai` |
+| $19 | [Orange Goriya](enemies/goriya.md) | 12 | 20 | 1 | 1 | blocks Link's projectiles | `MoblinGoriya_Ai` |
+| $1A | [Red Goriya](enemies/goriya.md) | 14 | 20 | 1 | 1 | blocks Link's projectiles | `MoblinGoriya_Ai` |
+| $1B | [Blue Goriya](enemies/goriya.md) | 18 | 30 | 1 | 2 | blocks Link's projectiles | `MoblinGoriya_Ai` |
 | $1C | [Lowder](enemies/lowder.md) | 4 | 3 | 0 | 1 |  | `Lowder_Ai` |
 | $1D | [Moby Generator](enemies/moby.md) | 3 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `MobyGenerator_Ai` |
 | $1E | [Moby](enemies/moby.md) | 3 | 2 | 0 | - | touch drains 10 exp | `Moby_Ai` |
@@ -43,37 +43,23 @@ The definition tables are `EnemyHp_Bank1` and following ($9400); see
 | $21 | [Dumb Moblin Generator](enemies/walking-moblin.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL | `DumbMoblinGenerator_Ai` |
 | $22 | [Dumb Moblin](enemies/walking-moblin.md) | 2 | 0 | 0 | 1 | touch drains 10 exp | `DumbMoblin_Ai` |
 
-## Moblins and Goriyas
+## Fighters
 
-**Moblins** ($14 orange, $15 red, $16 blue) and **Goriyas** ($19 orange,
-$1A red, $1B blue) share `MoblinGoriya_Ai` and the movement in
-`Fighter_Move`:
+**Moblins** ($14 orange, $15 red, $16 blue), **Goriyas** ($19 orange,
+$1A red, $1B blue) and **Dairas** ($17 orange, $18 red) share their
+movement (`Fighter_Move`): they walk up to a set distance from Link and
+hold there, swaying or keeping pace with him, and attack every 64
+frames (32 for the blue Moblin, 128 for the orange Goriya).  Some also
+attack as they come.  An attack is high or low, half the time aimed
+where Link's shield isn't.
 
-- When Link is far, they walk toward him (16 pixels/16 frames).  How
-  close they come depends on the type (`ram_05E5`): the red and blue
-  Moblins come within 22 pixels; the orange Moblin and the Goriyas keep
-  about 96 pixels away.
-- Within that distance they stop and sway: they copy Link's movement
-  when he walks, or step 4 back and forth every 64 frames.  At random
-  intervals (masks by type) they attack (`Fighter_StartAttack`), high
-  or low; the low attack is chosen when Link is crouching.
-- Moblins thrust their spear; the orange and blue Moblins throw it
-  (`Moblin_ThrowSpear`, projectile type 5, which flies in an arc).  The
-  red Moblin only thrusts.
-- Goriyas throw a boomerang (projectile type 6) that flies out and comes
-  back, disappearing when it returns to the Goriya.
-- A thrust is tested against Link like a projectile
-  (`Projectile_CheckLinkReflect`): his shield can block it, otherwise it
-  hurts him.  Goriyas also block the sword beam and fire (damage bit 5).
-- After a hit they are knocked back (`Fighter_KnockBack`).
-
-## Dairas
-
-**Dairas** ($17 orange, $18 red; `Daira_Ai`, `Daira_Attack`):
-axe-wielding lizardmen.  They move like Moblins (`Fighter_Move`, keeping
-30 or 55 pixels away) and swing their axe, which Link's shield can
-block; the red Daira throws its axe (projectile type 7, straight).
-They block the sword beam and fire.
+- Moblins thrust their spear; the orange and blue throw it in a high
+  attack.  See [Moblin](enemies/moblin.md), which also describes the
+  shared movement.
+- Goriyas keep 96 pixels away and throw boomerangs that turn at about
+  Link and come back.  See [Goriya](enemies/goriya.md).
+- Dairas swing an axe; the red one throws it.  See
+  [Daira](enemies/daira.md).
 
 ## Other Enemies
 

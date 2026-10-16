@@ -149,9 +149,9 @@ enemyAiVar              = $0444     ; [6] per-enemy variable, its meaning set by
 linkAttackDir           = $044A     ; direction of the current attack (as linkWalkDir)
 enemyFloorTileIndex     = $044B     ; offset in enemyFloorTilePtr of the floor tile under the enemy
 projectileTimer         = $044C     ; [6] per-projectile counter (bubble rise, boomerang flight)
-ram_0452                = $0452
-ram_0458                = $0458
-projectileSpeed         = $045E     ; [6] speed a projectile was thrown at (boomerang return, beams)
+boomerangDir            = $0452     ; [6] facing of a boomerang's thrower (1 right, 2 left): its turn back (Projectile_Boomerang_Bank1)
+boomerangHigh           = $0458     ; [6] 0: a boomerang thrown low, 1: high (MoblinGoriya_Ai)
+projectileSpeed         = $045E     ; [6] per-projectile extra byte: a boomerang's thrower (enemy slot), a thrown spear's palette (1 for the orange Moblin's, 0 = its own); also the speed of beams
 columnTiles             = $0464
 attrColumn              = $0471     ; [7] attribute bytes for the column being scrolled in
 linkJumpState           = $0479     ; 2 = going up, 1 = coming down, 0 = on the ground (provisional)

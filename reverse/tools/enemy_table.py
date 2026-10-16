@@ -62,11 +62,14 @@ ENEMY_PAGES = {
     "BubbleGenerator_Ai": "bubble-generator", "RockGenerator_Ai": "rock-generator",
     "Megmet_Ai": "megmet", "MobyGenerator_Ai": "moby", "Moby_Ai": "moby", "Geldarm_Ai": "geldarm",
     "DumbMoblinGenerator_Ai": "walking-moblin", "DumbMoblin_Ai": "walking-moblin",
+    "Daira_Ai": "daira",
 }
 
 
 def link_name(enemy, ai):
     page = ENEMY_PAGES.get(ai)
+    if ai == "MoblinGoriya_Ai":  # shared by two pages
+        page = "goriya" if "Gor" in enemy else "moblin"
     return f"[{enemy}](enemies/{page}.md)" if page else enemy
 
 

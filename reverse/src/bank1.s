@@ -1362,94 +1362,112 @@ Projectile_Bubble_Bank1:
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank1:
     jsr     Projectile_FallIfDeflected_Bank1 ; $965A
+; Boomerang: X acceleration while turning, by boomerangDir (1: -1/16, 2:
+; +1/16), from the jmp's high byte: $FF, $01.
 BoomerangXAccel_Bank1 := * + 2
     jmp     Projectile_Straight_Bank1 ; $965D
     .byte   $FF, $01                                                        ; $9660
 
+; Boomerang: Y velocity while turning, by boomerangHigh (low: up, high: down).
 BoomerangYSpeeds_Bank1:
     .byte   $FC, $04                                                        ; $9662
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Boomerang_Bank1
 ;
-; Projectile type 6 (Goriya's boomerang): flies out and back, its speed
-; changing by BoomerangYSpeeds_Bank1 and BoomerangXAccel_Bank1, with a sound on
-; alternate frames; it disappears when it returns to its thrower
-; (projectileSpeed).
+; Projectile type 6 (a Goriya's boomerang), with a sound every other frame.
 ;
+; - Out (projectileTimer counting down from $20): 32 frames at the 2
+;   pixels per frame it was thrown with; its Y velocity (1 pixel per frame
+;   up for a high throw, 0 or 1 down for a low one) shrinks toward 0 by
+;   1/16 every other frame.
+; - Turning (projectileTimer 0): its X velocity changes by 1/16 per frame
+;   back toward its thrower (BoomerangXAccel_Bank1, by boomerangDir) and
+;   its Y velocity is 1/4 pixel per frame down after a high throw, up
+;   after a low one (BoomerangYSpeeds_Bank1).  It faces its velocity.
+;   When the X velocity reaches 2 pixels per frame back, projectileTimer
+;   becomes $FF: it flies back at that speed, its Y velocity shrinking
+;   again.  The turn takes 64 frames and carries it 32 pixels further.
+; - From the turn on, it disappears when it touches its thrower
+;   (projectileSpeed = the thrower's slot), if that enemy is still alive.
+;
+; Knocked back by Link's shield, it falls (Projectile_FallIfDeflected).
+;
+; In:      x = projectile index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Boomerang_Bank1:
-    jsr     Projectile_FallIfDeflected_Bank1 ; $9664
+    jsr     Projectile_FallIfDeflected_Bank1 ; $9664  deflected: just fall
     lda     frameCounter            ; $9667
-    lsr     a                       ; $9669
-    bcc     @loc_9680               ; $966A
-    lda     #$80                    ; $966C
+    lsr     a                       ; $9669  every other frame:
+    bcc     @checkTimer             ; $966A
+    lda     #$80                    ; $966C  its sound,
     sta     sfxRequest+1            ; $966E
-    lda     objYVelocity+7,x        ; $9670
-    bmi     @loc_967D               ; $9673
-    beq     @loc_9680               ; $9675
-    dec     objYVelocity+7,x        ; $9677
+    lda     objYVelocity+7,x        ; $9670  and Y velocity 1/16 nearer 0
+    bmi     @up                     ; $9673
+    beq     @checkTimer             ; $9675
+    dec     objYVelocity+7,x        ; $9677  (down: -2 + 1)
     dec     objYVelocity+7,x        ; $967A
 
-@loc_967D:
-    inc     objYVelocity+7,x        ; $967D
+@up:
+    inc     objYVelocity+7,x        ; $967D  (up: + 1)
 
-@loc_9680:
+@checkTimer:
     lda     projectileTimer,x       ; $9680
-    bmi     @loc_96B4               ; $9683
-    bne     @loc_96B1               ; $9685
-    ldy     ram_0458,x              ; $9687
-    lda     BoomerangYSpeeds_Bank1,y ; $968A
+    bmi     @move                   ; $9683  $FF: on its way back
+    bne     @goingOut               ; $9685  going out
+    ; Turning.
+    ldy     boomerangHigh,x         ; $9687  1/4 px/frame up (low) or
+    lda     BoomerangYSpeeds_Bank1,y ; $968A  down (high)
     sta     objYVelocity+7,x        ; $968D
-    ldy     ram_0452,x              ; $9690
+    ldy     boomerangDir,x          ; $9690  1/16 px/frame toward the thrower
     lda     objXVelocity+7,x        ; $9693
     clc                             ; $9695
     adc     BoomerangXAccel_Bank1,y ; $9696
     sta     objXVelocity+7,x        ; $9699
-    ldy     #$02                    ; $969B
+    ldy     #$02                    ; $969B  face the way it moves
     cmp     #$00                    ; $969D
-    bmi     @loc_96A2               ; $969F
+    bmi     @setFacing              ; $969F
     dey                             ; $96A1
 
-@loc_96A2:
+@setFacing:
     sty     objFacing+7,x           ; $96A2
-    and     #$3F                    ; $96A4
-    cmp     #$20                    ; $96A6
-    bne     @loc_96B4               ; $96A8
-    lda     #$FF                    ; $96AA
+    and     #$3F                    ; $96A4  back at 2 px/frame
+    cmp     #$20                    ; $96A6  ($20 or $E0)?
+    bne     @move                   ; $96A8
+    lda     #$FF                    ; $96AA  yes: on its way back
     sta     projectileTimer,x       ; $96AC
-    bne     @loc_96B4               ; $96AF
+    bne     @move                   ; $96AF  (always)
 
-@loc_96B1:
+@goingOut:
     dec     projectileTimer,x       ; $96B1
 
-@loc_96B4:
-    jsr     Projectile_MoveAndCheck_Bank1 ; $96B4
+@move:
+    jsr     Projectile_MoveAndCheck_Bank1 ; $96B4  move, draw, test Link
     ldy     projectileTimer,x       ; $96B7
-    dey                             ; $96BA
-    bpl     Projectile_Boomerang_Done_Bank1 ; $96BB
-    lda     projectileSpeed,x       ; $96BD
+    dey                             ; $96BA  still going out?
+    bpl     Projectile_Boomerang_Done_Bank1 ; $96BB  yes: done
+    lda     projectileSpeed,x       ; $96BD  the thrower
     tax                             ; $96C0
-    lda     enemyActive,x           ; $96C1
+    lda     enemyActive,x           ; $96C1  still alive?
     cmp     #$01                    ; $96C3
     bne     Projectile_Boomerang_Done_Bank1 ; $96C5
-    lda     objX+1,x                ; $96C7
-    sbc     scrollX                 ; $96C9
+    lda     objX+1,x                ; $96C7  box B: the thrower's hitbox
+    sbc     scrollX                 ; $96C9  (at its screen X)
     ldy     #$00                    ; $96CC
     jsr     Hitbox_SetB             ; $96CE
-    ldy     #$03                    ; $96D1
+    ldy     #$03                    ; $96D1  copied to box A
 
-@loop:
+@copyBox:
     lda     a:temp4,y               ; $96D3
     sta     a:temp0,y               ; $96D6
     dey                             ; $96D9
-    bpl     @loop                   ; $96DA
+    bpl     @copyBox                ; $96DA
     ldx     currentObject           ; $96DC
-    jsr     Projectile_GetHitbox    ; $96DE
+    jsr     Projectile_GetHitbox    ; $96DE  box B: the boomerang
     jsr     Hitbox_Overlap          ; $96E1
     bcc     Projectile_Boomerang_Done_Bank1 ; $96E4
-    lda     #$00                    ; $96E6
+    lda     #$00                    ; $96E6  caught: gone
     sta     objState+7,x            ; $96E8
 
 Projectile_Boomerang_Done_Bank1:
@@ -1620,7 +1638,7 @@ Projectile_SetAttr_Bank1:
 Projectile_DrawLarge_Bank1:
     lda     enemyStunTimer,x        ; $9789
     pha                             ; $978C
-    lda     overworldBuffer+94,x    ; $978D
+    lda     projectileSpeed,x       ; $978D
     beq     @loc_9794               ; $9790
     sta     temp3                   ; $9792
 
@@ -1699,39 +1717,48 @@ Projectile_DrawFire_Bank1:
     lda     temp0                   ; $97E8
     sta     oamBuffer+2,y           ; $97EA
 
+; Moblin's thrown spear: X velocity by facing (1, 2), from the rts:
+; $28 right, $D8 left (the next table's first byte).
 MoblinSpearSpeeds:
     rts                             ; $97ED
 ; (unreferenced: $97EE-$97F1, 4 bytes)
     .byte   $28                                                             ; $97EE
 
+; Moblin's thrown spear: X offset by facing (0 for both).
 MoblinSpearXOffsets:
     .byte   $D8, $00, $00                                                   ; $97EF
 
 ; ---------------------------------------------------------------------------
 ; Moblin_ThrowSpear
 ;
-; Throw a spear (projectile type 5) from Moblin x, in an arc in front of
-; it.
+; Throw a spear (projectile type 5, Projectile_Falling_Bank1) from Moblin
+; x, if one of the six projectile slots is free: from its X and Y + 5
+; (+1 with the carry), 2.5 pixels per frame the way it faces
+; (MoblinSpearSpeeds) and 1.5 pixels per frame up (Y velocity -$18), so
+; that it rises 9 pixels and falls in an arc.  The orange Moblin's spear
+; is drawn in palette 1 (projectileSpeed 1); the blue Moblin's in its
+; own (0).
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Moblin_ThrowSpear:
 ; (code below not executed in the test movies)
-    ldy     #$05                    ; $97F2
+    ldy     #$05                    ; $97F2  find a free projectile slot
 
 @loop:
     lda     a:objState+7,y          ; $97F4
-    beq     @loc_97FD               ; $97F7
+    beq     @found                  ; $97F7
     dey                             ; $97F9
     bpl     @loop                   ; $97FA
-    rts                             ; $97FC
+    rts                             ; $97FC  none
 
-@loc_97FD:
-    sta     projectileSpeed,y       ; $97FD
-    lda     #$05                    ; $9800
+@found:
+    sta     projectileSpeed,y       ; $97FD  palette 0: its own
+    lda     #$05                    ; $9800  projectile type 5
     sta     a:objState+7,y          ; $9802
-    lda     objX+1,x                ; $9805
-    sty     temp0                   ; $9807
+    lda     objX+1,x                ; $9805  X = the Moblin's X (+ 0 for
+    sty     temp0                   ; $9807  facing 1 or 2)
     ldy     objFacing+1,x           ; $9809
     adc     MoblinSpearXOffsets,y   ; $980B
     ldy     temp0                   ; $980E
@@ -1741,25 +1768,25 @@ Moblin_ThrowSpear:
     adc     MoblinSpearXOffsets,y   ; $9817
     ldy     temp0                   ; $981A
     sta     a:objXHi+7,y            ; $981C
-    lda     objY+1,x                ; $981F
+    lda     objY+1,x                ; $981F  Y = its Y + 5
     adc     #$05                    ; $9821
     sta     a:objY+7,y              ; $9823
     lda     objYHi+1,x              ; $9826
     adc     #$00                    ; $9828
     sta     a:objYHi+7,y            ; $982A
     sty     temp0                   ; $982D
-    lda     objFacing+1,x           ; $982F
+    lda     objFacing+1,x           ; $982F  its facing
     sta     a:objFacing+7,y         ; $9831
     tay                             ; $9834
-    lda     MoblinSpearSpeeds,y     ; $9835
+    lda     MoblinSpearSpeeds,y     ; $9835  2.5 px/frame that way
     ldy     temp0                   ; $9838
     sta     a:objXVelocity+7,y      ; $983A
-    lda     #$E8                    ; $983D
+    lda     #$E8                    ; $983D  1.5 px/frame up
     sta     objYVelocity+7,y        ; $983F
     lda     enemyType,x             ; $9842
-    cmp     #$14                    ; $9844
+    cmp     #$14                    ; $9844  the orange Moblin's spear:
     bne     @done                   ; $9846
-    lda     #$01                    ; $9848
+    lda     #$01                    ; $9848  palette 1
     sta     projectileSpeed,y       ; $984A
 
 @done:
@@ -2042,334 +2069,383 @@ DumbMoblin_Ai:
 ; (end of disassembled code)
 
 
+; Goriya: boomerang Y from its Y, by boomerangHigh (low, high).
 MoblinThrowYOffsets:
     .byte   $10, $00                                                        ; $9970
 
 ; ---------------------------------------------------------------------------
 ; MoblinGoriya_Ai
 ;
-; Moblins ($14-$16) and Goriyas ($19-$1B): stand off from Link
-; (Fighter_Move) and attack: Moblins thrust their spear (Orange and Blue
-; Moblins also throw it, Moblin_ThrowSpear); Goriyas throw a boomerang
-; (projectile type 6) that returns.  The attack's height (high or low)
-; follows Link's crouch.  A thrust is tested against Link's shield and
-; body like a projectile (Projectile_CheckLinkReflect).
+; Moblins ($14 orange, $15 red, $16 blue) and Goriyas ($19 orange, $1A red,
+; $1B blue).  They move with Fighter_Move, which also starts their attacks
+; (Fighter_StartAttack: objState+1 = 1, a low attack, or 3, a high one,
+; for 24 frames).  This routine plays an attack out:
 ;
+; - A Goriya, when the 24 frames are up, throws a boomerang (projectile
+;   type 6) from its feet (low) or its head (high) and is done.
+; - A Moblin then thrusts (pose 2 or 4) for 16 frames, its spear tested
+;   against Link's shield and body like a projectile
+;   (Projectile_CheckLinkReflect).  A high thrust (pose 4) of an orange
+;   or blue Moblin throws the spear instead (Moblin_ThrowSpear, pose 5).
+;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 MoblinGoriya_Ai:
-    lda     objState+1,x            ; $9972
-    beq     @loc_99EB               ; $9974
+    lda     objState+1,x            ; $9972  pose: 0 none, 1/3 wind up,
+    beq     @move                   ; $9974  2/4 thrust, 5 thrown
     and     #$01                    ; $9976
-    bne     @loc_9980               ; $9978
-    jsr     Enemy_Draw              ; $997A
-    jsr     Projectile_CheckLinkReflect ; $997D
+    bne     @checkTimer             ; $9978  winding up: nothing to test
+    jsr     Enemy_Draw              ; $997A  thrusting: draw the spear now,
+    jsr     Projectile_CheckLinkReflect ; $997D  and test it against Link
 
-@loc_9980:
-    lda     timerFast+TIMER_ENEMY,x ; $9980
-    bne     @loc_99EB               ; $9983
+@checkTimer:
+    lda     timerFast+TIMER_ENEMY,x ; $9980  pose over?
+    bne     @move                   ; $9983  not yet
     lda     enemyType,x             ; $9985
-    cmp     #$19                    ; $9987
-    bcc     @loc_99C9               ; $9989
-    jsr     Enemy_FireProjectile    ; $998B
-    bcs     @loc_99C6               ; $998E
+    cmp     #$19                    ; $9987  a Goriya?
+    bcc     @nextPose               ; $9989  no: a Moblin
+    ; A Goriya throws its boomerang.
+    jsr     Enemy_FireProjectile    ; $998B  2 px/frame the way it faces
+    bcs     @toEndAttack            ; $998E  no free slot
     txa                             ; $9990
-    sta     projectileSpeed,y       ; $9991
+    sta     projectileSpeed,y       ; $9991  remember the thrower
     lda     a:objFacing+7,y         ; $9994
-    sta     ram_0452,y              ; $9997
-    lda     objState+1,x            ; $999A
+    sta     boomerangDir,y          ; $9997  and its direction
+    lda     objState+1,x            ; $999A  pose 1 (low) or 3 (high)
     lsr     a                       ; $999C
-    sta     ram_0458,y              ; $999D
+    sta     boomerangHigh,y         ; $999D  0 low, 1 high
     tax                             ; $99A0
-    lda     MoblinThrowYOffsets,x   ; $99A1
+    lda     MoblinThrowYOffsets,x   ; $99A1  from Y + $10 (low) or Y (high)
     ldx     currentObject           ; $99A4
-    adc     objY+1,x                ; $99A6
+    adc     objY+1,x                ; $99A6  (carry clear from the call)
     sta     a:objY+7,y              ; $99A8
-    lda     rng+1,x                 ; $99AB
-    and     #$10                    ; $99AE
-    ldx     ram_0458,y              ; $99B0
-    beq     @loc_99B7               ; $99B3
-    lda     #$F0                    ; $99B5
+    lda     rng+1,x                 ; $99AB  low: 0 or 1 px/frame down at
+    and     #$10                    ; $99AE  random
+    ldx     boomerangHigh,y         ; $99B0
+    beq     @setYSpeed              ; $99B3
+    lda     #$F0                    ; $99B5  high: 1 px/frame up
 
-@loc_99B7:
+@setYSpeed:
     sta     objYVelocity+7,y        ; $99B7
     ldx     currentObject           ; $99BA
-    lda     #$20                    ; $99BC
+    lda     #$20                    ; $99BC  out for 32 frames
     sta     projectileTimer,y       ; $99BE
-    lda     #$06                    ; $99C1
+    lda     #$06                    ; $99C1  projectile type 6
     sta     a:objState+7,y          ; $99C3
 
-@loc_99C6:
-    jmp     @loc_99EE               ; $99C6
+@toEndAttack:
+    jmp     @endAttack              ; $99C6
 
-@loc_99C9:
-    inc     objState+1,x            ; $99C9
+@nextPose:
+    inc     objState+1,x            ; $99C9  wind up -> thrust -> over
     lda     objState+1,x            ; $99CB
-    cmp     #$03                    ; $99CD
-    beq     @loc_99EE               ; $99CF
-    cmp     #$05                    ; $99D1
-    bcs     @loc_99EE               ; $99D3
-    cmp     #$04                    ; $99D5
-    bne     @loc_99E6               ; $99D7
+    cmp     #$03                    ; $99CD  low thrust over?
+    beq     @endAttack              ; $99CF
+    cmp     #$05                    ; $99D1  high thrust (or throw) over?
+    bcs     @endAttack              ; $99D3
+    cmp     #$04                    ; $99D5  high thrust?
+    bne     @thrust                 ; $99D7  no: low thrust
     lda     enemyType,x             ; $99D9
-    cmp     #$15                    ; $99DB
-    beq     @loc_99E6               ; $99DD
+    cmp     #$15                    ; $99DB  the red Moblin thrusts;
+    beq     @thrust                 ; $99DD
 ; (code below not executed in the test movies)
-    jsr     Moblin_ThrowSpear       ; $99DF
+    jsr     Moblin_ThrowSpear       ; $99DF  the orange and blue throw
     lda     #$05                    ; $99E2
-    sta     objState+1,x            ; $99E4
+    sta     objState+1,x            ; $99E4  pose 5: thrown
 ; (end of code not executed in the test movies)
 
-@loc_99E6:
-    lda     #$10                    ; $99E6
+@thrust:
+    lda     #$10                    ; $99E6  for 16 frames
     sta     timerFast+TIMER_ENEMY,x ; $99E8
 
-@loc_99EB:
-    jmp     MoblinGoriya_Fire       ; $99EB
+@move:
+    jmp     MoblinGoriya_Move       ; $99EB
 
-@loc_99EE:
-FighterAttackMasks := * + 1
-    lda     #$00                    ; $99EE
+@endAttack:
+FighterQuickAttackMasks := * + 1
+    lda     #$00                    ; $99EE  attack over
     sta     objState+1,x            ; $99F0
 
-MoblinGoriya_Fire:
-    lda     #$16                    ; $99F2
+MoblinGoriya_Move:
+    lda     #$16                    ; $99F2  keep $16 pixels from Link,
     ldy     enemyType,x             ; $99F4
-FighterTurnMasks := * + 1
-    cpy     #$14                    ; $99F6
-    beq     @loc_99FE               ; $99F8
-    cpy     #$19                    ; $99FA
-    bcc     @loc_9A00               ; $99FC
+FighterAttackPeriods := * + 1
+    cpy     #$14                    ; $99F6  or $60 for the orange Moblin
+    beq     @far                    ; $99F8
+    cpy     #$19                    ; $99FA  and the Goriyas
+    bcc     @move                   ; $99FC
 
-@loc_99FE:
+@far:
     lda     #$60                    ; $99FE
 
-@loc_9A00:
+@move:
     jmp     Fighter_Move            ; $9A00
+; FighterQuickAttackMasks for types $14-$1B (indexed from $99EF): up close,
+; when an attack starts and rng+1,x AND the mask is 0, the next one comes
+; 32 frames later instead of a full period.
 ; (unreferenced: $9A03-$9A03, 1 bytes)
     .byte   $03                                                             ; $9A03
     .byte   $01, $01, $03, $07, $0F, $07, $03                               ; $9A04
+; FighterAttackPeriods for types $14-$1B (indexed from $99F7): up close,
+; an attack starts when enemyAiState AND the mask is 0 (every 64 frames;
+; 32 for the blue Moblin, 128 for the orange Goriya).
 ; (unreferenced: $9A0B-$9A0B, 1 bytes)
     .byte   $3F                                                             ; $9A0B
     .byte   $3F, $1F, $3F, $3F, $7F, $3F, $3F                               ; $9A0C
 
+; Fighters: X velocity toward Link (0 right, 1 left), doubled when walking.
 FighterSpeeds:
     .byte   $08, $F8                                                        ; $9A13
 
 ; ---------------------------------------------------------------------------
 ; Daira_Ai
 ;
-; Daira (lizard with an axe): stands off from Link (Fighter_Move) and
-; swings its axe (Daira_Attack); the red Daira throws it (projectile
-; type 7).
+; Daira ($17 orange, $18 red; a lizardman with an axe): plays out its swing
+; (Daira_Attack), then moves with Fighter_Move, keeping $1E (orange) or
+; $37 (red) pixels from Link.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Daira_Ai:
     jsr     Daira_Attack            ; $9A15
-    lda     #$1E                    ; $9A18
+    lda     #$1E                    ; $9A18  orange: $1E pixels
     ldy     enemyType,x             ; $9A1A
     cpy     #$18                    ; $9A1C
     bne     Fighter_Move            ; $9A1E
-    lda     #$37                    ; $9A20
+    lda     #$37                    ; $9A20  red: $37
 
 ; ---------------------------------------------------------------------------
 ; Fighter_Move
 ;
-; Movement shared by Moblins, Goriyas and Dairas: when Link is more than
-; ram_05E5 pixels away (by type: $16, $1E, $37 or $60) walk toward him; up
-; close, attack at random (masks by type) and otherwise sway, matching
-; Link's movement or moving 4 back and forth every 64 frames.
+; Movement and attack timing shared by Moblins, Goriyas and Dairas, with
+; a = the distance r to keep from Link.  Each frame it:
 ;
+; - falls and lands (gravity 2/16 pixel per frame per frame), and moves
+;   by last frame's X velocity unless at a wall, or, while knocked back,
+;   by the knockback instead and does nothing else (Fighter_KnockBack);
+; - turns toward Link and compares dx = Link's X + 8 - its X, low bytes
+;   only (QUIRK: a fighter 128 or more pixels away can take Link for
+;   near: 210 pixels reads as 46);
+; - beyond r: walks toward him at 1 pixel per frame; and if within $50
+;   pixels, starts an attack whenever it isn't attacking (not the red
+;   Daira; for r = $60 there is no such band);
+; - within r: counts frames in enemyAiState, starts an attack when the
+;   count AND its FighterAttackPeriods mask is 0, and otherwise holds its
+;   ground (Fighter_Stop).  If rng+1,x AND its FighterQuickAttackMasks
+;   mask is 0 at that moment, the count is set to $E0 so that the next
+;   attack comes in 32 frames.
+;
+; In:      x = enemy index, a = distance r
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fighter_Move:
-    sta     ram_05E5                ; $9A22
+    sta     ram_05E5                ; $9A22  r
     asl     a                       ; $9A25
-    sta     ram_05E6                ; $9A26
-    jsr     Enemy_UpdateWithBg      ; $9A29
+    sta     ram_05E6                ; $9A26  2r
+    jsr     Enemy_UpdateWithBg      ; $9A29  probe background, draw, hit tests
     jsr     Enemy_HurtLinkOnContact ; $9A2C
-    jsr     Enemy_MoveYAndFall      ; $9A2F
+    jsr     Enemy_MoveYAndFall      ; $9A2F  fall: +2/16 px/frame per frame
     lda     objCollision+1,x        ; $9A32
-    and     #$04                    ; $9A34
-    beq     @loc_9A3B               ; $9A36
-    jsr     Enemy_Land              ; $9A38
+    and     #$04                    ; $9A34  on a floor?
+    beq     @noFloor                ; $9A36
+    jsr     Enemy_Land              ; $9A38  stand on it
 
-@loc_9A3B:
-    jsr     Fighter_KnockBack       ; $9A3B
-    jsr     Enemy_FaceLink          ; $9A3E
+@noFloor:
+    jsr     Fighter_KnockBack       ; $9A3B  move (or be knocked back and stop here)
+    jsr     Enemy_FaceLink          ; $9A3E  temp15 = dx (low byte), y = 0 if right
     lda     temp15                  ; $9A41
     clc                             ; $9A43
-    adc     ram_05E5                ; $9A44
+    adc     ram_05E5                ; $9A44  -r <= dx < r?
     cmp     ram_05E6                ; $9A47
-    bcc     @loc_9A6B               ; $9A4A
-    lda     temp15                  ; $9A4C
-    adc     #$50                    ; $9A4E
+    bcc     @near                   ; $9A4A  yes: near
+    lda     temp15                  ; $9A4C  -$50 <= dx < $50 (give or
+    adc     #$50                    ; $9A4E  take the carry)?
     cmp     #$A0                    ; $9A50
-    bcs     @loc_9A64               ; $9A52
+    bcs     @walk                   ; $9A52  no: just walk
     lda     enemyType,x             ; $9A54
-    cmp     #$18                    ; $9A56
-    bcs     @loc_9A61               ; $9A58
-    lda     objState+1,x            ; $9A5A
-    bne     @loc_9A61               ; $9A5C
-    jsr     Fighter_StartAttack     ; $9A5E
+    cmp     #$18                    ; $9A56  (not the red Daira or later
+    bcs     @faceLink               ; $9A58  types)
+    lda     objState+1,x            ; $9A5A  already attacking?
+    bne     @faceLink               ; $9A5C
+    jsr     Fighter_StartAttack     ; $9A5E  no: attack as it comes
 
-@loc_9A61:
-    jsr     Enemy_FaceLink          ; $9A61
+@faceLink:
+    jsr     Enemy_FaceLink          ; $9A61  (y again)
 
-@loc_9A64:
-    lda     FighterSpeeds,y         ; $9A64
+@walk:
+    lda     FighterSpeeds,y         ; $9A64  1 px/frame toward Link
     asl     a                       ; $9A67
     sta     objXVelocity+1,x        ; $9A68
     rts                             ; $9A6A
 
-@loc_9A6B:
+@near:
     ldy     enemyType,x             ; $9A6B
-    lda     FighterTurnMasks,y      ; $9A6D
-    inc     enemyAiState,x          ; $9A70
+    lda     FighterAttackPeriods,y  ; $9A6D  attack period mask
+    inc     enemyAiState,x          ; $9A70  count frames near Link
     and     enemyAiState,x          ; $9A72
-    bne     Fighter_Stop            ; $9A74
-    lda     rng+1,x                 ; $9A76
-    and     FighterAttackMasks,y    ; $9A79
+    bne     Fighter_Stop            ; $9A74  not yet: hold
+    lda     rng+1,x                 ; $9A76  attack; now and then the
+    and     FighterQuickAttackMasks,y ; $9A79  next one comes sooner:
     bne     Fighter_StartAttack     ; $9A7C
-    lda     #$E0                    ; $9A7E
+    lda     #$E0                    ; $9A7E  32 frames to the next
     sta     enemyAiState,x          ; $9A80
 
 ; ---------------------------------------------------------------------------
 ; Fighter_StartAttack
 ;
-; Start an attack: objState = 1-4 by type and at random (high or low,
-; following Link's crouch, linkStanding), for 24 frames.
+; Start an attack: objState+1 = 1 (low) or 3 (high) for 24 frames
+; (timerFast+TIMER_ENEMY), then hold (Fighter_Stop).  The orange Moblin
+; always attacks high and the Dairas low.  The others pick at random
+; (rng+1,x bit 0): half the time a random height, half the time the one
+; Link's shield doesn't cover, high if he crouches (linkStanding 0) and
+; low if he stands.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fighter_StartAttack:
-    ldy     #$01                    ; $9A82
+    ldy     #$01                    ; $9A82  low
     lda     enemyType,x             ; $9A84
-    cmp     #$14                    ; $9A86
-    beq     @loc_9AA2               ; $9A88
-    cmp     #$17                    ; $9A8A
-    beq     @loc_9AA4               ; $9A8C
+    cmp     #$14                    ; $9A86  orange Moblin: high
+    beq     @high                   ; $9A88
+    cmp     #$17                    ; $9A8A  Dairas: low
+    beq     @setPose                ; $9A8C
     cmp     #$18                    ; $9A8E
-    beq     @loc_9AA4               ; $9A90
+    beq     @setPose                ; $9A90
     lda     rng+1,x                 ; $9A92
-    lsr     a                       ; $9A95
-    bcs     @loc_9A9E               ; $9A96
-    and     #$02                    ; $9A98
+    lsr     a                       ; $9A95  bit 0 set:
+    bcs     @aimAtShield            ; $9A96  go around his shield
+    and     #$02                    ; $9A98  else bit 2: 1 low or 3 high
     tay                             ; $9A9A
     iny                             ; $9A9B
-    bne     @loc_9AA4               ; $9A9C
+    bne     @setPose                ; $9A9C  (always)
 
-@loc_9A9E:
-    lda     linkStanding            ; $9A9E
-    bne     @loc_9AA4               ; $9AA0
+@aimAtShield:
+    lda     linkStanding            ; $9A9E  standing: shield high, attack low
+    bne     @setPose                ; $9AA0
 
-@loc_9AA2:
-    iny                             ; $9AA2
+@high:
+    iny                             ; $9AA2  crouching: attack high
     iny                             ; $9AA3
 
-@loc_9AA4:
+@setPose:
     sty     objState+1,x            ; $9AA4
-    lda     #$18                    ; $9AA6
+    lda     #$18                    ; $9AA6  wind up for 24 frames
     sta     timerFast+TIMER_ENEMY,x ; $9AA8
 
+; Hold near Link: X velocity 0 if Link is against a wall; else half Link's
+; own X velocity while he walks, so that it keeps its distance; else a
+; sway of 1/8 pixel per frame, one way for 64 frames and back
+; (frameCounter bit 6).
 Fighter_Stop:
     lda     #$00                    ; $9AAB
-    sta     objXVelocity+1,x        ; $9AAD
-    lda     objCollision            ; $9AAF
+    sta     objXVelocity+1,x        ; $9AAD  stop
+    lda     objCollision            ; $9AAF  Link against a wall?
     and     #$03                    ; $9AB1
-    bne     Fighter_StartAttack_Done ; $9AB3
-    lda     linkDirHeld             ; $9AB5
+    bne     Fighter_StartAttack_Done ; $9AB3  yes: stay stopped
+    lda     linkDirHeld             ; $9AB5  Left or Right held?
 
 DairaAttackFrames:
-    beq     @loc_9ABE               ; $9AB8
-    lda     objXVelocity            ; $9ABA
-    bne     @loc_9AC9               ; $9ABC
+    beq     @sway                   ; $9AB8  no: sway
+    lda     objXVelocity            ; $9ABA  yes: Link's velocity,
+    bne     @setSpeed               ; $9ABC  if he is moving
 
-@loc_9ABE:
-    ldy     #$04                    ; $9ABE
+@sway:
+    ldy     #$04                    ; $9ABE  +1/4 px/frame,
     lda     frameCounter            ; $9AC0
     and     #$40                    ; $9AC2
-    bne     @loc_9AC8               ; $9AC4
-    ldy     #$FC                    ; $9AC6
+    bne     @swayDir                ; $9AC4
+    ldy     #$FC                    ; $9AC6  or -1/4, every 64 frames
 
-@loc_9AC8:
+@swayDir:
     tya                             ; $9AC8
 
-@loc_9AC9:
-    sta     objXVelocity+1,x        ; $9AC9
+@setSpeed:
+    sta     objXVelocity+1,x        ; $9AC9  halved, keeping the sign
     asl     a                       ; $9ACB
     ror     objXVelocity+1,x        ; $9ACC
 
 Fighter_StartAttack_Done:
     rts                             ; $9ACE
+    ; DairaAttackFrames for types $17, $18 (indexed from $9AB8): the pose
+    ; that ends the swing.
     .byte   $04, $03                                                        ; $9ACF
 
 ; ---------------------------------------------------------------------------
 ; Daira_Attack
 ;
-; Advance a Daira's axe swing (objState), testing the axe against Link's
-; shield and body like a projectile (Projectile_CheckLinkReflect); the red
-; Daira throws its axe at the second frame.
+; Play out a Daira's swing.  Fighter_StartAttack sets pose 1 for 24
+; frames; then every 5 frames the pose advances: pose 2 is the swing, its
+; axe tested against Link's shield and body like a projectile
+; (Projectile_CheckLinkReflect), and the red Daira throws its axe
+; (projectile type 7, 2 pixels per frame straight ahead).  The swing ends
+; at pose DairaAttackFrames: 4 for the orange Daira (poses 2 and 3, 5
+; frames each), 3 for the red (pose 2 only).
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Daira_Attack:
-    lda     objState+1,x            ; $9AD1
+    lda     objState+1,x            ; $9AD1  attacking?
     beq     @done                   ; $9AD3
-    lda     timerFast+TIMER_ENEMY,x ; $9AD5
+    lda     timerFast+TIMER_ENEMY,x ; $9AD5  pose over?
     bne     @done                   ; $9AD8
-    inc     objState+1,x            ; $9ADA
+    inc     objState+1,x            ; $9ADA  next pose
     ldy     enemyType,x             ; $9ADC
     lda     objState+1,x            ; $9ADE
-    cmp     DairaAttackFrames,y     ; $9AE0
-    beq     @loc_9B05               ; $9AE3
-    cmp     #$02                    ; $9AE5
-    bne     @loc_9AFF               ; $9AE7
-    jsr     Enemy_Draw              ; $9AE9
-    jsr     Projectile_CheckLinkReflect ; $9AEC
+    cmp     DairaAttackFrames,y     ; $9AE0  past the last?
+    beq     @end                    ; $9AE3
+    cmp     #$02                    ; $9AE5  the swing?
+    bne     @nextIn5                ; $9AE7
+    jsr     Enemy_Draw              ; $9AE9  draw the axe now,
+    jsr     Projectile_CheckLinkReflect ; $9AEC  and test it against Link
     lda     enemyType,x             ; $9AEF
-    cmp     #$18                    ; $9AF1
-    bne     @loc_9AFF               ; $9AF3
-    jsr     Enemy_FireProjectile    ; $9AF5
-    bcs     @loc_9AFF               ; $9AF8
-    lda     #$07                    ; $9AFA
+    cmp     #$18                    ; $9AF1  the red Daira
+    bne     @nextIn5                ; $9AF3
+    jsr     Enemy_FireProjectile    ; $9AF5  throws it:
+    bcs     @nextIn5                ; $9AF8
+    lda     #$07                    ; $9AFA  projectile type 7
     sta     a:objState+7,y          ; $9AFC
 
-@loc_9AFF:
-    lda     #$05                    ; $9AFF
+@nextIn5:
+    lda     #$05                    ; $9AFF  next pose in 5 frames
     sta     timerFast+TIMER_ENEMY,x ; $9B01
 
 @done:
     rts                             ; $9B04
 
-@loc_9B05:
-    lda     #$00                    ; $9B05
+@end:
+    lda     #$00                    ; $9B05  swing over
     sta     objState+1,x            ; $9B07
     rts                             ; $9B09
 
 ; ---------------------------------------------------------------------------
 ; Fighter_KnockBack
 ;
-; While knocked back (enemyKnockBack), move by the knockback speed instead of
-; the AI.
+; Move a fighter by its X velocity, unless at a wall.  While it is knocked
+; back (enemyKnockBack, set when Link's shield blocks it or a hit lands),
+; move it by enemyKnockBack instead, which shrinks by 1/16 pixel per frame
+; toward 0, and return from Fighter_Move too, skipping the rest of the AI.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fighter_KnockBack:
     lda     enemyKnockBack,x        ; $9B0A
-    beq     @loc_9B1E               ; $9B0D
-    dec     enemyKnockBack,x        ; $9B0F
-    bpl     @loc_9B1A               ; $9B12
-    inc     enemyKnockBack,x        ; $9B14
+    beq     @move                   ; $9B0D  not knocked back
+    dec     enemyKnockBack,x        ; $9B0F  shrink toward 0:
+    bpl     @knockedBack            ; $9B12  positive: - 1
+    inc     enemyKnockBack,x        ; $9B14  negative: + 1
     inc     enemyKnockBack,x        ; $9B17
 
-@loc_9B1A:
-    sta     objXVelocity+1,x        ; $9B1A
-    pla                             ; $9B1C
+@knockedBack:
+    sta     objXVelocity+1,x        ; $9B1A  move by it
+    pla                             ; $9B1C  and return from Fighter_Move
     pla                             ; $9B1D
 
-@loc_9B1E:
+@move:
     jmp     Enemy_MoveXUnlessWall_Bank1 ; $9B1E
 
 Fighter_KnockBack_Done:
@@ -2657,44 +2733,49 @@ DumbMoblin_Draw:
 ; ---------------------------------------------------------------------------
 ; Goriya_Draw
 ;
-; Draw a Goriya.
+; Draw a Goriya: two pairs of sprites (sramEnemyTiles from entry e), facing
+; its objFacing: e = $00 standing, alternating with $04 every 8 frames
+; while it moves; $08 winding up low (pose 1), $0C winding up high.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Goriya_Draw:
-    ldy     #$0C                    ; $9C6F
+    ldy     #$0C                    ; $9C6F  high wind-up: entry $0C
     lda     objState+1,x            ; $9C71
-    beq     @loc_9C7D               ; $9C73
+    beq     @standing               ; $9C73
     cmp     #$01                    ; $9C75
-    bne     @loc_9C8B               ; $9C77
-    ldy     #$08                    ; $9C79
-    bne     @loc_9C8B               ; $9C7B
+    bne     @draw                   ; $9C77
+    ldy     #$08                    ; $9C79  low wind-up: $08
+    bne     @draw                   ; $9C7B  (always)
 
-@loc_9C7D:
-    ldy     #$00                    ; $9C7D
+@standing:
+    ldy     #$00                    ; $9C7D  standing: $00,
     lda     objXVelocity+1,x        ; $9C7F
-    beq     @loc_9C8B               ; $9C81
-    lda     frameCounter            ; $9C83
+    beq     @draw                   ; $9C81
+    lda     frameCounter            ; $9C83  moving: $00 / $04 every 8 frames
     and     #$08                    ; $9C85
-    beq     @loc_9C8B               ; $9C87
+    beq     @draw                   ; $9C87
     ldy     #$04                    ; $9C89
 
-@loc_9C8B:
+@draw:
     tya                             ; $9C8B
     ldy     objOamOffset+1,x        ; $9C8C
     tax                             ; $9C8E
-    jsr     Sprite_DrawEnemyPair    ; $9C8F
-    jmp     Sprite_DrawEnemyPairKeepX ; $9C92
+    jsr     Sprite_DrawEnemyPair    ; $9C8F  top pair
+    jmp     Sprite_DrawEnemyPairKeepX ; $9C92  bottom pair
 
+; Moblin_Draw: body entry (sramEnemyTiles) by pose 0-5.
 MoblinDrawTiles:
     .byte   $24, $1E, $24, $2A, $30                                         ; $9C95
 ; (unreferenced: $9C9A-$9C9A, 1 bytes)
     .byte   $36                                                             ; $9C9A
 
-MoblinSpearTiles:
+; Moblin_Draw: spear X offset: wind-up and thrust facing left, then right.
+MoblinSpearDrawX:
     .byte   $04, $F8, $FC, $08                                              ; $9C9B
 
-MoblinFrames:
+; Moblin_Draw: by pose - 1, 0 for a wind-up, 1 for a thrust.
+MoblinSpearFrames:
     .byte   $00, $01, $00, $01                                              ; $9C9F
 ; (unreferenced: $9CA3-$9CA3, 1 bytes)
     .byte   $01                                                             ; $9CA3
@@ -2702,150 +2783,169 @@ MoblinFrames:
 ; ---------------------------------------------------------------------------
 ; Moblin_Draw
 ;
-; Draw a Moblin and its spear by pose.
+; Draw a Moblin: its body, two pairs of sprites from sramEnemyTiles entry
+; MoblinDrawTiles[pose] ($24 standing, alternating with $1E every 8 frames
+; while it moves), and, in an attack, its spear: a pair from the entry
+; after the body's, beside its legs (Y + 8) in a low attack and at its
+; head (Y) in a high one.  In a wind-up (poses 1 and 3) the spear points
+; back and is drawn 4 pixels behind; in a thrust (2, 4) it is 8 pixels
+; ahead, 16 while the timer is 3-12, lunging.  The last 8 frames of a low
+; thrust are drawn as the wind-up again.  In the high wind-up its front
+; spear sprite is moved 13 (facing left) or 12 (right) pixels further
+; ahead.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Moblin_Draw:
-    lda     temp2                   ; $9CA4
+    lda     temp2                   ; $9CA4  keep the facing
     sta     drawScratch             ; $9CA6
-    lda     objState+1,x            ; $9CA8
-    cmp     #$02                    ; $9CAA
-    bne     @loc_9CB8               ; $9CAC
-    lda     timerFast+TIMER_ENEMY,x ; $9CAE
+    lda     objState+1,x            ; $9CA8  pose
+    cmp     #$02                    ; $9CAA  low thrust...
+    bne     @setPose                ; $9CAC
+    lda     timerFast+TIMER_ENEMY,x ; $9CAE  ...in its last 8 frames?
     cmp     #$08                    ; $9CB1
     lda     objState+1,x            ; $9CB3
-    bcs     @loc_9CB8               ; $9CB5
-    lsr     a                       ; $9CB7
+    bcs     @setPose                ; $9CB5
+    lsr     a                       ; $9CB7  drawn as the wind-up, pose 1
 
-@loc_9CB8:
-    sta     ram_05E4                ; $9CB8
+@setPose:
+    sta     ram_05E4                ; $9CB8  pose drawn
     tax                             ; $9CBB
-    lda     MoblinDrawTiles,x       ; $9CBC
+    lda     MoblinDrawTiles,x       ; $9CBC  body entry
     cpx     #$00                    ; $9CBF
-    bne     @loc_9CD4               ; $9CC1
-    ldx     currentObject           ; $9CC3
-    ldy     objXVelocity+1,x        ; $9CC5
-    beq     @loc_9CD4               ; $9CC7
-    ldy     #$24                    ; $9CC9
+    bne     @drawBody               ; $9CC1
+    ldx     currentObject           ; $9CC3  no attack: standing, or
+    ldy     objXVelocity+1,x        ; $9CC5  walking if it moves
+    beq     @drawBody               ; $9CC7
+    ldy     #$24                    ; $9CC9  ($24 / $1E every 8 frames)
     lda     frameCounter            ; $9CCB
     and     #$08                    ; $9CCD
-    beq     @loc_9CD3               ; $9CCF
+    beq     @walkFrame              ; $9CCF
     ldy     #$1E                    ; $9CD1
 
-@loc_9CD3:
+@walkFrame:
     tya                             ; $9CD3
 
-@loc_9CD4:
+@drawBody:
     ldx     currentObject           ; $9CD4
     ldy     objOamOffset+1,x        ; $9CD6
     tax                             ; $9CD8
-    jsr     Sprite_DrawEnemyPair    ; $9CD9
-    jsr     Sprite_DrawEnemyPair    ; $9CDC
-    stx     temp13                  ; $9CDF
+    jsr     Sprite_DrawEnemyPair    ; $9CD9  top pair
+    jsr     Sprite_DrawEnemyPair    ; $9CDC  bottom pair
+    stx     temp13                  ; $9CDF  the next entry: the spear
     ldx     currentObject           ; $9CE1
-    lda     drawOffscreen+1         ; $9CE3
-    bne     @loc_9D56               ; $9CE5
-    lda     ram_05E4                ; $9CE7
-    beq     @loc_9D56               ; $9CEA
-    cmp     #$01                    ; $9CEC
-    bne     @loc_9CF6               ; $9CEE
-    lda     temp2                   ; $9CF0
+    lda     drawOffscreen+1         ; $9CE3  partly off screen,
+    bne     @done                   ; $9CE5
+    lda     ram_05E4                ; $9CE7  or no attack: no spear
+    beq     @done                   ; $9CEA
+    cmp     #$01                    ; $9CEC  low wind-up:
+    bne     @spearY                 ; $9CEE
+    lda     temp2                   ; $9CF0  the spear points back
     eor     #$03                    ; $9CF2
     sta     temp2                   ; $9CF4
 
-@loc_9CF6:
-    lda     temp0                   ; $9CF6
+@spearY:
+    lda     temp0                   ; $9CF6  low: Y + 32 - 24 = Y + 8
     sec                             ; $9CF8
     sbc     #$18                    ; $9CF9
     sta     temp0                   ; $9CFB
     lda     ram_05E4                ; $9CFD
     cmp     #$03                    ; $9D00
-    bcc     @loc_9D08               ; $9D02
-    lda     objY+1,x                ; $9D04
+    bcc     @spearX                 ; $9D02
+    lda     objY+1,x                ; $9D04  high: Y
     sta     temp0                   ; $9D06
 
-@loc_9D08:
-    lda     ram_05E4                ; $9D08
+@spearX:
+    lda     ram_05E4                ; $9D08  0 wind-up / 1 thrust,
     tax                             ; $9D0B
     dex                             ; $9D0C
-    lda     MoblinFrames,x          ; $9D0D
+    lda     MoblinSpearFrames,x     ; $9D0D
     tax                             ; $9D10
-    lda     drawScratch             ; $9D11
+    lda     drawScratch             ; $9D11  + 2 facing right
     cmp     #$01                    ; $9D13
-    bne     @loc_9D19               ; $9D15
+    bne     @offset                 ; $9D15
     inx                             ; $9D17
     inx                             ; $9D18
 
-@loc_9D19:
+@offset:
     tya                             ; $9D19
     pha                             ; $9D1A
-    lda     MoblinSpearTiles,x      ; $9D1B
+    lda     MoblinSpearDrawX,x      ; $9D1B  X offset of the spear
     ldx     currentObject           ; $9D1E
-    ldy     timerFast+TIMER_ENEMY,x ; $9D20
-    cpy     #$03                    ; $9D23
-    bcc     @loc_9D2C               ; $9D25
+    ldy     timerFast+TIMER_ENEMY,x ; $9D20  doubled while the timer
+    cpy     #$03                    ; $9D23  is 3-12
+    bcc     @addOffset              ; $9D25
     cpy     #$0D                    ; $9D27
-    bcs     @loc_9D2C               ; $9D29
+    bcs     @addOffset              ; $9D29
     asl     a                       ; $9D2B
 
-@loc_9D2C:
+@addOffset:
     clc                             ; $9D2C
     adc     temp1                   ; $9D2D
     sta     temp1                   ; $9D2F
     pla                             ; $9D31
     tay                             ; $9D32
     ldx     temp13                  ; $9D33
-    jsr     Sprite_DrawEnemyPairKeepX ; $9D35
+    jsr     Sprite_DrawEnemyPairKeepX ; $9D35  the spear
     lda     ram_05E4                ; $9D38
     clc                             ; $9D3B
     adc     #$01                    ; $9D3C
-    and     #$03                    ; $9D3E
-    bne     @loc_9D56               ; $9D40
-    lda     #$F3                    ; $9D42
-    ldx     drawScratch             ; $9D44
+    and     #$03                    ; $9D3E  high wind-up (pose 3)?
+    bne     @done                   ; $9D40
+    lda     #$F3                    ; $9D42  facing left: the first spear
+    ldx     drawScratch             ; $9D44  sprite 13 pixels further left
     cpx     #$02                    ; $9D46
-    beq     @loc_9D50               ; $9D48
+    beq     @raise                  ; $9D48
 ; (code below not executed in the test movies)
-    lda     #$0C                    ; $9D4A
-    iny                             ; $9D4C
+    lda     #$0C                    ; $9D4A  facing right: the second
+    iny                             ; $9D4C  12 pixels right
     iny                             ; $9D4D
     iny                             ; $9D4E
     iny                             ; $9D4F
 ; (end of code not executed in the test movies)
 
-@loc_9D50:
-    adc     oamBuffer - 5,y         ; $9D50
+@raise:
+    adc     oamBuffer - 5,y         ; $9D50  (carry clear)
     sta     oamBuffer - 5,y         ; $9D53
 
-@loc_9D56:
+@done:
     ldx     currentObject           ; $9D56
     rts                             ; $9D58
 
-RedDairaFrames:
+; Daira draw: axe entry (sramEnemyTiles) by pose - 1.
+DairaAxeEntries:
     .byte   $10, $12, $14                                                   ; $9D59
 
-RedDairaAxeYOffsets:
+; Daira draw: axe Y from the Daira's, by pose - 1.
+DairaAxeYOffsets:
     .byte   $00, $02, $11                                                   ; $9D5C
 
-RedDairaAxeXOffsets:
+; Daira draw: axe X offset by pose - 1, facing left, then right.
+DairaAxeXOffsets:
     .byte   $0D, $F0, $FB, $F3, $10, $05                                    ; $9D5F
 
 ; ---------------------------------------------------------------------------
 ; OrangeDaira_Draw
 ;
-; Draw the orange Daira.
+; Draw an orange Daira (Daira_DrawWeapon with a = $F6).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OrangeDaira_Draw:
     lda     #$F6                    ; $9D65
-    bne     Daira_DrawWeapon        ; $9D67
+    bne     Daira_DrawWeapon        ; $9D67  (always)
 
 ; ---------------------------------------------------------------------------
 ; RedDaira_Draw
 ;
-; Draw the red Daira.
+; Draw a red Daira, and (Daira_DrawWeapon) the orange one: its body, two
+; pairs of sprites from sramEnemyTiles entry $1A, or $16 on alternate
+; periods while it walks on the ground (every 8 frames, or 4 when it
+; moves faster than 1/2 pixel per frame); and in a swing (pose p = 1-3)
+; its axe, a pair from DairaAxeEntries[p - 1], at Y + DairaAxeYOffsets
+; and X + DairaAxeXOffsets.  In pose 1, the wind-up, the axe is drawn
+; upside down and mirrored, raised behind it.  The two Dairas differ
+; only in palette (sramEnemyAttr).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
@@ -2860,83 +2960,83 @@ Daira_DrawWeapon:
     ; can be in progress here.
     ; Status: provisional
     sta     $95E6                   ; $9D6B
-    lda     #$00                    ; $9D6E
+    lda     #$00                    ; $9D6E  temp13: walking frame
     sta     temp13                  ; $9D70
-    lda     temp2                   ; $9D72
+    lda     temp2                   ; $9D72  keep the facing
     sta     drawScratch             ; $9D74
-    lda     objCollision+1,x        ; $9D76
+    lda     objCollision+1,x        ; $9D76  on the ground
     and     #$04                    ; $9D78
-    beq     @loc_9D91               ; $9D7A
-    lda     objXVelocity+1,x        ; $9D7C
-    beq     @loc_9D91               ; $9D7E
+    beq     @body                   ; $9D7A
+    lda     objXVelocity+1,x        ; $9D7C  and moving?
+    beq     @body                   ; $9D7E
     clc                             ; $9D80
-    adc     #$08                    ; $9D81
-    tay                             ; $9D83
-    lda     #$08                    ; $9D84
+    adc     #$08                    ; $9D81  faster than 1/2 px/frame
+    tay                             ; $9D83  either way: every 4 frames,
+    lda     #$08                    ; $9D84  else every 8
     cpy     #$11                    ; $9D86
-    bcc     @loc_9D8B               ; $9D88
+    bcc     @walkMask               ; $9D88
     lsr     a                       ; $9D8A
 
-@loc_9D8B:
+@walkMask:
     and     frameCounter            ; $9D8B
-    bne     @loc_9D91               ; $9D8D
-    inc     temp13                  ; $9D8F
+    bne     @body                   ; $9D8D
+    inc     temp13                  ; $9D8F  the other frame
 
-@loc_9D91:
-    ldy     objState+1,x            ; $9D91
+@body:
+    ldy     objState+1,x            ; $9D91  temp14 = pose - 1
     dey                             ; $9D93
     sty     temp14                  ; $9D94
     ldy     objOamOffset+1,x        ; $9D96
-    ldx     #$16                    ; $9D98
+    ldx     #$16                    ; $9D98  entry $16 (walking frame)
     lda     temp13                  ; $9D9A
-    bne     @loc_9DA0               ; $9D9C
-    ldx     #$1A                    ; $9D9E
+    bne     @drawBody               ; $9D9C
+    ldx     #$1A                    ; $9D9E  or $1A
 
-@loc_9DA0:
-    jsr     Sprite_DrawEnemyPair    ; $9DA0
-    jsr     Sprite_DrawEnemyPair    ; $9DA3
-    lda     drawOffscreen+1         ; $9DA6
-    bne     @loc_9DEE               ; $9DA8
+@drawBody:
+    jsr     Sprite_DrawEnemyPair    ; $9DA0  top pair
+    jsr     Sprite_DrawEnemyPair    ; $9DA3  bottom pair
+    lda     drawOffscreen+1         ; $9DA6  partly off screen: no axe
+    bne     @done                   ; $9DA8
     ldx     temp14                  ; $9DAA
-    bmi     @loc_9DEE               ; $9DAC
-    bne     @loc_9DBC               ; $9DAE
-    lda     temp2                   ; $9DB0
+    bmi     @done                   ; $9DAC  not swinging: no axe
+    bne     @axe                    ; $9DAE
+    lda     temp2                   ; $9DB0  pose 1: mirrored,
     eor     #$03                    ; $9DB2
     sta     temp2                   ; $9DB4
-    lda     temp3                   ; $9DB6
+    lda     temp3                   ; $9DB6  and upside down
     ora     #$80                    ; $9DB8
     sta     temp3                   ; $9DBA
 
-@loc_9DBC:
-    lda     RedDairaFrames,x        ; $9DBC
+@axe:
+    lda     DairaAxeEntries,x       ; $9DBC  the axe pair
     tax                             ; $9DBF
     jsr     Sprite_DrawEnemyPairKeepX ; $9DC0
-    lda     objY+1,x                ; $9DC3
+    lda     objY+1,x                ; $9DC3  its Y
     ldx     temp14                  ; $9DC5
     clc                             ; $9DC7
-    adc     RedDairaAxeYOffsets,x   ; $9DC8
+    adc     DairaAxeYOffsets,x      ; $9DC8
     sta     oamBuffer - 8,y         ; $9DCB
     sta     oamBuffer - 4,y         ; $9DCE
-    lda     drawScratch             ; $9DD1
-    lsr     a                       ; $9DD3
-    bcc     @loc_9DDB               ; $9DD4
+    lda     drawScratch             ; $9DD1  its X offset, the second
+    lsr     a                       ; $9DD3  three when facing right
+    bcc     @axeX                   ; $9DD4
     txa                             ; $9DD6
     clc                             ; $9DD7
     adc     #$03                    ; $9DD8
     tax                             ; $9DDA
 
-@loc_9DDB:
-    lda     RedDairaAxeXOffsets,x   ; $9DDB
+@axeX:
+    lda     DairaAxeXOffsets,x      ; $9DDB
     pha                             ; $9DDE
     clc                             ; $9DDF
-    adc     oamBuffer - 5,y         ; $9DE0
+    adc     oamBuffer - 5,y         ; $9DE0  both axe sprites
     sta     oamBuffer - 5,y         ; $9DE3
     pla                             ; $9DE6
     clc                             ; $9DE7
     adc     oamBuffer - 1,y         ; $9DE8
     sta     oamBuffer - 1,y         ; $9DEB
 
-@loc_9DEE:
+@done:
     ldx     currentObject           ; $9DEE
     rts                             ; $9DF0
 

@@ -36,6 +36,9 @@ and how each was verified):
 | [Moby](enemies/moby.md) | $1D, $1E in West Hyrule (unused) |
 | [Megmet](enemies/megmet.md) | $1F in West Hyrule |
 | [Geldarm](enemies/geldarm.md) | $20 in West Hyrule |
+| [Moblin](enemies/moblin.md) | $14-$16 in West Hyrule (and the fighters' movement) |
+| [Daira](enemies/daira.md) | $17, $18 in West Hyrule |
+| [Goriya](enemies/goriya.md) | $19-$1B in West Hyrule |
 | [Walking Moblin](enemies/walking-moblin.md) | $21, $22 in West Hyrule |
 
 The enemy tables of the group pages link to them
