@@ -7744,19 +7744,19 @@ Projectile_CheckLinkBody:
     rts                             ; $E59B
 ; (end of code not executed in the test movies)
 
-SpecialHitboxXOffsets:
+SpecialHitboxYOffsets:
     .byte   $12, $00, $05, $10, $05, $02, $02                               ; $E59C
 
-SpecialHitboxWidths:
+SpecialHitboxHeights:
     .byte   $08, $0D, $20, $10, $20, $0D, $10                               ; $E5A3
 
-SpecialHitboxYOffsets:
+SpecialHitboxXOffsets:
     .byte   $00, $00, $00, $FC, $00, $FF, $02                               ; $E5AA
 
-SpecialHitboxHeights:
+SpecialHitboxWidths:
     .byte   $02, $02, $10, $18, $0F, $12                                    ; $E5B1
 
-SpecialHitboxYOffsets2:
+SpecialHitboxXOffsets2:
     .byte   $14                                                             ; $E5B7
 ; (unreferenced: $E5B8-$E5B8, 1 bytes)
     .byte   $F0                                                             ; $E5B8
@@ -7765,9 +7765,13 @@ SpecialHitboxYOffsets2:
 ; ---------------------------------------------------------------------------
 ; Enemy_GetSpecialHitbox
 ;
-; Set box B (temp4-temp7, see Hitbox_Overlap) to enemy x's vulnerable part,
-; by enemyAiVar, mirrored by its facing.
-; Enemy_CheckProjectileHitsSpecial tests it against Link's projectiles.
+; Set box B (temp4-temp7, see Hitbox_Overlap) to enemy x's guard: the
+; part that turns Link's sword and projectiles aside (a shield, a claw),
+; by enemyAiVar v: Y + SpecialHitboxYOffsets[v], height
+; SpecialHitboxHeights[v], screen X + SpecialHitboxXOffsets[v], width
+; SpecialHitboxWidths[v].  Guards 0 and 1 (2 pixels wide) move 13 pixels
+; right when it faces right; guard 4 moves by SpecialHitboxXOffsets2 by
+; facing (-16 facing right).  Enemy_CheckProjectileHitsSpecial tests it.
 ;
 ; In:      x = enemy index
 ; Status:  confirmed
@@ -7776,14 +7780,14 @@ Enemy_GetSpecialHitbox:
     lda     objY+1,x                ; $E5BA
     ldy     enemyAiVar,x            ; $E5BC
     clc                             ; $E5BF
-    adc     SpecialHitboxXOffsets,y ; $E5C0
+    adc     SpecialHitboxYOffsets,y ; $E5C0
     sta     temp5                   ; $E5C3
-    lda     SpecialHitboxWidths,y   ; $E5C5
+    lda     SpecialHitboxHeights,y  ; $E5C5
     sta     temp7                   ; $E5C8
     lda     drawScreenX+1           ; $E5CA
-    adc     SpecialHitboxYOffsets,y ; $E5CC
+    adc     SpecialHitboxXOffsets,y ; $E5CC
     sta     temp4                   ; $E5CF
-    lda     SpecialHitboxHeights,y  ; $E5D1
+    lda     SpecialHitboxWidths,y   ; $E5D1
     sta     temp6                   ; $E5D4
     cpy     #$02                    ; $E5D6
     bcs     @loc_E5E5               ; $E5D8
@@ -7799,7 +7803,7 @@ Enemy_GetSpecialHitbox:
     bne     Enemy_GetSpecialHitboxDone ; $E5E7
     ldy     objFacing+1,x           ; $E5E9
     lda     temp4                   ; $E5EB
-    adc     SpecialHitboxYOffsets2,y ; $E5ED
+    adc     SpecialHitboxXOffsets2,y ; $E5ED
     sta     temp4                   ; $E5F0
 
 ; ---------------------------------------------------------------------------
@@ -7849,6 +7853,19 @@ Shield_GetHitbox:
 Shield_GetHitboxDone:
     rts                             ; $E616
 
+; ---------------------------------------------------------------------------
+; Enemy_CheckProjectileHitsSpecial
+;
+; Test enemy x's guard (Enemy_GetSpecialHitbox), when it and Link are on
+; screen and its Y is $20 or more: each of Link's projectiles touching it is
+; destroyed (LinkProjectile_Disintegrate) with the clink sound; if Link's
+; sword touches it, the sword clinks (Enemy_SwordClink), and the return
+; to the caller is dropped, so that the caller's own hit test
+; (Enemy_UpdateCommon) is skipped this frame.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Enemy_CheckProjectileHitsSpecial:
     lda     drawOffscreen           ; $E617
     asl     a                       ; $E619

@@ -40,6 +40,10 @@ and how each was verified):
 | [Daira](enemies/daira.md) | $17, $18 in West Hyrule |
 | [Goriya](enemies/goriya.md) | $19-$1B in West Hyrule |
 | [Walking Moblin](enemies/walking-moblin.md) | $21, $22 in West Hyrule |
+| [Tektite](enemies/tektite.md) | $14 in East Hyrule |
+| [Eye](enemies/eye.md) | $15 in East Hyrule |
+| [Leever](enemies/leever.md) | $16 in East Hyrule |
+| [Boon](enemies/boon.md) | $17 in East Hyrule |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI

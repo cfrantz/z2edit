@@ -1382,18 +1382,23 @@ Projectile_Rock_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_FallingRock_Bank2
 ;
-; Projectile type 8 (dropped rock): falls with gravity until it hits the
-; background, then sparks.
+; Projectile type 8 (a rock dropped by a Boon or thrown by the rock
+; thrower): falls under gravity of 1/16 pixel per frame per frame until
+; it hits the background (Projectile_HitsBg, tested only at Y $90 or
+; more), when it bursts (objState+7 = $F3, counting up as it is drawn as
+; a spark).  Projectile_RockGravity_Bank2 is the falling part, also used
+; by the deflected rock (Projectile_Rock_Bank2).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_FallingRock_Bank2:
-    jsr     Projectile_HitsBg       ; $965B
-    lda     #$F3                    ; $965E
+    jsr     Projectile_HitsBg       ; $965B  hit the ground?
+    lda     #$F3                    ; $965E  yes: burst
     bcs     Projectile_Kill_Bank2   ; $9660
 
 Projectile_RockGravity_Bank2:
-    inc     objYVelocity+7,x        ; $9662
+    inc     objYVelocity+7,x        ; $9662  gravity: +1/16 px/frame
 
 ; ---------------------------------------------------------------------------
 ; Projectile_MoveAndCheck_Bank2
@@ -1757,287 +1762,329 @@ RockThrower_Ai:
 ; ---------------------------------------------------------------------------
 ; Leever_Init
 ;
-; Spawn routine of Leevers: a random start delay; its hiding depth
-; (objState) is $1C below its spawn point.
+; Spawn routine of Leevers: hidden ($1C below its spawn Y, its depth, kept
+; in objState+1), for 0-255 frames at random before it first comes up.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Leever_Init:
-    lda     rng+1,x                 ; $97F3
+    lda     rng+1,x                 ; $97F3  first wait: 0-255 frames
     sta     timerFast+TIMER_ENEMY,x ; $97F6
-    lda     objY+1,x                ; $97F9
+    lda     objY+1,x                ; $97F9  depth = spawn Y + $1C
     clc                             ; $97FB
     adc     #$1C                    ; $97FC
     sta     objState+1,x            ; $97FE
-    sta     objY+1,x                ; $9800
+    sta     objY+1,x                ; $9800  hidden there
     rts                             ; $9802
 
+; Tektite: X velocity in the air by facing - 1: 1 px/frame.
 TektiteSpeeds:
     .byte   $10, $F0                                                        ; $9803
 
 ; ---------------------------------------------------------------------------
 ; Tektite_Ai
 ;
-; Enemy $14 of East Hyrule (z2edit: Tektite): walks toward Link, turning
-; at walls, and now and then (on the ground, at random) leaps (Y speed
-; -$3B); its hitbox changes while it is in the air.  Every 64 frames, half
-; the time, it fires projectile type 6 from its top.  Identification not
-; checked on screen.
+; Tektite (East Hyrule $14): a long-legged creature that leaps over Link.
+; enemyAiState runs a 32-step cycle, $F1-$10, counted every frame on the
+; ground and every other frame in the air (Y velocity bit 1); its
+; distance from 0 lowers the top half of the body (Tektite_Draw), and in
+; the middle half of the cycle the type's hitbox is the tall $89 instead
+; of $80 (sramEnemyHitbox+$14, rewritten every frame).  At step $F8, on
+; the ground, half the time it leaps: Y velocity -$3B, falling under
+; Enemy_MoveYAndFall's gravity (about 50 pixels up, 60 frames long),
+; and 1 pixel per frame the way it faces.  On the ground it faces Link
+; and stands still; in the air it keeps its facing, so it lands beyond
+; Link and leaps back.  It turns at walls.
 ;
-; Status:  provisional
+; Every 64 frames (frameCounter), half the time, it fires projectile
+; type 6 (2 pixels per frame straight, Projectile_Straight_Bank2) the way
+; it faces, at the height of its top sprite ($F8, gone at once, when that
+; sprite is off screen).
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Tektite_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $9805
+    jsr     Enemy_SkipAiIfStunned   ; $9805  no AI while stunned
     jsr     Enemy_Draw              ; $9808
-    lda     objYVelocity+1,x        ; $980B
-    beq     @loc_9814               ; $980E
-    and     #$02                    ; $9810
-    beq     @loc_9820               ; $9812
+    lda     objYVelocity+1,x        ; $980B  on the ground (0), or in the
+    beq     @count                  ; $980E  air on frames with Y velocity
+    and     #$02                    ; $9810  bit 1 set:
+    beq     @checkLeap              ; $9812
 
-@loc_9814:
-    inc     enemyAiState,x          ; $9814
+@count:
+    inc     enemyAiState,x          ; $9814  step the cycle
     lda     enemyAiState,x          ; $9816
-    cmp     #$11                    ; $9818
-    bne     @loc_9820               ; $981A
+    cmp     #$11                    ; $9818  $F1-$10, 32 steps
+    bne     @checkLeap              ; $981A
     lda     #$F1                    ; $981C
     sta     enemyAiState,x          ; $981E
 
-@loc_9820:
-    cmp     #$F8                    ; $9820
-    bne     @loc_9837               ; $9822
-    lda     rng+1,x                 ; $9824
+@checkLeap:
+    cmp     #$F8                    ; $9820  step $F8,
+    bne     @fall                   ; $9822
+    lda     rng+1,x                 ; $9824  half the time,
     lsr     a                       ; $9827
-    bcc     @loc_9837               ; $9828
-    lda     objCollision+1,x        ; $982A
+    bcc     @fall                   ; $9828
+    lda     objCollision+1,x        ; $982A  on the ground:
     and     #$04                    ; $982C
-    beq     @loc_9837               ; $982E
-    lda     #$C5                    ; $9830
+    beq     @fall                   ; $982E
+    lda     #$C5                    ; $9830  leap (Y velocity -$3B)
     sta     objYVelocity+1,x        ; $9832
-    dec     objY+1,x                ; $9835
+    dec     objY+1,x                ; $9835  off the floor
 
-@loc_9837:
-    jsr     Enemy_Fall_Bank2        ; $9837
+@fall:
+    jsr     Enemy_Fall_Bank2        ; $9837  probe, fall or land
     lda     objCollision+1,x        ; $983A
-    and     #$03                    ; $983C
-    beq     @loc_9843               ; $983E
-    jsr     Enemy_TurnAround        ; $9840
+    and     #$03                    ; $983C  wall ahead?
+    beq     @move                   ; $983E
+    jsr     Enemy_TurnAround        ; $9840  turn around
 
-@loc_9843:
-    ldy     objFacing+1,x           ; $9843
+@move:
+    ldy     objFacing+1,x           ; $9843  y = facing - 1
     dey                             ; $9845
-    lda     objYVelocity+1,x        ; $9846
-    bne     @loc_9854               ; $9849
-    jsr     Enemy_FaceLink          ; $984B
+    lda     objYVelocity+1,x        ; $9846  in the air:
+    bne     @moveX                  ; $9849  fly on
+    jsr     Enemy_FaceLink          ; $984B  on the ground: face Link
     lda     objCollision+1,x        ; $984E
-    and     #$04                    ; $9850
-    bne     @loc_985C               ; $9852
+    and     #$04                    ; $9850  and stand (unless no floor)
+    bne     @maybeFire              ; $9852
 
-@loc_9854:
-    lda     TektiteSpeeds,y         ; $9854
+@moveX:
+    lda     TektiteSpeeds,y         ; $9854  1 px/frame the way it faces
     sta     objXVelocity+1,x        ; $9857
     jsr     Enemy_MoveX             ; $9859
 
-@loc_985C:
-    lda     frameCounter            ; $985C
+@maybeFire:
+    lda     frameCounter            ; $985C  every 64 frames,
     and     #$3F                    ; $985E
-    bne     @loc_987F               ; $9860
-    lda     rng+1,x                 ; $9862
+    bne     @setHitbox              ; $9860
+    lda     rng+1,x                 ; $9862  half the time,
     and     #$01                    ; $9865
-    bne     @loc_987F               ; $9867
-    jsr     Enemy_FireProjectile    ; $9869
-    bcs     @loc_987F               ; $986C
-    lda     #$06                    ; $986E
+    bne     @setHitbox              ; $9867
+    jsr     Enemy_FireProjectile    ; $9869  fire the way it faces
+    bcs     @setHitbox              ; $986C
+    lda     #$06                    ; $986E  projectile type 6
     sta     a:objState+7,y          ; $9870
     sty     temp0                   ; $9873
-    ldy     objOamOffset+1,x        ; $9875
+    ldy     objOamOffset+1,x        ; $9875  at its top sprite's Y
     lda     oamBuffer,y             ; $9877
     ldy     temp0                   ; $987A
     sta     a:objY+7,y              ; $987C
 
-@loc_987F:
-    ldy     #$80                    ; $987F
+@setHitbox:
+    ldy     #$80                    ; $987F  hitbox $80 at steps $F8-$07,
     lda     enemyAiState,x          ; $9881
     adc     #$08                    ; $9883
     cmp     #$10                    ; $9885
-    bcc     @loc_988B               ; $9887
-    ldy     #$89                    ; $9889
+    bcc     @storeHitbox            ; $9887
+    ldy     #$89                    ; $9889  $89 otherwise
 
-@loc_988B:
-    sty     sramEnemyHitbox+20      ; $988B
+@storeHitbox:
+    sty     sramEnemyHitbox+20      ; $988B  (the type's own entry)
+    ; Enemy_UpdateCommon, without drawing it again.
     ldy     #$01                    ; $988E
     inx                             ; $9890
     jsr     Obj_ComputeScreenPos    ; $9891
     ldx     currentObject           ; $9894
-    lda     objYHi+1,x              ; $9896
+    lda     objYHi+1,x              ; $9896  fallen below the screen?
     cmp     #$02                    ; $9898
-    bcc     @loc_989F               ; $989A
+    bcc     @onScreen               ; $989A
 ; (code below not executed in the test movies)
     jmp     Enemy_Despawn           ; $989C
 ; (end of code not executed in the test movies)
 
-@loc_989F:
-    lda     drawOffscreen+1         ; $989F
-    and     #$FC                    ; $98A1
-    beq     @loc_98AE               ; $98A3
+@onScreen:
+    lda     drawOffscreen+1         ; $989F  off screen: no hit tests,
+    and     #$FC                    ; $98A1  despawn if far
+    beq     @hitTests               ; $98A3
     lda     objCollision+1,x        ; $98A5
     and     #$0F                    ; $98A7
     sta     objCollision+1,x        ; $98A9
     jmp     Enemy_DespawnIfFar      ; $98AB
 
-@loc_98AE:
+@hitTests:
     jsr     Enemy_CheckProjectileHits ; $98AE
     jsr     Enemy_CheckSwordHit     ; $98B1
     jsr     Enemy_CheckLinkContact  ; $98B4
+; Eye: X velocity by facing; indexed by 1 or 2 it reads the two bytes
+; after this jmp, EyeYSpeeds: $08, $F8.
 EyeXSpeeds := * + 2
     jmp     Enemy_HurtLinkOnContact ; $98B7
 
+; Eye: bobbing Y velocity (down, up); also its X velocity (EyeXSpeeds).
 EyeYSpeeds:
     .byte   $08, $F8                                                        ; $98BA
 
 ; ---------------------------------------------------------------------------
 ; Eye_Ai
 ;
-; Enemy $15 of East Hyrule (z2edit: Eye): flies across at speed 8, bobbing
-; up and down in phases, turning toward Link every 64 frames and pausing at
-; random; only one part of it (vulnerable part 5) can be hit.
+; Eye (East Hyrule $15, a flying eye).  It flies 1/2 pixel per frame the
+; way it faces, turning toward Link every 64 frames (enemyAiState counts
+; frames), and bobs: in the second half of each 64 frames it drifts 1/2
+; pixel per frame down, then the next time up (bit 6), 16 pixels each
+; way.  On 1 frame in 32 at random it stops for 63 frames
+; (timerFast+TIMER_ENEMY) and opens its eye (Eye_Draw).  It
+; ignores the background.  Guard 5 (enemyAiVar, Enemy_GetSpecialHitbox),
+; nearly all of it, turns Link's sword and projectiles aside in flight;
+; while it is stopped the guard isn't tested, and it can be hurt.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Eye_Ai:
     jsr     Enemy_HurtLinkOnContact ; $98BC
-    lda     timerFast+TIMER_ENEMY,x ; $98BF
-    beq     @loc_98C7               ; $98C2
-    jmp     Enemy_UpdateCommon      ; $98C4
+    lda     timerFast+TIMER_ENEMY,x ; $98BF  stopped?
+    beq     @fly                    ; $98C2
+    jmp     Enemy_UpdateCommon      ; $98C4  yes: just draw and test
 
-@loc_98C7:
-    lda     enemyAiState,x          ; $98C7
+@fly:
+    lda     enemyAiState,x          ; $98C7  frames 32-63 of every 64:
     and     #$20                    ; $98C9
-    beq     @loc_98DE               ; $98CB
-    lda     enemyAiState,x          ; $98CD
-    asl     a                       ; $98CF
+    beq     @countFrame             ; $98CB
+    lda     enemyAiState,x          ; $98CD  bob: bit 6 picks down (0)
+    asl     a                       ; $98CF  or up (1)
     asl     a                       ; $98D0
     lda     #$00                    ; $98D1
     rol     a                       ; $98D3
     tay                             ; $98D4
-    lda     EyeYSpeeds,y            ; $98D5
+    lda     EyeYSpeeds,y            ; $98D5  1/2 px/frame
     sta     objYVelocity+1,x        ; $98D8
     jsr     Enemy_MoveY             ; $98DB
 
-@loc_98DE:
+@countFrame:
     inc     enemyAiState,x          ; $98DE
     lda     enemyAiState,x          ; $98E0
-    and     #$3F                    ; $98E2
-    bne     @loc_98E9               ; $98E4
-    jsr     Enemy_FaceLink          ; $98E6
+    and     #$3F                    ; $98E2  every 64 frames
+    bne     @moveX                  ; $98E4
+    jsr     Enemy_FaceLink          ; $98E6  turn toward Link
 
-@loc_98E9:
-    ldy     objFacing+1,x           ; $98E9
+@moveX:
+    ldy     objFacing+1,x           ; $98E9  1/2 px/frame the way it faces
     lda     EyeXSpeeds,y            ; $98EB
     sta     objXVelocity+1,x        ; $98EE
     jsr     Enemy_MoveX             ; $98F0
-    jsr     Enemy_Draw              ; $98F3
-    lda     #$05                    ; $98F6
-    sta     enemyAiVar,x            ; $98F8
-    jsr     Enemy_CheckProjectileHitsSpecial ; $98FB
-    jsr     Enemy_UpdateCommon      ; $98FE
-    lda     rng+1,x                 ; $9901
+    jsr     Enemy_Draw              ; $98F3  (the guard is tested against
+    lda     #$05                    ; $98F6  its sprites' positions)
+    sta     enemyAiVar,x            ; $98F8  guard 5
+    jsr     Enemy_CheckProjectileHitsSpecial ; $98FB  (a clink returns from here)
+    jsr     Enemy_UpdateCommon      ; $98FE  draw, hit tests (no background)
+    lda     rng+1,x                 ; $9901  1 frame in 32:
     and     #$1F                    ; $9904
     bne     @done                   ; $9906
-    lda     #$3F                    ; $9908
+    lda     #$3F                    ; $9908  stop for 63 frames
     sta     timerFast+TIMER_ENEMY,x ; $990A
 
 @done:
     rts                             ; $990D
 
+; Leever: X velocity toward Link (0 right, 1 left), 1 px/frame.
 LeeverSpeeds:
     .byte   $10, $F0                                                        ; $990E
 
 ; ---------------------------------------------------------------------------
 ; Leever_Ai
 ;
-; Leever ($16): by enemyAiState: appear at a random place near the screen,
-; facing Link, rise out of the sand, move along it for 48-111 frames, then
-; sink back for 32 frames, and again.
+; Leever (East Hyrule $16, a sand creature), by enemyAiState bits 1-0:
 ;
-; Status:  provisional
+; 0. Hidden: when its timer runs out, it moves to a random X on the screen
+;    (scrollX + rng+1,x) at its depth, facing Link with 1 pixel per frame
+;    his way (LeeverSpeeds), and waits 80 frames.
+; 1. Rising: during the last 24 of them it rises 1 pixel every other
+;    frame, 12 pixels; then it moves on for 48-127 frames.
+; 2. Moving: 1 pixel per frame, straight on; then it sinks.
+; 3. Sinking: 1 pixel every other frame for 32 frames, 16 pixels; then it
+;    stays hidden for 48-127 frames.
+;
+; It is drawn behind the background (Leever_Draw), so it shows only
+; where the background is empty: above the sand.  It ignores walls and
+; is tested for hits even while hidden.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Leever_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $9910
-    jsr     Enemy_UpdateCommon      ; $9913
+    jsr     Enemy_SkipAiIfStunned   ; $9910  no AI while stunned
+    jsr     Enemy_UpdateCommon      ; $9913  draw, hit tests (no background)
     jsr     Enemy_HurtLinkOnContact ; $9916
     lda     enemyAiState,x          ; $9919
     and     #$03                    ; $991B
     jsr     JumpTable               ; $991D
 ; (inline jump table)
-    .word   @loc_9928               ; $9920
-    .word   @loc_9950               ; $9922
-    .word   @loc_996C               ; $9924
-    .word   @loc_997C               ; $9926
+    .word   @hidden                 ; $9920
+    .word   @rising                 ; $9922
+    .word   @moving                 ; $9924
+    .word   @sinking                ; $9926
 
-@loc_9928:
-    lda     timerFast+TIMER_ENEMY,x ; $9928
+@hidden:
+    lda     timerFast+TIMER_ENEMY,x ; $9928  time to come up?
     bne     @done                   ; $992B
-    lda     #$50                    ; $992D
+    lda     #$50                    ; $992D  80 frames to rise
     sta     timerFast+TIMER_ENEMY,x ; $992F
-    lda     rng+1,x                 ; $9932
+    lda     rng+1,x                 ; $9932  a random X on the screen
     adc     scrollX                 ; $9935
     sta     objX+1,x                ; $9938
     lda     scrollXHi               ; $993A
     adc     #$00                    ; $993D
     sta     objXHi+1,x              ; $993F
-    jsr     Enemy_FaceLink          ; $9941
-    lda     LeeverSpeeds,y          ; $9944
+    jsr     Enemy_FaceLink          ; $9941  facing Link,
+    lda     LeeverSpeeds,y          ; $9944  1 px/frame his way
     sta     objXVelocity+1,x        ; $9947
-    lda     objState+1,x            ; $9949
+    lda     objState+1,x            ; $9949  at its depth
     sta     objY+1,x                ; $994B
-    inc     enemyAiState,x          ; $994D
+    inc     enemyAiState,x          ; $994D  rising
 
 @done:
     rts                             ; $994F
 
-@loc_9950:
+@rising:
     lda     timerFast+TIMER_ENEMY,x ; $9950
-    beq     @loc_9960               ; $9953
-    cmp     #$1A                    ; $9955
+    beq     @nextPhase              ; $9953  done: move
+    cmp     #$1A                    ; $9955  in the last 24 frames,
     bcs     @done2                  ; $9957
-    and     #$01                    ; $9959
+    and     #$01                    ; $9959  every other frame,
     bne     @done2                  ; $995B
-    dec     objY+1,x                ; $995D
+    dec     objY+1,x                ; $995D  1 pixel up
 
 @done2:
     rts                             ; $995F
 
-@loc_9960:
-    inc     enemyAiState,x          ; $9960
-    lda     rng+1,x                 ; $9962
+@nextPhase:
+    inc     enemyAiState,x          ; $9960  rising -> moving, sinking -> hidden
+    lda     rng+1,x                 ; $9962  for 48-127 frames
     lsr     a                       ; $9965
     ora     #$30                    ; $9966
     sta     timerFast+TIMER_ENEMY,x ; $9968
     rts                             ; $996B
 
-@loc_996C:
+@moving:
     jsr     Enemy_MoveX             ; $996C
     lda     timerFast+TIMER_ENEMY,x ; $996F
     bne     @done3                  ; $9972
-    inc     enemyAiState,x          ; $9974
-    lda     #$20                    ; $9976
+    inc     enemyAiState,x          ; $9974  then sink,
+    lda     #$20                    ; $9976  for 32 frames
     sta     timerFast+TIMER_ENEMY,x ; $9978
 
 @done3:
     rts                             ; $997B
 
-@loc_997C:
+@sinking:
     lda     timerFast+TIMER_ENEMY,x ; $997C
-    beq     @loc_9960               ; $997F
-    lsr     a                       ; $9981
+    beq     @nextPhase              ; $997F  done: hide
+    lsr     a                       ; $9981  every other frame,
     bcc     Leever_Ai_Done          ; $9982
+; Boon: X velocity by its direction 2, 3: read from here + 2, + 3,
+; BoonYSpeeds: $20, $E0.
 BoonXSpeeds := * + 1
-    inc     objY+1,x                ; $9984
+    inc     objY+1,x                ; $9984  1 pixel down
 
 Leever_Ai_Done:
     rts                             ; $9986
 ; (unreferenced: $9987-$9A10, 138 bytes)
 
+; Boon: Y velocity by direction (0 down, 1 up); X velocity for 2, 3
+; (BoonXSpeeds).
 BoonYSpeeds:
     .byte   $20, $E0                                                        ; $9987
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -2045,73 +2092,78 @@ BoonYSpeeds:
 ; ---------------------------------------------------------------------------
 ; Boon_Ai
 ;
-; Enemy $17 of East Hyrule (z2edit: Boon): flies high, picking a random
-; direction (up, down, left, right) every 8-23 frames, and drops a rock
-; (projectile type 8) every 32 frames while above Y $70; reappears at the
-; top of the screen when it leaves it.  Not executed in the test movies.
+; Boon (East Hyrule $17, a flying insect).  Whenever it isn't on screen
+; (enemyAiState 0) it comes back at Y $30 at a random X on the screen.
+; It flies 2 pixels per frame in one of four directions (objState+1: 0
+; down, 1 up, 2 right, 3 left; BoonMoves), a new random one every 8-23
+; frames (timerFast+TIMER_ENEMY), with no limits but the screen.  Every
+; 32 frames (frameCounter), while above Y $70, it drops a rock
+; (Enemy_DropRock_Bank2), even while stunned.  It faces Link.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boon_Ai:
-    lda     objY+1,x                ; $9989
+    lda     objY+1,x                ; $9989  above Y $70,
     cmp     #$70                    ; $998B
-    bcs     @loc_9998               ; $998D
-    lda     frameCounter            ; $998F
+    bcs     @setFacing              ; $998D
+    lda     frameCounter            ; $998F  every 32 frames:
     and     #$1F                    ; $9991
-    bne     @loc_9998               ; $9993
-    jsr     Enemy_DropRock_Bank2    ; $9995
+    bne     @setFacing              ; $9993
+    jsr     Enemy_DropRock_Bank2    ; $9995  drop a rock
 
-@loc_9998:
-    ldy     #$01                    ; $9998
-    lda     objXVelocity+1,x        ; $999A
-    bpl     @loc_999F               ; $999C
+@setFacing:
+    ldy     #$01                    ; $9998  face its X velocity
+    lda     objXVelocity+1,x        ; $999A  (replaced below by
+    bpl     @storeFacing            ; $999C  Enemy_FaceLink unless stunned)
     iny                             ; $999E
 
-@loc_999F:
+@storeFacing:
     sty     objFacing+1,x           ; $999F
-    jsr     Enemy_SkipAiIfStunned   ; $99A1
-    jsr     Enemy_UpdateCommon      ; $99A4
+    jsr     Enemy_SkipAiIfStunned   ; $99A1  no AI while stunned
+    jsr     Enemy_UpdateCommon      ; $99A4  draw, hit tests (no background)
     jsr     Enemy_HurtLinkOnContact ; $99A7
-    jsr     Enemy_FaceLink          ; $99AA
+    jsr     Enemy_FaceLink          ; $99AA  face Link
     lda     enemyAiState,x          ; $99AD
-    bne     @loc_99D2               ; $99AF
-    sta     objState+1,x            ; $99B1
+    bne     @flying                 ; $99AF
+    ; Come (back) on screen: at Y $30, a random X.
+    sta     objState+1,x            ; $99B1  direction 0
     lda     #$30                    ; $99B3
     sta     objY+1,x                ; $99B5
     lda     #$01                    ; $99B7
     sta     objYHi+1,x              ; $99B9
-    lda     rng+1,x                 ; $99BB
-    adc     scrollX                 ; $99BE
+    lda     rng+1,x                 ; $99BB  X = screen's left edge
+    adc     scrollX                 ; $99BE  + 0-255
     sta     objX+1,x                ; $99C1
     lda     scrollXHi               ; $99C3
     adc     #$00                    ; $99C6
     sta     objXHi+1,x              ; $99C8
-    lda     #$20                    ; $99CA
+    lda     #$20                    ; $99CA  first turn in 32 frames
     sta     timerFast+3,x           ; $99CC
-    inc     enemyAiState,x          ; $99CF
+    inc     enemyAiState,x          ; $99CF  flying
     rts                             ; $99D1
 
-@loc_99D2:
-    lda     drawOffscreen+1         ; $99D2
-    and     #$CC                    ; $99D4
-    beq     @loc_99DA               ; $99D6
-    dec     enemyAiState,x          ; $99D8
+@flying:
+    lda     drawOffscreen+1         ; $99D2  off screen (either side, or
+    and     #$CC                    ; $99D4  above or below)?
+    beq     @checkTurn              ; $99D6
+    dec     enemyAiState,x          ; $99D8  come back next frame
 
-@loc_99DA:
-    lda     timerFast+3,x           ; $99DA
-    bne     @loc_99EF               ; $99DD
-    lda     rng+1,x                 ; $99DF
+@checkTurn:
+    lda     timerFast+3,x           ; $99DA  time to turn?
+    bne     @move                   ; $99DD
+    lda     rng+1,x                 ; $99DF  next turn in 8-23 frames,
     pha                             ; $99E2
     and     #$0F                    ; $99E3
     ora     #$08                    ; $99E5
     sta     timerFast+3,x           ; $99E7
     pla                             ; $99EA
-    and     #$03                    ; $99EB
+    and     #$03                    ; $99EB  a random direction
     sta     objState+1,x            ; $99ED
 
-@loc_99EF:
+@move:
     lda     objState+1,x            ; $99EF
-    jsr     JumpTable               ; $99F1
+    jsr     JumpTable               ; $99F1  (BoonMoves)
 ; (end of disassembled code)
 
 
@@ -2120,15 +2172,17 @@ BoonMoves:
     .word   Boon_MoveY, Boon_MoveY, Boon_MoveX, Boon_MoveX ; $99F4
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
+; Boon: fly down (direction 0) or up (1) at 2 px/frame.
 Boon_MoveY:
-    ldy     objState+1,x            ; $99FC
-    lda     BoonYSpeeds,y           ; $99FE
+    ldy     objState+1,x            ; $99FC  direction 0 or 1
+    lda     BoonYSpeeds,y           ; $99FE  $20 down, $E0 up
     sta     objYVelocity+1,x        ; $9A01
     jmp     Enemy_MoveY             ; $9A04
 
+; Boon: fly right (direction 2) or left (3) at 2 px/frame.
 Boon_MoveX:
-    ldy     objState+1,x            ; $9A07
-    lda     BoonXSpeeds,y           ; $9A09
+    ldy     objState+1,x            ; $9A07  direction 2 or 3
+    lda     BoonXSpeeds,y           ; $9A09  $20 right, $E0 left
     sta     objXVelocity+1,x        ; $9A0C
     jmp     Enemy_MoveX             ; $9A0E
 ; (end of disassembled code)
@@ -2137,16 +2191,18 @@ Boon_MoveX:
 ; ---------------------------------------------------------------------------
 ; Enemy_DropRock_Bank2
 ;
-; Fire projectile type 8 (a rock dropped with no speed) from enemy x.
+; Drop a rock (projectile type 8, Projectile_FallingRock_Bank2) from enemy
+; x's position, with no speed, if a projectile slot is free.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DropRock_Bank2:
-    jsr     Enemy_FireProjectile    ; $9A11
-    bcs     Enemy_DropRock_Done_Bank2 ; $9A14
-    lda     #$08                    ; $9A16
+    jsr     Enemy_FireProjectile    ; $9A11  from its position
+    bcs     Enemy_DropRock_Done_Bank2 ; $9A14  no free slot
+    lda     #$08                    ; $9A16  projectile type 8
     sta     a:objState+7,y          ; $9A18
-    lda     #$00                    ; $9A1B
+    lda     #$00                    ; $9A1B  just dropped
     sta     objYVelocity+7,y        ; $9A1D
     sta     a:objXVelocity+7,y      ; $9A20
 
@@ -2771,33 +2827,36 @@ RockThrower_Draw:
 ; ---------------------------------------------------------------------------
 ; Tektite_Draw
 ;
-; Draw enemy $14 of East Hyrule.
+; Draw a Tektite: two pairs of sprites facing its objFacing, from
+; sramEnemyTiles entry $00, or $04 while its hitbox is the tall $89 (legs
+; stretched); the top pair lowered by its cycle step's distance from 0
+; (enemyAiState, 0-15 pixels), so that it crouches and stretches.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Tektite_Draw:
-    ldx     #$00                    ; $9DAC
+    ldx     #$00                    ; $9DAC  entry $00,
     lda     sramEnemyHitbox+20      ; $9DAE
     cmp     #$89                    ; $9DB1
-    bne     @loc_9DB7               ; $9DB3
-    ldx     #$04                    ; $9DB5
+    bne     @draw                   ; $9DB3
+    ldx     #$04                    ; $9DB5  or $04 stretched
 
-@loc_9DB7:
-    jsr     Sprite_DrawEnemyPair    ; $9DB7
-    jsr     Sprite_DrawEnemyPairKeepX ; $9DBA
-    lda     enemyAiState,x          ; $9DBD
-    bpl     @loc_9DC3               ; $9DBF
+@draw:
+    jsr     Sprite_DrawEnemyPair    ; $9DB7  top pair
+    jsr     Sprite_DrawEnemyPairKeepX ; $9DBA  bottom pair
+    lda     enemyAiState,x          ; $9DBD  |step| (one less for negative
+    bpl     @lower                  ; $9DBF  steps)
     eor     #$FF                    ; $9DC1
 
-@loc_9DC3:
+@lower:
     sta     temp0                   ; $9DC3
-    lda     oamBuffer - 16,y        ; $9DC5
-    cmp     #$F0                    ; $9DC8
-    bcs     @loc_9DD1               ; $9DCA
+    lda     oamBuffer - 16,y        ; $9DC5  lower the top pair's sprites
+    cmp     #$F0                    ; $9DC8  (unless hidden)
+    bcs     @second                 ; $9DCA
     adc     temp0                   ; $9DCC
     sta     oamBuffer - 16,y        ; $9DCE
 
-@loc_9DD1:
+@second:
     lda     oamBuffer - 12,y        ; $9DD1
     cmp     #$F0                    ; $9DD4
     bcs     @done                   ; $9DD6
@@ -2810,35 +2869,40 @@ Tektite_Draw:
 ; ---------------------------------------------------------------------------
 ; Eye_Draw
 ;
-; Draw enemy $15 of East Hyrule.
+; Draw an Eye: a pair of sprites facing its objFacing, sramEnemyTiles
+; entry $0A (its eye a slit) while it flies, $08 (wide open) while it is
+; stopped (its timer not 0 or $80).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Eye_Draw:
     lda     timerFast+TIMER_ENEMY,x ; $9DDE
-    ldx     #$0A                    ; $9DE1
+    ldx     #$0A                    ; $9DE1  entry $0A,
     asl     a                       ; $9DE3
-    beq     @loc_9DE8               ; $9DE4
-    ldx     #$08                    ; $9DE6
+    beq     @draw                   ; $9DE4
+    ldx     #$08                    ; $9DE6  or $08 while stopped
 
-@loc_9DE8:
+@draw:
     jmp     Sprite_DrawEnemyPairKeepX ; $9DE8
 
 ; ---------------------------------------------------------------------------
 ; Leever_Draw
 ;
-; Draw a Leever.
+; Draw a Leever: a symmetric pair of sprites (the right one mirrored),
+; alternating between sramEnemyTiles entries $0C and $0E every 8 frames,
+; in palette 3 and behind the background (attribute $23), so that it
+; shows only where the background is empty.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Leever_Draw:
-    ldx     #$02                    ; $9DEB
+    ldx     #$02                    ; $9DEB  as if facing left
     stx     temp2                   ; $9DED
-    lda     #$23                    ; $9DEF
+    lda     #$23                    ; $9DEF  palette 3, behind the background
     sta     temp3                   ; $9DF1
-    lda     #$0C                    ; $9DF3
+    lda     #$0C                    ; $9DF3  entries $0C / $0E
     jsr     Sprite_DrawAnimatedEnemyPair ; $9DF5
-    lda     oamBuffer - 2,y         ; $9DF8
+    lda     oamBuffer - 2,y         ; $9DF8  mirror the right sprite
     ora     #$40                    ; $9DFB
     sta     oamBuffer - 2,y         ; $9DFD
     rts                             ; $9E00
@@ -2847,19 +2911,20 @@ Leever_Draw:
 ; ---------------------------------------------------------------------------
 ; Boon_Draw
 ;
-; Draw enemy $17 of East Hyrule.  Not executed in the test movies.
+; Draw a Boon: a pair of sprites facing its objFacing, alternating every
+; frame between sramEnemyTiles entries $10 and $12, its wings buzzing.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boon_Draw:
-    ldx     #$10                    ; $9E01
+    ldx     #$10                    ; $9E01  entry $10,
     lda     frameCounter            ; $9E03
     lsr     a                       ; $9E05
-    bcc     @loc_9E0A               ; $9E06
-    inx                             ; $9E08
+    bcc     @draw                   ; $9E06
+    inx                             ; $9E08  or $12 on odd frames
     inx                             ; $9E09
 
-@loc_9E0A:
+@draw:
 SegmentXOffsets_Bank2 := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $9E0A
 ; (end of disassembled code)

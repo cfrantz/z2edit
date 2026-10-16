@@ -14,8 +14,8 @@ height, from the left and right edges.
 Outdoors it is invisible (no draw routine), can't be hurt, and has the
 generators' spawn routine (`Generator_Init_BankN`), which removes any other
 generator of the same type.  The lists place it in the desert encounter
-areas with Geldarms (West Hyrule $1D-$20, and areas $1D-$1E of Death
-Mountain and of East Hyrule's second group).  No Great Palace area
+areas with Geldarms (West Hyrule $1D-$20 and Death Mountain $1D-$1E),
+and in areas $1D-$1E of Maze Island.  No Great Palace area
 places one.
 
 ## Behavior

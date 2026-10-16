@@ -1,7 +1,8 @@
 # East Hyrule Enemies
 
 Bank 2's enemy group (`EnemyHp_Bank2` ... at $9400), used in East
-Hyrule, Death Mountain and Maze Island.  Types $00-$13 are the
+Hyrule and Maze Island (the second group of bank 2's areas; Death
+Mountain is bank 1's).  Types $00-$13 are the
 [common enemies](common.md), with tougher stats than in West Hyrule.
 
 The names in the table are z2edit's.  The test movies fight few of these
@@ -39,10 +40,10 @@ the candle for the caves) and logging `enemyType`:
 | $11 | [Blue Octorok (jumping)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Blue Octorok (moving)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
-| $14 | Tektite | 24 | 50 | 2 | 2 | sword clinks, beam blocked | `Tektite_Ai` |
-| $15 | Eye | 16 | 20 | 4 | 1 |  | `Eye_Ai` |
-| $16 | Leever | 16 | 10 | 4 | 1 |  | `Leever_Ai` |
-| $17 | Boon | 8 | 50 | 1 | 2 |  | `Boon_Ai` |
+| $14 | [Tektite](enemies/tektite.md) | 24 | 50 | 2 | 2 | sword clinks, beam blocked | `Tektite_Ai` |
+| $15 | [Eye](enemies/eye.md) | 16 | 20 | 4 | 1 |  | `Eye_Ai` |
+| $16 | [Leever](enemies/leever.md) | 16 | 10 | 4 | 1 |  | `Leever_Ai` |
+| $17 | [Boon](enemies/boon.md) | 8 | 50 | 1 | 2 |  | `Boon_Ai` |
 | $18 | Basilisk | 48 | 50 | 3 | 2 | sword clinks, beam blocked | `Basilisk_Ai` |
 | $19 | Scorpion | 32 | 150 | 4 | 2 | blocks Link's projectiles | `Scorpion_Ai` |
 | $1A | Red Lizalfos | 48 | 100 | 4 | - | blocks Link's projectiles, immune to SPELL | `Lizalfos_Ai` |
@@ -52,21 +53,22 @@ the candle for the caves) and logging `enemyType`:
 
 ## Enemies
 
-**Tektite** ($14, `Tektite_Ai`): walks toward Link, turning at
-walls, and leaps now and then; every 64 frames, half the time, it fires
-projectile type 6.  Its hitbox changes while it is in the air.
+**Tektite** ($14): crouches and stretches, leaps over Link again and
+again (1 pixel per frame across, about 50 pixels high), and every 64
+frames, half the time, fires a straight shot the way it faces.  See
+[Tektite](enemies/tektite.md).
 
-**Eye** ($15, `Eye_Ai`): flies across, bobbing up and down,
-turning toward Link every 64 frames and pausing at random; only one part
-of it can be hit.
+**Eye** ($15): drifts across at 1/2 pixel per frame, bobbing, turning
+toward Link every 64 frames, and now and then stops for 63 frames with
+its eye open; only then can it be hurt.  See [Eye](enemies/eye.md).
 
-**Leever** ($16, `Leever_Ai`, `Leever_Init`): appears out of the sand
-at a random place near the screen, facing Link, moves along for a while
-and sinks back, again and again.
+**Leever** ($16): comes up out of the sand at a random spot, slides
+toward Link at 1 pixel per frame for 48-127 frames and sinks back, again
+and again.  See [Leever](enemies/leever.md).
 
-**Boon** ($17, `Boon_Ai`): flies about high on the screen,
-changing direction at random every 8-23 frames, and drops rocks
-(projectile type 8) every 32 frames.
+**Boon** ($17): darts about at random, 2 pixels per frame in one of four
+directions, and drops rocks every 32 frames while high on the screen.
+See [Boon](enemies/boon.md).
 
 **Basilisk** ($18, `Basilisk_Ai`): paces back and forth and,
 every 64 frames half the time, breathes a fireball (projectile type 6).
