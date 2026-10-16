@@ -71,6 +71,11 @@ ENEMY_PAGES = {
     "CrystalSpot_Ai": "crystal", "Crystal_Ai": "crystal", "EnergyBallShooter_Ai": "energy-ball-shooter",
     "WolfHeadGenerator_Ai": "wolf-head", "WolfHead_Ai": "wolf-head",
     "Ironknuckle_Ai": "iron-knuckle", "Stalfos_Ai": "stalfos",
+    "HiddenJar_Ai": "hidden-jar", "HiddenJarOrIronknuckle_Ai": "hidden-jar",
+    "OrangeMoa_Ai": "orange-moa", "SkullHead_Ai": "skull-head", "SkullHead_Ai_Bank4B": "skull-head",
+    "TinsuitGenerator_Ai": "tinsuit", "Tinsuit_Ai": "tinsuit",
+    "RatheadGenerator_Ai": "rathead", "Rathead_Ai": "rathead",
+    "AcidDripper_Ai": "acid-dripper", "Flame_Ai": "flame",
 }
 
 

@@ -15,15 +15,15 @@ Octoroks, are the "Ropes" of the palaces).
 | $02 | [Door](enemies/locked-door.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
 | $03 | [Myu](enemies/myu.md) | 3 | 3 | 1 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
-| $05 | Hidden jar | 255 | 0 | 0 | - | blocks Link's projectiles, immune to Thunder | `HiddenJar_Ai` |
+| $05 | [Hidden jar](enemies/hidden-jar.md) | 255 | 0 | 0 | - | blocks Link's projectiles, immune to Thunder | `HiddenJar_Ai` |
 | $06 | [Slow Bubble](enemies/bubble.md) | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
-| $07 | Orange Moa | 16 | 50 | 3 | 2 | touch drains 10 exp, comes back | `OrangeMoa_Ai` |
+| $07 | [Orange Moa](enemies/orange-moa.md) | 16 | 50 | 3 | 2 | touch drains 10 exp, comes back | `OrangeMoa_Ai` |
 | $08 | [Falling Block Generator](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `FallingBlockGenerator_Ai` |
 | $09 | [Falling Block](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `FallingBlock_Ai` |
-| $0A | Blue Skull Head | 56 | 20 | 0 | - | touch drains 10 exp, comes back | `SkullHead_Ai` |
-| $0B | Tinsuit generator | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `TinsuitGenerator_Ai` |
-| $0C | Tinsuit | 2 | 0 | 0 | - | touch drains 10 exp, comes back | `Tinsuit_Ai` |
-| $0D | Acid Dripper | 250 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `AcidDripper_Ai` |
+| $0A | [Blue Skull Head](enemies/skull-head.md) | 56 | 20 | 0 | - | touch drains 10 exp, comes back | `SkullHead_Ai` |
+| $0B | [Tinsuit generator](enemies/tinsuit.md) | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `TinsuitGenerator_Ai` |
+| $0C | [Tinsuit](enemies/tinsuit.md) | 2 | 0 | 0 | - | touch drains 10 exp, comes back | `Tinsuit_Ai` |
+| $0D | [Acid Dripper](enemies/acid-dripper.md) | 250 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `AcidDripper_Ai` |
 | $0E | [Fast Bubble](enemies/bubble.md) | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
 | $0F | [Bago Bago Generator](enemies/bago-bago.md) | 8 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
 | $10 | [Bago Bago](enemies/bago-bago.md) | 8 | 5 | 2 | 1 | touch drains 10 exp | `BagoBago_Ai` |
@@ -56,18 +56,18 @@ Octoroks, are the "Ropes" of the palaces).
 | $02 | [Door](enemies/locked-door.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
 | $03 | [Myu](enemies/myu.md) | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
-| $05 | Hidden jar or Iron Knuckle | 255 | 0 | 0 | - | blocks Link's projectiles, comes back | `HiddenJarOrIronknuckle_Ai` |
+| $05 | [Hidden jar or Iron Knuckle](enemies/hidden-jar.md) | 255 | 0 | 0 | - | blocks Link's projectiles, comes back | `HiddenJarOrIronknuckle_Ai` |
 | $06 | [Slow Bubble](enemies/bubble.md) | 250 | 50 | 0 | - |  | `Bubble_Ai` |
-| $07 | Orange Moa | 16 | 50 | 3 | 2 | touch drains 10 exp | `OrangeMoa_Ai` |
+| $07 | [Orange Moa](enemies/orange-moa.md) | 16 | 50 | 3 | 2 | touch drains 10 exp | `OrangeMoa_Ai` |
 | $08 | [Falling Block Generator](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `FallingBlockGenerator_Ai` |
 | $09 | [Falling Block](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `FallingBlock_Ai` |
 | $0A | Rebonack Un-horsed | 8 | 301 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `RebonackUnhorsed_Ai` |
-| $0B | Rathead Generator | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `RatheadGenerator_Ai` |
-| $0C | Rathead | 2 | 0 | 0 | - | touch drains 10 exp, comes back | `Rathead_Ai` |
-| $0D | Acid Dripper | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `AcidDripper_Ai` |
+| $0B | [Rathead Generator](enemies/rathead.md) | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `RatheadGenerator_Ai` |
+| $0C | [Rathead](enemies/rathead.md) | 2 | 0 | 0 | - | touch drains 10 exp, comes back | `Rathead_Ai` |
+| $0D | [Acid Dripper](enemies/acid-dripper.md) | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `AcidDripper_Ai` |
 | $0E | [Fast Bubble](enemies/bubble.md) | 250 | 50 | 0 | - |  | `Bubble_Ai` |
-| $0F | Blue Skull Head | 56 | 20 | 0 | 1 | touch drains 10 exp, comes back | `SkullHead_Ai_Bank4B` |
-| $10 | Flame | 8 | 5 | 2 | - | blocks Link's projectiles, immune to SPELL, sword passes through, comes back | `Flame_Ai` |
+| $0F | [Blue Skull Head](enemies/skull-head.md) | 56 | 20 | 0 | 1 | touch drains 10 exp, comes back | `SkullHead_Ai_Bank4B` |
+| $10 | [Flame](enemies/flame.md) | 8 | 5 | 2 | - | blocks Link's projectiles, immune to SPELL, sword passes through, comes back | `Flame_Ai` |
 | $11 | [Hopping Octorok](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [(unused)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | [Elevator](enemies/elevator.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
@@ -120,28 +120,27 @@ also leaps at him.  Their shield guards their head.  See
 screen in steps, firing straight ahead, one every 128 frames from the
 edge Link is heading for.  See [Wolf Head](enemies/wolf-head.md).
 
-**Hidden jar** ($05; `HiddenJar_Ai`, `HiddenJarOrIronknuckle_Ai`): an
-invisible object in a wall; striking it with the sword reveals a red
-magic jar.  In palaces 3, 4 and 6 it is, half the time, a red Iron
-Knuckle (24 hit points) instead.
+**Hidden jar** ($05): an invisible object that a sword stroke turns
+into a red jar, or in palaces 3, 4 and 6 half the time into a red Iron
+Knuckle.  See [Hidden Jar](enemies/hidden-jar.md).
 
-**Acid dripper** ($0D, `AcidDripper_Ai`): drips acid (projectile type 8)
-every 64 frames.  A drop that lands on the floor turns into a Bot
-(`Projectile_AcidDrop_Bank4`).
+**Acid dripper** ($0D): a ceiling spout that drips acid every 64 frames;
+1 drop in 8 becomes a Bot where it lands.  See
+[Acid Dripper](enemies/acid-dripper.md).
+
+**Orange Moa** ($07): a flying eye that swoops in from the side Link
+faces, turns back while climbing, and drops flames on its way out.  See
+[Orange Moa](enemies/orange-moa.md).
+
+**Skull heads** ($0A in palaces 1, 2, 5; $0F in 3, 4, 6): blue flying
+skulls that come in from the side Link faces and swoop through him in a
+wave.  See [Skull Head](enemies/skull-head.md).
 
 ## Palaces 1, 2 and 5
 
-**Orange Moa** ($07, `OrangeMoa_Ai`): flies in from the side Link is
-facing, at Y $7D, rises away while drifting, and drops flames
-(projectile type 7, which burn on the floor for a while) as it passes.
-
-**Skull head** ($0A, `SkullHead_Ai`, `SkullHead_Init`): appears above
-Link and to the side he faces, and flies across in a wave, rising and
-falling; it comes back when it leaves the screen.
-
-**Tinsuit** ($0C) and its generator ($0B; `Tinsuit_Ai`,
-`TinsuitGenerator_Ai`): small knights that appear on the floor and hop
-along at double speed, turning at walls.
+**Tinsuits** ($0C) and their generator ($0B): small knights that hop
+along the floor, one sent in every 128 frames from the edge Link is
+heading for.  See [Tinsuit](enemies/tinsuit.md).
 
 **Wizzrobe** (Mago, $1D, `Mago_Ai`): appears at a random place on the
 screen, blinks for 32 frames, casts a flame (projectile type 7, at Y $C0)
@@ -174,13 +173,11 @@ destroyed and the music stops.  Their hit points are shown as a bar
 
 ## Palaces 3, 4 and 6
 
-**Skull head** ($0F, `SkullHead_Ai_Bank4B`): as in palaces 1, 2 and 5.
+**Ratheads** ($0C) and their generator ($0B): the Tinsuits of these
+palaces.  See [Rathead](enemies/rathead.md).
 
-**Rathead** ($0C) and its generator ($0B; `Rathead_Ai`,
-`RatheadGenerator_Ai`): like Tinsuits.
-
-**Flame** ($10, `Flame_Ai`): a flame that falls to the floor and burns
-there; touching it hurts.
+**Flame** ($10): a fire that falls to the floor and burns there for good.
+See [Flame](enemies/flame.md).
 
 **Wizzrobe** ($1D, `Wizrobe_Ai`): like the Mago above, firing a beam
 (projectile type 9) at $B0 of its cycle (`Wizrobe_FireBeam`).

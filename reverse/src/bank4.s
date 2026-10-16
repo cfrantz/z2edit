@@ -1301,22 +1301,23 @@ Projectile_DrawSpin_Bank4:
 ; ---------------------------------------------------------------------------
 ; Tinsuit_Draw
 ;
-; Draw a Tinsuit (or Rathead).
+; Draw a Tinsuit: two pairs of sprites, 1 pixel low, from sramEnemyTiles
+; entry $7A, or $7E after odd hops (enemyAiState).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Tinsuit_Draw:
-    inc     temp0                   ; $97CC
+    inc     temp0                   ; $97CC  1 pixel low
     lda     enemyAiState,x          ; $97CE
-    ldx     #$7A                    ; $97D0
+    ldx     #$7A                    ; $97D0  $7A,
     lsr     a                       ; $97D2
-    bcc     @loc_97D7               ; $97D3
-    ldx     #$7E                    ; $97D5
+    bcc     @draw                   ; $97D3
+    ldx     #$7E                    ; $97D5  or $7E on odd hops
 
-@loc_97D7:
-    jsr     Sprite_DrawEnemyPair    ; $97D7
+@draw:
+    jsr     Sprite_DrawEnemyPair    ; $97D7  top pair
 HammerThrowerDrawOffsets := * + 2
-    jmp     Sprite_DrawEnemyPairKeepX ; $97DA
+    jmp     Sprite_DrawEnemyPairKeepX ; $97DA  bottom pair
     .byte   $F4, $0C                                                        ; $97DD
 ; (unreferenced: $97DF-$97E0, 2 bytes)
     .byte   $40, $00                                                        ; $97DF
@@ -1492,9 +1493,11 @@ Bubble_SetSpeed_Bank4:
 ; ---------------------------------------------------------------------------
 ; Tinsuit_Init
 ;
-; Spawn routine of Tinsuits: double the X speed.
+; Spawn routine of Tinsuits from an enemy list: double the default X speed
+; (1 pixel per frame).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Tinsuit_Init:
     asl     objXVelocity+1,x        ; $98B6
@@ -1503,53 +1506,56 @@ Tinsuit_Init:
 ; ---------------------------------------------------------------------------
 ; Projectile_Flame_Bank4
 ;
-; Projectile type 7 (flame): with a sound, slows down, falls to the floor
-; and burns there for projectileTimer frames.
+; Projectile type 7 (flame), both palace groups: with a sound, burn for
+; projectileTimer frames, the X velocity easing toward 0 every 8 frames;
+; fall (gravity 1/16) and stop on a floor, its Y snapped to the tile.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Flame_Bank4:
     jsr     Projectile_PlaySound_Bank4 ; $98B9
-    lda     projectileTimer,x       ; $98BC
-    beq     @loc_98C6               ; $98BF
+    lda     projectileTimer,x       ; $98BC  burnt out?
+    beq     @remove                 ; $98BF
     dec     projectileTimer,x       ; $98C1
-    bne     @loc_98C9               ; $98C4
+    bne     @slow                   ; $98C4
 ; (code below not executed in the test movies)
 
-@loc_98C6:
+@remove:
     jmp     Projectile_Remove_Bank4 ; $98C6
 ; (end of code not executed in the test movies)
 
-@loc_98C9:
-    and     #$07                    ; $98C9
-    bne     @loc_98D9               ; $98CB
+@slow:
+    and     #$07                    ; $98C9  every 8 frames, X velocity
+    bne     @floor                  ; $98CB  1/16 nearer 0
     lda     objXVelocity+7,x        ; $98CD
-    beq     @loc_98D9               ; $98CF
-    bpl     @loc_98D7               ; $98D1
+    beq     @floor                  ; $98CF
+    bpl     @dec                    ; $98D1
     inc     objXVelocity+7,x        ; $98D3
     inc     objXVelocity+7,x        ; $98D5
 
-@loc_98D7:
+@dec:
     dec     objXVelocity+7,x        ; $98D7
 
-@loc_98D9:
-    jsr     Projectile_HitsBgLow    ; $98D9
-    bcc     @loc_98E9               ; $98DC
-    lda     objY+7,x                ; $98DE
-    and     #$F0                    ; $98E0
+@floor:
+    jsr     Projectile_HitsBgLow    ; $98D9  on a floor:
+    bcc     @fall                   ; $98DC
+    lda     objY+7,x                ; $98DE  snap to the tile, and
+    and     #$F0                    ; $98E0  stop (-1 + 1 = 0)
     sta     objY+7,x                ; $98E2
     lda     #$FF                    ; $98E4
     sta     objYVelocity+7,x        ; $98E6
 
-@loc_98E9:
+@fall:
     jmp     Projectile_Fall_Bank4   ; $98E9
 
 ; ---------------------------------------------------------------------------
 ; AcidDripper_Draw
 ;
-; Draw the acid dripper.
+; Draw the acid dripper: a pair of sprites from sramEnemyTiles entry $18,
+; 14 pixels below its Y.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 AcidDripper_Draw:
     lda     temp0                   ; $98EC
@@ -1562,47 +1568,52 @@ AcidDripper_Draw:
 ; ---------------------------------------------------------------------------
 ; Projectile_AcidDrop_Bank4
 ;
-; Projectile type 8 (acid drop): falls; when it hits the floor it becomes a
-; Bot (enemy type 4) if a slot is free, or sparks.
+; Projectile type 8 (acid drop), both palace groups: falls (gravity 1/16)
+; in palette 2, or 3 if it will become a Bot (projectileTimer 0).  When it
+; hits the background, that one becomes a Bot (type $04) if an enemy slot
+; is free (Enemy_SpawnFlyer_Bank4): 4 hit points, at the drop's X, Y
+; rounded down to the tile, hopping up (Y velocity -2) and 1/2 pixel per
+; frame toward Link.  Any other drop, or with no slot, becomes a spark.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_AcidDrop_Bank4:
     jsr     Projectile_HitsBg       ; $98F8
-    ldy     #$02                    ; $98FB
+    ldy     #$02                    ; $98FB  palette 2,
     lda     projectileTimer,x       ; $98FD
-    bne     @loc_9903               ; $9900
-    iny                             ; $9902
+    bne     @setPalette             ; $9900
+    iny                             ; $9902  3 for a Bot
 
-@loc_9903:
+@setPalette:
     sty     sramProjectileAttrs+8   ; $9903
-    bcc     Projectile_Fall_Bank4   ; $9906
-    tay                             ; $9908
-    bne     @loc_993C               ; $9909
-    jsr     Enemy_SpawnFlyer_Bank4  ; $990B
-    bcs     @loc_993C               ; $990E
+    bcc     Projectile_Fall_Bank4   ; $9906  falling
+    tay                             ; $9908  landed: a Bot?
+    bne     @spark                  ; $9909
+    jsr     Enemy_SpawnFlyer_Bank4  ; $990B  a free slot (temp0)?
+    bcs     @spark                  ; $990E
     ldx     temp0                   ; $9910
     ldy     currentObject           ; $9912
-    asl     enemyHp,x               ; $9914
-    lda     #$04                    ; $9916
+    asl     enemyHp,x               ; $9914  4 hit points
+    lda     #$04                    ; $9916  a Bot
     sta     enemyType,x             ; $9918
-    lda     a:objY+7,y              ; $991A
+    lda     a:objY+7,y              ; $991A  where the drop is
     and     #$F0                    ; $991D
     sta     objY+1,x                ; $991F
-    lda     #$E0                    ; $9921
+    lda     #$E0                    ; $9921  hopping up
     sta     objYVelocity+1,x        ; $9923
     lda     a:objX+7,y              ; $9926
     sta     objX+1,x                ; $9929
     lda     a:objXHi+7,y            ; $992B
     sta     objXHi+1,x              ; $992E
-    jsr     Enemy_FaceLink          ; $9930
+    jsr     Enemy_FaceLink          ; $9930  toward Link
     lda     SpeedsByFacing_Bank4,y  ; $9933
     sta     objXVelocity+1,x        ; $9936
     ldx     currentObject           ; $9938
-    bpl     Projectile_Remove_Bank4 ; $993A
+    bpl     Projectile_Remove_Bank4 ; $993A  (always) drop gone
 
-@loc_993C:
-    lda     #$F2                    ; $993C
+@spark:
+    lda     #$F2                    ; $993C  a spark
     bne     Projectile_Kill_Bank4   ; $993E
 
 ; ---------------------------------------------------------------------------
@@ -2777,6 +2788,8 @@ Ironknuckle_Draw:
     lda     IronknuckleDrawTiles,x  ; $9EB6
     tax                             ; $9EB9
 
+; TinsuitSpeeds (by the facing + 0 or 2): the jmp's high byte, then $0C,
+; $F4 (3/4 px/frame), $14, $EC (5/4).
 Ironknuckle_DrawPair:
 TinsuitSpeeds := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $9EBA
@@ -2785,20 +2798,24 @@ TinsuitSpeeds := * + 2
 ; ---------------------------------------------------------------------------
 ; TinsuitGenerator_Ai
 ;
-; Every 128 frames, if a slot is free, spawn a Tinsuit ($0C) on the floor (Y
-; $B0), moving at a random speed.
+; Tinsuit generator ($0B, invisible): every 128 frames, as a wolf head
+; generator would (WolfHeadGenerator_Ai: at the screen edge Link is
+; heading for, in a free slot from 5 down, 2 hit points), launch a Tinsuit
+; ($0C) on the floor (Y $B0) walking inward at 3/4 or 5/4 pixel per frame
+; at random (TinsuitSpeeds).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TinsuitGenerator_Ai:
-    jsr     WolfHeadGenerator_Ai    ; $9EC1
+    jsr     WolfHeadGenerator_Ai    ; $9EC1  launched one?
     bcs     @done                   ; $9EC4
-    ldx     temp0                   ; $9EC6
-    lda     #$B0                    ; $9EC8
+    ldx     temp0                   ; $9EC6  the new slot
+    lda     #$B0                    ; $9EC8  on the floor
     sta     objY+1,x                ; $9ECA
-    lda     #$0C                    ; $9ECC
+    lda     #$0C                    ; $9ECC  a Tinsuit
     sta     enemyType,x             ; $9ECE
-    lda     rng+1,x                 ; $9ED0
+    lda     rng+1,x                 ; $9ED0  slow or fast, inward
     and     #$02                    ; $9ED3
     adc     objFacing+1,x           ; $9ED5
     tay                             ; $9ED7
@@ -3345,13 +3362,14 @@ FallingBlock_Ai:
 ; ---------------------------------------------------------------------------
 ; SkullHead_Draw_Bank4B
 ;
-; Draw a skull head (second palace group).
+; Draw a skull head (second palace group): a pair of sprites from
+; sramEnemyTiles entry $C0, the facing flipped.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SkullHead_Draw_Bank4B:
     ldx     #$C0                    ; $ACA2
-    lda     temp2                   ; $ACA4
+    lda     temp2                   ; $ACA4  flip the facing
     eor     #$03                    ; $ACA6
     sta     temp2                   ; $ACA8
     jmp     Sprite_DrawEnemyPairKeepX ; $ACAA
@@ -3359,36 +3377,39 @@ SkullHead_Draw_Bank4B:
 ; ---------------------------------------------------------------------------
 ; SkullHead_Init_Bank4B
 ;
-; Spawn routine of skull heads: $24 above Link, at the screen's side that he
-; faces, flying across (second palace group).
+; Spawn routine of skull heads (second palace group), and their respawn:
+; as SkullHead_Init, but Y - $24, and flying 1.5 pixels per frame.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SkullHead_Init_Bank4B:
-    lda     objY                    ; $ACAD
+    lda     objY                    ; $ACAD  above Link
     sbc     #$24                    ; $ACAF
     sta     objY+1,x                ; $ACB1
-    ldy     objFacing               ; $ACB3
+    ldy     objFacing               ; $ACB3  the edge he faces
     lda     scrollX                 ; $ACB5
     adc     SkullHeadSpawnX_Bank4B,y ; $ACB8
     sta     objX+1,x                ; $ACBB
     lda     scrollXHi               ; $ACBD
     adc     #$00                    ; $ACC0
     sta     objXHi+1,x              ; $ACC2
-    lda     SkullHeadSpeeds_Bank4B,y ; $ACC4
+    lda     SkullHeadSpeeds_Bank4B,y ; $ACC4  flying inward
     sta     objXVelocity+1,x        ; $ACC7
     jsr     Enemy_StopY             ; $ACC9
-    sta     enemyAiState,x          ; $ACCC
+    sta     enemyAiState,x          ; $ACCC  (a = 0)
 SkullHeadSpawnX_Bank4B := * + 2
     jmp     Enemy_FaceLink          ; $ACCE
     .byte   $EF                                                             ; $ACD1
 
+; As SkullHeadSpeeds: 1.5 pixels per frame inward.
 SkullHeadSpeeds_Bank4B:
     .byte   $00, $E8, $18                                                   ; $ACD2
 
 SkullHeadYAccel_Bank4B:
     .byte   $02, $FE                                                        ; $ACD5
 
+; Turning at 2.875 pixels per frame.
 SkullHeadMaxYSpeeds_Bank4B:
     .byte   $2E, $D2                                                        ; $ACD7
 
@@ -3398,33 +3419,35 @@ SkullHead_Ai_Done_Bank4B:
 ; ---------------------------------------------------------------------------
 ; SkullHead_Ai_Bank4B
 ;
-; Skull head (second palace group): flies across in a wave; respawns when it
-; leaves the screen.
+; Blue skull head ($0F, second palace group): as SkullHead_Ai, faster
+; across (1.5 pixels per frame), its wave turning at 2.875 pixels per
+; frame (92 frames, about 66 pixels deep), starting 4 pixels higher.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SkullHead_Ai_Bank4B:
-    lda     drawOffscreen+1         ; $ACDA
+    lda     drawOffscreen+1         ; $ACDA  partly off screen?
     and     #$0C                    ; $ACDC
-    beq     @loc_ACE8               ; $ACDE
-    lda     scrollHeld              ; $ACE0
+    beq     @fly                    ; $ACDE
+    lda     scrollHeld              ; $ACE0  screen held: wait
     bne     SkullHead_Ai_Done_Bank4B ; $ACE3
-    jsr     SkullHead_Init_Bank4B   ; $ACE5
+    jsr     SkullHead_Init_Bank4B   ; $ACE5  else come again
 
-@loc_ACE8:
+@fly:
     jsr     Enemy_SkipAiIfStunned   ; $ACE8
-    lda     enemyAiState,x          ; $ACEB
-    and     #$01                    ; $ACED
+    lda     enemyAiState,x          ; $ACEB  accelerate down (even) or
+    and     #$01                    ; $ACED  up (odd)
     tay                             ; $ACEF
     lda     objYVelocity+1,x        ; $ACF0
     clc                             ; $ACF3
     adc     SkullHeadYAccel_Bank4B,y ; $ACF4
     sta     objYVelocity+1,x        ; $ACF7
-    cmp     SkullHeadMaxYSpeeds_Bank4B,y ; $ACFA
-    bne     @loc_AD01               ; $ACFD
+    cmp     SkullHeadMaxYSpeeds_Bank4B,y ; $ACFA  at the top speed: turn
+    bne     @move                   ; $ACFD
     inc     enemyAiState,x          ; $ACFF
 
-@loc_AD01:
+@move:
     jsr     Enemy_MoveY             ; $AD01
     jsr     Enemy_MoveX             ; $AD04
     jsr     Enemy_UpdateCommon      ; $AD07
@@ -3969,32 +3992,35 @@ Bubble_SetSpeed_Bank4B:
 ; ---------------------------------------------------------------------------
 ; HiddenJarOrIronknuckle_Ai
 ;
-; Hidden object (second palace group): when struck by the sword, becomes a
-; red jar, or half the time a red Iron Knuckle (24 hit points).
+; Hidden object ($05, second palace group): invisible and still until
+; Link's sword strikes it.  Then half the time (rng+1,x bit 7) it is a red
+; Iron Knuckle ($19, 24 hit points), stunned 8 frames, and otherwise a red
+; jar (type $01, kind $11), 3 pixels right.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HiddenJarOrIronknuckle_Ai:
-    lda     drawOffscreen+1         ; $AF61
+    lda     drawOffscreen+1         ; $AF61  on screen?
     bne     @done                   ; $AF63
     jsr     Enemy_CheckSwordHit     ; $AF65
-    lda     objCollision+1,x        ; $AF68
+    lda     objCollision+1,x        ; $AF68  struck?
     and     #$20                    ; $AF6A
     beq     @done                   ; $AF6C
-    lda     #$11                    ; $AF6E
+    lda     #$11                    ; $AF6E  kind $11, a red jar
     sta     enemyAiState,x          ; $AF70
     lda     #$00                    ; $AF72
     sta     enemyHp,x               ; $AF74
-    ldy     #$01                    ; $AF76
+    ldy     #$01                    ; $AF76  an item,
     lda     rng+1,x                 ; $AF78
-    bpl     @loc_AF83               ; $AF7B
-    lda     #$18                    ; $AF7D
-    sta     enemyHp,x               ; $AF7F
+    bpl     @setType                ; $AF7B
+    lda     #$18                    ; $AF7D  or half the time a red Iron
+    sta     enemyHp,x               ; $AF7F  Knuckle, 24 hit points
     ldy     #$19                    ; $AF81
 
-@loc_AF83:
+@setType:
     sty     enemyType,x             ; $AF83
-    lda     #$08                    ; $AF85
+    lda     #$08                    ; $AF85  stunned 8 frames
     sta     enemyStunTimer,x        ; $AF87
     lda     objX+1,x                ; $AF8A
     adc     #$03                    ; $AF8C
@@ -4724,13 +4750,17 @@ Barba_Draw:
 ; ---------------------------------------------------------------------------
 ; Rathead_Init
 ;
-; Spawn routine of Ratheads: double the X speed.
+; Spawn routine of Ratheads from an enemy list: double the default X speed
+; (1 pixel per frame).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Rathead_Init:
     asl     objXVelocity+1,x        ; $B33C
 
+; Rathead walking speed (by the facing + 0 or 2), from the rts: $0C, $F4
+; (3/4 pixel per frame), $14, $EC (5/4).
 RatheadSpeeds:
     rts                             ; $B33E
     .byte   $0C, $F4, $14, $EC                                              ; $B33F
@@ -4738,19 +4768,21 @@ RatheadSpeeds:
 ; ---------------------------------------------------------------------------
 ; RatheadGenerator_Ai
 ;
-; Every 128 frames, if a slot is free, spawn a Rathead on the floor.
+; Rathead generator ($0B, second palace group; invisible): as
+; TinsuitGenerator_Ai, launching a Rathead ($0C).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RatheadGenerator_Ai:
-    jsr     WolfHeadGenerator_Ai    ; $B343
+    jsr     WolfHeadGenerator_Ai    ; $B343  launched one?
     bcs     @done                   ; $B346
-    ldx     temp0                   ; $B348
-    lda     #$B0                    ; $B34A
+    ldx     temp0                   ; $B348  the new slot
+    lda     #$B0                    ; $B34A  on the floor
     sta     objY+1,x                ; $B34C
-    lda     #$0C                    ; $B34E
+    lda     #$0C                    ; $B34E  a Rathead
     sta     enemyType,x             ; $B350
-    lda     rng+1,x                 ; $B352
+    lda     rng+1,x                 ; $B352  slow or fast, inward
     and     #$02                    ; $B355
     adc     objFacing+1,x           ; $B357
     tay                             ; $B359
@@ -4764,49 +4796,53 @@ RatheadGenerator_Ai:
 ; ---------------------------------------------------------------------------
 ; Rathead_Ai
 ;
-; Rathead: hops along the floor, turning at walls.
+; Rathead ($0C, second palace group): hops along the floor like a Tinsuit
+; (Tinsuit_Ai), but isn't held still while stunned, and lands by rounding
+; its Y down to 8 pixels instead of Enemy_Land.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Rathead_Ai:
     jsr     Enemy_UpdateWithBg      ; $B362
     jsr     Enemy_HurtLinkOnContact ; $B365
-    lda     objCollision+1,x        ; $B368
+    lda     objCollision+1,x        ; $B368  on the floor: hop
     and     #$04                    ; $B36A
-    beq     @loc_B37B               ; $B36C
+    beq     @fall                   ; $B36C
     lda     objY+1,x                ; $B36E
     and     #$F8                    ; $B370
     sta     objY+1,x                ; $B372
-    lda     #$F0                    ; $B374
+    lda     #$F0                    ; $B374  Y velocity -1
     sta     objYVelocity+1,x        ; $B376
     inc     enemyAiState,x          ; $B379
 
-@loc_B37B:
+@fall:
     jsr     Enemy_MoveYAndFall      ; $B37B
-    lda     objCollision+1,x        ; $B37E
+    lda     objCollision+1,x        ; $B37E  at a wall: turn
     and     #$03                    ; $B380
-    beq     @loc_B387               ; $B382
+    beq     @move                   ; $B382
     jsr     Enemy_TurnAround        ; $B384
 
-@loc_B387:
+@move:
     jmp     Enemy_MoveX             ; $B387
 
 ; ---------------------------------------------------------------------------
 ; Rathead_Draw
 ;
-; Draw a Rathead.
+; Draw a Rathead: two pairs of sprites, 1 pixel low, from sramEnemyTiles
+; entry $B8, or $BC after odd hops.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Rathead_Draw:
-    inc     temp0                   ; $B38A
+    inc     temp0                   ; $B38A  1 pixel low
     lda     enemyAiState,x          ; $B38C
-    ldx     #$B8                    ; $B38E
+    ldx     #$B8                    ; $B38E  $B8,
     lsr     a                       ; $B390
-    bcc     @loc_B395               ; $B391
-    ldx     #$BC                    ; $B393
+    bcc     @draw                   ; $B391
+    ldx     #$BC                    ; $B393  or $BC on odd hops
 
-@loc_B395:
+@draw:
     jmp     Sprite_DrawEnemyPair3_Bank4 ; $B395
 
 RebonackDrawOffsets:
@@ -4990,7 +5026,8 @@ Sprite_DrawEnemyPair3_Bank4:
 ;
 ; Spawn routine of flames: 4 pixels right.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flame_Init:
     lda     objX+1,x                ; $B47D
@@ -5002,9 +5039,12 @@ Flame_Init:
 ; ---------------------------------------------------------------------------
 ; Flame_Ai
 ;
-; Flame: falls to the floor (Item_Fall) and burns; touching it hurts.
+; Flame ($10, second palace group): a fire that falls to the floor and
+; burns there for good, like an item (Item_Fall: drawn, tested, falling,
+; bouncing); touching it hurts.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flame_Ai:
     jsr     Item_Fall               ; $B485
@@ -5013,22 +5053,23 @@ Flame_Ai:
 ; ---------------------------------------------------------------------------
 ; Flame_Draw
 ;
-; Draw a flame.
+; Draw a flame: one sprite, tile $52, palette 2, at its X and Y, mirrored
+; every other 4 frames; not drawn when its column is off screen.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flame_Draw:
-    lda     drawOffscreen+1         ; $B48B
+    lda     drawOffscreen+1         ; $B48B  off screen?
     and     #$08                    ; $B48D
     bne     @done                   ; $B48F
     lda     temp0                   ; $B491
     sta     oamBuffer,y             ; $B493
     lda     temp1                   ; $B496
     sta     oamBuffer+3,y           ; $B498
-    lda     #$52                    ; $B49B
+    lda     #$52                    ; $B49B  tile $52
     sta     oamBuffer+1,y           ; $B49D
-    lda     frameCounter            ; $B4A0
-    and     #$04                    ; $B4A2
+    lda     frameCounter            ; $B4A0  frameCounter bit 2 -> $40
+    and     #$04                    ; $B4A2  (mirrored), palette 2
     asl     a                       ; $B4A4
     asl     a                       ; $B4A5
     sec                             ; $B4A6
@@ -5614,13 +5655,14 @@ Mago_Ai:
 ; ---------------------------------------------------------------------------
 ; SkullHead_Draw
 ;
-; Draw a skull head.
+; Draw a skull head: a pair of sprites from sramEnemyTiles entry $82, the
+; facing flipped (the tiles face the other way).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SkullHead_Draw:
     ldx     #$82                    ; $B833
-    lda     temp2                   ; $B835
+    lda     temp2                   ; $B835  flip the facing
     eor     #$03                    ; $B837
     sta     temp2                   ; $B839
     jmp     Sprite_DrawEnemyPairKeepX ; $B83B
@@ -5628,20 +5670,23 @@ SkullHead_Draw:
 ; ---------------------------------------------------------------------------
 ; HiddenJar_Ai
 ;
-; Hidden object: when struck by the sword, becomes a red jar.
+; Hidden jar ($05, first palace group): invisible and still until Link's
+; sword strikes it, when it becomes a red jar (an item, type $01, kind $11)
+; 3 pixels right, which falls and is taken by another stroke.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HiddenJar_Ai:
-    lda     drawOffscreen+1         ; $B83E
+    lda     drawOffscreen+1         ; $B83E  on screen?
     bne     @done                   ; $B840
     jsr     Enemy_CheckSwordHit     ; $B842
-    lda     objCollision+1,x        ; $B845
+    lda     objCollision+1,x        ; $B845  struck?
     and     #$20                    ; $B847
     beq     @done                   ; $B849
-    lda     #$11                    ; $B84B
+    lda     #$11                    ; $B84B  a red jar
     sta     enemyAiState,x          ; $B84D
-    lda     #$01                    ; $B84F
+    lda     #$01                    ; $B84F  type $01, an item
     sta     enemyType,x             ; $B851
     sta     enemyHp,x               ; $B853
     lsr     enemyStunTimer,x        ; $B855
@@ -5824,22 +5869,29 @@ WolfHead_Draw:
 ; ---------------------------------------------------------------------------
 ; OrangeMoa_Ai
 ;
-; Orange Moa: flies in from the side Link faces, rises away while drifting,
-; and drops flames (projectile type 7) as it passes.
+; Orange Moa ($07): a flying eye that comes in from the side Link faces, at
+; Y $7D, 2 pixels per frame, for 16 frames (80 if Link stands still), then
+; rises 1 pixel per frame for 64 frames while its X velocity swings by
+; 1/16 per frame the other way, turning it back; it flies out the way it
+; came at about 2 pixels per frame, dropping flames, and 191 frames after
+; leaving the screen comes again.  It bobs (Y velocity +-4/16, 16 frames
+; each) the whole time it is out.  enemyAiState & 3: 0 waiting, 1 coming
+; in, 2 rising, 3 flying out.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OrangeMoa_Ai:
-    lda     enemyAiState,x          ; $B909
+    lda     enemyAiState,x          ; $B909  out (state 1-3)?
     and     #$03                    ; $B90B
-    beq     @loc_B929               ; $B90D
-    ldy     #$04                    ; $B90F
-    lda     frameCounter            ; $B911
+    beq     @state                  ; $B90D
+    ldy     #$04                    ; $B90F  bob: +-4/16 px/frame,
+    lda     frameCounter            ; $B911  16 frames each
     and     #$10                    ; $B913
-    bne     @loc_B919               ; $B915
+    bne     @bob                    ; $B915
     ldy     #$FC                    ; $B917
 
-@loc_B919:
+@bob:
     tya                             ; $B919
     sta     objYVelocity+1,x        ; $B91A
     jsr     Enemy_MoveY             ; $B91D
@@ -5847,7 +5899,7 @@ OrangeMoa_Ai:
     jsr     Enemy_UpdateWithBg      ; $B923
     jsr     Enemy_HurtLinkOnContact ; $B926
 
-@loc_B929:
+@state:
     lda     enemyAiState,x          ; $B929
     and     #$03                    ; $B92B
     jsr     JumpTable               ; $B92D
@@ -5866,32 +5918,35 @@ OrangeMoaSpeeds:
 ; OrangeMoa_Appear
 ;
 ; OrangeMoa state 0: when its timer ends, appear at the edge of the screen
-; ahead of Link (OrangeMoaSpawnX), moving inward (OrangeMoaSpeeds).
+; Link faces (OrangeMoaSpawnX: $F0 right, 0 left) at Y $7D, flying inward
+; at 2 pixels per frame (OrangeMoaSpeeds), for 16 frames, or 80 while
+; Link stands.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OrangeMoa_Appear:
-    lda     timerFast+TIMER_ENEMY,x ; $B93C
+    lda     timerFast+TIMER_ENEMY,x ; $B93C  wait for the timer
     bne     @done                   ; $B93F
-    ldy     objFacing               ; $B941
+    ldy     objFacing               ; $B941  the edge Link faces
     lda     scrollX                 ; $B943
     adc     OrangeMoaSpawnX,y       ; $B946
     sta     objX+1,x                ; $B949
     lda     scrollXHi               ; $B94B
     adc     #$00                    ; $B94E
     sta     objXHi+1,x              ; $B950
-    lda     OrangeMoaSpeeds,y       ; $B952
+    lda     OrangeMoaSpeeds,y       ; $B952  flying inward
     sta     objXVelocity+1,x        ; $B955
     lda     #$7D                    ; $B957
     sta     objY+1,x                ; $B959
-    sty     objState+1,x            ; $B95B
+    sty     objState+1,x            ; $B95B  the side (for OrangeMoa_Rise)
     sty     objFacing+1,x           ; $B95D
-    lda     #$10                    ; $B95F
+    lda     #$10                    ; $B95F  16 frames,
     ldy     objXVelocity            ; $B961
-    bne     @loc_B967               ; $B963
-    lda     #$50                    ; $B965
+    bne     @setTimer               ; $B963
+    lda     #$50                    ; $B965  80 if Link stands
 
-@loc_B967:
+@setTimer:
     sta     timerFast+TIMER_ENEMY,x ; $B967
     inc     enemyAiState,x          ; $B96A
 
@@ -5921,41 +5976,46 @@ OrangeMoaAccel := @done
 ; ---------------------------------------------------------------------------
 ; OrangeMoa_Rise
 ;
-; State 2: rise while the timer runs, accelerating sideways (OrangeMoaAccel).
+; State 2: rise 1 pixel per frame while the timer runs (64 frames), the X
+; velocity moving 1/16 per frame toward the side it came from
+; (OrangeMoaAccel by objState+1): from -2 to +2 or back.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OrangeMoa_Rise:
     lda     timerFast+TIMER_ENEMY,x ; $B97C
-    beq     @loc_B98E               ; $B97F
-    dec     objY+1,x                ; $B981
-    ldy     objState+1,x            ; $B983
+    beq     @next                   ; $B97F
+    dec     objY+1,x                ; $B981  up 1 px
+    ldy     objState+1,x            ; $B983  turn back
     lda     objXVelocity+1,x        ; $B985
     clc                             ; $B987
     adc     OrangeMoaAccel,y        ; $B988
     sta     objXVelocity+1,x        ; $B98B
     rts                             ; $B98D
 
-@loc_B98E:
-    inc     enemyAiState,x          ; $B98E
+@next:
+    inc     enemyAiState,x          ; $B98E  fly out
     rts                             ; $B990
 
 ; ---------------------------------------------------------------------------
 ; OrangeMoa_Fly
 ;
-; State 3: fly on, dropping flames now and then (Enemy_DropFlame_Bank4);
-; once off screen, wait and start again.
+; State 3: fly on, dropping a flame on frames where frameCounter & $2F is
+; 0 (2 in each 64) unless touching anything; once off screen, wait 191
+; frames (state 4, which is 0 again) and come again.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OrangeMoa_Fly:
-    lda     drawOffscreen+1         ; $B991
-    beq     @loc_B99C               ; $B993
-    lda     #$BF                    ; $B995
+    lda     drawOffscreen+1         ; $B991  off screen?
+    beq     @maybeDrop              ; $B993
+    lda     #$BF                    ; $B995  wait 191 frames
     sta     timerFast+TIMER_ENEMY,x ; $B997
     inc     enemyAiState,x          ; $B99A
 
-@loc_B99C:
+@maybeDrop:
     lda     frameCounter            ; $B99C
     and     #$2F                    ; $B99E
     ora     objCollision+1,x        ; $B9A0
@@ -5964,18 +6024,20 @@ OrangeMoa_Fly:
 ; ---------------------------------------------------------------------------
 ; Enemy_DropFlame_Bank4
 ;
-; Drop a flame (projectile type 7, no speed) from enemy x.
+; Drop a flame (projectile type 7: no speed, burns for 255 frames) from
+; enemy x.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DropFlame_Bank4:
     jsr     Enemy_FireProjectile    ; $B9A4
-    bcs     Enemy_DropFlame_Done_Bank4 ; $B9A7
-    lda     #$07                    ; $B9A9
+    bcs     Enemy_DropFlame_Done_Bank4 ; $B9A7  (no slot)
+    lda     #$07                    ; $B9A9  a flame
     sta     a:objState+7,y          ; $B9AB
-    lda     #$FF                    ; $B9AE
+    lda     #$FF                    ; $B9AE  255 frames
     sta     projectileTimer,y       ; $B9B0
-    lda     #$00                    ; $B9B3
+    lda     #$00                    ; $B9B3  no speed
     sta     projectileSpeed,y       ; $B9B5
     sta     a:objXVelocity+7,y      ; $B9B8
     sta     objYVelocity+7,y        ; $B9BB
@@ -5986,30 +6048,34 @@ Enemy_DropFlame_Done_Bank4:
 ; ---------------------------------------------------------------------------
 ; AcidDripper_Ai
 ;
-; Acid dripper: every 64 frames, drip acid (projectile type 8).
+; Acid dripper ($0D): a fixed spout in the ceiling.  Every 64 frames it
+; drips a drop of acid (projectile type 8) from X + 4, Y + 18, with no
+; speed; projectileTimer holds rng & 7, and a drop with 0 (1 in 8) becomes
+; a Bot where it lands (Projectile_AcidDrop_Bank4).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 AcidDripper_Ai:
     jsr     Enemy_Draw              ; $B9BF
-    inc     enemyAiState,x          ; $B9C2
+    inc     enemyAiState,x          ; $B9C2  every 64 frames
     lda     enemyAiState,x          ; $B9C4
     and     #$3F                    ; $B9C6
     bne     @done                   ; $B9C8
     jsr     Enemy_FireProjectile    ; $B9CA
-    bcs     @done                   ; $B9CD
-    lda     #$08                    ; $B9CF
+    bcs     @done                   ; $B9CD  (no slot)
+    lda     #$08                    ; $B9CF  a drop of acid
     sta     a:objState+7,y          ; $B9D1
-    lda     objX+1,x                ; $B9D4
+    lda     objX+1,x                ; $B9D4  at X + 4,
     adc     #$04                    ; $B9D6
     sta     a:objX+7,y              ; $B9D8
-    lda     a:objY+7,y              ; $B9DB
+    lda     a:objY+7,y              ; $B9DB  Y + 18
     adc     #$12                    ; $B9DE
     sta     a:objY+7,y              ; $B9E0
-    lda     #$00                    ; $B9E3
+    lda     #$00                    ; $B9E3  falling from rest
     sta     a:objXVelocity+7,y      ; $B9E5
     sta     objYVelocity+7,y        ; $B9E8
-    lda     rng+1,x                 ; $B9EB
+    lda     rng+1,x                 ; $B9EB  0 (1 in 8): a Bot
     and     #$07                    ; $B9EE
     sta     projectileTimer,y       ; $B9F0
 
@@ -6019,67 +6085,80 @@ AcidDripper_Ai:
 ; ---------------------------------------------------------------------------
 ; SkullHead_Init
 ;
-; Spawn routine of skull heads: $20 above Link, at the side he faces.
+; Spawn routine of skull heads, and their respawn: about 32 pixels above
+; Link (Y - $20), at the edge of the screen he faces (SkullHeadSpawnX:
+; $EF right, 0 left), flying inward 1 pixel per frame (SkullHeadSpeeds),
+; Y velocity 0, state 0.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SkullHead_Init:
-    lda     objY                    ; $B9F4
+    lda     objY                    ; $B9F4  above Link
     sbc     #$20                    ; $B9F6
     sta     objY+1,x                ; $B9F8
-    ldy     objFacing               ; $B9FA
+    ldy     objFacing               ; $B9FA  the edge he faces
     lda     scrollX                 ; $B9FC
     adc     SkullHeadSpawnX,y       ; $B9FF
     sta     objX+1,x                ; $BA02
     lda     scrollXHi               ; $BA04
     adc     #$00                    ; $BA07
     sta     objXHi+1,x              ; $BA09
-    lda     SkullHeadSpeeds,y       ; $BA0B
+    lda     SkullHeadSpeeds,y       ; $BA0B  flying inward
     sta     objXVelocity+1,x        ; $BA0E
     jsr     Enemy_StopY             ; $BA10
-    sta     enemyAiState,x          ; $BA13
+    sta     enemyAiState,x          ; $BA13  (a = 0)
 SkullHeadSpawnX := * + 2
     jmp     Enemy_FaceLink          ; $BA15
     .byte   $EF                                                             ; $BA18
 
+; Skull head X velocity by Link's facing: 1 pixel per frame inward.
 SkullHeadSpeeds:
     .byte   $00, $F0, $10                                                   ; $BA19
 
+; Skull head Y acceleration by enemyAiState & 1, down then up.
 SkullHeadYAccel:
     .byte   $02, $FE                                                        ; $BA1C
 
+; ... until the Y velocity reaches this (3 pixels per frame), state + 1.
 SkullHeadMaxYSpeeds:
     .byte   $30, $D0                                                        ; $BA1E
 
 ; ---------------------------------------------------------------------------
 ; SkullHead_Ai
 ;
-; Skull head: flies across in a wave; respawns when it leaves the screen.
+; Blue skull head ($0A, first palace group): flies across 1 pixel per
+; frame in a wave: its Y velocity swings between +3 and -3 by 2/16 per
+; frame, so it dives 72 pixels below its start (passing through Link) and
+; climbs back, every 96 frames.  When partly off screen it starts again
+; ahead of Link (SkullHead_Init), unless the screen is held at an area
+; end, when it waits.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SkullHead_Ai:
-    lda     drawOffscreen+1         ; $BA20
+    lda     drawOffscreen+1         ; $BA20  partly off screen?
     and     #$0C                    ; $BA22
-    beq     @loc_BA2E               ; $BA24
-    lda     scrollHeld              ; $BA26
+    beq     @fly                    ; $BA24
+    lda     scrollHeld              ; $BA26  screen held: wait
     bne     @done                   ; $BA29
-    jsr     SkullHead_Init          ; $BA2B
+    jsr     SkullHead_Init          ; $BA2B  else come again
 
-@loc_BA2E:
+@fly:
     jsr     Enemy_SkipAiIfStunned   ; $BA2E
-    lda     enemyAiState,x          ; $BA31
-    and     #$01                    ; $BA33
+    lda     enemyAiState,x          ; $BA31  accelerate down (even) or
+    and     #$01                    ; $BA33  up (odd)
     tay                             ; $BA35
     lda     objYVelocity+1,x        ; $BA36
     clc                             ; $BA39
     adc     SkullHeadYAccel,y       ; $BA3A
     sta     objYVelocity+1,x        ; $BA3D
-    cmp     SkullHeadMaxYSpeeds,y   ; $BA40
-    bne     @loc_BA47               ; $BA43
+    cmp     SkullHeadMaxYSpeeds,y   ; $BA40  at 3 px/frame: turn
+    bne     @move                   ; $BA43
     inc     enemyAiState,x          ; $BA45
 
-@loc_BA47:
+@move:
     jsr     Enemy_MoveY             ; $BA47
     jsr     Enemy_MoveX             ; $BA4A
     jsr     Enemy_UpdateCommon      ; $BA4D
@@ -6542,30 +6621,34 @@ Boss_Init:
 ; ---------------------------------------------------------------------------
 ; Tinsuit_Ai
 ;
-; Tinsuit: hops along the floor (Y speed -$10 on landing), turning at walls.
+; Tinsuit ($0C, first palace group): hops along the floor, 1 pixel per
+; frame up on each landing (a hop about 4 pixels high, every 16 frames),
+; turning around at walls; it doesn't turn toward Link.  enemyAiState
+; counts the hops (the drawing alternates).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Tinsuit_Ai:
     jsr     Enemy_SkipAiIfStunned   ; $BCBC
     jsr     Enemy_UpdateWithBg      ; $BCBF
     jsr     Enemy_HurtLinkOnContact ; $BCC2
-    lda     objCollision+1,x        ; $BCC5
+    lda     objCollision+1,x        ; $BCC5  on the floor: hop
     and     #$04                    ; $BCC7
-    beq     @loc_BCD5               ; $BCC9
+    beq     @fall                   ; $BCC9
     jsr     Enemy_Land              ; $BCCB
-    lda     #$F0                    ; $BCCE
+    lda     #$F0                    ; $BCCE  Y velocity -1
     sta     objYVelocity+1,x        ; $BCD0
     inc     enemyAiState,x          ; $BCD3
 
-@loc_BCD5:
+@fall:
     jsr     Enemy_MoveYAndFall      ; $BCD5
-    lda     objCollision+1,x        ; $BCD8
+    lda     objCollision+1,x        ; $BCD8  at a wall: turn
     and     #$03                    ; $BCDA
-    beq     @loc_BCE1               ; $BCDC
+    beq     @move                   ; $BCDC
     jsr     Enemy_TurnAround        ; $BCDE
 
-@loc_BCE1:
+@move:
     jmp     Enemy_MoveX             ; $BCE1
 ; (unreferenced: $BCE4-$BCEB, 8 bytes)
 

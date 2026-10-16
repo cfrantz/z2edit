@@ -59,6 +59,13 @@ and how each was verified):
 | [Wolf Head](enemies/wolf-head.md) | $1B, $1C in the palaces |
 | [Iron Knuckle](enemies/iron-knuckle.md) | $18-$1A in the palaces |
 | [Stalfos](enemies/stalfos.md) | $1F, $23 in the palaces |
+| [Hidden Jar](enemies/hidden-jar.md) | $05 in the palaces |
+| [Orange Moa](enemies/orange-moa.md) | $07 in the palaces |
+| [Skull Head](enemies/skull-head.md) | $0A in palaces 1, 2, 5; $0F in 3, 4, 6 |
+| [Tinsuit](enemies/tinsuit.md) | $0B, $0C in palaces 1, 2, 5 |
+| [Rathead](enemies/rathead.md) | $0B, $0C in palaces 3, 4, 6 |
+| [Acid Dripper](enemies/acid-dripper.md) | $0D in the palaces |
+| [Flame](enemies/flame.md) | $10 in palaces 3, 4, 6 |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI
