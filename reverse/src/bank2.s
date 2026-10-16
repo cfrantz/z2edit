@@ -2208,87 +2208,99 @@ Enemy_DropRock_Bank2:
 
 Enemy_DropRock_Done_Bank2:
     rts                             ; $9A23
+    ; Enemy_Pace_Bank2's speeds, by facing (1, 2) from the rts: $F8, and
+    ; $08 (the next table's first byte).
     .byte   $F8                                                             ; $9A24
 
+; Basilisk: fireball X offset by facing (1, 2) while reared: +$0E, then
+; -8 (with the next table's first byte).
 BasiliskFireXOffsets:
     .byte   $08, $0E                                                        ; $9A25
 
+; Basilisk: high byte of that offset, by facing (1: $00, 2: $FF).
 BasiliskFireXHiOffsets:
     .byte   $F8, $00, $FF                                                   ; $9A27
 
 ; ---------------------------------------------------------------------------
 ; Basilisk_Ai
 ;
-; Enemy $18 of East Hyrule (z2edit: Basilisk): paces back and forth,
-; facing Link every 64 frames; every 64 frames, half the time, it breathes
-; a fireball (projectile type 6) from its mouth ten frames later.  Its
-; hitbox entry changes while it breathes.
+; Basilisk (East Hyrule $18, a crested lizard).  It crawls low on the
+; 256-step pace of Enemy_Pace_Bank2 (back off, stand, advance, stand) and
+; turns toward Link every 64 frames.  At frameCounter 0, every 256
+; frames, it rears up and stands for 80 frames (timerFast+TIMER_ENEMY);
+; its type's hitbox entry (sramEnemyHitbox+$18) is $80 while reared and
+; $89 while crawling.  Every 64 frames, half the time, it breathes a
+; fireball 10 frames later (objState+1 counting down): projectile type 6,
+; 2 pixels per frame the way it faces, from Y + 16 while crawling, or
+; from Y + 4 and further ahead (+14 facing right, -8 left) while reared.
+; It walks off ledges.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Basilisk_Ai:
-    lda     frameCounter            ; $9A2A
+    lda     frameCounter            ; $9A2A  every 64 frames,
     and     #$3F                    ; $9A2C
-    bne     @loc_9A3A               ; $9A2E
-    lda     rng+1,x                 ; $9A30
+    bne     @fall                   ; $9A2E
+    lda     rng+1,x                 ; $9A30  half the time,
     lsr     a                       ; $9A33
-    bcc     @loc_9A3A               ; $9A34
-    lda     #$0A                    ; $9A36
+    bcc     @fall                   ; $9A34
+    lda     #$0A                    ; $9A36  breathe fire in 10 frames
     sta     objState+1,x            ; $9A38
 
-@loc_9A3A:
-    jsr     Enemy_Fall_Bank2        ; $9A3A
-    lda     #$80                    ; $9A3D
+@fall:
+    jsr     Enemy_Fall_Bank2        ; $9A3A  probe, fall or land
+    lda     #$80                    ; $9A3D  hitbox $80 reared,
     ldy     timerFast+TIMER_ENEMY,x ; $9A3F
-    bne     @loc_9A46               ; $9A42
-    lda     #$89                    ; $9A44
+    bne     @setHitbox              ; $9A42
+    lda     #$89                    ; $9A44  $89 crawling
 
-@loc_9A46:
-    sta     sramEnemyHitbox+24      ; $9A46
-    jsr     Enemy_UpdateCommon      ; $9A49
+@setHitbox:
+    sta     sramEnemyHitbox+24      ; $9A46  (the type's own entry)
+    jsr     Enemy_UpdateCommon      ; $9A49  draw, hit tests
     jsr     Enemy_HurtLinkOnContact ; $9A4C
-    jsr     Enemy_KnockBackOrWalk_Bank2 ; $9A4F
-    lda     frameCounter            ; $9A52
+    jsr     Enemy_KnockBackOrWalk_Bank2 ; $9A4F  move by last frame's velocity
+    lda     frameCounter            ; $9A52  every 64 frames
     and     #$3F                    ; $9A54
-    bne     @loc_9A5B               ; $9A56
-    jsr     Enemy_FaceLink          ; $9A58
+    bne     @pace                   ; $9A56
+    jsr     Enemy_FaceLink          ; $9A58  turn toward Link
 
-@loc_9A5B:
-    lda     #$00                    ; $9A5B
+@pace:
+    lda     #$00                    ; $9A5B  stand,
     sta     objXVelocity+1,x        ; $9A5D
-    lda     timerFast+TIMER_ENEMY,x ; $9A5F
-    bne     @loc_9A70               ; $9A62
-    lda     frameCounter            ; $9A64
-    bne     @loc_9A6D               ; $9A66
-    lda     #$50                    ; $9A68
+    lda     timerFast+TIMER_ENEMY,x ; $9A5F  unless crawling:
+    bne     @countdown              ; $9A62
+    lda     frameCounter            ; $9A64  every 256 frames,
+    bne     @walk                   ; $9A66
+    lda     #$50                    ; $9A68  rear up for 80 frames
     sta     timerFast+TIMER_ENEMY,x ; $9A6A
 
-@loc_9A6D:
-    jsr     Enemy_Pace_Bank2        ; $9A6D
+@walk:
+    jsr     Enemy_Pace_Bank2        ; $9A6D  next frame's velocity
 
-@loc_9A70:
-    lda     objState+1,x            ; $9A70
+@countdown:
+    lda     objState+1,x            ; $9A70  breathing fire?
     beq     @done                   ; $9A72
     dec     objState+1,x            ; $9A74
-    bne     @done                   ; $9A76
-    jsr     Enemy_FireProjectile    ; $9A78
+    bne     @done                   ; $9A76  not yet
+    jsr     Enemy_FireProjectile    ; $9A78  a fireball the way it faces
     bcs     @done                   ; $9A7B
-    lda     #$06                    ; $9A7D
+    lda     #$06                    ; $9A7D  projectile type 6
     sta     a:objState+7,y          ; $9A7F
-    lda     a:objY+7,y              ; $9A82
+    lda     a:objY+7,y              ; $9A82  4 pixels lower
     adc     #$04                    ; $9A85
     sta     a:objY+7,y              ; $9A87
-    lda     timerFast+TIMER_ENEMY,x ; $9A8A
-    bne     @loc_9A99               ; $9A8D
-    lda     a:objY+7,y              ; $9A8F
+    lda     timerFast+TIMER_ENEMY,x ; $9A8A  reared?
+    bne     @forward                ; $9A8D
+    lda     a:objY+7,y              ; $9A8F  crawling: 12 more, Y + 16
     clc                             ; $9A92
     adc     #$0C                    ; $9A93
     sta     a:objY+7,y              ; $9A95
     rts                             ; $9A98
 
-@loc_9A99:
-    ldx     objFacing+7,y           ; $9A99
-    lda     a:objX+7,y              ; $9A9B
+@forward:
+    ldx     objFacing+7,y           ; $9A99  reared: from its raised head,
+    lda     a:objX+7,y              ; $9A9B  +14 facing right, -8 left
     adc     BasiliskFireXOffsets,x  ; $9A9E
     sta     a:objX+7,y              ; $9AA1
     lda     a:objXHi+7,y            ; $9AA4
@@ -2301,60 +2313,68 @@ Basilisk_Ai:
 ; ---------------------------------------------------------------------------
 ; Scorpion_Ai
 ;
-; Enemy $19 of East Hyrule (z2edit: Scorpion): paces back and forth,
-; facing Link every 64 frames; at random it hides (is not drawn or hit)
-; for 32 frames; now and then it fires projectile type 4.  Only one part
-; of it (vulnerable part 3) can be hit.
+; Scorpion (East Hyrule $19).  It walks on the 256-step pace of
+; Enemy_Pace_Bank2 (back off, stand, advance, stand), turning toward Link
+; every 64 frames, and walks off ledges.  Its guard 3 (enemyAiVar,
+; Enemy_GetSpecialHitbox: its body, 24 pixels wide from 16 to 32 below
+; its Y) turns aside Link's projectiles and low sword strokes; a high
+; stroke passes over it.  On 1 frame in 64 at random it drops its guard
+; for 32 frames (objState+1 counting down; its head changes,
+; Scorpion_Draw), when it can be hit.  On 1 frame in 64 at random
+; (rng+2,x) it raises its tail (timerFast+TIMER_ENEMY = 16) and 8 frames
+; later fires projectile type 4 (a fireball, with a sound) the way it
+; faces.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scorpion_Ai:
-    jsr     Enemy_Fall_Bank2        ; $9AAE
-    lda     objState+1,x            ; $9AB1
-    bne     @loc_9AC3               ; $9AB3
-    jsr     Enemy_Draw              ; $9AB5
+    jsr     Enemy_Fall_Bank2        ; $9AAE  probe, fall or land
+    lda     objState+1,x            ; $9AB1  guard down?
+    bne     @guardDown              ; $9AB3
+    jsr     Enemy_Draw              ; $9AB5  no: draw, and test guard 3
     lda     #$03                    ; $9AB8
     sta     enemyAiVar,x            ; $9ABA
-    jsr     Enemy_CheckProjectileHitsSpecial ; $9ABD
-    jmp     @loc_9AC5               ; $9AC0
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9ABD  (a clink returns from here)
+    jmp     @update                 ; $9AC0
 
-@loc_9AC3:
-    dec     objState+1,x            ; $9AC3
+@guardDown:
+    dec     objState+1,x            ; $9AC3  count the 32 frames
 
-@loc_9AC5:
-    jsr     Enemy_UpdateCommon      ; $9AC5
+@update:
+    jsr     Enemy_UpdateCommon      ; $9AC5  draw, hit tests
     jsr     Enemy_HurtLinkOnContact ; $9AC8
-    jsr     Enemy_KnockBackOrWalk_Bank2 ; $9ACB
-    lda     frameCounter            ; $9ACE
+    jsr     Enemy_KnockBackOrWalk_Bank2 ; $9ACB  move by last frame's velocity
+    lda     frameCounter            ; $9ACE  every 64 frames
     and     #$3F                    ; $9AD0
-    bne     @loc_9AD7               ; $9AD2
-    jsr     Enemy_FaceLink          ; $9AD4
+    bne     @maybeDropGuard         ; $9AD2
+    jsr     Enemy_FaceLink          ; $9AD4  turn toward Link
 
-@loc_9AD7:
-    lda     rng+1,x                 ; $9AD7
-    eor     #$FF                    ; $9ADA
+@maybeDropGuard:
+    lda     rng+1,x                 ; $9AD7  1 frame in 64 (bits 7-2
+    eor     #$FF                    ; $9ADA  all set):
     and     #$FC                    ; $9ADC
-    bne     @loc_9AE4               ; $9ADE
-    lda     #$20                    ; $9AE0
+    bne     @maybeAim               ; $9ADE
+    lda     #$20                    ; $9AE0  guard down for 32 frames
     sta     objState+1,x            ; $9AE2
 
-@loc_9AE4:
-    lda     rng+2,x                 ; $9AE4
+@maybeAim:
+    lda     rng+2,x                 ; $9AE4  1 frame in 64:
     and     #$3F                    ; $9AE7
-    bne     @loc_9AF0               ; $9AE9
-    lda     #$10                    ; $9AEB
+    bne     @pace                   ; $9AE9
+    lda     #$10                    ; $9AEB  raise its tail for 16 frames
     sta     timerFast+TIMER_ENEMY,x ; $9AED
 
-@loc_9AF0:
+@pace:
     lda     #$00                    ; $9AF0
     sta     objXVelocity+1,x        ; $9AF2
-    jsr     Enemy_Pace_Bank2        ; $9AF4
-    lda     timerFast+TIMER_ENEMY,x ; $9AF7
+    jsr     Enemy_Pace_Bank2        ; $9AF4  next frame's velocity
+    lda     timerFast+TIMER_ENEMY,x ; $9AF7  8 frames into the aim:
     cmp     #$08                    ; $9AFA
     bne     @done                   ; $9AFC
-    jsr     Enemy_FireProjectile    ; $9AFE
+    jsr     Enemy_FireProjectile    ; $9AFE  fire the way it faces
     bcs     @done                   ; $9B01
-    lda     #$04                    ; $9B03
+    lda     #$04                    ; $9B03  projectile type 4
     sta     a:objState+7,y          ; $9B05
 
 @done:
@@ -2363,28 +2383,33 @@ Scorpion_Ai:
 ; ---------------------------------------------------------------------------
 ; Enemy_Pace_Bank2
 ;
-; Walk back and forth: enemyAiState counts up, and its bits 7-6 choose the
-; speed and direction.
+; Set enemy x's X velocity for its pace, by enemyAiState (counted up
+; here) bits 7-6: 0, 1/2 pixel per frame away from its facing; 1 and 3,
+; none (the caller has set 0); 2, about 1 pixel per frame toward it
+; ($0F / $EF).  The speeds are the bytes after Enemy_DropRock_Done_Bank2,
+; by facing: $F8 (right), $08 (left).  Over 256 calls it backs off 32
+; pixels and advances 60.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Pace_Bank2:
-    inc     enemyAiState,x          ; $9B09
+    inc     enemyAiState,x          ; $9B09  count
     ldy     objFacing+1,x           ; $9B0B
     lda     enemyAiState,x          ; $9B0D
-    and     #$C0                    ; $9B0F
-    bne     @loc_9B18               ; $9B11
-    lda     Enemy_DropRock_Done_Bank2,y ; $9B13
-    bne     @loc_9B21               ; $9B16
+    and     #$C0                    ; $9B0F  quarter 0:
+    bne     @otherQuarters          ; $9B11
+    lda     Enemy_DropRock_Done_Bank2,y ; $9B13  1/2 px/frame backward
+    bne     @setSpeed               ; $9B16  (always)
 
-@loc_9B18:
-    asl     a                       ; $9B18
+@otherQuarters:
+    asl     a                       ; $9B18  quarters 1, 3: stand
     bne     Enemy_Pace_Done_Bank2   ; $9B19
-    lda     Enemy_DropRock_Done_Bank2,y ; $9B1B
-    asl     a                       ; $9B1E
+    lda     Enemy_DropRock_Done_Bank2,y ; $9B1B  quarter 2: about 1 px/frame
+    asl     a                       ; $9B1E  forward (-2v - 1)
     eor     #$FF                    ; $9B1F
 
-@loc_9B21:
+@setSpeed:
     sta     objXVelocity+1,x        ; $9B21
 
 Enemy_Pace_Done_Bank2:
@@ -2393,49 +2418,53 @@ Enemy_Pace_Done_Bank2:
 ; ---------------------------------------------------------------------------
 ; Enemy_KnockBackOrWalk_Bank2
 ;
-; While knocked back (enemyKnockBack), move by the knockback; otherwise walk
-; unless against a wall.
+; While knocked back (enemyKnockBack), move by the knockback, which shrinks
+; by 1/16 pixel per frame toward 0 (with a background probe); then, or
+; otherwise (Enemy_Walk_Bank2), move by the X velocity unless at a wall.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank2:
     lda     enemyKnockBack,x        ; $9B24
-    beq     Enemy_Walk_Bank2        ; $9B27
+    beq     Enemy_Walk_Bank2        ; $9B27  not knocked back
 ; (code below not executed in the test movies)
-    dec     enemyKnockBack,x        ; $9B29
-    bpl     @loc_9B34               ; $9B2C
+    dec     enemyKnockBack,x        ; $9B29  shrink toward 0
+    bpl     @knockedBack            ; $9B2C
     inc     enemyKnockBack,x        ; $9B2E
     inc     enemyKnockBack,x        ; $9B31
 
-@loc_9B34:
-    sta     objXVelocity+1,x        ; $9B34
+@knockedBack:
+    sta     objXVelocity+1,x        ; $9B34  move by it
     jsr     Enemy_UpdateBgCollision ; $9B36
 ; (end of code not executed in the test movies)
 
 Enemy_Walk_Bank2:
-    lda     objCollision+1,x        ; $9B39
+    lda     objCollision+1,x        ; $9B39  wall ahead?
     and     #$03                    ; $9B3B
-    bne     Enemy_Pace_Done_Bank2   ; $9B3D
+    bne     Enemy_Pace_Done_Bank2   ; $9B3D  yes: stay
     jmp     Enemy_MoveX             ; $9B3F
 
 ; ---------------------------------------------------------------------------
 ; Enemy_Fall_Bank2
 ;
-; Update enemy x's background collision and fall with gravity, landing on
-; the ground.
+; Probe enemy x's background (Enemy_UpdateBgCollision); land it on a floor
+; it is coming down on (Enemy_Land), else fall (Enemy_MoveYAndFall,
+; gravity 2/16 pixel per frame per frame).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Fall_Bank2:
     jsr     Enemy_UpdateBgCollision ; $9B42
-    lda     objYVelocity+1,x        ; $9B45
-    bmi     @loc_9B53               ; $9B48
+    lda     objYVelocity+1,x        ; $9B45  rising: keep moving
+    bmi     @fall                   ; $9B48
     lda     objCollision+1,x        ; $9B4A
-    and     #$04                    ; $9B4C
-    beq     @loc_9B53               ; $9B4E
-    jmp     Enemy_Land              ; $9B50
+    and     #$04                    ; $9B4C  on a floor?
+    beq     @fall                   ; $9B4E
+    jmp     Enemy_Land              ; $9B50  yes: land
 
-@loc_9B53:
+@fall:
     jmp     Enemy_MoveYAndFall      ; $9B53
 
 ; ---------------------------------------------------------------------------
@@ -2925,6 +2954,8 @@ Boon_Draw:
     inx                             ; $9E09
 
 @draw:
+; Basilisk/Scorpion: X of the extra sprite (the head) by facing
+; (1, 2): read from the next bytes, $10 and $F8.
 SegmentXOffsets_Bank2 := * + 2
     jmp     Sprite_DrawEnemyPairKeepX ; $9E0A
 ; (end of disassembled code)
@@ -2932,136 +2963,149 @@ SegmentXOffsets_Bank2 := * + 2
 
     .byte   $10                                                             ; $9E0D
 
+; Basilisk's head before breathing fire: 1 pixel back, by facing (1, 2).
 SegmentXOffsets2_Bank2:
     .byte   $F8, $FF                                                        ; $9E0E
 
+; Basilisk/Scorpion: drawOffscreen+1 bit of the extra sprite's column, by facing.
 SegmentHideMasks_Bank2:
     .byte   $01, $02, $08                                                   ; $9E10
 
 ; ---------------------------------------------------------------------------
 ; Basilisk_Draw
 ;
-; Draw enemy $18 of East Hyrule.
+; Draw a Basilisk, with the extra attribute bits of Link's sprites
+; (extraSpriteAttrs).  Reared (its timer running): two pairs of sprites
+; from sramEnemyTiles entry $18, standing.  Crawling: one pair 16 pixels
+; lower, entry $14, alternating with $16 while it moves (every 4 frames,
+; or 8 when slower than 1/2 pixel per frame), and a head sprite (tile
+; $DC) ahead of it at the same height (SegmentXOffsets_Bank2: 16 right
+; or 8 left of its X), drawn 1 pixel back while it is about to breathe
+; fire (SegmentXOffsets2_Bank2), unless that column is off screen.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Basilisk_Draw:
-    lda     temp3                   ; $9E13
+    lda     temp3                   ; $9E13  palette, plus Link's extra bits
     ora     extraSpriteAttrs        ; $9E15
     sta     temp3                   ; $9E18
-    lda     timerFast+TIMER_ENEMY,x ; $9E1A
-    bne     @loc_9E7C               ; $9E1D
-    lda     temp0                   ; $9E1F
+    lda     timerFast+TIMER_ENEMY,x ; $9E1A  reared?
+    bne     @reared                 ; $9E1D
+    lda     temp0                   ; $9E1F  crawling: 16 pixels lower
     clc                             ; $9E21
     adc     #$10                    ; $9E22
     sta     temp0                   ; $9E24
     lda     objXVelocity+1,x        ; $9E26
-    ldx     #$14                    ; $9E28
-    cmp     #$00                    ; $9E2A
-    beq     @loc_9E3F               ; $9E2C
-    bpl     @loc_9E32               ; $9E2E
-    eor     #$FF                    ; $9E30
+    ldx     #$14                    ; $9E28  entry $14,
+    cmp     #$00                    ; $9E2A  standing still: no steps
+    beq     @body                   ; $9E2C
+    bpl     @speed                  ; $9E2E
+    eor     #$FF                    ; $9E30  |velocity|
 
-@loc_9E32:
-    cmp     #$09                    ; $9E32
-    lda     #$04                    ; $9E34
-    bcs     @loc_9E39               ; $9E36
-    asl     a                       ; $9E38
+@speed:
+    cmp     #$09                    ; $9E32  faster than 1/2 px/frame:
+    lda     #$04                    ; $9E34  every 4 frames,
+    bcs     @step                   ; $9E36
+    asl     a                       ; $9E38  else every 8
 
-@loc_9E39:
+@step:
     and     frameCounter            ; $9E39
-    bne     @loc_9E3F               ; $9E3B
-    ldx     #$16                    ; $9E3D
+    bne     @body                   ; $9E3B
+    ldx     #$16                    ; $9E3D  or $16
 
-@loc_9E3F:
+@body:
     jsr     Sprite_DrawEnemyPairKeepX ; $9E3F
-    ldx     temp2                   ; $9E42
+    ldx     temp2                   ; $9E42  head column off screen?
     lda     drawOffscreen+1         ; $9E44
     and     SegmentHideMasks_Bank2,x ; $9E46
-    bne     @loc_9E79               ; $9E49
-    lda     temp0                   ; $9E4B
+    bne     @done                   ; $9E49  yes: no head
+    lda     temp0                   ; $9E4B  the head, level with the body
     sec                             ; $9E4D
     sbc     #$10                    ; $9E4E
     sta     oamBuffer,y             ; $9E50
-    lda     oamBuffer - 2,y         ; $9E53
+    lda     oamBuffer - 2,y         ; $9E53  same attributes
     sta     oamBuffer+2,y           ; $9E56
-    lda     #$DC                    ; $9E59
+    lda     #$DC                    ; $9E59  tile $DC
     sta     oamBuffer+1,y           ; $9E5B
-    lda     temp1                   ; $9E5E
+    lda     temp1                   ; $9E5E  ahead of it
     clc                             ; $9E60
     adc     SegmentXOffsets_Bank2,x ; $9E61
     sta     oamBuffer+3,y           ; $9E64
     ldx     currentObject           ; $9E67
-    lda     objState+1,x            ; $9E69
-    beq     @loc_9E79               ; $9E6B
-    ldx     temp2                   ; $9E6D
+    lda     objState+1,x            ; $9E69  about to breathe fire?
+    beq     @done                   ; $9E6B
+    ldx     temp2                   ; $9E6D  head drawn 1 pixel back
     lda     oamBuffer+3,y           ; $9E6F
     clc                             ; $9E72
     adc     SegmentXOffsets2_Bank2,x ; $9E73
     sta     oamBuffer+3,y           ; $9E76
 
-@loc_9E79:
+@done:
     ldx     currentObject           ; $9E79
     rts                             ; $9E7B
 
-@loc_9E7C:
-    ldx     #$18                    ; $9E7C
+@reared:
+    ldx     #$18                    ; $9E7C  reared: two pairs, entry $18
     jsr     Sprite_DrawEnemyPair    ; $9E7E
     jmp     Sprite_DrawEnemyPairKeepX ; $9E81
 
 ; ---------------------------------------------------------------------------
 ; Scorpion_Draw
 ;
-; Draw enemy $19 of East Hyrule.
+; Draw a Scorpion: its tail, a pair from sramEnemyTiles entry $20 ($22,
+; raised, while its timer runs); its body below, entry $1C, alternating
+; with $1E every 4 frames while it moves; and its head, a fifth sprite
+; in front of the body (SegmentXOffsets_Bank2: 16 right or 8 left of its
+; X), tile $EE, or $FA while its guard is down.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scorpion_Draw:
     lda     timerFast+TIMER_ENEMY,x ; $9E84
-    ldx     #$20                    ; $9E87
+    ldx     #$20                    ; $9E87  tail: entry $20,
     asl     a                       ; $9E89
-    beq     @loc_9E8E               ; $9E8A
-    ldx     #$22                    ; $9E8C
+    beq     @tail                   ; $9E8A
+    ldx     #$22                    ; $9E8C  or $22 while aiming
 
-@loc_9E8E:
+@tail:
     jsr     Sprite_DrawEnemyPairKeepX ; $9E8E
-    lda     objXVelocity+1,x        ; $9E91
+    lda     objXVelocity+1,x        ; $9E91  body: entry $1C,
     ldx     #$1C                    ; $9E93
     asl     a                       ; $9E95
-    beq     @loc_9EA0               ; $9E96
-    lda     frameCounter            ; $9E98
-    and     #$04                    ; $9E9A
-    bne     @loc_9EA0               ; $9E9C
+    beq     @body                   ; $9E96
+    lda     frameCounter            ; $9E98  alternating with $1E every
+    and     #$04                    ; $9E9A  4 frames while it moves
+    bne     @body                   ; $9E9C
     ldx     #$1E                    ; $9E9E
 
-@loc_9EA0:
+@body:
     jsr     Sprite_DrawEnemyPairKeepX ; $9EA0
-    ldx     temp2                   ; $9EA3
+    ldx     temp2                   ; $9EA3  head column off screen?
     lda     drawOffscreen+1         ; $9EA5
     and     SegmentHideMasks_Bank2,x ; $9EA7
-    bne     @loc_9ED2               ; $9EAA
-    lda     temp0                   ; $9EAC
+    bne     @done                   ; $9EAA  yes: no head
+    lda     temp0                   ; $9EAC  the head, level with the body
     sec                             ; $9EAE
     sbc     #$10                    ; $9EAF
     sta     oamBuffer,y             ; $9EB1
-    lda     oamBuffer - 2,y         ; $9EB4
+    lda     oamBuffer - 2,y         ; $9EB4  same attributes
     sta     oamBuffer+2,y           ; $9EB7
-    lda     temp1                   ; $9EBA
+    lda     temp1                   ; $9EBA  beside it
     clc                             ; $9EBC
-    adc     SegmentXOffsets_Bank2,x ; $9EBD
+    adc     SegmentXOffsets_Bank2,x ; $9EBD  in front
     sta     oamBuffer+3,y           ; $9EC0
     ldx     currentObject           ; $9EC3
-    lda     objState+1,x            ; $9EC5
+    lda     objState+1,x            ; $9EC5  tile $EE,
     ldx     #$EE                    ; $9EC7
     asl     a                       ; $9EC9
-    beq     @loc_9ECE               ; $9ECA
-    ldx     #$FA                    ; $9ECC
+    beq     @setTile                ; $9ECA
+    ldx     #$FA                    ; $9ECC  or $FA with its guard down
 
-@loc_9ECE:
+@setTile:
     txa                             ; $9ECE
     sta     oamBuffer+1,y           ; $9ECF
 
-@loc_9ED2:
+@done:
     ldx     currentObject           ; $9ED2
 
 LizalfosDrawTiles:

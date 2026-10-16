@@ -44,8 +44,8 @@ the candle for the caves) and logging `enemyType`:
 | $15 | [Eye](enemies/eye.md) | 16 | 20 | 4 | 1 |  | `Eye_Ai` |
 | $16 | [Leever](enemies/leever.md) | 16 | 10 | 4 | 1 |  | `Leever_Ai` |
 | $17 | [Boon](enemies/boon.md) | 8 | 50 | 1 | 2 |  | `Boon_Ai` |
-| $18 | Basilisk | 48 | 50 | 3 | 2 | sword clinks, beam blocked | `Basilisk_Ai` |
-| $19 | Scorpion | 32 | 150 | 4 | 2 | blocks Link's projectiles | `Scorpion_Ai` |
+| $18 | [Basilisk](enemies/basilisk.md) | 48 | 50 | 3 | 2 | sword clinks, beam blocked | `Basilisk_Ai` |
+| $19 | [Scorpion](enemies/scorpion.md) | 32 | 150 | 4 | 2 | blocks Link's projectiles | `Scorpion_Ai` |
 | $1A | Red Lizalfos | 48 | 100 | 4 | - | blocks Link's projectiles, immune to SPELL | `Lizalfos_Ai` |
 | $1B | Orange Lizalfos | 32 | 150 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `OrangeLizalfos_Ai` |
 | $1C | Blue Lizalfos | 56 | 200 | 4 | - | blocks Link's projectiles, immune to SPELL | `Lizalfos_Ai` |
@@ -70,12 +70,14 @@ and again.  See [Leever](enemies/leever.md).
 directions, and drops rocks every 32 frames while high on the screen.
 See [Boon](enemies/boon.md).
 
-**Basilisk** ($18, `Basilisk_Ai`): paces back and forth and,
-every 64 frames half the time, breathes a fireball (projectile type 6).
+**Basilisk** ($18): crawls back and forth on a 256-frame pace, rears up
+for 80 frames every 256, and breathes fireballs, low while crawling and
+high while reared.  See [Basilisk](enemies/basilisk.md).
 
-**Scorpion** ($19, `Scorpion_Ai`): paces back and forth, hides
-for 32 frames at random, and fires projectile type 4 now and then; only
-one part of it can be hit.
+**Scorpion** ($19): paces like the Basilisk, stings with fireballs, and
+guards its body against low strokes and projectiles; it can only be hurt
+in the 32 frames when it lowers its guard.  See
+[Scorpion](enemies/scorpion.md).
 
 **Lizalfos** ($1A red, $1B orange, $1C blue; `Lizalfos_Ai`,
 `OrangeLizalfos_Ai`, `Lizalfos_Attack`): fight like Iron Knuckles: they
