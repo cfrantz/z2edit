@@ -1156,21 +1156,22 @@ Projectile_Fireball_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_Straight_Bank4
 ;
-; Projectile types 1 and 2: fly straight; removed near the bottom of the
-; screen.
+; Projectile types 1 and 2 (energy balls): fly straight; at Y $C5 or more,
+; near the floor, they burst (objState+7 = $F4).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Straight_Bank4:
-    lda     objY+7,x                ; $974E
-    cmp     #$C5                    ; $9750
+    lda     objY+7,x                ; $974E  near the floor?
+    cmp     #$C5                    ; $9750  
     bcc     @loc_9759               ; $9752
-    lda     #$F4                    ; $9754
+    lda     #$F4                    ; $9754  burst
     sta     objState+7,x            ; $9756
     rts                             ; $9758
 
 @loc_9759:
-    jmp     Projectile_MoveAndCheck_Bank4 ; $9759
+    jmp     Projectile_MoveAndCheck_Bank4 ; $9759  move, draw, test Link
 
 Projectile_RockBounce_Bank4:
     lda     #$FE                    ; $975C
@@ -1444,23 +1445,26 @@ HorseHead_Draw:
 ; ---------------------------------------------------------------------------
 ; SlowBubble_Init
 ;
-; Spawn routine of slow bubbles: X and Y speed $F0.
+; Spawn routine of slow bubbles: X and Y velocity $F0, 1 pixel per frame up
+; and to the left, whatever side Link is on (FastBubble_Init: $E0, 2).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SlowBubble_Init:
-    lda     #$F0                    ; $98AA
-    bne     Bubble_SetSpeed_Bank4   ; $98AC
+    lda     #$F0                    ; $98AA  1 px/frame up-left
+    bne     Bubble_SetSpeed_Bank4   ; $98AC  (always)
 
 ; ---------------------------------------------------------------------------
 ; FastBubble_Init
 ;
-; Spawn routine of fast bubbles: X and Y speed $E0.
+; Spawn routine of fast bubbles: X and Y velocity $E0.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FastBubble_Init:
-    lda     #$E0                    ; $98AE
+    lda     #$E0                    ; $98AE  2 px/frame up-left
 
 Bubble_SetSpeed_Bank4:
     sta     objXVelocity+1,x        ; $98B0
@@ -1753,62 +1757,68 @@ Projectile_DrawNothing2_Bank4:
 ; ---------------------------------------------------------------------------
 ; Bubble_Ai
 ;
-; Bubble (flaming skull): flies diagonally, bouncing off walls, floors,
-; ceilings and the screen edges.  While touching Link it drains a point of
-; magic each frame (and hurts him).
+; Bubble ($06 slow, $0E fast; a flaming skull).  It flies diagonally at the
+; speed its spawn routine gave both axes (1 or 2 pixels per frame, always
+; starting up and to the left), and bounces: it turns around when either
+; of its sprite columns is off the side of the screen or there is a wall
+; ahead, and reverses its Y velocity when it is off the top or bottom of
+; the screen or meets a floor or ceiling.  While it touches Link (tested
+; every other frame) it takes a point of his magic, besides hurting him.
+; With 250 hit points it is all but indestructible.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bubble_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $99D1
+    jsr     Enemy_SkipAiIfStunned   ; $99D1  no AI while stunned
     jsr     Enemy_MoveX             ; $99D4
     jsr     Enemy_MoveY             ; $99D7
-    jsr     Enemy_UpdateWithBg      ; $99DA
-    lda     objCollision+1,x        ; $99DD
+    jsr     Enemy_UpdateWithBg      ; $99DA  probe background, draw, hit tests
+    lda     objCollision+1,x        ; $99DD  touching Link?
     and     #$10                    ; $99DF
-    beq     @loc_99F0               ; $99E1
-    lda     statMeter               ; $99E3
+    beq     @hudRedraw              ; $99E1
+    lda     statMeter               ; $99E3  a point of magic, down to 0
     sec                             ; $99E6
     sbc     #$01                    ; $99E7
-    bcs     @loc_99ED               ; $99E9
+    bcs     @setMagic               ; $99E9
 ; (code below not executed in the test movies)
     lda     #$00                    ; $99EB
 ; (end of code not executed in the test movies)
 
-@loc_99ED:
+@setMagic:
     sta     statMeter               ; $99ED
 
-@loc_99F0:
-    lda     hudRedraw               ; $99F0
+@hudRedraw:
+    lda     hudRedraw               ; $99F0  redraw the meters (every frame)
     ora     #$80                    ; $99F3
     sta     hudRedraw               ; $99F5
     jsr     Enemy_HurtLinkOnContact ; $99F8
-    lda     drawOffscreen+1         ; $99FB
+    lda     drawOffscreen+1         ; $99FB  off the side of the screen,
     and     #$0C                    ; $99FD
-    bne     @loc_9A07               ; $99FF
-    lda     objCollision+1,x        ; $9A01
+    bne     @turn                   ; $99FF
+    lda     objCollision+1,x        ; $9A01  or a wall ahead?
     and     #$03                    ; $9A03
-    beq     @loc_9A0D               ; $9A05
+    beq     @checkY                 ; $9A05
 
-@loc_9A07:
-    jsr     Enemy_TurnAround        ; $9A07
-    jsr     Enemy_MoveX             ; $9A0A
+@turn:
+    jsr     Enemy_TurnAround        ; $9A07  turn around,
+    jsr     Enemy_MoveX             ; $9A0A  and step back
 
-@loc_9A0D:
-    lda     drawOffscreen+1         ; $9A0D
+@checkY:
+    lda     drawOffscreen+1         ; $9A0D  off the top or bottom,
     and     #$F0                    ; $9A0F
-    bne     @loc_9A19               ; $9A11
-    lda     objCollision+1,x        ; $9A13
+    bne     @bounceY                ; $9A11
+    lda     objCollision+1,x        ; $9A13  or a floor or ceiling?
     and     #$0C                    ; $9A15
     beq     @done                   ; $9A17
 
-@loc_9A19:
-    lda     objYVelocity+1,x        ; $9A19
+@bounceY:
+    lda     objYVelocity+1,x        ; $9A19  reverse the Y velocity
     eor     #$FF                    ; $9A1C
     clc                             ; $9A1E
     adc     #$01                    ; $9A1F
     sta     objYVelocity+1,x        ; $9A21
-    jsr     Enemy_MoveY             ; $9A24
+    jsr     Enemy_MoveY             ; $9A24  and step back
 
 @done:
     rts                             ; $9A27
@@ -1880,24 +1890,26 @@ Boss_SpawnDeathSpark_Bank4:
 ; ---------------------------------------------------------------------------
 ; Crystal_Init
 ;
-; Spawn routine of the crystal spot: if the crystal is already placed (area
-; flag 3 clear), become the crystal ($15); put it at ($7C, $62).
+; Spawn routine of the crystal spot ($14): if the palace's crystal is
+; already placed (area flag 3 clear), it becomes the crystal itself ($15).
+; Either way it goes to X $7C, Y $62 on its page.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Crystal_Init:
-    ldx     #$03                    ; $9A73
+    ldx     #$03                    ; $9A73  flag 3: crystal not placed?
     jsr     Area_TestFlag           ; $9A75
     ldx     currentObject           ; $9A78
     cmp     #$00                    ; $9A7A
-    bne     @loc_9A82               ; $9A7C
+    bne     @place                  ; $9A7C  not placed: a spot
 ; (code below not executed in the test movies)
-    lda     #$15                    ; $9A7E
+    lda     #$15                    ; $9A7E  placed: the crystal
     sta     enemyType,x             ; $9A80
 ; (end of code not executed in the test movies)
 
-@loc_9A82:
-    lda     #$62                    ; $9A82
+@place:
+    lda     #$62                    ; $9A82  at (X $7C, Y $62)
     sta     objY+1,x                ; $9A84
     lda     #$7C                    ; $9A86
     sta     objX+1,x                ; $9A88
@@ -1906,20 +1918,23 @@ Crystal_Init:
 ; ---------------------------------------------------------------------------
 ; Crystal_Ai
 ;
-; The placed crystal: draw it (tile $3D) with its palette cycling.
+; The crystal in its statue ($15; also drawn by the spot while it rises):
+; one sprite, tile $3D, its palette cycling every frame.  Not drawn when
+; its column is off screen.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Crystal_Ai:
-    lda     drawOffscreen+1         ; $9A8B
+    lda     drawOffscreen+1         ; $9A8B  off screen: not drawn
     and     #$08                    ; $9A8D
     bne     @done                   ; $9A8F
     ldy     objOamOffset+1,x        ; $9A91
     lda     objY+1,x                ; $9A93
     sta     oamBuffer,y             ; $9A95
-    lda     #$3D                    ; $9A98
+    lda     #$3D                    ; $9A98  the crystal
     sta     oamBuffer+1,y           ; $9A9A
-    lda     frameCounter            ; $9A9D
+    lda     frameCounter            ; $9A9D  palette 0-3 by the frame
     and     #$03                    ; $9A9F
     sta     oamBuffer+2,y           ; $9AA1
     lda     drawScreenX+1           ; $9AA4
@@ -1935,19 +1950,22 @@ Crystal_Ai:
 ; ---------------------------------------------------------------------------
 ; CrystalSpot_Ai
 ;
-; The statue where the crystal goes, by enemyAiState: CrystalSpot_Wait,
-; CrystalSpot_Rise, CrystalSpot_WaitMusic, CrystalSpot_Finish; the palette
-; flashes meanwhile (CrystalSpot_FlashPalette).
+; The statue where the palace's crystal goes ($14).  It keeps the palette
+; flash going (CrystalSpot_FlashPalette), draws the crystal once it is
+; there (objState+1 nonzero: its Y), and runs its step by enemyAiState:
+; CrystalSpot_Wait, CrystalSpot_Rise, CrystalSpot_WaitMusic,
+; CrystalSpot_Finish.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 CrystalSpot_Ai:
     jsr     CrystalSpot_FlashPalette ; $9AD4
-    lda     objState+1,x            ; $9AD7
-    beq     @loc_9ADE               ; $9AD9
-    jsr     Crystal_Ai              ; $9ADB
+    lda     objState+1,x            ; $9AD7  crystal there?
+    beq     @step                   ; $9AD9
+    jsr     Crystal_Ai              ; $9ADB  draw it
 
-@loc_9ADE:
+@step:
     lda     enemyAiState,x          ; $9ADE
     jsr     JumpTable               ; $9AE0
 ; (inline jump table)
@@ -1959,43 +1977,47 @@ CrystalSpot_Ai:
 ; ---------------------------------------------------------------------------
 ; CrystalSpot_Wait
 ;
-; When Link stands on the spot with a crystal, freeze the game, take the
-; crystal (crystalsRemaining), mark it placed (crystalPlaced) and start the
-; fanfare.
+; While it is on screen and Link has a crystal (crystalsRemaining), wait
+; for him to stand on it (touching it, his objCollision bit 2).  Then:
+; freeze the game, Link in his holding-up pose (objState 3), the crystal
+; at Y $A0, one crystal fewer, a sound and the fanfare, and the palace
+; marked done (crystalPlaced, by palaceCode, + 2 for the regions past
+; West Hyrule).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 CrystalSpot_Wait:
-    lda     drawOffscreen+1         ; $9AEB
+    lda     drawOffscreen+1         ; $9AEB  on screen,
     bne     @done                   ; $9AED
-    lda     crystalsRemaining       ; $9AEF
+    lda     crystalsRemaining       ; $9AEF  a crystal to place,
     beq     @done                   ; $9AF2
     jsr     Enemy_CheckLinkContact  ; $9AF4
-    lda     objCollision+1,x        ; $9AF7
+    lda     objCollision+1,x        ; $9AF7  Link touching it,
     and     #$10                    ; $9AF9
     beq     @done                   ; $9AFB
-    lda     objCollision            ; $9AFD
+    lda     objCollision            ; $9AFD  and standing?
     and     #$04                    ; $9AFF
     beq     @done                   ; $9B01
-    inc     enemyAiState,x          ; $9B03
-    inc     gameFrozen              ; $9B05
-    lda     #$03                    ; $9B07
+    inc     enemyAiState,x          ; $9B03  rise
+    inc     gameFrozen              ; $9B05  freeze the game
+    lda     #$03                    ; $9B07  Link holds it up
     sta     objState                ; $9B09
-    lda     #$A0                    ; $9B0B
+    lda     #$A0                    ; $9B0B  the crystal at Y $A0
     sta     objY+1,x                ; $9B0D
     dec     crystalsRemaining       ; $9B0F
-    lda     #$08                    ; $9B12
+    lda     #$08                    ; $9B12  a sound,
     sta     sfxRequest+3            ; $9B14
-    lda     #$80                    ; $9B16
+    lda     #$80                    ; $9B16  the fanfare
     sta     musicRequest            ; $9B18
-    lda     currentRegion           ; $9B1A
-    beq     @loc_9B22               ; $9B1D
-    clc                             ; $9B1F
+    lda     currentRegion           ; $9B1A  crystalPlaced entry:
+    beq     @mark                   ; $9B1D  palaceCode (+ 2 past the
+    clc                             ; $9B1F  west)
     adc     #$02                    ; $9B20
 
-@loc_9B22:
-    sec                             ; $9B22
-    adc     palaceCode              ; $9B23
+@mark:
+    sec                             ; $9B22  (itemOwned+7 + 1 + y =
+    adc     palaceCode              ; $9B23  crystalPlaced + y)
     tay                             ; $9B26
     sta     itemOwned+7,y           ; $9B27
 
@@ -2005,18 +2027,20 @@ CrystalSpot_Wait:
 ; ---------------------------------------------------------------------------
 ; CrystalSpot_Rise
 ;
-; Raise the crystal to Y $62, then start the palette flash and the next
-; step.
+; Raise the crystal a pixel per frame (its Y also in objState+1, so that it
+; is drawn) to Y $62, 62 frames; then start the palette flash for 98
+; frames (crystalFlashTimer), the next music and a sound, and stop Link.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 CrystalSpot_Rise:
-    dec     objY+1,x                ; $9B2B
+    dec     objY+1,x                ; $9B2B  a pixel up
     lda     objY+1,x                ; $9B2D
-    sta     objState+1,x            ; $9B2F
-    cmp     #$62                    ; $9B31
+    sta     objState+1,x            ; $9B2F  (drawn there)
+    cmp     #$62                    ; $9B31  at Y $62?
     bne     @done                   ; $9B33
-    sta     crystalFlashTimer       ; $9B35
+    sta     crystalFlashTimer       ; $9B35  flash for $62 frames
     inc     enemyAiState,x          ; $9B38
     lda     #$40                    ; $9B3A
     sta     musicRequest            ; $9B3C
@@ -2031,16 +2055,18 @@ CrystalSpot_Rise:
 ; ---------------------------------------------------------------------------
 ; CrystalSpot_WaitMusic
 ;
-; When the music ends, fill Link's meters (statMeterPending).
+; When the music has ended, fill both of Link's meters
+; (statMeterPending $FF, $FF).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 CrystalSpot_WaitMusic:
-    ldy     musicPlaying            ; $9B47
+    ldy     musicPlaying            ; $9B47  music over?
     bne     @done                   ; $9B4A
-    dey                             ; $9B4C
-    sty     statMeterPending        ; $9B4D
-    sty     statMeterPending+1      ; $9B50
+    dey                             ; $9B4C  y = $FF:
+    sty     statMeterPending        ; $9B4D  fill magic
+    sty     statMeterPending+1      ; $9B50  and life
     inc     enemyAiState,x          ; $9B53
 
 @done:
@@ -2049,79 +2075,87 @@ CrystalSpot_WaitMusic:
 ; ---------------------------------------------------------------------------
 ; CrystalSpot_Finish
 ;
-; When the meters are full, unfreeze the game, give Link the experience for
-; his next level, make the spot a crystal in the area's enemy list, clear
-; the area flag and restart the music.
+; When the meters are full: unfreeze the game; give Link exactly the
+; experience he lacks for his next level (experiencePending =
+; experienceNext - experience); make the spot the crystal (type $15),
+; also in the area's enemy list (type byte $D5: page 3, type $15), so
+; that it is the crystal from now on; clear area flag 3; and restart the
+; area's music.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 CrystalSpot_Finish:
-    lda     statMeterPending        ; $9B56
+    lda     statMeterPending        ; $9B56  meters full?
     ora     statMeterPending+1      ; $9B59
     bne     @done                   ; $9B5C
-    sta     gameFrozen              ; $9B5E
-    lda     experienceNext+1        ; $9B60
+    sta     gameFrozen              ; $9B5E  unfreeze
+    lda     experienceNext+1        ; $9B60  experience to the next level
     sec                             ; $9B63
     sbc     experience+1            ; $9B64
     sta     experiencePending+1     ; $9B67
     lda     experienceNext          ; $9B6A
     sbc     experience              ; $9B6D
     sta     experiencePending       ; $9B70
-    ldy     enemySramIndex,x        ; $9B73
+    ldy     enemySramIndex,x        ; $9B73  its list entry's type byte:
     iny                             ; $9B75
-    lda     #$D5                    ; $9B76
+    lda     #$D5                    ; $9B76  page 3, the crystal
     sta     (enemyListPtr),y        ; $9B78
-    lda     #$15                    ; $9B7A
+    lda     #$15                    ; $9B7A  the crystal now
     sta     enemyType,x             ; $9B7C
-    ldx     #$02                    ; $9B7E
+    ldx     #$02                    ; $9B7E  the area's music
     stx     musicRequest            ; $9B80
-    inx                             ; $9B82
+    inx                             ; $9B82  area flag 3: placed
     jsr     Area_ClearFlag          ; $9B83
     ldx     currentObject           ; $9B86
 
 @done:
     rts                             ; $9B88
 
+; CrystalSpot_FlashPalette: the flashing color, by the timer's bits 1-0.
 CrystalSpotFlashColors:
     .byte   $12, $30, $2A, $16                                              ; $9B89
 
+; CrystalSpot_FlashPalette: PPU string for background palette 3 ($3F0C).
 CrystalSpotPaletteString:
     .byte   $3F, $0C, $04, $0F, $3C, $1C, $0C, $FF                          ; $9B8D
 
 ; ---------------------------------------------------------------------------
 ; CrystalSpot_FlashPalette
 ;
-; While crystalFlashTimer counts, queue a flashing background palette; at the end,
-; the area's own colors.
+; While crystalFlashTimer counts down, queue background palette 3
+; ($3F0C-$3F0F) every frame as $0F, $3C, $1C, $0C with its second color
+; cycling through CrystalSpotFlashColors (by the timer's bits 1-0); on
+; the last frame, the area's own colors (sramAreaPalettes+29-31) instead.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 CrystalSpot_FlashPalette:
-    lda     crystalFlashTimer       ; $9B95
+    lda     crystalFlashTimer       ; $9B95  flashing?
     beq     @done                   ; $9B98
     dec     crystalFlashTimer       ; $9B9A
-    ldy     #$07                    ; $9B9D
+    ldy     #$07                    ; $9B9D  copy the palette string
 
 @loop:
     lda     CrystalSpotPaletteString,y ; $9B9F
     sta     ppuBuffer0,y            ; $9BA2
     dey                             ; $9BA5
     bpl     @loop                   ; $9BA6
-    lda     crystalFlashTimer       ; $9BA8
-    bne     @loc_9BBE               ; $9BAB
-    lda     sramAreaPalettes+29     ; $9BAD
+    lda     crystalFlashTimer       ; $9BA8  last frame?
+    bne     @flash                  ; $9BAB
+    lda     sramAreaPalettes+29     ; $9BAD  yes: the area's colors
     sta     ppuBuffer0+4            ; $9BB0
     lda     sramAreaPalettes+31     ; $9BB3
     sta     ppuBuffer0+6            ; $9BB6
     lda     sramAreaPalettes+30     ; $9BB9
-    bne     @loc_9BC4               ; $9BBC
+    bne     @setColor               ; $9BBC  (always)
 
-@loc_9BBE:
-    and     #$03                    ; $9BBE
+@flash:
+    and     #$03                    ; $9BBE  no: a flash color by the timer
     tay                             ; $9BC0
     lda     CrystalSpotFlashColors,y ; $9BC1
 
-@loc_9BC4:
+@setColor:
     sta     ppuBuffer0+5            ; $9BC4
     lda     #$07                    ; $9BC7
     sta     ppuBuffer0Len           ; $9BC9
@@ -2129,11 +2163,13 @@ CrystalSpot_FlashPalette:
 @done:
     rts                             ; $9BCC
 
+; Enemy_FireAimedBall: X speed of the ball by Link's distance step d.
 AimedBallXSpeeds:
     .byte   $06, $0A, $0D, $0F, $11, $12                                    ; $9BCD
 ; (unreferenced: $9BD3-$9BD4, 2 bytes)
     .byte   $13, $13                                                        ; $9BD3
 
+; Enemy_FireAimedBall: Y speed (down) of the ball by d.
 AimedBallYSpeeds:
     .byte   $16, $14, $13, $11, $0F, $0E                                    ; $9BD5
 ; (unreferenced: $9BDB-$9BDC, 2 bytes)
@@ -2142,81 +2178,88 @@ AimedBallYSpeeds:
 ; ---------------------------------------------------------------------------
 ; EnergyBallShooter_Ai
 ;
-; Statue that shoots energy balls: every 32 frames while on screen, fire one
-; at Link (Enemy_FireAimedBall).
+; Energy ball shooter ($16 facing right, $17 facing left; part of a wall
+; statue, not drawn or hit): every 32 frames while it is on screen, it
+; fires at Link (Enemy_FireAimedBall).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 EnergyBallShooter_Ai:
-    lda     frameCounter            ; $9BDD
+    lda     frameCounter            ; $9BDD  every 32 frames,
     and     #$1F                    ; $9BDF
-    ora     drawOffscreen+1         ; $9BE1
+    ora     drawOffscreen+1         ; $9BE1  on screen
     bne     Enemy_FireAimedBall_Done ; $9BE3
 
 ; ---------------------------------------------------------------------------
 ; Enemy_FireAimedBall
 ;
-; Fire an energy ball (projectile type 1) from enemy x at Link, if he is on
-; the side it faces, with a speed chosen by his distance; carry set if none
-; was fired.
+; Fire an energy ball (projectile type 1, Projectile_Straight_Bank4) from
+; enemy x, 4 right of and 5 below its position (plus the carry), if Link
+; is on the side it faces and within about 148 pixels.  The speed is by
+; his distance, d = (|dx| - 20) / 16 (AimedBallXSpeeds, AimedBallYSpeeds):
+; across $06-$13, down $16-$0B, so the ball flies a straight line down at
+; him, flatter the further he is.  Otherwise the projectile is cancelled.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Out:     carry set if no projectile slot was free
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_FireAimedBall:
-    jsr     Enemy_FireProjectile    ; $9BE5
-    bcs     Enemy_FireAimedBall_Done ; $9BE8
+    jsr     Enemy_FireProjectile    ; $9BE5  take a slot
+    bcs     Enemy_FireAimedBall_Done ; $9BE8  none
     sty     temp5                   ; $9BEA
-    lda     objFacing+1,x           ; $9BEC
-    pha                             ; $9BEE
-    jsr     Enemy_FaceLink          ; $9BEF
+    lda     objFacing+1,x           ; $9BEC  which side is Link on (keeping
+    pha                             ; $9BEE  its own facing)?
+    jsr     Enemy_FaceLink          ; $9BEF  temp15 = dx
     pla                             ; $9BF2
     sta     objFacing+1,x           ; $9BF3
     iny                             ; $9BF5
     tya                             ; $9BF6
     ldy     temp5                   ; $9BF7
-    cmp     objFacing+1,x           ; $9BF9
-    bne     Enemy_CancelAimedBall   ; $9BFB
+    cmp     objFacing+1,x           ; $9BF9  the side it faces?
+    bne     Enemy_CancelAimedBall   ; $9BFB  no: no shot
     sta     a:objFacing+7,y         ; $9BFD
-    lda     temp15                  ; $9C00
-    bpl     @loc_9C06               ; $9C02
+    lda     temp15                  ; $9C00  |dx|
+    bpl     @absDx                  ; $9C02
     eor     #$FF                    ; $9C04
 
-@loc_9C06:
-    sbc     #$14                    ; $9C06
+@absDx:
+    sbc     #$14                    ; $9C06  d = (|dx| - 20) / 16
     lsr     a                       ; $9C08
     lsr     a                       ; $9C09
     lsr     a                       ; $9C0A
     lsr     a                       ; $9C0B
-    cmp     #$08                    ; $9C0C
-    bcs     Enemy_CancelAimedBall   ; $9C0E
+    cmp     #$08                    ; $9C0C  too far (or too near: the
+    bcs     Enemy_CancelAimedBall   ; $9C0E  subtraction wraps): no shot
     tax                             ; $9C10
-    lda     AimedBallYSpeeds,x      ; $9C11
+    lda     AimedBallYSpeeds,x      ; $9C11  down, by d
     sta     objYVelocity+7,y        ; $9C14
-    lda     AimedBallXSpeeds,x      ; $9C17
+    lda     AimedBallXSpeeds,x      ; $9C17  across, by d, toward Link
     ldx     objFacing+7,y           ; $9C1A
     dex                             ; $9C1C
-    beq     @loc_9C21               ; $9C1D
+    beq     @setXSpeed              ; $9C1D
     eor     #$FF                    ; $9C1F
 
-@loc_9C21:
+@setXSpeed:
     sta     a:objXVelocity+7,y      ; $9C21
     ldx     currentObject           ; $9C24
-    lda     objY+1,x                ; $9C26
+    lda     objY+1,x                ; $9C26  from 5 below,
     adc     #$05                    ; $9C28
     sta     a:objY+7,y              ; $9C2A
-    lda     objX+1,x                ; $9C2D
+    lda     objX+1,x                ; $9C2D  4 right of it
     adc     #$04                    ; $9C2F
     sta     a:objX+7,y              ; $9C31
     lda     objXHi+1,x              ; $9C34
     sta     a:objXHi+7,y            ; $9C36
-    lda     #$01                    ; $9C39
+    lda     #$01                    ; $9C39  projectile type 1
     sta     a:objState+7,y          ; $9C3B
 
 Enemy_FireAimedBall_Done:
     rts                             ; $9C3E
 
 Enemy_CancelAimedBall:
-    lda     #$00                    ; $9C3F
+    lda     #$00                    ; $9C3F  free the slot again
     sta     a:objState+7,y          ; $9C41
     rts                             ; $9C44
 
@@ -3057,60 +3100,65 @@ EnemyTiles_Bank4B:
 ; ---------------------------------------------------------------------------
 ; FallingBlockGenerator_Ai
 ;
-; Every 16 frames, if a slot is free, drop a block (type 9) from the top of
-; the screen at a random X ($60 or more); none is dropped where there is a
-; ceiling.
+; Falling block generator (type $08 in the palaces; the overworld groups'
+; $08 points here too, into empty space in their banks).  While it is on
+; screen, every 16 frames it looks for a free enemy slot from 5 down whose
+; random byte, rounded to 16, is $60 or more, and puts a block (type $09)
+; there: at that X on page 1 ($160-$1F0) and Y $1F, falling, with no list
+; entry and 255 hit points.  A block that starts inside a ceiling is
+; despawned at once.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FallingBlockGenerator_Ai:
-    lda     drawOffscreen+1         ; $AB98
+    lda     drawOffscreen+1         ; $AB98  on screen?
     bne     @done                   ; $AB9A
     lda     currentObject           ; $AB9C
     pha                             ; $AB9E
-    lda     frameCounter            ; $AB9F
+    lda     frameCounter            ; $AB9F  every 16 frames
     and     #$0F                    ; $ABA1
-    bne     @loc_ABE4               ; $ABA3
-    ldx     #$05                    ; $ABA5
+    bne     @restore                ; $ABA3
+    ldx     #$05                    ; $ABA5  find a free slot
 
 @loop:
     lda     enemyActive,x           ; $ABA7
-    beq     @loc_ABB0               ; $ABA9
+    beq     @tryX                   ; $ABA9
 
-@loop2:
+@next:
     dex                             ; $ABAB
     bpl     @loop                   ; $ABAC
-    bmi     @loc_ABE4               ; $ABAE
+    bmi     @restore                ; $ABAE  (always) none
 
-@loc_ABB0:
-    lda     rng+1,x                 ; $ABB0
+@tryX:
+    lda     rng+1,x                 ; $ABB0  its random X, a multiple of 16,
     and     #$F0                    ; $ABB3
-    cmp     #$60                    ; $ABB5
-    bcc     @loop2                  ; $ABB7
+    cmp     #$60                    ; $ABB5  $60 or more
+    bcc     @next                   ; $ABB7  else try the next slot
     sta     objX+1,x                ; $ABB9
-    inc     enemyActive,x           ; $ABBB
+    inc     enemyActive,x           ; $ABBB  a block
     lda     #$09                    ; $ABBD
     sta     enemyType,x             ; $ABBF
-    lda     #$FF                    ; $ABC1
+    lda     #$FF                    ; $ABC1  no list entry, 255 hit points
     sta     enemySramIndex,x        ; $ABC3
     sta     enemyHp,x               ; $ABC5
-    lda     #$1F                    ; $ABC7
+    lda     #$1F                    ; $ABC7  at the top
     sta     objY+1,x                ; $ABC9
-    lda     #$01                    ; $ABCB
+    lda     #$01                    ; $ABCB  page 1
     sta     objYHi+1,x              ; $ABCD
     sta     objXHi+1,x              ; $ABCF
-    jsr     Enemy_StopY             ; $ABD1
-    sta     enemyAiState,x          ; $ABD4
+    jsr     Enemy_StopY             ; $ABD1  not moving yet (a = 0)
+    sta     enemyAiState,x          ; $ABD4  falling
     stx     currentObject           ; $ABD6
-    jsr     Enemy_UpdateBgCollision ; $ABD8
+    jsr     Enemy_UpdateBgCollision ; $ABD8  inside a ceiling?
     lda     objCollision+1,x        ; $ABDB
     and     #$04                    ; $ABDD
-    beq     @loc_ABE4               ; $ABDF
+    beq     @restore                ; $ABDF
 ; (code below not executed in the test movies)
-    jsr     Enemy_Despawn           ; $ABE1
+    jsr     Enemy_Despawn           ; $ABE1  yes: gone
 ; (end of code not executed in the test movies)
 
-@loc_ABE4:
+@restore:
     pla                             ; $ABE4
     sta     currentObject           ; $ABE5
     tax                             ; $ABE7
@@ -3121,62 +3169,69 @@ FallingBlockGenerator_Ai:
 ; ---------------------------------------------------------------------------
 ; FallingBlock_Ai
 ;
-; A falling block: falls; if it hits Link (hurting him) or is struck by the
-; sword, it shatters; when it lands it becomes a solid block in the area's
-; tile map (and on the screen).
+; Falling block (type $09).  It falls under gravity of 2/16 pixel per
+; frame per frame (it is never stunned).  If it touches Link (hurting him)
+; or the sword strikes it, it shatters with a sound: it sinks 15 pixels,
+; a pixel per frame, and is removed.  When it lands it is removed with a
+; sound and becomes part of the area: the tile it occupies in the area map
+; becomes the breakable block (SpecialTiles_Bank4+4), and the block's
+; 2 x 2 tiles ($BA, $BC over $BB, $BD) are queued for the nametable, so
+; the blocks pile up.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FallingBlock_Ai:
-    lda     #$00                    ; $ABE9
+    lda     #$00                    ; $ABE9  never stunned
     sta     enemyStunTimer,x        ; $ABEB
-    lda     enemyAiState,x          ; $ABEE
-    beq     @loc_AC00               ; $ABF0
-    inc     objY+1,x                ; $ABF2
+    lda     enemyAiState,x          ; $ABEE  shattering?
+    beq     @falling                ; $ABF0
+    inc     objY+1,x                ; $ABF2  sink a pixel
     inc     enemyAiState,x          ; $ABF4
-    cmp     #$10                    ; $ABF6
-    bne     @loc_ABFD               ; $ABF8
+    cmp     #$10                    ; $ABF6  15 frames done?
+    bne     @draw                   ; $ABF8
     jmp     Enemy_Remove            ; $ABFA
 
-@loc_ABFD:
+@draw:
     jmp     Enemy_Draw              ; $ABFD
 
-@loc_AC00:
-    jsr     Enemy_MoveYAndFall      ; $AC00
+@falling:
+    jsr     Enemy_MoveYAndFall      ; $AC00  fall: +2/16 px/frame per frame
     jsr     Enemy_UpdateBgCollision ; $AC03
     jsr     Enemy_CheckSwordHit     ; $AC06
     jsr     Enemy_CheckLinkContact  ; $AC09
-    lda     objCollision+1,x        ; $AC0C
+    lda     objCollision+1,x        ; $AC0C  touching Link or struck?
     and     #$30                    ; $AC0E
-    beq     @loc_AC1F               ; $AC10
-    and     #$10                    ; $AC12
-    beq     @loc_AC19               ; $AC14
+    beq     @checkLanded            ; $AC10
+    and     #$10                    ; $AC12  touching Link:
+    beq     @shatter                ; $AC14
 ; (code below not executed in the test movies)
-    jsr     Link_HurtByEnemy        ; $AC16
+    jsr     Link_HurtByEnemy        ; $AC16  hurt him
 ; (end of code not executed in the test movies)
 
-@loc_AC19:
-    inc     enemyAiState,x          ; $AC19
-    lda     #$04                    ; $AC1B
+@shatter:
+    inc     enemyAiState,x          ; $AC19  shatter,
+    lda     #$04                    ; $AC1B  with a sound
     sta     sfxRequest+1            ; $AC1D
 
-@loc_AC1F:
-    lda     objCollision+1,x        ; $AC1F
+@checkLanded:
+    lda     objCollision+1,x        ; $AC1F  landed?
     and     #$04                    ; $AC21
-    beq     @loc_ABFD               ; $AC23
-    lda     #$02                    ; $AC25
+    beq     @draw                   ; $AC23  no: draw it
+    lda     #$02                    ; $AC25  yes: a sound,
     sta     sfxRequest+1            ; $AC27
-    jsr     Enemy_Remove            ; $AC29
-    ldy     enemyFloorTileIndex     ; $AC2C
+    jsr     Enemy_Remove            ; $AC29  gone as an enemy,
+    ldy     enemyFloorTileIndex     ; $AC2C  and a block in the area map
     lda     SpecialTiles_Bank4+4    ; $AC2F
     sta     (enemyFloorTilePtr),y   ; $AC32
-    lda     objY+1,x                ; $AC34
+    ; Queue its 2 x 2 tiles for the nametable at its position.
+    lda     objY+1,x                ; $AC34  row: Y & $F8
     and     #$F8                    ; $AC36
     sta     temp2                   ; $AC38
     lda     objX+1,x                ; $AC3A
     sta     temp3                   ; $AC3C
-    lda     #$08                    ; $AC3E
-    sta     temp0                   ; $AC40
+    lda     #$08                    ; $AC3E  address $2000 + row * 4 + X / 8
+    sta     temp0                   ; $AC40  (high byte in temp0)
     lda     temp2                   ; $AC42
     asl     a                       ; $AC44
     rol     temp0                   ; $AC45
@@ -3191,17 +3246,17 @@ FallingBlock_Ai:
     ora     temp1                   ; $AC53
     sta     temp1                   ; $AC55
     ldx     currentObject           ; $AC57
-    lda     objXHi+1,x              ; $AC59
+    lda     objXHi+1,x              ; $AC59  odd page: the second nametable
     and     #$01                    ; $AC5B
     asl     a                       ; $AC5D
     asl     a                       ; $AC5E
     ora     temp0                   ; $AC5F
-    ldx     ppuBuffer0Len           ; $AC61
+    ldx     ppuBuffer0Len           ; $AC61  two strings of two tiles:
     sta     ppuBuffer0,x            ; $AC64
     pha                             ; $AC67
     lda     temp1                   ; $AC68
     sta     ppuBuffer0+1,x          ; $AC6A
-    adc     #$20                    ; $AC6D
+    adc     #$20                    ; $AC6D  the row below
     sta     ppuBuffer0+6,x          ; $AC6F
     pla                             ; $AC72
     adc     #$00                    ; $AC73
@@ -3209,15 +3264,15 @@ FallingBlock_Ai:
     lda     #$02                    ; $AC78
     sta     ppuBuffer0+2,x          ; $AC7A
     sta     ppuBuffer0+7,x          ; $AC7D
-    lda     #$BA                    ; $AC80
+    lda     #$BA                    ; $AC80  top: $BA, $BC
     sta     ppuBuffer0+3,x          ; $AC82
     lda     #$BC                    ; $AC85
     sta     ppuBuffer0+4,x          ; $AC87
-    lda     #$BB                    ; $AC8A
+    lda     #$BB                    ; $AC8A  bottom: $BB, $BD
     sta     ppuBuffer0+8,x          ; $AC8C
     lda     #$BD                    ; $AC8F
     sta     ppuBuffer0+9,x          ; $AC91
-    lda     #$FF                    ; $AC94
+    lda     #$FF                    ; $AC94  end
     sta     ppuBuffer0+10,x         ; $AC96
     txa                             ; $AC99
     adc     #$0A                    ; $AC9A
@@ -3424,10 +3479,11 @@ Projectile_Fireball_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_Straight_Bank4B
 ;
-; Projectile types 1 and 2: fly straight; removed near the bottom of the
-; screen.
+; Projectile types 1 and 2 (energy balls): fly straight; at Y $C5 or more,
+; near the floor, they burst (objState+7 = $F4).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Straight_Bank4B:
     lda     objY+7,x                ; $AD9E
@@ -3821,9 +3877,11 @@ DoomKnocker_Draw:
 ; ---------------------------------------------------------------------------
 ; SlowBubble_Init_Bank4B
 ;
-; Spawn routine of slow bubbles (second palace group).
+; Spawn routine of slow bubbles in palaces 3, 4 and 6: the same as
+; SlowBubble_Init ($F0, up-left).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SlowBubble_Init_Bank4B:
     lda     #$F0                    ; $AF55
@@ -3832,9 +3890,11 @@ SlowBubble_Init_Bank4B:
 ; ---------------------------------------------------------------------------
 ; FastBubble_Init_Bank4B
 ;
-; Spawn routine of fast bubbles (second palace group).
+; Spawn routine of fast bubbles in palaces 3, 4 and 6: the same as
+; FastBubble_Init ($E0, up-left).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FastBubble_Init_Bank4B:
     lda     #$E0                    ; $AF59
@@ -5396,14 +5456,16 @@ Gooma_DrawPart:
 ; ---------------------------------------------------------------------------
 ; Bubble_Draw
 ;
-; Draw a bubble.
+; Draw a bubble: a symmetric pair of sprites (SpritePairTiles entry $5A,
+; the right one mirrored), its palette cycling every frame (frameCounter
+; bits 1-0).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bubble_Draw:
-    lda     #$02                    ; $B7B0
+    lda     #$02                    ; $B7B0  as if facing left
     sta     temp2                   ; $B7B2
-    lda     frameCounter            ; $B7B4
+    lda     frameCounter            ; $B7B4  palette 0-3 by the frame
     and     #$03                    ; $B7B6
     sta     temp3                   ; $B7B8
     ldx     #$5A                    ; $B7BA
@@ -5528,32 +5590,42 @@ HiddenJar_Ai:
 @done:
     rts                             ; $B85E
 
+; Wolf heads: X velocity and spawn X offset by side (0 left edge: +8,
+; 1 right edge: -8); also the Y velocity of their steps (0 down, 1 up).
 FlyerSpeeds_Bank4:
     .byte   $08, $F8                                                        ; $B85F
 
 ; ---------------------------------------------------------------------------
 ; WolfHeadGenerator_Ai
 ;
-; Every 128 frames, spawn a wolf head (Enemy_SpawnFlyer_Bank4).
+; Wolf head generator ($1B): every 128 frames (frameCounter $00, $80),
+; while the screen follows Link (scrollHeld 0), launch a wolf head
+; (Enemy_SpawnFlyer_Bank4).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 WolfHeadGenerator_Ai:
-    lda     frameCounter            ; $B861
+    lda     frameCounter            ; $B861  bits 6-0 all 0,
     asl     a                       ; $B863
-    ora     scrollHeld              ; $B864
+    ora     scrollHeld              ; $B864  and the screen following Link?
     bne     Enemy_SpawnFlyerFail_Bank4 ; $B867
 
 ; ---------------------------------------------------------------------------
 ; Enemy_SpawnFlyer_Bank4
 ;
-; Spawn a wolf head ($1C, 2 hit points) at Link's height at the left or
-; right edge, flying inward; carry set if no slot was free.
+; Put a wolf head ($1C) in a free enemy slot (from 5 down): 2 hit points,
+; at Link's Y - 2 (- 3 with the carry), at the edge of the screen he is
+; heading for (the right edge, flying left, if he holds Right; the left
+; if Left; either at random if neither), flying inward at 1/2 pixel per
+; frame (FlyerSpeeds_Bank4), with no list entry and enemyAiState $FF.
+; Enemy_InitFlyer_Bank4 does it in slot x.
 ;
-; Status:  provisional
+; Out:     carry set if no slot was free; temp0 = the slot
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_SpawnFlyer_Bank4:
-    ldx     #$05                    ; $B869
+    ldx     #$05                    ; $B869  find a free slot
 
 @loop:
     lda     enemyActive,x           ; $B86B
@@ -5562,43 +5634,43 @@ Enemy_SpawnFlyer_Bank4:
     bpl     @loop                   ; $B870
 
 Enemy_SpawnFlyerFail_Bank4:
-    ldx     currentObject           ; $B872
+    ldx     currentObject           ; $B872  none (or not now)
     sec                             ; $B874
     rts                             ; $B875
 
 Enemy_InitFlyer_Bank4:
-    lda     #$02                    ; $B876
+    lda     #$02                    ; $B876  2 hit points
     sta     enemyHp,x               ; $B878
     lsr     a                       ; $B87A
-    sta     enemyActive,x           ; $B87B
+    sta     enemyActive,x           ; $B87B  active
     sta     objYHi+1,x              ; $B87D
     lsr     a                       ; $B87F
     sta     enemyStunTimer,x        ; $B880
-    lda     objY                    ; $B883
+    lda     objY                    ; $B883  at Link's height
     sbc     #$02                    ; $B885
     sta     objY+1,x                ; $B887
-    lda     #$1C                    ; $B889
+    lda     #$1C                    ; $B889  a wolf head
     sta     enemyType,x             ; $B88B
-    lda     joypadHeld              ; $B88D
+    lda     joypadHeld              ; $B88D  Right (1) or Left (2) held?
     and     #$03                    ; $B88F
-    bne     @loc_B896               ; $B891
-    lda     rng+1,x                 ; $B893
+    bne     @side                   ; $B891
+    lda     rng+1,x                 ; $B893  neither: at random
 
-@loc_B896:
-    and     #$01                    ; $B896
+@side:
+    and     #$01                    ; $B896  y = 1: right edge, 0: left
     tay                             ; $B898
-    lda     scrollX                 ; $B899
+    lda     scrollX                 ; $B899  X = left edge + $08 or + $F8
     adc     FlyerSpeeds_Bank4,y     ; $B89C
     sta     objX+1,x                ; $B89F
     lda     scrollXHi               ; $B8A1
     adc     #$00                    ; $B8A4
     sta     objXHi+1,x              ; $B8A6
-    lda     FlyerSpeeds_Bank4,y     ; $B8A8
+    lda     FlyerSpeeds_Bank4,y     ; $B8A8  flying inward, 1/2 px/frame
     sta     objXVelocity+1,x        ; $B8AB
-    lda     #$FF                    ; $B8AD
+    lda     #$FF                    ; $B8AD  no list entry
     sta     enemySramIndex,x        ; $B8AF
     sta     enemyAiState,x          ; $B8B1
-    iny                             ; $B8B3
+    iny                             ; $B8B3  facing its way
     sty     objFacing+1,x           ; $B8B4
     stx     temp0                   ; $B8B6
     ldx     currentObject           ; $B8B8
@@ -5607,59 +5679,66 @@ Enemy_InitFlyer_Bank4:
 ; ---------------------------------------------------------------------------
 ; WolfHead_Ai
 ;
-; Wolf head: flies across, weaving up and down every 64 frames, and fires an
-; energy ball (projectile type 1) at Link every 64 frames when facing him.
+; Wolf head ($1C): a flying head that crosses the screen in steps.
+; enemyAiState counts frames: 32 frames it flies across at 1/2 pixel per
+; frame, the next 32 it moves straight down 16 pixels, then across, then
+; up 16 (bit 5: moving vertically; bit 6: up), and so on.  At the start of
+; each 64 (count bits 5-0 all 0), if it faces Link, it fires an energy
+; ball straight ahead (projectile type 1, 2 pixels per frame,
+; Enemy_FireProjectile).  It ignores the background and never turns.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 WolfHead_Ai:
-    jsr     Enemy_UpdateCommon      ; $B8BB
+    jsr     Enemy_UpdateCommon      ; $B8BB  draw, hit tests (no background)
     jsr     Enemy_HurtLinkOnContact ; $B8BE
-    inc     enemyAiState,x          ; $B8C1
+    inc     enemyAiState,x          ; $B8C1  count frames
     lda     enemyAiState,x          ; $B8C3
-    lsr     a                       ; $B8C5
+    lsr     a                       ; $B8C5  carry = bit 5
     lsr     a                       ; $B8C6
     lsr     a                       ; $B8C7
     lsr     a                       ; $B8C8
     lsr     a                       ; $B8C9
     lsr     a                       ; $B8CA
-    bcs     @loc_B8F0               ; $B8CB
-    lda     enemyAiState,x          ; $B8CD
+    bcs     @vertical               ; $B8CB  second 32 of 64: up or down
+    lda     enemyAiState,x          ; $B8CD  start of a 64?
     and     #$3F                    ; $B8CF
-    bne     @loc_B8ED               ; $B8D1
-    lda     objFacing+1,x           ; $B8D3
-    sta     temp5                   ; $B8D5
+    bne     @moveX                  ; $B8D1
+    lda     objFacing+1,x           ; $B8D3  facing Link (keeping its
+    sta     temp5                   ; $B8D5  facing)?
     pha                             ; $B8D7
     jsr     Enemy_FaceLink          ; $B8D8
     iny                             ; $B8DB
     cpy     temp5                   ; $B8DC
-    bne     @loc_B8EA               ; $B8DE
-    jsr     Enemy_FireProjectile    ; $B8E0
-    bcs     @loc_B8EA               ; $B8E3
-    lda     #$01                    ; $B8E5
+    bne     @restoreFacing          ; $B8DE  no
+    jsr     Enemy_FireProjectile    ; $B8E0  yes: fire straight ahead
+    bcs     @restoreFacing          ; $B8E3
+    lda     #$01                    ; $B8E5  projectile type 1
     sta     a:objState+7,y          ; $B8E7
 
-@loc_B8EA:
+@restoreFacing:
     pla                             ; $B8EA
     sta     objFacing+1,x           ; $B8EB
 
-@loc_B8ED:
-    jmp     Enemy_MoveX             ; $B8ED
+@moveX:
+    jmp     Enemy_MoveX             ; $B8ED  across, 1/2 px/frame
 
-@loc_B8F0:
-    and     #$01                    ; $B8F0
+@vertical:
+    and     #$01                    ; $B8F0  bit 6: 0 down, 1 up
     tay                             ; $B8F2
-    lda     FlyerSpeeds_Bank4,y     ; $B8F3
+    lda     FlyerSpeeds_Bank4,y     ; $B8F3  1/2 px/frame
     sta     objYVelocity+1,x        ; $B8F6
     jmp     Enemy_MoveY             ; $B8F9
 
 ; ---------------------------------------------------------------------------
 ; EnergyBallShooter_Init
 ;
-; Spawn routine of energy ball shooters: facing by type ($16 right, $17
-; left).
+; Spawn routine of energy ball shooters: facing by type ($16 - $15 = 1
+; right, $17 - $15 = 2 left).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 EnergyBallShooter_Init:
     lda     enemyType,x             ; $B8FC
@@ -5671,12 +5750,13 @@ EnergyBallShooter_Init:
 ; ---------------------------------------------------------------------------
 ; WolfHead_Draw
 ;
-; Draw a wolf head.
+; Draw a wolf head: a pair of sprites from sramEnemyTiles entry $16, facing
+; its objFacing (Ironknuckle_DrawPair).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 WolfHead_Draw:
-    ldx     #$16                    ; $B904
+    ldx     #$16                    ; $B904  entry $16
     jmp     Ironknuckle_DrawPair    ; $B906
 
 ; ---------------------------------------------------------------------------

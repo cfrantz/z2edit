@@ -9668,9 +9668,11 @@ Myu_Draw:
 ; ---------------------------------------------------------------------------
 ; Enemy08_Draw
 ;
-; Draw enemy types 8 and 9 (unused in the overworld groups).
+; Draw a falling block (palace types $08, $09; unused in the overworld
+; groups): a pair from SpritePairTiles entry $20 while it falls
+; (enemyAiState 0), $22 for the first 7 frames of shattering, then $24.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy08_Draw:
     lda     #$02                    ; $EFD2

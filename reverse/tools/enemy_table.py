@@ -67,6 +67,9 @@ ENEMY_PAGES = {
     "Tektite_Ai": "tektite", "Eye_Ai": "eye", "Leever_Ai": "leever", "Boon_Ai": "boon",
     "Basilisk_Ai": "basilisk", "Scorpion_Ai": "scorpion",
     "Lizalfos_Ai": "lizalfos", "OrangeLizalfos_Ai": "lizalfos", "RockThrower_Ai": "rock-thrower",
+    "Bubble_Ai": "bubble", "FallingBlockGenerator_Ai": "falling-block", "FallingBlock_Ai": "falling-block",
+    "CrystalSpot_Ai": "crystal", "Crystal_Ai": "crystal", "EnergyBallShooter_Ai": "energy-ball-shooter",
+    "WolfHeadGenerator_Ai": "wolf-head", "WolfHead_Ai": "wolf-head",
 }
 
 

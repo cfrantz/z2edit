@@ -192,7 +192,16 @@ def main():
                     line += "#" if tile >= rom[base + y] else "."
             print(f"# {row * 16:02X}   {line}")
 
+    def fill():
+        for f in a.fill:
+            x0, x1, row, *src = (int(v, 16) for v in f.split(":"))
+            src = src[0] if src else 0xC0
+            for x in range(x0 & ~0xF, x1 + 1, 0x10):
+                page = 0x6000 + (x >> 8) * 0xD0
+                wr(page + row + ((x >> 4) & 0xF), rd(page + src + ((x >> 4) & 0xF)))
+
     def prepare():
+        fill()  # before --approach, so that Link walks on the changed map
         meter, cont = eq["statMeter"], eq["statContainers"]
         full = lambda cpu, ad, v: 32 * rd(cont + ad - meter) - 1  # noqa: E731
         emu.set_read_callback(meter, full)
@@ -232,12 +241,6 @@ def main():
             wr(eq["objX"], x & 0xFF)
             wr(eq["objXHi"], x >> 8)
             wr(eq["objY"], y)
-        for f in a.fill:
-            x0, x1, row, *src = (int(v, 16) for v in f.split(":"))
-            src = src[0] if src else 0xC0
-            for x in range(x0 & ~0xF, x1 + 1, 0x10):
-                page = 0x6000 + (x >> 8) * 0xD0
-                wr(page + row + ((x >> 4) & 0xF), rd(page + src + ((x >> 4) & 0xF)))
         for s in a.poke:
             var, _, value = s.partition("=")
             wr(resolve(sym, var), int(value, 0))

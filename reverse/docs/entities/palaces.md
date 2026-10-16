@@ -16,29 +16,29 @@ Octoroks, are the "Ropes" of the palaces).
 | $03 | [Myu](enemies/myu.md) | 3 | 3 | 1 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
 | $05 | Hidden jar | 255 | 0 | 0 | - | blocks Link's projectiles, immune to Thunder | `HiddenJar_Ai` |
-| $06 | Slow Bubble | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
+| $06 | [Slow Bubble](enemies/bubble.md) | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
 | $07 | Orange Moa | 16 | 50 | 3 | 2 | touch drains 10 exp, comes back | `OrangeMoa_Ai` |
-| $08 | Falling Block Generator | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `FallingBlockGenerator_Ai` |
-| $09 | Falling Block | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `FallingBlock_Ai` |
+| $08 | [Falling Block Generator](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `FallingBlockGenerator_Ai` |
+| $09 | [Falling Block](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `FallingBlock_Ai` |
 | $0A | Blue Skull Head | 56 | 20 | 0 | - | touch drains 10 exp, comes back | `SkullHead_Ai` |
 | $0B | Tinsuit generator | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `TinsuitGenerator_Ai` |
 | $0C | Tinsuit | 2 | 0 | 0 | - | touch drains 10 exp, comes back | `Tinsuit_Ai` |
 | $0D | Acid Dripper | 250 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `AcidDripper_Ai` |
-| $0E | Fast Bubble | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
+| $0E | [Fast Bubble](enemies/bubble.md) | 250 | 50 | 0 | - | comes back | `Bubble_Ai` |
 | $0F | [Bago Bago Generator](enemies/bago-bago.md) | 8 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
 | $10 | [Bago Bago](enemies/bago-bago.md) | 8 | 5 | 2 | 1 | touch drains 10 exp | `BagoBago_Ai` |
 | $11 | [Hopping Octorok](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Walking Octorok](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | [Elevator](enemies/elevator.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
-| $14 | Crystal Spot | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `CrystalSpot_Ai` |
-| $15 | Crystal | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |
-| $16 | Energy Ball Shooter (down/right) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
-| $17 | Energy Ball Shooter (down/left) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
+| $14 | [Crystal Spot](enemies/crystal.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `CrystalSpot_Ai` |
+| $15 | [Crystal](enemies/crystal.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |
+| $16 | [Energy Ball Shooter (down/right)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
+| $17 | [Energy Ball Shooter (down/left)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
 | $18 | Orange Iron Knuckle | 16 | 50 | 2 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $19 | Red Iron Knuckle | 24 | 100 | 3 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $1A | Blue Iron Knuckle | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
-| $1B | Wolf Head Generator | 2 | 5 | 1 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL | `WolfHeadGenerator_Ai` |
-| $1C | Wolf Head | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
+| $1B | [Wolf Head Generator](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL | `WolfHeadGenerator_Ai` |
+| $1C | [Wolf Head](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
 | $1D | Wizzrobe | 32 | 200 | 3 | - | blocks Link's projectiles, immune to SPELL | `Mago_Ai` |
 | $1E | Hammer Thrower | 16 | 50 | 2 | 2 | blocks Link's projectiles | `HammerThrower_Ai` |
 | $1F | Red Stalfos | 8 | 30 | 1 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
@@ -57,29 +57,29 @@ Octoroks, are the "Ropes" of the palaces).
 | $03 | [Myu](enemies/myu.md) | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
 | $05 | Hidden jar or Iron Knuckle | 255 | 0 | 0 | - | blocks Link's projectiles, comes back | `HiddenJarOrIronknuckle_Ai` |
-| $06 | Slow Bubble | 250 | 50 | 0 | - |  | `Bubble_Ai` |
+| $06 | [Slow Bubble](enemies/bubble.md) | 250 | 50 | 0 | - |  | `Bubble_Ai` |
 | $07 | Orange Moa | 16 | 50 | 3 | 2 | touch drains 10 exp | `OrangeMoa_Ai` |
-| $08 | Falling Block Generator | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `FallingBlockGenerator_Ai` |
-| $09 | Falling Block | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `FallingBlock_Ai` |
+| $08 | [Falling Block Generator](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `FallingBlockGenerator_Ai` |
+| $09 | [Falling Block](enemies/falling-block.md) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `FallingBlock_Ai` |
 | $0A | Rebonack Un-horsed | 8 | 301 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `RebonackUnhorsed_Ai` |
 | $0B | Rathead Generator | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `RatheadGenerator_Ai` |
 | $0C | Rathead | 2 | 0 | 0 | - | touch drains 10 exp, comes back | `Rathead_Ai` |
 | $0D | Acid Dripper | 2 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `AcidDripper_Ai` |
-| $0E | Fast Bubble | 250 | 50 | 0 | - |  | `Bubble_Ai` |
+| $0E | [Fast Bubble](enemies/bubble.md) | 250 | 50 | 0 | - |  | `Bubble_Ai` |
 | $0F | Blue Skull Head | 56 | 20 | 0 | 1 | touch drains 10 exp, comes back | `SkullHead_Ai_Bank4B` |
 | $10 | Flame | 8 | 5 | 2 | - | blocks Link's projectiles, immune to SPELL, sword passes through, comes back | `Flame_Ai` |
 | $11 | [Hopping Octorok](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [(unused)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | [Elevator](enemies/elevator.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
-| $14 | Crystal Spot | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `CrystalSpot_Ai` |
-| $15 | Crystal | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |
-| $16 | Energy Ball Shooter (down/right) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
-| $17 | Energy Ball Shooter (down/left) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
+| $14 | [Crystal Spot](enemies/crystal.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `CrystalSpot_Ai` |
+| $15 | [Crystal](enemies/crystal.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Crystal_Ai` |
+| $16 | [Energy Ball Shooter (down/right)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
+| $17 | [Energy Ball Shooter (down/left)](enemies/energy-ball-shooter.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `EnergyBallShooter_Ai` |
 | $18 | Orange Iron Knuckle | 16 | 50 | 2 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $19 | Red Iron Knuckle | 24 | 100 | 3 | 2 | blocks Link's projectiles | `Ironknuckle_Ai` |
 | $1A | Blue Iron Knuckle | 56 | 150 | 3 | - | blocks Link's projectiles | `Ironknuckle_Ai` |
-| $1B | Wolf Head Generator | 2 | 5 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder | `WolfHeadGenerator_Ai` |
-| $1C | Wolf Head | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
+| $1B | [Wolf Head Generator](enemies/wolf-head.md) | 2 | 5 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder | `WolfHeadGenerator_Ai` |
+| $1C | [Wolf Head](enemies/wolf-head.md) | 2 | 5 | 1 | - | touch drains 10 exp | `WolfHead_Ai` |
 | $1D | Wizzrobe | 1 | 100 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `Wizrobe_Ai` |
 | $1E | Doom Knocker | 32 | 100 | 3 | - | blocks Link's projectiles | `DoomKnocker_Ai` |
 | $1F | Red Stalfos Knight | 24 | 50 | 2 | 2 | blocks Link's projectiles | `Stalfos_Ai` |
@@ -90,33 +90,21 @@ Octoroks, are the "Ropes" of the palaces).
 
 ## Shared Enemies
 
-**Bubbles** ($06 slow, $0E fast; `Bubble_Ai`, `SlowBubble_Init`,
-`FastBubble_Init`): flaming skulls that fly diagonally (speed $10 or
-$20), bouncing off walls, floors and ceilings and the screen edges.
-While touching Link they drain a point of magic every frame, besides the
-damage.  With 250 hit points they are practically indestructible.
+**Bubbles** ($06 slow, $0E fast): flaming skulls that fly diagonally,
+bouncing off everything, and burn away Link's magic while touching him.
+See [Bubble](enemies/bubble.md).
 
-**Falling blocks** ($08 generator, $09 block; `FallingBlockGenerator_Ai`,
-`FallingBlock_Ai`): every 16 frames the generator drops a block from the
-top of the screen at a random X (beyond the first $60 pixels).  A block
-falls; if it hits Link it hurts him and shatters, as it does when the
-sword hits it; when it lands it becomes a solid block in the area's tile
-map, so the blocks pile up.  (Types $08 and $09 of the overworld groups
-point to the same addresses, which are empty in those banks.)
+**Falling blocks** ($08 generator, $09 block): blocks dropped from the
+ceiling every 16 frames that pile up into walls.  See
+[Falling Block](enemies/falling-block.md).
 
-**Crystal spot** ($14, `CrystalSpot_Ai`) **and crystal** ($15,
-`Crystal_Ai`): the statue where Link places the palace's crystal.  When
-he stands on it holding a crystal (`crystalsRemaining`), the game
-freezes, the crystal rises with the palace's palette flashing
-(`CrystalSpot_FlashPalette`), a fanfare plays, his meters refill, and he
-gets exactly enough experience for his next level.  The area flag is
-cleared and the spot becomes a crystal (`Crystal_Init` checks the flag on
-later visits).  The crystal placed is recorded in `crystalPlaced`.
+**Crystal spot** ($14) **and crystal** ($15): the statue where Link sets
+the palace's crystal, for a fanfare, full meters and a level.  See
+[Crystal Spot](enemies/crystal.md).
 
-**Energy ball shooters** ($16, $17; `EnergyBallShooter_Ai`): statues
-that, every 32 frames while on screen, fire an energy ball (projectile
-type 1) aimed at Link, if he is on the side they face
-(`Enemy_FireAimedBall`, which picks the ball's speed by his distance).
+**Energy ball shooters** ($16, $17): wall statues that fire energy balls
+down at Link every 32 frames.  See
+[Energy Ball Shooter](enemies/energy-ball-shooter.md).
 
 **Iron Knuckles** ($18 orange, $19 red, $1A blue; `Ironknuckle_Ai`):
 armored knights.  When Link is on their level they face him and keep
@@ -133,10 +121,9 @@ drop from the ceiling when they come into view, then face Link and walk
 to within 30 pixels, slashing (`Enemy_StartSwing`); the blue Stalfos
 also jumps at him (1 time in 4).  Only their unshielded part can be hit.
 
-**Wolf heads** ($1C) and their generator ($1B; `WolfHead_Ai`,
-`WolfHeadGenerator_Ai`): every 128 frames a wolf head (2 hit points)
-flies in from an edge at Link's height, weaving up and down, and fires an
-energy ball (projectile type 1) at him every 64 frames when facing him.
+**Wolf heads** ($1C) and their generator ($1B): heads that cross the
+screen in steps, firing straight ahead, one every 128 frames from the
+edge Link is heading for.  See [Wolf Head](enemies/wolf-head.md).
 
 **Hidden jar** ($05; `HiddenJar_Ai`, `HiddenJarOrIronknuckle_Ai`): an
 invisible object in a wall; striking it with the sword reveals a red
