@@ -1262,18 +1262,19 @@ RedJar_Init_Bank1:
 ; ---------------------------------------------------------------------------
 ; Deeler_Init_Bank1
 ;
-; Spawn routine of Deelers: the thread's top is where it spawns
-; (ram_05DD); it drops to $60 below (ram_05DC).  Not executed in the test
-; movies.
+; Spawn routine of Deelers: the thread hangs from where the Deeler spawns
+; (deelerThreadTop) and it drops to $60 below (deelerThreadBottom).  The
+; two are shared, so the last Deeler spawned sets them for all.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Deeler_Init_Bank1:
-    lda     objY+1,x                ; $9625
-    sta     ram_05DD                ; $9627
+    lda     objY+1,x                ; $9625  its spawn Y is
+    sta     deelerThreadTop         ; $9627  the top of the thread
     clc                             ; $962A
-    adc     #$60                    ; $962B
-    sta     ram_05DC                ; $962D
+    adc     #$60                    ; $962B  it drops $60 pixels
+    sta     deelerThreadBottom      ; $962D
     rts                             ; $9630
 ; (end of disassembled code)
 
@@ -1311,8 +1312,8 @@ Projectile_Fireball_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Straight_Bank1:
-    lda     #$FE                    ; $9639
-    sta     objYVelocity+7,x        ; $963B
+    lda     #$FE                    ; $9639  Y velocity -2, so that the
+    sta     objYVelocity+7,x        ; $963B  +2 below leaves it at 0
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Falling_Bank1
@@ -1323,27 +1324,31 @@ Projectile_Straight_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Falling_Bank1:
-    inc     objYVelocity+7,x        ; $963E
+    inc     objYVelocity+7,x        ; $963E  gravity: +2/16 px/frame
     inc     objYVelocity+7,x        ; $9641
-    jmp     Projectile_MoveAndCheck_Bank1 ; $9644
+    jmp     Projectile_MoveAndCheck_Bank1 ; $9644  move, draw, test Link
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Bubble_Bank1
 ;
-; Projectile type 2 (lava fireball): rises, swaying left and right every
-; 16 frames.
+; Projectile type 2 (a bubble, from the bubble generator): rises at the
+; speed it was launched with (1.75 pixels per frame), swaying 1/4 pixel
+; per frame right and left, 16 frames each way (projectileTimer, which
+; isn't reset for a new bubble, so the sway starts anywhere).  It is
+; removed once off screen, at the top.
 ;
+; In:      x = projectile index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Bubble_Bank1:
-    ldy     #$04                    ; $9647
+    ldy     #$04                    ; $9647  1/4 px/frame right,
     inc     projectileTimer,x       ; $9649
     lda     projectileTimer,x       ; $964C
     and     #$10                    ; $964F
-    beq     @loc_9655               ; $9651
-    ldy     #$FC                    ; $9653
+    beq     @setSpeed               ; $9651
+    ldy     #$FC                    ; $9653  or left, every other 16 frames
 
-@loc_9655:
+@setSpeed:
     sty     objXVelocity+7,x        ; $9655
     jmp     Projectile_MoveAndCheck_Bank1 ; $9657
 

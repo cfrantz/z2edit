@@ -40,31 +40,25 @@ little steps, alternating moving and resting phases; the Bot also leaps
 at Link, and the Bit has periods of double speed.  See
 [Myu](enemies/myu.md), [Bot](enemies/bot.md), [Bit](enemies/bit.md).
 
-**Moa** ($06, `Moa_Ai`).  A floating eye (ghost) that drifts toward Link,
-weaving as its speed swings back and forth, and drifts up or down at
-random, turning back at Y $40 and $C0.  It passes through walls.
-Touching it drains experience.  In East Hyrule it is invisible unless
-Link has the cross.
+**Moa** ($06): a floating eye that weaves back and forth around Link,
+keeping pace with him and drifting up and down, through walls; touching
+it drains experience, and in East Hyrule it is invisible without the
+cross.  See [Moa](enemies/moa.md).
 
-**Ache** ($07) **and Acheman** ($0A) (`Ache_Ai`).  Bats that hang from
-the ceiling until Link comes within 32 pixels horizontally, then swoop
-down at him in an arc, moving 8 pixels/16 frames across, and fly back up
-to Y $30 to perch again.  After each swoop, the Acheman turns into a man
-for 48 frames and throws a fireball (projectile type 4) at Link.  On an
-area's first and last pages they swoop at once, toward the middle.
+**Ache** ($07) **and Acheman** ($0A): bats that perch at the top of
+caves and swoop down and back up, in a random direction, when Link comes
+within 32 pixels (on an area's first and last pages, at once and over
+and over); at the bottom of each swoop the Acheman becomes a man for 48
+frames and throws a fireball.  See [Ache and Acheman](enemies/ache.md).
 
-**Deelers** ($0D red, $0E blue, `Deeler_Ai`, `Deeler_Draw`).  Spiders
-hanging from trees in forests, moving sideways under the branch to stay
-above Link.  When he is within 64 pixels they may drop on their thread
-(1 frame in 32, at random), down to 96 pixels below the branch, then
-climb back up.  A blue Deeler that drops low enough lets go and then
-hops after Link.  (Neither test movie fights them.)
+**Deelers** ($0D red, $0E blue): forest spiders that follow Link under
+the branches and drop on their thread when he is near; the blue one lets
+go low down and hops after him.  See [Deeler](enemies/deeler.md).
 
-**Bago Bago** ($10, `BagoBago_Ai`).  A fish that leaps out of the water
-(spawned below the screen by the generator, $0F) in a high arc, moving
-toward Link once it lands; every 112 frames, when within 16 pixels of
-his height and facing him, it may spit a rock.  Touching it drains
-experience.
+**Bago Bago** ($10): a fish launched from below the screen by its
+generator ($0F) every 128 frames; it lands on a bridge or floor, walks
+toward Link without turning again, and spits rocks.  See
+[Bago Bago](enemies/bago-bago.md).
 
 **Octoroks** ($11 hopping, $12 walking): hop every 128 frames and spit
 rocks at Link from the top of a hop; the walking one also walks, turns
@@ -77,15 +71,14 @@ Generators are invisible enemies that spawn others.  Their spawn routine
 (`Generator_Init_BankN`) removes any other generator of the same type,
 so there is one at a time.
 
-- **Bubble generator** ($0B, `BubbleGenerator_Ai`): every 32 frames, a
-  fireball (projectile type 2) rises from the bottom of the screen at a
-  random X, swaying as it goes (lava areas).
-- **Rock generator** ($0C, `RockGenerator_Ai`): every 32 frames, a rock
-  (projectile type 1) flies in from the left or right edge at about
-  Link's height.  (Not seen in the test movies.)
-- **Bago Bago generator** ($0F, `BagoBagoGenerator_Ai`): every 128 frames,
-  a Bago Bago (with 3 hit points, whatever the table says) leaps up from
-  below the left or right side of the screen.
+- **Bubble generator** ($0B): every 32 frames, a bubble (West Hyrule) or
+  lava fireball (East Hyrule) rises from the bottom of the screen at a
+  random X, swaying.  See [Bubble Generator](enemies/bubble-generator.md).
+- **Rock generator** ($0C): every 32 frames, while one of four slots is
+  free, a rock flies in from the left or right edge at about Link's
+  height.  See [Rock Generator](enemies/rock-generator.md).
+- **Bago Bago generator** ($0F): every 128 frames, a Bago Bago leaps up
+  from below one side of the screen.  See [Bago Bago](enemies/bago-bago.md).
 
 ## Unused
 

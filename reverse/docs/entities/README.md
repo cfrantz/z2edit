@@ -27,6 +27,12 @@ and how each was verified):
 | [Bit](enemies/bit.md) | $05 outdoors and in towns |
 | [Octorok](enemies/octorok.md) | $11, $12 outdoors and in palaces (Ropes, Fire Ropes) |
 | [Lowder](enemies/lowder.md) | $1C in West Hyrule |
+| [Moa](enemies/moa.md) | $06 outdoors and in Old Kasuto |
+| [Ache and Acheman](enemies/ache.md) | $07, $0A outdoors |
+| [Bubble Generator](enemies/bubble-generator.md) | $0B outdoors |
+| [Rock Generator](enemies/rock-generator.md) | $0C outdoors |
+| [Deeler](enemies/deeler.md) | $0D, $0E outdoors |
+| [Bago Bago](enemies/bago-bago.md) | $0F, $10 outdoors, in palaces 1, 2, 5 and the Great Palace |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI

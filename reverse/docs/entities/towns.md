@@ -18,8 +18,8 @@ bit 7 and 4).  What each person says is the business of the town code
 | $03 | Purple Keese | `TownBat_Ai` |
 | $04 | [Purple Bot](enemies/bot.md) | `Bot_Ai` |
 | $05 | [Bit](enemies/bit.md) | `Bit_Ai` |
-| $06 | Purple Moa | `Moa_Ai` |
-| $07 | Purple Acheman(?) | `Ache_Ai` |
+| $06 | [Purple Moa](enemies/moa.md) | `Moa_Ai` |
+| $07 | [Purple Acheman(?)](enemies/ache.md) | `Ache_Ai` |
 | $08 | Gold Girl (crash?) | `Townsperson_WalkAi` |
 | $09 | Townsperson #? | `Townsperson_WalkAi` |
 | $0A | Ache (talking) #0 | `Townsperson_StandAi` |

@@ -15,6 +15,8 @@ lists code oddities with no visible effect.
 | `Myu_Move` | Myus, Bots and Bits test for a floor only when their Y is $60 or more, so one standing on a floor higher up the screen would fall through it. |
 | `Bit_Ai` | The Bit's fast periods depend on its enemy slot, which is ORed into the frame counter (an add would have staggered them evenly): Bits in enemy slots 0-1 are fast a quarter of the time, those in slots 2-5 half of it. |
 | `Lowder_Ai` | A Lowder treats the first frame without a floor like a ledge, so one that spawns in mid-air turns around once as it starts to fall. |
+| `Deeler_Ai` | The ends of a Deeler's thread are single variables set by the last Deeler spawned, so one spawned at another height drops to the other's bottom and climbs back to the other's top, where it then hangs. |
+| `BagoBagoGenerator_Ai` | Every Bago Bago gets 3 hit points, whatever its group's table says (8 in East Hyrule and the palaces). |
 | `Area_IsSolidTile_Bank2` | Tiles of palette group 0 ($00-$3F) look up a byte 255 bytes past the threshold table; in bank 2 (East Hyrule's areas) that byte is $00, so every group 0 tile is solid there.  In banks 1, 3, 4 and 5 the byte is $D2 or more, so none are. |
 | `Dialog_Type1D` | Townspeople of types $1D-$20 are meant to set a flag in `townFlags` when talked to, but the index misses `TownFlagBits` and lands on zeros, so nothing is set. |
 | `Dialog_TechniqueMan` | The type $0D handler gives the upward thrust in any town but Rauru, Saria and Mido, including Ruto; it only matters where a type $0D person stands (the knight of Darunia). |

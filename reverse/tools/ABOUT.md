@@ -67,7 +67,8 @@ Tools that drive the emulator need the Python extension built with
   optionally walks Link right to a point (`--approach`), clears the
   area's enemies, places enemies of chosen types in chosen slots, adds
   solid floor (`--fill`), and holds Link still and invincible while
-  logging each enemy's state every frame and hits on event addresses.
+  logging each enemy's state every frame and hits on event addresses
+  (`--projectiles` adds the enemy projectiles in flight).
   `--map` prints the area's solid tiles.  The enemy pages under
   `docs/entities/enemies` give the commands they were verified with.
 - `enemy_table.py`: Decodes each enemy group's definition tables (hit

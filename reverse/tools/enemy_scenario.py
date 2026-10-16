@@ -25,7 +25,8 @@ the takeover:
 Then it runs --frames frames, printing one line per frame for each enemy
 slot in --log (default: the spawned slots) as seen at the start of that
 frame's Enemy_RunAi (k = frames since the takeover), and a line for each
-hit of an --event address.  --shot K saves build/snap/scenario-K.png.
+hit of an --event address.  --projectiles adds a line per enemy projectile
+in flight (objState+7 = its type), at the start of each frame.  --shot K saves build/snap/scenario-K.png.
 
 Values are hex unless noted.  Velocities are 4.4 fixed point.
 """
@@ -95,6 +96,7 @@ def main():
     p.add_argument("--event", action="append", default=[])
     p.add_argument("--log", help="enemy slots to log, e.g. 0,2")
     p.add_argument("--map", action="store_true", help="print the area's solid tiles at the takeover")
+    p.add_argument("--projectiles", action="store_true", help="also log the enemy projectile slots in use, each frame")
     p.add_argument("--frames", type=int, default=600)
     p.add_argument("--shot", action="append", type=int, default=[])
     p.add_argument("--out", default=os.path.join(HERE, "../build/snap"))
@@ -265,6 +267,14 @@ def main():
                 return
             state["start"] = emu.frame
             take_over()
+        if a.projectiles:
+            for i in range(6):
+                st = rd(eq["objState"] + 7 + i)
+                if st:
+                    x = rd(eq["objX"] + 7 + i) | rd(eq["objXHi"] + 7 + i) << 8
+                    print(f"{k():5} p{i} type={st:02X} X={x:04X} Y={rd(eq['objY'] + 7 + i):02X} "
+                          f"xv={rd(eq['objXVelocity'] + 7 + i):02X} yv={rd(eq['objYVelocity'] + 7 + i):02X} "
+                          f"face={rd(eq['objFacing'] + 7 + i)} tmr={rd(eq['projectileTimer'] + i):02X}")
         pad = 0
         for start, mask, n in presses:
             if start <= k() < start + n:

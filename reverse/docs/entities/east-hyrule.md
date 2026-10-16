@@ -25,17 +25,17 @@ the candle for the caves) and logging `enemyType`:
 | $03 | [Myu](enemies/myu.md) | 3 | 5 | 1 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 4 | 2 | 1 | 1 | comes back | `Bot_Ai` |
 | $05 | [Bit](enemies/bit.md) | 4 | 2 | 0 | 1 | comes back | `Bit_Ai` |
-| $06 | Moa | 48 | 50 | 3 | 1 | touch drains 20 exp | `Moa_Ai` |
-| $07 | Ache | 8 | 10 | 2 | 1 | comes back | `Ache_Ai` |
+| $06 | [Moa](enemies/moa.md) | 48 | 50 | 3 | 1 | touch drains 20 exp | `Moa_Ai` |
+| $07 | [Ache](enemies/ache.md) | 8 | 10 | 2 | 1 | comes back | `Ache_Ai` |
 | $08 | (unused) | 0 | 0 | 1 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `$AB98` |
 | $09 | (unused) | 0 | 0 | 1 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder | `$ABE9` |
-| $0A | Acheman | 8 | 10 | 2 | 1 | comes back | `Ache_Ai` |
-| $0B | Bubble Generator | 2 | 0 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BubbleGenerator_Ai` |
-| $0C | Rock Generator | 2 | 0 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `RockGenerator_Ai` |
-| $0D | Red Deeler | 12 | 5 | 2 | 1 |  | `Deeler_Ai` |
-| $0E | Blue Deeler | 12 | 10 | 2 | 1 |  | `Deeler_Ai` |
-| $0F | Bago Bago Generator | 8 | 0 | 2 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
-| $10 | Bago Bago | 8 | 5 | 2 | 1 | touch drains 10 exp | `BagoBago_Ai` |
+| $0A | [Acheman](enemies/ache.md) | 8 | 10 | 2 | 1 | comes back | `Ache_Ai` |
+| $0B | [Bubble Generator](enemies/bubble-generator.md) | 2 | 0 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BubbleGenerator_Ai` |
+| $0C | [Rock Generator](enemies/rock-generator.md) | 2 | 0 | 0 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `RockGenerator_Ai` |
+| $0D | [Red Deeler](enemies/deeler.md) | 12 | 5 | 2 | 1 |  | `Deeler_Ai` |
+| $0E | [Blue Deeler](enemies/deeler.md) | 12 | 10 | 2 | 1 |  | `Deeler_Ai` |
+| $0F | [Bago Bago Generator](enemies/bago-bago.md) | 8 | 0 | 2 | - | touch drains 10 exp, blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
+| $10 | [Bago Bago](enemies/bago-bago.md) | 8 | 5 | 2 | 1 | touch drains 10 exp | `BagoBago_Ai` |
 | $11 | [Blue Octorok (jumping)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Blue Octorok (moving)](enemies/octorok.md) | 12 | 20 | 1 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |

@@ -4587,11 +4587,14 @@ JumpToTemp14:
     sta     temp15                  ; $D6D6
     jmp     (temp14)                ; $D6D8
 ; (unreferenced: $D6DB-$D78A, 176 bytes)
-; Unused: an enemy routine and its data, which nothing refers to.
+; (Deeler_Ai is reached only through the enemy AI tables of the area
+; banks, EnemyAiPtrs_BankN.)
 
+; Deeler: Y velocity dropping (2 pixels per frame down) and climbing (1 up).
 DeelerYSpeeds:
     .byte   $20, $F0                                                        ; $D6DB
 
+; Deeler: X velocity toward Link (0 right, 1 left); 4 times this in a hop.
 DeelerXSpeeds:
     .byte   $08, $F8                                                        ; $D6DD
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -4599,120 +4602,139 @@ DeelerXSpeeds:
 ; ---------------------------------------------------------------------------
 ; Deeler_Ai
 ;
-; Deeler (spider): hangs from a tree, moving sideways toward Link
-; (DeelerXSpeeds).  When Link is within $40 pixels, it may drop (1 frame
-; in 32, at random) on its thread down to ram_05DC ($60 below where it
-; spawned, Deeler_Init_BankN), then climbs back up to ram_05DD.  The blue
-; Deeler ($0E), once low enough (Y >= $8E), lets go: it then jumps about
-; at random intervals (64-127 frames), toward Link, at four times the
-; speed.  Not executed in the test movies.
+; Deeler (spider).  Hanging (enemyAiState 0) from its thread at
+; deelerThreadTop, it moves sideways toward Link at 1/2 pixel per frame
+; (DeelerXSpeeds), turning toward him every frame.  When Link is within
+; $40 pixels horizontally and the Deeler is on screen, on 1 frame in 32
+; at random it drops instead (enemyAiState 1): 2 pixels per frame down to
+; deelerThreadBottom, $60 below the top, then (enemyAiState 2) 1 pixel
+; per frame back up, and it hangs again.  It doesn't move sideways while
+; on the thread, and ignores the background.
 ;
-; Status:  provisional
+; The blue Deeler ($0E) lets go when it reaches Y $8E on the thread, going
+; down or up (so never if the bottom is above $8E): enemyAiState gets bit
+; 7 set.  It falls, from 2 pixels per frame down under gravity of 1/16
+; pixel per frame per frame, stops on the floor (Enemy_UpdateWithBg,
+; Enemy_Land), and 32 frames after letting go hops toward Link: X velocity
+; 2 pixels per frame (4 times DeelerXSpeeds) and Y velocity -$11 to -$18
+; at random, again every 64-127 frames (timerFast+TIMER_ENEMY).  A hop
+; lasts about 45 frames and carries it about 90 pixels.  It stops moving
+; sideways when it lands.
+;
+; QUIRK: the thread's ends are global, set by the spawn routine of the
+; last Deeler spawned (Deeler_Init_BankN), so a Deeler spawned at another
+; height drops to the other's bottom and climbs to the other's top.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Deeler_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $D6DF
+    jsr     Enemy_SkipAiIfStunned   ; $D6DF  no AI while stunned
     jsr     Enemy_HurtLinkOnContact ; $D6E2
     lda     enemyAiState,x          ; $D6E5
-    bpl     @loc_D6EC               ; $D6E7
-    jmp     @loc_D750               ; $D6E9
+    bpl     @onThread               ; $D6E7  bit 7 clear: on its thread
+    jmp     @loose                  ; $D6E9  blue Deeler, let go
 
-@loc_D6EC:
-    jsr     Enemy_FaceLink          ; $D6EC
+@onThread:
+    jsr     Enemy_FaceLink          ; $D6EC  y = 0 if Link is right, 1 if left
     lda     enemyAiState,x          ; $D6EF
-    bne     @loc_D711               ; $D6F1
-    lda     temp15                  ; $D6F3
-    adc     #$40                    ; $D6F5
-    cmp     #$80                    ; $D6F7
-    bcc     @loc_D706               ; $D6F9
+    bne     @dropOrClimb            ; $D6F1  1 or 2: on the way down or up
+    ; Hanging: drop only if Link is within $40 pixels.
+    lda     temp15                  ; $D6F3  Link's X + 8 - its X
+    adc     #$40                    ; $D6F5  within -$40..$3F (give or
+    cmp     #$80                    ; $D6F7  take the carry)?
+    bcc     @maybeDrop              ; $D6F9  yes
 
-@loc_D6FB:
-    lda     DeelerXSpeeds,y         ; $D6FB
+@moveSideways:
+    lda     DeelerXSpeeds,y         ; $D6FB  1/2 px/frame toward Link
     sta     objXVelocity+1,x        ; $D6FE
     jsr     Enemy_MoveX             ; $D700
-    jmp     @loc_D74D               ; $D703
+    jmp     @update                 ; $D703
 
-@loc_D706:
-    lda     rng+1,x                 ; $D706
+@maybeDrop:
+    lda     rng+1,x                 ; $D706  1 frame in 32,
     and     #$1F                    ; $D709
-    ora     drawOffscreen+1         ; $D70B
-    bne     @loc_D6FB               ; $D70D
+    ora     drawOffscreen+1         ; $D70B  and only if on screen
+    bne     @moveSideways           ; $D70D  otherwise keep moving
 
-@loop:
-    inc     enemyAiState,x          ; $D70F
+@nextState:
+    inc     enemyAiState,x          ; $D70F  hanging -> dropping -> climbing
 
-@loc_D711:
-    lda     enemyAiState,x          ; $D711
+@dropOrClimb:
+    lda     enemyAiState,x          ; $D711  1: dropping, 2: climbing
     lsr     a                       ; $D713
-    tay                             ; $D714
+    tay                             ; $D714  y = 0 dropping, 1 climbing
     lda     objY+1,x                ; $D715
-    cmp     ram_05DC,y              ; $D717
-    bne     @loc_D728               ; $D71A
+    cmp     deelerThreadBottom,y    ; $D717  at the bottom (or top) yet?
+    bne     @onTheWay               ; $D71A  no
     lda     enemyAiState,x          ; $D71C
-    cmp     #$02                    ; $D71E
-    bne     @loop                   ; $D720
-    lda     #$00                    ; $D722
+    cmp     #$02                    ; $D71E  reached the bottom?
+    bne     @nextState              ; $D720  yes: climb
+    lda     #$00                    ; $D722  reached the top: hang
     sta     enemyAiState,x          ; $D724
-    beq     @loc_D74D               ; $D726
+    beq     @update                 ; $D726  (always)
 
-@loc_D728:
+@onTheWay:
     lda     enemyType,x             ; $D728
-    cmp     #$0E                    ; $D72A
-    bne     @loc_D744               ; $D72C
+    cmp     #$0E                    ; $D72A  the blue Deeler?
+    bne     @moveOnThread           ; $D72C  no
     lda     objY+1,x                ; $D72E
-    cmp     #$8E                    ; $D730
-    bcc     @loc_D744               ; $D732
-    ror     enemyAiState,x          ; $D734
+    cmp     #$8E                    ; $D730  low enough to let go?
+    bcc     @moveOnThread           ; $D732  no
+    ror     enemyAiState,x          ; $D734  let go: bit 7 set (carry)
     lda     #$00                    ; $D736
-    sta     objXVelocity+1,x        ; $D738
-    lda     #$20                    ; $D73A
+    sta     objXVelocity+1,x        ; $D738  fall straight down,
+    lda     #$20                    ; $D73A  at 2 px/frame to start with
     sta     objYVelocity+1,x        ; $D73C
-    sta     timerFast+3,x           ; $D73F
-    bne     @loc_D773               ; $D742
+    sta     timerFast+3,x           ; $D73F  first hop in 32 frames
+    bne     @fall                   ; $D742  (always)
 
-@loc_D744:
-    lda     DeelerYSpeeds,y         ; $D744
+@moveOnThread:
+    lda     DeelerYSpeeds,y         ; $D744  2 px/frame down or 1 up
     sta     objYVelocity+1,x        ; $D747
     jsr     Enemy_MoveY             ; $D74A
 
-@loc_D74D:
-    jmp     Enemy_UpdateCommon      ; $D74D
+@update:
+    jmp     Enemy_UpdateCommon      ; $D74D  draw, hit tests (no background)
 
-@loc_D750:
-    lda     timerFast+3,x           ; $D750
-    bne     @loc_D773               ; $D753
-    lda     rng+1,x                 ; $D755
+@loose:
+    lda     timerFast+3,x           ; $D750  time to hop?
+    bne     @fall                   ; $D753  no
+    lda     rng+1,x                 ; $D755  next hop in 64-127 frames
     and     #$3F                    ; $D758
     ora     #$40                    ; $D75A
     sta     timerFast+3,x           ; $D75C
     jsr     Enemy_FaceLink          ; $D75F
-    lda     DeelerXSpeeds,y         ; $D762
+    lda     DeelerXSpeeds,y         ; $D762  2 px/frame toward Link
     asl     a                       ; $D765
     asl     a                       ; $D766
     sta     objXVelocity+1,x        ; $D767
-    lda     rng+1,x                 ; $D769
+    lda     rng+1,x                 ; $D769  Y velocity -$18 to -$11
     and     #$07                    ; $D76C
     ora     #$E8                    ; $D76E
     sta     objYVelocity+1,x        ; $D770
 
-@loc_D773:
+@fall:
     jsr     Enemy_MoveX             ; $D773
     jsr     Enemy_MoveY             ; $D776
-    inc     objYVelocity+1,x        ; $D779
-    jsr     Enemy_UpdateWithBg      ; $D77C
+    inc     objYVelocity+1,x        ; $D779  gravity: +1/16 px/frame
+    jsr     Enemy_UpdateWithBg      ; $D77C  probe background, draw, hit tests
     lda     objCollision+1,x        ; $D77F
-    and     #$04                    ; $D781
-    beq     @done                   ; $D783
-    jsr     Enemy_Land              ; $D785
-    sta     objXVelocity+1,x        ; $D788
+    and     #$04                    ; $D781  on a floor?
+    beq     @done                   ; $D783  no
+    jsr     Enemy_Land              ; $D785  yes: land (a = 0)
+    sta     objXVelocity+1,x        ; $D788  and stop
 
 @done:
     rts                             ; $D78A
 ; (end of disassembled code)
 
 
+; Bago Bago generator: spawn X from the screen's left edge (0 left, 1 right).
 BagoBagoSpawnX:
     .byte   $10, $F0                                                        ; $D78B
 
+; Bago Bago generator: X velocity of a new Bago Bago (2 px/frame inward).
 BagoBagoSpawnSpeeds:
     .byte   $20, $E0                                                        ; $D78D
 
@@ -4720,61 +4742,69 @@ BagoBagoSpawnSpeeds:
 ; ---------------------------------------------------------------------------
 ; BagoBagoGenerator_Ai
 ;
-; Bago Bago generator: every 128 frames, if an enemy slot is free, spawn a
-; Bago Bago (type $10, 3 hit points regardless of the table) below the
-; screen at its left or right side (BagoBagoSpawnX), jumping up (Y
-; velocity -$40) and moving inward (BagoBagoSpawnSpeeds).
+; Bago Bago generator: every 128 frames (frameCounter), if an enemy slot
+; is free, put a Bago Bago (type $10) in it, below the screen (Y $D0) at
+; its left or right side at random (scrollX + $10 or + $F0,
+; BagoBagoSpawnX), leaping up at 4 pixels per frame and across toward the
+; middle at 2 pixels per frame (BagoBagoSpawnSpeeds).  It gets no list
+; entry (enemySramIndex $D0); its other state is left from the slot's
+; last enemy.
 ;
+; QUIRK: it gets 3 hit points whatever the table says (8 in East Hyrule
+; and the palaces).
+;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BagoBagoGenerator_Ai:
     lda     frameCounter            ; $D78F
-    and     #$7F                    ; $D791
-    bne     @loc_D79E               ; $D793
-    ldx     #$05                    ; $D795
+    and     #$7F                    ; $D791  every 128 frames
+    bne     @done                   ; $D793
+    ldx     #$05                    ; $D795  find a free enemy slot
 
 @loop:
     lda     enemyActive,x           ; $D797
-    beq     @loc_D7A1               ; $D799
+    beq     @spawn                  ; $D799
     dex                             ; $D79B
     bpl     @loop                   ; $D79C
 
-@loc_D79E:
-    ldx     currentObject           ; $D79E
+@done:
+    ldx     currentObject           ; $D79E  none free
     rts                             ; $D7A0
 
-@loc_D7A1:
-    lda     #$01                    ; $D7A1
+@spawn:
+    lda     #$01                    ; $D7A1  ENEMY_STATE_ACTIVE
     sta     enemyActive,x           ; $D7A3
-    lda     #$10                    ; $D7A5
+    lda     #$10                    ; $D7A5  a Bago Bago
     sta     enemyType,x             ; $D7A7
-    lda     rng+1,x                 ; $D7A9
+    lda     rng+1,x                 ; $D7A9  left (0) or right (1) side
     and     #$01                    ; $D7AC
     tay                             ; $D7AE
-    lda     scrollX                 ; $D7AF
-    adc     BagoBagoSpawnX,y        ; $D7B2
+    lda     scrollX                 ; $D7AF  X = screen's left edge
+    adc     BagoBagoSpawnX,y        ; $D7B2  + $10 or + $F0
     sta     objX+1,x                ; $D7B5
     lda     scrollXHi               ; $D7B7
     adc     #$00                    ; $D7BA
     sta     objXHi+1,x              ; $D7BC
-    lda     BagoBagoSpawnSpeeds,y   ; $D7BE
+    lda     BagoBagoSpawnSpeeds,y   ; $D7BE  2 px/frame toward the middle
     sta     objXVelocity+1,x        ; $D7C1
-    lda     #$D0                    ; $D7C3
+    lda     #$D0                    ; $D7C3  below the screen
     sta     objY+1,x                ; $D7C5
-    sta     enemySramIndex,x        ; $D7C7
-    lda     #$C0                    ; $D7C9
+    sta     enemySramIndex,x        ; $D7C7  (not from the list)
+    lda     #$C0                    ; $D7C9  leaping up at 4 px/frame
     sta     objYVelocity+1,x        ; $D7CB
-    lda     #$03                    ; $D7CE
+    lda     #$03                    ; $D7CE  3 hit points
     sta     enemyHp,x               ; $D7D0
     lsr     a                       ; $D7D2
-    sta     objYHi+1,x              ; $D7D3
+    sta     objYHi+1,x              ; $D7D3  1: on screen vertically
     lsr     a                       ; $D7D5
-    sta     enemyStunTimer,x        ; $D7D6
-    iny                             ; $D7D9
+    sta     enemyStunTimer,x        ; $D7D6  0
+    iny                             ; $D7D9  facing its direction
     sty     objFacing+1,x           ; $D7DA
     ldx     currentObject           ; $D7DC
     rts                             ; $D7DE
 
+; Bago Bago: walking X velocity toward Link (0 right, 1 left).
 BagoBagoSpeeds:
     .byte   $10, $F0                                                        ; $D7DF
 
@@ -4782,68 +4812,79 @@ BagoBagoSpeeds:
 ; ---------------------------------------------------------------------------
 ; BagoBago_Ai
 ;
-; Bago Bago (fish): leaps out of the water, falling with gravity; on
-; landing it moves toward Link (BagoBagoSpeeds).  Every $70 frames, when
-; within $10 pixels of Link's height, it may spit a rock at him (half the
-; time, if facing him).  Removed once below the screen.
+; Bago Bago (fish).  In the air (enemyAiState 0) it falls under gravity of
+; 1/16 pixel per frame per frame (a leap from Y $D0 at 4 pixels per frame
+; rises 128 pixels in 64 frames), keeping its X velocity.  When it comes
+; down on a floor it lands (enemyAiState 1), turns toward Link and walks
+; his way at 1 pixel per frame (BagoBagoSpeeds), without turning again;
+; off a ledge it falls again.  Walls don't stop it: it only tests for
+; floors, and only when falling, so it leaps up through them.
 ;
+; It spits: when its timer (timerFast+TIMER_ENEMY) has run out and it is
+; 0-16 pixels below Link's Y, it reloads the timer with 112 frames and,
+; half the time (rng+1,x bit 7 clear), spits a rock if it faces Link
+; (Enemy_ShootIfFacingLink).  It is removed once it is off the side of
+; the screen (both of its sprite columns, drawOffscreen+1 bits 3-2).
+; Touching it drains experience (sramEnemyAttr bit 4).
+;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BagoBago_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $D7E1
-    lda     drawOffscreen+1         ; $D7E4
+    jsr     Enemy_SkipAiIfStunned   ; $D7E1  no AI while stunned
+    lda     drawOffscreen+1         ; $D7E4  both sprite columns off screen?
     and     #$0C                    ; $D7E6
     cmp     #$0C                    ; $D7E8
-    bne     @loc_D7F1               ; $D7EA
-    lda     #$00                    ; $D7EC
+    bne     @onScreen               ; $D7EA  no
+    lda     #$00                    ; $D7EC  yes: remove it
     sta     enemyActive,x           ; $D7EE
     rts                             ; $D7F0
 
-@loc_D7F1:
+@onScreen:
     jsr     Enemy_HurtLinkOnContact ; $D7F1
     lda     enemyAiState,x          ; $D7F4
-    bne     @loc_D838               ; $D7F6
-    lda     objCollision+1,x        ; $D7F8
+    bne     @walking                ; $D7F6  1: on the ground
+    lda     objCollision+1,x        ; $D7F8  in the air: on a floor,
     and     #$04                    ; $D7FA
-    beq     @loc_D812               ; $D7FC
-    lda     objYVelocity+1,x        ; $D7FE
-    bmi     @loc_D812               ; $D801
-    inc     enemyAiState,x          ; $D803
+    beq     @fall                   ; $D7FC
+    lda     objYVelocity+1,x        ; $D7FE  and coming down?
+    bmi     @fall                   ; $D801  no: keep flying
+    inc     enemyAiState,x          ; $D803  yes: land
     jsr     Enemy_Land              ; $D805
-    jsr     Enemy_FaceLink          ; $D808
-    lda     BagoBagoSpeeds,y        ; $D80B
+    jsr     Enemy_FaceLink          ; $D808  y = 0 if Link is right, 1 if left
+    lda     BagoBagoSpeeds,y        ; $D80B  walk 1 px/frame his way
     sta     objXVelocity+1,x        ; $D80E
-    bne     @loc_D838               ; $D810
+    bne     @walking                ; $D810  (always)
 
-@loc_D812:
-    inc     objYVelocity+1,x        ; $D812
+@fall:
+    inc     objYVelocity+1,x        ; $D812  gravity: +1/16 px/frame
     jsr     Enemy_MoveY             ; $D815
 
-@loc_D818:
+@maybeSpit:
     lda     timerFast+TIMER_ENEMY,x ; $D818
-    bne     @loc_D832               ; $D81B
-    lda     objY+1,x                ; $D81D
-    sbc     objY                    ; $D81F
+    bne     @move                   ; $D81B  not yet
+    lda     objY+1,x                ; $D81D  0-16 pixels below Link's Y
+    sbc     objY                    ; $D81F  (give or take the carry)?
     cmp     #$11                    ; $D821
-    bcs     @loc_D832               ; $D823
-    lda     #$70                    ; $D825
+    bcs     @move                   ; $D823  no
+    lda     #$70                    ; $D825  next try in 112 frames
     sta     timerFast+TIMER_ENEMY,x ; $D827
-    lda     rng+1,x                 ; $D82A
-    bmi     @loc_D832               ; $D82D
-    jsr     Enemy_ShootIfFacingLink ; $D82F
+    lda     rng+1,x                 ; $D82A  half the time,
+    bmi     @move                   ; $D82D
+    jsr     Enemy_ShootIfFacingLink ; $D82F  spit if facing Link
 
-@loc_D832:
+@move:
     jsr     Enemy_MoveX             ; $D832
-    jmp     Enemy_UpdateWithBg      ; $D835
+    jmp     Enemy_UpdateWithBg      ; $D835  probe background, draw, hit tests
 
-@loc_D838:
+@walking:
     lda     objCollision+1,x        ; $D838
-    and     #$04                    ; $D83A
-    bne     @loc_D840               ; $D83C
-    sta     enemyAiState,x          ; $D83E
+    and     #$04                    ; $D83A  still on a floor?
+    bne     @onFloor                ; $D83C  yes
+    sta     enemyAiState,x          ; $D83E  no: in the air again (a = 0)
 
-@loc_D840:
-    bpl     @loc_D818               ; $D840
+@onFloor:
+    bpl     @maybeSpit              ; $D840  (always)
 
 
 ; ---------------------------------------------------------------------------
@@ -5447,6 +5488,8 @@ Enemy_StopY:
     sta     objYVelocity+1,x        ; $DAC9
     rts                             ; $DACC
 
+; Moa: X velocity added toward Link, and Y drift velocity (0 right/down,
+; 1 left/up).
 MoaSpeeds:
     .byte   $08, $F8                                                        ; $DACD
 
@@ -5454,100 +5497,116 @@ MoaSpeeds:
 ; ---------------------------------------------------------------------------
 ; Moa_Ai
 ;
-; Moa (floating eye): floats toward Link, its speed swinging back and
-; forth (MoaSpeeds) so that it weaves; it drifts up or down for a while at
-; random, turning back at Y $40 and $C0.  In East Hyrule (region 2) it is
-; invisible without the cross.  It drains experience on contact
-; (sramEnemyAttr bit 4).
+; Moa (floating eye).  Its own X velocity swings between -2 and +2 pixels
+; per frame: in a swing (enemyAiState 1) it changes by 1/16 every frame
+; until it reaches the far end, where it holds for 32 frames
+; (enemyAiState 0, timerFast+TIMER_ENEMY), and the next swing goes back.
+; It moves each frame by that velocity plus Link's X velocity plus 1/2
+; pixel per frame toward Link (MoaSpeeds), so that it weaves back and
+; forth around him and keeps pace when he walks.  During a swing it also
+; drifts 1/2 pixel per frame up or down at random, down if above Y $40
+; and up if at Y $C0 or more.  It faces its own velocity and ignores the
+; background.
 ;
+; In East Hyrule (region 2) it isn't drawn unless Link has the cross.
+; Touching it drains experience (sramEnemyAttr bit 4).
+;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Moa_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $DACF
-    jsr     Enemy_CheckCollisions   ; $DAD2
+    jsr     Enemy_SkipAiIfStunned   ; $DACF  no AI while stunned
+    jsr     Enemy_CheckCollisions   ; $DAD2  hit tests (no background)
     ; In region 2 the enemy is only visible with the cross.
     lda     currentRegion           ; $DAD5
-    cmp     #$02                    ; $DAD8
-    bne     @loc_DAE1               ; $DADA
-    lda     itemOwned+ITEM_CROSS    ; $DADC
-    beq     @loc_DAE4               ; $DADF
+    cmp     #$02                    ; $DAD8  East Hyrule?
+    bne     @draw                   ; $DADA  no: draw it
+    lda     itemOwned+ITEM_CROSS    ; $DADC  yes: only with the cross
+    beq     @noDraw                 ; $DADF
 
-@loc_DAE1:
+@draw:
     jsr     Enemy_Draw              ; $DAE1
 
-@loc_DAE4:
+@noDraw:
     jsr     Enemy_HurtLinkOnContact ; $DAE4
-    jsr     Enemy_FaceLink          ; $DAE7
-    lda     objXVelocity+1,x        ; $DAEA
+    ; Move by its velocity + Link's + 1/2 px/frame toward Link, then
+    ; put its own velocity back.
+    jsr     Enemy_FaceLink          ; $DAE7  y = 0 if Link is right, 1 if left
+    lda     objXVelocity+1,x        ; $DAEA  its own velocity
     pha                             ; $DAEC
-    adc     objXVelocity            ; $DAED
-    adc     MoaSpeeds,y             ; $DAEF
+    adc     objXVelocity            ; $DAED  + Link's (carry from Enemy_FaceLink)
+    adc     MoaSpeeds,y             ; $DAEF  + 1/2 px/frame toward Link
     sta     objXVelocity+1,x        ; $DAF2
     jsr     Enemy_MoveX             ; $DAF4
     pla                             ; $DAF7
-    sta     objXVelocity+1,x        ; $DAF8
-    ldy     #$02                    ; $DAFA
+    sta     objXVelocity+1,x        ; $DAF8  restore it
+    ldy     #$02                    ; $DAFA  face left if it is negative,
     asl     a                       ; $DAFC
-    bcs     @loc_DB00               ; $DAFD
-    dey                             ; $DAFF
+    bcs     @setFacing              ; $DAFD
+    dey                             ; $DAFF  else right
 
-@loc_DB00:
+@setFacing:
     sty     objFacing+1,x           ; $DB00
     lda     enemyAiState,x          ; $DB02
-    bne     @loc_DB2D               ; $DB04
+    bne     @swing                  ; $DB04  1: swinging
+    ; Holding: when the timer runs out, start a swing.
     lda     timerFast+TIMER_ENEMY,x ; $DB06
-    bne     @done                   ; $DB09
-    inc     enemyAiState,x          ; $DB0B
-    lda     rng+1,x                 ; $DB0D
-    and     #$01                    ; $DB10
+    bne     @done                   ; $DB09  still holding
+    inc     enemyAiState,x          ; $DB0B  swing
+    lda     rng+1,x                 ; $DB0D  drift down (0) or up (1)
+    and     #$01                    ; $DB10  at random,
     tay                             ; $DB12
     lda     objY+1,x                ; $DB13
-    cmp     #$40                    ; $DB15
-    bcs     @loc_DB1B               ; $DB17
+    cmp     #$40                    ; $DB15  but down if above Y $40
+    bcs     @checkLow               ; $DB17
     ldy     #$00                    ; $DB19
 
-@loc_DB1B:
-    cmp     #$C0                    ; $DB1B
-    bcc     @loc_DB21               ; $DB1D
+@checkLow:
+    cmp     #$C0                    ; $DB1B  and up if at Y $C0 or more
+    bcc     @setDrift               ; $DB1D
     ldy     #$01                    ; $DB1F
 
-@loc_DB21:
-    lda     MoaSpeeds,y             ; $DB21
+@setDrift:
+    lda     MoaSpeeds,y             ; $DB21  1/2 px/frame
     sta     objYVelocity+1,x        ; $DB24
-    lda     objFacing+1,x           ; $DB27
-    sta     enemyAiDir,x            ; $DB29
+    lda     objFacing+1,x           ; $DB27  swing away from its velocity:
+    sta     enemyAiDir,x            ; $DB29  enemyAiDir = facing at the start
 
 @done:
     rts                             ; $DB2C
 
-@loc_DB2D:
-    jsr     Enemy_MoveY             ; $DB2D
+@swing:
+    jsr     Enemy_MoveY             ; $DB2D  drift
     ldy     enemyAiDir,x            ; $DB30
-    dey                             ; $DB33
-    beq     @loc_DB3F               ; $DB34
-    inc     objXVelocity+1,x        ; $DB36
+    dey                             ; $DB33  was moving right?
+    beq     @swingLeft              ; $DB34  yes: swing left
+    inc     objXVelocity+1,x        ; $DB36  no: +1/16 px/frame,
     lda     objXVelocity+1,x        ; $DB38
-    cmp     #$20                    ; $DB3A
-    beq     @loc_DB47               ; $DB3C
+    cmp     #$20                    ; $DB3A  up to +2 px/frame
+    beq     @hold                   ; $DB3C
     rts                             ; $DB3E
 
-@loc_DB3F:
-    dec     objXVelocity+1,x        ; $DB3F
+@swingLeft:
+    dec     objXVelocity+1,x        ; $DB3F  -1/16 px/frame,
     lda     objXVelocity+1,x        ; $DB41
-    cmp     #$E0                    ; $DB43
+    cmp     #$E0                    ; $DB43  down to -2 px/frame
     bne     @done2                  ; $DB45
 
-@loc_DB47:
-    dec     enemyAiState,x          ; $DB47
-    lda     #$20                    ; $DB49
+@hold:
+    dec     enemyAiState,x          ; $DB47  hold at that speed
+    lda     #$20                    ; $DB49  for 32 frames
     sta     timerFast+TIMER_ENEMY,x ; $DB4B
 
 @done2:
     rts                             ; $DB4E
 
+; Swoop X velocity of an Ache: $F8 (left) for direction 0; direction 1
+; reads the next byte, $08 (right).
 AcheSpeeds:
     .byte   $F8                                                             ; $DB4F
 
+; X velocity of an enemy's projectile by its facing (1 right, 2 left);
+; byte 0 is also AcheSpeeds' second entry.
 ProjectileSpeedsByFacing:
     .byte   $08, $20, $E0                                                   ; $DB50
 
@@ -5555,84 +5614,95 @@ ProjectileSpeedsByFacing:
 ; ---------------------------------------------------------------------------
 ; Ache_Ai
 ;
-; Ache (bat) and Acheman: perch on the ceiling until Link is within $20
-; pixels horizontally, then swoop down and across at him in an arc (X
-; speed 8, Y speed from $40 down) and back up to Y $30.  On an area's first
-; and last pages (objXHi 0 or 3) they swoop at once, toward the middle.
-; The Acheman (type $0A), after a swoop, turns into a man for $30 frames
-; and throws a fireball.
+; Ache (bat) and Acheman.  Perched (objState 0) at Y $30, it waits until
+; Link (objX + 8) is within $20 pixels of it horizontally, then swoops in
+; a random direction (AcheSpeeds, rng+1,x bit 0): 1/2 pixel per frame
+; across, and Y velocity 4 pixels per frame down, decreasing by 1/16 every
+; frame, so that it reaches Y $AE after 64 frames and is back at Y $30,
+; perched again, after 128, 64 pixels further on.  On an area's first page
+; (objXHi 0) it swoops right at once and on page 3 left, toward the
+; middle, without waiting for Link.  It ignores the background.
 ;
+; At the bottom of the swoop it sets enemyAiState to $30.  The Acheman
+; (type $0A) then stops for 48 frames as a man (Ache_Draw), facing Link,
+; and on the 25th of them throws a fireball (projectile type 4,
+; Enemy_FireProjectile, 2 pixels below it); the Ache ignores the value.
+;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ache_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $DB53
+    jsr     Enemy_SkipAiIfStunned   ; $DB53  no AI while stunned
+    ; The Acheman's man phase: enemyAiState counts down from $30.
     lda     enemyType,x             ; $DB56
-    cmp     #$0A                    ; $DB58
-    bne     @loc_DB79               ; $DB5A
-    lda     enemyAiState,x          ; $DB5C
-    beq     @loc_DB79               ; $DB5E
-    dec     enemyAiState,x          ; $DB60
-    cmp     #$18                    ; $DB62
-    bne     @loc_DB73               ; $DB64
-    jsr     Enemy_FireProjectile    ; $DB66
-    bcs     @loc_DB73               ; $DB69
-    lda     a:objY+7,y              ; $DB6B
-    adc     #$02                    ; $DB6E
+    cmp     #$0A                    ; $DB58  the Acheman?
+    bne     @checkPerched           ; $DB5A  no
+    lda     enemyAiState,x          ; $DB5C  man phase frames left
+    beq     @checkPerched           ; $DB5E  none: fly
+    dec     enemyAiState,x          ; $DB60  count one
+    cmp     #$18                    ; $DB62  25th frame of the phase?
+    bne     @faceLink               ; $DB64  no
+    jsr     Enemy_FireProjectile    ; $DB66  throw a fireball (type 4)
+    bcs     @faceLink               ; $DB69  no free slot: no throw
+    lda     a:objY+7,y              ; $DB6B  start it 2 pixels lower
+    adc     #$02                    ; $DB6E  (carry clear from the call)
     sta     a:objY+7,y              ; $DB70
 
-@loc_DB73:
-    jsr     Enemy_FaceLink          ; $DB73
-    jmp     @loc_DBC8               ; $DB76
+@faceLink:
+    jsr     Enemy_FaceLink          ; $DB73  the man faces Link
+    jmp     @update                 ; $DB76  and doesn't move
 
-@loc_DB79:
-    lda     objState+1,x            ; $DB79
-    bne     @loc_DBA8               ; $DB7B
-    ldy     objXHi+1,x              ; $DB7D
+@checkPerched:
+    lda     objState+1,x            ; $DB79  0: perched, 1: swooping
+    bne     @swoop                  ; $DB7B
+    ; Perched.  On pages 0 and 3 (and 4 and up), swoop at once: y = (page
+    ; - 1) & 1, 1 (right) on page 0, 0 (left) on page 3.
+    ldy     objXHi+1,x              ; $DB7D  the page it is on
     dey                             ; $DB7F
-    cpy     #$02                    ; $DB80
-    bcc     @loc_DB8B               ; $DB82
+    cpy     #$02                    ; $DB80  page 1 or 2?
+    bcc     @waitForLink            ; $DB82  yes: wait for Link
     tya                             ; $DB84
     and     #$01                    ; $DB85
-    tay                             ; $DB87
-    jmp     @loc_DB9C               ; $DB88
+    tay                             ; $DB87  y = direction
+    jmp     @startSwoop             ; $DB88
 
-@loc_DB8B:
-    jsr     Enemy_FaceLink          ; $DB8B
+@waitForLink:
+    jsr     Enemy_FaceLink          ; $DB8B  temp15 = Link's X + 8 - its X
     lda     temp15                  ; $DB8E
-    adc     #$20                    ; $DB90
-    cmp     #$40                    ; $DB92
-    bcs     @loc_DBC8               ; $DB94
-    lda     rng+1,x                 ; $DB96
-    and     #$01                    ; $DB99
+    adc     #$20                    ; $DB90  within -$20..$1F (give or
+    cmp     #$40                    ; $DB92  take the carry)?
+    bcs     @update                 ; $DB94  no: stay perched
+    lda     rng+1,x                 ; $DB96  yes: a random direction,
+    and     #$01                    ; $DB99  whatever side Link is on
     tay                             ; $DB9B
 
-@loc_DB9C:
-    lda     AcheSpeeds,y            ; $DB9C
+@startSwoop:
+    lda     AcheSpeeds,y            ; $DB9C  1/2 px/frame: y = 0 left, 1 right
     sta     objXVelocity+1,x        ; $DB9F
-    inc     objState+1,x            ; $DBA1
-    lda     #$40                    ; $DBA3
+    inc     objState+1,x            ; $DBA1  swooping
+    lda     #$40                    ; $DBA3  4 px/frame down
     sta     objYVelocity+1,x        ; $DBA5
 
-@loc_DBA8:
+@swoop:
     jsr     Enemy_MoveX             ; $DBA8
-    dec     objYVelocity+1,x        ; $DBAB
-    bne     @loc_DBB4               ; $DBAE
-    lda     #$30                    ; $DBB0
-    sta     enemyAiState,x          ; $DBB2
+    dec     objYVelocity+1,x        ; $DBAB  slow the fall by 1/16 px/frame
+    bne     @moveY                  ; $DBAE  (then rise faster and faster)
+    lda     #$30                    ; $DBB0  bottom of the swoop: an
+    sta     enemyAiState,x          ; $DBB2  Acheman becomes a man for $30 frames
 
-@loc_DBB4:
+@moveY:
     jsr     Enemy_MoveY             ; $DBB4
     lda     objY+1,x                ; $DBB7
-    cmp     #$30                    ; $DBB9
-    bcs     @loc_DBC8               ; $DBBB
-    lda     #$30                    ; $DBBD
+    cmp     #$30                    ; $DBB9  back above the perch height?
+    bcs     @update                 ; $DBBB  no
+    lda     #$30                    ; $DBBD  yes: perch at Y $30
     sta     objY+1,x                ; $DBBF
     lda     #$00                    ; $DBC1
     sta     objYVelocity+1,x        ; $DBC3
-    sta     objState+1,x            ; $DBC6
+    sta     objState+1,x            ; $DBC6  perched
 
-@loc_DBC8:
-    jsr     Enemy_UpdateCommon      ; $DBC8
+@update:
+    jsr     Enemy_UpdateCommon      ; $DBC8  draw, hit tests (no background)
     jmp     Enemy_HurtLinkOnContact ; $DBCB
 
 ; ---------------------------------------------------------------------------
@@ -5669,6 +5739,7 @@ Enemy_FireProjectile:
     rts                             ; $DBF8
 ; (unreferenced: $DBF9-$DBFA, 2 bytes)
 
+; Rock generator: X velocity of a rock by side (0 left edge, moving right).
 RockSpeeds:
     .byte   $10, $F0                                                        ; $DBF9
 
@@ -5707,40 +5778,45 @@ Projectile_FindFreeFrom:
 ; ---------------------------------------------------------------------------
 ; BubbleGenerator_Ai
 ;
-; Bubble (lava fireball) generator: every 32 frames, if a projectile slot
-; is free, launch a fireball (projectile type 2) from the bottom of the
-; screen at a random X, rising (Y velocity -$1C).
+; Bubble generator: every 32 frames (counted in enemyAiState), if one of
+; projectile slots 3-0 is free, launch projectile type 2 from below the
+; screen (Y $E0) in a random 16-pixel column of the screen, rising at
+; 1.75 pixels per frame (Y velocity -$1C).  In West Hyrule it is a
+; bubble (Projectile_Bubble_Bank1), in East Hyrule a lava fireball.
 ;
+; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BubbleGenerator_Ai:
-    inc     enemyAiState,x          ; $DC15
+    inc     enemyAiState,x          ; $DC15  frame counter
     lda     enemyAiState,x          ; $DC17
-    and     #$1F                    ; $DC19
+    and     #$1F                    ; $DC19  every 32 frames
     bne     @done                   ; $DC1B
-    jsr     Projectile_FindFree     ; $DC1D
-    bcs     @done                   ; $DC20
-    lda     #$02                    ; $DC22
+    jsr     Projectile_FindFree     ; $DC1D  a free slot of 3-0?
+    bcs     @done                   ; $DC20  none
+    lda     #$02                    ; $DC22  projectile type 2
     sta     a:objState+7,y          ; $DC24
-    lda     scrollX                 ; $DC27
-    adc     rng+1,x                 ; $DC2A
-    and     #$F0                    ; $DC2D
+    lda     scrollX                 ; $DC27  X = a random column of the
+    adc     rng+1,x                 ; $DC2A  screen (carry clear from the
+    and     #$F0                    ; $DC2D  call)
     sta     a:objX+7,y              ; $DC2F
     lda     scrollXHi               ; $DC32
     adc     #$00                    ; $DC35
     sta     a:objXHi+7,y            ; $DC37
-    lda     #$E0                    ; $DC3A
+    lda     #$E0                    ; $DC3A  below the screen
     sta     a:objY+7,y              ; $DC3C
-    lda     #$E4                    ; $DC3F
+    lda     #$E4                    ; $DC3F  rising at 1.75 px/frame
     sta     objYVelocity+7,y        ; $DC41
 
 @done:
     rts                             ; $DC44
 ; (unreferenced: $DC45-$DC90, 76 bytes)
 
+; Rock generator: spawn X from the screen's left edge, by side.
 RockSpawnX:
     .byte   $0C, $F4                                                        ; $DC45
 
+; Rock generator: spawn Y from Link's Y, by r (r & 1 is the side).
 RockSpawnY:
     .byte   $03, $13, $F3, $E3, $D3, $C3, $03, $13                          ; $DC47
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -5748,41 +5824,46 @@ RockSpawnY:
 ; ---------------------------------------------------------------------------
 ; RockGenerator_Ai
 ;
-; Rock generator: every 32 frames, if a projectile slot is free, throw a
-; rock (projectile type 1) from the left or right edge of the screen
-; (RockSpawnX) at about Link's height (RockSpawnY), moving inward.  Not
-; executed in the test movies.
+; Rock generator: every 32 frames (frameCounter), if one of projectile
+; slots 3-0 is free, throw a rock (projectile type 1, which flies
+; straight) at 1 pixel per frame (RockSpeeds) from near the left or right
+; edge of the screen (scrollX + $0C or + $F4, RockSpawnX), toward the
+; other.  A random r (0-7) picks the side (r & 1: 0 left, 1 right) and
+; the height from Link's Y (RockSpawnY): +3, -13 or -45 from the left,
+; +19, -29 or -61 from the right.  With rocks crossing the screen in
+; about 230 frames, four slots allow only about one rock per 64 frames.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RockGenerator_Ai:
     lda     frameCounter            ; $DC4F
-    and     #$1F                    ; $DC51
+    and     #$1F                    ; $DC51  every 32 frames
     bne     @done                   ; $DC53
-    jsr     Projectile_FindFree     ; $DC55
-    bcs     @done                   ; $DC58
-    lda     rng+1,x                 ; $DC5A
+    jsr     Projectile_FindFree     ; $DC55  a free slot of 3-0?
+    bcs     @done                   ; $DC58  none
+    lda     rng+1,x                 ; $DC5A  r = 0-7 at random
     and     #$07                    ; $DC5D
     tax                             ; $DC5F
-    lda     objY                    ; $DC60
-    adc     RockSpawnY,x            ; $DC62
+    lda     objY                    ; $DC60  Y = Link's Y + offset
+    adc     RockSpawnY,x            ; $DC62  (carry clear from the call)
     sta     a:objY+7,y              ; $DC65
     txa                             ; $DC68
-    and     #$01                    ; $DC69
-    sta     projectileTimer,y       ; $DC6B
+    and     #$01                    ; $DC69  side: r & 1
+    sta     projectileTimer,y       ; $DC6B  (kept, but not used)
     tax                             ; $DC6E
-    lda     scrollX                 ; $DC6F
-    adc     RockSpawnX,x            ; $DC72
+    lda     scrollX                 ; $DC6F  X = screen's left edge
+    adc     RockSpawnX,x            ; $DC72  + $0C or + $F4
     sta     a:objX+7,y              ; $DC75
     lda     scrollXHi               ; $DC78
     adc     #$00                    ; $DC7B
     sta     a:objXHi+7,y            ; $DC7D
-    lda     RockSpeeds,x            ; $DC80
+    lda     RockSpeeds,x            ; $DC80  1 px/frame inward
     sta     a:objXVelocity+7,y      ; $DC83
-    inx                             ; $DC86
+    inx                             ; $DC86  facing: 1 right, 2 left
     stx     objFacing+7,y           ; $DC87
     ldx     currentObject           ; $DC89
-    lda     #$01                    ; $DC8B
+    lda     #$01                    ; $DC8B  projectile type 1
     sta     a:objState+7,y          ; $DC8D
 
 @done:
@@ -9557,6 +9638,7 @@ Enemy08_Draw:
 @loc_EFE6:
     jmp     Sprite_DrawPairFromTableKeepX ; $EFE6
 
+; Moa_Draw: pixels the right sprite overlaps the left, by |X velocity| / 4.
 MoaWobble:
     .byte   $03, $03, $02, $02, $01, $01, $00, $00, $00                     ; $EFE9
 
@@ -9564,41 +9646,45 @@ MoaWobble:
 ; ---------------------------------------------------------------------------
 ; Moa_Draw
 ;
-; Draw a Moa, leaning with its speed (MoaWobble) and flickering its
-; palette.
+; Draw a Moa: a pair of sprites, tiles $B6, $B8 (SpritePairTiles entry
+; $1E), facing the way its own X velocity points, and flipped upside down
+; on alternate 16-frame periods (frameCounter bit 4 clear).  The closer its
+; velocity is to 0, the more its right sprite is drawn over the left one
+; (MoaWobble: 3 pixels for |velocity| < 1/2 pixel per frame, down to 0 at
+; 1.5 or more), so that it narrows as it turns.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Moa_Draw:
-    lda     #$01                    ; $EFF2
+    lda     #$01                    ; $EFF2  face right,
     sta     temp2                   ; $EFF4
     lda     objXVelocity+1,x        ; $EFF6
-    bpl     @loc_EFFC               ; $EFF8
-    inc     temp2                   ; $EFFA
+    bpl     @tiles                  ; $EFF8
+    inc     temp2                   ; $EFFA  or left if its velocity is negative
 
-@loc_EFFC:
-    ldx     #$1E                    ; $EFFC
+@tiles:
+    ldx     #$1E                    ; $EFFC  tiles $B6, $B8
     lda     frameCounter            ; $EFFE
-    and     #$10                    ; $F000
-    bne     @loc_F00A               ; $F002
-    lda     temp3                   ; $F004
+    and     #$10                    ; $F000  every other 16 frames,
+    bne     @draw                   ; $F002
+    lda     temp3                   ; $F004  flipped upside down
     ora     #$80                    ; $F006
     sta     temp3                   ; $F008
 
-@loc_F00A:
+@draw:
     jsr     Sprite_DrawPairFromTable ; $F00A
     ldx     currentObject           ; $F00D
     ldy     objOamOffset+1,x        ; $F00F
-    lda     objXVelocity+1,x        ; $F011
-    bpl     @loc_F017               ; $F013
+    lda     objXVelocity+1,x        ; $F011  |velocity| (- 1 if negative)
+    bpl     @positive               ; $F013
     eor     #$FF                    ; $F015
 
-@loc_F017:
-    lsr     a                       ; $F017
+@positive:
+    lsr     a                       ; $F017  / 4
     lsr     a                       ; $F018
     tax                             ; $F019
-    lda     oamBuffer+7,y           ; $F01A
-    sec                             ; $F01D
+    lda     oamBuffer+7,y           ; $F01A  move the right sprite left
+    sec                             ; $F01D  by 3 to 0 pixels
     sbc     MoaWobble,x             ; $F01E
     sta     oamBuffer+7,y           ; $F021
     ldx     currentObject           ; $F024
@@ -9608,79 +9694,86 @@ Moa_Draw:
 ; ---------------------------------------------------------------------------
 ; Deeler_Draw
 ;
-; Draw a Deeler and, while it hangs, its thread (tile $BE) up to ram_05DD.
-; Not executed in the test movies.
+; Draw a Deeler: a pair of sprites, tiles $BA, $BC (SpritePairTiles entry
+; $10), mirrored on alternate 8-frame periods so that it wriggles;
+; upside down while it hangs (enemyAiState 0), and 2 pixels lower once a
+; blue Deeler has let go (bit 7).  On its thread (bit 7 clear), if on
+; screen and below the top, it also draws the thread: three sprites of
+; tile $BE (palette 1) at its X, spaced (Y - deelerThreadTop) / 3 apart
+; from deelerThreadTop, shifted down by half a space on even frames, so
+; that over two frames they fill the thread.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Deeler_Draw:
-    lda     temp3                   ; $F027
+    lda     temp3                   ; $F027  palette
     ldy     enemyAiState,x          ; $F029
-    bne     @loc_F02F               ; $F02B
-    ora     #$80                    ; $F02D
+    bne     @notHanging             ; $F02B
+    ora     #$80                    ; $F02D  hanging: upside down
 
-@loc_F02F:
+@notHanging:
     cpy     #$00                    ; $F02F
-    bpl     @loc_F037               ; $F031
-    inc     temp0                   ; $F033
+    bpl     @setAttr                ; $F031
+    inc     temp0                   ; $F033  let go: 2 pixels lower
     inc     temp0                   ; $F035
 
-@loc_F037:
+@setAttr:
     sta     temp3                   ; $F037
     ldy     objOamOffset+1,x        ; $F039
-    lda     frameCounter            ; $F03B
-    lsr     a                       ; $F03D
+    lda     frameCounter            ; $F03B  mirrored every 8 frames:
+    lsr     a                       ; $F03D  temp2 (facing) = bit 3 + 1
     lsr     a                       ; $F03E
     lsr     a                       ; $F03F
     and     #$01                    ; $F040
     tax                             ; $F042
     inx                             ; $F043
     stx     temp2                   ; $F044
-    ldx     #$10                    ; $F046
+    ldx     #$10                    ; $F046  tiles $BA, $BC
     jsr     Sprite_DrawPairFromTableKeepX ; $F048
+    ; The thread.
     lda     drawOffscreen+1         ; $F04B
-    and     #$0C                    ; $F04D
-    bne     @done                   ; $F04F
+    and     #$0C                    ; $F04D  off screen to the side?
+    bne     @done                   ; $F04F  yes: no thread
     lda     enemyAiState,x          ; $F051
-    bmi     @done                   ; $F053
+    bmi     @done                   ; $F053  let go: no thread
     ldy     objOamOffset+1,x        ; $F055
     lda     objY+1,x                ; $F057
     sec                             ; $F059
-    sbc     ram_05DD                ; $F05A
-    beq     @done                   ; $F05D
-    ldy     #$FF                    ; $F05F
+    sbc     deelerThreadTop         ; $F05A  thread length
+    beq     @done                   ; $F05D  0: no thread
+    ldy     #$FF                    ; $F05F  temp0 = length / 3
 
-@loop:
+@divide:
     iny                             ; $F061
     sec                             ; $F062
     sbc     #$03                    ; $F063
-    bpl     @loop                   ; $F065
+    bpl     @divide                 ; $F065
     sty     temp0                   ; $F067
     ldy     objOamOffset+1,x        ; $F069
-    lda     frameCounter            ; $F06B
+    lda     frameCounter            ; $F06B  on even frames,
     lsr     a                       ; $F06D
-    lda     temp0                   ; $F06E
-    bcc     @loc_F074               ; $F070
-    lda     #$00                    ; $F072
+    lda     temp0                   ; $F06E  start half a space lower
+    bcc     @half                   ; $F070
+    lda     #$00                    ; $F072  on odd frames at the top
 
-@loc_F074:
+@half:
     lsr     a                       ; $F074
     clc                             ; $F075
-    adc     ram_05DD                ; $F076
-    sta     oamBuffer+8,y           ; $F079
+    adc     deelerThreadTop         ; $F076
+    sta     oamBuffer+8,y           ; $F079  sprite 3: top
     adc     temp0                   ; $F07C
-    sta     oamBuffer+12,y          ; $F07E
+    sta     oamBuffer+12,y          ; $F07E  sprite 4: one space lower
     adc     temp0                   ; $F081
-    sta     oamBuffer+16,y          ; $F083
-    lda     drawScreenX+1           ; $F086
+    sta     oamBuffer+16,y          ; $F083  sprite 5: two spaces lower
+    lda     drawScreenX+1           ; $F086  at the Deeler's X
     sta     oamBuffer+11,y          ; $F088
     sta     oamBuffer+15,y          ; $F08B
     sta     oamBuffer+19,y          ; $F08E
-    lda     #$01                    ; $F091
+    lda     #$01                    ; $F091  palette 1
     sta     oamBuffer+10,y          ; $F093
     sta     oamBuffer+14,y          ; $F096
     sta     oamBuffer+18,y          ; $F099
-    lda     #$BE                    ; $F09C
+    lda     #$BE                    ; $F09C  thread tile
     sta     oamBuffer+9,y           ; $F09E
     sta     oamBuffer+13,y          ; $F0A1
     sta     oamBuffer+17,y          ; $F0A4
@@ -9719,12 +9812,14 @@ Octorok_Draw:
 ; ---------------------------------------------------------------------------
 ; BagoBago_Draw
 ;
-; Draw a Bago Bago (animated).
+; Draw a Bago Bago: a pair of sprites facing its objFacing, alternating
+; every 8 frames between tiles $C0, $C2 and $C0, $C4 (SpritePairTiles
+; entries $0C and $0E).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BagoBago_Draw:
-    lda     #$0C                    ; $F0B9
+    lda     #$0C                    ; $F0B9  entries $0C/$0E, falls into
 
 ; ---------------------------------------------------------------------------
 ; Sprite_DrawAnimatedPairFromTable
@@ -9891,42 +9986,47 @@ LockedDoor_Draw:
 ; ---------------------------------------------------------------------------
 ; Ache_Draw
 ;
-; Draw an Ache (perched or flying), or the Acheman as a man.
+; Draw an Ache or Acheman.  Perched (objState 0): a pair of tiles $50
+; (SpritePairTiles entry $16), the right one mirrored, upside down.
+; Flying: the same, the right way up, alternating every 8 frames with
+; tiles $4E (entry $18), flapping.  The Acheman as a man (enemyAiState
+; not 0): two pairs, tiles $7C, $7E over $80, $82 (entries $1A and $1C),
+; facing its objFacing.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ache_Draw:
     lda     enemyType,x             ; $F17E
-    cmp     #$0A                    ; $F180
-    bne     @loc_F188               ; $F182
-    lda     enemyAiState,x          ; $F184
-    bne     @loc_F1AD               ; $F186
+    cmp     #$0A                    ; $F180  the Acheman,
+    bne     @bat                    ; $F182
+    lda     enemyAiState,x          ; $F184  as a man?
+    bne     @man                    ; $F186
 
-@loc_F188:
-    lda     temp3                   ; $F188
+@bat:
+    lda     temp3                   ; $F188  upside down
     ora     #$80                    ; $F18A
     sta     temp3                   ; $F18C
-    lda     #$02                    ; $F18E
-    sta     temp2                   ; $F190
+    lda     #$02                    ; $F18E  facing left: the left sprite
+    sta     temp2                   ; $F190  as is, the right one mirrored
     lda     objState+1,x            ; $F192
-    ldx     #$16                    ; $F194
+    ldx     #$16                    ; $F194  tiles $50
     asl     a                       ; $F196
-    beq     @loc_F1A7               ; $F197
-    lda     temp3                   ; $F199
+    beq     @perched                ; $F197
+    lda     temp3                   ; $F199  flying: the right way up,
     and     #$0F                    ; $F19B
     sta     temp3                   ; $F19D
-    lda     #$16                    ; $F19F
+    lda     #$16                    ; $F19F  flapping ($50 / $4E)
     jsr     Sprite_DrawAnimatedPairFromTable ; $F1A1
     jmp     Sprite_FlipPrevious     ; $F1A4
 
-@loc_F1A7:
+@perched:
     jsr     Sprite_DrawPairFromTableKeepX ; $F1A7
     jmp     Sprite_FlipPrevious     ; $F1AA
 
-@loc_F1AD:
-    ldx     #$1A                    ; $F1AD
+@man:
+    ldx     #$1A                    ; $F1AD  head: tiles $7C, $7E
     jsr     Sprite_DrawPairFromTable ; $F1AF
-    jmp     Sprite_DrawPairFromTableKeepX ; $F1B2
+    jmp     Sprite_DrawPairFromTableKeepX ; $F1B2  body: next entry, $80, $82
 
 ; ---------------------------------------------------------------------------
 ; Sprite_SetPairAttr

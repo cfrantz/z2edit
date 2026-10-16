@@ -13,17 +13,17 @@ own colors (`FireOctorok_Draw`).
 | $03 | [Myu](enemies/myu.md) | 24 | 10 | 3 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 48 | 10 | 3 | 1 | comes back | `Bot_Ai` |
 | $05 | Hidden jar | 255 | 10 | 3 | 1 | blocks Link's projectiles, comes back | `HiddenJar_Ai_Bank5` |
-| $06 | Moa | 6 | 5 | 1 | 1 | touch drains 20 exp | `Moa_Ai` |
-| $07 | Ache | 4 | 3 | 0 | 1 | comes back | `Ache_Ai` |
+| $06 | [Moa](enemies/moa.md) | 6 | 5 | 1 | 1 | touch drains 20 exp | `Moa_Ai` |
+| $07 | [Ache](enemies/ache.md) | 4 | 3 | 0 | 1 | comes back | `Ache_Ai` |
 | $08 | (unused) | 0 | 0 | 3 | 1 | immune to SPELL, immune to Thunder, sword passes through | `$AB98` |
 | $09 | (unused) | 0 | 0 | 3 | 1 | touch drains 10 exp, immune to SPELL, immune to Thunder | `$ABE9` |
-| $0A | Acheman | 2 | 0 | 2 | 1 |  | `Ache_Ai` |
-| $0B | Bubble Generator | 2 | 0 | 0 | 1 | immune to SPELL, immune to Thunder, sword passes through | `BubbleGenerator_Ai` |
-| $0C | Rock Generator | 2 | 0 | 0 | 1 | immune to Thunder, sword passes through | `RockGenerator_Ai` |
-| $0D | Red Deeler | 4 | 3 | 0 | 1 |  | `Deeler_Ai` |
-| $0E | Blue Deeler | 6 | 5 | 0 | 1 |  | `Deeler_Ai` |
-| $0F | Fire Bago Bago Generator | 8 | 20 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
-| $10 | Fire Bago Bago | 8 | 20 | 3 | 1 | touch drains 10 exp | `BagoBago_Ai` |
+| $0A | [Acheman](enemies/ache.md) | 2 | 0 | 2 | 1 |  | `Ache_Ai` |
+| $0B | [Bubble Generator](enemies/bubble-generator.md) | 2 | 0 | 0 | 1 | immune to SPELL, immune to Thunder, sword passes through | `BubbleGenerator_Ai` |
+| $0C | [Rock Generator](enemies/rock-generator.md) | 2 | 0 | 0 | 1 | immune to Thunder, sword passes through | `RockGenerator_Ai` |
+| $0D | [Red Deeler](enemies/deeler.md) | 4 | 3 | 0 | 1 |  | `Deeler_Ai` |
+| $0E | [Blue Deeler](enemies/deeler.md) | 6 | 5 | 0 | 1 |  | `Deeler_Ai` |
+| $0F | [Fire Bago Bago Generator](enemies/bago-bago.md) | 8 | 20 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `BagoBagoGenerator_Ai` |
+| $10 | [Fire Bago Bago](enemies/bago-bago.md) | 8 | 20 | 3 | 1 | touch drains 10 exp | `BagoBago_Ai` |
 | $11 | [Fire Hopping Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Fire Walking Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokWalking_Ai` |
 | $13 | Elevator | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |

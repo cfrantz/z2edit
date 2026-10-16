@@ -57,6 +57,9 @@ EXP_HI = 0xDDDC
 ENEMY_PAGES = {
     "Myu_Ai": "myu", "Bot_Ai": "bot", "Bit_Ai": "bit", "Lowder_Ai": "lowder",
     "OctorokHopping_Ai": "octorok", "OctorokWalking_Ai": "octorok",
+    "Moa_Ai": "moa", "Ache_Ai": "ache", "Deeler_Ai": "deeler",
+    "BagoBagoGenerator_Ai": "bago-bago", "BagoBago_Ai": "bago-bago",
+    "BubbleGenerator_Ai": "bubble-generator", "RockGenerator_Ai": "rock-generator",
 }
 
 

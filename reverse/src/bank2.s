@@ -1292,17 +1292,19 @@ RedJar_Init_Bank2:
 ; ---------------------------------------------------------------------------
 ; Deeler_Init_Bank2
 ;
-; Spawn routine of Deelers; same as Deeler_Init_Bank1.  Not executed in the
-; test movies.
+; Spawn routine of Deelers: the thread hangs from where the Deeler spawns
+; (deelerThreadTop) and it drops to $60 below (deelerThreadBottom).  The
+; two are shared, so the last Deeler spawned sets them for all.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Deeler_Init_Bank2:
-    lda     objY+1,x                ; $961B
-    sta     ram_05DD                ; $961D
+    lda     objY+1,x                ; $961B  its spawn Y is
+    sta     deelerThreadTop         ; $961D  the top of the thread
     clc                             ; $9620
-    adc     #$60                    ; $9621
-    sta     ram_05DC                ; $9623
+    adc     #$60                    ; $9621  it drops $60 pixels
+    sta     deelerThreadBottom      ; $9623
     rts                             ; $9626
 ; (end of disassembled code)
 
@@ -1336,20 +1338,22 @@ Projectile_Straight_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_Bubble_Bank2
 ;
-; Projectile type 2 (lava fireball): rises, swaying every 16 frames.  Not
-; executed in the test movies.
+; Projectile type 2 (a lava fireball, from the bubble generator): the same
+; as Projectile_Bubble_Bank1, rising and swaying 1/4 pixel per frame
+; right and left, 16 frames each way.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Bubble_Bank2:
-    ldy     #$04                    ; $9637
-    inc     overworldBuffer+76,x    ; $9639
-    lda     overworldBuffer+76,x    ; $963C
+    ldy     #$04                    ; $9637  1/4 px/frame right,
+    inc     projectileTimer,x       ; $9639
+    lda     projectileTimer,x       ; $963C
     and     #$10                    ; $963F
-    beq     @loc_9645               ; $9641
-    ldy     #$FC                    ; $9643
+    beq     @setSpeed               ; $9641
+    ldy     #$FC                    ; $9643  or left, every other 16 frames
 
-@loc_9645:
+@setSpeed:
     sty     objXVelocity+7,x        ; $9645
     jmp     Projectile_MoveAndCheck_Bank2 ; $9647
 ; (end of disassembled code)
