@@ -46,6 +46,8 @@ and how each was verified):
 | [Boon](enemies/boon.md) | $17 in East Hyrule |
 | [Basilisk](enemies/basilisk.md) | $18 in East Hyrule |
 | [Scorpion](enemies/scorpion.md) | $19 in East Hyrule |
+| [Lizalfos](enemies/lizalfos.md) | $1A-$1C in East Hyrule |
+| [Rock Thrower](enemies/rock-thrower.md) | $1D in East Hyrule |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI

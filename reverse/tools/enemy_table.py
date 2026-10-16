@@ -65,6 +65,7 @@ ENEMY_PAGES = {
     "Daira_Ai": "daira",
     "Tektite_Ai": "tektite", "Eye_Ai": "eye", "Leever_Ai": "leever", "Boon_Ai": "boon",
     "Basilisk_Ai": "basilisk", "Scorpion_Ai": "scorpion",
+    "Lizalfos_Ai": "lizalfos", "OrangeLizalfos_Ai": "lizalfos", "RockThrower_Ai": "rock-thrower",
 }
 
 

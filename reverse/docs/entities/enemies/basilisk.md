@@ -27,6 +27,8 @@ fire still works.  It has no spawn routine.
    - crawling, from Y + 16, near the floor;
    - reared, from Y + 4 and further ahead (+14 facing right, -8 facing
      left, `BasiliskFireXOffsets`), from its raised head.
+
+   Link's shield destroys the fireball (flags $01).
 2. `Enemy_Fall_Bank2` (probes, falling, landing).  Its type's hitbox
    entry (`sramEnemyHitbox+$18`) is set to $89 while it crawls and $80
    while it is reared, then `Enemy_UpdateCommon` and

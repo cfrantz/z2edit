@@ -1608,6 +1608,7 @@ Generator_Init_Bank2:
     ldx     currentObject           ; $9725
     rts                             ; $9727
 
+; Rock thrower: rock Y velocity by Link's Y / 32 (harder up the higher he is).
 RockThrowYSpeeds:
     .byte   $DC, $E4, $EC                                                   ; $9728
 ; (unreferenced: $972B-$972B, 1 bytes)
@@ -1619,42 +1620,58 @@ RockThrowYSpeeds:
 ; ---------------------------------------------------------------------------
 ; RockThrower_Ai
 ;
-; Enemy $1D of East Hyrule (z2edit: Fence Lizalfos; 1 hit point): appears
-; at a place ahead of where Link is going, rises to Y $4C, throws a rock
-; (projectile type 8) in an arc aimed by Link's distance and height, then
-; sinks back, and again.
+; Rock thrower (East Hyrule $1D; z2edit: Fence Lizalfos; 1 hit point): a
+; creature behind a fence (drawn behind the background) that peeks over it
+; and throws rocks.  By enemyAiState bits 1-0:
 ;
-; Status:  provisional
+; 0. Hidden: when its timer runs out, it moves to a spot ahead of where
+;    Link is heading (scrollX + $40 + 0-127 + 3 x Link's X velocity) and
+;    waits 36-67 frames.
+; 1. Rising: 1 pixel per frame up to Y $4C, until the wait is over.
+; 2. Rising on to Y $45, then up for 64-127 frames.
+; 3. Up: throwing, one throw after another while more than 16 frames
+;    are left; in the last 16 it sinks 16 pixels; then it waits 64
+;    frames hidden.
+;
+; A throw (objState+1, enemyAiVar counting 16 frames): wind-up (1), then
+; a rock (projectile type 8, Enemy_DropRock_Bank2) with X velocity a
+; quarter of the distance to Link in 1/16 pixels plus Link's X velocity,
+; and Y velocity by Link's height (RockThrowYSpeeds: harder up the higher
+; he is), falling under gravity of 1/16; then 16 frames (2) before the
+; next.  It faces Link.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RockThrower_Ai:
-    jsr     Enemy_FaceLink          ; $9730
-    lda     objState+1,x            ; $9733
-    beq     @loc_977C               ; $9735
-    ldy     enemyAiVar,x            ; $9737
-    bne     @loc_9773               ; $973A
-    inc     a:objState+1,x          ; $973C
-    cmp     #$02                    ; $973F
-    beq     @loc_9778               ; $9741
-    lda     #$10                    ; $9743
-    sta     enemyAiVar,x            ; $9745
-    jsr     Enemy_DropRock_Bank2    ; $9748
-    bcs     @loc_977C               ; $974B
-    lda     temp15                  ; $974D
-    bpl     @loc_9753               ; $974F
+    jsr     Enemy_FaceLink          ; $9730  temp15 = dx
+    lda     objState+1,x            ; $9733  throwing?
+    beq     @draw                   ; $9735
+    ldy     enemyAiVar,x            ; $9737  throw step over?
+    bne     @countThrow             ; $973A
+    inc     a:objState+1,x          ; $973C  next step
+    cmp     #$02                    ; $973F  after the follow-through:
+    beq     @endThrow               ; $9741  done
+    lda     #$10                    ; $9743  after the wind-up: 16 more
+    sta     enemyAiVar,x            ; $9745  frames,
+    jsr     Enemy_DropRock_Bank2    ; $9748  and the rock
+    bcs     @draw                   ; $974B  (no free slot)
+    lda     temp15                  ; $974D  X velocity: |dx| / 4,
+    bpl     @absDx                  ; $974F
     eor     #$FF                    ; $9751
 
-@loc_9753:
+@absDx:
     lsr     a                       ; $9753
     lsr     a                       ; $9754
-    ldx     objFacing+7,y           ; $9755
+    ldx     objFacing+7,y           ; $9755  toward Link,
     dex                             ; $9757
-    beq     @loc_975C               ; $9758
+    beq     @addLink                ; $9758
     eor     #$FF                    ; $975A
 
-@loc_975C:
-    adc     objXVelocity            ; $975C
+@addLink:
+    adc     objXVelocity            ; $975C  + Link's X velocity
     sta     a:objXVelocity+7,y      ; $975E
-    lda     objY                    ; $9761
+    lda     objY                    ; $9761  Y velocity by Link's Y / 32
     lsr     a                       ; $9763
     lsr     a                       ; $9764
     lsr     a                       ; $9765
@@ -1664,34 +1681,34 @@ RockThrower_Ai:
     lda     RockThrowYSpeeds,x      ; $9769
     sta     objYVelocity+7,y        ; $976C
     ldx     currentObject           ; $976F
-    bpl     @loc_977C               ; $9771
+    bpl     @draw                   ; $9771  (always)
 
-@loc_9773:
+@countThrow:
     dec     enemyAiVar,x            ; $9773
-    bpl     @loc_977C               ; $9776
+    bpl     @draw                   ; $9776
 
-@loc_9778:
-    lda     #$00                    ; $9778
+@endThrow:
+    lda     #$00                    ; $9778  not throwing
     sta     objState+1,x            ; $977A
 
-@loc_977C:
+@draw:
     jsr     Enemy_Draw              ; $977C
     lda     enemyAiState,x          ; $977F
     and     #$03                    ; $9781
     jsr     JumpTable               ; $9783
 ; (inline jump table)
-    .word   @loc_978E               ; $9786
-    .word   @loc_97B7               ; $9788
-    .word   @loc_97C8               ; $978A
-    .word   @loc_97DA               ; $978C
+    .word   @hidden                 ; $9786
+    .word   @rising                 ; $9788
+    .word   @risingMore             ; $978A
+    .word   @up                     ; $978C
 
-@loc_978E:
-    lda     timerFast+TIMER_ENEMY,x ; $978E
+@hidden:
+    lda     timerFast+TIMER_ENEMY,x ; $978E  time to come up?
     bne     @done                   ; $9791
-    lda     rng+1,x                 ; $9793
-    lsr     a                       ; $9796
-    adc     #$40                    ; $9797
-    adc     objXVelocity            ; $9799
+    lda     rng+1,x                 ; $9793  X = screen's left edge + $40
+    lsr     a                       ; $9796  + 0-127 + 3 x Link's X
+    adc     #$40                    ; $9797  velocity: ahead of where he
+    adc     objXVelocity            ; $9799  is heading
     adc     objXVelocity            ; $979B
     adc     objXVelocity            ; $979D
     adc     scrollX                 ; $979F
@@ -1700,21 +1717,21 @@ RockThrower_Ai:
     lda     scrollXHi               ; $97A5
     adc     #$00                    ; $97A8
     sta     objXHi+1,x              ; $97AA
-    pla                             ; $97AC
+    pla                             ; $97AC  wait 36-67 frames (from X)
     and     #$1F                    ; $97AD
     adc     #$24                    ; $97AF
 
-@loc_97B1:
+@setTimer:
     sta     timerFast+TIMER_ENEMY,x ; $97B1
-    inc     enemyAiState,x          ; $97B4
+    inc     enemyAiState,x          ; $97B4  next state
 
 @done:
     rts                             ; $97B6
 
-@loc_97B7:
-    lda     timerFast+TIMER_ENEMY,x ; $97B7
-    beq     @loc_97C5               ; $97BA
-    lda     objY+1,x                ; $97BC
+@rising:
+    lda     timerFast+TIMER_ENEMY,x ; $97B7  wait over?
+    beq     @nextState              ; $97BA
+    lda     objY+1,x                ; $97BC  rise to Y $4C
     cmp     #$4C                    ; $97BE
     bcc     @done2                  ; $97C0
     dec     objY+1,x                ; $97C2
@@ -1722,41 +1739,41 @@ RockThrower_Ai:
 @done2:
     rts                             ; $97C4
 
-@loc_97C5:
+@nextState:
     inc     enemyAiState,x          ; $97C5
     rts                             ; $97C7
 
-@loc_97C8:
-    lda     objY+1,x                ; $97C8
+@risingMore:
+    lda     objY+1,x                ; $97C8  rise to Y $45
     cmp     #$45                    ; $97CA
-    bcc     @loc_97D1               ; $97CC
+    bcc     @isUp                   ; $97CC
     dec     objY+1,x                ; $97CE
     rts                             ; $97D0
 
-@loc_97D1:
-    lda     rng+1,x                 ; $97D1
+@isUp:
+    lda     rng+1,x                 ; $97D1  up for 64-127 frames
     lsr     a                       ; $97D4
 
-@loc_97D5:
-    ora     #$40                    ; $97D5
-    jmp     @loc_97B1               ; $97D7
+@set40:
+    ora     #$40                    ; $97D5  (or, from @up, hidden for 64)
+    jmp     @setTimer               ; $97D7
 
-@loc_97DA:
-    lda     timerFast+TIMER_ENEMY,x ; $97DA
-    beq     @loc_97D5               ; $97DD
-    cmp     #$11                    ; $97DF
-    bcc     @loc_97F0               ; $97E1
-    lda     objState+1,x            ; $97E3
+@up:
+    lda     timerFast+TIMER_ENEMY,x ; $97DA  time up: hide for 64 frames
+    beq     @set40                  ; $97DD
+    cmp     #$11                    ; $97DF  last 16 frames: sink
+    bcc     @sink                   ; $97E1
+    lda     objState+1,x            ; $97E3  else throw, if not throwing
     bne     @done3                  ; $97E5
-    inc     a:objState+1,x          ; $97E7
-    lda     #$10                    ; $97EA
+    inc     a:objState+1,x          ; $97E7  wind up
+    lda     #$10                    ; $97EA  for 16 frames
     sta     enemyAiVar,x            ; $97EC
 
 @done3:
     rts                             ; $97EF
 
-@loc_97F0:
-    inc     objY+1,x                ; $97F0
+@sink:
+    inc     objY+1,x                ; $97F0  1 pixel down
     rts                             ; $97F2
 
 ; ---------------------------------------------------------------------------
@@ -2470,60 +2487,81 @@ Enemy_Fall_Bank2:
 ; ---------------------------------------------------------------------------
 ; OrangeLizalfos_Ai
 ;
-; Orange Lizalfos ($1B): like Lizalfos_Ai, with a double thrust (its
-; weapon is tested at the second and fifth frames of the attack).
+; Orange Lizalfos ($1B): as Lizalfos_Guard, with its own attack.  After
+; the 24-frame wind-up (pose 1 low or 4 high, Lizalfos_ChooseGuard) it
+; thrusts (pose 2 or 5) for 12 frames, its weapon tested against Link's
+; shield and body every frame (Projectile_CheckLink), then holds (3 or
+; 6) for 12 frames.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 OrangeLizalfos_Ai:
     jsr     Enemy_Draw              ; $9B56
-    lda     objState+1,x            ; $9B59
-    beq     Lizalfos_GuardFar       ; $9B5B
-    cmp     #$02                    ; $9B5D
-    beq     @loc_9B65               ; $9B5F
+    lda     objState+1,x            ; $9B59  attacking?
+    beq     Lizalfos_GuardFar       ; $9B5B  no
+    cmp     #$02                    ; $9B5D  thrusting (pose 2 or 5)?
+    beq     @thrust                 ; $9B5F
     cmp     #$05                    ; $9B61
-    bne     @loc_9B68               ; $9B63
+    bne     @checkTimer             ; $9B63
 
-@loc_9B65:
-    jsr     Projectile_CheckLink    ; $9B65
+@thrust:
+    jsr     Projectile_CheckLink    ; $9B65  the weapon against Link
 
-@loc_9B68:
-    lda     timerFast+TIMER_ENEMY,x ; $9B68
+@checkTimer:
+    lda     timerFast+TIMER_ENEMY,x ; $9B68  pose over?
     bne     Lizalfos_GuardFar       ; $9B6B
-LizalfosAttackMasks := * + 1
-    inc     objState+1,x            ; $9B6D
+LizalfosAttackPeriods := * + 1
+    inc     objState+1,x            ; $9B6D  next pose
     lda     objState+1,x            ; $9B6F
-    cmp     #$04                    ; $9B71
+    cmp     #$04                    ; $9B71  low attack over?
 
-LizalfosGuardHeights:
+LizalfosRanges:
     beq     Lizalfos_ResetPose      ; $9B73
-    cmp     #$07                    ; $9B75
+    cmp     #$07                    ; $9B75  high attack over?
     bcs     Lizalfos_ResetPose      ; $9B77
-    lda     #$0C                    ; $9B79
+    lda     #$0C                    ; $9B79  next pose in 12 frames
     sta     timerFast+TIMER_ENEMY,x ; $9B7B
 
 Lizalfos_GuardFar:
     jmp     Lizalfos_GuardFar2      ; $9B7E
 
 Lizalfos_ResetPose:
-    lda     #$00                    ; $9B81
+    lda     #$00                    ; $9B81  attack over
     sta     objState+1,x            ; $9B83
 
 Lizalfos_GuardFar2:
     jmp     Lizalfos_Guard          ; $9B85
+    ; LizalfosAttackPeriods for types $1A-$1C (indexed from $9B6E).
     .byte   $3F, $1F, $3F                                                   ; $9B88
 
+; Lizalfos: X velocity toward Link (0 right, 1 left), doubled; the next
+; bytes are LizalfosRanges for types $1A-$1C ($18, $18, $40).
 LizalfosSpeeds:
     .byte   $08, $F8, $18, $18, $40                                         ; $9B8B
 
 ; ---------------------------------------------------------------------------
 ; Lizalfos_Ai
 ;
-; Lizalfos ($1A red, $1C blue): stand off from Link like Moblins and
-; guard at the height he attacks (on B, 3 times in 4) or jumps; attack
-; (Lizalfos_Attack), the blue one throwing its weapon (projectile type 7).
+; Lizalfos ($1A red, $1C blue): plays out its attack (Lizalfos_Attack),
+; then Lizalfos_Guard, shared with the orange Lizalfos.  Like a fighter
+; (Fighter_Move) it keeps a distance r from Link (LizalfosRanges: $18,
+; $18, $40 for red, orange, blue), walking toward him at 1 pixel per
+; frame and attacking as it comes within $50 pixels.  Near, it holds,
+; swaying or keeping pace with him, and attacks every 64 frames (32 for
+; the orange; LizalfosAttackPeriods).  (A quarter of the time it sets the
+; count to $C0, as the fighters set $E0 for a quicker attack; but $C0 is
+; a multiple of either period, so nothing changes.)
 ;
-; Status:  provisional
+; It guards with its shield (guard 0 low or 1 high, enemyAiVar;
+; Enemy_CheckProjectileHitsSpecial): when Link presses B, 3 times in 4,
+; at the height of his stroke (high standing, low crouching); and while
+; he jumps, high if he is more than 10 pixels above it, else low.  So
+; strokes at one height clink off, and only a change of height, the
+; quarter of the time it doesn't follow, gets through.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Lizalfos_Ai:
     jsr     Enemy_Draw              ; $9B90
@@ -2531,150 +2569,153 @@ Lizalfos_Ai:
 
 Lizalfos_Guard:
     ldy     enemyType,x             ; $9B96
-    lda     LizalfosGuardHeights,y  ; $9B98
+    lda     LizalfosRanges,y        ; $9B98  r
     sta     ram_05E4                ; $9B9B
     asl     a                       ; $9B9E
-    sta     ram_05E5                ; $9B9F
-    lda     joypadPressed           ; $9BA2
+    sta     ram_05E5                ; $9B9F  2r
+    lda     joypadPressed           ; $9BA2  B just pressed,
     and     #$40                    ; $9BA4
-    beq     @loc_9BB4               ; $9BA6
-    lda     rng+1,x                 ; $9BA8
+    beq     @testGuard              ; $9BA6
+    lda     rng+1,x                 ; $9BA8  3 times in 4:
     and     #$03                    ; $9BAB
-    beq     @loc_9BB4               ; $9BAD
-    lda     linkStanding            ; $9BAF
-    sta     enemyAiVar,x            ; $9BB1
+    beq     @testGuard              ; $9BAD
+    lda     linkStanding            ; $9BAF  guard at his stroke's height
+    sta     enemyAiVar,x            ; $9BB1  (1 high, 0 low)
 
-@loc_9BB4:
-    jsr     Enemy_CheckProjectileHitsSpecial ; $9BB4
+@testGuard:
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9BB4  (a clink returns from here)
     jsr     Enemy_UpdateBgCollision ; $9BB7
+    ; Enemy_UpdateCommon, without drawing it again.
     ldy     #$01                    ; $9BBA
     inx                             ; $9BBC
     jsr     Obj_ComputeScreenPos    ; $9BBD
     ldx     currentObject           ; $9BC0
-    lda     objYHi+1,x              ; $9BC2
+    lda     objYHi+1,x              ; $9BC2  fallen below the screen?
     cmp     #$02                    ; $9BC4
-    bcc     @loc_9BCB               ; $9BC6
+    bcc     @onScreen               ; $9BC6
 ; (code below not executed in the test movies)
     jmp     Enemy_Despawn           ; $9BC8
 ; (end of code not executed in the test movies)
 
-@loc_9BCB:
-    lda     drawOffscreen+1         ; $9BCB
-    and     #$FC                    ; $9BCD
-    beq     @loc_9BDD               ; $9BCF
+@onScreen:
+    lda     drawOffscreen+1         ; $9BCB  off screen: no hit tests,
+    and     #$FC                    ; $9BCD  despawn if far
+    beq     @hitTests               ; $9BCF
     lda     objCollision+1,x        ; $9BD1
     and     #$0F                    ; $9BD3
     sta     objCollision+1,x        ; $9BD5
     jsr     Enemy_DespawnIfFar      ; $9BD7
-    jmp     @loc_9BE6               ; $9BDA
+    jmp     @move                   ; $9BDA
 
-@loc_9BDD:
+@hitTests:
     jsr     Enemy_CheckProjectileHits ; $9BDD
     jsr     Enemy_CheckSwordHit     ; $9BE0
     jsr     Enemy_CheckLinkContact  ; $9BE3
 
-@loc_9BE6:
+@move:
     jsr     Enemy_HurtLinkOnContact ; $9BE6
-    jsr     Enemy_MoveYAndFall      ; $9BE9
+    jsr     Enemy_MoveYAndFall      ; $9BE9  fall
     lda     objCollision+1,x        ; $9BEC
-    and     #$04                    ; $9BEE
-    beq     @loc_9BF5               ; $9BF0
+    and     #$04                    ; $9BEE  on a floor?
+    beq     @knockBack              ; $9BF0
     jsr     Enemy_Land              ; $9BF2
 
-@loc_9BF5:
-    jsr     Lizalfos_KnockBack      ; $9BF5
-    jsr     Enemy_FaceLink          ; $9BF8
+@knockBack:
+    jsr     Lizalfos_KnockBack      ; $9BF5  move (or be knocked back and stop)
+    jsr     Enemy_FaceLink          ; $9BF8  temp15 = dx, y = 0 if right
     lda     temp15                  ; $9BFB
     clc                             ; $9BFD
-    adc     ram_05E4                ; $9BFE
+    adc     ram_05E4                ; $9BFE  -r <= dx < r?
     cmp     ram_05E5                ; $9C01
-    bcc     Lizalfos_ChooseGuard    ; $9C04
+    bcc     Lizalfos_ChooseGuard    ; $9C04  near: hold and attack
     lda     temp15                  ; $9C06
     clc                             ; $9C08
-    adc     #$50                    ; $9C09
+    adc     #$50                    ; $9C09  within $50?
     cmp     #$A0                    ; $9C0B
-    bcs     @loc_9C15               ; $9C0D
-    jsr     Lizalfos_ChooseGuard    ; $9C0F
-    jsr     Enemy_FaceLink          ; $9C12
+    bcs     @walk                   ; $9C0D
+    jsr     Lizalfos_ChooseGuard    ; $9C0F  attack as it comes
+    jsr     Enemy_FaceLink          ; $9C12  (y again)
 
-@loc_9C15:
-    lda     LizalfosSpeeds,y        ; $9C15
+@walk:
+    lda     LizalfosSpeeds,y        ; $9C15  1 px/frame toward Link
     asl     a                       ; $9C18
     sta     objXVelocity+1,x        ; $9C19
     rts                             ; $9C1B
 
+; Near Link: guard against his jump, attack on time, else hold (as
+; Fighter_Stop).
 Lizalfos_ChooseGuard:
-    lda     objState+1,x            ; $9C1C
-    bne     @loc_9C66               ; $9C1E
-    lda     linkJumpState           ; $9C20
-    beq     @loc_9C34               ; $9C23
-    ldy     #$01                    ; $9C25
-    lda     objY                    ; $9C27
+    lda     objState+1,x            ; $9C1C  attacking?
+    bne     @hold                   ; $9C1E  yes
+    lda     linkJumpState           ; $9C20  Link in the air?
+    beq     @countFrame             ; $9C23
+    ldy     #$01                    ; $9C25  high guard if his Y + 10 is
+    lda     objY                    ; $9C27  above its Y,
     adc     #$0A                    ; $9C29
     cmp     objY+1,x                ; $9C2B
-    bcc     @loc_9C30               ; $9C2D
-    dey                             ; $9C2F
+    bcc     @setGuard               ; $9C2D
+    dey                             ; $9C2F  else low
 
-@loc_9C30:
+@setGuard:
     tya                             ; $9C30
     sta     enemyAiVar,x            ; $9C31
 
-@loc_9C34:
-    inc     enemyAiState,x          ; $9C34
+@countFrame:
+    inc     enemyAiState,x          ; $9C34  attack every period
     ldy     enemyType,x             ; $9C36
-    lda     LizalfosAttackMasks,y   ; $9C38
+    lda     LizalfosAttackPeriods,y ; $9C38
     and     enemyAiState,x          ; $9C3B
-    bne     @loc_9C66               ; $9C3D
-    lda     rng+1,x                 ; $9C3F
+    bne     @hold                   ; $9C3D  not yet
+    lda     rng+1,x                 ; $9C3F  a quarter of the time,
     and     #$03                    ; $9C42
-    bne     @loc_9C4A               ; $9C44
-    lda     #$C0                    ; $9C46
-    sta     enemyAiState,x          ; $9C48
+    bne     @startAttack            ; $9C44
+    lda     #$C0                    ; $9C46  count = $C0 (no effect: a
+    sta     enemyAiState,x          ; $9C48  multiple of the period)
 
-@loc_9C4A:
-    ldy     #$01                    ; $9C4A
+@startAttack:
+    ldy     #$01                    ; $9C4A  pose 1: low,
     lda     enemyType,x             ; $9C4C
-    cmp     #$1B                    ; $9C4E
-    bne     @loc_9C5F               ; $9C50
-    lda     rng+1,x                 ; $9C52
+    cmp     #$1B                    ; $9C4E  except the orange Lizalfos:
+    bne     @setPose                ; $9C50
+    lda     rng+1,x                 ; $9C52  half the time high,
     lsr     a                       ; $9C55
-    bcs     @loc_9C5C               ; $9C56
-    lda     linkStanding            ; $9C58
-    bne     @loc_9C5F               ; $9C5A
+    bcs     @high                   ; $9C56
+    lda     linkStanding            ; $9C58  half the time away from his
+    bne     @setPose                ; $9C5A  shield (low if he stands)
 
-@loc_9C5C:
-    iny                             ; $9C5C
+@high:
+    iny                             ; $9C5C  pose 4: high
     iny                             ; $9C5D
     iny                             ; $9C5E
 
-@loc_9C5F:
+@setPose:
     sty     objState+1,x            ; $9C5F
-    lda     #$18                    ; $9C61
+    lda     #$18                    ; $9C61  wind up for 24 frames
     sta     timerFast+TIMER_ENEMY,x ; $9C63
 
-@loc_9C66:
-    lda     #$00                    ; $9C66
+@hold:
+    lda     #$00                    ; $9C66  stop
     sta     objXVelocity+1,x        ; $9C68
-    lda     objCollision            ; $9C6A
+    lda     objCollision            ; $9C6A  Link against a wall: stay
     and     #$03                    ; $9C6C
     bne     @done                   ; $9C6E
-    lda     linkDirHeld             ; $9C70
-    beq     @loc_9C79               ; $9C73
+    lda     linkDirHeld             ; $9C70  Link walking: keep pace,
+    beq     @sway                   ; $9C73
     lda     objXVelocity            ; $9C75
-    bne     @loc_9C84               ; $9C77
+    bne     @setSpeed               ; $9C77
 
-@loc_9C79:
-    ldy     #$04                    ; $9C79
+@sway:
+    ldy     #$04                    ; $9C79  else sway, every 64 frames
     lda     frameCounter            ; $9C7B
     and     #$40                    ; $9C7D
-    bne     @loc_9C83               ; $9C7F
+    bne     @swayDir                ; $9C7F
     ldy     #$FC                    ; $9C81
 
-@loc_9C83:
+@swayDir:
     tya                             ; $9C83
 
-@loc_9C84:
-    sta     objXVelocity+1,x        ; $9C84
+@setSpeed:
+    sta     objXVelocity+1,x        ; $9C84  halved, keeping the sign
     asl     a                       ; $9C86
     ror     objXVelocity+1,x        ; $9C87
 
@@ -2685,6 +2726,7 @@ Lizalfos_ChooseGuard:
     .byte   $05, $B4, $60, $B9, $8A, $9B, $95, $71, $60, $A9, $00, $95, $71, $BD, $04, $05; $9C9A
     .byte   $D0, $0D, $F6, $AF, $A9, $80, $9D, $04, $05, $B5, $60, $49, $03, $95, $60; $9CAA
 
+; Blue Lizalfos' thrown weapon: X offset by facing (1: +$10, 2: -8).
 LizalfosShotXOffsets:
     .byte   $60                                                             ; $9CB9
     .byte   $10                                                             ; $9CBA
@@ -2695,50 +2737,56 @@ LizalfosShotXHiOffsets:
 ; ---------------------------------------------------------------------------
 ; Lizalfos_Attack
 ;
-; Advance a Lizalfos' attack (objState), testing its weapon against Link's
-; shield and body; the blue Lizalfos throws it (projectile type 7).
+; Play out a red or blue Lizalfos' attack.  After the 24-frame wind-up
+; (pose 1), every 5 frames the pose advances: pose 2 is the thrust, its
+; weapon drawn at once and tested against Link like a projectile
+; (Projectile_CheckLinkReflect); the attack ends at pose 4.  The blue
+; Lizalfos throws its weapon at pose 2 instead and ends there: projectile
+; type 7, 2 pixels per frame straight ahead, from 16 pixels right (facing
+; right) or 8 left of it (LizalfosShotXOffsets).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Lizalfos_Attack:
-    lda     objState+1,x            ; $9CBE
+    lda     objState+1,x            ; $9CBE  attacking?
     beq     @done                   ; $9CC0
-    lda     timerFast+TIMER_ENEMY,x ; $9CC2
+    lda     timerFast+TIMER_ENEMY,x ; $9CC2  pose over?
     bne     @done                   ; $9CC5
-    inc     objState+1,x            ; $9CC7
+    inc     objState+1,x            ; $9CC7  next pose
     lda     objState+1,x            ; $9CC9
-    cmp     #$04                    ; $9CCB
-    beq     @loc_9D08               ; $9CCD
-    cmp     #$02                    ; $9CCF
-    bne     @loc_9D02               ; $9CD1
-    jsr     Enemy_Draw              ; $9CD3
-    jsr     Projectile_CheckLinkReflect ; $9CD6
+    cmp     #$04                    ; $9CCB  over?
+    beq     @end                    ; $9CCD
+    cmp     #$02                    ; $9CCF  the thrust?
+    bne     @nextIn5                ; $9CD1
+    jsr     Enemy_Draw              ; $9CD3  draw the weapon now,
+    jsr     Projectile_CheckLinkReflect ; $9CD6  and test it
     lda     enemyType,x             ; $9CD9
-    cmp     #$1C                    ; $9CDB
-    bne     @loc_9D02               ; $9CDD
-    jsr     Enemy_FireProjectile    ; $9CDF
-    bcs     @loc_9D02               ; $9CE2
-    ldx     objFacing+7,y           ; $9CE4
+    cmp     #$1C                    ; $9CDB  the blue Lizalfos
+    bne     @nextIn5                ; $9CDD
+    jsr     Enemy_FireProjectile    ; $9CDF  throws it:
+    bcs     @nextIn5                ; $9CE2
+    ldx     objFacing+7,y           ; $9CE4  from ahead of it
     lda     a:objX+7,y              ; $9CE6
     adc     LizalfosShotXOffsets,x  ; $9CE9
     sta     a:objX+7,y              ; $9CEC
     lda     a:objXHi+7,y            ; $9CEF
     adc     LizalfosShotXHiOffsets,x ; $9CF2
     sta     a:objXHi+7,y            ; $9CF5
-    lda     #$07                    ; $9CF8
+    lda     #$07                    ; $9CF8  projectile type 7
     sta     a:objState+7,y          ; $9CFA
     ldx     currentObject           ; $9CFD
-    jmp     @loc_9D08               ; $9CFF
+    jmp     @end                    ; $9CFF  and the attack is over
 
-@loc_9D02:
-    lda     #$05                    ; $9D02
+@nextIn5:
+    lda     #$05                    ; $9D02  next pose in 5 frames
     sta     timerFast+TIMER_ENEMY,x ; $9D04
 
 @done:
     rts                             ; $9D07
 
-@loc_9D08:
-    lda     #$00                    ; $9D08
+@end:
+    lda     #$00                    ; $9D08  attack over
     sta     objState+1,x            ; $9D0A
     rts                             ; $9D0C
 ; (unreferenced: $9D0D-$9D12, 6 bytes)
@@ -2747,109 +2795,124 @@ Lizalfos_Attack:
 ; ---------------------------------------------------------------------------
 ; Lizalfos_KnockBack
 ;
-; While knocked back (enemyKnockBack), move by the knockback instead of the AI.
+; Move a Lizalfos by its X velocity unless at a wall (Enemy_Walk_Bank2);
+; while it is knocked back, move it by enemyKnockBack instead, which
+; shrinks by 1/16 pixel per frame toward 0, and return from
+; Lizalfos_Guard too, skipping the rest of the AI.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Lizalfos_KnockBack:
     lda     enemyKnockBack,x        ; $9D13
-    beq     @loc_9D27               ; $9D16
-    dec     enemyKnockBack,x        ; $9D18
-    bpl     @loc_9D23               ; $9D1B
+    beq     @walk                   ; $9D16  not knocked back
+    dec     enemyKnockBack,x        ; $9D18  shrink toward 0
+    bpl     @knockedBack            ; $9D1B
     inc     enemyKnockBack,x        ; $9D1D
     inc     enemyKnockBack,x        ; $9D20
 
-@loc_9D23:
-    sta     objXVelocity+1,x        ; $9D23
-    pla                             ; $9D25
+@knockedBack:
+    sta     objXVelocity+1,x        ; $9D23  move by it,
+    pla                             ; $9D25  and return from Lizalfos_Guard
     pla                             ; $9D26
 
-@loc_9D27:
+@walk:
+; RockThrower_Draw: arm X offsets by throw phase (+2 facing right), from
+; the jmp's high byte: $08, $FC, $FC, then $08 (RockThrowerRockYOffsets).
 RockThrowerDrawTiles := * + 2
     jmp     Enemy_Walk_Bank2        ; $9D27
     .byte   $08, $FC, $FC                                                   ; $9D2A
 
+; RockThrower_Draw: arm Y from its Y by throw step (1: -16, 2: -13).
 RockThrowerRockYOffsets:
     .byte   $08, $F0                                                        ; $9D2D
 
+; RockThrower_Draw: the rock's X from the arm's, by facing (1: -6, 2: +6).
 RockThrowerRockXOffsets:
     .byte   $F3, $FA, $06                                                   ; $9D2F
 
 ; ---------------------------------------------------------------------------
 ; RockThrower_Draw
 ;
-; Draw enemy $1D of East Hyrule.
+; Draw a rock thrower behind the background (priority bit), so that the
+; fence hides it: a pair of sprites from sramEnemyTiles entry $2C.  While
+; it throws (objState+1 = 1, 2) it adds its arm, tile $23, at Y +
+; RockThrowerRockYOffsets (wind-up: 16 above; follow-through: 13
+; above), mirrored and flipped in the follow-through, shifted by
+; RockThrowerDrawTiles (doubled in the wind-up's last 7 frames and in
+; the follow-through);
+; in the wind-up also the rock in its hand, tile $AE, beside the arm.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RockThrower_Draw:
-    lda     temp3                   ; $9D32
+    lda     temp3                   ; $9D32  behind the background
     ora     #$20                    ; $9D34
     sta     temp3                   ; $9D36
-    ldx     #$2C                    ; $9D38
+    ldx     #$2C                    ; $9D38  entry $2C
     jsr     Sprite_DrawEnemyPairKeepX ; $9D3A
-    lda     drawOffscreen+1         ; $9D3D
-    bne     @loc_9DA9               ; $9D3F
-    lda     objState+1,x            ; $9D41
-    beq     @loc_9DA9               ; $9D43
-    tax                             ; $9D45
-    lda     #$23                    ; $9D46
+    lda     drawOffscreen+1         ; $9D3D  partly off screen: no arm
+    bne     @done                   ; $9D3F
+    lda     objState+1,x            ; $9D41  throwing?
+    beq     @done                   ; $9D43
+    tax                             ; $9D45  x = throw step (1, 2)
+    lda     #$23                    ; $9D46  the arm
     sta     oamBuffer+1,y           ; $9D48
-    lda     temp0                   ; $9D4B
+    lda     temp0                   ; $9D4B  Y by step
     adc     RockThrowerRockYOffsets,x ; $9D4D
     sta     oamBuffer,y             ; $9D50
-    lda     oamBuffer - 6,y         ; $9D53
+    lda     oamBuffer - 6,y         ; $9D53  the body's attributes,
     cpx     #$02                    ; $9D56
-    bne     @loc_9D5C               ; $9D58
-    eor     #$C0                    ; $9D5A
+    bne     @setAttr                ; $9D58
+    eor     #$C0                    ; $9D5A  flipped both ways in step 2
 
-@loc_9D5C:
-    sta     oamBuffer+2,y           ; $9D5C
+@setAttr:
+    sta     oamBuffer+2,y           ; $9D5C  (arm and rock)
     sta     oamBuffer+6,y           ; $9D5F
-    lda     temp2                   ; $9D62
-    lsr     a                       ; $9D64
-    bne     @loc_9D69               ; $9D65
+    lda     temp2                   ; $9D62  facing right: the second pair
+    lsr     a                       ; $9D64  of offsets
+    bne     @armX                   ; $9D65
     inx                             ; $9D67
     inx                             ; $9D68
 
-@loc_9D69:
+@armX:
     stx     temp14                  ; $9D69
     sty     temp15                  ; $9D6B
-    lda     RockThrowerDrawTiles,x  ; $9D6D
-    cpx     #$01                    ; $9D70
-    beq     @loc_9D78               ; $9D72
+    lda     RockThrowerDrawTiles,x  ; $9D6D  arm X offset
+    cpx     #$01                    ; $9D70  wind-up (either facing):
+    beq     @windUp                 ; $9D72
     cpx     #$03                    ; $9D74
-    bne     @loc_9D81               ; $9D76
+    bne     @double                 ; $9D76
 
-@loc_9D78:
-    ldx     currentObject           ; $9D78
-    ldy     enemyAiVar,x            ; $9D7A
+@windUp:
+    ldx     currentObject           ; $9D78  its first 10 frames:
+    ldy     enemyAiVar,x            ; $9D7A  as is
     cpy     #$07                    ; $9D7D
-    bcs     @loc_9D82               ; $9D7F
+    bcs     @addX                   ; $9D7F
 
-@loc_9D81:
-    asl     a                       ; $9D81
+@double:
+    asl     a                       ; $9D81  else doubled
 
-@loc_9D82:
+@addX:
     clc                             ; $9D82
     adc     temp1                   ; $9D83
     ldy     temp15                  ; $9D85
     sta     oamBuffer+3,y           ; $9D87
-    lda     temp14                  ; $9D8A
+    lda     temp14                  ; $9D8A  wind-up: the rock in hand
     and     #$01                    ; $9D8C
-    beq     @loc_9DA9               ; $9D8E
-    ldx     temp2                   ; $9D90
+    beq     @done                   ; $9D8E
+    ldx     temp2                   ; $9D90  beside the arm
     lda     oamBuffer+3,y           ; $9D92
     clc                             ; $9D95
     adc     RockThrowerRockXOffsets,x ; $9D96
     sta     oamBuffer+7,y           ; $9D99
-    lda     #$AE                    ; $9D9C
+    lda     #$AE                    ; $9D9C  tile $AE
     sta     oamBuffer+5,y           ; $9D9E
-    lda     oamBuffer,y             ; $9DA1
+    lda     oamBuffer,y             ; $9DA1  3 above the arm
     sbc     #$03                    ; $9DA4
     sta     oamBuffer+4,y           ; $9DA6
 
-@loc_9DA9:
+@done:
     ldx     currentObject           ; $9DA9
     rts                             ; $9DAB
 
@@ -3108,125 +3171,138 @@ Scorpion_Draw:
 @done:
     ldx     currentObject           ; $9ED2
 
+; Lizalfos_Draw: weapon X offset by pose 1-3 (from the rts), facing left
+; then right: 8, -6, -2, -8, 6, 2 (the last read from LizalfosFrames).
 LizalfosDrawTiles:
     rts                             ; $9ED4
     .byte   $08, $FA, $FE, $F8, $06                                         ; $9ED5
 
+; Lizalfos_Draw: weapon entry (sramEnemyTiles) by pose 1-3: red and blue,
+; then (+3) orange.
 LizalfosFrames:
     .byte   $02, $34, $34, $36, $38, $3A, $3A                               ; $9EDA
 
 ; ---------------------------------------------------------------------------
 ; Lizalfos_Draw
 ;
-; Draw a Lizalfos and its weapon.
+; Draw a Lizalfos: its body, two pairs of sprites from sramEnemyTiles
+; entry $24 (shield high, guard 1) or $2C (shield low), 4 further on
+; alternate 8-frame periods while it walks on the ground; and in an attack
+; (pose p, 1-3, or 4-6 for the orange Lizalfos, drawn 8 lower as p - 3)
+; its weapon, a pair from entry LizalfosFrames[p] ($34, $34, $36; the
+; orange's $38, $3A, $3A), shifted by LizalfosDrawTiles[p] (8, -6, -2
+; facing left; -8, 6, 2 facing right), doubled for the red Lizalfos and
+; for the others while their timer is 3-8 (the lunge).  For the red and
+; blue, pose 2 is drawn mirrored and upside down and pose 3 13 pixels
+; lower.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Lizalfos_Draw:
-    lda     objCollision+1,x        ; $9EE1
+    lda     objCollision+1,x        ; $9EE1  keep the floor bit
     sta     drawScratch             ; $9EE3
     lda     objXVelocity+1,x        ; $9EE5
     pha                             ; $9EE7
-    lda     enemyAiVar,x            ; $9EE8
+    lda     enemyAiVar,x            ; $9EE8  shield high: entry $24,
     ldx     #$24                    ; $9EEB
     asl     a                       ; $9EED
-    bne     @loc_9EF2               ; $9EEE
-    ldx     #$2C                    ; $9EF0
+    bne     @walkFrame              ; $9EEE
+    ldx     #$2C                    ; $9EF0  low: $2C
 
-@loc_9EF2:
-    pla                             ; $9EF2
-    beq     @loc_9F05               ; $9EF3
-    lda     drawScratch             ; $9EF5
+@walkFrame:
+    pla                             ; $9EF2  moving,
+    beq     @drawBody               ; $9EF3
+    lda     drawScratch             ; $9EF5  on the ground,
     and     #$04                    ; $9EF7
-    beq     @loc_9F05               ; $9EF9
-    lda     frameCounter            ; $9EFB
+    beq     @drawBody               ; $9EF9
+    lda     frameCounter            ; $9EFB  every other 8 frames:
     and     #$08                    ; $9EFD
-    bne     @loc_9F05               ; $9EFF
-    inx                             ; $9F01
+    bne     @drawBody               ; $9EFF
+    inx                             ; $9F01  the walking frame (+4)
     inx                             ; $9F02
     inx                             ; $9F03
     inx                             ; $9F04
 
-@loc_9F05:
-    jsr     Sprite_DrawEnemyPair    ; $9F05
-    jsr     Sprite_DrawEnemyPairKeepX ; $9F08
-    lda     drawOffscreen+1         ; $9F0B
+@drawBody:
+    jsr     Sprite_DrawEnemyPair    ; $9F05  top pair
+    jsr     Sprite_DrawEnemyPairKeepX ; $9F08  bottom pair
+    lda     drawOffscreen+1         ; $9F0B  partly off screen: no weapon
     and     #$FC                    ; $9F0D
     bne     @done                   ; $9F0F
     lda     enemyType,x             ; $9F11
     sta     drawScratch             ; $9F13
-    lda     objY+1,x                ; $9F15
+    lda     objY+1,x                ; $9F15  weapon Y: its Y,
     sta     temp0                   ; $9F17
-    lda     objState+1,x            ; $9F19
-    beq     @done                   ; $9F1B
+    lda     objState+1,x            ; $9F19  attacking?
+    beq     @done                   ; $9F1B  no: no weapon
     tax                             ; $9F1D
-    cpx     #$04                    ; $9F1E
-    bcc     @loc_9F2B               ; $9F20
-    dex                             ; $9F22
+    cpx     #$04                    ; $9F1E  poses 4-6 (orange, high):
+    bcc     @weaponX                ; $9F20
+    dex                             ; $9F22  as 1-3,
     dex                             ; $9F23
     dex                             ; $9F24
-    lda     temp0                   ; $9F25
+    lda     temp0                   ; $9F25  8 lower (carry set: 9)
     adc     #$08                    ; $9F27
     sta     temp0                   ; $9F29
 
-@loc_9F2B:
-    stx     temp15                  ; $9F2B
-    lda     temp2                   ; $9F2D
-    lsr     a                       ; $9F2F
-    bcc     @loc_9F35               ; $9F30
+@weaponX:
+    stx     temp15                  ; $9F2B  p, 1-3
+    lda     temp2                   ; $9F2D  facing right: the second
+    lsr     a                       ; $9F2F  three offsets
+    bcc     @offset                 ; $9F30
     inx                             ; $9F32
     inx                             ; $9F33
     inx                             ; $9F34
 
-@loc_9F35:
-    lda     LizalfosDrawTiles,x     ; $9F35
+@offset:
+    lda     LizalfosDrawTiles,x     ; $9F35  X offset of the weapon
     sty     temp7                   ; $9F38
     ldx     currentObject           ; $9F3A
     ldy     enemyType,x             ; $9F3C
-    cpy     #$1A                    ; $9F3E
-    beq     @loc_9F4D               ; $9F40
-    ldy     timerFast+TIMER_ENEMY,x ; $9F42
-    cpy     #$03                    ; $9F45
-    bcc     @loc_9F4E               ; $9F47
+    cpy     #$1A                    ; $9F3E  red: doubled
+    beq     @double                 ; $9F40
+    ldy     timerFast+TIMER_ENEMY,x ; $9F42  others: doubled while the
+    cpy     #$03                    ; $9F45  timer is 3-8
+    bcc     @addOffset              ; $9F47
     cpy     #$09                    ; $9F49
-    bcs     @loc_9F4E               ; $9F4B
+    bcs     @addOffset              ; $9F4B
 
-@loc_9F4D:
+@double:
     asl     a                       ; $9F4D
 
-@loc_9F4E:
+@addOffset:
     clc                             ; $9F4E
     adc     temp1                   ; $9F4F
     sta     temp1                   ; $9F51
     ldy     temp7                   ; $9F53
     ldx     temp15                  ; $9F55
-    lda     drawScratch             ; $9F57
+    lda     drawScratch             ; $9F57  the orange Lizalfos:
     cmp     #$1B                    ; $9F59
-    beq     @loc_9F7A               ; $9F5B
-    cpx     #$03                    ; $9F5D
-    bne     @loc_9F67               ; $9F5F
-    lda     temp0                   ; $9F61
+    beq     @orange                 ; $9F5B  its own tiles
+    cpx     #$03                    ; $9F5D  red, blue pose 3:
+    bne     @pose2                  ; $9F5F
+    lda     temp0                   ; $9F61  13 lower
     adc     #$0D                    ; $9F63
     sta     temp0                   ; $9F65
 
-@loc_9F67:
-    cpx     #$02                    ; $9F67
-    bne     @loc_9F7D               ; $9F69
-    lda     temp2                   ; $9F6B
+@pose2:
+    cpx     #$02                    ; $9F67  pose 2:
+    bne     @drawWeapon             ; $9F69
+    lda     temp2                   ; $9F6B  mirrored,
     eor     #$03                    ; $9F6D
     sta     temp2                   ; $9F6F
-    lda     temp3                   ; $9F71
+    lda     temp3                   ; $9F71  upside down
     ora     #$80                    ; $9F73
     sta     temp3                   ; $9F75
-    jmp     @loc_9F7D               ; $9F77
+    jmp     @drawWeapon             ; $9F77
 
-@loc_9F7A:
-    inx                             ; $9F7A
+@orange:
+    inx                             ; $9F7A  the orange's entries
     inx                             ; $9F7B
     inx                             ; $9F7C
 
-@loc_9F7D:
-    lda     LizalfosFrames,x        ; $9F7D
+@drawWeapon:
+    lda     LizalfosFrames,x        ; $9F7D  weapon entry
     tax                             ; $9F80
     jmp     Sprite_DrawEnemyPairKeepX ; $9F81
 

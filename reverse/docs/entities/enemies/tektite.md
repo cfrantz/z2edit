@@ -42,7 +42,7 @@ down.
    (`Enemy_FireProjectile`, `Projectile_Straight_Bank2`), at the height
    of its top sprite.  In the air that is often away from Link.  When that
    sprite is hidden off screen, the shot starts at Y $F8 and is removed at
-   once.
+   once.  Link's shield destroys the shot (flags $01).
 6. The rest of `Enemy_UpdateCommon` (without drawing it again), and
    `Enemy_HurtLinkOnContact`.
 

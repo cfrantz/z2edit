@@ -29,6 +29,7 @@ lists code oddities with no visible effect.
 | `Bank5_Nmi` | Unlike the game NMI it does not save `a`; harmless, since it returns with a >= $80, which `Main_Loop` never takes for a load request. |
 | `Nmi` | A branch on `ram_0727` whose two outcomes are the next instruction. |
 | `Sword_CheckBlocksInBank` | Checks of the thrust poses (objState 8, 9) whose branches both go to the next instruction. |
+| `Lizalfos_ChooseGuard` | A quarter of the time it sets the attack count to $C0, as `Fighter_Move` sets $E0 for a quicker attack; but $C0 is a multiple of either Lizalfos period, so the next attack comes on time anyway. |
 | `Raft_Wait` | Meant to act every 16th frame, but both branches return, so it does nothing. |
 | `Barba_DrawAndCheck` | A test of `frameCounter` that branches to the next instruction either way. |
 | `Area_Load` | Loads of `temp0` that are overwritten unused. |

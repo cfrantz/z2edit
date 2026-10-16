@@ -46,10 +46,10 @@ the candle for the caves) and logging `enemyType`:
 | $17 | [Boon](enemies/boon.md) | 8 | 50 | 1 | 2 |  | `Boon_Ai` |
 | $18 | [Basilisk](enemies/basilisk.md) | 48 | 50 | 3 | 2 | sword clinks, beam blocked | `Basilisk_Ai` |
 | $19 | [Scorpion](enemies/scorpion.md) | 32 | 150 | 4 | 2 | blocks Link's projectiles | `Scorpion_Ai` |
-| $1A | Red Lizalfos | 48 | 100 | 4 | - | blocks Link's projectiles, immune to SPELL | `Lizalfos_Ai` |
-| $1B | Orange Lizalfos | 32 | 150 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `OrangeLizalfos_Ai` |
-| $1C | Blue Lizalfos | 56 | 200 | 4 | - | blocks Link's projectiles, immune to SPELL | `Lizalfos_Ai` |
-| $1D | Fence Lizalfos | 1 | 50 | 2 | - | blocks Link's projectiles | `RockThrower_Ai` |
+| $1A | [Red Lizalfos](enemies/lizalfos.md) | 48 | 100 | 4 | - | blocks Link's projectiles, immune to SPELL | `Lizalfos_Ai` |
+| $1B | [Orange Lizalfos](enemies/lizalfos.md) | 32 | 150 | 3 | 2 | blocks Link's projectiles, immune to SPELL | `OrangeLizalfos_Ai` |
+| $1C | [Blue Lizalfos](enemies/lizalfos.md) | 56 | 200 | 4 | - | blocks Link's projectiles, immune to SPELL | `Lizalfos_Ai` |
+| $1D | [Fence Lizalfos](enemies/rock-thrower.md) | 1 | 50 | 2 | - | blocks Link's projectiles | `RockThrower_Ai` |
 
 ## Enemies
 
@@ -79,15 +79,15 @@ guards its body against low strokes and projectiles; it can only be hurt
 in the 32 frames when it lowers its guard.  See
 [Scorpion](enemies/scorpion.md).
 
-**Lizalfos** ($1A red, $1B orange, $1C blue; `Lizalfos_Ai`,
-`OrangeLizalfos_Ai`, `Lizalfos_Attack`): fight like Iron Knuckles: they
-keep their distance, guard at the height Link attacks or jumps, and
-attack high or low.  The blue Lizalfos throws its weapon (projectile type
-7); the orange one thrusts twice.  They block the sword beam and fire.
+**Lizalfos** ($1A red, $1B orange, $1C blue): shielded fighters that
+keep their distance and move their guard to wherever Link strikes, so
+that only a change of height gets through; the red thrusts, the orange
+thrusts high or low around Link's shield, the blue throws its weapon.
+See [Lizalfos](enemies/lizalfos.md).
 
-**$1D** (z2edit: Fence Lizalfos; `RockThrower_Ai`): with a single hit
-point, it pops up ahead of where Link is going, throws a rock in an arc
-aimed at him (projectile type 8), and sinks back.
+**Rock thrower** ($1D, z2edit: Fence Lizalfos): peeks over a fence ahead
+of where Link is heading, throws rocks in an arc at him, and ducks back
+down.  See [Rock Thrower](enemies/rock-thrower.md).
 
 ## Projectiles
 

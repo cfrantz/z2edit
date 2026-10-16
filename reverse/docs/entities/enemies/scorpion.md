@@ -12,15 +12,14 @@ when it lowers its guard.
 
 Only bank 2's group has it, in East Hyrule areas $0A, $0C, $12, $13,
 $1E-$20 and the lava cave $3D (location $16), where it sits half sunk in
-the rock.  It blocks
-Link's projectiles (damage bit 5).  It has no spawn routine.
+the rock.  It blocks Link's projectiles (damage bit 5).  It has no spawn routine.
 
 ## Behavior
 
 `Scorpion_Ai` (no `Enemy_SkipAiIfStunned`):
 
 1. `Enemy_Fall_Bank2` (probes, falling, landing).
-2. **Guard.**  Unless its guard is down (`objState+1` = 0), it tests
+2. **Guard.**  While its guard is up (`objState+1` = 0), it tests
    guard 3 (`enemyAiVar`, `Enemy_CheckProjectileHitsSpecial`).  The guard
    is its body, 24 pixels wide, from 16 to 32 pixels below its Y, 4 left
    of its X.  Link's projectiles touching it are destroyed, and a
@@ -36,6 +35,7 @@ Link's projectiles (damage bit 5).  It has no spawn routine.
    it raises its tail for 16 frames (`timerFast+TIMER_ENEMY`).  8 frames
    in, it fires projectile type 4 the way it faces: a fireball with a
    sound, 2 pixels per frame straight (`Projectile_Fireball_Bank2`).
+   Link's shield deflects it (flags $41).
 6. **Pacing** (`Enemy_Pace_Bank2`), as the [Basilisk](basilisk.md):
    back off 1/2 pixel per frame, stand, advance about 1 pixel per frame,
    stand, 64 frames each.  It walks off ledges.
