@@ -44,4 +44,15 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at ${TA/townCode=
     --poke enemyAiState+2=0x80 --poke objState+3=3 --log 2,3 --frames 120
 ```
 
-The turning itself (`Dialog_MaybeTurnToBat`) was not seen.
+The turning: in Saria (`townCode=2`) area 7, Link walked to X $80 and
+pressed B every 10 frames for 1500 frames, talking to whoever came by.
+A type $1A walker (frame 393) and a type $1B (frame 713) turned into
+bats as their conversations closed; the life lady, talked to over and
+over, never did.
+
+```
+BS=""; for k in $(seq 4 10 1500); do BS="$BS --press $k:B:2"; done
+tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at ${TA/townCode=0/townCode=2},areaId=7 \
+    --until currentWorld=1 --after 200 --approach 80 $BS --event MaybeBat=3:B7CC --event Bat=3:B7E0 \
+    --log 9 --frames 1500 --dialog
+```

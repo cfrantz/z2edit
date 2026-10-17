@@ -339,7 +339,7 @@ crystalPlaced           = $078D     ; [6] nonzero once the palace's crystal is p
 keyCount                = $0793     ; number of keys held
 crystalsRemaining       = $0794     ; palaces still to be sealed with a crystal (starts at 6)
 techniques              = $0796     ; sword techniques learned (see TECH_*), and quest flags: bit 0 the river man of Saria will help, bit 1 told to ask Error of Ruto
-townFlags               = $0797     ; [8] per town (townCode): bit 0 the mirror found, bits 3-1 people talked to (Dialog_SetTalked); checked by Dialog_CheckTownFlag
+townFlags               = $0797     ; [8] per town (townCode): bit 0 something examined (Dialog_Examine: Saria's mirror, Nabooru's water), bits 3-1 people talked to (Dialog_SetTalked), bits 7-4 walkers talked to (Dialog_SetWalkerFlag); quest items set bits too (Item_CollectSpecial); checked by Dialog_CheckTownFlag
 continueCount           = $079F     ; times the continue screen has been shown, saved with the game
 secondQuest             = $07A0     ; nonzero for a second quest file (provisional)
 playerName              = $07A1     ; [8] player name, as tile numbers ($F4 = blank)

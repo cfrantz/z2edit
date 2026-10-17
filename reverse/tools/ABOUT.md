@@ -69,7 +69,8 @@ Tools that drive the emulator need the Python extension built with
   solid floor (`--fill`), and holds Link still and invincible while
   logging each enemy's state every frame and hits on event addresses
   (`--projectiles` adds the enemy projectiles in flight).
-  `--map` prints the area's solid tiles.  The enemy pages under
+  `--map` prints the area's solid tiles; `--dialog` prints each town
+  conversation's text with `townFlags` and `techniques`.  The enemy pages under
   `docs/entities/enemies` give the commands they were verified with.
 - `enemy_table.py`: Decodes each enemy group's definition tables (hit
   points, experience, damage, flags, and init/AI/draw routines by name).

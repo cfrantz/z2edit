@@ -78,7 +78,8 @@ so Link can go through it (Up on it, `Link_CheckBg`, `gameMode` $16).
   come back.
 
 The conversation's second text and `Dialog_Reward` then restore his life
-or magic.
+(type $17, `statMeterPending+1`) or magic (type $18, `statMeterPending`).
+B skips her text and goes straight to the refill.
 
 **The door** (`Door_QueueTiles`): two vertical PPU strings of 6 tiles,
 the door's left and right columns (`DoorTilesLeft`, `DoorTilesRight`).
@@ -148,4 +149,17 @@ Town scenarios: see [Townsperson](townsperson.md#verification) for `$TA`.
       --after 200 --approach 90 --press 1:RIGHT:6 --press 10:B:2 $BS --press 450:RIGHT:30 --press 495:UP:50 \
       --event StartDoor=3:989F --event Lady4=3:99EA --event Reward=3:B75B --log 5 --frames 900 \
       --dump 510:sramAreaTiles:D0
+  ```
+
+- **Which meter** (a lady spawned in room $1F, with her house conversation
+  forced: `dialogType` 4, `dialogPerson` 0).  `Dialog_Reward` set
+  `statMeterPending+1` for type $17 ("I CAN RESTORE YOUR LIFE.") and
+  `statMeterPending` for type $18 ("I CAN GIVE YOU MAGIC. COME BACK
+  ANYTIME.").  The B on frame 200 skipped the text; the refill followed on
+  frame 201 and the window closed without another B.
+
+  ```
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $TA,areaId=0x1f --until currentWorld=1 \
+      --after 200 --clear --spawn 0:18:30:B0 --poke dialogPerson=0 --poke dialogType=4 --poke gameFrozen=4 \
+      --press 200:B:2 --event Fill=3:B76F --event Finish=3:B7B2 --frames 300 --dialog
   ```

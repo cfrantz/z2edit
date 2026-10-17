@@ -11,16 +11,9 @@ area bank are documented; what is left is mostly routines still marked
   see docs/world/areas.md, towns.md and palaces.md.
 - 2. Projectiles and boss leftovers (banks 1, 2, 4): confirmed with
   per-frame sprite readings and boss scenarios in their own palaces.
-
-## 3. Town conversations (bank 3)
-
-- `Dialog_TechniqueMan`, `Dialog_Type0E`, `Dialog_SetTalked`,
-  `Dialog_CheckTownFlag`, `Dialog_Mirror`, `Dialog_Type1D` (the town flag
-  that is never set), `Dialog_SleepyCreature`, `Dialog_TextDone`,
-  `Dialog_Reward`, `Dialog_WaitForB`.
-- Untested on the townspeople pages: talking to the Ache from mid-air,
-  the four conversations that wake the Ache and Bit, a walker turning
-  into a bat (`Dialog_MaybeTurnToBat`).
+- 3. Town conversations (bank 3): every handler confirmed by scenarios
+  (`enemy_scenario.py --dialog`) and by both movies replayed with the
+  handlers hooked; see docs/world/towns.md.
 
 ## 4. Title, story, ending and saves (bank 5)
 

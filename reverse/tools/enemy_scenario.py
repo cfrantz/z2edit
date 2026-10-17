@@ -28,6 +28,8 @@ frame's Enemy_RunAi (k = frames since the takeover), and a line for each
 hit of an --event address.  --projectiles adds a line per enemy projectile
 in flight (objState+7 = its type), at the start of each frame.  --shot K saves build/snap/scenario-K.png;
 --dump K:ADDR:LEN prints memory (LEN hex bytes) at frame K.
+--dialog prints each town conversation's text as it starts printing,
+with the person and dialogTextPtr, townFlags and techniques.
 
 Values are hex unless noted.  Velocities are 4.4 fixed point.
 """
@@ -103,6 +105,7 @@ def main():
     p.add_argument("--shot", action="append", type=int, default=[])
     p.add_argument("--dump", action="append", default=[],
                    help="K:ADDR:LEN: print LEN bytes of memory from ADDR (a symbol, NAME+k, or hex) at frame K")
+    p.add_argument("--dialog", action="store_true", help="print each town conversation's text")
     p.add_argument("--out", default=os.path.join(HERE, "../build/snap"))
     a = p.parse_args()
     if (a.frame is None) == (a.until is None):
@@ -172,6 +175,34 @@ def main():
             return cpu
 
         emu.set_exec_callback(Address.Prg(-1 if bank == 7 else bank, int(addr, 16)), on_event)
+
+    def text(ptr):
+        # Letters are tiles $DA-$F3, digits $D0-$D9, space $F4, '.' $CF,
+        # '!' $36, '?' $34;
+        # $FD/$FE end a line, $FF the text (Dialog_PrintText).
+        out = ""
+        for i in range(200):
+            c = rd(ptr + i)
+            if c == 0xFF:
+                break
+            out += ("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[c - 0xDA] if 0xDA <= c <= 0xF3 else
+                    str(c - 0xD0) if 0xD0 <= c <= 0xD9 else
+                    {0xF4: " ", 0xCF: ".", 0x36: "!", 0x34: "?", 0xFD: "/", 0xFE: "//"}.get(c, f"{{{c:02X}}}"))
+        return out
+
+    def on_print(cpu):
+        # Dialog_PrintText's first call for a text: menuTimer still $2A.
+        if state["start"] is not None and rd(eq["menuTimer"]) == 0x2A and rd(eq["dialogColumn"]) == 0 \
+                and rd(eq["dialogLineOffset"]) == 0:
+            x = rd(eq["dialogPerson"])
+            ptr = rd(eq["dialogTextPtr"]) | rd(eq["dialogTextPtr"] + 1) << 8
+            flags = " ".join(f"{rd(eq['townFlags'] + i):02X}" for i in range(8))
+            print(f"{k():5} e{x} DIALOG t={rd(eq['enemyType'] + x):02X} type={rd(eq['dialogType'])} "
+                  f"ptr={ptr:04X} townFlags={flags} techniques={rd(eq['techniques']):02X}: {text(ptr)}")
+        return cpu
+
+    if a.dialog:
+        sym.break_at("Dialog_PrintText", on_print)
 
     rom = open(a.rom, "rb").read()
 

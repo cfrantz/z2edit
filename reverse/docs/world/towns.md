@@ -105,7 +105,8 @@ bank 7) as a state machine on `pauseState`:
    wizard or a teacher).
 4. `Dialog_Reward` follows a gift: the fanfare for a spell or a
    technique, or the refill in the life and magic ladies' houses.
-5. After B, the window is erased (`Menu_CloseRow_Bank3`) and
+5. After B (`Dialog_WaitForB`; no second B when B skipped the text),
+   the window is erased (`Menu_CloseRow_Bank3`) and
    `Dialog_Finish` ends the conversation.  In Saria and Darunia a walking
    townsperson ($19-$1C) may then turn into a bat (`Dialog_MaybeTurnToBat`,
    103 in 256).
@@ -126,24 +127,97 @@ The handlers (`Dialog_*`, with `y` = `townCode`):
 | Type | Handler | |
 |------|---------|-|
 | $0A, $0B | `Dialog_SleepyCreature` | talking Ache and Bit: "ZZZ..." until Link has talked to them 4 times (`townspersonTalkCount`) |
-| $0D | `Dialog_TechniqueMan` | Saria: the river man, once Bagu's note was read; Mido: downstab; elsewhere (not Rauru): upstab |
-| $0E | `Dialog_Type0E` | Mido's man sends Link to Error of Ruto (`techniques` bit 1); Error then tells of the tunnel |
+| $0D | `Dialog_TechniqueMan` | Saria: the river man, once Link has talked to Bagu; Mido: downstab; elsewhere (not Rauru): upstab; a technique already learned: "I CANNOT HELP YOU ANYMORE." |
+| $0E | `Dialog_Error` | Mido's man sends Link to Error of Ruto (`techniques` bit 1); Error then tells of the tunnel; elsewhere the cross is checked, to no effect |
 | $0F | `Dialog_Wizard` | spell `townCode`, if Link has `townCode` + 1 magic containers |
-| $10-$12 | `Dialog_SetTalked` | remember the talk in `townFlags` |
-| $13-$16 | `Dialog_CheckTownFlag` | second text if the town's flag is set (e.g. the mirror); the person leads Link to a door |
+| $10-$12 | `Dialog_SetTalked` | remember the talk in `townFlags` (bits 3-1); only Bagu's ($10, bit 3 of townCode 3) is checked |
+| $13-$16 | `Dialog_CheckTownFlag` | second text if the town's flag is set (see below); the person leads Link to a door |
 | $17, $18 | `Dialog_HouseLady` | the life and magic ladies |
-| $1D-$20 | `Dialog_Type1D` | meant to set a flag, but its index misses its table (nothing set) |
-| $21 | `Dialog_Mirror` | the mirror found (`townFlags` bit 0) |
+| $1D-$20 | `Dialog_SetWalkerFlag` | walkers: set `townFlags` bit 7-4, which no town of theirs checks |
+| $21 | `Dialog_Examine` | signs and things examined: `townFlags` bit 0, Saria's mirror and Nabooru's water |
 | $0C, $19-$1C, $22 | - | one text |
 
 `techniques` holds two quest flags besides the sword techniques: bit 0,
 the river man of Saria will help Link cross; bit 1, Mido's man told him
-to ask Error.
+to ask Error.  Saria's bridge clears bit 0 once it is built
+(`Saria_BuildBridge`), so Link must talk to the river man on each visit.
+
+The flags `Dialog_CheckTownFlag` reads (`TownFlagChecks`), and what sets
+them:
+
+| Town | Type | `townFlags` bit | Set by |
+|------|------|-----------------|--------|
+| Rauru | $14 | - | always met |
+| Ruto | $16 | 4 | the trophy (`Item_CollectSpecial`) |
+| Saria | $14 | 0 | the mirror under the table (type $21) |
+| Mido | $15 | 6 | the water of life (`Item_CollectSpecial`) |
+| Nabooru | $16 | 0 | the fountain (type $21) |
+| Darunia | $15 | 5 | the child (`Item_CollectSpecial`) |
+| New Kasuto | $15 | 3 | the 7th magic container (`Item_Collect`) |
+
+(`TownFlagChecks` also has bit 6 for type $13 in Ruto, but no area holds
+a type $13.)  The movies show each of them: the woman who lost her
+mirror, the mother of the sick girl, the trophy's owner, the child's
+mother and the New Kasuto woman lead Link to their doors once the flag
+is set.
+
+Talking to Bagu (type $10 in his house, entered as townCode 3) sets bit 3
+of townCode 3's flags, which the river man of Saria checks.  Each town's
+streets are areas 3n to 3n + 2, n = `townCode` (the right entrances lead
+to area 3n + 2: `Locations_Bank1`, `Locations_Bank2`).
 
 ### Text Format
 
 Each byte prints a two-tile column: a byte >= $C0 is the tile itself
-(letters are $DA-$F3, digits $D0-$D9, space $F4); below $C0, the low six
-bits are the tile and bits 7-6 put a mark above it.  $FD ends a line,
+(letters are $DA-$F3, digits $D0-$D9, space $F4, '.' $CF); below $C0,
+the low six bits are the tile ('!' $36, '?' $34) and bits 7-6 put a mark
+above it.  $FD ends a line,
 $FE ends a line with a longer pause, $FF ends the text.  A window holds
 four lines of 10 characters.
+
+### Checking Conversations
+
+`tools/enemy_scenario.py --dialog` prints each text as it starts, with
+`townFlags` and `techniques`.  Scenarios start in a town as on the
+[Townsperson](../entities/enemies/townsperson.md#verification) page, with
+`townCode` (and for East Hyrule `currentWorld=2`, `currentRegion=2`)
+chosen for the town, and B pressed every 20 frames:
+
+- **Teachers** (room $2C, Link walked to X $1B8): with `townCode` 3 the
+  knight said "WHEN YOU JUMP PRESS DOWNWARD TO STAB." and set
+  `techniques` bit 4, with the flash and fanfare.  With `townCode` 5 in
+  East Hyrule: "WHEN YOU JUMP PRESS UP TO STAB." and bit 2.  With both
+  already learned (`techniques=0x14` in `--at`): "I CANNOT HELP YOU
+  ANYMORE. GO NOW.", with no fanfare (`Dialog_StartReward` went on to
+  `Dialog_EndText`).
+- **Error** (room $20, Link walked to X $140): in Ruto "I AM ERROR.",
+  or with `techniques=2` "SOUTH OF KINGS TOMB IN MIDO IS A TUNNEL."; in
+  Mido the same person sets bit 1: "ASK ERROR OF RUTO ABOUT THE
+  PALACE."  In Nabooru, with or without the cross, "WITH BOOTS I COULD
+  WALK ON THE WATER."
+- **A walker's flag** (area $12 with `townCode` 3, its people cleared, a
+  type $15 woman and a type $1E walker spawned): she said "PLEASE. MY
+  DAUGHTER IS SICK. HELP HER!"; the walker's talk set `townFlags+3` bit 6;
+  then she said "THE WATER OF LIFE! QUICK COME WITH ME."  (Area $12 is
+  New Kasuto's, where bit 6 means nothing.)
+
+  ```
+  BS=""; for k in $(seq 4 20 900); do BS="$BS --press $k:B:2"; done
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at ${TA/townCode=0/townCode=3},areaId=0x12 \
+      --until currentWorld=1 --after 200 --clear --spawn 0:15:30:B0 --spawn 1:1E:90:B0 $BS \
+      --press 300:RIGHT:40 --log 0,1 --frames 700 --dialog
+  ```
+
+- **Closing** (the Bit's room): a B 14 frames into "ZZZ..." skipped it
+  and closed the window (`Dialog_Finish` 9 frames later); a text left to
+  finish waited in `Dialog_WaitForB` until the next B, 210 frames on.
+
+Both movies were also replayed with every handler hooked:
+- **The no-glitch movie:** 11 conversations.
+- **The 100AK movie:** 23 conversations, including all eight wizards and
+  Nabooru's fountain ("WANT TO GET SOME WATER?").
+
+Each matched the code: Bagu's talk, then the river man's help; the mirror,
+then its owner; the fountain, then the thirsty woman; the Water of Life, the trophy, the child and the 7th magic
+container, each followed by its person leading Link to a door; the
+technique teachers; and the wizards' spells and the house ladies' refills.

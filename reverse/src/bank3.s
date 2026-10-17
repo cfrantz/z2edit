@@ -3505,7 +3505,7 @@ DialogHandlers:
     .word   Dialog_SleepyCreature   ; $B450  type $0B
     .word   Dialog_SelectText       ; $B452  type $0C
     .word   Dialog_TechniqueMan     ; $B454  type $0D
-    .word   Dialog_Type0E           ; $B456  type $0E
+    .word   Dialog_Error            ; $B456  type $0E
     .word   Dialog_Wizard           ; $B458  type $0F
     .word   Dialog_SetTalked        ; $B45A  type $10
     .word   Dialog_SetTalked        ; $B45C  type $11
@@ -3520,11 +3520,11 @@ DialogHandlers:
     .word   Dialog_SelectText       ; $B46E  type $1A
     .word   Dialog_SelectText       ; $B470  type $1B
     .word   Dialog_SelectText       ; $B472  type $1C
-    .word   Dialog_Type1D           ; $B474  type $1D
-    .word   Dialog_Type1D           ; $B476  type $1E
-    .word   Dialog_Type1D           ; $B478  type $1F
-    .word   Dialog_Type1D           ; $B47A  type $20
-    .word   Dialog_Mirror           ; $B47C  type $21
+    .word   Dialog_SetWalkerFlag    ; $B474  type $1D
+    .word   Dialog_SetWalkerFlag    ; $B476  type $1E
+    .word   Dialog_SetWalkerFlag    ; $B478  type $1F
+    .word   Dialog_SetWalkerFlag    ; $B47A  type $20
+    .word   Dialog_Examine          ; $B47C  type $21
     .word   Dialog_SelectText       ; $B47E  type $22
 
 ; ---------------------------------------------------------------------------
@@ -3558,13 +3558,16 @@ Dialog_ChooseText:
 ; ---------------------------------------------------------------------------
 ; Dialog_TechniqueMan
 ;
-; Type $0D.  Saria: if Bagu's note was read (townFlags+3 bit 3), the river
-; man lets Link cross (techniques bit 0) and says so.  Mido: teaches the
-; downstab (techniques bit 4).  Rauru: nothing.  Any other town: teaches
-; the upstab (techniques bit 2; in the game, the knight of Darunia).  A
-; technique already learned gives the "already done" text.
+; Type $0D.  Saria (the river man): if Link has talked to Bagu (townFlags+3
+; bit 3), he lets Link cross (techniques bit 0, used up by Saria_BuildBridge)
+; and says so.  Mido: teaches the downstab (techniques bit 4).  Rauru:
+; nothing.  Any other town: teaches the upstab (techniques bit 2; in the
+; game, the knight of Darunia).  A technique already learned gives the
+; "already done" text ("I CANNOT HELP YOU ANYMORE. GO NOW.") and no
+; fanfare.
 ;
-; Status:  provisional
+; In:      y = townCode
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_TechniqueMan:
     cpy     #$02                    ; $B4A3
@@ -3619,16 +3622,18 @@ Dialog_TechniqueMan:
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
-; Dialog_Type0E
+; Dialog_Error
 ;
-; Type $0E.  Mido: sets techniques bit 1 (told to ask Error of Ruto).
-; Ruto: Error's second text (the tunnel south of the King's tomb) once
-; that bit is set.  Rauru: nothing.  Other towns: the second text if Link
-; has the cross.
+; Type $0E.  Mido: sets techniques bit 1 ("ASK ERROR OF RUTO ABOUT THE
+; PALACE.").  Ruto: Error says "I AM ERROR.", or once that bit is set his
+; second text (the tunnel south of the King's tomb).  Rauru: nothing.  Other
+; towns: the second text if Link has the cross, but there it is the same as
+; the first, so the cross changes nothing.
 ;
-; Status:  provisional
+; In:      y = townCode
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Dialog_Type0E:
+Dialog_Error:
     cpy     #$03                    ; $B4EE
     bne     @loc_B4FD               ; $B4F0
     lda     techniques              ; $B4F2
@@ -3708,10 +3713,12 @@ Dialog_Wizard:
 ; ---------------------------------------------------------------------------
 ; Dialog_SetTalked
 ;
-; Types $10-$12: set this person's bit (TownFlagBits+4) in the town's
-; townFlags.
+; Types $10-$12: set this person's bit ($08, $04, $02: TownFlagBits+4) in
+; the town's townFlags.  Only $08 is ever checked: Bagu ($10, townCode 3)
+; setting it lets the river man of Saria help (Dialog_TechniqueMan).
 ;
-; Status:  provisional
+; In:      y = townCode
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_SetTalked:
     lda     temp0                   ; $B54E
@@ -3728,9 +3735,12 @@ Dialog_SetTalked:
 ;
 ; Types $13-$16: the second text, and the person turns to lead Link to a
 ; door, if the town's townFlags has the bit for this type and town
-; (TownFlagChecks); always in Rauru.
+; (TownFlagChecks: Saria's mirror, Ruto's trophy, Mido's water of life,
+; Nabooru's water, Darunia's child, New Kasuto's 7th magic container);
+; always in Rauru.
 ;
-; Status:  provisional
+; In:      y = townCode
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_CheckTownFlag:
     cpy     #$00                    ; $B560
@@ -3775,14 +3785,17 @@ Dialog_TurnToDoor:
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
-; Dialog_Type1D
+; Dialog_SetWalkerFlag
 ;
-; Types $1D-$20: meant to set a townFlags bit, but the index (type - $13)
-; points past TownFlagBits into zeros, so nothing is set.
+; Types $1D-$20 (walkers): set bit 7, 6, 5 or 4 (TownFlagBits) of the
+; town's townFlags.  Bits 6-4 are also quest bits (Mido's water of life,
+; Darunia's child, Ruto's trophy), but no town's own streets hold a walker
+; whose bit that town checks, so in the game this changes nothing.
 ;
-; Status:  provisional
+; In:      y = townCode
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Dialog_Type1D:
+Dialog_SetWalkerFlag:
     lda     temp0                   ; $B592
     sec                             ; $B594
     sbc     #$13                    ; $B595
@@ -3791,7 +3804,7 @@ Dialog_Type1D:
     ora     TownFlagBits,x          ; $B59B
     sta     townFlags,y             ; $B59E
     jmp     Dialog_SelectText       ; $B5A1
-    lda     temp0                   ; $B5A4
+    lda     temp0                   ; $B5A4  unreferenced handler: the text of type - 4
     sec                             ; $B5A6
     sbc     #$04                    ; $B5A7
     sta     temp0                   ; $B5A9
@@ -3800,14 +3813,16 @@ Dialog_Type1D:
 
 
 ; ---------------------------------------------------------------------------
-; Dialog_Mirror
+; Dialog_Examine
 ;
-; Type $21, the mirror: sets bit 0 of the town's townFlags (the mirror
-; found).
+; Type $21, a sign or something Link examines (the mirror under Saria's
+; table, Nabooru's fountain, a sign): sets bit 0 of the town's townFlags,
+; which is Saria's mirror and Nabooru's water.
 ;
-; Status:  provisional
+; In:      y = townCode
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Dialog_Mirror:
+Dialog_Examine:
     lda     townFlags,y             ; $B5AE
     ora     #$01                    ; $B5B1
     sta     townFlags,y             ; $B5B3
@@ -3817,11 +3832,12 @@ Dialog_Mirror:
 ; ---------------------------------------------------------------------------
 ; Dialog_SleepyCreature
 ;
-; Types $0A and $0B (the talking Ache and Bit): "ZZZ..." until townspersonTalkCount,x
-; reaches 4, then the second text ("LET ME BE! MASTER IS IN WOODS N OF
-; RIVER").
+; Types $0A and $0B (the talking Ache and Bit): "ZZZ..." until
+; townspersonTalkCount,x reaches 4 (the fourth talk), then the second text
+; ("LET ME BE! MASTER IS IN WOODS N OF RIVER"); the count stays at 4.
 ;
-; Status:  provisional
+; In:      x = dialogPerson
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_SleepyCreature:
     lda     townspersonTalkCount,x  ; $B5B9
@@ -3907,6 +3923,8 @@ Dialog_NextState:
     inc     pauseState              ; $B621
     rts                             ; $B624
 ; (unreferenced: $B625-$B638, 20 bytes)
+; A bit table and an unused handler at $B62D: lda techniques / ora $B625,y /
+; sta techniques / jmp Dialog_SelectText (a technique per townCode).
     .byte   $01, $02, $04, $08, $10, $20, $40, $80, $AD, $96, $07, $19, $25, $B6, $8D, $96; $B625
     .byte   $07, $4C, $C7, $B5                                              ; $B635
 
@@ -3957,12 +3975,12 @@ Dialog_NewLine:
 ; ---------------------------------------------------------------------------
 ; Dialog_TextDone
 ;
-; The text is printed.  In a lady's house, go on to Dialog_Reward.  For a
-; wizard who gave a spell, or a technique taught, flash the screen with
-; the spell sound and go on to Dialog_Reward; otherwise skip it
-; (Dialog_EndText).
+; The text is printed (or skipped with B).  In a lady's house, go on to
+; Dialog_Reward.  For a wizard who gave a spell, or a technique taught,
+; flash the screen with the spell sound and go on to Dialog_Reward;
+; otherwise skip it (Dialog_EndText).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_TextDone:
     lda     dialogType              ; $B672
@@ -4132,11 +4150,12 @@ Dialog_NextChar:
 ; ---------------------------------------------------------------------------
 ; Dialog_Reward
 ;
-; After a gift: for a wizard or a technique, once the spell sound is over,
-; play the item fanfare (a wizard's conversation ends here); in a lady's
-; house, refill Link's life (type $17) or magic (type $18).
+; After a gift: for a wizard or a technique, once the spell sound is over
+; (run each frame until then), play the item fanfare (a wizard's
+; conversation ends here); in a lady's house, refill Link's life (type
+; $17) or magic (type $18).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Reward:
     ldx     dialogPerson            ; $B75B
@@ -4187,9 +4206,10 @@ Dialog_Reward_Done:
 ; ---------------------------------------------------------------------------
 ; Dialog_WaitForB
 ;
-; Wait for B, unless nothing was printed (dialogPrinted).
+; Wait for B, unless the text was skipped with B (dialogPrinted 0): that
+; press closes the window too.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_WaitForB:
     lda     dialogPrinted           ; $B7A6

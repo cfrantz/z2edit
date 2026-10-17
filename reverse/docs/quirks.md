@@ -23,7 +23,6 @@ lists code oddities with no visible effect.
 | `Stalfos_Ai` | While Link does the upward thrust, each Stalfos sets `swordY` to $F8, taking his sword out of the hit tests of every enemy handled after it in that frame. |
 | `Wizrobe_Ai` | After its first appearance a Wizzrobe of palaces 3, 4 and 6 always reappears on page 1 (`Wizrobe_Restart` sets `objXHi` to 1), so one placed on another page of its room leaves that page for good. |
 | `Area_IsSolidTile_Bank2` | Tiles of palette group 0 ($00-$3F) look up a byte 255 bytes past the threshold table; in bank 2 (East Hyrule's areas) that byte is $00, so every group 0 tile is solid there.  In banks 1, 3, 4 and 5 the byte is $D2 or more, so none are. |
-| `Dialog_Type1D` | Townspeople of types $1D-$20 are meant to set a flag in `townFlags` when talked to, but the index misses `TownFlagBits` and lands on zeros, so nothing is set. |
 | `Dialog_TechniqueMan` | The type $0D handler gives the upward thrust in any town but Rauru, Saria and Mido, including Ruto; it only matters where a type $0D person stands (the knight of Darunia). |
 
 ## Without Visible Effect
@@ -33,6 +32,8 @@ lists code oddities with no visible effect.
 | `Boss_UpdateIntro` | When a boss of palaces 1, 2 or 5 dies, the other enemies are hit at attack level $0A, past the end of `SwordDamage`; the byte read there ($E0, after `ThunderDamage`) kills them all, as intended.  The code that would have spared off-screen and SPELL-immune enemies never runs (`drawScratch` is always $0A). |
 | `KingBot_Ai` | A King Bot's burst writes Bots into enemy slots 5-1 but never slot 0, so one in slot 0 would burst again every frame, pinning its Bots in place, and could no longer be hit.  It can't happen in the game: the King Bots are alone in their rooms and spawn into slot 5. |
 | `Thunderbird_Ai` | Its intro and death paths drop a return address with `pla`/`pla`, copied from `Boss_UpdateIntro`, where it skips the boss's AI; inline in the AI routine it skips the rest of `Enemies_Update` instead, so the enemy slots after the Thunderbird's and every projectile slot go un-updated and undrawn in those frames.  Its room has no other enemies. |
+| `Dialog_SetWalkerFlag` | Talking to a walker of type $1D-$20 sets bit 7, 6, 5 or 4 of the town's `townFlags`.  Bits 6-4 are also the quest bits of Mido (the water of life), Darunia (the child) and Ruto (the trophy), so a type $1E walker in Mido would stand in for the water of life (tested: the sick girl's mother then leads Link to her door).  No town's streets hold a walker whose bit that town checks. |
+| `Dialog_Error` | Outside Rauru, Ruto and Mido, a type $0E person's second text needs the cross, but those towns' two texts are the same. |
 | `Thunderbird_Ai` | A test of `frameCounter` that branches to the next instruction either way. |
 | `Bank5_Nmi` | Unlike the game NMI it does not save `a`; harmless, since it returns with a >= $80, which `Main_Loop` never takes for a load request. |
 | `Nmi` | A branch on `ram_0727` whose two outcomes are the next instruction. |

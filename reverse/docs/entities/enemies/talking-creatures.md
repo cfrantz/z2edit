@@ -52,4 +52,26 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 \
     --shot 4 --shot 12 --shot 20 --shot 70
 ```
 
-The talking Ache and the waking count were not tested.
+- **Waking the Bit** (same room, Link walked to X $298, B every 20
+  frames; `--dialog` prints each text): "ZZZ..." three times, then
+  "LET ME BE! MASTER IS IN WOODS N OF RIVER" on the fourth talk and every
+  later one.
+
+  ```
+  BS=""; for k in $(seq 4 20 900); do BS="$BS --press $k:B:2"; done
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 \
+      --at ${TA/areaStartPage=0/areaStartPage=2},areaId=0x1e --until currentWorld=1 --after 200 \
+      --approach 298 $BS --log 5 --frames 900 --dialog
+  ```
+
+- **The Ache from mid-air** (room $20, the Ache at X $280, Y $70): Link
+  walked to X $278 and jumped, with B every 4 frames.  The conversation
+  started at Y $8D (event at 3:$9A33).  It snapped Link up to the tile row
+  ($80), where he hung until the window closed, then fell to the floor.
+
+  ```
+  BS=""; for k in $(seq 14 4 40); do BS="$BS --press $k:B:2"; done
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 \
+      --at ${TA/areaStartPage=0/areaStartPage=2},areaId=0x20 --until currentWorld=1 --after 200 \
+      --approach 278 --press 10:A:30 $BS --event Talk=3:9A33 --log 5 --frames 400 --dialog
+  ```
