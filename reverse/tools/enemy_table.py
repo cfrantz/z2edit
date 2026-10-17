@@ -82,6 +82,7 @@ ENEMY_PAGES = {
     "Rebonack_Ai": "rebonack", "RebonackUnhorsed_Ai": "rebonack", "Barba_Ai": "barba", "Carock_Ai": "carock",
     "GpBubble_Ai": "bubble", "GpSkullHead_Ai": "skull-head", "HiddenJar_Ai_Bank5": "hidden-jar",
     "KingBot_Ai": "king-bot", "Barrier_Ai": "barrier", "Fokka_Ai": "fokka", "Fokkeru_Ai": "fokkeru",
+    "Thunderbird_Ai": "thunderbird", "DarkLink_Ai": "dark-link",
 }
 
 
@@ -153,7 +154,7 @@ def main():
                 if dmg & 0x20: notes.append("blocks Link's projectiles")
                 if dmg & 0x10: notes.append("immune to SPELL")
                 if fl & 0x80: notes.append("immune to Thunder")
-                elif fl & 0x20: notes.append("Thunder weak")
+                elif fl & 0x20: notes.append("Thunder does only 2")
                 if fl & 0x10: notes.append("sword passes through")
                 if fl & 0x40: notes.append("comes back")
                 drop = dmg >> 6

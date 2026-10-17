@@ -2688,7 +2688,7 @@ Mode_FallAnimate:
     sta     objState                ; $8FCB
     sta     objState+1              ; $8FCD
     lda     linkWalkDir             ; $8FCF
-    sta     ram_00A0                ; $8FD1
+    sta     darkLinkWalkDir         ; $8FD1
     lda     #$30                    ; $8FD3
     sta     objOamOffset+1          ; $8FD5
     ldx     #$00                    ; $8FD7

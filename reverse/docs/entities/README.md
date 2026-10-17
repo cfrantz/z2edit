@@ -78,6 +78,8 @@ and how each was verified):
 | [Fokka](enemies/fokka.md) | $18-$1A in the Great Palace |
 | [Fokkeru](enemies/fokkeru.md) | $1D in the Great Palace |
 | [King Bot](enemies/king-bot.md) | $1E in the Great Palace |
+| [Thunderbird](enemies/thunderbird.md) | $22 in the Great Palace (its boss) |
+| [Dark Link](enemies/dark-link.md) | $23 in the Great Palace (the last room) |
 | [Barrier](enemies/barrier.md) | $20 in the Great Palace |
 
 The enemy tables of the group pages link to them

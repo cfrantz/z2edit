@@ -2029,7 +2029,7 @@ EnemyDrawPtrs_Bank5:
     .word   GpBubble_Draw, GpBubble_Draw, GpSkullHead_Draw, LargeBubble_Draw ; $958D
     .word   Fokka_Draw, Fokka_Draw, Fokka_Draw, $0000 ; $9595
     .word   Enemy_InitNone_Bank5, Fokkeru_Draw, KingBot_Draw, $0000 ; $959D
-    .word   $0000, $0000, Thunderbird_Draw, DarkLink_DrawTrigger ; $95A5
+    .word   $0000, $0000, Thunderbird_Draw, OldMan_Draw ; $95A5
 
 ; ---------------------------------------------------------------------------
 ; Enemy_InitNone_Bank5
@@ -2348,17 +2348,21 @@ Boss_SpawnDeathSpark_Bank5:
 ; ---------------------------------------------------------------------------
 ; DarkLink_Init
 ;
-; Spawn routine of the Dark Link trigger: put Dark Link (8 hit points) in
-; slot 0 at the trigger's place.
+; Spawn routine of the Dark Link trigger ($23, in the last room): it moves
+; itself to enemy slot 0, whatever is there (the trigger, alone in its
+; room, spawns in slot 5), as type $23 with 8 hit points, at the trigger's
+; place, and frees its own slot.  Dark Link's phase and scratch
+; (objFacing+2 to +5) start at 0; extraSpriteAttrs = 2.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Init:
-    lda     #$23                    ; $9796
+    lda     #$23                    ; $9796  slot 0: type $23,
     sta     enemyType               ; $9798
-    lda     #$08                    ; $979A
+    lda     #$08                    ; $979A  8 hit points,
     sta     enemyHp                 ; $979C
-    lda     objX+1,x                ; $979E
+    lda     objX+1,x                ; $979E  at the trigger's place
     sta     objX+1                  ; $97A0
     lda     objY+1,x                ; $97A2
     sta     objY+1                  ; $97A4
@@ -2368,10 +2372,10 @@ DarkLink_Init:
     sta     extraSpriteAttrs        ; $97AC
     lsr     a                       ; $97AF
     sta     objYHi+1                ; $97B0
-    sta     enemyActive             ; $97B2
+    sta     enemyActive             ; $97B2  active
     lsr     a                       ; $97B4
-    sta     enemyActive,x           ; $97B5
-    sta     objFacing+2             ; $97B7
+    sta     enemyActive,x           ; $97B5  the trigger's slot freed
+    sta     objFacing+2             ; $97B7  scratch and phase 0
     sta     objFacing+3             ; $97B9
     sta     objFacing+4             ; $97BB
     sta     objFacing+5             ; $97BD
@@ -2384,14 +2388,25 @@ DarkLink_Init:
 ; ---------------------------------------------------------------------------
 ; DarkLink_Ai
 ;
-; Dark Link, by objFacing+4: DarkLink_WaitForLink, DarkLink_Appear,
-; DarkLink_Separate, DarkLink_Fight, DarkLink_Defeated,
-; DarkLink_WalkLinkToCenter, DarkLink_ShowTriforce, DarkLink_StartEnding.
+; Dark Link ($23, enemy slot 0, drawn and moved as object 1), by its phase
+; in objFacing+4: 0 DarkLink_WaitForLink, 1 DarkLink_Appear, 2
+; DarkLink_Separate, 3 DarkLink_Fight, 4 DarkLink_Defeated, 5
+; DarkLink_WalkLinkToCenter, 6 DarkLink_ShowTriforce, 7
+; DarkLink_StartEnding.  Every phase first queues the room's flashing
+; color of the Triforce (Triforce_FlashPalette).
 ;
-; Status:  provisional
+; Its scratch: objFacing+2 the way it backs off or approaches (0 right, 1
+; left), objFacing+3 1 while in the air, objFacing+5 its walking frame;
+; timerFast+3 its phase and attack timer, timerFast+4 the fight's start,
+; timerFast+5 backing off or approaching, timerFast+8 (enemy slot 5's)
+; invulnerability after a hit, and timerFast+TIMER_BOSS knockback or
+; death.
+;
+; In:      x = enemy index (0)
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Ai:
-    jsr     DarkLink_FlashPalette   ; $97C6
+    jsr     Triforce_FlashPalette   ; $97C6
     lda     objFacing+4             ; $97C9
     jsr     JumpTable               ; $97CB
 ; (inline jump table)
@@ -2407,34 +2422,36 @@ DarkLink_Ai:
 ; ---------------------------------------------------------------------------
 ; DarkLink_WaitForLink
 ;
-; When Link reaches page 1 and lands, freeze the scroll, stand him at Y $A0
-; and freeze the game.
+; Phase 0: drawn as type $23 (OldMan_Draw).  When Link's screen
+; reaches page 1 of the room, the scroll freezes and Link stops; once he
+; is on the floor he is set at Y $A0 facing right, the game freezes, and
+; phase 1 starts with timerFast+3 = 255.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_WaitForLink:
-    inc     enemyAiState            ; $97DE
+    inc     enemyAiState            ; $97DE  animation count
     jsr     Enemy_Draw              ; $97E0
-    lda     scrollXHi               ; $97E3
+    lda     scrollXHi               ; $97E3  Link's screen at page 1?
     beq     DarkLink_WaitForLink_Done ; $97E6
-    inc     scrollFrozen            ; $97E8
-    lda     #$00                    ; $97EB
+    inc     scrollFrozen            ; $97E8  scroll frozen,
+    lda     #$00                    ; $97EB  Link stops
     sta     objXVelocity            ; $97ED
-    lda     objCollision            ; $97EF
+    lda     objCollision            ; $97EF  on the floor?
     and     #$04                    ; $97F1
     beq     DarkLink_WaitForLink_Done ; $97F3
-    lda     #$A0                    ; $97F5
+    lda     #$A0                    ; $97F5  at Y $A0,
     sta     objY                    ; $97F7
-    lda     #$03                    ; $97F9
+    lda     #$03                    ; $97F9  state 3,
     sta     objState                ; $97FB
-    lsr     a                       ; $97FD
+    lsr     a                       ; $97FD  facing right;
     sta     linkWalkDir             ; $97FE
-    asl     a                       ; $9800
-    sta     ram_00A0                ; $9801
+    asl     a                       ; $9800  Dark Link's sprites left
+    sta     darkLinkWalkDir         ; $9801
     lda     #$FF                    ; $9803
 
 DarkLink_Freeze:
-    inc     gameFrozen              ; $9805
+    inc     gameFrozen              ; $9805  freeze the game
 
 DarkLink_SetTimer:
     sta     timerFast+3             ; $9807
@@ -2448,79 +2465,86 @@ DarkLink_WaitForLink_Done:
 ; ---------------------------------------------------------------------------
 ; DarkLink_Appear
 ;
-; Flash the screen; the shadow appears at Link's position.
+; Phase 1, counting timerFast+3 down from 255: 63 frames drawn as before,
+; 112 frames flickering (every other frame), 80 not drawn.  Then the
+; screen flashes (spellFlash $C0) with sound 4 and the backdrop $14, and
+; Dark Link is put on Link; phase 2 with the timer at 255.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Appear:
-    lda     timerFast+3             ; $980D
-    bne     @loc_982C               ; $9810
-    lda     #$C0                    ; $9812
+    lda     timerFast+3             ; $980D  time up?
+    bne     @wait                   ; $9810
+    lda     #$C0                    ; $9812  flash,
     sta     spellFlash              ; $9814
-    lda     #$04                    ; $9817
+    lda     #$04                    ; $9817  sound,
     sta     sfxRequest              ; $9819
-    lda     #$14                    ; $981B
+    lda     #$14                    ; $981B  backdrop
     sta     backdropColor           ; $981D
-    lda     objX                    ; $9820
+    lda     objX                    ; $9820  Dark Link on Link
     sta     objX+1                  ; $9822
     lda     objY                    ; $9824
     sta     objY+1                  ; $9826
     lda     #$FF                    ; $9828
     bne     DarkLink_SetTimer       ; $982A
 
-@loc_982C:
-    cmp     #$50                    ; $982C
+@wait:
+    cmp     #$50                    ; $982C  below $50: not drawn
     bcc     DarkLink_WaitForLink_Done ; $982E
-    cmp     #$C0                    ; $9830
-    bcs     @loc_9839               ; $9832
-    lsr     a                       ; $9834
+    cmp     #$C0                    ; $9830  $C0 on: animated
+    bcs     @animate                ; $9832
+    lsr     a                       ; $9834  else every other frame
     bcc     DarkLink_WaitForLink_Done ; $9835
-    bcs     @loc_983B               ; $9837
+    bcs     @draw                   ; $9837
 
-@loc_9839:
+@animate:
     inc     enemyAiState,x          ; $9839
 
-@loc_983B:
+@draw:
     jmp     Enemy_Draw              ; $983B
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_Separate
 ;
-; The shadow steps out of Link and lands; then the fight music.
+; Phase 2: Dark Link, in pose $0A, steps out of Link.  When the flash ends
+; (spellFlash $81), the room's palette string $0D is written, the music
+; stops and sound 4 plays.  For 127 frames it stays on him; then it jumps
+; right (4 pixels per frame up, about 1.2 across) and falls.  When it lands
+; at Y $A0, phase 3 starts, the fight 112 frames later (timerFast+4).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Separate:
-    lda     spellFlash              ; $983E
+    lda     spellFlash              ; $983E  flash ending?
     cmp     #$81                    ; $9841
-    bne     @loc_9852               ; $9843
-    lda     #$0D                    ; $9845
+    bne     @checkTimer             ; $9843
+    lda     #$0D                    ; $9845  palette string $0D,
     sta     ppuStringSelect         ; $9847
-    lda     #$80                    ; $984A
+    lda     #$80                    ; $984A  music off,
     sta     musicRequest            ; $984C
-    lda     #$04                    ; $984E
+    lda     #$04                    ; $984E  sound
     sta     sfxRequest              ; $9850
 
-@loc_9852:
-    lda     timerFast+3             ; $9852
+@checkTimer:
+    lda     timerFast+3             ; $9852  waiting (timer above $80)
     cmp     #$80                    ; $9855
-    bcc     @loc_9864               ; $9857
+    bcc     @move                   ; $9857
     bne     DarkLink_WaitForLink_Done ; $9859
-    lda     #$FC                    ; $985B
+    lda     #$FC                    ; $985B  at $80: jump out
     sta     objYVelocity+1          ; $985D
     lda     #$13                    ; $9860
     sta     objXVelocity+1          ; $9862
 
-@loc_9864:
+@move:
     jsr     DarkLink_Move           ; $9864
-    lda     objY+1                  ; $9867
+    lda     objY+1                  ; $9867  landed?
     cmp     #$A0                    ; $9869
-    bcc     @loc_9874               ; $986B
-    inc     objFacing+4             ; $986D
+    bcc     @draw                   ; $986B
+    inc     objFacing+4             ; $986D  phase 3
     lda     #$70                    ; $986F
     sta     timerFast+4             ; $9871
 
-@loc_9874:
+@draw:
     lda     #$0A                    ; $9874
     sta     objState+1              ; $9876
     jmp     DarkLink_Draw           ; $9878
@@ -2528,67 +2552,77 @@ DarkLink_Separate:
 ; ---------------------------------------------------------------------------
 ; DarkLink_Fight
 ;
-; The fight: react to Link (DarkLink_ReactToLink), move, jump, attack, draw,
-; test swords (DarkLink_CheckSword) and contact.  When its hit points run
-; out it sinks away.
+; Phase 3.  For 112 frames (timerFast+4) it crouches (pose 6); then the
+; fight music ($40) starts and the game unfreezes.  It shows its hit
+; points in the boss bar, a unit each.
 ;
-; Status:  provisional
+; Knocked back (timerFast+TIMER_BOSS below $80, 24 frames) or dying ($FF
+; down), it is in pose $0A, moved with gravity but not landed; dying, it
+; sounds every 16 frames and sinks through the floor.  At Y $F0 the screen
+; flashes ($B0) with sound 4, the backdrop goes black, the music stops and
+; phase 4 starts (timerFast+3 = 64).
+;
+; Otherwise: DarkLink_ReactToLink, DarkLink_UpdateXVelocity,
+; DarkLink_UpdateJump, DarkLink_UpdateAttack, DarkLink_Draw,
+; DarkLink_CheckSword, and body contact, which hurts Link.
+;
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Fight:
-    ldy     timerFast+4             ; $987B
-    beq     @loc_988E               ; $987E
-    dey                             ; $9880
-    bne     @loc_9887               ; $9881
+    ldy     timerFast+4             ; $987B  starting?
+    beq     @started                ; $987E
+    dey                             ; $9880  the last frame: music
+    bne     @crouch                 ; $9881
     lda     #$40                    ; $9883
     sta     musicRequest            ; $9885
 
-@loc_9887:
+@crouch:
     lda     #$06                    ; $9887
     sta     objState+1              ; $9889
     jmp     DarkLink_Draw           ; $988B
 
-@loc_988E:
-    lda     musicPlaying            ; $988E
-    bne     @loc_9897               ; $9891
+@started:
+    lda     musicPlaying            ; $988E  (music again if none)
+    bne     @unfreeze               ; $9891
 ; (code below not executed in the test movies)
     lda     #$40                    ; $9893
     sta     musicRequest            ; $9895
 ; (end of code not executed in the test movies)
 
-@loc_9897:
-    sty     gameFrozen              ; $9897
-    lda     #$01                    ; $9899
+@unfreeze:
+    sty     gameFrozen              ; $9897  (y = 0)
+    lda     #$01                    ; $9899  hit point bar, 1 per unit
     jsr     Boss_DrawHpBar_Bank5    ; $989B
-    lda     timerFast+TIMER_BOSS    ; $989E
-    beq     @loc_98D3               ; $98A1
-    bpl     @loc_98AD               ; $98A3
-    and     #$0F                    ; $98A5
-    bne     @loc_98AD               ; $98A7
+    lda     timerFast+TIMER_BOSS    ; $989E  knocked back or dying?
+    beq     @fight                  ; $98A1
+    bpl     @knockedBack            ; $98A3
+    and     #$0F                    ; $98A5  dying: a sound every 16
+    bne     @knockedBack            ; $98A7  frames
     lda     #$01                    ; $98A9
     sta     dmcRequest              ; $98AB
 
-@loc_98AD:
-    lda     #$0A                    ; $98AD
+@knockedBack:
+    lda     #$0A                    ; $98AD  pose $0A, moved, not landed
     sta     objState+1              ; $98AF
     jsr     DarkLink_Move           ; $98B1
-    lda     objY+1                  ; $98B4
+    lda     objY+1                  ; $98B4  sunk below the screen?
     cmp     #$F0                    ; $98B6
-    bcc     @loc_98D0               ; $98B8
-    lda     #$B0                    ; $98BA
+    bcc     @draw                   ; $98B8
+    lda     #$B0                    ; $98BA  flash,
     sta     spellFlash              ; $98BC
-    lda     #$04                    ; $98BF
+    lda     #$04                    ; $98BF  sound,
     sta     sfxRequest              ; $98C1
-    lda     #$0F                    ; $98C3
+    lda     #$0F                    ; $98C3  black backdrop,
     sta     backdropColor           ; $98C5
-    lda     #$80                    ; $98C8
+    lda     #$80                    ; $98C8  music off;
     sta     musicRequest            ; $98CA
-    lsr     a                       ; $98CC
+    lsr     a                       ; $98CC  phase 4, 64 frames
     jsr     DarkLink_SetTimer       ; $98CD
 
-@loc_98D0:
+@draw:
     jmp     DarkLink_Draw           ; $98D0
 
-@loc_98D3:
+@fight:
     jsr     DarkLink_ReactToLink    ; $98D3
     jsr     DarkLink_UpdateXVelocity ; $98D6
     jsr     DarkLink_UpdateJump     ; $98D9
@@ -2601,130 +2635,143 @@ DarkLink_Fight:
 ; ---------------------------------------------------------------------------
 ; DarkLink_ReactToLink
 ;
-; By the distance to Link: up close, mirror his crouch when he attacks,
-; sometimes jump away, or turn away for a moment; farther, face him now and
-; then.
+; On the floor, by its distance from Link across ((|dx| + 3) / 16):
+; - 0-1 (within about 28 pixels): when Link presses B it takes his
+;   stance (darkLinkStanding = linkStanding), so its shield meets his
+;   stroke, and 1 time in 8 it jumps away (DarkLink_GetSide).  Otherwise
+;   DarkLink_MaybeTurn: back off or attack.
+; - 2-5 (up to about 92): DarkLink_TurnSometimes, approach.
+; - 6 or more: stand up, and wait.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_ReactToLink:
-    lda     objX+1                  ; $98EB
-    sbc     objX                    ; $98ED
-    bpl     @loc_98F3               ; $98EF
+    lda     objX+1                  ; $98EB  distance from Link
+    sbc     objX                    ; $98ED  (the carry isn't set up)
+    bpl     @abs                    ; $98EF
     eor     #$FF                    ; $98F1
 
-@loc_98F3:
+@abs:
     adc     #$03                    ; $98F3
     lsr     a                       ; $98F5
     lsr     a                       ; $98F6
     lsr     a                       ; $98F7
     lsr     a                       ; $98F8
     cmp     #$06                    ; $98F9
-    bcs     @loc_990C               ; $98FB
+    bcs     @far                    ; $98FB
     jsr     JumpTable               ; $98FD
 ; (inline jump table)
-    .word   @loc_9911               ; $9900
-    .word   @loc_9911               ; $9902
+    .word   @close                  ; $9900
+    .word   @close                  ; $9902
     .word   DarkLink_TurnSometimes  ; $9904
     .word   DarkLink_TurnSometimes  ; $9906
     .word   DarkLink_TurnSometimes  ; $9908
     .word   DarkLink_TurnSometimes  ; $990A
 ; (code below not executed in the test movies)
 
-@loc_990C:
-    lda     #$01                    ; $990C
-    sta     ram_0018                ; $990E
+@far:
+    lda     #$01                    ; $990C  far: stand
+    sta     darkLinkStanding        ; $990E
     rts                             ; $9910
 ; (end of code not executed in the test movies)
 
-@loc_9911:
-    lda     objFacing+3             ; $9911
+@close:
+    lda     objFacing+3             ; $9911  in the air: nothing
     bne     DarkLink_ReactToLink_Done ; $9913
-    lda     joypadPressed           ; $9915
+    lda     joypadPressed           ; $9915  Link pressed B?
     and     #$40                    ; $9917
     beq     DarkLink_MaybeTurn      ; $9919
-    lda     linkStanding            ; $991B
-    sta     ram_0018                ; $991D
-    lda     rng+1                   ; $991F
+    lda     linkStanding            ; $991B  take his stance
+    sta     darkLinkStanding        ; $991D
+    lda     rng+1                   ; $991F  1 time in 8,
     and     #$07                    ; $9922
     bne     DarkLink_MaybeTurn      ; $9924
 ; (code below not executed in the test movies)
-    sta     objYFrac+1              ; $9926
+    sta     objYFrac+1              ; $9926  jump away, the attack off
     sta     enemyAiDir              ; $9929
 ; (end of code not executed in the test movies)
 
+; Jump: 1.5 pixels per frame toward the middle of the screen, or 1 time in
+; 4 (rng+2 bits 1-0 zero) straight up; 4 pixels per frame up, standing.
 DarkLink_GetSide:
-    ldy     #$00                    ; $992C
+    ldy     #$00                    ; $992C  right if in the left half,
     lda     drawScreenX+1           ; $992E
     adc     #$0C                    ; $9930
-    bpl     @loc_9935               ; $9932
+    bpl     @checkUp                ; $9932
 ; (code below not executed in the test movies)
-    iny                             ; $9934
+    iny                             ; $9934  else left
 ; (end of code not executed in the test movies)
 
-@loc_9935:
-    lda     rng+2                   ; $9935
+@checkUp:
+    lda     rng+2                   ; $9935  1 in 4: straight up
     and     #$03                    ; $9938
-    bne     @loc_993E               ; $993A
+    bne     @setSpeed               ; $993A
 ; (code below not executed in the test movies)
     iny                             ; $993C
     iny                             ; $993D
 ; (end of code not executed in the test movies)
 
-@loc_993E:
+@setSpeed:
     lda     DarkLinkReactSpeeds,y   ; $993E
     sta     objXVelocity+1          ; $9941
     lda     #$FC                    ; $9943
     sta     objYVelocity+1          ; $9945
-    lda     #$01                    ; $9948
+    lda     #$01                    ; $9948  in the air, standing
     sta     objFacing+3             ; $994A
-    sta     ram_0018                ; $994C
+    sta     darkLinkStanding        ; $994C
 
 DarkLink_ReactToLink_Done:
     rts                             ; $994E
 
+; Close to Link: 1 frame in 4 (rng+3 bits 1-0 zero) back off for 16
+; frames.  Else, unless it is already attacking (attack step 1 or 2) or
+; is above him, attack: at the height his shield isn't (its stance the
+; opposite of his), standing still, with a sound; the wind-up lasts 16
+; frames.
 DarkLink_MaybeTurn:
-    lda     rng+3                   ; $994F
+    lda     rng+3                   ; $994F  1 in 4:
     and     #$03                    ; $9952
-    bne     @loc_9964               ; $9954
-    jsr     Enemy_FaceLink          ; $9956
+    bne     @attack                 ; $9954
+    jsr     Enemy_FaceLink          ; $9956  back off, away from him,
     tya                             ; $9959
     eor     #$01                    ; $995A
     sta     objFacing+2             ; $995C
-    lda     #$10                    ; $995E
+    lda     #$10                    ; $995E  for 16 frames
     sta     timerFast+5             ; $9960
     rts                             ; $9963
 
-@loc_9964:
-    ldy     enemyAiDir              ; $9964
+@attack:
+    ldy     enemyAiDir              ; $9964  attacking already?
     dey                             ; $9967
     cpy     #$02                    ; $9968
     bcc     @done                   ; $996A
-    lda     objY+1                  ; $996C
+    lda     objY+1                  ; $996C  above Link?
     cmp     objY                    ; $996E
     bcc     @done                   ; $9970
-    lda     linkStanding            ; $9972
+    lda     linkStanding            ; $9972  attack where his shield isn't
     eor     #$01                    ; $9974
-    sta     ram_0018                ; $9976
-    lda     #$01                    ; $9978
+    sta     darkLinkStanding        ; $9976
+    lda     #$01                    ; $9978  step 1,
     sta     enemyAiDir              ; $997A
-    lsr     a                       ; $997D
+    lsr     a                       ; $997D  standing still,
     sta     objXVelocity+1          ; $997E
-    lda     #$20                    ; $9980
+    lda     #$20                    ; $9980  sound,
     sta     sfxRequest+1            ; $9982
-    lsr     a                       ; $9984
+    lsr     a                       ; $9984  16 frames
     sta     timerFast+3             ; $9985
 
 @done:
     rts                             ; $9988
 
+; Farther from Link: in 3 of every 4 64-frame periods (frameCounter bits
+; 7-6 not zero), walk toward him (for 2 frames, renewed each frame).
 DarkLink_TurnSometimes:
-    lda     objFacing+3             ; $9989
+    lda     objFacing+3             ; $9989  in the air: nothing
     bne     @done                   ; $998B
     lda     frameCounter            ; $998D
     and     #$C0                    ; $998F
     beq     @done                   ; $9991
-    jsr     Enemy_FaceLink          ; $9993
+    jsr     Enemy_FaceLink          ; $9993  toward him
     sty     objFacing+2             ; $9996
     lda     #$02                    ; $9998
     sta     timerFast+5             ; $999A
@@ -2732,31 +2779,32 @@ DarkLink_TurnSometimes:
 @done:
     rts                             ; $999D
 
+; Jumps: right, left (1.5 pixels per frame), straight up (twice).
 DarkLinkReactSpeeds:
-    .byte   $18                                                             ; $999E
-; (unreferenced: $999F-$99A1, 3 bytes)
-    .byte   $E8, $00, $00                                                   ; $999F
+    .byte   $18, $E8, $00, $00                                              ; $999E
 
+; Backing off or approaching: 1.25 pixels per frame by objFacing+2.
 DarkLinkSpeeds:
     .byte   $14, $EC                                                        ; $99A2
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_UpdateXVelocity
 ;
-; Set the shadow's X speed while it is moving away (timerFast+5).
+; While it backs off or approaches (timerFast+5), its X velocity is 1.25
+; pixels per frame that way; otherwise, on the floor, 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_UpdateXVelocity:
-    lda     timerFast+5             ; $99A4
-    beq     @loc_99B1               ; $99A7
+    lda     timerFast+5             ; $99A4  backing off or approaching?
+    beq     @stop                   ; $99A7
     ldy     objFacing+2             ; $99A9
     lda     DarkLinkSpeeds,y        ; $99AB
     sta     objXVelocity+1          ; $99AE
     rts                             ; $99B0
 
-@loc_99B1:
-    lda     objFacing+3             ; $99B1
+@stop:
+    lda     objFacing+3             ; $99B1  on the floor: stand
     bne     @done                   ; $99B3
     sta     objXVelocity+1          ; $99B5
 
@@ -2766,159 +2814,167 @@ DarkLink_UpdateXVelocity:
 ; ---------------------------------------------------------------------------
 ; DarkLink_UpdateJump
 ;
-; Move the shadow vertically and land at Y $A0; set its pose for jumping or
-; walking.
+; Move it (DarkLink_Move); at Y $A0 or below it stands on the floor
+; (DarkLink_Animate).  In the air it takes Link's stance, in pose 6 going
+; up and 2 coming down.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_UpdateJump:
     jsr     DarkLink_Move           ; $99B8
-    lda     objY+1                  ; $99BB
+    lda     objY+1                  ; $99BB  on the floor?
     cmp     #$A0                    ; $99BD
-    bcc     @loc_99CC               ; $99BF
+    bcc     @inAir                  ; $99BF
     jsr     Enemy_Land              ; $99C1
-    sta     objFacing+3             ; $99C4
+    sta     objFacing+3             ; $99C4  (a = 0) not in the air
     lda     #$A0                    ; $99C6
     sta     objY+1                  ; $99C8
     bne     DarkLink_Animate        ; $99CA
 
-@loc_99CC:
-    lda     linkStanding            ; $99CC
-    sta     ram_0018                ; $99CE
-    lda     #$06                    ; $99D0
+@inAir:
+    lda     linkStanding            ; $99CC  Link's stance
+    sta     darkLinkStanding        ; $99CE
+    lda     #$06                    ; $99D0  pose 6 up, 2 down
     ldy     objYVelocity+1          ; $99D2
-    bmi     @loc_99D9               ; $99D5
+    bmi     @setPose                ; $99D5
     lda     #$02                    ; $99D7
 
-@loc_99D9:
+@setPose:
     sta     objState+1              ; $99D9
     rts                             ; $99DB
 
-DarkLinkJumpPoses:
+; Walking poses by objFacing+5: forward, then (+3) backward.
+DarkLinkWalkPoses:
     .byte   $00, $01, $02, $02, $01, $00                                    ; $99DC
 
+; On the floor: walking (frames every 4 frames, backward when it moves
+; away from the way it faces), or standing still, pose 3 standing or 6
+; crouching.
 DarkLink_Animate:
-    lda     objXVelocity+1          ; $99E2
-    beq     @loc_9A05               ; $99E4
-    ldy     objFacing+5             ; $99E6
-    lda     frameCounter            ; $99E8
+    lda     objXVelocity+1          ; $99E2  moving?
+    beq     @still                  ; $99E4
+    ldy     objFacing+5             ; $99E6  next frame every 4 frames,
+    lda     frameCounter            ; $99E8  0-2
     and     #$03                    ; $99EA
-    bne     @loc_99F6               ; $99EC
+    bne     @checkBackward          ; $99EC
     inc     objFacing+5             ; $99EE
     cpy     #$02                    ; $99F0
-    bne     @loc_99F6               ; $99F2
+    bne     @checkBackward          ; $99F2
     sta     objFacing+5             ; $99F4
 
-@loc_99F6:
-    lda     objFacing+1             ; $99F6
-    cmp     ram_00A0                ; $99F8
-    beq     @loc_99FF               ; $99FA
-    iny                             ; $99FC
+@checkBackward:
+    lda     objFacing+1             ; $99F6  moving the way it faces?
+    cmp     darkLinkWalkDir         ; $99F8
+    beq     @setWalkPose            ; $99FA
+    iny                             ; $99FC  no: backward
     iny                             ; $99FD
     iny                             ; $99FE
 
-@loc_99FF:
-    lda     DarkLinkJumpPoses,y     ; $99FF
+@setWalkPose:
+    lda     DarkLinkWalkPoses,y     ; $99FF
     sta     objState+1              ; $9A02
     rts                             ; $9A04
 
-@loc_9A05:
-    lda     #$03                    ; $9A05
-    ldy     ram_0018                ; $9A07
-    bne     @loc_9A0C               ; $9A09
-    asl     a                       ; $9A0B
+@still:
+    lda     #$03                    ; $9A05  standing, 3,
+    ldy     darkLinkStanding        ; $9A07
+    bne     @setStillPose           ; $9A09
+    asl     a                       ; $9A0B  crouching, 6
 
-@loc_9A0C:
+@setStillPose:
     sta     objState+1              ; $9A0C
     rts                             ; $9A0E
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_Move
 ;
-; Turn the shadow toward Link and move it, keeping it on the screen.
+; Face Link (its sprites, darkLinkWalkDir), and its objFacing the way it
+; moves.  At the edge of the screen: on the floor it jumps toward the
+; middle (DarkLink_GetSide, with rng+2 forced so it doesn't jump straight
+; up), and it doesn't move further toward the edge.  Then move it with
+; gravity ($3C/256 pixel per frame per frame, up to 4 pixels per frame).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Move:
-    jsr     Enemy_FaceLink          ; $9A0F
+    jsr     Enemy_FaceLink          ; $9A0F  its sprites face Link
     lda     objFacing+1             ; $9A12
-    sta     ram_00A0                ; $9A14
-    ldy     #$01                    ; $9A16
+    sta     darkLinkWalkDir         ; $9A14
+    ldy     #$01                    ; $9A16  its facing: the way it moves
     lda     objXVelocity+1          ; $9A18
-    bpl     @loc_9A1D               ; $9A1A
+    bpl     @setFacing              ; $9A1A
     iny                             ; $9A1C
 
-@loc_9A1D:
+@setFacing:
     sty     objFacing+1             ; $9A1D
-    lda     drawOffscreen+1         ; $9A1F
+    lda     drawOffscreen+1         ; $9A1F  at an edge of the screen?
     and     #$09                    ; $9A21
-    beq     @loc_9A3C               ; $9A23
-    ldy     objFacing+3             ; $9A25
-    bne     @loc_9A33               ; $9A27
+    beq     @moveX                  ; $9A23
+    ldy     objFacing+3             ; $9A25  on the floor: jump back
+    bne     @checkEdge              ; $9A27
     pha                             ; $9A29
-    lda     #$03                    ; $9A2A
+    lda     #$03                    ; $9A2A  (not straight up)
     sta     rng+2                   ; $9A2C
     jsr     DarkLink_GetSide        ; $9A2F
     pla                             ; $9A32
 
-@loc_9A33:
-    lsr     a                       ; $9A33
-    lsr     a                       ; $9A34
+@checkEdge:
+    lsr     a                       ; $9A33  moving toward that edge:
+    lsr     a                       ; $9A34  don't
     lsr     a                       ; $9A35
     tay                             ; $9A36
     iny                             ; $9A37
     cpy     objFacing+1             ; $9A38
-    beq     @loc_9A3F               ; $9A3A
+    beq     @moveY                  ; $9A3A
 
-@loc_9A3C:
+@moveX:
     jsr     Enemy_MoveX             ; $9A3C
 
-@loc_9A3F:
-    lda     #$3C                    ; $9A3F
+@moveY:
+    lda     #$3C                    ; $9A3F  gravity $3C/256,
     sta     temp0                   ; $9A41
-    lda     #$04                    ; $9A43
+    lda     #$04                    ; $9A43  up to 4 px/frame
     sta     temp2                   ; $9A45
+; Attack poses by step 1-3: standing 4, 5, 4, then (+3) crouching 6, 7, 6
+; (entry 0 is the jmp's high byte).
 DarkLinkAttackPoses := * + 2
     jmp     Enemy_MoveYWithGravity  ; $9A47
-    .byte   $04, $05                                                        ; $9A4A
-; (unreferenced: $9A4C-$9A4C, 1 bytes)
-    .byte   $04                                                             ; $9A4C
-    .byte   $06, $07                                                        ; $9A4D
-; (unreferenced: $9A4F-$9A4F, 1 bytes)
-    .byte   $06                                                             ; $9A4F
+    .byte   $04, $05, $04, $06, $07, $06                                    ; $9A4A
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_UpdateAttack
 ;
-; Advance the shadow's sword attack.
+; The attack, by step (enemyAiDir): 1, the wind-up, for the 16 frames
+; DarkLink_MaybeTurn set; 2, the thrust, 8 frames; 3, 8 frames; then done.
+; Its pose by step and stance (DarkLinkAttackPoses).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_UpdateAttack:
-    ldy     enemyAiDir              ; $9A50
+    ldy     enemyAiDir              ; $9A50  attacking?
     beq     @done                   ; $9A53
-    lda     timerFast+3             ; $9A55
-    bne     @loc_9A6A               ; $9A58
-    inc     enemyAiDir              ; $9A5A
-    cpy     #$03                    ; $9A5D
-    bne     @loc_9A65               ; $9A5F
+    lda     timerFast+3             ; $9A55  step over?
+    bne     @setPose                ; $9A58
+    inc     enemyAiDir              ; $9A5A  next step
+    cpy     #$03                    ; $9A5D  after 3: done
+    bne     @nextStep               ; $9A5F
 ; (code below not executed in the test movies)
     sta     enemyAiDir              ; $9A61
     rts                             ; $9A64
 ; (end of code not executed in the test movies)
 
-@loc_9A65:
-    lda     #$08                    ; $9A65
+@nextStep:
+    lda     #$08                    ; $9A65  8 frames
     sta     timerFast+3             ; $9A67
 
-@loc_9A6A:
-    lda     ram_0018                ; $9A6A
-    bne     @loc_9A71               ; $9A6C
+@setPose:
+    lda     darkLinkStanding        ; $9A6A  pose by step and stance
+    bne     @standing               ; $9A6C
     iny                             ; $9A6E
     iny                             ; $9A6F
     iny                             ; $9A70
 
-@loc_9A71:
+@standing:
     lda     DarkLinkAttackPoses,y   ; $9A71
     sta     objState+1              ; $9A74
 
@@ -2928,9 +2984,11 @@ DarkLink_UpdateAttack:
 ; ---------------------------------------------------------------------------
 ; DarkLink_Draw
 ;
-; Draw the shadow with Link's sprites (Link_DrawBody for object 1).
+; Draw Dark Link with Link's own drawing code (Link_DrawBody, for object
+; 1, swordOwner 1): its body and sword in its pose (objState+1), facing
+; darkLinkWalkDir, at oamBuffer offset $50.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Draw:
     ldy     #$01                    ; $9A77
@@ -2942,105 +3000,118 @@ DarkLink_Draw:
 
 DarkLink_Draw_Done:
     rts                             ; $9A84
-; The rts byte is also the base of the table DarkLinkSwordXOffsets (entry 0 is the rts).
+; Its shield's X offset by darkLinkWalkDir (1 right: +16, 2 left: -1;
+; entry 0 is the rts).
 DarkLinkSwordXOffsets := DarkLink_Draw_Done
     .byte   $10, $FF                                                        ; $9A85
 
+; Its shield's Y offset by darkLinkStanding: crouching +17, standing +4.
 DarkLinkSwordYOffsets:
     .byte   $11, $04                                                        ; $9A87
-; (unreferenced: $9A89-$9A89, 1 bytes)
 
+; Its sword's box X offset: -8 when the sword is right of Dark Link's X
+; (it faces right), else +2.
 DarkLinkSwordXOffsets2:
-    .byte   $F8                                                             ; $9A89
-    .byte   $02                                                             ; $9A8A
+    .byte   $F8, $02                                                        ; $9A89
 
+; Knockback after a hit, away from Link (by Enemy_FaceLink's y).
 DarkLinkKnockBackSpeeds:
     .byte   $F6, $0A                                                        ; $9A8B
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_CheckSword
 ;
-; Test the shadow's sword against Link's shield (blocked: knockback) and
-; body, and Link's sword against the shadow (a hit takes a point and knocks
-; it back).
+; The sword tests, skipped while either of them is in the air or Dark Link
+; is invulnerable (timerFast+8):
+; 1. Link's sword (Sword_GetHitbox) against its shield, a box 6 wide and
+;    9 high in front of it at its stance's height: a clink.  Both are
+;    knocked back (Enemy_KnockBack), it at Link's X velocity reversed.
+; 2. Else against its body (29 high): a hit.  Its attack is cut off and it
+;    loses 1 hit point, whatever Link's attack level.  Not the last: it is
+;    invulnerable for 56 frames and knocked back for 24
+;    (timerFast+TIMER_BOSS), hopping 3 pixels per frame up and 0.625 away
+;    from Link, with a sound.  The last: the timer is $FF, its death.
+; 3. Else its sword (swordX+1, swordY+1, a box 14 by 2) against Link's
+;    shield: a clink as in 1; else against Link, who is hurt
+;    (Link_HurtByEnemy).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_CheckSword:
-    lda     objFacing+3             ; $9A8D
-    ora     linkJumpState           ; $9A8F
+    lda     objFacing+3             ; $9A8D  either in the air, or
+    ora     linkJumpState           ; $9A8F  invulnerable: no tests
     ora     timerFast+8             ; $9A92
     bne     @done                   ; $9A95
-    jsr     Sword_GetHitbox         ; $9A97
-    ldy     ram_00A0                ; $9A9A
+    jsr     Sword_GetHitbox         ; $9A97  Link's sword (box A)
+    ldy     darkLinkWalkDir         ; $9A9A  against its shield (box B)
     lda     drawScreenX+1           ; $9A9C
     adc     #$08                    ; $9A9E
     adc     DarkLinkSwordXOffsets,y ; $9AA0
     sta     temp4                   ; $9AA3
     lda     #$06                    ; $9AA5
     sta     temp6                   ; $9AA7
-    ldy     ram_0018                ; $9AA9
+    ldy     darkLinkStanding        ; $9AA9
     lda     objY+1                  ; $9AAB
     adc     DarkLinkSwordYOffsets,y ; $9AAD
     sta     temp5                   ; $9AB0
     lda     #$09                    ; $9AB2
     sta     temp7                   ; $9AB4
     jsr     Hitbox_Overlap          ; $9AB6
-    bcs     @loc_9AF5               ; $9AB9
-    jsr     Enemy_GetHitbox         ; $9ABB
-    ldy     ram_0018                ; $9ABE
+    bcs     @clink                  ; $9AB9
+    jsr     Enemy_GetHitbox         ; $9ABB  against its body,
+    ldy     darkLinkStanding        ; $9ABE  29 high
     lda     objY+1                  ; $9AC0
     sta     temp5                   ; $9AC2
     lda     #$1D                    ; $9AC4
     sta     temp7                   ; $9AC6
     jsr     Hitbox_Overlap          ; $9AC8
-    bcc     @loc_9B07               ; $9ACB
-    ldy     #$00                    ; $9ACD
+    bcc     @checkItsSword          ; $9ACB
+    ldy     #$00                    ; $9ACD  hit: attack off,
     sty     enemyAiDir              ; $9ACF
     dey                             ; $9AD2
-    dec     enemyHp                 ; $9AD3
-    beq     @loc_9ADE               ; $9AD5
-    lda     #$38                    ; $9AD7
+    dec     enemyHp                 ; $9AD3  a hit point
+    beq     @setTimer               ; $9AD5  (the last: death, $FF)
+    lda     #$38                    ; $9AD7  invulnerable 56 frames,
     sta     timerFast+8             ; $9AD9
-    ldy     #$18                    ; $9ADC
+    ldy     #$18                    ; $9ADC  knocked back 24
 
-@loc_9ADE:
+@setTimer:
     sty     timerFast+TIMER_BOSS    ; $9ADE
-    jsr     Enemy_FaceLink          ; $9AE1
+    jsr     Enemy_FaceLink          ; $9AE1  away from Link,
     lda     DarkLinkKnockBackSpeeds,y ; $9AE4
     sta     objXVelocity+1          ; $9AE7
-    lda     #$FD                    ; $9AE9
+    lda     #$FD                    ; $9AE9  hopping
     sta     objYVelocity+1          ; $9AEB
-    lda     #$01                    ; $9AEE
+    lda     #$01                    ; $9AEE  sound
     sta     dmcRequest              ; $9AF0
-    sta     objFacing+3             ; $9AF2
+    sta     objFacing+3             ; $9AF2  in the air
 
 @done:
     rts                             ; $9AF4
 
-@loc_9AF5:
-    lda     #$00                    ; $9AF5
+@clink:
+    lda     #$00                    ; $9AF5  both knocked back,
     sta     temp11                  ; $9AF7
     jsr     Enemy_KnockBack         ; $9AF9
-    lda     objXVelocity            ; $9AFC
-    eor     #$FF                    ; $9AFE
+    lda     objXVelocity            ; $9AFC  it at Link's velocity
+    eor     #$FF                    ; $9AFE  reversed,
     sta     objXVelocity+1          ; $9B00
-    lda     #$02                    ; $9B02
+    lda     #$02                    ; $9B02  clink
     sta     sfxRequest              ; $9B04
 
 @done2:
     rts                             ; $9B06
 
-@loc_9B07:
-    jsr     Link_GetShieldHitbox    ; $9B07
-    ldy     #$00                    ; $9B0A
+@checkItsSword:
+    jsr     Link_GetShieldHitbox    ; $9B07  Link's shield (box A)
+    ldy     #$00                    ; $9B0A  against its sword (box B)
     lda     swordX+1                ; $9B0C
     pha                             ; $9B0F
     cmp     drawScreenX+1           ; $9B10
-    bcs     @loc_9B15               ; $9B12
+    bcs     @swordBox               ; $9B12
     iny                             ; $9B14
 
-@loc_9B15:
+@swordBox:
     pla                             ; $9B15
     adc     DarkLinkSwordXOffsets2,y ; $9B16
     sta     temp4                   ; $9B19
@@ -3052,8 +3123,8 @@ DarkLink_CheckSword:
     lda     #$02                    ; $9B26
     sta     temp7                   ; $9B28
     jsr     Hitbox_Overlap          ; $9B2A
-    bcs     @loc_9AF5               ; $9B2D
-    jsr     Link_GetHitbox          ; $9B2F
+    bcs     @clink                  ; $9B2D
+    jsr     Link_GetHitbox          ; $9B2F  against Link
     jsr     Hitbox_Overlap          ; $9B32
     bcc     @done2                  ; $9B35
 ; (code below not executed in the test movies)
@@ -3063,19 +3134,21 @@ DarkLink_CheckSword:
 ; ---------------------------------------------------------------------------
 ; DarkLink_Defeated
 ;
-; After the shadow is beaten, wait for Link to land.
+; Phase 4: when the flash ends, the room's palette string $0E is written.
+; When Link is on the floor and the 64 frames are up, the game freezes and
+; phase 5 starts (timerFast+3 = 128).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_Defeated:
-    lda     spellFlash              ; $9B3A
+    lda     spellFlash              ; $9B3A  flash ending?
     cmp     #$81                    ; $9B3D
-    bne     @loc_9B46               ; $9B3F
-    lda     #$0E                    ; $9B41
+    bne     @checkLink              ; $9B3F
+    lda     #$0E                    ; $9B41  palette string $0E
     sta     ppuStringSelect         ; $9B43
 
-@loc_9B46:
-    lda     linkJumpState           ; $9B46
+@checkLink:
+    lda     linkJumpState           ; $9B46  Link landed, time up?
     ora     timerFast+3             ; $9B49
     bne     DarkLink_WalkLinkToCenter_Done ; $9B4C
     lda     #$80                    ; $9B4E
@@ -3084,24 +3157,27 @@ DarkLink_Defeated:
 ; ---------------------------------------------------------------------------
 ; DarkLink_WalkLinkToCenter
 ;
-; Walk Link to the middle of the room.
+; Phase 5: Link in state 3; after 128 frames he walks a pixel per frame to
+; X $160 (objX + $0B = $6C on page 1), facing right.  Then Dark Link
+; (object 1, where the old man will stand) goes to ($17C, $B0) and phase 6
+; starts (timerSlow+4 = $0D).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_WalkLinkToCenter:
-    lda     #$03                    ; $9B53
+    lda     #$03                    ; $9B53  Link: state 3
     sta     objState                ; $9B55
-    ldy     timerFast+3             ; $9B57
+    ldy     timerFast+3             ; $9B57  waiting?
     bne     DarkLink_WalkLinkToCenter_Done ; $9B5A
-    lsr     a                       ; $9B5C
+    lsr     a                       ; $9B5C  facing right, both on page 1
     sta     linkWalkDir             ; $9B5D
     sta     objXHi                  ; $9B5F
     sta     objXHi+1                ; $9B61
-    lda     objX                    ; $9B63
+    lda     objX                    ; $9B63  at the middle?
     adc     #$0B                    ; $9B65
     cmp     #$6C                    ; $9B67
     beq     DarkLink_StartWalk      ; $9B69
-    dec     objX                    ; $9B6B
+    dec     objX                    ; $9B6B  else a pixel toward it
     bcs     DarkLink_WalkLinkToCenter_Done ; $9B6D
 ; (code below not executed in the test movies)
     inc     objX                    ; $9B6F
@@ -3112,19 +3188,19 @@ DarkLink_WalkLinkToCenter_Done:
     rts                             ; $9B73
 
 DarkLink_StartTriforce:
-    lda     #$C0                    ; $9B74
+    lda     #$C0                    ; $9B74  flash,
     sta     spellFlash              ; $9B76
-    lda     #$20                    ; $9B79
+    lda     #$20                    ; $9B79  music $20,
     sta     musicRequest            ; $9B7B
-    lda     #$15                    ; $9B7D
+    lda     #$15                    ; $9B7D  phase 7, timerSlow+4 = $15
     bne     DarkLink_PlaceAtCenter  ; $9B7F
 
 DarkLink_StartWalk:
-    lda     #$0D                    ; $9B81
+    lda     #$0D                    ; $9B81  phase 6, timerSlow+4 = $0D
 
 DarkLink_PlaceAtCenter:
     sta     timerSlow+4             ; $9B83
-    lda     #$7C                    ; $9B86
+    lda     #$7C                    ; $9B86  object 1 at ($17C, $B0)
     sta     objX+1                  ; $9B88
     lda     #$B0                    ; $9B8A
     sta     objY+1                  ; $9B8C
@@ -3133,44 +3209,49 @@ DarkLink_PlaceAtCenter:
 ; ---------------------------------------------------------------------------
 ; DarkLink_ShowTriforce
 ;
-; Show the Triforce, with the screen flashing and music.
+; Phase 6, by timerSlow+4 from $0D (a step every 21 frames): from 8 the
+; old man stands beside Link with the Triforce above him (OldMan_Draw
+; through Enemy_Draw), flickering until 5; at 2 the screen flashes, music
+; $20 plays and phase 7 starts (DarkLink_StartTriforce).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_ShowTriforce:
     lda     timerSlow+4             ; $9B91
-    cmp     #$02                    ; $9B94
+    cmp     #$02                    ; $9B94  at 2: phase 7
     beq     DarkLink_StartTriforce  ; $9B96
-    cmp     #$09                    ; $9B98
+    cmp     #$09                    ; $9B98  9 or more: nothing yet
     bcs     DarkLink_WalkLinkToCenter_Done ; $9B9A
-    cmp     #$06                    ; $9B9C
-    bcc     @loc_9BA5               ; $9B9E
+    cmp     #$06                    ; $9B9C  6-8: every other frame
+    bcc     @draw                   ; $9B9E
     lda     frameCounter            ; $9BA0
     lsr     a                       ; $9BA2
     bcc     DarkLink_WalkLinkToCenter_Done ; $9BA3
 
-@loc_9BA5:
+@draw:
     jmp     Enemy_Draw              ; $9BA5
 
 ; ---------------------------------------------------------------------------
 ; DarkLink_StartEnding
 ;
-; Hold Link's pose, then start the ending (gameState 3).
+; Phase 7: Link faces left, holding the Triforce up (state $0B), the old
+; man beside him, until timerSlow+4 runs out from $15 (about 440 frames);
+; then the ending starts (gameState 3) with rendering off.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DarkLink_StartEnding:
-    lda     #$02                    ; $9BA8
+    lda     #$02                    ; $9BA8  Link faces left,
     sta     linkWalkDir             ; $9BAA
-    ldy     timerSlow+4             ; $9BAC
-    beq     @loc_9BBA               ; $9BAF
-    lda     #$0B                    ; $9BB1
+    ldy     timerSlow+4             ; $9BAC  time up?
+    beq     @ending                 ; $9BAF
+    lda     #$0B                    ; $9BB1  state $0B
     sta     objState                ; $9BB3
     inc     enemyAiState            ; $9BB5
     jmp     Enemy_Draw              ; $9BB7
 
-@loc_9BBA:
-    lda     #$03                    ; $9BBA
+@ending:
+    lda     #$03                    ; $9BBA  the ending
     sta     gameState               ; $9BBC
     lda     #$00                    ; $9BBF
     sta     PPUMASK                 ; $9BC1
@@ -3832,8 +3913,12 @@ Fokkeru_Ai:
 ; ---------------------------------------------------------------------------
 ; Thunderbird_Draw
 ;
-; Draw the Thunderbird (its face changes as it is hurt).
+; Draw the Thunderbird, a large bird of many sprite pairs.  Its face, the
+; tile written to sramEnemyTiles+47, shows whether it can be hurt: $29 in
+; palette 2 at exactly 192 hit points; $19 in palette 3 above; below, $2B
+; for 8 frames of every 32, else $19, in palette 3.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Thunderbird_Draw:
@@ -4635,205 +4720,228 @@ Generator_Init_Bank5:
 ; ---------------------------------------------------------------------------
 ; Thunderbird_Init
 ;
-; Spawn routine of the Thunderbird: only while its area flag is set.
+; Spawn routine of the Thunderbird ($22): only while the area's flag is set
+; (not yet beaten), else removed at once.  It starts drifting down at 1/2
+; pixel per frame.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Thunderbird_Init:
-    ldx     #$01                    ; $A33B
+    ldx     #$01                    ; $A33B  beaten already?
     jsr     Area_TestFlag           ; $A33D
     ldx     currentObject           ; $A340
     cmp     #$00                    ; $A342
-    bne     @loc_A349               ; $A344
+    bne     @place                  ; $A344
 ; (code below not executed in the test movies)
-    sta     enemyActive,x           ; $A346
+    sta     enemyActive,x           ; $A346  yes: gone
     rts                             ; $A348
 ; (end of code not executed in the test movies)
 
-@loc_A349:
+@place:
     lda     #$08                    ; $A349
     sta     objYVelocity+1,x        ; $A34B
     rts                             ; $A34E
 
+; Thunderbird: X velocity toward Link by facing (0 right, 1 left).
 ThunderbirdSpeeds:
     .byte   $10, $F0                                                        ; $A34F
 
+; Thunderbird fireballs: X velocity by rng+2 bits 2-0, 1/8 to 1 pixel per
+; frame either way.
 ThunderbirdShotSpeeds:
-    .byte   $02                                                             ; $A351
-; (unreferenced: $A352-$A352, 1 bytes)
-    .byte   $04                                                             ; $A352
-    .byte   $08                                                             ; $A353
-; (unreferenced: $A354-$A355, 2 bytes)
-    .byte   $10, $FE                                                        ; $A354
-    .byte   $FC, $F8, $F0                                                   ; $A356
+    .byte   $02, $04, $08, $10, $FE, $FC, $F8, $F0                          ; $A351
 
 ; ---------------------------------------------------------------------------
 ; Thunderbird_Ai
 ;
-; Thunderbird: when Link reaches it, the scroll freezes; it flies, bobbing,
-; turning toward him every 32 frames, and spits fireballs (projectile type
-; 8) every 32 frames (16 below 96 hit points).  It cannot be hurt until its
-; hit points are below 192 (by Thunder).
+; The Thunderbird ($22), the Great Palace's boss, with the bank 4 bosses'
+; intro and death (as Boss_UpdateIntro, inline):
+; - Until Link's screen reaches page 1 of the room (scrollXHi), it is only
+;   drawn.  Then the scroll freezes, and it waits 144 frames.
+; - Dying (its type's hitbox $FF), it is only drawn while its stun
+;   flashes.  Then every projectile is removed, every other living enemy
+;   takes a hit at level $0A (224 points), and the music stops.
+; - With 192 hit points or more it is only drawn, with no hit tests: Link
+;   can't hurt it until the Thunder spell, which does it 2 points (flags
+;   bit 5), brings it below 192.  Its body never hurts Link (it doesn't
+;   call Enemy_HurtLinkOnContact); only its fireballs do.
+; - While Link isn't mid-stroke (linkAttackFrame 0) it moves his sword
+;   out of the hit tests (swordY = $F8).
 ;
-; Status:  provisional
+; It flies toward Link at 1 pixel per frame, turning every 32 frames, and
+; bobs: its Y velocity swings between 1 pixel per frame up and down, by
+; 1/16 every 4 frames, 64 pixels each way every 256 frames.  Every 32
+; frames (16 below 96 hit points) it spits a fireball (projectile type 8)
+; from 12 pixels right of its X, 1 pixel per frame up and 1/8 to 1
+; either way at random (ThunderbirdShotSpeeds), falling with gravity.
+;
+; BUG: the intro and death paths drop the AI's return address with
+; pla/pla as Boss_UpdateIntro does, but here they are in the AI routine
+; itself, so they drop Enemies_Update's: the enemy slots after the
+; Thunderbird's, and its projectile slot, are not updated in those frames.
+; Its room has no other enemies.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Thunderbird_Ai:
-    lda     scrollFrozen            ; $A359
-    bne     @loc_A36B               ; $A35C
-    lda     scrollXHi               ; $A35E
-    beq     @loc_A3BD               ; $A361
-    inc     scrollFrozen            ; $A363
-    lda     #$90                    ; $A366
+    lda     scrollFrozen            ; $A359  fight on already?
+    bne     @fightOn                ; $A35C
+    lda     scrollXHi               ; $A35E  Link not yet at page 1:
+    beq     @drawOnly               ; $A361  just draw it
+    inc     scrollFrozen            ; $A363  scroll frozen,
+    lda     #$90                    ; $A366  wait 144 frames
     sta     timerFast+TIMER_ENEMY,x ; $A368
 
-@loc_A36B:
-    lda     sramEnemyHitbox+34      ; $A36B
-    bpl     @loc_A3C2               ; $A36E
-    ldy     enemyStunTimer,x        ; $A370
-    bne     @loc_A3BD               ; $A373
-    inc     enemyActive,x           ; $A375
+@fightOn:
+    lda     sramEnemyHitbox+34      ; $A36B  dying (hitbox $FF)?
+    bpl     @alive                  ; $A36E
+    ldy     enemyStunTimer,x        ; $A370  still flashing: draw it
+    bne     @drawOnly               ; $A373
+    inc     enemyActive,x           ; $A375  burst
     lda     #$0A                    ; $A377
     sta     drawScratch             ; $A379
     lda     currentObject           ; $A37B
     pha                             ; $A37D
-    ldx     #$05                    ; $A37E
+    ldx     #$05                    ; $A37E  every slot:
 
 @loop:
     stx     currentObject           ; $A380
-    lda     #$00                    ; $A382
+    lda     #$00                    ; $A382  projectile gone
     sta     objState+7,x            ; $A384
-    lda     enemyActive,x           ; $A386
-    beq     @loc_A3B2               ; $A388
+    lda     enemyActive,x           ; $A386  a living enemy:
+    beq     @next                   ; $A388
     cmp     #$01                    ; $A38A
-    bne     @loc_A3B2               ; $A38C
+    bne     @next                   ; $A38C
 ; (code below not executed in the test movies)
     inx                             ; $A38E
     ldy     #$01                    ; $A38F
     jsr     Obj_ComputeScreenPos    ; $A391
     ldx     currentObject           ; $A394
-    ldy     drawScratch             ; $A396
-    bne     @loc_A3AF               ; $A398
+    ldy     drawScratch             ; $A396  (always $0A)
+    bne     @hit                    ; $A398
     lda     drawOffscreen+1         ; $A39A
     and     #$88                    ; $A39C
-    bne     @loc_A3B2               ; $A39E
+    bne     @next                   ; $A39E
     ldy     enemyType,x             ; $A3A0
     lda     sramEnemyFlags,y        ; $A3A2
     ldy     #$09                    ; $A3A5
     and     #$A0                    ; $A3A7
-    bmi     @loc_A3B2               ; $A3A9
-    beq     @loc_A3AF               ; $A3AB
+    bmi     @next                   ; $A3A9
+    beq     @hit                    ; $A3AB
     ldy     #$01                    ; $A3AD
 
-@loc_A3AF:
-    jsr     Enemy_TakeDamage        ; $A3AF
+@hit:
+    jsr     Enemy_TakeDamage        ; $A3AF  takes a hit
 ; (end of code not executed in the test movies)
 
-@loc_A3B2:
+@next:
     dex                             ; $A3B2
     bpl     @loop                   ; $A3B3
     pla                             ; $A3B5
     sta     currentObject           ; $A3B6
     tax                             ; $A3B8
-    lda     #$80                    ; $A3B9
+    lda     #$80                    ; $A3B9  music off
     sta     musicRequest            ; $A3BB
 
-@loc_A3BD:
-    pla                             ; $A3BD
-    pla                             ; $A3BE
+@drawOnly:
+    pla                             ; $A3BD  BUG: drops Enemies_Update's
+    pla                             ; $A3BE  return (see above)
     jmp     Enemy_Draw              ; $A3BF
 
-@loc_A3C2:
-    lda     linkAttackFrame         ; $A3C2
-    bne     @loc_A3CC               ; $A3C5
+@alive:
+    lda     linkAttackFrame         ; $A3C2  Link not mid-stroke: no sword
+    bne     @checkHp                ; $A3C5
     lda     #$F8                    ; $A3C7
     sta     swordY                  ; $A3C9
 
-@loc_A3CC:
-    lda     enemyHp,x               ; $A3CC
-    cmp     #$C0                    ; $A3CE
-    bcc     @loc_A3D8               ; $A3D0
+@checkHp:
+    lda     enemyHp,x               ; $A3CC  192 or more: just draw
+    cmp     #$C0                    ; $A3CE  (no hit tests)
+    bcc     @hitTests               ; $A3D0
     jsr     Enemy_Draw              ; $A3D2
-    jmp     @loc_A3DB               ; $A3D5
+    jmp     @checkKilled            ; $A3D5
 
-@loc_A3D8:
+@hitTests:
     jsr     Enemy_UpdateCommon      ; $A3D8
 
-@loc_A3DB:
-    lda     #$01                    ; $A3DB
-    cmp     enemyActive,x           ; $A3DD
-    beq     @loc_A3EF               ; $A3DF
-    sta     enemyActive,x           ; $A3E1
-    lda     #$FF                    ; $A3E3
+@checkKilled:
+    lda     #$01                    ; $A3DB  killed (Enemy_Kill made it
+    cmp     enemyActive,x           ; $A3DD  ENEMY_STATE_DYING)?
+    beq     @checkWait              ; $A3DF
+    sta     enemyActive,x           ; $A3E1  then keep it active, dying:
+    lda     #$FF                    ; $A3E3  hitbox $FF,
     sta     sramEnemyHitbox+34      ; $A3E5
     sta     timerFast+TIMER_ENEMY,x ; $A3E8
-    lsr     a                       ; $A3EB
+    lsr     a                       ; $A3EB  flashing 127 frames
     sta     enemyStunTimer,x        ; $A3EC
 
-@loc_A3EF:
-    lda     timerFast+TIMER_ENEMY,x ; $A3EF
-    beq     @loc_A3F5               ; $A3F2
+@checkWait:
+    lda     timerFast+TIMER_ENEMY,x ; $A3EF  waiting?
+    beq     @act                    ; $A3F2
     rts                             ; $A3F4
 
-@loc_A3F5:
-    lda     #$18                    ; $A3F5
+@act:
+    lda     #$18                    ; $A3F5  hit point bar, 24 per unit
     jsr     Boss_DrawHpBar_Bank5    ; $A3F7
-    lda     frameCounter            ; $A3FA
-    bne     @loc_A3FE               ; $A3FC
+    lda     frameCounter            ; $A3FA  (a test that branches to the
+    bne     @shotMask               ; $A3FC  next instruction either way)
 
-@loc_A3FE:
-    lda     #$1F                    ; $A3FE
-    ldy     enemyHp,x               ; $A400
+@shotMask:
+    lda     #$1F                    ; $A3FE  every 32 frames,
+    ldy     enemyHp,x               ; $A400  16 below 96 hit points:
     cpy     #$60                    ; $A402
-    bcs     @loc_A407               ; $A404
+    bcs     @checkShot              ; $A404
     lsr     a                       ; $A406
 
-@loc_A407:
+@checkShot:
     and     frameCounter            ; $A407
-    bne     @loc_A436               ; $A409
-    jsr     Enemy_FireProjectile    ; $A40B
-    bcs     @loc_A436               ; $A40E
-    lda     #$08                    ; $A410
+    bne     @move                   ; $A409
+    jsr     Enemy_FireProjectile    ; $A40B  a fireball
+    bcs     @move                   ; $A40E
+    lda     #$08                    ; $A410  projectile type 8,
     sta     a:objState+7,y          ; $A412
-    lda     objX+1,x                ; $A415
+    lda     objX+1,x                ; $A415  12 pixels right,
     adc     #$0C                    ; $A417
     sta     a:objX+7,y              ; $A419
     lda     objXHi+1,x              ; $A41C
     adc     #$00                    ; $A41E
     sta     a:objXHi+7,y            ; $A420
-    lda     rng+2                   ; $A423
+    lda     rng+2                   ; $A423  at a random speed across,
     and     #$07                    ; $A426
     tax                             ; $A428
     lda     ThunderbirdShotSpeeds,x ; $A429
     sta     a:objXVelocity+7,y      ; $A42C
-    lda     #$F0                    ; $A42F
+    lda     #$F0                    ; $A42F  1 pixel per frame up
     sta     objYVelocity+7,y        ; $A431
     ldx     currentObject           ; $A434
 
-@loc_A436:
+@move:
     jsr     Enemy_MoveX             ; $A436
     jsr     Enemy_MoveY             ; $A439
-    lda     frameCounter            ; $A43C
+    lda     frameCounter            ; $A43C  every 4 frames: bob
     and     #$03                    ; $A43E
-    bne     @loc_A45D               ; $A440
-    lda     objYVelocity+1,x        ; $A442
-    cmp     #$10                    ; $A445
-    beq     @loc_A44D               ; $A447
+    bne     @checkTurn              ; $A440
+    lda     objYVelocity+1,x        ; $A442  at 1 px/frame either way,
+    cmp     #$10                    ; $A445  turn the other way
+    beq     @turnY                  ; $A447
     cmp     #$F0                    ; $A449
-    bne     @loc_A44F               ; $A44B
+    bne     @accelY                 ; $A44B
 
-@loc_A44D:
+@turnY:
     inc     enemyAiState,x          ; $A44D
 
-@loc_A44F:
-    lda     enemyAiState,x          ; $A44F
+@accelY:
+    lda     enemyAiState,x          ; $A44F  +1/16 (odd state) or -1/16
     lsr     a                       ; $A451
     inc     objYVelocity+1,x        ; $A452
-    bcs     @loc_A45D               ; $A455
+    bcs     @checkTurn              ; $A455
     dec     objYVelocity+1,x        ; $A457
     dec     objYVelocity+1,x        ; $A45A
 
-@loc_A45D:
-    lda     frameCounter            ; $A45D
+@checkTurn:
+    lda     frameCounter            ; $A45D  every 32 frames: toward Link
     and     #$1F                    ; $A45F
     bne     @done                   ; $A461
     jsr     Enemy_FaceLink          ; $A463
@@ -4843,95 +4951,108 @@ Thunderbird_Ai:
 @done:
     rts                             ; $A46B
 
-DarkLinkTriggerYOffsets:
+; OldMan_Draw: the Triforce's X and Y offsets, by phase 0-5, 6, 7.
+TriforceXOffsets:
     .byte   $10, $00, $EC                                                   ; $A46C
 
-DarkLinkTriggerXOffsets:
+TriforceYOffsets:
     .byte   $00, $F0, $E0                                                   ; $A46F
 
 ; ---------------------------------------------------------------------------
-; DarkLink_DrawTrigger
+; OldMan_Draw
 ;
-; Draw the Dark Link trigger (the shadow's spawn).
+; Draw routine of type $23, used by DarkLink_Ai through Enemy_Draw before
+; and after the fight (Dark Link itself is drawn by DarkLink_Draw): the old
+; man, at Dark Link's position, and the Triforce.  The old man is
+; SpritePairTiles entry $36, or $38 one frame count in four (enemyAiState
+; bits 4-3 zero, 8 frames of every 32).  The Triforce is entry $3A in
+; palette 3 (glowing, Triforce_FlashPalette), its right sprite mirrored,
+; placed by phase (TriforceXOffsets, TriforceYOffsets): 16 pixels right of
+; him, sitting on the pillar (phases 0-1); 16 above him (6); 32 above and
+; 20 left, in Link's raised hands (7).
 ;
-; Status:  provisional
+; In:      x = 0 (Dark Link's slot)
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-DarkLink_DrawTrigger:
+OldMan_Draw:
     lda     #$02                    ; $A472
     sta     temp2                   ; $A474
-    ldx     #$36                    ; $A476
+    ldx     #$36                    ; $A476  the old man: $36,
     lda     enemyAiState            ; $A478
     and     #$18                    ; $A47A
-    bne     @loc_A480               ; $A47C
-    inx                             ; $A47E
+    bne     @drawLeft               ; $A47C
+    inx                             ; $A47E  or $38 a quarter of the time
     inx                             ; $A47F
 
-@loc_A480:
+@drawLeft:
     jsr     Sprite_DrawEnemyPairKeepX ; $A480
-    ldx     #$00                    ; $A483
+    ldx     #$00                    ; $A483  offsets by phase: 0-5,
     lda     objFacing+4             ; $A485
     cmp     #$06                    ; $A487
-    bcc     @loc_A491               ; $A489
-    inx                             ; $A48B
+    bcc     @placeRight             ; $A489
+    inx                             ; $A48B  6,
     cmp     #$07                    ; $A48C
-    bne     @loc_A491               ; $A48E
-    inx                             ; $A490
+    bne     @placeRight             ; $A48E
+    inx                             ; $A490  7
 
-@loc_A491:
+@placeRight:
     lda     objY+1                  ; $A491
     clc                             ; $A493
-    adc     DarkLinkTriggerXOffsets,x ; $A494
+    adc     TriforceYOffsets,x      ; $A494
     sta     temp0                   ; $A497
     lda     drawScreenX+1           ; $A499
     clc                             ; $A49B
-    adc     DarkLinkTriggerYOffsets,x ; $A49C
+    adc     TriforceXOffsets,x      ; $A49C
     sta     temp1                   ; $A49F
     lda     drawOffscreen+1         ; $A4A1
     asl     a                       ; $A4A3
     asl     a                       ; $A4A4
     and     #$0F                    ; $A4A5
     sta     drawOffscreen+1         ; $A4A7
-    lda     #$03                    ; $A4A9
+    lda     #$03                    ; $A4A9  palette 3
     sta     temp3                   ; $A4AB
-    ldx     #$3A                    ; $A4AD
+    ldx     #$3A                    ; $A4AD  the Triforce: $3A,
     jsr     Sprite_DrawEnemyPairKeepX ; $A4AF
-    lda     #$43                    ; $A4B2
+    lda     #$43                    ; $A4B2  its last sprite mirrored
     sta     oamBuffer - 2,y         ; $A4B4
     rts                             ; $A4B7
 
-DarkLinkFlashString:
+; Sprite palette 3 (its color 2 replaced by TriforceFlashColors).
+TriforceFlashString:
     .byte   $3F, $1C, $04, $0F, $30, $30, $30, $FF                          ; $A4B8
 
-DarkLinkFlashColors:
+TriforceFlashColors:
     .byte   $17, $27, $37, $37                                              ; $A4C0
 
 ; ---------------------------------------------------------------------------
-; DarkLink_FlashPalette
+; Triforce_FlashPalette
 ;
-; Queue the flashing palette of the Dark Link room.
+; Every frame of DarkLink_Ai: queue sprite palette 3 as $0F, $30, x, $30,
+; x cycling $17, $27, $37, $37 every 4 frames (TriforceFlashColors), so the
+; Triforce (drawn in palette 3) glows.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-DarkLink_FlashPalette:
-    ldx     ppuBuffer0Len           ; $A4C4
+Triforce_FlashPalette:
+    ldx     ppuBuffer0Len           ; $A4C4  append TriforceFlashString
     ldy     #$00                    ; $A4C7
 
 @loop:
-    lda     DarkLinkFlashString,y   ; $A4C9
+    lda     TriforceFlashString,y   ; $A4C9
     sta     ppuBuffer0,x            ; $A4CC
     inx                             ; $A4CF
     iny                             ; $A4D0
     cpy     #$08                    ; $A4D1
     bcc     @loop                   ; $A4D3
-    lda     frameCounter            ; $A4D5
-    lsr     a                       ; $A4D7
+    lda     frameCounter            ; $A4D5  its color by frameCounter
+    lsr     a                       ; $A4D7  bits 3-2
     lsr     a                       ; $A4D8
     and     #$03                    ; $A4D9
     tay                             ; $A4DB
-    lda     DarkLinkFlashColors,y   ; $A4DC
-    sta     ppuBuffer0-3,x          ; $A4DF  the string's second color
-    dex                             ; $A4E2
-    stx     ppuBuffer0Len           ; $A4E3
+    lda     TriforceFlashColors,y   ; $A4DC
+    sta     ppuBuffer0-3,x          ; $A4DF  its color 2
+    dex                             ; $A4E2  (the next string overwrites
+    stx     ppuBuffer0Len           ; $A4E3  the $FF)
     ldx     currentObject           ; $A4E6
     rts                             ; $A4E8
 

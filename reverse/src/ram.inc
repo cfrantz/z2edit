@@ -31,7 +31,7 @@ linkFairy               = $0013     ; 0 = Link, 8 = fairy; also an offset into t
 linkDeltaX              = $0014     ; pixels Link moved horizontally this frame
 ram_0015                = $0015
 linkStanding            = $0017     ; 1 = standing, 0 = crouching (lower hitbox and shield)
-ram_0018                = $0018
+darkLinkStanding        = $0018     ; linkStanding for object 1, Dark Link: 1 = standing (shield and strokes high), 0 = crouching
 ; ---------------------------------------------------------------------------
 ; Object slots
 ;
@@ -66,7 +66,7 @@ overworldScrollY        = $007F     ; vertical scroll of the overworld map, in p
 objState                = $0080     ; [15] per-object state: Link's animation, an enemy's behavior state, a projectile's type
 objOamOffset            = $0090     ; [15] offset in oamBuffer of the object's sprites; rotated every frame (oamRotation) to spread sprite flicker
 linkWalkDir             = $009F     ; last horizontal direction held: 1 = right, 2 = left
-ram_00A0                = $00A0
+darkLinkWalkDir         = $00A0     ; linkWalkDir for object 1, Dark Link: the way its sprites face (toward Link)
 enemyType               = $00A1     ; [6] enemy type, by enemy index
 objCollision            = $00A7     ; [7] collision bits: 3-0 = background above, below, left, right; for enemies, bit 4 = touching Link, bit 5 = hit
 linkWalkFrame           = $00AE     ; walking animation frame, 0-2

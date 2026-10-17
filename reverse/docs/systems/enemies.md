@@ -20,7 +20,7 @@ into SRAM when the world is loaded (`Mode_LoadWorld`).  The engine in bank
 | `sramEnemyAttr` | bits 7-6 sprite palette, bit 5 sword clinks, bit 4 drains experience, bits 3-0 experience class |
 | `sramEnemyDamage` | bits 7-6 item drop group, bit 5 blocks Link's projectiles, bit 4 immune to SPELL, bits 3-0 damage class |
 | `sramEnemyHitbox` | hitbox, an index into `EnemyHitboxes`; $FF for a boss |
-| `sramEnemyFlags` | bit 7 immune to Thunder, bit 6 comes back after dying, bit 5 Thunder weak, bit 4 not hit by the sword, bits 3-0 background collision probe set |
+| `sramEnemyFlags` | bit 7 immune to Thunder, bit 6 comes back after dying, bit 5 Thunder does only 2 points (level 1), bit 4 not hit by the sword, bits 3-0 background collision probe set |
 | `sramEnemyDrawPtrs` | routine that draws it |
 | `sramEnemyTiles` | sprite tiles |
 

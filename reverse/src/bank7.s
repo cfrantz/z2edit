@@ -6001,7 +6001,7 @@ Enemy_DieStep:
     lda     objState                ; $DD03
     sta     objState+1              ; $DD05
     lda     linkWalkDir             ; $DD07
-    sta     ram_00A0                ; $DD09
+    sta     darkLinkWalkDir         ; $DD09
     lda     #$50                    ; $DD0B
     sta     objOamOffset+1          ; $DD0D
     lda     #$00                    ; $DD0F

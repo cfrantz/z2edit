@@ -41,8 +41,8 @@ own colors (`FireOctorok_Draw`).
 | $1F | (unused) | 0 | 3 | 1 | - |  | `$0000` |
 | $20 | [Barrier](enemies/barrier.md) | 0 | 3 | 6 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Barrier_Ai` |
 | $21 | (unused) | 0 | 3 | 1 | - |  | `$0000` |
-| $22 | Thunderbird | 192 | 1000 | 5 | - | blocks Link's projectiles, immune to SPELL, Thunder weak | `Thunderbird_Ai` |
-| $23 | Dark Link Trigger | 248 | 150 | 4 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `DarkLink_Ai` |
+| $22 | [Thunderbird](enemies/thunderbird.md) | 192 | 1000 | 5 | - | blocks Link's projectiles, immune to SPELL, Thunder does only 2 | `Thunderbird_Ai` |
+| $23 | [Dark Link](enemies/dark-link.md) | 248 | 150 | 4 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `DarkLink_Ai` |
 
 ## Enemies
 
@@ -79,22 +79,22 @@ from the bottom up.
 
 ## Bosses
 
-- **Thunderbird** ($22, `Thunderbird_Ai`): appears when Link reaches the
-  second page of its room (the scroll freezes).  It flies, bobbing,
-  turning toward Link every 32 frames, and spits fireballs (projectile
-  type 8, at random speeds) every 32 frames, every 16 once below 96 hit
-  points.  With 192 hit points it cannot be hurt until the Thunder spell
-  (50 points) brings it below 192.
-- **Dark Link** ($23, `DarkLink_Ai`, `DarkLink_Init`): in the last room.
-  When Link arrives the scroll freezes, the screen flashes and his shadow
-  steps out of him (`DarkLink_Appear`, `DarkLink_Separate`).  The shadow
-  is drawn with Link's own sprites (`DarkLink_Draw`) and fights like him
-  (`DarkLink_Fight`): close to Link it reacts to his attacks, raising its
-  shield to his height, backing off or jumping away; farther away it
-  approaches.  Its sword hurts Link; his sword bounces off its shield; it
-  takes 8 hits.  When it is defeated, Link walks to the middle of the
-  room, the Triforce appears, and the ending begins (`gameState` 3,
-  `DarkLink_StartEnding`).
+- **[Thunderbird](enemies/thunderbird.md)** ($22, `Thunderbird_Ai`):
+  - It appears when Link's screen reaches page 1 of room $35, and the
+    scroll freezes.
+  - It flies after Link, bobbing, and spits fireballs every 32 frames, or
+    16 below 96 hit points.
+  - With 192 hit points it has no hit tests at all, until the Thunder
+    spell takes 2 points.  Its body never hurts Link.
+- **[Dark Link](enemies/dark-link.md)** ($23, `DarkLink_Ai`,
+  `DarkLink_Init`): in the last room.
+  - An old man sits on a pillar.  When Link arrives the game freezes, the
+    old man vanishes, and Link's shadow steps out of him.
+  - The shadow fights with Link's own sprites: it takes his stance when
+    he strikes, attacks where his shield isn't, backs off and jumps.
+  - It takes 8 hits, whatever the attack level.  Then it sinks through
+    the floor, Link walks to the middle of the room, and the ending
+    begins (`gameState` 3).
 
 ## Projectiles
 

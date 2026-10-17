@@ -42,7 +42,7 @@ RAM buffer or selected from a table (`PpuStringPtrs`, by
 - **Overworld**: `OverworldPalette`; each map square's palette comes from
   its terrain (`OverworldTerrainPalettes`).
 - Flashes: the crystal (`CrystalSpot_FlashPalette`), Dark Link's room
-  (`DarkLink_FlashPalette`), the dying boss (`BossDeathPalette`), the
+  (`Triforce_FlashPalette`), the dying boss (`BossDeathPalette`), the
   death screen (`Death_QueueRedPalette`).
 
 ## Metatiles
