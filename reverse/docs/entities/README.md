@@ -80,6 +80,11 @@ and how each was verified):
 | [King Bot](enemies/king-bot.md) | $1E in the Great Palace |
 | [Thunderbird](enemies/thunderbird.md) | $22 in the Great Palace (its boss) |
 | [Dark Link](enemies/dark-link.md) | $23 in the Great Palace (the last room) |
+| [Townsperson](enemies/townsperson.md) | $08, $09, $0C-$0E, $10-$12, $19-$23 in the towns (standing people, walkers, signs, the generator) |
+| [House People](enemies/house-people.md) | $13-$18 in the towns (idle people, the life and magic ladies) |
+| [Town Wizard](enemies/town-wizard.md) | $0F in the towns |
+| [Talking Creatures](enemies/talking-creatures.md) | $0A, $0B in the towns |
+| [Town Bat](enemies/town-bat.md) | $03 in the towns |
 | [Barrier](enemies/barrier.md) | $20 in the Great Palace |
 
 The enemy tables of the group pages link to them

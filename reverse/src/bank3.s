@@ -1061,9 +1061,11 @@ EnemyDrawPtrs_Bank3:
 ; ---------------------------------------------------------------------------
 ; Enemy_InitNone_Bank3
 ;
-; Spawn routine that does nothing (rts).
+; Spawn routine of the types that have none, and the projectile routines
+; and drawing of this group, which has no projectiles: does nothing.  Its
+; rts is also entry 0 of ProjectileTiles_Bank3.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank3:
     rts                             ; $95AD
@@ -1117,16 +1119,19 @@ TownspersonSpeedBase:
 ; ---------------------------------------------------------------------------
 ; TownBat_Ai
 ;
-; Town bat: despawned when off screen, otherwise an Ache (Ache_Ai).
+; Town bat ($03): an Ache (Ache_Ai) that disappears once it is off screen.
+; Walking townspeople ($19-$1C) of Saria and Darunia may turn into one
+; after a conversation (Dialog_MaybeTurnToBat).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TownBat_Ai:
-    lda     drawOffscreen+1         ; $96A8
-    beq     @loc_96AF               ; $96AA
+    lda     drawOffscreen+1         ; $96A8  off screen: gone
+    beq     @ache                   ; $96AA
     jmp     Enemy_Despawn           ; $96AC
 
-@loc_96AF:
+@ache:
     jmp     Ache_Ai                 ; $96AF
 ; (end of disassembled code)
 
@@ -1134,40 +1139,49 @@ TownBat_Ai:
 ; ---------------------------------------------------------------------------
 ; Generator_Init_Bank3
 ;
-; Spawn routine of generators: despawn any other enemy of the same type.
+; Spawn routine of the townsperson generator ($23), as Generator_Init_Bank5:
+; despawn any other enemy of its type.  Every street places two, on pages
+; 0 and 3, so the second removes the first and one runs at a time.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank3:
-    ldy     #$05                    ; $96B2
+    ldy     #$05                    ; $96B2  every other slot:
 
 @loop:
     cpy     currentObject           ; $96B4
-    beq     @loc_96C4               ; $96B6
-    lda     a:enemyActive,y         ; $96B8
-    beq     @loc_96C4               ; $96BB
-    lda     a:enemyType,y           ; $96BD
+    beq     @next                   ; $96B6
+    lda     a:enemyActive,y         ; $96B8  active,
+    beq     @next                   ; $96BB
+    lda     a:enemyType,y           ; $96BD  of this type?
     cmp     enemyType,x             ; $96C0
-    beq     @loc_96C8               ; $96C2
+    beq     @remove                 ; $96C2
 
-@loc_96C4:
+@next:
     dey                             ; $96C4
     bpl     @loop                   ; $96C5
     rts                             ; $96C7
 
-@loc_96C8:
-    tya                             ; $96C8
+@remove:
+    tya                             ; $96C8  yes: remove it
     tax                             ; $96C9
     jsr     Enemy_Despawn           ; $96CA
     ldx     currentObject           ; $96CD
     rts                             ; $96CF
 
+; Types the generator sends, by rng+1 bits 1-0: $19-$1B, and $1C (the
+; first byte of GeneratorSpeeds).
 TownspersonGeneratorTypes:
     .byte   $19, $1A, $1B                                                   ; $96D0
 
+; Their speeds, by type * 2 + facing (1 right, 2 left), from entry 1: 1,
+; 0.75, 0.5 and 0.75 pixels per frame.  Entries 1-8 are also the walking
+; speeds of types $1D-$20 (TownspersonSpeedBase).
 GeneratorSpeeds:
     .byte   $1C, $10, $F0, $0C, $F4, $08, $F8, $0C, $F4                     ; $96D3
 
+; Where they start, by side (0 left, 1 right): scrollX - 32 or + 264.
 GeneratorSpawnXLo:
     .byte   $E0, $08                                                        ; $96DC
 
@@ -1177,30 +1191,35 @@ GeneratorSpawnXHi:
 ; ---------------------------------------------------------------------------
 ; TownspersonGenerator_Ai
 ;
-; Every 256 frames, if a slot is free, send a walking townsperson
-; (TownspersonGeneratorTypes) in from the left or right edge.
+; The townsperson generator ($23), invisible: every 256 frames
+; (enemyAiState), if an enemy slot is free (from 5 down), send a walking
+; townsperson ($19-$1C at random) onto the street at Y $B0, from just off
+; the left or right edge of the screen, walking inward at its type's speed.
+; The side is the one Link is walking toward while he holds left or right,
+; else random.  It has no list entry (enemySramIndex $FF).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TownspersonGenerator_Ai:
-    inc     enemyAiState,x          ; $96E0
+    inc     enemyAiState,x          ; $96E0  every 256 frames
     bne     @done                   ; $96E2
-    ldx     #$05                    ; $96E4
+    ldx     #$05                    ; $96E4  a free slot
 
-@loop:
+@findSlot:
     lda     enemyActive,x           ; $96E6
-    beq     @loc_96F0               ; $96E8
+    beq     @send                   ; $96E8
     dex                             ; $96EA
-    bpl     @loop                   ; $96EB
+    bpl     @findSlot               ; $96EB
 ; (code below not executed in the test movies)
-    ldx     currentObject           ; $96ED
+    ldx     currentObject           ; $96ED  (none)
 ; (end of code not executed in the test movies)
 
 @done:
     rts                             ; $96EF
 
-@loc_96F0:
-    lda     rng+1,x                 ; $96F0
+@send:
+    lda     rng+1,x                 ; $96F0  type at random
     sta     temp2                   ; $96F3
     and     #$03                    ; $96F5
     tay                             ; $96F7
@@ -1208,7 +1227,7 @@ TownspersonGenerator_Ai:
     sta     temp0                   ; $96F9
     lda     TownspersonGeneratorTypes,y ; $96FB
     sta     enemyType,x             ; $96FE
-    lda     #$01                    ; $9700
+    lda     #$01                    ; $9700  active, no list entry
     sta     enemyActive,x           ; $9702
     lda     #$FF                    ; $9704
     sta     enemySramIndex,x        ; $9706
@@ -1216,26 +1235,26 @@ TownspersonGenerator_Ai:
     sta     objYHi+1,x              ; $970A
     lsr     a                       ; $970C
     sta     enemyAiState,x          ; $970D
-    lda     #$B0                    ; $970F
+    lda     #$B0                    ; $970F  on the street
     sta     objY+1,x                ; $9711
-    lda     joypadHeld              ; $9713
+    lda     joypadHeld              ; $9713  the side Link walks toward,
     and     #$03                    ; $9715
-    bne     @loc_971B               ; $9717
-    lda     temp2                   ; $9719
+    bne     @setSide                ; $9717
+    lda     temp2                   ; $9719  else at random
 
-@loc_971B:
+@setSide:
     and     #$01                    ; $971B
     tay                             ; $971D
-    lda     scrollX                 ; $971E
+    lda     scrollX                 ; $971E  just off that edge,
     clc                             ; $9721
     adc     GeneratorSpawnXLo,y     ; $9722
     sta     objX+1,x                ; $9725
     lda     scrollXHi               ; $9727
     adc     GeneratorSpawnXHi,y     ; $972A
     sta     objXHi+1,x              ; $972D
-    iny                             ; $972F
+    iny                             ; $972F  facing inward
     sty     objFacing+1,x           ; $9730
-    tya                             ; $9732
+    tya                             ; $9732  at its type's speed
     adc     temp0                   ; $9733
     tay                             ; $9735
     lda     GeneratorSpeeds,y       ; $9736
@@ -1252,15 +1271,17 @@ TownspersonDoorOffsets:
 ; ---------------------------------------------------------------------------
 ; Townsperson_InitWalking
 ;
-; Spawn routine of walking townspeople: walk toward Link at the type's
-; speed.
+; Spawn routine of walking townspeople $1D-$20: walk toward Link at the
+; type's speed (1, 0.75, 0.5, 0.75 pixels per frame), then
+; Townsperson_Init.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_InitWalking:
-    jsr     Enemy_FaceLink          ; $9743
+    jsr     Enemy_FaceLink          ; $9743  toward Link
     sty     temp0                   ; $9746
-    lda     enemyType,x             ; $9748
+    lda     enemyType,x             ; $9748  speed by type * 2 + side
     asl     a                       ; $974A
     adc     temp0                   ; $974B
     tay                             ; $974D
@@ -1271,13 +1292,14 @@ Townsperson_InitWalking:
 ; ---------------------------------------------------------------------------
 ; Townsperson_InitIdle
 ;
-; Spawn routine of idle townspeople: 8 pixels higher, then
-; Townsperson_InitAtDoor.
+; Spawn routine of the idle people $13-$16: inside their house, 8 pixels
+; up in the doorway, then Townsperson_InitAtDoor.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_InitIdle:
-    lda     objY+1,x                ; $9756
+    lda     objY+1,x                ; $9756  8 pixels up
     sec                             ; $9758
     sbc     #$08                    ; $9759
     sta     objY+1,x                ; $975B
@@ -1285,12 +1307,15 @@ Townsperson_InitIdle:
 ; ---------------------------------------------------------------------------
 ; Townsperson_InitAtDoor
 ;
-; Start a townsperson at a door (enemyAiState $80), offset in its facing.
+; Put a townsperson inside its door, waiting (enemyAiState $80), 14 pixels
+; back from where it stands (TownspersonDoorOffsets), then
+; Townsperson_Init.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_InitAtDoor:
-    lda     #$80                    ; $975D
+    lda     #$80                    ; $975D  inside, waiting
     sta     enemyAiState,x          ; $975F
     ldy     objFacing+1,x           ; $9761
     lda     objX+1,x                ; $9763
@@ -1301,9 +1326,12 @@ Townsperson_InitAtDoor:
 ; ---------------------------------------------------------------------------
 ; Townsperson_Init
 ;
-; Clear a townsperson's state (townspersonTalkCount and following).
+; Spawn routine of most townspeople: not talked to, no door, walk timer
+; $10, townspersonTimer $90 (they can't be talked to until it is below
+; $65, about 43 frames).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_Init:
     lda     #$00                    ; $976B
@@ -1324,39 +1352,45 @@ TownspersonDoorXOffsets:
 ; ---------------------------------------------------------------------------
 ; TalkingBit_Ai
 ;
-; A Bit that can be talked to, hopping in place.
+; The talking Bit ($0B), asleep on a table: in the 128 frames of every 256
+; when frameCounter bit 7 is clear it breathes (objState+1, Bot_Draw's
+; squash, from frameCounter bits 4-3); otherwise it holds still.  Then it is
+; a standing person (Townsperson_StandAi).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TalkingBit_Ai:
-    lda     frameCounter            ; $9783
+    lda     frameCounter            ; $9783  half the time,
     and     #$80                    ; $9785
-    bne     @loc_9791               ; $9787
-    lda     frameCounter            ; $9789
+    bne     @setState               ; $9787
+    lda     frameCounter            ; $9789  breathe
     and     #$18                    ; $978B
     sta     objState+1,x            ; $978D
     lda     #$00                    ; $978F
 
-@loc_9791:
-    sta     enemyAiState,x          ; $9791
+@setState:
+    sta     enemyAiState,x          ; $9791  (cleared again below)
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_StandAi
 ;
-; A townsperson standing in place, turning toward Link every 64 frames; can
-; be talked to.
+; Standing people ($0A, $0D, $0E, $10-$12; also the talking Bit): stand in
+; place, drawn, and turn toward Link whenever frameCounter is a multiple of
+; 64.  Link can talk to them (Townsperson_CheckTalk).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_StandAi:
-    jsr     Townsperson_FaceLinkWhileTalking ; $9793
+    jsr     Townsperson_FaceLinkWhileTalking ; $9793  (talking: no more)
     jsr     Townsperson_DrawAndCheck ; $9796
-    lda     frameCounter            ; $9799
+    lda     frameCounter            ; $9799  every 64 frames,
     and     #$3F                    ; $979B
-    bne     @loc_97A2               ; $979D
-    jsr     Enemy_FaceLink          ; $979F
+    bne     @checkTalk              ; $979D
+    jsr     Enemy_FaceLink          ; $979F  toward Link
 
-@loc_97A2:
+@checkTalk:
     lda     #$00                    ; $97A2
     sta     enemyAiState,x          ; $97A4
     jmp     Townsperson_CheckTalk   ; $97A6
@@ -1364,29 +1398,33 @@ Townsperson_StandAi:
 ; ---------------------------------------------------------------------------
 ; Wizard_Ai
 ;
-; The wizard: starts talking (Townsperson_StartTalk) when Link comes within
-; $20 pixels on the ground.
+; The wizard ($0F) who teaches the town's spell: he faces Link while on
+; screen, and starts talking himself (Townsperson_StartTalk) the first time
+; Link stands on the ground within 32 pixels of him (Link's X + 8 within
+; 32 of his X).  He can't be talked to by touching; after the first talk
+; (townspersonTalkCount) he is silent until he spawns again.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Wizard_Ai:
-    jsr     Townsperson_FaceLinkWhileTalking ; $97A9
+    jsr     Townsperson_FaceLinkWhileTalking ; $97A9  (talking: no more)
     jsr     Townsperson_DrawAndCheck ; $97AC
-    lda     drawOffscreen+1         ; $97AF
+    lda     drawOffscreen+1         ; $97AF  on screen?
     bne     @done                   ; $97B1
-    jsr     Enemy_FaceLink          ; $97B3
-    lda     townspersonTalkCount,x  ; $97B6
+    jsr     Enemy_FaceLink          ; $97B3  face Link
+    lda     townspersonTalkCount,x  ; $97B6  talked already?
     bne     @done                   ; $97B9
-    lda     temp15                  ; $97BB
+    lda     temp15                  ; $97BB  within 32 pixels,
     adc     #$20                    ; $97BD
     cmp     #$40                    ; $97BF
     bcs     @done                   ; $97C1
-    lda     objCollision            ; $97C3
-    lda     linkJumpState           ; $97C5
+    lda     objCollision            ; $97C3  (unused)
+    lda     linkJumpState           ; $97C5  on the ground?
     bne     @done                   ; $97C8
-    stx     dialogPerson            ; $97CA
+    stx     dialogPerson            ; $97CA  talk
     jmp     Townsperson_StartTalk   ; $97CD
-; (unreferenced: $97D0-$97D2, 3 bytes)
+; (unreferenced: $97D0-$97D2, 3 bytes: inc townspersonTalking,x)
     .byte   $FE, $C3, $05                                                   ; $97D0
 
 @done:
@@ -1395,40 +1433,52 @@ Wizard_Ai:
 ; ---------------------------------------------------------------------------
 ; HouseLady_Ai
 ;
-; A person waiting by a house (the life and magic ladies): walks to and
-; through its door, opening and closing it.
+; The house people: idle people $13-$16 and the life ($17) and magic ($18)
+; ladies, by enemyAiState:
+; - 0, outside (HouseLady_Idle): pacing in front of the house.
+; - 1-$7F, going in (Townsperson_WalkAi's door sequence), after a lady was
+;   asked for help (townspersonToDoor, Dialog_HouseLady).
+; - $80, inside and hidden, until Link comes within 96 pixels across (by
+;   screen X) and townspersonTimer is 0: then she steps back to the door,
+;   which opens halfway.
+; - $81-$AF, coming out: drawn from $90; the door opens fully at $90, half
+;   at $A0, and closes at $B0, when she is outside (state 0) with
+;   townspersonTimer $90.
+; FaceLinkWhileTalking leaves their facing alone, so a lady turns to her
+; door, not to Link.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HouseLady_Ai:
-    jsr     Townsperson_FaceLinkWhileTalking ; $97D4
-    lda     enemyAiState,x          ; $97D7
+    jsr     Townsperson_FaceLinkWhileTalking ; $97D4  (talking: no more)
+    lda     enemyAiState,x          ; $97D7  outside,
     beq     HouseLady_Idle          ; $97D9
-    bpl     HouseLady_Walk          ; $97DB
-    cmp     #$80                    ; $97DD
-    bne     @loc_9808               ; $97DF
-    jsr     Townsperson_CheckDespawn ; $97E1
-    lda     drawOffscreen+1         ; $97E4
+    bpl     HouseLady_Walk          ; $97DB  going in,
+    cmp     #$80                    ; $97DD  or inside?
+    bne     @comingOut              ; $97DF
+    jsr     Townsperson_CheckDespawn ; $97E1  inside: count down
+    lda     drawOffscreen+1         ; $97E4  on screen, time up,
     ora     townspersonTimer,x      ; $97E6
     bne     @done                   ; $97E9
-    lda     drawScreenX             ; $97EB
+    lda     drawScreenX             ; $97EB  and Link within 96 pixels?
     sbc     drawScreenX+1           ; $97ED
     adc     #$60                    ; $97EF
     cmp     #$C0                    ; $97F1
     bcs     @done                   ; $97F3
-    jsr     Enemy_UpdateBgCollision ; $97F5
+    jsr     Enemy_UpdateBgCollision ; $97F5  then come out: find the door,
     jsr     Townsperson_StartDoor   ; $97F8
-    ldy     objFacing+1,x           ; $97FB
+    ldy     objFacing+1,x           ; $97FB  back to it,
     lda     objX+1,x                ; $97FD
     sec                             ; $97FF
     sbc     TownspersonDoorOffsets,y ; $9800
     sta     objX+1,x                ; $9803
-    jmp     Door_QueueOpen          ; $9805
+    jmp     Door_QueueHalfOpen      ; $9805  half open
 
-@loc_9808:
+@comingOut:
     inc     enemyAiState,x          ; $9808
-    cmp     #$90                    ; $980A
-    bcc     @loc_981B               ; $980C
+    cmp     #$90                    ; $980A  from $90: drawn (as state 1)
+    bcc     @doorTiles              ; $980C
     lda     enemyAiState,x          ; $980E
     pha                             ; $9810
     lda     #$01                    ; $9811
@@ -1437,19 +1487,19 @@ HouseLady_Ai:
     pla                             ; $9818
     sta     enemyAiState,x          ; $9819
 
-@loc_981B:
-    lda     enemyAiState,x          ; $981B
+@doorTiles:
+    lda     enemyAiState,x          ; $981B  $90: open
     cmp     #$90                    ; $981D
-    bne     @loc_9824               ; $981F
-    jmp     Door_QueueHalf          ; $9821
+    bne     @checkA0                ; $981F
+    jmp     Door_QueueOpen          ; $9821
 
-@loc_9824:
-    cmp     #$A0                    ; $9824
-    bne     @loc_982B               ; $9826
-    jmp     Door_QueueOpen          ; $9828
+@checkA0:
+    cmp     #$A0                    ; $9824  $A0: half open
+    bne     @checkB0                ; $9826
+    jmp     Door_QueueHalfOpen      ; $9828
 
-@loc_982B:
-    cmp     #$B0                    ; $982B
+@checkB0:
+    cmp     #$B0                    ; $982B  $B0: outside, door closed
     bne     @done                   ; $982D
     lda     #$00                    ; $982F
     sta     enemyAiState,x          ; $9831
@@ -1463,24 +1513,29 @@ HouseLady_Ai:
 HouseLady_Walk:
     jmp     Townsperson_WalkAi      ; $983C
 
+; Outside: step down out of the doorway, 4 pixels every 16 frames, to Y
+; $B0; walk while townspersonTimer is $40 or more and stand while below;
+; at 0 turn around, with the timer at $E0 (160 frames walking, 64
+; standing).  Walking, she heads in through her door once townspersonToDoor
+; is set, and otherwise ignores it.
 HouseLady_Idle:
-    lda     objY+1,x                ; $983F
+    lda     objY+1,x                ; $983F  in the doorway:
     cmp     #$B0                    ; $9841
-    bcs     @loc_9851               ; $9843
-    lda     frameCounter            ; $9845
+    bcs     @checkTimer             ; $9843
+    lda     frameCounter            ; $9845  every 16 frames,
     and     #$0F                    ; $9847
-    bne     @loc_9851               ; $9849
-    lda     objY+1,x                ; $984B
+    bne     @checkTimer             ; $9849
+    lda     objY+1,x                ; $984B  4 down
     adc     #$04                    ; $984D
     sta     objY+1,x                ; $984F
 
-@loc_9851:
-    lda     townspersonTimer,x      ; $9851
-    beq     @loc_9868               ; $9854
-    cmp     #$40                    ; $9856
+@checkTimer:
+    lda     townspersonTimer,x      ; $9851  time up: turn around
+    beq     @turn                   ; $9854
+    cmp     #$40                    ; $9856  $40 or more: walk
     bcs     HouseLady_WalkOrTalk    ; $9858
-    lda     objXVelocity+1,x        ; $985A
-    pha                             ; $985C
+    lda     objXVelocity+1,x        ; $985A  else stand (X velocity 0
+    pha                             ; $985C  for this frame)
     lda     #$00                    ; $985D
     sta     objXVelocity+1,x        ; $985F
     jsr     HouseLady_WalkOrTalk    ; $9861
@@ -1488,41 +1543,46 @@ HouseLady_Idle:
     sta     objXVelocity+1,x        ; $9865
     rts                             ; $9867
 
-@loc_9868:
+@turn:
     jsr     Enemy_TurnAround        ; $9868
     lda     #$E0                    ; $986B
     sta     townspersonTimer,x      ; $986D
 
 HouseLady_WalkOrTalk:
-    lda     townspersonToDoor,x     ; $9870
+    lda     townspersonToDoor,x     ; $9870  heading for the door?
     bne     HouseLady_Walk          ; $9873
     jmp     Townsperson_WalkAndTalk ; $9875
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_WalkAi
 ;
-; A walking townsperson: walks the street, can be talked to, and enters
-; doors.
+; Walking townspeople ($08, $09, $19-$20), and the house people going in:
+; drawn (and despawned when far off screen), they walk on at their speed
+; and can be talked to.  They never turn around: they walk until they
+; leave.  Only the house people ($0A-$18) look for doors: when the tile
+; ahead (Enemy_UpdateBgCollision's drawScratch) is a door ($8B), they start
+; the door sequence (Townsperson_StartDoor, Townsperson_NextState).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_WalkAi:
-    jsr     Townsperson_FaceLinkWhileTalking ; $9878
+    jsr     Townsperson_FaceLinkWhileTalking ; $9878  (talking: no more)
     jsr     Townsperson_CheckTalk   ; $987B
     jsr     Townsperson_DrawOrDespawn ; $987E
-    lda     enemyAiState,x          ; $9881
+    lda     enemyAiState,x          ; $9881  at a door?
     bne     Townsperson_NextState   ; $9883
-    jsr     Townsperson_Walk        ; $9885
-    lda     enemyType,x             ; $9888
+    jsr     Townsperson_Walk        ; $9885  else walk
+    lda     enemyType,x             ; $9888  types $0A-$18 only:
     cmp     #$0A                    ; $988A
     bcc     Townsperson_StartDoor_Done ; $988C
     cmp     #$19                    ; $988E
-    bcc     @loc_9896               ; $9890
+    bcc     @checkDoor              ; $9890
     cmp     #$21                    ; $9892
     bcc     Townsperson_StartDoor_Done ; $9894
 
-@loc_9896:
-    jsr     Enemy_UpdateBgCollision ; $9896
+@checkDoor:
+    jsr     Enemy_UpdateBgCollision ; $9896  a door ahead?
     lda     drawScratch             ; $9899
     cmp     #$8B                    ; $989B
     bne     Townsperson_StartDoor_Done ; $989D
@@ -1530,18 +1590,21 @@ Townsperson_WalkAi:
 ; ---------------------------------------------------------------------------
 ; Townsperson_StartDoor
 ;
-; Note the door in front of the townsperson (its tile map address) and start
-; opening it.
+; Start the door sequence (enemyAiState 1, or $81 coming out): keep the
+; door's place in the tile map (townspersonDoorPtr, from enemyWallTilePtr)
+; and its X (townspersonDoorX: 16 right of the person facing right, at
+; its X facing left).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_StartDoor:
     inc     enemyAiState,x          ; $989F
-    lda     enemyWallTilePtr        ; $98A1
+    lda     enemyWallTilePtr        ; $98A1  the door's tile
     sta     townspersonDoorPtr,x    ; $98A3
     lda     enemyWallTilePtr+1      ; $98A6
     sta     townspersonDoorPtrHi,x  ; $98A8
-    ldy     objFacing+1,x           ; $98AB
+    ldy     objFacing+1,x           ; $98AB  and X
     lda     objX+1,x                ; $98AD
     clc                             ; $98AF
     adc     TownspersonDoorXOffsets,y ; $98B0
@@ -1552,53 +1615,61 @@ Townsperson_StartDoor:
 Townsperson_StartDoor_Done:
     rts                             ; $98BB
 
+; Going in, by enemyAiState, counting up a frame at a time: standing
+; ($01-$1F); the door half open at $10 and open at $20; walking in at
+; $20-$3F, 4 pixels up at $27 and $37; at $40 the door's map tile becomes
+; $54; standing, half open at $70, closed at $7E.  Then a lady (type $17
+; or more) waits inside (Townsperson_InitAtDoor, townspersonTimer 255,
+; the map tile back to $53); other people are removed.
 Townsperson_NextState:
     inc     enemyAiState,x          ; $98BC
-    cmp     #$10                    ; $98BE
-    bne     @loc_98C5               ; $98C0
-    jmp     Door_QueueOpen          ; $98C2
+    cmp     #$10                    ; $98BE  $10: half open
+    bne     @check20                ; $98C0
+    jmp     Door_QueueHalfOpen      ; $98C2
 
-@loc_98C5:
-    cmp     #$20                    ; $98C5
-    bne     @loc_98CC               ; $98C7
-    jmp     Door_QueueHalf          ; $98C9
+@check20:
+    cmp     #$20                    ; $98C5  $20: open
+    bne     @check40                ; $98C7
+    jmp     Door_QueueOpen          ; $98C9
 
-@loc_98CC:
-    cmp     #$40                    ; $98CC
-    bne     @loc_98D8               ; $98CE
+@check40:
+    cmp     #$40                    ; $98CC  $40: map tile $54
+    bne     @check70                ; $98CE
     jsr     Door_SetClosedTile      ; $98D0
     lda     #$54                    ; $98D3
     sta     (temp0),y               ; $98D5
     rts                             ; $98D7
 
-@loc_98D8:
-    cmp     #$70                    ; $98D8
-    bne     @loc_98DF               ; $98DA
-    jmp     Door_QueueOpen          ; $98DC
+@check70:
+    cmp     #$70                    ; $98D8  $70: half open
+    bne     @check7E                ; $98DA
+    jmp     Door_QueueHalfOpen      ; $98DC
 
-@loc_98DF:
-    cmp     #$7E                    ; $98DF
+@check7E:
+    cmp     #$7E                    ; $98DF  $7E: closed
     bne     Door_CheckTile          ; $98E1
     jsr     Door_QueueClosed        ; $98E3
-    lda     enemyType,x             ; $98E6
+    lda     enemyType,x             ; $98E6  a lady: wait inside
     cmp     #$17                    ; $98E8
-    bcc     @loc_98F6               ; $98EA
+    bcc     @remove                 ; $98EA
     jsr     Townsperson_InitAtDoor  ; $98EC
     lda     #$FF                    ; $98EF
     sta     townspersonTimer,x      ; $98F1
     bne     Door_SetClosedTile      ; $98F4
 ; (code below not executed in the test movies)
 
-@loc_98F6:
-    jsr     Enemy_Despawn           ; $98F6
+@remove:
+    jsr     Enemy_Despawn           ; $98F6  others: gone
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Door_SetClosedTile
 ;
-; Put the closed door tile ($53) back in the area tile map.
+; Put the closed door tile ($53) back in the area tile map, at the row
+; $B0 bytes on from townspersonDoorPtr (left in temp0/temp1, y = $B0).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Door_SetClosedTile:
     lda     townspersonDoorPtr,x    ; $98F9
@@ -1610,82 +1681,89 @@ Door_SetClosedTile:
     sta     (temp0),y               ; $9907
     rts                             ; $9909
 
+; Between the door states: walk in at $20-$3F (stepping up 4 pixels at
+; $27 and $37), else stand.
 Door_CheckTile:
-    cmp     #$20                    ; $990A
+    cmp     #$20                    ; $990A  $20-$3F:
     bcc     @done                   ; $990C
     cmp     #$40                    ; $990E
     bcs     @done                   ; $9910
-    and     #$0F                    ; $9912
+    and     #$0F                    ; $9912  at $x7: 4 up
     cmp     #$07                    ; $9914
-    bne     @loc_991E               ; $9916
+    bne     @walk                   ; $9916
     lda     objY+1,x                ; $9918
     sbc     #$04                    ; $991A
     sta     objY+1,x                ; $991C
 
-@loc_991E:
+@walk:
     jmp     Townsperson_Walk        ; $991E
 
 @done:
     rts                             ; $9921
 
-DoorTilesTop:
+; The door's two columns of 6 tiles (left, right), for half open (0),
+; open (6) and closed ($0C).
+DoorTilesLeft:
     .byte   $49, $FF, $FF, $FF, $FF, $47, $49, $FF, $FF, $FF, $FF, $47, $49, $40, $40, $41; $9922
     .byte   $40, $47                                                        ; $9932
 
-DoorTilesBottom:
+DoorTilesRight:
     .byte   $4A, $40, $40, $41, $40, $48, $4A, $FF, $FF, $FF, $FF, $48, $4A, $40, $40, $40; $9934
     .byte   $40, $48                                                        ; $9944
 
 ; ---------------------------------------------------------------------------
-; Door_QueueOpen
+; Door_QueueHalfOpen
 ;
-; Queue the open door's tiles (DoorTilesTop, DoorTilesBottom).
+; Queue the door of townsperson x half open: its left column dark.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Door_QueueOpen:
+Door_QueueHalfOpen:
     ldx     #$00                    ; $9946
     beq     Door_QueueTiles         ; $9948
 
 ; ---------------------------------------------------------------------------
-; Door_QueueHalf
+; Door_QueueOpen
 ;
-; Queue the half-open door's tiles.
+; Queue the door fully open: both columns dark.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Door_QueueHalf:
+Door_QueueOpen:
     ldx     #$06                    ; $994A
     bne     Door_QueueTiles         ; $994C
 
 ; ---------------------------------------------------------------------------
 ; Door_QueueClosed
 ;
-; Queue the closed door's tiles.
+; Queue the door closed.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Door_QueueClosed:
     ldx     #$0C                    ; $994E
 
+; Two vertical PPU strings of 6 tiles in ppuBuffer0, the door's columns:
+; name table $2280 + (townspersonDoorX / 16) * 2 (name table 1 for an odd
+; page), from tile row 20.  Closed whenever the person is wholly off screen.
 Door_QueueTiles:
-    lda     drawOffscreen+1         ; $9950
+    lda     drawOffscreen+1         ; $9950  off screen: closed
     and     #$0C                    ; $9952
     cmp     #$0C                    ; $9954
-    bne     @loc_995A               ; $9956
+    bne     @copy                   ; $9956
 ; (code below not executed in the test movies)
     ldx     #$0C                    ; $9958
 ; (end of code not executed in the test movies)
 
-@loc_995A:
-    lda     #$05                    ; $995A
+@copy:
+    lda     #$05                    ; $995A  6 tiles each
     sta     temp0                   ; $995C
     ldy     ppuBuffer0Len           ; $995E
 
 @loop:
-    lda     DoorTilesTop,x          ; $9961
+    lda     DoorTilesLeft,x         ; $9961
     sta     ppuBuffer0+3,y          ; $9964
-    lda     DoorTilesBottom,x       ; $9967
+    lda     DoorTilesRight,x        ; $9967
     sta     ppuBuffer0+12,y         ; $996A
     inx                             ; $996D
     iny                             ; $996E
@@ -1693,7 +1771,7 @@ Door_QueueTiles:
     bpl     @loop                   ; $9971
     ldx     currentObject           ; $9973
     ldy     ppuBuffer0Len           ; $9975
-    lda     townspersonDoorX,x      ; $9978
+    lda     townspersonDoorX,x      ; $9978  the door's tile column
     lsr     a                       ; $997B
     lsr     a                       ; $997C
     lsr     a                       ; $997D
@@ -1701,16 +1779,16 @@ Door_QueueTiles:
     asl     a                       ; $997F
     adc     #$80                    ; $9980
     sta     ppuBuffer0+1,y          ; $9982
-    adc     #$01                    ; $9985
+    adc     #$01                    ; $9985  and the next
     sta     ppuBuffer0+10,y         ; $9987
-    lda     townspersonDoorXHi,x    ; $998A
+    lda     townspersonDoorXHi,x    ; $998A  name table by page
     and     #$01                    ; $998D
     asl     a                       ; $998F
     asl     a                       ; $9990
     ora     #$22                    ; $9991
     sta     ppuBuffer0,y            ; $9993
     sta     ppuBuffer0+9,y          ; $9996
-    lda     #$86                    ; $9999
+    lda     #$86                    ; $9999  6 tiles, downward
     sta     ppuBuffer0+2,y          ; $999B
     sta     ppuBuffer0+11,y         ; $999E
     lda     #$FF                    ; $99A1
@@ -1725,110 +1803,126 @@ Door_QueueTiles:
 ; ---------------------------------------------------------------------------
 ; Townsperson_WalkAndTalk
 ;
-; Walk, draw, and check for being talked to.
+; A house person outside: face Link if talking, draw, walk (without
+; looking for doors), and check for a conversation.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_WalkAndTalk:
-    jsr     Townsperson_FaceLinkWhileTalking ; $99B0
+    jsr     Townsperson_FaceLinkWhileTalking ; $99B0  (talking: no more)
     jsr     Townsperson_DrawOrDespawn ; $99B3
     jsr     Townsperson_Walk        ; $99B6
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_CheckTalk
 ;
-; If Link touches the townsperson and presses B, start a conversation; a
-; lady being followed through her door starts dialogType 4.
+; While the person is on screen and no conversation is on: if Link
+; touches it (Enemy_CheckLinkContact; on the ground, except for the
+; talking Ache, $0A), it becomes dialogPerson, and:
+; - If Link is going through a door (gameMode $16) and the person is a lady
+;   (type $17 or more) inside her doorway (enemyAiState $40 or more), her
+;   house conversation starts there (dialogType 4) instead of the door's
+;   area: the door's map tile closed, gameMode back to side view ($0B),
+;   doorDepth and renderingOff undone, and every enemy of the area's list
+;   still in a slot marked as not to come back.
+; - Otherwise, when Link presses B, the person isn't in a door sequence
+;   (enemyAiState 0), and townspersonTimer isn't between $65 and $AB
+;   (just spawned, or just come out): a conversation
+;   (Townsperson_StartTalk).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_CheckTalk:
-    lda     drawOffscreen+1         ; $99B9
+    lda     drawOffscreen+1         ; $99B9  on screen, not talking?
     ora     dialogType              ; $99BB
     bne     @done                   ; $99BE
-    lda     enemyType,x             ; $99C0
-    cmp     #$0A                    ; $99C2
-    beq     @loc_99CB               ; $99C4
+    lda     enemyType,x             ; $99C0  Link on the ground (or the
+    cmp     #$0A                    ; $99C2  talking Ache)?
+    beq     @checkContact           ; $99C4
     lda     linkJumpState           ; $99C6
     bne     @done                   ; $99C9
 
-@loc_99CB:
-    jsr     Enemy_CheckLinkContact  ; $99CB
+@checkContact:
+    jsr     Enemy_CheckLinkContact  ; $99CB  touching Link?
     lda     objCollision+1,x        ; $99CE
     and     #$10                    ; $99D0
     beq     @done                   ; $99D2
     stx     dialogPerson            ; $99D4
-    lda     gameMode                ; $99D7
+    lda     gameMode                ; $99D7  Link going through a door?
     cmp     #$16                    ; $99DA
-    bne     @loc_9A1D               ; $99DC
-    lda     enemyAiState,x          ; $99DE
+    bne     @checkB                 ; $99DC
+    lda     enemyAiState,x          ; $99DE  a lady in her doorway:
     cmp     #$40                    ; $99E0
     bcc     @done                   ; $99E2
     lda     enemyType,x             ; $99E4
     cmp     #$17                    ; $99E6
     bcc     @done                   ; $99E8
-    jsr     Door_SetClosedTile      ; $99EA
+    jsr     Door_SetClosedTile      ; $99EA  her house conversation
     ldy     #$04                    ; $99ED
     sty     dialogType              ; $99EF
     sty     gameFrozen              ; $99F2
     inc     townspersonTalking,x    ; $99F4
-    lda     #$0B                    ; $99F7
+    lda     #GAME_MODE_SIDE_VIEW    ; $99F7  (not into the door's area)
     sta     gameMode                ; $99F9
     dec     doorDepth               ; $99FC
     inc     linkTalking             ; $99FF
     lda     #$00                    ; $9A02
     sta     renderingOff            ; $9A04
-    ldx     #$05                    ; $9A07
+    ldx     #$05                    ; $9A07  the area's enemies in slots:
 
-@loop:
+@markSpawned:
     lda     enemyActive,x           ; $9A09
-    beq     @loc_9A17               ; $9A0B
+    beq     @next                   ; $9A0B
     ldy     enemySramIndex,x        ; $9A0D
-    bmi     @loc_9A17               ; $9A0F
-    lda     (enemyListPtr),y        ; $9A11
+    bmi     @next                   ; $9A0F
+    lda     (enemyListPtr),y        ; $9A11  not to come back
     ora     #$80                    ; $9A13
     sta     (enemyListPtr),y        ; $9A15
 
-@loc_9A17:
+@next:
     dex                             ; $9A17
-    bpl     @loop                   ; $9A18
+    bpl     @markSpawned            ; $9A18
     ldx     currentObject           ; $9A1A
 
 @done:
     rts                             ; $9A1C
 
-@loc_9A1D:
-    lda     townspersonTimer,x      ; $9A1D
+@checkB:
+    lda     townspersonTimer,x      ; $9A1D  timer $65-$AB: not yet
     cmp     #$65                    ; $9A20
-    bcc     @loc_9A28               ; $9A22
+    bcc     @checkState             ; $9A22
     cmp     #$AC                    ; $9A24
     bcc     Townsperson_StartTalk_Done ; $9A26
 
-@loc_9A28:
-    lda     enemyAiState,x          ; $9A28
+@checkState:
+    lda     enemyAiState,x          ; $9A28  not at a door,
     bne     Townsperson_StartTalk_Done ; $9A2A
-    lda     a:joypadPressed         ; $9A2C
+    lda     a:joypadPressed         ; $9A2C  and B pressed?
     and     #$40                    ; $9A2F
     beq     Townsperson_StartTalk_Done ; $9A31
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_StartTalk
 ;
-; Start a conversation (dialogType 2) with townsperson x, freezing the game
-; and stopping Link.
+; Start a conversation (dialogType 2) with townsperson x: the game freezes,
+; Link stops his stroke and stands (state 3) on the tile row, and the
+; person's townspersonTalking and townspersonTalkCount go up.
 ;
-; Status:  provisional
+; In:      x = enemy index (dialogPerson)
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_StartTalk:
-    lda     #$02                    ; $9A33
+    lda     #DIALOG_TALK            ; $9A33
     sta     dialogType              ; $9A35
     sta     gameFrozen              ; $9A38
     inc     townspersonTalking,x    ; $9A3A
-    lda     #$00                    ; $9A3D
+    lda     #$00                    ; $9A3D  Link: no stroke,
     sta     linkAttackFrame         ; $9A3F
-    lda     #$03                    ; $9A42
+    lda     #$03                    ; $9A42  standing,
     sta     objState                ; $9A44
-    lda     objY                    ; $9A46
+    lda     objY                    ; $9A46  on the tile row
     and     #$F0                    ; $9A48
     sta     objY                    ; $9A4A
     inc     townspersonTalkCount,x  ; $9A4C
@@ -1839,20 +1933,23 @@ Townsperson_StartTalk_Done:
 ; ---------------------------------------------------------------------------
 ; Townsperson_TurnToDoor
 ;
-; Turn the townsperson toward its door.
+; From Dialog_HouseLady: the lady heads for her door (townspersonToDoor),
+; turning back the way she came (left if townspersonWalkCounter shows she
+; has gone right, else right), with townspersonTimer 255.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_TurnToDoor:
     lda     #$FF                    ; $9A50
     sta     townspersonTimer,x      ; $9A52
-    lda     #$02                    ; $9A55
+    lda     #$02                    ; $9A55  to the door,
     sta     townspersonToDoor,x     ; $9A57
-    ldy     townspersonWalkCounter,x ; $9A5A
-    bpl     @loc_9A60               ; $9A5D
+    ldy     townspersonWalkCounter,x ; $9A5A  left, or right if she has
+    bpl     @face                   ; $9A5D  gone left
     lsr     a                       ; $9A5F
 
-@loc_9A60:
+@face:
     cmp     objFacing+1,x           ; $9A60
     beq     @done                   ; $9A62
     jsr     Enemy_TurnAround        ; $9A64
@@ -1863,25 +1960,28 @@ Townsperson_TurnToDoor:
 ; ---------------------------------------------------------------------------
 ; Townsperson_Walk
 ;
-; Move the townsperson and update its facing every 16 frames.
+; Move the townsperson by its X velocity.  Every 16 frames
+; (townspersonWalkTimer) set its facing from the velocity and count the
+; step in townspersonWalkCounter (+1 right, -1 left).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_Walk:
     jsr     Enemy_MoveX             ; $9A68
-    inc     townspersonWalkTimer,x  ; $9A6B
+    inc     townspersonWalkTimer,x  ; $9A6B  every 16 frames:
     lda     townspersonWalkTimer,x  ; $9A6E
     and     #$0F                    ; $9A71
     bne     @done                   ; $9A73
-    lda     #$01                    ; $9A75
+    lda     #$01                    ; $9A75  moving right: facing 1, +1
     ldy     objXVelocity+1,x        ; $9A77
     beq     @done                   ; $9A79
-    bpl     @loc_9A84               ; $9A7B
-    asl     a                       ; $9A7D
+    bpl     @count                  ; $9A7B
+    asl     a                       ; $9A7D  left: facing 2, -1
     dec     townspersonWalkCounter,x ; $9A7E
     dec     townspersonWalkCounter,x ; $9A81
 
-@loc_9A84:
+@count:
     inc     townspersonWalkCounter,x ; $9A84
     sta     objFacing+1,x           ; $9A87
 
@@ -1891,9 +1991,12 @@ Townsperson_Walk:
 ; ---------------------------------------------------------------------------
 ; Townsperson_DrawOrDespawn
 ;
-; Despawn the townsperson if far off screen, otherwise draw it.
+; Despawn the townsperson if far off screen (Enemy_DespawnIfFar), draw it
+; (Townsperson_DrawAndCheck), and count townspersonTimer down to 0
+; (Townsperson_CheckDespawn).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_DrawOrDespawn:
     jsr     Enemy_DespawnIfFar      ; $9A8A
@@ -1902,51 +2005,58 @@ Townsperson_DrawAndCheck:
     jsr     Enemy_Draw              ; $9A8D
 
 Townsperson_CheckDespawn:
-    lda     townspersonTimer,x      ; $9A90
+    lda     townspersonTimer,x      ; $9A90  count down to 0
     beq     Townsperson_DrawOrDespawn_Done ; $9A93
     dec     townspersonTimer,x      ; $9A95
 
 Townsperson_DrawOrDespawn_Done:
     rts                             ; $9A98
 
+; Link's linkWalkDir to face the person, by Enemy_FaceLink's y.
 FacingToWalkDir:
     .byte   $02, $01                                                        ; $9A99
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_FaceLinkWhileTalking
 ;
-; While the townsperson is talking, turn it (and Link) to face each other
-; and skip the rest of its AI.
+; While the person is talking (townspersonTalking): turn Link to face it,
+; and turn it to face Link, except the house people ($13-$18), who keep
+; their facing; draw it, and drop the caller's return so the rest of its
+; AI is skipped.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_FaceLinkWhileTalking:
-    lda     townspersonTalking,x    ; $9A9B
+    lda     townspersonTalking,x    ; $9A9B  talking?
     beq     Townsperson_DrawOrDespawn_Done ; $9A9E
     lda     objFacing+1,x           ; $9AA0
     pha                             ; $9AA2
-    jsr     Enemy_FaceLink          ; $9AA3
-    lda     FacingToWalkDir,y       ; $9AA6
+    jsr     Enemy_FaceLink          ; $9AA3  face Link,
+    lda     FacingToWalkDir,y       ; $9AA6  Link faces it
     sta     linkWalkDir             ; $9AA9
     pla                             ; $9AAB
-    ldy     enemyType,x             ; $9AAC
-    cpy     #$13                    ; $9AAE
-    bcc     @loc_9AB8               ; $9AB0
+    ldy     enemyType,x             ; $9AAC  the house people: back as
+    cpy     #$13                    ; $9AAE  they were
+    bcc     @draw                   ; $9AB0
     cpy     #$19                    ; $9AB2
-    bcs     @loc_9AB8               ; $9AB4
+    bcs     @draw                   ; $9AB4
     sta     objFacing+1,x           ; $9AB6
 
-@loc_9AB8:
-    pla                             ; $9AB8
+@draw:
+    pla                             ; $9AB8  skip the rest of the AI
     pla                             ; $9AB9
     jmp     Enemy_Draw              ; $9ABA
 
 ; ---------------------------------------------------------------------------
 ; Sign_Ai
 ;
-; Signs and the mirror: invisible, can be talked to (read).
+; Signs ($0C, $22) and the mirror ($21): invisible, they can be read
+; (talked to) at once (townspersonTimer kept at 0), and are removed when
+; far off screen.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sign_Ai:
     lda     #$00                    ; $9ABD
@@ -1957,33 +2067,43 @@ Sign_Ai:
 ; ---------------------------------------------------------------------------
 ; Wizard_Draw
 ;
-; Draw the wizard (or his spell's flash).
+; Draw the wizard.  After he gives his spell, for the 64 frames of
+; wizardFlashTimer (set by Dialog_TextDone, as the screen flashes) he is
+; drawn as a small figure instead (SpritePairTiles entry $4C, palette 1, 4
+; pixels up), no longer talking.
 ;
-; Status:  provisional
+; In:      x = enemy index, temp0/temp1 = his screen Y/X
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Wizard_Draw:
-    lda     wizardFlashTimer        ; $9AC8
+    lda     wizardFlashTimer        ; $9AC8  flashing?
     beq     Townsperson_Draw        ; $9ACB
     dec     wizardFlashTimer        ; $9ACD
-    lda     #$00                    ; $9AD0
+    lda     #$00                    ; $9AD0  no longer talking
     sta     townspersonTalking,x    ; $9AD2
-    dec     temp0                   ; $9AD5
+    dec     temp0                   ; $9AD5  4 pixels up
     dec     temp0                   ; $9AD7
     dec     temp0                   ; $9AD9
     dec     temp0                   ; $9ADB
-    lda     #$01                    ; $9ADD
+    lda     #$01                    ; $9ADD  palette 1
     sta     temp3                   ; $9ADF
     ldy     objOamOffset+1,x        ; $9AE1
-    ldx     #$4C                    ; $9AE3
+    ldx     #$4C                    ; $9AE3  entry $4C
     jmp     Townsperson_DrawPair    ; $9AE5
 
 ; ---------------------------------------------------------------------------
 ; Townsperson_Draw
 ;
-; Draw a townsperson: tiles from sramEnemyAttr, palette from sramEnemyDamage
-; (bit 7: one pose), walking animation by speed.
+; Draw a townsperson: two pairs of sprites from SpritePairTiles entry
+; sramEnemyAttr (the person's tiles; towns 1-6 change those of $0D-$20),
+; palette sramEnemyDamage bits 1-0.  Not drawn inside a house (enemyAiState
+; $40 or more).  Standing (bit 7 of sramEnemyDamage: one pose), talking or
+; still: its first frame.  Walking: the next frame (+4) on alternate
+; 8-frame periods (16 below 1 pixel per frame); waiting at a door
+; (enemyAiState 1-$1F) the second frame.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_Draw:
     lda     objXVelocity+1,x        ; $9AE8
@@ -1993,60 +2113,60 @@ Townsperson_Draw:
     lda     townspersonTalking,x    ; $9AEF
     sta     temp5                   ; $9AF2
     ldy     enemyType,x             ; $9AF4
-    lda     sramEnemyDamage,y       ; $9AF6
+    lda     sramEnemyDamage,y       ; $9AF6  palette, one-pose flag
     sta     temp3                   ; $9AF9
-    lda     sramEnemyAttr,y         ; $9AFB
+    lda     sramEnemyAttr,y         ; $9AFB  tiles
     ldy     objOamOffset+1,x        ; $9AFE
     sty     temp15                  ; $9B00
     tax                             ; $9B02
     pla                             ; $9B03
-    asl     temp3                   ; $9B04
-    bcc     @loc_9B0A               ; $9B06
-    bcs     @loc_9B3B               ; $9B08
+    asl     temp3                   ; $9B04  one pose?
+    bcc     @checkInside            ; $9B06
+    bcs     @draw                   ; $9B08
 
-@loc_9B0A:
-    cmp     #$40                    ; $9B0A
+@checkInside:
+    cmp     #$40                    ; $9B0A  inside: not drawn
     bcs     Townsperson_DrawDone    ; $9B0C
-    asl     temp5                   ; $9B0E
-    bne     @loc_9B3B               ; $9B10
-    cmp     #$00                    ; $9B12
-    beq     @loc_9B20               ; $9B14
+    asl     temp5                   ; $9B0E  talking: first frame
+    bne     @draw                   ; $9B10
+    cmp     #$00                    ; $9B12  outside: walking frames
+    beq     @walking                ; $9B14
     cmp     #$40                    ; $9B16
-    bcc     @loc_9B1C               ; $9B18
+    bcc     @atDoor                 ; $9B18
 ; (code below not executed in the test movies)
     bcs     Townsperson_DrawDone    ; $9B1A
 ; (end of code not executed in the test movies)
 
-@loc_9B1C:
-    cmp     #$20                    ; $9B1C
-    bcc     @loc_9B37               ; $9B1E
+@atDoor:
+    cmp     #$20                    ; $9B1C  waiting at the door ($01-$1F):
+    bcc     @nextFrame              ; $9B1E  second frame
 
-@loc_9B20:
-    lda     temp9                   ; $9B20
-    beq     @loc_9B3B               ; $9B22
-    bpl     @loc_9B2B               ; $9B24
+@walking:
+    lda     temp9                   ; $9B20  standing still: first frame
+    beq     @draw                   ; $9B22
+    bpl     @abs                    ; $9B24
     eor     #$FF                    ; $9B26
     clc                             ; $9B28
     adc     #$01                    ; $9B29
 
-@loc_9B2B:
-    tay                             ; $9B2B
+@abs:
+    tay                             ; $9B2B  every 8 frames, 16 if slow
     lda     #$08                    ; $9B2C
     cpy     #$10                    ; $9B2E
-    bcs     @loc_9B33               ; $9B30
+    bcs     @mask                   ; $9B30
     asl     a                       ; $9B32
 
-@loc_9B33:
+@mask:
     and     frameCounter            ; $9B33
-    bne     @loc_9B3B               ; $9B35
+    bne     @draw                   ; $9B35
 
-@loc_9B37:
-    inx                             ; $9B37
+@nextFrame:
+    inx                             ; $9B37  the next frame
     inx                             ; $9B38
     inx                             ; $9B39
     inx                             ; $9B3A
 
-@loc_9B3B:
+@draw:
     lsr     temp3                   ; $9B3B
     ldy     temp15                  ; $9B3D
 

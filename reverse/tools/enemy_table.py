@@ -83,6 +83,9 @@ ENEMY_PAGES = {
     "GpBubble_Ai": "bubble", "GpSkullHead_Ai": "skull-head", "HiddenJar_Ai_Bank5": "hidden-jar",
     "KingBot_Ai": "king-bot", "Barrier_Ai": "barrier", "Fokka_Ai": "fokka", "Fokkeru_Ai": "fokkeru",
     "Thunderbird_Ai": "thunderbird", "DarkLink_Ai": "dark-link",
+    "TownBat_Ai": "town-bat", "Townsperson_WalkAi": "townsperson", "Townsperson_StandAi": "townsperson",
+    "TalkingBit_Ai": "talking-creatures", "Sign_Ai": "townsperson", "Wizard_Ai": "town-wizard",
+    "HouseLady_Ai": "house-people", "TownspersonGenerator_Ai": "townsperson",
 }
 
 

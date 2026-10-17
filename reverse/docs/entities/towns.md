@@ -15,70 +15,56 @@ bit 7 and 4).  What each person says is the business of the town code
 | $00 | [Fairy](enemies/fairy.md) | `Fairy_Ai` |
 | $01 | [Red Jar](enemies/item.md) | `Item_Fall` |
 | $02 | [Door](enemies/locked-door.md) | `LockedDoor_Ai` |
-| $03 | Purple Keese | `TownBat_Ai` |
+| $03 | [Town bat](enemies/town-bat.md) | `TownBat_Ai` |
 | $04 | [Purple Bot](enemies/bot.md) | `Bot_Ai` |
 | $05 | [Bit](enemies/bit.md) | `Bit_Ai` |
 | $06 | [Purple Moa](enemies/moa.md) | `Moa_Ai` |
 | $07 | [Purple Acheman(?)](enemies/ache.md) | `Ache_Ai` |
-| $08 | Gold Girl (crash?) | `Townsperson_WalkAi` |
-| $09 | Townsperson #? | `Townsperson_WalkAi` |
-| $0A | Ache (talking) #0 | `Townsperson_StandAi` |
-| $0B | Bit (talking) #1 | `TalkingBit_Ai` |
-| $0C | Invisible Dialog (sign) #2 | `Sign_Ai` |
-| $0D | Immobile Blue Woman / River Man #3 | `Townsperson_StandAi` |
-| $0E | Blue Lumberjack #4 | `Townsperson_StandAi` |
-| $0F | Wizard #5 | `Wizard_Ai` |
-| $10 | Little Kid #6 | `Townsperson_StandAi` |
-| $11 | Immobile Blue Lady W/ Bowl #7 | `Townsperson_StandAi` |
-| $12 | Immobile Red Granny #8 | `Townsperson_StandAi` |
-| $13 | Idle Red Lumberjack #9 | `HouseLady_Ai` |
-| $14 | Idle Blue Lady W/ Bowl #10 | `HouseLady_Ai` |
-| $15 | Idle Blue Granny #11 | `HouseLady_Ai` |
-| $16 | Idle Red Lady #12 | `HouseLady_Ai` |
-| $17 | Life Lady #13 | `HouseLady_Ai` |
-| $18 | Magic Lady #14 | `HouseLady_Ai` |
-| $19 | Random Blue Lumberjack #15 | `Townsperson_WalkAi` |
-| $1A | Random Red Lady W/ Bowl #16 | `Townsperson_WalkAi` |
-| $1B | Random Red Granny #17 | `Townsperson_WalkAi` |
-| $1C | Random Blue Lady #18 | `Townsperson_WalkAi` |
-| $1D | Walking Blue Lumberjack #19 | `Townsperson_WalkAi` |
-| $1E | Walking Red Guy #20 | `Townsperson_WalkAi` |
-| $1F | Walking Red Guy #21 | `Townsperson_WalkAi` |
-| $20 | Walking Blue Lady #22 | `Townsperson_WalkAi` |
-| $21 | Mirror #23 | `Sign_Ai` |
-| $22 | Sign #24 | `Sign_Ai` |
-| $23 | Busy Townsperson Generator | `TownspersonGenerator_Ai` |
+| $08 | [(unused walker)](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $09 | [(unused walker)](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $0A | [Ache (talking) #0](enemies/talking-creatures.md) | `Townsperson_StandAi` |
+| $0B | [Bit (talking) #1](enemies/talking-creatures.md) | `TalkingBit_Ai` |
+| $0C | [Invisible Dialog (sign) #2](enemies/townsperson.md) | `Sign_Ai` |
+| $0D | [Immobile Blue Woman / River Man #3](enemies/townsperson.md) | `Townsperson_StandAi` |
+| $0E | [Blue Lumberjack #4](enemies/townsperson.md) | `Townsperson_StandAi` |
+| $0F | [Wizard #5](enemies/town-wizard.md) | `Wizard_Ai` |
+| $10 | [Little Kid #6](enemies/townsperson.md) | `Townsperson_StandAi` |
+| $11 | [Immobile Blue Lady W/ Bowl #7](enemies/townsperson.md) | `Townsperson_StandAi` |
+| $12 | [Immobile Red Granny #8](enemies/townsperson.md) | `Townsperson_StandAi` |
+| $13 | [Idle Red Lumberjack #9](enemies/house-people.md) | `HouseLady_Ai` |
+| $14 | [Idle Blue Lady W/ Bowl #10](enemies/house-people.md) | `HouseLady_Ai` |
+| $15 | [Idle Blue Granny #11](enemies/house-people.md) | `HouseLady_Ai` |
+| $16 | [Idle Red Lady #12](enemies/house-people.md) | `HouseLady_Ai` |
+| $17 | [Life Lady #13](enemies/house-people.md) | `HouseLady_Ai` |
+| $18 | [Magic Lady #14](enemies/house-people.md) | `HouseLady_Ai` |
+| $19 | [Random Blue Lumberjack #15](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $1A | [Random Red Lady W/ Bowl #16](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $1B | [Random Red Granny #17](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $1C | [Random Blue Lady #18](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $1D | [Walking Blue Lumberjack #19](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $1E | [Walking Red Guy #20](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $1F | [Walking Red Guy #21](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $20 | [Walking Blue Lady #22](enemies/townsperson.md) | `Townsperson_WalkAi` |
+| $21 | [Mirror #23](enemies/townsperson.md) | `Sign_Ai` |
+| $22 | [Sign #24](enemies/townsperson.md) | `Sign_Ai` |
+| $23 | [Busy Townsperson Generator](enemies/townsperson.md) | `TownspersonGenerator_Ai` |
 
 ## Townspeople
 
-All townspeople are set up by `Townsperson_Init` (with variants for
-those that start idle or walking) and can be talked to: when Link touches
-one and presses B (`Townsperson_CheckTalk`), the game opens a
-conversation (`dialogType` = `DIALOG_TALK`, `Townsperson_StartTalk`) and
-the person turns to face him while it lasts.
+- **[Townspeople](enemies/townsperson.md)**: standing people ($0D, $0E,
+  $10-$12) turn toward Link every 64 frames; walkers ($1D-$20, and $19-$1C
+  sent onto the street every 256 frames by the generator, $23) walk until
+  they leave; signs and the mirror ($0C, $21, $22) are invisible and can
+  be read.  Link talks to anyone by touching them and pressing B.
+- **[House people](enemies/house-people.md)** ($13-$18): pace in front of
+  their house and go in and out through its door; the life ($17) and
+  magic ($18) ladies lead Link in to restore his life or magic.
+- **[Town wizard](enemies/town-wizard.md)** ($0F): speaks first when Link
+  comes near, and gives the town's spell.
+- **[Talking creatures](enemies/talking-creatures.md)** ($0A Ache, $0B
+  Bit): asleep until asked four times.
+- **[Town bat](enemies/town-bat.md)** ($03): what a walker of Saria or
+  Darunia may turn into after talking.
 
-- **Standing people** ($0A, $0D-$12; `Townsperson_StandAi`): stand in
-  place, turning toward Link every 64 frames.
-- **Talking Bit** ($0B, `TalkingBit_Ai`) and **talking Ache** ($0A):
-  creatures that talk; the Ache can be talked to even while Link is in
-  the air.
-- **Wizard** ($0F, `Wizard_Ai`): starts talking by himself when Link
-  comes within 32 pixels on the ground (he teaches the town's spell).
-- **Walking people** ($19-$20; `Townsperson_WalkAi`): walk along the
-  street, turning around at the edges of their range.  Some enter and
-  leave houses: they walk to a door, which opens (`Door_QueueOpen`),
-  go in, and the door closes behind them (`Door_QueueClosed`).
-- **Idle people and the life and magic ladies** ($13-$18,
-  `HouseLady_Ai`): wait near their house; the ladies ($17 life, $18
-  magic) lead Link in: when he follows one through her door, the
-  conversation that restores his life or magic begins (`dialogType` 4).
-- **Signs and mirror** ($0C, $21, $22; `Sign_Ai`): invisible objects
-  that can be talked to (read).
-- **Townsperson generator** ($23, `TownspersonGenerator_Ai`): every 256
-  frames, if a slot is free, sends a walking person (types $19-$1C at
-  random, `TownspersonGeneratorTypes`) in from the left or right edge.
-
-The town bank's other enemies ($03-$07) are the [common enemies](common.md)
-in town colors (the town bats, `TownBat_Ai`, vanish when they leave the
-screen); types $08 and $09 are unused people.  Not all of this has been
-checked against the movies; see the routine headers in `src/bank3.s`.
+The town bank's other enemies ($04-$07) are the [common enemies](common.md)
+in town colors.  Types $08 and $09 are unused walkers.

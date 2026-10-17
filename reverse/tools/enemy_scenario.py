@@ -26,7 +26,8 @@ Then it runs --frames frames, printing one line per frame for each enemy
 slot in --log (default: the spawned slots) as seen at the start of that
 frame's Enemy_RunAi (k = frames since the takeover), and a line for each
 hit of an --event address.  --projectiles adds a line per enemy projectile
-in flight (objState+7 = its type), at the start of each frame.  --shot K saves build/snap/scenario-K.png.
+in flight (objState+7 = its type), at the start of each frame.  --shot K saves build/snap/scenario-K.png;
+--dump K:ADDR:LEN prints memory (LEN hex bytes) at frame K.
 
 Values are hex unless noted.  Velocities are 4.4 fixed point.
 """
@@ -100,6 +101,8 @@ def main():
     p.add_argument("--projectiles", action="store_true", help="also log the enemy projectile slots in use, each frame")
     p.add_argument("--frames", type=int, default=600)
     p.add_argument("--shot", action="append", type=int, default=[])
+    p.add_argument("--dump", action="append", default=[],
+                   help="K:ADDR:LEN: print LEN bytes of memory from ADDR (a symbol, NAME+k, or hex) at frame K")
     p.add_argument("--out", default=os.path.join(HERE, "../build/snap"))
     a = p.parse_args()
     if (a.frame is None) == (a.until is None):
@@ -294,6 +297,13 @@ def main():
             Image.open(bmp).convert("RGB").save(path)
             os.remove(bmp)
             print(f"{k() - 1:5} screenshot {path}")
+        for spec in a.dump:
+            dk, addr, n = spec.rsplit(":", 2)
+            if k() - 1 == int(dk):
+                base = resolve(sym, addr)
+                for i in range(0, int(n, 16), 16):
+                    row = " ".join(f"{rd(base + i + j):02X}" for j in range(min(16, int(n, 16) - i)))
+                    print(f"{k() - 1:5} dump {base + i:04X}: {row}")
         if k() > a.frames:
             raise Done()
 
