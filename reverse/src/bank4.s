@@ -874,8 +874,10 @@ ProjectilePtrs_Bank4:
     .word   Projectile_Rock_Bank4, Projectile_Fall_Bank4, Projectile_Flame_Bank4, Projectile_AcidDrop_Bank4 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
-; Unused byte between the enemy definition tables.
-ProjectileUnused_Bank4:
+; Low byte of projectile type $0C's routine pointer (the 12th entry of
+; ProjectilePtrs_Bank4, whose high byte is the first of the flags table):
+; Projectile_DeathSpark_Bank4.
+ProjectileSparkPtrLo_Bank4:
     .byte   $67                                                             ; $9416
 
 ; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
@@ -1199,12 +1201,26 @@ Projectile_RockGravity_Bank4:
     inc     objYVelocity+7,x        ; $9761
     jmp     Projectile_Fall_Bank4   ; $9764
 
-@loc_9767:
-    dec     objXVelocity+7,x        ; $9767
-    bne     @loc_976E               ; $9769
+; ---------------------------------------------------------------------------
+; Projectile_DeathSpark_Bank4
+;
+; Projectile type $0C, the sparks of a boss's death (Boss_SpawnDeathSpark_*):
+; reached through the routine pointer one past the end of ProjectilePtrs_Bank4, whose
+; bytes are ProjectileSparkPtrLo_Bank4 and the first of the flags table.  The
+; spark stays where it was put; its X velocity ($10) only counts its 16
+; frames down.  It is drawn as a pair (SpritePairTiles entry 0, a small
+; spark) for 8 frames, then (entry 2, a larger ring) for 8, in palette 1,
+; its last sprite mirrored, and never tested against Link.
+;
+; In:      x = projectile index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_DeathSpark_Bank4:
+    dec     objXVelocity+7,x        ; $9767  count down; at 0, gone
+    bne     @show                   ; $9769
     jmp     Projectile_Remove_Bank4 ; $976B
 
-@loc_976E:
+@show:
     ldy     objOamOffset+7,x        ; $976E
     lda     objY+7,x                ; $9770
     sta     temp0                   ; $9772
@@ -1220,10 +1236,10 @@ Projectile_RockGravity_Bank4:
     lda     objXVelocity+7,x        ; $9785
     ldx     #$00                    ; $9787
     cmp     #$08                    ; $9789
-    bcs     @loc_978F               ; $978B
+    bcs     @draw                   ; $978B
     ldx     #$02                    ; $978D
 
-@loc_978F:
+@draw:
     jsr     Sprite_DrawPairFromTableKeepX ; $978F
     lda     #$41                    ; $9792
     sta     oamBuffer - 2,y         ; $9794
@@ -1904,8 +1920,9 @@ Generator_Init_Bank4:
 ;
 ; While a boss bursts (from Enemy_DieStep in bank 7), every other frame
 ; spawn a spark (projectile type $0C) at a random spot around it: Y - 6 to
-; Y + 25, X - 8 to X + 7, drifting right at 1 pixel per frame.  Bank 5's
-; copy is Boss_SpawnDeathSpark_Bank5.
+; Y + 25, X - 8 to X + 7.  The spark stays there for 16 frames: its X
+; velocity, $10, is only its countdown (Projectile_DeathSpark_Bank4).
+; Bank 5's copy is Boss_SpawnDeathSpark_Bank5.
 ;
 ; In:      x = enemy index
 ; Status:  confirmed
@@ -1928,7 +1945,7 @@ Boss_SpawnDeathSpark_Bank4:
     sbc     #$08                    ; $9A66
     adc     objX+1,x                ; $9A68
     sta     a:objX+7,y              ; $9A6A
-    lda     #$10                    ; $9A6D  drifting right
+    lda     #$10                    ; $9A6D  16 frames
     sta     a:objXVelocity+7,y      ; $9A6F
 
 @done:
@@ -3082,8 +3099,10 @@ ProjectilePtrs_Bank4B:
     .word   Projectile_Rock_Bank4B, Projectile_Mace_Bank4B, Projectile_Flame_Bank4, Projectile_AcidDrop_Bank4 ; $A908
     .word   Projectile_CarockBeam, $0000, $0000 ; $A910
 
-; Unused byte between the enemy definition tables.
-ProjectileUnused_Bank4B:
+; Low byte of projectile type $0C's routine pointer (the 12th entry of
+; ProjectilePtrs_Bank4B, whose high byte is the first of the flags table):
+; Projectile_DeathSpark_Bank4B.
+ProjectileSparkPtrLo_Bank4B:
     .byte   $E0                                                             ; $A916
 
 ; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
@@ -3674,12 +3693,26 @@ Projectile_DrawAndCheck_Bank4B:
     jsr     DoNothing               ; $ADDA
     jmp     Projectile_CheckLinkAlternate ; $ADDD
 
-@loc_ADE0:
-    dec     objXVelocity+7,x        ; $ADE0
-    bne     @loc_ADE7               ; $ADE2
+; ---------------------------------------------------------------------------
+; Projectile_DeathSpark_Bank4B
+;
+; Projectile type $0C, the sparks of a boss's death (Boss_SpawnDeathSpark_*):
+; reached through the routine pointer one past the end of ProjectilePtrs_Bank4B, whose
+; bytes are ProjectileSparkPtrLo_Bank4B and the first of the flags table.  The
+; spark stays where it was put; its X velocity ($10) only counts its 16
+; frames down.  It is drawn as a pair (SpritePairTiles entry 0, a small
+; spark) for 8 frames, then (entry 2, a larger ring) for 8, in palette 1,
+; its last sprite mirrored, and never tested against Link.
+;
+; In:      x = projectile index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_DeathSpark_Bank4B:
+    dec     objXVelocity+7,x        ; $ADE0  count down; at 0, gone
+    bne     @show                   ; $ADE2
     jmp     Projectile_Remove_Bank4B ; $ADE4
 
-@loc_ADE7:
+@show:
     ldy     objOamOffset+7,x        ; $ADE7
     lda     objY+7,x                ; $ADE9
     sta     temp0                   ; $ADEB
@@ -3695,10 +3728,10 @@ Projectile_DrawAndCheck_Bank4B:
     lda     objXVelocity+7,x        ; $ADFE
     ldx     #$00                    ; $AE00
     cmp     #$08                    ; $AE02
-    bcs     @loc_AE08               ; $AE04
+    bcs     @draw                   ; $AE04
     ldx     #$02                    ; $AE06
 
-@loc_AE08:
+@draw:
     jsr     Sprite_DrawPairFromTableKeepX ; $AE08
     lda     #$41                    ; $AE0B
     sta     oamBuffer - 2,y         ; $AE0D

@@ -1957,8 +1957,10 @@ ProjectilePtrs_Bank5:
     .word   Projectile_Rock_Bank5, $0000, Projectile_RollingFlame_Bank5, Projectile_Fireball_Bank5 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
-; Unused byte between the enemy definition tables.
-ProjectileUnused_Bank5:
+; Low byte of projectile type $0C's routine pointer (the 12th entry of
+; ProjectilePtrs_Bank5, whose high byte is the first of the flags table):
+; Projectile_DeathSpark_Bank5.
+ProjectileSparkPtrLo_Bank5:
     .byte   $69                                                             ; $9416
 
 ; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
@@ -2034,9 +2036,10 @@ EnemyDrawPtrs_Bank5:
 ; ---------------------------------------------------------------------------
 ; Enemy_InitNone_Bank5
 ;
-; Spawn routine that does nothing (rts).
+; Spawn routine of the types that have none: does nothing.  Its rts is
+; also entry 0 of ProjectileTiles_Bank5.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank5:
     rts                             ; $95AD
@@ -2192,9 +2195,11 @@ GpSkullHead_Draw:
 ; ---------------------------------------------------------------------------
 ; FireOctorok_Draw
 ;
-; Draw a fire Octorok.
+; Draw a fire Octorok ($11, $12): a pair from SpritePairTiles entries
+; $46/$48, alternating every 8 frames (Sprite_DrawAnimatedEnemyPair).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FireOctorok_Draw:
     lda     #$46                    ; $96A0
@@ -2315,31 +2320,36 @@ KingBot_Draw:
 ; ---------------------------------------------------------------------------
 ; Boss_SpawnDeathSpark_Bank5
 ;
-; Bank 5's copy of Boss_SpawnDeathSpark_Bank4, used in the Great Palace.
+; Bank 5's copy of Boss_SpawnDeathSpark_Bank4, for the Thunderbird: while
+; it bursts, every other frame a spark (projectile type $0C,
+; Projectile_DeathSpark_Bank5) at Y - 6 to Y + 25, X - 8 to X + 7, for 16
+; frames.  Unlike bank 4's it also copies the boss's objXHi (with no carry
+; from the X offset).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_SpawnDeathSpark_Bank5:
-    lda     frameCounter            ; $9764
+    lda     frameCounter            ; $9764  every other frame
     lsr     a                       ; $9766
     bcs     @done                   ; $9767
     jsr     Enemy_FireProjectile    ; $9769
-    bcs     @done                   ; $976C
-    lda     #$0C                    ; $976E
+    bcs     @done                   ; $976C  (no slot)
+    lda     #$0C                    ; $976E  a spark
     sta     a:objState+7,y          ; $9770
-    lda     rng+1,x                 ; $9773
+    lda     rng+1,x                 ; $9773  Y - 6 + 0-31
     and     #$1F                    ; $9776
     adc     objY+1,x                ; $9778
     sbc     #$06                    ; $977A
     sta     a:objY+7,y              ; $977C
-    lda     rng+2,x                 ; $977F
+    lda     rng+2,x                 ; $977F  X - 8 + 0-15
     and     #$0F                    ; $9782
     sbc     #$08                    ; $9784
     adc     objX+1,x                ; $9786
     sta     a:objX+7,y              ; $9788
-    lda     objXHi+1,x              ; $978B
+    lda     objXHi+1,x              ; $978B  (no carry from X)
     sta     a:objXHi+7,y            ; $978D
-    lda     #$10                    ; $9790
+    lda     #$10                    ; $9790  16 frames
     sta     a:objXVelocity+7,y      ; $9792
 
 @done:
@@ -3266,7 +3276,7 @@ DarkLink_StartEnding:
 ; and burst ($F4) when they hit the background.
 ;
 ; In:      x = projectile index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank5:
     jsr     Projectile_HitsBg       ; $9BC8  hit the background?
@@ -3422,8 +3432,22 @@ Projectile_DrawAndCheck_Bank5:
     jsr     DoNothing               ; $9C63
     jmp     Projectile_CheckLinkAlternate ; $9C66
 
-@loc_9C69:
-    dec     objXVelocity+7,x        ; $9C69
+; ---------------------------------------------------------------------------
+; Projectile_DeathSpark_Bank5
+;
+; Projectile type $0C, the sparks of a boss's death (Boss_SpawnDeathSpark_*):
+; reached through the routine pointer one past the end of ProjectilePtrs_Bank5, whose
+; bytes are ProjectileSparkPtrLo_Bank5 and the first of the flags table.  The
+; spark stays where it was put; its X velocity ($10) only counts its 16
+; frames down.  It is drawn as a pair (SpritePairTiles entry 0, a small
+; spark) for 8 frames, then (entry 2, a larger ring) for 8, in palette 1,
+; its last sprite mirrored, and never tested against Link.
+;
+; In:      x = projectile index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+Projectile_DeathSpark_Bank5:
+    dec     objXVelocity+7,x        ; $9C69  count down; at 0, gone
     beq     Projectile_Kill_Bank5   ; $9C6B
     ldy     objOamOffset+7,x        ; $9C6D
     lda     objY+7,x                ; $9C6F
@@ -3440,10 +3464,10 @@ Projectile_DrawAndCheck_Bank5:
     lda     objXVelocity+7,x        ; $9C84
     ldx     #$00                    ; $9C86
     cmp     #$08                    ; $9C88
-    bcs     @loc_9C8E               ; $9C8A
+    bcs     @draw                   ; $9C8A
     ldx     #$02                    ; $9C8C
 
-@loc_9C8E:
+@draw:
     jsr     Sprite_DrawPairFromTableKeepX ; $9C8E
     lda     #$41                    ; $9C91
     sta     oamBuffer - 2,y         ; $9C93
@@ -3457,53 +3481,62 @@ ProjectileFlipAttrs_Bank5 := Projectile_DrawAndCheck_Done_Bank5
 ; ---------------------------------------------------------------------------
 ; Projectile_Draw_Bank5
 ;
-; Draw projectile x by its type.
+; Draw projectile x, as Projectile_Draw_Bank1: one sprite at its Y and
+; screen X, tile and attributes by its type (sramProjectileTiles,
+; sramProjectileAttrs), mirrored when it faces right (ProjectileFlipAttrs),
+; then its type's draw routine (sramProjectileDrawPtrs) with y = its OAM
+; offset.  This group's: Flash for types 1, 4, 8; Flicker for 2, 5, 6;
+; Spin for 3; Flame for 7; none (an rts) for 9.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Draw_Bank5:
     lda     objState+7,x            ; $9C99
     pha                             ; $9C9B
     asl     a                       ; $9C9C
     tay                             ; $9C9D
-    lda     sramProjectileDrawPtrs,y ; $9C9E
+    lda     sramProjectileDrawPtrs,y ; $9C9E  its routine
     sta     temp14                  ; $9CA1
     lda     sramProjectileDrawPtrs+1,y ; $9CA3
     sta     temp15                  ; $9CA6
     ldy     objOamOffset+7,x        ; $9CA8
-    lda     objY+7,x                ; $9CAA
+    lda     objY+7,x                ; $9CAA  Y and screen X
     sta     oamBuffer,y             ; $9CAC
     lda     drawScreenX+2           ; $9CAF
     sta     oamBuffer+3,y           ; $9CB1
     pla                             ; $9CB4
     tay                             ; $9CB5
-    lda     sramProjectileTiles,y   ; $9CB6
+    lda     sramProjectileTiles,y   ; $9CB6  tile
     pha                             ; $9CB9
-    lda     sramProjectileAttrs,y   ; $9CBA
+    lda     sramProjectileAttrs,y   ; $9CBA  attributes, flipped
     ldy     objFacing+7,x           ; $9CBD
     ora     ProjectileFlipAttrs_Bank5,y ; $9CBF
     ldy     objOamOffset+7,x        ; $9CC2
     sta     oamBuffer+2,y           ; $9CC4
     pla                             ; $9CC7
     sta     oamBuffer+1,y           ; $9CC8
-    jmp     (temp14)                ; $9CCB
+    jmp     (temp14)                ; $9CCB  its draw routine
 
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlame_Bank5
 ;
-; Projectile draw: flash it (Projectile_DrawFlash_Bank5), then the flame's
-; extra handling as in Projectile_DrawFlame_Bank4.
+; Projectile type 7's draw (the Fokkeru's fireball): flashing in the air
+; (Projectile_DrawFlash_Bank5).  Once it has landed (projectileSpeed set)
+; it is a burning flame, tile $52, not flipped upside down, which blinks
+; (hidden every other 2 frames) in its last 32 frames.
 ;
-; Status:  provisional
+; In:      x = projectile index, y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlame_Bank5:
     jsr     Projectile_DrawFlash_Bank5 ; $9CCE
-    lda     projectileSpeed,x       ; $9CD1
+    lda     projectileSpeed,x       ; $9CD1  landed?
     beq     @done                   ; $9CD4
-    ldy     projectileTimer,x       ; $9CD6
+    ldy     projectileTimer,x       ; $9CD6  its last 32 frames:
     cpy     #$20                    ; $9CD9
     bcs     @loc_9CEB               ; $9CDB
-    lda     frameCounter            ; $9CDD
+    lda     frameCounter            ; $9CDD  hidden every other 2 frames
     and     #$02                    ; $9CDF
     beq     @loc_9CEB               ; $9CE1
     ldy     objOamOffset+7,x        ; $9CE3
@@ -3512,11 +3545,11 @@ Projectile_DrawFlame_Bank5:
     rts                             ; $9CEA
 
 @loc_9CEB:
-    ldy     objOamOffset+7,x        ; $9CEB
+    ldy     objOamOffset+7,x        ; $9CEB  on the floor: not upside
     lda     oamBuffer+2,y           ; $9CED
-    and     #$43                    ; $9CF0
+    and     #$43                    ; $9CF0  down,
     sta     oamBuffer+2,y           ; $9CF2
-    lda     #$52                    ; $9CF5
+    lda     #$52                    ; $9CF5  tile $52
     sta     oamBuffer+1,y           ; $9CF7
 
 @done:
@@ -3525,12 +3558,14 @@ Projectile_DrawFlame_Bank5:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlicker_Bank5
 ;
-; Projectile draw: cycle the palette every frame.
+; Projectile draw: OR frameCounter bits 1-0 into its palette, a new color
+; every frame.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank5:
-    lda     frameCounter            ; $9CFB
+    lda     frameCounter            ; $9CFB  palette ORed with frameCounter
     and     #$03                    ; $9CFD
     ora     oamBuffer+2,y           ; $9CFF
     sta     oamBuffer+2,y           ; $9D02
@@ -3539,17 +3574,20 @@ Projectile_DrawFlicker_Bank5:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawSpin_Bank5
 ;
-; Projectile draw: spin by the facing and the frame.
+; Projectile draw: tumble.  Palette 1, flipped horizontally when it faces
+; right (objFacing bit 0) and vertically every other 4 frames
+; (frameCounter bit 2).
 ;
-; Status:  provisional
+; In:      x = projectile index, y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank5:
-    lda     objFacing+7,x           ; $9D06
+    lda     objFacing+7,x           ; $9D06  bit 6: facing right
     lsr     a                       ; $9D08
     lda     #$00                    ; $9D09
     ror     a                       ; $9D0B
     pha                             ; $9D0C
-    lda     frameCounter            ; $9D0D
+    lda     frameCounter            ; $9D0D  bit 7: frameCounter bit 2
     lsr     a                       ; $9D0F
     lsr     a                       ; $9D10
 
@@ -3565,19 +3603,22 @@ FokkaAttackMasks:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlash_Bank5
 ;
-; Projectile draw: flash the palette.
+; Projectile draw: palette 2, flipped horizontally every other 2 frames
+; (frameCounter bit 1) and vertically every other 4 (bit 2).
+; Projectile_SetAttr_Bank5 stores a as the attributes.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank5:
-    lda     frameCounter            ; $9D18
+    lda     frameCounter            ; $9D18  frameCounter bits 2, 1 to
     asl     a                       ; $9D1A
     asl     a                       ; $9D1B
     asl     a                       ; $9D1C
     sec                             ; $9D1D
     rol     a                       ; $9D1E
-    asl     a                       ; $9D1F
-    and     #$C3                    ; $9D20
+    asl     a                       ; $9D1F  bits 7, 6 (flips),
+    and     #$C3                    ; $9D20  palette 2
 
 Projectile_SetAttr_Bank5:
     sta     oamBuffer+2,y           ; $9D22
@@ -3919,7 +3960,7 @@ Fokkeru_Ai:
 ; for 8 frames of every 32, else $19, in palette 3.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Thunderbird_Draw:
     lda     enemyHp,x               ; $9EBF
@@ -4076,7 +4117,7 @@ FokkaDrawYOffsets:
 ; middle of the thrust (timer 3-12), flipped upside down for the low thrust.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fokka_Draw:
     lda     enemyAiVar,x            ; $9FD4
@@ -4177,7 +4218,7 @@ Fokka_Draw:
 ; entries $20, $1C, $28, $24) cycling every 8 frames by enemyAiState.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fokkeru_Draw:
     lda     enemyAiState,x          ; $A05B
@@ -4355,7 +4396,7 @@ GpFastBubble_Init_Done:
 ; a third, 24 pixels higher, only when the bubble is on screen.
 ;
 ; In:      x = enemy index, temp0/temp1 = its screen Y/X
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LargeBubble_Draw:
     lda     #$02                    ; $A133
@@ -4687,8 +4728,11 @@ Barrier_Ai:
 ; ---------------------------------------------------------------------------
 ; Generator_Init_Bank5
 ;
-; Spawn routine of generators: despawn any other enemy of the same type.
+; Spawn routine of the fire Bago Bago generator ($0F), as
+; Generator_Init_Bank4: despawn any other enemy of its type, so only one
+; generator runs.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank5:
@@ -5059,13 +5103,16 @@ Triforce_FlashPalette:
 ; ---------------------------------------------------------------------------
 ; Boss_DrawHpBar_Bank5
 ;
-; Draw a boss's hit point bar; same as Boss_DrawHpBar.
+; Bank 5's copy of Boss_DrawHpBar (bank 4): a column of 8 sprites at X
+; $10 from Y $70 up, ceil(hit points / a) full ($6E), the rest empty ($70),
+; palette 1.  The Thunderbird uses a = 24, Dark Link 1.
 ;
-; Status:  provisional
+; In:      x = enemy index, a = hit points per block
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Boss_DrawHpBar_Bank5:
     sta     temp0                   ; $A4E9
-    ldy     #$00                    ; $A4EB
+    ldy     #$00                    ; $A4EB  y = ceil(hp / a)
     lda     enemyHp,x               ; $A4ED
     clc                             ; $A4EF
 
@@ -5073,25 +5120,25 @@ Boss_DrawHpBar_Bank5:
     sbc     temp0                   ; $A4F0
     iny                             ; $A4F2
     bcs     @loop                   ; $A4F3
-    ldx     #$1C                    ; $A4F5
-    lda     #$70                    ; $A4F7
+    ldx     #$1C                    ; $A4F5  8 sprites, bottom first,
+    lda     #$70                    ; $A4F7  from Y $70
     sta     temp0                   ; $A4F9
 
 @loop2:
-    lda     #$70                    ; $A4FB
+    lda     #$70                    ; $A4FB  empty,
     dey                             ; $A4FD
     bmi     @loc_A502               ; $A4FE
-    lda     #$6E                    ; $A500
+    lda     #$6E                    ; $A500  or full
 
 @loc_A502:
     sta     oamBuffer+193,x         ; $A502
-    lda     #$01                    ; $A505
+    lda     #$01                    ; $A505  palette 1
     sta     oamBuffer+194,x         ; $A507
-    lda     #$10                    ; $A50A
+    lda     #$10                    ; $A50A  X $10
     sta     oamBuffer+195,x         ; $A50C
     lda     temp0                   ; $A50F
     sta     oamBuffer+192,x         ; $A511
-    adc     #$F8                    ; $A514
+    adc     #$F8                    ; $A514  next up: 8 higher, then 7 (carry)
     sta     temp0                   ; $A516
     dex                             ; $A518
     dex                             ; $A519
