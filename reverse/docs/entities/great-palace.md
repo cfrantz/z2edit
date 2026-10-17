@@ -12,7 +12,7 @@ own colors (`FireOctorok_Draw`).
 | $02 | [Door](enemies/locked-door.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `LockedDoor_Ai` |
 | $03 | [Myu](enemies/myu.md) | 24 | 10 | 3 | 1 | comes back | `Myu_Ai` |
 | $04 | [Bot](enemies/bot.md) | 48 | 10 | 3 | 1 | comes back | `Bot_Ai` |
-| $05 | Hidden jar | 255 | 10 | 3 | 1 | blocks Link's projectiles, comes back | `HiddenJar_Ai_Bank5` |
+| $05 | [Hidden jar](enemies/hidden-jar.md) | 255 | 10 | 3 | 1 | blocks Link's projectiles, comes back | `HiddenJar_Ai_Bank5` |
 | $06 | [Moa](enemies/moa.md) | 6 | 5 | 1 | 1 | touch drains 20 exp | `Moa_Ai` |
 | $07 | [Ache](enemies/ache.md) | 4 | 3 | 0 | 1 | comes back | `Ache_Ai` |
 | $08 | (unused) | 0 | 0 | 3 | 1 | immune to SPELL, immune to Thunder, sword passes through | `$AB98` |
@@ -27,32 +27,32 @@ own colors (`FireOctorok_Draw`).
 | $11 | [Fire Hopping Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokHopping_Ai` |
 | $12 | [Fire Walking Octorok](enemies/octorok.md) | 12 | 20 | 4 | 1 |  | `OctorokWalking_Ai` |
 | $13 | [Elevator](enemies/elevator.md) | 0 | 0 | 0 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Elevator_Ai` |
-| $14 | Slow Bubble | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
-| $15 | Fast Bubble | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
-| $16 | Orange Skull Head | 96 | 20 | 3 | 1 | touch drains 10 exp, immune to Thunder, comes back | `GpSkullHead_Ai` |
-| $17 | Large Bubble | 255 | 0 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `GpBubble_Ai` |
+| $14 | [Slow Bubble](enemies/bubble.md) | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
+| $15 | [Fast Bubble](enemies/bubble.md) | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
+| $16 | [Orange Skull Head](enemies/skull-head.md) | 96 | 20 | 3 | 1 | touch drains 10 exp, immune to Thunder, comes back | `GpSkullHead_Ai` |
+| $17 | [Large Bubble](enemies/bubble.md) | 255 | 0 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `GpBubble_Ai` |
 | $18 | Orange Fokka | 0 | 70 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
 | $19 | Red Fokka | 48 | 70 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
 | $1A | Blue Fokka | 96 | 100 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
 | $1B | (unused) | 0 | 0 | 0 | - | touch drains 10 exp | `$9E66` |
 | $1C | (unused) | 2 | 0 | 0 | - | touch drains 10 exp | none (its AI pointer, $9E67, is a byte of `FokkeruSpeeds`) |
 | $1D | Fokkeru | 144 | 200 | 4 | - | blocks Link's projectiles, immune to SPELL | `Fokkeru_Ai` |
-| $1E | King Bot | 56 | 0 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `KingBot_Ai` |
+| $1E | [King Bot](enemies/king-bot.md) | 56 | 0 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `KingBot_Ai` |
 | $1F | (unused) | 0 | 3 | 1 | - |  | `$0000` |
-| $20 | Barrier | 0 | 3 | 6 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Barrier_Ai` |
+| $20 | [Barrier](enemies/barrier.md) | 0 | 3 | 6 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Barrier_Ai` |
 | $21 | (unused) | 0 | 3 | 1 | - |  | `$0000` |
 | $22 | Thunderbird | 192 | 1000 | 5 | - | blocks Link's projectiles, immune to SPELL, Thunder weak | `Thunderbird_Ai` |
 | $23 | Dark Link Trigger | 248 | 150 | 4 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `DarkLink_Ai` |
 
 ## Enemies
 
-**Bubbles** ($14 slow, $15 fast, $17 large; `GpBubble_Ai`): like the
-palace bubbles, they bounce diagonally and drain magic while touching
-Link.  When a large bubble is hit, it splits into two fast bubbles
-(255 hit points each).
+**[Bubbles](enemies/bubble.md)** ($14 slow, $15 fast, $17 large;
+`GpBubble_Ai`): like the palace bubbles, they bounce diagonally and drain
+magic while touching Link.  A large bubble brought below 192 hit points
+splits into two fast bubbles.
 
-**Skull head** ($16, `GpSkullHead_Ai`): like the palace skull heads, with
-96 hit points.
+**[Skull head](enemies/skull-head.md)** ($16, `GpSkullHead_Ai`): like
+the palace skull heads, with 96 hit points and a deeper dive.
 
 **Fokkas** ($18 orange, $19 red, $1A blue; `Fokka_Ai`): bird knights
 that fight like Iron Knuckles: they guard at the height Link attacks or
@@ -63,18 +63,18 @@ jump at random (1 frame in 32 on the ground).
 spits a fireball every 64 frames (projectile type 7), which rolls along
 the floor and then shoots off to a side (`Projectile_RollingFlame_Bank5`).
 
-**King Bot** ($1E, `KingBot_Ai`): a giant Bot that wakes when Link is
-within 48 pixels and hops toward him.  When its hit points fall below 48,
-it bursts into five Bots.
+**[King Bot](enemies/king-bot.md)** ($1E, `KingBot_Ai`): a giant Bot,
+hidden until Link comes near, that drops and hops after him.  Below 48
+hit points it bursts into five Bots.
 
-**Hidden jar** ($05, `HiddenJar_Ai_Bank5`): an invisible object;
-striking it reveals a magic jar (or, half the time, a red Fokka; not
-seen in the test movies).
+**[Hidden jar](enemies/hidden-jar.md)** ($05, `HiddenJar_Ai_Bank5`): an
+invisible object; striking it reveals a red jar, or half the time a red
+Fokka.
 
-**Barrier** ($20, `Barrier_Ai`): the barrier at the Great Palace's
-entrance, flashing.  It hurts Link on contact, and kills him outright if
-he is a fairy.  When all six crystals are placed (`crystalsRemaining` =
-0) and Link walks up to it, it dissolves a column at a time.
+**[Barrier](enemies/barrier.md)** ($20, `Barrier_Ai`): the flashing wall
+at the entrance.  It hurts Link on every contact, and kills a fairy Link.
+When all six crystals are placed and Link walks up to it, it dissolves
+from the bottom up.
 
 ## Bosses
 

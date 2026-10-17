@@ -1,7 +1,8 @@
 # Skull Head
 
-A blue flying skull that comes in from the side Link faces and swoops
-through him in a wave, again and again.
+A flying skull that comes in from the side Link faces and swoops
+through him in a wave, again and again: blue in the palaces, orange in
+the Great Palace.
 
 ## Where It Appears
 
@@ -9,37 +10,46 @@ through him in a wave, again and again.
 |-------|------|-------|---:|----:|-------------:|-----------:|
 | [Palaces 1, 2, 5](../palaces.md) | $0A | Blue Skull Head | 56 | 20 | 0 | - |
 | [Palaces 3, 4, 6](../palaces.md) | $0F | Blue Skull Head | 56 | 20 | 0 | 1 |
+| [Great Palace](../great-palace.md) | $16 | Orange Skull Head | 96 | 20 | 3 | 1 |
 
 It is placed in rooms $12, $26 and $3C of palaces 1, 2 and 5, and $16,
-$22 and $31 of palaces 3, 4 and 6.  Touching it drains experience.  It
-comes back after dying.  The two groups' routines differ only in their
-numbers.
+$22 and $31 of palaces 3, 4 and 6, and in pairs in the Great Palace's
+rooms $05, $0C, $13, $17, $24, $27, $28 and $2D.  Touching it drains
+experience.  It comes back after dying.  The three groups' routines
+differ only in their numbers, except that the Great Palace's doesn't wait
+at an area end (below).  The Great Palace's is also immune to Thunder.
 
 ## Behavior
 
-**Spawning** (`SkullHead_Init`, `SkullHead_Init_Bank4B`):
+**Spawning** (`SkullHead_Init`, `SkullHead_Init_Bank4B`,
+`GpSkullHead_Init`):
 
-- about 32 pixels above Link (his Y - $20; - $24 in palaces 3, 4, 6);
+- about 32 pixels above Link (his Y - $20; - $24 in palaces 3, 4, 6; -
+  $30 in the Great Palace);
 - at the edge of the screen he faces (`SkullHeadSpawnX`);
-- flying inward at 1 pixel per frame (1.5 in palaces 3, 4, 6;
-  `SkullHeadSpeeds`), facing Link.
+- flying inward at 1 pixel per frame (1.5 in palaces 3, 4, 6 and the
+  Great Palace; `SkullHeadSpeeds`), facing Link.
 
-**Flying** (`SkullHead_Ai`, `SkullHead_Ai_Bank4B`), after
-`Enemy_SkipAiIfStunned`:
+**Flying** (`SkullHead_Ai`, `SkullHead_Ai_Bank4B`, `GpSkullHead_Ai`),
+after `Enemy_SkipAiIfStunned`:
 
 - Its Y velocity changes by 2/16 per frame, down while `enemyAiState` is
   even and up while it is odd.  At 3 pixels per frame (2.875 in palaces
   3, 4, 6; `SkullHeadMaxYSpeeds`) the state goes up by 1.
 - So it dives from its start, 72 pixels down, through Link, and climbs
   back, every 96 frames (about 66 pixels, 92 frames, in palaces 3, 4, 6).
+- The Great Palace's turns at 3.5 pixels per frame
+  (`GpSkullHeadMaxYSpeeds`): it dives about 97 pixels, well below Link,
+  every 112 frames.
 - When it is partly off screen, it spawns again ahead of Link, unless the
-  screen is held at an area end, when it waits there.
+  screen is held at an area end, when it waits there.  The Great
+  Palace's doesn't test `scrollHeld`: it always spawns again at once.
 
 ## Drawing
 
 `SkullHead_Draw` (`SkullHead_Draw_Bank4B`): a pair of sprites from
 `sramEnemyTiles` entry $82 ($C0), with its facing flipped (the tiles face
-the other way).
+the other way).  `GpSkullHead_Draw` is the same with entry $4A.
 
 ## Routines
 
@@ -48,6 +58,7 @@ the other way).
 | `SkullHead_Init`, `SkullHead_Init_Bank4B` | 4:$B9F4, 4:$ACAD | spawning |
 | `SkullHead_Ai`, `SkullHead_Ai_Bank4B` | 4:$BA20, 4:$ACDA | flying |
 | `SkullHead_Draw`, `SkullHead_Draw_Bank4B` | 4:$B833, 4:$ACA2 | drawing |
+| `GpSkullHead_Init`, `GpSkullHead_Ai`, `GpSkullHead_Draw` | 5:$963B, 5:$9667, 5:$9695 | Great Palace |
 
 ## Verification
 
@@ -76,3 +87,20 @@ spawn default).
 tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $P3,statLevel+2=8,statContainers+1=8 \
     --until currentWorld=4 --after 200 --clear $F3 --approach 80 --spawn 4:0F:C0:90 --frames 250
 ```
+
+In the Great Palace's entrance (see
+[Bubble](bubble.md#great-palace) for `$GP` and `$GF`), an orange skull
+head placed at ($C0, $80), Link standing at $B1 facing right:
+
+- It dove from Y $80 to $E1 and back every 112 frames, flying left at 1/2
+  pixel per frame (the spawn default).
+- Partly off the left edge at X $49 on frame 237, it came again at the
+  right edge, X $139, Y $7F (Link's Y - $31: the carry was clear), flying
+  left at 1.5 pixels per frame.
+- Screenshot: an orange winged skull.
+
+```
+tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $GP --until currentWorld=5 --after 200 \
+    --clear $GF --approach B0 --spawn 1:16:C0:80 --log 1 --frames 260
+```
+

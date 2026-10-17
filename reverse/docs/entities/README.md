@@ -52,16 +52,16 @@ and how each was verified):
 | [Scorpion](enemies/scorpion.md) | $19 in East Hyrule |
 | [Lizalfos](enemies/lizalfos.md) | $1A-$1C in East Hyrule |
 | [Rock Thrower](enemies/rock-thrower.md) | $1D in East Hyrule |
-| [Bubble](enemies/bubble.md) | $06, $0E in the palaces |
+| [Bubble](enemies/bubble.md) | $06, $0E in the palaces; $14, $15, $17 in the Great Palace |
 | [Falling Block](enemies/falling-block.md) | $08, $09 in the palaces |
 | [Crystal Spot](enemies/crystal.md) | $14, $15 in the palaces |
 | [Energy Ball Shooter](enemies/energy-ball-shooter.md) | $16, $17 in the palaces |
 | [Wolf Head](enemies/wolf-head.md) | $1B, $1C in the palaces |
 | [Iron Knuckle](enemies/iron-knuckle.md) | $18-$1A in the palaces |
 | [Stalfos](enemies/stalfos.md) | $1F, $23 in the palaces |
-| [Hidden Jar](enemies/hidden-jar.md) | $05 in the palaces |
+| [Hidden Jar](enemies/hidden-jar.md) | $05 in the palaces and the Great Palace |
 | [Orange Moa](enemies/orange-moa.md) | $07 in the palaces |
-| [Skull Head](enemies/skull-head.md) | $0A in palaces 1, 2, 5; $0F in 3, 4, 6 |
+| [Skull Head](enemies/skull-head.md) | $0A in palaces 1, 2, 5; $0F in 3, 4, 6; $16 in the Great Palace |
 | [Tinsuit](enemies/tinsuit.md) | $0B, $0C in palaces 1, 2, 5 |
 | [Rathead](enemies/rathead.md) | $0B, $0C in palaces 3, 4, 6 |
 | [Acid Dripper](enemies/acid-dripper.md) | $0D in the palaces |
@@ -75,6 +75,8 @@ and how each was verified):
 | [Rebonack](enemies/rebonack.md) | $20, $0A in palaces 3, 4, 6 (palace 3's boss) |
 | [Carock](enemies/carock.md) | $22 in palaces 3, 4, 6 (palace 4's boss) |
 | [Barba](enemies/barba.md) | $21 in palaces 3, 4, 6 (palace 6's boss) |
+| [King Bot](enemies/king-bot.md) | $1E in the Great Palace |
+| [Barrier](enemies/barrier.md) | $20 in the Great Palace |
 
 The enemy tables of the group pages link to them
 (`tools/enemy_table.py --doc` links an enemy to its page by its AI

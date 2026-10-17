@@ -2063,21 +2063,27 @@ EnemyTiles_Bank5:
     .byte   $1D, $1F, $21, $23, $25, $27, $71, $73, $75, $77, $3D, $3D, $F2, $F4, $F8, $FA; $9604
     .byte   $07, $07, $09, $09, $05, $05, $0B, $0D, $61, $33, $35           ; $9614
 
+; X offsets (low and high bytes) of the Bots a King Bot bursts into, by
+; enemy slot 1-5 (entry 0 is unused): -24, -24, -8, -8, +8 (plus the
+; carry).  Slot 5's low byte is the first byte of KingBotPartXHiOffsets.
 KingBotPartXOffsets:
     .byte   $37, $E8, $E8, $F8, $F8                                         ; $961F
 
 KingBotPartXHiOffsets:
     .byte   $08, $FF, $FF, $FF, $FF, $00                                    ; $9624
 
+; King Bot hops: 1 pixel per frame toward Link, by facing.
 KingBotSpeeds:
     .byte   $10, $F0                                                        ; $962A
 
 ; ---------------------------------------------------------------------------
 ; GpBubble_Draw
 ;
-; Draw a bubble.
+; Draw a slow or fast bubble: a symmetric pair of sprites (SpritePairTiles
+; entry $5A, the right one mirrored), its palette changing every frame.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GpBubble_Draw:
     lda     #$02                    ; $962C
@@ -2091,65 +2097,78 @@ GpBubble_Draw:
 ; ---------------------------------------------------------------------------
 ; GpSkullHead_Init
 ;
-; Spawn routine of skull heads: $30 above Link, at the side he faces.
+; Spawn routine of the orange skull head ($16), and its respawn: as
+; SkullHead_Init, but $30 above Link (or $31; the carry isn't set), flying
+; inward 1.5 pixels per frame from the edge of the screen he faces.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GpSkullHead_Init:
-    lda     objY                    ; $963B
+    lda     objY                    ; $963B  above Link
     sbc     #$30                    ; $963D
     sta     objY+1,x                ; $963F
-    ldy     objFacing               ; $9641
+    ldy     objFacing               ; $9641  the edge he faces
     lda     scrollX                 ; $9643
     adc     GpSkullHeadSpawnX,y     ; $9646
     sta     objX+1,x                ; $9649
     lda     scrollXHi               ; $964B
     adc     #$00                    ; $964E
     sta     objXHi+1,x              ; $9650
-    lda     GpSkullHeadSpeeds,y     ; $9652
+    lda     GpSkullHeadSpeeds,y     ; $9652  flying inward
     sta     objXVelocity+1,x        ; $9655
     jsr     Enemy_StopY             ; $9657
-    sta     enemyAiState,x          ; $965A
+    sta     enemyAiState,x          ; $965A  (a = 0)
+; X offsets from the scroll by Link's facing (1 right, 2 left): the right
+; edge, $EF, or the left, 0 (the first byte of GpSkullHeadSpeeds).
 GpSkullHeadSpawnX := * + 2
     jmp     Enemy_FaceLink          ; $965C
     .byte   $EF                                                             ; $965F
 
+; 1.5 pixels per frame inward, by Link's facing.
 GpSkullHeadSpeeds:
     .byte   $00, $E8, $18                                                   ; $9660
 
 GpSkullHeadYAccel:
     .byte   $02, $FE                                                        ; $9663
 
+; Turning at 3.5 pixels per frame.
 GpSkullHeadMaxYSpeeds:
     .byte   $38, $C8                                                        ; $9665
 
 ; ---------------------------------------------------------------------------
 ; GpSkullHead_Ai
 ;
-; Skull head: flies across in a wave; respawns when it leaves the screen.
+; Orange skull head ($16): as SkullHead_Ai, with a deeper wave: its Y
+; velocity turns at 3.5 pixels per frame, so it dives about 97 pixels
+; from its start, through Link and well below him, and climbs back, every
+; 112 frames.  When it is partly off screen it spawns again at once ahead
+; of Link; unlike the palace skull heads it doesn't wait while the screen
+; is held at an area end.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GpSkullHead_Ai:
-    lda     drawOffscreen+1         ; $9667
+    lda     drawOffscreen+1         ; $9667  partly off screen?
     and     #$0C                    ; $9669
-    beq     @loc_9670               ; $966B
-    jsr     GpSkullHead_Init        ; $966D
+    beq     @fly                    ; $966B
+    jsr     GpSkullHead_Init        ; $966D  come again
 
-@loc_9670:
+@fly:
     jsr     Enemy_SkipAiIfStunned   ; $9670
-    lda     enemyAiState,x          ; $9673
-    and     #$01                    ; $9675
+    lda     enemyAiState,x          ; $9673  accelerate down (even) or
+    and     #$01                    ; $9675  up (odd)
     tay                             ; $9677
     lda     objYVelocity+1,x        ; $9678
     clc                             ; $967B
     adc     GpSkullHeadYAccel,y     ; $967C
     sta     objYVelocity+1,x        ; $967F
-    cmp     GpSkullHeadMaxYSpeeds,y ; $9682
-    bne     @loc_9689               ; $9685
+    cmp     GpSkullHeadMaxYSpeeds,y ; $9682  at the top speed: turn
+    bne     @move                   ; $9685
     inc     enemyAiState,x          ; $9687
 
-@loc_9689:
+@move:
     jsr     Enemy_MoveY             ; $9689
     jsr     Enemy_MoveX             ; $968C
     jsr     Enemy_UpdateCommon      ; $968F
@@ -2158,9 +2177,10 @@ GpSkullHead_Ai:
 ; ---------------------------------------------------------------------------
 ; GpSkullHead_Draw
 ;
-; Draw a skull head.
+; Draw the orange skull head: a pair of sprites (SpritePairTiles entry
+; $4A), its facing flipped (the tiles face the other way).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GpSkullHead_Draw:
     ldx     #$4A                    ; $9695
@@ -2183,7 +2203,11 @@ FireOctorok_Draw:
 ; ---------------------------------------------------------------------------
 ; KingBot_Draw
 ;
-; Draw King Bot.
+; Draw the King Bot, a giant Bot: its body from four pairs of
+; SpritePairTiles entry $3C (the right half mirrored), with four more
+; sprites (tiles $F0 and $F6, in the body's palette) at its left and right
+; edges, which move in and out a pixel every 16 frames.  The edge sprites
+; are hidden when their side is off screen.
 ;
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
@@ -4011,116 +4035,125 @@ Fokkeru_Draw:
 ; ---------------------------------------------------------------------------
 ; GpBubble_Ai
 ;
-; Bubbles: fly diagonally, bouncing, draining magic while touching Link.  A
-; large bubble ($17), once hit, splits into two fast bubbles.
+; Great Palace bubbles ($14 slow, $15 fast, $17 large): as Bubble_Ai
+; (flying diagonally, bouncing off the screen's edges, walls, floors and
+; ceilings, taking a point of Link's magic per contact), with 255 hit
+; points.  A large bubble whose hit points fall below 192 splits: it doubles
+; its speed and becomes a fast bubble, and puts a second fast bubble in the
+; highest free enemy slot, 16 pixels right and 16-17 down, flying the
+; same way across and the other way up or down (its Y velocity inverted,
+; one less).  Both get 255 hit points.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GpBubble_Ai:
-    jsr     Enemy_SkipAiIfStunned   ; $A075
+    jsr     Enemy_SkipAiIfStunned   ; $A075  no AI while stunned
     jsr     Enemy_MoveX             ; $A078
     jsr     Enemy_MoveY             ; $A07B
-    jsr     Enemy_UpdateWithBg      ; $A07E
-    lda     objCollision+1,x        ; $A081
+    jsr     Enemy_UpdateWithBg      ; $A07E  probe background, draw, hit tests
+    lda     objCollision+1,x        ; $A081  touching Link?
     and     #$10                    ; $A083
-    beq     @loc_A094               ; $A085
+    beq     @hudRedraw              ; $A085
 ; (code below not executed in the test movies)
-    lda     statMeter               ; $A087
+    lda     statMeter               ; $A087  a point of magic, down to 0
     sec                             ; $A08A
     sbc     #$01                    ; $A08B
-    bcs     @loc_A091               ; $A08D
+    bcs     @setMagic               ; $A08D
     lda     #$00                    ; $A08F
 
-@loc_A091:
+@setMagic:
     sta     statMeter               ; $A091
 ; (end of code not executed in the test movies)
 
-@loc_A094:
-    lda     hudRedraw               ; $A094
+@hudRedraw:
+    lda     hudRedraw               ; $A094  redraw the meters (every frame)
     ora     #$80                    ; $A097
     sta     hudRedraw               ; $A099
     jsr     Enemy_HurtLinkOnContact ; $A09C
-    lda     enemyType,x             ; $A09F
+    lda     enemyType,x             ; $A09F  a large bubble
     cmp     #$17                    ; $A0A1
-    bne     @loc_A0FB               ; $A0A3
-    lda     enemyHp,x               ; $A0A5
+    bne     @checkX                 ; $A0A3
+    lda     enemyHp,x               ; $A0A5  below 192 hit points?
     cmp     #$C0                    ; $A0A7
-    bcs     @loc_A0FB               ; $A0A9
+    bcs     @checkX                 ; $A0A9
 ; (code below not executed in the test movies)
-    asl     objXVelocity+1,x        ; $A0AB
+    asl     objXVelocity+1,x        ; $A0AB  split: twice as fast,
     asl     objYVelocity+1,x        ; $A0AD
-    lda     #$15                    ; $A0B0
+    lda     #$15                    ; $A0B0  a fast bubble
     sta     enemyType,x             ; $A0B2
-    ldy     #$05                    ; $A0B4
+    ldy     #$05                    ; $A0B4  a free slot, from 5 down
 
-@loop:
+@findSlot:
     lda     a:enemyActive,y         ; $A0B6
-    beq     @loc_A0C0               ; $A0B9
+    beq     @newBubble              ; $A0B9
     dey                             ; $A0BB
-    bpl     @loop                   ; $A0BC
-    bmi     @loc_A0FB               ; $A0BE
+    bpl     @findSlot               ; $A0BC
+    bmi     @checkX                 ; $A0BE  (none: no second bubble)
 
-@loc_A0C0:
-    lda     #$01                    ; $A0C0
+@newBubble:
+    lda     #$01                    ; $A0C0  active, on screen
     sta     a:enemyActive,y         ; $A0C2
     sta     a:objYHi+1,y            ; $A0C5
     lda     enemyHp,x               ; $A0C8
     sta     a:enemyHp,y             ; $A0CA
-    lda     #$15                    ; $A0CD
+    lda     #$15                    ; $A0CD  a fast bubble
     sta     a:enemyType,y           ; $A0CF
-    lda     objXVelocity+1,x        ; $A0D2
+    lda     objXVelocity+1,x        ; $A0D2  the same way across,
     sta     a:objXVelocity+1,y      ; $A0D4
-    lda     objYVelocity+1,x        ; $A0D7
+    lda     objYVelocity+1,x        ; $A0D7  the other way up or down
     eor     #$FF                    ; $A0DA
     sta     objYVelocity+1,y        ; $A0DC
-    lda     objY+1,x                ; $A0DF
-    adc     #$10                    ; $A0E1
+    lda     objY+1,x                ; $A0DF  16 pixels down
+    adc     #$10                    ; $A0E1  (17 if flying up: the asl's carry)
     sta     a:objY+1,y              ; $A0E3
-    lda     objX+1,x                ; $A0E6
+    lda     objX+1,x                ; $A0E6  and right
     adc     #$10                    ; $A0E8
     sta     a:objX+1,y              ; $A0EA
     lda     objXHi+1,x              ; $A0ED
     adc     #$00                    ; $A0EF
     sta     a:objXHi+1,y            ; $A0F1
-    lda     #$FF                    ; $A0F4
+    lda     #$FF                    ; $A0F4  both: 255 hit points
     sta     a:enemyHp,y             ; $A0F6
     sta     enemyHp,x               ; $A0F9
 ; (end of code not executed in the test movies)
 
-@loc_A0FB:
-    lda     drawOffscreen+1         ; $A0FB
+@checkX:
+    lda     drawOffscreen+1         ; $A0FB  off the side of the screen,
     and     #$0F                    ; $A0FD
-    bne     @loc_A107               ; $A0FF
-    lda     objCollision+1,x        ; $A101
+    bne     @turn                   ; $A0FF
+    lda     objCollision+1,x        ; $A101  or a wall ahead?
     and     #$03                    ; $A103
-    beq     @loc_A10D               ; $A105
+    beq     @checkY                 ; $A105
 
-@loc_A107:
-    jsr     Enemy_TurnAround        ; $A107
-    jsr     Enemy_MoveX             ; $A10A
+@turn:
+    jsr     Enemy_TurnAround        ; $A107  turn around,
+    jsr     Enemy_MoveX             ; $A10A  and step back
 
-@loc_A10D:
-    lda     drawOffscreen+1         ; $A10D
+@checkY:
+    lda     drawOffscreen+1         ; $A10D  off the top or bottom,
     and     #$F0                    ; $A10F
-    bne     @loc_A119               ; $A111
-    lda     objCollision+1,x        ; $A113
+    bne     @bounceY                ; $A111
+    lda     objCollision+1,x        ; $A113  or a floor or ceiling?
     and     #$0C                    ; $A115
     beq     GpFastBubble_Init_Done  ; $A117
 
-@loc_A119:
-    lda     objYVelocity+1,x        ; $A119
+@bounceY:
+    lda     objYVelocity+1,x        ; $A119  reverse the Y velocity
     eor     #$FF                    ; $A11C
     clc                             ; $A11E
     adc     #$01                    ; $A11F
     sta     objYVelocity+1,x        ; $A121
-    jmp     Enemy_MoveY             ; $A124
+    jmp     Enemy_MoveY             ; $A124  and step back
 
 ; ---------------------------------------------------------------------------
 ; GpSlowBubble_Init
 ;
-; Spawn routine of slow bubbles: speed $F0.
+; Spawn routine of slow bubbles ($14): 1 pixel per frame both ways, up and
+; to the left.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GpSlowBubble_Init:
     lda     #$F0                    ; $A127
@@ -4129,9 +4162,11 @@ GpSlowBubble_Init:
 ; ---------------------------------------------------------------------------
 ; GpFastBubble_Init
 ;
-; Spawn routine of fast bubbles: speed $E0.
+; Spawn routine of fast bubbles ($15) and large bubbles ($17): 2 pixels per
+; frame both ways, up and to the left.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 GpFastBubble_Init:
     lda     #$E0                    ; $A12B
@@ -4146,14 +4181,18 @@ GpFastBubble_Init_Done:
 ; ---------------------------------------------------------------------------
 ; LargeBubble_Draw
 ;
-; Draw a large bubble.
+; Draw a large bubble: a flaming skull about 32 pixels across, made of
+; mirrored pairs of sprites (SpritePairTiles entry $40), the palette
+; changing every 2 frames.  Two rows are drawn at the bubble's position;
+; a third, 24 pixels higher, only when the bubble is on screen.
 ;
+; In:      x = enemy index, temp0/temp1 = its screen Y/X
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 LargeBubble_Draw:
     lda     #$02                    ; $A133
     sta     temp2                   ; $A135
-    lda     frameCounter            ; $A137
+    lda     frameCounter            ; $A137  palette from frameCounter bits 2-1
     lsr     a                       ; $A139
     and     #$03                    ; $A13A
     sta     temp3                   ; $A13C
@@ -4161,63 +4200,79 @@ LargeBubble_Draw:
     lda     drawOffscreen+1         ; $A140
     pha                             ; $A142
     asl     drawOffscreen+1         ; $A143
-    lda     temp1                   ; $A145
+    lda     temp1                   ; $A145  8 pixels right
     adc     #$08                    ; $A147
     sta     temp1                   ; $A149
     jsr     Sprite_DrawEnemyPair    ; $A14B
     jsr     Sprite_FlipPrevious     ; $A14E
     jsr     Sprite_DrawEnemyPair    ; $A151
     jsr     Sprite_FlipPrevious     ; $A154
-    pla                             ; $A157
+    pla                             ; $A157  on screen?
     and     #$09                    ; $A158
-    bne     @loc_A178               ; $A15A
-    lda     temp0                   ; $A15C
+    bne     @done                   ; $A15A
+    lda     temp0                   ; $A15C  then a row 24 pixels up,
     sec                             ; $A15E
     sbc     #$18                    ; $A15F
     sta     temp0                   ; $A161
-    lda     temp1                   ; $A163
+    lda     temp1                   ; $A163  8 pixels left
     sbc     #$08                    ; $A165
     sta     temp1                   ; $A167
     jsr     Sprite_DrawEnemyPairKeepX ; $A169
     jsr     Sprite_FlipPrevious     ; $A16C
-    lda     oamBuffer - 1,y         ; $A16F
+    lda     oamBuffer - 1,y         ; $A16F  its last sprite 16 pixels right
     clc                             ; $A172
     adc     #$10                    ; $A173
     sta     oamBuffer - 1,y         ; $A175
 
-@loc_A178:
+@done:
     ldx     currentObject           ; $A178
 
 LargeBubble_Draw_Done:
     rts                             ; $A17A
-; The rts byte is also the base of the table KingBotPartYOffsets (entry 0 is the rts).
+; Y offsets of the Bots a King Bot bursts into, by enemy slot 1-5 (entry 0
+; is the rts above).
 KingBotPartYOffsets := LargeBubble_Draw_Done
     .byte   $04, $08, $00, $08, $04                                         ; $A17B
 
 ; ---------------------------------------------------------------------------
 ; KingBot_Ai
 ;
-; King Bot: wakes when Link is within $30 pixels, hops toward him; below 48
-; hit points it bursts into five Bots.
+; King Bot ($1E): a giant Bot.  It sleeps until it is on screen and Link
+; comes within 48 pixels across; then it falls to the floor and hops
+; toward him, 1 frame in 8 on the floor (1 pixel per frame across, 1.5 up),
+; standing still between hops.  Below 48 hit points it bursts: enemy slots
+; 5 down to 1 all become Bots (type $04, 208 hit points, stunned a frame),
+; around its position (KingBotPart*Offsets), leaping 3 pixels per frame up
+; and up to a pixel per frame either way across.  Slot 5 is written first,
+; so a King Bot there (where it spawns) moves itself 9 pixels right and 4
+; down before the others are placed around it.
 ;
-; Status:  provisional
+; BUG: the burst fills slots 1-5 whatever is in them, and leaves slot 0
+; alone.  A King Bot in slots 1-5 becomes one of the Bots, but one in slot
+; 0 stays a King Bot and bursts again every frame, so the Bots are put back
+; in place each frame and never move; it no longer hits Link or can be
+; hit.  Enemies spawn into the highest free slot, so the two King Bots,
+; alone in their rooms, take slot 5.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 KingBot_Ai:
-    lda     enemyHp,x               ; $A180
+    lda     enemyHp,x               ; $A180  below 48 hit points?
     cmp     #$30                    ; $A182
-    bcs     @loc_A1CA               ; $A184
-    ldy     #$05                    ; $A186
+    bcs     @awake                  ; $A184
+    ldy     #$05                    ; $A186  burst into slots 5-1
 
-@loop:
-    lda     #$04                    ; $A188
+@burst:
+    lda     #$04                    ; $A188  a Bot,
     sta     a:enemyType,y           ; $A18A
-    lda     #$01                    ; $A18D
+    lda     #$01                    ; $A18D  active, on screen,
     sta     a:enemyActive,y         ; $A18F
-    sta     enemyStunTimer,y        ; $A192
+    sta     enemyStunTimer,y        ; $A192  stunned a frame
     sta     a:objYHi+1,y            ; $A195
     lsr     a                       ; $A198
     sta     a:objCollision+1,y      ; $A199
-    lda     objX+1,x                ; $A19C
+    lda     objX+1,x                ; $A19C  around the King Bot
     adc     KingBotPartXOffsets,y   ; $A19E
     sta     a:objX+1,y              ; $A1A1
     lda     objXHi+1,x              ; $A1A4
@@ -4226,65 +4281,69 @@ KingBot_Ai:
     lda     objY+1,x                ; $A1AC
     adc     KingBotPartYOffsets,y   ; $A1AE
     sta     a:objY+1,y              ; $A1B1
-    lda     #$D0                    ; $A1B4
+    lda     #$D0                    ; $A1B4  leaping 3 pixels per frame,
     sta     objYVelocity+1,y        ; $A1B6
-    sta     a:enemyHp,y             ; $A1B9
-    lda     rng+2,y                 ; $A1BC
+    sta     a:enemyHp,y             ; $A1B9  208 hit points
+    lda     rng+2,y                 ; $A1BC  and -1..+1 across, at random
     and     #$1F                    ; $A1BF
     adc     #$F0                    ; $A1C1
     sta     a:objXVelocity+1,y      ; $A1C3
     dey                             ; $A1C6
-    bne     @loop                   ; $A1C7
+    bne     @burst                  ; $A1C7  (not slot 0)
 
 @done:
     rts                             ; $A1C9
 
-@loc_A1CA:
-    lda     objState+1,x            ; $A1CA
-    bne     @loc_A1DF               ; $A1CC
-    lda     drawOffscreen+1         ; $A1CE
+@awake:
+    lda     objState+1,x            ; $A1CA  awake?
+    bne     @fall                   ; $A1CC
+    lda     drawOffscreen+1         ; $A1CE  else wait until on screen
     bne     @done                   ; $A1D0
-    jsr     Enemy_FaceLink          ; $A1D2
+    jsr     Enemy_FaceLink          ; $A1D2  and Link within 48 pixels
     lda     temp15                  ; $A1D5
     adc     #$30                    ; $A1D7
     cmp     #$60                    ; $A1D9
     bcs     @done                   ; $A1DB
-    inc     objState+1,x            ; $A1DD
+    inc     objState+1,x            ; $A1DD  wake
 
-@loc_A1DF:
-    lda     objCollision+1,x        ; $A1DF
+@fall:
+    lda     objCollision+1,x        ; $A1DF  on the floor?
     and     #$04                    ; $A1E1
-    beq     @loc_A1EB               ; $A1E3
+    beq     @move                   ; $A1E3
 ; (code below not executed in the test movies)
-    jsr     Enemy_Land              ; $A1E5
+    jsr     Enemy_Land              ; $A1E5  stand on it
 
-@loop2:
+@setYVelocity:
     sta     objYVelocity+1,x        ; $A1E8
 ; (end of code not executed in the test movies)
 
-@loc_A1EB:
+@move:
     jsr     Enemy_MoveYAndFall      ; $A1EB
-    jsr     Enemy_UpdateWithBg      ; $A1EE
-    lda     objCollision+1,x        ; $A1F1
+    jsr     Enemy_UpdateWithBg      ; $A1EE  probe background, draw, hit tests
+    lda     objCollision+1,x        ; $A1F1  on the floor?
     and     #$04                    ; $A1F3
-    beq     @loc_A20A               ; $A1F5
+    beq     @moveX                  ; $A1F5
 ; (code below not executed in the test movies)
-    lda     rng+1,x                 ; $A1F7
+    lda     rng+1,x                 ; $A1F7  1 frame in 8,
     and     #$07                    ; $A1FA
-    bne     @loc_A20D               ; $A1FC
-    jsr     Enemy_FaceLink          ; $A1FE
-    lda     KingBotSpeeds,y         ; $A201
+    bne     @hurtLink               ; $A1FC  (else stand still)
+    jsr     Enemy_FaceLink          ; $A1FE  hop toward Link:
+    lda     KingBotSpeeds,y         ; $A201  1 pixel per frame across,
     sta     objXVelocity+1,x        ; $A204
-    lda     #$E8                    ; $A206
-    bne     @loop2                  ; $A208
+    lda     #$E8                    ; $A206  1.5 up
+    bne     @setYVelocity           ; $A208
 ; (end of code not executed in the test movies)
 
-@loc_A20A:
-    jsr     Enemy_MoveX             ; $A20A
+@moveX:
+    jsr     Enemy_MoveX             ; $A20A  across while in the air
 
-@loc_A20D:
+@hurtLink:
     jmp     Enemy_HurtLinkOnContact ; $A20D
 
+; PPU strings for the barrier's colors (background palette 2): two
+; flashing sets, each followed by one with the last two colors black;
+; Barrier_Ai writes the next one every 4 frames, and the first once more
+; when it starts to dissolve.
 BarrierPaletteStrings:
     .byte   $3F, $08, $04, $0F, $17, $16, $22, $FF, $3F, $08, $04, $0F, $17, $0F, $0F, $FF; $A210
     .byte   $3F, $08, $04, $0F, $17, $22, $16, $FF, $3F, $08, $04, $0F, $17, $0F, $0F, $FF; $A220
@@ -4294,126 +4353,140 @@ BarrierPaletteStrings:
 ; ---------------------------------------------------------------------------
 ; Barrier_Ai
 ;
-; The Great Palace barrier: flashes, hurts Link on contact (kills a fairy);
-; when all crystals are placed and Link comes near, it dissolves column by
-; column.
+; The barrier ($20) at the Great Palace's entrance, at X $110, a wall of
+; flashing tiles drawn by the area (it has no sprites).  While it is on
+; screen it hurts Link on contact, clearing his invulnerability so it can
+; hurt him again on each contact frame, and a fairy Link dies at once.
 ;
-; Status:  provisional
+; It opens when all crystals are placed (crystalsRemaining = 0), it is on
+; screen and Link reaches X $C0 on page 0: the game freezes (gameFrozen;
+; the barrier keeps running) with sound $40, and the barrier
+; dissolves from the bottom up.  Every 4 frames it blanks a 12-tile row
+; of the name table (tile $F4), from $26A2 up to $2502; every 8 frames it
+; also clears 7 blocks of a row of the area map (sramAreaTiles, page 1,
+; columns 1-7) to $40, rows 8 up to 2.  After 14 rows (56 frames) the game
+; unfreezes.  The dissolve keeps its PPU address in enemy slot 3's
+; objX/objXHi and its map offset in objState+4 (the barrier's room uses no
+; slot 3), and counts frames in its own objXVelocity.  It stays in state
+; 3, shifting gameFrozen right each frame after.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barrier_Ai:
-    lda     enemyAiState,x          ; $A234
-    bne     @loc_A2A7               ; $A236
-    lda     crystalsRemaining       ; $A238
-    ora     drawOffscreen+1         ; $A23B
-    bne     @loc_A25F               ; $A23D
-    lda     objXHi                  ; $A23F
-    bne     @loc_A25F               ; $A241
+    lda     enemyAiState,x          ; $A234  dissolving?
+    bne     @dissolve               ; $A236
+    lda     crystalsRemaining       ; $A238  all crystals placed and on
+    ora     drawOffscreen+1         ; $A23B  screen?
+    bne     @onScreen               ; $A23D
+    lda     objXHi                  ; $A23F  Link on page 0, X >= $C0?
+    bne     @onScreen               ; $A241
     lda     objX                    ; $A243
     cmp     #$C0                    ; $A245
-    bcc     @loc_A25F               ; $A247
-    rol     gameFrozen              ; $A249
+    bcc     @onScreen               ; $A247
+    rol     gameFrozen              ; $A249  freeze the game (carry set)
     lda     #$00                    ; $A24B
-    sta     objXVelocity+1,x        ; $A24D
-    sta     objXHi+4                ; $A24F
+    sta     objXVelocity+1,x        ; $A24D  frame count
+    sta     objXHi+4                ; $A24F  no PPU address yet
     sta     objX+4                  ; $A251
     sta     objState+4              ; $A253
-    lda     #$40                    ; $A255
+    lda     #$40                    ; $A255  sound
     sta     sfxRequest              ; $A257
-    lda     #$03                    ; $A259
+    lda     #$03                    ; $A259  dissolving (state 3)
     sta     enemyAiState,x          ; $A25B
-    sta     objState                ; $A25D
+    sta     objState                ; $A25D  and Link's state 3
 
-@loc_A25F:
-    lda     drawOffscreen+1         ; $A25F
+@onScreen:
+    lda     drawOffscreen+1         ; $A25F  on screen and Link alive?
     ora     linkDeathPending        ; $A261
-    bne     @loc_A27C               ; $A264
-    sta     timerSlow+TIMER_INVULNERABLE ; $A266
+    bne     @flash                  ; $A264
+    sta     timerSlow+TIMER_INVULNERABLE ; $A266  no invulnerability
     jsr     Enemy_CheckLinkContact  ; $A269
     jsr     Enemy_HurtLinkOnContact ; $A26C
-    lda     objCollision+1,x        ; $A26F
+    lda     objCollision+1,x        ; $A26F  touching Link
     and     #$10                    ; $A271
-    beq     @loc_A27C               ; $A273
+    beq     @flash                  ; $A273
 ; (code below not executed in the test movies)
-    lda     linkFairy               ; $A275
-    beq     @loc_A27C               ; $A277
-    inc     linkDeathPending        ; $A279
+    lda     linkFairy               ; $A275  as a fairy?
+    beq     @flash                  ; $A277
+    inc     linkDeathPending        ; $A279  he dies
 ; (end of code not executed in the test movies)
 
-@loc_A27C:
-    lda     #$00                    ; $A27C
-    ldy     enemyAiState,x          ; $A27E
-    bne     @loc_A28D               ; $A280
-    lda     frameCounter            ; $A282
+@flash:
+    lda     #$00                    ; $A27C  starting to dissolve: the
+    ldy     enemyAiState,x          ; $A27E  first string
+    bne     @writeColors            ; $A280
+    lda     frameCounter            ; $A282  else every 4 frames,
     and     #$03                    ; $A284
     bne     @done                   ; $A286
-    lda     frameCounter            ; $A288
+    lda     frameCounter            ; $A288  the next string
     and     #$0C                    ; $A28A
     asl     a                       ; $A28C
 
-@loc_A28D:
+@writeColors:
     tax                             ; $A28D
     ldy     #$00                    ; $A28E
 
-@loop:
+@copyColors:
     lda     BarrierPaletteStrings,x ; $A290
     sta     ppuBuffer1,y            ; $A293
     inx                             ; $A296
     iny                             ; $A297
     cpy     #$08                    ; $A298
-    bne     @loop                   ; $A29A
+    bne     @copyColors             ; $A29A
     lda     #$07                    ; $A29C
     sta     ppuBuffer1Len           ; $A29E
-    lda     #$01                    ; $A2A1
+    lda     #$01                    ; $A2A1  write ppuBuffer1
     sta     ppuStringSelect         ; $A2A3
 
 @done:
     rts                             ; $A2A6
 
-@loc_A2A7:
-    lda     objXHi+4                ; $A2A7
-    bne     @loc_A2B7               ; $A2A9
-    lda     #$81                    ; $A2AB
+@dissolve:
+    lda     objXHi+4                ; $A2A7  first frame: start at the
+    bne     @checkDone              ; $A2A9  bottom row
+    lda     #$81                    ; $A2AB  (map row 8, column 1)
     sta     objState+4              ; $A2AD
-    lda     #$A2                    ; $A2AF
+    lda     #$A2                    ; $A2AF  (name table $26A2)
     sta     objX+4                  ; $A2B1
     lda     #$26                    ; $A2B3
     sta     objXHi+4                ; $A2B5
 
-@loc_A2B7:
-    cmp     #$24                    ; $A2B7
-    bne     @loc_A2C4               ; $A2B9
+@checkDone:
+    cmp     #$24                    ; $A2B7  past the top row ($24E2)?
+    bne     @nextFrame              ; $A2B9
     lda     objX+4                  ; $A2BB
     cmp     #$E2                    ; $A2BD
-    bne     @loc_A2C4               ; $A2BF
-    lsr     gameFrozen              ; $A2C1
+    bne     @nextFrame              ; $A2BF
+    lsr     gameFrozen              ; $A2C1  then unfreeze
 
 @done2:
     rts                             ; $A2C3
 
-@loc_A2C4:
-    inc     objXVelocity+1,x        ; $A2C4
+@nextFrame:
+    inc     objXVelocity+1,x        ; $A2C4  every 4 frames
     lda     objXVelocity+1,x        ; $A2C6
     and     #$03                    ; $A2C8
     bne     @done2                  ; $A2CA
-    lda     objXVelocity+1,x        ; $A2CC
+    lda     objXVelocity+1,x        ; $A2CC  and every 8th,
     and     #$04                    ; $A2CE
-    beq     @loc_A2E6               ; $A2D0
-    ldy     objState+4              ; $A2D2
-    ldx     #$06                    ; $A2D4
+    beq     @blankRow               ; $A2D0
+    ldy     objState+4              ; $A2D2  clear a row of the map
+    ldx     #$06                    ; $A2D4  (7 blocks)
     lda     #$40                    ; $A2D6
 
-@loop2:
+@clearBlocks:
     sta     sramAreaTiles+208,y     ; $A2D8
     iny                             ; $A2DB
     dex                             ; $A2DC
-    bpl     @loop2                  ; $A2DD
-    lda     objState+4              ; $A2DF
+    bpl     @clearBlocks            ; $A2DD
+    lda     objState+4              ; $A2DF  and go up a row
     sec                             ; $A2E1
     sbc     #$10                    ; $A2E2
     sta     objState+4              ; $A2E4
 
-@loc_A2E6:
-    lda     objXHi+4                ; $A2E6
+@blankRow:
+    lda     objXHi+4                ; $A2E6  blank a row of 12 tiles
     sta     ppuBuffer1              ; $A2E8
     lda     objX+4                  ; $A2EB
     sta     ppuBuffer1+1            ; $A2ED
@@ -4423,12 +4496,12 @@ Barrier_Ai:
     sta     ppuBuffer1+15           ; $A2F7
     dex                             ; $A2FA
 
-@loop3:
+@fillRow:
     lda     #$F4                    ; $A2FB
     sta     ppuBuffer1+3,x          ; $A2FD
     dex                             ; $A300
-    bpl     @loop3                  ; $A301
-    lda     objX+4                  ; $A303
+    bpl     @fillRow                ; $A301
+    lda     objX+4                  ; $A303  and go up a row
     sec                             ; $A305
     sbc     #$20                    ; $A306
     sta     objX+4                  ; $A308
@@ -4437,7 +4510,7 @@ Barrier_Ai:
     sta     objXHi+4                ; $A30E
     lda     #$0F                    ; $A310
     sta     ppuBuffer1Len           ; $A312
-    lda     #$01                    ; $A315
+    lda     #$01                    ; $A315  write ppuBuffer1
     sta     ppuStringSelect         ; $A317
     ldx     currentObject           ; $A31A
     rts                             ; $A31C
@@ -4827,33 +4900,37 @@ Boss_DrawHpBar_Bank5:
 ; ---------------------------------------------------------------------------
 ; HiddenJar_Ai_Bank5
 ;
-; Hidden object: when struck by the sword, becomes a jar (or, half the time,
-; a red Fokka).
+; Hidden object ($05, Great Palace): invisible and still until Link's
+; sword strikes it.  Then half the time (rng+1,x bit 7) it is a red Fokka
+; ($19, 48 hit points), and otherwise a red jar (type $01, kind $11); either
+; is stunned 8 frames and moved 3 pixels right.  The Fokka keeps the jar's
+; kind in enemyAiState.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 HiddenJar_Ai_Bank5:
-    lda     drawOffscreen+1         ; $A521
+    lda     drawOffscreen+1         ; $A521  on screen?
     bne     @done                   ; $A523
     jsr     Enemy_CheckSwordHit     ; $A525
-    lda     objCollision+1,x        ; $A528
+    lda     objCollision+1,x        ; $A528  struck?
     and     #$20                    ; $A52A
     beq     @done                   ; $A52C
-    lda     #$11                    ; $A52E
+    lda     #$11                    ; $A52E  kind $11, a red jar
     sta     enemyAiState,x          ; $A530
-    ldy     #$01                    ; $A532
+    ldy     #$01                    ; $A532  an item, 1 hit point
     sty     enemyHp,x               ; $A534
     lda     rng+1,x                 ; $A536
-    bpl     @loc_A541               ; $A539
+    bpl     @setType                ; $A539
 ; (code below not executed in the test movies)
-    lda     #$30                    ; $A53B
-    sta     enemyHp,x               ; $A53D
+    lda     #$30                    ; $A53B  or half the time a red Fokka,
+    sta     enemyHp,x               ; $A53D  48 hit points
     ldy     #$19                    ; $A53F
 ; (end of code not executed in the test movies)
 
-@loc_A541:
+@setType:
     sty     enemyType,x             ; $A541
-    lda     #$08                    ; $A543
+    lda     #$08                    ; $A543  stunned 8 frames
     sta     enemyStunTimer,x        ; $A545
     lda     objX+1,x                ; $A548
     adc     #$03                    ; $A54A
