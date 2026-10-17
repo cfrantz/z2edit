@@ -25,8 +25,6 @@ area bank are documented; what is left is mostly routines still marked
 
 ## 6. Loose ends
 
-- Helmethead's head strike knocking off a helmet: confirmed only from the
-  no-glitch movie, not by a scenario.
 - The unhorsed Rebonack's facing is left at 0 when he spawns (minor, not
   marked).
 

@@ -69,7 +69,27 @@ with Link's life level raised):
 
 - Helmethead placed at X $1C8 (guard and hitbox poked in): he fired
   energy balls on frames 45, 173, 301, ... every 128 frames, and paced
-  as Horsehead does.  The scripted strokes didn't reach his head.
+  as Horsehead does.  The standing and jumping strokes scripted there
+  only clinked on his guard (in the movie, some strokes did get through).
+- **Knocking helmets off** (the same, with the downward thrust learned,
+  `techniques=0x10`; Link jumping at him and holding Down, as in the
+  movie's first hit):
+  - The thrusts on frames 76 and 176 each took 2 hit points and launched
+    a helmet, into enemy slots 5 and 4.  `objState+1` went to 1, then 2.
+  - The thrusts on frames 626 and 776 only took hit points ($2C, then
+    $28): no helmets were left.
+  - Each loose helmet had 208 hit points.  The launch code stores its
+    upward speed, $D0, into `enemyHp` as well, so the table's 80 is never
+    used.  It changes nothing: a loose helmet is never tested for hits,
+    and the 224-point hit when Helmethead bursts still kills it.
+
+  ```
+  P=""; for k in $(seq 10 50 900); do P="$P --press $k:A+RIGHT:14 --press $((k+14)):DOWN+RIGHT:6 --press $((k+20)):DOWN:20"; done
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $PAT,statLevel+2=8,statContainers+1=8,techniques=0x10 \
+      --until currentWorld=3 --after 200 --clear $PFLAT --approach 1A0 --spawn 1:21:1D0:B0 \
+      --poke enemyAiVar+1=2 --poke sramEnemyHitbox+33=7 $P --event Struck=4:BB05 --event Launch=4:BB4D \
+      --frames 900 --dump 177:enemyHp:6 --dump 177:objState+2:1
+  ```
 - A loose helmet placed at ($1E0, $A0), flung up at -3 and right at
   $10: it bounced on frames 59, 93 and 111, rose at frame 160 to Y $70,
   then drifted toward Link in a wave.  It fired aimed balls on frames
@@ -84,6 +104,7 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $PAT,statLevel
 
 In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`): the first hit, on frame 55650, knocked a
 helmet off, and the second came off on frame 55712, after the 64-frame
-delay; the hits in between only took hit points (4 each).  Every hit came
-from a jumping Link.  When Helmethead burst (frame 55844), both loose
+delay; the hits in between only took hit points (4 each).  The first hit
+came from Link's downward thrust (`objState` 9), the second from a
+stroke (`objState` 7).  When Helmethead burst (frame 55844), both loose
 helmets took the 224-point hit (`Enemy_TakeDamage` for slots 3 and 4).
