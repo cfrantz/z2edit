@@ -2214,10 +2214,11 @@ FireOctorok_Draw:
 ; edges, which move in and out a pixel every 16 frames.  The edge sprites
 ; are hidden when their side is off screen.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 KingBot_Draw:
-    ldy     #$50                    ; $96A5
+    ldy     #$50                    ; $96A5  body: two pairs,
     lda     #$02                    ; $96A7
     sta     temp2                   ; $96A9
     ldx     #$3C                    ; $96AB
@@ -2236,19 +2237,19 @@ KingBot_Draw:
     adc     #$10                    ; $96C3
     sta     temp1                   ; $96C5
     dec     temp2                   ; $96C7
-    ldx     #$3C                    ; $96C9
+    ldx     #$3C                    ; $96C9  two more 16 to the right,
     jsr     Sprite_DrawEnemyPair    ; $96CB
     lda     temp0                   ; $96CE
     sec                             ; $96D0
     sbc     drawScratch             ; $96D1
     jsr     Sprite_DrawEnemyPairKeepX ; $96D3
-    lda     objY+1,x                ; $96D6
+    lda     objY+1,x                ; $96D6  edge sprites: Y and Y + 16,
     sta     oamBuffer+112           ; $96D8
     sta     oamBuffer+120           ; $96DB
     adc     #$10                    ; $96DE
     sta     oamBuffer+116           ; $96E0
     sta     oamBuffer+124           ; $96E3
-    lda     frameCounter            ; $96E6
+    lda     frameCounter            ; $96E6  in by a pixel when frameCounter bit 4
     and     #$10                    ; $96E8
     lsr     a                       ; $96EA
     lsr     a                       ; $96EB
@@ -2257,29 +2258,29 @@ KingBot_Draw:
     sta     temp5                   ; $96EE
     adc     drawScreenX+1           ; $96F0
     sec                             ; $96F2
-    sbc     #$08                    ; $96F3
+    sbc     #$08                    ; $96F3  left: X - 8 (+1)
     sta     oamBuffer+115           ; $96F5
     sta     oamBuffer+119           ; $96F8
     lda     drawScreenX+1           ; $96FB
     clc                             ; $96FD
-    adc     #$20                    ; $96FE
+    adc     #$20                    ; $96FE  right: X + $20 (-1)
     sec                             ; $9700
     sbc     temp5                   ; $9701
     sta     oamBuffer+123           ; $9703
     sta     oamBuffer+127           ; $9706
-    lda     #$F0                    ; $9709
+    lda     #$F0                    ; $9709  tiles $F0 (top) and $F6
     sta     oamBuffer+113           ; $970B
     sta     oamBuffer+121           ; $970E
     lda     #$F6                    ; $9711
     sta     oamBuffer+117           ; $9713
     sta     oamBuffer+125           ; $9716
-    lda     oamBuffer+82            ; $9719
+    lda     oamBuffer+82            ; $9719  the body's palette,
     sta     oamBuffer+114           ; $971C
     sta     oamBuffer+118           ; $971F
-    ora     #$40                    ; $9722
+    ora     #$40                    ; $9722  the right ones mirrored
     sta     oamBuffer+122           ; $9724
     sta     oamBuffer+126           ; $9727
-    lda     objX+1,x                ; $972A
+    lda     objX+1,x                ; $972A  which side is off screen?
     pha                             ; $972C
     sec                             ; $972D
     sbc     #$08                    ; $972E
@@ -2296,20 +2297,20 @@ KingBot_Draw:
     beq     @loc_975A               ; $9743
 ; (code below not executed in the test movies)
     bpl     @loc_974F               ; $9745
-    ldy     #$F8                    ; $9747
+    ldy     #$F8                    ; $9747  left: hide
     sty     oamBuffer+112           ; $9749
     sty     oamBuffer+116           ; $974C
 
 @loc_974F:
     asl     a                       ; $974F
     beq     @loc_975A               ; $9750
-    ldy     #$F8                    ; $9752
+    ldy     #$F8                    ; $9752  right: hide
     sty     oamBuffer+120           ; $9754
     sty     oamBuffer+124           ; $9757
 ; (end of code not executed in the test movies)
 
 @loc_975A:
-    pla                             ; $975A
+    pla                             ; $975A  restore X
     sta     objXHi+1,x              ; $975B
     pla                             ; $975D
     sta     objX+1,x                ; $975E
@@ -4730,20 +4731,21 @@ Barrier_Ai:
 ;
 ; Spawn routine of the fire Bago Bago generator ($0F), as
 ; Generator_Init_Bank4: despawn any other enemy of its type, so only one
-; generator runs.
+; generator runs.  Rooms $03 and $32 each place two, on pages 0 and 3:
+; the second, when it spawns, removes the first.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank5:
-    ldy     #$05                    ; $A31D
+    ldy     #$05                    ; $A31D  every other slot:
 
 @loop:
     cpy     currentObject           ; $A31F
     beq     @loc_A32F               ; $A321
-    lda     a:enemyActive,y         ; $A323
+    lda     a:enemyActive,y         ; $A323  active,
     beq     @loc_A32F               ; $A326
-    lda     a:enemyType,y           ; $A328
+    lda     a:enemyType,y           ; $A328  of this type?
     cmp     enemyType,x             ; $A32B
     beq     @loc_A333               ; $A32D
 
@@ -4753,7 +4755,7 @@ Generator_Init_Bank5:
     rts                             ; $A332
 
 @loc_A333:
-    tya                             ; $A333
+    tya                             ; $A333  yes: remove it
     tax                             ; $A334
     jsr     Enemy_Despawn           ; $A335
     ldx     currentObject           ; $A338

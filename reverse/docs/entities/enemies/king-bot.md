@@ -102,3 +102,15 @@ In the Great Palace's entrance (see [Bubble](bubble.md#great-palace) for
   tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $GP --until currentWorld=5 --after 200 \
       --clear $GF --approach B0 --spawn 5:1E:70:70 --poke enemyHp+5=0x2F --log 0,1,2,3,4,5 --frames 30
   ```
+
+- **Drawing.**  Placed at ($60, $A0) and woken (`objState+6` = 1), it
+  was drawn as a grey Bot about 40 pixels across.  At ($3C, $A0), its
+  left part off the screen, the left edge sprites were hidden (event at
+  5:$9747), and only its right part showed.  Placed there asleep, it
+  never woke: it waits to be wholly on screen.
+
+  ```
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $GP --until currentWorld=5 --after 200 \
+      --clear $GF --approach B0 --link 90:B0 --spawn 5:1E:3C:A0 --poke objState+6=1 --event Hide=5:9747 \
+      --frames 12 --shot 10
+  ```

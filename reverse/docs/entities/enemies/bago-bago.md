@@ -111,3 +111,27 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $AT --until ar
     --log 0,1,2,3,4,5 --event Spawn=7:D7A1 --event Land=7:D803 --event Aim=7:D825 \
     --event Shoot=7:D82F --event Remove=7:D7EC --frames 900
 ```
+
+**The generators' spawn routine** (`Generator_Init_Bank5`).  Great Palace
+rooms $03 and $32 each place two generators, on pages 0 and 3, so the
+second removes the first when it spawns.  The test used a copy of the ROM
+whose entrance list (area 0) holds a generator at X $210 in place of the
+barrier.  It ran in the Great Palace's entrance (see
+[Bubble](bubble.md#great-palace) for `$GP` and `$GF`):
+
+- A second generator was placed by hand in slot 2.
+- Link was moved onto the step at ($D0, $80) and walked right.
+- On frame 88 the listed generator spawned (in slot 4).  Its spawn
+  routine ran (event at 5:$A31D) and removed slot 2's (5:$A333).  Slot 2
+  logged nothing after that.
+
+```
+python3 - <<'PY'   # gen.nes: area 0's list entry ($01, $60) becomes ($01, $8F)
+rom = bytearray(open("build/zelda2.nes", "rb").read())
+rom[16 + 5 * 0x4000 + 0x88A0 + 3 - 0x8000] = 0x8F
+open("gen.nes", "wb").write(rom)
+PY
+tools/enemy_scenario.py --rom gen.nes --movie build/movies/file_select.fm2 --at $GP --until currentWorld=5 \
+    --after 200 $GF --approach B0 --link D0:80 --spawn 2:0F:C0:D0 --press 0:RIGHT:200 --log 2,4 \
+    --event Init=5:A31D --event Remove=5:A333 --frames 95
+```

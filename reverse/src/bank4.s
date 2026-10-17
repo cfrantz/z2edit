@@ -1887,9 +1887,12 @@ Bubble_Ai:
 ; ---------------------------------------------------------------------------
 ; Generator_Init_Bank4
 ;
-; Spawn routine of generators: despawn any other enemy of the same type.
+; Spawn routine of generators: despawn any other enemy of the same type,
+; so that there is only one.  The same code as Generator_Init_Bank5,
+; tested there.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank4:
     ldy     #$05                    ; $9A28
