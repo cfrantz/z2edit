@@ -34,12 +34,14 @@ AreaPalettes_Bank3:
 ; ---------------------------------------------------------------------------
 ; Town_DrawCrossHatchedRoof
 ;
-; Large town objects $10 and $20, the cross-hatched roof: fill the
-; object's width with roof tiles over two rows (Town_FillRect, pattern 0).
-; At the address of AreaBank::DrawLargeObject, but in bank 3 it is only
+; Large town objects $1x-$2x, the cross-hatched roof (Town_DrawGrayRoof
+; $3x, Town_DrawGreenRoof $4x, Town_DrawUndergroundBricks $Dx likewise):
+; two rows of the object's width (size + 1), TownFillTopTiles then
+; TownFillTiles: $84/$85, $CF/$D0, $57/$52, $55/$55 (Town_FillRect).  At
+; the address of AreaBank::DrawLargeObject, but in bank 3 it is only
 ; reached through Town_DrawLargeObject.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawCrossHatchedRoof:
     ldx     #$00                    ; $80EE
@@ -135,12 +137,14 @@ Town_DrawLogBuilding:
 ; ---------------------------------------------------------------------------
 ; Town_DrawWall
 ;
-; Fill the object's width, row after row down to row $B, with
-; TownWallTiles[x], ending each row with TownWallBaseTiles[x]: the walls
-; of the buildings (x 0-4).
+; Large town objects $5x-$9x, the walls of buildings (brick $80, white
+; brick $CD, grass $4E, white wall $CB, logs $82; Town_DrawBrickBuilding
+; ...): each row, from the object's row down to row $A, is size tiles of
+; TownWallTiles[x], then TownWallBaseTiles[x] ($81, $CE, $4F, $CB, $83) as
+; the right edge.
 ;
 ; In:      x = pattern
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawWall:
     lda     TownWallTiles,x         ; $8157
@@ -203,10 +207,11 @@ Town_DrawWindows:
 ; ---------------------------------------------------------------------------
 ; Town_DrawSlantRight
 ;
-; Large extra $30: three rows of house background tile $44 from row 2,
-; each starting one column further right.
+; Large extra $3x (row $F): the left slope of a room's ceiling, three rows
+; of the background tile $44 from row 2, each size + 1 wide and starting
+; one column further right.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawSlantRight:
     lda     #$02                    ; $81A8
@@ -236,10 +241,11 @@ Town_DrawSlantRight:
 ; ---------------------------------------------------------------------------
 ; Town_DrawSlantLeft
 ;
-; Large extra $40: three rows of tile $44 from row 2, each one column
+; Large extra $4x (row $F): the right slope of a room's ceiling, three
+; rows of $44 from row 2, size + 1 wide, then one and two columns
 ; narrower.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawSlantLeft:
     lda     #$02                    ; $81D2
@@ -613,10 +619,14 @@ EnemyListPtrs_Bank3:
     .word   sramEnemyLists+50, sramEnemyLists+239, sramEnemyLists+282, sramEnemyLists+239 ; $8611
     .word   sramEnemyLists+142, sramEnemyLists, sramEnemyLists ; $8619
 
-dat_3_861F:
-    .byte   $42, $42, $42, $55, $42, $42, $55, $55, $55, $40, $40, $40, $E9, $40, $40, $CB; $861F
-    .byte   $CB, $E9, $40, $40, $40, $53, $40, $40, $53, $53, $53, $40, $40, $40, $53, $40; $862F
-    .byte   $40, $53, $53, $53                                              ; $863F
+; Floor records of the towns, one per background type (header byte 2 bits
+; 6-4), found by TownFloorRecordsLo: as AreaFloorRecords_Bank1, the 8 tiles
+; Area_DrawFloorColumn picks by a floor pattern's codes, then floorTile.
+TownFloorRecords:
+    .byte   $42, $42, $42, $55, $42, $42, $55, $55, $55             ; $861F  background type 0
+    .byte   $40, $40, $40, $E9, $40, $40, $CB, $CB, $E9             ; $8628  background type 1
+    .byte   $40, $40, $40, $53, $40, $40, $53, $53, $53             ; $8631  background type 2
+    .byte   $40, $40, $40, $53, $40, $40, $53, $53, $53             ; $863A  background type 3
 
 TownFloorRecordsLo:
     .byte   $1F, $28, $31, $3A                                              ; $8643
@@ -625,11 +635,11 @@ TownFloorRecordsLo:
 ; Town_SetFloorTiles
 ;
 ; Set up the town's floor tile (floorTile) from its background type
-; (areaTileSet): byte 8 of the type's record (TownFloorRecordsLo, records at
-; $861F).  Bank 3's version of OverworldBank::SetFloorTiles, called by
-; Area_SetFloorTiles for towns.
+; (areaTileSet): byte 8 of the type's record (TownFloorRecords).  Bank
+; 3's version of OverworldBank::SetFloorTiles, called by Area_SetFloorTiles
+; for towns.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_SetFloorTiles:
     ldx     areaTileSet             ; $8647
@@ -646,10 +656,10 @@ Town_SetFloorTiles:
 ; ---------------------------------------------------------------------------
 ; Area_PlaceElevator_Bank3
 ;
-; Large extra $50: the area's elevator is at this column (elevatorPos).
-; Same as in the other area banks.
+; Large extra $5x: the area's elevator is at this column (elevatorPos).
+; Same as in the other area banks; no town area uses it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_PlaceElevator_Bank3:
     lda     areaBuildColumn         ; $865B
@@ -813,9 +823,10 @@ EnemyLists_Bank3:
 ; Area_PlaceLockedDoor_Bank3
 ;
 ; Small objects $0E and $0F: the area's locked door is at this column
-; (lockedDoorPos).  Same as in the other area banks.
+; (lockedDoorPos).  Same as in the other area banks; no town area uses
+; them.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_PlaceLockedDoor_Bank3:
     lda     areaBuildColumn         ; $8B8E
@@ -2194,13 +2205,12 @@ Townsperson_DrawDone:
 ; Town_DrawLargeObject
 ;
 ; Draw large town object x (areaObjectType), for Area_DrawLargeObject in
-; towns: by its type's high nybble, or, on row $F, one of the extras
-; (+15).  The objects are named as in z2edit's town render config:
-; roofs, buildings, walls, windows, underground bricks, pillar and castle
-; bricks; on row $F, bush, background wall, slants, elevator, bridge and
-; water.
+; towns: by its type's high nibble ($1x-$Fx: roofs, building walls,
+; windows, underground bricks, pillar and castle bricks), or, on row $F,
+; one of the extras (+15: bush, background wall, ceiling slopes, elevator,
+; bridge and water).  See docs/world/towns.md for each object's tiles.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawLargeObject:
     txa                             ; $9B86
@@ -2250,11 +2260,11 @@ Town_DrawLargeObject:
 ; Town_DrawSmallObject
 ;
 ; Draw small town object x, for Area_DrawSmallObject in towns: doors,
-; stonehenge, chair, clouds, table, bench, crosses, chimney and the locked
+; stonehenge, chair, clouds, table, bench, crosses, chimneys and the locked
 ; door ($0E, $0F); on row $F (+$10), door and wall edges, fireplace,
-; fountain, sign, headstone and tomb decorations.
+; fountain, sign, headstone and tomb pieces.  See docs/world/towns.md.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawSmallObject:
     lda     areaBuildPos            ; $9BCB

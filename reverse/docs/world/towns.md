@@ -30,6 +30,63 @@ chimneys, furniture, signs and the like (named after z2edit's town
 render config), and place the locked door and the elevator like the
 other area banks.
 
+### Town Objects
+
+Large objects (size = the type's low nibble):
+
+| Type | Row | Routine | Drawn |
+|------|-----|---------|-------|
+| $1x, $2x | 0-$E | `Town_DrawCrossHatchedRoof` | 2 rows, size + 1 wide: $84 over $85 |
+| $3x | 0-$E | `Town_DrawGrayRoof` | $CF over $D0 |
+| $4x | 0-$E | `Town_DrawGreenRoof` | $57 over $52 |
+| $5x-$9x | 0-$E | `Town_DrawWall` (brick, white brick, grass, white wall, logs) | down to row $A, size tiles of $80, $CD, $4E, $CB, $82, then the right edge $81, $CE, $4F, $CB, $83 |
+| $Ax-$Cx | 0-$E | `Town_DrawWindows` (square, gray, brown) | a window ($86/$86, $D1/$D2, $87/$88) every 3 rows down to row 9 |
+| $Dx | 0-$E | `Town_DrawUndergroundBricks` | 2 rows of $55 |
+| $Ex | 0-$E | `Town_DrawPillar` | $94 over size of $93 |
+| $Fx | 0-$E | `Town_DrawCastleBricks` | a row of size + 1 of $98 |
+| $1x | $F | `Town_DrawBush` | bushes ($45) on row $A |
+| $2x | $F | `Town_DrawBackgroundWall` | $D3 $CC $CC from row 4, size + 1 rows |
+| $3x, $4x | $F | `Town_DrawSlantRight`, `Town_DrawSlantLeft` | a room ceiling's slopes: 3 rows of $44 from row 2 |
+| $5x | $F | `Area_PlaceElevator_Bank3` | (unused) |
+| $6x | $F | `Town_DrawBridge` | size + 1 wide: $51, $56, $92 on rows $A-$C |
+| $7x | $F | `Town_DrawWater` | size + 1 wide: $40 on row $B, water $92 on row $C |
+
+Small objects:
+
+| Type | Row | Routine | Drawn |
+|------|-----|---------|-------|
+| $00 | 0-$E | `Town_DrawClosedDoor` | $89 $8A $8B down, and the floor tile $53 under it |
+| $01 | 0-$E | `Town_DrawOpenDoor` | $8C $91 $91 down, and the door tile $54 under it |
+| $03 | 0-$E | `Town_DrawOpenDoor3` | $8C $91 $91 $58 down (the church's high door) |
+| $05 | 0-$E | `Town_DrawChair` | $4A |
+| $06, $07 | 0-$E | `Town_DrawLargeCloud`, `Town_DrawSmallCloud` | $C4 $C5, $C4 $C6 (background layers) |
+| $08 | 0-$E | `Town_DrawTable` | $4B $4B over $4C $4D |
+| $09 | 0-$E | `Town_DrawBench` | $46 $46 $47 $48 $48 |
+| $0A, $0D | 0-$E | `Town_DrawCross`, `Town_DrawChurchCross` | $DC, $DD |
+| $0B, $0C | 0-$E | `Town_DrawChimneyEntrance`, `Town_DrawChimney` | $59 $59, $5A $5A |
+| $00-$03 | $F | `Town_DrawDoorLeft` ... `Town_DrawWallRight` | a room's left and right ends (`TownWallEdgeTiles`) |
+| $04 | $F | `Town_DrawFireplace` | 2 x 2 from row 9, over the door tiles $EA $EA |
+| $05 | $F | `Town_DrawFountain` | $D9 over $D7 $D8 $DA $D8 $DB |
+| $06 | $F | `Town_DrawSign` | $E3 over $E4 on rows 9-$A |
+| $07-$09 | $F | `Town_DrawHeadstone`, `Town_DrawTombLeft`, `Town_DrawTombRight` | $95, $96, $97 on row 9 |
+
+`Town_DrawOpenDoor2` ($02) and `Town_DrawStonehenge` ($04) are unused.
+The open door's $54 and the fireplace's $EA are door tiles
+(`AreaBank::SpecialTiles`): Up on them goes through, so a fireplace is a
+way through too.  Floors and ceilings come from `TownFloorRecords`, 9
+bytes per background type.
+
+These tiles were checked against the tile maps the game builds.  The
+areas were the street areas $00, $06, $07, $0A, $0C and $10, the rooms
+$19 and $1A, the underground $24 and the graveyard $3C (`tools/area_dump.py`;
+see [Side view areas](areas.md#checking-objects)):
+
+```
+TA=areaPrgBank=3,currentRegion=0,currentWorld=1,townCode=0,palaceCode=0xfe,areaLocation=0x32,areaId=0,areaStartPage=0,areaEntrySide=0,prevRegion=0
+tools/area_dump.py --movie build/movies/file_select.fm2 --at $TA --until currentWorld=1 \
+    --areas 0x00,0x06,0x07,0x0A,0x0C,0x10,0x19,0x1A,0x24,0x3C
+```
+
 ## Conversations
 
 Talking to someone (`Townsperson_StartTalk`) sets `dialogType`; the
