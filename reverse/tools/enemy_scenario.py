@@ -31,6 +31,7 @@ in flight (objState+7 = its type), at the start of each frame.  --shot K saves b
 --dump K:ADDR:LEN prints memory (LEN hex bytes) at frame K.
 --dialog prints each town conversation's text as it starts printing,
 with the person and dialogTextPtr, townFlags and techniques.
+--mortal leaves Link's meters as they are (no invincibility).
 --apu REG,... logs each write to those APU registers (hex, e.g.
 4000,4002,4003) after the takeover, with the writing routine.
 
@@ -109,6 +110,7 @@ def main():
     p.add_argument("--shot", action="append", type=int, default=[])
     p.add_argument("--dump", action="append", default=[],
                    help="K:ADDR:LEN: print LEN bytes of memory from ADDR (a symbol, NAME+k, or hex) at frame K")
+    p.add_argument("--mortal", action="store_true", help="don't make Link invincible (his meters read as they are)")
     p.add_argument("--dialog", action="store_true", help="print each town conversation's text")
     p.add_argument("--apu", help="APU registers to log writes to, e.g. 4000,4002,4003")
     p.add_argument("--out", default=os.path.join(HERE, "../build/snap"))
@@ -251,10 +253,11 @@ def main():
 
     def prepare():
         fill()  # before --approach, so that Link walks on the changed map
-        meter, cont = eq["statMeter"], eq["statContainers"]
-        full = lambda cpu, ad, v: 32 * rd(cont + ad - meter) - 1  # noqa: E731
-        emu.set_read_callback(meter, full)
-        emu.set_read_callback(meter + 1, full)
+        if not a.mortal:
+            meter, cont = eq["statMeter"], eq["statContainers"]
+            full = lambda cpu, ad, v: 32 * rd(cont + ad - meter) - 1  # noqa: E731
+            emu.set_read_callback(meter, full)
+            emu.set_read_callback(meter + 1, full)
         clear()
 
     def clear():

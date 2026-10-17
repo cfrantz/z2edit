@@ -30,8 +30,9 @@ Thunder), and has no spawn routine.
    a full refill of his life (`statMeterPending+1` = $FF).
 4. **Refill.**  Each frame after that it keeps the screen flashing
    (`spellFlash` bit 4).  When the refill is done
-   (`statMeterPending+1` back to 0), it unfreezes the game and is
-   removed (`Enemy_Remove`).
+   (`statMeterPending+1` back to 0, once the meter is full: about a frame
+   per missing unit), it unfreezes the game and is removed
+   (`Enemy_Remove`).  The flash runs on for 17 frames.
 
 ## Drawing
 
@@ -66,4 +67,22 @@ a fairy placed at X $2D0, Y $78, Link walking into it from frame 30:
 tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $AT,itemOwned=1 --until areaId=0x2D --after 200 \
     --clear --approach 2A0 --spawn 0:00:2D0:78 --event Sound=7:D92B --event Touch=7:D93E \
     --event Gone=7:D954 --press 30:RIGHT:30 --frames 300
+```
+
+- **The refill** (the same, without the invincibility, `--mortal`, and
+  with Link's life at $20 of $7F):
+  - From the touch on frame 46 the meter rose 2 units every 2 frames.
+    It was full ($7F) on frame 142, 96 frames for 95 units.
+  - The game stayed frozen until then.  On frame 142 the refill request
+    was zeroed and the fairy removed.
+  - The flash: `spellFlash` kept bit 4 set during the refill, then
+    counted down from $11 to 0, so the screen flashed until frame 159.
+  - So a refill takes about a frame per missing unit of life, and the
+    flash runs 17 frames past it.
+
+```
+tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $AT,itemOwned=1,statMeter+1=0x20 \
+    --until areaId=0x2D --after 200 --mortal --clear --approach 2A0 --spawn 0:00:2D0:78 \
+    --event Touch=7:D93E --event Gone=7:D954 --press 30:RIGHT:30 --frames 220 \
+    --dump 100:statMeter+1:1 --dump 142:statMeter+1:1 --dump 150:spellFlash:1
 ```

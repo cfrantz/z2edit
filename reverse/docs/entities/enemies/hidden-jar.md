@@ -37,6 +37,32 @@ it changes in place, 3 pixels to the right:
   `enemyAiState`.  In the Great Palace the jar is also stunned 8
   frames, and is given 1 hit point rather than 0.
 
+## The Jar and the Area Flags
+
+The red jar has kind $11 without bit 7, so taking it clears its page's
+area flag (`Item_Collect`), the flag that also marks a placed item (a
+key, an experience bag) or a locked door on that page as gone.  Nothing
+is lost this visit, since the item or door is already there.  But if
+Link takes the jar and leaves the item behind, the item is not placed
+again; and a locked door on the jar's page is not there next time.
+Rooms with a hidden jar and something else on the same page:
+
+| Group | Area | Page | Also on the page |
+|-------|------|------|------------------|
+| Palaces 1, 2, 5 | $02 | 3 | a key |
+| Palaces 1, 2, 5 | $2E | 3 | a key |
+| Palaces 1, 2, 5 | $3A | 1 | an experience bag (kind $0A) |
+| Palaces 3, 4, 6 | $07 | 2 | an experience bag (kind $0C) |
+| Palaces 3, 4, 6 | $09 | 2 | a locked door |
+| Palaces 3, 4, 6 | $16 | 3 | a key |
+| Palaces 3, 4, 6 | $19 | 3 | a key |
+| Palaces 3, 4, 6 | $20 | 2 | an experience bag (kind $0C) |
+| Palaces 3, 4, 6 | $3B | 1 | a key |
+
+No hidden jar shares a room with a boss (flag 1) or a crystal statue
+(flag 3).  The red jars of West and East Hyrule's enemy lists clear their
+page's flag too, but none shares a page with anything.
+
 ## Routines
 
 | Routine | Address | Role |
@@ -46,6 +72,26 @@ it changes in place, 3 pixels to the right:
 | `HiddenJar_Ai_Bank5` | 5:$A521 | the Great Palace |
 
 ## Verification
+
+- **The flags** (palace 1's entrance, `$PAT` as in
+  [Palaces](../../world/palaces.md), with a hidden jar placed on page 1
+  beside Link): low strokes struck it and took the red jar on
+  frame 41.  Area 0's flag byte (`saveWorld+$80`) went from $FB to $BB:
+  page 1's flag cleared.  Area $02 of the same group, loaded with
+  `--poke-at 1:areaId=2 --poke-at 1:gameMode=0x14`, held its key (item
+  kind 8, X $3C3) with flag byte $FF, and no key with $EF (page 3's flag
+  clear).  The hidden jar was there both times.
+
+  ```
+  P=""; for k in $(seq 40 10 140); do P="$P --press $k:DOWN+B:4"; done
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $PAT,statLevel+2=8,statContainers+1=8 \
+      --until currentWorld=3 --after 200 --clear --fill 60:26F:80:70 --fill 60:26F:90:70 --fill 60:26F:A0:70 \
+      --approach 1A0 --spawn 1:05:1C0:B0 --press 5:B:4 $P \
+      --event Collect=7:E771 --frames 150 --dump 0:saveWorld+0x80:1 --dump 149:saveWorld+0x80:1
+  tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $PAT,statLevel+2=8,statContainers+1=8 \
+      --until currentWorld=3 --after 200 --poke-at 1:saveWorld+0x81=0xEF --poke-at 1:areaId=2 \
+      --poke-at 1:gameMode=0x14 --log 0,1,2,3,4,5 --frames 200
+  ```
 
 Scenario in palace 1's first room (see [Bubble](bubble.md#verification),
 with Link's life level raised), a hidden jar placed at X $1C4, Y $B0,

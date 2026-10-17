@@ -70,7 +70,7 @@ Tools that drive the emulator need the Python extension built with
   logging each enemy's state every frame and hits on event addresses
   (`--projectiles` adds the enemy projectiles in flight).
   `--map` prints the area's solid tiles; `--dialog` prints each town
-  conversation's text with `townFlags` and `techniques`; `--apu` logs
+  conversation's text with `townFlags` and `techniques`; `--mortal` turns the invincibility off; `--apu` logs
   writes to chosen APU registers (with `--poke sfxRequest=...` to start a
   sound effect).  The enemy pages under
   `docs/entities/enemies` give the commands they were verified with.
