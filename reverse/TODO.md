@@ -25,9 +25,9 @@ area bank are documented; what is left is mostly routines still marked
 - 6. Loose ends: the RAM bytes named; the fairy's refill timed; the red
   jars' area flags (a quirk in nine palace rooms); extraSpriteAttrs;
   Helmethead's helmets; the unhorsed Rebonack's facing.
+- 7b. The area banks' shared code: docs/architecture/area-banks.md
+  (`tools/bank_compare.py`).
 
 ## 7. Larger documentation
 
 - A reimplementation guide built from `docs/quirks.md`.
-- A comparison of the five area banks' shared code (which routines are
-  copies, and where they differ).

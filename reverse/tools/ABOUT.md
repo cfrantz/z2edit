@@ -76,6 +76,10 @@ Tools that drive the emulator need the Python extension built with
   `docs/entities/enemies` give the commands they were verified with.
 - `enemy_table.py`: Decodes each enemy group's definition tables (hit
   points, experience, damage, flags, and init/AI/draw routines by name).
+- `bank_compare.py`: Compares the code and tables the five area banks
+  share, by name stem: which banks' copies are identical (`--diff STEM`
+  shows the differences), plus copies under other names (`--renamed`,
+  `--similar`).  See docs/architecture/area-banks.md.
 - `area_objects.py`: Decodes every side view area's objects (and the
   background layers) in an area bank, naming the routine that draws each;
   `--by-routine` lists the areas that use each routine.

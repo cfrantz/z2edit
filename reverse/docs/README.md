@@ -9,6 +9,8 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
 ## Architecture
 
 - [Bank layout](architecture/bank-layout.md): what each PRG bank holds.
+- [Area banks' shared code](architecture/area-banks.md): which routines banks
+  1-5 share, which copies are identical, and where they differ.
 - [Main loop and NMI](architecture/main-loop-and-nmi.md): the frame, and
   the game state machine.
 - [MMC1](hardware/mmc1.md): bank switching and the bank interfaces.

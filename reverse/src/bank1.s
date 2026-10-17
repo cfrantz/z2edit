@@ -594,13 +594,48 @@ Area_DrawCloud_Bank1:
     lda     CloudTiles_Bank1,x      ; $8362  $C3 or $C4
     sta     (temp14),y              ; $8365
     rts                             ; $8367
-; (unreferenced: $8368-$8394, 45 bytes)
 
+; ---------------------------------------------------------------------------
+; Overworld_UseFlute_Bank1
+;
+; The flute's effect at Link's position, a copy of bank 2's
+; (Overworld_UseFlute_Bank2).  Everything it does is for East Hyrule
+; (currentRegion 2), so in this bank's regions it returns at once.  The
+; test movies never play the flute here.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Overworld_UseFlute_Bank1:
     .assert Overworld_UseFlute_Bank1 = OverworldBank::UseFlute, error, "interface address moved"
-    .byte   $AD, $06, $07, $C9, $02, $D0, $1F, $A5, $73, $C9, $64, $D0, $12, $A5, $74, $C9; $8368
-    .byte   $2D, $D0, $0C, $A9, $0B, $8D, $25, $07, $E6, $01, $E6, $01, $4C, $79, $DF, $AD; $8378
-    .byte   $63, $05, $C9, $0F, $F0, $01, $60, $20, $A1, $83, $4C, $79, $DF ; $8388
+; (code below not executed in the test movies)
+    lda     currentRegion           ; $8368
+    cmp     #$02                    ; $836B
+    bne     @done              ; $836D
+    lda     overworldY              ; $836F
+    cmp     #$64                    ; $8371
+    bne     @terrain              ; $8373
+    lda     overworldX              ; $8375
+    cmp     #$2D                    ; $8377
+    bne     @terrain              ; $8379
+    lda     #$0B                    ; $837B
+    sta     ppuStringSelect         ; $837D
+    inc     temp1                   ; $8380
+    inc     temp1                   ; $8382
+    jmp     Overworld_CheckSpecialTerrain ; $8384
+
+@terrain:
+    lda     overworldTerrain        ; $8387
+    cmp     #$0F                    ; $838A
+    beq     @riverDevil              ; $838C
+
+@done:
+    rts                             ; $838E
+
+@riverDevil:
+    jsr     Overworld_QueueMapStrip_Bank1 ; $838F
+    jmp     Overworld_CheckSpecialTerrain ; $8392
+; (end of code not executed in the test movies)
+
 
 MapStripHeader_Bank1:
     .byte   $0A, $00, $00, $82, $6C, $6C, $00, $00, $82, $6C, $6C, $FF      ; $8395
@@ -861,7 +896,10 @@ Overworld_UpdatePalaceStones_Bank1:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8806
     .byte   $FF                                                             ; $8816
 
-dat_1_8817:
+; AreaBank::Doors: the area behind each door, used only in the towns
+; (TownDoors); all $FF here.
+Doors_Bank1:
+    .assert Doors_Bank1 = AreaBank::Doors, error, "interface address moved"
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8817
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8826
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8836

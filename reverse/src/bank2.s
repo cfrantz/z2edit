@@ -589,6 +589,16 @@ Area_DrawCloud_Bank2:
     sta     (temp14),y              ; $8365
     rts                             ; $8367
 
+; ---------------------------------------------------------------------------
+; Overworld_UseFlute_Bank2
+;
+; The flute's effect at Link's position (OverworldBank::UseFlute, from
+; Overworld_UseFlute): in East Hyrule only.  At Y $64, X $2D it reveals
+; palace 6; on the river devil's tile ($0F) it queues the map strip there.
+; Either way Overworld_CheckSpecialTerrain changes the tile.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Overworld_UseFlute_Bank2:
     .assert Overworld_UseFlute_Bank2 = OverworldBank::UseFlute, error, "interface address moved"
     lda     currentRegion           ; $8368
@@ -893,7 +903,10 @@ Overworld_UpdatePalaceStones_Bank2:
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8803
     .byte   $FF, $FF, $FF, $FF                                              ; $8813
 
-dat_2_8817:
+; AreaBank::Doors: the area behind each door, used only in the towns
+; (TownDoors); all $FF here.
+Doors_Bank2:
+    .assert Doors_Bank2 = AreaBank::Doors, error, "interface address moved"
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF      ; $8817
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8823
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $8833

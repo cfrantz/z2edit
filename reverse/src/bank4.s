@@ -644,7 +644,10 @@ AreaConnections_Bank4:
     .byte   $DF, $00, $00, $E4, $E3, $FB, $00, $E8, $E7, $00, $CF, $FC, $FC, $00, $00, $F0; $87FB
     .byte   $EF, $00, $DA, $FC, $FC, $00, $00, $F8, $F7, $00, $E6, $FC      ; $880B
 
-dat_4_8817:
+; AreaBank::Doors: the area behind each door, used only in the towns
+; (TownDoors); all $FF here.
+Doors_Bank4:
+    .assert Doors_Bank4 = AreaBank::Doors, error, "interface address moved"
     .byte   $FF, $FF, $FF, $FF                                              ; $8817
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $881B
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $882B
