@@ -217,10 +217,11 @@ Area_FillObjectRow_Bank1:
 ; Area_DrawObjectColumn_Bank1
 ;
 ; Large objects $Dx: a column of size + 1 of the main tile, down from the
-; object's row.  No area of this bank uses one.
+; object's row.  No area of this bank uses one; the code is the palace
+; banks' (Palace_DrawObjectColumn_Bank4), checked there.
 ;
 ; In:      x = dispatch index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawObjectColumn_Bank1:
     jsr     Area_GetObjectTiles_Bank1 ; $8217  main tile
@@ -1561,10 +1562,13 @@ ProjectileBobOffsets_Bank1:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawBob_Bank1
 ;
-; Projectile draw: bob the sprite up and down (by frameCounter bits 5-4),
-; then flip it like Projectile_DrawFlip_Bank1.
+; Projectile type 1's draw: bob the sprite up and down, by frameCounter
+; bits 5-4 (ProjectileBobOffsets_Bank1: 0, +2, 0, -2, plus the carry, 16
+; frames each), then flip it upside down every 4 frames like
+; Projectile_DrawFlip_Bank1.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawBob_Bank1:
     lda     frameCounter            ; $9759
@@ -1584,9 +1588,12 @@ Projectile_DrawBob_Bank1:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlip_Bank1
 ;
-; Projectile draw: flip the sprite vertically every 4 frames.
+; Projectile types 3 and 4's draw (and the end of type 1's): flip the
+; sprite upside down on alternate 4-frame periods (frameCounter bit 2,
+; ORed into its attributes).
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlip_Bank1:
     lda     frameCounter            ; $976D
@@ -1602,9 +1609,11 @@ Projectile_DrawFlip_Bank1:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlash_Bank1
 ;
-; Projectile draw: cycle the palette and the horizontal flip by the frame.
+; Projectile type 2's draw: palette 2, mirrored on alternate 2-frame
+; periods (frameCounter bit 1); the attributes are replaced.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank1:
     lda     frameCounter            ; $977B
@@ -1624,9 +1633,13 @@ Projectile_SetAttr_Bank1:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawLarge_Bank1
 ;
-; Projectile draw: draw it as a pair of sprites (tile $48) like an enemy.
+; Projectile type 5's draw (a Moblin's spear): a pair of sprites like an
+; enemy (Sprite_DrawEnemyPairKeepX, SpritePairTiles entry $48), with
+; projectileSpeed as its palette if set, not hidden at the screen's edges
+; and never flashing.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawLarge_Bank1:
     lda     enemyStunTimer,x        ; $9789
@@ -1653,9 +1666,12 @@ SpinProjectileAttrs_Bank1:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawSpin_Bank1
 ;
-; Projectile draw: spin (flip the sprite by its facing and the frame).
+; Projectile type 6's draw (a Goriya's boomerang): spin through the four
+; flips of palette 2 (SpinProjectileAttrs_Bank1: $02, $82, $C2, $42), a
+; step every 4 frames, the other way round when it faces right.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank1:
     lda     frameCounter            ; $97A9
@@ -1677,10 +1693,12 @@ Projectile_DrawSpin_Bank1:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFire_Bank1
 ;
-; Projectile draw: alternate tiles $F6/$FA every 4 frames and the
-; attributes every 8, flipped by the facing.
+; Projectile type 7's draw (a Daira's axe): tile $F6 or $FA on alternate
+; 4-frame periods, attributes $C2 or $02 on alternate 8-frame periods,
+; mirrored when it faces right.
 ;
-; Status:  provisional
+; In:      x = projectile index, y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFire_Bank1:
     lda     frameCounter            ; $97C0

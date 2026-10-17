@@ -65,3 +65,12 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $P3,statLevel+
     --until currentWorld=4 --after 200 --clear $F3 --approach 1A0 --spawn 0:21:1B8:F0 --poke barbaStep=0 \
     --projectiles --event Pick=4:B14E --event Fire=4:B19A --event Sink=4:B1BF --frames 1000
 ```
+
+**Drawing.**  In palace 3 Barba is drawn with the wrong graphics (palace
+3's sprite tiles).  The same scenario started at palace 6's entrance
+(`currentRegion=2,palaceCode=1,areaLocation=0x35` in place of palace 3's
+values; the fill to X $25F) showed him right on frame 378, as a column of
+neck segments rising from the lava with his head turned toward Link,
+breathing fire.  With `--projectiles`, his fireballs flew down at Link and, meeting the
+floor at Y $C9 (frame 393), became sparks (type $F2 counting up;
+`Projectile_Fireball_Bank4B`).

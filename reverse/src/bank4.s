@@ -968,9 +968,10 @@ EnemyDrawPtrs_Bank4:
 ; ---------------------------------------------------------------------------
 ; Enemy_InitNone_Bank4
 ;
-; Spawn routine that does nothing (rts).
+; Spawn routine of the types that have none: does nothing.  Its rts is
+; also entry 0 of ProjectileTiles_Bank4.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank4:
     rts                             ; $95AD
@@ -1160,9 +1161,12 @@ Stalfos_Ai:
 ; ---------------------------------------------------------------------------
 ; Projectile_Rock_Bank4
 ;
-; Projectile types 3 and 5: fly straight, falling once deflected.
+; Projectile types 3 and 5 (rocks, thrown swords): fly level the way they
+; face; once deflected (moving against the facing) they fall, gaining
+; 2/16 pixel per frame each frame.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank4:
     ldy     #$02                    ; $973D
@@ -1179,9 +1183,11 @@ Projectile_Rock_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank4
 ;
-; Projectile type 4: with a sound, flies straight.
+; Projectile type 4: with a sound (Projectile_PlaySound_Bank4), then as
+; the energy balls (Projectile_Straight_Bank4).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank4:
 ; (code below not executed in the test movies)
@@ -1263,9 +1269,11 @@ Projectile_DeathSpark_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlicker_Bank4
 ;
-; Projectile draw: cycle the palette every frame.
+; Projectile types 2 and 5's draw: OR frameCounter bits 1-0 into the
+; palette, a new color every frame.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank4:
     lda     frameCounter            ; $9798
@@ -1276,9 +1284,9 @@ Projectile_DrawFlicker_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawNothing_Bank4
 ;
-; Projectile draw that does nothing (rts).
+; Projectile type 1's draw: nothing more (the rts).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawNothing_Bank4:
     rts                             ; $97A2
@@ -1286,9 +1294,11 @@ Projectile_DrawNothing_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlash_Bank4
 ;
-; Projectile draw: flash the palette.
+; Projectile types 3 and 4's draw: palette 2, upside down on alternate
+; 4-frame periods (frameCounter bit 2); the attributes are replaced.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank4:
     lda     frameCounter            ; $97A3
@@ -1308,9 +1318,12 @@ SpinProjectileAttrs_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawSpin_Bank4
 ;
-; Projectile draw: spin (flip the sprite by its facing and the frame).
+; Projectile type 6's draw: spin through palette 2's flips
+; (SpinProjectileAttrs_Bank4: $02, $82, $C2, $42), a step every 4 frames,
+; the other way round when it faces right.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank4:
     lda     frameCounter            ; $97B5
@@ -1666,10 +1679,11 @@ Projectile_AcidDrop_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_Fall_Bank4
 ;
-; Projectile type 6 (hammer): fall with gravity, then
-; Projectile_MoveAndCheck_Bank4.
+; Projectile type 6 (the hammer): fall with gravity (1/16 pixel per frame
+; per frame), then Projectile_MoveAndCheck_Bank4.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Fall_Bank4:
     inc     objYVelocity+7,x        ; $9940
@@ -1677,10 +1691,12 @@ Projectile_Fall_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_MoveAndCheck_Bank4
 ;
-; Move projectile x, remove it off screen (except types 6 and 8), draw it
-; and test it against Link.
+; Move projectile x; remove it off the top or bottom of the screen, or off
+; a side except types 6 (the hammer) and 8 (the acid drop), which go on
+; unseen; else draw it and test it against Link.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank4:
     jsr     Projectile_Move         ; $9943
@@ -1698,9 +1714,10 @@ Projectile_MoveAndCheck_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_Remove_Bank4
 ;
-; Remove projectile x.
+; Remove projectile x (objState+7 = 0).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Remove_Bank4:
     lda     #$00                    ; $995A
@@ -1708,9 +1725,10 @@ Projectile_Remove_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_Kill_Bank4
 ;
-; Remove the projectile (objState = a).
+; Set projectile x's state to a (0 removes it, $F2 makes a spark).
 ;
-; Status:  provisional
+; In:      x = projectile index, a = new state
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Kill_Bank4:
     sta     objState+7,x            ; $995C
@@ -1728,9 +1746,11 @@ Projectile_Done_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawAndCheck_Bank4
 ;
-; Draw the projectile and test it against Link (Projectile_CheckLinkAlternate).
+; Draw the projectile (Projectile_Draw_Bank4) and test it against Link
+; (Projectile_CheckLinkAlternate).  Bank 4B's routines use it too.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawAndCheck_Bank4:
     jsr     Projectile_Draw_Bank4   ; $995F
@@ -1742,9 +1762,13 @@ ProjectileFlipAttrs_Bank4 := * + 2
 ; ---------------------------------------------------------------------------
 ; Projectile_Draw_Bank4
 ;
-; Draw projectile x by its type (sramProjectileTiles, sramProjectileAttrs, sramProjectileDrawPtrs).
+; Draw projectile x, for both palace groups: one sprite, tile and
+; attributes by type (sramProjectileTiles, sramProjectileAttrs), mirrored
+; when it faces right (ProjectileFlipAttrs_Bank4), then its type's draw
+; routine (sramProjectileDrawPtrs).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Draw_Bank4:
     lda     objState+7,x            ; $996A
@@ -1776,9 +1800,13 @@ Projectile_Draw_Bank4:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlame_Bank4
 ;
-; Draw a flame, blinking as it burns out.
+; Projectile type 7's draw (the flame, both groups): attributes $01 or
+; $41 on alternate 4-frame periods (mirrored).  As it burns out it blinks
+; (hidden at Y $F8): below $50 of projectileTimer on odd frames, below $38
+; on alternate 2-frame periods, below $1C on alternate 4-frame periods.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlame_Bank4:
     ldy     projectileTimer,x       ; $999F
@@ -3196,9 +3224,9 @@ EnemyDrawPtrs_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Enemy_InitNone_Bank4B
 ;
-; Spawn routine that does nothing (rts), in the second palace group's block.
+; As Enemy_InitNone_Bank4, for the second palace group.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank4B:
     rts                             ; $AAAD
@@ -3614,10 +3642,12 @@ Projectile_RestoreX_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank4B
 ;
-; Projectile type 4: with a sound, flies straight until it hits the
-; background.
+; Projectile type 4 in the second group (Barba's fireballs): with a sound,
+; flies on; from Y $90 down (Projectile_HitsBg), on meeting the background
+; it becomes a spark (Projectile_Spark_Bank4B).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank4B:
 ; (code below not executed in the test movies)
@@ -3644,9 +3674,10 @@ Projectile_Straight_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_Spark_Bank4B
 ;
-; Turn projectile x into a spark ($F2).
+; Turn projectile x into a spark (state $F2).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Spark_Bank4B:
     lda     #$F2                    ; $ADA4
@@ -3655,9 +3686,10 @@ Projectile_Spark_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_Rock_Bank4B
 ;
-; Projectile types 3 and 5: fly straight, falling once deflected.
+; Projectile types 3 and 5 (second group): as Projectile_Rock_Bank4.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank4B:
     ldy     #$02                    ; $ADA8
@@ -3681,10 +3713,11 @@ Projectile_RockGravity_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_MoveAndCheck_Bank4B
 ;
-; Move projectile x, remove it off screen (except type 8), draw it and test
-; it against Link.
+; Move projectile x; remove it off the top or bottom, or off a side except
+; type 8 (the acid drop); else draw it and test it against Link.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank4B:
     jsr     Projectile_Move         ; $ADBF
@@ -3769,10 +3802,12 @@ Projectile_DrawNothing_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlicker_Bank4B
 ;
-; Projectile draw: cycle the palette every frame, flipped by the direction
-; of travel.
+; Projectile types 2, 5 and 9's draw (second group): palette = frameCounter
+; bits 1-0, mirrored while moving right (X velocity not negative); the
+; attributes are replaced.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank4B:
     lda     frameCounter            ; $AE11
@@ -3789,9 +3824,11 @@ Projectile_DrawFlicker_Bank4B:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlash_Bank4B
 ;
-; Projectile draw: flash the palette (not run by the test movies).
+; Projectile types 3 and 4's draw (second group): as
+; Projectile_DrawFlash_Bank4.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank4B:
     lda     frameCounter            ; $AE20
@@ -3806,15 +3843,18 @@ Projectile_DrawFlash_Bank4B:
 ; (end of disassembled code)
 
 
-ProjectileFlipAttrs_Bank4B:
+SpinProjectileAttrs_Bank4B:
     .byte   $03, $83, $C3, $43                                              ; $AE2C
 
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawSpin_Bank4B
 ;
-; Same as Projectile_DrawSpin_Bank4.
+; Projectile type 6's draw (the Doom Knocker's mace): spin through palette
+; 3's flips (SpinProjectileAttrs_Bank4B: $03, $83, $C3, $43), the other
+; way round when it faces right.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank4B:
     lda     frameCounter            ; $AE30
@@ -3828,7 +3868,7 @@ Projectile_DrawSpin_Bank4B:
 
 @loc_AE3D:
     tay                             ; $AE3D
-    lda     ProjectileFlipAttrs_Bank4B,y ; $AE3E
+    lda     SpinProjectileAttrs_Bank4B,y ; $AE3E
     ldy     objOamOffset+7,x        ; $AE41
 
 Projectile_SetAttr_Bank4B:
@@ -4559,7 +4599,7 @@ Barba_Rise:
 ; Barba's head (barbaHeadX + BarbaFlameXOffsets).  Then sink.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Breathe:
     lda     timerFast+TIMER_ENEMY,x ; $B16A  done?
@@ -4623,7 +4663,7 @@ Barba_Breathe:
 ; 96 frames (Barba_Wait).
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Sink:
     lda     objY+1,x                ; $B1C8  down to Y $F0
@@ -4757,7 +4797,7 @@ Boss_UpdateIntro_Bank4B:
 ; frames of every 128 he attacks again as soon as an attack ends.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RebonackUnhorsed_Ai:
     ldy     enemyType,x             ; $B23F  dying?
@@ -4815,7 +4855,7 @@ BarbaNeckFrames:
 ; mouth opens.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Draw:
     lda     temp0                   ; $B290
@@ -5048,7 +5088,7 @@ RebonackDrawOffsets:
 ; $48, so his fifth sprite (OAM $58) is the lance.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Rebonack_Draw:
     lda     enemyAiState,x          ; $B3A8
@@ -5163,7 +5203,7 @@ Wizrobe_Draw:
 ; from $A6 or $B2, on the side away from his facing.
 ;
 ; In:      x = enemy index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Carock_Draw:
     lda     temp1                   ; $B439
@@ -5208,7 +5248,7 @@ Carock_Draw:
 ;
 ; Draw two sprite pairs (Sprite_DrawEnemyPair, Sprite_DrawEnemyPairKeepX).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_DrawEnemyPair3_Bank4:
     jsr     Sprite_DrawEnemyPair    ; $B477
@@ -7362,9 +7402,9 @@ Boss_UpdateIntro:
 ; ---------------------------------------------------------------------------
 ; Projectile_PlaySound_Bank4
 ;
-; Play sound effect $40 on channel 1.
+; Play sound effect $40 on channel 1 (the fireballs' sound).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_PlaySound_Bank4:
     lda     sfxRequest+1            ; $BEF6

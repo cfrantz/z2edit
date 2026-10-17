@@ -4,35 +4,13 @@ Remaining work, roughly in the suggested order.  The enemies of every
 area bank are documented; what is left is mostly routines still marked
 `Status: provisional`.
 
-## 1. Area drawing (banks 1-5)
+## Done
 
-The routines that draw an area's background objects, about 15 per bank,
-sharing a pattern; verify with screenshots and `enemy_scenario.py --map`.
-
-- Banks 1 and 2: `Area_DrawObjectRow_*`, `Area_DrawObjectTwoRows_*`,
-  `Area_DrawObjectColumn_*`, `Area_DrawObjectPillar_*`, cactus, lava,
-  tree stump, crosses, headstone, stonehenge, pit, sleeping Zelda, cloud
-  (bank 2 also `Area_DrawPillarSlope_Bank2`).
-- Bank 3: `Town_DrawLargeObject`, `Town_DrawSmallObject`, the roof, wall
-  and slant routines, `Town_SetFloorTiles`, `Area_PlaceElevator_Bank3`,
-  `Area_PlaceLockedDoor_Bank3`.
-- Banks 4 and 5: `Palace_SetFloorTiles_*`, `Palace_DrawObject*`,
-  `Palace_DrawLava_*`, `Palace_DrawPit_Bank4`, `Palace_DrawCloud_*`,
-  `Palace_DrawCrystalStatue`, `Palace_DrawElevatorShaft`,
-  `Palace_DrawSleepingZelda`.
-
-## 2. Projectiles and boss leftovers (banks 1, 2, 4)
-
-- The projectile drawing routines of banks 1, 2 and 4 (Flash, Flicker,
-  Spin, Bob, Flip, Large, Fire, Flame), as done for bank 5.
-- Bank 2's and bank 4's projectile movement (`Projectile_Straight_Bank2`,
-  `Projectile_Rock_*`, `Projectile_Fireball_*`, `Projectile_MoveAndCheck_*`
-  and the rest).
-- Bank 4: `Barba_Breathe`, `Barba_Sink`, `RebonackUnhorsed_Ai`,
-  `Barba_Draw`, `Rebonack_Draw`, `Carock_Draw`,
-  `Sprite_DrawEnemyPair3_Bank4`.
-- `Generator_Init_Bank2` (same code as the confirmed bank 3 and 5 copies)
-  and the `Enemy_InitNone_*` stubs.
+- 1. Area drawing (banks 1-5): every object routine confirmed against the
+  tile maps the game builds (`tools/area_objects.py`, `tools/area_dump.py`);
+  see docs/world/areas.md, towns.md and palaces.md.
+- 2. Projectiles and boss leftovers (banks 1, 2, 4): confirmed with
+  per-frame sprite readings and boss scenarios in their own palaces.
 
 ## 3. Town conversations (bank 3)
 

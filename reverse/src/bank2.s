@@ -214,10 +214,11 @@ Area_FillObjectRow_Bank2:
 ; Area_DrawObjectColumn_Bank2
 ;
 ; Large objects $Dx: a column of size + 1 of the main tile, down from the
-; object's row.  No area of this bank uses one.
+; object's row.  No area of this bank uses one; the code is the palace
+; banks' (Palace_DrawObjectColumn_Bank4), checked there.
 ;
 ; In:      x = dispatch index
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawObjectColumn_Bank2:
     jsr     Area_GetObjectTiles_Bank2 ; $8217  main tile
@@ -1241,9 +1242,10 @@ EnemyDrawPtrs_Bank2:
 ; ---------------------------------------------------------------------------
 ; Enemy_InitNone_Bank2
 ;
-; Spawn routine that does nothing (rts).  Same as Enemy_InitNone_Bank1.
+; Spawn routine of the types that have none: does nothing.  Its rts is
+; also entry 0 of ProjectileTiles_Bank2.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_InitNone_Bank2:
     rts                             ; $95AD
@@ -1312,9 +1314,11 @@ Deeler_Init_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank2
 ;
-; Projectile type 4 (fireball): with a sound, flies straight.
+; Projectile type 4: with a sound ($40 on channel 1), flies straight
+; (Projectile_Straight_Bank2).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank2:
     lda     sfxRequest+1            ; $9627
@@ -1325,9 +1329,10 @@ Projectile_Fireball_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_Straight_Bank2
 ;
-; Projectile types 1 and 5-7: fly straight.
+; Projectile types 1 and 5-7: fly level (Y velocity 0).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Straight_Bank2:
     lda     #$00                    ; $962F
@@ -1362,9 +1367,12 @@ Projectile_Bubble_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_Rock_Bank2
 ;
-; Projectile type 3 (rock): flies straight, falling once deflected.
+; Projectile type 3 (an Octorok's rock): flies level the way it faces;
+; once deflected (moving against its facing) it falls, gaining 2/16 pixel
+; per frame each frame.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank2:
     ldy     #$02                    ; $964A
@@ -1403,10 +1411,12 @@ Projectile_RockGravity_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_MoveAndCheck_Bank2
 ;
-; Move projectile x, remove it off screen, draw it (Projectile_Draw_Bank2)
-; and test it against Link.
+; Move projectile x; remove it once off screen; else draw it
+; (Projectile_Draw_Bank2) and test it against Link
+; (Projectile_CheckLinkAlternate).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank2:
     jsr     Projectile_Move         ; $9665
@@ -1429,9 +1439,13 @@ ProjectileFlipAttrs_Bank2 := * + 2
 ; ---------------------------------------------------------------------------
 ; Projectile_Draw_Bank2
 ;
-; Draw projectile x by its type (sramProjectileTiles, sramProjectileAttrs, sramProjectileDrawPtrs).
+; Draw projectile x, as Projectile_Draw_Bank1: one sprite, tile and
+; attributes by type, mirrored when it faces right, then its type's draw
+; routine: Bob for 1, Flash for 2, Flip for 3, 4 and 8, nothing for 5,
+; Flicker for 6, Spin for 7.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Draw_Bank2:
     lda     objState+7,x            ; $967E
@@ -1463,9 +1477,11 @@ Projectile_Draw_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlicker_Bank2
 ;
-; Projectile draw: cycle the palette every frame.
+; Projectile type 6's draw: the attributes become frameCounter bits 1-0,
+; a new palette every frame and no flip.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank2:
     lda     frameCounter            ; $96B3
@@ -1490,9 +1506,11 @@ ProjectileBobOffsets_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawBob_Bank2
 ;
-; Same as Projectile_DrawBob_Bank1.
+; Projectile type 1's draw: as Projectile_DrawBob_Bank1 (bob by 2 pixels,
+; then flip upside down every 4 frames).
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawBob_Bank2:
     lda     frameCounter            ; $96BF
@@ -1512,9 +1530,10 @@ Projectile_DrawBob_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlip_Bank2
 ;
-; Same as Projectile_DrawFlip_Bank1.
+; Projectile types 3, 4 and 8's draw: as Projectile_DrawFlip_Bank1.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlip_Bank2:
     lda     frameCounter            ; $96D3
@@ -1531,9 +1550,10 @@ Projectile_DrawFlip_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlash_Bank2
 ;
-; Same as Projectile_DrawFlash_Bank1.
+; Projectile type 2's draw: as Projectile_DrawFlash_Bank1.
 ;
-; Status:  provisional
+; In:      y = its OAM offset
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank2:
     lda     frameCounter            ; $96E1
@@ -1556,9 +1576,11 @@ SpinProjectileAttrs_Bank2:
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawSpin_Bank2
 ;
-; Same as Projectile_DrawSpin_Bank1.
+; Projectile type 7's draw: as Projectile_DrawSpin_Bank1, through palette
+; 3's flips (SpinProjectileAttrs_Bank2: $03, $43, $C3, $83).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank2:
     lda     frameCounter            ; $96F3
@@ -1580,9 +1602,12 @@ Projectile_DrawSpin_Bank2:
 ; ---------------------------------------------------------------------------
 ; Generator_Init_Bank2
 ;
-; Spawn routine of generators: despawn any other enemy of the same type.
+; Spawn routine of generators: despawn any other enemy of the same type,
+; so that there is only one.  The same code as Generator_Init_Bank5, tested
+; there.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank2:
     ldy     #$05                    ; $970A

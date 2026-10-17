@@ -70,3 +70,9 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $P3,statLevel+
 In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`), every hit on Carock (frames 95477-95820,
 2 hit points each) came from a projectile (`temp11` 1): his reflected
 beams.  He burst on frame 95948.
+
+**Drawing.**  Palace 3 has no graphics for Carock (he is invisible
+there).  Started at palace 4's entrance instead
+(`currentRegion=1,palaceCode=0,areaLocation=0x34`, the fill to X $25F),
+the screenshots on frames 170-225 show him as a red caped figure about
+32 pixels wide, appearing at each new place.
