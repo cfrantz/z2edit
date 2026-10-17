@@ -4332,7 +4332,7 @@ Rebonack_Ai:
     lda     #$FF                    ; $B034  no list entry
     sta     enemySramIndex+3        ; $B036
     lda     #$EA                    ; $B038  leaping
-    sta     objYVelocity+4          ; $B03A
+    sta     objYVelocity+4          ; $B03A  (his facing is left as slot 3 had it)
     ldy     objFacing+1,x           ; $B03D  the horse forward 1,
     lda     RebonackSpeeds,y        ; $B03F
     sta     objXVelocity+1,x        ; $B042

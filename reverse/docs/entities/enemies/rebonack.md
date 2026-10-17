@@ -42,7 +42,10 @@ The fight is described with the [palace bosses](../palaces.md#bosses).
 
 - The rider, type $0A with 48 hit points and guard 1, appears in slot 3,
   24 pixels ahead, leaping (Y velocity -$16) backward at 2 pixels per
-  frame.  Link's Y velocity is doubled at that moment.
+  frame.  Link's Y velocity is doubled at that moment.  His facing (`objFacing+4`) is not set: he keeps whatever slot 3 last
+  held (0 after a cleared slot, which draws as facing left) until his
+  first attack turns him toward Link, about 33 frames after he lands.
+  His leap and his attacks don't depend on it.
 - The horse (`objState+1` = 1) flies off forward at 1 pixel per frame and
   is removed once fully off screen.
 - The rider (`RebonackUnhorsed_Ai`, 6 hit points per bar block) runs the
@@ -90,6 +93,14 @@ tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $P3,statLevel+
     --poke enemyHp=0x23 --poke sramEnemyHitbox+10=0 --projectiles --event Unhorse=4:B00F \
     --event Attack=4:9DE6 --event Throw=4:9CAC --frames 700
 ```
+
+- **The rider's facing:** the same, with slot 3's facing poked to 0, 1 or
+  2 first and the floor dug out to $2FF (with `$F3`'s fill ending at
+  $1FF, the rider lands in the wall at X $207 and never moves).
+  - He kept the poked facing from his leap (frame 256).
+  - With 0, his first attack set it to 2 (frame 289), toward Link.
+  - The attacks (frames 288, 365, 390, 415, ...) and throws were the same
+    in all three runs.  The thrown swords flew left at $E0.
 
 In the no-glitch movie (`../private/Zelda2_NoGlitch_2014_Final.fm2:0`), Link's strokes at the mounted Rebonack
 (frames 71860-71908) clinked off his shield three times and otherwise hit

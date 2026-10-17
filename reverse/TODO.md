@@ -22,11 +22,9 @@ area bank are documented; what is left is mostly routines still marked
   title and file select movies, and effects started in scenarios with
   `enemy_scenario.py --apu`); docs/audio/engines.md has a Sound Effects
   section.
-
-## 6. Loose ends
-
-- The unhorsed Rebonack's facing is left at 0 when he spawns (minor, not
-  marked).
+- 6. Loose ends: the RAM bytes named; the fairy's refill timed; the red
+  jars' area flags (a quirk in nine palace rooms); extraSpriteAttrs;
+  Helmethead's helmets; the unhorsed Rebonack's facing.
 
 ## 7. Larger documentation
 
