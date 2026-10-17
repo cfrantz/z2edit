@@ -20,6 +20,9 @@ one-line descriptions, in `src/ram.inc`.
 | $0600-$06DF | `saveWorld`: world state saved with the game |
 | $0700-$07FF | game state, Link's stats and inventory, sound |
 
+For the RAM and SRAM the game doesn't appear to use, see
+[Apparently unused RAM](unused-ram.md).
+
 ## Battery-Backed SRAM ($6000-$7FFF)
 
 | Range | Contents |

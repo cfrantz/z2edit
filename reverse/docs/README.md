@@ -21,6 +21,8 @@ Symbol names refer to `src/`; `make verify` checks that they still exist.
 ## Memory
 
 - [Memory map](memory/memory-map.md): RAM and SRAM.
+- [Apparently unused RAM](memory/unused-ram.md): free and write-only RAM
+  and SRAM, with a confidence for each range.
 - [Object slots](memory/objects.md): Link, enemies and projectiles, and
   collision.
 - [Save files](memory/save-files.md): what is saved and how.

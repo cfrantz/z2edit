@@ -46,6 +46,12 @@ Tools that drive the emulator need the Python extension built with
   read, write or use it as a pointer, directly or through an index, from
   the RAM access log (`build/zelda2.ram.json`, written by `cdl_movie.py`).
   `--arrays` lists indexed base addresses with their observed extents.
+- `ram_unused.py`: Lists RAM and SRAM ranges the game apparently doesn't
+  use, from the movies' access log (telling clears and block copies from
+  uses) and direct references in the source; `--all` gives every range's
+  status.  See docs/memory/unused-ram.md.
+- `stack_depth.py`: Plays a movie watching writes to the stack page and
+  reports the deepest push (the access log doesn't record pushes).
 - `callers.py`: Plays a movie with breakpoints on routines and tallies the
   JSR sites that call them, with a register's value on entry.
 - `watch.py`: Plays a movie and logs writes to RAM variables (by symbol
