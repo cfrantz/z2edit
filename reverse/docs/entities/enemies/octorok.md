@@ -87,9 +87,14 @@ out.
 `objFacing` (mirrored when facing right), alternating every 8 frames
 (`frameCounter` bit 3) between tiles $C6, $C8 and $CA, $CC
 (`SpritePairTiles` entries $12 and $14).  When it is low on the screen
-(Y $B5 or more) its attributes also take `extraSpriteAttrs`, the extra
-bits of Link's sprites (provisional: presumably so that it goes behind
-the background where Link would).
+(Y $B5 or more) its attributes also take `extraSpriteAttrs`, which holds
+$20 (behind the background) once Link has waded in the area's swamp.
+The Octoroks of West Hyrule's swamp areas stand at Y $C0 and sink behind
+the swamp tiles, as Link's legs do.  Checked in a swamp area: bank 1 area
+$2F, loaded from the cave test bed with `--poke-at 1:areaId=0x2F
+--poke-at 1:gameMode=0x14`.  The Octoroks' sprites had attributes $22
+(palette 2 + $20).  Link's lower sprites had $60, against his upper
+ones' $40.
 
 `FireOctorok_Draw` (Great Palace): the same animation from
 `sramEnemyTiles` entries $46 and $48.

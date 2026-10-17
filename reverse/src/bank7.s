@@ -9861,8 +9861,8 @@ Deeler_Draw:
 ; Draw an Octorok: a pair of sprites facing its objFacing, alternating
 ; between SpritePairTiles entries $12 (tiles $C6, $C8) and $14 (tiles $CA,
 ; $CC) every 8 frames.  Low on the screen (Y >= $B5) it also takes the
-; extra attribute bits of Link's sprites, extraSpriteAttrs (provisional:
-; presumably to be drawn behind the background where Link would be).
+; extra attribute bits extraSpriteAttrs: $20 once Link has waded in the
+; area's swamp, so that it sinks behind the swamp tiles as he does.
 ;
 ; In:      x = enemy index, y = OAM offset, temp0 = Y, temp1 = screen X,
 ;          temp2 = facing, temp3 = palette

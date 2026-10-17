@@ -51,8 +51,9 @@ fire still works.  It has no spawn routine.
 
 ## Drawing
 
-`Basilisk_Draw`, with the extra attribute bits of Link's sprites
-(`extraSpriteAttrs`):
+`Basilisk_Draw`, with the extra attribute bits `extraSpriteAttrs` ($20,
+behind the background, once Link has waded in the area's swamp; see
+[Octorok](octorok.md#drawing)):
 
 - **Reared:** two pairs of sprites from `sramEnemyTiles` entry $18.
 - **Crawling:** one pair 16 pixels lower, entry $14, alternating with $16

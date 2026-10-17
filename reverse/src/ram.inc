@@ -294,8 +294,8 @@ levelUpCursor           = $074E
 hudRedraw               = $074F     ; parts of the status bar to redraw: bit 7 = magic, bit 6 = life/experience
 hudHalf                 = $0750
 backdropColor           = $0751     ; backdrop color of the area (first color of its background palette), copied to Link's palette
-linkSlowed              = $0752     ; nonzero while Link wades through special tiles low in the area: he moves at half speed (provisional)
-extraSpriteAttrs        = $0753     ; sprite attribute bits ORed into Link's sprites (and some others), e.g. $20 to draw them behind the background (provisional)
+linkSlowed              = $0752     ; [2] $20 while Link stands low (Y $A5 or more) on the swamp tiles (AreaBank::SpecialTiles+7, +8) or goes down a chimney: he moves at half speed, and Link_DrawSprites ORs it into his lower sprites' attributes (behind the background); entry 1 is extraSpriteAttrs
+extraSpriteAttrs        = $0753     ; linkSlowed+1: sprite attribute bits of sword owner 1 (Link_DrawSprites ORs in linkSlowed,x): Dark Link's palette (1 or 2) in his fight; elsewhere Link_Control ORs linkSlowed in every frame, so it holds $20 (behind the background) once Link has waded in the area's swamp, until Link_EnterArea clears it; Octorok_Draw (low on the screen) and Basilisk_Draw add it to sink into the swamp too
 linkOnElevator          = $0754     ; nonzero while Link rides an elevator (no jumping or falling); cleared each frame
 experiencePending       = $0755     ; (16-bit, big-endian) experience still to be added to experience
 elevatorPos             = $0757     ; position of the area's elevator, 0 = none
