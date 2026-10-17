@@ -1572,7 +1572,7 @@ Curtain_QueueRows:
 ; ---------------------------------------------------------------------------
 Credits_Run:
     lda     #$00                    ; $9042
-    sta     ram_0765                ; $9044
+    sta     unused0765              ; $9044
     lda     endingSubStep           ; $9047
     jsr     JumpTable               ; $9049
 ; (inline jump table)
@@ -5335,7 +5335,7 @@ Game_PowerOnInit:
     sta     DMC_RAW                 ; $A6AE
     lda     #$0F                    ; $A6B1
     sta     SND_CHN                 ; $A6B3
-    sta     ram_076B                ; $A6B6
+    sta     unused076B              ; $A6B6
     lda     #$00                    ; $A6B9
     sta     PPUMASK                 ; $A6BB
     jsr     Oam_HideAll             ; $A6BE
@@ -5440,14 +5440,14 @@ Title_Init:
 ; ---------------------------------------------------------------------------
 ; Title_Show
 ;
-; Title mode 2: load the title sprites, set ram_0727, and turn rendering on
+; Title mode 2: load the title sprites, set nmiFlag, and turn rendering on
 ; for mode 3.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_Show:
     jsr     Title_LoadSprites       ; $A72E
-    inc     ram_0727                ; $A731
+    inc     nmiFlag                 ; $A731
     jmp     Game_UnblankAndNextMode ; $A734
 
 ; ---------------------------------------------------------------------------
@@ -5536,7 +5536,7 @@ Title_CheckStart:
     and     #$10                    ; $A79C
     beq     @done                   ; $A79E
     lda     #$00                    ; $A7A0
-    sta     ram_0727                ; $A7A2
+    sta     nmiFlag                 ; $A7A2
     sta     sceneStep               ; $A7A5
     jsr     Oam_HideAllButSprite0   ; $A7A8
     lda     #$80                    ; $A7AB

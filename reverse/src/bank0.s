@@ -209,7 +209,7 @@ Raft_Arrive:
     sta     ppuMaskExtra            ; $81EA
     lda     #$06                    ; $81ED
     sta     gameMode                ; $81EF
-    sta     ram_07AA                ; $81F2
+    sta     raftArrived             ; $81F2
     rts                             ; $81F5
 
 ; ---------------------------------------------------------------------------
@@ -560,7 +560,7 @@ Overworld_DrawEncounters:
     pla                             ; $83F2
     lda     #$02                    ; $83F3
     sta     sfxRequest+2            ; $83F5
-    inc     ram_07AC                ; $83F7
+    inc     encounterEntered        ; $83F7
     jmp     Overworld_EnterLocation ; $83FA
 
 @loc_83FD:
@@ -806,7 +806,7 @@ SpecialSpotX:
 ; ---------------------------------------------------------------------------
 Mode_Overworld:
     lda     #$00                    ; $8558
-    sta     ram_07AC                ; $855A
+    sta     encounterEntered        ; $855A
     sta     atSpecialSpot           ; $855D
     inc     menusPending            ; $8560
     jsr     Overworld_CheckEncounter ; $8563
@@ -960,7 +960,7 @@ Overworld_StartMove:
     sbc     #$0B                    ; $8624
     sta     overworldTargetY        ; $8626
     jsr     Overworld_SetMapPosition ; $8628
-    lda     ram_0077                ; $862B
+    lda     overworldMapRow         ; $862B
     lsr     a                       ; $862D
     bcc     @loc_8637               ; $862E
     dec     overworldTargetY        ; $8630
@@ -990,7 +990,7 @@ Overworld_StartMove:
     sbc     #$0B                    ; $8655
     sta     overworldTargetY        ; $8657
     jsr     Overworld_SetMapPosition ; $8659
-    lda     ram_0077                ; $865C
+    lda     overworldMapRow         ; $865C
     lsr     a                       ; $865E
     bcc     @loc_8668               ; $865F
     dec     overworldTargetY        ; $8661
@@ -1335,7 +1335,7 @@ Mode_IndexOverworldMap:
     asl     a                       ; $885E
     asl     a                       ; $885F
     ora     temp0                   ; $8860
-    sta     ram_0077                ; $8862
+    sta     overworldMapRow         ; $8862
     jsr     Sound_UpdateSometimes   ; $8864
     ldx     #$00                    ; $8867
     stx     overworldDrawStep       ; $8869
@@ -1352,7 +1352,7 @@ Mode_IndexOverworldMap:
     lda     #$08                    ; $8879
     sta     timerSlow+8             ; $887B
     jsr     Overworld_UpdateTerrain ; $887E
-    lda     ram_07AA                ; $8881
+    lda     raftArrived             ; $8881
     ora     atSpecialSpot           ; $8884
     bne     @loc_889E               ; $8887
     lda     currentRegion           ; $8889
@@ -1369,10 +1369,10 @@ Mode_IndexOverworldMap:
 
 @loc_889E:
     lda     #$04                    ; $889E
-    ldy     ram_07AA                ; $88A0
+    ldy     raftArrived             ; $88A0
     beq     @loc_88AF               ; $88A3
     ldx     #$00                    ; $88A5
-    stx     ram_07AA                ; $88A7
+    stx     raftArrived             ; $88A7
     stx     renderingOff            ; $88AA
     lda     #$18                    ; $88AD
 
@@ -1679,7 +1679,7 @@ Overworld_NextRow:
     lda     overworldDirection      ; $8A1A
     and     #$04                    ; $8A1D
     beq     @loc_8A31               ; $8A1F
-    lda     ram_0077                ; $8A21
+    lda     overworldMapRow         ; $8A21
     and     #$0F                    ; $8A23
     cmp     #$0E                    ; $8A25
     beq     @loc_8A31               ; $8A27
@@ -1692,7 +1692,7 @@ Overworld_NextRow:
     rts                             ; $8A30
 
 @loc_8A31:
-    lda     ram_0077                ; $8A31
+    lda     overworldMapRow         ; $8A31
     lsr     a                       ; $8A33
     bcs     @loc_8A2C               ; $8A34
 
@@ -1751,12 +1751,12 @@ Overworld_ScrollRowBuffer:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueRowAttrs:
-    lda     ram_0077                ; $8A79
+    lda     overworldMapRow         ; $8A79
     and     #$10                    ; $8A7B
     lsr     a                       ; $8A7D
     ora     #$23                    ; $8A7E
     sta     ppuBuffer0              ; $8A80
-    lda     ram_0077                ; $8A83
+    lda     overworldMapRow         ; $8A83
     and     #$0E                    ; $8A85
     asl     a                       ; $8A87
     asl     a                       ; $8A88
@@ -1790,7 +1790,7 @@ Overworld_QueueRowAttrs:
     lda     overworldDirection      ; $8AC9
     and     #$04                    ; $8ACC
     beq     @loc_8AF0               ; $8ACE
-    lda     ram_0077                ; $8AD0
+    lda     overworldMapRow         ; $8AD0
     and     #$0F                    ; $8AD2
     cmp     #$0E                    ; $8AD4
     beq     @loc_8AF0               ; $8AD6
@@ -1909,7 +1909,7 @@ Overworld_QueueColumnAttrsTop:
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnAttrs:
     jsr     Overworld_QueueAttrAddress ; $8B42
-    lda     ram_0077                ; $8B45
+    lda     overworldMapRow         ; $8B45
     and     #$0F                    ; $8B47
     cmp     #$0E                    ; $8B49
     beq     @loc_8B51               ; $8B4B
@@ -1928,7 +1928,7 @@ Overworld_QueueColumnAttrs:
     asl     a                       ; $8B5F
     asl     a                       ; $8B60
     ora     temp0                   ; $8B61
-    sta     ram_0077                ; $8B63
+    sta     overworldMapRow         ; $8B63
     lda     objXVelocity+2          ; $8B65
     cmp     temp11                  ; $8B67
     bcc     Overworld_QueueColumnAttrs ; $8B69
@@ -1950,12 +1950,12 @@ Overworld_QueueColumnAttrsBottom:
 
 Overworld_QueueAttrAddress:
     stx     temp14                  ; $8B76
-    lda     ram_0077                ; $8B78
+    lda     overworldMapRow         ; $8B78
     and     #$10                    ; $8B7A
     lsr     a                       ; $8B7C
     ora     #$23                    ; $8B7D
     sta     ppuBuffer0,x            ; $8B7F
-    lda     ram_0077                ; $8B82
+    lda     overworldMapRow         ; $8B82
     and     #$0E                    ; $8B84
     asl     a                       ; $8B86
     asl     a                       ; $8B87
@@ -2259,7 +2259,7 @@ SideView_Start:
     sta     spellActive             ; $8CF4
 
 @loop2:
-    sta     ram_0300,y              ; $8CF7
+    sta     ppuPage,y               ; $8CF7
     sta     overworldBuffer+$00,y   ; $8CFA
     dey                             ; $8CFD
     bne     @loop2                  ; $8CFE
@@ -2292,7 +2292,7 @@ SideView_Start:
     lda     sramEntryScrollX,y      ; $8D47
     sta     scrollX                 ; $8D4A
     and     #$10                    ; $8D4D
-    sta     ram_0721                ; $8D4F
+    sta     columnScroll            ; $8D4F
     lda     #$00                    ; $8D52
     sta     columnDrawStep          ; $8D54
     jsr     Scroll_SetRightEdge     ; $8D57
@@ -2300,7 +2300,7 @@ SideView_Start:
     tay                             ; $8D5B
     lda     #$A5                    ; $8D5C
     sta     rng                     ; $8D5E
-    inc     ram_0727                ; $8D61
+    inc     nmiFlag                 ; $8D61
     lda     areaMusic               ; $8D64
     ; Ten nops: probably code removed late in development.
     nop                             ; $8D67
@@ -4270,7 +4270,7 @@ LinkProjectile_Start:
     lsr     a                       ; $9837
     sta     linkProjectileTimer,x   ; $9838
     ldy     linkWalkDir             ; $983B
-    sty     ram_006D,x              ; $983D
+    sty     linkProjectileDir,x     ; $983D
     lda     LinkProjectileSpeeds,y  ; $983F
     sta     objXVelocity+13,x       ; $9842
     rts                             ; $9844
@@ -4396,7 +4396,7 @@ LinkProjectile_Draw:
     ldy     objOamOffset+13,x       ; $98C0
     lda     objY+13,x               ; $98C2
     sta     oamBuffer,y             ; $98C4
-    lda     ram_006D,x              ; $98C7
+    lda     linkProjectileDir,x     ; $98C7
     lsr     a                       ; $98C9
     lda     #$00                    ; $98CA
     ror     a                       ; $98CC
@@ -4527,8 +4527,8 @@ Scroll_Update:
     tya                             ; $9979
     beq     Scroll_SetRightEdgeDone ; $997A
     clc                             ; $997C
-    adc     ram_0721                ; $997D
-    sta     ram_0721                ; $9980
+    adc     columnScroll            ; $997D
+    sta     columnScroll            ; $9980
     ldx     #$01                    ; $9983
     stx     scrollPage              ; $9985
     dex                             ; $9988
@@ -4543,7 +4543,7 @@ Scroll_Update:
     ldy     scrollPage              ; $9993
     cpy     drawPage                ; $9996
     beq     @loc_99BD               ; $9999
-    lda     ram_0721                ; $999B
+    lda     columnScroll            ; $999B
     bmi     @loc_99A4               ; $999E
     cmp     #$20                    ; $99A0
     bcc     @loc_99BD               ; $99A2
@@ -4616,7 +4616,7 @@ Scroll_SetRightEdgeDone:
 Scroll_DrawColumns:
     lda     columnDrawStep          ; $99E6
     bne     Scroll_DrawColumnStep   ; $99E9
-    lda     ram_0721                ; $99EB
+    lda     columnScroll            ; $99EB
     bmi     @loc_99F9               ; $99EE
     cmp     #$20                    ; $99F0
     bcc     Scroll_SetRightEdgeDone ; $99F2
@@ -4628,7 +4628,7 @@ Scroll_DrawColumns:
     adc     #$20                    ; $99FA
 
 @loc_99FC:
-    sta     ram_0721                ; $99FC
+    sta     columnScroll            ; $99FC
     lda     #$00                    ; $99FF
     sta     ppuBuffer2Len           ; $9A01
 
@@ -4682,7 +4682,7 @@ Scroll_AdvanceColumn:
     bne     @loc_9A56               ; $9A42
     inc     columnPage,x            ; $9A44
     lda     columnPage,x            ; $9A47
-    cmp     ram_071B                ; $9A4A
+    cmp     columnLastPage          ; $9A4A
     bcc     @loc_9A56               ; $9A4D
     beq     @loc_9A56               ; $9A4F
     lda     #$00                    ; $9A51
@@ -4703,7 +4703,7 @@ Scroll_AdvanceColumn:
     bne     @loc_9A73               ; $9A66
     dec     columnPage,x            ; $9A68
     bpl     @loc_9A73               ; $9A6B
-    lda     ram_071B                ; $9A6D
+    lda     columnLastPage          ; $9A6D
     sta     columnPage,x            ; $9A70
 
 @loc_9A73:
@@ -7162,18 +7162,18 @@ Game_StartAtNorthCastle:
     sta     currentWorld            ; $AA0E
     sta     areaId                  ; $AA11
     sta     areaLocation            ; $AA14
-    sta     ram_073F                ; $AA17
+    sta     unused073F              ; $AA17
     sta     areaStartPage           ; $AA1A
     sta     areaEntrySide           ; $AA1D
     ldx     #$01                    ; $AA20
-    stx     ram_075D                ; $AA22
+    stx     unused075D              ; $AA22
     stx     areaMusic               ; $AA25
 
 @loop:
     jsr     Stat_FillMeter          ; $AA28
     dex                             ; $AA2B
     bpl     @loop                   ; $AA2C
-    stx     ram_0708                ; $AA2E
+    stx     unused0708              ; $AA2E
     jsr     Exp_ComputeNext         ; $AA31
     ldy     #$88                    ; $AA34
 

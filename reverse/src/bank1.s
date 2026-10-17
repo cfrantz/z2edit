@@ -2254,9 +2254,9 @@ Daira_Ai:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fighter_Move:
-    sta     ram_05E5                ; $9A22  r
+    sta     enemyScratch+1          ; $9A22  r
     asl     a                       ; $9A25
-    sta     ram_05E6                ; $9A26  2r
+    sta     enemyScratch+2          ; $9A26  2r
     jsr     Enemy_UpdateWithBg      ; $9A29  probe background, draw, hit tests
     jsr     Enemy_HurtLinkOnContact ; $9A2C
     jsr     Enemy_MoveYAndFall      ; $9A2F  fall: +2/16 px/frame per frame
@@ -2270,8 +2270,8 @@ Fighter_Move:
     jsr     Enemy_FaceLink          ; $9A3E  temp15 = dx (low byte), y = 0 if right
     lda     temp15                  ; $9A41
     clc                             ; $9A43
-    adc     ram_05E5                ; $9A44  -r <= dx < r?
-    cmp     ram_05E6                ; $9A47
+    adc     enemyScratch+1          ; $9A44  -r <= dx < r?
+    cmp     enemyScratch+2          ; $9A47
     bcc     @near                   ; $9A4A  yes: near
     lda     temp15                  ; $9A4C  -$50 <= dx < $50 (give or
     adc     #$50                    ; $9A4E  take the carry)?
@@ -2822,7 +2822,7 @@ Moblin_Draw:
     lsr     a                       ; $9CB7  drawn as the wind-up, pose 1
 
 @setPose:
-    sta     ram_05E4                ; $9CB8  pose drawn
+    sta     enemyScratch            ; $9CB8  pose drawn
     tax                             ; $9CBB
     lda     MoblinDrawTiles,x       ; $9CBC  body entry
     cpx     #$00                    ; $9CBF
@@ -2849,7 +2849,7 @@ Moblin_Draw:
     ldx     currentObject           ; $9CE1
     lda     drawOffscreen+1         ; $9CE3  partly off screen,
     bne     @done                   ; $9CE5
-    lda     ram_05E4                ; $9CE7  or no attack: no spear
+    lda     enemyScratch            ; $9CE7  or no attack: no spear
     beq     @done                   ; $9CEA
     cmp     #$01                    ; $9CEC  low wind-up:
     bne     @spearY                 ; $9CEE
@@ -2862,14 +2862,14 @@ Moblin_Draw:
     sec                             ; $9CF8
     sbc     #$18                    ; $9CF9
     sta     temp0                   ; $9CFB
-    lda     ram_05E4                ; $9CFD
+    lda     enemyScratch            ; $9CFD
     cmp     #$03                    ; $9D00
     bcc     @spearX                 ; $9D02
     lda     objY+1,x                ; $9D04  high: Y
     sta     temp0                   ; $9D06
 
 @spearX:
-    lda     ram_05E4                ; $9D08  0 wind-up / 1 thrust,
+    lda     enemyScratch            ; $9D08  0 wind-up / 1 thrust,
     tax                             ; $9D0B
     dex                             ; $9D0C
     lda     MoblinSpearFrames,x     ; $9D0D
@@ -2900,7 +2900,7 @@ Moblin_Draw:
     tay                             ; $9D32
     ldx     temp13                  ; $9D33
     jsr     Sprite_DrawEnemyPairKeepX ; $9D35  the spear
-    lda     ram_05E4                ; $9D38
+    lda     enemyScratch            ; $9D38
     clc                             ; $9D3B
     adc     #$01                    ; $9D3C
     and     #$03                    ; $9D3E  high wind-up (pose 3)?
@@ -2967,7 +2967,7 @@ RedDaira_Draw:
 
 Daira_DrawWeapon:
     ; BUG: writes to ROM at $95E6, i.e. to the MMC1 control register.
-    ; Probably intended ram_05E6 (used nearby).  Harmless: a is $F5 or $F6,
+    ; Probably intended enemyScratch+2 (used nearby).  Harmless: a is $F5 or $F6,
     ; and a write with bit 7 set only resets the MMC1 shift register and
     ; re-selects PRG mode 3, which is already selected; no other MMC1 write
     ; can be in progress here.

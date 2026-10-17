@@ -164,7 +164,7 @@ Nmi:
     sta     ppuCtrlShadow           ; $C08C
     sta     PPUCTRL                 ; $C08E
     ; QUIRK: both outcomes of this branch go to the next instruction.
-    lda     ram_0727                ; $C091
+    lda     nmiFlag                 ; $C091
     beq     @setMask                ; $C094
 
 @setMask:
@@ -597,7 +597,7 @@ Area_GetFlagByte:
 ; ---------------------------------------------------------------------------
 Game_RunState:
     ldy     #$00                    ; $C2CA
-    sty     ram_0727                ; $C2CC
+    sty     nmiFlag                 ; $C2CC
     sty     menusPending            ; $C2CF
     jsr     Game_CheckStateChange   ; $C2D2
     jsr     JumpTable               ; $C2D5
@@ -693,7 +693,7 @@ GameState_Begin:
 Game_ResetLives:
     lda     #$03                    ; $C358
     sta     lives                   ; $C35A
-    inc     ram_0760                ; $C35D
+    inc     unused0760              ; $C35D
 
 ; ---------------------------------------------------------------------------
 ; Game_NextState
@@ -790,7 +790,7 @@ Lives_Blank:
     lda     #$0C                    ; $C3A5
     sta     ppuStringSelect         ; $C3A7
     lda     #$00                    ; $C3AA
-    sta     ram_0760                ; $C3AC
+    sta     unused0760              ; $C3AC
     inc     renderingOff            ; $C3AF
     jmp     Game_NextStep           ; $C3B2
 
@@ -1161,17 +1161,17 @@ Area_Load:
 @loc_C5F9:
     jsr     Area_DecodeObjects      ; $C5F9
     lda     #$03                    ; $C5FC
-    sta     ram_071B                ; $C5FE
+    sta     columnLastPage          ; $C5FE
     lsr     a                       ; $C601
     sta     scrollPage              ; $C602
     sta     drawPage                ; $C605
     lsr     a                       ; $C608
-    sta     ram_071C                ; $C609
-    sta     ram_0721                ; $C60C
+    sta     unused071C              ; $C609
+    sta     columnScroll            ; $C60C
     sta     columnDrawStep          ; $C60F
     ldy     areaStartPage           ; $C612
     lda     #$0F                    ; $C615
-    sta     ram_0722                ; $C617
+    sta     drawAreaColumnsLeft     ; $C617
     lda     sramEntryLoadPage,y     ; $C61A
     sta     columnPage              ; $C61D
     sta     columnPage+1            ; $C620
@@ -2207,8 +2207,8 @@ Mode_EnterLocation:
     beq     Location_Enter          ; $CB49
 
 @loc_CB4B:
-    lda     ram_07AC                ; $CB4B
-    ora     ram_07AA                ; $CB4E
+    lda     encounterEntered        ; $CB4B
+    ora     raftArrived             ; $CB4E
     ora     atSpecialSpot           ; $CB51
     bne     Location_Enter          ; $CB54
     jsr     Music_RequestSilence    ; $CB56
@@ -2279,7 +2279,7 @@ Location_Enter:
     ora     currentWorld            ; $CBBB
     ora     areaLocation            ; $CBBE
     beq     @loc_CBCD               ; $CBC1
-    lda     ram_07AC                ; $CBC3
+    lda     encounterEntered        ; $CBC3
     bne     @loc_CBCD               ; $CBC6
     lda     #$04                    ; $CBC8
     sta     areaMusic               ; $CBCA
@@ -3354,7 +3354,7 @@ DrawArea_DrawColumns:
     bne     DrawArea_DrawColumns    ; $D141
 
 @loc_D143:
-    dec     ram_0722                ; $D143
+    dec     drawAreaColumnsLeft     ; $D143
     bpl     @loc_D14B               ; $D146
     inc     gameMode                ; $D148
 
@@ -3422,7 +3422,7 @@ Game_CheckModeChange:
 ; Game_CheckStateChange
 ;
 ; If gameState has changed since the last call, call Oam_HideAll and reset
-; gameMode, gameStep and gameSubStep (and fileStep, ram_073C).
+; gameMode, gameStep and gameSubStep (and fileStep, unused073C).
 ;
 ; Out:     a = gameState
 ; Clobbers: y
@@ -3436,7 +3436,7 @@ Game_CheckStateChange:
     jsr     Oam_HideAll             ; $D17F
     lda     gameState               ; $D182
     ldy     #$00                    ; $D185
-    sty     ram_073C                ; $D187
+    sty     unused073C              ; $D187
     sty     gameMode                ; $D18A
 
 ; ---------------------------------------------------------------------------
@@ -3781,7 +3781,7 @@ Ram_ClearWork:
     txa                             ; $D2A7
 
 @loop2:
-    sta     ram_0300,x              ; $D2A8
+    sta     ppuPage,x               ; $D2A8
     dex                             ; $D2AB
     bne     @loop2                  ; $D2AC
     ldx     #$DF                    ; $D2AE
@@ -4239,7 +4239,7 @@ Mode_SideView:
     lda     gameMode                ; $D538
     cmp     #$0B                    ; $D53B
     bne     @loc_D545               ; $D53D
-    inc     ram_0727                ; $D53F
+    inc     nmiFlag                 ; $D53F
     inc     menusPending            ; $D542
 
 @loc_D545:
@@ -6412,7 +6412,7 @@ Overworld_SetMapPosition:
     asl     a                       ; $DF0C
     ora     temp0                   ; $DF0D
     sta     temp10                  ; $DF0F
-    sta     ram_0077                ; $DF11
+    sta     overworldMapRow         ; $DF11
     lda     #$08                    ; $DF13
     sta     temp0                   ; $DF15
     asl     a                       ; $DF17
@@ -7598,7 +7598,7 @@ Enemy_CheckProjectileHits:
     jsr     Enemy_CheckHit          ; $E4A8
     ldy     swordOwner              ; $E4AB
     bcc     @loc_E4B8               ; $E4AD
-    lda     a:ram_006D,y            ; $E4AF
+    lda     a:linkProjectileDir,y   ; $E4AF
     tay                             ; $E4B2
     jmp     Enemy_SetKnockBack      ; $E4B3
 ; (unreferenced: $E4B6-$E4B7, 2 bytes)
@@ -8388,20 +8388,20 @@ Item_CollectSpecial:
     lda     #$00                    ; $E84B
     sta     musicRequest            ; $E84D
     lda     #$10                    ; $E84F
-    sta     ram_05E2                ; $E851
+    sta     jarFillAmounts          ; $E851
     lda     statContainers          ; $E854
     asl     a                       ; $E857
     asl     a                       ; $E858
     asl     a                       ; $E859
     asl     a                       ; $E85A
-    sta     ram_05E3                ; $E85B
+    sta     jarFillAmounts+1        ; $E85B
     tya                             ; $E85E
     sec                             ; $E85F
     sbc     #$10                    ; $E860
     tay                             ; $E862
     lda     statMeterPending        ; $E863
     clc                             ; $E866
-    adc     ram_05E2,y              ; $E867
+    adc     jarFillAmounts,y        ; $E867
     sta     statMeterPending        ; $E86A
 
 @loc_E86D:
@@ -9115,7 +9115,7 @@ Link_DrawBody:
     ldx     swordOwner              ; $EC7F
     ldy     objOamOffset,x          ; $EC81
     lda     oamBuffer+3,y           ; $EC83
-    sta     ram_0015,x              ; $EC86
+    sta     swordBaseX,x            ; $EC86
     lda     objState,x              ; $EC88
     cmp     #$0B                    ; $EC8A
     bne     @loc_EC96               ; $EC8C
@@ -9190,7 +9190,7 @@ Link_DrawBody:
 ; ---------------------------------------------------------------------------
 Sword_UpdatePosition:
     ldx     swordOwner              ; $ECEA
-    lda     ram_0015,x              ; $ECEC
+    lda     swordBaseX,x            ; $ECEC
     ldy     linkWalkDir,x           ; $ECEE
     clc                             ; $ECF0
     adc     SwordXOffsets,y         ; $ECF1

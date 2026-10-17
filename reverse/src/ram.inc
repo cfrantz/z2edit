@@ -29,7 +29,7 @@ swordOwner              = $0011     ; object whose sword is being drawn or teste
 frameCounter            = $0012     ; incremented by the game NMI every frame
 linkFairy               = $0013     ; 0 = Link, 8 = fairy; also an offset into the collision probe tables
 linkDeltaX              = $0014     ; pixels Link moved horizontally this frame
-ram_0015                = $0015
+swordBaseX              = $0015     ; [2] X of the sword owner's (Link's, Dark Link's) first sprite this frame; Sword_UpdatePosition adds SwordXOffsets
 linkStanding            = $0017     ; 1 = standing, 0 = crouching (lower hitbox and shield)
 darkLinkStanding        = $0018     ; linkStanding for object 1, Dark Link: 1 = standing (shield and strokes high), 0 = crouching
 ; ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ objY                    = $0029     ; [17] Y position (side view)
 objXHi                  = $003B     ; [17] high byte of X position (map page)
 objX                    = $004D     ; [17] low byte of X position
 objFacing               = $005F     ; [13] facing direction: 1 = right, 2 = left
-ram_006D                = $006D
+linkProjectileDir       = $006D     ; [2] direction of Link's projectile (linkWalkDir when fired): its sprite's flip and the knockback it gives
 objXVelocity            = $0070     ; [15] X velocity
 ; On the overworld, $0400-$04FF is a buffer for decoding and drawing the
 ; map (overworldBuffer below), and $0073-$007E (objXVelocity+3 and up) hold overworld
@@ -55,7 +55,7 @@ overworldY              = $0073     ; Link's Y position on the overworld map
 overworldX              = $0074     ; Link's X position on the overworld map
 overworldTargetY        = $0075     ; Y of the tile Link is moving toward on the overworld
 overworldTargetX        = $0076     ; X of the tile Link is moving toward on the overworld
-ram_0077                = $0077
+overworldMapRow         = $0077     ; overworld map position being drawn: screen in bits 7-4 (bit 4 = nametable), row within it (0-14) in bits 3-0 (Overworld_SetMapPosition)
 overworldDrawAddrHi     = $0079
 overworldDrawAddrLo     = $007A
 overworldNextAddrHi     = $007B
@@ -117,7 +117,7 @@ objectTile              = $0112     ; main tile of the area object being drawn (
 ; Sprites and PPU updates
 ; ---------------------------------------------------------------------------
 oamBuffer               = $0200     ; [256] sprite attributes, copied to the PPU by OAM DMA every NMI
-ram_0300                = $0300
+ppuPage                 = $0300     ; start of the $0300 page (the PPU buffers); only cleared, by the RAM clears, as the base of a loop
 ; PPU update buffers.  Each holds PPU update strings (see Ppu_WriteStrings)
 ; and is preceded by its length.
 ppuBuffer0Len           = $0301     ; length of the update strings in ppuBuffer0
@@ -219,11 +219,8 @@ deelerThreadBottom      = $05DC     ; Y at which a dropping Deeler turns back up
 deelerThreadTop         = $05DD     ; Y of the top of a Deeler's thread, where it hangs (its spawn Y); shared by all Deelers
 helmetheadHitDelay      = $05DE     ; Helmethead: frames/4 before another hit can knock off a helmet (16 after one); also lowers his head as drawn
 dropKillCounts          = $05DF     ; [3] kills toward the next item drop, per drop group 1-3 (Enemy_Kill)
-ram_05E2                = $05E2
-ram_05E3                = $05E3
-ram_05E4                = $05E4
-ram_05E5                = $05E5
-ram_05E6                = $05E6
+jarFillAmounts          = $05E2     ; [2] magic a jar adds (Item_CollectSpecial): $10 for the blue jar (kind $10), magic containers x 16 for the red (kind $11)
+enemyScratch            = $05E4     ; [3] scratch for the current enemy: Fighter_Move's and Lizalfos_Guard's range r and 2r, the Moblin's pose drawn
 blockedDirections       = $05E7     ; joypad direction bits Link cannot move in this frame (cleared each frame by Mode_SideView)
 experienceDrain         = $05E8     ; frames left to drain experience, one point per frame (provisional)
 overworldEntrySfx       = $05E9     ; sound to play (sfxRequest+2) on returning to the overworld, set by Mode_LeaveArea
@@ -241,7 +238,7 @@ enteredVertically       = $0705     ; nonzero when the room was entered by eleva
 ; ---------------------------------------------------------------------------
 currentRegion           = $0706     ; overworld region: 0 = west Hyrule, 1 = Death Mountain or Maze Island, 2 = east Hyrule
 currentWorld            = $0707     ; 0 = overworld, 1-2 = towns, 3-4 = palaces, 5 = Great Palace
-ram_0708                = $0708
+unused0708              = $0708     ; written $FF at the start of a game (Game_StartAtNorthCastle), never read
 enteredLocation         = $0709     ; nonzero after entering a location from the overworld; cleared on returning (provisional)
 prevRegion              = $070A     ; region before the current one; distinguishes Death Mountain from Maze Island
 palaceChrBank           = $070B     ; CHR bank of the current palace, halved; from PalaceChrBanks
@@ -250,16 +247,16 @@ chimneyTimer            = $070E     ; nonzero while Link sinks down a chimney; c
 shieldSpellActive       = $070F     ; nonzero while the shield spell is active: halves damage, changes Link's colors
 reflectSpellActive      = $0710     ; nonzero while the reflect spell is active
 areaBuildPage           = $0717     ; map page (0-3) while building an area's tile map
-ram_071B                = $071B
-ram_071C                = $071C
+columnLastPage          = $071B     ; last page of the area (3): columnPage wraps past it (Scroll_*)
+unused071C              = $071C     ; zeroed when an area is loaded, never read
 attrColumnAddr          = $071D     ; (16-bit, low byte first) PPU address of the attribute column queued for scrolling (Ppu_WriteAttrColumn) (provisional)
 scrollPage              = $071F     ; page of the area the screen is on (Scroll_Update) (provisional)
 drawPage                = $0720     ; page of the columns being drawn as the screen scrolls (provisional)
-ram_0721                = $0721
-ram_0722                = $0722
+columnScroll            = $0721     ; scroll since the last column was drawn: Scroll_DrawColumns starts a column when it reaches $20 (or goes negative) and takes $20 off
+drawAreaColumnsLeft     = $0722     ; columns Mode_DrawArea still draws before the side view starts (from $0F)
 ppuStringSelect         = $0725     ; PPU update string sent by the next NMI; see PpuStringPtrs
 renderingOff            = $0726     ; nonzero to keep rendering off (the NMI leaves PPUMASK rendering bits clear)
-ram_0727                = $0727
+nmiFlag                 = $0727     ; set during side view frames (and by Title_Show, SideView_Start), cleared each Game_RunState; QUIRK: the NMI reads it in a branch whose two outcomes are the same, so it has no effect
 scrollFrozen            = $0728     ; nonzero to stop the screen scrolling
 menusPending            = $0729     ; set by a mode handler so that the next NMI runs Game_UpdateMenus
 scrollXHi               = $072A     ; high byte of the side view horizontal scroll position
@@ -277,10 +274,10 @@ gameModePrev            = $0737     ; gameMode when last checked, to detect chan
 gameStep                = $0738     ; step within gameMode
 gameStepPrev            = $0739     ; gameStep when last checked, to detect changes
 fileStep                = $073B     ; step of the file screen mode (reset with gameStep by Game_ResetStep)
-ram_073C                = $073C
+unused073C              = $073C     ; zeroed when gameState changes (Game_CheckStateChange), never read
 gameSubStep             = $073D     ; step within gameStep; reset when any higher level changes
 fileSubStep             = $073E     ; 0-1: draw the screen, 2: take input
-ram_073F                = $073F
+unused073F              = $073F     ; zeroed at the start of a game (Game_StartAtNorthCastle), never read
 columnDrawStep          = $0740     ; step of drawing the column that is scrolling into view
 linkButtonsPressed      = $0741     ; A and B pressed this frame (JOY_A, JOY_B)
 linkDirHeld             = $0742     ; Left/Right held (JOY_LEFT, JOY_RIGHT), 0 = neither
@@ -307,19 +304,19 @@ fairyEncounter          = $0759     ; 1 in a fairy encounter (overworld encounte
 encounterKind           = $075A     ; kind of the overworld encounter being entered (its sprite's objState), 0 for a fairy or none; 2 and up use the area's second enemy list
 doorDepth               = $075B     ; doors gone through into buildings (Mode_EnterDoor); counts down on the way out, choosing the start page back outside (provisional)
 areaStartPage           = $075C     ; map page at which Link enters the area
-ram_075D                = $075D
+unused075D              = $075D     ; set to 1 at the start of a game (Game_StartAtNorthCastle), never read
 areaMusic               = $075F     ; music for the area being entered, sent to musicRequest when Link appears
-ram_0760                = $0760
+unused0760              = $0760     ; counted up by Game_ResetLives and zeroed by Lives_Blank, never read
 sceneStep               = $0761     ; step of the title's story scroll (Story_RunStep) and of the ending
 bridgeStep              = $0762
 bigDoorCounter          = $0763     ; counts while the big door opens (provisional)
 bigDoorStep             = $0764     ; step of the big door opening; with bigDoorCounter it keeps the menus from running (provisional)
-ram_0765                = $0765
+unused0765              = $0765     ; zeroed every frame of the credits (Credits_Run), never read
 dialogPrinted           = $0766     ; nonzero once a letter of the dialog text has been printed this time (Dialog_WaitForB) (provisional)
 crystalFlashTimer       = $0767     ; frames left of the crystal spot's flashing palette
 ppuMaskExtra            = $0768     ; extra PPUMASK bits ORed in by the game NMI when rendering is on
 areaPrgBank             = $0769     ; PRG bank holding the current world's areas
-ram_076B                = $076B
+unused076B              = $076B     ; set to $0F by bank 5's reset (with SND_CHN), never read
 gameState               = $076C     ; top-level state; see GAME_STATE_* (bank 5 uses it for the title screens)
 gameStatePrev           = $076D     ; gameState when last checked, to detect changes
 areaChrBank             = $076E     ; CHR bank for the current world: twice its PRG bank, or twice palaceChrBank in palaces
@@ -344,9 +341,9 @@ continueCount           = $079F     ; times the continue screen has been shown, 
 secondQuest             = $07A0     ; nonzero for a second quest file (provisional)
 playerName              = $07A1     ; [8] player name, as tile numbers ($F4 = blank)
 raftDirection           = $07A9     ; raft direction: 1 = right, 2 = left
-ram_07AA                = $07AA
+raftArrived             = $07AA     ; nonzero for the overworld setup after the raft lands (Raft_Arrive): Mode_IndexOverworldMap skips the music restart and entry sound, and Mode_EnterLocation the silence
 soundPacer              = $07AB     ; accumulator for Sound_UpdateSometimes
-ram_07AC                = $07AC
+encounterEntered        = $07AC     ; nonzero when Link has bumped into an encounter (Overworld_DrawEncounters): Mode_EnterLocation does not silence the music and Location_Enter keeps the battle music
 atSpecialSpot           = $07AD     ; nonzero when Link entered the region's special spot (SpecialSpotY/X) (provisional)
 attrColumnPending       = $07AE     ; nonzero when attrColumn should be written by the next NMI
 areaPaletteHeader       = $07AF     ; byte 3 of the area header: bits 7-6 sprite palette, bits 5-3 background palette, bits 2-0 background map

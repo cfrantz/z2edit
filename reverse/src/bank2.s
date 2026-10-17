@@ -2597,9 +2597,9 @@ Lizalfos_Ai:
 Lizalfos_Guard:
     ldy     enemyType,x             ; $9B96
     lda     LizalfosRanges,y        ; $9B98  r
-    sta     ram_05E4                ; $9B9B
+    sta     enemyScratch            ; $9B9B
     asl     a                       ; $9B9E
-    sta     ram_05E5                ; $9B9F  2r
+    sta     enemyScratch+1          ; $9B9F  2r
     lda     joypadPressed           ; $9BA2  B just pressed,
     and     #$40                    ; $9BA4
     beq     @testGuard              ; $9BA6
@@ -2652,8 +2652,8 @@ Lizalfos_Guard:
     jsr     Enemy_FaceLink          ; $9BF8  temp15 = dx, y = 0 if right
     lda     temp15                  ; $9BFB
     clc                             ; $9BFD
-    adc     ram_05E4                ; $9BFE  -r <= dx < r?
-    cmp     ram_05E5                ; $9C01
+    adc     enemyScratch            ; $9BFE  -r <= dx < r?
+    cmp     enemyScratch+1          ; $9C01
     bcc     Lizalfos_ChooseGuard    ; $9C04  near: hold and attack
     lda     temp15                  ; $9C06
     clc                             ; $9C08

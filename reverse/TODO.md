@@ -25,7 +25,6 @@ area bank are documented; what is left is mostly routines still marked
 
 ## 6. Loose ends
 
-- 23 RAM bytes still named `ram_XXXX` in `src/ram.inc`.
 - The fairy's refill and flash duration (never observed).
 - A red jar from an enemy list clears its page flag: consequences
   unverified.
