@@ -837,8 +837,8 @@ Ending_Run:
     .word   Curtain_Raise           ; $8BFB
     .word   Credits_Run             ; $8BFD
     .word   Ending_WaitForStart     ; $8BFF
-    .word   Curtain_Run             ; $8C01  (not observed)
-    .word   Ending_SetSecondQuest   ; $8C03  (not observed)
+    .word   Curtain_Run             ; $8C01  after START
+    .word   Ending_SetSecondQuest   ; $8C03
 
 EndingTriforceSprites:
     .byte   $A0, $D6, $01, $78, $A0, $D6, $41, $80                          ; $8C05
@@ -987,10 +987,13 @@ Ending_DrawTriforces:
 ; ---------------------------------------------------------------------------
 ; Ending_Flash
 ;
-; Scene 2: with a sound effect, flash the screen (spellFlash = $E0, as the
-; spells do) until spellFlash runs out.
+; Scene 2: with the spell sound (sfxRequest 4), flash Link's sprite palette
+; ($3F10) through the spell flash colors (sramLinkPalette*, by spellFlash &
+; 3) as the spells do: spellFlash counts down from $E0, one a frame while
+; the PPU buffer has room, and at $80 (96 frames) the flash ends and
+; Ending_Wait follows.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_Flash:
     jsr     Ending_DrawTriforces    ; $8CBB
@@ -1289,10 +1292,12 @@ CurtainEdgeAttr:
 ; ---------------------------------------------------------------------------
 ; Curtain_DrawEdge
 ;
-; Every 8 frames, at the start of a curtain step: blank the row below the
-; curtain and set the attributes under it.
+; Every 8 frames: at the start of a curtain step (curtainPhase 0), queue a
+; blank row (32 x $F4) under the curtain (curtainAddr + $20) and 8 bytes of
+; one attribute (CurtainEdgeAttr, by curtainEdgeCount) at curtainAttrLo,
+; which moves down a row every 4 steps; then advance endingSubStep.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Curtain_DrawEdge:
     lda     frameCounter            ; $8EAE
@@ -1855,13 +1860,14 @@ Credits_FadeOutPage:
 ; ---------------------------------------------------------------------------
 ; Ending_SetSecondQuest
 ;
-; Ending scene step 14, after START is pressed at the end of the credits:
-; mark the file for the second quest (secondQuest = 1; FileSelect_Menu
-; starts it when the file is next loaded), zero the experience, clear the
-; rest of the RAM that is not saved, and go to the next gameState
-; (GameState_SaveAfterEnding).
+; Ending scene step 14, after START is pressed at the end of the credits and
+; the curtain has closed (scene 13): mark the file for the second quest
+; (secondQuest = 1; FileSelect_Menu starts it when the file is next
+; loaded), zero the experience, clear the rest of the RAM that is not
+; saved, and go to the next gameState (GameState_SaveAfterEnding), which
+; saves and returns to the title.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_SetSecondQuest:
     lda     #$01                    ; $921C
@@ -5406,10 +5412,12 @@ Title_Run:
 ;
 ; Title mode 0: clear the work RAM, set the MMC1 control register
 ; (horizontal mirroring, 8K CHR), start the title song (soundMute = 1) unless
-; flutePlayed says it was already started, set up the scroll variables
-; (Title_InitScroll), map CHR bank 0, and blank the screen for mode 1.
+; flutePlayed (here a "title song started" flag) is set, set up the scroll
+; variables (Title_InitScroll), map CHR bank 0, and blank the screen for
+; mode 1.  flutePlayed is always 0 here in the movies: power-on,
+; Title_CheckStart and Ram_ClearExceptSaved clear it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_Init:
     jsr     Ram_ClearWork           ; $A70F
@@ -5589,11 +5597,14 @@ Title_LoadSprites:
 ; ---------------------------------------------------------------------------
 ; Title_AnimateStars
 ;
-; Every 16 frames, cycle the palette of the stars (sprites 26-52).  Every
-; 256 frames, start the shooting star (sprite 27), which falls 2 lines and
-; 3 pixels right every 4 frames until Y $37.
+; Every 16 frames, cycle the palette of the stars (sprites 26-52, keeping
+; their behind-the-background bit).  When frameCounter wraps to 0, start
+; the shooting star (sprite 27, until then an ordinary star), which falls
+; 2 lines and 3 pixels right every 4 frames until Y $37, then is parked at
+; Y $F8.  It stays there until Title_LoadSprites reloads it (at the end of
+; the story), so it falls once per title cycle.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_AnimateStars:
     ldx     #$6B                    ; $A8CF
@@ -5645,9 +5656,9 @@ Title_AnimateStars:
 ; Title_AnimateSparkles
 ;
 ; Every 8 frames, cycle the palette of sprites 53-63 (sparkles below the
-; logo).
+; logo) through palettes 0-3.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_AnimateSparkles:
     ldx     #$2B                    ; $A918
@@ -5739,14 +5750,18 @@ TitleLogoPtrs:
 ; Story_Run
 ;
 ; Title mode 4: the story scroll.  Sets the scroll below the sprite 0 split
-; like Title_Idle and checks START.  After titleDelay, it scrolls the screen
-; up one line every 4 frames, switching nametables every 240 lines, and every
-; 8 lines runs one step of the scene (Story_RunStep), which draws the rows
-; coming into view: 0 Story_ClearTextRows, 1 Story_DrawTextLine,
-; 2 Story_DrawTextAttr, 3 Title_DrawBgRow, 4 Title_DrawBgAttr, 5 Story_End.
-; titleScrollHeld runs the steps without scrolling.
+; like Title_Idle and checks START.  After titleDelay (512 frames), it
+; scrolls the screen up one line every 4 frames, switching nametables every
+; 240 lines, and every 8 lines runs one step of the scene (Story_RunStep),
+; one step every 4 frames until the chain returns to step 0: 0
+; Story_ClearTextRows, 1 Story_DrawTextLine, 2 Story_DrawTextAttr,
+; 3 Title_DrawBgRow, 4 Title_DrawBgAttr, 5 Story_End.  The steps draw the
+; story into nametable 2 and redraw the landscape row by row into the other
+; nametable, moving the split with it.  Once the background has wrapped
+; (titleBgRow 0) and the scroll is at $60 again, step 5 brings the title
+; back.  titleScrollHeld runs the steps without scrolling.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_Run:
     ldy     #$00                    ; $AB6D
@@ -5831,10 +5846,12 @@ Story_RunStep:
 ; ---------------------------------------------------------------------------
 ; Story_Delay
 ;
-; While titleDelay runs: count it down (Story_TickDelay) and keep running
-; the scene steps that are still pending.
+; While titleDelay runs: count it down (Story_TickDelay) and run the scene
+; steps until the first story line is drawn and the chain is back at step
+; 0.  From Title_Idle at scroll $60 this draws the first line, its
+; attributes and background row 0, one step a frame.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_Delay:
     jsr     Story_TickDelay         ; $ABF7
@@ -5874,7 +5891,7 @@ StoryBlankRow:
 ; (the two text rows coming into view) and go to step 1; otherwise go to
 ; step 3, the background.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_ClearTextRows:
     lda     ppuScrollY              ; $AC31
@@ -5950,10 +5967,11 @@ Story_DrawTextLine:
 ; Story_DrawTextAttr
 ;
 ; Scene step 2: after every second line, queue a row of story attributes
-; (StoryAttrRows; titleAttrRow 6 gets the second palette), advancing
-; titleAttrAddr; after the last line, start again at line 0.
+; (StoryAttrRows; titleAttrRow 6, the copyright line, gets the second
+; palette), advancing titleAttrAddr; after the last line, start again at
+; line 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_DrawTextAttr:
     lda     titleTextLine           ; $ACA8
@@ -6010,9 +6028,9 @@ Story_DrawTextAttr:
 ; Scene step 3: queue background row titleBgRow (32 tiles taken from
 ; TitleScreenText) at titleBgAddr and advance it, wrapping to the other
 ; nametable at its end.  After rows 16 and 30 go to step 4 (attributes);
-; otherwise restart at step 0.
+; otherwise restart at step 0.  Row 30 wraps to row 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_DrawBgRow:
     ldx     titleBgRow              ; $ACFA
@@ -6093,9 +6111,10 @@ TitleBgAttrBlank:
 ; Scene step 4: queue 24 bytes of background attributes (from the title's
 ; attribute string) at titleBgAttrAddr and blank ones in the other half,
 ; advance titleBgAttrAddr, and move the sprite 0 split address down by 16
-; rows (switching nametables when it wraps).  Then restart at step 0.
+; rows (switching nametables when it wraps: $2A00, $2000, $2200, ...).
+; Then restart at step 0.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_DrawBgAttr:
     lda     #$14                    ; $AD7C
@@ -6197,9 +6216,11 @@ Title_InitScroll_Done:
 ; Scene step 5: after the story text, scroll the title screen back into
 ; view, redrawing its rows (titleEndStep: 0 Story_RedrawLogoRow,
 ; 1 Story_EndDrawBgRow, 2 Story_EndDrawBgAttr).  When the background is
-; complete, reload the sprites and return to Title_Idle (mode 3).
+; complete, reload the sprites and return to Title_Idle (mode 3).  The
+; branch for a running titleDelay is never taken: only
+; Story_RedrawLogoRow's unreachable wrap sets it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_End:
     lda     ppuNametable            ; $AE15
@@ -6244,11 +6265,12 @@ Story_End:
 ; ---------------------------------------------------------------------------
 ; Story_RedrawLogoRow
 ;
-; Blank the text row coming into view and, when the next logo string
-; (titleLogoString) starts on that row, queue it as well
-; (Story_CopyLogoString).
+; Every 8 lines, blank the text row coming into view and, when the next logo
+; string (titleLogoString) starts on that row, queue it as well
+; (Story_CopyLogoString), until all 7 are drawn.  Its wrap at scroll $F0
+; never runs: Story_Run wraps the scroll first.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_RedrawLogoRow:
     lda     ppuScrollY              ; $AE55
@@ -6375,7 +6397,7 @@ Story_CopyLogoString:
 ; if it asked for them, else back to Story_RedrawLogoRow.  Leaves sceneStep
 ; at 5 (Story_End).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_EndDrawBgRow:
     jsr     Title_DrawBgRow         ; $AF02
@@ -6399,7 +6421,7 @@ Story_EndSetStep:
 ; Draw the background attributes (Title_DrawBgAttr), then back to
 ; Story_RedrawLogoRow.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_EndDrawBgAttr:
     jsr     Title_DrawBgAttr        ; $AF19
@@ -7165,11 +7187,12 @@ FileScreen_DrawFairy:
 ; ---------------------------------------------------------------------------
 ; FileScreen_DrawLinkIcons
 ;
-; Draw a Link sprite (tile $D0) beside each of the three files, 24 lines
-; apart.
+; Draw a Link sprite (tile $D0, sprites 3-5) beside each of the three files,
+; 24 lines apart: at Y $40 and X $28 on the file select screen, Y $2C and
+; X $58 on the register and elimination screens.
 ;
 ; In:      a = Y of the first, y = X
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_DrawLinkIcons:
     ldx     #$08                    ; $B596
@@ -7197,10 +7220,11 @@ FileScreen_DrawLinkIcons:
 ; FileSelect_FindSecondQuest
 ;
 ; Set bit n of temp2 for each file n whose secondQuest is nonzero; the file
-; select screen marks those files with a sprite (tile $D2).
+; select screen marks those files with a sprite (tile $D2, at X $30 beside
+; the file).
 ;
 ; Out:     temp2
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_FindSecondQuest:
     lda     #$00                    ; $B5B5
@@ -8023,12 +8047,13 @@ Save_MarkValid:
 ; ---------------------------------------------------------------------------
 ; Save_RestoreFromBackup
 ;
-; Copy save file a's backup copy to the file, and mark it valid.  Used by
-; the file screens to commit changes made to the backup.
+; Copy save file a's backup copy to the file, marking it
+; SAVE_STATUS_WRITING_FILE while copying and SAVE_STATUS_VALID after.  Used
+; by the file screens to commit changes made to the backup.
 ;
 ; In:      a = save file
 ; Clobbers: a, x, y, temp0-temp13
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_RestoreFromBackup:
     jsr     Save_SetPointers        ; $BA18
@@ -8062,11 +8087,13 @@ Save_RestoreFromBackup:
 ; Save_CopyToBackup
 ;
 ; Copy save file x to its backup copy, for the file screens to display and
-; edit.
+; edit.  It marks the file SAVE_STATUS_WRITING_BACKUP and leaves it so:
+; files only looked at stay $5A, which Save_CheckFiles takes as intact at
+; power-on.
 ;
 ; In:      x = save file
 ; Clobbers: a, y, temp0-temp13
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_CopyToBackup:
     txa                             ; $BA40

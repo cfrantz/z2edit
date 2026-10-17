@@ -14,15 +14,10 @@ area bank are documented; what is left is mostly routines still marked
 - 3. Town conversations (bank 3): every handler confirmed by scenarios
   (`enemy_scenario.py --dialog`) and by both movies replayed with the
   handlers hooked; see docs/world/towns.md.
-
-## 4. Title, story, ending and saves (bank 5)
-
-`Title_Init`, `Title_AnimateStars`, `Title_AnimateSparkles`, the
-`Story_*` routines, `Title_DrawBgRow`, `Title_DrawBgAttr`,
-`Ending_Flash`, `Curtain_DrawEdge`, `Ending_SetSecondQuest`,
-`FileScreen_DrawLinkIcons`, `FileSelect_FindSecondQuest`,
-`Save_RestoreFromBackup`, `Save_CopyToBackup`.  The no-glitch movie plays
-the ending (run on past its end; see the Dark Link page).
+- 4. Title, story, ending and saves (bank 5): checked against the idle
+  title movie, the file select movie, and the no-glitch movie played past
+  its end with START pressed (scenes 13-14, the second quest mark); see
+  docs/systems/title-and-files.md.
 
 ## 5. Sound (bank 6)
 

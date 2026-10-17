@@ -29,9 +29,13 @@ variables in the object slot arrays (the overlays at the end of
 | 3 | `Title_Idle` | the title screen |
 | 4 | `Story_Run` | the story scroll |
 
-In modes 3 and 4, `Title_AnimateStars` cycles the stars' palettes and
-drops a shooting star every 256 frames, and `Title_AnimateSparkles`
-cycles the sprites below the logo.
+In modes 3 and 4, `Title_AnimateStars` cycles the stars' palettes every
+16 frames and `Title_AnimateSparkles` the sprites below the logo every 8.
+When `frameCounter` wraps, one of the stars (sprite 27) becomes a
+shooting star and falls to Y $37, where it is parked off screen.  Only
+`Title_LoadSprites` brings it back, at the end of the story, so it falls
+once per title cycle (frame 262 and frame 4614 of the idle title movie),
+not every 256 frames.
 
 The screen is split with sprite 0.  Above the split the scroll is
 `ppuScrollY`; below it, `Title_Idle` and `Story_Run` busy-wait for the
@@ -69,6 +73,23 @@ The text rows go to the nametables at $2800 (`titleTextAddr`), the
 background rows to $2000 (`titleBgAddr`); each wraps to the other
 nametable at its end (horizontal mirroring, set by `Title_Init`).
 
+Steps run one every 4 frames until the chain is back at step 0, so most
+8-line boundaries queue a background row (step 3) and every second one
+also clears two text rows and types a line.  Before the scroll starts,
+`Story_Delay` runs steps 0-3 once each (from `Title_Idle`, the frame the
+scroll reaches $60), so the first line is ready.  The background rows
+redraw the landscape into the nametable the scroll is moving into, and
+`Title_DrawBgAttr` moves the split address down 16 rows at a time ($2A00,
+$2000, $2200, ...), so the landscape below the split stays put while the
+text scrolls above it.  The copyright line gets the second attribute
+palette (`titleAttrRow` 6).
+
+These were checked against the idle title movie (`build/movies/title_idle.fm2`),
+logging each step with the PPU strings it queued and taking screenshots.
+The story starts at frame 2055 and scrolls from frame 2597.  The title is
+back in mode 3 at frame 4466, with all seven logo strings redrawn
+(frames 4133-4326).
+
 The background rows are not stored separately: `TitleBgRowPtrsLo`/`Hi`
 point at the tiles of the row strings inside `TitleScreenText`, and
 `TitleLogoPtrs` at its logo strings, which `Story_RedrawLogoRow` queues
@@ -86,6 +107,13 @@ again at the end of the story as their rows come into view.
 | 2 | `FileSelect_Menu` | `Register_Menu` / `Eliminate_Menu` |
 | 3 | | `FileScreen_SaveFiles`: copy the backups back to the files |
 | 4 | | `FileScreen_ReturnToSelect` |
+
+`Save_CopyToBackup` marks a file `SAVE_STATUS_WRITING_BACKUP` ($5A) and
+leaves it so, and `Save_RestoreFromBackup` marks it $69 while copying
+back and $A5 (valid) after.  So a file only looked at on the file
+select screen stays $5A, which `Save_CheckFiles` takes as intact at
+power-on (`file_select.fm2`: all three were $5A from frame 62 until the
+register screen saved them on frame 799).
 
 All three screens work on the backup copies (`sramBackupStats`; see
 [Save files](../memory/save-files.md)).  A file is empty when its name is
@@ -152,12 +180,27 @@ movie, where Dark Link falls at frame 253062:
 | 10 | `Curtain_Raise` | 255681 | it rises again; the credits music starts |
 | 11 | `Credits_Run` | 256224 | the credits (`CreditsText`) |
 | 12 | `Ending_WaitForStart` | 260212 | the Triforce; PUSH START TO REPLAY |
-| 13 | `Curtain_Run` | | after START, the curtain closes |
-| 14 | `Ending_SetSecondQuest` | | `secondQuest` = 1; on to `GameState_SaveAfterEnding` |
+| 13 | `Curtain_Run` | (+300) | after START, the curtain closes (200 frames) |
+| 14 | `Ending_SetSecondQuest` | (+500) | `secondQuest` = 1, experience 0; on to `GameState_SaveAfterEnding` |
 
-The movie ends during scene 12, so scenes 13 and 14 have not been run.
-They were missing from the disassembly: the bootstrap ended the scene
-table after scene 12 and left `Ending_SetSecondQuest` as data.
+The 100% movie ends during scene 12.  Scenes 13 and 14 were run with the
+no-glitch movie played to its end (Dark Link falls at frame 164926),
+then no input but a START 300 frames into scene 12: scene 12 began at
+frame 172916 and the START press at frame 173216.  Scene 13 ran until
+frame 173417, then `Ending_SetSecondQuest` ran: `secondQuest` 1,
+experience 0, `gameState` 5.  The title was back on frame 173423
+(`Title_Init`, with the title song).  On the file select screen,
+`FileSelect_FindSecondQuest` returned bit 0 (file 0) and the screen drew
+the second quest mark, tile $D2 at Y $43, X $30, beside that file.  The
+two scenes were missing from the original disassembly: the bootstrap
+ended the scene table after scene 12 and left `Ending_SetSecondQuest` as
+data.
+
+`Ending_Flash` (scene 2) flashes Link's palette like a spell: `spellFlash`
+counts down from $E0 for 96 frames (166508-166604 in that run), then
+`Ending_Wait` gives 96 more.  The curtain is drawn a row at a time;
+every 8 frames `Curtain_DrawEdge` blanks the row under it and sets the
+attributes there.
 
 The credits show 9 pages, each a title and names (`CreditsTextPtrs`; the
 three PROGRAMER pages share one title string).  `Credits_FadeInText`
