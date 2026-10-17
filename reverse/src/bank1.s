@@ -1230,7 +1230,9 @@ ProjectileDrawPtrs_Bank1:
     .word   Projectile_DrawFlip_Bank1, Projectile_DrawLarge_Bank1, Projectile_DrawSpin_Bank1, Projectile_DrawFire_Bank1 ; $95C8
     .word   Enemy_InitNone_Bank1, Enemy_InitNone_Bank1 ; $95D0
 
-; First sprite tile of each enemy type (sramEnemyTiles).
+; The enemy group's sprite tiles (sramEnemyTiles): pairs of tiles, left
+; and right, read by Sprite_DrawEnemyPair at offsets each draw routine
+; chooses for its poses (not one entry per enemy type).
 EnemyTiles_Bank1:
     .byte   $01, $03, $EA, $EC, $05, $07, $F2, $F4, $01, $03, $EA, $0B, $05, $09, $F2, $F4; $95D4
     .byte   $F6, $F8, $F6, $F8, $FA, $F5, $E6, $E8, $EA, $EC, $EE, $F0, $F2, $F4, $0F, $11; $95E4

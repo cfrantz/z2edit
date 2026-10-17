@@ -117,6 +117,13 @@ In the Great Palace's entrance (see [Bubble](bubble.md#great-palace) for
   at $20, $40, $60, $80, $A0, $C0 and $E0, every 32 counts.  It jumped once
   during a wind-up (frame 112, pose 1).
 
+- **Orange Fokka** (unused), the same with type $18:
+  - It began an attack again on the frame it threw (frame 25).
+  - In the air (frames 27-99, after jumping on 26) an attack began every
+    frame, its pose switching between high and low wind-up at random, and
+    it threw nothing until it landed.
+  - It threw on frames 25, 109 and 194, each time on the floor.
+
 - **Shield,** a red Fokka placed at ($A8, $B0), Link moved to $90:
   - A standing stroke on frame 70 set its guard to 1 (high) the next
     frame.

@@ -6507,10 +6507,25 @@ FluteRevealString:
 ; ---------------------------------------------------------------------------
 ; Overworld_CheckSpecialTerrain
 ;
-; Look up the overworld tile at the target position and compare it with a
-; list of special tiles (SpecialTerrainTiles).
+; After the hammer or the flute (OverworldBank::UseFlute,
+; Overworld_CheckSpecialTerrainInBank): look up the overworld tile at the
+; target (temp14),y and, if it is one of SpecialTerrainTiles (x from 3
+; down), replace it by SpecialTerrainNewTiles,x:
+;   0  a rock ($0E, the hammer) becomes road ($04);
+;   1  the river devil ($0F, the flute) becomes road, with the fanfare;
+;   2  East Hyrule's desert spot (flute at Y $64, X $2D) becomes $02, and
+;      palace 6's location ($35) gets its Y ($E6);
+;   3  a forest tile ($06, the hammer) becomes $00 and, at Y $51, X $3E in
+;      East Hyrule, New Kasuto appears: its tiles $5C-$5F are queued, the
+;      fanfare plays, and its location ($31) gets its Y ($D1).
+; Tiles 1-3 only change in East Hyrule (region 2).  With no match,
+; ppuStringSelect is set to 0 (nothing drawn).
 ;
-; Status:  provisional
+; Checked over the 100AK movie: rocks broken in West Hyrule and on Death
+; Mountain, the river devil (frame 194789), New Kasuto (199214) and palace
+; 6 (209318).
+;
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_CheckSpecialTerrain:
     jsr     OverworldBank::GetTerrain ; $DF79
@@ -10877,7 +10892,10 @@ Mmc1_SetPrgBank:
 ;   $FFF8  licensee (1 = Nintendo)
 ;   $FFF9  header checksum ($FFF2-$FFF9 sum to zero)
 ;
-; Status:  provisional (field meanings from NESdev; the checksums verified)
+; The field meanings are NESdev's; the values check out: the title is 16
+; bytes ($FFF7 = $0F), the CHR checksum matches, and $FFF2-$FFF9 sum to 0.
+;
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RomHeader:
     .byte   "LEGEND OF ZELDA2"                                              ; $FFE0

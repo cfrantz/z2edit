@@ -29,14 +29,11 @@ area bank are documented; what is left is mostly routines still marked
 - The fairy's refill and flash duration (never observed).
 - A red jar from an enemy list clears its page flag: consequences
   unverified.
-- The `EnemyTiles_Bank1` header is inaccurate.
 - The meaning of `extraSpriteAttrs` (Octorok) is provisional.
 - Helmethead's head strike knocking off a helmet: confirmed only from the
   no-glitch movie, not by a scenario.
 - The unhorsed Rebonack's facing is left at 0 when he spawns (minor, not
   marked).
-- The orange Fokka (unused) would restart its attack every frame in the
-  air (attack mask 0).
 
 ## 7. Larger documentation
 

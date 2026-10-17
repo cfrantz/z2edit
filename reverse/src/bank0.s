@@ -3027,14 +3027,17 @@ Spell_FairyEffect:
 ; ---------------------------------------------------------------------------
 ; Spell_TurnEnemiesToBots
 ;
-; The SPELL spell in a palace: clear its bit in spellActive and turn every
-; enemy on the screen (except those with sramEnemyDamage bit 4) into a
-; Bot (enemy type 4), stopped and with no hit points.
+; The SPELL spell outside the towns (West Hyrule's side view areas, the
+; palaces and the Great Palace; Spell_SpellEffect): clear its bit in
+; spellActive and turn every enemy on the screen (except those with
+; sramEnemyDamage bit 4) into a Bot (enemy type 4), stopped and with no
+; hit points.
 ;
-; Casting SPELL in a palace reaches here (checked with tools/play.py; no
-; enemies were on the screen to see them change).
+; Checked in palace 1: an on-screen type $10 became a Bot with 0 hit
+; points; a type $13 (bit 4 set) and a type $11 off the screen were left
+; as they were.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Spell_TurnEnemiesToBots:
 ; (code below not executed in the test movies)
