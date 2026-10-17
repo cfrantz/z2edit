@@ -20,7 +20,7 @@ with N in header byte 3 bits 2-0 is drawn over).
 --by-routine instead lists, for each routine, the areas and objects that
 use it (the first few of each), which is what to load to test it.
 GROUP 2 is the second table (AreaBank::AreaPtrs2: Death Mountain, Maze
-Island, palaces 3/4/6).
+Island, palaces 3/4/6); banks 3 and 5 have none.
 """
 import argparse
 import json
@@ -42,6 +42,8 @@ def main():
     p.add_argument("--area", type=lambda s: int(s, 0))
     a = p.parse_args()
 
+    if a.group == 2 and a.bank in (3, 5):
+        p.error("banks 3 and 5 have only one group of areas")
     rom = open(ROM, "rb").read()
     prg = rom[16:16 + 8 * 0x4000]
     labels = {}

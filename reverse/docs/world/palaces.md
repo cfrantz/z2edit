@@ -43,11 +43,56 @@ bird knight statue), clouds and the crystal statue
 and Zelda's bed (`Palace_DrawSleepingZelda`, in the ending's room).  The
 names follow z2edit's palace render configs.
 
+| Large | Bank 4 (palaces 1-6) | Bank 5 (Great Palace) |
+|-------|----------------------|-----------------------|
+| $1x-$5x | row (size + 1 wide) | row |
+| $6x, $7x | two rows | row |
+| $8x-$Ax | two rows | two rows |
+| $Bx | column (size + 1 high) | two rows |
+| $Cx | pillar: the main tile over size of the second | two rows |
+| $Dx | pillar | column |
+| $Ex | pillar | column |
+| $Fx | pit: $40, size + 1 wide, down to row $C | pillar ($46 over $47) |
+| $1x-$4x on row $F | lava: $83 on row $B, $84 on row $C | lava: $83 on row $A, $84 below |
+| $5x on row $F | the elevator's column | the elevator's column |
+
+| Small | Bank 4 | Bank 5 |
+|-------|--------|--------|
+| $00 | window, $80 over $81 | window, $80 over $81 |
+| $01 | "unicorn head" $46 | "unicorn head" $44 |
+| $02 | "rat head" $45 | "rat head" $43 ($02-$04) |
+| $03, $04 | the crystal statue (4 x 5, `CrystalStatueTiles`) | (rat head) |
+| $05 | the locked door's column (also $06 in bank 4) | the locked door's column |
+| $06 | | the elevator shaft: $40 down to row $C |
+| $07 | large cloud, $C2 $C3 | large cloud |
+| $08, $0A-$0F | small cloud, $C2 $C4 | small cloud ($08, $0B-$0F) |
+| $09 | statue, $49 over $4A | Zelda asleep, $86 $87 |
+| $0A | | statue, $4A over $4B |
+
+The two banks' head decorations are named after z2edit, which swaps them
+between the banks.  Each bank's `PalaceObjectTiles_*` holds the tiles of
+its large objects, a pair per type.  Floors come from
+`PalaceFloorRecords_*`, 9 bytes per background type.
+
+These were checked against the tile maps the game builds
+(`tools/area_dump.py`; see [Side view areas](areas.md#checking-objects)).
+The areas were palaces 1, 2 and 5's areas $00, $04, $09, $0D, $1A and
+$27; palaces 3, 4 and 6's $02, $05 and $0A (`--set currentWorld=4`); and
+the Great Palace's $00, $03, $08, $09, $0A and $3D:
+
+```
+PAT=areaPrgBank=4,currentRegion=0,currentWorld=3,townCode=4,palaceCode=0,areaLocation=0x34,areaId=0,areaStartPage=0,areaEntrySide=0,prevRegion=0
+tools/area_dump.py --movie build/movies/file_select.fm2 --at $PAT --until currentWorld=3 --areas 0x00,0x04,0x09,0x0D,0x1A,0x27
+tools/area_dump.py --movie build/movies/file_select.fm2 --at $PAT --until currentWorld=3 --set currentWorld=4 --areas 0x0A,0x05,0x02
+GP=areaPrgBank=5,currentRegion=2,currentWorld=5,townCode=4,palaceCode=2,areaLocation=0x36,areaId=0,areaStartPage=0,areaEntrySide=0,prevRegion=2
+tools/area_dump.py --movie build/movies/file_select.fm2 --at $GP --until currentWorld=5 --areas 0x00,0x03,0x08,0x09,0x0A,0x3D
+```
+
 ## Bosses and the Crystal
 
 A palace's boss (`Boss_UpdateIntro`) freezes the scroll and starts the
-boss music when Link reaches page 1 of its room; when it dies, sparks fly
-from it (`Boss_SpawnDeathSpark_Bank4`, from `Enemy_DieStep`), the other
+boss music when Link reaches page 1 of its room; when it dies, sparks appear
+around it (`Boss_SpawnDeathSpark_Bank4`, from `Enemy_DieStep`), the other
 enemies are destroyed and the music stops (song $80, which every world
 leaves empty).
 

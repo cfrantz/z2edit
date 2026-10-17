@@ -94,40 +94,26 @@ Area_DrawSmallObject_Bank5:
     .word   Palace_DrawSmallCloud_Bank5 ; $814D
     .word   Palace_DrawSmallCloud_Bank5 ; $814F
     .word   Palace_DrawSmallCloud_Bank5 ; $8151
-; End of the jump table: data follows.
-    .byte   $42, $42                                                        ; $8153
-; (unreferenced: $8155-$8155, 1 bytes)
-    .byte   $4C                                                             ; $8155
-    .byte   $4C, $42, $42, $4C, $4C, $4C, $40, $40                          ; $8156
-; (unreferenced: $815E-$815E, 1 bytes)
-    .byte   $4C                                                             ; $815E
-    .byte   $88, $40                                                        ; $815F
-; (unreferenced: $8161-$8161, 1 bytes)
-    .byte   $40                                                             ; $8161
-    .byte   $4C, $4C, $88, $40, $40                                         ; $8162
-; (unreferenced: $8167-$8167, 1 bytes)
-    .byte   $48                                                             ; $8167
-    .byte   $C5, $40                                                        ; $8168
-; (unreferenced: $816A-$816A, 1 bytes)
-    .byte   $40                                                             ; $816A
-    .byte   $48, $48, $C5, $40, $40                                         ; $816B
-; (unreferenced: $8170-$8170, 1 bytes)
-    .byte   $4C                                                             ; $8170
-    .byte   $4C, $40                                                        ; $8171
-; (unreferenced: $8173-$8173, 1 bytes)
-    .byte   $40                                                             ; $8173
-    .byte   $4C, $4C, $4C                                                   ; $8174
+; Floor records, one per background type (header byte 2 bits 6-4), found by
+; PalaceFloorRecordsLo_Bank5: the 8 tiles Area_DrawFloorColumn picks by a
+; floor pattern's 3-bit codes, then the type's floorTile (byte 8).
+PalaceFloorRecords_Bank5:
+    .byte   $42, $42, $4C, $4C, $42, $42, $4C, $4C, $4C             ; $8153  background type 0
+    .byte   $40, $40, $4C, $88, $40, $40, $4C, $4C, $88             ; $815C  background type 1
+    .byte   $40, $40, $48, $C5, $40, $40, $48, $48, $C5             ; $8165  background type 2
+    .byte   $40, $40, $4C, $4C, $40, $40, $4C, $4C, $4C             ; $816E  background type 3
 
 PalaceFloorRecordsLo_Bank5:
-    .byte   $53, $5C, $65, $6E                                              ; $8177
+    .byte   $53, $5C, $65, $6E                                      ; $8177  low bytes of PalaceFloorRecords_Bank5 + 9 * type
 
 ; ---------------------------------------------------------------------------
 ; Palace_SetFloorTiles_Bank5
 ;
 ; Set up the floor tile (floorTile) from the background type (areaTileSet):
-; byte 8 of its record.  Bank 5 (the Great Palace), called by Area_SetFloorTiles.
+; byte 8 of its record (PalaceFloorRecords_Bank5).  Bank 5 (the Great
+; Palace), called by Area_SetFloorTiles.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_SetFloorTiles_Bank5:
     ldx     areaTileSet             ; $817B
@@ -140,21 +126,34 @@ Palace_SetFloorTiles_Bank5:
     sta     floorTile               ; $818B
     rts                             ; $818E
 
+; Tiles of each large object (Palace_GetObjectTiles_Bank5), a pair per
+; dispatch index: objectTile, then the second tile (temp0; the column of a
+; pillar, the lower row of two rows).
 PalaceObjectTiles_Bank5:
-    .byte   $4D                                                             ; $818F
-    .byte   $4D, $4C, $4C, $4E, $4E, $C6, $C6, $48, $48, $85, $85, $50, $50, $45, $4F, $4C; $8190
-    .byte   $4C, $C0, $C1, $49, $49                                         ; $81A0
-; (unreferenced: $81A5-$81A6, 2 bytes)
-    .byte   $4E, $4E                                                        ; $81A5
-    .byte   $4E, $4E, $82, $82, $46, $47                                    ; $81A7
+    .byte   $4D, $4D                                                ; $818F  $1x row
+    .byte   $4C, $4C                                                ; $8191  $2x row
+    .byte   $4E, $4E                                                ; $8193  $3x row
+    .byte   $C6, $C6                                                ; $8195  $4x row
+    .byte   $48, $48                                                ; $8197  $5x row
+    .byte   $85, $85                                                ; $8199  $6x row
+    .byte   $50, $50                                                ; $819B  $7x row
+    .byte   $45, $4F                                                ; $819D  $8x two rows
+    .byte   $4C, $4C                                                ; $819F  $9x two rows
+    .byte   $C0, $C1                                                ; $81A1  $Ax two rows
+    .byte   $49, $49                                                ; $81A3  $Bx two rows
+    .byte   $4E, $4E                                                ; $81A5  $Cx two rows
+    .byte   $4E, $4E                                                ; $81A7  $Dx column
+    .byte   $82, $82                                                ; $81A9  $Ex column
+    .byte   $46, $47                                                ; $81AB  $Fx pillar
 
 ; ---------------------------------------------------------------------------
 ; Palace_DrawObjectRow_Bank5
 ;
-; Large objects drawn as one row of the object's width (areaObjectType &
-; $0F, plus one) in its tile: bricks, blocks, bridges and the like.
+; Large objects $1x-$7x: a row of the object's width (size + 1) in its
+; main tile (PalaceObjectTiles_Bank5).
 ;
-; Status:  provisional
+; In:      x = dispatch index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectRow_Bank5:
     jsr     Palace_GetObjectTiles_Bank5 ; $81AD
@@ -163,9 +162,11 @@ Palace_DrawObjectRow_Bank5:
 ; ---------------------------------------------------------------------------
 ; Palace_DrawObjectTwoRows_Bank5
 ;
-; Large objects of two rows: the main tile, then the second tile below.
+; Large objects $8x-$Cx: a row of the object's width in its main tile and
+; the same row below in its second tile.
 ;
-; Status:  provisional
+; In:      x = dispatch index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectTwoRows_Bank5:
     jsr     Palace_DrawObjectRow_Bank5 ; $81B3
@@ -196,9 +197,11 @@ Palace_FillObjectRow_Bank5:
 ; ---------------------------------------------------------------------------
 ; Palace_DrawObjectColumn_Bank5
 ;
-; Large objects drawn as a column (the object's size counts down).
+; Large objects $Dx-$Ex: a column of size + 1 of the main tile, down from
+; the object's row.
 ;
-; Status:  provisional
+; In:      x = dispatch index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectColumn_Bank5:
     jsr     Palace_GetObjectTiles_Bank5 ; $81D1
@@ -207,9 +210,11 @@ Palace_DrawObjectColumn_Bank5:
 ; ---------------------------------------------------------------------------
 ; Palace_DrawObjectPillar_Bank5
 ;
-; Large objects with a top tile over a column of the second tile.
+; Large object $Fx: the main tile ($46), with a column of size tiles of
+; the second ($47) below it.
 ;
-; Status:  provisional
+; In:      x = dispatch index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectPillar_Bank5:
     jsr     Palace_GetObjectTiles_Bank5 ; $81D7
@@ -277,17 +282,17 @@ Palace_GetObjectTiles_Bank5:
 ; ---------------------------------------------------------------------------
 ; Palace_DrawLava_Bank5
 ;
-; Large extras $10-$40 on row $F: lava, the object's width from row
-; $A: a row of tile $83, then tile $84 down to row $C.
+; Large extras $1x-$4x (row $F): lava, the object's width (size + 1): $83
+; on row $A, and $84 on rows $B and $C (one row higher than bank 4's).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawLava_Bank5:
     lda     areaBuildPos            ; $821F
     and     #$0F                    ; $8222
-    ora     #$A0                    ; $8224
+    ora     #$A0                    ; $8224  row $A:
     sta     areaBuildPos            ; $8226
-    lda     #$83                    ; $8229
+    lda     #$83                    ; $8229  $83,
     sta     objectTile              ; $822B
 
 @loop:
@@ -301,9 +306,9 @@ Palace_DrawLava_Bank5:
     jsr     AreaMap_PutTileRight    ; $823A
     dex                             ; $823D
     bpl     @loop2                  ; $823E
-    lda     #$84                    ; $8240
+    lda     #$84                    ; $8240  then $84
     sta     objectTile              ; $8242
-    jsr     AreaMap_NextBuildRow    ; $8245
+    jsr     AreaMap_NextBuildRow    ; $8245  down to row $C
     and     #$F0                    ; $8248
     cmp     #$D0                    ; $824A
     bcc     @loop                   ; $824C
@@ -380,38 +385,39 @@ Palace_DrawDecoration_Bank5:
 ; ---------------------------------------------------------------------------
 ; Palace_DrawElevatorShaft
 ;
-; Small object $06: background tile $40 from the object's row down to row
-; $C.
+; Small object $06: the elevator's shaft, the background tile $40 in the
+; object's column from its row down to row $C (placed twice, for the two
+; columns of an elevator).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawElevatorShaft:
     jsr     AreaMap_GetPagePtr      ; $828F
 
 @loop:
-    lda     #$40                    ; $8292
+    lda     #$40                    ; $8292  background
     jsr     AreaMap_PutTileDown     ; $8294
     and     #$F0                    ; $8297
-    cmp     #$D0                    ; $8299
+    cmp     #$D0                    ; $8299  down to row $C
     bcc     @loop                   ; $829B
     rts                             ; $829D
 
 ; ---------------------------------------------------------------------------
 ; Palace_DrawSleepingZelda
 ;
-; Small object $09: Zelda asleep on her bed, tiles $86 and $87 (the room
-; of the ending).
+; Small object $09: Zelda asleep on her bed, $86 and $87 side by side (room
+; $3D, the ending's).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawSleepingZelda:
     jsr     AreaMap_GetPagePtr      ; $829E
     ldx     #$01                    ; $82A1
-    lda     #$86                    ; $82A3
+    lda     #$86                    ; $82A3  $86,
     jmp     @loc_82AA               ; $82A5
 
 @loop:
-    lda     #$87                    ; $82A8
+    lda     #$87                    ; $82A8  then $87
 
 @loc_82AA:
     sta     (temp14),y              ; $82AA
@@ -433,10 +439,12 @@ Palace_DrawSmallCloud_Bank5:
 ; ---------------------------------------------------------------------------
 ; Palace_DrawCloud_Bank5
 ;
-; Draw a cloud: tile $C2 and PalaceCloudTiles_Bank5[x] to its right.
+; Small objects $07 (large cloud) and $08, $0B-$0F (small): $C2 and, to its
+; right, $C3 (large) or $C4 (small, PalaceCloudTiles_Bank5); in the
+; entrance and the outdoor rooms.
 ;
 ; In:      x = 0 large, 1 small
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawCloud_Bank5:
     jsr     AreaMap_GetPagePtr      ; $82B9
