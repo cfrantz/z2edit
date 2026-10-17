@@ -18,14 +18,10 @@ area bank are documented; what is left is mostly routines still marked
   title movie, the file select movie, and the no-glitch movie played past
   its end with START pressed (scenes 13-14, the second quest mark); see
   docs/systems/title-and-files.md.
-
-## 5. Sound (bank 6)
-
-The 8 provisional routines (`TitleSq1_VibratoSfx`, `TitleSq2_VibratoSfx`,
-`TitleMusic_PlayNotes`, `Sq1_VibratoSfx`, `Sfx_SweepStep32`,
-`Sfx_StopSq1AndShared`, `Sfx_StartSharedOnNoise`,
-`Sfx_StartSharedOnSq1`), and the audio documentation phase
-(`docs/audio/`).
+- 5. Sound (bank 6): the 8 routines confirmed from APU write logs (the
+  title and file select movies, and effects started in scenarios with
+  `enemy_scenario.py --apu`); docs/audio/engines.md has a Sound Effects
+  section.
 
 ## 6. Loose ends
 

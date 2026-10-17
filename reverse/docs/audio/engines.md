@@ -68,6 +68,39 @@ spot request it to stop the music before their own.  While an effect plays it ho
 (`sq1Sfx`, `sq2Sfx`, `noiseSfx`, `sharedSfxOnSq1`, `sharedSfxOnNoise`)
 and the music on that channel is not played.
 
+## Sound Effects
+
+Each effect has a frame counter and is stepped once a frame by its
+channel's handler (`Sfx_UpdateSq1`, `Sfx_UpdateSq2`, `Sfx_UpdateNoise`,
+`Sfx_UpdateShared`, `Sfx_UpdateDmc`).  The shared effects take pulse 1 or
+the noise channel (`Sfx_StartSharedOnSq1`, `Sfx_StartSharedOnNoise`).  A
+new shared effect replaces the playing one and silences the channel it no
+longer uses.  Pulse 1 effect $01 (`Sfx_StopSq1AndShared`) ends the shared
+and DMC effects and silences pulse 1 and the noise; the music takes
+pulse 1 back the same frame.
+
+Effects waver like the music (`Sq1_VibratoSfx`): the period's low byte is
+the note's ±2, by bit 2 of the effect's frames left.  Sweeping effects
+(the Great Palace barrier, two pulse 2 effects) move their pitch by a
+fixed fraction of itself each frame (`Sfx_SweepStep32`, `16`, `8`), so
+the barrier's period falls by 16, then 12, then 8.
+
+These were checked by starting effects in a town room and logging the
+APU writes (`tools/enemy_scenario.py --apu`, with `--poke` and
+`--poke-at` to set the requests):
+
+```
+TA=areaPrgBank=3,currentRegion=0,currentWorld=1,townCode=0,palaceCode=0xfe,areaLocation=0x32,areaStartPage=0,areaEntrySide=0,prevRegion=0
+tools/enemy_scenario.py --movie build/movies/file_select.fm2 --at $TA,areaId=0x1f --until currentWorld=1 \
+    --after 200 --clear --poke sfxRequest=0x60 --poke-at 3:sfxRequest=0xC0 --poke-at 12:sfxRequest=0x60 \
+    --apu 4000,4002,4003,400C,400E --frames 30
+```
+
+The text letter ($60, noise) started.  On frame 3 the fairy ($C0, pulse
+1) replaced it and set the noise volume to $10.  On frame 12 the text
+letter came back and set pulse 1's to $10.  The fairy's period low byte
+alternated $78 and $74 every 4 frames.
+
 ## Gameplay Music
 
 `Music_Update` starts the requested song (`Music_Start`) or plays the
@@ -141,4 +174,11 @@ the phrase's row of `TitleNoteLengths`), and the others are pitches
 notes 8 frames later and both swell (`titleEcho`, `titleSq2Swell`).
 
 The title engine's sound effects are the file screens' cursor sounds
-(`TitleSfx_Update`).
+(`TitleSfx_Update`), played on both pulses with the same vibrato
+(`TitleSq1_VibratoSfx`, `TitleSq2_VibratoSfx`).
+
+These were checked by logging the APU writes in the idle title movie and
+the file select movie.  In the intro, pulse 1 played each of pulse 2's
+pitches 8 frames later ($6A, $70, $8D, $BD, ...).  The two pulses' peak
+volume rose from 3 to 15 over the first 384 frames.  The name cursor's
+period low byte went $9F+2, then $9D, as bit 2 of `titleSfxTimer` changed.

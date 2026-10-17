@@ -173,10 +173,13 @@ TitleMusic_NoteLength:
 ; ---------------------------------------------------------------------------
 ; TitleSq1_VibratoSfx
 ;
-; Vibrato on pulse 1 from the sound effect's frames left, or (from
-; TitleSq1_Vibrato) from pulse 1's note.
+; Vibrato on pulse 1 for a title sound effect: the period's low byte is
+; the note's (titleSq1TimerLo) + 2 or - 2 by bit 2 of the effect's frames
+; left (titleSfxTimer), so it wavers every 4 frames.  TitleSq1_Vibrato
+; uses pulse 1's note timer instead; the fall-through to it never happens
+; (the timer is nonzero while an effect plays).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleSq1_VibratoSfx:
     lda     titleSfxTimer           ; $815A
@@ -193,10 +196,10 @@ TitleSq1_VibratoA:
 ; ---------------------------------------------------------------------------
 ; TitleSq2_VibratoSfx
 ;
-; Vibrato on pulse 2 from the sound effect's frames left, or (from
-; TitleSq2_Vibrato) from pulse 2's note.
+; Vibrato on pulse 2 for a title sound effect, as TitleSq1_VibratoSfx (from
+; titleSq2TimerLo); TitleSq2_Vibrato uses pulse 2's note timer.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleSq2_VibratoSfx:
     lda     titleSfxTimer           ; $8167
@@ -574,10 +577,11 @@ TitleMusic_LoadPhraseFar:
 ; phrase (pulse 2) or loops the part (noise, to titleNoiseLoop); others are
 ; pitches (TitlePeriods; $02 is a rest).  The pulses follow
 ; TitleEnvelopes and waver (vibrato); in the intro, pulse 1 repeats pulse
-; 2's note 8 frames later (titleEcho), and both swell.  The noise plays
-; TitleDrums.  The pulses give way to a title sound effect (titleSfx).
+; 2's note 8 frames later (titleEcho), and both swell (peak volume 3 rising
+; to 15 over about 384 frames).  The noise plays TitleDrums.  The pulses
+; give way to a title sound effect (titleSfx).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleMusic_PlayNotes:
     lda     titleEcho               ; $8347
@@ -1186,10 +1190,12 @@ Music_NoteDuration:
 ; ---------------------------------------------------------------------------
 ; Sq1_VibratoSfx
 ;
-; Vibrato on pulse 1 for a sound effect, from its frames left ($07F3, or
-; $07F9).
+; Vibrato on pulse 1 for a sound effect: the period's low byte is sq1TimerLo
+; + 2 or - 2 by bit 2 of the shared effect's frames left (sharedSfxTimer;
+; the fairy's effect alternates $78 and $74 every 4 frames).  The
+; fall-back to sq1SfxTimer never runs: only shared effects call it.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sq1_VibratoSfx:
     lda     sharedSfxTimer          ; $907F
@@ -1286,11 +1292,13 @@ Sound_StopAll:
 ;
 ; Step a sound effect's pitch: return y + a / 32 if sweepUp is set, else
 ; y - a / 32 (the step at least 1).  Sfx_SweepStep16 and Sfx_SweepStep8
-; divide by 16 and 8.
+; divide by 16 and 8.  Every caller passes the pitch itself in both a and
+; y, so it moves by a fixed fraction of itself each frame (the barrier's
+; period falls by 16, then 12, then 8).
 ;
-; In:      a = the effect's frames left, y = the current value
+; In:      a, y = the current value
 ; Out:     a = the new value
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_SweepStep32:
     lsr     a                       ; $90CB
@@ -1481,9 +1489,10 @@ Sfx_UpdateDmc:
 ; Sfx_StopSq1AndShared
 ;
 ; Pulse 1 effect $01: end the shared and DMC effects, silence pulse 1 and
-; the noise channel, and go on with the other requests.
+; the noise channel, and go on with the other requests.  The music takes
+; pulse 1 back the same frame.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_StopSq1AndShared:
     ldx     #$00                    ; $929C
@@ -2207,8 +2216,8 @@ BossDeathStepTimes:
 ; Start shared effect y on the noise channel (sharedSfxOnNoise), silencing
 ; pulse 1 if the previous shared effect had it.
 ;
-; In:      y = effect, a/x = its parameters ($07F3, $07F2)
-; Status:  provisional
+; In:      y = effect, a = frames (sharedSfxTimer), x = sharedSfxStep
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_StartSharedOnNoise:
     sty     sharedSfxRecent         ; $9794
@@ -2235,8 +2244,8 @@ Sfx_StartSharedOnNoise:
 ; Start shared effect y on pulse 1 (sharedSfxOnSq1), silencing the noise
 ; channel if the previous shared effect had it.
 ;
-; In:      y = effect, a/x = its parameters ($07F3, $07F2)
-; Status:  provisional
+; In:      y = effect, a = frames (sharedSfxTimer), x = sharedSfxStep
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_StartSharedOnSq1:
     sty     sharedSfxRecent         ; $97BA

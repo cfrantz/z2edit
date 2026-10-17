@@ -21,6 +21,7 @@ the takeover:
               left) overrides the direction.
   --link      moves Link (the screen does not scroll to follow).
   --poke      writes VAR=VALUE (a symbol, NAME+k, or hex address).
+  --poke-at   K:VAR=VALUE writes it at frame K instead.
 
 Then it runs --frames frames, printing one line per frame for each enemy
 slot in --log (default: the spawned slots) as seen at the start of that
@@ -30,6 +31,8 @@ in flight (objState+7 = its type), at the start of each frame.  --shot K saves b
 --dump K:ADDR:LEN prints memory (LEN hex bytes) at frame K.
 --dialog prints each town conversation's text as it starts printing,
 with the person and dialogTextPtr, townFlags and techniques.
+--apu REG,... logs each write to those APU registers (hex, e.g.
+4000,4002,4003) after the takeover, with the writing routine.
 
 Values are hex unless noted.  Velocities are 4.4 fixed point.
 """
@@ -93,6 +96,7 @@ def main():
     p.add_argument("--link")
     p.add_argument("--approach", help="before the takeover, walk Link right (invincible, with --clear applied) until his X >= this")
     p.add_argument("--poke", action="append", default=[])
+    p.add_argument("--poke-at", action="append", default=[], help="K:VAR=VALUE: --poke at frame K")
     p.add_argument("--fill", action="append", default=[],
                    help="X0:X1:ROW[:SRC]: copy map row SRC (default $C0, solid) to row ROW from X0 to X1, "
                         "e.g. a row of air to dig out a floor; not drawn")
@@ -106,6 +110,7 @@ def main():
     p.add_argument("--dump", action="append", default=[],
                    help="K:ADDR:LEN: print LEN bytes of memory from ADDR (a symbol, NAME+k, or hex) at frame K")
     p.add_argument("--dialog", action="store_true", help="print each town conversation's text")
+    p.add_argument("--apu", help="APU registers to log writes to, e.g. 4000,4002,4003")
     p.add_argument("--out", default=os.path.join(HERE, "../build/snap"))
     a = p.parse_args()
     if (a.frame is None) == (a.until is None):
@@ -203,6 +208,16 @@ def main():
 
     if a.dialog:
         sym.break_at("Dialog_PrintText", on_print)
+
+    def on_apu(reg):
+        def cb(cpu, addr, value):
+            if state["start"] is not None:
+                print(f"{k():5} APU ${reg:04X}={value:02X} {sym.name(cpu.pc)}")
+            return value
+        return cb
+
+    for reg in (a.apu.split(",") if a.apu else []):
+        emu.set_write_callback(int(reg, 16), on_apu(int(reg, 16)))
 
     rom = open(a.rom, "rb").read()
 
@@ -328,6 +343,11 @@ def main():
             Image.open(bmp).convert("RGB").save(path)
             os.remove(bmp)
             print(f"{k() - 1:5} screenshot {path}")
+        for spec in a.poke_at:
+            pk, _, rest = spec.partition(":")
+            if k() == int(pk):
+                var, _, value = rest.partition("=")
+                wr(resolve(sym, var), int(value, 0))
         for spec in a.dump:
             dk, addr, n = spec.rsplit(":", 2)
             if k() - 1 == int(dk):
