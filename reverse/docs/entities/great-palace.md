@@ -31,12 +31,12 @@ own colors (`FireOctorok_Draw`).
 | $15 | [Fast Bubble](enemies/bubble.md) | 255 | 20 | 3 | - | immune to Thunder, comes back | `GpBubble_Ai` |
 | $16 | [Orange Skull Head](enemies/skull-head.md) | 96 | 20 | 3 | 1 | touch drains 10 exp, immune to Thunder, comes back | `GpSkullHead_Ai` |
 | $17 | [Large Bubble](enemies/bubble.md) | 255 | 0 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, comes back | `GpBubble_Ai` |
-| $18 | Orange Fokka | 0 | 70 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
-| $19 | Red Fokka | 48 | 70 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
-| $1A | Blue Fokka | 96 | 100 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
+| $18 | [Orange Fokka](enemies/fokka.md) | 0 | 70 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
+| $19 | [Red Fokka](enemies/fokka.md) | 48 | 70 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
+| $1A | [Blue Fokka](enemies/fokka.md) | 96 | 100 | 5 | - | blocks Link's projectiles, immune to SPELL | `Fokka_Ai` |
 | $1B | (unused) | 0 | 0 | 0 | - | touch drains 10 exp | `$9E66` |
 | $1C | (unused) | 2 | 0 | 0 | - | touch drains 10 exp | none (its AI pointer, $9E67, is a byte of `FokkeruSpeeds`) |
-| $1D | Fokkeru | 144 | 200 | 4 | - | blocks Link's projectiles, immune to SPELL | `Fokkeru_Ai` |
+| $1D | [Fokkeru](enemies/fokkeru.md) | 144 | 200 | 4 | - | blocks Link's projectiles, immune to SPELL | `Fokkeru_Ai` |
 | $1E | [King Bot](enemies/king-bot.md) | 56 | 0 | 3 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `KingBot_Ai` |
 | $1F | (unused) | 0 | 3 | 1 | - |  | `$0000` |
 | $20 | [Barrier](enemies/barrier.md) | 0 | 3 | 6 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Barrier_Ai` |
@@ -54,14 +54,15 @@ splits into two fast bubbles.
 **[Skull head](enemies/skull-head.md)** ($16, `GpSkullHead_Ai`): like
 the palace skull heads, with 96 hit points and a deeper dive.
 
-**Fokkas** ($18 orange, $19 red, $1A blue; `Fokka_Ai`): bird knights
-that fight like Iron Knuckles: they guard at the height Link attacks or
-jumps, attack high or low, throw their sword (projectile type 5), and
-jump at random (1 frame in 32 on the ground).
+**[Fokkas](enemies/fokka.md)** ($18 orange, $19 red, $1A blue;
+`Fokka_Ai`): bird knights built on the Iron Knuckle's code.  They leap
+at Link at random, guard at the height of his strokes, and throw their
+sword high or low every 64 frames (red) or 32 (blue).
 
-**Fokkeru** ($1D, `Fokkeru_Ai`): a bird that bounces about at random and
-spits a fireball every 64 frames (projectile type 7), which rolls along
-the floor and then shoots off to a side (`Projectile_RollingFlame_Bank5`).
+**[Fokkeru](enemies/fokkeru.md)** ($1D, `Fokkeru_Ai`): a bird that hops
+about at random and spits a fireball every 64 frames (projectile type 7).
+The fireball arcs to the floor, then burns in place or rolls toward Link
+(`Projectile_RollingFlame_Bank5`).
 
 **[King Bot](enemies/king-bot.md)** ($1E, `KingBot_Ai`): a giant Bot,
 hidden until Link comes near, that drops and hops after him.  Below 48
@@ -99,8 +100,8 @@ from the bottom up.
 
 | Type | Routine | Thrown by |
 |------|---------|-----------|
-| 1, 2 | `Projectile_Straight_Bank5` | |
-| 3 | `Projectile_Arc_Bank5` | Octoroks |
+| 1, 2 | `Projectile_MoveAndCheck_Bank5` | |
+| 3 | `Projectile_Straight_Bank5` | Octoroks |
 | 4, 8 | `Projectile_Fireball_Bank5` | Thunderbird (8) |
-| 5 | `Projectile_Rock_Bank5` | Fokkas' swords |
-| 7 | `Projectile_RollingFlame_Bank5` | Fokkeru |
+| 5 | `Projectile_Rock_Bank5` | [Fokkas](enemies/fokka.md)' swords |
+| 7 | `Projectile_RollingFlame_Bank5` | [Fokkeru](enemies/fokkeru.md) |

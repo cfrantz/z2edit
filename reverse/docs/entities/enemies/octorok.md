@@ -50,7 +50,8 @@ If all six projectile slots are busy nothing happens.  Type 3 is each
 group's own routine: a rock that flies straight and falls if Link's
 shield knocks it back (`Projectile_Rock_Bank1`, `Projectile_Rock_Bank2`,
 `Projectile_Rock_Bank4`, `Projectile_Rock_Bank4B`), or in the Great
-Palace `Projectile_Arc_Bank5` (provisional: a fireball in an arc).
+Palace `Projectile_Straight_Bank5`, which flies straight and is never
+knocked back: Link's shield destroys it (flags $03).
 
 ### The Hopping Octorok
 

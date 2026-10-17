@@ -75,6 +75,8 @@ and how each was verified):
 | [Rebonack](enemies/rebonack.md) | $20, $0A in palaces 3, 4, 6 (palace 3's boss) |
 | [Carock](enemies/carock.md) | $22 in palaces 3, 4, 6 (palace 4's boss) |
 | [Barba](enemies/barba.md) | $21 in palaces 3, 4, 6 (palace 6's boss) |
+| [Fokka](enemies/fokka.md) | $18-$1A in the Great Palace |
+| [Fokkeru](enemies/fokkeru.md) | $1D in the Great Palace |
 | [King Bot](enemies/king-bot.md) | $1E in the Great Palace |
 | [Barrier](enemies/barrier.md) | $20 in the Great Palace |
 

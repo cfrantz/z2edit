@@ -81,7 +81,7 @@ ENEMY_PAGES = {
     "HorseHead_Ai": "horsehead", "Helmethead_Ai": "helmethead", "HelmetheadHead_Ai": "helmethead",
     "Rebonack_Ai": "rebonack", "RebonackUnhorsed_Ai": "rebonack", "Barba_Ai": "barba", "Carock_Ai": "carock",
     "GpBubble_Ai": "bubble", "GpSkullHead_Ai": "skull-head", "HiddenJar_Ai_Bank5": "hidden-jar",
-    "KingBot_Ai": "king-bot", "Barrier_Ai": "barrier",
+    "KingBot_Ai": "king-bot", "Barrier_Ai": "barrier", "Fokka_Ai": "fokka", "Fokkeru_Ai": "fokkeru",
 }
 
 

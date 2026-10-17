@@ -1953,7 +1953,7 @@ CreditsText:
 
 ; Routine of each projectile type (1-11), copied to sramProjectilePtrs.
 ProjectilePtrs_Bank5:
-    .word   Projectile_Straight_Bank5, Projectile_Straight_Bank5, Projectile_Arc_Bank5, Projectile_Fireball_Bank5 ; $9400
+    .word   Projectile_MoveAndCheck_Bank5, Projectile_MoveAndCheck_Bank5, Projectile_Straight_Bank5, Projectile_Fireball_Bank5 ; $9400
     .word   Projectile_Rock_Bank5, $0000, Projectile_RollingFlame_Bank5, Projectile_Fireball_Bank5 ; $9408
     .word   $0000, $0000, $0000     ; $9410
 
@@ -3180,107 +3180,125 @@ DarkLink_StartEnding:
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank5
 ;
-; Projectile types 4 and 8: fly until they hit the background, then spark.
+; Projectile types 4 and 8 (the Thunderbird's fireballs): fall with gravity
+; (1/16 pixel per frame per frame) from the speeds they were launched with,
+; and burst ($F4) when they hit the background.
 ;
+; In:      x = projectile index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank5:
-    jsr     Projectile_HitsBg       ; $9BC8
-    bcc     Projectile_Fall_Bank5   ; $9BCB
-    lda     #$F4                    ; $9BCD
+    jsr     Projectile_HitsBg       ; $9BC8  hit the background?
+    bcc     Projectile_Fall_Bank5   ; $9BCB  no: fall
+    lda     #$F4                    ; $9BCD  yes: burst
     sta     objState+7,x            ; $9BCF
     rts                             ; $9BD1
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Rock_Bank5
 ;
-; Projectile type 5: fly straight, falling once deflected.
+; Projectile type 5 (a Fokka's thrown sword): flies level the way it was
+; thrown; once deflected (moving against its
+; facing) it falls, gaining 2/16 pixel per frame each frame.  Link's
+; shield stops it only with the reflect spell (flags $86).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank5:
-    ldy     #$02                    ; $9BD2
+    ldy     #$02                    ; $9BD2  moving its facing's way?
     lda     objXVelocity+7,x        ; $9BD4
-    bmi     @loc_9BD9               ; $9BD6
+    bmi     @checkFacing            ; $9BD6
     dey                             ; $9BD8
 
-@loc_9BD9:
+@checkFacing:
     tya                             ; $9BD9
     cmp     objFacing+7,x           ; $9BDA
-    bne     Projectile_FallFast_Bank5 ; $9BDC
-    jmp     Projectile_Arc_Bank5    ; $9BDE
+    bne     Projectile_FallFast_Bank5 ; $9BDC  no: deflected, fall
+    jmp     Projectile_Straight_Bank5 ; $9BDE  yes: level
 
 ; ---------------------------------------------------------------------------
 ; Projectile_RollingFlame_Bank5
 ;
-; Projectile type 7 (Fokkeru's fireball): falls to the floor, then rolls
-; along it and shoots off to one side.
+; Projectile type 7 (the Fokkeru's fireball): flies in an arc, falling
+; with gravity (1/16 pixel per frame per frame), until it meets the
+; background.  Each frame it touches it, there is a sound and it is set on
+; the tile row.  The first time (projectileSpeed 0), it stops and hops a
+; little (1 pixel per frame up), and then either (3 times in 4) burns in
+; place for 48 frames, or rolls toward Link (by its screen X against
+; his) at 1 pixel per frame, slowing by 1/16 every 8 frames, for 255
+; frames.  It falls off ledges, and goes on off the side of the screen.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_RollingFlame_Bank5:
-    jsr     Projectile_HitsBgAnyHeight ; $9BE1
-    bcc     Projectile_Fall_Bank5   ; $9BE4
-    lda     sfxRequest+1            ; $9BE6
+    jsr     Projectile_HitsBgAnyHeight ; $9BE1  on the background?
+    bcc     Projectile_Fall_Bank5   ; $9BE4  no: fall
+    lda     sfxRequest+1            ; $9BE6  sound
     ora     #$40                    ; $9BE8
     sta     sfxRequest+1            ; $9BEA
-    lda     objY+7,x                ; $9BEC
+    lda     objY+7,x                ; $9BEC  on the tile row
     and     #$F0                    ; $9BEE
     sta     objY+7,x                ; $9BF0
-    lda     projectileSpeed,x       ; $9BF2
-    bne     @loc_9C23               ; $9BF5
-    sta     objXVelocity+7,x        ; $9BF7
-    ldy     #$30                    ; $9BF9
+    lda     projectileSpeed,x       ; $9BF2  landed before?
+    bne     @burn                   ; $9BF5
+    sta     objXVelocity+7,x        ; $9BF7  first time: stop,
+    ldy     #$30                    ; $9BF9  3 in 4: burn for 48 frames
     lda     rng+1,x                 ; $9BFB
     and     #$03                    ; $9BFE
-    bne     @loc_9C15               ; $9C00
-    ldy     #$F0                    ; $9C02
-    lda     drawScreenX+2           ; $9C04
+    bne     @setTimer               ; $9C00
+    ldy     #$F0                    ; $9C02  1 in 4: roll toward Link,
+    lda     drawScreenX+2           ; $9C04  left if right of him,
     cmp     drawScreenX             ; $9C06
     lda     #$02                    ; $9C08
-    bcs     @loc_9C0F               ; $9C0A
-    lsr     a                       ; $9C0C
+    bcs     @setRoll                ; $9C0A
+    lsr     a                       ; $9C0C  else right
     ldy     #$10                    ; $9C0D
 
-@loc_9C0F:
+@setRoll:
     sta     objFacing+7,x           ; $9C0F
     sty     objXVelocity+7,x        ; $9C11
-    ldy     #$FF                    ; $9C13
+    ldy     #$FF                    ; $9C13  for 255 frames
 
-@loc_9C15:
+@setTimer:
     tya                             ; $9C15
     sta     projectileTimer,x       ; $9C16
-    inc     projectileSpeed,x       ; $9C19
-    lda     #$F0                    ; $9C1C
+    inc     projectileSpeed,x       ; $9C19  landed
+    lda     #$F0                    ; $9C1C  a little hop
     sta     objYVelocity+7,x        ; $9C1E
     bne     Projectile_Fall_Bank5   ; $9C21
 
-@loc_9C23:
-    lda     projectileTimer,x       ; $9C23
+@burn:
+    lda     projectileTimer,x       ; $9C23  time up?
     beq     Projectile_Kill_Bank5   ; $9C26
     dec     projectileTimer,x       ; $9C28
     beq     Projectile_Kill_Bank5   ; $9C2B
-    and     #$07                    ; $9C2D
-    bne     Projectile_Arc_Bank5    ; $9C2F
+    and     #$07                    ; $9C2D  every 8 frames, slow down
+    bne     Projectile_Straight_Bank5 ; $9C2F  by 1/16 toward 0
     lda     objXVelocity+7,x        ; $9C31
-    beq     Projectile_Arc_Bank5    ; $9C33
-    bpl     @loc_9C3B               ; $9C35
+    beq     Projectile_Straight_Bank5 ; $9C33
+    bpl     @slow                   ; $9C35
     inc     objXVelocity+7,x        ; $9C37
     inc     objXVelocity+7,x        ; $9C39
 
-@loc_9C3B:
+@slow:
     dec     objXVelocity+7,x        ; $9C3B
 
 ; ---------------------------------------------------------------------------
-; Projectile_Arc_Bank5
+; Projectile_Straight_Bank5
 ;
-; Projectile type 3: arc with gravity.
+; Projectile type 3 (a fire Octorok's shot), and the level flight of other
+; types: move with Y velocity 0 (-2, then +2 below).
+; Projectile_FallFast_Bank5 adds 2/16 pixel per frame to the Y velocity
+; first, Projectile_Fall_Bank5 1/16.
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Projectile_Arc_Bank5:
-    lda     #$FE                    ; $9C3D
-    sta     objYVelocity+7,x        ; $9C3F
+Projectile_Straight_Bank5:
+    lda     #$FE                    ; $9C3D  Y velocity -2, so that the
+    sta     objYVelocity+7,x        ; $9C3F  +2 below leaves it at 0
 
 Projectile_FallFast_Bank5:
     inc     objYVelocity+7,x        ; $9C42
@@ -3289,28 +3307,33 @@ Projectile_Fall_Bank5:
     inc     objYVelocity+7,x        ; $9C45
 
 ; ---------------------------------------------------------------------------
-; Projectile_Straight_Bank5
+; Projectile_MoveAndCheck_Bank5
 ;
-; Projectile types 1 and 2: fly straight.
+; Projectile types 1 and 2 (unused in this group), and the end of the
+; others: move projectile x; remove it when it is off the top or bottom
+; of the screen, or off a side (except type 7, which goes on unseen);
+; else draw it (Projectile_Draw_Bank5) and test it against Link
+; (Projectile_CheckLinkAlternate).
 ;
-; Status:  provisional
+; In:      x = projectile index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Projectile_Straight_Bank5:
+Projectile_MoveAndCheck_Bank5:
     jsr     Projectile_Move         ; $9C48
-    lda     drawOffscreen+2         ; $9C4B
+    lda     drawOffscreen+2         ; $9C4B  on screen?
     and     #$FC                    ; $9C4D
     beq     Projectile_DrawAndCheck_Bank5 ; $9C4F
-    and     #$F0                    ; $9C51
-    bne     Projectile_Kill_Bank5   ; $9C53
-    lda     objState+7,x            ; $9C55
-    cmp     #$07                    ; $9C57
-    beq     Projectile_Straight_Done_Bank5 ; $9C59
+    and     #$F0                    ; $9C51  off the top or bottom:
+    bne     Projectile_Kill_Bank5   ; $9C53  remove
+    lda     objState+7,x            ; $9C55  off a side: remove, unless
+    cmp     #$07                    ; $9C57  type 7
+    beq     Projectile_MoveAndCheck_Done_Bank5 ; $9C59
 
 Projectile_Kill_Bank5:
     lda     #$00                    ; $9C5B
     sta     objState+7,x            ; $9C5D
 
-Projectile_Straight_Done_Bank5:
+Projectile_MoveAndCheck_Done_Bank5:
     rts                             ; $9C5F
 
 Projectile_DrawAndCheck_Bank5:
@@ -3449,6 +3472,8 @@ Projectile_DrawSpin_Bank5:
     lsr     a                       ; $9D0F
     lsr     a                       ; $9D10
 
+; Fokka_Ai: attack masks by enemy type, from $9D11 + $18: entries $18-$1A
+; are FokkaThrowYOffsets 1-3, $00 (orange), $3F (red), $1F (blue).
 FokkaAttackMasks:
     lsr     a                       ; $9D11
     pla                             ; $9D12
@@ -3477,33 +3502,57 @@ Projectile_SetAttr_Bank5:
     sta     oamBuffer+2,y           ; $9D22
     rts                             ; $9D25
 
+; Fokka jumps by facing (0 right, 1 left), doubled: 1.5 pixels per frame.
 FokkaSpeeds:
     .byte   $0C, $F4                                                        ; $9D26
 
+; Y offset of the Fokka's thrown sword: Y + 10 (pose 4, low), Y (pose 2,
+; high).  Entries 1-3 are also FokkaAttackMasks $18-$1A.
 FokkaThrowYOffsets:
     .byte   $0A, $00, $3F, $1F                                              ; $9D28
 
 ; ---------------------------------------------------------------------------
 ; Fokka_Ai
 ;
-; Fokka (bird knight): guards at the height Link attacks or jumps, attacks
-; high or low, throws its sword (projectile type 5), and jumps at random.
+; Fokkas ($18 orange, $19 red, $1A blue): bird knights built on the Iron
+; Knuckle's code, but always on the attack.  Each frame it faces Link.
 ;
-; Status:  provisional
+; On the floor, 1 frame in 32 (rng+1,x bits 4-0 zero) it jumps at him:
+; 3.5 pixels per frame up and 1.5 his way, keeping that X velocity until
+; it lands (a ceiling turns it down at 1 pixel per frame).  Otherwise it
+; doesn't approach: it moves at half Link's X velocity while he walks,
+; else sways 1/4 pixel per frame (frameCounter bit 6, 64 frames each way).
+;
+; It attacks every 64 frames (red) or 32 (blue), by enemyAiState and
+; FokkaAttackMasks; the orange's mask is 0, so it attacks whenever it is
+; not attacking.  The count runs on the floor only while it isn't
+; attacking, but always in the air.  An attack: 24 frames of wind-up at a
+; random height (pose 1 high, 3 low), then the thrust (2, 4), on whose
+; first frame it throws its sword (projectile type 5) from its Y (high) or
+; Y + 10 (low).  Only if there is no free projectile slot does it thrust
+; for 16 frames, testing the sword against Link (Weapon_CheckLink).
+;
+; Its shield (guard, enemyAiVar: 1 high, 0 low) goes to the height of
+; Link's stroke whenever he presses B (high standing, low crouching), and
+; while he is in the air to high if he is more than 5 pixels above it,
+; else low.
+;
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fokka_Ai:
     jsr     Enemy_Draw              ; $9D2C
-    lda     objState+1,x            ; $9D2F
-    beq     @loc_9D77               ; $9D31
-    and     #$01                    ; $9D33
-    bne     @loc_9D5A               ; $9D35
-    jsr     Enemy_FireProjectile    ; $9D37
-    tya                             ; $9D3A
-    bmi     @loc_9D57               ; $9D3B
-    lda     #$05                    ; $9D3D
+    lda     objState+1,x            ; $9D2F  attacking?
+    beq     @guard                  ; $9D31
+    and     #$01                    ; $9D33  winding up (odd pose):
+    bne     @checkTimer             ; $9D35  nothing to test
+    jsr     Enemy_FireProjectile    ; $9D37  thrusting: throw the sword,
+    tya                             ; $9D3A  2 px/frame the way it faces
+    bmi     @testSword              ; $9D3B  (no slot: thrust instead)
+    lda     #$05                    ; $9D3D  projectile type 5
     sta     a:objState+7,y          ; $9D3F
-    lda     objState+1,x            ; $9D42
-    lsr     a                       ; $9D44
+    lda     objState+1,x            ; $9D42  from Y (pose 2, high) or
+    lsr     a                       ; $9D44  Y + 10 (pose 4, low)
     and     #$01                    ; $9D45
     tax                             ; $9D47
     lda     FokkaThrowYOffsets,x    ; $9D48
@@ -3511,154 +3560,163 @@ Fokka_Ai:
     clc                             ; $9D4D
     adc     objY+1,x                ; $9D4E
     sta     a:objY+7,y              ; $9D50
-    lda     #$00                    ; $9D53
+    lda     #$00                    ; $9D53  done
     sta     objState+1,x            ; $9D55
 
-@loc_9D57:
-    jsr     Weapon_CheckLink        ; $9D57
+@testSword:
+    jsr     Weapon_CheckLink        ; $9D57  the sword against Link
 
-@loc_9D5A:
-    lda     timerFast+TIMER_ENEMY,x ; $9D5A
-    bne     @loc_9D70               ; $9D5D
-    inc     objState+1,x            ; $9D5F
+@checkTimer:
+    lda     timerFast+TIMER_ENEMY,x ; $9D5A  pose over?
+    bne     @toGuard                ; $9D5D
+    inc     objState+1,x            ; $9D5F  next pose
     lda     objState+1,x            ; $9D61
-    cmp     #$03                    ; $9D63
-    beq     @loc_9D73               ; $9D65
+    cmp     #$03                    ; $9D63  past 2 or 4: done
+    beq     @endAttack              ; $9D65
     cmp     #$05                    ; $9D67
-    bcs     @loc_9D73               ; $9D69
-    lda     #$10                    ; $9D6B
+    bcs     @endAttack              ; $9D69
+    lda     #$10                    ; $9D6B  thrust for 16 frames
     sta     timerFast+TIMER_ENEMY,x ; $9D6D
 
-@loc_9D70:
-    jmp     @loc_9D77               ; $9D70
+@toGuard:
+    jmp     @guard                  ; $9D70
 ; (code below not executed in the test movies)
 
-@loc_9D73:
+@endAttack:
     lda     #$00                    ; $9D73
     sta     objState+1,x            ; $9D75
 ; (end of code not executed in the test movies)
 
-@loc_9D77:
-    jsr     Enemy_CheckProjectileHitsSpecial ; $9D77
+@guard:
+    jsr     Enemy_CheckProjectileHitsSpecial ; $9D77  its shield (a clink returns)
     jsr     Enemy_UpdateBgCollision ; $9D7A
+    ; Enemy_UpdateCommon, without drawing it again.
     ldy     #$01                    ; $9D7D
     inx                             ; $9D7F
     jsr     Obj_ComputeScreenPos    ; $9D80
     ldx     currentObject           ; $9D83
-    lda     objYHi+1,x              ; $9D85
+    lda     objYHi+1,x              ; $9D85  fallen below the screen?
     cmp     #$02                    ; $9D87
-    bcc     @loc_9D8E               ; $9D89
+    bcc     @onScreen               ; $9D89
 ; (code below not executed in the test movies)
     jmp     Enemy_Despawn           ; $9D8B
 ; (end of code not executed in the test movies)
 
-@loc_9D8E:
-    lda     drawOffscreen+1         ; $9D8E
-    and     #$FC                    ; $9D90
-    beq     @loc_9DA0               ; $9D92
+@onScreen:
+    lda     drawOffscreen+1         ; $9D8E  off screen: no hit tests,
+    and     #$FC                    ; $9D90  despawn if far
+    beq     @hitTests               ; $9D92
     lda     objCollision+1,x        ; $9D94
     and     #$0F                    ; $9D96
     sta     objCollision+1,x        ; $9D98
     jsr     Enemy_DespawnIfFar      ; $9D9A
-    jmp     @loc_9DA9               ; $9D9D
+    jmp     @move                   ; $9D9D
 
-@loc_9DA0:
+@hitTests:
     jsr     Enemy_CheckProjectileHits ; $9DA0
     jsr     Enemy_CheckSwordHit     ; $9DA3
     jsr     Enemy_CheckLinkContact  ; $9DA6
 
-@loc_9DA9:
+@move:
     jsr     Enemy_HurtLinkOnContact ; $9DA9
-    jsr     Enemy_MoveYAndFall      ; $9DAC
-    lda     objCollision+1,x        ; $9DAF
+    jsr     Enemy_MoveYAndFall      ; $9DAC  fall
+    lda     objCollision+1,x        ; $9DAF  a ceiling: down at 1 px/frame
     and     #$08                    ; $9DB1
-    beq     @loc_9DBA               ; $9DB3
+    beq     @checkFloor             ; $9DB3
     lda     #$10                    ; $9DB5
     sta     objYVelocity+1,x        ; $9DB7
 
-@loc_9DBA:
+@checkFloor:
     lda     objCollision+1,x        ; $9DBA
     and     #$04                    ; $9DBC
-    beq     @loc_9DC3               ; $9DBE
+    beq     @walk                   ; $9DBE
     jsr     Enemy_Land              ; $9DC0
 
-@loc_9DC3:
-    jsr     Enemy_KnockBackOrWalk_Bank5 ; $9DC3
-    lda     a:joypadPressed         ; $9DC6
-    and     #$40                    ; $9DC9
-    beq     @loc_9DD2               ; $9DCB
+@walk:
+    jsr     Enemy_KnockBackOrWalk_Bank5 ; $9DC3  move by last frame's velocity
+    lda     a:joypadPressed         ; $9DC6  B pressed: shield to his
+    and     #$40                    ; $9DC9  stroke's height
+    beq     @checkJump              ; $9DCB
     lda     linkStanding            ; $9DCD
     sta     enemyAiVar,x            ; $9DCF
 
-@loc_9DD2:
-    lda     linkJumpState           ; $9DD2
-    beq     @loc_9DE6               ; $9DD5
-    ldy     #$01                    ; $9DD7
-    lda     objY                    ; $9DD9
+@checkJump:
+    lda     linkJumpState           ; $9DD2  Link in the air:
+    beq     @face                   ; $9DD5
+    ldy     #$01                    ; $9DD7  high if he is more than 5
+    lda     objY                    ; $9DD9  above, else low
     adc     #$05                    ; $9DDB
     cmp     objY+1,x                ; $9DDD
-    bcc     @loc_9DE2               ; $9DDF
+    bcc     @setGuard               ; $9DDF
     dey                             ; $9DE1
 
-@loc_9DE2:
+@setGuard:
     tya                             ; $9DE2
     sta     enemyAiVar,x            ; $9DE3
 
-@loc_9DE6:
+@face:
     jsr     Enemy_FaceLink          ; $9DE6
-    lda     objCollision+1,x        ; $9DE9
+    lda     objCollision+1,x        ; $9DE9  on the floor?
     and     #$04                    ; $9DEB
-    bne     @loc_9DF1               ; $9DED
-    beq     @loc_9E1E               ; $9DEF
+    bne     @onFloor                ; $9DED
+    beq     @countAttack            ; $9DEF  (in the air)
 
-@loc_9DF1:
-    lda     rng+1,x                 ; $9DF1
+@onFloor:
+    lda     rng+1,x                 ; $9DF1  1 frame in 32,
     and     #$1F                    ; $9DF4
-    bne     @loc_9E06               ; $9DF6
-    lda     #$C8                    ; $9DF8
+    bne     @hold                   ; $9DF6
+    lda     #$C8                    ; $9DF8  jump: 3.5 px/frame up,
     sta     objYVelocity+1,x        ; $9DFA
     dec     objY+1,x                ; $9DFD
-    lda     FokkaSpeeds,y           ; $9DFF
+    lda     FokkaSpeeds,y           ; $9DFF  1.5 toward Link
     asl     a                       ; $9E02
     sta     objXVelocity+1,x        ; $9E03
     rts                             ; $9E05
 
-@loc_9E06:
-    lda     objXVelocity            ; $9E06
-    bne     @loc_9E15               ; $9E08
-    ldy     #$08                    ; $9E0A
+@hold:
+    lda     objXVelocity            ; $9E06  Link's velocity while he
+    bne     @setSpeed               ; $9E08  moves,
+    ldy     #$08                    ; $9E0A  else sway, 64 frames each way
     lda     frameCounter            ; $9E0C
     and     #$40                    ; $9E0E
-    bne     @loc_9E14               ; $9E10
+    bne     @swaySpeed              ; $9E10
     ldy     #$F8                    ; $9E12
 
-@loc_9E14:
+@swaySpeed:
     tya                             ; $9E14
 
-@loc_9E15:
-    sta     objXVelocity+1,x        ; $9E15
+@setSpeed:
+    sta     objXVelocity+1,x        ; $9E15  halved, keeping the sign
     asl     a                       ; $9E17
     ror     objXVelocity+1,x        ; $9E18
-    lda     objState+1,x            ; $9E1A
+    lda     objState+1,x            ; $9E1A  attacking: done
     bne     @done                   ; $9E1C
 
-@loc_9E1E:
-    ldy     enemyType,x             ; $9E1E
-    lda     FokkaAttackMasks,y      ; $9E20
+@countAttack:
+    ldy     enemyType,x             ; $9E1E  every 64 (red), 32 (blue) or
+    lda     FokkaAttackMasks,y      ; $9E20  1 (orange) frames,
     inc     enemyAiState,x          ; $9E23
     and     enemyAiState,x          ; $9E25
     bne     @done                   ; $9E27
-    lda     rng+1,x                 ; $9E29
-    and     #$02                    ; $9E2C
+    lda     rng+1,x                 ; $9E29  attack: wind up high (1) or
+    and     #$02                    ; $9E2C  low (3) at random,
     tay                             ; $9E2E
     iny                             ; $9E2F
     sty     objState+1,x            ; $9E30
-    lda     #$18                    ; $9E32
+    lda     #$18                    ; $9E32  for 24 frames
     sta     timerFast+TIMER_ENEMY,x ; $9E34
 
 @done:
     rts                             ; $9E37
 
+; ---------------------------------------------------------------------------
+; Enemy_Walk_Bank5
+;
+; Move enemy x by its X velocity unless it is against a wall.
+;
+; In:      x = enemy index
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Enemy_Walk_Bank5:
     lda     objCollision+1,x        ; $9E38
     and     #$03                    ; $9E3A
@@ -3671,90 +3729,101 @@ Enemy_Walk_Bank5:
 ; ---------------------------------------------------------------------------
 ; Enemy_KnockBackOrWalk_Bank5
 ;
-; While knocked back (enemyKnockBack), move by the knockback (on the ground,
-; except Fokkeru); otherwise move unless against a wall.
+; While knocked back (enemyKnockBack), move by the knockback (with a
+; background probe), which shrinks by 1/16 pixel per frame toward 0 while
+; the enemy is on the floor (always for the Fokkeru, $1D); then, or
+; otherwise (Enemy_Walk_Bank5), move by the X velocity unless at a wall.
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank5:
     ldy     enemyKnockBack,x        ; $9E42
-    beq     @loc_9E63               ; $9E45
-    lda     enemyType,x             ; $9E47
+    beq     @walk                   ; $9E45
+    lda     enemyType,x             ; $9E47  the Fokkeru: always shrink it
     cmp     #$1D                    ; $9E49
-    beq     @loc_9E53               ; $9E4B
-    lda     objCollision+1,x        ; $9E4D
+    beq     @shrink                 ; $9E4B
+    lda     objCollision+1,x        ; $9E4D  others: on the floor
     and     #$04                    ; $9E4F
-    beq     @loc_9E5E               ; $9E51
+    beq     @setVelocity            ; $9E51
 
-@loc_9E53:
-    dec     enemyKnockBack,x        ; $9E53
-    bpl     @loc_9E5E               ; $9E56
+@shrink:
+    dec     enemyKnockBack,x        ; $9E53  toward 0
+    bpl     @setVelocity            ; $9E56
     inc     enemyKnockBack,x        ; $9E58
     inc     enemyKnockBack,x        ; $9E5B
 
-@loc_9E5E:
+@setVelocity:
     sty     objXVelocity+1,x        ; $9E5E
     jsr     Enemy_UpdateBgCollision ; $9E60
 
-@loc_9E63:
+@walk:
     jmp     Enemy_Walk_Bank5        ; $9E63
 ; (unreferenced: $9E66-$9E66, 1 bytes)
     .byte   $60                                                             ; $9E66
 
+; Fokkeru hops: X velocity by rng+1,x bits 2-1: 1/4 or 1/2 pixel per frame
+; either way.
 FokkeruSpeeds:
     .byte   $04                                                             ; $9E67
 
+; X velocity of the Fokkeru's fireball by its facing (1 right, 2 left),
+; doubled: 1 pixel per frame.  Entries 1-3 are also FokkeruSpeeds 1-3.
 FokkeruShotSpeeds:
     .byte   $FC, $08, $F8                                                   ; $9E68
 
 ; ---------------------------------------------------------------------------
 ; Fokkeru_Ai
 ;
-; Fokkeru: bounces about at random and spits a fireball (projectile type 7)
-; every 64 frames.
+; Fokkeru ($1D): a fire-breathing bird that hops about at random.  Each
+; time it lands it hops again, 1 or 2 pixels per frame up (rng+1,x bit 0)
+; and 1/4 or 1/2 either way (FokkeruSpeeds), whatever Link does.  Every 64
+; frames (enemyAiState) it spits a fireball at him (projectile type 7, 1
+; pixel per frame his way and 2 up; Projectile_RollingFlame_Bank5).
 ;
-; Status:  provisional
+; In:      x = enemy index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fokkeru_Ai:
     jsr     Enemy_KnockBackOrWalk_Bank5 ; $9E6B
     jsr     Enemy_FaceLink          ; $9E6E
-    inc     enemyAiState,x          ; $9E71
+    inc     enemyAiState,x          ; $9E71  every 64 frames
     lda     enemyAiState,x          ; $9E73
     and     #$3F                    ; $9E75
-    bne     @loc_9E98               ; $9E77
-    jsr     Enemy_FireProjectile    ; $9E79
-    bcs     @loc_9E98               ; $9E7C
-    lda     #$07                    ; $9E7E
+    bne     @move                   ; $9E77
+    jsr     Enemy_FireProjectile    ; $9E79  a fireball
+    bcs     @move                   ; $9E7C
+    lda     #$07                    ; $9E7E  projectile type 7,
     sta     a:objState+7,y          ; $9E80
-    lda     #$E0                    ; $9E83
+    lda     #$E0                    ; $9E83  2 pixels per frame up,
     sta     objYVelocity+7,y        ; $9E85
-    ldx     objFacing+7,y           ; $9E88
+    ldx     objFacing+7,y           ; $9E88  1 toward Link
     lda     FokkeruShotSpeeds,x     ; $9E8A
     asl     a                       ; $9E8D
     sta     a:objXVelocity+7,y      ; $9E8E
-    lda     #$00                    ; $9E91
+    lda     #$00                    ; $9E91  not yet landed
     sta     projectileSpeed,y       ; $9E93
     ldx     currentObject           ; $9E96
 
-@loc_9E98:
+@move:
     jsr     Enemy_MoveYAndFall      ; $9E98
-    jsr     Enemy_UpdateWithBg      ; $9E9B
+    jsr     Enemy_UpdateWithBg      ; $9E9B  probe background, draw, hit tests
     jsr     Enemy_HurtLinkOnContact ; $9E9E
-    lda     objCollision+1,x        ; $9EA1
+    lda     objCollision+1,x        ; $9EA1  on the floor?
     and     #$04                    ; $9EA3
     beq     @done                   ; $9EA5
     jsr     Enemy_Land              ; $9EA7
-    lda     rng+1,x                 ; $9EAA
+    lda     rng+1,x                 ; $9EAA  hop: either way at random,
     lsr     a                       ; $9EAD
     and     #$03                    ; $9EAE
     tay                             ; $9EB0
     lda     FokkeruSpeeds,y         ; $9EB1
     sta     objXVelocity+1,x        ; $9EB4
-    lda     #$F0                    ; $9EB6
-    bcc     @loc_9EBB               ; $9EB8
+    lda     #$F0                    ; $9EB6  1 pixel per frame up, or 2
+    bcc     @setYVelocity           ; $9EB8  (bit 0)
     asl     a                       ; $9EBA
 
-@loc_9EBB:
+@setYVelocity:
     sta     objYVelocity+1,x        ; $9EBB
 
 @done:
@@ -3895,21 +3964,33 @@ Thunderbird_Draw:
     pla                             ; $9FC0
     sta     drawOffscreen+1         ; $9FC1
 
-FokkaFrames:
+; Fokka_Draw: sword entry by pose 1-4 (entry 0 is the rts): $14, $16, $18,
+; $16 (the first byte of FokkaDrawXOffsets).
+FokkaDrawTiles:
     rts                             ; $9FC3
     .byte   $14, $16, $18                                                   ; $9FC4
 
-FokkaDrawTiles:
+; Fokka_Draw: sword X offset by pose, facing left, then (+4) right; the
+; last is FokkaDrawYOffsets 0.
+FokkaDrawXOffsets:
     .byte   $16, $05, $F8, $04, $F8, $FB, $08, $FC                          ; $9FC7
 
-FokkaDrawOffsets:
+; Fokka_Draw: sword Y offset by pose, from the lower half's Y: -32 high,
+; -16 low.
+FokkaDrawYOffsets:
     .byte   $08, $E0, $E0, $F0, $F0                                         ; $9FCF
 
 ; ---------------------------------------------------------------------------
 ; Fokka_Draw
 ;
-; Draw a Fokka and its sword.
+; Draw a Fokka: two pairs of sprites, from SpritePairTiles entry 0 (shield
+; high) or 8 (low), $10 while rising in a jump, the walking frame (+4)
+; every 8 frames (every 4 when moving 1 pixel per frame or faster).  When
+; it is attacking, its sword: a pair from FokkaDrawTiles by pose, placed by
+; FokkaDrawXOffsets and FokkaDrawYOffsets, the X offset doubled for the
+; middle of the thrust (timer 3-12), flipped upside down for the low thrust.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Fokka_Draw:
@@ -3962,7 +4043,7 @@ Fokka_Draw:
     tax                             ; $A018
     lda     temp0                   ; $A019
     clc                             ; $A01B
-    adc     FokkaDrawOffsets,x      ; $A01C
+    adc     FokkaDrawYOffsets,x     ; $A01C
     sta     temp0                   ; $A01F
     lda     temp2                   ; $A021
     cmp     #$01                    ; $A023
@@ -3973,7 +4054,7 @@ Fokka_Draw:
     inx                             ; $A02A
 
 @loc_A02B:
-    lda     FokkaDrawTiles,x        ; $A02B
+    lda     FokkaDrawXOffsets,x     ; $A02B
     ldx     currentObject           ; $A02E
     sty     temp7                   ; $A030
     ldy     timerFast+TIMER_ENEMY,x ; $A032
@@ -3996,7 +4077,7 @@ Fokka_Draw:
     sta     temp3                   ; $A04F
 
 @loc_A051:
-    lda     FokkaFrames,x           ; $A051
+    lda     FokkaDrawTiles,x        ; $A051
     tax                             ; $A054
     jmp     Sprite_DrawEnemyPairKeepX ; $A055
 
@@ -4007,8 +4088,10 @@ Fokka_Draw:
 ; ---------------------------------------------------------------------------
 ; Fokkeru_Draw
 ;
-; Draw a Fokkeru.
+; Draw the Fokkeru: two pairs of sprites, its four frames (SpritePairTiles
+; entries $20, $1C, $28, $24) cycling every 8 frames by enemyAiState.
 ;
+; In:      x = enemy index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Fokkeru_Draw:
