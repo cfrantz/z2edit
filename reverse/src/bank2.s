@@ -53,7 +53,7 @@ Area_DrawLargeObject_Bank2:
     txa                             ; $8103
     jsr     JumpTable               ; $8104
 ; (inline jump table)
-    .word   Area_DrawPillarSlope_Bank2 ; $8107
+    .word   Area_DrawPillarWall_Bank2 ; $8107
     .word   Area_DrawObjectTwoRows_Bank2 ; $8109
     .word   Area_DrawObjectTwoRows_Bank2 ; $810B
     .word   Area_DrawObjectTwoRows_Bank2 ; $810D
@@ -95,56 +95,21 @@ Area_DrawSmallObject_Bank2:
     .word   Area_DrawSmallCloud_Bank2 ; $814D
     .word   Area_DrawSmallCloud_Bank2 ; $814F
     .word   Area_DrawSmallCloud_Bank2 ; $8151
-; End of the jump table: data follows.
-    .byte   $42, $42                                                        ; $8153
-; (unreferenced: $8155-$8155, 1 bytes)
-    .byte   $54                                                             ; $8155
-    .byte   $52, $42, $42, $55, $53, $53, $40, $40                          ; $8156
-; (unreferenced: $815E-$815E, 1 bytes)
-    .byte   $8D                                                             ; $815E
-    .byte   $90, $40                                                        ; $815F
-; (unreferenced: $8161-$8163, 3 bytes)
-    .byte   $40, $8D, $8C                                                   ; $8161
-    .byte   $90, $40, $40                                                   ; $8164
-; (unreferenced: $8167-$8167, 1 bytes)
-    .byte   $40                                                             ; $8167
-    .byte   $80, $40                                                        ; $8168
-; (unreferenced: $816A-$816C, 3 bytes)
-    .byte   $40, $40, $89                                                   ; $816A
-    .byte   $89, $40, $40                                                   ; $816D
-; (unreferenced: $8170-$8170, 1 bytes)
-    .byte   $40                                                             ; $8170
-    .byte   $87, $40                                                        ; $8171
-; (unreferenced: $8173-$8174, 2 bytes)
-    .byte   $40, $40                                                        ; $8173
-    .byte   $91, $91, $40, $40                                              ; $8175
-; (unreferenced: $8179-$8179, 1 bytes)
-    .byte   $40                                                             ; $8179
-    .byte   $8A, $40                                                        ; $817A
-; (unreferenced: $817C-$817D, 2 bytes)
-    .byte   $40, $40                                                        ; $817C
-    .byte   $8F, $8F, $51, $51                                              ; $817E
-; (unreferenced: $8182-$8182, 1 bytes)
-    .byte   $54                                                             ; $8182
-    .byte   $52, $51, $51                                                   ; $8183
-; (unreferenced: $8186-$8186, 1 bytes)
-    .byte   $55                                                             ; $8186
-    .byte   $53, $53                                                        ; $8187
-; (unreferenced: $8189-$8191, 9 bytes)
-    .byte   $40, $40, $40, $C9, $40, $40, $8B, $8B, $C9                     ; $8189
-    .byte   $40, $40                                                        ; $8192
-; (unreferenced: $8194-$8194, 1 bytes)
-    .byte   $54                                                             ; $8194
-    .byte   $52, $40                                                        ; $8195
-; (unreferenced: $8197-$8198, 2 bytes)
-    .byte   $40, $55                                                        ; $8197
-    .byte   $53, $53                                                        ; $8199
+; Floor records, one per tile set (header byte 2 bits 6-4), found by
+; AreaFloorRecordsLo_Bank2: the 8 tiles Area_DrawFloorColumn picks by a
+; floor pattern's 3-bit codes, then the tile set's floorTile (byte 8).
+AreaFloorRecords_Bank2:
+    .byte   $42, $42, $54, $52, $42, $42, $55, $53, $53             ; $8153  tile set 0
+    .byte   $40, $40, $8D, $90, $40, $40, $8D, $8C, $90             ; $815C  tile set 1
+    .byte   $40, $40, $40, $80, $40, $40, $40, $89, $89             ; $8165  tile set 2
+    .byte   $40, $40, $40, $87, $40, $40, $40, $91, $91             ; $816E  tile set 3
+    .byte   $40, $40, $40, $8A, $40, $40, $40, $8F, $8F             ; $8177  tile set 4
+    .byte   $51, $51, $54, $52, $51, $51, $55, $53, $53             ; $8180  tile set 5
+    .byte   $40, $40, $40, $C9, $40, $40, $8B, $8B, $C9             ; $8189  tile set 6
+    .byte   $40, $40, $54, $52, $40, $40, $55, $53, $53             ; $8192  tile set 7
 
 AreaFloorRecordsLo_Bank2:
-    .byte   $53, $5C, $65, $6E, $77, $80                                    ; $819B
-; (unreferenced: $81A1-$81A1, 1 bytes)
-    .byte   $89                                                             ; $81A1
-    .byte   $92                                                             ; $81A2
+    .byte   $53, $5C, $65, $6E, $77, $80, $89, $92                  ; $819B  low bytes of AreaFloorRecords_Bank2 + 9 * tile set
 
 Overworld_SetFloorTiles_Bank2:
     .assert Overworld_SetFloorTiles_Bank2 = OverworldBank::SetFloorTiles, error, "interface address moved"
@@ -157,60 +122,72 @@ Overworld_SetFloorTiles_Bank2:
     lda     (temp12),y              ; $81B1
     sta     floorTile               ; $81B3
     rts                             ; $81B6
-; (unreferenced: $81B7-$81C6, 16 bytes)
 
+; Tiles of each large object (Area_GetObjectTiles_Bank2), a pair per
+; dispatch index: objectTile, then the second tile (temp0; the column of a
+; pillar, the lower row of two rows).  Object set 0.
 AreaObjectTiles_Bank2:
-    .byte   $40                                                             ; $81B7
-    .byte   $40, $8C, $8D, $8C, $8D, $C0, $C1, $8D, $8E, $61, $61, $40, $40, $81, $81; $81B8
-    .byte   $82, $82                                                        ; $81C7
-; (unreferenced: $81C9-$81CC, 4 bytes)
-    .byte   $50, $50, $8B, $8B                                              ; $81C9
-    .byte   $51, $51                                                        ; $81CD
-; (unreferenced: $81CF-$81D0, 2 bytes)
-    .byte   $61, $61                                                        ; $81CF
-    .byte   $4C, $4B                                                        ; $81D1
-; (unreferenced: $81D3-$81D6, 4 bytes)
-    .byte   $86, $85                                                        ; $81D3
-
+    .byte   $40, $40                                                ; $81B7  $1x (none)
+    .byte   $8C, $8D                                                ; $81B9  $2x two rows
+    .byte   $8C, $8D                                                ; $81BB  $3x two rows
+    .byte   $C0, $C1                                                ; $81BD  $4x two rows
+    .byte   $8D, $8E                                                ; $81BF  $5x row
+    .byte   $61, $61                                                ; $81C1  $6x row
+    .byte   $40, $40                                                ; $81C3  $7x row
+    .byte   $81, $81                                                ; $81C5  $8x row
+    .byte   $82, $82                                                ; $81C7  $9x row
+    .byte   $50, $50                                                ; $81C9  $Ax row
+    .byte   $8B, $8B                                                ; $81CB  $Bx row
+    .byte   $51, $51                                                ; $81CD  $Cx row
+    .byte   $61, $61                                                ; $81CF  $Dx column
+    .byte   $4C, $4B                                                ; $81D1  $Ex pillar
+    .byte   $86, $85                                                ; $81D3  $Fx pillar
+; Object set 1 (header byte 1 bit 7), likewise.
 AreaObjectTiles2_Bank2:
-    .byte   $40                                                             ; $81D5
-    .byte   $40                                                             ; $81D6
-    .byte   $52, $53, $53, $55, $4D, $5D                                    ; $81D7
-; (unreferenced: $81DD-$81E4, 8 bytes)
-    .byte   $54, $54, $61, $61, $60, $60, $81, $81                          ; $81DD
-    .byte   $82, $82                                                        ; $81E5
-; (unreferenced: $81E7-$81EA, 4 bytes)
-    .byte   $40, $40, $8B, $8B                                              ; $81E7
-    .byte   $51, $51                                                        ; $81EB
-; (unreferenced: $81ED-$81EE, 2 bytes)
-    .byte   $61, $61                                                        ; $81ED
-    .byte   $52, $53                                                        ; $81EF
-; (unreferenced: $81F1-$81F2, 2 bytes)
-    .byte   $59, $5A                                                        ; $81F1
+    .byte   $40, $40                                                ; $81D5  $1x (none)
+    .byte   $52, $53                                                ; $81D7  $2x two rows
+    .byte   $53, $55                                                ; $81D9  $3x two rows
+    .byte   $4D, $5D                                                ; $81DB  $4x two rows
+    .byte   $54, $54                                                ; $81DD  $5x row
+    .byte   $61, $61                                                ; $81DF  $6x row
+    .byte   $60, $60                                                ; $81E1  $7x row
+    .byte   $81, $81                                                ; $81E3  $8x row
+    .byte   $82, $82                                                ; $81E5  $9x row
+    .byte   $40, $40                                                ; $81E7  $Ax row
+    .byte   $8B, $8B                                                ; $81E9  $Bx row
+    .byte   $51, $51                                                ; $81EB  $Cx row
+    .byte   $61, $61                                                ; $81ED  $Dx column
+    .byte   $52, $53                                                ; $81EF  $Ex pillar
+    .byte   $59, $5A                                                ; $81F1  $Fx pillar
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawObjectTwoRows_Bank2
 ;
-; Same as Area_DrawObjectTwoRows_Bank1.
+; Large objects $2x-$4x: a row of the object's width (size + 1) in its
+; main tile, and the same row below in its second tile
+; (AreaObjectTiles_Bank2).
 ;
-; Status:  provisional
+; In:      x = dispatch index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawObjectTwoRows_Bank2:
-    jsr     Area_DrawObjectRow_Bank2 ; $81F3
-    lda     temp0                   ; $81F6
+    jsr     Area_DrawObjectRow_Bank2 ; $81F3  main tile row,
+    lda     temp0                   ; $81F6  then the second
     sta     objectTile              ; $81F8
-    jsr     AreaMap_NextBuildRow    ; $81FB
+    jsr     AreaMap_NextBuildRow    ; $81FB  on the row below
     jmp     Area_FillObjectRow_Bank2 ; $81FE
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawObjectRow_Bank2
 ;
-; Same as Area_DrawObjectRow_Bank1.
+; Large objects $5x-$Cx: a row of the object's width (size, areaObjectType
+; & $0F, plus one) in its main tile.
 ;
-; Status:  provisional
+; In:      x = dispatch index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawObjectRow_Bank2:
-    jsr     Area_GetObjectTiles_Bank2 ; $8201
+    jsr     Area_GetObjectTiles_Bank2 ; $8201  main tile
 
 ; ---------------------------------------------------------------------------
 ; Area_FillObjectRow_Bank2
@@ -220,7 +197,7 @@ Area_DrawObjectRow_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_FillObjectRow_Bank2:
-    lda     areaObjectType          ; $8204
+    lda     areaObjectType          ; $8204  width = size + 1
     and     #$0F                    ; $8207
     tax                             ; $8209
     jsr     AreaMap_GetPagePtr      ; $820A
@@ -236,30 +213,34 @@ Area_FillObjectRow_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawObjectColumn_Bank2
 ;
-; Same as Area_DrawObjectColumn_Bank1.
+; Large objects $Dx: a column of size + 1 of the main tile, down from the
+; object's row.  No area of this bank uses one.
 ;
+; In:      x = dispatch index
 ; Status:  provisional
 ; ---------------------------------------------------------------------------
 Area_DrawObjectColumn_Bank2:
-    jsr     Area_GetObjectTiles_Bank2 ; $8217
+    jsr     Area_GetObjectTiles_Bank2 ; $8217  main tile
     jmp     Area_FillObjectColumn_Bank2 ; $821A
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawObjectPillar_Bank2
 ;
-; Same as Area_DrawObjectPillar_Bank1.
+; Large objects $Ex-$Fx (and the extra $1x on row $F, and Area_DrawPillarWall_Bank2): the main tile, with
+; a column of size tiles of the second tile below it.
 ;
-; Status:  provisional
+; In:      x = dispatch index
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawObjectPillar_Bank2:
-    jsr     Area_GetObjectTiles_Bank2 ; $821D
+    jsr     Area_GetObjectTiles_Bank2 ; $821D  main tile on top,
     jsr     AreaMap_GetPagePtr      ; $8220
     lda     objectTile              ; $8223
     jsr     AreaMap_PutTileDown     ; $8226
     sta     areaBuildPos            ; $8229
     dec     areaObjectType          ; $822C
-    lda     temp0                   ; $822F
+    lda     temp0                   ; $822F  then size of the second below
     sta     objectTile              ; $8231
 
 ; ---------------------------------------------------------------------------
@@ -270,7 +251,7 @@ Area_DrawObjectPillar_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_FillObjectColumn_Bank2:
-    lda     areaObjectType          ; $8234
+    lda     areaObjectType          ; $8234  height = size + 1
     and     #$0F                    ; $8237
     tax                             ; $8239
     jsr     AreaMap_GetPagePtr      ; $823A
@@ -293,86 +274,89 @@ Area_GetObjectTiles_Bank2:
     txa                             ; $8247
     asl     a                       ; $8248
     tax                             ; $8249
-    ldy     #$01                    ; $824A
+    ldy     #$01                    ; $824A  object set 1 (header byte 1 bit 7)?
     lda     (areaDataPtr),y         ; $824C
     asl     a                       ; $824E
     lda     AreaObjectTiles2_Bank2,x ; $824F
-    bcs     @loc_8257               ; $8252
+    bcs     @setMain                ; $8252
     lda     AreaObjectTiles_Bank2,x ; $8254
 
-@loc_8257:
-    sta     objectTile              ; $8257
+@setMain:
+    sta     objectTile              ; $8257  main tile
     lda     AreaObjectTiles2_Bank2+1,x ; $825A
-    bcs     @loc_8262               ; $825D
+    bcs     @setSecond              ; $825D
     lda     AreaObjectTiles_Bank2+1,x ; $825F
 
-@loc_8262:
-    sta     temp0                   ; $8262
+@setSecond:
+    sta     temp0                   ; $8262  second tile
     rts                             ; $8264
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawCactus_Bank2
 ;
-; Same as Area_DrawCactus_Bank1.
+; Large extra $3x (row $F; z2edit: cactus 1): in the object's column, size
+; tiles of $47 up from row 9, topped by $46.  (A size of 0 would loop 256
+; times; no area uses one.)
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawCactus_Bank2:
     jsr     AreaMap_GetPagePtrY     ; $8265
-    lda     areaBuildPos            ; $8268
+    lda     areaBuildPos            ; $8268  from row 9 up
     and     #$0F                    ; $826B
     ora     #$90                    ; $826D
     sta     areaBuildPos            ; $826F
     tay                             ; $8272
-    lda     areaObjectType          ; $8273
+    lda     areaObjectType          ; $8273  size tiles
     and     #$0F                    ; $8276
     tax                             ; $8278
 
 @loop:
-    lda     #$47                    ; $8279
+    lda     #$47                    ; $8279  of $47
     sta     (temp14),y              ; $827B
     tya                             ; $827D
     sec                             ; $827E
-    sbc     #$10                    ; $827F
+    sbc     #$10                    ; $827F  (up a row)
     tay                             ; $8281
     dex                             ; $8282
     bne     @loop                   ; $8283
-    lda     #$46                    ; $8285
+    lda     #$46                    ; $8285  topped by $46
     sta     (temp14),y              ; $8287
     rts                             ; $8289
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawLava_Bank2
 ;
-; Same as Area_DrawLava_Bank1.
+; Large extra $2x (row $F; z2edit: lava): the object's width (size + 1) of
+; $80 on row $A, and of $89 on rows $B and $C, whatever the object's row.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawLava_Bank2:
     lda     areaBuildPos            ; $828A
-    and     #$0F                    ; $828D
+    and     #$0F                    ; $828D  from row $A,
     ora     #$A0                    ; $828F
     sta     areaBuildPos            ; $8291
-    lda     #$80                    ; $8294
+    lda     #$80                    ; $8294  $80,
     sta     objectTile              ; $8296
 
-@loop:
-    lda     areaObjectType          ; $8299
+@row:
+    lda     areaObjectType          ; $8299  width = size + 1
     and     #$0F                    ; $829C
     tax                             ; $829E
     jsr     AreaMap_GetPagePtr      ; $829F
 
-@loop2:
+@tile:
     lda     objectTile              ; $82A2
     jsr     AreaMap_PutTileRight    ; $82A5
     dex                             ; $82A8
-    bpl     @loop2                  ; $82A9
-    lda     #$89                    ; $82AB
+    bpl     @tile                   ; $82A9
+    lda     #$89                    ; $82AB  then $89
     sta     objectTile              ; $82AD
-    jsr     AreaMap_NextBuildRow    ; $82B0
+    jsr     AreaMap_NextBuildRow    ; $82B0  down to row $C
     and     #$F0                    ; $82B3
     cmp     #$D0                    ; $82B5
-    bcc     @loop                   ; $82B7
+    bcc     @row                    ; $82B7
     rts                             ; $82B9
 ; (code below not executed in the test movies)
 
@@ -403,15 +387,16 @@ Area_PlaceLockedDoor_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawTreeStump_Bank2
 ;
-; Same as Area_DrawTreeStump_Bank1.
+; Small object $03: a tree stump, $5B over $5C.  No area of bank 2 uses
+; one.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawTreeStump_Bank2:
     jsr     AreaMap_GetPagePtr      ; $82C8
-    lda     #$5B                    ; $82CB
+    lda     #$5B                    ; $82CB  $5B
     jsr     AreaMap_PutTileDown     ; $82CD
-    lda     #$5C                    ; $82D0
+    lda     #$5C                    ; $82D0  over $5C
     sta     (temp14),y              ; $82D2
     rts                             ; $82D4
 ; (end of code not executed in the test movies)
@@ -419,23 +404,24 @@ Area_DrawTreeStump_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawCactus2_Bank2
 ;
-; Same as Area_DrawCactus2_Bank1.
+; Large extra $4x (row $F; z2edit: cactus 2): in the object's column, $49
+; on row 9 and $48 on row 8; the size is ignored.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawCactus2_Bank2:
     jsr     AreaMap_GetPagePtrY     ; $82D5
-    lda     areaBuildPos            ; $82D8
+    lda     areaBuildPos            ; $82D8  row 9:
     and     #$0F                    ; $82DB
     ora     #$90                    ; $82DD
     tay                             ; $82DF
-    lda     #$49                    ; $82E0
+    lda     #$49                    ; $82E0  $49
     sta     (temp14),y              ; $82E2
     tya                             ; $82E4
     sec                             ; $82E5
     sbc     #$10                    ; $82E6
     tay                             ; $82E8
-    lda     #$48                    ; $82E9
+    lda     #$48                    ; $82E9  $48 above
     sta     (temp14),y              ; $82EB
     rts                             ; $82ED
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -443,9 +429,9 @@ Area_DrawCactus2_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawCross_Bank2
 ;
-; Same as Area_DrawCross_Bank1.
+; Small object $01: a cross, $C6 (GraveTiles_Bank2 entry 0).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawCross_Bank2:
     ldx     #$00                    ; $82EE
@@ -454,9 +440,9 @@ Area_DrawCross_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawAngledCross_Bank2
 ;
-; Same as Area_DrawAngledCross_Bank1.
+; Small object $02: a leaning cross, $C7 (GraveTiles_Bank2 entry 1).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawAngledCross_Bank2:
     ldx     #$01                    ; $82F2
@@ -471,9 +457,9 @@ GraveTiles_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawHeadstone_Bank2
 ;
-; Same as Area_DrawHeadstone_Bank1.
+; Small object $00: a headstone, $C5 (GraveTiles_Bank2 entry 2).
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawHeadstone_Bank2:
     ldx     #$02                    ; $82F9
@@ -502,70 +488,74 @@ StonehengeTiles_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawStonehenge_Bank2
 ;
-; Same as Area_DrawStonehenge_Bank1.
+; Small object $04: a stone arch 4 tiles wide and 3 high, from
+; StonehengeTiles_Bank2 (rows ended by $FF): $56 $57 $57 $58, then two
+; rows of a post at each end ($59, then $5A) with background between.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawStonehenge_Bank2:
-    ldx     #$00                    ; $8313
+    ldx     #$00                    ; $8313  stonehenge tiles from 0
 
-@loc_8315:
+@row:
     jsr     AreaMap_GetPagePtr      ; $8315
 
-@loc_8318:
+@tile:
     lda     StonehengeTiles_Bank2,x ; $8318
-    cmp     #$FF                    ; $831B
-    beq     @loc_8326               ; $831D
+    cmp     #$FF                    ; $831B  $FF: end of row
+    beq     @rowEnd                 ; $831D
     jsr     AreaMap_PutTileRight    ; $831F
     inx                             ; $8322
-    jmp     @loc_8318               ; $8323
+    jmp     @tile                   ; $8323
 
-@loc_8326:
-    cpx     #$0E                    ; $8326
+@rowEnd:
+    cpx     #$0E                    ; $8326  after 3 rows: done
     beq     Area_DrawGraveTile_Done_Bank2 ; $8328
-    jsr     AreaMap_NextBuildRow    ; $832A
+    jsr     AreaMap_NextBuildRow    ; $832A  next row
     inx                             ; $832D
-    jmp     @loc_8315               ; $832E
+    jmp     @row                    ; $832E
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawPit_Bank2
 ;
-; Same as Area_DrawPit_Bank1.
+; Small object $08: a pit, the background tile ($40) from the object's row
+; down to row $C.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawPit_Bank2:
     jsr     AreaMap_GetPagePtr      ; $8331
 
 @loop:
-    lda     #$40                    ; $8334
+    lda     #$40                    ; $8334  background
     jsr     AreaMap_PutTileDown     ; $8336
     and     #$F0                    ; $8339
-    cmp     #$D0                    ; $833B
+    cmp     #$D0                    ; $833B  down to row $C
     bcc     @loop                   ; $833D
     rts                             ; $833F
 
 ; ---------------------------------------------------------------------------
 ; Area_DrawSleepingZelda_Bank2
 ;
-; Same as Area_DrawSleepingZelda_Bank1.
+; Small objects $06 and $07: Zelda asleep on her bed (as in bank 1's North
+; Castle), $4E and $4F side by side.  No area of bank 2 uses them.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawSleepingZelda_Bank2:
     jsr     AreaMap_GetPagePtr      ; $8340
     ldx     #$01                    ; $8343
-    lda     #$4E                    ; $8345
-    bne     @loc_834B               ; $8347
+    lda     #$4E                    ; $8345  $4E,
+    bne     @put                    ; $8347
 
-@loop:
-    lda     #$4F                    ; $8349
+@second:
+    lda     #$4F                    ; $8349  then $4F
 
-@loc_834B:
+@put:
     sta     (temp14),y              ; $834B
     iny                             ; $834D
     dex                             ; $834E
-    bpl     @loop                   ; $834F
+    bpl     @second                 ; $834F
     rts                             ; $8351
 ; (end of code not executed in the test movies)
 
@@ -582,16 +572,19 @@ Area_DrawSmallCloud_Bank2:
 ; ---------------------------------------------------------------------------
 ; Area_DrawCloud_Bank2
 ;
-; Same as Area_DrawCloud_Bank1.
+; Small objects $09 (large cloud) and $0A-$0F (small): $C2 and, to its
+; right, $C3 (large) or $C4 (small, CloudTiles_Bank2).  Only the
+; background layers (AreaBank::BackgroundAreas) place clouds.
 ;
-; Status:  provisional
+; In:      x = 0 large, 1 small
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawCloud_Bank2:
     jsr     AreaMap_GetPagePtr      ; $835A
-    lda     #$C2                    ; $835D
+    lda     #$C2                    ; $835D  $C2,
     sta     (temp14),y              ; $835F
     iny                             ; $8361
-    lda     CloudTiles_Bank2,x      ; $8362
+    lda     CloudTiles_Bank2,x      ; $8362  $C3 or $C4
     sta     (temp14),y              ; $8365
     rts                             ; $8367
 
@@ -1115,35 +1108,39 @@ SolidTileThresholds_Bank2:
     .byte   $52, $8F, $C9                                                   ; $938C
 
 ; ---------------------------------------------------------------------------
-; Area_DrawPillarSlope_Bank2
+; Area_DrawPillarWall_Bank2
 ;
-; Large object $10 in bank 2: the pillar of object $E0 in every column to
-; the end of the area (four pages), each one row taller than the last.
-; (Bank 1's table has $0000 for this object.)
+; Large object $1x off row $F, in bank 2 only (bank 1's table has $0000):
+; a wall of pillars of object $Ex's tiles ($4C over $4B in object set 0),
+; the object's size, in every column from its own to the end of the area
+; (four pages).  Area_DrawObjectPillar_Bank2 decrements the size and this
+; restores it, so every column is the same height.  After the first page
+; the pillars start at row 3, whatever the object's row.  Areas $02-$05
+; (East Hyrule) are such walls.
 ;
-; Status:  provisional
+; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Area_DrawPillarSlope_Bank2:
-    lda     #$03                    ; $938F
+Area_DrawPillarWall_Bank2:
+    lda     #$03                    ; $938F  pages: this one and 3 more
     sta     temp5                   ; $9391
-    lda     areaBuildPos            ; $9393
+    lda     areaBuildPos            ; $9393  from the object's position
     sta     temp4                   ; $9396
 
-@loop:
-    ldx     #$0D                    ; $9398
+@column:
+    ldx     #$0D                    ; $9398  a pillar of $Ex's tiles
     jsr     Area_DrawObjectPillar_Bank2 ; $939A
-    inc     areaObjectType          ; $939D
-    inc     temp4                   ; $93A0
+    inc     areaObjectType          ; $939D  (its size back)
+    inc     temp4                   ; $93A0  next column
     lda     temp4                   ; $93A2
     sta     areaBuildPos            ; $93A4
-    and     #$0F                    ; $93A7
-    bne     @loop                   ; $93A9
-    lda     #$30                    ; $93AB
+    and     #$0F                    ; $93A7  to the end of the page
+    bne     @column                 ; $93A9
+    lda     #$30                    ; $93AB  next page, from row 3
     sta     temp4                   ; $93AD
     sta     areaBuildPos            ; $93AF
     inc     areaBuildPage           ; $93B2
     dec     temp5                   ; $93B5
-    bpl     @loop                   ; $93B7
+    bpl     @column                 ; $93B7
     rts                             ; $93B9
 
 Overworld_GetRowPtr_Bank2:
@@ -1169,7 +1166,7 @@ ProjectilePtrs_Bank2:
 
 ; Unused byte between the enemy definition tables.
 ProjectileUnused_Bank2:
-    .byte   $00                                                             ; $9416
+    .byte   $00                     ; $9416
 
 ; Flags of each projectile type, indexed from 1 (sramProjectileFlags; see docs/entities).
 ProjectileFlags_Bank2:

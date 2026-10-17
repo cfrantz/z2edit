@@ -44,6 +44,6 @@ lists code oddities with no visible effect.
 | `Ppu_WriteAttrColumn` | Loads `a` with $FF but stores `y`. |
 | `Daira_DrawWeapon` (BUG) | Writes to ROM at $95E6, which on the MMC1 is a write to its control register; probably meant for RAM $05E6.  Harmless: the value has bit 7 set, which only resets the MMC1 shift register and re-selects PRG mode 3, already in use. |
 | `Palace_GetObjectTiles_Bank4`, `Palace_GetObjectTiles_Bank5` | If bit 7 of an area header's second byte were set, the object tiles would be read from code; no palace area sets it. |
-| `Area_DrawLargeObject_Bank1` | Large object $10 has a routine address of $0000, so an area using it would crash (bank 2 draws a slope there). |
+| `Area_DrawLargeObject_Bank1` | Large object $1x (off row $F) has a routine address of $0000, so an area using it would crash; no area does (bank 2 draws a wall of pillars there, `Area_DrawPillarWall_Bank2`). |
 | Bank 5 enemy types $1B, $1C | Their AI pointers point into data (`FokkeruSpeeds`); the types are not used. |
 | `RomHeader` | The PRG ROM checksum at $FFF0 does not match the PRG ROM (the CHR checksum does); presumably stale. |

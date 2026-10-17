@@ -73,6 +73,11 @@ Tools that drive the emulator need the Python extension built with
   `docs/entities/enemies` give the commands they were verified with.
 - `enemy_table.py`: Decodes each enemy group's definition tables (hit
   points, experience, damage, flags, and init/AI/draw routines by name).
+- `area_objects.py`: Decodes every side view area's objects (and the
+  background layers) in an area bank, naming the routine that draws each;
+  `--by-routine` lists the areas that use each routine.
+- `area_dump.py`: Loads areas in the emulator by `areaId` (`gameMode`
+  $14) and prints the tile maps the game builds for them.
 - `disasm.py`: Disassembles a run of `.byte` data into instructions (code
   the movies never ran, which the bootstrap left as data).
 - `name_at.py`: Names the code or data at addresses, whatever label (or

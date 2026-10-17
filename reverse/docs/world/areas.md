@@ -83,6 +83,71 @@ is solid if it is at or above its palette group's threshold
 For group 0 the lookup wraps around and reads an unrelated byte, which
 makes every group 0 tile solid in bank 2 and none in the other banks.
 
+## Overworld Objects (Banks 1 and 2)
+
+Banks 1 (West Hyrule, Death Mountain) and 2 (East Hyrule, Maze Island)
+have the same object code at the same addresses.  A large object's size
+is its type's low nibble.
+
+| Type | Row | Routine | Drawn |
+|------|-----|---------|-------|
+| $1x | 0-$E | none in bank 1 ($0000); `Area_DrawPillarWall_Bank2` | bank 2: pillars of $Ex's tiles, the object's size, in every column to the end of the area |
+| $2x-$4x | 0-$E | `Area_DrawObjectTwoRows_*` | a row of size + 1 of the main tile, the second tile below |
+| $5x-$Cx | 0-$E | `Area_DrawObjectRow_*` | a row of size + 1 of the main tile |
+| $Dx | 0-$E | `Area_DrawObjectColumn_*` | a column of size + 1 (unused) |
+| $Ex, $Fx | 0-$E | `Area_DrawObjectPillar_*` | the main tile over size of the second |
+| $1x | $F | `Area_DrawObjectPillar_*` | as above |
+| $2x | $F | `Area_DrawLava_*` | size + 1 wide: $80 on row $A, $89 on rows $B-$C |
+| $3x | $F | `Area_DrawCactus_*` | size of $47 up from row 9, topped by $46 |
+| $4x | $F | `Area_DrawCactus2_*` | $49 on row 9, $48 on row 8 |
+| $5x | $F | `Area_PlaceElevator_*` | the elevator's column |
+
+The main and second tiles come from `AreaObjectTiles_*` (object set 0)
+or `AreaObjectTiles2_*` (set 1, header byte 1 bit 7), a pair per type.
+For example, set 1's pillar $Fx is $59 over $5A, and set 0's $Ex is $4C
+over $4B.
+
+| Small | Routine | Drawn |
+|-------|---------|-------|
+| $00 | `Area_DrawHeadstone_*` | $C5 |
+| $01 | `Area_DrawCross_*` | $C6 |
+| $02 | `Area_DrawAngledCross_*` | $C7 |
+| $03 | `Area_DrawTreeStump_*` | $5B over $5C |
+| $04 | `Area_DrawStonehenge_*` | a 4 x 3 stone arch (`StonehengeTiles_*`) |
+| $05 | `Area_PlaceLockedDoor_*` | the locked door's column |
+| $06, $07 | `Area_DrawSleepingZelda_*` | $4E $4F (North Castle) |
+| $08 | `Area_DrawPit_*` | $40 down to row $C |
+| $09 | `Area_DrawLargeCloud_*` | $C2 $C3 |
+| $0A-$0F | `Area_DrawSmallCloud_*` | $C2 $C4 |
+
+Only the background layers place clouds.  Floors and ceilings come from
+`AreaFloorRecords_*`, 9 bytes per tile set: 8 tiles chosen by the floor
+pattern, then `floorTile`.
+
+### Checking Objects
+
+`tools/area_objects.py BANK [--group 2] [--by-routine]` decodes every
+area's objects and names the routine that draws each.  `--by-routine`
+lists which areas use each routine.  `tools/area_dump.py` loads areas in
+the emulator (`areaId` with `gameMode` $14, from a start made with
+`--at`) and prints the tile maps the game builds.  `--set
+currentRegion=1` selects the second group.
+
+These dumps matched every routine above except the unused column:
+
+- West Hyrule: cacti in area $1D, stonehenge in $26, lava in $06, tree
+  stumps in $14, graves in $34, Zelda in $00.
+- Death Mountain: the pit and elevator in $10.
+- East Hyrule: the pillar wall in $02, cacti in $0F, stonehenge in $2C.
+
+```
+AT=areaPrgBank=1,currentRegion=0,currentWorld=0,townCode=0,palaceCode=0,areaLocation=0x13,areaId=0x01,areaStartPage=0,areaEntrySide=0,prevRegion=0
+tools/area_dump.py --movie build/movies/file_select.fm2 --at $AT --until areaId=0x01 --areas 0x1D,0x26,0x06,0x14,0x34,0x00
+tools/area_dump.py --movie build/movies/file_select.fm2 --at $AT --until areaId=0x01 --set currentRegion=1 --areas 0x10
+AT2=areaPrgBank=2,currentRegion=2,currentWorld=0,townCode=0,palaceCode=0,areaLocation=0x0D,areaId=0x09,areaStartPage=0,areaEntrySide=0,prevRegion=2
+tools/area_dump.py --movie build/movies/file_select.fm2 --at $AT2 --until areaId=0x09 --areas 0x02,0x0F,0x2C
+```
+
 ## Scrolling
 
 While Link moves, `Scroll_Update` scrolls the screen to follow him,
