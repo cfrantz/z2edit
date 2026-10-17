@@ -42,7 +42,7 @@ own colors (`FireOctorok_Draw`).
 | $20 | [Barrier](enemies/barrier.md) | 0 | 3 | 6 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder, sword passes through | `Barrier_Ai` |
 | $21 | (unused) | 0 | 3 | 1 | - |  | `$0000` |
 | $22 | [Thunderbird](enemies/thunderbird.md) | 192 | 1000 | 5 | - | blocks Link's projectiles, immune to SPELL, Thunder does only 2 | `Thunderbird_Ai` |
-| $23 | [Dark Link](enemies/dark-link.md) | 248 | 150 | 4 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder | `DarkLink_Ai` |
+| $23 | [Dark Link](enemies/dark-link.md) | 248 | 150 | 4 | - | blocks Link's projectiles, immune to SPELL, immune to Thunder; `DarkLink_Init` gives it 8 hit points, and each hit takes 1 | `DarkLink_Ai` |
 
 ## Enemies
 
