@@ -108,8 +108,8 @@ unless noted):
 - 8m. Done: the area banks' shared code: the object drawers
   (`Area_*`, `Palace_*`), `Area_IsSolidTile`, `Generator_Init` and the
   projectile movers and draws.  One copy was commented and the others
-  filled by script where the code matches (tools: scratchpad
-  copycmt.py); variants by hand.  Bank 4's and 5's boss draws are left
+  filled by script where the code matches, instruction for
+  instruction; variants by hand.  Bank 4's and 5's boss draws are left
   for 8p.
 - 8n. Bank 5's screens (~2300): `Bank5_Nmi`, `Title_*`, `Story_*`,
   `FileScreen_*`, `FileSelect_*`, `Register_*`, `Eliminate_*`, `Save_*`,

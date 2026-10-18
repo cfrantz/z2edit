@@ -5251,62 +5251,62 @@ Bank5PpuStrings:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bank5_Nmi:
-    lda     ppuCtrlShadow           ; $A610
+    lda     ppuCtrlShadow           ; $A610  NMIs off, with the nametable
     and     #$7C                    ; $A612
     ora     ppuNametable            ; $A614
     sta     ppuCtrlShadow           ; $A617
     sta     PPUCTRL                 ; $A619
-    lda     ppuMaskShadow           ; $A61C
+    lda     ppuMaskShadow           ; $A61C  rendering off for the update
     and     #$E0                    ; $A61E
     sta     PPUMASK                 ; $A620
-    ldy     renderingOff            ; $A623
-    bne     @loc_A62C               ; $A626
-    lda     ppuMaskShadow           ; $A628
+    ldy     renderingOff            ; $A623  the screen on?
+    bne     @setMask                ; $A626
+    lda     ppuMaskShadow           ; $A628  sprites and background on
     ora     #$1E                    ; $A62A
 
-@loc_A62C:
+@setMask:
     sta     ppuMaskShadow           ; $A62C
-    ldx     PPUSTATUS               ; $A62E
-    lda     #$00                    ; $A631
+    ldx     PPUSTATUS               ; $A62E  reset the address latch
+    lda     #$00                    ; $A631  scroll 0 while writing
     sta     PPUSCROLL               ; $A633
     sta     PPUSCROLL               ; $A636
-    sta     OAMADDR                 ; $A639
+    sta     OAMADDR                 ; $A639  sprite DMA from $0200
     lda     #$02                    ; $A63C
     sta     OAMDMA                  ; $A63E
-    lda     ppuStringSelect         ; $A641
+    lda     ppuStringSelect         ; $A641  the selected PPU strings
     asl     a                       ; $A644
     tax                             ; $A645
     lda     Bank5PpuStrings,x       ; $A646
     sta     temp0                   ; $A649
     lda     Bank5PpuStrings+1,x     ; $A64B
     sta     temp1                   ; $A64E
-    jsr     Ppu_WriteStrings        ; $A650
-    lda     #$3F                    ; $A653
+    jsr     Ppu_WriteStrings        ; $A650  written
+    lda     #$3F                    ; $A653  PPU address $3F00, then 0
     sta     PPUADDR                 ; $A655
     ldy     #$00                    ; $A658
     sty     PPUADDR                 ; $A65A
-    sty     PPUADDR                 ; $A65D
+    sty     PPUADDR                 ; $A65D  (leaves the palette mirror)
     sty     PPUADDR                 ; $A660
     lda     ppuCtrlShadow           ; $A663
     sta     PPUCTRL                 ; $A665
-    lda     PPUSTATUS               ; $A668
-    lda     ppuScrollY              ; $A66B
+    lda     PPUSTATUS               ; $A668  reset the latch
+    lda     ppuScrollY              ; $A66B  the scroll: X 0, Y ppuScrollY
     sty     PPUSCROLL               ; $A66D
     sta     PPUSCROLL               ; $A670
-    lda     ppuMaskShadow           ; $A673
+    lda     ppuMaskShadow           ; $A673  rendering as set
     sta     PPUMASK                 ; $A675
-    sty     ppuBuffer0Len           ; $A678
+    sty     ppuBuffer0Len           ; $A678  y = 0: the buffer emptied
     sty     ppuStringSelect         ; $A67B
-    dey                             ; $A67E
+    dey                             ; $A67E  end its list ($FF)
     sty     ppuBuffer0              ; $A67F
-    jsr     Sound_UpdateTitle       ; $A682
-    lda     joypadHeld              ; $A685
+    jsr     Sound_UpdateTitle       ; $A682  the title sound engine
+    lda     joypadHeld              ; $A685  the controllers
     sta     joypadHeldPrev          ; $A687
     jsr     Joypad_Update           ; $A68A
     inc     a:frameCounter          ; $A68D
-    jsr     Bank5_RunState          ; $A690
+    jsr     Bank5_RunState          ; $A690  this frame's screen work
     lda     PPUSTATUS               ; $A693
-    lda     ppuCtrlShadow           ; $A696
+    lda     ppuCtrlShadow           ; $A696  NMIs back on
     ora     #$80                    ; $A698
     sta     ppuCtrlShadow           ; $A69A
     sta     PPUCTRL                 ; $A69C
@@ -5324,28 +5324,28 @@ Bank5_Nmi:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_PowerOnInit:
-    jsr     Save_CheckFiles         ; $A6A0
-    jsr     Ram_ClearAll            ; $A6A3
-    ldy     #$1F                    ; $A6A6
+    jsr     Save_CheckFiles         ; $A6A0  repair the save files
+    jsr     Ram_ClearAll            ; $A6A3  clear the RAM
+    ldy     #$1F                    ; $A6A6  and the sound's ($00E0-$00FF)
 
 @loop:
     sta     a:musicNotesPtr,y       ; $A6A8
     dey                             ; $A6AB
     bpl     @loop                   ; $A6AC
-    sta     DMC_RAW                 ; $A6AE
-    lda     #$0F                    ; $A6B1
+    sta     DMC_RAW                 ; $A6AE  DMC level 0
+    lda     #$0F                    ; $A6B1  pulses, triangle and noise on
     sta     SND_CHN                 ; $A6B3
     sta     unused076B              ; $A6B6
-    lda     #$00                    ; $A6B9
+    lda     #$00                    ; $A6B9  rendering off
     sta     PPUMASK                 ; $A6BB
     jsr     Oam_HideAll             ; $A6BE
     jsr     Ppu_ClearNametables     ; $A6C1
     inc     renderingOff            ; $A6C4
     lda     #$06                    ; $A6C7
     sta     ppuMaskExtra            ; $A6C9
-    lda     #NMI_MODE_BANK5         ; $A6CC
+    lda     #NMI_MODE_BANK5         ; $A6CC  Bank5_Nmi from now on
     sta     nmiMode                 ; $A6CE
-    lda     #$B0                    ; $A6D1
+    lda     #$B0                    ; $A6D1  NMIs on, 8x16 sprites, background from $1000
     sta     ppuCtrlShadow           ; $A6D3
     sta     PPUCTRL                 ; $A6D5
     rts                             ; $A6D8
@@ -5360,7 +5360,7 @@ Game_PowerOnInit:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bank5_RunState:
-    jsr     Game_CheckStateChange   ; $A6D9
+    jsr     Game_CheckStateChange   ; $A6D9  a new state starts at step 0
     jsr     JumpTable               ; $A6DC
 ; (inline jump table)
     .word   Title_Run               ; $A6DF
@@ -5376,9 +5376,9 @@ Bank5_RunState:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Bank5_StartGame:
-    lda     #NMI_MODE_GAME          ; $A6E5
+    lda     #NMI_MODE_GAME          ; $A6E5  the game NMI from now on
     sta     nmiMode                 ; $A6E7
-    lda     #$00                    ; $A6EA
+    lda     #$00                    ; $A6EA  GameState_Begin next
     sta     gameState               ; $A6EC
     rts                             ; $A6EF
 
@@ -5392,15 +5392,15 @@ Bank5_StartGame:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_Run:
-    lda     gameMode                ; $A6F0
+    lda     gameMode                ; $A6F0  the title shown (modes 3-4):
     cmp     #$03                    ; $A6F3
-    bcc     @loc_A6FF               ; $A6F5
-    jsr     Title_AnimateStars      ; $A6F7
+    bcc     @mode                   ; $A6F5
+    jsr     Title_AnimateStars      ; $A6F7  twinkle the stars
     jsr     Title_AnimateSparkles   ; $A6FA
     lda     #$00                    ; $A6FD
 
-@loc_A6FF:
-    jsr     Game_CheckModeChange    ; $A6FF
+@mode:
+    jsr     Game_CheckModeChange    ; $A6FF  a new mode starts at step 0
     jsr     JumpTable               ; $A702
 ; (inline jump table)
     .word   Title_Init              ; $A705
@@ -5423,17 +5423,17 @@ Title_Run:
 ; ---------------------------------------------------------------------------
 Title_Init:
     jsr     Ram_ClearWork           ; $A70F
-    lda     #$0F                    ; $A712
+    lda     #$0F                    ; $A712  horizontal mirroring, 8K CHR
     jsr     Mmc1_SetControl_Bank5   ; $A714
-    lda     flutePlayed             ; $A717
-    bne     @loc_A723               ; $A71A
-    lda     #$01                    ; $A71C
+    lda     flutePlayed             ; $A717  the song started?
+    bne     @scroll                 ; $A71A
+    lda     #$01                    ; $A71C  no: part 1 (titleSongRequest)
     sta     soundMute               ; $A71E
-    inc     flutePlayed             ; $A720
+    inc     flutePlayed             ; $A720  (once)
 
-@loc_A723:
+@scroll:
     jsr     Title_InitScroll        ; $A723
-    lda     #$00                    ; $A726
+    lda     #$00                    ; $A726  CHR bank 0
     jsr     Mmc1_SetChrBank_Bank5   ; $A728
     jmp     Game_BlankAndNextMode   ; $A72B
 
@@ -5463,7 +5463,7 @@ Title_Show:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_Idle:
-    ldy     #$00                    ; $A737
+    ldy     #$00                    ; $A737  a delay, past the vertical blank
 
 @loop:
     nop                             ; $A739
@@ -5471,9 +5471,9 @@ Title_Idle:
     bne     @loop                   ; $A73B
 
 @loop2:
-    bit     PPUSTATUS               ; $A73D
+    bit     PPUSTATUS               ; $A73D  wait for the sprite 0 hit
     bvc     @loop2                  ; $A740
-    ldy     #$00                    ; $A742
+    ldy     #$00                    ; $A742  delays to the end of the line
 
 @loop3:
     dey                             ; $A744
@@ -5483,41 +5483,41 @@ Title_Idle:
 @loop4:
     dey                             ; $A749
     bne     @loop4                  ; $A74A
-    lda     ppuCtrlShadow           ; $A74C
+    lda     ppuCtrlShadow           ; $A74C  the split's nametable
     and     #$FC                    ; $A74E
     ora     titleSplitNametable     ; $A750
     sta     ppuCtrlShadow           ; $A752
     sta     PPUCTRL                 ; $A754
-    lda     titleSplitAddr          ; $A757
+    lda     titleSplitAddr          ; $A757  and address
     ldy     titleSplitAddr+1        ; $A759
     sta     PPUADDR                 ; $A75B
     sty     PPUADDR                 ; $A75E
-    lda     PPUDATA                 ; $A761
+    lda     PPUDATA                 ; $A761  (two reads prime the PPU's read buffer)
     lda     PPUDATA                 ; $A764
-    lda     PPUSTATUS               ; $A767
-    lda     ppuScrollY              ; $A76A
+    lda     PPUSTATUS               ; $A767  reset the latch
+    lda     ppuScrollY              ; $A76A  scrolled all the way ($60)?
     cmp     #$60                    ; $A76C
-    bne     @loc_A787               ; $A76E
-    lda     #$80                    ; $A770
+    bne     @scrolling              ; $A76E  no
+    lda     #$80                    ; $A770  hold the story's delay
     sta     titleDelay              ; $A772
     jsr     Title_CheckStart        ; $A775
-    lda     titleMusicPart          ; $A778
+    lda     titleMusicPart          ; $A778  part 8 of the song?
     cmp     #$08                    ; $A77A
-    beq     @loc_A781               ; $A77C
-    jmp     Story_Delay             ; $A77E
+    beq     @story                  ; $A77C
+    jmp     Story_Delay             ; $A77E  no: draw the story's first rows
 
-@loc_A781:
-    inc     gameMode                ; $A781
+@story:
+    inc     gameMode                ; $A781  yes: the story
     jmp     Title_CheckStart        ; $A784
 
-@loc_A787:
-    lda     titleMusicPart          ; $A787
+@scrolling:
+    lda     titleMusicPart          ; $A787  scrolling: during part 2,
     cmp     #$02                    ; $A789
     bne     Title_CheckStart        ; $A78B
-    lda     frameCounter            ; $A78D
+    lda     frameCounter            ; $A78D  every 4 frames,
     and     #$03                    ; $A78F
     bne     Title_CheckStart        ; $A791
-    inc     ppuScrollY              ; $A793
+    inc     ppuScrollY              ; $A793  one line up
 
 ; ---------------------------------------------------------------------------
 ; Title_CheckStart
@@ -5530,23 +5530,23 @@ Title_Idle:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_CheckStart:
-    lda     joypadHeld              ; $A795
+    lda     joypadHeld              ; $A795  Start, newly pressed?
     cmp     joypadHeldPrev          ; $A797
     beq     @done                   ; $A79A
     and     #$10                    ; $A79C
     beq     @done                   ; $A79E
-    lda     #$00                    ; $A7A0
+    lda     #$00                    ; $A7A0  yes:
     sta     nmiFlag                 ; $A7A2
     sta     sceneStep               ; $A7A5
-    jsr     Oam_HideAllButSprite0   ; $A7A8
-    lda     #$80                    ; $A7AB
+    jsr     Oam_HideAllButSprite0   ; $A7A8  only sprite 0 left
+    lda     #$80                    ; $A7AB  the title player's part $80
     sta     soundMute               ; $A7AD
     lda     #$00                    ; $A7AF
     sta     ppuNametable            ; $A7B1
     sta     flutePlayed             ; $A7B4
     sta     fileSubStep             ; $A7B7
-    inc     renderingOff            ; $A7BA
-    inc     gameState               ; $A7BD
+    inc     renderingOff            ; $A7BA  screen off
+    inc     gameState               ; $A7BD  gameState 1: the file screens
 
 @done:
     rts                             ; $A7C0
@@ -5586,7 +5586,7 @@ TitleSprites:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_LoadSprites:
-    ldy     #$FF                    ; $A8C1
+    ldy     #$FF                    ; $A8C1  all 256 bytes
 
 @loop:
     lda     TitleSprites,y          ; $A8C3
@@ -5609,45 +5609,45 @@ Title_LoadSprites:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_AnimateStars:
-    ldx     #$6B                    ; $A8CF
-    lda     frameCounter            ; $A8D1
+    ldx     #$6B                    ; $A8CF  sprites 26-52 (the stars):
+    lda     frameCounter            ; $A8D1  every 16 frames,
     and     #$0F                    ; $A8D3
-    bne     @loc_A8E8               ; $A8D5
+    bne     @shootingStar           ; $A8D5
 
 @loop:
-    inc     oamBuffer+103,x         ; $A8D7
+    inc     oamBuffer+103,x         ; $A8D7  the next palette,
     lda     oamBuffer+103,x         ; $A8DA
-    and     #$23                    ; $A8DD
+    and     #$23                    ; $A8DD  keeping the behind bit
     sta     oamBuffer+103,x         ; $A8DF
-    dex                             ; $A8E2
+    dex                             ; $A8E2  the star before
     dex                             ; $A8E3
     dex                             ; $A8E4
     dex                             ; $A8E5
     bpl     @loop                   ; $A8E6
 
-@loc_A8E8:
-    lda     frameCounter            ; $A8E8
-    bne     @loc_A8EE               ; $A8EA
-    inc     titleShootingStar       ; $A8EC
+@shootingStar:
+    lda     frameCounter            ; $A8E8  every 256 frames:
+    bne     @checkFallen            ; $A8EA
+    inc     titleShootingStar       ; $A8EC  the shooting star falls
 
-@loc_A8EE:
-    lda     oamBuffer+108           ; $A8EE
+@checkFallen:
+    lda     oamBuffer+108           ; $A8EE  fallen to Y $37?
     cmp     #$37                    ; $A8F1
-    bcc     @loc_A8FE               ; $A8F3
-    lda     #$00                    ; $A8F5
+    bcc     @fall                   ; $A8F3
+    lda     #$00                    ; $A8F5  yes: done,
     sta     titleShootingStar       ; $A8F7
-    lda     #$F8                    ; $A8F9
+    lda     #$F8                    ; $A8F9  parked off the screen
     sta     oamBuffer+108           ; $A8FB
 
-@loc_A8FE:
-    lda     titleShootingStar       ; $A8FE
+@fall:
+    lda     titleShootingStar       ; $A8FE  falling:
     beq     @done                   ; $A900
-    lda     frameCounter            ; $A902
+    lda     frameCounter            ; $A902  every 4 frames,
     and     #$03                    ; $A904
     bne     @done                   ; $A906
-    inc     oamBuffer+108           ; $A908
+    inc     oamBuffer+108           ; $A908  2 lines down,
     inc     oamBuffer+108           ; $A90B
-    inc     oamBuffer+111           ; $A90E
+    inc     oamBuffer+111           ; $A90E  3 pixels right
     inc     oamBuffer+111           ; $A911
     inc     oamBuffer+111           ; $A914
 
@@ -5663,17 +5663,17 @@ Title_AnimateStars:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_AnimateSparkles:
-    ldx     #$2B                    ; $A918
-    lda     frameCounter            ; $A91A
+    ldx     #$2B                    ; $A918  sprites 53-63:
+    lda     frameCounter            ; $A91A  every 8 frames,
     and     #$07                    ; $A91C
     bne     @done                   ; $A91E
 
 @loop:
-    inc     oamBuffer+211,x         ; $A920
+    inc     oamBuffer+211,x         ; $A920  the next palette (0-3)
     lda     oamBuffer+211,x         ; $A923
     and     #$03                    ; $A926
     sta     oamBuffer+211,x         ; $A928
-    dex                             ; $A92B
+    dex                             ; $A92B  the sprite before
     dex                             ; $A92C
     dex                             ; $A92D
     dex                             ; $A92E
@@ -5766,7 +5766,7 @@ TitleLogoPtrs:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_Run:
-    ldy     #$00                    ; $AB6D
+    ldy     #$00                    ; $AB6D  a delay, past the vertical blank
 
 @loop:
     nop                             ; $AB6F
@@ -5774,9 +5774,9 @@ Story_Run:
     bne     @loop                   ; $AB71
 
 @loop2:
-    bit     PPUSTATUS               ; $AB73
+    bit     PPUSTATUS               ; $AB73  wait for the sprite 0 hit
     bvc     @loop2                  ; $AB76
-    ldy     #$00                    ; $AB78
+    ldy     #$00                    ; $AB78  delays to the end of the line
 
 @loop3:
     dey                             ; $AB7A
@@ -5786,56 +5786,56 @@ Story_Run:
 @loop4:
     dey                             ; $AB7F
     bne     @loop4                  ; $AB80
-    lda     ppuCtrlShadow           ; $AB82
+    lda     ppuCtrlShadow           ; $AB82  the split's nametable
     and     #$FC                    ; $AB84
     ora     titleSplitNametable     ; $AB86
     sta     ppuCtrlShadow           ; $AB88
     sta     PPUCTRL                 ; $AB8A
-    lda     titleSplitAddr          ; $AB8D
+    lda     titleSplitAddr          ; $AB8D  and address
     ldy     titleSplitAddr+1        ; $AB8F
     sta     PPUADDR                 ; $AB91
     sty     PPUADDR                 ; $AB94
-    lda     PPUDATA                 ; $AB97
+    lda     PPUDATA                 ; $AB97  (two reads prime the PPU's read buffer)
     lda     PPUDATA                 ; $AB9A
-    lda     PPUSTATUS               ; $AB9D
-    jsr     Title_CheckStart        ; $ABA0
-    lda     renderingOff            ; $ABA3
+    lda     PPUSTATUS               ; $AB9D  reset the latch
+    jsr     Title_CheckStart        ; $ABA0  Start?
+    lda     renderingOff            ; $ABA3  leaving: nothing more
     bne     Story_Delay_Done        ; $ABA6
-    lda     titleDelay              ; $ABA8
+    lda     titleDelay              ; $ABA8  still waiting?
     bne     Story_Delay             ; $ABAB
-    lda     titleScrollHeld         ; $ABAD
+    lda     titleScrollHeld         ; $ABAD  held: steps without scrolling
     bne     Story_RunStep           ; $ABAF
-    lda     frameCounter            ; $ABB1
+    lda     frameCounter            ; $ABB1  every 4 frames,
     and     #$03                    ; $ABB3
     bne     Story_Delay_Done        ; $ABB5
-    inc     ppuScrollY              ; $ABB7
+    inc     ppuScrollY              ; $ABB7  one line up
     lda     ppuScrollY              ; $ABB9
-    cmp     #$F0                    ; $ABBB
-    bne     @loc_ABCB               ; $ABBD
-    lda     #$00                    ; $ABBF
+    cmp     #$F0                    ; $ABBB  past 240?
+    bne     @checkStep              ; $ABBD
+    lda     #$00                    ; $ABBF  yes: the other nametable
     sta     ppuScrollY              ; $ABC1
     lda     ppuNametable            ; $ABC3
     eor     #$02                    ; $ABC6
     sta     ppuNametable            ; $ABC8
 
-@loc_ABCB:
-    lda     sceneStep               ; $ABCB
+@checkStep:
+    lda     sceneStep               ; $ABCB  in the middle of a step chain?
     bne     Story_RunStep           ; $ABCE
-    lda     titleBgRow              ; $ABD0
-    bne     @loc_ABDF               ; $ABD2
-    lda     ppuScrollY              ; $ABD4
+    lda     titleBgRow              ; $ABD0  the landscape wrapped (row 0)
+    bne     @everyEight             ; $ABD2
+    lda     ppuScrollY              ; $ABD4  and back at $60?
     cmp     #$60                    ; $ABD6
-    bne     @loc_ABDF               ; $ABD8
-    lda     #$05                    ; $ABDA
+    bne     @everyEight             ; $ABD8
+    lda     #$05                    ; $ABDA  yes: bring the title back
     sta     sceneStep               ; $ABDC
 
-@loc_ABDF:
-    lda     ppuScrollY              ; $ABDF
+@everyEight:
+    lda     ppuScrollY              ; $ABDF  every 8 lines:
     and     #$07                    ; $ABE1
     bne     Story_Delay_Done        ; $ABE3
 
 Story_RunStep:
-    lda     sceneStep               ; $ABE5
+    lda     sceneStep               ; $ABE5  this step
     jsr     JumpTable               ; $ABE8
 ; (inline jump table)
     .word   Story_ClearTextRows     ; $ABEB
@@ -5857,9 +5857,9 @@ Story_RunStep:
 ; ---------------------------------------------------------------------------
 Story_Delay:
     jsr     Story_TickDelay         ; $ABF7
-    lda     titleTextLine           ; $ABFA
+    lda     titleTextLine           ; $ABFA  no line drawn yet?
     beq     Story_RunStep           ; $ABFC
-    lda     sceneStep               ; $ABFE
+    lda     sceneStep               ; $ABFE  back at step 0?
     beq     Story_Delay_Done        ; $AC01
     jmp     Story_RunStep           ; $AC03
 
@@ -5874,10 +5874,10 @@ Story_Delay_Done:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_TickDelay:
-    lda     frameCounter            ; $AC07
+    lda     frameCounter            ; $AC07  every 4 frames
     and     #$03                    ; $AC09
     bne     @done                   ; $AC0B
-    dec     titleDelay              ; $AC0D
+    dec     titleDelay              ; $AC0D  one less
 
 @done:
     rts                             ; $AC10
@@ -5896,27 +5896,27 @@ StoryBlankRow:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_ClearTextRows:
-    lda     ppuScrollY              ; $AC31
+    lda     ppuScrollY              ; $AC31  on a 16-line boundary?
     and     #$0F                    ; $AC33
-    beq     @loc_AC3D               ; $AC35
-    lda     #$03                    ; $AC37
+    beq     @clear                  ; $AC35
+    lda     #$03                    ; $AC37  no: the background
     sta     sceneStep               ; $AC39
     rts                             ; $AC3C
 
-@loc_AC3D:
-    lda     titleTextAddr           ; $AC3D
+@clear:
+    lda     titleTextAddr           ; $AC3D  the first text row's address,
     sta     ppuBuffer0              ; $AC3F
     lda     titleTextAddr+1         ; $AC42
     sta     ppuBuffer0+1            ; $AC44
-    jsr     Story_NextTextRow       ; $AC47
-    lda     titleTextAddr           ; $AC4A
+    jsr     Story_NextTextRow       ; $AC47  the next
+    lda     titleTextAddr           ; $AC4A  the second's
     sta     ppuBuffer0+35           ; $AC4C
     lda     titleTextAddr+1         ; $AC4F
     sta     ppuBuffer0+36           ; $AC51
-    lda     #$20                    ; $AC54
+    lda     #$20                    ; $AC54  32 tiles each
     sta     ppuBuffer0+2            ; $AC56
     sta     ppuBuffer0+37           ; $AC59
-    ldy     #$1F                    ; $AC5C
+    ldy     #$1F                    ; $AC5C  blank
 
 @loop:
     lda     StoryBlankRow,y         ; $AC5E
@@ -5924,7 +5924,7 @@ Story_ClearTextRows:
     sta     ppuBuffer0+38,y         ; $AC64
     dey                             ; $AC67
     bpl     @loop                   ; $AC68
-    lda     #$FF                    ; $AC6A
+    lda     #$FF                    ; $AC6A  end
     sta     ppuBuffer0+70           ; $AC6C
     inc     sceneStep               ; $AC6F
     rts                             ; $AC72
@@ -5938,20 +5938,20 @@ Story_ClearTextRows:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_DrawTextLine:
-    ldx     titleTextLine           ; $AC73
+    ldx     titleTextLine           ; $AC73  the line's text
     lda     StoryTextPtrsLo,x       ; $AC75
     sta     temp0                   ; $AC78
     lda     StoryTextPtrsHi,x       ; $AC7A
     sta     temp1                   ; $AC7D
-    ldy     #$1D                    ; $AC7F
-    lda     titleTextAddr           ; $AC81
+    ldy     #$1D                    ; $AC7F  29 tiles
+    lda     titleTextAddr           ; $AC81  the text row,
     sta     ppuBuffer0              ; $AC83
-    lda     titleTextAddr+1         ; $AC86
+    lda     titleTextAddr+1         ; $AC86  from column 3
     clc                             ; $AC88
     adc     #$03                    ; $AC89
     sta     ppuBuffer0+1            ; $AC8B
     sty     ppuBuffer0+2            ; $AC8E
-    lda     #$FF                    ; $AC91
+    lda     #$FF                    ; $AC91  end
     sta     ppuBuffer0+3,y          ; $AC93
     dey                             ; $AC96
 
@@ -5960,8 +5960,8 @@ Story_DrawTextLine:
     sta     ppuBuffer0+3,y          ; $AC99
     dey                             ; $AC9C
     bpl     @loop                   ; $AC9D
-    jsr     Story_NextTextRow       ; $AC9F
-    inc     titleTextLine           ; $ACA2
+    jsr     Story_NextTextRow       ; $AC9F  the next text row
+    inc     titleTextLine           ; $ACA2  next line
     inc     sceneStep               ; $ACA4
     rts                             ; $ACA7
 
@@ -5976,28 +5976,28 @@ Story_DrawTextLine:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_DrawTextAttr:
-    lda     titleTextLine           ; $ACA8
+    lda     titleTextLine           ; $ACA8  after an odd line:
     and     #$01                    ; $ACAA
-    beq     @loc_ACF6               ; $ACAC
-    lda     titleTextLine           ; $ACAE
+    beq     @next                   ; $ACAC
+    lda     titleTextLine           ; $ACAE  all 15?
     cmp     #$0F                    ; $ACB0
-    bne     @loc_ACB8               ; $ACB2
-    lda     #$00                    ; $ACB4
+    bne     @attrs                  ; $ACB2
+    lda     #$00                    ; $ACB4  yes: from line 0 again
     sta     titleTextLine           ; $ACB6
 
-@loc_ACB8:
-    ldx     titleAttrRow            ; $ACB8
+@attrs:
+    ldx     titleAttrRow            ; $ACB8  the attribute row's bytes
     lda     StoryAttrPtrsLo,x       ; $ACBA
     sta     temp2                   ; $ACBD
     lda     StoryAttrPtrsHi,x       ; $ACBF
     sta     temp3                   ; $ACC2
-    ldy     #$08                    ; $ACC4
-    lda     titleAttrAddr           ; $ACC6
+    ldy     #$08                    ; $ACC4  8 bytes
+    lda     titleAttrAddr           ; $ACC6  at titleAttrAddr
     sta     ppuBuffer0              ; $ACC8
     lda     titleAttrAddr+1         ; $ACCB
     sta     ppuBuffer0+1            ; $ACCD
     sty     ppuBuffer0+2            ; $ACD0
-    lda     #$FF                    ; $ACD3
+    lda     #$FF                    ; $ACD3  end
     sta     ppuBuffer0+3,y          ; $ACD5
     dey                             ; $ACD8
 
@@ -6006,22 +6006,22 @@ Story_DrawTextAttr:
     sta     ppuBuffer0+3,y          ; $ACDB
     dey                             ; $ACDE
     bpl     @loop                   ; $ACDF
-    lda     titleAttrAddr+1         ; $ACE1
+    lda     titleAttrAddr+1         ; $ACE1  the next attribute row
     clc                             ; $ACE3
     adc     #$08                    ; $ACE4
     sta     titleAttrAddr+1         ; $ACE6
-    bne     @loc_ACEE               ; $ACE8
-    lda     #$C0                    ; $ACEA
+    bne     @nextRow                ; $ACE8  past the table?
+    lda     #$C0                    ; $ACEA  back to its first row
     sta     titleAttrAddr+1         ; $ACEC
 
-@loc_ACEE:
-    inc     titleAttrRow            ; $ACEE
+@nextRow:
+    inc     titleAttrRow            ; $ACEE  next row (0-7)
     lda     titleAttrRow            ; $ACF0
     and     #$07                    ; $ACF2
     sta     titleAttrRow            ; $ACF4
 
-@loc_ACF6:
-    inc     sceneStep               ; $ACF6
+@next:
+    inc     sceneStep               ; $ACF6  next step
     rts                             ; $ACF9
 
 ; ---------------------------------------------------------------------------
@@ -6035,18 +6035,18 @@ Story_DrawTextAttr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_DrawBgRow:
-    ldx     titleBgRow              ; $ACFA
+    ldx     titleBgRow              ; $ACFA  the row's tiles
     lda     TitleBgRowPtrsLo,x      ; $ACFC
     sta     temp0                   ; $ACFF
     lda     TitleBgRowPtrsHi,x      ; $AD01
     sta     temp1                   ; $AD04
-    ldy     #$20                    ; $AD06
-    lda     titleBgAddr             ; $AD08
+    ldy     #$20                    ; $AD06  32 tiles
+    lda     titleBgAddr             ; $AD08  at titleBgAddr
     sta     ppuBuffer0              ; $AD0A
     lda     titleBgAddr+1           ; $AD0D
     sta     ppuBuffer0+1            ; $AD0F
     sty     ppuBuffer0+2            ; $AD12
-    lda     #$FF                    ; $AD15
+    lda     #$FF                    ; $AD15  end
     sta     ppuBuffer0+3,y          ; $AD17
     dey                             ; $AD1A
 
@@ -6055,7 +6055,7 @@ Title_DrawBgRow:
     sta     ppuBuffer0+3,y          ; $AD1D
     dey                             ; $AD20
     bpl     @loop                   ; $AD21
-    lda     titleBgAddr+1           ; $AD23
+    lda     titleBgAddr+1           ; $AD23  the next row
     clc                             ; $AD25
     adc     #$20                    ; $AD26
     sta     titleBgAddr+1           ; $AD28
@@ -6064,30 +6064,30 @@ Title_DrawBgRow:
     sta     titleBgAddr             ; $AD2E
     inc     titleBgRow              ; $AD30
     lda     titleBgRow              ; $AD32
-    cmp     #$10                    ; $AD34
-    beq     @loc_AD40               ; $AD36
-    cmp     #$1E                    ; $AD38
-    bne     Story_RestartSteps      ; $AD3A
-    lda     #$00                    ; $AD3C
+    cmp     #$10                    ; $AD34  after row 16
+    beq     @checkWrap              ; $AD36
+    cmp     #$1E                    ; $AD38  or 30:
+    bne     Story_RestartSteps      ; $AD3A  otherwise back to step 0
+    lda     #$00                    ; $AD3C  row 30: from row 0 again
     sta     titleBgRow              ; $AD3E
 
-@loc_AD40:
-    lda     titleBgAddr+1           ; $AD40
+@checkWrap:
+    lda     titleBgAddr+1           ; $AD40  at the nametable's end ($x3C0)?
     cmp     #$C0                    ; $AD42
-    bne     @loc_AD5A               ; $AD44
+    bne     @next                   ; $AD44
     lda     titleBgAddr             ; $AD46
     and     #$23                    ; $AD48
     cmp     #$23                    ; $AD4A
-    bne     @loc_AD5A               ; $AD4C
-    lda     #$00                    ; $AD4E
+    bne     @next                   ; $AD4C
+    lda     #$00                    ; $AD4E  yes: the other one's top
     sta     titleBgAddr+1           ; $AD50
     lda     titleBgAddr             ; $AD52
     and     #$28                    ; $AD54
     eor     #$08                    ; $AD56
     sta     titleBgAddr             ; $AD58
 
-@loc_AD5A:
-    inc     sceneStep               ; $AD5A
+@next:
+    inc     sceneStep               ; $AD5A  the attributes next
     rts                             ; $AD5D
 
 ; ---------------------------------------------------------------------------
@@ -6119,21 +6119,21 @@ TitleBgAttrBlank:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_DrawBgAttr:
-    lda     #$14                    ; $AD7C
+    lda     #$14                    ; $AD7C  the title's attribute bytes ($B214)
     sta     temp2                   ; $AD7E
     lda     #$B2                    ; $AD80
     sta     temp3                   ; $AD82
-    ldy     #$18                    ; $AD84
-    lda     titleBgAttrAddr         ; $AD86
+    ldy     #$18                    ; $AD84  24 bytes
+    lda     titleBgAttrAddr         ; $AD86  at titleBgAttrAddr,
     sta     ppuBuffer0              ; $AD88
     sta     ppuBuffer0+27           ; $AD8B
-    lda     titleBgAttrAddr+1       ; $AD8E
+    lda     titleBgAttrAddr+1       ; $AD8E  and blank in the other nametable
     sta     ppuBuffer0+1            ; $AD90
     eor     #$20                    ; $AD93
     sta     ppuBuffer0+28           ; $AD95
     sty     ppuBuffer0+2            ; $AD98
     sty     ppuBuffer0+29           ; $AD9B
-    lda     #$FF                    ; $AD9E
+    lda     #$FF                    ; $AD9E  end
     sta     ppuBuffer0+30,y         ; $ADA0
     dey                             ; $ADA3
 
@@ -6144,24 +6144,24 @@ Title_DrawBgAttr:
     sta     ppuBuffer0+30,y         ; $ADAC
     dey                             ; $ADAF
     bpl     @loop                   ; $ADB0
-    lda     titleBgAttrAddr+1       ; $ADB2
+    lda     titleBgAttrAddr+1       ; $ADB2  the next attribute rows
     clc                             ; $ADB4
     adc     #$20                    ; $ADB5
     sta     titleBgAttrAddr+1       ; $ADB7
-    bne     @loc_ADC5               ; $ADB9
-    lda     titleBgAttrAddr         ; $ADBB
+    bne     @moveSplit              ; $ADB9  past the table?
+    lda     titleBgAttrAddr         ; $ADBB  yes: the other nametable's
     eor     #$08                    ; $ADBD
     sta     titleBgAttrAddr         ; $ADBF
     lda     #$C0                    ; $ADC1
     sta     titleBgAttrAddr+1       ; $ADC3
 
-@loc_ADC5:
-    inc     titleSplitAddr          ; $ADC5
+@moveSplit:
+    inc     titleSplitAddr          ; $ADC5  the split 16 rows lower
     inc     titleSplitAddr          ; $ADC7
-    lda     titleSplitAddr          ; $ADC9
+    lda     titleSplitAddr          ; $ADC9  wrapped ($x400)?
     and     #$04                    ; $ADCB
-    beq     @loc_ADDD               ; $ADCD
-    lda     titleSplitNametable     ; $ADCF
+    beq     @restart                ; $ADCD
+    lda     titleSplitNametable     ; $ADCF  yes: the other nametable
     eor     #$02                    ; $ADD1
     sta     titleSplitNametable     ; $ADD3
     lda     titleSplitAddr          ; $ADD5
@@ -6169,7 +6169,7 @@ Title_DrawBgAttr:
     eor     #$08                    ; $ADD9
     sta     titleSplitAddr          ; $ADDB
 
-@loc_ADDD:
+@restart:
     jmp     Story_RestartSteps      ; $ADDD
 
 ; ---------------------------------------------------------------------------
@@ -6183,15 +6183,15 @@ Title_DrawBgAttr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_InitScroll:
-    lda     #$2A                    ; $ADE0
+    lda     #$2A                    ; $ADE0  the split at $2A00,
     sta     titleSplitAddr          ; $ADE2
-    lda     #$20                    ; $ADE4
+    lda     #$20                    ; $ADE4  the landscape from $2000,
     sta     titleBgAddr             ; $ADE6
-    lda     #$28                    ; $ADE8
+    lda     #$28                    ; $ADE8  the text from $2800,
     sta     titleTextAddr           ; $ADEA
-    lda     #$2B                    ; $ADEC
+    lda     #$2B                    ; $ADEC  its attributes at $2BC0,
     sta     titleAttrAddr           ; $ADEE
-    lda     #$23                    ; $ADF0
+    lda     #$23                    ; $ADF0  the landscape's at $23C0
     sta     titleBgAttrAddr         ; $ADF2
     lda     #$00                    ; $ADF4
     sta     titleSplitAddr+1        ; $ADF6
@@ -6206,7 +6206,7 @@ Title_InitScroll:
     lda     #$C0                    ; $AE0A
     sta     titleAttrAddr+1         ; $AE0C
     sta     titleBgAttrAddr+1       ; $AE0E
-    lda     #$02                    ; $AE10
+    lda     #$02                    ; $AE10  the split in nametable 2
     sta     titleSplitNametable     ; $AE12
 
 Title_InitScroll_Done:
@@ -6225,10 +6225,10 @@ Title_InitScroll_Done:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_End:
-    lda     ppuNametable            ; $AE15
-    bne     @loc_AE4A               ; $AE18
-    lda     titleDelay              ; $AE1A
-    beq     @loc_AE30               ; $AE1D
+    lda     ppuNametable            ; $AE15  back in nametable 0 (the title's)?
+    bne     @step                   ; $AE18
+    lda     titleDelay              ; $AE1A  waiting (never)?
+    beq     @checkDone              ; $AE1D
 ; (code below not executed in the test movies)
     jsr     Story_TickDelay         ; $AE1F
     lda     #$01                    ; $AE22
@@ -6240,24 +6240,24 @@ Story_End:
     sta     titleScrollHeld         ; $AE2E
 ; (end of code not executed in the test movies)
 
-@loc_AE30:
-    lda     titleBgRow              ; $AE30
-    bne     @loc_AE4A               ; $AE32
-    lda     titleEndStep            ; $AE34
-    bne     @loc_AE4A               ; $AE36
-    lda     #$00                    ; $AE38
+@checkDone:
+    lda     titleBgRow              ; $AE30  the landscape wrapped
+    bne     @step                   ; $AE32
+    lda     titleEndStep            ; $AE34  and its steps done?
+    bne     @step                   ; $AE36
+    lda     #$00                    ; $AE38  yes: the title is back:
     sta     sceneStep               ; $AE3A
     sta     titleEndStep            ; $AE3D
     sta     titleLogoString         ; $AE3F
-    jsr     Title_LoadSprites       ; $AE41
-    lda     #$03                    ; $AE44
+    jsr     Title_LoadSprites       ; $AE41  its sprites again
+    lda     #$03                    ; $AE44  Title_Idle
     sta     gameMode                ; $AE46
 
 @done:
     rts                             ; $AE49
 
-@loc_AE4A:
-    lda     titleEndStep            ; $AE4A
+@step:
+    lda     titleEndStep            ; $AE4A  this step
     jsr     JumpTable               ; $AE4C
 ; (inline jump table)
     .word   Story_RedrawLogoRow     ; $AE4F
@@ -6275,12 +6275,12 @@ Story_End:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_RedrawLogoRow:
-    lda     ppuScrollY              ; $AE55
+    lda     ppuScrollY              ; $AE55  every 8 lines:
     and     #$07                    ; $AE57
     bne     Title_InitScroll_Done   ; $AE59
-    lda     ppuScrollY              ; $AE5B
+    lda     ppuScrollY              ; $AE5B  at 240 (never)?
     cmp     #$F0                    ; $AE5D
-    bne     @loc_AE72               ; $AE5F
+    bne     @logoRow                ; $AE5F
 ; (code below not executed in the test movies)
     lda     #$00                    ; $AE61
     sta     ppuScrollY              ; $AE63
@@ -6291,21 +6291,21 @@ Story_RedrawLogoRow:
     sta     titleDelay              ; $AE6F
 ; (end of code not executed in the test movies)
 
-@loc_AE72:
-    lda     titleLogoString         ; $AE72
+@logoRow:
+    lda     titleLogoString         ; $AE72  the next logo string
     asl     a                       ; $AE74
     tax                             ; $AE75
     lda     TitleLogoPtrs,x         ; $AE76
     sta     temp0                   ; $AE79
     lda     TitleLogoPtrs+1,x       ; $AE7B
     sta     temp1                   ; $AE7E
-    lda     titleTextAddr           ; $AE80
+    lda     titleTextAddr           ; $AE80  blank the text row coming into view
     sta     ppuBuffer0              ; $AE82
     lda     titleTextAddr+1         ; $AE85
     sta     ppuBuffer0+1            ; $AE87
-    lda     #$20                    ; $AE8A
+    lda     #$20                    ; $AE8A  32 tiles
     sta     ppuBuffer0+2            ; $AE8C
-    lda     #$FF                    ; $AE8F
+    lda     #$FF                    ; $AE8F  end
     ldy     #$1F                    ; $AE91
     sta     ppuBuffer0+4,y          ; $AE93
 
@@ -6314,24 +6314,24 @@ Story_RedrawLogoRow:
     sta     ppuBuffer0+3,y          ; $AE99
     dey                             ; $AE9C
     bpl     @loop                   ; $AE9D
-    lda     titleLogoString         ; $AE9F
+    lda     titleLogoString         ; $AE9F  all 7 drawn?
     cmp     #$07                    ; $AEA1
-    beq     @loc_AEBB               ; $AEA3
-    ldy     #$00                    ; $AEA5
-    lda     (temp0),y               ; $AEA7
+    beq     @nextRow                ; $AEA3
+    ldy     #$00                    ; $AEA5  the string's address
+    lda     (temp0),y               ; $AEA7  on this row?
     cmp     titleTextAddr           ; $AEA9
-    bne     @loc_AEBB               ; $AEAB
+    bne     @nextRow                ; $AEAB
     iny                             ; $AEAD
     lda     (temp0),y               ; $AEAE
     and     #$F0                    ; $AEB0
     cmp     titleTextAddr+1         ; $AEB2
-    bne     @loc_AEBB               ; $AEB4
-    jsr     Story_CopyLogoString    ; $AEB6
+    bne     @nextRow                ; $AEB4
+    jsr     Story_CopyLogoString    ; $AEB6  yes: queue it too
     inc     titleLogoString         ; $AEB9
 
-@loc_AEBB:
+@nextRow:
     jsr     Story_NextTextRow       ; $AEBB
-    inc     titleEndStep            ; $AEBE
+    inc     titleEndStep            ; $AEBE  next step
     rts                             ; $AEC0
 
 ; ---------------------------------------------------------------------------
@@ -6343,20 +6343,20 @@ Story_RedrawLogoRow:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_NextTextRow:
-    lda     titleTextAddr+1         ; $AEC1
+    lda     titleTextAddr+1         ; $AEC1  32 bytes on
     clc                             ; $AEC3
     adc     #$20                    ; $AEC4
     sta     titleTextAddr+1         ; $AEC6
     lda     titleTextAddr           ; $AEC8
     adc     #$00                    ; $AECA
     sta     titleTextAddr           ; $AECC
-    and     #$03                    ; $AECE
+    and     #$03                    ; $AECE  at the nametable's end ($x3C0)?
     cmp     #$03                    ; $AED0
     bne     @done                   ; $AED2
     lda     titleTextAddr+1         ; $AED4
     cmp     #$C0                    ; $AED6
     bne     @done                   ; $AED8
-    lda     #$00                    ; $AEDA
+    lda     #$00                    ; $AEDA  yes: the other one's top
     sta     titleTextAddr+1         ; $AEDC
     lda     titleTextAddr           ; $AEDE
     and     #$28                    ; $AEE0
@@ -6379,14 +6379,14 @@ TitleLogoLengths:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Story_CopyLogoString:
-    ldx     titleLogoString         ; $AEEE
+    ldx     titleLogoString         ; $AEEE  the string's length
     ldy     TitleLogoLengths,x      ; $AEF0
-    lda     #$FF                    ; $AEF3
+    lda     #$FF                    ; $AEF3  end
     sta     ppuBuffer0+35,y         ; $AEF5
     dey                             ; $AEF8
 
 @loop:
-    lda     (temp0),y               ; $AEF9
+    lda     (temp0),y               ; $AEF9  copied after the blank row
     sta     ppuBuffer0+35,y         ; $AEFB
     dey                             ; $AEFE
     bpl     @loop                   ; $AEFF
@@ -6403,17 +6403,17 @@ Story_CopyLogoString:
 ; ---------------------------------------------------------------------------
 Story_EndDrawBgRow:
     jsr     Title_DrawBgRow         ; $AF02
-    lda     sceneStep               ; $AF05
+    lda     sceneStep               ; $AF05  attributes wanted?
     beq     Story_EndRestart        ; $AF08
-    inc     titleEndStep            ; $AF0A
+    inc     titleEndStep            ; $AF0A  yes: the next step
     jmp     Story_EndSetStep        ; $AF0C
 
 Story_EndRestart:
-    lda     #$00                    ; $AF0F
+    lda     #$00                    ; $AF0F  no: back to the logo row
     sta     titleEndStep            ; $AF11
 
 Story_EndSetStep:
-    lda     #$05                    ; $AF13
+    lda     #$05                    ; $AF13  still Story_End
     sta     sceneStep               ; $AF15
     rts                             ; $AF18
 
@@ -6438,23 +6438,23 @@ Story_EndDrawBgAttr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Title_DrawScreen:
-    lda     gameSubStep             ; $AF1F
+    lda     gameSubStep             ; $AF1F  this frame's step
     jsr     JumpTable               ; $AF22
 ; (inline jump table)
     .word   Ppu_ClearNametables     ; $AF25
-    .word   @loc_AF2B               ; $AF27
-    .word   @loc_AF34               ; $AF29
+    .word   @palette                ; $AF27
+    .word   @text                   ; $AF29
 
-@loc_AF2B:
-    lda     #$01                    ; $AF2B
+@palette:
+    lda     #$01                    ; $AF2B  list 1: TitlePalette
     sta     ppuStringSelect         ; $AF2D
     inc     gameSubStep             ; $AF30
     rts                             ; $AF33
 
-@loc_AF34:
-    lda     #$04                    ; $AF34
+@text:
+    lda     #$04                    ; $AF34  list 4: TitleScreenText
     sta     ppuStringSelect         ; $AF36
-    inc     gameMode                ; $AF39
+    inc     gameMode                ; $AF39  Title_Show next
     rts                             ; $AF3C
 
 TitlePalette:
@@ -6531,7 +6531,7 @@ TitleScreenText:
 ; ---------------------------------------------------------------------------
 FileScreen_Run:
     jsr     Oam_HideAll             ; $B22D
-    jsr     Game_CheckModeChange    ; $B230
+    jsr     Game_CheckModeChange    ; $B230  a new mode starts at step 0
     jsr     JumpTable               ; $B233
 ; (inline jump table)
     .word   FileSelect_Run          ; $B236
@@ -6550,7 +6550,7 @@ FileNamePtrs:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_Run:
-    lda     fileStep                ; $B242
+    lda     fileStep                ; $B242  this step
     jsr     JumpTable               ; $B245
 ; (inline jump table)
     .word   FileSelect_LoadFiles    ; $B248
@@ -6567,7 +6567,7 @@ FileSelect_Run:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_CopyText:
-    ldy     #$00                    ; $B24E
+    ldy     #$00                    ; $B24E  $A6 bytes of text
 
 @loop:
     lda     FileScreenText,y        ; $B250
@@ -6594,62 +6594,62 @@ FileScreen_CopyText:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_Menu:
-    jsr     FileSelect_DrawLevels   ; $B261
-    jsr     FileSelect_DrawContinues ; $B264
-    jsr     FileSelect_BlankEmptyFiles ; $B267
-    jsr     FileSelect_FindSecondQuest ; $B26A
-    ldy     fileSubStep             ; $B26D
-    bne     @loc_B27B               ; $B270
-    lda     #$02                    ; $B272
+    jsr     FileSelect_DrawLevels   ; $B261  fill in the levels,
+    jsr     FileSelect_DrawContinues ; $B264  the continue counts,
+    jsr     FileSelect_BlankEmptyFiles ; $B267  blank the empty files
+    jsr     FileSelect_FindSecondQuest ; $B26A  (the second quest marks)
+    ldy     fileSubStep             ; $B26D  the first frame:
+    bne     @secondFrame            ; $B270
+    lda     #$02                    ; $B272  list 2: the palette
     sta     ppuStringSelect         ; $B274
     inc     fileSubStep             ; $B277
     rts                             ; $B27A
 
-@loc_B27B:
-    dey                             ; $B27B
-    bne     @loc_B28B               ; $B27C
+@secondFrame:
+    dey                             ; $B27B  the second:
+    bne     @menu                   ; $B27C
     inc     fileSubStep             ; $B27E
-    lda     #$05                    ; $B281
+    lda     #$05                    ; $B281  list 5: the screen text
     sta     ppuStringSelect         ; $B283
-    lda     #$00                    ; $B286
+    lda     #$00                    ; $B286  the fairy on file 1
     sta     fileCursor              ; $B288
     rts                             ; $B28A
 
-@loc_B28B:
-    lda     #$00                    ; $B28B
-    sta     renderingOff            ; $B28D
-    lda     joypadPressed           ; $B290
+@menu:
+    lda     #$00                    ; $B28B  then:
+    sta     renderingOff            ; $B28D  screen on
+    lda     joypadPressed           ; $B290  Start?
     and     #$10                    ; $B292
-    beq     @loc_B303               ; $B294
-    lda     #$00                    ; $B296
+    beq     @checkSelect            ; $B294
+    lda     #$00                    ; $B296  from the first step
     sta     fileSubStep             ; $B298
     sta     fileStep                ; $B29B
-    lda     fileCursor              ; $B29E
+    lda     fileCursor              ; $B29E  REGISTER YOUR NAME?
     cmp     #$03                    ; $B2A0
-    bne     @loc_B2AA               ; $B2A2
-    lda     #$01                    ; $B2A4
+    bne     @checkEliminate         ; $B2A2
+    lda     #$01                    ; $B2A4  mode 1
     sta     gameMode                ; $B2A6
     rts                             ; $B2A9
 
-@loc_B2AA:
-    cmp     #$04                    ; $B2AA
-    bne     @loc_B2B4               ; $B2AC
-    lda     #$02                    ; $B2AE
+@checkEliminate:
+    cmp     #$04                    ; $B2AA  ELIMINATION MODE?
+    bne     @loadFile               ; $B2AC
+    lda     #$02                    ; $B2AE  mode 2
     sta     gameMode                ; $B2B0
     rts                             ; $B2B3
 
-@loc_B2B4:
-    lda     fileCursor              ; $B2B4
+@loadFile:
+    lda     fileCursor              ; $B2B4  a file: load it
     sta     saveSlot                ; $B2B6
     jsr     Save_Load               ; $B2B9
-    lda     secondQuest             ; $B2BC
+    lda     secondQuest             ; $B2BC  finished once (second quest)?
     cmp     #$01                    ; $B2BF
-    bne     @loc_B2EE               ; $B2C1
+    bne     @start                  ; $B2C1
 ; (code below not executed in the test movies)
-    lda     techniques              ; $B2C3
+    lda     techniques              ; $B2C3  yes: keep two techniques,
     and     #$14                    ; $B2C6
     sta     temp0                   ; $B2C8
-    ldy     #$29                    ; $B2CA
+    ldy     #$29                    ; $B2CA  the stats from the containers on,
 
 @loop:
     lda     SaveDefaultStats,y      ; $B2CC
@@ -6657,7 +6657,7 @@ FileSelect_Menu:
     dey                             ; $B2D2
     cpy     #$0C                    ; $B2D3
     bcs     @loop                   ; $B2D5
-    ldy     #$DF                    ; $B2D7
+    ldy     #$DF                    ; $B2D7  the world state,
 
 @loop2:
     lda     SaveDefaultWorld,y      ; $B2D9
@@ -6665,142 +6665,142 @@ FileSelect_Menu:
     dey                             ; $B2DF
     cpy     #$FF                    ; $B2E0
     bne     @loop2                  ; $B2E2
-    lda     temp0                   ; $B2E4
+    lda     temp0                   ; $B2E4  from the defaults
     sta     techniques              ; $B2E6
-    lda     #$02                    ; $B2E9
+    lda     #$02                    ; $B2E9  a second quest file now
     sta     secondQuest             ; $B2EB
 ; (end of code not executed in the test movies)
 
-@loc_B2EE:
-    ldx     #$0F                    ; $B2EE
+@start:
+    ldx     #$0F                    ; $B2EE  clear the sound's RAM:
     lda     #$00                    ; $B2F0
 
 @loop3:
-    sta     musicNotesPtr,x         ; $B2F2
+    sta     musicNotesPtr,x         ; $B2F2  $00E0-$00EF,
     dex                             ; $B2F4
     bpl     @loop3                  ; $B2F5
-    ldy     #$DA                    ; $B2F7
+    ldy     #$DA                    ; $B2F7  $07DA-$07FF
 
 @loop4:
     sta     lives,y                 ; $B2F9
     iny                             ; $B2FC
     bne     @loop4                  ; $B2FD
-    inc     gameState               ; $B2FF
+    inc     gameState               ; $B2FF  gameState 2: start the game
     rts                             ; $B302
 
-@loc_B303:
-    lda     joypadPressed           ; $B303
+@checkSelect:
+    lda     joypadPressed           ; $B303  Select?
     and     #$20                    ; $B305
-    beq     @loc_B319               ; $B307
-    lda     #$04                    ; $B309
+    beq     @file1                  ; $B307
+    lda     #$04                    ; $B309  the cursor sound
     sta     musicRequest            ; $B30B
-    inc     fileCursor              ; $B30D
+    inc     fileCursor              ; $B30D  next choice
     lda     fileCursor              ; $B30F
     cmp     #$05                    ; $B311
-    bne     @loc_B319               ; $B313
-    lda     #$00                    ; $B315
+    bne     @file1                  ; $B313  past the last:
+    lda     #$00                    ; $B315  file 1
     sta     fileCursor              ; $B317
 
-@loc_B319:
-    lda     fileCursor              ; $B319
-    bne     @loc_B32F               ; $B31B
-    lda     fileEmptyMask           ; $B31D
+@file1:
+    lda     fileCursor              ; $B319  file 1:
+    bne     @file2                  ; $B31B
+    lda     fileEmptyMask           ; $B31D  empty?
     and     #$01                    ; $B31F
-    beq     @loc_B328               ; $B321
-    inc     fileCursor              ; $B323
-    jmp     @loc_B32F               ; $B325
+    beq     @setFile1               ; $B321
+    inc     fileCursor              ; $B323  skip it
+    jmp     @file2                  ; $B325
 
-@loc_B328:
-    lda     #$40                    ; $B328
+@setFile1:
+    lda     #$40                    ; $B328  Y $40
     sta     fileCursorY             ; $B32A
-    jmp     @loc_B384               ; $B32C
+    jmp     @draw                   ; $B32C
 
-@loc_B32F:
-    lda     fileCursor              ; $B32F
+@file2:
+    lda     fileCursor              ; $B32F  file 2:
     cmp     #$01                    ; $B331
-    bne     @loc_B347               ; $B333
-    lda     fileEmptyMask           ; $B335
+    bne     @file3                  ; $B333
+    lda     fileEmptyMask           ; $B335  empty?
     and     #$02                    ; $B337
-    beq     @loc_B340               ; $B339
-    inc     fileCursor              ; $B33B
-    jmp     @loc_B347               ; $B33D
+    beq     @setFile2               ; $B339
+    inc     fileCursor              ; $B33B  skip it
+    jmp     @file3                  ; $B33D
 
-@loc_B340:
-    lda     #$58                    ; $B340
+@setFile2:
+    lda     #$58                    ; $B340  Y $58
     sta     fileCursorY             ; $B342
-    jmp     @loc_B384               ; $B344
+    jmp     @draw                   ; $B344
 
-@loc_B347:
-    lda     fileCursor              ; $B347
+@file3:
+    lda     fileCursor              ; $B347  file 3:
     cmp     #$02                    ; $B349
-    bne     @loc_B35F               ; $B34B
-    lda     fileEmptyMask           ; $B34D
+    bne     @register               ; $B34B
+    lda     fileEmptyMask           ; $B34D  empty?
     and     #$04                    ; $B34F
-    beq     @loc_B358               ; $B351
-    inc     fileCursor              ; $B353
-    jmp     @loc_B35F               ; $B355
+    beq     @setFile3               ; $B351
+    inc     fileCursor              ; $B353  skip it
+    jmp     @register               ; $B355
 
-@loc_B358:
-    lda     #$70                    ; $B358
+@setFile3:
+    lda     #$70                    ; $B358  Y $70
     sta     fileCursorY             ; $B35A
-    jmp     @loc_B384               ; $B35C
+    jmp     @draw                   ; $B35C
 
-@loc_B35F:
-    lda     fileCursor              ; $B35F
+@register:
+    lda     fileCursor              ; $B35F  REGISTER YOUR NAME:
     cmp     #$03                    ; $B361
-    bne     @loc_B375               ; $B363
-    lda     fileEmptyMask           ; $B365
-    bne     @loc_B36E               ; $B367
-    inc     fileCursor              ; $B369
-    jmp     @loc_B375               ; $B36B
+    bne     @eliminate              ; $B363
+    lda     fileEmptyMask           ; $B365  any file empty?
+    bne     @setRegister            ; $B367
+    inc     fileCursor              ; $B369  no: skip it
+    jmp     @eliminate              ; $B36B
 
-@loc_B36E:
-    lda     #$90                    ; $B36E
+@setRegister:
+    lda     #$90                    ; $B36E  Y $90
     sta     fileCursorY             ; $B370
-    jmp     @loc_B384               ; $B372
+    jmp     @draw                   ; $B372
 
-@loc_B375:
-    lda     fileEmptyMask           ; $B375
-    cmp     #$07                    ; $B377
-    bne     @loc_B380               ; $B379
+@eliminate:
+    lda     fileEmptyMask           ; $B375  ELIMINATION MODE, unless
+    cmp     #$07                    ; $B377  all three are empty:
+    bne     @setEliminate           ; $B379
 ; (code below not executed in the test movies)
-    dec     fileCursor              ; $B37B
-    jmp     @loc_B35F               ; $B37D
+    dec     fileCursor              ; $B37B  back up
+    jmp     @register               ; $B37D
 ; (end of code not executed in the test movies)
 
-@loc_B380:
-    lda     #$A8                    ; $B380
+@setEliminate:
+    lda     #$A8                    ; $B380  Y $A8
     sta     fileCursorY             ; $B382
 
-@loc_B384:
-    lda     #$1C                    ; $B384
+@draw:
+    lda     #$1C                    ; $B384  the fairy at X $1C
     sta     a:fileCursorX           ; $B386
     ldy     fileCursorY             ; $B389
     jsr     FileScreen_DrawFairy    ; $B38B
-    lda     #$40                    ; $B38E
+    lda     #$40                    ; $B38E  Link's icons by the files
     ldy     #$28                    ; $B390
     jsr     FileScreen_DrawLinkIcons ; $B392
-    jsr     FileSelect_FindSecondQuest ; $B395
-    ldx     #$08                    ; $B398
-    lda     #$43                    ; $B39A
+    jsr     FileSelect_FindSecondQuest ; $B395  second quest files:
+    ldx     #$08                    ; $B398  3 files, the last first,
+    lda     #$43                    ; $B39A  from Y $43:
     sta     temp0                   ; $B39C
 
 @loop5:
-    lsr     temp2                   ; $B39E
-    bcc     @loc_B3B6               ; $B3A0
+    lsr     temp2                   ; $B39E  marked?
+    bcc     @nextMark               ; $B3A0
 ; (code below not executed in the test movies)
-    lda     temp0                   ; $B3A2
+    lda     temp0                   ; $B3A2  a mark: Y,
     sta     oamBuffer+24,x          ; $B3A4
-    lda     #$D2                    ; $B3A7
+    lda     #$D2                    ; $B3A7  tile $D2,
     sta     oamBuffer+25,x          ; $B3A9
-    lda     #$01                    ; $B3AC
+    lda     #$01                    ; $B3AC  palette 1,
     sta     oamBuffer+26,x          ; $B3AE
-    lda     #$30                    ; $B3B1
+    lda     #$30                    ; $B3B1  X $30
     sta     oamBuffer+27,x          ; $B3B3
 ; (end of code not executed in the test movies)
 
-@loc_B3B6:
-    lda     temp0                   ; $B3B6
+@nextMark:
+    lda     temp0                   ; $B3B6  18 lines further down
     clc                             ; $B3B8
     adc     #$18                    ; $B3B9
     sta     temp0                   ; $B3BB
@@ -6809,7 +6809,7 @@ FileSelect_Menu:
     dex                             ; $B3BF
     dex                             ; $B3C0
     bpl     @loop5                  ; $B3C1
-    lda     #$21                    ; $B3C3
+    lda     #$21                    ; $B3C3  the names, from PPU $2107
     sta     temp0                   ; $B3C5
     lda     #$07                    ; $B3C7
     sta     temp1                   ; $B3C9
@@ -6844,7 +6844,7 @@ Register_Run:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_SaveFiles:
-    ldx     #$02                    ; $B3DF
+    ldx     #$02                    ; $B3DF  each file, from the backups
 
 @loop:
     txa                             ; $B3E1
@@ -6854,7 +6854,7 @@ FileScreen_SaveFiles:
     tax                             ; $B3E7
     dex                             ; $B3E8
     bpl     @loop                   ; $B3E9
-    lda     #$00                    ; $B3EB
+    lda     #$00                    ; $B3EB  sound off
     sta     SND_CHN                 ; $B3ED
     inc     fileStep                ; $B3F0
     rts                             ; $B3F3
@@ -6867,7 +6867,7 @@ FileScreen_SaveFiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_ReturnToSelect:
-    lda     #$00                    ; $B3F4
+    lda     #$00                    ; $B3F4  file select
     sta     gameMode                ; $B3F6
     rts                             ; $B3F9
 
@@ -6900,7 +6900,7 @@ Eliminate_Run:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_LoadFiles:
-    ldx     #$02                    ; $B40A
+    ldx     #$02                    ; $B40A  each file into its backup
 
 @loop:
     jsr     Save_CopyToBackup       ; $B40C
@@ -6915,7 +6915,7 @@ FileSelect_LoadFiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_Blank:
-    inc     renderingOff            ; $B412
+    inc     renderingOff            ; $B412  screen off
     jmp     FileScreen_NextStep     ; $B415
 ; (unreferenced: $B418-$B41C, 5 bytes: dead code, lda #$00 / sta $0726)
     .byte   $A9, $00, $8D, $26, $07                                         ; $B418
@@ -6938,123 +6938,123 @@ FileCursorYs:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Eliminate_Menu:
-    ldy     fileSubStep             ; $B425
-    bne     @loc_B433               ; $B428
-    lda     #$06                    ; $B42A
+    ldy     fileSubStep             ; $B425  the first frame:
+    bne     @secondFrame            ; $B428
+    lda     #$06                    ; $B42A  list 6: its palette
     sta     ppuStringSelect         ; $B42C
     inc     fileSubStep             ; $B42F
     rts                             ; $B432
 
-@loc_B433:
-    dey                             ; $B433
-    bne     @loc_B443               ; $B434
-    lda     #$07                    ; $B436
+@secondFrame:
+    dey                             ; $B433  the second:
+    bne     @menu                   ; $B434
+    lda     #$07                    ; $B436  list 7: the screen text
     sta     ppuStringSelect         ; $B438
     inc     fileSubStep             ; $B43B
-    lda     #$00                    ; $B43E
+    lda     #$00                    ; $B43E  the fairy on file 1
     sta     fileCursor              ; $B440
     rts                             ; $B442
 
-@loc_B443:
-    lda     #$00                    ; $B443
-    sta     renderingOff            ; $B445
-    lda     joypadPressed           ; $B448
+@menu:
+    lda     #$00                    ; $B443  then:
+    sta     renderingOff            ; $B445  screen on
+    lda     joypadPressed           ; $B448  Start?
     and     #$10                    ; $B44A
-    beq     @loc_B4A6               ; $B44C
-    lda     fileCursor              ; $B44E
+    beq     @checkSelect            ; $B44C
+    lda     fileCursor              ; $B44E  on END?
     cmp     #$03                    ; $B450
-    bne     @loc_B462               ; $B452
-    lda     #$00                    ; $B454
+    bne     @erase                  ; $B452
+    lda     #$00                    ; $B454  yes: to the register screen,
     sta     fileSubStep             ; $B456
     sta     fileStep                ; $B459
-    lda     #$01                    ; $B45C
+    lda     #$01                    ; $B45C  mode 1
     sta     gameMode                ; $B45E
     rts                             ; $B461
 
-@loc_B462:
-    lda     fileCursor              ; $B462
+@erase:
+    lda     fileCursor              ; $B462  a file: its backup's stats
     asl     a                       ; $B464
     tax                             ; $B465
     lda     SaveBackupStatsPtrs,x   ; $B466
     sta     temp0                   ; $B469
     lda     SaveBackupStatsPtrs+1,x ; $B46B
     sta     temp1                   ; $B46E
-    ldy     #SAVE_STATS_SIZE - 1    ; $B470
+    ldy     #SAVE_STATS_SIZE - 1    ; $B470  reset
 
 @loop:
-    lda     SaveDefaultStats,y      ; $B472
+    lda     SaveDefaultStats,y      ; $B472  to the defaults
     sta     (temp0),y               ; $B475
     dey                             ; $B477
     bpl     @loop                   ; $B478
-    lda     #$08                    ; $B47A
+    lda     #$08                    ; $B47A  the erase sound
     sta     musicRequest            ; $B47C
     iny                             ; $B47E
-    lda     SaveDefaultWorldPtr     ; $B47F
+    lda     SaveDefaultWorldPtr     ; $B47F  its world state too:
     sta     temp0                   ; $B482
     lda     SaveDefaultWorldPtr+1   ; $B484
     sta     temp1                   ; $B487
-    lda     SaveBackupWorldPtrs,x   ; $B489
+    lda     SaveBackupWorldPtrs,x   ; $B489  (to the backup's)
     sta     temp2                   ; $B48C
     lda     SaveBackupWorldPtrs+1,x ; $B48E
     sta     temp3                   ; $B491
 
 @loop2:
-    lda     (temp0),y               ; $B493
+    lda     (temp0),y               ; $B493  byte by byte
     sta     (temp2),y               ; $B495
     jsr     Save_AdvancePointers    ; $B497
-    lda     temp0                   ; $B49A
+    lda     temp0                   ; $B49A  to the end of the defaults
     cmp     #<SaveDefaultWorldEnd   ; $B49C
     bne     @loop2                  ; $B49E
     lda     temp1                   ; $B4A0
     cmp     #>SaveDefaultWorldEnd   ; $B4A2
     bne     @loop2                  ; $B4A4
 
-@loc_B4A6:
-    lda     joypadPressed           ; $B4A6
+@checkSelect:
+    lda     joypadPressed           ; $B4A6  Select?
     and     #$20                    ; $B4A8
-    beq     @loc_B4BC               ; $B4AA
-    lda     #$04                    ; $B4AC
+    beq     @skipEmpty              ; $B4AA
+    lda     #$04                    ; $B4AC  the cursor sound
     sta     musicRequest            ; $B4AE
-    inc     fileCursor              ; $B4B0
+    inc     fileCursor              ; $B4B0  next choice
     lda     fileCursor              ; $B4B2
     cmp     #$04                    ; $B4B4
-    bne     @loc_B4BC               ; $B4B6
-    lda     #$00                    ; $B4B8
+    bne     @skipEmpty              ; $B4B6  past END:
+    lda     #$00                    ; $B4B8  file 1
     sta     fileCursor              ; $B4BA
 
-@loc_B4BC:
-    jsr     FileSelect_FindEmpty    ; $B4BC
-    lda     fileCursor              ; $B4BF
+@skipEmpty:
+    jsr     FileSelect_FindEmpty    ; $B4BC  which files are empty
+    lda     fileCursor              ; $B4BF  on END?
     cmp     #$03                    ; $B4C1
-    beq     @loc_B4D5               ; $B4C3
-    asl     a                       ; $B4C5
-    bne     @loc_B4CB               ; $B4C6
-    clc                             ; $B4C8
+    beq     @draw                   ; $B4C3
+    asl     a                       ; $B4C5  a file: its bit,
+    bne     @checkEmpty             ; $B4C6
+    clc                             ; $B4C8  (file 1: bit 0)
     adc     #$01                    ; $B4C9
 
-@loc_B4CB:
-    and     fileEmptyMask           ; $B4CB
-    beq     @loc_B4D5               ; $B4CD
-    inc     fileCursor              ; $B4CF
+@checkEmpty:
+    and     fileEmptyMask           ; $B4CB  empty?
+    beq     @draw                   ; $B4CD
+    inc     fileCursor              ; $B4CF  yes: the next
     asl     a                       ; $B4D1
-    jmp     @loc_B4CB               ; $B4D2
+    jmp     @checkEmpty             ; $B4D2
 
-@loc_B4D5:
-    ldx     fileCursor              ; $B4D5
+@draw:
+    ldx     fileCursor              ; $B4D5  its row
     lda     FileCursorYs,x          ; $B4D7
     sta     fileCursorY             ; $B4DA
-    lda     #$4C                    ; $B4DC
+    lda     #$4C                    ; $B4DC  the fairy at X $4C
     sta     a:fileCursorX           ; $B4DE
-    ldy     fileCursorY             ; $B4E1
+    ldy     fileCursorY             ; $B4E1  4 lines higher
     dey                             ; $B4E3
     dey                             ; $B4E4
     dey                             ; $B4E5
     dey                             ; $B4E6
     jsr     FileScreen_DrawFairy    ; $B4E7
-    lda     #$2C                    ; $B4EA
+    lda     #$2C                    ; $B4EA  Link's icons
     ldy     #$58                    ; $B4EC
     jsr     FileScreen_DrawLinkIcons ; $B4EE
-    lda     #$20                    ; $B4F1
+    lda     #$20                    ; $B4F1  the names, from PPU $20CD
     sta     temp0                   ; $B4F3
     lda     #$CD                    ; $B4F5
     sta     temp1                   ; $B4F7
@@ -7074,29 +7074,29 @@ FileEmptyBits:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_FindEmpty:
-    lda     #$00                    ; $B502
+    lda     #$00                    ; $B502  none yet
     sta     fileEmptyMask           ; $B504
-    ldx     #$04                    ; $B506
+    ldx     #$04                    ; $B506  files 3, 2, 1:
 
 @loop:
-    lda     FileNamePtrs,x          ; $B508
+    lda     FileNamePtrs,x          ; $B508  its name
     sta     temp0                   ; $B50B
     lda     FileNamePtrs+1,x        ; $B50D
     sta     temp1                   ; $B510
-    ldy     #$07                    ; $B512
+    ldy     #$07                    ; $B512  8 tiles
 
 @loop2:
-    lda     (temp0),y               ; $B514
+    lda     (temp0),y               ; $B514  all blank?
     cmp     #$F4                    ; $B516
-    bne     @loc_B524               ; $B518
+    bne     @next                   ; $B518  no
     dey                             ; $B51A
     bpl     @loop2                  ; $B51B
-    lda     FileEmptyBits,x         ; $B51D
+    lda     FileEmptyBits,x         ; $B51D  yes: its bit
     ora     fileEmptyMask           ; $B520
     sta     fileEmptyMask           ; $B522
 
-@loc_B524:
-    dex                             ; $B524
+@next:
+    dex                             ; $B524  the file before
     dex                             ; $B525
     bpl     @loop                   ; $B526
     rts                             ; $B528
@@ -7112,48 +7112,48 @@ FileSelect_FindEmpty:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_QueueNames:
-    lda     #$00                    ; $B529
+    lda     #$00                    ; $B529  file 0, at buffer 0:
     ldx     #$00                    ; $B52B
 
 @loop:
     pha                             ; $B52D
-    asl     a                       ; $B52E
+    asl     a                       ; $B52E  its name in SRAM
     tay                             ; $B52F
     lda     FileNamePtrs,y          ; $B530
     sta     temp2                   ; $B533
     lda     FileNamePtrs+1,y        ; $B535
     sta     temp3                   ; $B538
-    lda     temp0                   ; $B53A
+    lda     temp0                   ; $B53A  the PPU address
     sta     ppuBuffer0,x            ; $B53C
     lda     temp1                   ; $B53F
     sta     ppuBuffer0+1,x          ; $B541
-    lda     #$08                    ; $B544
+    lda     #$08                    ; $B544  8 tiles
     sta     ppuBuffer0+2,x          ; $B546
     ldy     #$00                    ; $B549
 
 @loop2:
-    lda     (temp2),y               ; $B54B
+    lda     (temp2),y               ; $B54B  the name
     sta     ppuBuffer0+3,x          ; $B54D
     inx                             ; $B550
     iny                             ; $B551
     cpy     #$08                    ; $B552
     bne     @loop2                  ; $B554
-    lda     temp1                   ; $B556
+    lda     temp1                   ; $B556  3 rows down
     clc                             ; $B558
     adc     #$60                    ; $B559
     sta     temp1                   ; $B55B
     lda     temp0                   ; $B55D
     adc     #$00                    ; $B55F
     sta     temp0                   ; $B561
-    pla                             ; $B563
+    pla                             ; $B563  next file
     clc                             ; $B564
     adc     #$01                    ; $B565
-    inx                             ; $B567
+    inx                             ; $B567  past the header
     inx                             ; $B568
     inx                             ; $B569
-    cpx     #$21                    ; $B56A
+    cpx     #$21                    ; $B56A  three strings?
     bne     @loop                   ; $B56C
-    lda     #$FF                    ; $B56E
+    lda     #$FF                    ; $B56E  end
     sta     ppuBuffer0,x            ; $B570
     rts                             ; $B573
 
@@ -7167,20 +7167,20 @@ FileScreen_QueueNames:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_DrawFairy:
-    inc     fileBlinkTimer          ; $B574
-    ldx     #$68                    ; $B576
-    lda     fileBlinkTimer          ; $B578
+    inc     fileBlinkTimer          ; $B574  count frames
+    ldx     #$68                    ; $B576  tile $68,
+    lda     fileBlinkTimer          ; $B578  every other 4 frames
     and     #$04                    ; $B57A
-    beq     @loc_B580               ; $B57C
-    inx                             ; $B57E
+    beq     @setTile                ; $B57C
+    inx                             ; $B57E  $6A
     inx                             ; $B57F
 
-@loc_B580:
+@setTile:
     stx     fileCursorTile          ; $B580
-    sty     oamBuffer               ; $B582
-    lda     #$01                    ; $B585
+    sty     oamBuffer               ; $B582  Y
+    lda     #$01                    ; $B585  palette 1
     sta     oamBuffer+2             ; $B587
-    lda     a:fileCursorX           ; $B58A
+    lda     a:fileCursorX           ; $B58A  X
     sta     oamBuffer+3             ; $B58D
     lda     fileCursorTile          ; $B590
     sta     oamBuffer+1             ; $B592
@@ -7197,18 +7197,18 @@ FileScreen_DrawFairy:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileScreen_DrawLinkIcons:
-    ldx     #$08                    ; $B596
+    ldx     #$08                    ; $B596  three sprites, the last first:
 
 @loop:
     pha                             ; $B598
-    sta     oamBuffer+12,x          ; $B599
-    tya                             ; $B59C
+    sta     oamBuffer+12,x          ; $B599  Y
+    tya                             ; $B59C  X
     sta     oamBuffer+15,x          ; $B59D
-    lda     #$D0                    ; $B5A0
+    lda     #$D0                    ; $B5A0  tile $D0
     sta     oamBuffer+13,x          ; $B5A2
-    lda     #$00                    ; $B5A5
+    lda     #$00                    ; $B5A5  palette 0
     sta     oamBuffer+14,x          ; $B5A7
-    pla                             ; $B5AA
+    pla                             ; $B5AA  the next 24 lines down
     clc                             ; $B5AB
     adc     #$18                    ; $B5AC
     dex                             ; $B5AE
@@ -7229,27 +7229,27 @@ FileScreen_DrawLinkIcons:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_FindSecondQuest:
-    lda     #$00                    ; $B5B5
+    lda     #$00                    ; $B5B5  none yet
     sta     temp2                   ; $B5B7
-    ldy     #$29                    ; $B5B9
-    ldx     #$04                    ; $B5BB
+    ldy     #$29                    ; $B5B9  secondQuest's offset
+    ldx     #$04                    ; $B5BB  files 3, 2, 1:
 
 @loop:
     lda     SaveStatsPtrs,x         ; $B5BD
     sta     temp0                   ; $B5C0
     lda     SaveStatsPtrs+1,x       ; $B5C2
     sta     temp1                   ; $B5C5
-    asl     temp2                   ; $B5C7
-    lda     (temp0),y               ; $B5C9
-    beq     @loc_B5D3               ; $B5CB
+    asl     temp2                   ; $B5C7  shift the bits up
+    lda     (temp0),y               ; $B5C9  finished once?
+    beq     @next                   ; $B5CB
 ; (code below not executed in the test movies)
-    lda     temp2                   ; $B5CD
+    lda     temp2                   ; $B5CD  yes: its bit
     ora     #$01                    ; $B5CF
     sta     temp2                   ; $B5D1
 ; (end of code not executed in the test movies)
 
-@loc_B5D3:
-    dex                             ; $B5D3
+@next:
+    dex                             ; $B5D3  the file before
     dex                             ; $B5D4
     bpl     @loop                   ; $B5D5
     rts                             ; $B5D7
@@ -7263,13 +7263,13 @@ FileSelect_FindSecondQuest:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_DrawLevels:
-    ldx     #$00                    ; $B5D8
+    ldx     #$00                    ; $B5D8  file 1,
     ldy     #$00                    ; $B5DA
     jsr     FileSelect_DrawFileLevels ; $B5DC
-    ldx     #$32                    ; $B5DF
+    ldx     #$32                    ; $B5DF  file 2,
     ldy     #$0E                    ; $B5E1
     jsr     FileSelect_DrawFileLevels ; $B5E3
-    ldx     #$64                    ; $B5E6
+    ldx     #$64                    ; $B5E6  file 3
     ldy     #$1C                    ; $B5E8
 
 ; ---------------------------------------------------------------------------
@@ -7281,13 +7281,13 @@ FileSelect_DrawLevels:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_DrawFileLevels:
-    lda     sramBackupStats,x       ; $B5EA
+    lda     sramBackupStats,x       ; $B5EA  attack level digit
     ora     #$D0                    ; $B5ED
     sta     sramFileScreenText+58,y ; $B5EF
-    lda     sramBackupStats+1,x     ; $B5F2
+    lda     sramBackupStats+1,x     ; $B5F2  magic
     ora     #$D0                    ; $B5F5
     sta     sramFileScreenText+62,y ; $B5F7
-    lda     sramBackupStats+2,x     ; $B5FA
+    lda     sramBackupStats+2,x     ; $B5FA  life
     ora     #$D0                    ; $B5FD
     sta     sramFileScreenText+66,y ; $B5FF
     rts                             ; $B602
@@ -7301,18 +7301,18 @@ FileSelect_DrawFileLevels:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_DrawContinues:
-    ldx     #$28                    ; $B603
+    ldx     #$28                    ; $B603  file 1's count,
     lda     #$00                    ; $B605
     sta     temp2                   ; $B607
     jsr     FileSelect_DrawFileContinues ; $B609
-    lda     #$28                    ; $B60C
+    lda     #$28                    ; $B60C  file 2's,
     clc                             ; $B60E
     adc     #$32                    ; $B60F
     tax                             ; $B611
     lda     #$06                    ; $B612
     sta     temp2                   ; $B614
     jsr     FileSelect_DrawFileContinues ; $B616
-    lda     #$28                    ; $B619
+    lda     #$28                    ; $B619  file 3's
     clc                             ; $B61B
     adc     #$64                    ; $B61C
     tax                             ; $B61E
@@ -7328,11 +7328,11 @@ FileSelect_DrawContinues:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_DrawFileContinues:
-    lda     #$00                    ; $B623
+    lda     #$00                    ; $B623  (high byte 0)
     sta     temp0                   ; $B625
-    lda     sramBackupStats,x       ; $B627
+    lda     sramBackupStats,x       ; $B627  as digits
     jsr     Text_NumberToDigits     ; $B62A
-    ldx     temp2                   ; $B62D
+    ldx     temp2                   ; $B62D  the hundreds, tens and ones
     sta     sramFileScreenText+121,x ; $B62F
     tya                             ; $B632
     sta     sramFileScreenText+120,x ; $B633
@@ -7349,24 +7349,24 @@ FileSelect_DrawFileContinues:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_BlankEmptyFiles:
-    jsr     FileSelect_FindEmpty    ; $B63C
-    lda     fileEmptyMask           ; $B63F
+    jsr     FileSelect_FindEmpty    ; $B63C  which files are empty?
+    lda     fileEmptyMask           ; $B63F  file 1?
     and     #$01                    ; $B641
-    beq     @loc_B64C               ; $B643
+    beq     @file2                  ; $B643
     ldx     #$00                    ; $B645
     ldy     #$00                    ; $B647
     jsr     FileSelect_BlankFile    ; $B649
 
-@loc_B64C:
-    lda     fileEmptyMask           ; $B64C
+@file2:
+    lda     fileEmptyMask           ; $B64C  file 2?
     and     #$02                    ; $B64E
-    beq     @loc_B659               ; $B650
+    beq     @file3                  ; $B650
     ldx     #$0E                    ; $B652
     ldy     #$06                    ; $B654
     jsr     FileSelect_BlankFile    ; $B656
 
-@loc_B659:
-    lda     fileEmptyMask           ; $B659
+@file3:
+    lda     fileEmptyMask           ; $B659  file 3?
     and     #$04                    ; $B65B
     beq     FileSelect_BlankFile_Done ; $B65D
     ldx     #$1C                    ; $B65F
@@ -7381,7 +7381,7 @@ FileSelect_BlankEmptyFiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 FileSelect_BlankFile:
-    lda     #$F4                    ; $B663
+    lda     #$F4                    ; $B663  blanks
     sta     sramFileScreenText+58,x ; $B665
     sta     sramFileScreenText+62,x ; $B668
     sta     sramFileScreenText+66,x ; $B66B
@@ -7404,332 +7404,332 @@ FileSelect_BlankFile_Done:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Register_Menu:
-    ldy     fileSubStep             ; $B678
-    bne     @loc_B692               ; $B67B
-    lda     #$06                    ; $B67D
+    ldy     fileSubStep             ; $B678  the first frame:
+    bne     @menu                   ; $B67B
+    lda     #$06                    ; $B67D  list 6: its palette
     sta     ppuStringSelect         ; $B67F
     inc     fileSubStep             ; $B682
-    lda     #$00                    ; $B685
+    lda     #$00                    ; $B685  the fairy on file 1,
     sta     fileCursor              ; $B687
-    sta     nameCursor              ; $B689
-    sta     letterColumn            ; $B68B
+    sta     nameCursor              ; $B689  the name cursor at its start,
+    sta     letterColumn            ; $B68B  the letter cursor on A
     sta     letterRow               ; $B68D
-    jmp     FileSelect_FindEmpty    ; $B68F
+    jmp     FileSelect_FindEmpty    ; $B68F  which files are empty
 
-@loc_B692:
-    lda     #$00                    ; $B692
-    sta     renderingOff            ; $B694
-    lda     joypadPressed           ; $B697
+@menu:
+    lda     #$00                    ; $B692  then:
+    sta     renderingOff            ; $B694  screen on
+    lda     joypadPressed           ; $B697  Start
     and     #$10                    ; $B699
-    beq     @loc_B6AC               ; $B69B
-    lda     fileCursor              ; $B69D
+    beq     @checkSelect            ; $B69B
+    lda     fileCursor              ; $B69D  on END?
     cmp     #$03                    ; $B69F
-    bne     @loc_B6AC               ; $B6A1
-    lda     #$00                    ; $B6A3
+    bne     @checkSelect            ; $B6A1
+    lda     #$00                    ; $B6A3  yes: save the files (next step)
     sta     fileSubStep             ; $B6A5
     inc     fileStep                ; $B6A8
     rts                             ; $B6AB
 
-@loc_B6AC:
-    lda     joypadPressed           ; $B6AC
+@checkSelect:
+    lda     joypadPressed           ; $B6AC  Select?
     and     #$20                    ; $B6AE
-    beq     @loc_B6C6               ; $B6B0
-    lda     #$04                    ; $B6B2
+    beq     @skipFull               ; $B6B0
+    lda     #$04                    ; $B6B2  the cursor sound
     sta     musicRequest            ; $B6B4
-    inc     fileCursor              ; $B6B6
+    inc     fileCursor              ; $B6B6  next choice
     lda     fileCursor              ; $B6B8
     cmp     #$04                    ; $B6BA
-    bne     @loc_B6C2               ; $B6BC
+    bne     @newName                ; $B6BC  past END:
 ; (code below not executed in the test movies)
-    lda     #$00                    ; $B6BE
+    lda     #$00                    ; $B6BE  file 1
     sta     fileCursor              ; $B6C0
 ; (end of code not executed in the test movies)
 
-@loc_B6C2:
-    lda     #$00                    ; $B6C2
+@newName:
+    lda     #$00                    ; $B6C2  a new name: from its start
     sta     nameCursor              ; $B6C4
 
-@loc_B6C6:
-    lda     fileEmptyMask           ; $B6C6
+@skipFull:
+    lda     fileEmptyMask           ; $B6C6  END always counts as a choice
     ora     #$08                    ; $B6C8
     sta     fileEmptyMask           ; $B6CA
-    lda     fileCursor              ; $B6CC
+    lda     fileCursor              ; $B6CC  on END?
     cmp     #$03                    ; $B6CE
-    beq     @loc_B6E4               ; $B6D0
-    asl     a                       ; $B6D2
-    bne     @loc_B6D8               ; $B6D3
-    clc                             ; $B6D5
+    beq     @draw                   ; $B6D0
+    asl     a                       ; $B6D2  a file: its bit,
+    bne     @checkFile              ; $B6D3
+    clc                             ; $B6D5  (file 1: bit 0)
     adc     #$01                    ; $B6D6
 
-@loc_B6D8:
+@checkFile:
     tay                             ; $B6D8
-    and     fileEmptyMask           ; $B6D9
-    bne     @loc_B6E4               ; $B6DB
-    inc     fileCursor              ; $B6DD
+    and     fileEmptyMask           ; $B6D9  empty (can be named)?
+    bne     @draw                   ; $B6DB
+    inc     fileCursor              ; $B6DD  no: the next
     tya                             ; $B6DF
     asl     a                       ; $B6E0
-    jmp     @loc_B6D8               ; $B6E1
+    jmp     @checkFile              ; $B6E1
 
-@loc_B6E4:
-    ldx     fileCursor              ; $B6E4
+@draw:
+    ldx     fileCursor              ; $B6E4  its row
     lda     FileCursorYs,x          ; $B6E6
     sta     fileCursorY             ; $B6E9
-    lda     #$4C                    ; $B6EB
+    lda     #$4C                    ; $B6EB  the fairy at X $4C
     sta     a:fileCursorX           ; $B6ED
-    ldy     fileCursorY             ; $B6F0
+    ldy     fileCursorY             ; $B6F0  4 lines higher
     dey                             ; $B6F2
     dey                             ; $B6F3
     dey                             ; $B6F4
     dey                             ; $B6F5
     jsr     FileScreen_DrawFairy    ; $B6F6
-    lda     #$2C                    ; $B6F9
+    lda     #$2C                    ; $B6F9  Link's icons
     ldy     #$58                    ; $B6FB
     jsr     FileScreen_DrawLinkIcons ; $B6FD
-    lda     fileCursorY             ; $B700
+    lda     fileCursorY             ; $B700  on END (Y $78)?
     cmp     #$78                    ; $B702
-    bne     @loc_B711               ; $B704
-    lda     #$F8                    ; $B706
+    bne     @checkAB                ; $B704
+    lda     #$F8                    ; $B706  yes: no name or letter cursor
     sta     oamBuffer+4             ; $B708
     sta     oamBuffer+8             ; $B70B
-    jmp     @loc_B8C4               ; $B70E
+    jmp     @names                  ; $B70E
 
-@loc_B711:
-    lda     joypadPressed           ; $B711
+@checkAB:
+    lda     joypadPressed           ; $B711  A or B?
     and     #$C0                    ; $B713
-    beq     @loc_B727               ; $B715
-    lda     #$01                    ; $B717
+    beq     @nameX                  ; $B715
+    lda     #$01                    ; $B717  a sound,
     sta     musicRequest            ; $B719
-    inc     nameCursor              ; $B71B
+    inc     nameCursor              ; $B71B  the next name position
     lda     nameCursor              ; $B71D
     cmp     #$08                    ; $B71F
-    bne     @loc_B727               ; $B721
+    bne     @nameX                  ; $B721  (wrapping after 8)
 ; (code below not executed in the test movies)
     lda     #$00                    ; $B723
     sta     nameCursor              ; $B725
 ; (end of code not executed in the test movies)
 
-@loc_B727:
-    lda     #$68                    ; $B727
+@nameX:
+    lda     #$68                    ; $B727  its X: $68 + 8 per position
     ldx     nameCursor              ; $B729
 
-@loc_B72B:
-    beq     @loc_B734               ; $B72B
+@nameXLoop:
+    beq     @setNameX               ; $B72B
     clc                             ; $B72D
     adc     #$08                    ; $B72E
     dex                             ; $B730
-    jmp     @loc_B72B               ; $B731
+    jmp     @nameXLoop              ; $B731
 
-@loc_B734:
+@setNameX:
     sta     nameCursorX             ; $B734
-    lda     fileCursorY             ; $B737
+    lda     fileCursorY             ; $B737  (on END: hidden; never here)
     cmp     #$78                    ; $B739
-    bne     @loc_B73F               ; $B73B
+    bne     @setNameY               ; $B73B
 ; (code below not executed in the test movies)
     lda     #$F8                    ; $B73D
 ; (end of code not executed in the test movies)
 
-@loc_B73F:
+@setNameY:
     sta     nameCursorY             ; $B73F
-    lda     fileBlinkTimer          ; $B741
+    lda     fileBlinkTimer          ; $B741  blinking every 8 frames
     and     #$08                    ; $B743
-    beq     @loc_B74B               ; $B745
+    beq     @drawName               ; $B745
     lda     #$F8                    ; $B747
     sta     nameCursorY             ; $B749
 
-@loc_B74B:
-    lda     nameCursorY             ; $B74B
+@drawName:
+    lda     nameCursorY             ; $B74B  the name cursor:
     sta     oamBuffer+4             ; $B74D
-    dec     oamBuffer+4             ; $B750
+    dec     oamBuffer+4             ; $B750  a line higher,
     lda     nameCursorX             ; $B753
     sta     oamBuffer+7             ; $B756
-    lda     #$FF                    ; $B759
+    lda     #$FF                    ; $B759  tile $FF,
     sta     oamBuffer+5             ; $B75B
-    lda     #$03                    ; $B75E
+    lda     #$03                    ; $B75E  palette 3
     sta     oamBuffer+6             ; $B760
-    lda     joypadHeld              ; $B763
+    lda     joypadHeld              ; $B763  a direction held?
     and     #$0F                    ; $B765
-    bne     @loc_B772               ; $B767
-    lda     #$00                    ; $B769
+    bne     @held                   ; $B767
+    lda     #$00                    ; $B769  no: not held, no repeat
     sta     letterHeld              ; $B76B
     sta     letterRepeatTimer       ; $B76D
-    jmp     @loc_B831               ; $B76F
+    jmp     @letterX                ; $B76F
 
-@loc_B772:
-    lda     letterHeld              ; $B772
-    beq     @loc_B78E               ; $B774
-    inc     letterRepeatTimer       ; $B776
+@held:
+    lda     letterHeld              ; $B772  held before?
+    beq     @move                   ; $B774  no: move now
+    inc     letterRepeatTimer       ; $B776  count:
     lda     letterRepeatTimer       ; $B778
-    cmp     #$1F                    ; $B77A
-    bmi     @loc_B78B               ; $B77C
-    and     #$07                    ; $B77E
-    bne     @loc_B78B               ; $B780
-    lda     #$20                    ; $B782
+    cmp     #$1F                    ; $B77A  after 31 frames,
+    bmi     @wait                   ; $B77C
+    and     #$07                    ; $B77E  every 8:
+    bne     @wait                   ; $B780
+    lda     #$20                    ; $B782  (from $20)
     sta     letterRepeatTimer       ; $B784
-    jmp     @loc_B78E               ; $B786
+    jmp     @move                   ; $B786  move
 ; (unreferenced: $B789-$B78A, 2 bytes: dead code, beq +3)
     .byte   $F0, $03                                                        ; $B789
 
-@loc_B78B:
-    jmp     @loc_B831               ; $B78B
+@wait:
+    jmp     @letterX                ; $B78B  not yet
 
-@loc_B78E:
-    lda     #$01                    ; $B78E
+@move:
+    lda     #$01                    ; $B78E  held
     sta     letterHeld              ; $B790
-    lda     #$02                    ; $B792
+    lda     #$02                    ; $B792  the letter sound
     sta     musicRequest            ; $B794
-    lda     joypadHeld              ; $B796
+    lda     joypadHeld              ; $B796  Left or Right?
     and     #$03                    ; $B798
-    beq     @loc_B7F2               ; $B79A
-    cmp     #$01                    ; $B79C
-    bne     @loc_B7CF               ; $B79E
-    inc     letterColumn            ; $B7A0
+    beq     @upDown                 ; $B79A
+    cmp     #$01                    ; $B79C  Right:
+    bne     @left                   ; $B79E
+    inc     letterColumn            ; $B7A0  next column,
     lda     letterColumn            ; $B7A2
-    cmp     #$0B                    ; $B7A4
-    bne     @loc_B7AE               ; $B7A6
-    inc     letterRow               ; $B7A8
+    cmp     #$0B                    ; $B7A4  past the 11th:
+    bne     @checkLastRow           ; $B7A6
+    inc     letterRow               ; $B7A8  the next row
     lda     #$00                    ; $B7AA
     sta     letterColumn            ; $B7AC
 
-@loc_B7AE:
-    lda     letterRow               ; $B7AE
+@checkLastRow:
+    lda     letterRow               ; $B7AE  past the last row:
     cmp     #$04                    ; $B7B0
-    bne     @loc_B7BA               ; $B7B2
-    lda     #$00                    ; $B7B4
+    bne     @checkGap               ; $B7B2
+    lda     #$00                    ; $B7B4  back to the first letter
     sta     letterColumn            ; $B7B6
     sta     letterRow               ; $B7B8
 
-@loc_B7BA:
-    lda     letterRow               ; $B7BA
+@checkGap:
+    lda     letterRow               ; $B7BA  row 2 has only 6 letters:
     cmp     #$02                    ; $B7BC
-    bne     @loc_B7CC               ; $B7BE
+    bne     @movedRight             ; $B7BE
     lda     letterColumn            ; $B7C0
     cmp     #$06                    ; $B7C2
-    bne     @loc_B7CC               ; $B7C4
+    bne     @movedRight             ; $B7C4
 ; (code below not executed in the test movies)
-    lda     #$00                    ; $B7C6
+    lda     #$00                    ; $B7C6  past them: the next row
     sta     letterColumn            ; $B7C8
     inc     letterRow               ; $B7CA
 ; (end of code not executed in the test movies)
 
-@loc_B7CC:
-    jmp     @loc_B831               ; $B7CC
+@movedRight:
+    jmp     @letterX                ; $B7CC
 
-@loc_B7CF:
-    dec     letterColumn            ; $B7CF
-    bpl     @loc_B7E3               ; $B7D1
-    dec     letterRow               ; $B7D3
-    lda     #$0A                    ; $B7D5
+@left:
+    dec     letterColumn            ; $B7CF  Left: the column before,
+    bpl     @checkFirstRow          ; $B7D1
+    dec     letterRow               ; $B7D3  before the first: the row above,
+    lda     #$0A                    ; $B7D5  its last column
     sta     letterColumn            ; $B7D7
-    lda     letterRow               ; $B7D9
+    lda     letterRow               ; $B7D9  row 2:
     cmp     #$02                    ; $B7DB
-    bne     @loc_B7E3               ; $B7DD
+    bne     @checkFirstRow          ; $B7DD
 ; (code below not executed in the test movies)
-    lda     #$05                    ; $B7DF
+    lda     #$05                    ; $B7DF  its last letter
     sta     letterColumn            ; $B7E1
 ; (end of code not executed in the test movies)
 
-@loc_B7E3:
-    lda     letterRow               ; $B7E3
-    bpl     @loc_B7EF               ; $B7E5
+@checkFirstRow:
+    lda     letterRow               ; $B7E3  above the first row:
+    bpl     @movedLeft              ; $B7E5
 ; (code below not executed in the test movies)
-    lda     #$03                    ; $B7E7
+    lda     #$03                    ; $B7E7  the last letter
     sta     letterRow               ; $B7E9
     lda     #$0A                    ; $B7EB
     sta     letterColumn            ; $B7ED
 ; (end of code not executed in the test movies)
 
-@loc_B7EF:
-    jmp     @loc_B831               ; $B7EF
+@movedLeft:
+    jmp     @letterX                ; $B7EF
 
-@loc_B7F2:
-    lda     joypadHeld              ; $B7F2
+@upDown:
+    lda     joypadHeld              ; $B7F2  Up?
     and     #$08                    ; $B7F4
-    beq     @loc_B814               ; $B7F6
-    dec     letterRow               ; $B7F8
-    bpl     @loc_B803               ; $B7FA
-    lda     #$03                    ; $B7FC
+    beq     @down                   ; $B7F6
+    dec     letterRow               ; $B7F8  the row above,
+    bpl     @upGap                  ; $B7FA
+    lda     #$03                    ; $B7FC  wrapping to the last
     sta     letterRow               ; $B7FE
-    jmp     @loc_B811               ; $B800
+    jmp     @movedUp                ; $B800
 
-@loc_B803:
-    lda     letterColumn            ; $B803
+@upGap:
+    lda     letterColumn            ; $B803  into row 2's gap?
     cmp     #$06                    ; $B805
-    bmi     @loc_B811               ; $B807
+    bmi     @movedUp                ; $B807
     lda     letterRow               ; $B809
     cmp     #$02                    ; $B80B
-    bne     @loc_B811               ; $B80D
-    dec     letterRow               ; $B80F
+    bne     @movedUp                ; $B80D
+    dec     letterRow               ; $B80F  skip it
 
-@loc_B811:
-    jmp     @loc_B831               ; $B811
+@movedUp:
+    jmp     @letterX                ; $B811
 
-@loc_B814:
-    inc     letterRow               ; $B814
+@down:
+    inc     letterRow               ; $B814  Down: the row below,
     lda     letterRow               ; $B816
     cmp     #$04                    ; $B818
-    bne     @loc_B823               ; $B81A
+    bne     @downGap                ; $B81A  past the last:
 ; (code below not executed in the test movies)
-    lda     #$00                    ; $B81C
+    lda     #$00                    ; $B81C  the first
     sta     letterRow               ; $B81E
-    jmp     @loc_B831               ; $B820
+    jmp     @letterX                ; $B820
 ; (end of code not executed in the test movies)
 
-@loc_B823:
-    lda     letterColumn            ; $B823
+@downGap:
+    lda     letterColumn            ; $B823  into row 2's gap?
     cmp     #$06                    ; $B825
-    bmi     @loc_B831               ; $B827
+    bmi     @letterX                ; $B827
     lda     letterRow               ; $B829
     cmp     #$02                    ; $B82B
-    bne     @loc_B831               ; $B82D
+    bne     @letterX                ; $B82D
 ; (code below not executed in the test movies)
-    inc     letterRow               ; $B82F
+    inc     letterRow               ; $B82F  skip it
 ; (end of code not executed in the test movies)
 
-@loc_B831:
-    lda     #$30                    ; $B831
+@letterX:
+    lda     #$30                    ; $B831  the letter cursor's X: $30 + 16 per column
     ldx     letterColumn            ; $B833
 
-@loc_B835:
-    beq     @loc_B83E               ; $B835
+@letterXLoop:
+    beq     @letterY                ; $B835
     clc                             ; $B837
     adc     #$10                    ; $B838
     dex                             ; $B83A
-    jmp     @loc_B835               ; $B83B
+    jmp     @letterXLoop            ; $B83B
 
-@loc_B83E:
+@letterY:
     sta     letterCursorX           ; $B83E
-    lda     #$90                    ; $B840
+    lda     #$90                    ; $B840  its Y: $90 + 16 per row
     ldx     letterRow               ; $B842
 
-@loc_B844:
-    beq     @loc_B84D               ; $B844
+@letterYLoop:
+    beq     @setLetterY             ; $B844
     clc                             ; $B846
     adc     #$10                    ; $B847
     dex                             ; $B849
-    jmp     @loc_B844               ; $B84A
+    jmp     @letterYLoop            ; $B84A
 
-@loc_B84D:
+@setLetterY:
     sta     letterCursorY           ; $B84D
-    lda     letterRepeatTimer       ; $B84F
+    lda     letterRepeatTimer       ; $B84F  not repeating:
     cmp     #$1F                    ; $B851
-    bpl     @loc_B85F               ; $B853
-    lda     fileBlinkTimer          ; $B855
+    bpl     @drawLetter             ; $B853
+    lda     fileBlinkTimer          ; $B855  blinking every 8 frames
     and     #$08                    ; $B857
-    beq     @loc_B85F               ; $B859
+    beq     @drawLetter             ; $B859
     lda     #$F8                    ; $B85B
     sta     letterCursorY           ; $B85D
 
-@loc_B85F:
-    lda     letterCursorY           ; $B85F
+@drawLetter:
+    lda     letterCursorY           ; $B85F  the letter cursor:
     sta     oamBuffer+68            ; $B861
-    dec     oamBuffer+68            ; $B864
+    dec     oamBuffer+68            ; $B864  a line higher,
     lda     letterCursorX           ; $B867
     sta     oamBuffer+71            ; $B869
-    lda     #$FF                    ; $B86C
+    lda     #$FF                    ; $B86C  tile $FF,
     sta     oamBuffer+69            ; $B86E
-    lda     #$03                    ; $B871
+    lda     #$03                    ; $B871  palette 3
     sta     oamBuffer+70            ; $B873
-    ldx     #$1C                    ; $B876
+    ldx     #$1C                    ; $B876  8 blank sprites (9-16) at Y $C7, X $10
 
 @loop:
     lda     #$C7                    ; $B878
@@ -7745,31 +7745,31 @@ Register_Menu:
     dex                             ; $B88E
     dex                             ; $B88F
     bpl     @loop                   ; $B890
-    lda     joypadPressed           ; $B892
+    lda     joypadPressed           ; $B892  A?
     and     #$80                    ; $B894
-    beq     @loc_B8C4               ; $B896
-    ldx     letterRow               ; $B898
+    beq     @names                  ; $B896
+    ldx     letterRow               ; $B898  the letter: row x 11 + column
     lda     letterColumn            ; $B89A
 
-@loc_B89C:
+@index:
     cpx     #$00                    ; $B89C
-    beq     @loc_B8A7               ; $B89E
+    beq     @write                  ; $B89E
     clc                             ; $B8A0
     adc     #$0B                    ; $B8A1
     dex                             ; $B8A3
-    jmp     @loc_B89C               ; $B8A4
+    jmp     @index                  ; $B8A4
 
-@loc_B8A7:
+@write:
     pha                             ; $B8A7
-    ldy     nameCursor              ; $B8A8
-    bne     @loc_B8AE               ; $B8AA
+    ldy     nameCursor              ; $B8A8  the position before the name cursor
+    bne     @position               ; $B8AA
 ; (code below not executed in the test movies)
-    ldy     #$08                    ; $B8AC
+    ldy     #$08                    ; $B8AC  (position 0: the last, 7)
 ; (end of code not executed in the test movies)
 
-@loc_B8AE:
+@position:
     dey                             ; $B8AE
-    lda     fileCursor              ; $B8AF
+    lda     fileCursor              ; $B8AF  the file's name
     asl     a                       ; $B8B1
     tax                             ; $B8B2
     lda     FileNamePtrs,x          ; $B8B3
@@ -7778,11 +7778,11 @@ Register_Menu:
     sta     temp1                   ; $B8BB
     pla                             ; $B8BD
     tax                             ; $B8BE
-    lda     NameLetters,x           ; $B8BF
+    lda     NameLetters,x           ; $B8BF  the letter written
     sta     (temp0),y               ; $B8C2
 
-@loc_B8C4:
-    lda     #$20                    ; $B8C4
+@names:
+    lda     #$20                    ; $B8C4  the names, from PPU $20CD
     sta     temp0                   ; $B8C6
     lda     #$CD                    ; $B8C8
     sta     temp1                   ; $B8CA
@@ -7800,52 +7800,52 @@ Register_Menu:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Text_NumberToDigits:
-    ldy     #$D0                    ; $B8D2
+    ldy     #$D0                    ; $B8D2  thousands, from '0':
 
 @loop:
-    iny                             ; $B8D4
+    iny                             ; $B8D4  count one more
     sec                             ; $B8D5
-    sbc     #$E8                    ; $B8D6
-    bcs     @loc_B8DC               ; $B8D8
-    dec     temp0                   ; $B8DA
+    sbc     #$E8                    ; $B8D6  - 1000 ($03E8)
+    bcs     @high                   ; $B8D8
+    dec     temp0                   ; $B8DA  (borrow)
 
-@loc_B8DC:
+@high:
     dec     temp0                   ; $B8DC
     dec     temp0                   ; $B8DE
     dec     temp0                   ; $B8E0
-    bpl     @loop                   ; $B8E2
-    clc                             ; $B8E4
+    bpl     @loop                   ; $B8E2  until negative
+    clc                             ; $B8E4  add the last 1000 back
     adc     #$E8                    ; $B8E5
-    bcc     @loc_B8EB               ; $B8E7
+    bcc     @addBackHigh            ; $B8E7
     inc     temp0                   ; $B8E9
 
-@loc_B8EB:
+@addBackHigh:
     inc     temp0                   ; $B8EB
     inc     temp0                   ; $B8ED
     inc     temp0                   ; $B8EF
-    dey                             ; $B8F1
-    sty     temp1                   ; $B8F2
-    ldy     #$D0                    ; $B8F4
+    dey                             ; $B8F1  one too many
+    sty     temp1                   ; $B8F2  the thousands digit
+    ldy     #$D0                    ; $B8F4  hundreds:
 
 @loop2:
     iny                             ; $B8F6
     sec                             ; $B8F7
-    sbc     #$64                    ; $B8F8
+    sbc     #$64                    ; $B8F8  - 100
     bcs     @loop2                  ; $B8FA
-    dec     temp0                   ; $B8FC
-    bpl     @loop2                  ; $B8FE
-    adc     #$64                    ; $B900
+    dec     temp0                   ; $B8FC  (borrow)
+    bpl     @loop2                  ; $B8FE  until negative
+    adc     #$64                    ; $B900  add the last 100 back
     dey                             ; $B902
-    sty     temp0                   ; $B903
-    ldy     #$D0                    ; $B905
+    sty     temp0                   ; $B903  the hundreds digit
+    ldy     #$D0                    ; $B905  tens:
 
 @loop3:
     iny                             ; $B907
     sec                             ; $B908
-    sbc     #$0A                    ; $B909
+    sbc     #$0A                    ; $B909  - 10, until it borrows
     bcs     @loop3                  ; $B90B
-    adc     #$DA                    ; $B90D
-    dey                             ; $B90F
+    adc     #$DA                    ; $B90D  + 10 + '0' (carry clear): the ones digit
+    dey                             ; $B90F  the tens digit
     rts                             ; $B910
 
 ; ---------------------------------------------------------------------------
@@ -7858,20 +7858,20 @@ Text_NumberToDigits:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_Load:
-    jsr     Save_SetPointersCurrent ; $B911
+    jsr     Save_SetPointersCurrent ; $B911  the slot's pointers; y = stats size - 1
 
 @loop:
-    lda     (temp0),y               ; $B914
+    lda     (temp0),y               ; $B914  the file's stats into RAM
     sta     statLevel,y             ; $B916
     dey                             ; $B919
     bpl     @loop                   ; $B91A
     iny                             ; $B91C
 
 @loop2:
-    lda     (temp2),y               ; $B91D
+    lda     (temp2),y               ; $B91D  its world state into saveWorld
     sta     (temp4),y               ; $B91F
-    jsr     Save_AdvancePointers    ; $B921
-    lda     temp6                   ; $B924
+    jsr     Save_AdvancePointers    ; $B921  (all six pointers on)
+    lda     temp6                   ; $B924  to the end of the defaults' length
     cmp     #<SaveDefaultWorldEnd   ; $B926
     bne     @loop2                  ; $B928
     lda     temp7                   ; $B92A
@@ -7903,85 +7903,85 @@ SaveDefaultWorldPtr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_CheckFiles:
-    ldx     #$02                    ; $B960
+    ldx     #$02                    ; $B960  each file, 3 down to 1:
 
 @loop:
     txa                             ; $B962
     jsr     Save_SetPointers        ; $B963
-    ldy     #$00                    ; $B966
+    ldy     #$00                    ; $B966  its status:
     lda     (temp12),y              ; $B968
-    cmp     #SAVE_STATUS_VALID      ; $B96A
-    beq     @loc_B9A3               ; $B96C
-    cmp     #SAVE_STATUS_WRITING_BACKUP ; $B96E
-    beq     @loc_B99D               ; $B970
-    cmp     #SAVE_STATUS_WRITING_FILE ; $B972
-    beq     @loc_B9A7               ; $B974
-    ldy     #SAVE_STATS_SIZE - 1    ; $B976
+    cmp     #SAVE_STATUS_VALID      ; $B96A  intact?
+    beq     @next                   ; $B96C
+    cmp     #SAVE_STATUS_WRITING_BACKUP ; $B96E  interrupted before the file was touched?
+    beq     @valid                  ; $B970
+    cmp     #SAVE_STATUS_WRITING_FILE ; $B972  interrupted while writing it?
+    beq     @restore                ; $B974
+    ldy     #SAVE_STATS_SIZE - 1    ; $B976  anything else: a new file:
 
 @loop2:
-    lda     SaveDefaultStats,y      ; $B978
+    lda     SaveDefaultStats,y      ; $B978  the default stats
     sta     (temp0),y               ; $B97B
     dey                             ; $B97D
     bpl     @loop2                  ; $B97E
     iny                             ; $B980
 
 @loop3:
-    lda     (temp6),y               ; $B981
+    lda     (temp6),y               ; $B981  and world state
     sta     (temp2),y               ; $B983
-    inc     temp6                   ; $B985
-    bne     @loc_B98B               ; $B987
+    inc     temp6                   ; $B985  (counting through the defaults)
+    bne     @incDest                ; $B987
 ; (code below not executed in the test movies)
     inc     temp7                   ; $B989
 ; (end of code not executed in the test movies)
 
-@loc_B98B:
+@incDest:
     inc     temp2                   ; $B98B
-    bne     @loc_B991               ; $B98D
+    bne     @checkEnd               ; $B98D
     inc     temp3                   ; $B98F
 
-@loc_B991:
-    lda     temp6                   ; $B991
+@checkEnd:
+    lda     temp6                   ; $B991  to the end of the defaults
     cmp     #<SaveDefaultWorldEnd   ; $B993
     bne     @loop3                  ; $B995
     lda     temp7                   ; $B997
     cmp     #>SaveDefaultWorldEnd   ; $B999
     bne     @loop3                  ; $B99B
 
-@loc_B99D:
+@valid:
     ldy     #$00                    ; $B99D
-    lda     #SAVE_STATUS_VALID      ; $B99F
+    lda     #SAVE_STATUS_VALID      ; $B99F  mark it valid
     sta     (temp12),y              ; $B9A1
 
-@loc_B9A3:
-    dex                             ; $B9A3
+@next:
+    dex                             ; $B9A3  the file before
     bpl     @loop                   ; $B9A4
     rts                             ; $B9A6
 ; (code below not executed in the test movies)
 
-@loc_B9A7:
-    ldy     #SAVE_STATS_SIZE - 1    ; $B9A7
+@restore:
+    ldy     #SAVE_STATS_SIZE - 1    ; $B9A7  restore the file from its backup:
 
 @loop4:
-    lda     (temp8),y               ; $B9A9
+    lda     (temp8),y               ; $B9A9  stats,
     sta     (temp0),y               ; $B9AB
     dey                             ; $B9AD
     bpl     @loop4                  ; $B9AE
     iny                             ; $B9B0
 
 @loop5:
-    lda     (temp10),y              ; $B9B1
+    lda     (temp10),y              ; $B9B1  world state
     sta     (temp2),y               ; $B9B3
     txa                             ; $B9B5
     pha                             ; $B9B6
     jsr     Save_AdvancePointers    ; $B9B7
     pla                             ; $B9BA
     tax                             ; $B9BB
-    lda     temp6                   ; $B9BC
+    lda     temp6                   ; $B9BC  to the end
     cmp     #<SaveDefaultWorldEnd   ; $B9BE
     bne     @loop5                  ; $B9C0
     lda     temp7                   ; $B9C2
     cmp     #>SaveDefaultWorldEnd   ; $B9C4
-    beq     @loc_B99D               ; $B9C6
+    beq     @valid                  ; $B9C6  then valid
     bne     @loop5                  ; $B9C8
 
 ; ---------------------------------------------------------------------------
@@ -7997,43 +7997,43 @@ Save_CheckFiles:
 Save_Write:
     jsr     Save_SetPointersCurrent ; $B9CA
     ldy     #$00                    ; $B9CD
-    lda     #SAVE_STATUS_WRITING_BACKUP ; $B9CF
+    lda     #SAVE_STATUS_WRITING_BACKUP ; $B9CF  in progress: copying to the backup
     sta     (temp12),y              ; $B9D1
-    ldy     #SAVE_STATS_SIZE - 1    ; $B9D3
+    ldy     #SAVE_STATS_SIZE - 1    ; $B9D3  RAM's stats
 
 @loop:
-    lda     statLevel,y             ; $B9D5
+    lda     statLevel,y             ; $B9D5  to the backup
     sta     (temp8),y               ; $B9D8
     dey                             ; $B9DA
     bpl     @loop                   ; $B9DB
     iny                             ; $B9DD
 
 @loop2:
-    lda     (temp4),y               ; $B9DE
+    lda     (temp4),y               ; $B9DE  RAM's world state
     sta     (temp10),y              ; $B9E0
     jsr     Save_AdvancePointers    ; $B9E2
-    lda     temp6                   ; $B9E5
+    lda     temp6                   ; $B9E5  to the end
     cmp     #<SaveDefaultWorldEnd   ; $B9E7
     bne     @loop2                  ; $B9E9
     lda     temp7                   ; $B9EB
     cmp     #>SaveDefaultWorldEnd   ; $B9ED
     bne     @loop2                  ; $B9EF
-    lda     #SAVE_STATUS_WRITING_FILE ; $B9F1
+    lda     #SAVE_STATUS_WRITING_FILE ; $B9F1  in progress: writing the file
     sta     (temp12),y              ; $B9F3
-    jsr     Save_SetPointersCurrent ; $B9F5
+    jsr     Save_SetPointersCurrent ; $B9F5  (y = stats size - 1)
 
 @loop3:
-    lda     (temp8),y               ; $B9F8
+    lda     (temp8),y               ; $B9F8  the backup's stats
     sta     (temp0),y               ; $B9FA
     dey                             ; $B9FC
     bpl     @loop3                  ; $B9FD
     iny                             ; $B9FF
 
 @loop4:
-    lda     (temp10),y              ; $BA00
+    lda     (temp10),y              ; $BA00  and world state to the file
     sta     (temp2),y               ; $BA02
     jsr     Save_AdvancePointers    ; $BA04
-    lda     temp6                   ; $BA07
+    lda     temp6                   ; $BA07  to the end
     cmp     #<SaveDefaultWorldEnd   ; $BA09
     bne     @loop4                  ; $BA0B
     lda     temp7                   ; $BA0D
@@ -8042,7 +8042,7 @@ Save_Write:
 ; (end of code not executed in the test movies)
 
 Save_MarkValid:
-    lda     #SAVE_STATUS_VALID      ; $BA13
+    lda     #SAVE_STATUS_VALID      ; $BA13  done
     sta     (temp12),y              ; $BA15
     rts                             ; $BA17
 
@@ -8060,27 +8060,27 @@ Save_MarkValid:
 Save_RestoreFromBackup:
     jsr     Save_SetPointers        ; $BA18
     ldy     #$00                    ; $BA1B
-    lda     #SAVE_STATUS_WRITING_FILE ; $BA1D
+    lda     #SAVE_STATUS_WRITING_FILE ; $BA1D  in progress: writing the file
     sta     (temp12),y              ; $BA1F
     ldy     #SAVE_STATS_SIZE - 1    ; $BA21
 
 @loop:
-    lda     (temp8),y               ; $BA23
+    lda     (temp8),y               ; $BA23  the backup's stats
     sta     (temp0),y               ; $BA25
     dey                             ; $BA27
     bpl     @loop                   ; $BA28
     iny                             ; $BA2A
 
 @loop2:
-    lda     (temp10),y              ; $BA2B
+    lda     (temp10),y              ; $BA2B  and world state to the file
     sta     (temp2),y               ; $BA2D
     jsr     Save_AdvancePointers    ; $BA2F
-    lda     temp6                   ; $BA32
+    lda     temp6                   ; $BA32  to the end
     cmp     #<SaveDefaultWorldEnd   ; $BA34
     bne     @loop2                  ; $BA36
     lda     temp7                   ; $BA38
     cmp     #>SaveDefaultWorldEnd   ; $BA3A
-    beq     Save_MarkValid          ; $BA3C
+    beq     Save_MarkValid          ; $BA3C  then valid
 ; (code below not executed in the test movies)
     bne     @loop2                  ; $BA3E
 ; (end of code not executed in the test movies)
@@ -8101,26 +8101,26 @@ Save_CopyToBackup:
     txa                             ; $BA40
     jsr     Save_SetPointers        ; $BA41
     ldy     #$00                    ; $BA44
-    lda     #SAVE_STATUS_WRITING_BACKUP ; $BA46
+    lda     #SAVE_STATUS_WRITING_BACKUP ; $BA46  marked as copying to the backup (and left so)
     sta     (temp12),y              ; $BA48
     ldy     #SAVE_STATS_SIZE - 1    ; $BA4A
 
 @loop:
-    lda     (temp0),y               ; $BA4C
+    lda     (temp0),y               ; $BA4C  the file's stats
     sta     (temp8),y               ; $BA4E
     dey                             ; $BA50
     bpl     @loop                   ; $BA51
     iny                             ; $BA53
 
 @loop2:
-    lda     (temp2),y               ; $BA54
+    lda     (temp2),y               ; $BA54  and world state to the backup
     sta     (temp10),y              ; $BA56
     txa                             ; $BA58
     pha                             ; $BA59
     jsr     Save_AdvancePointers    ; $BA5A
     pla                             ; $BA5D
     tax                             ; $BA5E
-    lda     temp6                   ; $BA5F
+    lda     temp6                   ; $BA5F  to the end
     cmp     #<SaveDefaultWorldEnd   ; $BA61
     bne     @loop2                  ; $BA63
     lda     temp7                   ; $BA65
@@ -8155,33 +8155,33 @@ Save_SetPointersCurrent:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_SetPointers:
-    asl     a                       ; $BA6F
+    asl     a                       ; $BA6F  2 bytes per file
     tay                             ; $BA70
-    lda     SaveStatsPtrs,y         ; $BA71
+    lda     SaveStatsPtrs,y         ; $BA71  the file's stats,
     sta     temp0                   ; $BA74
     lda     SaveStatsPtrs+1,y       ; $BA76
     sta     temp1                   ; $BA79
-    lda     SaveWorldPtrs,y         ; $BA7B
+    lda     SaveWorldPtrs,y         ; $BA7B  its world state,
     sta     temp2                   ; $BA7E
     lda     SaveWorldPtrs+1,y       ; $BA80
     sta     temp3                   ; $BA83
-    lda     #<saveWorld             ; $BA85
+    lda     #<saveWorld             ; $BA85  RAM's world state,
     sta     temp4                   ; $BA87
     lda     #>saveWorld             ; $BA89
     sta     temp5                   ; $BA8B
-    lda     SaveDefaultWorldPtr     ; $BA8D
+    lda     SaveDefaultWorldPtr     ; $BA8D  the defaults (the loop counter),
     sta     temp6                   ; $BA90
     lda     SaveDefaultWorldPtr+1   ; $BA92
     sta     temp7                   ; $BA95
-    lda     SaveBackupStatsPtrs,y   ; $BA97
+    lda     SaveBackupStatsPtrs,y   ; $BA97  the backup's stats,
     sta     temp8                   ; $BA9A
     lda     SaveBackupStatsPtrs+1,y ; $BA9C
     sta     temp9                   ; $BA9F
-    lda     SaveBackupWorldPtrs,y   ; $BAA1
+    lda     SaveBackupWorldPtrs,y   ; $BAA1  its world state,
     sta     temp10                  ; $BAA4
     lda     SaveBackupWorldPtrs+1,y ; $BAA6
     sta     temp11                  ; $BAA9
-    lda     SaveStatusPtrs,y        ; $BAAB
+    lda     SaveStatusPtrs,y        ; $BAAB  the file's status
     sta     temp12                  ; $BAAE
     lda     SaveStatusPtrs+1,y      ; $BAB0
     sta     temp13                  ; $BAB3
@@ -8197,15 +8197,15 @@ Save_SetPointers:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Save_AdvancePointers:
-    ldx     #$0A                    ; $BAB8
+    ldx     #$0A                    ; $BAB8  temp0, temp2, ..., temp10
 
 @loop:
     inc     temp0,x                 ; $BABA
-    bne     @loc_BAC0               ; $BABC
+    bne     @next                   ; $BABC
     inc     temp1,x                 ; $BABE
 
-@loc_BAC0:
-    dex                             ; $BAC0
+@next:
+    dex                             ; $BAC0  the pointer before
     dex                             ; $BAC1
     bpl     @loop                   ; $BAC2
     rts                             ; $BAC4
