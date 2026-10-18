@@ -2346,78 +2346,78 @@ SpellFlags:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Spell_Update:
-    lda     dialogType              ; $8DC3
-    ora     pauseState              ; $8DC6
-    ora     gameFrozen              ; $8DC9
-    bne     @loc_8E1F               ; $8DCB
-    ldy     spellCursor             ; $8DCD
+    lda     dialogType              ; $8DC3  a dialog,
+    ora     pauseState              ; $8DC6  the pause menu
+    ora     gameFrozen              ; $8DC9  or a scripted event:
+    bne     @effects                ; $8DCB  no casting
+    ldy     spellCursor             ; $8DCD  the selected spell + 1
     iny                             ; $8DD0
-    cpy     spellLastCast           ; $8DD1
-    beq     @loc_8E1F               ; $8DD4
-    lda     joypadPressed           ; $8DD6
+    cpy     spellLastCast           ; $8DD1  just cast (until the menu is opened again)?
+    beq     @effects                ; $8DD4
+    lda     joypadPressed           ; $8DD6  Select pressed?
     and     #$20                    ; $8DD8
-    beq     @loc_8E1F               ; $8DDA
-    ldy     spellCursor             ; $8DDC
+    beq     @effects                ; $8DDA
+    ldy     spellCursor             ; $8DDC  owned?
     lda     spellOwned,y            ; $8DDF
-    beq     @loc_8E1F               ; $8DE2
-    tya                             ; $8DE4
-    asl     a                       ; $8DE5
+    beq     @effects                ; $8DE2
+    tya                             ; $8DE4  its row of SpellCosts:
+    asl     a                       ; $8DE5  spell x 8
     asl     a                       ; $8DE6
     asl     a                       ; $8DE7
-    adc     statLevel+STAT_MAGIC    ; $8DE8
+    adc     statLevel+STAT_MAGIC    ; $8DE8  + magic level (1-8; carry clear)
     tay                             ; $8DEB
-    lda     statMeter               ; $8DEC
+    lda     statMeter               ; $8DEC  magic - cost
     sec                             ; $8DEF
     sbc     SpellCosts - 1,y        ; $8DF0  y = spell * 8 + magic level (1-8)
-    bcc     @loc_8E3B               ; $8DF3
+    bcc     @short                  ; $8DF3  short:
 
-@loc_8DF5:
-    sta     statMeter               ; $8DF5
-    ldy     spellCursor             ; $8DF8
+@cast:
+    sta     statMeter               ; $8DF5  new magic
+    ldy     spellCursor             ; $8DF8  set the spell's bit
     lda     SpellFlags,y            ; $8DFB
     ora     spellActive             ; $8DFE
     sta     spellActive             ; $8E01
-    iny                             ; $8E04
+    iny                             ; $8E04  remember it
     sty     spellLastCast           ; $8E05
-    lda     hudRedraw               ; $8E08
+    lda     hudRedraw               ; $8E08  redraw the magic meter
     ora     #$80                    ; $8E0B
     sta     hudRedraw               ; $8E0D
-    lda     #$20                    ; $8E10
-    cpy     #$06                    ; $8E12
-    bcc     @loc_8E18               ; $8E14
-    ora     #$80                    ; $8E16
+    lda     #$20                    ; $8E10  flash for $20 frames,
+    cpy     #$06                    ; $8E12  Reflect, Spell and Thunder (cursor 5-7)
+    bcc     @setFlash               ; $8E14
+    ora     #$80                    ; $8E16  flash the backdrop too
 
-@loc_8E18:
+@setFlash:
     sta     spellFlash              ; $8E18
-    lda     #$04                    ; $8E1B
+    lda     #$04                    ; $8E1B  the spell sound
     sta     sfxRequest              ; $8E1D
 
-@loc_8E1F:
-    lda     #$00                    ; $8E1F
+@effects:
+    lda     #$00                    ; $8E1F  the jump spell is set again below
     sta     jumpSpellActive         ; $8E21
-    jsr     Link_UpdatePalette      ; $8E23
-    ldy     #$07                    ; $8E26
+    jsr     Link_UpdatePalette      ; $8E23  Link's palette (flashing)
+    ldy     #$07                    ; $8E26  each active spell, Thunder down to Shield:
 
 @loop:
     tya                             ; $8E28
     pha                             ; $8E29
     lda     SpellFlags,y            ; $8E2A
     bit     spellActive             ; $8E2D
-    beq     @loc_8E35               ; $8E30
+    beq     @nextSpell              ; $8E30
     jsr     Spell_RunEffect         ; $8E32
 
-@loc_8E35:
+@nextSpell:
     pla                             ; $8E35
     tay                             ; $8E36
     dey                             ; $8E37
     bpl     @loop                   ; $8E38
     rts                             ; $8E3A
 
-@loc_8E3B:
-    cmp     #$FF                    ; $8E3B
-    bne     @loc_8E1F               ; $8E3D
-    lda     #$00                    ; $8E3F
-    jmp     @loc_8DF5               ; $8E41
+@short:
+    cmp     #$FF                    ; $8E3B  exactly one short (-1)?
+    bne     @effects                ; $8E3D  no
+    lda     #$00                    ; $8E3F  QUIRK: cast anyway, magic 0
+    jmp     @cast                   ; $8E41
 
 ; ---------------------------------------------------------------------------
 ; Spell_RunEffect
@@ -2428,7 +2428,7 @@ Spell_Update:
 ; Status:  confirmed (dispatch)
 ; ---------------------------------------------------------------------------
 Spell_RunEffect:
-    tya                             ; $8E44
+    tya                             ; $8E44  by spell
     jsr     JumpTable               ; $8E45
 ; (inline jump table)
     .word   Spell_ShieldEffect      ; $8E48  (not observed)
@@ -2440,47 +2440,81 @@ Spell_RunEffect:
     .word   Spell_SpellEffect       ; $8E54
     .word   Spell_ThunderEffect     ; $8E56
 
+; ---------------------------------------------------------------------------
+; Spell_JumpEffect
+;
+; The jump spell: each frame, set jumpSpellActive for Link_UpdateJump's
+; higher jump (Spell_Update clears it first).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Spell_JumpEffect:
-    lda     #$01                    ; $8E58
+    lda     #$01                    ; $8E58  higher jumps this frame (Link_UpdateJump)
     sta     jumpSpellActive         ; $8E5A
     rts                             ; $8E5C
-; (code below not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Spell_LifeEffect
+;
+; The life spell: once, add 48 to the life still to be refilled
+; (statMeterPending+1, at most 255), and clear the spell's bit.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
+; (code below not executed in the test movies)
 Spell_LifeEffect:
-    lda     spellActive             ; $8E5D
-    and     #$FB                    ; $8E60
+    lda     spellActive             ; $8E5D  once:
+    and     #$FB                    ; $8E60  clear the Life bit
     sta     spellActive             ; $8E62
-    lda     statMeterPending+1      ; $8E65
+    lda     statMeterPending+1      ; $8E65  add 48 to the life to refill
     clc                             ; $8E68
     adc     #$30                    ; $8E69
-    bcc     @loc_8E6F               ; $8E6B
+    bcc     @setLife                ; $8E6B  (at most 255)
     lda     #$FF                    ; $8E6D
 
-@loc_8E6F:
+@setLife:
     sta     statMeterPending+1      ; $8E6F
     rts                             ; $8E72
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Spell_SpellEffect
+;
+; The SPELL spell: outside the towns, turn the enemies into Bots
+; (Spell_TurnEnemiesToBots).  In a town, only on New Kasuto's east street
+; (area $14): freeze the game and open the big door (BigDoor_Update)
+; each frame; elsewhere in a town it does nothing.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Spell_SpellEffect:
-    lda     currentWorld            ; $8E73
-    beq     @loc_8E8A               ; $8E76
-    cmp     #$03                    ; $8E78
-    bcs     @loc_8E8A               ; $8E7A
-    lda     areaId                  ; $8E7C
+    lda     currentWorld            ; $8E73  the overworld's areas (world 0)
+    beq     @bots                   ; $8E76
+    cmp     #$03                    ; $8E78  or the palaces (3-5):
+    bcs     @bots                   ; $8E7A  turn the enemies into Bots
+    lda     areaId                  ; $8E7C  a town: New Kasuto's east street ($14)?
     cmp     #$14                    ; $8E7F
-    bne     Spell_ShieldEffectDone  ; $8E81
-    lda     #$01                    ; $8E83
+    bne     Spell_ShieldEffectDone  ; $8E81  no: nothing (the bit stays set)
+    lda     #$01                    ; $8E83  yes: freeze the game
     sta     gameFrozen              ; $8E85
-    jmp     BigDoor_Update          ; $8E87
+    jmp     BigDoor_Update          ; $8E87  and open the big door
 ; (code below not executed in the test movies)
 
-@loc_8E8A:
+@bots:
     jmp     Spell_TurnEnemiesToBots ; $8E8A
 
+; ---------------------------------------------------------------------------
+; Spell_ShieldEffect
+;
+; The shield spell: each frame, Link's shield color ($16) and
+; shieldSpellActive (damage halved, Link_TakeDamage).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Spell_ShieldEffect:
-    lda     #$16                    ; $8E8D
+    lda     #$16                    ; $8E8D  Link's shield color,
     sta     sramLinkPalette3+4      ; $8E8F
-    sta     shieldSpellActive       ; $8E92
+    sta     shieldSpellActive       ; $8E92  halve damage (Link_TakeDamage)
 
 ; ---------------------------------------------------------------------------
 ; Spell_ShieldEffectDone
@@ -2493,8 +2527,16 @@ Spell_ShieldEffectDone:
     rts                             ; $8E95
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Spell_ReflectEffect
+;
+; The reflect spell: each frame, set reflectSpellActive (the shield
+; reflects shots, Link_CheckShield).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Spell_ReflectEffect:
-    lda     #$01                    ; $8E96
+    lda     #$01                    ; $8E96  shield reflects (Link_CheckShield)
     sta     reflectSpellActive      ; $8E98
     rts                             ; $8E9B
     .byte   $F4, $F4, $30, $31, $30, $31, $30, $31, $F4, $F4, $F4, $30, $31, $30, $49, $4A; $8E9C
@@ -2750,7 +2792,7 @@ Mode_FallAnimate:
 ; Status:  confirmed (dispatch)
 ; ---------------------------------------------------------------------------
 Link_Run:
-    lda     linkMode                ; $903A
+    lda     linkMode                ; $903A  by mode
     jsr     JumpTable               ; $903C
 ; (inline jump table)
     .word   Link_EnterArea          ; $903F
@@ -2764,70 +2806,73 @@ AreaEntryXOffsets:
 ; Link_EnterArea
 ;
 ; LINK_MODE_ENTER: place Link in a newly entered area, at the left or right
-; edge (areaEntrySide) facing inward, or where the elevator or a door puts
-; him; place the elevator and locked door; start the area's music; go to
-; LINK_MODE_CONTROL.
+; edge (areaEntrySide) facing inward and walking in for 9 frames, or at the
+; X saved with the scroll he returns to (areaStartPage 4 and up: an
+; elevator, which then puts him at X $70, a fall, or back out of a door).
+; Place the elevator and locked door, limit the scroll of a two page area
+; to the pair of pages he is on (0-1 or 2-3; both seen in the 100% movie),
+; clear his state, start the area's music and go to LINK_MODE_CONTROL.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_EnterArea:
-    lda     #$03                    ; $9047
+    lda     #$03                    ; $9047  standing,
     sta     objState                ; $9049
-    lsr     a                       ; $904B
-    sta     objYHi                  ; $904C
-    sta     linkStanding            ; $904E
-    lsr     a                       ; $9050
-    sta     extraSpriteAttrs        ; $9051
-    sta     objYVelocity            ; $9054
-    ldx     #$07                    ; $9057
+    lsr     a                       ; $904B  a = 1:
+    sta     objYHi                  ; $904C  on screen,
+    sta     linkStanding            ; $904E  standing,
+    lsr     a                       ; $9050  a = 0:
+    sta     extraSpriteAttrs        ; $9051  normal palette,
+    sta     objYVelocity            ; $9054  not falling
+    ldx     #$07                    ; $9057  no projectiles (slots 7-14)
 
 @loop:
     sta     objState+7,x            ; $9059
     dex                             ; $905B
     bpl     @loop                   ; $905C
-    ldy     areaStartPage           ; $905E
-    cpy     #$04                    ; $9061
-    bcs     @loc_9079               ; $9063
-    ldy     areaEntrySide           ; $9065
-    lda     scrollX                 ; $9068
+    ldy     areaStartPage           ; $905E  starting on a map page
+    cpy     #$04                    ; $9061  (0-3)
+    bcs     @saved                  ; $9063  no: a saved scroll (4 and up)
+    ldy     areaEntrySide           ; $9065  at the screen's left or right edge:
+    lda     scrollX                 ; $9068  scrollX + 8 or + $D8
     adc     AreaEntryXOffsets,y     ; $906B
     sta     objX                    ; $906E
-    lda     scrollXHi               ; $9070
+    lda     scrollXHi               ; $9070  its page
     adc     #$00                    ; $9073
-    ldx     #$08                    ; $9075
-    bne     @loc_9081               ; $9077
+    ldx     #$08                    ; $9075  walk in for 9 frames
+    bne     @setPage                ; $9077  (always)
 
-@loc_9079:
-    lda     entryLinkX,y            ; $9079
+@saved:
+    lda     entryLinkX,y            ; $9079  the X saved with the entry scroll
     sta     objX                    ; $907C
-    lda     entryLinkXHi,y          ; $907E
+    lda     entryLinkXHi,y          ; $907E  (x = $FF + 1: no walking in)
 
-@loc_9081:
-    sta     objXHi                  ; $9081
+@setPage:
+    sta     objXHi                  ; $9081  page
     inx                             ; $9083
-    stx     timerFast+TIMER_LINK_ENTER ; $9084
-    ldy     areaEntrySide           ; $9087
-    iny                             ; $908A
+    stx     timerFast+TIMER_LINK_ENTER ; $9084  walk in (TIMER_LINK_ENTER)
+    ldy     areaEntrySide           ; $9087  face inward: 1 right from the left,
+    iny                             ; $908A  2 left from the right
     sty     objFacing               ; $908B
     sty     linkWalkDir             ; $908D
-    lda     linkFallingIn           ; $908F
-    bne     @loc_9097               ; $9092
-    jsr     Link_PlaceOnGround      ; $9094
+    lda     linkFallingIn           ; $908F  falling in from above?
+    bne     @objects                ; $9092
+    jsr     Link_PlaceOnGround      ; $9094  no: stand him on the floor
 
-@loc_9097:
-    jsr     Area_PlaceElevatorAndDoor ; $9097
-    ldy     areaLastPage            ; $909A
+@objects:
+    jsr     Area_PlaceElevatorAndDoor ; $9097  elevator, door or fairy
+    ldy     areaLastPage            ; $909A  a two page area (areaLastPage 1)?
     dey                             ; $909C
-    bne     @loc_90AB               ; $909D
-    lda     objXHi                  ; $909F
-    and     #$02                    ; $90A1
+    bne     @clear                  ; $909D
+    lda     objXHi                  ; $909F  yes: limit the scroll to his pair of pages
+    and     #$02                    ; $90A1  (pages 0-1 or 2-3)
     tay                             ; $90A3
-    sty     sram_69C2               ; $90A4
+    sty     sram_69C2               ; $90A4  min page
     iny                             ; $90A7
-    sty     sram_69C5               ; $90A8
+    sty     sram_69C5               ; $90A8  max page
 
-@loc_90AB:
-    lda     #$00                    ; $90AB
+@clear:
+    lda     #$00                    ; $90AB  a = 0:
     sta     linkFallingIn           ; $90AD
     sta     enteredVertically       ; $90B0
     sta     drawOffscreen           ; $90B3
@@ -2837,29 +2882,29 @@ Link_EnterArea:
     sta     objXVelocity            ; $90BE
     sta     reflectSpellActive      ; $90C0
     sta     shieldSpellActive       ; $90C3
-    ldy     chimneyTimer            ; $90C6
-    beq     @loc_90D7               ; $90C9
-    sta     objY                    ; $90CB
-    sta     timerFast+TIMER_LINK_ENTER ; $90CD
+    ldy     chimneyTimer            ; $90C6  down a chimney?
+    beq     @control                ; $90C9
+    sta     objY                    ; $90CB  yes: at the top of the screen,
+    sta     timerFast+TIMER_LINK_ENTER ; $90CD  not walking in,
     sta     chimneyTimer            ; $90D0
-    lda     #$50                    ; $90D3
+    lda     #$50                    ; $90D3  at X $50
     sta     objX                    ; $90D5
 
-@loc_90D7:
-    inc     linkMode                ; $90D7
-    lda     #$2A                    ; $90D9
+@control:
+    inc     linkMode                ; $90D7  LINK_MODE_CONTROL
+    lda     #$2A                    ; $90D9  Link's normal shield color
     sta     sramLinkPalette3+4      ; $90DB
-    lda     areaMusic               ; $90DE
-    cmp     #$04                    ; $90E1
-    bne     @loc_90EA               ; $90E3
+    lda     areaMusic               ; $90DE  the area's music
+    cmp     #$04                    ; $90E1  $04: the battle music?
+    bne     @music                  ; $90E3
 ; (code below not executed in the test movies)
-    lda     #$02                    ; $90E5
-    sta     sfxRequest+2            ; $90E7
+    lda     #$02                    ; $90E5  (consumed by SideView_Start first)
+    sta     sfxRequest+2            ; $90E7  the "pulled into battle" sound
     rts                             ; $90E9
 ; (end of code not executed in the test movies)
 
-@loc_90EA:
-    sta     musicRequest            ; $90EA
+@music:
+    sta     musicRequest            ; $90EA  start it (0: none)
     rts                             ; $90EC
 
 ; ---------------------------------------------------------------------------
@@ -3002,23 +3047,31 @@ Elevator_Place:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_Sink:
-    lda     #$00                    ; $918E
+    lda     #$00                    ; $918E  not moving horizontally
     sta     a:linkDeltaX            ; $9190
-    lda     objY                    ; $9193
+    lda     objY                    ; $9193  sunk below Y $D0?
     cmp     #$D0                    ; $9195
-    bcc     @loc_919C               ; $9197
-    inc     linkDeathPending        ; $9199
+    bcc     @sink                   ; $9197
+    inc     linkDeathPending        ; $9199  yes: he dies
 
-@loc_919C:
-    inc     objY                    ; $919C
-    jsr     Link_SetHurtPose        ; $919E
+@sink:
+    inc     objY                    ; $919C  one pixel down
+    jsr     Link_SetHurtPose        ; $919E  in the hurt pose
     jmp     Link_Draw               ; $91A1
 
+; ---------------------------------------------------------------------------
+; Spell_FairyEffect
+;
+; The fairy spell: each frame, turn Link into the fairy (linkFairy = 8),
+; once he is below Y $20.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Spell_FairyEffect:
-    lda     objY                    ; $91A4
+    lda     objY                    ; $91A4  below Y $20?
     cmp     #$20                    ; $91A6
-    bcc     @done                   ; $91A8
-    lda     #$08                    ; $91AA
+    bcc     @done                   ; $91A8  no: not yet (fairy flight's top is $18)
+    lda     #$08                    ; $91AA  a fairy (the probe offset too)
     sta     linkFairy               ; $91AC
 
 @done:
@@ -3027,7 +3080,7 @@ Spell_FairyEffect:
 ; ---------------------------------------------------------------------------
 ; Spell_TurnEnemiesToBots
 ;
-; The SPELL spell outside the towns (West Hyrule's side view areas, the
+; The SPELL spell outside the towns (the overworld's side view areas, the
 ; palaces and the Great Palace; Spell_SpellEffect): clear its bit in
 ; spellActive and turn every enemy on the screen (except those with
 ; sramEnemyDamage bit 4) into a Bot (enemy type 4), stopped and with no
@@ -3041,83 +3094,93 @@ Spell_FairyEffect:
 ; ---------------------------------------------------------------------------
 Spell_TurnEnemiesToBots:
 ; (code below not executed in the test movies)
-    lda     spellActive             ; $91AF
+    lda     spellActive             ; $91AF  once: clear the Spell bit
     and     #$BF                    ; $91B2
     sta     spellActive             ; $91B4
-    ldx     #$05                    ; $91B7
+    ldx     #$05                    ; $91B7  each enemy slot:
 
 @loop:
     stx     currentObject           ; $91B9
-    lda     enemyActive,x           ; $91BB
-    beq     @loc_91E2               ; $91BD
-    ldy     enemyType,x             ; $91BF
+    lda     enemyActive,x           ; $91BB  empty?
+    beq     @next                   ; $91BD
+    ldy     enemyType,x             ; $91BF  immune (sramEnemyDamage bit 4)?
     lda     sramEnemyDamage,y       ; $91C1
     and     #$10                    ; $91C4
-    bne     @loc_91E2               ; $91C6
-    inx                             ; $91C8
-    ldy     #$01                    ; $91C9
-    jsr     Obj_ComputeScreenPos    ; $91CB
+    bne     @next                   ; $91C6
+    inx                             ; $91C8  its object slot,
+    ldy     #$01                    ; $91C9  enemy category
+    jsr     Obj_ComputeScreenPos    ; $91CB  its screen position
     ldx     currentObject           ; $91CE
-    lda     drawOffscreen+1         ; $91D0
-    bne     @loc_91E2               ; $91D2
-    sta     objXVelocity+1,x        ; $91D4
+    lda     drawOffscreen+1         ; $91D0  off the screen?
+    bne     @next                   ; $91D2
+    sta     objXVelocity+1,x        ; $91D4  a = 0: stop it,
     sta     objYVelocity+1,x        ; $91D6
-    sta     timerFast+TIMER_ENEMY,x ; $91D9
-    sta     enemyHp,x               ; $91DC
-    lda     #$04                    ; $91DE
+    sta     timerFast+TIMER_ENEMY,x ; $91D9  not stunned,
+    sta     enemyHp,x               ; $91DC  no hit points:
+    lda     #$04                    ; $91DE  a Bot
     sta     enemyType,x             ; $91E0
 
-@loc_91E2:
+@next:
     dex                             ; $91E2
     bpl     @loop                   ; $91E3
     rts                             ; $91E5
 ; (end of code not executed in the test movies)
 
+; ---------------------------------------------------------------------------
+; Spell_ThunderEffect
+;
+; The thunder spell: once, clear the spell's bit, remove every enemy
+; projectile and hit every live enemy on the screen (Enemy_TakeDamage)
+; for ThunderDamage, or level 1 sword damage (sramEnemyFlags bit 5), unless
+; it is immune (bit 7).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Spell_ThunderEffect:
-    lda     spellActive             ; $91E6
+    lda     spellActive             ; $91E6  once: clear the Thunder bit
     and     #$7F                    ; $91E9
     sta     spellActive             ; $91EB
-    lda     #$00                    ; $91EE
-    beq     @loc_91F4               ; $91F0
+    lda     #$00                    ; $91EE  on screen only
+    beq     @start                  ; $91F0  (always)
 ; (code below not executed in the test movies)
-    lda     #$0A                    ; $91F2
+    lda     #$0A                    ; $91F2  (unreachable)
 ; (end of code not executed in the test movies)
 
-@loc_91F4:
-    sta     drawScratch             ; $91F4
+@start:
+    sta     drawScratch             ; $91F4  0: only enemies on screen
     lda     currentObject           ; $91F6
     pha                             ; $91F8
-    ldx     #$05                    ; $91F9
+    ldx     #$05                    ; $91F9  each enemy slot:
 
 @loop:
     stx     currentObject           ; $91FB
-    lda     #$00                    ; $91FD
+    lda     #$00                    ; $91FD  remove its projectile
     sta     objState+7,x            ; $91FF
-    lda     enemyActive,x           ; $9201
-    beq     @loc_922D               ; $9203
+    lda     enemyActive,x           ; $9201  a live enemy (1)?
+    beq     @next                   ; $9203
     cmp     #$01                    ; $9205
-    bne     @loc_922D               ; $9207
-    inx                             ; $9209
-    ldy     #$01                    ; $920A
-    jsr     Obj_ComputeScreenPos    ; $920C
+    bne     @next                   ; $9207
+    inx                             ; $9209  its object slot,
+    ldy     #$01                    ; $920A  enemy category
+    jsr     Obj_ComputeScreenPos    ; $920C  its screen position
     ldx     currentObject           ; $920F
-    ldy     drawScratch             ; $9211
-    bne     @loc_922A               ; $9213
-    lda     drawOffscreen+1         ; $9215
+    ldy     drawScratch             ; $9211  (always 0)
+    bne     @hit                    ; $9213
+    lda     drawOffscreen+1         ; $9215  off the screen?
     and     #$88                    ; $9217
-    bne     @loc_922D               ; $9219
-    ldy     enemyType,x             ; $921B
+    bne     @next                   ; $9219
+    ldy     enemyType,x             ; $921B  its flags:
     lda     sramEnemyFlags,y        ; $921D
-    ldy     #$09                    ; $9220
-    and     #$A0                    ; $9222
-    bmi     @loc_922D               ; $9224
-    beq     @loc_922A               ; $9226
-    ldy     #$01                    ; $9228
+    ldy     #$09                    ; $9220  ThunderDamage (y = 9),
+    and     #$A0                    ; $9222  immune (bit 7)?
+    bmi     @next                   ; $9224
+    beq     @hit                    ; $9226  bit 5:
+    ldy     #$01                    ; $9228  sword level 1 damage instead
 
-@loc_922A:
-    jsr     Enemy_TakeDamage        ; $922A
+@hit:
+    jsr     Enemy_TakeDamage        ; $922A  hit it
 
-@loc_922D:
+@next:
     dex                             ; $922D
     bpl     @loop                   ; $922E
     pla                             ; $9230
@@ -3135,64 +3198,64 @@ Spell_ThunderEffect:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdatePalette:
-    lda     backdropColor           ; $9235
+    lda     backdropColor           ; $9235  entry 4's color 0: the area's backdrop
     sta     sramLinkPalette0+4      ; $9238
-    lda     spellFlash              ; $923B
-    asl     a                       ; $923E
-    bne     @loc_9245               ; $923F
-    sta     spellFlash              ; $9241
+    lda     spellFlash              ; $923B  flashing?
+    asl     a                       ; $923E  (bit 7 alone counts as done)
+    bne     @flash                  ; $923F
+    sta     spellFlash              ; $9241  no: stop
 
 @done:
     rts                             ; $9244
 
-@loc_9245:
-    ldx     ppuBuffer0Len           ; $9245
+@flash:
+    ldx     ppuBuffer0Len           ; $9245  room in the buffer?
     cpx     #$19                    ; $9248
-    bcs     @done                   ; $924A
-    dec     spellFlash              ; $924C
-    lda     #$3F                    ; $924F
+    bcs     @done                   ; $924A  no: wait a frame
+    dec     spellFlash              ; $924C  one frame less
+    lda     #$3F                    ; $924F  $3F10: Link's palette,
     sta     ppuBuffer0,x            ; $9251
     lda     #$10                    ; $9254
     sta     ppuBuffer0+1,x          ; $9256
-    lda     #$04                    ; $9259
+    lda     #$04                    ; $9259  4 colors
     sta     ppuBuffer0+2,x          ; $925B
-    ldy     #$04                    ; $925E
-    lda     areaPaletteHeader       ; $9260
+    ldy     #$04                    ; $925E  entry 4, normal colors
+    lda     areaPaletteHeader       ; $9260  background palette 1 (dark caves)
     and     #$38                    ; $9263
     cmp     #$08                    ; $9265
-    bne     @loc_9272               ; $9267
-    lda     currentWorld            ; $9269
-    ora     itemOwned               ; $926C
-    bne     @loc_9272               ; $926F
-    iny                             ; $9271
+    bne     @pickColors             ; $9267
+    lda     currentWorld            ; $9269  in the overworld's areas
+    ora     itemOwned               ; $926C  without the candle?
+    bne     @pickColors             ; $926F
+    iny                             ; $9271  entry 5: Link in the dark
 
-@loc_9272:
-    lda     spellFlash              ; $9272
+@pickColors:
+    lda     spellFlash              ; $9272  flashing:
     and     #$7F                    ; $9275
-    beq     @loc_927C               ; $9277
-    and     #$03                    ; $9279
+    beq     @setColors              ; $9277
+    and     #$03                    ; $9279  entries 0-3 by frame
     tay                             ; $927B
 
-@loc_927C:
-    lda     sramLinkPalette1,y      ; $927C
+@setColors:
+    lda     sramLinkPalette1,y      ; $927C  colors 1-3
     sta     ppuBuffer0+4,x          ; $927F
     lda     sramLinkPalette2,y      ; $9282
     sta     ppuBuffer0+5,x          ; $9285
     lda     sramLinkPalette3,y      ; $9288
     sta     ppuBuffer0+6,x          ; $928B
-    lda     spellFlash              ; $928E
+    lda     spellFlash              ; $928E  bit 7 also flashes color 0
     asl     a                       ; $9291
-    bcs     @loc_9296               ; $9292
-    ldy     #$04                    ; $9294
+    bcs     @setBackdrop            ; $9292  (the backdrop, at $3F10 = $3F00)
+    ldy     #$04                    ; $9294  otherwise the normal backdrop
 
-@loc_9296:
+@setBackdrop:
     lda     sramLinkPalette0,y      ; $9296
     sta     ppuBuffer0+3,x          ; $9299
-    lda     #$FF                    ; $929C
+    lda     #$FF                    ; $929C  end
     sta     ppuBuffer0+7,x          ; $929E
     txa                             ; $92A1
     clc                             ; $92A2
-    adc     #$07                    ; $92A3
+    adc     #$07                    ; $92A3  7 bytes queued
     sta     ppuBuffer0Len           ; $92A5
     rts                             ; $92A8
 ; (unreferenced: $92A9-$92AA, 2 bytes)
@@ -3227,132 +3290,132 @@ LinkControlYVelocities:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_Control:
-    ldx     #$00                    ; $92BF
+    ldx     #$00                    ; $92BF  no horizontal motion yet
     stx     a:linkDeltaX            ; $92C1
-    lda     chimneyTimer            ; $92C4
-    beq     @loc_92E9               ; $92C7
-    inc     chimneyTimer            ; $92C9
+    lda     chimneyTimer            ; $92C4  sinking down a chimney?
+    beq     @notChimney             ; $92C7
+    inc     chimneyTimer            ; $92C9  count
     lda     chimneyTimer            ; $92CC
-    cmp     #$38                    ; $92CF
-    bcs     @loc_92E1               ; $92D1
-    inc     objY                    ; $92D3
-    lda     #$20                    ; $92D5
+    cmp     #$38                    ; $92CF  $38 frames?
+    bcs     @chimneyDone            ; $92D1
+    inc     objY                    ; $92D3  no: one pixel down
+    lda     #$20                    ; $92D5  behind the background,
     sta     linkSlowed              ; $92D7
-    lda     #$06                    ; $92DA
+    lda     #$06                    ; $92DA  crouching
     sta     objState                ; $92DC
     jmp     Link_Draw               ; $92DE
 
-@loc_92E1:
-    inc     doorDepth               ; $92E1
-    lda     #$16                    ; $92E4
+@chimneyDone:
+    inc     doorDepth               ; $92E1  yes: one door deeper
+    lda     #$16                    ; $92E4  gameMode $16: the room below
     jmp     Area_ExitToMode         ; $92E6
 
-@loc_92E9:
-    lda     gameFrozen              ; $92E9
-    bne     @done                   ; $92EB
-    lda     linkSlowed              ; $92ED
-    ora     extraSpriteAttrs        ; $92F0
+@notChimney:
+    lda     gameFrozen              ; $92E9  a scripted event?
+    bne     @done                   ; $92EB  Link waits
+    lda     linkSlowed              ; $92ED  behind the background (swamp, chimney)
+    ora     extraSpriteAttrs        ; $92F0  sticks for the area
     sta     extraSpriteAttrs        ; $92F3
     ; The fairy flies in the direction held on the D-pad.
-    lda     a:linkFairy             ; $92F6
-    beq     @loc_9341               ; $92F9
+    lda     a:linkFairy             ; $92F6  a fairy?
+    beq     @notFairy               ; $92F9
     lda     #$00                    ; $92FB
     sta     objXVelocity            ; $92FD
-    lda     #$02                    ; $92FF
+    lda     #$02                    ; $92FF  pulse 1 effect $02 each frame
     sta     sfxRequest+3            ; $9301
-    lda     joypadHeld              ; $9303
+    lda     joypadHeld              ; $9303  Up/Down for elevators
     and     #$0C                    ; $9305
     sta     linkUpDownHeld          ; $9307
-    lda     joypadHeld              ; $930A
+    lda     joypadHeld              ; $930A  a direction held?
     and     #$0F                    ; $930C
-    beq     @done                   ; $930E
-    tay                             ; $9310
-    and     blockedDirections       ; $9311
-    bne     @done                   ; $9314
-    lda     joypadHeld              ; $9316
+    beq     @done                   ; $930E  no: hover
+    tay                             ; $9310  (the velocity tables' index)
+    and     blockedDirections       ; $9311  blocked that way?
+    bne     @done                   ; $9314  yes: stay
+    lda     joypadHeld              ; $9316  face Left/Right
     and     #$03                    ; $9318
-    beq     @loc_931E               ; $931A
+    beq     @fly                    ; $931A
     sta     objFacing               ; $931C
 
-@loc_931E:
-    lda     LinkControlXVelocities,y ; $931E
+@fly:
+    lda     LinkControlXVelocities,y ; $931E  1.5 pixels per frame
     sta     objXVelocity            ; $9321
-    lda     LinkControlYVelocities,y ; $9323
+    lda     LinkControlYVelocities,y ; $9323  that way, diagonals too
     sta     objYVelocity            ; $9326
-    jsr     Link_CheckBg            ; $9329
-    lda     objCollision            ; $932C
-    ldy     objY                    ; $932E
+    jsr     Link_CheckBg            ; $9329  the fairy's probes
+    lda     objCollision            ; $932C  walls, floor, ceiling
+    ldy     objY                    ; $932E  above Y $18?
     cpy     #$18                    ; $9330
-    bcs     @loc_9336               ; $9332
-    ora     #$08                    ; $9334
+    bcs     @checkBlocked           ; $9332
+    ora     #$08                    ; $9334  also blocked upward
 
-@loc_9336:
-    and     joypadHeld              ; $9336
-    bne     @done                   ; $9338
-    jsr     Link_MoveX              ; $933A
+@checkBlocked:
+    and     joypadHeld              ; $9336  moving into any of them?
+    bne     @done                   ; $9338  yes: stay
+    jsr     Link_MoveX              ; $933A  no: fly
     jmp     Obj_MoveY               ; $933D
 
 @done:
     rts                             ; $9340
 
-@loc_9341:
-    lda     itemHoldTimer           ; $9341
-    beq     @loc_936B               ; $9344
+@notFairy:
+    lda     itemHoldTimer           ; $9341  holding up an item?
+    beq     @notHolding             ; $9344
     dec     itemHoldTimer           ; $9346
-    lda     musicPlaying            ; $9349
-    beq     @loc_936B               ; $934C
-    lda     objY                    ; $934E
+    lda     musicPlaying            ; $9349  until the fanfare ends:
+    beq     @notHolding             ; $934C
+    lda     objY                    ; $934E  Y rounded to the tile row
     clc                             ; $9350
     adc     #$08                    ; $9351
     and     #$F0                    ; $9353
     sta     objY                    ; $9355
-    ldy     #$0C                    ; $9357
+    ldy     #$0C                    ; $9357  holding up: $0C in the overworld's areas,
     lda     currentWorld            ; $9359
-    beq     @loc_9364               ; $935C
-    iny                             ; $935E
+    beq     @setHoldPose            ; $935C
+    iny                             ; $935E  $0D in towns,
     cmp     #$03                    ; $935F
-    bcc     @loc_9364               ; $9361
-    iny                             ; $9363
+    bcc     @setHoldPose            ; $9361
+    iny                             ; $9363  $0E in palaces
 
-@loc_9364:
+@setHoldPose:
     sty     objState                ; $9364
-    lda     #$02                    ; $9366
+    lda     #$02                    ; $9366  facing left
     sta     linkWalkDir             ; $9368
     rts                             ; $936A
 
-@loc_936B:
-    lda     timerFast+TIMER_LINK_HURT ; $936B
-    beq     @loc_9379               ; $936E
-    jsr     Link_UpdateJump         ; $9370
-    jsr     Link_ShowHurt           ; $9373
-    jmp     @loc_938A               ; $9376
+@notHolding:
+    lda     timerFast+TIMER_LINK_HURT ; $936B  knocked back?
+    beq     @notHurt                ; $936E
+    jsr     Link_UpdateJump         ; $9370  he falls,
+    jsr     Link_ShowHurt           ; $9373  hurt pose
+    jmp     @face                   ; $9376
 
-@loc_9379:
-    lda     timerFast+TIMER_LINK_ENTER ; $9379
-    bne     @loc_9381               ; $937C
-    jsr     Link_ReadInput          ; $937E
+@notHurt:
+    lda     timerFast+TIMER_LINK_ENTER ; $9379  walking in?
+    bne     @move                   ; $937C  (no control)
+    jsr     Link_ReadInput          ; $937E  the controller
 
-@loc_9381:
-    jsr     Link_UpdateXVelocity    ; $9381
-    jsr     Link_UpdateJump         ; $9384
-    jsr     Link_UpdateAttack       ; $9387
+@move:
+    jsr     Link_UpdateXVelocity    ; $9381  walk,
+    jsr     Link_UpdateJump         ; $9384  jump,
+    jsr     Link_UpdateAttack       ; $9387  attack
 
-@loc_938A:
-    ldy     #$02                    ; $938A
+@face:
+    ldy     #$02                    ; $938A  face the way he moves:
     lda     objXVelocity            ; $938C
-    beq     @loc_9395               ; $938E
-    bmi     @loc_9393               ; $9390
-    dey                             ; $9392
+    beq     @checkWalls             ; $938E  (not moving: as he was)
+    bmi     @setFacing              ; $9390  moving left: 2
+    dey                             ; $9392  right: 1
 
-@loc_9393:
+@setFacing:
     sty     objFacing               ; $9393
 
-@loc_9395:
-    jsr     Link_CheckBg            ; $9395
-    lda     objCollision            ; $9398
+@checkWalls:
+    jsr     Link_CheckBg            ; $9395  background collision
+    lda     objCollision            ; $9398  a wall left or right?
     and     #$03                    ; $939A
     beq     @done2                  ; $939C
-    lda     #$00                    ; $939E
+    lda     #$00                    ; $939E  yes: stop
     sta     objXVelocity            ; $93A0
 
 @done2:
@@ -3367,13 +3430,13 @@ Link_Control:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_ShowHurt:
-    lda     objCollision            ; $93A3
+    lda     objCollision            ; $93A3  against a wall?
     and     #$03                    ; $93A5
     bne     Link_SetHurtPose        ; $93A7
-    jsr     Link_AnimateWalk        ; $93A9
+    jsr     Link_AnimateWalk        ; $93A9  no: slide (and move)
 
 Link_SetHurtPose:
-    lda     #$0A                    ; $93AC
+    lda     #$0A                    ; $93AC  LINK_POSE_HURT
     sta     objState                ; $93AE
 
 ; ---------------------------------------------------------------------------
@@ -3414,85 +3477,85 @@ LinkWalkFrameTimes:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdateXVelocity:
-    lda     timerFast+TIMER_LINK_ENTER ; $93BC
-    beq     @loc_93CD               ; $93BF
-    ldy     areaEntrySide           ; $93C1
+    lda     timerFast+TIMER_LINK_ENTER ; $93BC  walking in?
+    beq     @notEntering            ; $93BF
+    ldy     areaEntrySide           ; $93C1  inward,
     lda     LinkEntrySpeed,y        ; $93C4
-    asl     a                       ; $93C7
+    asl     a                       ; $93C7  at $10 (1 pixel per frame)
     sta     objXVelocity            ; $93C8
     jmp     Link_AnimateWalk        ; $93CA
 
-@loc_93CD:
-    lda     timerFast+TIMER_LINK_RECOIL ; $93CD
-    bne     @loc_93DC               ; $93D0
-    lda     linkAttackFrame         ; $93D2
-    beq     @loc_93DC               ; $93D5
-    lda     linkJumpState           ; $93D7
-    beq     Link_SetHurtPoseDone    ; $93DA
+@notEntering:
+    lda     timerFast+TIMER_LINK_RECOIL ; $93CD  recoiling: keep control
+    bne     @free                   ; $93D0
+    lda     linkAttackFrame         ; $93D2  attacking
+    beq     @free                   ; $93D5
+    lda     linkJumpState           ; $93D7  on the ground?
+    beq     Link_SetHurtPoseDone    ; $93DA  yes: no change, no animation
 
-@loc_93DC:
-    lda     linkStanding            ; $93DC
-    beq     @loc_93E6               ; $93DE
-    ldy     linkDirHeld             ; $93E0
-    dey                             ; $93E3
-    bpl     @loc_93FD               ; $93E4
+@free:
+    lda     linkStanding            ; $93DC  standing (not crouching)
+    beq     @slowDown               ; $93DE
+    ldy     linkDirHeld             ; $93E0  with a direction held?
+    dey                             ; $93E3  y = 0 right, 1 left
+    bpl     @accelerate             ; $93E4
 
-@loc_93E6:
-    lda     linkJumpState           ; $93E6
-    bne     Link_AnimateWalkIfFree  ; $93E9
-    ldy     objFacing               ; $93EB
+@slowDown:
+    lda     linkJumpState           ; $93E6  crouching in the air:
+    bne     Link_AnimateWalkIfFree  ; $93E9  keep the velocity
+    ldy     objFacing               ; $93EB  slow down toward 0:
     dey                             ; $93ED
-    lda     objXVelocity            ; $93EE
-    beq     @loc_93FA               ; $93F0
+    lda     objXVelocity            ; $93EE  moving?
+    beq     @animate                ; $93F0
     sec                             ; $93F2
-    sbc     LinkWalkAccel,y         ; $93F3
+    sbc     LinkWalkAccel,y         ; $93F3  1 per frame
     sta     objXVelocity            ; $93F6
-    bne     @loc_93FA               ; $93F8
+    bne     @animate                ; $93F8  (no-op branch)
 
-@loc_93FA:
-    jmp     @loc_9419               ; $93FA
+@animate:
+    jmp     @animateWalk            ; $93FA
 
-@loc_93FD:
-    lda     objXVelocity            ; $93FD
+@accelerate:
+    lda     objXVelocity            ; $93FD  at the top speed?
     cmp     LinkWalkMaxSpeed,y      ; $93FF
-    beq     @loc_9419               ; $9402
+    beq     @animateWalk            ; $9402
     clc                             ; $9404
-    adc     LinkWalkAccel,y         ; $9405
-    iny                             ; $9408
-    cpy     objFacing               ; $9409
-    beq     @loc_9417               ; $940B
-    dey                             ; $940D
-    cmp     LinkWalkMaxSpeed,y      ; $940E
-    beq     @loc_9417               ; $9411
+    adc     LinkWalkAccel,y         ; $9405  accelerate by 1
+    iny                             ; $9408  held direction + 1 =
+    cpy     objFacing               ; $9409  the way he faces (moves)?
+    beq     @setVelocity            ; $940B  yes: done
+    dey                             ; $940D  reversing:
+    cmp     LinkWalkMaxSpeed,y      ; $940E  at the top speed?
+    beq     @setVelocity            ; $9411
     clc                             ; $9413
-    adc     LinkWalkAccel,y         ; $9414
+    adc     LinkWalkAccel,y         ; $9414  by 1 more
 
-@loc_9417:
+@setVelocity:
     sta     objXVelocity            ; $9417
 
-@loc_9419:
-    lda     linkStanding            ; $9419
-    bne     Link_AnimateWalkIfFree  ; $941B
-    jsr     Link_AnimateWalkIfFree  ; $941D
-    lda     objCollision            ; $9420
+@animateWalk:
+    lda     linkStanding            ; $9419  standing?
+    bne     Link_AnimateWalkIfFree  ; $941B  yes: walk
+    jsr     Link_AnimateWalkIfFree  ; $941D  crouching: walk,
+    lda     objCollision            ; $9420  on the floor?
     and     #$04                    ; $9422
     beq     @done                   ; $9424
-    lda     #$06                    ; $9426
+    lda     #$06                    ; $9426  crouching pose
     sta     objState                ; $9428
 
 @done:
     rts                             ; $942A
 
 Link_AnimateWalkIfFree:
-    lda     objCollision            ; $942B
+    lda     objCollision            ; $942B  against a wall?
     and     #$03                    ; $942D
-    beq     Link_AnimateWalk        ; $942F
-    lda     linkDirHeld             ; $9431
-    beq     @loc_9438               ; $9434
-    lda     #$05                    ; $9436
+    beq     Link_AnimateWalk        ; $942F  no: walk
+    lda     linkDirHeld             ; $9431  pushing against it?
+    beq     @animate                ; $9434  no: velocity 0, standing
+    lda     #$05                    ; $9436  yes: as if at speed 5 (slowest frames)
 
-@loc_9438:
-    bpl     Link_AnimateWalkVelocity ; $9438
+@animate:
+    bpl     Link_AnimateWalkVelocity ; $9438  (always)
 
 ; ---------------------------------------------------------------------------
 ; Link_AnimateWalk
@@ -3505,7 +3568,7 @@ Link_AnimateWalkIfFree:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_AnimateWalk:
-    jsr     Link_MoveX              ; $943A
+    jsr     Link_MoveX              ; $943A  move first
     lda     objXVelocity            ; $943D
 
 ; ---------------------------------------------------------------------------
@@ -3516,37 +3579,37 @@ Link_AnimateWalk:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_AnimateWalkVelocity:
-    ldy     linkJumpState           ; $943F
-    bne     @loc_9468               ; $9442
-    cmp     #$00                    ; $9444
-    beq     @loc_946C               ; $9446
-    bpl     @loc_944F               ; $9448
+    ldy     linkJumpState           ; $943F  in the air:
+    bne     @walkFrame              ; $9442  hold the frame
+    cmp     #$00                    ; $9444  still:
+    beq     @stand                  ; $9446  standing
+    bpl     @speed                  ; $9448  |velocity|
     eor     #$FF                    ; $944A
     clc                             ; $944C
     adc     #$01                    ; $944D
 
-@loc_944F:
-    lsr     a                       ; $944F
+@speed:
+    lsr     a                       ; $944F  / 8: 0-3
     lsr     a                       ; $9450
     lsr     a                       ; $9451
     tay                             ; $9452
-    ldx     timerFast               ; $9453
-    bne     @loc_9468               ; $9456
-    lda     LinkWalkFrameTimes,y    ; $9458
+    ldx     timerFast               ; $9453  this frame's time left?
+    bne     @walkFrame              ; $9456  (x = 0 when it ran out)
+    lda     LinkWalkFrameTimes,y    ; $9458  frame time by speed
     sta     timerFast               ; $945B
-    inc     linkWalkFrame           ; $945E
+    inc     linkWalkFrame           ; $945E  next frame,
     lda     linkWalkFrame           ; $9460
     cmp     #$03                    ; $9462
-    bcc     @loc_9468               ; $9464
-    stx     linkWalkFrame           ; $9466
+    bcc     @walkFrame              ; $9464
+    stx     linkWalkFrame           ; $9466  wrapping to 0
 
-@loc_9468:
-    lda     linkWalkFrame           ; $9468
+@walkFrame:
+    lda     linkWalkFrame           ; $9468  the walking frame as pose 0-2
     bpl     Link_SetPose            ; $946A
 
-@loc_946C:
-    lda     #$03                    ; $946C
-    bne     Link_SetPose            ; $946E
+@stand:
+    lda     #$03                    ; $946C  standing pose
+    bne     Link_SetPose            ; $946E  (always)
 
 ; Link's initial jump velocity: jump spell standing, running; normal
 ; standing, running.  LinkJumpVelocityFrac is the fraction (1/256).
@@ -3568,27 +3631,33 @@ LinkAttackLastFrames:
 ; ---------------------------------------------------------------------------
 ; Link_UpdateAttack
 ;
-; Advance Link's sword attack animation (linkAttackFrame), standing or
-; crouching (linkAttackStanding), and stop him when it ends on the ground.
+; Advance Link's sword attack (linkAttackFrame, from Link_ReadInput) and
+; set its pose (LinkAttackPoses).  Standing (linkAttackStanding 1): frame 1
+; winds up (pose 4, 6 frames), 2 strikes (pose 5, 6 frames, with the sound),
+; 3 stands (pose 3, 6 frames), and 4 holds the sword back (pose 4, 32
+; frames), when B strikes again at once and moving lowers it.  Crouching:
+; frame 1 strikes (pose 7, 6 frames), 2 crouches (pose 6, 6 frames).  An
+; attack that ends on the ground stops Link.
+; (Checked with a scripted attack from North Castle.)
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdateAttack:
-    ldy     linkAttackFrame         ; $9483
+    ldy     linkAttackFrame         ; $9483  attacking?
     beq     Link_UpdateAttackDone   ; $9486
-    dey                             ; $9488
-    ldx     linkAttackStanding      ; $9489
-    lda     timerFast+TIMER_LINK_ATTACK ; $948C
-    beq     Link_NextAttackFrame    ; $948F
-    dex                             ; $9491
-    bpl     @loc_9498               ; $9492
-    iny                             ; $9494
+    dey                             ; $9488  y = frame - 1
+    ldx     linkAttackStanding      ; $9489  standing (1) or crouching (0)
+    lda     timerFast+TIMER_LINK_ATTACK ; $948C  this frame's time up?
+    beq     Link_NextAttackFrame    ; $948F  yes: the next one
+    dex                             ; $9491  crouching:
+    bpl     @setPose                ; $9492
+    iny                             ; $9494  the crouching poses (+4)
     iny                             ; $9495
     iny                             ; $9496
     iny                             ; $9497
 
-@loc_9498:
-    lda     LinkAttackPoses,y       ; $9498
+@setPose:
+    lda     LinkAttackPoses,y       ; $9498  the frame's pose
 
 ; ---------------------------------------------------------------------------
 ; Link_SetPose
@@ -3611,23 +3680,23 @@ Link_SetPose:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_NextAttackFrame:
-    tya                             ; $949E
-    cmp     LinkAttackLastFrames,x  ; $949F
-    beq     @loc_94B6               ; $94A2
-    lda     LinkAttackFrameTimes,y  ; $94A4
+    tya                             ; $949E  the last frame
+    cmp     LinkAttackLastFrames,x  ; $949F  (standing 3, crouching 1)?
+    beq     @end                    ; $94A2  yes: end
+    lda     LinkAttackFrameTimes,y  ; $94A4  its time
     sta     timerFast+TIMER_LINK_ATTACK ; $94A7
-    inc     linkAttackFrame         ; $94AA
-    iny                             ; $94AD
-    cpy     linkAttackStanding      ; $94AE
+    inc     linkAttackFrame         ; $94AA  next frame
+    iny                             ; $94AD  the frame just ended
+    cpy     linkAttackStanding      ; $94AE  = 1 and standing: the stroke starts
     bne     Link_UpdateAttackDone   ; $94B1
-    jmp     Link_PlaySwordSound     ; $94B3
+    jmp     Link_PlaySwordSound     ; $94B3  the sword sound
 
-@loc_94B6:
-    lda     #$00                    ; $94B6
+@end:
+    lda     #$00                    ; $94B6  end the attack;
     sta     linkAttackFrame         ; $94B8
-    lda     linkJumpState           ; $94BB
+    lda     linkJumpState           ; $94BB  on the ground:
     bne     Link_UpdateAttackDone   ; $94BE
-    sta     objXVelocity            ; $94C0
+    sta     objXVelocity            ; $94C0  stop
 
 ; ---------------------------------------------------------------------------
 ; Link_UpdateAttackDone
@@ -3654,136 +3723,139 @@ Link_UpdateAttackDone:
 ; (1/256 pixel per frame per frame), or $30 while A is held on the way up,
 ; to a terminal velocity of 5.  Hitting a ceiling (objCollision bit 3) on
 ; the way up stops the rise.  Landing from full speed crouches Link for a
-; moment (linkLandingTimer).  In the air, holding Up on the way up gives
-; the upward thrust pose (objState 8) and holding Down the downward thrust
-; (objState 9), once those techniques are learned.
+; moment (linkLandingTimer, 8 frames).  After a jump (linkJumpState 2),
+; Link crouches (pose 6) on the way up and shows walking frame 2 on the
+; way down; holding Up on the way up gives the upward thrust pose (8), and
+; holding Down in the air the downward thrust (9), once those techniques
+; are learned.  Walking off a ledge (linkJumpState 1) keeps his pose.
+; (Checked with a scripted jump from North Castle.)
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_UpdateJump:
-    lda     linkOnElevator          ; $94C5
+    lda     linkOnElevator          ; $94C5  on an elevator: no jumping or falling
     bne     Link_UpdateAttackDone   ; $94C8
-    lda     objCollision            ; $94CA
+    lda     objCollision            ; $94CA  on the floor?
     and     #$04                    ; $94CC
-    bne     @loc_94DA               ; $94CE
-    lda     linkJumpState           ; $94D0
-    bne     @loc_952D               ; $94D3
-    inc     linkJumpState           ; $94D5
-    bne     @loc_952D               ; $94D8
+    bne     @onFloor                ; $94CE  yes
+    lda     linkJumpState           ; $94D0  already in the air?
+    bne     @gravity                ; $94D3
+    inc     linkJumpState           ; $94D5  no: walked off a ledge, falling (1)
+    bne     @gravity                ; $94D8  (always)
 
-@loc_94DA:
-    lda     linkJumpState           ; $94DA
-    beq     @loc_94F8               ; $94DD
-    ldy     objYVelocity            ; $94DF
-    bmi     @loc_952D               ; $94E2
-    cpy     #$05                    ; $94E4
-    bcc     @loc_94ED               ; $94E6
-    lda     #$08                    ; $94E8
+@onFloor:
+    lda     linkJumpState           ; $94DA  just landed?
+    beq     @onGround               ; $94DD
+    ldy     objYVelocity            ; $94DF  moving up (into a floor tile)?
+    bmi     @gravity                ; $94E2  yes: keep jumping
+    cpy     #$05                    ; $94E4  landing at 5 pixels per frame
+    bcc     @land                   ; $94E6
+    lda     #$08                    ; $94E8  crouch for 8 frames
     sta     linkLandingTimer        ; $94EA
 
-@loc_94ED:
-    lda     #$00                    ; $94ED
+@land:
+    lda     #$00                    ; $94ED  on the ground:
     sta     linkJumpState           ; $94EF
     sta     objYVelocity            ; $94F2
-    sta     linkAttackFrame         ; $94F5
+    sta     linkAttackFrame         ; $94F5  any attack ends
 
-@loc_94F8:
-    lda     objY                    ; $94F8
+@onGround:
+    lda     objY                    ; $94F8  snap Y to the tile row
     and     #$F0                    ; $94FA
     sta     objY                    ; $94FC
-    lda     linkButtonsPressed      ; $94FE
+    lda     linkButtonsPressed      ; $94FE  A pressed?
     and     #JOY_A                  ; $9501
     beq     Link_UpdateAttackDone   ; $9503
-    ldy     #$00                    ; $9505
-    sty     linkAttackFrame         ; $9507
-    sty     linkLandingTimer        ; $950A
-    lda     objXVelocity            ; $950D
+    ldy     #$00                    ; $9505  jump:
+    sty     linkAttackFrame         ; $9507  no attack,
+    sty     linkLandingTimer        ; $950A  no crouch
+    lda     objXVelocity            ; $950D  running (|velocity| >= $13)?
     adc     #$13                    ; $950F
     cmp     #$26                    ; $9511
-    bcc     @loc_9516               ; $9513
-    iny                             ; $9515
+    bcc     @jumpSpell              ; $9513  (v + $13 + carry >= $26 unsigned)
+    iny                             ; $9515  running: +1
 
-@loc_9516:
-    lda     jumpSpellActive         ; $9516
-    bne     @loc_951C               ; $9518
-    iny                             ; $951A
+@jumpSpell:
+    lda     jumpSpellActive         ; $9516  the jump spell?
+    bne     @jump                   ; $9518
+    iny                             ; $951A  no: +2
     iny                             ; $951B
 
-@loc_951C:
-    lda     LinkJumpVelocity,y      ; $951C
+@jump:
+    lda     LinkJumpVelocity,y      ; $951C  initial velocity
     sta     objYVelocity            ; $951F
     lda     LinkJumpVelocityFrac,y  ; $9522
     sta     objYFrac                ; $9525
-    lda     #$02                    ; $9528
+    lda     #$02                    ; $9528  going up
     sta     linkJumpState           ; $952A
 
-@loc_952D:
-    ldy     #$48                    ; $952D
-    lda     joypadHeld              ; $952F
+@gravity:
+    ldy     #$48                    ; $952D  gravity $48,
+    lda     joypadHeld              ; $952F  A held
     and     #JOY_A                  ; $9531
-    beq     @loc_953C               ; $9533
-    lda     objYVelocity            ; $9535
-    bpl     @loc_953C               ; $9538
-    ldy     #$30                    ; $953A
+    beq     @setGravity             ; $9533
+    lda     objYVelocity            ; $9535  on the way up?
+    bpl     @setGravity             ; $9538
+    ldy     #$30                    ; $953A  lighter gravity $30
 
-@loc_953C:
+@setGravity:
     sty     temp0                   ; $953C
-    lda     #$05                    ; $953E
+    lda     #$05                    ; $953E  terminal velocity 5
     sta     temp2                   ; $9540
-    ldx     #$00                    ; $9542
-    lda     objYVelocity            ; $9544
-    bpl     @loc_9569               ; $9547
-    lda     objCollision            ; $9549
+    ldx     #$00                    ; $9542  Link's slot
+    lda     objYVelocity            ; $9544  going up
+    bpl     @fall                   ; $9547
+    lda     objCollision            ; $9549  into a ceiling?
     and     #$08                    ; $954B
-    beq     @loc_9569               ; $954D
-    ldy     objYVelocity            ; $954F
+    beq     @fall                   ; $954D
+    ldy     objYVelocity            ; $954F  slower than -1?
     iny                             ; $9552
-    bpl     @loc_955E               ; $9553
-    ldy     #$FF                    ; $9555
+    bpl     @ceiling                ; $9553  no
+    ldy     #$FF                    ; $9555  yes: rise at -1
     sty     objYVelocity            ; $9557
-    iny                             ; $955A
+    iny                             ; $955A  from fraction 0
     sty     objYFrac                ; $955B
 
-@loc_955E:
-    lda     objY                    ; $955E
+@ceiling:
+    lda     objY                    ; $955E  apply gravity
     pha                             ; $9560
-    jsr     Obj_MoveYWithGravity    ; $9561
-    pla                             ; $9564
+    jsr     Obj_MoveYWithGravity    ; $9561  (velocity only)
+    pla                             ; $9564  but stay at the same Y
     sta     objY                    ; $9565
-    bne     @loc_956C               ; $9567
+    bne     @pose                   ; $9567  (always)
 
-@loc_9569:
-    jsr     Obj_MoveYWithGravity    ; $9569
+@fall:
+    jsr     Obj_MoveYWithGravity    ; $9569  move and fall
 
-@loc_956C:
-    ldy     linkJumpState           ; $956C
+@pose:
+    ldy     linkJumpState           ; $956C  going up (2)?
     dey                             ; $956F
-    beq     @loc_958C               ; $9570
-    ldy     #$06                    ; $9572
-    lda     techniques              ; $9574
+    beq     @downThrust             ; $9570  no: falling, pose as is
+    ldy     #$06                    ; $9572  rising: crouching
+    lda     techniques              ; $9574  upward thrust learned
     and     #TECH_UPWARD_THRUST     ; $9577
-    beq     @loc_9582               ; $9579
-    lda     joypadHeld              ; $957B
+    beq     @risingPose             ; $9579
+    lda     joypadHeld              ; $957B  and Up held?
     and     #JOY_UP                 ; $957D
-    beq     @loc_9582               ; $957F
-    tay                             ; $9581
+    beq     @risingPose             ; $957F
+    tay                             ; $9581  yes: the up thrust pose (8)
 
-@loc_9582:
+@risingPose:
     tya                             ; $9582
-    ldy     objYVelocity            ; $9583
-    bmi     @loc_958A               ; $9586
-    lda     #$02                    ; $9588
+    ldy     objYVelocity            ; $9583  falling (velocity >= 0)?
+    bmi     @setPose                ; $9586  no: that pose
+    lda     #$02                    ; $9588  yes: walking frame 2
 
-@loc_958A:
+@setPose:
     sta     objState                ; $958A
 
-@loc_958C:
-    lda     techniques              ; $958C
+@downThrust:
+    lda     techniques              ; $958C  downward thrust learned
     and     #TECH_DOWNWARD_THRUST   ; $958F
     beq     @done                   ; $9591
-    lda     linkStanding            ; $9593
+    lda     linkStanding            ; $9593  and Down held (crouching)?
     bne     @done                   ; $9595
-    lda     #$09                    ; $9597
+    lda     #$09                    ; $9597  the down thrust pose
     sta     objState                ; $9599
 
 @done:
@@ -3795,75 +3867,77 @@ Link_UpdateJump:
 ; Read the controller for Link: crouch while Down is held (linkStanding),
 ; the direction held (linkDirHeld, and linkWalkDir for the last one),
 ; Up/Down (linkUpDownHeld, e.g. for elevators), and A/B pressed
-; (linkButtonsPressed).  B starts a sword attack, standing or crouching
-; (linkAttackStanding), in direction linkAttackDir; Link stops if he is on
-; the ground.
+; (linkButtonsPressed).  B starts a sword attack (Link_UpdateAttack),
+; standing or crouching (linkAttackStanding), in direction linkAttackDir,
+; and stops Link on the ground unless he is recoiling; while the sword is
+; held back (frame 4), B strikes again at once and A, Down, Left or Right
+; lowers it.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_ReadInput:
-    lda     joypadHeld              ; $959C
+    lda     joypadHeld              ; $959C  A, Down, Left or Right held
     and     #JOY_A | JOY_DOWN | JOY_LEFT | JOY_RIGHT ; $959E
-    beq     @loc_95B5               ; $95A0
-    ldy     linkAttackFrame         ; $95A2
+    beq     @upDown                 ; $95A0
+    ldy     linkAttackFrame         ; $95A2  while the sword is held up (frame 4)?
     cpy     #$04                    ; $95A5
-    bne     @loc_95B5               ; $95A7
-    ldy     #$00                    ; $95A9
+    bne     @upDown                 ; $95A7
+    ldy     #$00                    ; $95A9  lower it
     sty     linkAttackFrame         ; $95AB
-    lda     linkJumpState           ; $95AE
-    bne     @loc_95B5               ; $95B1
-    sta     objXVelocity            ; $95B3
+    lda     linkJumpState           ; $95AE  on the ground:
+    bne     @upDown                 ; $95B1
+    sta     objXVelocity            ; $95B3  stop
 
-@loc_95B5:
-    lda     joypadHeld              ; $95B5
+@upDown:
+    lda     joypadHeld              ; $95B5  Up/Down, for elevators and doors
     and     #JOY_UP | JOY_DOWN      ; $95B7
     sta     linkUpDownHeld          ; $95B9
-    ldy     #$00                    ; $95BC
-    and     #JOY_DOWN               ; $95BE
-    bne     @loc_95C3               ; $95C0
-    iny                             ; $95C2
+    ldy     #$00                    ; $95BC  crouching
+    and     #JOY_DOWN               ; $95BE  while Down is held,
+    bne     @setStanding            ; $95C0
+    iny                             ; $95C2  else standing
 
-@loc_95C3:
+@setStanding:
     sty     a:linkStanding          ; $95C3
-    lda     joypadHeld              ; $95C6
+    lda     joypadHeld              ; $95C6  Left/Right
     and     #JOY_LEFT | JOY_RIGHT   ; $95C8
     sta     linkDirHeld             ; $95CA
-    beq     @loc_95D1               ; $95CD
+    beq     @buttons                ; $95CD  (the last one held)
     sta     linkWalkDir             ; $95CF
 
-@loc_95D1:
-    lda     joypadPressed           ; $95D1
+@buttons:
+    lda     joypadPressed           ; $95D1  A and B pressed this frame
     and     #JOY_A | JOY_B          ; $95D3
     sta     linkButtonsPressed      ; $95D5
-    and     #JOY_B                  ; $95D8
+    and     #JOY_B                  ; $95D8  B: attack
     beq     Link_PlaySwordSoundDone ; $95DA
-    lda     linkWalkDir             ; $95DC
+    lda     linkWalkDir             ; $95DC  in the way he last walked
     sta     linkAttackDir           ; $95DE
-    lda     linkJumpState           ; $95E1
-    bne     @loc_95ED               ; $95E4
-    lda     timerFast+TIMER_LINK_RECOIL ; $95E6
-    bne     @loc_95ED               ; $95E9
-    sta     objXVelocity            ; $95EB
+    lda     linkJumpState           ; $95E1  on the ground
+    bne     @attack                 ; $95E4
+    lda     timerFast+TIMER_LINK_RECOIL ; $95E6  and not recoiling:
+    bne     @attack                 ; $95E9
+    sta     objXVelocity            ; $95EB  stop
 
-@loc_95ED:
-    ldy     #$01                    ; $95ED
-    lda     linkAttackFrame         ; $95EF
-    beq     @loc_95FC               ; $95F2
-    cmp     #$04                    ; $95F4
-    bne     Link_PlaySwordSoundDone ; $95F6
-    jsr     Link_PlaySwordSound     ; $95F8
-    iny                             ; $95FB
+@attack:
+    ldy     #$01                    ; $95ED  from frame 1
+    lda     linkAttackFrame         ; $95EF  already attacking?
+    beq     @setFrame               ; $95F2
+    cmp     #$04                    ; $95F4  sword held up (frame 4)?
+    bne     Link_PlaySwordSoundDone ; $95F6  no: wait for this one
+    jsr     Link_PlaySwordSound     ; $95F8  yes: strike again at once,
+    iny                             ; $95FB  from frame 2
 
-@loc_95FC:
+@setFrame:
     sty     linkAttackFrame         ; $95FC
-    lda     #$06                    ; $95FF
+    lda     #$06                    ; $95FF  6 frames
     sta     timerFast+TIMER_LINK_ATTACK ; $9601
-    lda     linkStanding            ; $9604
+    lda     linkStanding            ; $9604  standing or crouching
     sta     linkAttackStanding      ; $9606
-    bne     Link_PlaySwordSoundDone ; $9609
+    bne     Link_PlaySwordSoundDone ; $9609  standing: the sound comes with the stroke
 
 Link_PlaySwordSound:
-    lda     #$20                    ; $960B
+    lda     #$20                    ; $960B  the sword strike sound
     sta     sfxRequest+1            ; $960D
 
 ; ---------------------------------------------------------------------------
@@ -3886,22 +3960,22 @@ Link_PlaySwordSoundDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_MoveX:
-    lda     linkSlowed              ; $9610
-    beq     @loc_9626               ; $9613
-    lda     frameCounter            ; $9615
+    lda     linkSlowed              ; $9610  in a swamp or chimney?
+    beq     @move                   ; $9613
+    lda     frameCounter            ; $9615  every other frame:
     lsr     a                       ; $9617
-    bcc     @done                   ; $9618
-    and     #$03                    ; $961A
-    bne     @loc_9626               ; $961C
-    ldy     objXVelocity            ; $961E
-    beq     @loc_9626               ; $9620
-    lda     #$20                    ; $9622
+    bcc     @done                   ; $9618  not this one
+    and     #$03                    ; $961A  every 8 frames,
+    bne     @move                   ; $961C
+    ldy     objXVelocity            ; $961E  moving:
+    beq     @move                   ; $9620
+    lda     #$20                    ; $9622  the swamp sound
     sta     sfxRequest+2            ; $9624
 
-@loc_9626:
-    ldx     #$00                    ; $9626
-    jsr     Obj_MoveX               ; $9628
-    sta     linkDeltaX              ; $962B
+@move:
+    ldx     #$00                    ; $9626  Link
+    jsr     Obj_MoveX               ; $9628  move
+    sta     linkDeltaX              ; $962B  pixels moved
 
 @done:
     rts                             ; $962D
@@ -4203,14 +4277,22 @@ Hud_DrawMeterSprites:
     bpl     @loop                   ; $97EE
     rts                             ; $97F0
 
+; ---------------------------------------------------------------------------
+; Spell_FireEffect
+;
+; The fire spell: each frame, fire a flame with each stroke of the sword
+; (LinkProjectile_TrySpawn), in slot 13, or 13-14 from attack level 4.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Spell_FireEffect:
-    ldx     #$01                    ; $97F1
-    lda     statLevel               ; $97F3
+    ldx     #$01                    ; $97F1  slots 13-14
+    lda     statLevel               ; $97F3  from attack level 4
     cmp     #$04                    ; $97F6
-    bcs     LinkProjectile_TrySpawn ; $97F8
+    bcs     LinkProjectile_TrySpawn ; $97F8  (x = 1)
 
 LinkProjectile_Spawn:
-    ldx     #$00                    ; $97FA
+    ldx     #$00                    ; $97FA  slot 13 only
 
 ; ---------------------------------------------------------------------------
 ; LinkProjectile_TrySpawn
@@ -4221,22 +4303,22 @@ LinkProjectile_Spawn:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_TrySpawn:
-    ldy     linkAttackFrame         ; $97FC
-    dey                             ; $97FF
+    ldy     linkAttackFrame         ; $97FC  the stroke's frame
+    dey                             ; $97FF  (standing 2, crouching 1)
     cpy     linkAttackStanding      ; $9800
-    bne     @loc_9813               ; $9803
-    lda     timerFast+TIMER_LINK_ATTACK ; $9805
+    bne     @none                   ; $9803
+    lda     timerFast+TIMER_LINK_ATTACK ; $9805  its first frame (timer 6 - 1)?
     cmp     #$05                    ; $9808
-    bne     @loc_9813               ; $980A
+    bne     @none                   ; $980A
 
 @loop:
-    lda     objState+13,x           ; $980C
+    lda     objState+13,x           ; $980C  a free slot?
     beq     LinkProjectile_Start    ; $980E
     dex                             ; $9810
     bpl     @loop                   ; $9811
 
-@loc_9813:
-    clc                             ; $9813
+@none:
+    clc                             ; $9813  none: carry clear
     rts                             ; $9814
 
 LinkProjectileYOffsets:
@@ -4254,24 +4336,24 @@ LinkProjectileSpeeds:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Start:
-    inc     objState+13,x           ; $981B
-    lda     objX                    ; $981D
+    inc     objState+13,x           ; $981B  state 1, moving
+    lda     objX                    ; $981D  X + $0D (carry set)
     adc     #$0C                    ; $981F
     sta     objX+13,x               ; $9821
     lda     objXHi                  ; $9823
     adc     #$00                    ; $9825
     sta     objXHi+13,x             ; $9827
-    lda     objY                    ; $9829
+    lda     objY                    ; $9829  Y + $0D crouching,
     ldy     a:linkStanding          ; $982B
-    adc     LinkProjectileYOffsets,y ; $982E
+    adc     LinkProjectileYOffsets,y ; $982E  + 4 standing
     sta     objY+13,x               ; $9831
-    lda     #$01                    ; $9833
+    lda     #$01                    ; $9833  on screen
     sta     objYHi+13,x             ; $9835
-    lsr     a                       ; $9837
+    lsr     a                       ; $9837  timer 0: the flame
     sta     linkProjectileTimer,x   ; $9838
-    ldy     linkWalkDir             ; $983B
+    ldy     linkWalkDir             ; $983B  the way Link faces
     sty     linkProjectileDir,x     ; $983D
-    lda     LinkProjectileSpeeds,y  ; $983F
+    lda     LinkProjectileSpeeds,y  ; $983F  2 pixels per frame that way
     sta     objXVelocity+13,x       ; $9842
     rts                             ; $9844
 
@@ -4281,66 +4363,70 @@ LinkProjectileOamOffsets:
 ; ---------------------------------------------------------------------------
 ; LinkProjectile_Update
 ;
-; At full life, fire the sword beam (LinkProjectile_Spawn) unless the fire
-; spell is active (which fires its own).  Then update Link's projectiles:
-; slot 13, and slot 14 too from attack level 4.
+; At full life (the meter at containers x 32 - 1), fire the sword beam in
+; slot 13 (LinkProjectile_Spawn) on the first frame of each stroke, unless
+; the fire spell is active (it fires its flame instead): at Link's Y
+; standing, 10 pixels lower crouching, flying 2 pixels per frame for 32
+; frames (linkProjectileTimer $D2 up to $F2), then sparking for 7 frames.
+; Then update Link's projectiles: slot 13, and slot 14 too from attack
+; level 4.  (Checked with a scripted attack at full life.)
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Update:
-    lda     spellActive             ; $9847
+    lda     spellActive             ; $9847  the fire spell?
     and     #$10                    ; $984A
-    bne     @loc_9878               ; $984C
-    lda     statContainers+STAT_METER_LIFE ; $984E
+    bne     @update                 ; $984C  yes: it fires instead
+    lda     statContainers+STAT_METER_LIFE ; $984E  full life:
     asl     a                       ; $9851
     asl     a                       ; $9852
     asl     a                       ; $9853
     asl     a                       ; $9854
-    asl     a                       ; $9855
+    asl     a                       ; $9855  containers x 32
     sec                             ; $9856
-    sbc     #$01                    ; $9857
-    cmp     statMeter+STAT_METER_LIFE ; $9859
-    bne     @loc_9878               ; $985C
-    jsr     LinkProjectile_Spawn    ; $985E
-    bcc     @loc_9878               ; $9861
-    lda     objY                    ; $9863
+    sbc     #$01                    ; $9857  - 1
+    cmp     statMeter+STAT_METER_LIFE ; $9859  = the life meter?
+    bne     @update                 ; $985C
+    jsr     LinkProjectile_Spawn    ; $985E  fire a beam in slot 13
+    bcc     @update                 ; $9861  not this frame
+    lda     objY                    ; $9863  the beam's Y: Link's Y standing
     ldy     linkAttackStanding      ; $9865
-    adc     LinkProjectileYOffsets+2,y ; $9868
+    adc     LinkProjectileYOffsets+2,y ; $9868  ($FF + carry), + $0A crouching
     sta     objY+13,x               ; $986B
-    lda     #$D2                    ; $986D
-    sta     linkProjectileTimer     ; $986F
-    lda     sfxRequest+3            ; $9872
+    lda     #$D2                    ; $986D  the beam's timer: $D2,
+    sta     linkProjectileTimer     ; $986F  counting up to $F2: 32 frames
+    lda     sfxRequest+3            ; $9872  the sword chime
     ora     #$08                    ; $9874
     sta     sfxRequest+3            ; $9876
 
-@loc_9878:
-    ldx     #$00                    ; $9878
+@update:
+    ldx     #$00                    ; $9878  slot 13,
     lda     statLevel               ; $987A
-    cmp     #$04                    ; $987D
-    bcc     @loc_9882               ; $987F
+    cmp     #$04                    ; $987D  and 14 from attack level 4
+    bcc     @updateSlots            ; $987F
     inx                             ; $9881
 
-@loc_9882:
+@updateSlots:
     jsr     LinkProjectile_UpdateOne ; $9882
     dex                             ; $9885
     bmi     LinkProjectile_Done     ; $9886
 
 LinkProjectile_UpdateOne:
     stx     currentObject           ; $9888
-    lda     LinkProjectileOamOffsets,x ; $988A
+    lda     LinkProjectileOamOffsets,x ; $988A  its sprite: $38 or $40
     sta     objOamOffset+13,x       ; $988D
-    lda     objState+13,x           ; $988F
+    lda     objState+13,x           ; $988F  unused?
     beq     LinkProjectile_Done     ; $9891
-    bmi     LinkProjectile_Spark    ; $9893
-    lda     linkProjectileTimer,x   ; $9895
-    beq     @loc_98A3               ; $9898
-    inc     linkProjectileTimer,x   ; $989A
-    cmp     #$F2                    ; $989D
-    beq     LinkProjectile_SetState ; $989F
+    bmi     LinkProjectile_Spark    ; $9893  sparking ($F2-$FE)?
+    lda     linkProjectileTimer,x   ; $9895  a beam?
+    beq     @flame                  ; $9898
+    inc     linkProjectileTimer,x   ; $989A  count
+    cmp     #$F2                    ; $989D  32 frames up?
+    beq     LinkProjectile_SetState ; $989F  yes: spark ($F2)
     bne     LinkProjectile_Move     ; $98A1
 
-@loc_98A3:
-    jsr     LinkProjectile_PlaySound ; $98A3
+@flame:
+    jsr     LinkProjectile_PlaySound ; $98A3  the flame's sound
 
 ; ---------------------------------------------------------------------------
 ; LinkProjectile_Move
@@ -4352,18 +4438,18 @@ LinkProjectile_UpdateOne:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Move:
-    txa                             ; $98A6
+    txa                             ; $98A6  its object slot
     clc                             ; $98A7
     adc     #$0D                    ; $98A8
     tax                             ; $98AA
-    jsr     Obj_MoveX               ; $98AB
-    ldy     #$03                    ; $98AE
-    jsr     Obj_ComputeScreenPos    ; $98B0
+    jsr     Obj_MoveX               ; $98AB  move
+    ldy     #$03                    ; $98AE  Link's projectile category
+    jsr     Obj_ComputeScreenPos    ; $98B0  screen position
     ldx     currentObject           ; $98B3
-    lda     drawOffscreen+3         ; $98B5
+    lda     drawOffscreen+3         ; $98B5  off the screen?
     and     #$FC                    ; $98B7
-    beq     LinkProjectile_Draw     ; $98B9
-    lda     #$00                    ; $98BB
+    beq     LinkProjectile_Draw     ; $98B9  no: draw it
+    lda     #$00                    ; $98BB  yes: remove it
 
 ; ---------------------------------------------------------------------------
 ; LinkProjectile_SetState
@@ -4393,44 +4479,51 @@ LinkProjectile_Done:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LinkProjectile_Draw:
-    ldy     objOamOffset+13,x       ; $98C0
+    ldy     objOamOffset+13,x       ; $98C0  its sprite
     lda     objY+13,x               ; $98C2
     sta     oamBuffer,y             ; $98C4
-    lda     linkProjectileDir,x     ; $98C7
+    lda     linkProjectileDir,x     ; $98C7  facing right (1)
     lsr     a                       ; $98C9
-    lda     #$00                    ; $98CA
+    lda     #$00                    ; $98CA  flips it ($40)
     ror     a                       ; $98CC
     ror     a                       ; $98CD
     sta     temp0                   ; $98CE
-    lda     frameCounter            ; $98D0
+    lda     frameCounter            ; $98D0  frame counter bit 2:
     asl     a                       ; $98D2
     asl     a                       ; $98D3
     asl     a                       ; $98D4
     asl     a                       ; $98D5
     asl     a                       ; $98D6
-    and     #$80                    ; $98D7
+    and     #$80                    ; $98D7  flipped vertically every 4 frames
     ora     temp0                   ; $98D9
-    ora     #$01                    ; $98DB
+    ora     #$01                    ; $98DB  palette 1
     sta     oamBuffer+2,y           ; $98DD
-    lda     #$84                    ; $98E0
+    lda     #$84                    ; $98E0  tile $84, the flame
     sta     oamBuffer+1,y           ; $98E2
-    lda     linkProjectileTimer,x   ; $98E5
-    beq     @loc_98FB               ; $98E8
-    lda     #$32                    ; $98EA
+    lda     linkProjectileTimer,x   ; $98E5  a beam?
+    beq     @setX                   ; $98E8
+    lda     #$32                    ; $98EA  tile $32
     sta     oamBuffer+1,y           ; $98EC
-    lda     frameCounter            ; $98EF
+    lda     frameCounter            ; $98EF  palette by frame (0-3)
     and     #$03                    ; $98F1
     ora     oamBuffer+2,y           ; $98F3
-    and     #$7F                    ; $98F6
+    and     #$7F                    ; $98F6  no vertical flip
     sta     oamBuffer+2,y           ; $98F8
 
-@loc_98FB:
-    lda     drawScreenX+3           ; $98FB
+@setX:
+    lda     drawScreenX+3           ; $98FB  its screen X
     sta     oamBuffer+3,y           ; $98FD
     rts                             ; $9900
 
+; ---------------------------------------------------------------------------
+; LinkProjectile_PlaySound
+;
+; The fire's sound, each frame a flame flies (noise effect $40).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 LinkProjectile_PlaySound:
-    lda     sfxRequest+1            ; $9901
+    lda     sfxRequest+1            ; $9901  the fire's sound
     ora     #$40                    ; $9903
     sta     sfxRequest+1            ; $9905
     rts                             ; $9907
@@ -4443,17 +4536,26 @@ LinkProjectile_PlaySound:
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; LinkProjectile_Spark
+;
+; Link's projectile x after it hit something or a beam ran out:
+; a spark that keeps moving for 7 frames (objState $F2 up by 2 to 0).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 LinkProjectile_Spark:
-    jsr     LinkProjectile_Move     ; $9908
-    ldy     objOamOffset+13,x       ; $990B
-    lda     objState+13,x           ; $990D
+    jsr     LinkProjectile_Move     ; $9908  keep moving
+    ldy     objOamOffset+13,x       ; $990B  its sprite
+    lda     objState+13,x           ; $990D  the spark's tile by state
     jsr     Projectile_SetSparkTile ; $990F
-    lda     objY+13,x               ; $9912
+    lda     objY+13,x               ; $9912  Y
     sta     oamBuffer,y             ; $9914
-    lda     objX+13,x               ; $9917
+    lda     objX+13,x               ; $9917  screen X
     sbc     scrollX                 ; $9919
     sta     oamBuffer+3,y           ; $991C
-    inc     objState+13,x           ; $991F
+    inc     objState+13,x           ; $991F  2 per frame, to 0: 7 frames
     inc     objState+13,x           ; $9921
     rts                             ; $9923
 

@@ -80,9 +80,12 @@ unless noted):
 - 8g. Done: combat (hitboxes, shield, knockback, damage, kills and drops,
   item pickup); docs/memory/objects.md has the boxes; experience bags are
   kinds $0A-$0D (docs/systems/items.md corrected).
-- 8h. Link (bank 0, ~920): `Link_Control`, `Link_UpdateJump`,
-  `Link_UpdateXVelocity`, attacks, `Link_ReadInput`, `Link_EnterArea`,
-  palette, `Spell_*` effects, `LinkProjectile_*`.
+- 8h. Done: Link (bank 0): entering, control, the fairy, walking,
+  jumping, attacks, the sword beam and fire, spells and their effects.
+  `linkJumpState` 2 means "jumped" (not "going up"); the attack's frame 4
+  holds the sword back for 32 frames (B strikes again at once); the beam
+  flies 32 frames, then sparks.  docs/systems/link.md has the attack
+  table, spell effects and the fairy.
 - 8i. HUD, pause, menus and level up (bank 0, ~1340): `Hud_*`,
   `Menu_*_Bank0` (bank 3 has copies, 8l), `Pause_*`, `LevelUp_*`,
   `Exp_*`, `Math_Digit1000`.

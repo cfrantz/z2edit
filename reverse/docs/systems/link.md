@@ -89,18 +89,36 @@ to 0.
 
 ## The Sword
 
-Link's attack (`Link_UpdateAttack`) runs through `linkAttackFrame`,
-standing or crouching; the sword's position (`swordX`, `swordY`,
-`Sword_UpdatePosition`) and hitbox (`Sword_GetHitbox`) follow his pose.
-In the air, holding Up on the way up gives the upward thrust (objState
-8) and holding Down the downward thrust (objState 9), once learned
-(`techniques` bits `TECH_UPWARD_THRUST`, `TECH_DOWNWARD_THRUST`, taught
-in Darunia and Mido); the thrusts use their own hitbox offset.
+B starts an attack (`Link_ReadInput`, `Link_UpdateAttack`), standing or
+crouching (`linkAttackStanding`).  On the ground it stops Link (unless he
+is recoiling from a wall) and he keeps still until it ends.
 
-At full life the sword also fires a beam (`LinkProjectile_Update`,
-object slot 13; slot 14 too from attack level 4), unless the fire spell
-is active, which fires its flame instead.  A beam that hits something
-turns into a spark (`LinkProjectile_Spark`).
+| Frame (`linkAttackFrame`) | Standing | Crouching |
+|---|---|---|
+| 1 | winding up (pose 4), 6 frames | the stroke (pose 7), 6 frames, with the sound |
+| 2 | the stroke (pose 5), 6 frames, with the sound | crouching (pose 6), 6 frames |
+| 3 | standing (pose 3), 6 frames | |
+| 4 | the sword held back (pose 4), 32 frames | |
+
+While the sword is held back, B strikes again at once (back to frame 2),
+and A, Down, Left or Right lowers it.  Landing ends an attack made in the
+air.  The sword's position (`swordX`, `swordY`, `Sword_UpdatePosition`)
+and hitbox (`Sword_GetHitbox`) follow the pose.  In the air, holding Up
+on the way up gives the upward thrust (pose 8) and holding Down the
+downward thrust (pose 9), once learned (`techniques` bits
+`TECH_UPWARD_THRUST`, `TECH_DOWNWARD_THRUST`, taught in Darunia and Mido);
+the thrusts use their own hitbox offset.
+
+At full life (`LinkProjectile_Update`) each stroke also fires a beam,
+in object slot 13, on the stroke's first frame, unless the fire spell is
+active, which fires its flame instead (slots 13-14 from attack level 4).
+The beam starts 13 pixels ahead of Link, at his Y (10 pixels lower
+crouching), and flies 2 pixels per frame for 32 frames, with a changing
+palette.  Then it sparks for 7 frames (`LinkProjectile_Spark`), as it does
+when it hits something.  The flame is tile $84, flipped vertically every 4
+frames, and flies until it leaves the screen, with its sound each frame.
+A scripted attack at full life from North Castle showed the beam's 32
+frames, the spark's 7 and the attack's frame times above.
 
 `techniques` also holds two quest flags (bits 0 and 1; see
 [Towns](../world/towns.md)): bit 0 makes the bridge in Saria build itself when
@@ -110,11 +128,27 @@ Link reaches it (`Saria_BuildBridge`), and is then cleared.
 
 `Spell_Update` (each frame in side view) casts the spell at
 `spellCursor` when Select is pressed, if Link owns it, it is not the spell
-last cast, and he has the magic: the cost (`SpellCosts`, by spell
-and magic level) is taken from the magic meter (32 units per container),
-the spell's bit is set in `spellActive`, and the screen flashes.  A spell
-costing one more than the magic left is still cast (QUIRK).  The effects
-run each frame from `Spell_RunEffect`.
+last cast (`spellLastCast`, cleared when the pause menu opens), and he has
+the magic: the cost (`SpellCosts`, by spell and magic level) is taken from
+the magic meter (32 units per container), the spell's bit is set in
+`spellActive` (until the next area), and Link's palette flashes for 32
+frames (`spellFlash`, `Link_UpdatePalette`); for Reflect, Spell and
+Thunder the backdrop flashes too.  A spell costing one more than the
+magic left is still cast and leaves 0 (QUIRK; checked with a scripted
+cast of Shield).  The effects run each frame from `Spell_RunEffect`:
+
+| Spell | Effect |
+|---|---|
+| Shield | Link's shield color, and damage halved (`shieldSpellActive`) |
+| Jump | higher jumps (`jumpSpellActive`) |
+| Life | once: 48 more life to refill (`statMeterPending`; checked with a scripted cast) |
+| Fairy | Link becomes the fairy once he is below Y $20 |
+| Fire | a flame with each stroke |
+| Reflect | the shield reflects shots (`reflectSpellActive`) |
+| Spell | once: the enemies on screen become Bots (`Spell_TurnEnemiesToBots`), except in towns; on New Kasuto's east street (area $14) it opens the big door (`BigDoor_Update`) |
+| Thunder | once: removes the enemy projectiles and hits every enemy on screen for 50, or 2 (flags bit 5), unless immune (flags bit 7) |
+
+Costs, by magic level:
 
 | Spell | Level 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
 |-------|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -130,14 +164,19 @@ run each frame from `Spell_RunEffect`.
 ## Holding Up an Item
 
 Collecting a special item (`Item_Collect`) makes Link hold it over his
-head for 112 frames (`itemHoldTimer`, the item in `heldItem`, drawn by
-`Sword_UpdateHitPosition` from `HeldItemTiles`), with the item fanfare.
+head for up to 112 frames (`itemHoldTimer`, the item in `heldItem`, drawn
+by `Sword_UpdateHitPosition` from `HeldItemTiles`), with the item
+fanfare; he regains control when the fanfare ends.  His Y is rounded to
+the tile row.
 
+## The Fairy
 
-As a fairy (`linkFairy` = 8, from the fairy spell), Link flies in the
-direction held on the D-pad.  He does not move in a direction that is
-blocked (`objCollision`), nor up above Y = $18.  His collision probes use
-the fairy's offsets.
+As a fairy (`linkFairy` = 8, from the fairy spell), Link flies 1.5
+pixels per frame in the direction held on the D-pad, diagonals too
+(`LinkControlXVelocities`, `LinkControlYVelocities`), requesting pulse 1
+effect $02 (the "item dropped" sound) each frame.  He does not move in a
+direction that is blocked (`objCollision`, `blockedDirections`), nor up
+above Y = $18.  His collision probes use the fairy's offsets.
 
 ## Poses and Drawing
 
@@ -146,11 +185,11 @@ Link's pose is `objState` of slot 0 (`LINK_POSE_*`; checked over the
 
 | Pose | |
 |------|---|
-| 0-2 | walking frames; 2 also rising in a jump |
+| 0-2 | walking frames; 2 also falling after a jump |
 | 3 | standing (`LINK_POSE_STAND`) |
 | 4 | standing stroke, sword raised (`LINK_POSE_WIND_UP`), drawn 8 pixels back |
 | 5 | standing stroke, sword out (`LINK_POSE_STROKE`) |
-| 6 | crouching, and most of a jump (`LINK_POSE_CROUCH`); 4 pixels higher in the air |
+| 6 | crouching, rising in a jump, and landing hard (`LINK_POSE_CROUCH`); 4 pixels higher in the air |
 | 7 | crouching stroke (`LINK_POSE_CROUCH_STROKE`) |
 | 8 | upward thrust (`LINK_POSE_UP_THRUST`) |
 | 9 | downward thrust (`LINK_POSE_DOWN_THRUST`) |
@@ -187,3 +226,10 @@ The numbers above are read from the code.  Over the first 20000 frames of
 the no-glitch movie (`tools/watch.py`), Link's X velocity stays within
 $18 either way and his Y velocity within -4 to 5, as expected; the jump
 spell's velocities were not exercised there.
+
+Over both movies (exec hooks on `Link_Control` and its helpers): jumps
+rise in pose 6 and fall in pose 2; hard landings (5 pixels per frame)
+crouch Link; the ceiling clamp, re-strikes from the held-back sword and
+its cancels, the up and down thrusts, the fairy's flight and the
+one-short spell cast (three times in each movie) all occur.  Holding up
+an item uses pose $0C and $0E, never $0D.

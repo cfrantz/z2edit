@@ -153,7 +153,7 @@ boomerangHigh           = $0458     ; [6] 0: a boomerang thrown low, 1: high (Mo
 projectileSpeed         = $045E     ; [6] per-projectile extra byte: a boomerang's thrower (enemy slot), a thrown spear's palette (1 for the orange Moblin's, 0 = its own); also the speed of beams
 columnTiles             = $0464
 attrColumn              = $0471     ; [7] attribute bytes for the column being scrolled in
-linkJumpState           = $0479     ; 2 = going up, 1 = coming down, 0 = on the ground (provisional)
+linkJumpState           = $0479     ; 2 = jumped (until landing), 1 = fell (walked off a ledge), 0 = on the ground
 swordX                  = $047E     ; screen X of Link's sword
 swordY                  = $0480     ; Y of Link's sword; $F8 = no sword
 fallStep                = $0484     ; step of the fall into an area (Mode_FallAnimate)
