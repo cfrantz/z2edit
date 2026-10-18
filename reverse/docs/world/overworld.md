@@ -20,6 +20,15 @@ $0400-$04FF area (`overworldBuffer`) that side view uses for objects.
    on a raft dock, the raft ride instead); else start a move in the
    direction held (`Overworld_StartMove`).
 
+## Terrain
+
+The map's squares are terrain types 0-$F: 0 town, 1 cave, 2 palace,
+3 bridge, 4 desert, 5 grass, 6 forest, 7 swamp, 8 graveyard, 9 road,
+$A lava, $B mountain, $C water, $D water the boots walk on, $E rock,
+$F the river devil.  (Link stands on road, 9, in the no-glitch movie's
+first overworld frames.)  Off the map, rows and columns are water ($C),
+or mountain ($B) along the west edge of regions 0 and 1.
+
 ## Moving
 
 A move is one map square in `overworldDirection` (1 = right, 2 = left,
@@ -46,22 +55,29 @@ a table of row pointers in SRAM when the overworld is set up, and
 
 ## Encounters
 
-`Overworld_CheckEncounter` starts a group of encounter sprites when the
-encounter timer (`timerSlow+8`) runs out, if the terrain under Link is
-one of `EncounterTerrains`: grass (5), desert (4), forest (6), swamp (7),
-graveyard (8) and lava ($A); not roads.  (Outside the north of region
-0, `objYHi+13` lets a group start without waiting for the timer.)  By
-the terrain it resets the timer
-(`EncounterDelays`), sets how long the sprites stay (`EncounterLifetimes`),
-and picks one of two sets of starting positions (`EncounterPositionSets`,
-`EncounterPositions`).  A random number against the terrain's four
-thresholds (`EncounterChances`) chooses the strength, which sets the kinds
-of the up to three sprites (`EncounterKinds`; drawn with
-`EncounterSpriteTiles` and `EncounterSpriteAttrs`).
+`Overworld_CheckEncounter` starts a group of encounter sprites if the
+terrain under Link is one of `EncounterTerrains`: desert (4), grass (5),
+forest (6), swamp (7), graveyard (8) and lava ($A); not roads.  It
+starts one when the encounter timer (`timerSlow+8`, 160 frames after
+the overworld is set up) runs out, or while the walking counter
+(`overworldWalkFrames`, one per frame of walking, wrapping) is 0, once
+every 256 walking frames; north of row $3C in West Hyrule only the timer
+counts.  In the movies, 27 of 70 and 32 of 82 groups came from the
+walking counter.  By the terrain it resets the timer (`EncounterDelays`),
+sets how long the sprites stay (`EncounterLifetimes`), and picks one of
+two sets of four starting positions (`EncounterPositionSets`,
+`EncounterPositions`); a random one of the four is left out.  A random
+number against the terrain's four thresholds (`EncounterChances`)
+chooses the strength (0-3), which sets the kinds of the three sprites
+(`EncounterKinds`: 1 weak, 2 strong, 3 a fairy; drawn with
+`EncounterSpriteTiles` and `EncounterSpriteAttrs`).  There are 8 slots.
 
-Encounter sprites wander toward Link.  When one touches him on terrain
-where encounters happen, `Overworld_DrawEncounters` sets `areaLocation`
-to $FF and enters it like a location; `Location_EnterEncounter` then
+Every 16 frames each sprite takes a step for the next 16 frames
+(`Overworld_UpdateEncounters`): toward Link when it is in his row or
+column (within 16 pixels), otherwise in a random direction; fairies, and
+everyone during frames 0-$3F of each 256, wander.  When one touches Link
+on terrain where encounters happen, `Overworld_DrawEncounters` sets
+`areaLocation` to $FF and enters it like a location; `Location_EnterEncounter` then
 makes a temporary location (slot $3E) from the encounter area for the
 terrain (`OverworldBank::Encounters`).
 
@@ -87,4 +103,23 @@ own).
 
 On a raft dock with the raft (`Overworld_EnterLocation`), Link rides
 across the water (`Mode_Raft`), moving by `RaftSteps` in `raftDirection`
-until he reaches the other dock (`RaftStopX`).
+until he reaches the other dock (`RaftStopX`).  Both movies ride only
+from West Hyrule's dock (X $3D, rightward): the raft leaves from Link's
+X $80 until it is off the screen, the other region is loaded, and it
+comes in for $80 frames to X $7C.
+
+## The Screen's Right Edge
+
+`Overworld_DrawLink` also places 15 sprites (tile $FF) down the screen's
+right edge, X $F8, which hide the map column being redrawn there: the
+overworld always shows a black strip 8 pixels wide on the right.
+
+## The Hammer and the Flute
+
+A (with the hammer) on a rock ($E) or forest (6) square ahead of Link,
+and the flute (B) on the river devil ($F) or on East Hyrule's desert
+spot (Y $64, X $2D), change the map (`Overworld_CheckSpecialTerrain`):
+rocks and the river devil become desert, the desert spot reveals palace
+6, and one forest square in East Hyrule (Y $51, X $3E) reveals New
+Kasuto; other forest is left as it is (the hammer's sound still
+plays).

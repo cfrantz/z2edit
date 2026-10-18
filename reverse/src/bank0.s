@@ -96,56 +96,67 @@ Death_QueueRedPalette:
     inc     gameSubStep             ; $8145
     rts                             ; $8148
 
+; ---------------------------------------------------------------------------
+; Mode_OverworldSetup
+;
+; gameMode 2: set up the overworld: horizontal mirroring, the overworld's
+; CHR, palaces turned to stone (Overworld_UpdatePalaceStones), the scroll
+; with Link at screen column 8 and row 7, 23 rows to draw (objXVelocity+1,
+; for Mode_IndexOverworldMap) and the overworld palette (PPU string $0A);
+; then blank the screen and go to gameMode 3.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Mode_OverworldSetup:
-    lda     #$0F                    ; $8149
+    lda     #$0F                    ; $8149  MMC1: horizontal mirroring (two nametables stacked)
     jsr     Mmc1_SetControl_Bank0   ; $814B
-    lda     #$10                    ; $814E
+    lda     #$10                    ; $814E  the overworld's CHR bank
     jsr     Mmc1_SetChrBank_Bank0   ; $8150
-    jsr     Overworld_UpdatePalaceStones ; $8153
-    lda     #$FC                    ; $8156
+    jsr     Overworld_UpdatePalaceStones ; $8153  crystals placed: palaces turn to stone
+    lda     #$FC                    ; $8156  the raft's X (off screen)
     sta     objState+1              ; $8158
-    lda     #$04                    ; $815A
+    lda     #$04                    ; $815A  facing down
     sta     overworldDirection      ; $815C
-    lda     overworldX              ; $815F
+    lda     overworldX              ; $815F  the map column at the screen's left (Link 8 columns in)
     sec                             ; $8161
     sbc     #$08                    ; $8162
     sta     overworldTargetX        ; $8164
-    lda     overworldY              ; $8166
+    lda     overworldY              ; $8166  and the row 11 above Link
     sec                             ; $8168
     sbc     #$0B                    ; $8169
     sta     overworldTargetY        ; $816B
-    jsr     Overworld_SetMapPosition ; $816D
-    lda     overworldY              ; $8170
+    jsr     Overworld_SetMapPosition ; $816D  the map position to draw from
+    lda     overworldY              ; $8170  Link's row - 7 (he is 7 rows down the screen)
     sec                             ; $8172
     sbc     #$07                    ; $8173
-    jsr     Math_DivMod15           ; $8175
-    asl     a                       ; $8178
+    jsr     Math_DivMod15           ; $8175  / 15 rows per nametable:
+    asl     a                       ; $8178  the scroll within it,
     asl     a                       ; $8179
     asl     a                       ; $817A
     asl     a                       ; $817B
     sta     ppuScrollY              ; $817C
-    lda     overworldTargetX        ; $817E
+    lda     overworldTargetX        ; $817E  X: 16 pixels per column
     asl     a                       ; $8180
     asl     a                       ; $8181
     asl     a                       ; $8182
     asl     a                       ; $8183
     sta     ppuScrollX              ; $8184
-    tya                             ; $8186
+    tya                             ; $8186  and the nametable by the quotient's parity
     asl     a                       ; $8187
     and     #$02                    ; $8188
     sta     ppuNametable            ; $818A
-    lda     #$00                    ; $818D
+    lda     #$00                    ; $818D  a = 0:
     sta     overworldMoveFrames     ; $818F
     sta     overworldDrawStep       ; $8191
     sta     dialogType              ; $8193
     sta     objXVelocity            ; $8196
     sta     objState                ; $8198
     sta     ppuMaskExtra            ; $819A
-    lda     #$17                    ; $819D
+    lda     #$17                    ; $819D  $17 rows to draw (Mode_IndexOverworldMap)
     sta     objXVelocity+1          ; $819F
-    lda     #$0A                    ; $81A1
+    lda     #$0A                    ; $81A1  PPU string $0A: the overworld palette
     sta     ppuStringSelect         ; $81A3
-    inc     renderingOff            ; $81A6
+    inc     renderingOff            ; $81A6  screen off
     inc     gameMode                ; $81A9
 
 Mode_OverworldSetup_Done:
@@ -161,10 +172,18 @@ RaftSpriteAttrs:
 ; (unreferenced: $81B0-$81B0, 1 bytes)
     .byte   $00                                                             ; $81B0
 
+; ---------------------------------------------------------------------------
+; Mode_RaftStart
+;
+; gameMode $17: the raft leaves the dock, a pixel per frame from Link's X
+; ($80), until it is off the screen; then Raft_Arrive.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Mode_RaftStart:
-    jsr     Raft_Wait               ; $81B1
-    jsr     Raft_Move               ; $81B4
-    beq     Raft_Arrive             ; $81B7
+    jsr     Raft_Wait               ; $81B1  (no effect)
+    jsr     Raft_Move               ; $81B4  the raft leaves the dock,
+    beq     Raft_Arrive             ; $81B7  until it is off the screen (X 0 or $F0 and up)
     cmp     #$F0                    ; $81B9
     bcs     Raft_Arrive             ; $81BB
 
@@ -176,16 +195,16 @@ Mode_RaftStart:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Raft_Draw:
-    jsr     Overworld_DrawLinkAtX   ; $81BD
-    lda     #$45                    ; $81C0
+    jsr     Overworld_DrawLinkAtX   ; $81BD  Link at the raft's X
+    lda     #$45                    ; $81C0  the raft's tiles
     sta     oamBuffer+1             ; $81C2
     lda     #$47                    ; $81C5
     sta     oamBuffer+5             ; $81C7
-    ldy     raftDirection           ; $81CA
+    ldy     raftDirection           ; $81CA  flipped facing left
     lda     RaftSpriteAttrs,y       ; $81CD
     sta     oamBuffer+2             ; $81D0
     sta     oamBuffer+6             ; $81D3
-    cpy     #$01                    ; $81D6
+    cpy     #$01                    ; $81D6  right: the tiles the other way round
     bne     @done                   ; $81D8
     lda     #$47                    ; $81DA
     sta     oamBuffer+1             ; $81DC
@@ -204,12 +223,12 @@ Raft_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Raft_Arrive:
-    inc     renderingOff            ; $81E5
+    inc     renderingOff            ; $81E5  screen off
     lda     #$06                    ; $81E8
     sta     ppuMaskExtra            ; $81EA
-    lda     #$06                    ; $81ED
+    lda     #$06                    ; $81ED  gameMode 6: enter the dock on the other side
     sta     gameMode                ; $81EF
-    sta     raftArrived             ; $81F2
+    sta     raftArrived             ; $81F2  (as a raft arrival)
     rts                             ; $81F5
 
 ; ---------------------------------------------------------------------------
@@ -220,9 +239,9 @@ Raft_Arrive:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Raft_Move:
-    ldy     raftDirection           ; $81F6
+    ldy     raftDirection           ; $81F6  the raft's direction is Link's
     sty     overworldDirection      ; $81F9
-    lda     objState+1              ; $81FC
+    lda     objState+1              ; $81FC  one pixel that way
     clc                             ; $81FE
     adc     RaftSteps,y             ; $81FF
     sta     objState+1              ; $8202
@@ -235,16 +254,25 @@ RaftStopX := Raft_Move_Done
 ; (unreferenced: $8206-$8206, 1 bytes)
     .byte   $78                                                             ; $8206
 
+; ---------------------------------------------------------------------------
+; Mode_Raft
+;
+; gameMode $18: on the other side, the raft comes in from the screen's
+; edge for $80 frames (right) or $78 (left), counting in objState, then
+; back to the overworld (gameMode 5).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Mode_Raft:
-    inc     objState                ; $8207
-    jsr     Raft_Move               ; $8209
-    jsr     Raft_Draw               ; $820C
-    jsr     Raft_Wait               ; $820F
-    ldy     raftDirection           ; $8212
+    inc     objState                ; $8207  count the ride's frames
+    jsr     Raft_Move               ; $8209  one pixel,
+    jsr     Raft_Draw               ; $820C  drawn
+    jsr     Raft_Wait               ; $820F  (no effect)
+    ldy     raftDirection           ; $8212  at the stop ($80 frames right, $78 left)?
     ldx     RaftStopX,y             ; $8215
     cpx     objState                ; $8218
     bne     Mode_RaftDone           ; $821A
-    lda     #$05                    ; $821C
+    lda     #$05                    ; $821C  yes: back to GAME_MODE_OVERWORLD
     sta     gameMode                ; $821E
 
 ; ---------------------------------------------------------------------------
@@ -266,9 +294,9 @@ Mode_RaftDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Raft_Wait:
-    lda     frameCounter            ; $8222
+    lda     frameCounter            ; $8222  every 16th frame:
     and     #$0F                    ; $8224
-    bne     Mode_RaftDone           ; $8226
+    bne     Mode_RaftDone           ; $8226  (either way: return)
     rts                             ; $8228
 
 EncounterPositions:
@@ -313,124 +341,132 @@ EncounterSpriteAttrs:
 ; ---------------------------------------------------------------------------
 ; Overworld_CheckEncounter
 ;
-; Check whether an encounter starts on the overworld, from the terrain under
-; Link and the encounter timer (timerSlow+8); safe in parts of region 0.
+; Start a group of encounter sprites when the encounter timer (timerSlow+8)
+; has run out, or while the walking counter (overworldWalkFrames, counted by
+; Overworld_ContinueMove) is 0, once every 256 walking frames (not north
+; of row $3C in West Hyrule), if the terrain under Link is one where
+; encounters happen (EncounterTerrains).  The timer restarts by terrain
+; (EncounterDelays, x 20 frames).  A random strength (EncounterChances)
+; picks the kinds (EncounterKinds), and 3 of the terrain's 4 start
+; positions (EncounterPositionSets, EncounterPositions; a random one left
+; out) get a sprite each, in free slots from 7 down, staying
+; EncounterLifetimes x 20 frames.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_CheckEncounter:
-    lda     currentRegion           ; $8284
-    bne     @loc_828F               ; $8287
-    lda     overworldY              ; $8289
+    lda     currentRegion           ; $8284  region 0,
+    bne     @elsewhere              ; $8287
+    lda     overworldY              ; $8289  north of row $3C:
     cmp     #$3C                    ; $828B
-    bcc     @loc_8293               ; $828D
+    bcc     @checkTimer             ; $828D  only when the timer runs out
 
-@loc_828F:
-    lda     objYHi+13               ; $828F
-    beq     @loc_8298               ; $8291
+@elsewhere:
+    lda     overworldWalkFrames     ; $828F  elsewhere, also while the walk counter is 0
+    beq     @checkTerrain           ; $8291
 
-@loc_8293:
-    lda     timerSlow+8             ; $8293
-    bne     @done                   ; $8296
+@checkTimer:
+    lda     timerSlow+8             ; $8293  the encounter timer
+    bne     @done                   ; $8296  not yet
 
-@loc_8298:
-    lda     overworldY              ; $8298
+@checkTerrain:
+    lda     overworldY              ; $8298  the terrain under Link
     sta     temp1                   ; $829A
     lda     overworldX              ; $829C
     sta     temp0                   ; $829E
     jsr     Overworld_GetTerrain    ; $82A0
     lda     temp2                   ; $82A3
-    ldy     #$06                    ; $82A5
+    ldy     #$06                    ; $82A5  one where encounters happen?
 
 @loop:
     cmp     EncounterTerrains,y     ; $82A7
-    beq     @loc_82B0               ; $82AA
+    beq     @found                  ; $82AA
     dey                             ; $82AC
     bne     @loop                   ; $82AD
 
 @done:
     rts                             ; $82AF
 
-@loc_82B0:
-    lda     objYHi+13               ; $82B0
-    beq     @loc_82BA               ; $82B2
-    lda     EncounterDelays,y       ; $82B4
+@found:
+    lda     overworldWalkFrames     ; $82B0  (not when it is 0:)
+    beq     @start                  ; $82B2
+    lda     EncounterDelays,y       ; $82B4  restart the timer for the terrain
     sta     timerSlow+8             ; $82B7
 
-@loc_82BA:
-    lda     rng+2                   ; $82BA
+@start:
+    lda     rng+2                   ; $82BA  a random position (0-3) left out
     and     #$03                    ; $82BD
     sta     temp0                   ; $82BF
-    sty     temp11                  ; $82C1
-    lda     EncounterPositionSets,y ; $82C3
+    sty     temp11                  ; $82C1  the terrain's index
+    lda     EncounterPositionSets,y ; $82C3  its set of 4 start positions,
     asl     a                       ; $82C6
     asl     a                       ; $82C7
-    ora     #$03                    ; $82C8
+    ora     #$03                    ; $82C8  from the last
     sta     temp9                   ; $82CA
-    ldx     #$07                    ; $82CC
+    ldx     #$07                    ; $82CC  from slot 7 down
     stx     objState                ; $82CE
-    lda     #$03                    ; $82D0
+    lda     #$03                    ; $82D0  4 positions, 3 sprites
     sta     temp10                  ; $82D2
-    tya                             ; $82D4
+    tya                             ; $82D4  the terrain's 4 chances,
     asl     a                       ; $82D5
     asl     a                       ; $82D6
     tay                             ; $82D7
-    dey                             ; $82D8
+    dey                             ; $82D8  from the highest
 
 @loop2:
-    lda     rng+1                   ; $82D9
+    lda     rng+1                   ; $82D9  random >= the chance?
     cmp     EncounterChances,y      ; $82DC
-    bcs     @loc_82E4               ; $82DF
-    dey                             ; $82E1
+    bcs     @setStrength            ; $82DF
+    dey                             ; $82E1  no: a weaker group
     bne     @loop2                  ; $82E2
 
-@loc_82E4:
-    tya                             ; $82E4
+@setStrength:
+    tya                             ; $82E4  the group's strength (0-3):
     and     #$03                    ; $82E5
     asl     a                       ; $82E7
     asl     a                       ; $82E8
-    ora     #$03                    ; $82E9
+    ora     #$03                    ; $82E9  its 4 kinds, from the last
     sta     temp8                   ; $82EB
 
 @loop3:
-    lda     objState+2,x            ; $82ED
-    beq     @loc_82F7               ; $82EF
-    dec     objState                ; $82F1
+    lda     objState+2,x            ; $82ED  a free slot?
+    beq     @place                  ; $82EF
+    dec     objState                ; $82F1  no: the next
     dex                             ; $82F3
     bpl     @loop3                  ; $82F4
     rts                             ; $82F6
 
-@loc_82F7:
-    lda     temp0                   ; $82F7
+@place:
+    lda     temp0                   ; $82F7  the position left out?
     cmp     temp10                  ; $82F9
-    beq     @loc_8324               ; $82FB
-    ldy     temp9                   ; $82FD
-    lda     EncounterPositions,y    ; $82FF
+    beq     @nextPosition           ; $82FB
+    ldy     temp9                   ; $82FD  no: a sprite there
+    lda     EncounterPositions,y    ; $82FF  Y: the position's high nybble
     and     #$F0                    ; $8302
     clc                             ; $8304
-    adc     overworldScrollY        ; $8305
+    adc     overworldScrollY        ; $8305  + the scroll in the square
     sta     objY+1,x                ; $8307
-    lda     EncounterPositions,y    ; $8309
+    lda     EncounterPositions,y    ; $8309  X: its low nybble x 16
     asl     a                       ; $830C
     asl     a                       ; $830D
     asl     a                       ; $830E
     asl     a                       ; $830F
     clc                             ; $8310
-    adc     ppuScrollX              ; $8311
+    adc     ppuScrollX              ; $8311  + the scroll
     sta     objX+1,x                ; $8313
-    ldy     temp11                  ; $8315
+    ldy     temp11                  ; $8315  how long it stays (x 20 frames)
     lda     EncounterLifetimes,y    ; $8317
     sta     timerSlow,x             ; $831A
-    ldy     temp8                   ; $831D
+    ldy     temp8                   ; $831D  its kind: 1 weak, 2 strong, 3 a fairy
     lda     EncounterKinds,y        ; $831F
     sta     objState+2,x            ; $8322
 
-@loc_8324:
-    dec     temp8                   ; $8324
+@nextPosition:
+    dec     temp8                   ; $8324  next position and kind
     dec     temp9                   ; $8326
     dec     temp10                  ; $8328
-    bmi     @done2                  ; $832A
-    dex                             ; $832C
+    bmi     @done2                  ; $832A  all 4 done
+    dex                             ; $832C  next slot
     stx     objState                ; $832D
     bpl     @loop3                  ; $832F
 
@@ -440,66 +476,69 @@ Overworld_CheckEncounter:
 ; ---------------------------------------------------------------------------
 ; Overworld_DrawEncounters
 ;
-; Draw the overworld encounter sprites (slots 2-7: objY, objX, moved by
-; encounterYOffset/encounterXOffset), and start an encounter when one touches Link on
-; terrain where encounters happen: areaLocation = $FF, the kind in
-; fairyEncounter and encounterKind, then enter it (Overworld_EnterLocation).
-; Encounters that leave the screen are removed.
+; Move and draw the overworld encounter sprites (slots 0-7: objState+2,
+; objY+1, objX+1, timerSlow; two sprites each at oamBuffer+$80) by
+; encounterYOffset/encounterXOffset, animated every 8 frames.  When one
+; touches Link on terrain where encounters happen (desert and up, not
+; water), start the encounter: areaLocation = $FF, encounterKind (1 weak,
+; 2 strong; 0 for a fairy) and fairyEncounter, the "pulled into battle"
+; sound, and enter it (Overworld_EnterLocation), leaving Mode_Overworld.
+; Timed-out sprites and those off the screen are removed.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawEncounters:
-    ldx     #$07                    ; $8332
+    ldx     #$07                    ; $8332  each slot, 7 down to 0:
     stx     objState                ; $8334
 
-@loc_8336:
-    lda     timerSlow,x             ; $8336
-    beq     @loc_833F               ; $8339
-    lda     objState+2,x            ; $833B
-    bne     @loc_8342               ; $833D
+@slot:
+    lda     timerSlow,x             ; $8336  timed out
+    beq     @removeFar              ; $8339
+    lda     objState+2,x            ; $833B  or empty?
+    bne     @draw                   ; $833D
 
-@loc_833F:
-    jmp     @loc_840B               ; $833F
+@removeFar:
+    jmp     @remove                 ; $833F  remove it
 
-@loc_8342:
-    txa                             ; $8342
+@draw:
+    txa                             ; $8342  its two sprites at oamBuffer + $80 + slot x 16
     asl     a                       ; $8343
     asl     a                       ; $8344
     asl     a                       ; $8345
     asl     a                       ; $8346
     tay                             ; $8347
-    lda     objY+1,x                ; $8348
+    lda     objY+1,x                ; $8348  move it by its step
     clc                             ; $834A
     adc     encounterYOffset,x      ; $834B
     sta     objY+1,x                ; $834E
-    sec                             ; $8350
+    sec                             ; $8350  screen Y
     sbc     overworldScrollY        ; $8351
     sta     oamBuffer+128,y         ; $8353
     sta     oamBuffer+132,y         ; $8356
     lda     objX+1,x                ; $8359
-    clc                             ; $835B
+    clc                             ; $835B  and X
     adc     encounterXOffset,x      ; $835C
     sta     objX+1,x                ; $835F
-    sec                             ; $8361
+    sec                             ; $8361  screen X
     sbc     ppuScrollX              ; $8362
     sta     oamBuffer+131,y         ; $8364
-    clc                             ; $8367
+    clc                             ; $8367  the right sprite 8 further
     adc     #$08                    ; $8368
     sta     oamBuffer+135,y         ; $836A
     txa                             ; $836D
     pha                             ; $836E
-    lda     frameCounter            ; $836F
+    lda     frameCounter            ; $836F  every 8 frames:
     and     #$08                    ; $8371
-    lsr     a                       ; $8373
+    lsr     a                       ; $8373  the second frame (+2)
     lsr     a                       ; $8374
     sta     temp7                   ; $8375
-    lda     objState+2,x            ; $8377
+    lda     objState+2,x            ; $8377  its kind's
     tax                             ; $8379
     dex                             ; $837A
-    lda     EncounterSpriteAttrs,x  ; $837B
+    lda     EncounterSpriteAttrs,x  ; $837B  palette
     sta     oamBuffer+130,y         ; $837E
     sta     oamBuffer+134,y         ; $8381
-    txa                             ; $8384
+    txa                             ; $8384  and tiles
     asl     a                       ; $8385
     asl     a                       ; $8386
     clc                             ; $8387
@@ -507,80 +546,80 @@ Overworld_DrawEncounters:
     tax                             ; $838A
     lda     EncounterSpriteTiles,x  ; $838B
     sta     oamBuffer+129,y         ; $838E
-    lda     EncounterSpriteTiles+1,x ; $8391
+    lda     EncounterSpriteTiles+1,x ; $8391  (left, right)
     sta     oamBuffer+133,y         ; $8394
     pla                             ; $8397
     tax                             ; $8398
-    lda     temp7                   ; $8399
-    beq     @loc_83AB               ; $839B
+    lda     temp7                   ; $8399  the second frame of a strong one:
+    beq     @checkTouch             ; $839B
     lda     objState+2,x            ; $839D
     cmp     #$02                    ; $839F
-    bne     @loc_83AB               ; $83A1
-    lda     #$42                    ; $83A3
+    bne     @checkTouch             ; $83A1
+    lda     #$42                    ; $83A3  flipped instead
     sta     oamBuffer+130,y         ; $83A5
     sta     oamBuffer+134,y         ; $83A8
 
-@loc_83AB:
-    lda     oamBuffer+128,y         ; $83AB
+@checkTouch:
+    lda     oamBuffer+128,y         ; $83AB  touching Link (Y $64-$75,
     cmp     #$64                    ; $83AE
-    bcc     @loc_83FD               ; $83B0
+    bcc     @checkOnScreen          ; $83B0
     cmp     #$76                    ; $83B2
-    bcs     @loc_83FD               ; $83B4
-    lda     oamBuffer+131,y         ; $83B6
+    bcs     @checkOnScreen          ; $83B4
+    lda     oamBuffer+131,y         ; $83B6  X $7A-$85)?
     cmp     #$7A                    ; $83B9
-    bcc     @loc_83FD               ; $83BB
+    bcc     @checkOnScreen          ; $83BB
     cmp     #$86                    ; $83BD
-    bcs     @loc_83FD               ; $83BF
-    lda     objXVelocity            ; $83C1
+    bcs     @checkOnScreen          ; $83BF
+    lda     objXVelocity            ; $83C1  keep the step flag
     pha                             ; $83C3
-    jsr     Overworld_CanWalk       ; $83C4
+    jsr     Overworld_CanWalk       ; $83C4  the terrain under Link
     pla                             ; $83C7
     sta     objXVelocity            ; $83C8
     ldx     objState                ; $83CA
-    bcs     @loc_83FD               ; $83CC
-    lda     overworldTerrain        ; $83CE
+    bcs     @checkOnScreen          ; $83CC  (blocking terrain: no)
+    lda     overworldTerrain        ; $83CE  a road, cave, town or the like (0-3)?
     cmp     #$04                    ; $83D1
-    bcc     @loc_83FD               ; $83D3
-    cmp     #$0D                    ; $83D5
-    beq     @loc_83FD               ; $83D7
-    ldy     #$FF                    ; $83D9
+    bcc     @checkOnScreen          ; $83D3
+    cmp     #$0D                    ; $83D5  or $0D?
+    beq     @checkOnScreen          ; $83D7
+    ldy     #$FF                    ; $83D9  no: an encounter
     sty     areaLocation            ; $83DB
-    iny                             ; $83DE
+    iny                             ; $83DE  kind 0 (a fairy),
     sty     encounterKind           ; $83DF
     lda     #$01                    ; $83E2
-    ldy     objState+2,x            ; $83E4
+    ldy     objState+2,x            ; $83E4  or the sprite's
     cpy     #$03                    ; $83E6
-    beq     @loc_83EE               ; $83E8
-    sty     encounterKind           ; $83EA
-    lsr     a                       ; $83ED
+    beq     @setFairy               ; $83E8
+    sty     encounterKind           ; $83EA  (1 weak, 2 strong)
+    lsr     a                       ; $83ED  fairyEncounter 0
 
-@loc_83EE:
-    sta     fairyEncounter          ; $83EE
-    pla                             ; $83F1
+@setFairy:
+    sta     fairyEncounter          ; $83EE  (1 for a fairy)
+    pla                             ; $83F1  leave Mode_Overworld:
     pla                             ; $83F2
-    lda     #$02                    ; $83F3
+    lda     #$02                    ; $83F3  the "pulled into battle" sound
     sta     sfxRequest+2            ; $83F5
-    inc     encounterEntered        ; $83F7
-    jmp     Overworld_EnterLocation ; $83FA
+    inc     encounterEntered        ; $83F7  (keep the battle music)
+    jmp     Overworld_EnterLocation ; $83FA  enter it
 
-@loc_83FD:
-    lda     oamBuffer+128,y         ; $83FD
+@checkOnScreen:
+    lda     oamBuffer+128,y         ; $83FD  off the screen?
     cmp     #$F8                    ; $8400
-    bcs     @loc_840B               ; $8402
+    bcs     @remove                 ; $8402
     lda     oamBuffer+131,y         ; $8404
     cmp     #$F8                    ; $8407
-    bcc     @loc_8412               ; $8409
+    bcc     @next                   ; $8409
 
-@loc_840B:
-    lda     #$00                    ; $840B
+@remove:
+    lda     #$00                    ; $840B  remove it
     sta     objState+2,x            ; $840D
     sta     timerSlow,x             ; $840F
 
-@loc_8412:
-    dex                             ; $8412
+@next:
+    dex                             ; $8412  next slot
     stx     objState                ; $8413
     bmi     @done                   ; $8415
-    jmp     @loc_8336               ; $8417
+    jmp     @slot                   ; $8417
 
 @done:
     rts                             ; $841A
@@ -588,60 +627,63 @@ Overworld_DrawEncounters:
 ; ---------------------------------------------------------------------------
 ; Overworld_UpdateEncounters
 ;
-; Move the overworld encounter sprites (every 16 frames).
+; Every 16 frames, give each encounter sprite a step for the next 16
+; frames: toward Link when it is in his row or column (within 16 pixels),
+; except during frames 0-$3F of each 256 and for fairies; otherwise a
+; random direction.  Then draw them (Overworld_DrawEncounters).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_UpdateEncounters:
-    lda     frameCounter            ; $841B
+    lda     frameCounter            ; $841B  every 16 frames:
     and     #$0F                    ; $841D
-    bne     @loc_8432               ; $841F
-    ldx     #$07                    ; $8421
+    bne     @draw                   ; $841F
+    ldx     #$07                    ; $8421  each slot:
 
 @loop:
-    lda     #$00                    ; $8423
+    lda     #$00                    ; $8423  stop
     sta     encounterYOffset,x      ; $8425
     sta     encounterXOffset,x      ; $8428
-    lda     objState+2,x            ; $842B
-    bne     @loc_8435               ; $842D
+    lda     objState+2,x            ; $842B  live?
+    bne     @live                   ; $842D
 
-@loc_842F:
+@next:
     dex                             ; $842F
     bpl     @loop                   ; $8430
 
-@loc_8432:
+@draw:
     jmp     Overworld_DrawEncounters ; $8432
 
-@loc_8435:
-    lda     objState+2,x            ; $8435
+@live:
+    lda     objState+2,x            ; $8435  the fairy:
     cmp     #$03                    ; $8437
-    bcs     @loc_8488               ; $8439
-    lda     frameCounter            ; $843B
+    bcs     @wander                 ; $8439  wanders
+    lda     frameCounter            ; $843B  frames 0-$3F of each 256:
     cmp     #$40                    ; $843D
-    bcc     @loc_8488               ; $843F
-    lda     #$70                    ; $8441
+    bcc     @wander                 ; $843F  wander
+    lda     #$70                    ; $8441  in Link's row (Y $70, within 16)?
     sbc     objY+1,x                ; $8443
     clc                             ; $8445
     adc     overworldScrollY        ; $8446
     clc                             ; $8448
     adc     #$10                    ; $8449
     cmp     #$20                    ; $844B
-    bcs     @loc_8464               ; $844D
-    ldy     #$01                    ; $844F
+    bcs     @checkColumn            ; $844D  no
+    ldy     #$01                    ; $844F  yes: step toward him
     lda     objX+1,x                ; $8451
     sec                             ; $8453
     sbc     ppuScrollX              ; $8454
-    cmp     oamBuffer+3             ; $8456
-    bcc     @loc_845D               ; $8459
+    cmp     oamBuffer+3             ; $8456  (Link's sprite X)
+    bcc     @setXStep               ; $8459
     ldy     #$FF                    ; $845B
 
-@loc_845D:
+@setXStep:
     tya                             ; $845D
     sta     encounterXOffset,x      ; $845E
-    jmp     @loc_842F               ; $8461
+    jmp     @next                   ; $8461
 
-@loc_8464:
-    lda     oamBuffer+3             ; $8464
+@checkColumn:
+    lda     oamBuffer+3             ; $8464  in Link's column (within 16)?
     sec                             ; $8467
     sbc     objX+1,x                ; $8468
     clc                             ; $846A
@@ -649,43 +691,43 @@ Overworld_UpdateEncounters:
     clc                             ; $846D
     adc     #$10                    ; $846E
     cmp     #$20                    ; $8470
-    bcs     @loc_8488               ; $8472
-    ldy     #$01                    ; $8474
+    bcs     @wander                 ; $8472  no: wander
+    ldy     #$01                    ; $8474  yes: step toward him
     lda     objY+1,x                ; $8476
     sec                             ; $8478
     sbc     overworldScrollY        ; $8479
-    cmp     #$70                    ; $847B
-    bcc     @loc_8481               ; $847D
+    cmp     #$70                    ; $847B  (Link at Y $70)
+    bcc     @setYStep               ; $847D
     ldy     #$FF                    ; $847F
 
-@loc_8481:
+@setYStep:
     tya                             ; $8481
     sta     encounterYOffset,x      ; $8482
-    jmp     @loc_842F               ; $8485
+    jmp     @next                   ; $8485
 
-@loc_8488:
-    ldy     #$01                    ; $8488
-    lda     rng+1,x                 ; $848A
-    bpl     @loc_8491               ; $848D
+@wander:
+    ldy     #$01                    ; $8488  wander: a random direction
+    lda     rng+1,x                 ; $848A  (bit 7: sign)
+    bpl     @pickAxis               ; $848D
     ldy     #$FF                    ; $848F
 
-@loc_8491:
-    and     #$04                    ; $8491
-    bne     @loc_84A1               ; $8493
-    tya                             ; $8495
+@pickAxis:
+    and     #$04                    ; $8491  bit 2: across or up/down
+    bne     @across                 ; $8493
+    tya                             ; $8495  up/down
     sta     encounterYOffset,x      ; $8496
     clc                             ; $8499
-    adc     objY+1,x                ; $849A
+    adc     objY+1,x                ; $849A  (one step now)
     sta     objY+1,x                ; $849C
-    jmp     @loc_842F               ; $849E
+    jmp     @next                   ; $849E
 
-@loc_84A1:
-    tya                             ; $84A1
+@across:
+    tya                             ; $84A1  across
     sta     encounterXOffset,x      ; $84A2
     clc                             ; $84A5
     adc     objX+1,x                ; $84A6
     sta     objX+1,x                ; $84A8
-    jmp     @loc_842F               ; $84AA
+    jmp     @next                   ; $84AA
 ; (unreferenced: $84AD-$84AD, 1 bytes)
 
 OverworldDirDX:
@@ -712,13 +754,15 @@ OverworldDirDY:
 ; ---------------------------------------------------------------------------
 ; Overworld_HandleInput
 ;
-; Work out the tile Link is moving toward (overworldTargetY,
-; overworldTargetX) from overworldDirection, and read the D-pad to move.
+; Work out the square Link faces (overworldTargetY, overworldTargetX) from
+; overworldDirection.  After the flute has played, apply its effect
+; (Overworld_UseFlute).  A with the hammer on a rock or forest breaks it
+; (Overworld_CheckSpecialTerrainInBank); B with the flute plays it.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_HandleInput:
-    ldy     overworldDirection      ; $84BF
+    ldy     overworldDirection      ; $84BF  the square ahead of Link:
     lda     overworldY              ; $84C2
     clc                             ; $84C4
     adc     OverworldDirDY,y        ; $84C5
@@ -728,50 +772,50 @@ Overworld_HandleInput:
     clc                             ; $84CE
     adc     OverworldDirDX,y        ; $84CF
     sta     overworldTargetX        ; $84D2
-    jsr     Overworld_GetTerrainAtX ; $84D4
-    lda     flutePlayed             ; $84D7
-    beq     @loc_84F2               ; $84DA
-    lda     fluteActive             ; $84DC
+    jsr     Overworld_GetTerrainAtX ; $84D4  its terrain
+    lda     flutePlayed             ; $84D7  the flute played?
+    beq     @checkA                 ; $84DA
+    lda     fluteActive             ; $84DC  still playing: wait
     bne     @done                   ; $84DF
-    lda     overworldX              ; $84E1
+    lda     overworldX              ; $84E1  then its effect at Link's square
     sta     temp0                   ; $84E3
     lda     overworldY              ; $84E5
     sta     temp1                   ; $84E7
     jsr     Overworld_UseFlute      ; $84E9
-    lda     #$00                    ; $84EC
+    lda     #$00                    ; $84EC  once
     sta     flutePlayed             ; $84EE
 
 @done:
     rts                             ; $84F1
 
-@loc_84F2:
-    lda     joypadPressed           ; $84F2
+@checkA:
+    lda     joypadPressed           ; $84F2  A pressed
     and     #$80                    ; $84F4
-    beq     @loc_8512               ; $84F6
-    lda     overworldTerrain        ; $84F8
+    beq     @checkB                 ; $84F6
+    lda     overworldTerrain        ; $84F8  facing a rock ($0E)
     cmp     #$0E                    ; $84FB
-    beq     @loc_8503               ; $84FD
-    cmp     #$06                    ; $84FF
-    bne     @loc_8512               ; $8501
+    beq     @hammer                 ; $84FD
+    cmp     #$06                    ; $84FF  or forest (6)?
+    bne     @checkB                 ; $8501
 
-@loc_8503:
-    lda     itemOwned+ITEM_HAMMER   ; $8503
-    beq     @loc_8512               ; $8506
-    lda     #$04                    ; $8508
+@hammer:
+    lda     itemOwned+ITEM_HAMMER   ; $8503  with the hammer:
+    beq     @checkB                 ; $8506
+    lda     #$04                    ; $8508  the crumbling sound
     sta     sfxRequest+1            ; $850A
-    jsr     Overworld_QueueMapStrip ; $850C
-    jmp     Overworld_CheckSpecialTerrainInBank ; $850F
+    jsr     Overworld_QueueMapStrip ; $850C  redraw the square
+    jmp     Overworld_CheckSpecialTerrainInBank ; $850F  and change the map there
 
-@loc_8512:
-    lda     joypadPressed           ; $8512
+@checkB:
+    lda     joypadPressed           ; $8512  B pressed
     and     #$40                    ; $8514
     beq     @done2                  ; $8516
-    lda     itemOwned+ITEM_FLUTE    ; $8518
+    lda     itemOwned+ITEM_FLUTE    ; $8518  with the flute:
     beq     @done2                  ; $851B
-    lda     #$08                    ; $851D
+    lda     #$08                    ; $851D  its sound,
     sta     sfxRequest              ; $851F
-    sta     fluteActive             ; $8521
-    sta     flutePlayed             ; $8524
+    sta     fluteActive             ; $8521  the tune (Flute_Update)
+    sta     flutePlayed             ; $8524  and its effect after
 
 @done2:
     rts                             ; $8527
@@ -805,75 +849,75 @@ SpecialSpotX:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_Overworld:
-    lda     #$00                    ; $8558
+    lda     #$00                    ; $8558  a = 0:
     sta     encounterEntered        ; $855A
     sta     atSpecialSpot           ; $855D
-    inc     menusPending            ; $8560
+    inc     menusPending            ; $8560  run the menus this frame (pause, flute)
     jsr     Overworld_CheckEncounter ; $8563
     jsr     Overworld_UpdateEncounters ; $8566
     jsr     Overworld_DrawLink      ; $8569
-    lda     overworldMoveFrames     ; $856C
-    beq     @loc_8573               ; $856E
-    jmp     Overworld_ContinueMove  ; $8570
+    lda     overworldMoveFrames     ; $856C  moving?
+    beq     @still                  ; $856E
+    jmp     Overworld_ContinueMove  ; $8570  yes: go on
 
-@loc_8573:
-    jsr     Overworld_HandleInput   ; $8573
-    lda     objXVelocity            ; $8576
-    bne     @loc_857D               ; $8578
-    jmp     Overworld_StartMove     ; $857A
+@still:
+    jsr     Overworld_HandleInput   ; $8573  the hammer and flute
+    lda     objXVelocity            ; $8576  just finished a step?
+    bne     @stepDone               ; $8578
+    jmp     Overworld_StartMove     ; $857A  no: start one
 
-@loc_857D:
-    jsr     Overworld_UpdateTerrain ; $857D
-    ldx     #$3D                    ; $8580
+@stepDone:
+    jsr     Overworld_UpdateTerrain ; $857D  the terrain under Link
+    ldx     #$3D                    ; $8580  each location, $3D down to 0:
 
 @loop:
-    lda     sramLocY,x              ; $8582
+    lda     sramLocY,x              ; $8582  on Link's square?
     and     #$7F                    ; $8585
     cmp     overworldY              ; $8587
-    bne     @loc_8594               ; $8589
+    bne     @nextLocation           ; $8589
     lda     sramLocX,x              ; $858B
     and     #$3F                    ; $858E
     cmp     overworldX              ; $8590
-    beq     @loc_8599               ; $8592
+    beq     @onLocation             ; $8592
 
-@loc_8594:
+@nextLocation:
     dex                             ; $8594
     bpl     @loop                   ; $8595
-    bmi     Overworld_StartMove     ; $8597
+    bmi     Overworld_StartMove     ; $8597  none: move on
 
-@loc_8599:
-    cpx     #$29                    ; $8599
-    bne     @loc_85A9               ; $859B
-    lda     currentRegion           ; $859D
+@onLocation:
+    cpx     #$29                    ; $8599  the raft's location ($29)
+    bne     @enter                  ; $859B
+    lda     currentRegion           ; $859D  outside region 1
     cmp     #$01                    ; $85A0
-    beq     @loc_85A9               ; $85A2
-    lda     itemOwned+ITEM_RAFT     ; $85A4
+    beq     @enter                  ; $85A2
+    lda     itemOwned+ITEM_RAFT     ; $85A4  needs the raft
     beq     Overworld_StartMove     ; $85A7
 
-@loc_85A9:
-    stx     areaLocation            ; $85A9
-    ldx     #$01                    ; $85AC
+@enter:
+    stx     areaLocation            ; $85A9  this location
+    ldx     #$01                    ; $85AC  a raft dock?
 
 @loop2:
     lda     overworldX              ; $85AE
     cmp     RaftDockX,x             ; $85B0
-    bne     @loc_85D2               ; $85B3
+    bne     @nextDock               ; $85B3
     lda     overworldY              ; $85B5
     cmp     RaftDockY,x             ; $85B7
-    bne     @loc_85D2               ; $85BA
-    inx                             ; $85BC
+    bne     @nextDock               ; $85BA
+    inx                             ; $85BC  yes: ride the raft: right from dock 0 (X $3D), left from dock 1 (X $07)
     stx     raftDirection           ; $85BD
-    lda     #$C0                    ; $85C0
+    lda     #$C0                    ; $85C0  the raft's sound
     sta     sfxRequest              ; $85C2
-    asl     a                       ; $85C4
+    asl     a                       ; $85C4  Link's X on the raft: $80
     sta     objState+1              ; $85C5
-    asl     a                       ; $85C7
+    asl     a                       ; $85C7  no menus
     sta     menusPending            ; $85C8
-    lda     #$17                    ; $85CB
+    lda     #$17                    ; $85CB  gameMode $17
     sta     gameMode                ; $85CD
     bne     Overworld_ClearDialog   ; $85D0
 
-@loc_85D2:
+@nextDock:
     dex                             ; $85D2
     bpl     @loop2                  ; $85D3
 
@@ -887,21 +931,21 @@ Mode_Overworld:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_EnterLocation:
-    ldy     currentRegion           ; $85D5
-    beq     @loc_85EB               ; $85D8
-    lda     overworldY              ; $85DA
+    ldy     currentRegion           ; $85D5  regions 1 and 2:
+    beq     @go                     ; $85D8
+    lda     overworldY              ; $85DA  on the special spot?
     cmp     SpecialSpotY,y          ; $85DC
-    bne     @loc_85EB               ; $85DF
+    bne     @go                     ; $85DF
     lda     overworldX              ; $85E1
     cmp     SpecialSpotX,y          ; $85E3
-    bne     @loc_85EB               ; $85E6
-    sta     atSpecialSpot           ; $85E8
+    bne     @go                     ; $85E6
+    sta     atSpecialSpot           ; $85E8  (nonzero)
 
-@loc_85EB:
-    lda     #$00                    ; $85EB
+@go:
+    lda     #$00                    ; $85EB  no menus
     sta     menusPending            ; $85ED
-    inc     renderingOff            ; $85F0
-    inc     gameMode                ; $85F3
+    inc     renderingOff            ; $85F0  screen off
+    inc     gameMode                ; $85F3  gameMode 6: Mode_EnterLocation
     lda     #$06                    ; $85F6
     sta     ppuMaskExtra            ; $85F8
 
@@ -937,53 +981,53 @@ Mode_OverworldDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_StartMove:
-    lda     joypadHeld              ; $8601
+    lda     joypadHeld              ; $8601  a direction held?
     and     #$0F                    ; $8603
     beq     Mode_OverworldDone      ; $8605
-    sta     objXVelocity            ; $8607
-    lsr     a                       ; $8609
-    bcc     @loc_863A               ; $860A
+    sta     objXVelocity            ; $8607  (remembered: a step is under way)
+    lsr     a                       ; $8609  Right:
+    bcc     @notRight               ; $860A
     lda     #$01                    ; $860C
     sta     overworldDirection      ; $860E
-    inc     overworldX              ; $8611
-    jsr     Overworld_CanWalk       ; $8613
-    bcc     @loc_861B               ; $8616
-    dec     overworldX              ; $8618
+    inc     overworldX              ; $8611  one square right
+    jsr     Overworld_CanWalk       ; $8613  walkable?
+    bcc     @right                  ; $8616  yes
+    dec     overworldX              ; $8618  no: stay
     rts                             ; $861A
 
-@loc_861B:
-    lda     overworldX              ; $861B
-    adc     #$07                    ; $861D
+@right:
+    lda     overworldX              ; $861B  the new column at the screen's right:
+    adc     #$07                    ; $861D  Link + 7 (carry clear)
     sta     overworldTargetX        ; $861F
-    lda     overworldY              ; $8621
+    lda     overworldY              ; $8621  from 11 rows up
     sec                             ; $8623
     sbc     #$0B                    ; $8624
     sta     overworldTargetY        ; $8626
-    jsr     Overworld_SetMapPosition ; $8628
-    lda     overworldMapRow         ; $862B
+    jsr     Overworld_SetMapPosition ; $8628  the map position to draw from
+    lda     overworldMapRow         ; $862B  (an odd screen row:
     lsr     a                       ; $862D
-    bcc     @loc_8637               ; $862E
-    dec     overworldTargetY        ; $8630
+    bcc     @move                   ; $862E
+    dec     overworldTargetY        ; $8630  one row higher)
     lda     overworldTargetY        ; $8632
     jsr     Overworld_SetMapPosition ; $8634
 
-@loc_8637:
-    jmp     Overworld_ContinueMove  ; $8637
+@move:
+    jmp     Overworld_ContinueMove  ; $8637  one frame of the move
 
-@loc_863A:
-    lsr     a                       ; $863A
-    bcc     @loc_866B               ; $863B
+@notRight:
+    lsr     a                       ; $863A  Left:
+    bcc     @notLeft                ; $863B
     lda     #$02                    ; $863D
     sta     overworldDirection      ; $863F
-    dec     overworldX              ; $8642
+    dec     overworldX              ; $8642  one square left
     jsr     Overworld_CanWalk       ; $8644
-    bcc     @loc_864C               ; $8647
+    bcc     @left                   ; $8647
     inc     overworldX              ; $8649
     rts                             ; $864B
 
-@loc_864C:
-    lda     overworldX              ; $864C
-    sbc     #$07                    ; $864E
+@left:
+    lda     overworldX              ; $864C  the new column at the screen's left:
+    sbc     #$07                    ; $864E  Link - 8 (carry clear: - 7 - 1)
     sta     overworldTargetX        ; $8650
     lda     overworldY              ; $8652
     sec                             ; $8654
@@ -992,43 +1036,43 @@ Overworld_StartMove:
     jsr     Overworld_SetMapPosition ; $8659
     lda     overworldMapRow         ; $865C
     lsr     a                       ; $865E
-    bcc     @loc_8668               ; $865F
+    bcc     @moveLeft               ; $865F
     dec     overworldTargetY        ; $8661
     lda     overworldTargetY        ; $8663
     jsr     Overworld_SetMapPosition ; $8665
 
-@loc_8668:
+@moveLeft:
     jmp     Overworld_ContinueMove  ; $8668
 
-@loc_866B:
-    lsr     a                       ; $866B
-    bcc     @loc_8690               ; $866C
+@notLeft:
+    lsr     a                       ; $866B  Down:
+    bcc     @up                     ; $866C
     lda     #$04                    ; $866E
     sta     overworldDirection      ; $8670
-    inc     overworldY              ; $8673
+    inc     overworldY              ; $8673  one square down
     jsr     Overworld_CanWalk       ; $8675
-    bcc     @loc_867D               ; $8678
+    bcc     @down                   ; $8678
     dec     overworldY              ; $867A
     rts                             ; $867C
 
-@loc_867D:
-    lda     overworldX              ; $867D
-    sbc     #$07                    ; $867F
+@down:
+    lda     overworldX              ; $867D  the screen's left column,
+    sbc     #$07                    ; $867F  (Link - 8)
     sta     overworldTargetX        ; $8681
-    lda     overworldY              ; $8683
+    lda     overworldY              ; $8683  the new row 11 below
     clc                             ; $8685
     adc     #$0B                    ; $8686
     sta     overworldTargetY        ; $8688
     jsr     Overworld_SetMapPosition ; $868A
     jmp     Overworld_ContinueMove  ; $868D
 
-@loc_8690:
-    lda     #$08                    ; $8690
+@up:
+    lda     #$08                    ; $8690  Up:
     sta     overworldDirection      ; $8692
-    dec     overworldY              ; $8695
+    dec     overworldY              ; $8695  one square up
     jsr     Overworld_CanWalk       ; $8697
     bcc     Overworld_StartMoveUp   ; $869A
-    inc     overworldY              ; $869C
+    inc     overworldY              ; $869C  no: stay
 
 ; ---------------------------------------------------------------------------
 ; Overworld_MoveDone
@@ -1048,10 +1092,10 @@ Overworld_MoveDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_StartMoveUp:
-    lda     overworldX              ; $869F
+    lda     overworldX              ; $869F  the screen's left column,
     sbc     #$07                    ; $86A1
     sta     overworldTargetX        ; $86A3
-    lda     overworldY              ; $86A5
+    lda     overworldY              ; $86A5  the new row 11 above
     sec                             ; $86A7
     sbc     #$0B                    ; $86A8
     sta     overworldTargetY        ; $86AA
@@ -1069,61 +1113,61 @@ Overworld_StartMoveUp:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_ContinueMove:
-    lda     overworldTerrain        ; $86AF
+    lda     overworldTerrain        ; $86AF  in a swamp (7):
     cmp     #$07                    ; $86B2
-    bne     @loc_86BB               ; $86B4
-    lda     frameCounter            ; $86B6
+    bne     @step                   ; $86B4
+    lda     frameCounter            ; $86B6  every other frame
     lsr     a                       ; $86B8
     bcc     Overworld_MoveDone      ; $86B9
 
-@loc_86BB:
-    dec     overworldMoveFrames     ; $86BB
-    inc     objYHi+13               ; $86BD
-    lda     overworldDirection      ; $86BF
+@step:
+    dec     overworldMoveFrames     ; $86BB  one frame less
+    inc     overworldWalkFrames     ; $86BD  count the walking frames
+    lda     overworldDirection      ; $86BF  across?
     and     #$03                    ; $86C2
-    beq     @loc_86D6               ; $86C4
-    dec     ppuScrollX              ; $86C6
-    lsr     a                       ; $86C8
-    bcc     @loc_86CF               ; $86C9
-    inc     ppuScrollX              ; $86CB
+    beq     @vertical               ; $86C4
+    dec     ppuScrollX              ; $86C6  left: one pixel
+    lsr     a                       ; $86C8  right:
+    bcc     @column                 ; $86C9
+    inc     ppuScrollX              ; $86CB  one pixel the other way
     inc     ppuScrollX              ; $86CD
 
-@loc_86CF:
-    lda     overworldTargetY        ; $86CF
+@column:
+    lda     overworldTargetY        ; $86CF  draw a step of the new column
     sta     temp1                   ; $86D1
     jmp     Overworld_DrawColumnStep ; $86D3
 
-@loc_86D6:
-    lda     overworldDirection      ; $86D6
+@vertical:
+    lda     overworldDirection      ; $86D6  down?
     lsr     a                       ; $86D9
     lsr     a                       ; $86DA
     lsr     a                       ; $86DB
-    bcc     @loc_86EE               ; $86DC
-    inc     ppuScrollY              ; $86DE
+    bcc     @moveUp                 ; $86DC
+    inc     ppuScrollY              ; $86DE  one pixel down
     inc     overworldScrollY        ; $86E0
-    lda     ppuScrollY              ; $86E2
+    lda     ppuScrollY              ; $86E2  past the nametable's 240 lines?
     cmp     #$F0                    ; $86E4
-    bne     @loc_8704               ; $86E6
-    lda     #$00                    ; $86E8
+    bne     @row                    ; $86E6
+    lda     #$00                    ; $86E8  wrap to 0
     sta     ppuScrollY              ; $86EA
-    beq     @loc_86FC               ; $86EC
+    beq     @flipNametable          ; $86EC
 
-@loc_86EE:
-    dec     ppuScrollY              ; $86EE
+@moveUp:
+    dec     ppuScrollY              ; $86EE  up: one pixel up
     dec     overworldScrollY        ; $86F0
-    lda     ppuScrollY              ; $86F2
+    lda     ppuScrollY              ; $86F2  above line 0?
     cmp     #$FF                    ; $86F4
-    bne     @loc_8704               ; $86F6
-    lda     #$EF                    ; $86F8
+    bne     @row                    ; $86F6
+    lda     #$EF                    ; $86F8  wrap to 239
     sta     ppuScrollY              ; $86FA
 
-@loc_86FC:
-    lda     ppuNametable            ; $86FC
+@flipNametable:
+    lda     ppuNametable            ; $86FC  the other nametable
     eor     #$02                    ; $86FF
     sta     ppuNametable            ; $8701
 
-@loc_8704:
-    lda     overworldTargetX        ; $8704
+@row:
+    lda     overworldTargetX        ; $8704  draw a step of the new row
     sta     temp0                   ; $8706
     lda     overworldTargetY        ; $8708
     sta     temp1                   ; $870A
@@ -1140,102 +1184,112 @@ Overworld_ContinueMove:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_CanWalk:
-    jsr     Overworld_UpdateTerrain ; $870F
-    cmp     #$0D                    ; $8712
-    bne     @loc_871B               ; $8714
-    ldy     itemOwned+ITEM_BOOTS    ; $8716
-    bne     @loc_871F               ; $8719
+    jsr     Overworld_UpdateTerrain ; $870F  the terrain under Link
+    cmp     #$0D                    ; $8712  water the boots walk on ($0D)?
+    bne     @checkBlock             ; $8714
+    ldy     itemOwned+ITEM_BOOTS    ; $8716  the boots walk on it
+    bne     @walkable               ; $8719
 
-@loc_871B:
-    cmp     #$0B                    ; $871B
-    bcs     @loc_8721               ; $871D
+@checkBlock:
+    cmp     #$0B                    ; $871B  $0B and up block
+    bcs     @blocked                ; $871D
 
-@loc_871F:
+@walkable:
     clc                             ; $871F
     rts                             ; $8720
 
-@loc_8721:
-    lda     #$00                    ; $8721
-    sta     objXVelocity            ; $8723
+@blocked:
+    lda     #$00                    ; $8721  blocked:
+    sta     objXVelocity            ; $8723  no step
     rts                             ; $8725
 
 ; ---------------------------------------------------------------------------
 ; Overworld_DrawLink
 ;
-; Draw Link on the overworld (sprites 0 and 1), facing overworldDirection.
+; Draw Link on the overworld at X $84, Y $6D (sprites 0 and 1), by
+; overworldDirection, flipping his walk every 8 frames; and a column of 15
+; sprites (2-16, tile $FF) down the screen's right edge, which hides the
+; map column being drawn (seen as a black 8-pixel strip).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawLink:
-    lda     #$84                    ; $8726
+    lda     #$84                    ; $8726  at X $84
 
+; ---------------------------------------------------------------------------
+; Overworld_DrawLinkAtX
+;
+; Overworld_DrawLink at X = a (Link on the raft).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Overworld_DrawLinkAtX:
-    sta     oamBuffer+3             ; $8728
+    sta     oamBuffer+3             ; $8728  two sprites, 8 apart,
     clc                             ; $872B
     adc     #$08                    ; $872C
     sta     oamBuffer+7             ; $872E
-    lda     #$6D                    ; $8731
+    lda     #$6D                    ; $8731  at Y $6D
     sta     oamBuffer               ; $8733
     sta     oamBuffer+4             ; $8736
-    lda     #$F5                    ; $8739
+    lda     #$F5                    ; $8739  the right one: tile $F5,
     sta     oamBuffer+5             ; $873B
-    lda     #$40                    ; $873E
+    lda     #$40                    ; $873E  flipped
     sta     oamBuffer+6             ; $8740
-    lda     overworldDirection      ; $8743
+    lda     overworldDirection      ; $8743  left or right?
     cmp     #$04                    ; $8746
-    bcs     @loc_8763               ; $8748
-    lsr     a                       ; $874A
+    bcs     @upDown                 ; $8748
+    lsr     a                       ; $874A  right: flip the left one
     lda     #$00                    ; $874B
     ror     a                       ; $874D
     lsr     a                       ; $874E
     sta     oamBuffer+2             ; $874F
-    ldx     #$77                    ; $8752
-    lda     overworldMoveFrames     ; $8754
-    beq     @loc_875E               ; $8756
-    and     #$08                    ; $8758
-    bne     @loc_875E               ; $875A
-    dex                             ; $875C
+    ldx     #$77                    ; $8752  tile $77,
+    lda     overworldMoveFrames     ; $8754  walking:
+    beq     @setTile                ; $8756
+    and     #$08                    ; $8758  every other 8 frames
+    bne     @setTile                ; $875A
+    dex                             ; $875C  tile $75
     dex                             ; $875D
 
-@loc_875E:
+@setTile:
     stx     oamBuffer+1             ; $875E
-    bpl     @loc_877C               ; $8761
+    bpl     @edgeColumn             ; $8761  (always)
 
-@loc_8763:
-    ldx     #$7B                    ; $8763
+@upDown:
+    ldx     #$7B                    ; $8763  down: tile $7B,
     cmp     #$04                    ; $8765
-    beq     @loc_876B               ; $8767
+    beq     @setUpDownTile          ; $8767
     dex                             ; $8769
     dex                             ; $876A
 
-@loc_876B:
-    stx     oamBuffer+1             ; $876B
-    ldx     #$40                    ; $876E
-    lda     overworldMoveFrames     ; $8770
-    beq     @loc_8779               ; $8772
-    and     #$08                    ; $8774
-    bne     @loc_8779               ; $8776
-    tax                             ; $8778
+@setUpDownTile:
+    stx     oamBuffer+1             ; $876B  up: $79
+    ldx     #$40                    ; $876E  flipped,
+    lda     overworldMoveFrames     ; $8770  walking:
+    beq     @setFlip                ; $8772
+    and     #$08                    ; $8774  every other 8 frames
+    bne     @setFlip                ; $8776
+    tax                             ; $8778  unflipped
 
-@loc_8779:
+@setFlip:
     stx     oamBuffer+2             ; $8779
 
-@loc_877C:
-    ldx     #$0E                    ; $877C
+@edgeColumn:
+    ldx     #$0E                    ; $877C  15 sprites (2-16) down the right edge:
     ldy     #$00                    ; $877E
     sty     temp0                   ; $8780
 
 @loop:
-    lda     temp0                   ; $8782
+    lda     temp0                   ; $8782  Y 0, 16, 32, ...
     sta     oamBuffer+8,y           ; $8784
     clc                             ; $8787
     adc     #$10                    ; $8788
     sta     temp0                   ; $878A
-    lda     #$FF                    ; $878C
+    lda     #$FF                    ; $878C  tile $FF
     sta     oamBuffer+9,y           ; $878E
-    lda     #$F8                    ; $8791
+    lda     #$F8                    ; $8791  X $F8
     sta     oamBuffer+11,y          ; $8793
-    lda     #$01                    ; $8796
+    lda     #$01                    ; $8796  palette 1, in front: hides the column being drawn
     sta     oamBuffer+10,y          ; $8798
     iny                             ; $879B
     iny                             ; $879C
@@ -1272,27 +1326,27 @@ OverworldTerrainPalettes:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_IndexOverworldMap:
-    lda     #$00                    ; $87F3
+    lda     #$00                    ; $87F3  the compressed map, sramOverworldMap ($7C00)
     sta     temp14                  ; $87F5
     lda     #$7C                    ; $87F7
     sta     temp15                  ; $87F9
-    ldy     #$00                    ; $87FB
+    ldy     #$00                    ; $87FB  row 0's pointer first
     sty     temp0                   ; $87FD
-    beq     @loc_880A               ; $87FF
+    beq     @savePtr                ; $87FF
 
 @loop:
-    ldx     #$00                    ; $8801
+    ldx     #$00                    ; $8801  decode a row (to find its end):
     stx     temp3                   ; $8803
     ldy     #$00                    ; $8805
     jsr     Overworld_DecodeRow     ; $8807
 
-@loc_880A:
-    ldx     temp0                   ; $880A
+@savePtr:
+    ldx     temp0                   ; $880A  the next row's pointer:
     tya                             ; $880C
-    clc                             ; $880D
+    clc                             ; $880D  its start + the bytes read
     adc     temp14                  ; $880E
     sta     temp14                  ; $8810
-    sta     sramAreaTiles,x         ; $8812
+    sta     sramAreaTiles,x         ; $8812  into sramAreaTiles
     lda     temp15                  ; $8815
     adc     #$00                    ; $8817
     sta     temp15                  ; $8819
@@ -1300,34 +1354,34 @@ Mode_IndexOverworldMap:
     inx                             ; $881E
     inx                             ; $881F
     stx     temp0                   ; $8820
-    txa                             ; $8822
+    txa                             ; $8822  75 rows?
     lsr     a                       ; $8823
     cmp     #$4B                    ; $8824
     bne     @loop                   ; $8826
-    lda     #$00                    ; $8828
+    lda     #$00                    ; $8828  draw 23 rows around Link:
     sta     overworldDrawStep       ; $882A
 
 @loop2:
-    lda     overworldTargetX        ; $882C
+    lda     overworldTargetX        ; $882C  one step of the row
     sta     temp0                   ; $882E
     lda     overworldTargetY        ; $8830
     sta     temp1                   ; $8832
     jsr     Overworld_DrawRowStep   ; $8834
-    lda     #$02                    ; $8837
+    lda     #$02                    ; $8837  write the queued strings now
     sta     temp0                   ; $8839
     lda     #$03                    ; $883B
     sta     temp1                   ; $883D
-    jsr     Ppu_WriteStrings        ; $883F
-    lda     #$00                    ; $8842
+    jsr     Ppu_WriteStrings        ; $883F  (rendering is off)
+    lda     #$00                    ; $8842  empty the buffer
     sta     ppuBuffer0Len           ; $8844
     lda     #$FF                    ; $8847
     sta     ppuBuffer0              ; $8849
-    lda     overworldDrawStep       ; $884C
+    lda     overworldDrawStep       ; $884C  all 6 steps?
     cmp     #$06                    ; $884E
     bne     @loop2                  ; $8850
-    inc     overworldTargetY        ; $8852
+    inc     overworldTargetY        ; $8852  the next row down,
     lda     overworldTargetY        ; $8854
-    jsr     Math_DivMod15           ; $8856
+    jsr     Math_DivMod15           ; $8856  its screen and row
     sta     temp0                   ; $8859
     tya                             ; $885B
     asl     a                       ; $885C
@@ -1336,47 +1390,47 @@ Mode_IndexOverworldMap:
     asl     a                       ; $885F
     ora     temp0                   ; $8860
     sta     overworldMapRow         ; $8862
-    jsr     Sound_UpdateSometimes   ; $8864
-    ldx     #$00                    ; $8867
+    jsr     Sound_UpdateSometimes   ; $8864  keep the music going
+    ldx     #$00                    ; $8867  from step 0
     stx     overworldDrawStep       ; $8869
-    dec     objXVelocity+1          ; $886B
+    dec     objXVelocity+1          ; $886B  all 23?
     bne     @loop2                  ; $886D
-    ldy     #$07                    ; $886F
+    ldy     #$07                    ; $886F  no encounters
 
 @loop3:
     stx     objState+2,y            ; $8871
     dey                             ; $8873
     bpl     @loop3                  ; $8874
-    inx                             ; $8876
-    stx     objYHi+13               ; $8877
-    lda     #$08                    ; $8879
+    inx                             ; $8876  walking frames 1
+    stx     overworldWalkFrames     ; $8877
+    lda     #$08                    ; $8879  encounters after 8 x 20 frames
     sta     timerSlow+8             ; $887B
-    jsr     Overworld_UpdateTerrain ; $887E
-    lda     raftArrived             ; $8881
+    jsr     Overworld_UpdateTerrain ; $887E  the terrain under Link
+    lda     raftArrived             ; $8881  after a raft ride or at the special spot:
     ora     atSpecialSpot           ; $8884
-    bne     @loc_889E               ; $8887
-    lda     currentRegion           ; $8889
+    bne     @nextMode               ; $8887  no music or sound
+    lda     currentRegion           ; $8889  North Castle (region 0, location 0):
     ora     areaLocation            ; $888C
-    beq     @loc_8895               ; $888F
-    lda     #$02                    ; $8891
+    beq     @sound                  ; $888F  keep its music
+    lda     #$02                    ; $8891  the overworld theme
     sta     musicRequest            ; $8893
 
-@loc_8895:
-    ldx     #$00                    ; $8895
+@sound:
+    ldx     #$00                    ; $8895  sound on,
     stx     soundMute               ; $8897
-    lda     overworldEntrySfx       ; $8899
+    lda     overworldEntrySfx       ; $8899  the leaving sound
     sta     sfxRequest+2            ; $889C
 
-@loc_889E:
-    lda     #$04                    ; $889E
-    ldy     raftArrived             ; $88A0
-    beq     @loc_88AF               ; $88A3
-    ldx     #$00                    ; $88A5
+@nextMode:
+    lda     #$04                    ; $889E  gameMode 4: unblank
+    ldy     raftArrived             ; $88A0  after a raft ride:
+    beq     @setMode                ; $88A3
+    ldx     #$00                    ; $88A5  (once)
     stx     raftArrived             ; $88A7
-    stx     renderingOff            ; $88AA
-    lda     #$18                    ; $88AD
+    stx     renderingOff            ; $88AA  rendering on at once
+    lda     #$18                    ; $88AD  gameMode $18: ride in
 
-@loc_88AF:
+@setMode:
     sta     gameMode                ; $88AF
 
 ; ---------------------------------------------------------------------------
@@ -1402,7 +1456,7 @@ Mode_IndexOverworldMapDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawRowStep:
-    lda     a:overworldDrawStep     ; $88B3
+    lda     a:overworldDrawStep     ; $88B3  the step
     jsr     JumpTable               ; $88B6
 ; (inline jump table)
     .word   Overworld_DecodeRowAt   ; $88B9
@@ -1427,10 +1481,10 @@ Overworld_DrawRowStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DrawColumnStep:
-    lda     overworldMoveFrames     ; $88C7
+    lda     overworldMoveFrames     ; $88C7  the move's first 2 frames:
     cmp     #$0E                    ; $88C9
-    bcs     Mode_IndexOverworldMapDone ; $88CB
-    lda     overworldDrawStep       ; $88CD
+    bcs     Mode_IndexOverworldMapDone ; $88CB  nothing
+    lda     overworldDrawStep       ; $88CD  the step
     jsr     JumpTable               ; $88CF
 ; (inline jump table)
     .word   Overworld_DecodeColumn  ; $88D2
@@ -1456,64 +1510,64 @@ Overworld_DrawColumnStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeColumn:
-    lda     overworldDirection      ; $88E8
+    lda     overworldDirection      ; $88E8  moving left?
     lsr     a                       ; $88EB
-    bcs     @loc_88F0               ; $88EC
-    inc     overworldDrawAddrLo     ; $88EE
+    bcs     @fill                   ; $88EC
+    inc     overworldDrawAddrLo     ; $88EE  start at the square's right tile column
 
-@loc_88F0:
-    ldx     #$17                    ; $88F0
-    lda     #$0C                    ; $88F2
-    ldy     currentRegion           ; $88F4
+@fill:
+    ldx     #$17                    ; $88F0  24 squares:
+    lda     #$0C                    ; $88F2  off the map: water ($0C),
+    ldy     currentRegion           ; $88F4  in regions 0-1,
     cpy     #$02                    ; $88F7
-    bcs     @loc_8903               ; $88F9
-    ldy     overworldTargetX        ; $88FB
+    bcs     @fillLoop               ; $88F9
+    ldy     overworldTargetX        ; $88FB  left of column $0C:
     cpy     #$0C                    ; $88FD
-    bpl     @loc_8903               ; $88FF
-    lda     #$0B                    ; $8901
+    bpl     @fillLoop               ; $88FF
+    lda     #$0B                    ; $8901  mountains ($0B)
 
-@loc_8903:
+@fillLoop:
     sta     overworldBuffer+$D0,x   ; $8903
     dex                             ; $8906
-    bpl     @loc_8903               ; $8907
-    lda     overworldDrawAddrHi     ; $8909
+    bpl     @fillLoop               ; $8907
+    lda     overworldDrawAddrHi     ; $8909  the next tile column's address, the same for now
     sta     overworldNextAddrHi     ; $890B
     lda     overworldDrawAddrLo     ; $890D
     sta     overworldNextAddrLo     ; $890F
-    lda     overworldTargetY        ; $8911
+    lda     overworldTargetY        ; $8911  from 30 rows above the target row
     sec                             ; $8913
     sbc     #$1E                    ; $8914
     sta     temp10                  ; $8916
-    lda     overworldTargetX        ; $8918
+    lda     overworldTargetX        ; $8918  off the map's right?
     cmp     #$40                    ; $891A
-    bcs     @loc_8941               ; $891C
-    ldx     #$00                    ; $891E
+    bcs     @done                   ; $891C  yes: all filler
+    ldx     #$00                    ; $891E  each square:
 
 @loop:
-    lda     temp10                  ; $8920
+    lda     temp10                  ; $8920  off the map's bottom (or top)?
     cmp     #$4B                    ; $8922
-    bcs     @loc_893A               ; $8924
-    jsr     Overworld_GetRowPtr     ; $8926
-    lda     #$FF                    ; $8929
+    bcs     @nextSquare             ; $8924
+    jsr     Overworld_GetRowPtr     ; $8926  no: its row
+    lda     #$FF                    ; $8929  (temp3: the last column read)
     sta     temp3                   ; $892B
 
 @loop2:
-    jsr     Overworld_ReadMapRun    ; $892D
+    jsr     Overworld_ReadMapRun    ; $892D  runs until one reaches the column
     iny                             ; $8930
     cmp     overworldTargetX        ; $8931
     bcc     @loop2                  ; $8933
-    lda     temp2                   ; $8935
+    lda     temp2                   ; $8935  its terrain
     sta     overworldBuffer+$D0,x   ; $8937
 
-@loc_893A:
-    inc     temp10                  ; $893A
+@nextSquare:
+    inc     temp10                  ; $893A  next row
     inx                             ; $893C
     cpx     #$18                    ; $893D
     bne     @loop                   ; $893F
 
-@loc_8941:
-    inc     overworldDrawStep       ; $8941
-    lda     #$00                    ; $8943
+@done:
+    inc     overworldDrawStep       ; $8941  next step
+    lda     #$00                    ; $8943  from square 0 (linkStanding is reused)
     sta     linkStanding            ; $8945
     rts                             ; $8947
 
@@ -1527,121 +1581,121 @@ Overworld_DecodeColumn:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnTiles:
-    lda     overworldDrawAddrHi     ; $8948
+    lda     overworldDrawAddrHi     ; $8948  a vertical string at the draw address
     sta     ppuBuffer0              ; $894A
     sta     temp14                  ; $894D
     lda     overworldDrawAddrLo     ; $894F
     sta     ppuBuffer0+1            ; $8951
     sta     temp15                  ; $8954
-    lda     #$00                    ; $8956
+    lda     #$00                    ; $8956  its length
     sta     temp6                   ; $8958
-    lda     linkStanding            ; $895A
+    lda     linkStanding            ; $895A  from the square reached
     sta     temp7                   ; $895C
 
-@loc_895E:
-    ldx     temp7                   ; $895E
-    lda     overworldBuffer+$D0,x   ; $8960
+@square:
+    ldx     temp7                   ; $895E  each square's terrain:
+    lda     overworldBuffer+$D0,x   ; $8960  its 4 tiles
     asl     a                       ; $8963
     asl     a                       ; $8964
     tax                             ; $8965
-    lda     overworldDirection      ; $8966
+    lda     overworldDirection      ; $8966  moving right:
     lsr     a                       ; $8969
-    beq     @loc_8976               ; $896A
-    lda     overworldDrawStep       ; $896C
+    beq     @movingRight            ; $896A
+    lda     overworldDrawStep       ; $896C  left tiles first (steps 1-3)
     and     #$04                    ; $896E
-    bne     @loc_897E               ; $8970
-    inx                             ; $8972
+    bne     @tiles                  ; $8970
+    inx                             ; $8972  then right
     inx                             ; $8973
-    bne     @loc_897E               ; $8974
+    bne     @tiles                  ; $8974
 
-@loc_8976:
-    lda     overworldDrawStep       ; $8976
+@movingRight:
+    lda     overworldDrawStep       ; $8976  moving left: right tiles first
     and     #$04                    ; $8978
-    beq     @loc_897E               ; $897A
+    beq     @tiles                  ; $897A
     inx                             ; $897C
     inx                             ; $897D
 
-@loc_897E:
-    ldy     temp6                   ; $897E
+@tiles:
+    ldy     temp6                   ; $897E  two tiles,
     lda     OverworldTileMetatiles,x ; $8980
     sta     ppuBuffer0+3,y          ; $8983
     inc     temp6                   ; $8986
     inx                             ; $8988
     txa                             ; $8989
     and     #$01                    ; $898A
-    bne     @loc_897E               ; $898C
-    inc     temp7                   ; $898E
-    lda     temp7                   ; $8990
+    bne     @tiles                  ; $898C
+    inc     temp7                   ; $898E  next square
+    lda     temp7                   ; $8990  all 24?
     cmp     #$18                    ; $8992
-    bne     @loc_89C8               ; $8994
-    lda     temp6                   ; $8996
+    bne     @nextTileRow            ; $8994
+    lda     temp6                   ; $8996  yes: end the string
     ora     #$80                    ; $8998
     sta     ppuBuffer0+2            ; $899A
     lda     #$FF                    ; $899D
     sta     ppuBuffer0+4,y          ; $899F
-    lda     overworldDrawStep       ; $89A2
+    lda     overworldDrawStep       ; $89A2  the first tile column?
     and     #$04                    ; $89A4
-    bne     @loc_89AE               ; $89A6
-    sta     linkStanding            ; $89A8
-    lda     #$04                    ; $89AA
-    bne     @loc_89B0               ; $89AC
+    bne     @bothDone               ; $89A6
+    sta     linkStanding            ; $89A8  yes: the second from square 0,
+    lda     #$04                    ; $89AA  at step 4
+    bne     @setStep                ; $89AC
 
-@loc_89AE:
-    lda     #$07                    ; $89AE
+@bothDone:
+    lda     #$07                    ; $89AE  no: done (step 7)
 
-@loc_89B0:
+@setStep:
     sta     overworldDrawStep       ; $89B0
-    lda     overworldDirection      ; $89B2
+    lda     overworldDirection      ; $89B2  the second tile column:
     lsr     a                       ; $89B5
-    beq     @loc_89BD               ; $89B6
-    dec     overworldNextAddrLo     ; $89B8
-    jmp     @loc_89BF               ; $89BA
+    beq     @rightOfIt              ; $89B6
+    dec     overworldNextAddrLo     ; $89B8  left of the first
+    jmp     @setNext                ; $89BA
 
-@loc_89BD:
-    inc     overworldNextAddrLo     ; $89BD
+@rightOfIt:
+    inc     overworldNextAddrLo     ; $89BD  right of it
 
-@loc_89BF:
+@setNext:
     lda     overworldNextAddrHi     ; $89BF
     sta     overworldDrawAddrHi     ; $89C1
     lda     overworldNextAddrLo     ; $89C3
     sta     overworldDrawAddrLo     ; $89C5
     rts                             ; $89C7
 
-@loc_89C8:
-    lda     temp15                  ; $89C8
+@nextTileRow:
+    lda     temp15                  ; $89C8  the next tile row's address
     clc                             ; $89CA
     adc     #$40                    ; $89CB
     sta     temp15                  ; $89CD
     lda     temp14                  ; $89CF
     adc     #$00                    ; $89D1
     sta     temp14                  ; $89D3
-    and     #$03                    ; $89D5
+    and     #$03                    ; $89D5  into the attribute table (row 30)?
     cmp     #$03                    ; $89D7
-    bne     @loc_89E3               ; $89D9
+    bne     @continue               ; $89D9
     lda     temp15                  ; $89DB
     and     #$F0                    ; $89DD
     cmp     #$C0                    ; $89DF
-    bcs     @loc_89E6               ; $89E1
+    bcs     @wrap                   ; $89E1
 
-@loc_89E3:
-    jmp     @loc_895E               ; $89E3
+@continue:
+    jmp     @square                 ; $89E3  no: next square
 
-@loc_89E6:
-    lda     temp6                   ; $89E6
+@wrap:
+    lda     temp6                   ; $89E6  yes: end the string here
     ora     #$80                    ; $89E8
     sta     ppuBuffer0+2            ; $89EA
     lda     #$FF                    ; $89ED
     sta     ppuBuffer0+4,y          ; $89EF
-    lda     overworldDrawAddrLo     ; $89F2
+    lda     overworldDrawAddrLo     ; $89F2  and go on at the top
     and     #$1F                    ; $89F4
     sta     overworldDrawAddrLo     ; $89F6
-    lda     overworldDrawAddrHi     ; $89F8
+    lda     overworldDrawAddrHi     ; $89F8  of the other nametable
     eor     #$08                    ; $89FA
     and     #$F8                    ; $89FC
     sta     overworldDrawAddrHi     ; $89FE
-    lda     temp7                   ; $8A00
+    lda     temp7                   ; $8A00  from this square
     sta     linkStanding            ; $8A02
-    inc     overworldDrawStep       ; $8A04
+    inc     overworldDrawStep       ; $8A04  next step
     rts                             ; $8A06
 
 ; ---------------------------------------------------------------------------
@@ -1653,14 +1707,21 @@ Overworld_QueueColumnTiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_UpdateTerrain:
-    lda     overworldY              ; $8A07
+    lda     overworldY              ; $8A07  Link's square
     sta     temp1                   ; $8A09
     lda     overworldX              ; $8A0B
 
+; ---------------------------------------------------------------------------
+; Overworld_GetTerrainAtX
+;
+; Set overworldTerrain to the terrain at X = a, Y = temp1.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Overworld_GetTerrainAtX:
     sta     temp0                   ; $8A0D
     jsr     Overworld_GetTerrain    ; $8A0F
-    lda     temp2                   ; $8A12
+    lda     temp2                   ; $8A12  its terrain
     sta     overworldTerrain        ; $8A14
     rts                             ; $8A17
 
@@ -1676,40 +1737,48 @@ OverworldRowSteps:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_NextRow:
-    lda     overworldDirection      ; $8A1A
+    lda     overworldDirection      ; $8A1A  moving down
     and     #$04                    ; $8A1D
-    beq     @loc_8A31               ; $8A1F
-    lda     overworldMapRow         ; $8A21
+    beq     @checkOdd               ; $8A1F
+    lda     overworldMapRow         ; $8A21  and not on the nametable's last row (14):
     and     #$0F                    ; $8A23
     cmp     #$0E                    ; $8A25
-    beq     @loc_8A31               ; $8A27
-    lsr     a                       ; $8A29
-    bcs     @loc_8A36               ; $8A2A
+    beq     @checkOdd               ; $8A27
+    lsr     a                       ; $8A29  an even row: decode the next
+    bcs     @decode                 ; $8A2A
 
-@loc_8A2C:
-    lda     #$06                    ; $8A2C
+@attrs:
+    lda     #$06                    ; $8A2C  odd: the attributes now (step 6)
     sta     overworldDrawStep       ; $8A2E
     rts                             ; $8A30
 
-@loc_8A31:
-    lda     overworldMapRow         ; $8A31
+@checkOdd:
+    lda     overworldMapRow         ; $8A31  moving up, or row 14: odd?
     lsr     a                       ; $8A33
-    bcs     @loc_8A2C               ; $8A34
+    bcs     @attrs                  ; $8A34  then the attributes
 
-@loc_8A36:
-    jsr     Overworld_ShiftRowBuffer ; $8A36
-    lda     overworldDirection      ; $8A39
+@decode:
+    jsr     Overworld_ShiftRowBuffer ; $8A36  decode the next row:
+    lda     overworldDirection      ; $8A39  down: +1, up: -1
     and     #$04                    ; $8A3C
     lsr     a                       ; $8A3E
     lsr     a                       ; $8A3F
     tay                             ; $8A40
-    lda     overworldTargetY        ; $8A41
+    lda     overworldTargetY        ; $8A41  (carry clear)
     adc     OverworldRowSteps,y     ; $8A43
     sta     temp1                   ; $8A46
-    jmp     Overworld_DecodeRowAt   ; $8A48
+    jmp     Overworld_DecodeRowAt   ; $8A48  into the second row buffer
 
+; ---------------------------------------------------------------------------
+; Overworld_ShiftRowBuffer
+;
+; Copy the second row buffer (overworldBuffer+$70, 96 squares) to the
+; first (+$10).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Overworld_ShiftRowBuffer:
-    ldy     #$5F                    ; $8A4B
+    ldy     #$5F                    ; $8A4B  the decoded row (+$70, 96 squares) to the first buffer (+$10)
 
 @loop:
     lda     overworldBuffer+$70,y   ; $8A4D
@@ -1718,28 +1787,37 @@ Overworld_ShiftRowBuffer:
     bpl     @loop                   ; $8A54
     rts                             ; $8A56
 
+; ---------------------------------------------------------------------------
+; Overworld_ScrollRowBuffer
+;
+; Copy the squares past the 16-column window back into it, in both row
+; buffers, so that the window's columns follow each other from
+; (overworldTargetX + 16) & $F0; then advance overworldDrawStep.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Overworld_ScrollRowBuffer:
-    lda     overworldTargetX        ; $8A57
+    lda     overworldTargetX        ; $8A57  the target column within 16
     and     #$0F                    ; $8A59
-    beq     @loc_8A76               ; $8A5B
+    beq     @done                   ; $8A5B  aligned: nothing
     tax                             ; $8A5D
-    lda     overworldTargetX        ; $8A5E
+    lda     overworldTargetX        ; $8A5E  the columns past the window's 16
     clc                             ; $8A60
     adc     #$10                    ; $8A61
     and     #$F0                    ; $8A63
     tay                             ; $8A65
 
 @loop:
-    lda     overworldBuffer+$20,y   ; $8A66
+    lda     overworldBuffer+$20,y   ; $8A66  copied back into it
     sta     overworldBuffer+$10,y   ; $8A69
-    lda     overworldBuffer+$80,y   ; $8A6C
+    lda     overworldBuffer+$80,y   ; $8A6C  (both row buffers)
     sta     overworldBuffer+$70,y   ; $8A6F
     iny                             ; $8A72
     dex                             ; $8A73
     bne     @loop                   ; $8A74
 
-@loc_8A76:
-    inc     overworldDrawStep       ; $8A76
+@done:
+    inc     overworldDrawStep       ; $8A76  next step
     rts                             ; $8A78
 
 ; ---------------------------------------------------------------------------
@@ -1751,20 +1829,20 @@ Overworld_ScrollRowBuffer:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueRowAttrs:
-    lda     overworldMapRow         ; $8A79
+    lda     overworldMapRow         ; $8A79  the attribute table of the row's nametable
     and     #$10                    ; $8A7B
     lsr     a                       ; $8A7D
     ora     #$23                    ; $8A7E
-    sta     ppuBuffer0              ; $8A80
-    lda     overworldMapRow         ; $8A83
+    sta     ppuBuffer0              ; $8A80  ($23C0 or $2BC0)
+    lda     overworldMapRow         ; $8A83  its attribute row
     and     #$0E                    ; $8A85
     asl     a                       ; $8A87
     asl     a                       ; $8A88
     ora     #$C0                    ; $8A89
     sta     ppuBuffer0+1            ; $8A8B
-    lda     #$08                    ; $8A8E
+    lda     #$08                    ; $8A8E  8 bytes
     sta     ppuBuffer0+2            ; $8A90
-    lda     overworldTargetX        ; $8A93
+    lda     overworldTargetX        ; $8A93  the window's 16 squares
     adc     #$10                    ; $8A95
     and     #$F0                    ; $8A97
     tay                             ; $8A99
@@ -1772,31 +1850,31 @@ Overworld_QueueRowAttrs:
     stx     temp14                  ; $8A9C
 
 @loop:
-    ldx     temp14                  ; $8A9E
-    lda     #$00                    ; $8AA0
+    ldx     temp14                  ; $8A9E  each byte:
+    lda     #$00                    ; $8AA0  from 0
     sta     ppuBuffer0+3,x          ; $8AA2
-    ldx     overworldBuffer+$10,y   ; $8AA5
+    ldx     overworldBuffer+$10,y   ; $8AA5  top left square
     lda     OverworldTerrainPalettes,x ; $8AA8
     jsr     Attr_SetTopLeft         ; $8AAB
-    ldx     overworldBuffer+$11,y   ; $8AAE
+    ldx     overworldBuffer+$11,y   ; $8AAE  top right
     lda     OverworldTerrainPalettes,x ; $8AB1
     jsr     Attr_SetTopRight        ; $8AB4
-    ldx     overworldBuffer+$70,y   ; $8AB7
+    ldx     overworldBuffer+$70,y   ; $8AB7  bottom left (second row)
     lda     OverworldTerrainPalettes,x ; $8ABA
     jsr     Attr_SetBottomLeft      ; $8ABD
-    ldx     overworldBuffer+$71,y   ; $8AC0
+    ldx     overworldBuffer+$71,y   ; $8AC0  bottom right
     lda     OverworldTerrainPalettes,x ; $8AC3
     jsr     Attr_SetBottomRight     ; $8AC6
-    lda     overworldDirection      ; $8AC9
+    lda     overworldDirection      ; $8AC9  moving down
     and     #$04                    ; $8ACC
-    beq     @loc_8AF0               ; $8ACE
-    lda     overworldMapRow         ; $8AD0
+    beq     @nextByte               ; $8ACE
+    lda     overworldMapRow         ; $8AD0  and not row 14:
     and     #$0F                    ; $8AD2
     cmp     #$0E                    ; $8AD4
-    beq     @loc_8AF0               ; $8AD6
+    beq     @nextByte               ; $8AD6
     lda     #$00                    ; $8AD8
     sta     temp0                   ; $8ADA
-    lda     ppuBuffer0+3,x          ; $8ADC
+    lda     ppuBuffer0+3,x          ; $8ADC  swap its top and bottom halves
     asl     a                       ; $8ADF
     rol     temp0                   ; $8AE0
     asl     a                       ; $8AE2
@@ -1808,16 +1886,16 @@ Overworld_QueueRowAttrs:
     ora     temp0                   ; $8AEB
     sta     ppuBuffer0+3,x          ; $8AED
 
-@loc_8AF0:
-    iny                             ; $8AF0
+@nextByte:
+    iny                             ; $8AF0  the next two squares
     iny                             ; $8AF1
     inc     temp14                  ; $8AF2
-    lda     temp14                  ; $8AF4
+    lda     temp14                  ; $8AF4  8 bytes?
     cmp     #$08                    ; $8AF6
     bcc     @loop                   ; $8AF8
-    lda     #$FF                    ; $8AFA
+    lda     #$FF                    ; $8AFA  end
     sta     ppuBuffer0+11           ; $8AFC
-    inc     overworldDrawStep       ; $8AFF
+    inc     overworldDrawStep       ; $8AFF  next step
     rts                             ; $8B01
 
 ; ---------------------------------------------------------------------------
@@ -1830,20 +1908,20 @@ Overworld_QueueRowAttrs:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeNextColumns:
-    lda     overworldTargetX        ; $8B02
+    lda     overworldTargetX        ; $8B02  the column's pair for the attributes:
     pha                             ; $8B04
-    and     #$01                    ; $8B05
+    and     #$01                    ; $8B05  even column: the next (+1),
     eor     #$01                    ; $8B07
     tay                             ; $8B09
-    iny                             ; $8B0A
-    cpy     overworldDirection      ; $8B0B
-    bne     Overworld_DecodeFarColumn ; $8B0E
-    cpy     #$02                    ; $8B10
-    beq     @loc_8B18               ; $8B12
-    dec     overworldTargetX        ; $8B14
+    iny                             ; $8B0A  odd: the previous
+    cpy     overworldDirection      ; $8B0B  the pair inside the window?
+    bne     Overworld_DecodeFarColumn ; $8B0E  no: the column now in its nametable place, 16 away
+    cpy     #$02                    ; $8B10  even (y = 2): X + 1
+    beq     @plusOne                ; $8B12
+    dec     overworldTargetX        ; $8B14  odd: X - 1
     dec     overworldTargetX        ; $8B16
 
-@loc_8B18:
+@plusOne:
     inc     overworldTargetX        ; $8B18
 
 ; ---------------------------------------------------------------------------
@@ -1855,14 +1933,14 @@ Overworld_DecodeNextColumns:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeColumnPair:
-    ldx     #$17                    ; $8B1A
+    ldx     #$17                    ; $8B1A  keep the decoded column
 
 @loop:
     lda     overworldBuffer+$D0,x   ; $8B1C
     sta     overworldBuffer+$E8,x   ; $8B1F
     dex                             ; $8B22
     bpl     @loop                   ; $8B23
-    jsr     Overworld_DecodeColumn  ; $8B25
+    jsr     Overworld_DecodeColumn  ; $8B25  decode the pair
     pla                             ; $8B28
     sta     overworldTargetX        ; $8B29
     rts                             ; $8B2B
@@ -1880,7 +1958,7 @@ OverworldFarColumnSteps:
 ; ---------------------------------------------------------------------------
 Overworld_DecodeFarColumn:
     dey                             ; $8B2E
-    lda     overworldTargetX        ; $8B2F
+    lda     overworldTargetX        ; $8B2F  X + 1 - 16 or X - 1 + 16
     clc                             ; $8B31
     adc     OverworldFarColumnSteps,y ; $8B32
     sta     overworldTargetX        ; $8B35
@@ -1894,10 +1972,10 @@ Overworld_DecodeFarColumn:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnAttrsTop:
-    lda     #$0B                    ; $8B3A
+    lda     #$0B                    ; $8B3A  rows up to 11
     sta     temp11                  ; $8B3C
-    ldx     #$00                    ; $8B3E
-    stx     objXVelocity+2          ; $8B40
+    ldx     #$00                    ; $8B3E  from ppuBuffer0's start,
+    stx     objXVelocity+2          ; $8B40  square 0
 
 ; ---------------------------------------------------------------------------
 ; Overworld_QueueColumnAttrs
@@ -1908,18 +1986,18 @@ Overworld_QueueColumnAttrsTop:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnAttrs:
-    jsr     Overworld_QueueAttrAddress ; $8B42
-    lda     overworldMapRow         ; $8B45
+    jsr     Overworld_QueueAttrAddress ; $8B42  a byte for two rows
+    lda     overworldMapRow         ; $8B45  at the nametable's last row (14)?
     and     #$0F                    ; $8B47
-    cmp     #$0E                    ; $8B49
-    beq     @loc_8B51               ; $8B4B
-    inc     overworldTargetY        ; $8B4D
+    cmp     #$0E                    ; $8B49  (alone in its attribute row)
+    beq     @oneRow                 ; $8B4B
+    inc     overworldTargetY        ; $8B4D  no: two rows down
     inc     objXVelocity+2          ; $8B4F
 
-@loc_8B51:
-    inc     overworldTargetY        ; $8B51
+@oneRow:
+    inc     overworldTargetY        ; $8B51  one row down
     inc     objXVelocity+2          ; $8B53
-    lda     overworldTargetY        ; $8B55
+    lda     overworldTargetY        ; $8B55  its screen and row
     jsr     Math_DivMod15           ; $8B57
     sta     temp0                   ; $8B5A
     tya                             ; $8B5C
@@ -1929,10 +2007,10 @@ Overworld_QueueColumnAttrs:
     asl     a                       ; $8B60
     ora     temp0                   ; $8B61
     sta     overworldMapRow         ; $8B63
-    lda     objXVelocity+2          ; $8B65
+    lda     objXVelocity+2          ; $8B65  the rows done?
     cmp     temp11                  ; $8B67
     bcc     Overworld_QueueColumnAttrs ; $8B69
-    inc     overworldDrawStep       ; $8B6B
+    inc     overworldDrawStep       ; $8B6B  next step
     rts                             ; $8B6D
 
 ; ---------------------------------------------------------------------------
@@ -1943,35 +2021,44 @@ Overworld_QueueColumnAttrs:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueColumnAttrsBottom:
-    lda     #$18                    ; $8B6E
+    lda     #$18                    ; $8B6E  rows up to 24
     sta     temp11                  ; $8B70
-    ldx     #$00                    ; $8B72
+    ldx     #$00                    ; $8B72  from ppuBuffer0's start
     beq     Overworld_QueueColumnAttrs ; $8B74
 
+; ---------------------------------------------------------------------------
+; Overworld_QueueAttrAddress
+;
+; Queue an attribute string at ppuBuffer0,x for the map row and column
+; being drawn (overworldMapRow, overworldTargetX), with its byte from
+; Overworld_QueueAttrByte; x moves past it.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Overworld_QueueAttrAddress:
-    stx     temp14                  ; $8B76
-    lda     overworldMapRow         ; $8B78
+    stx     temp14                  ; $8B76  the string's place
+    lda     overworldMapRow         ; $8B78  the attribute table
     and     #$10                    ; $8B7A
     lsr     a                       ; $8B7C
     ora     #$23                    ; $8B7D
     sta     ppuBuffer0,x            ; $8B7F
-    lda     overworldMapRow         ; $8B82
+    lda     overworldMapRow         ; $8B82  attribute row
     and     #$0E                    ; $8B84
     asl     a                       ; $8B86
     asl     a                       ; $8B87
     ora     #$C0                    ; $8B88
     sta     temp0                   ; $8B8A
-    lda     overworldTargetX        ; $8B8C
+    lda     overworldTargetX        ; $8B8C  attribute column: X / 2
     lsr     a                       ; $8B8E
     and     #$07                    ; $8B8F
     ora     temp0                   ; $8B91
     sta     ppuBuffer0+1,x          ; $8B93
-    lda     #$01                    ; $8B96
+    lda     #$01                    ; $8B96  one byte
     sta     ppuBuffer0+2,x          ; $8B98
     jsr     Overworld_QueueAttrByte ; $8B9B
-    lda     #$FF                    ; $8B9E
+    lda     #$FF                    ; $8B9E  end
     sta     ppuBuffer0+4,x          ; $8BA0
-    inx                             ; $8BA3
+    inx                             ; $8BA3  past the string
     inx                             ; $8BA4
     inx                             ; $8BA5
     inx                             ; $8BA6
@@ -1987,26 +2074,26 @@ Overworld_QueueAttrAddress:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueAttrByte:
-    lda     #$00                    ; $8BA8
+    lda     #$00                    ; $8BA8  from 0
     sta     ppuBuffer0+3,x          ; $8BAA
-    ldy     a:objXVelocity+2        ; $8BAD
-    ldx     overworldBuffer+$D0,y   ; $8BB0
+    ldy     a:objXVelocity+2        ; $8BAD  the square
+    ldx     overworldBuffer+$D0,y   ; $8BB0  the pair's top square (decoded last),
     lda     OverworldTerrainPalettes,x ; $8BB3
     jsr     Attr_SetTopLeft         ; $8BB6
-    ldx     overworldBuffer+$E8,y   ; $8BB9
+    ldx     overworldBuffer+$E8,y   ; $8BB9  the column's
     lda     OverworldTerrainPalettes,x ; $8BBC
     jsr     Attr_SetTopRight        ; $8BBF
-    iny                             ; $8BC2
+    iny                             ; $8BC2  the row below:
     ldx     overworldBuffer+$D0,y   ; $8BC3
     lda     OverworldTerrainPalettes,x ; $8BC6
     jsr     Attr_SetBottomLeft      ; $8BC9
-    ldx     overworldBuffer+$E8,y   ; $8BCC
+    ldx     overworldBuffer+$E8,y   ; $8BCC  the column's
     lda     OverworldTerrainPalettes,x ; $8BCF
     jsr     Attr_SetBottomRight     ; $8BD2
-    lda     overworldTargetX        ; $8BD5
+    lda     overworldTargetX        ; $8BD5  an even column (its pair on the right)?
     lsr     a                       ; $8BD7
-    bcs     @done                   ; $8BD8
-    lda     ppuBuffer0+3,x          ; $8BDA
+    bcs     @done                   ; $8BD8  no: the pair is on the left, as built
+    lda     ppuBuffer0+3,x          ; $8BDA  yes: swap left and right
     pha                             ; $8BDD
     lsr     a                       ; $8BDE
     lsr     a                       ; $8BDF
@@ -2045,7 +2132,7 @@ Attr_SetTopRight:
     asl     a                       ; $8BF4
 
 Attr_SetTopLeft:
-    ldx     temp14                  ; $8BF5
+    ldx     temp14                  ; $8BF5  the byte being built
     ora     ppuBuffer0+3,x          ; $8BF7
     sta     ppuBuffer0+3,x          ; $8BFA
     rts                             ; $8BFD
@@ -2060,35 +2147,35 @@ Attr_SetTopLeft:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeRowAt:
-    ldx     #$3E                    ; $8BFE
+    ldx     #$3E                    ; $8BFE  off the map: water ($0C) at columns 11-73,
     lda     #$0C                    ; $8C00
 
 @loop:
     sta     overworldBuffer+$8B,x   ; $8C02
     dex                             ; $8C05
     bpl     @loop                   ; $8C06
-    ldx     #$14                    ; $8C08
-    ldy     currentRegion           ; $8C0A
+    ldx     #$14                    ; $8C08  columns -9 to 11
+    ldy     currentRegion           ; $8C0A  in regions 0-1:
     cpy     #$02                    ; $8C0D
-    bcs     @loc_8C13               ; $8C0F
-    lda     #$0B                    ; $8C11
+    bcs     @fillLeft               ; $8C0F
+    lda     #$0B                    ; $8C11  mountains ($0B)
 
-@loc_8C13:
-    sta     overworldBuffer+$77,x   ; $8C13
+@fillLeft:
+    sta     overworldBuffer+$77,x   ; $8C13  (the row buffer +$80 is column 0)
     dex                             ; $8C16
-    bpl     @loc_8C13               ; $8C17
-    ldx     #$00                    ; $8C19
+    bpl     @fillLeft               ; $8C17
+    ldx     #$00                    ; $8C19  from column 0
     stx     temp3                   ; $8C1B
     lda     temp0                   ; $8C1D
     clc                             ; $8C1F
     adc     #$10                    ; $8C20
     sta     temp0                   ; $8C22
-    lda     temp1                   ; $8C24
+    lda     temp1                   ; $8C24  map row = Y - 30:
     sec                             ; $8C26
     sbc     #$1E                    ; $8C27
-    cmp     #$4B                    ; $8C29
-    bcs     Overworld_NextDrawStep  ; $8C2B
-    jsr     Overworld_GetRowPtr     ; $8C2D
+    cmp     #$4B                    ; $8C29  off the map?
+    bcs     Overworld_NextDrawStep  ; $8C2B  yes: filler only
+    jsr     Overworld_GetRowPtr     ; $8C2D  its pointer
 
 ; ---------------------------------------------------------------------------
 ; Overworld_DecodeRow
@@ -2099,17 +2186,17 @@ Overworld_DecodeRowAt:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_DecodeRow:
-    jsr     Overworld_ReadMapRun    ; $8C30
-    cmp     #$41                    ; $8C33
-    bpl     Overworld_NextDrawStep  ; $8C35
-    lda     temp2                   ; $8C37
+    jsr     Overworld_ReadMapRun    ; $8C30  the next run;
+    cmp     #$41                    ; $8C33  past column 64?
+    bpl     Overworld_NextDrawStep  ; $8C35  yes: done
+    lda     temp2                   ; $8C37  its terrain
 
 @loop:
-    sta     overworldBuffer+$80,x   ; $8C39
+    sta     overworldBuffer+$80,x   ; $8C39  over its length
     inx                             ; $8C3C
     cpx     temp3                   ; $8C3D
     bne     @loop                   ; $8C3F
-    iny                             ; $8C41
+    iny                             ; $8C41  next byte
     jmp     Overworld_DecodeRow     ; $8C42
 
 ; ---------------------------------------------------------------------------
@@ -2133,7 +2220,7 @@ Overworld_NextDrawStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_GetRowPtr:
-    asl     a                       ; $8C48
+    asl     a                       ; $8C48  2 bytes per row
     tay                             ; $8C49
     lda     sramAreaTiles,y         ; $8C4A
     sta     temp14                  ; $8C4D
@@ -2151,79 +2238,79 @@ Overworld_GetRowPtr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_QueueRowTiles:
-    lda     overworldDrawAddrHi     ; $8C57
+    lda     overworldDrawAddrHi     ; $8C57  the draw address,
     sta     ppuBuffer0              ; $8C59
-    lda     overworldDrawAddrLo     ; $8C5C
+    lda     overworldDrawAddrLo     ; $8C5C  from the row's first tile
     and     #$E0                    ; $8C5E
     sta     ppuBuffer0+1            ; $8C60
-    lda     #$20                    ; $8C63
+    lda     #$20                    ; $8C63  32 tiles
     sta     ppuBuffer0+2            ; $8C65
     lda     #$00                    ; $8C68
     sta     temp6                   ; $8C6A
-    lda     temp0                   ; $8C6C
+    lda     temp0                   ; $8C6C  the window's 16 squares
     clc                             ; $8C6E
     adc     #$10                    ; $8C6F
     and     #$F0                    ; $8C71
     sta     temp0                   ; $8C73
-    jsr     Overworld_ScrollRowBuffer ; $8C75
+    jsr     Overworld_ScrollRowBuffer ; $8C75  made contiguous (also steps the draw step: 2, then 3)
 
-@loc_8C78:
-    ldy     temp0                   ; $8C78
-    cpy     #$60                    ; $8C7A
-    bcc     @loc_8C83               ; $8C7C
+@square:
+    ldy     temp0                   ; $8C78  each square:
+    cpy     #$60                    ; $8C7A  past the buffer?
+    bcc     @terrain                ; $8C7C
 ; (code below not executed in the test movies)
-    lda     #$0C                    ; $8C7E
-    jmp     @loc_8C86               ; $8C80
+    lda     #$0C                    ; $8C7E  water ($0C)
+    jmp     @tiles                  ; $8C80
 ; (end of code not executed in the test movies)
 
-@loc_8C83:
-    lda     overworldBuffer+$70,y   ; $8C83
+@terrain:
+    lda     overworldBuffer+$70,y   ; $8C83  its terrain
 
-@loc_8C86:
-    asl     a                       ; $8C86
+@tiles:
+    asl     a                       ; $8C86  its tiles
     asl     a                       ; $8C87
     tax                             ; $8C88
     ldy     temp6                   ; $8C89
-    lda     #$01                    ; $8C8B
+    lda     #$01                    ; $8C8B  two tiles
     sta     temp8                   ; $8C8D
-    lda     a:overworldDrawStep     ; $8C8F
+    lda     a:overworldDrawStep     ; $8C8F  the first call (step 2):
     cmp     #$02                    ; $8C92
-    beq     @loc_8C97               ; $8C94
-    inx                             ; $8C96
+    beq     @tileLoop               ; $8C94  top tiles (0, 2)
+    inx                             ; $8C96  then bottom (1, 3)
 
-@loc_8C97:
+@tileLoop:
     lda     OverworldTileMetatiles,x ; $8C97
     sta     ppuBuffer0+3,y          ; $8C9A
     iny                             ; $8C9D
     inx                             ; $8C9E
     inx                             ; $8C9F
     dec     temp8                   ; $8CA0
-    bpl     @loc_8C97               ; $8CA2
+    bpl     @tileLoop               ; $8CA2
     sty     temp6                   ; $8CA4
-    inc     temp0                   ; $8CA6
+    inc     temp0                   ; $8CA6  next square
     lda     temp0                   ; $8CA8
-    and     #$0F                    ; $8CAA
-    bne     @loc_8C78               ; $8CAC
-    lda     #$FF                    ; $8CAE
+    and     #$0F                    ; $8CAA  16 done?
+    bne     @square                 ; $8CAC
+    lda     #$FF                    ; $8CAE  end
     sta     ppuBuffer0+35           ; $8CB0
-    lda     overworldDrawAddrLo     ; $8CB3
+    lda     overworldDrawAddrLo     ; $8CB3  the next tile row
     clc                             ; $8CB5
     adc     #$20                    ; $8CB6
     sta     overworldDrawAddrLo     ; $8CB8
     lda     overworldDrawAddrHi     ; $8CBA
     adc     #$00                    ; $8CBC
     sta     overworldDrawAddrHi     ; $8CBE
-    and     #$03                    ; $8CC0
+    and     #$03                    ; $8CC0  into the attribute table (row 30)?
     cmp     #$03                    ; $8CC2
     bne     @done                   ; $8CC4
     lda     overworldDrawAddrLo     ; $8CC6
     and     #$F0                    ; $8CC8
     cmp     #$C0                    ; $8CCA
     bcc     @done                   ; $8CCC
-    lda     overworldDrawAddrLo     ; $8CCE
+    lda     overworldDrawAddrLo     ; $8CCE  yes: the top
     and     #$1F                    ; $8CD0
     sta     overworldDrawAddrLo     ; $8CD2
-    lda     overworldDrawAddrHi     ; $8CD4
+    lda     overworldDrawAddrHi     ; $8CD4  of the other nametable
     eor     #$08                    ; $8CD6
     and     #$F8                    ; $8CD8
     sta     overworldDrawAddrHi     ; $8CDA

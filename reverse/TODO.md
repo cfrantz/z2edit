@@ -91,10 +91,11 @@ unless noted):
   halved; Cancel moves `experienceNext` to the next cost up (the window
   reopens); level 8 buys a life; docs/systems/menus.md has the window's
   geometry and attribute masks.  Bank 3's `Menu_*` copies remain (8l).
-- 8j. The overworld (banks 0, 7, 1, 2, ~1430 plus ~230 in banks 1-2):
-  `Mode_Overworld`, movement, `Overworld_CheckEncounter` and the
-  encounter sprites, the raft, the map decoders and the row/column/
-  attribute queues, and bank 7's `Overworld_CheckSpecialTerrain`.
+- 8j. Done: the overworld (banks 0, 7, 1, 2): setup, movement, the map
+  decoders and PPU queues, encounters, the raft, the hammer and flute.
+  New: terrain names; `overworldWalkFrames` (objYHi+13) starts encounters
+  without the timer; the right-edge sprite mask; QUIRK: bank 1's palace
+  stones overwrite Death Mountain's map (seen in the 100% movie).
 - 8k. Bank 0's remaining set pieces (~470): `NorthCastle_DrawSprites`,
   `SideView_Start`, `BigDoor_*`, `Mode_FallAnimate` and `Fall_*`,
   `BreakingBlock_Update`, `Saria_BuildBridge`,

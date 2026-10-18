@@ -25,6 +25,7 @@ lists code oddities with no visible effect.
 | `Wizrobe_Ai` | After its first appearance a Wizzrobe of palaces 3, 4 and 6 always reappears on page 1 (`Wizrobe_Restart` sets `objXHi` to 1), so one placed on another page of its room leaves that page for good. |
 | `Area_IsSolidTile_Bank2` | Tiles of palette group 0 ($00-$3F) look up a byte 255 bytes past the threshold table; in bank 2 (East Hyrule's areas) that byte is $00, so every group 0 tile is solid there.  In banks 1, 3, 4 and 5 the byte is $D2 or more, so none are. |
 | `Dialog_TechniqueMan` | The type $0D handler gives the upward thrust in any town but Rauru, Saria and Mido, including Ruto; it only matters where a type $0D person stands (the knight of Darunia). |
+| `Overworld_UpdatePalaceStones_Bank1` | Turns sealed palaces 1-3 to stone by writing $0B at fixed offsets of the region's map in SRAM, without checking the region (bank 2's copy does), so on Death Mountain it overwrites three bytes of that map's runs: each sealed palace shortens a run by one square and shifts the rest of its row one column left, the last column becoming water.  Palace 1: Y $22 (one mountain square in the water at X $2F becomes water); palace 2: Y $38, X $28-$3F; palace 3: Y $5A, in rows of $F.  Seen in the 100% movie: on Death Mountain at frame 47083 (palace 1 sealed), map byte $18 was $0B instead of $1B. |
 
 ## Without Visible Effect
 

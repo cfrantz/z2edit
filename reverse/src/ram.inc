@@ -63,6 +63,7 @@ overworldNextAddrLo     = $007C
 overworldMoveFrames     = $007D
 overworldDrawStep       = $007E     ; step of drawing the overworld map
 overworldScrollY        = $007F     ; vertical scroll of the overworld map, in pixels within the square (Overworld_ContinueMove) (provisional)
+overworldWalkFrames     = $0026     ; objYHi+13 on the overworld: frames walked (Overworld_ContinueMove), wrapping; when 0, an encounter can start without the timer (Overworld_CheckEncounter)
 objState                = $0080     ; [15] per-object state: Link's animation, an enemy's behavior state, a projectile's type
 objOamOffset            = $0090     ; [15] offset in oamBuffer of the object's sprites; rotated every frame (oamRotation) to spread sprite flicker
 linkWalkDir             = $009F     ; last horizontal direction held: 1 = right, 2 = left

@@ -113,13 +113,13 @@ AreaFloorRecordsLo_Bank2:
 
 Overworld_SetFloorTiles_Bank2:
     .assert Overworld_SetFloorTiles_Bank2 = OverworldBank::SetFloorTiles, error, "interface address moved"
-    ldx     areaTileSet             ; $81A3
-    lda     AreaFloorRecordsLo_Bank2,x ; $81A6
+    ldx     areaTileSet             ; $81A3  the area's tile set:
+    lda     AreaFloorRecordsLo_Bank2,x ; $81A6  its floor record (page $81)
     sta     temp12                  ; $81A9
     lda     #$81                    ; $81AB
     sta     temp13                  ; $81AD
-    ldy     #$08                    ; $81AF
-    lda     (temp12),y              ; $81B1
+    ldy     #$08                    ; $81AF  byte 8:
+    lda     (temp12),y              ; $81B1  the floor tile
     sta     floorTile               ; $81B3
     rts                             ; $81B6
 
@@ -601,59 +601,59 @@ Area_DrawCloud_Bank2:
 ; ---------------------------------------------------------------------------
 Overworld_UseFlute_Bank2:
     .assert Overworld_UseFlute_Bank2 = OverworldBank::UseFlute, error, "interface address moved"
-    lda     currentRegion           ; $8368
+    lda     currentRegion           ; $8368  East Hyrule only:
     cmp     #$02                    ; $836B
     bne     @done                   ; $836D
-    lda     overworldY              ; $836F
+    lda     overworldY              ; $836F  on the desert spot (Y $64, X $2D)?
     cmp     #$64                    ; $8371
-    bne     @loc_8387               ; $8373
+    bne     @terrain                ; $8373
     lda     overworldX              ; $8375
     cmp     #$2D                    ; $8377
-    bne     @loc_8387               ; $8379
-    lda     #$0B                    ; $837B
+    bne     @terrain                ; $8379
+    lda     #$0B                    ; $837B  yes: PPU string $0B
     sta     ppuStringSelect         ; $837D
-    inc     temp1                   ; $8380
+    inc     temp1                   ; $8380  the square two rows down
     inc     temp1                   ; $8382
-    jmp     Overworld_CheckSpecialTerrain ; $8384
+    jmp     Overworld_CheckSpecialTerrain ; $8384  becomes the palace
 
-@loc_8387:
-    lda     overworldTerrain        ; $8387
+@terrain:
+    lda     overworldTerrain        ; $8387  facing the river devil ($0F)?
     cmp     #$0F                    ; $838A
-    beq     @loc_838F               ; $838C
+    beq     @riverDevil             ; $838C
 ; (code below not executed in the test movies)
 
 @done:
     rts                             ; $838E
 ; (end of code not executed in the test movies)
 
-@loc_838F:
-    jsr     Overworld_QueueMapStrip_Bank2 ; $838F
-    jmp     Overworld_CheckSpecialTerrain ; $8392
+@riverDevil:
+    jsr     Overworld_QueueMapStrip_Bank2 ; $838F  yes: redraw its square
+    jmp     Overworld_CheckSpecialTerrain ; $8392  and remove it
 
 MapStripHeader_Bank2:
     .byte   $0A, $00, $00, $82, $6C, $6C, $00, $00, $82, $6C, $6C, $FF      ; $8395
 
 Overworld_QueueMapStrip_Bank2:
     .assert Overworld_QueueMapStrip_Bank2 = OverworldBank::QueueMapStrip, error, "interface address moved"
-    jsr     Overworld_SetMapPosition ; $83A1
-    lda     #$00                    ; $83A4
+    jsr     Overworld_SetMapPosition ; $83A1  the square's draw address
+    lda     #$00                    ; $83A4  not moving
     sta     overworldMoveFrames     ; $83A6
-    ldy     #$0B                    ; $83A8
+    ldy     #$0B                    ; $83A8  two vertical strings of two tiles ($6C)
 
 @loop:
     lda     MapStripHeader_Bank2,y  ; $83AA
     sta     ppuBuffer0Len,y         ; $83AD
     dey                             ; $83B0
     bpl     @loop                   ; $83B1
-    lda     overworldDrawAddrHi     ; $83B3
+    lda     overworldDrawAddrHi     ; $83B3  the left tile column
     sta     ppuBuffer0              ; $83B5
     sta     ppuBuffer0+5            ; $83B8
     lda     overworldDrawAddrLo     ; $83BB
     sta     ppuBuffer0+1            ; $83BD
     clc                             ; $83C0
-    adc     #$01                    ; $83C1
+    adc     #$01                    ; $83C1  the right one
     sta     ppuBuffer0+6            ; $83C3
-    lda     overworldTargetX        ; $83C6
+    lda     overworldTargetX        ; $83C6  temp0, temp1 = the square
     sta     temp0                   ; $83C8
     lda     overworldTargetY        ; $83CA
     sta     temp1                   ; $83CC
@@ -661,26 +661,26 @@ Overworld_QueueMapStrip_Bank2:
 
 Overworld_GetTerrain_Bank2:
     .assert Overworld_GetTerrain_Bank2 = OverworldBank::GetTerrain, error, "interface address moved"
-    lda     temp0                   ; $83CF
+    lda     temp0                   ; $83CF  off the map's right?
     cmp     #$40                    ; $83D1
-    bcs     @loc_8404               ; $83D3
-    lda     temp1                   ; $83D5
+    bcs     @offMap                 ; $83D3
+    lda     temp1                   ; $83D5  map row = Y - 30
     sec                             ; $83D7
     sbc     #$1E                    ; $83D8
     sta     temp4                   ; $83DA
-    cmp     #$4B                    ; $83DC
-    bcs     @loc_8404               ; $83DE
-    jsr     Overworld_GetRowPtr_Bank2 ; $83E0
-    inc     temp0                   ; $83E3
-    lda     #$00                    ; $83E5
+    cmp     #$4B                    ; $83DC  off its bottom?
+    bcs     @offMap                 ; $83DE
+    jsr     Overworld_GetRowPtr_Bank2 ; $83E0  the row
+    inc     temp0                   ; $83E3  runs until past column X:
+    lda     #$00                    ; $83E5  from 0
     sta     temp3                   ; $83E7
-    ldx     #$03                    ; $83E9
+    ldx     #$03                    ; $83E9  (x = 3 for Overworld_CheckSpecialTerrain)
 
-@loc_83EB:
-    lda     (temp14),y              ; $83EB
+@run:
+    lda     (temp14),y              ; $83EB  terrain: bits 3-0
     and     #$0F                    ; $83ED
     sta     temp2                   ; $83EF
-    lda     (temp14),y              ; $83F1
+    lda     (temp14),y              ; $83F1  length - 1: bits 7-4
     lsr     a                       ; $83F3
     lsr     a                       ; $83F4
     lsr     a                       ; $83F5
@@ -688,13 +688,13 @@ Overworld_GetTerrain_Bank2:
     sec                             ; $83F7
     adc     temp3                   ; $83F8
     sta     temp3                   ; $83FA
-    cmp     temp0                   ; $83FC
-    bcs     @done                   ; $83FE
-    iny                             ; $8400
-    jmp     @loc_83EB               ; $8401
+    cmp     temp0                   ; $83FC  past X?
+    bcs     @done                   ; $83FE  yes: this run ((temp14),y)
+    iny                             ; $8400  next run
+    jmp     @run                    ; $8401
 
-@loc_8404:
-    lda     #$0C                    ; $8404
+@offMap:
+    lda     #$0C                    ; $8404  off the map: water
     sta     temp2                   ; $8406
 
 @done:
@@ -863,22 +863,22 @@ PalaceStonePalaces_Bank2:
 
 Overworld_UpdatePalaceStones_Bank2:
     .assert Overworld_UpdatePalaceStones_Bank2 = OverworldBank::UpdatePalaceStones, error, "interface address moved"
-    ldx     #$03                    ; $879B
-    lda     currentRegion           ; $879D
+    ldx     #$03                    ; $879B  Maze Island (region 1): entry 3, palace 4
+    lda     currentRegion           ; $879D  East Hyrule:
     cmp     #$02                    ; $87A0
-    bne     @loc_87A6               ; $87A2
-    ldx     #$01                    ; $87A4
+    bne     @palace                 ; $87A2
+    ldx     #$01                    ; $87A4  entries 1-0: palaces 6, 5
 
-@loc_87A6:
-    lda     PalaceStonePalaces_Bank2,x ; $87A6
-    cmp     #$FF                    ; $87A9
-    beq     @loc_87CB               ; $87AB
+@palace:
+    lda     PalaceStonePalaces_Bank2,x ; $87A6  the palace's item
+    cmp     #$FF                    ; $87A9  (none)
+    beq     @next                   ; $87AB
     tay                             ; $87AD
-    lda     itemOwned,y             ; $87AE
-    beq     @loc_87CB               ; $87B1
-    lda     crystalPlaced,y         ; $87B3
-    beq     @loc_87CB               ; $87B6
-    txa                             ; $87B8
+    lda     itemOwned,y             ; $87AE  owned
+    beq     @next                   ; $87B1
+    lda     crystalPlaced,y         ; $87B3  and its crystal placed?
+    beq     @next                   ; $87B6
+    txa                             ; $87B8  yes: its square in the map
     asl     a                       ; $87B9
     tay                             ; $87BA
     lda     PalaceStoneMapPtrs_Bank2,y ; $87BB
@@ -886,14 +886,14 @@ Overworld_UpdatePalaceStones_Bank2:
     lda     PalaceStoneMapPtrs_Bank2+1,y ; $87C0
     sta     temp15                  ; $87C3
     ldy     #$00                    ; $87C5
-    lda     #$0B                    ; $87C7
+    lda     #$0B                    ; $87C7  becomes mountain ($0B)
     sta     (temp14),y              ; $87C9
 
-@loc_87CB:
-    cpx     #$03                    ; $87CB
+@next:
+    cpx     #$03                    ; $87CB  entry 3 alone
     beq     @done                   ; $87CD
-    dex                             ; $87CF
-    bpl     @loc_87A6               ; $87D0
+    dex                             ; $87CF  next palace
+    bpl     @palace                 ; $87D0
 
 @done:
     rts                             ; $87D2
@@ -1158,7 +1158,7 @@ Area_DrawPillarWall_Bank2:
     rts                             ; $93B9
 
 Overworld_GetRowPtr_Bank2:
-    asl     a                       ; $93BA
+    asl     a                       ; $93BA  2 bytes per row
     tay                             ; $93BB
     lda     sramAreaTiles,y         ; $93BC
     sta     temp14                  ; $93BF

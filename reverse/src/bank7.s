@@ -6472,22 +6472,22 @@ AreaMap_PutTileRight:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_SetMapPosition:
-    lda     overworldTargetY        ; $DF01
-    jsr     Math_DivMod15           ; $DF03
+    lda     overworldTargetY        ; $DF01  the target row
+    jsr     Math_DivMod15           ; $DF03  / 15: screen and row
     sta     temp0                   ; $DF06
     tya                             ; $DF08
     asl     a                       ; $DF09
     asl     a                       ; $DF0A
     asl     a                       ; $DF0B
     asl     a                       ; $DF0C
-    ora     temp0                   ; $DF0D
+    ora     temp0                   ; $DF0D  (screen in bits 7-4)
     sta     temp10                  ; $DF0F
     sta     overworldMapRow         ; $DF11
-    lda     #$08                    ; $DF13
+    lda     #$08                    ; $DF13  nametable $2000 (high byte $20 after the shifts below)
     sta     temp0                   ; $DF15
-    asl     a                       ; $DF17
+    asl     a                       ; $DF17  a 16-frame move
     sta     overworldMoveFrames     ; $DF18
-    lda     temp10                  ; $DF1A
+    lda     temp10                  ; $DF1A  row x 64 (two tile rows):
     asl     a                       ; $DF1C
     asl     a                       ; $DF1D
     asl     a                       ; $DF1E
@@ -6496,18 +6496,18 @@ Overworld_SetMapPosition:
     rol     temp0                   ; $DF21
     asl     a                       ; $DF23
     rol     temp0                   ; $DF24
-    sta     temp1                   ; $DF26
-    lda     overworldTargetX        ; $DF28
+    sta     temp1                   ; $DF26  low byte
+    lda     overworldTargetX        ; $DF28  + the column x 2
     and     #$0F                    ; $DF2A
     asl     a                       ; $DF2C
     adc     temp1                   ; $DF2D
     sta     overworldDrawAddrLo     ; $DF2F
-    lda     temp10                  ; $DF31
+    lda     temp10                  ; $DF31  the screen's parity:
     and     #$10                    ; $DF33
-    lsr     a                       ; $DF35
+    lsr     a                       ; $DF35  $2800 for odd screens
     ora     temp0                   ; $DF36
     sta     overworldDrawAddrHi     ; $DF38
-    lda     #$00                    ; $DF3A
+    lda     #$00                    ; $DF3A  from step 0
     sta     overworldDrawStep       ; $DF3C
     rts                             ; $DF3E
 
@@ -6581,15 +6581,18 @@ FluteRevealString:
 ; Overworld_CheckSpecialTerrainInBank): look up the overworld tile at the
 ; target (temp14),y and, if it is one of SpecialTerrainTiles (x from 3
 ; down), replace it by SpecialTerrainNewTiles,x:
-;   0  a rock ($0E, the hammer) becomes road ($04);
-;   1  the river devil ($0F, the flute) becomes road, with the fanfare;
-;   2  East Hyrule's desert spot (flute at Y $64, X $2D) becomes $02, and
-;      palace 6's location ($35) gets its Y ($E6);
-;   3  a forest tile ($06, the hammer) becomes $00 and, at Y $51, X $3E in
-;      East Hyrule, New Kasuto appears: its tiles $5C-$5F are queued, the
-;      fanfare plays, and its location ($31) gets its Y ($D1).
-; Tiles 1-3 only change in East Hyrule (region 2).  With no match,
-; ppuStringSelect is set to 0 (nothing drawn).
+;   0  a rock ($0E, the hammer) becomes desert ($04);
+;   1  the river devil ($0F, the flute) becomes desert, with the fanfare;
+;   2  East Hyrule's desert spot (flute at Y $64, X $2D) becomes a palace
+;      ($02), and palace 6's location ($35) gets its Y ($E6);
+;   3  the forest square ($06, the hammer) at Y $51, X $3E in East Hyrule
+;      becomes a town ($00): New Kasuto appears, its tiles $5C-$5F are
+;      queued, the fanfare plays, and its location ($31) gets its Y ($D1).
+; Tiles 1-3 only change in East Hyrule (region 2), and other forest is
+; left as it is.  With no match, ppuStringSelect is set to 0 (nothing
+; drawn).  Terrain types: 0 town, 1 cave, 2 palace, 3 bridge, 4 desert,
+; 5 grass, 6 forest, 7 swamp, 8 graveyard, 9 road, $A lava, $B mountain,
+; $C water, $D water the boots walk on, $E rock, $F river devil.
 ;
 ; Checked over the 100AK movie: rocks broken in West Hyrule and on Death
 ; Mountain, the river devil (frame 194789), New Kasuto (199214) and palace
@@ -6598,33 +6601,33 @@ FluteRevealString:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_CheckSpecialTerrain:
-    jsr     OverworldBank::GetTerrain ; $DF79
+    jsr     OverworldBank::GetTerrain ; $DF79  the square's byte: (temp14),y; x = 3
 
 @loop:
-    lda     (temp14),y              ; $DF7C
+    lda     (temp14),y              ; $DF7C  one of the special tiles?
     cmp     SpecialTerrainTiles,x   ; $DF7E
-    beq     @loc_DF8B               ; $DF81
+    beq     @found                  ; $DF81
     dex                             ; $DF83
     bpl     @loop                   ; $DF84
-    inx                             ; $DF86
-    stx     ppuStringSelect         ; $DF87
+    inx                             ; $DF86  no: x = 0,
+    stx     ppuStringSelect         ; $DF87  draw nothing
     rts                             ; $DF8A
 
-@loc_DF8B:
-    txa                             ; $DF8B
-    beq     @loc_DFBD               ; $DF8C
-    lda     currentRegion           ; $DF8E
+@found:
+    txa                             ; $DF8B  the rock?
+    beq     @change                 ; $DF8C  yes: desert, anywhere
+    lda     currentRegion           ; $DF8E  the others only in East Hyrule
     cmp     #$02                    ; $DF91
     bne     Overworld_Idle          ; $DF93
-    cpx     #$03                    ; $DF95
-    bne     @loc_DFB9               ; $DF97
-    lda     temp4                   ; $DF99
+    cpx     #$03                    ; $DF95  the forest:
+    bne     @fanfare                ; $DF97
+    lda     temp4                   ; $DF99  only at map row $33
     cmp     #$33                    ; $DF9B
     bne     Overworld_Idle          ; $DF9D
-    lda     temp0                   ; $DF9F
+    lda     temp0                   ; $DF9F  and column $3E
     cmp     #$3E                    ; $DFA1
     bne     Overworld_Idle          ; $DFA3
-    lda     #$5C                    ; $DFA5
+    lda     #$5C                    ; $DFA5  New Kasuto's tiles
     sta     ppuBuffer0+3            ; $DFA7
     lda     #$5D                    ; $DFAA
     sta     ppuBuffer0+4            ; $DFAC
@@ -6633,19 +6636,19 @@ Overworld_CheckSpecialTerrain:
     lda     #$5F                    ; $DFB4
     sta     ppuBuffer0+9            ; $DFB6
 
-@loc_DFB9:
-    lda     #$10                    ; $DFB9
+@fanfare:
+    lda     #$10                    ; $DFB9  the fanfare
     sta     musicRequest            ; $DFBB
 
-@loc_DFBD:
-    lda     SpecialTerrainNewTiles,x ; $DFBD
+@change:
+    lda     SpecialTerrainNewTiles,x ; $DFBD  the new terrain
     sta     (temp14),y              ; $DFC0
-    cpx     #$02                    ; $DFC2
+    cpx     #$02                    ; $DFC2  the desert spot or the forest:
     bcc     Overworld_Idle          ; $DFC4
-    dex                             ; $DFC6
+    dex                             ; $DFC6  its location
     dex                             ; $DFC7
     ldy     SpecialTerrainLocations,x ; $DFC8
-    lda     SpecialTerrainLocY,x    ; $DFCB
+    lda     SpecialTerrainLocY,x    ; $DFCB  appears on the map
     sta     sramLocY,y              ; $DFCE
 
 ; ---------------------------------------------------------------------------
@@ -6731,20 +6734,20 @@ Overworld_UseFlute:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Overworld_ReadMapRun:
-    jsr     Mmc1_SetPrgBankArea     ; $E001
-    lda     (temp14),y              ; $E004
+    jsr     Mmc1_SetPrgBankArea     ; $E001  the map is in the area bank
+    lda     (temp14),y              ; $E004  terrain: bits 3-0
     and     #$0F                    ; $E006
     sta     temp2                   ; $E008
-    lda     (temp14),y              ; $E00A
+    lda     (temp14),y              ; $E00A  length - 1: bits 7-4
     lsr     a                       ; $E00C
     lsr     a                       ; $E00D
     lsr     a                       ; $E00E
     lsr     a                       ; $E00F
-    sec                             ; $E010
+    sec                             ; $E010  + 1 + the column so far
     adc     temp3                   ; $E011
     sta     temp3                   ; $E013
     pha                             ; $E015
-    jsr     Mmc1_SetPrgBank0        ; $E016
+    jsr     Mmc1_SetPrgBank0        ; $E016  back to bank 0
     pla                             ; $E019
     rts                             ; $E01A
 
