@@ -33,24 +33,24 @@ AreaPalettes_Bank4:
 
 Area_DrawLargeObject_Bank4:
     .assert Area_DrawLargeObject_Bank4 = AreaBank::DrawLargeObject, error, "interface address moved"
-    txa                             ; $80EE
+    txa                             ; $80EE  the type's high nybble
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
     lsr     a                       ; $80F1
     lsr     a                       ; $80F2
-    tax                             ; $80F3
+    tax                             ; $80F3  - 1: type $1x first
     dex                             ; $80F4
-    lda     areaBuildPos            ; $80F5
+    lda     areaBuildPos            ; $80F5  on row $F (the extras)?
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
-    bne     @loc_8103               ; $80FC
-    txa                             ; $80FE
+    bne     @dispatch               ; $80FC
+    txa                             ; $80FE  yes: +15
     clc                             ; $80FF
     adc     #$0F                    ; $8100
     tax                             ; $8102
 
-@loc_8103:
-    txa                             ; $8103
+@dispatch:
+    txa                             ; $8103  by type
     jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   Palace_DrawObjectRow_Bank4 ; $8107
@@ -115,13 +115,13 @@ PalaceFloorRecordsLo_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_SetFloorTiles_Bank4:
-    ldx     areaTileSet             ; $8167
-    lda     PalaceFloorRecordsLo_Bank4,x ; $816A
+    ldx     areaTileSet             ; $8167  the area's background type:
+    lda     PalaceFloorRecordsLo_Bank4,x ; $816A  its floor record (page $81)
     sta     temp12                  ; $816D
     lda     #$81                    ; $816F
     sta     temp13                  ; $8171
-    ldy     #$08                    ; $8173
-    lda     (temp12),y              ; $8175
+    ldy     #$08                    ; $8173  byte 8:
+    lda     (temp12),y              ; $8175  the floor tile
     sta     floorTile               ; $8177
     rts                             ; $817A
 
@@ -155,7 +155,7 @@ PalaceObjectTiles_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectRow_Bank4:
-    jsr     Palace_GetObjectTiles_Bank4 ; $8199
+    jsr     Palace_GetObjectTiles_Bank4 ; $8199  main tile
     jmp     Palace_FillObjectRow_Bank4 ; $819C
 
 ; ---------------------------------------------------------------------------
@@ -168,11 +168,11 @@ Palace_DrawObjectRow_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectTwoRows_Bank4:
-    jsr     Palace_GetObjectTiles_Bank4 ; $819F
+    jsr     Palace_GetObjectTiles_Bank4 ; $819F  main tile row,
     jsr     Palace_FillObjectRow_Bank4 ; $81A2
-    lda     temp0                   ; $81A5
+    lda     temp0                   ; $81A5  then the second
     sta     objectTile              ; $81A7
-    jsr     AreaMap_NextBuildRow    ; $81AA
+    jsr     AreaMap_NextBuildRow    ; $81AA  on the row below
 
 ; ---------------------------------------------------------------------------
 ; Palace_FillObjectRow_Bank4
@@ -182,7 +182,7 @@ Palace_DrawObjectTwoRows_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_FillObjectRow_Bank4:
-    lda     areaObjectType          ; $81AD
+    lda     areaObjectType          ; $81AD  width = size + 1
     and     #$0F                    ; $81B0
     tax                             ; $81B2
     jsr     AreaMap_GetPagePtr      ; $81B3
@@ -204,7 +204,7 @@ Palace_FillObjectRow_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectColumn_Bank4:
-    jsr     Palace_GetObjectTiles_Bank4 ; $81C0
+    jsr     Palace_GetObjectTiles_Bank4 ; $81C0  main tile
     jmp     Palace_FillObjectColumn_Bank4 ; $81C3
 
 ; ---------------------------------------------------------------------------
@@ -217,13 +217,13 @@ Palace_DrawObjectColumn_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectPillar_Bank4:
-    jsr     Palace_GetObjectTiles_Bank4 ; $81C6
+    jsr     Palace_GetObjectTiles_Bank4 ; $81C6  main tile on top,
     jsr     AreaMap_GetPagePtr      ; $81C9
     lda     objectTile              ; $81CC
     jsr     AreaMap_PutTileDown     ; $81CF
     sta     areaBuildPos            ; $81D2
     dec     areaObjectType          ; $81D5
-    lda     temp0                   ; $81D8
+    lda     temp0                   ; $81D8  then size of the second below
     sta     objectTile              ; $81DA
 
 ; ---------------------------------------------------------------------------
@@ -234,7 +234,7 @@ Palace_DrawObjectPillar_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_FillObjectColumn_Bank4:
-    lda     areaObjectType          ; $81DD
+    lda     areaObjectType          ; $81DD  height = size + 1
     and     #$0F                    ; $81E0
     tax                             ; $81E2
     jsr     AreaMap_GetPagePtr      ; $81E3
@@ -262,20 +262,20 @@ Palace_GetObjectTiles_Bank4:
     txa                             ; $81F0
     asl     a                       ; $81F1
     tax                             ; $81F2
-    ldy     #$01                    ; $81F3
+    ldy     #$01                    ; $81F3  header byte 1 bit 7?
     lda     (areaDataPtr),y         ; $81F5
     asl     a                       ; $81F7
-    lda     Palace_DrawObjectRow_Bank4,x ; $81F8
-    bcs     @loc_8200               ; $81FB
-    lda     PalaceObjectTiles_Bank4,x ; $81FD
+    lda     Palace_DrawObjectRow_Bank4,x ; $81F8  (never: reads code)
+    bcs     @setMain                ; $81FB
+    lda     PalaceObjectTiles_Bank4,x ; $81FD  the main tile
 
-@loc_8200:
+@setMain:
     sta     objectTile              ; $8200
     lda     Palace_DrawObjectRow_Bank4+1,x ; $8203
-    bcs     @loc_820B               ; $8206
-    lda     PalaceObjectTiles_Bank4+1,x ; $8208
+    bcs     @setSecond              ; $8206
+    lda     PalaceObjectTiles_Bank4+1,x ; $8208  the second
 
-@loc_820B:
+@setSecond:
     sta     temp0                   ; $820B
     rts                             ; $820D
 
@@ -296,7 +296,7 @@ Palace_DrawLava_Bank4:
     sta     objectTile              ; $821A
 
 @loop:
-    lda     areaObjectType          ; $821D
+    lda     areaObjectType          ; $821D  width = size + 1
     and     #$0F                    ; $8220
     tax                             ; $8222
     jsr     AreaMap_GetPagePtr      ; $8223
@@ -373,10 +373,10 @@ Palace_DrawStatue_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawDecoration_Bank4:
-    jsr     AreaMap_GetPagePtr      ; $826F
+    jsr     AreaMap_GetPagePtr      ; $826F  top tile,
     lda     PalaceDecorationTopTiles_Bank4,x ; $8272
     jsr     AreaMap_PutTileDown     ; $8275
-    lda     PalaceDecorationTiles_Bank4,x ; $8278
+    lda     PalaceDecorationTiles_Bank4,x ; $8278  the tile below
     sta     (temp14),y              ; $827B
 
 Palace_DrawDecoration_Done_Bank4:
@@ -399,22 +399,22 @@ Palace_DrawCrystalStatue:
     ldx     #$00                    ; $8297
     jsr     AreaMap_GetPagePtr      ; $8299
 
-@loc_829C:
+@tile:
     lda     CrystalStatueTiles,x    ; $829C  a row, to $FF
     cmp     #$FF                    ; $829F
-    beq     @loc_82AA               ; $82A1
+    beq     @rowEnd                 ; $82A1
     sta     (temp14),y              ; $82A3
     iny                             ; $82A5
     inx                             ; $82A6
-    jmp     @loc_829C               ; $82A7
+    jmp     @tile                   ; $82A7
 
-@loc_82AA:
+@rowEnd:
     cpx     #$18                    ; $82AA  after 5 rows: done
     beq     Palace_DrawDecoration_Done_Bank4 ; $82AC
     jsr     AreaMap_NextBuildRow    ; $82AE  next row
     tay                             ; $82B1
     inx                             ; $82B2
-    jmp     @loc_829C               ; $82B3
+    jmp     @tile                   ; $82B3
 
 ; ---------------------------------------------------------------------------
 ; Palace_DrawPit_Bank4
@@ -425,13 +425,13 @@ Palace_DrawCrystalStatue:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawPit_Bank4:
-    lda     areaObjectType          ; $82B6
+    lda     areaObjectType          ; $82B6  width = size + 1
     and     #$0F                    ; $82B9
     tax                             ; $82BB
     jsr     AreaMap_GetPagePtr      ; $82BC
 
 @loop:
-    lda     #$40                    ; $82BF  background
+    lda     #$40                    ; $82BF
     jsr     AreaMap_PutTileRight    ; $82C1
     dex                             ; $82C4
     bpl     @loop                   ; $82C5
@@ -462,10 +462,10 @@ Palace_DrawSmallCloud_Bank4:
 ; ---------------------------------------------------------------------------
 Palace_DrawCloud_Bank4:
     jsr     AreaMap_GetPagePtr      ; $82D7
-    lda     #$C2                    ; $82DA
+    lda     #$C2                    ; $82DA  $C2,
     sta     (temp14),y              ; $82DC
     iny                             ; $82DE
-    lda     PalaceCloudTiles_Bank4,x ; $82DF
+    lda     PalaceCloudTiles_Bank4,x ; $82DF  $C3 or $C4
     sta     (temp14),y              ; $82E2
     rts                             ; $82E4
     .byte   $36, $60, $90, $00, $32, $07, $A4, $21, $50, $08, $92, $77, $02, $20, $60, $09; $82E5
@@ -553,15 +553,15 @@ OverworldMapPtrs_Bank4:
 Area_IsSolidTile_Bank4:
     .assert Area_IsSolidTile_Bank4 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
-    and     #$C0                    ; $850D
+    and     #$C0                    ; $850D  the palette group (bits 7-6)
     clc                             ; $850F
-    rol     a                       ; $8510
+    rol     a                       ; $8510  to bits 1-0
     rol     a                       ; $8511
     rol     a                       ; $8512
     tay                             ; $8513
-    dey                             ; $8514
-    pla                             ; $8515
-    cmp     SolidTileThresholds_Bank4,y ; $8516
+    dey                             ; $8514  - 1: group 1-3 to entry 0-2 (0 wraps to $FF)
+    pla                             ; $8515  the tile
+    cmp     SolidTileThresholds_Bank4,y ; $8516  at or above the group's threshold: solid
     rts                             ; $8519
 
 SpecialTiles_Bank4:
@@ -1174,16 +1174,16 @@ Stalfos_Ai:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank4:
-    ldy     #$02                    ; $973D
-    lda     objXVelocity+7,x        ; $973F
-    bmi     @loc_9744               ; $9741
-    dey                             ; $9743
+    ldy     #$02                    ; $973D  the way it moves:
+    lda     objXVelocity+7,x        ; $973F  left (negative): 2
+    bmi     @compare                ; $9741
+    dey                             ; $9743  right: 1
 
-@loc_9744:
+@compare:
     tya                             ; $9744
-    cmp     objFacing+7,x           ; $9745
-    bne     Projectile_RockGravity_Bank4 ; $9747
-    beq     Projectile_RockBounce_Bank4 ; $9749
+    cmp     objFacing+7,x           ; $9745  turned back by the shield?
+    bne     Projectile_RockGravity_Bank4 ; $9747  yes: it falls
+    beq     Projectile_RockBounce_Bank4 ; $9749  no: it bounces on
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Fireball_Bank4
@@ -1281,9 +1281,9 @@ Projectile_DeathSpark_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank4:
-    lda     frameCounter            ; $9798
+    lda     frameCounter            ; $9798  palette by frame,
     and     #$03                    ; $979A
-    ora     oamBuffer+2,y           ; $979C
+    ora     oamBuffer+2,y           ; $979C  keeping the flips
     sta     oamBuffer+2,y           ; $979F
 
 ; ---------------------------------------------------------------------------
@@ -1306,11 +1306,11 @@ Projectile_DrawNothing_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank4:
-    lda     frameCounter            ; $97A3
+    lda     frameCounter            ; $97A3  frameCounter bit 2 (to bit 7: upside down),
     asl     a                       ; $97A5
     asl     a                       ; $97A6
     asl     a                       ; $97A7
-    sec                             ; $97A8
+    sec                             ; $97A8  palette 2
     rol     a                       ; $97A9
     asl     a                       ; $97AA
     and     #$83                    ; $97AB
@@ -1331,18 +1331,18 @@ SpinProjectileAttrs_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank4:
-    lda     frameCounter            ; $97B5
+    lda     frameCounter            ; $97B5  a step every 4 frames
     lsr     a                       ; $97B7
     lsr     a                       ; $97B8
     and     #$03                    ; $97B9
-    ldy     objFacing+7,x           ; $97BB
+    ldy     objFacing+7,x           ; $97BB  facing right:
     dey                             ; $97BD
-    bne     @loc_97C2               ; $97BE
-    eor     #$03                    ; $97C0
+    bne     @setFlips               ; $97BE
+    eor     #$03                    ; $97C0  the other way round
 
-@loc_97C2:
+@setFlips:
     tay                             ; $97C2
-    lda     SpinProjectileAttrs_Bank4,y ; $97C3
+    lda     SpinProjectileAttrs_Bank4,y ; $97C3  the step's flips
     ldy     objOamOffset+7,x        ; $97C6
     sta     oamBuffer+2,y           ; $97C8
     rts                             ; $97CB
@@ -1704,16 +1704,16 @@ Projectile_Fall_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank4:
-    jsr     Projectile_Move         ; $9943
-    lda     drawOffscreen+2         ; $9946
+    jsr     Projectile_Move         ; $9943  move it
+    lda     drawOffscreen+2         ; $9946  off the screen?
     and     #$FC                    ; $9948
     beq     Projectile_DrawAndCheck_Bank4 ; $994A
-    and     #$F0                    ; $994C
-    bne     Projectile_Remove_Bank4 ; $994E
-    ldy     objState+7,x            ; $9950
-    cpy     #$06                    ; $9952
+    and     #$F0                    ; $994C  off the top or bottom:
+    bne     Projectile_Remove_Bank4 ; $994E  remove
+    ldy     objState+7,x            ; $9950  off a side: remove, unless
+    cpy     #$06                    ; $9952  type 6
     beq     Projectile_Done_Bank4   ; $9954
-    cpy     #$08                    ; $9956
+    cpy     #$08                    ; $9956  or 8
     beq     Projectile_Done_Bank4   ; $9958
 
 ; ---------------------------------------------------------------------------
@@ -1758,10 +1758,10 @@ Projectile_Done_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawAndCheck_Bank4:
-    jsr     Projectile_Draw_Bank4   ; $995F
-    jsr     DoNothing               ; $9962
+    jsr     Projectile_Draw_Bank4   ; $995F  draw it
+    jsr     DoNothing               ; $9962  (no extra step)
 ProjectileFlipAttrs_Bank4 := * + 2
-    jmp     Projectile_CheckLinkAlternate ; $9965
+    jmp     Projectile_CheckLinkAlternate ; $9965  hit Link? (tested every other frame)
     .byte   $40, $00                                                        ; $9968
 
 ; ---------------------------------------------------------------------------
@@ -1776,7 +1776,7 @@ ProjectileFlipAttrs_Bank4 := * + 2
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Draw_Bank4:
-    lda     objState+7,x            ; $996A
+    lda     objState+7,x            ; $996A  its type's draw routine
     pha                             ; $996C
     asl     a                       ; $996D
     tay                             ; $996E
@@ -1784,23 +1784,23 @@ Projectile_Draw_Bank4:
     sta     temp14                  ; $9972
     lda     sramProjectileDrawPtrs+1,y ; $9974
     sta     temp15                  ; $9977
-    ldy     objOamOffset+7,x        ; $9979
-    lda     objY+7,x                ; $997B
+    ldy     objOamOffset+7,x        ; $9979  its sprite
+    lda     objY+7,x                ; $997B  Y
     sta     oamBuffer,y             ; $997D
-    lda     drawScreenX+2           ; $9980
+    lda     drawScreenX+2           ; $9980  screen X
     sta     oamBuffer+3,y           ; $9982
-    pla                             ; $9985
+    pla                             ; $9985  the type's tile,
     tay                             ; $9986
     lda     sramProjectileTiles,y   ; $9987
     pha                             ; $998A
-    lda     sramProjectileAttrs,y   ; $998B
-    ldy     objFacing+7,x           ; $998E
+    lda     sramProjectileAttrs,y   ; $998B  attributes,
+    ldy     objFacing+7,x           ; $998E  flipped when facing right
     ora     ProjectileFlipAttrs_Bank4,y ; $9990
     ldy     objOamOffset+7,x        ; $9993
     sta     oamBuffer+2,y           ; $9995
-    pla                             ; $9998
+    pla                             ; $9998  the tile
     sta     oamBuffer+1,y           ; $9999
-    jmp     (temp14)                ; $999C
+    jmp     (temp14)                ; $999C  then the type's draw
 
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlame_Bank4
@@ -1814,38 +1814,38 @@ Projectile_Draw_Bank4:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlame_Bank4:
-    ldy     projectileTimer,x       ; $999F
+    ldy     projectileTimer,x       ; $999F  running out of time?
     cpy     #$50                    ; $99A2
-    bcs     @loc_99BE               ; $99A4
+    bcs     @show                   ; $99A4  no: shown
 ; (code below not executed in the test movies)
-    lda     #$01                    ; $99A6
-    cpy     #$38                    ; $99A8
-    bcs     @loc_99AD               ; $99AA
-    asl     a                       ; $99AC
+    lda     #$01                    ; $99A6  blink every 2 frames,
+    cpy     #$38                    ; $99A8  below $38:
+    bcs     @check8                 ; $99AA
+    asl     a                       ; $99AC  every 4,
 
-@loc_99AD:
-    cpy     #$1C                    ; $99AD
-    bcs     @loc_99B2               ; $99AF
-    asl     a                       ; $99B1
+@check8:
+    cpy     #$1C                    ; $99AD  below $1C:
+    bcs     @blink                  ; $99AF
+    asl     a                       ; $99B1  every 8
 
-@loc_99B2:
-    and     frameCounter            ; $99B2
-    beq     @loc_99BE               ; $99B4
-    ldy     objOamOffset+7,x        ; $99B6
+@blink:
+    and     frameCounter            ; $99B2  the blink's off half?
+    beq     @show                   ; $99B4
+    ldy     objOamOffset+7,x        ; $99B6  hidden
     lda     #$F8                    ; $99B8
     sta     oamBuffer,y             ; $99BA
     rts                             ; $99BD
 ; (end of code not executed in the test movies)
 
-@loc_99BE:
-    ldy     objOamOffset+7,x        ; $99BE
+@show:
+    ldy     objOamOffset+7,x        ; $99BE  palette 1,
     ldx     #$01                    ; $99C0
-    lda     frameCounter            ; $99C2
+    lda     frameCounter            ; $99C2  mirrored every 4 frames
     and     #$04                    ; $99C4
-    bne     @loc_99CA               ; $99C6
+    bne     @setAttrs               ; $99C6
     ldx     #$41                    ; $99C8
 
-@loc_99CA:
+@setAttrs:
     txa                             ; $99CA
     sta     oamBuffer+2,y           ; $99CB
     ldx     currentObject           ; $99CE
@@ -1943,24 +1943,24 @@ Bubble_Ai:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank4:
-    ldy     #$05                    ; $9A28
+    ldy     #$05                    ; $9A28  every other slot:
 
 @loop:
     cpy     currentObject           ; $9A2A
-    beq     @loc_9A3A               ; $9A2C
-    lda     a:enemyActive,y         ; $9A2E
-    beq     @loc_9A3A               ; $9A31
-    lda     a:enemyType,y           ; $9A33
+    beq     @next                   ; $9A2C
+    lda     a:enemyActive,y         ; $9A2E  active,
+    beq     @next                   ; $9A31
+    lda     a:enemyType,y           ; $9A33  of this type?
     cmp     enemyType,x             ; $9A36
-    beq     @loc_9A3E               ; $9A38
+    beq     @remove                 ; $9A38
 
-@loc_9A3A:
+@next:
     dey                             ; $9A3A
     bpl     @loop                   ; $9A3B
     rts                             ; $9A3D
 
-@loc_9A3E:
-    tya                             ; $9A3E
+@remove:
+    tya                             ; $9A3E  yes: remove it
     tax                             ; $9A3F
     jsr     Enemy_Despawn           ; $9A40
     ldx     currentObject           ; $9A43
@@ -2754,21 +2754,21 @@ Ironknuckle_PauseThenNext_Done:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_KnockBackOrWalk_Bank4:
-    lda     enemyKnockBack,x        ; $9E17
-    beq     Enemy_Walk_Bank4        ; $9E1A
-    dec     enemyKnockBack,x        ; $9E1C
-    bpl     @loc_9E27               ; $9E1F
-    inc     enemyKnockBack,x        ; $9E21
+    lda     enemyKnockBack,x        ; $9E17  being knocked back?
+    beq     Enemy_Walk_Bank4        ; $9E1A  no: walk
+    dec     enemyKnockBack,x        ; $9E1C  count it toward 0,
+    bpl     @setVelocity            ; $9E1F
+    inc     enemyKnockBack,x        ; $9E21  from either side
     inc     enemyKnockBack,x        ; $9E24
 
-@loc_9E27:
-    sta     objXVelocity+1,x        ; $9E27
-    jsr     Enemy_UpdateBgCollision ; $9E29
+@setVelocity:
+    sta     objXVelocity+1,x        ; $9E27  as the X velocity
+    jsr     Enemy_UpdateBgCollision ; $9E29  stopped by walls
 
 Enemy_Walk_Bank4:
-    lda     objCollision+1,x        ; $9E2C
+    lda     objCollision+1,x        ; $9E2C  against a wall?
     and     #$03                    ; $9E2E
-    bne     Ironknuckle_PauseThenNext_Done ; $9E30
+    bne     Ironknuckle_PauseThenNext_Done ; $9E30  yes: stay
 ; Ironknuckle_Draw: sword entry by pose 1-4, from the jmp's high byte:
 ; $10, $12, $14, $12.
 IronknuckleDrawTiles := * + 2
@@ -3656,9 +3656,9 @@ Projectile_RestoreX_Bank4B:
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank4B:
 ; (code below not executed in the test movies)
-    jsr     Projectile_PlaySound_Bank4 ; $AD94
-    jsr     Projectile_HitsBg       ; $AD97
-    bcs     Projectile_Spark_Bank4B ; $AD9A
+    jsr     Projectile_PlaySound_Bank4 ; $AD94  its sound
+    jsr     Projectile_HitsBg       ; $AD97  into a wall?
+    bcs     Projectile_Spark_Bank4B ; $AD9A  yes: a spark
     bcc     Projectile_MoveAndCheck_Bank4B ; $AD9C
 ; (end of code not executed in the test movies)
 
@@ -3697,18 +3697,18 @@ Projectile_Spark_Bank4B:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank4B:
-    ldy     #$02                    ; $ADA8
-    lda     objXVelocity+7,x        ; $ADAA
-    bmi     @loc_ADAF               ; $ADAC
-    dey                             ; $ADAE
+    ldy     #$02                    ; $ADA8  the way it moves:
+    lda     objXVelocity+7,x        ; $ADAA  left (negative): 2
+    bmi     @compare                ; $ADAC
+    dey                             ; $ADAE  right: 1
 
-@loc_ADAF:
+@compare:
     tya                             ; $ADAF
-    cmp     objFacing+7,x           ; $ADB0
-    bne     Projectile_RockGravity_Bank4B ; $ADB2
+    cmp     objFacing+7,x           ; $ADB0  turned back by the shield?
+    bne     Projectile_RockGravity_Bank4B ; $ADB2  yes: it falls
 
 Projectile_RockBounce_Bank4B:
-    lda     #$FE                    ; $ADB4
+    lda     #$FE                    ; $ADB4  no: bounce
     sta     objYVelocity+7,x        ; $ADB6
 
 Projectile_RockGravity_Bank4B:
@@ -3725,14 +3725,14 @@ Projectile_RockGravity_Bank4B:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank4B:
-    jsr     Projectile_Move         ; $ADBF
-    lda     drawOffscreen+2         ; $ADC2
+    jsr     Projectile_Move         ; $ADBF  move it
+    lda     drawOffscreen+2         ; $ADC2  off the screen?
     and     #$FC                    ; $ADC4
     beq     Projectile_DrawAndCheck_Bank4B ; $ADC6
-    and     #$F0                    ; $ADC8
-    bne     Projectile_Remove_Bank4B ; $ADCA
-    lda     objState+7,x            ; $ADCC
-    cmp     #$08                    ; $ADCE
+    and     #$F0                    ; $ADC8  off the top or bottom:
+    bne     Projectile_Remove_Bank4B ; $ADCA  remove
+    lda     objState+7,x            ; $ADCC  off a side: remove, unless
+    cmp     #$08                    ; $ADCE  type 8
     beq     Projectile_Done_Bank4B  ; $ADD0
 
 Projectile_Remove_Bank4B:
@@ -3815,13 +3815,13 @@ Projectile_DrawNothing_Bank4B:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank4B:
-    lda     frameCounter            ; $AE11
+    lda     frameCounter            ; $AE11  palette by frame,
     and     #$03                    ; $AE13
-    ldy     objXVelocity+7,x        ; $AE15
-    bmi     @loc_AE1B               ; $AE17
-    ora     #$40                    ; $AE19
+    ldy     objXVelocity+7,x        ; $AE15  moving right:
+    bmi     @store                  ; $AE17
+    ora     #$40                    ; $AE19  mirrored
 
-@loc_AE1B:
+@store:
     ldy     a:objOamOffset+7,x      ; $AE1B
     bne     Projectile_SetAttr_Bank4B ; $AE1E
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -3836,11 +3836,11 @@ Projectile_DrawFlicker_Bank4B:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank4B:
-    lda     frameCounter            ; $AE20
+    lda     frameCounter            ; $AE20  frameCounter bit 2 (to bit 7: upside down),
     asl     a                       ; $AE22
     asl     a                       ; $AE23
     asl     a                       ; $AE24
-    sec                             ; $AE25
+    sec                             ; $AE25  palette 2
     rol     a                       ; $AE26
     asl     a                       ; $AE27
     and     #$83                    ; $AE28
@@ -3862,18 +3862,18 @@ SpinProjectileAttrs_Bank4B:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank4B:
-    lda     frameCounter            ; $AE30
+    lda     frameCounter            ; $AE30  a step every 4 frames
     lsr     a                       ; $AE32
     lsr     a                       ; $AE33
     and     #$03                    ; $AE34
-    ldy     objFacing+7,x           ; $AE36
+    ldy     objFacing+7,x           ; $AE36  facing right:
     dey                             ; $AE38
-    bne     @loc_AE3D               ; $AE39
-    eor     #$03                    ; $AE3B
+    bne     @setFlips               ; $AE39
+    eor     #$03                    ; $AE3B  the other way round
 
-@loc_AE3D:
+@setFlips:
     tay                             ; $AE3D
-    lda     SpinProjectileAttrs_Bank4B,y ; $AE3E
+    lda     SpinProjectileAttrs_Bank4B,y ; $AE3E  the step's flips
     ldy     objOamOffset+7,x        ; $AE41
 
 Projectile_SetAttr_Bank4B:
@@ -7412,7 +7412,7 @@ Boss_UpdateIntro:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_PlaySound_Bank4:
-    lda     sfxRequest+1            ; $BEF6
+    lda     sfxRequest+1            ; $BEF6  noise effect $40
     ora     #$40                    ; $BEF8
     sta     sfxRequest+1            ; $BEFA
     rts                             ; $BEFC

@@ -32,24 +32,24 @@ AreaPalettes_Bank5:
 
 Area_DrawLargeObject_Bank5:
     .assert Area_DrawLargeObject_Bank5 = AreaBank::DrawLargeObject, error, "interface address moved"
-    txa                             ; $80EE
+    txa                             ; $80EE  the type's high nybble
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
     lsr     a                       ; $80F1
     lsr     a                       ; $80F2
-    tax                             ; $80F3
+    tax                             ; $80F3  - 1: type $1x first
     dex                             ; $80F4
-    lda     areaBuildPos            ; $80F5
+    lda     areaBuildPos            ; $80F5  on row $F (the extras)?
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
-    bne     @loc_8103               ; $80FC
-    txa                             ; $80FE
+    bne     @dispatch               ; $80FC
+    txa                             ; $80FE  yes: +15
     clc                             ; $80FF
     adc     #$0F                    ; $8100
     tax                             ; $8102
 
-@loc_8103:
-    txa                             ; $8103
+@dispatch:
+    txa                             ; $8103  by type
     jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   Palace_DrawObjectRow_Bank5 ; $8107
@@ -116,13 +116,13 @@ PalaceFloorRecordsLo_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_SetFloorTiles_Bank5:
-    ldx     areaTileSet             ; $817B
-    lda     PalaceFloorRecordsLo_Bank5,x ; $817E
+    ldx     areaTileSet             ; $817B  the area's background type:
+    lda     PalaceFloorRecordsLo_Bank5,x ; $817E  its floor record (page $81)
     sta     temp12                  ; $8181
     lda     #$81                    ; $8183
     sta     temp13                  ; $8185
-    ldy     #$08                    ; $8187
-    lda     (temp12),y              ; $8189
+    ldy     #$08                    ; $8187  byte 8:
+    lda     (temp12),y              ; $8189  the floor tile
     sta     floorTile               ; $818B
     rts                             ; $818E
 
@@ -156,7 +156,7 @@ PalaceObjectTiles_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectRow_Bank5:
-    jsr     Palace_GetObjectTiles_Bank5 ; $81AD
+    jsr     Palace_GetObjectTiles_Bank5 ; $81AD  main tile
     jmp     Palace_FillObjectRow_Bank5 ; $81B0
 
 ; ---------------------------------------------------------------------------
@@ -169,10 +169,10 @@ Palace_DrawObjectRow_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectTwoRows_Bank5:
-    jsr     Palace_DrawObjectRow_Bank5 ; $81B3
-    lda     temp0                   ; $81B6
+    jsr     Palace_DrawObjectRow_Bank5 ; $81B3  main tile row,
+    lda     temp0                   ; $81B6  then the second
     sta     objectTile              ; $81B8
-    jsr     AreaMap_NextBuildRow    ; $81BB
+    jsr     AreaMap_NextBuildRow    ; $81BB  on the row below
 
 ; ---------------------------------------------------------------------------
 ; Palace_FillObjectRow_Bank5
@@ -182,7 +182,7 @@ Palace_DrawObjectTwoRows_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_FillObjectRow_Bank5:
-    lda     areaObjectType          ; $81BE
+    lda     areaObjectType          ; $81BE  width = size + 1
     and     #$0F                    ; $81C1
     tax                             ; $81C3
     jsr     AreaMap_GetPagePtr      ; $81C4
@@ -204,7 +204,7 @@ Palace_FillObjectRow_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectColumn_Bank5:
-    jsr     Palace_GetObjectTiles_Bank5 ; $81D1
+    jsr     Palace_GetObjectTiles_Bank5 ; $81D1  main tile
     jmp     Palace_FillObjectColumn_Bank5 ; $81D4
 
 ; ---------------------------------------------------------------------------
@@ -217,13 +217,13 @@ Palace_DrawObjectColumn_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_DrawObjectPillar_Bank5:
-    jsr     Palace_GetObjectTiles_Bank5 ; $81D7
+    jsr     Palace_GetObjectTiles_Bank5 ; $81D7  main tile on top,
     jsr     AreaMap_GetPagePtr      ; $81DA
     lda     objectTile              ; $81DD
     jsr     AreaMap_PutTileDown     ; $81E0
     sta     areaBuildPos            ; $81E3
     dec     areaObjectType          ; $81E6
-    lda     temp0                   ; $81E9
+    lda     temp0                   ; $81E9  then size of the second below
     sta     objectTile              ; $81EB
 
 ; ---------------------------------------------------------------------------
@@ -234,7 +234,7 @@ Palace_DrawObjectPillar_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Palace_FillObjectColumn_Bank5:
-    lda     areaObjectType          ; $81EE
+    lda     areaObjectType          ; $81EE  height = size + 1
     and     #$0F                    ; $81F1
     tax                             ; $81F3
     jsr     AreaMap_GetPagePtr      ; $81F4
@@ -262,20 +262,20 @@ Palace_GetObjectTiles_Bank5:
     txa                             ; $8201
     asl     a                       ; $8202
     tax                             ; $8203
-    ldy     #$01                    ; $8204
+    ldy     #$01                    ; $8204  header byte 1 bit 7?
     lda     (areaDataPtr),y         ; $8206
     asl     a                       ; $8208
-    lda     Palace_DrawObjectRow_Bank5,x ; $8209
-    bcs     @loc_8211               ; $820C
-    lda     PalaceObjectTiles_Bank5,x ; $820E
+    lda     Palace_DrawObjectRow_Bank5,x ; $8209  (never: reads code)
+    bcs     @setMain                ; $820C
+    lda     PalaceObjectTiles_Bank5,x ; $820E  the main tile
 
-@loc_8211:
+@setMain:
     sta     objectTile              ; $8211
     lda     Palace_DrawObjectRow_Bank5+1,x ; $8214
-    bcs     @loc_821C               ; $8217
-    lda     PalaceObjectTiles_Bank5+1,x ; $8219
+    bcs     @setSecond              ; $8217
+    lda     PalaceObjectTiles_Bank5+1,x ; $8219  the second
 
-@loc_821C:
+@setSecond:
     sta     temp0                   ; $821C
     rts                             ; $821E
 
@@ -296,7 +296,7 @@ Palace_DrawLava_Bank5:
     sta     objectTile              ; $822B
 
 @loop:
-    lda     areaObjectType          ; $822E
+    lda     areaObjectType          ; $822E  width = size + 1
     and     #$0F                    ; $8231
     tax                             ; $8233
     jsr     AreaMap_GetPagePtr      ; $8234
@@ -376,9 +376,9 @@ Palace_DrawStatue_Bank5:
 ; ---------------------------------------------------------------------------
 Palace_DrawDecoration_Bank5:
     jsr     AreaMap_GetPagePtr      ; $8280
-    lda     PalaceDecorationTopTiles_Bank5,x ; $8283
+    lda     PalaceDecorationTopTiles_Bank5,x ; $8283  top tile,
     jsr     AreaMap_PutTileDown     ; $8286
-    lda     PalaceDecorationTiles_Bank5,x ; $8289
+    lda     PalaceDecorationTiles_Bank5,x ; $8289  the tile below
     sta     (temp14),y              ; $828C
     rts                             ; $828E
 
@@ -448,10 +448,10 @@ Palace_DrawSmallCloud_Bank5:
 ; ---------------------------------------------------------------------------
 Palace_DrawCloud_Bank5:
     jsr     AreaMap_GetPagePtr      ; $82B9
-    lda     #$C2                    ; $82BC
+    lda     #$C2                    ; $82BC  $C2,
     sta     (temp14),y              ; $82BE
     iny                             ; $82C0
-    lda     PalaceCloudTiles_Bank5,x ; $82C1
+    lda     PalaceCloudTiles_Bank5,x ; $82C1  $C3 or $C4
     sta     (temp14),y              ; $82C4
     rts                             ; $82C6
     .byte   $F4, $F4, $F4, $F4                                              ; $82C7
@@ -549,15 +549,15 @@ OverworldMapPtrs_Bank5:
 Area_IsSolidTile_Bank5:
     .assert Area_IsSolidTile_Bank5 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
-    and     #$C0                    ; $850D
+    and     #$C0                    ; $850D  the palette group (bits 7-6)
     clc                             ; $850F
-    rol     a                       ; $8510
+    rol     a                       ; $8510  to bits 1-0
     rol     a                       ; $8511
     rol     a                       ; $8512
     tay                             ; $8513
-    dey                             ; $8514
-    pla                             ; $8515
-    cmp     SolidTileThresholds_Bank5,y ; $8516
+    dey                             ; $8514  - 1: group 1-3 to entry 0-2 (0 wraps to $FF)
+    pla                             ; $8515  the tile
+    cmp     SolidTileThresholds_Bank5,y ; $8516  at or above the group's threshold: solid
     rts                             ; $8519
 
 SpecialTiles_Bank5:
@@ -3509,7 +3509,7 @@ ProjectileFlipAttrs_Bank5 := Projectile_DrawAndCheck_Done_Bank5
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Draw_Bank5:
-    lda     objState+7,x            ; $9C99
+    lda     objState+7,x            ; $9C99  its type's draw routine
     pha                             ; $9C9B
     asl     a                       ; $9C9C
     tay                             ; $9C9D
@@ -3517,21 +3517,21 @@ Projectile_Draw_Bank5:
     sta     temp14                  ; $9CA1
     lda     sramProjectileDrawPtrs+1,y ; $9CA3
     sta     temp15                  ; $9CA6
-    ldy     objOamOffset+7,x        ; $9CA8
+    ldy     objOamOffset+7,x        ; $9CA8  its sprite
     lda     objY+7,x                ; $9CAA  Y and screen X
     sta     oamBuffer,y             ; $9CAC
-    lda     drawScreenX+2           ; $9CAF
+    lda     drawScreenX+2           ; $9CAF  screen X
     sta     oamBuffer+3,y           ; $9CB1
-    pla                             ; $9CB4
+    pla                             ; $9CB4  the type's tile,
     tay                             ; $9CB5
     lda     sramProjectileTiles,y   ; $9CB6  tile
     pha                             ; $9CB9
     lda     sramProjectileAttrs,y   ; $9CBA  attributes, flipped
-    ldy     objFacing+7,x           ; $9CBD
+    ldy     objFacing+7,x           ; $9CBD  flipped when facing right
     ora     ProjectileFlipAttrs_Bank5,y ; $9CBF
     ldy     objOamOffset+7,x        ; $9CC2
     sta     oamBuffer+2,y           ; $9CC4
-    pla                             ; $9CC7
+    pla                             ; $9CC7  the tile
     sta     oamBuffer+1,y           ; $9CC8
     jmp     (temp14)                ; $9CCB  its draw routine
 
@@ -3632,7 +3632,7 @@ Projectile_DrawFlash_Bank5:
     asl     a                       ; $9D1A
     asl     a                       ; $9D1B
     asl     a                       ; $9D1C
-    sec                             ; $9D1D
+    sec                             ; $9D1D  palette 2
     rol     a                       ; $9D1E
     asl     a                       ; $9D1F  bits 7, 6 (flips),
     and     #$C3                    ; $9D20  palette 2
@@ -3857,9 +3857,9 @@ Fokka_Ai:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Walk_Bank5:
-    lda     objCollision+1,x        ; $9E38
+    lda     objCollision+1,x        ; $9E38  against a wall?
     and     #$03                    ; $9E3A
-    bne     @done                   ; $9E3C
+    bne     @done                   ; $9E3C  yes: stay
     jmp     Enemy_MoveX             ; $9E3E
 
 @done:
@@ -4758,19 +4758,19 @@ Generator_Init_Bank5:
 
 @loop:
     cpy     currentObject           ; $A31F
-    beq     @loc_A32F               ; $A321
+    beq     @next                   ; $A321
     lda     a:enemyActive,y         ; $A323  active,
-    beq     @loc_A32F               ; $A326
+    beq     @next                   ; $A326
     lda     a:enemyType,y           ; $A328  of this type?
     cmp     enemyType,x             ; $A32B
-    beq     @loc_A333               ; $A32D
+    beq     @remove                 ; $A32D
 
-@loc_A32F:
+@next:
     dey                             ; $A32F
     bpl     @loop                   ; $A330
     rts                             ; $A332
 
-@loc_A333:
+@remove:
     tya                             ; $A333  yes: remove it
     tax                             ; $A334
     jsr     Enemy_Despawn           ; $A335

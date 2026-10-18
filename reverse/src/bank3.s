@@ -565,15 +565,15 @@ OverworldMapPtrs_Bank3:
 Area_IsSolidTile_Bank3:
     .assert Area_IsSolidTile_Bank3 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
-    and     #$C0                    ; $850D
+    and     #$C0                    ; $850D  the palette group (bits 7-6)
     clc                             ; $850F
-    rol     a                       ; $8510
+    rol     a                       ; $8510  to bits 1-0
     rol     a                       ; $8511
     rol     a                       ; $8512
     tay                             ; $8513
-    dey                             ; $8514
-    pla                             ; $8515
-    cmp     SolidTileThresholds_Bank3,y ; $8516
+    dey                             ; $8514  - 1: group 1-3 to entry 0-2 (0 wraps to $FF)
+    pla                             ; $8515  the tile
+    cmp     SolidTileThresholds_Bank3,y ; $8516  at or above the group's threshold: solid
     rts                             ; $8519
 
 SpecialTiles_Bank3:

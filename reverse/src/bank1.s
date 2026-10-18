@@ -36,24 +36,24 @@ AreaPalettes_Bank1:
 
 Area_DrawLargeObject_Bank1:
     .assert Area_DrawLargeObject_Bank1 = AreaBank::DrawLargeObject, error, "interface address moved"
-    txa                             ; $80EE
+    txa                             ; $80EE  the type's high nybble
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
     lsr     a                       ; $80F1
     lsr     a                       ; $80F2
-    tax                             ; $80F3
+    tax                             ; $80F3  - 1: type $1x first
     dex                             ; $80F4
-    lda     areaBuildPos            ; $80F5
+    lda     areaBuildPos            ; $80F5  on row $F (the extras)?
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
-    bne     @loc_8103               ; $80FC
-    txa                             ; $80FE
+    bne     @dispatch               ; $80FC
+    txa                             ; $80FE  yes: +15
     clc                             ; $80FF
     adc     #$0F                    ; $8100
     tax                             ; $8102
 
-@loc_8103:
-    txa                             ; $8103
+@dispatch:
+    txa                             ; $8103  by type
     jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   $0000                   ; $8107  (not observed)
@@ -610,13 +610,13 @@ Overworld_UseFlute_Bank1:
 ; (code below not executed in the test movies)
     lda     currentRegion           ; $8368  East Hyrule only:
     cmp     #$02                    ; $836B
-    bne     @done              ; $836D
+    bne     @done                   ; $836D
     lda     overworldY              ; $836F  on the desert spot (Y $64, X $2D)?
     cmp     #$64                    ; $8371
-    bne     @terrain              ; $8373
+    bne     @terrain                ; $8373
     lda     overworldX              ; $8375
     cmp     #$2D                    ; $8377
-    bne     @terrain              ; $8379
+    bne     @terrain                ; $8379
     lda     #$0B                    ; $837B  yes: PPU string $0B
     sta     ppuStringSelect         ; $837D
     inc     temp1                   ; $8380  the square two rows down
@@ -626,7 +626,7 @@ Overworld_UseFlute_Bank1:
 @terrain:
     lda     overworldTerrain        ; $8387  facing the river devil ($0F)?
     cmp     #$0F                    ; $838A
-    beq     @riverDevil              ; $838C
+    beq     @riverDevil             ; $838C
 
 @done:
     rts                             ; $838E
@@ -771,15 +771,15 @@ OverworldMapPtrs_Bank1:
 Area_IsSolidTile_Bank1:
     .assert Area_IsSolidTile_Bank1 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
-    and     #$C0                    ; $850D
+    and     #$C0                    ; $850D  the palette group (bits 7-6)
     clc                             ; $850F
-    rol     a                       ; $8510
+    rol     a                       ; $8510  to bits 1-0
     rol     a                       ; $8511
     rol     a                       ; $8512
     tay                             ; $8513
-    dey                             ; $8514
-    pla                             ; $8515
-    cmp     SolidTileThresholds_Bank1,y ; $8516
+    dey                             ; $8514  - 1: group 1-3 to entry 0-2 (0 wraps to $FF)
+    pla                             ; $8515  the tile
+    cmp     SolidTileThresholds_Bank1,y ; $8516  at or above the group's threshold: solid
     rts                             ; $8519
 
 SpecialTiles_Bank1:
@@ -1160,7 +1160,7 @@ SolidTileThresholds_Bank1:
     .byte   $52, $8F, $C9                                                   ; $93A9
 
 Overworld_GetRowPtr_Bank1:
-    asl     a                       ; $93AC
+    asl     a                       ; $93AC  2 bytes per row
     tay                             ; $93AD
     lda     sramAreaTiles,y         ; $93AE
     sta     temp14                  ; $93B1
@@ -1528,18 +1528,18 @@ Projectile_Boomerang_Done_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_FallIfDeflected_Bank1:
-    ldy     #$02                    ; $96EB
-    lda     objXVelocity+7,x        ; $96ED
-    bmi     @loc_96F2               ; $96EF
-    dey                             ; $96F1
+    ldy     #$02                    ; $96EB  the way it moves:
+    lda     objXVelocity+7,x        ; $96ED  left (negative): 2
+    bmi     @compare                ; $96EF
+    dey                             ; $96F1  right: 1
 
-@loc_96F2:
+@compare:
     tya                             ; $96F2
-    cmp     objFacing+7,x           ; $96F3
-    beq     Projectile_Boomerang_Done_Bank1 ; $96F5
-    pla                             ; $96F7
+    cmp     objFacing+7,x           ; $96F3  still the way it was thrown?
+    beq     Projectile_Boomerang_Done_Bank1 ; $96F5  yes: on as usual
+    pla                             ; $96F7  no (the shield turned it): skip the caller,
     pla                             ; $96F8
-    inc     objYVelocity+7,x        ; $96F9
+    inc     objYVelocity+7,x        ; $96F9  and fall, faster each frame
     inc     objYVelocity+7,x        ; $96FC
 
 ; ---------------------------------------------------------------------------
@@ -1552,19 +1552,19 @@ Projectile_FallIfDeflected_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank1:
-    jsr     Projectile_Move         ; $96FF
-    lda     drawOffscreen+2         ; $9702
+    jsr     Projectile_Move         ; $96FF  move it
+    lda     drawOffscreen+2         ; $9702  off the screen?
     and     #$FC                    ; $9704
-    beq     @loc_970D               ; $9706
-    lda     #$00                    ; $9708
+    beq     @draw                   ; $9706
+    lda     #$00                    ; $9708  yes: remove it
     sta     objState+7,x            ; $970A
     rts                             ; $970C
 
-@loc_970D:
-    jsr     Projectile_Draw_Bank1   ; $970D
-    jsr     DoNothing               ; $9710
+@draw:
+    jsr     Projectile_Draw_Bank1   ; $970D  draw it
+    jsr     DoNothing               ; $9710  (no extra step)
 ProjectileFlipAttrs_Bank1 := * + 2
-    jmp     Projectile_CheckLinkAlternate ; $9713
+    jmp     Projectile_CheckLinkAlternate ; $9713  hit Link? (tested every other frame)
     .byte   $40, $00                                                        ; $9716
 
 ; ---------------------------------------------------------------------------
@@ -1576,7 +1576,7 @@ ProjectileFlipAttrs_Bank1 := * + 2
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Draw_Bank1:
-    lda     objState+7,x            ; $9718
+    lda     objState+7,x            ; $9718  its type's draw routine
     pha                             ; $971A
     asl     a                       ; $971B
     tay                             ; $971C
@@ -1584,27 +1584,27 @@ Projectile_Draw_Bank1:
     sta     temp14                  ; $9720
     lda     sramProjectileDrawPtrs+1,y ; $9722
     sta     temp15                  ; $9725
-    ldy     objOamOffset+7,x        ; $9727
-    lda     objY+7,x                ; $9729
+    ldy     objOamOffset+7,x        ; $9727  its sprite
+    lda     objY+7,x                ; $9729  Y
     sta     oamBuffer,y             ; $972B
     sta     temp0                   ; $972E
-    lda     drawScreenX+2           ; $9730
+    lda     drawScreenX+2           ; $9730  screen X
     sta     temp1                   ; $9732
     sta     oamBuffer+3,y           ; $9734
-    pla                             ; $9737
+    pla                             ; $9737  the type's tile,
     tay                             ; $9738
     lda     sramProjectileTiles,y   ; $9739
     pha                             ; $973C
-    lda     sramProjectileAttrs,y   ; $973D
+    lda     sramProjectileAttrs,y   ; $973D  attributes,
     sta     temp3                   ; $9740
-    ldy     objFacing+7,x           ; $9742
+    ldy     objFacing+7,x           ; $9742  flipped when facing right
     sty     temp2                   ; $9744
     ora     ProjectileFlipAttrs_Bank1,y ; $9746
     ldy     objOamOffset+7,x        ; $9749
     sta     oamBuffer+2,y           ; $974B
-    pla                             ; $974E
+    pla                             ; $974E  the tile
     sta     oamBuffer+1,y           ; $974F
-    jmp     (temp14)                ; $9752
+    jmp     (temp14)                ; $9752  then the type's draw
 ; (unreferenced: $9755-$976C, 24 bytes)
 
 ProjectileBobOffsets_Bank1:
@@ -1623,14 +1623,14 @@ ProjectileBobOffsets_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawBob_Bank1:
-    lda     frameCounter            ; $9759
+    lda     frameCounter            ; $9759  frameCounter bits 5-4:
     and     #$30                    ; $975B
     lsr     a                       ; $975D
     lsr     a                       ; $975E
     lsr     a                       ; $975F
     lsr     a                       ; $9760
     tax                             ; $9761
-    lda     oamBuffer,y             ; $9762
+    lda     oamBuffer,y             ; $9762  bob its Y
     adc     ProjectileBobOffsets_Bank1,x ; $9765
     sta     oamBuffer,y             ; $9768
     ldx     currentObject           ; $976B
@@ -1648,13 +1648,13 @@ Projectile_DrawBob_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlip_Bank1:
-    lda     frameCounter            ; $976D
+    lda     frameCounter            ; $976D  frameCounter bit 2:
     asl     a                       ; $976F
     asl     a                       ; $9770
     asl     a                       ; $9771
     asl     a                       ; $9772
     asl     a                       ; $9773
-    and     #$80                    ; $9774
+    and     #$80                    ; $9774  upside down
     ora     oamBuffer+2,y           ; $9776
     bne     Projectile_SetAttr_Bank1 ; $9779
 
@@ -1668,11 +1668,11 @@ Projectile_DrawFlip_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank1:
-    lda     frameCounter            ; $977B
+    lda     frameCounter            ; $977B  frameCounter bit 1 (to bit 6: mirrored),
     asl     a                       ; $977D
     asl     a                       ; $977E
     asl     a                       ; $977F
-    sec                             ; $9780
+    sec                             ; $9780  palette 2
     rol     a                       ; $9781
     asl     a                       ; $9782
     and     #$43                    ; $9783
@@ -1694,17 +1694,17 @@ Projectile_SetAttr_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawLarge_Bank1:
-    lda     enemyStunTimer,x        ; $9789
+    lda     enemyStunTimer,x        ; $9789  keep the stun timer
     pha                             ; $978C
-    lda     projectileSpeed,x       ; $978D
-    beq     @loc_9794               ; $9790
+    lda     projectileSpeed,x       ; $978D  its own palette?
+    beq     @noPalette              ; $9790
     sta     temp3                   ; $9792
 
-@loc_9794:
-    lda     #$00                    ; $9794
+@noPalette:
+    lda     #$00                    ; $9794  never hidden at the edges,
     sta     drawOffscreen+1         ; $9796
-    sta     enemyStunTimer,x        ; $9798
-    ldx     #$48                    ; $979B
+    sta     enemyStunTimer,x        ; $9798  never flashing
+    ldx     #$48                    ; $979B  a pair of sprites ($48)
     jsr     Sprite_DrawEnemyPairKeepX ; $979D
     pla                             ; $97A0
     sta     enemyStunTimer,x        ; $97A1
@@ -1726,18 +1726,18 @@ SpinProjectileAttrs_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank1:
-    lda     frameCounter            ; $97A9
+    lda     frameCounter            ; $97A9  a step every 4 frames
     lsr     a                       ; $97AB
     lsr     a                       ; $97AC
     and     #$03                    ; $97AD
-    ldy     objFacing+7,x           ; $97AF
+    ldy     objFacing+7,x           ; $97AF  facing right:
     dey                             ; $97B1
-    bne     @loc_97B6               ; $97B2
-    eor     #$03                    ; $97B4
+    bne     @setFlips               ; $97B2
+    eor     #$03                    ; $97B4  the other way round
 
-@loc_97B6:
+@setFlips:
     tay                             ; $97B6
-    lda     SpinProjectileAttrs_Bank1,y ; $97B7
+    lda     SpinProjectileAttrs_Bank1,y ; $97B7  the step's flips
     ldy     objOamOffset+7,x        ; $97BA
     sta     oamBuffer+2,y           ; $97BC
     rts                             ; $97BF
@@ -1753,30 +1753,30 @@ Projectile_DrawSpin_Bank1:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFire_Bank1:
-    lda     frameCounter            ; $97C0
+    lda     frameCounter            ; $97C0  every 4 frames:
     and     #$04                    ; $97C2
     sta     temp0                   ; $97C4
-    lda     #$F6                    ; $97C6
+    lda     #$F6                    ; $97C6  tile $F6 or $FA
     clc                             ; $97C8
     adc     temp0                   ; $97C9
     sta     oamBuffer+1,y           ; $97CB
-    ldx     #$02                    ; $97CE
+    ldx     #$02                    ; $97CE  every 8 frames:
     lda     frameCounter            ; $97D0
     and     #$08                    ; $97D2
-    bne     @loc_97D8               ; $97D4
-    ldx     #$C2                    ; $97D6
+    bne     @setAttrs               ; $97D4
+    ldx     #$C2                    ; $97D6  attributes $C2, else $02
 
-@loc_97D8:
+@setAttrs:
     stx     temp0                   ; $97D8
-    ldx     currentObject           ; $97DA
+    ldx     currentObject           ; $97DA  facing right:
     lda     objFacing+7,x           ; $97DC
     cmp     #$01                    ; $97DE
-    bne     @loc_97E8               ; $97E0
-    lda     temp0                   ; $97E2
+    bne     @store                  ; $97E0
+    lda     temp0                   ; $97E2  mirrored
     eor     #$40                    ; $97E4
     sta     temp0                   ; $97E6
 
-@loc_97E8:
+@store:
     lda     temp0                   ; $97E8
     sta     oamBuffer+2,y           ; $97EA
 
@@ -1865,24 +1865,24 @@ Moblin_ThrowSpear:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank1:
-    ldy     #$05                    ; $984E
+    ldy     #$05                    ; $984E  every other slot:
 
 @loop:
     cpy     currentObject           ; $9850
-    beq     @loc_9860               ; $9852
-    lda     a:enemyActive,y         ; $9854
-    beq     @loc_9860               ; $9857
-    lda     a:enemyType,y           ; $9859
+    beq     @next                   ; $9852
+    lda     a:enemyActive,y         ; $9854  active,
+    beq     @next                   ; $9857
+    lda     a:enemyType,y           ; $9859  of this type?
     cmp     enemyType,x             ; $985C
-    beq     @loc_9864               ; $985E
+    beq     @remove                 ; $985E
 
-@loc_9860:
+@next:
     dey                             ; $9860
     bpl     @loop                   ; $9861
     rts                             ; $9863
 
-@loc_9864:
-    tya                             ; $9864
+@remove:
+    tya                             ; $9864  yes: remove it
     tax                             ; $9865
     jsr     Enemy_Despawn           ; $9866
     ldx     currentObject           ; $9869
@@ -2522,9 +2522,9 @@ Fighter_KnockBack_Done:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_MoveXUnlessWall_Bank1:
-    lda     objCollision+1,x        ; $9B22
+    lda     objCollision+1,x        ; $9B22  against a wall?
     and     #$03                    ; $9B24
-    bne     Fighter_KnockBack_Done  ; $9B26
+    bne     Fighter_KnockBack_Done  ; $9B26  yes: stay
 ; Moby: X velocity by facing (1, 2): the two bytes after this jmp ($20, $E0).
 MobySpeeds := * + 2
     jmp     Enemy_MoveX             ; $9B28
@@ -3285,7 +3285,7 @@ Geldarm_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_PlaySound_Bank1:
-    lda     sfxRequest+1            ; $9EB2
+    lda     sfxRequest+1            ; $9EB2  noise effect $40
     ora     #$40                    ; $9EB4
     sta     sfxRequest+1            ; $9EB6
     rts                             ; $9EB8

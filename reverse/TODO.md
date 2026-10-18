@@ -105,9 +105,12 @@ unless noted):
   a scripted conversation), the handlers, and the `Menu_*_Bank3` copies
   (comments and label names carried over from bank 0 by script, only the
   equivalent calls differing).  Bank 3 has no `@loc_` labels left.
-- 8m. The area banks' shared code (banks 1-5, ~1500 before
-  de-duplication): `Area_*` objects, `Palace_*`, `Projectile_*` and the
-  generators.
+- 8m. Done: the area banks' shared code: the object drawers
+  (`Area_*`, `Palace_*`), `Area_IsSolidTile`, `Generator_Init` and the
+  projectile movers and draws.  One copy was commented and the others
+  filled by script where the code matches (tools: scratchpad
+  copycmt.py); variants by hand.  Bank 4's and 5's boss draws are left
+  for 8p.
 - 8n. Bank 5's screens (~2300): `Bank5_Nmi`, `Title_*`, `Story_*`,
   `FileScreen_*`, `FileSelect_*`, `Register_*`, `Eliminate_*`, `Save_*`,
   and the ending (`Ending_*`, `Curtain_*`, `Credits_*`).

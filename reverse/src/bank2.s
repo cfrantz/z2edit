@@ -33,24 +33,24 @@ AreaPalettes_Bank2:
 
 Area_DrawLargeObject_Bank2:
     .assert Area_DrawLargeObject_Bank2 = AreaBank::DrawLargeObject, error, "interface address moved"
-    txa                             ; $80EE
+    txa                             ; $80EE  the type's high nybble
     lsr     a                       ; $80EF
     lsr     a                       ; $80F0
     lsr     a                       ; $80F1
     lsr     a                       ; $80F2
-    tax                             ; $80F3
+    tax                             ; $80F3  - 1: type $1x first
     dex                             ; $80F4
-    lda     areaBuildPos            ; $80F5
+    lda     areaBuildPos            ; $80F5  on row $F (the extras)?
     and     #$F0                    ; $80F8
     cmp     #$F0                    ; $80FA
-    bne     @loc_8103               ; $80FC
-    txa                             ; $80FE
+    bne     @dispatch               ; $80FC
+    txa                             ; $80FE  yes: +15
     clc                             ; $80FF
     adc     #$0F                    ; $8100
     tax                             ; $8102
 
-@loc_8103:
-    txa                             ; $8103
+@dispatch:
+    txa                             ; $8103  by type
     jsr     JumpTable               ; $8104
 ; (inline jump table)
     .word   Area_DrawPillarWall_Bank2 ; $8107
@@ -771,15 +771,15 @@ OverworldMapPtrs_Bank2:
 Area_IsSolidTile_Bank2:
     .assert Area_IsSolidTile_Bank2 = AreaBank::IsSolidTile, error, "interface address moved"
     pha                             ; $850C
-    and     #$C0                    ; $850D
+    and     #$C0                    ; $850D  the palette group (bits 7-6)
     clc                             ; $850F
-    rol     a                       ; $8510
+    rol     a                       ; $8510  to bits 1-0
     rol     a                       ; $8511
     rol     a                       ; $8512
     tay                             ; $8513
-    dey                             ; $8514
-    pla                             ; $8515
-    cmp     SolidTileThresholds_Bank2,y ; $8516
+    dey                             ; $8514  - 1: group 1-3 to entry 0-2 (0 wraps to $FF)
+    pla                             ; $8515  the tile
+    cmp     SolidTileThresholds_Bank2,y ; $8516  at or above the group's threshold: solid
     rts                             ; $8519
 
 SpecialTiles_Bank2:
@@ -1298,9 +1298,9 @@ EnemyTiles_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 RedJar_Init_Bank2:
-    lda     #$11                    ; $9610
+    lda     #$11                    ; $9610  state $11
     sta     enemyAiState,x          ; $9612
-    lda     objX+1,x                ; $9614
+    lda     objX+1,x                ; $9614  3 pixels right (with the carry)
     adc     #$03                    ; $9616
     sta     objX+1,x                ; $9618
     rts                             ; $961A
@@ -1336,10 +1336,10 @@ Deeler_Init_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Fireball_Bank2:
-    lda     sfxRequest+1            ; $9627
+    lda     sfxRequest+1            ; $9627  the fireball's sound
     ora     #$40                    ; $9629
     sta     sfxRequest+1            ; $962B
-    bne     Projectile_Straight_Bank2 ; $962D
+    bne     Projectile_Straight_Bank2 ; $962D  (always)
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Straight_Bank2
@@ -1390,16 +1390,16 @@ Projectile_Bubble_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Rock_Bank2:
-    ldy     #$02                    ; $964A
-    lda     objXVelocity+7,x        ; $964C
-    bmi     @loc_9651               ; $964E
-    dey                             ; $9650
+    ldy     #$02                    ; $964A  the way it moves:
+    lda     objXVelocity+7,x        ; $964C  left (negative): 2
+    bmi     @compare                ; $964E
+    dey                             ; $9650  right: 1
 
-@loc_9651:
+@compare:
     tya                             ; $9651
-    cmp     objFacing+7,x           ; $9652
-    beq     Projectile_Straight_Bank2 ; $9654
-    inc     objYVelocity+7,x        ; $9656
+    cmp     objFacing+7,x           ; $9652  still the way it was thrown?
+    beq     Projectile_Straight_Bank2 ; $9654  yes: straight on
+    inc     objYVelocity+7,x        ; $9656  no: falls, faster each frame
     bne     Projectile_RockGravity_Bank2 ; $9659
 
 ; ---------------------------------------------------------------------------
@@ -1434,21 +1434,21 @@ Projectile_RockGravity_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_MoveAndCheck_Bank2:
-    jsr     Projectile_Move         ; $9665
-    lda     drawOffscreen+2         ; $9668
+    jsr     Projectile_Move         ; $9665  move it
+    lda     drawOffscreen+2         ; $9668  off the screen?
     and     #$FC                    ; $966A
     beq     Projectile_DrawAndCheck_Bank2 ; $966C
-    lda     #$00                    ; $966E
+    lda     #$00                    ; $966E  yes: remove it
 
 Projectile_Kill_Bank2:
     sta     objState+7,x            ; $9670
     rts                             ; $9672
 
 Projectile_DrawAndCheck_Bank2:
-    jsr     Projectile_Draw_Bank2   ; $9673
-    jsr     DoNothing               ; $9676
+    jsr     Projectile_Draw_Bank2   ; $9673  draw it
+    jsr     DoNothing               ; $9676  (no extra step)
 ProjectileFlipAttrs_Bank2 := * + 2
-    jmp     Projectile_CheckLinkAlternate ; $9679
+    jmp     Projectile_CheckLinkAlternate ; $9679  hit Link? (tested every other frame)
     .byte   $40, $00                                                        ; $967C
 
 ; ---------------------------------------------------------------------------
@@ -1463,7 +1463,7 @@ ProjectileFlipAttrs_Bank2 := * + 2
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Draw_Bank2:
-    lda     objState+7,x            ; $967E
+    lda     objState+7,x            ; $967E  its type's draw routine
     pha                             ; $9680
     asl     a                       ; $9681
     tay                             ; $9682
@@ -1471,23 +1471,23 @@ Projectile_Draw_Bank2:
     sta     temp14                  ; $9686
     lda     sramProjectileDrawPtrs+1,y ; $9688
     sta     temp15                  ; $968B
-    ldy     objOamOffset+7,x        ; $968D
-    lda     objY+7,x                ; $968F
+    ldy     objOamOffset+7,x        ; $968D  its sprite
+    lda     objY+7,x                ; $968F  Y
     sta     oamBuffer,y             ; $9691
-    lda     drawScreenX+2           ; $9694
+    lda     drawScreenX+2           ; $9694  screen X
     sta     oamBuffer+3,y           ; $9696
-    pla                             ; $9699
+    pla                             ; $9699  the type's tile,
     tay                             ; $969A
     lda     sramProjectileTiles,y   ; $969B
     pha                             ; $969E
-    lda     sramProjectileAttrs,y   ; $969F
-    ldy     objFacing+7,x           ; $96A2
+    lda     sramProjectileAttrs,y   ; $969F  attributes,
+    ldy     objFacing+7,x           ; $96A2  flipped when facing right
     ora     ProjectileFlipAttrs_Bank2,y ; $96A4
     ldy     objOamOffset+7,x        ; $96A7
     sta     oamBuffer+2,y           ; $96A9
-    pla                             ; $96AC
+    pla                             ; $96AC  the tile
     sta     oamBuffer+1,y           ; $96AD
-    jmp     (temp14)                ; $96B0
+    jmp     (temp14)                ; $96B0  then the type's draw
 
 ; ---------------------------------------------------------------------------
 ; Projectile_DrawFlicker_Bank2
@@ -1499,7 +1499,7 @@ Projectile_Draw_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlicker_Bank2:
-    lda     frameCounter            ; $96B3
+    lda     frameCounter            ; $96B3  palette by frame, no flip
     and     #$03                    ; $96B5
     sta     oamBuffer+2,y           ; $96B7
 
@@ -1528,14 +1528,14 @@ ProjectileBobOffsets_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawBob_Bank2:
-    lda     frameCounter            ; $96BF
+    lda     frameCounter            ; $96BF  frameCounter bits 5-4:
     and     #$30                    ; $96C1
     lsr     a                       ; $96C3
     lsr     a                       ; $96C4
     lsr     a                       ; $96C5
     lsr     a                       ; $96C6
     tax                             ; $96C7
-    lda     oamBuffer,y             ; $96C8
+    lda     oamBuffer,y             ; $96C8  bob its Y
     adc     ProjectileBobOffsets_Bank2,x ; $96CB
     sta     oamBuffer,y             ; $96CE
     ldx     currentObject           ; $96D1
@@ -1551,13 +1551,13 @@ Projectile_DrawBob_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlip_Bank2:
-    lda     frameCounter            ; $96D3
+    lda     frameCounter            ; $96D3  frameCounter bit 2:
     asl     a                       ; $96D5
     asl     a                       ; $96D6
     asl     a                       ; $96D7
     asl     a                       ; $96D8
     asl     a                       ; $96D9
-    and     #$80                    ; $96DA
+    and     #$80                    ; $96DA  upside down
     ora     oamBuffer+2,y           ; $96DC
     bne     Projectile_SetAttr_Bank2 ; $96DF
 ; (code below not executed in the test movies)
@@ -1571,11 +1571,11 @@ Projectile_DrawFlip_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawFlash_Bank2:
-    lda     frameCounter            ; $96E1
+    lda     frameCounter            ; $96E1  frameCounter bit 1 (to bit 6: mirrored),
     asl     a                       ; $96E3
     asl     a                       ; $96E4
     asl     a                       ; $96E5
-    sec                             ; $96E6
+    sec                             ; $96E6  palette 2
     rol     a                       ; $96E7
     asl     a                       ; $96E8
     and     #$43                    ; $96E9
@@ -1598,18 +1598,18 @@ SpinProjectileAttrs_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_DrawSpin_Bank2:
-    lda     frameCounter            ; $96F3
+    lda     frameCounter            ; $96F3  a step every 4 frames
     lsr     a                       ; $96F5
     lsr     a                       ; $96F6
     and     #$03                    ; $96F7
-    ldy     objFacing+7,x           ; $96F9
+    ldy     objFacing+7,x           ; $96F9  facing right:
     dey                             ; $96FB
-    bne     @loc_9700               ; $96FC
-    eor     #$03                    ; $96FE
+    bne     @setFlips               ; $96FC
+    eor     #$03                    ; $96FE  the other way round
 
-@loc_9700:
+@setFlips:
     tay                             ; $9700
-    lda     SpinProjectileAttrs_Bank2,y ; $9701
+    lda     SpinProjectileAttrs_Bank2,y ; $9701  the step's flips
     ldy     objOamOffset+7,x        ; $9704
     sta     oamBuffer+2,y           ; $9706
     rts                             ; $9709
@@ -1625,24 +1625,24 @@ Projectile_DrawSpin_Bank2:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Generator_Init_Bank2:
-    ldy     #$05                    ; $970A
+    ldy     #$05                    ; $970A  every other slot:
 
 @loop:
     cpy     currentObject           ; $970C
-    beq     @loc_971C               ; $970E
-    lda     a:enemyActive,y         ; $9710
-    beq     @loc_971C               ; $9713
-    lda     a:enemyType,y           ; $9715
+    beq     @next                   ; $970E
+    lda     a:enemyActive,y         ; $9710  active,
+    beq     @next                   ; $9713
+    lda     a:enemyType,y           ; $9715  of this type?
     cmp     enemyType,x             ; $9718
-    beq     @loc_9720               ; $971A
+    beq     @remove                 ; $971A
 
-@loc_971C:
+@next:
     dey                             ; $971C
     bpl     @loop                   ; $971D
     rts                             ; $971F
 
-@loc_9720:
-    tya                             ; $9720
+@remove:
+    tya                             ; $9720  yes: remove it
     tax                             ; $9721
     jsr     Enemy_Despawn           ; $9722
     ldx     currentObject           ; $9725
