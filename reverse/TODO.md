@@ -70,20 +70,16 @@ unless noted):
   `drawPage` renamed `scrollDir` and `columnDrawDir`; the scroll limits
   checked over the 100% movie and the row fill with area_dump.py;
   docs/world/areas.md (Scrolling).
-- 8e. The side view frame and the object framework (bank 7, ~700):
-  `Mode_SideView`, `Obj_Move*`, `Enemy_Update`, `Enemy_TrySpawn`,
-  `Enemy_Spawn`, `Enemy_Die*`, `Enemy_ShowExperience`,
-  `Enemy_AwardExperience`, `Enemy_DropItem`, `Enemy_DespawnIfFar`,
-  `Enemy_FireProjectile`, `Enemy_FaceLink` and the movement wrappers,
-  `Projectile_*`.
-- 8f. Background collision (bank 7, ~435): `Link_PlaceOnGround`,
-  `Link_CheckBgInBank`, `Link_CheckFellOut`, `Obj_ProbeBg*`,
-  `Sword_CheckBlocksInBank`, `Projectile_HitsBg*`,
-  `Enemy_UpdateBgCollision`, `Obj_GetBgTile`, `AreaMap_PutTile*`.
-- 8g. Combat (bank 7, ~800): `Link_HurtByEnemy`, `Link_TakeDamage`,
-  knockback, `Projectile_CheckLinkAlternate`, the hitbox routines,
-  `Enemy_Check*` hit tests, `Enemy_TakeDamage`, `Enemy_Kill`,
-  `Item_Collect*`.
+- 8e. Done: the side view frame (`Mode_SideView`) and the object framework
+  (movement, spawning, death, experience, drops, despawning, projectiles);
+  `Enemy_Spawn` has a header; the despawn distance ($160) and the boss
+  death steps (with Link's double) checked over the movies.
+- 8f. Done: background collision; the probe tables and their Y encoding
+  (dy - $20) documented, and the enemy probe docs corrected;
+  `TIMER_LINK_RECOIL`.
+- 8g. Done: combat (hitboxes, shield, knockback, damage, kills and drops,
+  item pickup); docs/memory/objects.md has the boxes; experience bags are
+  kinds $0A-$0D (docs/systems/items.md corrected).
 - 8h. Link (bank 0, ~920): `Link_Control`, `Link_UpdateJump`,
   `Link_UpdateXVelocity`, attacks, `Link_ReadInput`, `Link_EnterArea`,
   palette, `Spell_*` effects, `LinkProjectile_*`.

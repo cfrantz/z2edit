@@ -96,6 +96,12 @@ around it (`Boss_SpawnDeathSpark_Bank4`, from `Enemy_DieStep`), the other
 enemies are destroyed and the music stops (song $80, which every world
 leaves empty).
 
+A boss's death lasts 126 frames (`Enemy_DieStep`, its death timer from
+$7E): the boss stays drawn for 23 frames, then the screen flashes
+(`BossDeathPalette`) with the boss dying sound, and for the remaining 103
+frames a copy of Link, in Dark Link's palette, stands 8 pixels from him
+in his pose while the sparks burst where the boss was.
+
 The crystal statue (`CrystalSpot_Ai`) takes the palace's crystal; see
 [Palace enemies](../entities/palaces.md).  Once placed, the area flag of
 the spot is cleared, `crystalsRemaining` drops, and on the overworld the

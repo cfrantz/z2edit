@@ -53,6 +53,32 @@ enemy against the sword (`Enemy_CheckSwordHit`), Link's projectiles
 Outside towns, contact with Link is only tested every other frame for each
 enemy.
 
+The boxes (X, Y from the object's screen position and top; boxes that
+would run past the screen's right edge are cut at it):
+
+| Box | X | Width | Y | Height |
+|-----|---|-------|---|--------|
+| Link standing | +9 | 13 | +0 | 29 |
+| Link crouching | +9 | 13 | +4 | 25 |
+| sword (`swordX`, `swordY`) | -8 if left of Link, +2 if right | 14 | +7 (thrusts: +0) | 3 |
+| shield standing | +22 facing right, +7 left | 5 | +2 | 12 |
+| shield crouching | as standing | 5 | +$11 | 12 |
+| Link's projectile | +2 | 4 | +4 | 6 |
+| enemy projectile | +3 | 2 | +7 | 3 (10 with flag bit 3) |
+| enemy | `EnemyHitboxes` by `sramEnemyHitbox` | | | |
+| enemy weapon (5th sprite) | +0 | 14 | +9 | 1 |
+
+`Hitbox_Overlap` takes the boxes as overlapping when, on each axis,
+B - A + B's size <= A's size + B's size (unsigned), so touching edges
+count.
+
+Knockback: hurting Link pushes him away from the enemy at $0D or $F3
+(13/16 pixel a frame), and up at 2 pixels a frame, unless a wall is that
+way; a shield or sword clink pushes him $04 or $FC and the enemy $0C or
+$F4 away from him ($18 / $E8 while it is stunned; Link's projectiles push
+it the way they fly); a boss's weapon (guard 2 or more) throws him
+twice as high and away at $18 / $E8.
+
 ## Indexing
 
 Routines shared by all objects take the slot in `x` (e.g. `Obj_GetBgTile`,

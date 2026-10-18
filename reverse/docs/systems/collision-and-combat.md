@@ -12,8 +12,20 @@ if it is at or above its palette group's threshold
 (`AreaBank::IsSolidTile`; see [Side view areas](../world/areas.md), and
 [Quirks](../quirks.md) for group 0 in bank 2).
 
-- Link: `Link_CheckBgInBank` (walls, floors, ceilings; see
-  [Link](link.md#walking)).
+- Link: `Link_CheckBgInBank` (see [Link](link.md#walking)) sets
+  `objCollision` from his probe points (offsets from his top left): head
+  (+12, 0), (+20, 0) for bit 3; feet (+12, +32), (+20, +32) for bit 2;
+  and in the direction he faces, a wall at the upper point (+23 or +9,
+  +6) and the lower point (+23 or +9, +26) for bit 0 or 1.  The fairy
+  has its own set.  The tile at (+15, +32), under him, can be special
+  (`AreaBank::SpecialTiles`): lava sinks him (`LINK_MODE_SINK`, with
+  his cry); swamp tiles slow him and put his feet behind the background
+  once his Y is $A5 or more; a crumbling floor starts breaking; Up on a
+  door, on the ground, enters it (gameMode $16); crouching on a chimney
+  sinks him into it.  In a room that doesn't scroll, the screen edge he
+  faces is a wall; in a scrolling one, walking his body off the screen
+  leaves the area (gameMode $10), and falling below it falls into the
+  area below (gameMode $0C).
 - Enemy projectiles: `Projectile_HitsBg` and its variants.
 - The sword tip breaks blocks: `Sword_CheckBlocksInBank` (object slot 16,
   see [Object slots](../memory/objects.md)).

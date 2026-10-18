@@ -14,7 +14,8 @@ Both end in `Item_Collect`.  See [Item](../entities/enemies/item.md).
 |------|------|----------------------------|
 | $00-$07 | the eight inventory items (candle, glove, raft, boots, flute, cross, hammer, magic key) | `Item_Collect`: set `itemOwned`, play the item fanfare |
 | $08 | key | the sword; `Item_Collect`: add to `keyCount` |
-| $09-$0D | experience bags | the sword; `Item_CollectExpBag`: experience of class `ExpBagClasses` |
+| $0A-$0D | experience bags | the sword; `Item_CollectExpBag`: experience of class `ExpBagClasses` (7, 9, $0B, $0D) |
+| $09 | (none) | no area or drop uses it; as a bag it would read class $DD, a byte of code, and drop an item instead |
 | $0E, $0F | magic container, heart container | `Item_Collect`: add to `statContainers`, fill the meter; the 7th magic container sets `townFlags+6` bit 3 |
 | $10 | blue magic jar: one block of magic | the sword; `Item_CollectSpecial` |
 | $11 | red magic jar: fills the magic meter | the sword; `Item_CollectSpecial` |

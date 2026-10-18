@@ -62,6 +62,7 @@ PPU_STRING_BUFFER2      = 2
 AREA_PAGE_SIZE          = $D0
 
 ; Indexes into timerFast and timerSlow.
+TIMER_LINK_RECOIL       = 1     ; timerFast: Link pushed back after his sword hits a wall, or knocked back (Link keeps his X velocity)
 TIMER_LINK_ENTER        = 2     ; timerFast: Link walking into an area
 TIMER_ENEMY             = 3     ; timerFast: 3-8, one per enemy
 TIMER_LINK_ATTACK       = 9     ; timerFast: Link's attack animation frame time

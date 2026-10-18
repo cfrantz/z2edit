@@ -3423,7 +3423,7 @@ Link_UpdateXVelocity:
     jmp     Link_AnimateWalk        ; $93CA
 
 @loc_93CD:
-    lda     timerFast+1             ; $93CD
+    lda     timerFast+TIMER_LINK_RECOIL ; $93CD
     bne     @loc_93DC               ; $93D0
     lda     linkAttackFrame         ; $93D2
     beq     @loc_93DC               ; $93D5
@@ -3841,7 +3841,7 @@ Link_ReadInput:
     sta     linkAttackDir           ; $95DE
     lda     linkJumpState           ; $95E1
     bne     @loc_95ED               ; $95E4
-    lda     timerFast+1             ; $95E6
+    lda     timerFast+TIMER_LINK_RECOIL ; $95E6
     bne     @loc_95ED               ; $95E9
     sta     objXVelocity            ; $95EB
 

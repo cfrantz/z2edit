@@ -59,6 +59,16 @@ velocity $08 or $F8 (1/2 pixel per frame) that way
 (`EnemySpawnXVelocities`).  It clears `enemyAiState`, `objState`,
 `objYVelocity`, `enemyStunTimer`, `enemyKnockBack`, `enemyAiVar`
 and `enemyLanded`, then runs the type's spawn routine (most types have none).
+
+An empty slot looks for a list entry at the column just drawn at the edge
+the screen moves toward (`Enemy_TrySpawn`), so enemies appear as their
+column comes into view; an entry spawns once (bit 7 of its first byte)
+until the enemy is despawned.  A despawned enemy (`Enemy_Despawn`: fallen
+below the screen, or $160 pixels or more beyond either edge of it,
+`Enemy_DespawnIfFar`) has the bit cleared and can spawn again; one killed
+stays gone unless its type has `sramEnemyFlags` bit 6.  In an encounter,
+`Area_Load` clears every entry's bit, and kinds 2 and up use the area's
+second list.
 The enemy's timer (`timerFast+TIMER_ENEMY`) is not reset; by then it has
 normally counted down to 0.
 
@@ -95,16 +105,22 @@ probe set *s* (bits 3-0 of `sramEnemyFlags`) picks the points from
 
 | Bit of `objCollision` | Meaning | Probe | Set 6 point (X, Y) |
 |---|---|---|---|
-| 3 | solid above | $15 + *s* | (+8, -31) |
-| 2 | standing on a floor | $14 + *s* | (+8, -16) |
-| 0 | wall ahead, moving right | $10 + *s*, then $12 + *s* | (+14, -27), (+14, -21) |
-| 1 | wall ahead, moving left | $11 + *s*, then $13 + *s* | (+2, -27), (+2, -21) |
+| 3 | solid above | $15 + *s* | (+8, +1) |
+| 2 | standing on a floor | $14 + *s* | (+8, +16) |
+| 0 | wall ahead, moving right | $10 + *s*, then $12 + *s* | (+14, +5), (+14, +11) |
+| 1 | wall ahead, moving left | $11 + *s*, then $13 + *s* | (+2, +5), (+2, +11) |
+
+The points are offsets from the enemy's top left corner.  `ProbeOffsetY`
+stores the Y offset minus $20, because the tile map's row 0 is at screen
+Y $20, below the status bar (`Obj_GetBgTile` adds the stored value and
+takes the row from the sum).
 
 Only the side the enemy is moving toward (by the sign of
 `objXVelocity`) is tested.  The floor probe at Y - 16 means that an
 enemy resting on a floor has a Y that is a multiple of 16, which is
 where `Enemy_Land` puts it; a falling enemy lands as soon as its Y
-crosses into the next row of tiles.  Set 6 is used by the Myu, Bot,
+crosses into the next row of tiles (its feet, 16 pixels down, reach
+the floor tile).  Set 6 is used by the Myu, Bot,
 Bit, Lowder and Octoroks, among others.
 
 ## Damage

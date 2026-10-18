@@ -3528,31 +3528,31 @@ Game_CheckStateChangeDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_MoveYWithGravity:
-    ldy     #$00                    ; $D19B
+    ldy     #$00                    ; $D19B  velocity's high byte:
     lda     objYVelocity,x          ; $D19D
-    bpl     @loc_D1A3               ; $D1A0
-    dey                             ; $D1A2
+    bpl     @addVelocity            ; $D1A0
+    dey                             ; $D1A2  $FF going up
 
-@loc_D1A3:
+@addVelocity:
     sty     temp7                   ; $D1A3
     clc                             ; $D1A5
-    adc     objY,x                  ; $D1A6
+    adc     objY,x                  ; $D1A6  Y + velocity (whole pixels)
     sta     objY,x                  ; $D1A8
     lda     objYHi,x                ; $D1AA
     adc     temp7                   ; $D1AC
     sta     objYHi,x                ; $D1AE
-    lda     objYFrac,x              ; $D1B0
+    lda     objYFrac,x              ; $D1B0  fraction
     clc                             ; $D1B3
-    adc     temp0                   ; $D1B4
+    adc     temp0                   ; $D1B4  + gravity,
     sta     objYFrac,x              ; $D1B6
     lda     objYVelocity,x          ; $D1B9
-    adc     #$00                    ; $D1BC
+    adc     #$00                    ; $D1BC  carrying into the velocity
     sta     objYVelocity,x          ; $D1BE
-    cmp     temp2                   ; $D1C1
-    bne     @done                   ; $D1C3
+    cmp     temp2                   ; $D1C1  at the limit?
+    bne     @done                   ; $D1C3  no
     sta     objYVelocity,x          ; $D1C5
-    lda     #$00                    ; $D1C8
-    sta     objYFrac,x              ; $D1CA
+    lda     #$00                    ; $D1C8  yes: stay there (fraction cleared
+    sta     objYFrac,x              ; $D1CA  every frame at the limit)
 
 @done:
     rts                             ; $D1CD
@@ -3570,44 +3570,44 @@ Obj_MoveYWithGravity:
 ; ---------------------------------------------------------------------------
 Obj_MoveX:
     lda     objXVelocity,x          ; $D1CE
-    asl     a                       ; $D1D0
+    asl     a                       ; $D1D0  low nibble: 1/16 pixels,
     asl     a                       ; $D1D1
     asl     a                       ; $D1D2
     asl     a                       ; $D1D3
     sta     temp1                   ; $D1D4
     lda     objXVelocity,x          ; $D1D6
-    lsr     a                       ; $D1D8
+    lsr     a                       ; $D1D8  high nibble: whole pixels,
     lsr     a                       ; $D1D9
     lsr     a                       ; $D1DA
     lsr     a                       ; $D1DB
     cmp     #$08                    ; $D1DC
-    bcc     @loc_D1E2               ; $D1DE
-    ora     #$F0                    ; $D1E0
+    bcc     @pixels                 ; $D1DE
+    ora     #$F0                    ; $D1E0  sign-extended
 
-@loc_D1E2:
+@pixels:
     sta     temp0                   ; $D1E2
-    ldy     #$00                    ; $D1E4
+    ldy     #$00                    ; $D1E4  and the high byte
     cmp     #$00                    ; $D1E6
-    bpl     @loc_D1EB               ; $D1E8
+    bpl     @setHigh                ; $D1E8
     dey                             ; $D1EA
 
-@loc_D1EB:
+@setHigh:
     sty     temp2                   ; $D1EB
     lda     objXSubpixel,x          ; $D1ED
     clc                             ; $D1F0
-    adc     temp1                   ; $D1F1
+    adc     temp1                   ; $D1F1  add the 1/16 pixels:
     sta     objXSubpixel,x          ; $D1F3
-    lda     #$00                    ; $D1F6
+    lda     #$00                    ; $D1F6  their carry
     rol     a                       ; $D1F8
-    pha                             ; $D1F9
-    ror     a                       ; $D1FA
+    pha                             ; $D1F9  (kept for the result)
+    ror     a                       ; $D1FA  back into carry
     lda     objX,x                  ; $D1FB
-    adc     temp0                   ; $D1FD
+    adc     temp0                   ; $D1FD  + whole pixels
     sta     objX,x                  ; $D1FF
     lda     objXHi,x                ; $D201
-    adc     temp2                   ; $D203
+    adc     temp2                   ; $D203  + high byte
     sta     objXHi,x                ; $D205
-    jmp     Obj_MoveFinish          ; $D207
+    jmp     Obj_MoveFinish          ; $D207  a = pixels moved
 
 ; ---------------------------------------------------------------------------
 ; Obj_MoveY
@@ -3623,42 +3623,42 @@ Obj_MoveX:
 ; ---------------------------------------------------------------------------
 Obj_MoveY:
     lda     objYVelocity,x          ; $D20A
-    asl     a                       ; $D20D
+    asl     a                       ; $D20D  low nibble: 1/16 pixels,
     asl     a                       ; $D20E
     asl     a                       ; $D20F
     asl     a                       ; $D210
     sta     temp1                   ; $D211
     lda     objYVelocity,x          ; $D213
-    lsr     a                       ; $D216
+    lsr     a                       ; $D216  high nibble: whole pixels,
     lsr     a                       ; $D217
     lsr     a                       ; $D218
     lsr     a                       ; $D219
     cmp     #$08                    ; $D21A
-    bcc     @loc_D220               ; $D21C
-    ora     #$F0                    ; $D21E
+    bcc     @pixels                 ; $D21C
+    ora     #$F0                    ; $D21E  sign-extended
 
-@loc_D220:
+@pixels:
     sta     temp0                   ; $D220
-    ldy     #$00                    ; $D222
+    ldy     #$00                    ; $D222  and the high byte
     cmp     #$00                    ; $D224
-    bpl     @loc_D229               ; $D226
+    bpl     @setHigh                ; $D226
     dey                             ; $D228
 
-@loc_D229:
+@setHigh:
     sty     temp2                   ; $D229
     lda     objYFrac,x              ; $D22B
     clc                             ; $D22E
-    adc     temp1                   ; $D22F
+    adc     temp1                   ; $D22F  add the 1/16 pixels:
     sta     objYFrac,x              ; $D231
-    lda     #$00                    ; $D234
+    lda     #$00                    ; $D234  their carry
     rol     a                       ; $D236
-    pha                             ; $D237
-    ror     a                       ; $D238
+    pha                             ; $D237  (kept for the result)
+    ror     a                       ; $D238  back into carry
     lda     a:objY,x                ; $D239
-    adc     temp0                   ; $D23C
+    adc     temp0                   ; $D23C  + whole pixels
     sta     a:objY,x                ; $D23E
     lda     objYHi,x                ; $D241
-    adc     temp2                   ; $D243
+    adc     temp2                   ; $D243  + high byte
     sta     objYHi,x                ; $D245
 
 ; ---------------------------------------------------------------------------
@@ -3670,9 +3670,9 @@ Obj_MoveY:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_MoveFinish:
-    pla                             ; $D247
+    pla                             ; $D247  the carry
     clc                             ; $D248
-    adc     temp0                   ; $D249
+    adc     temp0                   ; $D249  + whole pixels
     rts                             ; $D24B
 
 ; ---------------------------------------------------------------------------
@@ -4088,106 +4088,106 @@ HudRedrawBits:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_SideView:
-    lda     linkDeathPending        ; $D3CC
-    beq     @loc_D3E9               ; $D3CF
-    ldx     timerFast+TIMER_LINK_HURT ; $D3D1
-    bne     @loc_D3E9               ; $D3D4
+    lda     linkDeathPending        ; $D3CC  Link died?
+    beq     @alive                  ; $D3CF
+    ldx     timerFast+TIMER_LINK_HURT ; $D3D1  not until his knockback ends
+    bne     @alive                  ; $D3D4
     stx     linkDeathPending        ; $D3D6
     inx                             ; $D3D9
-    stx     sfxRequest              ; $D3DA
-    lda     #$02                    ; $D3DC
+    stx     sfxRequest              ; $D3DA  the dying sound (shared $01)
+    lda     #$02                    ; $D3DC  GAME_STATE_DEATH
     sta     gameState               ; $D3DE
     lda     #$00                    ; $D3E1
-    sta     PPUMASK                 ; $D3E3
-    jmp     Area_Exit               ; $D3E6
+    sta     PPUMASK                 ; $D3E3  rendering off at once
+    jmp     Area_Exit               ; $D3E6  leave the area (removes the enemies)
 
-@loc_D3E9:
-    jsr     Mmc1_SetPrgBank0        ; $D3E9
-    jsr     Spell_Update            ; $D3EC
-    lda     frameCounter            ; $D3EF
+@alive:
+    jsr     Mmc1_SetPrgBank0        ; $D3E9  Link's code is bank 0's
+    jsr     Spell_Update            ; $D3EC  spells
+    lda     frameCounter            ; $D3EF  one meter a frame:
     and     #$01                    ; $D3F1
-    tax                             ; $D3F3
-    lda     statMeterPending,x      ; $D3F4
-    beq     @loc_D433               ; $D3F7
+    tax                             ; $D3F3  magic, then life
+    lda     statMeterPending,x      ; $D3F4  still to refill?
+    beq     @experience             ; $D3F7
     dec     statMeterPending,x      ; $D3F9
-    lda     statContainers,x        ; $D3FC
+    lda     statContainers,x        ; $D3FC  its maximum:
     asl     a                       ; $D3FF
     asl     a                       ; $D400
     asl     a                       ; $D401
     asl     a                       ; $D402
-    asl     a                       ; $D403
+    asl     a                       ; $D403  containers x 32
     sec                             ; $D404
-    sbc     #$01                    ; $D405
+    sbc     #$01                    ; $D405  - 1
     sta     temp0                   ; $D407
-    lda     statMeter,x             ; $D409
+    lda     statMeter,x             ; $D409  + 2 a frame,
     clc                             ; $D40C
     adc     #$02                    ; $D40D
-    bcs     @loc_D415               ; $D40F
-    cmp     temp0                   ; $D411
-    bcc     @loc_D41C               ; $D413
+    bcs     @full                   ; $D40F
+    cmp     temp0                   ; $D411  up to the maximum,
+    bcc     @setMeter               ; $D413
 
-@loc_D415:
-    lda     #$00                    ; $D415
+@full:
+    lda     #$00                    ; $D415  where the refill ends
     sta     statMeterPending,x      ; $D417
     lda     temp0                   ; $D41A
 
-@loc_D41C:
+@setMeter:
     sta     statMeter,x             ; $D41C
-    lda     hudRedraw               ; $D41F
+    lda     hudRedraw               ; $D41F  redraw it
     ora     HudRedrawBits,x         ; $D422
     sta     hudRedraw               ; $D425
     lda     musicPlaying            ; $D428
-    cmp     #$10                    ; $D42B
-    beq     @loc_D433               ; $D42D
-    lda     #$10                    ; $D42F
+    cmp     #$10                    ; $D42B  unless the fanfare plays,
+    beq     @experience             ; $D42D
+    lda     #$10                    ; $D42F  the refill sound (pulse 1 $10)
     sta     sfxRequest+3            ; $D431
 
-@loc_D433:
-    lda     experiencePending+1     ; $D433
+@experience:
+    lda     experiencePending+1     ; $D433  experience to add?
     ora     experiencePending       ; $D436
-    beq     @loc_D477               ; $D439
-    ldy     #$0A                    ; $D43B
+    beq     @drain                  ; $D439  no
+    ldy     #$0A                    ; $D43B  10 a frame,
     lda     experiencePending+1     ; $D43D
     ldx     experiencePending       ; $D440
-    bne     @loc_D44B               ; $D443
-    cmp     #$0A                    ; $D445
-    bcs     @loc_D44B               ; $D447
+    bne     @addExperience          ; $D443
+    cmp     #$0A                    ; $D445  or 1 when less than 10 is left
+    bcs     @addExperience          ; $D447
     ldy     #$01                    ; $D449
 
-@loc_D44B:
+@addExperience:
     sty     temp0                   ; $D44B
     sec                             ; $D44D
     sbc     temp0                   ; $D44E
     sta     experiencePending+1     ; $D450
-    bcs     @loc_D458               ; $D453
+    bcs     @add                    ; $D453
     dec     experiencePending       ; $D455
 
-@loc_D458:
+@add:
     lda     experience+1            ; $D458
     clc                             ; $D45B
-    adc     temp0                   ; $D45C
+    adc     temp0                   ; $D45C  into experience
     sta     experience+1            ; $D45E
     lda     experience              ; $D461
     adc     #$00                    ; $D464
     sta     experience              ; $D466
     lda     musicPlaying            ; $D469
-    cmp     #$10                    ; $D46C
-    beq     @loc_D474               ; $D46E
-    lda     #$10                    ; $D470
+    cmp     #$10                    ; $D46C  unless the fanfare plays,
+    beq     @redrawExperience       ; $D46E
+    lda     #$10                    ; $D470  the counting sound
     sta     sfxRequest+3            ; $D472
 
-@loc_D474:
-    jmp     @loc_D4A3               ; $D474
+@redrawExperience:
+    jmp     @redraw                 ; $D474
 
-@loc_D477:
-    lda     experienceDrain         ; $D477
-    beq     @loc_D4AB               ; $D47A
+@drain:
+    lda     experienceDrain         ; $D477  experience to drain?
+    beq     @split                  ; $D47A  no
     dec     experienceDrain         ; $D47C
     lda     experience+1            ; $D47F
     ora     experience              ; $D482
-    beq     @loc_D4AB               ; $D485
+    beq     @split                  ; $D485  none left
 ; (code below not executed in the test movies)
-    lda     experience+1            ; $D487
+    lda     experience+1            ; $D487  one point a frame
     sec                             ; $D48A
     sbc     #$01                    ; $D48B
     sta     experience+1            ; $D48D
@@ -4196,100 +4196,100 @@ Mode_SideView:
     sta     experience              ; $D495
     lda     musicPlaying            ; $D498
     cmp     #$10                    ; $D49B
-    beq     @loc_D4A3               ; $D49D
+    beq     @redraw                 ; $D49D
     lda     #$10                    ; $D49F
     sta     sfxRequest+3            ; $D4A1
 ; (end of code not executed in the test movies)
 
-@loc_D4A3:
-    lda     hudRedraw               ; $D4A3
+@redraw:
+    lda     hudRedraw               ; $D4A3  redraw the experience
     ora     #$40                    ; $D4A6
     sta     hudRedraw               ; $D4A8
 
-@loc_D4AB:
-    lda     dialogType              ; $D4AB
+@split:
+    lda     dialogType              ; $D4AB  a conversation?
     cmp     #$02                    ; $D4AE
-    bcs     @loc_D4CE               ; $D4B0
+    bcs     @hud                    ; $D4B0  it does its own split
 
     ; Split the screen below the status bar: wait for the sprite 0 hit, then
     ; switch to the playfield's nametable and scroll.
 @waitSprite0Hit:
     bit     PPUSTATUS               ; $D4B2
     bvc     @waitSprite0Hit         ; $D4B5
-    lda     ppuCtrlShadow           ; $D4B7
+    lda     ppuCtrlShadow           ; $D4B7  the playfield's nametable,
     ora     playfieldNametable      ; $D4B9
     sta     ppuCtrlShadow           ; $D4BC
-    ldx     ppuScrollX              ; $D4BE
-    ldy     #$10                    ; $D4C0
+    ldx     ppuScrollX              ; $D4BE  scroll X,
+    ldy     #$10                    ; $D4C0  a short delay into the line
 
 @loop:
     dey                             ; $D4C2
     bne     @loop                   ; $D4C3
     sta     PPUCTRL                 ; $D4C5
     stx     PPUSCROLL               ; $D4C8
-    sty     PPUSCROLL               ; $D4CB
+    sty     PPUSCROLL               ; $D4CB  Y 0 (y = 0 after the delay)
 
-@loc_D4CE:
-    jsr     Hud_Update              ; $D4CE
+@hud:
+    jsr     Hud_Update              ; $D4CE  level up check, status bar
     ; Beep while Link's life is low.
-    lda     statMeterDisplay+1      ; $D4D1
+    lda     statMeterDisplay+1      ; $D4D1  under one container of life,
     cmp     #$20                    ; $D4D4
-    bcs     @loc_D4F3               ; $D4D6
-    lda     musicPlaying            ; $D4D8
+    bcs     @update                 ; $D4D6
+    lda     musicPlaying            ; $D4D8  no fanfare or later song,
     cmp     #$10                    ; $D4DB
-    bcs     @loc_D4F3               ; $D4DD
-    lda     sharedSfxRecent         ; $D4DF
+    bcs     @update                 ; $D4DD
+    lda     sharedSfxRecent         ; $D4DF  not the barrier's sound,
     cmp     #$40                    ; $D4E2
-    beq     @loc_D4F3               ; $D4E4
-    lda     sq2Sfx                  ; $D4E6
+    beq     @update                 ; $D4E4
+    lda     sq2Sfx                  ; $D4E6  not the battle sound:
     cmp     #$02                    ; $D4E9
-    beq     @loc_D4F3               ; $D4EB
+    beq     @update                 ; $D4EB
     lda     sfxRequest+3            ; $D4ED
-    ora     #$40                    ; $D4EF
+    ora     #$40                    ; $D4EF  the low life beep (pulse 1 $40)
     sta     sfxRequest+3            ; $D4F1
 
-@loc_D4F3:
-    jsr     Link_Run                ; $D4F3
-    lda     #$00                    ; $D4F6
+@update:
+    jsr     Link_Run                ; $D4F3  Link's frame (bank 0)
+    lda     #$00                    ; $D4F6  reset each frame:
     sta     linkOnElevator          ; $D4F8
     sta     blockedDirections       ; $D4FB
     jsr     Scroll_Update           ; $D4FE
-    jsr     Mmc1_SetPrgBankArea     ; $D501
-    jsr     Enemies_Update          ; $D504
+    jsr     Mmc1_SetPrgBankArea     ; $D501  enemies are area bank code
+    jsr     Enemies_Update          ; $D504  the enemies and their projectiles
     jsr     Mmc1_SetPrgBank0        ; $D507
     jsr     NorthCastle_DrawSprites ; $D50A
-    jsr     LinkProjectile_Update   ; $D50D
+    jsr     LinkProjectile_Update   ; $D50D  Link's sword beams and fire
     jsr     BreakingBlocks_Update   ; $D510
-    lda     linkLandingTimer        ; $D513
-    beq     @loc_D51F               ; $D516
+    lda     linkLandingTimer        ; $D513  a hard landing:
+    beq     @blink                  ; $D516
     dec     linkLandingTimer        ; $D518
-    lda     #$06                    ; $D51B
+    lda     #$06                    ; $D51B  crouch meanwhile
     sta     objState                ; $D51D
 
-@loc_D51F:
-    lda     timerSlow+TIMER_INVULNERABLE ; $D51F
-    beq     @loc_D52D               ; $D522
-    cmp     #$03                    ; $D524
-    bcs     @loc_D52D               ; $D526
+@blink:
+    lda     timerSlow+TIMER_INVULNERABLE ; $D51F  invulnerable,
+    beq     @drawLink               ; $D522
+    cmp     #$03                    ; $D524  in its last 40 frames:
+    bcs     @drawLink               ; $D526
     lda     frameCounter            ; $D528
-    lsr     a                       ; $D52A
-    bcs     @loc_D538               ; $D52B
+    lsr     a                       ; $D52A  blink on odd frames
+    bcs     @checkMode              ; $D52B
 
-@loc_D52D:
+@drawLink:
     jsr     Link_Draw               ; $D52D
-    lda     timerFast+TIMER_LINK_ENTER ; $D530
-    bne     @loc_D538               ; $D533
-    jsr     Sword_CheckBlocks       ; $D535
+    lda     timerFast+TIMER_LINK_ENTER ; $D530  entering the area:
+    bne     @checkMode              ; $D533  no block breaking yet
+    jsr     Sword_CheckBlocks       ; $D535  the sword against blocks
 
-@loc_D538:
-    lda     gameMode                ; $D538
+@checkMode:
+    lda     gameMode                ; $D538  still in side view?
     cmp     #$0B                    ; $D53B
-    bne     @loc_D545               ; $D53D
-    inc     nmiFlag                 ; $D53F
-    inc     menusPending            ; $D542
+    bne     @drawColumns            ; $D53D
+    inc     nmiFlag                 ; $D53F  (no effect)
+    inc     menusPending            ; $D542  run the menus next frame
 
-@loc_D545:
-    jmp     Scroll_DrawColumns      ; $D545
+@drawColumns:
+    jmp     Scroll_DrawColumns      ; $D545  then the column drawing
 
 ; ---------------------------------------------------------------------------
 ; Projectile_Spark
@@ -4301,16 +4301,16 @@ Mode_SideView:
 ; ---------------------------------------------------------------------------
 Projectile_Spark:
     ldy     objOamOffset+7,x        ; $D548
-    lda     drawOffscreen+2         ; $D54A
+    lda     drawOffscreen+2         ; $D54A  off screen?
     and     #$08                    ; $D54C
-    bne     @loc_D55A               ; $D54E
+    bne     @count                  ; $D54E
     lda     objY+7,x                ; $D550
     sta     oamBuffer,y             ; $D552
     lda     drawScreenX+2           ; $D555
     sta     oamBuffer+3,y           ; $D557
 
-@loc_D55A:
-    inc     objState+7,x            ; $D55A
+@count:
+    inc     objState+7,x            ; $D55A  counts up to 0
     lda     objState+7,x            ; $D55C
 
 ; ---------------------------------------------------------------------------
@@ -4322,12 +4322,12 @@ Projectile_Spark:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_SetSparkTile:
-    and     #$08                    ; $D55E
+    and     #$08                    ; $D55E  every 8 frames:
     lsr     a                       ; $D560
     lsr     a                       ; $D561
-    adc     #$78                    ; $D562
+    adc     #$78                    ; $D562  tile $78 or $7A
     sta     oamBuffer+1,y           ; $D564
-    lda     #$01                    ; $D567
+    lda     #$01                    ; $D567  palette 1
     sta     oamBuffer+2,y           ; $D569
 
 ; ---------------------------------------------------------------------------
@@ -4350,21 +4350,21 @@ Projectile_UpdateDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Update:
-    txa                             ; $D56D
+    txa                             ; $D56D  slot x + 7
     clc                             ; $D56E
     adc     #$07                    ; $D56F
     tax                             ; $D571
-    ldy     #$02                    ; $D572
+    ldy     #$02                    ; $D572  draw category 2
     jsr     Obj_ComputeScreenPos    ; $D574
     ldx     currentObject           ; $D577
-    lda     objState+7,x            ; $D579
-    beq     Projectile_UpdateDone   ; $D57B
-    bmi     Projectile_Spark        ; $D57D
+    lda     objState+7,x            ; $D579  its type
+    beq     Projectile_UpdateDone   ; $D57B  none
+    bmi     Projectile_Spark        ; $D57D  negative: a spark
     sec                             ; $D57F
-    sbc     #$01                    ; $D580
-    asl     a                       ; $D582
+    sbc     #$01                    ; $D580  type - 1,
+    asl     a                       ; $D582  word index
     tay                             ; $D583
-    lda     sramProjectilePtrs,y    ; $D584
+    lda     sramProjectilePtrs,y    ; $D584  the group's routine for it
     sta     temp14                  ; $D587
     lda     sramProjectilePtrs+1,y  ; $D589
     jmp     JumpToTemp14            ; $D58C
@@ -4431,14 +4431,14 @@ Enemies_Update:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Update:
-    ldy     #$01                    ; $D5DA
-    inx                             ; $D5DC
+    ldy     #$01                    ; $D5DA  draw category 1,
+    inx                             ; $D5DC  slot x + 1
     jsr     Obj_ComputeScreenPos    ; $D5DD
     ldx     currentObject           ; $D5E0
-    lda     enemyActive,x           ; $D5E2
+    lda     enemyActive,x           ; $D5E2  by state:
     asl     a                       ; $D5E4
     tay                             ; $D5E5
-    lda     EnemyStateHandlers,y    ; $D5E6
+    lda     EnemyStateHandlers,y    ; $D5E6  empty, active, dying, experience
     sta     temp14                  ; $D5E9
     lda     EnemyStateHandlers+1,y  ; $D5EB
     jmp     JumpToTemp14            ; $D5EE
@@ -4462,23 +4462,23 @@ EnemySpawnYPositions:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_TrySpawn:
-    lda     fairyEncounter          ; $D603
+    lda     fairyEncounter          ; $D603  no list enemies in a fairy encounter
     bne     Enemy_TrySpawnDone      ; $D606
-    lda     scrollDir               ; $D608
+    lda     scrollDir               ; $D608  the edge the screen moves toward:
     lsr     a                       ; $D60B
-    eor     #$01                    ; $D60C
+    eor     #$01                    ; $D60C  x = 1 right, 0 left
     tax                             ; $D60E
-    lda     columnPage              ; $D60F
+    lda     columnPage              ; $D60F  edges in page order?
     cmp     columnPage+1            ; $D612
-    bcc     Enemy_Spawn             ; $D615
-    cmp     #$02                    ; $D617
-    beq     @loc_D620               ; $D619
-    cpx     #$01                    ; $D61B
+    bcc     Enemy_Spawn             ; $D615  yes: spawn at that edge
+    cmp     #$02                    ; $D617  wrapped:
+    beq     @wrapped                ; $D619
+    cpx     #$01                    ; $D61B  only at the right edge
     beq     Enemy_Spawn             ; $D61D
     rts                             ; $D61F
 
-@loc_D620:
-    cpx     #$00                    ; $D620
+@wrapped:
+    cpx     #$00                    ; $D620  or, page 2, only at the left
     beq     Enemy_Spawn             ; $D622
 
 ; ---------------------------------------------------------------------------
@@ -4491,53 +4491,68 @@ Enemy_TrySpawn:
 Enemy_TrySpawnDone:
     rts                             ; $D624
 
+; ---------------------------------------------------------------------------
+; Enemy_Spawn
+;
+; Spawn into enemy slot currentObject the first entry of the area's enemy
+; list (enemyListPtr) at the column just drawn at edge x, if it has not
+; spawned yet.  An entry is two bytes: bit 7 spawned, bits 6-4 the Y
+; (EnemySpawnYPositions), bits 3-0 the column; then bits 7-6 the page and
+; bits 5-0 the type.  The enemy faces Link and moves toward him at 1/2
+; pixel a frame, with its type's hit points; then its set-up routine runs
+; (sramEnemyInitPtrs).
+;
+; In:      x = edge (0 left, 1 right)
+; Out:     x = currentObject
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Enemy_Spawn:
-    lda     columnPage,x            ; $D625
+    lda     columnPage,x            ; $D625  the edge's page
     sta     temp0                   ; $D628
-    lda     columnIndex,x           ; $D62A
+    lda     columnIndex,x           ; $D62A  and column
     sta     temp1                   ; $D62D
     ldx     currentObject           ; $D62F
-    ldy     #$01                    ; $D631
+    ldy     #$01                    ; $D631  from the list's first entry:
 
-@loc_D633:
+@entry:
     tya                             ; $D633
     ldy     #$00                    ; $D634
-    cmp     (enemyListPtr),y        ; $D636
-    bcs     Enemy_TrySpawnDone      ; $D638
+    cmp     (enemyListPtr),y        ; $D636  past the end?
+    bcs     Enemy_TrySpawnDone      ; $D638  nothing to spawn
     tay                             ; $D63A
-    iny                             ; $D63B
+    iny                             ; $D63B  its second byte:
     lda     (enemyListPtr),y        ; $D63C
-    asl     a                       ; $D63E
+    asl     a                       ; $D63E  bits 7-6: the page
     rol     a                       ; $D63F
     rol     a                       ; $D640
     and     #$03                    ; $D641
-    cmp     temp0                   ; $D643
-    beq     @loc_D64B               ; $D645
+    cmp     temp0                   ; $D643  this page?
+    beq     @checkColumn            ; $D645
 
-@loc_D647:
+@nextByte:
     iny                             ; $D647
-    jmp     @loc_D633               ; $D648
+    jmp     @entry                  ; $D648  next entry
 
-@loc_D64B:
-    dey                             ; $D64B
+@checkColumn:
+    dey                             ; $D64B  its first byte:
     lda     (enemyListPtr),y        ; $D64C
-    and     #$0F                    ; $D64E
-    cmp     temp1                   ; $D650
-    beq     @loc_D658               ; $D652
-    iny                             ; $D654
-    jmp     @loc_D647               ; $D655
+    and     #$0F                    ; $D64E  bits 3-0: the column
+    cmp     temp1                   ; $D650  this column?
+    beq     @found                  ; $D652
+    iny                             ; $D654  no
+    jmp     @nextByte               ; $D655
 
-@loc_D658:
+@found:
     lda     (enemyListPtr),y        ; $D658
-    asl     a                       ; $D65A
-    bcs     Enemy_SpawnDone         ; $D65B
-    inc     enemyActive,x           ; $D65D
+    asl     a                       ; $D65A  bit 7: already spawned?
+    bcs     Enemy_SpawnDone         ; $D65B  yes
+    inc     enemyActive,x           ; $D65D  active
     pha                             ; $D65F
-    sec                             ; $D660
+    sec                             ; $D660  mark it spawned
     ror     a                       ; $D661
     sta     (enemyListPtr),y        ; $D662
     sty     temp2                   ; $D664
-    pla                             ; $D666
+    pla                             ; $D666  bits 6-4:
     lsr     a                       ; $D667
     lsr     a                       ; $D668
     lsr     a                       ; $D669
@@ -4545,13 +4560,13 @@ Enemy_Spawn:
     lsr     a                       ; $D66B
     and     #$07                    ; $D66C
     tay                             ; $D66E
-    lda     EnemySpawnYPositions,y  ; $D66F
+    lda     EnemySpawnYPositions,y  ; $D66F  its Y
     sta     objY+1,x                ; $D672
     ldy     temp2                   ; $D674
-    sty     enemySramIndex,x        ; $D676
-    lda     temp0                   ; $D678
+    sty     enemySramIndex,x        ; $D676  the list entry, for despawning
+    lda     temp0                   ; $D678  X: the edge's page
     sta     objXHi+1,x              ; $D67A
-    lda     temp1                   ; $D67C
+    lda     temp1                   ; $D67C  and column x 16
     asl     a                       ; $D67E
     asl     a                       ; $D67F
     asl     a                       ; $D680
@@ -4559,14 +4574,14 @@ Enemy_Spawn:
     sta     objX+1,x                ; $D682
     iny                             ; $D684
     lda     (enemyListPtr),y        ; $D685
-    and     #$3F                    ; $D687
+    and     #$3F                    ; $D687  bits 5-0: the type
     sta     enemyType,x             ; $D689
-    jsr     Enemy_FaceLink          ; $D68B
-    lda     EnemySpawnXVelocities,y ; $D68E
+    jsr     Enemy_FaceLink          ; $D68B  y = 0 Link right, 1 left
+    lda     EnemySpawnXVelocities,y ; $D68E  1/2 pixel a frame toward Link
     sta     objXVelocity+1,x        ; $D691
-    lda     #$01                    ; $D693
+    lda     #$01                    ; $D693  on screen
     sta     objYHi+1,x              ; $D695
-    lsr     a                       ; $D697
+    lsr     a                       ; $D697  0:
     sta     enemyStunTimer,x        ; $D698
     sta     enemyAiState,x          ; $D69B
     sta     objState+1,x            ; $D69D
@@ -4575,12 +4590,12 @@ Enemy_Spawn:
     sta     enemyAiVar,x            ; $D6A5
     sta     enemyLanded,x           ; $D6A8
     ldy     enemyType,x             ; $D6AB
-    lda     sramEnemyHp,y           ; $D6AD
+    lda     sramEnemyHp,y           ; $D6AD  hit points from the group's table
     sta     enemyHp,x               ; $D6B0
     tya                             ; $D6B2
-    asl     a                       ; $D6B3
+    asl     a                       ; $D6B3  word index
     tay                             ; $D6B4
-    lda     sramEnemyInitPtrs,y     ; $D6B5
+    lda     sramEnemyInitPtrs,y     ; $D6B5  the type's set-up routine
     sta     temp14                  ; $D6B8
     lda     sramEnemyInitPtrs+1,y   ; $D6BA
     jmp     JumpToTemp14            ; $D6BD
@@ -4606,8 +4621,8 @@ Enemy_SpawnDone:
 ; ---------------------------------------------------------------------------
 Enemy_HurtLinkOnContact:
     lda     objCollision+1,x        ; $D6C1
-    and     #$10                    ; $D6C3
-    beq     Enemy_SpawnDone         ; $D6C5
+    and     #$10                    ; $D6C3  touching Link?
+    beq     Enemy_SpawnDone         ; $D6C5  no
     jmp     Link_HurtByEnemy        ; $D6C7
 
 ; ---------------------------------------------------------------------------
@@ -4620,9 +4635,9 @@ Enemy_HurtLinkOnContact:
 ; ---------------------------------------------------------------------------
 Enemy_RunAi:
     lda     enemyType,x             ; $D6CA
-    asl     a                       ; $D6CC
+    asl     a                       ; $D6CC  word index
     tay                             ; $D6CD
-    lda     sramEnemyAiPtrs,y       ; $D6CE
+    lda     sramEnemyAiPtrs,y       ; $D6CE  the type's routine
     sta     temp14                  ; $D6D1
     lda     sramEnemyAiPtrs+1,y     ; $D6D3
 
@@ -4635,7 +4650,7 @@ Enemy_RunAi:
 ; ---------------------------------------------------------------------------
 JumpToTemp14:
     sta     temp15                  ; $D6D6
-    jmp     (temp14)                ; $D6D8
+    jmp     (temp14)                ; $D6D8  (a jsr to here returns from the routine)
 ; (unreferenced: $D6DB-$D78A, 176 bytes)
 ; (Deeler_Ai is reached only through the enemy AI tables of the area
 ; banks, EnemyAiPtrs_BankN.)
@@ -5788,24 +5803,24 @@ Ache_Ai:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_FireProjectile:
-    ldy     #$05                    ; $DBCE
+    ldy     #$05                    ; $DBCE  projectile slots 5 down to 0
     jsr     Projectile_FindFreeFrom ; $DBD0
-    bcs     @done                   ; $DBD3
-    lda     #$04                    ; $DBD5
+    bcs     @done                   ; $DBD3  none free
+    lda     #$04                    ; $DBD5  type 4
     sta     a:objState+7,y          ; $DBD7
-    lda     objX+1,x                ; $DBDA
+    lda     objX+1,x                ; $DBDA  at the enemy's position
     sta     a:objX+7,y              ; $DBDC
     lda     objXHi+1,x              ; $DBDF
     sta     a:objXHi+7,y            ; $DBE1
     lda     objY+1,x                ; $DBE4
     sta     a:objY+7,y              ; $DBE6
-    lda     objFacing+1,x           ; $DBE9
+    lda     objFacing+1,x           ; $DBE9  and facing
     sta     a:objFacing+7,y         ; $DBEB
     tax                             ; $DBEE
-    lda     ProjectileSpeedsByFacing,x ; $DBEF
+    lda     ProjectileSpeedsByFacing,x ; $DBEF  its speed for the facing
     sta     a:objXVelocity+7,y      ; $DBF2
     ldx     currentObject           ; $DBF5
-    clc                             ; $DBF7
+    clc                             ; $DBF7  fired
 
 @done:
     rts                             ; $DBF8
@@ -5816,7 +5831,7 @@ RockSpeeds:
     .byte   $10, $F0                                                        ; $DBF9
 
 Projectile_FindFree:
-    ldy     #$03                    ; $DBFB
+    ldy     #$03                    ; $DBFB  slots 3 down to 0
 
 ; ---------------------------------------------------------------------------
 ; Projectile_FindFreeFrom
@@ -5831,18 +5846,18 @@ Projectile_FindFree:
 ; ---------------------------------------------------------------------------
 Projectile_FindFreeFrom:
     lda     a:objState+7,y          ; $DBFD
-    beq     @loc_DC07               ; $DC00
+    beq     @found                  ; $DC00  free
     dey                             ; $DC02
     bpl     Projectile_FindFreeFrom ; $DC03
-    sec                             ; $DC05
+    sec                             ; $DC05  none
     rts                             ; $DC06
 
-@loc_DC07:
+@found:
     lda     #$01                    ; $DC07
-    sta     a:objYHi+7,y            ; $DC09
-    sta     a:objFacing+7,y         ; $DC0C
+    sta     a:objYHi+7,y            ; $DC09  on screen,
+    sta     a:objFacing+7,y         ; $DC0C  facing right,
     lsr     a                       ; $DC0F
-    sta     objYVelocity+7,y        ; $DC10
+    sta     objYVelocity+7,y        ; $DC10  not moving vertically
     clc                             ; $DC13
     rts                             ; $DC14
 
@@ -5957,24 +5972,24 @@ RockGenerator_Ai:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_FaceLink:
-    ldy     #$01                    ; $DC91
-    lda     objX                    ; $DC93
+    ldy     #$01                    ; $DC91  right (1) unless
+    lda     objX                    ; $DC93  Link's X + 8
     adc     #$08                    ; $DC95
     pha                             ; $DC97
     lda     objXHi                  ; $DC98
     adc     #$00                    ; $DC9A
     sta     temp14                  ; $DC9C
     pla                             ; $DC9E
-    sbc     objX+1,x                ; $DC9F
+    sbc     objX+1,x                ; $DC9F  - the enemy's
     sta     temp15                  ; $DCA1
     lda     temp14                  ; $DCA3
     sbc     objXHi+1,x              ; $DCA5
-    bpl     @loc_DCAA               ; $DCA7
-    iny                             ; $DCA9
+    bpl     @setFacing              ; $DCA7  Link to the right
+    iny                             ; $DCA9  left (2)
 
-@loc_DCAA:
+@setFacing:
     sty     objFacing+1,x           ; $DCAA
-    dey                             ; $DCAC
+    dey                             ; $DCAC  y = facing - 1
     rts                             ; $DCAD
 
 ; ---------------------------------------------------------------------------
@@ -5986,25 +6001,25 @@ Enemy_FaceLink:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Die:
-    lda     timerFast+TIMER_ENEMY,x ; $DCAE
-    bne     @loc_DCC2               ; $DCB1
-    lda     #$20                    ; $DCB3
+    lda     timerFast+TIMER_ENEMY,x ; $DCAE  death timer
+    bne     @dying                  ; $DCB1  still dying
+    lda     #$20                    ; $DCB3  then show the experience 32 frames
     ldy     enemyExpClass,x         ; $DCB5
-    bpl     @loc_DCBC               ; $DCB8
-    lda     #$00                    ; $DCBA
+    bpl     @setTimer               ; $DCB8
+    lda     #$00                    ; $DCBA  (none for a drop: at once)
 
-@loc_DCBC:
+@setTimer:
     sta     timerFast+TIMER_ENEMY,x ; $DCBC
-    inc     enemyActive,x           ; $DCBF
+    inc     enemyActive,x           ; $DCBF  ENEMY_STATE_SHOW_EXP
     rts                             ; $DCC1
 
-@loc_DCC2:
+@dying:
     ldy     enemyType,x             ; $DCC2
-    lda     sramEnemyHitbox,y       ; $DCC4
-    ldy     timerFast+TIMER_ENEMY,x ; $DCC7
+    lda     sramEnemyHitbox,y       ; $DCC4  a boss ($FF)?
+    ldy     timerFast+TIMER_ENEMY,x ; $DCC7  the timer
     cmp     #$FF                    ; $DCCA
-    beq     Enemy_DieStep           ; $DCCC
-    jmp     Enemy_DrawDying         ; $DCCE
+    beq     Enemy_DieStep           ; $DCCC  boss: its own steps
+    jmp     Enemy_DrawDying         ; $DCCE  others: the puff
 ; (unreferenced: $DCD1-$DCD1, 1 bytes)
 
 DyingXOffsets:
@@ -6017,59 +6032,67 @@ BossDeathPalette:
 ; ---------------------------------------------------------------------------
 ; Enemy_DieStep
 ;
-; A step of an enemy's death (Enemy_Die): flash the screen for some
-; enemies (y = $68).
+; A boss's death (sramEnemyHitbox $FF), a frame at a time, by its death
+; timer y (from $7E): the boss is drawn until $68, when the screen flashes
+; (BossDeathPalette, spellFlash) with the boss dying sound; from then to
+; the end (103 frames) a copy of Link, drawn by Link_DrawBody as Dark
+; Link (swordOwner 1, palette 2), stands 8 pixels from him in his pose.
+; Every frame, sparks burst where the boss was (Boss_SpawnDeathSpark_Bank4
+; or _Bank5).  Checked over the no-glitch movie: all eight bosses it
+; kills, and a screenshot of palace 1's.
+;
+; In:      x = enemy index, y = death timer
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DieStep:
-    cpy     #$68                    ; $DCDB
-    bne     @loc_DCED               ; $DCDD
-    lda     #$E8                    ; $DCDF
+    cpy     #$68                    ; $DCDB  the death timer (from $7E) at $68:
+    bne     @draw                   ; $DCDD
+    lda     #$E8                    ; $DCDF  the screen flashes,
     sta     spellFlash              ; $DCE1
-    lda     #$0F                    ; $DCE4
+    lda     #$0F                    ; $DCE4  PPU string $0F: BossDeathPalette
     sta     ppuStringSelect         ; $DCE6
-    lda     #$80                    ; $DCE9
+    lda     #$80                    ; $DCE9  the boss dying sound (shared $80)
     sta     sfxRequest              ; $DCEB
 
-@loc_DCED:
-    bcc     @loc_DCF5               ; $DCED
-    jsr     Enemy_Draw              ; $DCEF
-    jmp     @loc_DD27               ; $DCF2
+@draw:
+    bcc     @double                 ; $DCED  below $68: Link's double
+    jsr     Enemy_Draw              ; $DCEF  $7E-$68: the boss itself
+    jmp     @sparks                 ; $DCF2
 
-@loc_DCF5:
-    lda     objY                    ; $DCF5
+@double:
+    lda     objY                    ; $DCF5  the double: at Link's Y,
     sta     objY+1                  ; $DCF7
-    jsr     Enemy_FaceLink          ; $DCF9
+    jsr     Enemy_FaceLink          ; $DCF9  y = 0 Link right of the boss, 1 left
     lda     drawScreenX             ; $DCFC
-    adc     DyingXOffsets,y         ; $DCFE
+    adc     DyingXOffsets,y         ; $DCFE  8 pixels from Link
     sta     drawScreenX+1           ; $DD01
-    lda     objState                ; $DD03
+    lda     objState                ; $DD03  in his pose,
     sta     objState+1              ; $DD05
-    lda     linkWalkDir             ; $DD07
+    lda     linkWalkDir             ; $DD07  and his facing,
     sta     darkLinkWalkDir         ; $DD09
-    lda     #$50                    ; $DD0B
+    lda     #$50                    ; $DD0B  in the boss's sprites,
     sta     objOamOffset+1          ; $DD0D
-    lda     #$00                    ; $DD0F
+    lda     #$00                    ; $DD0F  on screen,
     sta     drawOffscreen+1         ; $DD11
-    ldx     #$01                    ; $DD13
+    ldx     #$01                    ; $DD13  drawn as Dark Link,
     stx     swordOwner              ; $DD15
-    inx                             ; $DD17
+    inx                             ; $DD17  in palette 2
     stx     extraSpriteAttrs        ; $DD18
     jsr     Link_DrawBody           ; $DD1B
     ldx     currentObject           ; $DD1E
-    lda     objX+1,x                ; $DD20
+    lda     objX+1,x                ; $DD20  the boss's screen X again,
     sbc     scrollX                 ; $DD22
-    sta     drawScreenX+1           ; $DD25
+    sta     drawScreenX+1           ; $DD25  for the sparks
 
-@loc_DD27:
-    jsr     World_GetIndex          ; $DD27
-    cmp     #$0F                    ; $DD2A
-    bne     @loc_DD31               ; $DD2C
-    jmp     Boss_SpawnDeathSpark_Bank5 ; $DD2E
+@sparks:
+    jsr     World_GetIndex          ; $DD27  sparks where the boss was:
+    cmp     #$0F                    ; $DD2A  the Great Palace?
+    bne     @palaceSparks           ; $DD2C
+    jmp     Boss_SpawnDeathSpark_Bank5 ; $DD2E  bank 5's
 
-@loc_DD31:
-    jmp     Boss_SpawnDeathSpark_Bank4 ; $DD31
+@palaceSparks:
+    jmp     Boss_SpawnDeathSpark_Bank4 ; $DD31  bank 4's
 
 ; ---------------------------------------------------------------------------
 ; Enemy_RemoveAfterDeath
@@ -6083,9 +6106,9 @@ Enemy_DieStep:
 ; ---------------------------------------------------------------------------
 Enemy_RemoveAfterDeath:
     ldy     enemyType,x             ; $DD34
-    lda     sramEnemyFlags,y        ; $DD36
+    lda     sramEnemyFlags,y        ; $DD36  comes back?
     and     #$40                    ; $DD39
-    beq     Enemy_Remove            ; $DD3B
+    beq     Enemy_Remove            ; $DD3B  no: stays gone
 
 ; ---------------------------------------------------------------------------
 ; Enemy_Despawn
@@ -6098,15 +6121,15 @@ Enemy_RemoveAfterDeath:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_Despawn:
-    ldy     enemySramIndex,x        ; $DD3D
-    bmi     Enemy_Remove            ; $DD3F
+    ldy     enemySramIndex,x        ; $DD3D  its list entry
+    bmi     Enemy_Remove            ; $DD3F  none
     lda     (enemyListPtr),y        ; $DD41
-    and     #$7F                    ; $DD43
+    and     #$7F                    ; $DD43  not spawned: can come again
     sta     (enemyListPtr),y        ; $DD45
 
 Enemy_Remove:
     lda     #$00                    ; $DD47
-    sta     enemyActive,x           ; $DD49
+    sta     enemyActive,x           ; $DD49  the slot is free
     rts                             ; $DD4B
 
 ExperienceTilesLeft:
@@ -6125,45 +6148,45 @@ ExperienceTilesRight:
 ; ---------------------------------------------------------------------------
 Enemy_ShowExperience:
     lda     timerFast+TIMER_ENEMY,x ; $DD6C
-    beq     Enemy_AwardExperience   ; $DD6F
+    beq     Enemy_AwardExperience   ; $DD6F  time up: award it
     ldy     objOamOffset+1,x        ; $DD71
-    lda     enemyExpClass,x         ; $DD73
+    lda     enemyExpClass,x         ; $DD73  class
     and     #$0F                    ; $DD76
     tax                             ; $DD78
-    lda     ExperienceTilesLeft,x   ; $DD79
+    lda     ExperienceTilesLeft,x   ; $DD79  its two tiles
     sta     oamBuffer+1,y           ; $DD7C
     lda     ExperienceTilesRight,x  ; $DD7F
     ldx     currentObject           ; $DD82
     sta     oamBuffer+5,y           ; $DD84
-    lda     #$01                    ; $DD87
+    lda     #$01                    ; $DD87  palette 1
     sta     oamBuffer+2,y           ; $DD89
     sta     oamBuffer+6,y           ; $DD8C
     lda     frameCounter            ; $DD8F
     lsr     a                       ; $DD91
-    bcc     @loc_DD96               ; $DD92
-    dec     objY+1,x                ; $DD94
+    bcc     @setY                   ; $DD92
+    dec     objY+1,x                ; $DD94  rising every other frame
 
-@loc_DD96:
+@setY:
     lda     objY+1,x                ; $DD96
     sta     oamBuffer,y             ; $DD98
     sta     oamBuffer+4,y           ; $DD9B
     lda     drawScreenX+1           ; $DD9E
     sta     oamBuffer+3,y           ; $DDA0
     clc                             ; $DDA3
-    adc     #$08                    ; $DDA4
+    adc     #$08                    ; $DDA4  the right one 8 pixels on
     sta     oamBuffer+7,y           ; $DDA6
-    lda     drawOffscreen+1         ; $DDA9
+    lda     drawOffscreen+1         ; $DDA9  off screen:
     pha                             ; $DDAB
     and     #$08                    ; $DDAC
-    beq     @loc_DDB5               ; $DDAE
-    lda     #$F8                    ; $DDB0
+    beq     @checkRight             ; $DDAE
+    lda     #$F8                    ; $DDB0  hide the left one
     sta     oamBuffer,y             ; $DDB2
 
-@loc_DDB5:
+@checkRight:
     pla                             ; $DDB5
     and     #$04                    ; $DDB6
     beq     @done                   ; $DDB8
-    lda     #$F8                    ; $DDBA
+    lda     #$F8                    ; $DDBA  hide the right one
     sta     oamBuffer+4,y           ; $DDBC
 
 @done:
@@ -6187,20 +6210,20 @@ ExpRewardsHi:
 ; ---------------------------------------------------------------------------
 Enemy_AwardExperience:
     lda     enemyExpClass,x         ; $DDEC
-    bmi     Enemy_DropItem          ; $DDEF
+    bmi     Enemy_DropItem          ; $DDEF  a drop instead
     tay                             ; $DDF1
-    lda     ExpRewardsLo,y          ; $DDF2
+    lda     ExpRewardsLo,y          ; $DDF2  class's points
     clc                             ; $DDF5
-    adc     experiencePending+1     ; $DDF6
+    adc     experiencePending+1     ; $DDF6  added to experiencePending
     sta     experiencePending+1     ; $DDF9
     lda     ExpRewardsHi,y          ; $DDFC
     adc     experiencePending       ; $DDFF
     sta     experiencePending       ; $DE02
     ldy     enemyType,x             ; $DE05
-    lda     sramEnemyHitbox,y       ; $DE07
+    lda     sramEnemyHitbox,y       ; $DE07  a boss?
     cmp     #$FF                    ; $DE0A
-    bne     @loc_DE1D               ; $DE0C
-    lda     #$80                    ; $DE0E
+    bne     @remove                 ; $DE0C
+    lda     #$80                    ; $DE0E  yes: drops its item mid screen,
     sta     objX+1,x                ; $DE10
     lsr     a                       ; $DE12
     sta     objY+1,x                ; $DE13
@@ -6209,7 +6232,7 @@ Enemy_AwardExperience:
     sta     enemyAiState,x          ; $DE1A
     rts                             ; $DE1C
 
-@loc_DE1D:
+@remove:
     jmp     Enemy_RemoveAfterDeath  ; $DE1D
 
 ; ---------------------------------------------------------------------------
@@ -6223,17 +6246,17 @@ Enemy_AwardExperience:
 ; ---------------------------------------------------------------------------
 Enemy_DropItem:
     jsr     Enemy_RemoveAfterDeath  ; $DE20
-    lda     #$02                    ; $DE23
+    lda     #$02                    ; $DE23  the drop sound (pulse 1 $02)
     sta     sfxRequest+3            ; $DE25
-    lda     enemyDropItem,x         ; $DE27
+    lda     enemyDropItem,x         ; $DE27  the item kind
     sta     enemyAiState,x          ; $DE2A
-    lda     #$FF                    ; $DE2C
+    lda     #$FF                    ; $DE2C  no list entry
     sta     enemySramIndex,x        ; $DE2E
-    lda     #$01                    ; $DE30
+    lda     #$01                    ; $DE30  active,
     sta     enemyActive,x           ; $DE32
-    sta     enemyType,x             ; $DE34
+    sta     enemyType,x             ; $DE34  type 1 (an item),
     lsr     a                       ; $DE36
-    sta     objYVelocity+1,x        ; $DE37
+    sta     objYVelocity+1,x        ; $DE37  not falling
     sta     enemyHp,x               ; $DE3A
     rts                             ; $DE3C
 
@@ -6260,16 +6283,16 @@ Enemy_UpdateWithBg:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_UpdateCommon:
-    ldy     #$01                    ; $DE40
-    inx                             ; $DE42
+    ldy     #$01                    ; $DE40  draw category 1,
+    inx                             ; $DE42  slot x + 1
     jsr     Obj_ComputeScreenPos    ; $DE43
     ldx     currentObject           ; $DE46
-    lda     objYHi+1,x              ; $DE48
+    lda     objYHi+1,x              ; $DE48  fallen below the screen?
     cmp     #$02                    ; $DE4A
-    bcc     @loc_DE51               ; $DE4C
-    jmp     Enemy_Despawn           ; $DE4E
+    bcc     @draw                   ; $DE4C
+    jmp     Enemy_Despawn           ; $DE4E  yes: gone (it can come back)
 
-@loc_DE51:
+@draw:
     jsr     Enemy_Draw              ; $DE51
 
 ; ---------------------------------------------------------------------------
@@ -6282,68 +6305,69 @@ Enemy_UpdateCommon:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckCollisions:
-    lda     drawOffscreen+1         ; $DE54
-    and     #$FC                    ; $DE56
-    beq     @loc_DE63               ; $DE58
-    lda     objCollision+1,x        ; $DE5A
+    lda     drawOffscreen+1         ; $DE54  off screen vertically, or its left
+    and     #$FC                    ; $DE56  16 pixels (probe points 0-1)?
+    beq     @onScreen               ; $DE58
+    lda     objCollision+1,x        ; $DE5A  no hits: keep only bits 3-0
     and     #$0F                    ; $DE5C
     sta     objCollision+1,x        ; $DE5E
     jmp     Enemy_DespawnIfFar      ; $DE60
 
-@loc_DE63:
-    jsr     Enemy_CheckProjectileHits ; $DE63
-    jsr     Enemy_CheckSwordHit     ; $DE66
-    jmp     Enemy_CheckLinkContact  ; $DE69
+@onScreen:
+    jsr     Enemy_CheckProjectileHits ; $DE63  Link's beams and fire
+    jsr     Enemy_CheckSwordHit     ; $DE66  the sword
+    jmp     Enemy_CheckLinkContact  ; $DE69  touching Link
 
 ; ---------------------------------------------------------------------------
 ; Enemy_DespawnIfFar
 ;
-; Despawn enemy x if it is more than $60 pixels beyond either edge of the
-; screen.  Enemy types below 3 and type $13 are never despawned.
+; Despawn enemy x if it is $160 pixels or more beyond either edge of the
+; screen (checked over the 100% movie: despawns at 352-355 pixels).  Enemy
+; types below 3 and the elevator ($13) are never despawned.
 ;
 ; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DespawnIfFar:
     lda     enemyType,x             ; $DE6C
-    cmp     #ENEMY_TYPE_ELEVATOR    ; $DE6E
+    cmp     #ENEMY_TYPE_ELEVATOR    ; $DE6E  elevators,
     beq     @done                   ; $DE70
-    cmp     #$03                    ; $DE72
-    bcc     @done                   ; $DE74
+    cmp     #$03                    ; $DE72  and types 0-2 (1: items)
+    bcc     @done                   ; $DE74  always stay
     ldy     #$01                    ; $DE76
     sty     temp15                  ; $DE78
-    lda     scrollX                 ; $DE7A
+    lda     scrollX                 ; $DE7A  screen's left edge
     sec                             ; $DE7D
-    sbc     #$60                    ; $DE7E
+    sbc     #$60                    ; $DE7E  - $60
     sta     temp1                   ; $DE80
-    lda     scrollXHi               ; $DE82
+    lda     scrollXHi               ; $DE82  - a page: $160 to the left
     sbc     temp15                  ; $DE85
     sta     temp0                   ; $DE87
-    inc     temp0                   ; $DE89
-    lda     scrollRightX            ; $DE8B
+    inc     temp0                   ; $DE89  (+1: the bias of the objXHi + 1 below)
+    lda     scrollRightX            ; $DE8B  right edge
     clc                             ; $DE8E
-    adc     #$60                    ; $DE8F
+    adc     #$60                    ; $DE8F  + $60
     sta     temp3                   ; $DE91
-    lda     scrollRightXHi          ; $DE93
+    lda     scrollRightXHi          ; $DE93  + a page: $160 to the right
     adc     temp15                  ; $DE96
     sta     temp2                   ; $DE98
-    inc     temp2                   ; $DE9A
-    lda     objX+1,x                ; $DE9C
+    inc     temp2                   ; $DE9A  (+1 bias)
+    lda     objX+1,x                ; $DE9C  X
     cmp     temp1                   ; $DE9E
     ldy     objXHi+1,x              ; $DEA0
-    iny                             ; $DEA2
+    iny                             ; $DEA2  + a page, so a page of -1 compares
     tya                             ; $DEA3
-    sbc     temp0                   ; $DEA4
-    bmi     @loc_DEB4               ; $DEA6
+    sbc     temp0                   ; $DEA4  left of the left limit?
+    bmi     @despawn                ; $DEA6  yes
     lda     objX+1,x                ; $DEA8
     cmp     temp3                   ; $DEAA
     ldy     objXHi+1,x              ; $DEAC
     iny                             ; $DEAE
     tya                             ; $DEAF
-    sbc     temp2                   ; $DEB0
-    bmi     @done                   ; $DEB2
+    sbc     temp2                   ; $DEB0  left of the right limit?
+    bmi     @done                   ; $DEB2  yes: stays
 
-@loc_DEB4:
+@despawn:
     jsr     Enemy_Despawn           ; $DEB4
 
 @done:
@@ -6361,25 +6385,25 @@ Enemy_DespawnIfFar:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_MoveX:
-    inx                             ; $DEB8
+    inx                             ; $DEB8  slot x + 1
     jsr     Obj_MoveX               ; $DEB9
     dex                             ; $DEBC
     rts                             ; $DEBD
 
 Enemy_MoveYAndFall:
     jsr     Enemy_MoveY             ; $DEBE
-    inc     objYVelocity+1,x        ; $DEC1
+    inc     objYVelocity+1,x        ; $DEC1  then 2/16 pixel a frame faster down
     inc     objYVelocity+1,x        ; $DEC4
     rts                             ; $DEC7
 
 Enemy_MoveY:
-    inx                             ; $DEC8
+    inx                             ; $DEC8  slot x + 1
     jsr     Obj_MoveY               ; $DEC9
     dex                             ; $DECC
     rts                             ; $DECD
 
 Enemy_MoveYWithGravity:
-    inx                             ; $DECE
+    inx                             ; $DECE  slot x + 1
     jsr     Obj_MoveYWithGravity    ; $DECF
     dex                             ; $DED2
     rts                             ; $DED3
@@ -6395,13 +6419,13 @@ Enemy_MoveYWithGravity:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Move:
-    txa                             ; $DED4
+    txa                             ; $DED4  slot x + 7
     clc                             ; $DED5
     adc     #$07                    ; $DED6
     tax                             ; $DED8
     jsr     Obj_MoveX               ; $DED9
     jsr     Obj_MoveY               ; $DEDC
-    ldy     #$02                    ; $DEDF
+    ldy     #$02                    ; $DEDF  draw category 2
     jsr     Obj_ComputeScreenPos    ; $DEE1
     ldx     currentObject           ; $DEE4
     rts                             ; $DEE6
@@ -6419,19 +6443,19 @@ Projectile_Move:
 ; ---------------------------------------------------------------------------
 AreaMap_PutTileRight:
     sta     (temp14),y              ; $DEE7
-    iny                             ; $DEE9
+    iny                             ; $DEE9  next column
     tya                             ; $DEEA
-    and     #$0F                    ; $DEEB
-    bne     @done                   ; $DEED
-    lda     temp14                  ; $DEEF
+    and     #$0F                    ; $DEEB  end of the page's row?
+    bne     @done                   ; $DEED  no
+    lda     temp14                  ; $DEEF  yes: the next page
     clc                             ; $DEF1
     adc     #$D0                    ; $DEF2
     sta     temp14                  ; $DEF4
-    bcc     @loc_DEFA               ; $DEF6
+    bcc     @rowStart               ; $DEF6
     inc     temp15                  ; $DEF8
 
-@loc_DEFA:
-    lda     areaBuildPos            ; $DEFA
+@rowStart:
+    lda     areaBuildPos            ; $DEFA  at the start of the row
     and     #$F0                    ; $DEFD
     tay                             ; $DEFF
 
@@ -6499,11 +6523,11 @@ Math_DivMod15:
     ldy     #$FF                    ; $DF3F
 
 @loop:
-    iny                             ; $DF41
+    iny                             ; $DF41  count the 15s
     sec                             ; $DF42
     sbc     #$0F                    ; $DF43
     bcs     @loop                   ; $DF45
-    adc     #$0F                    ; $DF47
+    adc     #$0F                    ; $DF47  back one: the remainder
     rts                             ; $DF49
 
 AreaMap_PutTileNextBuildRow:
@@ -6520,7 +6544,7 @@ AreaMap_PutTileNextBuildRow:
 AreaMap_NextBuildRow:
     lda     areaBuildPos            ; $DF4C
     clc                             ; $DF4F
-    adc     #$10                    ; $DF50
+    adc     #$10                    ; $DF50  a row down
     sta     areaBuildPos            ; $DF52
     rts                             ; $DF55
 
@@ -6530,7 +6554,7 @@ AreaMap_PutTileDown:
 AreaMap_NextRow:
     tya                             ; $DF58
     clc                             ; $DF59
-    adc     #$10                    ; $DF5A
+    adc     #$10                    ; $DF5A  a row down
     tay                             ; $DF5C
     rts                             ; $DF5D
 
@@ -6761,7 +6785,7 @@ Overworld_QueueMapStrip:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_PlaceOnGround:
-    lda     #$AF                    ; $E030
+    lda     #$AF                    ; $E030  from the bottom of the playfield,
 
 @loop:
     sta     objY                    ; $E032
@@ -6769,18 +6793,20 @@ Link_PlaceOnGround:
     ldx     #$00                    ; $E036
     jsr     Obj_ComputeScreenPos    ; $E038
     jsr     Link_CheckBg            ; $E03B
-    lda     objCollision            ; $E03E
-    beq     @loc_E04B               ; $E040
-    lda     objY                    ; $E042
+    lda     objCollision            ; $E03E  inside something?
+    beq     @done                   ; $E040  no: stand there
+    lda     objY                    ; $E042  yes: 16 pixels up,
     sec                             ; $E044
     sbc     #$10                    ; $E045
-    cmp     #$10                    ; $E047
+    cmp     #$10                    ; $E047  but not above Y $10
     bcs     @loop                   ; $E049
 
-@loc_E04B:
+@done:
     inc     objY                    ; $E04B
     rts                             ; $E04D
 
+; objCollision bit set by each probe point (see ProbeOffsetX): 1 wall
+; right, 2 wall left, 4 floor, 8 solid above.
 ProbeCollisionBits:
     .byte   $01, $02, $01, $02, $04, $04, $08, $08, $01, $02                ; $E04E
 ; (unreferenced: $E058-$E059, 2 bytes)
@@ -6802,93 +6828,93 @@ ProbeCollisionBits:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_CheckBg:
-    jsr     Mmc1_SetPrgBankArea     ; $E070
+    jsr     Mmc1_SetPrgBankArea     ; $E070  the tile map tests are in the area bank
     jsr     Link_CheckBgInBank      ; $E073
-    jmp     Mmc1_SetPrgBank0        ; $E076
+    jmp     Mmc1_SetPrgBank0        ; $E076  map bank 0 again, and return
 
 Link_CheckBgInBank:
     ldx     #$00                    ; $E079
-    stx     objCollision            ; $E07B
-    lda     #$07                    ; $E07D
+    stx     objCollision            ; $E07B  no collisions yet
+    lda     #$07                    ; $E07D  head: probes 7, 6
     clc                             ; $E07F
-    adc     linkFairy               ; $E080
+    adc     linkFairy               ; $E080  (the fairy's: +8)
     tay                             ; $E082
-    jsr     Obj_ProbeBgPair         ; $E083
+    jsr     Obj_ProbeBgPair         ; $E083  bit 3: solid above
     lda     temp3                   ; $E086
-    sta     temp13                  ; $E088
-    lda     #$05                    ; $E08A
+    sta     temp13                  ; $E088  (the head's tile)
+    lda     #$05                    ; $E08A  feet: probes 5, 4
     clc                             ; $E08C
     adc     linkFairy               ; $E08D
     tay                             ; $E08F
-    jsr     Obj_ProbeBgPair         ; $E090
-    ldy     #$1D                    ; $E093
+    jsr     Obj_ProbeBgPair         ; $E090  bit 2: on a floor
+    ldy     #$1D                    ; $E093  the tile under his middle (probe $1D)
     jsr     Obj_GetBgTile           ; $E095
-    lda     #$00                    ; $E098
+    lda     #$00                    ; $E098  out of the swamp
     sta     linkSlowed              ; $E09A
     lda     temp3                   ; $E09D
-    cmp     AreaBank::SpecialTiles+6 ; $E09F  lava
-    bne     @loc_E0B0               ; $E0A2
-    lda     #$01                    ; $E0A4
+    cmp     AreaBank::SpecialTiles+6 ; $E09F  lava:
+    bne     @checkSwamp             ; $E0A2
+    lda     #$01                    ; $E0A4  Link's cry,
     sta     dmcRequest              ; $E0A6
-    lda     #$10                    ; $E0A8
+    lda     #$10                    ; $E0A8  hurt,
     sta     timerFast+TIMER_LINK_HURT ; $E0AA
-    inc     linkMode                ; $E0AD
+    inc     linkMode                ; $E0AD  and sinking (LINK_MODE_SINK)
     rts                             ; $E0AF
 
-@loc_E0B0:
-    cmp     AreaBank::SpecialTiles+7 ; $E0B0  (+7, +8: see below)
-    beq     @loc_E0BA               ; $E0B3
+@checkSwamp:
+    cmp     AreaBank::SpecialTiles+7 ; $E0B0  the swamp tiles:
+    beq     @swamp                  ; $E0B3
     cmp     AreaBank::SpecialTiles+8 ; $E0B5
-    bne     @loc_E0C5               ; $E0B8
+    bne     @checkSpecial           ; $E0B8
 
-@loc_E0BA:
+@swamp:
     ldy     objY                    ; $E0BA
-    cpy     #$A5                    ; $E0BC
-    bcc     @loc_E0C5               ; $E0BE
-    ldy     #$20                    ; $E0C0
+    cpy     #$A5                    ; $E0BC  low enough (Y $A5 and up)?
+    bcc     @checkSpecial           ; $E0BE
+    ldy     #$20                    ; $E0C0  slowed, his feet behind the background
     sty     linkSlowed              ; $E0C2
 
-@loc_E0C5:
+@checkSpecial:
     cmp     AreaBank::SpecialTiles+5 ; $E0C5  crumbling floor
-    beq     @loc_E0FC               ; $E0C8
-    cmp     AreaBank::SpecialTiles  ; $E0CA  door
-    beq     @loc_E0E6               ; $E0CD
+    beq     @crumble                ; $E0C8
+    cmp     AreaBank::SpecialTiles  ; $E0CA  a door
+    beq     @door                   ; $E0CD
     cmp     AreaBank::SpecialTiles+2 ; $E0CF  door
-    beq     @loc_E0E6               ; $E0D2
+    beq     @door                   ; $E0D2
     cmp     AreaBank::SpecialTiles+1 ; $E0D4  door
-    beq     @loc_E0E6               ; $E0D7
-    cmp     AreaBank::SpecialTiles+3 ; $E0D9  chimney
-    bne     @loc_E0F9               ; $E0DC
-    lda     linkStanding            ; $E0DE
-    bne     @loc_E0F9               ; $E0E0
-    inc     chimneyTimer            ; $E0E2
+    beq     @door                   ; $E0D7
+    cmp     AreaBank::SpecialTiles+3 ; $E0D9  a chimney
+    bne     @walls                  ; $E0DC
+    lda     linkStanding            ; $E0DE  crouching on it:
+    bne     @walls                  ; $E0E0
+    inc     chimneyTimer            ; $E0E2  he sinks into it
 
 @done:
     rts                             ; $E0E5
 
-@loc_E0E6:
-    lda     joypadHeld              ; $E0E6
-    and     #$08                    ; $E0E8
-    beq     @loc_E0F9               ; $E0EA
-    lda     linkJumpState           ; $E0EC
+@door:
+    lda     joypadHeld              ; $E0E6  at a door:
+    and     #$08                    ; $E0E8  Up held,
+    beq     @walls                  ; $E0EA
+    lda     linkJumpState           ; $E0EC  on the ground:
     bne     @done                   ; $E0EF
-    inc     doorDepth               ; $E0F1
-    lda     #$16                    ; $E0F4
+    inc     doorDepth               ; $E0F1  one door deeper
+    lda     #$16                    ; $E0F4  Mode_EnterDoor
     jmp     Area_ExitToMode         ; $E0F6
 
-@loc_E0F9:
-    jmp     @loc_E12B               ; $E0F9
+@walls:
+    jmp     @checkWalls             ; $E0F9
 
-@loc_E0FC:
-    lda     #$8F                    ; $E0FC
+@crumble:
+    lda     #$8F                    ; $E0FC  crumbling: tile $8F,
     ldy     temp2                   ; $E0FE
     sta     (temp14),y              ; $E100
-    jsr     BreakingBlock_Start     ; $E102
+    jsr     BreakingBlock_Start     ; $E102  a breaking block slot
     lda     #$81                    ; $E105
     sta     breakingBlockTimer,x    ; $E107
-    lda     #$02                    ; $E10A
+    lda     #$02                    ; $E10A  the bridge crumbling sound
     sta     sfxRequest+1            ; $E10C
-    lda     objY                    ; $E10E
+    lda     objY                    ; $E10E  at the tile under his feet
     clc                             ; $E110
     adc     #$20                    ; $E111
     and     #$F0                    ; $E113
@@ -6903,62 +6929,62 @@ Link_CheckBgInBank:
     sta     breakingBlockXHi,x      ; $E126
     ldx     #$00                    ; $E129
 
-@loc_E12B:
-    lda     objFacing               ; $E12B
-    lsr     a                       ; $E12D
+@checkWalls:
+    lda     objFacing               ; $E12B  walls, facing:
+    lsr     a                       ; $E12D  0 right, 1 left
     clc                             ; $E12E
-    adc     linkFairy               ; $E12F
-    sta     temp0                   ; $E131
+    adc     linkFairy               ; $E12F  (the fairy's: +8)
+    sta     temp0                   ; $E131  upper probe
     pha                             ; $E133
     lda     #$00                    ; $E134
     sta     temp1                   ; $E136
-    jsr     Obj_ProbeBg             ; $E138
+    jsr     Obj_ProbeBg             ; $E138  bit 0 or 1
     pla                             ; $E13B
     clc                             ; $E13C
-    adc     #$02                    ; $E13D
+    adc     #$02                    ; $E13D  lower probe (+2)
     adc     linkFairy               ; $E13F
     sta     temp0                   ; $E141
     lda     #$00                    ; $E143
     sta     temp1                   ; $E145
     jsr     Obj_ProbeBg             ; $E147
-    lda     linkMode                ; $E14A
+    lda     linkMode                ; $E14A  under the player's control?
     cmp     #$01                    ; $E14C
-    bne     Link_CheckBgInBankDone  ; $E14E
-    lda     timerFast+TIMER_LINK_ENTER ; $E150
-    bne     Link_CheckFellOut       ; $E153
-    lda     drawOffscreen           ; $E155
-    ldy     scrollFrozen            ; $E157
-    beq     @loc_E16F               ; $E15A
-    and     #$09                    ; $E15C
+    bne     Link_CheckBgInBankDone  ; $E14E  no
+    lda     timerFast+TIMER_LINK_ENTER ; $E150  entering the area:
+    bne     Link_CheckFellOut       ; $E153  only the fall check
+    lda     drawOffscreen           ; $E155  off the screen's edge?
+    ldy     scrollFrozen            ; $E157  in a room that doesn't scroll:
+    beq     @checkLeave             ; $E15A
+    and     #$09                    ; $E15C  at either edge (probe 0 or 3),
     beq     @done2                  ; $E15E
-    lsr     a                       ; $E160
+    lsr     a                       ; $E160  $08 -> 2 (left), $01 -> 1 (right):
     lsr     a                       ; $E161
     lsr     a                       ; $E162
     tay                             ; $E163
     iny                             ; $E164
-    cpy     objFacing               ; $E165
+    cpy     objFacing               ; $E165  the edge he faces?
     bne     @done2                  ; $E167
-    tya                             ; $E169
+    tya                             ; $E169  treat it as a wall
     ora     objCollision            ; $E16A
     sta     objCollision            ; $E16C
 
 @done2:
     rts                             ; $E16E
 
-@loc_E16F:
-    and     #$06                    ; $E16F
-    beq     Link_CheckFellOut       ; $E171
-    and     #$04                    ; $E173
-    beq     @loc_E179               ; $E175
-    inc     objXHi                  ; $E177
+@checkLeave:
+    and     #$06                    ; $E16F  a scrolling area: his body (probes
+    beq     Link_CheckFellOut       ; $E171  1-2) off screen?
+    and     #$04                    ; $E173  off the left edge:
+    beq     @leave                  ; $E175
+    inc     objXHi                  ; $E177  page -1 -> 0 (the left edge)
 
-@loc_E179:
-    lda     #$00                    ; $E179
-    sta     linkFairy               ; $E17B
+@leave:
+    lda     #$00                    ; $E179  leaving the area:
+    sta     linkFairy               ; $E17B  not a fairy,
     sta     fairyEncounter          ; $E17D
-    sta     encounterKind           ; $E180
+    sta     encounterKind           ; $E180  no encounter,
     sta     objXVelocity            ; $E183
-    lda     #$10                    ; $E185
+    lda     #$10                    ; $E185  Mode_LeaveArea
 
 ; ---------------------------------------------------------------------------
 ; Area_ExitToMode
@@ -6978,16 +7004,16 @@ Area_ExitToMode:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_Exit:
-    inc     renderingOff            ; $E18A
-    ldx     #$05                    ; $E18D
+    inc     renderingOff            ; $E18A  blank the screen
+    ldx     #$05                    ; $E18D  each enemy:
 
 @loop:
     lda     enemyActive,x           ; $E18F
-    beq     @loc_E198               ; $E191
-    jsr     Enemy_Despawn           ; $E193
-    inc     enemyActive,x           ; $E196
+    beq     @nextEnemy              ; $E191
+    jsr     Enemy_Despawn           ; $E193  back into its list
+    inc     enemyActive,x           ; $E196  (active again: no matter, the area is left)
 
-@loc_E198:
+@nextEnemy:
     dex                             ; $E198
     bpl     @loop                   ; $E199
     ldx     currentObject           ; $E19B
@@ -7012,21 +7038,21 @@ Link_CheckBgInBankDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_CheckFellOut:
-    lda     linkFairy               ; $E19E
-    beq     @loc_E1A8               ; $E1A0
+    lda     linkFairy               ; $E19E  the fairy:
+    beq     @checkLink              ; $E1A0
     lda     objY                    ; $E1A2
-    cmp     #$E4                    ; $E1A4
-    bcs     @loc_E1AE               ; $E1A6
+    cmp     #$E4                    ; $E1A4  at Y $E4 or more
+    bcs     @fell                   ; $E1A6
 
-@loc_E1A8:
-    lda     objYHi                  ; $E1A8
-    cmp     #$02                    ; $E1AA
+@checkLink:
+    lda     objYHi                  ; $E1A8  Link:
+    cmp     #$02                    ; $E1AA  below the screen?
     bcc     Link_CheckBgInBankDone  ; $E1AC
 
-@loc_E1AE:
-    lda     #$00                    ; $E1AE
+@fell:
+    lda     #$00                    ; $E1AE  fell: not a fairy,
     sta     linkFairy               ; $E1B0
-    inc     gameMode                ; $E1B2
+    inc     gameMode                ; $E1B2  Mode_FallSaveScroll
     jmp     Area_Exit               ; $E1B5
 
 ; ---------------------------------------------------------------------------
@@ -7038,7 +7064,7 @@ Link_CheckFellOut:
 ; ---------------------------------------------------------------------------
 Obj_ProbeBgPair:
     sty     temp0                   ; $E1B8
-    lda     #$01                    ; $E1BA
+    lda     #$01                    ; $E1BA  2 probes
     sta     temp1                   ; $E1BC
 
 ; ---------------------------------------------------------------------------
@@ -7053,17 +7079,17 @@ Obj_ProbeBgPair:
 ; ---------------------------------------------------------------------------
 Obj_ProbeBg:
     ldy     temp0                   ; $E1BE
-    jsr     Obj_GetBgTile           ; $E1C0
-    jsr     AreaBank::IsSolidTile   ; $E1C3
-    bcc     @loc_E1D2               ; $E1C6
-    ldy     temp0                   ; $E1C8
+    jsr     Obj_GetBgTile           ; $E1C0  the tile
+    jsr     AreaBank::IsSolidTile   ; $E1C3  solid?
+    bcc     @nextProbe              ; $E1C6  no
+    ldy     temp0                   ; $E1C8  yes: its collision bit
     lda     objCollision,x          ; $E1CA
     ora     ProbeCollisionBits,y    ; $E1CC
     sta     objCollision,x          ; $E1CF
     rts                             ; $E1D1
 
-@loc_E1D2:
-    dec     temp0                   ; $E1D2
+@nextProbe:
+    dec     temp0                   ; $E1D2  next probe down
     dec     temp1                   ; $E1D4
     bpl     Obj_ProbeBg             ; $E1D6
     rts                             ; $E1D8
@@ -7075,70 +7101,70 @@ SwordBlockXOffsets:
     .byte   $04, $FC                                                        ; $E1DB
 
 Sword_CheckBlocks:
-    jsr     Mmc1_SetPrgBankArea     ; $E1DD
+    jsr     Mmc1_SetPrgBankArea     ; $E1DD  the tile map tests are in the area bank
     jsr     Sword_CheckBlocksInBank ; $E1E0
-    jmp     Mmc1_SetPrgBank0        ; $E1E3
+    jmp     Mmc1_SetPrgBank0        ; $E1E3  map bank 0 again, and return
 
 Sword_CheckBlocksInBank:
-    lda     swordY                  ; $E1E6
-    cmp     #$F8                    ; $E1E9
+    lda     swordY                  ; $E1E6  the sword's Y
+    cmp     #$F8                    ; $E1E9  no sword?
     bcs     @done                   ; $E1EB
     ldy     objState                ; $E1ED
     ; QUIRK: both branches go to the next instruction, so these checks do
     ; nothing.
     cpy     #$08                    ; $E1EF
-    beq     @loc_E1F7               ; $E1F1
+    beq     @probeY                 ; $E1F1
     cpy     #$09                    ; $E1F3
-    beq     @loc_E1F7               ; $E1F5
+    beq     @probeY                 ; $E1F5
 
-@loc_E1F7:
+@probeY:
     clc                             ; $E1F7
-    adc     #$03                    ; $E1F8
-    sta     objY+16                 ; $E1FA
-    lda     swordX                  ; $E1FC
-    cpy     #$08                    ; $E1FF
-    bne     @loc_E214               ; $E201
-    dec     objY+16                 ; $E203
+    adc     #$03                    ; $E1F8  the probe 3 pixels lower
+    sta     objY+16                 ; $E1FA  in the sword probe object
+    lda     swordX                  ; $E1FC  X
+    cpy     #$08                    ; $E1FF  the upward thrust:
+    bne     @probeX                 ; $E201
+    dec     objY+16                 ; $E203  at the sword's Y,
     dec     objY+16                 ; $E205
     dec     objY+16                 ; $E207
-    lda     drawScreenX             ; $E209
+    lda     drawScreenX             ; $E209  and X + $0A
     clc                             ; $E20B
     adc     #$0A                    ; $E20C
     ldy     objFacing               ; $E20E
     dey                             ; $E210
-    adc     SwordBlockXOffsets,y    ; $E211
+    adc     SwordBlockXOffsets,y    ; $E211  + 4 right, - 4 left
 
-@loc_E214:
+@probeX:
     clc                             ; $E214
-    adc     #$04                    ; $E215
-    adc     scrollX                 ; $E217
+    adc     #$04                    ; $E215  + 4,
+    adc     scrollX                 ; $E217  + the scroll: map X
     sta     objX+16                 ; $E21A
     lda     scrollXHi               ; $E21C
     adc     #$00                    ; $E21F
     sta     objXHi+16               ; $E221
     ldx     #OBJ_SLOT_SWORD_PROBE   ; $E223
-    ldy     #$1C                    ; $E225
+    ldy     #$1C                    ; $E225  probe $1C: the point itself
     jsr     Obj_GetBgTile           ; $E227
-    cmp     AreaBank::SpecialTiles+4 ; $E22A
-    beq     @loc_E235               ; $E22D
-    jsr     AreaBank::IsSolidTile   ; $E22F
-    bcs     @loc_E26A               ; $E232
+    cmp     AreaBank::SpecialTiles+4 ; $E22A  a breakable block?
+    beq     @block                  ; $E22D
+    jsr     AreaBank::IsSolidTile   ; $E22F  else solid?
+    bcs     @solid                  ; $E232  yes: recoil
 
 @done:
     rts                             ; $E234
 
-@loc_E235:
-    lda     itemOwned+ITEM_GLOVE    ; $E235
-    beq     @loc_E26A               ; $E238
-    lda     #$42                    ; $E23A
+@block:
+    lda     itemOwned+ITEM_GLOVE    ; $E235  a block: with the glove?
+    beq     @solid                  ; $E238  no: recoil
+    lda     #$42                    ; $E23A  yes: an empty tile
     ldy     temp2                   ; $E23C
-    sta     (temp14),y              ; $E23E
-    jsr     BreakingBlock_Start     ; $E240
+    sta     (temp14),y              ; $E23E  in the map
+    jsr     BreakingBlock_Start     ; $E240  a breaking block slot,
     lda     #$01                    ; $E243
     sta     breakingBlockTimer,x    ; $E245
-    lda     #$04                    ; $E248
+    lda     #$04                    ; $E248  the block crumbling sound
     sta     sfxRequest+1            ; $E24A
-    lda     objY+16                 ; $E24C
+    lda     objY+16                 ; $E24C  at the tile
     and     #$F0                    ; $E24E
     sta     breakingBlockY,x        ; $E250
     lda     objX+16                 ; $E253
@@ -7148,38 +7174,38 @@ Sword_CheckBlocksInBank:
     sta     breakingBlockXHi,x      ; $E25C
     lda     objState                ; $E25F
     sec                             ; $E261
-    sbc     #$08                    ; $E262
+    sbc     #$08                    ; $E262  a thrust (8, 9)?
     cmp     #$02                    ; $E264
-    bcc     @loc_E28C               ; $E266
-    bcs     @loc_E277               ; $E268
+    bcc     @stopThrust             ; $E266  yes: stop there
+    bcs     @recoil                 ; $E268  no: recoil
 
-@loc_E26A:
+@solid:
     lda     objState                ; $E26A
     sec                             ; $E26C
-    sbc     #$08                    ; $E26D
+    sbc     #$08                    ; $E26D  a thrust (8, 9)?
     cmp     #$02                    ; $E26F
-    bcc     @done2                  ; $E271
-    lda     #$02                    ; $E273
+    bcc     @done2                  ; $E271  nothing
+    lda     #$02                    ; $E273  the sword denied sound
     sta     sfxRequest              ; $E275
 
-@loc_E277:
+@recoil:
     lda     #$18                    ; $E277
-    sta     timerFast+1             ; $E279
-    ldy     #$00                    ; $E27C
+    sta     timerFast+TIMER_LINK_RECOIL ; $E279  Link pushed back $18 frames,
+    ldy     #$00                    ; $E27C  away from the sword:
     lda     swordX                  ; $E27E
     cmp     drawScreenX             ; $E281
-    bcc     @loc_E286               ; $E283
-    iny                             ; $E285
+    bcc     @setVelocity            ; $E283  sword on the left: right
+    iny                             ; $E285  sword on the right: left
 
-@loc_E286:
+@setVelocity:
     lda     SwordBlockXVelocities,y ; $E286
     sta     objXVelocity            ; $E289
 
 @done2:
     rts                             ; $E28B
 
-@loc_E28C:
-    lda     #$00                    ; $E28C
+@stopThrust:
+    lda     #$00                    ; $E28C  stop the thrust on the block
     sta     objYVelocity            ; $E28E
     rts                             ; $E291
 
@@ -7193,19 +7219,19 @@ Sword_CheckBlocksInBank:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BreakingBlock_Start:
-    ldx     #$04                    ; $E292
+    ldx     #$04                    ; $E292  a free slot, 4 down to 0,
 
 @loop:
     lda     breakingBlockTimer,x    ; $E294
-    beq     @loc_E29E               ; $E297
+    beq     @found                  ; $E297
     dex                             ; $E299
     bpl     @loop                   ; $E29A
-    ldx     #$00                    ; $E29C
+    ldx     #$00                    ; $E29C  none: slot 0
 
-@loc_E29E:
+@found:
     ldy     temp2                   ; $E29E
     tya                             ; $E2A0
-    sta     breakingBlockMapOffset,x ; $E2A1
+    sta     breakingBlockMapOffset,x ; $E2A1  the tile's place in the map
     lda     temp14                  ; $E2A4
     sta     breakingBlockMapPtrLo,x ; $E2A6
     lda     temp15                  ; $E2A9
@@ -7244,23 +7270,23 @@ LinkDamage:
 ; ---------------------------------------------------------------------------
 Link_HurtByEnemy:
     ldy     enemyType,x             ; $E2EF
-    lda     timerSlow+TIMER_INVULNERABLE ; $E2F1
-    bne     @loc_E308               ; $E2F4
-    lda     sramEnemyAttr,y         ; $E2F6
+    lda     timerSlow+TIMER_INVULNERABLE ; $E2F1  invulnerable?
+    bne     @damage                 ; $E2F4
+    lda     sramEnemyAttr,y         ; $E2F6  a draining enemy (attr bit 4)?
     and     #$10                    ; $E2F9
-    beq     @loc_E305               ; $E2FB
-    lda     #$0A                    ; $E2FD
-    cpy     #$06                    ; $E2FF
-    bne     @loc_E305               ; $E301
+    beq     @setDrain               ; $E2FB  no
+    lda     #$0A                    ; $E2FD  drain 10 points,
+    cpy     #$06                    ; $E2FF  or 20 for type 6
+    bne     @setDrain               ; $E301
 ; (code below not executed in the test movies)
     lda     #$14                    ; $E303
 ; (end of code not executed in the test movies)
 
-@loc_E305:
+@setDrain:
     sta     experienceDrain         ; $E305
 
-@loc_E308:
-    lda     sramEnemyDamage,y       ; $E308
+@damage:
+    lda     sramEnemyDamage,y       ; $E308  its damage class
     and     #$0F                    ; $E30B
 
 ; ---------------------------------------------------------------------------
@@ -7277,58 +7303,64 @@ Link_HurtByEnemy:
 ; ---------------------------------------------------------------------------
 Link_TakeDamage:
     sta     temp12                  ; $E30D
-    lda     timerSlow+TIMER_INVULNERABLE ; $E30F
-    bne     @loc_E368               ; $E312
-    lda     #$01                    ; $E314
+    lda     timerSlow+TIMER_INVULNERABLE ; $E30F  invulnerable:
+    bne     @notHurt                ; $E312  no damage
+    lda     #$01                    ; $E314  Link's cry
     sta     dmcRequest              ; $E316
-    sta     temp0                   ; $E318
-    jsr     Link_KnockBack          ; $E31A
-    lda     temp12                  ; $E31D
+    sta     temp0                   ; $E318  a strong knockback
+    jsr     Link_KnockBack          ; $E31A  away from the enemy
+    lda     temp12                  ; $E31D  class
     asl     a                       ; $E31F
     asl     a                       ; $E320
-    asl     a                       ; $E321
-    adc     statLevel+STAT_LIFE     ; $E322
+    asl     a                       ; $E321  x 8
+    adc     statLevel+STAT_LIFE     ; $E322  + life level
     tay                             ; $E325
     lda     LinkDamage - 1,y        ; $E326  y = class * 8 + life level
     ; The shield spell halves the damage.
     ldy     shieldSpellActive       ; $E329
-    beq     @loc_E32F               ; $E32C
+    beq     @subtract               ; $E32C  no shield spell
 ; (code below not executed in the test movies)
-    lsr     a                       ; $E32E
+    lsr     a                       ; $E32E  halved by it
 ; (end of code not executed in the test movies)
 
-@loc_E32F:
+@subtract:
     sta     temp12                  ; $E32F
-    lda     statMeter+STAT_METER_LIFE ; $E331
+    lda     statMeter+STAT_METER_LIFE ; $E331  life
     sec                             ; $E334
-    sbc     temp12                  ; $E335
+    sbc     temp12                  ; $E335  - damage
     sta     statMeter+STAT_METER_LIFE ; $E337
     lda     hudRedraw               ; $E33A
-    ora     #$40                    ; $E33D
+    ora     #$40                    ; $E33D  redraw the life meter
     sta     hudRedraw               ; $E33F
-    bcs     @loc_E34C               ; $E342
-    lda     #$00                    ; $E344
+    bcs     @knockBack              ; $E342  some left
+    lda     #$00                    ; $E344  none:
     sta     statMeter+STAT_METER_LIFE ; $E346
-    inc     linkDeathPending        ; $E349
+    inc     linkDeathPending        ; $E349  Link dies (Mode_SideView)
 
-@loc_E34C:
-    lda     #$20                    ; $E34C
+@knockBack:
+    lda     #$20                    ; $E34C  knocked back 32 frames,
     sta     timerFast+TIMER_LINK_HURT ; $E34E
-    lda     #$04                    ; $E351
+    lda     #$04                    ; $E351  invulnerable 4 x 20 frames,
     sta     timerSlow+TIMER_INVULNERABLE ; $E353
-    lda     #$00                    ; $E356
+    lda     #$00                    ; $E356  his stroke cancelled,
     sta     linkAttackFrame         ; $E358
-    lda     objCollision            ; $E35B
+    lda     objCollision            ; $E35B  off the floor,
     and     #$FB                    ; $E35D
     sta     objCollision            ; $E35F
-    lda     #$FE                    ; $E361
+    lda     #$FE                    ; $E361  and up at 2 pixels a frame
     sta     objYVelocity            ; $E363
-    sec                             ; $E366
+    sec                             ; $E366  hurt
     rts                             ; $E367
 
-@loc_E368:
-    clc                             ; $E368
+@notHurt:
+    clc                             ; $E368  not hurt
 
+; Knockback speeds.  EnemyKnockBackSpeeds starts at this rts (entry 0,
+; unused): entries 1-2 ($0C right, $F4 left) by a Link projectile's
+; direction, 2-3 ($F4, $0C) by Link's side after a shield or sword clink
+; (Enemy_KnockBack).  LinkKnockBackSpeeds overlaps it: entries 1-2 ($04,
+; $FC) the weak push, 3-4 ($0D, $F3) the strong one, by direction 1 right,
+; 2 left.
 EnemyKnockBackSpeeds:
     rts                             ; $E369
     .byte   $0C, $F4                                                        ; $E36A
@@ -7337,21 +7369,21 @@ LinkKnockBackSpeeds:
     .byte   $0C, $04, $FC, $0D, $F3                                         ; $E36C
 
 Enemy_KnockBack:
-    lda     #$00                    ; $E371
+    lda     #$00                    ; $E371  a weak push for Link
     sta     temp0                   ; $E373
-    lda     temp11                  ; $E375
-    bne     @loc_E381               ; $E377
-    lda     #$18                    ; $E379
-    sta     timerFast+1             ; $E37B
-    jsr     Link_KnockBack          ; $E37E
+    lda     temp11                  ; $E375  by the sword?
+    bne     @pushEnemy              ; $E377  a projectile: only the enemy
+    lda     #$18                    ; $E379  Link recoils $18 frames
+    sta     timerFast+TIMER_LINK_RECOIL ; $E37B
+    jsr     Link_KnockBack          ; $E37E  pushed away from it
 
-@loc_E381:
+@pushEnemy:
     lda     objFacing+1,x           ; $E381
     pha                             ; $E383
-    jsr     Enemy_FaceLink          ; $E384
+    jsr     Enemy_FaceLink          ; $E384  y = 0 Link right, 1 left
     pla                             ; $E387
-    sta     objFacing+1,x           ; $E388
-    iny                             ; $E38A
+    sta     objFacing+1,x           ; $E388  (its facing kept)
+    iny                             ; $E38A  entries 2, 3:
     iny                             ; $E38B
 
 ; ---------------------------------------------------------------------------
@@ -7363,12 +7395,12 @@ Enemy_KnockBack:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_SetKnockBack:
-    lda     EnemyKnockBackSpeeds,y  ; $E38C
-    ldy     enemyStunTimer,x        ; $E38F
-    beq     @loc_E395               ; $E392
-    asl     a                       ; $E394
+    lda     EnemyKnockBackSpeeds,y  ; $E38C  away from Link (or the projectile)
+    ldy     enemyStunTimer,x        ; $E38F  stunned?
+    beq     @set                    ; $E392
+    asl     a                       ; $E394  twice as hard
 
-@loc_E395:
+@set:
     sta     enemyKnockBack,x        ; $E395
     rts                             ; $E398
 
@@ -7383,18 +7415,18 @@ Enemy_SetKnockBack:
 ; ---------------------------------------------------------------------------
 Link_KnockBack:
     lda     objCollision            ; $E399
-    and     #$03                    ; $E39B
+    and     #$03                    ; $E39B  Link's wall bits (1 right, 2 left)
     sta     temp13                  ; $E39D
     lda     objFacing+1,x           ; $E39F
     pha                             ; $E3A1
-    jsr     Enemy_FaceLink          ; $E3A2
+    jsr     Enemy_FaceLink          ; $E3A2  y = 0 Link right, 1 left
     pla                             ; $E3A5
-    sta     objFacing+1,x           ; $E3A6
-    iny                             ; $E3A8
-    cpy     temp13                  ; $E3A9
-    beq     Link_KnockBackDone      ; $E3AB
-    lda     temp0                   ; $E3AD
-    beq     Link_SetKnockBackVelocity ; $E3AF
+    sta     objFacing+1,x           ; $E3A6  (its facing kept)
+    iny                             ; $E3A8  1 right, 2 left: away from it
+    cpy     temp13                  ; $E3A9  a wall that way?
+    beq     Link_KnockBackDone      ; $E3AB  yes: no push
+    lda     temp0                   ; $E3AD  weak (0)?
+    beq     Link_SetKnockBackVelocity ; $E3AF  $04 right, $FC left
 
 ; ---------------------------------------------------------------------------
 ; Link_KnockBackOtherWay
@@ -7404,7 +7436,7 @@ Link_KnockBack:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_KnockBackOtherWay:
-    iny                             ; $E3B1
+    iny                             ; $E3B1  strong: entries 3-4,
     iny                             ; $E3B2
 
 ; ---------------------------------------------------------------------------
@@ -7415,7 +7447,7 @@ Link_KnockBackOtherWay:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_SetKnockBackVelocity:
-    lda     LinkKnockBackSpeeds,y   ; $E3B3
+    lda     LinkKnockBackSpeeds,y   ; $E3B3  $0D right, $F3 left
     sta     objXVelocity            ; $E3B6
 
 ; ---------------------------------------------------------------------------
@@ -7439,80 +7471,80 @@ Link_KnockBackDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_CheckLinkAlternate:
-    lda     frameCounter            ; $E3B9
+    lda     frameCounter            ; $E3B9  carry = frame parity,
     lsr     a                       ; $E3BB
     txa                             ; $E3BC
-    and     #$01                    ; $E3BD
-    bne     @loc_E3C7               ; $E3BF
+    and     #$01                    ; $E3BD  inverted for even slots:
+    bne     @checkFrame             ; $E3BF
     php                             ; $E3C1
     pla                             ; $E3C2
     eor     #$01                    ; $E3C3
     pha                             ; $E3C5
     plp                             ; $E3C6
 
-@loc_E3C7:
-    bcs     Link_KnockBackDone      ; $E3C7
-    jsr     Projectile_GetHitbox    ; $E3C9
-    ldy     objState+7,x            ; $E3CC
+@checkFrame:
+    bcs     Link_KnockBackDone      ; $E3C7  tested on alternate frames
+    jsr     Projectile_GetHitbox    ; $E3C9  box B
+    ldy     objState+7,x            ; $E3CC  its type's flags:
     lda     sramProjectileFlags,y   ; $E3CE
-    and     #$C0                    ; $E3D1
-    cmp     #$80                    ; $E3D3
-    bne     @loc_E3DD               ; $E3D5
-    ldy     reflectSpellActive      ; $E3D7
-    beq     Projectile_HitLinkBody  ; $E3DA
+    and     #$C0                    ; $E3D1  bits 7-6, the shield
+    cmp     #$80                    ; $E3D3  %10, passes through it?
+    bne     @checkDirection         ; $E3D5
+    ldy     reflectSpellActive      ; $E3D7  without Reflect:
+    beq     Projectile_HitLinkBody  ; $E3DA  only Link's body
 ; (code below not executed in the test movies)
-    asl     a                       ; $E3DC
+    asl     a                       ; $E3DC  with Reflect: %00, destroyed
 ; (end of code not executed in the test movies)
 
-@loc_E3DD:
+@checkDirection:
     sta     drawScratch             ; $E3DD
-    ldy     #$02                    ; $E3DF
-    lda     objXVelocity+7,x        ; $E3E1
-    beq     @loc_E3ED               ; $E3E3
-    bmi     @loc_E3E8               ; $E3E5
+    ldy     #$02                    ; $E3DF  moving right (1), left (2)
+    lda     objXVelocity+7,x        ; $E3E1  or still:
+    beq     @checkShield            ; $E3E3
+    bmi     @checkFacing            ; $E3E5
     dey                             ; $E3E7
 
-@loc_E3E8:
-    tya                             ; $E3E8
+@checkFacing:
+    tya                             ; $E3E8  the way it faces?
     cmp     objFacing+7,x           ; $E3E9
-    bne     Projectile_CheckLinkAlternateDone ; $E3EB
+    bne     Projectile_CheckLinkAlternateDone ; $E3EB  no (deflected): no more hits
 
-@loc_E3ED:
-    lda     linkFairy               ; $E3ED
+@checkShield:
+    lda     linkFairy               ; $E3ED  the fairy has no shield
     bne     Projectile_HitLinkBody  ; $E3EF
-    jsr     Link_GetShieldHitbox    ; $E3F1
-    jsr     Hitbox_Overlap          ; $E3F4
-    bcc     Projectile_HitLinkBody  ; $E3F7
-    lda     drawScratch             ; $E3F9
-    beq     @loc_E413               ; $E3FB
-    cmp     #$40                    ; $E3FD
+    jsr     Link_GetShieldHitbox    ; $E3F1  box A
+    jsr     Hitbox_Overlap          ; $E3F4  on the shield?
+    bcc     Projectile_HitLinkBody  ; $E3F7  no: his body?
+    lda     drawScratch             ; $E3F9  the shield's effect:
+    beq     @destroyed              ; $E3FB  %00 destroyed
+    cmp     #$40                    ; $E3FD  %01 deflected
     beq     Projectile_Deflect      ; $E3FF
-    lda     reflectSpellActive      ; $E401
-    beq     @loc_E413               ; $E404
-    lda     #$00                    ; $E406
+    lda     reflectSpellActive      ; $E401  %11: with Reflect,
+    beq     @destroyed              ; $E404  (else destroyed)
+    lda     #$00                    ; $E406  sent back:
     sta     projectileTimer,x       ; $E408
-    jsr     Projectile_Deflect      ; $E40B
-    asl     objXVelocity+7,x        ; $E40E
+    jsr     Projectile_Deflect      ; $E40B  deflected,
+    asl     objXVelocity+7,x        ; $E40E  at 4 times the speed
     asl     objXVelocity+7,x        ; $E410
     rts                             ; $E412
 
-@loc_E413:
-    ldy     objState+7,x            ; $E413
+@destroyed:
+    ldy     objState+7,x            ; $E413  destroyed:
     lda     sramProjectileFlags,y   ; $E415
-    ldy     #$10                    ; $E418
+    ldy     #$10                    ; $E418  the tink sound,
     and     #$10                    ; $E41A
-    beq     @loc_E424               ; $E41C
+    beq     @spark                  ; $E41C
 ; (code below not executed in the test movies)
-    lda     #$02                    ; $E41E
+    lda     #$02                    ; $E41E  or (flag bit 4) the denied sound
     sta     sfxRequest              ; $E420
     ldy     #$00                    ; $E422
 ; (end of code not executed in the test movies)
 
-@loc_E424:
+@spark:
     sty     sfxRequest+2            ; $E424
-    dec     objY+7,x                ; $E426
+    dec     objY+7,x                ; $E426  2 pixels up,
     dec     objY+7,x                ; $E428
-    lda     #$F2                    ; $E42A
+    lda     #$F2                    ; $E42A  as a spark (counts up to 0)
     sta     objState+7,x            ; $E42C
 
     rts                             ; $E42E
@@ -7531,12 +7563,12 @@ ProjectileDeflectSpeeds:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_Deflect:
-    lda     #$10                    ; $E431
+    lda     #$10                    ; $E431  the tink sound
     sta     sfxRequest+2            ; $E433
-    ldy     objFacing+7,x           ; $E435
-    lda     ProjectileDeflectSpeeds - 1,y ; $E437
+    ldy     objFacing+7,x           ; $E435  back the way
+    lda     ProjectileDeflectSpeeds - 1,y ; $E437  it came,
     sta     objXVelocity+7,x        ; $E43A
-    lda     #$F8                    ; $E43C
+    lda     #$F8                    ; $E43C  and up
     sta     objYVelocity+7,x        ; $E43E
 
 ; ---------------------------------------------------------------------------
@@ -7558,24 +7590,24 @@ Projectile_CheckLinkAlternateDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_HitLinkBody:
-    jsr     Link_GetHitbox          ; $E442
-    jsr     Hitbox_Overlap          ; $E445
-    bcc     Projectile_CheckLinkAlternateDone ; $E448
+    jsr     Link_GetHitbox          ; $E442  box A
+    jsr     Hitbox_Overlap          ; $E445  touching Link?
+    bcc     Projectile_CheckLinkAlternateDone ; $E448  no
     ldy     objState+7,x            ; $E44A
     lda     sramProjectileFlags,y   ; $E44C
-    and     #$20                    ; $E44F
-    bne     @loc_E457               ; $E451
-    lda     #$00                    ; $E453
+    and     #$20                    ; $E44F  survives hitting him?
+    bne     @checkInvulnerable      ; $E451
+    lda     #$00                    ; $E453  no: gone
     sta     objState+7,x            ; $E455
 
-@loc_E457:
-    lda     timerSlow+TIMER_INVULNERABLE ; $E457
+@checkInvulnerable:
+    lda     timerSlow+TIMER_INVULNERABLE ; $E457  invulnerable?
     bne     Projectile_CheckLinkAlternateDone ; $E45A
-    lda     sramProjectileFlags,y   ; $E45C
+    lda     sramProjectileFlags,y   ; $E45C  bits 2-0: its damage class
     and     #$07                    ; $E45F
     jsr     Link_TakeDamage         ; $E461
-    ldy     objFacing+7,x           ; $E464
-    jmp     Link_KnockBackOtherWay  ; $E466
+    ldy     objFacing+7,x           ; $E464  pushed the way it moved,
+    jmp     Link_KnockBackOtherWay  ; $E466  strongly
 
 ; ---------------------------------------------------------------------------
 ; Projectile_GetHitbox
@@ -7589,22 +7621,22 @@ Projectile_HitLinkBody:
 Projectile_GetHitbox:
     ldy     objState+7,x            ; $E469
     lda     sramProjectileFlags,y   ; $E46B
-    ldy     #$03                    ; $E46E
+    ldy     #$03                    ; $E46E  3 pixels high,
     and     #$08                    ; $E470
-    beq     @loc_E476               ; $E472
+    beq     @setHeight              ; $E472
 ; (code below not executed in the test movies)
-    ldy     #$0A                    ; $E474
+    ldy     #$0A                    ; $E474  or 10 (flag bit 3)
 ; (end of code not executed in the test movies)
 
-@loc_E476:
+@setHeight:
     sty     temp6                   ; $E476
-    lda     objY+7,x                ; $E478
+    lda     objY+7,x                ; $E478  from Y + 7,
     clc                             ; $E47A
     adc     #$07                    ; $E47B
     sta     temp5                   ; $E47D
-    lda     #$02                    ; $E47F
+    lda     #$02                    ; $E47F  2 wide,
     sta     temp7                   ; $E481
-    lda     drawScreenX+2           ; $E483
+    lda     drawScreenX+2           ; $E483  from X + 3
     clc                             ; $E485
     adc     #$03                    ; $E486
     sta     temp4                   ; $E488
@@ -7626,33 +7658,33 @@ DoNothing:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckProjectileHits:
-    lda     enemyActive,x           ; $E48B
+    lda     enemyActive,x           ; $E48B  active?
     cmp     #$01                    ; $E48D
     bne     @done                   ; $E48F
-    lda     enemyStunTimer,x        ; $E491
+    lda     enemyStunTimer,x        ; $E491  not while stunned
     bne     @done                   ; $E494
-    ldy     #$01                    ; $E496
+    ldy     #$01                    ; $E496  Link's projectiles 1, 0:
 
-@loc_E498:
+@loop:
     sty     swordOwner              ; $E498
     lda     a:objState+13,y         ; $E49A
-    beq     @loc_E4B8               ; $E49D
-    bmi     @loc_E4B8               ; $E49F
-    jsr     LinkProjectile_GetHitbox ; $E4A1
-    lda     #$01                    ; $E4A4
+    beq     @next                   ; $E49D  none
+    bmi     @next                   ; $E49F  disintegrating
+    jsr     LinkProjectile_GetHitbox ; $E4A1  box A
+    lda     #$01                    ; $E4A4  a projectile
     sta     temp11                  ; $E4A6
-    jsr     Enemy_CheckHit          ; $E4A8
+    jsr     Enemy_CheckHit          ; $E4A8  hit?
     ldy     swordOwner              ; $E4AB
-    bcc     @loc_E4B8               ; $E4AD
-    lda     a:linkProjectileDir,y   ; $E4AF
+    bcc     @next                   ; $E4AD
+    lda     a:linkProjectileDir,y   ; $E4AF  knocked back the way it flew
     tay                             ; $E4B2
     jmp     Enemy_SetKnockBack      ; $E4B3
 ; (unreferenced: $E4B6-$E4B7, 2 bytes)
     .byte   $A4, $11                                                        ; $E4B6
 
-@loc_E4B8:
+@next:
     dey                             ; $E4B8
-    bpl     @loc_E498               ; $E4B9
+    bpl     @loop                   ; $E4B9
 
 @done:
     rts                             ; $E4BB
@@ -7668,17 +7700,17 @@ Enemy_CheckProjectileHits:
 LinkProjectile_GetHitbox:
     lda     a:objX+13,y             ; $E4BC
     sec                             ; $E4BF
-    sbc     scrollX                 ; $E4C0
+    sbc     scrollX                 ; $E4C0  screen X
     clc                             ; $E4C3
-    adc     #$02                    ; $E4C4
+    adc     #$02                    ; $E4C4  + 2,
     sta     temp0                   ; $E4C6
-    lda     #$04                    ; $E4C8
+    lda     #$04                    ; $E4C8  4 wide;
     sta     temp2                   ; $E4CA
     lda     a:objY+13,y             ; $E4CC
     clc                             ; $E4CF
-    adc     #$04                    ; $E4D0
+    adc     #$04                    ; $E4D0  Y + 4,
     sta     temp1                   ; $E4D2
-    lda     #$06                    ; $E4D4
+    lda     #$06                    ; $E4D4  6 high
     sta     temp3                   ; $E4D6
     rts                             ; $E4D8
 
@@ -7694,42 +7726,42 @@ LinkProjectile_GetHitbox:
 ; ---------------------------------------------------------------------------
 Enemy_CheckLinkContact:
     lda     enemyType,x             ; $E4D9
-    cmp     #ENEMY_TYPE_ELEVATOR    ; $E4DB
-    beq     @loc_E4F7               ; $E4DD
-    ldy     currentWorld            ; $E4DF
+    cmp     #ENEMY_TYPE_ELEVATOR    ; $E4DB  the elevator,
+    beq     @test                   ; $E4DD
+    ldy     currentWorld            ; $E4DF  and in towns,
     dey                             ; $E4E2
     cpy     #$02                    ; $E4E3
-    bcc     @loc_E4F7               ; $E4E5
-    lda     frameCounter            ; $E4E7
+    bcc     @test                   ; $E4E5  every frame
+    lda     frameCounter            ; $E4E7  carry = frame parity,
     lsr     a                       ; $E4E9
     txa                             ; $E4EA
-    and     #$01                    ; $E4EB
-    bne     @loc_E4F5               ; $E4ED
+    and     #$01                    ; $E4EB  inverted for even enemies:
+    bne     @checkFrame             ; $E4ED
     php                             ; $E4EF
     pla                             ; $E4F0
     eor     #$01                    ; $E4F1
     pha                             ; $E4F3
     plp                             ; $E4F4
 
-@loc_E4F5:
-    bcs     @loc_E54F               ; $E4F5
+@checkFrame:
+    bcs     @noContact              ; $E4F5  alternate frames
 
-@loc_E4F7:
-    lda     enemyActive,x           ; $E4F7
+@test:
+    lda     enemyActive,x           ; $E4F7  active,
     cmp     #$01                    ; $E4F9
-    bne     @loc_E54F               ; $E4FB
-    lda     enemyStunTimer,x        ; $E4FD
-    bne     @loc_E54F               ; $E500
-    lda     drawOffscreen           ; $E502
+    bne     @noContact              ; $E4FB
+    lda     enemyStunTimer,x        ; $E4FD  not stunned,
+    bne     @noContact              ; $E500
+    lda     drawOffscreen           ; $E502  Link's middle (probes 1-2, to bits
     and     #$06                    ; $E504
-    asl     a                       ; $E506
+    asl     a                       ; $E506  3-2) and the enemy's left part
     ora     drawOffscreen+1         ; $E507
-    and     #$FC                    ; $E509
-    bne     @loc_E54F               ; $E50B
-    jsr     Enemy_GetHitbox         ; $E50D
-    jsr     Link_GetHitbox          ; $E510
-    jsr     Hitbox_Overlap          ; $E513
-    bcc     @loc_E54F               ; $E516
+    and     #$FC                    ; $E509  or height on screen?
+    bne     @noContact              ; $E50B
+    jsr     Enemy_GetHitbox         ; $E50D  box B
+    jsr     Link_GetHitbox          ; $E510  box A
+    jsr     Hitbox_Overlap          ; $E513  touching?
+    bcc     @noContact              ; $E516
     lda     objCollision+1,x        ; $E518  touching: set bit 4
     ora     #$10                    ; $E51A
     sta     objCollision+1,x        ; $E51C
@@ -7739,7 +7771,7 @@ Enemy_CheckLinkContact:
     lda     enemyAiState,x          ; $E524  touch takes inventory items (0-7),
     and     #$7F                    ; $E526
     cmp     #$08                    ; $E528  containers ($0E, $0F) and kinds $12 and
-    bcc     @loc_E538               ; $E52A
+    bcc     @take                   ; $E52A
     cmp     #$0E                    ; $E52C  up; keys, bags and jars (8-$0D, $10,
     bcc     @done                   ; $E52E
     cmp     #$10                    ; $E530  $11) need the sword (Enemy_TakeDamage)
@@ -7747,7 +7779,7 @@ Enemy_CheckLinkContact:
     cmp     #$11                    ; $E534
     beq     @done                   ; $E536
 
-@loc_E538:
+@take:
     jsr     Item_Collect            ; $E538  taken:
     lda     #$70                    ; $E53B  Link holds it up for 112 frames,
     sta     itemHoldTimer           ; $E53D
@@ -7759,8 +7791,8 @@ Enemy_CheckLinkContact:
     sta     heldItem                ; $E54B  the item he holds
     rts                             ; $E54E
 
-@loc_E54F:
-    lda     objCollision+1,x        ; $E54F
+@noContact:
+    lda     objCollision+1,x        ; $E54F  not touching: clear bit 4
     and     #$EF                    ; $E551
     sta     objCollision+1,x        ; $E553
 
@@ -7782,11 +7814,11 @@ LinkBodyKnockBackSpeeds:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Weapon_CheckLinkReflect:
-    lda     reflectSpellActive      ; $E558
+    lda     reflectSpellActive      ; $E558  with Reflect: the shield
     bne     Weapon_CheckLink        ; $E55B
     lda     enemyType,x             ; $E55D
-    cmp     #$17                    ; $E55F
-    bcs     Weapon_CheckLinkBody    ; $E561
+    cmp     #$17                    ; $E55F  types $17 and up:
+    bcs     Weapon_CheckLinkBody    ; $E561  only his body
 
 ; ---------------------------------------------------------------------------
 ; Weapon_CheckLink
@@ -7801,32 +7833,32 @@ Weapon_CheckLinkReflect:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Weapon_CheckLink:
-    jsr     Enemy_GetWeaponHitbox   ; $E563
-    jsr     Link_GetShieldHitbox    ; $E566
-    jsr     Hitbox_Overlap          ; $E569
-    bcc     Weapon_CheckLinkBody    ; $E56C
+    jsr     Enemy_GetWeaponHitbox   ; $E563  box B
+    jsr     Link_GetShieldHitbox    ; $E566  box A
+    jsr     Hitbox_Overlap          ; $E569  on the shield?
+    bcc     Weapon_CheckLinkBody    ; $E56C  no: his body?
 ; (code below not executed in the test movies)
-    lda     #$02                    ; $E56E
+    lda     #$02                    ; $E56E  the denied sound,
     sta     sfxRequest              ; $E570
-    lda     #$00                    ; $E572
+    lda     #$00                    ; $E572  a sword-like push:
     sta     temp11                  ; $E574
-    jmp     Enemy_KnockBack         ; $E576
+    jmp     Enemy_KnockBack         ; $E576  both knocked back
 ; (end of code not executed in the test movies)
 
 Weapon_CheckLinkBody:
-    jsr     Enemy_GetWeaponHitbox   ; $E579
-    jsr     Link_GetHitbox          ; $E57C
-    jsr     Hitbox_Overlap          ; $E57F
+    jsr     Enemy_GetWeaponHitbox   ; $E579  box B
+    jsr     Link_GetHitbox          ; $E57C  box A
+    jsr     Hitbox_Overlap          ; $E57F  touching?
     bcc     Enemy_GetSpecialHitboxDone ; $E582
 ; (code below not executed in the test movies)
-    jsr     Link_HurtByEnemy        ; $E584
-    bcc     @done                   ; $E587
-    lda     enemyAiVar,x            ; $E589
-    cmp     #$02                    ; $E58C
+    jsr     Link_HurtByEnemy        ; $E584  hurt him
+    bcc     @done                   ; $E587  not hurt (invulnerable)
+    lda     enemyAiVar,x            ; $E589  guard
+    cmp     #$02                    ; $E58C  2 and up (bosses):
     bcc     @done                   ; $E58E
-    asl     objYVelocity            ; $E590
+    asl     objYVelocity            ; $E590  twice as high,
     jsr     Enemy_FaceLink          ; $E593
-    lda     LinkBodyKnockBackSpeeds,y ; $E596
+    lda     LinkBodyKnockBackSpeeds,y ; $E596  and 1 1/2 pixels a frame away
     sta     objXVelocity            ; $E599
 
 @done:
@@ -7858,7 +7890,7 @@ SpecialHitboxXOffsets2:
 ; part that turns Link's sword and projectiles aside (a shield, a claw),
 ; by enemyAiVar v: Y + SpecialHitboxYOffsets[v], height
 ; SpecialHitboxHeights[v], screen X + SpecialHitboxXOffsets[v], width
-; SpecialHitboxWidths[v].  Guards 0 and 1 (2 pixels wide) move 13 pixels
+; SpecialHitboxWidths[v].  Guards 0 and 1 (2 pixels wide) move 14 pixels
 ; right when it faces right; guard 4 moves by SpecialHitboxXOffsets2 by
 ; facing (-16 facing right).  Enemy_CheckProjectileHitsSpecial tests it.
 ;
@@ -7867,30 +7899,30 @@ SpecialHitboxXOffsets2:
 ; ---------------------------------------------------------------------------
 Enemy_GetSpecialHitbox:
     lda     objY+1,x                ; $E5BA
-    ldy     enemyAiVar,x            ; $E5BC
+    ldy     enemyAiVar,x            ; $E5BC  guard v
     clc                             ; $E5BF
-    adc     SpecialHitboxYOffsets,y ; $E5C0
+    adc     SpecialHitboxYOffsets,y ; $E5C0  Y offset
     sta     temp5                   ; $E5C3
-    lda     SpecialHitboxHeights,y  ; $E5C5
+    lda     SpecialHitboxHeights,y  ; $E5C5  height
     sta     temp7                   ; $E5C8
     lda     drawScreenX+1           ; $E5CA
-    adc     SpecialHitboxXOffsets,y ; $E5CC
+    adc     SpecialHitboxXOffsets,y ; $E5CC  X offset
     sta     temp4                   ; $E5CF
-    lda     SpecialHitboxWidths,y   ; $E5D1
+    lda     SpecialHitboxWidths,y   ; $E5D1  width
     sta     temp6                   ; $E5D4
-    cpy     #$02                    ; $E5D6
-    bcs     @loc_E5E5               ; $E5D8
-    lda     objFacing+1,x           ; $E5DA
+    cpy     #$02                    ; $E5D6  guards 0, 1 (2 wide):
+    bcs     @guard4                 ; $E5D8
+    lda     objFacing+1,x           ; $E5DA  facing right:
     lsr     a                       ; $E5DC
-    bcc     @loc_E5E5               ; $E5DD
-    lda     temp4                   ; $E5DF
-    adc     #$0D                    ; $E5E1
+    bcc     @guard4                 ; $E5DD
+    lda     temp4                   ; $E5DF  on the other side,
+    adc     #$0D                    ; $E5E1  13 pixels on (carry set: 14)
     sta     temp4                   ; $E5E3
 
-@loc_E5E5:
-    cpy     #$04                    ; $E5E5
+@guard4:
+    cpy     #$04                    ; $E5E5  guard 4:
     bne     Enemy_GetSpecialHitboxDone ; $E5E7
-    ldy     objFacing+1,x           ; $E5E9
+    ldy     objFacing+1,x           ; $E5E9  by facing
     lda     temp4                   ; $E5EB
     adc     SpecialHitboxXOffsets2,y ; $E5ED
     sta     temp4                   ; $E5F0
@@ -7916,21 +7948,21 @@ Enemy_GetSpecialHitboxDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_GetWeaponHitbox:
-    ldy     objOamOffset+1,x        ; $E5F3
-    lda     oamBuffer+16,y          ; $E5F5
+    ldy     objOamOffset+1,x        ; $E5F3  its fifth sprite:
+    lda     oamBuffer+16,y          ; $E5F5  its top
     clc                             ; $E5F8
-    adc     #$09                    ; $E5F9
+    adc     #$09                    ; $E5F9  + 9,
     sta     temp5                   ; $E5FB
-    lda     #$01                    ; $E5FD
+    lda     #$01                    ; $E5FD  1 high
     sta     temp7                   ; $E5FF
-    lda     oamBuffer+19,y          ; $E601
+    lda     oamBuffer+19,y          ; $E601  its X,
     sta     temp4                   ; $E604
-    lda     #$0E                    ; $E606
+    lda     #$0E                    ; $E606  14 wide,
     sta     temp6                   ; $E608
     lda     temp4                   ; $E60A
-    adc     temp6                   ; $E60C
-    bcc     Enemy_GetWeaponHitboxDone ; $E60E
-    lda     temp4                   ; $E610
+    adc     temp6                   ; $E60C  past the screen's right edge?
+    bcc     Enemy_GetWeaponHitboxDone ; $E60E  no
+    lda     temp4                   ; $E610  yes: up to the edge
     eor     #$FF                    ; $E612
     sta     temp6                   ; $E614
 
@@ -7958,38 +7990,38 @@ Enemy_GetWeaponHitboxDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckProjectileHitsSpecial:
-    lda     drawOffscreen           ; $E617
+    lda     drawOffscreen           ; $E617  Link's middle, and the enemy
     asl     a                       ; $E619
     and     #$0C                    ; $E61A
     ora     drawOffscreen+1         ; $E61C
-    and     #$FC                    ; $E61E
-    bne     Enemy_GetWeaponHitboxDone ; $E620
+    and     #$FC                    ; $E61E  on screen?
+    bne     Enemy_GetWeaponHitboxDone ; $E620  no
     lda     objY+1,x                ; $E622
-    adc     #$10                    ; $E624
-    cmp     #$30                    ; $E626
-    bcc     Enemy_GetWeaponHitboxDone ; $E628
-    jsr     Enemy_GetSpecialHitbox  ; $E62A
-    ldy     #$01                    ; $E62D
+    adc     #$10                    ; $E624  the enemy's Y + 16
+    cmp     #$30                    ; $E626  $30 or more?
+    bcc     Enemy_GetWeaponHitboxDone ; $E628  no
+    jsr     Enemy_GetSpecialHitbox  ; $E62A  box B: its guard
+    ldy     #$01                    ; $E62D  Link's projectiles 1, 0:
 
 @loop:
     sty     swordOwner              ; $E62F
     lda     a:objState+13,y         ; $E631
-    beq     @loc_E649               ; $E634
-    bmi     @loc_E649               ; $E636
-    jsr     LinkProjectile_GetHitbox ; $E638
-    jsr     Hitbox_Overlap          ; $E63B
+    beq     @next                   ; $E634  none
+    bmi     @next                   ; $E636  disintegrating
+    jsr     LinkProjectile_GetHitbox ; $E638  box A
+    jsr     Hitbox_Overlap          ; $E63B  on the guard?
     ldy     swordOwner              ; $E63E
-    bcc     @loc_E649               ; $E640
-    lda     #$02                    ; $E642
+    bcc     @next                   ; $E640  no
+    lda     #$02                    ; $E642  the denied sound
     sta     sfxRequest              ; $E644
-    jsr     LinkProjectile_Disintegrate ; $E646
+    jsr     LinkProjectile_Disintegrate ; $E646  it falls apart
 
-@loc_E649:
+@next:
     dey                             ; $E649
     bpl     @loop                   ; $E64A
-    jsr     Sword_GetHitbox         ; $E64C
-    jsr     Hitbox_Overlap          ; $E64F
-    bcc     Enemy_GetWeaponHitboxDone ; $E652
+    jsr     Sword_GetHitbox         ; $E64C  the sword:
+    jsr     Hitbox_Overlap          ; $E64F  on the guard?
+    bcc     Enemy_GetWeaponHitboxDone ; $E652  no
 
 ; ---------------------------------------------------------------------------
 ; Enemy_SwordClink
@@ -8000,21 +8032,21 @@ Enemy_CheckProjectileHitsSpecial:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_SwordClink:
-    lda     #$02                    ; $E654
+    lda     #$02                    ; $E654  the denied sound
     sta     sfxRequest              ; $E656
-    lda     #$00                    ; $E658
+    lda     #$00                    ; $E658  a sword-like push
     sta     temp11                  ; $E65A
-    pla                             ; $E65C
+    pla                             ; $E65C  drop the caller's return: no hit test
     pla                             ; $E65D
     lda     objState                ; $E65E
-    cmp     #$09                    ; $E660
-    bne     @loc_E66A               ; $E662
-    lda     #$FE                    ; $E664
+    cmp     #$09                    ; $E660  a downward thrust:
+    bne     @knockBack              ; $E662
+    lda     #$FE                    ; $E664  bounce up 2 pixels a frame
     sta     objYVelocity            ; $E666
     rts                             ; $E669
 
-@loc_E66A:
-    jmp     Enemy_KnockBack         ; $E66A
+@knockBack:
+    jmp     Enemy_KnockBack         ; $E66A  else both knocked back
 
 ; Hit points a sword hit takes from an enemy, by attack level 1-8.
 SwordDamage:
@@ -8039,17 +8071,17 @@ ThunderDamage:
 ; ---------------------------------------------------------------------------
 Enemy_CheckSwordHit:
     lda     swordY                  ; $E677
-    cmp     #$F8                    ; $E67A
+    cmp     #$F8                    ; $E67A  no sword
     beq     Enemy_ClearHitFlag      ; $E67C
     ldy     enemyType,x             ; $E67E
     lda     sramEnemyFlags,y        ; $E680
-    and     #$10                    ; $E683
+    and     #$10                    ; $E683  immune to the sword?
     bne     Enemy_ClearHitFlag      ; $E685
     lda     enemyActive,x           ; $E687
-    cmp     #$01                    ; $E689
+    cmp     #$01                    ; $E689  active?
     bne     Enemy_ClearHitFlag      ; $E68B
-    jsr     Sword_GetHitbox         ; $E68D
-    lda     #$00                    ; $E690
+    jsr     Sword_GetHitbox         ; $E68D  box A
+    lda     #$00                    ; $E690  the sword
     sta     temp11                  ; $E692
 
 ; ---------------------------------------------------------------------------
@@ -8065,13 +8097,13 @@ Enemy_CheckSwordHit:
 ; ---------------------------------------------------------------------------
 Enemy_CheckHit:
     ldy     enemyType,x             ; $E694
-    cpy     #ENEMY_TYPE_ELEVATOR    ; $E696
+    cpy     #ENEMY_TYPE_ELEVATOR    ; $E696  the elevator
     beq     Enemy_CheckHitMiss      ; $E698
-    cpy     #$02                    ; $E69A
-    beq     Enemy_CheckHitMiss      ; $E69C
-    jsr     Enemy_GetHitbox         ; $E69E
+    cpy     #$02                    ; $E69A  and type 2
+    beq     Enemy_CheckHitMiss      ; $E69C  can't be hit
+    jsr     Enemy_GetHitbox         ; $E69E  box B
     jsr     Hitbox_Overlap          ; $E6A1
-    bcs     Enemy_HitBySword        ; $E6A4
+    bcs     Enemy_HitBySword        ; $E6A4  hit
 
 ; ---------------------------------------------------------------------------
 ; Enemy_ClearHitFlag
@@ -8082,7 +8114,7 @@ Enemy_CheckHit:
 ; ---------------------------------------------------------------------------
 Enemy_ClearHitFlag:
     lda     objCollision+1,x        ; $E6A6
-    and     #$DF                    ; $E6A8
+    and     #$DF                    ; $E6A8  not hit
     sta     objCollision+1,x        ; $E6AA
 
 ; ---------------------------------------------------------------------------
@@ -8115,39 +8147,39 @@ Enemy_CheckHitDone:
 ; ---------------------------------------------------------------------------
 Enemy_HitBySword:
     ldy     enemyType,x             ; $E6AE
-    lda     temp11                  ; $E6B0
-    bne     @loc_E6BE               ; $E6B2
-    lda     sramEnemyAttr,y         ; $E6B4
+    lda     temp11                  ; $E6B0  the sword
+    bne     @checkItem              ; $E6B2
+    lda     sramEnemyAttr,y         ; $E6B4  against a sword-proof one
     and     #$20                    ; $E6B7
-    beq     @loc_E6BE               ; $E6B9
-    jmp     Enemy_SwordClink        ; $E6BB
+    beq     @checkItem              ; $E6B9  (attr bit 5):
+    jmp     Enemy_SwordClink        ; $E6BB  clinks
 
-@loc_E6BE:
+@checkItem:
     lda     temp11                  ; $E6BE
-    bne     @loc_E6CB               ; $E6C0
-    cpy     #$01                    ; $E6C2
-    bne     @loc_E6CB               ; $E6C4
-    lda     enemyStunTimer,x        ; $E6C6
-    bne     Enemy_CheckHitMiss      ; $E6C9
+    bne     @checkProjectile        ; $E6C0
+    cpy     #$01                    ; $E6C2  the sword on an item
+    bne     @checkProjectile        ; $E6C4
+    lda     enemyStunTimer,x        ; $E6C6  while it flashes:
+    bne     Enemy_CheckHitMiss      ; $E6C9  no
 
-@loc_E6CB:
-    lda     temp11                  ; $E6CB
+@checkProjectile:
+    lda     temp11                  ; $E6CB  a projectile:
     beq     Enemy_CheckUpThrust     ; $E6CD
-    lda     sramEnemyAttr,y         ; $E6CF
+    lda     sramEnemyAttr,y         ; $E6CF  on a sword-proof one
     and     #$20                    ; $E6D2
-    beq     @loc_E6DD               ; $E6D4
-    ldy     swordOwner              ; $E6D6
-    lda     linkProjectileTimer,y   ; $E6D8
-    bne     @loc_E6E6               ; $E6DB
+    beq     @checkStops             ; $E6D4
+    ldy     swordOwner              ; $E6D6  a projectile
+    lda     linkProjectileTimer,y   ; $E6D8  with its timer running
+    bne     @fallApart              ; $E6DB  falls apart
 
-@loc_E6DD:
+@checkStops:
     ldy     enemyType,x             ; $E6DD
-    lda     sramEnemyDamage,y       ; $E6DF
-    and     #$20                    ; $E6E2
+    lda     sramEnemyDamage,y       ; $E6DF  on one that stops projectiles
+    and     #$20                    ; $E6E2  (damage bit 5)
     beq     Enemy_CheckUpThrust     ; $E6E4
 
-@loc_E6E6:
-    ldy     swordOwner              ; $E6E6
+@fallApart:
+    ldy     swordOwner              ; $E6E6  falls apart, and doesn't hurt it
 
 ; ---------------------------------------------------------------------------
 ; LinkProjectile_Disintegrate
@@ -8159,8 +8191,8 @@ Enemy_HitBySword:
 ; ---------------------------------------------------------------------------
 LinkProjectile_Disintegrate:
     lda     #$00                    ; $E6E8
-    sta     a:objXVelocity+13,y     ; $E6EA
-    lda     #$F2                    ; $E6ED
+    sta     a:objXVelocity+13,y     ; $E6EA  stopped,
+    lda     #$F2                    ; $E6ED  falling apart
     sta     a:objState+13,y         ; $E6EF
     rts                             ; $E6F2
 
@@ -8173,34 +8205,34 @@ LinkProjectile_Disintegrate:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_CheckUpThrust:
-    lda     objState                ; $E6F3
+    lda     objState                ; $E6F3  the upward thrust
     cmp     #$08                    ; $E6F5
-    bne     @loc_E708               ; $E6F7
-    lda     temp11                  ; $E6F9
-    bne     @loc_E708               ; $E6FB
-    lda     objY                    ; $E6FD
+    bne     @checkHitFlag           ; $E6F7
+    lda     temp11                  ; $E6F9  with the sword?
+    bne     @checkHitFlag           ; $E6FB
+    lda     objY                    ; $E6FD  Link below the enemy?
     cmp     objY+1,x                ; $E6FF
-    bcc     Enemy_ClearHitFlag      ; $E701
-    lda     #$00                    ; $E703
+    bcc     Enemy_ClearHitFlag      ; $E701  no: no hit
+    lda     #$00                    ; $E703  yes: his rise stops
     sta     objYVelocity            ; $E705
 
-@loc_E708:
-    lda     objCollision+1,x        ; $E708
+@checkHitFlag:
+    lda     objCollision+1,x        ; $E708  already hit by this stroke?
     and     #$20                    ; $E70A
-    bne     Enemy_CheckHitDone      ; $E70C
+    bne     Enemy_CheckHitDone      ; $E70C  yes
     lda     objCollision+1,x        ; $E70E
-    ora     #$20                    ; $E710
+    ora     #$20                    ; $E710  hit
     sta     objCollision+1,x        ; $E712
-    lda     objState                ; $E714
+    lda     objState                ; $E714  a downward thrust
     cmp     #$09                    ; $E716
-    bne     @loc_E723               ; $E718
-    lda     temp11                  ; $E71A
-    bne     @loc_E723               ; $E71C
-    lda     #$FE                    ; $E71E
+    bne     @damage                 ; $E718
+    lda     temp11                  ; $E71A  with the sword:
+    bne     @damage                 ; $E71C
+    lda     #$FE                    ; $E71E  bounces him up
     sta     objYVelocity            ; $E720
 
-@loc_E723:
-    ldy     statLevel               ; $E723
+@damage:
+    ldy     statLevel               ; $E723  attack level
 
 ; ---------------------------------------------------------------------------
 ; Enemy_TakeDamage
@@ -8214,39 +8246,39 @@ Enemy_CheckUpThrust:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_TakeDamage:
-    lda     #$30                    ; $E726
+    lda     #$30                    ; $E726  stunned, flashing, $30 frames,
     sta     enemyStunTimer,x        ; $E728
-    lda     #$10                    ; $E72B
+    lda     #$10                    ; $E72B  the enemy damaged sound
     sta     sfxRequest+1            ; $E72D
     lda     enemyHp,x               ; $E72F
     sec                             ; $E731
-    sbc     SwordDamage - 1,y       ; $E732  y = attack level (1-8)
+    sbc     SwordDamage - 1,y       ; $E732  - the sword's damage
     sta     enemyHp,x               ; $E735
-    beq     @loc_E74C               ; $E737
-    bcc     @loc_E74C               ; $E739
+    beq     @killed                 ; $E737  killed?
+    bcc     @killed                 ; $E739
     lda     enemyType,x             ; $E73B
     cmp     #ENEMY_TYPE_ITEM        ; $E73D  an item: collect it
-    beq     @loc_E755               ; $E73F
-    lda     objState                ; $E741
+    beq     @item                   ; $E73F
+    lda     objState                ; $E741  a downward thrust:
     cmp     #$09                    ; $E743
-    beq     @loc_E74A               ; $E745
+    beq     @hit                    ; $E745  no knockback
     jsr     Enemy_KnockBack         ; $E747
 
-@loc_E74A:
-    sec                             ; $E74A
+@hit:
+    sec                             ; $E74A  hit
     rts                             ; $E74B
 
-@loc_E74C:
+@killed:
     ldy     enemyType,x             ; $E74C
     cpy     #ENEMY_TYPE_ITEM        ; $E74E  an item: collect it
-    beq     @loc_E755               ; $E750
+    beq     @item                   ; $E750
     jmp     Enemy_Kill              ; $E752
 
-@loc_E755:
+@item:
     lda     enemyAiState,x          ; $E755  the sword takes keys, bags (8-$0D)
     and     #$7F                    ; $E757
     cmp     #$08                    ; $E759
-    bcc     @loc_E769               ; $E75B
+    bcc     @untouched              ; $E75B
     cmp     #$0E                    ; $E75D
     bcc     Item_Collect            ; $E75F  and jars ($10, $11);
     cmp     #$10                    ; $E761
@@ -8255,7 +8287,7 @@ Enemy_TakeDamage:
     beq     Item_Collect            ; $E767
 ; (code below not executed in the test movies)
 
-@loc_E769:
+@untouched:
     lda     #$00                    ; $E769  anything else isn't touched: no stun,
     sta     enemyStunTimer,x        ; $E76B
     sta     sfxRequest+1            ; $E76E  no hit sound
@@ -8281,77 +8313,80 @@ Enemy_TakeDamage:
 ; ---------------------------------------------------------------------------
 Item_Collect:
     lda     enemyAiState,x          ; $E771
-    bmi     @loc_E77D               ; $E773
-    lda     objXHi+1,x              ; $E775
+    bmi     @kind                   ; $E773  a drop: no area flag
+    lda     objXHi+1,x              ; $E775  its page's
     tax                             ; $E777
-    jsr     Area_ClearFlag          ; $E778
+    jsr     Area_ClearFlag          ; $E778  area flag: taken
     ldx     currentObject           ; $E77B
 
-@loc_E77D:
-    lda     enemyAiState,x          ; $E77D
+@kind:
+    lda     enemyAiState,x          ; $E77D  the kind
     and     #$7F                    ; $E77F
     tay                             ; $E781
-    cpy     #$08                    ; $E782
-    bcs     @loc_E79A               ; $E784
-    lda     #$A0                    ; $E786
+    cpy     #$08                    ; $E782  an inventory item (0-7)?
+    bcs     @notInventory           ; $E784
+    lda     #$A0                    ; $E786  the screen flashes
     sta     spellFlash              ; $E788
-    lda     #$10                    ; $E78B
+    lda     #$10                    ; $E78B  the item fanfare
     sta     musicRequest            ; $E78D
     lda     itemOwned,y             ; $E78F
-    ora     #$01                    ; $E792
+    ora     #$01                    ; $E792  owned
     sta     itemOwned,y             ; $E794
 
-@loc_E797:
+@remove:
     jmp     Enemy_Remove            ; $E797
 
-@loc_E79A:
-    lda     #$08                    ; $E79A
+@notInventory:
+    lda     #$08                    ; $E79A  the chime
     sta     sfxRequest+3            ; $E79C
-    cpy     #$08                    ; $E79E
-    bne     @loc_E7BB               ; $E7A0
-    lda     scrollFrozen            ; $E7A2
-    beq     @loc_E7B5               ; $E7A5
-    lda     #$00                    ; $E7A7
+    cpy     #$08                    ; $E79E  a key?
+    bne     @checkBag               ; $E7A0
+    lda     scrollFrozen            ; $E7A2  in a room that froze the scroll
+    beq     @addKey                 ; $E7A5
+    lda     #$00                    ; $E7A7  (a boss's): free it,
     sta     scrollFrozen            ; $E7A9
     lda     musicPlaying            ; $E7AC
-    bne     @loc_E7B5               ; $E7AF
-    lda     #$02                    ; $E7B1
+    bne     @addKey                 ; $E7AF
+    lda     #$02                    ; $E7B1  and the palace theme again
     sta     musicRequest            ; $E7B3
 
-@loc_E7B5:
+@addKey:
     inc     keyCount                ; $E7B5
-    jmp     @loc_E797               ; $E7B8
+    jmp     @remove                 ; $E7B8
 
-@loc_E7BB:
-    cpy     #$0E                    ; $E7BB
+@checkBag:
+    cpy     #$0E                    ; $E7BB  bags ($0A-$0D)
     bcc     Item_CollectExpBag      ; $E7BD
-    cpy     #$10                    ; $E7BF
+    cpy     #$10                    ; $E7BF  jars, the doll, quest items ($10+)
     bcs     Item_CollectSpecial     ; $E7C1
-    lda     #$10                    ; $E7C3
+    lda     #$10                    ; $E7C3  a container: the fanfare,
     sta     musicRequest            ; $E7C5
-    lda     #$00                    ; $E7C7
+    lda     #$00                    ; $E7C7  not the chime
     sta     sfxRequest+3            ; $E7C9
     tya                             ; $E7CB
     tax                             ; $E7CC
     inc     statContainers-$0E,x    ; $E7CD  kinds $0E, $0F: magic, heart container
-    cpx     #$0E                    ; $E7D0
-    bne     @loc_E7E3               ; $E7D2
+    cpx     #$0E                    ; $E7D0  magic?
+    bne     @fill                   ; $E7D2
     ldy     statContainers-$0E,x    ; $E7D4
     cpy     #$07                    ; $E7D7  the 7th magic container
-    bcc     @loc_E7E3               ; $E7D9
+    bcc     @fill                   ; $E7D9
     lda     townFlags+6             ; $E7DB
     ora     #$08                    ; $E7DE
     sta     townFlags+6             ; $E7E0
 
-@loc_E7E3:
-    tya                             ; $E7E3
-    asl     a                       ; $E7E4
+@fill:
+    tya                             ; $E7E3  magic: the containers; heart: $0F
+    asl     a                       ; $E7E4  x 16 (2 units a frame):
     asl     a                       ; $E7E5
 
+; The experience class of each bag kind, read as ExpBagClasses,kind: kinds
+; $0A-$0D read the 7, 9, $0B, $0D after the jmp below (50, 100, 200, 500
+; points); kind 9, never placed, would read the jmp's high byte ($DD).
 ExpBagClasses:
     asl     a                       ; $E7E6
     asl     a                       ; $E7E7
-    sta     statMeterPending-$0E,x  ; $E7E8  fill the meter
+    sta     statMeterPending-$0E,x  ; $E7E8  enough to fill the meter
     ldx     currentObject           ; $E7EB
     jmp     Enemy_Remove            ; $E7ED
     .byte   $07                                                             ; $E7F0
@@ -8370,15 +8405,15 @@ ExpBagClasses:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_CollectExpBag:
-    jsr     Enemy_Kill              ; $E7F4
+    jsr     Enemy_Kill              ; $E7F4  counts as a kill
     lda     enemyAiState,x          ; $E7F7
     and     #$7F                    ; $E7F9
     tay                             ; $E7FB
-    lda     ExpBagClasses,y         ; $E7FC
+    lda     ExpBagClasses,y         ; $E7FC  the bag's class
     sta     enemyExpClass,x         ; $E7FF
-    lda     #$08                    ; $E802
+    lda     #$08                    ; $E802  the chime
     sta     sfxRequest+3            ; $E804
-    lda     #$00                    ; $E806
+    lda     #$00                    ; $E806  no death animation
     sta     timerFast+TIMER_ENEMY,x ; $E808
     rts                             ; $E80B
 
@@ -8395,47 +8430,47 @@ Item_CollectExpBag:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Item_CollectSpecial:
-    lda     #$10                    ; $E80C
+    lda     #$10                    ; $E80C  the fanfare,
     sta     musicRequest            ; $E80E
-    lda     #$00                    ; $E810
+    lda     #$00                    ; $E810  not the chime
     sta     sfxRequest+3            ; $E812
-    cpy     #$12                    ; $E814
-    bne     @loc_E81D               ; $E816
-    inc     lives                   ; $E818
-    bne     @loc_E86D               ; $E81B
+    cpy     #$12                    ; $E814  the doll:
+    bne     @checkChild             ; $E816
+    inc     lives                   ; $E818  one more life
+    bne     @remove                 ; $E81B
 
-@loc_E81D:
-    cpy     #$13                    ; $E81D
-    bne     @loc_E82B               ; $E81F
+@checkChild:
+    cpy     #$13                    ; $E81D  the child
+    bne     @checkTrophy            ; $E81F
     lda     townFlags+5             ; $E821
     ora     #$20                    ; $E824
     sta     townFlags+5             ; $E826
-    bne     @loc_E86D               ; $E829
+    bne     @remove                 ; $E829
 
-@loc_E82B:
-    cpy     #$14                    ; $E82B
-    bne     @loc_E839               ; $E82D
+@checkTrophy:
+    cpy     #$14                    ; $E82B  the trophy
+    bne     @checkMedicine          ; $E82D
     lda     townFlags+1             ; $E82F
     ora     #$10                    ; $E832
     sta     townFlags+1             ; $E834
-    bne     @loc_E86D               ; $E837
+    bne     @remove                 ; $E837
 
-@loc_E839:
-    cpy     #$15                    ; $E839
-    bne     @loc_E847               ; $E83B
+@checkMedicine:
+    cpy     #$15                    ; $E839  the medicine
+    bne     @jar                    ; $E83B
     lda     townFlags+3             ; $E83D
     ora     #$40                    ; $E840
     sta     townFlags+3             ; $E842
-    bne     @loc_E86D               ; $E845
+    bne     @remove                 ; $E845
 
-@loc_E847:
-    lda     #$08                    ; $E847
+@jar:
+    lda     #$08                    ; $E847  a jar: the chime,
     sta     sfxRequest+3            ; $E849
-    lda     #$00                    ; $E84B
+    lda     #$00                    ; $E84B  not the fanfare
     sta     musicRequest            ; $E84D
-    lda     #$10                    ; $E84F
+    lda     #$10                    ; $E84F  blue: $10
     sta     jarFillAmounts          ; $E851
-    lda     statContainers          ; $E854
+    lda     statContainers          ; $E854  red: the whole meter
     asl     a                       ; $E857
     asl     a                       ; $E858
     asl     a                       ; $E859
@@ -8447,10 +8482,10 @@ Item_CollectSpecial:
     tay                             ; $E862
     lda     statMeterPending        ; $E863
     clc                             ; $E866
-    adc     jarFillAmounts,y        ; $E867
+    adc     jarFillAmounts,y        ; $E867  the jar's amount
     sta     statMeterPending        ; $E86A
 
-@loc_E86D:
+@remove:
     jmp     Enemy_Remove            ; $E86D
 
 EnemyDropItems:
@@ -8476,11 +8511,11 @@ EnemyDropItems:
 Enemy_Kill:
     ldy     enemyType,x             ; $E880
     lda     sramEnemyAttr,y         ; $E882
-    and     #$0F                    ; $E885
+    and     #$0F                    ; $E885  bits 3-0: its experience class
     sta     enemyExpClass,x         ; $E887
     lda     sramEnemyDamage,y       ; $E88A
-    and     #$C0                    ; $E88D
-    beq     @loc_E8BF               ; $E88F
+    and     #$C0                    ; $E88D  drop group (bits 7-6):
+    beq     @dying                  ; $E88F  none
     lsr     a                       ; $E891
     lsr     a                       ; $E892
     lsr     a                       ; $E893
@@ -8489,38 +8524,42 @@ Enemy_Kill:
     lsr     a                       ; $E896
     tax                             ; $E897
     tay                             ; $E898
-    inc     dropKillCounts-1,x      ; $E899
+    inc     dropKillCounts-1,x      ; $E899  count the kill
     lda     dropKillCounts-1,x      ; $E89C
-    cmp     #$06                    ; $E89F
-    bne     @loc_E8BF               ; $E8A1
+    cmp     #$06                    ; $E89F  the 6th?
+    bne     @dying                  ; $E8A1
     lda     #$00                    ; $E8A3
     sta     dropKillCounts-1,x      ; $E8A5
     ldx     currentObject           ; $E8A8
-    ror     enemyExpClass,x         ; $E8AA
-    lda     rng+1,x                 ; $E8AD
+    ror     enemyExpClass,x         ; $E8AA  bit 7: drop instead (carry set)
+    lda     rng+1,x                 ; $E8AD  at random:
     and     #$07                    ; $E8B0
-    cpy     #$02                    ; $E8B2
-    bne     @loc_E8B8               ; $E8B4
-    adc     #$07                    ; $E8B6
+    cpy     #$02                    ; $E8B2  group 2:
+    bne     @pick                   ; $E8B4
+    adc     #$07                    ; $E8B6  the big items (8-15, carry set)
 
-@loc_E8B8:
+@pick:
     tay                             ; $E8B8
     lda     EnemyDropItems,y        ; $E8B9
     sta     enemyDropItem,x         ; $E8BC
 
-@loc_E8BF:
+@dying:
     ldx     currentObject           ; $E8BF
-    lda     #$25                    ; $E8C1
+    lda     #$25                    ; $E8C1  dying $25 frames
     sta     timerFast+TIMER_ENEMY,x ; $E8C3
     lda     #$00                    ; $E8C6
     sta     enemyKnockBack,x        ; $E8C8
-    lda     #$02                    ; $E8CB
+    lda     #$02                    ; $E8CB  ENEMY_STATE_DYING
     sta     enemyActive,x           ; $E8CD
-    lda     #$04                    ; $E8CF
+    lda     #$04                    ; $E8CF  the enemy killed sound
     sta     sfxRequest+3            ; $E8D1
-    sec                             ; $E8D3
+    sec                             ; $E8D3  killed
     rts                             ; $E8D4
 ; (unreferenced: $E8D5-$E8EA, 22 bytes)
+; Unused code, a sword test against a fixed 8x8 box at enemy x:
+;   lda objY+1,x / sta temp5 / lda #8 / sta temp7 / lda drawScreenX+1 /
+;   sta temp4 / lda #8 / sta temp6 / jsr Sword_GetHitbox / jmp $E6A1
+; (Enemy_CheckHit's overlap test).
     .byte   $B5, $2A, $85, $05, $A9, $08, $85, $07, $A5, $CD, $85, $04, $A9, $08, $85, $06; $E8D5
     .byte   $20, $A2, $E9, $4C, $A1, $E6                                    ; $E8E5
 
@@ -8534,12 +8573,12 @@ Enemy_Kill:
 ; ---------------------------------------------------------------------------
 Enemy_TurnAround:
     lda     objFacing+1,x           ; $E8EB
-    eor     #$03                    ; $E8ED
+    eor     #$03                    ; $E8ED  1 <-> 2
     sta     objFacing+1,x           ; $E8EF
     lda     objXVelocity+1,x        ; $E8F1
     eor     #$FF                    ; $E8F3
     tay                             ; $E8F5
-    iny                             ; $E8F6
+    iny                             ; $E8F6  velocity negated
     sty     objXVelocity+1,x        ; $E8F7
     rts                             ; $E8F9
 
@@ -8570,28 +8609,28 @@ EnemyHitboxes:
 ; ---------------------------------------------------------------------------
 Enemy_GetHitbox:
     ldy     enemyType,x             ; $E942
-    lda     sramEnemyHitbox,y       ; $E944
-    asl     a                       ; $E947
+    lda     sramEnemyHitbox,y       ; $E944  its hitbox
+    asl     a                       ; $E947  4 bytes each
     asl     a                       ; $E948
     tay                             ; $E949
-    lda     drawScreenX+1           ; $E94A
+    lda     drawScreenX+1           ; $E94A  screen X
 
 Hitbox_SetB:
     clc                             ; $E94C
-    adc     EnemyHitboxes,y         ; $E94D
+    adc     EnemyHitboxes,y         ; $E94D  + X offset
     sta     temp4                   ; $E950
-    lda     EnemyHitboxes+1,y       ; $E952
+    lda     EnemyHitboxes+1,y       ; $E952  width
     sta     temp6                   ; $E955
     lda     objY+1,x                ; $E957
     clc                             ; $E959
-    adc     EnemyHitboxes+2,y       ; $E95A
+    adc     EnemyHitboxes+2,y       ; $E95A  + Y offset
     sta     temp5                   ; $E95D
-    lda     EnemyHitboxes+3,y       ; $E95F
+    lda     EnemyHitboxes+3,y       ; $E95F  height
     sta     temp7                   ; $E962
     lda     temp4                   ; $E964
-    adc     temp6                   ; $E966
-    bcc     @done                   ; $E968
-    lda     temp4                   ; $E96A
+    adc     temp6                   ; $E966  past the screen's right edge?
+    bcc     @done                   ; $E968  no
+    lda     temp4                   ; $E96A  yes: up to the edge
     eor     #$FF                    ; $E96C
     sta     temp6                   ; $E96E
 
@@ -8615,21 +8654,21 @@ LinkHitboxHeights:
 Link_GetHitbox:
     lda     drawScreenX             ; $E975
     clc                             ; $E977
-    adc     #$09                    ; $E978
+    adc     #$09                    ; $E978  X + 9,
     sta     temp0                   ; $E97A
-    lda     #$0D                    ; $E97C
+    lda     #$0D                    ; $E97C  13 wide;
     sta     temp2                   ; $E97E
-    ldy     linkStanding            ; $E980
+    ldy     linkStanding            ; $E980  crouching (0) or standing (1):
     lda     objY                    ; $E982
     clc                             ; $E984
-    adc     LinkHitboxYOffsets,y    ; $E985
+    adc     LinkHitboxYOffsets,y    ; $E985  Y + 4, 25 high, or
     sta     temp1                   ; $E988
-    lda     LinkHitboxHeights,y     ; $E98A
+    lda     LinkHitboxHeights,y     ; $E98A  Y + 0, 29 high
     sta     temp3                   ; $E98D
     lda     temp0                   ; $E98F
-    adc     temp2                   ; $E991
-    bcc     @done                   ; $E993
-    lda     temp0                   ; $E995
+    adc     temp2                   ; $E991  past the screen's right edge?
+    bcc     @done                   ; $E993  no
+    lda     temp0                   ; $E995  yes: up to the edge
     eor     #$FF                    ; $E997
     sta     temp2                   ; $E999
 
@@ -8656,35 +8695,35 @@ SwordHitboxHeights:
 ; ---------------------------------------------------------------------------
 Sword_GetHitbox:
     ldy     #$00                    ; $E9A2
-    lda     swordX                  ; $E9A4
+    lda     swordX                  ; $E9A4  the sword's X
     pha                             ; $E9A7
-    cmp     drawScreenX             ; $E9A8
-    bcs     @loc_E9AD               ; $E9AA
-    iny                             ; $E9AC
+    cmp     drawScreenX             ; $E9A8  right of Link's?
+    bcs     @xOffset                ; $E9AA
+    iny                             ; $E9AC  no: left
 
-@loc_E9AD:
+@xOffset:
     pla                             ; $E9AD
     clc                             ; $E9AE
-    adc     SwordHitboxXOffsets,y   ; $E9AF
+    adc     SwordHitboxXOffsets,y   ; $E9AF  - 8 left, + 2 right
     sta     temp0                   ; $E9B2
-    lda     #$0E                    ; $E9B4
+    lda     #$0E                    ; $E9B4  14 wide
     sta     temp2                   ; $E9B6
     ldy     #$00                    ; $E9B8
     lda     objState                ; $E9BA
-    cmp     #$08                    ; $E9BC
-    beq     @loc_E9C4               ; $E9BE
+    cmp     #$08                    ; $E9BC  thrusts:
+    beq     @thrust                 ; $E9BE
     cmp     #$09                    ; $E9C0
-    bne     @loc_E9C5               ; $E9C2
+    bne     @yOffset                ; $E9C2
 
-@loc_E9C4:
+@thrust:
     iny                             ; $E9C4
 
-@loc_E9C5:
+@yOffset:
     lda     swordY                  ; $E9C5
     clc                             ; $E9C8
-    adc     SwordHitboxYOffsets,y   ; $E9C9
+    adc     SwordHitboxYOffsets,y   ; $E9C9  Y + 7, or Y for the thrusts,
     sta     temp1                   ; $E9CC
-    lda     SwordHitboxHeights,y    ; $E9CE
+    lda     SwordHitboxHeights,y    ; $E9CE  3 high
     sta     temp3                   ; $E9D1
     rts                             ; $E9D3
 
@@ -8707,21 +8746,21 @@ ShieldHitboxYOffsets:
 ; ---------------------------------------------------------------------------
 Link_GetShieldHitbox:
     ldy     linkWalkDir             ; $E9D8
-    dey                             ; $E9DA
+    dey                             ; $E9DA  0 right, 1 left
     lda     drawScreenX             ; $E9DB
     clc                             ; $E9DD
-    adc     #$08                    ; $E9DE
+    adc     #$08                    ; $E9DE  X + 8,
     clc                             ; $E9E0
-    adc     ShieldHitboxXOffsets,y  ; $E9E1
+    adc     ShieldHitboxXOffsets,y  ; $E9E1  + 14 right, - 1 left,
     sta     temp0                   ; $E9E4
-    lda     #$05                    ; $E9E6
+    lda     #$05                    ; $E9E6  5 wide;
     sta     temp2                   ; $E9E8
-    ldy     linkStanding            ; $E9EA
+    ldy     linkStanding            ; $E9EA  crouching (0) or standing (1):
     lda     objY                    ; $E9EC
     clc                             ; $E9EE
-    adc     ShieldHitboxYOffsets,y  ; $E9EF
+    adc     ShieldHitboxYOffsets,y  ; $E9EF  Y + $11 or Y + 2,
     sta     temp1                   ; $E9F2
-    lda     #$0C                    ; $E9F4
+    lda     #$0C                    ; $E9F4  12 high
     sta     temp3                   ; $E9F6
     rts                             ; $E9F8
 
@@ -8737,34 +8776,34 @@ Link_GetShieldHitbox:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hitbox_Overlap:
-    ldx     #$01                    ; $E9F9
+    ldx     #$01                    ; $E9F9  Y, then X:
 
 @loop:
-    lda     temp4,x                 ; $E9FB
+    lda     temp4,x                 ; $E9FB  B
     sec                             ; $E9FD
-    sbc     temp0,x                 ; $E9FE
+    sbc     temp0,x                 ; $E9FE  - A
     clc                             ; $EA00
-    adc     temp6,x                 ; $EA01
+    adc     temp6,x                 ; $EA01  + B's size
     sta     temp15                  ; $EA03
-    lda     temp2,x                 ; $EA05
+    lda     temp2,x                 ; $EA05  A's size
     clc                             ; $EA07
-    adc     temp6,x                 ; $EA08
-    cmp     temp15                  ; $EA0A
-    bcc     @loc_EA11               ; $EA0C
+    adc     temp6,x                 ; $EA08  + B's size
+    cmp     temp15                  ; $EA0A  within it?
+    bcc     @done                   ; $EA0C  no: apart
     dex                             ; $EA0E
     bpl     @loop                   ; $EA0F
 
-@loc_EA11:
-    ldx     currentObject           ; $EA11
+@done:
+    ldx     currentObject           ; $EA11  (carry set if both overlap)
     rts                             ; $EA13
 
 Projectile_HitsBgLow:
-    ldy     #$1E                    ; $EA14
-    bne     Projectile_HitsBgCheckLow ; $EA16
+    ldy     #$1E                    ; $EA14  probe $1E,
+    bne     Projectile_HitsBgCheckLow ; $EA16  when low
 
 Projectile_HitsBgAnyHeight:
-    ldy     #$1E                    ; $EA18
-    bne     Projectile_HitsBgProbe  ; $EA1A
+    ldy     #$1E                    ; $EA18  probe $1E,
+    bne     Projectile_HitsBgProbe  ; $EA1A  at any height
 
 ; ---------------------------------------------------------------------------
 ; Projectile_HitsBg
@@ -8778,7 +8817,7 @@ Projectile_HitsBgAnyHeight:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Projectile_HitsBg:
-    ldy     #$1F                    ; $EA1C
+    ldy     #$1F                    ; $EA1C  probe $1F
 
 ; ---------------------------------------------------------------------------
 ; Projectile_HitsBgCheckLow
@@ -8790,8 +8829,8 @@ Projectile_HitsBg:
 ; ---------------------------------------------------------------------------
 Projectile_HitsBgCheckLow:
     lda     objY+7,x                ; $EA1E
-    cmp     #$90                    ; $EA20
-    bcc     Projectile_HitsBgDone   ; $EA22
+    cmp     #$90                    ; $EA20  low enough (Y $90 and up)?
+    bcc     Projectile_HitsBgDone   ; $EA22  no: carry clear
 
 ; ---------------------------------------------------------------------------
 ; Projectile_HitsBgProbe
@@ -8804,10 +8843,10 @@ Projectile_HitsBgCheckLow:
 Projectile_HitsBgProbe:
     txa                             ; $EA24
     clc                             ; $EA25
-    adc     #$07                    ; $EA26
+    adc     #$07                    ; $EA26  slot x + 7
     tax                             ; $EA28
     jsr     Obj_GetBgTile           ; $EA29
-    jsr     AreaBank::IsSolidTile   ; $EA2C
+    jsr     AreaBank::IsSolidTile   ; $EA2C  carry = solid
     ldx     currentObject           ; $EA2F
 
 ; ---------------------------------------------------------------------------
@@ -8842,66 +8881,73 @@ Projectile_HitsBgDone:
 ; ---------------------------------------------------------------------------
 Enemy_UpdateBgCollision:
     ldy     enemyType,x             ; $EA32
-    lda     sramEnemyFlags,y        ; $EA34
+    lda     sramEnemyFlags,y        ; $EA34  its probe set
     and     #$0F                    ; $EA37
     sta     temp9                   ; $EA39
-    inx                             ; $EA3B
+    inx                             ; $EA3B  slot x + 1
     lda     objCollision,x          ; $EA3C
-    and     #$F0                    ; $EA3E
+    and     #$F0                    ; $EA3E  clear bits 3-0
     sta     objCollision,x          ; $EA40
-    lda     #$15                    ; $EA42
+    lda     #$15                    ; $EA42  head: probe $15 + s
     clc                             ; $EA44
     adc     temp9                   ; $EA45
     sta     temp0                   ; $EA47
     lda     #$00                    ; $EA49
     sta     temp1                   ; $EA4B
-    jsr     Obj_ProbeBg             ; $EA4D
-    lda     #$14                    ; $EA50
+    jsr     Obj_ProbeBg             ; $EA4D  bit 3
+    lda     #$14                    ; $EA50  feet: probe $14 + s
     clc                             ; $EA52
     adc     temp9                   ; $EA53
     sta     temp0                   ; $EA55
     lda     #$00                    ; $EA57
     sta     temp1                   ; $EA59
-    jsr     Obj_ProbeBg             ; $EA5B
-    lda     temp2                   ; $EA5E
+    jsr     Obj_ProbeBg             ; $EA5B  bit 2
+    lda     temp2                   ; $EA5E  the row above the floor tile
     sec                             ; $EA60
     sbc     #$10                    ; $EA61
     sta     enemyFloorTileIndex     ; $EA63
-    lda     temp14                  ; $EA66
+    lda     temp14                  ; $EA66  and the floor tile's page
     sta     enemyFloorTilePtr       ; $EA68
     lda     temp15                  ; $EA6A
     sta     enemyFloorTilePtr+1     ; $EA6C
     lda     #$01                    ; $EA6E
-    ldy     objXVelocity,x          ; $EA70
-    bmi     @loc_EA75               ; $EA72
-    lsr     a                       ; $EA74
+    ldy     objXVelocity,x          ; $EA70  moving left:
+    bmi     @walls                  ; $EA72  probes $11, $13
+    lsr     a                       ; $EA74  right: $10, $12
 
-@loc_EA75:
+@walls:
     clc                             ; $EA75
     adc     #$10                    ; $EA76
     clc                             ; $EA78
-    adc     temp9                   ; $EA79
+    adc     temp9                   ; $EA79  + s
     sta     temp0                   ; $EA7B
     pha                             ; $EA7D
     lda     #$00                    ; $EA7E
     sta     temp1                   ; $EA80
-    jsr     Obj_ProbeBg             ; $EA82
+    jsr     Obj_ProbeBg             ; $EA82  upper: bit 0 or 1
     pla                             ; $EA85
     clc                             ; $EA86
-    adc     #$02                    ; $EA87
+    adc     #$02                    ; $EA87  lower (+2)
     sta     temp0                   ; $EA89
     lda     #$00                    ; $EA8B
     sta     temp1                   ; $EA8D
     jsr     Obj_ProbeBg             ; $EA8F
     dex                             ; $EA92
-    lda     temp14                  ; $EA93
+    lda     temp14                  ; $EA93  the last tile's page
     sta     enemyWallTilePtr        ; $EA95
     lda     temp15                  ; $EA97
     sta     enemyWallTilePtr+1      ; $EA99
-    lda     temp3                   ; $EA9B
+    lda     temp3                   ; $EA9B  and the tile
     sta     drawScratch             ; $EA9D
     rts                             ; $EA9F
 
+; Probe points for Obj_GetBgTile, by probe index: X offset from the
+; object's left, and Y offset from its top minus $20 (the tile map's row 0
+; is at screen Y $20).  0-7 Link (walls right/left upper 0-1, lower 2-3;
+; floor 4-5; head 6-7), 8-$F the fairy's, $10-$15 and $16-$1B the enemy
+; probe sets 0 and 6 (walls upper $10/$11, lower $12/$13, floor $14,
+; head $15), $1C the sword probe, $1D the tile under Link, $1E-$1F enemy
+; projectiles.  ProbeCollisionBits gives each one's objCollision bit.
 ProbeOffsetX:
     .byte   $17, $09, $17, $09, $14, $0C, $14, $0C, $15, $0B                ; $EAA0
 ; (unreferenced: $EAAA-$EAAB, 2 bytes)
@@ -8938,41 +8984,41 @@ BgPagePtrsHi:
 ; ---------------------------------------------------------------------------
 Obj_GetBgTile:
     sty     temp12                  ; $EAE8
-    lda     objX,x                  ; $EAEA
+    lda     objX,x                  ; $EAEA  X
     clc                             ; $EAEC
-    adc     ProbeOffsetX,y          ; $EAED
+    adc     ProbeOffsetX,y          ; $EAED  + the probe's offset
     sta     temp14                  ; $EAF0
-    lda     objXHi,x                ; $EAF2
+    lda     objXHi,x                ; $EAF2  page:
     adc     #$00                    ; $EAF4
-    cmp     #$04                    ; $EAF6
-    bcs     @loc_EB1D               ; $EAF8
+    cmp     #$04                    ; $EAF6  beyond the map?
+    bcs     @empty                  ; $EAF8  yes: empty
     tay                             ; $EAFA
     lda     temp14                  ; $EAFB
     lsr     a                       ; $EAFD
     lsr     a                       ; $EAFE
     lsr     a                       ; $EAFF
-    lsr     a                       ; $EB00
+    lsr     a                       ; $EB00  column
     clc                             ; $EB01
-    adc     BgPagePtrsLo,y          ; $EB02
+    adc     BgPagePtrsLo,y          ; $EB02  + the page's start
     sta     temp14                  ; $EB05
     lda     BgPagePtrsHi,y          ; $EB07
     sta     temp15                  ; $EB0A
     ldy     temp12                  ; $EB0C
-    lda     objY,x                  ; $EB0E
+    lda     objY,x                  ; $EB0E  Y
     clc                             ; $EB10
-    adc     ProbeOffsetY,y          ; $EB11
-    and     #$F0                    ; $EB14
+    adc     ProbeOffsetY,y          ; $EB11  + the offset (which is dy - $20,
+    and     #$F0                    ; $EB14  since row 0 is at Y $20): the row
     sta     temp2                   ; $EB16
     tay                             ; $EB18
-    cpy     #$D0                    ; $EB19
-    bcc     @loc_EB20               ; $EB1B
+    cpy     #$D0                    ; $EB19  below row 12?
+    bcc     @readTile               ; $EB1B  no
 
-@loc_EB1D:
-    lda     #$40                    ; $EB1D
+@empty:
+    lda     #$40                    ; $EB1D  yes: empty ($40)
     .byte   $2C                                                             ; $EB1F  bit (overlapping instruction)
 
-@loc_EB20:
-    lda     (temp14),y              ; $EB20
+@readTile:
+    lda     (temp14),y              ; $EB20  the tile
     sta     temp3                   ; $EB22
     rts                             ; $EB24
 
