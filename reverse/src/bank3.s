@@ -75,36 +75,36 @@ Town_DrawUndergroundBricks:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_FillRect:
-    lda     TownFillTopTiles,x      ; $8104
+    lda     TownFillTopTiles,x      ; $8104  the top row's tile
     sta     temp0                   ; $8107
-    lda     TownFillTiles,x         ; $8109
+    lda     TownFillTiles,x         ; $8109  the second row's
     sta     temp1                   ; $810C
-    lda     #$01                    ; $810E
+    lda     #$01                    ; $810E  two rows
     pha                             ; $8110
-    lda     temp0                   ; $8111
+    lda     temp0                   ; $8111  the top row first
     sta     objectTile              ; $8113
 
-@loc_8116:
-    lda     areaObjectType          ; $8116
+@row:
+    lda     areaObjectType          ; $8116  size + 1 tiles
     and     #$0F                    ; $8119
     tax                             ; $811B
-    jsr     AreaMap_GetPagePtr      ; $811C
+    jsr     AreaMap_GetPagePtr      ; $811C  from the build position
 
 @loop:
     lda     objectTile              ; $811F
     jsr     AreaMap_PutTileRight    ; $8122
     dex                             ; $8125
     bpl     @loop                   ; $8126
-    jsr     AreaMap_NextBuildRow    ; $8128
+    jsr     AreaMap_NextBuildRow    ; $8128  next row
     pla                             ; $812B
     tax                             ; $812C
     dex                             ; $812D
     bmi     @done                   ; $812E
     txa                             ; $8130
     pha                             ; $8131
-    lda     temp1                   ; $8132
+    lda     temp1                   ; $8132  the second row's tile
     sta     objectTile              ; $8134
-    jmp     @loc_8116               ; $8137
+    jmp     @row                    ; $8137
 
 @done:
     rts                             ; $813A
@@ -147,13 +147,13 @@ Town_DrawLogBuilding:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawWall:
-    lda     TownWallTiles,x         ; $8157
+    lda     TownWallTiles,x         ; $8157  the wall's tile
     sta     temp0                   ; $815A
-    lda     TownWallBaseTiles,x     ; $815C
+    lda     TownWallBaseTiles,x     ; $815C  and its right edge
     sta     temp1                   ; $815F
 
 @loop:
-    lda     areaObjectType          ; $8161
+    lda     areaObjectType          ; $8161  size tiles
     and     #$0F                    ; $8164
     tax                             ; $8166
     jsr     AreaMap_GetPagePtr      ; $8167
@@ -163,9 +163,9 @@ Town_DrawWall:
     jsr     AreaMap_PutTileRight    ; $816C
     dex                             ; $816F
     bne     @loop2                  ; $8170
-    lda     temp1                   ; $8172
-    jsr     AreaMap_PutTileNextBuildRow ; $8174
-    and     #$F0                    ; $8177
+    lda     temp1                   ; $8172  the right edge,
+    jsr     AreaMap_PutTileNextBuildRow ; $8174  next row
+    and     #$F0                    ; $8177  down to row $A
     cmp     #$B0                    ; $8179
     bne     @loop                   ; $817B
     rts                             ; $817D
@@ -188,18 +188,18 @@ Town_DrawBrownWindows:
     ldx     #$02                    ; $818C
 
 Town_DrawWindows:
-    jsr     AreaMap_GetPagePtr      ; $818E
+    jsr     AreaMap_GetPagePtr      ; $818E  the window's column
 
 @loop:
-    lda     TownWindowTopTiles,x    ; $8191
+    lda     TownWindowTopTiles,x    ; $8191  top tile,
     jsr     AreaMap_PutTileDown     ; $8194
-    lda     TownWindowTiles,x       ; $8197
+    lda     TownWindowTiles,x       ; $8197  the tile below
     sta     (temp14),y              ; $819A
-    tya                             ; $819C
+    tya                             ; $819C  two rows down
     clc                             ; $819D
     adc     #$20                    ; $819E
     tay                             ; $81A0
-    and     #$F0                    ; $81A1
+    and     #$F0                    ; $81A1  down to row 9
     cmp     #$A0                    ; $81A3
     bcc     @loop                   ; $81A5
     rts                             ; $81A7
@@ -214,26 +214,26 @@ Town_DrawWindows:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawSlantRight:
-    lda     #$02                    ; $81A8
+    lda     #$02                    ; $81A8  three rows
     sta     temp4                   ; $81AA
-    lda     areaBuildPos            ; $81AC
+    lda     areaBuildPos            ; $81AC  from row 2
     and     #$0F                    ; $81AF
     ora     #$20                    ; $81B1
     sta     areaBuildPos            ; $81B3
 
 @loop:
-    lda     areaObjectType          ; $81B6
+    lda     areaObjectType          ; $81B6  size + 1 tiles
     and     #$0F                    ; $81B9
     tax                             ; $81BB
     jsr     AreaMap_GetPagePtr      ; $81BC
 
 @loop2:
-    lda     #$44                    ; $81BF
+    lda     #$44                    ; $81BF  background wall
     jsr     AreaMap_PutTileRight    ; $81C1
     dex                             ; $81C4
     bpl     @loop2                  ; $81C5
-    jsr     AreaMap_NextBuildRow    ; $81C7
-    inc     areaBuildPos            ; $81CA
+    jsr     AreaMap_NextBuildRow    ; $81C7  next row,
+    inc     areaBuildPos            ; $81CA  one column right
     dec     temp4                   ; $81CD
     bpl     @loop                   ; $81CF
     rts                             ; $81D1
@@ -248,26 +248,26 @@ Town_DrawSlantRight:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawSlantLeft:
-    lda     #$02                    ; $81D2
+    lda     #$02                    ; $81D2  three rows
     sta     temp4                   ; $81D4
-    lda     areaBuildPos            ; $81D6
+    lda     areaBuildPos            ; $81D6  from row 2
     and     #$0F                    ; $81D9
     ora     #$20                    ; $81DB
     sta     areaBuildPos            ; $81DD
 
 @loop:
-    lda     areaObjectType          ; $81E0
+    lda     areaObjectType          ; $81E0  size + 1 tiles
     and     #$0F                    ; $81E3
     tax                             ; $81E5
     jsr     AreaMap_GetPagePtr      ; $81E6
 
 @loop2:
-    lda     #$44                    ; $81E9
+    lda     #$44                    ; $81E9  background wall
     jsr     AreaMap_PutTileRight    ; $81EB
     dex                             ; $81EE
     bpl     @loop2                  ; $81EF
-    jsr     AreaMap_NextBuildRow    ; $81F1
-    dec     areaObjectType          ; $81F4
+    jsr     AreaMap_NextBuildRow    ; $81F1  next row,
+    dec     areaObjectType          ; $81F4  one narrower
     dec     temp4                   ; $81F7
     bpl     @loop                   ; $81F9
     rts                             ; $81FB
@@ -300,30 +300,30 @@ Town_DrawWallRight:
     ldy     #$03                    ; $8278
 
 Town_DrawWallEdge:
-    ldx     TownWallEdgeOffsets,y   ; $827A
-    lda     #$1A                    ; $827D
+    ldx     TownWallEdgeOffsets,y   ; $827A  the edge's tile column (read backward)
+    lda     #$1A                    ; $827D  $1B tiles: 3 columns of 9 rows
     sta     temp0                   ; $827F
-    lda     areaBuildPos            ; $8281
+    lda     areaBuildPos            ; $8281  from row 2
     and     #$0F                    ; $8284
     ora     #$20                    ; $8286
     sta     areaBuildPos            ; $8288
     jsr     AreaMap_GetPagePtr      ; $828B
 
 @loop:
-    lda     TownWallEdgeTiles,x     ; $828E
-    cmp     #$44                    ; $8291
-    beq     @loc_8297               ; $8293
+    lda     TownWallEdgeTiles,x     ; $828E  the tile,
+    cmp     #$44                    ; $8291  unless $44 (left as it is)
+    beq     @next                   ; $8293
     sta     (temp14),y              ; $8295
 
-@loc_8297:
+@next:
     dec     temp0                   ; $8297
     dex                             ; $8299
-    jsr     AreaMap_NextRow         ; $829A
-    cmp     #$B0                    ; $829D
+    jsr     AreaMap_NextRow         ; $829A  next row
+    cmp     #$B0                    ; $829D  down to row $A
     bcc     @loop                   ; $829F
-    inc     areaBuildPos            ; $82A1
+    inc     areaBuildPos            ; $82A1  the next column
     ldy     areaBuildPos            ; $82A4
-    lda     temp0                   ; $82A7
+    lda     temp0                   ; $82A7  all done?
     cmp     #$FF                    ; $82A9
     bne     @loop                   ; $82AB
     rts                             ; $82AD
@@ -332,16 +332,16 @@ TownTableTiles:
     .byte   $4D, $4C, $4B, $4B                                              ; $82AE
 
 Town_DrawTable:
-    ldx     #$03                    ; $82B2
+    ldx     #$03                    ; $82B2  2 x 2 tiles
     jsr     AreaMap_GetPagePtr      ; $82B4
 
 @loop:
-    lda     TownTableTiles,x        ; $82B7
+    lda     TownTableTiles,x        ; $82B7  left,
     sta     (temp14),y              ; $82BA
-    iny                             ; $82BC
+    iny                             ; $82BC  right
     dex                             ; $82BD
     lda     TownTableTiles,x        ; $82BE
-    jsr     AreaMap_PutTileNextBuildRow ; $82C1
+    jsr     AreaMap_PutTileNextBuildRow ; $82C1  next row
     tay                             ; $82C4
     dex                             ; $82C5
     bpl     @loop                   ; $82C6
@@ -351,8 +351,8 @@ TownFireplaceTiles:
     .byte   $EA, $90, $8F, $EA, $8E, $8D                                    ; $82C9
 
 Town_DrawFireplace:
-    ldx     #$05                    ; $82CF
-    lda     areaBuildPos            ; $82D1
+    ldx     #$05                    ; $82CF  2 columns x 3 rows,
+    lda     areaBuildPos            ; $82D1  from row 9
     and     #$0F                    ; $82D4
     ora     #$90                    ; $82D6
     sta     areaBuildPos            ; $82D8
@@ -361,15 +361,15 @@ Town_DrawFireplace:
     jsr     AreaMap_GetPagePtr      ; $82DB
 
 @loop2:
-    lda     TownFireplaceTiles,x    ; $82DE
+    lda     TownFireplaceTiles,x    ; $82DE  (read backward)
     sta     (temp14),y              ; $82E1
     dex                             ; $82E3
-    jsr     AreaMap_NextRow         ; $82E4
-    and     #$F0                    ; $82E7
+    jsr     AreaMap_NextRow         ; $82E4  next row
+    and     #$F0                    ; $82E7  down to row $B
     cmp     #$C0                    ; $82E9
     bcc     @loop2                  ; $82EB
-    inc     areaBuildPos            ; $82ED
-    cpx     #$FF                    ; $82F0
+    inc     areaBuildPos            ; $82ED  next column
+    cpx     #$FF                    ; $82F0  all 6?
     bne     @loop                   ; $82F2
     rts                             ; $82F4
 ; (code below not executed in the test movies)
@@ -378,28 +378,28 @@ Town_DrawStonehenge:
     jsr     AreaMap_GetPagePtr      ; $82F5
 
 @loop:
-    lda     #$49                    ; $82F8
+    lda     #$49                    ; $82F8  two stones a row
     sta     (temp14),y              ; $82FA
     iny                             ; $82FC
     lda     #$49                    ; $82FD
-    jsr     AreaMap_PutTileNextBuildRow ; $82FF
+    jsr     AreaMap_PutTileNextBuildRow ; $82FF  next row
     tay                             ; $8302
-    and     #$F0                    ; $8303
+    and     #$F0                    ; $8303  down to row $A
     cmp     #$B0                    ; $8305
     bcc     @loop                   ; $8307
     rts                             ; $8309
 ; (end of code not executed in the test movies)
 
 Town_DrawWater:
-    lda     areaBuildPos            ; $830A
+    lda     areaBuildPos            ; $830A  from row $B
     and     #$0F                    ; $830D
     ora     #$B0                    ; $830F
     sta     areaBuildPos            ; $8311
-    lda     #$40                    ; $8314
+    lda     #$40                    ; $8314  the surface: $40
     sta     temp0                   ; $8316
 
 @loop2:
-    lda     areaObjectType          ; $8318
+    lda     areaObjectType          ; $8318  size + 1 tiles
     and     #$0F                    ; $831B
     tax                             ; $831D
     jsr     AreaMap_GetPagePtr      ; $831E
@@ -409,10 +409,10 @@ Town_DrawWater:
     jsr     AreaMap_PutTileRight    ; $8323
     dex                             ; $8326
     bpl     @loop3                  ; $8327
-    lda     #$92                    ; $8329
+    lda     #$92                    ; $8329  below it: $92
     sta     temp0                   ; $832B
-    jsr     AreaMap_NextBuildRow    ; $832D
-    and     #$F0                    ; $8330
+    jsr     AreaMap_NextBuildRow    ; $832D  next row
+    and     #$F0                    ; $8330  to the bottom (row $C)
     cmp     #$D0                    ; $8332
     bcc     @loop2                  ; $8334
     rts                             ; $8336
@@ -421,16 +421,16 @@ TownBackgroundWallTiles:
     .byte   $D3, $CC, $CC                                                   ; $8337
 
 Town_DrawBackgroundWall:
-    lda     areaObjectType          ; $833A
+    lda     areaObjectType          ; $833A  size + 1 rows
     and     #$0F                    ; $833D
     sta     areaObjectType          ; $833F
-    lda     areaBuildPos            ; $8342
+    lda     areaBuildPos            ; $8342  from row 4
     and     #$0F                    ; $8345
     ora     #$40                    ; $8347
     sta     areaBuildPos            ; $8349
 
 @loop:
-    ldx     #$02                    ; $834C
+    ldx     #$02                    ; $834C  3 tiles a row
     jsr     AreaMap_GetPagePtr      ; $834E
 
 @loop2:
@@ -439,7 +439,7 @@ Town_DrawBackgroundWall:
     iny                             ; $8356
     dex                             ; $8357
     bpl     @loop2                  ; $8358
-    jsr     AreaMap_NextBuildRow    ; $835A
+    jsr     AreaMap_NextBuildRow    ; $835A  next row
     dec     areaObjectType          ; $835D
     bpl     @loop                   ; $8360
     rts                             ; $8362
@@ -448,18 +448,18 @@ TownBridgeTiles:
     .byte   $92, $56, $51                                                   ; $8363
 
 Town_DrawBridge:
-    lda     #$02                    ; $8366
+    lda     #$02                    ; $8366  three rows
     sta     temp0                   ; $8368
-    lda     areaBuildPos            ; $836A
+    lda     areaBuildPos            ; $836A  from row $A
     and     #$0F                    ; $836D
     ora     #$A0                    ; $836F
     sta     areaBuildPos            ; $8371
 
 @loop:
-    ldx     temp0                   ; $8374
+    ldx     temp0                   ; $8374  the row's tile ($51, $56, $92)
     lda     TownBridgeTiles,x       ; $8376
     sta     temp1                   ; $8379
-    lda     areaObjectType          ; $837B
+    lda     areaObjectType          ; $837B  size + 1 tiles
     and     #$0F                    ; $837E
     tax                             ; $8380
     jsr     AreaMap_GetPagePtr      ; $8381
@@ -469,7 +469,7 @@ Town_DrawBridge:
     jsr     AreaMap_PutTileRight    ; $8386
     dex                             ; $8389
     bpl     @loop2                  ; $838A
-    jsr     AreaMap_NextBuildRow    ; $838C
+    jsr     AreaMap_NextBuildRow    ; $838C  next row
     dec     temp0                   ; $838F
     bpl     @loop                   ; $8391
     rts                             ; $8393
@@ -498,11 +498,11 @@ Town_DrawOpenDoor3:
     lda     #$03                    ; $83B0
 
 Town_DrawDoor:
-    asl     a                       ; $83B2
+    asl     a                       ; $83B2  the door's 4 tiles,
     asl     a                       ; $83B3
     ora     #$03                    ; $83B4
     tax                             ; $83B6
-    lda     #$03                    ; $83B7
+    lda     #$03                    ; $83B7  top down
     sta     temp0                   ; $83B9
     jsr     AreaMap_GetPagePtr      ; $83BB
 
@@ -642,13 +642,13 @@ TownFloorRecordsLo:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_SetFloorTiles:
-    ldx     areaTileSet             ; $8647
-    lda     TownFloorRecordsLo,x    ; $864A
+    ldx     areaTileSet             ; $8647  the area's tile set:
+    lda     TownFloorRecordsLo,x    ; $864A  its floor record (page $86)
     sta     temp12                  ; $864D
     lda     #$86                    ; $864F
     sta     temp13                  ; $8651
-    ldy     #$08                    ; $8653
-    lda     (temp12),y              ; $8655
+    ldy     #$08                    ; $8653  byte 8:
+    lda     (temp12),y              ; $8655  the floor tile
     sta     floorTile               ; $8657
     rts                             ; $865A
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -679,7 +679,7 @@ Town_DrawSmallCloud:
     ldx     #$01                    ; $8668
 
 Town_DrawCloud:
-    jsr     AreaMap_GetPagePtr      ; $866A
+    jsr     AreaMap_GetPagePtr      ; $866A  $C4 then $C5 or $C6
     lda     #$C4                    ; $866D
     sta     (temp14),y              ; $866F
     iny                             ; $8671
@@ -703,7 +703,7 @@ Town_DrawChair:
 
 Town_DrawCrossTile:
     jsr     AreaMap_GetPagePtr      ; $8685
-    lda     TownCrossTiles,x        ; $8688
+    lda     TownCrossTiles,x        ; $8688  one tile
     sta     (temp14),y              ; $868B
     rts                             ; $868D
 
@@ -711,11 +711,11 @@ TownBenchTiles:
     .byte   $48, $48, $47, $46, $46                                         ; $868E
 
 Town_DrawBench:
-    ldx     #$04                    ; $8693
+    ldx     #$04                    ; $8693  5 tiles across
     jsr     AreaMap_GetPagePtr      ; $8695
 
 @loop:
-    lda     TownBenchTiles,x        ; $8698
+    lda     TownBenchTiles,x        ; $8698  (read backward)
     sta     (temp14),y              ; $869B
     iny                             ; $869D
     dex                             ; $869E
@@ -836,10 +836,10 @@ Area_PlaceLockedDoor_Bank3:
 
 
 Town_DrawBush:
-    lda     areaObjectType          ; $8B95
+    lda     areaObjectType          ; $8B95  size + 1 tiles
     and     #$0F                    ; $8B98
     tax                             ; $8B9A
-    lda     areaBuildPos            ; $8B9B
+    lda     areaBuildPos            ; $8B9B  on row $A
     and     #$0F                    ; $8B9E
     .assert EnemyLists_Bank3+768 = AreaBank::EnemyLists+768, error, "interface address moved"
     ora     #$A0                    ; $8BA0
@@ -847,7 +847,7 @@ Town_DrawBush:
     jsr     AreaMap_GetPagePtr      ; $8BA5
 
 @loop:
-    lda     #$45                    ; $8BA8
+    lda     #$45                    ; $8BA8  bush tile $45
     jsr     AreaMap_PutTileRight    ; $8BAA
     dex                             ; $8BAD
     bpl     @loop                   ; $8BAE
@@ -1347,13 +1347,13 @@ Townsperson_InitAtDoor:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Townsperson_Init:
-    lda     #$00                    ; $976B
+    lda     #$00                    ; $976B  not talked to,
     sta     townspersonTalkCount,x  ; $976D
-    sta     townspersonToDoor,x     ; $9770
+    sta     townspersonToDoor,x     ; $9770  not going to a door,
     sta     townspersonWalkCounter,x ; $9773
-    lda     #$10                    ; $9776
+    lda     #$10                    ; $9776  walk timer $10
     sta     townspersonWalkTimer,x  ; $9778
-    lda     #$90                    ; $977B
+    lda     #$90                    ; $977B  can't talk for a while
     sta     townspersonTimer,x      ; $977D
 
 ; The rts byte doubles as the base of a table indexed by facing (1, 2):
@@ -1685,12 +1685,12 @@ Townsperson_NextState:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Door_SetClosedTile:
-    lda     townspersonDoorPtr,x    ; $98F9
+    lda     townspersonDoorPtr,x    ; $98F9  the door's tile map page
     sta     temp0                   ; $98FC
     lda     townspersonDoorPtrHi,x  ; $98FE
     sta     temp1                   ; $9901
-    ldy     #$B0                    ; $9903
-    lda     #$53                    ; $9905
+    ldy     #$B0                    ; $9903  row $B (the street's door tile)
+    lda     #$53                    ; $9905  closed
     sta     (temp0),y               ; $9907
     rts                             ; $9909
 
@@ -2215,24 +2215,24 @@ Townsperson_DrawDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawLargeObject:
-    txa                             ; $9B86
+    txa                             ; $9B86  the type's high nybble
     lsr     a                       ; $9B87
     lsr     a                       ; $9B88
     lsr     a                       ; $9B89
     lsr     a                       ; $9B8A
-    tax                             ; $9B8B
+    tax                             ; $9B8B  - 1: type $1x first
     dex                             ; $9B8C
-    lda     areaBuildPos            ; $9B8D
+    lda     areaBuildPos            ; $9B8D  on row $F (the extras)?
     and     #$F0                    ; $9B90
     cmp     #$F0                    ; $9B92
-    bne     @loc_9B9B               ; $9B94
-    txa                             ; $9B96
+    bne     @dispatch               ; $9B94
+    txa                             ; $9B96  yes: +15
     clc                             ; $9B97
     adc     #$0F                    ; $9B98
     tax                             ; $9B9A
 
-@loc_9B9B:
-    txa                             ; $9B9B
+@dispatch:
+    txa                             ; $9B9B  by type
     jsr     JumpTable               ; $9B9C
 ; (inline jump table)
     .word   Town_DrawCrossHatchedRoof ; $9B9F
@@ -2269,17 +2269,17 @@ Town_DrawLargeObject:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Town_DrawSmallObject:
-    lda     areaBuildPos            ; $9BCB
+    lda     areaBuildPos            ; $9BCB  on row $F?
     and     #$F0                    ; $9BCE
     cmp     #$F0                    ; $9BD0
-    bne     @loc_9BD9               ; $9BD2
-    txa                             ; $9BD4
+    bne     @dispatch               ; $9BD2
+    txa                             ; $9BD4  yes: +16
     clc                             ; $9BD5
     adc     #$10                    ; $9BD6
     tax                             ; $9BD8
 
-@loc_9BD9:
-    txa                             ; $9BD9
+@dispatch:
+    txa                             ; $9BD9  by type
     jsr     JumpTable               ; $9BDA
 ; (inline jump table)
     .word   Town_DrawClosedDoor     ; $9BDD
@@ -2310,14 +2310,14 @@ Town_DrawSmallObject:
     .word   Town_DrawTombRight      ; $9C0F
 
 Town_DrawSign:
-    lda     areaBuildPos            ; $9C11
+    lda     areaBuildPos            ; $9C11  at row 9:
     and     #$0F                    ; $9C14
     ora     #$90                    ; $9C16
     sta     areaBuildPos            ; $9C18
     jsr     AreaMap_GetPagePtr      ; $9C1B
-    lda     #$E3                    ; $9C1E
+    lda     #$E3                    ; $9C1E  the sign's top,
     jsr     AreaMap_PutTileDown     ; $9C20
-    lda     #$E4                    ; $9C23
+    lda     #$E4                    ; $9C23  its post
     sta     (temp14),y              ; $9C25
     rts                             ; $9C27
 
@@ -2325,8 +2325,8 @@ TownFountainTiles:
     .byte   $DB, $D8, $DA, $D8, $D7, $40, $40, $D9, $40, $40                ; $9C28
 
 Town_DrawFountain:
-    ldx     #$09                    ; $9C32
-    lda     areaBuildPos            ; $9C34
+    ldx     #$09                    ; $9C32  two rows of 5 tiles (read backward)
+    lda     areaBuildPos            ; $9C34  from row 9
     and     #$0F                    ; $9C37
     ora     #$90                    ; $9C39
     sta     areaBuildPos            ; $9C3B
@@ -2337,9 +2337,9 @@ Town_DrawFountain:
     jsr     AreaMap_PutTileRight    ; $9C44
     dex                             ; $9C47
     bmi     @done                   ; $9C48
-    cpx     #$04                    ; $9C4A
+    cpx     #$04                    ; $9C4A  after 5:
     bne     @loop                   ; $9C4C
-    jsr     AreaMap_NextBuildRow    ; $9C4E
+    jsr     AreaMap_NextBuildRow    ; $9C4E  the next row
     tay                             ; $9C51
     jmp     @loop                   ; $9C52
 
@@ -2357,7 +2357,7 @@ Town_DrawChimney:
     ldx     #$01                    ; $9C5C
 
 Town_DrawChimneyTile:
-    jsr     AreaMap_GetPagePtr      ; $9C5E
+    jsr     AreaMap_GetPagePtr      ; $9C5E  two tiles side by side
     lda     TownChimneyTiles,x      ; $9C61
     jsr     AreaMap_PutTileRight    ; $9C64
     lda     TownChimneyTiles,x      ; $9C67
@@ -2365,21 +2365,21 @@ Town_DrawChimneyTile:
     rts                             ; $9C6C
 
 Town_DrawPillar:
-    lda     areaObjectType          ; $9C6D
+    lda     areaObjectType          ; $9C6D  size + 1 tiles down:
     and     #$0F                    ; $9C70
     tax                             ; $9C72
     ldy     areaBuildPos            ; $9C73
     jsr     AreaMap_GetPagePtr      ; $9C76
-    lda     #$94                    ; $9C79
+    lda     #$94                    ; $9C79  the capital ($94),
     sta     (temp14),y              ; $9C7B
-    bne     @loc_9C83               ; $9C7D
+    bne     @nextRow                ; $9C7D  (always)
 
 @loop:
-    lda     #$93                    ; $9C7F
+    lda     #$93                    ; $9C7F  then shaft ($93)
     sta     (temp14),y              ; $9C81
 
-@loc_9C83:
-    tya                             ; $9C83
+@nextRow:
+    tya                             ; $9C83  one row down
     clc                             ; $9C84
     adc     #$10                    ; $9C85
     tay                             ; $9C87
@@ -2388,14 +2388,14 @@ Town_DrawPillar:
     rts                             ; $9C8B
 
 Town_DrawCastleBricks:
-    lda     areaObjectType          ; $9C8C
+    lda     areaObjectType          ; $9C8C  size + 1 tiles across
     and     #$0F                    ; $9C8F
     tax                             ; $9C91
     ldy     areaBuildPos            ; $9C92
     jsr     AreaMap_GetPagePtr      ; $9C95
 
 @loop:
-    lda     #$98                    ; $9C98
+    lda     #$98                    ; $9C98  brick $98
     jsr     AreaMap_PutTileRight    ; $9C9A
     dex                             ; $9C9D
     bpl     @loop                   ; $9C9E
@@ -2416,13 +2416,13 @@ Town_DrawTombRight:
     ldx     #$02                    ; $9CAC
 
 Town_DrawGraveTile:
-    lda     areaBuildPos            ; $9CAE
+    lda     areaBuildPos            ; $9CAE  at row 9
     and     #$0F                    ; $9CB1
     ora     #$90                    ; $9CB3
     sta     areaBuildPos            ; $9CB5
     tay                             ; $9CB8
     jsr     AreaMap_GetPagePtr      ; $9CB9
-    lda     TownTombTiles,x         ; $9CBC
+    lda     TownTombTiles,x         ; $9CBC  one tile
     sta     (temp14),y              ; $9CBF
     rts                             ; $9CC1
     .byte   $48, $00, $18, $30, $F0, $00, $F1, $38, $52, $89, $71, $A0, $72, $A0, $A3, $05; $9CC2
@@ -2870,10 +2870,10 @@ EastTextPtrs:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Update:
-    lda     pauseState              ; $B082
+    lda     pauseState              ; $B082  the last step (window closed):
     cmp     #$0C                    ; $B085
-    beq     @loc_B0AE               ; $B087
-    ldy     #$F0                    ; $B089
+    beq     @step                   ; $B087  no split
+    ldy     #$F0                    ; $B089  a delay, past the vertical blank
 
 @loop:
     nop                             ; $B08B
@@ -2881,23 +2881,23 @@ Dialog_Update:
     bne     @loop                   ; $B08D
 
 @loop2:
-    bit     PPUSTATUS               ; $B08F
+    bit     PPUSTATUS               ; $B08F  wait for the sprite 0 hit
     bvc     @loop2                  ; $B092
-    lda     ppuCtrlShadow           ; $B094
+    lda     ppuCtrlShadow           ; $B094  the playfield's nametable
     ora     playfieldNametable      ; $B096
     sta     ppuCtrlShadow           ; $B099
-    ldx     ppuScrollX              ; $B09B
-    ldy     #$10                    ; $B09D
+    ldx     ppuScrollX              ; $B09B  and scroll
+    ldy     #$10                    ; $B09D  a short delay, to the end of the line
 
 @loop3:
     dey                             ; $B09F
     bne     @loop3                  ; $B0A0
-    sta     PPUCTRL                 ; $B0A2
+    sta     PPUCTRL                 ; $B0A2  below the status bar
     stx     PPUSCROLL               ; $B0A5
-    sty     PPUSCROLL               ; $B0A8
-    lda     pauseState              ; $B0AB
+    sty     PPUSCROLL               ; $B0A8  (Y 0)
+    lda     pauseState              ; $B0AB  this step
 
-@loc_B0AE:
+@step:
     jsr     JumpTable               ; $B0AE
 ; (inline jump table)
     .word   Menu_NextState_Bank3    ; $B0B1
@@ -2922,7 +2922,7 @@ Dialog_Update:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Open:
-    lda     #$08                    ; $B0CB
+    lda     #$08                    ; $B0CB  the dialog sound
     sta     sfxRequest+2            ; $B0CD
     jmp     Dialog_NextState        ; $B0CF
 
@@ -2935,7 +2935,7 @@ Dialog_Open:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_OpenRow:
-    lda     menuRow                 ; $B0D2
+    lda     menuRow                 ; $B0D2  the row pair's two tile rows
     asl     a                       ; $B0D5
     tay                             ; $B0D6
     lda     DialogRowPtrs,y         ; $B0D7
@@ -2946,7 +2946,7 @@ Dialog_OpenRow:
     sta     temp4                   ; $B0E4
     lda     DialogRow2Ptrs+1,y      ; $B0E6
     sta     temp5                   ; $B0E9
-    ldy     #$0D                    ; $B0EB
+    ldy     #$0D                    ; $B0EB  14 tiles
 
 @loop:
     lda     (temp2),y               ; $B0ED
@@ -2955,9 +2955,9 @@ Dialog_OpenRow:
     sta     menuRowTiles2,y         ; $B0F4
     dey                             ; $B0F7
     bpl     @loop                   ; $B0F8
-    jsr     Menu_DrawRowAttrs_Bank3 ; $B0FA
-    inc     menuRow                 ; $B0FD
-    lda     menuRow                 ; $B100
+    jsr     Menu_DrawRowAttrs_Bank3 ; $B0FA  draw it
+    inc     menuRow                 ; $B0FD  next row
+    lda     menuRow                 ; $B100  all five?
     cmp     #$05                    ; $B103
     bcc     Menu_NextState_Done_Bank3 ; $B105
 
@@ -2968,252 +2968,252 @@ Menu_NextState_Done_Bank3:
     rts                             ; $B10A
 
 Menu_DrawRowAttrs_Bank3:
-    jsr     Menu_BeginRow_Bank3     ; $B10B
+    jsr     Menu_BeginRow_Bank3     ; $B10B  queue the row's tiles
 
 @loop:
-    jsr     Menu_GetAttrAddress_Bank3 ; $B10E
-    and     #$FE                    ; $B111
+    jsr     Menu_GetAttrAddress_Bank3 ; $B10E  each attribute column of the window:
+    and     #$FE                    ; $B111  attribute row ((menuRow + 1) / 2 + 1) x 8
     asl     a                       ; $B113
     asl     a                       ; $B114
-    adc     #$C8                    ; $B115
-    jsr     Menu_QueueAttrHeader_Bank3 ; $B117
-    lda     #$0F                    ; $B11A
+    adc     #$C8                    ; $B115  + $C0 (attribute table)
+    jsr     Menu_QueueAttrHeader_Bank3 ; $B117  + column; x = its menuAttrs index
+    lda     #$0F                    ; $B11A  bottom half: palette 0 there
     sta     temp5                   ; $B11C
-    jsr     Menu_CheckAttrAlignment_Bank3 ; $B11E
-    beq     @loc_B12F               ; $B121
-    lda     temp4                   ; $B123
-    bne     @loc_B13D               ; $B125
-    lda     #$3F                    ; $B127
+    jsr     Menu_CheckAttrAlignment_Bank3 ; $B11E  starting on an attribute byte's left?
+    beq     @aligned                ; $B121
+    lda     temp4                   ; $B123  no: the first byte,
+    bne     @pickMask               ; $B125
+    lda     #$3F                    ; $B127  only the right quadrants
     sta     temp5                   ; $B129
     lda     #$F3                    ; $B12B
-    bne     @loc_B13B               ; $B12D
+    bne     @setTopMask             ; $B12D
 
-@loc_B12F:
-    lda     temp4                   ; $B12F
+@aligned:
+    lda     temp4                   ; $B12F  yes: the last byte,
     cmp     #$03                    ; $B131
-    bne     @loc_B13D               ; $B133
-    lda     #$CF                    ; $B135
+    bne     @pickMask               ; $B133
+    lda     #$CF                    ; $B135  only the left quadrants
     sta     temp5                   ; $B137
     lda     #$FC                    ; $B139
 
-@loc_B13B:
-    sta     temp6                   ; $B13B
+@setTopMask:
+    sta     temp6                   ; $B13B  (top half's mask)
 
-@loc_B13D:
-    lda     temp2                   ; $B13D
-    lsr     a                       ; $B13F
+@pickMask:
+    lda     temp2                   ; $B13D  the row's half of the byte:
+    lsr     a                       ; $B13F  bottom (menuRow even)
     lda     temp5                   ; $B140
-    bcs     @loc_B146               ; $B142
-    lda     temp6                   ; $B144
+    bcs     @mask                   ; $B142
+    lda     temp6                   ; $B144  top
 
-@loc_B146:
-    and     menuAttrs,x             ; $B146
-    sta     menuAttrs,x             ; $B149
-    jsr     Menu_NextAttr_Bank3     ; $B14C
+@mask:
+    and     menuAttrs,x             ; $B146  palette 0 in the window's quadrants
+    sta     menuAttrs,x             ; $B149  (kept for the next row)
+    jsr     Menu_NextAttr_Bank3     ; $B14C  queue it; all 4?
     bcc     @loop                   ; $B14F
 
 Menu_EndRowString_Bank3:
-    lda     #$FF                    ; $B151
+    lda     #$FF                    ; $B151  end
     sta     ppuBuffer1,y            ; $B153
     sty     ppuBuffer1Len           ; $B156
-    lda     #$01                    ; $B159
+    lda     #$01                    ; $B159  send ppuBuffer1
     sta     ppuStringSelect         ; $B15B
     rts                             ; $B15E
 
 Menu_GetAttrAddress_Bank3:
-    lda     temp1                   ; $B15F
+    lda     temp1                   ; $B15F  the window's left edge,
     clc                             ; $B161
     adc     #$78                    ; $B162
-    php                             ; $B164
-    lsr     a                       ; $B165
+    php                             ; $B164  (carry: into the next page)
+    lsr     a                       ; $B165  / 32: attribute column
     lsr     a                       ; $B166
     lsr     a                       ; $B167
     lsr     a                       ; $B168
     lsr     a                       ; $B169
     sta     temp3                   ; $B16A
     plp                             ; $B16C
-    lda     temp0                   ; $B16D
+    lda     temp0                   ; $B16D  nametable
     adc     #$00                    ; $B16F
     and     #$01                    ; $B171
     asl     a                       ; $B173
     asl     a                       ; $B174
-    adc     #$23                    ; $B175
+    adc     #$23                    ; $B175  $23xx or $27xx
     sta     ppuBuffer1,y            ; $B177
-    lda     menuRow                 ; $B17A
+    lda     menuRow                 ; $B17A  the row + 1 (its parity: which half)
     clc                             ; $B17D
     adc     #$01                    ; $B17E
     sta     temp2                   ; $B180
     rts                             ; $B182
 
 Menu_CloseRow_Bank3:
-    dec     menuRow                 ; $B183
-    bpl     @loc_B18B               ; $B186
+    dec     menuRow                 ; $B183  the next row up
+    bpl     @close                  ; $B186  none left: next step
     jmp     Menu_NextState_Bank3    ; $B188
 
-@loc_B18B:
-    lda     scrollX                 ; $B18B
+@close:
+    lda     scrollX                 ; $B18B  the window's left edge, X + $78:
     clc                             ; $B18E
     adc     #$78                    ; $B18F
     tax                             ; $B191
     lda     scrollXHi               ; $B192
     adc     #$00                    ; $B195
-    jsr     AreaMap_GetPagePtr_Bank3 ; $B197
-    txa                             ; $B19A
+    jsr     AreaMap_GetPagePtr_Bank3 ; $B197  its page's tile map
+    txa                             ; $B19A  metatile column
     lsr     a                       ; $B19B
     lsr     a                       ; $B19C
     lsr     a                       ; $B19D
     lsr     a                       ; $B19E
     tay                             ; $B19F
-    lda     menuRow                 ; $B1A0
+    lda     menuRow                 ; $B1A0  the row's metatile row
     asl     a                       ; $B1A3
     asl     a                       ; $B1A4
     asl     a                       ; $B1A5
     asl     a                       ; $B1A6
-    adc     #$10                    ; $B1A7
+    adc     #$10                    ; $B1A7  (+ 1: the window starts on map row 1, Y $30)
     jsr     Math_AddToTemp14_Bank3  ; $B1A9
-    ldx     #$00                    ; $B1AC
+    ldx     #$00                    ; $B1AC  7 metatiles:
 
 @loop:
-    lda     (temp14),y              ; $B1AE
+    lda     (temp14),y              ; $B1AE  under the window
     sta     menuUnderRow,x          ; $B1B0
     iny                             ; $B1B3
     tya                             ; $B1B4
-    and     #$0F                    ; $B1B5
-    bne     @loc_B1C4               ; $B1B7
-    lda     #$D0                    ; $B1B9
+    and     #$0F                    ; $B1B5  crossed a page?
+    bne     @nextTile               ; $B1B7
+    lda     #$D0                    ; $B1B9  yes: the next page's map
     clc                             ; $B1BB
     jsr     Math_AddToTemp14_Bank3  ; $B1BC
-    tya                             ; $B1BF
+    tya                             ; $B1BF  (and its first column)
     sec                             ; $B1C0
     sbc     #$10                    ; $B1C1
     tay                             ; $B1C3
 
-@loc_B1C4:
+@nextTile:
     inx                             ; $B1C4
     cpx     #$07                    ; $B1C5
     bcc     @loop                   ; $B1C7
-    lda     #$00                    ; $B1C9
+    lda     #$00                    ; $B1C9  their tiles:
     sta     temp0                   ; $B1CB
     sta     temp1                   ; $B1CD
 
 @loop2:
-    ldx     temp0                   ; $B1CF
+    ldx     temp0                   ; $B1CF  each metatile:
     lda     menuUnderRow,x          ; $B1D1
-    and     #$C0                    ; $B1D4
+    and     #$C0                    ; $B1D4  its palette: the metatile table
     asl     a                       ; $B1D6
     rol     a                       ; $B1D7
     rol     a                       ; $B1D8
     asl     a                       ; $B1D9
     tay                             ; $B1DA
-    jsr     Area_GetMetatilePtr     ; $B1DB
-    lda     menuUnderRow,x          ; $B1DE
+    jsr     Area_GetMetatilePtr     ; $B1DB  (4 tables)
+    lda     menuUnderRow,x          ; $B1DE  index x 4
     asl     a                       ; $B1E1
     asl     a                       ; $B1E2
     tay                             ; $B1E3
     ldx     temp1                   ; $B1E4
-    jsr     Menu_CopyPtr            ; $B1E6
+    jsr     Menu_CopyPtr            ; $B1E6  top two tiles,
     iny                             ; $B1E9
-    jsr     Menu_CopyPtr            ; $B1EA
+    jsr     Menu_CopyPtr            ; $B1EA  bottom two tiles
     stx     temp1                   ; $B1ED
     inc     temp0                   ; $B1EF
-    cpx     #$0E                    ; $B1F1
+    cpx     #$0E                    ; $B1F1  14 tiles a row
     bcc     @loop2                  ; $B1F3
-    jsr     Menu_BeginRow_Bank3     ; $B1F5
+    jsr     Menu_BeginRow_Bank3     ; $B1F5  queue the row's tiles
 
-@loc_B1F8:
-    jsr     Menu_GetAttrAddress_Bank3 ; $B1F8
-    lsr     a                       ; $B1FB
+@attrLoop:
+    jsr     Menu_GetAttrAddress_Bank3 ; $B1F8  each attribute column:
+    lsr     a                       ; $B1FB  attribute row
     clc                             ; $B1FC
     adc     #$01                    ; $B1FD
     asl     a                       ; $B1FF
     asl     a                       ; $B200
     asl     a                       ; $B201
-    adc     #$C0                    ; $B202
-    jsr     Menu_QueueAttrHeader_Bank3 ; $B204
+    adc     #$C0                    ; $B202  + $C0
+    jsr     Menu_QueueAttrHeader_Bank3 ; $B204  + column
     jsr     Menu_CheckAttrAlignment_Bank3 ; $B207
     lda     #$F0                    ; $B20A
     sta     temp6                   ; $B20C
-    lda     scrollX                 ; $B20E
+    lda     scrollX                 ; $B20E  starting on an attribute byte's left?
     clc                             ; $B211
     adc     #$78                    ; $B212
     and     #$F0                    ; $B214
     sta     temp7                   ; $B216
     and     #$E0                    ; $B218
     cmp     temp7                   ; $B21A
-    beq     @loc_B226               ; $B21C
-    lda     temp4                   ; $B21E
-    bne     @loc_B230               ; $B220
-    lda     #$F3                    ; $B222
-    bne     @loc_B22E               ; $B224
+    beq     @aligned                ; $B21C  yes
+    lda     temp4                   ; $B21E  no: the first byte
+    bne     @pickMask               ; $B220
+    lda     #$F3                    ; $B222  palette 0 kept only in the top right
+    bne     @setMask                ; $B224
 
-@loc_B226:
-    lda     temp4                   ; $B226
+@aligned:
+    lda     temp4                   ; $B226  the last byte
     cmp     #$03                    ; $B228
-    bne     @loc_B230               ; $B22A
-    lda     #$FC                    ; $B22C
+    bne     @pickMask               ; $B22A
+    lda     #$FC                    ; $B22C  palette 0 kept only in the top left
 
-@loc_B22E:
+@setMask:
     sta     temp6                   ; $B22E
 
-@loc_B230:
-    cpx     #$04                    ; $B230
-    bcc     @loc_B23B               ; $B232
-    lda     temp2                   ; $B234
+@pickMask:
+    cpx     #$04                    ; $B230  the attribute row above the window?
+    bcc     @restoreAll             ; $B232  yes: all as before
+    lda     temp2                   ; $B234  the row's half:
     lsr     a                       ; $B236
-    lda     temp6                   ; $B237
-    bcs     @loc_B23D               ; $B239
+    lda     temp6                   ; $B237  bottom: restored, the top still palette 0
+    bcs     @mask                   ; $B239
 
-@loc_B23B:
+@restoreAll:
     lda     #$FF                    ; $B23B
 
-@loc_B23D:
-    and     menuAttrs,x             ; $B23D
-    jsr     Menu_NextAttr_Bank3     ; $B240
-    bcs     @loc_B248               ; $B243
-    jmp     @loc_B1F8               ; $B245
+@mask:
+    and     menuAttrs,x             ; $B23D  the area's attributes, masked
+    jsr     Menu_NextAttr_Bank3     ; $B240  queue it; all 4?
+    bcs     @end                    ; $B243
+    jmp     @attrLoop               ; $B245
 
-@loc_B248:
+@end:
     jmp     Menu_EndRowString_Bank3 ; $B248
 
 Menu_QueueRowTiles_Bank3:
     ldy     ppuBuffer1Len           ; $B24B
-    lda     #$C0                    ; $B24E
+    lda     #$C0                    ; $B24E  the first tile row: offset $C0 (tile row 6)
     sta     temp7                   ; $B250
-    lda     #$02                    ; $B252
+    lda     #$02                    ; $B252  two tile rows
     sta     temp8                   ; $B254
-    ldx     #$00                    ; $B256
+    ldx     #$00                    ; $B256  from menuRowTiles
 
-@loc_B258:
-    lda     scrollX                 ; $B258
+@tileRow:
+    lda     scrollX                 ; $B258  the window's left edge, X + $78,
     clc                             ; $B25B
     adc     #$78                    ; $B25C
-    and     #$F0                    ; $B25E
+    and     #$F0                    ; $B25E  on a metatile
     sta     temp1                   ; $B260
     lda     scrollXHi               ; $B262
     adc     #$00                    ; $B265
     sta     temp0                   ; $B267
-    lda     temp1                   ; $B269
-    eor     #$FF                    ; $B26B
+    lda     temp1                   ; $B269  metatiles to the nametable's edge:
+    eor     #$FF                    ; $B26B  (256 - X) / 16
     clc                             ; $B26D
     adc     #$01                    ; $B26E
     lsr     a                       ; $B270
     lsr     a                       ; $B271
     lsr     a                       ; $B272
     lsr     a                       ; $B273
-    beq     @loc_B27A               ; $B274
+    beq     @all                    ; $B274  0 (at the edge): all 7
     cmp     #$07                    ; $B276
-    bcc     @loc_B27C               ; $B278
+    bcc     @setCount               ; $B278
 
-@loc_B27A:
-    lda     #$07                    ; $B27A
+@all:
+    lda     #$07                    ; $B27A  (at most 7)
 
-@loc_B27C:
-    sta     temp6                   ; $B27C
-    lda     #$07                    ; $B27E
+@setCount:
+    sta     temp6                   ; $B27C  this string's metatiles
+    lda     #$07                    ; $B27E  7 in all
     sta     temp3                   ; $B280
 
-@loc_B282:
-    lda     menuRow                 ; $B282
+@string:
+    lda     menuRow                 ; $B282  the row's offset: menuRow x 64
     asl     a                       ; $B285
     asl     a                       ; $B286
     asl     a                       ; $B287
@@ -3222,27 +3222,27 @@ Menu_QueueRowTiles_Bank3:
     rol     temp4                   ; $B28A
     asl     a                       ; $B28C
     rol     temp4                   ; $B28D
-    clc                             ; $B28F
+    clc                             ; $B28F  + the tile row's
     adc     temp7                   ; $B290
     sta     temp5                   ; $B292
-    lda     temp4                   ; $B294
+    lda     temp4                   ; $B294  (high bits)
     adc     #$00                    ; $B296
     and     #$03                    ; $B298
     sta     temp4                   ; $B29A
-    lda     temp1                   ; $B29C
+    lda     temp1                   ; $B29C  + tile column
     lsr     a                       ; $B29E
     lsr     a                       ; $B29F
     lsr     a                       ; $B2A0
     adc     temp5                   ; $B2A1
-    sta     ppuBuffer1+1,y          ; $B2A3
-    lda     temp0                   ; $B2A6
+    sta     ppuBuffer1+1,y          ; $B2A3  address
+    lda     temp0                   ; $B2A6  nametable
     and     #$01                    ; $B2A8
     asl     a                       ; $B2AA
     asl     a                       ; $B2AB
     adc     #$20                    ; $B2AC
     adc     temp4                   ; $B2AE
     sta     ppuBuffer1,y            ; $B2B0
-    lda     temp6                   ; $B2B3
+    lda     temp6                   ; $B2B3  2 tiles per metatile
     asl     a                       ; $B2B5
     sta     ppuBuffer1+2,y          ; $B2B6
     iny                             ; $B2B9
@@ -3250,76 +3250,76 @@ Menu_QueueRowTiles_Bank3:
     iny                             ; $B2BB
 
 @loop:
-    lda     menuRowTiles,x          ; $B2BC
+    lda     menuRowTiles,x          ; $B2BC  two tiles
     sta     ppuBuffer1,y            ; $B2BF
     inx                             ; $B2C2
     lda     menuRowTiles,x          ; $B2C3
     sta     ppuBuffer1+1,y          ; $B2C6
     inx                             ; $B2C9
-    lda     temp1                   ; $B2CA
+    lda     temp1                   ; $B2CA  the next metatile's X
     clc                             ; $B2CC
     adc     #$10                    ; $B2CD
     sta     temp1                   ; $B2CF
-    bcc     @loc_B2D5               ; $B2D1
+    bcc     @nextMetatile           ; $B2D1
     inc     temp0                   ; $B2D3
 
-@loc_B2D5:
+@nextMetatile:
     iny                             ; $B2D5
     iny                             ; $B2D6
-    dec     temp3                   ; $B2D7
-    beq     @loc_B2E6               ; $B2D9
-    dec     temp6                   ; $B2DB
+    dec     temp3                   ; $B2D7  all 7?
+    beq     @secondRow              ; $B2D9
+    dec     temp6                   ; $B2DB  the nametable's edge?
     bne     @loop                   ; $B2DD
-    lda     temp3                   ; $B2DF
+    lda     temp3                   ; $B2DF  yes: the rest in a new string
     sta     temp6                   ; $B2E1
-    jmp     @loc_B282               ; $B2E3
+    jmp     @string                 ; $B2E3
 
-@loc_B2E6:
-    lda     #$E0                    ; $B2E6
+@secondRow:
+    lda     #$E0                    ; $B2E6  the second tile row: offset $E0
     sta     temp7                   ; $B2E8
-    dec     temp8                   ; $B2EA
+    dec     temp8                   ; $B2EA  (menuRowTiles2 follows in x)
     beq     @done                   ; $B2EC
-    jmp     @loc_B258               ; $B2EE
+    jmp     @tileRow                ; $B2EE
 
 @done:
     rts                             ; $B2F1
 
 Menu_BeginRow_Bank3:
-    jsr     Menu_QueueRowTiles_Bank3 ; $B2F2
-    lda     scrollXHi               ; $B2F5
+    jsr     Menu_QueueRowTiles_Bank3 ; $B2F2  the row's tiles
+    lda     scrollXHi               ; $B2F5  temp0:temp1 = the scroll,
     sta     temp0                   ; $B2F8
     lda     scrollX                 ; $B2FA
     sta     temp1                   ; $B2FD
-    lda     #$00                    ; $B2FF
+    lda     #$00                    ; $B2FF  attribute column 0
     sta     temp4                   ; $B301
     rts                             ; $B303
 
 Menu_QueueAttrHeader_Bank3:
-    adc     temp3                   ; $B304
+    adc     temp3                   ; $B304  + the attribute column
     sta     ppuBuffer1+1,y          ; $B306
-    lda     #$01                    ; $B309
+    lda     #$01                    ; $B309  one byte
     sta     ppuBuffer1+2,y          ; $B30B
-    lda     temp2                   ; $B30E
-    and     #$FE                    ; $B310
+    lda     temp2                   ; $B30E  x = menuAttrs index:
+    and     #$FE                    ; $B310  attribute row x 4
     asl     a                       ; $B312
-    adc     temp4                   ; $B313
+    adc     temp4                   ; $B313  + column
     tax                             ; $B315
     rts                             ; $B316
 
 Menu_CheckAttrAlignment_Bank3:
-    lda     #$F0                    ; $B317
+    lda     #$F0                    ; $B317  the bottom-half mask
     sta     temp6                   ; $B319
-    lda     scrollX                 ; $B31B
+    lda     scrollX                 ; $B31B  the window's left edge
     clc                             ; $B31E
     adc     #$78                    ; $B31F
     and     #$F0                    ; $B321
     sta     temp7                   ; $B323
-    and     #$E0                    ; $B325
+    and     #$E0                    ; $B325  on an attribute byte's left (32-pixel) boundary? (z)
     cmp     temp7                   ; $B327
     rts                             ; $B329
 
 Math_AddToTemp14_Bank3:
-    adc     temp14                  ; $B32A
+    adc     temp14                  ; $B32A  temp14 += a (16-bit)
     sta     temp14                  ; $B32C
     lda     temp15                  ; $B32E
     adc     #$00                    ; $B330
@@ -3327,130 +3327,130 @@ Math_AddToTemp14_Bank3:
     rts                             ; $B334
 
 Menu_NextAttr_Bank3:
-    sta     ppuBuffer1+3,y          ; $B335
-    iny                             ; $B338
+    sta     ppuBuffer1+3,y          ; $B335  the attribute byte
+    iny                             ; $B338  next string
     iny                             ; $B339
     iny                             ; $B33A
     iny                             ; $B33B
-    lda     temp1                   ; $B33C
+    lda     temp1                   ; $B33C  32 pixels right
     clc                             ; $B33E
     adc     #$20                    ; $B33F
     sta     temp1                   ; $B341
     lda     temp0                   ; $B343
     adc     #$00                    ; $B345
     sta     temp0                   ; $B347
-    inc     temp4                   ; $B349
+    inc     temp4                   ; $B349  next column
     lda     temp4                   ; $B34B
-    cmp     #$04                    ; $B34D
+    cmp     #$04                    ; $B34D  carry set after the 4th
     rts                             ; $B34F
 
 Menu_ComputeAttrs_Bank3:
-    lda     scrollX                 ; $B350
+    lda     scrollX                 ; $B350  the window's left edge, X + $78:
     clc                             ; $B353
     adc     #$78                    ; $B354
     tax                             ; $B356
     lda     scrollXHi               ; $B357
     adc     #$00                    ; $B35A
-    jsr     AreaMap_GetPagePtr_Bank3 ; $B35C
-    txa                             ; $B35F
+    jsr     AreaMap_GetPagePtr_Bank3 ; $B35C  its page's tile map (temp14)
+    txa                             ; $B35F  the attribute column's metatile column (even)
     and     #$E0                    ; $B360
     lsr     a                       ; $B362
     lsr     a                       ; $B363
     lsr     a                       ; $B364
     lsr     a                       ; $B365
     tay                             ; $B366
-    ldx     #$00                    ; $B367
-    lda     #$04                    ; $B369
+    ldx     #$00                    ; $B367  menuAttrs from 0
+    lda     #$04                    ; $B369  4 attribute columns
     sta     temp0                   ; $B36B
 
 @loop:
-    lda     #$00                    ; $B36D
+    lda     #$00                    ; $B36D  left metatile column
     sta     temp1                   ; $B36F
 
 @loop2:
-    lda     #$0C                    ; $B371
+    lda     #$0C                    ; $B371  12 metatile rows
     sta     temp2                   ; $B373
 
 @loop3:
-    jsr     Menu_AddTileAttr_Bank3  ; $B375
-    tya                             ; $B378
+    jsr     Menu_AddTileAttr_Bank3  ; $B375  add its palette
+    tya                             ; $B378  next row down
     clc                             ; $B379
     adc     #$10                    ; $B37A
     tay                             ; $B37C
-    asl     a                       ; $B37D
+    asl     a                       ; $B37D  bit 4: moving to a new attribute row?
     asl     a                       ; $B37E
     asl     a                       ; $B37F
     asl     a                       ; $B380
-    bcs     @loc_B387               ; $B381
-    inx                             ; $B383
+    bcs     @nextRow                ; $B381  no
+    inx                             ; $B383  next attribute row
     inx                             ; $B384
     inx                             ; $B385
     inx                             ; $B386
 
-@loc_B387:
+@nextRow:
     dec     temp2                   ; $B387
     bne     @loop3                  ; $B389
-    tya                             ; $B38B
+    tya                             ; $B38B  back to the top, one column right
     sec                             ; $B38C
     sbc     #$BF                    ; $B38D
     tay                             ; $B38F
-    and     #$0F                    ; $B390
-    bne     @loc_B3A4               ; $B392
-    lda     temp14                  ; $B394
+    and     #$0F                    ; $B390  crossed a page?
+    bne     @nextColumn             ; $B392
+    lda     temp14                  ; $B394  yes: the next page's map
     clc                             ; $B396
     adc     #$D0                    ; $B397
     sta     temp14                  ; $B399
-    bcc     @loc_B39F               ; $B39B
+    bcc     @samePage               ; $B39B
     inc     temp15                  ; $B39D
 
-@loc_B39F:
-    tya                             ; $B39F
+@samePage:
+    tya                             ; $B39F  (and its first column)
     sec                             ; $B3A0
     sbc     #$10                    ; $B3A1
     tay                             ; $B3A3
 
-@loc_B3A4:
-    txa                             ; $B3A4
+@nextColumn:
+    txa                             ; $B3A4  back to the top attribute row
     sec                             ; $B3A5
     sbc     #$18                    ; $B3A6
     tax                             ; $B3A8
-    lda     temp1                   ; $B3A9
+    lda     temp1                   ; $B3A9  the right metatile column next
     eor     #$80                    ; $B3AB
     sta     temp1                   ; $B3AD
-    bne     @loop2                  ; $B3AF
-    inx                             ; $B3B1
+    bne     @loop2                  ; $B3AF  (then done with this attribute column)
+    inx                             ; $B3B1  next attribute column
     dec     temp0                   ; $B3B2
     bne     @loop                   ; $B3B4
     jmp     Menu_NextState_Bank3    ; $B3B6
 
 Menu_AddTileAttr_Bank3:
-    tya                             ; $B3B9
+    tya                             ; $B3B9  bit 4 of y: bottom row?
     asl     a                       ; $B3BA
     asl     a                       ; $B3BB
     asl     a                       ; $B3BC
     asl     a                       ; $B3BD
-    lda     (temp14),y              ; $B3BE
+    lda     (temp14),y              ; $B3BE  the tile's palette (bits 7-6)
     and     #$C0                    ; $B3C0
-    bcs     @loc_B3D0               ; $B3C2
-    asl     a                       ; $B3C4
+    bcs     @bottom                 ; $B3C2
+    asl     a                       ; $B3C4  top: to bits 1-0
     rol     a                       ; $B3C5
     rol     a                       ; $B3C6
-    bit     temp1                   ; $B3C7
-    bpl     @loc_B3D9               ; $B3C9
-    asl     a                       ; $B3CB
+    bit     temp1                   ; $B3C7  right column?
+    bpl     @store                  ; $B3C9  no: top left, the byte's first part
+    asl     a                       ; $B3CB  bits 3-2
     asl     a                       ; $B3CC
-    jmp     @loc_B3D6               ; $B3CD
+    jmp     @add                    ; $B3CD
 
-@loc_B3D0:
-    bit     temp1                   ; $B3D0
-    bmi     @loc_B3D6               ; $B3D2
-    lsr     a                       ; $B3D4
+@bottom:
+    bit     temp1                   ; $B3D0  bottom: right column?
+    bmi     @add                    ; $B3D2  yes: bits 7-6
+    lsr     a                       ; $B3D4  no: bits 5-4
     lsr     a                       ; $B3D5
 
-@loc_B3D6:
-    ora     menuAttrs,x             ; $B3D6
+@add:
+    ora     menuAttrs,x             ; $B3D6  add to the byte
 
-@loc_B3D9:
+@store:
     sta     menuAttrs,x             ; $B3D9
     rts                             ; $B3DC
 
@@ -3461,7 +3461,7 @@ AreaPagePtrsHi_Bank3:
     .byte   $60, $60, $61, $62                                              ; $B3E1
 
 AreaMap_GetPagePtr_Bank3:
-    and     #$03                    ; $B3E5
+    and     #$03                    ; $B3E5  the page's tile map
     tay                             ; $B3E7
     lda     AreaPagePtrsLo_Bank3,y  ; $B3E8
     sta     temp14                  ; $B3EB
@@ -3540,21 +3540,21 @@ DialogHandlers:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_ChooseText:
-    lda     #$00                    ; $B480
+    lda     #$00                    ; $B480  condition not met yet,
     sta     temp5                   ; $B482
-    sta     dialogAlreadyDone       ; $B484
-    ldx     dialogPerson            ; $B487
+    sta     dialogAlreadyDone       ; $B484  nothing given before
+    ldx     dialogPerson            ; $B487  the person's type
     lda     enemyType,x             ; $B48A
-    sec                             ; $B48C
+    sec                             ; $B48C  - $0A: the text row
     sbc     #$0A                    ; $B48D
     sta     temp0                   ; $B48F
-    asl     a                       ; $B491
+    asl     a                       ; $B491  its handler
     tay                             ; $B492
-    lda     DialogHandlers,y            ; $B493
+    lda     DialogHandlers,y        ; $B493
     sta     temp2                   ; $B496
-    lda     DialogHandlers+1,y            ; $B498
+    lda     DialogHandlers+1,y      ; $B498
     sta     temp3                   ; $B49B
-    ldy     townCode                ; $B49D
+    ldy     townCode                ; $B49D  y = the town
     jmp     (temp2)                 ; $B4A0
 
 ; ---------------------------------------------------------------------------
@@ -3572,54 +3572,54 @@ Dialog_ChooseText:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_TechniqueMan:
-    cpy     #$02                    ; $B4A3
-    bne     @loc_B4BB               ; $B4A5
-    lda     townFlags+3             ; $B4A7
+    cpy     #$02                    ; $B4A3  Saria: the river man
+    bne     @notSaria               ; $B4A5
+    lda     townFlags+3             ; $B4A7  Bagu met?
     and     #$08                    ; $B4AA
-    beq     @loc_B4B8               ; $B4AC
-    lda     techniques              ; $B4AE
+    beq     @select                 ; $B4AC  no
+    lda     techniques              ; $B4AE  yes: he lets Link cross
     ora     #$01                    ; $B4B1
     sta     techniques              ; $B4B3
-    inc     temp5                   ; $B4B6
+    inc     temp5                   ; $B4B6  second text
 
-@loc_B4B8:
+@select:
     jmp     Dialog_SelectText       ; $B4B8
 
-@loc_B4BB:
-    cpy     #$03                    ; $B4BB
-    bne     @loc_B4D3               ; $B4BD
-    lda     techniques              ; $B4BF
+@notSaria:
+    cpy     #$03                    ; $B4BB  Mido: the downward thrust
+    bne     @notMido                ; $B4BD
+    lda     techniques              ; $B4BF  known already?
     and     #$10                    ; $B4C2
-    beq     @loc_B4CB               ; $B4C4
+    beq     @learnDown              ; $B4C4
 ; (code below not executed in the test movies)
-    inc     temp5                   ; $B4C6
+    inc     temp5                   ; $B4C6  "already done"
     inc     dialogAlreadyDone       ; $B4C8
 ; (end of code not executed in the test movies)
 
-@loc_B4CB:
-    lda     techniques              ; $B4CB
+@learnDown:
+    lda     techniques              ; $B4CB  learn it
     ora     #$10                    ; $B4CE
-    jmp     @loc_B4E8               ; $B4D0
+    jmp     @setTechniques          ; $B4D0
 
-@loc_B4D3:
-    cpy     #$00                    ; $B4D3
-    beq     @loc_B4EB               ; $B4D5
-    lda     techniques              ; $B4D7
+@notMido:
+    cpy     #$00                    ; $B4D3  Rauru: nothing
+    beq     @selectText             ; $B4D5
+    lda     techniques              ; $B4D7  elsewhere, the upward thrust: known?
     and     #$04                    ; $B4DA
-    beq     @loc_B4E3               ; $B4DC
+    beq     @learnUp                ; $B4DC
 ; (code below not executed in the test movies)
-    inc     temp5                   ; $B4DE
+    inc     temp5                   ; $B4DE  "already done"
     inc     dialogAlreadyDone       ; $B4E0
 ; (end of code not executed in the test movies)
 
-@loc_B4E3:
-    lda     techniques              ; $B4E3
+@learnUp:
+    lda     techniques              ; $B4E3  learn it
     ora     #$04                    ; $B4E6
 
-@loc_B4E8:
+@setTechniques:
     sta     techniques              ; $B4E8
 
-@loc_B4EB:
+@selectText:
     jmp     Dialog_SelectText       ; $B4EB
 ; (disassembled with tools/disasm.py; not executed in the test movies)
 
@@ -3636,32 +3636,32 @@ Dialog_TechniqueMan:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Error:
-    cpy     #$03                    ; $B4EE
-    bne     @loc_B4FD               ; $B4F0
-    lda     techniques              ; $B4F2
+    cpy     #$03                    ; $B4EE  Mido:
+    bne     @notMido                ; $B4F0
+    lda     techniques              ; $B4F2  "ask Error"
     ora     #$02                    ; $B4F5
     sta     techniques              ; $B4F7
     jmp     Dialog_SelectText       ; $B4FA
 
-@loc_B4FD:
-    cpy     #$01                    ; $B4FD
-    bne     @loc_B50D               ; $B4FF
-    lda     techniques              ; $B501
+@notMido:
+    cpy     #$01                    ; $B4FD  Ruto (Error):
+    bne     @notRuto                ; $B4FF
+    lda     techniques              ; $B501  asked?
     and     #$02                    ; $B504
-    beq     @loc_B50A               ; $B506
+    beq     @select                 ; $B506
 
-@loc_B508:
-    inc     temp5                   ; $B508
+@second:
+    inc     temp5                   ; $B508  second text
 
-@loc_B50A:
+@select:
     jmp     Dialog_SelectText       ; $B50A
 
-@loc_B50D:
-    cpy     #$00                    ; $B50D
-    beq     @loc_B50A               ; $B50F
-    lda     itemOwned+5             ; $B511
-    bne     @loc_B508               ; $B514
-    beq     @loc_B50A               ; $B516
+@notRuto:
+    cpy     #$00                    ; $B50D  Rauru: nothing
+    beq     @select                 ; $B50F
+    lda     itemOwned+5             ; $B511  elsewhere: the cross
+    bne     @second                 ; $B514
+    beq     @select                 ; $B516
 ; (end of disassembled code)
 
 
@@ -3675,41 +3675,41 @@ Dialog_Error:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Wizard:
-    sty     temp1                   ; $B518
+    sty     temp1                   ; $B518  containers needed: town + 1
     inc     temp1                   ; $B51A
-    lda     spellOwned,y            ; $B51C
-    beq     @loc_B526               ; $B51F
+    lda     spellOwned,y            ; $B51C  owned already?
+    beq     @checkMagic             ; $B51F
 ; (code below not executed in the test movies)
-    inc     dialogAlreadyDone       ; $B521
-    bne     @loc_B52D               ; $B524
+    inc     dialogAlreadyDone       ; $B521  "already done"
+    bne     @give                   ; $B524  (always)
 ; (end of code not executed in the test movies)
 
-@loc_B526:
-    lda     statContainers          ; $B526
+@checkMagic:
+    lda     statContainers          ; $B526  enough magic containers?
     cmp     temp1                   ; $B529
-    bcc     @loc_B54B               ; $B52B
+    bcc     @select                 ; $B52B  no: the first text
 
-@loc_B52D:
-    inc     temp5                   ; $B52D
-    lda     #$01                    ; $B52F
+@give:
+    inc     temp5                   ; $B52D  yes: second text,
+    lda     #$01                    ; $B52F  the spell
     sta     spellOwned,y            ; $B531
-    sty     temp1                   ; $B534
+    sty     temp1                   ; $B534  any other spell owned?
     ldx     #$07                    ; $B536
     lda     #$00                    ; $B538
 
 @loop:
-    cpx     temp1                   ; $B53A
-    beq     @loc_B541               ; $B53C
+    cpx     temp1                   ; $B53A  (not this one)
+    beq     @nextSpell              ; $B53C
     ora     spellOwned,x            ; $B53E
 
-@loc_B541:
+@nextSpell:
     dex                             ; $B541
     bpl     @loop                   ; $B542
     cmp     #$00                    ; $B544
-    bne     @loc_B54B               ; $B546
-    sty     spellCursor             ; $B548
+    bne     @select                 ; $B546  yes
+    sty     spellCursor             ; $B548  no: select it
 
-@loc_B54B:
+@select:
     jmp     Dialog_SelectText       ; $B54B
 
 ; ---------------------------------------------------------------------------
@@ -3723,11 +3723,11 @@ Dialog_Wizard:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_SetTalked:
-    lda     temp0                   ; $B54E
+    lda     temp0                   ; $B54E  type $10-$12:
     sec                             ; $B550
-    sbc     #$06                    ; $B551
+    sbc     #$06                    ; $B551  bit $08, $04, $02
     tax                             ; $B553
-    lda     townFlags,y             ; $B554
+    lda     townFlags,y             ; $B554  in the town's flags
     ora     TownFlagBits+4,x        ; $B557
     sta     townFlags,y             ; $B55A
     jmp     Dialog_SelectText       ; $B55D
@@ -3745,10 +3745,10 @@ Dialog_SetTalked:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_CheckTownFlag:
-    cpy     #$00                    ; $B560
-    beq     @loc_B579               ; $B562
+    cpy     #$00                    ; $B560  Rauru: always
+    beq     @second                 ; $B562
     sty     temp1                   ; $B564
-    lda     temp0                   ; $B566
+    lda     temp0                   ; $B566  (type - $13) x 8 + town
     sec                             ; $B568
     sbc     #$09                    ; $B569
     asl     a                       ; $B56B
@@ -3756,13 +3756,13 @@ Dialog_CheckTownFlag:
     asl     a                       ; $B56D
     adc     temp1                   ; $B56E
     tax                             ; $B570
-    lda     townFlags,y             ; $B571
+    lda     townFlags,y             ; $B571  the town's flag set?
     and     TownFlagChecks,x        ; $B574
-    beq     Dialog_SelectText       ; $B577
+    beq     Dialog_SelectText       ; $B577  no: the first text
 
-@loc_B579:
-    inc     temp5                   ; $B579
-    bne     Dialog_TurnToDoor       ; $B57B
+@second:
+    inc     temp5                   ; $B579  yes: second text,
+    bne     Dialog_TurnToDoor       ; $B57B  and lead Link to the door
 
 ; ---------------------------------------------------------------------------
 ; Dialog_HouseLady
@@ -3774,14 +3774,14 @@ Dialog_CheckTownFlag:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_HouseLady:
-    ldx     dialogType              ; $B57D
+    ldx     dialogType              ; $B57D  outside (dialogType 2)?
     cpx     #$02                    ; $B580
-    beq     Dialog_TurnToDoor       ; $B582
-    inc     temp5                   ; $B584
+    beq     Dialog_TurnToDoor       ; $B582  lead Link to her door
+    inc     temp5                   ; $B584  inside: second text
     jmp     Dialog_SelectText       ; $B586
 
 Dialog_TurnToDoor:
-    ldx     dialogPerson            ; $B589
+    ldx     dialogPerson            ; $B589  the person
     jsr     Townsperson_TurnToDoor  ; $B58C
     jmp     Dialog_SelectText       ; $B58F
 ; (disassembled with tools/disasm.py; not executed in the test movies)
@@ -3798,11 +3798,11 @@ Dialog_TurnToDoor:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_SetWalkerFlag:
-    lda     temp0                   ; $B592
+    lda     temp0                   ; $B592  type $1D-$20:
     sec                             ; $B594
-    sbc     #$13                    ; $B595
+    sbc     #$13                    ; $B595  bit 7-4
     tax                             ; $B597
-    lda     townFlags,y             ; $B598
+    lda     townFlags,y             ; $B598  in the town's flags
     ora     TownFlagBits,x          ; $B59B
     sta     townFlags,y             ; $B59E
     jmp     Dialog_SelectText       ; $B5A1
@@ -3825,7 +3825,7 @@ Dialog_SetWalkerFlag:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Examine:
-    lda     townFlags,y             ; $B5AE
+    lda     townFlags,y             ; $B5AE  flag bit 0
     ora     #$01                    ; $B5B1
     sta     townFlags,y             ; $B5B3
     jmp     Dialog_SelectText       ; $B5B6
@@ -3842,12 +3842,12 @@ Dialog_Examine:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_SleepyCreature:
-    lda     townspersonTalkCount,x  ; $B5B9
+    lda     townspersonTalkCount,x  ; $B5B9  talked to 4 times?
     cmp     #$04                    ; $B5BC
     bcc     Dialog_SelectText       ; $B5BE
-    lda     #$04                    ; $B5C0
+    lda     #$04                    ; $B5C0  stay at 4
     sta     townspersonTalkCount,x  ; $B5C2
-    inc     temp5                   ; $B5C5
+    inc     temp5                   ; $B5C5  second text
 ; (end of disassembled code)
 
 
@@ -3857,60 +3857,60 @@ Dialog_SleepyCreature:
 ; Look up the text: row temp0 (the type - $0A, or $0F when dialogAlreadyDone)
 ; and column townCode & 3 of WestTextIds or EastTextIds (WestTextIdsMet /
 ; EastTextIdsMet if the condition was met), then its pointer in the
-; world's table (TownTextTables) into dialogTextPtr.  Start printing after
-; 42 frames at the window's first column and line.
+; world's table (TownTextTables) into dialogTextPtr.  Start printing 43
+; frames later at the window's first column and line.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_SelectText:
-    lda     temp0                   ; $B5C7
-    ldx     dialogAlreadyDone       ; $B5C9
-    beq     @loc_B5D0               ; $B5CC
+    lda     temp0                   ; $B5C7  the text row,
+    ldx     dialogAlreadyDone       ; $B5C9  or "already done"
+    beq     @row                    ; $B5CC
 ; (code below not executed in the test movies)
-    lda     #$0F                    ; $B5CE
+    lda     #$0F                    ; $B5CE  ($0F)
 ; (end of code not executed in the test movies)
 
-@loc_B5D0:
-    asl     a                       ; $B5D0
+@row:
+    asl     a                       ; $B5D0  x 4
     asl     a                       ; $B5D1
     sta     temp0                   ; $B5D2
-    lda     townCode                ; $B5D4
+    lda     townCode                ; $B5D4  + the town (0-3 in its world)
     and     #$03                    ; $B5D7
     clc                             ; $B5D9
     adc     temp0                   ; $B5DA
     tay                             ; $B5DC
-    lda     WestTextIds,y           ; $B5DD
-    ldx     temp5                   ; $B5E0
-    beq     @loc_B5E7               ; $B5E2
-    lda     WestTextIdsMet,y        ; $B5E4
+    lda     WestTextIds,y           ; $B5DD  West Hyrule's text,
+    ldx     temp5                   ; $B5E0  condition met?
+    beq     @checkEast              ; $B5E2
+    lda     WestTextIdsMet,y        ; $B5E4  the second text
 
-@loc_B5E7:
-    ldx     currentWorld            ; $B5E7
+@checkEast:
+    ldx     currentWorld            ; $B5E7  East Hyrule's towns:
     cpx     #$02                    ; $B5EA
-    bne     @loc_B5F8               ; $B5EC
-    lda     EastTextIds,y           ; $B5EE
+    bne     @pointer                ; $B5EC
+    lda     EastTextIds,y           ; $B5EE  their text
     ldx     temp5                   ; $B5F1
-    beq     @loc_B5F8               ; $B5F3
+    beq     @pointer                ; $B5F3
     lda     EastTextIdsMet,y        ; $B5F5
 
-@loc_B5F8:
-    asl     a                       ; $B5F8
+@pointer:
+    asl     a                       ; $B5F8  its pointer
     tay                             ; $B5F9
-    lda     currentWorld            ; $B5FA
+    lda     currentWorld            ; $B5FA  in the world's table
     asl     a                       ; $B5FD
     tax                             ; $B5FE
     lda     TownTextTables-2,x      ; $B5FF
     sta     temp0                   ; $B602
     lda     TownTextTables-1,x      ; $B604
     sta     temp1                   ; $B607
-    lda     (temp0),y               ; $B609
+    lda     (temp0),y               ; $B609  the text
     sta     dialogTextPtr           ; $B60B
     iny                             ; $B60E
     lda     (temp0),y               ; $B60F
     sta     dialogTextPtr+1         ; $B611
-    lda     #$2A                    ; $B614
+    lda     #$2A                    ; $B614  the first letter 43 frames later
     sta     menuTimer               ; $B616
-    lda     #$00                    ; $B619
+    lda     #$00                    ; $B619  from the start of the first line
     sta     dialogColumn            ; $B61B
     sta     dialogLineOffset        ; $B61E
 
@@ -3931,44 +3931,44 @@ Dialog_NextState:
     .byte   $07, $4C, $C7, $B5                                              ; $B635
 
 Dialog_CheckTechnique:
-    lda     townCode                ; $B639
+    lda     townCode                ; $B639  Mido and up (a technique taught)?
     cmp     #$03                    ; $B63C
-    bcs     Dialog_StartReward      ; $B63E
-    bcc     Dialog_EndText          ; $B640
+    bcs     Dialog_StartReward      ; $B63E  (yes)
+    bcc     Dialog_EndText          ; $B640  (no)
 
 Dialog_CheckSpell:
-    ldy     townCode                ; $B642
+    ldy     townCode                ; $B642  the spell given?
     lda     spellOwned,y            ; $B645
     beq     Dialog_EndText          ; $B648
 
 Dialog_StartReward:
-    lda     dialogAlreadyDone       ; $B64A
+    lda     dialogAlreadyDone       ; $B64A  not "already done":
     bne     Dialog_EndText          ; $B64D
-    lda     #$04                    ; $B64F
+    lda     #$04                    ; $B64F  the spell sound
     sta     sfxRequest              ; $B651
     jmp     Dialog_NextState        ; $B653
 
 ; ---------------------------------------------------------------------------
 ; Dialog_NewLine
 ;
-; Start the next line (two tile rows down) after a pause of 11 frames
-; ($FD) or 45 frames.
+; Start the next line (two tile rows down) after a pause: the next letter
+; comes 12 frames later after $FD, or 46 after $FE.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_NewLine:
-    ldy     #$0B                    ; $B656
+    ldy     #$0B                    ; $B656  11 frames after $FD,
     cmp     #$FD                    ; $B658
-    beq     @loc_B65E               ; $B65A
+    beq     @setPause               ; $B65A
 ; (code below not executed in the test movies)
-    ldy     #$2D                    ; $B65C
+    ldy     #$2D                    ; $B65C  45 after $FE
 ; (end of code not executed in the test movies)
 
-@loc_B65E:
+@setPause:
     sty     menuTimer               ; $B65E
-    lda     #$00                    ; $B661
+    lda     #$00                    ; $B661  the line's start,
     sta     dialogColumn            ; $B663
-    lda     dialogLineOffset        ; $B666
+    lda     dialogLineOffset        ; $B666  two tile rows down
     clc                             ; $B669
     adc     #$40                    ; $B66A
     sta     dialogLineOffset        ; $B66C
@@ -3985,18 +3985,18 @@ Dialog_NewLine:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_TextDone:
-    lda     dialogType              ; $B672
+    lda     dialogType              ; $B672  in a lady's house: the reward
     cmp     #$04                    ; $B675
     beq     Dialog_NextState        ; $B677
-    lda     #$C0                    ; $B679
+    lda     #$C0                    ; $B679  flash the screen
     sta     spellFlash              ; $B67B
-    lda     #$40                    ; $B67E
+    lda     #$40                    ; $B67E  (with the wizard's flash)
     sta     wizardFlashTimer        ; $B680
-    ldx     dialogPerson            ; $B683
+    ldx     dialogPerson            ; $B683  a wizard?
     lda     enemyType,x             ; $B686
     cmp     #$0F                    ; $B688
     beq     Dialog_CheckSpell       ; $B68A
-    cmp     #$0D                    ; $B68C
+    cmp     #$0D                    ; $B68C  or the technique man?
     beq     Dialog_CheckTechnique   ; $B68E
 
 ; ---------------------------------------------------------------------------
@@ -4007,10 +4007,10 @@ Dialog_TextDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_EndText:
-    lda     #$00                    ; $B690
+    lda     #$00                    ; $B690  no flash
     sta     spellFlash              ; $B692
     sta     wizardFlashTimer        ; $B695
-    inc     pauseState              ; $B698
+    inc     pauseState              ; $B698  skip the reward
     jmp     Dialog_NextState        ; $B69B
 
 ; ---------------------------------------------------------------------------
@@ -4027,7 +4027,8 @@ Dialog_Wait:
 ; ---------------------------------------------------------------------------
 ; Dialog_PrintText
 ;
-; Print the text, one letter every 5 frames with the typing sound
+; Print the text, one letter every 6 frames (menuTimer 5, then the
+; printing frame) with the typing sound
 ; (sfxRequest $60), as two-tile columns: a byte >= $C0 is a tile; below
 ; that, the low six bits are the tile and bits 7-6 put a mark above it.
 ; $FD ends a line (a short pause), $FE a line with a long pause, $FF the
@@ -4037,77 +4038,77 @@ Dialog_Wait:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_PrintText:
-    lda     #$00                    ; $B6A2
+    lda     #$00                    ; $B6A2  not skipped
     sta     dialogPrinted           ; $B6A4
-    ldx     dialogPerson            ; $B6A7
+    ldx     dialogPerson            ; $B6A7  the technique man and wizards
     lda     enemyType,x             ; $B6AA
     cmp     #$0D                    ; $B6AC
-    beq     @loc_B6BA               ; $B6AE
+    beq     @print                  ; $B6AE
     cmp     #$0F                    ; $B6B0
-    beq     @loc_B6BA               ; $B6B2
-    lda     joypadPressed           ; $B6B4
+    beq     @print                  ; $B6B2
+    lda     joypadPressed           ; $B6B4  can't be skipped with B
     and     #$40                    ; $B6B6
     bne     Dialog_TextDone         ; $B6B8
 
-@loc_B6BA:
-    lda     menuTimer               ; $B6BA
+@print:
+    lda     menuTimer               ; $B6BA  wait for the next letter
     bne     Dialog_Wait             ; $B6BD
-    inc     dialogPrinted           ; $B6BF
-    ldx     #$F4                    ; $B6C2
-    lda     dialogTextPtr           ; $B6C4
+    inc     dialogPrinted           ; $B6BF  a letter printed
+    ldx     #$F4                    ; $B6C2  the tile above: blank
+    lda     dialogTextPtr           ; $B6C4  the next byte
     sta     temp0                   ; $B6C7
     lda     dialogTextPtr+1         ; $B6C9
     sta     temp1                   ; $B6CC
     ldy     #$00                    ; $B6CE
     lda     (temp0),y               ; $B6D0
-    cmp     #$FF                    ; $B6D2
+    cmp     #$FF                    ; $B6D2  the end?
     beq     Dialog_TextDone         ; $B6D4
-    cmp     #$FD                    ; $B6D6
-    bcc     @loc_B6DD               ; $B6D8
+    cmp     #$FD                    ; $B6D6  a line's end ($FD, $FE)?
+    bcc     @letter                 ; $B6D8
     jmp     Dialog_NewLine          ; $B6DA
 
-@loc_B6DD:
-    asl     a                       ; $B6DD
-    bcc     @loc_B6ED               ; $B6DE
-    asl     a                       ; $B6E0
-    bcs     @loc_B6E7               ; $B6E1
+@letter:
+    asl     a                       ; $B6DD  $80-$FF:
+    bcc     @lowBytes               ; $B6DE
+    asl     a                       ; $B6E0  $C0-$FF: a tile as it is
+    bcs     @plainTile              ; $B6E1
 ; (code below not executed in the test movies)
-    ldx     #$33                    ; $B6E3
-    bcc     @loc_B6F2               ; $B6E5
+    ldx     #$33                    ; $B6E3  $80-$BF: mark $33 above
+    bcc     @lowSix                 ; $B6E5
 ; (end of code not executed in the test movies)
 
-@loc_B6E7:
+@plainTile:
     lda     (temp0),y               ; $B6E7
     ora     #$C0                    ; $B6E9
-    bne     @loc_B6F6               ; $B6EB
+    bne     @setLetter              ; $B6EB
 
-@loc_B6ED:
-    asl     a                       ; $B6ED
-    bcc     @loc_B6F2               ; $B6EE
+@lowBytes:
+    asl     a                       ; $B6ED  $40-$7F:
+    bcc     @lowSix                 ; $B6EE
 ; (code below not executed in the test movies)
-    ldx     #$32                    ; $B6F0
+    ldx     #$32                    ; $B6F0  mark $32 above
 ; (end of code not executed in the test movies)
 
-@loc_B6F2:
-    lda     (temp0),y               ; $B6F2
+@lowSix:
+    lda     (temp0),y               ; $B6F2  the tile: the low 6 bits
     and     #$3F                    ; $B6F4
 
-@loc_B6F6:
-    sta     ppuBuffer0+4            ; $B6F6
-    lda     dialogColumn            ; $B6F9
-    asl     a                       ; $B6FC
+@setLetter:
+    sta     ppuBuffer0+4            ; $B6F6  the letter
+    lda     dialogColumn            ; $B6F9  its X: the window's column
+    asl     a                       ; $B6FC  (8 pixels a letter)
     asl     a                       ; $B6FD
     asl     a                       ; $B6FE
     sta     temp2                   ; $B6FF
-    lda     scrollX                 ; $B701
+    lda     scrollX                 ; $B701  + the window's text column (X + $88)
     clc                             ; $B704
     adc     #$88                    ; $B705
     and     #$F0                    ; $B707
-    php                             ; $B709
+    php                             ; $B709  (carry: into the next page)
     clc                             ; $B70A
     adc     temp2                   ; $B70B
     sta     temp2                   ; $B70D
-    lda     scrollXHi               ; $B70F
+    lda     scrollXHi               ; $B70F  its nametable
     adc     #$00                    ; $B712
     plp                             ; $B714
     adc     #$00                    ; $B715
@@ -4116,31 +4117,31 @@ Dialog_PrintText:
     asl     a                       ; $B71A
     adc     #$20                    ; $B71B
     sta     temp3                   ; $B71D
-    lda     temp2                   ; $B71F
+    lda     temp2                   ; $B71F  tile column
     lsr     a                       ; $B721
     lsr     a                       ; $B722
     lsr     a                       ; $B723
-    adc     #$E0                    ; $B724
-    adc     dialogLineOffset        ; $B726
+    adc     #$E0                    ; $B724  + row 7
+    adc     dialogLineOffset        ; $B726  + the line's rows
     sta     ppuBuffer0+1            ; $B729
-    lda     a:temp3                 ; $B72C
+    lda     a:temp3                 ; $B72C  (carry: $xx00 to the next page)
     adc     #$00                    ; $B72F
     sta     ppuBuffer0              ; $B731
-    lda     #$82                    ; $B734
+    lda     #$82                    ; $B734  vertical, 2 tiles:
     sta     ppuBuffer0+2            ; $B736
-    stx     ppuBuffer0+3            ; $B739
-    lda     #$FF                    ; $B73C
+    stx     ppuBuffer0+3            ; $B739  the mark,
+    lda     #$FF                    ; $B73C  end
     sta     ppuBuffer0+5            ; $B73E
-    lda     #$05                    ; $B741
+    lda     #$05                    ; $B741  5 bytes
     sta     ppuBuffer0Len           ; $B743
-    lda     #$60                    ; $B746
+    lda     #$60                    ; $B746  the typing sound
     sta     sfxRequest              ; $B748
-    inc     dialogColumn            ; $B74A
-    lda     #$05                    ; $B74D
+    inc     dialogColumn            ; $B74A  next column
+    lda     #$05                    ; $B74D  the next letter in 6 frames
     sta     menuTimer               ; $B74F
 
 Dialog_NextChar:
-    inc     dialogTextPtr           ; $B752
+    inc     dialogTextPtr           ; $B752  the next byte
     bne     @done                   ; $B755
 ; (code below not executed in the test movies)
     inc     dialogTextPtr+1         ; $B757
@@ -4160,33 +4161,33 @@ Dialog_NextChar:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Reward:
-    ldx     dialogPerson            ; $B75B
+    ldx     dialogPerson            ; $B75B  the person's type:
     lda     enemyType,x             ; $B75E
-    ldx     #$00                    ; $B760
-    cmp     #$0F                    ; $B762
-    beq     @loc_B776               ; $B764
-    cmp     #$0D                    ; $B766
-    beq     @loc_B776               ; $B768
-    cmp     #$18                    ; $B76A
-    bcs     @loc_B76F               ; $B76C
-    inx                             ; $B76E
+    ldx     #$00                    ; $B760  magic,
+    cmp     #$0F                    ; $B762  a wizard
+    beq     @gift                   ; $B764
+    cmp     #$0D                    ; $B766  or the technique man?
+    beq     @gift                   ; $B768
+    cmp     #$18                    ; $B76A  the magic lady ($18)?
+    bcs     @refill                 ; $B76C
+    inx                             ; $B76E  life ($17)
 
-@loc_B76F:
-    lda     #$FF                    ; $B76F
+@refill:
+    lda     #$FF                    ; $B76F  refill it
     sta     statMeterPending,x      ; $B771
-    bne     Dialog_NextStateB       ; $B774
+    bne     Dialog_NextStateB       ; $B774  (always)
 
-@loc_B776:
-    lda     sharedSfxRecent         ; $B776
+@gift:
+    lda     sharedSfxRecent         ; $B776  the spell sound still playing?
     cmp     #$04                    ; $B779
-    beq     Dialog_Reward_Done      ; $B77B
-    lda     #$10                    ; $B77D
+    beq     Dialog_Reward_Done      ; $B77B  wait
+    lda     #$10                    ; $B77D  the item fanfare
     sta     musicRequest            ; $B77F
-    ldx     dialogPerson            ; $B781
+    ldx     dialogPerson            ; $B781  a wizard:
     lda     enemyType,x             ; $B784
     cmp     #$0F                    ; $B786
-    bne     Dialog_NextStateB       ; $B788
-    lda     #$00                    ; $B78A
+    bne     Dialog_NextStateB       ; $B788  (no: the window closes as usual)
+    lda     #$00                    ; $B78A  done at once
     sta     pauseState              ; $B78C
     sta     dialogType              ; $B78F
     sta     menuRow                 ; $B792
@@ -4214,9 +4215,9 @@ Dialog_Reward_Done:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_WaitForB:
-    lda     dialogPrinted           ; $B7A6
-    beq     Dialog_NextStateB       ; $B7A9
-    lda     joypadPressed           ; $B7AB
+    lda     dialogPrinted           ; $B7A6  skipped with B?
+    beq     Dialog_NextStateB       ; $B7A9  then close
+    lda     joypadPressed           ; $B7AB  B pressed?
     and     #$40                    ; $B7AD
     bne     Dialog_NextStateB       ; $B7AF
 ; (code below not executed in the test movies)
@@ -4234,38 +4235,38 @@ Dialog_WaitForB:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Finish:
-    ldy     #$05                    ; $B7B2
+    ldy     #$05                    ; $B7B2  nobody talking
     lda     #$00                    ; $B7B4
 
 @loop:
     sta     townspersonTalking,y    ; $B7B6
     dey                             ; $B7B9
     bpl     @loop                   ; $B7BA
-    sta     gameFrozen              ; $B7BC
+    sta     gameFrozen              ; $B7BC  unfreeze
     sta     linkTalking             ; $B7BE
-    lda     townCode                ; $B7C1
+    lda     townCode                ; $B7C1  Saria
     cmp     #$02                    ; $B7C4
     beq     Dialog_MaybeTurnToBat   ; $B7C6
-    cmp     #$05                    ; $B7C8
+    cmp     #$05                    ; $B7C8  or Darunia:
     bne     Dialog_Close            ; $B7CA
 
 Dialog_MaybeTurnToBat:
-    ldx     dialogPerson            ; $B7CC
+    ldx     dialogPerson            ; $B7CC  a walking townsperson ($19-$1C)?
     lda     enemyType,x             ; $B7CF
     cmp     #$19                    ; $B7D1
     bcc     Dialog_Close            ; $B7D3
     cmp     #$1D                    ; $B7D5
     bcs     Dialog_Close            ; $B7D7
 ; (code below not executed in the test movies)
-    lda     rng+2,x                 ; $B7D9
+    lda     rng+2,x                 ; $B7D9  103 in 256:
     cmp     #$67                    ; $B7DC
     bcs     Dialog_Close            ; $B7DE
-    lda     #$03                    ; $B7E0
+    lda     #$03                    ; $B7E0  a bat (type 3)
     sta     enemyType,x             ; $B7E2
     sta     objState+1,x            ; $B7E4
     lda     #$80                    ; $B7E6
     sta     enemyAiState,x          ; $B7E8
-    asl     a                       ; $B7EA
+    asl     a                       ; $B7EA  a = 0: stopped
     sta     objYVelocity+1,x        ; $B7EB
     sta     objXVelocity+1,x        ; $B7EE
 ; (end of code not executed in the test movies)
@@ -4279,9 +4280,9 @@ Dialog_MaybeTurnToBat:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Dialog_Close:
-    lda     #$08                    ; $B7F0
+    lda     #$08                    ; $B7F0  the dialog sound
     sta     sfxRequest+2            ; $B7F2
-    lda     #$00                    ; $B7F4
+    lda     #$00                    ; $B7F4  no dialog, menu or flute
     sta     dialogType              ; $B7F6
     sta     menuRow                 ; $B7F9
     sta     pauseState              ; $B7FC

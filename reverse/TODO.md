@@ -100,9 +100,11 @@ unless noted):
   start, the big door, falling, breaking blocks, Saria's bridge, the
   game's start).  $8000 is the game over screen (PPU string 9), not
   unused; bank 0 has no `@loc_` labels left.
-- 8l. Towns and conversations (bank 3, ~1600): `Town_*` objects,
-  `Dialog_*`, `Menu_*_Bank3`, and the townspeople (`Townsperson_*`,
-  `HouseLady_*`, `Door_*`, ~23% commented).
+- 8l. Done: towns (bank 3): the `Town_*` object drawers, the dialog
+  window and text printing (letters every 6 frames, not 5; checked with
+  a scripted conversation), the handlers, and the `Menu_*_Bank3` copies
+  (comments and label names carried over from bank 0 by script, only the
+  equivalent calls differing).  Bank 3 has no `@loc_` labels left.
 - 8m. The area banks' shared code (banks 1-5, ~1500 before
   de-duplication): `Area_*` objects, `Palace_*`, `Projectile_*` and the
   generators.

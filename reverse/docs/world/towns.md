@@ -100,7 +100,9 @@ bank 7) as a state machine on `pauseState`:
    (`DialogHandlers`), which may give Link something and decides whether
    the person's second text applies; `Dialog_SelectText` then finds the
    text.
-3. `Dialog_PrintText` types it, a letter every 5 frames, each with the
+3. `Dialog_PrintText` types it, a letter every 6 frames (43 frames before
+   the first, 12 or 46 more at a line's end; checked with a scripted
+   house conversation), each with the
    typing sound (`sfxRequest` $60).  B skips to the end (not for a
    wizard or a teacher).
 4. `Dialog_Reward` follows a gift: the fanfare for a spell or a
