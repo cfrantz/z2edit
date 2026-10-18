@@ -146,7 +146,10 @@ the frames left (every 4 frames); the drum, bass, harmony and melody
 `Sfx_UpdateDmc` plays samples from `DmcSamples` (start, length pairs),
 stored in bank 7 at $F300-$FB70: sample 1 is Link's cry (`DmcLinkHurt`),
 samples 2-7 Ganon's laugh (`DmcLaugh1`-`DmcLaugh6`), played one after
-another (`laughSample`).  The fifth part (241 bytes from $F9C0) overlaps
+another, 23 frames apart (`laughSample`), except that sample 3
+(`DmcLaugh2`) is skipped: the counter starts at 3 and is counted up
+before each next sample (QUIRK; a scripted game over started samples
+$CF, $DC, $E1, $E7 and $EA).  The fifth part (241 bytes from $F9C0) overlaps
 the sixth (from $FA80).  `DmcSamplesUnused` lists two more samples,
 `DmcUnused1` and `DmcUnused2`, that no sound effect plays.
 

@@ -116,8 +116,9 @@ unless noted):
   ending (scenes, curtain, credits).  `Text_NumberToDigits` got bank 0's
   `Math_ToDigits` comments.  Bank 5's remaining `@loc_` labels are in its
   enemies (8p).
-- 8o. Sound (bank 6, ~1700, no comments, 155 `@loc_` labels): both
-  engines' players, request handlers and the sound effects.
+- 8o. Done: sound (bank 6): both engines' players, request handlers and
+  effects; no `@loc_` labels left.  QUIRK: Ganon's laugh never plays its
+  second sample (DmcLaugh2; seen in a scripted game over).
 - 8p. The enemies' top-up: the enemy routines of banks 1-5 measure
   15-40%, below the standard set by the later ones; Gooma (18 `@loc_`),
   Barba, Rebonack, Fokka and Thunderbird have unnamed labels.

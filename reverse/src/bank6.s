@@ -19,13 +19,13 @@
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sound_TitleEngine:
-    lda     #$FF                    ; $8000
+    lda     #$FF                    ; $8000  the frame counter: 4-step, no IRQ
     sta     APU_FRAME               ; $8002
-    lda     #$0F                    ; $8005
+    lda     #$0F                    ; $8005  pulses, triangle and noise on
     sta     SND_CHN                 ; $8007
-    jsr     TitleSfx_Update         ; $800A
-    jsr     TitleMusic_Update       ; $800D
-    lda     #$00                    ; $8010
+    jsr     TitleSfx_Update         ; $800A  the effects,
+    jsr     TitleMusic_Update       ; $800D  then the music
+    lda     #$00                    ; $8010  this frame's requests are done
     sta     titleSfxRequest         ; $8012
     sta     titleSongRequest        ; $8014
     rts                             ; $8016
@@ -107,23 +107,23 @@ TitleSq1_PlayNote:
 ; ---------------------------------------------------------------------------
 TitleSound_PlayNote:
     tay                             ; $8122
-    lda     TitlePeriods+1,y        ; $8123
-    beq     @done                   ; $8126
+    lda     TitlePeriods+1,y        ; $8123  the period's low byte
+    beq     @done                   ; $8126  0: a rest
     sta     SQ1_LO,x                ; $8128
-    cpx     #$00                    ; $812B
-    bne     @loc_8134               ; $812D
-    sta     titleSq1TimerLo         ; $812F
-    bne     @loc_813B               ; $8132
+    cpx     #$00                    ; $812B  pulse 1:
+    bne     @checkSq2               ; $812D
+    sta     titleSq1TimerLo         ; $812F  kept for its vibrato
+    bne     @high                   ; $8132
 
-@loc_8134:
-    cpx     #$04                    ; $8134
-    bne     @loc_813B               ; $8136
-    sta     titleSq2TimerLo         ; $8138
+@checkSq2:
+    cpx     #$04                    ; $8134  pulse 2:
+    bne     @high                   ; $8136
+    sta     titleSq2TimerLo         ; $8138  kept
 
-@loc_813B:
-    lda     TitlePeriods,y          ; $813B
-    ora     #$08                    ; $813E
-    sta     SQ1_HI,x                ; $8140
+@high:
+    lda     TitlePeriods,y          ; $813B  the high bits,
+    ora     #$08                    ; $813E  with a length counter load
+    sta     SQ1_HI,x                ; $8140  (restarts the note)
 
 @done:
     rts                             ; $8143
@@ -163,11 +163,11 @@ TitleTri_PlayNote:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleMusic_NoteLength:
-    and     #$0F                    ; $814F
+    and     #$0F                    ; $814F  the length index
     clc                             ; $8151
-    adc     titleDurationBase       ; $8152
+    adc     titleDurationBase       ; $8152  in the phrase's row
     tay                             ; $8155
-    lda     TitleNoteLengths,y      ; $8156
+    lda     TitleNoteLengths,y      ; $8156  frames
     rts                             ; $8159
 
 ; ---------------------------------------------------------------------------
@@ -182,14 +182,14 @@ TitleMusic_NoteLength:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleSq1_VibratoSfx:
-    lda     titleSfxTimer           ; $815A
+    lda     titleSfxTimer           ; $815A  an effect playing?
     bne     TitleSq1_VibratoA       ; $815C
 
 TitleSq1_Vibrato:
-    lda     titleSq1Timer           ; $815E
+    lda     titleSq1Timer           ; $815E  the note's frames left
 
 TitleSq1_VibratoA:
-    ldx     #$00                    ; $8160
+    ldx     #$00                    ; $8160  pulse 1, from its base
     ldy     titleSq1TimerLo         ; $8162
     bne     TitleSound_Vibrato      ; $8165
 
@@ -202,14 +202,14 @@ TitleSq1_VibratoA:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleSq2_VibratoSfx:
-    lda     titleSfxTimer           ; $8167
+    lda     titleSfxTimer           ; $8167  an effect playing?
     bne     TitleSq2_VibratoA       ; $8169
 
 TitleSq2_Vibrato:
-    lda     titleSq2Timer           ; $816B
+    lda     titleSq2Timer           ; $816B  the note's frames left
 
 TitleSq2_VibratoA:
-    ldx     #$04                    ; $816D
+    ldx     #$04                    ; $816D  pulse 2, from its base
     ldy     titleSq2TimerLo         ; $816F
 
 ; ---------------------------------------------------------------------------
@@ -220,23 +220,23 @@ TitleSq2_VibratoA:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleSound_Vibrato:
-    sty     titleVibratoBase        ; $8172
-    lsr     a                       ; $8175
+    sty     titleVibratoBase        ; $8172  (titleMusicPart is free scratch here)
+    lsr     a                       ; $8175  bit 2 of the frames left:
     lsr     a                       ; $8176
     lsr     a                       ; $8177
-    bcs     @loc_8182               ; $8178
-    lda     #$FE                    ; $817A
+    bcs     @up                     ; $8178
+    lda     #$FE                    ; $817A  clear: base - 2
     clc                             ; $817C
     adc     titleVibratoBase        ; $817D
-    bne     @loc_8188               ; $8180
+    bne     @store                  ; $8180
 
-@loc_8182:
-    lda     #$02                    ; $8182
+@up:
+    lda     #$02                    ; $8182  set: base + 2
     clc                             ; $8184
     adc     titleVibratoBase        ; $8185
 
-@loc_8188:
-    sta     SQ1_LO,x                ; $8188
+@store:
+    sta     SQ1_LO,x                ; $8188  the low byte only
     rts                             ; $818B
 
 ; ---------------------------------------------------------------------------
@@ -249,82 +249,82 @@ TitleSound_Vibrato:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleSfx_Start:
-    sty     titleSfx                ; $818C
-    sta     titleSfxTimer           ; $818E
-    lda     #$00                    ; $8190
+    sty     titleSfx                ; $818C  the effect,
+    sta     titleSfxTimer           ; $818E  its frames
+    lda     #$00                    ; $8190  the music's envelopes restart after
     sta     titleSq2EnvStep         ; $8192
     sta     titleEchoEnvStep        ; $8195
     sta     titleSq1EnvStep         ; $8198
     rts                             ; $819B
 
 TitleSfx_NameCursor:
-    lda     #$0C                    ; $819C
+    lda     #$0C                    ; $819C  $0C frames
     jsr     TitleSfx_Start          ; $819E
-    ldx     #$88                    ; $81A1
+    ldx     #$88                    ; $81A1  both pulses' envelope
     ldy     #$7F                    ; $81A3
     jsr     TitleSq1_SetEnvelope    ; $81A5
     jsr     TitleSq2_SetEnvelope    ; $81A8
-    lda     #$56                    ; $81AB
+    lda     #$56                    ; $81AB  pitch $56,
     bne     TitleSfx_PlayTone       ; $81AD
 
 TitleSfx_NameCursorStep:
-    lda     titleSfxTimer           ; $81AF
+    lda     titleSfxTimer           ; $81AF  then at 8 left:
     cmp     #$08                    ; $81B1
-    bne     @loc_81B9               ; $81B3
-    lda     #$5E                    ; $81B5
+    bne     @check4                 ; $81B3
+    lda     #$5E                    ; $81B5  $5E,
     bne     TitleSfx_PlayTone       ; $81B7
 
-@loc_81B9:
-    cmp     #$04                    ; $81B9
+@check4:
+    cmp     #$04                    ; $81B9  at 4 left:
     bne     TitleSfx_VibratoFar     ; $81BB
-    lda     #$64                    ; $81BD
+    lda     #$64                    ; $81BD  $64
 
 TitleSfx_PlayTone:
-    jsr     TitleSq1_PlayNote       ; $81BF
-    tya                             ; $81C2
-    jsr     TitleSq2_PlayNote       ; $81C3
+    jsr     TitleSq1_PlayNote       ; $81BF  on pulse 1
+    tya                             ; $81C2  (y: the pitch)
+    jsr     TitleSq2_PlayNote       ; $81C3  and pulse 2
 
 TitleSfx_VibratoFar:
     jmp     TitleSfx_Vibrato        ; $81C6
 
 TitleSfx_LetterCursor:
-    lda     #$06                    ; $81C9
+    lda     #$06                    ; $81C9  6 frames
     jsr     TitleSfx_Start          ; $81CB
-    ldx     #$9F                    ; $81CE
+    ldx     #$9F                    ; $81CE  timer low $71
     ldy     #$7F                    ; $81D0
     lda     #$71                    ; $81D2
     bne     TitleSfx_StartTone      ; $81D4
 
 TitleSfx_Select:
-    lda     #$06                    ; $81D6
+    lda     #$06                    ; $81D6  6 frames
     jsr     TitleSfx_Start          ; $81D8
-    ldx     #$9F                    ; $81DB
+    ldx     #$9F                    ; $81DB  timer low $A9
     ldy     #$7F                    ; $81DD
     lda     #$A9                    ; $81DF
 
 TitleSfx_StartTone:
-    jsr     TitleSq1_SetEnvelope    ; $81E1
+    jsr     TitleSq1_SetEnvelope    ; $81E1  both pulses' envelope
     jsr     TitleSq2_SetEnvelope    ; $81E4
-    sta     SQ1_LO                  ; $81E7
+    sta     SQ1_LO                  ; $81E7  pulse 1 at the timer low,
     sta     titleSq1TimerLo         ; $81EA
     sec                             ; $81ED
-    sbc     #$02                    ; $81EE
+    sbc     #$02                    ; $81EE  pulse 2 2 lower
     sta     SQ2_LO                  ; $81F0
     sta     titleSq2TimerLo         ; $81F3
-    lda     #$08                    ; $81F6
+    lda     #$08                    ; $81F6  high 0, length counter load
     sta     SQ1_HI                  ; $81F8
     sta     SQ2_HI                  ; $81FB
 
 TitleSfx_Vibrato:
-    jsr     TitleSq1_VibratoSfx     ; $81FE
+    jsr     TitleSq1_VibratoSfx     ; $81FE  both waver
     jsr     TitleSq2_VibratoSfx     ; $8201
 
 TitleSfx_Tick:
-    dec     titleSfxTimer           ; $8204
+    dec     titleSfxTimer           ; $8204  count down:
     bne     @done                   ; $8206
-    lda     #$00                    ; $8208
+    lda     #$00                    ; $8208  over:
     sta     titleSfx                ; $820A
-    lda     #$10                    ; $820C
+    lda     #$10                    ; $820C  both pulses silent
     sta     SQ1_VOL                 ; $820E
     sta     SQ2_VOL                 ; $8211
 
@@ -349,45 +349,45 @@ TitleSfx_NameCursorStepFar:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleSfx_Update:
-    ldy     titleSfxRequest         ; $821B
-    lda     titleSfx                ; $821D
-    lsr     titleSfxRequest         ; $821F
+    ldy     titleSfxRequest         ; $821B  the requests (y: the effect started)
+    lda     titleSfx                ; $821D  the effect playing
+    lsr     titleSfxRequest         ; $821F  $01 requested
     bcs     TitleSfx_NameCursorFar  ; $8221
-    lsr     a                       ; $8223
+    lsr     a                       ; $8223  $01 playing
     bcs     TitleSfx_NameCursorStepFar ; $8224
-    lsr     titleSfxRequest         ; $8226
+    lsr     titleSfxRequest         ; $8226  $02 requested
     bcs     TitleSfx_LetterCursor   ; $8228
-    lsr     a                       ; $822A
+    lsr     a                       ; $822A  $02 playing
     bcs     TitleSfx_Vibrato        ; $822B
-    lsr     titleSfxRequest         ; $822D
+    lsr     titleSfxRequest         ; $822D  $04 requested
     bcs     TitleSfx_Select         ; $822F
-    lsr     a                       ; $8231
+    lsr     a                       ; $8231  $04 playing
     bcs     TitleSfx_Vibrato        ; $8232
-    lsr     titleSfxRequest         ; $8234
+    lsr     titleSfxRequest         ; $8234  $08 requested
     bcs     TitleSfx_Eliminate      ; $8236
-    lsr     a                       ; $8238
+    lsr     a                       ; $8238  $08 playing
     bcs     TitleSfx_EliminateStep  ; $8239
     rts                             ; $823B
 
 TitleSfx_Eliminate:
-    lda     #$1F                    ; $823C
+    lda     #$1F                    ; $823C  $1F frames
     jsr     TitleSfx_Start          ; $823E
-    lda     #$8A                    ; $8241
+    lda     #$8A                    ; $8241  both pulses sweep down
     sta     SQ1_SWEEP               ; $8243
     sta     SQ2_SWEEP               ; $8246
 
 TitleSfx_EliminateStep:
-    lda     titleSfxTimer           ; $8249
+    lda     titleSfxTimer           ; $8249  a step every 2 frames:
     lsr     a                       ; $824B
     tay                             ; $824C
-    lda     TitleSfxVolumes,y       ; $824D
+    lda     TitleSfxVolumes,y       ; $824D  the volume,
     sta     SQ1_VOL                 ; $8250
     sta     SQ2_VOL                 ; $8253
-    sta     SQ1_LO                  ; $8256
-    sec                             ; $8259
+    sta     SQ1_LO                  ; $8256  also pulse 1's timer low,
+    sec                             ; $8259  pulse 2's 4 lower
     sbc     #$04                    ; $825A
     sta     SQ2_LO                  ; $825C
-    lda     #$08                    ; $825F
+    lda     #$08                    ; $825F  high 0
     sta     SQ1_HI                  ; $8261
     sta     SQ2_HI                  ; $8264
     jmp     TitleSfx_Tick           ; $8267
@@ -402,23 +402,23 @@ TitleSfx_EliminateStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleMusic_Update:
-    lda     titleSongRequest        ; $826A
+    lda     titleSongRequest        ; $826A  part 1 (the intro) requested?
     and     #$01                    ; $826C
-    bne     @loc_8277               ; $826E
-    lda     titleSongRequest        ; $8270
-    beq     @loc_8282               ; $8272
-    jmp     TitleMusic_StartPart    ; $8274
+    bne     @intro                  ; $826E
+    lda     titleSongRequest        ; $8270  another part?
+    beq     @play                   ; $8272
+    jmp     TitleMusic_StartPart    ; $8274  start it
 
-@loc_8277:
-    ldx     #$20                    ; $8277
+@intro:
+    ldx     #$20                    ; $8277  the intro: both swells from $20
     stx     titleSq2Swell           ; $8279
     stx     titleEchoSwell          ; $827C
-    jmp     TitleMusic_StartPart    ; $827F
+    jmp     TitleMusic_StartPart    ; $827F  start it
 
-@loc_8282:
-    lda     titleMusicPart          ; $8282
+@play:
+    lda     titleMusicPart          ; $8282  a part playing?
     beq     TitleMusic_Silence_Done ; $8284
-    jmp     TitleMusic_PlayNotes    ; $8286
+    jmp     TitleMusic_PlayNotes    ; $8286  yes: a frame of it
 
 ; ---------------------------------------------------------------------------
 ; TitleMusic_NextPart
@@ -430,10 +430,10 @@ TitleMusic_Update:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleMusic_NextPart:
-    lda     titleMusicPart          ; $8289
+    lda     titleMusicPart          ; $8289  $01-$10?
     and     #$1F                    ; $828B
     bne     TitleMusic_ChooseNextPart ; $828D
-    ldx     #$00                    ; $828F
+    ldx     #$00                    ; $828F  no ($80): stop
     stx     titleMusicPart          ; $8291
 
 ; ---------------------------------------------------------------------------
@@ -445,12 +445,12 @@ TitleMusic_NextPart:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleMusic_Silence:
-    ldx     #$00                    ; $8293
+    ldx     #$00                    ; $8293  no envelopes,
     stx     titleSq2EnvStep         ; $8295
     stx     titleEchoEnvStep        ; $8298
     stx     titleSq1EnvStep         ; $829B
-    stx     TRI_LINEAR              ; $829E
-    ldx     #$10                    ; $82A1
+    stx     TRI_LINEAR              ; $829E  triangle off,
+    ldx     #$10                    ; $82A1  noise and pulses silent
     stx     NOISE_VOL               ; $82A3
     stx     SQ1_VOL                 ; $82A6
     stx     SQ2_VOL                 ; $82A9
@@ -459,31 +459,31 @@ TitleMusic_Silence_Done:
     rts                             ; $82AC
 
 TitleMusic_ChooseNextPart:
-    cmp     #$01                    ; $82AD
-    bne     @loc_82B5               ; $82AF
-    lda     #$02                    ; $82B1
+    cmp     #$01                    ; $82AD  $01:
+    bne     @not1                   ; $82AF
+    lda     #$02                    ; $82B1  $02
     bne     TitleMusic_StartPart    ; $82B3
 
-@loc_82B5:
-    cmp     #$02                    ; $82B5
-    bne     @loc_82BD               ; $82B7
-    lda     #$04                    ; $82B9
+@not1:
+    cmp     #$02                    ; $82B5  $02:
+    bne     @not2                   ; $82B7
+    lda     #$04                    ; $82B9  $04
     bne     TitleMusic_StartPart    ; $82BB
 
-@loc_82BD:
-    cmp     #$04                    ; $82BD
-    bne     @loc_82C5               ; $82BF
-    lda     #$08                    ; $82C1
+@not2:
+    cmp     #$04                    ; $82BD  $04:
+    bne     @not4                   ; $82BF
+    lda     #$08                    ; $82C1  $08
     bne     TitleMusic_StartPart    ; $82C3
 
-@loc_82C5:
-    cmp     #$08                    ; $82C5
-    bne     @loc_82CD               ; $82C7
-    lda     #$10                    ; $82C9
+@not4:
+    cmp     #$08                    ; $82C5  $08:
+    bne     @not8                   ; $82C7
+    lda     #$10                    ; $82C9  $10
     bne     TitleMusic_StartPart    ; $82CB
 
-@loc_82CD:
-    lda     #$02                    ; $82CD
+@not8:
+    lda     #$02                    ; $82CD  $10: back to $02
 
 ; ---------------------------------------------------------------------------
 ; TitleMusic_StartPart
@@ -496,21 +496,21 @@ TitleMusic_ChooseNextPart:
 ; ---------------------------------------------------------------------------
 TitleMusic_StartPart:
     sta     titleMusicPart          ; $82CF
-    jsr     TitleMusic_Silence      ; $82D1
-    tax                             ; $82D4
+    jsr     TitleMusic_Silence      ; $82D1  silence first
+    tax                             ; $82D4  the intro?
     and     #$01                    ; $82D5
-    beq     @loc_82DD               ; $82D7
-    ldy     #$01                    ; $82D9
-    bne     @loc_82DF               ; $82DB
+    beq     @noEcho                 ; $82D7
+    ldy     #$01                    ; $82D9  echo on
+    bne     @setEcho                ; $82DB
 
-@loc_82DD:
-    ldy     #$00                    ; $82DD
+@noEcho:
+    ldy     #$00                    ; $82DD  off
 
-@loc_82DF:
+@setEcho:
     sty     titleEcho               ; $82DF
-    ldy     #$00                    ; $82E2
+    ldy     #$00                    ; $82E2  from the first phrase
     sty     titlePhrase             ; $82E4
-    txa                             ; $82E7
+    txa                             ; $82E7  the bit's number + 1
 
 @loop:
     iny                             ; $82E8
@@ -529,36 +529,36 @@ TitleMusic_StartPart:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleMusic_LoadPhrase:
-    ldy     titleSongPart           ; $82EF
-    lda     TitleMusic-1,y          ; $82F2
+    ldy     titleSongPart           ; $82EF  the part's
+    lda     TitleMusic-1,y          ; $82F2  phrase list offset
     clc                             ; $82F5
-    adc     titlePhrase             ; $82F6
-    inc     titlePhrase             ; $82F9
+    adc     titlePhrase             ; $82F6  + the phrase
+    inc     titlePhrase             ; $82F9  (next time the next)
     tay                             ; $82FC
-    lda     TitleMusic,y            ; $82FD
+    lda     TitleMusic,y            ; $82FD  the phrase record's offset
     tay                             ; $8300
-    beq     TitleMusic_NextPart     ; $8301
-    lda     TitleMusic,y            ; $8303
+    beq     TitleMusic_NextPart     ; $8301  0: the part is over
+    lda     TitleMusic,y            ; $8303  note length row
     sta     titleDurationBase       ; $8306
-    lda     TitleMusic+1,y          ; $8309
+    lda     TitleMusic+1,y          ; $8309  note data pointer
     sta     titleNotesPtr           ; $830C
     lda     TitleMusic+2,y          ; $830E
-    sta     musicNotesPtr+1         ; $8311
-    lda     TitleMusic+3,y          ; $8313
+    sta     musicNotesPtr+1         ; $8311  (its high byte shares musicNotesPtr+1)
+    lda     TitleMusic+3,y          ; $8313  triangle offset
     sta     titleTriOffset          ; $8316
-    lda     TitleMusic+4,y          ; $8318
+    lda     TitleMusic+4,y          ; $8318  pulse 1 offset
     sta     titleSq1Offset          ; $831B
-    lda     TitleMusic+5,y          ; $831D
+    lda     TitleMusic+5,y          ; $831D  noise offset
     sta     titleNoiseOffset        ; $8320
-    sta     titleNoiseLoop          ; $8322
-    lda     TitleMusic+6,y          ; $8325
+    sta     titleNoiseLoop          ; $8322  (also its loop point)
+    lda     TitleMusic+6,y          ; $8325  pulse 2's envelope
     sta     titleSq2EnvBase         ; $8328
-    lda     TitleMusic+7,y          ; $832B
+    lda     TitleMusic+7,y          ; $832B  pulse 1's envelope
     sta     titleSq1EnvBase         ; $832E
-    lda     #$00                    ; $8331
+    lda     #$00                    ; $8331  pulse 2 from offset 0,
     sta     titleSq2Offset          ; $8333
-    sta     titleEchoEnvStep        ; $8335
-    lda     #$01                    ; $8338
+    sta     titleEchoEnvStep        ; $8335  no echo yet
+    lda     #$01                    ; $8338  every channel's note ends now
     sta     titleSq2Timer           ; $833A
     sta     titleSq1Timer           ; $833C
     sta     titleTriTimer           ; $833E
@@ -584,250 +584,250 @@ TitleMusic_LoadPhraseFar:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 TitleMusic_PlayNotes:
-    lda     titleEcho               ; $8347
-    beq     @loc_837F               ; $834A
-    lda     titleSfx                ; $834C
-    bne     @loc_837F               ; $834E
-    inc     titleEchoDelay          ; $8350
+    lda     titleEcho               ; $8347  the intro's echo:
+    beq     @melody                 ; $834A
+    lda     titleSfx                ; $834C  (not during an effect)
+    bne     @melody                 ; $834E
+    inc     titleEchoDelay          ; $8350  8 frames after pulse 2's note:
     lda     titleEchoDelay          ; $8353
     cmp     #$08                    ; $8356
-    bne     @loc_837F               ; $8358
-    lda     titleSq2Pitch           ; $835A
+    bne     @melody                 ; $8358
+    lda     titleSq2Pitch           ; $835A  the same pitch on pulse 1
     jsr     TitleSq1_PlayNote       ; $835D
-    beq     @loc_837F               ; $8360
-    lda     titleMusicPart          ; $8362
+    beq     @melody                 ; $8360  a rest
+    lda     titleMusicPart          ; $8362  the intro
     and     #$01                    ; $8364
-    beq     @loc_837A               ; $8366
-    lda     titleSq2Swell           ; $8368
+    beq     @echoFull               ; $8366
+    lda     titleSq2Swell           ; $8368  still swelling:
     cmp     #$5F                    ; $836B
-    bcs     @loc_837A               ; $836D
-    inc     titleEchoSwell          ; $836F
+    bcs     @echoFull               ; $836D
+    inc     titleEchoSwell          ; $836F  the echo's swell grows
     inc     titleEchoSwell          ; $8372
     lda     titleEchoSwell          ; $8375
-    bne     @loc_837C               ; $8378
+    bne     @setEchoEnv             ; $8378
 
-@loc_837A:
-    lda     #$5F                    ; $837A
+@echoFull:
+    lda     #$5F                    ; $837A  else full ($5F)
 
-@loc_837C:
-    sta     titleEchoEnvStep        ; $837C
+@setEchoEnv:
+    sta     titleEchoEnvStep        ; $837C  its envelope step
 
-@loc_837F:
-    dec     titleSq2Timer           ; $837F
-    bne     @loc_83CF               ; $8381
-    lda     #$00                    ; $8383
+@melody:
+    dec     titleSq2Timer           ; $837F  pulse 2 (melody): the note over?
+    bne     @melodyFrame            ; $8381
+    lda     #$00                    ; $8383  the echo's count restarts
     sta     titleEchoDelay          ; $8385
-    beq     @loc_8390               ; $8388
+    beq     @melodyByte             ; $8388
 
 @loop:
-    jsr     TitleMusic_NoteLength   ; $838A
-    sta     titleSq2Length          ; $838D
+    jsr     TitleMusic_NoteLength   ; $838A  a length byte:
+    sta     titleSq2Length          ; $838D  the note length from now on
 
-@loc_8390:
-    ldy     titleSq2Offset          ; $8390
+@melodyByte:
+    ldy     titleSq2Offset          ; $8390  the next byte
     inc     titleSq2Offset          ; $8392
     lda     (titleNotesPtr),y       ; $8394
-    beq     TitleMusic_LoadPhraseFar ; $8396
-    bmi     @loop                   ; $8398
-    cmp     #$02                    ; $839A
-    beq     @loc_83A1               ; $839C
-    clc                             ; $839E
+    beq     TitleMusic_LoadPhraseFar ; $8396  0: the next phrase
+    bmi     @loop                   ; $8398  $80 and up: a length
+    cmp     #$02                    ; $839A  a pitch: $02 a rest,
+    beq     @melodyPitch            ; $839C
+    clc                             ; $839E  others + 4 (TitlePeriods)
     adc     #$04                    ; $839F
 
-@loc_83A1:
-    sta     titleSq2Pitch           ; $83A1
-    ldy     titleSfx                ; $83A4
-    bne     @loc_83CA               ; $83A6
-    jsr     TitleSq2_PlayNote       ; $83A8
-    beq     @loc_83CA               ; $83AB
-    lda     titleMusicPart          ; $83AD
+@melodyPitch:
+    sta     titleSq2Pitch           ; $83A1  (for the echo)
+    ldy     titleSfx                ; $83A4  an effect has the pulses?
+    bne     @melodyLength           ; $83A6
+    jsr     TitleSq2_PlayNote       ; $83A8  play it
+    beq     @melodyLength           ; $83AB  a rest
+    lda     titleMusicPart          ; $83AD  the intro:
     and     #$01                    ; $83AF
-    beq     @loc_83C5               ; $83B1
-    lda     titleSq2Swell           ; $83B3
+    beq     @swellFull              ; $83B1
+    lda     titleSq2Swell           ; $83B3  still swelling:
     cmp     #$5F                    ; $83B6
-    bcs     @loc_83C5               ; $83B8
-    inc     titleSq2Swell           ; $83BA
+    bcs     @swellFull              ; $83B8
+    inc     titleSq2Swell           ; $83BA  it grows
     inc     titleSq2Swell           ; $83BD
     lda     titleSq2Swell           ; $83C0
-    bne     @loc_83C7               ; $83C3
+    bne     @setEnv                 ; $83C3
 
-@loc_83C5:
-    lda     #$5F                    ; $83C5
+@swellFull:
+    lda     #$5F                    ; $83C5  else full ($5F)
 
-@loc_83C7:
-    sta     titleSq2EnvStep         ; $83C7
+@setEnv:
+    sta     titleSq2EnvStep         ; $83C7  its envelope step
 
-@loc_83CA:
-    lda     titleSq2Length          ; $83CA
+@melodyLength:
+    lda     titleSq2Length          ; $83CA  the note's frames
     sta     titleSq2Timer           ; $83CD
 
-@loc_83CF:
-    lda     titleSfx                ; $83CF
-    bne     @loc_840A               ; $83D1
-    lda     titleMusicPart          ; $83D3
+@melodyFrame:
+    lda     titleSfx                ; $83CF  each frame, unless an effect plays:
+    bne     @harmony                ; $83D1
+    lda     titleMusicPart          ; $83D3  not in the intro:
     and     #$01                    ; $83D5
-    bne     @loc_83DC               ; $83D7
-    jsr     TitleSq2_Vibrato        ; $83D9
+    bne     @melodyEnv              ; $83D7
+    jsr     TitleSq2_Vibrato        ; $83D9  vibrato
 
-@loc_83DC:
-    lda     titleSq2EnvStep         ; $83DC
-    beq     @loc_83E6               ; $83DF
+@melodyEnv:
+    lda     titleSq2EnvStep         ; $83DC  the envelope: step / 4,
+    beq     @melodyVolume           ; $83DF
     lsr     a                       ; $83E1
     lsr     a                       ; $83E2
-    dec     titleSq2EnvStep         ; $83E3
+    dec     titleSq2EnvStep         ; $83E3  counting down
 
-@loc_83E6:
-    clc                             ; $83E6
+@melodyVolume:
+    clc                             ; $83E6  + the phrase's envelope base
     adc     titleSq2EnvBase         ; $83E7
     tay                             ; $83EA
-    lda     TitleEnvelopes,y        ; $83EB
+    lda     TitleEnvelopes,y        ; $83EB  the volume
     tax                             ; $83EE
-    ldy     #$7F                    ; $83EF
+    ldy     #$7F                    ; $83EF  no sweep
     jsr     TitleSq2_SetEnvelope    ; $83F1
-    lda     titleEcho               ; $83F4
-    beq     @loc_840A               ; $83F7
+    lda     titleEcho               ; $83F4  echoing (the intro)?
+    beq     @harmony                ; $83F7
     lda     titleSfx                ; $83F9
-    bne     @loc_840A               ; $83FB
-    lda     titleEchoEnvStep        ; $83FD
-    beq     @loc_8407               ; $8400
+    bne     @harmony                ; $83FB
+    lda     titleEchoEnvStep        ; $83FD  pulse 1 follows its own envelope step:
+    beq     @echoVolume             ; $8400
     lsr     a                       ; $8402
     lsr     a                       ; $8403
     dec     titleEchoEnvStep        ; $8404
 
-@loc_8407:
-    jmp     @loc_844D               ; $8407
+@echoVolume:
+    jmp     @harmonyVolume          ; $8407  (set below)
 
-@loc_840A:
-    lda     titleSq1Offset          ; $840A
-    beq     @loc_845B               ; $840C
-    dec     titleSq1Timer           ; $840E
-    bne     @loc_843C               ; $8410
-    beq     @loc_841A               ; $8412
+@harmony:
+    lda     titleSq1Offset          ; $840A  pulse 1 (harmony), if the phrase has it:
+    beq     @bass                   ; $840C
+    dec     titleSq1Timer           ; $840E  the note over?
+    bne     @harmonyFrame           ; $8410
+    beq     @harmonyByte            ; $8412
 
 @loop2:
-    jsr     TitleMusic_NoteLength   ; $8414
-    sta     titleSq1Length          ; $8417
+    jsr     TitleMusic_NoteLength   ; $8414  a length byte:
+    sta     titleSq1Length          ; $8417  the note length
 
-@loc_841A:
-    ldy     titleSq1Offset          ; $841A
+@harmonyByte:
+    ldy     titleSq1Offset          ; $841A  the next byte
     inc     titleSq1Offset          ; $841C
     lda     (titleNotesPtr),y       ; $841E
-    bmi     @loop2                  ; $8420
-    cmp     #$02                    ; $8422
-    beq     @loc_8429               ; $8424
-    clc                             ; $8426
+    bmi     @loop2                  ; $8420  $80 and up: a length
+    cmp     #$02                    ; $8422  a pitch: $02 a rest,
+    beq     @harmonyPitch           ; $8424
+    clc                             ; $8426  others + 4
     adc     #$04                    ; $8427
 
-@loc_8429:
-    ldy     titleSfx                ; $8429
-    bne     @loc_8437               ; $842B
-    jsr     TitleSq1_PlayNote       ; $842D
-    beq     @loc_8437               ; $8430
-    lda     #$5F                    ; $8432
+@harmonyPitch:
+    ldy     titleSfx                ; $8429  an effect has the pulses?
+    bne     @harmonyLength          ; $842B
+    jsr     TitleSq1_PlayNote       ; $842D  play it
+    beq     @harmonyLength          ; $8430  a rest
+    lda     #$5F                    ; $8432  its envelope from $5F
     sta     titleSq1EnvStep         ; $8434
 
-@loc_8437:
-    lda     titleSq1Length          ; $8437
+@harmonyLength:
+    lda     titleSq1Length          ; $8437  the note's frames
     sta     titleSq1Timer           ; $843A
 
-@loc_843C:
-    lda     titleSfx                ; $843C
-    bne     @loc_845B               ; $843E
-    jsr     TitleSq1_Vibrato        ; $8440
-    lda     titleSq1EnvStep         ; $8443
-    beq     @loc_844D               ; $8446
+@harmonyFrame:
+    lda     titleSfx                ; $843C  each frame, unless an effect plays:
+    bne     @bass                   ; $843E
+    jsr     TitleSq1_Vibrato        ; $8440  vibrato
+    lda     titleSq1EnvStep         ; $8443  the envelope: step / 4,
+    beq     @harmonyVolume          ; $8446
     lsr     a                       ; $8448
     lsr     a                       ; $8449
-    dec     titleSq1EnvStep         ; $844A
+    dec     titleSq1EnvStep         ; $844A  counting down
 
-@loc_844D:
-    clc                             ; $844D
+@harmonyVolume:
+    clc                             ; $844D  + the phrase's envelope base
     adc     titleSq1EnvBase         ; $844E
     tay                             ; $8451
-    lda     TitleEnvelopes,y        ; $8452
+    lda     TitleEnvelopes,y        ; $8452  the volume
     tax                             ; $8455
-    ldy     #$7F                    ; $8456
+    ldy     #$7F                    ; $8456  no sweep
     jsr     TitleSq1_SetEnvelope    ; $8458
 
-@loc_845B:
-    ldy     titleTriOffset          ; $845B
-    beq     @loc_8496               ; $845D
-    dec     titleTriTimer           ; $845F
-    beq     @loc_846B               ; $8461
-    bne     @loc_8490               ; $8463
+@bass:
+    ldy     titleTriOffset          ; $845B  the triangle (bass), if the phrase has it:
+    beq     @bassOff                ; $845D
+    dec     titleTriTimer           ; $845F  the note over?
+    beq     @bassByte               ; $8461
+    bne     @bassFrame              ; $8463  no
 
 @loop3:
-    jsr     TitleMusic_NoteLength   ; $8465
-    sta     titleTriLength          ; $8468
+    jsr     TitleMusic_NoteLength   ; $8465  a length byte:
+    sta     titleTriLength          ; $8468  the note length
 
-@loc_846B:
-    ldy     titleTriOffset          ; $846B
+@bassByte:
+    ldy     titleTriOffset          ; $846B  the next byte
     inc     titleTriOffset          ; $846D
     lda     (titleNotesPtr),y       ; $846F
-    bmi     @loop3                  ; $8471
-    cmp     #$02                    ; $8473
-    beq     @loc_847A               ; $8475
-    clc                             ; $8477
+    bmi     @loop3                  ; $8471  $80 and up: a length
+    cmp     #$02                    ; $8473  a pitch: $02 a rest,
+    beq     @bassPitch              ; $8475
+    clc                             ; $8477  others + 4
     adc     #$04                    ; $8478
 
-@loc_847A:
-    jsr     TitleTri_PlayNote       ; $847A
-    bne     @loc_8486               ; $847D
-    lda     #$00                    ; $847F
+@bassPitch:
+    jsr     TitleTri_PlayNote       ; $847A  play it
+    bne     @bassOn                 ; $847D  a rest:
+    lda     #$00                    ; $847F  off
     sta     TRI_LINEAR              ; $8481
-    beq     @loc_848B               ; $8484
+    beq     @bassLength             ; $8484
 
-@loc_8486:
-    lda     #$81                    ; $8486
+@bassOn:
+    lda     #$81                    ; $8486  on: linear counter $01, held
     sta     TRI_LINEAR              ; $8488
 
-@loc_848B:
-    lda     titleTriLength          ; $848B
+@bassLength:
+    lda     titleTriLength          ; $848B  the note's frames
     sta     titleTriTimer           ; $848E
 
-@loc_8490:
-    lda     titleTriTimer           ; $8490
+@bassFrame:
+    lda     titleTriTimer           ; $8490  4 frames before its end:
     cmp     #$04                    ; $8492
-    bne     @loc_849B               ; $8494
+    bne     @drums                  ; $8494
 
-@loc_8496:
-    lda     #$00                    ; $8496
+@bassOff:
+    lda     #$00                    ; $8496  off (a short gap between notes)
     sta     TRI_LINEAR              ; $8498
 
-@loc_849B:
-    lda     titleNoiseOffset        ; $849B
+@drums:
+    lda     titleNoiseOffset        ; $849B  the noise (drums), if the phrase has it:
     beq     TitleMusic_Done         ; $849D
-    dec     titleNoiseTimer         ; $849F
-    beq     @loc_84AB               ; $84A1
+    dec     titleNoiseTimer         ; $849F  the note over?
+    beq     @drumByte               ; $84A1
     bne     TitleMusic_Done         ; $84A3
 
 @loop4:
-    jsr     TitleMusic_NoteLength   ; $84A5
-    sta     titleNoiseLength        ; $84A8
+    jsr     TitleMusic_NoteLength   ; $84A5  a length byte:
+    sta     titleNoiseLength        ; $84A8  the note length
 
-@loc_84AB:
-    ldy     titleNoiseOffset        ; $84AB
+@drumByte:
+    ldy     titleNoiseOffset        ; $84AB  the next byte
     inc     titleNoiseOffset        ; $84AD
     lda     (titleNotesPtr),y       ; $84AF
-    bmi     @loop4                  ; $84B1
-    bne     @loc_84BC               ; $84B3
+    bmi     @loop4                  ; $84B1  $80 and up: a length
+    bne     @drum                   ; $84B3  0: back to the loop point
     lda     titleNoiseLoop          ; $84B5
     sta     titleNoiseOffset        ; $84B8
-    bne     @loc_84AB               ; $84BA
+    bne     @drumByte               ; $84BA
 
-@loc_84BC:
-    ldy     melodyOffset            ; $84BC
-    bne     @loc_84D4               ; $84BF
-    tay                             ; $84C1
-    lda     TitleDrums,y            ; $84C2
+@drum:
+    ldy     melodyOffset            ; $84BC  (melodyOffset, the gameplay engine's: always 0 here)
+    bne     @drumLength             ; $84BF
+    tay                             ; $84C1  the drum's three bytes:
+    lda     TitleDrums,y            ; $84C2  volume,
     sta     NOISE_VOL               ; $84C5
-    lda     TitleDrums+1,y          ; $84C8
+    lda     TitleDrums+1,y          ; $84C8  period,
     sta     NOISE_LO                ; $84CB
-    lda     TitleDrums+2,y          ; $84CE
+    lda     TitleDrums+2,y          ; $84CE  length
     sta     NOISE_HI                ; $84D1
 
-@loc_84D4:
-    lda     titleNoiseLength        ; $84D4
+@drumLength:
+    lda     titleNoiseLength        ; $84D4  the note's frames
     sta     titleNoiseTimer         ; $84D7
 
 TitleMusic_Done:
@@ -1025,24 +1025,24 @@ TitleNotes:
     .byte   $FF, $FF, $FF, $FF, $FF                                         ; $8FFB
 
 Sound_Engine:
-    lda     soundMute               ; $9000
-    beq     @loc_900B               ; $9002
+    lda     soundMute               ; $9000  muted (the overworld pause)?
+    beq     @run                    ; $9002
 ; (code below not executed in the test movies)
-    lda     #$00                    ; $9004
+    lda     #$00                    ; $9004  yes: every channel off
     sta     SND_CHN                 ; $9006
     beq     @done                   ; $9009
 ; (end of code not executed in the test movies)
 
-@loc_900B:
-    lda     #$FF                    ; $900B
+@run:
+    lda     #$FF                    ; $900B  the frame counter: 4-step, no IRQ
     sta     APU_FRAME               ; $900D
-    jsr     Sfx_UpdateDmc           ; $9010
-    jsr     Sfx_UpdateShared        ; $9013
-    jsr     Sfx_UpdateSq1           ; $9016
-    jsr     Sfx_UpdateSq2           ; $9019
-    jsr     Sfx_UpdateNoise         ; $901C
-    jsr     Music_Update            ; $901F
-    lda     #$00                    ; $9022
+    jsr     Sfx_UpdateDmc           ; $9010  the DMC samples,
+    jsr     Sfx_UpdateShared        ; $9013  the shared effects,
+    jsr     Sfx_UpdateSq1           ; $9016  pulse 1's,
+    jsr     Sfx_UpdateSq2           ; $9019  pulse 2's,
+    jsr     Sfx_UpdateNoise         ; $901C  the noise's,
+    jsr     Music_Update            ; $901F  then the music
+    lda     #$00                    ; $9022  this frame's requests are done
     sta     sfxRequest+3            ; $9024
     sta     sfxRequest+2            ; $9026
     sta     sfxRequest+1            ; $9028
@@ -1110,23 +1110,23 @@ Sq1_PlayNote:
 ; ---------------------------------------------------------------------------
 Sound_PlayNote:
     tay                             ; $9044
-    lda     NotePeriods+1,y         ; $9045
-    beq     @done                   ; $9048
+    lda     NotePeriods+1,y         ; $9045  the period's low byte
+    beq     @done                   ; $9048  0: a rest
     sta     SQ1_LO,x                ; $904A
-    cpx     #$00                    ; $904D
-    bne     @loc_9055               ; $904F
-    sta     sq1TimerLo              ; $9051
-    bne     @loc_905B               ; $9053
+    cpx     #$00                    ; $904D  pulse 1:
+    bne     @checkSq2               ; $904F
+    sta     sq1TimerLo              ; $9051  kept for its vibrato
+    bne     @high                   ; $9053
 
-@loc_9055:
-    cpx     #$04                    ; $9055
-    bne     @loc_905B               ; $9057
-    sta     sq2TimerLo              ; $9059
+@checkSq2:
+    cpx     #$04                    ; $9055  pulse 2:
+    bne     @high                   ; $9057
+    sta     sq2TimerLo              ; $9059  kept
 
-@loc_905B:
-    lda     NotePeriods,y           ; $905B
-    ora     #$08                    ; $905E
-    sta     SQ1_HI,x                ; $9060
+@high:
+    lda     NotePeriods,y           ; $905B  the high bits,
+    ora     #$08                    ; $905E  with a length counter load
+    sta     SQ1_HI,x                ; $9060  (restarts the note)
 
 @done:
     rts                             ; $9063
@@ -1175,16 +1175,16 @@ Tri_PlayNote:
 ; ---------------------------------------------------------------------------
 Music_NoteDuration:
     tax                             ; $906F
-    ror     a                       ; $9070
+    ror     a                       ; $9070  bit 0 into the carry,
     txa                             ; $9071
-    rol     a                       ; $9072
+    rol     a                       ; $9072  then above bits 7-6:
     rol     a                       ; $9073
     rol     a                       ; $9074
-    and     #$07                    ; $9075
-    clc                             ; $9077
+    and     #$07                    ; $9075  the duration index (0-7)
+    clc                             ; $9077  in the tempo's row
     adc     musicTempo              ; $9078
     tay                             ; $907A
-    lda     NoteDurations,y         ; $907B
+    lda     NoteDurations,y         ; $907B  frames
     rts                             ; $907E
 
 ; ---------------------------------------------------------------------------
@@ -1198,10 +1198,10 @@ Music_NoteDuration:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sq1_VibratoSfx:
-    lda     sharedSfxTimer          ; $907F
+    lda     sharedSfxTimer          ; $907F  a shared effect playing?
     bne     Sq1_VibratoA            ; $9082
 ; (code below not executed in the test movies)
-    lda     sq1SfxTimer             ; $9084
+    lda     sq1SfxTimer             ; $9084  a pulse 1 effect?
     bne     Sq1_VibratoA            ; $9087
 ; (end of code not executed in the test movies)
 
@@ -1213,14 +1213,14 @@ Sq1_VibratoSfx:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sq1_Vibrato:
-    lda     harmonyTimer            ; $9089
+    lda     harmonyTimer            ; $9089  the note's frames left
 
 Sq1_VibratoA:
-    ldx     #$00                    ; $908C
+    ldx     #$00                    ; $908C  pulse 1, from its base
     ldy     sq1TimerLo              ; $908E
     bne     Sound_Vibrato           ; $9090
 ; (code below not executed in the test movies)
-    lda     sq2SfxTimer             ; $9092
+    lda     sq2SfxTimer             ; $9092  (unreachable)
     bne     Sq2_VibratoA            ; $9095
 ; (end of code not executed in the test movies)
 
@@ -1232,10 +1232,10 @@ Sq1_VibratoA:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sq2_Vibrato:
-    lda     melodyTimer             ; $9097
+    lda     melodyTimer             ; $9097  the note's frames left
 
 Sq2_VibratoA:
-    ldx     #$04                    ; $909A
+    ldx     #$04                    ; $909A  pulse 2, from its base
     ldy     sq2TimerLo              ; $909C
 
 ; ---------------------------------------------------------------------------
@@ -1249,23 +1249,23 @@ Sq2_VibratoA:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sound_Vibrato:
-    sty     titleMusicPart          ; $909E
-    lsr     a                       ; $90A0
+    sty     titleMusicPart          ; $909E  (titleMusicPart is free scratch here)
+    lsr     a                       ; $90A0  bit 2 of the frames left:
     lsr     a                       ; $90A1
     lsr     a                       ; $90A2
-    bcs     @loc_90AC               ; $90A3
-    lda     #$FE                    ; $90A5
+    bcs     @up                     ; $90A3
+    lda     #$FE                    ; $90A5  clear: base - 2
     clc                             ; $90A7
     adc     titleMusicPart          ; $90A8
-    bne     @loc_90B1               ; $90AA
+    bne     @store                  ; $90AA
 
-@loc_90AC:
-    lda     #$02                    ; $90AC
+@up:
+    lda     #$02                    ; $90AC  set: base + 2
     clc                             ; $90AE
     adc     titleMusicPart          ; $90AF
 
-@loc_90B1:
-    sta     SQ1_LO,x                ; $90B1
+@store:
+    sta     SQ1_LO,x                ; $90B1  the low byte only
     rts                             ; $90B4
 
 ; ---------------------------------------------------------------------------
@@ -1276,13 +1276,13 @@ Sound_Vibrato:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sound_StopAll:
-    lda     #$00                    ; $90B5
+    lda     #$00                    ; $90B5  no effects:
     sta     sq1Sfx                  ; $90B7
     sta     noiseSfx                ; $90BA
     sta     sharedSfx               ; $90BD
     sta     sharedSfxOnNoise        ; $90C0
     sta     sharedSfxOnSq1          ; $90C3
-    jsr     Music_Stop              ; $90C6
+    jsr     Music_Stop              ; $90C6  and no music
     rts                             ; $90C9
 ; (unreferenced: $90CA-$90CA, 1 bytes)
     .byte   $4A                                                             ; $90CA
@@ -1301,29 +1301,29 @@ Sound_StopAll:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_SweepStep32:
-    lsr     a                       ; $90CB
+    lsr     a                       ; $90CB  / 32
 
 Sfx_SweepStep16:
-    lsr     a                       ; $90CC
+    lsr     a                       ; $90CC  / 16
 
 Sfx_SweepStep8:
-    lsr     a                       ; $90CD
+    lsr     a                       ; $90CD  / 8
     lsr     a                       ; $90CE
     lsr     a                       ; $90CF
-    sta     sweepStep               ; $90D0
-    bne     @loc_90D8               ; $90D3
-    inc     sweepStep               ; $90D5
+    sta     sweepStep               ; $90D0  the step,
+    bne     @apply                  ; $90D3
+    inc     sweepStep               ; $90D5  at least 1
 
-@loc_90D8:
-    lda     sweepUp                 ; $90D8
-    beq     @loc_90E3               ; $90DB
-    tya                             ; $90DD
+@apply:
+    lda     sweepUp                 ; $90D8  up?
+    beq     @down                   ; $90DB
+    tya                             ; $90DD  the value + step
     clc                             ; $90DE
     adc     sweepStep               ; $90DF
     rts                             ; $90E2
 
-@loc_90E3:
-    tya                             ; $90E3
+@down:
+    tya                             ; $90E3  down: - step
     sec                             ; $90E4
     sbc     sweepStep               ; $90E5
 
@@ -1390,98 +1390,101 @@ NotePeriods:
 ;
 ; Sound effects on the DMC channel, requested in dmcRequest: bit 0 Link's
 ; grunt when hurt (Link_TakeDamage, Link_CheckBgInBank, Dark Link's
-; sword), bit 1 Ganon's laugh when Link loses a life (Death_LoseLife),
-; played as samples 2-7 in turn, 24 frames each (laughSample).  Other bits
-; do nothing.  The samples are in bank 7 (DmcSamples).
+; sword), bit 1 Ganon's laugh at the game over (Death_LoseLife), played
+; as samples 2, 4, 5, 6 and 7, 23 frames apart (laughSample).  QUIRK:
+; laughSample starts at 3 and is counted up before each next sample, so
+; sample 3 (DmcLaugh2) is never played (seen in a scripted game over: the
+; sample starts were $CF, $DC, $E1, $E7, $EA).  Other bits do nothing.
+; The samples are in bank 7.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateDmc:
-    ldy     dmcRequest              ; $920B
-    lda     dmcSfx                  ; $920D
-    lsr     dmcRequest              ; $9210
-    bcs     @loc_9221               ; $9212
-    lsr     dmcRequest              ; $9214
-    bcs     @loc_9230               ; $9216
-    lsr     a                       ; $9218
-    bcs     @loc_9264               ; $9219
-    lsr     a                       ; $921B
-    bcs     @loc_9264               ; $921C
-    jmp     @loc_9290               ; $921E
+    ldy     dmcRequest              ; $920B  the request bits
+    lda     dmcSfx                  ; $920D  the sample playing
+    lsr     dmcRequest              ; $9210  bit 0: Link's grunt?
+    bcs     @grunt                  ; $9212
+    lsr     dmcRequest              ; $9214  bit 1: the laugh?
+    bcs     @laugh                  ; $9216
+    lsr     a                       ; $9218  none: the grunt playing?
+    bcs     @count                  ; $9219
+    lsr     a                       ; $921B  or the laugh?
+    bcs     @count                  ; $921C
+    jmp     @dmcOff                 ; $921E  no: DMC off
 
-@loc_9221:
-    ldx     #$C0                    ; $9221
-    lda     #$04                    ; $9223
-    sty     dmcSfx                  ; $9225
+@grunt:
+    ldx     #$C0                    ; $9221  the grunt: $C0 frames,
+    lda     #$04                    ; $9223  the channel on 4 frames
+    sty     dmcSfx                  ; $9225  (dmcSfx 1)
     stx     dmcTimer                ; $9228
     sta     dmcEnableTimer          ; $922B
-    bne     @loc_924B               ; $922E
+    bne     @startSample            ; $922E  (always)
 ; (code below not executed in the test movies)
 
-@loc_9230:
-    sty     dmcSfx                  ; $9230
+@laugh:
+    sty     dmcSfx                  ; $9230  the laugh (dmcSfx 2): $C0 frames,
     ldx     #$C0                    ; $9233
     stx     dmcTimer                ; $9235
-    ldx     #$03                    ; $9238
+    ldx     #$03                    ; $9238  its next part: 3 (QUIRK: counted up first)
     stx     laughSample             ; $923A
-    lda     #$08                    ; $923D
-    bne     @loc_9243               ; $923F
+    lda     #$08                    ; $923D  the channel on 8 frames
+    bne     @setOnTime              ; $923F
 
 @loop:
-    lda     #$05                    ; $9241
+    lda     #$05                    ; $9241  the next part: on 5 frames
 
-@loc_9243:
+@setOnTime:
     sta     dmcEnableTimer          ; $9243
-    lda     #$18                    ; $9246
+    lda     #$18                    ; $9246  23 frames to the next
     sta     laughSampleTimer        ; $9248
 ; (end of code not executed in the test movies)
 
-@loc_924B:
-    tya                             ; $924B
+@startSample:
+    tya                             ; $924B  the sample's start
     asl     a                       ; $924C
     tay                             ; $924D
     lda     DmcSamples,y            ; $924E
     sta     DMC_START               ; $9251
-    lda     DmcSamples+1,y          ; $9254
+    lda     DmcSamples+1,y          ; $9254  and length
     sta     DMC_LEN                 ; $9257
-    lda     #$0F                    ; $925A
+    lda     #$0F                    ; $925A  rate 15, no loop
     sta     DMC_FREQ                ; $925C
-    lda     #$0F                    ; $925F
+    lda     #$0F                    ; $925F  (restarts the DMC)
     sta     SND_CHN                 ; $9261
 
-@loc_9264:
-    dec     dmcTimer                ; $9264
-    beq     @loc_928B               ; $9267
+@count:
+    dec     dmcTimer                ; $9264  count
+    beq     @done                   ; $9267  over: done
     lda     dmcSfx                  ; $9269
-    cmp     #$01                    ; $926C
-    beq     @loc_927F               ; $926E
+    cmp     #$01                    ; $926C  the laugh:
+    beq     @channel                ; $926E
 ; (code below not executed in the test movies)
-    dec     laughSampleTimer        ; $9270
-    bne     @loc_927F               ; $9273
-    inc     laughSample             ; $9275
+    dec     laughSampleTimer        ; $9270  time for the next part?
+    bne     @channel                ; $9273
+    inc     laughSample             ; $9275  (3 is skipped)
     ldy     laughSample             ; $9278
-    cpy     #$08                    ; $927B
+    cpy     #$08                    ; $927B  all done after 7
     bcc     @loop                   ; $927D
 ; (end of code not executed in the test movies)
 
-@loc_927F:
-    lda     dmcEnableTimer          ; $927F
-    beq     @loc_9290               ; $9282
-    dec     dmcEnableTimer          ; $9284
-    beq     @loc_9290               ; $9287
-    bne     @loc_9296               ; $9289
+@channel:
+    lda     dmcEnableTimer          ; $927F  the channel's frames on
+    beq     @dmcOff                 ; $9282
+    dec     dmcEnableTimer          ; $9284  count
+    beq     @dmcOff                 ; $9287
+    bne     @dmcOn                  ; $9289  still on
 
-@loc_928B:
+@done:
     lda     #$00                    ; $928B
     sta     dmcSfx                  ; $928D
 
-@loc_9290:
-    lda     #$0F                    ; $9290
+@dmcOff:
+    lda     #$0F                    ; $9290  DMC off
     sta     SND_CHN                 ; $9292
     rts                             ; $9295
 
-@loc_9296:
-    lda     #$1F                    ; $9296
+@dmcOn:
+    lda     #$1F                    ; $9296  DMC on
     sta     SND_CHN                 ; $9298
     rts                             ; $929B
 
@@ -1495,49 +1498,49 @@ Sfx_UpdateDmc:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_StopSq1AndShared:
-    ldx     #$00                    ; $929C
+    ldx     #$00                    ; $929C  no shared effects,
     stx     sfxRequest              ; $929E
     stx     sharedSfxRecent         ; $92A0
     stx     sharedSfx               ; $92A3
     stx     dmcSfx                  ; $92A6
     stx     sharedSfxOnNoise        ; $92A9
     stx     sharedSfxOnSq1          ; $92AC
-    ldx     #$10                    ; $92AF
+    ldx     #$10                    ; $92AF  pulse 1 and noise silent
     stx     SQ1_VOL                 ; $92B1
     stx     NOISE_VOL               ; $92B4
-    ldx     #$0F                    ; $92B7
+    ldx     #$0F                    ; $92B7  DMC off
     stx     SND_CHN                 ; $92B9
-    bne     Sfx_UpdateSq1Requests   ; $92BC
+    bne     Sfx_UpdateSq1Requests   ; $92BC  on with the other requests
 
 Sfx_ItemDrop:
-    lda     #$18                    ; $92BE
+    lda     #$18                    ; $92BE  $18 frames:
     sta     sq1SfxTimer             ; $92C0
     sty     sq1Sfx                  ; $92C3
-    ldx     #$95                    ; $92C6
+    ldx     #$95                    ; $92C6  a note at pitch $52,
     ldy     #$E3                    ; $92C8
     lda     #$52                    ; $92CA
     jsr     Sq1_PlayNoteEnvelope    ; $92CC
 
 Sfx_ItemDropStep:
-    lda     sq1SfxTimer             ; $92CF
+    lda     sq1SfxTimer             ; $92CF  halfway:
     cmp     #$0C                    ; $92D2
-    bne     @loc_92DB               ; $92D4
-    lda     #$4E                    ; $92D6
+    bne     @step                   ; $92D4
+    lda     #$4E                    ; $92D6  pitch $4E
     jsr     Sq1_PlayNote            ; $92D8
 
-@loc_92DB:
-    jmp     Sfx_Sq1Step             ; $92DB
+@step:
+    jmp     Sfx_Sq1Step             ; $92DB  count it down
 
 Sfx_MenuCursor:
     sty     sq1Sfx                  ; $92DE
-    lda     #$02                    ; $92E1
+    lda     #$02                    ; $92E1  2 frames
     sta     sq1SfxTimer             ; $92E3
 
 Sfx_MenuCursorStep:
-    ldx     #$9C                    ; $92E6
+    ldx     #$9C                    ; $92E6  the cursor's envelope
     ldy     #$82                    ; $92E8
     jsr     Sq1_SetEnvelope         ; $92EA
-    ldx     #$90                    ; $92ED
+    ldx     #$90                    ; $92ED  timer low $90
     lda     #$08                    ; $92EF
     jmp     Sfx_Sq1SetTimer         ; $92F1
 
@@ -1562,122 +1565,122 @@ Sfx_MenuCursorStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateSq1:
-    ldy     sfxRequest+3            ; $92F4
-    lda     sq1Sfx                  ; $92F6
-    lsr     sfxRequest+3            ; $92F9
+    ldy     sfxRequest+3            ; $92F4  the requests (y: the effect started)
+    lda     sq1Sfx                  ; $92F6  the effect playing
+    lsr     sfxRequest+3            ; $92F9  $01: stop?
     bcs     Sfx_StopSq1AndShared    ; $92FB
 
 Sfx_UpdateSq1Requests:
-    ldx     sharedSfxOnSq1          ; $92FD
-    beq     @loc_9308               ; $9300
-    ldx     #$00                    ; $9302
+    ldx     sharedSfxOnSq1          ; $92FD  a shared effect has pulse 1?
+    beq     @requests               ; $9300
+    ldx     #$00                    ; $9302  yes: give way
     stx     sq1Sfx                  ; $9304
     rts                             ; $9307
 
-@loc_9308:
-    lsr     a                       ; $9308
-    lsr     a                       ; $9309
+@requests:
+    lsr     a                       ; $9308  each bit in turn, playing (a) or requested:
+    lsr     a                       ; $9309  $02 playing:
     bcs     Sfx_ItemDropStep        ; $930A
-    lsr     sfxRequest+3            ; $930C
+    lsr     sfxRequest+3            ; $930C  $02 requested: start
     bcs     Sfx_ItemDrop            ; $930E
-    lsr     sfxRequest+3            ; $9310
+    lsr     sfxRequest+3            ; $9310  $04 requested
     bcs     Sfx_KillOrChime         ; $9312
-    lsr     a                       ; $9314
+    lsr     a                       ; $9314  $04 playing
     bcs     Sfx_KillOrChimeStep     ; $9315
-    lsr     sfxRequest+3            ; $9317
+    lsr     sfxRequest+3            ; $9317  $08 requested
     bcs     Sfx_KillOrChime         ; $9319
-    lsr     a                       ; $931B
+    lsr     a                       ; $931B  $08 playing
     bcs     Sfx_KillOrChimeStep     ; $931C
-    lsr     a                       ; $931E
+    lsr     a                       ; $931E  $10 playing
     bcs     Sfx_MenuCursorStep      ; $931F
-    lsr     sfxRequest+3            ; $9321
+    lsr     sfxRequest+3            ; $9321  $10 requested
     bcs     Sfx_MenuCursor          ; $9323
-    lsr     a                       ; $9325
+    lsr     a                       ; $9325  $20 playing
     bcs     Sfx_ElevatorStep        ; $9326
-    lsr     sfxRequest+3            ; $9328
+    lsr     sfxRequest+3            ; $9328  $20 requested
     bcs     Sfx_Elevator            ; $932A
-    lsr     a                       ; $932C
+    lsr     a                       ; $932C  $40 playing
     bcs     Sfx_Sq1Step             ; $932D
-    lsr     sfxRequest+3            ; $932F
+    lsr     sfxRequest+3            ; $932F  $40 requested
     bcs     Sfx_LowHealth           ; $9331
     rts                             ; $9333
 
 Sfx_KillOrChime:
     sty     sq1Sfx                  ; $9334
-    lda     sq1Sfx                  ; $9337
+    lda     sq1Sfx                  ; $9337  the chime ($08)?
     and     #$08                    ; $933A
-    bne     @loc_9342               ; $933C
-    lda     #$14                    ; $933E
-    bne     @loc_9344               ; $9340
+    bne     @chime                  ; $933C
+    lda     #$14                    ; $933E  kill: $14 frames
+    bne     @setTimer               ; $9340
 
-@loc_9342:
-    lda     #$3B                    ; $9342
+@chime:
+    lda     #$3B                    ; $9342  chime: $3B frames
 
-@loc_9344:
+@setTimer:
     sta     sq1SfxTimer             ; $9344
-    lda     #$8A                    ; $9347
+    lda     #$8A                    ; $9347  a sweep down
     sta     SQ1_SWEEP               ; $9349
 
 Sfx_KillOrChimeStep:
-    lda     sq1SfxTimer             ; $934C
+    lda     sq1SfxTimer             ; $934C  a step every 4 frames
     lsr     a                       ; $934F
     lsr     a                       ; $9350
     tay                             ; $9351
-    lda     sq1Sfx                  ; $9352
+    lda     sq1Sfx                  ; $9352  the chime?
     and     #$08                    ; $9355
-    bne     @loc_9364               ; $9357
-    lda     KillVolumes,y           ; $9359
+    bne     @chimeStep              ; $9357
+    lda     KillVolumes,y           ; $9359  kill: volume
     sta     SQ1_VOL                 ; $935C
-    lda     KillNotes,y             ; $935F
-    bne     @loc_9374               ; $9362
+    lda     KillNotes,y             ; $935F  and pitch by step
+    bne     @play                   ; $9362
 
-@loc_9364:
-    lda     ChimeVolumes,y          ; $9364
+@chimeStep:
+    lda     ChimeVolumes,y          ; $9364  chime: volume by step,
     sta     SQ1_VOL                 ; $9367
-    tya                             ; $936A
+    tya                             ; $936A  pitch alternating
     lsr     a                       ; $936B
-    bcc     @loc_9372               ; $936C
-    lda     #$54                    ; $936E
-    bne     @loc_9374               ; $9370
+    bcc     @lowNote                ; $936C
+    lda     #$54                    ; $936E  $54
+    bne     @play                   ; $9370
 
-@loc_9372:
-    lda     #$62                    ; $9372
+@lowNote:
+    lda     #$62                    ; $9372  $62
 
-@loc_9374:
+@play:
     jsr     Sq1_PlayNote            ; $9374
-    jmp     Sfx_Sq1Step             ; $9377
+    jmp     Sfx_Sq1Step             ; $9377  count it down
 
 Sfx_Elevator:
-    lda     #$0C                    ; $937A
+    lda     #$0C                    ; $937A  $0C frames
     sta     sq1SfxTimer             ; $937C
     sty     sq1Sfx                  ; $937F
-    ldx     #$1A                    ; $9382
+    ldx     #$1A                    ; $9382  its envelope
     ldy     #$7F                    ; $9384
     jsr     Sq1_SetEnvelope         ; $9386
 
 Sfx_ElevatorStep:
-    lda     sq1SfxTimer             ; $9389
+    lda     sq1SfxTimer             ; $9389  the first 6 frames:
     cmp     #$06                    ; $938C
-    bcc     @loc_9394               ; $938E
-    ldx     #$FF                    ; $9390
-    bne     @loc_9396               ; $9392
+    bcc     @second                 ; $938E
+    ldx     #$FF                    ; $9390  timer low $FF,
+    bne     @setHigh                ; $9392
 
-@loc_9394:
-    ldx     #$00                    ; $9394
+@second:
+    ldx     #$00                    ; $9394  then $00
 
-@loc_9396:
-    lda     #$0D                    ; $9396
+@setHigh:
+    lda     #$0D                    ; $9396  high $0D
 
 Sfx_Sq1SetTimer:
     stx     SQ1_LO                  ; $9398
     sta     SQ1_HI                  ; $939B
 
 Sfx_Sq1Step:
-    dec     sq1SfxTimer             ; $939E
-    bne     @done                   ; $93A1
-    lda     #$00                    ; $93A3
+    dec     sq1SfxTimer             ; $939E  count down:
+    bne     @done                   ; $93A1  not over
+    lda     #$00                    ; $93A3  over:
     sta     sq1Sfx                  ; $93A5
-    lda     #$90                    ; $93A8
+    lda     #$90                    ; $93A8  pulse 1 silent
     sta     SQ1_VOL                 ; $93AA
 
 @done:
@@ -1685,12 +1688,12 @@ Sfx_Sq1Step:
 
 Sfx_LowHealth:
     sty     sq1Sfx                  ; $93AE
-    lda     #$30                    ; $93B1
+    lda     #$30                    ; $93B1  $30 frames
     sta     sq1SfxTimer             ; $93B3
-    ldx     #$96                    ; $93B6
+    ldx     #$96                    ; $93B6  its envelope
     ldy     #$7F                    ; $93B8
     jsr     Sq1_SetEnvelope         ; $93BA
-    ldx     #$60                    ; $93BD
+    ldx     #$60                    ; $93BD  timer $060 + high bits $70
     lda     #$70                    ; $93BF
     bne     Sfx_Sq1SetTimer         ; $93C1
 
@@ -1705,38 +1708,38 @@ Sfx_LowHealth:
 ; ---------------------------------------------------------------------------
 Sfx_TakeOverMusic:
     sty     sq2Sfx                  ; $93C3
-    lda     #$00                    ; $93C6
+    lda     #$00                    ; $93C6  no other effects,
     sta     sq1Sfx                  ; $93C8
     sta     noiseSfx                ; $93CB
     sta     sharedSfx               ; $93CE
     sta     sharedSfxOnNoise        ; $93D1
     sta     sharedSfxOnSq1          ; $93D4
-    sta     musicPlaying            ; $93D7
-    lda     #$10                    ; $93DA
+    sta     musicPlaying            ; $93D7  no music,
+    lda     #$10                    ; $93DA  noise silent,
     sta     NOISE_VOL               ; $93DC
-    lda     #$00                    ; $93DF
+    lda     #$00                    ; $93DF  triangle silent
     sta     TRI_LINEAR              ; $93E1
     rts                             ; $93E4
 
 Sfx_FallInPit:
     sty     sq2Sfx                  ; $93E5
-    jsr     Sound_StopAll           ; $93E8
-    lda     #$79                    ; $93EB
+    jsr     Sound_StopAll           ; $93E8  everything else stops
+    lda     #$79                    ; $93EB  $79 frames
     sta     sq2SfxTimer             ; $93ED
-    ldx     #$9F                    ; $93F0
+    ldx     #$9F                    ; $93F0  a falling note at pitch $58
     ldy     #$C5                    ; $93F2
     lda     #$58                    ; $93F4
     jsr     Sq2_PlayNoteEnvelope    ; $93F6
 
 Sfx_FallInPitStep:
-    lda     sq2SfxTimer             ; $93F9
+    lda     sq2SfxTimer             ; $93F9  the last frame:
     cmp     #$01                    ; $93FC
-    bne     @loc_9405               ; $93FE
-    lda     #$22                    ; $9400
+    bne     @step                   ; $93FE
+    lda     #$22                    ; $9400  pitch $22
     jsr     Sq2_PlayNote            ; $9402
 
-@loc_9405:
-    jmp     Sfx_Sq2StepFar          ; $9405
+@step:
+    jmp     Sfx_Sq2StepFar          ; $9405  count it down
 
 ; ---------------------------------------------------------------------------
 ; Sfx_UpdateSq2
@@ -1758,123 +1761,123 @@ Sfx_FallInPitStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateSq2:
-    ldy     sfxRequest+2            ; $9408
-    lda     sq2Sfx                  ; $940A
-    lsr     sfxRequest+2            ; $940D
+    ldy     sfxRequest+2            ; $9408  the requests (y: the effect started)
+    lda     sq2Sfx                  ; $940A  the effect playing
+    lsr     sfxRequest+2            ; $940D  $01 requested: start
     bcs     Sfx_FallInPit           ; $940F
-    lsr     a                       ; $9411
+    lsr     a                       ; $9411  $01 playing
     bcs     Sfx_FallInPitStep       ; $9412
-    lsr     sfxRequest+2            ; $9414
+    lsr     sfxRequest+2            ; $9414  $02 requested
     bcs     Sfx_Encounter           ; $9416
-    lsr     a                       ; $9418
+    lsr     a                       ; $9418  $02 playing
     bcs     Sfx_EncounterStep       ; $9419
-    lsr     sfxRequest+2            ; $941B
-    bcs     @loc_9425               ; $941D
-    lsr     a                       ; $941F
-    bcs     @loc_9428               ; $9420
-    jmp     Sfx_UpdateSq2High       ; $9422
+    lsr     sfxRequest+2            ; $941B  $04 requested
+    bcs     @leaveBattle            ; $941D
+    lsr     a                       ; $941F  $04 playing
+    bcs     @leaveBattleStep        ; $9420
+    jmp     Sfx_UpdateSq2High       ; $9422  the higher bits
 
-@loc_9425:
+@leaveBattle:
     jmp     Sfx_LeaveBattle         ; $9425
 
-@loc_9428:
+@leaveBattleStep:
     jmp     Sfx_LeaveBattleStep     ; $9428
 
 Sfx_Encounter:
-    jsr     Sfx_TakeOverMusic       ; $942B
-    lda     #$50                    ; $942E
-    ldx     #$8F                    ; $9430
+    jsr     Sfx_TakeOverMusic       ; $942B  both pulses:
+    lda     #$50                    ; $942E  $50 frames,
+    ldx     #$8F                    ; $9430  from pitch $8F
     sta     sq2SfxTimer             ; $9432
     stx     sq2SfxPitch             ; $9435
-    ldx     #$5E                    ; $9438
+    ldx     #$5E                    ; $9438  both pulses' envelope
     ldy     #$81                    ; $943A
     jsr     Sq1_SetEnvelope         ; $943C
     jsr     Sq2_SetEnvelope         ; $943F
-    lda     #$00                    ; $9442
+    lda     #$00                    ; $9442  the period falling (pitch rising)
     sta     sweepUp                 ; $9444
 
 Sfx_EncounterStep:
-    lda     sq2SfxTimer             ; $9447
+    lda     sq2SfxTimer             ; $9447  halfway ($28 left):
     cmp     #$28                    ; $944A
-    bne     @loc_9453               ; $944C
-    lda     #$01                    ; $944E
+    bne     @sweep                  ; $944C
+    lda     #$01                    ; $944E  then rising (pitch falling)
     sta     sweepUp                 ; $9450
 
-@loc_9453:
-    lda     sq2SfxPitch             ; $9453
+@sweep:
+    lda     sq2SfxPitch             ; $9453  sweep by 1/16 each frame
     tay                             ; $9456
     jsr     Sfx_SweepStep16         ; $9457
-    sta     sq2SfxPitch             ; $945A
-    rol     a                       ; $945D
+    sta     sq2SfxPitch             ; $945A  the period:
+    rol     a                       ; $945D  x 4 (low byte)
     rol     a                       ; $945E
     sta     SQ1_LO                  ; $945F
     sta     SQ2_LO                  ; $9462
-    rol     a                       ; $9465
+    rol     a                       ; $9465  and its high bits
     and     #$03                    ; $9466
-    ora     #$08                    ; $9468
+    ora     #$08                    ; $9468  (length counter load)
     sta     SQ1_HI                  ; $946A
     sta     SQ2_HI                  ; $946D
-    lda     sq2SfxTimer             ; $9470
+    lda     sq2SfxTimer             ; $9470  the last 15 frames:
     cmp     #$0F                    ; $9473
-    bcs     @loc_948D               ; $9475
-    ora     #$90                    ; $9477
+    bcs     @step                   ; $9475
+    ora     #$90                    ; $9477  fading out
     sta     SQ1_VOL                 ; $9479
     sta     SQ2_VOL                 ; $947C
-    lda     sq2SfxTimer             ; $947F
+    lda     sq2SfxTimer             ; $947F  the last frame:
     cmp     #$01                    ; $9482
-    bne     @loc_948D               ; $9484
-    jsr     Sound_SilencePulseNoise ; $9486
-    lda     #$04                    ; $9489
+    bne     @step                   ; $9484
+    jsr     Sound_SilencePulseNoise ; $9486  silence,
+    lda     #$04                    ; $9489  the battle music
     sta     musicRequest            ; $948B
 
-@loc_948D:
-    jmp     Sfx_Sq2Step             ; $948D
+@step:
+    jmp     Sfx_Sq2Step             ; $948D  count it down
 
 Sfx_LeaveBattle:
-    jsr     Sfx_TakeOverMusic       ; $9490
-    lda     #$10                    ; $9493
+    jsr     Sfx_TakeOverMusic       ; $9490  both pulses:
+    lda     #$10                    ; $9493  pulse 1 silent
     sta     SQ1_VOL                 ; $9495
-    lda     #$24                    ; $9498
-    ldx     #$A0                    ; $949A
+    lda     #$24                    ; $9498  $24 frames,
+    ldx     #$A0                    ; $949A  from pitch $A0
     sta     sq2SfxTimer             ; $949C
     stx     sq2SfxPitch             ; $949F
-    ldx     #$9E                    ; $94A2
+    ldx     #$9E                    ; $94A2  pulse 2's envelope
     ldy     #$82                    ; $94A4
     jsr     Sq2_SetEnvelope         ; $94A6
-    lda     #$00                    ; $94A9
+    lda     #$00                    ; $94A9  the period falling (pitch rising)
     sta     sweepUp                 ; $94AB
 
 Sfx_LeaveBattleStep:
-    lda     sq2SfxTimer             ; $94AE
+    lda     sq2SfxTimer             ; $94AE  at $10 left:
     cmp     #$10                    ; $94B1
-    bne     @loc_94BA               ; $94B3
-    lda     #$00                    ; $94B5
+    bne     @sweep                  ; $94B3
+    lda     #$00                    ; $94B5  (still falling)
     sta     sweepUp                 ; $94B7
 
-@loc_94BA:
-    lda     sq2SfxPitch             ; $94BA
+@sweep:
+    lda     sq2SfxPitch             ; $94BA  sweep by 1/8 each frame
     tay                             ; $94BD
     jsr     Sfx_SweepStep8          ; $94BE
-    sta     sq2SfxPitch             ; $94C1
-    rol     a                       ; $94C4
+    sta     sq2SfxPitch             ; $94C1  the period:
+    rol     a                       ; $94C4  x 4 (low byte)
     rol     a                       ; $94C5
     sta     SQ2_LO                  ; $94C6
-    rol     a                       ; $94C9
+    rol     a                       ; $94C9  high bits
     and     #$03                    ; $94CA
     ora     #$08                    ; $94CC
     sta     SQ2_HI                  ; $94CE
-    lda     sq2SfxTimer             ; $94D1
+    lda     sq2SfxTimer             ; $94D1  the last 15 frames:
     cmp     #$0F                    ; $94D4
-    bcs     @loc_94DD               ; $94D6
-    ora     #$10                    ; $94D8
+    bcs     @count                  ; $94D6
+    ora     #$10                    ; $94D8  fading out
     sta     SQ2_VOL                 ; $94DA
 
-@loc_94DD:
-    dec     sq2SfxTimer             ; $94DD
+@count:
+    dec     sq2SfxTimer             ; $94DD  count down:
     bne     @done                   ; $94E0
-    lda     #$00                    ; $94E2
+    lda     #$00                    ; $94E2  over:
     sta     sq2Sfx                  ; $94E4
-    lda     #$10                    ; $94E7
+    lda     #$10                    ; $94E7  pulse 2 silent
     sta     SQ2_VOL                 ; $94E9
 
 @done:
@@ -1882,114 +1885,114 @@ Sfx_LeaveBattleStep:
 
 Sfx_SpellMenu:
     sty     sq2Sfx                  ; $94ED
-    lda     #$0C                    ; $94F0
+    lda     #$0C                    ; $94F0  $0C frames
     sta     sq2SfxTimer             ; $94F2
-    ldx     #$9F                    ; $94F5
+    ldx     #$9F                    ; $94F5  pitch $22,
     ldy     #$7F                    ; $94F7
     lda     #$22                    ; $94F9
     jsr     Sq2_PlayNoteEnvelope    ; $94FB
 
 Sfx_SpellMenuStep:
-    lda     sq2SfxTimer             ; $94FE
+    lda     sq2SfxTimer             ; $94FE  then at 8 left:
     cmp     #$08                    ; $9501
-    bne     @loc_9509               ; $9503
-    lda     #$28                    ; $9505
-    bne     @loc_950F               ; $9507
+    bne     @check4                 ; $9503
+    lda     #$28                    ; $9505  $28,
+    bne     @play                   ; $9507
 
-@loc_9509:
-    cmp     #$04                    ; $9509
+@check4:
+    cmp     #$04                    ; $9509  at 4 left:
     bne     Sfx_Sq2StepFar          ; $950B
-    lda     #$32                    ; $950D
+    lda     #$32                    ; $950D  $32
 
-@loc_950F:
+@play:
     jsr     Sq2_PlayNote            ; $950F
 
 Sfx_Sq2StepFar:
     jmp     Sfx_Sq2Step             ; $9512
 
 Sfx_UpdateSq2High:
-    lsr     sfxRequest+2            ; $9515
+    lsr     sfxRequest+2            ; $9515  $08 requested
     bcs     Sfx_SpellMenu           ; $9517
-    lsr     a                       ; $9519
+    lsr     a                       ; $9519  $08 playing
     bcs     Sfx_SpellMenuStep       ; $951A
-    lsr     sfxRequest+2            ; $951C
+    lsr     sfxRequest+2            ; $951C  $10 requested
     bcs     Sfx_Tink                ; $951E
-    lsr     a                       ; $9520
+    lsr     a                       ; $9520  $10 playing
     bcs     Sfx_Sq2Step             ; $9521
-    lsr     sfxRequest+2            ; $9523
+    lsr     sfxRequest+2            ; $9523  $20 requested
     bcs     Sfx_Swamp               ; $9525
-    lsr     a                       ; $9527
+    lsr     a                       ; $9527  $20 playing
     bcs     Sfx_Sq2Step             ; $9528
     rts                             ; $952A
 
 Sfx_Tink:
     sty     sq2Sfx                  ; $952B
-    lda     #$10                    ; $952E
+    lda     #$10                    ; $952E  $10 frames
     sta     sq2SfxTimer             ; $9530
-    ldx     #$82                    ; $9533
+    ldx     #$82                    ; $9533  pitch $3C
     ldy     #$CF                    ; $9535
     lda     #$3C                    ; $9537
     jsr     Sq2_PlayNoteEnvelope    ; $9539
 
 Sfx_Sq2Step:
-    dec     sq2SfxTimer             ; $953C
+    dec     sq2SfxTimer             ; $953C  count down:
     bne     @done                   ; $953F
-    lda     #$00                    ; $9541
+    lda     #$00                    ; $9541  over:
     sta     sq2Sfx                  ; $9543
-    lda     #$90                    ; $9546
+    lda     #$90                    ; $9546  pulse 2 silent
     sta     SQ2_VOL                 ; $9548
 
 @done:
     rts                             ; $954B
 
 Sfx_Swamp:
-    lda     #$03                    ; $954C
+    lda     #$03                    ; $954C  3 frames per splash
     sty     sq2Sfx                  ; $954E
     sta     sq2SfxTimer             ; $9551
-    inc     sq2SfxPitch             ; $9554
+    inc     sq2SfxPitch             ; $9554  alternating pitches:
     lda     sq2SfxPitch             ; $9557
-    lsr     a                       ; $955A
-    bcs     @loc_9561               ; $955B
+    lsr     a                       ; $955A  odd:
+    bcs     @high                   ; $955B
 ; (code below not executed in the test movies)
-    lda     #$04                    ; $955D
-    bne     @loc_9563               ; $955F
+    lda     #$04                    ; $955D  (even: $04)
+    bne     @play                   ; $955F
 ; (end of code not executed in the test movies)
 
-@loc_9561:
-    lda     #$10                    ; $9561
+@high:
+    lda     #$10                    ; $9561  $10
 
-@loc_9563:
-    ldx     #$1C                    ; $9563
+@play:
+    ldx     #$1C                    ; $9563  its envelope
     ldy     #$83                    ; $9565
     jsr     Sq2_PlayNoteEnvelope    ; $9567
     bne     Sfx_Sq2Step             ; $956A
 
 Sfx_CrumbleBridge:
-    lda     #$06                    ; $956C
+    lda     #$06                    ; $956C  6 frames:
     ldx     #$18                    ; $956E
     sty     noiseSfx                ; $9570
     sta     noiseSfxTimer           ; $9573
-    stx     TRI_LINEAR              ; $9576
+    stx     TRI_LINEAR              ; $9576  a triangle note ($0A),
     lda     #$0A                    ; $9579
     jsr     Tri_PlayNote            ; $957B
-    ldx     #$0C                    ; $957E
+    ldx     #$0C                    ; $957E  and a noise burst
     lda     #$1A                    ; $9580
     ldy     #$08                    ; $9582
     jsr     Noise_Play              ; $9584
 
 Sfx_NoiseStep:
-    dec     noiseSfxTimer           ; $9587
+    dec     noiseSfxTimer           ; $9587  count down:
     bne     @done                   ; $958A
-    lda     #$00                    ; $958C
+    lda     #$00                    ; $958C  over:
     sta     noiseSfx                ; $958E
-    lda     #$10                    ; $9591
+    lda     #$10                    ; $9591  noise silent
     sta     NOISE_VOL               ; $9593
 
 @done:
     rts                             ; $9596
 
 Sfx_Crumble40:
-    lda     #$1D                    ; $9597
+    lda     #$1D                    ; $9597  a short burst: volume $1D, period $0F, length $28
     ldx     #$0F                    ; $9599
     ldy     #$28                    ; $959B
 
@@ -2023,99 +2026,99 @@ Noise_Play:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateNoise:
-    lda     sharedSfxOnNoise        ; $95A7
-    beq     @loc_95B2               ; $95AA
-    lda     #$00                    ; $95AC
+    lda     sharedSfxOnNoise        ; $95A7  a shared effect has the noise?
+    beq     @requests               ; $95AA
+    lda     #$00                    ; $95AC  yes: give way
     sta     noiseSfx                ; $95AE
     rts                             ; $95B1
 
-@loc_95B2:
-    ldy     sfxRequest+1            ; $95B2
-    lda     noiseSfx                ; $95B4
-    lsr     sfxRequest+1            ; $95B7
+@requests:
+    ldy     sfxRequest+1            ; $95B2  the requests (y: the effect started)
+    lda     noiseSfx                ; $95B4  the effect playing
+    lsr     sfxRequest+1            ; $95B7  $01: nothing
     lsr     a                       ; $95B9
-    lsr     sfxRequest+1            ; $95BA
+    lsr     sfxRequest+1            ; $95BA  $02 requested
     bcs     Sfx_CrumbleBridge       ; $95BC
-    lsr     a                       ; $95BE
+    lsr     a                       ; $95BE  $02 playing
     bcs     Sfx_NoiseStep           ; $95BF
-    lsr     sfxRequest+1            ; $95C1
+    lsr     sfxRequest+1            ; $95C1  $04 requested
     bcs     Sfx_CrumbleOrHurt       ; $95C3
-    lsr     a                       ; $95C5
+    lsr     a                       ; $95C5  $04 playing
     bcs     Sfx_CrumbleOrHurtStep   ; $95C6
-    lsr     sfxRequest+1            ; $95C8
+    lsr     sfxRequest+1            ; $95C8  $08: nothing
     lsr     a                       ; $95CA
-    lsr     sfxRequest+1            ; $95CB
+    lsr     sfxRequest+1            ; $95CB  $10 requested
     bcs     Sfx_CrumbleOrHurt       ; $95CD
-    lsr     a                       ; $95CF
+    lsr     a                       ; $95CF  $10 playing
     bcs     Sfx_CrumbleOrHurtStep   ; $95D0
-    lsr     sfxRequest+1            ; $95D2
+    lsr     sfxRequest+1            ; $95D2  $20 requested
     bcs     Sfx_SwordStrike         ; $95D4
-    lsr     a                       ; $95D6
+    lsr     a                       ; $95D6  $20 playing
     bcs     Sfx_SwordStrikeStep     ; $95D7
-    lsr     sfxRequest+1            ; $95D9
+    lsr     sfxRequest+1            ; $95D9  $40 requested (one burst)
     bcs     Sfx_Crumble40           ; $95DB
-    lsr     a                       ; $95DD
+    lsr     a                       ; $95DD  $80 playing
     lsr     a                       ; $95DE
     bcs     Sfx_SwordStrikeStep     ; $95DF
-    lsr     sfxRequest+1            ; $95E1
+    lsr     sfxRequest+1            ; $95E1  $80 requested
     bcs     Sfx_SwordStrike         ; $95E3
     rts                             ; $95E5
 
 Sfx_CrumbleOrHurt:
-    lda     #$10                    ; $95E6
+    lda     #$10                    ; $95E6  $10 frames
     sta     noiseSfxTimer           ; $95E8
     sty     noiseSfx                ; $95EB
 
 Sfx_CrumbleOrHurtStep:
-    lda     noiseSfxTimer           ; $95EE
+    lda     noiseSfxTimer           ; $95EE  a step every 2 frames
     lsr     a                       ; $95F1
     tay                             ; $95F2
-    lda     noiseSfx                ; $95F3
+    lda     noiseSfx                ; $95F3  hurt ($10)?
     and     #$10                    ; $95F6
-    bne     @loc_95FF               ; $95F8
-    lda     CrumbleNoise,y          ; $95FA
+    bne     @hurt                   ; $95F8
+    lda     CrumbleNoise,y          ; $95FA  crumble: by step
     bne     Noise_PlaySample        ; $95FD
 
-@loc_95FF:
-    lda     HurtNoise,y             ; $95FF
+@hurt:
+    lda     HurtNoise,y             ; $95FF  hurt: by step
     bne     Noise_PlaySample        ; $9602
 
 Sfx_SwordStrike:
     sty     noiseSfx                ; $9604
-    lda     #$0F                    ; $9607
+    lda     #$0F                    ; $9607  $0F frames
     sta     noiseSfxTimer           ; $9609
 
 Sfx_SwordStrikeStep:
-    ldy     noiseSfxTimer           ; $960C
+    ldy     noiseSfxTimer           ; $960C  by frame
     lda     SwordNoise,y            ; $960F
 
 Noise_PlaySample:
-    tax                             ; $9612
-    lda     noiseSfx                ; $9613
+    tax                             ; $9612  a sample: period in bits 3-0,
+    lda     noiseSfx                ; $9613  the sword strike ($20):
     and     #$20                    ; $9616
-    beq     @loc_9622               ; $9618
-    txa                             ; $961A
+    beq     @period                 ; $9618
+    txa                             ; $961A  2 higher
     and     #$0F                    ; $961B
     sec                             ; $961D
     sbc     #$02                    ; $961E
-    bne     @loc_9625               ; $9620
+    bne     @setPeriod              ; $9620
 
-@loc_9622:
-    txa                             ; $9622
+@period:
+    txa                             ; $9622  the period
     and     #$0F                    ; $9623
 
-@loc_9625:
+@setPeriod:
     sta     NOISE_LO                ; $9625
-    txa                             ; $9628
+    txa                             ; $9628  the volume: bits 7-4
     lsr     a                       ; $9629
     lsr     a                       ; $962A
     lsr     a                       ; $962B
     lsr     a                       ; $962C
-    ora     #$10                    ; $962D
+    ora     #$10                    ; $962D  constant volume
     sta     NOISE_VOL               ; $962F
-    lda     #$08                    ; $9632
+    lda     #$08                    ; $9632  length counter load
     sta     NOISE_HI                ; $9634
-    jmp     Sfx_NoiseStep           ; $9637
+    jmp     Sfx_NoiseStep           ; $9637  count it down
 
 FairyNoteTimes:
     .byte   $40, $50, $60, $70, $7F                                         ; $963A
@@ -2220,19 +2223,19 @@ BossDeathStepTimes:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_StartSharedOnNoise:
-    sty     sharedSfxRecent         ; $9794
-    sty     sharedSfx               ; $9797
-    sta     sharedSfxTimer          ; $979A
-    stx     sharedSfxStep           ; $979D
+    sty     sharedSfxRecent         ; $9794  remembered for $C0 frames (sharedSfxRecent)
+    sty     sharedSfx               ; $9797  the effect,
+    sta     sharedSfxTimer          ; $979A  its frames,
+    stx     sharedSfxStep           ; $979D  its step
     lda     #$C0                    ; $97A0
     sta     sharedSfxLockout        ; $97A2
-    lda     sharedSfxOnSq1          ; $97A5
-    beq     @loc_97AF               ; $97A8
-    lda     #$10                    ; $97AA
+    lda     sharedSfxOnSq1          ; $97A5  pulse 1 had the last one?
+    beq     @noise                  ; $97A8
+    lda     #$10                    ; $97AA  silence it
     sta     SQ1_VOL                 ; $97AC
 
-@loc_97AF:
-    lda     #$01                    ; $97AF
+@noise:
+    lda     #$01                    ; $97AF  the noise is the effect's
     sta     sharedSfxOnNoise        ; $97B1
     lda     #$00                    ; $97B4
     sta     sharedSfxOnSq1          ; $97B6
@@ -2248,69 +2251,69 @@ Sfx_StartSharedOnNoise:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_StartSharedOnSq1:
-    sty     sharedSfxRecent         ; $97BA
-    sty     sharedSfx               ; $97BD
-    sta     sharedSfxTimer          ; $97C0
-    stx     sharedSfxStep           ; $97C3
+    sty     sharedSfxRecent         ; $97BA  remembered for $C0 frames (sharedSfxRecent)
+    sty     sharedSfx               ; $97BD  the effect,
+    sta     sharedSfxTimer          ; $97C0  its frames,
+    stx     sharedSfxStep           ; $97C3  its step
     lda     #$C0                    ; $97C6
     sta     sharedSfxLockout        ; $97C8
-    lda     sharedSfxOnNoise        ; $97CB
-    beq     @loc_97D5               ; $97CE
-    lda     #$10                    ; $97D0
+    lda     sharedSfxOnNoise        ; $97CB  the noise had the last one?
+    beq     @sq1                    ; $97CE
+    lda     #$10                    ; $97D0  silence it
     sta     NOISE_VOL               ; $97D2
 
-@loc_97D5:
-    lda     #$01                    ; $97D5
+@sq1:
+    lda     #$01                    ; $97D5  pulse 1 is the effect's
     sta     sharedSfxOnSq1          ; $97D7
     lda     #$00                    ; $97DA
     sta     sharedSfxOnNoise        ; $97DC
     rts                             ; $97DF
 
 Sfx_Fairy:
-    lda     #$7F                    ; $97E0
+    lda     #$7F                    ; $97E0  $7F frames, 5 notes
     ldx     #$04                    ; $97E2
     jsr     Sfx_StartSharedOnSq1    ; $97E4
-    lda     #$7F                    ; $97E7
+    lda     #$7F                    ; $97E7  no sweep
     sta     SQ1_SWEEP               ; $97E9
 
 Sfx_FairyStep:
-    lda     sharedSfxTimer          ; $97EC
+    lda     sharedSfxTimer          ; $97EC  time for the next note?
     ldy     sharedSfxStep           ; $97EF
     cmp     FairyNoteTimes,y        ; $97F2
     bne     Sfx_SharedStep          ; $97F5
-    lda     FairyNotes,y            ; $97F7
+    lda     FairyNotes,y            ; $97F7  play it
     jsr     Sq1_PlayNote            ; $97FA
-    lda     sharedSfxStep           ; $97FD
+    lda     sharedSfxStep           ; $97FD  (the last stays)
     beq     Sfx_SharedStep          ; $9800
     dec     sharedSfxStep           ; $9802
 
 Sfx_SharedStep:
-    lda     sharedSfxTimer          ; $9805
+    lda     sharedSfxTimer          ; $9805  volume every 4 frames
     lsr     a                       ; $9808
     lsr     a                       ; $9809
     tay                             ; $980A
     lda     FairyVolumes,y          ; $980B
     sta     SQ1_VOL                 ; $980E
-    jsr     Sq1_VibratoSfx          ; $9811
-    jmp     Sfx_SharedTick          ; $9814
+    jsr     Sq1_VibratoSfx          ; $9811  with vibrato
+    jmp     Sfx_SharedTick          ; $9814  count it down
 
 Sfx_TextLetter:
-    lda     #$06                    ; $9817
+    lda     #$06                    ; $9817  6 frames
     ldx     #$00                    ; $9819
     jsr     Sfx_StartSharedOnNoise  ; $981B
-    lda     #$05                    ; $981E
+    lda     #$05                    ; $981E  a fixed noise
     sta     NOISE_LO                ; $9820
     lda     #$08                    ; $9823
     sta     NOISE_HI                ; $9825
 
 Sfx_TextLetterStep:
-    ldy     sharedSfxTimer          ; $9828
+    ldy     sharedSfxTimer          ; $9828  volume by frame
     lda     TextLetterVolumes,y     ; $982B
     sta     NOISE_VOL               ; $982E
     jmp     Sfx_SharedTick          ; $9831
 
 Sfx_Death:
-    lda     #$C0                    ; $9834
+    lda     #$C0                    ; $9834  $C0 frames
     ldx     #$30                    ; $9836
     jsr     Sfx_StartSharedOnSq1    ; $9838
     lda     #$0F                    ; $983B
@@ -2319,109 +2322,109 @@ Sfx_Death:
     sta     sfxPitchHi              ; $9842
     lda     #$04                    ; $9845
     sta     sfxPitchLo              ; $9847
-    lda     #$00                    ; $984A
+    lda     #$00                    ; $984A  no other effects,
     sta     sq1Sfx                  ; $984C
     sta     sq2Sfx                  ; $984F
     sta     noiseSfx                ; $9852
     sta     dmcSfx                  ; $9855
-    lda     #$0F                    ; $9858
+    lda     #$0F                    ; $9858  DMC off,
     sta     SND_CHN                 ; $985A
-    jsr     Music_Stop              ; $985D
+    jsr     Music_Stop              ; $985D  no music
 
 Sfx_DeathStep:
-    ldy     sfxSweepTimer           ; $9860
-    lda     sfxPitchHi              ; $9863
-    beq     @loc_986D               ; $9866
+    ldy     sfxSweepTimer           ; $9860  the volume,
+    lda     sfxPitchHi              ; $9863  (sweeping: by the sweep's step)
+    beq     @envelope               ; $9866
     lda     DeathPitchSteps,y       ; $9868
-    bne     @loc_9870               ; $986B
+    bne     @setVolume              ; $986B
 
-@loc_986D:
-    lda     DeathVolumes,y          ; $986D
+@envelope:
+    lda     DeathVolumes,y          ; $986D  (else the envelope)
 
-@loc_9870:
+@setVolume:
     sta     SQ1_VOL                 ; $9870
-    lda     sharedSfxTimer          ; $9873
+    lda     sharedSfxTimer          ; $9873  time for the next part?
     ldy     sharedSfxStep           ; $9876
     cmp     DeathStepTimes,y        ; $9879
-    bne     @loc_98BD               ; $987C
-    iny                             ; $987E
+    bne     @sweep                  ; $987C
+    iny                             ; $987E  its sweep's length
     tya                             ; $987F
     lsr     a                       ; $9880
     tay                             ; $9881
     lda     DeathSweeps,y           ; $9882
     sta     sfxSweepTimer           ; $9885
-    lda     sharedSfxStep           ; $9888
+    lda     sharedSfxStep           ; $9888  alternating:
     lsr     a                       ; $988B
-    bcs     @loc_9894               ; $988C
-    lda     #$CA                    ; $988E
+    bcs     @moving                 ; $988C
+    lda     #$CA                    ; $988E  sweep $CA, still
     ldx     #$00                    ; $9890
-    beq     @loc_9898               ; $9892
+    beq     @setSweep               ; $9892
 
-@loc_9894:
-    lda     #$CA                    ; $9894
+@moving:
+    lda     #$CA                    ; $9894  sweep $CA, moving
     ldx     #$01                    ; $9896
 
-@loc_9898:
+@setSweep:
     stx     sfxPitchHi              ; $9898
     sta     SQ1_SWEEP               ; $989B
-    lda     sharedSfxStep           ; $989E
-    beq     @loc_98A6               ; $98A1
+    lda     sharedSfxStep           ; $989E  (the last stays)
+    beq     @pitch                  ; $98A1
     dec     sharedSfxStep           ; $98A3
 
-@loc_98A6:
-    ldy     sfxPitchLo              ; $98A6
+@pitch:
+    ldy     sfxPitchLo              ; $98A6  a new pitch each part:
     lda     DeathTimersLo,y         ; $98A9
     sta     SQ1_LO                  ; $98AC
     lda     DeathTimersHi,y         ; $98AF
     sta     SQ1_HI                  ; $98B2
-    dey                             ; $98B5
-    bne     @loc_98BA               ; $98B6
+    dey                             ; $98B5  cycling 4-1
+    bne     @setPitch               ; $98B6
     ldy     #$04                    ; $98B8
 
-@loc_98BA:
+@setPitch:
     sty     sfxPitchLo              ; $98BA
 
-@loc_98BD:
-    lda     sfxSweepTimer           ; $98BD
-    beq     @loc_98C5               ; $98C0
+@sweep:
+    lda     sfxSweepTimer           ; $98BD  count the sweep
+    beq     @tick                   ; $98C0
     dec     sfxSweepTimer           ; $98C2
 
-@loc_98C5:
-    jmp     Sfx_SharedTick          ; $98C5
+@tick:
+    jmp     Sfx_SharedTick          ; $98C5  count it down
 
 Sfx_SwordDenied:
-    lda     #$1F                    ; $98C8
+    lda     #$1F                    ; $98C8  $1F frames
     ldx     #$00                    ; $98CA
     jsr     Sfx_StartSharedOnSq1    ; $98CC
-    lda     #$8A                    ; $98CF
+    lda     #$8A                    ; $98CF  a sweep down
     sta     SQ1_SWEEP               ; $98D1
 
 Sfx_SwordDeniedStep:
-    lda     sharedSfxTimer          ; $98D4
+    lda     sharedSfxTimer          ; $98D4  volume every 2 frames
     lsr     a                       ; $98D7
     tay                             ; $98D8
     lda     SwordDeniedVolumes,y    ; $98D9
     sta     SQ1_VOL                 ; $98DC
-    lda     sharedSfxTimer          ; $98DF
+    lda     sharedSfxTimer          ; $98DF  a pitch each frame
     tay                             ; $98E2
     lda     SwordDeniedNotes,y      ; $98E3
     jsr     Sq1_PlayNote            ; $98E6
 
 Sfx_SharedTick:
-    dec     sharedSfxTimer          ; $98E9
+    dec     sharedSfxTimer          ; $98E9  count down:
     bne     @done                   ; $98EC
-    lda     sharedSfxOnSq1          ; $98EE
-    beq     @loc_98FA               ; $98F1
+    lda     sharedSfxOnSq1          ; $98EE  over: silence its channel
+    beq     @noise                  ; $98F1
     lda     #$10                    ; $98F3
     sta     SQ1_VOL                 ; $98F5
-    bne     @loc_98FF               ; $98F8
+    bne     @none                   ; $98F8
 
-@loc_98FA:
+@noise:
     lda     #$10                    ; $98FA
     sta     NOISE_VOL               ; $98FC
 
-@loc_98FF:
-    lda     #$00                    ; $98FF
+@none:
+    lda     #$00                    ; $98FF  none playing
     sta     sharedSfx               ; $9901
     sta     sharedSfxOnSq1          ; $9904
     sta     sharedSfxOnNoise        ; $9907
@@ -2453,125 +2456,125 @@ Sfx_SharedTick:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sfx_UpdateShared:
-    lda     sharedSfxLockout        ; $990B
-    bne     @loc_9915               ; $990E
-    sta     sharedSfxRecent         ; $9910
-    beq     @loc_9918               ; $9913
+    lda     sharedSfxLockout        ; $990B  the recent-effect memory:
+    bne     @countLockout           ; $990E  counting
+    sta     sharedSfxRecent         ; $9910  over: forget it
+    beq     @requests               ; $9913
 
-@loc_9915:
+@countLockout:
     dec     sharedSfxLockout        ; $9915
 
-@loc_9918:
-    ldy     sfxRequest              ; $9918
-    lda     sharedSfx               ; $991A
-    cpy     #$C0                    ; $991D
-    beq     @loc_997E               ; $991F
-    cpy     #$60                    ; $9921
-    beq     @loc_9981               ; $9923
-    lsr     sfxRequest              ; $9925
-    bcs     @loc_9966               ; $9927
-    lsr     sfxRequest              ; $9929
-    bcs     @loc_9969               ; $992B
-    lsr     sfxRequest              ; $992D
-    bcs     @loc_996C               ; $992F
-    lsr     sfxRequest              ; $9931
-    bcs     @loc_996F               ; $9933
-    lsr     sfxRequest              ; $9935
-    bcs     @loc_9972               ; $9937
-    lsr     sfxRequest              ; $9939
-    bcs     @loc_9975               ; $993B
-    lsr     sfxRequest              ; $993D
-    bcs     @loc_9978               ; $993F
-    lsr     sfxRequest              ; $9941
-    bcs     @loc_997B               ; $9943
-    cmp     #$C0                    ; $9945
-    beq     @loc_999C               ; $9947
+@requests:
+    ldy     sfxRequest              ; $9918  the requests (y: the effect started)
+    lda     sharedSfx               ; $991A  the effect playing
+    cpy     #$C0                    ; $991D  the fairy (or the raft)?
+    beq     @fairy                  ; $991F
+    cpy     #$60                    ; $9921  a text letter?
+    beq     @textLetter             ; $9923
+    lsr     sfxRequest              ; $9925  $01 Link dying
+    bcs     @death                  ; $9927
+    lsr     sfxRequest              ; $9929  $02 sword denied
+    bcs     @swordDenied            ; $992B
+    lsr     sfxRequest              ; $992D  $04 a spell
+    bcs     @spell                  ; $992F
+    lsr     sfxRequest              ; $9931  $08 the flute
+    bcs     @flute                  ; $9933
+    lsr     sfxRequest              ; $9935  $10 the flute (2)
+    bcs     @flute2                 ; $9937
+    lsr     sfxRequest              ; $9939  $20 the flute (3)
+    bcs     @flute3                 ; $993B
+    lsr     sfxRequest              ; $993D  $40 the barrier
+    bcs     @barrier                ; $993F
+    lsr     sfxRequest              ; $9941  $80 a boss dying
+    bcs     @bossDeath              ; $9943
+    cmp     #$C0                    ; $9945  none requested: the one playing
+    beq     @fairyStep              ; $9947
     cmp     #$60                    ; $9949
-    beq     @loc_999F               ; $994B
+    beq     @textLetterStep         ; $994B
     lsr     a                       ; $994D
-    bcs     @loc_9984               ; $994E
+    bcs     @deathStep              ; $994E
     lsr     a                       ; $9950
-    bcs     @loc_9987               ; $9951
+    bcs     @swordDeniedStep        ; $9951
     lsr     a                       ; $9953
-    bcs     @loc_998A               ; $9954
+    bcs     @spellStep              ; $9954
     lsr     a                       ; $9956
-    bcs     @loc_998D               ; $9957
+    bcs     @fluteStep              ; $9957
     lsr     a                       ; $9959
-    bcs     @loc_9990               ; $995A
+    bcs     @flute2Step             ; $995A
     lsr     a                       ; $995C
-    bcs     @loc_9993               ; $995D
+    bcs     @flute3Step             ; $995D
     lsr     a                       ; $995F
-    bcs     @loc_9996               ; $9960
+    bcs     @barrierStep            ; $9960
     lsr     a                       ; $9962
-    bcs     @loc_9999               ; $9963
+    bcs     @bossDeathStep          ; $9963
     rts                             ; $9965
 
-@loc_9966:
+@death:
     jmp     Sfx_Death               ; $9966
 
-@loc_9969:
+@swordDenied:
     jmp     Sfx_SwordDenied         ; $9969
 
-@loc_996C:
+@spell:
     jmp     Sfx_Spell               ; $996C
 
-@loc_996F:
+@flute:
     jmp     Sfx_Flute               ; $996F
 
-@loc_9972:
+@flute2:
     jmp     Sfx_Flute2              ; $9972
 ; (code below not executed in the test movies)
 
-@loc_9975:
+@flute3:
     jmp     Sfx_Flute3              ; $9975
 ; (end of code not executed in the test movies)
 
-@loc_9978:
+@barrier:
     jmp     Sfx_Barrier             ; $9978
 
-@loc_997B:
+@bossDeath:
     jmp     Sfx_BossDeath           ; $997B
 
-@loc_997E:
+@fairy:
     jmp     Sfx_Fairy               ; $997E
 
-@loc_9981:
+@textLetter:
     jmp     Sfx_TextLetter          ; $9981
 
-@loc_9984:
+@deathStep:
     jmp     Sfx_DeathStep           ; $9984
 
-@loc_9987:
+@swordDeniedStep:
     jmp     Sfx_SwordDeniedStep     ; $9987
 
-@loc_998A:
+@spellStep:
     jmp     Sfx_SpellStep           ; $998A
 
-@loc_998D:
+@fluteStep:
     jmp     Sfx_FluteStep           ; $998D
 
-@loc_9990:
+@flute2Step:
     jmp     Sfx_Flute2Step          ; $9990
 ; (code below not executed in the test movies)
 
-@loc_9993:
+@flute3Step:
     jmp     Sfx_Flute3Step          ; $9993
 ; (end of code not executed in the test movies)
 
-@loc_9996:
+@barrierStep:
     jmp     Sfx_BarrierStep         ; $9996
 
-@loc_9999:
+@bossDeathStep:
     jmp     Sfx_BossDeathStep       ; $9999
 
-@loc_999C:
+@fairyStep:
     jmp     Sfx_FairyStep           ; $999C
 
-@loc_999F:
+@textLetterStep:
     jmp     Sfx_TextLetterStep      ; $999F
 
 Sfx_Spell:
-    lda     #$60                    ; $99A2
+    lda     #$60                    ; $99A2  $60 frames
     ldx     #$0C                    ; $99A4
     jsr     Sfx_StartSharedOnSq1    ; $99A6
     lda     #$0F                    ; $99A9
@@ -2582,198 +2585,198 @@ Sfx_Spell:
     sta     sfxPitchLo              ; $99B5
 
 Sfx_SpellStep:
-    ldy     sfxSweepTimer           ; $99B8
-    lda     sfxPitchHi              ; $99BB
-    beq     @loc_99C5               ; $99BE
+    ldy     sfxSweepTimer           ; $99B8  the volume,
+    lda     sfxPitchHi              ; $99BB  (sweeping: by the sweep's step)
+    beq     @envelope               ; $99BE
     lda     SpellPitchSteps,y       ; $99C0
-    bne     @loc_99C8               ; $99C3
+    bne     @setVolume              ; $99C3
 
-@loc_99C5:
-    lda     SpellVolumes,y          ; $99C5
+@envelope:
+    lda     SpellVolumes,y          ; $99C5  (else the envelope)
 
-@loc_99C8:
+@setVolume:
     sta     SQ1_VOL                 ; $99C8
-    lda     sharedSfxTimer          ; $99CB
+    lda     sharedSfxTimer          ; $99CB  time for the next part?
     ldy     sharedSfxStep           ; $99CE
     cmp     SpellStepTimes,y        ; $99D1
-    bne     @loc_9A15               ; $99D4
-    iny                             ; $99D6
+    bne     @sweep                  ; $99D4
+    iny                             ; $99D6  its sweep's length
     tya                             ; $99D7
     lsr     a                       ; $99D8
     tay                             ; $99D9
     lda     SpellSweeps,y           ; $99DA
     sta     sfxSweepTimer           ; $99DD
-    lda     sharedSfxStep           ; $99E0
+    lda     sharedSfxStep           ; $99E0  alternating:
     lsr     a                       ; $99E3
-    bcs     @loc_99EC               ; $99E4
-    lda     #$CA                    ; $99E6
+    bcs     @moving                 ; $99E4
+    lda     #$CA                    ; $99E6  sweep $CA, still
     ldx     #$00                    ; $99E8
-    beq     @loc_99F0               ; $99EA
+    beq     @setSweep               ; $99EA
 
-@loc_99EC:
-    lda     #$BB                    ; $99EC
+@moving:
+    lda     #$BB                    ; $99EC  sweep $BB, moving
     ldx     #$01                    ; $99EE
 
-@loc_99F0:
+@setSweep:
     stx     sfxPitchHi              ; $99F0
     sta     SQ1_SWEEP               ; $99F3
-    lda     sharedSfxStep           ; $99F6
-    beq     @loc_99FE               ; $99F9
+    lda     sharedSfxStep           ; $99F6  (the last stays)
+    beq     @pitch                  ; $99F9
     dec     sharedSfxStep           ; $99FB
 
-@loc_99FE:
-    ldy     sfxPitchLo              ; $99FE
+@pitch:
+    ldy     sfxPitchLo              ; $99FE  a new pitch each part:
     lda     SpellTimersLo,y         ; $9A01
     sta     SQ1_LO                  ; $9A04
     lda     SpellTimersHi,y         ; $9A07
     sta     SQ1_HI                  ; $9A0A
-    dey                             ; $9A0D
-    bne     @loc_9A12               ; $9A0E
+    dey                             ; $9A0D  cycling 4-1
+    bne     @setPitch               ; $9A0E
     ldy     #$04                    ; $9A10
 
-@loc_9A12:
+@setPitch:
     sty     sfxPitchLo              ; $9A12
 
-@loc_9A15:
-    lda     sfxSweepTimer           ; $9A15
-    beq     @loc_9A1D               ; $9A18
+@sweep:
+    lda     sfxSweepTimer           ; $9A15  count the sweep
+    beq     @tick                   ; $9A18
     dec     sfxSweepTimer           ; $9A1A
 
-@loc_9A1D:
-    jmp     Sfx_SharedTick          ; $9A1D
+@tick:
+    jmp     Sfx_SharedTick          ; $9A1D  count it down
 
 Sfx_Flute:
-    lda     #$7F                    ; $9A20
+    lda     #$7F                    ; $9A20  $7F frames, 7 notes
     ldx     #$06                    ; $9A22
     jsr     Sfx_StartSharedOnSq1    ; $9A24
-    lda     #$7F                    ; $9A27
+    lda     #$7F                    ; $9A27  no sweep
     sta     SQ1_SWEEP               ; $9A29
 
 Sfx_FluteStep:
-    lda     sharedSfxTimer          ; $9A2C
+    lda     sharedSfxTimer          ; $9A2C  time for the next note?
     ldy     sharedSfxStep           ; $9A2F
     cmp     FluteNoteTimes,y        ; $9A32
-    bne     @loc_9A45               ; $9A35
-    lda     FluteNotes,y            ; $9A37
+    bne     @step                   ; $9A35
+    lda     FluteNotes,y            ; $9A37  play it
     jsr     Sq1_PlayNote            ; $9A3A
-    lda     sharedSfxStep           ; $9A3D
-    beq     @loc_9A45               ; $9A40
+    lda     sharedSfxStep           ; $9A3D  (the last stays)
+    beq     @step                   ; $9A40
     dec     sharedSfxStep           ; $9A42
 
-@loc_9A45:
-    jmp     Sfx_SharedStep          ; $9A45
+@step:
+    jmp     Sfx_SharedStep          ; $9A45  volume and vibrato
 
 Sfx_Flute2:
-    lda     #$7F                    ; $9A48
+    lda     #$7F                    ; $9A48  $7F frames, 6 notes
     ldx     #$05                    ; $9A4A
     jsr     Sfx_StartSharedOnSq1    ; $9A4C
-    lda     #$7F                    ; $9A4F
+    lda     #$7F                    ; $9A4F  no sweep
     sta     SQ1_SWEEP               ; $9A51
 
 Sfx_Flute2Step:
-    lda     sharedSfxTimer          ; $9A54
+    lda     sharedSfxTimer          ; $9A54  time for the next note?
     ldy     sharedSfxStep           ; $9A57
     cmp     Flute2NoteTimes,y       ; $9A5A
-    bne     @loc_9A6D               ; $9A5D
-    lda     Flute2Notes,y           ; $9A5F
+    bne     @step                   ; $9A5D
+    lda     Flute2Notes,y           ; $9A5F  play it
     jsr     Sq1_PlayNote            ; $9A62
-    lda     sharedSfxStep           ; $9A65
-    beq     @loc_9A6D               ; $9A68
+    lda     sharedSfxStep           ; $9A65  (the last stays)
+    beq     @step                   ; $9A68
     dec     sharedSfxStep           ; $9A6A
 
-@loc_9A6D:
-    jmp     Sfx_SharedStep          ; $9A6D
+@step:
+    jmp     Sfx_SharedStep          ; $9A6D  volume and vibrato
 ; (code below not executed in the test movies)
 
 Sfx_Flute3:
-    lda     #$9F                    ; $9A70
+    lda     #$9F                    ; $9A70  $9F frames, 9 notes
     ldx     #$08                    ; $9A72
     jsr     Sfx_StartSharedOnSq1    ; $9A74
-    lda     #$7F                    ; $9A77
+    lda     #$7F                    ; $9A77  no sweep
     sta     SQ1_SWEEP               ; $9A79
 
 Sfx_Flute3Step:
-    lda     sharedSfxTimer          ; $9A7C
+    lda     sharedSfxTimer          ; $9A7C  time for the next note?
     ldy     sharedSfxStep           ; $9A7F
     cmp     Flute3NoteTimes,y       ; $9A82
-    bne     @loc_9A95               ; $9A85
-    lda     Flute3Notes,y           ; $9A87
+    bne     @step                   ; $9A85
+    lda     Flute3Notes,y           ; $9A87  play it
     jsr     Sq1_PlayNote            ; $9A8A
-    lda     sharedSfxStep           ; $9A8D
-    beq     @loc_9A95               ; $9A90
+    lda     sharedSfxStep           ; $9A8D  (the last stays)
+    beq     @step                   ; $9A90
     dec     sharedSfxStep           ; $9A92
 
-@loc_9A95:
-    jmp     Sfx_SharedStep          ; $9A95
+@step:
+    jmp     Sfx_SharedStep          ; $9A95  volume and vibrato
 ; (end of code not executed in the test movies)
 
 Sfx_Barrier:
-    lda     #$60                    ; $9A98
+    lda     #$60                    ; $9A98  $60 frames, from period $8F
     ldx     #$8F                    ; $9A9A
     jsr     Sfx_StartSharedOnSq1    ; $9A9C
-    lda     #$00                    ; $9A9F
+    lda     #$00                    ; $9A9F  the period falling (pitch rising)
     sta     sweepUp                 ; $9AA1
-    ldx     #$5D                    ; $9AA4
+    ldx     #$5D                    ; $9AA4  its envelope
     ldy     #$81                    ; $9AA6
     jsr     Sq1_SetEnvelope         ; $9AA8
 
 Sfx_BarrierStep:
-    lda     sharedSfxStep           ; $9AAB
+    lda     sharedSfxStep           ; $9AAB  sweep by 1/32 each frame
     tay                             ; $9AAE
     jsr     Sfx_SweepStep32         ; $9AAF
-    sta     sharedSfxStep           ; $9AB2
-    rol     a                       ; $9AB5
+    sta     sharedSfxStep           ; $9AB2  the period:
+    rol     a                       ; $9AB5  x 4 (low byte)
     rol     a                       ; $9AB6
     sta     SQ1_LO                  ; $9AB7
-    rol     a                       ; $9ABA
+    rol     a                       ; $9ABA  high bits
     and     #$03                    ; $9ABB
     ora     #$08                    ; $9ABD
     sta     SQ1_HI                  ; $9ABF
-    lda     sharedSfxTimer          ; $9AC2
+    lda     sharedSfxTimer          ; $9AC2  the last 13 frames:
     cmp     #$0D                    ; $9AC5
-    bcs     @loc_9ACE               ; $9AC7
-    ora     #$90                    ; $9AC9
+    bcs     @tick                   ; $9AC7
+    ora     #$90                    ; $9AC9  fading out
     sta     SQ1_VOL                 ; $9ACB
 
-@loc_9ACE:
+@tick:
     jmp     Sfx_SharedTick          ; $9ACE
 
 Sfx_BossDeath:
-    lda     #$6B                    ; $9AD1
+    lda     #$6B                    ; $9AD1  $6B frames on the noise
     ldx     #$1B                    ; $9AD3
     jsr     Sfx_StartSharedOnNoise  ; $9AD5
-    lda     #$05                    ; $9AD8
+    lda     #$05                    ; $9AD8  6 bursts
     sta     sfxSweepTimer           ; $9ADA
 
 Sfx_BossDeathStep:
-    lda     sharedSfxTimer          ; $9ADD
+    lda     sharedSfxTimer          ; $9ADD  time for the next burst?
     ldy     sfxSweepTimer           ; $9AE0
     cmp     BossDeathStepTimes,y    ; $9AE3
-    bne     @loc_9AF5               ; $9AE6
-    lda     sfxSweepTimer           ; $9AE8
-    beq     @loc_9AF0               ; $9AEB
+    bne     @burst                  ; $9AE6
+    lda     sfxSweepTimer           ; $9AE8  (the last stays)
+    beq     @restart                ; $9AEB
     dec     sfxSweepTimer           ; $9AED
 
-@loc_9AF0:
-    lda     #$1B                    ; $9AF0
+@restart:
+    lda     #$1B                    ; $9AF0  restart the burst
     sta     sharedSfxStep           ; $9AF2
 
-@loc_9AF5:
-    lda     sharedSfxStep           ; $9AF5
+@burst:
+    lda     sharedSfxStep           ; $9AF5  its sample every 2 frames:
     lsr     a                       ; $9AF8
     tay                             ; $9AF9
     lda     BossDeathNoise,y        ; $9AFA
     tax                             ; $9AFD
-    and     #$0F                    ; $9AFE
+    and     #$0F                    ; $9AFE  period: bits 3-0
     sta     NOISE_LO                ; $9B00
-    txa                             ; $9B03
+    txa                             ; $9B03  volume: bits 7-4
     lsr     a                       ; $9B04
     lsr     a                       ; $9B05
     lsr     a                       ; $9B06
     lsr     a                       ; $9B07
     ora     #$10                    ; $9B08
     sta     NOISE_VOL               ; $9B0A
-    lda     #$08                    ; $9B0D
+    lda     #$08                    ; $9B0D  length counter load
     sta     NOISE_HI                ; $9B0F
     dec     sharedSfxStep           ; $9B12
     jmp     Sfx_SharedTick          ; $9B15
@@ -2788,11 +2791,11 @@ Sfx_BossDeathStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Music_Update:
-    lda     musicRequest            ; $9B18
+    lda     musicRequest            ; $9B18  a song requested?
     bne     Music_Start             ; $9B1A
-    lda     musicPlaying            ; $9B1C
+    lda     musicPlaying            ; $9B1C  one playing?
     beq     Sound_SilencePulseNoise_Done ; $9B1F
-    jmp     Music_PlayNotes         ; $9B21
+    jmp     Music_PlayNotes         ; $9B21  yes: a frame of it
 
 ; ---------------------------------------------------------------------------
 ; Music_NextSong
@@ -2805,16 +2808,16 @@ Music_Update:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Music_NextSong:
-    lda     currentWorld            ; $9B24
+    lda     currentWorld            ; $9B24  in the Great Palace:
     cmp     #$05                    ; $9B27
-    bne     @loc_9B34               ; $9B29
-    lda     musicPlaying            ; $9B2B
+    bne     @elsewhere              ; $9B29
+    lda     musicPlaying            ; $9B2B  $01-$10 and $40 go on (Music_RepeatOrResume)
     and     #$5F                    ; $9B2E
     bne     Music_RepeatOrResume    ; $9B30
-    beq     Music_Stop              ; $9B32
+    beq     Music_Stop              ; $9B32  the others stop
 
-@loc_9B34:
-    lda     musicPlaying            ; $9B34
+@elsewhere:
+    lda     musicPlaying            ; $9B34  elsewhere: $01-$10 go on
     and     #$1F                    ; $9B37
     bne     Music_RepeatOrResume    ; $9B39
 
@@ -2829,7 +2832,7 @@ Music_NextSong:
 Music_Stop:
     lda     #$00                    ; $9B3B
     sta     musicPlaying            ; $9B3D
-    sta     TRI_LINEAR              ; $9B40
+    sta     TRI_LINEAR              ; $9B40  triangle off
 
 ; ---------------------------------------------------------------------------
 ; Sound_SilencePulseNoise
@@ -2839,7 +2842,7 @@ Music_Stop:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sound_SilencePulseNoise:
-    lda     #$10                    ; $9B43
+    lda     #$10                    ; $9B43  pulses and noise silent
     sta     SQ1_VOL                 ; $9B45
     sta     SQ2_VOL                 ; $9B48
     sta     NOISE_VOL               ; $9B4B
@@ -2848,16 +2851,16 @@ Sound_SilencePulseNoise_Done:
     rts                             ; $9B4E
 
 Music_RepeatOrResume:
-    and     #$01                    ; $9B4F
-    beq     @loc_9B57               ; $9B51
-    lda     #$02                    ; $9B53
+    and     #$01                    ; $9B4F  the intro ($01)?
+    beq     @repeat                 ; $9B51
+    lda     #$02                    ; $9B53  goes on to $02
     bne     Music_Start             ; $9B55
 
-@loc_9B57:
-    lda     musicPlaying            ; $9B57
+@repeat:
+    lda     musicPlaying            ; $9B57  $02, $04, $08, $40:
     and     #$4E                    ; $9B5A
-    bne     Music_Start             ; $9B5C
-    lda     musicResume             ; $9B5E
+    bne     Music_Start             ; $9B5C  start again
+    lda     musicResume             ; $9B5E  the fanfare: back to the song it interrupted
 
 ; ---------------------------------------------------------------------------
 ; Music_Start
@@ -2871,22 +2874,22 @@ Music_RepeatOrResume:
 ; ---------------------------------------------------------------------------
 Music_Start:
     tax                             ; $9B61
-    and     #$10                    ; $9B62
-    beq     @loc_9B70               ; $9B64
-    lda     musicPlaying            ; $9B66
+    and     #$10                    ; $9B62  the fanfare?
+    beq     @start                  ; $9B64
+    lda     musicPlaying            ; $9B66  interrupting a song $01-$08:
     and     #$0F                    ; $9B69
-    beq     @loc_9B70               ; $9B6B
-    sta     musicResume             ; $9B6D
+    beq     @start                  ; $9B6B
+    sta     musicResume             ; $9B6D  remember it
 
-@loc_9B70:
-    txa                             ; $9B70
+@start:
+    txa                             ; $9B70  0: stop
     beq     Music_Stop              ; $9B71
     sta     musicPlaying            ; $9B73
-    ldy     #$00                    ; $9B76
+    ldy     #$00                    ; $9B76  from the first phrase
     sty     musicPhrase             ; $9B78
 
 @loop:
-    iny                             ; $9B7A
+    iny                             ; $9B7A  the bit's number + 1
     lsr     a                       ; $9B7B
     bcc     @loop                   ; $9B7C
     sty     musicSong               ; $9B7E
@@ -2902,92 +2905,92 @@ Music_Start:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Music_LoadPhrase:
-    lda     currentWorld            ; $9B80
-    bne     @loc_9BBC               ; $9B83
-    ldy     musicSong               ; $9B85
-    lda     OverworldMusic-1,y      ; $9B87
+    lda     currentWorld            ; $9B80  the overworld (world 0)?
+    bne     @notOverworld           ; $9B83
+    ldy     musicSong               ; $9B85  the song's
+    lda     OverworldMusic-1,y      ; $9B87  phrase list offset
     clc                             ; $9B8A
-    adc     musicPhrase             ; $9B8B
-    inc     musicPhrase             ; $9B8D
+    adc     musicPhrase             ; $9B8B  + the phrase
+    inc     musicPhrase             ; $9B8D  (next time the next)
     tay                             ; $9B8F
-    lda     OverworldMusic,y        ; $9B90
+    lda     OverworldMusic,y        ; $9B90  the phrase record's offset
     tay                             ; $9B93
-    beq     Music_NextSong          ; $9B94
-    lda     OverworldMusic,y        ; $9B96
+    beq     Music_NextSong          ; $9B94  0: the song is over
+    lda     OverworldMusic,y        ; $9B96  tempo row
     sta     musicTempo              ; $9B99
-    lda     OverworldMusic+1,y      ; $9B9B
+    lda     OverworldMusic+1,y      ; $9B9B  note data pointer
     sta     musicNotesPtr           ; $9B9E
     lda     OverworldMusic+2,y      ; $9BA0
     sta     musicNotesPtr+1         ; $9BA3
-    lda     OverworldMusic+3,y      ; $9BA5
+    lda     OverworldMusic+3,y      ; $9BA5  bass (triangle) offset
     sta     bassOffset              ; $9BA8
-    lda     OverworldMusic+4,y      ; $9BAB
+    lda     OverworldMusic+4,y      ; $9BAB  harmony (pulse 1) offset
     sta     harmonyOffset           ; $9BAE
-    lda     OverworldMusic+5,y      ; $9BB1
+    lda     OverworldMusic+5,y      ; $9BB1  drum (noise) offset
     sta     drumOffset              ; $9BB4
-    sta     drumLoopOffset          ; $9BB7
+    sta     drumLoopOffset          ; $9BB7  (also the drums' loop point)
     jmp     Music_StartPhrase       ; $9BB9
 
-@loc_9BBC:
-    cmp     #$01                    ; $9BBC
-    beq     @loc_9BC4               ; $9BBE
+@notOverworld:
+    cmp     #$01                    ; $9BBC  towns (1-2)?
+    beq     @towns                  ; $9BBE
     cmp     #$02                    ; $9BC0
-    bne     @loc_9BFB               ; $9BC2
+    bne     @notTowns               ; $9BC2
 
-@loc_9BC4:
-    ldy     musicSong               ; $9BC4
-    lda     TownMusic-1,y           ; $9BC6
+@towns:
+    ldy     musicSong               ; $9BC4  the song's
+    lda     TownMusic-1,y           ; $9BC6  phrase list offset
     clc                             ; $9BC9
-    adc     musicPhrase             ; $9BCA
-    inc     musicPhrase             ; $9BCC
+    adc     musicPhrase             ; $9BCA  + the phrase
+    inc     musicPhrase             ; $9BCC  (next time the next)
     tay                             ; $9BCE
-    lda     TownMusic,y             ; $9BCF
+    lda     TownMusic,y             ; $9BCF  the phrase record's offset
     tay                             ; $9BD2
-    beq     Music_NextSongFar       ; $9BD3
-    lda     TownMusic,y             ; $9BD5
+    beq     Music_NextSongFar       ; $9BD3  0: the song is over
+    lda     TownMusic,y             ; $9BD5  tempo row
     sta     musicTempo              ; $9BD8
-    lda     TownMusic+1,y           ; $9BDA
+    lda     TownMusic+1,y           ; $9BDA  note data pointer
     sta     musicNotesPtr           ; $9BDD
     lda     TownMusic+2,y           ; $9BDF
     sta     musicNotesPtr+1         ; $9BE2
-    lda     TownMusic+3,y           ; $9BE4
+    lda     TownMusic+3,y           ; $9BE4  bass (triangle) offset
     sta     bassOffset              ; $9BE7
-    lda     TownMusic+4,y           ; $9BEA
+    lda     TownMusic+4,y           ; $9BEA  harmony (pulse 1) offset
     sta     harmonyOffset           ; $9BED
-    lda     TownMusic+5,y           ; $9BF0
+    lda     TownMusic+5,y           ; $9BF0  drum (noise) offset
     sta     drumOffset              ; $9BF3
-    sta     drumLoopOffset          ; $9BF6
+    sta     drumLoopOffset          ; $9BF6  (also the drums' loop point)
     jmp     Music_StartPhrase       ; $9BF8
 
-@loc_9BFB:
-    cmp     #$03                    ; $9BFB
-    beq     @loc_9C03               ; $9BFD
+@notTowns:
+    cmp     #$03                    ; $9BFB  palaces (3-4)?
+    beq     @palaces                ; $9BFD
     cmp     #$04                    ; $9BFF
-    bne     Music_LoadGreatPalacePhrase ; $9C01
+    bne     Music_LoadGreatPalacePhrase ; $9C01  no: the Great Palace (5-6)
 
-@loc_9C03:
-    ldy     musicSong               ; $9C03
-    lda     TownMusic+612,y         ; $9C05
+@palaces:
+    ldy     musicSong               ; $9C03  the song's
+    lda     TownMusic+612,y         ; $9C05  phrase list offset
     clc                             ; $9C08
-    adc     musicPhrase             ; $9C09
-    inc     musicPhrase             ; $9C0B
+    adc     musicPhrase             ; $9C09  + the phrase
+    inc     musicPhrase             ; $9C0B  (next time the next)
     tay                             ; $9C0D
-    lda     PalaceMusic,y           ; $9C0E
+    lda     PalaceMusic,y           ; $9C0E  the phrase record's offset
     tay                             ; $9C11
-    beq     Music_NextSongFar       ; $9C12
-    lda     PalaceMusic,y           ; $9C14
+    beq     Music_NextSongFar       ; $9C12  0: the song is over
+    lda     PalaceMusic,y           ; $9C14  tempo row
     sta     musicTempo              ; $9C17
-    lda     PalaceMusic+1,y         ; $9C19
+    lda     PalaceMusic+1,y         ; $9C19  note data pointer
     sta     musicNotesPtr           ; $9C1C
     lda     PalaceMusic+2,y         ; $9C1E
     sta     musicNotesPtr+1         ; $9C21
-    lda     PalaceMusic+3,y         ; $9C23
+    lda     PalaceMusic+3,y         ; $9C23  bass (triangle) offset
     sta     bassOffset              ; $9C26
-    lda     PalaceMusic+4,y         ; $9C29
+    lda     PalaceMusic+4,y         ; $9C29  harmony (pulse 1) offset
     sta     harmonyOffset           ; $9C2C
-    lda     PalaceMusic+5,y         ; $9C2F
+    lda     PalaceMusic+5,y         ; $9C2F  drum (noise) offset
     sta     drumOffset              ; $9C32
-    sta     drumLoopOffset          ; $9C35
+    sta     drumLoopOffset          ; $9C35  (also the drums' loop point)
     jmp     Music_StartPhrase       ; $9C37
 
 Music_NextSongFar:
@@ -2997,28 +3000,28 @@ Music_LoadPhraseFar:
     jmp     Music_LoadPhrase        ; $9C3D
 
 Music_LoadGreatPalacePhrase:
-    ldy     musicSong               ; $9C40
-    lda     PalaceMusic+774,y       ; $9C42
+    ldy     musicSong               ; $9C40  the song's
+    lda     PalaceMusic+774,y       ; $9C42  phrase list offset
     clc                             ; $9C45
-    adc     musicPhrase             ; $9C46
-    inc     musicPhrase             ; $9C48
+    adc     musicPhrase             ; $9C46  + the phrase
+    inc     musicPhrase             ; $9C48  (next time the next)
     tay                             ; $9C4A
-    lda     GreatPalaceMusic,y      ; $9C4B
+    lda     GreatPalaceMusic,y      ; $9C4B  the phrase record's offset
     tay                             ; $9C4E
-    beq     Music_NextSongFar       ; $9C4F
-    lda     GreatPalaceMusic,y      ; $9C51
+    beq     Music_NextSongFar       ; $9C4F  0: the song is over
+    lda     GreatPalaceMusic,y      ; $9C51  tempo row
     sta     musicTempo              ; $9C54
-    lda     GreatPalaceMusic+1,y    ; $9C56
+    lda     GreatPalaceMusic+1,y    ; $9C56  note data pointer
     sta     musicNotesPtr           ; $9C59
     lda     GreatPalaceMusic+2,y    ; $9C5B
     sta     musicNotesPtr+1         ; $9C5E
-    lda     GreatPalaceMusic+3,y    ; $9C60
+    lda     GreatPalaceMusic+3,y    ; $9C60  bass (triangle) offset
     sta     bassOffset              ; $9C63
-    lda     GreatPalaceMusic+4,y    ; $9C66
+    lda     GreatPalaceMusic+4,y    ; $9C66  harmony (pulse 1) offset
     sta     harmonyOffset           ; $9C69
-    lda     GreatPalaceMusic+5,y    ; $9C6C
+    lda     GreatPalaceMusic+5,y    ; $9C6C  drum (noise) offset
     sta     drumOffset              ; $9C6F
-    sta     drumLoopOffset          ; $9C72
+    sta     drumLoopOffset          ; $9C72  (also the drums' loop point)
 
 ; ---------------------------------------------------------------------------
 ; Music_StartPhrase
@@ -3028,9 +3031,9 @@ Music_LoadGreatPalacePhrase:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Music_StartPhrase:
-    lda     #$00                    ; $9C74
+    lda     #$00                    ; $9C74  the melody from its start
     sta     melodyOffset            ; $9C76
-    lda     #$01                    ; $9C79
+    lda     #$01                    ; $9C79  every channel's note ends now
     sta     melodyTimer             ; $9C7B
     sta     harmonyTimer            ; $9C7E
     sta     bassTimer               ; $9C81
@@ -3056,164 +3059,164 @@ Music_StartPhrase:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Music_PlayNotes:
-    lda     sq2Sfx                  ; $9C87
-    beq     @loc_9C91               ; $9C8A
-    lda     #$00                    ; $9C8C
+    lda     sq2Sfx                  ; $9C87  the melody (pulse 2): an effect has it?
+    beq     @melody                 ; $9C8A
+    lda     #$00                    ; $9C8C  restart its envelope after
     sta     sq2EnvelopeStep         ; $9C8E
 
-@loc_9C91:
-    dec     melodyTimer             ; $9C91
-    bne     @loc_9CC3               ; $9C94
-    ldy     melodyOffset            ; $9C96
+@melody:
+    dec     melodyTimer             ; $9C91  the note over?
+    bne     @melodyFrame            ; $9C94
+    ldy     melodyOffset            ; $9C96  the next byte
     inc     melodyOffset            ; $9C99
     lda     (musicNotesPtr),y       ; $9C9C
-    beq     Music_LoadPhraseFar     ; $9C9E
-    jsr     Music_NoteDuration      ; $9CA0
+    beq     Music_LoadPhraseFar     ; $9C9E  0: the next phrase
+    jsr     Music_NoteDuration      ; $9CA0  its frames
     sta     melodyTimer             ; $9CA3
-    lda     sq2Sfx                  ; $9CA6
-    bne     @loc_9CDE               ; $9CA9
-    txa                             ; $9CAB
+    lda     sq2Sfx                  ; $9CA6  an effect has the channel?
+    bne     @harmonyCheck           ; $9CA9
+    txa                             ; $9CAB  the pitch
     and     #$3E                    ; $9CAC
-    jsr     Sq2_PlayNote            ; $9CAE
-    beq     @loc_9CC3               ; $9CB1
-    lda     musicPlaying            ; $9CB3
+    jsr     Sq2_PlayNote            ; $9CAE  play it
+    beq     @melodyFrame            ; $9CB1  a rest
+    lda     musicPlaying            ; $9CB3  song $04:
     and     #$04                    ; $9CB6
-    beq     @loc_9CBE               ; $9CB8
-    lda     #$18                    ; $9CBA
-    bne     @loc_9CC0               ; $9CBC
+    beq     @envelope2F             ; $9CB8
+    lda     #$18                    ; $9CBA  envelope from step $18
+    bne     @setEnvelope            ; $9CBC
 
-@loc_9CBE:
-    lda     #$2F                    ; $9CBE
+@envelope2F:
+    lda     #$2F                    ; $9CBE  others: from $2F
 
-@loc_9CC0:
+@setEnvelope:
     sta     sq2EnvelopeStep         ; $9CC0
 
-@loc_9CC3:
-    lda     sq2Sfx                  ; $9CC3
-    bne     @loc_9CDE               ; $9CC6
-    jsr     Sq2_Vibrato             ; $9CC8
-    lda     sq2EnvelopeStep         ; $9CCB
-    beq     @loc_9CD4               ; $9CCE
-    lsr     a                       ; $9CD0
-    dec     sq2EnvelopeStep         ; $9CD1
+@melodyFrame:
+    lda     sq2Sfx                  ; $9CC3  each frame, unless an effect has it:
+    bne     @harmonyCheck           ; $9CC6
+    jsr     Sq2_Vibrato             ; $9CC8  vibrato
+    lda     sq2EnvelopeStep         ; $9CCB  the envelope:
+    beq     @volume                 ; $9CCE
+    lsr     a                       ; $9CD0  step / 2,
+    dec     sq2EnvelopeStep         ; $9CD1  counting down to 0
 
-@loc_9CD4:
+@volume:
     tay                             ; $9CD4
-    lda     PulseEnvelope,y         ; $9CD5
+    lda     PulseEnvelope,y         ; $9CD5  the volume
     tax                             ; $9CD8
-    ldy     #$7F                    ; $9CD9
+    ldy     #$7F                    ; $9CD9  no sweep
     jsr     Sq2_SetEnvelope         ; $9CDB
 
-@loc_9CDE:
-    lda     sq1Sfx                  ; $9CDE
+@harmonyCheck:
+    lda     sq1Sfx                  ; $9CDE  the harmony (pulse 1): an effect has it?
     ora     sharedSfxOnSq1          ; $9CE1
-    beq     @loc_9CEB               ; $9CE4
-    lda     #$00                    ; $9CE6
+    beq     @harmony                ; $9CE4
+    lda     #$00                    ; $9CE6  restart its envelope after
     sta     sq1EnvelopeStep         ; $9CE8
 
-@loc_9CEB:
-    dec     harmonyTimer            ; $9CEB
-    bne     @loc_9D1E               ; $9CEE
-    ldy     harmonyOffset           ; $9CF0
+@harmony:
+    dec     harmonyTimer            ; $9CEB  the note over?
+    bne     @harmonyFrame           ; $9CEE
+    ldy     harmonyOffset           ; $9CF0  the next byte
     inc     harmonyOffset           ; $9CF3
     lda     (musicNotesPtr),y       ; $9CF6
-    jsr     Music_NoteDuration      ; $9CF8
+    jsr     Music_NoteDuration      ; $9CF8  its frames
     sta     harmonyTimer            ; $9CFB
-    lda     sq1Sfx                  ; $9CFE
+    lda     sq1Sfx                  ; $9CFE  an effect has the channel?
     ora     sharedSfxOnSq1          ; $9D01
-    bne     @loc_9D3C               ; $9D04
-    txa                             ; $9D06
+    bne     @bass                   ; $9D04
+    txa                             ; $9D06  the pitch
     and     #$3E                    ; $9D07
-    jsr     Sq1_PlayNote            ; $9D09
-    beq     @loc_9D1E               ; $9D0C
-    lda     musicPlaying            ; $9D0E
+    jsr     Sq1_PlayNote            ; $9D09  play it
+    beq     @harmonyFrame           ; $9D0C  a rest
+    lda     musicPlaying            ; $9D0E  song $04:
     and     #$04                    ; $9D11
-    beq     @loc_9D19               ; $9D13
-    lda     #$18                    ; $9D15
-    bne     @loc_9D1B               ; $9D17
+    beq     @harmonyEnv2F           ; $9D13
+    lda     #$18                    ; $9D15  envelope from step $18
+    bne     @harmonySetEnv          ; $9D17
 
-@loc_9D19:
-    lda     #$2F                    ; $9D19
+@harmonyEnv2F:
+    lda     #$2F                    ; $9D19  others: from $2F
 
-@loc_9D1B:
+@harmonySetEnv:
     sta     sq1EnvelopeStep         ; $9D1B
 
-@loc_9D1E:
-    lda     sq1Sfx                  ; $9D1E
+@harmonyFrame:
+    lda     sq1Sfx                  ; $9D1E  each frame, unless an effect has it:
     ora     sharedSfxOnSq1          ; $9D21
-    bne     @loc_9D3C               ; $9D24
-    jsr     Sq1_Vibrato             ; $9D26
-    lda     sq1EnvelopeStep         ; $9D29
-    beq     @loc_9D32               ; $9D2C
-    lsr     a                       ; $9D2E
-    dec     sq1EnvelopeStep         ; $9D2F
+    bne     @bass                   ; $9D24
+    jsr     Sq1_Vibrato             ; $9D26  vibrato
+    lda     sq1EnvelopeStep         ; $9D29  the envelope:
+    beq     @harmonyVolume          ; $9D2C
+    lsr     a                       ; $9D2E  step / 2,
+    dec     sq1EnvelopeStep         ; $9D2F  counting down to 0
 
-@loc_9D32:
+@harmonyVolume:
     tay                             ; $9D32
-    lda     PulseEnvelope,y         ; $9D33
+    lda     PulseEnvelope,y         ; $9D33  the volume
     tax                             ; $9D36
-    ldy     #$7F                    ; $9D37
+    ldy     #$7F                    ; $9D37  no sweep
     jsr     Sq1_SetEnvelope         ; $9D39
 
-@loc_9D3C:
-    dec     bassTimer               ; $9D3C
-    bne     @loc_9D6C               ; $9D3F
-    ldy     bassOffset              ; $9D41
+@bass:
+    dec     bassTimer               ; $9D3C  the bass (triangle): the note over?
+    bne     @drums                  ; $9D3F
+    ldy     bassOffset              ; $9D41  the next byte
     inc     bassOffset              ; $9D44
     lda     (musicNotesPtr),y       ; $9D47
-    jsr     Music_NoteDuration      ; $9D49
+    jsr     Music_NoteDuration      ; $9D49  its frames
     sta     bassTimer               ; $9D4C
-    lda     noiseSfx                ; $9D4F
+    lda     noiseSfx                ; $9D4F  the bridge or a block crumbling (on the triangle too)?
     and     #$0A                    ; $9D52
-    bne     @loc_9D6C               ; $9D54
-    lda     musicPlaying            ; $9D56
+    bne     @drums                  ; $9D54
+    lda     musicPlaying            ; $9D56  the fanfare:
     and     #$10                    ; $9D59
-    bne     @loc_9D61               ; $9D5B
-    ldy     #$1F                    ; $9D5D
-    bne     @loc_9D63               ; $9D5F
+    bne     @fanfare                ; $9D5B
+    ldy     #$1F                    ; $9D5D  others: linear counter $1F
+    bne     @setLinear              ; $9D5F
 
-@loc_9D61:
-    ldy     #$60                    ; $9D61
+@fanfare:
+    ldy     #$60                    ; $9D61  $60
 
-@loc_9D63:
+@setLinear:
     sty     TRI_LINEAR              ; $9D63
-    txa                             ; $9D66
+    txa                             ; $9D66  the pitch
     and     #$3E                    ; $9D67
     jsr     Tri_PlayNote            ; $9D69
 
-@loc_9D6C:
-    lda     drumOffset              ; $9D6C
+@drums:
+    lda     drumOffset              ; $9D6C  the drums (noise), if the phrase has them:
     beq     @done                   ; $9D6F
-    dec     drumTimer               ; $9D71
+    dec     drumTimer               ; $9D71  the note over?
     bne     @done                   ; $9D74
 
 @loop:
-    ldy     drumOffset              ; $9D76
+    ldy     drumOffset              ; $9D76  the next byte
     inc     drumOffset              ; $9D79
     lda     (musicNotesPtr),y       ; $9D7C
-    bne     @loc_9D87               ; $9D7E
+    bne     @drum                   ; $9D7E  0: back to the loop point
     lda     drumLoopOffset          ; $9D80
     sta     drumOffset              ; $9D82
     bne     @loop                   ; $9D85
 
-@loc_9D87:
-    jsr     Music_NoteDuration      ; $9D87
+@drum:
+    jsr     Music_NoteDuration      ; $9D87  its frames
     sta     drumTimer               ; $9D8A
-    lda     noiseSfx                ; $9D8D
+    lda     noiseSfx                ; $9D8D  an effect has the noise?
     ora     sharedSfxOnNoise        ; $9D90
     bne     @done                   ; $9D93
-    txa                             ; $9D95
+    txa                             ; $9D95  a rest?
     and     #$3E                    ; $9D96
-    bne     @loc_9D9E               ; $9D98
-    lda     #$10                    ; $9D9A
-    bne     @loc_9DA4               ; $9D9C
+    bne     @hit                    ; $9D98
+    lda     #$10                    ; $9D9A  yes: silent (volume 0)
+    bne     @play                   ; $9D9C
 
-@loc_9D9E:
-    ldx     #$0A                    ; $9D9E
+@hit:
+    ldx     #$0A                    ; $9D9E  no: the drum: period $0A, length $38, volume 7
     ldy     #$38                    ; $9DA0
     lda     #$17                    ; $9DA2
 
-@loc_9DA4:
+@play:
     jsr     Noise_Play              ; $9DA4
 
 @done:
