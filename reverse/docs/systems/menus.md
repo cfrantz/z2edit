@@ -42,6 +42,22 @@ While a menu is open, the screen is split under the status bar by the
 menu code itself (`Hud_SplitScreen`, or the timed loop at the start of
 `LevelUp_Update`).
 
+The window is 7 metatiles (112 pixels) wide, from the metatile at
+`scrollX` + $78, and 10 rows of 16 pixels from Y $30 (map rows 1-10).
+Each row is two tile rows of 14 tiles (`menuRowTiles`, `menuRowTiles2`),
+queued as one string per nametable when the window crosses into the
+other (`Menu_QueueRowTiles_Bank0`).  Its attribute bytes are the area's
+(`menuAttrs`, 4 columns by 6 rows) masked to palette 0 in the window's
+quadrants only: the window covers half of its first or last attribute
+column (`Menu_CheckAttrAlignment_Bank0`), and each row is the top or
+bottom half of its attribute byte.  Rows open from the top and close from
+the bottom; closing restores the closed row's quadrants and keeps palette
+0 in the half still covered.
+
+Menu cursors (`Menu_MoveCursor`) move when Up or Down is first pressed,
+then every 7 frames once held for 16 (checked with `tools/play.py`,
+holding Down in the pause menu: frames 0, 16, 23, 30, ...).
+
 ## Pause Menu
 
 `pauseState` in side view (`Pause_RunState`):
@@ -57,6 +73,13 @@ menu code itself (`Hud_SplitScreen`, or the timed loop at the start of
 | 6 | `Menu_ComputeAttrs_Bank0` |
 | 7 | `Menu_CloseRow_Bank0` |
 | 8 | `Menu_Close` |
+
+The menu lists the lives in reserve (`lives` - 1), the keys, the
+crystals still to place, and each owned spell with its cost at the
+current magic level, halved (the menu counts 2 meter units as 1: Shield
+shows 032 at level 1).  Spells not owned are blank rows; the arrow ($FA)
+skips them, wrapping around.  Opening the menu also lets the last spell
+be cast again (`spellLastCast`).
 
 On the overworld there is no window: Start pauses and mutes the sound
 (`Pause_OverworldMute`, `soundMute`), Start again resumes
@@ -85,7 +108,39 @@ Opened by `Hud_Update` when `experience` reaches `experienceNext`.
 
 Level costs are in `LevelUpCostHi`/`LevelUpCostLo`; the window shows them
 from the digit tables `LevelUpCostThousands`, `LevelUpCostHundreds` and
-`LevelUpCostTens`.
+`LevelUpCostTens`.  The cursor starts on the first stat (attack, magic,
+life) that can be raised and skips those that can't.  Choosing a stat
+plays the item fanfare, refills its meter (magic or life), raises it and
+draws its level bar one tile longer, blinking it (8 frames on, 8 off)
+while the fanfare plays; `experienceNext` becomes the cheapest next
+level.  At level 8 the 9000 experience buys a life (up to 127).
+
+Cancel sets `experienceNext` to the next cost above the current one
+(`Exp_UpdateAfterLevelUp`), so with enough experience the window opens
+again at once.  Checked with `tools/play.py` from North Castle with 250
+experience: Cancel moved `experienceNext` from 50 to 100 and then 200,
+reopening the window each time; with attack at level 8 and 9000
+experience, choosing attack added a life and left 0 experience.  When no
+cost is above `experienceNext`, Cancel is skipped (from the code).
+
+## Status Bar
+
+`Hud_Update` (each side view frame) opens the level up window when
+`experience` reaches `experienceNext`, then redraws the halves of the
+status bar flagged in `hudRedraw` (bit 7 the left half, bit 6 the right),
+one half per frame, alternating when both are (`hudHalf`), and only when
+`ppuBuffer0` has room:
+
+- left (`HudLeftTemplate`): the magic level, the attack level and the
+  magic meter;
+- right (`HudRightTemplate`): the life level, the life meter, the
+  experience and `experienceNext` (`Math_ToDigits`); the next level's
+  ones digit is not drawn (the name table's '0'; every cost is a
+  multiple of 50).
+
+A meter has one block per container: empty, or full per 32 units.  The
+remainder is shown by a sprite behind the background at the fill's end
+(`Hud_DrawMeterSprites`, sprites 62 and 63).
 
 ## Flute
 

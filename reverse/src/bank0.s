@@ -4022,86 +4022,98 @@ MeterSpriteXOffsets:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_Update:
-    lda     experience+1            ; $968D
+    lda     experience+1            ; $968D  experience - experienceNext
     sec                             ; $9690
     sbc     experienceNext+1        ; $9691
     lda     experience              ; $9694
     sbc     experienceNext          ; $9697
-    bcc     @loc_96A1               ; $969A
-    lda     #DIALOG_LEVEL_UP        ; $969C
+    bcc     @checkRoom              ; $969A  short of it
+    lda     #DIALOG_LEVEL_UP        ; $969C  enough: the level up window
     sta     dialogType              ; $969E
 
-@loc_96A1:
-    ldy     ppuBuffer0Len           ; $96A1
+@checkRoom:
+    ldy     ppuBuffer0Len           ; $96A1  room for a half (up to 24 bytes) in the buffer?
     cpy     #$08                    ; $96A4
-    bcs     Hud_SkipToMeterSprites  ; $96A6
+    bcs     Hud_SkipToMeterSprites  ; $96A6  no: only the meter sprites
 
+; ---------------------------------------------------------------------------
+; Hud_Draw
+;
+; Queue one half of the status bar in ppuBuffer0 at y: the half whose
+; hudRedraw bit is set (bit 7 magic, bit 6 life and experience), and when
+; both are, the one hudHalf prefers ($80 or $40, switched after each draw,
+; so the halves alternate).  Then the meter sprites.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Hud_Draw:
-    ldx     #$00                    ; $96A8
-    lda     hudHalf                 ; $96AA
-    bit     hudRedraw               ; $96AD
-    beq     Hud_CheckHalf           ; $96B0
-    bit     hudHalf                 ; $96B2
-    bpl     Hud_DrawRightHalf       ; $96B5
+    ldx     #$00                    ; $96A8  from the template's start
+    lda     hudHalf                 ; $96AA  the half preferred this frame
+    bit     hudRedraw               ; $96AD  (N, V: magic, life halves wanted)
+    beq     Hud_CheckHalf           ; $96B0  not wanted: the other one
+    bit     hudHalf                 ; $96B2  wanted: which is it?
+    bpl     Hud_DrawRightHalf       ; $96B5  bit 6: life and experience
 
 ; ---------------------------------------------------------------------------
 ; Hud_DrawLeftHalf
 ;
-; Queue the left half of the status bar (magic and attack levels and the
-; magic meter) from its template.
+; Queue the left half of the status bar from HudLeftTemplate: the magic
+; level after MAGIC- (PPU $204A), the attack level ($2062) and the magic
+; meter (from $2065): an empty block ($97) per container, filled ($C6) per
+; 32 units.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_DrawLeftHalf:
-    asl     hudRedraw               ; $96B7
+    asl     hudRedraw               ; $96B7  clear bit 7: magic drawn
     lsr     hudRedraw               ; $96BA
-    lda     HudLeftTemplate,x       ; $96BD
+    lda     HudLeftTemplate,x       ; $96BD  copy HudLeftTemplate
     sta     ppuBuffer0,y            ; $96C0
     iny                             ; $96C3
     inx                             ; $96C4
-    cpx     #$13                    ; $96C5
+    cpx     #$13                    ; $96C5  (19 bytes, with its $FF)
     bcc     Hud_DrawLeftHalf        ; $96C7
-    tya                             ; $96C9
+    tya                             ; $96C9  the end, for later
     pha                             ; $96CA
-    ldy     ppuBuffer0Len           ; $96CB
-    lda     statLevel               ; $96CE
+    ldy     ppuBuffer0Len           ; $96CB  the string's start
+    lda     statLevel               ; $96CE  attack level digit ($D0 = '0'),
     clc                             ; $96D1
     adc     #$D0                    ; $96D2
-    sta     ppuBuffer0+7,y          ; $96D4
-    lda     statLevel+STAT_MAGIC    ; $96D7
+    sta     ppuBuffer0+7,y          ; $96D4  bottom row (PPU $2062)
+    lda     statLevel+STAT_MAGIC    ; $96D7  magic level digit,
     clc                             ; $96DA
     adc     #$D0                    ; $96DB
-    sta     ppuBuffer0+3,y          ; $96DD
-    lda     statContainers          ; $96E0
+    sta     ppuBuffer0+3,y          ; $96DD  after MAGIC- (PPU $204A)
+    lda     statContainers          ; $96E0  magic containers:
     tax                             ; $96E3
-    clc                             ; $96E4
+    clc                             ; $96E4  from the last one back
     adc     ppuBuffer0Len           ; $96E5
     tay                             ; $96E8
     dey                             ; $96E9
-    lda     #$97                    ; $96EA
+    lda     #$97                    ; $96EA  empty blocks
 
 @loop:
     sta     ppuBuffer0+10,y         ; $96EC
     dey                             ; $96EF
     dex                             ; $96F0
     bne     @loop                   ; $96F1
-    iny                             ; $96F3
-    lda     statMeter               ; $96F4
+    iny                             ; $96F3  the first block (PPU $2065)
+    lda     statMeter               ; $96F4  magic as shown
     sta     statMeterDisplay        ; $96F7
-    lsr     a                       ; $96FA
+    lsr     a                       ; $96FA  / 32: full blocks
     lsr     a                       ; $96FB
     lsr     a                       ; $96FC
     lsr     a                       ; $96FD
     lsr     a                       ; $96FE
     sta     temp0                   ; $96FF
 
-@loc_9701:
-    dec     temp0                   ; $9701
+@fullBlocks:
+    dec     temp0                   ; $9701  each full block:
     bmi     Hud_FinishHalf          ; $9703
-    lda     #$C6                    ; $9705
+    lda     #$C6                    ; $9705  a full magic block
     sta     ppuBuffer0+10,y         ; $9707
     iny                             ; $970A
-    jmp     @loc_9701               ; $970B
+    jmp     @fullBlocks             ; $970B
 
 ; ---------------------------------------------------------------------------
 ; Hud_FinishHalf
@@ -4111,12 +4123,12 @@ Hud_DrawLeftHalf:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_FinishHalf:
-    lda     hudHalf                 ; $970E
+    lda     hudHalf                 ; $970E  prefer the other half next
     eor     #$C0                    ; $9711
     sta     hudHalf                 ; $9713
-    pla                             ; $9716
+    pla                             ; $9716  the end,
     tay                             ; $9717
-    dey                             ; $9718
+    dey                             ; $9718  at the $FF
     sty     ppuBuffer0Len           ; $9719
 
 ; ---------------------------------------------------------------------------
@@ -4137,95 +4149,98 @@ Hud_SkipToMeterSprites:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_CheckHalf:
-    bmi     Hud_DrawLeftHalf        ; $971F
-    bvc     Hud_SkipToMeterSprites  ; $9721
+    bmi     Hud_DrawLeftHalf        ; $971F  the magic half wanted?
+    bvc     Hud_SkipToMeterSprites  ; $9721  nor life: nothing
 
 ; ---------------------------------------------------------------------------
 ; Hud_DrawRightHalf
 ;
-; Queue the right half of the status bar (life level, experience, next
-; level and the life meter) from its template.
+; Queue the right half of the status bar from HudRightTemplate: the life
+; level after LIFE- ($2052), the life meter (from $206E, $C8 empty, $C7
+; full), the experience ($2076-$2079) and experienceNext's first three
+; digits ($207B-$207D); its ones digit is the name table's '0' (every
+; cost is a multiple of 50).  (Checked with a screenshot: 1079/0050.)
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_DrawRightHalf:
-    lda     hudRedraw               ; $9723
+    lda     hudRedraw               ; $9723  clear bit 6: life drawn
     and     #$BF                    ; $9726
     sta     hudRedraw               ; $9728
     ldy     ppuBuffer0Len           ; $972B
 
 @loop:
-    lda     HudRightTemplate,x      ; $972E
+    lda     HudRightTemplate,x      ; $972E  copy HudRightTemplate
     sta     ppuBuffer0,y            ; $9731
     iny                             ; $9734
     inx                             ; $9735
-    cpx     #$18                    ; $9736
+    cpx     #$18                    ; $9736  (24 bytes; its $FF is LevelUpCostHi's first byte)
     bcc     @loop                   ; $9738
-    tya                             ; $973A
+    tya                             ; $973A  the end, for later
     pha                             ; $973B
-    ldy     ppuBuffer0Len           ; $973C
-    lda     statLevel+STAT_LIFE     ; $973F
+    ldy     ppuBuffer0Len           ; $973C  the string's start
+    lda     statLevel+STAT_LIFE     ; $973F  life level digit,
     clc                             ; $9742
     adc     #$D0                    ; $9743
-    sta     ppuBuffer0+3,y          ; $9745
-    lda     experience              ; $9748
+    sta     ppuBuffer0+3,y          ; $9745  after LIFE- (PPU $2052)
+    lda     experience              ; $9748  experience as digits:
     sta     temp0                   ; $974B
     lda     experience+1            ; $974D
-    jsr     Math_Digit1000          ; $9750
+    jsr     Math_ToDigits           ; $9750  thousands in temp1, hundreds in temp0, tens in y, ones in a
     pha                             ; $9753
     tya                             ; $9754
     ldy     ppuBuffer0Len           ; $9755
-    sta     ppuBuffer0+17,y         ; $9758
+    sta     ppuBuffer0+17,y         ; $9758  (PPU $2076-$2079)
     lda     temp0                   ; $975B
     sta     ppuBuffer0+16,y         ; $975D
     lda     temp1                   ; $9760
     sta     ppuBuffer0+15,y         ; $9762
     pla                             ; $9765
     sta     ppuBuffer0+18,y         ; $9766
-    lda     experienceNext          ; $9769
+    lda     experienceNext          ; $9769  experienceNext,
     sta     temp0                   ; $976C
     lda     experienceNext+1        ; $976E
-    jsr     Math_Digit1000          ; $9771
+    jsr     Math_ToDigits           ; $9771  as digits
     tya                             ; $9774
     ldy     ppuBuffer0Len           ; $9775
-    sta     ppuBuffer0+22,y         ; $9778
+    sta     ppuBuffer0+22,y         ; $9778  its thousands, hundreds and tens (PPU $207B-$207D);
     lda     temp0                   ; $977B
-    sta     ppuBuffer0+21,y         ; $977D
+    sta     ppuBuffer0+21,y         ; $977D  the ones digit is always 0,
     lda     temp1                   ; $9780
-    sta     ppuBuffer0+20,y         ; $9782
+    sta     ppuBuffer0+20,y         ; $9782  left in the name table
     ldy     ppuBuffer0Len           ; $9785
-    lda     statContainers+STAT_METER_LIFE ; $9788
+    lda     statContainers+STAT_METER_LIFE ; $9788  heart containers:
     tax                             ; $978B
-    clc                             ; $978C
+    clc                             ; $978C  from the last one back
     adc     ppuBuffer0Len           ; $978D
     tay                             ; $9790
     dey                             ; $9791
-    lda     #$C8                    ; $9792
+    lda     #$C8                    ; $9792  empty blocks (from PPU $206E)
 
 @loop2:
     sta     ppuBuffer0+7,y          ; $9794
     dey                             ; $9797
     dex                             ; $9798
     bne     @loop2                  ; $9799
-    iny                             ; $979B
-    lda     statMeter+STAT_METER_LIFE ; $979C
+    iny                             ; $979B  the first block
+    lda     statMeter+STAT_METER_LIFE ; $979C  life as shown
     sta     statMeterDisplay+1      ; $979F
-    lsr     a                       ; $97A2
+    lsr     a                       ; $97A2  / 32: full blocks
     lsr     a                       ; $97A3
     lsr     a                       ; $97A4
     lsr     a                       ; $97A5
     lsr     a                       ; $97A6
     sta     temp0                   ; $97A7
 
-@loc_97A9:
-    dec     temp0                   ; $97A9
-    bmi     @loc_97B6               ; $97AB
-    lda     #$C7                    ; $97AD
+@fullBlocks:
+    dec     temp0                   ; $97A9  each full block:
+    bmi     @finish                 ; $97AB
+    lda     #$C7                    ; $97AD  a full life block
     sta     ppuBuffer0+7,y          ; $97AF
     iny                             ; $97B2
-    jmp     @loc_97A9               ; $97B3
+    jmp     @fullBlocks             ; $97B3
 
-@loc_97B6:
+@finish:
     jmp     Hud_FinishHalf          ; $97B6
 
 MeterSpritePtr:
@@ -4235,14 +4250,16 @@ MeterSpritePtr:
 ; ---------------------------------------------------------------------------
 ; Hud_DrawMeterSprites
 ;
-; Draw the two sprites that show the partly filled last block of the magic
-; and life meters (statMeterDisplay).
+; Draw the two sprites (oamBuffer $F8 and $FC) that mark the end of the
+; magic and life meters' fill, inside the last partly filled block: Y $0F,
+; X = the meter's left edge + meter / 4, palette 1, behind the
+; background.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_DrawMeterSprites:
-    ldx     #$01                    ; $97BB
-    lda     MeterSpritePtr          ; $97BD
+    ldx     #$01                    ; $97BB  life, then magic
+    lda     MeterSpritePtr          ; $97BD  at oamBuffer $F8 (sprites 62-63)
     sta     temp0                   ; $97C0
     lda     MeterSpritePtr+1        ; $97C2
     sta     temp1                   ; $97C5
@@ -4250,26 +4267,26 @@ Hud_DrawMeterSprites:
 @loop:
     txa                             ; $97C7
     pha                             ; $97C8
-    asl     a                       ; $97C9
+    asl     a                       ; $97C9  x 4: its sprite
     asl     a                       ; $97CA
     tay                             ; $97CB
     txa                             ; $97CC
-    and     #$01                    ; $97CD
+    and     #$01                    ; $97CD  (meter 0 magic, 1 life)
     tax                             ; $97CF
-    lda     #$0F                    ; $97D0
+    lda     #$0F                    ; $97D0  Y $0F
     sta     (temp0),y               ; $97D2
     iny                             ; $97D4
-    lda     MeterSpriteTiles,x      ; $97D5
+    lda     MeterSpriteTiles,x      ; $97D5  the meter's tip tile
     sta     (temp0),y               ; $97D8
     iny                             ; $97DA
-    lda     #$21                    ; $97DB
+    lda     #$21                    ; $97DB  palette 1, behind the background
     sta     (temp0),y               ; $97DD
     iny                             ; $97DF
-    lda     statMeterDisplay,x      ; $97E0
+    lda     statMeterDisplay,x      ; $97E0  X: meter / 4 (8 pixels per 32)
     lsr     a                       ; $97E3
     lsr     a                       ; $97E4
     clc                             ; $97E5
-    adc     MeterSpriteXOffsets,x   ; $97E6
+    adc     MeterSpriteXOffsets,x   ; $97E6  + the meter's left edge
     sta     (temp0),y               ; $97E9
     pla                             ; $97EB
     tax                             ; $97EC
@@ -4953,46 +4970,46 @@ Scroll_RequestAttrColumn:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_DrawItems:
-    lda     scrollX                 ; $9B19
+    lda     scrollX                 ; $9B19  the scroll's fine X
     and     #$0F                    ; $9B1C
     sta     temp1                   ; $9B1E
-    cmp     #$08                    ; $9B20
-    bcs     @loc_9B2C               ; $9B22
-    lda     #$98                    ; $9B24
+    cmp     #$08                    ; $9B20  in the first or second half of a metatile:
+    bcs     @secondHalf             ; $9B22
+    lda     #$98                    ; $9B24  X $98 - fine
     sec                             ; $9B26
     sbc     temp1                   ; $9B27
-    jmp     @loc_9B30               ; $9B29
+    jmp     @setX                   ; $9B29
 
-@loc_9B2C:
-    lda     #$A8                    ; $9B2C
+@secondHalf:
+    lda     #$A8                    ; $9B2C  X $A8 - fine (carry set)
     sbc     temp1                   ; $9B2E
 
-@loc_9B30:
-    sta     temp1                   ; $9B30
-    ldy     #$07                    ; $9B32
+@setX:
+    sta     temp1                   ; $9B30  the first item's X
+    ldy     #$07                    ; $9B32  each item, 7 down to 0:
 
 @loop:
-    lda     itemOwned,y             ; $9B34
-    beq     @loc_9B56               ; $9B37
-    tya                             ; $9B39
+    lda     itemOwned,y             ; $9B34  owned?
+    beq     @next                   ; $9B37
+    tya                             ; $9B39  its sprite: 1 + item
     asl     a                       ; $9B3A
     asl     a                       ; $9B3B
     pha                             ; $9B3C
     tax                             ; $9B3D
-    lda     #$B7                    ; $9B3E
+    lda     #$B7                    ; $9B3E  Y $B7
     sta     oamBuffer+4,x           ; $9B40
-    tya                             ; $9B43
+    tya                             ; $9B43  tile $8C + item x 2
     asl     a                       ; $9B44
     adc     #$8C                    ; $9B45
     sta     oamBuffer+5,x           ; $9B47
-    lda     #$01                    ; $9B4A
+    lda     #$01                    ; $9B4A  palette 1
     sta     oamBuffer+6,x           ; $9B4C
-    pla                             ; $9B4F
+    pla                             ; $9B4F  X: first + item x 8
     asl     a                       ; $9B50
     adc     temp1                   ; $9B51
     sta     oamBuffer+7,x           ; $9B53
 
-@loc_9B56:
+@next:
     dey                             ; $9B56
     bpl     @loop                   ; $9B57
     rts                             ; $9B59
@@ -5069,28 +5086,28 @@ LevelUpBarPtrs:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_Update:
-    ldy     #$50                    ; $9D54
+    ldy     #$50                    ; $9D54  a delay, past the vertical blank
 
 @loop:
     dey                             ; $9D56
     bne     @loop                   ; $9D57
 
 @loop2:
-    bit     PPUSTATUS               ; $9D59
+    bit     PPUSTATUS               ; $9D59  wait for the sprite 0 hit
     bvc     @loop2                  ; $9D5C
-    lda     ppuCtrlShadow           ; $9D5E
+    lda     ppuCtrlShadow           ; $9D5E  the playfield's nametable
     ora     playfieldNametable      ; $9D60
     sta     ppuCtrlShadow           ; $9D63
-    ldx     ppuScrollX              ; $9D65
-    ldy     #$10                    ; $9D67
+    ldx     ppuScrollX              ; $9D65  and scroll
+    ldy     #$10                    ; $9D67  a short delay, to the end of the line
 
 @loop3:
     dey                             ; $9D69
     bne     @loop3                  ; $9D6A
-    sta     PPUCTRL                 ; $9D6C
+    sta     PPUCTRL                 ; $9D6C  below the status bar
     stx     PPUSCROLL               ; $9D6F
-    sty     PPUSCROLL               ; $9D72
-    lda     pauseState              ; $9D75
+    sty     PPUSCROLL               ; $9D72  (Y 0)
+    lda     pauseState              ; $9D75  the window's step
     jsr     JumpTable               ; $9D78
 ; (inline jump table)
     .word   Menu_Skip               ; $9D7B
@@ -5115,18 +5132,18 @@ LevelUp_Update:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_Update:
-    lda     pauseState              ; $9D91
+    lda     pauseState              ; $9D91  paused?
     bne     Pause_RunState          ; $9D94
-    lda     joypadHeldPrev          ; $9D96
+    lda     joypadHeldPrev          ; $9D96  Start:
     and     #$10                    ; $9D99
     sta     temp0                   ; $9D9B
-    lda     joypadHeld              ; $9D9D
+    lda     joypadHeld              ; $9D9D  held now
     and     #$10                    ; $9D9F
     beq     Pause_DoNothing         ; $9DA1
-    cmp     temp0                   ; $9DA3
+    cmp     temp0                   ; $9DA3  but not last frame?
     beq     Pause_DoNothing         ; $9DA5
-    inc     pauseState              ; $9DA7
-    ldy     #$00                    ; $9DAA
+    inc     pauseState              ; $9DA7  yes: pause (step 1)
+    ldy     #$00                    ; $9DAA  a delay, past the vertical blank
 
 @loop:
     nop                             ; $9DAC
@@ -5142,20 +5159,20 @@ Pause_Update:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Hud_SplitScreen:
-    bit     PPUSTATUS               ; $9DB0
+    bit     PPUSTATUS               ; $9DB0  wait for the sprite 0 hit
     bvc     Hud_SplitScreen         ; $9DB3
-    lda     ppuCtrlShadow           ; $9DB5
+    lda     ppuCtrlShadow           ; $9DB5  the playfield's nametable
     ora     playfieldNametable      ; $9DB7
     sta     ppuCtrlShadow           ; $9DBA
-    ldx     ppuScrollX              ; $9DBC
-    ldy     #$10                    ; $9DBE
+    ldx     ppuScrollX              ; $9DBC  and scroll
+    ldy     #$10                    ; $9DBE  a short delay, to the end of the line
 
 @loop:
     dey                             ; $9DC0
     bne     @loop                   ; $9DC1
-    sta     PPUCTRL                 ; $9DC3
+    sta     PPUCTRL                 ; $9DC3  below the status bar
     stx     PPUSCROLL               ; $9DC6
-    sty     PPUSCROLL               ; $9DC9
+    sty     PPUSCROLL               ; $9DC9  (Y 0)
 
 ; ---------------------------------------------------------------------------
 ; Pause_DoNothing
@@ -5179,16 +5196,16 @@ Pause_DoNothing:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_RunState:
-    jsr     Hud_SplitScreen         ; $9DCD
-    lda     pauseState              ; $9DD0
+    jsr     Hud_SplitScreen         ; $9DCD  split the screen
+    lda     pauseState              ; $9DD0  steps 5-6:
     cmp     #$05                    ; $9DD3
-    bcc     @loc_9DDE               ; $9DD5
+    bcc     @step                   ; $9DD5
     cmp     #$07                    ; $9DD7
-    bcs     @loc_9DDE               ; $9DD9
-    jsr     Menu_DrawItems          ; $9DDB
+    bcs     @step                   ; $9DD9
+    jsr     Menu_DrawItems          ; $9DDB  the item sprites
 
-@loc_9DDE:
-    lda     pauseState              ; $9DDE
+@step:
+    lda     pauseState              ; $9DDE  this step
     jsr     JumpTable               ; $9DE1
 ; (inline jump table)
     .word   Pause_DoNothing         ; $9DE4
@@ -5204,40 +5221,41 @@ Pause_RunState:
 ; ---------------------------------------------------------------------------
 ; Menu_MoveCursor
 ;
-; Move a menu cursor with Up and Down, repeating while held
-; (menuRepeatTimer).
+; Return carry set (and a = Up/Down held) when a menu cursor should move:
+; when Up or Down is first pressed, then every 7 frames after it has been
+; held 16 (menuRepeatTimer).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_MoveCursor:
-    lda     joypadHeldPrev          ; $9DF6
+    lda     joypadHeldPrev          ; $9DF6  Up/Down held last frame
     and     #$0C                    ; $9DF9
     sta     temp1                   ; $9DFB
     lda     #$0C                    ; $9DFD
     sta     temp0                   ; $9DFF
-    lda     joypadHeld              ; $9E01
+    lda     joypadHeld              ; $9E01  Up/Down held now?
     and     #$0C                    ; $9E03
     bit     temp0                   ; $9E05
-    beq     @loc_9E1D               ; $9E07
-    cmp     temp1                   ; $9E09
-    bne     @loc_9E16               ; $9E0B
-    dec     menuRepeatTimer         ; $9E0D
-    bne     @loc_9E1D               ; $9E10
+    beq     @noMove                 ; $9E07  neither: no move
+    cmp     temp1                   ; $9E09  the same as last frame?
+    bne     @first                  ; $9E0B  no: move now
+    dec     menuRepeatTimer         ; $9E0D  held: count down
+    bne     @noMove                 ; $9E10  not yet
 ; (code below not executed in the test movies)
-    ldy     #$07                    ; $9E12
-    bne     @loc_9E18               ; $9E14
+    ldy     #$07                    ; $9E12  then repeat every 7 frames
+    bne     @setTimer               ; $9E14
 ; (end of code not executed in the test movies)
 
-@loc_9E16:
-    ldy     #$10                    ; $9E16
+@first:
+    ldy     #$10                    ; $9E16  16 frames before repeating
 
-@loc_9E18:
+@setTimer:
     sty     menuRepeatTimer         ; $9E18
-    sec                             ; $9E1B
+    sec                             ; $9E1B  carry set: move (a = Up/Down)
     rts                             ; $9E1C
 
-@loc_9E1D:
-    clc                             ; $9E1D
+@noMove:
+    clc                             ; $9E1D  carry clear: no move
     rts                             ; $9E1E
 
 LevelUpCursorString:
@@ -5267,75 +5285,78 @@ LevelUpCostThousands:
 ; ---------------------------------------------------------------------------
 ; LevelUp_ChooseStat
 ;
-; Level up window step 5: move levelUpCursor among the stats that
-; experience can raise (attack, magic, life) and Cancel with Up and Down,
-; drawing the cursor.  On Start, raise the chosen stat (or, at level 8,
-; add a life), take its cost from experience, recompute experienceNext
-; and redraw the level bars; or on Cancel just recompute experienceNext.
+; Level up window step 5: Up and Down move levelUpCursor among the stats
+; the experience can raise (attack 0, magic 1, life 2) and Cancel (3),
+; skipping the others, and redraw the four arrow places (rows 8, 11, 16
+; and 21 of the nametable).  Start on a stat plays the fanfare, refills
+; that meter (magic or life), takes the cost from experience, raises the
+; level (at level 8, adds a life instead, up to 127), sets experienceNext
+; to the cheapest next level and redraws the level bars.  Start on Cancel
+; sets experienceNext to the next cost above it (Exp_UpdateAfterLevelUp).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_ChooseStat:
-    jsr     Menu_MoveCursor         ; $9E7A
-    bcs     @loc_9E82               ; $9E7D
-    jmp     @loc_9F3D               ; $9E7F
+    jsr     Menu_MoveCursor         ; $9E7A  Up or Down?
+    bcs     @move                   ; $9E7D
+    jmp     @checkStart             ; $9E7F  no: check Start
 
-@loc_9E82:
-    and     #$08                    ; $9E82
-    ldy     levelUpCursor           ; $9E84
+@move:
+    and     #$08                    ; $9E82  Up?
+    ldy     levelUpCursor           ; $9E84  the next choice down
     iny                             ; $9E87
-    bit     temp0                   ; $9E88
-    beq     @loc_9E92               ; $9E8A
-    dey                             ; $9E8C
+    bit     temp0                   ; $9E88  (temp0 = $0C from Menu_MoveCursor)
+    beq     @wrap                   ; $9E8A  Down
+    dey                             ; $9E8C  Up: the one above
     dey                             ; $9E8D
-    bpl     @loc_9E92               ; $9E8E
-    ldy     #$03                    ; $9E90
+    bpl     @wrap                   ; $9E8E
+    ldy     #$03                    ; $9E90  above attack: Cancel
 
-@loc_9E92:
-    cpy     #$04                    ; $9E92
-    bcc     @loc_9E98               ; $9E94
+@wrap:
+    cpy     #$04                    ; $9E92  below Cancel?
+    bcc     @setCursor              ; $9E94
 ; (code below not executed in the test movies)
-    ldy     #$00                    ; $9E96
+    ldy     #$00                    ; $9E96  back to attack
 ; (end of code not executed in the test movies)
 
-@loc_9E98:
+@setCursor:
     sty     levelUpCursor           ; $9E98
-    cpy     #$03                    ; $9E9B
-    beq     @loc_9EBA               ; $9E9D
-    tya                             ; $9E9F
+    cpy     #$03                    ; $9E9B  Cancel?
+    beq     @cancel                 ; $9E9D
+    tya                             ; $9E9F  a stat: enough experience to raise it?
     asl     a                       ; $9EA0
     asl     a                       ; $9EA1
     asl     a                       ; $9EA2
-    adc     statLevel,y             ; $9EA3
+    adc     statLevel,y             ; $9EA3  stat x 8 + level
     tax                             ; $9EA6
     lda     experience+1            ; $9EA7
     sec                             ; $9EAA
     sbc     LevelUpCostLo,x         ; $9EAB
     lda     experience              ; $9EAE
     sbc     LevelUpCostHi,x         ; $9EB1
-    lda     joypadHeld              ; $9EB4
-    bcc     @loc_9E82               ; $9EB6
-    bcs     @loc_9ECA               ; $9EB8
+    lda     joypadHeld              ; $9EB4  (keep moving the same way)
+    bcc     @move                   ; $9EB6  no: skip it
+    bcs     @drawCursor             ; $9EB8  yes: there
 
-@loc_9EBA:
-    jsr     Exp_FindLevelUps        ; $9EBA
+@cancel:
+    jsr     Exp_FindLevelUps        ; $9EBA  Cancel: any stat costing more than experienceNext?
     lda     temp2                   ; $9EBD
     ora     temp3                   ; $9EBF
     ora     temp4                   ; $9EC1
-    bne     @loc_9ECA               ; $9EC3
+    bne     @drawCursor             ; $9EC3  yes: Cancel can wait for it
 ; (code below not executed in the test movies)
-    lda     joypadHeld              ; $9EC5
-    jmp     @loc_9E82               ; $9EC7
+    lda     joypadHeld              ; $9EC5  no: skip Cancel
+    jmp     @move                   ; $9EC7
 ; (end of code not executed in the test movies)
 
-@loc_9ECA:
-    lda     #$10                    ; $9ECA
+@drawCursor:
+    lda     #$10                    ; $9ECA  the menu cursor sound
     sta     sfxRequest+3            ; $9ECC
-    ldy     #$00                    ; $9ECE
+    ldy     #$00                    ; $9ECE  the four cursor places, blank:
     ldx     #$00                    ; $9ED0
 
 @loop:
-    lda     LevelUpCursorString,x   ; $9ED2
+    lda     LevelUpCursorString,x   ; $9ED2  4-byte strings [address, 1, $F4]
     sta     ppuBuffer0,y            ; $9ED5
     inx                             ; $9ED8
     txa                             ; $9ED9
@@ -5344,159 +5365,160 @@ LevelUp_ChooseStat:
     iny                             ; $9EDD
     cpy     #$10                    ; $9EDE
     bcc     @loop                   ; $9EE0
-    lda     scrollX                 ; $9EE2
+    lda     scrollX                 ; $9EE2  the window's column: X + $A8
     clc                             ; $9EE5
     adc     #$A8                    ; $9EE6
     and     #$F0                    ; $9EE8
     sta     temp1                   ; $9EEA
-    lda     scrollXHi               ; $9EEC
+    lda     scrollXHi               ; $9EEC  on its nametable
     adc     #$00                    ; $9EEF
     and     #$01                    ; $9EF1
     asl     a                       ; $9EF3
     asl     a                       ; $9EF4
     adc     #$21                    ; $9EF5
-    sta     ppuBuffer0              ; $9EF7
+    sta     ppuBuffer0              ; $9EF7  ($21xx or $25xx)
     sta     ppuBuffer0+4            ; $9EFA
     sta     ppuBuffer0+8            ; $9EFD
     sta     ppuBuffer0+12           ; $9F00
-    lda     temp1                   ; $9F03
+    lda     temp1                   ; $9F03  tile column
     lsr     a                       ; $9F05
     lsr     a                       ; $9F06
     lsr     a                       ; $9F07
     adc     #$00                    ; $9F08
-    sta     ppuBuffer0+1            ; $9F0A
+    sta     ppuBuffer0+1            ; $9F0A  Cancel's row
     clc                             ; $9F0D
-    adc     #$60                    ; $9F0E
+    adc     #$60                    ; $9F0E  3 rows down: attack
     sta     ppuBuffer0+5            ; $9F10
     clc                             ; $9F13
-    adc     #$A0                    ; $9F14
+    adc     #$A0                    ; $9F14  5 more: magic
     sta     ppuBuffer0+9            ; $9F16
     inc     ppuBuffer0+8            ; $9F19
     clc                             ; $9F1C
-    adc     #$A0                    ; $9F1D
+    adc     #$A0                    ; $9F1D  5 more: life
     sta     ppuBuffer0+13           ; $9F1F
     inc     ppuBuffer0+12           ; $9F22
-    lda     #$FF                    ; $9F25
+    lda     #$FF                    ; $9F25  end
     sta     ppuBuffer0+16           ; $9F27
-    ldy     levelUpCursor           ; $9F2A
-    iny                             ; $9F2D
+    ldy     levelUpCursor           ; $9F2A  the cursor's place:
+    iny                             ; $9F2D  Cancel first (0), then the stats (1-3)
     cpy     #$04                    ; $9F2E
-    bne     @loc_9F34               ; $9F30
+    bne     @setArrow               ; $9F30
     ldy     #$00                    ; $9F32
 
-@loc_9F34:
+@setArrow:
     tya                             ; $9F34
     asl     a                       ; $9F35
     asl     a                       ; $9F36
     tay                             ; $9F37
-    lda     #$FB                    ; $9F38
+    lda     #$FB                    ; $9F38  the arrow
     sta     ppuBuffer0+3,y          ; $9F3A
 
-@loc_9F3D:
-    lda     joypadHeld              ; $9F3D
+@checkStart:
+    lda     joypadHeld              ; $9F3D  Start
     and     #$10                    ; $9F3F
-    bit     joypadHeldPrev          ; $9F41
-    bne     @done                   ; $9F44
+    bit     joypadHeldPrev          ; $9F41  held last frame?
+    bne     @done                   ; $9F44  yes: wait
     and     #$10                    ; $9F46
-    beq     @done                   ; $9F48
-    ldx     levelUpCursor           ; $9F4A
+    beq     @done                   ; $9F48  not pressed
+    ldx     levelUpCursor           ; $9F4A  Cancel?
     cpx     #$03                    ; $9F4D
-    beq     @loc_9FBD               ; $9F4F
-    lda     #$10                    ; $9F51
+    beq     @chooseCancel           ; $9F4F
+    lda     #$10                    ; $9F51  the item fanfare
     sta     musicRequest            ; $9F53
-    dex                             ; $9F55
-    bmi     @loc_9F5B               ; $9F56
-    jsr     Stat_FillMeter          ; $9F58
+    dex                             ; $9F55  magic or life:
+    bmi     @payCost                ; $9F56
+    jsr     Stat_FillMeter          ; $9F58  refill that meter
 
-@loc_9F5B:
+@payCost:
     inx                             ; $9F5B
-    txa                             ; $9F5C
+    txa                             ; $9F5C  its cost: stat x 8 + level
     asl     a                       ; $9F5D
     asl     a                       ; $9F5E
     asl     a                       ; $9F5F
     adc     statLevel,x             ; $9F60
     tay                             ; $9F63
-    lda     experience+1            ; $9F64
+    lda     experience+1            ; $9F64  experience - cost
     sec                             ; $9F67
     sbc     LevelUpCostLo,y         ; $9F68
     sta     experience+1            ; $9F6B
     lda     experience              ; $9F6E
     sbc     LevelUpCostHi,y         ; $9F71
     sta     experience              ; $9F74
-    ldx     levelUpCursor           ; $9F77
+    ldx     levelUpCursor           ; $9F77  already level 8?
     lda     statLevel,x             ; $9F7A
     cmp     #$08                    ; $9F7D
-    bcs     @loc_9FC3               ; $9F7F
+    bcs     @extraLife              ; $9F7F  yes: a life instead
     ldx     levelUpCursor           ; $9F81
-    inc     statLevel,x             ; $9F84
+    inc     statLevel,x             ; $9F84  raise the stat
 
-@loc_9F87:
-    lda     #$01                    ; $9F87
+@updateNext:
+    lda     #$01                    ; $9F87  all three stats:
     sta     temp2                   ; $9F89
     sta     temp3                   ; $9F8B
     sta     temp4                   ; $9F8D
-    jsr     Exp_ComputeNextOfLevelUps ; $9F8F
-    ldx     #$02                    ; $9F92
+    jsr     Exp_ComputeNextOfLevelUps ; $9F8F  experienceNext = the cheapest
+    ldx     #$02                    ; $9F92  redraw the three level bars:
 
 @loop2:
-    txa                             ; $9F94
+    txa                             ; $9F94  its row in sramMenuText
     asl     a                       ; $9F95
     tay                             ; $9F96
     lda     LevelUpBarPtrs,y        ; $9F97
     sta     temp0                   ; $9F9A
     lda     LevelUpBarPtrs+1,y      ; $9F9C
     sta     temp1                   ; $9F9F
-    lda     statLevel,x             ; $9FA1
+    lda     statLevel,x             ; $9FA1  the stat's level
     sta     temp2                   ; $9FA4
-    ldy     #$07                    ; $9FA6
+    ldy     #$07                    ; $9FA6  8 tiles:
 
 @loop3:
-    lda     #$F4                    ; $9FA8
-    cpy     temp2                   ; $9FAA
-    bcs     @loc_9FB1               ; $9FAC
-    lda     LevelUpBarTiles,x       ; $9FAE
+    lda     #$F4                    ; $9FA8  blank
+    cpy     temp2                   ; $9FAA  past the level?
+    bcs     @setBarTile             ; $9FAC
+    lda     LevelUpBarTiles,x       ; $9FAE  no: the stat's bar tile
 
-@loc_9FB1:
+@setBarTile:
     sta     (temp0),y               ; $9FB1
     dey                             ; $9FB3
     bpl     @loop3                  ; $9FB4
     dex                             ; $9FB6
     bpl     @loop2                  ; $9FB7
 
-@loc_9FB9:
-    inc     pauseState              ; $9FB9
+@nextStep:
+    inc     pauseState              ; $9FB9  next step
 
 @done:
     rts                             ; $9FBC
 
-@loc_9FBD:
-    jsr     Exp_UpdateAfterLevelUp  ; $9FBD
-    jmp     @loc_9FB9               ; $9FC0
+@chooseCancel:
+    jsr     Exp_UpdateAfterLevelUp  ; $9FBD  Cancel: experienceNext = the next cost above it
+    jmp     @nextStep               ; $9FC0
 ; (code below not executed in the test movies)
 
-@loc_9FC3:
-    inc     lives                   ; $9FC3
-    bpl     @loc_9F87               ; $9FC6
+@extraLife:
+    inc     lives                   ; $9FC3  an extra life,
+    bpl     @updateNext             ; $9FC6  at most 127
     dec     lives                   ; $9FC8
-    jmp     @loc_9F87               ; $9FCB
+    jmp     @updateNext             ; $9FCB
 ; (end of code not executed in the test movies)
 
 ; ---------------------------------------------------------------------------
 ; LevelUp_FillText
 ;
-; Level up window step 2: for each stat, write its next level cost (three
-; digits from LevelUpCostThousands/Hundreds/Tens) into sramMenuText, and
-; the prompt rows (LevelUpPromptRows) where experience is enough; the
-; cursor starts on the last stat that can be raised.  Then draw each
-; stat's level bar (LevelUpBarTiles).
+; Level up window step 2: for each stat, write its next level's cost
+; (three digits from LevelUpCostThousands/Hundreds/Tens; the ones '0' is
+; in the template) into sramMenuText, and its "WILL GO UP" rows
+; (LevelUpPromptRows) where experience is enough; the cursor starts on the
+; first stat (attack, magic, life) that can be raised.  Then draw each
+; stat's level bar (LevelUpBarTiles: one tile per level).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_FillText:
-    ldx     #$02                    ; $9FCE
+    ldx     #$02                    ; $9FCE  each stat, life down to attack:
 
 @loop:
-    txa                             ; $9FD0
+    txa                             ; $9FD0  its two prompt rows
     asl     a                       ; $9FD1
     tay                             ; $9FD2
     lda     LevelUpPromptPtrs,y     ; $9FD3
@@ -5509,20 +5531,20 @@ LevelUp_FillText:
     sta     temp3                   ; $9FE5
     txa                             ; $9FE7
     pha                             ; $9FE8
-    asl     a                       ; $9FE9
+    asl     a                       ; $9FE9  its cost: stat x 8 + level
     asl     a                       ; $9FEA
     asl     a                       ; $9FEB
     adc     statLevel,x             ; $9FEC
     pha                             ; $9FEF
     tay                             ; $9FF0
-    lda     experience+1            ; $9FF1
+    lda     experience+1            ; $9FF1  enough experience?
     sec                             ; $9FF4
     sbc     LevelUpCostLo,y         ; $9FF5
     lda     experience              ; $9FF8
     sbc     LevelUpCostHi,y         ; $9FFB
-    bcc     @loc_A012               ; $9FFE
-    stx     levelUpCursor           ; $A000
-    ldy     #$0D                    ; $A003
+    bcc     @cost                   ; $9FFE  no
+    stx     levelUpCursor           ; $A000  yes: the cursor starts here (ending on the first such)
+    ldy     #$0D                    ; $A003  "WILL GO UP" rows
 
 @loop2:
     lda     LevelUpPromptRows,y     ; $A005
@@ -5532,49 +5554,49 @@ LevelUp_FillText:
     dey                             ; $A00F
     bpl     @loop2                  ; $A010
 
-@loc_A012:
-    pla                             ; $A012
+@cost:
+    pla                             ; $A012  the cost's digits (the ones '0' is in the template)
     tax                             ; $A013
     ldy     #$01                    ; $A014
-    lda     LevelUpCostThousands - 1,x ; $A016
+    lda     LevelUpCostThousands - 1,x ; $A016  thousands,
     sta     (temp0),y               ; $A019
     iny                             ; $A01B
-    lda     LevelUpCostHundreds - 1,x ; $A01C
+    lda     LevelUpCostHundreds - 1,x ; $A01C  hundreds,
     sta     (temp0),y               ; $A01F
     iny                             ; $A021
-    lda     LevelUpCostTens - 1,x   ; $A022
+    lda     LevelUpCostTens - 1,x   ; $A022  tens
     sta     (temp0),y               ; $A025
     pla                             ; $A027
     tax                             ; $A028
     dex                             ; $A029
     bpl     @loop                   ; $A02A
-    ldx     #$02                    ; $A02C
+    ldx     #$02                    ; $A02C  the three level bars:
 
 @loop3:
-    txa                             ; $A02E
+    txa                             ; $A02E  its row in sramMenuText
     asl     a                       ; $A02F
     tay                             ; $A030
     lda     LevelUpBarPtrs,y        ; $A031
     sta     temp0                   ; $A034
     lda     LevelUpBarPtrs+1,y      ; $A036
     sta     temp1                   ; $A039
-    lda     statLevel,x             ; $A03B
+    lda     statLevel,x             ; $A03B  the stat's level
     sta     temp2                   ; $A03E
-    ldy     #$07                    ; $A040
+    ldy     #$07                    ; $A040  8 tiles:
 
 @loop4:
-    lda     #$F4                    ; $A042
-    cpy     temp2                   ; $A044
-    bcs     @loc_A04B               ; $A046
-    lda     LevelUpBarTiles,x       ; $A048
+    lda     #$F4                    ; $A042  blank
+    cpy     temp2                   ; $A044  past the level?
+    bcs     @setBarTile             ; $A046
+    lda     LevelUpBarTiles,x       ; $A048  no: the stat's bar tile
 
-@loc_A04B:
+@setBarTile:
     sta     (temp0),y               ; $A04B
     dey                             ; $A04D
     bpl     @loop4                  ; $A04E
     dex                             ; $A050
     bpl     @loop3                  ; $A051
-    inc     pauseState              ; $A053
+    inc     pauseState              ; $A053  next step
     rts                             ; $A056
 
 ; ---------------------------------------------------------------------------
@@ -5586,75 +5608,92 @@ LevelUp_FillText:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Exp_ComputeNext:
-    lda     #$FF                    ; $A057
+    lda     #$FF                    ; $A057  from $FFFF,
     sta     experienceNext          ; $A059
     sta     experienceNext+1        ; $A05C
-    ldx     #$02                    ; $A05F
+    ldx     #$02                    ; $A05F  each stat:
 
 @loop:
-    txa                             ; $A061
+    txa                             ; $A061  its next cost
     asl     a                       ; $A062
     asl     a                       ; $A063
     asl     a                       ; $A064
     adc     statLevel,x             ; $A065
     tay                             ; $A068
-    lda     LevelUpCostLo,y         ; $A069
+    lda     LevelUpCostLo,y         ; $A069  cheaper?
     sec                             ; $A06C
     sbc     experienceNext+1        ; $A06D
     lda     LevelUpCostHi,y         ; $A070
     sbc     experienceNext          ; $A073
-    bcs     @loc_A084               ; $A076
-    lda     LevelUpCostHi,y         ; $A078
+    bcs     @next                   ; $A076  no
+    lda     LevelUpCostHi,y         ; $A078  yes: take it
     sta     experienceNext          ; $A07B
     lda     LevelUpCostLo,y         ; $A07E
     sta     experienceNext+1        ; $A081
 
-@loc_A084:
+@next:
     dex                             ; $A084
     bpl     @loop                   ; $A085
     rts                             ; $A087
 
+; ---------------------------------------------------------------------------
+; Exp_UpdateAfterLevelUp
+;
+; After Cancel in the level up window: set experienceNext to the
+; cheapest cost above the current experienceNext (Exp_FindLevelUps), so
+; the window waits for the next one.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Exp_UpdateAfterLevelUp:
-    jsr     Exp_FindLevelUps        ; $A088
+    jsr     Exp_FindLevelUps        ; $A088  the stats costing more than experienceNext
 
+; ---------------------------------------------------------------------------
+; Exp_ComputeNextOfLevelUps
+;
+; Set experienceNext to the cheapest next level among the stats flagged
+; in temp2-temp4 (all three if none is).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Exp_ComputeNextOfLevelUps:
-    lda     temp2                   ; $A08B
+    lda     temp2                   ; $A08B  none?
     ora     temp3                   ; $A08D
     ora     temp4                   ; $A08F
-    bne     @loc_A099               ; $A091
+    bne     @find                   ; $A091
 ; (code below not executed in the test movies)
-    inc     temp2                   ; $A093
+    inc     temp2                   ; $A093  then all three
     inc     temp3                   ; $A095
     inc     temp4                   ; $A097
 ; (end of code not executed in the test movies)
 
-@loc_A099:
-    lda     #$FF                    ; $A099
+@find:
+    lda     #$FF                    ; $A099  from $FFFF,
     sta     experienceNext          ; $A09B
     sta     experienceNext+1        ; $A09E
-    ldx     #$02                    ; $A0A1
+    ldx     #$02                    ; $A0A1  each flagged stat:
 
 @loop:
     lda     temp2,x                 ; $A0A3
-    beq     @loc_A0CA               ; $A0A5
-    txa                             ; $A0A7
+    beq     @next                   ; $A0A5
+    txa                             ; $A0A7  its next cost
     asl     a                       ; $A0A8
     asl     a                       ; $A0A9
     asl     a                       ; $A0AA
     adc     statLevel,x             ; $A0AB
     tay                             ; $A0AE
-    lda     LevelUpCostLo,y         ; $A0AF
+    lda     LevelUpCostLo,y         ; $A0AF  cheaper?
     sec                             ; $A0B2
     sbc     experienceNext+1        ; $A0B3
     lda     LevelUpCostHi,y         ; $A0B6
     sbc     experienceNext          ; $A0B9
-    bcs     @loc_A0CA               ; $A0BC
-    lda     LevelUpCostHi,y         ; $A0BE
+    bcs     @next                   ; $A0BC  no
+    lda     LevelUpCostHi,y         ; $A0BE  yes: take it
     sta     experienceNext          ; $A0C1
     lda     LevelUpCostLo,y         ; $A0C4
     sta     experienceNext+1        ; $A0C7
 
-@loc_A0CA:
+@next:
     dex                             ; $A0CA
     bpl     @loop                   ; $A0CB
     rts                             ; $A0CD
@@ -5662,33 +5701,33 @@ Exp_ComputeNextOfLevelUps:
 ; ---------------------------------------------------------------------------
 ; Exp_FindLevelUps
 ;
-; For each stat, set temp2 + stat to 1 if experience is enough to raise
-; it.  Exp_UpdateAfterLevelUp then sets experienceNext to the cheapest of
-; those (Exp_ComputeNextOfLevelUps).
+; Flag (temp2 + stat = 1) each stat whose next level costs more than
+; experienceNext.  Exp_UpdateAfterLevelUp then sets experienceNext to the
+; cheapest of those (Exp_ComputeNextOfLevelUps).
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Exp_FindLevelUps:
-    ldx     #$02                    ; $A0CE
+    ldx     #$02                    ; $A0CE  each stat:
 
 @loop:
-    lda     #$00                    ; $A0D0
+    lda     #$00                    ; $A0D0  not flagged
     sta     temp2,x                 ; $A0D2
-    txa                             ; $A0D4
+    txa                             ; $A0D4  its next cost
     asl     a                       ; $A0D5
     asl     a                       ; $A0D6
     asl     a                       ; $A0D7
     adc     statLevel,x             ; $A0D8
     tay                             ; $A0DB
-    lda     experienceNext+1        ; $A0DC
+    lda     experienceNext+1        ; $A0DC  more than experienceNext?
     sec                             ; $A0DF
     sbc     LevelUpCostLo,y         ; $A0E0
     lda     experienceNext          ; $A0E3
     sbc     LevelUpCostHi,y         ; $A0E6
-    bcs     @loc_A0ED               ; $A0E9
-    inc     temp2,x                 ; $A0EB
+    bcs     @next                   ; $A0E9  no
+    inc     temp2,x                 ; $A0EB  yes: flag it
 
-@loc_A0ED:
+@next:
     dex                             ; $A0ED
     bpl     @loop                   ; $A0EE
 
@@ -5705,62 +5744,62 @@ Exp_FindLevelUpsDone:
 ; ---------------------------------------------------------------------------
 ; LevelUp_BlinkChoice
 ;
-; Level up window step 7: while the level up fanfare plays
-; (musicPlaying = $10), blink the chosen stat's prompt row.  Then go to
-; the next step.
+; Level up window step 7: while the fanfare plays (musicPlaying = $10),
+; blink the chosen stat's level bar (8 frames on, 8 off).  Then go to the
+; next step.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_BlinkChoice:
-    dec     menuRepeatTimer         ; $A0F1
-    lda     musicPlaying            ; $A0F4
+    dec     menuRepeatTimer         ; $A0F1  the blink's frame count
+    lda     musicPlaying            ; $A0F4  the fanfare still playing?
     cmp     #$10                    ; $A0F7
-    beq     @loc_A0FE               ; $A0F9
-    jmp     Menu_NextState_Bank0    ; $A0FB
+    beq     @blink                  ; $A0F9
+    jmp     Menu_NextState_Bank0    ; $A0FB  no: done
 
-@loc_A0FE:
-    lda     ppuBuffer0Len           ; $A0FE
+@blink:
+    lda     ppuBuffer0Len           ; $A0FE  wait for the buffer
     bne     Exp_FindLevelUpsDone    ; $A101
-    lda     menuRow                 ; $A103
+    lda     menuRow                 ; $A103  (never row 3 here)
     cmp     #$03                    ; $A106
-    beq     @loc_A140               ; $A108
+    beq     @wait                   ; $A108
     pha                             ; $A10A
-    ldy     levelUpCursor           ; $A10B
+    ldy     levelUpCursor           ; $A10B  the chosen stat's level bar row
     lda     LevelUpStatRows,y       ; $A10E
     sta     menuRow                 ; $A111
-    jsr     LevelUp_LoadRow         ; $A114
-    lda     menuRepeatTimer         ; $A117
+    jsr     LevelUp_LoadRow         ; $A114  load it
+    lda     menuRepeatTimer         ; $A117  8 frames of 16:
     and     #$0F                    ; $A11A
-    cmp     #$08                    ; $A11C
-    bcc     @loc_A130               ; $A11E
-    ldy     #$07                    ; $A120
-    lda     levelUpCursor           ; $A122
+    cmp     #$08                    ; $A11C  blank its bar
+    bcc     @draw                   ; $A11E
+    ldy     #$07                    ; $A120  8 tiles,
+    lda     levelUpCursor           ; $A122  magic: the second tile row
     lsr     a                       ; $A125
-    lda     #$F4                    ; $A126
-    bcs     @loc_A138               ; $A128
+    lda     #$F4                    ; $A126  blank
+    bcs     @blankSecond            ; $A128
 
 @loop:
-    sta     menuRowTiles+5,y        ; $A12A
+    sta     menuRowTiles+5,y        ; $A12A  first tile row
     dey                             ; $A12D
     bpl     @loop                   ; $A12E
 
-@loc_A130:
-    jsr     Menu_DrawRowAttrs_Bank0 ; $A130
+@draw:
+    jsr     Menu_DrawRowAttrs_Bank0 ; $A130  draw the row
     pla                             ; $A133
     sta     menuRow                 ; $A134
 
 @done:
     rts                             ; $A137
 
-@loc_A138:
-    sta     menuRowTiles2+5,y       ; $A138
+@blankSecond:
+    sta     menuRowTiles2+5,y       ; $A138  second tile row
     dey                             ; $A13B
-    bpl     @loc_A138               ; $A13C
-    bmi     @loc_A130               ; $A13E
+    bpl     @blankSecond            ; $A13C
+    bmi     @draw                   ; $A13E
 ; (code below not executed in the test movies)
 
-@loc_A140:
-    lda     menuRepeatTimer         ; $A140
+@wait:
+    lda     menuRepeatTimer         ; $A140  wait out the timer
     bne     @done                   ; $A143
     jmp     Menu_NextState_Bank0    ; $A145
 ; (end of code not executed in the test movies)
@@ -5768,52 +5807,54 @@ LevelUp_BlinkChoice:
 ; ---------------------------------------------------------------------------
 ; Pause_FillText
 ;
-; Pause menu step 2: write the key count, crystals remaining, lives and
-; the cost of each spell at the current magic level into sramMenuText,
-; and clear spellLastCast.
+; Pause menu step 2: write the lives in reserve (lives - 1), the keys,
+; the crystals still to place and each spell's cost at the current magic
+; level, halved (the menu shows 2 meter units as 1), into sramMenuText,
+; and clear spellLastCast.  (Checked with a screenshot: Shield 032 and
+; Fire 120 at magic level 1.)
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_FillText:
-    lda     #$00                    ; $A148
+    lda     #$00                    ; $A148  any spell can be cast again
     sta     spellLastCast           ; $A14A
     sta     ppuBuffer1Len           ; $A14D
-    lda     keyCount                ; $A150
+    lda     keyCount                ; $A150  keys
     clc                             ; $A153
     adc     #$D0                    ; $A154
-    sta     sramMenuText+129        ; $A156
-    lda     crystalsRemaining       ; $A159
+    sta     sramMenuText+129        ; $A156  (row 9)
+    lda     crystalsRemaining       ; $A159  crystals left to place
     clc                             ; $A15C
     adc     #$D0                    ; $A15D
-    sta     sramMenuText+143        ; $A15F
-    lda     lives                   ; $A162
+    sta     sramMenuText+143        ; $A15F  (row 10)
+    lda     lives                   ; $A162  lives - 1 (the ones in reserve)
     clc                             ; $A165
     adc     #$CF                    ; $A166
-    sta     sramMenuText+3          ; $A168
-    lda     statLevel+STAT_MAGIC    ; $A16B
+    sta     sramMenuText+3          ; $A168  (row 0)
+    lda     statLevel+STAT_MAGIC    ; $A16B  Thunder's cost at the magic level
     clc                             ; $A16E
-    adc     #$37                    ; $A16F
+    adc     #$37                    ; $A16F  (7 x 8 + level - 1)
     tay                             ; $A171
-    ldx     #$62                    ; $A172
+    ldx     #$62                    ; $A172  its row's offset in sramMenuText
 
 @loop:
-    tya                             ; $A174
+    tya                             ; $A174  each spell, Thunder up to Shield:
     pha                             ; $A175
-    lda     #$00                    ; $A176
+    lda     #$00                    ; $A176  cost / 2 as digits
     sta     temp0                   ; $A178
     lda     SpellCosts,y            ; $A17A
     lsr     a                       ; $A17D
-    jsr     Math_Digit1000          ; $A17E
-    sta     sramMenuText+26,x       ; $A181
+    jsr     Math_ToDigits           ; $A17E
+    sta     sramMenuText+26,x       ; $A181  ones,
     tya                             ; $A184
-    sta     sramMenuText+25,x       ; $A185
+    sta     sramMenuText+25,x       ; $A185  tens,
     lda     temp0                   ; $A188
-    sta     sramMenuText+24,x       ; $A18A
-    pla                             ; $A18D
+    sta     sramMenuText+24,x       ; $A18A  hundreds
+    pla                             ; $A18D  the spell before:
     sec                             ; $A18E
-    sbc     #$08                    ; $A18F
+    sbc     #$08                    ; $A18F  8 bytes back in SpellCosts,
     tay                             ; $A191
-    txa                             ; $A192
+    txa                             ; $A192  one row up
     sec                             ; $A193
     sbc     #$0E                    ; $A194
     tax                             ; $A196
@@ -5839,7 +5880,7 @@ Menu_Skip:
 ; ---------------------------------------------------------------------------
 Pause_OverworldWait:
 ; (code below not executed in the test movies)
-    jsr     Pause_CheckStart        ; $A19C
+    jsr     Pause_CheckStart        ; $A19C  Start: next step
     lda     joypadHeld+1            ; $A19F
     cmp     #JOY_UP | JOY_A         ; $A1A1  Up+A on controller 2
     bne     Game_ShowContinueScreenDone ; $A1A3
@@ -5856,22 +5897,22 @@ Pause_OverworldWait:
 Game_ShowContinueScreen:
     jsr     Oam_HideAll             ; $A1A5
     jsr     Music_RequestSilence    ; $A1A8
-    lda     #$02                    ; $A1AB
+    lda     #$02                    ; $A1AB  GAME_STATE_DEATH, at the continue screen (gameMode 5):
     sta     gameState               ; $A1AD
     sta     gameStatePrev           ; $A1B0
     lda     #$05                    ; $A1B3
     sta     gameMode                ; $A1B5
-    lda     #$00                    ; $A1B8
+    lda     #$00                    ; $A1B8  no dialog, menu or fairy,
     sta     dialogType              ; $A1BA
     sta     pauseState              ; $A1BD
     sta     menuRow                 ; $A1C0
     sta     menuCursor              ; $A1C3
     sta     fairyEncounter          ; $A1C6
-    sta     experience              ; $A1C9
+    sta     experience              ; $A1C9  no experience
     sta     experience+1            ; $A1CC
     lda     #$06                    ; $A1CF
     sta     ppuMaskExtra            ; $A1D1
-    ldx     #$01                    ; $A1D4
+    ldx     #$01                    ; $A1D4  both meters full
 
 @loop:
     jsr     Stat_FillMeter          ; $A1D6
@@ -5901,7 +5942,7 @@ Pause_MenuOpen:
     lda     joypadHeld+1            ; $A1DD
     cmp     #JOY_UP | JOY_A         ; $A1DF  Up+A on controller 2
     beq     Game_ShowContinueScreen ; $A1E1
-    ldy     #$07                    ; $A1E3
+    ldy     #$07                    ; $A1E3  any spell owned?
     lda     #$00                    ; $A1E5
 
 @loop:
@@ -5909,64 +5950,64 @@ Pause_MenuOpen:
     dey                             ; $A1EA
     bpl     @loop                   ; $A1EB
     cmp     #$00                    ; $A1ED
-    beq     Pause_CheckStart        ; $A1EF
-    jsr     Menu_MoveCursor         ; $A1F1
-    bcc     Pause_CheckStart        ; $A1F4
-    and     #$08                    ; $A1F6
+    beq     Pause_CheckStart        ; $A1EF  no: only Start
+    jsr     Menu_MoveCursor         ; $A1F1  Up or Down?
+    bcc     Pause_CheckStart        ; $A1F4  no
+    and     #$08                    ; $A1F6  Up?
     ldy     spellCursor             ; $A1F8
 
 @loop2:
-    iny                             ; $A1FB
+    iny                             ; $A1FB  the next spell down
     bit     temp0                   ; $A1FC
-    beq     @loc_A206               ; $A1FE
-    dey                             ; $A200
+    beq     @wrap                   ; $A1FE  Down
+    dey                             ; $A200  Up: the one above,
     dey                             ; $A201
-    bpl     @loc_A206               ; $A202
-    ldy     #$07                    ; $A204
+    bpl     @wrap                   ; $A202
+    ldy     #$07                    ; $A204  wrapping to Thunder
 
-@loc_A206:
-    cpy     #$08                    ; $A206
-    bcc     @loc_A20C               ; $A208
-    ldy     #$00                    ; $A20A
+@wrap:
+    cpy     #$08                    ; $A206  past Thunder?
+    bcc     @checkOwned             ; $A208
+    ldy     #$00                    ; $A20A  back to Shield
 
-@loc_A20C:
-    ldx     spellOwned,y            ; $A20C
-    beq     @loop2                  ; $A20F
-    sty     spellCursor             ; $A211
-    lda     #$10                    ; $A214
+@checkOwned:
+    ldx     spellOwned,y            ; $A20C  owned?
+    beq     @loop2                  ; $A20F  no: keep going
+    sty     spellCursor             ; $A211  select it
+    lda     #$10                    ; $A214  the menu cursor sound
     sta     sfxRequest+3            ; $A216
-    lda     scrollX                 ; $A218
+    lda     scrollX                 ; $A218  the cursor column: window X + 8
     clc                             ; $A21B
     adc     #$78                    ; $A21C
     and     #$F0                    ; $A21E
     sta     temp1                   ; $A220
-    lda     scrollXHi               ; $A222
+    lda     scrollXHi               ; $A222  on its nametable
     adc     #$00                    ; $A225
     and     #$01                    ; $A227
     asl     a                       ; $A229
     asl     a                       ; $A22A
     adc     #$20                    ; $A22B
-    sta     ppuBuffer0              ; $A22D
-    lda     temp1                   ; $A230
+    sta     ppuBuffer0              ; $A22D  ($20xx or $24xx)
+    lda     temp1                   ; $A230  tile column
     lsr     a                       ; $A232
     lsr     a                       ; $A233
     lsr     a                       ; $A234
-    adc     #$E1                    ; $A235
+    adc     #$E1                    ; $A235  + 1, on tile row 7
     sta     ppuBuffer0+1            ; $A237
-    lda     #$8F                    ; $A23A
+    lda     #$8F                    ; $A23A  vertical, 15 tiles
     sta     ppuBuffer0+2            ; $A23C
-    ldy     #$0E                    ; $A23F
+    ldy     #$0E                    ; $A23F  blank
     lda     #$F4                    ; $A241
 
 @loop3:
     sta     ppuBuffer0+3,y          ; $A243
     dey                             ; $A246
     bpl     @loop3                  ; $A247
-    sty     ppuBuffer0+18           ; $A249
-    lda     spellCursor             ; $A24C
+    sty     ppuBuffer0+18           ; $A249  end ($FF)
+    lda     spellCursor             ; $A24C  the spell's row (7 + 2 x spell)
     asl     a                       ; $A24F
     tay                             ; $A250
-    lda     #$FA                    ; $A251
+    lda     #$FA                    ; $A251  the arrow
     sta     ppuBuffer0+3,y          ; $A253
 
 ; ---------------------------------------------------------------------------
@@ -5977,13 +6018,13 @@ Pause_MenuOpen:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_CheckStart:
-    lda     joypadHeldPrev          ; $A256
+    lda     joypadHeldPrev          ; $A256  Start held last frame
     and     #$10                    ; $A259
     sta     temp0                   ; $A25B
-    lda     joypadHeld              ; $A25D
+    lda     joypadHeld              ; $A25D  held now
     and     #$10                    ; $A25F
     beq     Pause_CheckStartDone    ; $A261
-    cmp     temp0                   ; $A263
+    cmp     temp0                   ; $A263  and not before?
     beq     Pause_CheckStartDone    ; $A265
 
 ; ---------------------------------------------------------------------------
@@ -6017,80 +6058,80 @@ Pause_CheckStartDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_ComputeAttrs_Bank0:
-    lda     scrollX                 ; $A26B
+    lda     scrollX                 ; $A26B  the window's left edge, X + $78:
     clc                             ; $A26E
     adc     #$78                    ; $A26F
     tax                             ; $A271
     lda     scrollXHi               ; $A272
     adc     #$00                    ; $A275
-    jsr     AreaMap_GetPagePtr_Bank0 ; $A277
-    txa                             ; $A27A
+    jsr     AreaMap_GetPagePtr_Bank0 ; $A277  its page's tile map (temp14)
+    txa                             ; $A27A  the attribute column's metatile column (even)
     and     #$E0                    ; $A27B
     lsr     a                       ; $A27D
     lsr     a                       ; $A27E
     lsr     a                       ; $A27F
     lsr     a                       ; $A280
     tay                             ; $A281
-    ldx     #$00                    ; $A282
-    lda     #$04                    ; $A284
+    ldx     #$00                    ; $A282  menuAttrs from 0
+    lda     #$04                    ; $A284  4 attribute columns
     sta     temp0                   ; $A286
 
 @loop:
-    lda     #$00                    ; $A288
+    lda     #$00                    ; $A288  left metatile column
     sta     temp1                   ; $A28A
 
 @loop2:
-    lda     #$0C                    ; $A28C
+    lda     #$0C                    ; $A28C  12 metatile rows
     sta     temp2                   ; $A28E
 
 @loop3:
-    jsr     Menu_AddTileAttr_Bank0  ; $A290
-    tya                             ; $A293
+    jsr     Menu_AddTileAttr_Bank0  ; $A290  add its palette
+    tya                             ; $A293  next row down
     clc                             ; $A294
     adc     #$10                    ; $A295
     tay                             ; $A297
-    asl     a                       ; $A298
+    asl     a                       ; $A298  bit 4: moving to a new attribute row?
     asl     a                       ; $A299
     asl     a                       ; $A29A
     asl     a                       ; $A29B
-    bcs     @loc_A2A2               ; $A29C
-    inx                             ; $A29E
+    bcs     @nextRow                ; $A29C  no
+    inx                             ; $A29E  next attribute row
     inx                             ; $A29F
     inx                             ; $A2A0
     inx                             ; $A2A1
 
-@loc_A2A2:
+@nextRow:
     dec     temp2                   ; $A2A2
     bne     @loop3                  ; $A2A4
-    tya                             ; $A2A6
+    tya                             ; $A2A6  back to the top, one column right
     sec                             ; $A2A7
     sbc     #$BF                    ; $A2A8
     tay                             ; $A2AA
-    and     #$0F                    ; $A2AB
-    bne     @loc_A2BF               ; $A2AD
-    lda     temp14                  ; $A2AF
+    and     #$0F                    ; $A2AB  crossed a page?
+    bne     @nextColumn             ; $A2AD
+    lda     temp14                  ; $A2AF  yes: the next page's map
     clc                             ; $A2B1
     adc     #$D0                    ; $A2B2
     sta     temp14                  ; $A2B4
-    bcc     @loc_A2BA               ; $A2B6
+    bcc     @samePage               ; $A2B6
     inc     temp15                  ; $A2B8
 
-@loc_A2BA:
-    tya                             ; $A2BA
+@samePage:
+    tya                             ; $A2BA  (and its first column)
     sec                             ; $A2BB
     sbc     #$10                    ; $A2BC
     tay                             ; $A2BE
 
-@loc_A2BF:
-    txa                             ; $A2BF
+@nextColumn:
+    txa                             ; $A2BF  back to the top attribute row
     sec                             ; $A2C0
     sbc     #$18                    ; $A2C1
     tax                             ; $A2C3
-    lda     temp1                   ; $A2C4
+    lda     temp1                   ; $A2C4  the right metatile column next
     eor     #$80                    ; $A2C6
     sta     temp1                   ; $A2C8
-    bne     @loop2                  ; $A2CA
-    inx                             ; $A2CC
+    bne     @loop2                  ; $A2CA  (then done with this attribute column)
+    inx                             ; $A2CC  next attribute column
     dec     temp0                   ; $A2CD
     bne     @loop                   ; $A2CF
     jmp     Pause_NextState         ; $A2D1
@@ -6099,39 +6140,40 @@ Menu_ComputeAttrs_Bank0:
 ; Menu_AddTileAttr_Bank0
 ;
 ; Add the palette bits (bits 7-6) of area tile (temp14),y to attribute
-; byte menuAttrs,x, in the quadrant given by bit 4 of y (left or right)
-; and bit 7 of temp1 (top or bottom).
+; byte menuAttrs,x, in the quadrant given by bit 4 of y (the map row's
+; parity: top or bottom) and bit 7 of temp1 (left or right column).  The
+; top left quadrant comes first and starts the byte.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_AddTileAttr_Bank0:
-    tya                             ; $A2D4
+    tya                             ; $A2D4  bit 4 of y: bottom row?
     asl     a                       ; $A2D5
     asl     a                       ; $A2D6
     asl     a                       ; $A2D7
     asl     a                       ; $A2D8
-    lda     (temp14),y              ; $A2D9
+    lda     (temp14),y              ; $A2D9  the tile's palette (bits 7-6)
     and     #$C0                    ; $A2DB
-    bcs     @loc_A2EB               ; $A2DD
-    asl     a                       ; $A2DF
+    bcs     @bottom                 ; $A2DD
+    asl     a                       ; $A2DF  top: to bits 1-0
     rol     a                       ; $A2E0
     rol     a                       ; $A2E1
-    bit     temp1                   ; $A2E2
-    bpl     @loc_A2F4               ; $A2E4
-    asl     a                       ; $A2E6
+    bit     temp1                   ; $A2E2  right column?
+    bpl     @store                  ; $A2E4  no: top left, the byte's first part
+    asl     a                       ; $A2E6  bits 3-2
     asl     a                       ; $A2E7
-    jmp     @loc_A2F1               ; $A2E8
+    jmp     @add                    ; $A2E8
 
-@loc_A2EB:
-    bit     temp1                   ; $A2EB
-    bmi     @loc_A2F1               ; $A2ED
-    lsr     a                       ; $A2EF
+@bottom:
+    bit     temp1                   ; $A2EB  bottom: right column?
+    bmi     @add                    ; $A2ED  yes: bits 7-6
+    lsr     a                       ; $A2EF  no: bits 5-4
     lsr     a                       ; $A2F0
 
-@loc_A2F1:
-    ora     menuAttrs,x             ; $A2F1
+@add:
+    ora     menuAttrs,x             ; $A2F1  add to the byte
 
-@loc_A2F4:
+@store:
     sta     menuAttrs,x             ; $A2F4
     rts                             ; $A2F7
 
@@ -6167,9 +6209,9 @@ Pause_OpenRow:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_DrawOpenRow:
-    jsr     Menu_DrawRowAttrs_Bank0 ; $A301
-    inc     menuRow                 ; $A304
-    lda     menuRow                 ; $A307
+    jsr     Menu_DrawRowAttrs_Bank0 ; $A301  tiles and attributes
+    inc     menuRow                 ; $A304  next row
+    lda     menuRow                 ; $A307  all 10 drawn?
     cmp     #$0A                    ; $A30A
     bcs     Menu_NextState_Bank0    ; $A30C
     rts                             ; $A30E
@@ -6197,7 +6239,7 @@ Pause_OverworldMute:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flute_Start:
-    lda     #$88                    ; $A315
+    lda     #$88                    ; $A315  $88 frames
     sta     menuTimer               ; $A317
     bne     Menu_NextState_Bank0    ; $A31A
 
@@ -6209,9 +6251,9 @@ Flute_Start:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_TextReady:
-    lda     #$C0                    ; $A31C
+    lda     #$C0                    ; $A31C  redraw the whole status bar
     sta     hudRedraw               ; $A31E
-    lda     #$08                    ; $A321
+    lda     #$08                    ; $A321  the spell menu sound
     sta     sfxRequest+2            ; $A323
 
 ; ---------------------------------------------------------------------------
@@ -6233,7 +6275,7 @@ Menu_NextState_Bank0:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Flute_Wait:
-    dec     menuTimer               ; $A329
+    dec     menuTimer               ; $A329  count down to $FF
     lda     menuTimer               ; $A32C
     cmp     #$FF                    ; $A32F
     beq     Menu_NextState_Bank0    ; $A331
@@ -6278,7 +6320,7 @@ Menu_Close:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_CopyTextTemplate:
-    ldy     #$00                    ; $A347
+    ldy     #$00                    ; $A347  the first 256 bytes,
 
 @loop:
     lda     MenuTextTemplate,y      ; $A349
@@ -6287,7 +6329,7 @@ Menu_CopyTextTemplate:
     bne     @loop                   ; $A350
 
 @loop2:
-    lda     MenuTextTemplate+256,y  ; $A352
+    lda     MenuTextTemplate+256,y  ; $A352  and the last 24
     sta     sramMenuText+256,y      ; $A355
     iny                             ; $A358
     cpy     #$18                    ; $A359
@@ -6306,48 +6348,48 @@ Menu_CopyTextTemplate:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_DrawRowAttrs_Bank0:
-    jsr     Menu_BeginRow_Bank0     ; $A35F
+    jsr     Menu_BeginRow_Bank0     ; $A35F  queue the row's tiles
 
 @loop:
-    jsr     Menu_GetAttrAddress_Bank0 ; $A362
-    and     #$FE                    ; $A365
+    jsr     Menu_GetAttrAddress_Bank0 ; $A362  each attribute column of the window:
+    and     #$FE                    ; $A365  attribute row ((menuRow + 1) / 2 + 1) x 8
     asl     a                       ; $A367
     asl     a                       ; $A368
-    adc     #$C8                    ; $A369
-    jsr     Menu_QueueAttrHeader_Bank0 ; $A36B
-    lda     #$0F                    ; $A36E
+    adc     #$C8                    ; $A369  + $C0 (attribute table)
+    jsr     Menu_QueueAttrHeader_Bank0 ; $A36B  + column; x = its menuAttrs index
+    lda     #$0F                    ; $A36E  bottom half: palette 0 there
     sta     temp5                   ; $A370
-    jsr     Menu_CheckAttrAlignment_Bank0 ; $A372
-    beq     @loc_A383               ; $A375
-    lda     temp4                   ; $A377
-    bne     @loc_A391               ; $A379
-    lda     #$3F                    ; $A37B
+    jsr     Menu_CheckAttrAlignment_Bank0 ; $A372  starting on an attribute byte's left?
+    beq     @aligned                ; $A375
+    lda     temp4                   ; $A377  no: the first byte,
+    bne     @pickMask               ; $A379
+    lda     #$3F                    ; $A37B  only the right quadrants
     sta     temp5                   ; $A37D
     lda     #$F3                    ; $A37F
-    bne     @loc_A38F               ; $A381
+    bne     @setTopMask             ; $A381
 
-@loc_A383:
-    lda     temp4                   ; $A383
+@aligned:
+    lda     temp4                   ; $A383  yes: the last byte,
     cmp     #$03                    ; $A385
-    bne     @loc_A391               ; $A387
-    lda     #$CF                    ; $A389
+    bne     @pickMask               ; $A387
+    lda     #$CF                    ; $A389  only the left quadrants
     sta     temp5                   ; $A38B
     lda     #$FC                    ; $A38D
 
-@loc_A38F:
-    sta     temp6                   ; $A38F
+@setTopMask:
+    sta     temp6                   ; $A38F  (top half's mask)
 
-@loc_A391:
-    lda     temp2                   ; $A391
-    lsr     a                       ; $A393
+@pickMask:
+    lda     temp2                   ; $A391  the row's half of the byte:
+    lsr     a                       ; $A393  bottom (menuRow even)
     lda     temp5                   ; $A394
-    bcs     @loc_A39A               ; $A396
-    lda     temp6                   ; $A398
+    bcs     @mask                   ; $A396
+    lda     temp6                   ; $A398  top
 
-@loc_A39A:
-    and     menuAttrs,x             ; $A39A
-    sta     menuAttrs,x             ; $A39D
-    jsr     Menu_NextAttr_Bank0     ; $A3A0
+@mask:
+    and     menuAttrs,x             ; $A39A  palette 0 in the window's quadrants
+    sta     menuAttrs,x             ; $A39D  (kept for the next row)
+    jsr     Menu_NextAttr_Bank0     ; $A3A0  queue it; all 4?
     bcc     @loop                   ; $A3A3
 
 ; ---------------------------------------------------------------------------
@@ -6358,33 +6400,44 @@ Menu_DrawRowAttrs_Bank0:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_EndRowString_Bank0:
-    lda     #$FF                    ; $A3A5
+    lda     #$FF                    ; $A3A5  end
     sta     ppuBuffer1,y            ; $A3A7
     sty     ppuBuffer1Len           ; $A3AA
-    lda     #$01                    ; $A3AD
+    lda     #$01                    ; $A3AD  send ppuBuffer1
     sta     ppuStringSelect         ; $A3AF
     rts                             ; $A3B2
 
+; ---------------------------------------------------------------------------
+; Menu_GetAttrAddress_Bank0
+;
+; Start an attribute string in ppuBuffer1 at y: its nametable's high
+; byte ($23 or $27) for the window's column temp3 ((temp1 + $78) / 32,
+; from the scroll in temp0:temp1); temp2 = menuRow + 1, whose bit 0 tells
+; the row's half of the attribute byte (set: the bottom).  Returns a =
+; temp2.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Menu_GetAttrAddress_Bank0:
-    lda     temp1                   ; $A3B3
+    lda     temp1                   ; $A3B3  the window's left edge,
     clc                             ; $A3B5
     adc     #$78                    ; $A3B6
-    php                             ; $A3B8
-    lsr     a                       ; $A3B9
+    php                             ; $A3B8  (carry: into the next page)
+    lsr     a                       ; $A3B9  / 32: attribute column
     lsr     a                       ; $A3BA
     lsr     a                       ; $A3BB
     lsr     a                       ; $A3BC
     lsr     a                       ; $A3BD
     sta     temp3                   ; $A3BE
     plp                             ; $A3C0
-    lda     temp0                   ; $A3C1
+    lda     temp0                   ; $A3C1  nametable
     adc     #$00                    ; $A3C3
     and     #$01                    ; $A3C5
     asl     a                       ; $A3C7
     asl     a                       ; $A3C8
-    adc     #$23                    ; $A3C9
+    adc     #$23                    ; $A3C9  $23xx or $27xx
     sta     ppuBuffer1,y            ; $A3CB
-    lda     menuRow                 ; $A3CE
+    lda     menuRow                 ; $A3CE  the row + 1 (its parity: which half)
     clc                             ; $A3D1
     adc     #$01                    ; $A3D2
     sta     temp2                   ; $A3D4
@@ -6400,133 +6453,133 @@ Menu_GetAttrAddress_Bank0:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_CloseRow_Bank0:
-    dec     menuRow                 ; $A3D7
-    bpl     @loc_A3DF               ; $A3DA
+    dec     menuRow                 ; $A3D7  the next row up
+    bpl     @close                  ; $A3DA  none left: next step
     jmp     Pause_NextState         ; $A3DC
 
-@loc_A3DF:
-    lda     scrollX                 ; $A3DF
+@close:
+    lda     scrollX                 ; $A3DF  the window's left edge, X + $78:
     clc                             ; $A3E2
     adc     #$78                    ; $A3E3
     tax                             ; $A3E5
     lda     scrollXHi               ; $A3E6
     adc     #$00                    ; $A3E9
-    jsr     AreaMap_GetPagePtr_Bank0 ; $A3EB
-    txa                             ; $A3EE
+    jsr     AreaMap_GetPagePtr_Bank0 ; $A3EB  its page's tile map
+    txa                             ; $A3EE  metatile column
     lsr     a                       ; $A3EF
     lsr     a                       ; $A3F0
     lsr     a                       ; $A3F1
     lsr     a                       ; $A3F2
     tay                             ; $A3F3
-    lda     menuRow                 ; $A3F4
+    lda     menuRow                 ; $A3F4  the row's metatile row
     asl     a                       ; $A3F7
     asl     a                       ; $A3F8
     asl     a                       ; $A3F9
     asl     a                       ; $A3FA
-    adc     #$10                    ; $A3FB
+    adc     #$10                    ; $A3FB  (+ 1: the window starts on map row 1, Y $30)
     jsr     Math_AddToTemp14_Bank0  ; $A3FD
-    ldx     #$00                    ; $A400
+    ldx     #$00                    ; $A400  7 metatiles:
 
 @loop:
-    lda     (temp14),y              ; $A402
+    lda     (temp14),y              ; $A402  under the window
     sta     menuUnderRow,x          ; $A404
     iny                             ; $A407
     tya                             ; $A408
-    and     #$0F                    ; $A409
-    bne     @loc_A418               ; $A40B
-    lda     #$D0                    ; $A40D
+    and     #$0F                    ; $A409  crossed a page?
+    bne     @nextTile               ; $A40B
+    lda     #$D0                    ; $A40D  yes: the next page's map
     clc                             ; $A40F
     jsr     Math_AddToTemp14_Bank0  ; $A410
-    tya                             ; $A413
+    tya                             ; $A413  (and its first column)
     sec                             ; $A414
     sbc     #$10                    ; $A415
     tay                             ; $A417
 
-@loc_A418:
+@nextTile:
     inx                             ; $A418
     cpx     #$07                    ; $A419
     bcc     @loop                   ; $A41B
-    lda     #$00                    ; $A41D
+    lda     #$00                    ; $A41D  their tiles:
     sta     temp0                   ; $A41F
     sta     temp1                   ; $A421
 
 @loop2:
-    ldx     temp0                   ; $A423
+    ldx     temp0                   ; $A423  each metatile:
     lda     menuUnderRow,x          ; $A425
-    and     #$C0                    ; $A428
+    and     #$C0                    ; $A428  its palette: the metatile table
     asl     a                       ; $A42A
     rol     a                       ; $A42B
     rol     a                       ; $A42C
     asl     a                       ; $A42D
     tay                             ; $A42E
-    jsr     Area_GetMetatilePtrInBank ; $A42F
-    lda     menuUnderRow,x          ; $A432
+    jsr     Area_GetMetatilePtrInBank ; $A42F  (4 tables)
+    lda     menuUnderRow,x          ; $A432  index x 4
     asl     a                       ; $A435
     asl     a                       ; $A436
     tay                             ; $A437
     ldx     temp1                   ; $A438
-    jsr     Menu_CopyPtrFromArea    ; $A43A
+    jsr     Menu_CopyPtrFromArea    ; $A43A  top two tiles,
     iny                             ; $A43D
-    jsr     Menu_CopyPtrFromArea    ; $A43E
+    jsr     Menu_CopyPtrFromArea    ; $A43E  bottom two tiles
     stx     temp1                   ; $A441
     inc     temp0                   ; $A443
-    cpx     #$0E                    ; $A445
+    cpx     #$0E                    ; $A445  14 tiles a row
     bcc     @loop2                  ; $A447
-    jsr     Menu_BeginRow_Bank0     ; $A449
+    jsr     Menu_BeginRow_Bank0     ; $A449  queue the row's tiles
 
-@loc_A44C:
-    jsr     Menu_GetAttrAddress_Bank0 ; $A44C
-    lsr     a                       ; $A44F
+@attrLoop:
+    jsr     Menu_GetAttrAddress_Bank0 ; $A44C  each attribute column:
+    lsr     a                       ; $A44F  attribute row
     clc                             ; $A450
     adc     #$01                    ; $A451
     asl     a                       ; $A453
     asl     a                       ; $A454
     asl     a                       ; $A455
-    adc     #$C0                    ; $A456
-    jsr     Menu_QueueAttrHeader_Bank0 ; $A458
+    adc     #$C0                    ; $A456  + $C0
+    jsr     Menu_QueueAttrHeader_Bank0 ; $A458  + column
     jsr     Menu_CheckAttrAlignment_Bank0 ; $A45B
     lda     #$F0                    ; $A45E
     sta     temp6                   ; $A460
-    lda     scrollX                 ; $A462
+    lda     scrollX                 ; $A462  starting on an attribute byte's left?
     clc                             ; $A465
     adc     #$78                    ; $A466
     and     #$F0                    ; $A468
     sta     temp7                   ; $A46A
     and     #$E0                    ; $A46C
     cmp     temp7                   ; $A46E
-    beq     @loc_A47A               ; $A470
-    lda     temp4                   ; $A472
-    bne     @loc_A484               ; $A474
-    lda     #$F3                    ; $A476
-    bne     @loc_A482               ; $A478
+    beq     @aligned                ; $A470  yes
+    lda     temp4                   ; $A472  no: the first byte
+    bne     @pickMask               ; $A474
+    lda     #$F3                    ; $A476  palette 0 kept only in the top right
+    bne     @setMask                ; $A478
 
-@loc_A47A:
-    lda     temp4                   ; $A47A
+@aligned:
+    lda     temp4                   ; $A47A  the last byte
     cmp     #$03                    ; $A47C
-    bne     @loc_A484               ; $A47E
-    lda     #$FC                    ; $A480
+    bne     @pickMask               ; $A47E
+    lda     #$FC                    ; $A480  palette 0 kept only in the top left
 
-@loc_A482:
+@setMask:
     sta     temp6                   ; $A482
 
-@loc_A484:
-    cpx     #$04                    ; $A484
-    bcc     @loc_A48F               ; $A486
-    lda     temp2                   ; $A488
+@pickMask:
+    cpx     #$04                    ; $A484  the attribute row above the window?
+    bcc     @restoreAll             ; $A486  yes: all as before
+    lda     temp2                   ; $A488  the row's half:
     lsr     a                       ; $A48A
-    lda     temp6                   ; $A48B
-    bcs     @loc_A491               ; $A48D
+    lda     temp6                   ; $A48B  bottom: restored, the top still palette 0
+    bcs     @mask                   ; $A48D
 
-@loc_A48F:
+@restoreAll:
     lda     #$FF                    ; $A48F
 
-@loc_A491:
-    and     menuAttrs,x             ; $A491
-    jsr     Menu_NextAttr_Bank0     ; $A494
-    bcs     @loc_A49C               ; $A497
-    jmp     @loc_A44C               ; $A499
+@mask:
+    and     menuAttrs,x             ; $A491  the area's attributes, masked
+    jsr     Menu_NextAttr_Bank0     ; $A494  queue it; all 4?
+    bcs     @end                    ; $A497
+    jmp     @attrLoop               ; $A499
 
-@loc_A49C:
+@end:
     jmp     Menu_EndRowString_Bank0 ; $A49C
 
 ; ---------------------------------------------------------------------------
@@ -6541,43 +6594,43 @@ Menu_CloseRow_Bank0:
 ; ---------------------------------------------------------------------------
 Menu_QueueRowTiles_Bank0:
     ldy     ppuBuffer1Len           ; $A49F
-    lda     #$C0                    ; $A4A2
+    lda     #$C0                    ; $A4A2  the first tile row: offset $C0 (tile row 6)
     sta     temp7                   ; $A4A4
-    lda     #$02                    ; $A4A6
+    lda     #$02                    ; $A4A6  two tile rows
     sta     temp8                   ; $A4A8
-    ldx     #$00                    ; $A4AA
+    ldx     #$00                    ; $A4AA  from menuRowTiles
 
-@loc_A4AC:
-    lda     scrollX                 ; $A4AC
+@tileRow:
+    lda     scrollX                 ; $A4AC  the window's left edge, X + $78,
     clc                             ; $A4AF
     adc     #$78                    ; $A4B0
-    and     #$F0                    ; $A4B2
+    and     #$F0                    ; $A4B2  on a metatile
     sta     temp1                   ; $A4B4
     lda     scrollXHi               ; $A4B6
     adc     #$00                    ; $A4B9
     sta     temp0                   ; $A4BB
-    lda     temp1                   ; $A4BD
-    eor     #$FF                    ; $A4BF
+    lda     temp1                   ; $A4BD  metatiles to the nametable's edge:
+    eor     #$FF                    ; $A4BF  (256 - X) / 16
     clc                             ; $A4C1
     adc     #$01                    ; $A4C2
     lsr     a                       ; $A4C4
     lsr     a                       ; $A4C5
     lsr     a                       ; $A4C6
     lsr     a                       ; $A4C7
-    beq     @loc_A4CE               ; $A4C8
+    beq     @all                    ; $A4C8  0 (at the edge): all 7
     cmp     #$07                    ; $A4CA
-    bcc     @loc_A4D0               ; $A4CC
+    bcc     @setCount               ; $A4CC
 
-@loc_A4CE:
-    lda     #$07                    ; $A4CE
+@all:
+    lda     #$07                    ; $A4CE  (at most 7)
 
-@loc_A4D0:
-    sta     temp6                   ; $A4D0
-    lda     #$07                    ; $A4D2
+@setCount:
+    sta     temp6                   ; $A4D0  this string's metatiles
+    lda     #$07                    ; $A4D2  7 in all
     sta     temp3                   ; $A4D4
 
-@loc_A4D6:
-    lda     menuRow                 ; $A4D6
+@string:
+    lda     menuRow                 ; $A4D6  the row's offset: menuRow x 64
     asl     a                       ; $A4D9
     asl     a                       ; $A4DA
     asl     a                       ; $A4DB
@@ -6586,27 +6639,27 @@ Menu_QueueRowTiles_Bank0:
     rol     temp4                   ; $A4DE
     asl     a                       ; $A4E0
     rol     temp4                   ; $A4E1
-    clc                             ; $A4E3
+    clc                             ; $A4E3  + the tile row's
     adc     temp7                   ; $A4E4
     sta     temp5                   ; $A4E6
-    lda     temp4                   ; $A4E8
+    lda     temp4                   ; $A4E8  (high bits)
     adc     #$00                    ; $A4EA
     and     #$03                    ; $A4EC
     sta     temp4                   ; $A4EE
-    lda     temp1                   ; $A4F0
+    lda     temp1                   ; $A4F0  + tile column
     lsr     a                       ; $A4F2
     lsr     a                       ; $A4F3
     lsr     a                       ; $A4F4
     adc     temp5                   ; $A4F5
-    sta     ppuBuffer1+1,y          ; $A4F7
-    lda     temp0                   ; $A4FA
+    sta     ppuBuffer1+1,y          ; $A4F7  address
+    lda     temp0                   ; $A4FA  nametable
     and     #$01                    ; $A4FC
     asl     a                       ; $A4FE
     asl     a                       ; $A4FF
     adc     #$20                    ; $A500
     adc     temp4                   ; $A502
     sta     ppuBuffer1,y            ; $A504
-    lda     temp6                   ; $A507
+    lda     temp6                   ; $A507  2 tiles per metatile
     asl     a                       ; $A509
     sta     ppuBuffer1+2,y          ; $A50A
     iny                             ; $A50D
@@ -6614,155 +6667,200 @@ Menu_QueueRowTiles_Bank0:
     iny                             ; $A50F
 
 @loop:
-    lda     menuRowTiles,x          ; $A510
+    lda     menuRowTiles,x          ; $A510  two tiles
     sta     ppuBuffer1,y            ; $A513
     inx                             ; $A516
     lda     menuRowTiles,x          ; $A517
     sta     ppuBuffer1+1,y          ; $A51A
     inx                             ; $A51D
-    lda     temp1                   ; $A51E
+    lda     temp1                   ; $A51E  the next metatile's X
     clc                             ; $A520
     adc     #$10                    ; $A521
     sta     temp1                   ; $A523
-    bcc     @loc_A529               ; $A525
+    bcc     @nextMetatile           ; $A525
     inc     temp0                   ; $A527
 
-@loc_A529:
+@nextMetatile:
     iny                             ; $A529
     iny                             ; $A52A
-    dec     temp3                   ; $A52B
-    beq     @loc_A53A               ; $A52D
-    dec     temp6                   ; $A52F
+    dec     temp3                   ; $A52B  all 7?
+    beq     @secondRow              ; $A52D
+    dec     temp6                   ; $A52F  the nametable's edge?
     bne     @loop                   ; $A531
-    lda     temp3                   ; $A533
+    lda     temp3                   ; $A533  yes: the rest in a new string
     sta     temp6                   ; $A535
-    jmp     @loc_A4D6               ; $A537
+    jmp     @string                 ; $A537
 
-@loc_A53A:
-    lda     #$E0                    ; $A53A
+@secondRow:
+    lda     #$E0                    ; $A53A  the second tile row: offset $E0
     sta     temp7                   ; $A53C
-    dec     temp8                   ; $A53E
+    dec     temp8                   ; $A53E  (menuRowTiles2 follows in x)
     beq     @done                   ; $A540
-    jmp     @loc_A4AC               ; $A542
+    jmp     @tileRow                ; $A542
 
 @done:
     rts                             ; $A545
 
+; ---------------------------------------------------------------------------
+; Menu_BeginRow_Bank0
+;
+; Queue the window row's tiles (Menu_QueueRowTiles_Bank0), then set
+; temp0:temp1 to the scroll and temp4 to 0 for the attribute columns.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Menu_BeginRow_Bank0:
-    jsr     Menu_QueueRowTiles_Bank0 ; $A546
-    lda     scrollXHi               ; $A549
+    jsr     Menu_QueueRowTiles_Bank0 ; $A546  the row's tiles
+    lda     scrollXHi               ; $A549  temp0:temp1 = the scroll,
     sta     temp0                   ; $A54C
     lda     scrollX                 ; $A54E
     sta     temp1                   ; $A551
-    lda     #$00                    ; $A553
+    lda     #$00                    ; $A553  attribute column 0
     sta     temp4                   ; $A555
     rts                             ; $A557
 
+; ---------------------------------------------------------------------------
+; Menu_QueueAttrHeader_Bank0
+;
+; Finish the attribute string's header: low byte a + temp3, one byte; and
+; set x to its menuAttrs index ((temp2 & $FE) x 2 + temp4: attribute row
+; x 4 + column).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Menu_QueueAttrHeader_Bank0:
-    adc     temp3                   ; $A558
+    adc     temp3                   ; $A558  + the attribute column
     sta     ppuBuffer1+1,y          ; $A55A
-    lda     #$01                    ; $A55D
+    lda     #$01                    ; $A55D  one byte
     sta     ppuBuffer1+2,y          ; $A55F
-    lda     temp2                   ; $A562
-    and     #$FE                    ; $A564
+    lda     temp2                   ; $A562  x = menuAttrs index:
+    and     #$FE                    ; $A564  attribute row x 4
     asl     a                       ; $A566
-    adc     temp4                   ; $A567
+    adc     temp4                   ; $A567  + column
     tax                             ; $A569
     rts                             ; $A56A
 
+; ---------------------------------------------------------------------------
+; Menu_CheckAttrAlignment_Bank0
+;
+; Set temp6 to $F0 (keep the bottom quadrants) and return z set if the
+; window's left edge (scrollX + $78, on a metatile) starts an attribute
+; byte (a 32-pixel column); otherwise the window covers only the right
+; half of its first attribute column (and then all of its fourth).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Menu_CheckAttrAlignment_Bank0:
-    lda     #$F0                    ; $A56B
+    lda     #$F0                    ; $A56B  the bottom-half mask
     sta     temp6                   ; $A56D
-    lda     scrollX                 ; $A56F
+    lda     scrollX                 ; $A56F  the window's left edge
     clc                             ; $A572
     adc     #$78                    ; $A573
     and     #$F0                    ; $A575
     sta     temp7                   ; $A577
-    and     #$E0                    ; $A579
+    and     #$E0                    ; $A579  on an attribute byte's left (32-pixel) boundary? (z)
     cmp     temp7                   ; $A57B
     rts                             ; $A57D
 
+; ---------------------------------------------------------------------------
+; Math_AddToTemp14_Bank0
+;
+; Add a (plus carry) to the 16-bit pointer temp14.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Math_AddToTemp14_Bank0:
-    adc     temp14                  ; $A57E
+    adc     temp14                  ; $A57E  temp14 += a (16-bit)
     sta     temp14                  ; $A580
     lda     temp15                  ; $A582
     adc     #$00                    ; $A584
     sta     temp15                  ; $A586
     rts                             ; $A588
 
+; ---------------------------------------------------------------------------
+; Menu_NextAttr_Bank0
+;
+; Store the attribute byte a in the string at y, move y past it, advance
+; temp0:temp1 by 32 pixels and temp4 to the next column; carry set after
+; the 4th.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Menu_NextAttr_Bank0:
-    sta     ppuBuffer1+3,y          ; $A589
-    iny                             ; $A58C
+    sta     ppuBuffer1+3,y          ; $A589  the attribute byte
+    iny                             ; $A58C  next string
     iny                             ; $A58D
     iny                             ; $A58E
     iny                             ; $A58F
-    lda     temp1                   ; $A590
+    lda     temp1                   ; $A590  32 pixels right
     clc                             ; $A592
     adc     #$20                    ; $A593
     sta     temp1                   ; $A595
     lda     temp0                   ; $A597
     adc     #$00                    ; $A599
     sta     temp0                   ; $A59B
-    inc     temp4                   ; $A59D
+    inc     temp4                   ; $A59D  next column
     lda     temp4                   ; $A59F
-    cmp     #$04                    ; $A5A1
+    cmp     #$04                    ; $A5A1  carry set after the 4th
     rts                             ; $A5A3
 
 ; ---------------------------------------------------------------------------
-; Math_Digit1000
+; Math_ToDigits
 ;
-; Count the thousands in the 16-bit number temp0:a, as a digit tile
-; ($D0 = '0'), for showing numbers on the screen.
+; Convert the 16-bit number temp0:a (0-9999; temp0 high) to four digit
+; tiles ($D0 = '0'): thousands in temp1, hundreds in temp0, tens in y and
+; ones in a.  Used for the experience on the status bar and in the level
+; up window.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
-Math_Digit1000:
-    ldy     #$D0                    ; $A5A4
+Math_ToDigits:
+    ldy     #$D0                    ; $A5A4  thousands, from '0':
 
 @loop:
-    iny                             ; $A5A6
+    iny                             ; $A5A6  count one more
     sec                             ; $A5A7
-    sbc     #$E8                    ; $A5A8
-    bcs     @loc_A5AE               ; $A5AA
-    dec     temp0                   ; $A5AC
+    sbc     #$E8                    ; $A5A8  - 1000 ($03E8)
+    bcs     @high                   ; $A5AA
+    dec     temp0                   ; $A5AC  (borrow)
 
-@loc_A5AE:
+@high:
     dec     temp0                   ; $A5AE
     dec     temp0                   ; $A5B0
     dec     temp0                   ; $A5B2
-    bpl     @loop                   ; $A5B4
-    clc                             ; $A5B6
+    bpl     @loop                   ; $A5B4  until negative
+    clc                             ; $A5B6  add the last 1000 back
     adc     #$E8                    ; $A5B7
-    bcc     @loc_A5BD               ; $A5B9
+    bcc     @addBackHigh            ; $A5B9
     inc     temp0                   ; $A5BB
 
-@loc_A5BD:
+@addBackHigh:
     inc     temp0                   ; $A5BD
     inc     temp0                   ; $A5BF
     inc     temp0                   ; $A5C1
-    dey                             ; $A5C3
-    sty     temp1                   ; $A5C4
-    ldy     #$D0                    ; $A5C6
+    dey                             ; $A5C3  one too many
+    sty     temp1                   ; $A5C4  the thousands digit
+    ldy     #$D0                    ; $A5C6  hundreds:
 
 @loop2:
     iny                             ; $A5C8
     sec                             ; $A5C9
-    sbc     #$64                    ; $A5CA
+    sbc     #$64                    ; $A5CA  - 100
     bcs     @loop2                  ; $A5CC
-    dec     temp0                   ; $A5CE
-    bpl     @loop2                  ; $A5D0
-    adc     #$64                    ; $A5D2
+    dec     temp0                   ; $A5CE  (borrow)
+    bpl     @loop2                  ; $A5D0  until negative
+    adc     #$64                    ; $A5D2  add the last 100 back
     dey                             ; $A5D4
-    sty     temp0                   ; $A5D5
-    ldy     #$D0                    ; $A5D7
+    sty     temp0                   ; $A5D5  the hundreds digit
+    ldy     #$D0                    ; $A5D7  tens:
 
 @loop3:
     iny                             ; $A5D9
     sec                             ; $A5DA
-    sbc     #$0A                    ; $A5DB
+    sbc     #$0A                    ; $A5DB  - 10, until it borrows
     bcs     @loop3                  ; $A5DD
-    adc     #$DA                    ; $A5DF
-    dey                             ; $A5E1
+    adc     #$DA                    ; $A5DF  + 10 + '0' (carry clear): the ones digit
+    dey                             ; $A5E1  the tens digit
     rts                             ; $A5E2
 
 ; ---------------------------------------------------------------------------
@@ -6775,7 +6873,7 @@ Math_Digit1000:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Pause_LoadRow:
-    lda     menuRow                 ; $A5E3
+    lda     menuRow                 ; $A5E3  the row's two tile rows
     asl     a                       ; $A5E6
     tay                             ; $A5E7
     lda     PauseMenuRowPtrs,y      ; $A5E8
@@ -6786,45 +6884,45 @@ Pause_LoadRow:
     sta     temp4                   ; $A5F5
     lda     PauseMenuRowPtrs2+1,y   ; $A5F7
     sta     temp5                   ; $A5FA
-    ldy     #$0D                    ; $A5FC
+    ldy     #$0D                    ; $A5FC  14 tiles:
 
 @loop:
     lda     (temp2),y               ; $A5FE
-    sta     menuRowTiles,y          ; $A600
-    lda     (temp4),y               ; $A603
-    ldx     menuRow                 ; $A605
+    sta     menuRowTiles,y          ; $A600  first tile row
+    lda     (temp4),y               ; $A603  second:
+    ldx     menuRow                 ; $A605  a spell's row (0-7)?
     cpx     #$08                    ; $A608
-    bcs     @loc_A619               ; $A60A
+    bcs     @setTile                ; $A60A  no
     pha                             ; $A60C
-    lda     spellOwned,x            ; $A60D
+    lda     spellOwned,x            ; $A60D  owned?
     tax                             ; $A610
     pla                             ; $A611
     cpx     #$00                    ; $A612
-    bne     @loc_A619               ; $A614
-    lda     MenuRowTemplates+28,y   ; $A616
+    bne     @setTile                ; $A614  yes
+    lda     MenuRowTemplates+28,y   ; $A616  no: a blank row instead
 
-@loc_A619:
+@setTile:
     sta     menuRowTiles2,y         ; $A619
     dey                             ; $A61C
     bpl     @loop                   ; $A61D
-    ldx     spellCursor             ; $A61F
-    bne     @loc_A633               ; $A622
+    ldx     spellCursor             ; $A61F  the cursor's spell
+    bne     @checkRow               ; $A622  not Shield: check it
 
 @loop2:
-    stx     spellCursor             ; $A624
+    stx     spellCursor             ; $A624  Shield: the first owned spell instead
     lda     spellOwned,x            ; $A627
-    bne     @loc_A633               ; $A62A
+    bne     @checkRow               ; $A62A
     inx                             ; $A62C
     cpx     #$08                    ; $A62D
     bcc     @loop2                  ; $A62F
-    bcs     @done                   ; $A631
+    bcs     @done                   ; $A631  (none)
 
-@loc_A633:
-    cpx     menuRow                 ; $A633
+@checkRow:
+    cpx     menuRow                 ; $A633  this row's spell?
     bne     @done                   ; $A636
-    lda     spellOwned,x            ; $A638
+    lda     spellOwned,x            ; $A638  (owned)
     beq     @done                   ; $A63B
-    lda     #$FA                    ; $A63D
+    lda     #$FA                    ; $A63D  the arrow beside it
     sta     menuRowTiles2+1         ; $A63F
 
 @done:
@@ -6845,7 +6943,7 @@ LevelUpCursorRows:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_LoadRow:
-    lda     menuRow                 ; $A647
+    lda     menuRow                 ; $A647  the row's two tile rows
     asl     a                       ; $A64A
     tay                             ; $A64B
     lda     LevelUpRowPtrs,y        ; $A64C
@@ -6856,7 +6954,7 @@ LevelUp_LoadRow:
     sta     temp4                   ; $A659
     lda     LevelUpRowPtrs2+1,y     ; $A65B
     sta     temp5                   ; $A65E
-    ldy     #$0D                    ; $A660
+    ldy     #$0D                    ; $A660  14 tiles
 
 @loop:
     lda     (temp2),y               ; $A662
@@ -6865,21 +6963,21 @@ LevelUp_LoadRow:
     sta     menuRowTiles2,y         ; $A669
     dey                             ; $A66C
     bpl     @loop                   ; $A66D
-    ldx     levelUpCursor           ; $A66F
+    ldx     levelUpCursor           ; $A66F  the cursor's row?
     lda     LevelUpCursorRows,x     ; $A672
     cmp     menuRow                 ; $A675
     bne     @done                   ; $A678
     txa                             ; $A67A
-    ldx     #$FB                    ; $A67B
-    lsr     a                       ; $A67D
-    bcs     @loc_A684               ; $A67E
-    stx     menuRowTiles2+6         ; $A680
+    ldx     #$FB                    ; $A67B  the arrow
+    lsr     a                       ; $A67D  magic or Cancel (odd):
+    bcs     @firstRow               ; $A67E  the first tile row
+    stx     menuRowTiles2+6         ; $A680  the second
 
 @done:
     rts                             ; $A683
 
-@loc_A684:
-    stx     menuRowTiles+6          ; $A684
+@firstRow:
+    stx     menuRowTiles+6          ; $A684  the first
     rts                             ; $A687
 
 LevelUpStatRows:
@@ -6890,36 +6988,36 @@ LevelUpStatRows:
 ; ---------------------------------------------------------------------------
 ; LevelUp_ApplyChoice
 ;
-; Level up window step 6: redraw the chosen stat's row (or nothing for
-; Cancel), set the blink time (menuRepeatTimer), redraw the status bar and
-; advance pauseState.
+; Level up window step 6: redraw the chosen stat's level bar row, now one
+; tile longer (nothing for Cancel), set the blink timer (menuRepeatTimer),
+; redraw the status bar and advance pauseState.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 LevelUp_ApplyChoice:
-    ldy     levelUpCursor           ; $A68B
+    ldy     levelUpCursor           ; $A68B  Cancel?
     cpy     #$03                    ; $A68E
-    beq     @loc_A6B6               ; $A690
+    beq     @cancel                 ; $A690
     lda     menuRow                 ; $A692
     pha                             ; $A695
-    lda     LevelUpStatRows,y       ; $A696
+    lda     LevelUpStatRows,y       ; $A696  the chosen stat's level bar row,
     sta     menuRow                 ; $A699
-    jsr     LevelUp_LoadRow         ; $A69C
+    jsr     LevelUp_LoadRow         ; $A69C  redrawn one longer
     jsr     Menu_DrawRowAttrs_Bank0 ; $A69F
     pla                             ; $A6A2
     sta     menuRow                 ; $A6A3
-    lda     #$60                    ; $A6A6
+    lda     #$60                    ; $A6A6  blink for $60 frames
 
-@loc_A6A8:
-    sta     menuRepeatTimer         ; $A6A8
-    lda     hudRedraw               ; $A6AB
+@setTimer:
+    sta     menuRepeatTimer         ; $A6A8  (the fanfare's length decides)
+    lda     hudRedraw               ; $A6AB  redraw the whole status bar
     ora     #$C0                    ; $A6AE
     sta     hudRedraw               ; $A6B0
     jmp     Menu_NextState_Bank0    ; $A6B3
 
-@loc_A6B6:
-    lda     #$20                    ; $A6B6
-    bne     @loc_A6A8               ; $A6B8
+@cancel:
+    lda     #$20                    ; $A6B6  Cancel: $20 (no fanfare, no blinking)
+    bne     @setTimer               ; $A6B8
 
 BreakingBlockTiles:
     .byte   $94                                                             ; $A6BA

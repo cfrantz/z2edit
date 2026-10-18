@@ -86,9 +86,11 @@ unless noted):
   holds the sword back for 32 frames (B strikes again at once); the beam
   flies 32 frames, then sparks.  docs/systems/link.md has the attack
   table, spell effects and the fairy.
-- 8i. HUD, pause, menus and level up (bank 0, ~1340): `Hud_*`,
-  `Menu_*_Bank0` (bank 3 has copies, 8l), `Pause_*`, `LevelUp_*`,
-  `Exp_*`, `Math_Digit1000`.
+- 8i. Done: HUD, pause menu, menu window, level up (bank 0).
+  `Math_Digit1000` is now `Math_ToDigits` (four digits); spell costs show
+  halved; Cancel moves `experienceNext` to the next cost up (the window
+  reopens); level 8 buys a life; docs/systems/menus.md has the window's
+  geometry and attribute masks.  Bank 3's `Menu_*` copies remain (8l).
 - 8j. The overworld (banks 0, 7, 1, 2, ~1430 plus ~230 in banks 1-2):
   `Mode_Overworld`, movement, `Overworld_CheckEncounter` and the
   encounter sprites, the raft, the map decoders and the row/column/
