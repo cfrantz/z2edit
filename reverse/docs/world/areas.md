@@ -150,12 +150,30 @@ tools/area_dump.py --movie build/movies/file_select.fm2 --at $AT2 --until areaId
 
 ## Scrolling
 
-While Link moves, `Scroll_Update` scrolls the screen to follow him,
-between the area's page limits (`sramScrollMinPage`, `sramScrollMaxPage`,
-by `areaLastPage`); single-screen areas and boss rooms (`scrollFrozen`)
-do not scroll.  At the end of each frame `Scroll_DrawColumns` draws the
-columns coming into view from the tile map, a little at a time (8 steps
-a column), with their attributes.
+While Link moves, `Scroll_Update` scrolls the screen by his movement,
+keeping him at screen X $70-$71, between the area's page limits
+(`sramScrollMinPage`, `sramScrollMaxPage`, by `areaLastPage`).  At a
+limit the screen holds (`scrollHeld`) until he walks back past that
+point; single-screen areas and boss rooms (`scrollFrozen`) do not
+scroll.
+
+At the end of each frame `Scroll_DrawColumns` draws the columns coming
+into view from the tile map: every 32 pixels scrolled, two area columns
+and their attribute column, in 9 steps of a frame each (`columnDrawStep`
+8 down to 0).  For each area column: load its 13 tiles
+(`Scroll_LoadColumnTiles`), queue its left and right tile columns, each a
+vertical PPU string of 26 tiles from row 4 (`Scroll_QueueColumnTiles`,
+`Area_DrawMetatileColumn`, in `ppuBuffer2`), and advance the edge
+(`Scroll_AdvanceColumn`); last, the attribute column for the pair
+(`Ppu_WriteAttrColumn`, from the NMI).  The edges are tracked per side
+(`columnPage`, `columnIndex`; 0 left, 1 right); `scrollDir` and
+`columnDrawDir` are 1 for right and 2 for left.  Turning round while a
+column is half drawn abandons it and moves the edges past it.
+
+`Scroll_SavePageState` records the scroll for an entry point (start
+pages 0-3, slot 4 for elevators and falls, slots 5-6 for doors): the
+screen position, the direction, and the drawn area's edges, 96 pixels
+beyond each side of the screen.
 
 ## Moving Between Areas
 

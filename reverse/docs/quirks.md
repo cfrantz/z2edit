@@ -44,6 +44,8 @@ lists code oddities with no visible effect.
 | `Raft_Wait` | Meant to act every 16th frame, but both branches return, so it does nothing. |
 | `Barba_DrawAndCheck` | A test of `frameCounter` that branches to the next instruction either way. |
 | `Area_Load` | Loads of `temp0` that are overwritten unused. |
+| `Area_DrawFloors` | Only the first object at a column is examined, so a floor change (row $D) placed after another object at the same column is ignored.  No vanilla area has one, but an edited area could. |
+| `Scroll_DrawColumnStep` | Clears `attrColumn+1` to `+7` instead of `+0` to `+6`, zeroing $0478, the byte after the array (`+0` is already cleared by `Ppu_WriteAttrColumn`). |
 | `Ppu_WriteAttrColumn` | Loads `a` with $FF but stores `y` into `ppuBuffer2Len`: `y` holds `renderingOff` from the NMI, usually 0 but 2 or 3 while the screen is blanked; `Scroll_DrawColumns` zeroes the length before queuing its next column. |
 | `Daira_DrawWeapon` (BUG) | Writes to ROM at $95E6, which on the MMC1 is a write to its control register; probably meant for RAM $05E6.  Harmless: the value has bit 7 set, which only resets the MMC1 shift register and re-selects PRG mode 3, already in use. |
 | `Palace_GetObjectTiles_Bank4`, `Palace_GetObjectTiles_Bank5` | If bit 7 of an area header's second byte were set, the object tiles would be read from code; no palace area sets it. |

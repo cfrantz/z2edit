@@ -1005,19 +1005,24 @@ AreaEnemyListTables:
 ; SRAM), fill the tile map with the background tile, decode the background
 ; layer (AreaBank::BackgroundAreas, if the area has one) and then the area
 ; itself into sramAreaTiles, set the scroll limits, and advance gameMode.
+; Header byte 1's row fill (bits 4-2), used by 15 overworld areas, is never
+; reached in the test movies; checked with tools/area_dump.py (West Hyrule
+; area $14: row $A of tile $84).  For an encounter (encounterKind) the
+; enemy list's spawned bits are cleared, and kinds 2 and up use the area's
+; second list.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_Load:
-    lda     #$30                    ; $C4CB
+    lda     #$30                    ; $C4CB  NMI off while the mapper is written
     sta     PPUCTRL                 ; $C4CD
-    lda     #MMC1_MIRROR_VERTICAL | MMC1_PRG_FIX_LAST | MMC1_CHR_8K ; $C4D0
-    jsr     Mmc1_SetControl         ; $C4D2
-    jsr     Mmc1_SetPrgBankArea     ; $C4D5
-    lda     ppuCtrlShadow           ; $C4D8
+    lda     #MMC1_MIRROR_VERTICAL | MMC1_PRG_FIX_LAST | MMC1_CHR_8K ; $C4D0  vertical mirroring: side view scrolls
+    jsr     Mmc1_SetControl         ; $C4D2  horizontally
+    jsr     Mmc1_SetPrgBankArea     ; $C4D5  the area's bank
+    lda     ppuCtrlShadow           ; $C4D8  NMI back on (sound only)
     sta     PPUCTRL                 ; $C4DA
-    jsr     Ram_ClearWork           ; $C4DD
-    sta     a:ppuScrollX            ; $C4E0
+    jsr     Ram_ClearWork           ; $C4DD  a = 0
+    sta     a:ppuScrollX            ; $C4E0  scroll at the left edge,
     sta     ppuNametable            ; $C4E3
     sta     scrollXHi               ; $C4E6
     sta     scrollRightXHi          ; $C4E9
@@ -1025,32 +1030,32 @@ Area_Load:
     sta     columnIndex             ; $C4EF
     sta     columnPage+1            ; $C4F2
     sta     columnIndex+1           ; $C4F5
-    sta     bigDoorCounter          ; $C4F8
+    sta     bigDoorCounter          ; $C4F8  no big door opening
     sta     bigDoorStep             ; $C4FB
-    ldy     currentWorld            ; $C4FE
-    bne     @loc_C50C               ; $C501
+    ldy     currentWorld            ; $C4FE  as in Mode_LoadWorld:
+    bne     @group                  ; $C501
     lda     currentRegion           ; $C503
     cmp     #$01                    ; $C506
-    bne     @loc_C50C               ; $C508
-    ldy     #$04                    ; $C50A
+    bne     @group                  ; $C508
+    ldy     #$04                    ; $C50A  region 1 of the overworld
 
-@loc_C50C:
-    lda     WorldLocationTable,y    ; $C50C
+@group:
+    lda     WorldLocationTable,y    ; $C50C  the area group (1 or 2)
     tay                             ; $C50F
-    lda     AreaDataPtrTables,y     ; $C510
+    lda     AreaDataPtrTables,y     ; $C510  its area pointers
     sta     temp0                   ; $C513
     lda     AreaDataPtrTables+1,y   ; $C515
     sta     temp1                   ; $C518
-    lda     AreaEnemyListTables,y   ; $C51A
+    lda     AreaEnemyListTables,y   ; $C51A  and enemy list pointers
     sta     temp2                   ; $C51D
     lda     AreaEnemyListTables+1,y ; $C51F
     sta     temp3                   ; $C522
     lda     areaId                  ; $C524
-    asl     a                       ; $C527
+    asl     a                       ; $C527  by areaId:
     tay                             ; $C528
-    lda     (temp0),y               ; $C529
+    lda     (temp0),y               ; $C529  the area's data
     sta     areaDataPtr             ; $C52B
-    lda     (temp2),y               ; $C52D
+    lda     (temp2),y               ; $C52D  its enemy list
     sta     enemyListPtr            ; $C52F
     iny                             ; $C531
     lda     (temp0),y               ; $C532
@@ -1059,45 +1064,45 @@ Area_Load:
     sta     enemyListPtr+1          ; $C538
     lda     encounterKind           ; $C53A
     pha                             ; $C53D
-    cmp     #$02                    ; $C53E
-    bcc     @loc_C551               ; $C540
-    ldy     #$00                    ; $C542
+    cmp     #$02                    ; $C53E  an encounter of kind 2 and up?
+    bcc     @checkEncounter         ; $C540  no
+    ldy     #$00                    ; $C542  yes: its second list,
     lda     enemyListPtr            ; $C544
     clc                             ; $C546
-    adc     (enemyListPtr),y        ; $C547
+    adc     (enemyListPtr),y        ; $C547  past the first (its length)
     sta     enemyListPtr            ; $C549
     lda     enemyListPtr+1          ; $C54B
     adc     #$00                    ; $C54D
     sta     enemyListPtr+1          ; $C54F
 
-@loc_C551:
+@checkEncounter:
     pla                             ; $C551
-    beq     @loc_C568               ; $C552
-    ldy     #$01                    ; $C554
+    beq     @fillMap                ; $C552  not an encounter
+    ldy     #$01                    ; $C554  an encounter: all its enemies
 
 @loop:
     tya                             ; $C556
     ldy     #$00                    ; $C557
-    cmp     (enemyListPtr),y        ; $C559
-    bcs     @loc_C568               ; $C55B
+    cmp     (enemyListPtr),y        ; $C559  past the end?
+    bcs     @fillMap                ; $C55B
     tay                             ; $C55D
     lda     (enemyListPtr),y        ; $C55E
-    and     #$7F                    ; $C560
+    and     #$7F                    ; $C560  not spawned yet (bit 7)
     sta     (enemyListPtr),y        ; $C562
-    iny                             ; $C564
+    iny                             ; $C564  next entry (2 bytes)
     iny                             ; $C565
     bne     @loop                   ; $C566
 
-@loc_C568:
-    ldx     #$40                    ; $C568
+@fillMap:
+    ldx     #$40                    ; $C568  the empty tile $40,
     ldy     #$02                    ; $C56A
     lda     (areaDataPtr),y         ; $C56C
-    and     #$70                    ; $C56E
-    bne     @loc_C574               ; $C570
-    ldx     #$42                    ; $C572
+    and     #$70                    ; $C56E  tile set 0:
+    bne     @fill                   ; $C570
+    ldx     #$42                    ; $C572  $42
 
-@loc_C574:
-    ldy     #AREA_PAGE_SIZE         ; $C574
+@fill:
+    ldy     #AREA_PAGE_SIZE         ; $C574  all 4 pages:
     sty     temp0                   ; $C576
     txa                             ; $C578
 
@@ -1109,91 +1114,91 @@ Area_Load:
     sta     sramAreaTiles + 3 * AREA_PAGE_SIZE - 1,y ; $C584
     dec     temp0                   ; $C587
     bne     @loop2                  ; $C589
-    ldy     #$03                    ; $C58B
+    ldy     #$03                    ; $C58B  header byte 3:
     lda     (areaDataPtr),y         ; $C58D
-    sta     areaPaletteHeader       ; $C58F
+    sta     areaPaletteHeader       ; $C58F  palettes and background map
     lda     #$00                    ; $C592
-    sta     areaDataOffset          ; $C594
-    sta     areaBuildColumn         ; $C597
+    sta     areaDataOffset          ; $C594  objects from the first,
+    sta     areaBuildColumn         ; $C597  column 0
     ldy     #$03                    ; $C59A
-    lda     (areaDataPtr),y         ; $C59C
+    lda     (areaDataPtr),y         ; $C59C  a background map?
     and     #$07                    ; $C59E
-    beq     @loc_C5C2               ; $C5A0
-    asl     a                       ; $C5A2
+    beq     @floors                 ; $C5A0  no
+    asl     a                       ; $C5A2  entry (map - 1),
     tax                             ; $C5A3
     dex                             ; $C5A4
     dex                             ; $C5A5
-    lda     areaDataPtr             ; $C5A6
+    lda     areaDataPtr             ; $C5A6  the area's data aside
     pha                             ; $C5A8
     lda     areaDataPtr+1           ; $C5A9
     pha                             ; $C5AB
-    lda     AreaBank::BackgroundAreas,x ; $C5AC
+    lda     AreaBank::BackgroundAreas,x ; $C5AC  the background map's data:
     sta     areaDataPtr             ; $C5AF
     lda     AreaBank::BackgroundAreas+1,x ; $C5B1
     sta     areaDataPtr+1           ; $C5B4
-    jsr     Area_DrawFloors         ; $C5B6
-    jsr     Area_DecodeObjects      ; $C5B9
-    pla                             ; $C5BC
+    jsr     Area_DrawFloors         ; $C5B6  its floors
+    jsr     Area_DecodeObjects      ; $C5B9  and its objects
+    pla                             ; $C5BC  the area's data again
     sta     areaDataPtr+1           ; $C5BD
     pla                             ; $C5BF
     sta     areaDataPtr             ; $C5C0
 
-@loc_C5C2:
-    jsr     Area_DrawFloors         ; $C5C2
-    ldy     #$01                    ; $C5C5
+@floors:
+    jsr     Area_DrawFloors         ; $C5C2  the area's floors
+    ldy     #$01                    ; $C5C5  header byte 1:
     lda     (areaDataPtr),y         ; $C5C7
-    and     #$1C                    ; $C5C9
+    and     #$1C                    ; $C5C9  bits 4-2: a row fill
     lsr     a                       ; $C5CB
     lsr     a                       ; $C5CC
     tax                             ; $C5CD
     dey                             ; $C5CE
-    sty     areaBuildPage           ; $C5CF
-    lda     AreaRowFillRows,x       ; $C5D2
+    sty     areaBuildPage           ; $C5CF  from page 0
+    lda     AreaRowFillRows,x       ; $C5D2  its row (0: none)
     sta     areaBuildColumn         ; $C5D5
-    beq     @loc_C5F9               ; $C5D8
+    beq     @objects                ; $C5D8  none
 ; (code below not executed in the test movies)
 
 @loop3:
-    jsr     AreaMap_GetPagePtrY     ; $C5DA
-    ldy     areaBuildColumn         ; $C5DD
+    jsr     AreaMap_GetPagePtrY     ; $C5DA  each page:
+    ldy     areaBuildColumn         ; $C5DD  the row
 
 @loop4:
     ; QUIRK: the loads of temp0 here and below are overwritten unused.
     lda     temp0                   ; $C5E0
-    lda     AreaRowFillTiles,x      ; $C5E2
-    sta     (temp14),y              ; $C5E5
+    lda     AreaRowFillTiles,x      ; $C5E2  its tile,
+    sta     (temp14),y              ; $C5E5  across the page
     lda     temp0                   ; $C5E7
     iny                             ; $C5E9
     tya                             ; $C5EA
     and     #$0F                    ; $C5EB
     bne     @loop4                  ; $C5ED
-    inc     areaBuildPage           ; $C5EF
+    inc     areaBuildPage           ; $C5EF  next page
     lda     areaBuildPage           ; $C5F2
     cmp     #$04                    ; $C5F5
     bne     @loop3                  ; $C5F7
 ; (end of code not executed in the test movies)
 
-@loc_C5F9:
-    jsr     Area_DecodeObjects      ; $C5F9
-    lda     #$03                    ; $C5FC
+@objects:
+    jsr     Area_DecodeObjects      ; $C5F9  the area's objects
+    lda     #$03                    ; $C5FC  column pages wrap after 3
     sta     columnLastPage          ; $C5FE
-    lsr     a                       ; $C601
-    sta     scrollPage              ; $C602
-    sta     drawPage                ; $C605
-    lsr     a                       ; $C608
+    lsr     a                       ; $C601  1: scrolling right
+    sta     scrollDir               ; $C602
+    sta     columnDrawDir           ; $C605
+    lsr     a                       ; $C608  0
     sta     unused071C              ; $C609
     sta     columnScroll            ; $C60C
     sta     columnDrawStep          ; $C60F
-    ldy     areaStartPage           ; $C612
-    lda     #$0F                    ; $C615
+    ldy     areaStartPage           ; $C612  the entry slot
+    lda     #$0F                    ; $C615  16 columns to draw first
     sta     drawAreaColumnsLeft     ; $C617
-    lda     sramEntryLoadPage,y     ; $C61A
+    lda     sramEntryLoadPage,y     ; $C61A  from its saved page and column
     sta     columnPage              ; $C61D
     sta     columnPage+1            ; $C620
     lda     sramEntryLeftAttrColumn,y ; $C623
     sta     columnIndex             ; $C626
     sta     columnIndex+1           ; $C629
-    jmp     Game_BlankAndNextMode   ; $C62C
+    jmp     Game_BlankAndNextMode   ; $C62C  rendering off, Mode_DrawArea
 
 ; ---------------------------------------------------------------------------
 ; Mode_StartSideView
@@ -1303,37 +1308,37 @@ Mode_FallSaveScroll:
 ; ---------------------------------------------------------------------------
 Scroll_SavePageState:
     lda     ppuScrollX              ; $C690
-    and     #$F0                    ; $C692
+    and     #$F0                    ; $C692  to the metatile
     sta     sramEntryPpuScrollX,x   ; $C694
-    lda     scrollPage              ; $C697
-    sta     sramEntryScrollPage,x   ; $C69A
+    lda     scrollDir               ; $C697  scroll direction
+    sta     sramEntryScrollDir,x    ; $C69A
     lda     scrollX                 ; $C69D
-    and     #$F0                    ; $C6A0
+    and     #$F0                    ; $C6A0  the screen's left edge, to the metatile
     sta     sramEntryScrollX,x      ; $C6A2
     pha                             ; $C6A5
     sec                             ; $C6A6
-    sbc     #$60                    ; $C6A7
-    php                             ; $C6A9
-    ora     #$10                    ; $C6AA
+    sbc     #$60                    ; $C6A7  the drawn area starts 96 pixels left of it
+    php                             ; $C6A9  (borrow: the page before)
+    ora     #$10                    ; $C6AA  at an odd column:
     lsr     a                       ; $C6AC
     lsr     a                       ; $C6AD
     lsr     a                       ; $C6AE
     lsr     a                       ; $C6AF
-    sta     sramEntryLeftColumn,x   ; $C6B0
+    sta     sramEntryLeftColumn,x   ; $C6B0  its column
     and     #$0E                    ; $C6B3
-    sta     sramEntryLeftAttrColumn,x ; $C6B5
+    sta     sramEntryLeftAttrColumn,x ; $C6B5  and its attribute column (even)
     lda     scrollXHi               ; $C6B8
     sta     sramEntryScrollXHi,x    ; $C6BB
     plp                             ; $C6BE
-    sbc     #$00                    ; $C6BF
+    sbc     #$00                    ; $C6BF  the page, less the borrow
     and     #$03                    ; $C6C1
     sta     sramEntryLeftPage,x     ; $C6C3
-    sta     sramEntryLoadPage,x     ; $C6C6
+    sta     sramEntryLoadPage,x     ; $C6C6  columns load from it
     pla                             ; $C6C9
     clc                             ; $C6CA
-    adc     #$60                    ; $C6CB
-    php                             ; $C6CD
-    and     #$E0                    ; $C6CE
+    adc     #$60                    ; $C6CB  and ends 96 pixels into the next page,
+    php                             ; $C6CD  (carry: the page after that)
+    and     #$E0                    ; $C6CE  at an even column
     lsr     a                       ; $C6D0
     lsr     a                       ; $C6D1
     lsr     a                       ; $C6D2
@@ -1341,13 +1346,13 @@ Scroll_SavePageState:
     sta     sramEntryRightColumn,x  ; $C6D4
     lda     scrollXHi               ; $C6D7
     plp                             ; $C6DA
-    adc     #$01                    ; $C6DB
+    adc     #$01                    ; $C6DB  the next page, plus the carry
     and     #$03                    ; $C6DD
     sta     sramEntryRightPage,x    ; $C6DF
-    lda     objXHi                  ; $C6E2
+    lda     objXHi                  ; $C6E2  Link's position
     sta     entryLinkXHi,x          ; $C6E4
     lda     objX                    ; $C6E7
-    and     #$F0                    ; $C6E9
+    and     #$F0                    ; $C6E9  to the metatile
     sta     entryLinkX,x            ; $C6EB
 
 ; ---------------------------------------------------------------------------
@@ -1396,8 +1401,8 @@ Mode_FallStart:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_PlaceLink:
-    lda     scrollPage              ; $C70C  drawing direction
-    sta     drawPage                ; $C70F
+    lda     scrollDir               ; $C70C  drawing direction
+    sta     columnDrawDir           ; $C70F
     lda     #$09                    ; $C712  then draw the area (Mode_DrawArea)
     sta     gameMode                ; $C714
     jmp     Link_PlaceOnGround      ; $C717
@@ -1453,120 +1458,124 @@ FloorPatterns:
 ; change the floor pattern from their column on.  The world's floor tiles
 ; come from Area_SetFloorTiles.
 ;
+; QUIRK: only the first object at a column is looked at; a floor change
+; after another object at the same column (relative column 0) is skipped.
+; No vanilla area has one (checked over every area header in the ROM).
+;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawFloors:
-    lda     #$00                    ; $C755
+    lda     #$00                    ; $C755  from column 0
     sta     areaBuildColumn         ; $C757
     sta     floorColumn             ; $C75A
     sta     areaBuildPage           ; $C75D
-    ldy     #$02                    ; $C760
+    ldy     #$02                    ; $C760  header byte 2:
     lda     (areaDataPtr),y         ; $C762
-    and     #$0F                    ; $C764
+    and     #$0F                    ; $C764  bits 3-0: the starting floor pattern
     sta     areaObjectType          ; $C766
     lda     (areaDataPtr),y         ; $C769
-    and     #$80                    ; $C76B
+    and     #$80                    ; $C76B  bit 7: no ceiling
     sta     areaNoCeiling           ; $C76D
     lda     (areaDataPtr),y         ; $C770
-    and     #$70                    ; $C772
+    and     #$70                    ; $C772  bits 6-4: the tile set
     lsr     a                       ; $C774
     lsr     a                       ; $C775
     lsr     a                       ; $C776
     lsr     a                       ; $C777
     sta     areaTileSet             ; $C778
-    lda     #$04                    ; $C77B
+    lda     #$04                    ; $C77B  objects from byte 4
     sta     areaDataOffset          ; $C77D
-    jsr     Area_SetFloorTiles      ; $C780
+    jsr     Area_SetFloorTiles      ; $C780  the world's floor tiles
     ldy     #$00                    ; $C783
-    lda     (areaDataPtr),y         ; $C785
-    sta     areaDataLength          ; $C787
+    lda     (areaDataPtr),y         ; $C785  header byte 0:
+    sta     areaDataLength          ; $C787  the data's length
 
-@loc_C78A:
-    ldy     areaDataOffset          ; $C78A
+@nextObject:
+    ldy     areaDataOffset          ; $C78A  next object:
 
 @loop:
-    lda     (areaDataPtr),y         ; $C78D
+    lda     (areaDataPtr),y         ; $C78D  its position,
     sta     areaBuildPos            ; $C78F
-    jsr     Area_NextObjectPos      ; $C792
+    jsr     Area_NextObjectPos      ; $C792  its absolute column
 
-@loc_C795:
-    lda     floorColumn             ; $C795
+@column:
+    lda     floorColumn             ; $C795  for each column (0-$3F):
     lsr     a                       ; $C798
     lsr     a                       ; $C799
     lsr     a                       ; $C79A
     lsr     a                       ; $C79B
-    sta     areaBuildPage           ; $C79C
+    sta     areaBuildPage           ; $C79C  its page
     jsr     AreaMap_GetPagePtrY     ; $C79F
     lda     areaBuildColumn         ; $C7A2
-    cmp     floorColumn             ; $C7A5
-    beq     @loc_C7C6               ; $C7A8
-    bpl     @loc_C7F0               ; $C7AA
-    iny                             ; $C7AC
+    cmp     floorColumn             ; $C7A5  the object at this column?
+    beq     @atObject               ; $C7A8  yes
+    bpl     @draw                   ; $C7AA  ahead: draw this column
+    iny                             ; $C7AC  behind (several at one column):
     lda     (areaDataPtr),y         ; $C7AD
-    cmp     #$0F                    ; $C7AF
-    bne     @loc_C7B4               ; $C7B1
-    iny                             ; $C7B3
+    cmp     #$0F                    ; $C7AF  an item?
+    bne     @skipObject             ; $C7B1
+    iny                             ; $C7B3  one more byte
 
-@loc_C7B4:
-    iny                             ; $C7B4
+@skipObject:
+    iny                             ; $C7B4  skip it
     cpy     areaDataLength          ; $C7B5
-    bcc     @loop                   ; $C7B8
-    dey                             ; $C7BA
+    bcc     @loop                   ; $C7B8  more objects
+    dey                             ; $C7BA  at the end: back to the last one
     lda     (areaDataPtr),y         ; $C7BB
     cmp     #$0F                    ; $C7BD
-    bne     @loc_C7C2               ; $C7BF
+    bne     @backOne                ; $C7BF
     dey                             ; $C7C1
 
-@loc_C7C2:
+@backOne:
     dey                             ; $C7C2
-    jmp     @loc_C7F0               ; $C7C3
+    jmp     @draw                   ; $C7C3
 
-@loc_C7C6:
-    lda     areaBuildPos            ; $C7C6
+@atObject:
+    lda     areaBuildPos            ; $C7C6  at this column:
     and     #$F0                    ; $C7C9
-    cmp     #$D0                    ; $C7CB
-    bne     @loc_C7E2               ; $C7CD
+    cmp     #$D0                    ; $C7CB  row $D?
+    bne     @skipHere               ; $C7CD  no
     iny                             ; $C7CF
-    lda     (areaDataPtr),y         ; $C7D0
+    lda     (areaDataPtr),y         ; $C7D0  yes: its type byte:
     pha                             ; $C7D2
-    and     #$0F                    ; $C7D3
+    and     #$0F                    ; $C7D3  bits 3-0: the new floor pattern
     sta     areaObjectType          ; $C7D5
     pla                             ; $C7D8
-    and     #$80                    ; $C7D9
+    and     #$80                    ; $C7D9  bit 7: no ceiling
     sta     areaNoCeiling           ; $C7DB
-    iny                             ; $C7DE
-    jmp     @loc_C7F0               ; $C7DF
+    iny                             ; $C7DE  past it
+    jmp     @draw                   ; $C7DF
 
-@loc_C7E2:
-    cpy     areaDataLength          ; $C7E2
-    bcs     @loc_C7F0               ; $C7E5
+@skipHere:
+    cpy     areaDataLength          ; $C7E2  another object:
+    bcs     @draw                   ; $C7E5  (none left)
     iny                             ; $C7E7
-    lda     (areaDataPtr),y         ; $C7E8
+    lda     (areaDataPtr),y         ; $C7E8  an item?
     cmp     #$0F                    ; $C7EA
-    bne     @loc_C7EF               ; $C7EC
-    iny                             ; $C7EE
+    bne     @pastItem               ; $C7EC
+    iny                             ; $C7EE  one more byte
 
-@loc_C7EF:
-    iny                             ; $C7EF
+@pastItem:
+    iny                             ; $C7EF  past it
 
-@loc_C7F0:
+@draw:
     sty     areaDataOffset          ; $C7F0
-    lda     floorColumn             ; $C7F3
+    lda     floorColumn             ; $C7F3  the column within its page
     and     #$0F                    ; $C7F6
     sta     temp10                  ; $C7F8
     jsr     Area_DrawFloorColumn    ; $C7FA
-    inc     floorColumn             ; $C7FD
+    inc     floorColumn             ; $C7FD  next column
     lda     floorColumn             ; $C800
-    cmp     #$40                    ; $C803
+    cmp     #$40                    ; $C803  all 64?
     beq     @done                   ; $C805
     lda     areaBuildColumn         ; $C807
     cmp     floorColumn             ; $C80A
-    bpl     @loc_C812               ; $C80D
-    jmp     @loc_C78A               ; $C80F
+    bpl     @nextColumn             ; $C80D  the next object is ahead
+    jmp     @nextObject             ; $C80F
 
-@loc_C812:
+@nextColumn:
     ldy     areaDataOffset          ; $C812
-    jmp     @loc_C795               ; $C815
+    jmp     @column                 ; $C815
 
 @done:
     rts                             ; $C818
@@ -1581,7 +1590,7 @@ Area_DrawFloors:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_SetFloorTiles:
-    lda     currentWorld            ; $C819
+    lda     currentWorld            ; $C819  by world
     jsr     JumpTable               ; $C81C
 ; (inline jump table)
     .word   OverworldBank::SetFloorTiles ; $C81F
@@ -1601,76 +1610,76 @@ Area_SetFloorTiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawFloorColumn:
-    lda     areaObjectType          ; $C82B
+    lda     areaObjectType          ; $C82B  the pattern's 2 bytes
     asl     a                       ; $C82E
     tay                             ; $C82F
-    ldx     #$05                    ; $C830
+    ldx     #$05                    ; $C830  rows from the top: 6 from byte 1,
     lda     areaNoCeiling           ; $C832
-    beq     @loc_C844               ; $C835
-    lda     temp10                  ; $C837
+    beq     @sixRows                ; $C835
+    lda     temp10                  ; $C837  no ceiling: start at row 2,
     ora     #$20                    ; $C839
     sta     temp10                  ; $C83B
-    lda     #$38                    ; $C83D
+    lda     #$38                    ; $C83D  4 rows from byte 1
     ldx     #$03                    ; $C83F
-    jmp     @loc_C846               ; $C841
+    jmp     @setRows                ; $C841
 
-@loc_C844:
-    lda     #$E0                    ; $C844
+@sixRows:
+    lda     #$E0                    ; $C844  3 bits at a time from bit 7
 
-@loc_C846:
+@setRows:
     sta     floorPatternBits        ; $C846
     stx     floorRowCount           ; $C849
 
 @loop:
     sty     temp8                   ; $C84C
     ldx     floorRowCount           ; $C84E
-    lda     FloorPatterns,y         ; $C851
+    lda     FloorPatterns,y         ; $C851  this row's 3 bits
     and     floorPatternBits        ; $C854
     cpx     #$00                    ; $C857
-    beq     @loc_C85F               ; $C859
+    beq     @tile                   ; $C859
 
 @loop2:
-    lsr     a                       ; $C85B
+    lsr     a                       ; $C85B  shifted down:
     dex                             ; $C85C
     bne     @loop2                  ; $C85D
 
-@loc_C85F:
-    tay                             ; $C85F
-    lda     (temp12),y              ; $C860
+@tile:
+    tay                             ; $C85F  0-7:
+    lda     (temp12),y              ; $C860  the tile set's floor tile for them
     sta     temp11                  ; $C862
-    ldy     temp10                  ; $C864
-    cmp     #$40                    ; $C866
-    beq     @loc_C878               ; $C868
-    cmp     #$42                    ; $C86A
-    bne     @loc_C874               ; $C86C
-    lda     (temp14),y              ; $C86E
+    ldy     temp10                  ; $C864  the row's offset
+    cmp     #$40                    ; $C866  empty?
+    beq     @nextRow                ; $C868  leave the map as it is
+    cmp     #$42                    ; $C86A  $42 (the other empty tile)
+    bne     @store                  ; $C86C
+    lda     (temp14),y              ; $C86E  only over $40
     cmp     #$40                    ; $C870
-    bne     @loc_C878               ; $C872
+    bne     @nextRow                ; $C872
 
-@loc_C874:
+@store:
     lda     temp11                  ; $C874
-    sta     (temp14),y              ; $C876
+    sta     (temp14),y              ; $C876  into the tile map
 
-@loc_C878:
+@nextRow:
     tya                             ; $C878
     clc                             ; $C879
-    adc     #$10                    ; $C87A
+    adc     #$10                    ; $C87A  next row
     sta     temp10                  ; $C87C
     ldy     temp8                   ; $C87E
-    lsr     floorPatternBits        ; $C880
+    lsr     floorPatternBits        ; $C880  next bits
     dec     floorRowCount           ; $C883
     bpl     @loop                   ; $C886
     ldx     #$05                    ; $C888
-    iny                             ; $C88A
+    iny                             ; $C88A  byte 2,
     tya                             ; $C88B
-    and     #$01                    ; $C88C
-    bne     @loc_C844               ; $C88E
-    ldy     temp10                  ; $C890
-    lda     floorTile               ; $C892
+    and     #$01                    ; $C88C  done both?
+    bne     @sixRows                ; $C88E  no: 6 more rows
+    ldy     temp10                  ; $C890  row 12:
+    lda     floorTile               ; $C892  the floor
     sta     (temp14),y              ; $C895
     tya                             ; $C897
     and     #$0F                    ; $C898
-    sta     temp10                  ; $C89A
+    sta     temp10                  ; $C89A  the column again
     rts                             ; $C89C
 
 ; ---------------------------------------------------------------------------
@@ -1691,63 +1700,63 @@ Area_DecodeObjects:
     lda     #$00                    ; $C89D
     sta     areaBuildPage           ; $C89F
     sta     areaBuildColumn         ; $C8A2
-    sta     elevatorPos             ; $C8A5
-    sta     lockedDoorPos           ; $C8A8
+    sta     elevatorPos             ; $C8A5  no elevator yet
+    sta     lockedDoorPos           ; $C8A8  nor locked door
     tay                             ; $C8AB
-    lda     (areaDataPtr),y         ; $C8AC
+    lda     (areaDataPtr),y         ; $C8AC  header byte 0: the length
     sta     areaDataLength          ; $C8AE
     iny                             ; $C8B1
-    lda     (areaDataPtr),y         ; $C8B2
-    and     #$60                    ; $C8B4
+    lda     (areaDataPtr),y         ; $C8B2  header byte 1:
+    and     #$60                    ; $C8B4  bits 6-5: the last page
     lsr     a                       ; $C8B6
     lsr     a                       ; $C8B7
     lsr     a                       ; $C8B8
     lsr     a                       ; $C8B9
     lsr     a                       ; $C8BA
     sta     areaLastPage            ; $C8BB
-    lda     #$04                    ; $C8BD
+    lda     #$04                    ; $C8BD  objects from byte 4
     sta     areaDataOffset          ; $C8BF
     ldy     areaDataOffset          ; $C8C2
 
 @loop:
-    lda     (areaDataPtr),y         ; $C8C5
+    lda     (areaDataPtr),y         ; $C8C5  the position,
     sta     areaBuildPos            ; $C8C7
-    jsr     Area_CheckPageSkip      ; $C8CA
+    jsr     Area_CheckPageSkip      ; $C8CA  after a page skip
     iny                             ; $C8CD
-    lda     (areaDataPtr),y         ; $C8CE
+    lda     (areaDataPtr),y         ; $C8CE  the type
     sta     areaObjectType          ; $C8D0
     iny                             ; $C8D3
     sty     areaDataOffset          ; $C8D4
-    jsr     Area_AdvanceColumn      ; $C8D7
+    jsr     Area_AdvanceColumn      ; $C8D7  the absolute column
     lda     areaBuildPos            ; $C8DA
     and     #$F0                    ; $C8DD
-    cmp     #$D0                    ; $C8DF
-    bne     @loc_C8E9               ; $C8E1
-    cpy     areaDataLength          ; $C8E3
+    cmp     #$D0                    ; $C8DF  row $D (a floor change)?
+    bne     @object                 ; $C8E1  no: an object
+    cpy     areaDataLength          ; $C8E3  more?
     bne     @loop                   ; $C8E6
     rts                             ; $C8E8
 
-@loc_C8E9:
+@object:
     lda     areaObjectType          ; $C8E9
-    and     #$F0                    ; $C8EC
-    beq     @loc_C8F6               ; $C8EE
-    jsr     Area_DrawLargeObject    ; $C8F0
-    jmp     @loc_C909               ; $C8F3
+    and     #$F0                    ; $C8EC  $10 and up?
+    beq     @small                  ; $C8EE
+    jsr     Area_DrawLargeObject    ; $C8F0  a large object
+    jmp     @next                   ; $C8F3
 
-@loc_C8F6:
+@small:
     lda     areaObjectType          ; $C8F6
-    cmp     #$0F                    ; $C8F9
-    bne     @loc_C906               ; $C8FB
-    jsr     Area_PlaceItem          ; $C8FD
-    inc     areaDataOffset          ; $C900
-    jmp     @loc_C909               ; $C903
+    cmp     #$0F                    ; $C8F9  $0F?
+    bne     @drawSmall              ; $C8FB
+    jsr     Area_PlaceItem          ; $C8FD  an item,
+    inc     areaDataOffset          ; $C900  with one more byte
+    jmp     @next                   ; $C903
 
-@loc_C906:
-    jsr     Area_DrawSmallObject    ; $C906
+@drawSmall:
+    jsr     Area_DrawSmallObject    ; $C906  $00-$0E: a small object
 
-@loc_C909:
+@next:
     ldy     areaDataOffset          ; $C909
-    cpy     areaDataLength          ; $C90C
+    cpy     areaDataLength          ; $C90C  more?
     bne     @loop                   ; $C90F
     rts                             ; $C911
 
@@ -1762,8 +1771,8 @@ Area_DecodeObjects:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawLargeObject:
-    ldx     areaObjectType          ; $C912
-    lda     currentWorld            ; $C915
+    ldx     areaObjectType          ; $C912  the object
+    lda     currentWorld            ; $C915  by world
     jsr     JumpTable               ; $C918
 ; (inline jump table)
     .word   AreaBank::DrawLargeObject ; $C91B
@@ -1774,8 +1783,8 @@ Area_DrawLargeObject:
     .word   AreaBank::DrawLargeObject ; $C925
 
 Area_DrawSmallObject:
-    ldx     areaObjectType          ; $C927
-    lda     currentWorld            ; $C92A
+    ldx     areaObjectType          ; $C927  the object
+    lda     currentWorld            ; $C92A  by world
     jsr     JumpTable               ; $C92D
 ; (inline jump table)
     .word   AreaBank::DrawSmallObject ; $C930
@@ -1809,14 +1818,14 @@ AreaMap_GetPagePtr:
 AreaMap_GetPagePtrY:
     tya                             ; $C947
     pha                             ; $C948
-    lda     areaBuildPage           ; $C949
+    lda     areaBuildPage           ; $C949  the page
     and     #$03                    ; $C94C
     tay                             ; $C94E
     lda     AreaMapPagesLo,y        ; $C94F
     sta     temp14                  ; $C952
     lda     AreaMapPagesHi,y        ; $C954
     sta     temp15                  ; $C957
-    pla                             ; $C959
+    pla                             ; $C959  y again
     tay                             ; $C95A
     rts                             ; $C95B
 
@@ -1836,41 +1845,41 @@ Area_NextObjectPos:
 
 Area_AdvanceColumn:
     lda     areaBuildPos            ; $C95F
-    and     #$0F                    ; $C962
+    and     #$0F                    ; $C962  the relative column
     clc                             ; $C964
-    adc     areaBuildColumn         ; $C965
+    adc     areaBuildColumn         ; $C965  + the previous object's
     sta     areaBuildColumn         ; $C968
     and     #$0F                    ; $C96B
     pha                             ; $C96D
-    lda     areaBuildPos            ; $C96E
+    lda     areaBuildPos            ; $C96E  row
     and     #$F0                    ; $C971
     sta     areaBuildPos            ; $C973
     pla                             ; $C976
-    ora     areaBuildPos            ; $C977
+    ora     areaBuildPos            ; $C977  with the column in its page
     sta     areaBuildPos            ; $C97A
     lda     areaBuildColumn         ; $C97D
     lsr     a                       ; $C980
     lsr     a                       ; $C981
     lsr     a                       ; $C982
     lsr     a                       ; $C983
-    sta     areaBuildPage           ; $C984
+    sta     areaBuildPage           ; $C984  its page
     rts                             ; $C987
 
 Area_CheckPageSkip:
     lda     areaBuildPos            ; $C988
     and     #$F0                    ; $C98B
-    cmp     #$E0                    ; $C98D
-    bne     @done                   ; $C98F
-    lda     areaBuildPos            ; $C991
+    cmp     #$E0                    ; $C98D  row $E?
+    bne     @done                   ; $C98F  no
+    lda     areaBuildPos            ; $C991  yes: page 0-3,
     and     #$03                    ; $C994
-    asl     a                       ; $C996
+    asl     a                       ; $C996  x 16: its first column
     asl     a                       ; $C997
     asl     a                       ; $C998
     asl     a                       ; $C999
     sta     areaBuildColumn         ; $C99A
-    iny                             ; $C99D
+    iny                             ; $C99D  the next object
     iny                             ; $C99E
-    lda     (areaDataPtr),y         ; $C99F
+    lda     (areaDataPtr),y         ; $C99F  its position
     sta     areaBuildPos            ; $C9A1
 
 @done:
@@ -1892,45 +1901,45 @@ Area_PlaceItem:
     ldx     #$05                    ; $C9A5
 
 @loop:
-    lda     enemyActive,x           ; $C9A7
-    beq     @loc_C9AF               ; $C9A9
-    dex                             ; $C9AB
+    lda     enemyActive,x           ; $C9A7  a free enemy slot,
+    beq     @place                  ; $C9A9
+    dex                             ; $C9AB  from 5 down
     bpl     @loop                   ; $C9AC
 ; (code below not executed in the test movies)
-    inx                             ; $C9AE
+    inx                             ; $C9AE  none: slot 0
 ; (end of code not executed in the test movies)
 
-@loc_C9AF:
+@place:
     stx     currentObject           ; $C9AF
     lda     areaBuildPage           ; $C9B1
-    sta     objXHi+1,x              ; $C9B4
-    tax                             ; $C9B6
+    sta     objXHi+1,x              ; $C9B4  the item's page
+    tax                             ; $C9B6  its area flag (one per page)
     jsr     Area_TestFlag           ; $C9B7
     ldx     currentObject           ; $C9BA
-    cmp     #$00                    ; $C9BC
-    beq     @done                   ; $C9BE
-    ror     enemySramIndex,x        ; $C9C0
-    lda     areaBuildPos            ; $C9C2
+    cmp     #$00                    ; $C9BC  taken?
+    beq     @done                   ; $C9BE  yes: leave it out
+    ror     enemySramIndex,x        ; $C9C0  bit 7: no list entry (carry set)
+    lda     areaBuildPos            ; $C9C2  column:
     pha                             ; $C9C5
     asl     a                       ; $C9C6
     asl     a                       ; $C9C7
     asl     a                       ; $C9C8
     asl     a                       ; $C9C9
     clc                             ; $C9CA
-    adc     #$03                    ; $C9CB
+    adc     #$03                    ; $C9CB  X = column x 16 + 3
     sta     objX+1,x                ; $C9CD
     pla                             ; $C9CF
-    and     #$F0                    ; $C9D0
+    and     #$F0                    ; $C9D0  row:
     clc                             ; $C9D2
-    adc     #$20                    ; $C9D3
+    adc     #$20                    ; $C9D3  Y = row x 16 + $20
     sta     objY+1,x                ; $C9D5
     lda     #$01                    ; $C9D7
-    sta     objYHi+1,x              ; $C9D9
-    sta     enemyActive,x           ; $C9DB
-    sta     enemyType,x             ; $C9DD
-    sta     objYVelocity+1,x        ; $C9DF
+    sta     objYHi+1,x              ; $C9D9  on screen,
+    sta     enemyActive,x           ; $C9DB  active,
+    sta     enemyType,x             ; $C9DD  an item (type 1),
+    sta     objYVelocity+1,x        ; $C9DF  falling
     ldy     areaDataOffset          ; $C9E2
-    lda     (areaDataPtr),y         ; $C9E5
+    lda     (areaDataPtr),y         ; $C9E5  its kind, the extra byte
     sta     enemyAiState,x          ; $C9E7
 
 @done:
@@ -4455,7 +4464,7 @@ EnemySpawnYPositions:
 Enemy_TrySpawn:
     lda     fairyEncounter          ; $D603
     bne     Enemy_TrySpawnDone      ; $D606
-    lda     scrollPage              ; $D608
+    lda     scrollDir               ; $D608
     lsr     a                       ; $D60B
     eor     #$01                    ; $D60C
     tax                             ; $D60E
@@ -10642,14 +10651,14 @@ AttrColumnOffsets:
 ;
 ; Write attrColumn (7 bytes) to a column of the attribute table, for
 ; scrolling, and clear attrColumn and attrColumnPending.  The column is
-; computed from attrColumnAddr, attrColumnAddr+1 and drawPage.  Called by the game NMI
+; computed from attrColumnAddr, attrColumnAddr+1 and columnDrawDir.  Called by the game NMI
 ; when attrColumnPending is set.
 ;
 ; Clobbers: a, x, temp0, temp1
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_WriteAttrColumn:
-    lda     drawPage                ; $FD82  1 scrolling right, 2 left:
+    lda     columnDrawDir           ; $FD82  1 scrolling right, 2 left:
     lsr     a                       ; $FD85
     tax                             ; $FD86  x = 0 right, 1 left
     lda     attrColumnAddr+1        ; $FD87  the column's address, low byte:
@@ -10774,78 +10783,78 @@ Death_BlinkSaveChoice:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_DrawMetatileColumn:
-    jsr     Mmc1_SetPrgBankArea     ; $FED0
+    jsr     Mmc1_SetPrgBankArea     ; $FED0  the metatiles are in the area bank
 
-@loc_FED3:
-    stx     temp1                   ; $FED3
-    lda     columnTiles,x           ; $FED5
-    and     #$C0                    ; $FED8
+@row:
+    stx     temp1                   ; $FED3  the row (0-12)
+    lda     columnTiles,x           ; $FED5  the area tile:
+    and     #$C0                    ; $FED8  bits 7-6: its palette
     sta     temp3                   ; $FEDA
     asl     a                       ; $FEDC
     rol     a                       ; $FEDD
     rol     a                       ; $FEDE
-    asl     a                       ; $FEDF
+    asl     a                       ; $FEDF  its group's metatiles
     tay                             ; $FEE0
     lda     AreaBank::MetatilePtrs,y ; $FEE1
     sta     temp14                  ; $FEE4
     lda     AreaBank::MetatilePtrs+1,y ; $FEE6
     sta     temp15                  ; $FEE9
     lda     columnTiles,x           ; $FEEB
-    and     #$3F                    ; $FEEE
-    asl     a                       ; $FEF0
+    and     #$3F                    ; $FEEE  bits 5-0: the metatile,
+    asl     a                       ; $FEF0  4 tiles each
     asl     a                       ; $FEF1
     sta     temp2                   ; $FEF2
     lda     columnDrawStep          ; $FEF4
-    and     #$01                    ; $FEF7
+    and     #$01                    ; $FEF7  the left or right half
     eor     #$01                    ; $FEF9
     asl     a                       ; $FEFB
     adc     temp2                   ; $FEFC
     tay                             ; $FEFE
     ldx     temp0                   ; $FEFF
-    lda     (temp14),y              ; $FF01
-    sta     ppuBuffer2+3,x          ; $FF03
+    lda     (temp14),y              ; $FF01  its top tile
+    sta     ppuBuffer2+3,x          ; $FF03  into the PPU string
     iny                             ; $FF06
-    lda     (temp14),y              ; $FF07
+    lda     (temp14),y              ; $FF07  and its bottom tile
     sta     ppuBuffer2+4,x          ; $FF09
-    ldy     temp4                   ; $FF0C
-    lda     temp5                   ; $FF0E
-    bne     @loc_FF20               ; $FF10
+    ldy     temp4                   ; $FF0C  the attribute row
+    lda     temp5                   ; $FF0E  left (0) or right (1) in the attribute cell?
+    bne     @right                  ; $FF10
     lda     temp1                   ; $FF12
-    lsr     a                       ; $FF14
-    bcs     @loc_FF30               ; $FF15
-    rol     temp3                   ; $FF17
+    lsr     a                       ; $FF14  top or bottom row of it?
+    bcs     @bottomLeft             ; $FF15
+    rol     temp3                   ; $FF17  top left: bits 1-0
     rol     temp3                   ; $FF19
     rol     temp3                   ; $FF1B
-    jmp     @loc_FF36               ; $FF1D
+    jmp     @setAttr                ; $FF1D
 
-@loc_FF20:
+@right:
     lda     temp1                   ; $FF20
     lsr     a                       ; $FF22
-    bcs     @loc_FF34               ; $FF23
-    lsr     temp3                   ; $FF25
+    bcs     @bottom                 ; $FF23  bottom right: bits 7-6 as they are
+    lsr     temp3                   ; $FF25  top right: bits 3-2
     lsr     temp3                   ; $FF27
     lsr     temp3                   ; $FF29
     lsr     temp3                   ; $FF2B
-    jmp     @loc_FF36               ; $FF2D
+    jmp     @setAttr                ; $FF2D
 
-@loc_FF30:
-    lsr     temp3                   ; $FF30
+@bottomLeft:
+    lsr     temp3                   ; $FF30  bottom left: bits 5-4
     lsr     temp3                   ; $FF32
 
-@loc_FF34:
-    inc     temp4                   ; $FF34
+@bottom:
+    inc     temp4                   ; $FF34  bottom: next attribute row
 
-@loc_FF36:
+@setAttr:
     lda     attrColumn,y            ; $FF36
-    ora     temp3                   ; $FF39
+    ora     temp3                   ; $FF39  add the palette
     sta     attrColumn,y            ; $FF3B
-    inc     temp0                   ; $FF3E
+    inc     temp0                   ; $FF3E  2 tiles on
     inc     temp0                   ; $FF40
     ldx     temp1                   ; $FF42
-    inx                             ; $FF44
-    cpx     #$0D                    ; $FF45
-    bcc     @loc_FED3               ; $FF47
-    jmp     Mmc1_SetPrgBank0        ; $FF49
+    inx                             ; $FF44  next row
+    cpx     #$0D                    ; $FF45  13 rows
+    bcc     @row                    ; $FF47
+    jmp     Mmc1_SetPrgBank0        ; $FF49  map bank 0 again, and return
 ; (unreferenced: $FF4C-$FF6F, 36 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $FF4C
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $FF5C

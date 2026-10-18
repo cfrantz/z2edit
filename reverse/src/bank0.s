@@ -2280,9 +2280,9 @@ SideView_Start:
     sta     columnIndex             ; $8D24
     lda     sramEntryRightColumn,y  ; $8D27
     sta     columnIndex+1           ; $8D2A
-    lda     sramEntryScrollPage,y   ; $8D2D
-    sta     scrollPage              ; $8D30
-    sta     drawPage                ; $8D33
+    lda     sramEntryScrollDir,y    ; $8D2D
+    sta     scrollDir               ; $8D30
+    sta     columnDrawDir           ; $8D33
     lda     sramEntryScrollXHi,y    ; $8D36
     sta     scrollXHi               ; $8D39
     and     #$01                    ; $8D3C
@@ -4470,110 +4470,116 @@ Scroll_UpdateDone:
 ; ---------------------------------------------------------------------------
 ; Scroll_Update
 ;
-; Side view: scroll the screen to follow Link, within the area's limits
-; (sramScrollMinPage, sramScrollMaxPage).  Does nothing in single-screen
-; areas or while scrollFrozen is set.
+; Side view: scroll the screen by Link's movement this frame (linkDeltaX),
+; which keeps him at screen X $70-$71, within the area's limits
+; (sramScrollMinPage, sramScrollMaxPage).  At the left limit (within 4
+; pixels of it) the screen holds until Link, facing right, reaches screen X
+; $70; at the right limit until Link, facing left, is back left of $71
+; (scrollHeld = 1 meanwhile).  Sets scrollDir, and when the direction
+; changes turns the column drawing round (columnDrawDir).  Does nothing in
+; single-screen areas or while scrollFrozen is set.  Checked over the
+; first 60000 frames of the 100% movie.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_Update:
     ldy     areaLastPage            ; $9925
-    beq     Scroll_UpdateDone       ; $9927
+    beq     Scroll_UpdateDone       ; $9927  one page: no scrolling
     lda     scrollFrozen            ; $9929
-    bne     Scroll_UpdateDone       ; $992C
+    bne     Scroll_UpdateDone       ; $992C  frozen (boss rooms)
     sta     scrollHeld              ; $992E  0: the screen follows Link (a = 0)
-    lda     a:linkDeltaX            ; $9931
+    lda     a:linkDeltaX            ; $9931  how far Link moved this frame
     sta     temp0                   ; $9934
-    ldx     objFacing               ; $9936
-    lda     scrollXHi               ; $9938
+    ldx     objFacing               ; $9936  1 right, 2 left
+    lda     scrollXHi               ; $9938  at the left limit?
     cmp     sramScrollMinPage,y     ; $993B
-    bmi     @loc_9949               ; $993E
-    bne     @loc_9955               ; $9940
-    lda     scrollX                 ; $9942
+    bmi     @atLeftLimit            ; $993E
+    bne     @checkRightLimit        ; $9940
+    lda     scrollX                 ; $9942  within 4 pixels of it?
     cmp     #$04                    ; $9945
-    bcs     @loc_9955               ; $9947
+    bcs     @checkRightLimit        ; $9947  no: free to scroll
 
-@loc_9949:
-    dex                             ; $9949
-    bne     @loc_9971               ; $994A
-    lda     drawScreenX             ; $994C
+@atLeftLimit:
+    dex                             ; $9949  at the left limit:
+    bne     @held                   ; $994A  facing left: held
+    lda     drawScreenX             ; $994C  facing right: once Link is at
     clc                             ; $994E
-    adc     #$20                    ; $994F
+    adc     #$20                    ; $994F  screen X $70 or more,
     cmp     #$90                    ; $9951
-    bcc     @loc_9971               ; $9953
+    bcc     @held                   ; $9953  scroll
 
-@loc_9955:
-    lda     scrollX                 ; $9955
+@checkRightLimit:
+    lda     scrollX                 ; $9955  at the right limit?
     clc                             ; $9958
     adc     #$02                    ; $9959
     lda     scrollXHi               ; $995B
     adc     #$00                    ; $995E
-    cmp     sramScrollMaxPage,y     ; $9960
-    bne     @loc_9977               ; $9963
-    dex                             ; $9965
-    beq     @loc_9971               ; $9966
-    lda     drawScreenX             ; $9968
+    cmp     sramScrollMaxPage,y     ; $9960  (2 pixels short of it)
+    bne     @scroll                 ; $9963  no: free to scroll
+    dex                             ; $9965  facing right: held
+    beq     @held                   ; $9966
+    lda     drawScreenX             ; $9968  facing left: while Link is left
     sec                             ; $996A
     sbc     #$20                    ; $996B
-    cmp     #$51                    ; $996D
-    bcc     @loc_9977               ; $996F
+    cmp     #$51                    ; $996D  of screen X $71,
+    bcc     @scroll                 ; $996F  scroll
 
-@loc_9971:
+@held:
     inc     scrollHeld              ; $9971  1: held at the end of the area
     jmp     Scroll_SetRightEdge     ; $9974
 
-@loc_9977:
+@scroll:
     ldy     temp0                   ; $9977
-    tya                             ; $9979
+    tya                             ; $9979  Link didn't move: nothing to do
     beq     Scroll_SetRightEdgeDone ; $997A
     clc                             ; $997C
-    adc     columnScroll            ; $997D
+    adc     columnScroll            ; $997D  the column drawing keeps count
     sta     columnScroll            ; $9980
-    ldx     #$01                    ; $9983
-    stx     scrollPage              ; $9985
-    dex                             ; $9988
+    ldx     #$01                    ; $9983  scrolling right (1),
+    stx     scrollDir               ; $9985
+    dex                             ; $9988  dx's high byte 0
     tya                             ; $9989
     pha                             ; $998A
-    bpl     @loc_9991               ; $998B
-    dex                             ; $998D
-    inc     scrollPage              ; $998E
+    bpl     @checkDir               ; $998B
+    dex                             ; $998D  or left (2): high byte $FF
+    inc     scrollDir               ; $998E
 
-@loc_9991:
+@checkDir:
     stx     temp0                   ; $9991
-    ldy     scrollPage              ; $9993
-    cpy     drawPage                ; $9996
-    beq     @loc_99BD               ; $9999
-    lda     columnScroll            ; $999B
-    bmi     @loc_99A4               ; $999E
-    cmp     #$20                    ; $99A0
-    bcc     @loc_99BD               ; $99A2
+    ldy     scrollDir               ; $9993
+    cpy     columnDrawDir           ; $9996  the direction columns are drawn in?
+    beq     @move                   ; $9999  same: just scroll
+    lda     columnScroll            ; $999B  turned: unless a column was just
+    bmi     @turn                   ; $999E
+    cmp     #$20                    ; $99A0  finished (count 0-$1F),
+    bcc     @move                   ; $99A2
 
-@loc_99A4:
-    sty     drawPage                ; $99A4
-    lda     columnDrawStep          ; $99A7
-    cmp     #$06                    ; $99AA
-    bcs     @loc_99B8               ; $99AC
+@turn:
+    sty     columnDrawDir           ; $99A4  draw toward the new side,
+    lda     columnDrawStep          ; $99A7  with the edges moved past the column
+    cmp     #$06                    ; $99AA  that was half drawn
+    bcs     @newColumn              ; $99AC
     cmp     #$02                    ; $99AE
-    bcs     @loc_99B5               ; $99B0
+    bcs     @advanceOnce            ; $99B0
     jsr     Scroll_AdvanceColumn    ; $99B2
 
-@loc_99B5:
+@advanceOnce:
     jsr     Scroll_AdvanceColumn    ; $99B5
 
-@loc_99B8:
-    lda     #$00                    ; $99B8
+@newColumn:
+    lda     #$00                    ; $99B8  and a new column
     sta     columnDrawStep          ; $99BA
 
-@loc_99BD:
-    pla                             ; $99BD
+@move:
+    pla                             ; $99BD  dx
     clc                             ; $99BE
-    adc     scrollX                 ; $99BF
+    adc     scrollX                 ; $99BF  + scroll
     sta     scrollX                 ; $99C2
-    sta     ppuScrollX              ; $99C5
+    sta     ppuScrollX              ; $99C5  the PPU's too
     lda     scrollXHi               ; $99C7
     adc     temp0                   ; $99CA
     sta     scrollXHi               ; $99CC
-    and     #$01                    ; $99CF
+    and     #$01                    ; $99CF  its page's nametable
     sta     playfieldNametable      ; $99D1
 
 ; ---------------------------------------------------------------------------
@@ -4587,7 +4593,7 @@ Scroll_Update:
 Scroll_SetRightEdge:
     lda     scrollX                 ; $99D4
     clc                             ; $99D7
-    adc     #$FF                    ; $99D8
+    adc     #$FF                    ; $99D8  + 255
     sta     scrollRightX            ; $99DA
     lda     scrollXHi               ; $99DD
     adc     #$00                    ; $99E0
@@ -4615,39 +4621,42 @@ Scroll_SetRightEdgeDone:
 ; ---------------------------------------------------------------------------
 Scroll_DrawColumns:
     lda     columnDrawStep          ; $99E6
-    bne     Scroll_DrawColumnStep   ; $99E9
-    lda     columnScroll            ; $99EB
-    bmi     @loc_99F9               ; $99EE
+    bne     Scroll_DrawColumnStep   ; $99E9  a column under way: its next step
+    lda     columnScroll            ; $99EB  scrolled 32 pixels either way?
+    bmi     @left                   ; $99EE  left
     cmp     #$20                    ; $99F0
-    bcc     Scroll_SetRightEdgeDone ; $99F2
-    sbc     #$20                    ; $99F4
-    jmp     @loc_99FC               ; $99F6
+    bcc     Scroll_SetRightEdgeDone ; $99F2  not yet
+    sbc     #$20                    ; $99F4  right: count 32 off
+    jmp     @newString              ; $99F6
 
-@loc_99F9:
+@left:
     clc                             ; $99F9
-    adc     #$20                    ; $99FA
+    adc     #$20                    ; $99FA  left: count 32 back
 
-@loc_99FC:
+@newString:
     sta     columnScroll            ; $99FC
-    lda     #$00                    ; $99FF
+    lda     #$00                    ; $99FF  a new column in ppuBuffer2
     sta     ppuBuffer2Len           ; $9A01
 
 Scroll_DrawColumnStep:
-    dec     columnDrawStep          ; $9A04
-    bpl     @loc_9A18               ; $9A07
-    lda     #$08                    ; $9A09
+    ; QUIRK: the clear loop at the start of a column stores attrColumn+7
+    ; down to +1: it misses +0 (which Ppu_WriteAttrColumn already cleared)
+    ; and clears $0478, past the array.
+    dec     columnDrawStep          ; $9A04  next step (8 down to 0)
+    bpl     @step                   ; $9A07
+    lda     #$08                    ; $9A09  start a column: 8 steps,
     sta     columnDrawStep          ; $9A0B
     lda     #$00                    ; $9A0E
-    ldx     #$07                    ; $9A10
+    ldx     #$07                    ; $9A10  7 down to 1: attrColumn+1 to +7
 
 @loop:
     sta     attrColumn,x            ; $9A12
     dex                             ; $9A15
     bne     @loop                   ; $9A16
 
-@loc_9A18:
+@step:
     lda     columnDrawStep          ; $9A18
-    jsr     JumpTable               ; $9A1B
+    jsr     JumpTable               ; $9A1B  by step, from 8 down to 0
 ; (inline jump table)
     .word   Scroll_RequestAttrColumn ; $9A1E
     .word   Scroll_AdvanceColumn    ; $9A20
@@ -4668,47 +4677,47 @@ Scroll_DrawColumnStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_AdvanceColumn:
-    lda     drawPage                ; $9A30
-    ldx     #$01                    ; $9A33
+    lda     columnDrawDir           ; $9A30  drawing direction:
+    ldx     #$01                    ; $9A33  both edges
     lsr     a                       ; $9A35
-    bcc     @loc_9A5A               ; $9A36
+    bcc     @leftEdge               ; $9A36  left
 
 @loop:
-    ldy     columnIndex,x           ; $9A38
+    ldy     columnIndex,x           ; $9A38  right: next column
     iny                             ; $9A3B
     tya                             ; $9A3C
     and     #$0F                    ; $9A3D
     sta     columnIndex,x           ; $9A3F
-    bne     @loc_9A56               ; $9A42
-    inc     columnPage,x            ; $9A44
+    bne     @nextEdge               ; $9A42
+    inc     columnPage,x            ; $9A44  next page,
     lda     columnPage,x            ; $9A47
-    cmp     columnLastPage          ; $9A4A
-    bcc     @loc_9A56               ; $9A4D
-    beq     @loc_9A56               ; $9A4F
-    lda     #$00                    ; $9A51
+    cmp     columnLastPage          ; $9A4A  past the last page?
+    bcc     @nextEdge               ; $9A4D
+    beq     @nextEdge               ; $9A4F
+    lda     #$00                    ; $9A51  wrap to page 0
     sta     columnPage,x            ; $9A53
 
-@loc_9A56:
-    dex                             ; $9A56
+@nextEdge:
+    dex                             ; $9A56  the other edge
     bpl     @loop                   ; $9A57
     rts                             ; $9A59
 
-@loc_9A5A:
-    ldy     columnIndex,x           ; $9A5A
+@leftEdge:
+    ldy     columnIndex,x           ; $9A5A  left: previous column
     dey                             ; $9A5D
     tya                             ; $9A5E
     and     #$0F                    ; $9A5F
     sta     columnIndex,x           ; $9A61
     cmp     #$0F                    ; $9A64
-    bne     @loc_9A73               ; $9A66
-    dec     columnPage,x            ; $9A68
-    bpl     @loc_9A73               ; $9A6B
-    lda     columnLastPage          ; $9A6D
+    bne     @nextLeftEdge           ; $9A66
+    dec     columnPage,x            ; $9A68  previous page,
+    bpl     @nextLeftEdge           ; $9A6B
+    lda     columnLastPage          ; $9A6D  wrap to the last page
     sta     columnPage,x            ; $9A70
 
-@loc_9A73:
+@nextLeftEdge:
     dex                             ; $9A73
-    bpl     @loc_9A5A               ; $9A74
+    bpl     @leftEdge               ; $9A74
     rts                             ; $9A76
 
 ; ---------------------------------------------------------------------------
@@ -4719,26 +4728,26 @@ Scroll_AdvanceColumn:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_LoadColumnTiles:
-    lda     drawPage                ; $9A77
-    lsr     a                       ; $9A7A
-    ldx     columnIndex             ; $9A7B
+    lda     columnDrawDir           ; $9A77  drawing direction:
+    lsr     a                       ; $9A7A  carry = 1 right
+    ldx     columnIndex             ; $9A7B  left edge's column
     lda     columnPage              ; $9A7E
-    bcc     @loc_9A89               ; $9A81
-    ldx     columnIndex+1           ; $9A83
+    bcc     @load                   ; $9A81
+    ldx     columnIndex+1           ; $9A83  right edge's
     lda     columnPage+1            ; $9A86
 
-@loc_9A89:
-    jsr     AreaMap_GetPagePtr_Bank0 ; $9A89
+@load:
+    jsr     AreaMap_GetPagePtr_Bank0 ; $9A89  its page
     txa                             ; $9A8C
     tay                             ; $9A8D
-    ldx     #$00                    ; $9A8E
+    ldx     #$00                    ; $9A8E  13 rows:
 
 @loop:
     lda     (temp14),y              ; $9A90
     sta     columnTiles,x           ; $9A92
     tya                             ; $9A95
     clc                             ; $9A96
-    adc     #$10                    ; $9A97
+    adc     #$10                    ; $9A97  next row
     tay                             ; $9A99
     inx                             ; $9A9A
     cpx     #$0D                    ; $9A9B
@@ -4780,45 +4789,45 @@ NametableHiBytes:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Scroll_QueueColumnTiles:
-    lda     drawPage                ; $9AB8
-    and     #$01                    ; $9ABB
+    lda     columnDrawDir           ; $9AB8  drawing direction:
+    and     #$01                    ; $9ABB  0 left edge, 1 right
     tay                             ; $9ABD
     lda     columnIndex,y           ; $9ABE
-    and     #$01                    ; $9AC1
-    sta     temp5                   ; $9AC3
-    lda     columnPage,y            ; $9AC5
+    and     #$01                    ; $9AC1  odd metatile column:
+    sta     temp5                   ; $9AC3  the right half of its attribute cell
+    lda     columnPage,y            ; $9AC5  the page's
     and     #$01                    ; $9AC8
     tax                             ; $9ACA
-    lda     NametableHiBytes,x      ; $9ACB
+    lda     NametableHiBytes,x      ; $9ACB  nametable
     sta     attrColumnAddr          ; $9ACE
-    lda     columnDrawStep          ; $9AD1
+    lda     columnDrawStep          ; $9AD1  this step's
     and     #$01                    ; $9AD4
-    eor     #$01                    ; $9AD6
-    lsr     a                       ; $9AD8
-    lda     columnIndex,y           ; $9AD9
-    rol     a                       ; $9ADC
-    adc     #$80                    ; $9ADD
+    eor     #$01                    ; $9AD6  half of the metatile:
+    lsr     a                       ; $9AD8  carry
+    lda     columnIndex,y           ; $9AD9  tile column = metatile column x 2
+    rol     a                       ; $9ADC  + half,
+    adc     #$80                    ; $9ADD  on tile row 4: below the status bar
     sta     attrColumnAddr+1        ; $9ADF
     ldy     ppuBuffer2Len           ; $9AE2
-    sty     temp0                   ; $9AE5
+    sty     temp0                   ; $9AE5  the string's start
     lda     attrColumnAddr+1        ; $9AE7
-    sta     ppuBuffer2+1,y          ; $9AEA
+    sta     ppuBuffer2+1,y          ; $9AEA  address
     lda     attrColumnAddr          ; $9AED
     sta     ppuBuffer2,y            ; $9AF0
-    lda     #$9A                    ; $9AF3
+    lda     #$9A                    ; $9AF3  vertical, 26 bytes
     sta     ppuBuffer2+2,y          ; $9AF5
-    lda     #$00                    ; $9AF8
+    lda     #$00                    ; $9AF8  the attribute row
     sta     temp4                   ; $9AFA
-    tax                             ; $9AFC
-    jsr     Area_DrawMetatileColumn ; $9AFD
+    tax                             ; $9AFC  from row 0
+    jsr     Area_DrawMetatileColumn ; $9AFD  26 tiles and their attributes
     ldy     temp0                   ; $9B00
     iny                             ; $9B02
     iny                             ; $9B03
-    iny                             ; $9B04
-    lda     #$FF                    ; $9B05
+    iny                             ; $9B04  past the string
+    lda     #$FF                    ; $9B05  end the list
     sta     ppuBuffer2,y            ; $9B07
     sty     ppuBuffer2Len           ; $9B0A
-    lda     #$02                    ; $9B0D
+    lda     #$02                    ; $9B0D  for the next NMI
     sta     ppuStringSelect         ; $9B0F
     rts                             ; $9B12
 
@@ -4831,7 +4840,7 @@ Scroll_QueueColumnTiles:
 ; ---------------------------------------------------------------------------
 Scroll_RequestAttrColumn:
     lda     #$01                    ; $9B13
-    sta     attrColumnPending       ; $9B15
+    sta     attrColumnPending       ; $9B15  the attributes, at the next NMI
     rts                             ; $9B18
 
 ; ---------------------------------------------------------------------------

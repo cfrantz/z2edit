@@ -250,8 +250,8 @@ areaBuildPage           = $0717     ; map page (0-3) while building an area's ti
 columnLastPage          = $071B     ; last page of the area (3): columnPage wraps past it (Scroll_*)
 unused071C              = $071C     ; zeroed when an area is loaded, never read
 attrColumnAddr          = $071D     ; (16-bit, high byte first) PPU address of the top of the column being scrolled in, below the status bar ($2080 + column); Ppu_WriteAttrColumn finds its attribute column from it
-scrollPage              = $071F     ; page of the area the screen is on (Scroll_Update) (provisional)
-drawPage                = $0720     ; page of the columns being drawn as the screen scrolls (provisional)
+scrollDir               = $071F     ; direction of the latest scroll: 1 = right, 2 = left (Scroll_Update; the JOY_RIGHT, JOY_LEFT bits)
+columnDrawDir           = $0720     ; edge the scroll columns are drawn at: 1 = right, 2 = left; follows scrollDir once a column is done (Scroll_Update)
 columnScroll            = $0721     ; scroll since the last column was drawn: Scroll_DrawColumns starts a column when it reaches $20 (or goes negative) and takes $20 off
 drawAreaColumnsLeft     = $0722     ; columns Mode_DrawArea still draws before the side view starts (from $0F)
 ppuStringSelect         = $0725     ; PPU update string sent by the next NMI; see PpuStringPtrs
@@ -400,7 +400,7 @@ sramEntryRightColumn    = $699E     ; [7] column at the right edge, likewise (pr
 sramEntryScrollXHi      = $69A5     ; [7] scrollXHi, likewise (provisional)
 sramEntryScrollX        = $69AC     ; [7] scrollX & $F0, likewise (provisional)
 sramEntryPpuScrollX     = $69B3     ; [7] scroll state saved for entering an area at page x (Scroll_SavePageState, restored by Area_Load): ppuScrollX & $F0 (provisional)
-sramEntryScrollPage     = $69BA     ; [7] scrollPage, likewise (provisional)
+sramEntryScrollDir      = $69BA     ; [7] scrollDir, likewise
 sramScrollMinPage       = $69C1     ; lowest scroll page, indexed by areaLastPage
 sram_69C2               = $69C2
 sramScrollMaxPage       = $69C4     ; highest scroll page, indexed by areaLastPage

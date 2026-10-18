@@ -66,13 +66,10 @@ unless noted):
 - 8c. Done: game modes and transitions (bank 7): location entry, world
   loading, area transitions, doors, death, game over and the continue
   screen (scripted with play.py; docs/systems/death.md).
-- 8d. Area loading and scrolling (banks 7 and 0, ~740): `Area_Load`,
-  `Area_DrawFloors`, `Area_DecodeObjects`, `Area_PlaceItem`, the
-  `AreaMap_*` helpers, `Area_DrawMetatileColumn`, and bank 0's
-  `Scroll_*`.  `scrollPage` and `drawPage` are not pages: `Scroll_Update` sets
-  them to 1 scrolling right and 2 scrolling left (`Ppu_WriteAttrColumn`
-  relies on it); rename them once the entry values
-  (`sramEntryScrollPage`) are understood.
+- 8d. Done: area loading and scrolling (banks 7 and 0); `scrollPage` and
+  `drawPage` renamed `scrollDir` and `columnDrawDir`; the scroll limits
+  checked over the 100% movie and the row fill with area_dump.py;
+  docs/world/areas.md (Scrolling).
 - 8e. The side view frame and the object framework (bank 7, ~700):
   `Mode_SideView`, `Obj_Move*`, `Enemy_Update`, `Enemy_TrySpawn`,
   `Enemy_Spawn`, `Enemy_Die*`, `Enemy_ShowExperience`,
