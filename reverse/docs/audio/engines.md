@@ -144,8 +144,11 @@ the frames left (every 4 frames); the drum, bass, harmony and melody
 ## DMC Samples
 
 `Sfx_UpdateDmc` plays samples from `DmcSamples` (start, length pairs),
-stored in bank 7 at $F300-$FB70: sample 1 is Link's cry, samples 2-7
-Ganon's laugh, played one after another (`laughSample`).
+stored in bank 7 at $F300-$FB70: sample 1 is Link's cry (`DmcLinkHurt`),
+samples 2-7 Ganon's laugh (`DmcLaugh1`-`DmcLaugh6`), played one after
+another (`laughSample`).  The fifth part (241 bytes from $F9C0) overlaps
+the sixth (from $FA80).  `DmcSamplesUnused` lists two more samples,
+`DmcUnused1` and `DmcUnused2`, that no sound effect plays.
 
 ## Title Music
 

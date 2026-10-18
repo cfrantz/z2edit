@@ -42,10 +42,46 @@ While idle, the loop uses only `a` and the flags.
   the area bank with `Mmc1_SetPrgBankArea`.
 - The game NMI saves only `a` (the main thread is idle).  It updates the
   PPU (sprite DMA, VRAM updates, scroll), reads the controllers
-  (`Joypad_Update`), updates sound (bank 6), runs the game for one frame
+  (`Joypad_Update`) after updating sound (bank 6), runs the game for one frame
   (`Game_RunState`, mostly bank 0 code), runs the menus when the mode
   asked for them (`menusPending`, `Game_UpdateMenus`; see
   [menus](../systems/menus.md)), and returns with bank 0 mapped.
+
+## The Game NMI's Frame
+
+In order (checked over both movies):
+
+1. PPUCTRL with NMI disabled (a game frame can outlast the vblank) and
+   this frame's base nametable (`ppuNametable`).
+2. PPUMASK with rendering off.  The value restored in step 6 is
+   `ppuMaskShadow`: the emphasis bits only while `renderingOff` is set,
+   else background and sprites on ($18) plus `ppuMaskExtra` ($06, the
+   leftmost 8 pixels; set everywhere but the overworld).
+3. Scroll 0, 0, and sprite DMA from `oamBuffer`.
+4. VRAM updates: a pending attribute column (`Ppu_WriteAttrColumn`), then
+   the PPU strings selected by `ppuStringSelect` (`Ppu_WriteStrings`).
+   The RAM buffers hand over 2 -> 1 -> 0 on successive frames; a ROM
+   string (select 3 and up) is sent once and selection returns to buffer 0.
+5. The scroll for the whole screen, on the overworld only (`ppuMaskExtra`
+   clear).  Elsewhere it stays 0, 0 for the status bar, and the code that
+   waits for the sprite 0 hit sets the playfield's scroll (`Mode_SideView`,
+   and in menus `Hud_SplitScreen`, `LevelUp_Update`, `Dialog_Update`,
+   `Saria_BuildBridge`).
+6. Rendering back on, and the sent RAM buffer emptied.
+7. Sound (bank 6), then the controllers.  These run every frame, paused
+   or not.
+8. The menus (`Game_UpdateMenus`) if the mode asked (`menusPending`),
+   except while the big door opens (`gameFrozen` with `bigDoorCounter` or
+   `bigDoorStep`).
+9. The game, unless paused (`pauseState` set), in the level up window, or
+   opening a conversation's window (`dialogType` 2-4 with `pauseState`
+   3-6; the rest of a conversation runs the game): decrement the timers
+   (`timerFast` every frame, `timerSlow` every 20 frames), count
+   `frameCounter`, step the RNG, hide every sprite but sprite 0, and run
+   `Game_RunState`.  `Game_RunState` clears `menusPending`, so while
+   paused it stays set and the menus run every frame.
+10. NMI enabled again, after reading PPUSTATUS to clear the vblank flag
+    (enabling NMI during vblank would fire one at once).
 
 ## PPU Shadow Registers
 

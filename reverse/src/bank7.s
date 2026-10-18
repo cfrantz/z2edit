@@ -19,11 +19,11 @@
 ; ---------------------------------------------------------------------------
 Main:
     lda     #$00                    ; $C000
-    sta     PPUMASK                 ; $C002
-    sta     PPUCTRL                 ; $C005
-    lda     #$05                    ; $C008
+    sta     PPUMASK                 ; $C002  rendering off
+    sta     PPUCTRL                 ; $C005  NMI off
+    lda     #$05                    ; $C008  map bank 5: the title screens
     jsr     Mmc1_SetPrgBank         ; $C00A
-    jsr     Game_PowerOnInit        ; $C00D
+    jsr     Game_PowerOnInit        ; $C00D  ends with NMI on, in Bank5_Nmi's mode
 
 ; ---------------------------------------------------------------------------
 ; Main_Loop
@@ -45,19 +45,19 @@ Main:
 ; ---------------------------------------------------------------------------
 Main_Loop:
     lda     gameMode                ; $C010
-    cmp     #GAME_MODE_LOAD_AREA    ; $C013
+    cmp     #GAME_MODE_LOAD_AREA    ; $C013  entering an area?
     beq     @checkLoadRequest       ; $C015
-    cmp     #GAME_MODE_LOAD_ROOM    ; $C017
-    bne     Main_Loop               ; $C019
+    cmp     #GAME_MODE_LOAD_ROOM    ; $C017  or moving to a connected room?
+    bne     Main_Loop               ; $C019  neither: keep waiting
 
 @checkLoadRequest:
     lda     gameState               ; $C01B
-    cmp     #GAME_STATE_PLAY        ; $C01E
-    bne     Main_Loop               ; $C020
-    lda     #NMI_MODE_SOUND_ONLY    ; $C022
+    cmp     #GAME_STATE_PLAY        ; $C01E  only while playing (the ending loads its own)
+    bne     Main_Loop               ; $C020  not playing: keep waiting
+    lda     #NMI_MODE_SOUND_ONLY    ; $C022  the NMI only plays sound
     sta     nmiMode                 ; $C024
-    jsr     Area_Load               ; $C027
-    lda     #NMI_MODE_GAME          ; $C02A
+    jsr     Area_Load               ; $C027  while the area loads (several frames)
+    lda     #NMI_MODE_GAME          ; $C02A  then the game NMI again
     sta     nmiMode                 ; $C02C
     jmp     Main_Loop               ; $C02F
 
@@ -70,10 +70,10 @@ Main_Loop:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sound_UpdateTitle:
-    lda     #$06                    ; $C032
+    lda     #$06                    ; $C032  map bank 6
     jsr     Mmc1_SetPrgBank         ; $C034
-    jsr     Sound_TitleEngine       ; $C037
-    jmp     Mmc1_SetPrgBank5        ; $C03A
+    jsr     Sound_TitleEngine       ; $C037  the title screens' engine
+    jmp     Mmc1_SetPrgBank5        ; $C03A  map bank 5 again, and return
 
 ; PPU update strings sent by the game NMI, indexed by ppuStringSelect * 2.
 ; Entries 0-2 are the RAM buffers (PPU_STRING_BUFFER*); $696C is in SRAM,
@@ -99,16 +99,16 @@ PpuBufferLenOffsets:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Nmi_SoundOnly:
-    pha                             ; $C060
+    pha                             ; $C060  save a, x and y
     txa                             ; $C061
     pha                             ; $C062
     tya                             ; $C063
     pha                             ; $C064
-    lda     #$06                    ; $C065
+    lda     #$06                    ; $C065  map bank 6
     jsr     Mmc1_SetPrgBank         ; $C067
-    jsr     Sound_Engine            ; $C06A
-    jsr     Mmc1_SetPrgBankArea     ; $C06D
-    pla                             ; $C070
+    jsr     Sound_Engine            ; $C06A  the gameplay engine
+    jsr     Mmc1_SetPrgBankArea     ; $C06D  map the loader's bank again
+    pla                             ; $C070  restore y, x and a
     tay                             ; $C071
     pla                             ; $C072
     tax                             ; $C073
@@ -126,8 +126,8 @@ Nmi_SoundOnly:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Nmi_Bank5:
-    plp                             ; $C077
-    jmp     Bank5_Nmi               ; $C078
+    plp                             ; $C077  the flags Nmi pushed
+    jmp     Bank5_Nmi               ; $C078  bank 5's handler finishes the NMI
 
 ; ---------------------------------------------------------------------------
 ; Nmi
@@ -143,197 +143,207 @@ Nmi_Bank5:
 ;      clears the RAM buffer it came from;
 ;   3. sets the scroll and turns rendering back on;
 ;   4. updates sound (bank 6) and reads the controllers;
-;   5. unless paused or in a dialog, decrements the timers, advances
-;      frameCounter and the RNG, and runs the game (Game_RunState).
+;   5. runs the menus if the mode asked for them (menusPending);
+;   6. unless paused, in the level up window or opening a conversation's
+;      window, decrements the timers, advances frameCounter and the RNG,
+;      and runs the game (Game_RunState).
 ; It returns with bank 0 mapped.
 ;
-; Status:  confirmed (the meaning of renderingOff, ppuMaskExtra, dialogType and
-;          gameFrozen is provisional)
+; Status:  confirmed (the PPUMASK values, the menu gate and the dialog
+;          gating checked over both movies)
 ; ---------------------------------------------------------------------------
 Nmi:
-    php                             ; $C07B
-    bit     nmiMode                 ; $C07C
-    bpl     Nmi_SoundOnly           ; $C07F
-    bvc     Nmi_Bank5               ; $C081
-    plp                             ; $C083
+    php                             ; $C07B  save the flags: bit changes them
+    bit     nmiMode                 ; $C07C  n = bit 7, v = bit 6
+    bpl     Nmi_SoundOnly           ; $C07F  bit 7 clear: the main thread is loading
+    bvc     Nmi_Bank5               ; $C081  bit 6 clear: bank 5's screens
+    plp                             ; $C083  the game NMI
     pha                             ; $C084  keep the main thread's a
     ; Base nametable from ppuNametable; NMI disabled until the end.
     lda     ppuCtrlShadow           ; $C085
-    and     #$7C                    ; $C087
-    ora     ppuNametable            ; $C089
+    and     #$7C                    ; $C087  NMI and the nametable bits off
+    ora     ppuNametable            ; $C089  this frame's base nametable
     sta     ppuCtrlShadow           ; $C08C
     sta     PPUCTRL                 ; $C08E
     ; QUIRK: both outcomes of this branch go to the next instruction.
-    lda     nmiFlag                 ; $C091
-    beq     @setMask                ; $C094
+    lda     nmiFlag                 ; $C091  (no effect)
+    beq     @setMask                ; $C094  (no effect)
 
 @setMask:
     ; Rendering off while VRAM is updated.  ppuMaskShadow keeps rendering off
     ; while renderingOff is set, and otherwise turns on the background and
     ; sprites, plus the bits in ppuMaskExtra.
-    ldy     #$00                    ; $C096
+    ldy     #$00                    ; $C096  (y is loaded again below)
     lda     ppuMaskShadow           ; $C098
-    and     #$E0                    ; $C09A
+    and     #$E0                    ; $C09A  only the emphasis bits: rendering off
     ldy     renderingOff            ; $C09C
-    bne     @writeMask              ; $C09F
-    lda     ppuMaskShadow           ; $C0A1
-    ora     #$18                    ; $C0A3
-    ora     ppuMaskExtra            ; $C0A5
+    bne     @writeMask              ; $C09F  keep rendering off
+    lda     ppuMaskShadow           ; $C0A1  rendering allowed:
+    ora     #$18                    ; $C0A3  background and sprites on,
+    ora     ppuMaskExtra            ; $C0A5  and the left 8 pixels (not on the overworld)
 
 @writeMask:
-    sta     ppuMaskShadow           ; $C0A8
-    and     #$E1                    ; $C0AA
+    sta     ppuMaskShadow           ; $C0A8  the value to restore after the update
+    and     #$E1                    ; $C0AA  rendering off, keeping emphasis and grey
     sta     PPUMASK                 ; $C0AC
-    ldx     PPUSTATUS               ; $C0AF
-    lda     #$00                    ; $C0B2
+    ldx     PPUSTATUS               ; $C0AF  reset the PPU address latch
+    lda     #$00                    ; $C0B2  scroll 0, 0, for the status bar
     sta     PPUSCROLL               ; $C0B4
     sta     PPUSCROLL               ; $C0B7
-    sta     OAMADDR                 ; $C0BA
+    sta     OAMADDR                 ; $C0BA  DMA from sprite 0
     lda     #>oamBuffer             ; $C0BD  sprite DMA from oamBuffer
     sta     OAMDMA                  ; $C0BF
-    lda     attrColumnPending       ; $C0C2
+    lda     attrColumnPending       ; $C0C2  a scrolled-in attribute column waiting?
     beq     @writeStrings           ; $C0C5
-    jsr     Ppu_WriteAttrColumn     ; $C0C7
+    jsr     Ppu_WriteAttrColumn     ; $C0C7  write it first
 
 @writeStrings:
-    lda     ppuStringSelect         ; $C0CA
+    lda     ppuStringSelect         ; $C0CA  the selected list of PPU strings:
     asl     a                       ; $C0CD
     tax                             ; $C0CE
-    lda     PpuStringPtrs,x         ; $C0CF
+    lda     PpuStringPtrs,x         ; $C0CF  its address
     sta     temp0                   ; $C0D2
     lda     PpuStringPtrs+1,x       ; $C0D4
     sta     temp1                   ; $C0D7
-    jsr     Ppu_WriteStrings        ; $C0D9
+    jsr     Ppu_WriteStrings        ; $C0D9  write them to the PPU
     ; Point the PPU address at the palette and then at $0000, so that the
     ; address left in the PPU does not disturb rendering.
     lda     #$3F                    ; $C0DC
     sta     PPUADDR                 ; $C0DE
     ldy     #$00                    ; $C0E1
-    sty     PPUADDR                 ; $C0E3
+    sty     PPUADDR                 ; $C0E3  $3F00,
     sty     PPUADDR                 ; $C0E6
-    sty     PPUADDR                 ; $C0E9
-    ; Skip setting the scroll while ppuMaskExtra is set.
+    sty     PPUADDR                 ; $C0E9  then $0000
+    ; The scroll.  While ppuMaskExtra is set (everywhere but the overworld)
+    ; it stays at 0, 0 (set above), for the status bar; side view sets the
+    ; playfield's scroll itself after the sprite 0 split.  On the overworld
+    ; it is set here for the whole screen.
     lda     ppuMaskExtra            ; $C0EC
-    bne     @enableRendering        ; $C0EF
-    lda     ppuCtrlShadow           ; $C0F1
+    bne     @enableRendering        ; $C0EF  set: the scroll stays 0, 0 here
+    lda     ppuCtrlShadow           ; $C0F1  base nametable
     sta     PPUCTRL                 ; $C0F3
-    ldx     PPUSTATUS               ; $C0F6
-    lda     ppuScrollX              ; $C0F9
+    ldx     PPUSTATUS               ; $C0F6  reset the PPU address latch
+    lda     ppuScrollX              ; $C0F9  overworld: the scroll for the whole screen
     sta     PPUSCROLL               ; $C0FB
     lda     ppuScrollY              ; $C0FE
     sta     PPUSCROLL               ; $C100
 
 @enableRendering:
     lda     ppuMaskShadow           ; $C103
-    sta     PPUMASK                 ; $C105
+    sta     PPUMASK                 ; $C105  rendering back on (or kept off)
     ; Clear the RAM buffer that was sent.  Buffer 2 is followed by buffer 1
     ; next frame; buffer 1 by buffer 0.  ROM strings (select 3 and up) are
     ; sent once.
-    ldx     ppuStringSelect         ; $C108
-    beq     @clearBuffer            ; $C10B
-    iny                             ; $C10D
+    ldx     ppuStringSelect         ; $C108  the list just sent:
+    beq     @clearBuffer            ; $C10B  buffer 0: empty it (y = 0)
+    iny                             ; $C10D  y = 1
     cpx     #$01                    ; $C10E
-    beq     @nextBuffer             ; $C110
-    iny                             ; $C112
-    lda     #$00                    ; $C113
+    beq     @nextBuffer             ; $C110  buffer 1: empty it, select buffer 0
+    iny                             ; $C112  y = 2
+    lda     #$00                    ; $C113  a ROM string: select buffer 0
     cpx     #$02                    ; $C115
     bne     @setSelect              ; $C117
 
 @nextBuffer:
-    dec     ppuStringSelect         ; $C119
+    dec     ppuStringSelect         ; $C119  2 -> 1, 1 -> 0
 
 @clearBuffer:
-    ldx     PpuBufferLenOffsets,y   ; $C11C
+    ldx     PpuBufferLenOffsets,y   ; $C11C  offset of buffer y
     lda     #$00                    ; $C11F
-    sta     ppuBuffer0Len,x         ; $C121
-    lda     #$FF                    ; $C124
+    sta     ppuBuffer0Len,x         ; $C121  no strings
+    lda     #$FF                    ; $C124  and the end of the list
     sta     ppuBuffer0,x            ; $C126
-    lda     ppuStringSelect         ; $C129
+    lda     ppuStringSelect         ; $C129  the new selection
 
 @setSelect:
     sta     ppuStringSelect         ; $C12C
+    ; Sound and the controllers run every frame, even while paused.
     jsr     Sound_Update            ; $C12F  update sound (bank 6)
     lda     joypadHeld              ; $C132  previous frame's buttons
     sta     joypadHeldPrev          ; $C134
-    jsr     Joypad_Update           ; $C137
-    lda     gameFrozen              ; $C13A
-    beq     @checkPerFrame          ; $C13C
+    jsr     Joypad_Update           ; $C137  read the controllers
+    ; Run the menus if the mode asked for them, except while the big door
+    ; opens.
+    lda     gameFrozen              ; $C13A  frozen,
+    beq     @checkMenus             ; $C13C
     lda     bigDoorCounter          ; $C13E
-    ora     bigDoorStep             ; $C141
-    bne     @checkPaused            ; $C144
+    ora     bigDoorStep             ; $C141  and the big door opening?
+    bne     @checkPaused            ; $C144  yes: no menus
 
-@checkPerFrame:
-    lda     menusPending            ; $C146
-    beq     @checkPaused            ; $C149
-    jsr     Game_UpdateMenus        ; $C14B
+@checkMenus:
+    lda     menusPending            ; $C146  did the mode ask for the menus?
+    beq     @checkPaused            ; $C149  no
+    jsr     Game_UpdateMenus        ; $C14B  pause menu, dialogs, flute
 
 @checkPaused:
-    ; Skip the game while paused or in a dialog (dialogType), except in
-    ; pauseState 3-6 of a dialog.
-    lda     dialogType              ; $C14E
+    ; Skip the game (timers, RNG and Game_RunState) while paused or in the
+    ; level up window.  A conversation lets it run, except while its window
+    ; opens (pauseState 3-6).
+    lda     dialogType              ; $C14E  in a dialog?
     beq     @notInDialog            ; $C151
     cmp     #DIALOG_TALK            ; $C153
-    bcc     @done                   ; $C155
+    bcc     @done                   ; $C155  the level up window: skip the game
     lda     pauseState              ; $C157
-    cmp     #$03                    ; $C15A
-    bcc     @updateTimers           ; $C15C
-    cmp     #$07                    ; $C15E
-    bcs     @updateTimers           ; $C160
-    bcc     @done                   ; $C162
+    cmp     #$03                    ; $C15A  a conversation's states 0-2
+    bcc     @updateTimers           ; $C15C  run the game,
+    cmp     #$07                    ; $C15E  and 7 and up
+    bcs     @updateTimers           ; $C160  run the game;
+    bcc     @done                   ; $C162  3-6 (opening the window): skip it
 
 @notInDialog:
-    lda     pauseState              ; $C164
-    bne     @done                   ; $C167
+    lda     pauseState              ; $C164  not in a dialog:
+    bne     @done                   ; $C167  paused: skip the game
 
 @updateTimers:
     ; Decrement the timers: timerFast every frame, timerSlow (x = 24..13)
     ; every 20 frames.
-    ldx     #13 - 1                 ; $C169
+    ldx     #13 - 1                 ; $C169  timerFast only,
     dec     timerDivider            ; $C16B
-    bpl     @decTimer               ; $C16E
+    bpl     @decTimer               ; $C16E  unless this is the 20th frame:
     lda     #20                     ; $C170
-    sta     timerDivider            ; $C172
-    ldx     #13 + 12 - 1            ; $C175
+    sta     timerDivider            ; $C172  count 20 again
+    ldx     #13 + 12 - 1            ; $C175  then timerFast and timerSlow
 
 @decTimer:
     lda     timerFast,x             ; $C177
-    beq     @nextTimer              ; $C17A
+    beq     @nextTimer              ; $C17A  stopped at 0
     dec     timerFast,x             ; $C17C
 
 @nextTimer:
-    dex                             ; $C17F
+    dex                             ; $C17F  next timer
     bpl     @decTimer               ; $C180
-    inc     a:frameCounter          ; $C182
+    inc     a:frameCounter          ; $C182  count the frame
     ; Advance the RNG: shift the 9 bytes right, shifting in bit 1 of the
     ; first byte XOR bit 1 of the second.
-    ldx     #$00                    ; $C185
-    ldy     #$09                    ; $C187
-    lda     rng                     ; $C189
+    ldx     #$00                    ; $C185  from the first byte,
+    ldy     #$09                    ; $C187  9 bytes
+    lda     rng                     ; $C189  bit 1 of the first byte
     and     #$02                    ; $C18C
     sta     temp0                   ; $C18E
-    lda     rng+1                   ; $C190
+    lda     rng+1                   ; $C190  XOR bit 1 of the second
     and     #$02                    ; $C193
     eor     temp0                   ; $C195
-    clc                             ; $C197
+    clc                             ; $C197  carry = the XOR
     beq     @shiftRng               ; $C198
     sec                             ; $C19A
 
 @shiftRng:
-    ror     rng,x                   ; $C19B
+    ror     rng,x                   ; $C19B  shifted into the top, through all 9
     inx                             ; $C19E
     dey                             ; $C19F
     bne     @shiftRng               ; $C1A0
-    jsr     Oam_HideAllButSprite0   ; $C1A2
-    jsr     Game_RunState           ; $C1A5
+    jsr     Oam_HideAllButSprite0   ; $C1A2  the game draws all sprites anew
+    jsr     Game_RunState           ; $C1A5  run the game for one frame
 
 @done:
+    ; Re-enable NMI.  Clear the vblank flag first: enabling NMI during
+    ; vblank would fire another at once.
     lda     PPUSTATUS               ; $C1A8
-    ; Re-enable NMI.
     lda     ppuCtrlShadow           ; $C1AB
     ora     #$80                    ; $C1AD
     sta     ppuCtrlShadow           ; $C1AF
     sta     PPUCTRL                 ; $C1B1
-    pla                             ; $C1B4
+    pla                             ; $C1B4  the main thread's a
     rti                             ; $C1B5
 
 ; ---------------------------------------------------------------------------
@@ -349,9 +359,9 @@ Nmi:
 Sound_UpdateSometimes:
     lda     soundPacer              ; $C1B6
     clc                             ; $C1B9
-    adc     #$D8                    ; $C1BA
+    adc     #$D8                    ; $C1BA  + 216/256
     sta     soundPacer              ; $C1BC
-    bcc     Sound_UpdateDone        ; $C1BF
+    bcc     Sound_UpdateDone        ; $C1BF  no carry: skip this one (40 in 256)
 
 ; ---------------------------------------------------------------------------
 ; Sound_Update
@@ -362,10 +372,10 @@ Sound_UpdateSometimes:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sound_Update:
-    lda     #$06                    ; $C1C1
+    lda     #$06                    ; $C1C1  map bank 6
     jsr     Mmc1_SetPrgBank         ; $C1C3
-    jsr     Sound_Engine            ; $C1C6
-    jmp     Mmc1_SetPrgBank0        ; $C1C9
+    jsr     Sound_Engine            ; $C1C6  the gameplay engine
+    jmp     Mmc1_SetPrgBank0        ; $C1C9  map bank 0 again, and return
 
 ; ---------------------------------------------------------------------------
 ; Sound_UpdateDone
@@ -390,46 +400,51 @@ Sound_UpdateDone:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_UpdateMenus:
-    jsr     Mmc1_SetPrgBank0        ; $C1CD
+    jsr     Mmc1_SetPrgBank0        ; $C1CD  the menus are bank 0 code
     lda     gameMode                ; $C1D0
-    cmp     #$0B                    ; $C1D3
-    bne     Menu_UpdateOther        ; $C1D5
+    cmp     #GAME_MODE_SIDE_VIEW    ; $C1D3
+    bne     Menu_UpdateOther        ; $C1D5  overworld: the flute or the pause
     jsr     Game_UpdateSideViewMenus ; $C1D7
-    jmp     Mmc1_SetPrgBankArea     ; $C1DA
+    jmp     Mmc1_SetPrgBankArea     ; $C1DA  map the area bank again, and return
 
 Game_UpdateSideViewMenus:
-    jsr     World_GetIndex          ; $C1DD
+    ; Saria's bridge: once the river man has agreed to help, walking far
+    ; enough into the river's area starts the event, which then runs here
+    ; as a menu (pauseState is its step).
+    jsr     World_GetIndex          ; $C1DD  West Hyrule's towns?
     cmp     #$01                    ; $C1E0
-    bne     @loc_C206               ; $C1E2
+    bne     @menus                  ; $C1E2
     lda     townCode                ; $C1E4
-    cmp     #$02                    ; $C1E7
-    bne     @loc_C206               ; $C1E9
+    cmp     #$02                    ; $C1E7  Saria,
+    bne     @menus                  ; $C1E9
     lda     areaId                  ; $C1EB
-    cmp     #$06                    ; $C1EE
-    bne     @loc_C206               ; $C1F0
+    cmp     #$06                    ; $C1EE  its area 6,
+    bne     @menus                  ; $C1F0
     lda     objXHi                  ; $C1F2
-    cmp     #$02                    ; $C1F4
-    bcc     @loc_C206               ; $C1F6
+    cmp     #$02                    ; $C1F4  with Link at X $200 or more,
+    bcc     @menus                  ; $C1F6
     lda     techniques              ; $C1F8
     lsr     a                       ; $C1FB
-    bcc     @loc_C206               ; $C1FC
-    lda     #$01                    ; $C1FE
+    bcc     @menus                  ; $C1FC  once the river man will help (bit 0)
+    lda     #$01                    ; $C1FE  the event's first step
     sta     pauseState              ; $C200
-    jmp     Saria_BuildBridge       ; $C203
+    jmp     Saria_BuildBridge       ; $C203  builds the bridge
 
-@loc_C206:
+@menus:
+    ; While paused the game doesn't run, so nothing else draws: hide the
+    ; sprites and keep the status bar up to date.
     lda     pauseState              ; $C206
-    beq     @loc_C218               ; $C209
+    beq     @dispatch               ; $C209  not paused
     lda     dialogType              ; $C20B
-    cmp     #$02                    ; $C20E
-    bcs     @loc_C218               ; $C210
-    jsr     Oam_HideAllButSprite0   ; $C212
-    jsr     Hud_Update              ; $C215
+    cmp     #DIALOG_TALK            ; $C20E
+    bcs     @dispatch               ; $C210  a conversation draws its own window
+    jsr     Oam_HideAllButSprite0   ; $C212  paused or level up: hide the sprites
+    jsr     Hud_Update              ; $C215  level up check, status bar
 
-@loc_C218:
+@dispatch:
     lda     dialogType              ; $C218
-    bne     Menu_UpdateDialog       ; $C21B
-    jmp     Pause_Update            ; $C21D
+    bne     Menu_UpdateDialog       ; $C21B  the level up window, a conversation
+    jmp     Pause_Update            ; $C21D  else the pause menu
 
 ; ---------------------------------------------------------------------------
 ; Menu_UpdateOther
@@ -442,10 +457,10 @@ Game_UpdateSideViewMenus:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_UpdateOther:
-    lda     pauseState              ; $C220
+    lda     pauseState              ; $C220  the step
     ldy     fluteActive             ; $C223
-    bne     Flute_Update            ; $C226
-    jsr     JumpTable               ; $C228
+    bne     Flute_Update            ; $C226  the flute is playing
+    jsr     JumpTable               ; $C228  else the overworld pause
 ; (inline jump table)
     .word   Pause_CheckStart        ; $C22B
     .word   Pause_OverworldMute     ; $C22D  (not observed)
@@ -461,9 +476,9 @@ Menu_UpdateOther:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_UpdateDialog:
-    cmp     #$02                    ; $C233
-    bcs     Menu_UpdateTownDialog   ; $C235
-    jmp     LevelUp_Update          ; $C237
+    cmp     #DIALOG_TALK            ; $C233
+    bcs     Menu_UpdateTownDialog   ; $C235  conversations
+    jmp     LevelUp_Update          ; $C237  dialogType 1: the level up window
 
 ; ---------------------------------------------------------------------------
 ; Flute_Update
@@ -491,14 +506,14 @@ Flute_Update:
 ; ---------------------------------------------------------------------------
 Menu_UpdateTownDialog:
     cmp     #$05                    ; $C245
-    bcs     Menu_UpdateOther        ; $C247
-    jsr     Mmc1_SetPrgBankArea     ; $C249
+    bcs     Menu_UpdateOther        ; $C247  (5 and up: never set)
+    jsr     Mmc1_SetPrgBankArea     ; $C249  map the town bank (bank 3)
     jmp     Dialog_Update           ; $C24C
 
 Menu_CopyPtrFromArea:
-    jsr     Mmc1_SetPrgBankArea     ; $C24F
+    jsr     Mmc1_SetPrgBankArea     ; $C24F  read the area bank's tables
     jsr     Menu_CopyPtr            ; $C252
-    jmp     Mmc1_SetPrgBank0        ; $C255
+    jmp     Mmc1_SetPrgBank0        ; $C255  map bank 0 again, and return
 
 ; ---------------------------------------------------------------------------
 ; Menu_CopyPtr
@@ -509,12 +524,12 @@ Menu_CopyPtrFromArea:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Menu_CopyPtr:
-    lda     (temp14),y              ; $C258
+    lda     (temp14),y              ; $C258  first byte
     sta     menuRowTiles,x          ; $C25A
     iny                             ; $C25D
-    lda     (temp14),y              ; $C25E
+    lda     (temp14),y              ; $C25E  second byte
     sta     menuRowTiles2,x         ; $C260
-    inx                             ; $C263
+    inx                             ; $C263  next row
     rts                             ; $C264
 
 ; Per-area flags in saveWorld, by World_GetIndex: 4 bits per area, two
@@ -552,29 +567,29 @@ AreaFlagEven:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Area_ClearFlag:
-    jsr     Area_GetFlagByte        ; $C295
-    bcc     @loc_C2A0               ; $C298
-    and     AreaFlagClearOdd,x      ; $C29A
+    jsr     Area_GetFlagByte        ; $C295  a = the byte, carry = odd area
+    bcc     @even                   ; $C298  even area: the high nibble
+    and     AreaFlagClearOdd,x      ; $C29A  odd area: clear it in the low nibble
     sta     (temp0),y               ; $C29D
     rts                             ; $C29F
 
-@loc_C2A0:
+@even:
     and     AreaFlagClearEven,x     ; $C2A0
     sta     (temp0),y               ; $C2A3
     rts                             ; $C2A5
 
 Area_TestFlag:
-    jsr     Area_GetFlagByte        ; $C2A6
-    bcc     @loc_C2AF               ; $C2A9
-    and     AreaFlagOdd,x           ; $C2AB
+    jsr     Area_GetFlagByte        ; $C2A6  a = the byte, carry = odd area
+    bcc     @even                   ; $C2A9  even area: the high nibble
+    and     AreaFlagOdd,x           ; $C2AB  a = nonzero if set
     rts                             ; $C2AE
 
-@loc_C2AF:
-    and     AreaFlagEven,x          ; $C2AF
+@even:
+    and     AreaFlagEven,x          ; $C2AF  a = nonzero if set
     rts                             ; $C2B2
 
 Area_GetFlagByte:
-    jsr     World_GetIndex          ; $C2B3
+    jsr     World_GetIndex          ; $C2B3  this world's flag bytes
     asl     a                       ; $C2B6
     tay                             ; $C2B7
     lda     AreaFlagsPtrs,y         ; $C2B8
@@ -582,9 +597,9 @@ Area_GetFlagByte:
     lda     AreaFlagsPtrs+1,y       ; $C2BD
     sta     temp1                   ; $C2C0
     lda     areaId                  ; $C2C2
-    lsr     a                       ; $C2C5
+    lsr     a                       ; $C2C5  two areas per byte; carry = odd area
     tay                             ; $C2C6
-    lda     (temp0),y               ; $C2C7
+    lda     (temp0),y               ; $C2C7  the area's byte
     rts                             ; $C2C9
 
 ; ---------------------------------------------------------------------------
@@ -597,10 +612,10 @@ Area_GetFlagByte:
 ; ---------------------------------------------------------------------------
 Game_RunState:
     ldy     #$00                    ; $C2CA
-    sty     nmiFlag                 ; $C2CC
-    sty     menusPending            ; $C2CF
-    jsr     Game_CheckStateChange   ; $C2D2
-    jsr     JumpTable               ; $C2D5
+    sty     nmiFlag                 ; $C2CC  (read by the NMI, to no effect)
+    sty     menusPending            ; $C2CF  the mode sets it again to run the menus
+    jsr     Game_CheckStateChange   ; $C2D2  a = gameState; a new state starts at mode 0
+    jsr     JumpTable               ; $C2D5  by gameState
 ; (inline jump table)
     .word   GameState_Begin         ; $C2D8
     .word   GameState_Play          ; $C2DA
@@ -611,8 +626,8 @@ Game_RunState:
     .word   GameState_Respawn       ; $C2E4
 
 GameState_Play:
-    jsr     Game_CheckModeChange    ; $C2E6
-    jsr     JumpTable               ; $C2E9
+    jsr     Game_CheckModeChange    ; $C2E6  a = gameMode; a new mode starts at step 0
+    jsr     JumpTable               ; $C2E9  by gameMode
 ; (inline jump table)
     .word   Mode_LoadWorld          ; $C2EC  mode $00
     .word   Mode_ReturnToOverworld  ; $C2EE  mode $01
@@ -641,8 +656,8 @@ GameState_Play:
     .word   Mode_Raft               ; $C31C  mode $18
 
 GameState_Death:
-    jsr     Game_CheckModeChange    ; $C31E
-    jsr     JumpTable               ; $C321
+    jsr     Game_CheckModeChange    ; $C31E  a = gameMode; a new mode starts at step 0
+    jsr     JumpTable               ; $C321  by gameMode: the death and continue steps
 ; (inline jump table)
     .word   Game_BlankAndNextMode   ; $C324
     .word   Death_ClearScreen       ; $C326
@@ -667,20 +682,20 @@ GameState_Death:
 ; ---------------------------------------------------------------------------
 Game_ReturnToTitle:
 ; (code below not executed in the test movies)
-    lda     #$05                    ; $C33C
+    lda     #$05                    ; $C33C  map bank 5
     jsr     Mmc1_SetPrgBank         ; $C33E
-    jsr     Mmc1_SetChrBank         ; $C341
-    lda     #NMI_MODE_BANK5         ; $C344
+    jsr     Mmc1_SetChrBank         ; $C341  CHR bank 0 (a = 0 after the bank write)
+    lda     #NMI_MODE_BANK5         ; $C344  bank 5's NMI
     sta     nmiMode                 ; $C346
     lda     #$00                    ; $C349
-    sta     gameState               ; $C34B
+    sta     gameState               ; $C34B  its first state: the title screen
     rts                             ; $C34E
 ; (end of code not executed in the test movies)
 
 GameState_Begin:
-    jsr     Mmc1_SetPrgBank0        ; $C34F
-    jsr     Ram_ClearExceptSaved    ; $C352
-    jsr     Game_StartAtNorthCastle ; $C355
+    jsr     Mmc1_SetPrgBank0        ; $C34F  map bank 0
+    jsr     Ram_ClearExceptSaved    ; $C352  keep only the saved world and stats
+    jsr     Game_StartAtNorthCastle ; $C355  Link at North Castle
 
 ; ---------------------------------------------------------------------------
 ; Game_ResetLives
@@ -692,8 +707,8 @@ GameState_Begin:
 ; ---------------------------------------------------------------------------
 Game_ResetLives:
     lda     #$03                    ; $C358
-    sta     lives                   ; $C35A
-    inc     unused0760              ; $C35D
+    sta     lives                   ; $C35A  3 lives
+    inc     unused0760              ; $C35D  (never read)
 
 ; ---------------------------------------------------------------------------
 ; Game_NextState
@@ -703,30 +718,30 @@ Game_ResetLives:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_NextState:
-    inc     gameState               ; $C360
+    inc     gameState               ; $C360  GAME_STATE_PLAY after GAME_STATE_BEGIN
     rts                             ; $C363
 
 GameState_Ending:
-    jsr     Game_CheckModeChange    ; $C364
-    jsr     JumpTable               ; $C367
+    jsr     Game_CheckModeChange    ; $C364  a = gameMode; a new mode starts at step 0
+    jsr     JumpTable               ; $C367  by gameMode
 ; (inline jump table)
-    .word   @loc_C376               ; $C36A
+    .word   @loadArea               ; $C36A
     .word   Area_Load               ; $C36C
     .word   Mode_DrawArea           ; $C36E
-    .word   @loc_C37C               ; $C370
+    .word   @drawCurtain            ; $C370
     .word   Mode_StartSideView      ; $C372
-    .word   @loc_C382               ; $C374
+    .word   @runEnding              ; $C374
 
-@loc_C376:
-    jsr     Mmc1_SetPrgBank5        ; $C376
+@loadArea:
+    jsr     Mmc1_SetPrgBank5        ; $C376  bank 5: the ending's area
     jmp     Ending_LoadArea         ; $C379
 
-@loc_C37C:
-    jsr     Mmc1_SetPrgBank5        ; $C37C
+@drawCurtain:
+    jsr     Mmc1_SetPrgBank5        ; $C37C  bank 5: the curtain's top
     jmp     Ending_DrawCurtainTop   ; $C37F
 
-@loc_C382:
-    jsr     Mmc1_SetPrgBank5        ; $C382
+@runEnding:
+    jsr     Mmc1_SetPrgBank5        ; $C382  bank 5: the ending's scenes
     jmp     Ending_Run              ; $C385
 
 ; ---------------------------------------------------------------------------
@@ -738,7 +753,7 @@ GameState_Ending:
 ; ---------------------------------------------------------------------------
 Mmc1_SetPrgBank5:
     lda     #$05                    ; $C388
-    jmp     Mmc1_SetPrgBank         ; $C38A
+    jmp     Mmc1_SetPrgBank         ; $C38A  and return
 
 ; ---------------------------------------------------------------------------
 ; GameState_SaveAfterEnding
@@ -753,8 +768,8 @@ Mmc1_SetPrgBank5:
 ; ---------------------------------------------------------------------------
 GameState_SaveAfterEnding:
 ; (code below not executed in the test movies)
-    jsr     Game_CheckModeChange    ; $C38D
-    jsr     JumpTable               ; $C390
+    jsr     Game_CheckModeChange    ; $C38D  a = gameMode; a new mode starts at step 0
+    jsr     JumpTable               ; $C390  by gameMode
 ; (end of code not executed in the test movies)
 ; (inline jump table)
     .word   Mode_SaveAfterEnding    ; $C393  (not observed)
@@ -3396,9 +3411,9 @@ Ppu_SelectString2:
 ; ---------------------------------------------------------------------------
 Game_CheckStepChange:
     lda     gameStep                ; $D15C
-    cmp     gameStepPrev            ; $D15F
-    sta     gameStepPrev            ; $D162
-    bne     Game_ResetSubStep       ; $D165
+    cmp     gameStepPrev            ; $D15F  changed since the last check?
+    sta     gameStepPrev            ; $D162  remember it (sta keeps the flags)
+    bne     Game_ResetSubStep       ; $D165  yes: restart its substeps
     rts                             ; $D167
 
 ; ---------------------------------------------------------------------------
@@ -3413,9 +3428,9 @@ Game_CheckStepChange:
 ; ---------------------------------------------------------------------------
 Game_CheckModeChange:
     lda     gameMode                ; $D168
-    cmp     gameModePrev            ; $D16B
-    sta     gameModePrev            ; $D16E
-    bne     Game_ResetStep          ; $D171
+    cmp     gameModePrev            ; $D16B  changed since the last check?
+    sta     gameModePrev            ; $D16E  remember it (sta keeps the flags)
+    bne     Game_ResetStep          ; $D171  yes: start it at step 0
     rts                             ; $D173
 
 ; ---------------------------------------------------------------------------
@@ -3430,14 +3445,14 @@ Game_CheckModeChange:
 ; ---------------------------------------------------------------------------
 Game_CheckStateChange:
     lda     gameState               ; $D174
-    cmp     gameStatePrev           ; $D177
-    sta     gameStatePrev           ; $D17A
-    beq     Game_CheckStateChangeDone ; $D17D
-    jsr     Oam_HideAll             ; $D17F
-    lda     gameState               ; $D182
+    cmp     gameStatePrev           ; $D177  changed since the last check?
+    sta     gameStatePrev           ; $D17A  remember it (sta keeps the flags)
+    beq     Game_CheckStateChangeDone ; $D17D  no
+    jsr     Oam_HideAll             ; $D17F  a new state starts with no sprites
+    lda     gameState               ; $D182  (the Out value)
     ldy     #$00                    ; $D185
-    sty     unused073C              ; $D187
-    sty     gameMode                ; $D18A
+    sty     unused073C              ; $D187  (never read)
+    sty     gameMode                ; $D18A  and at mode 0
 
 ; ---------------------------------------------------------------------------
 ; Game_ResetStep
@@ -3448,8 +3463,8 @@ Game_CheckStateChange:
 ; ---------------------------------------------------------------------------
 Game_ResetStep:
     ldy     #$00                    ; $D18D
-    sty     fileStep                ; $D18F
-    sty     gameStep                ; $D192
+    sty     fileStep                ; $D18F  bank 5's file screens' step
+    sty     gameStep                ; $D192  step 0
 
 ; ---------------------------------------------------------------------------
 ; Game_ResetSubStep
@@ -3460,7 +3475,7 @@ Game_ResetStep:
 ; ---------------------------------------------------------------------------
 Game_ResetSubStep:
     ldy     #$00                    ; $D195
-    sty     gameSubStep             ; $D197
+    sty     gameSubStep             ; $D197  substep 0
 
 ; ---------------------------------------------------------------------------
 ; Game_CheckStateChangeDone
@@ -3643,11 +3658,11 @@ Obj_MoveFinish:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Oam_HideAll:
-    ldy     #$00                    ; $D24C
-    beq     Oam_HideFrom            ; $D24E
+    ldy     #$00                    ; $D24C  from sprite 0
+    beq     Oam_HideFrom            ; $D24E  always taken
 
 Oam_HideAllButSprite0:
-    ldy     #$04                    ; $D250
+    ldy     #$04                    ; $D250  from sprite 1
 
 ; ---------------------------------------------------------------------------
 ; Oam_HideFrom
@@ -3657,15 +3672,15 @@ Oam_HideAllButSprite0:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Oam_HideFrom:
-    lda     #$F8                    ; $D252
+    lda     #$F8                    ; $D252  Y below the screen
 
 @loop:
-    sta     oamBuffer,y             ; $D254
-    iny                             ; $D257
+    sta     oamBuffer,y             ; $D254  the sprite's Y
+    iny                             ; $D257  next sprite
     iny                             ; $D258
     iny                             ; $D259
     iny                             ; $D25A
-    bne     @loop                   ; $D25B
+    bne     @loop                   ; $D25B  up to sprite 63
     rts                             ; $D25D
 
 ; ---------------------------------------------------------------------------
@@ -3677,7 +3692,7 @@ Oam_HideFrom:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 DrawArea_ClearNametable2400:
-    jsr     Game_NextSubStep        ; $D25E
+    jsr     Game_NextSubStep        ; $D25E  next substep, then clear
 
 ; ---------------------------------------------------------------------------
 ; Ppu_ClearNametable2400
@@ -3685,7 +3700,7 @@ DrawArea_ClearNametable2400:
 ; Clear the nametable at $2400; see Ppu_FillNametable.
 ; ---------------------------------------------------------------------------
 Ppu_ClearNametable2400:
-    lda     #$24                    ; $D261
+    lda     #$24                    ; $D261  $2400
 
 Ppu_ClearNametable:
     jmp     Ppu_FillNametable       ; $D263
@@ -3700,7 +3715,7 @@ Ppu_ClearNametable:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_ClearNametables:
-    jsr     Ppu_ClearNametable2400  ; $D266
+    jsr     Ppu_ClearNametable2400  ; $D266  $2400,
 
 ; ---------------------------------------------------------------------------
 ; Ppu_ClearNametable2000
@@ -3710,12 +3725,12 @@ Ppu_ClearNametables:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_ClearNametable2000:
-    lda     #$20                    ; $D269
+    lda     #$20                    ; $D269  then $2000
     jsr     Ppu_ClearNametable      ; $D26B
-    lda     #$00                    ; $D26E
+    lda     #$00                    ; $D26E  scroll 0, 0
     sta     ppuScrollY              ; $D270
     sta     ppuScrollX              ; $D272
-    sta     playfieldNametable      ; $D274
+    sta     playfieldNametable      ; $D274  playfield in nametable $2000
     sta     PPUSCROLL               ; $D277
     sta     PPUSCROLL               ; $D27A
 
@@ -3745,18 +3760,19 @@ Game_NextSubStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ram_ClearAll:
+    ; Each loop clears a page: x = 0, then 255 down to 1.
     ldx     #$00                    ; $D281
     txa                             ; $D283
 
 @loop:
-    sta     lives,x                 ; $D284
+    sta     lives,x                 ; $D284  $0700-$07FF
     dex                             ; $D287
     bne     @loop                   ; $D288
     ldx     #$00                    ; $D28A
     txa                             ; $D28C
 
 @loop2:
-    sta     saveWorld,x             ; $D28D
+    sta     saveWorld,x             ; $D28D  $0600-$06FF: saveWorld
     dex                             ; $D290
     bne     @loop2                  ; $D291
 
@@ -3765,7 +3781,7 @@ Ram_ClearExceptSaved:
     txa                             ; $D295
 
 @loop:
-    sta     timerDivider,x          ; $D296
+    sta     timerDivider,x          ; $D296  $0500-$05FF
     dex                             ; $D299
     bne     @loop                   ; $D29A
 
@@ -3774,24 +3790,24 @@ Ram_ClearWork:
     txa                             ; $D29E
 
 @loop:
-    sta     linkAttackFrame,x       ; $D29F
+    sta     linkAttackFrame,x       ; $D29F  $0400-$04FF
     dex                             ; $D2A2
     bne     @loop                   ; $D2A3
     ldx     #$00                    ; $D2A5
     txa                             ; $D2A7
 
 @loop2:
-    sta     ppuPage,x               ; $D2A8
+    sta     ppuPage,x               ; $D2A8  $0300-$03FF: the PPU buffers
     dex                             ; $D2AB
     bne     @loop2                  ; $D2AC
     ldx     #$DF                    ; $D2AE
 
 @loop3:
-    sta     temp0,x                 ; $D2B0
+    sta     temp0,x                 ; $D2B0  $0000-$00DF
     dex                             ; $D2B2
     cpx     #$FF                    ; $D2B3
     bne     @loop3                  ; $D2B5
-    stx     ppuBuffer0              ; $D2B7
+    stx     ppuBuffer0              ; $D2B7  end both PPU buffers' lists
     stx     ppuBuffer1              ; $D2BA
     rts                             ; $D2BD
 
@@ -3808,14 +3824,14 @@ Ram_ClearWork:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_FillNametable:
-    ldy     PPUSTATUS               ; $D2BE
-    ldy     #$30                    ; $D2C1
-    sty     PPUCTRL                 ; $D2C3
+    ldy     PPUSTATUS               ; $D2BE  reset the PPU address latch
+    ldy     #$30                    ; $D2C1  NMI off, 8x16 sprites,
+    sty     PPUCTRL                 ; $D2C3  background tiles at $1000
     ldy     #$00                    ; $D2C6
-    sta     PPUADDR                 ; $D2C8
+    sta     PPUADDR                 ; $D2C8  the nametable's address
     sty     PPUADDR                 ; $D2CB
-    ldx     #$03                    ; $D2CE
-    lda     #$F4                    ; $D2D0
+    ldx     #$03                    ; $D2CE  3 x 256 + $C0 = 960 tiles
+    lda     #$F4                    ; $D2D0  the blank tile
 
 @loop:
     sta     PPUDATA                 ; $D2D2
@@ -3825,14 +3841,14 @@ Ppu_FillNametable:
     bne     @loop                   ; $D2D9
 
 @loop2:
-    sta     PPUDATA                 ; $D2DB
+    sta     PPUDATA                 ; $D2DB  the last $C0 tiles
     iny                             ; $D2DE
     cpy     #$C0                    ; $D2DF
     bne     @loop2                  ; $D2E1
-    lda     #$00                    ; $D2E3
+    lda     #$00                    ; $D2E3  attribute table: palette 0,
 
 @loop3:
-    sta     PPUDATA                 ; $D2E5
+    sta     PPUDATA                 ; $D2E5  64 bytes
     iny                             ; $D2E8
     bne     @loop3                  ; $D2E9
 
@@ -3861,66 +3877,69 @@ Ppu_WriteStringsDone:
 ; ---------------------------------------------------------------------------
 Ppu_WriteStrings:
     ldy     #$00                    ; $D2EC
-    lda     (temp0),y               ; $D2EE
-    cmp     #$FF                    ; $D2F0
+    lda     (temp0),y               ; $D2EE  address high byte, or a marker
+    cmp     #$FF                    ; $D2F0  end of the list?
     beq     Ppu_WriteStringsDone    ; $D2F2
-    cmp     #$4C                    ; $D2F4
-    bne     @loc_D307               ; $D2F6
+    cmp     #$4C                    ; $D2F4  $4C (JMP): continue at a pointer?
+    bne     @string                 ; $D2F6  no: a string
     iny                             ; $D2F8
-    lda     (temp0),y               ; $D2F9
+    lda     (temp0),y               ; $D2F9  the pointer
     tax                             ; $D2FB
     iny                             ; $D2FC
     lda     (temp0),y               ; $D2FD
     sta     temp1                   ; $D2FF
     stx     temp0                   ; $D301
     ldy     #$00                    ; $D303
-    lda     (temp0),y               ; $D305
+    lda     (temp0),y               ; $D305  the first byte there
 
-@loc_D307:
-    ldx     PPUSTATUS               ; $D307
-    sta     PPUADDR                 ; $D30A
+@string:
+    ldx     PPUSTATUS               ; $D307  reset the PPU address latch
+    sta     PPUADDR                 ; $D30A  address high byte
     iny                             ; $D30D
-    lda     (temp0),y               ; $D30E
+    lda     (temp0),y               ; $D30E  address low byte
     sta     PPUADDR                 ; $D310
     iny                             ; $D313
-    lda     (temp0),y               ; $D314
-    asl     a                       ; $D316
+    ; The control byte: bit 7 sets the PPU's address increment, bit 6
+    ; becomes the carry that tells the copy loop not to advance y, and
+    ; bits 5-0 the count.
+    lda     (temp0),y               ; $D314  control byte
+    asl     a                       ; $D316  carry = bit 7 (vertical)
     pha                             ; $D317
     lda     ppuCtrlShadow           ; $D318
-    ora     #$04                    ; $D31A
-    bcs     @loc_D320               ; $D31C
-    and     #$FB                    ; $D31E
+    ora     #$04                    ; $D31A  +32 increment (vertical),
+    bcs     @setIncrement           ; $D31C
+    and     #$FB                    ; $D31E  or +1
 
-@loc_D320:
+@setIncrement:
     sta     PPUCTRL                 ; $D320
     pla                             ; $D323
-    asl     a                       ; $D324
-    bcc     @loc_D32A               ; $D325
-    ora     #$02                    ; $D327
-    iny                             ; $D329
+    asl     a                       ; $D324  carry = bit 6 (repeat one byte)
+    bcc     @count                  ; $D325
+    ora     #$02                    ; $D327  the lsr below sets carry
+    iny                             ; $D329  y at the byte to repeat
 
-@loc_D32A:
+@count:
     lsr     a                       ; $D32A
-    lsr     a                       ; $D32B
-    tax                             ; $D32C
+    lsr     a                       ; $D32B  carry = repeat
+    tax                             ; $D32C  x = count (bits 5-0)
 
 @loop:
-    bcs     @loc_D330               ; $D32D
-    iny                             ; $D32F
+    bcs     @write                  ; $D32D  repeating: keep y
+    iny                             ; $D32F  next data byte
 
-@loc_D330:
+@write:
     lda     (temp0),y               ; $D330
     sta     PPUDATA                 ; $D332
     dex                             ; $D335
     bne     @loop                   ; $D336
-    iny                             ; $D338
+    iny                             ; $D338  past the string
     tya                             ; $D339
     clc                             ; $D33A
-    adc     temp0                   ; $D33B
+    adc     temp0                   ; $D33B  advance the pointer
     sta     temp0                   ; $D33D
     bcc     Ppu_WriteStrings        ; $D33F
     inc     temp1                   ; $D341
-    jmp     Ppu_WriteStrings        ; $D343
+    jmp     Ppu_WriteStrings        ; $D343  next string
 
 ; ---------------------------------------------------------------------------
 ; Joypad_Update
@@ -3938,19 +3957,19 @@ Ppu_WriteStrings:
 ; ---------------------------------------------------------------------------
 Joypad_Update:
     jsr     Joypad_Read             ; $D346
-    lda     joypadPressed           ; $D349
+    lda     joypadPressed           ; $D349  the raw buttons
     sta     temp0                   ; $D34B
-    jsr     Joypad_Read             ; $D34D
+    jsr     Joypad_Read             ; $D34D  read them again
     lda     joypadPressed           ; $D350
-    cmp     temp0                   ; $D352
-    bne     Joypad_Update           ; $D354
-    ldx     #$01                    ; $D356
+    cmp     temp0                   ; $D352  the same?
+    bne     Joypad_Update           ; $D354  no: read until two reads agree
+    ldx     #$01                    ; $D356  joypad 2, then 1
 
 @computePressed:
-    lda     joypadPressed,x         ; $D358
+    lda     joypadPressed,x         ; $D358  the buttons down now
     tay                             ; $D35A
-    eor     joypadHeld,x            ; $D35B
-    and     joypadPressed,x         ; $D35D
+    eor     joypadHeld,x            ; $D35B  changed since the last frame
+    and     joypadPressed,x         ; $D35D  and down now: newly pressed
     sta     joypadPressed,x         ; $D35F
     sty     joypadHeld,x            ; $D361
     dex                             ; $D363
@@ -3969,16 +3988,16 @@ Joypad_Update:
 ; ---------------------------------------------------------------------------
 Joypad_Read:
     ldx     #$01                    ; $D367
-    stx     JOY1                    ; $D369
+    stx     JOY1                    ; $D369  strobe: latch the buttons
     dex                             ; $D36C
-    stx     JOY1                    ; $D36D
-    ldx     #$08                    ; $D370
+    stx     JOY1                    ; $D36D  end the strobe
+    ldx     #$08                    ; $D370  8 buttons: A, B, Select, Start, Up, Down, Left, Right
 
 @readBit:
-    lda     JOY1                    ; $D372
-    lsr     a                       ; $D375
-    rol     joypadPressed           ; $D376
-    lda     JOY2                    ; $D378
+    lda     JOY1                    ; $D372  joypad 1:
+    lsr     a                       ; $D375  the button's bit
+    rol     joypadPressed           ; $D376  into the result; A ends in bit 7
+    lda     JOY2                    ; $D378  joypad 2, the same
     lsr     a                       ; $D37B
     rol     joypadPressed+1         ; $D37C
     dex                             ; $D37E
@@ -3991,7 +4010,7 @@ Joypad_Read:
 ; JumpTable indexed by gameSubStep.
 ; ---------------------------------------------------------------------------
 JumpTableBySubStep:
-    lda     gameSubStep             ; $D382
+    lda     gameSubStep             ; $D382  index = gameSubStep
 
 ; ---------------------------------------------------------------------------
 ; JumpTable
@@ -4011,19 +4030,19 @@ JumpTableBySubStep:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 JumpTable:
-    asl     a                       ; $D385
+    asl     a                       ; $D385  word index
     tay                             ; $D386
-    pla                             ; $D387
+    pla                             ; $D387  the return address: the table - 1
     sta     temp12                  ; $D388
     pla                             ; $D38A
     sta     temp13                  ; $D38B
-    iny                             ; $D38D
-    lda     (temp12),y              ; $D38E
+    iny                             ; $D38D  +1: the table starts after it
+    lda     (temp12),y              ; $D38E  handler's low byte
     sta     temp14                  ; $D390
     iny                             ; $D392
-    lda     (temp12),y              ; $D393
+    lda     (temp12),y              ; $D393  high byte
     sta     temp15                  ; $D395
-    jmp     (temp14)                ; $D397
+    jmp     (temp14)                ; $D397  does not return here
 ; (unreferenced: $D39A-$D3C9, 48 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $D39A
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $D3AA
@@ -10364,7 +10383,13 @@ Obj_ComputeWideOffscreen:
     bpl     @loop                   ; $F2FB
     lda     temp2                   ; $F2FD
     rts                             ; $F2FF
-; (unreferenced: $F300-$FD7F, 2688 bytes)
+; DMC (delta modulation) samples, played by bank 6's Sfx_UpdateDmc from the
+; DmcSamples table: Link's cry when hurt, and Ganon's laugh in six parts.
+; The APU reads them directly, so no code refers to them.  DmcLaugh5 is
+; 241 bytes long and runs into DmcLaugh6.  DmcUnused1 and DmcUnused2 are
+; listed in DmcSamplesUnused; the bytes after DmcUnused2's 241 ($FD71 on)
+; are not part of any sample.
+DmcLinkHurt:
     .byte   $55, $AB, $D5, $AA, $5A, $4B, $95, $4A, $55, $A9, $54, $D5, $D6, $AA, $A4, $35; $F300
     .byte   $4B, $89, $52, $55, $D9, $5B, $5F, $57, $75, $2A, $49, $42, $92, $22, $4D, $D5; $F310
     .byte   $76, $DB, $D7, $2A, $A5, $24, $92, $28, $52, $A9, $7F, $DF, $DB, $6D, $4F, $89; $F320
@@ -10377,6 +10402,8 @@ Obj_ComputeWideOffscreen:
     .byte   $94, $4A, $5B, $FD, $FF, $FF, $CD, $7A, $8B, $02, $01, $8A, $04, $22, $88, $76; $F390
     .byte   $55, $52, $4A, $DB, $FF, $FF, $D7, $76, $3F, $2A, $20, $48, $49, $20, $08, $75; $F3A0
     .byte   $97, $8A, $AC, $56, $FA, $CA, $8A, $A8, $A5, $4A, $01, $02, $95, $22, $08, $A0; $F3B0
+
+DmcLaugh1:
     .byte   $4A, $52, $55, $B5, $55, $33, $95, $4A, $55, $AB, $55, $A9, $2A, $55, $55, $DD; $F3C0
     .byte   $37, $2A, $09, $4A, $AB, $6D, $57, $4A, $29, $AA, $B5, $D5, $9A, $4A, $A5, $54; $F3D0
     .byte   $AB, $5A, $A5, $52, $55, $AA, $FD, $17, $A5, $00, $69, $6B, $7B, $93, $A2, $92; $F3E0
@@ -10405,6 +10432,8 @@ Obj_ComputeWideOffscreen:
     .byte   $00, $FD, $0F, $08, $C1, $FF, $BF, $00, $C0, $FF, $3F, $00, $C0, $FF, $5F, $00; $F550
     .byte   $D0, $DD, $9D, $08, $A2, $FF, $FF, $00, $00, $FC, $FF, $08, $00, $FF, $77, $09; $F560
     .byte   $A0, $D6, $B7, $89, $A4, $62, $FF, $3F, $00, $A0, $FD, $55, $0A, $62, $DD, $55; $F570
+
+DmcLaugh2:
     .byte   $75, $FF, $07, $00, $C0, $FF, $0F, $40, $D0, $FF, $0F, $02, $E8, $DF, $A8, $20; $F580
     .byte   $C8, $FF, $FF, $04, $00, $FC, $FF, $03, $00, $FC, $FF, $0F, $00, $D0, $FF, $03; $F590
     .byte   $00, $D0, $FF, $FF, $00, $00, $FF, $FF, $00, $00, $FF, $FF, $03, $00, $FC, $BF; $F5A0
@@ -10429,6 +10458,8 @@ Obj_ComputeWideOffscreen:
     .byte   $21, $29, $CA, $26, $80, $02, $ED, $A9, $56, $52, $B7, $DA, $2A, $D6, $AD, $FD; $F6D0
     .byte   $09, $D9, $52, $B7, $08, $88, $A9, $4A, $73, $29, $AA, $B6, $55, $A9, $AA, $55; $F6E0
     .byte   $5B, $CB, $54, $6D, $55, $AD, $4A, $35, $55, $93, $2A, $55, $55, $95, $4A, $55; $F6F0
+
+DmcLaugh3:
     .byte   $36, $89, $52, $D5, $AD, $8A, $4A, $D5, $75, $95, $48, $5A, $5B, $55, $4A, $55; $F700
     .byte   $6A, $F7, $1F, $00, $88, $FD, $3F, $24, $80, $F7, $AF, $09, $82, $FD, $AD, $88; $F710
     .byte   $50, $AB, $5A, $23, $FB, $FF, $00, $00, $FC, $FF, $14, $00, $FC, $3F, $8F, $00; $F720
@@ -10449,6 +10480,8 @@ Obj_ComputeWideOffscreen:
     .byte   $95, $54, $4B, $AD, $4A, $55, $55, $AB, $56, $A9, $B2, $6A, $AD, $4A, $AD, $AA; $F810
     .byte   $56, $49, $A9, $6A, $2B, $4A, $55, $B5, $A6, $A5, $52, $75, $AD, $4A, $CA, $5A; $F820
     .byte   $AB, $2A, $69, $55, $B5, $2A, $A9, $AA, $56, $55, $2A, $55, $AD, $55, $A5, $AA; $F830
+
+DmcLaugh4:
     .byte   $59, $95, $65, $95, $A9, $9A, $AA, $AA, $AA, $69, $AA, $A6, $AA, $6A, $D5, $2D; $F840
     .byte   $89, $52, $55, $B7, $2A, $A9, $94, $75, $6D, $A5, $48, $6A, $AD, $55, $A5, $54; $F850
     .byte   $A5, $DA, $FD, $17, $00, $88, $FE, $BF, $50, $20, $F0, $7F, $AB, $09, $82, $F5; $F860
@@ -10473,6 +10506,8 @@ Obj_ComputeWideOffscreen:
     .byte   $56, $25, $95, $AA, $D6, $8A, $52, $55, $B5, $A6, $AA, $8A, $6A, $5B, $AB, $A2; $F990
     .byte   $D2, $5A, $AD, $2A, $A5, $66, $55, $AB, $52, $AA, $AA, $56, $55, $A9, $54, $B5; $F9A0
     .byte   $5A, $55, $A9, $B4, $6A, $55, $65, $AA, $55, $55, $55, $55, $AA, $56, $55, $55; $F9B0
+
+DmcLaugh5:
     .byte   $D7, $56, $A5, $48, $6A, $AD, $55, $55, $4A, $55, $A5, $DA, $FF, $95, $80, $80; $F9C0
     .byte   $E8, $FF, $2D, $92, $20, $F0, $FD, $AD, $16, $22, $68, $F7, $AD, $8A, $08, $55; $F9D0
     .byte   $AB, $6A, $55, $D2, $FE, $FF, $00, $00, $40, $FF, $FF, $70, $80, $80, $FF, $37; $F9E0
@@ -10485,6 +10520,8 @@ Obj_ComputeWideOffscreen:
     .byte   $00, $00, $FF, $FF, $0F, $00, $00, $FD, $FF, $DF, $00, $00, $40, $FF, $1D, $00; $FA50
     .byte   $FD, $FF, $3F, $03, $00, $E0, $FF, $FF, $03, $00, $C0, $FF, $FF, $3B, $00, $00; $FA60
     .byte   $C0, $FF, $0B, $00, $FF, $FF, $CF, $02, $00, $F0, $FF, $FF, $00, $00, $E0, $FF; $FA70
+
+DmcLaugh6:
     .byte   $FF, $2F, $00, $00, $E0, $FF, $02, $40, $FF, $FF, $F3, $00, $00, $FC, $FF, $3F; $FA80
     .byte   $00, $00, $F4, $FF, $FF, $03, $00, $00, $F6, $BF, $00, $D0, $FF, $FF, $37, $00; $FA90
     .byte   $00, $FC, $FF, $1F, $00, $00, $FC, $FF, $FF, $03, $00, $00, $FD, $3F, $00, $40; $FAA0
@@ -10501,6 +10538,8 @@ Obj_ComputeWideOffscreen:
     .byte   $FD, $FF, $3F, $03, $00, $E0, $FF, $FF, $03, $00, $C0, $FF, $FF, $3B, $00, $00; $FB50
     .byte   $C0, $FF, $0B, $00, $FF, $FF, $CF, $02, $00, $F0, $FF, $FF, $00, $00, $E0, $FF; $FB60
     .byte   $FF, $2F, $00, $00, $E0, $FF, $02, $40, $FF, $FF, $F3, $00, $00, $FC, $FF, $3F; $FB70
+
+DmcUnused1:
     .byte   $00, $00, $F4, $FF, $FF, $03, $00, $00, $F6, $BF, $00, $D0, $FF, $FF, $37, $00; $FB80
     .byte   $00, $FC, $FF, $1F, $00, $00, $FC, $FF, $FF, $03, $00, $00, $FD, $3F, $00, $40; $FB90
     .byte   $D7, $56, $A5, $48, $6A, $AD, $55, $55, $4A, $55, $A5, $DA, $FF, $95, $80, $80; $FBA0
@@ -10517,6 +10556,8 @@ Obj_ComputeWideOffscreen:
     .byte   $C0, $FF, $0B, $00, $FF, $FF, $CF, $02, $00, $F0, $FF, $FF, $00, $00, $E0, $FF; $FC50
     .byte   $FF, $2F, $00, $00, $E0, $FF, $02, $40, $FF, $FF, $F3, $00, $00, $FC, $FF, $3F; $FC60
     .byte   $00, $00, $F4, $FF, $FF, $03, $00, $00, $F6, $BF, $00, $D0, $FF, $FF, $37, $00; $FC70
+
+DmcUnused2:
     .byte   $00, $FC, $FF, $1F, $00, $00, $FC, $FF, $FF, $03, $00, $00, $FD, $3F, $00, $40; $FC80
     .byte   $D7, $56, $A5, $48, $6A, $AD, $55, $55, $4A, $55, $A5, $DA, $FF, $95, $80, $80; $FC90
     .byte   $E8, $FF, $2D, $92, $20                                         ; $FCA0
@@ -10551,41 +10592,44 @@ AttrColumnOffsets:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_WriteAttrColumn:
-    lda     drawPage                ; $FD82
+    lda     drawPage                ; $FD82  1 scrolling right, 2 left:
     lsr     a                       ; $FD85
-    tax                             ; $FD86
-    lda     attrColumnAddr+1        ; $FD87
-    and     #$1F                    ; $FD8A
+    tax                             ; $FD86  x = 0 right, 1 left
+    lda     attrColumnAddr+1        ; $FD87  the column's address, low byte:
+    and     #$1F                    ; $FD8A  its tile column
     sec                             ; $FD8C
-    sbc     AttrColumnOffsets,x     ; $FD8D
+    sbc     AttrColumnOffsets,x     ; $FD8D  drawn last: 4n+3 right, 4n+1 left
     lsr     a                       ; $FD90
-    lsr     a                       ; $FD91
+    lsr     a                       ; $FD91  / 4: the attribute column
     clc                             ; $FD92
-    adc     #$C0                    ; $FD93
-    sta     temp1                   ; $FD95
-    lda     attrColumnAddr          ; $FD97
-    ora     #$03                    ; $FD9A
-    sta     temp0                   ; $FD9C
+    adc     #$C0                    ; $FD93  in the attribute table
+    sta     temp1                   ; $FD95  address low byte
+    lda     attrColumnAddr          ; $FD97  nametable $20 or $24:
+    ora     #$03                    ; $FD9A  its attribute table, $23 or $27
+    sta     temp0                   ; $FD9C  address high byte
     ldx     #$00                    ; $FD9E
     stx     attrColumnPending       ; $FDA0
 
 @loop:
-    lda     PPUSTATUS               ; $FDA3
+    lda     PPUSTATUS               ; $FDA3  reset the PPU address latch
     lda     temp0                   ; $FDA6
     sta     PPUADDR                 ; $FDA8
     lda     temp1                   ; $FDAB
     clc                             ; $FDAD
-    adc     #$08                    ; $FDAE
+    adc     #$08                    ; $FDAE  rows 1-7 (row 0 is the status bar's)
     sta     PPUADDR                 ; $FDB0
     sta     temp1                   ; $FDB3
-    lda     attrColumn,x            ; $FDB5
+    lda     attrColumn,x            ; $FDB5  the row's byte
     sta     PPUDATA                 ; $FDB8
     lda     #$00                    ; $FDBB
-    sta     attrColumn,x            ; $FDBD
+    sta     attrColumn,x            ; $FDBD  cleared for the next column
     inx                             ; $FDC0
-    cpx     #$07                    ; $FDC1
+    cpx     #$07                    ; $FDC1  7 rows
     bcc     @loop                   ; $FDC3
-    ; QUIRK: a is loaded with $FF but y is stored.
+    ; QUIRK: a is loaded with $FF but y is stored.  y still holds
+    ; renderingOff from the NMI: usually 0, but 2 or 3 while the screen is
+    ; blanked (both movies).  Scroll_DrawColumns sets ppuBuffer2Len to 0
+    ; again before it queues the next column.
     lda     #$FF                    ; $FDC5
     sty     ppuBuffer2Len           ; $FDC7
     rts                             ; $FDCA
@@ -10768,27 +10812,27 @@ Area_DrawMetatileColumn:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Reset:
-    sei                             ; $FF70
-    cld                             ; $FF71
+    sei                             ; $FF70  no IRQs (never enabled)
+    cld                             ; $FF71  (the 2A03 has no decimal mode)
     ldx     #$00                    ; $FF72
     stx     PPUCTRL                 ; $FF74  disable NMI
     inx                             ; $FF77  x = 1: wait for two vblanks
 
 @waitVblank:
-    lda     PPUSTATUS               ; $FF78
+    lda     PPUSTATUS               ; $FF78  wait for vblank: the PPU warms up
     bpl     @waitVblank             ; $FF7B
     dex                             ; $FF7D
-    beq     @waitVblank             ; $FF7E
+    beq     @waitVblank             ; $FF7E  the first: wait for another
     txs                             ; $FF80  x = $FF: empty stack
     ; Writing a value with bit 7 set resets the MMC1 shift register.
     stx     MMC1_CONTROL            ; $FF81
-    stx     MMC1_CHR0               ; $FF84
-    stx     MMC1_CHR1               ; $FF87
-    stx     MMC1_PRG                ; $FF8A
-    lda     #MMC1_MIRROR_HORIZONTAL | MMC1_PRG_FIX_LAST | MMC1_CHR_8K ; $FF8D
+    stx     MMC1_CHR0               ; $FF84  (resets it again)
+    stx     MMC1_CHR1               ; $FF87  (and again)
+    stx     MMC1_PRG                ; $FF8A  (and again)
+    lda     #MMC1_MIRROR_HORIZONTAL | MMC1_PRG_FIX_LAST | MMC1_CHR_8K ; $FF8D  mirroring, PRG and CHR modes
     jsr     Mmc1_SetControl         ; $FF8F
     jsr     Mmc1_SetChrBank         ; $FF92  a = 0 after Mmc1_SetControl
-    lda     #$07                    ; $FF95
+    lda     #$07                    ; $FF95  bank 7 at $8000 too, for now
     jsr     Mmc1_SetPrgBank         ; $FF97
     jmp     Main                    ; $FF9A
 
@@ -10803,15 +10847,15 @@ Reset:
 ; Status:   confirmed
 ; ---------------------------------------------------------------------------
 Mmc1_SetControl:
-    sta     MMC1_CONTROL            ; $FF9D
+    sta     MMC1_CONTROL            ; $FF9D  bit 0
     lsr     a                       ; $FFA0
-    sta     MMC1_CONTROL            ; $FFA1
+    sta     MMC1_CONTROL            ; $FFA1  bit 1
     lsr     a                       ; $FFA4
-    sta     MMC1_CONTROL            ; $FFA5
+    sta     MMC1_CONTROL            ; $FFA5  bit 2
     lsr     a                       ; $FFA8
-    sta     MMC1_CONTROL            ; $FFA9
+    sta     MMC1_CONTROL            ; $FFA9  bit 3
     lsr     a                       ; $FFAC
-    sta     MMC1_CONTROL            ; $FFAD
+    sta     MMC1_CONTROL            ; $FFAD  bit 4: the fifth write loads it
     rts                             ; $FFB0
 
 ; ---------------------------------------------------------------------------
@@ -10825,15 +10869,15 @@ Mmc1_SetControl:
 ; Status:   confirmed
 ; ---------------------------------------------------------------------------
 Mmc1_SetChrBank:
-    sta     MMC1_CHR0               ; $FFB1
+    sta     MMC1_CHR0               ; $FFB1  bit 0
     lsr     a                       ; $FFB4
-    sta     MMC1_CHR0               ; $FFB5
+    sta     MMC1_CHR0               ; $FFB5  bit 1
     lsr     a                       ; $FFB8
-    sta     MMC1_CHR0               ; $FFB9
+    sta     MMC1_CHR0               ; $FFB9  bit 2
     lsr     a                       ; $FFBC
-    sta     MMC1_CHR0               ; $FFBD
+    sta     MMC1_CHR0               ; $FFBD  bit 3
     lsr     a                       ; $FFC0
-    sta     MMC1_CHR0               ; $FFC1
+    sta     MMC1_CHR0               ; $FFC1  bit 4: the fifth write loads it
     rts                             ; $FFC4
 
 ; ---------------------------------------------------------------------------
@@ -10862,18 +10906,18 @@ Mmc1_SetPrgBank0:
     beq     Mmc1_SetPrgBank         ; $FFC7  always taken
 
 Mmc1_SetPrgBankArea:
-    lda     areaPrgBank             ; $FFC9
+    lda     areaPrgBank             ; $FFC9  the area bank
 
 Mmc1_SetPrgBank:
-    sta     MMC1_PRG                ; $FFCC
+    sta     MMC1_PRG                ; $FFCC  bit 0
     lsr     a                       ; $FFCF
-    sta     MMC1_PRG                ; $FFD0
+    sta     MMC1_PRG                ; $FFD0  bit 1
     lsr     a                       ; $FFD3
-    sta     MMC1_PRG                ; $FFD4
+    sta     MMC1_PRG                ; $FFD4  bit 2
     lsr     a                       ; $FFD7
-    sta     MMC1_PRG                ; $FFD8
+    sta     MMC1_PRG                ; $FFD8  bit 3
     lsr     a                       ; $FFDB
-    sta     MMC1_PRG                ; $FFDC
+    sta     MMC1_PRG                ; $FFDC  bit 4: the fifth write loads it
     rts                             ; $FFDF
 
 ; ---------------------------------------------------------------------------

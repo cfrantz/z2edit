@@ -55,13 +55,9 @@ bank 4 48, banks 1-2 23.
 Banks 7 and 0, by subsystem (instruction counts; under 3% commented
 unless noted):
 
-- 8a. The core frame (bank 7, ~560): `Reset` and the `Mmc1_*` writers,
-  `Main` and `Main_Loop`, the three NMI handlers, `Sound_Update*`,
-  `Joypad_*`, `JumpTable`, `Ppu_WriteStrings`, `Ppu_FillNametable`, the
-  nametable clears, `Ppu_WriteAttrColumn`, `Oam_Hide*`, `Ram_Clear*`,
-  `Game_UpdateMenus` and the dialog pointer helpers, the area flag
-  helpers, and `Game_Check*Change`.  Then the game state machine
-  (`Game_RunState`, `GameState_*`, ~65).
+- 8a. Done: the core frame and the game state machine (bank 7), checked
+  over both movies; docs/architecture/main-loop-and-nmi.md has the game
+  NMI's frame step by step.  The DMC samples at $F300 are labelled.
 - 8b. Sprite management (bank 7, ~880; the enemy draw routines in it are
   done): slot rotation in `Enemies_Update`, `Obj_ComputeScreenPos`,
   `Obj_ComputeWideOffscreen`, `Sprite_HideOffscreen`, the
@@ -77,7 +73,10 @@ unless noted):
 - 8d. Area loading and scrolling (banks 7 and 0, ~740): `Area_Load`,
   `Area_DrawFloors`, `Area_DecodeObjects`, `Area_PlaceItem`, the
   `AreaMap_*` helpers, `Area_DrawMetatileColumn`, and bank 0's
-  `Scroll_*`.
+  `Scroll_*`.  `scrollPage` and `drawPage` are not pages: `Scroll_Update` sets
+  them to 1 scrolling right and 2 scrolling left (`Ppu_WriteAttrColumn`
+  relies on it); rename them once the entry values
+  (`sramEntryScrollPage`) are understood.
 - 8e. The side view frame and the object framework (bank 7, ~700):
   `Mode_SideView`, `Obj_Move*`, `Enemy_Update`, `Enemy_TrySpawn`,
   `Enemy_Spawn`, `Enemy_Die*`, `Enemy_ShowExperience`,
